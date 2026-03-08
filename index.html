@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - O Potinho Mais Feliz do Mundo | Franquia</title>
+    <meta name="description" content="MilkyPot - A franquia de sobremesas mais fofa e deliciosa do Brasil. Seja um franqueado ou faça seu pedido agora!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <!-- Floating Particles Background -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <span class="logo-icon">🐑</span>
+                <span class="logo-text">Milky<span class="logo-highlight">Pot</span></span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home" class="active">Início</a></li>
+                <li><a href="#produtos">Produtos</a></li>
+                <li><a href="#pedir">Pedir Agora</a></li>
+                <li><a href="#franquia">Seja Franqueado</a></li>
+                <li><a href="#sobre">Sobre Nós</a></li>
+                <li><a href="#contato">Contato</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="btn-cart" id="cartBtn" aria-label="Carrinho">
+                    <span class="cart-icon">🛒</span>
+                    <span class="cart-count" id="cartCount">0</span>
+                </button>
+                <button class="btn-primary-small" onclick="scrollToSection('pedir')">Pedir Agora</button>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-clouds">
+            <div class="cloud cloud-1"></div>
+            <div class="cloud cloud-2"></div>
+            <div class="cloud cloud-3"></div>
+            <div class="cloud cloud-4"></div>
+        </div>
+        <div class="hero-rainbow"></div>
+        <div class="hero-content">
+            <div class="hero-badge">🌈 O Potinho Mais Feliz do Mundo 🌈</div>
+            <h1 class="hero-title">
+                <span class="title-line">Bem-vindo à</span>
+                <span class="title-brand">
+                    <span class="letter" style="color:#FF6B9D">M</span><span class="letter" style="color:#FF8A65">i</span><span class="letter" style="color:#FFD54F">l</span><span class="letter" style="color:#81C784">k</span><span class="letter" style="color:#64B5F6">y</span><span class="letter" style="color:#BA68C8">P</span><span class="letter" style="color:#FF6B9D">o</span><span class="letter" style="color:#FF8A65">t</span>
+                </span>
+            </h1>
+            <p class="hero-subtitle">Sobremesas mágicas que fazem sorrir! Escolha a franquia mais perto de você e peça agora mesmo.</p>
+            <div class="hero-buttons">
+                <button class="btn-primary btn-lg" onclick="scrollToSection('pedir')">
+                    <span>🍦</span> Fazer Pedido
+                </button>
+                <button class="btn-secondary btn-lg" onclick="scrollToSection('franquia')">
+                    <span>🏪</span> Seja Franqueado
+                </button>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number" data-count="150">0</span>+
+                    <span class="stat-label">Franquias</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number" data-count="50">0</span>+
+                    <span class="stat-label">Produtos</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number" data-count="500">0</span>K+
+                    <span class="stat-label">Clientes Felizes</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-mascot">
+            <div class="mascot-container bounce-animation">
+                <div class="pot-shape">
+                    <div class="pot-drip"></div>
+                    <div class="pot-body">
+                        <span class="mascot-face">🐑</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <span>Role para baixo</span>
+            <div class="scroll-arrow"></div>
+        </div>
+    </section>
+
+    <!-- Store Selector Section -->
+    <section class="store-selector" id="pedir">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">📍 Encontre sua loja</span>
+                <h2 class="section-title">Escolha sua <span class="highlight">MilkyPot</span></h2>
+                <p class="section-desc">Selecione a franquia mais perto de você para ver o cardápio e fazer seu pedido!</p>
+            </div>
+
+            <div class="store-search-box">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="storeSearch" placeholder="Digite seu CEP ou cidade..." class="search-input">
+                    <button class="btn-location" id="btnLocation" title="Usar minha localização">
+                        <span>📍</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="stores-grid" id="storesGrid">
+                <!-- Stores will be populated by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Catalog Section -->
+    <section class="products-section" id="produtos">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">🍨 Nosso Cardápio</span>
+                <h2 class="section-title">Produtos <span class="highlight">Deliciosos</span></h2>
+                <p class="section-desc">Escolha entre nossas sobremesas mágicas! Cada potinho é feito com muito carinho.</p>
+            </div>
+
+            <div class="selected-store-banner" id="selectedStoreBanner" style="display:none">
+                <span class="store-banner-icon">🏪</span>
+                <span class="store-banner-name" id="selectedStoreName"></span>
+                <button class="btn-change-store" onclick="changeStore()">Trocar loja</button>
+            </div>
+
+            <div class="category-tabs" id="categoryTabs">
+                <button class="cat-tab active" data-category="todos">🌟 Todos</button>
+                <button class="cat-tab" data-category="potinhos">🍨 Potinhos</button>
+                <button class="cat-tab" data-category="milkshakes">🥤 Milkshakes</button>
+                <button class="cat-tab" data-category="acai">🫐 Açaí</button>
+                <button class="cat-tab" data-category="sorvetes">🍦 Sorvetes</button>
+                <button class="cat-tab" data-category="especiais">✨ Especiais</button>
+                <button class="cat-tab" data-category="combos">🎁 Combos</button>
+            </div>
+
+            <div class="products-grid" id="productsGrid">
+                <!-- Products populated by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- How to Order Section -->
+    <section class="how-to-order">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">🎯 Super Fácil</span>
+                <h2 class="section-title">Como <span class="highlight">Pedir</span></h2>
+                <p class="section-desc">Fazer seu pedido é tão fácil que até uma criança consegue!</p>
+            </div>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">📍</div>
+                    <h3>Escolha a Loja</h3>
+                    <p>Selecione a MilkyPot mais perto de você</p>
+                </div>
+                <div class="step-connector">→</div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">🍨</div>
+                    <h3>Monte seu Pedido</h3>
+                    <p>Escolha seus potinhos e sobremesas favoritas</p>
+                </div>
+                <div class="step-connector">→</div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">💳</div>
+                    <h3>Pague Online</h3>
+                    <p>PIX, cartão ou dinheiro na entrega</p>
+                </div>
+                <div class="step-connector">→</div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <div class="step-icon">🎉</div>
+                    <h3>Receba e Sorria!</h3>
+                    <p>Retire na loja ou receba em casa</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Franchise Section -->
+    <section class="franchise-section" id="franquia">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">🏪 Oportunidade</span>
+                <h2 class="section-title">Seja um <span class="highlight">Franqueado</span></h2>
+                <p class="section-desc">Faça parte da família MilkyPot e leve a felicidade para sua cidade!</p>
+            </div>
+
+            <div class="franchise-hero-card">
+                <div class="franchise-hero-content">
+                    <h3>Por que ser um franqueado MilkyPot?</h3>
+                    <p>A MilkyPot é mais que uma marca — é uma experiência mágica que conquista corações. Com um modelo de negócio comprovado, suporte completo e produtos irresistíveis, sua franquia vai ser um sucesso!</p>
+                    <div class="franchise-highlights">
+                        <div class="fh-item">
+                            <span class="fh-icon">💰</span>
+                            <div>
+                                <strong>Retorno Rápido</strong>
+                                <span>Payback médio de 12-18 meses</span>
+                            </div>
+                        </div>
+                        <div class="fh-item">
+                            <span class="fh-icon">📈</span>
+                            <div>
+                                <strong>Faturamento Médio</strong>
+                                <span>R$ 80.000 a R$ 150.000/mês</span>
+                            </div>
+                        </div>
+                        <div class="fh-item">
+                            <span class="fh-icon">🎓</span>
+                            <div>
+                                <strong>Treinamento Completo</strong>
+                                <span>Suporte do início ao sucesso</span>
+                            </div>
+                        </div>
+                        <div class="fh-item">
+                            <span class="fh-icon">🛡️</span>
+                            <div>
+                                <strong>Marca Consolidada</strong>
+                                <span>Marketing e branding inclusos</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="franchise-models">
+                <h3 class="models-title">Modelos de Franquia</h3>
+                <div class="models-grid">
+                    <div class="model-card">
+                        <div class="model-badge">Compacto</div>
+                        <div class="model-icon">🏠</div>
+                        <h4>MilkyPot Express</h4>
+                        <p class="model-desc">Quiosque em shoppings e centros comerciais</p>
+                        <div class="model-price">
+                            <span class="price-label">Investimento a partir de</span>
+                            <span class="price-value">R$ 89.000</span>
+                        </div>
+                        <ul class="model-features">
+                            <li>Área de 12m² a 20m²</li>
+                            <li>Equipe de 3-5 pessoas</li>
+                            <li>Cardápio essencial</li>
+                            <li>Suporte completo</li>
+                        </ul>
+                        <button class="btn-primary" onclick="openFranchiseForm('express')">Quero Saber Mais</button>
+                    </div>
+                    <div class="model-card featured">
+                        <div class="model-badge">Mais Popular</div>
+                        <div class="model-icon">🏪</div>
+                        <h4>MilkyPot Store</h4>
+                        <p class="model-desc">Loja completa com espaço para clientes</p>
+                        <div class="model-price">
+                            <span class="price-label">Investimento a partir de</span>
+                            <span class="price-value">R$ 169.000</span>
+                        </div>
+                        <ul class="model-features">
+                            <li>Área de 30m² a 60m²</li>
+                            <li>Equipe de 6-10 pessoas</li>
+                            <li>Cardápio completo</li>
+                            <li>Espaço kids incluso</li>
+                            <li>Sistema de delivery</li>
+                        </ul>
+                        <button class="btn-primary" onclick="openFranchiseForm('store')">Quero Saber Mais</button>
+                    </div>
+                    <div class="model-card">
+                        <div class="model-badge">Premium</div>
+                        <div class="model-icon">🏰</div>
+                        <h4>MilkyPot Mega</h4>
+                        <p class="model-desc">Mega loja com área de festas e eventos</p>
+                        <div class="model-price">
+                            <span class="price-label">Investimento a partir de</span>
+                            <span class="price-value">R$ 289.000</span>
+                        </div>
+                        <ul class="model-features">
+                            <li>Área de 80m² a 150m²</li>
+                            <li>Equipe de 12-20 pessoas</li>
+                            <li>Cardápio completo + exclusivos</li>
+                            <li>Espaço para festas</li>
+                            <li>Delivery + drive-thru</li>
+                        </ul>
+                        <button class="btn-primary" onclick="openFranchiseForm('mega')">Quero Saber Mais</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Franchise Numbers -->
+            <div class="franchise-numbers">
+                <div class="fn-item">
+                    <span class="fn-number" data-count="150">0</span>+
+                    <span class="fn-label">Unidades</span>
+                </div>
+                <div class="fn-item">
+                    <span class="fn-number" data-count="23">0</span>
+                    <span class="fn-label">Estados</span>
+                </div>
+                <div class="fn-item">
+                    <span class="fn-number" data-count="98">0</span>%
+                    <span class="fn-label">Satisfação</span>
+                </div>
+                <div class="fn-item">
+                    <span class="fn-number" data-count="15">0</span>
+                    <span class="fn-label">Anos de Mercado</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section" id="sobre">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">💬 Depoimentos</span>
+                <h2 class="section-title">O que dizem sobre <span class="highlight">nós</span></h2>
+            </div>
+            <div class="testimonials-slider" id="testimonialsSlider">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                    <p>"Minha filha ama a MilkyPot! Ela mesma faz o pedido pelo site, super fácil!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">👩</div>
+                        <div>
+                            <strong>Ana Paula S.</strong>
+                            <span>Cliente - São Paulo</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                    <p>"Melhor investimento que fiz! Minha franquia já deu retorno em 14 meses."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">👨</div>
+                        <div>
+                            <strong>Carlos M.</strong>
+                            <span>Franqueado - Curitiba</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                    <p>"Os potinhos são simplesmente mágicos! Toda semana peço pelo site."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">👧</div>
+                        <div>
+                            <strong>Mariana L.</strong>
+                            <span>Cliente - Rio de Janeiro</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact-section" id="contato">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">📞 Fale Conosco</span>
+                <h2 class="section-title">Entre em <span class="highlight">Contato</span></h2>
+            </div>
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <span class="contact-icon">📧</span>
+                        <div>
+                            <strong>E-mail</strong>
+                            <span>contato@milkypot.com</span>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <span class="contact-icon">📱</span>
+                        <div>
+                            <strong>WhatsApp</strong>
+                            <span>(11) 99999-9999</span>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <span class="contact-icon">📍</span>
+                        <div>
+                            <strong>Sede</strong>
+                            <span>São Paulo, SP - Brasil</span>
+                        </div>
+                    </div>
+                    <div class="contact-socials">
+                        <a href="#" class="social-link" aria-label="Instagram">📸 Instagram</a>
+                        <a href="#" class="social-link" aria-label="Facebook">👍 Facebook</a>
+                        <a href="#" class="social-link" aria-label="TikTok">🎵 TikTok</a>
+                        <a href="#" class="social-link" aria-label="YouTube">▶️ YouTube</a>
+                    </div>
+                </div>
+                <form class="contact-form" id="contactForm">
+                    <div class="form-group">
+                        <label for="contactName">Nome</label>
+                        <input type="text" id="contactName" placeholder="Seu nome completo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactEmail">E-mail</label>
+                        <input type="email" id="contactEmail" placeholder="seu@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactSubject">Assunto</label>
+                        <select id="contactSubject" required>
+                            <option value="">Selecione...</option>
+                            <option value="pedido">Dúvida sobre Pedido</option>
+                            <option value="franquia">Quero ser Franqueado</option>
+                            <option value="parceria">Parceria</option>
+                            <option value="outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactMsg">Mensagem</label>
+                        <textarea id="contactMsg" rows="4" placeholder="Como podemos ajudar?" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary btn-full">Enviar Mensagem ✨</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <span class="logo-icon">🐑</span>
+                    <span class="logo-text">Milky<span class="logo-highlight">Pot</span></span>
+                    <p>O potinho mais feliz do mundo! Levando alegria e sabor para todo o Brasil.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Links</h4>
+                    <a href="#home">Início</a>
+                    <a href="#produtos">Produtos</a>
+                    <a href="#pedir">Pedir Agora</a>
+                    <a href="#franquia">Franquia</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Institucional</h4>
+                    <a href="#">Sobre Nós</a>
+                    <a href="#">Política de Privacidade</a>
+                    <a href="#">Termos de Uso</a>
+                    <a href="#">Trabalhe Conosco</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Franqueado</h4>
+                    <a href="#franquia">Seja Franqueado</a>
+                    <a href="#">Portal do Franqueado</a>
+                    <a href="#">Suporte</a>
+                    <a href="#">FAQ</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 MilkyPot. Todos os direitos reservados. O potinho mais feliz do mundo.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-overlay" id="cartOverlay"></div>
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>🛒 Meu Carrinho</h3>
+            <button class="cart-close" id="cartClose" aria-label="Fechar carrinho">&times;</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty">
+                <span class="cart-empty-icon">🛒</span>
+                <p>Seu carrinho está vazio</p>
+                <small>Adicione produtos deliciosos!</small>
+            </div>
+        </div>
+        <div class="cart-footer" id="cartFooter" style="display:none">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span class="cart-total-value" id="cartTotal">R$ 0,00</span>
+            </div>
+            <button class="btn-primary btn-full" onclick="openCheckout()">Finalizar Pedido ✨</button>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div class="modal-overlay" id="checkoutModal">
+        <div class="modal-content checkout-modal">
+            <button class="modal-close" onclick="closeCheckout()">&times;</button>
+            <h2>🎉 Finalizar Pedido</h2>
+            <div class="checkout-steps" id="checkoutSteps">
+                <div class="checkout-step active" data-step="1">
+                    <span class="cs-num">1</span>
+                    <span>Dados</span>
+                </div>
+                <div class="checkout-step" data-step="2">
+                    <span class="cs-num">2</span>
+                    <span>Entrega</span>
+                </div>
+                <div class="checkout-step" data-step="3">
+                    <span class="cs-num">3</span>
+                    <span>Pagamento</span>
+                </div>
+            </div>
+
+            <!-- Step 1: Customer Data -->
+            <div class="checkout-panel active" id="checkoutStep1">
+                <h3>Seus Dados</h3>
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="checkoutName" placeholder="Seu nome" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Telefone</label>
+                        <input type="tel" id="checkoutPhone" placeholder="(11) 99999-9999" required>
+                    </div>
+                    <div class="form-group">
+                        <label>CPF</label>
+                        <input type="text" id="checkoutCpf" placeholder="000.000.000-00">
+                    </div>
+                </div>
+                <button class="btn-primary btn-full" onclick="nextCheckoutStep(2)">Continuar →</button>
+            </div>
+
+            <!-- Step 2: Delivery -->
+            <div class="checkout-panel" id="checkoutStep2">
+                <h3>Entrega</h3>
+                <div class="delivery-options">
+                    <label class="delivery-option active">
+                        <input type="radio" name="delivery" value="pickup" checked>
+                        <span class="do-icon">🏪</span>
+                        <span class="do-text">
+                            <strong>Retirar na Loja</strong>
+                            <small>Grátis - pronto em 15min</small>
+                        </span>
+                    </label>
+                    <label class="delivery-option">
+                        <input type="radio" name="delivery" value="delivery">
+                        <span class="do-icon">🛵</span>
+                        <span class="do-text">
+                            <strong>Delivery</strong>
+                            <small>Taxa a partir de R$ 5,00</small>
+                        </span>
+                    </label>
+                </div>
+                <div class="delivery-address" id="deliveryAddress" style="display:none">
+                    <div class="form-group">
+                        <label>CEP</label>
+                        <input type="text" id="checkoutCep" placeholder="00000-000">
+                    </div>
+                    <div class="form-group">
+                        <label>Endereço</label>
+                        <input type="text" id="checkoutAddress" placeholder="Rua, número">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Complemento</label>
+                            <input type="text" id="checkoutComplement" placeholder="Apto, bloco...">
+                        </div>
+                        <div class="form-group">
+                            <label>Bairro</label>
+                            <input type="text" id="checkoutNeighborhood" placeholder="Bairro">
+                        </div>
+                    </div>
+                </div>
+                <div class="checkout-nav">
+                    <button class="btn-secondary" onclick="nextCheckoutStep(1)">← Voltar</button>
+                    <button class="btn-primary" onclick="nextCheckoutStep(3)">Continuar →</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Payment -->
+            <div class="checkout-panel" id="checkoutStep3">
+                <h3>Pagamento</h3>
+                <div class="payment-options">
+                    <label class="payment-option active">
+                        <input type="radio" name="payment" value="pix" checked>
+                        <span class="po-icon">📱</span>
+                        <strong>PIX</strong>
+                        <small>Aprovação instantânea</small>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="payment" value="credit">
+                        <span class="po-icon">💳</span>
+                        <strong>Cartão de Crédito</strong>
+                        <small>Até 3x sem juros</small>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="payment" value="debit">
+                        <span class="po-icon">💳</span>
+                        <strong>Cartão de Débito</strong>
+                        <small>Pagamento na entrega</small>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="payment" value="cash">
+                        <span class="po-icon">💵</span>
+                        <strong>Dinheiro</strong>
+                        <small>Pagamento na entrega</small>
+                    </label>
+                </div>
+                <div class="order-summary">
+                    <h4>Resumo do Pedido</h4>
+                    <div class="summary-items" id="summaryItems"></div>
+                    <div class="summary-line">
+                        <span>Subtotal</span>
+                        <span id="summarySubtotal">R$ 0,00</span>
+                    </div>
+                    <div class="summary-line">
+                        <span>Entrega</span>
+                        <span id="summaryDelivery">Grátis</span>
+                    </div>
+                    <div class="summary-line total">
+                        <span>Total</span>
+                        <span id="summaryTotal">R$ 0,00</span>
+                    </div>
+                </div>
+                <div class="checkout-nav">
+                    <button class="btn-secondary" onclick="nextCheckoutStep(2)">← Voltar</button>
+                    <button class="btn-primary btn-full" onclick="placeOrder()">Confirmar Pedido 🎉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Franchise Form Modal -->
+    <div class="modal-overlay" id="franchiseModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeFranchiseForm()">&times;</button>
+            <h2>🏪 Quero ser Franqueado</h2>
+            <p class="modal-desc">Preencha o formulário e nossa equipe entrará em contato em até 24h!</p>
+            <form id="franchiseForm">
+                <input type="hidden" id="franchiseModel" value="">
+                <div class="form-group">
+                    <label>Nome Completo *</label>
+                    <input type="text" id="franchiseName" required placeholder="Seu nome completo">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>E-mail *</label>
+                        <input type="email" id="franchiseEmail" required placeholder="seu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone *</label>
+                        <input type="tel" id="franchisePhone" required placeholder="(11) 99999-9999">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cidade *</label>
+                        <input type="text" id="franchiseCity" required placeholder="Sua cidade">
+                    </div>
+                    <div class="form-group">
+                        <label>Estado *</label>
+                        <select id="franchiseState" required>
+                            <option value="">Selecione...</option>
+                            <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+                            <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+                            <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
+                            <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+                            <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+                            <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+                            <option>SP</option><option>SE</option><option>TO</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Capital disponível para investimento *</label>
+                    <select id="franchiseCapital" required>
+                        <option value="">Selecione...</option>
+                        <option>Até R$ 100.000</option>
+                        <option>R$ 100.000 a R$ 200.000</option>
+                        <option>R$ 200.000 a R$ 300.000</option>
+                        <option>Acima de R$ 300.000</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Experiência com franquias?</label>
+                    <select id="franchiseExperience">
+                        <option value="">Selecione...</option>
+                        <option>Primeira franquia</option>
+                        <option>Já tive/tenho franquia</option>
+                        <option>Tenho experiência em alimentação</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mensagem adicional</label>
+                    <textarea id="franchiseMsg" rows="3" placeholder="Conte-nos mais sobre você..."></textarea>
+                </div>
+                <button type="submit" class="btn-primary btn-full">Enviar Candidatura 🚀</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Success Modal -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-content success-modal">
+            <div class="success-animation">
+                <div class="success-circle">
+                    <span>🎉</span>
+                </div>
+            </div>
+            <h2>Pedido Confirmado!</h2>
+            <p>Seu pedido <strong id="orderNumber">#MP0001</strong> foi recebido com sucesso!</p>
+            <div class="success-details" id="successDetails"></div>
+            <button class="btn-primary btn-full" onclick="closeSuccessModal()">Voltar ao Início</button>
+        </div>
+    </div>
+
+    <!-- WhatsApp Float -->
+    <a href="https://wa.me/5511999999999" class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp">
+        <span>💬</span>
+    </a>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/checkout.js"></script>
+</body>
+</html>
