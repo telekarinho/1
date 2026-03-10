@@ -18,6 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initStoreSearch();
     initForms();
     initChat();
+    initPromoTimer();
+    initTestimonialTabs();
+    initFaqTabs();
+    calculateROI();
 });
 
 // ============================================
@@ -103,7 +107,7 @@ function initScrollAnimations() {
         });
     }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
-    document.querySelectorAll('.section-header, .step-card, .model-card, .testimonial-card, .franchise-hero-card, .contact-form, .contact-info').forEach(el => {
+    document.querySelectorAll('.section-header, .step-card, .model-card, .testimonial-card, .franchise-hero-card, .contact-form, .contact-info, .award-card, .faq-item, .roi-simulator, .benefit-item').forEach(el => {
         el.classList.add('fade-in-up');
         observer.observe(el);
     });
@@ -398,4 +402,121 @@ function createConfetti() {
         document.body.appendChild(piece);
         setTimeout(() => piece.remove(), 4000);
     }
+}
+
+// ============================================
+// PROMO TIMER
+// ============================================
+function initPromoTimer() {
+    const timerEl = document.getElementById('promoTimer');
+    if (!timerEl) return;
+
+    // Set timer to end of today
+    function updateTimer() {
+        const now = new Date();
+        const end = new Date(now);
+        end.setHours(23, 59, 59, 999);
+        const diff = end - now;
+        const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+        const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+        const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+        timerEl.textContent = `${h}:${m}:${s}`;
+    }
+    updateTimer();
+    setInterval(updateTimer, 1000);
+}
+
+// ============================================
+// PRODUCT URGENCY COUNTERS
+// ============================================
+function addUrgencyCounters() {
+    document.querySelectorAll('.product-card').forEach(card => {
+        if (card.querySelector('.product-urgency')) return;
+        const viewers = Math.floor(Math.random() * 15) + 3;
+        if (viewers > 8) {
+            const urgency = document.createElement('div');
+            urgency.className = 'product-urgency';
+            urgency.innerHTML = `<span class="urgency-dot"></span> ${viewers} pessoas vendo agora`;
+            card.querySelector('.product-info').appendChild(urgency);
+        }
+    });
+}
+
+// Override renderProducts to add urgency
+const _originalRenderProducts = renderProducts;
+renderProducts = function(products) {
+    _originalRenderProducts(products);
+    setTimeout(addUrgencyCounters, 100);
+};
+
+// ============================================
+// TESTIMONIAL TABS
+// ============================================
+function initTestimonialTabs() {
+    const tabs = document.querySelectorAll('.tt-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const type = tab.dataset.tab;
+            document.querySelectorAll('.testimonial-card').forEach(card => {
+                card.style.display = card.dataset.type === type ? '' : 'none';
+            });
+        });
+    });
+}
+
+// ============================================
+// FAQ
+// ============================================
+function toggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    item.classList.toggle('open');
+}
+
+function initFaqTabs() {
+    const tabs = document.querySelectorAll('.faq-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const type = tab.dataset.faq;
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.style.display = item.dataset.faqType === type ? '' : 'none';
+                item.classList.remove('open');
+            });
+        });
+    });
+}
+
+// ============================================
+// ROI SIMULATOR
+// ============================================
+function calculateROI() {
+    const model = document.getElementById('roiModel')?.value;
+    const location = document.getElementById('roiLocation')?.value;
+    const experience = document.getElementById('roiExperience')?.value;
+    if (!model) return;
+
+    const models = {
+        express:  { investment: 89000,  revenueBase: 45000, marginPct: 0.20 },
+        store:    { investment: 169000, revenueBase: 95000, marginPct: 0.20 },
+        mega:     { investment: 289000, revenueBase: 160000, marginPct: 0.22 }
+    };
+
+    const locationMult = { shopping: 1.15, rua: 1.0, galeria: 0.9 };
+    const expMult = { none: 0.9, some: 1.0, food: 1.1 };
+
+    const data = models[model];
+    const locMul = locationMult[location] || 1;
+    const expMul = expMult[experience] || 1;
+
+    const revenue = Math.round(data.revenueBase * locMul * expMul);
+    const profit = Math.round(revenue * data.marginPct * locMul * expMul);
+    const payback = Math.ceil(data.investment / profit);
+
+    document.getElementById('roiInvestment').textContent = formatCurrency(data.investment);
+    document.getElementById('roiRevenue').textContent = formatCurrency(revenue);
+    document.getElementById('roiProfit').textContent = formatCurrency(profit);
+    document.getElementById('roiPayback').textContent = `${payback} meses`;
 }

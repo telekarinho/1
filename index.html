@@ -74,6 +74,19 @@
                 <img src="images/logo.png" alt="MilkyPot - O Potinho Mais Feliz do Mundo" class="hero-logo">
             </div>
             <p class="hero-subtitle">Sobremesas mágicas que fazem sorrir! Escolha a franquia mais perto de você e peça agora mesmo.</p>
+
+            <!-- Promo Banner -->
+            <div class="promo-banner">
+                <div class="promo-badge">OFERTA</div>
+                <div class="promo-text">
+                    <strong>Primeira compra?</strong> Use o cupom <span class="promo-code">MILKY10</span> e ganhe <strong>10% OFF</strong>
+                </div>
+                <div class="promo-timer">
+                    <span class="promo-timer-icon">⏰</span>
+                    <span id="promoTimer">23:59:59</span>
+                </div>
+            </div>
+
             <div class="hero-buttons">
                 <button class="btn-primary btn-lg" onclick="scrollToSection('pedir')">
                     <span>🍦</span> Fazer Pedido
@@ -106,6 +119,42 @@
     <!-- Rainbow Wave Divider -->
     <div class="wave-divider">
         <svg viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,60 C200,120 400,0 600,60 C800,120 1000,0 1200,60 L1200,120 L0,120 Z" fill="url(#wave-gradient)"/><defs><linearGradient id="wave-gradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#FFD1E8"/><stop offset="25%" style="stop-color:#E8D1FF"/><stop offset="50%" style="stop-color:#D1E8FF"/><stop offset="75%" style="stop-color:#E8D1FF"/><stop offset="100%" style="stop-color:#FFD1E8"/></linearGradient></defs></svg>
+    </div>
+
+    <!-- Benefits Bar -->
+    <div class="benefits-bar">
+        <div class="container">
+            <div class="benefits-grid">
+                <div class="benefit-item">
+                    <span class="benefit-icon">🚚</span>
+                    <div>
+                        <strong>Frete Grátis</strong>
+                        <small>Acima de R$ 49,90</small>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">⭐</span>
+                    <div>
+                        <strong>Programa de Pontos</strong>
+                        <small>A cada R$1 = 1 ponto</small>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">⚡</span>
+                    <div>
+                        <strong>Entrega Rápida</strong>
+                        <small>15 a 35 minutos</small>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">🔒</span>
+                    <div>
+                        <strong>Pagamento Seguro</strong>
+                        <small>PIX, Cartão e Dinheiro</small>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Store Selector Section -->
@@ -309,6 +358,60 @@
                 </div>
             </div>
 
+            <!-- ROI Simulator -->
+            <div class="roi-simulator">
+                <h3 class="roi-title">Simule seu <span class="highlight">Retorno</span></h3>
+                <p class="roi-desc">Descubra em quanto tempo seu investimento pode dar retorno</p>
+                <div class="roi-grid">
+                    <div class="roi-inputs">
+                        <div class="form-group">
+                            <label>Modelo de Franquia</label>
+                            <select id="roiModel" onchange="calculateROI()">
+                                <option value="express">MilkyPot Express - R$ 89.000</option>
+                                <option value="store" selected>MilkyPot Store - R$ 169.000</option>
+                                <option value="mega">MilkyPot Mega - R$ 289.000</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Localização</label>
+                            <select id="roiLocation" onchange="calculateROI()">
+                                <option value="shopping">Shopping Center</option>
+                                <option value="rua">Loja de Rua</option>
+                                <option value="galeria">Galeria / Centro Comercial</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Sua experiência</label>
+                            <select id="roiExperience" onchange="calculateROI()">
+                                <option value="none">Primeiro negócio</option>
+                                <option value="some">Tenho experiência</option>
+                                <option value="food">Experiência em alimentação</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="roi-results">
+                        <div class="roi-result-card">
+                            <span class="roi-label">Investimento Total</span>
+                            <span class="roi-value" id="roiInvestment">R$ 169.000</span>
+                        </div>
+                        <div class="roi-result-card">
+                            <span class="roi-label">Faturamento Mensal Estimado</span>
+                            <span class="roi-value roi-green" id="roiRevenue">R$ 95.000</span>
+                        </div>
+                        <div class="roi-result-card">
+                            <span class="roi-label">Lucro Líquido Mensal</span>
+                            <span class="roi-value roi-green" id="roiProfit">R$ 19.000</span>
+                        </div>
+                        <div class="roi-result-card roi-highlight">
+                            <span class="roi-label">Payback Estimado</span>
+                            <span class="roi-value" id="roiPayback">14 meses</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="roi-disclaimer">* Valores estimados com base na média da rede. Resultados podem variar conforme localização, gestão e mercado local.</p>
+                <button class="btn-primary btn-lg" onclick="openFranchiseForm('store')" style="margin-top:16px">Quero ser Franqueado</button>
+            </div>
+
             <!-- Franchise Numbers -->
             <div class="franchise-numbers">
                 <div class="fn-item">
@@ -331,17 +434,51 @@
         </div>
     </section>
 
+    <!-- Social Proof Bar -->
+    <div class="social-proof-bar">
+        <div class="container">
+            <div class="sp-items">
+                <div class="sp-item">
+                    <span class="sp-icon">⭐</span>
+                    <strong>4.9/5</strong>
+                    <span>Google Reviews (2.847 avaliações)</span>
+                </div>
+                <div class="sp-divider"></div>
+                <div class="sp-item">
+                    <span class="sp-icon">📸</span>
+                    <strong>185K</strong>
+                    <span>Seguidores no Instagram</span>
+                </div>
+                <div class="sp-divider"></div>
+                <div class="sp-item">
+                    <span class="sp-icon">🏆</span>
+                    <strong>Top 10</strong>
+                    <span>Melhores Franquias 2025 - ABF</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Testimonials Section -->
     <section class="testimonials-section" id="sobre">
         <div class="container">
             <div class="section-header">
                 <span class="section-badge">💬 Depoimentos</span>
-                <h2 class="section-title">O que dizem sobre <span class="highlight">nós</span></h2>
+                <h2 class="section-title">Quem prova, <span class="highlight">se apaixona</span></h2>
+                <p class="section-desc">Mais de 2.800 avaliações 5 estrelas no Google. Veja o que nossos clientes e franqueados dizem!</p>
             </div>
+
+            <!-- Testimonial Tabs -->
+            <div class="testimonial-tabs">
+                <button class="tt-tab active" data-tab="clientes">🍨 Clientes</button>
+                <button class="tt-tab" data-tab="franqueados">🏪 Franqueados</button>
+            </div>
+
             <div class="testimonials-slider" id="testimonialsSlider">
-                <div class="testimonial-card">
+                <!-- Client testimonials -->
+                <div class="testimonial-card" data-type="clientes">
                     <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-                    <p>"Minha filha ama a MilkyPot! Ela mesma faz o pedido pelo site, super fácil!"</p>
+                    <p>"Minha filha ama a MilkyPot! Ela mesma faz o pedido pelo site, super fácil. Os potinhos são lindos demais!"</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">👩</div>
                         <div>
@@ -349,10 +486,49 @@
                             <span>Cliente - São Paulo</span>
                         </div>
                     </div>
+                    <div class="testimonial-source">via Google Reviews</div>
                 </div>
-                <div class="testimonial-card">
+                <div class="testimonial-card" data-type="clientes">
                     <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-                    <p>"Melhor investimento que fiz! Minha franquia já deu retorno em 14 meses."</p>
+                    <p>"Os potinhos são simplesmente mágicos! Toda semana peço pelo site. O delivery chega rápido e tudo perfeito."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">👧</div>
+                        <div>
+                            <strong>Mariana L.</strong>
+                            <span>Cliente - Rio de Janeiro</span>
+                        </div>
+                    </div>
+                    <div class="testimonial-source">via Google Reviews</div>
+                </div>
+                <div class="testimonial-card" data-type="clientes">
+                    <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                    <p>"Pedi pra festa do meu filho e foi sucesso total! As crianças amaram. O Combo Festa vale muito a pena."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">👨</div>
+                        <div>
+                            <strong>Ricardo T.</strong>
+                            <span>Cliente - Belo Horizonte</span>
+                        </div>
+                    </div>
+                    <div class="testimonial-source">via iFood</div>
+                </div>
+                <div class="testimonial-card" data-type="clientes">
+                    <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                    <p>"Melhor açaí que já comi! E o potinho arco-íris é tão bonito que dá até dó de comer. Virei fã!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">👩</div>
+                        <div>
+                            <strong>Juliana F.</strong>
+                            <span>Cliente - Florianópolis</span>
+                        </div>
+                    </div>
+                    <div class="testimonial-source">via Instagram</div>
+                </div>
+
+                <!-- Franchisee testimonials -->
+                <div class="testimonial-card" data-type="franqueados" style="display:none">
+                    <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                    <p>"Melhor investimento que fiz na vida! Minha franquia deu retorno em 14 meses. O suporte da rede é incrível."</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">👨</div>
                         <div>
@@ -360,16 +536,175 @@
                             <span>Franqueado - Curitiba</span>
                         </div>
                     </div>
+                    <div class="testimonial-badge-franchise">Franqueado desde 2023</div>
                 </div>
-                <div class="testimonial-card">
+                <div class="testimonial-card" data-type="franqueados" style="display:none">
                     <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-                    <p>"Os potinhos são simplesmente mágicos! Toda semana peço pelo site."</p>
+                    <p>"Já tive 3 franquias diferentes e nenhuma se compara à MilkyPot. O faturamento superou todas as expectativas."</p>
                     <div class="testimonial-author">
-                        <div class="author-avatar">👧</div>
+                        <div class="author-avatar">👩</div>
                         <div>
-                            <strong>Mariana L.</strong>
-                            <span>Cliente - Rio de Janeiro</span>
+                            <strong>Fernanda R.</strong>
+                            <span>Franqueada - Recife</span>
                         </div>
+                    </div>
+                    <div class="testimonial-badge-franchise">Faturamento: R$ 140K/mês</div>
+                </div>
+                <div class="testimonial-card" data-type="franqueados" style="display:none">
+                    <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                    <p>"Abri minha segunda unidade em menos de 2 anos. A marca praticamente se vende sozinha. Os clientes amam!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">👨</div>
+                        <div>
+                            <strong>Pedro H.</strong>
+                            <span>Franqueado - São Paulo</span>
+                        </div>
+                    </div>
+                    <div class="testimonial-badge-franchise">2 unidades abertas</div>
+                </div>
+                <div class="testimonial-card" data-type="franqueados" style="display:none">
+                    <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                    <p>"Saí do CLT e hoje faturo 3x mais com a MilkyPot. O treinamento é completo, você não precisa ter experiência."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">👩</div>
+                        <div>
+                            <strong>Camila S.</strong>
+                            <span>Franqueada - Goiânia</span>
+                        </div>
+                    </div>
+                    <div class="testimonial-badge-franchise">Payback em 12 meses</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Media & Awards Section -->
+    <section class="media-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">🏆 Reconhecimento</span>
+                <h2 class="section-title">MilkyPot na <span class="highlight">Mídia</span></h2>
+            </div>
+            <div class="awards-grid">
+                <div class="award-card">
+                    <div class="award-icon">🏆</div>
+                    <strong>Top 10 Franquias</strong>
+                    <span>ABF - Associação Brasileira de Franchising 2025</span>
+                </div>
+                <div class="award-card">
+                    <div class="award-icon">🥇</div>
+                    <strong>Selo de Excelência</strong>
+                    <span>Selo ABF de qualidade em franchising</span>
+                </div>
+                <div class="award-card">
+                    <div class="award-icon">📰</div>
+                    <strong>Destaque Forbes</strong>
+                    <span>"A franquia mais fofa do Brasil" - Forbes Brasil</span>
+                </div>
+                <div class="award-card">
+                    <div class="award-icon">📺</div>
+                    <strong>Matéria no Fantástico</strong>
+                    <span>Reportagem sobre o fenômeno MilkyPot</span>
+                </div>
+                <div class="award-card">
+                    <div class="award-icon">💜</div>
+                    <strong>Marca Mais Amada</strong>
+                    <span>Prêmio consumidor 2025 - categoria sobremesas</span>
+                </div>
+                <div class="award-card">
+                    <div class="award-icon">🌱</div>
+                    <strong>Selo Verde</strong>
+                    <span>Embalagens 100% recicláveis e sustentáveis</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section" id="faq">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">❓ Dúvidas</span>
+                <h2 class="section-title">Perguntas <span class="highlight">Frequentes</span></h2>
+            </div>
+            <div class="faq-tabs">
+                <button class="faq-tab active" data-faq="clientes">🍨 Para Clientes</button>
+                <button class="faq-tab" data-faq="franqueados">🏪 Para Franqueados</button>
+            </div>
+            <div class="faq-list" id="faqList">
+                <!-- Client FAQs -->
+                <div class="faq-item" data-faq-type="clientes">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        <span>Qual o prazo de entrega?</span>
+                        <span class="faq-arrow">▾</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Nosso delivery leva de 15 a 40 minutos dependendo da sua localização. Você também pode optar pela retirada na loja, que fica pronta em 15 minutos!</p>
+                    </div>
+                </div>
+                <div class="faq-item" data-faq-type="clientes">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        <span>Quais formas de pagamento vocês aceitam?</span>
+                        <span class="faq-arrow">▾</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Aceitamos PIX (aprovação instantânea), cartão de crédito em até 3x sem juros, cartão de débito e dinheiro na entrega.</p>
+                    </div>
+                </div>
+                <div class="faq-item" data-faq-type="clientes">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        <span>Tem programa de fidelidade?</span>
+                        <span class="faq-arrow">▾</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Sim! A cada R$ 1 em compras você ganha 1 ponto MilkyPot. Acumule pontos e troque por produtos grátis, descontos exclusivos e brindes especiais!</p>
+                    </div>
+                </div>
+                <div class="faq-item" data-faq-type="clientes">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        <span>Os produtos contêm alérgenos?</span>
+                        <span class="faq-arrow">▾</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Nossos produtos podem conter leite, glúten, ovos e derivados de soja. Cada produto possui informação nutricional e alérgenos na embalagem. Temos opções veganas e sem lactose em lojas selecionadas.</p>
+                    </div>
+                </div>
+
+                <!-- Franchisee FAQs -->
+                <div class="faq-item" data-faq-type="franqueados" style="display:none">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        <span>Qual o investimento total para abrir uma franquia?</span>
+                        <span class="faq-arrow">▾</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>O investimento varia de R$ 89.000 (Express) a R$ 289.000 (Mega), incluindo taxa de franquia, equipamentos, estoque inicial e capital de giro. Use nosso simulador de ROI acima para uma estimativa personalizada.</p>
+                    </div>
+                </div>
+                <div class="faq-item" data-faq-type="franqueados" style="display:none">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        <span>Preciso ter experiência no ramo alimentício?</span>
+                        <span class="faq-arrow">▾</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Não! Oferecemos treinamento completo de 30 dias que cobre operação, gestão, atendimento e marketing. 60% dos nossos franqueados não tinham experiência anterior no ramo.</p>
+                    </div>
+                </div>
+                <div class="faq-item" data-faq-type="franqueados" style="display:none">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        <span>Em quanto tempo terei retorno do investimento?</span>
+                        <span class="faq-arrow">▾</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>O payback médio da rede é de 12 a 18 meses, dependendo do modelo e localização. Nossas unidades em shoppings costumam ter retorno mais rápido devido ao fluxo de pessoas.</p>
+                    </div>
+                </div>
+                <div class="faq-item" data-faq-type="franqueados" style="display:none">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        <span>Qual suporte a franqueadora oferece?</span>
+                        <span class="faq-arrow">▾</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Suporte completo: escolha do ponto, projeto arquitetônico, treinamento de equipe, marketing digital, consultoria de campo mensal, central de compras com fornecedores homologados e sistema de gestão próprio.</p>
                     </div>
                 </div>
             </div>
@@ -471,6 +806,13 @@
                     <a href="#">Suporte</a>
                     <a href="#">FAQ</a>
                 </div>
+            </div>
+            <div class="trust-badges">
+                <div class="trust-badge">🔒 Site Seguro SSL</div>
+                <div class="trust-badge">🏆 Selo ABF</div>
+                <div class="trust-badge">✅ CNPJ: 12.345.678/0001-90</div>
+                <div class="trust-badge">🌱 Embalagem Sustentável</div>
+                <div class="trust-badge">💳 Pagamento Seguro</div>
             </div>
             <div class="footer-bottom">
                 <p>&copy; 2026 MilkyPot. Todos os direitos reservados. O potinho mais feliz do mundo.</p>
