@@ -26,18 +26,23 @@ document.addEventListener('DOMContentLoaded', () => {
 function initParticles() {
     const container = document.getElementById('particles');
     if (!container) return;
-    const colors = ['#FFB6D9', '#D4A5FF', '#A5D4FF', '#A5FFD4', '#FFE5A5', '#FFB38A'];
-    for (let i = 0; i < 20; i++) {
+    const colors = ['#F8B4D9', '#D4A5FF', '#B8D8F8', '#C8F0DC', '#FFF0C8', '#F0A0C8', '#E0C0FF'];
+    const shapes = ['50%', '50%', '50%', 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'];
+    for (let i = 0; i < 30; i++) {
         const particle = document.createElement('div');
         particle.className = 'particle';
-        const size = Math.random() * 8 + 4;
+        const size = Math.random() * 10 + 4;
+        const shape = shapes[Math.floor(Math.random() * shapes.length)];
         particle.style.cssText = `
             width: ${size}px;
             height: ${size}px;
             background: ${colors[Math.floor(Math.random() * colors.length)]};
             left: ${Math.random() * 100}%;
-            animation-duration: ${Math.random() * 15 + 10}s;
-            animation-delay: ${Math.random() * 10}s;
+            animation-duration: ${Math.random() * 18 + 12}s;
+            animation-delay: ${Math.random() * 12}s;
+            clip-path: ${shape === '50%' ? 'none' : shape};
+            border-radius: ${shape === '50%' ? '50%' : '0'};
+            opacity: ${Math.random() * 0.3 + 0.15};
         `;
         container.appendChild(particle);
     }
