@@ -1,18 +1,21 @@
 /* ============================================
    MilkyPot - Cardápio Online / Ordering Flow
+   FLUXO: BASE → FORMATO → TAMANHO → SABOR → ADICIONAIS → BEBIDAS → RESUMO
    ============================================ */
 
 const CardapioApp = {
-    // State
-    currentStep: 0,      // 0=home, 1=type, 2=flavor, 3=size, 4=extras, 5=summary
-    selectedType: null,
-    selectedFlavor: null,
-    selectedSize: null,
-    selectedExtras: [],   // [{id, name, price, qty}]
+    // Steps: 0=home, 1=base, 2=formato, 3=tamanho, 4=sabor, 5=adicionais, 6=bebidas, 7=resumo
+    currentStep: 0,
+    selectedBase: null,
+    selectedFormato: null,
+    selectedTamanho: null,
+    selectedSabor: null,
+    selectedAdicionais: [],   // [{id, name, price, emoji, qty}]
+    selectedBebidas: [],      // [{id, name, price, emoji, qty}]
+    nomeCliente: '',
     quantity: 1,
     cart: [],
 
-    // DOM refs
     els: {},
 
     init() {
@@ -30,7 +33,6 @@ const CardapioApp = {
             cartTotal:   document.getElementById('menuCartTotal')
         };
 
-        // Load cart from localStorage
         const saved = localStorage.getItem('milkypot_cart');
         if (saved) {
             try { this.cart = JSON.parse(saved); } catch(e) { this.cart = []; }
@@ -42,10 +44,7 @@ const CardapioApp = {
     },
 
     bindEvents() {
-        // Back button
         this.els.backBtn?.addEventListener('click', () => this.goBack());
-
-        // Cart
         this.els.cartBtn?.addEventListener('click', () => this.openCart());
         this.els.cartOverlay?.addEventListener('click', () => this.closeCart());
         this.els.cartClose?.addEventListener('click', () => this.closeCart());
@@ -57,11 +56,17 @@ const CardapioApp = {
     goBack() {
         if (this.currentStep <= 0) return;
         this.currentStep--;
-        if (this.currentStep === 0) this.renderHome();
-        else if (this.currentStep === 1) this.renderFlavors();
-        else if (this.currentStep === 2) this.renderSizes();
-        else if (this.currentStep === 3) this.renderExtras();
-        else if (this.currentStep === 4) this.renderSummary();
+        const renders = [
+            () => this.renderHome(),
+            () => this.renderBases(),
+            () => this.renderFormatos(),
+            () => this.renderTamanhos(),
+            () => this.renderSabores(),
+            () => this.renderAdicionais(),
+            () => this.renderBebidas(),
+            () => this.renderResumo()
+        ];
+        if (renders[this.currentStep]) renders[this.currentStep]();
     },
 
     updateStepBar() {
@@ -81,59 +86,53 @@ const CardapioApp = {
     },
 
     // ============================================
-    // STEP 0: HOME (type selection + highlights)
+    // STEP 0: HOME
     // ============================================
     renderHome() {
         this.currentStep = 0;
-        this.selectedType = null;
-        this.selectedFlavor = null;
-        this.selectedSize = null;
-        this.selectedExtras = [];
-        this.quantity = 1;
+        this.resetSelections();
         this.updateStepBar();
 
-        const types = CARDAPIO_CONFIG.types.filter(t => t.available);
+        const bases = CARDAPIO_CONFIG.bases.filter(b => b.available);
         const highlights = CARDAPIO_CONFIG.highlights;
 
         this.els.main.innerHTML = `
-            <!-- Hero Phrase -->
             <div class="cp-hero-phrase">
                 <div class="cp-mascot">🐑</div>
-                <h2>Escolha seu tipo, escolha seu sabor, escolha seu tamanho</h2>
-                <p class="cp-hero-sub">Monte do seu jeitinho e receba feliz!</p>
+                <h2>Monte seu Milkypot!</h2>
+                <p class="cp-hero-sub">Escolha sua base, formato, sabor e monte do seu jeito.</p>
             </div>
 
-            <!-- Highlights (Destaques) -->
+            <!-- Destaques -->
             <div class="cp-highlights">
-                <h3 class="cp-section-title">🌟 Destaques — Campeões de Venda</h3>
+                <h3 class="cp-section-title">🌟 Top 5 — Mais Pedidos</h3>
                 <div class="cp-highlights-grid">
                     ${highlights.map(h => {
-                        const type = CARDAPIO_CONFIG.types.find(t => t.id === h.typeId);
-                        const flavor = CARDAPIO_CONFIG.flavors[h.typeId]?.find(f => f.id === h.flavorId);
-                        if (!flavor || !type) return '';
+                        const sabor = this.findSabor(h.saborId);
+                        if (!sabor) return '';
                         return `
-                            <button class="cp-highlight-card" onclick="CardapioApp.quickSelect('${h.typeId}','${h.flavorId}')">
+                            <button class="cp-highlight-card" onclick="CardapioApp.quickStart('${h.baseId}','${h.saborId}')">
                                 <div class="cp-highlight-badge">${h.label}</div>
-                                <div class="cp-highlight-emoji">${flavor.emoji}</div>
-                                <div class="cp-highlight-name">${flavor.name}</div>
-                                <div class="cp-highlight-desc">${flavor.desc}</div>
-                                ${flavor.badge ? `<span class="cp-badge" style="background:${flavor.badgeColor || '#E87AB0'}">${flavor.badge}</span>` : ''}
+                                <div class="cp-highlight-emoji">${sabor.emoji}</div>
+                                <div class="cp-highlight-name">${sabor.name}</div>
+                                <div class="cp-highlight-desc">${sabor.desc}</div>
                             </button>
                         `;
                     }).join('')}
                 </div>
             </div>
 
-            <!-- Type Selection -->
-            <div class="cp-types-section">
-                <h3 class="cp-section-title">🍦 Escolha o Tipo</h3>
+            <!-- Começar Pedido -->
+            <div class="cp-start-section">
+                <h3 class="cp-section-title">🍦 Comece seu Pedido</h3>
+                <p class="cp-start-desc">Siga o passo a passo e monte seu potinho perfeito!</p>
                 <div class="cp-types-grid">
-                    ${types.map(type => `
-                        <button class="cp-type-card" onclick="CardapioApp.selectType('${type.id}')"
-                                style="--type-color:${type.color};--type-gradient:${type.gradient}">
-                            <div class="cp-type-emoji">${type.emoji}</div>
-                            <div class="cp-type-name">${type.name}</div>
-                            <div class="cp-type-desc">${type.shortDesc}</div>
+                    ${bases.map(base => `
+                        <button class="cp-type-card" onclick="CardapioApp.selectBase('${base.id}')"
+                                style="--type-color:${base.color};--type-gradient:${base.gradient}">
+                            <div class="cp-type-emoji">${base.emoji}</div>
+                            <div class="cp-type-name">${base.name}</div>
+                            <div class="cp-type-desc">${base.desc}</div>
                         </button>
                     `).join('')}
                 </div>
@@ -143,122 +142,78 @@ const CardapioApp = {
             <div class="cp-how-it-works">
                 <h3 class="cp-section-title">📋 Como Funciona</h3>
                 <div class="cp-steps-mini">
-                    <div class="cp-step-mini">
-                        <span class="cp-step-mini-num">1</span>
-                        <span class="cp-step-mini-icon">🍦</span>
-                        <span>Escolha o tipo</span>
-                    </div>
+                    <div class="cp-step-mini"><span class="cp-step-mini-num">1</span><span>Base</span></div>
                     <div class="cp-step-mini-arrow">→</div>
-                    <div class="cp-step-mini">
-                        <span class="cp-step-mini-num">2</span>
-                        <span class="cp-step-mini-icon">😋</span>
-                        <span>Escolha o sabor</span>
-                    </div>
+                    <div class="cp-step-mini"><span class="cp-step-mini-num">2</span><span>Formato</span></div>
                     <div class="cp-step-mini-arrow">→</div>
-                    <div class="cp-step-mini">
-                        <span class="cp-step-mini-num">3</span>
-                        <span class="cp-step-mini-icon">🎉</span>
-                        <span>Receba feliz!</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Combine do Seu Jeito -->
-            <div class="cp-combine-section">
-                <h3 class="cp-section-title">✨ Combine do Seu Jeito</h3>
-                <p class="cp-combine-desc">Adicione extras e bordas para deixar seu pedido ainda mais gostoso!</p>
-                <div class="cp-combine-grid">
-                    ${Object.values(CARDAPIO_CONFIG.extras).slice(0, 4).map(cat =>
-                        cat.items.filter(i => i.available).map(item => `
-                            <div class="cp-combine-item">
-                                <span class="cp-combine-emoji">${item.emoji}</span>
-                                <span class="cp-combine-name">${item.name}</span>
-                                <span class="cp-combine-price">+${this.formatPrice(item.price)}</span>
-                            </div>
-                        `).join('')
-                    ).join('')}
+                    <div class="cp-step-mini"><span class="cp-step-mini-num">3</span><span>Tamanho</span></div>
+                    <div class="cp-step-mini-arrow">→</div>
+                    <div class="cp-step-mini"><span class="cp-step-mini-num">4</span><span>Sabor</span></div>
+                    <div class="cp-step-mini-arrow">→</div>
+                    <div class="cp-step-mini"><span class="cp-step-mini-num">5</span><span>Adicionais</span></div>
+                    <div class="cp-step-mini-arrow">→</div>
+                    <div class="cp-step-mini"><span class="cp-step-mini-num">6</span><span>Confirmar</span></div>
                 </div>
             </div>
         `;
     },
 
+    resetSelections() {
+        this.selectedBase = null;
+        this.selectedFormato = null;
+        this.selectedTamanho = null;
+        this.selectedSabor = null;
+        this.selectedAdicionais = [];
+        this.selectedBebidas = [];
+        this.nomeCliente = '';
+        this.quantity = 1;
+    },
+
+    findSabor(saborId) {
+        for (const cat of Object.values(CARDAPIO_CONFIG.sabores)) {
+            const found = cat.items.find(s => s.id === saborId);
+            if (found) return found;
+        }
+        return null;
+    },
+
+    quickStart(baseId, saborId) {
+        this.selectedBase = CARDAPIO_CONFIG.bases.find(b => b.id === baseId);
+        this.selectedSabor = this.findSabor(saborId);
+        if (!this.selectedBase || !this.selectedSabor) return;
+        // Skip to formato selection
+        this.currentStep = 2;
+        this.renderFormatos();
+        this.scrollToTop();
+    },
+
     // ============================================
-    // STEP 1: SELECT TYPE → SHOW FLAVORS
+    // STEP 1: ESCOLHER BASE
     // ============================================
-    selectType(typeId) {
-        this.selectedType = CARDAPIO_CONFIG.types.find(t => t.id === typeId);
-        if (!this.selectedType) return;
+    selectBase(baseId) {
+        this.selectedBase = CARDAPIO_CONFIG.bases.find(b => b.id === baseId);
+        if (!this.selectedBase) return;
         this.currentStep = 1;
-        this.renderFlavors();
+        this.renderFormatos();
         this.scrollToTop();
     },
 
-    renderFlavors() {
+    renderBases() {
         this.updateStepBar();
-        const flavors = CARDAPIO_CONFIG.flavors[this.selectedType.id]?.filter(f => f.available) || [];
-
+        const bases = CARDAPIO_CONFIG.bases.filter(b => b.available);
         this.els.main.innerHTML = `
-            <div class="cp-flow-header" style="--type-gradient:${this.selectedType.gradient}">
-                <span class="cp-flow-emoji">${this.selectedType.emoji}</span>
-                <h2>${this.selectedType.name}</h2>
-                <p>${this.selectedType.shortDesc}</p>
+            <div class="cp-flow-header">
+                <span class="cp-flow-emoji">🐑</span>
+                <h2>Escolha sua Base</h2>
+                <p>Qual é a base do seu Milkypot?</p>
             </div>
-            <h3 class="cp-section-title cp-mt">Escolha seu sabor</h3>
-            <div class="cp-flavors-grid">
-                ${flavors.map(flavor => `
-                    <button class="cp-flavor-card" onclick="CardapioApp.selectFlavor('${flavor.id}')">
-                        <div class="cp-flavor-emoji">${flavor.emoji}</div>
-                        ${flavor.badge ? `<span class="cp-badge" style="background:${flavor.badgeColor || '#E87AB0'}">${flavor.badge}</span>` : ''}
-                        <h4 class="cp-flavor-name">${flavor.name}</h4>
-                        <p class="cp-flavor-desc">${flavor.desc}</p>
-                    </button>
-                `).join('')}
-            </div>
-        `;
-    },
-
-    quickSelect(typeId, flavorId) {
-        this.selectedType = CARDAPIO_CONFIG.types.find(t => t.id === typeId);
-        this.selectedFlavor = CARDAPIO_CONFIG.flavors[typeId]?.find(f => f.id === flavorId);
-        if (!this.selectedType || !this.selectedFlavor) return;
-        this.currentStep = 2;
-        this.renderSizes();
-        this.scrollToTop();
-    },
-
-    // ============================================
-    // STEP 2: SELECT FLAVOR → SHOW SIZES
-    // ============================================
-    selectFlavor(flavorId) {
-        this.selectedFlavor = CARDAPIO_CONFIG.flavors[this.selectedType.id]?.find(f => f.id === flavorId);
-        if (!this.selectedFlavor) return;
-        this.currentStep = 2;
-        this.renderSizes();
-        this.scrollToTop();
-    },
-
-    renderSizes() {
-        this.updateStepBar();
-        const sizes = CARDAPIO_CONFIG.sizes[this.selectedType.id]?.filter(s => s.available) || [];
-
-        this.els.main.innerHTML = `
-            <div class="cp-flow-header" style="--type-gradient:${this.selectedType.gradient}">
-                <span class="cp-flow-emoji">${this.selectedFlavor.emoji}</span>
-                <h2>${this.selectedFlavor.name}</h2>
-                <p>${this.selectedType.name} · ${this.selectedFlavor.desc}</p>
-            </div>
-            <h3 class="cp-section-title cp-mt">Escolha o tamanho</h3>
-            <div class="cp-sizes-grid">
-                ${sizes.map((size, i) => `
-                    <button class="cp-size-card ${i === 1 ? 'cp-recommended' : ''}"
-                            onclick="CardapioApp.selectSize('${size.id}')">
-                        ${i === 1 ? '<span class="cp-size-recommended-badge">Recomendado</span>' : ''}
-                        <div class="cp-size-visual">
-                            <div class="cp-size-cup" style="height:${30 + i * 18}px;width:${28 + i * 8}px"></div>
-                        </div>
-                        <div class="cp-size-name">${size.name}</div>
-                        <div class="cp-size-ml">${size.ml}ml</div>
-                        <div class="cp-size-price">${this.formatPrice(size.price)}</div>
+            <div class="cp-types-grid">
+                ${bases.map(base => `
+                    <button class="cp-type-card" onclick="CardapioApp.selectBase('${base.id}')"
+                            style="--type-color:${base.color};--type-gradient:${base.gradient}">
+                        <div class="cp-type-emoji">${base.emoji}</div>
+                        <div class="cp-type-name">${base.name}</div>
+                        <div class="cp-type-desc">${base.desc}</div>
                     </button>
                 `).join('')}
             </div>
@@ -266,41 +221,168 @@ const CardapioApp = {
     },
 
     // ============================================
-    // STEP 3: SELECT SIZE → SHOW EXTRAS
+    // STEP 2: ESCOLHER FORMATO
     // ============================================
-    selectSize(sizeId) {
-        this.selectedSize = CARDAPIO_CONFIG.sizes[this.selectedType.id]?.find(s => s.id === sizeId);
-        if (!this.selectedSize) return;
-        this.selectedExtras = [];
+    renderFormatos() {
+        this.currentStep = 2;
+        this.updateStepBar();
+        const formatos = CARDAPIO_CONFIG.formatos.filter(f =>
+            f.available && f.compatibleBases.includes(this.selectedBase.id)
+        );
+
+        this.els.main.innerHTML = `
+            <div class="cp-flow-header" style="--type-gradient:${this.selectedBase.gradient}">
+                <span class="cp-flow-emoji">${this.selectedBase.emoji}</span>
+                <h2>${this.selectedBase.name}</h2>
+                <p>Escolha o formato do seu potinho</p>
+            </div>
+            <h3 class="cp-section-title cp-mt">Formato</h3>
+            <div class="cp-types-grid">
+                ${formatos.map(fmt => `
+                    <button class="cp-type-card cp-formato-card" onclick="CardapioApp.selectFormato('${fmt.id}')">
+                        <div class="cp-type-emoji">${fmt.emoji}</div>
+                        <div class="cp-type-name">${fmt.name}</div>
+                        <div class="cp-type-desc">${fmt.desc}</div>
+                    </button>
+                `).join('')}
+            </div>
+        `;
+    },
+
+    selectFormato(formatoId) {
+        this.selectedFormato = CARDAPIO_CONFIG.formatos.find(f => f.id === formatoId);
+        if (!this.selectedFormato) return;
         this.currentStep = 3;
-        this.renderExtras();
+        this.renderTamanhos();
         this.scrollToTop();
     },
 
-    renderExtras() {
+    // ============================================
+    // STEP 3: ESCOLHER TAMANHO
+    // ============================================
+    renderTamanhos() {
         this.updateStepBar();
-        const extras = CARDAPIO_CONFIG.extras;
+        const tamanhos = CARDAPIO_CONFIG.tamanhos.filter(t => t.available);
 
         this.els.main.innerHTML = `
-            <div class="cp-flow-header cp-flow-header-sm" style="--type-gradient:${this.selectedType.gradient}">
+            <div class="cp-flow-header" style="--type-gradient:${this.selectedBase.gradient}">
                 <div class="cp-flow-summary-line">
-                    <span>${this.selectedFlavor.emoji} ${this.selectedFlavor.name}</span>
+                    <span>${this.selectedBase.emoji} ${this.selectedBase.name}</span>
                     <span>·</span>
-                    <span>${this.selectedType.name}</span>
-                    <span>·</span>
-                    <span>${this.selectedSize.name} (${this.selectedSize.ml}ml)</span>
-                    <span>·</span>
-                    <span class="cp-flow-price">${this.formatPrice(this.selectedSize.price)}</span>
+                    <span>${this.selectedFormato.emoji} ${this.selectedFormato.name}</span>
                 </div>
             </div>
-            <h3 class="cp-section-title cp-mt">Adicione extras <small>(opcional)</small></h3>
+            <h3 class="cp-section-title cp-mt">Escolha o Tamanho</h3>
+            <div class="cp-sizes-grid">
+                ${tamanhos.map((tam, i) => `
+                    <button class="cp-size-card ${i === 2 ? 'cp-recommended' : ''}"
+                            onclick="CardapioApp.selectTamanho('${tam.id}')">
+                        ${i === 2 ? '<span class="cp-size-recommended-badge">Mais Pedido</span>' : ''}
+                        <div class="cp-size-visual">
+                            <div class="cp-size-cup" style="height:${28 + i * 16}px;width:${26 + i * 8}px"></div>
+                        </div>
+                        <div class="cp-size-name">${tam.name}</div>
+                        <div class="cp-size-ml">${tam.ml}ml</div>
+                        <div class="cp-size-price">${this.formatPrice(tam.price)}</div>
+                    </button>
+                `).join('')}
+            </div>
+        `;
+    },
+
+    selectTamanho(tamanhoId) {
+        this.selectedTamanho = CARDAPIO_CONFIG.tamanhos.find(t => t.id === tamanhoId);
+        if (!this.selectedTamanho) return;
+        // If sabor already selected (quickStart), skip to adicionais
+        if (this.selectedSabor) {
+            this.currentStep = 5;
+            this.renderAdicionais();
+        } else {
+            this.currentStep = 4;
+            this.renderSabores();
+        }
+        this.scrollToTop();
+    },
+
+    // ============================================
+    // STEP 4: ESCOLHER SABOR
+    // ============================================
+    renderSabores() {
+        this.updateStepBar();
+        const baseId = this.selectedBase.id;
+
+        // Filter sabor categories compatible with the base
+        const categorias = Object.entries(CARDAPIO_CONFIG.sabores)
+            .filter(([, cat]) => cat.compatibleBases.includes(baseId))
+            .map(([catId, cat]) => ({ catId, ...cat }));
+
+        this.els.main.innerHTML = `
+            <div class="cp-flow-header cp-flow-header-sm" style="--type-gradient:${this.selectedBase.gradient}">
+                <div class="cp-flow-summary-line">
+                    <span>${this.selectedBase.emoji} ${this.selectedBase.name}</span>
+                    <span>·</span>
+                    <span>${this.selectedFormato.emoji} ${this.selectedFormato.name}</span>
+                    <span>·</span>
+                    <span>${this.selectedTamanho.name} (${this.selectedTamanho.ml}ml)</span>
+                    <span>·</span>
+                    <span class="cp-flow-price">${this.formatPrice(this.selectedTamanho.price)}</span>
+                </div>
+            </div>
+            <h3 class="cp-section-title cp-mt">Escolha o Sabor</h3>
+            ${categorias.map(cat => `
+                <div class="cp-sabor-category">
+                    <h4 class="cp-sabor-cat-title">${cat.emoji} ${cat.name}</h4>
+                    <div class="cp-flavors-grid">
+                        ${cat.items.filter(s => s.available).map(sabor => `
+                            <button class="cp-flavor-card" onclick="CardapioApp.selectSabor('${sabor.id}')">
+                                <div class="cp-flavor-emoji">${sabor.emoji}</div>
+                                ${sabor.highlight ? '<span class="cp-badge">Top 5</span>' : ''}
+                                <h4 class="cp-flavor-name">${sabor.name}</h4>
+                                <p class="cp-flavor-desc">${sabor.desc}</p>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('')}
+        `;
+    },
+
+    selectSabor(saborId) {
+        this.selectedSabor = this.findSabor(saborId);
+        if (!this.selectedSabor) return;
+        this.selectedAdicionais = [];
+        this.currentStep = 5;
+        this.renderAdicionais();
+        this.scrollToTop();
+    },
+
+    // ============================================
+    // STEP 5: ADICIONAIS
+    // ============================================
+    renderAdicionais() {
+        this.updateStepBar();
+        const adicionais = CARDAPIO_CONFIG.adicionais;
+
+        this.els.main.innerHTML = `
+            <div class="cp-flow-header cp-flow-header-sm" style="--type-gradient:${this.selectedBase.gradient}">
+                <div class="cp-flow-summary-line">
+                    <span>${this.selectedSabor.emoji} ${this.selectedSabor.name}</span>
+                    <span>·</span>
+                    <span>${this.selectedFormato.name}</span>
+                    <span>·</span>
+                    <span>${this.selectedTamanho.name}</span>
+                    <span>·</span>
+                    <span class="cp-flow-price">${this.formatPrice(this.selectedTamanho.price)}</span>
+                </div>
+            </div>
+            <h3 class="cp-section-title cp-mt">Adicionais <small>(opcional)</small></h3>
             <div class="cp-extras-list">
-                ${Object.entries(extras).map(([catId, cat]) => `
+                ${Object.entries(adicionais).map(([catId, cat]) => `
                     <div class="cp-extras-category">
                         <h4 class="cp-extras-cat-name">${cat.emoji} ${cat.name}</h4>
                         <div class="cp-extras-items">
                             ${cat.items.filter(i => i.available).map(item => {
-                                const inCart = this.selectedExtras.find(e => e.id === item.id);
+                                const inCart = this.selectedAdicionais.find(e => e.id === item.id);
                                 const qty = inCart ? inCart.qty : 0;
                                 return `
                                     <div class="cp-extra-item ${qty > 0 ? 'active' : ''}">
@@ -311,10 +393,10 @@ const CardapioApp = {
                                         </div>
                                         <div class="cp-extra-controls">
                                             ${qty > 0 ? `
-                                                <button class="cp-extra-btn" onclick="CardapioApp.changeExtra('${item.id}', -1)">−</button>
+                                                <button class="cp-extra-btn" onclick="CardapioApp.changeAdicional('${item.id}', -1)">−</button>
                                                 <span class="cp-extra-qty">${qty}</span>
                                             ` : ''}
-                                            <button class="cp-extra-btn cp-extra-add" onclick="CardapioApp.changeExtra('${item.id}', 1)">+</button>
+                                            <button class="cp-extra-btn cp-extra-add" onclick="CardapioApp.changeAdicional('${item.id}', 1)">+</button>
                                         </div>
                                     </div>
                                 `;
@@ -325,94 +407,193 @@ const CardapioApp = {
             </div>
             <div class="cp-extras-footer">
                 <div class="cp-extras-total">
-                    <span>Total extras:</span>
-                    <span id="extrasTotal">${this.formatPrice(this.getExtrasTotal())}</span>
+                    <span>Total adicionais:</span>
+                    <span id="extrasTotal">${this.formatPrice(this.getAdicionaisTotal())}</span>
                 </div>
-                <button class="cp-btn-primary cp-btn-lg" onclick="CardapioApp.goToSummary()">
+                <button class="cp-btn-primary cp-btn-lg" onclick="CardapioApp.goToBebidas()">
                     Continuar →
                 </button>
             </div>
         `;
     },
 
-    changeExtra(extraId, delta) {
-        // Find the extra in config
-        let extraItem = null;
-        for (const cat of Object.values(CARDAPIO_CONFIG.extras)) {
-            extraItem = cat.items.find(i => i.id === extraId);
-            if (extraItem) break;
+    changeAdicional(itemId, delta) {
+        let item = null;
+        for (const cat of Object.values(CARDAPIO_CONFIG.adicionais)) {
+            item = cat.items.find(i => i.id === itemId);
+            if (item) break;
         }
-        if (!extraItem) return;
+        if (!item) return;
 
-        const existing = this.selectedExtras.find(e => e.id === extraId);
+        const existing = this.selectedAdicionais.find(e => e.id === itemId);
         if (existing) {
             existing.qty += delta;
             if (existing.qty <= 0) {
-                this.selectedExtras = this.selectedExtras.filter(e => e.id !== extraId);
+                this.selectedAdicionais = this.selectedAdicionais.filter(e => e.id !== itemId);
             }
         } else if (delta > 0) {
-            this.selectedExtras.push({
-                id: extraItem.id,
-                name: extraItem.name,
-                price: extraItem.price,
-                emoji: extraItem.emoji,
-                qty: 1
-            });
+            this.selectedAdicionais.push({ id: item.id, name: item.name, price: item.price, emoji: item.emoji, qty: 1 });
         }
-        this.renderExtras();
+        this.renderAdicionais();
     },
 
-    getExtrasTotal() {
-        return this.selectedExtras.reduce((sum, e) => sum + e.price * e.qty, 0);
+    getAdicionaisTotal() {
+        return this.selectedAdicionais.reduce((sum, e) => sum + e.price * e.qty, 0);
     },
 
     // ============================================
-    // STEP 4: SUMMARY
+    // STEP 6: BEBIDAS
     // ============================================
-    goToSummary() {
-        this.currentStep = 4;
-        this.renderSummary();
+    goToBebidas() {
+        this.currentStep = 6;
+        this.renderBebidas();
         this.scrollToTop();
     },
 
-    renderSummary() {
+    renderBebidas() {
         this.updateStepBar();
-        const basePrice = this.selectedSize.price;
-        const extrasTotal = this.getExtrasTotal();
-        const unitTotal = basePrice + extrasTotal;
-        const total = unitTotal * this.quantity;
+        const bebidas = CARDAPIO_CONFIG.bebidas.filter(b => b.available);
+
+        this.els.main.innerHTML = `
+            <div class="cp-flow-header cp-flow-header-sm" style="--type-gradient:${this.selectedBase.gradient}">
+                <div class="cp-flow-summary-line">
+                    <span>${this.selectedSabor.emoji} ${this.selectedSabor.name}</span>
+                    <span>·</span>
+                    <span>${this.selectedFormato.name}</span>
+                    <span>·</span>
+                    <span>${this.selectedTamanho.name}</span>
+                </div>
+            </div>
+            <h3 class="cp-section-title cp-mt">Bebidas <small>(opcional)</small></h3>
+            <div class="cp-extras-list">
+                <div class="cp-extras-items">
+                    ${bebidas.map(beb => {
+                        const inCart = this.selectedBebidas.find(e => e.id === beb.id);
+                        const qty = inCart ? inCart.qty : 0;
+                        return `
+                            <div class="cp-extra-item ${qty > 0 ? 'active' : ''}">
+                                <span class="cp-extra-emoji">${beb.emoji}</span>
+                                <div class="cp-extra-info">
+                                    <span class="cp-extra-name">${beb.name}</span>
+                                    <span class="cp-extra-price">${this.formatPrice(beb.price)}</span>
+                                </div>
+                                <div class="cp-extra-controls">
+                                    ${qty > 0 ? `
+                                        <button class="cp-extra-btn" onclick="CardapioApp.changeBebida('${beb.id}', -1)">−</button>
+                                        <span class="cp-extra-qty">${qty}</span>
+                                    ` : ''}
+                                    <button class="cp-extra-btn cp-extra-add" onclick="CardapioApp.changeBebida('${beb.id}', 1)">+</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+            <div class="cp-extras-footer">
+                <div class="cp-extras-total">
+                    <span>Bebidas:</span>
+                    <span>${this.formatPrice(this.getBebidasTotal())}</span>
+                </div>
+                <button class="cp-btn-primary cp-btn-lg" onclick="CardapioApp.goToResumo()">
+                    Ver Resumo →
+                </button>
+            </div>
+        `;
+    },
+
+    changeBebida(bebId, delta) {
+        const beb = CARDAPIO_CONFIG.bebidas.find(b => b.id === bebId);
+        if (!beb) return;
+
+        const existing = this.selectedBebidas.find(e => e.id === bebId);
+        if (existing) {
+            existing.qty += delta;
+            if (existing.qty <= 0) {
+                this.selectedBebidas = this.selectedBebidas.filter(e => e.id !== bebId);
+            }
+        } else if (delta > 0) {
+            this.selectedBebidas.push({ id: beb.id, name: beb.name, price: beb.price, emoji: beb.emoji, qty: 1 });
+        }
+        this.renderBebidas();
+    },
+
+    getBebidasTotal() {
+        return this.selectedBebidas.reduce((sum, b) => sum + b.price * b.qty, 0);
+    },
+
+    // ============================================
+    // STEP 7: RESUMO
+    // ============================================
+    goToResumo() {
+        this.currentStep = 7;
+        this.renderResumo();
+        this.scrollToTop();
+    },
+
+    renderResumo() {
+        this.updateStepBar();
+        const basePrice = this.selectedTamanho.price;
+        const adicionaisTotal = this.getAdicionaisTotal();
+        const bebidasTotal = this.getBebidasTotal();
+        const unitTotal = basePrice + adicionaisTotal;
+        const total = (unitTotal * this.quantity) + bebidasTotal;
 
         this.els.main.innerHTML = `
             <div class="cp-summary">
-                <div class="cp-summary-icon">${this.selectedFlavor.emoji}</div>
+                <div class="cp-summary-icon">${this.selectedSabor.emoji}</div>
                 <h2 class="cp-summary-title">Resumo do Pedido</h2>
+
+                <!-- Nome do Cliente -->
+                <div class="cp-nome-cliente">
+                    <label class="cp-nome-label">🏷️ Nome para o potinho *</label>
+                    <input type="text" class="cp-nome-input" id="nomePotinho"
+                           placeholder="Ex: João" value="${this.nomeCliente}"
+                           oninput="CardapioApp.nomeCliente = this.value"
+                           maxlength="30">
+                    <small class="cp-nome-hint">Aparece no seu pedido e na etiqueta!</small>
+                </div>
 
                 <div class="cp-summary-card">
                     <div class="cp-summary-row">
-                        <span class="cp-summary-label">Tipo</span>
-                        <span class="cp-summary-value">${this.selectedType.emoji} ${this.selectedType.name}</span>
+                        <span class="cp-summary-label">Base</span>
+                        <span class="cp-summary-value">${this.selectedBase.emoji} ${this.selectedBase.name}</span>
                     </div>
                     <div class="cp-summary-row">
-                        <span class="cp-summary-label">Sabor</span>
-                        <span class="cp-summary-value">${this.selectedFlavor.emoji} ${this.selectedFlavor.name}</span>
+                        <span class="cp-summary-label">Formato</span>
+                        <span class="cp-summary-value">${this.selectedFormato.emoji} ${this.selectedFormato.name}</span>
                     </div>
                     <div class="cp-summary-row">
                         <span class="cp-summary-label">Tamanho</span>
-                        <span class="cp-summary-value">${this.selectedSize.name} (${this.selectedSize.ml}ml)</span>
+                        <span class="cp-summary-value">${this.selectedTamanho.name} (${this.selectedTamanho.ml}ml)</span>
+                    </div>
+                    <div class="cp-summary-row">
+                        <span class="cp-summary-label">Sabor</span>
+                        <span class="cp-summary-value">${this.selectedSabor.emoji} ${this.selectedSabor.name}</span>
                     </div>
                     <div class="cp-summary-row">
                         <span class="cp-summary-label">Preço base</span>
                         <span class="cp-summary-value">${this.formatPrice(basePrice)}</span>
                     </div>
-                    ${this.selectedExtras.length > 0 ? `
-                        <div class="cp-summary-extras-title">Extras:</div>
-                        ${this.selectedExtras.map(e => `
+
+                    ${this.selectedAdicionais.length > 0 ? `
+                        <div class="cp-summary-extras-title">Adicionais:</div>
+                        ${this.selectedAdicionais.map(e => `
                             <div class="cp-summary-row cp-summary-extra-row">
                                 <span class="cp-summary-label">${e.emoji} ${e.name} x${e.qty}</span>
                                 <span class="cp-summary-value">+${this.formatPrice(e.price * e.qty)}</span>
                             </div>
                         `).join('')}
-                    ` : '<div class="cp-summary-no-extras">Sem extras adicionados</div>'}
+                    ` : '<div class="cp-summary-no-extras">Sem adicionais</div>'}
+
+                    ${this.selectedBebidas.length > 0 ? `
+                        <div class="cp-summary-extras-title">Bebidas:</div>
+                        ${this.selectedBebidas.map(b => `
+                            <div class="cp-summary-row cp-summary-extra-row">
+                                <span class="cp-summary-label">${b.emoji} ${b.name} x${b.qty}</span>
+                                <span class="cp-summary-value">${this.formatPrice(b.price * b.qty)}</span>
+                            </div>
+                        `).join('')}
+                    ` : ''}
 
                     <div class="cp-summary-divider"></div>
 
@@ -445,9 +626,10 @@ const CardapioApp = {
 
     changeQty(delta) {
         this.quantity = Math.max(1, this.quantity + delta);
-        const basePrice = this.selectedSize.price;
-        const extrasTotal = this.getExtrasTotal();
-        const total = (basePrice + extrasTotal) * this.quantity;
+        const basePrice = this.selectedTamanho.price;
+        const adicionaisTotal = this.getAdicionaisTotal();
+        const bebidasTotal = this.getBebidasTotal();
+        const total = ((basePrice + adicionaisTotal) * this.quantity) + bebidasTotal;
         const qtyEl = document.getElementById('summaryQty');
         const totalEl = document.getElementById('summaryTotalValue');
         if (qtyEl) qtyEl.textContent = this.quantity;
@@ -458,23 +640,33 @@ const CardapioApp = {
     // CART
     // ============================================
     addToMenuCart() {
+        const nome = document.getElementById('nomePotinho')?.value?.trim();
+        if (!nome) {
+            this.showToast('Preencha o nome para o potinho!');
+            document.getElementById('nomePotinho')?.focus();
+            return;
+        }
+        this.nomeCliente = nome;
+
         const item = {
             uid: Date.now() + Math.random(),
-            type: { id: this.selectedType.id, name: this.selectedType.name, emoji: this.selectedType.emoji },
-            flavor: { id: this.selectedFlavor.id, name: this.selectedFlavor.name, emoji: this.selectedFlavor.emoji },
-            size: { id: this.selectedSize.id, name: this.selectedSize.name, ml: this.selectedSize.ml, price: this.selectedSize.price },
-            extras: [...this.selectedExtras],
+            nomeCliente: this.nomeCliente,
+            base: { id: this.selectedBase.id, name: this.selectedBase.name, emoji: this.selectedBase.emoji },
+            formato: { id: this.selectedFormato.id, name: this.selectedFormato.name, emoji: this.selectedFormato.emoji },
+            tamanho: { id: this.selectedTamanho.id, name: this.selectedTamanho.name, ml: this.selectedTamanho.ml, price: this.selectedTamanho.price },
+            sabor: { id: this.selectedSabor.id, name: this.selectedSabor.name, emoji: this.selectedSabor.emoji },
+            adicionais: [...this.selectedAdicionais],
+            bebidas: [...this.selectedBebidas],
             quantity: this.quantity,
-            unitPrice: this.selectedSize.price + this.getExtrasTotal(),
-            totalPrice: (this.selectedSize.price + this.getExtrasTotal()) * this.quantity
+            unitPrice: this.selectedTamanho.price + this.getAdicionaisTotal(),
+            bebidasTotal: this.getBebidasTotal(),
+            totalPrice: ((this.selectedTamanho.price + this.getAdicionaisTotal()) * this.quantity) + this.getBebidasTotal()
         };
 
         this.cart.push(item);
         this.saveCart();
         this.updateCartCount();
-        this.showToast(`${item.flavor.emoji} ${item.flavor.name} adicionado ao carrinho!`);
-
-        // Reset and go home
+        this.showToast(`${item.sabor.emoji} ${item.sabor.name} adicionado! (${item.nomeCliente})`);
         this.renderHome();
         this.openCart();
     },
@@ -490,28 +682,16 @@ const CardapioApp = {
         const item = this.cart.find(i => i.uid === uid);
         if (!item) return;
         item.quantity += delta;
-        if (item.quantity <= 0) {
-            this.removeFromMenuCart(uid);
-            return;
-        }
-        item.totalPrice = item.unitPrice * item.quantity;
+        if (item.quantity <= 0) { this.removeFromMenuCart(uid); return; }
+        item.totalPrice = (item.unitPrice * item.quantity) + item.bebidasTotal;
         this.saveCart();
         this.updateCartCount();
         this.renderCartItems();
     },
 
-    getMenuCartTotal() {
-        return this.cart.reduce((sum, i) => sum + i.totalPrice, 0);
-    },
-
-    getMenuCartCount() {
-        return this.cart.reduce((sum, i) => sum + i.quantity, 0);
-    },
-
-    saveCart() {
-        localStorage.setItem('milkypot_cart', JSON.stringify(this.cart));
-    },
-
+    getMenuCartTotal() { return this.cart.reduce((sum, i) => sum + i.totalPrice, 0); },
+    getMenuCartCount() { return this.cart.reduce((sum, i) => sum + i.quantity, 0); },
+    saveCart() { localStorage.setItem('milkypot_cart', JSON.stringify(this.cart)); },
     updateCartCount() {
         const count = this.getMenuCartCount();
         if (this.els.cartCount) this.els.cartCount.textContent = count;
@@ -532,13 +712,12 @@ const CardapioApp = {
 
     renderCartItems() {
         if (!this.els.cartItems) return;
-
         if (this.cart.length === 0) {
             this.els.cartItems.innerHTML = `
                 <div class="cp-cart-empty">
                     <span>🐑</span>
                     <p>Seu carrinho está vazio</p>
-                    <small>Escolha produtos deliciosos do cardápio!</small>
+                    <small>Monte seu Milkypot e adicione aqui!</small>
                 </div>
             `;
             if (this.els.cartFooter) this.els.cartFooter.style.display = 'none';
@@ -548,16 +727,22 @@ const CardapioApp = {
         this.els.cartItems.innerHTML = this.cart.map(item => `
             <div class="cp-cart-item">
                 <div class="cp-cart-item-header">
-                    <span class="cp-cart-item-emoji">${item.flavor.emoji}</span>
+                    <span class="cp-cart-item-emoji">${item.sabor.emoji}</span>
                     <div class="cp-cart-item-info">
-                        <strong>${item.flavor.name}</strong>
-                        <small>${item.type.name} · ${item.size.name} (${item.size.ml}ml)</small>
+                        <strong>${item.sabor.name}</strong>
+                        <small>${item.formato.name} · ${item.tamanho.name} (${item.tamanho.ml}ml)</small>
+                        <small class="cp-cart-nome">🏷️ ${item.nomeCliente}</small>
                     </div>
                     <button class="cp-cart-item-remove" onclick="CardapioApp.removeFromMenuCart(${item.uid})" aria-label="Remover">✕</button>
                 </div>
-                ${item.extras.length > 0 ? `
+                ${item.adicionais.length > 0 ? `
                     <div class="cp-cart-item-extras">
-                        ${item.extras.map(e => `<span>${e.emoji} ${e.name}${e.qty > 1 ? ` x${e.qty}` : ''}</span>`).join('')}
+                        ${item.adicionais.map(e => `<span>${e.emoji} ${e.name}${e.qty > 1 ? ' x' + e.qty : ''}</span>`).join('')}
+                    </div>
+                ` : ''}
+                ${item.bebidas.length > 0 ? `
+                    <div class="cp-cart-item-extras">
+                        ${item.bebidas.map(b => `<span>${b.emoji} ${b.name}${b.qty > 1 ? ' x' + b.qty : ''}</span>`).join('')}
                     </div>
                 ` : ''}
                 <div class="cp-cart-item-footer">
@@ -576,15 +761,11 @@ const CardapioApp = {
     },
 
     // ============================================
-    // CHECKOUT (redirect to main site checkout or WhatsApp)
+    // CHECKOUT
     // ============================================
     startCheckout() {
-        if (this.cart.length === 0) {
-            this.showToast('Adicione itens ao carrinho primeiro!');
-            return;
-        }
+        if (this.cart.length === 0) { this.showToast('Adicione itens ao carrinho!'); return; }
         this.closeCart();
-        // Show checkout modal
         const modal = document.getElementById('menuCheckoutModal');
         if (modal) {
             modal.classList.add('active');
@@ -595,10 +776,7 @@ const CardapioApp = {
 
     closeCheckoutModal() {
         const modal = document.getElementById('menuCheckoutModal');
-        if (modal) {
-            modal.classList.remove('active');
-            document.body.style.overflow = '';
-        }
+        if (modal) { modal.classList.remove('active'); document.body.style.overflow = ''; }
     },
 
     renderCheckoutSummary() {
@@ -606,8 +784,11 @@ const CardapioApp = {
         if (!el) return;
         el.innerHTML = this.cart.map(item => `
             <div class="cp-checkout-item">
-                <span>${item.flavor.emoji} ${item.flavor.name} (${item.size.name}) x${item.quantity}</span>
-                <span>${this.formatPrice(item.totalPrice)}</span>
+                <div>
+                    <span>${item.sabor.emoji} ${item.sabor.name}</span>
+                    <small style="display:block;color:#9484A8">${item.formato.name} · ${item.tamanho.name} · 🏷️ ${item.nomeCliente}</small>
+                </div>
+                <span>x${item.quantity} ${this.formatPrice(item.totalPrice)}</span>
             </div>
         `).join('') + `
             <div class="cp-checkout-total">
@@ -620,45 +801,42 @@ const CardapioApp = {
     finishOrder() {
         const name = document.getElementById('ckoName')?.value?.trim();
         const phone = document.getElementById('ckoPhone')?.value?.trim();
-        if (!name || !phone) {
-            this.showToast('Preencha nome e telefone!');
-            return;
-        }
+        if (!name || !phone) { this.showToast('Preencha nome e telefone!'); return; }
 
         const deliveryType = document.querySelector('input[name="ckoDelivery"]:checked')?.value || 'pickup';
         if (deliveryType === 'delivery') {
             const addr = document.getElementById('ckoAddress')?.value?.trim();
-            if (!addr) {
-                this.showToast('Preencha o endereço de entrega!');
-                return;
-            }
+            if (!addr) { this.showToast('Preencha o endereco!'); return; }
         }
 
-        // Build WhatsApp message
         let msg = `🐑 *Novo Pedido MilkyPot*\n\n`;
-        msg += `👤 *Nome:* ${name}\n📱 *Tel:* ${phone}\n`;
+        msg += `👤 *Responsável:* ${name}\n📱 *Tel:* ${phone}\n`;
         msg += deliveryType === 'delivery'
             ? `🛵 *Entrega:* ${document.getElementById('ckoAddress')?.value}\n`
             : `🏪 *Retirada na loja*\n`;
         msg += `\n📋 *Itens:*\n`;
-        this.cart.forEach(item => {
-            msg += `• ${item.flavor.emoji} ${item.flavor.name} (${item.type.name}) - ${item.size.name}\n`;
-            if (item.extras.length) {
-                msg += `  Extras: ${item.extras.map(e => e.name + (e.qty > 1 ? ` x${e.qty}` : '')).join(', ')}\n`;
+        this.cart.forEach((item, i) => {
+            msg += `\n*Potinho #${i + 1} — 🏷️ ${item.nomeCliente}*\n`;
+            msg += `${item.sabor.emoji} ${item.sabor.name}\n`;
+            msg += `Base: ${item.base.name}\n`;
+            msg += `Formato: ${item.formato.name}\n`;
+            msg += `Tamanho: ${item.tamanho.name} (${item.tamanho.ml}ml)\n`;
+            if (item.adicionais.length) {
+                msg += `Adicionais: ${item.adicionais.map(e => e.name + (e.qty > 1 ? ' x' + e.qty : '')).join(', ')}\n`;
             }
-            msg += `  Qtd: ${item.quantity} — ${this.formatPrice(item.totalPrice)}\n`;
+            if (item.bebidas.length) {
+                msg += `Bebidas: ${item.bebidas.map(b => b.name + (b.qty > 1 ? ' x' + b.qty : '')).join(', ')}\n`;
+            }
+            msg += `Qtd: ${item.quantity} — ${this.formatPrice(item.totalPrice)}\n`;
         });
         msg += `\n💰 *Total: ${this.formatPrice(this.getMenuCartTotal())}*`;
 
-        // Show success
         this.closeCheckoutModal();
         this.showSuccessModal();
 
-        // Open WhatsApp
         const waNumber = '5511999999999';
         window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
 
-        // Clear cart
         this.cart = [];
         this.saveCart();
         this.updateCartCount();
@@ -666,28 +844,18 @@ const CardapioApp = {
 
     showSuccessModal() {
         const modal = document.getElementById('menuSuccessModal');
-        if (modal) {
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            // Confetti
-            this.createConfetti();
-        }
+        if (modal) { modal.classList.add('active'); document.body.style.overflow = 'hidden'; this.createConfetti(); }
     },
 
     closeSuccessModal() {
         const modal = document.getElementById('menuSuccessModal');
-        if (modal) {
-            modal.classList.remove('active');
-            document.body.style.overflow = '';
-        }
+        if (modal) { modal.classList.remove('active'); document.body.style.overflow = ''; }
     },
 
     // ============================================
     // UTILITIES
     // ============================================
-    formatPrice(value) {
-        return `R$ ${value.toFixed(2).replace('.', ',')}`;
-    },
+    formatPrice(value) { return `R$ ${value.toFixed(2).replace('.', ',')}`; },
 
     showToast(message) {
         const existing = document.querySelector('.cp-toast');
@@ -697,10 +865,7 @@ const CardapioApp = {
         toast.textContent = message;
         document.body.appendChild(toast);
         requestAnimationFrame(() => toast.classList.add('show'));
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 400);
-        }, 3000);
+        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000);
     },
 
     createConfetti() {
@@ -708,26 +873,15 @@ const CardapioApp = {
         for (let i = 0; i < 40; i++) {
             const piece = document.createElement('div');
             piece.className = 'cp-confetti';
-            piece.style.cssText = `
-                left:${Math.random()*100}%;
-                background:${colors[Math.floor(Math.random()*colors.length)]};
-                animation-delay:${Math.random()}s;
-                animation-duration:${Math.random()*2+2}s;
-                width:${Math.random()*8+5}px;
-                height:${Math.random()*8+5}px;
-                border-radius:${Math.random()>0.5?'50%':'2px'};
-            `;
+            piece.style.cssText = `left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-delay:${Math.random()}s;animation-duration:${Math.random()*2+2}s;width:${Math.random()*8+5}px;height:${Math.random()*8+5}px;border-radius:${Math.random()>0.5?'50%':'2px'};`;
             document.body.appendChild(piece);
             setTimeout(() => piece.remove(), 4000);
         }
     }
 };
 
-// Init on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
     CardapioApp.init();
-
-    // Delivery toggle in checkout
     document.querySelectorAll('input[name="ckoDelivery"]').forEach(radio => {
         radio.addEventListener('change', () => {
             const addrDiv = document.getElementById('ckoDeliveryAddress');

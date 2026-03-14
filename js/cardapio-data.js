@@ -2,312 +2,205 @@
    MilkyPot - Cardápio Data (Admin-Editable)
    ============================================
 
+   FLUXO DO PEDIDO:
+   BASE → FORMATO → TAMANHO → SABOR → ADICIONAIS → BEBIDAS → RESUMO
+
    INSTRUÇÕES PARA O ADMIN:
    - Edite nomes, descrições, preços e disponibilidade
-   - Para desativar um produto: available: false
-   - Para desativar um extra: available: false
-   - Para alterar preços de tamanhos, edite o array "sizes"
-   - Cada franquia pode ter configs próprias no futuro
+   - Para desativar um item: available: false
+   - Cada franquia pode ter configs próprias (storeId)
    ============================================ */
 
 const CARDAPIO_CONFIG = {
-    // Configuração da franquia atual
-    storeId: null, // será preenchido ao selecionar loja
+    storeId: null,
     storeName: '',
 
-    // Tipos de produto (categorias principais)
-    types: [
+    // ============================================
+    // PASSO 1: BASES
+    // ============================================
+    bases: [
         {
-            id: 'milkshake',
-            name: 'Milkshake',
-            emoji: '🥤',
+            id: 'ninho',
+            name: 'Milkypot Ninho',
+            emoji: '☁️',
+            desc: 'Base cremosa de leite Ninho. A mais amada!',
             color: '#F8B4D9',
             gradient: 'linear-gradient(135deg, #FFE0EE 0%, #F0DBFF 100%)',
-            shortDesc: 'Batido na máquina, gelado e super cremoso.',
-            icon: '🥤',
-            order: 1,
             available: true
         },
         {
-            id: 'cremoso',
-            name: 'Cremoso no Copo',
-            emoji: '🍨',
-            color: '#D4A5FF',
-            gradient: 'linear-gradient(135deg, #F0DBFF 0%, #E4F0FC 100%)',
-            shortDesc: 'Sorvete montado no copo com cremes e coberturas.',
-            icon: '🍨',
-            order: 2,
+            id: 'zero-fit',
+            name: 'Milkypot Zero / Fit',
+            emoji: '💪',
+            desc: 'Base zero açúcar com opções proteicas.',
+            color: '#4CAF50',
+            gradient: 'linear-gradient(135deg, #D0FFE8 0%, #C8F0DC 100%)',
             available: true
         },
         {
             id: 'acai',
-            name: 'Açaí',
+            name: 'Milkypot Açaí',
             emoji: '🫐',
+            desc: 'Base de açaí puro e cremoso.',
             color: '#7B4EA8',
             gradient: 'linear-gradient(135deg, #E0D0F8 0%, #C8A8E8 100%)',
-            shortDesc: 'Açaí cremoso com combinações deliciosas.',
-            icon: '🫐',
-            order: 3,
-            available: true
-        },
-        {
-            id: 'zero',
-            name: 'Zero / Proteico',
-            emoji: '💪',
-            color: '#4CAF50',
-            gradient: 'linear-gradient(135deg, #D0FFE8 0%, #C8F0DC 100%)',
-            shortDesc: 'Opções sem açúcar e com proteína.',
-            icon: '💪',
-            order: 4,
             available: true
         }
     ],
 
-    // Tamanhos padrão (preços por tipo)
-    sizes: {
-        milkshake: [
-            { id: 'mini',    name: 'Mini',    ml: 180, price: 12.90, available: true },
-            { id: 'pequeno', name: 'Pequeno', ml: 300, price: 16.90, available: true },
-            { id: 'medio',   name: 'Médio',   ml: 500, price: 22.90, available: true },
-            { id: 'gigante', name: 'Gigante', ml: 700, price: 28.90, available: true }
-        ],
-        cremoso: [
-            { id: 'mini',    name: 'Mini',    ml: 180, price: 11.90, available: true },
-            { id: 'pequeno', name: 'Pequeno', ml: 300, price: 15.90, available: true },
-            { id: 'medio',   name: 'Médio',   ml: 500, price: 21.90, available: true },
-            { id: 'gigante', name: 'Gigante', ml: 700, price: 27.90, available: true }
-        ],
-        acai: [
-            { id: 'mini',    name: 'Mini',    ml: 180, price: 13.90, available: true },
-            { id: 'pequeno', name: 'Pequeno', ml: 300, price: 18.90, available: true },
-            { id: 'medio',   name: 'Médio',   ml: 500, price: 25.90, available: true },
-            { id: 'gigante', name: 'Gigante', ml: 700, price: 32.90, available: true }
-        ],
-        zero: [
-            { id: 'mini',    name: 'Mini',    ml: 180, price: 14.90, available: true },
-            { id: 'pequeno', name: 'Pequeno', ml: 300, price: 19.90, available: true },
-            { id: 'medio',   name: 'Médio',   ml: 500, price: 26.90, available: true },
-            { id: 'gigante', name: 'Gigante', ml: 700, price: 34.90, available: true }
-        ]
-    },
+    // ============================================
+    // PASSO 2: FORMATOS
+    // ============================================
+    formatos: [
+        {
+            id: 'shake',
+            name: 'Milkypot Shake',
+            emoji: '🥤',
+            desc: 'Batido na máquina, gelado e super cremoso.',
+            compatibleBases: ['ninho', 'zero-fit'],
+            available: true
+        },
+        {
+            id: 'sundae',
+            name: 'Sundae Gourmet',
+            emoji: '🍨',
+            desc: 'Montado no copo com camadas de cremes e coberturas.',
+            compatibleBases: ['ninho', 'zero-fit'],
+            available: true
+        },
+        {
+            id: 'acai-bowl',
+            name: 'Açaí Bowl',
+            emoji: '🥣',
+            desc: 'Açaí servido na tigela com toppings.',
+            compatibleBases: ['acai'],
+            available: true
+        },
+        {
+            id: 'acai-shake',
+            name: 'Açaí Shake',
+            emoji: '🥤',
+            desc: 'Açaí batido cremoso no copo.',
+            compatibleBases: ['acai'],
+            available: true
+        }
+    ],
 
-    // Sabores por tipo
-    flavors: {
-        milkshake: [
-            {
-                id: 'nevinha',
-                name: 'Nevinha',
-                desc: 'Milkshake de sorvete cremoso com creme de leite Ninho e leite em pó por cima.',
-                emoji: '☁️',
-                badge: 'Mais Pedido',
-                badgeColor: '#E87AB0',
-                highlight: true,
-                available: true
-            },
-            {
-                id: 'ovelha-negra',
-                name: 'Ovelha Negra',
-                desc: 'Milkshake de sorvete cremoso com Nutella.',
-                emoji: '🐑',
-                badge: 'Cremoso',
-                badgeColor: '#8B4513',
-                highlight: true,
-                available: true
-            },
-            {
-                id: 'flocos-rebanho',
-                name: 'Flocos do Rebanho',
-                desc: 'Milkshake de sorvete cremoso com creme de Ninho e pedaços de Oreo.',
-                emoji: '🍪',
-                badge: null,
-                highlight: false,
-                available: true
-            },
-            {
-                id: 'campo-doce',
-                name: 'Campo Doce',
-                desc: 'Milkshake de sorvete cremoso com creme de Ninho e morango.',
-                emoji: '🍓',
-                badge: null,
-                highlight: false,
-                available: true
-            }
-        ],
-        cremoso: [
-            {
-                id: 'nuvem-doce',
-                name: 'Nuvem Doce',
-                desc: 'Sorvete no copo com creme de leite Ninho e leite em pó.',
-                emoji: '☁️',
-                badge: 'Mais Pedido',
-                badgeColor: '#E87AB0',
-                highlight: true,
-                available: true
-            },
-            {
-                id: 'choco-nuvem',
-                name: 'Choco Nuvem',
-                desc: 'Sorvete no copo com Nutella.',
-                emoji: '🍫',
-                badge: 'Cremoso',
-                badgeColor: '#8B4513',
-                highlight: false,
-                available: true
-            },
-            {
-                id: 'ovelhinha',
-                name: 'Ovelhinha',
-                desc: 'Sorvete no copo com Oreo.',
-                emoji: '🐑',
-                badge: 'Infantil',
-                badgeColor: '#D4A5FF',
-                highlight: false,
-                available: true
-            },
-            {
-                id: 'doce-pastinho',
-                name: 'Doce Pastinho',
-                desc: 'Sorvete no copo com creme de Ninho e morango.',
-                emoji: '🌿',
-                badge: null,
-                highlight: false,
-                available: true
-            }
-        ],
-        acai: [
-            {
-                id: 'acai-ninho',
-                name: 'Açaí Ninho',
-                desc: 'Açaí com creme de leite Ninho e leite em pó.',
-                emoji: '🥛',
-                badge: 'Mais Pedido',
-                badgeColor: '#7B4EA8',
-                highlight: true,
-                available: true
-            },
-            {
-                id: 'acai-banana',
-                name: 'Açaí Banana',
-                desc: 'Açaí com banana e granola.',
-                emoji: '🍌',
-                badge: null,
-                highlight: false,
-                available: true
-            },
-            {
-                id: 'acai-nutella',
-                name: 'Açaí Nutella',
-                desc: 'Açaí com Nutella.',
-                emoji: '🍫',
-                badge: 'Cremoso',
-                badgeColor: '#8B4513',
-                highlight: false,
-                available: true
-            },
-            {
-                id: 'acai-proteico',
-                name: 'Açaí Proteico',
-                desc: 'Açaí com banana e whey.',
-                emoji: '💪',
-                badge: 'Proteico',
-                badgeColor: '#4CAF50',
-                highlight: false,
-                available: true
-            }
-        ],
-        zero: [
-            {
-                id: 'fit-baunilha',
-                name: 'Fit Baunilha',
-                desc: 'Sorvete zero açúcar com calda baunilha zero.',
-                emoji: '🍦',
-                badge: 'Zero Açúcar',
-                badgeColor: '#4CAF50',
-                highlight: false,
-                available: true
-            },
-            {
-                id: 'proteico',
-                name: 'Proteico',
-                desc: 'Sorvete zero com whey protein.',
-                emoji: '💪',
-                badge: 'Proteico',
-                badgeColor: '#2196F3',
-                highlight: true,
-                available: true
-            },
-            {
-                id: 'proteico-amendoim',
-                name: 'Proteico Amendoim',
-                desc: 'Sorvete zero com pasta de amendoim e whey.',
-                emoji: '🥜',
-                badge: 'Mais Pedido',
-                badgeColor: '#E87AB0',
-                highlight: true,
-                available: true
-            },
-            {
-                id: 'zero-ninho-fit',
-                name: 'Zero Ninho Fit',
-                desc: 'Sorvete zero com creme zero e leite em pó zero.',
-                emoji: '☁️',
-                badge: 'Zero Açúcar',
-                badgeColor: '#4CAF50',
-                highlight: false,
-                available: true
-            }
-        ]
-    },
+    // ============================================
+    // PASSO 3: TAMANHOS (preço único p/ todos)
+    // ============================================
+    tamanhos: [
+        { id: 'mini',    name: 'Mini',    ml: 180, price: 10.00, available: true },
+        { id: 'pequeno', name: 'Pequeno', ml: 300, price: 14.00, available: true },
+        { id: 'medio',   name: 'Médio',   ml: 500, price: 18.00, available: true },
+        { id: 'gigante', name: 'Gigante', ml: 700, price: 22.00, available: true }
+    ],
 
-    // Extras organizados por categoria
-    extras: {
-        bordas: {
-            name: 'Bordas',
-            emoji: '🔵',
+    // ============================================
+    // PASSO 4: SABORES (organizados por categoria)
+    // ============================================
+    sabores: {
+        classicos: {
+            name: 'Clássicos',
+            emoji: '⭐',
+            compatibleBases: ['ninho'],
             items: [
-                { id: 'borda-nutella',  name: 'Borda de Nutella',         price: 5.90, emoji: '🍫', available: true },
-                { id: 'borda-ninho',    name: 'Borda de Creme de Ninho',  price: 5.90, emoji: '☁️', available: true }
+                { id: 'morango',           name: 'Morango',           emoji: '🍓', desc: 'Calda e pedaços de morango.', highlight: true, available: true },
+                { id: 'ninho',             name: 'Ninho',             emoji: '☁️', desc: 'Puro creme de leite Ninho.', highlight: true, available: true },
+                { id: 'ninho-morango',     name: 'Ninho com Morango', emoji: '🍓', desc: 'Creme de Ninho + calda de morango.', highlight: true, available: true },
+                { id: 'nutella',           name: 'Nutella',           emoji: '🍫', desc: 'Nutella cremosa generosa.', highlight: true, available: true },
+                { id: 'oreo',              name: 'Oreo',              emoji: '🍪', desc: 'Pedaços de Oreo triturado.', highlight: true, available: true }
             ]
         },
-        cremes: {
-            name: 'Cremes',
-            emoji: '🍯',
+        especiais: {
+            name: 'Especiais',
+            emoji: '✨',
+            compatibleBases: ['ninho'],
             items: [
-                { id: 'nutella',        name: 'Nutella',                  price: 4.90, emoji: '🍫', available: true },
-                { id: 'creme-ninho',    name: 'Creme de Ninho',           price: 4.90, emoji: '☁️', available: true }
+                { id: 'capuccino-cream',   name: 'Capuccino Cream',   emoji: '☕', desc: 'Creme de capuccino aveludado.', highlight: false, available: true }
+            ]
+        },
+        adulto: {
+            name: 'Adulto +18',
+            emoji: '🔞',
+            compatibleBases: ['ninho'],
+            items: [
+                { id: 'amarula-cream',     name: 'Amarula Cream',     emoji: '🥃', desc: 'Com licor Amarula.', highlight: false, available: true },
+                { id: 'baileys-cream',     name: 'Baileys Cream',     emoji: '🥃', desc: 'Com licor Baileys.', highlight: false, available: true }
+            ]
+        },
+        acai: {
+            name: 'Açaí',
+            emoji: '🫐',
+            compatibleBases: ['acai'],
+            items: [
+                { id: 'acai-granola',      name: 'Açaí + Granola',    emoji: '🥣', desc: 'Açaí com granola crocante.', highlight: true, available: true },
+                { id: 'acai-banana',       name: 'Açaí + Banana',     emoji: '🍌', desc: 'Açaí com banana fatiada.', highlight: false, available: true },
+                { id: 'acai-morango',      name: 'Açaí + Morango',    emoji: '🍓', desc: 'Açaí com morango fresco.', highlight: false, available: true }
+            ]
+        },
+        zero_fit: {
+            name: 'Zero / Fit',
+            emoji: '💪',
+            compatibleBases: ['zero-fit'],
+            items: [
+                { id: 'whey',              name: 'Whey',              emoji: '💪', desc: 'Com whey protein.', highlight: false, available: true },
+                { id: 'banana-whey',       name: 'Banana + Whey',     emoji: '🍌', desc: 'Banana com whey protein.', highlight: true, available: true },
+                { id: 'pasta-amendoim',    name: 'Pasta de Amendoim', emoji: '🥜', desc: 'Com pasta de amendoim.', highlight: false, available: true }
+            ]
+        }
+    },
+
+    // ============================================
+    // PASSO 5: ADICIONAIS (organizados por subcategoria)
+    // ============================================
+    adicionais: {
+        bordas: {
+            name: 'Bordas Recheadas',
+            emoji: '🔵',
+            items: [
+                { id: 'borda-nutella',  name: 'Nutella',          price: 4.00, emoji: '🍫', available: true },
+                { id: 'borda-ninho',    name: 'Creme de Ninho',   price: 4.00, emoji: '☁️', available: true },
+                { id: 'borda-oreo',     name: 'Oreo',             price: 4.00, emoji: '🍪', available: true }
             ]
         },
         frutas: {
             name: 'Frutas',
             emoji: '🍓',
             items: [
-                { id: 'morango',        name: 'Morango',                  price: 3.90, emoji: '🍓', available: true },
-                { id: 'banana',         name: 'Banana',                   price: 2.90, emoji: '🍌', available: true }
+                { id: 'add-morango',    name: 'Morango',          price: 3.00, emoji: '🍓', available: true },
+                { id: 'add-banana',     name: 'Banana',           price: 3.00, emoji: '🍌', available: true }
             ]
         },
-        crocantes: {
-            name: 'Crocantes',
+        toppings: {
+            name: 'Toppings',
             emoji: '🍪',
             items: [
-                { id: 'oreo',           name: 'Oreo',                     price: 3.90, emoji: '🍪', available: true },
-                { id: 'granola',        name: 'Granola',                  price: 2.90, emoji: '🥣', available: true }
-            ]
-        },
-        proteinas: {
-            name: 'Proteínas',
-            emoji: '💪',
-            items: [
-                { id: 'pasta-amendoim', name: 'Pasta de Amendoim',        price: 4.90, emoji: '🥜', available: true },
-                { id: 'whey',           name: 'Whey Protein',             price: 5.90, emoji: '💪', available: true }
+                { id: 'add-granola',    name: 'Granola',          price: 3.00, emoji: '🥣', available: true },
+                { id: 'add-oreo',       name: 'Oreo',             price: 3.00, emoji: '🍪', available: true },
+                { id: 'add-confete',    name: 'Confete',          price: 2.00, emoji: '🎉', available: true },
+                { id: 'add-condensado', name: 'Leite Condensado', price: 3.00, emoji: '🥛', available: true },
+                { id: 'add-chocolate',  name: 'Chocolate',        price: 3.00, emoji: '🍫', available: true }
             ]
         }
     },
 
-    // Destaques (campeões de venda - IDs dos sabores)
+    // ============================================
+    // PASSO 6: BEBIDAS
+    // ============================================
+    bebidas: [
+        { id: 'agua',          name: 'Água',          price: 3.00, emoji: '💧', available: true },
+        { id: 'agua-gas',      name: 'Água com Gás',  price: 4.00, emoji: '🫧', available: true }
+    ],
+
+    // ============================================
+    // DESTAQUES (home page)
+    // ============================================
     highlights: [
-        { typeId: 'milkshake', flavorId: 'nevinha',           label: 'Milkshake' },
-        { typeId: 'milkshake', flavorId: 'ovelha-negra',     label: 'Milkshake' },
-        { typeId: 'acai',      flavorId: 'acai-ninho',       label: 'Açaí' },
-        { typeId: 'zero',      flavorId: 'proteico-amendoim', label: 'Proteico' }
+        { baseId: 'ninho', saborId: 'ninho',          label: 'Mais Pedido' },
+        { baseId: 'ninho', saborId: 'morango',        label: 'Clássico' },
+        { baseId: 'ninho', saborId: 'ninho-morango',  label: 'Favorito' },
+        { baseId: 'ninho', saborId: 'nutella',        label: 'Cremoso' },
+        { baseId: 'ninho', saborId: 'oreo',           label: 'Crocante' }
     ]
 };

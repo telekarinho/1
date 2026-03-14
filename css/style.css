@@ -311,7 +311,7 @@ input, select, textarea {
 }
 
 /* ============================================
-   HERO SECTION
+   HERO SECTION — Dreamy Vibrant Style
    ============================================ */
 .hero {
     min-height: 100vh;
@@ -320,7 +320,7 @@ input, select, textarea {
     justify-content: center;
     position: relative;
     overflow: hidden;
-    background: var(--gradient-hero);
+    background: linear-gradient(180deg, #FFE0F0 0%, #F0D0FF 15%, #D8C0F8 30%, #C8B8FF 45%, #D0D8FF 60%, #E0E8FF 75%, #F0E8FF 100%);
     padding: 100px 20px 60px;
 }
 
@@ -329,36 +329,252 @@ input, select, textarea {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
     background:
-        radial-gradient(ellipse at 20% 20%, rgba(248, 180, 217, 0.15) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 30%, rgba(184, 216, 248, 0.15) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 80%, rgba(212, 165, 255, 0.12) 0%, transparent 50%);
+        radial-gradient(ellipse at 15% 25%, rgba(255, 150, 200, 0.35) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 20%, rgba(150, 180, 255, 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 75%, rgba(200, 150, 255, 0.25) 0%, transparent 50%),
+        radial-gradient(ellipse at 30% 60%, rgba(255, 200, 150, 0.15) 0%, transparent 40%);
     pointer-events: none;
 }
 
-/* Hero Logo */
+/* Neon Glow Orbs */
+.hero-glow {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+}
+.hero-glow-1 {
+    width: 400px; height: 400px;
+    top: -80px; left: -80px;
+    background: radial-gradient(circle, rgba(255, 120, 200, 0.4) 0%, rgba(255, 120, 200, 0) 70%);
+    animation: glow-pulse 5s ease-in-out infinite;
+}
+.hero-glow-2 {
+    width: 350px; height: 350px;
+    top: 20%; right: -60px;
+    background: radial-gradient(circle, rgba(130, 160, 255, 0.35) 0%, rgba(130, 160, 255, 0) 70%);
+    animation: glow-pulse 6s ease-in-out infinite 1s;
+}
+.hero-glow-3 {
+    width: 500px; height: 500px;
+    bottom: -100px; left: 30%;
+    background: radial-gradient(circle, rgba(180, 130, 255, 0.3) 0%, rgba(180, 130, 255, 0) 70%);
+    animation: glow-pulse 7s ease-in-out infinite 2s;
+}
+@keyframes glow-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.15); opacity: 1; }
+}
+
+/* Hero Logo — Enhanced Neon Glow */
 .hero-logo-wrapper {
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     animation: hero-logo-float 4s ease-in-out infinite;
+    position: relative;
+}
+
+.hero-logo-wrapper::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 30px;
+    background: radial-gradient(ellipse, rgba(255, 120, 200, 0.3) 0%, transparent 70%);
+    filter: blur(10px);
+    animation: logo-glow-pulse 4s ease-in-out infinite;
+}
+
+@keyframes logo-glow-pulse {
+    0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(0.95); }
+    50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
 }
 
 .hero-logo {
-    max-width: 400px;
+    max-width: 420px;
     width: 85%;
     height: auto;
-    filter: drop-shadow(0 8px 32px rgba(248, 180, 217, 0.35)) drop-shadow(0 0 60px rgba(212, 165, 255, 0.15));
-    transition: transform 0.4s ease;
+    filter:
+        drop-shadow(0 0 20px rgba(255, 140, 200, 0.5))
+        drop-shadow(0 0 60px rgba(212, 165, 255, 0.3))
+        drop-shadow(0 8px 32px rgba(248, 180, 217, 0.4));
+    transition: transform 0.4s ease, filter 0.4s ease;
 }
 
 .hero-logo:hover {
-    transform: scale(1.03);
+    transform: scale(1.05);
+    filter:
+        drop-shadow(0 0 30px rgba(255, 140, 200, 0.6))
+        drop-shadow(0 0 80px rgba(212, 165, 255, 0.4))
+        drop-shadow(0 12px 40px rgba(248, 180, 217, 0.5));
 }
 
 @keyframes hero-logo-float {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-12px); }
+    50% { transform: translateY(-14px); }
 }
 
-/* Dreamy Stars */
+/* Hero Tagline — "O Potinho Mais Feliz do Mundo" */
+.hero-tagline {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    gap: 8px 12px;
+    margin-bottom: 20px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.tagline-word {
+    display: inline-block;
+    font-size: 1.6rem;
+    animation: tagline-float 3s ease-in-out infinite;
+}
+
+.tagline-o, .tagline-do {
+    font-size: 1.3rem;
+    color: #C8A0D8;
+    text-shadow: 0 0 15px rgba(200, 160, 216, 0.4);
+}
+
+.tagline-potinho {
+    font-size: 2rem;
+    background: linear-gradient(135deg, #FFD700, #FFA500, #FF8C00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 4px rgba(255, 165, 0, 0.3));
+    animation-delay: 0.1s;
+}
+
+.tagline-mais {
+    font-size: 2.2rem;
+    color: #FF69B4;
+    text-shadow: 0 0 20px rgba(255, 105, 180, 0.5), 0 2px 4px rgba(255, 105, 180, 0.2);
+    animation-delay: 0.2s;
+}
+
+.tagline-feliz {
+    font-size: 2.8rem;
+    background: linear-gradient(135deg, #FF6B9D, #E85ABF, #D040D0, #A060E0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 3px 6px rgba(232, 90, 191, 0.35));
+    animation-delay: 0.3s;
+    letter-spacing: 1px;
+}
+
+.tagline-mundo {
+    font-size: 2.2rem;
+    background: linear-gradient(135deg, #60C0F0, #40A0E0, #3080D0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 4px rgba(64, 160, 224, 0.3));
+    animation-delay: 0.4s;
+}
+
+@keyframes tagline-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+/* Decorative Hearts */
+.hero-hearts {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+.hero-heart {
+    position: absolute;
+    color: rgba(255, 105, 180, 0.5);
+    text-shadow: 0 0 15px rgba(255, 105, 180, 0.4);
+    animation: heart-float 4s ease-in-out infinite;
+}
+.hero-heart-1 { top: 15%; right: 8%; font-size: 2rem; animation-delay: 0s; }
+.hero-heart-2 { top: 65%; right: 12%; font-size: 1.4rem; animation-delay: 1s; color: rgba(212, 165, 255, 0.5); }
+.hero-heart-3 { top: 45%; left: 6%; font-size: 1.6rem; animation-delay: 2s; color: rgba(255, 180, 200, 0.4); }
+
+@keyframes heart-float {
+    0%, 100% { transform: translateY(0) scale(1); opacity: 0.5; }
+    50% { transform: translateY(-10px) scale(1.15); opacity: 0.9; }
+}
+
+/* Rainbow Arc (visible arc behind logo) */
+.hero-rainbow-arc {
+    position: absolute;
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    height: 350px;
+    border-radius: 350px 350px 0 0;
+    background: transparent;
+    border-top: 8px solid rgba(255, 0, 0, 0.12);
+    border-left: 8px solid rgba(255, 165, 0, 0.1);
+    border-right: 8px solid rgba(0, 128, 255, 0.1);
+    box-shadow:
+        0 -12px 0 0 rgba(255, 100, 0, 0.08),
+        0 -24px 0 0 rgba(255, 200, 0, 0.08),
+        0 -36px 0 0 rgba(100, 200, 100, 0.08),
+        0 -48px 0 0 rgba(100, 150, 255, 0.08),
+        0 -60px 0 0 rgba(180, 100, 255, 0.08),
+        0 -72px 0 0 rgba(255, 100, 180, 0.06);
+    pointer-events: none;
+    z-index: 0;
+    animation: rainbow-arc-glow 6s ease-in-out infinite;
+}
+
+@keyframes rainbow-arc-glow {
+    0%, 100% { opacity: 0.6; filter: blur(2px); }
+    50% { opacity: 1; filter: blur(0px); }
+}
+
+/* Cloud Floor (bottom volumetric clouds) */
+.cloud-floor {
+    position: absolute;
+    bottom: -30px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 100px;
+    filter: blur(8px);
+    z-index: 1;
+}
+.cloud-floor-1 {
+    width: 500px; height: 100px;
+    left: -50px;
+    animation: cloud-floor-float 8s ease-in-out infinite;
+}
+.cloud-floor-2 {
+    width: 600px; height: 120px;
+    left: 30%;
+    animation: cloud-floor-float 10s ease-in-out infinite 2s;
+}
+.cloud-floor-3 {
+    width: 450px; height: 90px;
+    right: -30px;
+    animation: cloud-floor-float 9s ease-in-out infinite 4s;
+}
+@keyframes cloud-floor-float {
+    0%, 100% { transform: translateY(0); opacity: 0.85; }
+    50% { transform: translateY(-8px); opacity: 1; }
+}
+
+/* Button Glow Effect */
+.btn-glow {
+    box-shadow: 0 4px 20px rgba(232, 122, 176, 0.35), 0 0 30px rgba(232, 122, 176, 0.15);
+    animation: btn-glow-pulse 3s ease-in-out infinite;
+}
+@keyframes btn-glow-pulse {
+    0%, 100% { box-shadow: 0 4px 20px rgba(232, 122, 176, 0.35), 0 0 30px rgba(232, 122, 176, 0.15); }
+    50% { box-shadow: 0 6px 30px rgba(232, 122, 176, 0.5), 0 0 50px rgba(232, 122, 176, 0.25); }
+}
+
+/* Golden Sparkle Stars */
 .hero-stars {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -368,23 +584,28 @@ input, select, textarea {
 
 .star {
     position: absolute;
-    color: rgba(255, 215, 100, 0.6);
+    color: #FFD700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.3);
     font-size: 1rem;
     animation: star-twinkle 3s ease-in-out infinite;
 }
 
-.star-1 { top: 12%; left: 8%; animation-delay: 0s; font-size: 1.2rem; }
-.star-2 { top: 18%; right: 12%; animation-delay: 0.5s; font-size: 0.9rem; }
-.star-3 { top: 35%; left: 5%; animation-delay: 1s; }
-.star-4 { top: 25%; right: 25%; animation-delay: 1.5s; font-size: 1.4rem; }
-.star-5 { bottom: 30%; left: 15%; animation-delay: 2s; }
-.star-6 { bottom: 25%; right: 8%; animation-delay: 0.8s; font-size: 1.1rem; }
-.star-7 { top: 50%; left: 2%; animation-delay: 1.2s; font-size: 0.8rem; }
-.star-8 { top: 10%; left: 45%; animation-delay: 2.2s; }
+.star-1 { top: 10%; left: 8%; animation-delay: 0s; font-size: 1.4rem; }
+.star-2 { top: 16%; right: 10%; animation-delay: 0.5s; font-size: 1.1rem; }
+.star-3 { top: 30%; left: 4%; animation-delay: 1s; font-size: 1.2rem; }
+.star-4 { top: 22%; right: 22%; animation-delay: 1.5s; font-size: 1.6rem; }
+.star-5 { bottom: 32%; left: 12%; animation-delay: 2s; font-size: 1rem; }
+.star-6 { bottom: 22%; right: 6%; animation-delay: 0.8s; font-size: 1.3rem; }
+.star-7 { top: 48%; left: 2%; animation-delay: 1.2s; font-size: 0.9rem; }
+.star-8 { top: 8%; left: 42%; animation-delay: 2.2s; font-size: 1.1rem; }
+.star-9 { top: 40%; right: 3%; animation-delay: 0.3s; font-size: 1rem; }
+.star-10 { bottom: 40%; left: 30%; animation-delay: 1.8s; font-size: 0.8rem; }
+.star-11 { top: 5%; right: 35%; animation-delay: 2.5s; font-size: 1.3rem; }
+.star-12 { bottom: 15%; right: 25%; animation-delay: 0.6s; font-size: 0.9rem; }
 
 @keyframes star-twinkle {
-    0%, 100% { opacity: 0.3; transform: scale(0.8) rotate(0deg); }
-    50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
+    0%, 100% { opacity: 0.3; transform: scale(0.7) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1.3) rotate(180deg); }
 }
 
 /* Wave Divider */
@@ -410,9 +631,10 @@ input, select, textarea {
 
 .cloud {
     position: absolute;
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.85);
     border-radius: 100px;
-    filter: blur(3px);
+    filter: blur(2px);
+    box-shadow: 0 8px 32px rgba(255, 255, 255, 0.3), inset 0 -5px 15px rgba(200, 180, 255, 0.1);
 }
 
 .cloud-5 {
@@ -490,21 +712,21 @@ input, select, textarea {
 
 .hero-rainbow {
     position: absolute;
-    top: -30%;
+    top: -35%;
     left: 50%;
     transform: translateX(-50%);
-    width: 1000px;
-    height: 1000px;
+    width: 1200px;
+    height: 1200px;
     background: conic-gradient(
         from 180deg,
         transparent 0deg,
-        rgba(248, 180, 217, 0.12) 25deg,
-        rgba(255, 200, 160, 0.10) 50deg,
-        rgba(255, 240, 140, 0.10) 75deg,
-        rgba(168, 224, 168, 0.10) 100deg,
-        rgba(184, 216, 248, 0.12) 125deg,
-        rgba(212, 165, 255, 0.12) 150deg,
-        rgba(248, 180, 217, 0.10) 175deg,
+        rgba(255, 140, 200, 0.18) 25deg,
+        rgba(255, 180, 130, 0.15) 50deg,
+        rgba(255, 230, 100, 0.15) 75deg,
+        rgba(140, 220, 140, 0.15) 100deg,
+        rgba(140, 200, 255, 0.18) 125deg,
+        rgba(200, 140, 255, 0.18) 150deg,
+        rgba(255, 140, 200, 0.15) 175deg,
         transparent 180deg
     );
     border-radius: 50%;
@@ -580,10 +802,14 @@ input, select, textarea {
 }
 
 .hero-subtitle {
-    font-size: 1.15rem;
-    color: var(--text-light);
-    margin-bottom: 32px;
+    font-size: 1.1rem;
+    color: rgba(100, 80, 130, 0.85);
+    margin-bottom: 28px;
     line-height: 1.7;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
 }
 
 .hero-buttons {
