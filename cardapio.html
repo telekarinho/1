@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cardápio Online | MilkyPot - O Potinho Mais Feliz do Mundo</title>
+    <meta name="description" content="Faça seu pedido online na MilkyPot! Milkshakes, Cremosos, Açaí e opções Zero/Proteico. Monte do seu jeito e receba feliz!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/cardapio.css">
+</head>
+<body class="cp-page">
+
+    <!-- Navbar -->
+    <nav class="cp-navbar">
+        <div class="cp-nav-inner">
+            <a href="index.html" class="cp-nav-logo">
+                <img src="images/logo.png" alt="MilkyPot">
+            </a>
+            <div class="cp-nav-actions">
+                <a href="index.html" class="cp-nav-home">🏠 Início</a>
+                <button class="cp-nav-cart" id="menuCartBtn" aria-label="Carrinho">
+                    <span>🛒</span>
+                    <span class="cp-nav-cart-count" id="menuCartCount">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Step Progress Bar -->
+    <div class="cp-step-bar" id="cardapioStepBar">
+        <div class="cp-step" data-step="1">
+            <span class="cp-step-dot"></span>
+            <span>Tipo</span>
+        </div>
+        <div class="cp-step" data-step="2">
+            <span class="cp-step-dot"></span>
+            <span>Sabor</span>
+        </div>
+        <div class="cp-step" data-step="3">
+            <span class="cp-step-dot"></span>
+            <span>Tamanho</span>
+        </div>
+        <div class="cp-step" data-step="4">
+            <span class="cp-step-dot"></span>
+            <span>Extras</span>
+        </div>
+        <div class="cp-step" data-step="5">
+            <span class="cp-step-dot"></span>
+            <span>Resumo</span>
+        </div>
+    </div>
+
+    <!-- Back Button (fixed) -->
+    <button class="cp-back-btn" id="cardapioBack">← Voltar</button>
+
+    <!-- Main Content Area -->
+    <main class="cp-container" id="cardapioSection">
+        <div id="cardapioMain">
+            <!-- Rendered by JS -->
+        </div>
+    </main>
+
+    <!-- Cart Sidebar -->
+    <div class="cp-cart-overlay" id="menuCartOverlay"></div>
+    <div class="cp-cart-sidebar" id="menuCartSidebar">
+        <div class="cp-cart-header">
+            <h3>🛒 Meu Pedido</h3>
+            <button class="cp-cart-close" id="menuCartClose" aria-label="Fechar">&times;</button>
+        </div>
+        <div class="cp-cart-items" id="menuCartItems">
+            <div class="cp-cart-empty">
+                <span>🐑</span>
+                <p>Seu carrinho está vazio</p>
+                <small>Escolha produtos deliciosos do cardápio!</small>
+            </div>
+        </div>
+        <div class="cp-cart-footer" id="menuCartFooter" style="display:none">
+            <div class="cp-cart-total">
+                <span>Total:</span>
+                <span class="cp-cart-total-value" id="menuCartTotal">R$ 0,00</span>
+            </div>
+            <button class="cp-btn-primary cp-btn-full" onclick="CardapioApp.startCheckout()">
+                Finalizar Pedido ✨
+            </button>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div class="cp-modal-overlay" id="menuCheckoutModal">
+        <div class="cp-modal">
+            <button class="cp-modal-close" onclick="CardapioApp.closeCheckoutModal()">&times;</button>
+            <h2>🎉 Finalizar Pedido</h2>
+
+            <!-- Order Summary -->
+            <div id="checkoutOrderSummary"></div>
+
+            <div style="margin-top:20px">
+                <div class="cp-form-group">
+                    <label>Nome *</label>
+                    <input type="text" id="ckoName" placeholder="Seu nome" required>
+                </div>
+                <div class="cp-form-group">
+                    <label>Telefone *</label>
+                    <input type="tel" id="ckoPhone" placeholder="(11) 99999-9999" required>
+                </div>
+
+                <label style="font-weight:600;font-size:0.85rem;color:#5A4570;margin-bottom:8px;display:block">Recebimento</label>
+                <div class="cp-delivery-options">
+                    <label class="cp-delivery-opt">
+                        <input type="radio" name="ckoDelivery" value="pickup" checked>
+                        🏪 Retirada
+                    </label>
+                    <label class="cp-delivery-opt">
+                        <input type="radio" name="ckoDelivery" value="delivery">
+                        🛵 Entrega
+                    </label>
+                </div>
+
+                <div id="ckoDeliveryAddress" style="display:none">
+                    <div class="cp-form-group">
+                        <label>Endereço completo *</label>
+                        <input type="text" id="ckoAddress" placeholder="Rua, número, bairro">
+                    </div>
+                    <div class="cp-form-group">
+                        <label>Complemento</label>
+                        <input type="text" id="ckoComplement" placeholder="Apto, bloco...">
+                    </div>
+                </div>
+
+                <div class="cp-form-group">
+                    <label>Forma de Pagamento</label>
+                    <select id="ckoPayment">
+                        <option value="pix">📱 PIX</option>
+                        <option value="credito">💳 Cartão de Crédito</option>
+                        <option value="debito">💳 Cartão de Débito</option>
+                        <option value="dinheiro">💵 Dinheiro</option>
+                    </select>
+                </div>
+
+                <button class="cp-btn-primary cp-btn-full cp-btn-lg" onclick="CardapioApp.finishOrder()" style="margin-top:8px">
+                    Confirmar Pedido via WhatsApp 🐑
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="cp-modal-overlay" id="menuSuccessModal">
+        <div class="cp-modal cp-success-modal">
+            <div class="cp-success-emoji">🎉</div>
+            <h2>Pedido Enviado!</h2>
+            <p>Seu pedido foi enviado via WhatsApp. Aguarde a confirmação da loja!</p>
+            <button class="cp-btn-primary cp-btn-full" onclick="CardapioApp.closeSuccessModal()">
+                Voltar ao Cardápio
+            </button>
+        </div>
+    </div>
+
+    <script src="js/cardapio-data.js"></script>
+    <script src="js/cardapio.js"></script>
+</body>
+</html>
