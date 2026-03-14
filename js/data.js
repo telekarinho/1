@@ -142,231 +142,179 @@ const STORES = [
 ];
 
 const PRODUCTS = [
-    // Potinhos
+    // ===== MILKYPOT NINHO - Clássicos =====
     {
         id: 1,
-        name: "Potinho Arco-Íris",
-        desc: "Sorvete de baunilha com calda colorida, granulado e confetes de chocolate",
-        price: 24.90,
-        originalPrice: 29.90,
-        category: "potinhos",
-        emoji: "🍨",
-        badge: "Mais Vendido",
+        name: "Shake de Ninho",
+        desc: "Puro creme de leite Ninho batido na máquina, gelado e super cremoso.",
+        price: 14.00,
+        category: "ninho",
+        emoji: "☁️",
+        badge: "Mais Pedido",
         popular: true
     },
     {
         id: 2,
-        name: "Potinho Nuvem de Morango",
-        desc: "Creme de morango com chantilly, morangos frescos e calda rosa",
-        price: 22.90,
-        category: "potinhos",
+        name: "Shake de Morango",
+        desc: "Calda e pedaços de morango com base cremosa de leite Ninho.",
+        price: 14.00,
+        category: "ninho",
         emoji: "🍓",
+        badge: "Clássico",
         popular: true
     },
     {
         id: 3,
-        name: "Potinho Brigadeiro Mágico",
-        desc: "Brigadeiro cremoso com granulado belga, Nutella e leite ninho",
-        price: 26.90,
-        category: "potinhos",
-        emoji: "🍫",
-        badge: "Novo"
+        name: "Shake Ninho com Morango",
+        desc: "Creme de Ninho + calda de morango. O favorito da galera!",
+        price: 14.00,
+        category: "ninho",
+        emoji: "🍓",
+        badge: "Favorito",
+        popular: true
     },
     {
         id: 4,
-        name: "Potinho Unicórnio",
-        desc: "Mix de sorvetes coloridos com marshmallow, confeitos e calda de tutti-frutti",
-        price: 28.90,
-        category: "potinhos",
-        emoji: "🦄",
-        badge: "Especial"
+        name: "Shake de Nutella",
+        desc: "Nutella cremosa generosa com base de leite Ninho.",
+        price: 14.00,
+        category: "ninho",
+        emoji: "🍫",
+        badge: "Cremoso",
+        popular: true
     },
     {
         id: 5,
-        name: "Potinho Cookie Monster",
-        desc: "Sorvete de cookies com pedaços de cookie, calda de chocolate e chantilly",
-        price: 25.90,
-        category: "potinhos",
-        emoji: "🍪"
+        name: "Shake de Oreo",
+        desc: "Pedaços de Oreo triturado com base cremosa de leite Ninho.",
+        price: 14.00,
+        category: "ninho",
+        emoji: "🍪",
+        badge: "Crocante",
+        popular: true
     },
     {
         id: 6,
-        name: "Potinho Doce de Leite",
-        desc: "Doce de leite artesanal com nozes, farofa crocante e calda caramelo",
-        price: 23.90,
-        category: "potinhos",
-        emoji: "🥛"
+        name: "Capuccino Cream",
+        desc: "Creme de capuccino aveludado com base de leite Ninho.",
+        price: 14.00,
+        category: "ninho",
+        emoji: "☕"
     },
-    // Milkshakes
+    // ===== MILKYPOT NINHO - Adulto +18 =====
     {
         id: 7,
-        name: "Milkshake Sonho Rosa",
-        desc: "Milkshake de morango com chantilly, calda rosa e algodão doce",
-        price: 19.90,
-        category: "milkshakes",
-        emoji: "🥤",
-        popular: true
+        name: "Amarula Cream",
+        desc: "Shake cremoso com licor Amarula. Exclusivo +18.",
+        price: 18.00,
+        category: "adulto",
+        emoji: "🥃",
+        badge: "+18"
     },
     {
         id: 8,
-        name: "Milkshake Ovomaltine",
-        desc: "Milkshake cremoso com Ovomaltine crocante e calda de chocolate",
-        price: 21.90,
-        category: "milkshakes",
-        emoji: "🥤"
+        name: "Baileys Cream",
+        desc: "Shake cremoso com licor Baileys. Exclusivo +18.",
+        price: 18.00,
+        category: "adulto",
+        emoji: "🥃",
+        badge: "+18"
     },
+    // ===== MILKYPOT AÇAÍ =====
     {
         id: 9,
-        name: "Milkshake Nutella Dream",
-        desc: "Milkshake de Nutella com avelã, chantilly e calda extra de Nutella",
-        price: 23.90,
-        category: "milkshakes",
-        emoji: "🥤",
-        badge: "Top"
-    },
-    {
-        id: 10,
-        name: "Milkshake Beijinho",
-        desc: "Milkshake de coco com leite condensado, coco ralado e cereja",
-        price: 18.90,
-        category: "milkshakes",
-        emoji: "🥥"
-    },
-    // Açaí
-    {
-        id: 11,
-        name: "Açaí MilkyPot 500ml",
-        desc: "Açaí puro com banana, granola, leite ninho e mel",
-        price: 27.90,
+        name: "Açaí + Granola",
+        desc: "Açaí puro e cremoso com granola crocante.",
+        price: 14.00,
         category: "acai",
-        emoji: "🫐",
+        emoji: "🥣",
         popular: true
     },
     {
-        id: 12,
-        name: "Açaí MilkyPot 700ml",
-        desc: "Açaí puro com frutas da estação, granola, paçoca e leite condensado",
-        price: 34.90,
+        id: 10,
+        name: "Açaí + Banana",
+        desc: "Açaí cremoso com banana fatiada fresca.",
+        price: 14.00,
         category: "acai",
-        emoji: "🫐"
+        emoji: "🍌"
+    },
+    {
+        id: 11,
+        name: "Açaí + Morango",
+        desc: "Açaí cremoso com morango fresco.",
+        price: 14.00,
+        category: "acai",
+        emoji: "🍓"
+    },
+    // ===== MILKYPOT ZERO / FIT =====
+    {
+        id: 12,
+        name: "Shake Whey",
+        desc: "Shake zero açúcar com whey protein.",
+        price: 14.00,
+        category: "fit",
+        emoji: "💪"
     },
     {
         id: 13,
-        name: "Açaí Premium 500ml",
-        desc: "Açaí com morango, kiwi, manga, granola artesanal e mel orgânico",
-        price: 32.90,
-        category: "acai",
-        emoji: "🍇",
-        badge: "Premium"
+        name: "Shake Banana + Whey",
+        desc: "Banana com whey protein, zero açúcar.",
+        price: 14.00,
+        category: "fit",
+        emoji: "🍌",
+        badge: "Fit",
+        popular: true
     },
-    // Sorvetes
     {
         id: 14,
-        name: "Casquinha Dupla",
-        desc: "Duas bolas de sorvete na casquinha crocante. Escolha seus sabores!",
-        price: 12.90,
-        category: "sorvetes",
-        emoji: "🍦"
+        name: "Shake Pasta de Amendoim",
+        desc: "Com pasta de amendoim, zero açúcar e proteico.",
+        price: 14.00,
+        category: "fit",
+        emoji: "🥜"
     },
+    // ===== SUNDAE GOURMET =====
     {
         id: 15,
-        name: "Sundae Caramelo",
-        desc: "Sorvete de creme com calda de caramelo, castanhas e chantilly",
-        price: 18.90,
-        category: "sorvetes",
-        emoji: "🍨"
+        name: "Sundae de Morango",
+        desc: "Montado no copo com camadas de cremes e cobertura de morango.",
+        price: 18.00,
+        category: "sundae",
+        emoji: "🍨",
+        badge: "Gourmet"
     },
     {
         id: 16,
-        name: "Banana Split MilkyPot",
-        desc: "Banana com 3 bolas de sorvete, caldas, chantilly e cereja",
-        price: 29.90,
-        category: "sorvetes",
-        emoji: "🍌",
-        badge: "Clássico"
+        name: "Sundae de Nutella",
+        desc: "Montado no copo com camadas de cremes e Nutella generosa.",
+        price: 18.00,
+        category: "sundae",
+        emoji: "🍨"
     },
     {
         id: 17,
-        name: "Picolé Artesanal",
-        desc: "Picolé artesanal nos sabores: frutas vermelhas, maracujá ou limão",
-        price: 9.90,
-        category: "sorvetes",
-        emoji: "🍭"
+        name: "Sundae de Oreo",
+        desc: "Montado no copo com camadas de cremes e Oreo triturado.",
+        price: 18.00,
+        category: "sundae",
+        emoji: "🍨"
     },
-    // Especiais
+    // ===== BEBIDAS =====
     {
         id: 18,
-        name: "Fondue de Chocolate",
-        desc: "Fondue de chocolate belga com frutas, marshmallow e biscoitos",
-        price: 49.90,
-        category: "especiais",
-        emoji: "🫕",
-        badge: "Para Compartilhar"
+        name: "Água",
+        desc: "Água mineral 500ml.",
+        price: 3.00,
+        category: "bebidas",
+        emoji: "💧"
     },
     {
         id: 19,
-        name: "Waffle MilkyPot",
-        desc: "Waffle crocante com sorvete, calda, frutas e chantilly",
-        price: 32.90,
-        category: "especiais",
-        emoji: "🧇"
-    },
-    {
-        id: 20,
-        name: "Crepe de Nutella",
-        desc: "Crepe fino recheado com Nutella, morango e sorvete",
-        price: 28.90,
-        category: "especiais",
-        emoji: "🥞"
-    },
-    {
-        id: 21,
-        name: "Churros Recheado",
-        desc: "Churros crocante recheado com doce de leite e cobertura de chocolate",
-        price: 15.90,
-        category: "especiais",
-        emoji: "🥖"
-    },
-    // Combos
-    {
-        id: 22,
-        name: "Combo Família Feliz",
-        desc: "4 Potinhos médios + 1 Milkshake grande + 4 Picolés",
-        price: 89.90,
-        originalPrice: 119.60,
-        category: "combos",
-        emoji: "👨‍👩‍👧‍👦",
-        badge: "Economia"
-    },
-    {
-        id: 23,
-        name: "Combo Casal",
-        desc: "2 Potinhos grandes + 2 Milkshakes + Fondue para dividir",
-        price: 99.90,
-        originalPrice: 139.60,
-        category: "combos",
-        emoji: "💑",
-        badge: "Romântico"
-    },
-    {
-        id: 24,
-        name: "Combo Kids",
-        desc: "1 Potinho pequeno + 1 Milkshake mini + 1 Picolé + Brinde surpresa",
-        price: 34.90,
-        originalPrice: 44.70,
-        category: "combos",
-        emoji: "🧒",
-        badge: "Com Brinde!"
-    },
-    {
-        id: 25,
-        name: "Combo Festa",
-        desc: "10 Potinhos + 5 Milkshakes + Bolo de sorvete para 15 pessoas",
-        price: 299.90,
-        originalPrice: 399.00,
-        category: "combos",
-        emoji: "🎂",
-        badge: "Festa"
+        name: "Água com Gás",
+        desc: "Água mineral com gás 500ml.",
+        price: 4.00,
+        category: "bebidas",
+        emoji: "🫧"
     }
 ];
 

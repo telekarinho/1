@@ -287,8 +287,8 @@ function renderProducts(products) {
                         R$ ${product.price.toFixed(2).replace('.', ',')}
                         ${product.originalPrice ? `<small>R$ ${product.originalPrice.toFixed(2).replace('.', ',')}</small>` : ''}
                     </div>
-                    <button class="btn-add-cart wiggle-hover" onclick="addToCart(${product.id})"
-                            aria-label="Adicionar ${product.name} ao carrinho">+</button>
+                    <button class="btn-add-cart wiggle-hover" onclick="window.location.href='cardapio.html'"
+                            aria-label="Pedir ${product.name}">+</button>
                 </div>
             </div>
         </div>
