@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot Admin - Campanhas de Marketing</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+</head>
+<body>
+    <div class="panel-layout">
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo.png" alt="MilkyPot">
+                <h2>MilkyPot<small>Central Admin</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="franchises.html" class="sidebar-link"><span class="icon">🏪</span> Franquias</a>
+                <a href="finances.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="orders.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <a href="products.html" class="sidebar-link"><span class="icon">🍨</span> Cardapio</a>
+                <a href="users.html" class="sidebar-link"><span class="icon">👥</span> Usuarios</a>
+                <div class="sidebar-nav-group">Marketing</div>
+                <a href="campaigns.html" class="sidebar-link active"><span class="icon">📢</span> Campanhas</a>
+                <a href="seo.html" class="sidebar-link"><span class="icon">🔍</span> SEO & Delivery</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">👑</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Admin</strong>
+                        <small>Super Admin</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+                    <h1>📢 Campanhas de Marketing</h1>
+                </div>
+                <div class="panel-header-right">
+                    <button class="btn btn-primary" onclick="openNewCampaign()">+ Nova Campanha</button>
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <!-- Quick Create Buttons -->
+                <div style="background:linear-gradient(135deg,#FF6B35,#FF3D00);border-radius:var(--mp-radius);padding:24px 32px;color:#fff;margin-bottom:24px">
+                    <h2 style="font-family:'Baloo 2',cursive;font-size:1.3rem;margin-bottom:16px">Criar Campanha Rapida</h2>
+                    <p style="opacity:0.9;font-size:0.85rem;margin-bottom:20px">O Admin cria e gerencia todas as campanhas para os franqueados. Cada campanha pode ser aplicada a franquias especificas ou a toda rede.</p>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap">
+                        <button class="btn" style="background:rgba(255,255,255,0.2);color:#fff" onclick="createQuickCampaign('google')">
+                            🔍 Google Ads
+                        </button>
+                        <button class="btn" style="background:rgba(255,255,255,0.2);color:#fff" onclick="createQuickCampaign('youtube')">
+                            ▶️ YouTube Ads
+                        </button>
+                        <button class="btn" style="background:rgba(255,255,255,0.2);color:#fff" onclick="createQuickCampaign('tiktok')">
+                            🎵 TikTok Ads
+                        </button>
+                        <button class="btn" style="background:rgba(255,255,255,0.2);color:#fff" onclick="createQuickCampaign('instagram')">
+                            📸 Instagram Ads
+                        </button>
+                        <button class="btn" style="background:rgba(255,255,255,0.2);color:#fff" onclick="createQuickCampaign('whatsapp')">
+                            💬 WhatsApp Marketing
+                        </button>
+                        <button class="btn" style="background:rgba(255,255,255,0.2);color:#fff" onclick="createQuickCampaign('delivery')">
+                            🛵 Promo Delivery
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPIs -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon blue">📢</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Campanhas Ativas</div>
+                            <div class="kpi-value" id="kpiActive">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon green">💰</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Investimento Total/Mes</div>
+                            <div class="kpi-value" id="kpiInvestment">R$ 0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon pink">👥</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Leads Gerados</div>
+                            <div class="kpi-value" id="kpiLeads">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon yellow">📈</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">ROI Medio</div>
+                            <div class="kpi-value" id="kpiROI">0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campaign Templates -->
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3>🎯 Templates de Campanha - Delivery Focus</h3>
+                    </div>
+                    <div class="panel-card-body">
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+                            <div class="franchise-card-item" onclick="useCampaignTemplate('frete-gratis')">
+                                <div class="franchise-card-name">🛵 Frete Gratis</div>
+                                <p style="font-size:0.85rem;color:var(--mp-text-light);margin:8px 0">Campanha de frete gratis para delivery acima de R$30. Foco em Google Ads local + Instagram Stories.</p>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                    <span class="status-badge" style="background:#E3F2FD;color:#1565C0">Google Ads</span>
+                                    <span class="status-badge" style="background:#FCE4EC;color:#C62828">Instagram</span>
+                                </div>
+                            </div>
+                            <div class="franchise-card-item" onclick="useCampaignTemplate('primeira-compra')">
+                                <div class="franchise-card-name">🎁 Primeira Compra 20% OFF</div>
+                                <p style="font-size:0.85rem;color:var(--mp-text-light);margin:8px 0">Cupom de desconto para novos clientes no delivery. TikTok + YouTube Shorts + Google.</p>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                    <span class="status-badge" style="background:#E8F5E9;color:#2E7D32">TikTok</span>
+                                    <span class="status-badge" style="background:#FFF3E0;color:#E65100">YouTube</span>
+                                    <span class="status-badge" style="background:#E3F2FD;color:#1565C0">Google</span>
+                                </div>
+                            </div>
+                            <div class="franchise-card-item" onclick="useCampaignTemplate('combo-delivery')">
+                                <div class="franchise-card-name">🎉 Combo Delivery Especial</div>
+                                <p style="font-size:0.85rem;color:var(--mp-text-light);margin:8px 0">Combo exclusivo para delivery: 2 shakes + 1 sundae. Todas as plataformas.</p>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                    <span class="status-badge" style="background:#E3F2FD;color:#1565C0">Multi-canal</span>
+                                </div>
+                            </div>
+                            <div class="franchise-card-item" onclick="useCampaignTemplate('happy-hour')">
+                                <div class="franchise-card-name">⏰ Happy Hour Delivery</div>
+                                <p style="font-size:0.85rem;color:var(--mp-text-light);margin:8px 0">Desconto especial das 14h-17h no delivery. Push via WhatsApp + Instagram.</p>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                    <span class="status-badge" style="background:#E8F5E9;color:#2E7D32">WhatsApp</span>
+                                    <span class="status-badge" style="background:#FCE4EC;color:#C62828">Instagram</span>
+                                </div>
+                            </div>
+                            <div class="franchise-card-item" onclick="useCampaignTemplate('indicacao')">
+                                <div class="franchise-card-name">🤝 Programa de Indicacao</div>
+                                <p style="font-size:0.85rem;color:var(--mp-text-light);margin:8px 0">Indique e ganhe! Cliente indica amigo, ambos ganham 15% OFF no delivery.</p>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                    <span class="status-badge" style="background:#E8F5E9;color:#2E7D32">Organico</span>
+                                    <span class="status-badge" style="background:#E3F2FD;color:#1565C0">WhatsApp</span>
+                                </div>
+                            </div>
+                            <div class="franchise-card-item" onclick="useCampaignTemplate('google-local')">
+                                <div class="franchise-card-name">📍 Google Local - Delivery</div>
+                                <p style="font-size:0.85rem;color:var(--mp-text-light);margin:8px 0">Anuncios locais no Google Maps para atrair pedidos de delivery na regiao. SEO + Google Ads.</p>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                    <span class="status-badge" style="background:#E3F2FD;color:#1565C0">Google Maps</span>
+                                    <span class="status-badge" style="background:#FFF3E0;color:#E65100">SEO Local</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Campaigns -->
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3>📋 Campanhas em Andamento</h3>
+                    </div>
+                    <div class="panel-card-body" style="padding:0">
+                        <table class="panel-table">
+                            <thead>
+                                <tr>
+                                    <th>Campanha</th>
+                                    <th>Plataforma</th>
+                                    <th>Franquias</th>
+                                    <th>Investimento</th>
+                                    <th>Leads</th>
+                                    <th>Pedidos</th>
+                                    <th>ROI</th>
+                                    <th>Status</th>
+                                    <th>Acoes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="campaignsBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Campaign Modal -->
+    <div class="panel-modal-overlay" id="campaignModal">
+        <div class="panel-modal" style="max-width:640px">
+            <div class="panel-modal-header">
+                <h3 id="campaignModalTitle">Nova Campanha</h3>
+                <button class="panel-modal-close" onclick="document.getElementById('campaignModal').classList.remove('active')">&times;</button>
+            </div>
+            <div class="panel-modal-body">
+                <form id="campaignForm" onsubmit="saveCampaign(event)">
+                    <input type="hidden" id="cId">
+                    <div class="form-group">
+                        <label>Nome da Campanha *</label>
+                        <input type="text" class="form-control" id="cName" required placeholder="Ex: Frete Gratis Dezembro">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Plataforma *</label>
+                            <select class="form-control" id="cPlatform" required>
+                                <option value="google">🔍 Google Ads</option>
+                                <option value="youtube">▶️ YouTube Ads</option>
+                                <option value="tiktok">🎵 TikTok Ads</option>
+                                <option value="instagram">📸 Instagram Ads</option>
+                                <option value="whatsapp">💬 WhatsApp</option>
+                                <option value="multi">🌐 Multi-canal</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo</label>
+                            <select class="form-control" id="cType">
+                                <option value="delivery">🛵 Delivery</option>
+                                <option value="branding">🎨 Branding</option>
+                                <option value="promo">🎁 Promocao</option>
+                                <option value="local">📍 Local</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Franquias Alvo</label>
+                        <select class="form-control" id="cFranchises">
+                            <option value="all">🌐 Todas as Franquias</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Orcamento Diario (R$)</label>
+                            <input type="number" class="form-control" id="cBudget" value="50" step="10">
+                        </div>
+                        <div class="form-group">
+                            <label>Duracao (dias)</label>
+                            <input type="number" class="form-control" id="cDuration" value="30">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Descricao / Texto do Anuncio</label>
+                        <textarea class="form-control" id="cDescription" rows="3" placeholder="Descreva a campanha..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Cupom de Desconto (opcional)</label>
+                        <input type="text" class="form-control" id="cCoupon" placeholder="Ex: DELIVERY20">
+                    </div>
+                    <div class="panel-modal-footer" style="padding:0;border:0;margin-top:24px">
+                        <button type="button" class="btn btn-outline" onclick="document.getElementById('campaignModal').classList.remove('active')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Lancar Campanha</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script>
+        if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+        document.getElementById('sidebarUserName').textContent = Auth.getUserName();
+
+        // Populate franchise select
+        const franchises = DataStore.getAllFranchises();
+        const sel = document.getElementById('cFranchises');
+        franchises.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f.id;
+            opt.textContent = f.name;
+            sel.appendChild(opt);
+        });
+
+        // Seed demo campaigns if empty
+        if (!DataStore.get('campaigns')) {
+            DataStore.set('campaigns', [
+                {
+                    id: 'camp1', name: 'Frete Gratis - Rede Inteira', platform: 'google', type: 'delivery',
+                    franchises: 'all', budget: 80, duration: 30, description: 'Campanha de frete gratis para pedidos acima de R$30 via delivery.',
+                    coupon: 'FRETEGRATIS', status: 'ativo', leads: 342, orders: 89, investment: 2400,
+                    createdAt: '2026-02-15T00:00:00Z'
+                },
+                {
+                    id: 'camp2', name: '1a Compra 20% OFF - TikTok', platform: 'tiktok', type: 'promo',
+                    franchises: 'all', budget: 50, duration: 15, description: 'Video criativo mostrando processo de preparo do shake.',
+                    coupon: 'MILKY20', status: 'ativo', leads: 1200, orders: 156, investment: 750,
+                    createdAt: '2026-03-01T00:00:00Z'
+                },
+                {
+                    id: 'camp3', name: 'Google Local - SP Capital', platform: 'google', type: 'local',
+                    franchises: 'ibirapuera', budget: 100, duration: 30, description: 'Anuncios no Google Maps para franquias de SP.',
+                    coupon: '', status: 'ativo', leads: 890, orders: 234, investment: 3000,
+                    createdAt: '2026-02-01T00:00:00Z'
+                },
+                {
+                    id: 'camp4', name: 'Happy Hour Delivery', platform: 'whatsapp', type: 'delivery',
+                    franchises: 'all', budget: 0, duration: 30, description: 'Push via WhatsApp para base de clientes com desconto 14h-17h.',
+                    coupon: 'HAPPY15', status: 'pausado', leads: 560, orders: 78, investment: 0,
+                    createdAt: '2026-01-15T00:00:00Z'
+                }
+            ]);
+        }
+
+        function openNewCampaign() {
+            document.getElementById('campaignForm').reset();
+            document.getElementById('cId').value = '';
+            document.getElementById('campaignModalTitle').textContent = 'Nova Campanha';
+            document.getElementById('campaignModal').classList.add('active');
+        }
+
+        function createQuickCampaign(platform) {
+            document.getElementById('campaignForm').reset();
+            document.getElementById('cId').value = '';
+            document.getElementById('cPlatform').value = platform === 'delivery' ? 'multi' : platform;
+            document.getElementById('cType').value = platform === 'delivery' ? 'delivery' : 'promo';
+            document.getElementById('campaignModalTitle').textContent = 'Nova Campanha - ' + platform.toUpperCase();
+            document.getElementById('campaignModal').classList.add('active');
+        }
+
+        function useCampaignTemplate(template) {
+            const templates = {
+                'frete-gratis': { name: 'Frete Gratis - Delivery', platform: 'google', type: 'delivery', budget: 80, description: 'Frete gratis para pedidos delivery acima de R$30.', coupon: 'FRETEGRATIS' },
+                'primeira-compra': { name: '1a Compra 20% OFF', platform: 'multi', type: 'promo', budget: 50, description: 'Cupom exclusivo para novos clientes no delivery.', coupon: 'MILKY20' },
+                'combo-delivery': { name: 'Combo Delivery Especial', platform: 'multi', type: 'delivery', budget: 60, description: '2 Shakes + 1 Sundae por preco especial no delivery.', coupon: 'COMBO2X1' },
+                'happy-hour': { name: 'Happy Hour Delivery 14h-17h', platform: 'whatsapp', type: 'delivery', budget: 0, description: '15% de desconto em todos os pedidos delivery das 14h as 17h.', coupon: 'HAPPY15' },
+                'indicacao': { name: 'Programa Indica e Ganha', platform: 'whatsapp', type: 'promo', budget: 0, description: 'Indique um amigo e ambos ganham 15% OFF no proximo delivery.', coupon: 'INDICA15' },
+                'google-local': { name: 'Google Maps Delivery Local', platform: 'google', type: 'local', budget: 100, description: 'Anuncios no Google Maps para atrair pedidos de delivery na regiao.', coupon: '' }
+            };
+            const t = templates[template];
+            if (!t) return;
+
+            document.getElementById('cId').value = '';
+            document.getElementById('cName').value = t.name;
+            document.getElementById('cPlatform').value = t.platform;
+            document.getElementById('cType').value = t.type;
+            document.getElementById('cBudget').value = t.budget;
+            document.getElementById('cDescription').value = t.description;
+            document.getElementById('cCoupon').value = t.coupon;
+            document.getElementById('campaignModalTitle').textContent = 'Criar Campanha: ' + t.name;
+            document.getElementById('campaignModal').classList.add('active');
+        }
+
+        function saveCampaign(e) {
+            e.preventDefault();
+            const campaigns = DataStore.get('campaigns') || [];
+            const campaign = {
+                id: document.getElementById('cId').value || Utils.generateId(),
+                name: document.getElementById('cName').value,
+                platform: document.getElementById('cPlatform').value,
+                type: document.getElementById('cType').value,
+                franchises: document.getElementById('cFranchises').value,
+                budget: parseFloat(document.getElementById('cBudget').value),
+                duration: parseInt(document.getElementById('cDuration').value),
+                description: document.getElementById('cDescription').value,
+                coupon: document.getElementById('cCoupon').value,
+                status: 'ativo',
+                leads: 0,
+                orders: 0,
+                investment: 0,
+                createdAt: new Date().toISOString()
+            };
+
+            const idx = campaigns.findIndex(c => c.id === campaign.id);
+            if (idx !== -1) campaigns[idx] = campaign;
+            else campaigns.push(campaign);
+
+            DataStore.set('campaigns', campaigns);
+            document.getElementById('campaignModal').classList.remove('active');
+            renderCampaigns();
+            Utils.showToast('Campanha criada com sucesso!');
+        }
+
+        function toggleCampaignStatus(id) {
+            const campaigns = DataStore.get('campaigns') || [];
+            const c = campaigns.find(x => x.id === id);
+            if (!c) return;
+            c.status = c.status === 'ativo' ? 'pausado' : 'ativo';
+            DataStore.set('campaigns', campaigns);
+            renderCampaigns();
+        }
+
+        function renderCampaigns() {
+            const campaigns = DataStore.get('campaigns') || [];
+            const platformIcons = { google: '🔍', youtube: '▶️', tiktok: '🎵', instagram: '📸', whatsapp: '💬', multi: '🌐' };
+
+            // KPIs
+            const active = campaigns.filter(c => c.status === 'ativo');
+            document.getElementById('kpiActive').textContent = active.length;
+            document.getElementById('kpiInvestment').textContent = Utils.formatCurrency(active.reduce((s, c) => s + (c.investment || c.budget * c.duration), 0));
+            document.getElementById('kpiLeads').textContent = campaigns.reduce((s, c) => s + (c.leads || 0), 0).toLocaleString();
+            const totalInvest = campaigns.reduce((s, c) => s + (c.investment || 0), 0);
+            const totalOrders = campaigns.reduce((s, c) => s + (c.orders || 0), 0);
+            document.getElementById('kpiROI').textContent = totalInvest > 0 ? ((totalOrders * 18 / totalInvest - 1) * 100).toFixed(0) + '%' : 'N/A';
+
+            // Table
+            document.getElementById('campaignsBody').innerHTML = campaigns.map(c => `
+                <tr>
+                    <td><strong>${c.name}</strong>${c.coupon ? `<br><small style="color:var(--mp-purple)">🏷️ ${c.coupon}</small>` : ''}</td>
+                    <td>${platformIcons[c.platform] || ''} ${c.platform}</td>
+                    <td>${c.franchises === 'all' ? '🌐 Todas' : c.franchises}</td>
+                    <td>${Utils.formatCurrency(c.investment || c.budget * c.duration)}</td>
+                    <td><strong>${(c.leads || 0).toLocaleString()}</strong></td>
+                    <td><strong>${c.orders || 0}</strong></td>
+                    <td>${c.investment > 0 ? ((c.orders * 18 / c.investment - 1) * 100).toFixed(0) + '%' : '-'}</td>
+                    <td>${Utils.statusBadge(c.status)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="toggleCampaignStatus('${c.id}')">${c.status === 'ativo' ? '⏸️' : '▶️'}</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        renderCampaigns();
+    </script>
+</body>
+</html>

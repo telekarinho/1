@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/shared-panel.css">
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body class="login-page">
+    <div class="login-card">
+        <img src="images/logo.png" alt="MilkyPot" class="login-logo">
+        <h1 class="login-title">Acesso ao Sistema</h1>
+        <p class="login-subtitle">Painel Administrativo & Franqueados</p>
+
+        <div class="login-error" id="loginError"></div>
+
+        <!-- Google Sign-In Button -->
+        <div style="margin-bottom: 20px;">
+            <div id="g_id_onload"
+                 data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+                 data-callback="handleGoogleSignIn"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-shape="rectangular"
+                 data-theme="outline"
+                 data-text="signin_with"
+                 data-size="large"
+                 data-logo_alignment="left"
+                 data-width="340">
+            </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+            <div style="flex:1;height:1px;background:var(--mp-border)"></div>
+            <span style="font-size:0.8rem;color:var(--mp-text-light)">ou entre com e-mail</span>
+            <div style="flex:1;height:1px;background:var(--mp-border)"></div>
+        </div>
+
+        <form class="login-form" id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" class="form-control" placeholder="seu@email.com" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" class="form-control" placeholder="Sua senha" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full btn-lg" style="margin-top:8px">
+                Entrar
+            </button>
+        </form>
+
+        <div class="login-demo">
+            <h4>Contas Demo para Teste</h4>
+            <div class="demo-accounts">
+                <button class="demo-account" onclick="fillDemo('admin@milkypot.com','admin123')">
+                    <strong>👑 Admin Geral</strong><br>
+                    <span>admin@milkypot.com / admin123</span>
+                </button>
+                <button class="demo-account" onclick="fillDemo('catuai@milkypot.com','catuai123')">
+                    <strong>🏪 Franqueado Catuai</strong><br>
+                    <span>catuai@milkypot.com / catuai123</span>
+                </button>
+                <button class="demo-account" onclick="fillDemo('morumbi@milkypot.com','morumbi123')">
+                    <strong>🏪 Franqueado Morumbi</strong><br>
+                    <span>morumbi@milkypot.com / morumbi123</span>
+                </button>
+            </div>
+        </div>
+
+        <p style="margin-top:24px;font-size:0.75rem;color:var(--mp-text-light)">
+            <a href="index.html">Voltar ao site</a>
+        </p>
+    </div>
+
+    <script src="js/core/utils.js"></script>
+    <script src="js/core/datastore.js"></script>
+    <script src="js/core/auth.js"></script>
+    <script>
+        // Check if already logged in
+        const session = Auth.getSession();
+        if (session) {
+            if (session.role === 'super_admin') {
+                window.location.href = 'admin/';
+            } else {
+                window.location.href = 'painel/';
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const result = Auth.login(email, password);
+            if (result.success) {
+                if (result.session.role === 'super_admin') {
+                    window.location.href = 'admin/';
+                } else {
+                    window.location.href = 'painel/';
+                }
+            } else {
+                const errorEl = document.getElementById('loginError');
+                errorEl.textContent = result.error;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        function handleGoogleSignIn(response) {
+            // Decode Google JWT token
+            const payload = JSON.parse(atob(response.credential.split('.')[1]));
+            const email = payload.email;
+            const name = payload.name;
+
+            // Check if user exists
+            const users = DataStore.get('users') || [];
+            let user = users.find(u => u.email === email);
+
+            if (user) {
+                // Login existing user
+                const session = {
+                    userId: user.id,
+                    email: user.email,
+                    name: user.name,
+                    role: user.role,
+                    franchiseId: user.franchiseId,
+                    token: Utils.generateId() + Utils.generateId(),
+                    loginAt: new Date().toISOString(),
+                    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                    googleAuth: true,
+                    avatar: payload.picture
+                };
+                localStorage.setItem(Auth.SESSION_KEY, JSON.stringify(session));
+
+                if (user.role === 'super_admin') {
+                    window.location.href = 'admin/';
+                } else {
+                    window.location.href = 'painel/';
+                }
+            } else {
+                // Show error - user not registered
+                const errorEl = document.getElementById('loginError');
+                errorEl.textContent = 'Este e-mail Google nao esta cadastrado no sistema. Solicite acesso ao administrador.';
+                errorEl.style.display = 'block';
+            }
+        }
+
+        function fillDemo(email, password) {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = password;
+        }
+    </script>
+</body>
+</html>

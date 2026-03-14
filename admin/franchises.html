@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot Admin - Franquias</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+</head>
+<body>
+    <div class="panel-layout">
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo.png" alt="MilkyPot">
+                <h2>MilkyPot<small>Central Admin</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="franchises.html" class="sidebar-link active"><span class="icon">🏪</span> Franquias</a>
+                <a href="finances.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="orders.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <a href="products.html" class="sidebar-link"><span class="icon">🍨</span> Cardapio</a>
+                <a href="users.html" class="sidebar-link"><span class="icon">👥</span> Usuarios</a>
+                <div class="sidebar-nav-group">Marketing</div>
+                <a href="campaigns.html" class="sidebar-link"><span class="icon">📢</span> Campanhas</a>
+                <a href="seo.html" class="sidebar-link"><span class="icon">🔍</span> SEO & Delivery</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">👑</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Admin</strong>
+                        <small>Super Admin</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+                    <h1>🏪 Gestao de Franquias</h1>
+                </div>
+                <div class="panel-header-right">
+                    <button class="btn btn-primary" onclick="openNewFranchiseModal()">+ Nova Franquia</button>
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <!-- Search & Filters -->
+                <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;align-items:center">
+                    <div class="panel-search" style="flex:1;min-width:250px">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" placeholder="Buscar franquia..." id="searchInput" oninput="renderFranchises()">
+                    </div>
+                    <select class="form-control" style="width:auto" id="filterStatus" onchange="renderFranchises()">
+                        <option value="">Todos os status</option>
+                        <option value="ativo">Ativas</option>
+                        <option value="inativo">Inativas</option>
+                        <option value="pendente">Pendentes</option>
+                    </select>
+                    <select class="form-control" style="width:auto" id="filterState" onchange="renderFranchises()">
+                        <option value="">Todos os estados</option>
+                    </select>
+                </div>
+
+                <!-- KPIs -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon green">🏪</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Total de Franquias</div>
+                            <div class="kpi-value" id="kpiTotal">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon blue">🟢</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Ativas</div>
+                            <div class="kpi-value" id="kpiActive">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon yellow">📍</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Estados</div>
+                            <div class="kpi-value" id="kpiStates">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon pink">💰</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Receita Mensal Franquias</div>
+                            <div class="kpi-value" id="kpiMonthlyFee">R$ 0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Franchise Grid -->
+                <div class="franchise-card-grid" id="franchiseGrid"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- New Franchise Modal -->
+    <div class="panel-modal-overlay" id="newFranchiseModal">
+        <div class="panel-modal" style="max-width:640px">
+            <div class="panel-modal-header">
+                <h3>🏪 Nova Franquia</h3>
+                <button class="panel-modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="panel-modal-body">
+                <form id="franchiseForm" onsubmit="saveFranchise(event)">
+                    <input type="hidden" id="fId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome da Franquia *</label>
+                            <input type="text" class="form-control" id="fName" required placeholder="MilkyPot Shopping XXX">
+                        </div>
+                        <div class="form-group">
+                            <label>Slug (URL) *</label>
+                            <input type="text" class="form-control" id="fSlug" required placeholder="shopping-xxx">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Endereco *</label>
+                        <input type="text" class="form-control" id="fAddress" required placeholder="Rua, numero - Bairro">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cidade *</label>
+                            <input type="text" class="form-control" id="fCity" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Estado *</label>
+                            <input type="text" class="form-control" id="fState" required placeholder="SP" maxlength="2">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Telefone *</label>
+                            <input type="tel" class="form-control" id="fPhone" required>
+                        </div>
+                        <div class="form-group">
+                            <label>WhatsApp *</label>
+                            <input type="text" class="form-control" id="fWhatsapp" required placeholder="5511999999999">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo</label>
+                            <select class="form-control" id="fType">
+                                <option value="express">Express (Quiosque)</option>
+                                <option value="store" selected>Store (Loja)</option>
+                                <option value="mega">Mega (Grande)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Taxa Mensal (R$)</label>
+                            <input type="number" class="form-control" id="fMonthlyFee" value="5000" step="100">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Horario</label>
+                            <input type="text" class="form-control" id="fHours" value="10:00 - 22:00">
+                        </div>
+                        <div class="form-group">
+                            <label>Taxa Entrega (R$)</label>
+                            <input type="number" class="form-control" id="fDeliveryFee" value="5.90" step="0.10">
+                        </div>
+                    </div>
+
+                    <h4 style="margin:24px 0 16px;font-family:'Baloo 2',cursive">👤 Acesso do Franqueado</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome do Franqueado</label>
+                            <input type="text" class="form-control" id="fOwnerName" placeholder="Nome completo">
+                        </div>
+                        <div class="form-group">
+                            <label>E-mail de Acesso</label>
+                            <input type="email" class="form-control" id="fOwnerEmail" placeholder="franqueado@email.com">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Senha Inicial</label>
+                        <input type="text" class="form-control" id="fOwnerPassword" placeholder="Sera usada no primeiro acesso">
+                    </div>
+
+                    <div class="panel-modal-footer" style="padding:0;border:0;margin-top:24px">
+                        <button type="button" class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Franquia</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script>
+        if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+        document.getElementById('sidebarUserName').textContent = Auth.getUserName();
+
+        // Auto-generate slug from name
+        document.getElementById('fName').addEventListener('input', function() {
+            const slug = Utils.slugify(this.value.replace('MilkyPot', '').trim());
+            document.getElementById('fSlug').value = slug;
+        });
+
+        function openNewFranchiseModal() {
+            document.getElementById('franchiseForm').reset();
+            document.getElementById('fId').value = '';
+            document.getElementById('newFranchiseModal').classList.add('active');
+        }
+
+        function editFranchise(id) {
+            const franchises = DataStore.getAllFranchises();
+            const f = franchises.find(x => x.id === id);
+            if (!f) return;
+
+            document.getElementById('fId').value = f.id;
+            document.getElementById('fName').value = f.name;
+            document.getElementById('fSlug').value = f.slug;
+            document.getElementById('fAddress').value = f.address;
+            document.getElementById('fCity').value = f.city;
+            document.getElementById('fState').value = f.state;
+            document.getElementById('fPhone').value = f.phone;
+            document.getElementById('fWhatsapp').value = f.whatsapp;
+            document.getElementById('fType').value = f.type;
+            document.getElementById('fMonthlyFee').value = f.monthlyFee;
+            document.getElementById('fHours').value = f.hours;
+            document.getElementById('fDeliveryFee').value = f.deliveryFee;
+            document.getElementById('newFranchiseModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('newFranchiseModal').classList.remove('active');
+        }
+
+        function saveFranchise(e) {
+            e.preventDefault();
+            const franchises = DataStore.getAllFranchises();
+            const id = document.getElementById('fId').value;
+            const isNew = !id;
+
+            const data = {
+                id: id || document.getElementById('fSlug').value,
+                slug: document.getElementById('fSlug').value,
+                name: document.getElementById('fName').value,
+                address: document.getElementById('fAddress').value,
+                city: document.getElementById('fCity').value,
+                state: document.getElementById('fState').value.toUpperCase(),
+                phone: document.getElementById('fPhone').value,
+                whatsapp: document.getElementById('fWhatsapp').value,
+                type: document.getElementById('fType').value,
+                monthlyFee: parseFloat(document.getElementById('fMonthlyFee').value),
+                hours: document.getElementById('fHours').value,
+                deliveryFee: parseFloat(document.getElementById('fDeliveryFee').value),
+                rating: 5.0,
+                deliveryTime: '20-35 min',
+                status: 'ativo',
+                createdAt: new Date().toISOString()
+            };
+
+            if (isNew) {
+                // Check slug uniqueness
+                if (franchises.find(f => f.id === data.id)) {
+                    Utils.showToast('Slug ja existe! Use outro nome.', 'error');
+                    return;
+                }
+                franchises.push(data);
+
+                // Create user account for franchisee
+                const ownerName = document.getElementById('fOwnerName').value;
+                const ownerEmail = document.getElementById('fOwnerEmail').value;
+                const ownerPassword = document.getElementById('fOwnerPassword').value;
+
+                if (ownerEmail && ownerPassword) {
+                    Auth.createUser({
+                        email: ownerEmail,
+                        password: ownerPassword,
+                        name: ownerName || data.name,
+                        role: 'franchisee',
+                        franchiseId: data.id
+                    });
+                }
+
+                // Initialize empty collections
+                DataStore.set('orders_' + data.id, []);
+                DataStore.set('finances_' + data.id, []);
+                DataStore.set('staff_' + data.id, []);
+                DataStore.set('inventory_' + data.id, []);
+
+                Utils.showToast('Franquia criada com sucesso!', 'success');
+            } else {
+                const idx = franchises.findIndex(f => f.id === id);
+                if (idx !== -1) {
+                    franchises[idx] = { ...franchises[idx], ...data };
+                }
+                Utils.showToast('Franquia atualizada!', 'success');
+            }
+
+            DataStore.set('franchises', franchises);
+            closeModal();
+            renderFranchises();
+        }
+
+        function toggleFranchiseStatus(id) {
+            const franchises = DataStore.getAllFranchises();
+            const f = franchises.find(x => x.id === id);
+            if (!f) return;
+            f.status = f.status === 'ativo' ? 'inativo' : 'ativo';
+            DataStore.set('franchises', franchises);
+            renderFranchises();
+            Utils.showToast(`Franquia ${f.status === 'ativo' ? 'ativada' : 'desativada'}!`);
+        }
+
+        function renderFranchises() {
+            let franchises = DataStore.getAllFranchises();
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filterStatus = document.getElementById('filterStatus').value;
+            const filterState = document.getElementById('filterState').value;
+
+            if (search) franchises = franchises.filter(f =>
+                f.name.toLowerCase().includes(search) || f.city.toLowerCase().includes(search));
+            if (filterStatus) franchises = franchises.filter(f => f.status === filterStatus);
+            if (filterState) franchises = franchises.filter(f => f.state === filterState);
+
+            // KPIs
+            const all = DataStore.getAllFranchises();
+            document.getElementById('kpiTotal').textContent = all.length;
+            document.getElementById('kpiActive').textContent = all.filter(f => f.status === 'ativo').length;
+            const states = [...new Set(all.map(f => f.state))];
+            document.getElementById('kpiStates').textContent = states.length;
+            document.getElementById('kpiMonthlyFee').textContent = Utils.formatCurrency(
+                all.filter(f => f.status === 'ativo').reduce((s, f) => s + (f.monthlyFee || 0), 0)
+            );
+
+            // Populate state filter
+            const stateSelect = document.getElementById('filterState');
+            if (stateSelect.options.length <= 1) {
+                states.sort().forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s; opt.textContent = s;
+                    stateSelect.appendChild(opt);
+                });
+            }
+
+            // Grid
+            const today = Utils.today();
+            document.getElementById('franchiseGrid').innerHTML = franchises.map(f => {
+                const orders = DataStore.getCollection('orders', f.id);
+                const now = new Date();
+                const monthOrders = orders.filter(o => {
+                    const d = new Date(o.createdAt);
+                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                });
+                const revenue = monthOrders.reduce((s, o) => s + o.total, 0);
+                const todayOrders = orders.filter(o => o.createdAt.startsWith(today)).length;
+                const typeLabel = { express: '🏠 Express', store: '🏪 Store', mega: '🏰 Mega' };
+
+                return `
+                    <div class="franchise-card-item">
+                        <div class="franchise-card-top">
+                            <div>
+                                <div class="franchise-card-name">${f.name}</div>
+                                <div class="franchise-card-city">📍 ${f.city} - ${f.state} | ${typeLabel[f.type] || f.type}</div>
+                            </div>
+                            ${Utils.statusBadge(f.status)}
+                        </div>
+                        <div class="franchise-card-stats">
+                            <div class="franchise-stat">
+                                <div class="franchise-stat-value">${Utils.formatCurrency(revenue)}</div>
+                                <div class="franchise-stat-label">Faturamento/mes</div>
+                            </div>
+                            <div class="franchise-stat">
+                                <div class="franchise-stat-value">${todayOrders}</div>
+                                <div class="franchise-stat-label">Pedidos Hoje</div>
+                            </div>
+                            <div class="franchise-stat">
+                                <div class="franchise-stat-value">${monthOrders.length}</div>
+                                <div class="franchise-stat-label">Pedidos/mes</div>
+                            </div>
+                            <div class="franchise-stat">
+                                <div class="franchise-stat-value">⭐ ${f.rating}</div>
+                                <div class="franchise-stat-label">Avaliacao</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:16px">
+                            <button class="btn btn-sm btn-outline" onclick="editFranchise('${f.id}')">✏️ Editar</button>
+                            <button class="btn btn-sm btn-outline" onclick="toggleFranchiseStatus('${f.id}')">${f.status === 'ativo' ? '🔴 Desativar' : '🟢 Ativar'}</button>
+                            <a href="franchise-detail.html?id=${f.id}" class="btn btn-sm btn-primary">📊 Detalhes</a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        renderFranchises();
+    </script>
+</body>
+</html>

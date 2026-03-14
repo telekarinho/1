@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Painel do Franqueado</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="panel-layout">
+        <!-- Sidebar -->
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo.png" alt="MilkyPot">
+                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link active">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="pedidos.html" class="sidebar-link">
+                    <span class="icon">📋</span> Pedidos
+                    <span class="badge-count" id="newOrdersCount">0</span>
+                </a>
+
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="financeiro.html" class="sidebar-link">
+                    <span class="icon">💰</span> Financeiro
+                </a>
+                <a href="produtos.html" class="sidebar-link">
+                    <span class="icon">🍨</span> Produtos
+                </a>
+                <a href="entregas.html" class="sidebar-link">
+                    <span class="icon">🛵</span> Entregas
+                </a>
+                <a href="equipe.html" class="sidebar-link">
+                    <span class="icon">👥</span> Equipe
+                </a>
+
+                <div class="sidebar-nav-group">Loja Online</div>
+                <a href="#" class="sidebar-link" id="linkSiteFranquia">
+                    <span class="icon">🌐</span> Meu Site
+                </a>
+                <a href="marketing.html" class="sidebar-link">
+                    <span class="icon">📢</span> Marketing
+                </a>
+
+                <div class="sidebar-nav-group">Config</div>
+                <a href="configuracoes.html" class="sidebar-link">
+                    <span class="icon">⚙️</span> Configuracoes
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">🏪</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Franqueado</strong>
+                        <small>Franqueado</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>📊 Dashboard</h1>
+                </div>
+                <div class="panel-header-right">
+                    <button class="header-btn" title="Novo Pedido" onclick="newWalkInOrder()">🛒</button>
+                    <button class="header-btn" title="Notificacoes">🔔<span class="notif-dot"></span></button>
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <!-- Welcome -->
+                <div style="background:linear-gradient(135deg,#4CAF50,#2E7D32);border-radius:var(--mp-radius);padding:24px 32px;color:#fff;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+                    <div>
+                        <h2 style="font-family:'Baloo 2',cursive;font-size:1.3rem;margin-bottom:4px" id="welcomeMsg">Bom dia!</h2>
+                        <p style="opacity:0.9;font-size:0.85rem" id="storeInfo">Carregando...</p>
+                    </div>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap">
+                        <button class="btn" style="background:rgba(255,255,255,0.2);color:#fff" onclick="newWalkInOrder()">+ Novo Pedido</button>
+                        <a href="pedidos.html" class="btn" style="background:rgba(255,255,255,0.2);color:#fff">📋 Ver Pedidos</a>
+                    </div>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon green">💰</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Faturamento Hoje</div>
+                            <div class="kpi-value" id="kpiRevenueToday">R$ 0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon blue">📋</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Pedidos Hoje</div>
+                            <div class="kpi-value" id="kpiOrdersToday">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon yellow">🛵</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Entregas Pendentes</div>
+                            <div class="kpi-value" id="kpiPendingDelivery">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon red">📦</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Estoque Baixo</div>
+                            <div class="kpi-value" id="kpiLowStock">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="newWalkInOrder()">
+                        <span class="qa-icon">🛒</span> Novo Pedido Balcao
+                    </button>
+                    <a href="pedidos.html" class="quick-action-btn">
+                        <span class="qa-icon">📋</span> Gerenciar Pedidos
+                    </a>
+                    <a href="financeiro.html" class="quick-action-btn">
+                        <span class="qa-icon">📊</span> Relatorio do Dia
+                    </a>
+                    <a href="produtos.html" class="quick-action-btn">
+                        <span class="qa-icon">🔄</span> Atualizar Estoque
+                    </a>
+                </div>
+
+                <div class="grid-2">
+                    <!-- Revenue Chart -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>📈 Faturamento - Semana</h3>
+                        </div>
+                        <div class="panel-card-body">
+                            <div class="chart-container" style="height:250px">
+                                <canvas id="weeklyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Orders -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>📋 Ultimos Pedidos</h3>
+                            <a href="pedidos.html" class="btn btn-sm btn-outline">Ver Todos</a>
+                        </div>
+                        <div class="panel-card-body" style="padding:0">
+                            <table class="panel-table">
+                                <thead>
+                                    <tr>
+                                        <th>Pedido</th>
+                                        <th>Cliente</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentOrdersBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <!-- Low Stock Alerts -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>⚠️ Alertas de Estoque</h3>
+                            <a href="produtos.html" class="btn btn-sm btn-outline">Gerenciar</a>
+                        </div>
+                        <div class="panel-card-body" style="padding:0">
+                            <table class="panel-table">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th>Qtd Atual</th>
+                                        <th>Minimo</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lowStockBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Team -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>👥 Equipe</h3>
+                            <a href="equipe.html" class="btn btn-sm btn-outline">Gerenciar</a>
+                        </div>
+                        <div class="panel-card-body" style="padding:0">
+                            <table class="panel-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Funcao</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teamBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script>
+        // Auth Guard
+        if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+
+        const session = Auth.getSession();
+        const franchiseId = session.franchiseId;
+
+        // Get franchise info
+        const franchises = DataStore.getAllFranchises();
+        const franchise = franchises.find(f => f.id === franchiseId);
+
+        document.getElementById('sidebarUserName').textContent = session.name;
+        document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia';
+        document.getElementById('linkSiteFranquia').href = `../f/${franchiseId}/cardapio.html`;
+
+        const hour = new Date().getHours();
+        const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+        document.getElementById('welcomeMsg').textContent = `${greeting}, ${session.name.split(' ')[0]}! 👋`;
+        document.getElementById('storeInfo').textContent = franchise
+            ? `${franchise.name} | ${franchise.address}`
+            : 'Franquia nao encontrada';
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function newWalkInOrder() {
+            window.location.href = `../f/${franchiseId}/cardapio.html`;
+        }
+
+        function loadDashboard() {
+            const today = Utils.today();
+            const orders = DataStore.getCollection('orders', franchiseId);
+
+            // KPIs
+            const todayOrders = orders.filter(o => o.createdAt.startsWith(today));
+            const todayRevenue = todayOrders.reduce((s, o) => s + o.total, 0);
+            const pendingDelivery = orders.filter(o => o.delivery === 'delivery' && ['novo', 'preparando', 'pronto'].includes(o.status));
+
+            document.getElementById('kpiRevenueToday').textContent = Utils.formatCurrency(todayRevenue);
+            document.getElementById('kpiOrdersToday').textContent = todayOrders.length;
+            document.getElementById('kpiPendingDelivery').textContent = pendingDelivery.length;
+
+            // New orders badge
+            const newOrders = orders.filter(o => o.status === 'novo');
+            document.getElementById('newOrdersCount').textContent = newOrders.length;
+            document.getElementById('newOrdersCount').style.display = newOrders.length > 0 ? '' : 'none';
+
+            // Low stock
+            const inventory = DataStore.getCollection('inventory', franchiseId);
+            const lowStock = inventory.filter(item => item.quantity <= item.minStock);
+            document.getElementById('kpiLowStock').textContent = lowStock.length;
+
+            document.getElementById('lowStockBody').innerHTML = lowStock.length > 0
+                ? lowStock.map(item => `
+                    <tr>
+                        <td><strong>${item.name}</strong></td>
+                        <td>${item.quantity} ${item.unit}</td>
+                        <td>${item.minStock} ${item.unit}</td>
+                        <td>${item.quantity <= item.minStock * 0.5
+                            ? Utils.statusBadge('atrasado')
+                            : Utils.statusBadge('vencendo')}</td>
+                    </tr>
+                `).join('')
+                : '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--mp-text-light)">✅ Estoque OK!</td></tr>';
+
+            // Recent Orders
+            const recentOrders = orders
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .slice(0, 8);
+
+            document.getElementById('recentOrdersBody').innerHTML = recentOrders.map(o => `
+                <tr>
+                    <td><strong>#${o.id.slice(-6)}</strong><br><small style="color:var(--mp-text-light)">${Utils.formatTime(o.createdAt)}</small></td>
+                    <td>${o.customer?.name || o.items?.[0]?.nomeCliente || '-'}</td>
+                    <td><strong>${Utils.formatCurrency(o.total)}</strong></td>
+                    <td>${Utils.statusBadge(o.status)}</td>
+                </tr>
+            `).join('');
+
+            // Team
+            const staff = DataStore.getCollection('staff', franchiseId);
+            document.getElementById('teamBody').innerHTML = staff.map(s => `
+                <tr>
+                    <td><strong>${s.name}</strong></td>
+                    <td>${s.role}</td>
+                    <td>${Utils.statusBadge(s.active ? 'ativo' : 'inativo')}</td>
+                </tr>
+            `).join('');
+
+            // Weekly Chart
+            renderWeeklyChart(orders);
+        }
+
+        function renderWeeklyChart(orders) {
+            const ctx = document.getElementById('weeklyChart').getContext('2d');
+            const labels = [];
+            const revenues = [];
+            const counts = [];
+
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                labels.push(d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' }));
+
+                const dayOrders = orders.filter(o => o.createdAt.startsWith(dateStr));
+                revenues.push(dayOrders.reduce((s, o) => s + o.total, 0));
+                counts.push(dayOrders.length);
+            }
+
+            if (window._weeklyChart) window._weeklyChart.destroy();
+            window._weeklyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Faturamento',
+                            data: revenues,
+                            backgroundColor: 'rgba(248,180,217,0.6)',
+                            borderRadius: 6,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Pedidos',
+                            data: counts,
+                            type: 'line',
+                            borderColor: '#D4A5FF',
+                            backgroundColor: 'transparent',
+                            tension: 0.4,
+                            pointRadius: 4,
+                            borderWidth: 2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            position: 'left',
+                            ticks: { callback: v => 'R$' + v }
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Poll for new orders every 5 seconds
+        setInterval(() => {
+            const orders = DataStore.getCollection('orders', franchiseId);
+            const newOrders = orders.filter(o => o.status === 'novo');
+            const badge = document.getElementById('newOrdersCount');
+            badge.textContent = newOrders.length;
+            badge.style.display = newOrders.length > 0 ? '' : 'none';
+        }, 5000);
+
+        // Init
+        loadDashboard();
+    </script>
+</body>
+</html>

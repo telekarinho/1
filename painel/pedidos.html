@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Gerenciar Pedidos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <style>
+        .kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .kanban-column {
+            background: var(--mp-bg);
+            border-radius: var(--mp-radius);
+            padding: 16px;
+            min-height: 400px;
+        }
+        .kanban-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--mp-border);
+        }
+        .kanban-title {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .kanban-count {
+            background: var(--mp-border);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .order-card {
+            background: var(--mp-card);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--mp-shadow);
+        }
+        .order-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .order-id { font-weight: 800; font-size: 0.9rem; color: var(--mp-dark); }
+        .order-time { font-size: 0.75rem; color: var(--mp-text-light); }
+        .order-items {
+            font-size: 0.8rem;
+            color: var(--mp-text);
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        .order-items .item-name { font-weight: 600; }
+        .order-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--mp-border);
+        }
+        .order-total { font-weight: 800; color: var(--mp-dark); font-size: 1rem; }
+        .order-type-badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+        .order-type-delivery { background: #E3F2FD; color: #1565C0; }
+        .order-type-retirada { background: #E8F5E9; color: #2E7D32; }
+        .order-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .order-actions .btn { padding: 6px 10px; font-size: 0.75rem; }
+        .order-customer {
+            font-size: 0.8rem;
+            color: var(--mp-text-light);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        @media (max-width: 1024px) {
+            .kanban { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 600px) {
+            .kanban { grid-template-columns: 1fr; }
+        }
+        /* Sound notification */
+        .new-order-alert {
+            position: fixed;
+            top: 80px; right: 24px;
+            background: var(--mp-success);
+            color: #fff;
+            padding: 16px 24px;
+            border-radius: var(--mp-radius);
+            box-shadow: var(--mp-shadow-lg);
+            font-weight: 700;
+            display: none;
+            z-index: 300;
+            animation: pulse 0.5s ease-in-out infinite alternate;
+        }
+        @keyframes pulse { to { transform: scale(1.02); } }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo.png" alt="MilkyPot">
+                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="pedidos.html" class="sidebar-link active"><span class="icon">📋</span> Pedidos</a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+                <a href="entregas.html" class="sidebar-link"><span class="icon">🛵</span> Entregas</a>
+                <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
+            </nav>
+        </aside>
+
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+                    <h1>📋 Pedidos</h1>
+                </div>
+                <div class="panel-header-right">
+                    <select class="form-control" style="width:auto" id="filterDate" onchange="renderKanban()">
+                        <option value="today">Hoje</option>
+                        <option value="week">Esta Semana</option>
+                        <option value="all">Todos</option>
+                    </select>
+                    <button class="btn btn-primary btn-sm" onclick="newWalkInOrder()">+ Novo Pedido</button>
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <!-- KPIs -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon blue">🔵</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Novos</div>
+                            <div class="kpi-value" id="kpiNew">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon yellow">🟡</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Preparando</div>
+                            <div class="kpi-value" id="kpiPreparing">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon green">🟢</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Prontos</div>
+                            <div class="kpi-value" id="kpiReady">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon pink">💰</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Faturamento</div>
+                            <div class="kpi-value" id="kpiRevenue">R$ 0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kanban Board -->
+                <div class="kanban">
+                    <div class="kanban-column" id="colNovo">
+                        <div class="kanban-header">
+                            <div class="kanban-title">🔵 Novo <span class="kanban-count" id="countNovo">0</span></div>
+                        </div>
+                        <div id="listNovo"></div>
+                    </div>
+                    <div class="kanban-column" id="colPreparando">
+                        <div class="kanban-header">
+                            <div class="kanban-title">🟡 Preparando <span class="kanban-count" id="countPreparando">0</span></div>
+                        </div>
+                        <div id="listPreparando"></div>
+                    </div>
+                    <div class="kanban-column" id="colPronto">
+                        <div class="kanban-header">
+                            <div class="kanban-title">🟢 Pronto <span class="kanban-count" id="countPronto">0</span></div>
+                        </div>
+                        <div id="listPronto"></div>
+                    </div>
+                    <div class="kanban-column" id="colEntregue">
+                        <div class="kanban-header">
+                            <div class="kanban-title">✅ Entregue <span class="kanban-count" id="countEntregue">0</span></div>
+                        </div>
+                        <div id="listEntregue"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="new-order-alert" id="newOrderAlert">🔔 Novo pedido recebido!</div>
+
+    <!-- Order Detail Modal -->
+    <div class="panel-modal-overlay" id="orderModal">
+        <div class="panel-modal">
+            <div class="panel-modal-header">
+                <h3 id="orderModalTitle">Pedido</h3>
+                <button class="panel-modal-close" onclick="document.getElementById('orderModal').classList.remove('active')">&times;</button>
+            </div>
+            <div class="panel-modal-body" id="orderModalBody"></div>
+            <div class="panel-modal-footer" id="orderModalFooter"></div>
+        </div>
+    </div>
+
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script>
+        if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+        const session = Auth.getSession();
+        const franchiseId = session.franchiseId;
+        const franchises = DataStore.getAllFranchises();
+        const franchise = franchises.find(f => f.id === franchiseId);
+        document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ','') : '';
+
+        function newWalkInOrder() {
+            window.location.href = `../f/${franchiseId}/cardapio.html`;
+        }
+
+        function getFilteredOrders() {
+            const orders = DataStore.getCollection('orders', franchiseId);
+            const filter = document.getElementById('filterDate').value;
+            const today = Utils.today();
+
+            if (filter === 'today') {
+                return orders.filter(o => o.createdAt.startsWith(today));
+            } else if (filter === 'week') {
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                return orders.filter(o => new Date(o.createdAt) >= weekAgo);
+            }
+            return orders;
+        }
+
+        function renderKanban() {
+            const orders = getFilteredOrders();
+            const statuses = ['novo', 'preparando', 'pronto', 'entregue'];
+
+            statuses.forEach(status => {
+                const statusOrders = orders
+                    .filter(o => o.status === status)
+                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                const listId = 'list' + status.charAt(0).toUpperCase() + status.slice(1);
+                const countId = 'count' + status.charAt(0).toUpperCase() + status.slice(1);
+
+                document.getElementById(countId).textContent = statusOrders.length;
+                document.getElementById(listId).innerHTML = statusOrders.slice(0, status === 'entregue' ? 10 : 50).map(o => {
+                    const itemsSummary = o.items ? o.items.map(i =>
+                        `<span class="item-name">${i.sabor || i.name || '?'}</span> (${i.tamanho || ''} ${i.formato || ''})`
+                    ).join('<br>') : '-';
+
+                    const nextStatus = { novo: 'preparando', preparando: 'pronto', pronto: 'entregue' };
+                    const nextLabel = { novo: '▶️ Preparar', preparando: '✅ Pronto', pronto: '📦 Entregar' };
+
+                    return `
+                        <div class="order-card" onclick="showOrderDetail('${o.id}')">
+                            <div class="order-card-header">
+                                <span class="order-id">#${o.id.slice(-6)}</span>
+                                <span class="order-time">${Utils.formatTime(o.createdAt)}</span>
+                            </div>
+                            <div class="order-customer">👤 ${o.customer?.name || o.items?.[0]?.nomeCliente || 'Cliente'}</div>
+                            <div class="order-items">${itemsSummary}</div>
+                            <div class="order-card-footer">
+                                <span class="order-total">${Utils.formatCurrency(o.total)}</span>
+                                <span class="order-type-badge order-type-${o.delivery}">${o.delivery === 'delivery' ? '🛵 Delivery' : '🏪 Retirada'}</span>
+                            </div>
+                            ${status !== 'entregue' ? `
+                                <div class="order-actions">
+                                    <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();moveOrder('${o.id}','${nextStatus[status]}')">${nextLabel[status]}</button>
+                                    ${status === 'novo' ? `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();moveOrder('${o.id}','cancelado')">❌</button>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            });
+
+            // KPIs
+            document.getElementById('kpiNew').textContent = orders.filter(o => o.status === 'novo').length;
+            document.getElementById('kpiPreparing').textContent = orders.filter(o => o.status === 'preparando').length;
+            document.getElementById('kpiReady').textContent = orders.filter(o => o.status === 'pronto').length;
+            document.getElementById('kpiRevenue').textContent = Utils.formatCurrency(
+                orders.filter(o => o.status === 'entregue').reduce((s, o) => s + o.total, 0)
+            );
+        }
+
+        function moveOrder(orderId, newStatus) {
+            const orders = DataStore.getCollection('orders', franchiseId);
+            const idx = orders.findIndex(o => o.id === orderId);
+            if (idx === -1) return;
+            orders[idx].status = newStatus;
+            orders[idx].updatedAt = new Date().toISOString();
+            DataStore.set('orders_' + franchiseId, orders);
+            renderKanban();
+            Utils.showToast(`Pedido #${orderId.slice(-6)} → ${newStatus.toUpperCase()}`);
+        }
+
+        function showOrderDetail(orderId) {
+            const orders = DataStore.getCollection('orders', franchiseId);
+            const o = orders.find(x => x.id === orderId);
+            if (!o) return;
+
+            document.getElementById('orderModalTitle').textContent = `Pedido #${o.id.slice(-6)}`;
+            document.getElementById('orderModalBody').innerHTML = `
+                <div style="margin-bottom:16px">
+                    ${Utils.statusBadge(o.status)}
+                    <span class="order-type-badge order-type-${o.delivery}" style="margin-left:8px">${o.delivery === 'delivery' ? '🛵 Delivery' : '🏪 Retirada'}</span>
+                </div>
+                <p style="font-size:0.85rem;color:var(--mp-text-light);margin-bottom:16px">
+                    📅 ${Utils.formatDateTime(o.createdAt)} | 💳 ${o.payment || 'N/A'}
+                </p>
+                <h4 style="margin-bottom:12px">👤 Cliente</h4>
+                <p style="margin-bottom:16px">${o.customer?.name || '-'} | ${o.customer?.phone || '-'}</p>
+                <h4 style="margin-bottom:12px">🍨 Itens</h4>
+                <table class="panel-table" style="margin-bottom:16px">
+                    <thead><tr><th>Item</th><th>Potinho</th><th>Detalhe</th><th class="text-right">Preco</th></tr></thead>
+                    <tbody>
+                        ${(o.items || []).map(i => `
+                            <tr>
+                                <td><strong>${i.sabor || i.name || '?'}</strong></td>
+                                <td>${i.nomeCliente || '-'}</td>
+                                <td>${i.tamanho || ''} ${i.formato || ''}</td>
+                                <td class="text-right">${Utils.formatCurrency(i.price)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div style="text-align:right;font-size:1.2rem;font-weight:800;color:var(--mp-dark)">
+                    Total: ${Utils.formatCurrency(o.total)}
+                </div>
+            `;
+
+            const nextStatus = { novo: 'preparando', preparando: 'pronto', pronto: 'entregue' };
+            const nextLabel = { novo: '▶️ Iniciar Preparo', preparando: '✅ Marcar Pronto', pronto: '📦 Marcar Entregue' };
+
+            document.getElementById('orderModalFooter').innerHTML = o.status !== 'entregue' && o.status !== 'cancelado'
+                ? `<button class="btn btn-danger btn-sm" onclick="moveOrder('${o.id}','cancelado');document.getElementById('orderModal').classList.remove('active')">Cancelar</button>
+                   <button class="btn btn-primary" onclick="moveOrder('${o.id}','${nextStatus[o.status]}');document.getElementById('orderModal').classList.remove('active')">${nextLabel[o.status]}</button>`
+                : '';
+
+            document.getElementById('orderModal').classList.add('active');
+        }
+
+        // Poll for new orders
+        let lastOrderCount = 0;
+        setInterval(() => {
+            const orders = DataStore.getCollection('orders', franchiseId);
+            const newOrders = orders.filter(o => o.status === 'novo');
+            if (newOrders.length > lastOrderCount && lastOrderCount > 0) {
+                document.getElementById('newOrderAlert').style.display = 'block';
+                setTimeout(() => document.getElementById('newOrderAlert').style.display = 'none', 5000);
+                // Play notification sound
+                try {
+                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2JkYyBd3N9ho6LgXdxe4WNjIF3cXyFjYyBd3F8hY2MgXdxfIWNjA==');
+                    audio.play().catch(() => {});
+                } catch(e) {}
+                renderKanban();
+            }
+            lastOrderCount = newOrders.length;
+        }, 3000);
+
+        renderKanban();
+    </script>
+</body>
+</html>

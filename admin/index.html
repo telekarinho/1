@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot Admin - Central de Controle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="panel-layout">
+        <!-- Sidebar -->
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo.png" alt="MilkyPot">
+                <h2>MilkyPot<small>Central Admin</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link active">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="franchises.html" class="sidebar-link">
+                    <span class="icon">🏪</span> Franquias
+                    <span class="badge-count" id="franchiseCount">0</span>
+                </a>
+                <a href="finances.html" class="sidebar-link">
+                    <span class="icon">💰</span> Financeiro
+                </a>
+
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="orders.html" class="sidebar-link">
+                    <span class="icon">📋</span> Pedidos
+                </a>
+                <a href="products.html" class="sidebar-link">
+                    <span class="icon">🍨</span> Cardapio
+                </a>
+                <a href="users.html" class="sidebar-link">
+                    <span class="icon">👥</span> Usuarios
+                </a>
+
+                <div class="sidebar-nav-group">Marketing</div>
+                <a href="campaigns.html" class="sidebar-link">
+                    <span class="icon">📢</span> Campanhas
+                </a>
+                <a href="seo.html" class="sidebar-link">
+                    <span class="icon">🔍</span> SEO & Delivery
+                </a>
+
+                <div class="sidebar-nav-group">Sistema</div>
+                <a href="settings.html" class="sidebar-link">
+                    <span class="icon">⚙️</span> Configuracoes
+                </a>
+                <a href="#" class="sidebar-link" onclick="DataStore.downloadBackup()">
+                    <span class="icon">💾</span> Backup
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">👑</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Admin</strong>
+                        <small>Super Admin</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>📊 Dashboard Geral</h1>
+                </div>
+                <div class="panel-header-right">
+                    <button class="header-btn" title="Notificacoes" onclick="toggleNotifications()">
+                        🔔<span class="notif-dot" id="notifDot"></span>
+                    </button>
+                    <button class="header-btn" title="Atualizar" onclick="loadDashboard()">🔄</button>
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <!-- Welcome Banner -->
+                <div style="background:linear-gradient(135deg,var(--mp-pink),var(--mp-purple));border-radius:var(--mp-radius);padding:24px 32px;color:#fff;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+                    <div>
+                        <h2 style="font-family:'Baloo 2',cursive;font-size:1.4rem;margin-bottom:4px">Bom dia, <span id="welcomeName">Admin</span>! 👋</h2>
+                        <p style="opacity:0.9;font-size:0.9rem">Aqui esta o resumo da sua rede MilkyPot</p>
+                    </div>
+                    <div style="display:flex;gap:12px">
+                        <a href="franchises.html" class="btn" style="background:rgba(255,255,255,0.2);color:#fff;backdrop-filter:blur(10px)">+ Nova Franquia</a>
+                        <a href="campaigns.html" class="btn" style="background:rgba(255,255,255,0.2);color:#fff;backdrop-filter:blur(10px)">📢 Nova Campanha</a>
+                    </div>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="kpi-grid" id="kpiGrid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon green">💰</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Faturamento Mensal</div>
+                            <div class="kpi-value" id="kpiRevenue">R$ 0</div>
+                            <div class="kpi-change up" id="kpiRevenueChange">+0%</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon pink">🏪</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Franquias Ativas</div>
+                            <div class="kpi-value" id="kpiFranchises">0</div>
+                            <div class="kpi-change up">Todas operando</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon blue">📋</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Pedidos Hoje</div>
+                            <div class="kpi-value" id="kpiOrdersToday">0</div>
+                            <div class="kpi-change" id="kpiOrdersChange">vs ontem</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon yellow">⚠️</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Pagamentos Pendentes</div>
+                            <div class="kpi-value" id="kpiPending">0</div>
+                            <div class="kpi-change down" id="kpiPendingInfo">Verificar</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid-2">
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>📈 Faturamento - Ultimos 30 Dias</h3>
+                        </div>
+                        <div class="panel-card-body">
+                            <div class="chart-container">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>🏆 Top Franquias - Faturamento</h3>
+                        </div>
+                        <div class="panel-card-body">
+                            <div class="chart-container">
+                                <canvas id="topFranchisesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Franchise Overview & Payments -->
+                <div class="grid-2">
+                    <!-- Recent Orders -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>📋 Pedidos Recentes</h3>
+                            <a href="orders.html" class="btn btn-sm btn-outline">Ver Todos</a>
+                        </div>
+                        <div class="panel-card-body" style="padding:0">
+                            <table class="panel-table">
+                                <thead>
+                                    <tr>
+                                        <th>Pedido</th>
+                                        <th>Franquia</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentOrdersBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Payments Status -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>💳 Pagamentos de Franquia</h3>
+                            <a href="finances.html" class="btn btn-sm btn-outline">Ver Todos</a>
+                        </div>
+                        <div class="panel-card-body" style="padding:0">
+                            <table class="panel-table">
+                                <thead>
+                                    <tr>
+                                        <th>Franquia</th>
+                                        <th>Valor</th>
+                                        <th>Vencimento</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="paymentsBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Franchise Cards -->
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3>🏪 Visao Geral das Franquias</h3>
+                        <a href="franchises.html" class="btn btn-sm btn-primary">Gerenciar</a>
+                    </div>
+                    <div class="panel-card-body">
+                        <div class="franchise-card-grid" id="franchiseGrid">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script>
+        // Auth Guard
+        if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+
+        const session = Auth.getSession();
+        document.getElementById('sidebarUserName').textContent = session.name;
+        document.getElementById('welcomeName').textContent = session.name.split(' ')[0];
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function toggleNotifications() {
+            Utils.showToast('Em breve: Central de Notificacoes!', 'info');
+        }
+
+        function loadDashboard() {
+            const franchises = DataStore.getAllFranchises();
+            const today = Utils.today();
+
+            // KPIs
+            document.getElementById('franchiseCount').textContent = franchises.length;
+            document.getElementById('kpiFranchises').textContent = franchises.filter(f => f.status === 'ativo').length;
+
+            // Revenue this month
+            let totalRevenue = 0;
+            let ordersToday = 0;
+            let allOrders = [];
+
+            franchises.forEach(f => {
+                const orders = DataStore.getCollection('orders', f.id);
+                orders.forEach(o => {
+                    o._franchiseName = f.name;
+                    o._franchiseId = f.id;
+                });
+                allOrders = allOrders.concat(orders);
+
+                const monthOrders = orders.filter(o => {
+                    const d = new Date(o.createdAt);
+                    const now = new Date();
+                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                });
+                totalRevenue += monthOrders.reduce((s, o) => s + o.total, 0);
+
+                ordersToday += orders.filter(o => o.createdAt.startsWith(today)).length;
+            });
+
+            document.getElementById('kpiRevenue').textContent = Utils.formatCurrency(totalRevenue);
+            document.getElementById('kpiOrdersToday').textContent = ordersToday;
+
+            // Payments
+            const payments = DataStore.get('payments') || [];
+            const pendingPayments = payments.filter(p => p.status !== 'pago');
+            document.getElementById('kpiPending').textContent = pendingPayments.length;
+            document.getElementById('kpiPendingInfo').textContent = pendingPayments.length > 0
+                ? `${Utils.formatCurrency(pendingPayments.reduce((s,p) => s + p.amount, 0))} em aberto`
+                : 'Tudo em dia!';
+            document.getElementById('kpiPendingInfo').className = 'kpi-change ' + (pendingPayments.length > 0 ? 'down' : 'up');
+
+            // Recent Orders Table
+            const recentOrders = allOrders
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .slice(0, 8);
+
+            document.getElementById('recentOrdersBody').innerHTML = recentOrders.map(o => `
+                <tr>
+                    <td><strong>#${o.id.slice(-6)}</strong><br><small style="color:var(--mp-text-light)">${Utils.formatTime(o.createdAt)}</small></td>
+                    <td style="font-size:0.8rem">${o._franchiseName}</td>
+                    <td><strong>${Utils.formatCurrency(o.total)}</strong></td>
+                    <td>${Utils.statusBadge(o.status)}</td>
+                </tr>
+            `).join('');
+
+            // Payments Table
+            const recentPayments = payments
+                .sort((a, b) => new Date(b.dueDate) - new Date(a.dueDate))
+                .slice(0, 8);
+
+            document.getElementById('paymentsBody').innerHTML = recentPayments.map(p => `
+                <tr>
+                    <td style="font-size:0.85rem">${p.franchiseName}</td>
+                    <td><strong>${Utils.formatCurrency(p.amount)}</strong></td>
+                    <td>${Utils.formatDate(p.dueDate)}</td>
+                    <td>${Utils.statusBadge(p.status)}</td>
+                </tr>
+            `).join('');
+
+            // Franchise Cards
+            document.getElementById('franchiseGrid').innerHTML = franchises.map(f => {
+                const orders = DataStore.getCollection('orders', f.id);
+                const monthOrders = orders.filter(o => {
+                    const d = new Date(o.createdAt);
+                    const now = new Date();
+                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                });
+                const revenue = monthOrders.reduce((s, o) => s + o.total, 0);
+                const todayOrders = orders.filter(o => o.createdAt.startsWith(today)).length;
+
+                return `
+                    <div class="franchise-card-item" onclick="window.location.href='franchise-detail.html?id=${f.id}'">
+                        <div class="franchise-card-top">
+                            <div>
+                                <div class="franchise-card-name">${f.name}</div>
+                                <div class="franchise-card-city">📍 ${f.city} - ${f.state}</div>
+                            </div>
+                            ${Utils.statusBadge(f.status)}
+                        </div>
+                        <div class="franchise-card-stats">
+                            <div class="franchise-stat">
+                                <div class="franchise-stat-value">${Utils.formatCurrency(revenue)}</div>
+                                <div class="franchise-stat-label">Faturamento/mes</div>
+                            </div>
+                            <div class="franchise-stat">
+                                <div class="franchise-stat-value">${todayOrders}</div>
+                                <div class="franchise-stat-label">Pedidos Hoje</div>
+                            </div>
+                            <div class="franchise-stat">
+                                <div class="franchise-stat-value">${monthOrders.length}</div>
+                                <div class="franchise-stat-label">Pedidos/mes</div>
+                            </div>
+                            <div class="franchise-stat">
+                                <div class="franchise-stat-value">⭐ ${f.rating}</div>
+                                <div class="franchise-stat-label">Avaliacao</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Charts
+            renderRevenueChart(franchises);
+            renderTopFranchisesChart(franchises);
+        }
+
+        function renderRevenueChart(franchises) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            const labels = [];
+            const data = [];
+
+            for (let i = 29; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                labels.push(d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+
+                let dayTotal = 0;
+                franchises.forEach(f => {
+                    const orders = DataStore.getCollection('orders', f.id);
+                    dayTotal += orders
+                        .filter(o => o.createdAt.startsWith(dateStr))
+                        .reduce((s, o) => s + o.total, 0);
+                });
+                data.push(dayTotal);
+            }
+
+            if (window._revenueChart) window._revenueChart.destroy();
+            window._revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Faturamento',
+                        data,
+                        borderColor: '#D4A5FF',
+                        backgroundColor: 'rgba(212,165,255,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 2,
+                        pointHoverRadius: 6,
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => Utils.formatCurrency(ctx.raw)
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (v) => 'R$ ' + (v/1000).toFixed(0) + 'k'
+                            }
+                        },
+                        x: {
+                            ticks: { maxTicksLimit: 10 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTopFranchisesChart(franchises) {
+            const ctx = document.getElementById('topFranchisesChart').getContext('2d');
+
+            const franchiseData = franchises.map(f => {
+                const orders = DataStore.getCollection('orders', f.id);
+                const now = new Date();
+                const monthOrders = orders.filter(o => {
+                    const d = new Date(o.createdAt);
+                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                });
+                return {
+                    name: f.name.replace('MilkyPot ', ''),
+                    revenue: monthOrders.reduce((s, o) => s + o.total, 0)
+                };
+            }).sort((a, b) => b.revenue - a.revenue).slice(0, 6);
+
+            if (window._topChart) window._topChart.destroy();
+            window._topChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: franchiseData.map(f => f.name),
+                    datasets: [{
+                        label: 'Faturamento',
+                        data: franchiseData.map(f => f.revenue),
+                        backgroundColor: [
+                            '#F8B4D9', '#D4A5FF', '#B8D8F8', '#C8F0DC', '#FFF0C8', '#F0A0C8'
+                        ],
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => Utils.formatCurrency(ctx.raw)
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (v) => 'R$' + (v/1000).toFixed(0) + 'k'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Init
+        loadDashboard();
+    </script>
+</body>
+</html>
