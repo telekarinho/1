@@ -28,6 +28,10 @@ const Auth = {
             const session = this._buildSession(user, profile);
             this._saveSession(session);
             if (typeof AuditLog !== 'undefined') AuditLog.logAuth(AuditLog.EVENTS.LOGIN, { email: user.email });
+
+            // Auto-setup owner claims via Cloud Function
+            this._trySetupOwner(user.email);
+
             return { success: true, session };
         } catch (error) {
             console.error('Auth.login error:', error);
@@ -71,6 +75,10 @@ const Auth = {
             session.avatar = user.photoURL;
             this._saveSession(session);
             if (typeof AuditLog !== 'undefined') AuditLog.logAuth(AuditLog.EVENTS.LOGIN_GOOGLE, { email: user.email });
+
+            // Auto-setup owner claims via Cloud Function
+            this._trySetupOwner(user.email);
+
             return { success: true, session };
         } catch (error) {
             console.error('Auth.loginWithGoogle error:', error);
@@ -276,13 +284,22 @@ const Auth = {
         return DataStore.updateInCollection('users', null, userId, updates);
     },
 
-    deleteUser(userId) {
+    async deleteUser(userId) {
         const users = DataStore.get('users') || [];
         const user = users.find(u => u.id === userId);
         if (!user || user.role === MP.ROLES.SUPER_ADMIN) return false;
         const filtered = users.filter(u => u.id !== userId);
         DataStore.set('users', filtered);
-        // TODO: Quando tiver Firebase Functions, deletar do Firebase Auth tambem
+
+        // Deleta do Firebase Auth via Cloud Function
+        if (user.firebaseUid && typeof CloudFunctions !== 'undefined' && CloudFunctions._functions) {
+            try {
+                await CloudFunctions.deleteUserAccount(user.firebaseUid);
+            } catch (e) {
+                console.warn('deleteUser Firebase Auth falhou:', e.message || e);
+            }
+        }
+
         return true;
     },
 
@@ -351,6 +368,24 @@ const Auth = {
             'auth/invalid-credential': 'E-mail ou senha incorretos'
         };
         return map[code] || `Erro de autenticacao (${code})`;
+    },
+
+    // ============================================
+    // Auto-setup: ativa super_admin claim do owner
+    // ============================================
+    async _trySetupOwner(email) {
+        if (email !== MP.OWNER_EMAIL) return;
+        if (typeof CloudFunctions === 'undefined' || !CloudFunctions._functions) return;
+
+        try {
+            const result = await CloudFunctions.setupOwner();
+            if (result && result.success) {
+                console.log('✅ Owner custom claims ativados:', result.message);
+            }
+        } catch (e) {
+            // Functions pode nao estar deployed ainda — silencia
+            console.warn('setupOwner pendente (Functions nao deployed?):', e.message || e);
+        }
     },
 
     // ============================================
