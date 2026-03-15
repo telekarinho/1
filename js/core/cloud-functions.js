@@ -1,39 +1,109 @@
 /* ============================================
    MilkyPot - Cloud Functions Client
    ============================================
-   Wrapper para chamar Firebase Cloud Functions
-   do frontend. Requer firebase-functions SDK.
+   Chama a API Vercel serverless ao inves do
+   Firebase Cloud Functions. Zero dependencia
+   do plano Blaze.
    ============================================ */
 
 const CloudFunctions = {
-    _functions: null,
+    _apiUrl: null,
+    _functions: null, // kept for backward compat checks
 
     init() {
-        if (typeof firebase !== 'undefined' && firebase.functions) {
-            this._functions = firebase.app().functions('southamerica-east1');
-            console.log('☁️ CloudFunctions: conectado (southamerica-east1)');
+        // Detecta URL base da API
+        // Em producao (Vercel): usa a mesma origem
+        // Em dev (GitHub Pages): usa VERCEL_API_URL se definido
+        if (window.location.hostname.includes('vercel.app')) {
+            this._apiUrl = '/api/cloud-functions';
+        } else if (window.MP_VERCEL_API_URL) {
+            this._apiUrl = window.MP_VERCEL_API_URL + '/api/cloud-functions';
         } else {
-            console.warn('⚠️ CloudFunctions: SDK nao disponivel');
+            // Fallback: tenta Firebase Functions se disponivel
+            if (typeof firebase !== 'undefined' && firebase.functions) {
+                this._functions = firebase.app().functions('southamerica-east1');
+                console.log('☁️ CloudFunctions: Firebase Functions (southamerica-east1)');
+                return;
+            }
+            console.warn('⚠️ CloudFunctions: nenhum backend configurado. Defina window.MP_VERCEL_API_URL');
+            return;
+        }
+
+        this._functions = true; // flag para indicar que esta disponivel
+        console.log('☁️ CloudFunctions: Vercel API (' + this._apiUrl + ')');
+    },
+
+    // ============================================
+    // Chamada principal - detecta Vercel ou Firebase
+    // ============================================
+    async call(name, data = {}) {
+        // Se usando Vercel API
+        if (this._apiUrl) {
+            return this._callVercel(name, data);
+        }
+
+        // Se usando Firebase Functions (fallback)
+        if (this._functions && typeof this._functions === 'object') {
+            return this._callFirebase(name, data);
+        }
+
+        console.warn('CloudFunctions.call: nao inicializado');
+        return { success: false, error: 'Functions nao disponivel' };
+    },
+
+    // Chama API Vercel
+    async _callVercel(action, data) {
+        try {
+            // Pega token do Firebase Auth para autenticacao
+            const token = await this._getAuthToken();
+            if (!token) {
+                return { success: false, error: 'Nao autenticado no Firebase' };
+            }
+
+            const response = await fetch(this._apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ action, data })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                return { success: false, error: result.error || 'Erro na API' };
+            }
+
+            return result;
+        } catch (error) {
+            console.error(`CloudFunctions._callVercel(${action}) error:`, error);
+            return { success: false, error: error.message || 'Erro ao chamar API' };
         }
     },
 
-    // Chama uma function com retry
-    async call(name, data = {}) {
-        if (!this._functions) {
-            console.warn('CloudFunctions.call: nao inicializado');
-            return { success: false, error: 'Functions nao disponivel' };
-        }
-
+    // Chama Firebase Functions (fallback)
+    async _callFirebase(name, data) {
         try {
             const fn = this._functions.httpsCallable(name);
             const result = await fn(data);
             return result.data;
         } catch (error) {
-            console.error(`CloudFunctions.call(${name}) error:`, error);
-            return {
-                success: false,
-                error: error.message || 'Erro ao chamar function'
-            };
+            console.error(`CloudFunctions._callFirebase(${name}) error:`, error);
+            return { success: false, error: error.message || 'Erro ao chamar function' };
+        }
+    },
+
+    // Pega ID token do usuario logado no Firebase Auth
+    async _getAuthToken() {
+        try {
+            if (typeof firebaseAuth !== 'undefined' && firebaseAuth && firebaseAuth.currentUser) {
+                return await firebaseAuth.currentUser.getIdToken();
+            }
+            return null;
+        } catch (e) {
+            console.warn('CloudFunctions._getAuthToken error:', e);
+            return null;
         }
     },
 

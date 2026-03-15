@@ -219,18 +219,18 @@
     <div class="modal-overlay" id="modalOverlay" style="display:none;">
         <div class="modal" style="background:#fff; border-radius:16px; padding:32px; max-width:480px; width:90%; position:relative;">
             <button class="modal-close" onclick="closeModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;">&times;</button>
-            <h2 style="margin-bottom:20px;" id="modalTitle">Nova Transação</h2>
+            <h2 style="margin-bottom:20px;" id="modalTitle" data-i18n="common.new_transaction">Nova Transação</h2>
             <form id="formTransacao" onsubmit="salvarTransacao(event)">
                 <input type="hidden" id="editId" value="">
                 <div style="margin-bottom:14px;">
-                    <label style="display:block;margin-bottom:4px;font-weight:600;">Tipo</label>
+                    <label style="display:block;margin-bottom:4px;font-weight:600;" data-i18n="common.type">Tipo</label>
                     <select id="inputTipo" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
-                        <option value="income">Receita</option>
-                        <option value="expense">Despesa</option>
+                        <option value="income" data-i18n="finances.type_income">Receita</option>
+                        <option value="expense" data-i18n="finances.type_expense">Despesa</option>
                     </select>
                 </div>
                 <div style="margin-bottom:14px;">
-                    <label style="display:block;margin-bottom:4px;font-weight:600;">Categoria</label>
+                    <label style="display:block;margin-bottom:4px;font-weight:600;" data-i18n="finances.category_label">Categoria</label>
                     <select id="inputCategoria" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
                         <option value="vendas">Vendas</option>
                         <option value="ingredientes">Ingredientes</option>
@@ -242,20 +242,20 @@
                     </select>
                 </div>
                 <div style="margin-bottom:14px;">
-                    <label style="display:block;margin-bottom:4px;font-weight:600;">Valor (R$)</label>
+                    <label style="display:block;margin-bottom:4px;font-weight:600;" data-i18n="finances.value_label">Valor (R$)</label>
                     <input type="number" id="inputValor" step="0.01" min="0.01" required placeholder="0,00" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
                 </div>
                 <div style="margin-bottom:14px;">
-                    <label style="display:block;margin-bottom:4px;font-weight:600;">Descrição</label>
+                    <label style="display:block;margin-bottom:4px;font-weight:600;" data-i18n="finances.description_label">Descrição</label>
                     <input type="text" id="inputDescricao" required placeholder="Ex: Compra de insumos" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
                 </div>
                 <div style="margin-bottom:20px;">
-                    <label style="display:block;margin-bottom:4px;font-weight:600;">Data</label>
+                    <label style="display:block;margin-bottom:4px;font-weight:600;" data-i18n="finances.date_label">Data</label>
                     <input type="date" id="inputData" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
                 </div>
                 <div style="display:flex;gap:10px;justify-content:flex-end;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal()" data-i18n="common.cancel">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="common.save">Salvar</button>
                 </div>
             </form>
         </div>
@@ -860,6 +860,7 @@
 
                 initDRESelectors();
                 loadData();
+                i18n.translatePage();
             } catch (err) {
                 console.error('Erro ao inicializar financeiro:', err);
             }
