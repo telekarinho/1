@@ -125,6 +125,15 @@ service cloud.firestore {
     }
 
     // ============================================
+    // Delivery Tracking (posicao GPS em tempo real)
+    // ============================================
+    match /delivery_tracking/{orderId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // ============================================
     // Bloqueia tudo que nao foi definido
     // ============================================
     match /{document=**} {

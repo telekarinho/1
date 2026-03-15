@@ -9,7 +9,6 @@
 
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
-const { beforeUserCreated } = require("firebase-functions/v2/identity");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
@@ -271,10 +270,12 @@ exports.getMyRole = onCall({
 // Helper: gera senha aleatoria
 // ============================================
 function generatePassword(length = 12) {
+    const crypto = require("crypto");
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
+    const bytes = crypto.randomBytes(length);
     let password = "";
     for (let i = 0; i < length; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
+        password += chars.charAt(bytes[i] % chars.length);
     }
     return password;
 }

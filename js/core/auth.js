@@ -106,10 +106,15 @@ const Auth = {
             // Atualiza displayName no Firebase
             await newUser.updateProfile({ displayName: userData.name });
 
-            // Restaura sessao do admin (createUser faz login automatico)
+            // Sign out the newly created user so the admin's auth state
+            // can be restored. The admin's localStorage session remains valid
+            // and Firebase auth will be re-established on next page load
+            // via onAuthStateChanged or the next explicit login.
+            await firebaseAuth.signOut();
+
+            // Restore the admin's localStorage session
             if (currentSession) {
-                // Re-autentica o admin
-                await firebaseAuth.signInWithEmailAndPassword(currentSession.email, currentSession._adminReauth || '');
+                this._saveSession(currentSession);
             }
 
             // Cria perfil local

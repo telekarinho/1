@@ -17,13 +17,16 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-// Firebase Auth instance
-const firebaseAuth = firebase.auth();
+// Firebase Auth instance (only if firebase-auth-compat.js is loaded)
+const firebaseAuth = typeof firebase.auth === 'function' ? firebase.auth() : null;
 
-// Google Auth Provider
-const googleProvider = new firebase.auth.GoogleAuthProvider();
-googleProvider.addScope('email');
-googleProvider.addScope('profile');
+// Google Auth Provider (only if firebase-auth-compat.js is loaded)
+let googleProvider = null;
+if (typeof firebase.auth === 'function') {
+    googleProvider = new firebase.auth.GoogleAuthProvider();
+    googleProvider.addScope('email');
+    googleProvider.addScope('profile');
+}
 
 // Initialize DataStore with Firestore
 if (typeof DataStore !== 'undefined') {

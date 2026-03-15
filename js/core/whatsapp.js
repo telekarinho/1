@@ -31,25 +31,28 @@ const WhatsApp = {
     templates: {
         // Confirmação de pedido para o cliente
         orderConfirmed(order) {
+            const customerName = order.customerName || (order.customer && order.customer.name) || 'Cliente';
             const items = (order.items || []).map(i =>
-                `  • ${i.quantity}x ${i.flavor} ${i.size}`
+                `  • ${i.quantity || 1}x ${i.flavor || i.sabor || i.name || 'Item'} ${i.size || i.tamanho || ''}`
             ).join('\n');
 
             return `🍦 *MilkyPot - Pedido Confirmado!*\n\n` +
-                `Olá ${Utils.escapeHtml(order.customerName || 'Cliente')}!\n\n` +
+                `Olá ${Utils.escapeHtml(customerName)}!\n\n` +
                 `Seu pedido *#${order.id}* foi confirmado!\n\n` +
                 `📋 *Itens:*\n${items}\n\n` +
                 `💰 *Total:* R$ ${(order.total || 0).toFixed(2)}\n` +
-                `📍 *Tipo:* ${WhatsApp._deliveryTypeLabel(order.deliveryType)}\n\n` +
+                `📍 *Tipo:* ${WhatsApp._deliveryTypeLabel(order.deliveryType || order.delivery)}\n\n` +
                 `Obrigado pela preferência! 💖`;
         },
 
         // Pedido pronto para retirada
         orderReady(order) {
+            const customerName = order.customerName || (order.customer && order.customer.name) || 'Cliente';
+            const deliveryType = order.deliveryType || order.delivery;
             return `🍦 *MilkyPot - Pedido Pronto!*\n\n` +
-                `Olá ${Utils.escapeHtml(order.customerName || 'Cliente')}!\n\n` +
+                `Olá ${Utils.escapeHtml(customerName)}!\n\n` +
                 `Seu pedido *#${order.id}* está *pronto*! 🎉\n\n` +
-                (order.deliveryType === 'retirada'
+                (deliveryType === 'retirada'
                     ? `📍 Venha retirar no balcão!\n\n`
                     : `🛵 Saindo para entrega!\n\n`) +
                 `Obrigado pela preferência! 💖`;
@@ -57,8 +60,9 @@ const WhatsApp = {
 
         // Pedido saiu para entrega
         orderOutForDelivery(order) {
+            const customerName = order.customerName || (order.customer && order.customer.name) || 'Cliente';
             return `🍦 *MilkyPot - Saiu para Entrega!*\n\n` +
-                `Olá ${Utils.escapeHtml(order.customerName || 'Cliente')}!\n\n` +
+                `Olá ${Utils.escapeHtml(customerName)}!\n\n` +
                 `Seu pedido *#${order.id}* saiu para entrega! 🛵\n\n` +
                 `Previsão: *30-45 minutos*\n\n` +
                 `Obrigado pela preferência! 💖`;
@@ -66,8 +70,9 @@ const WhatsApp = {
 
         // Pedido entregue
         orderDelivered(order) {
+            const customerName = order.customerName || (order.customer && order.customer.name) || 'Cliente';
             return `🍦 *MilkyPot - Pedido Entregue!*\n\n` +
-                `Olá ${Utils.escapeHtml(order.customerName || 'Cliente')}!\n\n` +
+                `Olá ${Utils.escapeHtml(customerName)}!\n\n` +
                 `Seu pedido *#${order.id}* foi *entregue*! ✅\n\n` +
                 `Esperamos que você goste! 😋\n\n` +
                 `⭐ Avalie sua experiência respondendo esta mensagem.\n\n` +
@@ -126,7 +131,8 @@ const WhatsApp = {
     // Enviar mensagem por status do pedido
     // ============================================
     sendOrderNotification(order, newStatus) {
-        if (!order.customerPhone) {
+        const customerPhone = order.customerPhone || (order.customer && order.customer.phone) || '';
+        if (!customerPhone) {
             console.warn('WhatsApp: pedido sem telefone do cliente');
             return false;
         }
@@ -149,14 +155,14 @@ const WhatsApp = {
                 return false;
         }
 
-        this.open(order.customerPhone, message);
+        this.open(customerPhone, message);
 
         // Log no audit
         if (typeof AuditLog !== 'undefined') {
             AuditLog.log('whatsapp.sent', {
                 orderId: order.id,
                 status: newStatus,
-                phone: this._maskPhone(order.customerPhone)
+                phone: this._maskPhone(customerPhone)
             });
         }
 

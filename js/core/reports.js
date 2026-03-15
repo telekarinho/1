@@ -24,7 +24,7 @@ const Reports = {
         const productCount = {};
         deliveredOrders.forEach(o => {
             (o.items || []).forEach(item => {
-                const key = item.flavor || item.name || 'Desconhecido';
+                const key = item.flavor || item.sabor || item.name || 'Desconhecido';
                 productCount[key] = (productCount[key] || 0) + (item.quantity || 1);
             });
         });
@@ -35,7 +35,7 @@ const Reports = {
         // Métodos de pagamento
         const paymentMethods = {};
         deliveredOrders.forEach(o => {
-            const method = o.paymentMethod || 'nao_informado';
+            const method = o.paymentMethod || o.payment || 'nao_informado';
             paymentMethods[method] = (paymentMethods[method] || 0) + 1;
         });
 
@@ -64,8 +64,8 @@ const Reports = {
                 peakHour: peakHour ? `${peakHour[0]}:00 (${peakHour[1]} pedidos)` : '-'
             },
             finances: {
-                income: finances.filter(f => f.type === 'income').reduce((s, f) => s + (f.value || 0), 0),
-                expenses: finances.filter(f => f.type === 'expense').reduce((s, f) => s + (f.value || 0), 0)
+                income: finances.filter(f => f.type === 'income').reduce((s, f) => s + (f.value || f.amount || 0), 0),
+                expenses: finances.filter(f => f.type === 'expense').reduce((s, f) => s + (f.value || f.amount || 0), 0)
             },
             generatedAt: new Date().toISOString()
         };
@@ -196,13 +196,13 @@ const Reports = {
         csv += `Pedidos Entregues,${s.deliveredOrders}\n`;
         csv += `Pedidos Cancelados,${s.cancelledOrders}\n`;
         csv += `Taxa de Cancelamento,${s.cancellationRate}%\n`;
-        csv += `Faturamento,R$ ${s.revenue.toFixed(2)}\n`;
-        csv += `Ticket Médio,R$ ${s.avgTicket.toFixed(2)}\n`;
-        csv += `Horário de Pico,${s.peakHour}\n\n`;
+        csv += `Faturamento,"R$ ${s.revenue.toFixed(2)}"\n`;
+        csv += `Ticket Médio,"R$ ${s.avgTicket.toFixed(2)}"\n`;
+        csv += `Horário de Pico,"${s.peakHour}"\n\n`;
         csv += 'Produtos Mais Vendidos\n';
         csv += 'Produto,Quantidade\n';
         s.topProducts.forEach(([name, qty]) => {
-            csv += `${name},${qty}\n`;
+            csv += `"${name.replace(/"/g, '""')}",${qty}\n`;
         });
         return csv;
     },
@@ -210,17 +210,17 @@ const Reports = {
     _weeklyToCSV(report) {
         const s = report.summary;
         let csv = 'Relatório Semanal MilkyPot\n';
-        csv += `Período,${report.weekStart} a ${report.weekEnd}\n\n`;
+        csv += `Período,"${report.weekStart} a ${report.weekEnd}"\n\n`;
         csv += 'Métrica,Valor\n';
         csv += `Total de Pedidos,${s.totalOrders}\n`;
-        csv += `Faturamento Total,R$ ${s.totalRevenue.toFixed(2)}\n`;
-        csv += `Média Diária (R$),R$ ${s.avgDailyRevenue.toFixed(2)}\n`;
-        csv += `Ticket Médio,R$ ${s.avgTicket.toFixed(2)}\n`;
-        csv += `Melhor Dia,${s.bestDay.date} (R$ ${s.bestDay.revenue.toFixed(2)})\n`;
-        csv += `Pior Dia,${s.worstDay.date} (R$ ${s.worstDay.revenue.toFixed(2)})\n\n`;
+        csv += `Faturamento Total,"R$ ${s.totalRevenue.toFixed(2)}"\n`;
+        csv += `"Média Diária (R$)","R$ ${s.avgDailyRevenue.toFixed(2)}"\n`;
+        csv += `Ticket Médio,"R$ ${s.avgTicket.toFixed(2)}"\n`;
+        csv += `Melhor Dia,"${s.bestDay.date} (R$ ${s.bestDay.revenue.toFixed(2)})"\n`;
+        csv += `Pior Dia,"${s.worstDay.date} (R$ ${s.worstDay.revenue.toFixed(2)})"\n\n`;
         csv += 'Dia,Pedidos,Faturamento\n';
         report.days.forEach(d => {
-            csv += `${d.date},${d.summary.totalOrders},R$ ${d.summary.revenue.toFixed(2)}\n`;
+            csv += `${d.date},${d.summary.totalOrders},"R$ ${d.summary.revenue.toFixed(2)}"\n`;
         });
         return csv;
     },
@@ -231,14 +231,14 @@ const Reports = {
         csv += `Mês/Ano,${report.month}/${report.year}\n\n`;
         csv += 'Métrica,Valor\n';
         csv += `Total de Pedidos,${s.totalOrders}\n`;
-        csv += `Receita Total,R$ ${s.totalRevenue.toFixed(2)}\n`;
-        csv += `Despesas Total,R$ ${s.totalExpenses.toFixed(2)}\n`;
-        csv += `Lucro,R$ ${s.profit.toFixed(2)}\n`;
+        csv += `Receita Total,"R$ ${s.totalRevenue.toFixed(2)}"\n`;
+        csv += `Despesas Total,"R$ ${s.totalExpenses.toFixed(2)}"\n`;
+        csv += `Lucro,"R$ ${s.profit.toFixed(2)}"\n`;
         csv += `Margem de Lucro,${s.profitMargin}\n`;
-        csv += `Ticket Médio,R$ ${s.avgTicket.toFixed(2)}\n\n`;
+        csv += `Ticket Médio,"R$ ${s.avgTicket.toFixed(2)}"\n\n`;
         csv += 'Dia,Pedidos,Faturamento,Despesas\n';
         report.dailyData.forEach(d => {
-            csv += `${d.date},${d.summary.totalOrders},R$ ${d.summary.revenue.toFixed(2)},R$ ${d.finances.expenses.toFixed(2)}\n`;
+            csv += `${d.date},${d.summary.totalOrders},"R$ ${d.summary.revenue.toFixed(2)}","R$ ${d.finances.expenses.toFixed(2)}"\n`;
         });
         return csv;
     },

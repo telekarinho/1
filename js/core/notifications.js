@@ -282,8 +282,18 @@ const Notifications = {
 
     // Create bell icon in header
     _createBell() {
-        const headerRight = document.querySelector('.panel-header-right');
-        if (!headerRight) return;
+        // Try multiple containers in order of preference
+        let headerRight = document.querySelector('.panel-header-right')
+            || document.querySelector('.panel-header')
+            || document.querySelector('header');
+
+        // If no header element exists at all, create a fixed container
+        if (!headerRight) {
+            headerRight = document.createElement('div');
+            headerRight.id = 'mp-notif-fixed-container';
+            headerRight.style.cssText = 'position:fixed;top:12px;right:16px;z-index:9998;display:flex;align-items:center;';
+            document.body.appendChild(headerRight);
+        }
 
         // Remove existing placeholder bell buttons
         const existingBells = headerRight.querySelectorAll('.header-btn[title="Notificacoes"]');
