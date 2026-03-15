@@ -691,49 +691,83 @@ const CardapioApp = {
         }
         this.nomeCliente = nome;
 
+        // Build format label
+        let formatLabel = '';
+        if (this.selectedFormato.id === 'shake' || this.selectedFormato.id === 'acai-shake') formatLabel = 'Shake';
+        else if (this.selectedFormato.id === 'sundae') formatLabel = 'Sundae Gourmet';
+        else if (this.selectedFormato.id === 'acai-bowl') formatLabel = 'Bowl';
+        let productName = formatLabel + ' de ' + this.selectedSabor.name;
+        if (this.selectedSabor.id.startsWith('acai-')) {
+            productName = 'Açaí ' + formatLabel + ' + ' + this.selectedSabor.name.replace('Açaí + ', '');
+        }
+
+        // Build extras array
+        const extras = this.selectedAdicionais.map(e => ({
+            id: e.id, name: e.name, price: e.price, emoji: e.emoji, qty: e.qty || 1
+        }));
+
+        // Build bebidas array
+        const bebidas = this.selectedBebidas.map(b => ({
+            id: b.id, name: b.name, price: b.price, emoji: b.emoji, qty: b.qty || 1
+        }));
+
+        // Calculate totals
+        let extrasTotal = extras.reduce((s, e) => s + e.price * (e.qty || 1), 0);
+        let bebidasTotal = bebidas.reduce((s, b) => s + b.price * (b.qty || 1), 0);
+        let total = ((this.selectedTamanho.price + extrasTotal + bebidasTotal) * this.quantity);
+
+        // UNIFIED CART FORMAT - same as index.html bottom sheet
         const item = {
-            uid: Date.now() + Math.random(),
+            id: Date.now().toString(),
+            name: productName,
+            emoji: this.selectedSabor.emoji,
+            baseId: this.selectedBase.id,
+            baseName: this.selectedBase.name,
+            formatoId: this.selectedFormato.id,
+            formatoName: this.selectedFormato.name,
+            saborId: this.selectedSabor.id,
+            size: this.selectedTamanho.id,
+            sizeName: this.selectedTamanho.name,
+            sizeMl: this.selectedTamanho.ml,
+            sizePrice: this.selectedTamanho.price,
+            extras: extras,
+            bebidas: bebidas,
             nomeCliente: this.nomeCliente,
-            base: { id: this.selectedBase.id, name: this.selectedBase.name, emoji: this.selectedBase.emoji },
-            formato: { id: this.selectedFormato.id, name: this.selectedFormato.name, emoji: this.selectedFormato.emoji },
-            tamanho: { id: this.selectedTamanho.id, name: this.selectedTamanho.name, ml: this.selectedTamanho.ml, price: this.selectedTamanho.price },
-            sabor: { id: this.selectedSabor.id, name: this.selectedSabor.name, emoji: this.selectedSabor.emoji },
-            adicionais: [...this.selectedAdicionais],
-            bebidas: [...this.selectedBebidas],
-            quantity: this.quantity,
-            unitPrice: this.selectedTamanho.price + this.getAdicionaisTotal(),
-            bebidasTotal: this.getBebidasTotal(),
-            totalPrice: ((this.selectedTamanho.price + this.getAdicionaisTotal()) * this.quantity) + this.getBebidasTotal()
+            qty: this.quantity,
+            total: total
         };
 
         this.cart.push(item);
         this.saveCart();
         this.updateCartCount();
-        this.showToast(`${item.sabor.emoji} ${item.sabor.name} adicionado! (${item.nomeCliente})`);
+        this.showToast(`${item.emoji} ${item.name} adicionado! (${item.nomeCliente})`);
         this.renderHome();
         this.openCart();
     },
 
-    removeFromMenuCart(uid) {
-        this.cart = this.cart.filter(i => i.uid !== uid);
+    removeFromMenuCart(id) {
+        this.cart = this.cart.filter(i => String(i.id) !== String(id));
         this.saveCart();
         this.updateCartCount();
         this.renderCartItems();
     },
 
-    updateMenuCartQty(uid, delta) {
-        const item = this.cart.find(i => i.uid === uid);
+    updateMenuCartQty(id, delta) {
+        const item = this.cart.find(i => String(i.id) === String(id));
         if (!item) return;
-        item.quantity += delta;
-        if (item.quantity <= 0) { this.removeFromMenuCart(uid); return; }
-        item.totalPrice = (item.unitPrice * item.quantity) + item.bebidasTotal;
+        item.qty = (item.qty || 1) + delta;
+        if (item.qty <= 0) { this.removeFromMenuCart(id); return; }
+        // Recalculate total
+        let extrasTotal = (item.extras || []).reduce((s, e) => s + e.price * (e.qty || 1), 0);
+        let bebidasTotal = (item.bebidas || []).reduce((s, b) => s + b.price * (b.qty || 1), 0);
+        item.total = (item.sizePrice + extrasTotal + bebidasTotal) * item.qty;
         this.saveCart();
         this.updateCartCount();
         this.renderCartItems();
     },
 
-    getMenuCartTotal() { return this.cart.reduce((sum, i) => sum + i.totalPrice, 0); },
-    getMenuCartCount() { return this.cart.reduce((sum, i) => sum + i.quantity, 0); },
+    getMenuCartTotal() { return this.cart.reduce((sum, i) => sum + (i.total || 0), 0); },
+    getMenuCartCount() { return this.cart.reduce((sum, i) => sum + (i.qty || 1), 0); },
     saveCart() { localStorage.setItem('milkypot_cart', JSON.stringify(this.cart)); },
     updateCartCount() {
         const count = this.getMenuCartCount();
@@ -767,37 +801,50 @@ const CardapioApp = {
             return;
         }
 
-        this.els.cartItems.innerHTML = this.cart.map(item => `
+        this.els.cartItems.innerHTML = this.cart.map(item => {
+            const emoji = item.emoji || '🍨';
+            const name = item.name || 'Produto';
+            const formatoName = item.formatoName || '';
+            const sizeName = item.sizeName || item.size || '';
+            const sizeMl = item.sizeMl || '';
+            const nomeCliente = item.nomeCliente || '';
+            const extras = item.extras || [];
+            const bebidas = item.bebidas || [];
+            const qty = item.qty || 1;
+            const total = item.total || 0;
+            const id = item.id;
+
+            return `
             <div class="cp-cart-item">
                 <div class="cp-cart-item-header">
-                    <span class="cp-cart-item-emoji">${item.sabor.emoji}</span>
+                    <span class="cp-cart-item-emoji">${emoji}</span>
                     <div class="cp-cart-item-info">
-                        <strong>${item.sabor.name}</strong>
-                        <small>${item.formato.name} · ${item.tamanho.name} (${item.tamanho.ml}ml)</small>
-                        <small class="cp-cart-nome">🏷️ ${item.nomeCliente}</small>
+                        <strong>${name}</strong>
+                        <small>${formatoName}${sizeName ? ' · ' + sizeName : ''}${sizeMl ? ' (' + sizeMl + 'ml)' : ''}</small>
+                        ${nomeCliente ? `<small class="cp-cart-nome">🏷️ ${nomeCliente}</small>` : ''}
                     </div>
-                    <button class="cp-cart-item-remove" onclick="CardapioApp.removeFromMenuCart(${item.uid})" aria-label="Remover">✕</button>
+                    <button class="cp-cart-item-remove" onclick="CardapioApp.removeFromMenuCart('${id}')" aria-label="Remover">✕</button>
                 </div>
-                ${item.adicionais.length > 0 ? `
+                ${extras.length > 0 ? `
                     <div class="cp-cart-item-extras">
-                        ${item.adicionais.map(e => `<span>${e.emoji} ${e.name}${e.qty > 1 ? ' x' + e.qty : ''}</span>`).join('')}
+                        ${extras.map(e => `<span>${e.emoji || ''} ${e.name}${e.qty && e.qty > 1 ? ' x' + e.qty : ''}</span>`).join('')}
                     </div>
                 ` : ''}
-                ${item.bebidas.length > 0 ? `
+                ${bebidas.length > 0 ? `
                     <div class="cp-cart-item-extras">
-                        ${item.bebidas.map(b => `<span>${b.emoji} ${b.name}${b.qty > 1 ? ' x' + b.qty : ''}</span>`).join('')}
+                        ${bebidas.map(b => `<span>${b.emoji || ''} ${b.name}${b.qty && b.qty > 1 ? ' x' + b.qty : ''}</span>`).join('')}
                     </div>
                 ` : ''}
                 <div class="cp-cart-item-footer">
                     <div class="cp-cart-item-qty">
-                        <button class="cp-qty-btn-sm" onclick="CardapioApp.updateMenuCartQty(${item.uid}, -1)">−</button>
-                        <span>${item.quantity}</span>
-                        <button class="cp-qty-btn-sm" onclick="CardapioApp.updateMenuCartQty(${item.uid}, 1)">+</button>
+                        <button class="cp-qty-btn-sm" onclick="CardapioApp.updateMenuCartQty('${id}', -1)">−</button>
+                        <span>${qty}</span>
+                        <button class="cp-qty-btn-sm" onclick="CardapioApp.updateMenuCartQty('${id}', 1)">+</button>
                     </div>
-                    <span class="cp-cart-item-price">${this.formatPrice(item.totalPrice)}</span>
+                    <span class="cp-cart-item-price">${this.formatPrice(total)}</span>
                 </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
 
         if (this.els.cartFooter) this.els.cartFooter.style.display = 'block';
         if (this.els.cartTotal) this.els.cartTotal.textContent = this.formatPrice(this.getMenuCartTotal());
@@ -825,15 +872,25 @@ const CardapioApp = {
     renderCheckoutSummary() {
         const el = document.getElementById('checkoutOrderSummary');
         if (!el) return;
-        el.innerHTML = this.cart.map(item => `
+        el.innerHTML = this.cart.map(item => {
+            const emoji = item.emoji || '🍨';
+            const name = item.name || 'Produto';
+            const formatoName = item.formatoName || '';
+            const sizeName = item.sizeName || '';
+            const nomeCliente = item.nomeCliente || '';
+            const qty = item.qty || 1;
+            const total = item.total || 0;
+            let details = [formatoName, sizeName, nomeCliente ? '🏷️ ' + nomeCliente : ''].filter(Boolean).join(' · ');
+
+            return `
             <div class="cp-checkout-item">
                 <div>
-                    <span>${item.sabor.emoji} ${item.sabor.name}</span>
-                    <small style="display:block;color:#9484A8">${item.formato.name} · ${item.tamanho.name} · 🏷️ ${item.nomeCliente}</small>
+                    <span>${emoji} ${name}</span>
+                    ${details ? `<small style="display:block;color:#9484A8">${details}</small>` : ''}
                 </div>
-                <span>x${item.quantity} ${this.formatPrice(item.totalPrice)}</span>
-            </div>
-        `).join('') + `
+                <span>x${qty} ${this.formatPrice(total)}</span>
+            </div>`;
+        }).join('') + `
             <div class="cp-checkout-total">
                 <strong>Total:</strong>
                 <strong>${this.formatPrice(this.getMenuCartTotal())}</strong>
@@ -852,33 +909,94 @@ const CardapioApp = {
             if (!addr) { this.showToast('Preencha o endereco!'); return; }
         }
 
-        let msg = `🐑 *Novo Pedido MilkyPot*\n\n`;
+        const paymentType = document.getElementById('ckoPayment')?.value || 'pix';
+        const paymentLabels = { pix: 'PIX', credito: 'Cartão de Crédito', debito: 'Cartão de Débito', dinheiro: 'Dinheiro' };
+
+        // ============================================
+        // CAPTURE ORDER
+        // ============================================
+        const orderCounter = parseInt(localStorage.getItem('milkypot_order_counter') || '1000') + 1;
+        localStorage.setItem('milkypot_order_counter', orderCounter.toString());
+        const orderNumber = '#MP' + orderCounter;
+
+        const order = {
+            orderNumber: orderNumber,
+            status: 'aguardando_pagamento',
+            createdAt: new Date().toISOString(),
+            customer: { name, phone },
+            delivery: {
+                type: deliveryType,
+                address: deliveryType === 'delivery' ? document.getElementById('ckoAddress')?.value : '',
+                complement: document.getElementById('ckoComplement')?.value || '',
+                fee: 0
+            },
+            payment: {
+                method: paymentType,
+                label: paymentLabels[paymentType] || paymentType,
+                status: 'pendente'
+            },
+            items: this.cart.map(item => ({
+                name: item.name || 'Produto',
+                emoji: item.emoji || '🍨',
+                baseId: item.baseId,
+                baseName: item.baseName,
+                formatoId: item.formatoId,
+                formatoName: item.formatoName,
+                saborId: item.saborId,
+                size: item.sizeName || item.size || '',
+                sizeMl: item.sizeMl || 0,
+                sizePrice: item.sizePrice || 0,
+                extras: item.extras || [],
+                bebidas: item.bebidas || [],
+                nomeCliente: item.nomeCliente || '',
+                qty: item.qty || 1,
+                total: item.total || 0
+            })),
+            subtotal: this.getMenuCartTotal(),
+            total: this.getMenuCartTotal()
+        };
+
+        // Save order
+        const orders = JSON.parse(localStorage.getItem('milkypot_orders') || '[]');
+        orders.unshift(order);
+        localStorage.setItem('milkypot_orders', JSON.stringify(orders));
+
+        // Build WhatsApp message
+        let msg = `🐑 *Novo Pedido MilkyPot* ${orderNumber}\n\n`;
         msg += `👤 *Responsável:* ${name}\n📱 *Tel:* ${phone}\n`;
         msg += deliveryType === 'delivery'
             ? `🛵 *Entrega:* ${document.getElementById('ckoAddress')?.value}\n`
             : `🏪 *Retirada na loja*\n`;
+        msg += `💳 *Pagamento:* ${paymentLabels[paymentType] || paymentType}\n`;
         msg += `\n📋 *Itens:*\n`;
         this.cart.forEach((item, i) => {
-            msg += `\n*Potinho #${i + 1} — 🏷️ ${item.nomeCliente}*\n`;
-            msg += `${item.sabor.emoji} ${item.sabor.name}\n`;
-            msg += `Base: ${item.base.name}\n`;
-            msg += `Formato: ${item.formato.name}\n`;
-            msg += `Tamanho: ${item.tamanho.name} (${item.tamanho.ml}ml)\n`;
-            if (item.adicionais.length) {
-                msg += `Adicionais: ${item.adicionais.map(e => e.name + (e.qty > 1 ? ' x' + e.qty : '')).join(', ')}\n`;
+            const itemName = item.name || 'Produto';
+            const nomeCliente = item.nomeCliente || '';
+            msg += `\n*Potinho #${i + 1}${nomeCliente ? ' — 🏷️ ' + nomeCliente : ''}*\n`;
+            msg += `${item.emoji || '🍨'} ${itemName}\n`;
+            if (item.baseName) msg += `Base: ${item.baseName}\n`;
+            if (item.formatoName) msg += `Formato: ${item.formatoName}\n`;
+            if (item.sizeName) msg += `Tamanho: ${item.sizeName}${item.sizeMl ? ' (' + item.sizeMl + 'ml)' : ''}\n`;
+            const extras = item.extras || [];
+            if (extras.length) {
+                msg += `Adicionais: ${extras.map(e => e.name + (e.qty > 1 ? ' x' + e.qty : '')).join(', ')}\n`;
             }
-            if (item.bebidas.length) {
-                msg += `Bebidas: ${item.bebidas.map(b => b.name + (b.qty > 1 ? ' x' + b.qty : '')).join(', ')}\n`;
+            const bebidas = item.bebidas || [];
+            if (bebidas.length) {
+                msg += `Bebidas: ${bebidas.map(b => b.name + (b.qty > 1 ? ' x' + b.qty : '')).join(', ')}\n`;
             }
-            msg += `Qtd: ${item.quantity} — ${this.formatPrice(item.totalPrice)}\n`;
+            msg += `Qtd: ${item.qty || 1} — ${this.formatPrice(item.total || 0)}\n`;
         });
         msg += `\n💰 *Total: ${this.formatPrice(this.getMenuCartTotal())}*`;
+        msg += `\n⏳ *Status: Aguardando pagamento*`;
 
         this.closeCheckoutModal();
         this.showSuccessModal();
 
         const waNumber = '5511999999999';
         window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+
+        console.log('Order captured:', order);
 
         this.cart = [];
         this.saveCart();

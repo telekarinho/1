@@ -1,19 +1,20 @@
 /* ============================================
-   MilkyPot - Checkout & Chat Ordering
+   MilkyPot - Checkout & Order Capture
    ============================================ */
 
-let currentCheckoutStep = 1;
-let orderCounter = Math.floor(Math.random() * 9000) + 1000;
+var currentCheckoutStep = 1;
+var orderCounter = parseInt(localStorage.getItem('milkypot_order_counter') || '1000');
 
 // ============================================
-// CHECKOUT
+// CHECKOUT MODAL
 // ============================================
 function openCheckout() {
+    reloadCart();
     if (cart.length === 0) {
         showToast('Adicione produtos ao carrinho primeiro!');
         return;
     }
-    const modal = document.getElementById('checkoutModal');
+    var modal = document.getElementById('checkoutModal');
     if (modal) {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -24,7 +25,7 @@ function openCheckout() {
 }
 
 function closeCheckout() {
-    const modal = document.getElementById('checkoutModal');
+    var modal = document.getElementById('checkoutModal');
     if (modal) {
         modal.classList.remove('active');
         document.body.style.overflow = '';
@@ -32,14 +33,11 @@ function closeCheckout() {
 }
 
 function nextCheckoutStep(step) {
-    // Validate current step
     if (step > currentCheckoutStep) {
         if (!validateCheckoutStep(currentCheckoutStep)) return;
     }
-
     currentCheckoutStep = step;
     updateCheckoutSteps();
-
     if (step === 4) {
         updateOrderSummary();
     }
@@ -47,27 +45,26 @@ function nextCheckoutStep(step) {
 
 function validateCheckoutStep(step) {
     if (step === 1) {
-        const name = document.getElementById('checkoutName')?.value?.trim();
-        const phone = document.getElementById('checkoutPhone')?.value?.trim();
-        if (!name || !phone) {
+        var name = document.getElementById('checkoutName');
+        var phone = document.getElementById('checkoutPhone');
+        if (!name || !name.value.trim() || !phone || !phone.value.trim()) {
             showToast('Preencha seu nome e telefone!');
             return false;
         }
     }
     if (step === 2) {
-        // Franchise selection - check if a store was selected
-        const btn = document.getElementById('btnToDelivery');
+        var btn = document.getElementById('btnToDelivery');
         if (btn && btn.disabled) {
             showToast('Selecione uma loja MilkyPot!');
             return false;
         }
     }
     if (step === 3) {
-        const deliveryType = document.querySelector('input[name="delivery"]:checked')?.value;
-        if (deliveryType === 'delivery') {
-            const cep = document.getElementById('checkoutCep')?.value?.trim();
-            const address = document.getElementById('checkoutAddress')?.value?.trim();
-            if (!cep || !address) {
+        var deliveryRadio = document.querySelector('input[name="delivery"]:checked');
+        if (deliveryRadio && deliveryRadio.value === 'delivery') {
+            var cep = document.getElementById('checkoutCep');
+            var address = document.getElementById('checkoutAddress');
+            if (!cep || !cep.value.trim() || !address || !address.value.trim()) {
                 showToast('Preencha o endereço de entrega!');
                 return false;
             }
@@ -77,79 +74,183 @@ function validateCheckoutStep(step) {
 }
 
 function updateCheckoutSteps() {
-    // Update step indicators
-    document.querySelectorAll('.checkout-step').forEach(step => {
-        const stepNum = parseInt(step.dataset.step);
+    document.querySelectorAll('.checkout-step').forEach(function(step) {
+        var stepNum = parseInt(step.dataset.step);
         step.classList.remove('active', 'completed');
         if (stepNum === currentCheckoutStep) step.classList.add('active');
         if (stepNum < currentCheckoutStep) step.classList.add('completed');
     });
 
-    // Update panels
-    document.querySelectorAll('.checkout-panel').forEach(panel => {
+    document.querySelectorAll('.checkout-panel').forEach(function(panel) {
         panel.classList.remove('active');
     });
-    const activePanel = document.getElementById(`checkoutStep${currentCheckoutStep}`);
+    var activePanel = document.getElementById('checkoutStep' + currentCheckoutStep);
     if (activePanel) activePanel.classList.add('active');
 }
 
 function updateOrderSummary() {
-    const summaryItems = document.getElementById('summaryItems');
-    const summarySubtotal = document.getElementById('summarySubtotal');
-    const summaryDelivery = document.getElementById('summaryDelivery');
-    const summaryTotal = document.getElementById('summaryTotal');
+    reloadCart();
+    var summaryItems = document.getElementById('summaryItems');
+    var summarySubtotal = document.getElementById('summarySubtotal');
+    var summaryDelivery = document.getElementById('summaryDelivery');
+    var summaryTotal = document.getElementById('summaryTotal');
 
     if (summaryItems) {
-        summaryItems.innerHTML = cart.map(item =>
-            `<div class="summary-item">
-                <span>${item.emoji} ${item.name} x${item.qty}</span>
-                <span>${formatCurrency(item.price * item.qty)}</span>
-            </div>`
-        ).join('');
+        summaryItems.innerHTML = cart.map(function(item) {
+            var emoji = item.emoji || '🍨';
+            var name = item.name || 'Produto';
+            var qty = item.qty || 1;
+            var total = item.total || calcItemTotal(item);
+
+            var details = '';
+            if (item.sizeName) details += item.sizeName;
+            if (item.formatoName) details += (details ? ' · ' : '') + item.formatoName;
+            if (item.nomeCliente) details += (details ? ' · ' : '') + '🏷️ ' + item.nomeCliente;
+
+            return '<div class="summary-item">' +
+                '<div>' +
+                    '<span>' + emoji + ' ' + name + ' x' + qty + '</span>' +
+                    (details ? '<small style="display:block;color:#9484A8;font-size:0.75rem">' + details + '</small>' : '') +
+                '</div>' +
+                '<span>' + formatCurrency(total) + '</span>' +
+            '</div>';
+        }).join('');
     }
 
-    const subtotal = getCartTotal();
-    const deliveryType = document.querySelector('input[name="delivery"]:checked')?.value;
-    // Get delivery fee from selected store (set by franchise selection script)
-    const storeFee = window._selectedStoreDeliveryFee || 0;
-    const deliveryFee = deliveryType === 'delivery' ? storeFee : 0;
+    var subtotal = getCartTotal();
+    var deliveryRadio = document.querySelector('input[name="delivery"]:checked');
+    var deliveryType = deliveryRadio ? deliveryRadio.value : 'pickup';
+    var storeFee = window._selectedStoreDeliveryFee || 0;
+    var deliveryFee = deliveryType === 'delivery' ? storeFee : 0;
 
     if (summarySubtotal) summarySubtotal.textContent = formatCurrency(subtotal);
     if (summaryDelivery) summaryDelivery.textContent = deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Grátis';
     if (summaryTotal) summaryTotal.textContent = formatCurrency(subtotal + deliveryFee);
 }
 
+// ============================================
+// PLACE ORDER - Capture + Status
+// ============================================
 function placeOrder() {
+    reloadCart();
+    if (cart.length === 0) {
+        showToast('Carrinho vazio!');
+        return;
+    }
+
     orderCounter++;
-    const orderNumber = `#MP${orderCounter}`;
+    localStorage.setItem('milkypot_order_counter', orderCounter.toString());
+    var orderNumber = '#MP' + orderCounter;
 
+    // Gather customer data
+    var customerName = (document.getElementById('checkoutName') || {}).value || '';
+    var customerPhone = (document.getElementById('checkoutPhone') || {}).value || '';
+    var customerCpf = (document.getElementById('checkoutCpf') || {}).value || '';
+
+    // Store data
+    var storeName = window._selectedStoreName || 'MilkyPot';
+    var storeWhatsapp = window._selectedStoreWhatsApp || '5511999999999';
+    var storeTime = window._selectedStoreTime || '20-35 min';
+    var storeFee = window._selectedStoreDeliveryFee || 0;
+
+    // Delivery data
+    var deliveryRadio = document.querySelector('input[name="delivery"]:checked');
+    var deliveryType = deliveryRadio ? deliveryRadio.value : 'pickup';
+    var deliveryFee = deliveryType === 'delivery' ? storeFee : 0;
+    var deliveryAddress = '';
+    if (deliveryType === 'delivery') {
+        var addr = (document.getElementById('checkoutAddress') || {}).value || '';
+        var comp = (document.getElementById('checkoutComplement') || {}).value || '';
+        var bairro = (document.getElementById('checkoutNeighborhood') || {}).value || '';
+        var cep = (document.getElementById('checkoutCep') || {}).value || '';
+        deliveryAddress = [addr, comp, bairro, cep].filter(Boolean).join(', ');
+    }
+
+    // Payment data
+    var paymentRadio = document.querySelector('input[name="payment"]:checked');
+    var paymentType = paymentRadio ? paymentRadio.value : 'pix';
+    var paymentLabels = { pix: 'PIX', credit: 'Cartão de Crédito', debit: 'Cartão de Débito', cash: 'Dinheiro' };
+
+    var subtotal = getCartTotal();
+    var total = subtotal + deliveryFee;
+
+    // ============================================
+    // CAPTURE ORDER (save to localStorage)
+    // ============================================
+    var order = {
+        orderNumber: orderNumber,
+        status: 'aguardando_pagamento',
+        createdAt: new Date().toISOString(),
+        customer: {
+            name: customerName,
+            phone: customerPhone,
+            cpf: customerCpf
+        },
+        store: {
+            name: storeName,
+            whatsapp: storeWhatsapp,
+            deliveryTime: storeTime
+        },
+        delivery: {
+            type: deliveryType,
+            address: deliveryAddress,
+            fee: deliveryFee
+        },
+        payment: {
+            method: paymentType,
+            label: paymentLabels[paymentType] || paymentType,
+            status: 'pendente'
+        },
+        items: cart.map(function(item) {
+            return {
+                name: item.name || 'Produto',
+                emoji: item.emoji || '🍨',
+                baseId: item.baseId,
+                baseName: item.baseName,
+                formatoId: item.formatoId,
+                formatoName: item.formatoName,
+                saborId: item.saborId,
+                size: item.sizeName || item.size || '',
+                sizeMl: item.sizeMl || 0,
+                sizePrice: item.sizePrice || 0,
+                extras: item.extras || [],
+                bebidas: item.bebidas || [],
+                nomeCliente: item.nomeCliente || '',
+                qty: item.qty || 1,
+                total: item.total || calcItemTotal(item)
+            };
+        }),
+        subtotal: subtotal,
+        deliveryFee: deliveryFee,
+        total: total
+    };
+
+    // Save order to orders list
+    var orders = JSON.parse(localStorage.getItem('milkypot_orders') || '[]');
+    orders.unshift(order);
+    localStorage.setItem('milkypot_orders', JSON.stringify(orders));
+
+    // ============================================
+    // SHOW SUCCESS
+    // ============================================
     closeCheckout();
-    closeSidebar();
 
-    // Show success
-    const successModal = document.getElementById('successModal');
-    const orderNumEl = document.getElementById('orderNumber');
-    const detailsEl = document.getElementById('successDetails');
+    var successModal = document.getElementById('successModal');
+    var orderNumEl = document.getElementById('orderNumber');
+    var detailsEl = document.getElementById('successDetails');
 
     if (orderNumEl) orderNumEl.textContent = orderNumber;
 
-    const deliveryType = document.querySelector('input[name="delivery"]:checked')?.value;
-    const paymentType = document.querySelector('input[name="payment"]:checked')?.value;
-    const paymentLabels = { pix: 'PIX', credit: 'Cartão de Crédito', debit: 'Cartão de Débito', cash: 'Dinheiro' };
-
-    const storeName = window._selectedStoreName || '-';
-    const storeTime = window._selectedStoreTime || '20-35 min';
-    const storeFee = window._selectedStoreDeliveryFee || 0;
-    const deliveryFeeAmount = deliveryType === 'delivery' ? storeFee : 0;
-
     if (detailsEl) {
-        detailsEl.innerHTML = `
-            <p><strong>Loja:</strong> ${storeName}</p>
-            <p><strong>Entrega:</strong> ${deliveryType === 'delivery' ? 'Delivery' : 'Retirada na loja'}</p>
-            <p><strong>Pagamento:</strong> ${paymentLabels[paymentType] || 'PIX'}</p>
-            <p><strong>Total:</strong> ${formatCurrency(getCartTotal() + deliveryFeeAmount)}</p>
-            <p><strong>Previsão:</strong> ${storeTime}</p>
-        `;
+        detailsEl.innerHTML =
+            '<p><strong>Loja:</strong> ' + storeName + '</p>' +
+            '<p><strong>Entrega:</strong> ' + (deliveryType === 'delivery' ? 'Delivery' : 'Retirada na loja') + '</p>' +
+            '<p><strong>Pagamento:</strong> ' + (paymentLabels[paymentType] || 'PIX') + '</p>' +
+            '<p><strong>Total:</strong> ' + formatCurrency(total) + '</p>' +
+            '<p><strong>Previsão:</strong> ' + storeTime + '</p>' +
+            '<p style="margin-top:8px;padding:8px 12px;background:#FFF3E0;border-radius:8px;font-size:0.85rem;">' +
+                '⏳ <strong>Status:</strong> Aguardando pagamento' +
+            '</p>';
     }
 
     if (successModal) {
@@ -157,16 +258,17 @@ function placeOrder() {
         document.body.style.overflow = 'hidden';
     }
 
-    // Confetti!
-    createConfetti();
+    // Confetti
+    if (typeof createConfetti === 'function') createConfetti();
 
     // Clear cart
-    cart = [];
-    updateCartUI();
+    clearCart();
+
+    console.log('Order captured:', order);
 }
 
 function closeSuccessModal() {
-    const modal = document.getElementById('successModal');
+    var modal = document.getElementById('successModal');
     if (modal) {
         modal.classList.remove('active');
         document.body.style.overflow = '';
@@ -174,43 +276,45 @@ function closeSuccessModal() {
 }
 
 function closeSidebar() {
-    const sidebar = document.getElementById('cartSidebar');
-    const overlay = document.getElementById('cartOverlay');
-    if (sidebar) sidebar.classList.remove('active');
-    if (overlay) overlay.classList.remove('active');
+    if (typeof closeCartSidebar === 'function') {
+        closeCartSidebar();
+    } else {
+        var sidebar = document.getElementById('cartSidebar');
+        var overlay = document.getElementById('cartOverlay');
+        if (sidebar) sidebar.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
+    }
 }
 
 // ============================================
-// DELIVERY TOGGLE
+// DELIVERY TOGGLE & PAYMENT OPTIONS
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.delivery-option').forEach(opt => {
-        opt.addEventListener('click', () => {
-            document.querySelectorAll('.delivery-option').forEach(o => o.classList.remove('active'));
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.delivery-option').forEach(function(opt) {
+        opt.addEventListener('click', function() {
+            document.querySelectorAll('.delivery-option').forEach(function(o) { o.classList.remove('active'); });
             opt.classList.add('active');
-
-            const radio = opt.querySelector('input[type="radio"]');
+            var radio = opt.querySelector('input[type="radio"]');
             if (radio) radio.checked = true;
-
-            const addressDiv = document.getElementById('deliveryAddress');
+            var addressDiv = document.getElementById('deliveryAddress');
             if (addressDiv) {
-                addressDiv.style.display = radio.value === 'delivery' ? 'block' : 'none';
+                addressDiv.style.display = radio && radio.value === 'delivery' ? 'block' : 'none';
             }
         });
     });
 
-    document.querySelectorAll('.payment-option').forEach(opt => {
-        opt.addEventListener('click', () => {
-            document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
+    document.querySelectorAll('.payment-option').forEach(function(opt) {
+        opt.addEventListener('click', function() {
+            document.querySelectorAll('.payment-option').forEach(function(o) { o.classList.remove('active'); });
             opt.classList.add('active');
-            const radio = opt.querySelector('input[type="radio"]');
+            var radio = opt.querySelector('input[type="radio"]');
             if (radio) radio.checked = true;
         });
     });
 
     // Close modals on overlay click
-    document.querySelectorAll('.modal-overlay').forEach(overlay => {
-        overlay.addEventListener('click', (e) => {
+    document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+        overlay.addEventListener('click', function(e) {
             if (e.target === overlay) {
                 overlay.classList.remove('active');
                 document.body.style.overflow = '';
@@ -220,89 +324,109 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================
-// CHAT ORDERING SYSTEM
+// CONFETTI HELPER
 // ============================================
-let chatState = {
+function createConfetti() {
+    var colors = ['#FFB6D9', '#D4A5FF', '#A5D4FF', '#A5FFD4', '#FFE5A5', '#FFB38A', '#FF6B9D'];
+    for (var i = 0; i < 40; i++) {
+        var piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.cssText = 'position:fixed;top:-10px;left:' + (Math.random() * 100) + '%;z-index:99999;' +
+            'background:' + colors[Math.floor(Math.random() * colors.length)] + ';' +
+            'width:' + (Math.random() * 8 + 5) + 'px;height:' + (Math.random() * 8 + 5) + 'px;' +
+            'border-radius:' + (Math.random() > 0.5 ? '50%' : '2px') + ';' +
+            'animation:confettiFall ' + (Math.random() * 2 + 2) + 's ease forwards;' +
+            'animation-delay:' + Math.random() + 's;';
+        document.body.appendChild(piece);
+        setTimeout(function() { piece.remove(); }, 4500);
+    }
+}
+
+// Add confetti animation style if not present
+(function() {
+    if (!document.getElementById('confettiStyle')) {
+        var style = document.createElement('style');
+        style.id = 'confettiStyle';
+        style.textContent = '@keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }';
+        document.head.appendChild(style);
+    }
+})();
+
+// ============================================
+// CHAT ORDERING SYSTEM (Lulu Bot)
+// ============================================
+var chatState = {
     step: 'greeting',
     selectedCategory: null,
     chatCart: []
 };
 
 function initChat() {
-    // Create chat button and widget
-    const chatBtn = document.createElement('button');
+    var chatBtn = document.createElement('button');
     chatBtn.className = 'chat-float-btn';
     chatBtn.id = 'chatFloatBtn';
     chatBtn.innerHTML = '🐑';
     chatBtn.setAttribute('aria-label', 'Pedir via chat');
     chatBtn.title = 'Pedir pelo Chat!';
 
-    const chatWidget = document.createElement('div');
+    var chatWidget = document.createElement('div');
     chatWidget.className = 'chat-widget';
     chatWidget.id = 'chatWidget';
-    chatWidget.innerHTML = `
-        <div class="chat-header">
-            <div class="chat-header-avatar">🐑</div>
-            <div class="chat-header-info">
-                <h4>Lulú - MilkyPot</h4>
-                <span>Online agora</span>
-            </div>
-            <button class="chat-close-btn" id="chatCloseBtn" aria-label="Fechar chat">&times;</button>
-        </div>
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="chat-input-area">
-            <input type="text" class="chat-input" id="chatInput" placeholder="Digite sua mensagem...">
-            <button class="chat-send-btn" id="chatSendBtn" aria-label="Enviar">➤</button>
-        </div>
-    `;
+    chatWidget.innerHTML =
+        '<div class="chat-header">' +
+            '<div class="chat-header-avatar">🐑</div>' +
+            '<div class="chat-header-info"><h4>Lulú - MilkyPot</h4><span>Online agora</span></div>' +
+            '<button class="chat-close-btn" id="chatCloseBtn" aria-label="Fechar chat">&times;</button>' +
+        '</div>' +
+        '<div class="chat-messages" id="chatMessages"></div>' +
+        '<div class="chat-input-area">' +
+            '<input type="text" class="chat-input" id="chatInput" placeholder="Digite sua mensagem...">' +
+            '<button class="chat-send-btn" id="chatSendBtn" aria-label="Enviar">➤</button>' +
+        '</div>';
 
     document.body.appendChild(chatBtn);
     document.body.appendChild(chatWidget);
 
-    // Move WhatsApp button up
-    const whatsapp = document.querySelector('.whatsapp-float');
-    if (whatsapp) {
-        whatsapp.style.bottom = '170px';
-    }
+    var whatsapp = document.querySelector('.whatsapp-float');
+    if (whatsapp) whatsapp.style.bottom = '170px';
 
-    // Events
-    chatBtn.addEventListener('click', () => {
+    chatBtn.addEventListener('click', function() {
         chatWidget.classList.add('active');
         chatBtn.style.display = 'none';
-        if (chatState.step === 'greeting') {
-            startChatConversation();
-        }
+        if (chatState.step === 'greeting') startChatConversation();
     });
 
-    document.getElementById('chatCloseBtn').addEventListener('click', () => {
+    document.getElementById('chatCloseBtn').addEventListener('click', function() {
         chatWidget.classList.remove('active');
         chatBtn.style.display = 'flex';
     });
 
     document.getElementById('chatSendBtn').addEventListener('click', handleChatInput);
-    document.getElementById('chatInput').addEventListener('keypress', (e) => {
+    document.getElementById('chatInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') handleChatInput();
     });
 }
 
 function startChatConversation() {
-    const messages = document.getElementById('chatMessages');
-    messages.innerHTML = '';
+    var messages = document.getElementById('chatMessages');
+    if (messages) messages.innerHTML = '';
 
-    // Greeting sequence
-    addBotMessage(CHAT_GREETINGS[0], 0);
-    addBotMessage(CHAT_GREETINGS[1], 800);
-    addBotMessage(CHAT_GREETINGS[2], 1600);
+    if (typeof CHAT_GREETINGS !== 'undefined') {
+        addBotMessage(CHAT_GREETINGS[0], 0);
+        addBotMessage(CHAT_GREETINGS[1], 800);
+        addBotMessage(CHAT_GREETINGS[2], 1600);
+    } else {
+        addBotMessage('Oii! Bem-vindo(a) à MilkyPot! 🐑', 0);
+        addBotMessage('Eu sou a Lulú, vou te ajudar a montar seu potinho perfeito! 🍨', 800);
+    }
 
-    // Show options
-    setTimeout(() => {
+    setTimeout(function() {
         if (!selectedStore) {
             addBotMessageWithOptions(
-                "Primeiro, escolha uma loja perto de você:",
-                STORES.filter(s => s.open).slice(0, 4).map(s => ({
-                    label: s.name.replace('MilkyPot ', ''),
-                    value: `store_${s.id}`
-                }))
+                'Primeiro, escolha uma loja perto de você:',
+                (typeof STORES !== 'undefined' ? STORES : []).filter(function(s) { return s.open; }).slice(0, 4).map(function(s) {
+                    return { label: s.name.replace('MilkyPot ', ''), value: 'store_' + s.id };
+                })
             );
             chatState.step = 'select_store';
         } else {
@@ -314,39 +438,33 @@ function startChatConversation() {
 function showChatCategories() {
     chatState.step = 'select_category';
     addBotMessageWithOptions(
-        CHAT_CATEGORIES_MSG,
+        typeof CHAT_CATEGORIES_MSG !== 'undefined' ? CHAT_CATEGORIES_MSG : 'Escolha uma categoria:',
         [
-            { label: "🍨 Potinhos", value: "potinhos" },
-            { label: "🥤 Milkshakes", value: "milkshakes" },
-            { label: "🫐 Açaí", value: "acai" },
-            { label: "🍦 Sorvetes", value: "sorvetes" },
-            { label: "✨ Especiais", value: "especiais" },
-            { label: "🎁 Combos", value: "combos" }
+            { label: '🍨 Potinhos', value: 'potinhos' },
+            { label: '🥤 Milkshakes', value: 'milkshakes' },
+            { label: '🫐 Açaí', value: 'acai' },
+            { label: '🍦 Sorvetes', value: 'sorvetes' },
+            { label: '✨ Especiais', value: 'especiais' },
+            { label: '🎁 Combos', value: 'combos' }
         ]
     );
 }
 
 function handleChatInput() {
-    const input = document.getElementById('chatInput');
-    const text = input.value.trim();
+    var input = document.getElementById('chatInput');
+    var text = input.value.trim();
     if (!text) return;
-
     addUserMessage(text);
     input.value = '';
-
-    // Process based on state
     processUserMessage(text);
 }
 
 function handleChatOption(value) {
-    // Show user selection
-    const btn = event.target;
+    var btn = event.target;
     addUserMessage(btn.textContent);
-
-    // Disable all option buttons in the same group
-    const parent = btn.closest('.chat-options');
+    var parent = btn.closest('.chat-options');
     if (parent) {
-        parent.querySelectorAll('.chat-option-btn').forEach(b => {
+        parent.querySelectorAll('.chat-option-btn').forEach(function(b) {
             b.disabled = true;
             b.style.opacity = '0.5';
             b.style.cursor = 'default';
@@ -354,10 +472,10 @@ function handleChatOption(value) {
     }
 
     if (chatState.step === 'select_store') {
-        const storeId = parseInt(value.replace('store_', ''));
-        selectStore(storeId);
-        addBotMessage(`Ótima escolha! ${selectedStore.name} selecionada! 🎉`, 500);
-        setTimeout(() => showChatCategories(), 1200);
+        var storeId = parseInt(value.replace('store_', ''));
+        if (typeof selectStore === 'function') selectStore(storeId);
+        addBotMessage('Ótima escolha! Loja selecionada! 🎉', 500);
+        setTimeout(function() { showChatCategories(); }, 1200);
     } else if (chatState.step === 'select_category') {
         chatState.selectedCategory = value;
         showChatProducts(value);
@@ -367,16 +485,39 @@ function handleChatOption(value) {
         } else if (value === 'finish') {
             finishChatOrder();
         } else if (value.startsWith('add_')) {
-            const productId = parseInt(value.replace('add_', ''));
-            addToCart(productId);
-            const product = PRODUCTS.find(p => p.id === productId);
-            addBotMessage(`${product.emoji} ${product.name} adicionado ao carrinho! ✨`, 500);
-            setTimeout(() => {
+            var productId = parseInt(value.replace('add_', ''));
+            if (typeof PRODUCTS !== 'undefined') {
+                var product = PRODUCTS.find(function(p) { return p.id === productId; });
+                if (product) {
+                    // Add to localStorage cart
+                    var cartItems = JSON.parse(localStorage.getItem('milkypot_cart') || '[]');
+                    var existing = cartItems.find(function(i) { return i.name === product.name; });
+                    if (existing) {
+                        existing.qty = (existing.qty || 1) + 1;
+                        existing.total = (existing.sizePrice || existing.price || product.price) * existing.qty;
+                    } else {
+                        cartItems.push({
+                            id: Date.now().toString(),
+                            name: product.name,
+                            emoji: product.emoji,
+                            sizePrice: product.price,
+                            extras: [],
+                            bebidas: [],
+                            qty: 1,
+                            total: product.price
+                        });
+                    }
+                    localStorage.setItem('milkypot_cart', JSON.stringify(cartItems));
+                    if (typeof updateCartUI === 'function') updateCartUI();
+                    addBotMessage(product.emoji + ' ' + product.name + ' adicionado ao carrinho! ✨', 500);
+                }
+            }
+            setTimeout(function() {
                 addBotMessageWithOptions(
-                    CHAT_ADD_MORE,
+                    'Quer adicionar mais alguma coisa?',
                     [
-                        { label: "📋 Ver mais categorias", value: "more_categories" },
-                        { label: "✅ Finalizar pedido", value: "finish" }
+                        { label: '📋 Ver mais categorias', value: 'more_categories' },
+                        { label: '✅ Finalizar pedido', value: 'finish' }
                     ]
                 );
                 chatState.step = 'browsing';
@@ -386,168 +527,141 @@ function handleChatOption(value) {
 }
 
 function showChatProducts(category) {
-    const products = PRODUCTS.filter(p => p.category === category);
+    if (typeof PRODUCTS === 'undefined') return;
+    var products = PRODUCTS.filter(function(p) { return p.category === category; });
     chatState.step = 'browsing';
 
-    addBotMessage("Aqui estão as opções deliciosas! 😋", 300);
-
-    products.forEach((product, i) => {
-        setTimeout(() => {
-            addProductCard(product);
-        }, 600 + (i * 400));
+    addBotMessage('Aqui estão as opções deliciosas! 😋', 300);
+    products.forEach(function(product, i) {
+        setTimeout(function() { addProductCard(product); }, 600 + (i * 400));
     });
 
-    setTimeout(() => {
+    setTimeout(function() {
         addBotMessageWithOptions(
-            "Quer ver outra categoria ou finalizar?",
+            'Quer ver outra categoria ou finalizar?',
             [
-                { label: "📋 Outras categorias", value: "more_categories" },
-                { label: "✅ Finalizar pedido", value: "finish" }
+                { label: '📋 Outras categorias', value: 'more_categories' },
+                { label: '✅ Finalizar pedido', value: 'finish' }
             ]
         );
     }, 600 + (products.length * 400) + 500);
 }
 
 function finishChatOrder() {
+    reloadCart();
     if (cart.length === 0) {
-        addBotMessage("Seu carrinho está vazio! Escolha alguns produtos primeiro 😊", 500);
-        setTimeout(() => showChatCategories(), 1200);
+        addBotMessage('Seu carrinho está vazio! Escolha alguns produtos primeiro 😊', 500);
+        setTimeout(function() { showChatCategories(); }, 1200);
         return;
     }
 
-    const total = getCartTotal();
-    let summary = "Seu pedido:\n\n";
-    cart.forEach(item => {
-        summary += `${item.emoji} ${item.name} x${item.qty} - ${formatCurrency(item.price * item.qty)}\n`;
+    var total = getCartTotal();
+    var summary = 'Seu pedido:\n\n';
+    cart.forEach(function(item) {
+        summary += (item.emoji || '🍨') + ' ' + (item.name || 'Produto') + ' x' + (item.qty || 1) + ' - ' + formatCurrency(item.total || 0) + '\n';
     });
-    summary += `\nTotal: ${formatCurrency(total)}`;
+    summary += '\nTotal: ' + formatCurrency(total);
 
     addBotMessage(summary, 500);
-    addBotMessage("Vou abrir a tela de finalização para você! 🎉", 1500);
+    addBotMessage('Vou abrir a tela de finalização para você! 🎉', 1500);
 
-    setTimeout(() => {
-        openCheckout();
-    }, 2500);
+    setTimeout(function() { openCheckout(); }, 2500);
 }
 
 function processUserMessage(text) {
-    const lower = text.toLowerCase();
-
-    // Simple keyword matching
+    var lower = text.toLowerCase();
     showTyping();
 
-    setTimeout(() => {
+    setTimeout(function() {
         removeTyping();
-
         if (lower.includes('oi') || lower.includes('olá') || lower.includes('ola')) {
-            addBotMessage("Oii! Como posso te ajudar? 😊");
+            addBotMessage('Oii! Como posso te ajudar? 😊');
             showChatCategories();
-        } else if (lower.includes('cardápio') || lower.includes('cardapio') || lower.includes('menu') || lower.includes('produtos')) {
+        } else if (lower.includes('cardápio') || lower.includes('cardapio') || lower.includes('menu')) {
             showChatCategories();
-        } else if (lower.includes('potinho')) {
-            showChatProducts('potinhos');
-        } else if (lower.includes('milkshake')) {
-            showChatProducts('milkshakes');
-        } else if (lower.includes('açaí') || lower.includes('acai')) {
-            showChatProducts('acai');
-        } else if (lower.includes('sorvete')) {
-            showChatProducts('sorvetes');
-        } else if (lower.includes('especial') || lower.includes('waffle') || lower.includes('crepe')) {
-            showChatProducts('especiais');
-        } else if (lower.includes('combo') || lower.includes('promoção') || lower.includes('promocao')) {
-            showChatProducts('combos');
-        } else if (lower.includes('finalizar') || lower.includes('fechar') || lower.includes('pagar') || lower.includes('carrinho')) {
+        } else if (lower.includes('finalizar') || lower.includes('fechar') || lower.includes('carrinho')) {
             finishChatOrder();
-        } else if (lower.includes('obrigado') || lower.includes('obrigada') || lower.includes('valeu')) {
-            addBotMessage("Por nada! Fico feliz em ajudar! 🐑💕 Volte sempre!");
+        } else if (lower.includes('obrigado') || lower.includes('valeu')) {
+            addBotMessage('Por nada! Fico feliz em ajudar! 🐑💕 Volte sempre!');
         } else {
-            addBotMessage("Hmm, não entendi muito bem 🤔 Posso te mostrar nosso cardápio?");
-            setTimeout(() => showChatCategories(), 800);
+            addBotMessage('Hmm, não entendi muito bem 🤔 Posso te mostrar nosso cardápio?');
+            setTimeout(function() { showChatCategories(); }, 800);
         }
     }, 1000);
 }
 
-// ============================================
-// CHAT UI HELPERS
-// ============================================
-function addBotMessage(text, delay = 0) {
-    setTimeout(() => {
-        const messages = document.getElementById('chatMessages');
+// Chat UI helpers
+function addBotMessage(text, delay) {
+    delay = delay || 0;
+    setTimeout(function() {
+        var messages = document.getElementById('chatMessages');
         if (!messages) return;
-        const msg = document.createElement('div');
+        var msg = document.createElement('div');
         msg.className = 'chat-message bot';
-        msg.innerHTML = `<div class="chat-bubble">${text.replace(/\n/g, '<br>')}</div>`;
+        msg.innerHTML = '<div class="chat-bubble">' + text.replace(/\n/g, '<br>') + '</div>';
         messages.appendChild(msg);
         messages.scrollTop = messages.scrollHeight;
     }, delay);
 }
 
 function addUserMessage(text) {
-    const messages = document.getElementById('chatMessages');
+    var messages = document.getElementById('chatMessages');
     if (!messages) return;
-    const msg = document.createElement('div');
+    var msg = document.createElement('div');
     msg.className = 'chat-message user';
-    msg.innerHTML = `<div class="chat-bubble">${text}</div>`;
+    msg.innerHTML = '<div class="chat-bubble">' + text + '</div>';
     messages.appendChild(msg);
     messages.scrollTop = messages.scrollHeight;
 }
 
 function addBotMessageWithOptions(text, options) {
-    const messages = document.getElementById('chatMessages');
+    var messages = document.getElementById('chatMessages');
     if (!messages) return;
-    const msg = document.createElement('div');
+    var msg = document.createElement('div');
     msg.className = 'chat-message bot';
-    msg.innerHTML = `
-        <div class="chat-bubble">${text}</div>
-        <div class="chat-options">
-            ${options.map(opt =>
-                `<button class="chat-option-btn" onclick="handleChatOption('${opt.value}')">${opt.label}</button>`
-            ).join('')}
-        </div>
-    `;
+    msg.innerHTML =
+        '<div class="chat-bubble">' + text + '</div>' +
+        '<div class="chat-options">' +
+            options.map(function(opt) {
+                return '<button class="chat-option-btn" onclick="handleChatOption(\'' + opt.value + '\')">' + opt.label + '</button>';
+            }).join('') +
+        '</div>';
     messages.appendChild(msg);
     messages.scrollTop = messages.scrollHeight;
 }
 
 function addProductCard(product) {
-    const messages = document.getElementById('chatMessages');
+    var messages = document.getElementById('chatMessages');
     if (!messages) return;
-    const msg = document.createElement('div');
+    var msg = document.createElement('div');
     msg.className = 'chat-message bot';
-    msg.innerHTML = `
-        <div class="chat-product-card">
-            <div class="chat-product-img">${product.emoji}</div>
-            <div class="chat-product-info">
-                <h5>${product.name}</h5>
-                <p class="desc">${product.desc}</p>
-                <span class="price">${formatCurrency(product.price)}</span>
-            </div>
-            <div class="chat-product-actions">
-                <button class="chat-add-btn chat-option-btn" onclick="handleChatOption('add_${product.id}')">Adicionar 🛒</button>
-            </div>
-        </div>
-    `;
+    msg.innerHTML =
+        '<div class="chat-product-card">' +
+            '<div class="chat-product-img">' + product.emoji + '</div>' +
+            '<div class="chat-product-info">' +
+                '<h5>' + product.name + '</h5>' +
+                '<p class="desc">' + product.desc + '</p>' +
+                '<span class="price">' + formatCurrency(product.price) + '</span>' +
+            '</div>' +
+            '<div class="chat-product-actions">' +
+                '<button class="chat-add-btn chat-option-btn" onclick="handleChatOption(\'add_' + product.id + '\')">Adicionar 🛒</button>' +
+            '</div>' +
+        '</div>';
     messages.appendChild(msg);
     messages.scrollTop = messages.scrollHeight;
 }
 
 function showTyping() {
-    const messages = document.getElementById('chatMessages');
+    var messages = document.getElementById('chatMessages');
     if (!messages) return;
-    const typing = document.createElement('div');
+    var typing = document.createElement('div');
     typing.className = 'chat-message bot typing-msg';
-    typing.innerHTML = `
-        <div class="typing-indicator">
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-        </div>
-    `;
+    typing.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
     messages.appendChild(typing);
     messages.scrollTop = messages.scrollHeight;
 }
 
 function removeTyping() {
-    const typing = document.querySelector('.typing-msg');
+    var typing = document.querySelector('.typing-msg');
     if (typing) typing.remove();
 }

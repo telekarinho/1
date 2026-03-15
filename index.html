@@ -1361,10 +1361,16 @@
             var product = window._sheetProduct;
             var size = window._sheetSize;
             var qty = window._sheetQty || 1;
+            var config = CARDAPIO_CONFIG;
+
+            // Get base/formato info for unified format
+            var base = config.bases.find(function(b) { return b.id === product.baseId; });
+            var formato = config.formatos.find(function(f) { return f.id === product.formatoId; });
+            var tamanho = config.tamanhos.find(function(t) { return t.id === size.id; });
 
             // Get selected extras
             var extras = [];
-            document.querySelectorAll('.extra-check:checked').forEach(function(cb) {
+            document.querySelectorAll('#sheetExtras .extra-check:checked').forEach(function(cb) {
                 extras.push({
                     id: cb.dataset.extraId,
                     name: cb.dataset.extraName,
@@ -1372,34 +1378,52 @@
                 });
             });
 
+            // Get selected bebidas
+            var bebidas = [];
+            document.querySelectorAll('#sheetBebidas .extra-check:checked').forEach(function(cb) {
+                bebidas.push({
+                    id: cb.dataset.extraId,
+                    name: cb.dataset.extraName,
+                    price: parseFloat(cb.dataset.extraPrice),
+                    qty: 1
+                });
+            });
+
             // Calculate total
             var itemTotal = size.price;
             extras.forEach(function(e) { itemTotal += e.price; });
+            bebidas.forEach(function(b) { itemTotal += b.price; });
 
-            // Build cart item
+            // UNIFIED CART FORMAT
             var cartItem = {
                 id: Date.now().toString(),
-                baseId: product.baseId,
-                formatoId: product.formatoId,
-                saborId: product.saborId,
                 name: product.name,
                 emoji: product.emoji,
+                baseId: product.baseId,
+                baseName: base ? base.name : '',
+                formatoId: product.formatoId,
+                formatoName: formato ? formato.name : '',
+                saborId: product.saborId,
                 size: size.id,
+                sizeName: tamanho ? tamanho.name : size.id,
+                sizeMl: tamanho ? tamanho.ml : 0,
                 sizePrice: size.price,
                 extras: extras,
+                bebidas: bebidas,
                 qty: qty,
                 total: itemTotal * qty
             };
 
             // Save to localStorage (shared with cardapio.js)
-            var cart = JSON.parse(localStorage.getItem('milkypot_cart') || '[]');
-            cart.push(cartItem);
-            localStorage.setItem('milkypot_cart', JSON.stringify(cart));
+            var existingCart = JSON.parse(localStorage.getItem('milkypot_cart') || '[]');
+            existingCart.push(cartItem);
+            localStorage.setItem('milkypot_cart', JSON.stringify(existingCart));
 
             // Haptic feedback
             if ('vibrate' in navigator) navigator.vibrate(50);
 
-            // Update cart count in navbar
+            // Update cart UI
+            if (typeof updateCartUI === 'function') updateCartUI();
             updateCartBadge();
             updateStickyCart();
 
@@ -1436,8 +1460,10 @@
         }
 
         window.openCart = function() {
-            // Redirect to cardapio with cart view
-            window.location.href = 'cardapio.html#resumo';
+            // Open cart sidebar (from cart.js)
+            if (typeof openCartSidebar === 'function') {
+                openCartSidebar();
+            }
         };
 
         function showToast(msg) {

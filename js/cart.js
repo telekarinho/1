@@ -1,5 +1,27 @@
 /* ============================================
-   MilkyPot - Cart System (localStorage-based)
+   MilkyPot - Unified Cart System (localStorage)
+   ============================================
+
+   UNIFIED ITEM FORMAT:
+   {
+     id: String,           // unique ID (timestamp)
+     name: String,         // "Shake de Morango"
+     emoji: String,        // "🍓"
+     baseId: String,
+     baseName: String,
+     formatoId: String,
+     formatoName: String,
+     saborId: String,
+     size: String,         // size id e.g. "medio"
+     sizeName: String,     // "Médio"
+     sizeMl: Number,       // 500
+     sizePrice: Number,    // 18.00
+     extras: [{id, name, price}],
+     bebidas: [{id, name, price, qty}],
+     nomeCliente: String,  // optional
+     qty: Number,
+     total: Number         // (sizePrice + extras + bebidas) * qty
+   }
    ============================================ */
 
 const CART_KEY = 'milkypot_cart';
@@ -11,127 +33,171 @@ function saveCart() {
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
 }
 
+function reloadCart() {
+    cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+}
+
+// ============================================
+// PRICE HELPERS
+// ============================================
+function formatCurrency(value) {
+    if (typeof value !== 'number' || isNaN(value)) value = 0;
+    return 'R$ ' + value.toFixed(2).replace('.', ',');
+}
+
+function calcItemTotal(item) {
+    var base = item.sizePrice || item.price || 0;
+    var extrasTotal = 0;
+    if (item.extras && item.extras.length) {
+        item.extras.forEach(function(e) { extrasTotal += (e.price || 0) * (e.qty || 1); });
+    }
+    var bebidasTotal = 0;
+    if (item.bebidas && item.bebidas.length) {
+        item.bebidas.forEach(function(b) { bebidasTotal += (b.price || 0) * (b.qty || 1); });
+    }
+    return (base + extrasTotal + bebidasTotal) * (item.qty || 1);
+}
+
 // ============================================
 // CART OPERATIONS
 // ============================================
-function addToCart(productId) {
-    // Legacy addToCart (from data.js PRODUCTS array)
-    if (typeof PRODUCTS !== 'undefined') {
-        const product = PRODUCTS.find(p => p.id === productId);
-        if (!product) return;
-
-        const existingItem = cart.find(item => item.id === productId);
-        if (existingItem) {
-            existingItem.qty += 1;
-        } else {
-            cart.push({ ...product, qty: 1, total: product.price });
-        }
-
-        saveCart();
-        updateCartUI();
-        showToast(`${product.emoji} ${product.name} adicionado!`);
-    }
-
-    // Animate cart button
-    const cartBtn = document.getElementById('cartBtn');
-    if (cartBtn) {
-        cartBtn.classList.add('cart-add-anim');
-        setTimeout(() => cartBtn.classList.remove('cart-add-anim'), 400);
-    }
+function addItemToCart(item) {
+    reloadCart();
+    // Ensure total is calculated
+    if (!item.total) item.total = calcItemTotal(item);
+    cart.push(item);
+    saveCart();
+    updateCartUI();
 }
 
 function removeFromCart(itemId) {
-    cart = cart.filter(item => String(item.id) !== String(itemId));
+    reloadCart();
+    cart = cart.filter(function(item) { return String(item.id) !== String(itemId); });
     saveCart();
     updateCartUI();
 }
 
 function updateQty(itemId, delta) {
-    const item = cart.find(i => String(i.id) === String(itemId));
+    reloadCart();
+    var item = cart.find(function(i) { return String(i.id) === String(itemId); });
     if (!item) return;
 
-    item.qty += delta;
+    item.qty = (item.qty || 1) + delta;
     if (item.qty <= 0) {
         removeFromCart(itemId);
         return;
     }
     // Recalculate total
-    if (item.sizePrice !== undefined) {
-        let extrasTotal = 0;
-        if (item.extras) item.extras.forEach(e => extrasTotal += e.price);
-        item.total = (item.sizePrice + extrasTotal) * item.qty;
-    } else if (item.price) {
-        item.total = item.price * item.qty;
-    }
+    item.total = calcItemTotal(item);
     saveCart();
     updateCartUI();
 }
 
 function getCartTotal() {
-    return cart.reduce((sum, item) => {
-        if (item.total) return sum + item.total;
-        if (item.price) return sum + (item.price * item.qty);
-        return sum;
+    return cart.reduce(function(sum, item) {
+        return sum + (item.total || calcItemTotal(item));
     }, 0);
 }
 
 function getCartCount() {
-    return cart.reduce((sum, item) => sum + (item.qty || 1), 0);
+    return cart.reduce(function(sum, item) { return sum + (item.qty || 1); }, 0);
+}
+
+function clearCart() {
+    cart = [];
+    saveCart();
+    updateCartUI();
 }
 
 // ============================================
-// CART UI
+// CART UI RENDERING
 // ============================================
 function updateCartUI() {
-    const countEl = document.getElementById('cartCount');
-    const itemsEl = document.getElementById('cartItems');
-    const footerEl = document.getElementById('cartFooter');
-    const totalEl = document.getElementById('cartTotal');
+    reloadCart();
 
-    // Reload from localStorage (in case bottom sheet added items)
-    cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    var countEl = document.getElementById('cartCount');
+    var itemsEl = document.getElementById('cartItems');
+    var footerEl = document.getElementById('cartFooter');
+    var totalEl = document.getElementById('cartTotal');
 
     if (countEl) countEl.textContent = getCartCount();
 
     if (itemsEl) {
         if (cart.length === 0) {
-            itemsEl.innerHTML = `
-                <div class="cart-empty">
-                    <span class="cart-empty-icon">🛒</span>
-                    <p>Seu carrinho está vazio</p>
-                    <small>Adicione produtos deliciosos!</small>
-                </div>
-            `;
+            itemsEl.innerHTML =
+                '<div class="cart-empty">' +
+                    '<span class="cart-empty-icon">🛒</span>' +
+                    '<p>Seu carrinho está vazio</p>' +
+                    '<small>Adicione produtos deliciosos!</small>' +
+                '</div>';
         } else {
-            itemsEl.innerHTML = cart.map(item => {
-                const itemEmoji = item.emoji || '🍨';
-                const itemName = item.name || 'Produto';
-                const itemTotal = item.total || (item.price ? item.price * item.qty : 0);
-                const itemId = item.id;
-                const extrasText = item.extras && item.extras.length > 0
-                    ? '<small class="cart-item-extras">' + item.extras.map(e => e.name).join(', ') + '</small>'
-                    : '';
-                const sizeText = item.size ? '<small class="cart-item-size">' + item.size + '</small>' : '';
+            itemsEl.innerHTML = cart.map(function(item) {
+                var itemEmoji = item.emoji || '🍨';
+                var itemName = item.name || 'Produto';
+                var itemTotal = item.total || calcItemTotal(item);
+                var itemId = item.id;
+                var qty = item.qty || 1;
 
-                return `
-                    <div class="cart-item">
-                        <div class="cart-item-img" style="background: linear-gradient(135deg, #D6ECFF, #BBDEFB)">
-                            ${itemEmoji}
-                        </div>
-                        <div class="cart-item-info">
-                            <div class="cart-item-name">${itemName}</div>
-                            ${sizeText}
-                            ${extrasText}
-                            <div class="cart-item-price">${formatCurrency(itemTotal)}</div>
-                            <div class="cart-item-qty">
-                                <button class="qty-btn" onclick="updateQty('${itemId}', -1)">−</button>
-                                <span>${item.qty || 1}</span>
-                                <button class="qty-btn" onclick="updateQty('${itemId}', 1)">+</button>
-                            </div>
-                        </div>
-                        <button class="cart-item-remove" onclick="removeFromCart('${itemId}')" aria-label="Remover">✕</button>
-                    </div>
-                `;
+                // Size info
+                var sizeText = '';
+                if (item.sizeName) {
+                    sizeText = '<small class="cart-item-size">' + item.sizeName;
+                    if (item.sizeMl) sizeText += ' (' + item.sizeMl + 'ml)';
+                    sizeText += '</small>';
+                } else if (item.size) {
+                    sizeText = '<small class="cart-item-size">' + item.size + '</small>';
+                }
+
+                // Format info
+                var formatText = '';
+                if (item.formatoName) {
+                    formatText = '<small class="cart-item-size">' + item.formatoName + '</small>';
+                }
+
+                // Extras info
+                var extrasText = '';
+                if (item.extras && item.extras.length > 0) {
+                    extrasText = '<small class="cart-item-extras">' +
+                        item.extras.map(function(e) {
+                            return e.name + (e.qty && e.qty > 1 ? ' x' + e.qty : '');
+                        }).join(', ') + '</small>';
+                }
+
+                // Bebidas info
+                var bebidasText = '';
+                if (item.bebidas && item.bebidas.length > 0) {
+                    bebidasText = '<small class="cart-item-extras">' +
+                        item.bebidas.map(function(b) {
+                            return b.emoji + ' ' + b.name + (b.qty && b.qty > 1 ? ' x' + b.qty : '');
+                        }).join(', ') + '</small>';
+                }
+
+                // Nome do cliente
+                var nomeText = '';
+                if (item.nomeCliente) {
+                    nomeText = '<small class="cart-item-extras" style="color:#42A5F5">🏷️ ' + item.nomeCliente + '</small>';
+                }
+
+                return '<div class="cart-item">' +
+                    '<div class="cart-item-img" style="background: linear-gradient(135deg, #D6ECFF, #BBDEFB)">' +
+                        itemEmoji +
+                    '</div>' +
+                    '<div class="cart-item-info">' +
+                        '<div class="cart-item-name">' + itemName + '</div>' +
+                        formatText +
+                        sizeText +
+                        extrasText +
+                        bebidasText +
+                        nomeText +
+                        '<div class="cart-item-price">' + formatCurrency(itemTotal) + '</div>' +
+                        '<div class="cart-item-qty">' +
+                            '<button class="qty-btn" onclick="updateQty(\'' + itemId + '\', -1)">−</button>' +
+                            '<span>' + qty + '</span>' +
+                            '<button class="qty-btn" onclick="updateQty(\'' + itemId + '\', 1)">+</button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<button class="cart-item-remove" onclick="removeFromCart(\'' + itemId + '\')" aria-label="Remover">✕</button>' +
+                '</div>';
             }).join('');
         }
     }
@@ -144,16 +210,16 @@ function updateCartUI() {
         totalEl.textContent = formatCurrency(getCartTotal());
     }
 
-    // Also update sticky cart bar if present
-    const stickyCart = document.getElementById('stickyCart');
+    // Update sticky cart bar if present
+    var stickyCart = document.getElementById('stickyCart');
     if (stickyCart) {
         if (cart.length === 0) {
             stickyCart.style.display = 'none';
         } else {
-            const totalItems = getCartCount();
-            const totalPrice = getCartTotal();
-            const stickyText = document.getElementById('stickyCartText');
-            const stickyTotal = document.getElementById('stickyCartTotal');
+            var totalItems = getCartCount();
+            var totalPrice = getCartTotal();
+            var stickyText = document.getElementById('stickyCartText');
+            var stickyTotal = document.getElementById('stickyCartTotal');
             if (stickyText) stickyText.textContent = totalItems + (totalItems === 1 ? ' item' : ' itens');
             if (stickyTotal) stickyTotal.textContent = formatCurrency(totalPrice);
             stickyCart.style.display = 'flex';
@@ -161,43 +227,35 @@ function updateCartUI() {
     }
 }
 
-function getCategoryBg(category) {
-    const bgs = {
-        potinhos: 'linear-gradient(135deg, #D6ECFF, #BBDEFB)',
-        milkshakes: 'linear-gradient(135deg, #F0DBFF, #DBF0FF)',
-        acai: 'linear-gradient(135deg, #E0D0F8, #DBF0FF)',
-        sorvetes: 'linear-gradient(135deg, #DBF0FF, #D0FFE8)',
-        especiais: 'linear-gradient(135deg, #FFE5A5, #D6ECFF)',
-        combos: 'linear-gradient(135deg, #D0FFE8, #FFE5A5)'
-    };
-    return bgs[category] || bgs.potinhos;
-}
-
 // ============================================
-// CART SIDEBAR
+// CART SIDEBAR TOGGLE
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
-    const cartBtn = document.getElementById('cartBtn');
-    const cartOverlay = document.getElementById('cartOverlay');
-    const cartClose = document.getElementById('cartClose');
-    const sidebar = document.getElementById('cartSidebar');
+document.addEventListener('DOMContentLoaded', function() {
+    var cartBtn = document.getElementById('cartBtn');
+    var cartOverlay = document.getElementById('cartOverlay');
+    var cartClose = document.getElementById('cartClose');
+    var sidebar = document.getElementById('cartSidebar');
 
     function openCartSidebar() {
-        updateCartUI(); // Refresh from localStorage
+        updateCartUI();
         if (sidebar) sidebar.classList.add('active');
         if (cartOverlay) cartOverlay.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
 
-    function closeCart() {
+    function closeCartSidebar() {
         if (sidebar) sidebar.classList.remove('active');
         if (cartOverlay) cartOverlay.classList.remove('active');
         document.body.style.overflow = '';
     }
 
     if (cartBtn) cartBtn.addEventListener('click', openCartSidebar);
-    if (cartOverlay) cartOverlay.addEventListener('click', closeCart);
-    if (cartClose) cartClose.addEventListener('click', closeCart);
+    if (cartOverlay) cartOverlay.addEventListener('click', closeCartSidebar);
+    if (cartClose) cartClose.addEventListener('click', closeCartSidebar);
+
+    // Expose for external use
+    window.openCartSidebar = openCartSidebar;
+    window.closeCartSidebar = closeCartSidebar;
 
     // Initial UI update
     updateCartUI();
