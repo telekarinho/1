@@ -133,14 +133,14 @@
             </div>
             <nav class="sidebar-nav">
                 <div class="sidebar-nav-group">Principal</div>
-                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
-                <a href="pedidos.html" class="sidebar-link active"><span class="icon">📋</span> Pedidos</a>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> <span data-i18n="nav.dashboard">Dashboard</span></a>
+                <a href="pedidos.html" class="sidebar-link active"><span class="icon">📋</span> <span data-i18n="nav.orders">Pedidos</span></a>
                 <div class="sidebar-nav-group">Gestao</div>
-                <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
-                <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
-                <a href="entregas.html" class="sidebar-link"><span class="icon">🛵</span> Entregas</a>
-                <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
-                <a href="fidelidade.html" class="sidebar-link"><span class="icon">🎁</span> Fidelidade</a>
+                <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> <span data-i18n="nav.finances">Financeiro</span></a>
+                <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> <span data-i18n="nav.products">Produtos</span></a>
+                <a href="entregas.html" class="sidebar-link"><span class="icon">🛵</span> <span data-i18n="nav.delivery">Entregas</span></a>
+                <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> <span data-i18n="nav.staff">Equipe</span></a>
+                <a href="fidelidade.html" class="sidebar-link"><span class="icon">🎁</span> <span data-i18n="nav.loyalty">Fidelidade</span></a>
             </nav>
         </aside>
 
@@ -148,16 +148,16 @@
             <header class="panel-header">
                 <div class="panel-header-left">
                     <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-                    <h1>📋 Pedidos</h1>
+                    <h1>📋 <span data-i18n="nav.orders">Pedidos</span></h1>
                 </div>
                 <div class="panel-header-right">
                     <select class="form-control" style="width:auto" id="filterDate" onchange="renderKanban()">
-                        <option value="today">Hoje</option>
-                        <option value="week">Esta Semana</option>
-                        <option value="all">Todos</option>
+                        <option value="today" data-i18n="orders.filter_today">Hoje</option>
+                        <option value="week" data-i18n="orders.filter_week">Esta Semana</option>
+                        <option value="all" data-i18n="orders.filter_all">Todos</option>
                     </select>
-                    <button class="btn btn-primary btn-sm" onclick="newWalkInOrder()">+ Novo Pedido</button>
-                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                    <button class="btn btn-primary btn-sm" onclick="newWalkInOrder()">+ <span data-i18n="orders.new_order">Novo Pedido</span></button>
+                    <button class="btn-logout" onclick="Auth.logout()" data-i18n="auth.logout">Sair</button>
                 </div>
             </header>
 
@@ -167,28 +167,28 @@
                     <div class="kpi-card">
                         <div class="kpi-icon blue">🔵</div>
                         <div class="kpi-info">
-                            <div class="kpi-label">Novos</div>
+                            <div class="kpi-label" data-i18n="orders.status_new">Novos</div>
                             <div class="kpi-value" id="kpiNew">0</div>
                         </div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-icon yellow">🟡</div>
                         <div class="kpi-info">
-                            <div class="kpi-label">Preparando</div>
+                            <div class="kpi-label" data-i18n="orders.status_preparing">Preparando</div>
                             <div class="kpi-value" id="kpiPreparing">0</div>
                         </div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-icon green">🟢</div>
                         <div class="kpi-info">
-                            <div class="kpi-label">Prontos</div>
+                            <div class="kpi-label" data-i18n="orders.status_ready">Prontos</div>
                             <div class="kpi-value" id="kpiReady">0</div>
                         </div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-icon pink">💰</div>
                         <div class="kpi-info">
-                            <div class="kpi-label">Faturamento</div>
+                            <div class="kpi-label" data-i18n="finances.revenue">Faturamento</div>
                             <div class="kpi-value" id="kpiRevenue">R$ 0</div>
                         </div>
                     </div>
@@ -198,37 +198,37 @@
                 <div class="kanban">
                     <div class="kanban-column" id="colNovo">
                         <div class="kanban-header">
-                            <div class="kanban-title">🔵 Novo <span class="kanban-count" id="countNovo">0</span></div>
+                            <div class="kanban-title">🔵 <span data-i18n="orders.status_new">Novo</span> <span class="kanban-count" id="countNovo">0</span></div>
                         </div>
                         <div id="listNovo"></div>
                     </div>
                     <div class="kanban-column" id="colConfirmado">
                         <div class="kanban-header">
-                            <div class="kanban-title">✔️ Confirmado <span class="kanban-count" id="countConfirmado">0</span></div>
+                            <div class="kanban-title">✔️ <span data-i18n="orders.status_confirmed">Confirmado</span> <span class="kanban-count" id="countConfirmado">0</span></div>
                         </div>
                         <div id="listConfirmado"></div>
                     </div>
                     <div class="kanban-column" id="colPreparando">
                         <div class="kanban-header">
-                            <div class="kanban-title">🟡 Preparando <span class="kanban-count" id="countPreparando">0</span></div>
+                            <div class="kanban-title">🟡 <span data-i18n="orders.status_preparing">Preparando</span> <span class="kanban-count" id="countPreparando">0</span></div>
                         </div>
                         <div id="listPreparando"></div>
                     </div>
                     <div class="kanban-column" id="colPronto">
                         <div class="kanban-header">
-                            <div class="kanban-title">🟢 Pronto <span class="kanban-count" id="countPronto">0</span></div>
+                            <div class="kanban-title">🟢 <span data-i18n="orders.status_ready">Pronto</span> <span class="kanban-count" id="countPronto">0</span></div>
                         </div>
                         <div id="listPronto"></div>
                     </div>
                     <div class="kanban-column" id="colEm_entrega">
                         <div class="kanban-header">
-                            <div class="kanban-title">🛵 Em Entrega <span class="kanban-count" id="countEm_entrega">0</span></div>
+                            <div class="kanban-title">🛵 <span data-i18n="orders.status_out_delivery">Em Entrega</span> <span class="kanban-count" id="countEm_entrega">0</span></div>
                         </div>
                         <div id="listEm_entrega"></div>
                     </div>
                     <div class="kanban-column" id="colEntregue">
                         <div class="kanban-header">
-                            <div class="kanban-title">✅ Entregue <span class="kanban-count" id="countEntregue">0</span></div>
+                            <div class="kanban-title">✅ <span data-i18n="orders.status_delivered">Entregue</span> <span class="kanban-count" id="countEntregue">0</span></div>
                         </div>
                         <div id="listEntregue"></div>
                     </div>
@@ -237,7 +237,7 @@
         </main>
     </div>
 
-    <div class="new-order-alert" id="newOrderAlert">🔔 Novo pedido recebido!</div>
+    <div class="new-order-alert" id="newOrderAlert" data-i18n="orders.new_alert">🔔 Novo pedido recebido!</div>
 
     <!-- Order Detail Modal -->
     <div class="panel-modal-overlay" id="orderModal">
@@ -452,6 +452,7 @@
         }, 3000);
 
         renderKanban();
+        i18n.translatePage();
     </script>
 </body>
 </html>

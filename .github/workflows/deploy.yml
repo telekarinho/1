@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy MilkyPot
 
 on:
   push:
@@ -14,7 +14,78 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  # ============================================
+  # 1. Validate HTML and JS
+  # ============================================
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for syntax errors in JS core
+        run: |
+          echo "🔍 Validating JavaScript files..."
+          errors=0
+          for f in js/core/*.js; do
+            if ! node --check "$f" 2>/dev/null; then
+              echo "❌ Syntax error: $f"
+              errors=$((errors + 1))
+            fi
+          done
+          if [ $errors -gt 0 ]; then
+            echo "❌ $errors files with syntax errors"
+            exit 1
+          fi
+          echo "✅ All JS files valid"
+
+      - name: Check for required files
+        run: |
+          echo "🔍 Checking required files..."
+          required_files=(
+            "login.html"
+            "js/core/auth.js"
+            "js/core/config.js"
+            "js/core/datastore.js"
+            "js/core/firebase-config.js"
+            "firebase.json"
+            "firestore.rules"
+          )
+          for f in "${required_files[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "❌ Missing: $f"
+              exit 1
+            fi
+          done
+          echo "✅ All required files present"
+
+  # ============================================
+  # 2. Validate Cloud Functions
+  # ============================================
+  validate-functions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install function dependencies
+        working-directory: functions
+        run: npm ci
+
+      - name: Lint Cloud Functions
+        working-directory: functions
+        run: node --check index.js && echo "✅ Cloud Functions valid"
+
+  # ============================================
+  # 3. Deploy to GitHub Pages
+  # ============================================
+  deploy-pages:
+    needs: [validate, validate-functions]
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -22,12 +93,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

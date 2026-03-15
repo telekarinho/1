@@ -194,7 +194,16 @@ i18n._translations['pt-BR'] = {
         all: 'Todos',
         active: 'Ativo',
         inactive: 'Inativo',
-        pending: 'Pendente'
+        pending: 'Pendente',
+        view_all: 'Ver Todos',
+        today: 'Hoje',
+        this_week: 'Esta Semana',
+        this_month: 'Este Mês',
+        last_30_days: 'Últimos 30 Dias',
+        period: 'Período',
+        new_transaction: 'Nova Transação',
+        manage: 'Gerenciar',
+        print: 'Imprimir'
     },
 
     auth: {
@@ -277,7 +286,12 @@ i18n._translations['pt-BR'] = {
         // Delivery types
         delivery: 'Delivery',
         pickup: 'Retirada',
-        dine_in: 'Consumo Local'
+        dine_in: 'Consumo Local',
+        filter_today: 'Hoje',
+        filter_week: 'Esta Semana',
+        filter_all: 'Todos',
+        new_alert: 'Novo pedido recebido!',
+        cancel: 'Cancelar'
     },
 
     products: {
@@ -316,7 +330,20 @@ i18n._translations['pt-BR'] = {
         cat_electricity: 'Energia',
         cat_water: 'Água',
         cat_internet: 'Internet',
-        cat_other: 'Outros'
+        cat_other: 'Outros',
+        total_revenue: 'Receita Total',
+        total_expenses: 'Despesas Total',
+        net_profit: 'Lucro Líquido',
+        avg_ticket: 'Ticket Médio',
+        revenue_vs_expenses: 'Receita x Despesas',
+        expenses_by_category: 'Despesas por Categoria',
+        transactions: 'Transações',
+        type_income: 'Receita',
+        type_expense: 'Despesa',
+        value_label: 'Valor (R$)',
+        date_label: 'Data',
+        description_label: 'Descrição',
+        category_label: 'Categoria'
     },
 
     staff: {
@@ -426,13 +453,36 @@ i18n._translations['pt-BR'] = {
 
     dashboard: {
         welcome: 'Bem-vindo, {{name}}!',
+        title: 'Dashboard Geral',
+        title_franchisee: 'Dashboard',
         today_sales: 'Vendas hoje',
+        today_revenue: 'Faturamento Hoje',
         today_orders: 'Pedidos hoje',
         monthly_revenue: 'Faturamento mensal',
         pending_orders: 'Pedidos pendentes',
+        pending_payments: 'Pagamentos Pendentes',
+        pending_deliveries: 'Entregas Pendentes',
+        low_stock: 'Estoque Baixo',
+        active_franchises: 'Franquias Ativas',
         top_products: 'Produtos mais vendidos',
+        top_franchises: 'Top Franquias - Faturamento',
         recent_orders: 'Pedidos recentes',
-        quick_actions: 'Ações rápidas'
+        quick_actions: 'Ações rápidas',
+        revenue_30days: 'Faturamento - Últimos 30 Dias',
+        revenue_week: 'Faturamento - Semana',
+        franchise_overview: 'Visão Geral das Franquias',
+        franchise_payments: 'Pagamentos de Franquia',
+        stock_alerts: 'Alertas de Estoque',
+        team: 'Equipe',
+        manage: 'Gerenciar',
+        view_all: 'Ver Todos',
+        new_franchise: 'Nova Franquia',
+        new_campaign: 'Nova Campanha',
+        new_order: 'Novo Pedido',
+        manage_orders: 'Gerenciar Pedidos',
+        daily_report: 'Relatório do Dia',
+        update_stock: 'Atualizar Estoque',
+        counter_order: 'Novo Pedido Balcão'
     },
 
     settings: {
@@ -487,7 +537,16 @@ i18n._translations['en'] = {
         all: 'All',
         active: 'Active',
         inactive: 'Inactive',
-        pending: 'Pending'
+        pending: 'Pending',
+        view_all: 'View All',
+        today: 'Today',
+        this_week: 'This Week',
+        this_month: 'This Month',
+        last_30_days: 'Last 30 Days',
+        period: 'Period',
+        new_transaction: 'New Transaction',
+        manage: 'Manage',
+        print: 'Print'
     },
 
     auth: {
@@ -567,7 +626,12 @@ i18n._translations['en'] = {
         status_cancelled: 'Cancelled',
         delivery: 'Delivery',
         pickup: 'Pickup',
-        dine_in: 'Dine In'
+        dine_in: 'Dine In',
+        filter_today: 'Today',
+        filter_week: 'This Week',
+        filter_all: 'All',
+        new_alert: 'New order received!',
+        cancel: 'Cancel'
     },
 
     products: {
@@ -605,7 +669,20 @@ i18n._translations['en'] = {
         cat_electricity: 'Electricity',
         cat_water: 'Water',
         cat_internet: 'Internet',
-        cat_other: 'Other'
+        cat_other: 'Other',
+        total_revenue: 'Total Revenue',
+        total_expenses: 'Total Expenses',
+        net_profit: 'Net Profit',
+        avg_ticket: 'Average Ticket',
+        revenue_vs_expenses: 'Revenue vs Expenses',
+        expenses_by_category: 'Expenses by Category',
+        transactions: 'Transactions',
+        type_income: 'Income',
+        type_expense: 'Expense',
+        value_label: 'Value',
+        date_label: 'Date',
+        description_label: 'Description',
+        category_label: 'Category'
     },
 
     staff: {
@@ -721,7 +798,30 @@ i18n._translations['en'] = {
         pending_orders: 'Pending orders',
         top_products: 'Top products',
         recent_orders: 'Recent orders',
-        quick_actions: 'Quick actions'
+        quick_actions: 'Quick actions',
+        title: 'General Dashboard',
+        title_franchisee: 'Dashboard',
+        today_revenue: 'Today\'s Revenue',
+        pending_payments: 'Pending Payments',
+        pending_deliveries: 'Pending Deliveries',
+        low_stock: 'Low Stock',
+        active_franchises: 'Active Franchises',
+        top_franchises: 'Top Franchises - Revenue',
+        revenue_30days: 'Revenue - Last 30 Days',
+        revenue_week: 'Revenue - Week',
+        franchise_overview: 'Franchise Overview',
+        franchise_payments: 'Franchise Payments',
+        stock_alerts: 'Stock Alerts',
+        team: 'Team',
+        manage: 'Manage',
+        view_all: 'View All',
+        new_franchise: 'New Franchise',
+        new_campaign: 'New Campaign',
+        new_order: 'New Order',
+        manage_orders: 'Manage Orders',
+        daily_report: 'Daily Report',
+        update_stock: 'Update Stock',
+        counter_order: 'New Counter Order'
     },
 
     settings: {
@@ -776,7 +876,16 @@ i18n._translations['es'] = {
         all: 'Todos',
         active: 'Activo',
         inactive: 'Inactivo',
-        pending: 'Pendiente'
+        pending: 'Pendiente',
+        view_all: 'Ver Todos',
+        today: 'Hoy',
+        this_week: 'Esta Semana',
+        this_month: 'Este Mes',
+        last_30_days: 'Últimos 30 Días',
+        period: 'Período',
+        new_transaction: 'Nueva Transacción',
+        manage: 'Gestionar',
+        print: 'Imprimir'
     },
 
     auth: {
@@ -856,7 +965,12 @@ i18n._translations['es'] = {
         status_cancelled: 'Cancelado',
         delivery: 'Envío',
         pickup: 'Retiro',
-        dine_in: 'Consumo Local'
+        dine_in: 'Consumo Local',
+        filter_today: 'Hoy',
+        filter_week: 'Esta Semana',
+        filter_all: 'Todos',
+        new_alert: '¡Nuevo pedido recibido!',
+        cancel: 'Cancelar'
     },
 
     products: {
@@ -894,7 +1008,20 @@ i18n._translations['es'] = {
         cat_electricity: 'Electricidad',
         cat_water: 'Agua',
         cat_internet: 'Internet',
-        cat_other: 'Otros'
+        cat_other: 'Otros',
+        total_revenue: 'Ingresos Totales',
+        total_expenses: 'Gastos Totales',
+        net_profit: 'Ganancia Neta',
+        avg_ticket: 'Ticket Promedio',
+        revenue_vs_expenses: 'Ingresos vs Gastos',
+        expenses_by_category: 'Gastos por Categoría',
+        transactions: 'Transacciones',
+        type_income: 'Ingreso',
+        type_expense: 'Gasto',
+        value_label: 'Valor',
+        date_label: 'Fecha',
+        description_label: 'Descripción',
+        category_label: 'Categoría'
     },
 
     staff: {
@@ -1010,7 +1137,30 @@ i18n._translations['es'] = {
         pending_orders: 'Pedidos pendientes',
         top_products: 'Productos más vendidos',
         recent_orders: 'Pedidos recientes',
-        quick_actions: 'Acciones rápidas'
+        quick_actions: 'Acciones rápidas',
+        title: 'Panel General',
+        title_franchisee: 'Panel',
+        today_revenue: 'Ingresos de Hoy',
+        pending_payments: 'Pagos Pendientes',
+        pending_deliveries: 'Entregas Pendientes',
+        low_stock: 'Stock Bajo',
+        active_franchises: 'Franquicias Activas',
+        top_franchises: 'Top Franquicias - Ingresos',
+        revenue_30days: 'Ingresos - Últimos 30 Días',
+        revenue_week: 'Ingresos - Semana',
+        franchise_overview: 'Vista General de Franquicias',
+        franchise_payments: 'Pagos de Franquicia',
+        stock_alerts: 'Alertas de Stock',
+        team: 'Equipo',
+        manage: 'Gestionar',
+        view_all: 'Ver Todos',
+        new_franchise: 'Nueva Franquicia',
+        new_campaign: 'Nueva Campaña',
+        new_order: 'Nuevo Pedido',
+        manage_orders: 'Gestionar Pedidos',
+        daily_report: 'Reporte del Día',
+        update_stock: 'Actualizar Stock',
+        counter_order: 'Nuevo Pedido Mostrador'
     },
 
     settings: {
