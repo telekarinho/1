@@ -41,6 +41,49 @@ const CardapioApp = {
         this.renderHome();
         this.updateCartCount();
         this.bindEvents();
+
+        // Parse URL params for pre-selections from homepage catalog
+        this.handleUrlParams();
+    },
+
+    handleUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        const baseId = params.get('base');
+        const formatoId = params.get('formato');
+        const saborId = params.get('sabor');
+        const tamanhoId = params.get('tamanho');
+
+        if (!baseId || !formatoId || !saborId || !tamanhoId) return;
+
+        // Find base
+        const base = CARDAPIO_CONFIG.bases.find(b => b.id === baseId);
+        if (!base) return;
+        this.selectedBase = base;
+
+        // Find formato
+        const formato = CARDAPIO_CONFIG.formatos.find(f => f.id === formatoId);
+        if (!formato) return;
+        this.selectedFormato = formato;
+
+        // Find tamanho
+        const tamanho = CARDAPIO_CONFIG.tamanhos.find(t => t.id === tamanhoId);
+        if (!tamanho) return;
+        this.selectedTamanho = tamanho;
+
+        // Find sabor
+        const sabor = this.findSabor(saborId);
+        if (!sabor) return;
+        this.selectedSabor = sabor;
+
+        // All selections valid - go straight to adicionais step
+        this.currentStep = 5;
+        this.renderAdicionais();
+        this.scrollToTop();
+
+        // Clean URL params so back/refresh doesn't re-trigger
+        if (window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
     },
 
     bindEvents() {
