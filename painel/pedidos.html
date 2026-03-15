@@ -140,6 +140,7 @@
                 <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
                 <a href="entregas.html" class="sidebar-link"><span class="icon">🛵</span> Entregas</a>
                 <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
+                <a href="fidelidade.html" class="sidebar-link"><span class="icon">🎁</span> Fidelidade</a>
             </nav>
         </aside>
 
@@ -262,6 +263,7 @@
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/audit.js"></script>
     <script src="../js/core/recipes.js"></script>
+    <script src="../js/core/loyalty.js"></script>
     <script>
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
         const session = Auth.getSession();
@@ -356,6 +358,12 @@
             if (newStatus === 'entregue' || newStatus === MP.ORDER_STATUS.DELIVERED) {
                 if (typeof Recipes !== 'undefined') {
                     Recipes.deductFromInventory(franchiseId, orders[idx]);
+                }
+                if (typeof Loyalty !== 'undefined') {
+                    const result = Loyalty.addPointsFromOrder(orders[idx], franchiseId);
+                    if (result && result.rewardEarned) {
+                        Utils.showToast(`🎉 Cliente ${orders[idx].customer?.name || ''} ganhou uma recompensa!`, 'success');
+                    }
                 }
             }
             AuditLog.logOrder(

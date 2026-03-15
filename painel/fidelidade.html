@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Fidelidade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#E91E63">
+    <style>
+        .search-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .search-bar input {
+            flex: 1;
+            max-width: 400px;
+        }
+        .progress-bar-container {
+            background: var(--mp-border);
+            border-radius: 10px;
+            height: 8px;
+            width: 100%;
+            min-width: 80px;
+        }
+        .progress-bar-fill {
+            background: linear-gradient(90deg, var(--mp-primary), var(--mp-accent));
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        .points-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .points-text {
+            font-size: 0.75rem;
+            color: var(--mp-text-light);
+            white-space: nowrap;
+        }
+        .reward-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .reward-pending {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+        .reward-redeemed {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+        .customer-detail-section {
+            margin-bottom: 20px;
+        }
+        .customer-detail-section h4 {
+            margin-bottom: 12px;
+            font-family: 'Baloo 2', cursive;
+        }
+        .reward-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--mp-bg);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .reward-card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .reward-card-desc {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .reward-card-date {
+            font-size: 0.75rem;
+            color: var(--mp-text-light);
+        }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <!-- SIDEBAR -->
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo.png" alt="MilkyPot">
+                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="pedidos.html" class="sidebar-link">
+                    <span class="icon">📋</span> Pedidos
+                </a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="financeiro.html" class="sidebar-link">
+                    <span class="icon">💰</span> Financeiro
+                </a>
+                <a href="produtos.html" class="sidebar-link">
+                    <span class="icon">🍨</span> Produtos
+                </a>
+                <a href="entregas.html" class="sidebar-link">
+                    <span class="icon">🛵</span> Entregas
+                </a>
+                <a href="equipe.html" class="sidebar-link">
+                    <span class="icon">👥</span> Equipe
+                </a>
+                <a href="fidelidade.html" class="sidebar-link active">
+                    <span class="icon">🎁</span> Fidelidade
+                </a>
+                <div class="sidebar-nav-group">Loja Online</div>
+                <a href="#" class="sidebar-link" id="linkSiteFranquia">
+                    <span class="icon">🌐</span> Meu Site
+                </a>
+                <a href="marketing.html" class="sidebar-link">
+                    <span class="icon">📢</span> Marketing
+                </a>
+                <div class="sidebar-nav-group">Config</div>
+                <a href="configuracoes.html" class="sidebar-link">
+                    <span class="icon">⚙️</span> Configuracoes
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">🏪</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Franqueado</strong>
+                        <small>Franqueado</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+                    <h1>🎁 Fidelidade</h1>
+                </div>
+                <div class="panel-header-right">
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <!-- KPIs -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon blue">👥</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Total Clientes</div>
+                            <div class="kpi-value" id="kpiTotal">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon green">🟢</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Clientes Ativos (30d)</div>
+                            <div class="kpi-value" id="kpiActive">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon yellow">🎁</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Recompensas Pendentes</div>
+                            <div class="kpi-value" id="kpiRewards">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon pink">⭐</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Total Pontos</div>
+                            <div class="kpi-value" id="kpiPoints">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div class="search-bar">
+                    <input type="text" class="form-control" id="searchPhone" placeholder="Buscar por telefone do cliente..." onkeyup="if(event.key==='Enter') searchCustomer()">
+                    <button class="btn btn-primary" onclick="searchCustomer()">🔍 Buscar</button>
+                </div>
+
+                <!-- Customers Table -->
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3>Clientes Fidelidade</h3>
+                    </div>
+                    <div class="panel-card-body" style="overflow-x:auto">
+                        <table class="panel-table" id="customersTable">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Telefone</th>
+                                    <th>Pontos</th>
+                                    <th class="text-right">Total Gasto</th>
+                                    <th class="text-center">Pedidos</th>
+                                    <th>Recompensas</th>
+                                    <th>Acoes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customersBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Customer Detail Modal -->
+    <div class="panel-modal-overlay" id="customerModal">
+        <div class="panel-modal">
+            <div class="panel-modal-header">
+                <h3 id="customerModalTitle">Detalhes do Cliente</h3>
+                <button class="panel-modal-close" onclick="document.getElementById('customerModal').classList.remove('active')">&times;</button>
+            </div>
+            <div class="panel-modal-body" id="customerModalBody"></div>
+            <div class="panel-modal-footer" id="customerModalFooter">
+                <button class="btn btn-secondary" onclick="document.getElementById('customerModal').classList.remove('active')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/cloud-functions.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+    <script src="../js/core/loyalty.js"></script>
+    <script>
+        if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+        const session = Auth.getSession();
+        const franchiseId = session.franchiseId;
+        const franchises = DataStore.getAllFranchises();
+        const franchise = franchises.find(f => f.id === franchiseId);
+        document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ','') : '';
+
+        function refreshKPIs() {
+            const stats = Loyalty.getStats(franchiseId);
+            document.getElementById('kpiTotal').textContent = stats.totalCustomers;
+            document.getElementById('kpiActive').textContent = stats.activeCustomers;
+            document.getElementById('kpiRewards').textContent = stats.pendingRewards;
+            document.getElementById('kpiPoints').textContent = stats.totalPoints.toLocaleString('pt-BR');
+        }
+
+        function renderCustomers(customersToShow) {
+            const customers = customersToShow || Loyalty.getTopCustomers(franchiseId, 50);
+            const tbody = document.getElementById('customersBody');
+
+            if (customers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--mp-text-light)">Nenhum cliente fidelidade encontrado</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = customers.map(c => {
+                const progressPercent = Math.min((c.points / Loyalty.REWARD_THRESHOLD) * 100, 100);
+                const pendingRewards = c.rewards.filter(r => !r.redeemed).length;
+                const redeemedRewards = c.rewards.filter(r => r.redeemed).length;
+
+                return `
+                    <tr>
+                        <td><strong>${Utils.escapeHtml(c.name || '-')}</strong></td>
+                        <td>${Utils.escapeHtml(c.phone)}</td>
+                        <td>
+                            <div class="points-info">
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar-fill" style="width:${progressPercent}%"></div>
+                                </div>
+                                <span class="points-text">${c.points}/${Loyalty.REWARD_THRESHOLD}</span>
+                            </div>
+                        </td>
+                        <td class="text-right">${Utils.formatCurrency(c.totalSpent)}</td>
+                        <td class="text-center">${c.ordersCount}</td>
+                        <td>
+                            ${pendingRewards > 0 ? `<span class="reward-badge reward-pending">🎁 ${pendingRewards} pendente${pendingRewards > 1 ? 's' : ''}</span>` : ''}
+                            ${redeemedRewards > 0 ? `<span class="reward-badge reward-redeemed">✅ ${redeemedRewards} resgatada${redeemedRewards > 1 ? 's' : ''}</span>` : ''}
+                            ${pendingRewards === 0 && redeemedRewards === 0 ? '<span style="color:var(--mp-text-light);font-size:0.8rem">-</span>' : ''}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="showCustomerDetail('${c.id}')">Ver</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function searchCustomer() {
+            const phone = document.getElementById('searchPhone').value.trim();
+            if (!phone) {
+                renderCustomers();
+                return;
+            }
+            const customers = DataStore.getCollection('loyalty', franchiseId);
+            const filtered = customers.filter(c =>
+                c.phone.includes(phone) || (c.name && c.name.toLowerCase().includes(phone.toLowerCase()))
+            );
+            renderCustomers(filtered);
+        }
+
+        function showCustomerDetail(customerId) {
+            const customers = DataStore.getCollection('loyalty', franchiseId);
+            const c = customers.find(x => x.id === customerId);
+            if (!c) return;
+
+            const progressPercent = Math.min((c.points / Loyalty.REWARD_THRESHOLD) * 100, 100);
+
+            document.getElementById('customerModalTitle').textContent = c.name || c.phone;
+            document.getElementById('customerModalBody').innerHTML = `
+                <div class="customer-detail-section">
+                    <h4>📊 Resumo</h4>
+                    <div class="kpi-grid" style="margin-bottom:0">
+                        <div class="kpi-card">
+                            <div class="kpi-info">
+                                <div class="kpi-label">Pontos</div>
+                                <div class="kpi-value">${c.points}</div>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-info">
+                                <div class="kpi-label">Total Gasto</div>
+                                <div class="kpi-value">${Utils.formatCurrency(c.totalSpent)}</div>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-info">
+                                <div class="kpi-label">Pedidos</div>
+                                <div class="kpi-value">${c.ordersCount}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="customer-detail-section">
+                    <h4>🏆 Progresso para Proxima Recompensa</h4>
+                    <div class="points-info" style="gap:12px">
+                        <div class="progress-bar-container" style="height:12px">
+                            <div class="progress-bar-fill" style="width:${progressPercent}%"></div>
+                        </div>
+                        <span class="points-text" style="font-size:0.9rem">${c.points}/${Loyalty.REWARD_THRESHOLD} pontos</span>
+                    </div>
+                </div>
+                <div class="customer-detail-section">
+                    <h4>🎁 Recompensas</h4>
+                    ${c.rewards.length === 0 ? '<p style="color:var(--mp-text-light);font-size:0.85rem">Nenhuma recompensa ainda</p>' :
+                        c.rewards.map(r => `
+                            <div class="reward-card">
+                                <div class="reward-card-info">
+                                    <span class="reward-card-desc">${Utils.escapeHtml(r.description)}</span>
+                                    <span class="reward-card-date">Ganhou em: ${Utils.formatDateTime(r.earnedAt)}${r.redeemed ? ' | Resgatou em: ' + Utils.formatDateTime(r.redeemedAt) : ''}</span>
+                                </div>
+                                ${!r.redeemed ? `<button class="btn btn-sm btn-success" onclick="redeemReward('${c.id}','${r.id}')">Resgatar</button>` :
+                                    '<span class="reward-badge reward-redeemed">Resgatada</span>'}
+                            </div>
+                        `).join('')
+                    }
+                </div>
+                <div class="customer-detail-section">
+                    <h4>📋 Informacoes</h4>
+                    <p style="font-size:0.85rem;color:var(--mp-text-light)">
+                        📞 ${Utils.escapeHtml(c.phone)}<br>
+                        📅 Cliente desde: ${Utils.formatDateTime(c.createdAt)}<br>
+                        ${c.lastOrderAt ? '🕐 Ultimo pedido: ' + Utils.formatDateTime(c.lastOrderAt) : ''}
+                    </p>
+                </div>
+            `;
+
+            document.getElementById('customerModal').classList.add('active');
+        }
+
+        function redeemReward(customerId, rewardId) {
+            const result = Loyalty.redeemReward(customerId, rewardId, franchiseId);
+            if (result.success) {
+                Utils.showToast('Recompensa resgatada com sucesso!', 'success');
+                showCustomerDetail(customerId);
+                refreshKPIs();
+                renderCustomers();
+            } else {
+                Utils.showToast(result.error, 'error');
+            }
+        }
+
+        // Init
+        refreshKPIs();
+        renderCustomers();
+    </script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+/**
+ * MilkyPot - Sistema de Fidelidade (Loyalty Points)
+ * 1 ponto por R$1 gasto. 100 pontos = recompensa.
+ */
+const Loyalty = {
+    POINTS_PER_REAL: 1,
+    REWARD_THRESHOLD: 100,
+    REWARD_DESCRIPTION: 'Sorvete gratis (tamanho Mini)',
+    REWARD_VALUE: 10.00,
+
+    // Busca cliente por telefone
+    getCustomer(phone, franchiseId) {
+        const customers = DataStore.getCollection('loyalty', franchiseId);
+        return customers.find(c => c.phone === phone) || null;
+    },
+
+    // Registra ou atualiza cliente
+    registerCustomer(phone, name, franchiseId) {
+        let customers = DataStore.getCollection('loyalty', franchiseId);
+        let customer = customers.find(c => c.phone === phone);
+
+        if (!customer) {
+            customer = {
+                id: Utils.generateId(),
+                phone, name,
+                points: 0,
+                totalSpent: 0,
+                ordersCount: 0,
+                rewards: [],
+                createdAt: new Date().toISOString()
+            };
+            customers.push(customer);
+        } else {
+            if (name) customer.name = name;
+        }
+
+        DataStore.set('loyalty_' + franchiseId, customers);
+        return customer;
+    },
+
+    // Adiciona pontos apos pedido entregue
+    addPointsFromOrder(order, franchiseId) {
+        if (!order.customer?.phone) return null;
+
+        const customer = this.registerCustomer(
+            order.customer.phone,
+            order.customer.name,
+            franchiseId
+        );
+
+        const points = Math.floor(order.total * this.POINTS_PER_REAL);
+        customer.points += points;
+        customer.totalSpent += order.total;
+        customer.ordersCount++;
+        customer.lastOrderAt = new Date().toISOString();
+
+        // Verifica se atingiu recompensa
+        let rewardEarned = false;
+        while (customer.points >= this.REWARD_THRESHOLD) {
+            customer.points -= this.REWARD_THRESHOLD;
+            customer.rewards.push({
+                id: Utils.generateId(),
+                description: this.REWARD_DESCRIPTION,
+                value: this.REWARD_VALUE,
+                earnedAt: new Date().toISOString(),
+                redeemed: false
+            });
+            rewardEarned = true;
+        }
+
+        // Save
+        const customers = DataStore.getCollection('loyalty', franchiseId);
+        const idx = customers.findIndex(c => c.id === customer.id);
+        if (idx !== -1) customers[idx] = customer;
+        DataStore.set('loyalty_' + franchiseId, customers);
+
+        return { customer, pointsAdded: points, rewardEarned };
+    },
+
+    // Resgata recompensa
+    redeemReward(customerId, rewardId, franchiseId) {
+        const customers = DataStore.getCollection('loyalty', franchiseId);
+        const customer = customers.find(c => c.id === customerId);
+        if (!customer) return { success: false, error: 'Cliente nao encontrado' };
+
+        const reward = customer.rewards.find(r => r.id === rewardId);
+        if (!reward) return { success: false, error: 'Recompensa nao encontrada' };
+        if (reward.redeemed) return { success: false, error: 'Recompensa ja resgatada' };
+
+        reward.redeemed = true;
+        reward.redeemedAt = new Date().toISOString();
+
+        const idx = customers.findIndex(c => c.id === customerId);
+        if (idx !== -1) customers[idx] = customer;
+        DataStore.set('loyalty_' + franchiseId, customers);
+
+        return { success: true, reward };
+    },
+
+    // Lista clientes com mais pontos
+    getTopCustomers(franchiseId, limit = 10) {
+        const customers = DataStore.getCollection('loyalty', franchiseId);
+        return customers
+            .slice()
+            .sort((a, b) => b.points - a.points)
+            .slice(0, limit);
+    },
+
+    // Estatisticas
+    getStats(franchiseId) {
+        const customers = DataStore.getCollection('loyalty', franchiseId);
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+        const activeCustomers = customers.filter(c => c.lastOrderAt && c.lastOrderAt >= thirtyDaysAgo);
+        const pendingRewards = customers.reduce((sum, c) => sum + c.rewards.filter(r => !r.redeemed).length, 0);
+        const totalPoints = customers.reduce((sum, c) => sum + c.points, 0);
+        const totalSpent = customers.reduce((sum, c) => sum + c.totalSpent, 0);
+        const totalOrders = customers.reduce((sum, c) => sum + c.ordersCount, 0);
+
+        return {
+            totalCustomers: customers.length,
+            activeCustomers: activeCustomers.length,
+            pendingRewards,
+            totalPoints,
+            totalSpent,
+            totalOrders
+        };
+    }
+};
