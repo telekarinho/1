@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Marketing</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+</head>
+<body>
+    <aside class="panel-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="../images/logo.png" alt="MilkyPot">
+            <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-group">Principal</div>
+            <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+            <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+            <div class="sidebar-nav-group">Gestao</div>
+            <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+            <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+            <a href="entregas.html" class="sidebar-link"><span class="icon">🛵</span> Entregas</a>
+            <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
+            <div class="sidebar-nav-group">Loja Online</div>
+            <a href="#" class="sidebar-link" id="linkSiteFranquia"><span class="icon">🌐</span> Meu Site</a>
+            <a href="marketing.html" class="sidebar-link active"><span class="icon">📢</span> Marketing</a>
+            <div class="sidebar-nav-group">Config</div>
+            <a href="configuracoes.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">🏪</div>
+                <div class="sidebar-user-info">
+                    <strong id="sidebarUserName">Franqueado</strong>
+                    <small>Franqueado</small>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="panel-main">
+        <header class="panel-header">
+            <button class="sidebar-toggle" onclick="toggleSidebar()">&#9776;</button>
+            <h1>Marketing Local</h1>
+        </header>
+
+        <div class="panel-content">
+
+            <!-- Section 1: Banner info -->
+            <div class="marketing-banner" style="background: linear-gradient(135deg, #e040fb 0%, #7c4dff 50%, #448aff 100%); border-radius: 16px; padding: 32px 36px; color: #fff; margin-bottom: 28px;">
+                <h2 style="margin: 0 0 8px 0; font-family: 'Baloo 2', cursive; font-size: 1.6rem;">Ferramentas de Marketing Local</h2>
+                <p style="margin: 0; opacity: 0.92; font-size: 1rem; max-width: 700px;">Gerencie cupons de desconto, crie links de divulgacao para WhatsApp, atualize seu perfil no Google e descubra ideias de conteudo para atrair mais clientes para sua unidade MilkyPot.</p>
+            </div>
+
+            <!-- Section 2: Cupons de Desconto -->
+            <section class="panel-section">
+                <div class="section-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                    <h2>Cupons de Desconto</h2>
+                    <button class="btn btn-primary" onclick="openCouponModal()">+ Novo Cupom</button>
+                </div>
+
+                <div class="kpi-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin: 20px 0;">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Cupons Ativos</div>
+                        <div class="kpi-value" id="kpiCuponsAtivos">0</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Total Utilizados</div>
+                        <div class="kpi-value" id="kpiTotalUtilizados">0</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Receita com Cupons</div>
+                        <div class="kpi-value" id="kpiReceitaCupons">R$ 0,00</div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="panel-table">
+                        <thead>
+                            <tr>
+                                <th>Codigo</th>
+                                <th>Desconto</th>
+                                <th>Validade</th>
+                                <th>Usos</th>
+                                <th>Limite</th>
+                                <th>Status</th>
+                                <th>Acoes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="couponsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Section 3: Links Rapidos de Marketing -->
+            <section class="panel-section" style="margin-top: 28px;">
+                <h2>Links Rapidos de Marketing</h2>
+                <div class="marketing-cards-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-top:18px;">
+
+                    <!-- WhatsApp Marketing -->
+                    <div class="card" style="background:#fff; border-radius:14px; padding:24px; box-shadow: 0 2px 12px rgba(0,0,0,0.07);">
+                        <h3 style="margin:0 0 6px 0; font-family:'Baloo 2',cursive; font-size:1.15rem;">WhatsApp Marketing</h3>
+                        <p style="font-size:0.9rem; color:#666; margin:0 0 12px 0;">Gere um link de mensagem pronta para enviar pelo WhatsApp com o cardapio da sua franquia.</p>
+                        <textarea id="whatsappMsg" rows="4" style="width:100%; border:1px solid #ddd; border-radius:8px; padding:10px; font-family:'Nunito',sans-serif; font-size:0.88rem; resize:vertical;">Oi! Conheca a MilkyPot, sorvetes artesanais incriveis! Confira nosso cardapio e peca pelo delivery. Acesse nosso site e aproveite nossas promocoes especiais!</textarea>
+                        <button class="btn btn-primary" style="margin-top:10px; width:100%;" onclick="copyWhatsAppLink()">Copiar Link WhatsApp</button>
+                        <small id="whatsappCopied" style="color:#4caf50; display:none; margin-top:6px;">Link copiado!</small>
+                    </div>
+
+                    <!-- Google Meu Negocio -->
+                    <div class="card" style="background:#fff; border-radius:14px; padding:24px; box-shadow: 0 2px 12px rgba(0,0,0,0.07);">
+                        <h3 style="margin:0 0 6px 0; font-family:'Baloo 2',cursive; font-size:1.15rem;">Google Meu Negocio</h3>
+                        <p style="font-size:0.9rem; color:#666; margin:0 0 14px 0;">Mantenha seu perfil no Google Maps atualizado para atrair clientes locais.</p>
+                        <ul style="list-style:none; padding:0; margin:0 0 14px 0;">
+                            <li style="padding:6px 0; font-size:0.92rem;"><input type="checkbox" id="gmbFotos"> <label for="gmbFotos">Fotos atualizadas</label></li>
+                            <li style="padding:6px 0; font-size:0.92rem;"><input type="checkbox" id="gmbHorarios"> <label for="gmbHorarios">Horarios corretos</label></li>
+                            <li style="padding:6px 0; font-size:0.92rem;"><input type="checkbox" id="gmbAvaliacoes"> <label for="gmbAvaliacoes">Responder avaliacoes</label></li>
+                        </ul>
+                        <a href="https://business.google.com/" target="_blank" class="btn btn-primary" style="display:block; text-align:center; text-decoration:none;">Acessar Google Meu Negocio</a>
+                    </div>
+
+                    <!-- Instagram Post Ideas -->
+                    <div class="card" style="background:#fff; border-radius:14px; padding:24px; box-shadow: 0 2px 12px rgba(0,0,0,0.07);">
+                        <h3 style="margin:0 0 6px 0; font-family:'Baloo 2',cursive; font-size:1.15rem;">Instagram - Ideias de Posts</h3>
+                        <p style="font-size:0.9rem; color:#666; margin:0 0 12px 0;">Sugestoes de conteudo para engajar seus seguidores.</p>
+                        <ol style="padding-left:18px; margin:0; font-size:0.9rem; line-height:1.8;">
+                            <li>Bastidores: mostre a preparacao dos sorvetes artesanais</li>
+                            <li>Sabor da Semana: destaque um sabor especial com foto atrativa</li>
+                            <li>Depoimento de cliente: reposte stories de clientes felizes</li>
+                            <li>Enquete nos Stories: "Qual sabor voce quer na proxima semana?"</li>
+                            <li>Promocao relampago: cupom exclusivo para seguidores do Instagram</li>
+                        </ol>
+                    </div>
+
+                    <!-- Programa de Fidelidade -->
+                    <div class="card" style="background:#fff; border-radius:14px; padding:24px; box-shadow: 0 2px 12px rgba(0,0,0,0.07);">
+                        <h3 style="margin:0 0 6px 0; font-family:'Baloo 2',cursive; font-size:1.15rem;">Programa de Fidelidade</h3>
+                        <p style="font-size:0.9rem; color:#666; margin:0 0 12px 0;">Conceito do sistema de pontos para fidelizar clientes.</p>
+                        <div style="background:#f5f0ff; border-radius:10px; padding:16px; font-size:0.9rem; line-height:1.6;">
+                            <strong>Como funciona:</strong><br>
+                            A cada R$ 1,00 gasto, o cliente acumula 1 ponto. Ao atingir 100 pontos, ganha um sorvete gratis (1 bola). O programa incentiva compras recorrentes e aumenta o ticket medio.
+                            <br><br>
+                            <strong>Beneficios:</strong><br>
+                            - Aumento de 25% na recorrencia de compras<br>
+                            - Clientes fidelizados gastam em media 40% mais<br>
+                            - Diferencial competitivo frente a concorrencia
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Modal Novo Cupom -->
+    <div class="modal-overlay" id="couponModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div class="modal-content" style="background:#fff; border-radius:16px; padding:32px; width:90%; max-width:460px; position:relative;">
+            <button onclick="closeCouponModal()" style="position:absolute; top:14px; right:18px; background:none; border:none; font-size:1.4rem; cursor:pointer;">&times;</button>
+            <h2 style="margin:0 0 20px 0; font-family:'Baloo 2',cursive; font-size:1.3rem;">Novo Cupom de Desconto</h2>
+            <form id="couponForm" onsubmit="saveCoupon(event)">
+                <div style="margin-bottom:14px;">
+                    <label style="font-weight:600; font-size:0.9rem; display:block; margin-bottom:4px;">Codigo do Cupom</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="couponCode" required style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:'Nunito',sans-serif; text-transform:uppercase;" placeholder="Ex: VERAO15">
+                        <button type="button" onclick="autoGenerateCode()" class="btn" style="white-space:nowrap; font-size:0.85rem;">Gerar</button>
+                    </div>
+                </div>
+                <div style="margin-bottom:14px;">
+                    <label style="font-weight:600; font-size:0.9rem; display:block; margin-bottom:4px;">Tipo de Desconto</label>
+                    <select id="couponType" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:'Nunito',sans-serif;">
+                        <option value="percent">Porcentagem (%)</option>
+                        <option value="fixed">Valor Fixo (R$)</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:14px;">
+                    <label style="font-weight:600; font-size:0.9rem; display:block; margin-bottom:4px;">Valor do Desconto</label>
+                    <input type="number" id="couponValue" required min="0.01" step="0.01" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:'Nunito',sans-serif; box-sizing:border-box;" placeholder="Ex: 10">
+                </div>
+                <div style="margin-bottom:14px;">
+                    <label style="font-weight:600; font-size:0.9rem; display:block; margin-bottom:4px;">Data de Validade</label>
+                    <input type="date" id="couponExpiry" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:'Nunito',sans-serif; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:20px;">
+                    <label style="font-weight:600; font-size:0.9rem; display:block; margin-bottom:4px;">Limite de Usos</label>
+                    <input type="number" id="couponLimit" required min="1" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:'Nunito',sans-serif; box-sizing:border-box;" placeholder="Ex: 50">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%; padding:12px; font-size:1rem;">Criar Cupom</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/auth.js"></script>
+
+    <script>
+    // Sidebar toggle
+    function toggleSidebar() {
+        var sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('open');
+    }
+
+    // Auth guard
+    if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+    var session = Auth.getSession();
+    var franchiseId = session.franchiseId;
+    var franchises = DataStore.getAllFranchises();
+    var franchise = franchises.find(function(f) { return f.id === franchiseId; });
+    document.getElementById('sidebarUserName').textContent = session.name;
+    document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia';
+
+    // Site link
+    var siteLink = document.getElementById('linkSiteFranquia');
+    if (franchise && franchise.slug) {
+        siteLink.href = '../' + franchise.slug + '/index.html';
+    }
+
+    // Seed default coupons
+    var defaultCoupons = [
+        { id: 'c1', code: 'PRIMEIRA10', type: 'percent', value: 10, expiresAt: '2026-12-31', usageLimit: 100, usageCount: 23, active: true },
+        { id: 'c2', code: 'FRETEGRATIS', type: 'fixed', value: 6.90, expiresAt: '2026-06-30', usageLimit: 50, usageCount: 12, active: true },
+        { id: 'c3', code: 'MILKY20', type: 'percent', value: 20, expiresAt: '2026-04-30', usageLimit: 30, usageCount: 30, active: false }
+    ];
+
+    var coupons = DataStore.getCollection('coupons', franchiseId);
+    if (!coupons || coupons.length === 0) {
+        coupons = defaultCoupons;
+        DataStore.setCollection('coupons', franchiseId, coupons);
+    }
+
+    // Compute KPIs
+    function computeKPIs() {
+        var today = new Date().toISOString().split('T')[0];
+        var activeCoupons = 0;
+        var totalUsed = 0;
+
+        coupons.forEach(function(c) {
+            if (c.active && c.expiresAt >= today && c.usageCount < c.usageLimit) {
+                activeCoupons++;
+            }
+            totalUsed += c.usageCount;
+        });
+
+        // Estimate revenue from coupons using orders
+        var orders = DataStore.getCollection('orders', franchiseId) || [];
+        var couponRevenue = 0;
+        orders.forEach(function(o) {
+            if (o.coupon) {
+                couponRevenue += (o.total || 0);
+            }
+        });
+        if (couponRevenue === 0) {
+            couponRevenue = totalUsed * 28.50;
+        }
+
+        document.getElementById('kpiCuponsAtivos').textContent = activeCoupons;
+        document.getElementById('kpiTotalUtilizados').textContent = totalUsed;
+        document.getElementById('kpiReceitaCupons').textContent = 'R$ ' + couponRevenue.toFixed(2).replace('.', ',');
+    }
+
+    // Render coupons table
+    function renderCoupons() {
+        var tbody = document.getElementById('couponsTableBody');
+        var today = new Date().toISOString().split('T')[0];
+        var html = '';
+
+        coupons.forEach(function(c, index) {
+            var status = '';
+            var statusClass = '';
+
+            if (c.usageCount >= c.usageLimit) {
+                status = 'Esgotado';
+                statusClass = 'color:#f44336;';
+            } else if (c.expiresAt < today) {
+                status = 'Expirado';
+                statusClass = 'color:#ff9800;';
+            } else if (c.active) {
+                status = 'Ativo';
+                statusClass = 'color:#4caf50;';
+            } else {
+                status = 'Inativo';
+                statusClass = 'color:#999;';
+            }
+
+            var discountText = c.type === 'percent' ? c.value + '%' : 'R$ ' + c.value.toFixed(2).replace('.', ',');
+            var expiryFormatted = c.expiresAt.split('-').reverse().join('/');
+
+            html += '<tr>';
+            html += '<td><strong>' + c.code + '</strong></td>';
+            html += '<td>' + discountText + '</td>';
+            html += '<td>' + expiryFormatted + '</td>';
+            html += '<td>' + c.usageCount + '</td>';
+            html += '<td>' + c.usageLimit + '</td>';
+            html += '<td><span style="font-weight:600;' + statusClass + '">' + status + '</span></td>';
+            html += '<td>';
+            if (c.active) {
+                html += '<button class="btn" style="font-size:0.8rem; padding:4px 10px;" onclick="toggleCoupon(' + index + ')">Desativar</button>';
+            } else {
+                html += '<button class="btn btn-primary" style="font-size:0.8rem; padding:4px 10px;" onclick="toggleCoupon(' + index + ')">Ativar</button>';
+            }
+            html += '</td>';
+            html += '</tr>';
+        });
+
+        tbody.innerHTML = html;
+        computeKPIs();
+    }
+
+    // Toggle coupon active state
+    function toggleCoupon(index) {
+        coupons[index].active = !coupons[index].active;
+        DataStore.setCollection('coupons', franchiseId, coupons);
+        renderCoupons();
+    }
+
+    // Modal functions
+    function openCouponModal() {
+        document.getElementById('couponModal').style.display = 'flex';
+        document.getElementById('couponForm').reset();
+    }
+
+    function closeCouponModal() {
+        document.getElementById('couponModal').style.display = 'none';
+    }
+
+    // Auto generate coupon code
+    function autoGenerateCode() {
+        var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        var code = 'MILKY';
+        for (var i = 0; i < 4; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        document.getElementById('couponCode').value = code;
+    }
+
+    // Save new coupon
+    function saveCoupon(e) {
+        e.preventDefault();
+        var code = document.getElementById('couponCode').value.trim().toUpperCase();
+        var type = document.getElementById('couponType').value;
+        var value = parseFloat(document.getElementById('couponValue').value);
+        var expiry = document.getElementById('couponExpiry').value;
+        var limit = parseInt(document.getElementById('couponLimit').value);
+
+        var exists = coupons.some(function(c) { return c.code === code; });
+        if (exists) {
+            alert('Ja existe um cupom com este codigo.');
+            return;
+        }
+
+        var newCoupon = {
+            id: 'c' + Date.now(),
+            code: code,
+            type: type,
+            value: value,
+            expiresAt: expiry,
+            usageLimit: limit,
+            usageCount: 0,
+            active: true
+        };
+
+        coupons.push(newCoupon);
+        DataStore.setCollection('coupons', franchiseId, coupons);
+        closeCouponModal();
+        renderCoupons();
+    }
+
+    // WhatsApp link copy
+    function copyWhatsAppLink() {
+        var msg = document.getElementById('whatsappMsg').value;
+        var encoded = encodeURIComponent(msg);
+        var link = 'https://wa.me/?text=' + encoded;
+
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(link).then(function() {
+                var notice = document.getElementById('whatsappCopied');
+                notice.style.display = 'block';
+                setTimeout(function() { notice.style.display = 'none'; }, 2500);
+            });
+        } else {
+            var temp = document.createElement('textarea');
+            temp.value = link;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            var notice = document.getElementById('whatsappCopied');
+            notice.style.display = 'block';
+            setTimeout(function() { notice.style.display = 'none'; }, 2500);
+        }
+    }
+
+    // Close modal on overlay click
+    document.getElementById('couponModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCouponModal();
+    });
+
+    // Initial render
+    renderCoupons();
+    </script>
+</body>
+</html>

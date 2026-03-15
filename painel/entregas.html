@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Entregas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <style>
+        .entregas-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        .entregas-header h1 {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.8rem;
+            color: #2d1b4e;
+            margin: 0;
+        }
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .kpi-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+        .kpi-card .kpi-value {
+            font-family: 'Baloo 2', cursive;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d1b4e;
+        }
+        .kpi-card .kpi-label {
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 4px;
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .filter-tab {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 2px solid #e0d6f0;
+            background: #fff;
+            color: #6b5b8a;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-tab:hover {
+            border-color: #9b6dd7;
+            color: #9b6dd7;
+        }
+        .filter-tab.active {
+            background: #9b6dd7;
+            border-color: #9b6dd7;
+            color: #fff;
+        }
+        .delivery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+        .delivery-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid #ccc;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .delivery-card.status-novo { border-left-color: #3b82f6; }
+        .delivery-card.status-preparando { border-left-color: #f59e0b; }
+        .delivery-card.status-pronto { border-left-color: #22c55e; }
+        .delivery-card.status-entregue { border-left-color: #9ca3af; }
+        .delivery-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .delivery-card-header .order-id {
+            font-family: 'Baloo 2', cursive;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #2d1b4e;
+        }
+        .delivery-card-header .time-ago {
+            font-size: 0.8rem;
+            color: #999;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-badge.novo { background: #dbeafe; color: #1d4ed8; }
+        .status-badge.preparando { background: #fef3c7; color: #b45309; }
+        .status-badge.pronto { background: #dcfce7; color: #15803d; }
+        .status-badge.entregue { background: #f3f4f6; color: #6b7280; }
+        .delivery-customer {
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            color: #333;
+        }
+        .delivery-customer small {
+            color: #888;
+            display: block;
+            font-size: 0.8rem;
+        }
+        .delivery-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        .delivery-total {
+            font-weight: 700;
+            color: #2d1b4e;
+            font-size: 1rem;
+        }
+        .delivery-entregador {
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.85rem;
+        }
+        .delivery-entregador select {
+            padding: 4px 8px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.85rem;
+            background: #fafafa;
+            cursor: pointer;
+        }
+        .delivery-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .delivery-actions button {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .delivery-actions button:hover { opacity: 0.85; }
+        .btn-saiu {
+            background: #3b82f6;
+            color: #fff;
+        }
+        .btn-entregue {
+            background: #22c55e;
+            color: #fff;
+        }
+        .btn-disabled {
+            background: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed !important;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 48px 16px;
+            color: #999;
+            font-family: 'Nunito', sans-serif;
+        }
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 8px;
+        }
+        @media (max-width: 768px) {
+            .delivery-grid {
+                grid-template-columns: 1fr;
+            }
+            .kpi-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<aside class="panel-sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <img src="../images/logo.png" alt="MilkyPot">
+        <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="sidebar-nav-group">Principal</div>
+        <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+        <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+        <div class="sidebar-nav-group">Gestao</div>
+        <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+        <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+        <a href="entregas.html" class="sidebar-link active"><span class="icon">🛵</span> Entregas</a>
+        <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
+        <div class="sidebar-nav-group">Loja Online</div>
+        <a href="#" class="sidebar-link" id="linkSiteFranquia"><span class="icon">🌐</span> Meu Site</a>
+        <a href="marketing.html" class="sidebar-link"><span class="icon">📢</span> Marketing</a>
+        <div class="sidebar-nav-group">Config</div>
+        <a href="configuracoes.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="sidebar-user">
+            <div class="sidebar-avatar">🏪</div>
+            <div class="sidebar-user-info">
+                <strong id="sidebarUserName">Franqueado</strong>
+                <small>Franqueado</small>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<main class="panel-main">
+    <header class="panel-topbar">
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title">Entregas</div>
+        <div class="topbar-spacer"></div>
+    </header>
+
+    <div class="panel-content">
+        <div class="entregas-header">
+            <h1>🛵 Entregas</h1>
+        </div>
+
+        <div class="kpi-row">
+            <div class="kpi-card">
+                <div class="kpi-value" id="kpiEntregasHoje">0</div>
+                <div class="kpi-label">Entregas Hoje</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value" id="kpiEmAndamento">0</div>
+                <div class="kpi-label">Em Andamento</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value" id="kpiConcluidas">0</div>
+                <div class="kpi-label">Concluidas Hoje</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value" id="kpiTempoMedio">~25 min</div>
+                <div class="kpi-label">Tempo Medio</div>
+            </div>
+        </div>
+
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="andamento" onclick="setFilter('andamento')">Em Andamento</button>
+            <button class="filter-tab" data-filter="concluidas" onclick="setFilter('concluidas')">Concluidas Hoje</button>
+            <button class="filter-tab" data-filter="todas" onclick="setFilter('todas')">Todas</button>
+        </div>
+
+        <div class="delivery-grid" id="deliveryGrid">
+        </div>
+    </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/auth.js"></script>
+
+<script>
+(function() {
+    if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+    const session = Auth.getSession();
+    const franchiseId = session.franchiseId;
+    const franchises = DataStore.getAllFranchises();
+    const franchise = franchises.find(f => f.id === franchiseId);
+    document.getElementById('sidebarUserName').textContent = session.name;
+    document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia';
+
+    var currentFilter = 'andamento';
+    var refreshInterval = null;
+
+    function timeAgo(dateStr) {
+        var diff = Date.now() - new Date(dateStr).getTime();
+        var mins = Math.floor(diff / 60000);
+        if (mins < 60) return mins + ' min atras';
+        var hours = Math.floor(mins / 60);
+        return hours + 'h atras';
+    }
+
+    function isToday(dateStr) {
+        var d = new Date(dateStr);
+        var now = new Date();
+        return d.getFullYear() === now.getFullYear() &&
+               d.getMonth() === now.getMonth() &&
+               d.getDate() === now.getDate();
+    }
+
+    function getDeliveryOrders() {
+        var orders = DataStore.getCollection('orders', franchiseId) || [];
+        return orders.filter(function(o) { return o.delivery === 'delivery'; });
+    }
+
+    function getEntregadores() {
+        var staff = DataStore.getCollection('staff', franchiseId) || [];
+        return staff.filter(function(s) { return s.role === 'Entregador'; });
+    }
+
+    function getStatusClass(status) {
+        if (status === 'novo') return 'novo';
+        if (status === 'preparando') return 'preparando';
+        if (status === 'pronto') return 'pronto';
+        if (status === 'entregue') return 'entregue';
+        return 'novo';
+    }
+
+    function getStatusLabel(status) {
+        if (status === 'novo') return 'Novo';
+        if (status === 'preparando') return 'Preparando';
+        if (status === 'pronto') return 'Pronto';
+        if (status === 'entregue') return 'Entregue';
+        return status || 'Novo';
+    }
+
+    function updateKPIs(deliveryOrders) {
+        var todayOrders = deliveryOrders.filter(function(o) { return isToday(o.createdAt || o.date); });
+        var inProgress = deliveryOrders.filter(function(o) {
+            return o.status === 'novo' || o.status === 'preparando' || o.status === 'pronto';
+        });
+        var completedToday = todayOrders.filter(function(o) { return o.status === 'entregue'; });
+
+        document.getElementById('kpiEntregasHoje').textContent = todayOrders.length;
+        document.getElementById('kpiEmAndamento').textContent = inProgress.length;
+        document.getElementById('kpiConcluidas').textContent = completedToday.length;
+        document.getElementById('kpiTempoMedio').textContent = '~25 min';
+    }
+
+    function filterOrders(deliveryOrders) {
+        if (currentFilter === 'andamento') {
+            return deliveryOrders.filter(function(o) {
+                return o.status === 'novo' || o.status === 'preparando' || o.status === 'pronto';
+            });
+        }
+        if (currentFilter === 'concluidas') {
+            return deliveryOrders.filter(function(o) {
+                return o.status === 'entregue' && isToday(o.createdAt || o.date);
+            });
+        }
+        return deliveryOrders;
+    }
+
+    function formatCurrency(value) {
+        var num = parseFloat(value) || 0;
+        return 'R$ ' + num.toFixed(2).replace('.', ',');
+    }
+
+    function countItems(order) {
+        if (order.items && Array.isArray(order.items)) return order.items.length;
+        return 0;
+    }
+
+    function renderCards() {
+        var deliveryOrders = getDeliveryOrders();
+        var entregadores = getEntregadores();
+        updateKPIs(deliveryOrders);
+
+        var filtered = filterOrders(deliveryOrders);
+        var grid = document.getElementById('deliveryGrid');
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🛵</div><p>Nenhuma entrega encontrada</p></div>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < filtered.length; i++) {
+            var order = filtered[i];
+            var statusClass = getStatusClass(order.status);
+            var orderId = (order.id || '').slice(-6);
+            var customerName = order.customerName || order.customer || 'Cliente';
+            var customerPhone = order.customerPhone || order.phone || '';
+            var total = formatCurrency(order.total);
+            var items = countItems(order);
+            var elapsed = timeAgo(order.createdAt || order.date || new Date().toISOString());
+            var assignedDriver = order.entregador || order.driver || '';
+
+            html += '<div class="delivery-card status-' + statusClass + '">';
+            html += '<div class="delivery-card-header">';
+            html += '<span class="order-id">#' + orderId + '</span>';
+            html += '<span class="time-ago">' + elapsed + '</span>';
+            html += '</div>';
+            html += '<div class="delivery-customer">' + customerName;
+            if (customerPhone) html += '<small>' + customerPhone + '</small>';
+            html += '</div>';
+            html += '<div class="delivery-info">';
+            html += '<span>' + items + ' ' + (items === 1 ? 'item' : 'itens') + '</span>';
+            html += '<span class="delivery-total">' + total + '</span>';
+            html += '</div>';
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+            html += '<span class="status-badge ' + statusClass + '">' + getStatusLabel(order.status) + '</span>';
+            html += '</div>';
+            html += '<div class="delivery-entregador">';
+            html += '<label>Entregador: </label>';
+            html += '<select onchange="assignDriver(\'' + order.id + '\', this.value)">';
+            html += '<option value="">-- Selecionar --</option>';
+            for (var j = 0; j < entregadores.length; j++) {
+                var drv = entregadores[j];
+                var drvName = drv.name || drv.nome || '';
+                var selected = (assignedDriver === drvName || assignedDriver === drv.id) ? ' selected' : '';
+                html += '<option value="' + (drv.id || drvName) + '"' + selected + '>' + drvName + '</option>';
+            }
+            html += '</select>';
+            html += '</div>';
+            html += '<div class="delivery-actions">';
+            if (order.status !== 'entregue' && order.status !== 'pronto') {
+                html += '<button class="btn-saiu" onclick="updateStatus(\'' + order.id + '\', \'pronto\')">Saiu para Entrega</button>';
+            } else if (order.status === 'pronto') {
+                html += '<button class="btn-saiu btn-disabled" disabled>Saiu para Entrega</button>';
+            } else {
+                html += '<button class="btn-saiu btn-disabled" disabled>Saiu para Entrega</button>';
+            }
+            if (order.status !== 'entregue') {
+                html += '<button class="btn-entregue" onclick="updateStatus(\'' + order.id + '\', \'entregue\')">Entregue</button>';
+            } else {
+                html += '<button class="btn-entregue btn-disabled" disabled>Entregue</button>';
+            }
+            html += '</div>';
+            html += '</div>';
+        }
+        grid.innerHTML = html;
+    }
+
+    window.updateStatus = function(orderId, newStatus) {
+        var orders = DataStore.getCollection('orders', franchiseId) || [];
+        for (var i = 0; i < orders.length; i++) {
+            if (orders[i].id === orderId) {
+                orders[i].status = newStatus;
+                break;
+            }
+        }
+        DataStore.saveCollection('orders', franchiseId, orders);
+        renderCards();
+    };
+
+    window.assignDriver = function(orderId, driverId) {
+        var orders = DataStore.getCollection('orders', franchiseId) || [];
+        for (var i = 0; i < orders.length; i++) {
+            if (orders[i].id === orderId) {
+                orders[i].entregador = driverId;
+                break;
+            }
+        }
+        DataStore.saveCollection('orders', franchiseId, orders);
+        renderCards();
+    };
+
+    window.setFilter = function(filter) {
+        currentFilter = filter;
+        var tabs = document.querySelectorAll('.filter-tab');
+        for (var t = 0; t < tabs.length; t++) {
+            tabs[t].classList.remove('active');
+            if (tabs[t].getAttribute('data-filter') === filter) {
+                tabs[t].classList.add('active');
+            }
+        }
+        renderCards();
+    };
+
+    window.toggleSidebar = function() {
+        var sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('open');
+    };
+
+    renderCards();
+    refreshInterval = setInterval(renderCards, 5000);
+})();
+</script>
+
+</body>
+</html>

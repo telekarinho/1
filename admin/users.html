@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot Admin - Usuarios</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+</head>
+<body>
+    <div class="panel-layout">
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo.png" alt="MilkyPot">
+                <h2>MilkyPot<small>Central Admin</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="franchises.html" class="sidebar-link"><span class="icon">🏪</span> Franquias</a>
+                <a href="finances.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="orders.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <a href="products.html" class="sidebar-link"><span class="icon">🍨</span> Cardapio</a>
+                <a href="users.html" class="sidebar-link active"><span class="icon">👥</span> Usuarios</a>
+                <div class="sidebar-nav-group">Marketing</div>
+                <a href="campaigns.html" class="sidebar-link"><span class="icon">📢</span> Campanhas</a>
+                <a href="seo.html" class="sidebar-link"><span class="icon">🔍</span> SEO & Delivery</a>
+                <div class="sidebar-nav-group">Sistema</div>
+                <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
+                <a href="#" class="sidebar-link" onclick="DataStore.downloadBackup()"><span class="icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">👑</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Admin</strong>
+                        <small>Super Admin</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="panel-main">
+            <header class="panel-header">
+                <button class="btn btn-sm btn-outline" onclick="toggleSidebar()" style="font-size:1.3rem;">☰</button>
+                <h1>👥 Usuarios</h1>
+                <div style="display:flex; gap:10px; align-items:center; margin-left:auto;">
+                    <input type="text" id="searchInput" placeholder="Buscar usuario..." onkeyup="filterUsers()" style="padding:8px 14px; border:1px solid #ddd; border-radius:8px; font-family:inherit; font-size:0.9rem;">
+                    <select id="roleFilter" onchange="filterUsers()" style="padding:8px 14px; border:1px solid #ddd; border-radius:8px; font-family:inherit; font-size:0.9rem;">
+                        <option value="all">Todos</option>
+                        <option value="super_admin">Super Admin</option>
+                        <option value="franchisee">Franqueado</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="openNewUserModal()">+ Novo Usuario</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="kpi-card">
+                        <div class="kpi-icon">👥</div>
+                        <div>
+                            <small>Total Usuarios</small>
+                            <h3 id="kpiTotal">0</h3>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">👑</div>
+                        <div>
+                            <small>Admins</small>
+                            <h3 id="kpiAdmins">0</h3>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">🏪</div>
+                        <div>
+                            <small>Franqueados</small>
+                            <h3 id="kpiFranchisees">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3>Lista de Usuarios</h3>
+                    </div>
+                    <div class="panel-card-body">
+                        <table class="panel-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Franquia Vinculada</th>
+                                    <th>Data Criacao</th>
+                                    <th>Acoes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Carregando usuarios...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Novo Usuario -->
+    <div id="newUserModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:16px; padding:30px; width:100%; max-width:500px; max-height:90vh; overflow-y:auto;">
+            <h3 style="margin-bottom:20px;">Novo Usuario</h3>
+            <form id="newUserForm" onsubmit="handleCreateUser(event)">
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:600; font-size:0.9rem;">Nome</label>
+                    <input type="text" id="newName" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:600; font-size:0.9rem;">Email</label>
+                    <input type="email" id="newEmail" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:600; font-size:0.9rem;">Senha</label>
+                    <input type="text" id="newPassword" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:600; font-size:0.9rem;">Role</label>
+                    <select id="newRole" required onchange="toggleFranchiseSelect('new')" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box;">
+                        <option value="super_admin">Super Admin</option>
+                        <option value="franchisee">Franqueado</option>
+                    </select>
+                </div>
+                <div id="newFranchiseGroup" style="margin-bottom:15px; display:none;">
+                    <label style="display:block; margin-bottom:5px; font-weight:600; font-size:0.9rem;">Franquia</label>
+                    <select id="newFranchise" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box;">
+                        <option value="">Selecione uma franquia</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('newUserModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Criar Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Usuario -->
+    <div id="editUserModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:16px; padding:30px; width:100%; max-width:500px; max-height:90vh; overflow-y:auto;">
+            <h3 style="margin-bottom:20px;">Editar Usuario</h3>
+            <form id="editUserForm" onsubmit="handleEditUser(event)">
+                <input type="hidden" id="editUserId">
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:600; font-size:0.9rem;">Nome</label>
+                    <input type="text" id="editName" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:600; font-size:0.9rem;">Email</label>
+                    <input type="email" id="editEmail" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:600; font-size:0.9rem;">Role</label>
+                    <select id="editRole" required onchange="toggleFranchiseSelect('edit')" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box;">
+                        <option value="super_admin">Super Admin</option>
+                        <option value="franchisee">Franqueado</option>
+                    </select>
+                </div>
+                <div id="editFranchiseGroup" style="margin-bottom:15px; display:none;">
+                    <label style="display:block; margin-bottom:5px; font-weight:600; font-size:0.9rem;">Franquia</label>
+                    <select id="editFranchise" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box;">
+                        <option value="">Selecione uma franquia</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('editUserModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Alteracoes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Reset Senha -->
+    <div id="resetPasswordModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:16px; padding:30px; width:100%; max-width:420px;">
+            <h3 style="margin-bottom:15px;">Resetar Senha</h3>
+            <p id="resetPasswordMsg" style="margin-bottom:15px; color:#555;"></p>
+            <div id="resetPasswordResult" style="display:none; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:15px; margin-bottom:15px;">
+                <small style="color:#666;">Nova senha gerada:</small>
+                <p id="newGeneratedPassword" style="font-size:1.2rem; font-weight:700; color:#16a34a; margin:5px 0 0 0; font-family:monospace;"></p>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn btn-outline" onclick="closeModal('resetPasswordModal')">Fechar</button>
+                <button id="resetConfirmBtn" class="btn btn-primary" onclick="confirmResetPassword()">Confirmar Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/auth.js"></script>
+
+    <script>
+        if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+
+        var allUsers = [];
+        var allFranchises = [];
+        var resetUserId = null;
+
+        function toggleSidebar() {
+            var sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        function init() {
+            var userName = Auth.getUserName();
+            if (userName) {
+                document.getElementById('sidebarUserName').textContent = userName;
+            }
+            loadFranchises();
+            loadUsers();
+        }
+
+        function loadFranchises() {
+            allFranchises = DataStore.getAllFranchises() || [];
+            populateFranchiseSelects();
+        }
+
+        function populateFranchiseSelects() {
+            var selects = [document.getElementById('newFranchise'), document.getElementById('editFranchise')];
+            selects.forEach(function(select) {
+                select.innerHTML = '<option value="">Selecione uma franquia</option>';
+                allFranchises.forEach(function(f) {
+                    var opt = document.createElement('option');
+                    opt.value = f.id;
+                    opt.textContent = f.name;
+                    select.appendChild(opt);
+                });
+            });
+        }
+
+        function loadUsers() {
+            allUsers = Auth.listUsers() || [];
+            updateKPIs();
+            filterUsers();
+        }
+
+        function updateKPIs() {
+            var total = allUsers.length;
+            var admins = allUsers.filter(function(u) { return u.role === 'super_admin'; }).length;
+            var franchisees = allUsers.filter(function(u) { return u.role === 'franchisee'; }).length;
+            document.getElementById('kpiTotal').textContent = total;
+            document.getElementById('kpiAdmins').textContent = admins;
+            document.getElementById('kpiFranchisees').textContent = franchisees;
+        }
+
+        function filterUsers() {
+            var search = document.getElementById('searchInput').value.toLowerCase();
+            var roleFilter = document.getElementById('roleFilter').value;
+
+            var filtered = allUsers.filter(function(u) {
+                var matchSearch = !search || u.name.toLowerCase().indexOf(search) !== -1 || u.email.toLowerCase().indexOf(search) !== -1;
+                var matchRole = roleFilter === 'all' || u.role === roleFilter;
+                return matchSearch && matchRole;
+            });
+
+            renderTable(filtered);
+        }
+
+        function getFranchiseName(franchiseId) {
+            if (!franchiseId) return '-';
+            var franchise = allFranchises.find(function(f) { return f.id === franchiseId; });
+            return franchise ? franchise.name : franchiseId;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            var d = new Date(dateStr);
+            return d.toLocaleDateString('pt-BR');
+        }
+
+        function getRoleBadge(role) {
+            if (role === 'super_admin') {
+                return '<span class="status-badge" style="background:#f3e8ff; color:#7c3aed;">\uD83D\uDC51 Admin</span>';
+            }
+            return '<span class="status-badge" style="background:#dcfce7; color:#16a34a;">\uD83C\uDFEA Franqueado</span>';
+        }
+
+        function renderTable(users) {
+            var tbody = document.getElementById('usersTableBody');
+            if (!users.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Nenhum usuario encontrado.</td></tr>';
+                return;
+            }
+
+            var html = '';
+            users.forEach(function(u) {
+                html += '<tr>';
+                html += '<td><strong>' + u.name + '</strong></td>';
+                html += '<td>' + u.email + '</td>';
+                html += '<td>' + getRoleBadge(u.role) + '</td>';
+                html += '<td>' + getFranchiseName(u.franchiseId) + '</td>';
+                html += '<td>' + formatDate(u.createdAt) + '</td>';
+                html += '<td>';
+                html += '<button class="btn btn-sm btn-outline" onclick="openEditUserModal(\'' + u.id + '\')" style="margin-right:5px;">Editar</button>';
+                html += '<button class="btn btn-sm btn-outline" onclick="openResetPasswordModal(\'' + u.id + '\')" style="margin-right:5px;">Reset Senha</button>';
+                if (u.role !== 'super_admin') {
+                    html += '<button class="btn btn-sm btn-outline" style="color:#ef4444; border-color:#ef4444;" onclick="handleDeleteUser(\'' + u.id + '\', \'' + u.name.replace(/'/g, "\\'") + '\')">Remover</button>';
+                }
+                html += '</td>';
+                html += '</tr>';
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function toggleFranchiseSelect(prefix) {
+            var role = document.getElementById(prefix + 'Role').value;
+            var group = document.getElementById(prefix + 'FranchiseGroup');
+            group.style.display = role === 'franchisee' ? 'block' : 'none';
+        }
+
+        function openModal(id) {
+            var modal = document.getElementById(id);
+            modal.style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            var modal = document.getElementById(id);
+            modal.style.display = 'none';
+        }
+
+        function openNewUserModal() {
+            document.getElementById('newUserForm').reset();
+            document.getElementById('newFranchiseGroup').style.display = 'none';
+            openModal('newUserModal');
+        }
+
+        function handleCreateUser(e) {
+            e.preventDefault();
+            var role = document.getElementById('newRole').value;
+            var franchiseId = role === 'franchisee' ? document.getElementById('newFranchise').value : null;
+
+            if (role === 'franchisee' && !franchiseId) {
+                alert('Selecione uma franquia para o franqueado.');
+                return;
+            }
+
+            var data = {
+                name: document.getElementById('newName').value,
+                email: document.getElementById('newEmail').value,
+                password: document.getElementById('newPassword').value,
+                role: role,
+                franchiseId: franchiseId
+            };
+
+            var result = Auth.createUser(data);
+            if (result.success) {
+                alert('Usuario criado com sucesso!');
+                closeModal('newUserModal');
+                loadUsers();
+            } else {
+                alert('Erro ao criar usuario: ' + (result.error || 'Erro desconhecido'));
+            }
+        }
+
+        function openEditUserModal(userId) {
+            var user = allUsers.find(function(u) { return u.id === userId; });
+            if (!user) return;
+
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('editName').value = user.name;
+            document.getElementById('editEmail').value = user.email;
+            document.getElementById('editRole').value = user.role;
+
+            toggleFranchiseSelect('edit');
+
+            if (user.franchiseId) {
+                document.getElementById('editFranchise').value = user.franchiseId;
+            }
+
+            openModal('editUserModal');
+        }
+
+        function handleEditUser(e) {
+            e.preventDefault();
+            var userId = document.getElementById('editUserId').value;
+            var role = document.getElementById('editRole').value;
+            var franchiseId = role === 'franchisee' ? document.getElementById('editFranchise').value : null;
+
+            if (role === 'franchisee' && !franchiseId) {
+                alert('Selecione uma franquia para o franqueado.');
+                return;
+            }
+
+            var user = allUsers.find(function(u) { return u.id === userId; });
+            if (!user) return;
+
+            user.name = document.getElementById('editName').value;
+            user.email = document.getElementById('editEmail').value;
+            user.role = role;
+            user.franchiseId = franchiseId;
+
+            alert('Usuario atualizado com sucesso!');
+            closeModal('editUserModal');
+            loadUsers();
+        }
+
+        function generatePassword() {
+            var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+            var password = '';
+            for (var i = 0; i < 10; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return password;
+        }
+
+        function openResetPasswordModal(userId) {
+            var user = allUsers.find(function(u) { return u.id === userId; });
+            if (!user) return;
+
+            resetUserId = userId;
+            document.getElementById('resetPasswordMsg').textContent = 'Deseja resetar a senha do usuario "' + user.name + '" (' + user.email + ')?';
+            document.getElementById('resetPasswordResult').style.display = 'none';
+            document.getElementById('resetConfirmBtn').style.display = 'inline-flex';
+            openModal('resetPasswordModal');
+        }
+
+        function confirmResetPassword() {
+            if (!resetUserId) return;
+
+            var newPassword = generatePassword();
+            Auth.changePassword(resetUserId, newPassword);
+
+            document.getElementById('newGeneratedPassword').textContent = newPassword;
+            document.getElementById('resetPasswordResult').style.display = 'block';
+            document.getElementById('resetConfirmBtn').style.display = 'none';
+            document.getElementById('resetPasswordMsg').textContent = 'Senha resetada com sucesso!';
+
+            resetUserId = null;
+        }
+
+        function handleDeleteUser(userId, userName) {
+            if (!confirm('Tem certeza que deseja remover o usuario "' + userName + '"? Esta acao nao pode ser desfeita.')) {
+                return;
+            }
+
+            Auth.deleteUser(userId);
+            alert('Usuario removido com sucesso!');
+            loadUsers();
+        }
+
+        // Close modals when clicking outside
+        document.querySelectorAll('#newUserModal, #editUserModal, #resetPasswordModal').forEach(function(modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal(modal.id);
+                }
+            });
+        });
+
+        init();
+    </script>
+</body>
+</html>

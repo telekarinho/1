@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot Admin - Configuracoes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+</head>
+<body>
+    <div class="panel-layout">
+        <!-- Sidebar -->
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo.png" alt="MilkyPot">
+                <h2>MilkyPot<small>Central Admin</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="franchises.html" class="sidebar-link"><span class="icon">🏪</span> Franquias</a>
+                <a href="finances.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="orders.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <a href="products.html" class="sidebar-link"><span class="icon">🍨</span> Cardapio</a>
+                <a href="users.html" class="sidebar-link"><span class="icon">👥</span> Usuarios</a>
+                <div class="sidebar-nav-group">Marketing</div>
+                <a href="campaigns.html" class="sidebar-link"><span class="icon">📢</span> Campanhas</a>
+                <a href="seo.html" class="sidebar-link"><span class="icon">🔍</span> SEO & Delivery</a>
+                <div class="sidebar-nav-group">Sistema</div>
+                <a href="settings.html" class="sidebar-link active"><span class="icon">⚙️</span> Configuracoes</a>
+                <a href="#" class="sidebar-link" onclick="DataStore.downloadBackup()"><span class="icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">👑</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Admin</strong>
+                        <small>Super Admin</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>Configuracoes do Sistema</h1>
+                </div>
+                <div class="panel-header-right">
+                    <span id="saveStatus" style="color: #27ae60; font-weight: 600; display: none;">Salvo com sucesso!</span>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <div class="grid-2">
+
+                    <!-- Card 1: Dados da Empresa -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>Dados da Empresa</h3>
+                        </div>
+                        <div class="panel-card-body">
+                            <div class="form-group">
+                                <label>Nome da Marca</label>
+                                <input type="text" class="form-control" id="brandName" value="MilkyPot">
+                            </div>
+                            <div class="form-group">
+                                <label>Slogan</label>
+                                <input type="text" class="form-control" id="brandSlogan" value="O Potinho Mais Feliz do Mundo">
+                            </div>
+                            <div class="form-group">
+                                <label>Email de Contato</label>
+                                <input type="email" class="form-control" id="contactEmail" placeholder="contato@milkypot.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Telefone</label>
+                                <input type="tel" class="form-control" id="contactPhone" placeholder="(11) 99999-9999">
+                            </div>
+                            <div class="form-group">
+                                <label>CNPJ</label>
+                                <input type="text" class="form-control" id="cnpj" placeholder="00.000.000/0001-00">
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSection('company')">Salvar Dados da Empresa</button>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Configuracoes de Franquia -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>Configuracoes de Franquia</h3>
+                        </div>
+                        <div class="panel-card-body">
+                            <div class="form-group">
+                                <label>Taxa Mensal Padrao (R$)</label>
+                                <input type="number" class="form-control" id="franchiseMonthlyFee" placeholder="2500.00" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Royalty (%)</label>
+                                <input type="number" class="form-control" id="franchiseRoyalty" placeholder="5" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label>Prazo de Pagamento (dias)</label>
+                                <input type="number" class="form-control" id="franchisePaymentDays" placeholder="30">
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSection('franchise')">Salvar Configuracoes de Franquia</button>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Configuracoes de Pedido -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>Configuracoes de Pedido</h3>
+                        </div>
+                        <div class="panel-card-body">
+                            <div class="form-group">
+                                <label>Tempo Estimado de Preparo (minutos)</label>
+                                <input type="number" class="form-control" id="orderPrepTime" placeholder="15">
+                            </div>
+                            <div class="form-group">
+                                <label>Taxa de Entrega Padrao (R$)</label>
+                                <input type="number" class="form-control" id="orderDeliveryFee" placeholder="8.00" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Raio de Entrega (km)</label>
+                                <input type="number" class="form-control" id="orderDeliveryRadius" placeholder="10" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label>Pedido Minimo (R$)</label>
+                                <input type="number" class="form-control" id="orderMinValue" placeholder="20.00" step="0.01">
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSection('order')">Salvar Configuracoes de Pedido</button>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Integracao -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>Integracao</h3>
+                        </div>
+                        <div class="panel-card-body">
+                            <div class="form-group">
+                                <label>WhatsApp Business</label>
+                                <input type="tel" class="form-control" id="whatsappNumber" placeholder="+55 11 99999-9999">
+                            </div>
+                            <div class="form-group">
+                                <label>Firebase Project ID</label>
+                                <input type="text" class="form-control" id="firebaseProjectId" value="milkypot-ad945" readonly style="background: #f0f0f0; cursor: not-allowed;">
+                            </div>
+                            <div class="form-group">
+                                <label>Firebase Status</label>
+                                <div><span style="background: #27ae60; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">Conectado</span></div>
+                            </div>
+                            <div class="form-group">
+                                <label>GitHub Pages URL</label>
+                                <input type="text" class="form-control" id="githubPagesUrl" value="milkypot.com" readonly style="background: #f0f0f0; cursor: not-allowed;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 5: Dados & Backup -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>Dados & Backup</h3>
+                        </div>
+                        <div class="panel-card-body">
+                            <div class="form-group">
+                                <label>Uso do localStorage</label>
+                                <div id="storageInfo" style="font-size: 0.9rem; color: #666;">Calculando...</div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <button class="btn btn-primary" onclick="DataStore.downloadBackup()">Fazer Backup</button>
+                                <div style="position: relative;">
+                                    <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">Importar Backup</button>
+                                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importBackup(event)">
+                                </div>
+                                <button class="btn btn-outline" onclick="clearDemoData()" style="color: #e74c3c; border-color: #e74c3c;">Limpar Dados Demo</button>
+                                <button class="btn btn-outline" onclick="regenDemoData()" style="color: #f39c12; border-color: #f39c12;">Re-gerar Dados Demo</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 6: Aparencia -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>Aparencia</h3>
+                        </div>
+                        <div class="panel-card-body">
+                            <div class="form-group">
+                                <label>Cor Primaria</label>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <input type="color" id="primaryColor" value="#F8B4D9" style="width: 50px; height: 40px; border: none; cursor: pointer;">
+                                    <input type="text" class="form-control" id="primaryColorText" value="#F8B4D9" style="flex: 1;" oninput="document.getElementById('primaryColor').value = this.value">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Cor Secundaria</label>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <input type="color" id="secondaryColor" value="#D4A5FF" style="width: 50px; height: 40px; border: none; cursor: pointer;">
+                                    <input type="text" class="form-control" id="secondaryColorText" value="#D4A5FF" style="flex: 1;" oninput="document.getElementById('secondaryColor').value = this.value">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Logo URL</label>
+                                <input type="text" class="form-control" id="logoUrl" placeholder="https://milkypot.com/images/logo.png">
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSection('appearance')">Salvar Aparencia</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/auth.js"></script>
+
+    <script>
+        function toggleSidebar() {
+            var sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        // Auth check
+        if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+
+        // Load settings from DataStore
+        function loadSettings() {
+            var settings = DataStore.get('settings') || {};
+
+            // Company
+            if (settings.brandName) document.getElementById('brandName').value = settings.brandName;
+            if (settings.brandSlogan) document.getElementById('brandSlogan').value = settings.brandSlogan;
+            if (settings.contactEmail) document.getElementById('contactEmail').value = settings.contactEmail;
+            if (settings.contactPhone) document.getElementById('contactPhone').value = settings.contactPhone;
+            if (settings.cnpj) document.getElementById('cnpj').value = settings.cnpj;
+
+            // Franchise
+            if (settings.franchiseMonthlyFee) document.getElementById('franchiseMonthlyFee').value = settings.franchiseMonthlyFee;
+            if (settings.franchiseRoyalty) document.getElementById('franchiseRoyalty').value = settings.franchiseRoyalty;
+            if (settings.franchisePaymentDays) document.getElementById('franchisePaymentDays').value = settings.franchisePaymentDays;
+
+            // Order
+            if (settings.orderPrepTime) document.getElementById('orderPrepTime').value = settings.orderPrepTime;
+            if (settings.orderDeliveryFee) document.getElementById('orderDeliveryFee').value = settings.orderDeliveryFee;
+            if (settings.orderDeliveryRadius) document.getElementById('orderDeliveryRadius').value = settings.orderDeliveryRadius;
+            if (settings.orderMinValue) document.getElementById('orderMinValue').value = settings.orderMinValue;
+
+            // Integration
+            if (settings.whatsappNumber) document.getElementById('whatsappNumber').value = settings.whatsappNumber;
+
+            // Appearance
+            if (settings.primaryColor) {
+                document.getElementById('primaryColor').value = settings.primaryColor;
+                document.getElementById('primaryColorText').value = settings.primaryColor;
+            }
+            if (settings.secondaryColor) {
+                document.getElementById('secondaryColor').value = settings.secondaryColor;
+                document.getElementById('secondaryColorText').value = settings.secondaryColor;
+            }
+            if (settings.logoUrl) document.getElementById('logoUrl').value = settings.logoUrl;
+
+            // Storage info
+            updateStorageInfo();
+        }
+
+        // Save section
+        function saveSection(section) {
+            var settings = DataStore.get('settings') || {};
+
+            if (section === 'company') {
+                settings.brandName = document.getElementById('brandName').value;
+                settings.brandSlogan = document.getElementById('brandSlogan').value;
+                settings.contactEmail = document.getElementById('contactEmail').value;
+                settings.contactPhone = document.getElementById('contactPhone').value;
+                settings.cnpj = document.getElementById('cnpj').value;
+            } else if (section === 'franchise') {
+                settings.franchiseMonthlyFee = parseFloat(document.getElementById('franchiseMonthlyFee').value) || 0;
+                settings.franchiseRoyalty = parseFloat(document.getElementById('franchiseRoyalty').value) || 0;
+                settings.franchisePaymentDays = parseInt(document.getElementById('franchisePaymentDays').value) || 0;
+            } else if (section === 'order') {
+                settings.orderPrepTime = parseInt(document.getElementById('orderPrepTime').value) || 0;
+                settings.orderDeliveryFee = parseFloat(document.getElementById('orderDeliveryFee').value) || 0;
+                settings.orderDeliveryRadius = parseFloat(document.getElementById('orderDeliveryRadius').value) || 0;
+                settings.orderMinValue = parseFloat(document.getElementById('orderMinValue').value) || 0;
+            } else if (section === 'appearance') {
+                settings.primaryColor = document.getElementById('primaryColor').value;
+                settings.secondaryColor = document.getElementById('secondaryColor').value;
+                settings.logoUrl = document.getElementById('logoUrl').value;
+            }
+
+            DataStore.set('settings', settings);
+            showSaveStatus();
+        }
+
+        // Show save confirmation
+        function showSaveStatus() {
+            var status = document.getElementById('saveStatus');
+            status.style.display = 'inline';
+            setTimeout(function() {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        // Storage info
+        function updateStorageInfo() {
+            var total = 0;
+            for (var key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    total += localStorage[key].length + key.length;
+                }
+            }
+            var sizeKB = (total * 2 / 1024).toFixed(2);
+            var sizeMB = (total * 2 / 1024 / 1024).toFixed(2);
+            var maxMB = 5;
+            var percent = ((total * 2 / 1024 / 1024) / maxMB * 100).toFixed(1);
+            document.getElementById('storageInfo').innerHTML =
+                '<strong>' + sizeKB + ' KB</strong> (' + sizeMB + ' MB de ' + maxMB + ' MB disponivel)' +
+                '<div style="background: #eee; border-radius: 8px; height: 8px; margin-top: 8px; overflow: hidden;">' +
+                '<div style="background: linear-gradient(90deg, #F8B4D9, #D4A5FF); height: 100%; width: ' + percent + '%; border-radius: 8px;"></div>' +
+                '</div>';
+        }
+
+        // Import backup
+        function importBackup(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    var data = JSON.parse(e.target.result);
+                    for (var key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            localStorage.setItem(key, typeof data[key] === 'string' ? data[key] : JSON.stringify(data[key]));
+                        }
+                    }
+                    alert('Backup importado com sucesso! A pagina sera recarregada.');
+                    location.reload();
+                } catch (err) {
+                    alert('Erro ao importar backup: arquivo invalido.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Clear demo data
+        function clearDemoData() {
+            if (!confirm('Tem certeza que deseja limpar todos os dados demo? Esta acao nao pode ser desfeita.')) return;
+            var keysToKeep = ['settings'];
+            var allKeys = Object.keys(localStorage);
+            allKeys.forEach(function(key) {
+                if (keysToKeep.indexOf(key) === -1) {
+                    localStorage.removeItem(key);
+                }
+            });
+            alert('Dados demo removidos com sucesso!');
+            updateStorageInfo();
+        }
+
+        // Regenerate demo data
+        function regenDemoData() {
+            if (!confirm('Isso ira limpar os dados atuais e re-gerar os dados demo. Deseja continuar?')) return;
+            localStorage.removeItem('_seeded');
+            location.reload();
+        }
+
+        // Sync color pickers with text fields
+        document.getElementById('primaryColor').addEventListener('input', function() {
+            document.getElementById('primaryColorText').value = this.value;
+        });
+        document.getElementById('secondaryColor').addEventListener('input', function() {
+            document.getElementById('secondaryColorText').value = this.value;
+        });
+
+        // Initialize
+        loadSettings();
+    </script>
+</body>
+</html>
