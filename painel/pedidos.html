@@ -253,12 +253,15 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
     <script src="../js/core/constants.js"></script>
     <script src="../js/core/utils.js"></script>
     <script src="../js/core/datastore.js"></script>
     <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/cloud-functions.js"></script>
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/audit.js"></script>
+    <script src="../js/core/recipes.js"></script>
     <script>
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
         const session = Auth.getSession();
@@ -350,6 +353,11 @@
                 orders[idx].cancelledAt = new Date().toISOString();
             }
             DataStore.set('orders_' + franchiseId, orders);
+            if (newStatus === 'entregue' || newStatus === MP.ORDER_STATUS.DELIVERED) {
+                if (typeof Recipes !== 'undefined') {
+                    Recipes.deductFromInventory(franchiseId, orders[idx]);
+                }
+            }
             AuditLog.logOrder(
                 newStatus === 'cancelado' ? AuditLog.EVENTS.ORDER_CANCELLED : AuditLog.EVENTS.ORDER_STATUS_CHANGED,
                 orderId,

@@ -29,3 +29,8 @@ googleProvider.addScope('profile');
 if (typeof DataStore !== 'undefined') {
     DataStore.init();
 }
+
+// Initialize Cloud Functions client
+if (typeof CloudFunctions !== 'undefined') {
+    CloudFunctions.init();
+}
