@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Produtos & Estoque</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <style>
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-tab {
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid #e0e0e0;
+            background: #fff;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.2s;
+        }
+        .filter-tab:hover {
+            border-color: #e91e8a;
+            color: #e91e8a;
+        }
+        .filter-tab.active {
+            background: #e91e8a;
+            color: #fff;
+            border-color: #e91e8a;
+        }
+        .stock-bar-container {
+            width: 100%;
+            background: #f0f0f0;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .stock-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s;
+        }
+        .stock-bar.green { background: #27ae60; }
+        .stock-bar.yellow { background: #f39c12; }
+        .stock-bar.red { background: #e74c3c; }
+        .stock-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .stock-qty {
+            min-width: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+        .stock-bar-wrapper {
+            flex: 1;
+            min-width: 60px;
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px;
+            width: 90%;
+            max-width: 480px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal h3 {
+            margin: 0 0 24px 0;
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.3rem;
+            color: #333;
+        }
+        .modal-field {
+            margin-bottom: 16px;
+        }
+        .modal-field label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #555;
+            margin-bottom: 6px;
+        }
+        .modal-field input,
+        .modal-field select,
+        .modal-field textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        .modal-field input:focus,
+        .modal-field select:focus,
+        .modal-field textarea:focus {
+            border-color: #e91e8a;
+        }
+        .modal-field textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+        .btn-cancel {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            background: #fff;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 600;
+            color: #666;
+        }
+        .btn-cancel:hover { background: #f5f5f5; }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-input {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            min-width: 200px;
+        }
+        .search-input:focus { border-color: #e91e8a; }
+        .actions-cell {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .btn-entrada {
+            background: #27ae60;
+            color: #fff;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        .btn-entrada:hover { background: #219a52; }
+        .btn-editar {
+            background: #3498db;
+            color: #fff;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        .btn-editar:hover { background: #2980b9; }
+        .btn-remover {
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        .btn-remover:hover { background: #c0392b; }
+        @media (max-width: 768px) {
+            .header-actions { flex-direction: column; align-items: stretch; }
+            .search-input { min-width: unset; width: 100%; }
+            .actions-cell { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <!-- Sidebar -->
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo.png" alt="MilkyPot">
+                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="pedidos.html" class="sidebar-link">
+                    <span class="icon">📋</span> Pedidos
+                </a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="financeiro.html" class="sidebar-link">
+                    <span class="icon">💰</span> Financeiro
+                </a>
+                <a href="produtos.html" class="sidebar-link active">
+                    <span class="icon">🍨</span> Produtos
+                </a>
+                <a href="entregas.html" class="sidebar-link">
+                    <span class="icon">🛵</span> Entregas
+                </a>
+                <a href="equipe.html" class="sidebar-link">
+                    <span class="icon">👥</span> Equipe
+                </a>
+                <div class="sidebar-nav-group">Loja Online</div>
+                <a href="#" class="sidebar-link" id="linkSiteFranquia">
+                    <span class="icon">🌐</span> Meu Site
+                </a>
+                <a href="marketing.html" class="sidebar-link">
+                    <span class="icon">📢</span> Marketing
+                </a>
+                <div class="sidebar-nav-group">Config</div>
+                <a href="configuracoes.html" class="sidebar-link">
+                    <span class="icon">⚙️</span> Configuracoes
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">🏪</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Franqueado</strong>
+                        <small>Franqueado</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="panel-main">
+            <header class="panel-header">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+                <h1>🍨 Produtos & Estoque</h1>
+                <div class="header-actions">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Buscar produto..." oninput="renderTable()">
+                    <button class="btn btn-primary" onclick="openNewModal()">+ Novo Produto</button>
+                </div>
+            </header>
+
+            <section class="panel-content">
+                <!-- Category Filters -->
+                <div style="margin-bottom: 20px;">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-cat="todos" onclick="setFilter('todos', this)">Todos</button>
+                        <button class="filter-tab" data-cat="ingredientes" onclick="setFilter('ingredientes', this)">Ingredientes</button>
+                        <button class="filter-tab" data-cat="frutas" onclick="setFilter('frutas', this)">Frutas</button>
+                        <button class="filter-tab" data-cat="embalagens" onclick="setFilter('embalagens', this)">Embalagens</button>
+                    </div>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon blue">📦</div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Total Produtos</span>
+                            <span class="kpi-value" id="kpiTotal">0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon green">✅</div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Estoque OK</span>
+                            <span class="kpi-value" id="kpiOk">0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon yellow">⚠️</div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Estoque Baixo</span>
+                            <span class="kpi-value" id="kpiBaixo">0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon red">🚨</div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Estoque Critico</span>
+                            <span class="kpi-value" id="kpiCritico">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventory Table -->
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3>Inventario</h3>
+                        <button class="btn btn-sm btn-outline" onclick="exportCSV()">Exportar CSV</button>
+                    </div>
+                    <div class="panel-card-body">
+                        <div style="overflow-x: auto;">
+                            <table class="panel-table" id="inventoryTable">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th>Categoria</th>
+                                        <th>Quantidade</th>
+                                        <th>Unidade</th>
+                                        <th>Estoque Minimo</th>
+                                        <th>Status</th>
+                                        <th>Acoes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventoryBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal: Novo Produto -->
+    <div class="modal-overlay" id="modalNew">
+        <div class="modal">
+            <h3>Novo Produto</h3>
+            <div class="modal-field">
+                <label>Nome do Produto</label>
+                <input type="text" id="newName" placeholder="Ex: Leite Ninho">
+            </div>
+            <div class="modal-field">
+                <label>Categoria</label>
+                <select id="newCategory">
+                    <option value="ingredientes">Ingredientes</option>
+                    <option value="frutas">Frutas</option>
+                    <option value="embalagens">Embalagens</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Quantidade Inicial</label>
+                <input type="number" id="newQuantity" min="0" value="0">
+            </div>
+            <div class="modal-field">
+                <label>Unidade</label>
+                <select id="newUnit">
+                    <option value="kg">kg</option>
+                    <option value="litro">litro</option>
+                    <option value="pct">pct</option>
+                    <option value="un">un</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Estoque Minimo</label>
+                <input type="number" id="newMinStock" min="0" value="10">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal('modalNew')">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveNewProduct()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Editar Produto -->
+    <div class="modal-overlay" id="modalEdit">
+        <div class="modal">
+            <h3>Editar Produto</h3>
+            <input type="hidden" id="editId">
+            <div class="modal-field">
+                <label>Nome do Produto</label>
+                <input type="text" id="editName">
+            </div>
+            <div class="modal-field">
+                <label>Categoria</label>
+                <select id="editCategory">
+                    <option value="ingredientes">Ingredientes</option>
+                    <option value="frutas">Frutas</option>
+                    <option value="embalagens">Embalagens</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Quantidade</label>
+                <input type="number" id="editQuantity" min="0">
+            </div>
+            <div class="modal-field">
+                <label>Unidade</label>
+                <select id="editUnit">
+                    <option value="kg">kg</option>
+                    <option value="litro">litro</option>
+                    <option value="pct">pct</option>
+                    <option value="un">un</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Estoque Minimo</label>
+                <input type="number" id="editMinStock" min="0">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal('modalEdit')">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveEditProduct()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Entrada de Estoque -->
+    <div class="modal-overlay" id="modalEntrada">
+        <div class="modal">
+            <h3>Entrada de Estoque</h3>
+            <div class="modal-field">
+                <label>Produto</label>
+                <select id="entradaProduct"></select>
+            </div>
+            <div class="modal-field">
+                <label>Quantidade a Adicionar</label>
+                <input type="number" id="entradaQty" min="1" value="1">
+            </div>
+            <div class="modal-field">
+                <label>Observacao</label>
+                <textarea id="entradaNote" placeholder="Ex: Compra semanal, reposicao..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal('modalEntrada')">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveEntrada()">Confirmar Entrada</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script>
+        // Auth guard
+        if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+        const session = Auth.getSession();
+        const franchiseId = session.franchiseId;
+        const franchises = DataStore.getAllFranchises();
+        const franchise = franchises.find(f => f.id === franchiseId);
+        document.getElementById('sidebarUserName').textContent = session.name;
+        document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia';
+
+        // State
+        let currentFilter = 'todos';
+        let inventory = [];
+
+        // Toggle sidebar
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // Load inventory
+        function loadInventory() {
+            inventory = DataStore.getCollection('inventory', franchiseId) || [];
+            updateKPIs();
+            renderTable();
+        }
+
+        // Save inventory
+        function saveInventory() {
+            DataStore.setCollection('inventory', franchiseId, inventory);
+        }
+
+        // Get stock status
+        function getStockStatus(qty, minStock) {
+            if (qty > minStock) return 'ok';
+            if (qty > minStock * 0.5) return 'baixo';
+            return 'critico';
+        }
+
+        // Get status badge HTML
+        function getStatusBadge(status) {
+            var labels = { ok: 'OK', baixo: 'Baixo', critico: 'Critico' };
+            var colors = { ok: 'green', baixo: 'yellow', critico: 'red' };
+            return '<span class="status-badge ' + colors[status] + '">' + labels[status] + '</span>';
+        }
+
+        // Get category label
+        function getCategoryLabel(cat) {
+            var labels = { ingredientes: 'Ingredientes', frutas: 'Frutas', embalagens: 'Embalagens' };
+            return labels[cat] || cat;
+        }
+
+        // Get stock bar color
+        function getBarColor(status) {
+            var colors = { ok: 'green', baixo: 'yellow', critico: 'red' };
+            return colors[status] || 'green';
+        }
+
+        // Update KPI cards
+        function updateKPIs() {
+            var total = inventory.length;
+            var ok = 0, baixo = 0, critico = 0;
+            for (var i = 0; i < inventory.length; i++) {
+                var s = getStockStatus(inventory[i].quantity, inventory[i].minStock);
+                if (s === 'ok') ok++;
+                else if (s === 'baixo') baixo++;
+                else critico++;
+            }
+            document.getElementById('kpiTotal').textContent = total;
+            document.getElementById('kpiOk').textContent = ok;
+            document.getElementById('kpiBaixo').textContent = baixo;
+            document.getElementById('kpiCritico').textContent = critico;
+        }
+
+        // Render table
+        function renderTable() {
+            var search = document.getElementById('searchInput').value.toLowerCase();
+            var tbody = document.getElementById('inventoryBody');
+            tbody.innerHTML = '';
+
+            var filtered = inventory.filter(function(item) {
+                var matchCat = currentFilter === 'todos' || item.category === currentFilter;
+                var matchSearch = !search || item.name.toLowerCase().indexOf(search) !== -1;
+                return matchCat && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#999;">Nenhum produto encontrado</td></tr>';
+                return;
+            }
+
+            for (var i = 0; i < filtered.length; i++) {
+                var item = filtered[i];
+                var status = getStockStatus(item.quantity, item.minStock);
+                var barColor = getBarColor(status);
+                var barPercent = item.minStock > 0 ? Math.min((item.quantity / (item.minStock * 2)) * 100, 100) : 100;
+
+                var tr = document.createElement('tr');
+                tr.innerHTML =
+                    '<td><strong>' + item.name + '</strong></td>' +
+                    '<td>' + getCategoryLabel(item.category) + '</td>' +
+                    '<td>' +
+                        '<div class="stock-cell">' +
+                            '<span class="stock-qty">' + item.quantity + '</span>' +
+                            '<div class="stock-bar-wrapper">' +
+                                '<div class="stock-bar-container">' +
+                                    '<div class="stock-bar ' + barColor + '" style="width:' + barPercent + '%"></div>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td>' + item.unit + '</td>' +
+                    '<td>' + item.minStock + '</td>' +
+                    '<td>' + getStatusBadge(status) + '</td>' +
+                    '<td>' +
+                        '<div class="actions-cell">' +
+                            '<button class="btn-entrada" onclick="openEntradaForProduct(\'' + item.id + '\')">Entrada</button>' +
+                            '<button class="btn-editar" onclick="openEditModal(\'' + item.id + '\')">Editar</button>' +
+                            '<button class="btn-remover" onclick="removeProduct(\'' + item.id + '\')">Remover</button>' +
+                        '</div>' +
+                    '</td>';
+                tbody.appendChild(tr);
+            }
+        }
+
+        // Filter tabs
+        function setFilter(cat, btn) {
+            currentFilter = cat;
+            var tabs = document.querySelectorAll('.filter-tab');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            btn.classList.add('active');
+            renderTable();
+        }
+
+        // Modal helpers
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // New product modal
+        function openNewModal() {
+            document.getElementById('newName').value = '';
+            document.getElementById('newCategory').value = 'ingredientes';
+            document.getElementById('newQuantity').value = '0';
+            document.getElementById('newUnit').value = 'kg';
+            document.getElementById('newMinStock').value = '10';
+            openModal('modalNew');
+        }
+
+        function saveNewProduct() {
+            var name = document.getElementById('newName').value.trim();
+            if (!name) {
+                Utils.showToast('Informe o nome do produto', 'error');
+                return;
+            }
+            var item = {
+                id: Utils.generateId(),
+                name: name,
+                category: document.getElementById('newCategory').value,
+                quantity: parseInt(document.getElementById('newQuantity').value) || 0,
+                unit: document.getElementById('newUnit').value,
+                minStock: parseInt(document.getElementById('newMinStock').value) || 0
+            };
+            inventory.push(item);
+            saveInventory();
+            updateKPIs();
+            renderTable();
+            closeModal('modalNew');
+            Utils.showToast('Produto adicionado com sucesso!', 'success');
+        }
+
+        // Edit product modal
+        function openEditModal(id) {
+            var item = inventory.find(function(p) { return p.id === id; });
+            if (!item) return;
+            document.getElementById('editId').value = item.id;
+            document.getElementById('editName').value = item.name;
+            document.getElementById('editCategory').value = item.category;
+            document.getElementById('editQuantity').value = item.quantity;
+            document.getElementById('editUnit').value = item.unit;
+            document.getElementById('editMinStock').value = item.minStock;
+            openModal('modalEdit');
+        }
+
+        function saveEditProduct() {
+            var id = document.getElementById('editId').value;
+            var name = document.getElementById('editName').value.trim();
+            if (!name) {
+                Utils.showToast('Informe o nome do produto', 'error');
+                return;
+            }
+            var idx = inventory.findIndex(function(p) { return p.id === id; });
+            if (idx === -1) return;
+            inventory[idx].name = name;
+            inventory[idx].category = document.getElementById('editCategory').value;
+            inventory[idx].quantity = parseInt(document.getElementById('editQuantity').value) || 0;
+            inventory[idx].unit = document.getElementById('editUnit').value;
+            inventory[idx].minStock = parseInt(document.getElementById('editMinStock').value) || 0;
+            saveInventory();
+            updateKPIs();
+            renderTable();
+            closeModal('modalEdit');
+            Utils.showToast('Produto atualizado com sucesso!', 'success');
+        }
+
+        // Entrada de estoque
+        function openEntradaModal() {
+            var select = document.getElementById('entradaProduct');
+            select.innerHTML = '';
+            for (var i = 0; i < inventory.length; i++) {
+                var opt = document.createElement('option');
+                opt.value = inventory[i].id;
+                opt.textContent = inventory[i].name + ' (' + inventory[i].quantity + ' ' + inventory[i].unit + ')';
+                select.appendChild(opt);
+            }
+            document.getElementById('entradaQty').value = '1';
+            document.getElementById('entradaNote').value = '';
+            openModal('modalEntrada');
+        }
+
+        function openEntradaForProduct(id) {
+            openEntradaModal();
+            document.getElementById('entradaProduct').value = id;
+        }
+
+        function saveEntrada() {
+            var productId = document.getElementById('entradaProduct').value;
+            var qty = parseInt(document.getElementById('entradaQty').value) || 0;
+            if (qty <= 0) {
+                Utils.showToast('Informe uma quantidade valida', 'error');
+                return;
+            }
+            var idx = inventory.findIndex(function(p) { return p.id === productId; });
+            if (idx === -1) return;
+            inventory[idx].quantity += qty;
+            saveInventory();
+            updateKPIs();
+            renderTable();
+            closeModal('modalEntrada');
+            Utils.showToast('Entrada de ' + qty + ' ' + inventory[idx].unit + ' de ' + inventory[idx].name + ' registrada!', 'success');
+        }
+
+        // Remove product
+        function removeProduct(id) {
+            var item = inventory.find(function(p) { return p.id === id; });
+            if (!item) return;
+            if (!confirm('Remover "' + item.name + '" do estoque?')) return;
+            inventory = inventory.filter(function(p) { return p.id !== id; });
+            saveInventory();
+            updateKPIs();
+            renderTable();
+            Utils.showToast('Produto removido', 'info');
+        }
+
+        // Export CSV
+        function exportCSV() {
+            if (inventory.length === 0) {
+                Utils.showToast('Nenhum produto para exportar', 'error');
+                return;
+            }
+            var headers = ['Produto', 'Categoria', 'Quantidade', 'Unidade', 'Estoque Minimo', 'Status'];
+            var rows = inventory.map(function(item) {
+                var status = getStockStatus(item.quantity, item.minStock);
+                var statusLabel = { ok: 'OK', baixo: 'Baixo', critico: 'Critico' };
+                return [item.name, getCategoryLabel(item.category), item.quantity, item.unit, item.minStock, statusLabel[status]];
+            });
+            Utils.downloadCSV('estoque_' + franchiseId + '.csv', headers, rows);
+            Utils.showToast('CSV exportado com sucesso!', 'success');
+        }
+
+        // Init
+        loadInventory();
+    </script>
+</body>
+</html>

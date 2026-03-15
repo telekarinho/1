@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Financeiro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="panel-layout">
+        <!-- SIDEBAR -->
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo.png" alt="MilkyPot">
+                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="pedidos.html" class="sidebar-link">
+                    <span class="icon">📋</span> Pedidos
+                </a>
+                <div class="sidebar-nav-group">Gestão</div>
+                <a href="financeiro.html" class="sidebar-link active">
+                    <span class="icon">💰</span> Financeiro
+                </a>
+                <a href="produtos.html" class="sidebar-link">
+                    <span class="icon">🍨</span> Produtos
+                </a>
+                <a href="entregas.html" class="sidebar-link">
+                    <span class="icon">🛵</span> Entregas
+                </a>
+                <a href="equipe.html" class="sidebar-link">
+                    <span class="icon">👥</span> Equipe
+                </a>
+                <div class="sidebar-nav-group">Loja Online</div>
+                <a href="#" class="sidebar-link" id="linkSiteFranquia">
+                    <span class="icon">🌐</span> Meu Site
+                </a>
+                <a href="marketing.html" class="sidebar-link">
+                    <span class="icon">📢</span> Marketing
+                </a>
+                <div class="sidebar-nav-group">Config</div>
+                <a href="configuracoes.html" class="sidebar-link">
+                    <span class="icon">⚙️</span> Configurações
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">🏪</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Franqueado</strong>
+                        <small>Franqueado</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>💰 Financeiro</h1>
+                </div>
+                <div class="panel-header-right">
+                    <button class="header-btn" title="Exportar CSV" onclick="exportCSV()">📥</button>
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <!-- FILTROS -->
+                <div class="panel-card">
+                    <div class="panel-card-body" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                        <strong>Periodo:</strong>
+                        <button class="btn btn-sm btn-outline filter-btn" data-period="today" onclick="setPeriod('today')">Hoje</button>
+                        <button class="btn btn-sm btn-outline filter-btn" data-period="week" onclick="setPeriod('week')">Esta Semana</button>
+                        <button class="btn btn-sm btn-primary filter-btn" data-period="month" onclick="setPeriod('month')">Este Mês</button>
+                        <button class="btn btn-sm btn-outline filter-btn" data-period="30days" onclick="setPeriod('30days')">Últimos 30 Dias</button>
+                        <div style="flex:1"></div>
+                        <button class="btn btn-sm btn-primary" onclick="openModal()">+ Nova Transação</button>
+                    </div>
+                </div>
+
+                <!-- KPIs -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon green">💵</div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Receita Total</span>
+                            <span class="kpi-value" id="kpiReceita">R$ 0,00</span>
+                            <span class="kpi-change up" id="kpiReceitaChange">--</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon red">📉</div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Despesas Total</span>
+                            <span class="kpi-value" id="kpiDespesas">R$ 0,00</span>
+                            <span class="kpi-change down" id="kpiDespesasChange">--</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon blue">📈</div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Lucro Líquido</span>
+                            <span class="kpi-value" id="kpiLucro">R$ 0,00</span>
+                            <span class="kpi-change up" id="kpiLucroChange">--</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon yellow">🎫</div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Ticket Médio</span>
+                            <span class="kpi-value" id="kpiTicket">R$ 0,00</span>
+                            <span class="kpi-change up" id="kpiTicketChange">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GRAFICOS -->
+                <div class="grid-2">
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>Receita x Despesas</h3>
+                        </div>
+                        <div class="panel-card-body">
+                            <div class="chart-container">
+                                <canvas id="chartReceitaDespesa"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>Despesas por Categoria</h3>
+                        </div>
+                        <div class="panel-card-body">
+                            <div class="chart-container">
+                                <canvas id="chartDespesasCategoria"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABELA DE TRANSACOES -->
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3>Transações</h3>
+                    </div>
+                    <div class="panel-card-body">
+                        <table class="panel-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Categoria</th>
+                                    <th>Descrição</th>
+                                    <th>Valor</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaTransacoes">
+                                <tr><td colspan="6" style="text-align:center;">Carregando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL NOVA TRANSACAO -->
+    <div class="modal-overlay" id="modalOverlay" style="display:none;">
+        <div class="modal" style="background:#fff; border-radius:16px; padding:32px; max-width:480px; width:90%; position:relative;">
+            <button class="modal-close" onclick="closeModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;">&times;</button>
+            <h2 style="margin-bottom:20px;" id="modalTitle">Nova Transação</h2>
+            <form id="formTransacao" onsubmit="salvarTransacao(event)">
+                <input type="hidden" id="editId" value="">
+                <div style="margin-bottom:14px;">
+                    <label style="display:block;margin-bottom:4px;font-weight:600;">Tipo</label>
+                    <select id="inputTipo" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
+                        <option value="income">Receita</option>
+                        <option value="expense">Despesa</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:14px;">
+                    <label style="display:block;margin-bottom:4px;font-weight:600;">Categoria</label>
+                    <select id="inputCategoria" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
+                        <option value="vendas">Vendas</option>
+                        <option value="ingredientes">Ingredientes</option>
+                        <option value="aluguel">Aluguel</option>
+                        <option value="salarios">Salários</option>
+                        <option value="manutencao">Manutenção</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="outros">Outros</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:14px;">
+                    <label style="display:block;margin-bottom:4px;font-weight:600;">Valor (R$)</label>
+                    <input type="number" id="inputValor" step="0.01" min="0.01" required placeholder="0,00" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
+                </div>
+                <div style="margin-bottom:14px;">
+                    <label style="display:block;margin-bottom:4px;font-weight:600;">Descrição</label>
+                    <input type="text" id="inputDescricao" required placeholder="Ex: Compra de insumos" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
+                </div>
+                <div style="margin-bottom:20px;">
+                    <label style="display:block;margin-bottom:4px;font-weight:600;">Data</label>
+                    <input type="date" id="inputData" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/auth.js"></script>
+
+    <script>
+        // ========== GLOBALS ==========
+        let currentPeriod = 'month';
+        let franchiseId = null;
+        let lineChart = null;
+        let donutChart = null;
+
+        const categoryLabels = {
+            vendas: 'Vendas',
+            ingredientes: 'Ingredientes',
+            aluguel: 'Aluguel',
+            salarios: 'Salarios',
+            manutencao: 'Manutencao',
+            marketing: 'Marketing',
+            outros: 'Outros'
+        };
+
+        const categoryColors = {
+            vendas: '#4CAF50',
+            ingredientes: '#FF9800',
+            aluguel: '#2196F3',
+            salarios: '#9C27B0',
+            manutencao: '#F44336',
+            marketing: '#00BCD4',
+            outros: '#607D8B'
+        };
+
+        // ========== SIDEBAR ==========
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // ========== PERIOD FILTER ==========
+        function setPeriod(period) {
+            currentPeriod = period;
+            document.querySelectorAll('.filter-btn').forEach(function(btn) {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline');
+            });
+            var activeBtn = document.querySelector('.filter-btn[data-period="' + period + '"]');
+            if (activeBtn) {
+                activeBtn.classList.remove('btn-outline');
+                activeBtn.classList.add('btn-primary');
+            }
+            loadData();
+        }
+
+        function getPeriodRange() {
+            var now = new Date();
+            var start, end;
+            end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            if (currentPeriod === 'today') {
+                start = new Date(end);
+            } else if (currentPeriod === 'week') {
+                start = new Date(end);
+                var day = start.getDay();
+                var diff = day === 0 ? 6 : day - 1;
+                start.setDate(start.getDate() - diff);
+            } else if (currentPeriod === 'month') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+            } else if (currentPeriod === '30days') {
+                start = new Date(end);
+                start.setDate(start.getDate() - 29);
+            }
+
+            var startStr = start.toISOString().slice(0, 10);
+            var endStr = end.toISOString().slice(0, 10);
+            return { start: startStr, end: endStr, startDate: start, endDate: end };
+        }
+
+        // ========== DATA LOADING ==========
+        function loadData() {
+            var finances = DataStore.getCollection('finances', franchiseId) || [];
+            var orders = DataStore.getCollection('orders', franchiseId) || [];
+            var range = getPeriodRange();
+
+            var filtered = finances.filter(function(f) {
+                return f.date >= range.start && f.date <= range.end;
+            });
+
+            var income = filtered.filter(function(f) { return f.type === 'income'; });
+            var expenses = filtered.filter(function(f) { return f.type === 'expense'; });
+
+            var totalIncome = income.reduce(function(sum, f) { return sum + (f.amount || 0); }, 0);
+            var totalExpenses = expenses.reduce(function(sum, f) { return sum + (f.amount || 0); }, 0);
+            var profit = totalIncome - totalExpenses;
+
+            // Ticket medio baseado em pedidos do periodo
+            var periodOrders = orders.filter(function(o) {
+                var orderDate = (o.date || o.createdAt || '').slice(0, 10);
+                return orderDate >= range.start && orderDate <= range.end && o.status !== 'cancelled';
+            });
+            var ticketMedio = periodOrders.length > 0 ? totalIncome / periodOrders.length : 0;
+
+            // KPIs
+            document.getElementById('kpiReceita').textContent = Utils.formatCurrency(totalIncome);
+            document.getElementById('kpiDespesas').textContent = Utils.formatCurrency(totalExpenses);
+            document.getElementById('kpiLucro').textContent = Utils.formatCurrency(profit);
+            document.getElementById('kpiTicket').textContent = Utils.formatCurrency(ticketMedio);
+
+            // KPI changes - comparar com periodo anterior
+            updateKpiChanges(finances, orders, range, totalIncome, totalExpenses, profit, ticketMedio);
+
+            // Charts
+            renderLineChart(filtered, range);
+            renderDonutChart(expenses);
+
+            // Table
+            renderTable(filtered);
+        }
+
+        function updateKpiChanges(allFinances, allOrders, range, currentIncome, currentExpenses, currentProfit, currentTicket) {
+            var days = Math.round((new Date(range.end) - new Date(range.start)) / 86400000) + 1;
+            var prevEnd = new Date(range.startDate);
+            prevEnd.setDate(prevEnd.getDate() - 1);
+            var prevStart = new Date(prevEnd);
+            prevStart.setDate(prevStart.getDate() - days + 1);
+            var prevStartStr = prevStart.toISOString().slice(0, 10);
+            var prevEndStr = prevEnd.toISOString().slice(0, 10);
+
+            var prevFiltered = allFinances.filter(function(f) {
+                return f.date >= prevStartStr && f.date <= prevEndStr;
+            });
+            var prevIncome = prevFiltered.filter(function(f) { return f.type === 'income'; }).reduce(function(s, f) { return s + (f.amount || 0); }, 0);
+            var prevExpenses = prevFiltered.filter(function(f) { return f.type === 'expense'; }).reduce(function(s, f) { return s + (f.amount || 0); }, 0);
+            var prevProfit = prevIncome - prevExpenses;
+
+            var prevOrders = allOrders.filter(function(o) {
+                var d = (o.date || o.createdAt || '').slice(0, 10);
+                return d >= prevStartStr && d <= prevEndStr && o.status !== 'cancelled';
+            });
+            var prevTicket = prevOrders.length > 0 ? prevIncome / prevOrders.length : 0;
+
+            setChange('kpiReceitaChange', currentIncome, prevIncome);
+            setChange('kpiDespesasChange', currentExpenses, prevExpenses, true);
+            setChange('kpiLucroChange', currentProfit, prevProfit);
+            setChange('kpiTicketChange', currentTicket, prevTicket);
+        }
+
+        function setChange(elementId, current, previous, invertColor) {
+            var el = document.getElementById(elementId);
+            var pct = Utils.percentChange(current, previous);
+            if (pct === null || isNaN(pct)) {
+                el.textContent = '--';
+                el.className = 'kpi-change';
+                return;
+            }
+            var isUp = pct >= 0;
+            var arrow = isUp ? '↑' : '↓';
+            el.textContent = arrow + ' ' + Math.abs(pct).toFixed(1) + '%';
+            if (invertColor) {
+                el.className = 'kpi-change ' + (isUp ? 'down' : 'up');
+            } else {
+                el.className = 'kpi-change ' + (isUp ? 'up' : 'down');
+            }
+        }
+
+        // ========== CHARTS ==========
+        function renderLineChart(filtered, range) {
+            var ctx = document.getElementById('chartReceitaDespesa').getContext('2d');
+
+            // Agrupar por data
+            var dateMap = {};
+            filtered.forEach(function(f) {
+                if (!dateMap[f.date]) dateMap[f.date] = { income: 0, expense: 0 };
+                if (f.type === 'income') dateMap[f.date].income += f.amount;
+                else dateMap[f.date].expense += f.amount;
+            });
+
+            var dates = Object.keys(dateMap).sort();
+            var incomeData = dates.map(function(d) { return dateMap[d].income; });
+            var expenseData = dates.map(function(d) { return dateMap[d].expense; });
+            var labels = dates.map(function(d) {
+                var parts = d.split('-');
+                return parts[2] + '/' + parts[1];
+            });
+
+            if (lineChart) lineChart.destroy();
+            lineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Receita',
+                            data: incomeData,
+                            borderColor: '#4CAF50',
+                            backgroundColor: 'rgba(76,175,80,0.1)',
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Despesas',
+                            data: expenseData,
+                            borderColor: '#F44336',
+                            backgroundColor: 'rgba(244,67,54,0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(v) { return 'R$ ' + v.toFixed(0); }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDonutChart(expenses) {
+            var ctx = document.getElementById('chartDespesasCategoria').getContext('2d');
+
+            var catTotals = {};
+            expenses.forEach(function(e) {
+                var cat = e.category || 'outros';
+                catTotals[cat] = (catTotals[cat] || 0) + e.amount;
+            });
+
+            var cats = Object.keys(catTotals);
+            var labels = cats.map(function(c) { return categoryLabels[c] || c; });
+            var data = cats.map(function(c) { return catTotals[c]; });
+            var colors = cats.map(function(c) { return categoryColors[c] || '#999'; });
+
+            if (donutChart) donutChart.destroy();
+            donutChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // ========== TABLE ==========
+        function renderTable(filtered) {
+            var tbody = document.getElementById('tabelaTransacoes');
+            var sorted = filtered.slice().sort(function(a, b) {
+                return b.date.localeCompare(a.date);
+            });
+
+            if (sorted.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhuma transacao encontrada no periodo.</td></tr>';
+                return;
+            }
+
+            var html = '';
+            sorted.forEach(function(item) {
+                var isIncome = item.type === 'income';
+                var typeLabel = isIncome ? 'Receita' : 'Despesa';
+                var typeColor = isIncome ? 'color:#4CAF50;font-weight:700;' : 'color:#F44336;font-weight:700;';
+                var amountPrefix = isIncome ? '+' : '-';
+                var catLabel = categoryLabels[item.category] || item.category;
+
+                html += '<tr>';
+                html += '<td>' + Utils.formatDate(item.date) + '</td>';
+                html += '<td><span style="' + typeColor + '">' + typeLabel + '</span></td>';
+                html += '<td>' + catLabel + '</td>';
+                html += '<td>' + (item.description || '-') + '</td>';
+                html += '<td style="' + typeColor + '">' + amountPrefix + ' ' + Utils.formatCurrency(item.amount) + '</td>';
+                html += '<td><button class="btn btn-sm btn-outline" onclick="deletarTransacao(\'' + item.id + '\')">🗑️</button></td>';
+                html += '</tr>';
+            });
+            tbody.innerHTML = html;
+        }
+
+        // ========== MODAL ==========
+        function openModal() {
+            document.getElementById('modalOverlay').style.display = 'flex';
+            document.getElementById('modalTitle').textContent = 'Nova Transacao';
+            document.getElementById('editId').value = '';
+            document.getElementById('formTransacao').reset();
+            document.getElementById('inputData').value = Utils.today();
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+
+        function salvarTransacao(e) {
+            e.preventDefault();
+            var tipo = document.getElementById('inputTipo').value;
+            var categoria = document.getElementById('inputCategoria').value;
+            var valor = parseFloat(document.getElementById('inputValor').value);
+            var descricao = document.getElementById('inputDescricao').value.trim();
+            var data = document.getElementById('inputData').value;
+
+            if (!valor || valor <= 0) {
+                Utils.showToast('Informe um valor valido.', 'error');
+                return;
+            }
+
+            var editId = document.getElementById('editId').value;
+
+            if (editId) {
+                DataStore.updateInCollection('finances', franchiseId, editId, {
+                    type: tipo,
+                    category: categoria,
+                    amount: valor,
+                    description: descricao,
+                    date: data
+                });
+                Utils.showToast('Transacao atualizada com sucesso!', 'success');
+            } else {
+                var newItem = {
+                    id: Utils.generateId(),
+                    type: tipo,
+                    category: categoria,
+                    amount: valor,
+                    description: descricao,
+                    date: data,
+                    createdAt: new Date().toISOString()
+                };
+                DataStore.addToCollection('finances', franchiseId, newItem);
+                Utils.showToast('Transacao adicionada com sucesso!', 'success');
+            }
+
+            closeModal();
+            loadData();
+        }
+
+        function deletarTransacao(id) {
+            if (!confirm('Tem certeza que deseja excluir esta transacao?')) return;
+            DataStore.removeFromCollection('finances', franchiseId, id);
+            Utils.showToast('Transacao removida.', 'success');
+            loadData();
+        }
+
+        // ========== EXPORT CSV ==========
+        function exportCSV() {
+            var finances = DataStore.getCollection('finances', franchiseId) || [];
+            var range = getPeriodRange();
+            var filtered = finances.filter(function(f) {
+                return f.date >= range.start && f.date <= range.end;
+            }).sort(function(a, b) {
+                return b.date.localeCompare(a.date);
+            });
+
+            if (filtered.length === 0) {
+                Utils.showToast('Nenhuma transacao para exportar.', 'error');
+                return;
+            }
+
+            var headers = ['Data', 'Tipo', 'Categoria', 'Descricao', 'Valor'];
+            var rows = filtered.map(function(item) {
+                return [
+                    item.date,
+                    item.type === 'income' ? 'Receita' : 'Despesa',
+                    categoryLabels[item.category] || item.category,
+                    item.description || '',
+                    item.amount.toFixed(2)
+                ];
+            });
+
+            Utils.downloadCSV('financeiro_' + range.start + '_' + range.end + '.csv', headers, rows);
+            Utils.showToast('CSV exportado com sucesso!', 'success');
+        }
+
+        // ========== MODAL OVERLAY CLICK ==========
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // ========== INIT ==========
+        (function init() {
+            try {
+                if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+                var session = Auth.getSession();
+                franchiseId = session.franchiseId;
+                var franchises = DataStore.getAllFranchises();
+                var franchise = franchises.find(function(f) { return f.id === franchiseId; });
+                document.getElementById('sidebarUserName').textContent = session.name;
+                document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia';
+
+                if (franchise && franchise.slug) {
+                    document.getElementById('linkSiteFranquia').href = '/loja/' + franchise.slug + '/';
+                }
+
+                loadData();
+            } catch (err) {
+                console.error('Erro ao inicializar financeiro:', err);
+            }
+        })();
+    </script>
+
+    <style>
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+    </style>
+</body>
+</html>
