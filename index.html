@@ -100,9 +100,10 @@
     <!-- Products Catalog Section - Dynamic (HERO SECTION) -->
     <section class="products-section" id="produtos">
         <div class="container">
+            <h2 style="text-align:center;font-family:'Baloo 2',cursive;color:#5A4570;margin-bottom:4px;font-size:1.4rem;">Escolha o creme do seu Milkypot 🍨</h2>
+            <p style="text-align:center;color:#9484A8;font-size:0.9rem;margin-bottom:16px;">Toque no sabor para montar do seu jeito!</p>
             <div class="category-tabs sticky-tabs" id="categoryTabs">
-                <button class="cat-tab active" data-category="todos" onclick="filterProducts('todos')">🌟 Todos</button>
-                <button class="cat-tab" data-category="ninho" onclick="filterProducts('ninho')">☁️ Ninho</button>
+                <button class="cat-tab active" data-category="ninho" onclick="filterProducts('ninho')">☁️ Ninho</button>
                 <button class="cat-tab" data-category="acai" onclick="filterProducts('acai')">🫐 Açaí</button>
                 <button class="cat-tab" data-category="fit" onclick="filterProducts('fit')">💪 Zero/Fit</button>
             </div>
@@ -1148,27 +1149,11 @@
             var grid = document.getElementById('productGrid');
             if (!grid) return;
 
-            var filtered = filter === 'todos' ? allProducts : allProducts.filter(function(p) { return p.category === filter; });
+            var filtered = allProducts.filter(function(p) { return p.category === filter; });
 
             var html = '';
-            var currentCategory = '';
 
             filtered.forEach(function(p, i) {
-                // Category header
-                if (p.category !== currentCategory && filter === 'todos') {
-                    currentCategory = p.category;
-                    var catNames = { ninho: '☁️ MilkyPot Ninho', acai: '🫐 MilkyPot Açaí', fit: '💪 MilkyPot Zero/Fit' };
-                    var catDescs = {
-                        ninho: 'Base cremosa de leite Ninho — Shake batido no mixer ou Sundae montado em camadas',
-                        acai: 'Açaí puro da Amazônia — Shake batido ou Bowl na tigela',
-                        fit: 'Zero açúcar com proteína — Shake ou Sundae sem culpa'
-                    };
-                    html += '<div class="catalog-cat-divider">' +
-                        '<h3 class="catalog-cat-divider-title">' + catNames[p.category] + '</h3>' +
-                        '<p class="catalog-cat-divider-desc">' + catDescs[p.category] + '</p>' +
-                        '</div>';
-                }
-
                 var badgeHtml = '';
                 if (p.isAdulto) badgeHtml = '<span class="card-badge badge-adulto">+18</span>';
                 else if (p.highlight) badgeHtml = '<span class="card-badge badge-popular">⭐</span>';
@@ -1479,7 +1464,7 @@
         }
 
         // Init
-        renderProducts('todos');
+        renderProducts('ninho');
         updateCartBadge();
         updateStickyCart();
     })();
