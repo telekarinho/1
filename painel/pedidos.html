@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/shared-panel.css">
     <style>
-        .kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .kanban { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
         .kanban-column {
             background: var(--mp-bg);
             border-radius: var(--mp-radius);
@@ -95,6 +95,9 @@
             display: flex;
             align-items: center;
             gap: 4px;
+        }
+        @media (max-width: 1400px) {
+            .kanban { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 1024px) {
             .kanban { grid-template-columns: 1fr 1fr; }
@@ -196,6 +199,12 @@
                         </div>
                         <div id="listNovo"></div>
                     </div>
+                    <div class="kanban-column" id="colConfirmado">
+                        <div class="kanban-header">
+                            <div class="kanban-title">✔️ Confirmado <span class="kanban-count" id="countConfirmado">0</span></div>
+                        </div>
+                        <div id="listConfirmado"></div>
+                    </div>
                     <div class="kanban-column" id="colPreparando">
                         <div class="kanban-header">
                             <div class="kanban-title">🟡 Preparando <span class="kanban-count" id="countPreparando">0</span></div>
@@ -207,6 +216,12 @@
                             <div class="kanban-title">🟢 Pronto <span class="kanban-count" id="countPronto">0</span></div>
                         </div>
                         <div id="listPronto"></div>
+                    </div>
+                    <div class="kanban-column" id="colEm_entrega">
+                        <div class="kanban-header">
+                            <div class="kanban-title">🛵 Em Entrega <span class="kanban-count" id="countEm_entrega">0</span></div>
+                        </div>
+                        <div id="listEm_entrega"></div>
                     </div>
                     <div class="kanban-column" id="colEntregue">
                         <div class="kanban-header">
@@ -271,7 +286,7 @@
 
         function renderKanban() {
             const orders = getFilteredOrders();
-            const statuses = ['novo', 'preparando', 'pronto', 'entregue'];
+            const statuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'entregue'];
 
             statuses.forEach(status => {
                 const statusOrders = orders
@@ -287,8 +302,8 @@
                         `<span class="item-name">${Utils.escapeHtml(i.sabor || i.name || '?')}</span> (${Utils.escapeHtml(i.tamanho || '')} ${Utils.escapeHtml(i.formato || '')})`
                     ).join('<br>') : '-';
 
-                    const nextStatus = { novo: 'preparando', preparando: 'pronto', pronto: 'entregue' };
-                    const nextLabel = { novo: '▶️ Preparar', preparando: '✅ Pronto', pronto: '📦 Entregar' };
+                    const nextStatus = { novo: 'confirmado', confirmado: 'preparando', preparando: 'pronto', pronto: 'em_entrega', em_entrega: 'entregue' };
+                    const nextLabel = { novo: '✔️ Confirmar', confirmado: '▶️ Preparar', preparando: '✅ Pronto', pronto: '🛵 Enviar', em_entrega: '📦 Entregue' };
 
                     return `
                         <div class="order-card" onclick="showOrderDetail('${o.id}')">
@@ -314,9 +329,9 @@
             });
 
             // KPIs
-            document.getElementById('kpiNew').textContent = orders.filter(o => o.status === 'novo').length;
+            document.getElementById('kpiNew').textContent = orders.filter(o => o.status === 'novo' || o.status === 'confirmado').length;
             document.getElementById('kpiPreparing').textContent = orders.filter(o => o.status === 'preparando').length;
-            document.getElementById('kpiReady').textContent = orders.filter(o => o.status === 'pronto').length;
+            document.getElementById('kpiReady').textContent = orders.filter(o => o.status === 'pronto' || o.status === 'em_entrega').length;
             document.getElementById('kpiRevenue').textContent = Utils.formatCurrency(
                 orders.filter(o => o.status === 'entregue').reduce((s, o) => s + o.total, 0)
             );
@@ -326,9 +341,19 @@
             const orders = DataStore.getCollection('orders', franchiseId);
             const idx = orders.findIndex(o => o.id === orderId);
             if (idx === -1) return;
+            const oldStatus = orders[idx].status;
             orders[idx].status = newStatus;
             orders[idx].updatedAt = new Date().toISOString();
+            if (newStatus === 'cancelado') {
+                orders[idx].cancelledAt = new Date().toISOString();
+            }
             DataStore.set('orders_' + franchiseId, orders);
+            AuditLog.logOrder(
+                newStatus === 'cancelado' ? AuditLog.EVENTS.ORDER_CANCELLED : AuditLog.EVENTS.ORDER_STATUS_CHANGED,
+                orderId,
+                { from: oldStatus, to: newStatus, total: orders[idx].total },
+                franchiseId
+            );
             renderKanban();
             Utils.showToast(`Pedido #${orderId.slice(-6)} → ${newStatus.toUpperCase()}`);
         }
@@ -368,8 +393,8 @@
                 </div>
             `;
 
-            const nextStatus = { novo: 'preparando', preparando: 'pronto', pronto: 'entregue' };
-            const nextLabel = { novo: '▶️ Iniciar Preparo', preparando: '✅ Marcar Pronto', pronto: '📦 Marcar Entregue' };
+            const nextStatus = { novo: 'confirmado', confirmado: 'preparando', preparando: 'pronto', pronto: 'em_entrega', em_entrega: 'entregue' };
+            const nextLabel = { novo: '✔️ Confirmar', confirmado: '▶️ Preparar', preparando: '✅ Pronto', pronto: '🛵 Enviar', em_entrega: '📦 Entregue' };
 
             document.getElementById('orderModalFooter').innerHTML = o.status !== 'entregue' && o.status !== 'cancelado'
                 ? `<button class="btn btn-danger btn-sm" onclick="moveOrder('${o.id}','cancelado');document.getElementById('orderModal').classList.remove('active')">Cancelar</button>
