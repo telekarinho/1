@@ -187,7 +187,7 @@ const DeliveryTracker = {
                 : null;
 
             container.innerHTML = `
-                <div style="background:linear-gradient(135deg,#E91E63,#FF5722);border-radius:12px;padding:20px;color:white">
+                <div style="background:linear-gradient(135deg,#42A5F5,#FF5722);border-radius:12px;padding:20px;color:white">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
                         <div style="font-size:32px">🛵</div>
                         <div>
@@ -256,7 +256,7 @@ const DeliveryTracker = {
                             width:32px;height:32px;border-radius:50%;
                             display:flex;align-items:center;justify-content:center;
                             font-size:16px;flex-shrink:0;
-                            background:${isDone ? '#E91E63' : '#eee'};
+                            background:${isDone ? '#42A5F5' : '#eee'};
                             color:${isDone ? 'white' : '#999'};
                             ${isCurrent ? 'box-shadow:0 0 0 4px rgba(233,30,99,0.2);' : ''}
                         ">${s.icon}</div>
@@ -264,13 +264,13 @@ const DeliveryTracker = {
                         <div style="
                             position:absolute;left:15px;top:32px;
                             width:2px;height:20px;
-                            background:${isDone && i < currentIdx ? '#E91E63' : '#eee'};
+                            background:${isDone && i < currentIdx ? '#42A5F5' : '#eee'};
                         "></div>` : ''}
                         <div>
                             <div style="font-weight:${isCurrent ? '700' : '500'};color:${isDone ? '#333' : '#999'};font-size:14px">
                                 ${s.label}
                             </div>
-                            ${isCurrent ? '<div style="font-size:11px;color:#E91E63;margin-top:2px">Status atual</div>' : ''}
+                            ${isCurrent ? '<div style="font-size:11px;color:#42A5F5;margin-top:2px">Status atual</div>' : ''}
                         </div>
                     </div>`;
         }).join('')}

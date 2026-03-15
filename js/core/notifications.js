@@ -42,7 +42,7 @@ const Notifications = {
                 position: absolute;
                 top: 2px;
                 right: 2px;
-                background: #E91E63;
+                background: #42A5F5;
                 color: #fff;
                 font-size: 0.65rem;
                 font-weight: 800;

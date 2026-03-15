@@ -112,11 +112,11 @@ function updateCartUI() {
 
 function getCategoryBg(category) {
     const bgs = {
-        potinhos: 'linear-gradient(135deg, #FFE0EE, #F0DBFF)',
+        potinhos: 'linear-gradient(135deg, #D6ECFF, #BBDEFB)',
         milkshakes: 'linear-gradient(135deg, #F0DBFF, #DBF0FF)',
         acai: 'linear-gradient(135deg, #E0D0F8, #DBF0FF)',
         sorvetes: 'linear-gradient(135deg, #DBF0FF, #D0FFE8)',
-        especiais: 'linear-gradient(135deg, #FFE5A5, #FFE0EE)',
+        especiais: 'linear-gradient(135deg, #FFE5A5, #D6ECFF)',
         combos: 'linear-gradient(135deg, #D0FFE8, #FFE5A5)'
     };
     return bgs[category] || bgs.potinhos;

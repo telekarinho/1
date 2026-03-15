@@ -24,8 +24,8 @@ const CARDAPIO_CONFIG = {
             name: 'Milkypot Ninho',
             emoji: '☁️',
             desc: 'Base cremosa de leite Ninho. A mais amada!',
-            color: '#F8B4D9',
-            gradient: 'linear-gradient(135deg, #FFE0EE 0%, #F0DBFF 100%)',
+            color: '#90CAF9',
+            gradient: 'linear-gradient(135deg, #D6ECFF 0%, #BBDEFB 100%)',
             available: true
         },
         {

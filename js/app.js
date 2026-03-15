@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initParticles() {
     const container = document.getElementById('particles');
     if (!container) return;
-    const colors = ['#F8B4D9', '#D4A5FF', '#B8D8F8', '#C8F0DC', '#FFF0C8', '#F0A0C8', '#E0C0FF'];
+    const colors = ['#90CAF9', '#D4A5FF', '#B8D8F8', '#C8F0DC', '#FFF0C8', '#F0A0C8', '#E0C0FF'];
     const shapes = ['50%', '50%', '50%', 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'];
     for (let i = 0; i < 30; i++) {
         const particle = document.createElement('div');

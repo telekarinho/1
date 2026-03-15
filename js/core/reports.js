@@ -254,14 +254,14 @@ const Reports = {
             <title>Relatório MilkyPot</title>
             <style>
                 body { font-family: 'Nunito', Arial, sans-serif; padding: 40px; color: #333; }
-                h1 { color: #E91E63; border-bottom: 3px solid #E91E63; padding-bottom: 10px; }
+                h1 { color: #42A5F5; border-bottom: 3px solid #42A5F5; padding-bottom: 10px; }
                 h2 { color: #444; margin-top: 24px; }
                 table { width: 100%; border-collapse: collapse; margin: 16px 0; }
                 th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #eee; }
                 th { background: #f5f5f5; font-weight: 700; }
                 .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 16px 0; }
                 .kpi { background: #f8f8f8; padding: 16px; border-radius: 8px; text-align: center; }
-                .kpi-value { font-size: 24px; font-weight: 800; color: #E91E63; }
+                .kpi-value { font-size: 24px; font-weight: 800; color: #42A5F5; }
                 .kpi-label { font-size: 12px; color: #666; margin-top: 4px; }
                 .footer { margin-top: 40px; font-size: 11px; color: #999; text-align: center; }
                 @media print { body { padding: 20px; } }
