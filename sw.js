@@ -1,16 +1,23 @@
-const CACHE_VERSION = 'mp-v1';
-const CACHE_NAME = 'milkypot-v1';
+const CACHE_VERSION = 'mp-v2';
+const CACHE_NAME = 'milkypot-v2';
 
 const PRECACHE_URLS = [
     '/',
+    '/index.html',
     '/login.html',
+    '/cardapio.html',
+    '/css/style.css',
+    '/css/animations.css',
+    '/css/responsive.css',
+    '/css/mobile-app.css',
     '/css/shared-panel.css',
     '/js/core/constants.js',
     '/js/core/utils.js',
     '/js/core/datastore.js',
     '/js/core/firebase-config.js',
     '/js/core/auth.js',
-    '/js/core/audit.js',
+    '/js/cardapio.js',
+    '/js/cardapio-data.js',
     '/images/logo-milkypot.png',
     '/manifest.json'
 ];
@@ -193,3 +200,40 @@ async function replayOfflineQueue() {
         console.error('Failed to replay offline queue:', e);
     }
 }
+
+// --- Push Notifications ---
+self.addEventListener('push', event => {
+    let data = { title: 'MilkyPot', body: 'Novidade pra você!', icon: '/images/logo-milkypot.png', url: '/' };
+    try {
+        if (event.data) data = Object.assign(data, event.data.json());
+    } catch (e) {}
+
+    event.waitUntil(
+        self.registration.showNotification(data.title, {
+            body: data.body,
+            icon: data.icon || '/images/logo-milkypot.png',
+            badge: '/images/logo-milkypot.png',
+            data: { url: data.url || '/' },
+            vibrate: [200, 100, 200],
+            actions: [
+                { action: 'open', title: 'Abrir' },
+                { action: 'close', title: 'Fechar' }
+            ]
+        })
+    );
+});
+
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    if (event.action === 'close') return;
+
+    const url = event.notification.data?.url || '/';
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+            for (const client of windowClients) {
+                if (client.url.includes(url) && 'focus' in client) return client.focus();
+            }
+            return clients.openWindow(url);
+        })
+    );
+});

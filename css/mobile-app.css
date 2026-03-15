@@ -1,0 +1,248 @@
+/* ============================================
+   MilkyPot - Mobile App CSS
+   PWA + Safe Area + Install Banner + Touch
+   ============================================ */
+
+/* Safe Area Variables */
+:root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* PWA Standalone Mode */
+@media all and (display-mode: standalone) {
+    body {
+        padding-top: var(--safe-top);
+        padding-bottom: var(--safe-bottom);
+    }
+
+    .navbar {
+        top: var(--safe-top);
+    }
+
+    /* Hide scrollbar in app mode */
+    ::-webkit-scrollbar { display: none; }
+    body { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* ============================================
+   Install Banner
+   ============================================ */
+.install-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 99999;
+    background: linear-gradient(135deg, #E91E63 0%, #AD1457 100%);
+    color: white;
+    padding: 16px 20px;
+    padding-bottom: calc(16px + var(--safe-bottom));
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+    transform: translateY(100%);
+    animation: slideUpBanner 0.5s ease forwards;
+    animation-delay: 0.5s;
+}
+
+@keyframes slideUpBanner {
+    to { transform: translateY(0); }
+}
+
+.install-banner-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.install-banner-text {
+    flex: 1;
+}
+
+.install-banner-text h4 {
+    margin: 0;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.install-banner-text p {
+    margin: 2px 0 0;
+    font-size: 0.8rem;
+    opacity: 0.9;
+}
+
+.install-banner-btn {
+    background: white;
+    color: #E91E63;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    white-space: nowrap;
+    min-height: 44px;
+    transition: transform 0.2s;
+}
+
+.install-banner-btn:active {
+    transform: scale(0.95);
+}
+
+.install-banner-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 4px;
+    opacity: 0.7;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* iOS Install Instructions */
+.install-ios-instructions {
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.install-ios-instructions strong {
+    display: block;
+    margin-bottom: 4px;
+}
+
+/* ============================================
+   Touch Optimizations
+   ============================================ */
+a, button, input, select, textarea, [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button, a, [role="button"] {
+    min-height: 44px;
+}
+
+/* Prevent iOS zoom on input focus */
+@media screen and (max-width: 768px) {
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* Prevent pull-to-refresh in standalone */
+@media all and (display-mode: standalone) {
+    body {
+        overscroll-behavior: contain;
+    }
+}
+
+/* ============================================
+   Admin Panels Mobile
+   ============================================ */
+@media (max-width: 992px) {
+    .admin-sidebar {
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 280px;
+        height: 100vh;
+        z-index: 10000;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+    }
+
+    .admin-sidebar.open {
+        left: 0;
+    }
+
+    .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+    }
+
+    .sidebar-backdrop.active {
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
+    .stat-cards, .kpi-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* ============================================
+   Notification Permission Toast
+   ============================================ */
+.notif-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99998;
+    background: white;
+    border-radius: 16px;
+    padding: 16px 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 360px;
+    transform: translateX(120%);
+    animation: slideInNotifToast 0.4s ease forwards;
+}
+
+@keyframes slideInNotifToast {
+    to { transform: translateX(0); }
+}
+
+.notif-toast-icon {
+    font-size: 1.5rem;
+}
+
+.notif-toast-text {
+    flex: 1;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.notif-toast-btn {
+    background: #E91E63;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 44px;
+    white-space: nowrap;
+}
+
+.notif-toast-close {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px;
+}

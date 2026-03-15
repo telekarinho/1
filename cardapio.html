@@ -9,6 +9,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/cardapio.css">
+    <link rel="stylesheet" href="css/mobile-app.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#E91E63">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MilkyPot">
+    <link rel="apple-touch-icon" href="images/logo-milkypot.png">
 </head>
 <body class="cp-page">
 
@@ -164,5 +171,93 @@
 
     <script src="js/cardapio-data.js"></script>
     <script src="js/cardapio.js"></script>
+
+<!-- Install Banner -->
+<div id="installBanner" class="install-banner" style="display:none;">
+    <span class="install-banner-icon">🍨</span>
+    <div class="install-banner-text" id="installBannerText">
+        <h4>Instale o MilkyPot!</h4>
+        <p>Tenha o cardápio na palma da mão. Rápido e sem ocupar espaço!</p>
+    </div>
+    <button class="install-banner-btn" id="installBannerBtn" onclick="installApp()">Instalar</button>
+    <button class="install-banner-close" onclick="dismissInstallBanner()">&times;</button>
+</div>
+
+<script>
+(function() {
+    // --- Service Worker Registration ---
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(function(reg) {
+                console.log('SW registered:', reg.scope);
+                window.addEventListener('online', function() {
+                    reg.active && reg.active.postMessage({ type: 'REPLAY_OFFLINE_QUEUE' });
+                });
+            })
+            .catch(function(err) { console.warn('SW failed:', err); });
+    }
+
+    // --- Install Banner ---
+    var deferredPrompt = null;
+    var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+                (/Macintosh/.test(navigator.userAgent) && 'ontouchend' in document);
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                       window.navigator.standalone === true;
+
+    if (isStandalone) return;
+
+    var dismissed = localStorage.getItem('mp_install_dismissed');
+    if (dismissed && (Date.now() - parseInt(dismissed)) < 7 * 24 * 60 * 60 * 1000) return;
+
+    window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        showInstallBanner('android');
+    });
+
+    if (isIOS) {
+        setTimeout(function() { showInstallBanner('ios'); }, 5000);
+    }
+
+    window.installApp = function() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(function(choice) {
+                if (choice.outcome === 'accepted') hideInstallBanner();
+                deferredPrompt = null;
+            });
+        }
+    };
+
+    window.dismissInstallBanner = function() {
+        localStorage.setItem('mp_install_dismissed', Date.now().toString());
+        hideInstallBanner();
+    };
+
+    function showInstallBanner(platform) {
+        var banner = document.getElementById('installBanner');
+        if (!banner) return;
+        if (platform === 'ios') {
+            document.getElementById('installBannerText').innerHTML =
+                '<h4>Instale o MilkyPot!</h4>' +
+                '<p class="install-ios-instructions">' +
+                'Toque em <strong>Compartilhar</strong> e depois <strong>"Adicionar à Tela de Início"</strong></p>';
+            document.getElementById('installBannerBtn').style.display = 'none';
+        }
+        banner.style.display = 'flex';
+        setTimeout(function() {
+            if (banner.style.display !== 'none') hideInstallBanner();
+        }, 20000);
+    }
+
+    function hideInstallBanner() {
+        var banner = document.getElementById('installBanner');
+        if (banner) {
+            banner.style.transform = 'translateY(100%)';
+            setTimeout(function() { banner.style.display = 'none'; }, 500);
+        }
+    }
+})();
+</script>
 </body>
 </html>

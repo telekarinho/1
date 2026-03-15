@@ -11,6 +11,13 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/mobile-app.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#E91E63">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MilkyPot">
+    <link rel="apple-touch-icon" href="images/logo-milkypot.png">
 </head>
 <body>
     <!-- Floating Particles Background -->
@@ -1686,5 +1693,174 @@
         }
     }
     </script>
+
+<!-- Install Banner -->
+<div id="installBanner" class="install-banner" style="display:none;">
+    <span class="install-banner-icon">🍨</span>
+    <div class="install-banner-text" id="installBannerText">
+        <h4>Instale o MilkyPot!</h4>
+        <p>Tenha o cardápio na palma da mão. Rápido e sem ocupar espaço!</p>
+    </div>
+    <button class="install-banner-btn" id="installBannerBtn" onclick="installApp()">Instalar</button>
+    <button class="install-banner-close" onclick="dismissInstallBanner()">&times;</button>
+</div>
+
+<script>
+/* ============================================
+   PWA: Service Worker + Install Banner + Push
+   ============================================ */
+(function() {
+    // --- Service Worker Registration ---
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(function(reg) {
+                console.log('SW registered:', reg.scope);
+                // Replay offline queue when back online
+                window.addEventListener('online', function() {
+                    reg.active && reg.active.postMessage({ type: 'REPLAY_OFFLINE_QUEUE' });
+                });
+            })
+            .catch(function(err) { console.warn('SW failed:', err); });
+    }
+
+    // --- Install Banner ---
+    var deferredPrompt = null;
+    var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+                (/Macintosh/.test(navigator.userAgent) && 'ontouchend' in document);
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                       window.navigator.standalone === true;
+
+    // Don't show if already installed
+    if (isStandalone) return;
+
+    // Check dismiss cooldown (7 days)
+    var dismissed = localStorage.getItem('mp_install_dismissed');
+    if (dismissed && (Date.now() - parseInt(dismissed)) < 7 * 24 * 60 * 60 * 1000) return;
+
+    // Android: capture beforeinstallprompt
+    window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        showInstallBanner('android');
+    });
+
+    // iOS: show after 5 seconds
+    if (isIOS) {
+        setTimeout(function() { showInstallBanner('ios'); }, 5000);
+    }
+
+    window.installApp = function() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(function(choice) {
+                if (choice.outcome === 'accepted') {
+                    hideInstallBanner();
+                }
+                deferredPrompt = null;
+            });
+        }
+    };
+
+    window.dismissInstallBanner = function() {
+        localStorage.setItem('mp_install_dismissed', Date.now().toString());
+        hideInstallBanner();
+    };
+
+    function showInstallBanner(platform) {
+        var banner = document.getElementById('installBanner');
+        if (!banner) return;
+
+        if (platform === 'ios') {
+            document.getElementById('installBannerText').innerHTML =
+                '<h4>Instale o MilkyPot!</h4>' +
+                '<p class="install-ios-instructions">' +
+                'Toque em <strong>Compartilhar</strong> e depois <strong>"Adicionar à Tela de Início"</strong></p>';
+            document.getElementById('installBannerBtn').style.display = 'none';
+        }
+
+        banner.style.display = 'flex';
+
+        // Auto-close after 20 seconds
+        setTimeout(function() {
+            if (banner.style.display !== 'none') {
+                hideInstallBanner();
+            }
+        }, 20000);
+    }
+
+    function hideInstallBanner() {
+        var banner = document.getElementById('installBanner');
+        if (banner) {
+            banner.style.transform = 'translateY(100%)';
+            setTimeout(function() { banner.style.display = 'none'; }, 500);
+        }
+    }
+
+    // --- Push Notification Permission (ask after 10 seconds) ---
+    if ('Notification' in window && Notification.permission === 'default') {
+        setTimeout(function() {
+            askNotificationPermission();
+        }, 10000);
+    }
+
+    function askNotificationPermission() {
+        // Don't ask if already decided
+        if (Notification.permission !== 'default') return;
+
+        // Show a friendly toast first
+        var toast = document.createElement('div');
+        toast.className = 'notif-toast';
+        toast.innerHTML =
+            '<span class="notif-toast-icon">🔔</span>' +
+            '<span class="notif-toast-text">Quer receber promoções e novidades da MilkyPot?</span>' +
+            '<button class="notif-toast-btn" id="notifAcceptBtn">Sim!</button>' +
+            '<button class="notif-toast-close" id="notifCloseBtn">&times;</button>';
+        document.body.appendChild(toast);
+
+        document.getElementById('notifAcceptBtn').onclick = function() {
+            toast.remove();
+            Notification.requestPermission().then(function(permission) {
+                if (permission === 'granted') {
+                    subscribePush();
+                }
+            });
+        };
+
+        document.getElementById('notifCloseBtn').onclick = function() {
+            toast.style.transform = 'translateX(120%)';
+            setTimeout(function() { toast.remove(); }, 400);
+        };
+
+        // Auto-close after 15 seconds
+        setTimeout(function() {
+            if (toast.parentNode) {
+                toast.style.transform = 'translateX(120%)';
+                setTimeout(function() { if (toast.parentNode) toast.remove(); }, 400);
+            }
+        }, 15000);
+    }
+
+    function subscribePush() {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+        navigator.serviceWorker.ready.then(function(reg) {
+            return reg.pushManager.getSubscription().then(function(sub) {
+                if (sub) return sub;
+                // Basic subscribe without VAPID (can be upgraded later)
+                return reg.pushManager.subscribe({
+                    userVisibleOnly: true
+                }).catch(function(err) {
+                    console.warn('Push subscribe failed:', err);
+                });
+            });
+        }).then(function(subscription) {
+            if (!subscription) return;
+            console.log('Push subscription:', subscription.endpoint);
+            // Save subscription to Firestore via API when backend is ready
+            // For now, just log it
+        });
+    }
+})();
+</script>
 </body>
 </html>
