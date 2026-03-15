@@ -105,7 +105,7 @@ const CARDAPIO_CONFIG = {
             emoji: '⭐',
             compatibleBases: ['ninho'],
             items: [
-                { id: 'morango',           name: 'Morango',           emoji: '🍓', desc: 'Calda e pedaços de morango.', highlight: true, available: true },
+                { id: 'morango',           name: 'Morango',           emoji: '🍓', desc: 'Calda artesanal de morango.', highlight: true, available: true },
                 { id: 'ninho',             name: 'Ninho',             emoji: '☁️', desc: 'Puro creme de leite Ninho.', highlight: true, available: true },
                 { id: 'ninho-morango',     name: 'Ninho com Morango', emoji: '🍓', desc: 'Creme de Ninho + calda de morango.', highlight: true, available: true },
                 { id: 'nutella',           name: 'Nutella',           emoji: '🍫', desc: 'Nutella cremosa generosa.', highlight: true, available: true },
