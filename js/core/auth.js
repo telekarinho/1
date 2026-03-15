@@ -27,6 +27,7 @@ const Auth = {
 
             const session = this._buildSession(user, profile);
             this._saveSession(session);
+            if (typeof AuditLog !== 'undefined') AuditLog.logAuth(AuditLog.EVENTS.LOGIN, { email: user.email });
             return { success: true, session };
         } catch (error) {
             console.error('Auth.login error:', error);
@@ -69,6 +70,7 @@ const Auth = {
             session.googleAuth = true;
             session.avatar = user.photoURL;
             this._saveSession(session);
+            if (typeof AuditLog !== 'undefined') AuditLog.logAuth(AuditLog.EVENTS.LOGIN_GOOGLE, { email: user.email });
             return { success: true, session };
         } catch (error) {
             console.error('Auth.loginWithGoogle error:', error);
@@ -119,6 +121,8 @@ const Auth = {
                 firebaseUid: newUser.uid
             });
 
+            if (typeof AuditLog !== 'undefined') AuditLog.logAuth(AuditLog.EVENTS.USER_CREATED, { email: userData.email, role: userData.role, franchiseId: userData.franchiseId });
+
             return {
                 success: true,
                 user: profile,
@@ -135,6 +139,7 @@ const Auth = {
     // Logout
     // ============================================
     async logout() {
+        if (typeof AuditLog !== 'undefined') AuditLog.logAuth(AuditLog.EVENTS.LOGOUT, {});
         try {
             await firebaseAuth.signOut();
         } catch (e) {

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot Admin - Audit Log</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <style>
+        .audit-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-end;
+            padding: 16px 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .audit-filters .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .audit-filters label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .audit-filters select,
+        .audit-filters input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            background: #fff;
+        }
+        .audit-filters input[type="date"] {
+            font-family: inherit;
+        }
+        .event-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .event-badge.cat-auth { background: #f3e8ff; color: #7c3aed; }
+        .event-badge.cat-order { background: #dbeafe; color: #2563eb; }
+        .event-badge.cat-finance { background: #dcfce7; color: #16a34a; }
+        .event-badge.cat-franchise { background: #ffedd5; color: #ea580c; }
+        .event-badge.cat-inventory { background: #e0f2fe; color: #0284c7; }
+        .event-badge.cat-staff { background: #fce7f3; color: #db2777; }
+        .event-badge.cat-product { background: #fef3c7; color: #d97706; }
+        .event-badge.cat-settings { background: #f1f5f9; color: #475569; }
+        .event-badge.cat-system { background: #f1f5f9; color: #475569; }
+        .timestamp-cell {
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 0.82rem;
+            color: #475569;
+            white-space: nowrap;
+        }
+        .event-code {
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 0.78rem;
+        }
+        .details-cell {
+            font-size: 0.82rem;
+            color: #555;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .details-cell span {
+            display: inline-block;
+            background: #f1f5f9;
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin: 1px 2px;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 0.78rem;
+        }
+        .pagination-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        .pagination-bar .page-buttons {
+            display: flex;
+            gap: 6px;
+        }
+        .pagination-bar button {
+            padding: 6px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fff;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+        }
+        .pagination-bar button:hover:not(:disabled) {
+            background: #f1f5f9;
+        }
+        .pagination-bar button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .pagination-bar button.active {
+            background: #7c3aed;
+            color: #fff;
+            border-color: #7c3aed;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo.png" alt="MilkyPot">
+                <h2>MilkyPot<small>Central Admin</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">&#x1F4CA;</span> Dashboard</a>
+                <a href="franchises.html" class="sidebar-link"><span class="icon">&#x1F3EA;</span> Franquias</a>
+                <a href="finances.html" class="sidebar-link"><span class="icon">&#x1F4B0;</span> Financeiro</a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="orders.html" class="sidebar-link"><span class="icon">&#x1F4CB;</span> Pedidos</a>
+                <a href="products.html" class="sidebar-link"><span class="icon">&#x1F368;</span> Cardapio</a>
+                <a href="users.html" class="sidebar-link"><span class="icon">&#x1F465;</span> Usuarios</a>
+                <div class="sidebar-nav-group">Marketing</div>
+                <a href="campaigns.html" class="sidebar-link"><span class="icon">&#x1F4E2;</span> Campanhas</a>
+                <a href="seo.html" class="sidebar-link"><span class="icon">&#x1F50D;</span> SEO & Delivery</a>
+                <div class="sidebar-nav-group">Sistema</div>
+                <a href="settings.html" class="sidebar-link"><span class="icon">&#x2699;&#xFE0F;</span> Configuracoes</a>
+                <a href="audit.html" class="sidebar-link active"><span class="icon">&#x1F4DC;</span> Audit Log</a>
+                <a href="#" class="sidebar-link" onclick="DataStore.downloadBackup()"><span class="icon">&#x1F4BE;</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">&#x1F451;</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Admin</strong>
+                        <small>Super Admin</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="panel-main">
+            <header class="panel-header">
+                <button class="btn btn-sm btn-outline" onclick="toggleSidebar()" style="font-size:1.3rem;">&#x2630;</button>
+                <div>
+                    <h1>&#x1F4DC; Registro de Auditoria</h1>
+                    <small style="color:#64748b;">Historico de acoes e eventos do sistema</small>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <!-- Filter Bar -->
+                <div class="audit-filters">
+                    <div class="filter-group">
+                        <label>Tipo de Evento</label>
+                        <select id="filterEvent">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Usuario</label>
+                        <input type="text" id="filterUser" placeholder="Nome ou email...">
+                    </div>
+                    <div class="filter-group">
+                        <label>Franquia</label>
+                        <select id="filterFranchise">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Data Inicio</label>
+                        <input type="date" id="filterDateStart">
+                    </div>
+                    <div class="filter-group">
+                        <label>Data Fim</label>
+                        <input type="date" id="filterDateEnd">
+                    </div>
+                    <div class="filter-group" style="flex-direction:row; gap:8px; align-self:flex-end;">
+                        <button class="btn btn-primary" onclick="applyFilters()">Filtrar</button>
+                        <button class="btn btn-outline" onclick="exportCSV()">Exportar CSV</button>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="kpi-card">
+                        <div class="kpi-icon">&#x1F4CA;</div>
+                        <div>
+                            <small>Total de Registros</small>
+                            <h3 id="kpiTotal">0</h3>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">&#x1F4C5;</div>
+                        <div>
+                            <small>Registros Hoje</small>
+                            <h3 id="kpiToday">0</h3>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">&#x1F551;</div>
+                        <div>
+                            <small>Ultimo Evento</small>
+                            <h3 id="kpiLast" style="font-size:0.95rem;">-</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Log Table -->
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3>Logs de Auditoria</h3>
+                    </div>
+                    <div class="panel-card-body" style="overflow-x:auto;">
+                        <table class="panel-table">
+                            <thead>
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>Evento</th>
+                                    <th>Usuario</th>
+                                    <th>Franquia</th>
+                                    <th>Detalhes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditTableBody">
+                                <tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">Carregando registros...</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination-bar" id="paginationBar">
+                            <span id="paginationInfo"></span>
+                            <div class="page-buttons" id="pageButtons"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+
+    <script>
+        if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+
+        var allLogs = [];
+        var filteredLogs = [];
+        var allFranchises = [];
+        var currentPage = 1;
+        var PAGE_SIZE = 50;
+
+        function toggleSidebar() {
+            var sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        // ============================================
+        // Init
+        // ============================================
+        function init() {
+            var userName = Auth.getUserName();
+            if (userName) {
+                document.getElementById('sidebarUserName').textContent = userName;
+            }
+            populateEventFilter();
+            loadFranchises();
+            loadLogs();
+        }
+
+        // ============================================
+        // Populate event type dropdown
+        // ============================================
+        function populateEventFilter() {
+            var select = document.getElementById('filterEvent');
+            var events = AuditLog.EVENTS;
+            var keys = Object.keys(events);
+            keys.forEach(function(key) {
+                var val = events[key];
+                var opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = AuditLog.eventLabel(val);
+                select.appendChild(opt);
+            });
+        }
+
+        // ============================================
+        // Load franchises for filter
+        // ============================================
+        function loadFranchises() {
+            allFranchises = DataStore.getAllFranchises() || [];
+            var select = document.getElementById('filterFranchise');
+            allFranchises.forEach(function(f) {
+                var opt = document.createElement('option');
+                opt.value = f.id;
+                opt.textContent = f.name;
+                select.appendChild(opt);
+            });
+        }
+
+        // ============================================
+        // Load audit logs
+        // ============================================
+        function loadLogs() {
+            // Instant display from localStorage
+            allLogs = AuditLog.getLocal(200);
+            filteredLogs = allLogs.slice();
+            currentPage = 1;
+            updateStats();
+            renderTable();
+
+            // Background: try Firestore and merge
+            try {
+                AuditLog.queryFirestore({}, 500).then(function(remoteLogs) {
+                    if (remoteLogs && remoteLogs.length > 0) {
+                        mergeLogs(remoteLogs);
+                        applyFilters();
+                    }
+                }).catch(function() {
+                    // Firestore unavailable, local data is already displayed
+                });
+            } catch (e) {
+                // queryFirestore not available or errored
+            }
+        }
+
+        function mergeLogs(remoteLogs) {
+            var existingIds = {};
+            allLogs.forEach(function(l) { existingIds[l.id] = true; });
+
+            remoteLogs.forEach(function(l) {
+                if (!existingIds[l.id]) {
+                    allLogs.push(l);
+                }
+            });
+
+            // Sort by timestamp descending
+            allLogs.sort(function(a, b) {
+                var tA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+                var tB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+                return tB - tA;
+            });
+        }
+
+        // ============================================
+        // Stats
+        // ============================================
+        function updateStats() {
+            document.getElementById('kpiTotal').textContent = filteredLogs.length;
+
+            var today = new Date().toISOString().slice(0, 10);
+            var todayCount = filteredLogs.filter(function(l) {
+                return l.timestamp && l.timestamp.slice(0, 10) === today;
+            }).length;
+            document.getElementById('kpiToday').textContent = todayCount;
+
+            if (filteredLogs.length > 0) {
+                var last = filteredLogs[0];
+                var label = AuditLog.eventLabel(last.event);
+                document.getElementById('kpiLast').textContent = label;
+            } else {
+                document.getElementById('kpiLast').textContent = '-';
+            }
+        }
+
+        // ============================================
+        // Filters
+        // ============================================
+        function applyFilters() {
+            var eventFilter = document.getElementById('filterEvent').value;
+            var userFilter = document.getElementById('filterUser').value.toLowerCase();
+            var franchiseFilter = document.getElementById('filterFranchise').value;
+            var dateStart = document.getElementById('filterDateStart').value;
+            var dateEnd = document.getElementById('filterDateEnd').value;
+
+            filteredLogs = allLogs.filter(function(l) {
+                if (eventFilter && l.event !== eventFilter) return false;
+
+                if (userFilter) {
+                    var name = (l.userName || '').toLowerCase();
+                    var email = (l.userEmail || '').toLowerCase();
+                    if (name.indexOf(userFilter) === -1 && email.indexOf(userFilter) === -1) return false;
+                }
+
+                if (franchiseFilter && l.franchiseId !== franchiseFilter) return false;
+
+                if (dateStart && l.timestamp) {
+                    var logDate = l.timestamp.slice(0, 10);
+                    if (logDate < dateStart) return false;
+                }
+                if (dateEnd && l.timestamp) {
+                    var logDate2 = l.timestamp.slice(0, 10);
+                    if (logDate2 > dateEnd) return false;
+                }
+
+                return true;
+            });
+
+            currentPage = 1;
+            updateStats();
+            renderTable();
+        }
+
+        // ============================================
+        // Helpers
+        // ============================================
+        function getEventCategory(event) {
+            if (!event) return 'system';
+            return event.split('.')[0];
+        }
+
+        function getFranchiseName(franchiseId) {
+            if (!franchiseId) return '-';
+            var franchise = allFranchises.find(function(f) { return f.id === franchiseId; });
+            return franchise ? franchise.name : franchiseId;
+        }
+
+        function formatTimestamp(ts) {
+            if (!ts) return '-';
+            try {
+                var d;
+                if (ts.seconds) {
+                    d = new Date(ts.seconds * 1000);
+                } else {
+                    d = new Date(ts);
+                }
+                var date = d.toLocaleDateString('pt-BR');
+                var time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                return date + ' ' + time;
+            } catch (e) {
+                return ts;
+            }
+        }
+
+        function formatDetails(details) {
+            if (!details || typeof details !== 'object') return '-';
+            var keys = Object.keys(details);
+            if (keys.length === 0) return '-';
+
+            var html = '';
+            keys.forEach(function(key) {
+                var val = details[key];
+                if (val === null || val === undefined) return;
+                if (typeof val === 'object') val = JSON.stringify(val);
+                html += '<span>' + Utils.escapeHtml(key) + ': ' + Utils.escapeHtml(String(val)) + '</span> ';
+            });
+            return html || '-';
+        }
+
+        // ============================================
+        // Render table with pagination
+        // ============================================
+        function renderTable() {
+            var tbody = document.getElementById('auditTableBody');
+            var totalPages = Math.max(1, Math.ceil(filteredLogs.length / PAGE_SIZE));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            var start = (currentPage - 1) * PAGE_SIZE;
+            var end = Math.min(start + PAGE_SIZE, filteredLogs.length);
+            var pageData = filteredLogs.slice(start, end);
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">Nenhum registro encontrado.</td></tr>';
+                document.getElementById('paginationInfo').textContent = '';
+                document.getElementById('pageButtons').innerHTML = '';
+                return;
+            }
+
+            var html = '';
+            pageData.forEach(function(log) {
+                var cat = getEventCategory(log.event);
+                var icon = AuditLog.eventIcon(log.event);
+                var label = AuditLog.eventLabel(log.event);
+
+                html += '<tr>';
+                html += '<td class="timestamp-cell">' + Utils.escapeHtml(formatTimestamp(log.timestamp)) + '</td>';
+                html += '<td><span class="event-badge cat-' + cat + '">' + icon + ' ' + Utils.escapeHtml(label) + '</span></td>';
+                html += '<td>' + Utils.escapeHtml(log.userName || '-') + (log.userEmail ? '<br><small style="color:#94a3b8;">' + Utils.escapeHtml(log.userEmail) + '</small>' : '') + '</td>';
+                html += '<td>' + Utils.escapeHtml(getFranchiseName(log.franchiseId)) + '</td>';
+                html += '<td class="details-cell">' + formatDetails(log.details) + '</td>';
+                html += '</tr>';
+            });
+
+            tbody.innerHTML = html;
+
+            // Pagination info
+            document.getElementById('paginationInfo').textContent = 'Mostrando ' + (start + 1) + '-' + end + ' de ' + filteredLogs.length + ' registros';
+
+            // Pagination buttons
+            var btnHtml = '';
+            btnHtml += '<button ' + (currentPage <= 1 ? 'disabled' : '') + ' onclick="goToPage(' + (currentPage - 1) + ')">Anterior</button>';
+
+            var maxButtons = 7;
+            var startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            var endPage = Math.min(totalPages, startPage + maxButtons - 1);
+            if (endPage - startPage < maxButtons - 1) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+
+            for (var p = startPage; p <= endPage; p++) {
+                btnHtml += '<button class="' + (p === currentPage ? 'active' : '') + '" onclick="goToPage(' + p + ')">' + p + '</button>';
+            }
+
+            btnHtml += '<button ' + (currentPage >= totalPages ? 'disabled' : '') + ' onclick="goToPage(' + (currentPage + 1) + ')">Proximo</button>';
+            document.getElementById('pageButtons').innerHTML = btnHtml;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderTable();
+            // Scroll to top of table
+            document.querySelector('.panel-card').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ============================================
+        // Export CSV
+        // ============================================
+        function exportCSV() {
+            if (filteredLogs.length === 0) {
+                alert('Nenhum registro para exportar.');
+                return;
+            }
+
+            var header = 'Data/Hora,Evento,Codigo Evento,Usuario,Email,Franquia,Detalhes\n';
+            var rows = filteredLogs.map(function(log) {
+                var ts = formatTimestamp(log.timestamp);
+                var label = AuditLog.eventLabel(log.event);
+                var detailsStr = '';
+                if (log.details && typeof log.details === 'object') {
+                    var keys = Object.keys(log.details);
+                    detailsStr = keys.map(function(k) {
+                        return k + '=' + (log.details[k] != null ? String(log.details[k]) : '');
+                    }).join('; ');
+                }
+                return [
+                    '"' + ts + '"',
+                    '"' + label + '"',
+                    '"' + (log.event || '') + '"',
+                    '"' + (log.userName || '') + '"',
+                    '"' + (log.userEmail || '') + '"',
+                    '"' + getFranchiseName(log.franchiseId) + '"',
+                    '"' + detailsStr.replace(/"/g, '""') + '"'
+                ].join(',');
+            });
+
+            var csv = header + rows.join('\n');
+            var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'audit_log_' + new Date().toISOString().slice(0, 10) + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        init();
+    </script>
+</body>
+</html>
