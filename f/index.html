@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nossas Unidades | MilkyPot - O Potinho Mais Feliz do Mundo</title>
+    <meta name="description" content="Encontre a MilkyPot mais perto de voce! Veja todas as nossas unidades, horarios, cardapio e faca seu pedido online.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <style>
+        /* ---- Page Layout ---- */
+        .fu-page {
+            min-height: 100vh;
+            background: var(--mp-bg);
+        }
+
+        /* ---- Header ---- */
+        .fu-header {
+            background: linear-gradient(135deg, var(--mp-dark) 0%, var(--mp-dark2) 60%, #5B3A8C 100%);
+            color: #fff;
+            padding: 0;
+        }
+        .fu-header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 24px 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .fu-header-top {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .fu-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #fff;
+        }
+        .fu-logo img {
+            height: 48px;
+            border-radius: 10px;
+        }
+        .fu-logo span {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+        .fu-home-link {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .fu-home-link:hover {
+            color: #fff;
+            text-decoration: none;
+        }
+        .fu-header h1 {
+            font-family: 'Baloo 2', cursive;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-top: 16px;
+            text-align: center;
+        }
+        .fu-header p {
+            color: rgba(255,255,255,0.75);
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        /* ---- Search ---- */
+        .fu-search-wrap {
+            max-width: 520px;
+            margin: -24px auto 0;
+            padding: 0 24px;
+            position: relative;
+            z-index: 10;
+        }
+        .fu-search {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            border: 2px solid var(--mp-border);
+            border-radius: 50px;
+            background: var(--mp-card);
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            color: var(--mp-text);
+            outline: none;
+            box-shadow: var(--mp-shadow-lg);
+            transition: border-color 0.2s;
+        }
+        .fu-search:focus {
+            border-color: var(--mp-pink);
+        }
+        .fu-search-icon {
+            position: absolute;
+            left: 42px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            color: var(--mp-text-light);
+            pointer-events: none;
+        }
+
+        /* ---- Grid ---- */
+        .fu-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px 60px;
+        }
+        .fu-count {
+            font-size: 0.9rem;
+            color: var(--mp-text-light);
+            margin-bottom: 20px;
+        }
+        .fu-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        /* ---- Franchise Card ---- */
+        .fu-card {
+            background: var(--mp-card);
+            border-radius: var(--mp-radius);
+            box-shadow: var(--mp-shadow);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .fu-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--mp-shadow-lg);
+        }
+        .fu-card-header {
+            padding: 20px 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .fu-card-name {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--mp-dark);
+            line-height: 1.2;
+        }
+        .fu-card-city {
+            font-size: 0.85rem;
+            color: var(--mp-text-light);
+            margin-top: 2px;
+        }
+        .fu-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .fu-badge-express {
+            background: var(--mp-yellow);
+            color: #8B6914;
+        }
+        .fu-badge-store {
+            background: var(--mp-pink);
+            color: #7B2D5A;
+        }
+        .fu-badge-mega {
+            background: var(--mp-purple);
+            color: #4A2D7A;
+        }
+
+        .fu-card-body {
+            padding: 16px 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .fu-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 0.85rem;
+            color: var(--mp-text-light);
+            flex-wrap: wrap;
+        }
+        .fu-card-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .fu-stars {
+            color: #F5A623;
+            letter-spacing: 1px;
+        }
+        .fu-card-info {
+            font-size: 0.85rem;
+            color: var(--mp-text);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .fu-card-info span {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+        .fu-card-info .fu-icon {
+            flex-shrink: 0;
+            width: 18px;
+            text-align: center;
+        }
+        .fu-card-hours {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: var(--mp-mint);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #2E7D46;
+            width: fit-content;
+        }
+        .fu-card-hours.closed {
+            background: #FFE0E0;
+            color: var(--mp-danger);
+        }
+
+        .fu-card-footer {
+            padding: 0 20px 20px;
+            margin-top: auto;
+        }
+        .fu-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--mp-pink) 0%, var(--mp-purple) 100%);
+            color: #fff;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-align: center;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .fu-btn:hover {
+            opacity: 0.9;
+            text-decoration: none;
+            color: #fff;
+        }
+        .fu-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* ---- Empty State ---- */
+        .fu-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--mp-text-light);
+        }
+        .fu-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+        .fu-empty h3 {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.3rem;
+            color: var(--mp-text);
+            margin-bottom: 8px;
+        }
+
+        /* ---- Loading ---- */
+        .fu-loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--mp-text-light);
+        }
+        .fu-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--mp-border);
+            border-top-color: var(--mp-pink);
+            border-radius: 50%;
+            animation: fu-spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes fu-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 900px) {
+            .fu-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 600px) {
+            .fu-header h1 {
+                font-size: 1.5rem;
+            }
+            .fu-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .fu-container {
+                padding: 32px 16px 48px;
+            }
+            .fu-search-wrap {
+                padding: 0 16px;
+            }
+        }
+    </style>
+</head>
+<body class="fu-page">
+
+    <!-- Header -->
+    <header class="fu-header">
+        <div class="fu-header-inner">
+            <div class="fu-header-top">
+                <a href="../index.html" class="fu-logo">
+                    <img src="../images/logo.png" alt="MilkyPot">
+                    <span>MilkyPot</span>
+                </a>
+                <a href="../index.html" class="fu-home-link">Voltar ao inicio</a>
+            </div>
+            <h1>Nossas Unidades</h1>
+            <p>Encontre a MilkyPot mais perto de voce e faca seu pedido!</p>
+        </div>
+    </header>
+
+    <!-- Search -->
+    <div class="fu-search-wrap">
+        <span class="fu-search-icon">&#128269;</span>
+        <input type="text" class="fu-search" id="searchInput" placeholder="Buscar por cidade, nome ou bairro...">
+    </div>
+
+    <!-- Content -->
+    <div class="fu-container">
+        <div class="fu-count" id="franchiseCount"></div>
+
+        <!-- Loading -->
+        <div class="fu-loading" id="loadingState">
+            <div class="fu-spinner"></div>
+            <p>Carregando unidades...</p>
+        </div>
+
+        <!-- Grid -->
+        <div class="fu-grid" id="franchiseGrid" style="display:none;"></div>
+
+        <!-- Empty -->
+        <div class="fu-empty" id="emptyState" style="display:none;">
+            <div class="fu-empty-icon">&#128270;</div>
+            <h3>Nenhuma unidade encontrada</h3>
+            <p>Tente buscar por outra cidade ou nome.</p>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <!-- Core (no auth needed) -->
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/franchise-router.js"></script>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const grid = document.getElementById('franchiseGrid');
+        const loading = document.getElementById('loadingState');
+        const empty = document.getElementById('emptyState');
+        const countEl = document.getElementById('franchiseCount');
+        const searchInput = document.getElementById('searchInput');
+
+        let allFranchises = [];
+
+        // ============================================
+        // Init
+        // ============================================
+        async function init() {
+            try {
+                allFranchises = await FranchiseRouter.fetchActiveFranchisesFromFirestore();
+
+                // Fallback: try DataStore if Firestore returned nothing
+                if (!allFranchises.length) {
+                    allFranchises = FranchiseRouter.getAllActiveFranchises();
+                }
+
+                renderFranchises(allFranchises);
+            } catch (e) {
+                console.error('Erro ao carregar unidades:', e);
+                // Fallback DataStore
+                allFranchises = FranchiseRouter.getAllActiveFranchises();
+                renderFranchises(allFranchises);
+            }
+        }
+
+        // ============================================
+        // Render
+        // ============================================
+        function renderFranchises(franchises) {
+            loading.style.display = 'none';
+
+            if (!franchises.length) {
+                grid.style.display = 'none';
+                empty.style.display = 'block';
+                countEl.textContent = '';
+                return;
+            }
+
+            empty.style.display = 'none';
+            grid.style.display = 'grid';
+            countEl.textContent = franchises.length + (franchises.length === 1 ? ' unidade encontrada' : ' unidades encontradas');
+
+            grid.innerHTML = franchises.map(f => buildCard(f)).join('');
+        }
+
+        function buildCard(f) {
+            const slug = f.slug || f.id || '';
+            const name = f.name || f.nome || 'MilkyPot';
+            const city = f.city || f.cidade || '';
+            const state = f.state || f.estado || '';
+            const location = [city, state].filter(Boolean).join(' - ');
+            const type = (f.type || f.tipo || 'store').toLowerCase();
+            const badgeClass = type === 'express' ? 'fu-badge-express'
+                             : type === 'mega' ? 'fu-badge-mega'
+                             : 'fu-badge-store';
+            const badgeLabel = type === 'express' ? 'Express'
+                             : type === 'mega' ? 'Mega'
+                             : 'Store';
+            const rating = f.rating || f.avaliacao || 0;
+            const stars = buildStars(rating);
+            const ratingText = rating > 0 ? rating.toFixed(1) : '--';
+            const deliveryTime = f.deliveryTime || f.tempoEntrega || '30-45 min';
+            const deliveryFee = f.deliveryFee != null ? f.deliveryFee
+                              : f.taxaEntrega != null ? f.taxaEntrega : null;
+            const feeText = deliveryFee === 0 ? 'Gratis'
+                          : deliveryFee != null ? 'R$ ' + Number(deliveryFee).toFixed(2).replace('.', ',')
+                          : '--';
+            const address = f.address || f.endereco || '';
+            const phone = f.phone || f.telefone || '';
+            const hours = f.hours || f.horario || '';
+            const isOpen = checkIfOpen(f);
+            const hoursClass = isOpen ? '' : ' closed';
+            const hoursLabel = isOpen ? 'Aberto agora' : (hours || 'Fechado');
+            const menuUrl = FranchiseRouter.getMenuUrl(slug);
+
+            return `
+            <div class="fu-card" data-name="${esc(name)}" data-city="${esc(location)}" data-address="${esc(address)}">
+                <div class="fu-card-header">
+                    <div>
+                        <div class="fu-card-name">${esc(name)}</div>
+                        <div class="fu-card-city">${esc(location)}</div>
+                    </div>
+                    <span class="fu-badge ${badgeClass}">${badgeLabel}</span>
+                </div>
+                <div class="fu-card-body">
+                    <div class="fu-card-meta">
+                        <span><span class="fu-stars">${stars}</span> ${ratingText}</span>
+                        <span><span class="fu-icon">&#128337;</span> ${esc(deliveryTime)}</span>
+                        <span><span class="fu-icon">&#128666;</span> ${feeText}</span>
+                    </div>
+                    <div class="fu-card-info">
+                        ${address ? `<span><span class="fu-icon">&#128205;</span> ${esc(address)}</span>` : ''}
+                        ${phone ? `<span><span class="fu-icon">&#128222;</span> ${esc(phone)}</span>` : ''}
+                    </div>
+                    ${hours || isOpen !== null ? `<div class="fu-card-hours${hoursClass}">${isOpen ? '&#9679;' : '&#9679;'} ${esc(hoursLabel)}</div>` : ''}
+                </div>
+                <div class="fu-card-footer">
+                    <a href="${esc(menuUrl)}" class="fu-btn">Ver Cardapio</a>
+                </div>
+            </div>`;
+        }
+
+        function buildStars(rating) {
+            const full = Math.floor(rating);
+            const half = rating - full >= 0.5 ? 1 : 0;
+            const empty = 5 - full - half;
+            return '&#9733;'.repeat(full)
+                 + (half ? '&#9734;' : '')
+                 + '&#9734;'.repeat(empty);
+        }
+
+        function checkIfOpen(f) {
+            // Simple heuristic: if franchise has openHour/closeHour, check current time
+            const openH = f.openHour != null ? f.openHour : (f.horaAbertura != null ? f.horaAbertura : null);
+            const closeH = f.closeHour != null ? f.closeHour : (f.horaFechamento != null ? f.horaFechamento : null);
+            if (openH == null || closeH == null) return null; // unknown
+            const now = new Date();
+            const h = now.getHours();
+            if (closeH > openH) {
+                return h >= openH && h < closeH;
+            } else {
+                // overnight (e.g., 18-02)
+                return h >= openH || h < closeH;
+            }
+        }
+
+        function esc(str) {
+            if (!str) return '';
+            const d = document.createElement('div');
+            d.textContent = String(str);
+            return d.innerHTML;
+        }
+
+        // ============================================
+        // Search / Filter
+        // ============================================
+        searchInput.addEventListener('input', function() {
+            const q = this.value.toLowerCase().trim();
+            if (!q) {
+                renderFranchises(allFranchises);
+                return;
+            }
+            const filtered = allFranchises.filter(f => {
+                const name = (f.name || f.nome || '').toLowerCase();
+                const city = (f.city || f.cidade || '').toLowerCase();
+                const state = (f.state || f.estado || '').toLowerCase();
+                const address = (f.address || f.endereco || '').toLowerCase();
+                const bairro = (f.neighborhood || f.bairro || '').toLowerCase();
+                return name.includes(q) || city.includes(q) || state.includes(q)
+                    || address.includes(q) || bairro.includes(q);
+            });
+            renderFranchises(filtered);
+        });
+
+        // ============================================
+        // Boot
+        // ============================================
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+    </script>
+
+</body>
+</html>

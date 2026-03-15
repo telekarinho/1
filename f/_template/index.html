@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MilkyPot - Cardapio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/shared-panel.css">
+    <style>
+        /* ============================================
+           MilkyPot Storefront - Embedded Styles
+           ============================================ */
+
+        :root {
+            --sf-pink: #E91E63;
+            --sf-pink-light: #F8BBD0;
+            --sf-pink-dark: #C2185B;
+            --sf-rose: #FF6090;
+            --sf-bg: #FAFAFA;
+            --sf-card: #FFFFFF;
+            --sf-text: #333333;
+            --sf-text-light: #777777;
+            --sf-text-muted: #AAAAAA;
+            --sf-border: #F0F0F0;
+            --sf-green: #4CAF50;
+            --sf-orange: #FF9800;
+            --sf-radius: 16px;
+            --sf-radius-sm: 10px;
+            --sf-shadow: 0 2px 16px rgba(0,0,0,0.08);
+            --sf-shadow-lg: 0 8px 40px rgba(0,0,0,0.15);
+            --sf-max-w: 480px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Nunito', 'Segoe UI', sans-serif;
+            background: var(--sf-bg);
+            color: var(--sf-text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .sf-container {
+            max-width: var(--sf-max-w);
+            margin: 0 auto;
+            min-height: 100vh;
+            background: #FFF;
+            position: relative;
+            box-shadow: 0 0 60px rgba(0,0,0,0.06);
+        }
+
+        /* ---- Header / Hero ---- */
+        .sf-hero {
+            background: linear-gradient(135deg, var(--sf-pink) 0%, var(--sf-rose) 50%, #FF8A80 100%);
+            color: #FFF;
+            padding: 32px 20px 28px;
+            position: relative;
+            overflow: hidden;
+        }
+        .sf-hero::before {
+            content: '';
+            position: absolute;
+            top: -40%; right: -20%;
+            width: 200px; height: 200px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+        }
+        .sf-hero::after {
+            content: '';
+            position: absolute;
+            bottom: -30%; left: -15%;
+            width: 160px; height: 160px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 50%;
+        }
+        .sf-hero-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+        .sf-logo {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+        }
+        .sf-logo span { opacity: 0.8; font-weight: 600; }
+        .sf-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .sf-status-badge.open .sf-status-dot { background: #69F0AE; }
+        .sf-status-badge.closed .sf-status-dot { background: #FF5252; }
+        .sf-status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .sf-franchise-name {
+            font-size: 26px;
+            font-weight: 900;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        .sf-hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 13px;
+            opacity: 0.92;
+            position: relative;
+            z-index: 1;
+        }
+        .sf-hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .sf-hero-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            position: relative;
+            z-index: 1;
+        }
+        .sf-btn-whatsapp {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #25D366;
+            color: #FFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+        }
+        .sf-btn-whatsapp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(37,211,102,0.4);
+            text-decoration: none;
+            color: #FFF;
+        }
+        .sf-btn-call {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            color: #FFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+        }
+        .sf-btn-call:hover {
+            background: rgba(255,255,255,0.3);
+            text-decoration: none;
+            color: #FFF;
+        }
+
+        /* ---- Category Pills ---- */
+        .sf-categories {
+            display: flex;
+            gap: 8px;
+            padding: 16px 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            background: #FFF;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            border-bottom: 1px solid var(--sf-border);
+        }
+        .sf-categories::-webkit-scrollbar { display: none; }
+        .sf-cat-pill {
+            flex-shrink: 0;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 700;
+            border: 2px solid var(--sf-border);
+            background: #FFF;
+            color: var(--sf-text-light);
+            cursor: pointer;
+            transition: all 0.25s;
+            white-space: nowrap;
+        }
+        .sf-cat-pill:hover {
+            border-color: var(--sf-pink-light);
+            color: var(--sf-pink);
+        }
+        .sf-cat-pill.active {
+            background: var(--sf-pink);
+            color: #FFF;
+            border-color: var(--sf-pink);
+        }
+
+        /* ---- Products Grid ---- */
+        .sf-products {
+            padding: 16px 16px 120px;
+        }
+        .sf-section-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 16px 4px 12px;
+            color: var(--sf-text);
+        }
+        .sf-product-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        /* Product Card */
+        .sf-product-card {
+            background: var(--sf-card);
+            border-radius: var(--sf-radius);
+            overflow: hidden;
+            box-shadow: var(--sf-shadow);
+            transition: transform 0.25s, box-shadow 0.25s;
+            display: flex;
+            flex-direction: row;
+            border: 1px solid var(--sf-border);
+        }
+        .sf-product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--sf-shadow-lg);
+        }
+        .sf-product-img {
+            width: 110px;
+            min-height: 110px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 44px;
+            position: relative;
+        }
+        .sf-product-img.shake-bg { background: linear-gradient(135deg, #FCE4EC, #F8BBD0); }
+        .sf-product-img.sundae-bg { background: linear-gradient(135deg, #E8EAF6, #C5CAE9); }
+        .sf-product-img.acai-bg { background: linear-gradient(135deg, #E8D5F5, #CE93D8); }
+        .sf-product-img.especiais-bg { background: linear-gradient(135deg, #FFF3E0, #FFCC80); }
+
+        .sf-product-body {
+            flex: 1;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+        }
+        .sf-product-name {
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .sf-product-desc {
+            font-size: 12px;
+            color: var(--sf-text-light);
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        .sf-product-sizes {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .sf-size-chip {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #F5F5F5;
+            color: var(--sf-text);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            text-align: center;
+        }
+        .sf-size-chip:hover { border-color: var(--sf-pink-light); }
+        .sf-size-chip.selected {
+            background: var(--sf-pink);
+            color: #FFF;
+            border-color: var(--sf-pink);
+        }
+        .sf-size-chip .sf-size-label {
+            display: block;
+            font-size: 10px;
+            opacity: 0.8;
+            font-weight: 600;
+        }
+
+        .sf-product-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+        }
+        .sf-product-price {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--sf-pink);
+        }
+        .sf-btn-add {
+            background: var(--sf-pink);
+            color: #FFF;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .sf-btn-add:hover {
+            background: var(--sf-pink-dark);
+            transform: scale(1.05);
+        }
+        .sf-btn-add:active { transform: scale(0.95); }
+
+        /* ---- Floating Cart Button ---- */
+        .sf-cart-fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--sf-pink);
+            color: #FFF;
+            border: none;
+            box-shadow: 0 6px 30px rgba(233,30,99,0.4);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            z-index: 100;
+        }
+        .sf-cart-fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 40px rgba(233,30,99,0.5);
+        }
+        .sf-cart-fab.bounce {
+            animation: cart-bounce 0.5s ease;
+        }
+        @keyframes cart-bounce {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.3); }
+            50% { transform: scale(0.9); }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .sf-cart-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #FF5252;
+            color: #FFF;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            font-size: 13px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #FFF;
+        }
+        .sf-cart-fab.empty { display: none; }
+
+        /* ---- Cart Drawer ---- */
+        .sf-cart-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        .sf-cart-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .sf-cart-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            max-width: 420px;
+            height: 100%;
+            background: #FFF;
+            z-index: 201;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.15);
+        }
+        .sf-cart-drawer.open {
+            transform: translateX(0);
+        }
+        .sf-cart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            border-bottom: 1px solid var(--sf-border);
+        }
+        .sf-cart-header h2 {
+            font-size: 20px;
+            font-weight: 900;
+        }
+        .sf-cart-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #F5F5F5;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .sf-cart-close:hover { background: #EEE; }
+
+        .sf-cart-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+        }
+        .sf-cart-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--sf-text-muted);
+        }
+        .sf-cart-empty-icon {
+            font-size: 60px;
+            margin-bottom: 12px;
+        }
+
+        .sf-cart-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--sf-border);
+        }
+        .sf-cart-item-emoji {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: #FFF0F5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            flex-shrink: 0;
+        }
+        .sf-cart-item-info { flex: 1; }
+        .sf-cart-item-name {
+            font-size: 14px;
+            font-weight: 800;
+        }
+        .sf-cart-item-size {
+            font-size: 12px;
+            color: var(--sf-text-light);
+        }
+        .sf-cart-item-price {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--sf-pink);
+        }
+        .sf-cart-item-qty {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sf-qty-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 2px solid var(--sf-border);
+            background: #FFF;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .sf-qty-btn:hover {
+            border-color: var(--sf-pink);
+            color: var(--sf-pink);
+        }
+        .sf-qty-value {
+            font-size: 15px;
+            font-weight: 800;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* Delivery/Pickup Toggle */
+        .sf-delivery-toggle {
+            display: flex;
+            background: #F5F5F5;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 16px;
+        }
+        .sf-toggle-opt {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s;
+            border: none;
+            background: transparent;
+            color: var(--sf-text-light);
+            font-family: inherit;
+        }
+        .sf-toggle-opt.active {
+            background: #FFF;
+            color: var(--sf-pink);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        /* Cart Form */
+        .sf-cart-form { margin-top: 16px; }
+        .sf-form-group {
+            margin-bottom: 14px;
+        }
+        .sf-form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--sf-text);
+        }
+        .sf-form-group input,
+        .sf-form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--sf-border);
+            border-radius: var(--sf-radius-sm);
+            font-size: 15px;
+            font-family: inherit;
+            font-weight: 600;
+            transition: border-color 0.2s;
+            background: #FFF;
+            color: var(--sf-text);
+        }
+        .sf-form-group input:focus,
+        .sf-form-group select:focus {
+            outline: none;
+            border-color: var(--sf-pink);
+        }
+
+        /* Cart Footer */
+        .sf-cart-footer {
+            padding: 16px 20px 24px;
+            border-top: 1px solid var(--sf-border);
+            background: #FFF;
+        }
+        .sf-cart-summary {
+            margin-bottom: 16px;
+        }
+        .sf-summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .sf-summary-row.total {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--sf-pink);
+            padding-top: 10px;
+            border-top: 2px dashed var(--sf-border);
+        }
+        .sf-btn-checkout {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: var(--sf-radius);
+            background: var(--sf-pink);
+            color: #FFF;
+            font-size: 17px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .sf-btn-checkout:hover {
+            background: var(--sf-pink-dark);
+            transform: translateY(-1px);
+        }
+        .sf-btn-checkout:disabled {
+            background: #CCC;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ---- Store Info Section ---- */
+        .sf-store-info {
+            background: #F9F9F9;
+            padding: 32px 20px;
+            border-top: 1px solid var(--sf-border);
+        }
+        .sf-store-info h3 {
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+        .sf-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .sf-info-card {
+            background: #FFF;
+            padding: 16px;
+            border-radius: var(--sf-radius-sm);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .sf-info-card-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .sf-info-card-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--sf-text-muted);
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .sf-info-card-value {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--sf-text);
+        }
+        .sf-map-placeholder {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+            border-radius: var(--sf-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #64B5F6;
+            font-weight: 700;
+            gap: 8px;
+        }
+
+        /* ---- Footer Branding ---- */
+        .sf-footer {
+            text-align: center;
+            padding: 24px 20px;
+            font-size: 12px;
+            color: var(--sf-text-muted);
+        }
+        .sf-footer a {
+            color: var(--sf-pink);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        /* ---- Order Confirmation Modal ---- */
+        .sf-confirm-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            padding: 20px;
+        }
+        .sf-confirm-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .sf-confirm-modal {
+            background: #FFF;
+            border-radius: 24px;
+            padding: 40px 28px;
+            text-align: center;
+            max-width: 360px;
+            width: 100%;
+            transform: scale(0.8);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sf-confirm-overlay.open .sf-confirm-modal {
+            transform: scale(1);
+        }
+        .sf-confirm-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        .sf-confirm-title {
+            font-size: 22px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+        .sf-confirm-text {
+            font-size: 14px;
+            color: var(--sf-text-light);
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        .sf-confirm-order-id {
+            font-size: 13px;
+            font-weight: 700;
+            background: #F5F5F5;
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        .sf-confirm-btn {
+            background: var(--sf-pink);
+            color: #FFF;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+        .sf-confirm-btn:hover { background: var(--sf-pink-dark); }
+
+        /* ---- Not Found ---- */
+        .sf-not-found {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .sf-not-found-icon { font-size: 80px; margin-bottom: 20px; }
+        .sf-not-found h1 {
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+        .sf-not-found p {
+            color: var(--sf-text-light);
+            margin-bottom: 24px;
+        }
+        .sf-not-found a {
+            background: var(--sf-pink);
+            color: #FFF;
+            padding: 12px 32px;
+            border-radius: 14px;
+            font-weight: 800;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .sf-not-found a:hover { background: var(--sf-pink-dark); text-decoration: none; }
+
+        /* ---- Loading ---- */
+        .sf-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            gap: 16px;
+        }
+        .sf-spinner {
+            width: 44px; height: 44px;
+            border: 4px solid var(--sf-pink-light);
+            border-top-color: var(--sf-pink);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ---- Add to Cart Animation ---- */
+        .sf-added-flash {
+            animation: flash-green 0.4s ease;
+        }
+        @keyframes flash-green {
+            0% { background: var(--sf-pink); }
+            50% { background: var(--sf-green); }
+            100% { background: var(--sf-pink); }
+        }
+
+        /* ---- Responsive: 2-col on wider screens ---- */
+        @media (min-width: 520px) {
+            .sf-container { max-width: 600px; }
+            .sf-product-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .sf-product-card {
+                flex-direction: column;
+            }
+            .sf-product-img {
+                width: 100%;
+                height: 100px;
+                min-height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading State -->
+    <div id="sf-loading" class="sf-loading">
+        <div class="sf-spinner"></div>
+        <span style="font-weight:700;color:var(--sf-text-light);">Carregando cardapio...</span>
+    </div>
+
+    <!-- Not Found State (hidden by default) -->
+    <div id="sf-not-found" class="sf-not-found" style="display:none;">
+        <div class="sf-not-found-icon">🍦</div>
+        <h1>Franquia nao encontrada</h1>
+        <p>Essa franquia nao existe ou esta temporariamente indisponivel.</p>
+        <a href="/f/">Ver todas as franquias</a>
+    </div>
+
+    <!-- Main Storefront (hidden until loaded) -->
+    <div id="sf-app" class="sf-container" style="display:none;">
+
+        <!-- Hero Header -->
+        <div class="sf-hero">
+            <div class="sf-hero-top">
+                <div class="sf-logo">Milky<span>Pot</span></div>
+                <div id="sf-status" class="sf-status-badge open">
+                    <div class="sf-status-dot"></div>
+                    <span id="sf-status-text">Aberto</span>
+                </div>
+            </div>
+            <div id="sf-franchise-name" class="sf-franchise-name">MilkyPot</div>
+            <div class="sf-hero-meta">
+                <div class="sf-hero-meta-item" id="sf-rating-display">
+                    <span>&#9733;</span>
+                    <span id="sf-rating">4.8</span>
+                </div>
+                <div class="sf-hero-meta-item">
+                    <span>&#128337;</span>
+                    <span id="sf-delivery-time">25-40 min</span>
+                </div>
+                <div class="sf-hero-meta-item">
+                    <span>&#128205;</span>
+                    <span id="sf-address">Carregando...</span>
+                </div>
+            </div>
+            <div class="sf-hero-actions">
+                <a id="sf-whatsapp-btn" href="#" class="sf-btn-whatsapp" target="_blank" rel="noopener">
+                    &#128172; WhatsApp
+                </a>
+                <a id="sf-phone-btn" href="#" class="sf-btn-call">
+                    &#128222; Ligar
+                </a>
+            </div>
+        </div>
+
+        <!-- Category Pills -->
+        <div class="sf-categories" id="sf-categories">
+            <button class="sf-cat-pill active" data-cat="todos">Todos</button>
+            <button class="sf-cat-pill" data-cat="shakes">&#127868; Shakes</button>
+            <button class="sf-cat-pill" data-cat="sundaes">&#127848; Sundaes</button>
+            <button class="sf-cat-pill" data-cat="acai">&#129744; Acai</button>
+            <button class="sf-cat-pill" data-cat="especiais">&#11088; Especiais</button>
+        </div>
+
+        <!-- Products -->
+        <div class="sf-products">
+            <div id="sf-product-grid" class="sf-product-grid"></div>
+        </div>
+
+        <!-- Store Info -->
+        <div class="sf-store-info">
+            <h3>&#128205; Informacoes da Loja</h3>
+            <div class="sf-info-grid">
+                <div class="sf-info-card">
+                    <div class="sf-info-card-icon">&#128336;</div>
+                    <div class="sf-info-card-label">Horario</div>
+                    <div class="sf-info-card-value" id="sf-hours">10:00 - 22:00</div>
+                </div>
+                <div class="sf-info-card">
+                    <div class="sf-info-card-icon">&#128176;</div>
+                    <div class="sf-info-card-label">Taxa de Entrega</div>
+                    <div class="sf-info-card-value" id="sf-delivery-fee">R$ 5,00</div>
+                </div>
+                <div class="sf-info-card">
+                    <div class="sf-info-card-icon">&#128205;</div>
+                    <div class="sf-info-card-label">Endereco</div>
+                    <div class="sf-info-card-value" id="sf-full-address">Carregando...</div>
+                </div>
+                <div class="sf-info-card">
+                    <div class="sf-info-card-icon">&#128222;</div>
+                    <div class="sf-info-card-label">Telefone</div>
+                    <div class="sf-info-card-value" id="sf-phone-display">Carregando...</div>
+                </div>
+            </div>
+            <div class="sf-map-placeholder">
+                <span>&#128506;</span> Mapa em breve
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="sf-footer">
+            Feito com &#10084;&#65039; por <a href="/">MilkyPot</a> &bull; Sistema de Franquias
+        </div>
+    </div>
+
+    <!-- Floating Cart Button -->
+    <button id="sf-cart-fab" class="sf-cart-fab empty" onclick="Storefront.openCart()">
+        &#128722;
+        <div id="sf-cart-badge" class="sf-cart-badge">0</div>
+    </button>
+
+    <!-- Cart Overlay -->
+    <div id="sf-cart-overlay" class="sf-cart-overlay" onclick="Storefront.closeCart()"></div>
+
+    <!-- Cart Drawer -->
+    <div id="sf-cart-drawer" class="sf-cart-drawer">
+        <div class="sf-cart-header">
+            <h2>&#128722; Seu Pedido</h2>
+            <button class="sf-cart-close" onclick="Storefront.closeCart()">&times;</button>
+        </div>
+        <div class="sf-cart-body" id="sf-cart-body">
+            <div class="sf-cart-empty" id="sf-cart-empty">
+                <div class="sf-cart-empty-icon">&#128722;</div>
+                <p>Seu carrinho esta vazio</p>
+                <p style="font-size:13px;margin-top:4px;">Adicione produtos para comecar!</p>
+            </div>
+            <div id="sf-cart-items"></div>
+
+            <div id="sf-cart-form-area" style="display:none;">
+                <!-- Delivery Toggle -->
+                <div class="sf-delivery-toggle" style="margin-top:16px;">
+                    <button class="sf-toggle-opt active" data-mode="delivery" onclick="Storefront.setDeliveryMode('delivery')">&#128666; Entrega</button>
+                    <button class="sf-toggle-opt" data-mode="pickup" onclick="Storefront.setDeliveryMode('pickup')">&#127978; Retirada</button>
+                </div>
+
+                <!-- Customer Info -->
+                <div class="sf-cart-form">
+                    <div class="sf-form-group">
+                        <label>Seu Nome</label>
+                        <input type="text" id="sf-customer-name" placeholder="Ex: Maria Silva">
+                    </div>
+                    <div class="sf-form-group">
+                        <label>Telefone / WhatsApp</label>
+                        <input type="tel" id="sf-customer-phone" placeholder="(11) 99999-9999">
+                    </div>
+                    <div class="sf-form-group" id="sf-address-group">
+                        <label>Endereco de Entrega</label>
+                        <input type="text" id="sf-customer-address" placeholder="Rua, numero, bairro">
+                    </div>
+                    <div class="sf-form-group">
+                        <label>Forma de Pagamento</label>
+                        <select id="sf-payment-method">
+                            <option value="pix">Pix</option>
+                            <option value="credito">Cartao de Credito</option>
+                            <option value="debito">Cartao de Debito</option>
+                            <option value="dinheiro">Dinheiro</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sf-cart-footer" id="sf-cart-footer" style="display:none;">
+            <div class="sf-cart-summary">
+                <div class="sf-summary-row">
+                    <span>Subtotal</span>
+                    <span id="sf-subtotal">R$ 0,00</span>
+                </div>
+                <div class="sf-summary-row" id="sf-delivery-fee-row">
+                    <span>Taxa de entrega</span>
+                    <span id="sf-del-fee-value">R$ 5,00</span>
+                </div>
+                <div class="sf-summary-row total">
+                    <span>Total</span>
+                    <span id="sf-total">R$ 0,00</span>
+                </div>
+            </div>
+            <button class="sf-btn-checkout" id="sf-btn-checkout" onclick="Storefront.submitOrder()">
+                Finalizar Pedido
+            </button>
+        </div>
+    </div>
+
+    <!-- Order Confirmation Modal -->
+    <div id="sf-confirm-overlay" class="sf-confirm-overlay">
+        <div class="sf-confirm-modal">
+            <div class="sf-confirm-icon">&#127881;</div>
+            <div class="sf-confirm-title">Pedido Enviado!</div>
+            <div class="sf-confirm-text">
+                Seu pedido foi recebido com sucesso. Acompanhe pelo WhatsApp.
+            </div>
+            <div class="sf-confirm-order-id" id="sf-confirm-order-id"></div>
+            <div class="sf-confirm-text" style="font-size:13px;">
+                Tempo estimado: <strong id="sf-confirm-time">25-40 min</strong>
+            </div>
+            <button class="sf-confirm-btn" onclick="Storefront.closeConfirmation()">
+                Entendido!
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="../../js/core/constants.js"></script>
+    <script src="../../js/core/utils.js"></script>
+    <script src="../../js/core/datastore.js"></script>
+    <script src="../../js/core/firebase-config.js"></script>
+    <script>
+    /* ============================================
+       MilkyPot - Storefront Controller
+       ============================================ */
+
+    // FranchiseRouter (inline since no separate file yet)
+    const FranchiseRouter = {
+        getFranchiseSlug() {
+            const path = window.location.pathname;
+            const parts = path.split('/').filter(Boolean);
+            // URL pattern: /f/{slug}/
+            const fIdx = parts.indexOf('f');
+            if (fIdx !== -1 && parts[fIdx + 1] && parts[fIdx + 1] !== '_template') {
+                return parts[fIdx + 1];
+            }
+            return null;
+        },
+
+        getFranchiseData(slug) {
+            if (!slug) return null;
+            // Try DataStore first
+            if (typeof DataStore !== 'undefined') {
+                const franchises = DataStore.get('franchises') || [];
+                const found = franchises.find(f =>
+                    f.slug === slug || (f.name && f.name.toLowerCase().replace(/\s+/g, '-') === slug)
+                );
+                if (found) return found;
+            }
+            return null;
+        }
+    };
+
+    // ============================================
+    // Default Products
+    // ============================================
+    const defaultProducts = [
+        { id: 'p1', name: 'Shake Ninho', category: 'shakes', description: 'Cremoso shake de leite ninho', emoji: '\u{1F95B}', sizes: [{name:'Mini',price:10},{name:'Medio',price:16},{name:'Grande',price:22}] },
+        { id: 'p2', name: 'Shake Morango', category: 'shakes', description: 'Shake com morangos frescos', emoji: '\u{1F353}', sizes: [{name:'Mini',price:12},{name:'Medio',price:18},{name:'Grande',price:24}] },
+        { id: 'p3', name: 'Shake Nutella', category: 'shakes', description: 'Shake irresistivel de Nutella', emoji: '\u{1F36B}', sizes: [{name:'Mini',price:14},{name:'Medio',price:20},{name:'Grande',price:26}] },
+        { id: 'p4', name: 'Shake Oreo', category: 'shakes', description: 'Shake crocante com Oreo', emoji: '\u{1F36A}', sizes: [{name:'Mini',price:13},{name:'Medio',price:19},{name:'Grande',price:25}] },
+        { id: 'p5', name: 'Sundae Ninho', category: 'sundaes', description: 'Sundae cremoso de leite ninho', emoji: '\u{1F368}', sizes: [{name:'Pequeno',price:14},{name:'Grande',price:22}] },
+        { id: 'p6', name: 'Sundae Morango', category: 'sundaes', description: 'Sundae com calda de morango', emoji: '\u{1F367}', sizes: [{name:'Pequeno',price:15},{name:'Grande',price:23}] },
+        { id: 'p7', name: 'Acai Tradicional', category: 'acai', description: 'Acai puro com granola e banana', emoji: '\u{1FAD0}', sizes: [{name:'300ml',price:16},{name:'500ml',price:22},{name:'700ml',price:28}] },
+        { id: 'p8', name: 'Acai Premium', category: 'acai', description: 'Acai com morango, kiwi e mel', emoji: '\u{1F347}', sizes: [{name:'300ml',price:20},{name:'500ml',price:28},{name:'700ml',price:34}] },
+        { id: 'p9', name: 'Banana + Whey', category: 'especiais', description: 'Shake proteico com banana e whey', emoji: '\u{1F34C}', sizes: [{name:'Mini',price:16},{name:'Medio',price:22},{name:'Grande',price:28}] },
+        { id: 'p10', name: 'Ninho com Morango', category: 'especiais', description: 'Combinacao perfeita ninho + morango', emoji: '\u{1F964}', sizes: [{name:'Mini',price:14},{name:'Medio',price:20},{name:'Grande',price:26}] },
+    ];
+
+    // ============================================
+    // Storefront App
+    // ============================================
+    const Storefront = {
+        franchiseId: null,
+        franchiseData: null,
+        products: [],
+        cart: [],
+        activeCategory: 'todos',
+        deliveryMode: 'delivery',
+        deliveryFee: 5,
+        selectedSizes: {},  // productId -> sizeIndex
+
+        // ---- Init ----
+        init() {
+            // Init DataStore if available
+            if (typeof DataStore !== 'undefined' && typeof DataStore.init === 'function') {
+                try { DataStore.init(); } catch(e) { console.warn('DataStore init skipped:', e); }
+            }
+
+            const slug = FranchiseRouter.getFranchiseSlug();
+
+            if (!slug) {
+                this.showNotFound();
+                return;
+            }
+
+            const data = FranchiseRouter.getFranchiseData(slug);
+
+            if (data) {
+                this.franchiseId = data.id || slug;
+                this.franchiseData = data;
+                this.loadFranchise(data);
+            } else {
+                // No data in DataStore - use slug as id and show with defaults
+                this.franchiseId = slug;
+                this.franchiseData = { name: this.formatSlug(slug), slug: slug };
+                this.loadFranchise(this.franchiseData);
+            }
+        },
+
+        formatSlug(slug) {
+            return slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        },
+
+        showNotFound() {
+            document.getElementById('sf-loading').style.display = 'none';
+            document.getElementById('sf-not-found').style.display = 'flex';
+        },
+
+        loadFranchise(data) {
+            // Populate header
+            document.getElementById('sf-franchise-name').textContent = 'MilkyPot ' + (data.name || '');
+            document.title = 'MilkyPot ' + (data.name || '') + ' - Cardapio';
+
+            // Status
+            const isOpen = data.status !== 'inativo';
+            const statusEl = document.getElementById('sf-status');
+            statusEl.className = 'sf-status-badge ' + (isOpen ? 'open' : 'closed');
+            document.getElementById('sf-status-text').textContent = isOpen ? 'Aberto' : 'Fechado';
+
+            // Rating
+            document.getElementById('sf-rating').textContent = data.rating || '4.8';
+
+            // Delivery time
+            document.getElementById('sf-delivery-time').textContent = data.deliveryTime || '25-40 min';
+
+            // Address
+            const addr = data.address || data.endereco || 'Consulte pelo WhatsApp';
+            document.getElementById('sf-address').textContent = addr;
+            document.getElementById('sf-full-address').textContent = addr;
+
+            // Phone
+            const phone = data.phone || data.telefone || '(11) 99999-9999';
+            document.getElementById('sf-phone-display').textContent = phone;
+            const cleanPhone = phone.replace(/\D/g, '');
+            document.getElementById('sf-whatsapp-btn').href = 'https://wa.me/55' + cleanPhone + '?text=Ola! Gostaria de fazer um pedido.';
+            document.getElementById('sf-phone-btn').href = 'tel:+55' + cleanPhone;
+
+            // Hours
+            document.getElementById('sf-hours').textContent = data.hours || data.horario || '10:00 - 22:00';
+
+            // Delivery fee
+            this.deliveryFee = data.deliveryFee || data.taxaEntrega || 5;
+            document.getElementById('sf-delivery-fee').textContent = Utils.formatCurrency(this.deliveryFee);
+            document.getElementById('sf-del-fee-value').textContent = Utils.formatCurrency(this.deliveryFee);
+
+            // Confirmation time
+            document.getElementById('sf-confirm-time').textContent = data.deliveryTime || '25-40 min';
+
+            // Load products
+            this.loadProducts();
+
+            // Show app
+            document.getElementById('sf-loading').style.display = 'none';
+            document.getElementById('sf-app').style.display = 'block';
+
+            // Setup category filters
+            this.setupCategories();
+        },
+
+        // ---- Products ----
+        loadProducts() {
+            let products = null;
+            if (typeof DataStore !== 'undefined') {
+                products = DataStore.get('products_' + this.franchiseId) || DataStore.get('products');
+            }
+            this.products = (products && products.length) ? products : defaultProducts;
+
+            // Initialize selected sizes (first/cheapest size for each)
+            this.products.forEach(p => {
+                this.selectedSizes[p.id] = 0;
+            });
+
+            this.renderProducts();
+        },
+
+        renderProducts() {
+            const grid = document.getElementById('sf-product-grid');
+            const filtered = this.activeCategory === 'todos'
+                ? this.products
+                : this.products.filter(p => p.category === this.activeCategory);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--sf-text-muted);grid-column:1/-1;">Nenhum produto nesta categoria.</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => {
+                const bgClass = p.category === 'shakes' ? 'shake-bg'
+                    : p.category === 'sundaes' ? 'sundae-bg'
+                    : p.category === 'acai' ? 'acai-bg'
+                    : 'especiais-bg';
+
+                const selIdx = this.selectedSizes[p.id] || 0;
+                const currentPrice = p.sizes[selIdx].price;
+
+                return `
+                <div class="sf-product-card" data-id="${p.id}">
+                    <div class="sf-product-img ${bgClass}">${p.emoji || '🍦'}</div>
+                    <div class="sf-product-body">
+                        <div class="sf-product-name">${p.name}</div>
+                        <div class="sf-product-desc">${p.description}</div>
+                        <div class="sf-product-sizes">
+                            ${p.sizes.map((s, i) => `
+                                <div class="sf-size-chip ${i === selIdx ? 'selected' : ''}"
+                                     onclick="Storefront.selectSize('${p.id}', ${i})">
+                                    <span class="sf-size-label">${s.name}</span>
+                                    ${Utils.formatCurrency(s.price)}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="sf-product-footer">
+                            <div class="sf-product-price">${Utils.formatCurrency(currentPrice)}</div>
+                            <button class="sf-btn-add" id="btn-add-${p.id}" onclick="Storefront.addToCart('${p.id}')">
+                                + Adicionar
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        },
+
+        selectSize(productId, sizeIndex) {
+            this.selectedSizes[productId] = sizeIndex;
+            this.renderProducts();
+        },
+
+        // ---- Categories ----
+        setupCategories() {
+            document.querySelectorAll('.sf-cat-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    document.querySelectorAll('.sf-cat-pill').forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                    this.activeCategory = pill.dataset.cat;
+                    this.renderProducts();
+                });
+            });
+        },
+
+        // ---- Cart ----
+        addToCart(productId) {
+            const product = this.products.find(p => p.id === productId);
+            if (!product) return;
+
+            const sizeIdx = this.selectedSizes[productId] || 0;
+            const size = product.sizes[sizeIdx];
+
+            // Check if same product+size already in cart
+            const existingIdx = this.cart.findIndex(
+                item => item.productId === productId && item.sizeName === size.name
+            );
+
+            if (existingIdx !== -1) {
+                this.cart[existingIdx].qty += 1;
+            } else {
+                this.cart.push({
+                    productId: productId,
+                    name: product.name,
+                    emoji: product.emoji,
+                    sizeName: size.name,
+                    price: size.price,
+                    qty: 1
+                });
+            }
+
+            this.updateCartUI();
+
+            // Button flash animation
+            const btn = document.getElementById('btn-add-' + productId);
+            if (btn) {
+                btn.classList.add('sf-added-flash');
+                btn.textContent = '\u2713 Adicionado';
+                setTimeout(() => {
+                    btn.classList.remove('sf-added-flash');
+                    btn.textContent = '+ Adicionar';
+                }, 800);
+            }
+
+            // FAB bounce
+            const fab = document.getElementById('sf-cart-fab');
+            fab.classList.remove('bounce');
+            void fab.offsetWidth; // trigger reflow
+            fab.classList.add('bounce');
+        },
+
+        removeFromCart(index) {
+            this.cart.splice(index, 1);
+            this.updateCartUI();
+            this.renderCartItems();
+        },
+
+        changeQty(index, delta) {
+            this.cart[index].qty += delta;
+            if (this.cart[index].qty <= 0) {
+                this.cart.splice(index, 1);
+            }
+            this.updateCartUI();
+            this.renderCartItems();
+        },
+
+        updateCartUI() {
+            const count = this.cart.reduce((sum, item) => sum + item.qty, 0);
+            const fab = document.getElementById('sf-cart-fab');
+            const badge = document.getElementById('sf-cart-badge');
+
+            badge.textContent = count;
+            fab.classList.toggle('empty', count === 0);
+
+            // Update totals
+            const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const fee = this.deliveryMode === 'delivery' ? this.deliveryFee : 0;
+            const total = subtotal + fee;
+
+            document.getElementById('sf-subtotal').textContent = Utils.formatCurrency(subtotal);
+            document.getElementById('sf-del-fee-value').textContent = Utils.formatCurrency(fee);
+            document.getElementById('sf-total').textContent = Utils.formatCurrency(total);
+
+            // Show/hide form + footer
+            const hasItems = this.cart.length > 0;
+            document.getElementById('sf-cart-empty').style.display = hasItems ? 'none' : 'block';
+            document.getElementById('sf-cart-form-area').style.display = hasItems ? 'block' : 'none';
+            document.getElementById('sf-cart-footer').style.display = hasItems ? 'block' : 'none';
+        },
+
+        renderCartItems() {
+            const container = document.getElementById('sf-cart-items');
+            if (this.cart.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = this.cart.map((item, i) => `
+                <div class="sf-cart-item">
+                    <div class="sf-cart-item-emoji">${item.emoji || '🍦'}</div>
+                    <div class="sf-cart-item-info">
+                        <div class="sf-cart-item-name">${item.name}</div>
+                        <div class="sf-cart-item-size">${item.sizeName}</div>
+                        <div class="sf-cart-item-price">${Utils.formatCurrency(item.price * item.qty)}</div>
+                    </div>
+                    <div class="sf-cart-item-qty">
+                        <button class="sf-qty-btn" onclick="Storefront.changeQty(${i}, -1)">&minus;</button>
+                        <span class="sf-qty-value">${item.qty}</span>
+                        <button class="sf-qty-btn" onclick="Storefront.changeQty(${i}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+        },
+
+        // ---- Cart Drawer ----
+        openCart() {
+            document.getElementById('sf-cart-overlay').classList.add('open');
+            document.getElementById('sf-cart-drawer').classList.add('open');
+            document.body.style.overflow = 'hidden';
+            this.renderCartItems();
+            this.updateCartUI();
+        },
+
+        closeCart() {
+            document.getElementById('sf-cart-overlay').classList.remove('open');
+            document.getElementById('sf-cart-drawer').classList.remove('open');
+            document.body.style.overflow = '';
+        },
+
+        // ---- Delivery Mode ----
+        setDeliveryMode(mode) {
+            this.deliveryMode = mode;
+            document.querySelectorAll('.sf-toggle-opt').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+            // Show/hide address field
+            document.getElementById('sf-address-group').style.display =
+                mode === 'delivery' ? 'block' : 'none';
+            // Show/hide delivery fee row
+            document.getElementById('sf-delivery-fee-row').style.display =
+                mode === 'delivery' ? 'flex' : 'none';
+            this.updateCartUI();
+        },
+
+        // ---- Submit Order ----
+        submitOrder() {
+            const name = document.getElementById('sf-customer-name').value.trim();
+            const phone = document.getElementById('sf-customer-phone').value.trim();
+            const address = document.getElementById('sf-customer-address').value.trim();
+            const payment = document.getElementById('sf-payment-method').value;
+
+            // Validate
+            if (!name) {
+                this.shakeField('sf-customer-name');
+                return;
+            }
+            if (!phone) {
+                this.shakeField('sf-customer-phone');
+                return;
+            }
+            if (this.deliveryMode === 'delivery' && !address) {
+                this.shakeField('sf-customer-address');
+                return;
+            }
+            if (this.cart.length === 0) return;
+
+            const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const fee = this.deliveryMode === 'delivery' ? this.deliveryFee : 0;
+            const total = subtotal + fee;
+
+            const orderData = {
+                customer: { name, phone, address: this.deliveryMode === 'delivery' ? address : null },
+                items: this.cart.map(item => ({
+                    productId: item.productId,
+                    name: item.name,
+                    sizeName: item.sizeName,
+                    price: item.price,
+                    qty: item.qty,
+                    subtotal: item.price * item.qty
+                })),
+                deliveryMode: this.deliveryMode,
+                paymentMethod: payment,
+                subtotal: subtotal,
+                deliveryFee: fee,
+                total: total,
+                status: MP.ORDER_STATUS.NEW,
+                paymentStatus: MP.PAYMENT_STATUS.PENDING,
+                createdAt: new Date().toISOString()
+            };
+
+            // Save to DataStore
+            let savedOrder = orderData;
+            if (typeof DataStore !== 'undefined') {
+                try {
+                    savedOrder = DataStore.addToCollection('orders', this.franchiseId, orderData);
+                } catch (e) {
+                    console.error('Error saving order:', e);
+                    savedOrder.id = Utils.generateId();
+                }
+            } else {
+                savedOrder.id = Utils.generateId();
+            }
+
+            // Show confirmation
+            const orderId = savedOrder.id || Utils.generateId();
+            document.getElementById('sf-confirm-order-id').textContent = 'Pedido #' + orderId.substring(0, 8).toUpperCase();
+            document.getElementById('sf-confirm-overlay').classList.add('open');
+
+            // Disable button
+            document.getElementById('sf-btn-checkout').disabled = true;
+            document.getElementById('sf-btn-checkout').textContent = 'Pedido Enviado!';
+
+            // Close cart
+            this.closeCart();
+
+            // Reset after a moment
+            setTimeout(() => {
+                this.cart = [];
+                this.updateCartUI();
+                this.renderCartItems();
+                document.getElementById('sf-customer-name').value = '';
+                document.getElementById('sf-customer-phone').value = '';
+                document.getElementById('sf-customer-address').value = '';
+                document.getElementById('sf-btn-checkout').disabled = false;
+                document.getElementById('sf-btn-checkout').textContent = 'Finalizar Pedido';
+            }, 500);
+        },
+
+        shakeField(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.borderColor = '#FF5252';
+            el.focus();
+            el.style.animation = 'none';
+            void el.offsetWidth;
+            el.style.animation = 'shake 0.4s ease';
+            setTimeout(() => { el.style.borderColor = ''; el.style.animation = ''; }, 1500);
+        },
+
+        // ---- Confirmation ----
+        closeConfirmation() {
+            document.getElementById('sf-confirm-overlay').classList.remove('open');
+        }
+    };
+
+    // Shake animation (injected via JS to keep CSS clean)
+    const shakeStyle = document.createElement('style');
+    shakeStyle.textContent = '@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}';
+    document.head.appendChild(shakeStyle);
+
+    // Phone mask
+    document.addEventListener('DOMContentLoaded', () => {
+        const phoneInput = document.getElementById('sf-customer-phone');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function() {
+                let v = this.value.replace(/\D/g, '');
+                if (v.length > 11) v = v.slice(0, 11);
+                if (v.length > 6) {
+                    this.value = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
+                } else if (v.length > 2) {
+                    this.value = '(' + v.slice(0,2) + ') ' + v.slice(2);
+                } else if (v.length > 0) {
+                    this.value = '(' + v;
+                }
+            });
+        }
+    });
+
+    // Boot
+    window.addEventListener('DOMContentLoaded', () => {
+        Storefront.init();
+    });
+    </script>
+</body>
+</html>

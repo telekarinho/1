@@ -262,6 +262,97 @@ const DataStore = {
     },
 
     // ============================================
+    // Firestore Subcollections (Fase 2 ready)
+    // Metodos async para acesso direto ao Firestore
+    // usando subcollections: franchises/{id}/orders
+    // ============================================
+    async firestoreAddDoc(collectionPath, data) {
+        if (!this._ready || !this._db) return null;
+        try {
+            data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            const ref = await this._db.collection(collectionPath).add(data);
+            data.id = ref.id;
+            return data;
+        } catch (e) {
+            console.error('firestoreAddDoc error:', collectionPath, e);
+            return null;
+        }
+    },
+
+    async firestoreGetDoc(collectionPath, docId) {
+        if (!this._ready || !this._db) return null;
+        try {
+            const doc = await this._db.collection(collectionPath).doc(docId).get();
+            return doc.exists ? { id: doc.id, ...doc.data() } : null;
+        } catch (e) {
+            console.error('firestoreGetDoc error:', e);
+            return null;
+        }
+    },
+
+    async firestoreQuery(collectionPath, filters = [], orderBy = null, limit = null) {
+        if (!this._ready || !this._db) return [];
+        try {
+            let query = this._db.collection(collectionPath);
+            filters.forEach(([field, op, value]) => {
+                query = query.where(field, op, value);
+            });
+            if (orderBy) {
+                query = query.orderBy(orderBy.field, orderBy.direction || 'asc');
+            }
+            if (limit) {
+                query = query.limit(limit);
+            }
+            const snapshot = await query.get();
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (e) {
+            console.error('firestoreQuery error:', collectionPath, e);
+            return [];
+        }
+    },
+
+    async firestoreUpdateDoc(collectionPath, docId, updates) {
+        if (!this._ready || !this._db) return false;
+        try {
+            updates.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+            await this._db.collection(collectionPath).doc(docId).update(updates);
+            return true;
+        } catch (e) {
+            console.error('firestoreUpdateDoc error:', e);
+            return false;
+        }
+    },
+
+    async firestoreDeleteDoc(collectionPath, docId) {
+        if (!this._ready || !this._db) return false;
+        try {
+            await this._db.collection(collectionPath).doc(docId).delete();
+            return true;
+        } catch (e) {
+            console.error('firestoreDeleteDoc error:', e);
+            return false;
+        }
+    },
+
+    // Real-time listener generico para subcollections
+    firestoreListen(collectionPath, callback, filters = []) {
+        if (!this._ready || !this._db) return null;
+        let query = this._db.collection(collectionPath);
+        filters.forEach(([field, op, value]) => {
+            query = query.where(field, op, value);
+        });
+        return query.onSnapshot(snapshot => {
+            const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            callback(docs);
+        }, err => console.warn('firestoreListen error:', collectionPath, err));
+    },
+
+    // Helper: path para subcollection de franquia
+    franchisePath(franchiseId, subcollection) {
+        return `franchises/${franchiseId}/${subcollection}`;
+    },
+
+    // ============================================
     // Export / Import (backup)
     // ============================================
     exportAll() {
