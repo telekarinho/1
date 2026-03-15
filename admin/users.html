@@ -201,6 +201,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
     <script src="../js/core/utils.js"></script>
     <script src="../js/core/datastore.js"></script>
     <script src="../js/core/firebase-config.js"></script>
@@ -212,6 +213,7 @@
         var allUsers = [];
         var allFranchises = [];
         var resetUserId = null;
+        var resetUserEmail = null;
 
         function toggleSidebar() {
             var sidebar = document.getElementById('sidebar');
@@ -302,8 +304,8 @@
             var html = '';
             users.forEach(function(u) {
                 html += '<tr>';
-                html += '<td><strong>' + u.name + '</strong></td>';
-                html += '<td>' + u.email + '</td>';
+                html += '<td><strong>' + Utils.escapeHtml(u.name) + '</strong></td>';
+                html += '<td>' + Utils.escapeHtml(u.email) + '</td>';
                 html += '<td>' + getRoleBadge(u.role) + '</td>';
                 html += '<td>' + getFranchiseName(u.franchiseId) + '</td>';
                 html += '<td>' + formatDate(u.createdAt) + '</td>';
@@ -355,19 +357,22 @@
             var data = {
                 name: document.getElementById('newName').value,
                 email: document.getElementById('newEmail').value,
-                password: document.getElementById('newPassword').value,
+                tempPassword: document.getElementById('newPassword').value,
                 role: role,
                 franchiseId: franchiseId
             };
 
-            var result = Auth.createUser(data);
-            if (result.success) {
-                alert('Usuario criado com sucesso!');
-                closeModal('newUserModal');
-                loadUsers();
-            } else {
-                alert('Erro ao criar usuario: ' + (result.error || 'Erro desconhecido'));
-            }
+            Auth.createUser(data).then(function(result) {
+                if (result.success) {
+                    alert('Usuario criado com sucesso!\n\nSenha temporaria: ' + result.tempPassword + '\n\nInforme ao usuario para alterar na primeira entrada.');
+                    closeModal('newUserModal');
+                    loadUsers();
+                } else {
+                    alert('Erro ao criar usuario: ' + (result.error || 'Erro desconhecido'));
+                }
+            }).catch(function(err) {
+                alert('Erro ao criar usuario: ' + err.message);
+            });
         }
 
         function openEditUserModal(userId) {
@@ -399,26 +404,16 @@
                 return;
             }
 
-            var user = allUsers.find(function(u) { return u.id === userId; });
-            if (!user) return;
-
-            user.name = document.getElementById('editName').value;
-            user.email = document.getElementById('editEmail').value;
-            user.role = role;
-            user.franchiseId = franchiseId;
+            Auth.updateUser(userId, {
+                name: document.getElementById('editName').value,
+                email: document.getElementById('editEmail').value,
+                role: role,
+                franchiseId: franchiseId
+            });
 
             alert('Usuario atualizado com sucesso!');
             closeModal('editUserModal');
             loadUsers();
-        }
-
-        function generatePassword() {
-            var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-            var password = '';
-            for (var i = 0; i < 10; i++) {
-                password += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return password;
         }
 
         function openResetPasswordModal(userId) {
@@ -426,24 +421,33 @@
             if (!user) return;
 
             resetUserId = userId;
-            document.getElementById('resetPasswordMsg').textContent = 'Deseja resetar a senha do usuario "' + user.name + '" (' + user.email + ')?';
+            resetUserEmail = user.email;
+            document.getElementById('resetPasswordMsg').textContent = 'Deseja enviar e-mail de recuperacao de senha para "' + Utils.escapeHtml(user.name) + '" (' + Utils.escapeHtml(user.email) + ')?';
             document.getElementById('resetPasswordResult').style.display = 'none';
             document.getElementById('resetConfirmBtn').style.display = 'inline-flex';
             openModal('resetPasswordModal');
         }
 
         function confirmResetPassword() {
-            if (!resetUserId) return;
+            if (!resetUserEmail) return;
 
-            var newPassword = generatePassword();
-            Auth.changePassword(resetUserId, newPassword);
-
-            document.getElementById('newGeneratedPassword').textContent = newPassword;
-            document.getElementById('resetPasswordResult').style.display = 'block';
-            document.getElementById('resetConfirmBtn').style.display = 'none';
-            document.getElementById('resetPasswordMsg').textContent = 'Senha resetada com sucesso!';
+            Auth.sendPasswordReset(resetUserEmail).then(function(result) {
+                if (result.success) {
+                    document.getElementById('resetPasswordResult').style.display = 'block';
+                    document.getElementById('resetConfirmBtn').style.display = 'none';
+                    document.getElementById('resetPasswordMsg').textContent = 'E-mail de recuperacao enviado com sucesso!';
+                    if (document.getElementById('newGeneratedPassword')) {
+                        document.getElementById('newGeneratedPassword').textContent = 'Link enviado para ' + resetUserEmail;
+                    }
+                } else {
+                    alert('Erro ao enviar e-mail: ' + result.error);
+                }
+            }).catch(function(err) {
+                alert('Erro ao enviar e-mail de recuperacao');
+            });
 
             resetUserId = null;
+            resetUserEmail = null;
         }
 
         function handleDeleteUser(userId, userName) {

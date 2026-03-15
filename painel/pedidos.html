@@ -236,6 +236,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
     <script src="../js/core/utils.js"></script>
     <script src="../js/core/datastore.js"></script>
     <script src="../js/core/firebase-config.js"></script>
@@ -282,7 +283,7 @@
                 document.getElementById(countId).textContent = statusOrders.length;
                 document.getElementById(listId).innerHTML = statusOrders.slice(0, status === 'entregue' ? 10 : 50).map(o => {
                     const itemsSummary = o.items ? o.items.map(i =>
-                        `<span class="item-name">${i.sabor || i.name || '?'}</span> (${i.tamanho || ''} ${i.formato || ''})`
+                        `<span class="item-name">${Utils.escapeHtml(i.sabor || i.name || '?')}</span> (${Utils.escapeHtml(i.tamanho || '')} ${Utils.escapeHtml(i.formato || '')})`
                     ).join('<br>') : '-';
 
                     const nextStatus = { novo: 'preparando', preparando: 'pronto', pronto: 'entregue' };
@@ -294,7 +295,7 @@
                                 <span class="order-id">#${o.id.slice(-6)}</span>
                                 <span class="order-time">${Utils.formatTime(o.createdAt)}</span>
                             </div>
-                            <div class="order-customer">👤 ${o.customer?.name || o.items?.[0]?.nomeCliente || 'Cliente'}</div>
+                            <div class="order-customer">👤 ${Utils.escapeHtml(o.customer?.name || o.items?.[0]?.nomeCliente || 'Cliente')}</div>
                             <div class="order-items">${itemsSummary}</div>
                             <div class="order-card-footer">
                                 <span class="order-total">${Utils.formatCurrency(o.total)}</span>
@@ -346,16 +347,16 @@
                     📅 ${Utils.formatDateTime(o.createdAt)} | 💳 ${o.payment || 'N/A'}
                 </p>
                 <h4 style="margin-bottom:12px">👤 Cliente</h4>
-                <p style="margin-bottom:16px">${o.customer?.name || '-'} | ${o.customer?.phone || '-'}</p>
+                <p style="margin-bottom:16px">${Utils.escapeHtml(o.customer?.name || '-')} | ${Utils.escapeHtml(o.customer?.phone || '-')}</p>
                 <h4 style="margin-bottom:12px">🍨 Itens</h4>
                 <table class="panel-table" style="margin-bottom:16px">
                     <thead><tr><th>Item</th><th>Potinho</th><th>Detalhe</th><th class="text-right">Preco</th></tr></thead>
                     <tbody>
                         ${(o.items || []).map(i => `
                             <tr>
-                                <td><strong>${i.sabor || i.name || '?'}</strong></td>
-                                <td>${i.nomeCliente || '-'}</td>
-                                <td>${i.tamanho || ''} ${i.formato || ''}</td>
+                                <td><strong>${Utils.escapeHtml(i.sabor || i.name || '?')}</strong></td>
+                                <td>${Utils.escapeHtml(i.nomeCliente || '-')}</td>
+                                <td>${Utils.escapeHtml(i.tamanho || '')} ${Utils.escapeHtml(i.formato || '')}</td>
                                 <td class="text-right">${Utils.formatCurrency(i.price)}</td>
                             </tr>
                         `).join('')}

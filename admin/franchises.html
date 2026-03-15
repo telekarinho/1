@@ -205,6 +205,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
     <script src="../js/core/utils.js"></script>
     <script src="../js/core/datastore.js"></script>
     <script src="../js/core/firebase-config.js"></script>
@@ -282,18 +283,24 @@
                 }
                 franchises.push(data);
 
-                // Create user account for franchisee
+                // Create user account for franchisee (Firebase Auth)
                 const ownerName = document.getElementById('fOwnerName').value;
                 const ownerEmail = document.getElementById('fOwnerEmail').value;
                 const ownerPassword = document.getElementById('fOwnerPassword').value;
 
-                if (ownerEmail && ownerPassword) {
+                if (ownerEmail) {
                     Auth.createUser({
                         email: ownerEmail,
-                        password: ownerPassword,
+                        tempPassword: ownerPassword || undefined,
                         name: ownerName || data.name,
-                        role: 'franchisee',
+                        role: MP.ROLES.FRANCHISEE,
                         franchiseId: data.id
+                    }).then(result => {
+                        if (result.success) {
+                            Utils.showToast('Conta do franqueado criada! Senha: ' + result.tempPassword, 'success');
+                        } else {
+                            Utils.showToast('Erro ao criar conta: ' + result.error, 'error');
+                        }
                     });
                 }
 
@@ -375,8 +382,8 @@
                     <div class="franchise-card-item">
                         <div class="franchise-card-top">
                             <div>
-                                <div class="franchise-card-name">${f.name}</div>
-                                <div class="franchise-card-city">📍 ${f.city} - ${f.state} | ${typeLabel[f.type] || f.type}</div>
+                                <div class="franchise-card-name">${Utils.escapeHtml(f.name)}</div>
+                                <div class="franchise-card-city">📍 ${Utils.escapeHtml(f.city)} - ${Utils.escapeHtml(f.state)} | ${typeLabel[f.type] || f.type}</div>
                             </div>
                             ${Utils.statusBadge(f.status)}
                         </div>
@@ -399,9 +406,9 @@
                             </div>
                         </div>
                         <div style="display:flex;gap:8px;margin-top:16px">
-                            <button class="btn btn-sm btn-outline" onclick="editFranchise('${f.id}')">✏️ Editar</button>
-                            <button class="btn btn-sm btn-outline" onclick="toggleFranchiseStatus('${f.id}')">${f.status === 'ativo' ? '🔴 Desativar' : '🟢 Ativar'}</button>
-                            <a href="franchise-detail.html?id=${f.id}" class="btn btn-sm btn-primary">📊 Detalhes</a>
+                            <button class="btn btn-sm btn-outline" onclick="editFranchise('${Utils.escapeHtml(f.id)}')">✏️ Editar</button>
+                            <button class="btn btn-sm btn-outline" onclick="toggleFranchiseStatus('${Utils.escapeHtml(f.id)}')">${f.status === 'ativo' ? '🔴 Desativar' : '🟢 Ativar'}</button>
+                            <a href="franchise-detail.html?id=${encodeURIComponent(f.id)}" class="btn btn-sm btn-primary">📊 Detalhes</a>
                         </div>
                     </div>
                 `;

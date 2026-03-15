@@ -98,6 +98,55 @@ const Utils = {
         return `<span class="status-badge" style="background:${s.color}15;color:${s.color};border:1px solid ${s.color}30">${s.icon} ${s.label}</span>`;
     },
 
+    // Escapa HTML para prevenir XSS
+    escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    },
+
+    // Sanitiza objeto - escapa todas as strings
+    sanitizeObject(obj) {
+        if (typeof obj === 'string') return this.escapeHtml(obj);
+        if (Array.isArray(obj)) return obj.map(item => this.sanitizeObject(item));
+        if (obj && typeof obj === 'object') {
+            const clean = {};
+            for (const [key, value] of Object.entries(obj)) {
+                clean[key] = this.sanitizeObject(value);
+            }
+            return clean;
+        }
+        return obj;
+    },
+
+    // Valida email
+    isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    },
+
+    // Valida senha (min 8 chars, 1 maiuscula, 1 numero)
+    isStrongPassword(password) {
+        return password.length >= 8 &&
+            /[A-Z]/.test(password) &&
+            /[0-9]/.test(password);
+    },
+
+    // Gera senha aleatoria segura
+    generateSecurePassword(length = 12) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+        const array = new Uint8Array(length);
+        crypto.getRandomValues(array);
+        return Array.from(array, byte => chars[byte % chars.length]).join('');
+    },
+
+    // Gera token seguro usando crypto API
+    generateSecureToken() {
+        const array = new Uint8Array(32);
+        crypto.getRandomValues(array);
+        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+    },
+
     // Slug from name
     slugify(text) {
         return text.toLowerCase()

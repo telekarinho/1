@@ -228,6 +228,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
     <script src="../js/core/utils.js"></script>
     <script src="../js/core/datastore.js"></script>
     <script src="../js/core/firebase-config.js"></script>
@@ -288,7 +289,7 @@
             document.getElementById('lowStockBody').innerHTML = lowStock.length > 0
                 ? lowStock.map(item => `
                     <tr>
-                        <td><strong>${item.name}</strong></td>
+                        <td><strong>${Utils.escapeHtml(item.name)}</strong></td>
                         <td>${item.quantity} ${item.unit}</td>
                         <td>${item.minStock} ${item.unit}</td>
                         <td>${item.quantity <= item.minStock * 0.5
@@ -306,7 +307,7 @@
             document.getElementById('recentOrdersBody').innerHTML = recentOrders.map(o => `
                 <tr>
                     <td><strong>#${o.id.slice(-6)}</strong><br><small style="color:var(--mp-text-light)">${Utils.formatTime(o.createdAt)}</small></td>
-                    <td>${o.customer?.name || o.items?.[0]?.nomeCliente || '-'}</td>
+                    <td>${Utils.escapeHtml(o.customer?.name || o.items?.[0]?.nomeCliente || '-')}</td>
                     <td><strong>${Utils.formatCurrency(o.total)}</strong></td>
                     <td>${Utils.statusBadge(o.status)}</td>
                 </tr>
@@ -316,8 +317,8 @@
             const staff = DataStore.getCollection('staff', franchiseId);
             document.getElementById('teamBody').innerHTML = staff.map(s => `
                 <tr>
-                    <td><strong>${s.name}</strong></td>
-                    <td>${s.role}</td>
+                    <td><strong>${Utils.escapeHtml(s.name)}</strong></td>
+                    <td>${Utils.escapeHtml(s.role)}</td>
                     <td>${Utils.statusBadge(s.active ? 'ativo' : 'inativo')}</td>
                 </tr>
             `).join('');

@@ -238,6 +238,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
     <script src="../js/core/utils.js"></script>
     <script src="../js/core/datastore.js"></script>
     <script src="../js/core/firebase-config.js"></script>
@@ -415,14 +416,17 @@
             return alert('As senhas nao coincidem.');
         }
 
-        var result = Auth.changePassword(session.userId, newPass);
-        if (result) {
-            alert('Senha alterada com sucesso!');
-            document.getElementById('newPassword').value = '';
-            document.getElementById('confirmPassword').value = '';
-        } else {
-            alert('Erro ao alterar senha. Tente novamente.');
-        }
+        Auth.changePassword(newPass).then(function(result) {
+            if (result.success) {
+                alert('Senha alterada com sucesso!');
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            } else {
+                alert(result.error || 'Erro ao alterar senha. Tente novamente.');
+            }
+        }).catch(function(err) {
+            alert('Erro ao alterar senha. Verifique sua conexao.');
+        });
     }
 
     // Init

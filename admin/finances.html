@@ -204,6 +204,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="../js/core/constants.js"></script>
 <script src="../js/core/utils.js"></script>
 <script src="../js/core/datastore.js"></script>
 <script src="../js/core/firebase-config.js"></script>
@@ -540,7 +541,7 @@
                 actionBtn = '<span style="color:#4caf50;">&#10003;</span>';
             }
             return '<tr>' +
-                '<td>' + (p.franchiseName || p.franchiseId || '-') + '</td>' +
+                '<td>' + Utils.escapeHtml(p.franchiseName || p.franchiseId || '-') + '</td>' +
                 '<td>' + Utils.formatCurrency(p.amount) + '</td>' +
                 '<td>' + Utils.formatDate(p.dueDate) + '</td>' +
                 '<td>' + (p.paidDate ? Utils.formatDate(p.paidDate) : '-') + '</td>' +
@@ -608,10 +609,10 @@
             var amountPrefix = f.type === 'income' ? '+' : '-';
             return '<tr>' +
                 '<td>' + Utils.formatDate(f.date) + '</td>' +
-                '<td>' + (f._franchiseName || f._franchiseId || '-') + '</td>' +
+                '<td>' + Utils.escapeHtml(f._franchiseName || f._franchiseId || '-') + '</td>' +
                 '<td>' + (typeLabels[f.type] || f.type) + '</td>' +
                 '<td>' + (categoryLabels[f.category] || f.category || '-') + '</td>' +
-                '<td>' + (f.description || '-') + '</td>' +
+                '<td>' + Utils.escapeHtml(f.description || '-') + '</td>' +
                 '<td style="' + amountColor + '">' + amountPrefix + ' ' + Utils.formatCurrency(f.amount) + '</td>' +
                 '</tr>';
         }).join('');

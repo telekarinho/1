@@ -302,12 +302,11 @@ const DataStore = {
     seed() {
         if (this.get('_seeded')) return;
 
-        // ---- Usuarios ----
+        // ---- Usuarios (SEM senhas - autenticacao via Firebase Auth) ----
         const users = [
             {
                 id: 'admin1',
                 email: 'admin@milkypot.com',
-                password: 'admin123',
                 role: 'super_admin',
                 name: 'Admin MilkyPot',
                 franchiseId: null,
@@ -316,7 +315,6 @@ const DataStore = {
             {
                 id: 'franq1',
                 email: 'catuai@milkypot.com',
-                password: 'catuai123',
                 role: 'franchisee',
                 name: 'Joao Silva',
                 franchiseId: 'catuai',
@@ -325,7 +323,6 @@ const DataStore = {
             {
                 id: 'franq2',
                 email: 'morumbi@milkypot.com',
-                password: 'morumbi123',
                 role: 'franchisee',
                 name: 'Maria Santos',
                 franchiseId: 'morumbi',
@@ -334,7 +331,6 @@ const DataStore = {
             {
                 id: 'franq3',
                 email: 'jardins@milkypot.com',
-                password: 'jardins123',
                 role: 'franchisee',
                 name: 'Pedro Oliveira',
                 franchiseId: 'jardins',

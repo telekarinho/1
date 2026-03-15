@@ -296,6 +296,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="../js/core/constants.js"></script>
 <script src="../js/core/utils.js"></script>
 <script src="../js/core/datastore.js"></script>
 <script src="../js/core/firebase-config.js"></script>
@@ -525,11 +526,11 @@
             var paymentLabel = capitalizePayment(o.payment);
 
             tr.innerHTML =
-                '<td><code style="font-size:12px;">' + (o.id || '-') + '</code></td>' +
+                '<td><code style="font-size:12px;">' + Utils.escapeHtml(o.id || '-') + '</code></td>' +
                 '<td style="white-space:nowrap;">' + (o.createdAt ? Utils.formatDateTime(o.createdAt) : '-') + '</td>' +
-                '<td>' + (o._franchiseName || o._franchiseId || '-') + '</td>' +
-                '<td>' + ((o.customer && o.customer.name) || '-') + '</td>' +
-                '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + itemsSummary + '</td>' +
+                '<td>' + Utils.escapeHtml(o._franchiseName || o._franchiseId || '-') + '</td>' +
+                '<td>' + Utils.escapeHtml((o.customer && o.customer.name) || '-') + '</td>' +
+                '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + Utils.escapeHtml(itemsSummary) + '</td>' +
                 '<td><span class="delivery-badge ' + deliveryClass + '">' + deliveryLabel + '</span></td>' +
                 '<td class="payment-label">' + paymentLabel + '</td>' +
                 '<td style="font-weight:600;">' + Utils.formatCurrency(o.total || 0) + '</td>' +
@@ -603,9 +604,9 @@
             order.items.forEach(function(it) {
                 var row = document.createElement('tr');
                 row.innerHTML =
-                    '<td>' + (it.sabor || '-') + '</td>' +
-                    '<td>' + (it.tamanho || '-') + '</td>' +
-                    '<td>' + (it.formato || '-') + '</td>' +
+                    '<td>' + Utils.escapeHtml(it.sabor || '-') + '</td>' +
+                    '<td>' + Utils.escapeHtml(it.tamanho || '-') + '</td>' +
+                    '<td>' + Utils.escapeHtml(it.formato || '-') + '</td>' +
                     '<td>' + Utils.formatCurrency(it.price || 0) + '</td>';
                 itemsTbody.appendChild(row);
             });
@@ -616,8 +617,8 @@
         // Customer
         var custHtml = '';
         if (order.customer) {
-            custHtml += '<strong>' + (order.customer.name || '-') + '</strong>';
-            if (order.customer.phone) custHtml += '<br><span style="color:#666;">' + order.customer.phone + '</span>';
+            custHtml += '<strong>' + Utils.escapeHtml(order.customer.name || '-') + '</strong>';
+            if (order.customer.phone) custHtml += '<br><span style="color:#666;">' + Utils.escapeHtml(order.customer.phone) + '</span>';
         } else {
             custHtml = '<span style="color:#999;">Sem dados do cliente</span>';
         }

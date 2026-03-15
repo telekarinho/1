@@ -1,0 +1,134 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================
+    // Helper Functions
+    // ============================================
+
+    // Verifica se usuario esta autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Obtem role do token customizado (custom claims)
+    // Fallback: verifica no documento do usuario
+    function getUserRole() {
+      return request.auth.token.role;
+    }
+
+    // Verifica se e super_admin
+    function isSuperAdmin() {
+      return isAuthenticated() && getUserRole() == 'super_admin';
+    }
+
+    // Verifica se e franqueado
+    function isFranchisee() {
+      return isAuthenticated() && getUserRole() == 'franchisee';
+    }
+
+    // Verifica se usuario pertence a franquia
+    function belongsToFranchise(franchiseId) {
+      return isAuthenticated() && request.auth.token.franchiseId == franchiseId;
+    }
+
+    // Verifica se e admin OU dono da franquia
+    function isAdminOrFranchiseOwner(franchiseId) {
+      return isSuperAdmin() || belongsToFranchise(franchiseId);
+    }
+
+    // ============================================
+    // DataStore Collection (legado - fase de migracao)
+    // ============================================
+    match /datastore/{document} {
+      // Durante migracao, permite leitura/escrita para autenticados
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // ============================================
+    // Users (perfis de usuario)
+    // ============================================
+    match /users/{userId} {
+      // Qualquer autenticado pode ler seu proprio perfil
+      allow read: if isAuthenticated() && (
+        request.auth.uid == userId || isSuperAdmin()
+      );
+      // Apenas super_admin pode criar/editar usuarios
+      allow create, update: if isSuperAdmin();
+      // Apenas super_admin pode deletar (exceto outros super_admin)
+      allow delete: if isSuperAdmin() && resource.data.role != 'super_admin';
+    }
+
+    // ============================================
+    // Franchises (dados de franquias)
+    // ============================================
+    match /franchises/{franchiseId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+
+      // Subcollections da franquia
+      match /orders/{orderId} {
+        allow read: if isAdminOrFranchiseOwner(franchiseId);
+        allow create: if isAdminOrFranchiseOwner(franchiseId);
+        allow update: if isAdminOrFranchiseOwner(franchiseId);
+        allow delete: if isSuperAdmin();
+      }
+
+      match /finances/{financeId} {
+        allow read: if isAdminOrFranchiseOwner(franchiseId);
+        allow write: if isAdminOrFranchiseOwner(franchiseId);
+      }
+
+      match /inventory/{itemId} {
+        allow read: if isAdminOrFranchiseOwner(franchiseId);
+        allow write: if isAdminOrFranchiseOwner(franchiseId);
+      }
+
+      match /staff/{staffId} {
+        allow read: if isAdminOrFranchiseOwner(franchiseId);
+        allow write: if isAdminOrFranchiseOwner(franchiseId);
+      }
+    }
+
+    // ============================================
+    // Products (cardapio centralizado)
+    // ============================================
+    match /products/{productId} {
+      allow read: if true; // Publico (cardapio)
+      allow write: if isSuperAdmin();
+    }
+
+    // ============================================
+    // Payments (pagamentos de franquia)
+    // ============================================
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+
+    // ============================================
+    // Settings (configuracoes do sistema)
+    // ============================================
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+
+    // ============================================
+    // Audit Log (somente leitura para admin)
+    // ============================================
+    match /audit_log/{logId} {
+      allow read: if isSuperAdmin();
+      allow create: if isAuthenticated(); // Qualquer autenticado cria log
+      allow update, delete: if false; // Imutavel
+    }
+
+    // ============================================
+    // Bloqueia tudo que nao foi definido
+    // ============================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

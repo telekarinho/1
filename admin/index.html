@@ -223,6 +223,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
     <script src="../js/core/utils.js"></script>
     <script src="../js/core/datastore.js"></script>
     <script src="../js/core/firebase-config.js"></script>
@@ -294,7 +295,7 @@
             document.getElementById('recentOrdersBody').innerHTML = recentOrders.map(o => `
                 <tr>
                     <td><strong>#${o.id.slice(-6)}</strong><br><small style="color:var(--mp-text-light)">${Utils.formatTime(o.createdAt)}</small></td>
-                    <td style="font-size:0.8rem">${o._franchiseName}</td>
+                    <td style="font-size:0.8rem">${Utils.escapeHtml(o._franchiseName)}</td>
                     <td><strong>${Utils.formatCurrency(o.total)}</strong></td>
                     <td>${Utils.statusBadge(o.status)}</td>
                 </tr>
@@ -307,7 +308,7 @@
 
             document.getElementById('paymentsBody').innerHTML = recentPayments.map(p => `
                 <tr>
-                    <td style="font-size:0.85rem">${p.franchiseName}</td>
+                    <td style="font-size:0.85rem">${Utils.escapeHtml(p.franchiseName)}</td>
                     <td><strong>${Utils.formatCurrency(p.amount)}</strong></td>
                     <td>${Utils.formatDate(p.dueDate)}</td>
                     <td>${Utils.statusBadge(p.status)}</td>
@@ -329,8 +330,8 @@
                     <div class="franchise-card-item" onclick="window.location.href='franchise-detail.html?id=${f.id}'">
                         <div class="franchise-card-top">
                             <div>
-                                <div class="franchise-card-name">${f.name}</div>
-                                <div class="franchise-card-city">📍 ${f.city} - ${f.state}</div>
+                                <div class="franchise-card-name">${Utils.escapeHtml(f.name)}</div>
+                                <div class="franchise-card-city">📍 ${Utils.escapeHtml(f.city)} - ${Utils.escapeHtml(f.state)}</div>
                             </div>
                             ${Utils.statusBadge(f.status)}
                         </div>
