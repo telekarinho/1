@@ -1,15 +1,40 @@
 /* ============================================
-   MilkyPot - DataStore (localStorage Abstraction)
+   MilkyPot - DataStore (Firestore + localStorage)
    ============================================
-   Camada de dados que pode ser migrada para
-   Firebase/Supabase no futuro sem alterar a API.
+   Usa Firestore como banco principal com cache
+   localStorage para performance instantanea.
+   API sincrona mantida para compatibilidade.
    ============================================ */
 
 const DataStore = {
     PREFIX: 'mp_',
+    _db: null,
+    _ready: false,
+    _pendingWrites: [],
 
     // ============================================
-    // CRUD Básico
+    // Inicializacao Firestore
+    // ============================================
+    init() {
+        try {
+            if (typeof firebase !== 'undefined' && firebase.firestore) {
+                this._db = firebase.firestore();
+                this._ready = true;
+                console.log('🔥 DataStore: Firestore conectado');
+                // Sync pending writes
+                this._flushPendingWrites();
+                // Load cloud data to local cache
+                this._syncFromCloud();
+            } else {
+                console.warn('⚠️ DataStore: Firestore nao disponivel, usando localStorage apenas');
+            }
+        } catch (e) {
+            console.error('DataStore.init error:', e);
+        }
+    },
+
+    // ============================================
+    // CRUD Basico (sincrono via localStorage)
     // ============================================
     get(key) {
         try {
@@ -24,6 +49,8 @@ const DataStore = {
     set(key, data) {
         try {
             localStorage.setItem(this.PREFIX + key, JSON.stringify(data));
+            // Sync to Firestore in background
+            this._writeToCloud(key, data);
             return true;
         } catch (e) {
             console.error('DataStore.set error:', key, e);
@@ -33,6 +60,7 @@ const DataStore = {
 
     remove(key) {
         localStorage.removeItem(this.PREFIX + key);
+        this._deleteFromCloud(key);
     },
 
     // ============================================
@@ -122,6 +150,118 @@ const DataStore = {
     },
 
     // ============================================
+    // Firestore Sync (background)
+    // ============================================
+    _writeToCloud(key, data) {
+        if (!this._ready || !this._db) {
+            this._pendingWrites.push({ action: 'set', key, data });
+            return;
+        }
+        try {
+            // Store as a document in 'datastore' collection
+            this._db.collection('datastore').doc(key).set({
+                value: JSON.stringify(data),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(err => console.warn('Firestore write error:', key, err));
+        } catch (e) {
+            console.warn('_writeToCloud error:', e);
+        }
+    },
+
+    _deleteFromCloud(key) {
+        if (!this._ready || !this._db) return;
+        try {
+            this._db.collection('datastore').doc(key).delete()
+                .catch(err => console.warn('Firestore delete error:', key, err));
+        } catch (e) {
+            console.warn('_deleteFromCloud error:', e);
+        }
+    },
+
+    _flushPendingWrites() {
+        if (!this._ready) return;
+        const pending = [...this._pendingWrites];
+        this._pendingWrites = [];
+        pending.forEach(op => {
+            if (op.action === 'set') this._writeToCloud(op.key, op.data);
+            if (op.action === 'delete') this._deleteFromCloud(op.key);
+        });
+    },
+
+    async _syncFromCloud() {
+        if (!this._ready || !this._db) return;
+        try {
+            const snapshot = await this._db.collection('datastore').get();
+            if (snapshot.empty) {
+                // First time: push local data to cloud
+                console.log('☁️ Firestore vazio, enviando dados locais...');
+                this._pushAllToCloud();
+            } else {
+                // Cloud has data: update local cache
+                console.log('☁️ Sincronizando dados do Firestore...');
+                snapshot.forEach(doc => {
+                    const key = doc.id;
+                    try {
+                        const cloudData = JSON.parse(doc.data().value);
+                        localStorage.setItem(this.PREFIX + key, JSON.stringify(cloudData));
+                    } catch (e) {
+                        console.warn('Sync parse error for:', key, e);
+                    }
+                });
+                console.log(`✅ ${snapshot.size} registros sincronizados do Firestore`);
+            }
+        } catch (e) {
+            console.warn('_syncFromCloud error:', e);
+        }
+    },
+
+    _pushAllToCloud() {
+        if (!this._ready || !this._db) return;
+        const batch = this._db.batch();
+        let count = 0;
+        for (let i = 0; i < localStorage.length; i++) {
+            const fullKey = localStorage.key(i);
+            if (fullKey.startsWith(this.PREFIX)) {
+                const key = fullKey.substring(this.PREFIX.length);
+                if (key === '_seeded' || key === 'session') continue;
+                const ref = this._db.collection('datastore').doc(key);
+                batch.set(ref, {
+                    value: localStorage.getItem(fullKey),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                count++;
+                // Firestore batch limit = 500
+                if (count >= 490) break;
+            }
+        }
+        if (count > 0) {
+            batch.commit()
+                .then(() => console.log(`☁️ ${count} registros enviados para o Firestore`))
+                .catch(err => console.error('Batch write error:', err));
+        }
+    },
+
+    // ============================================
+    // Real-time listeners (para pedidos)
+    // ============================================
+    onOrdersChange(franchiseId, callback) {
+        if (!this._ready || !this._db) return null;
+        const key = franchiseId ? `orders_${franchiseId}` : 'orders';
+        return this._db.collection('datastore').doc(key)
+            .onSnapshot(doc => {
+                if (doc.exists) {
+                    try {
+                        const data = JSON.parse(doc.data().value);
+                        localStorage.setItem(this.PREFIX + key, JSON.stringify(data));
+                        if (callback) callback(data);
+                    } catch (e) {
+                        console.warn('onOrdersChange parse error:', e);
+                    }
+                }
+            }, err => console.warn('onOrdersChange error:', err));
+    },
+
+    // ============================================
     // Export / Import (backup)
     // ============================================
     exportAll() {
@@ -141,6 +281,8 @@ const DataStore = {
                 localStorage.setItem(key, value);
             }
         });
+        // Also push to Firestore
+        this._pushAllToCloud();
     },
 
     downloadBackup() {
@@ -155,12 +297,12 @@ const DataStore = {
     },
 
     // ============================================
-    // SEED - Dados iniciais para demonstração
+    // SEED - Dados iniciais para demonstracao
     // ============================================
     seed() {
         if (this.get('_seeded')) return;
 
-        // ---- Usuários ----
+        // ---- Usuarios ----
         const users = [
             {
                 id: 'admin1',
@@ -176,7 +318,7 @@ const DataStore = {
                 email: 'catuai@milkypot.com',
                 password: 'catuai123',
                 role: 'franchisee',
-                name: 'João Silva',
+                name: 'Joao Silva',
                 franchiseId: 'catuai',
                 createdAt: '2024-06-01T00:00:00Z'
             },
@@ -207,8 +349,8 @@ const DataStore = {
                 id: 'ibirapuera',
                 slug: 'ibirapuera',
                 name: 'MilkyPot Shopping Ibirapuera',
-                address: 'Av. Ibirapuera, 3103 - Moema, São Paulo - SP',
-                city: 'São Paulo',
+                address: 'Av. Ibirapuera, 3103 - Moema, Sao Paulo - SP',
+                city: 'Sao Paulo',
                 state: 'SP',
                 phone: '(11) 3456-7890',
                 whatsapp: '5511934567890',
@@ -226,8 +368,8 @@ const DataStore = {
                 id: 'morumbi',
                 slug: 'morumbi',
                 name: 'MilkyPot Shopping Morumbi',
-                address: 'Av. Roque Petroni Jr, 1089 - Morumbi, São Paulo - SP',
-                city: 'São Paulo',
+                address: 'Av. Roque Petroni Jr, 1089 - Morumbi, Sao Paulo - SP',
+                city: 'Sao Paulo',
                 state: 'SP',
                 phone: '(11) 3456-7891',
                 whatsapp: '5511934567891',
@@ -245,8 +387,8 @@ const DataStore = {
                 id: 'jardins',
                 slug: 'jardins',
                 name: 'MilkyPot Jardins',
-                address: 'Rua Oscar Freire, 725 - Jardins, São Paulo - SP',
-                city: 'São Paulo',
+                address: 'Rua Oscar Freire, 725 - Jardins, Sao Paulo - SP',
+                city: 'Sao Paulo',
                 state: 'SP',
                 phone: '(11) 3456-7892',
                 whatsapp: '5511934567892',
@@ -264,7 +406,7 @@ const DataStore = {
                 id: 'barra',
                 slug: 'barra',
                 name: 'MilkyPot Barra Shopping',
-                address: 'Av. das Américas, 4666 - Barra, Rio de Janeiro - RJ',
+                address: 'Av. das Americas, 4666 - Barra, Rio de Janeiro - RJ',
                 city: 'Rio de Janeiro',
                 state: 'RJ',
                 phone: '(21) 3456-7893',
@@ -321,13 +463,13 @@ const DataStore = {
         this.set('franchises', franchises);
 
         // ---- Pedidos demo para cada franquia ----
-        const sabores = ['Ninho', 'Morango', 'Ninho com Morango', 'Nutella', 'Oreo', 'Açaí + Granola', 'Banana + Whey'];
+        const sabores = ['Ninho', 'Morango', 'Ninho com Morango', 'Nutella', 'Oreo', 'Acai + Granola', 'Banana + Whey'];
         const nomes = ['Ana', 'Carlos', 'Julia', 'Pedro', 'Maria', 'Lucas', 'Lara', 'Bruno', 'Sofia', 'Mateus'];
         const statuses = ['entregue', 'entregue', 'entregue', 'pronto', 'preparando', 'novo'];
 
         franchises.forEach(f => {
             const orders = [];
-            const numOrders = Math.floor(Math.random() * 20) + 30; // 30-50 pedidos
+            const numOrders = Math.floor(Math.random() * 20) + 30;
             for (let i = 0; i < numOrders; i++) {
                 const daysAgo = Math.floor(Math.random() * 30);
                 const date = new Date();
@@ -365,14 +507,13 @@ const DataStore = {
             }
             this.set('orders_' + f.id, orders);
 
-            // ---- Finanças demo ----
+            // ---- Financas demo ----
             const finances = [];
             for (let d = 29; d >= 0; d--) {
                 const date = new Date();
                 date.setDate(date.getDate() - d);
                 const dateStr = date.toISOString().split('T')[0];
 
-                // Receitas (dos pedidos daquele dia)
                 const dayOrders = orders.filter(o => o.createdAt.startsWith(dateStr));
                 const dayRevenue = dayOrders.reduce((s, o) => s + o.total, 0);
                 if (dayRevenue > 0) {
@@ -387,7 +528,6 @@ const DataStore = {
                     });
                 }
 
-                // Despesas aleatórias
                 if (Math.random() > 0.6) {
                     const categories = ['ingredientes', 'aluguel', 'salarios', 'manutencao', 'marketing', 'outros'];
                     const cat = categories[Math.floor(Math.random() * categories.length)];
@@ -420,13 +560,13 @@ const DataStore = {
             }));
             this.set('staff_' + f.id, staff);
 
-            // ---- Inventário demo ----
+            // ---- Inventario demo ----
             const inventory = [
                 { id: `inv_${f.id}_1`, name: 'Leite Ninho', category: 'ingredientes', quantity: Math.floor(Math.random() * 50) + 10, unit: 'kg', minStock: 15 },
                 { id: `inv_${f.id}_2`, name: 'Morango', category: 'frutas', quantity: Math.floor(Math.random() * 30) + 5, unit: 'kg', minStock: 10 },
                 { id: `inv_${f.id}_3`, name: 'Nutella', category: 'ingredientes', quantity: Math.floor(Math.random() * 20) + 3, unit: 'kg', minStock: 8 },
                 { id: `inv_${f.id}_4`, name: 'Oreo', category: 'ingredientes', quantity: Math.floor(Math.random() * 40) + 5, unit: 'pct', minStock: 10 },
-                { id: `inv_${f.id}_5`, name: 'Açaí', category: 'ingredientes', quantity: Math.floor(Math.random() * 30) + 5, unit: 'litro', minStock: 12 },
+                { id: `inv_${f.id}_5`, name: 'Acai', category: 'ingredientes', quantity: Math.floor(Math.random() * 30) + 5, unit: 'litro', minStock: 12 },
                 { id: `inv_${f.id}_6`, name: 'Granola', category: 'ingredientes', quantity: Math.floor(Math.random() * 25) + 5, unit: 'kg', minStock: 8 },
                 { id: `inv_${f.id}_7`, name: 'Copos 300ml', category: 'embalagens', quantity: Math.floor(Math.random() * 500) + 100, unit: 'un', minStock: 200 },
                 { id: `inv_${f.id}_8`, name: 'Copos 500ml', category: 'embalagens', quantity: Math.floor(Math.random() * 400) + 80, unit: 'un', minStock: 150 },

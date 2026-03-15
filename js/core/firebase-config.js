@@ -12,8 +12,10 @@ const firebaseConfig = {
     measurementId: "G-N2B5V05MEN"
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+// Initialize Firebase (only once)
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
 // Firebase Auth instance
 const firebaseAuth = firebase.auth();
@@ -22,3 +24,8 @@ const firebaseAuth = firebase.auth();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 googleProvider.addScope('email');
 googleProvider.addScope('profile');
+
+// Initialize DataStore with Firestore
+if (typeof DataStore !== 'undefined') {
+    DataStore.init();
+}
