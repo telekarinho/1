@@ -40,7 +40,7 @@ function nextCheckoutStep(step) {
     currentCheckoutStep = step;
     updateCheckoutSteps();
 
-    if (step === 3) {
+    if (step === 4) {
         updateOrderSummary();
     }
 }
@@ -55,6 +55,14 @@ function validateCheckoutStep(step) {
         }
     }
     if (step === 2) {
+        // Franchise selection - check if a store was selected
+        const btn = document.getElementById('btnToDelivery');
+        if (btn && btn.disabled) {
+            showToast('Selecione uma loja MilkyPot!');
+            return false;
+        }
+    }
+    if (step === 3) {
         const deliveryType = document.querySelector('input[name="delivery"]:checked')?.value;
         if (deliveryType === 'delivery') {
             const cep = document.getElementById('checkoutCep')?.value?.trim();
@@ -102,7 +110,9 @@ function updateOrderSummary() {
 
     const subtotal = getCartTotal();
     const deliveryType = document.querySelector('input[name="delivery"]:checked')?.value;
-    const deliveryFee = deliveryType === 'delivery' && selectedStore ? selectedStore.deliveryFee : 0;
+    // Get delivery fee from selected store (set by franchise selection script)
+    const storeFee = window._selectedStoreDeliveryFee || 0;
+    const deliveryFee = deliveryType === 'delivery' ? storeFee : 0;
 
     if (summarySubtotal) summarySubtotal.textContent = formatCurrency(subtotal);
     if (summaryDelivery) summaryDelivery.textContent = deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Grátis';
@@ -127,13 +137,18 @@ function placeOrder() {
     const paymentType = document.querySelector('input[name="payment"]:checked')?.value;
     const paymentLabels = { pix: 'PIX', credit: 'Cartão de Crédito', debit: 'Cartão de Débito', cash: 'Dinheiro' };
 
+    const storeName = window._selectedStoreName || '-';
+    const storeTime = window._selectedStoreTime || '20-35 min';
+    const storeFee = window._selectedStoreDeliveryFee || 0;
+    const deliveryFeeAmount = deliveryType === 'delivery' ? storeFee : 0;
+
     if (detailsEl) {
         detailsEl.innerHTML = `
-            <p><strong>Loja:</strong> ${selectedStore?.name || '-'}</p>
+            <p><strong>Loja:</strong> ${storeName}</p>
             <p><strong>Entrega:</strong> ${deliveryType === 'delivery' ? 'Delivery' : 'Retirada na loja'}</p>
             <p><strong>Pagamento:</strong> ${paymentLabels[paymentType] || 'PIX'}</p>
-            <p><strong>Total:</strong> ${formatCurrency(getCartTotal() + (deliveryType === 'delivery' && selectedStore ? selectedStore.deliveryFee : 0))}</p>
-            <p><strong>Previsão:</strong> ${selectedStore?.deliveryTime || '20-35 min'}</p>
+            <p><strong>Total:</strong> ${formatCurrency(getCartTotal() + deliveryFeeAmount)}</p>
+            <p><strong>Previsão:</strong> ${storeTime}</p>
         `;
     }
 
