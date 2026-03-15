@@ -93,6 +93,7 @@
         .delivery-card.status-novo { border-left-color: #3b82f6; }
         .delivery-card.status-preparando { border-left-color: #f59e0b; }
         .delivery-card.status-pronto { border-left-color: #22c55e; }
+        .delivery-card.status-em_entrega { border-left-color: #8b5cf6; }
         .delivery-card.status-entregue { border-left-color: #9ca3af; }
         .delivery-card-header {
             display: flex;
@@ -121,6 +122,7 @@
         .status-badge.novo { background: #dbeafe; color: #1d4ed8; }
         .status-badge.preparando { background: #fef3c7; color: #b45309; }
         .status-badge.pronto { background: #dcfce7; color: #15803d; }
+        .status-badge.em_entrega { background: #ede9fe; color: #6d28d9; }
         .status-badge.entregue { background: #f3f4f6; color: #6b7280; }
         .delivery-customer {
             font-family: 'Nunito', sans-serif;
@@ -175,6 +177,10 @@
         .delivery-actions button:hover { opacity: 0.85; }
         .btn-saiu {
             background: #3b82f6;
+            color: #fff;
+        }
+        .btn-gps {
+            background: #8b5cf6;
             color: #fff;
         }
         .btn-entregue {
@@ -341,6 +347,7 @@
         if (status === 'novo') return 'novo';
         if (status === 'preparando') return 'preparando';
         if (status === 'pronto') return 'pronto';
+        if (status === 'em_entrega') return 'em_entrega';
         if (status === 'entregue') return 'entregue';
         return 'novo';
     }
@@ -349,6 +356,7 @@
         if (status === 'novo') return 'Novo';
         if (status === 'preparando') return 'Preparando';
         if (status === 'pronto') return 'Pronto';
+        if (status === 'em_entrega') return 'Em Entrega';
         if (status === 'entregue') return 'Entregue';
         return status || 'Novo';
     }
@@ -356,7 +364,7 @@
     function updateKPIs(deliveryOrders) {
         var todayOrders = deliveryOrders.filter(function(o) { return isToday(o.createdAt || o.date); });
         var inProgress = deliveryOrders.filter(function(o) {
-            return o.status === 'novo' || o.status === 'preparando' || o.status === 'pronto';
+            return o.status === 'novo' || o.status === 'preparando' || o.status === 'pronto' || o.status === 'em_entrega';
         });
         var completedToday = todayOrders.filter(function(o) { return o.status === 'entregue'; });
 
@@ -369,7 +377,7 @@
     function filterOrders(deliveryOrders) {
         if (currentFilter === 'andamento') {
             return deliveryOrders.filter(function(o) {
-                return o.status === 'novo' || o.status === 'preparando' || o.status === 'pronto';
+                return o.status === 'novo' || o.status === 'preparando' || o.status === 'pronto' || o.status === 'em_entrega';
             });
         }
         if (currentFilter === 'concluidas') {
@@ -442,15 +450,27 @@
             }
             html += '</select>';
             html += '</div>';
+            // Timeline container for active deliveries
+            if (order.status !== 'entregue') {
+                html += '<div id="timeline-' + order.id + '"></div>';
+            }
+            // Tracking card container for em_entrega orders
+            if (order.status === 'em_entrega') {
+                html += '<div id="tracking-' + order.id + '"></div>';
+            }
             html += '<div class="delivery-actions">';
-            if (order.status !== 'entregue' && order.status !== 'pronto') {
+            if (order.status === 'pronto') {
+                html += '<button class="btn-gps" onclick="startDeliveryTracking(\'' + order.id + '\')">&#128205; Iniciar GPS</button>';
+            } else if (order.status !== 'entregue' && order.status !== 'pronto' && order.status !== 'em_entrega') {
                 html += '<button class="btn-saiu" onclick="updateStatus(\'' + order.id + '\', \'pronto\')">Saiu para Entrega</button>';
-            } else if (order.status === 'pronto') {
-                html += '<button class="btn-saiu btn-disabled" disabled>Saiu para Entrega</button>';
+            } else if (order.status === 'em_entrega') {
+                html += '<button class="btn-saiu btn-disabled" disabled>Em Entrega</button>';
             } else {
                 html += '<button class="btn-saiu btn-disabled" disabled>Saiu para Entrega</button>';
             }
-            if (order.status !== 'entregue') {
+            if (order.status === 'em_entrega') {
+                html += '<button class="btn-entregue" onclick="completeDelivery(\'' + order.id + '\')">Entregue</button>';
+            } else if (order.status !== 'entregue') {
                 html += '<button class="btn-entregue" onclick="updateStatus(\'' + order.id + '\', \'entregue\')">Entregue</button>';
             } else {
                 html += '<button class="btn-entregue btn-disabled" disabled>Entregue</button>';
@@ -459,6 +479,17 @@
             html += '</div>';
         }
         grid.innerHTML = html;
+
+        // Render timelines and tracking cards after DOM update
+        for (var k = 0; k < filtered.length; k++) {
+            var o = filtered[k];
+            if (o.status !== 'entregue') {
+                DeliveryTracker.renderDeliveryTimeline('timeline-' + o.id, o);
+            }
+            if (o.status === 'em_entrega') {
+                DeliveryTracker.renderTrackingCard('tracking-' + o.id, o.id);
+            }
+        }
     }
 
     window.updateStatus = function(orderId, newStatus) {
@@ -471,6 +502,21 @@
         }
         DataStore.saveCollection('orders', franchiseId, orders);
         renderCards();
+    };
+
+    window.startDeliveryTracking = function(orderId) {
+        DeliveryTracker.startTracking(orderId).then(function(result) {
+            if (result.success) {
+                window.updateStatus(orderId, 'em_entrega');
+            } else {
+                alert('Erro ao iniciar GPS: ' + result.error);
+            }
+        });
+    };
+
+    window.completeDelivery = function(orderId) {
+        DeliveryTracker.stopTracking();
+        window.updateStatus(orderId, 'entregue');
     };
 
     window.assignDriver = function(orderId, driverId) {

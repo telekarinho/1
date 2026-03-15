@@ -370,6 +370,13 @@
                     }
                 }
             }
+            // Send WhatsApp notification to customer
+            if (typeof WhatsApp !== 'undefined') {
+                const notifyStatuses = ['confirmado', 'pronto', 'em_entrega', 'entregue'];
+                if (notifyStatuses.includes(newStatus)) {
+                    WhatsApp.sendOrderNotification(orders[idx], newStatus);
+                }
+            }
             AuditLog.logOrder(
                 newStatus === 'cancelado' ? AuditLog.EVENTS.ORDER_CANCELLED : AuditLog.EVENTS.ORDER_STATUS_CHANGED,
                 orderId,

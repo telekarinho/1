@@ -75,6 +75,9 @@
                     <h1>💰 Financeiro</h1>
                 </div>
                 <div class="panel-header-right">
+                    <button class="btn btn-sm" onclick="exportDailyReport()" title="Relatório do dia">📊 Diário</button>
+                    <button class="btn btn-sm" onclick="exportWeeklyReport()" title="Relatório semanal">📈 Semanal</button>
+                    <button class="btn btn-sm" onclick="exportMonthlyReport()" title="Relatório mensal">📅 Mensal</button>
                     <button class="header-btn" title="Exportar CSV" onclick="exportCSV()">📥</button>
                     <button class="btn-logout" onclick="Auth.logout()">Sair</button>
                 </div>
@@ -275,6 +278,23 @@
     <script src="../js/core/reports.js"></script>
 
     <script>
+        // ========== REPORT EXPORTS ==========
+        function exportDailyReport() {
+            if (typeof Reports === 'undefined') return;
+            const report = Reports.generateDailyReport(franchiseId);
+            Reports.exportToCSV(report);
+        }
+        function exportWeeklyReport() {
+            if (typeof Reports === 'undefined') return;
+            const report = Reports.generateWeeklyReport(franchiseId);
+            Reports.exportToCSV(report);
+        }
+        function exportMonthlyReport() {
+            if (typeof Reports === 'undefined') return;
+            const report = Reports.generateMonthlyReport(franchiseId);
+            Reports.exportToCSV(report);
+        }
+
         // ========== GLOBALS ==========
         let currentPeriod = 'month';
         let franchiseId = null;
