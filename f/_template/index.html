@@ -3,1559 +3,938 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MilkyPot - Cardapio</title>
+    <title>MilkyPot - Franquia - Cardápio</title>
+    <meta name="description" content="Faça seu pedido online na MilkyPot - Franquia! Milkshakes, Cremosos, Açaí e opções Zero/Proteico.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../css/shared-panel.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/mobile-app.css">
+    <meta name="theme-color" content="#42A5F5">
+    <link rel="apple-touch-icon" href="../../images/logo-milkypot.png">
     <style>
-        /* ============================================
-           MilkyPot Storefront - Embedded Styles
-           ============================================ */
-
-        :root {
-            --sf-blue: #42A5F5;
-            --sf-blue-light: #BBDEFB;
-            --sf-blue-dark: #1976D2;
-            --sf-rose: #64B5F6;
-            --sf-bg: #FAFAFA;
-            --sf-card: #FFFFFF;
-            --sf-text: #333333;
-            --sf-text-light: #777777;
-            --sf-text-muted: #AAAAAA;
-            --sf-border: #F0F0F0;
-            --sf-green: #4CAF50;
-            --sf-orange: #FF9800;
-            --sf-radius: 16px;
-            --sf-radius-sm: 10px;
-            --sf-shadow: 0 2px 16px rgba(0,0,0,0.08);
-            --sf-shadow-lg: 0 8px 40px rgba(0,0,0,0.15);
-            --sf-max-w: 480px;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'Nunito', 'Segoe UI', sans-serif;
-            background: var(--sf-bg);
-            color: var(--sf-text);
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .sf-container {
-            max-width: var(--sf-max-w);
-            margin: 0 auto;
-            min-height: 100vh;
-            background: #FFF;
-            position: relative;
-            box-shadow: 0 0 60px rgba(0,0,0,0.06);
-        }
-
-        /* ---- Header / Hero ---- */
-        .sf-hero {
-            background: linear-gradient(135deg, var(--sf-blue) 0%, var(--sf-rose) 50%, #FF8A80 100%);
+        /* Store Hero */
+        .store-hero {
+            background: linear-gradient(135deg, #42A5F5 0%, #64B5F6 50%, #90CAF9 100%);
             color: #FFF;
-            padding: 32px 20px 28px;
-            position: relative;
-            overflow: hidden;
+            padding: 24px 20px 20px;
+            text-align: center;
         }
-        .sf-hero::before {
-            content: '';
-            position: absolute;
-            top: -40%; right: -20%;
-            width: 200px; height: 200px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 50%;
+        .store-hero-logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
         }
-        .sf-hero::after {
-            content: '';
-            position: absolute;
-            bottom: -30%; left: -15%;
-            width: 160px; height: 160px;
-            background: rgba(255,255,255,0.06);
-            border-radius: 50%;
+        .store-hero-name {
+            font-family: 'Baloo 2', cursive;
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 6px;
         }
-        .sf-hero-top {
+        .store-hero-meta {
             display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            font-size: 13px;
+            opacity: 0.95;
+            margin-bottom: 10px;
+        }
+        .store-hero-meta span {
+            display: inline-flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-            position: relative;
-            z-index: 1;
+            gap: 4px;
         }
-        .sf-logo {
-            font-size: 28px;
-            font-weight: 900;
-            letter-spacing: -0.5px;
-        }
-        .sf-logo span { opacity: 0.8; font-weight: 600; }
-        .sf-status-badge {
+        .store-hero-status {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             background: rgba(255,255,255,0.2);
             backdrop-filter: blur(10px);
-            padding: 6px 14px;
+            padding: 4px 14px;
             border-radius: 20px;
             font-size: 13px;
             font-weight: 700;
+            margin-bottom: 10px;
         }
-        .sf-status-badge.open .sf-status-dot { background: #69F0AE; }
-        .sf-status-badge.closed .sf-status-dot { background: #FF5252; }
-        .sf-status-dot {
+        .store-hero-status .dot {
             width: 8px; height: 8px;
             border-radius: 50%;
+            background: #69F0AE;
             animation: pulse-dot 2s infinite;
         }
         @keyframes pulse-dot {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
         }
-
-        .sf-franchise-name {
-            font-size: 26px;
-            font-weight: 900;
-            margin-bottom: 8px;
-            position: relative;
-            z-index: 1;
-        }
-        .sf-hero-meta {
+        .store-hero-actions {
             display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            font-size: 13px;
-            opacity: 0.92;
-            position: relative;
-            z-index: 1;
-        }
-        .sf-hero-meta-item {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .sf-hero-actions {
-            display: flex;
+            justify-content: center;
             gap: 10px;
-            margin-top: 16px;
-            position: relative;
-            z-index: 1;
+            margin-top: 8px;
         }
-        .sf-btn-whatsapp {
+        .store-hero-actions a {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            background: #25D366;
-            color: #FFF;
-            border: none;
-            padding: 10px 20px;
+            gap: 6px;
+            padding: 8px 18px;
             border-radius: 25px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            text-decoration: none;
-        }
-        .sf-btn-whatsapp:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(37,211,102,0.4);
             text-decoration: none;
             color: #FFF;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .sf-btn-call {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+        .store-hero-actions a:hover {
+            transform: translateY(-2px);
+        }
+        .store-btn-wpp {
+            background: #25D366;
+        }
+        .store-btn-wpp:hover {
+            box-shadow: 0 4px 20px rgba(37,211,102,0.4);
+        }
+        .store-btn-call {
             background: rgba(255,255,255,0.2);
             backdrop-filter: blur(10px);
-            color: #FFF;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 0.2s;
-            text-decoration: none;
         }
-        .sf-btn-call:hover {
+        .store-btn-call:hover {
             background: rgba(255,255,255,0.3);
-            text-decoration: none;
-            color: #FFF;
         }
 
-        /* ---- Category Pills ---- */
-        .sf-categories {
-            display: flex;
-            gap: 8px;
-            padding: 16px 20px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            background: #FFF;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            border-bottom: 1px solid var(--sf-border);
+        /* Store Info Section */
+        .store-info-section {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 24px 16px;
         }
-        .sf-categories::-webkit-scrollbar { display: none; }
-        .sf-cat-pill {
-            flex-shrink: 0;
-            padding: 8px 20px;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: 700;
-            border: 2px solid var(--sf-border);
-            background: #FFF;
-            color: var(--sf-text-light);
-            cursor: pointer;
-            transition: all 0.25s;
-            white-space: nowrap;
-        }
-        .sf-cat-pill:hover {
-            border-color: var(--sf-blue-light);
-            color: var(--sf-blue);
-        }
-        .sf-cat-pill.active {
-            background: var(--sf-blue);
-            color: #FFF;
-            border-color: var(--sf-blue);
-        }
-
-        /* ---- Products Grid ---- */
-        .sf-products {
-            padding: 16px 16px 120px;
-        }
-        .sf-section-title {
-            font-size: 20px;
-            font-weight: 800;
-            margin: 16px 4px 12px;
-            color: var(--sf-text);
-        }
-        .sf-product-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 14px;
-        }
-
-        /* Product Card */
-        .sf-product-card {
-            background: var(--sf-card);
-            border-radius: var(--sf-radius);
-            overflow: hidden;
-            box-shadow: var(--sf-shadow);
-            transition: transform 0.25s, box-shadow 0.25s;
-            display: flex;
-            flex-direction: row;
-            border: 1px solid var(--sf-border);
-        }
-        .sf-product-card:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--sf-shadow-lg);
-        }
-        .sf-product-img {
-            width: 110px;
-            min-height: 110px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 44px;
-            position: relative;
-        }
-        .sf-product-img.shake-bg { background: linear-gradient(135deg, #FCE4EC, #BBDEFB); }
-        .sf-product-img.sundae-bg { background: linear-gradient(135deg, #E8EAF6, #C5CAE9); }
-        .sf-product-img.acai-bg { background: linear-gradient(135deg, #E8D5F5, #CE93D8); }
-        .sf-product-img.especiais-bg { background: linear-gradient(135deg, #FFF3E0, #FFCC80); }
-
-        .sf-product-body {
-            flex: 1;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-        }
-        .sf-product-name {
-            font-size: 16px;
-            font-weight: 800;
-            margin-bottom: 4px;
-        }
-        .sf-product-desc {
-            font-size: 12px;
-            color: var(--sf-text-light);
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
-        .sf-product-sizes {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-        .sf-size-chip {
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 700;
-            background: #F5F5F5;
-            color: var(--sf-text);
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 2px solid transparent;
-            text-align: center;
-        }
-        .sf-size-chip:hover { border-color: var(--sf-blue-light); }
-        .sf-size-chip.selected {
-            background: var(--sf-blue);
-            color: #FFF;
-            border-color: var(--sf-blue);
-        }
-        .sf-size-chip .sf-size-label {
-            display: block;
-            font-size: 10px;
-            opacity: 0.8;
-            font-weight: 600;
-        }
-
-        .sf-product-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: auto;
-        }
-        .sf-product-price {
-            font-size: 18px;
-            font-weight: 900;
-            color: var(--sf-blue);
-        }
-        .sf-btn-add {
-            background: var(--sf-blue);
-            color: #FFF;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        .sf-btn-add:hover {
-            background: var(--sf-blue-dark);
-            transform: scale(1.05);
-        }
-        .sf-btn-add:active { transform: scale(0.95); }
-
-        /* ---- Floating Cart Button ---- */
-        .sf-cart-fab {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: var(--sf-blue);
-            color: #FFF;
-            border: none;
-            box-shadow: 0 6px 30px rgba(233,30,99,0.4);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            transition: transform 0.3s, box-shadow 0.3s;
-            z-index: 100;
-        }
-        .sf-cart-fab:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 40px rgba(233,30,99,0.5);
-        }
-        .sf-cart-fab.bounce {
-            animation: cart-bounce 0.5s ease;
-        }
-        @keyframes cart-bounce {
-            0% { transform: scale(1); }
-            30% { transform: scale(1.3); }
-            50% { transform: scale(0.9); }
-            70% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        .sf-cart-badge {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            background: #FF5252;
-            color: #FFF;
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            font-size: 13px;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #FFF;
-        }
-        .sf-cart-fab.empty { display: none; }
-
-        /* ---- Cart Drawer ---- */
-        .sf-cart-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 200;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
-        .sf-cart-overlay.open {
-            opacity: 1;
-            visibility: visible;
-        }
-        .sf-cart-drawer {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 100%;
-            max-width: 420px;
-            height: 100%;
-            background: #FFF;
-            z-index: 201;
-            transform: translateX(100%);
-            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            box-shadow: -10px 0 40px rgba(0,0,0,0.15);
-        }
-        .sf-cart-drawer.open {
-            transform: translateX(0);
-        }
-        .sf-cart-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px;
-            border-bottom: 1px solid var(--sf-border);
-        }
-        .sf-cart-header h2 {
-            font-size: 20px;
-            font-weight: 900;
-        }
-        .sf-cart-close {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border: none;
-            background: #F5F5F5;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-        }
-        .sf-cart-close:hover { background: #EEE; }
-
-        .sf-cart-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px 20px;
-        }
-        .sf-cart-empty {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--sf-text-muted);
-        }
-        .sf-cart-empty-icon {
-            font-size: 60px;
+        .store-info-section h3 {
+            font-family: 'Baloo 2', cursive;
+            color: #5A4570;
+            font-size: 1.1rem;
             margin-bottom: 12px;
-        }
-
-        .sf-cart-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 0;
-            border-bottom: 1px solid var(--sf-border);
-        }
-        .sf-cart-item-emoji {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            background: #FFF0F5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            flex-shrink: 0;
-        }
-        .sf-cart-item-info { flex: 1; }
-        .sf-cart-item-name {
-            font-size: 14px;
-            font-weight: 800;
-        }
-        .sf-cart-item-size {
-            font-size: 12px;
-            color: var(--sf-text-light);
-        }
-        .sf-cart-item-price {
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--sf-blue);
-        }
-        .sf-cart-item-qty {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .sf-qty-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 8px;
-            border: 2px solid var(--sf-border);
-            background: #FFF;
-            font-size: 16px;
-            font-weight: 800;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        .sf-qty-btn:hover {
-            border-color: var(--sf-blue);
-            color: var(--sf-blue);
-        }
-        .sf-qty-value {
-            font-size: 15px;
-            font-weight: 800;
-            min-width: 20px;
             text-align: center;
         }
-
-        /* Delivery/Pickup Toggle */
-        .sf-delivery-toggle {
-            display: flex;
-            background: #F5F5F5;
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 16px;
-        }
-        .sf-toggle-opt {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.25s;
-            border: none;
-            background: transparent;
-            color: var(--sf-text-light);
-            font-family: inherit;
-        }
-        .sf-toggle-opt.active {
-            background: #FFF;
-            color: var(--sf-blue);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        /* Cart Form */
-        .sf-cart-form { margin-top: 16px; }
-        .sf-form-group {
-            margin-bottom: 14px;
-        }
-        .sf-form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            color: var(--sf-text);
-        }
-        .sf-form-group input,
-        .sf-form-group select {
-            width: 100%;
-            padding: 12px 14px;
-            border: 2px solid var(--sf-border);
-            border-radius: var(--sf-radius-sm);
-            font-size: 15px;
-            font-family: inherit;
-            font-weight: 600;
-            transition: border-color 0.2s;
-            background: #FFF;
-            color: var(--sf-text);
-        }
-        .sf-form-group input:focus,
-        .sf-form-group select:focus {
-            outline: none;
-            border-color: var(--sf-blue);
-        }
-
-        /* Cart Footer */
-        .sf-cart-footer {
-            padding: 16px 20px 24px;
-            border-top: 1px solid var(--sf-border);
-            background: #FFF;
-        }
-        .sf-cart-summary {
-            margin-bottom: 16px;
-        }
-        .sf-summary-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        .sf-summary-row.total {
-            font-size: 18px;
-            font-weight: 900;
-            color: var(--sf-blue);
-            padding-top: 10px;
-            border-top: 2px dashed var(--sf-border);
-        }
-        .sf-btn-checkout {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: var(--sf-radius);
-            background: var(--sf-blue);
-            color: #FFF;
-            font-size: 17px;
-            font-weight: 900;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        .sf-btn-checkout:hover {
-            background: var(--sf-blue-dark);
-            transform: translateY(-1px);
-        }
-        .sf-btn-checkout:disabled {
-            background: #CCC;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* ---- Store Info Section ---- */
-        .sf-store-info {
-            background: #F9F9F9;
-            padding: 32px 20px;
-            border-top: 1px solid var(--sf-border);
-        }
-        .sf-store-info h3 {
-            font-size: 20px;
-            font-weight: 900;
-            margin-bottom: 20px;
-        }
-        .sf-info-grid {
+        .store-info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: 10px;
         }
-        .sf-info-card {
+        .store-info-card {
             background: #FFF;
-            padding: 16px;
-            border-radius: var(--sf-radius-sm);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        .sf-info-card-icon {
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-        .sf-info-card-label {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--sf-text-muted);
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-        .sf-info-card-value {
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--sf-text);
-        }
-        .sf-map-placeholder {
-            width: 100%;
-            height: 180px;
-            background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
-            border-radius: var(--sf-radius);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            color: #64B5F6;
-            font-weight: 700;
-            gap: 8px;
-        }
-
-        /* ---- Footer Branding ---- */
-        .sf-footer {
+            border-radius: 12px;
+            padding: 14px;
             text-align: center;
-            padding: 24px 20px;
-            font-size: 12px;
-            color: var(--sf-text-muted);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid #F0F0F0;
         }
-        .sf-footer a {
-            color: var(--sf-blue);
-            font-weight: 700;
-            text-decoration: none;
-        }
+        .store-info-card .icon { font-size: 22px; margin-bottom: 4px; }
+        .store-info-card .label { font-size: 11px; color: #999; font-weight: 600; text-transform: uppercase; }
+        .store-info-card .value { font-size: 13px; font-weight: 700; color: #333; margin-top: 2px; }
 
-        /* ---- Order Confirmation Modal ---- */
-        .sf-confirm-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 300;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-            padding: 20px;
-        }
-        .sf-confirm-overlay.open {
-            opacity: 1;
-            visibility: visible;
-        }
-        .sf-confirm-modal {
-            background: #FFF;
-            border-radius: 24px;
-            padding: 40px 28px;
+        /* Footer */
+        .store-footer {
             text-align: center;
-            max-width: 360px;
-            width: 100%;
-            transform: scale(0.8);
-            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .sf-confirm-overlay.open .sf-confirm-modal {
-            transform: scale(1);
-        }
-        .sf-confirm-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-        }
-        .sf-confirm-title {
-            font-size: 22px;
-            font-weight: 900;
-            margin-bottom: 8px;
-        }
-        .sf-confirm-text {
-            font-size: 14px;
-            color: var(--sf-text-light);
-            margin-bottom: 8px;
-            line-height: 1.5;
-        }
-        .sf-confirm-order-id {
+            padding: 24px 16px;
             font-size: 13px;
-            font-weight: 700;
-            background: #F5F5F5;
-            padding: 8px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: inline-block;
+            color: #999;
+            border-top: 1px solid #F0F0F0;
         }
-        .sf-confirm-btn {
-            background: var(--sf-blue);
-            color: #FFF;
-            border: none;
-            padding: 14px 40px;
-            border-radius: 14px;
-            font-size: 16px;
-            font-weight: 800;
-            cursor: pointer;
-            font-family: inherit;
-            transition: background 0.2s;
-        }
-        .sf-confirm-btn:hover { background: var(--sf-blue-dark); }
-
-        /* ---- Not Found ---- */
-        .sf-not-found {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            text-align: center;
-            padding: 40px 20px;
-        }
-        .sf-not-found-icon { font-size: 80px; margin-bottom: 20px; }
-        .sf-not-found h1 {
-            font-size: 24px;
-            font-weight: 900;
-            margin-bottom: 10px;
-        }
-        .sf-not-found p {
-            color: var(--sf-text-light);
-            margin-bottom: 24px;
-        }
-        .sf-not-found a {
-            background: var(--sf-blue);
-            color: #FFF;
-            padding: 12px 32px;
-            border-radius: 14px;
-            font-weight: 800;
-            text-decoration: none;
-            transition: background 0.2s;
-        }
-        .sf-not-found a:hover { background: var(--sf-blue-dark); text-decoration: none; }
-
-        /* ---- Loading ---- */
-        .sf-loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            gap: 16px;
-        }
-        .sf-spinner {
-            width: 44px; height: 44px;
-            border: 4px solid var(--sf-blue-light);
-            border-top-color: var(--sf-blue);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ---- Add to Cart Animation ---- */
-        .sf-added-flash {
-            animation: flash-green 0.4s ease;
-        }
-        @keyframes flash-green {
-            0% { background: var(--sf-blue); }
-            50% { background: var(--sf-green); }
-            100% { background: var(--sf-blue); }
-        }
-
-        /* ---- Responsive: 2-col on wider screens ---- */
-        @media (min-width: 520px) {
-            .sf-container { max-width: 600px; }
-            .sf-product-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            .sf-product-card {
-                flex-direction: column;
-            }
-            .sf-product-img {
-                width: 100%;
-                height: 100px;
-                min-height: 100px;
-            }
-        }
+        .store-footer a { color: #42A5F5; text-decoration: none; font-weight: 700; }
     </style>
 </head>
 <body>
-    <!-- Loading State -->
-    <div id="sf-loading" class="sf-loading">
-        <div class="sf-spinner"></div>
-        <span style="font-weight:700;color:var(--sf-text-light);">Carregando cardapio...</span>
-    </div>
-
-    <!-- Not Found State (hidden by default) -->
-    <div id="sf-not-found" class="sf-not-found" style="display:none;">
-        <div class="sf-not-found-icon">🍦</div>
-        <h1>Franquia nao encontrada</h1>
-        <p>Essa franquia nao existe ou esta temporariamente indisponivel.</p>
-        <a href="/f/">Ver todas as franquias</a>
-    </div>
-
-    <!-- Main Storefront (hidden until loaded) -->
-    <div id="sf-app" class="sf-container" style="display:none;">
-
-        <!-- Hero Header -->
-        <div class="sf-hero">
-            <div class="sf-hero-top">
-                <div class="sf-logo">Milky<span>Pot</span></div>
-                <div id="sf-status" class="sf-status-badge open">
-                    <div class="sf-status-dot"></div>
-                    <span id="sf-status-text">Aberto</span>
-                </div>
-            </div>
-            <div id="sf-franchise-name" class="sf-franchise-name">MilkyPot</div>
-            <div class="sf-hero-meta">
-                <div class="sf-hero-meta-item" id="sf-rating-display">
-                    <span>&#9733;</span>
-                    <span id="sf-rating">4.8</span>
-                </div>
-                <div class="sf-hero-meta-item">
-                    <span>&#128337;</span>
-                    <span id="sf-delivery-time">25-40 min</span>
-                </div>
-                <div class="sf-hero-meta-item">
-                    <span>&#128205;</span>
-                    <span id="sf-address">Carregando...</span>
-                </div>
-            </div>
-            <div class="sf-hero-actions">
-                <a id="sf-whatsapp-btn" href="#" class="sf-btn-whatsapp" target="_blank" rel="noopener">
-                    &#128172; WhatsApp
-                </a>
-                <a id="sf-phone-btn" href="#" class="sf-btn-call">
-                    &#128222; Ligar
-                </a>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">
+                <img src="../../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="../../index.html">Início</a></li>
+                <li><a href="#cardapio" class="active">Cardápio</a></li>
+                <li><a href="../../index.html#franquia">Seja Franqueado</a></li>
+                <li><a href="../../index.html#contato">Contato</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="btn-cart" id="cartBtn" aria-label="Carrinho">
+                    <span class="cart-icon">🛒</span>
+                    <span class="cart-count" id="cartCount">0</span>
+                </button>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
             </div>
         </div>
+    </nav>
 
-        <!-- Category Pills -->
-        <div class="sf-categories" id="sf-categories">
-            <button class="sf-cat-pill active" data-cat="todos">Todos</button>
-            <button class="sf-cat-pill" data-cat="shakes">&#127868; Shakes</button>
-            <button class="sf-cat-pill" data-cat="sundaes">&#127848; Sundaes</button>
-            <button class="sf-cat-pill" data-cat="acai">&#129744; Acai</button>
-            <button class="sf-cat-pill" data-cat="especiais">&#11088; Especiais</button>
+    <!-- Store Hero -->
+    <div class="store-hero" id="storeHero">
+        <img src="../../images/logo-milkypot.png" alt="MilkyPot" class="store-hero-logo">
+        <div class="store-hero-status">
+            <div class="dot"></div>
+            <span id="storeStatus">Aberto</span>
         </div>
-
-        <!-- Products -->
-        <div class="sf-products">
-            <div id="sf-product-grid" class="sf-product-grid"></div>
+        <div class="store-hero-name" id="storeHeroName">MilkyPot - Franquia</div>
+        <div class="store-hero-meta">
+            <span>⭐ <strong id="storeRating">4.8</strong></span>
+            <span>🕐 <strong id="storeTime">25-40 min</strong></span>
+            <span>📍 <span id="storeAddr">Endereço da franquia</span></span>
         </div>
-
-        <!-- Store Info -->
-        <div class="sf-store-info">
-            <h3>&#128205; Informacoes da Loja</h3>
-            <div class="sf-info-grid">
-                <div class="sf-info-card">
-                    <div class="sf-info-card-icon">&#128336;</div>
-                    <div class="sf-info-card-label">Horario</div>
-                    <div class="sf-info-card-value" id="sf-hours">10:00 - 22:00</div>
-                </div>
-                <div class="sf-info-card">
-                    <div class="sf-info-card-icon">&#128176;</div>
-                    <div class="sf-info-card-label">Taxa de Entrega</div>
-                    <div class="sf-info-card-value" id="sf-delivery-fee">R$ 5,00</div>
-                </div>
-                <div class="sf-info-card">
-                    <div class="sf-info-card-icon">&#128205;</div>
-                    <div class="sf-info-card-label">Endereco</div>
-                    <div class="sf-info-card-value" id="sf-full-address">Carregando...</div>
-                </div>
-                <div class="sf-info-card">
-                    <div class="sf-info-card-icon">&#128222;</div>
-                    <div class="sf-info-card-label">Telefone</div>
-                    <div class="sf-info-card-value" id="sf-phone-display">Carregando...</div>
-                </div>
-            </div>
-            <div class="sf-map-placeholder">
-                <span>&#128506;</span> Mapa em breve
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="sf-footer">
-            Feito com &#10084;&#65039; por <a href="/">MilkyPot</a> &bull; Sistema de Franquias
+        <div class="store-hero-actions">
+            <a id="storeWpp" href="#" class="store-btn-wpp" target="_blank" rel="noopener">💬 WhatsApp</a>
+            <a id="storePhone" href="#" class="store-btn-call">📞 Ligar</a>
         </div>
     </div>
 
-    <!-- Floating Cart Button -->
-    <button id="sf-cart-fab" class="sf-cart-fab empty" onclick="Storefront.openCart()">
-        &#128722;
-        <div id="sf-cart-badge" class="sf-cart-badge">0</div>
-    </button>
-
-    <!-- Cart Overlay -->
-    <div id="sf-cart-overlay" class="sf-cart-overlay" onclick="Storefront.closeCart()"></div>
-
-    <!-- Cart Drawer -->
-    <div id="sf-cart-drawer" class="sf-cart-drawer">
-        <div class="sf-cart-header">
-            <h2>&#128722; Seu Pedido</h2>
-            <button class="sf-cart-close" onclick="Storefront.closeCart()">&times;</button>
-        </div>
-        <div class="sf-cart-body" id="sf-cart-body">
-            <div class="sf-cart-empty" id="sf-cart-empty">
-                <div class="sf-cart-empty-icon">&#128722;</div>
-                <p>Seu carrinho esta vazio</p>
-                <p style="font-size:13px;margin-top:4px;">Adicione produtos para comecar!</p>
+    <!-- Products Catalog -->
+    <section class="products-section" id="cardapio" style="padding-top:24px;">
+        <div class="container">
+            <h2 style="text-align:center;font-family:'Baloo 2',cursive;color:#5A4570;margin-bottom:4px;font-size:1.4rem;">Escolha o creme do seu Milkypot 🍨</h2>
+            <p style="text-align:center;color:#9484A8;font-size:0.9rem;margin-bottom:16px;">Toque no sabor para montar do seu jeito!</p>
+            <div class="category-tabs sticky-tabs" id="categoryTabs">
+                <button class="cat-tab active" data-category="ninho" onclick="filterProducts('ninho')">☁️ Ninho</button>
+                <button class="cat-tab" data-category="acai" onclick="filterProducts('acai')">🫐 Açaí</button>
+                <button class="cat-tab" data-category="fit" onclick="filterProducts('fit')">💪 Zero/Fit</button>
             </div>
-            <div id="sf-cart-items"></div>
+            <div class="products-grid-mobile" id="productGrid"></div>
+        </div>
+    </section>
 
-            <div id="sf-cart-form-area" style="display:none;">
-                <!-- Delivery Toggle -->
-                <div class="sf-delivery-toggle" style="margin-top:16px;">
-                    <button class="sf-toggle-opt active" data-mode="delivery" onclick="Storefront.setDeliveryMode('delivery')">&#128666; Entrega</button>
-                    <button class="sf-toggle-opt" data-mode="pickup" onclick="Storefront.setDeliveryMode('pickup')">&#127978; Retirada</button>
+    <!-- Store Info -->
+    <div class="store-info-section">
+        <h3>📍 Informações da Loja</h3>
+        <div class="store-info-grid">
+            <div class="store-info-card">
+                <div class="icon">🕐</div>
+                <div class="label">Horário</div>
+                <div class="value" id="storeHours">10:00 - 22:00</div>
+            </div>
+            <div class="store-info-card">
+                <div class="icon">🛵</div>
+                <div class="label">Taxa de Entrega</div>
+                <div class="value" id="storeDeliveryFee">R$ 5,00</div>
+            </div>
+            <div class="store-info-card">
+                <div class="icon">📍</div>
+                <div class="label">Endereço</div>
+                <div class="value" id="storeFullAddr">Endereço da franquia</div>
+            </div>
+            <div class="store-info-card">
+                <div class="icon">📞</div>
+                <div class="label">Telefone</div>
+                <div class="value" id="storePhoneDisplay">(00) 00000-0000</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="store-footer">
+        Feito com ❤️ por <a href="../../index.html">MilkyPot</a> &bull; Sistema de Franquias
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-overlay" id="cartOverlay"></div>
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>🛒 Meu Carrinho</h3>
+            <button class="cart-close" id="cartClose" aria-label="Fechar carrinho">&times;</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty">
+                <span class="cart-empty-icon">🛒</span>
+                <p>Seu carrinho está vazio</p>
+                <small>Adicione produtos deliciosos!</small>
+            </div>
+        </div>
+        <div class="cart-footer" id="cartFooter" style="display:none">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span class="cart-total-value" id="cartTotal">R$ 0,00</span>
+            </div>
+            <button class="btn-primary btn-full" onclick="openCheckout()">Finalizar Pedido ✨</button>
+        </div>
+    </div>
+
+    <!-- Checkout Modal (4 steps) -->
+    <div class="modal-overlay" id="checkoutModal">
+        <div class="modal-content checkout-modal">
+            <button class="modal-close" onclick="closeCheckout()">&times;</button>
+            <h2>🎉 Finalizar Pedido</h2>
+            <div class="checkout-steps" id="checkoutSteps">
+                <div class="checkout-step active" data-step="1">
+                    <span class="cs-num">1</span>
+                    <span>Dados</span>
                 </div>
+                <div class="checkout-step" data-step="2">
+                    <span class="cs-num">2</span>
+                    <span>Loja</span>
+                </div>
+                <div class="checkout-step" data-step="3">
+                    <span class="cs-num">3</span>
+                    <span>Entrega</span>
+                </div>
+                <div class="checkout-step" data-step="4">
+                    <span class="cs-num">4</span>
+                    <span>Pagamento</span>
+                </div>
+            </div>
 
-                <!-- Customer Info -->
-                <div class="sf-cart-form">
-                    <div class="sf-form-group">
-                        <label>Seu Nome</label>
-                        <input type="text" id="sf-customer-name" placeholder="Ex: Maria Silva">
+            <!-- Step 1: Customer Data -->
+            <div class="checkout-panel active" id="checkoutStep1">
+                <h3>Seus Dados</h3>
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="checkoutName" placeholder="Seu nome" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Telefone</label>
+                        <input type="tel" id="checkoutPhone" placeholder="(11) 99999-9999" required>
                     </div>
-                    <div class="sf-form-group">
-                        <label>Telefone / WhatsApp</label>
-                        <input type="tel" id="sf-customer-phone" placeholder="(11) 99999-9999">
-                    </div>
-                    <div class="sf-form-group" id="sf-address-group">
-                        <label>Endereco de Entrega</label>
-                        <input type="text" id="sf-customer-address" placeholder="Rua, numero, bairro">
-                    </div>
-                    <div class="sf-form-group">
-                        <label>Forma de Pagamento</label>
-                        <select id="sf-payment-method">
-                            <option value="pix">Pix</option>
-                            <option value="credito">Cartao de Credito</option>
-                            <option value="debito">Cartao de Debito</option>
-                            <option value="dinheiro">Dinheiro</option>
-                        </select>
+                    <div class="form-group">
+                        <label>CPF</label>
+                        <input type="text" id="checkoutCpf" placeholder="000.000.000-00">
                     </div>
                 </div>
+                <button class="btn-primary btn-full" onclick="nextCheckoutStep(2)">Continuar →</button>
             </div>
-        </div>
 
-        <div class="sf-cart-footer" id="sf-cart-footer" style="display:none;">
-            <div class="sf-cart-summary">
-                <div class="sf-summary-row">
-                    <span>Subtotal</span>
-                    <span id="sf-subtotal">R$ 0,00</span>
+            <!-- Step 2: Franchise Selection -->
+            <div class="checkout-panel" id="checkoutStep2">
+                <h3>📍 Escolha a Loja</h3>
+                <p class="checkout-panel-desc">Selecione a MilkyPot mais perto de você:</p>
+                <div class="franchise-search-checkout">
+                    <div class="search-input-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="checkoutStoreSearch" placeholder="Seu CEP ou bairro..." class="search-input" oninput="filterCheckoutStores(this.value)">
+                        <button class="btn-location" onclick="useGeolocationCheckout()" title="Usar minha localização">
+                            <span>📍</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="sf-summary-row" id="sf-delivery-fee-row">
-                    <span>Taxa de entrega</span>
-                    <span id="sf-del-fee-value">R$ 5,00</span>
+                <div class="checkout-stores-list" id="checkoutStoresList"></div>
+                <div class="checkout-selected-store" id="checkoutSelectedStore" style="display:none;">
+                    <div class="selected-store-card">
+                        <div class="selected-store-info">
+                            <strong id="selectedStoreName"></strong>
+                            <span id="selectedStoreAddress" class="selected-store-addr"></span>
+                            <div class="selected-store-meta">
+                                <span class="ss-meta-item" id="selectedStoreTime">⏱️ --</span>
+                                <span class="ss-meta-item" id="selectedStoreRating">⭐ --</span>
+                                <span class="ss-meta-item ss-open" id="selectedStoreStatus">🟢 Aberto</span>
+                            </div>
+                        </div>
+                        <button class="btn-change-store" onclick="changeSelectedStore()">Trocar</button>
+                    </div>
                 </div>
-                <div class="sf-summary-row total">
-                    <span>Total</span>
-                    <span id="sf-total">R$ 0,00</span>
+                <div class="checkout-nav">
+                    <button class="btn-secondary" onclick="nextCheckoutStep(1)">← Voltar</button>
+                    <button class="btn-primary" id="btnToDelivery" onclick="nextCheckoutStep(3)" disabled>Escolha uma loja</button>
                 </div>
             </div>
-            <button class="sf-btn-checkout" id="sf-btn-checkout" onclick="Storefront.submitOrder()">
-                Finalizar Pedido
-            </button>
+
+            <!-- Step 3: Delivery -->
+            <div class="checkout-panel" id="checkoutStep3">
+                <h3>Entrega</h3>
+                <div class="delivery-options">
+                    <label class="delivery-option active">
+                        <input type="radio" name="delivery" value="pickup" checked>
+                        <span class="do-icon">🏪</span>
+                        <span class="do-text">
+                            <strong>Retirar na Loja</strong>
+                            <small>Grátis - pronto em 15min</small>
+                        </span>
+                    </label>
+                    <label class="delivery-option">
+                        <input type="radio" name="delivery" value="delivery">
+                        <span class="do-icon">🛵</span>
+                        <span class="do-text">
+                            <strong>Delivery</strong>
+                            <small id="deliveryFeeText">Taxa a partir de R$ 5,00</small>
+                        </span>
+                    </label>
+                </div>
+                <div class="delivery-address" id="deliveryAddress" style="display:none">
+                    <div class="form-group">
+                        <label>CEP</label>
+                        <input type="text" id="checkoutCep" placeholder="00000-000">
+                    </div>
+                    <div class="form-group">
+                        <label>Endereço</label>
+                        <input type="text" id="checkoutAddress" placeholder="Rua, número">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Complemento</label>
+                            <input type="text" id="checkoutComplement" placeholder="Apto, bloco...">
+                        </div>
+                        <div class="form-group">
+                            <label>Bairro</label>
+                            <input type="text" id="checkoutNeighborhood" placeholder="Bairro">
+                        </div>
+                    </div>
+                </div>
+                <div class="checkout-nav">
+                    <button class="btn-secondary" onclick="nextCheckoutStep(2)">← Voltar</button>
+                    <button class="btn-primary" onclick="nextCheckoutStep(4)">Continuar →</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Payment -->
+            <div class="checkout-panel" id="checkoutStep4">
+                <h3>Pagamento</h3>
+                <div class="payment-options">
+                    <label class="payment-option active">
+                        <input type="radio" name="payment" value="pix" checked>
+                        <span class="po-icon">📱</span>
+                        <strong>PIX</strong>
+                        <small>Aprovação instantânea</small>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="payment" value="credit">
+                        <span class="po-icon">💳</span>
+                        <strong>Cartão de Crédito</strong>
+                        <small>Até 3x sem juros</small>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="payment" value="debit">
+                        <span class="po-icon">💳</span>
+                        <strong>Cartão de Débito</strong>
+                        <small>Pagamento na entrega</small>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="payment" value="cash">
+                        <span class="po-icon">💵</span>
+                        <strong>Dinheiro</strong>
+                        <small>Pagamento na entrega</small>
+                    </label>
+                </div>
+                <div class="order-summary">
+                    <h4>Resumo do Pedido</h4>
+                    <div class="summary-store" id="summaryStore"></div>
+                    <div class="summary-items" id="summaryItems"></div>
+                    <div class="summary-line">
+                        <span>Subtotal</span>
+                        <span id="summarySubtotal">R$ 0,00</span>
+                    </div>
+                    <div class="summary-line">
+                        <span>Entrega</span>
+                        <span id="summaryDelivery">Grátis</span>
+                    </div>
+                    <div class="summary-line total">
+                        <span>Total</span>
+                        <span id="summaryTotal">R$ 0,00</span>
+                    </div>
+                </div>
+                <div class="checkout-nav">
+                    <button class="btn-secondary" onclick="nextCheckoutStep(3)">← Voltar</button>
+                    <button class="btn-primary btn-full" onclick="placeOrder()">Confirmar Pedido 🎉</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Order Confirmation Modal -->
-    <div id="sf-confirm-overlay" class="sf-confirm-overlay">
-        <div class="sf-confirm-modal">
-            <div class="sf-confirm-icon">&#127881;</div>
-            <div class="sf-confirm-title">Pedido Enviado!</div>
-            <div class="sf-confirm-text">
-                Seu pedido foi recebido com sucesso. Acompanhe pelo WhatsApp.
+    <!-- Order Success Modal -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-content success-modal">
+            <div class="success-animation">
+                <div class="success-circle">
+                    <span>🎉</span>
+                </div>
             </div>
-            <div class="sf-confirm-order-id" id="sf-confirm-order-id"></div>
-            <div class="sf-confirm-text" style="font-size:13px;">
-                Tempo estimado: <strong id="sf-confirm-time">25-40 min</strong>
-            </div>
-            <button class="sf-confirm-btn" onclick="Storefront.closeConfirmation()">
-                Entendido!
-            </button>
+            <h2>Pedido Confirmado!</h2>
+            <p>Seu pedido <strong id="orderNumber">#MP0001</strong> foi recebido com sucesso!</p>
+            <div class="success-details" id="successDetails"></div>
+            <button class="btn-primary btn-full" onclick="closeSuccessModal()">Voltar ao Cardápio</button>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <script src="../../js/core/constants.js"></script>
-    <script src="../../js/core/i18n.js"></script>
-    <script src="../../js/core/utils.js"></script>
-    <script src="../../js/core/datastore.js"></script>
-    <script src="../../js/core/firebase-config.js"></script>
-    <script src="../../js/core/whatsapp.js"></script>
+    <!-- Product Bottom Sheet -->
+    <div id="productSheetBackdrop" class="sheet-backdrop" onclick="closeProductSheet()" style="display:none;"></div>
+    <div id="productSheet" class="product-sheet" style="display:none;">
+        <div class="sheet-handle" onclick="closeProductSheet()"></div>
+        <div class="sheet-content" id="sheetContent"></div>
+    </div>
+
+    <!-- Sticky Cart Bar -->
+    <div id="stickyCart" class="sticky-cart-bar" style="display:none;">
+        <div class="sticky-cart-info">
+            <span class="sticky-cart-icon">🛒</span>
+            <span id="stickyCartText">0 itens</span>
+        </div>
+        <button class="sticky-cart-btn" onclick="openCart()">
+            Ver Carrinho — <strong id="stickyCartTotal">R$ 0,00</strong>
+        </button>
+    </div>
+
+    <script src="../../js/cardapio-data.js"></script>
+    <script src="../../js/cart.js"></script>
+    <script src="../../js/checkout.js"></script>
     <script>
     /* ============================================
-       MilkyPot - Storefront Controller
+       Product Catalog + Bottom Sheet (same as cardapio.html)
        ============================================ */
-
-    // FranchiseRouter (inline since no separate file yet)
-    const FranchiseRouter = {
-        getFranchiseSlug() {
-            const path = window.location.pathname;
-            const parts = path.split('/').filter(Boolean);
-            // URL pattern: /f/{slug}/
-            const fIdx = parts.indexOf('f');
-            if (fIdx !== -1 && parts[fIdx + 1] && parts[fIdx + 1] !== '_template') {
-                return parts[fIdx + 1];
-            }
-            return null;
-        },
-
-        getFranchiseData(slug) {
-            if (!slug) return null;
-            // Try DataStore first
-            if (typeof DataStore !== 'undefined') {
-                const franchises = DataStore.get('franchises') || [];
-                const found = franchises.find(f =>
-                    f.slug === slug || (f.name && f.name.toLowerCase().replace(/\s+/g, '-') === slug)
-                );
-                if (found) return found;
-            }
-            return null;
+    (function() {
+        function getAllProducts() {
+            var products = [];
+            var config = CARDAPIO_CONFIG;
+            config.bases.forEach(function(base) {
+                if (!base.available) return;
+                var formats = config.formatos.filter(function(f) {
+                    return f.available && f.compatibleBases.indexOf(base.id) !== -1;
+                });
+                Object.keys(config.sabores).forEach(function(catKey) {
+                    var cat = config.sabores[catKey];
+                    if (cat.compatibleBases.indexOf(base.id) === -1) return;
+                    cat.items.forEach(function(sabor) {
+                        if (!sabor.available) return;
+                        formats.forEach(function(formato) {
+                            var categoryTag = base.id === 'acai' ? 'acai' : (base.id === 'zero-fit' ? 'fit' : 'ninho');
+                            var formatLabel = '';
+                            if (formato.id === 'shake' || formato.id === 'acai-shake') formatLabel = 'Shake';
+                            else if (formato.id === 'sundae') formatLabel = 'Sundae Gourmet';
+                            else if (formato.id === 'acai-bowl') formatLabel = 'Bowl';
+                            var productName = formatLabel + ' de ' + sabor.name;
+                            if (sabor.id.startsWith('acai-')) {
+                                productName = 'Açaí ' + formatLabel + ' + ' + sabor.name.replace('Açaí + ', '');
+                            }
+                            var desc = sabor.desc;
+                            if (formato.id === 'shake' || formato.id === 'acai-shake') {
+                                desc = 'Batido no mixer profissional. ' + desc;
+                            } else {
+                                desc = 'Montado em camadas. ' + desc;
+                            }
+                            products.push({
+                                baseId: base.id, formatoId: formato.id, saborId: sabor.id,
+                                name: productName, desc: desc, emoji: sabor.emoji,
+                                category: categoryTag, highlight: sabor.highlight,
+                                isAdulto: catKey === 'adulto',
+                                formatType: (formato.id === 'shake' || formato.id === 'acai-shake') ? 'shake' : 'sundae',
+                                mediumPrice: config.tamanhos.find(function(t) { return t.id === 'medio'; }).price
+                            });
+                        });
+                    });
+                });
+            });
+            return products;
         }
-    };
 
-    // ============================================
-    // Default Products
-    // ============================================
-    const defaultProducts = [
-        { id: 'p1', name: 'Shake Ninho', category: 'shakes', description: 'Cremoso shake de leite ninho', emoji: '\u{1F95B}', sizes: [{name:'Mini',price:10},{name:'Medio',price:16},{name:'Grande',price:22}] },
-        { id: 'p2', name: 'Shake Morango', category: 'shakes', description: 'Shake com morangos frescos', emoji: '\u{1F353}', sizes: [{name:'Mini',price:12},{name:'Medio',price:18},{name:'Grande',price:24}] },
-        { id: 'p3', name: 'Shake Nutella', category: 'shakes', description: 'Shake irresistivel de Nutella', emoji: '\u{1F36B}', sizes: [{name:'Mini',price:14},{name:'Medio',price:20},{name:'Grande',price:26}] },
-        { id: 'p4', name: 'Shake Oreo', category: 'shakes', description: 'Shake crocante com Oreo', emoji: '\u{1F36A}', sizes: [{name:'Mini',price:13},{name:'Medio',price:19},{name:'Grande',price:25}] },
-        { id: 'p5', name: 'Sundae Ninho', category: 'sundaes', description: 'Sundae cremoso de leite ninho', emoji: '\u{1F368}', sizes: [{name:'Pequeno',price:14},{name:'Grande',price:22}] },
-        { id: 'p6', name: 'Sundae Morango', category: 'sundaes', description: 'Sundae com calda de morango', emoji: '\u{1F367}', sizes: [{name:'Pequeno',price:15},{name:'Grande',price:23}] },
-        { id: 'p7', name: 'Acai Tradicional', category: 'acai', description: 'Acai puro com granola e banana', emoji: '\u{1FAD0}', sizes: [{name:'300ml',price:16},{name:'500ml',price:22},{name:'700ml',price:28}] },
-        { id: 'p8', name: 'Acai Premium', category: 'acai', description: 'Acai com morango, kiwi e mel', emoji: '\u{1F347}', sizes: [{name:'300ml',price:20},{name:'500ml',price:28},{name:'700ml',price:34}] },
-        { id: 'p9', name: 'Banana + Whey', category: 'especiais', description: 'Shake proteico com banana e whey', emoji: '\u{1F34C}', sizes: [{name:'Mini',price:16},{name:'Medio',price:22},{name:'Grande',price:28}] },
-        { id: 'p10', name: 'Ninho com Morango', category: 'especiais', description: 'Combinacao perfeita ninho + morango', emoji: '\u{1F964}', sizes: [{name:'Mini',price:14},{name:'Medio',price:20},{name:'Grande',price:26}] },
-    ];
+        var allProducts = getAllProducts();
 
-    // ============================================
-    // Storefront App
-    // ============================================
-    const Storefront = {
-        franchiseId: null,
-        franchiseData: null,
-        products: [],
-        cart: [],
-        activeCategory: 'todos',
-        deliveryMode: 'delivery',
-        deliveryFee: 5,
-        selectedSizes: {},  // productId -> sizeIndex
+        function renderProducts(filter) {
+            var grid = document.getElementById('productGrid');
+            if (!grid) return;
+            var filtered = allProducts.filter(function(p) { return p.category === filter; });
+            var html = '';
+            filtered.forEach(function(p) {
+                var badgeHtml = '';
+                if (p.isAdulto) badgeHtml = '<span class="card-badge badge-adulto">+18</span>';
+                else if (p.highlight) badgeHtml = '<span class="card-badge badge-popular">⭐</span>';
+                var formatIcon = p.formatType === 'shake' ? '🥤' : (p.category === 'acai' && p.formatType !== 'shake' ? '🥣' : '🍨');
+                html += '<div class="product-card-mobile" onclick="openProductSheet(\'' + p.baseId + '\',\'' + p.formatoId + '\',\'' + p.saborId + '\')">' +
+                    '<div class="card-emoji-wrap">' +
+                        '<span class="card-emoji">' + p.emoji + '</span>' +
+                        '<span class="card-format-icon">' + formatIcon + '</span>' +
+                        badgeHtml +
+                    '</div>' +
+                    '<div class="card-info">' +
+                        '<h3 class="card-name">' + p.name + '</h3>' +
+                        '<p class="card-desc">' + p.desc + '</p>' +
+                        '<div class="card-footer">' +
+                            '<span class="card-price">a partir de <strong>R$ 10</strong></span>' +
+                            '<button class="card-add-btn">Pedir</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            });
+            grid.innerHTML = html;
+        }
 
-        // ---- Init ----
-        init() {
-            // Init DataStore if available
-            if (typeof DataStore !== 'undefined' && typeof DataStore.init === 'function') {
-                try { DataStore.init(); } catch(e) { console.warn('DataStore init skipped:', e); }
+        window.filterProducts = function(cat) {
+            var tabs = document.querySelectorAll('.cat-tab');
+            tabs.forEach(function(t) { t.classList.remove('active'); });
+            if (event && event.target) event.target.classList.add('active');
+            renderProducts(cat);
+        };
+
+        // Product Bottom Sheet
+        window.openProductSheet = function(baseId, formatoId, saborId) {
+            var config = CARDAPIO_CONFIG;
+            var base = config.bases.find(function(b) { return b.id === baseId; });
+            var formato = config.formatos.find(function(f) { return f.id === formatoId; });
+            var sabor = null;
+            Object.keys(config.sabores).forEach(function(key) {
+                var found = config.sabores[key].items.find(function(s) { return s.id === saborId; });
+                if (found) sabor = found;
+            });
+            if (!base || !formato || !sabor) return;
+
+            var formatLabel = '';
+            if (formato.id === 'shake' || formato.id === 'acai-shake') formatLabel = 'Shake';
+            else if (formato.id === 'sundae') formatLabel = 'Sundae Gourmet';
+            else if (formato.id === 'acai-bowl') formatLabel = 'Bowl';
+
+            var productName = formatLabel + ' de ' + sabor.name;
+            if (sabor.id.startsWith('acai-')) {
+                productName = 'Açaí ' + formatLabel + ' + ' + sabor.name.replace('Açaí + ', '');
             }
 
-            const slug = FranchiseRouter.getFranchiseSlug();
+            var html = '<div class="sheet-product-hero">' +
+                '<span class="sheet-emoji">' + sabor.emoji + '</span>' +
+                '<h2 class="sheet-name">' + productName + '</h2>' +
+                '<p class="sheet-desc">' + sabor.desc + '</p>' +
+            '</div>' +
+            '<div class="sheet-section">' +
+                '<h4 class="sheet-section-title">Escolha o tamanho</h4>' +
+                '<div class="sheet-sizes" id="sheetSizes">';
 
-            if (!slug) {
-                this.showNotFound();
-                return;
-            }
-
-            const data = FranchiseRouter.getFranchiseData(slug);
-
-            if (data) {
-                this.franchiseId = data.id || slug;
-                this.franchiseData = data;
-                this.loadFranchise(data);
-            } else {
-                // No data in DataStore - use slug as id and show with defaults
-                this.franchiseId = slug;
-                this.franchiseData = { name: this.formatSlug(slug), slug: slug };
-                this.loadFranchise(this.franchiseData);
-            }
-        },
-
-        formatSlug(slug) {
-            return slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-        },
-
-        showNotFound() {
-            document.getElementById('sf-loading').style.display = 'none';
-            document.getElementById('sf-not-found').style.display = 'flex';
-        },
-
-        loadFranchise(data) {
-            // Populate header
-            document.getElementById('sf-franchise-name').textContent = 'MilkyPot ' + (data.name || '');
-            document.title = 'MilkyPot ' + (data.name || '') + ' - Cardapio';
-
-            // Status
-            const isOpen = data.status !== 'inativo';
-            const statusEl = document.getElementById('sf-status');
-            statusEl.className = 'sf-status-badge ' + (isOpen ? 'open' : 'closed');
-            document.getElementById('sf-status-text').textContent = isOpen ? 'Aberto' : 'Fechado';
-
-            // Rating
-            document.getElementById('sf-rating').textContent = data.rating || '4.8';
-
-            // Delivery time
-            document.getElementById('sf-delivery-time').textContent = data.deliveryTime || '25-40 min';
-
-            // Address
-            const addr = data.address || data.endereco || 'Consulte pelo WhatsApp';
-            document.getElementById('sf-address').textContent = addr;
-            document.getElementById('sf-full-address').textContent = addr;
-
-            // Phone
-            const phone = data.phone || data.telefone || '(11) 99999-9999';
-            document.getElementById('sf-phone-display').textContent = phone;
-            const cleanPhone = phone.replace(/\D/g, '');
-            document.getElementById('sf-whatsapp-btn').href = 'https://wa.me/55' + cleanPhone + '?text=Ola! Gostaria de fazer um pedido.';
-            document.getElementById('sf-phone-btn').href = 'tel:+55' + cleanPhone;
-
-            // Hours
-            document.getElementById('sf-hours').textContent = data.hours || data.horario || '10:00 - 22:00';
-
-            // Delivery fee
-            this.deliveryFee = data.deliveryFee || data.taxaEntrega || 5;
-            document.getElementById('sf-delivery-fee').textContent = Utils.formatCurrency(this.deliveryFee);
-            document.getElementById('sf-del-fee-value').textContent = Utils.formatCurrency(this.deliveryFee);
-
-            // Confirmation time
-            document.getElementById('sf-confirm-time').textContent = data.deliveryTime || '25-40 min';
-
-            // Load products
-            this.loadProducts();
-
-            // Show app
-            document.getElementById('sf-loading').style.display = 'none';
-            document.getElementById('sf-app').style.display = 'block';
-
-            // Setup category filters
-            this.setupCategories();
-        },
-
-        // ---- Products ----
-        loadProducts() {
-            let products = null;
-            if (typeof DataStore !== 'undefined') {
-                products = DataStore.get('products_' + this.franchiseId) || DataStore.get('products');
-            }
-            this.products = (products && products.length) ? products : defaultProducts;
-
-            // Initialize selected sizes (first/cheapest size for each)
-            this.products.forEach(p => {
-                this.selectedSizes[p.id] = 0;
+            config.tamanhos.forEach(function(tam) {
+                if (!tam.available) return;
+                var isPopular = tam.id === 'medio';
+                html += '<button class="sheet-size-btn' + (isPopular ? ' sheet-size-popular selected' : '') + '" ' +
+                    'data-size-id="' + tam.id + '" data-price="' + tam.price + '" ' +
+                    'onclick="selectSize(this)">' +
+                    '<span class="size-ml">' + tam.ml + 'ml</span>' +
+                    '<span class="size-name">' + tam.name + '</span>' +
+                    '<span class="size-price">R$ ' + tam.price.toFixed(0) + '</span>' +
+                    (isPopular ? '<span class="size-popular-tag">Popular</span>' : '') +
+                '</button>';
             });
 
-            this.renderProducts();
-        },
+            html += '</div></div>' +
+            '<div class="sheet-section">' +
+                '<h4 class="sheet-section-title">Adicionais <span class="sheet-optional">(opcional)</span></h4>' +
+                '<div class="sheet-extras" id="sheetExtras">';
 
-        renderProducts() {
-            const grid = document.getElementById('sf-product-grid');
-            const filtered = this.activeCategory === 'todos'
-                ? this.products
-                : this.products.filter(p => p.category === this.activeCategory);
-
-            if (filtered.length === 0) {
-                grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--sf-text-muted);grid-column:1/-1;">Nenhum produto nesta categoria.</div>';
-                return;
-            }
-
-            grid.innerHTML = filtered.map(p => {
-                const bgClass = p.category === 'shakes' ? 'shake-bg'
-                    : p.category === 'sundaes' ? 'sundae-bg'
-                    : p.category === 'acai' ? 'acai-bg'
-                    : 'especiais-bg';
-
-                const selIdx = this.selectedSizes[p.id] || 0;
-                const currentPrice = p.sizes[selIdx].price;
-
-                return `
-                <div class="sf-product-card" data-id="${p.id}">
-                    <div class="sf-product-img ${bgClass}">${p.emoji || '🍦'}</div>
-                    <div class="sf-product-body">
-                        <div class="sf-product-name">${p.name}</div>
-                        <div class="sf-product-desc">${p.description}</div>
-                        <div class="sf-product-sizes">
-                            ${p.sizes.map((s, i) => `
-                                <div class="sf-size-chip ${i === selIdx ? 'selected' : ''}"
-                                     onclick="Storefront.selectSize('${p.id}', ${i})">
-                                    <span class="sf-size-label">${s.name}</span>
-                                    ${Utils.formatCurrency(s.price)}
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div class="sf-product-footer">
-                            <div class="sf-product-price">${Utils.formatCurrency(currentPrice)}</div>
-                            <button class="sf-btn-add" id="btn-add-${p.id}" onclick="Storefront.addToCart('${p.id}')">
-                                + Adicionar
-                            </button>
-                        </div>
-                    </div>
-                </div>`;
-            }).join('');
-        },
-
-        selectSize(productId, sizeIndex) {
-            this.selectedSizes[productId] = sizeIndex;
-            this.renderProducts();
-        },
-
-        // ---- Categories ----
-        setupCategories() {
-            document.querySelectorAll('.sf-cat-pill').forEach(pill => {
-                pill.addEventListener('click', () => {
-                    document.querySelectorAll('.sf-cat-pill').forEach(p => p.classList.remove('active'));
-                    pill.classList.add('active');
-                    this.activeCategory = pill.dataset.cat;
-                    this.renderProducts();
+            Object.keys(config.adicionais).forEach(function(catKey) {
+                var cat = config.adicionais[catKey];
+                cat.items.forEach(function(item) {
+                    if (!item.available) return;
+                    html += '<label class="sheet-extra-item" onclick="toggleExtra(this)">' +
+                        '<span class="extra-emoji">' + item.emoji + '</span>' +
+                        '<span class="extra-name">' + item.name + '</span>' +
+                        '<span class="extra-price">+R$ ' + item.price.toFixed(0) + '</span>' +
+                        '<input type="checkbox" class="extra-check" data-extra-id="' + item.id + '" data-extra-price="' + item.price + '" data-extra-name="' + item.name + '" hidden>' +
+                        '<span class="extra-toggle"></span>' +
+                    '</label>';
                 });
             });
-        },
 
-        // ---- Cart ----
-        addToCart(productId) {
-            const product = this.products.find(p => p.id === productId);
-            if (!product) return;
+            html += '</div></div>' +
+            '<div class="sheet-section">' +
+                '<h4 class="sheet-section-title">Bebidas <span class="sheet-optional">(opcional)</span></h4>' +
+                '<div class="sheet-extras" id="sheetBebidas">';
 
-            const sizeIdx = this.selectedSizes[productId] || 0;
-            const size = product.sizes[sizeIdx];
+            config.bebidas.forEach(function(beb) {
+                if (!beb.available) return;
+                html += '<label class="sheet-extra-item" onclick="toggleExtra(this)">' +
+                    '<span class="extra-emoji">' + beb.emoji + '</span>' +
+                    '<span class="extra-name">' + beb.name + '</span>' +
+                    '<span class="extra-price">+R$ ' + beb.price.toFixed(0) + '</span>' +
+                    '<input type="checkbox" class="extra-check" data-extra-id="' + beb.id + '" data-extra-price="' + beb.price + '" data-extra-name="' + beb.name + '" hidden>' +
+                    '<span class="extra-toggle"></span>' +
+                '</label>';
+            });
 
-            // Check if same product+size already in cart
-            const existingIdx = this.cart.findIndex(
-                item => item.productId === productId && item.sizeName === size.name
-            );
+            html += '</div></div>' +
+            '<div class="sheet-footer">' +
+                '<div class="sheet-qty">' +
+                    '<button class="qty-btn" onclick="changeQty(-1)">−</button>' +
+                    '<span class="qty-value" id="sheetQty">1</span>' +
+                    '<button class="qty-btn" onclick="changeQty(1)">+</button>' +
+                '</div>' +
+                '<button class="sheet-add-btn" id="sheetAddBtn" onclick="addToCart()">' +
+                    'Adicionar — <strong id="sheetTotal">R$ 18,00</strong>' +
+                '</button>' +
+            '</div>';
 
-            if (existingIdx !== -1) {
-                this.cart[existingIdx].qty += 1;
-            } else {
-                this.cart.push({
-                    productId: productId,
-                    name: product.name,
-                    emoji: product.emoji,
-                    sizeName: size.name,
-                    price: size.price,
-                    qty: 1
-                });
-            }
+            document.getElementById('sheetContent').innerHTML = html;
+            window._sheetProduct = { baseId: baseId, formatoId: formatoId, saborId: saborId, name: productName, emoji: sabor.emoji };
+            window._sheetQty = 1;
+            window._sheetSize = config.tamanhos.find(function(t) { return t.id === 'medio'; });
 
-            this.updateCartUI();
+            document.getElementById('productSheetBackdrop').style.display = 'block';
+            var sheet = document.getElementById('productSheet');
+            sheet.style.display = 'block';
+            setTimeout(function() {
+                sheet.classList.add('sheet-open');
+                document.body.style.overflow = 'hidden';
+            }, 10);
+            updateSheetTotal();
+        };
 
-            // Button flash animation
-            const btn = document.getElementById('btn-add-' + productId);
-            if (btn) {
-                btn.classList.add('sf-added-flash');
-                btn.textContent = '\u2713 Adicionado';
-                setTimeout(() => {
-                    btn.classList.remove('sf-added-flash');
-                    btn.textContent = '+ Adicionar';
-                }, 800);
-            }
-
-            // FAB bounce
-            const fab = document.getElementById('sf-cart-fab');
-            fab.classList.remove('bounce');
-            void fab.offsetWidth; // trigger reflow
-            fab.classList.add('bounce');
-        },
-
-        removeFromCart(index) {
-            this.cart.splice(index, 1);
-            this.updateCartUI();
-            this.renderCartItems();
-        },
-
-        changeQty(index, delta) {
-            this.cart[index].qty += delta;
-            if (this.cart[index].qty <= 0) {
-                this.cart.splice(index, 1);
-            }
-            this.updateCartUI();
-            this.renderCartItems();
-        },
-
-        updateCartUI() {
-            const count = this.cart.reduce((sum, item) => sum + item.qty, 0);
-            const fab = document.getElementById('sf-cart-fab');
-            const badge = document.getElementById('sf-cart-badge');
-
-            badge.textContent = count;
-            fab.classList.toggle('empty', count === 0);
-
-            // Update totals
-            const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const fee = this.deliveryMode === 'delivery' ? this.deliveryFee : 0;
-            const total = subtotal + fee;
-
-            document.getElementById('sf-subtotal').textContent = Utils.formatCurrency(subtotal);
-            document.getElementById('sf-del-fee-value').textContent = Utils.formatCurrency(fee);
-            document.getElementById('sf-total').textContent = Utils.formatCurrency(total);
-
-            // Show/hide form + footer
-            const hasItems = this.cart.length > 0;
-            document.getElementById('sf-cart-empty').style.display = hasItems ? 'none' : 'block';
-            document.getElementById('sf-cart-form-area').style.display = hasItems ? 'block' : 'none';
-            document.getElementById('sf-cart-footer').style.display = hasItems ? 'block' : 'none';
-        },
-
-        renderCartItems() {
-            const container = document.getElementById('sf-cart-items');
-            if (this.cart.length === 0) {
-                container.innerHTML = '';
-                return;
-            }
-
-            container.innerHTML = this.cart.map((item, i) => `
-                <div class="sf-cart-item">
-                    <div class="sf-cart-item-emoji">${item.emoji || '🍦'}</div>
-                    <div class="sf-cart-item-info">
-                        <div class="sf-cart-item-name">${item.name}</div>
-                        <div class="sf-cart-item-size">${item.sizeName}</div>
-                        <div class="sf-cart-item-price">${Utils.formatCurrency(item.price * item.qty)}</div>
-                    </div>
-                    <div class="sf-cart-item-qty">
-                        <button class="sf-qty-btn" onclick="Storefront.changeQty(${i}, -1)">&minus;</button>
-                        <span class="sf-qty-value">${item.qty}</span>
-                        <button class="sf-qty-btn" onclick="Storefront.changeQty(${i}, 1)">+</button>
-                    </div>
-                </div>
-            `).join('');
-        },
-
-        // ---- Cart Drawer ----
-        openCart() {
-            document.getElementById('sf-cart-overlay').classList.add('open');
-            document.getElementById('sf-cart-drawer').classList.add('open');
-            document.body.style.overflow = 'hidden';
-            this.renderCartItems();
-            this.updateCartUI();
-        },
-
-        closeCart() {
-            document.getElementById('sf-cart-overlay').classList.remove('open');
-            document.getElementById('sf-cart-drawer').classList.remove('open');
+        window.closeProductSheet = function() {
+            var sheet = document.getElementById('productSheet');
+            sheet.classList.remove('sheet-open');
             document.body.style.overflow = '';
-        },
+            setTimeout(function() {
+                sheet.style.display = 'none';
+                document.getElementById('productSheetBackdrop').style.display = 'none';
+            }, 300);
+        };
 
-        // ---- Delivery Mode ----
-        setDeliveryMode(mode) {
-            this.deliveryMode = mode;
-            document.querySelectorAll('.sf-toggle-opt').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.mode === mode);
+        window.selectSize = function(btn) {
+            document.querySelectorAll('.sheet-size-btn').forEach(function(b) { b.classList.remove('selected'); });
+            btn.classList.add('selected');
+            window._sheetSize = { id: btn.dataset.sizeId, price: parseFloat(btn.dataset.price) };
+            updateSheetTotal();
+        };
+
+        window.toggleExtra = function(label) {
+            var cb = label.querySelector('.extra-check');
+            cb.checked = !cb.checked;
+            label.classList.toggle('extra-selected', cb.checked);
+            updateSheetTotal();
+        };
+
+        window.changeQty = function(delta) {
+            window._sheetQty = Math.max(1, (window._sheetQty || 1) + delta);
+            document.getElementById('sheetQty').textContent = window._sheetQty;
+            updateSheetTotal();
+        };
+
+        function updateSheetTotal() {
+            var total = window._sheetSize ? window._sheetSize.price : 18;
+            document.querySelectorAll('.extra-check:checked').forEach(function(cb) {
+                total += parseFloat(cb.dataset.extraPrice);
             });
-            // Show/hide address field
-            document.getElementById('sf-address-group').style.display =
-                mode === 'delivery' ? 'block' : 'none';
-            // Show/hide delivery fee row
-            document.getElementById('sf-delivery-fee-row').style.display =
-                mode === 'delivery' ? 'flex' : 'none';
-            this.updateCartUI();
-        },
+            total *= window._sheetQty || 1;
+            document.getElementById('sheetTotal').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+        }
 
-        // ---- Submit Order ----
-        submitOrder() {
-            const name = document.getElementById('sf-customer-name').value.trim();
-            const phone = document.getElementById('sf-customer-phone').value.trim();
-            const address = document.getElementById('sf-customer-address').value.trim();
-            const payment = document.getElementById('sf-payment-method').value;
+        window.addToCart = function() {
+            var product = window._sheetProduct;
+            var size = window._sheetSize;
+            var qty = window._sheetQty || 1;
+            var config = CARDAPIO_CONFIG;
 
-            // Validate
-            if (!name) {
-                this.shakeField('sf-customer-name');
-                return;
-            }
-            if (!phone) {
-                this.shakeField('sf-customer-phone');
-                return;
-            }
-            if (this.deliveryMode === 'delivery' && !address) {
-                this.shakeField('sf-customer-address');
-                return;
-            }
-            if (this.cart.length === 0) return;
+            var base = config.bases.find(function(b) { return b.id === product.baseId; });
+            var formato = config.formatos.find(function(f) { return f.id === product.formatoId; });
+            var tamanho = config.tamanhos.find(function(t) { return t.id === size.id; });
 
-            const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const fee = this.deliveryMode === 'delivery' ? this.deliveryFee : 0;
-            const total = subtotal + fee;
+            var extras = [];
+            document.querySelectorAll('#sheetExtras .extra-check:checked').forEach(function(cb) {
+                extras.push({ id: cb.dataset.extraId, name: cb.dataset.extraName, price: parseFloat(cb.dataset.extraPrice) });
+            });
 
-            const orderData = {
-                customer: { name, phone, address: this.deliveryMode === 'delivery' ? address : null },
-                items: this.cart.map(item => ({
-                    productId: item.productId,
-                    name: item.name,
-                    sizeName: item.sizeName,
-                    price: item.price,
-                    qty: item.qty,
-                    subtotal: item.price * item.qty
-                })),
-                deliveryMode: this.deliveryMode,
-                paymentMethod: payment,
-                subtotal: subtotal,
-                deliveryFee: fee,
-                total: total,
-                status: MP.ORDER_STATUS.NEW,
-                paymentStatus: MP.PAYMENT_STATUS.PENDING,
-                createdAt: new Date().toISOString()
+            var bebidas = [];
+            document.querySelectorAll('#sheetBebidas .extra-check:checked').forEach(function(cb) {
+                bebidas.push({ id: cb.dataset.extraId, name: cb.dataset.extraName, price: parseFloat(cb.dataset.extraPrice), qty: 1 });
+            });
+
+            var itemTotal = size.price;
+            extras.forEach(function(e) { itemTotal += e.price; });
+            bebidas.forEach(function(b) { itemTotal += b.price; });
+
+            var cartItem = {
+                id: Date.now().toString(),
+                name: product.name,
+                emoji: product.emoji,
+                baseId: product.baseId,
+                baseName: base ? base.name : '',
+                formatoId: product.formatoId,
+                formatoName: formato ? formato.name : '',
+                saborId: product.saborId,
+                size: size.id,
+                sizeName: tamanho ? tamanho.name : size.id,
+                sizeMl: tamanho ? tamanho.ml : 0,
+                sizePrice: size.price,
+                extras: extras,
+                bebidas: bebidas,
+                qty: qty,
+                total: itemTotal * qty
             };
 
-            // Save to DataStore
-            let savedOrder = orderData;
-            if (typeof DataStore !== 'undefined') {
-                try {
-                    savedOrder = DataStore.addToCollection('orders', this.franchiseId, orderData);
-                } catch (e) {
-                    console.error('Error saving order:', e);
-                    savedOrder.id = Utils.generateId();
-                }
-            } else {
-                savedOrder.id = Utils.generateId();
-            }
+            var existingCart = JSON.parse(localStorage.getItem('milkypot_cart') || '[]');
+            existingCart.push(cartItem);
+            localStorage.setItem('milkypot_cart', JSON.stringify(existingCart));
 
-            // Show confirmation
-            const orderId = savedOrder.id || Utils.generateId();
-            document.getElementById('sf-confirm-order-id').textContent = 'Pedido #' + orderId.substring(0, 8).toUpperCase();
-            document.getElementById('sf-confirm-overlay').classList.add('open');
+            if ('vibrate' in navigator) navigator.vibrate(50);
+            if (typeof updateCartUI === 'function') updateCartUI();
+            closeProductSheet();
+            showToast(product.emoji + ' ' + product.name + ' adicionado!');
+        };
 
-            // Disable button
-            document.getElementById('sf-btn-checkout').disabled = true;
-            document.getElementById('sf-btn-checkout').textContent = 'Pedido Enviado!';
+        window.openCart = function() {
+            if (typeof openCartSidebar === 'function') openCartSidebar();
+        };
 
-            // Close cart
-            this.closeCart();
-
-            // Reset after a moment
-            setTimeout(() => {
-                this.cart = [];
-                this.updateCartUI();
-                this.renderCartItems();
-                document.getElementById('sf-customer-name').value = '';
-                document.getElementById('sf-customer-phone').value = '';
-                document.getElementById('sf-customer-address').value = '';
-                document.getElementById('sf-btn-checkout').disabled = false;
-                document.getElementById('sf-btn-checkout').textContent = 'Finalizar Pedido';
-            }, 500);
-        },
-
-        shakeField(id) {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.style.borderColor = '#FF5252';
-            el.focus();
-            el.style.animation = 'none';
-            void el.offsetWidth;
-            el.style.animation = 'shake 0.4s ease';
-            setTimeout(() => { el.style.borderColor = ''; el.style.animation = ''; }, 1500);
-        },
-
-        // ---- Confirmation ----
-        closeConfirmation() {
-            document.getElementById('sf-confirm-overlay').classList.remove('open');
+        function showToast(msg) {
+            var toast = document.createElement('div');
+            toast.className = 'add-toast';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(function() { toast.classList.add('toast-show'); }, 10);
+            setTimeout(function() {
+                toast.classList.remove('toast-show');
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 2000);
         }
-    };
+        window.showToast = showToast;
 
-    // Shake animation (injected via JS to keep CSS clean)
-    const shakeStyle = document.createElement('style');
-    shakeStyle.textContent = '@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}';
-    document.head.appendChild(shakeStyle);
+        // Init
+        renderProducts('ninho');
+        updateCartUI();
 
-    // Phone mask
-    document.addEventListener('DOMContentLoaded', () => {
-        const phoneInput = document.getElementById('sf-customer-phone');
-        if (phoneInput) {
-            phoneInput.addEventListener('input', function() {
-                let v = this.value.replace(/\D/g, '');
-                if (v.length > 11) v = v.slice(0, 11);
-                if (v.length > 6) {
-                    this.value = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
-                } else if (v.length > 2) {
-                    this.value = '(' + v.slice(0,2) + ') ' + v.slice(2);
-                } else if (v.length > 0) {
-                    this.value = '(' + v;
-                }
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            var navbar = document.getElementById('navbar');
+            if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        // Hamburger menu
+        var hamburger = document.getElementById('hamburger');
+        var navLinks = document.getElementById('navLinks');
+        if (hamburger && navLinks) {
+            hamburger.addEventListener('click', function() {
+                navLinks.classList.toggle('active');
+                hamburger.classList.toggle('active');
             });
         }
-    });
+    })();
+    </script>
 
-    // Boot
-    window.addEventListener('DOMContentLoaded', () => {
-        Storefront.init();
+    <!-- Checkout Franchise Selection Logic (pre-selects this store) -->
+    <script>
+    (function() {
+        var CHECKOUT_STORES = [
+            { id: 'ibirapuera', name: 'MilkyPot Shopping Ibirapuera', address: 'Av. Ibirapuera, 3103 - Moema, São Paulo - SP', rating: 4.9, deliveryTime: '20-35 min', deliveryFee: 5.90, hours: '10:00 - 22:00', open: true, whatsapp: '5511999990001', lat: -23.6092, lng: -46.6654 },
+            { id: 'morumbi', name: 'MilkyPot Shopping Morumbi', address: 'Av. Roque Petroni Jr, 1089 - Morumbi, São Paulo - SP', rating: 4.8, deliveryTime: '25-40 min', deliveryFee: 6.90, hours: '10:00 - 22:00', open: true, whatsapp: '5511999990002', lat: -23.6233, lng: -46.6984 },
+            { id: 'jardins', name: 'MilkyPot Jardins', address: 'Rua Oscar Freire, 725 - Jardins, São Paulo - SP', rating: 4.9, deliveryTime: '15-25 min', deliveryFee: 4.90, hours: '09:00 - 23:00', open: true, whatsapp: '5511999990003', lat: -23.5631, lng: -46.6699 },
+            { id: 'barra', name: 'MilkyPot Barra Shopping', address: 'Av. das Américas, 4666 - Barra, Rio de Janeiro - RJ', rating: 4.7, deliveryTime: '25-40 min', deliveryFee: 7.90, hours: '10:00 - 22:00', open: true, whatsapp: '5521999990004', lat: -22.9994, lng: -43.3632 },
+            { id: 'curitiba', name: 'MilkyPot Curitiba - Batel', address: 'Av. do Batel, 1868 - Batel, Curitiba - PR', rating: 4.8, deliveryTime: '20-30 min', deliveryFee: 5.50, hours: '10:00 - 21:00', open: false, whatsapp: '5541999990005', lat: -25.4369, lng: -49.2889 },
+            { id: 'recife', name: 'MilkyPot Shopping Recife', address: 'R. Padre Carapuceiro, 777 - Boa Viagem, Recife - PE', rating: 4.9, deliveryTime: '20-35 min', deliveryFee: 5.00, hours: '10:00 - 22:00', open: true, whatsapp: '5581999990006', lat: -8.1184, lng: -34.9046 }
+        ];
 
-        // Inject WhatsApp floating button
-        if (typeof WhatsApp !== 'undefined') {
-            const franchisePhone = ''; // Will be set per franchise
-            WhatsApp.injectFloatingButton(franchisePhone, 'Olá! Gostaria de fazer um pedido 🍦');
+        // Pre-select this store
+        var THIS_STORE_ID = 'template';
+        var selectedStore = CHECKOUT_STORES.find(function(s) { return s.id === THIS_STORE_ID; }) || CHECKOUT_STORES[0];
+
+        function renderCheckoutStores(stores) {
+            var list = document.getElementById('checkoutStoresList');
+            if (!list) return;
+            if (!stores || stores.length === 0) {
+                list.innerHTML = '<div class="checkout-no-stores">Nenhuma loja encontrada.</div>';
+                return;
+            }
+            stores.sort(function(a, b) { return (a.open && !b.open) ? -1 : (!a.open && b.open) ? 1 : 0; });
+            var html = '';
+            stores.forEach(function(store) {
+                var statusClass = store.open ? 'store-open' : 'store-closed';
+                var statusText = store.open ? '🟢 Aberto agora' : '🔴 Fechado';
+                var isSelected = selectedStore && selectedStore.id === store.id;
+                html += '<div class="checkout-store-card ' + statusClass + (isSelected ? ' store-selected' : '') + (store.open ? '' : ' store-disabled') + '" ' +
+                    (store.open ? 'onclick="selectCheckoutStore(\'' + store.id + '\')"' : '') + '>' +
+                    '<div class="cs-card-main"><div class="cs-card-info"><strong class="cs-card-name">' + store.name + '</strong><span class="cs-card-addr">' + store.address + '</span></div><div class="cs-card-check">' + (isSelected ? '✅' : '') + '</div></div>' +
+                    '<div class="cs-card-meta"><span class="cs-meta">⭐ ' + store.rating + '</span><span class="cs-meta">⏱️ ' + store.deliveryTime + '</span><span class="cs-meta">🛵 R$ ' + store.deliveryFee.toFixed(2).replace('.', ',') + '</span><span class="cs-meta ' + statusClass + '">' + statusText + '</span></div>' +
+                    '<div class="cs-card-hours">🕐 Horário: ' + store.hours + '</div></div>';
+            });
+            list.innerHTML = html;
         }
-    });
+
+        // Apply pre-selection
+        function applyPreselection() {
+            if (!selectedStore) return;
+            document.getElementById('selectedStoreName').textContent = selectedStore.name;
+            document.getElementById('selectedStoreAddress').textContent = selectedStore.address;
+            document.getElementById('selectedStoreTime').textContent = '⏱️ ' + selectedStore.deliveryTime;
+            document.getElementById('selectedStoreRating').textContent = '⭐ ' + selectedStore.rating;
+            document.getElementById('selectedStoreStatus').textContent = '🟢 Aberto';
+            document.getElementById('checkoutSelectedStore').style.display = 'block';
+            var btn = document.getElementById('btnToDelivery');
+            if (btn) { btn.disabled = false; btn.textContent = 'Continuar →'; }
+            var feeText = document.getElementById('deliveryFeeText');
+            if (feeText) feeText.textContent = 'Taxa: R$ ' + selectedStore.deliveryFee.toFixed(2).replace('.', ',');
+            window._selectedStoreWhatsApp = selectedStore.whatsapp;
+            window._selectedStoreName = selectedStore.name;
+            window._selectedStoreTime = selectedStore.deliveryTime;
+            window._selectedStoreDeliveryFee = selectedStore.deliveryFee;
+        }
+
+        window.selectCheckoutStore = function(storeId) {
+            selectedStore = CHECKOUT_STORES.find(function(s) { return s.id === storeId; });
+            if (!selectedStore || !selectedStore.open) return;
+            applyPreselection();
+            renderCheckoutStores(CHECKOUT_STORES);
+            if ('vibrate' in navigator) navigator.vibrate(30);
+        };
+
+        window.changeSelectedStore = function() {
+            document.getElementById('checkoutSelectedStore').style.display = 'none';
+            document.getElementById('checkoutStoresList').style.display = 'block';
+            var btn = document.getElementById('btnToDelivery');
+            btn.disabled = true;
+            btn.textContent = 'Escolha uma loja';
+            selectedStore = null;
+            renderCheckoutStores(CHECKOUT_STORES);
+        };
+
+        window.filterCheckoutStores = function(query) {
+            if (!query || query.length < 2) { renderCheckoutStores(CHECKOUT_STORES); return; }
+            query = query.toLowerCase();
+            renderCheckoutStores(CHECKOUT_STORES.filter(function(s) {
+                return s.name.toLowerCase().indexOf(query) !== -1 || s.address.toLowerCase().indexOf(query) !== -1;
+            }));
+        };
+
+        window.useGeolocationCheckout = function() {
+            if (!navigator.geolocation) { alert('Geolocalização não disponível.'); return; }
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                var lat = pos.coords.latitude, lng = pos.coords.longitude;
+                CHECKOUT_STORES.sort(function(a, b) {
+                    if (a.open && !b.open) return -1;
+                    if (!a.open && b.open) return 1;
+                    return Math.sqrt(Math.pow(a.lat - lat, 2) + Math.pow(a.lng - lng, 2)) - Math.sqrt(Math.pow(b.lat - lat, 2) + Math.pow(b.lng - lng, 2));
+                });
+                renderCheckoutStores(CHECKOUT_STORES);
+                document.getElementById('checkoutStoreSearch').value = 'Mais perto de mim';
+            }, function() { alert('Não foi possível obter sua localização.'); });
+        };
+
+        var originalNextStep = window.nextCheckoutStep;
+        window.nextCheckoutStep = function(step) {
+            if (step === 2) {
+                renderCheckoutStores(CHECKOUT_STORES);
+                if (selectedStore) applyPreselection();
+            }
+            if (step === 4) {
+                var summaryStore = document.getElementById('summaryStore');
+                if (summaryStore && selectedStore) {
+                    summaryStore.innerHTML = '<div class="summary-store-card"><span class="summary-store-icon">🏪</span><div><strong>' + selectedStore.name + '</strong><small>' + selectedStore.deliveryTime + '</small></div></div>';
+                }
+            }
+            document.querySelectorAll('.checkout-step').forEach(function(s) {
+                var sNum = parseInt(s.dataset.step);
+                s.classList.remove('active', 'completed');
+                if (sNum === step) s.classList.add('active');
+                else if (sNum < step) s.classList.add('completed');
+            });
+            document.querySelectorAll('.checkout-panel').forEach(function(p) { p.classList.remove('active'); });
+            var target = document.getElementById('checkoutStep' + step);
+            if (target) target.classList.add('active');
+        };
+
+        var originalPlaceOrder = window.placeOrder;
+        window.placeOrder = function() {
+            if (window._selectedStoreWhatsApp) {
+                var waLink = document.querySelector('.whatsapp-float');
+                if (waLink) waLink.href = 'https://wa.me/' + window._selectedStoreWhatsApp;
+            }
+            if (typeof originalPlaceOrder === 'function') originalPlaceOrder();
+        };
+
+        var originalOpenCheckout = window.openCheckout;
+        window.openCheckout = function() {
+            // Pre-select this store automatically
+            if (!selectedStore) {
+                selectedStore = CHECKOUT_STORES.find(function(s) { return s.id === THIS_STORE_ID; }) || CHECKOUT_STORES[0];
+            }
+            applyPreselection();
+            if (typeof originalOpenCheckout === 'function') originalOpenCheckout();
+        };
+    })();
     </script>
 </body>
 </html>
