@@ -5,6 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MilkyPot Catuaí Shopping - Cardápio</title>
     <meta name="description" content="Faça seu pedido online na MilkyPot Catuaí Shopping! Milkshakes, Cremosos, Açaí e opções Zero/Proteico.">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="restaurant">
+    <meta property="og:title" content="MilkyPot Catuaí Shopping - Cardápio Online">
+    <meta property="og:description" content="Peça online na MilkyPot Catuaí Shopping, Rod. Celso Garcia Cid, Londrina PR. Milkshakes artesanais, Cremosos, Açaí e opções Zero/Proteico. Avaliação 4.8 ★">
+    <meta property="og:url" content="https://milkypot.com/f/catuai/">
+    <meta property="og:image" content="https://milkypot.com/images/logo-milkypot.png">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:site_name" content="MilkyPot">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MilkyPot Catuaí Shopping - Cardápio Online">
+    <meta name="twitter:description" content="Peça online na MilkyPot Catuaí Shopping, Rod. Celso Garcia Cid, Londrina PR. Milkshakes artesanais, Cremosos, Açaí e opções Zero/Proteico.">
+    <meta name="twitter:image" content="https://milkypot.com/images/logo-milkypot.png">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://milkypot.com/f/catuai/">
+
+    <!-- Manifest -->
+    <link rel="manifest" href="../../manifest.json">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Restaurant",
+        "name": "MilkyPot Catuaí Shopping",
+        "image": "https://milkypot.com/images/logo-milkypot.png",
+        "url": "https://milkypot.com/f/catuai/",
+        "telephone": "",
+        "servesCuisine": ["Milkshake", "Açaí", "Sobremesas"],
+        "priceRange": "$$",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Rod. Celso Garcia Cid",
+            "addressLocality": "Londrina",
+            "addressRegion": "PR",
+            "addressCountry": "BR"
+        },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "bestRating": "5",
+            "worstRating": "1",
+            "ratingCount": "380"
+        },
+        "openingHoursSpecification": {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+            "opens": "10:00",
+            "closes": "22:00"
+        }
+    }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -146,6 +202,10 @@
         }
         .store-footer a { color: #42A5F5; text-decoration: none; font-weight: 700; }
     </style>
+
+    <!-- Google Analytics (substituir G-XXXXXXXXXX pelo ID real) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
 </head>
 <body>
     <!-- Navigation -->
@@ -475,6 +535,8 @@
         </button>
     </div>
 
+    <script src="../../js/stores-data.js"></script>
+    <script src="../../js/analytics.js"></script>
     <script src="../../js/cardapio-data.js"></script>
     <script src="../../js/cart.js"></script>
     <script src="../../js/checkout.js"></script>
@@ -757,6 +819,7 @@
             existingCart.push(cartItem);
             localStorage.setItem('milkypot_cart', JSON.stringify(existingCart));
 
+            if (typeof MilkyPotAnalytics !== 'undefined') MilkyPotAnalytics.trackAddToCart(product.name, size.price, qty);
             if ('vibrate' in navigator) navigator.vibrate(50);
             if (typeof updateCartUI === 'function') updateCartUI();
             closeProductSheet();
@@ -921,7 +984,7 @@
         window.placeOrder = function() {
             if (window._selectedStoreWhatsApp) {
                 var waLink = document.querySelector('.whatsapp-float');
-                if (waLink) waLink.href = 'https://wa.me/' + window._selectedStoreWhatsApp;
+                if (waLink) waLink.href = 'https://wa.me/' + window._selectedStoreWhatsApp + '?text=Oi!%20Vim%20do%20card%C3%A1pio%20online%20da%20MilkyPot%20e%20gostaria%20de%20fazer%20um%20pedido!';
             }
             if (typeof originalPlaceOrder === 'function') originalPlaceOrder();
         };

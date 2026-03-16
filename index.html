@@ -18,6 +18,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MilkyPot">
     <link rel="apple-touch-icon" href="images/logo-milkypot.png">
+
+    <!-- Google Analytics (substituir G-XXXXXXXXXX pelo ID real) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
 </head>
 <body>
     <!-- Floating Particles Background -->
@@ -711,7 +715,7 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-brand">
-                    <img src="images/logo-milkypot.png" alt="MilkyPot" class="footer-logo-img">
+                    <img src="images/logo-milkypot.png" alt="MilkyPot" class="footer-logo-img" loading="lazy">
                     <p>O potinho mais feliz do mundo! Levando alegria e sabor para todo o Brasil.</p>
                 </div>
                 <div class="footer-links">
@@ -1042,7 +1046,7 @@
     </div>
 
     <!-- WhatsApp Float -->
-    <a href="https://wa.me/5511999999999" class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp">
+    <a href="https://wa.me/5511999999999?text=Oi!%20Vim%20do%20card%C3%A1pio%20online%20da%20MilkyPot%20e%20gostaria%20de%20fazer%20um%20pedido!" class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp">
         <span>💬</span>
     </a>
 
@@ -1066,6 +1070,8 @@
         </button>
     </div>
 
+    <script src="js/stores-data.js"></script>
+    <script src="js/analytics.js"></script>
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
     <script src="js/cart.js"></script>
@@ -1404,6 +1410,9 @@
             existingCart.push(cartItem);
             localStorage.setItem('milkypot_cart', JSON.stringify(existingCart));
 
+            // Analytics tracking
+            if (typeof MilkyPotAnalytics !== 'undefined') MilkyPotAnalytics.trackAddToCart(product.name, size.price, qty);
+
             // Haptic feedback
             if ('vibrate' in navigator) navigator.vibrate(50);
 
@@ -1707,7 +1716,7 @@
         if (window._selectedStoreWhatsApp) {
             var waLink = document.querySelector('.whatsapp-float');
             if (waLink) {
-                waLink.href = 'https://wa.me/' + window._selectedStoreWhatsApp;
+                waLink.href = 'https://wa.me/' + window._selectedStoreWhatsApp + '?text=Oi!%20Vim%20do%20card%C3%A1pio%20online%20da%20MilkyPot%20e%20gostaria%20de%20fazer%20um%20pedido!';
             }
         }
         if (typeof originalPlaceOrder === 'function') {

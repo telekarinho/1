@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v3';
-const CACHE_NAME = 'milkypot-v3';
+const CACHE_VERSION = 'mp-v4';
+const CACHE_NAME = 'milkypot-v4';
 
 const PRECACHE_URLS = [
     '/',
@@ -19,7 +19,13 @@ const PRECACHE_URLS = [
     '/js/cardapio.js',
     '/js/cardapio-data.js',
     '/images/logo-milkypot.png',
-    '/manifest.json'
+    '/manifest.json',
+    '/f/ibirapuera/',
+    '/f/morumbi/',
+    '/f/jardins/',
+    '/f/barra/',
+    '/f/catuai/',
+    '/f/recife/'
 ];
 
 const OFFLINE_QUEUE_KEY = 'milkypot-offline-queue';
@@ -117,7 +123,10 @@ function networkFirst(request) {
             if (cached) return cached;
             // Offline fallback for navigation requests
             if (request.mode === 'navigate') {
-                return caches.match('/login.html');
+                return new Response(
+                    '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>MilkyPot - Offline</title><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#F0F7FF;color:#333;text-align:center}div{padding:2rem}h1{color:#42A5F5}p{margin-top:1rem;font-size:1.1rem}</style></head><body><div><h1>MilkyPot</h1><p>Voce esta offline no momento.</p><p>Verifique sua conexao e tente novamente.</p></div></body></html>',
+                    { status: 503, headers: { 'Content-Type': 'text/html; charset=UTF-8' } }
+                );
             }
             return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
         });

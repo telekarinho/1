@@ -16,6 +16,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MilkyPot">
     <link rel="apple-touch-icon" href="images/logo-milkypot.png">
+
+    <!-- Google Analytics (substituir G-XXXXXXXXXX pelo ID real) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
 </head>
 <body>
     <!-- Navigation -->
@@ -304,6 +308,8 @@
         </button>
     </div>
 
+    <script src="js/stores-data.js"></script>
+    <script src="js/analytics.js"></script>
     <script src="js/cardapio-data.js"></script>
     <script src="js/cart.js"></script>
     <script src="js/checkout.js"></script>
@@ -602,6 +608,7 @@
             existingCart.push(cartItem);
             localStorage.setItem('milkypot_cart', JSON.stringify(existingCart));
 
+            if (typeof MilkyPotAnalytics !== 'undefined') MilkyPotAnalytics.trackAddToCart(product.name, size.price, qty);
             if ('vibrate' in navigator) navigator.vibrate(50);
             if (typeof updateCartUI === 'function') updateCartUI();
             closeProductSheet();
@@ -770,7 +777,7 @@
     window.placeOrder = function() {
         if (window._selectedStoreWhatsApp) {
             var waLink = document.querySelector('.whatsapp-float');
-            if (waLink) waLink.href = 'https://wa.me/' + window._selectedStoreWhatsApp;
+            if (waLink) waLink.href = 'https://wa.me/' + window._selectedStoreWhatsApp + '?text=Oi!%20Vim%20do%20card%C3%A1pio%20online%20da%20MilkyPot%20e%20gostaria%20de%20fazer%20um%20pedido!';
         }
         if (typeof originalPlaceOrder === 'function') originalPlaceOrder();
     };
