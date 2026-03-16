@@ -145,16 +145,23 @@
     </style>
 </head>
 <body>
-    <!-- Navigation (simplified for store page) -->
+    <!-- Navigation -->
     <nav class="navbar" id="navbar">
-        <div class="nav-container" style="justify-content:center;">
-            <a href="../../index.html" class="logo" style="margin:0;">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">
                 <img src="../../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
             </a>
-            <div class="nav-actions" style="position:absolute;right:20px;">
+            <ul class="nav-links" id="navLinks">
+                <li><a href="../../index.html">Inicio</a></li>
+                <li><a href="#cardapio" class="active">Cardapio</a></li>
+            </ul>
+            <div class="nav-actions">
                 <button class="btn-cart" id="cartBtn" aria-label="Carrinho">
                     <span class="cart-icon">🛒</span>
                     <span class="cart-count" id="cartCount">0</span>
+                </button>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span><span></span><span></span>
                 </button>
             </div>
         </div>
@@ -924,6 +931,25 @@
             applyPreselection();
             if (typeof originalOpenCheckout === 'function') originalOpenCheckout();
         };
+    })();
+    </script>
+    <script>
+    /* Hamburger menu toggle */
+    (function(){
+        var ham = document.getElementById('hamburger');
+        var nav = document.getElementById('navLinks');
+        if(ham && nav){
+            ham.addEventListener('click', function(){
+                ham.classList.toggle('active');
+                nav.classList.toggle('active');
+            });
+            nav.querySelectorAll('a').forEach(function(a){
+                a.addEventListener('click', function(){
+                    ham.classList.remove('active');
+                    nav.classList.remove('active');
+                });
+            });
+        }
     })();
     </script>
 </body>
