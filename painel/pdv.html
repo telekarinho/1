@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - PDV Rapido</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#42A5F5">
+    <style>
+        body { margin: 0; font-family: 'Nunito', sans-serif; background: #f0f2f5; }
+        .pdv-layout { display: grid; grid-template-columns: 1fr 360px; height: 100vh; }
+        .pdv-products { padding: 16px; overflow-y: auto; }
+        .pdv-cart { background: #fff; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; }
+
+        /* Header */
+        .pdv-header { background: linear-gradient(135deg, #6C63FF, #5A52E0); color: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .pdv-header h1 { margin: 0; font-size: 16px; font-family: 'Baloo 2', cursive; }
+        .pdv-header .btn-back { background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+
+        /* Category tabs */
+        .cat-tabs { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; }
+        .cat-tab { padding: 8px 16px; border-radius: 20px; border: 2px solid #e0e0e0; background: #fff; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .cat-tab.active { background: #6C63FF; color: #fff; border-color: #6C63FF; }
+
+        /* Product grid */
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+        .pdv-item { background: #fff; border-radius: 12px; padding: 14px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; box-shadow: 0 1px 4px rgba(0,0,0,0.06); user-select: none; }
+        .pdv-item:hover { border-color: #6C63FF; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(108,99,255,0.15); }
+        .pdv-item:active { transform: scale(0.95); }
+        .pdv-item .item-emoji { font-size: 32px; margin-bottom: 4px; }
+        .pdv-item .item-name { font-size: 12px; font-weight: 700; color: #333; line-height: 1.2; margin-bottom: 4px; }
+        .pdv-item .item-price { font-size: 14px; font-weight: 800; color: #6C63FF; }
+
+        /* Cart */
+        .cart-header { padding: 16px; border-bottom: 1px solid #f0f0f0; }
+        .cart-header h2 { margin: 0; font-size: 16px; font-family: 'Baloo 2', cursive; }
+        .cart-type { display: flex; gap: 4px; margin-top: 8px; }
+        .cart-type-btn { flex: 1; padding: 8px; border: 2px solid #e0e0e0; border-radius: 8px; background: #fff; font-size: 11px; font-weight: 700; cursor: pointer; text-align: center; }
+        .cart-type-btn.active { border-color: #6C63FF; background: #EDE7F6; color: #6C63FF; }
+        .cart-items { flex: 1; overflow-y: auto; padding: 8px 16px; }
+        .cart-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
+        .cart-item .ci-info { flex: 1; }
+        .cart-item .ci-name { font-size: 12px; font-weight: 700; }
+        .cart-item .ci-price { font-size: 11px; color: #6C63FF; }
+        .cart-item .ci-qty { display: flex; align-items: center; gap: 6px; }
+        .cart-item .ci-qty button { width: 26px; height: 26px; border: 1px solid #ddd; border-radius: 6px; background: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .cart-item .ci-qty span { font-weight: 700; font-size: 13px; min-width: 16px; text-align: center; }
+        .cart-item .ci-remove { background: none; border: none; color: #e53935; cursor: pointer; font-size: 16px; padding: 4px; }
+        .cart-empty { text-align: center; padding: 40px 16px; color: #999; font-size: 13px; }
+
+        /* Customer fields */
+        .cart-customer { padding: 0 16px 8px; display: none; }
+        .cart-customer.show { display: block; }
+        .cart-customer input { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px; margin-bottom: 6px; box-sizing: border-box; }
+
+        /* Footer */
+        .cart-footer { border-top: 1px solid #e0e0e0; padding: 16px; }
+        .cart-total { display: flex; justify-content: space-between; font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+        .cart-total .total-val { color: #6C63FF; }
+        .cart-nf { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 12px; }
+        .cart-nf input { width: auto; }
+        .cart-actions { display: flex; gap: 6px; }
+        .cart-actions .btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
+        .btn-finish { background: #4CAF50; color: #fff; }
+        .btn-finish:hover { background: #43A047; }
+        .btn-print { background: #f5f5f5; color: #333; }
+        .btn-clear { background: #ffebee; color: #e53935; }
+
+        /* Toast */
+        .pdv-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; z-index: 9999; display: none; }
+        .pdv-toast.show { display: block; animation: fadeInUp 0.3s; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+        @media (max-width: 768px) {
+            .pdv-layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+            .pdv-cart { max-height: 50vh; border-left: none; border-top: 1px solid #e0e0e0; }
+            .product-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="pdv-header">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <button class="btn-back" onclick="window.location.href='pedidos.html'">← Voltar</button>
+        <h1>🏪 PDV Rapido — <span id="pdvStoreName">MilkyPot</span></h1>
+    </div>
+    <div style="font-size:13px;opacity:0.8;" id="pdvClock"></div>
+</div>
+
+<div class="pdv-layout">
+    <!-- Products -->
+    <div class="pdv-products">
+        <div class="cat-tabs" id="catTabs"></div>
+        <div class="product-grid" id="productGrid"></div>
+    </div>
+
+    <!-- Cart -->
+    <div class="pdv-cart">
+        <div class="cart-header">
+            <h2>🛒 Pedido</h2>
+            <div class="cart-type">
+                <button class="cart-type-btn active" data-type="balcao" onclick="setOrderType('balcao')">🏪 Balcao</button>
+                <button class="cart-type-btn" data-type="retirada" onclick="setOrderType('retirada')">📦 Retirada</button>
+                <button class="cart-type-btn" data-type="delivery" onclick="setOrderType('delivery')">🛵 Delivery</button>
+            </div>
+        </div>
+
+        <div class="cart-customer" id="customerFields">
+            <input type="text" id="custName" placeholder="Nome do cliente">
+            <input type="tel" id="custPhone" placeholder="WhatsApp (opcional)">
+            <input type="text" id="custAddress" placeholder="Endereco completo" style="display:none" id="custAddressField">
+        </div>
+
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty">Toque nos produtos para adicionar</div>
+        </div>
+
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total</span>
+                <span class="total-val" id="cartTotal">R$ 0,00</span>
+            </div>
+            <div class="cart-nf">
+                <input type="checkbox" id="nfCheck">
+                <label for="nfCheck">Emitir NF-e</label>
+                <input type="text" id="nfCpf" placeholder="CPF (opcional)" style="flex:1;padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:11px;display:none;">
+            </div>
+            <div class="cart-actions">
+                <button class="btn btn-clear" onclick="clearCart()">🗑️</button>
+                <button class="btn btn-print" onclick="printOrder()">🖨️</button>
+                <button class="btn btn-finish" onclick="finishOrder()">✅ Finalizar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="pdv-toast" id="pdvToast"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/auth.js"></script>
+<script src="../js/cardapio-data.js"></script>
+
+<script>
+(function() {
+    if (!Auth.requireAuth('franchisee')) return;
+    DataStore.init();
+    var session = Auth.getSession();
+    var franchiseId = session.franchiseId;
+    var franchises = DataStore.getAllFranchises() || [];
+    var franchise = franchises.find(function(f) { return f.id === franchiseId; });
+    document.getElementById('pdvStoreName').textContent = franchise ? franchise.name : 'MilkyPot';
+
+    // Clock
+    setInterval(function() {
+        document.getElementById('pdvClock').textContent = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    }, 1000);
+
+    // ---- Build products from CARDAPIO_CONFIG ----
+    var products = [];
+    var categories = {};
+    var config = typeof CARDAPIO_CONFIG !== 'undefined' ? CARDAPIO_CONFIG : null;
+
+    if (config) {
+        var mediumPrice = 18;
+        var med = config.tamanhos.find(function(t) { return t.id === 'medio'; });
+        if (med) mediumPrice = med.price;
+
+        config.bases.forEach(function(base) {
+            if (!base.available) return;
+            var catKey = base.id === 'acai' ? 'Acai' : (base.id === 'zero-fit' ? 'Zero/Fit' : 'Ninho');
+            if (!categories[catKey]) categories[catKey] = [];
+
+            Object.keys(config.sabores).forEach(function(sk) {
+                var cat = config.sabores[sk];
+                if (cat.compatibleBases.indexOf(base.id) === -1) return;
+                cat.items.forEach(function(sabor) {
+                    if (!sabor.available) return;
+                    var formats = config.formatos.filter(function(f) {
+                        return f.available && f.compatibleBases.indexOf(base.id) !== -1;
+                    });
+                    formats.forEach(function(fmt) {
+                        var label = fmt.id === 'shake' || fmt.id === 'acai-shake' ? 'Shake' : (fmt.id === 'acai-bowl' ? 'Bowl' : 'Sundae');
+                        var name = label + ' ' + sabor.name;
+                        var p = {
+                            id: base.id + '_' + fmt.id + '_' + sabor.id,
+                            name: name,
+                            emoji: sabor.emoji,
+                            price: mediumPrice,
+                            category: catKey
+                        };
+                        products.push(p);
+                        categories[catKey].push(p);
+                    });
+                });
+            });
+        });
+
+        // Add extras as individual items
+        config.adicionais.forEach(function(ext) {
+            if (!ext.available) return;
+            products.push({ id: 'extra_' + ext.id, name: ext.name, emoji: ext.emoji, price: ext.price, category: 'Extras' });
+            if (!categories['Extras']) categories['Extras'] = [];
+            categories['Extras'].push(products[products.length - 1]);
+        });
+        config.bebidas.forEach(function(beb) {
+            if (!beb.available) return;
+            products.push({ id: 'beb_' + beb.id, name: beb.name, emoji: beb.emoji, price: beb.price, category: 'Bebidas' });
+            if (!categories['Bebidas']) categories['Bebidas'] = [];
+            categories['Bebidas'].push(products[products.length - 1]);
+        });
+    }
+
+    // ---- Render category tabs ----
+    var catNames = Object.keys(categories);
+    var activeCat = catNames[0] || '';
+    var tabsHtml = catNames.map(function(c) {
+        return '<button class="cat-tab' + (c === activeCat ? ' active' : '') + '" onclick="switchCat(\'' + c + '\')">' + c + '</button>';
+    }).join('');
+    document.getElementById('catTabs').innerHTML = tabsHtml;
+
+    function renderProducts(cat) {
+        var items = categories[cat] || [];
+        var html = items.map(function(p) {
+            return '<div class="pdv-item" onclick="addToCart(\'' + p.id + '\')">' +
+                '<div class="item-emoji">' + p.emoji + '</div>' +
+                '<div class="item-name">' + p.name + '</div>' +
+                '<div class="item-price">R$ ' + p.price.toFixed(2).replace('.',',') + '</div>' +
+            '</div>';
+        }).join('');
+        document.getElementById('productGrid').innerHTML = html;
+    }
+
+    window.switchCat = function(cat) {
+        activeCat = cat;
+        document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.toggle('active', t.textContent === cat); });
+        renderProducts(cat);
+    };
+
+    renderProducts(activeCat);
+
+    // ---- Cart ----
+    var cart = [];
+    var orderType = 'balcao';
+
+    window.addToCart = function(productId) {
+        var product = products.find(function(p) { return p.id === productId; });
+        if (!product) return;
+        var existing = cart.find(function(c) { return c.id === productId; });
+        if (existing) {
+            existing.qty++;
+        } else {
+            cart.push({ id: product.id, name: product.name, emoji: product.emoji, price: product.price, qty: 1 });
+        }
+        renderCart();
+        toast(product.emoji + ' ' + product.name + ' adicionado');
+    };
+
+    window.changeQty = function(idx, delta) {
+        cart[idx].qty += delta;
+        if (cart[idx].qty <= 0) cart.splice(idx, 1);
+        renderCart();
+    };
+
+    window.removeItem = function(idx) {
+        cart.splice(idx, 1);
+        renderCart();
+    };
+
+    function renderCart() {
+        var container = document.getElementById('cartItems');
+        if (cart.length === 0) {
+            container.innerHTML = '<div class="cart-empty">Toque nos produtos para adicionar</div>';
+            document.getElementById('cartTotal').textContent = 'R$ 0,00';
+            return;
+        }
+        var total = 0;
+        var html = cart.map(function(item, i) {
+            var subtotal = item.price * item.qty;
+            total += subtotal;
+            return '<div class="cart-item">' +
+                '<div class="ci-info"><div class="ci-name">' + item.emoji + ' ' + item.name + '</div>' +
+                '<div class="ci-price">R$ ' + subtotal.toFixed(2).replace('.',',') + '</div></div>' +
+                '<div class="ci-qty">' +
+                    '<button onclick="changeQty(' + i + ',-1)">−</button>' +
+                    '<span>' + item.qty + '</span>' +
+                    '<button onclick="changeQty(' + i + ',1)">+</button>' +
+                '</div>' +
+                '<button class="ci-remove" onclick="removeItem(' + i + ')">×</button>' +
+            '</div>';
+        }).join('');
+        container.innerHTML = html;
+        document.getElementById('cartTotal').textContent = 'R$ ' + total.toFixed(2).replace('.',',');
+    }
+
+    window.setOrderType = function(type) {
+        orderType = type;
+        document.querySelectorAll('.cart-type-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.type === type); });
+        var fields = document.getElementById('customerFields');
+        var addrField = document.querySelector('#custAddress');
+        if (type === 'balcao') {
+            fields.classList.remove('show');
+        } else {
+            fields.classList.add('show');
+            addrField.style.display = type === 'delivery' ? 'block' : 'none';
+        }
+    };
+
+    // NF toggle
+    document.getElementById('nfCheck').addEventListener('change', function() {
+        document.getElementById('nfCpf').style.display = this.checked ? 'block' : 'none';
+    });
+
+    window.clearCart = function() {
+        if (cart.length === 0) return;
+        cart = [];
+        renderCart();
+        toast('Pedido limpo');
+    };
+
+    window.finishOrder = function() {
+        if (cart.length === 0) { toast('Adicione itens ao pedido'); return; }
+
+        var total = cart.reduce(function(s, c) { return s + (c.price * c.qty); }, 0);
+        var order = {
+            id: Utils.generateId(),
+            createdAt: new Date().toISOString(),
+            status: 'confirmado',
+            type: orderType,
+            source: 'pdv',
+            items: cart.map(function(c) { return { name: c.name, qty: c.qty, price: c.price, total: c.price * c.qty }; }),
+            total: total,
+            customer: {
+                name: document.getElementById('custName').value || (orderType === 'balcao' ? 'Balcao' : ''),
+                phone: document.getElementById('custPhone').value || ''
+            },
+            address: orderType === 'delivery' ? document.getElementById('custAddress').value : '',
+            nf: document.getElementById('nfCheck').checked,
+            cpf: document.getElementById('nfCpf').value || '',
+            franchiseId: franchiseId
+        };
+
+        // Save to DataStore
+        DataStore.addToCollection('orders', franchiseId, order);
+        toast('✅ Pedido #' + order.id.slice(-4) + ' finalizado! R$ ' + total.toFixed(2).replace('.',','));
+
+        // Reset
+        cart = [];
+        renderCart();
+        document.getElementById('custName').value = '';
+        document.getElementById('custPhone').value = '';
+        document.getElementById('custAddress').value = '';
+        document.getElementById('nfCheck').checked = false;
+        document.getElementById('nfCpf').style.display = 'none';
+        document.getElementById('nfCpf').value = '';
+    };
+
+    window.printOrder = function() {
+        if (cart.length === 0) { toast('Nada para imprimir'); return; }
+        var total = cart.reduce(function(s, c) { return s + (c.price * c.qty); }, 0);
+        var storeName = franchise ? franchise.name : 'MilkyPot';
+        var now = new Date().toLocaleString('pt-BR');
+        var typeLabels = { balcao: 'BALCAO', retirada: 'RETIRADA', delivery: 'DELIVERY' };
+
+        var text = '================================\n';
+        text += '       ' + storeName + '\n';
+        text += '================================\n';
+        text += typeLabels[orderType] + ' | ' + now + '\n';
+        text += '--------------------------------\n';
+        cart.forEach(function(c) {
+            text += c.qty + 'x ' + c.name + '\n';
+            text += '   R$ ' + (c.price * c.qty).toFixed(2).replace('.',',') + '\n';
+        });
+        text += '--------------------------------\n';
+        text += 'TOTAL: R$ ' + total.toFixed(2).replace('.',',') + '\n';
+        if (document.getElementById('custName').value) {
+            text += 'Cliente: ' + document.getElementById('custName').value + '\n';
+        }
+        if (orderType === 'delivery' && document.getElementById('custAddress').value) {
+            text += 'Endereco: ' + document.getElementById('custAddress').value + '\n';
+        }
+        text += '================================\n';
+        text += '     Obrigado pela preferencia!\n';
+
+        var w = window.open('', '_blank', 'width=300,height=600');
+        w.document.write('<pre style="font-family:monospace;font-size:12px;white-space:pre-wrap;">' + text + '</pre>');
+        w.document.write('<script>window.print();setTimeout(function(){window.close()},500);<\/script>');
+    };
+
+    function toast(msg) {
+        var el = document.getElementById('pdvToast');
+        el.textContent = msg;
+        el.classList.add('show');
+        setTimeout(function() { el.classList.remove('show'); }, 2500);
+    }
+})();
+</script>
+
+</body>
+</html>
