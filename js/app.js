@@ -6,12 +6,55 @@
 let selectedStore = null;
 let currentCategory = 'todos';
 
+// Load stores from Firestore (active only), fallback to hardcoded STORES
+function loadActiveStores() {
+    try {
+        if (typeof DataStore !== 'undefined' && DataStore._ready !== false) {
+            const dbFranchises = DataStore.getAllFranchises();
+            if (dbFranchises && dbFranchises.length > 0) {
+                const active = dbFranchises.filter(f => f.status === 'ativo');
+                if (active.length > 0) {
+                    // Map DataStore format to STORES format
+                    return active.map((f, i) => ({
+                        id: i + 1,
+                        slug: f.slug || f.id,
+                        name: f.name,
+                        address: f.address,
+                        city: f.city || '',
+                        state: f.state || '',
+                        cep: f.cep || '',
+                        phone: f.phone || '',
+                        whatsapp: f.whatsapp || '',
+                        rating: f.rating || 4.8,
+                        deliveryTime: f.deliveryTime || '20-35 min',
+                        deliveryFee: f.deliveryFee || 5.90,
+                        open: f.status === 'ativo',
+                        hours: f.hours || '10:00 - 22:00',
+                        type: f.type || 'store',
+                        lat: f.lat || 0,
+                        lng: f.lng || 0
+                    }));
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Firestore load failed, using fallback:', e);
+    }
+    return STORES; // fallback to hardcoded
+}
+
 // DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
     initParticles();
     initNavbar();
     initScrollAnimations();
     initCounters();
+
+    // Load from database, filter active only
+    const activeStores = loadActiveStores();
+    STORES.length = 0;
+    activeStores.forEach(s => STORES.push(s));
+
     renderStores(STORES);
     renderProducts(PRODUCTS);
     initCategoryTabs();
