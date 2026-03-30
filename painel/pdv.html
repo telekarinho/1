@@ -46,7 +46,7 @@
         .cart-cust { padding: 0 14px 6px; display: none; flex-shrink: 0; }
         .cart-cust.show { display: block; }
         .cart-cust input { width: 100%; padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 11px; margin-bottom: 4px; }
-        .cart-items { flex: 1; overflow-y: auto; padding: 6px 14px; }
+        .cart-items { flex: 1; overflow-y: auto; padding: 6px 14px; min-height: 0; }
         .ci { display: flex; align-items: center; gap: 6px; padding: 6px 0; border-bottom: 1px solid #f5f5f5; font-size: 11px; }
         .ci-info { flex: 1; }
         .ci-name { font-weight: 700; font-size: 11px; }
@@ -57,14 +57,14 @@
         .ci-qty span { font-weight: 700; min-width: 14px; text-align: center; }
         .ci-rm { background: none; border: none; color: #e53935; cursor: pointer; font-size: 14px; }
         .cart-empty { text-align: center; padding: 30px 14px; color: #bbb; font-size: 12px; }
-        .cart-foot { border-top: 2px solid #6C63FF; padding: 10px 14px; background: #fafafa; flex-shrink: 0; }
-        .cart-total { display: flex; justify-content: space-between; font-size: 20px; font-weight: 800; margin-bottom: 6px; }
-        .cart-total .tv { color: #6C63FF; font-size: 22px; }
-        .cart-nf { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; font-size: 11px; }
+        .cart-foot { border-top: 3px solid #6C63FF; padding: 8px 14px; background: #f8f5ff; flex-shrink: 0; }
+        .cart-total { display: flex; justify-content: space-between; font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+        .cart-total .tv { color: #6C63FF; font-size: 20px; }
+        .cart-nf { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; font-size: 11px; }
         .cart-nf input[type=text] { flex: 1; padding: 3px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 10px; display: none; }
-        .cart-acts { display: grid; grid-template-columns: auto auto 1fr 1fr; gap: 4px; }
-        .cart-acts .btn { padding: 12px 8px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; }
-        .bf { background: #4CAF50; color: #fff; font-size: 14px !important; }
+        .cart-acts { display: grid; grid-template-columns: 40px 40px 1fr 1fr; gap: 4px; }
+        .cart-acts .btn { padding: 10px 6px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; }
+        .bf { background: #4CAF50; color: #fff; }
         .bf:hover { background: #388E3C; }
         .bp { background: #e3f2fd; color: #1565C0; }
         .bc { background: #ffebee; color: #e53935; }
@@ -150,6 +150,10 @@
             <input type="tel" id="cPhone" placeholder="WhatsApp (opcional)">
             <input type="text" id="cAddr" placeholder="Endereco completo">
         </div>
+        <div id="openTabs" style="padding:4px 14px;display:none;flex-shrink:0;">
+            <div style="font-size:11px;font-weight:700;color:#FF9800;margin-bottom:3px;">📋 Contas Abertas:</div>
+            <div id="openTabsList"></div>
+        </div>
         <div class="cart-items" id="cartList"><div class="cart-empty">Toque em um produto para montar</div></div>
         <div class="cart-foot">
             <div class="cart-total"><span>Total</span><span class="tv" id="cTotal">R$ 0,00</span></div>
@@ -163,11 +167,6 @@
                 <button class="btn bp" onclick="printOrder()">🖨️</button>
                 <button class="btn" style="flex:1;background:#FF9800;color:#fff;" onclick="openTab()">📋 Conta Aberta</button>
                 <button class="btn bf" onclick="finishOrder()">✅ Fechar</button>
-            </div>
-            <!-- Open tabs -->
-            <div id="openTabs" style="margin-top:8px;display:none;">
-                <div style="font-size:11px;font-weight:700;color:#FF9800;margin-bottom:4px;">📋 Contas Abertas:</div>
-                <div id="openTabsList"></div>
             </div>
         </div>
     </div>
