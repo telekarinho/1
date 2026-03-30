@@ -143,9 +143,96 @@
         <div class="extension-download" id="extensionBanner">
             <div class="ext-icon">🧩</div>
             <div style="flex:1">
-                <h3>Extensao Chrome - iFood Connector</h3>
-                <p>Instale a extensao no navegador de cada franqueado para capturar pedidos automaticamente do Gestor de Pedidos do iFood.</p>
-                <button class="btn" onclick="downloadExtension()">📥 Como Instalar</button>
+                <h3>Extensao Chrome - MilkyPot iFood Connector</h3>
+                <p>Captura automaticamente os pedidos aceitos no Gestor de Pedidos do iFood e envia pro painel MilkyPot. Instale no navegador de cada franqueado.</p>
+                <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+                    <a href="../extensions/ifood-connector/" class="btn" style="background:#fff;color:#6C63FF;" download>📥 Baixar Extensao</a>
+                    <button class="btn" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4);" onclick="toggleSetup()">📋 Tutorial de Instalacao</button>
+                    <a href="https://gestordepedidos.ifood.com.br" target="_blank" class="btn" style="background:#EA1D2C;color:#fff;">🛵 Abrir Gestor iFood</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Setup Guide (always visible initially) -->
+        <div id="setupGuide" style="margin-bottom:24px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <h3>📋 Como Configurar a Integracao iFood</h3>
+                <button class="btn btn-sm btn-outline" onclick="toggleSetup()">Ocultar</button>
+            </div>
+
+            <div style="background:#FFF3E0;border-radius:12px;padding:16px;margin-bottom:16px;border-left:4px solid #FF9800;">
+                <strong style="color:#E65100;">⚠️ Como funciona:</strong>
+                <p style="margin:4px 0 0;font-size:13px;color:#555;">A extensao Chrome roda no navegador do franqueado. Quando ele aceita um pedido no <strong>Gestor de Pedidos do iFood</strong>, a extensao intercepta os dados do pedido e envia automaticamente pro painel MilkyPot. O iFood nao detecta — funciona 100% no navegador local.</p>
+            </div>
+
+            <div class="setup-steps">
+                <div class="setup-step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h3>Baixe os arquivos da extensao</h3>
+                        <p>A extensao esta na pasta <code>extensions/ifood-connector/</code> do repositorio do projeto. Baixe ou clone o repositorio no computador do franqueado.</p>
+                        <div style="background:#f5f5f5;border-radius:8px;padding:10px;margin-top:8px;font-family:monospace;font-size:12px;">
+                            📁 extensions/ifood-connector/<br>
+                            &nbsp;&nbsp;├── manifest.json<br>
+                            &nbsp;&nbsp;├── content.js (intercepta pedidos)<br>
+                            &nbsp;&nbsp;├── background.js (envia pro Firestore)<br>
+                            &nbsp;&nbsp;├── popup.html (interface do popup)<br>
+                            &nbsp;&nbsp;├── popup.js<br>
+                            &nbsp;&nbsp;└── icons/
+                        </div>
+                    </div>
+                </div>
+                <div class="setup-step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h3>Instale no Chrome</h3>
+                        <p>No navegador Chrome do franqueado:</p>
+                        <ol style="font-size:13px;color:#555;margin:8px 0;padding-left:20px;line-height:1.8;">
+                            <li>Digite <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;">chrome://extensions</code> na barra de endereco</li>
+                            <li>Ative o <strong>"Modo do desenvolvedor"</strong> (toggle no canto superior direito)</li>
+                            <li>Clique em <strong>"Carregar sem compactacao"</strong></li>
+                            <li>Selecione a pasta <code>extensions/ifood-connector</code></li>
+                            <li>A extensao aparecera na barra do Chrome com o icone 🐑</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="setup-step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h3>Configure a franquia na extensao</h3>
+                        <p>Clique no icone da extensao 🐑 na barra do Chrome:</p>
+                        <ol style="font-size:13px;color:#555;margin:8px 0;padding-left:20px;line-height:1.8;">
+                            <li>Selecione a <strong>franquia MilkyPot</strong> correspondente (ex: Ibirapuera)</li>
+                            <li>Ative o <strong>toggle</strong> — o status muda pra <span style="color:#4CAF50;font-weight:700;">● Ativo</span></li>
+                            <li>Pronto! A extensao esta capturando.</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="setup-step">
+                    <div class="step-num">4</div>
+                    <div class="step-content">
+                        <h3>Use o Gestor de Pedidos normalmente</h3>
+                        <p>Abra o <a href="https://gestordepedidos.ifood.com.br" target="_blank" style="color:#EA1D2C;font-weight:700;">gestordepedidos.ifood.com.br</a> e trabalhe normalmente. Quando o franqueado <strong>aceitar um pedido</strong>, a extensao:</p>
+                        <ol style="font-size:13px;color:#555;margin:8px 0;padding-left:20px;line-height:1.8;">
+                            <li>Captura os dados do pedido (itens, cliente, endereco, valor)</li>
+                            <li>Mostra um toast verde: <span style="background:#6C63FF;color:#fff;padding:2px 8px;border-radius:6px;font-size:11px;">🐑 Pedido #1234 capturado!</span></li>
+                            <li>Envia automaticamente pro Firebase/MilkyPot</li>
+                            <li>O pedido aparece aqui embaixo e no <strong>Painel do Franqueado > iFood</strong></li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="setup-step">
+                    <div class="step-num">5</div>
+                    <div class="step-content">
+                        <h3>Acompanhe os pedidos</h3>
+                        <p>Os pedidos iFood aparecem em <strong>3 lugares</strong>:</p>
+                        <ul style="font-size:13px;color:#555;margin:8px 0;padding-left:20px;line-height:1.8;">
+                            <li><strong>Popup da extensao</strong> — ultimos pedidos + stats do dia</li>
+                            <li><strong>Esta pagina (Admin > iFood)</strong> — visao geral de todas as lojas</li>
+                            <li><strong>Painel Franqueado > iFood</strong> — pedidos da loja com botoes de status</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -421,12 +508,12 @@
 
     window.toggleSetup = function() {
         var guide = document.getElementById('setupGuide');
-        guide.style.display = guide.style.display === 'none' ? 'block' : 'none';
-    };
-
-    window.downloadExtension = function() {
-        toggleSetup();
-        Utils.showToast('Siga os passos abaixo para instalar a extensao', 'info');
+        if (guide.style.display === 'none') {
+            guide.style.display = 'block';
+            guide.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            guide.style.display = 'none';
+        }
     };
 
     window.toggleSidebar = function() {

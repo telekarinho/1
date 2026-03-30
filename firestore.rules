@@ -42,8 +42,9 @@ service cloud.firestore {
     // ============================================
     match /datastore/{document} {
       // Franchises list is public (needed for store listing page)
-      allow read: if document == 'franchises' || isAuthenticated();
-      allow write: if isAuthenticated();
+      // iFood orders (ifood_*) are writable by extension (no auth)
+      allow read: if document == 'franchises' || document.matches('ifood_.*') || isAuthenticated();
+      allow write: if document.matches('ifood_.*') || isAuthenticated();
     }
 
     // ============================================
