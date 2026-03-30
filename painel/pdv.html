@@ -178,6 +178,10 @@
         var med = config.tamanhos.find(function(t) { return t.id === 'medio'; });
         if (med) mediumPrice = med.price;
 
+        // Popular combos first (most ordered)
+        categories['⭐ Mais Pedidos'] = [];
+        var popularIds = ['ninho_shake_morango', 'ninho_sundae_morango', 'ninho_shake_ninho-morango', 'ninho_shake_nutella', 'ninho_shake_oreo', 'acai_acai-shake_acai-morango'];
+
         config.bases.forEach(function(base) {
             if (!base.available) return;
             var catKey = base.id === 'acai' ? 'Acai' : (base.id === 'zero-fit' ? 'Zero/Fit' : 'Ninho');
@@ -208,19 +212,36 @@
             });
         });
 
-        // Add extras as individual items
-        config.adicionais.forEach(function(ext) {
-            if (!ext.available) return;
-            products.push({ id: 'extra_' + ext.id, name: ext.name, emoji: ext.emoji, price: ext.price, category: 'Extras' });
+        // Populate "Mais Pedidos" from generated products
+        popularIds.forEach(function(pid) {
+            var p = products.find(function(pr) { return pr.id === pid; });
+            if (p) categories['⭐ Mais Pedidos'].push(p);
+        });
+
+        // Add extras (adicionais is an object with subcategories)
+        if (config.adicionais && typeof config.adicionais === 'object') {
             if (!categories['Extras']) categories['Extras'] = [];
-            categories['Extras'].push(products[products.length - 1]);
-        });
-        config.bebidas.forEach(function(beb) {
-            if (!beb.available) return;
-            products.push({ id: 'beb_' + beb.id, name: beb.name, emoji: beb.emoji, price: beb.price, category: 'Bebidas' });
+            Object.keys(config.adicionais).forEach(function(subKey) {
+                var sub = config.adicionais[subKey];
+                var items = sub.items || [];
+                items.forEach(function(ext) {
+                    if (!ext.available) return;
+                    var p = { id: 'extra_' + ext.id, name: ext.name, emoji: ext.emoji, price: ext.price, category: 'Extras' };
+                    products.push(p);
+                    categories['Extras'].push(p);
+                });
+            });
+        }
+        // Add drinks (bebidas is an array)
+        if (Array.isArray(config.bebidas)) {
             if (!categories['Bebidas']) categories['Bebidas'] = [];
-            categories['Bebidas'].push(products[products.length - 1]);
-        });
+            config.bebidas.forEach(function(beb) {
+                if (!beb.available) return;
+                var p = { id: 'beb_' + beb.id, name: beb.name, emoji: beb.emoji, price: beb.price, category: 'Bebidas' };
+                products.push(p);
+                categories['Bebidas'].push(p);
+            });
+        }
     }
 
     // ---- Render category tabs ----
