@@ -152,6 +152,15 @@ const Auth = {
     // Logout
     // ============================================
     async logout() {
+        // If quick login session, restore admin session instead of full logout
+        var currentSession = this.getSession();
+        if (currentSession && currentSession.quickLogin) {
+            if (this.restoreAdminSession()) {
+                window.location.href = '/admin/';
+                return;
+            }
+        }
+
         if (typeof AuditLog !== 'undefined') AuditLog.logAuth(AuditLog.EVENTS.LOGOUT, {});
         try {
             await firebaseAuth.signOut();
@@ -159,6 +168,8 @@ const Auth = {
             console.warn('Firebase signOut error:', e);
         }
         localStorage.removeItem(this.SESSION_KEY);
+        localStorage.removeItem('mp_admin_session_backup');
+        localStorage.removeItem('mp_quick_login');
         window.location.href = '/login.html';
     },
 
@@ -234,6 +245,10 @@ const Auth = {
     // Quick login: admin creates temp session to access franchise panel
     _checkQuickLogin() {
         try {
+            var urlParams = new URLSearchParams(window.location.search);
+            var storeParam = urlParams.get('store');
+            if (!storeParam) return false;
+
             var ql = localStorage.getItem('mp_quick_login');
             if (!ql) return false;
             var data = JSON.parse(ql);
@@ -241,27 +256,46 @@ const Auth = {
                 localStorage.removeItem('mp_quick_login');
                 return false;
             }
-            // Check if URL has store param matching quick login
-            var urlParams = new URLSearchParams(window.location.search);
-            var storeParam = urlParams.get('store');
-            if (storeParam && storeParam === data.franchiseId) {
-                // Create temporary session for this franchise
-                var session = {
-                    userId: 'admin_quick_' + data.franchiseId,
-                    email: 'admin@milkypot.com',
-                    name: 'Admin (' + data.franchiseName + ')',
-                    role: 'franchisee',
-                    franchiseId: data.franchiseId,
-                    firebaseUid: null,
-                    token: 'quick_' + Date.now(),
-                    loginAt: data.loginAt,
-                    expiresAt: data.expiresAt,
-                    quickLogin: true
-                };
-                this._saveSession(session);
-                return true;
+            if (storeParam !== data.franchiseId) return false;
+
+            // Backup current admin session before overwriting
+            var currentSession = localStorage.getItem(this.SESSION_KEY);
+            if (currentSession) {
+                var parsed = JSON.parse(currentSession);
+                if (parsed.role === 'super_admin' || parsed.role === MP.ROLES.SUPER_ADMIN) {
+                    localStorage.setItem('mp_admin_session_backup', currentSession);
+                }
             }
+
+            // Create temporary franchisee session
+            var session = {
+                userId: 'admin_quick_' + data.franchiseId,
+                email: 'admin@milkypot.com',
+                name: 'Admin (' + data.franchiseName + ')',
+                role: 'franchisee',
+                franchiseId: data.franchiseId,
+                firebaseUid: null,
+                token: 'quick_' + Date.now(),
+                loginAt: data.loginAt,
+                expiresAt: data.expiresAt,
+                quickLogin: true
+            };
+            this._saveSession(session);
+            // Clear quick login flag so it doesn't trigger again
+            localStorage.removeItem('mp_quick_login');
+            return true;
         } catch (e) {}
+        return false;
+    },
+
+    // Restore admin session when leaving franchise panel
+    restoreAdminSession() {
+        var backup = localStorage.getItem('mp_admin_session_backup');
+        if (backup) {
+            localStorage.setItem(this.SESSION_KEY, backup);
+            localStorage.removeItem('mp_admin_session_backup');
+            return true;
+        }
         return false;
     },
 
