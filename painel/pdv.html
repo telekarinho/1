@@ -103,6 +103,11 @@
         .mf-add { flex: 1; padding: 12px; background: #6C63FF; color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 800; cursor: pointer; }
         .mf-add:hover { background: #5A52E0; }
 
+        .tab-chip { display: flex; align-items: center; gap: 6px; padding: 5px 8px; background: #FFF3E0; border: 1px solid #FFB74D; border-radius: 8px; margin-bottom: 4px; cursor: pointer; font-size: 11px; transition: all 0.12s; }
+        .tab-chip:hover { background: #FFE0B2; }
+        .tab-chip .tc-name { flex: 1; font-weight: 700; color: #E65100; }
+        .tab-chip .tc-total { font-weight: 700; color: #333; }
+        .tab-chip .tc-close { background: none; border: none; color: #e53935; cursor: pointer; font-size: 13px; }
         .toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; z-index: 9999; display: none; }
         .toast.show { display: block; animation: fiu 0.3s; }
         @keyframes fiu { from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)} }
@@ -127,14 +132,14 @@
     <div class="pdv-cart">
         <div class="cart-head">
             <h2>🛒 Pedido</h2>
-            <div class="cart-type">
+            <input type="text" id="orderName" placeholder="👤 Nome do pedido (ex: Mesa 3, João, Comanda 5...)" style="width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:8px;font-size:12px;margin-top:6px;font-weight:600;">
+            <div class="cart-type" style="margin-top:6px;">
                 <button class="ct-btn active" data-type="balcao" onclick="setType('balcao')">🏪 Balcao</button>
                 <button class="ct-btn" data-type="retirada" onclick="setType('retirada')">📦 Retirada</button>
                 <button class="ct-btn" data-type="delivery" onclick="setType('delivery')">🛵 Delivery</button>
             </div>
         </div>
         <div class="cart-cust" id="custF">
-            <input type="text" id="cName" placeholder="Nome do cliente">
             <input type="tel" id="cPhone" placeholder="WhatsApp (opcional)">
             <input type="text" id="cAddr" placeholder="Endereco completo">
         </div>
@@ -149,7 +154,13 @@
             <div class="cart-acts">
                 <button class="btn bc" onclick="clearCart()">🗑️</button>
                 <button class="btn bp" onclick="printOrder()">🖨️</button>
-                <button class="btn bf" onclick="finishOrder()">✅ Finalizar</button>
+                <button class="btn" style="flex:1;background:#FF9800;color:#fff;" onclick="openTab()">📋 Conta Aberta</button>
+                <button class="btn bf" onclick="finishOrder()">✅ Fechar</button>
+            </div>
+            <!-- Open tabs -->
+            <div id="openTabs" style="margin-top:8px;display:none;">
+                <div style="font-size:11px;font-weight:700;color:#FF9800;margin-bottom:4px;">📋 Contas Abertas:</div>
+                <div id="openTabsList"></div>
             </div>
         </div>
     </div>
@@ -441,23 +452,112 @@
 
     window.clearCart=function(){if(!cart.length)return;cart=[];renderCart();toast('Pedido limpo')};
 
+    // ============================================
+    // OPEN TABS (Conta Aberta)
+    // ============================================
+    var openTabs = JSON.parse(localStorage.getItem('mp_pdv_tabs_'+fid) || '[]');
+    var editingTabId = null; // if editing an open tab
+
+    function saveOpenTabs(){
+        localStorage.setItem('mp_pdv_tabs_'+fid, JSON.stringify(openTabs));
+        renderOpenTabs();
+    }
+
+    function renderOpenTabs(){
+        var el=document.getElementById('openTabs');
+        var list=document.getElementById('openTabsList');
+        if(!openTabs.length){el.style.display='none';return}
+        el.style.display='block';
+        list.innerHTML=openTabs.map(function(tab){
+            var total=tab.items.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
+            return '<div class="tab-chip" onclick="loadTab(\''+tab.id+'\')">'+
+                '<span>📋</span><span class="tc-name">'+Utils.escapeHtml(tab.name)+'</span>'+
+                '<span class="tc-total">R$ '+total.toFixed(2).replace('.',',')+'</span>'+
+                '<span style="font-size:10px;color:#999;">'+tab.items.length+' itens</span>'+
+                '<button class="tc-close" onclick="event.stopPropagation();removeTab(\''+tab.id+'\')">×</button></div>';
+        }).join('');
+    }
+
+    window.openTab=function(){
+        if(!cart.length){toast('Adicione itens primeiro');return}
+        var tabName=document.getElementById('orderName').value||'Comanda '+(openTabs.length+1);
+
+        if(editingTabId){
+            // Update existing tab
+            var tab=openTabs.find(function(t){return t.id===editingTabId});
+            if(tab){
+                tab.items=cart.slice();
+                tab.name=tabName;
+                tab.updatedAt=new Date().toISOString();
+                toast('📋 '+tabName+' atualizada!');
+            }
+            editingTabId=null;
+        } else {
+            // Create new tab
+            openTabs.push({
+                id:Utils.generateId(),
+                name:tabName,
+                items:cart.slice(),
+                type:orderType,
+                createdAt:new Date().toISOString()
+            });
+            toast('📋 '+tabName+' — conta aberta! Cliente pode consumir mais.');
+        }
+        saveOpenTabs();
+        cart=[];renderCart();
+        document.getElementById('orderName').value='';
+    };
+
+    window.loadTab=function(tabId){
+        var tab=openTabs.find(function(t){return t.id===tabId});
+        if(!tab)return;
+        // Load tab items into cart
+        cart=tab.items.slice();
+        editingTabId=tabId;
+        document.getElementById('orderName').value=tab.name;
+        if(tab.type)setType(tab.type);
+        renderCart();
+        toast('📋 '+tab.name+' carregada — adicione mais itens ou feche a conta');
+    };
+
+    window.removeTab=function(tabId){
+        openTabs=openTabs.filter(function(t){return t.id!==tabId});
+        if(editingTabId===tabId)editingTabId=null;
+        saveOpenTabs();
+        toast('Conta removida');
+    };
+
+    renderOpenTabs();
+
+    // ============================================
+    // FINISH ORDER (Fechar conta)
+    // ============================================
     window.finishOrder=function(){
         if(!cart.length){toast('Adicione itens');return}
         var total=cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
+        var oName=document.getElementById('orderName').value||(orderType==='balcao'?'Balcao':'');
         var order={
             id:Utils.generateId(),createdAt:new Date().toISOString(),status:'confirmado',
             type:orderType,source:'pdv',
             items:cart.map(function(c){return{name:c.name,size:c.size,extras:c.extras,qty:c.qty,unitPrice:c.unitPrice,total:c.unitPrice*c.qty}}),
             total:total,
-            customer:{name:document.getElementById('cName').value||(orderType==='balcao'?'Balcao':''),phone:document.getElementById('cPhone').value||''},
+            customer:{name:oName,phone:document.getElementById('cPhone').value||''},
             address:orderType==='delivery'?document.getElementById('cAddr').value:'',
             nf:document.getElementById('nfCk').checked,cpf:document.getElementById('nfCpf').value||'',
             franchiseId:fid
         };
         DataStore.addToCollection('orders',fid,order);
-        toast('✅ Pedido #'+order.id.slice(-4)+' — R$ '+total.toFixed(2).replace('.',','));
+        toast('✅ '+oName+' — R$ '+total.toFixed(2).replace('.',',')+' finalizado!');
+
+        // Remove from open tabs if was editing
+        if(editingTabId){
+            openTabs=openTabs.filter(function(t){return t.id!==editingTabId});
+            editingTabId=null;
+            saveOpenTabs();
+        }
+
         cart=[];renderCart();
-        document.getElementById('cName').value='';document.getElementById('cPhone').value='';document.getElementById('cAddr').value='';
+        document.getElementById('orderName').value='';document.getElementById('cPhone').value='';document.getElementById('cAddr').value='';
         document.getElementById('nfCk').checked=false;document.getElementById('nfCpf').style.display='none';
     };
 
