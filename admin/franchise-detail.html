@@ -254,11 +254,28 @@
 
         document.getElementById('headerActions').innerHTML =
             '<button class="btn btn-primary" onclick="editFranchise()">✏️ Editar</button>' +
+            '<button class="btn btn-success" onclick="quickLoginFranchise(\'' + Utils.escapeHtml(franchise.id) + '\', \'' + Utils.escapeHtml(franchise.name) + '\')">🔑 Acessar Painel</button>' +
             '<a href="../f/' + encodeURIComponent(franchise.slug || franchise.id) + '/" class="btn btn-outline" target="_blank">🔗 Ver Loja Publica</a>';
 
         function editFranchise() {
             window.location.href = 'franchises.html#edit-' + encodeURIComponent(franchiseId);
         }
+
+        // Quick login: admin acessa o painel da franquia diretamente
+        window.quickLoginFranchise = function(fId, fName) {
+            // Salva sessao temporaria no localStorage pro painel da franquia
+            var adminSession = {
+                franchiseId: fId,
+                franchiseName: fName,
+                role: 'super_admin',
+                quickLogin: true,
+                loginAt: new Date().toISOString(),
+                expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString() // 4 horas
+            };
+            localStorage.setItem('mp_quick_login', JSON.stringify(adminSession));
+            // Abre o painel da franquia em nova aba
+            window.open('../painel/index.html?store=' + encodeURIComponent(fId), '_blank');
+        };
 
         // --- KPIs ---
         const monthOrders = orders.filter(function(o) {

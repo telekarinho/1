@@ -211,20 +211,58 @@ const Auth = {
 
     // Require auth - redirect to login if not authenticated
     requireAuth(requiredRole) {
+        // Check for quick login from admin (super_admin accessing franchise panel)
+        var quickLogin = this._checkQuickLogin();
+        if (quickLogin) return true;
+
         const session = this.getSession();
         if (!session) {
             window.location.href = '/login.html';
             return false;
         }
         if (requiredRole && session.role !== requiredRole) {
+            // Allow super_admin to access any panel
             if (session.role === MP.ROLES.SUPER_ADMIN) {
-                window.location.href = '/admin/';
-            } else {
-                window.location.href = '/painel/';
+                return true;
             }
+            window.location.href = '/painel/';
             return false;
         }
         return true;
+    },
+
+    // Quick login: admin creates temp session to access franchise panel
+    _checkQuickLogin() {
+        try {
+            var ql = localStorage.getItem('mp_quick_login');
+            if (!ql) return false;
+            var data = JSON.parse(ql);
+            if (new Date(data.expiresAt) < new Date()) {
+                localStorage.removeItem('mp_quick_login');
+                return false;
+            }
+            // Check if URL has store param matching quick login
+            var urlParams = new URLSearchParams(window.location.search);
+            var storeParam = urlParams.get('store');
+            if (storeParam && storeParam === data.franchiseId) {
+                // Create temporary session for this franchise
+                var session = {
+                    userId: 'admin_quick_' + data.franchiseId,
+                    email: 'admin@milkypot.com',
+                    name: 'Admin (' + data.franchiseName + ')',
+                    role: 'franchisee',
+                    franchiseId: data.franchiseId,
+                    firebaseUid: null,
+                    token: 'quick_' + Date.now(),
+                    loginAt: data.loginAt,
+                    expiresAt: data.expiresAt,
+                    quickLogin: true
+                };
+                this._saveSession(session);
+                return true;
+            }
+        } catch (e) {}
+        return false;
     },
 
     // ============================================

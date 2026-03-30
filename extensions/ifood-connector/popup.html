@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { width: 320px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; }
+.header { background: linear-gradient(135deg, #6C63FF, #5A52E0); padding: 16px; color: #fff; text-align: center; }
+.header img { width: 40px; height: 40px; border-radius: 8px; margin-bottom: 6px; }
+.header h1 { font-size: 15px; font-weight: 700; }
+.header p { font-size: 11px; opacity: 0.8; }
+.content { padding: 16px; }
+.status-card { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.status-row { display: flex; align-items: center; justify-content: space-between; }
+.status-label { font-size: 13px; font-weight: 600; color: #333; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; }
+.status-dot.active { background: #4CAF50; box-shadow: 0 0 6px rgba(76,175,80,0.5); }
+.status-dot.inactive { background: #ccc; }
+.toggle { position: relative; width: 44px; height: 24px; cursor: pointer; }
+.toggle input { display: none; }
+.toggle .slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; border-radius: 24px; transition: 0.3s; }
+.toggle input:checked + .slider { background: #6C63FF; }
+.toggle .slider:before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.3s; }
+.toggle input:checked + .slider:before { transform: translateX(20px); }
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px; }
+.field select, .field input { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; background: #fff; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.stat-card { background: #fff; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.stat-num { font-size: 20px; font-weight: 800; color: #6C63FF; }
+.stat-label { font-size: 10px; color: #999; margin-top: 2px; }
+.orders-list { max-height: 200px; overflow-y: auto; }
+.order-item { background: #fff; border-radius: 8px; padding: 10px; margin-bottom: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-size: 12px; }
+.order-item .oi-head { display: flex; justify-content: space-between; font-weight: 700; }
+.order-item .oi-items { color: #666; margin-top: 4px; }
+.order-item .oi-total { color: #6C63FF; font-weight: 700; margin-top: 2px; }
+.footer { text-align: center; padding: 8px; font-size: 10px; color: #999; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div style="font-size:28px">🐑</div>
+    <h1>MilkyPot iFood Connector</h1>
+    <p>Captura automatica de pedidos</p>
+</div>
+
+<div class="content">
+    <!-- Status -->
+    <div class="status-card">
+        <div class="status-row">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div class="status-dot" id="statusDot"></div>
+                <span class="status-label" id="statusText">Desativado</span>
+            </div>
+            <label class="toggle">
+                <input type="checkbox" id="toggleEnabled">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Config -->
+    <div class="status-card">
+        <div class="field">
+            <label>Franquia MilkyPot</label>
+            <select id="storeSelect">
+                <option value="">Selecione a loja...</option>
+                <option value="ibirapuera">MilkyPot Shopping Ibirapuera</option>
+                <option value="morumbi">MilkyPot Shopping Morumbi</option>
+                <option value="jardins">MilkyPot Jardins</option>
+                <option value="barra">MilkyPot Barra Shopping</option>
+                <option value="catuai">MilkyPot Catuai Londrina</option>
+                <option value="recife">MilkyPot Shopping Recife</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-num" id="totalOrders">0</div>
+            <div class="stat-label">Pedidos Hoje</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num" id="totalRevenue">R$ 0</div>
+            <div class="stat-label">Faturamento</div>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="status-card">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:#333;">Ultimos pedidos capturados</div>
+        <div class="orders-list" id="ordersList">
+            <div style="text-align:center;color:#999;font-size:12px;padding:20px;">
+                Nenhum pedido capturado ainda
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    MilkyPot iFood Connector v1.0 &bull; Feito com ❤️
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>
