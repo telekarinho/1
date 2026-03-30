@@ -6,41 +6,35 @@
 let selectedStore = null;
 let currentCategory = 'todos';
 
-// Load stores from Firestore (active only), fallback to hardcoded STORES
-function loadActiveStores() {
-    try {
-        if (typeof DataStore !== 'undefined' && DataStore._ready !== false) {
-            const dbFranchises = DataStore.getAllFranchises();
-            if (dbFranchises && dbFranchises.length > 0) {
-                const active = dbFranchises.filter(f => f.status === 'ativo');
-                if (active.length > 0) {
-                    // Map DataStore format to STORES format
-                    return active.map((f, i) => ({
-                        id: i + 1,
-                        slug: f.slug || f.id,
-                        name: f.name,
-                        address: f.address,
-                        city: f.city || '',
-                        state: f.state || '',
-                        cep: f.cep || '',
-                        phone: f.phone || '',
-                        whatsapp: f.whatsapp || '',
-                        rating: f.rating || 4.8,
-                        deliveryTime: f.deliveryTime || '20-35 min',
-                        deliveryFee: f.deliveryFee || 5.90,
-                        open: f.status === 'ativo',
-                        hours: f.hours || '10:00 - 22:00',
-                        type: f.type || 'store',
-                        lat: f.lat || 0,
-                        lng: f.lng || 0
-                    }));
-                }
-            }
-        }
-    } catch (e) {
-        console.warn('Firestore load failed, using fallback:', e);
-    }
-    return STORES; // fallback to hardcoded
+// Map DataStore franchises to STORES format
+function mapFranchisesToStores(dbFranchises) {
+    const active = dbFranchises.filter(f => f.status === 'ativo');
+    if (active.length === 0) return null;
+    return active.map((f, i) => ({
+        id: i + 1,
+        slug: f.slug || f.id,
+        name: f.name,
+        address: f.address,
+        city: f.city || '',
+        state: f.state || '',
+        cep: f.cep || '',
+        phone: f.phone || '',
+        whatsapp: f.whatsapp || '',
+        rating: f.rating || 4.8,
+        deliveryTime: f.deliveryTime || '20-35 min',
+        deliveryFee: f.deliveryFee || 5.90,
+        open: true,
+        hours: f.hours || '10:00 - 22:00',
+        type: f.type || 'store',
+        lat: f.lat || 0,
+        lng: f.lng || 0
+    }));
+}
+
+function applyStores(storeList) {
+    STORES.length = 0;
+    storeList.forEach(s => STORES.push(s));
+    renderStores(STORES);
 }
 
 // DOM Ready
@@ -50,12 +44,28 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollAnimations();
     initCounters();
 
-    // Load from database, filter active only
-    const activeStores = loadActiveStores();
-    STORES.length = 0;
-    activeStores.forEach(s => STORES.push(s));
+    // 1) Render immediately from localStorage cache or hardcoded
+    let cached = null;
+    try {
+        if (typeof DataStore !== 'undefined') {
+            const dbFranchises = DataStore.getAllFranchises();
+            if (dbFranchises && dbFranchises.length > 0) {
+                cached = mapFranchisesToStores(dbFranchises);
+            }
+        }
+    } catch (e) { /* ignore */ }
+    applyStores(cached || STORES);
 
-    renderStores(STORES);
+    // 2) Then fetch fresh from Firestore and update
+    if (typeof DataStore !== 'undefined' && DataStore._ready) {
+        DataStore.fetchPublicFranchises().then(data => {
+            if (data && data.length > 0) {
+                const mapped = mapFranchisesToStores(data);
+                if (mapped) applyStores(mapped);
+            }
+        }).catch(() => {});
+    }
+
     renderProducts(PRODUCTS);
     initCategoryTabs();
     initStoreSearch();

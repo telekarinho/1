@@ -41,8 +41,8 @@ service cloud.firestore {
     // DataStore Collection (legado - fase de migracao)
     // ============================================
     match /datastore/{document} {
-      // Durante migracao, permite leitura/escrita para autenticados
-      allow read: if isAuthenticated();
+      // Franchises list is public (needed for store listing page)
+      allow read: if document == 'franchises' || isAuthenticated();
       allow write: if isAuthenticated();
     }
 

@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v4';
-const CACHE_NAME = 'milkypot-v4';
+const CACHE_VERSION = 'mp-v5';
+const CACHE_NAME = 'milkypot-v5';
 
 const PRECACHE_URLS = [
     '/',

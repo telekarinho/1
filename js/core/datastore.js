@@ -188,6 +188,22 @@ const DataStore = {
         });
     },
 
+    // Fetch only the franchises doc (public, no auth needed)
+    async fetchPublicFranchises() {
+        if (!this._ready || !this._db) return null;
+        try {
+            const doc = await this._db.collection('datastore').doc('franchises').get();
+            if (doc.exists) {
+                const data = JSON.parse(doc.data().value);
+                localStorage.setItem(this.PREFIX + 'franchises', JSON.stringify(data));
+                return data;
+            }
+        } catch (e) {
+            console.warn('fetchPublicFranchises error:', e);
+        }
+        return null;
+    },
+
     async _syncFromCloud() {
         if (!this._ready || !this._db) return;
         try {
