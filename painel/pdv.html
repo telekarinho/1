@@ -21,19 +21,21 @@
         .pdv-header h1 { margin: 0; font-size: 16px; font-family: 'Baloo 2', cursive; }
         .pdv-header .btn-back { background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; }
 
-        /* Category tabs */
-        .cat-tabs { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; }
-        .cat-tab { padding: 8px 16px; border-radius: 20px; border: 2px solid #e0e0e0; background: #fff; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-        .cat-tab.active { background: #6C63FF; color: #fff; border-color: #6C63FF; }
+        /* Section headers */
+        .section-title { font-family: 'Baloo 2', cursive; font-size: 14px; font-weight: 700; color: #555; margin: 16px 0 8px; padding-bottom: 4px; border-bottom: 2px solid #e0e0e0; display: flex; align-items: center; gap: 6px; }
+        .section-title:first-child { margin-top: 0; }
+        .section-title.popular { color: #6C63FF; border-color: #6C63FF; }
 
         /* Product grid */
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-bottom: 8px; }
         .pdv-item { background: #fff; border-radius: 12px; padding: 14px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; box-shadow: 0 1px 4px rgba(0,0,0,0.06); user-select: none; }
         .pdv-item:hover { border-color: #6C63FF; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(108,99,255,0.15); }
         .pdv-item:active { transform: scale(0.95); }
-        .pdv-item .item-emoji { font-size: 32px; margin-bottom: 4px; }
-        .pdv-item .item-name { font-size: 12px; font-weight: 700; color: #333; line-height: 1.2; margin-bottom: 4px; }
-        .pdv-item .item-price { font-size: 14px; font-weight: 800; color: #6C63FF; }
+        .pdv-item .item-emoji { font-size: 26px; margin-bottom: 2px; }
+        .pdv-item .item-name { font-size: 11px; font-weight: 700; color: #333; line-height: 1.2; margin-bottom: 2px; }
+        .pdv-item .item-price { font-size: 12px; font-weight: 800; color: #6C63FF; }
+        .pdv-item.popular-item { border: 2px solid #6C63FF; background: #f3f0ff; }
+        .pdv-item.popular-item .item-price { color: #5A52E0; }
 
         /* Cart */
         .cart-header { padding: 16px; border-bottom: 1px solid #f0f0f0; }
@@ -94,10 +96,7 @@
 
 <div class="pdv-layout">
     <!-- Products -->
-    <div class="pdv-products">
-        <div class="cat-tabs" id="catTabs"></div>
-        <div class="product-grid" id="productGrid"></div>
-    </div>
+    <div class="pdv-products" id="allProducts"></div>
 
     <!-- Cart -->
     <div class="pdv-cart">
@@ -180,7 +179,14 @@
 
         // Popular combos first (most ordered)
         categories['⭐ Mais Pedidos'] = [];
-        var popularIds = ['ninho_shake_morango', 'ninho_sundae_morango', 'ninho_shake_ninho-morango', 'ninho_shake_nutella', 'ninho_shake_oreo', 'acai_acai-shake_acai-morango'];
+        var popularIds = [
+            'ninho_shake_morango', 'ninho_sundae_morango',
+            'ninho_shake_ninho-morango', 'ninho_sundae_ninho-morango',
+            'ninho_shake_nutella', 'ninho_sundae_nutella',
+            'ninho_shake_oreo', 'ninho_sundae_oreo',
+            'ninho_shake_ninho', 'ninho_sundae_ninho',
+            'acai_acai-shake_acai-morango', 'acai_acai-bowl_acai-morango'
+        ];
 
         config.bases.forEach(function(base) {
             if (!base.available) return;
@@ -244,33 +250,38 @@
         }
     }
 
-    // ---- Render category tabs ----
-    var catNames = Object.keys(categories);
-    var activeCat = catNames[0] || '';
-    var tabsHtml = catNames.map(function(c) {
-        return '<button class="cat-tab' + (c === activeCat ? ' active' : '') + '" onclick="switchCat(\'' + c + '\')">' + c + '</button>';
-    }).join('');
-    document.getElementById('catTabs').innerHTML = tabsHtml;
+    // ---- Render all products in sections ----
+    function renderAllProducts() {
+        var container = document.getElementById('allProducts');
+        var html = '';
 
-    function renderProducts(cat) {
-        var items = categories[cat] || [];
-        var html = items.map(function(p) {
-            return '<div class="pdv-item" onclick="addToCart(\'' + p.id + '\')">' +
-                '<div class="item-emoji">' + p.emoji + '</div>' +
-                '<div class="item-name">' + p.name + '</div>' +
-                '<div class="item-price">R$ ' + p.price.toFixed(2).replace('.',',') + '</div>' +
-            '</div>';
-        }).join('');
-        document.getElementById('productGrid').innerHTML = html;
+        // Order: Mais Pedidos first, then regular categories
+        var orderedCats = ['⭐ Mais Pedidos'];
+        Object.keys(categories).forEach(function(c) {
+            if (c !== '⭐ Mais Pedidos') orderedCats.push(c);
+        });
+
+        orderedCats.forEach(function(catName) {
+            var items = categories[catName] || [];
+            if (items.length === 0) return;
+            var isPopular = catName === '⭐ Mais Pedidos';
+
+            html += '<div class="section-title' + (isPopular ? ' popular' : '') + '">' + catName + ' <span style="font-size:11px;color:#999;">(' + items.length + ')</span></div>';
+            html += '<div class="product-grid">';
+            items.forEach(function(p) {
+                html += '<div class="pdv-item' + (isPopular ? ' popular-item' : '') + '" onclick="addToCart(\'' + p.id + '\')">' +
+                    '<div class="item-emoji">' + p.emoji + '</div>' +
+                    '<div class="item-name">' + p.name + '</div>' +
+                    '<div class="item-price">R$ ' + p.price.toFixed(2).replace('.',',') + '</div>' +
+                '</div>';
+            });
+            html += '</div>';
+        });
+
+        container.innerHTML = html;
     }
 
-    window.switchCat = function(cat) {
-        activeCat = cat;
-        document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.toggle('active', t.textContent === cat); });
-        renderProducts(cat);
-    };
-
-    renderProducts(activeCat);
+    renderAllProducts();
 
     // ---- Cart ----
     var cart = [];
