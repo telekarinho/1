@@ -8,139 +8,174 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/shared-panel.css">
-    <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#42A5F5">
     <style>
-        body { margin: 0; font-family: 'Nunito', sans-serif; background: #f0f2f5; }
-        .pdv-layout { display: grid; grid-template-columns: 1fr 360px; height: 100vh; }
-        .pdv-products { padding: 16px; overflow-y: auto; }
-        .pdv-cart { background: #fff; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Nunito', sans-serif; background: #f0f2f5; overflow: hidden; }
+        .pdv-layout { display: grid; grid-template-columns: 1fr 340px; height: 100vh; }
 
         /* Header */
-        .pdv-header { background: linear-gradient(135deg, #6C63FF, #5A52E0); color: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
-        .pdv-header h1 { margin: 0; font-size: 16px; font-family: 'Baloo 2', cursive; }
-        .pdv-header .btn-back { background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .pdv-header { background: linear-gradient(135deg, #6C63FF, #5A52E0); color: #fff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .pdv-header h1 { margin: 0; font-size: 15px; font-family: 'Baloo 2', cursive; }
+        .pdv-header .btn-back { background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; }
 
-        /* Section headers */
-        .section-title { font-family: 'Baloo 2', cursive; font-size: 14px; font-weight: 700; color: #555; margin: 16px 0 8px; padding-bottom: 4px; border-bottom: 2px solid #e0e0e0; display: flex; align-items: center; gap: 6px; }
-        .section-title:first-child { margin-top: 0; }
-        .section-title.popular { color: #6C63FF; border-color: #6C63FF; }
+        /* Products area */
+        .pdv-products { padding: 12px; overflow-y: auto; height: calc(100vh - 44px); }
+        .sec-title { font-family: 'Baloo 2', cursive; font-size: 13px; font-weight: 700; color: #555; margin: 12px 0 6px; padding-bottom: 3px; border-bottom: 2px solid #e0e0e0; }
+        .sec-title:first-child { margin-top: 0; }
+        .sec-title.pop { color: #6C63FF; border-color: #6C63FF; }
+        .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; margin-bottom: 6px; }
+        .pitem { background: #fff; border-radius: 10px; padding: 10px 6px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.12s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); user-select: none; }
+        .pitem:hover { border-color: #6C63FF; transform: translateY(-1px); }
+        .pitem:active { transform: scale(0.95); }
+        .pitem .pe { font-size: 22px; }
+        .pitem .pn { font-size: 10px; font-weight: 700; color: #333; line-height: 1.1; margin: 2px 0; }
+        .pitem .pp { font-size: 11px; font-weight: 800; color: #6C63FF; }
+        .pitem.pop { border-color: #D1C4E9; background: #f8f5ff; }
 
-        /* Product grid */
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-bottom: 8px; }
-        .pdv-item { background: #fff; border-radius: 12px; padding: 14px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; box-shadow: 0 1px 4px rgba(0,0,0,0.06); user-select: none; }
-        .pdv-item:hover { border-color: #6C63FF; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(108,99,255,0.15); }
-        .pdv-item:active { transform: scale(0.95); }
-        .pdv-item .item-emoji { font-size: 26px; margin-bottom: 2px; }
-        .pdv-item .item-name { font-size: 11px; font-weight: 700; color: #333; line-height: 1.2; margin-bottom: 2px; }
-        .pdv-item .item-price { font-size: 12px; font-weight: 800; color: #6C63FF; }
-        .pdv-item.popular-item { border: 2px solid #6C63FF; background: #f3f0ff; }
-        .pdv-item.popular-item .item-price { color: #5A52E0; }
+        /* Cart sidebar */
+        .pdv-cart { background: #fff; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; height: 100vh; }
+        .cart-head { padding: 12px 14px; border-bottom: 1px solid #f0f0f0; }
+        .cart-head h2 { margin: 0; font-size: 15px; font-family: 'Baloo 2', cursive; }
+        .cart-type { display: flex; gap: 3px; margin-top: 6px; }
+        .ct-btn { flex: 1; padding: 6px; border: 2px solid #e0e0e0; border-radius: 6px; background: #fff; font-size: 10px; font-weight: 700; cursor: pointer; text-align: center; }
+        .ct-btn.active { border-color: #6C63FF; background: #EDE7F6; color: #6C63FF; }
+        .cart-cust { padding: 0 14px 6px; display: none; }
+        .cart-cust.show { display: block; }
+        .cart-cust input { width: 100%; padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 11px; margin-bottom: 4px; }
+        .cart-items { flex: 1; overflow-y: auto; padding: 6px 14px; }
+        .ci { display: flex; align-items: center; gap: 6px; padding: 6px 0; border-bottom: 1px solid #f5f5f5; font-size: 11px; }
+        .ci-info { flex: 1; }
+        .ci-name { font-weight: 700; font-size: 11px; }
+        .ci-detail { font-size: 10px; color: #888; }
+        .ci-price { font-size: 11px; color: #6C63FF; font-weight: 700; }
+        .ci-qty { display: flex; align-items: center; gap: 4px; }
+        .ci-qty button { width: 22px; height: 22px; border: 1px solid #ddd; border-radius: 4px; background: #fff; font-size: 13px; cursor: pointer; }
+        .ci-qty span { font-weight: 700; min-width: 14px; text-align: center; }
+        .ci-rm { background: none; border: none; color: #e53935; cursor: pointer; font-size: 14px; }
+        .cart-empty { text-align: center; padding: 30px 14px; color: #bbb; font-size: 12px; }
+        .cart-foot { border-top: 1px solid #e0e0e0; padding: 12px 14px; }
+        .cart-total { display: flex; justify-content: space-between; font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+        .cart-total .tv { color: #6C63FF; }
+        .cart-nf { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; font-size: 11px; }
+        .cart-nf input[type=text] { flex: 1; padding: 3px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 10px; display: none; }
+        .cart-acts { display: flex; gap: 4px; }
+        .cart-acts .btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .bf { background: #4CAF50; color: #fff; }
+        .bp { background: #f5f5f5; color: #333; }
+        .bc { background: #ffebee; color: #e53935; }
 
-        /* Cart */
-        .cart-header { padding: 16px; border-bottom: 1px solid #f0f0f0; }
-        .cart-header h2 { margin: 0; font-size: 16px; font-family: 'Baloo 2', cursive; }
-        .cart-type { display: flex; gap: 4px; margin-top: 8px; }
-        .cart-type-btn { flex: 1; padding: 8px; border: 2px solid #e0e0e0; border-radius: 8px; background: #fff; font-size: 11px; font-weight: 700; cursor: pointer; text-align: center; }
-        .cart-type-btn.active { border-color: #6C63FF; background: #EDE7F6; color: #6C63FF; }
-        .cart-items { flex: 1; overflow-y: auto; padding: 8px 16px; }
-        .cart-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
-        .cart-item .ci-info { flex: 1; }
-        .cart-item .ci-name { font-size: 12px; font-weight: 700; }
-        .cart-item .ci-price { font-size: 11px; color: #6C63FF; }
-        .cart-item .ci-qty { display: flex; align-items: center; gap: 6px; }
-        .cart-item .ci-qty button { width: 26px; height: 26px; border: 1px solid #ddd; border-radius: 6px; background: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .cart-item .ci-qty span { font-weight: 700; font-size: 13px; min-width: 16px; text-align: center; }
-        .cart-item .ci-remove { background: none; border: none; color: #e53935; cursor: pointer; font-size: 16px; padding: 4px; }
-        .cart-empty { text-align: center; padding: 40px 16px; color: #999; font-size: 13px; }
+        /* Customization Modal */
+        .modal-bg { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center; }
+        .modal-bg.open { display: flex; }
+        .modal { background: #fff; border-radius: 16px; width: 520px; max-width: 95vw; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+        .modal-head { background: linear-gradient(135deg, #6C63FF, #5A52E0); color: #fff; padding: 16px; border-radius: 16px 16px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-head h3 { margin: 0; font-size: 16px; }
+        .modal-close { background: rgba(255,255,255,0.2); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; font-size: 18px; cursor: pointer; }
+        .modal-body { padding: 16px; }
+        .modal-sec { margin-bottom: 14px; }
+        .modal-sec h4 { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #333; }
 
-        /* Customer fields */
-        .cart-customer { padding: 0 16px 8px; display: none; }
-        .cart-customer.show { display: block; }
-        .cart-customer input { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px; margin-bottom: 6px; box-sizing: border-box; }
+        /* Size buttons */
+        .size-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .size-btn { padding: 10px 6px; border: 2px solid #e0e0e0; border-radius: 10px; background: #fff; text-align: center; cursor: pointer; transition: all 0.15s; }
+        .size-btn:hover { border-color: #6C63FF; }
+        .size-btn.sel { border-color: #6C63FF; background: #EDE7F6; }
+        .size-btn .sz-name { font-size: 12px; font-weight: 700; }
+        .size-btn .sz-ml { font-size: 10px; color: #999; }
+        .size-btn .sz-price { font-size: 14px; font-weight: 800; color: #6C63FF; }
 
-        /* Footer */
-        .cart-footer { border-top: 1px solid #e0e0e0; padding: 16px; }
-        .cart-total { display: flex; justify-content: space-between; font-size: 18px; font-weight: 800; margin-bottom: 8px; }
-        .cart-total .total-val { color: #6C63FF; }
-        .cart-nf { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 12px; }
-        .cart-nf input { width: auto; }
-        .cart-actions { display: flex; gap: 6px; }
-        .cart-actions .btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
-        .btn-finish { background: #4CAF50; color: #fff; }
-        .btn-finish:hover { background: #43A047; }
-        .btn-print { background: #f5f5f5; color: #333; }
-        .btn-clear { background: #ffebee; color: #e53935; }
+        /* Extra toggles */
+        .ext-list { display: flex; flex-direction: column; gap: 4px; }
+        .ext-item { display: flex; align-items: center; padding: 8px 10px; border: 1px solid #eee; border-radius: 8px; cursor: pointer; transition: all 0.12s; }
+        .ext-item:hover { background: #f8f5ff; }
+        .ext-item.checked { background: #EDE7F6; border-color: #6C63FF; }
+        .ext-item .ext-emoji { font-size: 16px; margin-right: 8px; }
+        .ext-item .ext-name { flex: 1; font-size: 12px; font-weight: 600; }
+        .ext-item .ext-price { font-size: 12px; font-weight: 700; color: #6C63FF; }
+        .ext-item .ext-check { width: 18px; height: 18px; margin-left: 8px; accent-color: #6C63FF; }
 
-        /* Toast */
-        .pdv-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; z-index: 9999; display: none; }
-        .pdv-toast.show { display: block; animation: fadeInUp 0.3s; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        /* Modal footer */
+        .modal-foot { display: flex; gap: 8px; padding: 16px; border-top: 1px solid #f0f0f0; align-items: center; }
+        .mf-qty { display: flex; align-items: center; gap: 8px; }
+        .mf-qty button { width: 32px; height: 32px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-size: 18px; cursor: pointer; }
+        .mf-qty span { font-weight: 800; font-size: 16px; min-width: 20px; text-align: center; }
+        .mf-add { flex: 1; padding: 12px; background: #6C63FF; color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 800; cursor: pointer; }
+        .mf-add:hover { background: #5A52E0; }
 
-        @media (max-width: 768px) {
-            .pdv-layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
-            .pdv-cart { max-height: 50vh; border-left: none; border-top: 1px solid #e0e0e0; }
-            .product-grid { grid-template-columns: repeat(3, 1fr); }
+        .toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; z-index: 9999; display: none; }
+        .toast.show { display: block; animation: fiu 0.3s; }
+        @keyframes fiu { from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)} }
+
+        @media(max-width:768px) {
+            .pdv-layout { grid-template-columns: 1fr; }
+            .pdv-cart { position: fixed; bottom: 0; left: 0; right: 0; height: 50vh; z-index: 500; }
+            .pdv-products { height: calc(50vh - 44px); }
         }
     </style>
 </head>
 <body>
-
 <div class="pdv-header">
-    <div style="display:flex;align-items:center;gap:12px;">
+    <div style="display:flex;align-items:center;gap:10px;">
         <button class="btn-back" onclick="window.location.href='pedidos.html'">← Voltar</button>
-        <h1>🏪 PDV Rapido — <span id="pdvStoreName">MilkyPot</span></h1>
+        <h1>🏪 PDV — <span id="pdvStore">MilkyPot</span></h1>
     </div>
-    <div style="font-size:13px;opacity:0.8;" id="pdvClock"></div>
+    <div style="font-size:12px;opacity:0.8;" id="clk"></div>
 </div>
-
 <div class="pdv-layout">
-    <!-- Products -->
-    <div class="pdv-products" id="allProducts"></div>
-
-    <!-- Cart -->
+    <div class="pdv-products" id="allProds"></div>
     <div class="pdv-cart">
-        <div class="cart-header">
+        <div class="cart-head">
             <h2>🛒 Pedido</h2>
             <div class="cart-type">
-                <button class="cart-type-btn active" data-type="balcao" onclick="setOrderType('balcao')">🏪 Balcao</button>
-                <button class="cart-type-btn" data-type="retirada" onclick="setOrderType('retirada')">📦 Retirada</button>
-                <button class="cart-type-btn" data-type="delivery" onclick="setOrderType('delivery')">🛵 Delivery</button>
+                <button class="ct-btn active" data-type="balcao" onclick="setType('balcao')">🏪 Balcao</button>
+                <button class="ct-btn" data-type="retirada" onclick="setType('retirada')">📦 Retirada</button>
+                <button class="ct-btn" data-type="delivery" onclick="setType('delivery')">🛵 Delivery</button>
             </div>
         </div>
-
-        <div class="cart-customer" id="customerFields">
-            <input type="text" id="custName" placeholder="Nome do cliente">
-            <input type="tel" id="custPhone" placeholder="WhatsApp (opcional)">
-            <input type="text" id="custAddress" placeholder="Endereco completo" style="display:none" id="custAddressField">
+        <div class="cart-cust" id="custF">
+            <input type="text" id="cName" placeholder="Nome do cliente">
+            <input type="tel" id="cPhone" placeholder="WhatsApp (opcional)">
+            <input type="text" id="cAddr" placeholder="Endereco completo">
         </div>
-
-        <div class="cart-items" id="cartItems">
-            <div class="cart-empty">Toque nos produtos para adicionar</div>
-        </div>
-
-        <div class="cart-footer">
-            <div class="cart-total">
-                <span>Total</span>
-                <span class="total-val" id="cartTotal">R$ 0,00</span>
-            </div>
+        <div class="cart-items" id="cartList"><div class="cart-empty">Toque em um produto para montar</div></div>
+        <div class="cart-foot">
+            <div class="cart-total"><span>Total</span><span class="tv" id="cTotal">R$ 0,00</span></div>
             <div class="cart-nf">
-                <input type="checkbox" id="nfCheck">
-                <label for="nfCheck">Emitir NF-e</label>
-                <input type="text" id="nfCpf" placeholder="CPF (opcional)" style="flex:1;padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:11px;display:none;">
+                <input type="checkbox" id="nfCk" onchange="document.getElementById('nfCpf').style.display=this.checked?'block':'none'">
+                <label for="nfCk">NF-e</label>
+                <input type="text" id="nfCpf" placeholder="CPF">
             </div>
-            <div class="cart-actions">
-                <button class="btn btn-clear" onclick="clearCart()">🗑️</button>
-                <button class="btn btn-print" onclick="printOrder()">🖨️</button>
-                <button class="btn btn-finish" onclick="finishOrder()">✅ Finalizar</button>
+            <div class="cart-acts">
+                <button class="btn bc" onclick="clearCart()">🗑️</button>
+                <button class="btn bp" onclick="printOrder()">🖨️</button>
+                <button class="btn bf" onclick="finishOrder()">✅ Finalizar</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="pdv-toast" id="pdvToast"></div>
+<!-- Customization Modal -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+        <div class="modal-head">
+            <h3 id="mTitle">Montar Produto</h3>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body" id="mBody"></div>
+        <div class="modal-foot">
+            <div class="mf-qty">
+                <button onclick="mQty(-1)">−</button>
+                <span id="mQtyV">1</span>
+                <button onclick="mQty(1)">+</button>
+            </div>
+            <button class="mf-add" id="mAddBtn" onclick="mAddToCart()">Adicionar — R$ 18,00</button>
+        </div>
+    </div>
+</div>
 
-<!-- Firebase SDK -->
+<div class="toast" id="tst"></div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -151,294 +186,304 @@
 <script src="../js/core/firebase-config.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/cardapio-data.js"></script>
-
 <script>
-(function() {
-    if (!Auth.requireAuth('franchisee')) return;
+(function(){
+    if(!Auth.requireAuth('franchisee'))return;
     DataStore.init();
-    var session = Auth.getSession();
-    var franchiseId = session.franchiseId;
-    var franchises = DataStore.getAllFranchises() || [];
-    var franchise = franchises.find(function(f) { return f.id === franchiseId; });
-    document.getElementById('pdvStoreName').textContent = franchise ? franchise.name : 'MilkyPot';
+    var s=Auth.getSession(), fid=s.franchiseId;
+    var franchises=DataStore.getAllFranchises()||[];
+    var fr=franchises.find(function(f){return f.id===fid});
+    document.getElementById('pdvStore').textContent=fr?fr.name:'MilkyPot';
+    setInterval(function(){document.getElementById('clk').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})},1000);
 
-    // Clock
-    setInterval(function() {
-        document.getElementById('pdvClock').textContent = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    }, 1000);
+    var C=CARDAPIO_CONFIG;
+    var cart=[], orderType='balcao';
+    // Current modal state
+    var mProduct=null, mSize=null, mExtras=[], mQtyVal=1;
 
-    // ---- Build products from CARDAPIO_CONFIG ----
-    var products = [];
-    var categories = {};
-    var config = typeof CARDAPIO_CONFIG !== 'undefined' ? CARDAPIO_CONFIG : null;
-
-    if (config) {
-        var mediumPrice = 18;
-        var med = config.tamanhos.find(function(t) { return t.id === 'medio'; });
-        if (med) mediumPrice = med.price;
-
-        // Popular combos first (most ordered)
-        categories['⭐ Mais Pedidos'] = [];
-        var popularIds = [
-            'ninho_shake_morango', 'ninho_sundae_morango',
-            'ninho_shake_ninho-morango', 'ninho_sundae_ninho-morango',
-            'ninho_shake_nutella', 'ninho_sundae_nutella',
-            'ninho_shake_oreo', 'ninho_sundae_oreo',
-            'ninho_shake_ninho', 'ninho_sundae_ninho',
-            'acai_acai-shake_acai-morango', 'acai_acai-bowl_acai-morango'
-        ];
-
-        config.bases.forEach(function(base) {
-            if (!base.available) return;
-            var catKey = base.id === 'acai' ? 'Acai' : (base.id === 'zero-fit' ? 'Zero/Fit' : 'Ninho');
-            if (!categories[catKey]) categories[catKey] = [];
-
-            Object.keys(config.sabores).forEach(function(sk) {
-                var cat = config.sabores[sk];
-                if (cat.compatibleBases.indexOf(base.id) === -1) return;
-                cat.items.forEach(function(sabor) {
-                    if (!sabor.available) return;
-                    var formats = config.formatos.filter(function(f) {
-                        return f.available && f.compatibleBases.indexOf(base.id) !== -1;
-                    });
-                    formats.forEach(function(fmt) {
-                        var label = fmt.id === 'shake' || fmt.id === 'acai-shake' ? 'Shake' : (fmt.id === 'acai-bowl' ? 'Bowl' : 'Sundae');
-                        var name = label + ' ' + sabor.name;
-                        var p = {
-                            id: base.id + '_' + fmt.id + '_' + sabor.id,
-                            name: name,
-                            emoji: sabor.emoji,
-                            price: mediumPrice,
-                            category: catKey
-                        };
-                        products.push(p);
-                        categories[catKey].push(p);
+    // ============================================
+    // BUILD ALL PRODUCTS
+    // ============================================
+    var allProducts=[];
+    C.bases.forEach(function(base){
+        if(!base.available)return;
+        var fmts=C.formatos.filter(function(f){return f.available&&f.compatibleBases.indexOf(base.id)!==-1});
+        Object.keys(C.sabores).forEach(function(sk){
+            var cat=C.sabores[sk];
+            if(cat.compatibleBases.indexOf(base.id)===-1)return;
+            cat.items.forEach(function(sab){
+                if(!sab.available)return;
+                fmts.forEach(function(fmt){
+                    var label=fmt.id==='shake'||fmt.id==='acai-shake'?'Shake':(fmt.id==='acai-bowl'?'Bowl':'Sundae');
+                    allProducts.push({
+                        baseId:base.id, fmtId:fmt.id, sabId:sab.id,
+                        name:label+' '+sab.name, emoji:sab.emoji,
+                        baseEmoji:base.emoji, fmtEmoji:fmt.emoji,
+                        desc:sab.desc, highlight:sab.highlight,
+                        catKey:base.id==='acai'?'Acai':(base.id==='zero-fit'?'Zero/Fit':'Ninho'),
+                        minPrice:C.tamanhos.filter(function(t){return t.available}).reduce(function(m,t){return t.price<m?t.price:m},999)
                     });
                 });
             });
         });
-
-        // Populate "Mais Pedidos" from generated products
-        popularIds.forEach(function(pid) {
-            var p = products.find(function(pr) { return pr.id === pid; });
-            if (p) categories['⭐ Mais Pedidos'].push(p);
-        });
-
-        // Add extras (adicionais is an object with subcategories)
-        if (config.adicionais && typeof config.adicionais === 'object') {
-            if (!categories['Extras']) categories['Extras'] = [];
-            Object.keys(config.adicionais).forEach(function(subKey) {
-                var sub = config.adicionais[subKey];
-                var items = sub.items || [];
-                items.forEach(function(ext) {
-                    if (!ext.available) return;
-                    var p = { id: 'extra_' + ext.id, name: ext.name, emoji: ext.emoji, price: ext.price, category: 'Extras' };
-                    products.push(p);
-                    categories['Extras'].push(p);
-                });
-            });
-        }
-        // Add drinks (bebidas is an array)
-        if (Array.isArray(config.bebidas)) {
-            if (!categories['Bebidas']) categories['Bebidas'] = [];
-            config.bebidas.forEach(function(beb) {
-                if (!beb.available) return;
-                var p = { id: 'beb_' + beb.id, name: beb.name, emoji: beb.emoji, price: beb.price, category: 'Bebidas' };
-                products.push(p);
-                categories['Bebidas'].push(p);
-            });
-        }
-    }
-
-    // ---- Render all products in sections ----
-    function renderAllProducts() {
-        var container = document.getElementById('allProducts');
-        var html = '';
-
-        // Order: Mais Pedidos first, then regular categories
-        var orderedCats = ['⭐ Mais Pedidos'];
-        Object.keys(categories).forEach(function(c) {
-            if (c !== '⭐ Mais Pedidos') orderedCats.push(c);
-        });
-
-        orderedCats.forEach(function(catName) {
-            var items = categories[catName] || [];
-            if (items.length === 0) return;
-            var isPopular = catName === '⭐ Mais Pedidos';
-
-            html += '<div class="section-title' + (isPopular ? ' popular' : '') + '">' + catName + ' <span style="font-size:11px;color:#999;">(' + items.length + ')</span></div>';
-            html += '<div class="product-grid">';
-            items.forEach(function(p) {
-                html += '<div class="pdv-item' + (isPopular ? ' popular-item' : '') + '" onclick="addToCart(\'' + p.id + '\')">' +
-                    '<div class="item-emoji">' + p.emoji + '</div>' +
-                    '<div class="item-name">' + p.name + '</div>' +
-                    '<div class="item-price">R$ ' + p.price.toFixed(2).replace('.',',') + '</div>' +
-                '</div>';
-            });
-            html += '</div>';
-        });
-
-        container.innerHTML = html;
-    }
-
-    renderAllProducts();
-
-    // ---- Cart ----
-    var cart = [];
-    var orderType = 'balcao';
-
-    window.addToCart = function(productId) {
-        var product = products.find(function(p) { return p.id === productId; });
-        if (!product) return;
-        var existing = cart.find(function(c) { return c.id === productId; });
-        if (existing) {
-            existing.qty++;
-        } else {
-            cart.push({ id: product.id, name: product.name, emoji: product.emoji, price: product.price, qty: 1 });
-        }
-        renderCart();
-        toast(product.emoji + ' ' + product.name + ' adicionado');
-    };
-
-    window.changeQty = function(idx, delta) {
-        cart[idx].qty += delta;
-        if (cart[idx].qty <= 0) cart.splice(idx, 1);
-        renderCart();
-    };
-
-    window.removeItem = function(idx) {
-        cart.splice(idx, 1);
-        renderCart();
-    };
-
-    function renderCart() {
-        var container = document.getElementById('cartItems');
-        if (cart.length === 0) {
-            container.innerHTML = '<div class="cart-empty">Toque nos produtos para adicionar</div>';
-            document.getElementById('cartTotal').textContent = 'R$ 0,00';
-            return;
-        }
-        var total = 0;
-        var html = cart.map(function(item, i) {
-            var subtotal = item.price * item.qty;
-            total += subtotal;
-            return '<div class="cart-item">' +
-                '<div class="ci-info"><div class="ci-name">' + item.emoji + ' ' + item.name + '</div>' +
-                '<div class="ci-price">R$ ' + subtotal.toFixed(2).replace('.',',') + '</div></div>' +
-                '<div class="ci-qty">' +
-                    '<button onclick="changeQty(' + i + ',-1)">−</button>' +
-                    '<span>' + item.qty + '</span>' +
-                    '<button onclick="changeQty(' + i + ',1)">+</button>' +
-                '</div>' +
-                '<button class="ci-remove" onclick="removeItem(' + i + ')">×</button>' +
-            '</div>';
-        }).join('');
-        container.innerHTML = html;
-        document.getElementById('cartTotal').textContent = 'R$ ' + total.toFixed(2).replace('.',',');
-    }
-
-    window.setOrderType = function(type) {
-        orderType = type;
-        document.querySelectorAll('.cart-type-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.type === type); });
-        var fields = document.getElementById('customerFields');
-        var addrField = document.querySelector('#custAddress');
-        if (type === 'balcao') {
-            fields.classList.remove('show');
-        } else {
-            fields.classList.add('show');
-            addrField.style.display = type === 'delivery' ? 'block' : 'none';
-        }
-    };
-
-    // NF toggle
-    document.getElementById('nfCheck').addEventListener('change', function() {
-        document.getElementById('nfCpf').style.display = this.checked ? 'block' : 'none';
     });
 
-    window.clearCart = function() {
-        if (cart.length === 0) return;
-        cart = [];
-        renderCart();
-        toast('Pedido limpo');
-    };
+    // Popular products
+    var popIds=['ninho_shake_morango','ninho_sundae_morango','ninho_shake_ninho-morango','ninho_sundae_ninho-morango',
+        'ninho_shake_nutella','ninho_sundae_nutella','ninho_shake_oreo','ninho_sundae_oreo',
+        'ninho_shake_ninho','ninho_sundae_ninho','acai_acai-shake_acai-morango','acai_acai-bowl_acai-morango'];
 
-    window.finishOrder = function() {
-        if (cart.length === 0) { toast('Adicione itens ao pedido'); return; }
-
-        var total = cart.reduce(function(s, c) { return s + (c.price * c.qty); }, 0);
-        var order = {
-            id: Utils.generateId(),
-            createdAt: new Date().toISOString(),
-            status: 'confirmado',
-            type: orderType,
-            source: 'pdv',
-            items: cart.map(function(c) { return { name: c.name, qty: c.qty, price: c.price, total: c.price * c.qty }; }),
-            total: total,
-            customer: {
-                name: document.getElementById('custName').value || (orderType === 'balcao' ? 'Balcao' : ''),
-                phone: document.getElementById('custPhone').value || ''
-            },
-            address: orderType === 'delivery' ? document.getElementById('custAddress').value : '',
-            nf: document.getElementById('nfCheck').checked,
-            cpf: document.getElementById('nfCpf').value || '',
-            franchiseId: franchiseId
-        };
-
-        // Save to DataStore
-        DataStore.addToCollection('orders', franchiseId, order);
-        toast('✅ Pedido #' + order.id.slice(-4) + ' finalizado! R$ ' + total.toFixed(2).replace('.',','));
-
-        // Reset
-        cart = [];
-        renderCart();
-        document.getElementById('custName').value = '';
-        document.getElementById('custPhone').value = '';
-        document.getElementById('custAddress').value = '';
-        document.getElementById('nfCheck').checked = false;
-        document.getElementById('nfCpf').style.display = 'none';
-        document.getElementById('nfCpf').value = '';
-    };
-
-    window.printOrder = function() {
-        if (cart.length === 0) { toast('Nada para imprimir'); return; }
-        var total = cart.reduce(function(s, c) { return s + (c.price * c.qty); }, 0);
-        var storeName = franchise ? franchise.name : 'MilkyPot';
-        var now = new Date().toLocaleString('pt-BR');
-        var typeLabels = { balcao: 'BALCAO', retirada: 'RETIRADA', delivery: 'DELIVERY' };
-
-        var text = '================================\n';
-        text += '       ' + storeName + '\n';
-        text += '================================\n';
-        text += typeLabels[orderType] + ' | ' + now + '\n';
-        text += '--------------------------------\n';
-        cart.forEach(function(c) {
-            text += c.qty + 'x ' + c.name + '\n';
-            text += '   R$ ' + (c.price * c.qty).toFixed(2).replace('.',',') + '\n';
+    // ============================================
+    // RENDER ALL SECTIONS
+    // ============================================
+    function renderAll(){
+        var html='';
+        // Mais Pedidos
+        var pops=popIds.map(function(pid){return allProducts.find(function(p){return p.baseId+'_'+p.fmtId+'_'+p.sabId===pid})}).filter(Boolean);
+        if(pops.length){
+            html+='<div class="sec-title pop">⭐ Mais Pedidos ('+pops.length+')</div><div class="pgrid">';
+            pops.forEach(function(p){html+=prodCard(p,true)});
+            html+='</div>';
+        }
+        // By category
+        var cats={};
+        allProducts.forEach(function(p){if(!cats[p.catKey])cats[p.catKey]=[];cats[p.catKey].push(p)});
+        Object.keys(cats).forEach(function(cat){
+            html+='<div class="sec-title">'+cat+' ('+cats[cat].length+')</div><div class="pgrid">';
+            cats[cat].forEach(function(p){html+=prodCard(p,false)});
+            html+='</div>';
         });
-        text += '--------------------------------\n';
-        text += 'TOTAL: R$ ' + total.toFixed(2).replace('.',',') + '\n';
-        if (document.getElementById('custName').value) {
-            text += 'Cliente: ' + document.getElementById('custName').value + '\n';
+        // Extras
+        var extItems=[];
+        Object.keys(C.adicionais).forEach(function(k){(C.adicionais[k].items||[]).forEach(function(e){if(e.available)extItems.push(e)})});
+        if(extItems.length){
+            html+='<div class="sec-title">Adicionais ('+extItems.length+')</div><div class="pgrid">';
+            extItems.forEach(function(e){
+                html+='<div class="pitem" onclick="quickAddExtra(\''+e.id+'\',\''+e.name.replace(/'/g,"\\'")+'\','+e.price+',\''+e.emoji+'\')"><div class="pe">'+e.emoji+'</div><div class="pn">'+e.name+'</div><div class="pp">+R$ '+e.price.toFixed(2).replace('.',',')+'</div></div>';
+            });
+            html+='</div>';
         }
-        if (orderType === 'delivery' && document.getElementById('custAddress').value) {
-            text += 'Endereco: ' + document.getElementById('custAddress').value + '\n';
+        // Bebidas
+        var bebs=C.bebidas.filter(function(b){return b.available});
+        if(bebs.length){
+            html+='<div class="sec-title">Bebidas ('+bebs.length+')</div><div class="pgrid">';
+            bebs.forEach(function(b){
+                html+='<div class="pitem" onclick="quickAddExtra(\''+b.id+'\',\''+b.name.replace(/'/g,"\\'")+'\','+b.price+',\''+b.emoji+'\')"><div class="pe">'+b.emoji+'</div><div class="pn">'+b.name+'</div><div class="pp">R$ '+b.price.toFixed(2).replace('.',',')+'</div></div>';
+            });
+            html+='</div>';
         }
-        text += '================================\n';
-        text += '     Obrigado pela preferencia!\n';
+        document.getElementById('allProds').innerHTML=html;
+    }
 
-        var w = window.open('', '_blank', 'width=300,height=600');
-        w.document.write('<pre style="font-family:monospace;font-size:12px;white-space:pre-wrap;">' + text + '</pre>');
-        w.document.write('<script>window.print();setTimeout(function(){window.close()},500);<\/script>');
+    function prodCard(p,isPop){
+        var id=p.baseId+'_'+p.fmtId+'_'+p.sabId;
+        return '<div class="pitem'+(isPop?' pop':'')+'" onclick="openCustomize(\''+id+'\')">'+
+            '<div class="pe">'+p.emoji+'</div>'+
+            '<div class="pn">'+p.name+'</div>'+
+            '<div class="pp">a partir R$ '+p.minPrice.toFixed(0)+'</div></div>';
+    }
+
+    renderAll();
+
+    // ============================================
+    // CUSTOMIZATION MODAL
+    // ============================================
+    window.openCustomize=function(id){
+        var parts=id.split('_'), baseId=parts[0], fmtId=parts[1], sabId=parts.slice(2).join('_');
+        var prod=allProducts.find(function(p){return p.baseId===baseId&&p.fmtId===fmtId&&p.sabId===sabId});
+        if(!prod)return;
+        mProduct=prod; mExtras=[]; mQtyVal=1;
+
+        document.getElementById('mTitle').textContent=prod.emoji+' '+prod.name;
+
+        var html='';
+        // Sizes
+        var sizes=C.tamanhos.filter(function(t){return t.available});
+        mSize=sizes.find(function(t){return t.id==='medio'})||sizes[0];
+        html+='<div class="modal-sec"><h4>📏 Tamanho</h4><div class="size-grid">';
+        sizes.forEach(function(t){
+            var sel=t.id===mSize.id?' sel':'';
+            html+='<div class="size-btn'+sel+'" onclick="selSize(\''+t.id+'\')" data-sid="'+t.id+'">'+
+                '<div class="sz-name">'+t.name+'</div><div class="sz-ml">'+t.ml+'ml</div>'+
+                '<div class="sz-price">R$ '+t.price.toFixed(0)+'</div></div>';
+        });
+        html+='</div></div>';
+
+        // Extras (by subcategory)
+        Object.keys(C.adicionais).forEach(function(subKey){
+            var sub=C.adicionais[subKey];
+            var items=(sub.items||[]).filter(function(e){return e.available});
+            if(!items.length)return;
+            html+='<div class="modal-sec"><h4>'+sub.emoji+' '+sub.name+'</h4><div class="ext-list">';
+            items.forEach(function(e){
+                html+='<div class="ext-item" onclick="togExt(this,\''+e.id+'\','+e.price+',\''+e.name.replace(/'/g,"\\'")+'\')">'+
+                    '<span class="ext-emoji">'+e.emoji+'</span>'+
+                    '<span class="ext-name">'+e.name+'</span>'+
+                    '<span class="ext-price">+R$ '+e.price.toFixed(2).replace('.',',')+'</span>'+
+                    '<input type="checkbox" class="ext-check" data-eid="'+e.id+'"></div>';
+            });
+            html+='</div></div>';
+        });
+
+        // Bebidas
+        var bebs=C.bebidas.filter(function(b){return b.available});
+        if(bebs.length){
+            html+='<div class="modal-sec"><h4>🥤 Bebidas</h4><div class="ext-list">';
+            bebs.forEach(function(b){
+                html+='<div class="ext-item" onclick="togExt(this,\''+b.id+'\','+b.price+',\''+b.name.replace(/'/g,"\\'")+'\')">'+
+                    '<span class="ext-emoji">'+b.emoji+'</span>'+
+                    '<span class="ext-name">'+b.name+'</span>'+
+                    '<span class="ext-price">+R$ '+b.price.toFixed(2).replace('.',',')+'</span>'+
+                    '<input type="checkbox" class="ext-check" data-eid="'+b.id+'"></div>';
+            });
+            html+='</div></div>';
+        }
+
+        document.getElementById('mBody').innerHTML=html;
+        document.getElementById('mQtyV').textContent='1';
+        updModalTotal();
+        document.getElementById('modalBg').classList.add('open');
     };
 
-    function toast(msg) {
-        var el = document.getElementById('pdvToast');
-        el.textContent = msg;
-        el.classList.add('show');
-        setTimeout(function() { el.classList.remove('show'); }, 2500);
+    window.selSize=function(sid){
+        mSize=C.tamanhos.find(function(t){return t.id===sid});
+        document.querySelectorAll('.size-btn').forEach(function(b){b.classList.toggle('sel',b.dataset.sid===sid)});
+        updModalTotal();
+    };
+
+    window.togExt=function(el,eid,price,name){
+        var cb=el.querySelector('.ext-check');
+        cb.checked=!cb.checked;
+        el.classList.toggle('checked',cb.checked);
+        if(cb.checked){mExtras.push({id:eid,name:name,price:price})}
+        else{mExtras=mExtras.filter(function(e){return e.id!==eid})}
+        updModalTotal();
+    };
+
+    window.mQty=function(d){
+        mQtyVal=Math.max(1,mQtyVal+d);
+        document.getElementById('mQtyV').textContent=mQtyVal;
+        updModalTotal();
+    };
+
+    function updModalTotal(){
+        var t=mSize?mSize.price:18;
+        mExtras.forEach(function(e){t+=e.price});
+        t*=mQtyVal;
+        document.getElementById('mAddBtn').textContent='Adicionar — R$ '+t.toFixed(2).replace('.',',');
     }
+
+    window.mAddToCart=function(){
+        if(!mProduct||!mSize)return;
+        var unitPrice=mSize.price;
+        mExtras.forEach(function(e){unitPrice+=e.price});
+        var item={
+            id:Utils.generateId(),
+            name:mProduct.name,
+            emoji:mProduct.emoji,
+            size:mSize.name+' ('+mSize.ml+'ml)',
+            sizeId:mSize.id,
+            extras:mExtras.map(function(e){return{name:e.name,price:e.price}}),
+            unitPrice:unitPrice,
+            qty:mQtyVal,
+            baseId:mProduct.baseId,
+            fmtId:mProduct.fmtId,
+            sabId:mProduct.sabId
+        };
+        cart.push(item);
+        renderCart();
+        closeModal();
+        toast(mProduct.emoji+' '+mProduct.name+' ('+mSize.name+') adicionado!');
+    };
+
+    window.closeModal=function(){
+        document.getElementById('modalBg').classList.remove('open');
+    };
+
+    // Quick add extras/drinks directly (no modal)
+    window.quickAddExtra=function(id,name,price,emoji){
+        cart.push({id:Utils.generateId(),name:name,emoji:emoji,size:'',sizeId:'',extras:[],unitPrice:price,qty:1});
+        renderCart();
+        toast(emoji+' '+name+' adicionado!');
+    };
+
+    // ============================================
+    // CART
+    // ============================================
+    function renderCart(){
+        var el=document.getElementById('cartList');
+        if(!cart.length){el.innerHTML='<div class="cart-empty">Toque em um produto para montar</div>';document.getElementById('cTotal').textContent='R$ 0,00';return}
+        var total=0;
+        var html=cart.map(function(it,i){
+            var sub=it.unitPrice*it.qty;total+=sub;
+            var detail=it.size;
+            if(it.extras.length)detail+=(detail?' + ':'')+it.extras.map(function(e){return e.name}).join(', ');
+            return '<div class="ci"><div class="ci-info"><div class="ci-name">'+it.emoji+' '+it.name+'</div>'+
+                (detail?'<div class="ci-detail">'+detail+'</div>':'')+
+                '<div class="ci-price">R$ '+(sub).toFixed(2).replace('.',',')+'</div></div>'+
+                '<div class="ci-qty"><button onclick="cQty('+i+',-1)">−</button><span>'+it.qty+'</span><button onclick="cQty('+i+',1)">+</button></div>'+
+                '<button class="ci-rm" onclick="cRm('+i+')">×</button></div>';
+        }).join('');
+        el.innerHTML=html;
+        document.getElementById('cTotal').textContent='R$ '+total.toFixed(2).replace('.',',');
+    }
+
+    window.cQty=function(i,d){cart[i].qty=Math.max(1,cart[i].qty+d);renderCart()};
+    window.cRm=function(i){cart.splice(i,1);renderCart()};
+
+    window.setType=function(t){
+        orderType=t;
+        document.querySelectorAll('.ct-btn').forEach(function(b){b.classList.toggle('active',b.dataset.type===t)});
+        var cf=document.getElementById('custF'),addr=document.getElementById('cAddr');
+        cf.classList.toggle('show',t!=='balcao');
+        addr.style.display=t==='delivery'?'block':'none';
+    };
+
+    window.clearCart=function(){if(!cart.length)return;cart=[];renderCart();toast('Pedido limpo')};
+
+    window.finishOrder=function(){
+        if(!cart.length){toast('Adicione itens');return}
+        var total=cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
+        var order={
+            id:Utils.generateId(),createdAt:new Date().toISOString(),status:'confirmado',
+            type:orderType,source:'pdv',
+            items:cart.map(function(c){return{name:c.name,size:c.size,extras:c.extras,qty:c.qty,unitPrice:c.unitPrice,total:c.unitPrice*c.qty}}),
+            total:total,
+            customer:{name:document.getElementById('cName').value||(orderType==='balcao'?'Balcao':''),phone:document.getElementById('cPhone').value||''},
+            address:orderType==='delivery'?document.getElementById('cAddr').value:'',
+            nf:document.getElementById('nfCk').checked,cpf:document.getElementById('nfCpf').value||'',
+            franchiseId:fid
+        };
+        DataStore.addToCollection('orders',fid,order);
+        toast('✅ Pedido #'+order.id.slice(-4)+' — R$ '+total.toFixed(2).replace('.',','));
+        cart=[];renderCart();
+        document.getElementById('cName').value='';document.getElementById('cPhone').value='';document.getElementById('cAddr').value='';
+        document.getElementById('nfCk').checked=false;document.getElementById('nfCpf').style.display='none';
+    };
+
+    window.printOrder=function(){
+        if(!cart.length){toast('Nada para imprimir');return}
+        var total=cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
+        var name=fr?fr.name:'MilkyPot';
+        var now=new Date().toLocaleString('pt-BR');
+        var tl={balcao:'BALCAO',retirada:'RETIRADA',delivery:'DELIVERY'};
+        var t='================================\n       '+name+'\n================================\n'+tl[orderType]+' | '+now+'\n--------------------------------\n';
+        cart.forEach(function(c){
+            t+=c.qty+'x '+c.name+(c.size?' ('+c.size+')':'')+'\n';
+            if(c.extras.length)t+='   + '+c.extras.map(function(e){return e.name}).join(', ')+'\n';
+            t+='   R$ '+(c.unitPrice*c.qty).toFixed(2).replace('.',',')+'\n';
+        });
+        t+='--------------------------------\nTOTAL: R$ '+total.toFixed(2).replace('.',',')+'\n';
+        if(document.getElementById('cName').value)t+='Cliente: '+document.getElementById('cName').value+'\n';
+        if(orderType==='delivery'&&document.getElementById('cAddr').value)t+='Endereco: '+document.getElementById('cAddr').value+'\n';
+        t+='================================\n     Obrigado pela preferencia!\n';
+        var w=window.open('','_blank','width=300,height=600');
+        w.document.write('<pre style="font-family:monospace;font-size:12px;white-space:pre-wrap;">'+t+'</pre>');
+        w.document.write('<script>window.print();setTimeout(function(){window.close()},500)<\/script>');
+    };
+
+    function toast(m){var e=document.getElementById('tst');e.textContent=m;e.classList.add('show');setTimeout(function(){e.classList.remove('show')},2500)}
 })();
 </script>
-
 </body>
 </html>
