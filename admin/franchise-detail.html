@@ -263,18 +263,27 @@
 
         // Quick login: admin acessa o painel da franquia diretamente
         window.quickLoginFranchise = function(fId, fName) {
-            // Salva sessao temporaria no localStorage pro painel da franquia
-            var adminSession = {
+            // Backup current admin session
+            var currentSession = localStorage.getItem('mp_session');
+            if (currentSession) {
+                localStorage.setItem('mp_admin_session_backup', currentSession);
+            }
+            // Create franchisee session directly
+            var session = {
+                userId: 'admin_quick_' + fId,
+                email: 'admin@milkypot.com',
+                name: 'Admin (' + fName + ')',
+                role: 'franchisee',
                 franchiseId: fId,
-                franchiseName: fName,
-                role: 'super_admin',
-                quickLogin: true,
+                firebaseUid: null,
+                token: 'quick_' + Date.now(),
                 loginAt: new Date().toISOString(),
-                expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString() // 4 horas
+                expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+                quickLogin: true
             };
-            localStorage.setItem('mp_quick_login', JSON.stringify(adminSession));
-            // Abre o painel da franquia em nova aba
-            window.open('../painel/index.html?store=' + encodeURIComponent(fId), '_blank');
+            localStorage.setItem('mp_session', JSON.stringify(session));
+            // Open franchise panel
+            window.open('../painel/index.html', '_blank');
         };
 
         // --- KPIs ---

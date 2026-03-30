@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Pedidos iFood</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="stylesheet" href="../css/mobile-app.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#EA1D2C">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="../images/logo-milkypot.png">
+    <style>
+        .ifood-brand { color: #EA1D2C; }
+        .ifood-badge { background: #EA1D2C; color: #fff; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 700; }
+
+        .kpi-grid-ifood { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .kpi-ifood { background: var(--mp-card); border-radius: 12px; padding: 14px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .kpi-ifood .kpi-num { font-size: 24px; font-weight: 800; color: #EA1D2C; }
+        .kpi-ifood .kpi-lbl { font-size: 11px; color: #999; }
+
+        .status-tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
+        .status-tab { padding: 6px 14px; border-radius: 20px; border: 1px solid #ddd; background: #fff; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+        .status-tab.active { background: #EA1D2C; color: #fff; border-color: #EA1D2C; }
+        .status-tab .tab-count { background: rgba(0,0,0,0.1); padding: 1px 6px; border-radius: 10px; margin-left: 4px; font-size: 10px; }
+        .status-tab.active .tab-count { background: rgba(255,255,255,0.3); }
+
+        .order-card-ifood { background: var(--mp-card); border-radius: 14px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #EA1D2C; transition: all 0.2s; }
+        .order-card-ifood:hover { box-shadow: 0 4px 16px rgba(234,29,44,0.15); }
+        .ocf-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .ocf-id { font-weight: 800; font-size: 18px; color: #EA1D2C; }
+        .ocf-time { font-size: 11px; color: #999; }
+        .ocf-type { font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+        .ocf-type.delivery { background: #FFF3E0; color: #E65100; }
+        .ocf-type.takeout { background: #E8F5E9; color: #2E7D32; }
+        .ocf-customer { font-size: 13px; color: #555; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .ocf-items { list-style: none; padding: 0; margin: 8px 0; }
+        .ocf-items li { font-size: 13px; color: #444; padding: 3px 0; border-bottom: 1px solid #f5f5f5; display: flex; justify-content: space-between; }
+        .ocf-items li:last-child { border: none; }
+        .ocf-subs { font-size: 11px; color: #999; margin-left: 8px; }
+        .ocf-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
+        .ocf-total { font-size: 20px; font-weight: 800; color: #333; }
+        .ocf-payment { font-size: 11px; color: #666; background: #f5f5f5; padding: 3px 8px; border-radius: 6px; }
+        .ocf-actions { display: flex; gap: 6px; margin-top: 10px; }
+        .ocf-actions .btn { font-size: 12px; padding: 6px 12px; border-radius: 8px; }
+
+        .ocf-status { padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+        .ocf-status.confirmed { background: #E8F5E9; color: #2E7D32; }
+        .ocf-status.preparing { background: #FFF3E0; color: #E65100; }
+        .ocf-status.ready { background: #E3F2FD; color: #1565C0; }
+        .ocf-status.delivered { background: #F3E5F5; color: #7B1FA2; }
+
+        .empty-ifood { text-align: center; padding: 60px 20px; }
+        .empty-ifood .empty-icon { font-size: 56px; margin-bottom: 8px; }
+        .empty-ifood h3 { color: #666; font-size: 16px; margin-bottom: 4px; }
+        .empty-ifood p { color: #999; font-size: 13px; }
+
+        .sound-toggle { background: none; border: 1px solid #ddd; border-radius: 8px; padding: 4px 10px; font-size: 16px; cursor: pointer; }
+
+        @media (max-width: 768px) {
+            .kpi-grid-ifood { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+            <h2>MilkyPot<small id="sidebarStoreName">Franquia</small></h2>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-group">Principal</div>
+            <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+            <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+            <div class="sidebar-nav-group">Integracoes</div>
+            <a href="ifood.html" class="sidebar-link active"><span class="icon">🛵</span> iFood</a>
+            <div class="sidebar-nav-group">Gestao</div>
+            <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+            <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+            <a href="entregas.html" class="sidebar-link"><span class="icon">🚚</span> Entregas</a>
+            <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
+            <a href="fidelidade.html" class="sidebar-link"><span class="icon">🎁</span> Fidelidade</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">🏪</div>
+                <div class="sidebar-user-info">
+                    <strong id="sidebarUserName">Franqueado</strong>
+                    <small>Franqueado</small>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="panel-main">
+        <header class="panel-header">
+            <div class="panel-header-left">
+                <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+                <h1>🛵 Pedidos iFood <span class="ifood-badge">iFood</span></h1>
+            </div>
+            <div class="panel-header-right">
+                <button class="sound-toggle" id="soundToggle" onclick="toggleSound()" title="Som de novo pedido">🔔</button>
+                <button class="btn btn-sm btn-outline" onclick="refreshOrders()">🔄</button>
+                <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+            </div>
+        </header>
+
+        <div class="panel-content">
+            <!-- KPIs -->
+            <div class="kpi-grid-ifood">
+                <div class="kpi-ifood">
+                    <div class="kpi-num" id="kpiTotal">0</div>
+                    <div class="kpi-lbl">Pedidos Hoje</div>
+                </div>
+                <div class="kpi-ifood">
+                    <div class="kpi-num" id="kpiRevenue">R$ 0</div>
+                    <div class="kpi-lbl">Faturamento</div>
+                </div>
+                <div class="kpi-ifood">
+                    <div class="kpi-num" id="kpiAvg">R$ 0</div>
+                    <div class="kpi-lbl">Ticket Medio</div>
+                </div>
+                <div class="kpi-ifood">
+                    <div class="kpi-num" id="kpiPending">0</div>
+                    <div class="kpi-lbl">Pendentes</div>
+                </div>
+            </div>
+
+            <!-- Status Tabs -->
+            <div class="status-tabs" id="statusTabs">
+                <button class="status-tab active" data-status="" onclick="filterByStatus('')">Todos</button>
+                <button class="status-tab" data-status="confirmed" onclick="filterByStatus('confirmed')">✅ Confirmados</button>
+                <button class="status-tab" data-status="preparing" onclick="filterByStatus('preparing')">👨‍🍳 Preparando</button>
+                <button class="status-tab" data-status="ready" onclick="filterByStatus('ready')">📦 Prontos</button>
+                <button class="status-tab" data-status="delivered" onclick="filterByStatus('delivered')">✅ Entregues</button>
+            </div>
+
+            <!-- Orders List -->
+            <div id="ordersList"></div>
+        </div>
+    </main>
+</div>
+
+<!-- Audio for new order notification -->
+<audio id="newOrderSound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ==" type="audio/wav">
+</audio>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/auth.js"></script>
+
+<script>
+(function() {
+    if (!Auth.requireAuth('franchisee')) return;
+    DataStore.init();
+
+    var session = Auth.getSession();
+    var franchiseId = session.franchiseId;
+    document.getElementById('sidebarUserName').textContent = session.name || 'Franqueado';
+
+    var franchises = DataStore.getAllFranchises() || [];
+    var franchise = franchises.find(function(f) { return f.id === franchiseId; });
+    document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia';
+
+    var allOrders = [];
+    var currentFilter = '';
+    var soundEnabled = true;
+    var lastOrderCount = 0;
+
+    // ---- Load Orders ----
+    function loadOrders() {
+        var storeOrders = DataStore.get('ifood_' + franchiseId);
+        allOrders = (storeOrders && Array.isArray(storeOrders)) ? storeOrders : [];
+        allOrders.sort(function(a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+
+        // Check for new orders
+        if (allOrders.length > lastOrderCount && lastOrderCount > 0) {
+            playNotificationSound();
+        }
+        lastOrderCount = allOrders.length;
+
+        updateKPIs();
+        updateTabCounts();
+        filterByStatus(currentFilter);
+    }
+
+    function updateKPIs() {
+        var today = new Date().toISOString().split('T')[0];
+        var todayOrders = allOrders.filter(function(o) { return o.createdAt && o.createdAt.startsWith(today); });
+        var revenue = todayOrders.reduce(function(s, o) {
+            var t = o.total ? o.total.total : 0;
+            return s + (t > 1000 ? t / 100 : t);
+        }, 0);
+        var pending = todayOrders.filter(function(o) { return o.status === 'confirmed'; }).length;
+
+        document.getElementById('kpiTotal').textContent = todayOrders.length;
+        document.getElementById('kpiRevenue').textContent = 'R$ ' + revenue.toFixed(0);
+        document.getElementById('kpiAvg').textContent = 'R$ ' + (todayOrders.length > 0 ? (revenue / todayOrders.length).toFixed(0) : '0');
+        document.getElementById('kpiPending').textContent = pending;
+    }
+
+    function updateTabCounts() {
+        var counts = { '': allOrders.length, confirmed: 0, preparing: 0, ready: 0, delivered: 0 };
+        allOrders.forEach(function(o) { if (counts[o.status] !== undefined) counts[o.status]++; });
+        document.querySelectorAll('.status-tab').forEach(function(tab) {
+            var status = tab.dataset.status;
+            var countEl = tab.querySelector('.tab-count');
+            if (countEl) countEl.textContent = counts[status] || 0;
+            else {
+                var span = document.createElement('span');
+                span.className = 'tab-count';
+                span.textContent = counts[status] || 0;
+                tab.appendChild(span);
+            }
+        });
+    }
+
+    // ---- Filter ----
+    window.filterByStatus = function(status) {
+        currentFilter = status;
+        document.querySelectorAll('.status-tab').forEach(function(t) {
+            t.classList.toggle('active', t.dataset.status === status);
+        });
+        var filtered = status ? allOrders.filter(function(o) { return o.status === status; }) : allOrders;
+        renderOrders(filtered);
+    };
+
+    // ---- Render ----
+    function renderOrders(orders) {
+        var container = document.getElementById('ordersList');
+        if (orders.length === 0) {
+            container.innerHTML = '<div class="empty-ifood"><div class="empty-icon">🛵</div><h3>Nenhum pedido iFood</h3><p>Quando voce aceitar pedidos no Gestor de Pedidos,<br>eles aparecerao aqui automaticamente.</p></div>';
+            return;
+        }
+
+        var html = '';
+        orders.forEach(function(o) {
+            var shortId = o.ifoodShortId || (o.ifoodId ? o.ifoodId.slice(-6) : '???');
+            var time = o.createdAt ? new Date(o.createdAt).toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+            var total = o.total ? o.total.total : 0;
+            if (total > 1000) total = total / 100;
+            var statusLabels = { confirmed:'Confirmado', preparing:'Preparando', ready:'Pronto', delivered:'Entregue' };
+            var statusLabel = statusLabels[o.status] || 'Pendente';
+            var isDelivery = o.orderType !== 'TAKEOUT';
+            var customer = o.customer ? o.customer.name : 'Cliente';
+            var payment = o.payment ? o.payment.method : '';
+
+            var itemsHtml = '';
+            if (o.items && o.items.length > 0) {
+                itemsHtml = '<ul class="ocf-items">';
+                o.items.forEach(function(item) {
+                    var price = item.totalPrice || item.unitPrice || 0;
+                    if (price > 1000) price = price / 100;
+                    itemsHtml += '<li><span>' + item.quantity + 'x ' + Utils.escapeHtml(item.name) + '</span><span>R$ ' + price.toFixed(2).replace('.',',') + '</span></li>';
+                    if (item.subItems && item.subItems.length > 0) {
+                        itemsHtml += '<li class="ocf-subs">&nbsp;&nbsp;↳ ' + item.subItems.map(function(s) { return s.name; }).join(', ') + '</li>';
+                    }
+                });
+                itemsHtml += '</ul>';
+            }
+
+            var addressHtml = '';
+            if (isDelivery && o.deliveryAddress) {
+                var addr = o.deliveryAddress;
+                addressHtml = '<div style="font-size:11px;color:#888;margin:4px 0;">📍 ' +
+                    Utils.escapeHtml((addr.street || '') + (addr.number ? ', ' + addr.number : '') + (addr.neighborhood ? ' - ' + addr.neighborhood : '')) +
+                    (addr.complement ? ' (' + Utils.escapeHtml(addr.complement) + ')' : '') + '</div>';
+            }
+
+            var nextStatus = { confirmed:'preparing', preparing:'ready', ready:'delivered' };
+            var nextLabels = { confirmed:'👨‍🍳 Preparar', preparing:'📦 Pronto', ready:'✅ Entregue' };
+            var actionsHtml = '';
+            if (nextStatus[o.status]) {
+                actionsHtml = '<div class="ocf-actions">' +
+                    '<button class="btn btn-sm" style="background:#EA1D2C;color:#fff" onclick="advanceStatus(\'' + Utils.escapeHtml(o.ifoodId) + '\',\'' + nextStatus[o.status] + '\')">' + nextLabels[o.status] + '</button>' +
+                '</div>';
+            }
+
+            html += '<div class="order-card-ifood">' +
+                '<div class="ocf-header">' +
+                    '<div><span class="ocf-id">#' + Utils.escapeHtml(shortId) + '</span> <span class="ocf-type ' + (isDelivery ? 'delivery' : 'takeout') + '">' + (isDelivery ? '🛵 Delivery' : '🏪 Retirada') + '</span></div>' +
+                    '<div style="display:flex;align-items:center;gap:6px;"><span class="ocf-status ' + (o.status || '') + '">' + statusLabel + '</span><span class="ocf-time">' + time + '</span></div>' +
+                '</div>' +
+                '<div class="ocf-customer">👤 ' + Utils.escapeHtml(customer) + '</div>' +
+                addressHtml +
+                itemsHtml +
+                '<div class="ocf-footer">' +
+                    '<span class="ocf-total">R$ ' + total.toFixed(2).replace('.',',') + '</span>' +
+                    (payment ? '<span class="ocf-payment">💳 ' + Utils.escapeHtml(payment) + '</span>' : '') +
+                '</div>' +
+                actionsHtml +
+            '</div>';
+        });
+        container.innerHTML = html;
+    }
+
+    // ---- Advance Order Status ----
+    window.advanceStatus = function(ifoodId, newStatus) {
+        var storeOrders = DataStore.get('ifood_' + franchiseId) || [];
+        var order = storeOrders.find(function(o) { return o.ifoodId === ifoodId; });
+        if (order) {
+            order.status = newStatus;
+            DataStore.set('ifood_' + franchiseId, storeOrders);
+            loadOrders();
+            Utils.showToast('Pedido atualizado: ' + newStatus, 'success');
+        }
+    };
+
+    // ---- Sound ----
+    function playNotificationSound() {
+        if (!soundEnabled) return;
+        try {
+            var audio = document.getElementById('newOrderSound');
+            if (audio) audio.play().catch(function(){});
+        } catch(e) {}
+        // Also try browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('MilkyPot - Novo Pedido iFood!', { body: 'Um novo pedido chegou do iFood', icon: '../images/logo-milkypot.png' });
+        }
+    }
+
+    window.toggleSound = function() {
+        soundEnabled = !soundEnabled;
+        document.getElementById('soundToggle').textContent = soundEnabled ? '🔔' : '🔕';
+        Utils.showToast(soundEnabled ? 'Som ativado' : 'Som desativado', 'info');
+    };
+
+    window.refreshOrders = function() {
+        // Try fetching from Firestore
+        if (DataStore._ready && DataStore._db) {
+            DataStore._db.collection('datastore').doc('ifood_' + franchiseId).get()
+                .then(function(doc) {
+                    if (doc.exists) {
+                        try {
+                            var data = JSON.parse(doc.data().value);
+                            localStorage.setItem(DataStore.PREFIX + 'ifood_' + franchiseId, JSON.stringify(data));
+                        } catch(e) {}
+                    }
+                    loadOrders();
+                }).catch(function() { loadOrders(); });
+        } else {
+            loadOrders();
+        }
+        Utils.showToast('Atualizado!', 'success');
+    };
+
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+
+    // Initial load
+    loadOrders();
+
+    // Auto-refresh every 15 seconds
+    setInterval(loadOrders, 15000);
+})();
+</script>
+
+</body>
+</html>
