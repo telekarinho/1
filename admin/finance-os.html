@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot Admin - Finance OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#42A5F5">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        /* ---- Finance OS Custom Styles ---- */
+        .health-banner {
+            background: linear-gradient(135deg, var(--mp-dark) 0%, var(--mp-dark2) 100%);
+            border-radius: var(--mp-radius);
+            padding: 32px;
+            color: #fff;
+            margin-bottom: 24px;
+            box-shadow: var(--mp-shadow-lg);
+        }
+        .health-banner-top {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+        .health-gauge {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            flex-shrink: 0;
+        }
+        .health-gauge canvas {
+            width: 140px;
+            height: 140px;
+        }
+        .health-gauge-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .health-gauge-value .score-number {
+            font-family: 'Baloo 2', cursive;
+            font-size: 2.4rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .health-gauge-value .score-label {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .health-info {
+            flex: 1;
+            min-width: 240px;
+        }
+        .health-info h2 {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.4rem;
+            margin-bottom: 4px;
+        }
+        .health-info .health-subtitle {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin-bottom: 12px;
+        }
+        .health-insight {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--mp-warning);
+            margin-top: 12px;
+        }
+        .sub-scores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .sub-score-card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 14px 16px;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .sub-score-card:hover {
+            background: rgba(255,255,255,0.14);
+        }
+        .sub-score-card .ss-value {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+        .sub-score-card .ss-name {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+        .sub-score-card .ss-weight {
+            font-size: 0.65rem;
+            opacity: 0.4;
+        }
+
+        /* KPI Grid Extended */
+        .kpi-grid-os {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .kpi-card-os {
+            background: var(--mp-card);
+            border-radius: var(--mp-radius);
+            padding: 18px 16px;
+            box-shadow: var(--mp-shadow);
+            border-left: 4px solid transparent;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .kpi-card-os:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--mp-shadow-lg);
+        }
+        .kpi-card-os .kpi-os-label {
+            font-size: 0.72rem;
+            color: var(--mp-text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .kpi-card-os .kpi-os-value {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--mp-text);
+        }
+        .kpi-card-os .kpi-os-target {
+            font-size: 0.7rem;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .kpi-card-os .kpi-os-target.ok { color: var(--mp-success); }
+        .kpi-card-os .kpi-os-target.warn { color: var(--mp-warning); }
+        .kpi-card-os .kpi-os-target.danger { color: var(--mp-danger); }
+
+        .kpi-card-os.border-green { border-left-color: var(--mp-success); }
+        .kpi-card-os.border-blue { border-left-color: var(--mp-info); }
+        .kpi-card-os.border-yellow { border-left-color: var(--mp-warning); }
+        .kpi-card-os.border-red { border-left-color: var(--mp-danger); }
+        .kpi-card-os.border-purple { border-left-color: var(--mp-purple); }
+
+        /* Franchise Ranking Table */
+        .score-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 28px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #fff;
+        }
+        .score-badge.green { background: var(--mp-success); }
+        .score-badge.yellow { background: #FFC107; color: #333; }
+        .score-badge.orange { background: #FF9800; }
+        .score-badge.red { background: var(--mp-danger); }
+        .score-badge.black { background: #333; }
+
+        .status-pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .status-pill.saudavel { background: #E8F5E9; color: #2E7D32; }
+        .status-pill.atencao { background: #FFF8E1; color: #F57F17; }
+        .status-pill.risco { background: #FFF3E0; color: #E65100; }
+        .status-pill.critico { background: #FFEBEE; color: #C62828; }
+
+        /* DRE Table */
+        .dre-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .dre-table th, .dre-table td {
+            padding: 10px 14px;
+            text-align: right;
+            font-size: 0.85rem;
+            border-bottom: 1px solid var(--mp-border);
+        }
+        .dre-table th {
+            text-align: right;
+            font-weight: 700;
+            color: var(--mp-text-light);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+        }
+        .dre-table th:first-child, .dre-table td:first-child {
+            text-align: left;
+        }
+        .dre-table tr.dre-header td {
+            font-weight: 700;
+            color: var(--mp-text);
+            background: var(--mp-bg);
+        }
+        .dre-table tr.dre-result td {
+            font-weight: 800;
+            border-top: 2px solid var(--mp-border);
+        }
+        .dre-table tr.dre-result.positive td:nth-child(2) { color: var(--mp-success); }
+        .dre-table tr.dre-result.negative td:nth-child(2) { color: var(--mp-danger); }
+        .dre-table .dre-indent { padding-left: 28px; }
+        .dre-table .vs-target {
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .dre-table .vs-target.ok { color: var(--mp-success); }
+        .dre-table .vs-target.warn { color: var(--mp-warning); }
+        .dre-table .vs-target.bad { color: var(--mp-danger); }
+
+        /* Alerts */
+        .alert-list { list-style: none; }
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--mp-border);
+            font-size: 0.88rem;
+        }
+        .alert-item:last-child { border-bottom: none; }
+        .alert-severity {
+            flex-shrink: 0;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .alert-severity.critico { background: #FFEBEE; color: #C62828; }
+        .alert-severity.risco { background: #FFF3E0; color: #E65100; }
+        .alert-severity.atencao { background: #FFF8E1; color: #F57F17; }
+        .alert-severity.info { background: #E3F2FD; color: #1565C0; }
+        .alert-text { flex: 1; }
+        .alert-franchise { font-weight: 700; }
+        .alert-time {
+            font-size: 0.7rem;
+            color: var(--mp-text-light);
+            margin-top: 2px;
+        }
+
+        /* Tasks */
+        .task-list { list-style: none; }
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--mp-border);
+            font-size: 0.88rem;
+        }
+        .task-item:last-child { border-bottom: none; }
+        .task-check {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+        .task-check.done { background: #E8F5E9; color: #2E7D32; }
+        .task-check.pending { background: #FFEBEE; color: #C62828; }
+        .task-franchise {
+            font-weight: 700;
+            min-width: 100px;
+        }
+        .task-due {
+            margin-left: auto;
+            font-size: 0.72rem;
+            color: var(--mp-text-light);
+        }
+        .task-due.overdue { color: var(--mp-danger); font-weight: 700; }
+
+        /* Section Spacing */
+        .section-title {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--mp-text);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title .title-icon {
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+<div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+            <h2>MilkyPot<small>Central Admin</small></h2>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-group">Principal</div>
+            <a href="index.html" class="sidebar-link">
+                <span class="icon">📊</span> Dashboard
+            </a>
+            <a href="franchises.html" class="sidebar-link">
+                <span class="icon">🏪</span> Franquias
+            </a>
+            <a href="finances.html" class="sidebar-link">
+                <span class="icon">💰</span> Financeiro
+            </a>
+            <a href="finance-os.html" class="sidebar-link active">
+                <span class="icon">🏥</span> Finance OS
+            </a>
+            <div class="sidebar-nav-group">Gestao</div>
+            <a href="orders.html" class="sidebar-link">
+                <span class="icon">📋</span> Pedidos
+            </a>
+            <a href="products.html" class="sidebar-link">
+                <span class="icon">🍨</span> Cardapio
+            </a>
+            <a href="users.html" class="sidebar-link">
+                <span class="icon">👥</span> Usuarios
+            </a>
+            <div class="sidebar-nav-group">Marketing</div>
+            <a href="campaigns.html" class="sidebar-link">
+                <span class="icon">📢</span> Campanhas
+            </a>
+            <a href="seo.html" class="sidebar-link">
+                <span class="icon">🔍</span> SEO & Delivery
+            </a>
+            <div class="sidebar-nav-group">Sistema</div>
+            <a href="settings.html" class="sidebar-link">
+                <span class="icon">⚙️</span> Configuracoes
+            </a>
+            <a href="#" class="sidebar-link" onclick="DataStore.downloadBackup()">
+                <span class="icon">💾</span> Backup
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">👑</div>
+                <div class="sidebar-user-info">
+                    <strong id="sidebarUserName">Admin</strong>
+                    <small>Super Admin</small>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="panel-main">
+        <header class="panel-header">
+            <button class="btn btn-sm btn-outline" onclick="toggleSidebar()" style="margin-right:12px;">☰</button>
+            <h1>Finance OS</h1>
+            <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+                <select id="filterMonth" class="btn btn-sm btn-outline" onchange="updateMonth()">
+                    <option value="2026-03">Março 2026</option>
+                    <option value="2026-02">Fevereiro 2026</option>
+                    <option value="2026-01">Janeiro 2026</option>
+                    <option value="2025-12">Dezembro 2025</option>
+                </select>
+                <button class="btn btn-sm btn-primary" onclick="exportReport()">Exportar Relatorio</button>
+            </div>
+        </header>
+
+        <div class="panel-content">
+
+            <!-- ===== 1. HEALTH SCORE BANNER ===== -->
+            <div class="health-banner" id="healthBanner">
+                <div class="health-banner-top">
+                    <div class="health-gauge">
+                        <canvas id="gaugeCanvas" width="140" height="140"></canvas>
+                        <div class="health-gauge-value">
+                            <div class="score-number" id="mainScore">78</div>
+                            <div class="score-label">Score</div>
+                        </div>
+                    </div>
+                    <div class="health-info">
+                        <h2>Saude Financeira da Rede</h2>
+                        <div class="health-subtitle">Analise consolidada de 6 franquias ativas - Março 2026</div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <span class="status-pill saudavel">2 Saudaveis</span>
+                            <span class="status-pill atencao">2 Atencao</span>
+                            <span class="status-pill risco">1 Risco</span>
+                            <span class="status-pill critico">1 Critico</span>
+                        </div>
+                        <div class="health-insight" id="healthInsight">
+                            Sua rede precisa faturar <strong>R$ 45.230/dia</strong> para cobrir custos fixos. Atualmente a media esta em <strong>R$ 41.800/dia</strong> (-7.6%).
+                        </div>
+                    </div>
+                </div>
+                <div class="sub-scores" id="subScores">
+                    <div class="sub-score-card">
+                        <div class="ss-value" style="color:#4CAF50;">82</div>
+                        <div class="ss-name">Liquidez</div>
+                        <div class="ss-weight">Peso: 25%</div>
+                    </div>
+                    <div class="sub-score-card">
+                        <div class="ss-value" style="color:#FF9800;">71</div>
+                        <div class="ss-name">Rentabilidade</div>
+                        <div class="ss-weight">Peso: 25%</div>
+                    </div>
+                    <div class="sub-score-card">
+                        <div class="ss-value" style="color:#4CAF50;">85</div>
+                        <div class="ss-name">Eficiencia</div>
+                        <div class="ss-weight">Peso: 20%</div>
+                    </div>
+                    <div class="sub-score-card">
+                        <div class="ss-value" style="color:#FF9800;">74</div>
+                        <div class="ss-name">Previsibilidade</div>
+                        <div class="ss-weight">Peso: 15%</div>
+                    </div>
+                    <div class="sub-score-card">
+                        <div class="ss-value" style="color:#FF9800;">72</div>
+                        <div class="ss-name">Disciplina</div>
+                        <div class="ss-weight">Peso: 15%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== 2. KPI CARDS ROW ===== -->
+            <div class="kpi-grid-os" id="kpiGrid">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- ===== 3. FRANCHISE RANKING TABLE ===== -->
+            <div class="panel-card" style="margin-bottom:24px;">
+                <div class="panel-card-header">
+                    <h3 class="section-title"><span class="title-icon">🏆</span> Ranking de Franquias</h3>
+                </div>
+                <div class="panel-card-body" style="overflow-x:auto;">
+                    <table class="panel-table" id="rankingTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Franquia</th>
+                                <th style="text-align:center;">Score</th>
+                                <th style="text-align:right;">Faturamento</th>
+                                <th style="text-align:right;">CMV %</th>
+                                <th style="text-align:right;">Labor %</th>
+                                <th style="text-align:right;">Prime Cost %</th>
+                                <th style="text-align:right;">Margem Bruta %</th>
+                                <th style="text-align:right;">Break-even</th>
+                                <th style="text-align:center;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rankingBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== 4. DRE GERENCIAL ===== -->
+            <div class="panel-card" style="margin-bottom:24px;">
+                <div class="panel-card-header">
+                    <h3 class="section-title"><span class="title-icon">📑</span> DRE Gerencial - Rede Consolidada</h3>
+                </div>
+                <div class="panel-card-body" style="overflow-x:auto;">
+                    <table class="dre-table" id="dreTable">
+                        <thead>
+                            <tr>
+                                <th style="min-width:260px;">Conta</th>
+                                <th style="min-width:120px;">Valor (R$)</th>
+                                <th style="min-width:80px;">% Receita</th>
+                                <th style="min-width:80px;">vs. Meta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dreBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== 5. CHARTS ROW ===== -->
+            <div class="grid-2" style="margin-bottom:20px;">
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3>Receita vs Despesas (6 meses)</h3>
+                    </div>
+                    <div class="panel-card-body">
+                        <canvas id="revExpChart" height="280"></canvas>
+                    </div>
+                </div>
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3>Composicao de Custos</h3>
+                    </div>
+                    <div class="panel-card-body" style="display:flex; justify-content:center;">
+                        <canvas id="costPieChart" height="280" style="max-width:320px;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-card" style="margin-bottom:24px;">
+                <div class="panel-card-header">
+                    <h3>Evolucao de Score por Franquia</h3>
+                </div>
+                <div class="panel-card-body">
+                    <canvas id="scoreEvolutionChart" height="260"></canvas>
+                </div>
+            </div>
+
+            <!-- ===== 6. ALERTS SECTION ===== -->
+            <div class="grid-2" style="margin-bottom:24px;">
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3 class="section-title"><span class="title-icon">🚨</span> Alertas Ativos</h3>
+                    </div>
+                    <div class="panel-card-body">
+                        <ul class="alert-list" id="alertsList"></ul>
+                    </div>
+                </div>
+
+                <!-- ===== 7. MANDATORY TASKS ===== -->
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3 class="section-title"><span class="title-icon">📋</span> Tarefas Obrigatorias</h3>
+                    </div>
+                    <div class="panel-card-body">
+                        <ul class="task-list" id="tasksList"></ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/i18n.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/cloud-functions.js"></script>
+<script src="../js/core/auth.js"></script>
+<script src="../js/core/audit.js"></script>
+<script src="../js/core/notifications.js"></script>
+
+<script>
+(function() {
+    if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+    document.getElementById('sidebarUserName').textContent = Auth.getUserName();
+
+    // Sidebar toggle
+    window.toggleSidebar = function() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+    };
+
+    // ====== DEMO DATA ======
+    var franchises = [
+        {
+            id: 'ibirapuera', name: 'Ibirapuera', score: 87, status: 'saudavel', statusLabel: 'Saudavel',
+            faturamento: 189500, cmv: 28.4, labor: 22.1, primeCost: 50.5, margemBruta: 71.6, breakeven: 142000,
+            scores: { liquidez: 90, rentabilidade: 85, eficiencia: 88, previsibilidade: 84, disciplina: 86 },
+            scoreHistory: [82, 83, 85, 84, 86, 87]
+        },
+        {
+            id: 'jardins', name: 'Jardins', score: 91, status: 'saudavel', statusLabel: 'Saudavel',
+            faturamento: 215800, cmv: 26.8, labor: 21.5, primeCost: 48.3, margemBruta: 73.2, breakeven: 148000,
+            scores: { liquidez: 94, rentabilidade: 92, eficiencia: 90, previsibilidade: 88, disciplina: 89 },
+            scoreHistory: [86, 87, 89, 90, 90, 91]
+        },
+        {
+            id: 'catuai', name: 'Catuai', score: 79, status: 'atencao', statusLabel: 'Atencao',
+            faturamento: 156200, cmv: 30.2, labor: 24.8, primeCost: 55.0, margemBruta: 69.8, breakeven: 128000,
+            scores: { liquidez: 82, rentabilidade: 75, eficiencia: 80, previsibilidade: 78, disciplina: 76 },
+            scoreHistory: [75, 76, 77, 78, 78, 79]
+        },
+        {
+            id: 'morumbi', name: 'Morumbi', score: 72, status: 'atencao', statusLabel: 'Atencao',
+            faturamento: 142800, cmv: 33.5, labor: 25.2, primeCost: 58.7, margemBruta: 66.5, breakeven: 135000,
+            scores: { liquidez: 74, rentabilidade: 68, eficiencia: 76, previsibilidade: 70, disciplina: 69 },
+            scoreHistory: [78, 76, 75, 74, 73, 72]
+        },
+        {
+            id: 'recife', name: 'Recife', score: 65, status: 'risco', statusLabel: 'Risco',
+            faturamento: 118400, cmv: 35.1, labor: 27.3, primeCost: 62.4, margemBruta: 64.9, breakeven: 122000,
+            scores: { liquidez: 68, rentabilidade: 60, eficiencia: 70, previsibilidade: 62, disciplina: 58 },
+            scoreHistory: [72, 70, 68, 67, 66, 65]
+        },
+        {
+            id: 'barra', name: 'Barra da Tijuca', score: 58, status: 'critico', statusLabel: 'Critico',
+            faturamento: 98500, cmv: 37.8, labor: 29.4, primeCost: 67.2, margemBruta: 62.2, breakeven: 118000,
+            scores: { liquidez: 52, rentabilidade: 48, eficiencia: 65, previsibilidade: 58, disciplina: 55 },
+            scoreHistory: [68, 65, 63, 61, 60, 58]
+        }
+    ];
+
+    // Sort by score descending
+    franchises.sort(function(a, b) { return b.score - a.score; });
+
+    // Consolidated DRE data
+    var dreData = {
+        receitaBruta: 978200,
+        deducoes: { impostos: 58692, cancelamentos: 9782, descontos: 19564 },
+        cmv: 280450,
+        maoDeObra: 218600,
+        despesasOp: {
+            aluguel: 86400,
+            condominio: 14400,
+            energia: 18600,
+            agua: 5400,
+            internet: 4800,
+            marketing: 28500,
+            manutencao: 12800,
+            contabilidade: 9600,
+            software: 7200,
+            outros: 15200
+        },
+        impostosSobreLucro: 22400,
+        juros: 8600,
+        depreciacao: 14200
+    };
+
+    var months6 = ['Out/25', 'Nov/25', 'Dez/25', 'Jan/26', 'Fev/26', 'Mar/26'];
+    var revenueHistory = [845000, 878000, 920000, 895000, 912000, 978200];
+    var expenseHistory = [698000, 715000, 748000, 738000, 752000, 805200];
+
+    var alerts = [
+        { severity: 'critico', franchise: 'Barra da Tijuca', text: 'Caixa insuficiente para folha de pagamento em 11 dias', time: 'Detectado ha 2h' },
+        { severity: 'critico', franchise: 'Barra da Tijuca', text: 'Prime Cost em 67.2% - 12 pontos acima da meta', time: 'Persistente ha 3 semanas' },
+        { severity: 'atencao', franchise: 'Morumbi', text: 'CMV subiu 3.2 pontos percentuais este mes (30.3% para 33.5%)', time: 'Detectado ha 5 dias' },
+        { severity: 'atencao', franchise: 'Barra da Tijuca', text: '3 dias seguidos abaixo da venda minima diaria (R$ 3.933 vs meta R$ 4.500)', time: 'Desde 28/03' },
+        { severity: 'risco', franchise: 'Recife', text: 'Inventario fisico atrasado ha 15 dias - ultimo fechamento 14/03', time: 'Prazo: 01/04' },
+        { severity: 'atencao', franchise: 'Morumbi', text: 'Margem bruta caiu abaixo de 68% pelo segundo mes consecutivo', time: 'Tendencia negativa' },
+        { severity: 'risco', franchise: 'Recife', text: 'Conciliacao bancaria de fevereiro nao finalizada', time: 'Atraso de 28 dias' },
+        { severity: 'info', franchise: 'Jardins', text: 'Score atingiu 91 - melhor da rede pelo 4o mes consecutivo', time: 'Hoje' },
+        { severity: 'atencao', franchise: 'Catuai', text: 'Custo de mao de obra subiu para 24.8% - proximo do limite (25%)', time: 'Detectado ha 3 dias' }
+    ];
+
+    var tasks = [
+        { franchise: 'Ibirapuera', task: 'Fechar inventario mensal de Marco', done: false, due: '01/04', overdue: true },
+        { franchise: 'Morumbi', task: 'Conciliacao bancaria de Marco', done: false, due: '05/04', overdue: false },
+        { franchise: 'Jardins', task: 'DRE Gerencial de Marco fechado', done: true, due: '31/03', overdue: false },
+        { franchise: 'Barra da Tijuca', task: 'Fechar inventario mensal de Marco', done: false, due: '01/04', overdue: true },
+        { franchise: 'Barra da Tijuca', task: 'Plano de acao corretivo - Prime Cost', done: false, due: '03/04', overdue: false },
+        { franchise: 'Catuai', task: 'Conciliacao bancaria de Marco', done: false, due: '05/04', overdue: false },
+        { franchise: 'Recife', task: 'Fechar inventario mensal de Fevereiro', done: false, due: '15/03', overdue: true },
+        { franchise: 'Recife', task: 'Fechar inventario mensal de Marco', done: false, due: '01/04', overdue: true },
+        { franchise: 'Recife', task: 'Conciliacao bancaria de Fevereiro', done: false, due: '05/03', overdue: true },
+        { franchise: 'Jardins', task: 'Conciliacao bancaria de Marco', done: true, due: '05/04', overdue: false },
+        { franchise: 'Ibirapuera', task: 'DRE Gerencial de Marco fechado', done: true, due: '31/03', overdue: false },
+        { franchise: 'Catuai', task: 'DRE Gerencial de Marco fechado', done: true, due: '31/03', overdue: false }
+    ];
+
+    // ====== RENDER FUNCTIONS ======
+
+    // Helper
+    function fmt(val) {
+        return 'R$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+    function fmtPct(val) {
+        return val.toFixed(1) + '%';
+    }
+
+    // 1. Health gauge
+    function drawGauge() {
+        var canvas = document.getElementById('gaugeCanvas');
+        var ctx = canvas.getContext('2d');
+        var score = 78;
+        var cx = 70, cy = 70, r = 58;
+        var startAngle = 0.75 * Math.PI;
+        var endAngle = 2.25 * Math.PI;
+        var totalArc = endAngle - startAngle;
+        var scoreAngle = startAngle + (totalArc * score / 100);
+
+        ctx.clearRect(0, 0, 140, 140);
+
+        // Background arc
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, startAngle, endAngle);
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // Score arc - gradient color based on score
+        var color = score >= 90 ? '#4CAF50' : score >= 75 ? '#FFC107' : score >= 60 ? '#FF9800' : score >= 40 ? '#F44336' : '#333';
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, startAngle, scoreAngle);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        document.getElementById('mainScore').style.color = color;
+    }
+
+    // 2. KPI Cards
+    function renderKPIs() {
+        var totalFat = franchises.reduce(function(s, f) { return s + f.faturamento; }, 0);
+        var avgCMV = franchises.reduce(function(s, f) { return s + f.cmv; }, 0) / franchises.length;
+        var avgPrime = franchises.reduce(function(s, f) { return s + f.primeCost; }, 0) / franchises.length;
+        var totalBreakeven = franchises.reduce(function(s, f) { return s + f.breakeven; }, 0);
+        var vendaMinDia = Math.ceil(totalBreakeven / 30);
+        var avgMargem = franchises.reduce(function(s, f) { return s + f.margemBruta; }, 0) / franchises.length;
+        var receitaLiquida = dreData.receitaBruta - dreData.deducoes.impostos - dreData.deducoes.cancelamentos - dreData.deducoes.descontos;
+        var totalDespOp = Object.keys(dreData.despesasOp).reduce(function(s, k) { return s + dreData.despesasOp[k]; }, 0);
+        var ebitda = receitaLiquida - dreData.cmv - dreData.maoDeObra - totalDespOp;
+        var caixaProjetado = ebitda * 1.1;
+        var avgScore = Math.round(franchises.reduce(function(s, f) { return s + f.score; }, 0) / franchises.length);
+
+        var kpis = [
+            { label: 'Faturamento Liquido', value: fmt(receitaLiquida), target: 'Meta: R$ 920.000', status: receitaLiquida >= 920000 ? 'ok' : 'warn', border: 'green' },
+            { label: 'CMV Medio %', value: fmtPct(avgCMV), target: 'Meta: < 30%', status: avgCMV <= 30 ? 'ok' : avgCMV <= 33 ? 'warn' : 'danger', border: 'yellow' },
+            { label: 'Prime Cost Medio %', value: fmtPct(avgPrime), target: 'Meta: < 55%', status: avgPrime <= 55 ? 'ok' : avgPrime <= 60 ? 'warn' : 'danger', border: 'red' },
+            { label: 'Break-even Mensal', value: fmt(totalBreakeven), target: 'Total rede', status: 'ok', border: 'blue' },
+            { label: 'Venda Minima Diaria', value: fmt(vendaMinDia), target: 'Para cobrir fixos', status: 'warn', border: 'yellow' },
+            { label: 'Margem Contribuicao %', value: fmtPct(avgMargem), target: 'Meta: > 68%', status: avgMargem >= 68 ? 'ok' : avgMargem >= 65 ? 'warn' : 'danger', border: 'green' },
+            { label: 'Caixa Projetado 30d', value: fmt(Math.round(caixaProjetado)), target: 'Projecao otimista', status: caixaProjetado > 0 ? 'ok' : 'danger', border: 'blue' },
+            { label: 'Score Medio da Rede', value: avgScore.toString(), target: 'Meta: > 80', status: avgScore >= 80 ? 'ok' : avgScore >= 70 ? 'warn' : 'danger', border: 'purple' }
+        ];
+
+        var html = kpis.map(function(k) {
+            return '<div class="kpi-card-os border-' + k.border + '">' +
+                '<div class="kpi-os-label">' + k.label + '</div>' +
+                '<div class="kpi-os-value">' + k.value + '</div>' +
+                '<div class="kpi-os-target ' + k.status + '">' +
+                    (k.status === 'ok' ? '&#10003; ' : k.status === 'warn' ? '&#9888; ' : '&#10007; ') +
+                    k.target +
+                '</div>' +
+            '</div>';
+        }).join('');
+
+        document.getElementById('kpiGrid').innerHTML = html;
+    }
+
+    // 3. Ranking Table
+    function renderRanking() {
+        var tbody = document.getElementById('rankingBody');
+        tbody.innerHTML = franchises.map(function(f, i) {
+            var scoreClass = f.score >= 90 ? 'green' : f.score >= 75 ? 'yellow' : f.score >= 60 ? 'orange' : f.score >= 40 ? 'red' : 'black';
+            return '<tr>' +
+                '<td style="font-weight:700; color:var(--mp-text-light);">' + (i + 1) + '</td>' +
+                '<td style="font-weight:700;">' + f.name + '</td>' +
+                '<td style="text-align:center;"><span class="score-badge ' + scoreClass + '">' + f.score + '</span></td>' +
+                '<td style="text-align:right;">' + fmt(f.faturamento) + '</td>' +
+                '<td style="text-align:right;' + (f.cmv > 33 ? 'color:var(--mp-danger);font-weight:700;' : f.cmv > 30 ? 'color:var(--mp-warning);font-weight:600;' : '') + '">' + fmtPct(f.cmv) + '</td>' +
+                '<td style="text-align:right;' + (f.labor > 27 ? 'color:var(--mp-danger);font-weight:700;' : f.labor > 25 ? 'color:var(--mp-warning);font-weight:600;' : '') + '">' + fmtPct(f.labor) + '</td>' +
+                '<td style="text-align:right;' + (f.primeCost > 60 ? 'color:var(--mp-danger);font-weight:700;' : f.primeCost > 55 ? 'color:var(--mp-warning);font-weight:600;' : '') + '">' + fmtPct(f.primeCost) + '</td>' +
+                '<td style="text-align:right;">' + fmtPct(f.margemBruta) + '</td>' +
+                '<td style="text-align:right;">' + fmt(f.breakeven) + '</td>' +
+                '<td style="text-align:center;"><span class="status-pill ' + f.status + '">' + f.statusLabel + '</span></td>' +
+            '</tr>';
+        }).join('');
+    }
+
+    // 4. DRE Gerencial
+    function renderDRE() {
+        var rb = dreData.receitaBruta;
+        var dedTotal = dreData.deducoes.impostos + dreData.deducoes.cancelamentos + dreData.deducoes.descontos;
+        var rl = rb - dedTotal;
+        var mb = rl - dreData.cmv;
+        var primeCostResult = mb - dreData.maoDeObra;
+        var totalDespOp = Object.keys(dreData.despesasOp).reduce(function(s, k) { return s + dreData.despesasOp[k]; }, 0);
+        var ebitda = primeCostResult - totalDespOp;
+        var lucroLiquido = ebitda - dreData.impostosSobreLucro - dreData.juros - dreData.depreciacao;
+
+        function pct(v) { return (v / rb * 100).toFixed(1) + '%'; }
+        function vsTarget(actual, target, inverse) {
+            var diff = actual - target;
+            if (inverse) diff = -diff;
+            var cls = diff >= 0 ? 'ok' : Math.abs(diff) < 3 ? 'warn' : 'bad';
+            var sign = diff >= 0 ? '+' : '';
+            return '<span class="vs-target ' + cls + '">' + sign + diff.toFixed(1) + '%</span>';
+        }
+        function row(label, value, pctVal, target, cls, indent) {
+            var tdClass = indent ? ' class="dre-indent"' : '';
+            var trClass = cls ? ' class="' + cls + '"' : '';
+            return '<tr' + trClass + '>' +
+                '<td' + tdClass + '>' + label + '</td>' +
+                '<td>' + fmt(value) + '</td>' +
+                '<td>' + pctVal + '</td>' +
+                '<td>' + target + '</td>' +
+            '</tr>';
+        }
+
+        var rows = [
+            row('(+) Receita Bruta', rb, '100%', '-', 'dre-header'),
+            row('(-) Impostos sobre Vendas', dreData.deducoes.impostos, pct(dreData.deducoes.impostos), vsTarget(dreData.deducoes.impostos/rb*100, 6.0, true), '', true),
+            row('(-) Cancelamentos', dreData.deducoes.cancelamentos, pct(dreData.deducoes.cancelamentos), vsTarget(dreData.deducoes.cancelamentos/rb*100, 1.0, true), '', true),
+            row('(-) Descontos', dreData.deducoes.descontos, pct(dreData.deducoes.descontos), vsTarget(dreData.deducoes.descontos/rb*100, 2.0, true), '', true),
+            row('(=) Receita Liquida', rl, pct(rl), '', 'dre-result positive'),
+            row('(-) CMV - Custo de Mercadoria', dreData.cmv, pct(dreData.cmv), vsTarget(dreData.cmv/rb*100, 30.0, true), '', true),
+            row('(=) Margem Bruta', mb, pct(mb), vsTarget(mb/rb*100, 62.0, false), 'dre-result positive'),
+            row('(-) Mao de Obra Direta', dreData.maoDeObra, pct(dreData.maoDeObra), vsTarget(dreData.maoDeObra/rb*100, 22.0, true), '', true),
+            row('(=) Resultado Prime Cost', primeCostResult, pct(primeCostResult), vsTarget(primeCostResult/rb*100, 40.0, false), 'dre-result positive')
+        ];
+
+        // Despesas operacionais
+        var despLabels = {
+            aluguel: 'Aluguel', condominio: 'Condominio', energia: 'Energia Eletrica',
+            agua: 'Agua', internet: 'Internet/Telecom', marketing: 'Marketing',
+            manutencao: 'Manutencao', contabilidade: 'Contabilidade', software: 'Software/Sistemas', outros: 'Outros'
+        };
+        rows.push('<tr class="dre-header"><td>(-) Despesas Operacionais</td><td>' + fmt(totalDespOp) + '</td><td>' + pct(totalDespOp) + '</td><td>' + vsTarget(totalDespOp/rb*100, 20.0, true) + '</td></tr>');
+        Object.keys(dreData.despesasOp).forEach(function(k) {
+            rows.push(row('    ' + (despLabels[k] || k), dreData.despesasOp[k], pct(dreData.despesasOp[k]), '', '', true));
+        });
+
+        rows.push(row('(=) EBITDA', ebitda, pct(ebitda), vsTarget(ebitda/rb*100, 15.0, false), 'dre-result ' + (ebitda >= 0 ? 'positive' : 'negative')));
+        rows.push(row('(-) Impostos sobre Lucro', dreData.impostosSobreLucro, pct(dreData.impostosSobreLucro), '', '', true));
+        rows.push(row('(-) Juros e Encargos', dreData.juros, pct(dreData.juros), '', '', true));
+        rows.push(row('(-) Depreciacao e Amortizacao', dreData.depreciacao, pct(dreData.depreciacao), '', '', true));
+        rows.push(row('(=) Lucro Liquido', lucroLiquido, pct(lucroLiquido), vsTarget(lucroLiquido/rb*100, 10.0, false), 'dre-result ' + (lucroLiquido >= 0 ? 'positive' : 'negative')));
+
+        document.getElementById('dreBody').innerHTML = rows.join('');
+    }
+
+    // 5. Charts
+    var chartInstances = {};
+
+    function renderCharts() {
+        // Revenue vs Expenses
+        if (chartInstances.revExp) chartInstances.revExp.destroy();
+        chartInstances.revExp = new Chart(document.getElementById('revExpChart'), {
+            type: 'line',
+            data: {
+                labels: months6,
+                datasets: [
+                    {
+                        label: 'Receita',
+                        data: revenueHistory,
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76,175,80,0.08)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#4CAF50'
+                    },
+                    {
+                        label: 'Despesas',
+                        data: expenseHistory,
+                        borderColor: '#F44336',
+                        backgroundColor: 'rgba(244,67,54,0.08)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#F44336'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { boxWidth: 12, padding: 16 } }
+                },
+                scales: {
+                    y: { beginAtZero: false, ticks: { callback: function(v) { return 'R$ ' + (v/1000).toFixed(0) + 'k'; } } }
+                }
+            }
+        });
+
+        // Cost Breakdown Pie
+        var costLabels = ['CMV', 'Mao de Obra', 'Desp. Fixas', 'Desp. Variaveis'];
+        var fixas = dreData.despesasOp.aluguel + dreData.despesasOp.condominio + dreData.despesasOp.energia + dreData.despesasOp.agua + dreData.despesasOp.internet + dreData.despesasOp.contabilidade;
+        var variaveis = dreData.despesasOp.marketing + dreData.despesasOp.manutencao + dreData.despesasOp.software + dreData.despesasOp.outros;
+        var costValues = [dreData.cmv, dreData.maoDeObra, fixas, variaveis];
+        var costColors = ['#FF9800', '#9C27B0', '#2196F3', '#00BCD4'];
+
+        if (chartInstances.costPie) chartInstances.costPie.destroy();
+        chartInstances.costPie = new Chart(document.getElementById('costPieChart'), {
+            type: 'doughnut',
+            data: {
+                labels: costLabels,
+                datasets: [{ data: costValues, backgroundColor: costColors, borderWidth: 2 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10 } }
+                }
+            }
+        });
+
+        // Score Evolution per Franchise
+        var franchiseColors = ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336', '#795548'];
+        var datasets = franchises.map(function(f, i) {
+            return {
+                label: f.name,
+                data: f.scoreHistory,
+                borderColor: franchiseColors[i % franchiseColors.length],
+                backgroundColor: 'transparent',
+                tension: 0.3,
+                borderWidth: 2,
+                pointRadius: 3,
+                pointBackgroundColor: franchiseColors[i % franchiseColors.length]
+            };
+        });
+
+        if (chartInstances.scoreEvol) chartInstances.scoreEvol.destroy();
+        chartInstances.scoreEvol = new Chart(document.getElementById('scoreEvolutionChart'), {
+            type: 'line',
+            data: { labels: months6, datasets: datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { boxWidth: 12, padding: 12 } }
+                },
+                scales: {
+                    y: { min: 40, max: 100, ticks: { stepSize: 10 } }
+                }
+            }
+        });
+    }
+
+    // 6. Alerts
+    function renderAlerts() {
+        var html = alerts.map(function(a) {
+            return '<li class="alert-item">' +
+                '<span class="alert-severity ' + a.severity + '">' + a.severity.charAt(0).toUpperCase() + a.severity.slice(1) + '</span>' +
+                '<div class="alert-text">' +
+                    '<span class="alert-franchise">' + a.franchise + ':</span> ' + a.text +
+                    '<div class="alert-time">' + a.time + '</div>' +
+                '</div>' +
+            '</li>';
+        }).join('');
+        document.getElementById('alertsList').innerHTML = html;
+    }
+
+    // 7. Tasks
+    function renderTasks() {
+        // Sort: pending first (overdue first), then completed
+        tasks.sort(function(a, b) {
+            if (a.done !== b.done) return a.done ? 1 : -1;
+            if (!a.done && a.overdue !== b.overdue) return a.overdue ? -1 : 1;
+            return 0;
+        });
+
+        var html = tasks.map(function(t) {
+            return '<li class="task-item">' +
+                '<span class="task-check ' + (t.done ? 'done' : 'pending') + '">' + (t.done ? '&#10003;' : '&#10007;') + '</span>' +
+                '<span class="task-franchise">' + t.franchise + '</span>' +
+                '<span class="task-desc">' + t.task + '</span>' +
+                '<span class="task-due ' + (t.overdue && !t.done ? 'overdue' : '') + '">' + (t.overdue && !t.done ? 'Atrasado - ' : 'Prazo: ') + t.due + '</span>' +
+            '</li>';
+        }).join('');
+        document.getElementById('tasksList').innerHTML = html;
+    }
+
+    // Export stub
+    window.exportReport = function() {
+        if (typeof Utils !== 'undefined' && Utils.showToast) {
+            Utils.showToast('Relatorio Finance OS exportado!', 'success');
+        } else {
+            alert('Relatorio Finance OS exportado!');
+        }
+    };
+
+    // Month filter stub
+    window.updateMonth = function() {
+        if (typeof Utils !== 'undefined' && Utils.showToast) {
+            Utils.showToast('Periodo atualizado', 'info');
+        }
+    };
+
+    // ====== INIT ======
+    drawGauge();
+    renderKPIs();
+    renderRanking();
+    renderDRE();
+    renderCharts();
+    renderAlerts();
+    renderTasks();
+
+})();
+</script>
+</body>
+</html>

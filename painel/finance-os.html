@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Finance OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="stylesheet" href="../css/mobile-app.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#42A5F5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MilkyPot">
+    <link rel="apple-touch-icon" href="../images/logo-milkypot.png">
+    <style>
+        /* ===== FINANCE OS CUSTOM STYLES ===== */
+        .fos-hero {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%);
+            border-radius: var(--mp-radius, 16px);
+            padding: 32px;
+            color: #fff;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .fos-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .fos-score-ring {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            position: relative;
+            margin: 0 auto 20px;
+        }
+        .fos-score-ring svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        .fos-score-ring .score-num {
+            font-family: 'Baloo 2', cursive;
+            font-size: 56px;
+            font-weight: 800;
+            line-height: 1;
+            z-index: 1;
+        }
+        .fos-score-ring .score-label {
+            font-size: 13px;
+            opacity: 0.85;
+            z-index: 1;
+            font-weight: 600;
+        }
+        .fos-sub-scores {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .fos-sub-score {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 14px 10px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+        .fos-sub-score .sub-val {
+            font-family: 'Baloo 2', cursive;
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+        .fos-sub-score .sub-name {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .fos-insight {
+            background: rgba(255,255,255,0.12);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-top: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        .fos-insight .insight-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        /* KPI Grid - 7 cols on desktop */
+        .fos-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .fos-kpi {
+            background: #fff;
+            border-radius: var(--mp-radius, 16px);
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .fos-kpi:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+        .fos-kpi .kpi-emoji {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .fos-kpi .kpi-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .fos-kpi .kpi-value {
+            font-family: 'Baloo 2', cursive;
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a237e;
+        }
+        .fos-kpi .kpi-meta {
+            font-size: 13px;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+        .fos-kpi .kpi-meta.ok { color: #2e7d32; }
+        .fos-kpi .kpi-meta.warn { color: #e65100; }
+        .fos-kpi .kpi-meta.info { color: #1565c0; }
+
+        /* DRE Table */
+        .fos-dre-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 14px;
+        }
+        .fos-dre-table th {
+            background: #f5f5f5;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #555;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .fos-dre-table th:not(:first-child) {
+            text-align: right;
+        }
+        .fos-dre-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .fos-dre-table td:not(:first-child) {
+            text-align: right;
+            font-family: 'Baloo 2', cursive;
+            font-weight: 600;
+        }
+        .fos-dre-table tr.dre-header {
+            background: #e8eaf6;
+        }
+        .fos-dre-table tr.dre-header td {
+            font-weight: 700;
+            color: #1a237e;
+            font-size: 15px;
+            border-bottom: 2px solid #c5cae9;
+        }
+        .fos-dre-table tr.dre-total {
+            background: #1a237e;
+        }
+        .fos-dre-table tr.dre-total td {
+            color: #fff;
+            font-weight: 700;
+            font-size: 16px;
+            border-bottom: none;
+        }
+        .fos-dre-table tr.dre-sub td {
+            padding-left: 32px;
+            font-size: 13px;
+            color: #555;
+        }
+        .fos-dre-table .val-green { color: #2e7d32; }
+        .fos-dre-table .val-red { color: #c62828; }
+        .fos-dre-table .target-ok { color: #2e7d32; }
+        .fos-dre-table .target-warn { color: #e65100; }
+
+        /* Cost Registration */
+        .fos-cost-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .fos-cost-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .fos-cost-row:last-child {
+            border-bottom: none;
+        }
+        .fos-cost-row label {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            min-width: 120px;
+        }
+        .fos-cost-row input {
+            width: 140px;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: 'Baloo 2', cursive;
+            font-weight: 600;
+            text-align: right;
+            transition: border-color 0.2s;
+        }
+        .fos-cost-row input:focus {
+            outline: none;
+            border-color: #3949ab;
+            box-shadow: 0 0 0 3px rgba(57,73,171,0.15);
+        }
+        .fos-cost-row .cost-status {
+            font-size: 18px;
+            width: 28px;
+            text-align: center;
+        }
+
+        /* Break-even */
+        .fos-be-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .fos-be-card {
+            background: #f5f5f5;
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+        }
+        .fos-be-card .be-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .fos-be-card .be-value {
+            font-family: 'Baloo 2', cursive;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a237e;
+        }
+        .fos-progress-bar {
+            background: #e0e0e0;
+            border-radius: 20px;
+            height: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        .fos-progress-fill {
+            height: 100%;
+            border-radius: 20px;
+            background: linear-gradient(90deg, #c62828 0%, #ef6c00 40%, #f9a825 70%, #2e7d32 100%);
+            transition: width 1s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+            min-width: 60px;
+        }
+        .fos-progress-label {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 15px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        /* Alerts */
+        .fos-alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .fos-alert.critical { background: #fce4ec; color: #b71c1c; border-left: 4px solid #c62828; }
+        .fos-alert.warning { background: #fff3e0; color: #e65100; border-left: 4px solid #ef6c00; }
+        .fos-alert.success { background: #e8f5e9; color: #1b5e20; border-left: 4px solid #2e7d32; }
+        .fos-alert.info { background: #e3f2fd; color: #0d47a1; border-left: 4px solid #1565c0; }
+        .fos-alert-icon { font-size: 20px; flex-shrink: 0; }
+
+        /* Checklist */
+        .fos-checklist-group {
+            margin-bottom: 20px;
+        }
+        .fos-checklist-title {
+            font-family: 'Baloo 2', cursive;
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a237e;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #e8eaf6;
+        }
+        .fos-check-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            cursor: pointer;
+            font-size: 15px;
+            user-select: none;
+            transition: opacity 0.2s;
+        }
+        .fos-check-item input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            accent-color: #1a237e;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .fos-check-item.checked span {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        /* Section nav */
+        .fos-section-nav {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .fos-section-nav a {
+            padding: 8px 16px;
+            background: #e8eaf6;
+            color: #1a237e;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.2s, color 0.2s;
+        }
+        .fos-section-nav a:hover {
+            background: #1a237e;
+            color: #fff;
+        }
+
+        /* Save button */
+        .fos-save-btn {
+            background: linear-gradient(135deg, #1a237e, #3949ab);
+            color: #fff;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: 'Nunito', sans-serif;
+        }
+        .fos-save-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(26,35,126,0.3);
+        }
+        .fos-save-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Toast */
+        .fos-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #1a237e;
+            color: #fff;
+            padding: 16px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            z-index: 9999;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+        .fos-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .fos-sub-scores { grid-template-columns: repeat(3, 1fr); }
+            .fos-cost-grid { grid-template-columns: 1fr; }
+            .fos-be-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 600px) {
+            .fos-sub-scores { grid-template-columns: repeat(2, 1fr); }
+            .fos-hero { padding: 20px; }
+            .fos-score-ring { width: 140px; height: 140px; }
+            .fos-score-ring .score-num { font-size: 42px; }
+            .fos-kpi .kpi-value { font-size: 20px; }
+            .fos-section-nav { overflow-x: auto; flex-wrap: nowrap; }
+        }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <!-- SIDEBAR -->
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="pedidos.html" class="sidebar-link">
+                    <span class="icon">📋</span> Pedidos
+                </a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="financeiro.html" class="sidebar-link">
+                    <span class="icon">💰</span> Financeiro
+                </a>
+                <a href="finance-os.html" class="sidebar-link active">
+                    <span class="icon">🏥</span> Finance OS
+                </a>
+                <a href="produtos.html" class="sidebar-link">
+                    <span class="icon">🍨</span> Produtos
+                </a>
+                <a href="entregas.html" class="sidebar-link">
+                    <span class="icon">🛵</span> Entregas
+                </a>
+                <a href="equipe.html" class="sidebar-link">
+                    <span class="icon">👥</span> Equipe
+                </a>
+                <a href="fidelidade.html" class="sidebar-link">
+                    <span class="icon">🎁</span> Fidelidade
+                </a>
+                <div class="sidebar-nav-group">Loja Online</div>
+                <a href="#" class="sidebar-link" id="linkSiteFranquia">
+                    <span class="icon">🌐</span> Meu Site
+                </a>
+                <a href="marketing.html" class="sidebar-link">
+                    <span class="icon">📢</span> Marketing
+                </a>
+                <div class="sidebar-nav-group">Config</div>
+                <a href="configuracoes.html" class="sidebar-link">
+                    <span class="icon">⚙️</span> Configuracoes
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">🏪</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Franqueado</strong>
+                        <small>Franqueado</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>🏥 Finance OS</h1>
+                </div>
+                <div class="panel-header-right">
+                    <span id="headerStoreName" style="font-size:13px;color:#888;margin-right:8px;"></span>
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+
+                <!-- SECTION NAV -->
+                <div class="fos-section-nav">
+                    <a href="#sec-health">Saude Financeira</a>
+                    <a href="#sec-kpis">KPIs</a>
+                    <a href="#sec-dre">DRE Gerencial</a>
+                    <a href="#sec-costs">Cadastro de Custos</a>
+                    <a href="#sec-breakeven">Break-even</a>
+                    <a href="#sec-alerts">Alertas</a>
+                    <a href="#sec-checklist">Checklist</a>
+                </div>
+
+                <!-- ====== 1. HEALTH SCORE HERO ====== -->
+                <div class="fos-hero" id="sec-health">
+                    <div style="text-align:center;">
+                        <div class="fos-score-ring" id="scoreRing">
+                            <svg viewBox="0 0 180 180">
+                                <circle cx="90" cy="90" r="80" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="12"/>
+                                <circle id="scoreArc" cx="90" cy="90" r="80" fill="none" stroke="#4CAF50" stroke-width="12" stroke-linecap="round" stroke-dasharray="502.65" stroke-dashoffset="502.65"/>
+                            </svg>
+                            <span class="score-num" id="heroScore">--</span>
+                            <span class="score-label">HEALTH SCORE</span>
+                        </div>
+                    </div>
+                    <div class="fos-sub-scores" id="subScores">
+                        <div class="fos-sub-score"><div class="sub-val" id="subLiquidez">--</div><div class="sub-name">Liquidez</div></div>
+                        <div class="fos-sub-score"><div class="sub-val" id="subRentabilidade">--</div><div class="sub-name">Rentabilidade</div></div>
+                        <div class="fos-sub-score"><div class="sub-val" id="subEficiencia">--</div><div class="sub-name">Eficiencia</div></div>
+                        <div class="fos-sub-score"><div class="sub-val" id="subPrevisibilidade">--</div><div class="sub-name">Previsibilidade</div></div>
+                        <div class="fos-sub-score"><div class="sub-val" id="subDisciplina">--</div><div class="sub-name">Disciplina</div></div>
+                    </div>
+                    <div class="fos-insight">
+                        <span class="insight-icon">💡</span>
+                        <div id="heroInsight">Carregando dados...</div>
+                    </div>
+                    <div class="fos-insight" style="margin-top:10px;">
+                        <span class="insight-icon">🛡️</span>
+                        <div id="heroSafety">Carregando dados...</div>
+                    </div>
+                </div>
+
+                <!-- ====== 2. QUICK KPIs ====== -->
+                <div class="fos-kpi-grid" id="sec-kpis">
+                    <div class="fos-kpi">
+                        <div class="kpi-emoji">💰</div>
+                        <div class="kpi-label">Faturamento do Mes</div>
+                        <div class="kpi-value" id="kpiFaturamento">--</div>
+                        <div class="kpi-meta info" id="kpiFaturamentoMeta"></div>
+                    </div>
+                    <div class="fos-kpi">
+                        <div class="kpi-emoji">📦</div>
+                        <div class="kpi-label">CMV %</div>
+                        <div class="kpi-value" id="kpiCMV">--</div>
+                        <div class="kpi-meta" id="kpiCMVMeta"></div>
+                    </div>
+                    <div class="fos-kpi">
+                        <div class="kpi-emoji">👥</div>
+                        <div class="kpi-label">Prime Cost %</div>
+                        <div class="kpi-value" id="kpiPrime">--</div>
+                        <div class="kpi-meta" id="kpiPrimeMeta"></div>
+                    </div>
+                    <div class="fos-kpi">
+                        <div class="kpi-emoji">🎯</div>
+                        <div class="kpi-label">Break-even do Mes</div>
+                        <div class="kpi-value" id="kpiBE">--</div>
+                        <div class="kpi-meta info" id="kpiBEMeta"></div>
+                    </div>
+                    <div class="fos-kpi">
+                        <div class="kpi-emoji">📅</div>
+                        <div class="kpi-label">Venda Minima/Dia</div>
+                        <div class="kpi-value" id="kpiMinDay">--</div>
+                        <div class="kpi-meta info" id="kpiMinDayMeta"></div>
+                    </div>
+                    <div class="fos-kpi">
+                        <div class="kpi-emoji">🏦</div>
+                        <div class="kpi-label">Caixa Atual</div>
+                        <div class="kpi-value" id="kpiCaixa">--</div>
+                        <div class="kpi-meta" id="kpiCaixaMeta"></div>
+                    </div>
+                    <div class="fos-kpi">
+                        <div class="kpi-emoji">📈</div>
+                        <div class="kpi-label">Lucro Projetado</div>
+                        <div class="kpi-value" id="kpiLucro">--</div>
+                        <div class="kpi-meta" id="kpiLucroMeta"></div>
+                    </div>
+                </div>
+
+                <!-- ====== 3. DRE GERENCIAL ====== -->
+                <div class="panel-card" id="sec-dre">
+                    <div class="panel-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                        <h3>📊 DRE Gerencial Simplificado</h3>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <select id="dreMes" onchange="renderAll()" style="padding:8px 12px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
+                                <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Marco</option>
+                                <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
+                                <option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option>
+                                <option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="panel-card-body" style="overflow-x:auto;">
+                        <table class="fos-dre-table" id="dreTable">
+                            <thead>
+                                <tr>
+                                    <th style="min-width:220px;">Conta</th>
+                                    <th style="min-width:130px;">Valor (R$)</th>
+                                    <th style="min-width:80px;">% Receita</th>
+                                    <th style="min-width:80px;">Meta %</th>
+                                    <th style="min-width:60px;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dreBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ====== 4. COSTS REGISTRATION ====== -->
+                <div class="panel-card" id="sec-costs">
+                    <div class="panel-card-header">
+                        <h3>📝 Cadastro de Custos Mensais</h3>
+                    </div>
+                    <div class="panel-card-body">
+                        <div class="fos-cost-grid">
+                            <!-- FIXED COSTS -->
+                            <div>
+                                <h4 style="font-family:'Baloo 2',cursive;font-size:18px;color:#1a237e;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #e8eaf6;">
+                                    🏠 Custos Fixos
+                                </h4>
+                                <div id="fixedCostsContainer"></div>
+                                <div style="margin-top:16px;">
+                                    <button class="fos-save-btn" onclick="saveCosts('fixed')">Salvar Custos Fixos</button>
+                                </div>
+                            </div>
+                            <!-- VARIABLE COSTS -->
+                            <div>
+                                <h4 style="font-family:'Baloo 2',cursive;font-size:18px;color:#1a237e;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #e8eaf6;">
+                                    📦 Custos Variaveis
+                                </h4>
+                                <div id="variableCostsContainer"></div>
+                                <div style="margin-top:16px;">
+                                    <button class="fos-save-btn" onclick="saveCosts('variable')">Salvar Custos Variaveis</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- OPERATIONAL DATA -->
+                        <div style="margin-top:28px;">
+                            <h4 style="font-family:'Baloo 2',cursive;font-size:18px;color:#1a237e;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #e8eaf6;">
+                                📋 Dados Operacionais (CMV Real)
+                            </h4>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+                                <div id="operationalContainer"></div>
+                            </div>
+                            <div style="margin-top:16px;">
+                                <button class="fos-save-btn" onclick="saveCosts('operational')">Salvar Dados Operacionais</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====== 5. BREAK-EVEN CALCULATOR ====== -->
+                <div class="panel-card" id="sec-breakeven">
+                    <div class="panel-card-header">
+                        <h3>🎯 Calculadora de Break-even</h3>
+                    </div>
+                    <div class="panel-card-body">
+                        <div class="fos-be-grid">
+                            <div class="fos-be-card">
+                                <div class="be-label">Break-even Mensal</div>
+                                <div class="be-value" id="beMonthly">--</div>
+                            </div>
+                            <div class="fos-be-card">
+                                <div class="be-label">Break-even Diario</div>
+                                <div class="be-value" id="beDaily">--</div>
+                            </div>
+                            <div class="fos-be-card">
+                                <div class="be-label">Break-even por Hora</div>
+                                <div class="be-value" id="beHourly">--</div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:8px;font-weight:600;font-size:14px;color:#555;">Progresso para o break-even este mes:</div>
+                        <div class="fos-progress-bar">
+                            <div class="fos-progress-fill" id="beProgress" style="width:0%;">0%</div>
+                        </div>
+                        <div class="fos-progress-label" id="beProgressLabel">Calculando...</div>
+                    </div>
+                </div>
+
+                <!-- ====== 6. ALERTS ====== -->
+                <div class="panel-card" id="sec-alerts">
+                    <div class="panel-card-header">
+                        <h3>🚨 Alertas da Sua Franquia</h3>
+                    </div>
+                    <div class="panel-card-body" id="alertsContainer">
+                        <p style="text-align:center;color:#888;">Carregando alertas...</p>
+                    </div>
+                </div>
+
+                <!-- ====== 7. WEEKLY CHECKLIST ====== -->
+                <div class="panel-card" id="sec-checklist">
+                    <div class="panel-card-header">
+                        <h3>✅ Tarefas Obrigatorias</h3>
+                    </div>
+                    <div class="panel-card-body" id="checklistContainer"></div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- TOAST -->
+    <div class="fos-toast" id="fosToast"></div>
+
+    <!-- SCRIPTS -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/i18n.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/cloud-functions.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+    <script src="../js/core/notifications.js"></script>
+    <script src="../js/core/reports.js"></script>
+
+    <script>
+    // ========== AUTH GUARD ==========
+    if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+
+    const session = Auth.getSession();
+    const franchiseId = session.franchiseId;
+    const franchises = DataStore.getAllFranchises();
+    const franchise = franchises.find(f => f.id === franchiseId);
+
+    document.getElementById('sidebarUserName').textContent = session.name;
+    document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia';
+    document.getElementById('linkSiteFranquia').href = '../f/' + franchiseId + '/';
+    document.getElementById('headerStoreName').textContent = franchise ? franchise.name : '';
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    // ========== DEMO DATA ==========
+    const DEMO = {
+        storeName: 'MilkyPot Shopping Ibirapuera',
+        score: 87,
+        subScores: { liquidez: 82, rentabilidade: 90, eficiencia: 88, previsibilidade: 85, disciplina: 89 },
+        revenue: 45200,
+        revenuePrev: 41800,
+        cmvPct: 28,
+        cmvMeta: 30,
+        laborPct: 18,
+        laborMeta: 20,
+        primeCostPct: 46,
+        primeCostMeta: 50,
+        breakeven: 32000,
+        minDaily: 1230,
+        cash: 12400,
+        projectedProfit: 8200,
+        operatingDays: 26,
+        operatingHours: 12,
+        fixedCosts: {
+            aluguel: 5500, condominio: 800, agua: 320, energia: 1200,
+            internet: 200, software: 350, contador: 600, folhaAdmin: 3200,
+            prolabore: 4000, royalties: 2260, marketingLocal: 1500,
+            manutencao: 400, seguros: 350, juros: 0
+        },
+        variableCosts: {
+            insumos: 12656, embalagens: 1808, taxasIfood: 2260,
+            comissoes: 452, frete: 680, entregadores: 1356,
+            horasExtras: 400, perdas: 226, estornos: 180,
+            taxasCartao: 904, impostosVar: 2712
+        },
+        operational: {
+            estoqueInicial: 8500, comprasMes: 14200, estoqueFinal: 10044, desperdicio: 350
+        },
+        dreLines: [
+            { label: 'Receita Bruta', val: 45200, pct: 100, meta: null, type: 'header' },
+            { label: '(-) Impostos sobre Vendas', val: -2712, pct: -6, meta: -6, type: 'sub' },
+            { label: '(-) Taxas Cartao/PIX', val: -904, pct: -2, meta: -2.5, type: 'sub' },
+            { label: '(-) Estornos/Cancelamentos', val: -180, pct: -0.4, meta: -1, type: 'sub' },
+            { label: '= Receita Liquida', val: 41404, pct: 91.6, meta: 91, type: 'header' },
+            { label: '(-) CMV (Custo Merc. Vendidas)', val: -12656, pct: -28, meta: -30, type: 'sub' },
+            { label: '= Margem Bruta', val: 28748, pct: 63.6, meta: 61, type: 'header' },
+            { label: '(-) Mao de Obra', val: -8136, pct: -18, meta: -20, type: 'sub' },
+            { label: '= Resultado apos Prime Cost', val: 20612, pct: 45.6, meta: 41, type: 'header' },
+            { label: '(-) Aluguel + Condominio', val: -6300, pct: -13.9, meta: -15, type: 'sub' },
+            { label: '(-) Agua + Energia', val: -1520, pct: -3.4, meta: -4, type: 'sub' },
+            { label: '(-) Marketing Local', val: -1500, pct: -3.3, meta: -4, type: 'sub' },
+            { label: '(-) Royalties/Taxa Franquia', val: -2260, pct: -5, meta: -5, type: 'sub' },
+            { label: '(-) Software/Internet', val: -550, pct: -1.2, meta: -1.5, type: 'sub' },
+            { label: '(-) Contador + Seguros', val: -950, pct: -2.1, meta: -2.5, type: 'sub' },
+            { label: '(-) Manutencao', val: -400, pct: -0.9, meta: -1, type: 'sub' },
+            { label: '(-) Juros/Parcelamentos', val: 0, pct: 0, meta: -1, type: 'sub' },
+            { label: '(-) Perdas/Desperdicio', val: -226, pct: -0.5, meta: -1, type: 'sub' },
+            { label: '= EBITDA', val: 6906, pct: 15.3, meta: 12, type: 'header' },
+            { label: '= LUCRO LIQUIDO PROJETADO', val: 8200, pct: 18.1, meta: 15, type: 'total' }
+        ]
+    };
+
+    // ========== FIXED COST FIELDS ==========
+    const FIXED_FIELDS = [
+        { key: 'aluguel', label: 'Aluguel' },
+        { key: 'condominio', label: 'Condominio' },
+        { key: 'agua', label: 'Agua' },
+        { key: 'energia', label: 'Energia' },
+        { key: 'internet', label: 'Internet' },
+        { key: 'software', label: 'Software' },
+        { key: 'contador', label: 'Contador' },
+        { key: 'folhaAdmin', label: 'Folha Admin' },
+        { key: 'prolabore', label: 'Pro-labore' },
+        { key: 'royalties', label: 'Royalties/Taxa Franquia' },
+        { key: 'marketingLocal', label: 'Marketing Local' },
+        { key: 'manutencao', label: 'Manutencao' },
+        { key: 'seguros', label: 'Seguros' },
+        { key: 'juros', label: 'Juros/Parcelamentos' }
+    ];
+
+    const VARIABLE_FIELDS = [
+        { key: 'insumos', label: 'Insumos' },
+        { key: 'embalagens', label: 'Embalagens' },
+        { key: 'taxasIfood', label: 'Taxas iFood' },
+        { key: 'comissoes', label: 'Comissoes' },
+        { key: 'frete', label: 'Frete' },
+        { key: 'entregadores', label: 'Entregadores' },
+        { key: 'horasExtras', label: 'Horas Extras' },
+        { key: 'perdas', label: 'Perdas' },
+        { key: 'estornos', label: 'Estorno/Cancelamento' },
+        { key: 'taxasCartao', label: 'Taxas Cartao/PIX' },
+        { key: 'impostosVar', label: 'Impostos Variaveis' }
+    ];
+
+    const OPERATIONAL_FIELDS = [
+        { key: 'estoqueInicial', label: 'Estoque Inicial' },
+        { key: 'comprasMes', label: 'Compras do Mes' },
+        { key: 'estoqueFinal', label: 'Estoque Final' },
+        { key: 'desperdicio', label: 'Desperdicio' }
+    ];
+
+    // ========== CHECKLIST ITEMS ==========
+    const CHECKLIST = {
+        diario: [
+            'Conferir vendas do dia',
+            'Registrar perdas/desperdicio',
+            'Conferir saldo de caixa'
+        ],
+        semanal: [
+            'Inventario parcial',
+            'Revisar CMV',
+            'Atualizar escala/mao de obra'
+        ],
+        mensal: [
+            'Fechar inventario completo',
+            'Lancar custos fixos',
+            'Conciliacao bancaria',
+            'Fechar DRE',
+            'Plano de acao (se score < meta)'
+        ]
+    };
+
+    // ========== UTILITY ==========
+    function fmt(v) {
+        return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+    function fmtDec(v) {
+        return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function pct(v) { return v.toFixed(1) + '%'; }
+
+    function scoreColor(s) {
+        if (s >= 80) return '#4CAF50';
+        if (s >= 60) return '#FF9800';
+        return '#F44336';
+    }
+
+    function showToast(msg) {
+        var t = document.getElementById('fosToast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(function() { t.classList.remove('show'); }, 3000);
+    }
+
+    // ========== STORAGE HELPERS ==========
+    function getStorageKey(type) {
+        return 'fos_' + franchiseId + '_' + type;
+    }
+    function loadCosts(type) {
+        try { return JSON.parse(localStorage.getItem(getStorageKey(type))) || {}; } catch(e) { return {}; }
+    }
+    function storeCosts(type, data) {
+        localStorage.setItem(getStorageKey(type), JSON.stringify(data));
+    }
+
+    // ========== RENDER: HEALTH SCORE ==========
+    function renderHealthScore() {
+        var d = DEMO;
+        var score = d.score;
+        var color = scoreColor(score);
+
+        document.getElementById('heroScore').textContent = score;
+        document.getElementById('heroScore').style.color = color;
+
+        // Animate arc
+        var arc = document.getElementById('scoreArc');
+        var circumference = 2 * Math.PI * 80;
+        var offset = circumference - (score / 100) * circumference;
+        arc.style.stroke = color;
+        arc.style.transition = 'stroke-dashoffset 1.5s ease-out';
+        setTimeout(function() { arc.setAttribute('stroke-dashoffset', offset); }, 100);
+
+        // Sub scores
+        document.getElementById('subLiquidez').textContent = d.subScores.liquidez;
+        document.getElementById('subRentabilidade').textContent = d.subScores.rentabilidade;
+        document.getElementById('subEficiencia').textContent = d.subScores.eficiencia;
+        document.getElementById('subPrevisibilidade').textContent = d.subScores.previsibilidade;
+        document.getElementById('subDisciplina').textContent = d.subScores.disciplina;
+
+        // Color sub scores
+        ['subLiquidez','subRentabilidade','subEficiencia','subPrevisibilidade','subDisciplina'].forEach(function(id) {
+            var el = document.getElementById(id);
+            var v = parseInt(el.textContent);
+            el.style.color = scoreColor(v);
+        });
+
+        // Insights
+        document.getElementById('heroInsight').innerHTML =
+            'Voce precisa vender <strong>' + fmt(d.minDaily) + '/dia</strong> para nao fechar no prejuizo';
+        var safetyMargin = d.revenue - d.breakeven;
+        document.getElementById('heroSafety').innerHTML =
+            'Sua margem de seguranca e de <strong>' + fmt(safetyMargin) + '</strong> este mes';
+    }
+
+    // ========== RENDER: KPIs ==========
+    function renderKPIs() {
+        var d = DEMO;
+        var revChange = ((d.revenue - d.revenuePrev) / d.revenuePrev * 100).toFixed(1);
+
+        document.getElementById('kpiFaturamento').textContent = fmt(d.revenue);
+        document.getElementById('kpiFaturamentoMeta').textContent = (revChange >= 0 ? '+' : '') + revChange + '% vs mes anterior';
+
+        document.getElementById('kpiCMV').textContent = d.cmvPct + '%';
+        var cmvOk = d.cmvPct <= d.cmvMeta;
+        document.getElementById('kpiCMVMeta').textContent = (cmvOk ? '✅' : '⚠️') + ' Meta: ' + d.cmvMeta + '%';
+        document.getElementById('kpiCMVMeta').className = 'kpi-meta ' + (cmvOk ? 'ok' : 'warn');
+
+        document.getElementById('kpiPrime').textContent = d.primeCostPct + '%';
+        var primeOk = d.primeCostPct <= d.primeCostMeta;
+        document.getElementById('kpiPrimeMeta').textContent = (primeOk ? '✅' : '⚠️') + ' Meta: ' + d.primeCostMeta + '%';
+        document.getElementById('kpiPrimeMeta').className = 'kpi-meta ' + (primeOk ? 'ok' : 'warn');
+
+        document.getElementById('kpiBE').textContent = fmt(d.breakeven);
+        document.getElementById('kpiBEMeta').textContent = 'Faltam ' + fmt(Math.max(0, d.breakeven - d.revenue));
+
+        document.getElementById('kpiMinDay').textContent = fmt(d.minDaily);
+        document.getElementById('kpiMinDayMeta').textContent = d.operatingDays + ' dias operados';
+
+        document.getElementById('kpiCaixa').textContent = fmt(d.cash);
+        var cashWeeks = Math.floor(d.cash / (d.breakeven / 4));
+        var cashOk = cashWeeks >= 4;
+        document.getElementById('kpiCaixaMeta').textContent = (cashOk ? '✅' : '⚠️') + ' ' + cashWeeks + ' semanas de reserva';
+        document.getElementById('kpiCaixaMeta').className = 'kpi-meta ' + (cashOk ? 'ok' : 'warn');
+
+        document.getElementById('kpiLucro').textContent = fmt(d.projectedProfit);
+        var profitPct = (d.projectedProfit / d.revenue * 100).toFixed(1);
+        document.getElementById('kpiLucroMeta').textContent = profitPct + '% de margem liquida';
+        document.getElementById('kpiLucroMeta').className = 'kpi-meta ' + (d.projectedProfit > 0 ? 'ok' : 'warn');
+    }
+
+    // ========== RENDER: DRE ==========
+    function renderDRE() {
+        var tbody = document.getElementById('dreBody');
+        var html = '';
+        DEMO.dreLines.forEach(function(line) {
+            var rowClass = '';
+            if (line.type === 'header') rowClass = 'dre-header';
+            else if (line.type === 'total') rowClass = 'dre-total';
+            else rowClass = 'dre-sub';
+
+            var valClass = line.val >= 0 ? 'val-green' : 'val-red';
+            if (line.type === 'total') valClass = '';
+
+            var metaStr = line.meta !== null ? pct(Math.abs(line.meta)) : '-';
+            var statusStr = '';
+            if (line.meta !== null && line.type !== 'header') {
+                var actual = Math.abs(line.pct);
+                var target = Math.abs(line.meta);
+                if (line.val < 0) {
+                    // Cost line: lower actual is better
+                    statusStr = actual <= target
+                        ? '<span class="target-ok" style="font-size:18px;">✅</span>'
+                        : '<span class="target-warn" style="font-size:18px;">⚠️</span>';
+                } else {
+                    // Revenue line: higher is better
+                    statusStr = actual >= target
+                        ? '<span class="target-ok" style="font-size:18px;">✅</span>'
+                        : '<span class="target-warn" style="font-size:18px;">⚠️</span>';
+                }
+            }
+            if (line.type === 'header' && line.meta !== null) {
+                var actual2 = Math.abs(line.pct);
+                var target2 = Math.abs(line.meta);
+                statusStr = actual2 >= target2
+                    ? '<span class="target-ok" style="font-size:18px;">✅</span>'
+                    : '<span class="target-warn" style="font-size:18px;">⚠️</span>';
+            }
+
+            html += '<tr class="' + rowClass + '">';
+            html += '<td>' + line.label + '</td>';
+            html += '<td class="' + valClass + '">' + fmtDec(Math.abs(line.val)) + (line.val < 0 ? ' (-)' : '') + '</td>';
+            html += '<td>' + pct(Math.abs(line.pct)) + '</td>';
+            html += '<td>' + metaStr + '</td>';
+            html += '<td style="text-align:center;">' + statusStr + '</td>';
+            html += '</tr>';
+        });
+        tbody.innerHTML = html;
+    }
+
+    // ========== RENDER: COSTS ==========
+    function renderCostFields(containerId, fields, storageType, defaults) {
+        var container = document.getElementById(containerId);
+        var saved = loadCosts(storageType);
+        var html = '';
+        fields.forEach(function(f) {
+            var val = saved[f.key] !== undefined ? saved[f.key] : (defaults[f.key] || '');
+            var filled = val !== '' && val !== 0 && val !== '0';
+            html += '<div class="fos-cost-row">';
+            html += '<label>' + f.label + '</label>';
+            html += '<input type="number" step="0.01" min="0" placeholder="0,00" id="cost_' + f.key + '" value="' + (val || '') + '">';
+            html += '<span class="cost-status">' + (filled ? '✅' : '❌') + '</span>';
+            html += '</div>';
+        });
+        container.innerHTML = html;
+    }
+
+    function renderAllCosts() {
+        renderCostFields('fixedCostsContainer', FIXED_FIELDS, 'fixed', DEMO.fixedCosts);
+        renderCostFields('variableCostsContainer', VARIABLE_FIELDS, 'variable', DEMO.variableCosts);
+        renderCostFields('operationalContainer', OPERATIONAL_FIELDS, 'operational', DEMO.operational);
+    }
+
+    function saveCosts(type) {
+        var fields;
+        if (type === 'fixed') fields = FIXED_FIELDS;
+        else if (type === 'variable') fields = VARIABLE_FIELDS;
+        else fields = OPERATIONAL_FIELDS;
+
+        var data = {};
+        fields.forEach(function(f) {
+            var el = document.getElementById('cost_' + f.key);
+            data[f.key] = el ? parseFloat(el.value) || 0 : 0;
+        });
+        storeCosts(type, data);
+        renderAllCosts();
+        showToast('Custos salvos com sucesso!');
+    }
+
+    // ========== RENDER: BREAK-EVEN ==========
+    function renderBreakeven() {
+        var d = DEMO;
+        var monthly = d.breakeven;
+        var daily = Math.ceil(monthly / d.operatingDays);
+        var hourly = Math.ceil(daily / d.operatingHours);
+
+        document.getElementById('beMonthly').textContent = fmt(monthly);
+        document.getElementById('beDaily').textContent = fmt(daily);
+        document.getElementById('beHourly').textContent = fmt(hourly);
+
+        var progress = Math.min(100, Math.round(d.revenue / monthly * 100));
+        var bar = document.getElementById('beProgress');
+        setTimeout(function() {
+            bar.style.width = progress + '%';
+            bar.textContent = progress + '%';
+        }, 300);
+
+        var remaining = monthly - d.revenue;
+        if (remaining <= 0) {
+            document.getElementById('beProgressLabel').innerHTML =
+                '🎉 <strong>Parabens!</strong> Voce ja ultrapassou o break-even! Faturamento excede em ' + fmt(Math.abs(remaining));
+        } else {
+            document.getElementById('beProgressLabel').innerHTML =
+                'Voce esta a ' + progress + '% do break-even. Faltam <strong>' + fmt(remaining) + '</strong> este mes.';
+        }
+    }
+
+    // ========== RENDER: ALERTS ==========
+    function renderAlerts() {
+        var d = DEMO;
+        var alerts = [];
+
+        // Check CMV
+        if (d.cmvPct > d.cmvMeta) {
+            alerts.push({ type: 'critical', icon: '🔴', msg: 'CMV esta em ' + d.cmvPct + '%, acima da meta de ' + d.cmvMeta + '%. Revise compras e desperdicio.' });
+        } else {
+            alerts.push({ type: 'success', icon: '🟢', msg: 'CMV controlado em ' + d.cmvPct + '% (meta: ' + d.cmvMeta + '%). Continue assim!' });
+        }
+
+        // Check cash
+        var cashWeeks = Math.floor(d.cash / (d.breakeven / 4));
+        if (cashWeeks < 4) {
+            alerts.push({ type: 'warning', icon: '🟡', msg: 'Caixa cobre apenas ' + cashWeeks + ' semanas de operacao. Ideal e ter 4+ semanas de reserva.' });
+        } else {
+            alerts.push({ type: 'success', icon: '🟢', msg: 'Caixa saudavel: ' + cashWeeks + ' semanas de reserva operacional.' });
+        }
+
+        // Check prime cost
+        if (d.primeCostPct > d.primeCostMeta) {
+            alerts.push({ type: 'critical', icon: '🔴', msg: 'Prime Cost em ' + d.primeCostPct + '%, acima da meta de ' + d.primeCostMeta + '%. Revise mao de obra e insumos.' });
+        }
+
+        // Break-even check
+        var daysLeft = d.operatingDays - Math.floor(d.operatingDays * (d.revenue / (d.revenue * 1.2)));
+        if (d.revenue >= d.breakeven) {
+            alerts.push({ type: 'success', icon: '🎯', msg: 'Break-even atingido! Faturamento ' + fmt(d.revenue) + ' > Break-even ' + fmt(d.breakeven) + '.' });
+        } else {
+            alerts.push({ type: 'warning', icon: '🎯', msg: 'Ainda nao atingiu o break-even. Faltam ' + fmt(d.breakeven - d.revenue) + '.' });
+        }
+
+        // Score alert
+        if (d.score < 70) {
+            alerts.push({ type: 'critical', icon: '🏥', msg: 'Health Score em ' + d.score + '. Atencao! Faca o plano de acao urgente.' });
+        } else if (d.score < 80) {
+            alerts.push({ type: 'warning', icon: '🏥', msg: 'Health Score em ' + d.score + '. Bom, mas ha espaco para melhorar.' });
+        } else {
+            alerts.push({ type: 'info', icon: '🏥', msg: 'Health Score excelente: ' + d.score + '. Sua franquia esta saudavel!' });
+        }
+
+        // Desperdicio
+        if (d.operational.desperdicio > 0) {
+            var despPct = (d.operational.desperdicio / d.revenue * 100).toFixed(1);
+            if (parseFloat(despPct) > 1) {
+                alerts.push({ type: 'warning', icon: '🗑️', msg: 'Desperdicio de ' + fmt(d.operational.desperdicio) + ' (' + despPct + '% do faturamento). Meta: < 1%.' });
+            }
+        }
+
+        var container = document.getElementById('alertsContainer');
+        if (alerts.length === 0) {
+            container.innerHTML = '<div class="fos-alert success"><span class="fos-alert-icon">✅</span><div>Nenhum alerta no momento. Tudo operando normalmente!</div></div>';
+            return;
+        }
+
+        container.innerHTML = alerts.map(function(a) {
+            return '<div class="fos-alert ' + a.type + '"><span class="fos-alert-icon">' + a.icon + '</span><div>' + a.msg + '</div></div>';
+        }).join('');
+    }
+
+    // ========== RENDER: CHECKLIST ==========
+    function renderChecklist() {
+        var container = document.getElementById('checklistContainer');
+        var saved = {};
+        try { saved = JSON.parse(localStorage.getItem('fos_checklist_' + franchiseId)) || {}; } catch(e) {}
+
+        var groups = [
+            { key: 'diario', title: '📅 Diario', items: CHECKLIST.diario },
+            { key: 'semanal', title: '📆 Semanal', items: CHECKLIST.semanal },
+            { key: 'mensal', title: '🗓️ Mensal', items: CHECKLIST.mensal }
+        ];
+
+        var html = '';
+        groups.forEach(function(g) {
+            html += '<div class="fos-checklist-group">';
+            html += '<div class="fos-checklist-title">' + g.title + '</div>';
+            g.items.forEach(function(item, idx) {
+                var id = g.key + '_' + idx;
+                var checked = saved[id] === true;
+                html += '<div class="fos-check-item ' + (checked ? 'checked' : '') + '" onclick="toggleCheck(\'' + id + '\', this)">';
+                html += '<input type="checkbox" ' + (checked ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleCheck(\'' + id + '\', this.parentElement);">';
+                html += '<span>' + item + '</span>';
+                html += '</div>';
+            });
+            html += '</div>';
+        });
+
+        container.innerHTML = html;
+    }
+
+    function toggleCheck(id, el) {
+        var saved = {};
+        try { saved = JSON.parse(localStorage.getItem('fos_checklist_' + franchiseId)) || {}; } catch(e) {}
+        saved[id] = !saved[id];
+        localStorage.setItem('fos_checklist_' + franchiseId, JSON.stringify(saved));
+
+        var cb = el.querySelector('input[type="checkbox"]');
+        cb.checked = saved[id];
+        if (saved[id]) {
+            el.classList.add('checked');
+        } else {
+            el.classList.remove('checked');
+        }
+    }
+
+    // ========== RENDER ALL ==========
+    function renderAll() {
+        renderHealthScore();
+        renderKPIs();
+        renderDRE();
+        renderAllCosts();
+        renderBreakeven();
+        renderAlerts();
+        renderChecklist();
+    }
+
+    // Set month selector to current month
+    document.getElementById('dreMes').value = new Date().getMonth();
+
+    // Init
+    renderAll();
+    if (typeof i18n !== 'undefined') i18n.translatePage();
+    </script>
+</body>
+</html>

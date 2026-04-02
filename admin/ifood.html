@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MilkyPot Admin - iFood Integration</title>
+    <title>MilkyPot Admin - Integracao iFood</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,523 +11,732 @@
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#42A5F5">
     <style>
-        .ifood-badge { background: #EA1D2C; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }
-        .ifood-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
-        .ifood-header img { height: 36px; }
-        .ifood-header h2 { margin: 0; font-size: 20px; }
+        /* iFood Page Specific Styles */
+        .ifood-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin: 24px 0;
+        }
 
-        .setup-steps { display: grid; gap: 16px; margin-bottom: 24px; }
-        .setup-step { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; gap: 16px; align-items: flex-start; }
-        .step-num { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #EA1D2C, #ff4757); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; flex-shrink: 0; }
-        .step-content h3 { margin: 0 0 4px; font-size: 15px; }
-        .step-content p { margin: 0; font-size: 13px; color: #666; }
-        .step-done { opacity: 0.5; }
-        .step-done .step-num { background: #4CAF50; }
+        .ifood-step {
+            background: var(--mp-card);
+            border-radius: var(--mp-radius);
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: var(--mp-shadow);
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
 
-        .orders-panel { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .orders-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
-        .orders-toolbar select { padding: 6px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
-        .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #4CAF50; display: inline-block; animation: pulse-dot 2s infinite; margin-right: 6px; }
-        @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .ifood-step:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--mp-shadow-lg);
+        }
 
-        .order-card { border: 1px solid #eee; border-radius: 12px; padding: 16px; margin-bottom: 12px; transition: all 0.2s; }
-        .order-card:hover { border-color: #EA1D2C; box-shadow: 0 2px 8px rgba(234,29,44,0.1); }
-        .oc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .oc-id { font-weight: 800; font-size: 16px; color: #EA1D2C; }
-        .oc-time { font-size: 12px; color: #999; }
-        .oc-store { font-size: 12px; color: #6C63FF; font-weight: 600; }
-        .oc-items { font-size: 13px; color: #555; margin: 8px 0; }
-        .oc-items li { margin-bottom: 2px; }
-        .oc-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0f0; }
-        .oc-total { font-weight: 800; font-size: 16px; color: #333; }
-        .oc-payment { font-size: 12px; color: #666; background: #f5f5f5; padding: 2px 8px; border-radius: 6px; }
-        .oc-customer { font-size: 12px; color: #888; }
-        .oc-status { padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; }
-        .oc-status.confirmed { background: #E8F5E9; color: #2E7D32; }
-        .oc-status.preparing { background: #FFF3E0; color: #E65100; }
-        .oc-status.ready { background: #E3F2FD; color: #1565C0; }
-        .oc-status.delivered { background: #F3E5F5; color: #7B1FA2; }
+        .ifood-step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #EA1D2C, #FF6B6B);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
 
-        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
-        .stat-card-ifood { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center; }
-        .stat-card-ifood .stat-icon { font-size: 24px; margin-bottom: 4px; }
-        .stat-card-ifood .stat-value { font-size: 22px; font-weight: 800; color: #EA1D2C; }
-        .stat-card-ifood .stat-label { font-size: 11px; color: #999; }
+        .ifood-step-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            display: block;
+        }
 
-        .extension-download { background: linear-gradient(135deg, #6C63FF, #5A52E0); color: #fff; border-radius: 16px; padding: 24px; margin-bottom: 24px; display: flex; align-items: center; gap: 20px; }
-        .extension-download .ext-icon { font-size: 48px; }
-        .extension-download h3 { margin: 0 0 4px; font-size: 18px; }
-        .extension-download p { margin: 0; font-size: 13px; opacity: 0.85; }
-        .extension-download .btn { background: #fff; color: #6C63FF; margin-top: 8px; font-weight: 700; }
+        .ifood-step h4 {
+            font-family: 'Baloo 2', cursive;
+            font-size: 0.95rem;
+            color: var(--mp-dark);
+            margin-bottom: 6px;
+        }
 
-        .empty-state { text-align: center; padding: 60px 20px; color: #999; }
-        .empty-state .empty-icon { font-size: 64px; margin-bottom: 12px; }
-        .empty-state h3 { color: #666; margin-bottom: 8px; }
+        .ifood-step p {
+            font-size: 0.82rem;
+            color: var(--mp-text-light);
+            line-height: 1.4;
+        }
+
+        .ifood-step-arrow {
+            display: none;
+        }
+
+        @media (min-width: 900px) {
+            .ifood-step-arrow {
+                display: block;
+                position: absolute;
+                right: -14px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 1.2rem;
+                color: var(--mp-text-light);
+                z-index: 2;
+            }
+            .ifood-step:last-child .ifood-step-arrow {
+                display: none;
+            }
+        }
+
+        /* Extension Config Card */
+        .extension-card {
+            background: var(--mp-card);
+            border-radius: var(--mp-radius);
+            padding: 28px;
+            box-shadow: var(--mp-shadow);
+            margin-bottom: 24px;
+        }
+
+        .extension-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .extension-status.connected {
+            background: rgba(76, 175, 80, 0.12);
+            color: #2E7D32;
+        }
+
+        .extension-status.disconnected {
+            background: rgba(244, 67, 54, 0.12);
+            color: #C62828;
+        }
+
+        .extension-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .extension-status.connected .extension-status-dot {
+            background: #4CAF50;
+            animation: pulse-green 2s infinite;
+        }
+
+        .extension-status.disconnected .extension-status-dot {
+            background: #F44336;
+        }
+
+        @keyframes pulse-green {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(76,175,80,0.5); }
+            50% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(76,175,80,0); }
+        }
+
+        .btn-ifood {
+            background: linear-gradient(135deg, #EA1D2C, #FF4444);
+            color: #fff;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-ifood:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(234, 29, 44, 0.35);
+            text-decoration: none;
+            color: #fff;
+        }
+
+        .extension-info {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .extension-instructions {
+            font-size: 0.85rem;
+            color: var(--mp-text-light);
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: var(--mp-bg);
+            border-radius: 8px;
+            border-left: 3px solid var(--mp-purple);
+        }
+
+        /* Orders Table */
+        .ifood-orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+
+        .ifood-orders-table thead {
+            background: var(--mp-bg);
+        }
+
+        .ifood-orders-table th {
+            padding: 12px 14px;
+            text-align: left;
+            font-family: 'Baloo 2', cursive;
+            font-weight: 600;
+            color: var(--mp-dark);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .ifood-orders-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--mp-border);
+            vertical-align: middle;
+        }
+
+        .ifood-orders-table tbody tr:hover {
+            background: rgba(212, 165, 255, 0.06);
+        }
+
+        .order-status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .order-status-badge.novo {
+            background: rgba(33, 150, 243, 0.12);
+            color: #1565C0;
+        }
+
+        .order-status-badge.preparando {
+            background: rgba(255, 152, 0, 0.12);
+            color: #E65100;
+        }
+
+        .order-status-badge.pronto {
+            background: rgba(156, 39, 176, 0.12);
+            color: #7B1FA2;
+        }
+
+        .order-status-badge.entregue {
+            background: rgba(76, 175, 80, 0.12);
+            color: #2E7D32;
+        }
+
+        /* Report Section */
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+        }
+
+        .report-card {
+            background: var(--mp-card);
+            border-radius: var(--mp-radius);
+            padding: 24px;
+            box-shadow: var(--mp-shadow);
+        }
+
+        .report-card h4 {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1rem;
+            color: var(--mp-dark);
+            margin-bottom: 16px;
+        }
+
+        .chart-placeholder {
+            background: var(--mp-bg);
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 140px;
+        }
+
+        .chart-bar-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chart-bar {
+            width: 100%;
+            border-radius: 4px 4px 0 0;
+            background: linear-gradient(180deg, #EA1D2C, #FF6B6B);
+            transition: height 0.5s ease;
+            min-height: 8px;
+        }
+
+        .chart-bar-label {
+            font-size: 0.7rem;
+            color: var(--mp-text-light);
+        }
+
+        .chart-bar-value {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--mp-dark);
+        }
+
+        /* Comparison bars */
+        .comparison-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .comparison-label {
+            width: 100px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--mp-text);
+            flex-shrink: 0;
+        }
+
+        .comparison-bar-track {
+            flex: 1;
+            height: 28px;
+            background: var(--mp-bg);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .comparison-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #fff;
+            transition: width 0.8s ease;
+        }
+
+        .comparison-bar-fill.ifood {
+            background: linear-gradient(90deg, #EA1D2C, #FF6B6B);
+        }
+
+        .comparison-bar-fill.site {
+            background: linear-gradient(90deg, var(--mp-dark), var(--mp-purple));
+        }
+
+        /* Section titles */
+        .section-title {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.15rem;
+            color: var(--mp-dark);
+            margin-bottom: 4px;
+        }
+
+        .section-subtitle {
+            font-size: 0.85rem;
+            color: var(--mp-text-light);
+            margin-bottom: 20px;
+        }
+
+        .section-block {
+            margin-bottom: 32px;
+        }
+
+        /* Responsive table wrapper */
+        .table-wrapper {
+            overflow-x: auto;
+            background: var(--mp-card);
+            border-radius: var(--mp-radius);
+            box-shadow: var(--mp-shadow);
+        }
+
+        /* Page subtitle */
+        .page-subtitle {
+            font-size: 0.9rem;
+            color: var(--mp-text-light);
+            margin-top: 2px;
+        }
     </style>
 </head>
 <body>
-
-<div class="panel-layout">
-
-    <aside class="panel-sidebar" id="sidebar">
-        <div class="sidebar-brand">
-            <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
-            <h2>MilkyPot<small>Central Admin</small></h2>
-        </div>
-        <nav class="sidebar-nav">
-            <div class="sidebar-nav-group">Principal</div>
-            <a href="index.html" class="sidebar-link">
-                <span class="icon">📊</span> Dashboard
-            </a>
-            <a href="franchises.html" class="sidebar-link">
-                <span class="icon">🏪</span> Franquias
-            </a>
-            <a href="finances.html" class="sidebar-link">
-                <span class="icon">💰</span> Financeiro
-            </a>
-            <div class="sidebar-nav-group">Gestao</div>
-            <a href="orders.html" class="sidebar-link">
-                <span class="icon">📋</span> Pedidos
-            </a>
-            <a href="products.html" class="sidebar-link">
-                <span class="icon">🍨</span> Cardapio
-            </a>
-            <a href="users.html" class="sidebar-link">
-                <span class="icon">👥</span> Usuarios
-            </a>
-            <div class="sidebar-nav-group">Integracoes</div>
-            <a href="ifood.html" class="sidebar-link active">
-                <span class="icon">🛵</span> iFood
-            </a>
-            <div class="sidebar-nav-group">Marketing</div>
-            <a href="campaigns.html" class="sidebar-link">
-                <span class="icon">📢</span> Campanhas
-            </a>
-            <a href="seo.html" class="sidebar-link">
-                <span class="icon">🔍</span> SEO & Delivery
-            </a>
-            <div class="sidebar-nav-group">Sistema</div>
-            <a href="settings.html" class="sidebar-link">
-                <span class="icon">⚙️</span> Configuracoes
-            </a>
-            <a href="#" class="sidebar-link" onclick="DataStore.downloadBackup()">
-                <span class="icon">💾</span> Backup
-            </a>
-        </nav>
-        <div class="sidebar-footer">
-            <div class="sidebar-user">
-                <div class="sidebar-avatar">👑</div>
-                <div class="sidebar-user-info">
-                    <strong id="sidebarUserName">Admin</strong>
-                    <small>Super Admin</small>
+    <div class="panel-layout">
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small>Central Admin</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="franchises.html" class="sidebar-link"><span class="icon">🏪</span> Franquias</a>
+                <a href="finances.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="orders.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <a href="products.html" class="sidebar-link"><span class="icon">🍨</span> Cardapio</a>
+                <a href="users.html" class="sidebar-link"><span class="icon">👥</span> Usuarios</a>
+                <div class="sidebar-nav-group">Marketing</div>
+                <a href="campaigns.html" class="sidebar-link"><span class="icon">📢</span> Campanhas</a>
+                <a href="seo.html" class="sidebar-link"><span class="icon">🔍</span> SEO & Delivery</a>
+                <a href="ifood.html" class="sidebar-link active"><span class="icon">🛵</span> iFood</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">👑</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Admin</strong>
+                        <small>Super Admin</small>
+                    </div>
                 </div>
             </div>
-        </div>
-    </aside>
+        </aside>
 
-    <main class="panel-main">
-
-        <header class="panel-header">
-            <button class="btn btn-sm btn-outline" onclick="toggleSidebar()">☰</button>
-            <div class="ifood-header">
-                <h2>🛵 iFood Integration</h2>
-                <span class="ifood-badge">iFood</span>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center;">
-                <button class="btn btn-sm btn-outline" onclick="refreshOrders()">🔄 Atualizar</button>
-                <button class="btn btn-sm" style="background:#EA1D2C;color:#fff;" onclick="Auth.logout()">Sair</button>
-            </div>
-        </header>
-
-        <!-- Extension Download Banner -->
-        <div class="extension-download" id="extensionBanner">
-            <div class="ext-icon">🧩</div>
-            <div style="flex:1">
-                <h3>Extensao Chrome - MilkyPot iFood Connector</h3>
-                <p>Captura automaticamente os pedidos aceitos no Gestor de Pedidos do iFood e envia pro painel MilkyPot. Instale no navegador de cada franqueado.</p>
-                <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-                    <a href="../extensions/ifood-connector/" class="btn" style="background:#fff;color:#6C63FF;" download>📥 Baixar Extensao</a>
-                    <button class="btn" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4);" onclick="toggleSetup()">📋 Tutorial de Instalacao</button>
-                    <a href="https://gestordepedidos.ifood.com.br" target="_blank" class="btn" style="background:#EA1D2C;color:#fff;">🛵 Abrir Gestor iFood</a>
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+                    <div>
+                        <h1>🛵 Integracao iFood</h1>
+                        <div class="page-subtitle">Gerencie pedidos do iFood sincronizados via extensao Chrome</div>
+                    </div>
                 </div>
-            </div>
-        </div>
+                <div class="panel-header-right">
+                    <button class="btn btn-primary" onclick="refreshOrders()">🔄 Atualizar</button>
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
 
-        <!-- Setup Guide (always visible initially) -->
-        <div id="setupGuide" style="margin-bottom:24px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                <h3>📋 Como Configurar a Integracao iFood</h3>
-                <button class="btn btn-sm btn-outline" onclick="toggleSetup()">Ocultar</button>
-            </div>
+            <div class="panel-content">
 
-            <div style="background:#FFF3E0;border-radius:12px;padding:16px;margin-bottom:16px;border-left:4px solid #FF9800;">
-                <strong style="color:#E65100;">⚠️ Como funciona:</strong>
-                <p style="margin:4px 0 0;font-size:13px;color:#555;">A extensao Chrome roda no navegador do franqueado. Quando ele aceita um pedido no <strong>Gestor de Pedidos do iFood</strong>, a extensao intercepta os dados do pedido e envia automaticamente pro painel MilkyPot. O iFood nao detecta — funciona 100% no navegador local.</p>
-            </div>
-
-            <div class="setup-steps">
-                <div class="setup-step">
-                    <div class="step-num">1</div>
-                    <div class="step-content">
-                        <h3>Baixe os arquivos da extensao</h3>
-                        <p>A extensao esta na pasta <code>extensions/ifood-connector/</code> do repositorio do projeto. Baixe ou clone o repositorio no computador do franqueado.</p>
-                        <div style="background:#f5f5f5;border-radius:8px;padding:10px;margin-top:8px;font-family:monospace;font-size:12px;">
-                            📁 extensions/ifood-connector/<br>
-                            &nbsp;&nbsp;├── manifest.json<br>
-                            &nbsp;&nbsp;├── content.js (intercepta pedidos)<br>
-                            &nbsp;&nbsp;├── background.js (envia pro Firestore)<br>
-                            &nbsp;&nbsp;├── popup.html (interface do popup)<br>
-                            &nbsp;&nbsp;├── popup.js<br>
-                            &nbsp;&nbsp;└── icons/
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background:rgba(234,29,44,0.12);color:#EA1D2C">🛵</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Pedidos iFood Hoje</div>
+                            <div class="kpi-value" id="kpiIfoodOrders">47</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon green">💰</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Faturamento iFood Hoje</div>
+                            <div class="kpi-value" id="kpiFaturamento">R$ 2.340,00</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon yellow">⏳</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Pedidos Pendentes</div>
+                            <div class="kpi-value" id="kpiPendentes">3</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon blue">📊</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Taxa Media iFood</div>
+                            <div class="kpi-value" id="kpiTaxa">23,5%</div>
                         </div>
                     </div>
                 </div>
-                <div class="setup-step">
-                    <div class="step-num">2</div>
-                    <div class="step-content">
-                        <h3>Instale no Chrome</h3>
-                        <p>No navegador Chrome do franqueado:</p>
-                        <ol style="font-size:13px;color:#555;margin:8px 0;padding-left:20px;line-height:1.8;">
-                            <li>Digite <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;">chrome://extensions</code> na barra de endereco</li>
-                            <li>Ative o <strong>"Modo do desenvolvedor"</strong> (toggle no canto superior direito)</li>
-                            <li>Clique em <strong>"Carregar sem compactacao"</strong></li>
-                            <li>Selecione a pasta <code>extensions/ifood-connector</code></li>
-                            <li>A extensao aparecera na barra do Chrome com o icone 🐑</li>
-                        </ol>
+
+                <!-- Como Funciona -->
+                <div class="section-block">
+                    <h3 class="section-title">Como Funciona</h3>
+                    <p class="section-subtitle">A integracao com o iFood funciona em 4 passos simples</p>
+
+                    <div class="ifood-steps">
+                        <div class="ifood-step">
+                            <div class="ifood-step-number">1</div>
+                            <span class="ifood-step-icon">🧩</span>
+                            <h4>Instale a Extensao</h4>
+                            <p>Baixe e instale a extensao Chrome MilkyPot iFood Sync na Chrome Web Store</p>
+                            <span class="ifood-step-arrow">→</span>
+                        </div>
+                        <div class="ifood-step">
+                            <div class="ifood-step-number">2</div>
+                            <span class="ifood-step-icon">🔑</span>
+                            <h4>Login no iFood</h4>
+                            <p>Faca login no Gestor de Pedidos do iFood normalmente pelo navegador</p>
+                            <span class="ifood-step-arrow">→</span>
+                        </div>
+                        <div class="ifood-step">
+                            <div class="ifood-step-number">3</div>
+                            <span class="ifood-step-icon">🔄</span>
+                            <h4>Captura Automatica</h4>
+                            <p>A extensao captura automaticamente os pedidos aceitos e envia para o MilkyPot</p>
+                            <span class="ifood-step-arrow">→</span>
+                        </div>
+                        <div class="ifood-step">
+                            <div class="ifood-step-number">4</div>
+                            <span class="ifood-step-icon">📋</span>
+                            <h4>Pedidos em Tempo Real</h4>
+                            <p>Os pedidos aparecem aqui automaticamente, prontos para gerenciamento</p>
+                        </div>
                     </div>
                 </div>
-                <div class="setup-step">
-                    <div class="step-num">3</div>
-                    <div class="step-content">
-                        <h3>Configure a franquia na extensao</h3>
-                        <p>Clique no icone da extensao 🐑 na barra do Chrome:</p>
-                        <ol style="font-size:13px;color:#555;margin:8px 0;padding-left:20px;line-height:1.8;">
-                            <li>Selecione a <strong>franquia MilkyPot</strong> correspondente (ex: Ibirapuera)</li>
-                            <li>Ative o <strong>toggle</strong> — o status muda pra <span style="color:#4CAF50;font-weight:700;">● Ativo</span></li>
-                            <li>Pronto! A extensao esta capturando.</li>
-                        </ol>
+
+                <!-- Configurar Extensao -->
+                <div class="section-block">
+                    <h3 class="section-title">Configurar Extensao</h3>
+                    <p class="section-subtitle">Status e download da extensao MilkyPot iFood Sync</p>
+
+                    <div class="extension-card">
+                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+                            <div>
+                                <div style="font-family:'Baloo 2',cursive;font-size:1.05rem;color:var(--mp-dark);margin-bottom:8px">Status da Extensao</div>
+                                <span class="extension-status disconnected" id="extensionStatus">
+                                    <span class="extension-status-dot"></span>
+                                    <span id="extensionStatusText">Desconectada</span>
+                                </span>
+                            </div>
+                            <div class="extension-info">
+                                <a href="#" class="btn-ifood" id="btnDownloadExtension" target="_blank" rel="noopener">
+                                    📥 Baixar Extensao
+                                </a>
+                                <button class="btn btn-outline" onclick="testConnection()" style="font-size:0.88rem">
+                                    🔌 Testar Conexao
+                                </button>
+                            </div>
+                        </div>
+                        <div class="extension-instructions">
+                            <strong>Instrucoes:</strong> Apos instalar a extensao, abra o Gestor de Pedidos do iFood no Chrome. A extensao sincroniza automaticamente os pedidos aceitos com o painel MilkyPot. Mantenha a aba do iFood aberta para sincronizacao continua.
+                        </div>
                     </div>
                 </div>
-                <div class="setup-step">
-                    <div class="step-num">4</div>
-                    <div class="step-content">
-                        <h3>Use o Gestor de Pedidos normalmente</h3>
-                        <p>Abra o <a href="https://gestordepedidos.ifood.com.br" target="_blank" style="color:#EA1D2C;font-weight:700;">gestordepedidos.ifood.com.br</a> e trabalhe normalmente. Quando o franqueado <strong>aceitar um pedido</strong>, a extensao:</p>
-                        <ol style="font-size:13px;color:#555;margin:8px 0;padding-left:20px;line-height:1.8;">
-                            <li>Captura os dados do pedido (itens, cliente, endereco, valor)</li>
-                            <li>Mostra um toast verde: <span style="background:#6C63FF;color:#fff;padding:2px 8px;border-radius:6px;font-size:11px;">🐑 Pedido #1234 capturado!</span></li>
-                            <li>Envia automaticamente pro Firebase/MilkyPot</li>
-                            <li>O pedido aparece aqui embaixo e no <strong>Painel do Franqueado > iFood</strong></li>
-                        </ol>
+
+                <!-- Pedidos iFood -->
+                <div class="section-block">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+                        <div>
+                            <h3 class="section-title">Pedidos iFood</h3>
+                            <p class="section-subtitle" style="margin-bottom:0">Ultimos pedidos recebidos via iFood</p>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <select class="form-control" style="width:auto;font-size:0.85rem" id="filterOrderStatus" onchange="renderOrders()">
+                                <option value="">Todos os status</option>
+                                <option value="novo">Novo</option>
+                                <option value="preparando">Preparando</option>
+                                <option value="pronto">Pronto</option>
+                                <option value="entregue">Entregue</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="ifood-orders-table">
+                            <thead>
+                                <tr>
+                                    <th>ID iFood</th>
+                                    <th>Cliente</th>
+                                    <th>Itens</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Hora</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="setup-step">
-                    <div class="step-num">5</div>
-                    <div class="step-content">
-                        <h3>Acompanhe os pedidos</h3>
-                        <p>Os pedidos iFood aparecem em <strong>3 lugares</strong>:</p>
-                        <ul style="font-size:13px;color:#555;margin:8px 0;padding-left:20px;line-height:1.8;">
-                            <li><strong>Popup da extensao</strong> — ultimos pedidos + stats do dia</li>
-                            <li><strong>Esta pagina (Admin > iFood)</strong> — visao geral de todas as lojas</li>
-                            <li><strong>Painel Franqueado > iFood</strong> — pedidos da loja com botoes de status</li>
-                        </ul>
+
+                <!-- Relatorio -->
+                <div class="section-block">
+                    <h3 class="section-title">Relatorio</h3>
+                    <p class="section-subtitle">Desempenho do canal iFood nos ultimos 7 dias</p>
+
+                    <div class="report-grid">
+                        <!-- Bar chart - Pedidos por dia -->
+                        <div class="report-card">
+                            <h4>📈 Pedidos por Dia (Ultimos 7 dias)</h4>
+                            <div class="chart-placeholder">
+                                <div class="chart-bars" id="chartBars">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Comparison - iFood vs Site -->
+                        <div class="report-card">
+                            <h4>⚖️ iFood vs Site Proprio</h4>
+                            <div style="margin-top:8px">
+                                <div style="font-size:0.82rem;color:var(--mp-text-light);margin-bottom:16px">Faturamento do mes atual por canal</div>
+
+                                <div class="comparison-row">
+                                    <div class="comparison-label">🛵 iFood</div>
+                                    <div class="comparison-bar-track">
+                                        <div class="comparison-bar-fill ifood" style="width:62%" id="barIfood">R$ 18.600</div>
+                                    </div>
+                                </div>
+                                <div class="comparison-row">
+                                    <div class="comparison-label">🌐 Site</div>
+                                    <div class="comparison-bar-track">
+                                        <div class="comparison-bar-fill site" style="width:38%" id="barSite">R$ 11.400</div>
+                                    </div>
+                                </div>
+
+                                <div style="display:flex;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid var(--mp-border)">
+                                    <div style="text-align:center">
+                                        <div style="font-size:0.78rem;color:var(--mp-text-light)">Total Mes</div>
+                                        <div style="font-family:'Baloo 2',cursive;font-size:1.2rem;color:var(--mp-dark)">R$ 30.000</div>
+                                    </div>
+                                    <div style="text-align:center">
+                                        <div style="font-size:0.78rem;color:var(--mp-text-light)">% iFood</div>
+                                        <div style="font-family:'Baloo 2',cursive;font-size:1.2rem;color:#EA1D2C">62%</div>
+                                    </div>
+                                    <div style="text-align:center">
+                                        <div style="font-size:0.78rem;color:var(--mp-text-light)">% Site</div>
+                                        <div style="font-family:'Baloo 2',cursive;font-size:1.2rem;color:var(--mp-dark)">38%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
             </div>
-        </div>
+        </main>
+    </div>
 
-        <!-- Stats -->
-        <div class="stats-row" id="statsRow">
-            <div class="stat-card-ifood">
-                <div class="stat-icon">📦</div>
-                <div class="stat-value" id="statTotal">0</div>
-                <div class="stat-label">Pedidos iFood Hoje</div>
-            </div>
-            <div class="stat-card-ifood">
-                <div class="stat-icon">💰</div>
-                <div class="stat-value" id="statRevenue">R$ 0</div>
-                <div class="stat-label">Faturamento iFood</div>
-            </div>
-            <div class="stat-card-ifood">
-                <div class="stat-icon">🏪</div>
-                <div class="stat-value" id="statStores">0</div>
-                <div class="stat-label">Lojas Conectadas</div>
-            </div>
-            <div class="stat-card-ifood">
-                <div class="stat-icon">⚡</div>
-                <div class="stat-value" id="statAvgTicket">R$ 0</div>
-                <div class="stat-label">Ticket Medio</div>
-            </div>
-        </div>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/i18n.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/cloud-functions.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+    <script src="../js/core/notifications.js"></script>
+    <script>
+        if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+        document.getElementById('sidebarUserName').textContent = Auth.getUserName();
 
-        <!-- Setup Guide -->
-        <div id="setupGuide" style="display:none;">
-            <h3 style="margin-bottom:12px;">📋 Como Configurar</h3>
-            <div class="setup-steps">
-                <div class="setup-step">
-                    <div class="step-num">1</div>
-                    <div class="step-content">
-                        <h3>Baixe a Extensao Chrome</h3>
-                        <p>Acesse <code>chrome://extensions</code>, ative o "Modo Desenvolvedor" e clique em "Carregar sem compactacao". Selecione a pasta <code>extensions/ifood-connector</code> do projeto.</p>
-                    </div>
-                </div>
-                <div class="setup-step">
-                    <div class="step-num">2</div>
-                    <div class="step-content">
-                        <h3>Configure a Franquia</h3>
-                        <p>No popup da extensao (clique no icone 🐑 na barra do Chrome), selecione a franquia MilkyPot correspondente e ative o toggle.</p>
-                    </div>
-                </div>
-                <div class="setup-step">
-                    <div class="step-num">3</div>
-                    <div class="step-content">
-                        <h3>Use o Gestor de Pedidos Normalmente</h3>
-                        <p>Abra o <a href="https://gestordepedidos.ifood.com.br" target="_blank" style="color:#EA1D2C">Gestor de Pedidos do iFood</a> e aceite pedidos como sempre. A extensao captura automaticamente cada pedido aceito e envia pro MilkyPot.</p>
-                    </div>
-                </div>
-                <div class="setup-step">
-                    <div class="step-num">4</div>
-                    <div class="step-content">
-                        <h3>Acompanhe Aqui</h3>
-                        <p>Os pedidos aparecem automaticamente nesta tela e no painel do franqueado. Tudo integrado em tempo real!</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        // ============================================
+        // Demo Data
+        // ============================================
+        const demoOrders = [
+            { id: 'IFOOD-8842', cliente: 'Maria Silva', itens: '2x Acai 500ml, 1x Milkshake Morango', total: 78.90, status: 'novo', hora: '14:32' },
+            { id: 'IFOOD-8841', cliente: 'Joao Santos', itens: '1x Acai 300ml, 1x Granola Extra', total: 32.50, status: 'preparando', hora: '14:28' },
+            { id: 'IFOOD-8840', cliente: 'Ana Oliveira', itens: '3x Milkshake Chocolate, 1x Acai 700ml', total: 112.00, status: 'preparando', hora: '14:15' },
+            { id: 'IFOOD-8839', cliente: 'Carlos Pereira', itens: '1x Acai 500ml c/ Banana', total: 29.90, status: 'pronto', hora: '14:02' },
+            { id: 'IFOOD-8838', cliente: 'Fernanda Costa', itens: '2x Smoothie Frutas, 1x Acai 300ml', total: 64.70, status: 'entregue', hora: '13:45' },
+            { id: 'IFOOD-8837', cliente: 'Ricardo Lima', itens: '1x Milkshake Ovomaltine', total: 24.90, status: 'entregue', hora: '13:30' },
+            { id: 'IFOOD-8836', cliente: 'Juliana Mendes', itens: '1x Acai 700ml, 2x Complemento', total: 52.80, status: 'entregue', hora: '13:12' },
+            { id: 'IFOOD-8835', cliente: 'Pedro Almeida', itens: '2x Acai 500ml, 1x Suco Natural', total: 67.60, status: 'entregue', hora: '12:50' },
+            { id: 'IFOOD-8834', cliente: 'Lucia Ferreira', itens: '1x Milkshake Morango, 1x Acai 300ml', total: 45.80, status: 'entregue', hora: '12:35' },
+            { id: 'IFOOD-8833', cliente: 'Marcos Souza', itens: '1x Acai 500ml Especial', total: 39.90, status: 'entregue', hora: '12:10' }
+        ];
 
-        <!-- Orders Panel -->
-        <div class="orders-panel">
-            <div class="orders-toolbar">
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <span class="live-dot"></span>
-                    <strong style="font-size:14px;">Pedidos iFood</strong>
-                    <span style="font-size:12px;color:#999;" id="lastUpdate">Atualizado agora</span>
-                </div>
-                <div style="display:flex;gap:8px;">
-                    <select id="filterStore" onchange="filterOrders()">
-                        <option value="">Todas as Lojas</option>
-                    </select>
-                    <select id="filterStatus" onchange="filterOrders()">
-                        <option value="">Todos os Status</option>
-                        <option value="confirmed">Confirmado</option>
-                        <option value="preparing">Preparando</option>
-                        <option value="ready">Pronto</option>
-                        <option value="delivered">Entregue</option>
-                    </select>
-                </div>
-            </div>
-            <div id="ordersList">
-                <div class="empty-state">
-                    <div class="empty-icon">🛵</div>
-                    <h3>Nenhum pedido iFood ainda</h3>
-                    <p>Instale a extensao Chrome e aceite pedidos no Gestor de Pedidos.<br>Os pedidos aparecerao aqui automaticamente.</p>
-                    <button class="btn btn-sm" style="background:#EA1D2C;color:#fff;margin-top:12px;" onclick="toggleSetup()">📋 Ver Tutorial de Instalacao</button>
-                </div>
-            </div>
-        </div>
+        const chartData = [
+            { day: 'Seg', orders: 38 },
+            { day: 'Ter', orders: 45 },
+            { day: 'Qua', orders: 42 },
+            { day: 'Qui', orders: 51 },
+            { day: 'Sex', orders: 63 },
+            { day: 'Sab', orders: 72 },
+            { day: 'Dom', orders: 47 }
+        ];
 
-    </main>
-</div>
+        // ============================================
+        // Render Functions
+        // ============================================
+        function renderOrders() {
+            const filter = document.getElementById('filterOrderStatus').value;
+            const filtered = filter ? demoOrders.filter(o => o.status === filter) : demoOrders;
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+            const statusLabels = {
+                novo: 'Novo',
+                preparando: 'Preparando',
+                pronto: 'Pronto',
+                entregue: 'Entregue'
+            };
 
-<script src="../js/core/config.js"></script>
-<script src="../js/core/utils.js"></script>
-<script src="../js/core/firebase-config.js"></script>
-<script src="../js/core/datastore.js"></script>
-<script src="../js/core/auth.js"></script>
-
-<script>
-(function() {
-    // Auth guard
-    if (!Auth.requireAuth('super_admin')) return;
-    DataStore.init();
-
-    var session = Auth.getSession();
-    document.getElementById('sidebarUserName').textContent = session.name || 'Admin';
-
-    var allOrders = [];
-    var franchises = DataStore.getAllFranchises() || [];
-
-    // Populate store filter
-    var filterStore = document.getElementById('filterStore');
-    franchises.forEach(function(f) {
-        var opt = document.createElement('option');
-        opt.value = f.id;
-        opt.textContent = f.name;
-        filterStore.appendChild(opt);
-    });
-
-    // Load iFood orders from all franchise docs
-    function loadOrders() {
-        allOrders = [];
-        var connectedStores = new Set();
-
-        franchises.forEach(function(f) {
-            var storeOrders = DataStore.get('ifood_' + f.id);
-            if (storeOrders && Array.isArray(storeOrders)) {
-                storeOrders.forEach(function(o) {
-                    o._storeName = f.name;
-                    o._storeId = f.id;
-                });
-                allOrders = allOrders.concat(storeOrders);
-                if (storeOrders.length > 0) connectedStores.add(f.id);
-            }
-        });
-
-        // Sort by date descending
-        allOrders.sort(function(a, b) {
-            return new Date(b.createdAt) - new Date(a.createdAt);
-        });
-
-        updateStats(allOrders, connectedStores.size);
-        filterOrders();
-        document.getElementById('lastUpdate').textContent = 'Atualizado ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
-    }
-
-    function updateStats(orders, storeCount) {
-        var today = new Date().toISOString().split('T')[0];
-        var todayOrders = orders.filter(function(o) { return o.createdAt && o.createdAt.startsWith(today); });
-
-        var totalRevenue = todayOrders.reduce(function(s, o) {
-            var t = o.total ? o.total.total : 0;
-            return s + (t > 1000 ? t / 100 : t);
-        }, 0);
-        var avgTicket = todayOrders.length > 0 ? totalRevenue / todayOrders.length : 0;
-
-        document.getElementById('statTotal').textContent = todayOrders.length;
-        document.getElementById('statRevenue').textContent = 'R$ ' + totalRevenue.toFixed(0);
-        document.getElementById('statStores').textContent = storeCount;
-        document.getElementById('statAvgTicket').textContent = 'R$ ' + avgTicket.toFixed(0);
-    }
-
-    window.filterOrders = function() {
-        var storeFilter = document.getElementById('filterStore').value;
-        var statusFilter = document.getElementById('filterStatus').value;
-
-        var filtered = allOrders.filter(function(o) {
-            if (storeFilter && o.storeId !== storeFilter) return false;
-            if (statusFilter && o.status !== statusFilter) return false;
-            return true;
-        });
-
-        renderOrders(filtered);
-    };
-
-    function renderOrders(orders) {
-        var container = document.getElementById('ordersList');
-
-        if (orders.length === 0) {
-            container.innerHTML =
-                '<div class="empty-state">' +
-                    '<div class="empty-icon">🛵</div>' +
-                    '<h3>Nenhum pedido iFood ainda</h3>' +
-                    '<p>Instale a extensao Chrome e aceite pedidos no Gestor de Pedidos.<br>Os pedidos aparecerao aqui automaticamente.</p>' +
-                    '<button class="btn btn-sm" style="background:#EA1D2C;color:#fff;margin-top:12px;" onclick="toggleSetup()">📋 Ver Tutorial</button>' +
-                '</div>';
-            return;
+            document.getElementById('ordersTableBody').innerHTML = filtered.map(o => `
+                <tr>
+                    <td><strong style="color:var(--mp-dark)">${o.id}</strong></td>
+                    <td>${Utils.escapeHtml(o.cliente)}</td>
+                    <td style="max-width:260px;font-size:0.82rem;color:var(--mp-text-light)">${Utils.escapeHtml(o.itens)}</td>
+                    <td><strong>R$ ${o.total.toFixed(2).replace('.', ',')}</strong></td>
+                    <td><span class="order-status-badge ${o.status}">${statusLabels[o.status]}</span></td>
+                    <td style="color:var(--mp-text-light)">${o.hora}</td>
+                </tr>
+            `).join('');
         }
 
-        var html = '';
-        orders.forEach(function(o) {
-            var shortId = o.ifoodShortId || (o.ifoodId ? o.ifoodId.slice(-6) : '???');
-            var time = o.createdAt ? new Date(o.createdAt).toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
-            var total = o.total ? o.total.total : 0;
-            if (total > 1000) total = total / 100;
-            var totalStr = 'R$ ' + total.toFixed(2).replace('.', ',');
-            var statusLabels = { confirmed: 'Confirmado', preparing: 'Preparando', ready: 'Pronto', delivered: 'Entregue' };
-            var statusLabel = statusLabels[o.status] || o.status || 'Pendente';
-            var statusClass = o.status || 'confirmed';
-            var customerName = o.customer ? o.customer.name : 'Cliente';
-            var paymentMethod = o.payment ? o.payment.method : '';
-            var storeName = o._storeName || o.storeId || '';
-            var orderType = o.orderType === 'TAKEOUT' ? '🏪 Retirada' : '🛵 Delivery';
-
-            var itemsHtml = '';
-            if (o.items && o.items.length > 0) {
-                itemsHtml = '<ul class="oc-items">';
-                o.items.forEach(function(item) {
-                    itemsHtml += '<li>' + item.quantity + 'x ' + Utils.escapeHtml(item.name);
-                    if (item.subItems && item.subItems.length > 0) {
-                        itemsHtml += ' <small style="color:#999">(' + item.subItems.map(function(s) { return s.name; }).join(', ') + ')</small>';
-                    }
-                    itemsHtml += '</li>';
-                });
-                itemsHtml += '</ul>';
-            }
-
-            html += '<div class="order-card">' +
-                '<div class="oc-header">' +
-                    '<div>' +
-                        '<span class="oc-id">#' + Utils.escapeHtml(shortId) + '</span>' +
-                        ' <span class="oc-store">' + Utils.escapeHtml(storeName) + '</span>' +
-                        ' <span style="font-size:11px;color:#999;">' + orderType + '</span>' +
-                    '</div>' +
-                    '<div style="display:flex;align-items:center;gap:8px;">' +
-                        '<span class="oc-status ' + statusClass + '">' + statusLabel + '</span>' +
-                        '<span class="oc-time">' + time + '</span>' +
-                    '</div>' +
-                '</div>' +
-                '<div class="oc-customer">👤 ' + Utils.escapeHtml(customerName) + '</div>' +
-                itemsHtml +
-                '<div class="oc-footer">' +
-                    '<span class="oc-total">' + totalStr + '</span>' +
-                    (paymentMethod ? '<span class="oc-payment">💳 ' + Utils.escapeHtml(paymentMethod) + '</span>' : '') +
-                '</div>' +
-            '</div>';
-        });
-
-        container.innerHTML = html;
-    }
-
-    window.refreshOrders = function() {
-        loadOrders();
-        // Also try fetching from Firestore
-        if (DataStore._ready) {
-            franchises.forEach(function(f) {
-                DataStore.fetchPublicFranchises && DataStore._db &&
-                DataStore._db.collection('datastore').doc('ifood_' + f.id).get()
-                    .then(function(doc) {
-                        if (doc.exists) {
-                            try {
-                                var data = JSON.parse(doc.data().value);
-                                localStorage.setItem(DataStore.PREFIX + 'ifood_' + f.id, JSON.stringify(data));
-                            } catch(e) {}
-                        }
-                    }).catch(function() {});
-            });
-            // Reload after a short delay to pick up Firestore data
-            setTimeout(loadOrders, 2000);
+        function renderChart() {
+            const maxOrders = Math.max(...chartData.map(d => d.orders));
+            document.getElementById('chartBars').innerHTML = chartData.map(d => {
+                const height = Math.round((d.orders / maxOrders) * 120);
+                return `
+                    <div class="chart-bar-wrapper">
+                        <div class="chart-bar-value">${d.orders}</div>
+                        <div class="chart-bar" style="height:${height}px"></div>
+                        <div class="chart-bar-label">${d.day}</div>
+                    </div>
+                `;
+            }).join('');
         }
-        Utils.showToast('Pedidos atualizados!', 'success');
-    };
 
-    window.toggleSetup = function() {
-        var guide = document.getElementById('setupGuide');
-        if (guide.style.display === 'none') {
-            guide.style.display = 'block';
-            guide.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else {
-            guide.style.display = 'none';
+        function refreshOrders() {
+            Utils.showToast('Pedidos atualizados!', 'success');
+            renderOrders();
         }
-    };
 
-    window.toggleSidebar = function() {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-    };
+        function testConnection() {
+            const statusEl = document.getElementById('extensionStatus');
+            const textEl = document.getElementById('extensionStatusText');
 
-    // Initial load
-    loadOrders();
+            textEl.textContent = 'Verificando...';
+            setTimeout(() => {
+                const isConnected = statusEl.classList.contains('connected');
+                if (isConnected) {
+                    statusEl.classList.remove('connected');
+                    statusEl.classList.add('disconnected');
+                    textEl.textContent = 'Desconectada';
+                    Utils.showToast('Extensao nao encontrada. Verifique se esta instalada e a aba do iFood esta aberta.', 'warning');
+                } else {
+                    statusEl.classList.remove('disconnected');
+                    statusEl.classList.add('connected');
+                    textEl.textContent = 'Conectada';
+                    Utils.showToast('Extensao conectada com sucesso!', 'success');
+                }
+            }, 1500);
+        }
 
-    // Auto-refresh every 30 seconds
-    setInterval(loadOrders, 30000);
-
-})();
-</script>
-
+        // ============================================
+        // Init
+        // ============================================
+        renderOrders();
+        renderChart();
+    </script>
 </body>
 </html>
