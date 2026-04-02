@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Fiscal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="stylesheet" href="../css/mobile-app.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#42A5F5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MilkyPot">
+    <link rel="apple-touch-icon" href="../images/logo-milkypot.png">
+    <style>
+        /* ===== TABS ===== */
+        .tabs-bar {
+            display: flex;
+            gap: 0;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.25s ease;
+            font-family: 'Nunito', sans-serif;
+            white-space: nowrap;
+        }
+        .tab-btn.active {
+            background: #fff;
+            color: #1e293b;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.5); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ===== STATUS BANNER ===== */
+        .status-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .status-banner.ok {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+        }
+        .status-banner.warn {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            color: #92400e;
+        }
+        .status-banner.error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+        .status-banner .status-icon { font-size: 20px; }
+
+        /* ===== FORM SECTION ===== */
+        .form-section {
+            background: #fff;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .form-section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: 'Nunito', sans-serif;
+            background: #f8fafc;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #42A5F5;
+            background: #fff;
+        }
+        .form-group input[readonly] {
+            background: #f1f5f9;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+        .form-group .input-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .form-group .input-row input { flex: 1; }
+        .form-span-2 { grid-column: span 2; }
+        .form-span-3 { grid-column: span 3; }
+
+        /* ===== CERT STATUS ===== */
+        .cert-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+        .cert-status.valid {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+        .cert-status.invalid {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        /* ===== API STATUS ===== */
+        .api-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .api-status-dot.connected { background: #22c55e; }
+        .api-status-dot.disconnected { background: #ef4444; }
+
+        /* ===== TOGGLE SWITCH ===== */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+        .toggle-switch input { display: none; }
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: #cbd5e1;
+            border-radius: 28px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background: #ef4444;
+        }
+        .toggle-switch input:not(:checked) + .toggle-slider {
+            background: #22c55e;
+        }
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(24px);
+        }
+        .toggle-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .toggle-label .env-tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .env-tag.homolog { background: #fef3c7; color: #92400e; }
+        .env-tag.producao { background: #fee2e2; color: #991b1b; }
+
+        /* ===== MASKED INPUT ===== */
+        .masked-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .masked-value input { flex: 1; }
+        .masked-value .btn-copy {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .masked-value .btn-copy:hover { background: #e2e8f0; }
+
+        /* ===== EMIT BUTTONS ===== */
+        .emit-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .emit-card {
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 32px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .emit-card:hover {
+            border-color: #42A5F5;
+            box-shadow: 0 4px 16px rgba(66,165,245,0.15);
+            transform: translateY(-2px);
+        }
+        .emit-card.active {
+            border-color: #42A5F5;
+            background: #eff6ff;
+        }
+        .emit-card .emit-icon { font-size: 40px; margin-bottom: 12px; }
+        .emit-card .emit-title { font-size: 16px; font-weight: 700; color: #1e293b; }
+        .emit-card .emit-desc { font-size: 13px; color: #64748b; margin-top: 6px; }
+
+        /* ===== ITEMS TABLE (Emit) ===== */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        .items-table th {
+            background: #f8fafc;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .items-table th:last-child { text-align: center; }
+        .items-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .items-table td input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: 'Nunito', sans-serif;
+        }
+        .items-table td input:focus {
+            outline: none;
+            border-color: #42A5F5;
+        }
+        .items-table .col-qty { width: 70px; }
+        .items-table .col-price { width: 110px; }
+        .items-table .col-total { width: 110px; text-align: right; font-weight: 600; }
+        .items-table .col-action { width: 50px; text-align: center; }
+
+        .totals-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 24px;
+            padding: 12px 0;
+            font-size: 14px;
+        }
+        .totals-row .total-item { display: flex; gap: 8px; align-items: center; }
+        .totals-row .total-item strong { color: #1e293b; }
+        .totals-row .total-final {
+            font-size: 18px;
+            font-weight: 800;
+            color: #16a34a;
+            font-family: 'Baloo 2', cursive;
+        }
+
+        /* ===== NOTAS TABLE ===== */
+        .notas-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .notas-table th {
+            background: #f8fafc;
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .notas-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .notas-table tr:hover { background: #f8fafc; }
+
+        /* ===== BADGES ===== */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .badge-autorizada { background: #ecfdf5; color: #065f46; }
+        .badge-pendente { background: #fffbeb; color: #92400e; }
+        .badge-erro { background: #fef2f2; color: #991b1b; }
+        .badge-cancelada { background: #f1f5f9; color: #475569; }
+        .badge-nfce { background: #eff6ff; color: #1e40af; }
+        .badge-cupom { background: #faf5ff; color: #6b21a8; }
+
+        /* ===== FILTER ROW ===== */
+        .filter-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .filter-row select,
+        .filter-row input {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 13px;
+            font-family: 'Nunito', sans-serif;
+            background: #f8fafc;
+        }
+
+        /* ===== PAGINATION ===== */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        .pagination button {
+            padding: 8px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Nunito', sans-serif;
+        }
+        .pagination button:hover:not(:disabled) {
+            background: #f1f5f9;
+            border-color: #42A5F5;
+        }
+        .pagination button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .pagination button.active {
+            background: #42A5F5;
+            color: #fff;
+            border-color: #42A5F5;
+        }
+        .pagination .page-info {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        /* ===== DANFE MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .modal-box {
+            background: #fff;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 420px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .modal-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #64748b;
+            padding: 4px;
+        }
+        .modal-body { padding: 24px; }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* ===== DANFE PREVIEW (thermal receipt format) ===== */
+        .danfe-preview {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            background: #fff;
+            border: 2px dashed #ccc;
+            padding: 20px;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+        .danfe-preview .danfe-header {
+            text-align: center;
+            border-bottom: 1px dashed #999;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .danfe-preview .danfe-header strong {
+            font-size: 14px;
+            display: block;
+        }
+        .danfe-preview .danfe-items {
+            border-bottom: 1px dashed #999;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .danfe-preview .danfe-item {
+            display: flex;
+            justify-content: space-between;
+        }
+        .danfe-preview .danfe-total {
+            text-align: right;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .danfe-preview .danfe-footer {
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px dashed #999;
+            padding-top: 10px;
+        }
+        .danfe-preview .danfe-qr {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .danfe-preview .danfe-qr div {
+            width: 100px;
+            height: 100px;
+            background: #f1f5f9;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #999;
+        }
+
+        /* ===== LOADING SPINNER ===== */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #42A5F5;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text {
+            margin-top: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-span-2, .form-span-3 { grid-column: span 1; }
+            .emit-options { grid-template-columns: 1fr; }
+            .filter-row { flex-direction: column; align-items: stretch; }
+            .totals-row { flex-direction: column; align-items: flex-end; gap: 8px; }
+            .notas-table { font-size: 12px; }
+            .notas-table th, .notas-table td { padding: 8px 6px; }
+        }
+
+        @media print {
+            .panel-sidebar, .panel-header, .tabs-bar, .filter-row,
+            .pagination, .form-section, .emit-options { display: none !important; }
+            .panel-main { margin: 0; padding: 0; }
+            .danfe-preview { border: none; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <!-- SIDEBAR -->
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link">
+                    <span class="icon">📊</span> <span data-i18n="nav.dashboard">Dashboard</span>
+                </a>
+                <a href="pedidos.html" class="sidebar-link">
+                    <span class="icon">📋</span> <span data-i18n="nav.orders">Pedidos</span>
+                </a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="financeiro.html" class="sidebar-link">
+                    <span class="icon">💰</span> <span data-i18n="nav.finances">Financeiro</span>
+                </a>
+                <a href="despesas.html" class="sidebar-link">
+                    <span class="icon">💰</span> Despesas
+                </a>
+                <a href="fiscal.html" class="sidebar-link active">
+                    <span class="icon">🧾</span> Fiscal
+                </a>
+                <a href="produtos.html" class="sidebar-link">
+                    <span class="icon">🍨</span> <span data-i18n="nav.products">Produtos</span>
+                </a>
+                <a href="entregas.html" class="sidebar-link">
+                    <span class="icon">🛵</span> <span data-i18n="nav.delivery">Entregas</span>
+                </a>
+                <a href="equipe.html" class="sidebar-link">
+                    <span class="icon">👥</span> <span data-i18n="nav.staff">Equipe</span>
+                </a>
+                <a href="fidelidade.html" class="sidebar-link">
+                    <span class="icon">🎁</span> <span data-i18n="nav.loyalty">Fidelidade</span>
+                </a>
+                <a href="ifood.html" class="sidebar-link">
+                    <span class="icon">🛵</span> iFood
+                </a>
+                <div class="sidebar-nav-group">Loja Online</div>
+                <a href="#" class="sidebar-link" id="linkSiteFranquia">
+                    <span class="icon">🌐</span> Meu Site
+                </a>
+                <a href="marketing.html" class="sidebar-link">
+                    <span class="icon">📢</span> <span data-i18n="nav.marketing">Marketing</span>
+                </a>
+                <div class="sidebar-nav-group">Config</div>
+                <a href="configuracoes.html" class="sidebar-link">
+                    <span class="icon">⚙️</span> <span data-i18n="nav.settings">Configuracoes</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">🏪</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Franqueado</strong>
+                        <small>Franqueado</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>🧾 Fiscal</h1>
+                </div>
+                <div class="panel-header-right">
+                    <button class="btn-logout" onclick="Auth.logout()" data-i18n="auth.logout">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+
+                <!-- TAB NAV -->
+                <div class="tabs-bar">
+                    <button class="tab-btn active" onclick="switchTab('config')">⚙️ Configuracao</button>
+                    <button class="tab-btn" onclick="switchTab('emitir')">🧾 Emitir Nota</button>
+                    <button class="tab-btn" onclick="switchTab('notas')">📋 Notas Emitidas</button>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- TAB: CONFIGURACAO                            -->
+                <!-- ============================================ -->
+                <div class="tab-content active" id="tab-config">
+
+                    <div class="status-banner warn" id="configStatusBanner">
+                        <span class="status-icon">⚠️</span>
+                        <span id="configStatusText">Configuracao fiscal incompleta. Preencha os dados abaixo para emitir notas.</span>
+                    </div>
+
+                    <!-- Dados da Empresa -->
+                    <div class="form-section">
+                        <div class="form-section-title">🏢 Dados da Empresa</div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="cfgCnpj">CNPJ</label>
+                                <input type="text" id="cfgCnpj" placeholder="XX.XXX.XXX/XXXX-XX" maxlength="18">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgRazaoSocial">Razao Social</label>
+                                <input type="text" id="cfgRazaoSocial" placeholder="Razao Social da empresa">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgNomeFantasia">Nome Fantasia</label>
+                                <input type="text" id="cfgNomeFantasia" placeholder="Nome Fantasia">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgInscricaoEstadual">Inscricao Estadual</label>
+                                <input type="text" id="cfgInscricaoEstadual" placeholder="Inscricao Estadual">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgRegimeTributario">Regime Tributario</label>
+                                <select id="cfgRegimeTributario">
+                                    <option value="">Selecione...</option>
+                                    <option value="simples_nacional">Simples Nacional</option>
+                                    <option value="lucro_presumido">Lucro Presumido</option>
+                                    <option value="lucro_real">Lucro Real</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Endereco -->
+                    <div class="form-section">
+                        <div class="form-section-title">📍 Endereco</div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="cfgCep">CEP</label>
+                                <div class="input-row">
+                                    <input type="text" id="cfgCep" placeholder="00000-000" maxlength="9">
+                                    <button class="btn btn-sm btn-primary" onclick="buscarCep()" type="button">Buscar</button>
+                                </div>
+                            </div>
+                            <div class="form-group form-span-2">
+                                <label for="cfgLogradouro">Logradouro</label>
+                                <input type="text" id="cfgLogradouro" placeholder="Rua, Avenida...">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgNumero">Numero</label>
+                                <input type="text" id="cfgNumero" placeholder="123">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgComplemento">Complemento</label>
+                                <input type="text" id="cfgComplemento" placeholder="Sala, Loja...">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgBairro">Bairro</label>
+                                <input type="text" id="cfgBairro" placeholder="Bairro">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgCidade">Cidade</label>
+                                <input type="text" id="cfgCidade" placeholder="Cidade">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgUf">UF</label>
+                                <select id="cfgUf">
+                                    <option value="">UF</option>
+                                    <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+                                    <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+                                    <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
+                                    <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+                                    <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+                                    <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+                                    <option>SP</option><option>SE</option><option>TO</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgCodigoIbge">Codigo Municipio IBGE</label>
+                                <input type="text" id="cfgCodigoIbge" placeholder="Auto-preenchido" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Certificado Digital A1 -->
+                    <div class="form-section">
+                        <div class="form-section-title">🔐 Certificado Digital A1</div>
+
+                        <div class="cert-status invalid" id="certStatus">
+                            <span>❌</span> <span id="certStatusText">Nao configurado</span>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Arquivo do Certificado (.pfx / .p12)</label>
+                                <input type="file" id="cfgCertFile" accept=".pfx,.p12">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgCertPassword">Senha do Certificado</label>
+                                <input type="password" id="cfgCertPassword" placeholder="Senha do certificado">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgCertCnpj">CNPJ do Certificado</label>
+                                <input type="text" id="cfgCertCnpj" placeholder="Extraido automaticamente" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NFC-e Settings -->
+                    <div class="form-section">
+                        <div class="form-section-title">📄 Configuracoes NFC-e</div>
+                        <div class="form-grid">
+                            <div class="form-group form-span-2">
+                                <label>Ambiente</label>
+                                <div class="toggle-row">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="cfgAmbiente">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span class="toggle-label" id="ambienteLabel">
+                                        <span class="env-tag homolog">Homologacao</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgSerie">Serie</label>
+                                <input type="number" id="cfgSerie" value="1" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgProximoNumero">Proximo Numero</label>
+                                <input type="number" id="cfgProximoNumero" value="1" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgCscId">CSC ID</label>
+                                <input type="text" id="cfgCscId" placeholder="Codigo de Seguranca do Contribuinte">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgCscToken">CSC Token</label>
+                                <input type="text" id="cfgCscToken" placeholder="Token CSC">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API Connection -->
+                    <div class="form-section">
+                        <div class="form-section-title">🔗 Conexao API</div>
+                        <div class="form-grid">
+                            <div class="form-group form-span-2">
+                                <label>Status da Conexao</label>
+                                <div style="display:flex; align-items:center; gap:8px; font-weight:600; font-size:14px;">
+                                    <span class="api-status-dot disconnected" id="apiStatusDot"></span>
+                                    <span id="apiStatusLabel">Desconectado</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgApiUrl">API URL</label>
+                                <input type="text" id="cfgApiUrl" value="api.milkypot.com" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="cfgApiKey">API Key</label>
+                                <div class="masked-value">
+                                    <input type="password" id="cfgApiKey" placeholder="Sua API Key" readonly>
+                                    <button class="btn-copy" onclick="copyApiKey()" title="Copiar">📋</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <button class="btn btn-primary" onclick="testarConexao()" type="button">🔄 Testar Conexao</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Save -->
+                    <div style="text-align:right; margin-top:8px;">
+                        <button class="btn btn-primary" onclick="salvarConfiguracao()" style="padding:14px 40px; font-size:15px; font-weight:700;">
+                            💾 Salvar Configuracao
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- TAB: EMITIR NOTA                             -->
+                <!-- ============================================ -->
+                <div class="tab-content" id="tab-emitir">
+
+                    <div class="emit-options">
+                        <div class="emit-card" id="cardNfce" onclick="selectEmitType('nfce')">
+                            <div class="emit-icon">🧾</div>
+                            <div class="emit-title">NFC-e (Nota Fiscal)</div>
+                            <div class="emit-desc">Emite nota fiscal ao consumidor via SEFAZ</div>
+                        </div>
+                        <div class="emit-card" id="cardCupom" onclick="selectEmitType('cupom')">
+                            <div class="emit-icon">🧾</div>
+                            <div class="emit-title">Cupom Nao Fiscal</div>
+                            <div class="emit-desc">Recibo rapido sem validacao SEFAZ</div>
+                        </div>
+                    </div>
+
+                    <!-- NFC-e Form -->
+                    <div id="formNfce" style="display:none;">
+                        <div class="form-section">
+                            <div class="form-section-title">📋 Dados do Pedido</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="emitPedido">Pedido</label>
+                                    <select id="emitPedido" onchange="loadOrderItems()">
+                                        <option value="">Selecione um pedido...</option>
+                                        <option value="manual">Entrada manual</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="emitClienteNome">Cliente (opcional)</label>
+                                    <input type="text" id="emitClienteNome" placeholder="Nome do cliente">
+                                </div>
+                                <div class="form-group">
+                                    <label for="emitClienteDoc">CPF/CNPJ (opcional)</label>
+                                    <input type="text" id="emitClienteDoc" placeholder="CPF ou CNPJ">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                📦 Itens
+                                <button class="btn btn-sm" onclick="addEmitItem()" style="margin-left:auto; font-size:12px;">+ Item</button>
+                            </div>
+                            <table class="items-table" id="emitItemsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th class="col-qty">Qtd</th>
+                                        <th class="col-price">Valor Unit.</th>
+                                        <th class="col-total">Total</th>
+                                        <th class="col-action"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="emitItemsBody">
+                                </tbody>
+                            </table>
+
+                            <div class="totals-row">
+                                <div class="total-item">
+                                    <span>Subtotal:</span>
+                                    <strong id="emitSubtotal">R$ 0,00</strong>
+                                </div>
+                                <div class="total-item">
+                                    <span>Desconto:</span>
+                                    <input type="number" id="emitDesconto" value="0" min="0" step="0.01"
+                                           style="width:80px; padding:4px 8px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px;"
+                                           onchange="recalcTotals()">
+                                </div>
+                                <div class="total-item">
+                                    <span>Total:</span>
+                                    <span class="total-final" id="emitTotal">R$ 0,00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="form-section-title">💳 Pagamento</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="emitFormaPgto">Forma de Pagamento</label>
+                                    <select id="emitFormaPgto">
+                                        <option value="pix">PIX</option>
+                                        <option value="credito">Credito</option>
+                                        <option value="debito">Debito</option>
+                                        <option value="dinheiro">Dinheiro</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="text-align:right; margin-top:8px;">
+                            <button class="btn btn-primary" onclick="emitirNfce()" style="padding:14px 40px; font-size:15px; font-weight:700;" id="btnEmitirNfce">
+                                🧾 Emitir NFC-e
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Cupom Nao Fiscal Form -->
+                    <div id="formCupom" style="display:none;">
+                        <div class="form-section">
+                            <div class="form-section-title">📋 Dados do Cupom</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="cupomPedido">Pedido</label>
+                                    <select id="cupomPedido" onchange="loadCupomItems()">
+                                        <option value="">Selecione um pedido...</option>
+                                        <option value="manual">Entrada manual</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cupomClienteNome">Cliente (opcional)</label>
+                                    <input type="text" id="cupomClienteNome" placeholder="Nome do cliente">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                📦 Itens
+                                <button class="btn btn-sm" onclick="addCupomItem()" style="margin-left:auto; font-size:12px;">+ Item</button>
+                            </div>
+                            <table class="items-table" id="cupomItemsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th class="col-qty">Qtd</th>
+                                        <th class="col-price">Valor Unit.</th>
+                                        <th class="col-total">Total</th>
+                                        <th class="col-action"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cupomItemsBody">
+                                </tbody>
+                            </table>
+
+                            <div class="totals-row">
+                                <div class="total-item">
+                                    <span>Total:</span>
+                                    <span class="total-final" id="cupomTotal">R$ 0,00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="form-section-title">💳 Pagamento</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="cupomFormaPgto">Forma de Pagamento</label>
+                                    <select id="cupomFormaPgto">
+                                        <option value="pix">PIX</option>
+                                        <option value="credito">Credito</option>
+                                        <option value="debito">Debito</option>
+                                        <option value="dinheiro">Dinheiro</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="text-align:right; margin-top:8px;">
+                            <button class="btn btn-primary" onclick="emitirCupom()" style="padding:14px 40px; font-size:15px; font-weight:700;">
+                                🧾 Gerar Cupom
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- TAB: NOTAS EMITIDAS                          -->
+                <!-- ============================================ -->
+                <div class="tab-content" id="tab-notas">
+
+                    <div class="filter-row">
+                        <input type="date" id="filtroDataInicio" title="Data inicio">
+                        <input type="date" id="filtroDataFim" title="Data fim">
+                        <select id="filtroTipo">
+                            <option value="">Todos os tipos</option>
+                            <option value="nfce">NFC-e</option>
+                            <option value="cupom">Cupom</option>
+                        </select>
+                        <select id="filtroStatus">
+                            <option value="">Todos os status</option>
+                            <option value="autorizada">Autorizada</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="erro">Erro</option>
+                            <option value="cancelada">Cancelada</option>
+                        </select>
+                        <button class="btn btn-sm btn-primary" onclick="filtrarNotas()">Filtrar</button>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-card-body" style="overflow-x:auto;">
+                            <table class="notas-table">
+                                <thead>
+                                    <tr>
+                                        <th>Numero</th>
+                                        <th>Tipo</th>
+                                        <th>Data</th>
+                                        <th>Cliente</th>
+                                        <th>Valor</th>
+                                        <th>Status</th>
+                                        <th>Acoes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="notasTableBody">
+                                    <tr>
+                                        <td colspan="7" style="text-align:center; padding:40px; color:#94a3b8;">
+                                            Nenhuma nota emitida ainda.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="pagination" id="notasPagination"></div>
+                </div>
+
+            </div><!-- .panel-content -->
+        </main>
+    </div>
+
+    <!-- DANFE Modal -->
+    <div class="modal-overlay" id="danfeModal" style="display:none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="danfeModalTitle">DANFE NFC-e</h3>
+                <button class="modal-close" onclick="closeDanfeModal()">X</button>
+            </div>
+            <div class="modal-body" id="danfeModalBody">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-sm btn-outline" onclick="closeDanfeModal()">Fechar</button>
+                <button class="btn btn-sm btn-primary" onclick="printDanfe()">🖨️ Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display:none;">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">Emitindo NFC-e...</div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/i18n.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/cloud-functions.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+    <script src="../js/core/notifications.js"></script>
+    <script src="../js/core/reports.js"></script>
+    <script>
+        var franchiseId = '';
+        var fiscalConfig = {};
+        var notas = [];
+        var currentPage = 1;
+        var perPage = 15;
+        var currentEmitType = '';
+        var emitItems = [];
+        var cupomItems = [];
+
+        // ========== TABS ==========
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
+            document.querySelectorAll('.tab-btn').forEach(function(el) { el.classList.remove('active'); });
+            document.getElementById('tab-' + tab).classList.add('active');
+            var tabs = ['config', 'emitir', 'notas'];
+            var idx = tabs.indexOf(tab);
+            if (idx >= 0) document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+
+            if (tab === 'notas') loadNotas();
+            if (tab === 'emitir') loadRecentOrders();
+        }
+
+        // ========== CNPJ MASK ==========
+        document.getElementById('cfgCnpj').addEventListener('input', function(e) {
+            var v = e.target.value.replace(/\D/g, '');
+            if (v.length > 14) v = v.slice(0, 14);
+            if (v.length > 12) v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, '$1.$2.$3/$4-$5');
+            else if (v.length > 8) v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{0,4})/, '$1.$2.$3/$4');
+            else if (v.length > 5) v = v.replace(/^(\d{2})(\d{3})(\d{0,3})/, '$1.$2.$3');
+            else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,3})/, '$1.$2');
+            e.target.value = v;
+        });
+
+        // ========== CEP MASK ==========
+        document.getElementById('cfgCep').addEventListener('input', function(e) {
+            var v = e.target.value.replace(/\D/g, '');
+            if (v.length > 8) v = v.slice(0, 8);
+            if (v.length > 5) v = v.replace(/^(\d{5})(\d{0,3})/, '$1-$2');
+            e.target.value = v;
+        });
+
+        // ========== CPF/CNPJ MASK ==========
+        document.getElementById('emitClienteDoc').addEventListener('input', function(e) {
+            var v = e.target.value.replace(/\D/g, '');
+            if (v.length <= 11) {
+                if (v.length > 9) v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
+                else if (v.length > 6) v = v.replace(/^(\d{3})(\d{3})(\d{0,3})/, '$1.$2.$3');
+                else if (v.length > 3) v = v.replace(/^(\d{3})(\d{0,3})/, '$1.$2');
+            } else {
+                v = v.slice(0, 14);
+                v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, '$1.$2.$3/$4-$5');
+            }
+            e.target.value = v;
+        });
+
+        // ========== AMBIENTE TOGGLE ==========
+        document.getElementById('cfgAmbiente').addEventListener('change', function() {
+            var label = document.getElementById('ambienteLabel');
+            if (this.checked) {
+                label.innerHTML = '<span class="env-tag producao">Producao</span>';
+            } else {
+                label.innerHTML = '<span class="env-tag homolog">Homologacao</span>';
+            }
+        });
+
+        // ========== BUSCAR CEP (ViaCEP) ==========
+        function buscarCep() {
+            var cep = document.getElementById('cfgCep').value.replace(/\D/g, '');
+            if (cep.length !== 8) {
+                Utils.showToast('CEP invalido. Digite 8 digitos.', 'error');
+                return;
+            }
+            fetch('https://viacep.com.br/ws/' + cep + '/json/')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.erro) {
+                        Utils.showToast('CEP nao encontrado.', 'error');
+                        return;
+                    }
+                    document.getElementById('cfgLogradouro').value = data.logradouro || '';
+                    document.getElementById('cfgBairro').value = data.bairro || '';
+                    document.getElementById('cfgCidade').value = data.localidade || '';
+                    document.getElementById('cfgUf').value = data.uf || '';
+                    document.getElementById('cfgCodigoIbge').value = data.ibge || '';
+                    Utils.showToast('Endereco preenchido!', 'success');
+                })
+                .catch(function() {
+                    Utils.showToast('Erro ao buscar CEP. Tente novamente.', 'error');
+                });
+        }
+
+        // ========== COPY API KEY ==========
+        function copyApiKey() {
+            var input = document.getElementById('cfgApiKey');
+            var key = input.getAttribute('data-value') || input.value;
+            if (!key) {
+                Utils.showToast('Nenhuma API Key configurada.', 'error');
+                return;
+            }
+            navigator.clipboard.writeText(key).then(function() {
+                Utils.showToast('API Key copiada!', 'success');
+            }).catch(function() {
+                Utils.showToast('Erro ao copiar.', 'error');
+            });
+        }
+
+        // ========== TESTAR CONEXAO ==========
+        function testarConexao() {
+            var apiKey = fiscalConfig.apiKey || '';
+            if (!apiKey) {
+                Utils.showToast('Configure a API Key primeiro.', 'error');
+                return;
+            }
+            showLoading('Testando conexao...');
+            fetch('https://api.milkypot.com/health', {
+                method: 'GET',
+                headers: { 'X-API-Key': apiKey }
+            })
+            .then(function(r) {
+                hideLoading();
+                if (r.ok) {
+                    document.getElementById('apiStatusDot').className = 'api-status-dot connected';
+                    document.getElementById('apiStatusLabel').textContent = 'Conectado';
+                    Utils.showToast('Conexao OK!', 'success');
+                } else {
+                    throw new Error('Status ' + r.status);
+                }
+            })
+            .catch(function(err) {
+                hideLoading();
+                document.getElementById('apiStatusDot').className = 'api-status-dot disconnected';
+                document.getElementById('apiStatusLabel').textContent = 'Desconectado';
+                Utils.showToast('Falha na conexao: ' + err.message, 'error');
+            });
+        }
+
+        // ========== SALVAR CONFIGURACAO ==========
+        function salvarConfiguracao() {
+            var config = {
+                cnpj: document.getElementById('cfgCnpj').value.trim(),
+                razaoSocial: document.getElementById('cfgRazaoSocial').value.trim(),
+                nomeFantasia: document.getElementById('cfgNomeFantasia').value.trim(),
+                inscricaoEstadual: document.getElementById('cfgInscricaoEstadual').value.trim(),
+                regimeTributario: document.getElementById('cfgRegimeTributario').value,
+                endereco: {
+                    cep: document.getElementById('cfgCep').value.trim(),
+                    logradouro: document.getElementById('cfgLogradouro').value.trim(),
+                    numero: document.getElementById('cfgNumero').value.trim(),
+                    complemento: document.getElementById('cfgComplemento').value.trim(),
+                    bairro: document.getElementById('cfgBairro').value.trim(),
+                    cidade: document.getElementById('cfgCidade').value.trim(),
+                    uf: document.getElementById('cfgUf').value,
+                    codigoIbge: document.getElementById('cfgCodigoIbge').value.trim()
+                },
+                nfce: {
+                    ambiente: document.getElementById('cfgAmbiente').checked ? 'producao' : 'homologacao',
+                    serie: parseInt(document.getElementById('cfgSerie').value, 10) || 1,
+                    proximoNumero: parseInt(document.getElementById('cfgProximoNumero').value, 10) || 1,
+                    cscId: document.getElementById('cfgCscId').value.trim(),
+                    cscToken: document.getElementById('cfgCscToken').value.trim()
+                },
+                apiKey: fiscalConfig.apiKey || '',
+                updatedAt: new Date().toISOString()
+            };
+
+            // Validation
+            if (!config.cnpj || config.cnpj.replace(/\D/g, '').length !== 14) {
+                Utils.showToast('CNPJ invalido.', 'error');
+                return;
+            }
+            if (!config.razaoSocial) {
+                Utils.showToast('Razao Social obrigatoria.', 'error');
+                return;
+            }
+
+            // Save locally
+            DataStore.setItem('fiscal_config_' + franchiseId, config);
+            fiscalConfig = config;
+            updateConfigStatus();
+            Utils.showToast('Configuracao salva localmente!', 'success');
+
+            // Send to API
+            if (config.apiKey) {
+                fetch('https://api.milkypot.com/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': config.apiKey
+                    },
+                    body: JSON.stringify(config)
+                })
+                .then(function(r) {
+                    if (r.ok) Utils.showToast('Configuracao sincronizada com o servidor!', 'success');
+                    else Utils.showToast('Salvo localmente, mas erro ao sincronizar.', 'warn');
+                })
+                .catch(function() {
+                    Utils.showToast('Salvo localmente. Sincronizacao pendente.', 'warn');
+                });
+            }
+
+            // Upload certificate if selected
+            var certFile = document.getElementById('cfgCertFile').files[0];
+            var certPass = document.getElementById('cfgCertPassword').value;
+            if (certFile && certPass && config.apiKey) {
+                var formData = new FormData();
+                formData.append('certificate', certFile);
+                formData.append('password', certPass);
+                fetch('https://api.milkypot.com/config/certificate', {
+                    method: 'POST',
+                    headers: { 'X-API-Key': config.apiKey },
+                    body: formData
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.valid) {
+                        var certInfo = {
+                            valid: true,
+                            validUntil: data.validUntil,
+                            cnpj: data.cnpj
+                        };
+                        DataStore.setItem('fiscal_cert_' + franchiseId, certInfo);
+                        updateCertStatus(certInfo);
+                        Utils.showToast('Certificado enviado e validado!', 'success');
+                    } else {
+                        Utils.showToast('Certificado invalido: ' + (data.error || 'erro desconhecido'), 'error');
+                    }
+                })
+                .catch(function() {
+                    Utils.showToast('Erro ao enviar certificado.', 'error');
+                });
+            }
+        }
+
+        // ========== UPDATE STATUS DISPLAYS ==========
+        function updateConfigStatus() {
+            var banner = document.getElementById('configStatusBanner');
+            var text = document.getElementById('configStatusText');
+            var cfg = fiscalConfig;
+            var cnpjOk = cfg.cnpj && cfg.cnpj.replace(/\D/g, '').length === 14;
+            var certOk = (DataStore.getItem('fiscal_cert_' + franchiseId) || {}).valid;
+            var nfceOk = cfg.nfce && cfg.nfce.cscId && cfg.nfce.cscToken;
+
+            if (cnpjOk && certOk && nfceOk) {
+                banner.className = 'status-banner ok';
+                banner.querySelector('.status-icon').textContent = '✅';
+                text.textContent = 'Configuracao fiscal completa. Pronto para emitir notas.';
+            } else if (cnpjOk) {
+                banner.className = 'status-banner warn';
+                banner.querySelector('.status-icon').textContent = '⚠️';
+                var missing = [];
+                if (!certOk) missing.push('certificado digital');
+                if (!nfceOk) missing.push('CSC/Token NFC-e');
+                text.textContent = 'Falta configurar: ' + missing.join(', ') + '.';
+            } else {
+                banner.className = 'status-banner error';
+                banner.querySelector('.status-icon').textContent = '❌';
+                text.textContent = 'Configuracao fiscal incompleta. Preencha os dados abaixo para emitir notas.';
+            }
+        }
+
+        function updateCertStatus(certInfo) {
+            var el = document.getElementById('certStatus');
+            var text = document.getElementById('certStatusText');
+            var cnpjEl = document.getElementById('cfgCertCnpj');
+            if (certInfo && certInfo.valid) {
+                el.className = 'cert-status valid';
+                el.querySelector('span:first-child').textContent = '✅';
+                text.textContent = 'Valido ate ' + Utils.formatDate(certInfo.validUntil);
+                if (certInfo.cnpj) cnpjEl.value = certInfo.cnpj;
+            } else {
+                el.className = 'cert-status invalid';
+                el.querySelector('span:first-child').textContent = '❌';
+                text.textContent = 'Nao configurado';
+                cnpjEl.value = '';
+            }
+        }
+
+        // ========== EMIT TYPE SELECTION ==========
+        function selectEmitType(type) {
+            currentEmitType = type;
+            document.getElementById('cardNfce').classList.toggle('active', type === 'nfce');
+            document.getElementById('cardCupom').classList.toggle('active', type === 'cupom');
+            document.getElementById('formNfce').style.display = type === 'nfce' ? 'block' : 'none';
+            document.getElementById('formCupom').style.display = type === 'cupom' ? 'block' : 'none';
+        }
+
+        // ========== LOAD RECENT ORDERS ==========
+        function loadRecentOrders() {
+            var orders = DataStore.getCollection('orders', franchiseId) || [];
+            var recent = orders
+                .sort(function(a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); })
+                .slice(0, 20);
+
+            var selects = [document.getElementById('emitPedido'), document.getElementById('cupomPedido')];
+            selects.forEach(function(sel) {
+                var html = '<option value="">Selecione um pedido...</option>';
+                html += '<option value="manual">Entrada manual</option>';
+                recent.forEach(function(o) {
+                    var label = '#' + (o.orderNumber || o.id).toString().slice(-4) + ' - ' +
+                                Utils.formatCurrency(o.total || 0) + ' (' + Utils.formatDate(o.createdAt) + ')';
+                    html += '<option value="' + o.id + '">' + Utils.escapeHtml(label) + '</option>';
+                });
+                sel.innerHTML = html;
+            });
+        }
+
+        // ========== LOAD ORDER ITEMS ==========
+        function loadOrderItems() {
+            var orderId = document.getElementById('emitPedido').value;
+            emitItems = [];
+            if (!orderId || orderId === 'manual') {
+                addEmitItem();
+                renderEmitItems();
+                return;
+            }
+            var orders = DataStore.getCollection('orders', franchiseId) || [];
+            var order = orders.find(function(o) { return o.id === orderId; });
+            if (order && order.items) {
+                emitItems = order.items.map(function(item) {
+                    return {
+                        nome: item.name || item.productName || '',
+                        qty: item.quantity || 1,
+                        valorUnit: item.price || item.unitPrice || 0
+                    };
+                });
+            }
+            if (emitItems.length === 0) addEmitItem();
+            renderEmitItems();
+        }
+
+        function loadCupomItems() {
+            var orderId = document.getElementById('cupomPedido').value;
+            cupomItems = [];
+            if (!orderId || orderId === 'manual') {
+                addCupomItem();
+                renderCupomItems();
+                return;
+            }
+            var orders = DataStore.getCollection('orders', franchiseId) || [];
+            var order = orders.find(function(o) { return o.id === orderId; });
+            if (order && order.items) {
+                cupomItems = order.items.map(function(item) {
+                    return {
+                        nome: item.name || item.productName || '',
+                        qty: item.quantity || 1,
+                        valorUnit: item.price || item.unitPrice || 0
+                    };
+                });
+            }
+            if (cupomItems.length === 0) addCupomItem();
+            renderCupomItems();
+        }
+
+        // ========== EMIT ITEMS MANAGEMENT ==========
+        function addEmitItem() {
+            emitItems.push({ nome: '', qty: 1, valorUnit: 0 });
+            renderEmitItems();
+        }
+
+        function removeEmitItem(idx) {
+            emitItems.splice(idx, 1);
+            if (emitItems.length === 0) addEmitItem();
+            renderEmitItems();
+        }
+
+        function renderEmitItems() {
+            var tbody = document.getElementById('emitItemsBody');
+            var html = '';
+            emitItems.forEach(function(item, i) {
+                var total = (item.qty || 0) * (item.valorUnit || 0);
+                html += '<tr>';
+                html += '<td><input type="text" value="' + Utils.escapeHtml(item.nome) + '" onchange="emitItems[' + i + '].nome=this.value" placeholder="Nome do produto"></td>';
+                html += '<td><input type="number" class="col-qty" value="' + item.qty + '" min="1" onchange="emitItems[' + i + '].qty=parseInt(this.value)||1; recalcTotals()"></td>';
+                html += '<td><input type="number" class="col-price" value="' + item.valorUnit.toFixed(2) + '" min="0" step="0.01" onchange="emitItems[' + i + '].valorUnit=parseFloat(this.value)||0; recalcTotals()"></td>';
+                html += '<td class="col-total">' + Utils.formatCurrency(total) + '</td>';
+                html += '<td class="col-action"><button class="btn btn-sm" onclick="removeEmitItem(' + i + ')">🗑️</button></td>';
+                html += '</tr>';
+            });
+            tbody.innerHTML = html;
+            recalcTotals();
+        }
+
+        function addCupomItem() {
+            cupomItems.push({ nome: '', qty: 1, valorUnit: 0 });
+            renderCupomItems();
+        }
+
+        function removeCupomItem(idx) {
+            cupomItems.splice(idx, 1);
+            if (cupomItems.length === 0) addCupomItem();
+            renderCupomItems();
+        }
+
+        function renderCupomItems() {
+            var tbody = document.getElementById('cupomItemsBody');
+            var html = '';
+            cupomItems.forEach(function(item, i) {
+                var total = (item.qty || 0) * (item.valorUnit || 0);
+                html += '<tr>';
+                html += '<td><input type="text" value="' + Utils.escapeHtml(item.nome) + '" onchange="cupomItems[' + i + '].nome=this.value" placeholder="Nome do produto"></td>';
+                html += '<td><input type="number" class="col-qty" value="' + item.qty + '" min="1" onchange="cupomItems[' + i + '].qty=parseInt(this.value)||1; recalcCupomTotal()"></td>';
+                html += '<td><input type="number" class="col-price" value="' + item.valorUnit.toFixed(2) + '" min="0" step="0.01" onchange="cupomItems[' + i + '].valorUnit=parseFloat(this.value)||0; recalcCupomTotal()"></td>';
+                html += '<td class="col-total">' + Utils.formatCurrency(total) + '</td>';
+                html += '<td class="col-action"><button class="btn btn-sm" onclick="removeCupomItem(' + i + ')">🗑️</button></td>';
+                html += '</tr>';
+            });
+            tbody.innerHTML = html;
+            recalcCupomTotal();
+        }
+
+        function recalcTotals() {
+            var subtotal = emitItems.reduce(function(s, item) {
+                return s + (item.qty || 0) * (item.valorUnit || 0);
+            }, 0);
+            var desconto = parseFloat(document.getElementById('emitDesconto').value) || 0;
+            var total = Math.max(0, subtotal - desconto);
+            document.getElementById('emitSubtotal').textContent = Utils.formatCurrency(subtotal);
+            document.getElementById('emitTotal').textContent = Utils.formatCurrency(total);
+        }
+
+        function recalcCupomTotal() {
+            var total = cupomItems.reduce(function(s, item) {
+                return s + (item.qty || 0) * (item.valorUnit || 0);
+            }, 0);
+            document.getElementById('cupomTotal').textContent = Utils.formatCurrency(total);
+        }
+
+        // ========== EMITIR NFC-e ==========
+        function emitirNfce() {
+            var cfg = fiscalConfig;
+            if (!cfg.cnpj || !cfg.apiKey) {
+                Utils.showToast('Configure os dados fiscais primeiro.', 'error');
+                switchTab('config');
+                return;
+            }
+
+            var validItems = emitItems.filter(function(i) { return i.nome && i.valorUnit > 0; });
+            if (validItems.length === 0) {
+                Utils.showToast('Adicione pelo menos um item valido.', 'error');
+                return;
+            }
+
+            var desconto = parseFloat(document.getElementById('emitDesconto').value) || 0;
+            var subtotal = validItems.reduce(function(s, i) { return s + i.qty * i.valorUnit; }, 0);
+
+            var payload = {
+                franchiseId: franchiseId,
+                cliente: {
+                    nome: document.getElementById('emitClienteNome').value.trim(),
+                    documento: document.getElementById('emitClienteDoc').value.replace(/\D/g, '')
+                },
+                items: validItems.map(function(i) {
+                    return {
+                        nome: i.nome,
+                        quantidade: i.qty,
+                        valorUnitario: i.valorUnit,
+                        valorTotal: i.qty * i.valorUnit
+                    };
+                }),
+                subtotal: subtotal,
+                desconto: desconto,
+                total: subtotal - desconto,
+                formaPagamento: document.getElementById('emitFormaPgto').value,
+                pedidoId: document.getElementById('emitPedido').value || null
+            };
+
+            showLoading('Emitindo NFC-e junto a SEFAZ...');
+
+            fetch('https://api.milkypot.com/nfce/emit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': cfg.apiKey
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                hideLoading();
+                if (data.success || data.autorizada) {
+                    // Increment next number
+                    var nextNum = parseInt(document.getElementById('cfgProximoNumero').value, 10) || 1;
+                    document.getElementById('cfgProximoNumero').value = nextNum + 1;
+                    cfg.nfce.proximoNumero = nextNum + 1;
+                    DataStore.setItem('fiscal_config_' + franchiseId, cfg);
+
+                    // Save nota locally
+                    var nota = {
+                        id: Utils.generateId(),
+                        numero: data.numero || nextNum,
+                        tipo: 'nfce',
+                        data: new Date().toISOString(),
+                        cliente: payload.cliente.nome || 'Consumidor',
+                        valor: payload.total,
+                        status: 'autorizada',
+                        chave: data.chave || '',
+                        protocolo: data.protocolo || '',
+                        items: payload.items,
+                        formaPagamento: payload.formaPagamento,
+                        xml: data.xml || '',
+                        danfe: data.danfe || ''
+                    };
+                    var notasList = DataStore.getCollection('fiscal_notas', franchiseId) || [];
+                    notasList.push(nota);
+                    DataStore.setItem('fiscal_notas_' + franchiseId, notasList);
+
+                    Utils.showToast('NFC-e emitida com sucesso!', 'success');
+                    showDanfe(nota);
+                } else {
+                    // Save with error
+                    var errNota = {
+                        id: Utils.generateId(),
+                        numero: '-',
+                        tipo: 'nfce',
+                        data: new Date().toISOString(),
+                        cliente: payload.cliente.nome || 'Consumidor',
+                        valor: payload.total,
+                        status: 'erro',
+                        erro: data.error || data.mensagem || 'Erro desconhecido',
+                        items: payload.items
+                    };
+                    var list = DataStore.getCollection('fiscal_notas', franchiseId) || [];
+                    list.push(errNota);
+                    DataStore.setItem('fiscal_notas_' + franchiseId, list);
+
+                    Utils.showToast('Erro ao emitir NFC-e: ' + (data.error || 'erro desconhecido'), 'error');
+                }
+            })
+            .catch(function(err) {
+                hideLoading();
+                Utils.showToast('Erro de conexao: ' + err.message, 'error');
+            });
+        }
+
+        // ========== EMITIR CUPOM ==========
+        function emitirCupom() {
+            var validItems = cupomItems.filter(function(i) { return i.nome && i.valorUnit > 0; });
+            if (validItems.length === 0) {
+                Utils.showToast('Adicione pelo menos um item valido.', 'error');
+                return;
+            }
+
+            var total = validItems.reduce(function(s, i) { return s + i.qty * i.valorUnit; }, 0);
+
+            var nota = {
+                id: Utils.generateId(),
+                numero: Date.now().toString().slice(-6),
+                tipo: 'cupom',
+                data: new Date().toISOString(),
+                cliente: document.getElementById('cupomClienteNome').value.trim() || 'Consumidor',
+                valor: total,
+                status: 'autorizada',
+                items: validItems.map(function(i) {
+                    return {
+                        nome: i.nome,
+                        quantidade: i.qty,
+                        valorUnitario: i.valorUnit,
+                        valorTotal: i.qty * i.valorUnit
+                    };
+                }),
+                formaPagamento: document.getElementById('cupomFormaPgto').value
+            };
+
+            var notasList = DataStore.getCollection('fiscal_notas', franchiseId) || [];
+            notasList.push(nota);
+            DataStore.setItem('fiscal_notas_' + franchiseId, notasList);
+
+            Utils.showToast('Cupom gerado com sucesso!', 'success');
+            showDanfe(nota);
+        }
+
+        // ========== DANFE PREVIEW ==========
+        function showDanfe(nota) {
+            var cfg = fiscalConfig;
+            var isNfce = nota.tipo === 'nfce';
+            document.getElementById('danfeModalTitle').textContent = isNfce ? 'DANFE NFC-e' : 'Cupom Nao Fiscal';
+
+            var formaPgtoLabels = { pix: 'PIX', credito: 'Cartao Credito', debito: 'Cartao Debito', dinheiro: 'Dinheiro' };
+
+            var html = '<div class="danfe-preview" id="danfePrint">';
+            html += '<div class="danfe-header">';
+            html += '<strong>' + Utils.escapeHtml(cfg.nomeFantasia || cfg.razaoSocial || 'MilkyPot') + '</strong>';
+            html += '<div>' + Utils.escapeHtml(cfg.razaoSocial || '') + '</div>';
+            html += '<div>CNPJ: ' + Utils.escapeHtml(cfg.cnpj || '') + '</div>';
+            if (cfg.endereco) {
+                html += '<div style="font-size:10px;">' + Utils.escapeHtml(cfg.endereco.logradouro || '') + ', ' +
+                         Utils.escapeHtml(cfg.endereco.numero || '') + ' - ' +
+                         Utils.escapeHtml(cfg.endereco.cidade || '') + '/' + Utils.escapeHtml(cfg.endereco.uf || '') + '</div>';
+            }
+            html += '<div style="margin-top:6px; font-weight:700;">' + (isNfce ? 'DANFE NFC-e' : 'CUPOM NAO FISCAL') + '</div>';
+            if (isNfce && nota.numero) html += '<div>Numero: ' + nota.numero + '</div>';
+            html += '</div>';
+
+            html += '<div class="danfe-items">';
+            html += '<div style="font-weight:700; margin-bottom:4px;">ITENS:</div>';
+            if (nota.items) {
+                nota.items.forEach(function(item, i) {
+                    html += '<div class="danfe-item">';
+                    html += '<span>' + (i + 1) + '. ' + Utils.escapeHtml(item.nome) + ' x' + item.quantidade + '</span>';
+                    html += '<span>' + Utils.formatCurrency(item.valorTotal) + '</span>';
+                    html += '</div>';
+                });
+            }
+            html += '</div>';
+
+            html += '<div class="danfe-total">';
+            html += 'TOTAL: ' + Utils.formatCurrency(nota.valor);
+            html += '</div>';
+
+            html += '<div style="font-size:11px; margin-bottom:8px;">';
+            html += 'Pagamento: ' + (formaPgtoLabels[nota.formaPagamento] || nota.formaPagamento || '-');
+            html += '</div>';
+
+            if (nota.cliente && nota.cliente !== 'Consumidor') {
+                html += '<div style="font-size:11px;">Cliente: ' + Utils.escapeHtml(nota.cliente) + '</div>';
+            }
+
+            html += '<div style="font-size:10px; color:#999; margin-top:6px;">' + Utils.formatDate(nota.data) + '</div>';
+
+            if (isNfce && nota.chave) {
+                html += '<div class="danfe-qr"><div>QR Code</div></div>';
+                html += '<div style="font-size:9px; word-break:break-all; text-align:center; color:#666;">Chave: ' + nota.chave + '</div>';
+            }
+
+            html += '<div class="danfe-footer">';
+            if (isNfce) {
+                html += 'Documento auxiliar da Nota Fiscal de Consumidor Eletronica<br>';
+                if (nota.protocolo) html += 'Protocolo: ' + nota.protocolo + '<br>';
+            }
+            html += 'MilkyPot - Sistema de Gestao';
+            html += '</div>';
+            html += '</div>';
+
+            document.getElementById('danfeModalBody').innerHTML = html;
+            document.getElementById('danfeModal').style.display = 'flex';
+        }
+
+        function closeDanfeModal() {
+            document.getElementById('danfeModal').style.display = 'none';
+        }
+
+        function printDanfe() {
+            var content = document.getElementById('danfePrint');
+            if (!content) return;
+            var printWindow = window.open('', '_blank', 'width=400,height=600');
+            printWindow.document.write('<!DOCTYPE html><html><head><title>Impressao</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write('body { margin: 0; padding: 10px; font-family: "Courier New", monospace; font-size: 12px; }');
+            printWindow.document.write('.danfe-preview { max-width: 300px; margin: 0 auto; }');
+            printWindow.document.write('.danfe-header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px; }');
+            printWindow.document.write('.danfe-items { border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px; }');
+            printWindow.document.write('.danfe-item { display: flex; justify-content: space-between; }');
+            printWindow.document.write('.danfe-total { text-align: right; font-weight: 700; font-size: 14px; margin-bottom: 8px; }');
+            printWindow.document.write('.danfe-footer { text-align: center; font-size: 10px; border-top: 1px dashed #000; padding-top: 8px; }');
+            printWindow.document.write('.danfe-qr { display: flex; justify-content: center; margin: 8px 0; }');
+            printWindow.document.write('.danfe-qr div { width: 80px; height: 80px; border: 1px solid #000; display: flex; align-items: center; justify-content: center; font-size: 9px; }');
+            printWindow.document.write('</style></head><body>');
+            printWindow.document.write(content.outerHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+        }
+
+        // ========== NOTAS EMITIDAS ==========
+        function loadNotas() {
+            notas = DataStore.getItem('fiscal_notas_' + franchiseId) || [];
+            notas.sort(function(a, b) { return (b.data || '').localeCompare(a.data || ''); });
+            currentPage = 1;
+            renderNotas();
+        }
+
+        function filtrarNotas() {
+            var all = DataStore.getItem('fiscal_notas_' + franchiseId) || [];
+            var inicio = document.getElementById('filtroDataInicio').value;
+            var fim = document.getElementById('filtroDataFim').value;
+            var tipo = document.getElementById('filtroTipo').value;
+            var status = document.getElementById('filtroStatus').value;
+
+            notas = all.filter(function(n) {
+                var d = (n.data || '').slice(0, 10);
+                if (inicio && d < inicio) return false;
+                if (fim && d > fim) return false;
+                if (tipo && n.tipo !== tipo) return false;
+                if (status && n.status !== status) return false;
+                return true;
+            });
+            notas.sort(function(a, b) { return (b.data || '').localeCompare(a.data || ''); });
+            currentPage = 1;
+            renderNotas();
+        }
+
+        function renderNotas() {
+            var tbody = document.getElementById('notasTableBody');
+            var totalPages = Math.max(1, Math.ceil(notas.length / perPage));
+            if (currentPage > totalPages) currentPage = totalPages;
+            var start = (currentPage - 1) * perPage;
+            var pageNotas = notas.slice(start, start + perPage);
+
+            if (pageNotas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px; color:#94a3b8;">Nenhuma nota encontrada.</td></tr>';
+                document.getElementById('notasPagination').innerHTML = '';
+                return;
+            }
+
+            var statusBadges = {
+                autorizada: '<span class="badge badge-autorizada">✅ Autorizada</span>',
+                pendente: '<span class="badge badge-pendente">⏳ Pendente</span>',
+                erro: '<span class="badge badge-erro">❌ Erro</span>',
+                cancelada: '<span class="badge badge-cancelada">🚫 Cancelada</span>'
+            };
+            var tipoBadges = {
+                nfce: '<span class="badge badge-nfce">NFC-e</span>',
+                cupom: '<span class="badge badge-cupom">Cupom</span>'
+            };
+
+            var html = '';
+            pageNotas.forEach(function(n) {
+                html += '<tr>';
+                html += '<td><strong>' + Utils.escapeHtml(String(n.numero || '-')) + '</strong></td>';
+                html += '<td>' + (tipoBadges[n.tipo] || n.tipo) + '</td>';
+                html += '<td>' + Utils.formatDate(n.data) + '</td>';
+                html += '<td>' + Utils.escapeHtml(n.cliente || '-') + '</td>';
+                html += '<td><strong>' + Utils.formatCurrency(n.valor || 0) + '</strong></td>';
+                html += '<td>' + (statusBadges[n.status] || n.status) + '</td>';
+                html += '<td>';
+                html += '<button class="btn btn-sm btn-outline" onclick="viewNota(\'' + n.id + '\')" title="Ver DANFE">👁️</button> ';
+                html += '<button class="btn btn-sm btn-outline" onclick="printNotaById(\'' + n.id + '\')" title="Imprimir">🖨️</button> ';
+                if (n.status === 'autorizada' && n.tipo === 'nfce') {
+                    html += '<button class="btn btn-sm btn-outline" onclick="cancelarNota(\'' + n.id + '\')" title="Cancelar" style="color:#ef4444;">🚫</button>';
+                }
+                html += '</td>';
+                html += '</tr>';
+            });
+            tbody.innerHTML = html;
+
+            // Pagination
+            var pagHtml = '';
+            pagHtml += '<button ' + (currentPage <= 1 ? 'disabled' : '') + ' onclick="goPage(' + (currentPage - 1) + ')">Anterior</button>';
+            for (var p = 1; p <= totalPages; p++) {
+                if (totalPages <= 7 || Math.abs(p - currentPage) <= 2 || p === 1 || p === totalPages) {
+                    pagHtml += '<button class="' + (p === currentPage ? 'active' : '') + '" onclick="goPage(' + p + ')">' + p + '</button>';
+                } else if (Math.abs(p - currentPage) === 3) {
+                    pagHtml += '<span class="page-info">...</span>';
+                }
+            }
+            pagHtml += '<button ' + (currentPage >= totalPages ? 'disabled' : '') + ' onclick="goPage(' + (currentPage + 1) + ')">Proximo</button>';
+            document.getElementById('notasPagination').innerHTML = pagHtml;
+        }
+
+        function goPage(p) {
+            currentPage = p;
+            renderNotas();
+        }
+
+        function viewNota(id) {
+            var all = DataStore.getItem('fiscal_notas_' + franchiseId) || [];
+            var nota = all.find(function(n) { return n.id === id; });
+            if (nota) showDanfe(nota);
+        }
+
+        function printNotaById(id) {
+            var all = DataStore.getItem('fiscal_notas_' + franchiseId) || [];
+            var nota = all.find(function(n) { return n.id === id; });
+            if (nota) {
+                showDanfe(nota);
+                setTimeout(printDanfe, 300);
+            }
+        }
+
+        function cancelarNota(id) {
+            if (!confirm('Tem certeza que deseja cancelar esta NFC-e? Esta acao nao pode ser desfeita.')) return;
+
+            var cfg = fiscalConfig;
+            if (!cfg.apiKey) {
+                Utils.showToast('API Key nao configurada.', 'error');
+                return;
+            }
+
+            showLoading('Cancelando NFC-e...');
+
+            var all = DataStore.getItem('fiscal_notas_' + franchiseId) || [];
+            var nota = all.find(function(n) { return n.id === id; });
+            if (!nota) { hideLoading(); return; }
+
+            fetch('https://api.milkypot.com/nfce/cancel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': cfg.apiKey
+                },
+                body: JSON.stringify({ chave: nota.chave, motivo: 'Cancelamento solicitado pelo emitente' })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                hideLoading();
+                if (data.success || data.cancelada) {
+                    nota.status = 'cancelada';
+                    DataStore.setItem('fiscal_notas_' + franchiseId, all);
+                    Utils.showToast('NFC-e cancelada com sucesso!', 'success');
+                    renderNotas();
+                } else {
+                    Utils.showToast('Erro ao cancelar: ' + (data.error || 'erro desconhecido'), 'error');
+                }
+            })
+            .catch(function(err) {
+                hideLoading();
+                Utils.showToast('Erro de conexao: ' + err.message, 'error');
+            });
+        }
+
+        // ========== LOADING ==========
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text || 'Processando...';
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        // ========== MODAL CLICK OUTSIDE ==========
+        document.getElementById('danfeModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDanfeModal();
+        });
+
+        // ========== LOAD CONFIG ==========
+        function loadConfig() {
+            fiscalConfig = DataStore.getItem('fiscal_config_' + franchiseId) || {};
+            if (fiscalConfig.cnpj) document.getElementById('cfgCnpj').value = fiscalConfig.cnpj;
+            if (fiscalConfig.razaoSocial) document.getElementById('cfgRazaoSocial').value = fiscalConfig.razaoSocial;
+            if (fiscalConfig.nomeFantasia) document.getElementById('cfgNomeFantasia').value = fiscalConfig.nomeFantasia;
+            if (fiscalConfig.inscricaoEstadual) document.getElementById('cfgInscricaoEstadual').value = fiscalConfig.inscricaoEstadual;
+            if (fiscalConfig.regimeTributario) document.getElementById('cfgRegimeTributario').value = fiscalConfig.regimeTributario;
+            if (fiscalConfig.endereco) {
+                var e = fiscalConfig.endereco;
+                if (e.cep) document.getElementById('cfgCep').value = e.cep;
+                if (e.logradouro) document.getElementById('cfgLogradouro').value = e.logradouro;
+                if (e.numero) document.getElementById('cfgNumero').value = e.numero;
+                if (e.complemento) document.getElementById('cfgComplemento').value = e.complemento;
+                if (e.bairro) document.getElementById('cfgBairro').value = e.bairro;
+                if (e.cidade) document.getElementById('cfgCidade').value = e.cidade;
+                if (e.uf) document.getElementById('cfgUf').value = e.uf;
+                if (e.codigoIbge) document.getElementById('cfgCodigoIbge').value = e.codigoIbge;
+            }
+            if (fiscalConfig.nfce) {
+                var n = fiscalConfig.nfce;
+                document.getElementById('cfgAmbiente').checked = n.ambiente === 'producao';
+                document.getElementById('cfgAmbiente').dispatchEvent(new Event('change'));
+                if (n.serie) document.getElementById('cfgSerie').value = n.serie;
+                if (n.proximoNumero) document.getElementById('cfgProximoNumero').value = n.proximoNumero;
+                if (n.cscId) document.getElementById('cfgCscId').value = n.cscId;
+                if (n.cscToken) document.getElementById('cfgCscToken').value = n.cscToken;
+            }
+            if (fiscalConfig.apiKey) {
+                var keyInput = document.getElementById('cfgApiKey');
+                keyInput.value = '****' + fiscalConfig.apiKey.slice(-4);
+                keyInput.setAttribute('data-value', fiscalConfig.apiKey);
+            }
+
+            // Load cert status
+            var certInfo = DataStore.getItem('fiscal_cert_' + franchiseId);
+            updateCertStatus(certInfo);
+            updateConfigStatus();
+        }
+
+        // ========== INIT ==========
+        (function init() {
+            try {
+                if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+                var session = Auth.getSession();
+                franchiseId = session.franchiseId;
+                var franchises = DataStore.getAllFranchises();
+                var franchise = franchises.find(function(f) { return f.id === franchiseId; });
+                document.getElementById('sidebarUserName').textContent = session.name;
+                document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia';
+
+                if (franchise && franchise.slug) {
+                    document.getElementById('linkSiteFranquia').href = '/loja/' + franchise.slug + '/';
+                }
+
+                loadConfig();
+                i18n.translatePage();
+            } catch (err) {
+                console.error('Erro ao inicializar fiscal:', err);
+            }
+        })();
+    </script>
+</body>
+</html>
