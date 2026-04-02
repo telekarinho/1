@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Gestao de Despesas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="stylesheet" href="../css/mobile-app.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#42A5F5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MilkyPot">
+    <link rel="apple-touch-icon" href="../images/logo-milkypot.png">
+    <style>
+        /* ===== TABS ===== */
+        .tabs-bar {
+            display: flex;
+            gap: 0;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.25s ease;
+            font-family: 'Nunito', sans-serif;
+            white-space: nowrap;
+        }
+        .tab-btn.active {
+            background: #fff;
+            color: #1e293b;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.5); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ===== SUMMARY STRIP ===== */
+        .summary-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: #fff;
+            border-radius: 14px;
+            padding: 16px 18px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .summary-item .label {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 6px;
+        }
+        .summary-item .value {
+            font-size: 22px;
+            font-weight: 800;
+            font-family: 'Baloo 2', cursive;
+        }
+        .summary-item .value.red { color: #ef4444; }
+        .summary-item .value.blue { color: #3b82f6; }
+        .summary-item .value.orange { color: #f59e0b; }
+        .summary-item .value.green { color: #22c55e; }
+        .summary-item .value.purple { color: #8b5cf6; }
+
+        /* ===== NF CAMERA ===== */
+        .nf-section {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .nf-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 28px 20px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            background: #f8fafc;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.25s ease;
+            font-family: 'Nunito', sans-serif;
+        }
+        .nf-btn:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            transform: translateY(-2px);
+        }
+        .nf-btn .nf-icon { font-size: 40px; display: block; margin-bottom: 8px; }
+        .nf-btn .nf-label { font-size: 15px; font-weight: 700; color: #1e293b; }
+        .nf-btn .nf-hint { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+
+        /* ===== CAMERA FULLSCREEN ===== */
+        .camera-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #000;
+            z-index: 9999;
+            flex-direction: column;
+        }
+        .camera-overlay.active { display: flex; }
+        .camera-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            z-index: 2;
+        }
+        .camera-header h3 { margin: 0; font-size: 16px; }
+        .camera-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        .camera-body {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .camera-body video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .viewfinder {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            height: 200px;
+            border: 3px solid rgba(255,255,255,0.8);
+            border-radius: 16px;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
+            pointer-events: none;
+        }
+        .viewfinder::before {
+            content: 'Posicione o QR Code da NF-e aqui';
+            position: absolute;
+            bottom: -36px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 13px;
+            white-space: nowrap;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+        .camera-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0,0,0,0.7);
+            z-index: 2;
+        }
+        .camera-actions button {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 40px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+        }
+        .btn-capture {
+            background: #22c55e;
+            color: #fff;
+            min-width: 140px;
+        }
+        .btn-capture:hover { background: #16a34a; }
+
+        /* ===== FORM ===== */
+        .expense-form { max-width: 600px; }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 700;
+            font-size: 13px;
+            color: #334155;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 11px 14px;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            font-size: 14px;
+            font-family: 'Nunito', sans-serif;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        @media (max-width: 500px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+        .toggle-switch input { display: none; }
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: #cbd5e1;
+            border-radius: 26px;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 20px; height: 20px;
+            left: 3px; top: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.25s;
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background: #3b82f6;
+        }
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(22px);
+        }
+        .frequency-selector {
+            display: none;
+            margin-top: 8px;
+        }
+        .frequency-selector.visible { display: block; }
+
+        .btn-register {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            transition: all 0.25s;
+            margin-top: 10px;
+        }
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34,197,94,0.35);
+        }
+        .btn-register:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ===== FIXED COSTS GRID ===== */
+        .fixed-costs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .fixed-cost-card {
+            background: #fff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 18px;
+            transition: all 0.25s;
+        }
+        .fixed-cost-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59,130,246,0.1);
+        }
+        .fixed-cost-card .fc-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .fixed-cost-card .fc-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background: #f1f5f9;
+        }
+        .fixed-cost-card .fc-name {
+            font-weight: 700;
+            font-size: 14px;
+            color: #1e293b;
+        }
+        .fixed-cost-card .fc-value-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Baloo 2', cursive;
+            margin-bottom: 8px;
+            box-sizing: border-box;
+        }
+        .fixed-cost-card .fc-value-input:focus {
+            border-color: #3b82f6;
+            outline: none;
+        }
+        .fixed-cost-card .fc-status {
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .fc-status.active { color: #22c55e; }
+        .fc-status.pending { color: #f59e0b; }
+
+        .btn-generate {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            transition: all 0.25s;
+        }
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59,130,246,0.35);
+        }
+
+        /* ===== HISTORY TABLE ===== */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+        .filter-bar select,
+        .filter-bar input {
+            padding: 9px 12px;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            font-size: 13px;
+            font-family: 'Nunito', sans-serif;
+        }
+        .filter-bar select:focus,
+        .filter-bar input:focus {
+            border-color: #3b82f6;
+            outline: none;
+        }
+        .period-total {
+            margin-left: auto;
+            font-size: 18px;
+            font-weight: 800;
+            font-family: 'Baloo 2', cursive;
+            color: #ef4444;
+        }
+
+        .btn-csv {
+            padding: 10px 20px;
+            background: #10b981;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+        }
+        .btn-csv:hover { background: #059669; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .badge-manual { background: #dbeafe; color: #2563eb; }
+        .badge-nf { background: #d1fae5; color: #059669; }
+        .badge-fixo { background: #fef3c7; color: #d97706; }
+
+        .actions-cell {
+            display: flex;
+            gap: 6px;
+        }
+        .btn-action {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .btn-edit { background: #dbeafe; color: #2563eb; }
+        .btn-edit:hover { background: #bfdbfe; }
+        .btn-delete { background: #fee2e2; color: #ef4444; }
+        .btn-delete:hover { background: #fecaca; }
+
+        /* ===== SUPPLIER AUTOCOMPLETE ===== */
+        .autocomplete-wrap { position: relative; }
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0; right: 0;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        .autocomplete-list.open { display: block; }
+        .autocomplete-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .autocomplete-item:hover { background: #eff6ff; }
+        .autocomplete-item:last-child { border-bottom: none; }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 700;
+            font-family: 'Nunito', sans-serif;
+            font-size: 14px;
+            z-index: 10000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-success { background: #22c55e; }
+        .toast-error { background: #ef4444; }
+        .toast-info { background: #3b82f6; }
+
+        /* ===== NF-e extracted data preview ===== */
+        .nf-preview {
+            background: #f0fdf4;
+            border: 2px solid #86efac;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .nf-preview.visible { display: block; }
+        .nf-preview h4 {
+            margin: 0 0 10px 0;
+            color: #166534;
+            font-size: 14px;
+        }
+        .nf-preview .nf-data {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 4px 12px;
+            font-size: 13px;
+        }
+        .nf-preview .nf-data dt { font-weight: 700; color: #334155; }
+        .nf-preview .nf-data dd { margin: 0; color: #475569; }
+
+        /* ===== FILE UPLOAD ===== */
+        .file-upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        .file-upload-area:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .file-upload-area .upload-text {
+            font-size: 13px;
+            color: #64748b;
+        }
+        .file-upload-area input[type="file"] { display: none; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .summary-strip {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .tabs-bar {
+                overflow-x: auto;
+            }
+            .tab-btn {
+                font-size: 13px;
+                padding: 10px 12px;
+            }
+            .fixed-costs-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .nf-section {
+                flex-direction: column;
+            }
+            .viewfinder {
+                width: 80vw;
+                height: 56vw;
+                max-width: 340px;
+                max-height: 240px;
+            }
+        }
+        @media (max-width: 480px) {
+            .fixed-costs-grid {
+                grid-template-columns: 1fr;
+            }
+            .summary-strip {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <!-- SIDEBAR -->
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link">
+                    <span class="icon">&#x1F4CA;</span> <span data-i18n="nav.dashboard">Dashboard</span>
+                </a>
+                <a href="pedidos.html" class="sidebar-link">
+                    <span class="icon">&#x1F4CB;</span> <span data-i18n="nav.orders">Pedidos</span>
+                </a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="financeiro.html" class="sidebar-link">
+                    <span class="icon">&#x1F4B0;</span> <span data-i18n="nav.finances">Financeiro</span>
+                </a>
+                <a href="despesas.html" class="sidebar-link active">
+                    <span class="icon">&#x1F4B0;</span> Despesas
+                </a>
+                <a href="produtos.html" class="sidebar-link">
+                    <span class="icon">&#x1F368;</span> <span data-i18n="nav.products">Produtos</span>
+                </a>
+                <a href="entregas.html" class="sidebar-link">
+                    <span class="icon">&#x1F6F5;</span> <span data-i18n="nav.delivery">Entregas</span>
+                </a>
+                <a href="equipe.html" class="sidebar-link">
+                    <span class="icon">&#x1F465;</span> <span data-i18n="nav.staff">Equipe</span>
+                </a>
+                <a href="fidelidade.html" class="sidebar-link">
+                    <span class="icon">&#x1F381;</span> <span data-i18n="nav.loyalty">Fidelidade</span>
+                </a>
+                <a href="ifood.html" class="sidebar-link">
+                    <span class="icon">&#x1F6F5;</span> iFood
+                </a>
+                <div class="sidebar-nav-group">Loja Online</div>
+                <a href="#" class="sidebar-link" id="linkSiteFranquia">
+                    <span class="icon">&#x1F310;</span> Meu Site
+                </a>
+                <a href="marketing.html" class="sidebar-link">
+                    <span class="icon">&#x1F4E2;</span> <span data-i18n="nav.marketing">Marketing</span>
+                </a>
+                <div class="sidebar-nav-group">Config</div>
+                <a href="configuracoes.html" class="sidebar-link">
+                    <span class="icon">&#x2699;&#xFE0F;</span> <span data-i18n="nav.settings">Configuracoes</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">&#x1F3EA;</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Franqueado</strong>
+                        <small>Franqueado</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="toggleSidebar()">&#x2630;</button>
+                    <h1>&#x1F4B0; Gestao de Despesas <span id="headerStoreName" style="font-size:16px;color:#64748b;font-weight:400;"></span></h1>
+                </div>
+                <div class="panel-header-right">
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <!-- SUMMARY STRIP -->
+                <div class="summary-strip">
+                    <div class="summary-item">
+                        <span class="label">Total do Mes</span>
+                        <span class="value red" id="sumTotal">R$ 0,00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Custos Fixos</span>
+                        <span class="value blue" id="sumFixos">R$ 0,00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Custos Variaveis</span>
+                        <span class="value orange" id="sumVariaveis">R$ 0,00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Compras</span>
+                        <span class="value green" id="sumCompras">R$ 0,00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Pendentes</span>
+                        <span class="value purple" id="sumPendentes">0 itens</span>
+                    </div>
+                </div>
+
+                <!-- TABS -->
+                <div class="tabs-bar">
+                    <button class="tab-btn active" onclick="switchTab('lancar')">&#x1F4DD; Lancar Despesa</button>
+                    <button class="tab-btn" onclick="switchTab('fixos')">&#x1F4C5; Custos Fixos</button>
+                    <button class="tab-btn" onclick="switchTab('historico')">&#x1F4CA; Historico</button>
+                </div>
+
+                <!-- ======== TAB: LANCAR DESPESA ======== -->
+                <div class="tab-content active" id="tab-lancar">
+                    <!-- NF Section -->
+                    <div class="panel-card">
+                        <div class="panel-card-header"><h3>Leitura de Nota Fiscal</h3></div>
+                        <div class="panel-card-body">
+                            <div class="nf-section">
+                                <div class="nf-btn" onclick="openCamera()">
+                                    <span class="nf-icon">&#x1F4F8;</span>
+                                    <span class="nf-label">Ler Nota Fiscal</span>
+                                    <span class="nf-hint">Aponte para o QR Code da NF-e</span>
+                                </div>
+                                <div class="nf-btn" onclick="document.getElementById('nfFileUpload').click()">
+                                    <span class="nf-icon">&#x1F4C4;</span>
+                                    <span class="nf-label">Enviar Foto</span>
+                                    <span class="nf-hint">Upload da foto do comprovante</span>
+                                    <input type="file" id="nfFileUpload" accept="image/*" onchange="handleNfUpload(event)" style="display:none;">
+                                </div>
+                                <div class="nf-btn" onclick="showManualNfKey()">
+                                    <span class="nf-icon">&#x1F522;</span>
+                                    <span class="nf-label">Digitar Chave</span>
+                                    <span class="nf-hint">Insira os 44 digitos da NF-e</span>
+                                </div>
+                            </div>
+
+                            <!-- NF-e extracted data preview -->
+                            <div class="nf-preview" id="nfPreview">
+                                <h4>&#x2705; Dados extraidos da NF-e</h4>
+                                <dl class="nf-data">
+                                    <dt>Chave:</dt><dd id="nfPrevKey">-</dd>
+                                    <dt>CNPJ:</dt><dd id="nfPrevCnpj">-</dd>
+                                    <dt>Valor:</dt><dd id="nfPrevValor">-</dd>
+                                    <dt>Data:</dt><dd id="nfPrevData">-</dd>
+                                </dl>
+                            </div>
+
+                            <!-- Manual NF key entry (hidden by default) -->
+                            <div id="manualNfKeySection" style="display:none; margin-top:12px;">
+                                <div class="form-group">
+                                    <label>Chave de Acesso NF-e (44 digitos)</label>
+                                    <input type="text" id="inputNfKeyManual" maxlength="44" placeholder="00000000000000000000000000000000000000000000" oninput="handleManualNfKey(this)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manual Entry Form -->
+                    <div class="panel-card">
+                        <div class="panel-card-header"><h3>Entrada Manual</h3></div>
+                        <div class="panel-card-body">
+                            <form class="expense-form" id="formDespesa" onsubmit="salvarDespesa(event)">
+                                <input type="hidden" id="editExpenseId" value="">
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Tipo de Despesa *</label>
+                                        <select id="inputCategory" required>
+                                            <option value="">Selecione...</option>
+                                            <option value="insumos">Compra de Insumos</option>
+                                            <option value="embalagens">Embalagens</option>
+                                            <option value="limpeza">Material de Limpeza</option>
+                                            <option value="manutencao">Manutencao</option>
+                                            <option value="marketing">Marketing</option>
+                                            <option value="delivery">Delivery / Frete</option>
+                                            <option value="outros">Outros</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group autocomplete-wrap">
+                                        <label>Fornecedor *</label>
+                                        <input type="text" id="inputSupplier" required placeholder="Nome do fornecedor" autocomplete="off" oninput="showSupplierSuggestions(this.value)" onfocus="showSupplierSuggestions(this.value)">
+                                        <div class="autocomplete-list" id="supplierAutocomplete"></div>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Valor Total (R$) *</label>
+                                        <input type="text" id="inputAmount" required placeholder="0,00" oninput="maskCurrency(this)">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Data *</label>
+                                        <input type="date" id="inputDate" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Nota Fiscal (opcional)</label>
+                                        <input type="text" id="inputNfKey" placeholder="Numero ou chave de acesso">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Descricao (opcional)</label>
+                                        <input type="text" id="inputDescription" placeholder="Detalhes da compra">
+                                    </div>
+                                </div>
+
+                                <div class="toggle-row">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="toggleRecurring" onchange="toggleRecurring()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span style="font-weight:600;font-size:14px;">Despesa recorrente?</span>
+                                </div>
+                                <div class="frequency-selector" id="frequencySelector">
+                                    <div class="form-group">
+                                        <label>Frequencia</label>
+                                        <select id="inputFrequency">
+                                            <option value="mensal">Mensal</option>
+                                            <option value="quinzenal">Quinzenal</option>
+                                            <option value="semanal">Semanal</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Comprovante (opcional)</label>
+                                    <div class="file-upload-area" onclick="document.getElementById('inputReceipt').click()">
+                                        <span class="upload-text" id="receiptLabel">&#x1F4CE; Clique para anexar foto do comprovante</span>
+                                        <input type="file" id="inputReceipt" accept="image/*,application/pdf" onchange="handleReceiptUpload(this)">
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn-register" id="btnSubmit">
+                                    &#x1F4BE; Registrar Despesa
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======== TAB: CUSTOS FIXOS ======== -->
+                <div class="tab-content" id="tab-fixos">
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>Custos Fixos Mensais</h3>
+                        </div>
+                        <div class="panel-card-body">
+                            <p style="color:#64748b;font-size:13px;margin-bottom:16px;">
+                                Cadastre os valores dos custos fixos da sua loja. Eles serao lancados automaticamente todo mes.
+                            </p>
+                            <div class="fixed-costs-grid" id="fixedCostsGrid"></div>
+                            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+                                <button class="btn-generate" onclick="generateMonthlyFixedCosts()">
+                                    &#x1F504; Gerar Lancamentos do Mes
+                                </button>
+                                <button class="btn btn-sm btn-outline" onclick="saveFixedCosts()" style="padding:12px 20px;border-radius:12px;font-weight:700;">
+                                    &#x1F4BE; Salvar Valores
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======== TAB: HISTORICO ======== -->
+                <div class="tab-content" id="tab-historico">
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>Historico de Despesas</h3>
+                        </div>
+                        <div class="panel-card-body">
+                            <div class="filter-bar">
+                                <input type="date" id="filterDateFrom" onchange="renderHistory()">
+                                <span style="color:#94a3b8;">ate</span>
+                                <input type="date" id="filterDateTo" onchange="renderHistory()">
+                                <select id="filterType" onchange="renderHistory()">
+                                    <option value="">Todos os tipos</option>
+                                    <option value="insumos">Insumos</option>
+                                    <option value="embalagens">Embalagens</option>
+                                    <option value="limpeza">Limpeza</option>
+                                    <option value="manutencao">Manutencao</option>
+                                    <option value="marketing">Marketing</option>
+                                    <option value="delivery">Delivery/Frete</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                                <input type="text" id="filterSupplier" placeholder="Fornecedor..." oninput="renderHistory()" style="min-width:140px;">
+                                <span class="period-total" id="historyTotal">R$ 0,00</span>
+                                <button class="btn-csv" onclick="exportExpensesCSV()">&#x1F4E5; Exportar CSV</button>
+                            </div>
+                            <div style="overflow-x:auto;">
+                                <table class="panel-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Tipo</th>
+                                            <th>Fornecedor</th>
+                                            <th>Descricao</th>
+                                            <th>Valor</th>
+                                            <th>Fonte</th>
+                                            <th>Acoes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="historyTableBody">
+                                        <tr><td colspan="7" style="text-align:center;color:#94a3b8;">Carregando...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- CAMERA OVERLAY (FULLSCREEN on mobile) -->
+    <div class="camera-overlay" id="cameraOverlay">
+        <div class="camera-header">
+            <h3>&#x1F4F7; Ler QR Code da NF-e</h3>
+            <button class="camera-close" onclick="closeCamera()">&times;</button>
+        </div>
+        <div class="camera-body">
+            <video id="cameraVideo" autoplay playsinline></video>
+            <div class="viewfinder"></div>
+            <canvas id="cameraCanvas" style="display:none;"></canvas>
+        </div>
+        <div class="camera-actions">
+            <button class="btn-capture" onclick="captureFrame()">&#x1F4F8; Capturar</button>
+            <button class="btn btn-outline" onclick="closeCamera()" style="padding:14px 24px;border-radius:40px;font-weight:700;">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <!-- SCRIPTS -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/i18n.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/cloud-functions.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+    <script src="../js/core/notifications.js"></script>
+
+    <script>
+    // ========================================================
+    // DESPESAS MODULE - MilkyPot Franchise Panel
+    // ========================================================
+
+    let franchiseId = null;
+    let cameraStream = null;
+    let scanInterval = null;
+
+    // ===== CATEGORY MAP =====
+    const categoryLabels = {
+        insumos: 'Compra de Insumos',
+        embalagens: 'Embalagens',
+        limpeza: 'Material de Limpeza',
+        manutencao: 'Manutencao',
+        marketing: 'Marketing',
+        delivery: 'Delivery / Frete',
+        outros: 'Outros',
+        aluguel: 'Aluguel',
+        condominio: 'Condominio',
+        energia: 'Energia',
+        agua: 'Agua',
+        internet: 'Internet',
+        contador: 'Contador',
+        software: 'Software',
+        folha: 'Folha de Pagamento',
+        prolabore: 'Pro-labore',
+        royalties: 'Royalties',
+        seguros: 'Seguros',
+        juros: 'Juros'
+    };
+
+    // ===== FIXED COSTS DEFINITIONS =====
+    const fixedCostsDefs = [
+        { key: 'aluguel',     icon: '&#x1F3E0;', name: 'Aluguel' },
+        { key: 'condominio',  icon: '&#x1F3E2;', name: 'Condominio' },
+        { key: 'energia',     icon: '&#x26A1;',  name: 'Energia' },
+        { key: 'agua',        icon: '&#x1F4A7;', name: 'Agua' },
+        { key: 'internet',    icon: '&#x1F310;', name: 'Internet' },
+        { key: 'contador',    icon: '&#x1F4CB;', name: 'Contador' },
+        { key: 'software',    icon: '&#x1F4BB;', name: 'Software' },
+        { key: 'folha',       icon: '&#x1F465;', name: 'Folha de Pagamento' },
+        { key: 'prolabore',   icon: '&#x1F468;', name: 'Pro-labore' },
+        { key: 'royalties',   icon: '&#x1F451;', name: 'Royalties' },
+        { key: 'marketing',   icon: '&#x1F4E2;', name: 'Marketing Fixo' },
+        { key: 'manutencao',  icon: '&#x1F527;', name: 'Manutencao' },
+        { key: 'seguros',     icon: '&#x1F6E1;', name: 'Seguros' },
+        { key: 'juros',       icon: '&#x1F4B3;', name: 'Juros / Financiamentos' }
+    ];
+
+    // ========== SIDEBAR ==========
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    // ========== TABS ==========
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(function(btn, i) {
+            btn.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-content').forEach(function(tc) {
+            tc.classList.remove('active');
+        });
+        document.getElementById('tab-' + tab).classList.add('active');
+        // Highlight correct tab button
+        var tabMap = { lancar: 0, fixos: 1, historico: 2 };
+        document.querySelectorAll('.tab-btn')[tabMap[tab]].classList.add('active');
+
+        if (tab === 'historico') renderHistory();
+        if (tab === 'fixos') renderFixedCosts();
+    }
+
+    // ========== CURRENCY MASK ==========
+    function maskCurrency(input) {
+        var v = input.value.replace(/\D/g, '');
+        if (v === '') { input.value = ''; return; }
+        var num = parseInt(v, 10);
+        var formatted = (num / 100).toFixed(2).replace('.', ',');
+        // Add thousands separator
+        var parts = formatted.split(',');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        input.value = parts.join(',');
+    }
+
+    function parseCurrency(str) {
+        if (!str) return 0;
+        return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
+    }
+
+    function formatCurrency(val) {
+        if (typeof Utils !== 'undefined' && Utils.formatCurrency) return Utils.formatCurrency(val);
+        return 'R$ ' + val.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    // ========== TOAST ==========
+    function showToast(msg, type) {
+        var toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.className = 'toast toast-' + (type || 'success');
+        toast.classList.add('show');
+        setTimeout(function() { toast.classList.remove('show'); }, 3000);
+    }
+
+    // ========== SUPPLIER AUTOCOMPLETE ==========
+    function getSuppliers() {
+        try {
+            return JSON.parse(localStorage.getItem('mp_suppliers_' + franchiseId) || '[]');
+        } catch(e) { return []; }
+    }
+    function saveSupplier(name) {
+        if (!name) return;
+        var list = getSuppliers();
+        var lower = name.toLowerCase().trim();
+        if (!list.some(function(s) { return s.toLowerCase() === lower; })) {
+            list.push(name.trim());
+            localStorage.setItem('mp_suppliers_' + franchiseId, JSON.stringify(list));
+        }
+    }
+    function showSupplierSuggestions(val) {
+        var container = document.getElementById('supplierAutocomplete');
+        if (!val || val.length < 1) { container.classList.remove('open'); return; }
+        var suppliers = getSuppliers();
+        var filtered = suppliers.filter(function(s) {
+            return s.toLowerCase().indexOf(val.toLowerCase()) !== -1;
+        });
+        if (filtered.length === 0) { container.classList.remove('open'); return; }
+        container.innerHTML = filtered.map(function(s) {
+            return '<div class="autocomplete-item" onclick="selectSupplier(\'' + s.replace(/'/g, "\\'") + '\')">' + s + '</div>';
+        }).join('');
+        container.classList.add('open');
+    }
+    function selectSupplier(name) {
+        document.getElementById('inputSupplier').value = name;
+        document.getElementById('supplierAutocomplete').classList.remove('open');
+    }
+    // Close autocomplete on outside click
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.autocomplete-wrap')) {
+            var ac = document.getElementById('supplierAutocomplete');
+            if (ac) ac.classList.remove('open');
+        }
+    });
+
+    // ========== RECURRING TOGGLE ==========
+    function toggleRecurring() {
+        var checked = document.getElementById('toggleRecurring').checked;
+        var sel = document.getElementById('frequencySelector');
+        if (checked) { sel.classList.add('visible'); }
+        else { sel.classList.remove('visible'); }
+    }
+
+    // ========== RECEIPT UPLOAD ==========
+    function handleReceiptUpload(input) {
+        if (input.files && input.files[0]) {
+            document.getElementById('receiptLabel').textContent = '&#x2705; ' + input.files[0].name;
+        }
+    }
+
+    // ========== NF-e PARSING ==========
+    function parseNfeQrCode(url) {
+        // Brazilian NF-e QR codes have the access key in the URL parameters
+        var result = { key: '', cnpj: '', amount: 0, date: '' };
+        try {
+            if (typeof url !== 'string') return result;
+            // Pattern 1: p= parameter with pipe separated values
+            var pMatch = url.match(/[?&]p=([^&]+)/);
+            if (pMatch) {
+                var pVal = decodeURIComponent(pMatch[1]);
+                var parts = pVal.split('|');
+                if (parts.length >= 1) {
+                    // The access key is the first 44-digit field
+                    for (var i = 0; i < parts.length; i++) {
+                        if (/^\d{44}$/.test(parts[i])) {
+                            result.key = parts[i];
+                            result.cnpj = parts[i].substring(6, 20);
+                            // Date from key: positions 2-5 = YYMM
+                            var yy = parts[i].substring(2, 4);
+                            var mm = parts[i].substring(4, 6);
+                            result.date = '20' + yy + '-' + mm + '-01';
+                            break;
+                        }
+                    }
+                    // Try to find amount (usually last numeric with decimal)
+                    for (var j = parts.length - 1; j >= 0; j--) {
+                        var numVal = parseFloat(parts[j]);
+                        if (!isNaN(numVal) && numVal > 0 && parts[j].indexOf('.') !== -1) {
+                            result.amount = numVal;
+                            break;
+                        }
+                    }
+                }
+            }
+            // Pattern 2: chNFe parameter
+            var chMatch = url.match(/chNFe=(\d{44})/);
+            if (chMatch && !result.key) {
+                result.key = chMatch[1];
+                result.cnpj = chMatch[1].substring(6, 20);
+                var yy2 = chMatch[1].substring(2, 4);
+                var mm2 = chMatch[1].substring(4, 6);
+                result.date = '20' + yy2 + '-' + mm2 + '-01';
+            }
+            // Try vNF or valor parameter
+            var vMatch = url.match(/[?&](?:vNF|nValor)=([0-9.]+)/);
+            if (vMatch && !result.amount) {
+                result.amount = parseFloat(vMatch[1]) || 0;
+            }
+        } catch(e) {
+            console.warn('NF-e parse error:', e);
+        }
+        return result;
+    }
+
+    function applyNfData(data) {
+        if (data.key) {
+            document.getElementById('inputNfKey').value = data.key;
+            document.getElementById('nfPrevKey').textContent = data.key.replace(/(\d{4})/g, '$1 ').trim();
+        }
+        if (data.cnpj) {
+            document.getElementById('nfPrevCnpj').textContent = data.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+        }
+        if (data.amount) {
+            document.getElementById('inputAmount').value = data.amount.toFixed(2).replace('.', ',');
+            document.getElementById('nfPrevValor').textContent = formatCurrency(data.amount);
+        }
+        if (data.date) {
+            document.getElementById('inputDate').value = data.date;
+            document.getElementById('nfPrevData').textContent = data.date.split('-').reverse().join('/');
+        }
+        document.getElementById('nfPreview').classList.add('visible');
+        showToast('Dados da NF-e extraidos com sucesso!', 'success');
+    }
+
+    function showManualNfKey() {
+        var section = document.getElementById('manualNfKeySection');
+        section.style.display = section.style.display === 'none' ? 'block' : 'none';
+        if (section.style.display === 'block') {
+            document.getElementById('inputNfKeyManual').focus();
+        }
+    }
+
+    function handleManualNfKey(input) {
+        var v = input.value.replace(/\D/g, '');
+        input.value = v;
+        if (v.length === 44) {
+            var data = {
+                key: v,
+                cnpj: v.substring(6, 20),
+                amount: 0,
+                date: '20' + v.substring(2, 4) + '-' + v.substring(4, 6) + '-01'
+            };
+            applyNfData(data);
+            document.getElementById('manualNfKeySection').style.display = 'none';
+        }
+    }
+
+    function handleNfUpload(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+        // Store as receipt
+        document.getElementById('receiptLabel').textContent = '&#x2705; ' + file.name;
+        showToast('Foto da nota fiscal anexada. Preencha os dados manualmente.', 'info');
+    }
+
+    // ========== CAMERA ==========
+    function openCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showToast('Camera nao disponivel neste dispositivo. Use a entrada manual.', 'error');
+            return;
+        }
+        var overlay = document.getElementById('cameraOverlay');
+        overlay.classList.add('active');
+        navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        }).then(function(stream) {
+            cameraStream = stream;
+            var video = document.getElementById('cameraVideo');
+            video.srcObject = stream;
+            video.play();
+            // Start scanning for QR codes
+            startQrScanning();
+        }).catch(function(err) {
+            console.error('Camera error:', err);
+            closeCamera();
+            showToast('Erro ao acessar camera: ' + err.message, 'error');
+        });
+    }
+
+    function closeCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(function(t) { t.stop(); });
+            cameraStream = null;
+        }
+        if (scanInterval) {
+            clearInterval(scanInterval);
+            scanInterval = null;
+        }
+        document.getElementById('cameraOverlay').classList.remove('active');
+    }
+
+    function startQrScanning() {
+        // Use BarcodeDetector API if available (Chrome 83+)
+        if ('BarcodeDetector' in window) {
+            var detector = new BarcodeDetector({ formats: ['qr_code'] });
+            scanInterval = setInterval(function() {
+                var video = document.getElementById('cameraVideo');
+                if (video.readyState < 2) return;
+                detector.detect(video).then(function(codes) {
+                    if (codes.length > 0) {
+                        var rawValue = codes[0].rawValue;
+                        if (rawValue && (rawValue.indexOf('nfce') !== -1 || rawValue.indexOf('nfe') !== -1 || rawValue.indexOf('fazenda') !== -1 || /\d{44}/.test(rawValue))) {
+                            var data = parseNfeQrCode(rawValue);
+                            if (data.key) {
+                                applyNfData(data);
+                                closeCamera();
+                            }
+                        }
+                    }
+                }).catch(function(e) { /* silent */ });
+            }, 500);
+        }
+    }
+
+    function captureFrame() {
+        var video = document.getElementById('cameraVideo');
+        var canvas = document.getElementById('cameraCanvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+
+        // Try BarcodeDetector on the captured frame
+        if ('BarcodeDetector' in window) {
+            var detector = new BarcodeDetector({ formats: ['qr_code'] });
+            detector.detect(canvas).then(function(codes) {
+                if (codes.length > 0) {
+                    var data = parseNfeQrCode(codes[0].rawValue);
+                    if (data.key) {
+                        applyNfData(data);
+                        closeCamera();
+                        return;
+                    }
+                }
+                showToast('QR Code nao detectado. Tente novamente ou use a entrada manual.', 'info');
+            }).catch(function() {
+                showToast('Falha na deteccao. Use a entrada manual.', 'error');
+            });
+        } else {
+            // Convert canvas to data URL for manual review (save as receipt)
+            showToast('BarcodeDetector nao disponivel. Preencha os dados manualmente.', 'info');
+            closeCamera();
+        }
+    }
+
+    // ========== SAVE EXPENSE ==========
+    function salvarDespesa(event) {
+        event.preventDefault();
+        var btn = document.getElementById('btnSubmit');
+        btn.disabled = true;
+
+        var editId = document.getElementById('editExpenseId').value;
+        var category = document.getElementById('inputCategory').value;
+        var supplier = document.getElementById('inputSupplier').value.trim();
+        var amount = parseCurrency(document.getElementById('inputAmount').value);
+        var date = document.getElementById('inputDate').value;
+        var nfKey = document.getElementById('inputNfKey').value.trim();
+        var description = document.getElementById('inputDescription').value.trim();
+        var isRecurring = document.getElementById('toggleRecurring').checked;
+        var frequency = document.getElementById('inputFrequency').value;
+
+        if (!category || !supplier || !amount || !date) {
+            showToast('Preencha todos os campos obrigatorios.', 'error');
+            btn.disabled = false;
+            return;
+        }
+
+        var source = nfKey ? 'nf' : 'manual';
+
+        var entry = {
+            id: editId || 'exp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            type: 'expense',
+            category: category,
+            source: source,
+            amount: amount,
+            description: description || (categoryLabels[category] || category),
+            supplier: supplier,
+            nfKey: nfKey,
+            date: date,
+            createdAt: new Date().toISOString(),
+            recurring: isRecurring ? frequency : null
+        };
+
+        if (typeof DataStore !== 'undefined') {
+            if (editId) {
+                // Update existing
+                var finances = DataStore.getCollection('finances', franchiseId) || [];
+                var idx = finances.findIndex(function(f) { return f.id === editId; });
+                if (idx !== -1) {
+                    finances[idx] = entry;
+                    DataStore.set('finances_' + franchiseId, finances);
+                }
+            } else {
+                DataStore.addToCollection('finances', franchiseId, entry);
+            }
+        }
+
+        // Save supplier
+        saveSupplier(supplier);
+
+        showToast(editId ? 'Despesa atualizada!' : 'Despesa registrada com sucesso!', 'success');
+
+        // Reset form
+        document.getElementById('formDespesa').reset();
+        document.getElementById('editExpenseId').value = '';
+        document.getElementById('nfPreview').classList.remove('visible');
+        document.getElementById('receiptLabel').innerHTML = '&#x1F4CE; Clique para anexar foto do comprovante';
+        document.getElementById('frequencySelector').classList.remove('visible');
+        document.getElementById('btnSubmit').innerHTML = '&#x1F4BE; Registrar Despesa';
+        document.getElementById('inputDate').value = new Date().toISOString().slice(0, 10);
+        btn.disabled = false;
+
+        updateSummary();
+    }
+
+    // ========== FIXED COSTS ==========
+    function getFixedCosts() {
+        if (typeof DataStore === 'undefined') return {};
+        return DataStore.get('fixed_costs_' + franchiseId) || {};
+    }
+
+    function saveFixedCosts() {
+        var costs = {};
+        fixedCostsDefs.forEach(function(def) {
+            var input = document.getElementById('fc_' + def.key);
+            if (input) {
+                var val = parseCurrency(input.value);
+                if (val > 0) {
+                    costs[def.key] = {
+                        value: val,
+                        updatedAt: new Date().toISOString()
+                    };
+                }
+            }
+        });
+        if (typeof DataStore !== 'undefined') {
+            DataStore.set('fixed_costs_' + franchiseId, costs);
+        }
+        showToast('Custos fixos salvos!', 'success');
+        renderFixedCosts();
+        updateSummary();
+    }
+
+    function renderFixedCosts() {
+        var grid = document.getElementById('fixedCostsGrid');
+        var costs = getFixedCosts();
+        var html = '';
+        fixedCostsDefs.forEach(function(def) {
+            var data = costs[def.key] || {};
+            var value = data.value || 0;
+            var updated = data.updatedAt ? new Date(data.updatedAt).toLocaleDateString('pt-BR') : '';
+            var statusClass = value > 0 ? 'active' : 'pending';
+            var statusText = value > 0 ? '&#x2705; Cadastrado' : '&#x274C; Pendente';
+
+            html += '<div class="fixed-cost-card">';
+            html += '  <div class="fc-header">';
+            html += '    <div class="fc-icon">' + def.icon + '</div>';
+            html += '    <div class="fc-name">' + def.name + '</div>';
+            html += '  </div>';
+            html += '  <input type="text" class="fc-value-input" id="fc_' + def.key + '" value="' + (value > 0 ? value.toFixed(2).replace('.', ',') : '') + '" placeholder="R$ 0,00" oninput="maskCurrency(this)">';
+            html += '  <div class="fc-status ' + statusClass + '">' + statusText;
+            if (updated) html += ' - ' + updated;
+            html += '  </div>';
+            html += '</div>';
+        });
+        grid.innerHTML = html;
+    }
+
+    function generateMonthlyFixedCosts() {
+        var costs = getFixedCosts();
+        var now = new Date();
+        var yearMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        var date = yearMonth + '-01';
+
+        // Check if already generated this month
+        var finances = (typeof DataStore !== 'undefined') ? (DataStore.getCollection('finances', franchiseId) || []) : [];
+        var alreadyGenerated = finances.some(function(f) {
+            return f.source === 'fixo' && f.date && f.date.startsWith(yearMonth);
+        });
+
+        if (alreadyGenerated) {
+            if (!confirm('Ja existem lancamentos de custos fixos para este mes. Deseja gerar novamente? (duplicatas serao criadas)')) {
+                return;
+            }
+        }
+
+        var count = 0;
+        fixedCostsDefs.forEach(function(def) {
+            var data = costs[def.key];
+            if (data && data.value > 0) {
+                var entry = {
+                    id: 'fc_' + yearMonth + '_' + def.key + '_' + Date.now(),
+                    type: 'expense',
+                    category: def.key,
+                    source: 'fixo',
+                    amount: data.value,
+                    description: def.name + ' - ' + yearMonth,
+                    supplier: def.name,
+                    nfKey: '',
+                    date: date,
+                    createdAt: new Date().toISOString(),
+                    recurring: 'mensal'
+                };
+                if (typeof DataStore !== 'undefined') {
+                    DataStore.addToCollection('finances', franchiseId, entry);
+                }
+                count++;
+            }
+        });
+
+        if (count > 0) {
+            showToast(count + ' lancamentos de custos fixos gerados para ' + yearMonth + '!', 'success');
+        } else {
+            showToast('Nenhum custo fixo cadastrado. Preencha os valores primeiro.', 'error');
+        }
+        updateSummary();
+    }
+
+    // ========== HISTORY ==========
+    function getExpenses() {
+        if (typeof DataStore === 'undefined') return [];
+        var finances = DataStore.getCollection('finances', franchiseId) || [];
+        return finances.filter(function(f) { return f.type === 'expense'; });
+    }
+
+    function renderHistory() {
+        var expenses = getExpenses();
+        var fromDate = document.getElementById('filterDateFrom').value;
+        var toDate = document.getElementById('filterDateTo').value;
+        var filterType = document.getElementById('filterType').value;
+        var filterSupplier = document.getElementById('filterSupplier').value.toLowerCase();
+
+        // Apply filters
+        var filtered = expenses.filter(function(e) {
+            if (fromDate && e.date < fromDate) return false;
+            if (toDate && e.date > toDate) return false;
+            if (filterType && e.category !== filterType) return false;
+            if (filterSupplier && (!e.supplier || e.supplier.toLowerCase().indexOf(filterSupplier) === -1)) return false;
+            return true;
+        });
+
+        // Sort by date desc
+        filtered.sort(function(a, b) {
+            return (b.date || '').localeCompare(a.date || '') || (b.createdAt || '').localeCompare(a.createdAt || '');
+        });
+
+        var total = filtered.reduce(function(s, e) { return s + (e.amount || 0); }, 0);
+        document.getElementById('historyTotal').textContent = formatCurrency(total);
+
+        var tbody = document.getElementById('historyTableBody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">Nenhuma despesa encontrada</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(function(e) {
+            var dateStr = e.date ? e.date.split('-').reverse().join('/') : '-';
+            var catLabel = categoryLabels[e.category] || e.category || '-';
+            var sourceBadge = '<span class="badge badge-' + (e.source || 'manual') + '">' + (e.source === 'nf' ? 'NF-e' : e.source === 'fixo' ? 'Fixo' : 'Manual') + '</span>';
+            return '<tr>' +
+                '<td>' + dateStr + '</td>' +
+                '<td>' + catLabel + '</td>' +
+                '<td>' + (e.supplier || '-') + '</td>' +
+                '<td>' + (e.description || '-') + '</td>' +
+                '<td style="font-weight:700;color:#ef4444;">' + formatCurrency(e.amount || 0) + '</td>' +
+                '<td>' + sourceBadge + '</td>' +
+                '<td class="actions-cell">' +
+                    '<button class="btn-action btn-edit" onclick="editExpense(\'' + e.id + '\')">&#x270F;&#xFE0F;</button>' +
+                    '<button class="btn-action btn-delete" onclick="deleteExpense(\'' + e.id + '\')">&#x1F5D1;&#xFE0F;</button>' +
+                '</td>' +
+            '</tr>';
+        }).join('');
+    }
+
+    function editExpense(id) {
+        var expenses = getExpenses();
+        var expense = expenses.find(function(e) { return e.id === id; });
+        if (!expense) return;
+
+        // Switch to lancar tab
+        switchTab('lancar');
+
+        // Fill form
+        document.getElementById('editExpenseId').value = expense.id;
+        document.getElementById('inputCategory').value = expense.category || '';
+        document.getElementById('inputSupplier').value = expense.supplier || '';
+        document.getElementById('inputAmount').value = expense.amount ? expense.amount.toFixed(2).replace('.', ',') : '';
+        document.getElementById('inputDate').value = expense.date || '';
+        document.getElementById('inputNfKey').value = expense.nfKey || '';
+        document.getElementById('inputDescription').value = expense.description || '';
+        if (expense.recurring) {
+            document.getElementById('toggleRecurring').checked = true;
+            document.getElementById('frequencySelector').classList.add('visible');
+            document.getElementById('inputFrequency').value = expense.recurring;
+        }
+        document.getElementById('btnSubmit').innerHTML = '&#x1F4BE; Atualizar Despesa';
+
+        // Scroll to form
+        document.getElementById('formDespesa').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function deleteExpense(id) {
+        if (!confirm('Deseja realmente excluir esta despesa?')) return;
+        if (typeof DataStore !== 'undefined') {
+            var finances = DataStore.getCollection('finances', franchiseId) || [];
+            finances = finances.filter(function(f) { return f.id !== id; });
+            DataStore.set('finances_' + franchiseId, finances);
+        }
+        showToast('Despesa excluida.', 'info');
+        renderHistory();
+        updateSummary();
+    }
+
+    // ========== CSV EXPORT ==========
+    function exportExpensesCSV() {
+        var expenses = getExpenses();
+        if (expenses.length === 0) {
+            showToast('Nenhuma despesa para exportar.', 'error');
+            return;
+        }
+        // Apply current filters
+        var fromDate = document.getElementById('filterDateFrom').value;
+        var toDate = document.getElementById('filterDateTo').value;
+        var filterType = document.getElementById('filterType').value;
+        var filterSupplier = document.getElementById('filterSupplier').value.toLowerCase();
+
+        var filtered = expenses.filter(function(e) {
+            if (fromDate && e.date < fromDate) return false;
+            if (toDate && e.date > toDate) return false;
+            if (filterType && e.category !== filterType) return false;
+            if (filterSupplier && (!e.supplier || e.supplier.toLowerCase().indexOf(filterSupplier) === -1)) return false;
+            return true;
+        });
+
+        var csv = 'Data,Tipo,Fornecedor,Descricao,Valor,Fonte,Nota Fiscal\n';
+        filtered.forEach(function(e) {
+            csv += '"' + (e.date || '') + '","' + (categoryLabels[e.category] || e.category || '') + '","' + (e.supplier || '') + '","' + (e.description || '') + '","' + (e.amount || 0).toFixed(2) + '","' + (e.source || '') + '","' + (e.nfKey || '') + '"\n';
+        });
+
+        var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'despesas_milkypot_' + new Date().toISOString().slice(0, 10) + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('CSV exportado!', 'success');
+    }
+
+    // ========== SUMMARY ==========
+    function updateSummary() {
+        var expenses = getExpenses();
+        var now = new Date();
+        var yearMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+
+        var monthExpenses = expenses.filter(function(e) {
+            return e.date && e.date.startsWith(yearMonth);
+        });
+
+        var total = monthExpenses.reduce(function(s, e) { return s + (e.amount || 0); }, 0);
+        var fixos = monthExpenses.filter(function(e) { return e.source === 'fixo'; }).reduce(function(s, e) { return s + (e.amount || 0); }, 0);
+        var variaveis = monthExpenses.filter(function(e) { return e.source !== 'fixo' && e.category !== 'insumos'; }).reduce(function(s, e) { return s + (e.amount || 0); }, 0);
+        var compras = monthExpenses.filter(function(e) { return e.category === 'insumos' || e.category === 'embalagens'; }).reduce(function(s, e) { return s + (e.amount || 0); }, 0);
+
+        // Pending fixed costs
+        var costs = getFixedCosts();
+        var totalFixedRegistered = Object.keys(costs).filter(function(k) { return costs[k] && costs[k].value > 0; }).length;
+        var fixedLaunched = monthExpenses.filter(function(e) { return e.source === 'fixo'; });
+        var launchedKeys = {};
+        fixedLaunched.forEach(function(e) { launchedKeys[e.category] = true; });
+        var pendingCount = 0;
+        fixedCostsDefs.forEach(function(def) {
+            if (costs[def.key] && costs[def.key].value > 0 && !launchedKeys[def.key]) {
+                pendingCount++;
+            }
+        });
+
+        document.getElementById('sumTotal').textContent = formatCurrency(total);
+        document.getElementById('sumFixos').textContent = formatCurrency(fixos);
+        document.getElementById('sumVariaveis').textContent = formatCurrency(variaveis);
+        document.getElementById('sumCompras').textContent = formatCurrency(compras);
+        document.getElementById('sumPendentes').textContent = pendingCount + ' ' + (pendingCount === 1 ? 'item' : 'itens');
+    }
+
+    // ========== INIT ==========
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof Auth !== 'undefined') {
+            Auth.requireAuth('franchisee', function(user, data) {
+                franchiseId = data.franchiseId || data.storeId || user.uid;
+                var storeName = data.storeName || data.franchiseName || '';
+                document.getElementById('sidebarStoreName').textContent = storeName;
+                document.getElementById('sidebarUserName').textContent = data.name || user.email || 'Franqueado';
+                document.getElementById('headerStoreName').textContent = storeName ? '- ' + storeName : '';
+
+                // Set default date
+                document.getElementById('inputDate').value = new Date().toISOString().slice(0, 10);
+
+                // Set default history filter to current month
+                var now = new Date();
+                document.getElementById('filterDateFrom').value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
+                document.getElementById('filterDateTo').value = now.toISOString().slice(0, 10);
+
+                // Load data
+                renderFixedCosts();
+                updateSummary();
+            });
+        } else {
+            // Fallback for dev/testing
+            franchiseId = 'dev_store';
+            document.getElementById('inputDate').value = new Date().toISOString().slice(0, 10);
+            var now = new Date();
+            document.getElementById('filterDateFrom').value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
+            document.getElementById('filterDateTo').value = now.toISOString().slice(0, 10);
+            renderFixedCosts();
+            updateSummary();
+        }
+    });
+    </script>
+</body>
+</html>

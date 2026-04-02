@@ -231,6 +231,46 @@ function placeOrder() {
     localStorage.setItem('milkypot_orders', JSON.stringify(orders));
 
     // ============================================
+    // SAVE TO DATASTORE (franchise financial tracking)
+    // ============================================
+    var storeId = window._selectedStoreId || null;
+    if (typeof DataStore !== 'undefined' && typeof Utils !== 'undefined' && storeId) {
+        try {
+            // Save order to DataStore for franchise tracking
+            DataStore.addToCollection('orders', storeId, {
+                id: Utils.generateId(),
+                orderNumber: orderNumber,
+                status: 'aguardando_pagamento',
+                createdAt: new Date().toISOString(),
+                customer: { name: customerName, phone: customerPhone },
+                delivery: { type: deliveryType, address: deliveryAddress, fee: deliveryFee },
+                payment: { method: paymentType, label: paymentLabels[paymentType] || paymentType },
+                items: order.items,
+                subtotal: subtotal,
+                deliveryFee: deliveryFee,
+                total: total,
+                source: 'site'
+            });
+
+            // Auto-create financial entry from site order
+            DataStore.addToCollection('finances', storeId, {
+                id: Utils.generateId(),
+                type: 'income',
+                category: 'vendas_delivery',
+                source: 'site',
+                amount: total,
+                description: 'Pedido ' + orderNumber + ' - ' + (deliveryType === 'delivery' ? 'Delivery' : 'Retirada'),
+                orderId: orderNumber,
+                date: new Date().toISOString().split('T')[0],
+                createdAt: new Date().toISOString()
+            });
+            console.log('DataStore: Order + finance entry saved for franchise', storeId);
+        } catch (e) {
+            console.warn('DataStore save error:', e);
+        }
+    }
+
+    // ============================================
     // SHOW SUCCESS
     // ============================================
     closeCheckout();

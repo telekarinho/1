@@ -553,6 +553,21 @@
             franchiseId:fid
         };
         DataStore.addToCollection('orders',fid,order);
+
+        // Auto-create financial entry from PDV sale
+        var financeEntry = {
+            id: Utils.generateId(),
+            type: 'income',
+            category: 'vendas_pdv',
+            source: 'pdv',
+            amount: total,
+            description: 'PDV ' + order.id + ' - ' + (oName || 'Balcao'),
+            orderId: order.id,
+            date: new Date().toISOString().split('T')[0],
+            createdAt: new Date().toISOString()
+        };
+        DataStore.addToCollection('finances', fid, financeEntry);
+
         toast('✅ '+oName+' — R$ '+total.toFixed(2).replace('.',',')+' finalizado!');
 
         // Remove from open tabs if was editing

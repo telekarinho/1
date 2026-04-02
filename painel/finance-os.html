@@ -468,6 +468,9 @@
                 <a href="financeiro.html" class="sidebar-link">
                     <span class="icon">💰</span> Financeiro
                 </a>
+                <a href="despesas.html" class="sidebar-link">
+                    <span class="icon">💰</span> Despesas
+                </a>
                 <a href="finance-os.html" class="sidebar-link active">
                     <span class="icon">🏥</span> Finance OS
                 </a>
@@ -767,63 +770,217 @@
         document.getElementById('sidebar').classList.toggle('open');
     }
 
-    // ========== DEMO DATA ==========
+    // ========== DATA - Loaded from DataStore ==========
     const DEMO = {
-        storeName: 'MilkyPot Shopping Ibirapuera',
-        score: 87,
-        subScores: { liquidez: 82, rentabilidade: 90, eficiencia: 88, previsibilidade: 85, disciplina: 89 },
-        revenue: 45200,
-        revenuePrev: 41800,
-        cmvPct: 28,
+        storeName: franchise ? franchise.name : 'Sua Franquia',
+        score: 0,
+        subScores: { liquidez: 0, rentabilidade: 0, eficiencia: 0, previsibilidade: 0, disciplina: 0 },
+        revenue: 0,
+        revenuePrev: 0,
+        cmvPct: 0,
         cmvMeta: 30,
-        laborPct: 18,
+        laborPct: 0,
         laborMeta: 20,
-        primeCostPct: 46,
+        primeCostPct: 0,
         primeCostMeta: 50,
-        breakeven: 32000,
-        minDaily: 1230,
-        cash: 12400,
-        projectedProfit: 8200,
+        breakeven: 0,
+        minDaily: 0,
+        cash: 0,
+        projectedProfit: 0,
         operatingDays: 26,
         operatingHours: 12,
         fixedCosts: {
-            aluguel: 5500, condominio: 800, agua: 320, energia: 1200,
-            internet: 200, software: 350, contador: 600, folhaAdmin: 3200,
-            prolabore: 4000, royalties: 2260, marketingLocal: 1500,
-            manutencao: 400, seguros: 350, juros: 0
+            aluguel: 0, condominio: 0, agua: 0, energia: 0,
+            internet: 0, software: 0, contador: 0, folhaAdmin: 0,
+            prolabore: 0, royalties: 0, marketingLocal: 0,
+            manutencao: 0, seguros: 0, juros: 0
         },
         variableCosts: {
-            insumos: 12656, embalagens: 1808, taxasIfood: 2260,
-            comissoes: 452, frete: 680, entregadores: 1356,
-            horasExtras: 400, perdas: 226, estornos: 180,
-            taxasCartao: 904, impostosVar: 2712
+            insumos: 0, embalagens: 0, taxasIfood: 0,
+            comissoes: 0, frete: 0, entregadores: 0,
+            horasExtras: 0, perdas: 0, estornos: 0,
+            taxasCartao: 0, impostosVar: 0
         },
         operational: {
-            estoqueInicial: 8500, comprasMes: 14200, estoqueFinal: 10044, desperdicio: 350
+            estoqueInicial: 0, comprasMes: 0, estoqueFinal: 0, desperdicio: 0
         },
-        dreLines: [
-            { label: 'Receita Bruta', val: 45200, pct: 100, meta: null, type: 'header' },
-            { label: '(-) Impostos sobre Vendas', val: -2712, pct: -6, meta: -6, type: 'sub' },
-            { label: '(-) Taxas Cartao/PIX', val: -904, pct: -2, meta: -2.5, type: 'sub' },
-            { label: '(-) Estornos/Cancelamentos', val: -180, pct: -0.4, meta: -1, type: 'sub' },
-            { label: '= Receita Liquida', val: 41404, pct: 91.6, meta: 91, type: 'header' },
-            { label: '(-) CMV (Custo Merc. Vendidas)', val: -12656, pct: -28, meta: -30, type: 'sub' },
-            { label: '= Margem Bruta', val: 28748, pct: 63.6, meta: 61, type: 'header' },
-            { label: '(-) Mao de Obra', val: -8136, pct: -18, meta: -20, type: 'sub' },
-            { label: '= Resultado apos Prime Cost', val: 20612, pct: 45.6, meta: 41, type: 'header' },
-            { label: '(-) Aluguel + Condominio', val: -6300, pct: -13.9, meta: -15, type: 'sub' },
-            { label: '(-) Agua + Energia', val: -1520, pct: -3.4, meta: -4, type: 'sub' },
-            { label: '(-) Marketing Local', val: -1500, pct: -3.3, meta: -4, type: 'sub' },
-            { label: '(-) Royalties/Taxa Franquia', val: -2260, pct: -5, meta: -5, type: 'sub' },
-            { label: '(-) Software/Internet', val: -550, pct: -1.2, meta: -1.5, type: 'sub' },
-            { label: '(-) Contador + Seguros', val: -950, pct: -2.1, meta: -2.5, type: 'sub' },
-            { label: '(-) Manutencao', val: -400, pct: -0.9, meta: -1, type: 'sub' },
-            { label: '(-) Juros/Parcelamentos', val: 0, pct: 0, meta: -1, type: 'sub' },
-            { label: '(-) Perdas/Desperdicio', val: -226, pct: -0.5, meta: -1, type: 'sub' },
-            { label: '= EBITDA', val: 6906, pct: 15.3, meta: 12, type: 'header' },
-            { label: '= LUCRO LIQUIDO PROJETADO', val: 8200, pct: 18.1, meta: 15, type: 'total' }
-        ]
+        dreLines: []
     };
+
+    // ========== LOAD REAL DATA FROM DATASTORE ==========
+    function loadRealData() {
+        var today = new Date().toISOString().split('T')[0];
+        var selectedMonth = parseInt(document.getElementById('dreMes').value);
+        var year = new Date().getFullYear();
+        // If selected month is ahead of current month, use previous year
+        if (selectedMonth > new Date().getMonth()) year--;
+        var monthStr = year + '-' + String(selectedMonth + 1).padStart(2, '0');
+
+        // Load orders and finances from DataStore
+        var orders = DataStore.getCollection('orders', franchiseId) || [];
+        var finances = DataStore.getCollection('finances', franchiseId) || [];
+
+        // Filter to selected month
+        var monthOrders = orders.filter(function(o) {
+            return o.createdAt && o.createdAt.substring(0, 7) === monthStr;
+        });
+        var monthFinances = finances.filter(function(f) {
+            return f.date && f.date.substring(0, 7) === monthStr;
+        });
+
+        // Calculate revenue from orders
+        var orderRevenue = monthOrders.reduce(function(sum, o) { return sum + (o.total || 0); }, 0);
+
+        // Calculate from finance entries
+        var monthIncome = monthFinances.filter(function(f) { return f.type === 'income'; })
+            .reduce(function(sum, f) { return sum + (f.amount || 0); }, 0);
+        var monthExpenses = monthFinances.filter(function(f) { return f.type === 'expense'; })
+            .reduce(function(sum, f) { return sum + (f.amount || 0); }, 0);
+
+        // Use the higher of order revenue vs finance income (they should match but cover edge cases)
+        var revenue = Math.max(orderRevenue, monthIncome);
+
+        // Previous month for comparison
+        var prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
+        var prevYear = selectedMonth === 0 ? year - 1 : year;
+        var prevMonthStr = prevYear + '-' + String(prevMonth + 1).padStart(2, '0');
+        var prevOrders = orders.filter(function(o) {
+            return o.createdAt && o.createdAt.substring(0, 7) === prevMonthStr;
+        });
+        var prevRevenue = prevOrders.reduce(function(sum, o) { return sum + (o.total || 0); }, 0);
+
+        // Load saved costs
+        var savedFixed = loadCosts('fixed');
+        var savedVariable = loadCosts('variable');
+        var savedOp = loadCosts('operational');
+
+        // Calculate totals from saved costs
+        var totalFixed = 0;
+        FIXED_FIELDS.forEach(function(f) { totalFixed += (savedFixed[f.key] || 0); });
+        var totalVariable = 0;
+        VARIABLE_FIELDS.forEach(function(f) { totalVariable += (savedVariable[f.key] || 0); });
+
+        // CMV calculation from operational data
+        var cmvReal = (savedOp.estoqueInicial || 0) + (savedOp.comprasMes || 0)
+            - (savedOp.estoqueFinal || 0) + (savedOp.desperdicio || 0);
+        // If no operational data, use insumos + embalagens as proxy
+        if (cmvReal === 0) cmvReal = (savedVariable.insumos || 0) + (savedVariable.embalagens || 0);
+
+        // Labor costs (folhaAdmin + prolabore + horasExtras + comissoes)
+        var laborCost = (savedFixed.folhaAdmin || 0) + (savedFixed.prolabore || 0)
+            + (savedVariable.horasExtras || 0) + (savedVariable.comissoes || 0);
+
+        // Percentages
+        var cmvPct = revenue > 0 ? parseFloat((cmvReal / revenue * 100).toFixed(1)) : 0;
+        var laborPct = revenue > 0 ? parseFloat((laborCost / revenue * 100).toFixed(1)) : 0;
+        var primeCostPct = cmvPct + laborPct;
+
+        // Break-even = totalFixed / (1 - totalVariable/revenue)
+        var contributionMarginPct = revenue > 0 ? (1 - totalVariable / revenue) : 0.7;
+        if (contributionMarginPct <= 0) contributionMarginPct = 0.7;
+        var breakeven = totalFixed > 0 ? Math.ceil(totalFixed / contributionMarginPct) : 0;
+        var minDaily = breakeven > 0 ? Math.ceil(breakeven / DEMO.operatingDays) : 0;
+
+        // Cash = revenue - all expenses
+        var totalExpenses = totalFixed + totalVariable;
+        var cash = revenue - totalExpenses;
+
+        // Projected profit
+        var projectedProfit = revenue - totalFixed - totalVariable;
+
+        // Build DRE lines
+        var impostos = savedVariable.impostosVar || 0;
+        var taxasCartao = savedVariable.taxasCartao || 0;
+        var estornos = savedVariable.estornos || 0;
+        var receitaLiquida = revenue - impostos - taxasCartao - estornos;
+        var margemBruta = receitaLiquida - cmvReal;
+        var resultPrimeCost = margemBruta - laborCost;
+        var aluguelCond = (savedFixed.aluguel || 0) + (savedFixed.condominio || 0);
+        var aguaEnergia = (savedFixed.agua || 0) + (savedFixed.energia || 0);
+        var marketingLocal = savedFixed.marketingLocal || 0;
+        var royalties = savedFixed.royalties || 0;
+        var softwareInternet = (savedFixed.software || 0) + (savedFixed.internet || 0);
+        var contadorSeguros = (savedFixed.contador || 0) + (savedFixed.seguros || 0);
+        var manutencao = savedFixed.manutencao || 0;
+        var juros = savedFixed.juros || 0;
+        var perdasDesp = savedOp.desperdicio || (savedVariable.perdas || 0);
+        var opexTotal = aluguelCond + aguaEnergia + marketingLocal + royalties + softwareInternet + contadorSeguros + manutencao + juros + perdasDesp;
+        var ebitda = resultPrimeCost - opexTotal;
+        var lucroLiquido = ebitda; // simplified
+
+        function drePct(val) {
+            return revenue > 0 ? parseFloat((val / revenue * 100).toFixed(1)) : 0;
+        }
+
+        DEMO.dreLines = [
+            { label: 'Receita Bruta', val: revenue, pct: 100, meta: null, type: 'header' },
+            { label: '(-) Impostos sobre Vendas', val: -impostos, pct: -drePct(impostos), meta: -6, type: 'sub' },
+            { label: '(-) Taxas Cartao/PIX', val: -taxasCartao, pct: -drePct(taxasCartao), meta: -2.5, type: 'sub' },
+            { label: '(-) Estornos/Cancelamentos', val: -estornos, pct: -drePct(estornos), meta: -1, type: 'sub' },
+            { label: '= Receita Liquida', val: receitaLiquida, pct: drePct(receitaLiquida), meta: 91, type: 'header' },
+            { label: '(-) CMV (Custo Merc. Vendidas)', val: -cmvReal, pct: -drePct(cmvReal), meta: -30, type: 'sub' },
+            { label: '= Margem Bruta', val: margemBruta, pct: drePct(margemBruta), meta: 61, type: 'header' },
+            { label: '(-) Mao de Obra', val: -laborCost, pct: -drePct(laborCost), meta: -20, type: 'sub' },
+            { label: '= Resultado apos Prime Cost', val: resultPrimeCost, pct: drePct(resultPrimeCost), meta: 41, type: 'header' },
+            { label: '(-) Aluguel + Condominio', val: -aluguelCond, pct: -drePct(aluguelCond), meta: -15, type: 'sub' },
+            { label: '(-) Agua + Energia', val: -aguaEnergia, pct: -drePct(aguaEnergia), meta: -4, type: 'sub' },
+            { label: '(-) Marketing Local', val: -marketingLocal, pct: -drePct(marketingLocal), meta: -4, type: 'sub' },
+            { label: '(-) Royalties/Taxa Franquia', val: -royalties, pct: -drePct(royalties), meta: -5, type: 'sub' },
+            { label: '(-) Software/Internet', val: -softwareInternet, pct: -drePct(softwareInternet), meta: -1.5, type: 'sub' },
+            { label: '(-) Contador + Seguros', val: -contadorSeguros, pct: -drePct(contadorSeguros), meta: -2.5, type: 'sub' },
+            { label: '(-) Manutencao', val: -manutencao, pct: -drePct(manutencao), meta: -1, type: 'sub' },
+            { label: '(-) Juros/Parcelamentos', val: -juros, pct: -drePct(juros), meta: -1, type: 'sub' },
+            { label: '(-) Perdas/Desperdicio', val: -perdasDesp, pct: -drePct(perdasDesp), meta: -1, type: 'sub' },
+            { label: '= EBITDA', val: ebitda, pct: drePct(ebitda), meta: 12, type: 'header' },
+            { label: '= LUCRO LIQUIDO PROJETADO', val: lucroLiquido, pct: drePct(lucroLiquido), meta: 15, type: 'total' }
+        ];
+
+        // Health Score calculation
+        var score = 0;
+        var hasData = revenue > 0 || totalFixed > 0;
+        if (hasData) {
+            // Liquidez: caixa/breakeven ratio (0-100)
+            var liqScore = breakeven > 0 ? Math.min(100, Math.round(cash / breakeven * 100)) : 50;
+            if (liqScore < 0) liqScore = 0;
+            // Rentabilidade: profit margin (0-100)
+            var rentScore = revenue > 0 ? Math.min(100, Math.max(0, Math.round(projectedProfit / revenue * 100 * 5))) : 0;
+            // Eficiencia: inverse of prime cost (lower is better)
+            var efScore = primeCostPct > 0 ? Math.min(100, Math.max(0, Math.round((100 - primeCostPct) * 1.5))) : 50;
+            // Previsibilidade: has all cost data registered
+            var costsFilled = 0;
+            FIXED_FIELDS.forEach(function(f) { if (savedFixed[f.key] > 0) costsFilled++; });
+            var prevScore = Math.min(100, Math.round(costsFilled / FIXED_FIELDS.length * 100));
+            // Disciplina: checklist completion
+            var checklist = {};
+            try { checklist = JSON.parse(localStorage.getItem('fos_checklist_' + franchiseId)) || {}; } catch(e) {}
+            var totalChecks = 11; // 3 diario + 3 semanal + 5 mensal
+            var doneChecks = Object.keys(checklist).filter(function(k) { return checklist[k] === true; }).length;
+            var discScore = Math.min(100, Math.round(doneChecks / totalChecks * 100));
+
+            score = Math.round(liqScore * 0.25 + rentScore * 0.25 + efScore * 0.20 + prevScore * 0.15 + discScore * 0.15);
+            DEMO.subScores = { liquidez: liqScore, rentabilidade: rentScore, eficiencia: efScore, previsibilidade: prevScore, disciplina: discScore };
+        }
+
+        // Update DEMO with real data
+        DEMO.score = score;
+        DEMO.revenue = revenue;
+        DEMO.revenuePrev = prevRevenue;
+        DEMO.cmvPct = cmvPct;
+        DEMO.laborPct = laborPct;
+        DEMO.primeCostPct = primeCostPct;
+        DEMO.breakeven = breakeven;
+        DEMO.minDaily = minDaily;
+        DEMO.cash = Math.max(0, cash);
+        DEMO.projectedProfit = projectedProfit;
+        DEMO.fixedCosts = savedFixed;
+        DEMO.variableCosts = savedVariable;
+        DEMO.operational = {
+            estoqueInicial: savedOp.estoqueInicial || 0,
+            comprasMes: savedOp.comprasMes || 0,
+            estoqueFinal: savedOp.estoqueFinal || 0,
+            desperdicio: savedOp.desperdicio || 0
+        };
+    }
 
     // ========== FIXED COST FIELDS ==========
     const FIXED_FIELDS = [
@@ -922,9 +1079,10 @@
     function renderHealthScore() {
         var d = DEMO;
         var score = d.score;
-        var color = scoreColor(score);
+        var hasData = score > 0;
+        var color = hasData ? scoreColor(score) : '#999';
 
-        document.getElementById('heroScore').textContent = score;
+        document.getElementById('heroScore').textContent = hasData ? score : '?';
         document.getElementById('heroScore').style.color = color;
 
         // Animate arc
@@ -936,61 +1094,77 @@
         setTimeout(function() { arc.setAttribute('stroke-dashoffset', offset); }, 100);
 
         // Sub scores
-        document.getElementById('subLiquidez').textContent = d.subScores.liquidez;
-        document.getElementById('subRentabilidade').textContent = d.subScores.rentabilidade;
-        document.getElementById('subEficiencia').textContent = d.subScores.eficiencia;
-        document.getElementById('subPrevisibilidade').textContent = d.subScores.previsibilidade;
-        document.getElementById('subDisciplina').textContent = d.subScores.disciplina;
-
-        // Color sub scores
-        ['subLiquidez','subRentabilidade','subEficiencia','subPrevisibilidade','subDisciplina'].forEach(function(id) {
+        var subIds = ['subLiquidez','subRentabilidade','subEficiencia','subPrevisibilidade','subDisciplina'];
+        var subKeys = ['liquidez','rentabilidade','eficiencia','previsibilidade','disciplina'];
+        subIds.forEach(function(id, i) {
             var el = document.getElementById(id);
-            var v = parseInt(el.textContent);
-            el.style.color = scoreColor(v);
+            var v = d.subScores[subKeys[i]];
+            el.textContent = v > 0 ? v : '--';
+            el.style.color = v > 0 ? scoreColor(v) : '#999';
         });
 
         // Insights
-        document.getElementById('heroInsight').innerHTML =
-            'Voce precisa vender <strong>' + fmt(d.minDaily) + '/dia</strong> para nao fechar no prejuizo';
-        var safetyMargin = d.revenue - d.breakeven;
-        document.getElementById('heroSafety').innerHTML =
-            'Sua margem de seguranca e de <strong>' + fmt(safetyMargin) + '</strong> este mes';
+        if (!hasData) {
+            document.getElementById('heroInsight').innerHTML =
+                'Preencha os custos fixos e variaveis para calcular o break-even e a venda minima diaria.';
+            document.getElementById('heroSafety').innerHTML =
+                'Cadastre o faturamento para calcular a margem de seguranca.';
+        } else {
+            document.getElementById('heroInsight').innerHTML =
+                'Voce precisa vender <strong>' + fmt(d.minDaily) + '/dia</strong> para nao fechar no prejuizo';
+            var safetyMargin = d.revenue - d.breakeven;
+            document.getElementById('heroSafety').innerHTML =
+                'Sua margem de seguranca e de <strong>' + fmt(safetyMargin) + '</strong> este mes';
+        }
     }
 
     // ========== RENDER: KPIs ==========
     function renderKPIs() {
         var d = DEMO;
-        var revChange = ((d.revenue - d.revenuePrev) / d.revenuePrev * 100).toFixed(1);
+        var hasRevenue = d.revenue > 0;
 
-        document.getElementById('kpiFaturamento').textContent = fmt(d.revenue);
-        document.getElementById('kpiFaturamentoMeta').textContent = (revChange >= 0 ? '+' : '') + revChange + '% vs mes anterior';
+        document.getElementById('kpiFaturamento').textContent = hasRevenue ? fmt(d.revenue) : 'R$ 0,00';
+        document.getElementById('kpiFaturamentoMeta').textContent = hasRevenue && d.revenuePrev > 0
+            ? ((((d.revenue - d.revenuePrev) / d.revenuePrev * 100).toFixed(1) >= 0 ? '+' : '') + ((d.revenue - d.revenuePrev) / d.revenuePrev * 100).toFixed(1) + '% vs mes anterior')
+            : 'Aguardando dados';
+        document.getElementById('kpiFaturamentoMeta').className = 'kpi-meta info';
 
-        document.getElementById('kpiCMV').textContent = d.cmvPct + '%';
-        var cmvOk = d.cmvPct <= d.cmvMeta;
-        document.getElementById('kpiCMVMeta').textContent = (cmvOk ? '✅' : '⚠️') + ' Meta: ' + d.cmvMeta + '%';
-        document.getElementById('kpiCMVMeta').className = 'kpi-meta ' + (cmvOk ? 'ok' : 'warn');
+        document.getElementById('kpiCMV').textContent = d.cmvPct > 0 ? d.cmvPct + '%' : '0%';
+        document.getElementById('kpiCMVMeta').textContent = d.cmvPct > 0 ? ((d.cmvPct <= d.cmvMeta ? '✅' : '⚠️') + ' Meta: ' + d.cmvMeta + '%') : 'Preencha os custos';
+        document.getElementById('kpiCMVMeta').className = 'kpi-meta ' + (d.cmvPct > 0 ? (d.cmvPct <= d.cmvMeta ? 'ok' : 'warn') : 'info');
 
-        document.getElementById('kpiPrime').textContent = d.primeCostPct + '%';
-        var primeOk = d.primeCostPct <= d.primeCostMeta;
-        document.getElementById('kpiPrimeMeta').textContent = (primeOk ? '✅' : '⚠️') + ' Meta: ' + d.primeCostMeta + '%';
-        document.getElementById('kpiPrimeMeta').className = 'kpi-meta ' + (primeOk ? 'ok' : 'warn');
+        document.getElementById('kpiPrime').textContent = d.primeCostPct > 0 ? d.primeCostPct + '%' : '0%';
+        document.getElementById('kpiPrimeMeta').textContent = d.primeCostPct > 0 ? ((d.primeCostPct <= d.primeCostMeta ? '✅' : '⚠️') + ' Meta: ' + d.primeCostMeta + '%') : 'Preencha os custos';
+        document.getElementById('kpiPrimeMeta').className = 'kpi-meta ' + (d.primeCostPct > 0 ? (d.primeCostPct <= d.primeCostMeta ? 'ok' : 'warn') : 'info');
 
-        document.getElementById('kpiBE').textContent = fmt(d.breakeven);
-        document.getElementById('kpiBEMeta').textContent = 'Faltam ' + fmt(Math.max(0, d.breakeven - d.revenue));
+        document.getElementById('kpiBE').textContent = d.breakeven > 0 ? fmt(d.breakeven) : 'R$ 0,00';
+        document.getElementById('kpiBEMeta').textContent = d.breakeven > 0 ? 'Faltam ' + fmt(Math.max(0, d.breakeven - d.revenue)) : 'Preencha custos fixos';
+        document.getElementById('kpiBEMeta').className = 'kpi-meta info';
 
-        document.getElementById('kpiMinDay').textContent = fmt(d.minDaily);
-        document.getElementById('kpiMinDayMeta').textContent = d.operatingDays + ' dias operados';
+        document.getElementById('kpiMinDay').textContent = d.minDaily > 0 ? fmt(d.minDaily) : 'R$ 0,00';
+        document.getElementById('kpiMinDayMeta').textContent = d.minDaily > 0 ? d.operatingDays + ' dias operados' : 'Preencha custos fixos';
+        document.getElementById('kpiMinDayMeta').className = 'kpi-meta info';
 
-        document.getElementById('kpiCaixa').textContent = fmt(d.cash);
-        var cashWeeks = Math.floor(d.cash / (d.breakeven / 4));
-        var cashOk = cashWeeks >= 4;
-        document.getElementById('kpiCaixaMeta').textContent = (cashOk ? '✅' : '⚠️') + ' ' + cashWeeks + ' semanas de reserva';
-        document.getElementById('kpiCaixaMeta').className = 'kpi-meta ' + (cashOk ? 'ok' : 'warn');
+        document.getElementById('kpiCaixa').textContent = d.cash > 0 ? fmt(d.cash) : 'R$ 0,00';
+        if (d.cash > 0 && d.breakeven > 0) {
+            var cashWeeks = Math.floor(d.cash / (d.breakeven / 4));
+            var cashOk = cashWeeks >= 4;
+            document.getElementById('kpiCaixaMeta').textContent = (cashOk ? '✅' : '⚠️') + ' ' + cashWeeks + ' semanas de reserva';
+            document.getElementById('kpiCaixaMeta').className = 'kpi-meta ' + (cashOk ? 'ok' : 'warn');
+        } else {
+            document.getElementById('kpiCaixaMeta').textContent = 'Aguardando dados';
+            document.getElementById('kpiCaixaMeta').className = 'kpi-meta info';
+        }
 
-        document.getElementById('kpiLucro').textContent = fmt(d.projectedProfit);
-        var profitPct = (d.projectedProfit / d.revenue * 100).toFixed(1);
-        document.getElementById('kpiLucroMeta').textContent = profitPct + '% de margem liquida';
-        document.getElementById('kpiLucroMeta').className = 'kpi-meta ' + (d.projectedProfit > 0 ? 'ok' : 'warn');
+        document.getElementById('kpiLucro').textContent = d.projectedProfit > 0 ? fmt(d.projectedProfit) : 'R$ 0,00';
+        if (hasRevenue && d.projectedProfit !== 0) {
+            var profitPct = (d.projectedProfit / d.revenue * 100).toFixed(1);
+            document.getElementById('kpiLucroMeta').textContent = profitPct + '% de margem liquida';
+            document.getElementById('kpiLucroMeta').className = 'kpi-meta ' + (d.projectedProfit > 0 ? 'ok' : 'warn');
+        } else {
+            document.getElementById('kpiLucroMeta').textContent = 'Preencha os dados';
+            document.getElementById('kpiLucroMeta').className = 'kpi-meta info';
+        }
     }
 
     // ========== RENDER: DRE ==========
@@ -1060,9 +1234,13 @@
     }
 
     function renderAllCosts() {
-        renderCostFields('fixedCostsContainer', FIXED_FIELDS, 'fixed', DEMO.fixedCosts);
-        renderCostFields('variableCostsContainer', VARIABLE_FIELDS, 'variable', DEMO.variableCosts);
-        renderCostFields('operationalContainer', OPERATIONAL_FIELDS, 'operational', DEMO.operational);
+        // Use empty defaults - only show saved values, no pre-filled demo data
+        var emptyFixed = {}; FIXED_FIELDS.forEach(function(f) { emptyFixed[f.key] = ''; });
+        var emptyVar = {}; VARIABLE_FIELDS.forEach(function(f) { emptyVar[f.key] = ''; });
+        var emptyOp = {}; OPERATIONAL_FIELDS.forEach(function(f) { emptyOp[f.key] = ''; });
+        renderCostFields('fixedCostsContainer', FIXED_FIELDS, 'fixed', emptyFixed);
+        renderCostFields('variableCostsContainer', VARIABLE_FIELDS, 'variable', emptyVar);
+        renderCostFields('operationalContainer', OPERATIONAL_FIELDS, 'operational', emptyOp);
     }
 
     function saveCosts(type) {
@@ -1077,7 +1255,45 @@
             data[f.key] = el ? parseFloat(el.value) || 0 : 0;
         });
         storeCosts(type, data);
-        renderAllCosts();
+
+        // Also save to DataStore for cross-franchise access
+        DataStore.set('fos_' + franchiseId + '_' + type, data);
+
+        // Create expense entries in finances for this month's costs
+        var today = new Date().toISOString().split('T')[0];
+        if (type === 'fixed' || type === 'variable') {
+            Object.keys(data).forEach(function(key) {
+                if (data[key] > 0) {
+                    // Check if an entry for this cost category already exists this month
+                    var monthStr = today.substring(0, 7);
+                    var existing = (DataStore.getCollection('finances', franchiseId) || []).find(function(f) {
+                        return f.category === (type === 'fixed' ? 'fixo_' : 'var_') + key
+                            && f.date && f.date.substring(0, 7) === monthStr
+                            && f.source === 'cadastro';
+                    });
+                    if (!existing) {
+                        DataStore.addToCollection('finances', franchiseId, {
+                            id: Utils.generateId(),
+                            type: 'expense',
+                            category: (type === 'fixed' ? 'fixo_' : 'var_') + key,
+                            source: 'cadastro',
+                            amount: data[key],
+                            description: key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim(),
+                            date: today,
+                            createdAt: new Date().toISOString()
+                        });
+                    } else {
+                        // Update existing entry amount
+                        DataStore.updateInCollection('finances', franchiseId, existing.id, {
+                            amount: data[key]
+                        });
+                    }
+                }
+            });
+        }
+
+        // Re-calculate and re-render everything
+        renderAll();
         showToast('Custos salvos com sucesso!');
     }
 
@@ -1085,6 +1301,17 @@
     function renderBreakeven() {
         var d = DEMO;
         var monthly = d.breakeven;
+
+        if (monthly <= 0) {
+            document.getElementById('beMonthly').textContent = '--';
+            document.getElementById('beDaily').textContent = '--';
+            document.getElementById('beHourly').textContent = '--';
+            document.getElementById('beProgress').style.width = '0%';
+            document.getElementById('beProgress').textContent = '0%';
+            document.getElementById('beProgressLabel').innerHTML = 'Preencha os custos fixos para calcular o break-even.';
+            return;
+        }
+
         var daily = Math.ceil(monthly / d.operatingDays);
         var hourly = Math.ceil(daily / d.operatingHours);
 
@@ -1112,56 +1339,70 @@
     // ========== RENDER: ALERTS ==========
     function renderAlerts() {
         var d = DEMO;
+        var container = document.getElementById('alertsContainer');
+
+        // If no data entered yet, show empty state
+        if (d.revenue === 0 && d.breakeven === 0 && d.score === 0) {
+            container.innerHTML = '<div class="fos-alert info"><span class="fos-alert-icon">📋</span><div>Nenhum alerta - cadastre os dados financeiros para receber alertas automaticos sobre a saude da sua franquia.</div></div>';
+            return;
+        }
+
         var alerts = [];
 
         // Check CMV
-        if (d.cmvPct > d.cmvMeta) {
-            alerts.push({ type: 'critical', icon: '🔴', msg: 'CMV esta em ' + d.cmvPct + '%, acima da meta de ' + d.cmvMeta + '%. Revise compras e desperdicio.' });
-        } else {
-            alerts.push({ type: 'success', icon: '🟢', msg: 'CMV controlado em ' + d.cmvPct + '% (meta: ' + d.cmvMeta + '%). Continue assim!' });
+        if (d.cmvPct > 0) {
+            if (d.cmvPct > d.cmvMeta) {
+                alerts.push({ type: 'critical', icon: '🔴', msg: 'CMV esta em ' + d.cmvPct + '%, acima da meta de ' + d.cmvMeta + '%. Revise compras e desperdicio.' });
+            } else {
+                alerts.push({ type: 'success', icon: '🟢', msg: 'CMV controlado em ' + d.cmvPct + '% (meta: ' + d.cmvMeta + '%). Continue assim!' });
+            }
         }
 
         // Check cash
-        var cashWeeks = Math.floor(d.cash / (d.breakeven / 4));
-        if (cashWeeks < 4) {
-            alerts.push({ type: 'warning', icon: '🟡', msg: 'Caixa cobre apenas ' + cashWeeks + ' semanas de operacao. Ideal e ter 4+ semanas de reserva.' });
-        } else {
-            alerts.push({ type: 'success', icon: '🟢', msg: 'Caixa saudavel: ' + cashWeeks + ' semanas de reserva operacional.' });
+        if (d.cash > 0 && d.breakeven > 0) {
+            var cashWeeks = Math.floor(d.cash / (d.breakeven / 4));
+            if (cashWeeks < 4) {
+                alerts.push({ type: 'warning', icon: '🟡', msg: 'Caixa cobre apenas ' + cashWeeks + ' semanas de operacao. Ideal e ter 4+ semanas de reserva.' });
+            } else {
+                alerts.push({ type: 'success', icon: '🟢', msg: 'Caixa saudavel: ' + cashWeeks + ' semanas de reserva operacional.' });
+            }
         }
 
         // Check prime cost
-        if (d.primeCostPct > d.primeCostMeta) {
+        if (d.primeCostPct > 0 && d.primeCostPct > d.primeCostMeta) {
             alerts.push({ type: 'critical', icon: '🔴', msg: 'Prime Cost em ' + d.primeCostPct + '%, acima da meta de ' + d.primeCostMeta + '%. Revise mao de obra e insumos.' });
         }
 
         // Break-even check
-        var daysLeft = d.operatingDays - Math.floor(d.operatingDays * (d.revenue / (d.revenue * 1.2)));
-        if (d.revenue >= d.breakeven) {
-            alerts.push({ type: 'success', icon: '🎯', msg: 'Break-even atingido! Faturamento ' + fmt(d.revenue) + ' > Break-even ' + fmt(d.breakeven) + '.' });
-        } else {
-            alerts.push({ type: 'warning', icon: '🎯', msg: 'Ainda nao atingiu o break-even. Faltam ' + fmt(d.breakeven - d.revenue) + '.' });
+        if (d.breakeven > 0) {
+            if (d.revenue >= d.breakeven) {
+                alerts.push({ type: 'success', icon: '🎯', msg: 'Break-even atingido! Faturamento ' + fmt(d.revenue) + ' > Break-even ' + fmt(d.breakeven) + '.' });
+            } else if (d.revenue > 0) {
+                alerts.push({ type: 'warning', icon: '🎯', msg: 'Ainda nao atingiu o break-even. Faltam ' + fmt(d.breakeven - d.revenue) + '.' });
+            }
         }
 
         // Score alert
-        if (d.score < 70) {
-            alerts.push({ type: 'critical', icon: '🏥', msg: 'Health Score em ' + d.score + '. Atencao! Faca o plano de acao urgente.' });
-        } else if (d.score < 80) {
-            alerts.push({ type: 'warning', icon: '🏥', msg: 'Health Score em ' + d.score + '. Bom, mas ha espaco para melhorar.' });
-        } else {
-            alerts.push({ type: 'info', icon: '🏥', msg: 'Health Score excelente: ' + d.score + '. Sua franquia esta saudavel!' });
+        if (d.score > 0) {
+            if (d.score < 70) {
+                alerts.push({ type: 'critical', icon: '🏥', msg: 'Health Score em ' + d.score + '. Atencao! Faca o plano de acao urgente.' });
+            } else if (d.score < 80) {
+                alerts.push({ type: 'warning', icon: '🏥', msg: 'Health Score em ' + d.score + '. Bom, mas ha espaco para melhorar.' });
+            } else {
+                alerts.push({ type: 'info', icon: '🏥', msg: 'Health Score excelente: ' + d.score + '. Sua franquia esta saudavel!' });
+            }
         }
 
         // Desperdicio
-        if (d.operational.desperdicio > 0) {
+        if (d.operational.desperdicio > 0 && d.revenue > 0) {
             var despPct = (d.operational.desperdicio / d.revenue * 100).toFixed(1);
             if (parseFloat(despPct) > 1) {
                 alerts.push({ type: 'warning', icon: '🗑️', msg: 'Desperdicio de ' + fmt(d.operational.desperdicio) + ' (' + despPct + '% do faturamento). Meta: < 1%.' });
             }
         }
 
-        var container = document.getElementById('alertsContainer');
         if (alerts.length === 0) {
-            container.innerHTML = '<div class="fos-alert success"><span class="fos-alert-icon">✅</span><div>Nenhum alerta no momento. Tudo operando normalmente!</div></div>';
+            container.innerHTML = '<div class="fos-alert info"><span class="fos-alert-icon">📋</span><div>Nenhum alerta no momento. Continue cadastrando os dados financeiros.</div></div>';
             return;
         }
 
@@ -1217,6 +1458,7 @@
 
     // ========== RENDER ALL ==========
     function renderAll() {
+        loadRealData();
         renderHealthScore();
         renderKPIs();
         renderDRE();
