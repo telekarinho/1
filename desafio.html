@@ -319,6 +319,81 @@ background:rgba(255,255,255,0.05);padding:6px 14px;border-radius:50px;
 /* Footer */
 .foot{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.15);z-index:10;text-align:center;white-space:nowrap}
 
+/* === SHEEP MASCOT === */
+.sheep{
+position:fixed;bottom:60px;z-index:20;
+font-size:clamp(40px,6vw,64px);
+animation:sheepWalk 12s linear infinite;
+filter:drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+pointer-events:none;
+}
+@keyframes sheepWalk{
+0%{left:-80px;transform:scaleX(1)}
+45%{left:calc(100vw - 80px);transform:scaleX(1)}
+50%{left:calc(100vw - 80px);transform:scaleX(-1)}
+95%{left:-80px;transform:scaleX(-1)}
+100%{left:-80px;transform:scaleX(1)}
+}
+.sheep-bounce{animation:sheepBounce 0.5s ease infinite alternate}
+@keyframes sheepBounce{from{transform:translateY(0)}to{transform:translateY(-6px)}}
+.sheep-bubble{
+position:fixed;bottom:clamp(110px,14vw,140px);
+z-index:21;pointer-events:none;
+background:rgba(255,255,255,0.1);
+backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+border:1px solid rgba(255,255,255,0.15);
+border-radius:16px;padding:10px 16px;
+font-size:clamp(11px,1.4vw,14px);font-weight:700;
+color:#E8A0BF;
+max-width:280px;text-align:center;
+animation:bubbleIn 0.4s ease;
+display:none;
+}
+@keyframes bubbleIn{from{opacity:0;transform:translateY(10px) scale(0.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+.sheep-bubble::after{
+content:'';position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);
+width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;
+border-top:8px solid rgba(255,255,255,0.1);
+}
+
+/* === RETURNING PLAYER OVERLAY === */
+.welcome-back{
+position:fixed;inset:0;z-index:90;
+display:none;align-items:center;justify-content:center;
+background:rgba(10,10,10,0.8);backdrop-filter:blur(8px);
+}
+.welcome-back.show{display:flex}
+.welcome-card{
+background:linear-gradient(145deg,#1a0a2e,#2a1040);
+border:2px solid rgba(232,160,191,0.3);
+border-radius:28px;padding:clamp(24px,4vw,40px);
+text-align:center;max-width:420px;width:90%;
+animation:winIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+.welcome-emoji{font-size:clamp(48px,8vw,72px);margin-bottom:8px}
+.welcome-title{font-family:'Baloo 2',cursive;font-size:clamp(22px,4vw,32px);font-weight:800;color:#E8A0BF;margin-bottom:4px}
+.welcome-sub{font-size:clamp(13px,1.5vw,16px);color:rgba(255,255,255,0.5);margin-bottom:16px}
+.welcome-history{
+background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);
+border-radius:16px;padding:12px;margin-bottom:16px;text-align:left;
+max-height:200px;overflow-y:auto;
+}
+.welcome-history-item{
+display:flex;justify-content:space-between;align-items:center;
+padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);
+font-size:clamp(12px,1.3vw,14px);
+}
+.welcome-history-item:last-child{border:none}
+.welcome-history-date{color:rgba(255,255,255,0.3);font-weight:600}
+.welcome-history-val{font-family:'Orbitron',monospace;color:#FF0040;font-weight:700;font-size:clamp(13px,1.5vw,15px)}
+.welcome-best{
+background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.2);
+border-radius:12px;padding:10px;margin-bottom:16px;
+}
+.welcome-best-label{font-size:11px;font-weight:800;color:#FFD700;text-transform:uppercase;letter-spacing:1px}
+.welcome-best-val{font-family:'Orbitron',monospace;font-size:clamp(24px,4vw,36px);font-weight:900;color:#FFD700}
+.welcome-challenge{font-size:clamp(14px,1.8vw,18px);font-weight:800;color:#E8A0BF;margin-bottom:16px}
+
 /* === SCREENSAVER / ATTRACT MODE === */
 .attract{text-align:center}
 .attract-title{
@@ -534,6 +609,26 @@ border-radius:16px;object-fit:cover;margin:0 auto 10px;display:block;
 </div>
 
 <div class="webcam-pip" id="webcamPip"><video id="webcamVid" autoplay muted playsinline></video></div>
+
+<!-- SHEEP MASCOT -->
+<div class="sheep" id="sheepMascot">&#128017;</div>
+<div class="sheep-bubble" id="sheepBubble"></div>
+
+<!-- RETURNING PLAYER WELCOME -->
+<div class="welcome-back" id="welcomeBack">
+<div class="welcome-card">
+<div class="welcome-emoji">&#128017;&#128150;</div>
+<div class="welcome-title" id="welcomeTitle">Que bom te ver de novo!</div>
+<div class="welcome-sub" id="welcomeSub"></div>
+<div class="welcome-history" id="welcomeHistory"></div>
+<div class="welcome-best" id="welcomeBest">
+<div class="welcome-best-label">&#127942; Seu melhor resultado</div>
+<div class="welcome-best-val" id="welcomeBestVal">--</div>
+</div>
+<div class="welcome-challenge" id="welcomeChallenge"></div>
+<button class="btn btn-start" onclick="closeWelcome()">Bora melhorar! &#128170;</button>
+</div>
+</div>
 
 <div class="attempts-badge">Tentativas: <span id="attCount">0</span></div>
 <div class="foot">Desafio oficial MilkyPot &bull; Consulte regras na loja &bull; milkypot.com</div>
@@ -828,6 +923,8 @@ var existing=best.filter(function(b){return b.phone===playerPhone});
 if(existing.length>0){
 playerN=existing[0].name;
 document.getElementById('playerName').value=playerN;
+/* === RETURNING PLAYER WELCOME === */
+showReturningWelcome(existing);
 }
 /* Update stamp card (feature 10) */
 if(gameConfig.stampCard) updateStampCard();
@@ -1409,6 +1506,93 @@ mediaHtml+
 var ctas=['Toque na tela para jogar!','Voce consegue acertar?','Desafie seus amigos!','Quem sera o proximo?','Toque aqui e tente!'];
 document.getElementById('attractCta').textContent=ctas[attractIdx%ctas.length];
 }
+
+/* ========== RETURNING PLAYER WELCOME ========== */
+function showReturningWelcome(records){
+records.sort(function(a,b){return new Date(b.date)-new Date(a.date)});
+var bestRecord=records.reduce(function(min,r){
+return Math.abs(10000-r.val)<Math.abs(10000-min.val)?r:min;
+});
+var bestDiff=Math.abs(10000-bestRecord.val);
+
+document.getElementById('welcomeTitle').textContent='Que bom te ver de novo, '+playerN+'!';
+document.getElementById('welcomeSub').textContent='Voce ja tentou '+records.length+' vez'+(records.length>1?'es':'')+'. Vamos melhorar?';
+
+/* History */
+var hhtml='';
+records.slice(0,8).forEach(function(r){
+var d=new Date(r.date);
+var dateStr=d.getDate()+'/'+(d.getMonth()+1);
+var diff=Math.abs(10000-r.val);
+var emoji=diff===0?'&#127942;':diff<=50?'&#128293;':diff<=200?'&#128170;':'&#127919;';
+hhtml+='<div class="welcome-history-item"><span class="welcome-history-date">'+emoji+' '+dateStr+'</span><span class="welcome-history-val">'+fmt(r.val)+' ('+diff+'ms)</span></div>';
+});
+document.getElementById('welcomeHistory').innerHTML=hhtml;
+
+/* Best */
+document.getElementById('welcomeBestVal').textContent=fmt(bestRecord.val);
+
+/* Challenge message */
+var msgs;
+if(bestDiff===0){
+msgs='Voce ja acertou! Consegue de novo?';
+} else if(bestDiff<=50){
+msgs='Faltaram apenas '+bestDiff+'ms! Hoje voce acerta!';
+} else if(bestDiff<=200){
+msgs='Seu melhor foi '+fmt(bestRecord.val)+'. Da pra chegar mais perto!';
+} else if(bestDiff<=1000){
+msgs='Voce fez '+fmt(bestRecord.val)+'. Bora quebrar esse recorde!';
+} else {
+msgs='Seu recorde e '+fmt(bestRecord.val)+'. Concentre e melhore!';
+}
+document.getElementById('welcomeChallenge').textContent=msgs;
+
+document.getElementById('welcomeBack').classList.add('show');
+sheepSay('Eeei '+playerN+'! Voltou pro desafio! Beeee! &#128017;');
+}
+window.closeWelcome=function(){
+document.getElementById('welcomeBack').classList.remove('show');
+showStep(1);
+startCamera('photoVideo');
+};
+
+/* ========== SHEEP MASCOT LOGIC ========== */
+var sheepMsgs=[
+'Beeee! Acerte 10.000! &#127942;',
+'Eu acredito em voce! &#128155;',
+'Concentra! O potinho depende de voce!',
+'Vai, vai, vai! &#128293;',
+'Quase la! Mais uma vez!',
+'Sera que voce consegue? &#129300;',
+'Tic-tac, tic-tac... &#9201;',
+'O recorde ta esperando!',
+'Beeee! Toca na tela! &#128017;',
+'Quem acerta ganha MilkyPot! &#127846;'
+];
+var sheepMsgIdx=0;
+
+function sheepSay(msg){
+var bubble=document.getElementById('sheepBubble');
+bubble.innerHTML=msg;
+bubble.style.display='block';
+bubble.style.animation='none';
+void bubble.offsetWidth;
+bubble.style.animation='bubbleIn 0.4s ease';
+clearTimeout(bubble._timer);
+bubble._timer=setTimeout(function(){bubble.style.display='none'},4000);
+}
+
+/* Sheep talks periodically in attract mode */
+var sheepTalkTimer;
+function startSheepTalk(){
+sheepTalkTimer=setInterval(function(){
+if(document.getElementById('stepAttract').classList.contains('active')){
+sheepSay(sheepMsgs[sheepMsgIdx%sheepMsgs.length]);
+sheepMsgIdx++;
+}
+},8000);
+}
+startSheepTalk();
 
 function renderAttractGlobalRanking(){
 var gl=document.getElementById('attractGlobalList');
