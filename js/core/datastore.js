@@ -63,6 +63,15 @@ const DataStore = {
         this._deleteFromCloud(key);
     },
 
+    // Alias mantido para telas legadas
+    getItem(key) {
+        return this.get(key);
+    },
+
+    setItem(key, data) {
+        return this.set(key, data);
+    },
+
     // ============================================
     // Collections (com suporte a franchiseId)
     // ============================================

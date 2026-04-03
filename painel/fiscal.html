@@ -75,6 +75,103 @@
             color: #991b1b;
         }
         .status-banner .status-icon { font-size: 20px; }
+        .setup-hero {
+            background: linear-gradient(135deg, #fff7ed 0%, #eff6ff 100%);
+            border: 1px solid #fde68a;
+            border-radius: 16px;
+            padding: 22px 24px;
+            margin-bottom: 20px;
+        }
+        .setup-hero h3 {
+            margin: 0 0 8px;
+            font-size: 20px;
+            color: #1e293b;
+        }
+        .setup-hero p {
+            margin: 0;
+            color: #475569;
+            font-size: 14px;
+        }
+        .setup-steps {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .setup-step {
+            background: rgba(255,255,255,0.92);
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 14px 16px;
+        }
+        .setup-step strong {
+            display: block;
+            font-size: 14px;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+        .setup-step span {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.45;
+        }
+        .setup-checklist {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin: 16px 0 22px;
+        }
+        .check-item {
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #475569;
+        }
+        .check-item strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #0f172a;
+            font-size: 13px;
+        }
+        .check-item.ok {
+            border-color: #86efac;
+            background: #f0fdf4;
+        }
+        .check-item.warn {
+            border-color: #fde68a;
+            background: #fffbeb;
+        }
+        .section-tip {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.5;
+        }
+        .field-hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .pill-required,
+        .pill-auto,
+        .pill-manual {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+        .pill-required { background: #fee2e2; color: #991b1b; }
+        .pill-auto { background: #dbeafe; color: #1d4ed8; }
+        .pill-manual { background: #fef3c7; color: #92400e; }
 
         /* ===== FORM SECTION ===== */
         .form-section {
@@ -565,6 +662,7 @@
         @media (max-width: 768px) {
             .form-grid { grid-template-columns: 1fr; }
             .form-span-2, .form-span-3 { grid-column: span 1; }
+            .setup-steps, .setup-checklist { grid-template-columns: 1fr; }
             .emit-options { grid-template-columns: 1fr; }
             .filter-row { flex-direction: column; align-items: stretch; }
             .totals-row { flex-direction: column; align-items: flex-end; gap: 8px; }
@@ -670,33 +768,76 @@
                 <!-- ============================================ -->
                 <div class="tab-content active" id="tab-config">
 
+                    <div class="setup-hero">
+                        <h3>Configuração rápida da loja</h3>
+                        <p>O objetivo aqui é simples: subir o certificado, conferir os dados que o sistema preencher e informar só o que a SEFAZ exige manualmente.</p>
+                        <div class="setup-steps">
+                            <div class="setup-step">
+                                <strong>1. Suba o certificado A1</strong>
+                                <span>Envie o arquivo `.pfx` e a senha. O sistema tenta aproveitar o máximo possível disso.</span>
+                            </div>
+                            <div class="setup-step">
+                                <strong>2. Confirme a empresa</strong>
+                                <span>CEP, cidade e código IBGE ficam guiados para você revisar, não montar do zero.</span>
+                            </div>
+                            <div class="setup-step">
+                                <strong>3. Informe só o CSC</strong>
+                                <span>Na prática, o que normalmente sobra manual é `CSC ID` e `CSC Token`.</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="status-banner warn" id="configStatusBanner">
                         <span class="status-icon">⚠️</span>
                         <span id="configStatusText">Configuracao fiscal incompleta. Preencha os dados abaixo para emitir notas.</span>
                     </div>
 
+                    <div class="setup-checklist">
+                        <div class="check-item warn" id="checkCertificado">
+                            <strong>Certificado</strong>
+                            <span id="checkCertificadoText">Falta enviar o A1</span>
+                        </div>
+                        <div class="check-item warn" id="checkEmpresa">
+                            <strong>Empresa</strong>
+                            <span id="checkEmpresaText">Falta conferir CNPJ e razão social</span>
+                        </div>
+                        <div class="check-item warn" id="checkEndereco">
+                            <strong>Endereço</strong>
+                            <span id="checkEnderecoText">Falta CEP ou código IBGE</span>
+                        </div>
+                        <div class="check-item warn" id="checkNfce">
+                            <strong>NFC-e</strong>
+                            <span id="checkNfceText">Faltam CSC ID e CSC Token</span>
+                        </div>
+                    </div>
+
                     <!-- Dados da Empresa -->
                     <div class="form-section">
                         <div class="form-section-title">🏢 Dados da Empresa</div>
+                        <div class="section-tip">
+                            <span class="pill-auto">Auto</span>
+                            Se o certificado trouxer dados aproveitáveis, vamos preencher aqui para você. O mais importante é deixar `CNPJ`, `Razão Social` e `Inscrição Estadual` corretos.
+                        </div>
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="cfgCnpj">CNPJ</label>
+                                <label for="cfgCnpj">CNPJ <span class="pill-required">Obrigatório</span></label>
                                 <input type="text" id="cfgCnpj" placeholder="XX.XXX.XXX/XXXX-XX" maxlength="18">
+                                <div class="field-hint">Se o certificado já mostrar o CNPJ da loja, copie e confira aqui.</div>
                             </div>
                             <div class="form-group">
-                                <label for="cfgRazaoSocial">Razao Social</label>
-                                <input type="text" id="cfgRazaoSocial" placeholder="Razao Social da empresa">
+                                <label for="cfgRazaoSocial">Razão Social <span class="pill-required">Obrigatório</span></label>
+                                <input type="text" id="cfgRazaoSocial" placeholder="Nome oficial no CNPJ">
                             </div>
                             <div class="form-group">
                                 <label for="cfgNomeFantasia">Nome Fantasia</label>
-                                <input type="text" id="cfgNomeFantasia" placeholder="Nome Fantasia">
+                                <input type="text" id="cfgNomeFantasia" placeholder="Ex.: MilkyPot Ibirapuera">
                             </div>
                             <div class="form-group">
-                                <label for="cfgInscricaoEstadual">Inscricao Estadual</label>
+                                <label for="cfgInscricaoEstadual">Inscrição Estadual <span class="pill-manual">Manual</span></label>
                                 <input type="text" id="cfgInscricaoEstadual" placeholder="Inscricao Estadual">
                             </div>
                             <div class="form-group">
-                                <label for="cfgRegimeTributario">Regime Tributario</label>
+                                <label for="cfgRegimeTributario">Regime Tributário</label>
                                 <select id="cfgRegimeTributario">
                                     <option value="">Selecione...</option>
                                     <option value="simples_nacional">Simples Nacional</option>
@@ -710,9 +851,13 @@
                     <!-- Endereco -->
                     <div class="form-section">
                         <div class="form-section-title">📍 Endereco</div>
+                        <div class="section-tip">
+                            <span class="pill-auto">Auto</span>
+                            Digite o `CEP` e clique em buscar. Cidade, UF e código IBGE podem ser preenchidos automaticamente para evitar erro.
+                        </div>
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="cfgCep">CEP</label>
+                                <label for="cfgCep">CEP <span class="pill-required">Obrigatório</span></label>
                                 <div class="input-row">
                                     <input type="text" id="cfgCep" placeholder="00000-000" maxlength="9">
                                     <button class="btn btn-sm btn-primary" onclick="buscarCep()" type="button">Buscar</button>
@@ -761,6 +906,10 @@
                     <!-- Certificado Digital A1 -->
                     <div class="form-section">
                         <div class="form-section-title">🔐 Certificado Digital A1</div>
+                        <div class="section-tip">
+                            <span class="pill-required">Obrigatório</span>
+                            Esta é a parte mais importante. Você só precisa do arquivo `.pfx` da loja e da senha dele. O resto o sistema guia.
+                        </div>
 
                         <div class="cert-status invalid" id="certStatus">
                             <span>❌</span> <span id="certStatusText">Nao configurado</span>
@@ -768,15 +917,16 @@
 
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>Arquivo do Certificado (.pfx / .p12)</label>
+                                <label>Arquivo do Certificado (.pfx / .p12) <span class="pill-required">Obrigatório</span></label>
                                 <input type="file" id="cfgCertFile" accept=".pfx,.p12">
+                                <div class="field-hint">Pode arrastar o arquivo da loja aqui.</div>
                             </div>
                             <div class="form-group">
-                                <label for="cfgCertPassword">Senha do Certificado</label>
+                                <label for="cfgCertPassword">Senha do Certificado <span class="pill-required">Obrigatório</span></label>
                                 <input type="password" id="cfgCertPassword" placeholder="Senha do certificado">
                             </div>
                             <div class="form-group">
-                                <label for="cfgCertCnpj">CNPJ do Certificado</label>
+                                <label for="cfgCertCnpj">CNPJ do Certificado <span class="pill-auto">Auto</span></label>
                                 <input type="text" id="cfgCertCnpj" placeholder="Extraido automaticamente" readonly>
                             </div>
                         </div>
@@ -785,6 +935,10 @@
                     <!-- NFC-e Settings -->
                     <div class="form-section">
                         <div class="form-section-title">📄 Configuracoes NFC-e</div>
+                        <div class="section-tip">
+                            <span class="pill-manual">Manual</span>
+                            Normalmente o único ponto que gera dúvida aqui é o `CSC`. Se você já recebeu `CSC ID` e `CSC Token`, preencha e o resto pode ficar no padrão.
+                        </div>
                         <div class="form-grid">
                             <div class="form-group form-span-2">
                                 <label>Ambiente</label>
@@ -801,18 +955,20 @@
                             <div class="form-group">
                                 <label for="cfgSerie">Serie</label>
                                 <input type="number" id="cfgSerie" value="1" min="1">
+                                <div class="field-hint">Pode deixar `1` se você ainda não usa outra série.</div>
                             </div>
                             <div class="form-group">
                                 <label for="cfgProximoNumero">Proximo Numero</label>
                                 <input type="number" id="cfgProximoNumero" value="1" min="1">
+                                <div class="field-hint">Se for a primeira emissão, mantenha `1`.</div>
                             </div>
                             <div class="form-group">
-                                <label for="cfgCscId">CSC ID</label>
-                                <input type="text" id="cfgCscId" placeholder="Codigo de Seguranca do Contribuinte">
+                                <label for="cfgCscId">CSC ID <span class="pill-required">Obrigatório</span></label>
+                                <input type="text" id="cfgCscId" placeholder="Número do CSC liberado na SEFAZ">
                             </div>
                             <div class="form-group">
-                                <label for="cfgCscToken">CSC Token</label>
-                                <input type="text" id="cfgCscToken" placeholder="Token CSC">
+                                <label for="cfgCscToken">CSC Token <span class="pill-required">Obrigatório</span></label>
+                                <input type="text" id="cfgCscToken" placeholder="Código/token do CSC">
                             </div>
                         </div>
                     </div>
@@ -829,14 +985,14 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="cfgApiUrl">API URL</label>
-                                <input type="text" id="cfgApiUrl" value="api.milkypot.com" readonly>
+                                <label for="cfgApiUrl">Backend Fiscal</label>
+                                <input type="text" id="cfgApiUrl" value="Firebase Functions" readonly>
                             </div>
                             <div class="form-group">
-                                <label for="cfgApiKey">API Key</label>
+                                <label for="cfgApiKey">Token do Provedor (opcional)</label>
                                 <div class="masked-value">
-                                    <input type="password" id="cfgApiKey" placeholder="Sua API Key" readonly>
-                                    <button class="btn-copy" onclick="copyApiKey()" title="Copiar">📋</button>
+                                    <input type="password" id="cfgApiKey" placeholder="Token salvo no Firebase" readonly>
+                                    <button class="btn-copy" onclick="copyApiKey()" title="Copiar token">📋</button>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -849,7 +1005,7 @@
                     <!-- Save -->
                     <div style="text-align:right; margin-top:8px;">
                         <button class="btn btn-primary" onclick="salvarConfiguracao()" style="padding:14px 40px; font-size:15px; font-weight:700;">
-                            💾 Salvar Configuracao
+                            💾 Salvar e Validar
                         </button>
                     </div>
                 </div>
@@ -1181,6 +1337,16 @@
             }
         });
 
+        ['cfgCnpj', 'cfgRazaoSocial', 'cfgCep', 'cfgCodigoIbge', 'cfgCscId', 'cfgCscToken', 'cfgCertPassword'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('input', refreshSetupHints);
+            el.addEventListener('change', refreshSetupHints);
+        });
+        document.getElementById('cfgCertFile').addEventListener('change', function() {
+            updateCertStatus(DataStore.getItem('fiscal_cert_' + franchiseId) || null);
+        });
+
         // ========== BUSCAR CEP (ViaCEP) ==========
         function buscarCep() {
             var cep = document.getElementById('cfgCep').value.replace(/\D/g, '');
@@ -1207,6 +1373,91 @@
                 });
         }
 
+        function applyFiscalConfigToForm(config) {
+            fiscalConfig = config || {};
+
+            document.getElementById('cfgCnpj').value = fiscalConfig.cnpj || '';
+            document.getElementById('cfgRazaoSocial').value = fiscalConfig.razaoSocial || '';
+            document.getElementById('cfgNomeFantasia').value = fiscalConfig.nomeFantasia || '';
+            document.getElementById('cfgInscricaoEstadual').value = fiscalConfig.inscricaoEstadual || '';
+            document.getElementById('cfgRegimeTributario').value = fiscalConfig.regimeTributario || '1';
+
+            var endereco = fiscalConfig.endereco || {};
+            document.getElementById('cfgCep').value = endereco.cep || '';
+            document.getElementById('cfgLogradouro').value = endereco.logradouro || '';
+            document.getElementById('cfgNumero').value = endereco.numero || '';
+            document.getElementById('cfgComplemento').value = endereco.complemento || '';
+            document.getElementById('cfgBairro').value = endereco.bairro || '';
+            document.getElementById('cfgCidade').value = endereco.cidade || '';
+            document.getElementById('cfgUf').value = endereco.uf || '';
+            document.getElementById('cfgCodigoIbge').value = endereco.codigoIbge || '';
+
+            var nfce = fiscalConfig.nfce || {};
+            document.getElementById('cfgAmbiente').checked = nfce.ambiente === 'producao';
+            document.getElementById('cfgAmbiente').dispatchEvent(new Event('change'));
+            document.getElementById('cfgSerie').value = nfce.serie || 1;
+            document.getElementById('cfgProximoNumero').value = nfce.proximoNumero || 1;
+            document.getElementById('cfgCscId').value = nfce.cscId || '';
+            document.getElementById('cfgCscToken').value = nfce.cscToken || '';
+
+            var keyInput = document.getElementById('cfgApiKey');
+            if (fiscalConfig.apiKey) {
+                keyInput.value = '****' + fiscalConfig.apiKey.slice(-4);
+                keyInput.setAttribute('data-value', fiscalConfig.apiKey);
+            } else {
+                keyInput.value = '';
+                keyInput.removeAttribute('data-value');
+            }
+
+            var certInfo = fiscalConfig.certificate || DataStore.getItem('fiscal_cert_' + franchiseId);
+            if (certInfo) {
+                DataStore.setItem('fiscal_cert_' + franchiseId, certInfo);
+            }
+            updateCertStatus(certInfo);
+            updateConfigStatus();
+            refreshSetupHints();
+        }
+
+        function setChecklistState(id, ok, text) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.className = 'check-item ' + (ok ? 'ok' : 'warn');
+            var span = el.querySelector('span');
+            if (span) span.textContent = text;
+        }
+
+        function refreshSetupHints() {
+            var cnpj = document.getElementById('cfgCnpj').value.replace(/\D/g, '');
+            var razao = document.getElementById('cfgRazaoSocial').value.trim();
+            var cep = document.getElementById('cfgCep').value.replace(/\D/g, '');
+            var ibge = document.getElementById('cfgCodigoIbge').value.trim();
+            var cscId = document.getElementById('cfgCscId').value.trim();
+            var cscToken = document.getElementById('cfgCscToken').value.trim();
+            var certInfo = DataStore.getItem('fiscal_cert_' + franchiseId) || {};
+            var certSelected = !!document.getElementById('cfgCertFile').files[0];
+
+            setChecklistState('checkCertificado', !!certInfo.valid,
+                certInfo.valid ? 'Certificado salvo e pronto' : (certSelected ? 'Arquivo selecionado, falta salvar' : 'Falta enviar o A1'));
+            setChecklistState('checkEmpresa', cnpj.length === 14 && !!razao,
+                cnpj.length === 14 && !!razao ? 'Empresa conferida' : 'Falta CNPJ ou razão social');
+            setChecklistState('checkEndereco', cep.length === 8 && !!ibge,
+                cep.length === 8 && !!ibge ? 'Endereço pronto' : 'Use o CEP para preencher endereço e IBGE');
+            setChecklistState('checkNfce', !!cscId && !!cscToken,
+                !!cscId && !!cscToken ? 'CSC preenchido' : 'Falta informar CSC ID e CSC Token');
+        }
+
+        function readFileAsBase64(file) {
+            return new Promise(function(resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function() {
+                    var result = reader.result || '';
+                    resolve(String(result).split(',').pop() || '');
+                };
+                reader.onerror = function() { reject(new Error('Falha ao ler arquivo')); };
+                reader.readAsDataURL(file);
+            });
+        }
+
         // ========== COPY API KEY ==========
         function copyApiKey() {
             var input = document.getElementById('cfgApiKey');
@@ -1223,37 +1474,30 @@
         }
 
         // ========== TESTAR CONEXAO ==========
-        function testarConexao() {
-            var apiKey = fiscalConfig.apiKey || '';
-            if (!apiKey) {
-                Utils.showToast('Configure a API Key primeiro.', 'error');
-                return;
-            }
+        async function testarConexao() {
             showLoading('Testando conexao...');
-            fetch('https://api.milkypot.com/health', {
-                method: 'GET',
-                headers: { 'X-API-Key': apiKey }
-            })
-            .then(function(r) {
+            try {
+                var result = await CloudFunctions.getFiscalHealth();
                 hideLoading();
-                if (r.ok) {
+                if (result && result.success) {
                     document.getElementById('apiStatusDot').className = 'api-status-dot connected';
-                    document.getElementById('apiStatusLabel').textContent = 'Conectado';
-                    Utils.showToast('Conexao OK!', 'success');
+                    document.getElementById('apiStatusLabel').textContent = result.providerConfigured ? 'Conectado' : 'Backend OK';
+                    Utils.showToast(result.providerConfigured
+                        ? 'Backend fiscal conectado e provedor configurado.'
+                        : 'Backend Firebase conectado. Falta apenas configurar o provedor fiscal da NFC-e.', 'success');
                 } else {
-                    throw new Error('Status ' + r.status);
+                    throw new Error((result && (result.error || result.message)) || 'Falha ao validar backend');
                 }
-            })
-            .catch(function(err) {
+            } catch (err) {
                 hideLoading();
                 document.getElementById('apiStatusDot').className = 'api-status-dot disconnected';
                 document.getElementById('apiStatusLabel').textContent = 'Desconectado';
                 Utils.showToast('Falha na conexao: ' + err.message, 'error');
-            });
+            }
         }
 
         // ========== SALVAR CONFIGURACAO ==========
-        function salvarConfiguracao() {
+        async function salvarConfiguracao() {
             var config = {
                 cnpj: document.getElementById('cfgCnpj').value.trim(),
                 razaoSocial: document.getElementById('cfgRazaoSocial').value.trim(),
@@ -1291,61 +1535,49 @@
                 return;
             }
 
-            // Save locally
+            showLoading('Salvando configuracao fiscal...');
             DataStore.setItem('fiscal_config_' + franchiseId, config);
             fiscalConfig = config;
-            updateConfigStatus();
-            Utils.showToast('Configuracao salva localmente!', 'success');
 
-            // Send to API
-            if (config.apiKey) {
-                fetch('https://api.milkypot.com/config', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-Key': config.apiKey
-                    },
-                    body: JSON.stringify(config)
-                })
-                .then(function(r) {
-                    if (r.ok) Utils.showToast('Configuracao sincronizada com o servidor!', 'success');
-                    else Utils.showToast('Salvo localmente, mas erro ao sincronizar.', 'warn');
-                })
-                .catch(function() {
-                    Utils.showToast('Salvo localmente. Sincronizacao pendente.', 'warn');
-                });
-            }
+            try {
+                var saveResult = await CloudFunctions.saveFiscalConfig(config, franchiseId);
+                if (!saveResult || !saveResult.success) {
+                    throw new Error((saveResult && (saveResult.error || saveResult.message)) || 'Erro ao salvar configuracao');
+                }
 
-            // Upload certificate if selected
-            var certFile = document.getElementById('cfgCertFile').files[0];
-            var certPass = document.getElementById('cfgCertPassword').value;
-            if (certFile && certPass && config.apiKey) {
-                var formData = new FormData();
-                formData.append('certificate', certFile);
-                formData.append('password', certPass);
-                fetch('https://api.milkypot.com/config/certificate', {
-                    method: 'POST',
-                    headers: { 'X-API-Key': config.apiKey },
-                    body: formData
-                })
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (data.valid) {
-                        var certInfo = {
-                            valid: true,
-                            validUntil: data.validUntil,
-                            cnpj: data.cnpj
-                        };
-                        DataStore.setItem('fiscal_cert_' + franchiseId, certInfo);
-                        updateCertStatus(certInfo);
-                        Utils.showToast('Certificado enviado e validado!', 'success');
-                    } else {
-                        Utils.showToast('Certificado invalido: ' + (data.error || 'erro desconhecido'), 'error');
+                applyFiscalConfigToForm(saveResult.config || config);
+
+                var certFile = document.getElementById('cfgCertFile').files[0];
+                var certPass = document.getElementById('cfgCertPassword').value;
+                if (certFile) {
+                    if (!certPass) {
+                        throw new Error('Informe a senha do certificado para enviar o arquivo');
                     }
-                })
-                .catch(function() {
-                    Utils.showToast('Erro ao enviar certificado.', 'error');
-                });
+
+                    var fileContentBase64 = await readFileAsBase64(certFile);
+                    var certResult = await CloudFunctions.uploadFiscalCertificate({
+                        franchiseId: franchiseId,
+                        fileName: certFile.name,
+                        fileContentBase64: fileContentBase64,
+                        password: certPass
+                    });
+
+                    if (!certResult || !certResult.success) {
+                        throw new Error((certResult && (certResult.error || certResult.message)) || 'Erro ao enviar certificado');
+                    }
+
+                    DataStore.setItem('fiscal_cert_' + franchiseId, certResult.certificate);
+                    updateCertStatus(certResult.certificate);
+                    document.getElementById('cfgCertFile').value = '';
+                    document.getElementById('cfgCertPassword').value = '';
+                }
+
+                Utils.showToast('Configuracao fiscal salva no Firebase!', 'success');
+                await testarConexao();
+            } catch (error) {
+                Utils.showToast(error.message || 'Erro ao salvar configuracao.', 'error');
+            } finally {
+                hideLoading();
             }
         }
 
@@ -1374,6 +1606,7 @@
                 banner.querySelector('.status-icon').textContent = '❌';
                 text.textContent = 'Configuracao fiscal incompleta. Preencha os dados abaixo para emitir notas.';
             }
+            refreshSetupHints();
         }
 
         function updateCertStatus(certInfo) {
@@ -1383,14 +1616,15 @@
             if (certInfo && certInfo.valid) {
                 el.className = 'cert-status valid';
                 el.querySelector('span:first-child').textContent = '✅';
-                text.textContent = 'Valido ate ' + Utils.formatDate(certInfo.validUntil);
+                text.textContent = certInfo.validUntil ? ('Valido ate ' + Utils.formatDate(certInfo.validUntil)) : 'Certificado salvo e validado';
                 if (certInfo.cnpj) cnpjEl.value = certInfo.cnpj;
             } else {
                 el.className = 'cert-status invalid';
                 el.querySelector('span:first-child').textContent = '❌';
-                text.textContent = 'Nao configurado';
+                text.textContent = document.getElementById('cfgCertFile').files[0] ? 'Arquivo selecionado. Clique em salvar para enviar.' : 'Nao configurado';
                 cnpjEl.value = '';
             }
+            refreshSetupHints();
         }
 
         // ========== EMIT TYPE SELECTION ==========
@@ -1543,10 +1777,18 @@
             document.getElementById('cupomTotal').textContent = Utils.formatCurrency(total);
         }
 
+        function persistFiscalNote(nota) {
+            var notasList = DataStore.getItem('fiscal_notas_' + franchiseId) || [];
+            var idx = notasList.findIndex(function(item) { return item.id === nota.id; });
+            if (idx >= 0) notasList[idx] = nota;
+            else notasList.unshift(nota);
+            DataStore.setItem('fiscal_notas_' + franchiseId, notasList);
+        }
+
         // ========== EMITIR NFC-e ==========
-        function emitirNfce() {
+        async function emitirNfce() {
             var cfg = fiscalConfig;
-            if (!cfg.cnpj || !cfg.apiKey) {
+            if (!cfg.cnpj) {
                 Utils.showToast('Configure os dados fiscais primeiro.', 'error');
                 switchTab('config');
                 return;
@@ -1583,49 +1825,38 @@
             };
 
             showLoading('Emitindo NFC-e junto a SEFAZ...');
-
-            fetch('https://api.milkypot.com/nfce/emit', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-Key': cfg.apiKey
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
+            try {
+                var data = await CloudFunctions.emitFiscalDocument({
+                    franchiseId: franchiseId,
+                    tipo: 'nfce',
+                    payload: payload
+                });
                 hideLoading();
-                if (data.success || data.autorizada) {
-                    // Increment next number
-                    var nextNum = parseInt(document.getElementById('cfgProximoNumero').value, 10) || 1;
-                    document.getElementById('cfgProximoNumero').value = nextNum + 1;
-                    cfg.nfce.proximoNumero = nextNum + 1;
-                    DataStore.setItem('fiscal_config_' + franchiseId, cfg);
+                if (data && data.success) {
+                    if (data.note) {
+                        persistFiscalNote(data.note);
+                    }
+                    if (cfg.nfce) {
+                        cfg.nfce.proximoNumero = (parseInt(cfg.nfce.proximoNumero, 10) || 1) + 1;
+                        document.getElementById('cfgProximoNumero').value = cfg.nfce.proximoNumero;
+                        DataStore.setItem('fiscal_config_' + franchiseId, cfg);
+                    }
 
-                    // Save nota locally
-                    var nota = {
+                    var nota = data.note || {
                         id: Utils.generateId(),
-                        numero: data.numero || nextNum,
+                        numero: '-',
                         tipo: 'nfce',
                         data: new Date().toISOString(),
                         cliente: payload.cliente.nome || 'Consumidor',
                         valor: payload.total,
-                        status: 'autorizada',
-                        chave: data.chave || '',
-                        protocolo: data.protocolo || '',
+                        status: 'pendente',
                         items: payload.items,
-                        formaPagamento: payload.formaPagamento,
-                        xml: data.xml || '',
-                        danfe: data.danfe || ''
+                        formaPagamento: payload.formaPagamento
                     };
-                    var notasList = DataStore.getCollection('fiscal_notas', franchiseId) || [];
-                    notasList.push(nota);
-                    DataStore.setItem('fiscal_notas_' + franchiseId, notasList);
 
-                    Utils.showToast('NFC-e emitida com sucesso!', 'success');
+                    Utils.showToast(data.warning || 'NFC-e registrada com sucesso!', 'success');
                     showDanfe(nota);
                 } else {
-                    // Save with error
                     var errNota = {
                         id: Utils.generateId(),
                         numero: '-',
@@ -1637,21 +1868,18 @@
                         erro: data.error || data.mensagem || 'Erro desconhecido',
                         items: payload.items
                     };
-                    var list = DataStore.getCollection('fiscal_notas', franchiseId) || [];
-                    list.push(errNota);
-                    DataStore.setItem('fiscal_notas_' + franchiseId, list);
+                    persistFiscalNote(errNota);
 
                     Utils.showToast('Erro ao emitir NFC-e: ' + (data.error || 'erro desconhecido'), 'error');
                 }
-            })
-            .catch(function(err) {
+            } catch (err) {
                 hideLoading();
                 Utils.showToast('Erro de conexao: ' + err.message, 'error');
-            });
+            }
         }
 
         // ========== EMITIR CUPOM ==========
-        function emitirCupom() {
+        async function emitirCupom() {
             var validItems = cupomItems.filter(function(i) { return i.nome && i.valorUnit > 0; });
             if (validItems.length === 0) {
                 Utils.showToast('Adicione pelo menos um item valido.', 'error');
@@ -1659,32 +1887,45 @@
             }
 
             var total = validItems.reduce(function(s, i) { return s + i.qty * i.valorUnit; }, 0);
-
-            var nota = {
-                id: Utils.generateId(),
-                numero: Date.now().toString().slice(-6),
+            var payload = {
+                franchiseId: franchiseId,
                 tipo: 'cupom',
-                data: new Date().toISOString(),
-                cliente: document.getElementById('cupomClienteNome').value.trim() || 'Consumidor',
-                valor: total,
-                status: 'autorizada',
-                items: validItems.map(function(i) {
-                    return {
-                        nome: i.nome,
-                        quantidade: i.qty,
-                        valorUnitario: i.valorUnit,
-                        valorTotal: i.qty * i.valorUnit
-                    };
-                }),
-                formaPagamento: document.getElementById('cupomFormaPgto').value
+                payload: {
+                    cliente: {
+                        nome: document.getElementById('cupomClienteNome').value.trim() || 'Consumidor'
+                    },
+                    items: validItems.map(function(i) {
+                        return {
+                            nome: i.nome,
+                            quantidade: i.qty,
+                            valorUnitario: i.valorUnit,
+                            valorTotal: i.qty * i.valorUnit
+                        };
+                    }),
+                    subtotal: total,
+                    desconto: 0,
+                    total: total,
+                    formaPagamento: document.getElementById('cupomFormaPgto').value
+                }
             };
 
-            var notasList = DataStore.getCollection('fiscal_notas', franchiseId) || [];
-            notasList.push(nota);
-            DataStore.setItem('fiscal_notas_' + franchiseId, notasList);
+            showLoading('Gerando cupom...');
+            try {
+                var result = await CloudFunctions.emitFiscalDocument(payload);
+                hideLoading();
 
-            Utils.showToast('Cupom gerado com sucesso!', 'success');
-            showDanfe(nota);
+                if (!result || !result.success) {
+                    throw new Error((result && (result.error || result.message)) || 'Falha ao gerar cupom');
+                }
+
+                var nota = result.note;
+                persistFiscalNote(nota);
+                Utils.showToast('Cupom gerado com sucesso!', 'success');
+                showDanfe(nota);
+            } catch (error) {
+                hideLoading();
+                Utils.showToast(error.message || 'Erro ao gerar cupom.', 'error');
+            }
         }
 
         // ========== DANFE PREVIEW ==========
@@ -1781,7 +2022,16 @@
         }
 
         // ========== NOTAS EMITIDAS ==========
-        function loadNotas() {
+        async function loadNotas() {
+            try {
+                var result = await CloudFunctions.listFiscalNotes(franchiseId);
+                if (result && result.success && Array.isArray(result.items)) {
+                    DataStore.setItem('fiscal_notas_' + franchiseId, result.items);
+                }
+            } catch (error) {
+                console.warn('Falha ao carregar notas do Firebase:', error);
+            }
+
             notas = DataStore.getItem('fiscal_notas_' + franchiseId) || [];
             notas.sort(function(a, b) { return (b.data || '').localeCompare(a.data || ''); });
             currentPage = 1;
@@ -1886,14 +2136,8 @@
             }
         }
 
-        function cancelarNota(id) {
+        async function cancelarNota(id) {
             if (!confirm('Tem certeza que deseja cancelar esta NFC-e? Esta acao nao pode ser desfeita.')) return;
-
-            var cfg = fiscalConfig;
-            if (!cfg.apiKey) {
-                Utils.showToast('API Key nao configurada.', 'error');
-                return;
-            }
 
             showLoading('Cancelando NFC-e...');
 
@@ -1901,18 +2145,10 @@
             var nota = all.find(function(n) { return n.id === id; });
             if (!nota) { hideLoading(); return; }
 
-            fetch('https://api.milkypot.com/nfce/cancel', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-Key': cfg.apiKey
-                },
-                body: JSON.stringify({ chave: nota.chave, motivo: 'Cancelamento solicitado pelo emitente' })
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
+            try {
+                var data = await CloudFunctions.cancelFiscalNote(id, 'Cancelamento solicitado pelo emitente', franchiseId);
                 hideLoading();
-                if (data.success || data.cancelada) {
+                if (data.success || data.cancelada || data.canceled) {
                     nota.status = 'cancelada';
                     DataStore.setItem('fiscal_notas_' + franchiseId, all);
                     Utils.showToast('NFC-e cancelada com sucesso!', 'success');
@@ -1920,11 +2156,10 @@
                 } else {
                     Utils.showToast('Erro ao cancelar: ' + (data.error || 'erro desconhecido'), 'error');
                 }
-            })
-            .catch(function(err) {
+            } catch (err) {
                 hideLoading();
                 Utils.showToast('Erro de conexao: ' + err.message, 'error');
-            });
+            }
         }
 
         // ========== LOADING ==========
@@ -1942,47 +2177,28 @@
         });
 
         // ========== LOAD CONFIG ==========
-        function loadConfig() {
-            fiscalConfig = DataStore.getItem('fiscal_config_' + franchiseId) || {};
-            if (fiscalConfig.cnpj) document.getElementById('cfgCnpj').value = fiscalConfig.cnpj;
-            if (fiscalConfig.razaoSocial) document.getElementById('cfgRazaoSocial').value = fiscalConfig.razaoSocial;
-            if (fiscalConfig.nomeFantasia) document.getElementById('cfgNomeFantasia').value = fiscalConfig.nomeFantasia;
-            if (fiscalConfig.inscricaoEstadual) document.getElementById('cfgInscricaoEstadual').value = fiscalConfig.inscricaoEstadual;
-            if (fiscalConfig.regimeTributario) document.getElementById('cfgRegimeTributario').value = fiscalConfig.regimeTributario;
-            if (fiscalConfig.endereco) {
-                var e = fiscalConfig.endereco;
-                if (e.cep) document.getElementById('cfgCep').value = e.cep;
-                if (e.logradouro) document.getElementById('cfgLogradouro').value = e.logradouro;
-                if (e.numero) document.getElementById('cfgNumero').value = e.numero;
-                if (e.complemento) document.getElementById('cfgComplemento').value = e.complemento;
-                if (e.bairro) document.getElementById('cfgBairro').value = e.bairro;
-                if (e.cidade) document.getElementById('cfgCidade').value = e.cidade;
-                if (e.uf) document.getElementById('cfgUf').value = e.uf;
-                if (e.codigoIbge) document.getElementById('cfgCodigoIbge').value = e.codigoIbge;
-            }
-            if (fiscalConfig.nfce) {
-                var n = fiscalConfig.nfce;
-                document.getElementById('cfgAmbiente').checked = n.ambiente === 'producao';
-                document.getElementById('cfgAmbiente').dispatchEvent(new Event('change'));
-                if (n.serie) document.getElementById('cfgSerie').value = n.serie;
-                if (n.proximoNumero) document.getElementById('cfgProximoNumero').value = n.proximoNumero;
-                if (n.cscId) document.getElementById('cfgCscId').value = n.cscId;
-                if (n.cscToken) document.getElementById('cfgCscToken').value = n.cscToken;
-            }
-            if (fiscalConfig.apiKey) {
-                var keyInput = document.getElementById('cfgApiKey');
-                keyInput.value = '****' + fiscalConfig.apiKey.slice(-4);
-                keyInput.setAttribute('data-value', fiscalConfig.apiKey);
+        async function loadConfig() {
+            var localConfig = DataStore.getItem('fiscal_config_' + franchiseId) || {};
+            applyFiscalConfigToForm(localConfig);
+
+            try {
+                var result = await CloudFunctions.getFiscalConfig(franchiseId);
+                if (result && result.success && result.config) {
+                    DataStore.setItem('fiscal_config_' + franchiseId, result.config);
+                    if (result.config.certificate) {
+                        DataStore.setItem('fiscal_cert_' + franchiseId, result.config.certificate);
+                    }
+                    applyFiscalConfigToForm(result.config);
+                }
+            } catch (error) {
+                console.warn('Falha ao carregar configuracao fiscal do Firebase:', error);
             }
 
-            // Load cert status
-            var certInfo = DataStore.getItem('fiscal_cert_' + franchiseId);
-            updateCertStatus(certInfo);
-            updateConfigStatus();
+            await testarConexao();
         }
 
         // ========== INIT ==========
-        (function init() {
+        (async function init() {
             try {
                 if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
                 var session = Auth.getSession();
@@ -1996,7 +2212,7 @@
                     document.getElementById('linkSiteFranquia').href = '/loja/' + franchise.slug + '/';
                 }
 
-                loadConfig();
+                await loadConfig();
                 i18n.translatePage();
             } catch (err) {
                 console.error('Erro ao inicializar fiscal:', err);

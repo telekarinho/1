@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot Admin - Desafio 10.000</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#42A5F5">
+    <style>
+        /* Desafio Page Specific Styles */
+        .section-title {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.15rem;
+            color: var(--mp-dark);
+            margin-bottom: 4px;
+        }
+
+        .section-subtitle {
+            font-size: 0.85rem;
+            color: var(--mp-text-light);
+            margin-bottom: 20px;
+        }
+
+        .section-block {
+            margin-bottom: 32px;
+        }
+
+        .page-subtitle {
+            font-size: 0.9rem;
+            color: var(--mp-text-light);
+            margin-top: 2px;
+        }
+
+        /* Config Card */
+        .config-card {
+            background: var(--mp-card);
+            border-radius: var(--mp-radius);
+            padding: 28px;
+            box-shadow: var(--mp-shadow);
+            margin-bottom: 24px;
+        }
+
+        .config-form-group {
+            margin-bottom: 20px;
+        }
+
+        .config-form-group label {
+            display: block;
+            font-family: 'Baloo 2', cursive;
+            font-size: 0.9rem;
+            color: var(--mp-dark);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .config-form-group input[type="text"] {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--mp-border);
+            border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.9rem;
+            color: var(--mp-text);
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .config-form-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--mp-purple);
+            box-shadow: 0 0 0 3px rgba(212, 165, 255, 0.2);
+        }
+
+        /* Toggle Switch */
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #ccc;
+            border-radius: 28px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            content: "";
+            position: absolute;
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #4CAF50, #66BB6A);
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .toggle-label {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--mp-text);
+        }
+
+        /* Save Button */
+        .btn-save {
+            background: linear-gradient(135deg, var(--mp-dark), var(--mp-purple));
+            color: #fff;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(212, 165, 255, 0.35);
+        }
+
+        /* Participants Table */
+        .desafio-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+
+        .desafio-table thead {
+            background: var(--mp-bg);
+        }
+
+        .desafio-table th {
+            padding: 12px 14px;
+            text-align: left;
+            font-family: 'Baloo 2', cursive;
+            font-weight: 600;
+            color: var(--mp-dark);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .desafio-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--mp-border);
+            vertical-align: middle;
+        }
+
+        .desafio-table tbody tr:hover {
+            background: rgba(212, 165, 255, 0.06);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            background: var(--mp-card);
+            border-radius: var(--mp-radius);
+            box-shadow: var(--mp-shadow);
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .status-badge.acertou {
+            background: rgba(255, 215, 0, 0.15);
+            color: #B8860B;
+        }
+
+        .status-badge.quase {
+            background: rgba(255, 87, 34, 0.12);
+            color: #E64A19;
+        }
+
+        .status-badge.participou {
+            background: rgba(76, 175, 80, 0.12);
+            color: #2E7D32;
+        }
+
+        /* Hall da Fama */
+        .hall-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .hall-item {
+            background: var(--mp-card);
+            border-radius: var(--mp-radius);
+            padding: 16px 20px;
+            box-shadow: var(--mp-shadow);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .hall-item:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--mp-shadow-lg);
+        }
+
+        .hall-position {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.1rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .hall-position.gold {
+            background: linear-gradient(135deg, #FFD700, #FFA000);
+            color: #fff;
+        }
+
+        .hall-position.silver {
+            background: linear-gradient(135deg, #C0C0C0, #9E9E9E);
+            color: #fff;
+        }
+
+        .hall-position.bronze {
+            background: linear-gradient(135deg, #CD7F32, #A0522D);
+            color: #fff;
+        }
+
+        .hall-position.regular {
+            background: var(--mp-bg);
+            color: var(--mp-text);
+        }
+
+        .hall-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .hall-name {
+            font-family: 'Baloo 2', cursive;
+            font-size: 0.95rem;
+            color: var(--mp-dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .hall-time {
+            font-size: 0.82rem;
+            color: var(--mp-text-light);
+        }
+
+        .hall-diff {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .hall-diff.exact {
+            color: #FFD700;
+        }
+
+        .hall-diff.close {
+            color: #FF5722;
+        }
+
+        .hall-diff.normal {
+            color: var(--mp-purple);
+        }
+
+        /* Filter Row */
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .filter-row input[type="date"] {
+            padding: 8px 12px;
+            border: 1px solid var(--mp-border);
+            border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.85rem;
+            color: var(--mp-text);
+        }
+
+        .filter-row input[type="date"]:focus {
+            outline: none;
+            border-color: var(--mp-purple);
+        }
+
+        .btn-export {
+            background: rgba(76, 175, 80, 0.12);
+            color: #2E7D32;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-export:hover {
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .btn-tv {
+            background: linear-gradient(135deg, #7C4DFF, #B388FF);
+            color: #fff;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-tv:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(124, 77, 255, 0.35);
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .unique-count {
+            font-size: 0.85rem;
+            color: var(--mp-text-light);
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small>Central Admin</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="franchises.html" class="sidebar-link"><span class="icon">🏪</span> Franquias</a>
+                <a href="finances.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="orders.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <a href="products.html" class="sidebar-link"><span class="icon">🍨</span> Cardapio</a>
+                <a href="users.html" class="sidebar-link"><span class="icon">👥</span> Usuarios</a>
+                <div class="sidebar-nav-group">Marketing</div>
+                <a href="campaigns.html" class="sidebar-link"><span class="icon">📢</span> Campanhas</a>
+                <a href="seo.html" class="sidebar-link"><span class="icon">🔍</span> SEO & Delivery</a>
+                <a href="ifood.html" class="sidebar-link"><span class="icon">🛵</span> iFood</a>
+                <a href="desafio.html" class="sidebar-link active"><span class="icon">🎮</span> Desafio</a>
+                <div class="sidebar-nav-group">Sistema</div>
+                <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
+                <a href="#" class="sidebar-link" onclick="DataStore.downloadBackup()"><span class="icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">👑</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Admin</strong>
+                        <small>Super Admin</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+                    <div>
+                        <h1>🎮 Desafio 10.000 - Configuracao</h1>
+                        <div class="page-subtitle">Configure premios e acompanhe participantes</div>
+                    </div>
+                </div>
+                <div class="panel-header-right">
+                    <a href="../desafio.html" target="_blank" class="btn-tv">🖥️ Abrir Desafio na TV</a>
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background:rgba(124,77,255,0.12);color:#7C4DFF">👥</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Total Participantes</div>
+                            <div class="kpi-value" id="kpiParticipants">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon yellow">🎯</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Tentativas Hoje</div>
+                            <div class="kpi-value" id="kpiAttemptsToday">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background:rgba(255,215,0,0.15);color:#B8860B">🏆</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Acertos Exatos (10.000)</div>
+                            <div class="kpi-value" id="kpiExactHits">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon green">🔄</div>
+                        <div class="kpi-info">
+                            <div class="kpi-label">Taxa de Retorno</div>
+                            <div class="kpi-value" id="kpiReturnRate">0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prize Configuration -->
+                <div class="section-block">
+                    <h3 class="section-title">🎁 Configuracao de Premios</h3>
+                    <p class="section-subtitle">Defina os premios para cada faixa de acerto do desafio</p>
+
+                    <div class="config-card">
+                        <div class="config-form-group">
+                            <label>Desafio Ativo</label>
+                            <div class="toggle-wrapper">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="cfgEnabled" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span class="toggle-label" id="toggleStatusText">Ativo</span>
+                            </div>
+                        </div>
+
+                        <div class="config-form-group">
+                            <label>🏆 Premio - Acerto Exato (10.000ms)</label>
+                            <input type="text" id="cfgExact" value="1 MilkyPot Gratis!" placeholder="Ex: 1 MilkyPot Gratis!">
+                        </div>
+
+                        <div class="config-form-group">
+                            <label>🔥 Premio - Quase Acertou (ate 50ms)</label>
+                            <input type="text" id="cfgClose50" value="10% de desconto no proximo pedido!" placeholder="Ex: 10% de desconto">
+                        </div>
+
+                        <div class="config-form-group">
+                            <label>✅ Premio - Chegou Perto (ate 200ms)</label>
+                            <input type="text" id="cfgClose200" value="5% de desconto no proximo pedido!" placeholder="Ex: 5% de desconto">
+                        </div>
+
+                        <button class="btn-save" onclick="saveConfig()">💾 Salvar Configuracao</button>
+                    </div>
+                </div>
+
+                <!-- Participants Table -->
+                <div class="section-block">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:4px">
+                        <div>
+                            <h3 class="section-title">👥 Participantes do Desafio</h3>
+                            <p class="section-subtitle" style="margin-bottom:0">Todos os participantes agrupados por telefone</p>
+                        </div>
+                        <span class="unique-count" id="uniqueCount">0 participantes unicos</span>
+                    </div>
+
+                    <div class="filter-row">
+                        <label style="font-size:0.85rem;font-weight:600;color:var(--mp-text)">Filtrar por data:</label>
+                        <input type="date" id="filterDateFrom">
+                        <span style="font-size:0.85rem;color:var(--mp-text-light)">ate</span>
+                        <input type="date" id="filterDateTo">
+                        <button class="btn btn-outline" onclick="loadParticipants()" style="font-size:0.85rem">🔍 Filtrar</button>
+                        <button class="btn-export" onclick="exportCSV()">📥 Exportar CSV</button>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="desafio-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>WhatsApp</th>
+                                    <th>Melhor Tempo</th>
+                                    <th>Diferenca</th>
+                                    <th>Tentativas</th>
+                                    <th>Ultima Visita</th>
+                                    <th>Ganhou Premio?</th>
+                                </tr>
+                            </thead>
+                            <tbody id="participantsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Hall da Fama -->
+                <div class="section-block">
+                    <h3 class="section-title">🏆 Hall da Fama</h3>
+                    <p class="section-subtitle">Top 10 tentativas mais proximas de 10.000ms de todos os tempos</p>
+
+                    <div class="hall-grid" id="hallOfFame">
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/i18n.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/cloud-functions.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+    <script src="../js/core/notifications.js"></script>
+    <script>
+        if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+        document.getElementById('sidebarUserName').textContent = Auth.getUserName();
+
+        const db = firebase.firestore();
+        let allAttempts = [];
+        let groupedParticipants = [];
+
+        // ============================================
+        // Toggle status text
+        // ============================================
+        document.getElementById('cfgEnabled').addEventListener('change', function() {
+            document.getElementById('toggleStatusText').textContent = this.checked ? 'Ativo' : 'Inativo';
+        });
+
+        // ============================================
+        // Load Config from Firebase
+        // ============================================
+        async function loadConfig() {
+            try {
+                const doc = await db.collection('config').doc('desafio_premios').get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    document.getElementById('cfgEnabled').checked = data.enabled !== false;
+                    document.getElementById('toggleStatusText').textContent = data.enabled !== false ? 'Ativo' : 'Inativo';
+                    if (data.exact) document.getElementById('cfgExact').value = data.exact;
+                    if (data.close50) document.getElementById('cfgClose50').value = data.close50;
+                    if (data.close200) document.getElementById('cfgClose200').value = data.close200;
+                }
+            } catch (err) {
+                console.error('Erro ao carregar config:', err);
+            }
+        }
+
+        // ============================================
+        // Save Config to Firebase
+        // ============================================
+        async function saveConfig() {
+            const config = {
+                enabled: document.getElementById('cfgEnabled').checked,
+                exact: document.getElementById('cfgExact').value.trim(),
+                close50: document.getElementById('cfgClose50').value.trim(),
+                close200: document.getElementById('cfgClose200').value.trim(),
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                await db.collection('config').doc('desafio_premios').set(config, { merge: true });
+                Utils.showToast('Configuracao salva com sucesso!', 'success');
+            } catch (err) {
+                console.error('Erro ao salvar config:', err);
+                Utils.showToast('Erro ao salvar configuracao', 'error');
+            }
+        }
+
+        // ============================================
+        // Load Participants from Firebase
+        // ============================================
+        async function loadParticipants() {
+            try {
+                const snapshot = await db.collection('desafio_10000').get();
+                allAttempts = [];
+                snapshot.forEach(doc => {
+                    allAttempts.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Apply date filter
+                const fromDate = document.getElementById('filterDateFrom').value;
+                const toDate = document.getElementById('filterDateTo').value;
+
+                let filtered = allAttempts;
+                if (fromDate) {
+                    filtered = filtered.filter(a => {
+                        const d = a.timestamp || a.createdAt || '';
+                        return d >= fromDate;
+                    });
+                }
+                if (toDate) {
+                    const toEnd = toDate + 'T23:59:59';
+                    filtered = filtered.filter(a => {
+                        const d = a.timestamp || a.createdAt || '';
+                        return d <= toEnd;
+                    });
+                }
+
+                // Group by phone number
+                const byPhone = {};
+                filtered.forEach(a => {
+                    const phone = a.phone || a.whatsapp || 'desconhecido';
+                    if (!byPhone[phone]) {
+                        byPhone[phone] = {
+                            name: a.name || a.nome || 'Anonimo',
+                            phone: phone,
+                            attempts: 0,
+                            bestTime: Infinity,
+                            bestDiff: Infinity,
+                            lastVisit: '',
+                            wonPrize: false,
+                            prizeType: null
+                        };
+                    }
+                    const entry = byPhone[phone];
+                    entry.attempts++;
+
+                    // Use name from most recent attempt
+                    const visitDate = a.timestamp || a.createdAt || '';
+                    if (visitDate > entry.lastVisit) {
+                        entry.lastVisit = visitDate;
+                        if (a.name || a.nome) entry.name = a.name || a.nome;
+                    }
+
+                    // Track best attempt (closest to 10000)
+                    const time = parseFloat(a.time || a.tempo || 0);
+                    const diff = Math.abs(time - 10000);
+                    if (diff < entry.bestDiff) {
+                        entry.bestTime = time;
+                        entry.bestDiff = diff;
+                    }
+
+                    // Prize check
+                    if (diff === 0) {
+                        entry.wonPrize = true;
+                        entry.prizeType = 'acertou';
+                    } else if (diff <= 50 && entry.prizeType !== 'acertou') {
+                        entry.wonPrize = true;
+                        entry.prizeType = 'quase';
+                    } else if (diff <= 200 && !entry.wonPrize) {
+                        entry.wonPrize = true;
+                        entry.prizeType = 'participou';
+                    }
+                });
+
+                groupedParticipants = Object.values(byPhone);
+                groupedParticipants.sort((a, b) => a.bestDiff - b.bestDiff);
+
+                renderParticipants();
+                updateKPIs(filtered);
+                renderHallOfFame();
+            } catch (err) {
+                console.error('Erro ao carregar participantes:', err);
+                Utils.showToast('Erro ao carregar dados do desafio', 'error');
+            }
+        }
+
+        // ============================================
+        // Render Participants Table
+        // ============================================
+        function renderParticipants() {
+            const tbody = document.getElementById('participantsTableBody');
+            document.getElementById('uniqueCount').textContent = groupedParticipants.length + ' participantes unicos';
+
+            if (groupedParticipants.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px 20px;color:#999;font-size:0.9rem;">Nenhum participante encontrado. Os dados aparecerao quando alguem jogar o Desafio 10.000.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = groupedParticipants.map(p => {
+                const diffMs = p.bestDiff;
+                let badgeClass, badgeText;
+                if (diffMs === 0) {
+                    badgeClass = 'acertou';
+                    badgeText = '🏆 Acertou';
+                } else if (diffMs <= 50) {
+                    badgeClass = 'quase';
+                    badgeText = '🔥 Quase';
+                } else {
+                    badgeClass = 'participou';
+                    badgeText = '✅ Participou';
+                }
+
+                const lastVisitFormatted = p.lastVisit
+                    ? new Date(p.lastVisit).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
+                    : '-';
+
+                const diffSign = p.bestTime >= 10000 ? '+' : '-';
+                const diffFormatted = diffMs === 0 ? 'EXATO!' : diffSign + diffMs + 'ms';
+
+                return `<tr>
+                    <td><strong style="color:var(--mp-dark)">${Utils.escapeHtml(p.name)}</strong></td>
+                    <td style="font-size:0.82rem">${Utils.escapeHtml(p.phone)}</td>
+                    <td><strong>${p.bestTime.toLocaleString('pt-BR')}ms</strong></td>
+                    <td style="font-weight:600;color:${diffMs === 0 ? '#B8860B' : diffMs <= 50 ? '#E64A19' : 'var(--mp-text)'}">${diffFormatted}</td>
+                    <td style="text-align:center">${p.attempts}</td>
+                    <td style="color:var(--mp-text-light);font-size:0.82rem">${lastVisitFormatted}</td>
+                    <td><span class="status-badge ${badgeClass}">${badgeText}</span></td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ============================================
+        // Update KPIs
+        // ============================================
+        function updateKPIs(filtered) {
+            // Total unique participants (from all data, not filtered)
+            const allPhones = new Set();
+            allAttempts.forEach(a => allPhones.add(a.phone || a.whatsapp || 'x'));
+            document.getElementById('kpiParticipants').textContent = allPhones.size;
+
+            // Attempts today
+            const today = new Date().toISOString().split('T')[0];
+            const todayAttempts = allAttempts.filter(a => {
+                const d = a.timestamp || a.createdAt || '';
+                return d.startsWith(today);
+            });
+            document.getElementById('kpiAttemptsToday').textContent = todayAttempts.length;
+
+            // Exact hits
+            const exactHits = allAttempts.filter(a => {
+                const time = parseFloat(a.time || a.tempo || 0);
+                return Math.abs(time - 10000) === 0;
+            });
+            document.getElementById('kpiExactHits').textContent = exactHits.length;
+
+            // Return rate (people with > 1 attempt)
+            const phoneCounts = {};
+            allAttempts.forEach(a => {
+                const ph = a.phone || a.whatsapp || 'x';
+                phoneCounts[ph] = (phoneCounts[ph] || 0) + 1;
+            });
+            const totalPeople = Object.keys(phoneCounts).length;
+            const returners = Object.values(phoneCounts).filter(c => c > 1).length;
+            const rate = totalPeople > 0 ? Math.round((returners / totalPeople) * 100) : 0;
+            document.getElementById('kpiReturnRate').textContent = rate + '%';
+        }
+
+        // ============================================
+        // Render Hall of Fame
+        // ============================================
+        function renderHallOfFame() {
+            const top10 = groupedParticipants.slice(0, 10);
+            const container = document.getElementById('hallOfFame');
+
+            if (top10.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;font-size:0.9rem;grid-column:1/-1;">Nenhum participante ainda. O Hall da Fama sera preenchido automaticamente.</div>';
+                return;
+            }
+
+            container.innerHTML = top10.map((p, i) => {
+                let posClass;
+                if (i === 0) posClass = 'gold';
+                else if (i === 1) posClass = 'silver';
+                else if (i === 2) posClass = 'bronze';
+                else posClass = 'regular';
+
+                let diffClass;
+                if (p.bestDiff === 0) diffClass = 'exact';
+                else if (p.bestDiff <= 50) diffClass = 'close';
+                else diffClass = 'normal';
+
+                const diffSign = p.bestTime >= 10000 ? '+' : '-';
+                const diffText = p.bestDiff === 0 ? 'EXATO!' : diffSign + p.bestDiff + 'ms';
+
+                const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+
+                return `<div class="hall-item">
+                    <div class="hall-position ${posClass}">${medal}</div>
+                    <div class="hall-info">
+                        <div class="hall-name">${Utils.escapeHtml(p.name)}</div>
+                        <div class="hall-time">${p.bestTime.toLocaleString('pt-BR')}ms &middot; ${p.attempts} tentativa${p.attempts > 1 ? 's' : ''}</div>
+                    </div>
+                    <div class="hall-diff ${diffClass}">${diffText}</div>
+                </div>`;
+            }).join('');
+        }
+
+        // ============================================
+        // Export CSV
+        // ============================================
+        function exportCSV() {
+            if (groupedParticipants.length === 0) {
+                Utils.showToast('Nenhum dado para exportar', 'warning');
+                return;
+            }
+
+            const headers = ['Nome', 'WhatsApp', 'Melhor Tempo (ms)', 'Diferenca (ms)', 'Tentativas', 'Ultima Visita', 'Status'];
+            const rows = groupedParticipants.map(p => {
+                const status = p.bestDiff === 0 ? 'Acertou' : p.bestDiff <= 50 ? 'Quase' : 'Participou';
+                return [
+                    p.name,
+                    p.phone,
+                    p.bestTime,
+                    p.bestDiff,
+                    p.attempts,
+                    p.lastVisit,
+                    status
+                ];
+            });
+
+            let csv = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csv += row.map(cell => {
+                    const str = String(cell);
+                    return str.includes(',') || str.includes('"') ? '"' + str.replace(/"/g, '""') + '"' : str;
+                }).join(',') + '\n';
+            });
+
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'desafio_10000_participantes_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            Utils.showToast('CSV exportado com sucesso!', 'success');
+        }
+
+        // ============================================
+        // Init
+        // ============================================
+        loadConfig();
+        loadParticipants();
+    </script>
+</body>
+</html>

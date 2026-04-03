@@ -32,6 +32,7 @@
                 <a href="campaigns.html" class="sidebar-link"><span class="icon">📢</span> Campanhas</a>
                 <a href="seo.html" class="sidebar-link"><span class="icon">🔍</span> SEO & Delivery</a>
                 <a href="ifood.html" class="sidebar-link"><span class="icon">🛵</span> iFood</a>
+                <a href="desafio.html" class="sidebar-link"><span class="icon">🎮</span> Desafio</a>
                 <div class="sidebar-nav-group">Sistema</div>
                 <a href="settings.html" class="sidebar-link active"><span class="icon">⚙️</span> Configuracoes</a>
                 <a href="#" class="sidebar-link" onclick="DataStore.downloadBackup()"><span class="icon">💾</span> Backup</a>
@@ -137,6 +138,23 @@
                                 <input type="number" class="form-control" id="orderMinValue" placeholder="20.00" step="0.01">
                             </div>
                             <button class="btn btn-primary" onclick="saveSection('order')">Salvar Configuracoes de Pedido</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>Cronometro da Loja</h3>
+                        </div>
+                        <div class="panel-card-body">
+                            <div class="form-group">
+                                <label>Premio do Desafio</label>
+                                <input type="text" class="form-control" id="challengePrize" placeholder="Ex: 10% de desconto no proximo pedido">
+                            </div>
+                            <div class="form-group">
+                                <label>Texto Curto do Premio</label>
+                                <input type="text" class="form-control" id="challengePrizeHint" placeholder="Ex: Acertou muito perto? Ganhe um mimo da loja">
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSection('challenge')">Salvar Premio do Cronometro</button>
                         </div>
                     </div>
 
@@ -265,6 +283,9 @@
             if (settings.orderDeliveryRadius) document.getElementById('orderDeliveryRadius').value = settings.orderDeliveryRadius;
             if (settings.orderMinValue) document.getElementById('orderMinValue').value = settings.orderMinValue;
 
+            if (settings.challengePrize) document.getElementById('challengePrize').value = settings.challengePrize;
+            if (settings.challengePrizeHint) document.getElementById('challengePrizeHint').value = settings.challengePrizeHint;
+
             // Integration
             if (settings.whatsappNumber) document.getElementById('whatsappNumber').value = settings.whatsappNumber;
 
@@ -302,6 +323,9 @@
                 settings.orderDeliveryFee = parseFloat(document.getElementById('orderDeliveryFee').value) || 0;
                 settings.orderDeliveryRadius = parseFloat(document.getElementById('orderDeliveryRadius').value) || 0;
                 settings.orderMinValue = parseFloat(document.getElementById('orderMinValue').value) || 0;
+            } else if (section === 'challenge') {
+                settings.challengePrize = document.getElementById('challengePrize').value.trim();
+                settings.challengePrizeHint = document.getElementById('challengePrizeHint').value.trim();
             } else if (section === 'appearance') {
                 settings.primaryColor = document.getElementById('primaryColor').value;
                 settings.secondaryColor = document.getElementById('secondaryColor').value;

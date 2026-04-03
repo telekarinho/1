@@ -1,0 +1,845 @@
+﻿
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Acerte 10.000 | Milkypot</title>
+  <meta name="description" content="Desafio oficial Milkypot. Sinta o tempo, pare no instante exato e tente acertar 10.000.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-1: #fffafc;
+      --bg-2: #f6f1ff;
+      --bg-3: #eef7ff;
+      --pink: #ff86c8;
+      --pink-strong: #ff4fae;
+      --lilac: #b58fff;
+      --violet: #7143c9;
+      --blue: #66b8ff;
+      --blue-strong: #2f8ff7;
+      --gold: #ffd46f;
+      --danger: #ff385c;
+      --success: #23b36b;
+      --text: #4d3775;
+      --text-soft: #7d6a9e;
+      --border: rgba(255,255,255,.58);
+      --shadow: 0 24px 70px rgba(120, 85, 172, .16);
+      --radius-xl: 34px;
+      --radius-lg: 26px;
+      --radius-md: 20px;
+      --display: 'Baloo 2', cursive;
+      --body: 'Plus Jakarta Sans', sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: var(--body);
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 18%, rgba(255,134,200,.34), transparent 20%),
+        radial-gradient(circle at 82% 12%, rgba(102,184,255,.28), transparent 22%),
+        radial-gradient(circle at 72% 74%, rgba(181,143,255,.22), transparent 20%),
+        linear-gradient(145deg, var(--bg-1) 0%, var(--bg-2) 42%, var(--bg-3) 100%);
+      overflow-x: hidden;
+    }
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      border-radius: 999px;
+      filter: blur(90px);
+      opacity: .55;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 24rem;
+      height: 24rem;
+      background: rgba(255, 117, 193, .22);
+      top: -8rem;
+      left: -6rem;
+    }
+    body::after {
+      width: 26rem;
+      height: 26rem;
+      background: rgba(91, 180, 255, .18);
+      right: -8rem;
+      bottom: -9rem;
+    }
+    .shell {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      padding: clamp(16px, 2vw, 24px);
+      display: grid;
+      align-items: stretch;
+    }
+    .experience {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr);
+      gap: 22px;
+      width: min(1440px, 100%);
+      margin: 0 auto;
+    }
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.62));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(24px);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+    .hero {
+      padding: clamp(20px, 3vw, 34px);
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      min-height: calc(100vh - 48px);
+      position: relative;
+      isolation: isolate;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.78);
+      border: 1px solid rgba(255,255,255,.9);
+      box-shadow: 0 12px 25px rgba(113, 67, 201, .08);
+    }
+    .brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      border-radius: 14px;
+      background: rgba(255,255,255,.95);
+      padding: 5px;
+    }
+    .brand b {
+      display: block;
+      font-size: .82rem;
+      color: var(--text-soft);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .brand strong {
+      display: block;
+      font-family: var(--display);
+      font-size: 1.2rem;
+      line-height: .9;
+      color: #6d42be;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: .88rem;
+      color: #7048bc;
+      background: linear-gradient(135deg, rgba(255,255,255,.8), rgba(255,219,241,.65));
+      border: 1px solid rgba(255,255,255,.86);
+      box-shadow: 0 12px 25px rgba(113, 67, 201, .08);
+      white-space: nowrap;
+    }
+    .headline { max-width: 820px; margin-bottom: 18px; }
+    h1 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(3.6rem, 10vw, 8rem);
+      line-height: .86;
+      letter-spacing: -.05em;
+      color: #5c34a3;
+      text-shadow: 0 14px 40px rgba(122, 88, 193, .12);
+    }
+    h1 .accent {
+      display: block;
+      color: var(--pink-strong);
+      filter: drop-shadow(0 12px 28px rgba(255,79,174,.18));
+    }
+    .subtitle {
+      margin: 16px 0 0;
+      max-width: 640px;
+      font-size: clamp(1rem, 1.8vw, 1.18rem);
+      line-height: 1.65;
+      color: var(--text-soft);
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+    .display-wrap {
+      position: relative;
+      padding: clamp(18px, 2vw, 24px);
+      border-radius: 32px;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,.95), rgba(255,255,255,.52) 45%, rgba(255,255,255,.35) 100%),
+        linear-gradient(145deg, rgba(255,255,255,.72), rgba(246,243,255,.48));
+      border: 1px solid rgba(255,255,255,.84);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 22px 60px rgba(125,106,158,.16);
+      overflow: hidden;
+    }
+    .display-glow {
+      position: absolute;
+      inset: auto 12% -2.8rem 12%;
+      height: 6rem;
+      background: radial-gradient(circle, rgba(255,79,174,.28), rgba(102,184,255,.08), transparent 72%);
+      filter: blur(14px);
+      pointer-events: none;
+    }
+    .display-top,
+    .counter-caption,
+    .cta-row,
+    .metrics,
+    .camera-actions,
+    .camera-downloads,
+    .list { display: grid; gap: 12px; }
+    .display-top {
+      grid-template-columns: repeat(2, max-content);
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .display-badge,
+    .small-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,.74);
+      border: 1px solid rgba(255,255,255,.8);
+      color: var(--text-soft);
+      font-size: .84rem;
+      font-weight: 800;
+    }
+    .display-badge strong,
+    .small-chip strong { color: #5f3ca0; }
+    .counter-frame {
+      display: grid;
+      place-items: center;
+      text-align: center;
+      min-height: min(48vh, 430px);
+      padding: 10px 6px 24px;
+    }
+    .counter {
+      margin: 0;
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: clamp(5.8rem, 17vw, 11.5rem);
+      line-height: .82;
+      letter-spacing: -.08em;
+      color: var(--danger);
+      text-shadow: 0 0 18px rgba(255,56,92,.18), 0 0 42px rgba(255,86,126,.16), 0 22px 60px rgba(255,56,92,.18);
+      transform-origin: center;
+      transition: transform .2s ease, color .28s ease, text-shadow .28s ease;
+    }
+    .counter.running { animation: pulseBlink .82s steps(2, end) infinite; }
+    .counter.win {
+      color: var(--success);
+      text-shadow: 0 0 20px rgba(35,179,107,.24), 0 0 52px rgba(35,179,107,.22), 0 18px 50px rgba(35,179,107,.22);
+      animation: winnerBounce .72s ease infinite alternate;
+    }
+    @keyframes pulseBlink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .34; transform: scale(.992); }
+    }
+    @keyframes winnerBounce {
+      from { transform: translateY(0) scale(1); }
+      to { transform: translateY(-4px) scale(1.02); }
+    }
+    .counter-caption {
+      grid-auto-flow: column;
+      justify-content: center;
+      color: var(--text-soft);
+      font-weight: 700;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 76px;
+      margin-top: 8px;
+      padding: 14px 18px;
+      border-radius: 22px;
+      font-weight: 800;
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      color: #6b49ad;
+      background: linear-gradient(135deg, rgba(255,255,255,.84), rgba(244,240,255,.72));
+      border: 1px solid rgba(255,255,255,.72);
+    }
+    .status.hot { color: #b84a80; }
+    .status.win { color: #188a54; background: linear-gradient(135deg, rgba(236,255,246,.9), rgba(226,255,238,.72)); }
+    .cta-zone { display: grid; gap: 14px; margin-top: 18px; }
+    .cta-main {
+      appearance: none; border: 0; border-radius: 28px; min-height: 82px; padding: 18px 24px;
+      font: inherit; font-weight: 900; font-size: clamp(1.06rem, 2vw, 1.18rem); color: #fff;
+      background: linear-gradient(135deg, #ff5db4, #7f5bff 48%, #45b7ff 100%);
+      box-shadow: 0 24px 40px rgba(123, 92, 255, .24), inset 0 1px 0 rgba(255,255,255,.32);
+      cursor: pointer; position: relative; overflow: hidden; transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+    .cta-main::before {
+      content: ""; position: absolute; inset: -140% auto auto -20%; width: 38%; height: 340%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+      transform: rotate(16deg); animation: sheen 3.2s linear infinite;
+    }
+    @keyframes sheen { to { transform: translateX(260%) rotate(16deg); } }
+    .cta-main:hover { transform: translateY(-2px) scale(1.003); }
+    .cta-main:active { transform: translateY(1px) scale(.992); }
+    .cta-main.secondary { background: linear-gradient(135deg, #72c7ff, #7f5bff 60%, #ff77c2); }
+    .cta-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .ghost, .soft-button {
+      appearance: none; border: 0; border-radius: 20px; min-height: 58px; padding: 14px 16px; font: inherit;
+      font-weight: 800; color: #5d3fa2; background: linear-gradient(145deg, rgba(255,255,255,.9), rgba(240,246,255,.85));
+      border: 1px solid rgba(255,255,255,.76); box-shadow: 0 12px 24px rgba(120, 85, 172, .08); cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .ghost:hover, .soft-button:hover { transform: translateY(-2px); }
+    .metrics { grid-template-columns: repeat(3, minmax(0,1fr)); margin-top: 14px; }
+    .metric {
+      padding: 16px 18px; border-radius: 22px; background: linear-gradient(145deg, rgba(255,255,255,.88), rgba(245,249,255,.78));
+      border: 1px solid rgba(255,255,255,.78);
+    }
+    .metric-label { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--text-soft); }
+    .metric-value {
+      display: block; margin-top: 6px; font-family: var(--display); font-size: clamp(1.8rem, 4vw, 2.6rem);
+      line-height: .92; color: #5a3799;
+    }
+    .metric-sub { color: var(--text-soft); font-size: .88rem; }
+    .winner-card {
+      display: none; margin-top: 16px; padding: 22px; border-radius: 28px; text-align: center; position: relative; overflow: hidden;
+      background: linear-gradient(145deg, rgba(255,247,214,.96), rgba(255,255,255,.78)); border: 1px solid rgba(255,232,168,.78);
+      box-shadow: 0 18px 40px rgba(255, 212, 111, .18);
+    }
+    .winner-card.show { display: block; }
+    .winner-stamp {
+      display: inline-flex; align-items: center; justify-content: center; padding: 10px 16px; border-radius: 999px;
+      background: linear-gradient(135deg, #ffcf6f, #ff86c8); color: #fff; font-weight: 900; letter-spacing: .08em;
+      text-transform: uppercase; box-shadow: 0 12px 26px rgba(255, 136, 194, .24);
+    }
+    .winner-card h2 {
+      margin: 14px 0 6px; font-family: var(--display); font-size: clamp(2.3rem, 5vw, 3.6rem); line-height: .9; color: #4e2f86;
+    }
+    .winner-card p { margin: 0; color: #725f8d; line-height: 1.6; }
+    .support {
+      padding: clamp(18px, 2vw, 22px); display: grid; gap: 16px; align-content: start; min-height: calc(100vh - 48px);
+    }
+    .support-card {
+      padding: 18px; border-radius: 26px; background: linear-gradient(180deg, rgba(255,255,255,.84), rgba(255,255,255,.62));
+      border: 1px solid rgba(255,255,255,.8); box-shadow: 0 18px 42px rgba(120, 85, 172, .08);
+    }
+    .support-card h3 { margin: 0 0 6px; font-family: var(--display); font-size: 1.7rem; line-height: .92; color: #58359d; }
+    .support-card p { margin: 0; color: var(--text-soft); line-height: 1.6; }
+    .prize-badge {
+      display: grid; gap: 8px; padding: 16px; border-radius: 22px; background: linear-gradient(145deg, rgba(255,240,200,.96), rgba(255,255,255,.82));
+      border: 1px solid rgba(255,226,138,.76); color: #6e4a09; margin-top: 14px;
+    }
+    .prize-badge strong { font-size: 1.1rem; color: #7d4f00; }
+    .idle-copy {
+      min-height: 72px; display: grid; align-items: center; margin-top: 14px; padding: 14px 16px; border-radius: 18px;
+      background: rgba(255,255,255,.65); font-weight: 800; color: #6a49a8;
+    }
+    .camera-preview {
+      position: relative; border-radius: 22px; overflow: hidden; margin-top: 14px;
+      background: linear-gradient(145deg, rgba(247,250,255,.94), rgba(241,235,255,.82)); min-height: 220px;
+      display: grid; place-items: center; border: 1px solid rgba(255,255,255,.8);
+    }
+    .camera-preview video, .camera-preview img {
+      width: 100%; height: 100%; object-fit: cover; display: none;
+    }
+    .camera-placeholder {
+      padding: 26px; text-align: center; color: var(--text-soft); line-height: 1.65; font-weight: 700;
+    }
+    .camera-actions { grid-template-columns: repeat(2, minmax(0,1fr)); margin-top: 12px; }
+    .camera-downloads { grid-template-columns: 1fr; margin-top: 12px; }
+    .camera-hint { margin-top: 10px; font-size: .88rem; color: var(--text-soft); }
+    .list-item {
+      display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 14px 16px;
+      border-radius: 18px; background: rgba(255,255,255,.68); border: 1px solid rgba(255,255,255,.8);
+    }
+    .position {
+      width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%;
+      background: linear-gradient(135deg, rgba(255,134,200,.2), rgba(102,184,255,.2)); font-weight: 900; color: #5e3d9d;
+    }
+    .entry-name { font-weight: 800; color: #553592; }
+    .entry-meta { color: var(--text-soft); font-size: .88rem; }
+    .story-box {
+      margin-top: 14px; padding: 16px; border-radius: 20px; background: linear-gradient(145deg, rgba(255,255,255,.82), rgba(245,249,255,.76));
+      border: 1px solid rgba(255,255,255,.84); color: #5f44a0; font-weight: 700; line-height: 1.55;
+    }
+    .counter-dust { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .confetti-piece {
+      position: absolute; width: 10px; height: 18px; border-radius: 999px; opacity: 0; animation: fall 1.6s ease forwards;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-40px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(380px) rotate(280deg); opacity: 0; }
+    }
+    .legal { margin-top: auto; text-align: center; font-size: .82rem; color: rgba(93, 76, 132, .74); }
+    .hidden { display: none !important; }
+    @media (max-width: 1120px) {
+      .experience { grid-template-columns: 1fr; }
+      .hero, .support { min-height: auto; }
+      .hero-grid { grid-template-columns: 1fr; }
+      .support { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width: 760px) {
+      .shell { padding: 12px; }
+      .hero, .support { padding: 16px; }
+      .topbar, .display-top { flex-direction: column; align-items: flex-start; }
+      .hero-grid, .cta-row, .metrics, .support, .camera-actions { grid-template-columns: 1fr; }
+      .counter-frame { min-height: 320px; }
+      .brand, .pill { width: 100%; }
+      .pill { justify-content: center; }
+      .counter-caption { grid-auto-flow: row; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="experience" id="experienceRoot">
+      <main class="panel hero">
+        <div class="topbar">
+          <div class="brand">
+            <img src="./assets/logo.png" alt="Milkypot">
+            <div>
+              <b>Desafio Oficial</b>
+              <strong>Milkypot</strong>
+            </div>
+          </div>
+          <div class="pill">Premio de hoje: <strong id="heroPrizeText">Brinde especial</strong></div>
+        </div>
+        <section class="headline">
+          <h1>Acerte <span class="accent">10.000</span></h1>
+          <p class="subtitle">Inicie. Sinta o tempo. Pare no instante exato. Quanto mais perto de <strong>10.000</strong>, mais lendaria fica a sua tentativa.</p>
+        </section>
+        <section class="hero-grid">
+          <div class="display-wrap">
+            <div class="display-glow"></div>
+            <div class="counter-dust" id="confettiLayer"></div>
+            <div class="display-top">
+              <div class="display-badge">Meta oficial <strong>10.000</strong></div>
+              <div class="small-chip">Tentativas hoje <strong id="attemptsDisplay">0</strong></div>
+            </div>
+            <div class="counter-frame">
+              <h2 class="counter" id="counterValue">00.000</h2>
+              <div class="counter-caption">
+                <span>Sinta o tempo</span>
+                <span>segure a emocao</span>
+                <span>pare no exato</span>
+              </div>
+            </div>
+            <div class="status" id="statusMessage">Um toque para comecar. Um toque para tentar entrar para a historia da loja.</div>
+            <div class="cta-zone">
+              <button class="cta-main" id="mainAction">Comecar desafio</button>
+              <div class="cta-row">
+                <button class="ghost" id="retryAction">Tentar de novo</button>
+                <button class="ghost" id="copyStoryAction">Copiar frase</button>
+                <button class="ghost" id="shareAction">Compartilhar desafio</button>
+              </div>
+            </div>
+            <div class="metrics">
+              <article class="metric">
+                <span class="metric-label">Seu tempo</span>
+                <strong class="metric-value" id="resultTime">--.---</strong>
+                <span class="metric-sub">O cronometro congela aqui.</span>
+              </article>
+              <article class="metric">
+                <span class="metric-label">Diferenca</span>
+                <strong class="metric-value" id="resultDiff">--.---</strong>
+                <span class="metric-sub" id="resultDirection">Ainda sem tentativa.</span>
+              </article>
+              <article class="metric">
+                <span class="metric-label">Nivel</span>
+                <strong class="metric-value" id="resultTier">Valendo</strong>
+                <span class="metric-sub" id="resultFlavor">Toda lenda comeca na primeira tentativa.</span>
+              </article>
+            </div>
+            <div class="winner-card" id="winnerCard">
+              <div class="winner-stamp">Ganhou</div>
+              <h2>VOCE ACERTOU!</h2>
+              <p>Parabens. Essa rodada desbloqueou o seu premio. Mostre esta tela para um atendente da loja e valide sua conquista.</p>
+            </div>
+          </div>
+          <aside class="support-card">
+            <h3>Clima da rodada</h3>
+            <p>Uma experiencia para filmar, desafiar amigos e tentar de novo. Quando a tela estiver livre, ela chama a proxima pessoa.</p>
+            <div class="prize-badge">
+              <span>Selo do premio</span>
+              <strong id="prizeTitle">Brinde especial Milkypot</strong>
+              <span id="prizeHint">Consulte o time da loja para validar a acao do dia.</span>
+            </div>
+            <div class="idle-copy" id="idleCopy">Tente agora. A loja toda vai ver se voce sente o tempo melhor que todo mundo.</div>
+            <div class="story-box" id="storyPhrase">Eu tentei acertar 10.000 na Milkypot. Voce consegue?</div>
+          </aside>
+        </section>
+        <div class="legal">Consulte regras da acao na loja. Premio sujeito a validacao da equipe e disponibilidade da campanha.</div>
+      </main>
+      <aside class="panel support">
+        <section class="support-card">
+          <h3>Momento da lenda</h3>
+          <p>Tire a foto com o produto antes de jogar. Durante a rodada, a camera pode gravar a sua reacao automaticamente.</p>
+          <div class="camera-preview" id="cameraPreview">
+            <video id="cameraStream" autoplay muted playsinline></video>
+            <img id="photoPreview" alt="Foto da tentativa">
+            <div class="camera-placeholder" id="cameraPlaceholder">Ative a camera se quiser registrar a foto com o produto na mao e a emocao da tentativa.</div>
+          </div>
+          <div class="camera-actions">
+            <button class="soft-button" id="cameraToggle">Ativar camera</button>
+            <button class="soft-button" id="photoAction" disabled>Tirar foto</button>
+          </div>
+          <div class="camera-downloads">
+            <button class="soft-button" id="videoAction" disabled>Baixar video da reacao</button>
+          </div>
+          <div class="camera-hint" id="cameraHint">A camera e opcional. Sem permissao, o desafio continua normal.</div>
+          <canvas id="captureCanvas" class="hidden"></canvas>
+        </section>
+        <section class="support-card">
+          <h3>Melhores tentativas do dia</h3>
+          <p>Ranking local bonito e rapido para deixar a brincadeira mais competitiva.</p>
+          <div class="list" id="rankingList"></div>
+        </section>
+        <section class="support-card">
+          <h3>Desafie um amigo</h3>
+          <p>Perfeito para story, reels e aquela segunda tentativa que todo mundo promete que vai ser melhor.</p>
+          <div class="story-box">Filme a tela, copie a frase e marque a Milkypot. Quem quase acerta quase sempre tenta de novo.</div>
+        </section>
+      </aside>
+    </div>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="./js/core/datastore.js"></script>
+  <script src="./js/core/firebase-config.js"></script>
+  <script>
+    const TARGET = 10.0;
+    const NEAR = 0.05;
+    const CLOSE = 0.1;
+    const RANKING_KEY = 'milkypot_challenge_ranking_v2';
+    const ATTEMPTS_KEY = 'milkypot_challenge_attempts_v2';
+    const els = {
+      counter: document.getElementById('counterValue'),
+      status: document.getElementById('statusMessage'),
+      mainAction: document.getElementById('mainAction'),
+      retryAction: document.getElementById('retryAction'),
+      copyStoryAction: document.getElementById('copyStoryAction'),
+      shareAction: document.getElementById('shareAction'),
+      resultTime: document.getElementById('resultTime'),
+      resultDiff: document.getElementById('resultDiff'),
+      resultDirection: document.getElementById('resultDirection'),
+      resultTier: document.getElementById('resultTier'),
+      resultFlavor: document.getElementById('resultFlavor'),
+      attemptsDisplay: document.getElementById('attemptsDisplay'),
+      winnerCard: document.getElementById('winnerCard'),
+      confettiLayer: document.getElementById('confettiLayer'),
+      idleCopy: document.getElementById('idleCopy'),
+      storyPhrase: document.getElementById('storyPhrase'),
+      prizeTitle: document.getElementById('prizeTitle'),
+      prizeHint: document.getElementById('prizeHint'),
+      prizeHeroText: document.getElementById('heroPrizeText'),
+      rankingList: document.getElementById('rankingList'),
+      cameraToggle: document.getElementById('cameraToggle'),
+      photoAction: document.getElementById('photoAction'),
+      videoAction: document.getElementById('videoAction'),
+      cameraStream: document.getElementById('cameraStream'),
+      photoPreview: document.getElementById('photoPreview'),
+      cameraPlaceholder: document.getElementById('cameraPlaceholder'),
+      cameraHint: document.getElementById('cameraHint'),
+      captureCanvas: document.getElementById('captureCanvas')
+    };
+    let running = false, rafId = null, startTime = 0, elapsed = 0;
+    let attempts = Number(localStorage.getItem(ATTEMPTS_KEY) || 0);
+    let ranking = loadRanking();
+    let idleIndex = 0, idleTimer = null;
+    let currentPrize = 'Brinde especial Milkypot';
+    let currentPrizeHint = 'Consulte o time da loja para validar a acao do dia.';
+    let stream = null, mediaRecorder = null, recordedChunks = [], recordedUrl = '', cameraEnabled = false;
+    const idleMessages = [
+      () => 'Tente agora. A loja toda vai ver se voce sente o tempo melhor que todo mundo.',
+      () => 'Quase levaram agora ha pouco. Seu toque pode ser o da virada.',
+      () => 'Desafio oficial Milkypot no ar. Quem chega perto sempre quer mais uma.',
+      () => ranking[0] ? `${ranking[0].name} lidera com diferenca de ${formatScore(ranking[0].diff)}.` : 'Ninguem lidera forte ainda. Pode ser a sua vez de aparecer no topo.'
+    ];
+    function formatTime(value) { return value.toFixed(3).padStart(6, '0'); }
+    function formatScore(value) { return Number(value).toFixed(3); }
+    function loadRanking() { try { return JSON.parse(localStorage.getItem(RANKING_KEY) || '[]'); } catch { return []; } }
+    function saveRanking() { localStorage.setItem(RANKING_KEY, JSON.stringify(ranking.slice(0, 5))); }
+    function updateAttempts() { els.attemptsDisplay.textContent = String(attempts); localStorage.setItem(ATTEMPTS_KEY, String(attempts)); }
+    function renderRanking() {
+      if (!ranking.length) {
+        els.rankingList.innerHTML = '<div class="list-item"><div class="position">1</div><div><div class="entry-name">Sua loja ainda esta esperando a primeira lenda</div><div class="entry-meta">Jogue e inaugure o topo do dia.</div></div><strong>10.000</strong></div>';
+        return;
+      }
+      els.rankingList.innerHTML = ranking.slice(0, 5).map((entry, index) => `
+        <div class="list-item">
+          <div class="position">${index + 1}</div>
+          <div><div class="entry-name">${entry.name}</div><div class="entry-meta">Parou em ${formatTime(entry.time)} | diferenca ${formatScore(entry.diff)}</div></div>
+          <strong>${formatScore(entry.diff)}</strong>
+        </div>`).join('');
+    }
+    function setStoryPhrase(latestTime = null) {
+      const phrase = latestTime === null
+        ? 'Eu tentei acertar 10.000 na Milkypot. Voce consegue?'
+        : `Eu parei em ${formatTime(latestTime)} no desafio Acerte 10.000 da Milkypot. Voce consegue chegar mais perto?`;
+      els.storyPhrase.textContent = phrase;
+      return phrase;
+    }
+    function updateIdleCopy() { els.idleCopy.textContent = idleMessages[idleIndex % idleMessages.length](); idleIndex += 1; }
+    function startIdleRotation() { stopIdleRotation(); updateIdleCopy(); idleTimer = setInterval(updateIdleCopy, 4600); }
+    function stopIdleRotation() { if (idleTimer) { clearInterval(idleTimer); idleTimer = null; } }
+    function createConfetti() {
+      els.confettiLayer.innerHTML = '';
+      const colors = ['#ff5db4', '#ffcf6f', '#66b8ff', '#7f5bff', '#77e4b4'];
+      for (let i = 0; i < 34; i += 1) {
+        const piece = document.createElement('span');
+        piece.className = 'confetti-piece';
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.top = `${Math.random() * 12}%`;
+        piece.style.background = colors[i % colors.length];
+        piece.style.animationDelay = `${Math.random() * .35}s`;
+        els.confettiLayer.appendChild(piece);
+      }
+      setTimeout(() => { els.confettiLayer.innerHTML = ''; }, 2200);
+    }
+    function setStatus(message, mode = '') {
+      els.status.textContent = message;
+      els.status.classList.toggle('hot', mode === 'hot');
+      els.status.classList.toggle('win', mode === 'win');
+    }
+    function loop(now) {
+      elapsed = (now - startTime) / 1000;
+      els.counter.textContent = formatTime(elapsed);
+      rafId = requestAnimationFrame(loop);
+    }
+    function resetVisualState() {
+      els.counter.classList.remove('running', 'win');
+      els.winnerCard.classList.remove('show');
+      els.mainAction.classList.remove('secondary');
+    }
+    function startChallenge() {
+      running = true;
+      elapsed = 0;
+      startTime = performance.now();
+      resetVisualState();
+      stopIdleRotation();
+      els.counter.textContent = '00.000';
+      els.counter.classList.add('running');
+      els.mainAction.textContent = 'Parar em 10.000';
+      els.mainAction.classList.add('secondary');
+      setStatus('Valendo. Sinta o tempo e toque no instante perfeito.', 'hot');
+      if (cameraEnabled) startRecording();
+      rafId = requestAnimationFrame(loop);
+    }
+    function stopChallenge() {
+      running = false;
+      cancelAnimationFrame(rafId);
+      els.counter.classList.remove('running');
+      els.mainAction.textContent = 'Comecar desafio';
+      els.mainAction.classList.remove('secondary');
+      attempts += 1;
+      updateAttempts();
+      if (cameraEnabled) stopRecording();
+      const diff = Math.abs(elapsed - TARGET);
+      const direction = elapsed < TARGET ? `Faltaram ${formatScore(TARGET - elapsed)} para a meta.` : `Passou ${formatScore(elapsed - TARGET)} da meta.`;
+      els.resultTime.textContent = formatTime(elapsed);
+      els.resultDiff.textContent = formatScore(diff);
+      els.resultDirection.textContent = direction;
+      setStoryPhrase(elapsed);
+      let tier = 'De novo';
+      let flavor = 'Agora voce ja sentiu o ritmo. A proxima quase sempre vem mais afiada.';
+      let status = 'Foi forte, mas ainda da para lapidar mais.';
+      let mode = '';
+      if (diff === 0) {
+        tier = 'Premio';
+        flavor = `Voce cravou a meta e desbloqueou ${currentPrize}.`;
+        status = 'VOCE ACERTOU 10.000!';
+        mode = 'win';
+        els.counter.classList.add('win');
+        els.winnerCard.classList.add('show');
+        createConfetti();
+      } else if (diff <= NEAR) {
+        tier = 'Quase levou';
+        flavor = 'Foi por muito pouco. Essa foi tentativa de quem esta perigando ganhar.';
+        status = 'Nossa. Foi por um sopro.';
+        mode = 'hot';
+      } else if (diff <= CLOSE) {
+        tier = 'Muito perto';
+        flavor = 'Esse resultado ja deixa todo mundo querendo ver a revanche.';
+        status = 'Passou perto de verdade.';
+        mode = 'hot';
+      }
+      els.resultTier.textContent = tier;
+      els.resultFlavor.textContent = flavor;
+      setStatus(status, mode);
+      pushRanking(elapsed, diff);
+      startIdleRotation();
+    }
+    function pushRanking(time, diff) {
+      const name = diff === 0 ? 'Lenda Milkypot' : randomName();
+      ranking.push({ name, time, diff, createdAt: Date.now() });
+      ranking.sort((a, b) => a.diff - b.diff || a.createdAt - b.createdAt);
+      ranking = ranking.slice(0, 5);
+      saveRanking();
+      renderRanking();
+    }
+    function randomName() {
+      const first = ['Cliente', 'Visitante', 'Milkylover', 'Desafiante', 'Streamer', 'Craque'];
+      const second = ['Rosa', 'Brilho', 'Doce', 'Lucky', 'Candy', 'Pop'];
+      return `${first[Math.floor(Math.random() * first.length)]} ${second[Math.floor(Math.random() * second.length)]}`;
+    }
+    async function copyStory() {
+      try {
+        await navigator.clipboard.writeText(els.storyPhrase.textContent);
+        setStatus('Frase copiada. Agora e so mandar no grupo e desafiar alguem.', 'hot');
+      } catch {
+        setStatus('Nao consegui copiar aqui. Mas a frase ja esta pronta na tela.', 'hot');
+      }
+    }
+    async function shareStory() {
+      const text = els.storyPhrase.textContent;
+      if (navigator.share) {
+        try { await navigator.share({ title: 'Acerte 10.000 | Milkypot', text, url: window.location.href }); return; } catch {}
+      }
+      copyStory();
+    }
+    async function toggleCamera() {
+      if (cameraEnabled) { disableCamera(); return; }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
+        cameraEnabled = true;
+        els.cameraStream.srcObject = stream;
+        els.cameraStream.style.display = 'block';
+        els.cameraPlaceholder.style.display = 'none';
+        els.photoAction.disabled = false;
+        els.cameraToggle.textContent = 'Desativar camera';
+        els.cameraHint.textContent = 'Foto antes da rodada e gravacao automatica durante o jogo ativadas.';
+      } catch {
+        els.cameraHint.textContent = 'Permissao negada ou camera indisponivel. O desafio continua sem camera.';
+      }
+    }
+    function disableCamera() {
+      cameraEnabled = false;
+      if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
+      if (recordedUrl) { URL.revokeObjectURL(recordedUrl); recordedUrl = ''; }
+      els.cameraStream.srcObject = null;
+      els.cameraStream.style.display = 'none';
+      els.photoPreview.style.display = 'none';
+      els.cameraPlaceholder.style.display = 'grid';
+      els.photoAction.disabled = true;
+      els.videoAction.disabled = true;
+      els.cameraToggle.textContent = 'Ativar camera';
+      els.cameraHint.textContent = 'A camera e opcional. Sem permissao, o desafio continua normal.';
+    }
+    function takePhoto() {
+      if (!stream) return;
+      const video = els.cameraStream;
+      const canvas = els.captureCanvas;
+      canvas.width = video.videoWidth || 1080;
+      canvas.height = video.videoHeight || 1440;
+      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+      els.photoPreview.src = canvas.toDataURL('image/jpeg', 0.92);
+      els.photoPreview.style.display = 'block';
+      els.cameraHint.textContent = 'Foto capturada. Agora comeca a rodada e a sua reacao pode ser gravada.';
+    }
+    function startRecording() {
+      if (!stream || typeof MediaRecorder === 'undefined') return;
+      recordedChunks = [];
+      try {
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' });
+      } catch {
+        mediaRecorder = new MediaRecorder(stream);
+      }
+      mediaRecorder.ondataavailable = event => { if (event.data && event.data.size > 0) recordedChunks.push(event.data); };
+      mediaRecorder.onstop = () => {
+        if (!recordedChunks.length) return;
+        if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+        recordedUrl = URL.createObjectURL(new Blob(recordedChunks, { type: 'video/webm' }));
+        els.videoAction.disabled = false;
+        els.cameraHint.textContent = 'Video da reacao pronto para baixar.';
+      };
+      mediaRecorder.start();
+    }
+    function stopRecording() { if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); }
+    function downloadVideo() {
+      if (!recordedUrl) return;
+      const link = document.createElement('a');
+      link.href = recordedUrl;
+      link.download = `milkypot-reacao-${Date.now()}.webm`;
+      link.click();
+    }
+    function bindEvents() {
+      els.mainAction.addEventListener('click', () => { if (running) stopChallenge(); else startChallenge(); });
+      els.retryAction.addEventListener('click', () => {
+        cancelAnimationFrame(rafId);
+        running = false;
+        elapsed = 0;
+        resetVisualState();
+        els.counter.textContent = '00.000';
+        els.resultTime.textContent = '--.---';
+        els.resultDiff.textContent = '--.---';
+        els.resultDirection.textContent = 'Ainda sem tentativa.';
+        els.resultTier.textContent = 'Valendo';
+        els.resultFlavor.textContent = 'Toda lenda comeca na primeira tentativa.';
+        setStatus('Respira, sorri e tenta de novo. O 10.000 ainda esta te esperando.');
+        startIdleRotation();
+      });
+      els.copyStoryAction.addEventListener('click', copyStory);
+      els.shareAction.addEventListener('click', shareStory);
+      els.cameraToggle.addEventListener('click', toggleCamera);
+      els.photoAction.addEventListener('click', takePhoto);
+      els.videoAction.addEventListener('click', downloadVideo);
+    }
+    function applyChallengeSettings(settings = {}) {
+      currentPrize = settings.challengePrize || currentPrize;
+      currentPrizeHint = settings.challengePrizeHint || currentPrizeHint;
+      els.prizeTitle.textContent = currentPrize;
+      els.prizeHint.textContent = currentPrizeHint;
+      els.prizeHeroText.textContent = currentPrize;
+      if (!running) setStoryPhrase();
+    }
+    async function loadChallengeSettings() {
+      try {
+        if (window.DataStore && typeof DataStore.get === 'function') {
+          const settings = await DataStore.get('settings');
+          if (settings) applyChallengeSettings(settings);
+          return;
+        }
+      } catch {}
+      try {
+        if (window.DataStore && DataStore._db) {
+          const snap = await DataStore._db.collection('datastore').doc('settings').get();
+          if (snap.exists) {
+            const payload = snap.data();
+            const value = JSON.parse(payload.value || '{}');
+            applyChallengeSettings(value);
+          }
+        }
+      } catch {}
+    }
+    function init() {
+      bindEvents();
+      updateAttempts();
+      renderRanking();
+      setStoryPhrase();
+      setStatus('Um toque para comecar. Um toque para tentar entrar para a historia da loja.');
+      startIdleRotation();
+      loadChallengeSettings();
+    }
+    init();
+  </script>
+</body>
+</html>

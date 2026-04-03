@@ -136,5 +136,34 @@ const CloudFunctions = {
     // Obtem role do usuario atual
     async getMyRole() {
         return this.call('getMyRole', {});
+    },
+
+    // Fiscal
+    async getFiscalHealth() {
+        return this.call('getFiscalHealth', {});
+    },
+
+    async getFiscalConfig(franchiseId) {
+        return this.call('getFiscalConfig', { franchiseId });
+    },
+
+    async saveFiscalConfig(config, franchiseId) {
+        return this.call('saveFiscalConfig', { franchiseId, config });
+    },
+
+    async uploadFiscalCertificate(payload) {
+        return this.call('uploadFiscalCertificate', payload);
+    },
+
+    async listFiscalNotes(franchiseId, filters) {
+        return this.call('listFiscalNotes', { franchiseId, filters: filters || {} });
+    },
+
+    async emitFiscalDocument(payload) {
+        return this.call('emitFiscalDocument', payload);
+    },
+
+    async cancelFiscalNote(noteId, reason, franchiseId) {
+        return this.call('cancelFiscalNote', { noteId, reason, franchiseId });
     }
 };
