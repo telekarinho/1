@@ -766,6 +766,17 @@ border-radius:16px;object-fit:cover;margin:0 auto 10px;display:block;
 <div class="result-diff-badge" id="resultDiffBadge"></div>
 <div class="result-msg" id="resultMsg"></div>
 <div class="result-sub" id="resultSub"></div>
+<!-- Prize won display -->
+<div id="prizeWonDisplay" style="display:none;background:rgba(255,255,255,0.9);border:2px solid rgba(200,162,232,0.3);border-radius:16px;padding:14px 20px;margin:8px 0 12px;text-align:center;max-width:400px;width:100%">
+<div style="font-size:11px;font-weight:800;color:#9B59B6;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">&#127873; Voce Ganhou</div>
+<div id="prizeWonText" style="font-size:clamp(16px,2.5vw,22px);font-weight:800;color:#5A4570"></div>
+<div id="prizeWonNote" style="font-size:11px;color:rgba(90,69,112,0.5);margin-top:4px">Mostre esta tela para o atendente</div>
+</div>
+<!-- Instagram bonus -->
+<div id="instagramBonus" style="display:none;background:linear-gradient(135deg,rgba(193,53,132,0.1),rgba(131,58,180,0.08));border:2px solid rgba(193,53,132,0.2);border-radius:16px;padding:14px 20px;margin:8px 0 12px;text-align:center;max-width:400px;width:100%">
+<div style="font-size:clamp(13px,1.8vw,16px);font-weight:800;color:#C13584;margin-bottom:4px">&#128248; Quer mais chances?</div>
+<div id="instagramBonusText" style="font-size:clamp(12px,1.5vw,14px);color:#5A4570;line-height:1.4">Poste o video da tentativa no Instagram,<br>marque <strong id="instagramHandleDisplay">@milkypot</strong> e ganhe <strong id="instagramChancesDisplay">+3</strong> tentativas!</div>
+</div>
 <!-- Personal record display (feature 4) -->
 <div id="prDisplay" style="display:none"></div>
 <div class="btn-row">
@@ -850,7 +861,7 @@ document.getElementById('attCount').textContent=attempts;
 var DIFF={easy:{target:5000,label:'5.000ms',sec:'5 segundos'},medium:{target:10000,label:'10.000ms',sec:'10 segundos'},hard:{target:30000,label:'30.000ms',sec:'30 segundos'}};
 
 /* ========== FIREBASE INIT ========== */
-var prizeConfig={exact:'1 MilkyPot Gratis!',close50:'10% de desconto no proximo pedido!',close200:'5% de desconto no proximo pedido!',enabled:true};
+var prizeConfig={exact:'1 MilkyPot Gratis!',close50:'10% de desconto no proximo pedido!',close200:'5% de desconto no proximo pedido!',enabled:true,instagramBonus:true,instagramHandle:'@milkypot',instagramExtraChances:3,attemptsPerPurchase:1};
 
 if(typeof firebase!=='undefined'){
 if(firebase.firestore) db=firebase.firestore();
@@ -875,6 +886,10 @@ if(d.exact) prizeConfig.exact=d.exact;
 if(d.close50) prizeConfig.close50=d.close50;
 if(d.close200) prizeConfig.close200=d.close200;
 if(typeof d.enabled!=='undefined') prizeConfig.enabled=d.enabled;
+if(typeof d.instagramBonus!=='undefined') prizeConfig.instagramBonus=d.instagramBonus;
+if(d.instagramHandle) prizeConfig.instagramHandle=d.instagramHandle;
+if(d.instagramExtraChances) prizeConfig.instagramExtraChances=d.instagramExtraChances;
+if(d.attemptsPerPurchase) prizeConfig.attemptsPerPurchase=d.attemptsPerPurchase;
 if(d.targetOverride) gameConfig.monthlyChallenge={target:d.targetOverride,name:d.monthlyName||'Este Mes'};
 document.querySelector('.win-prize-text').textContent=prizeConfig.exact;
 applyConfig();
@@ -1128,6 +1143,31 @@ if(gameConfig.badge) renderBadge();
 if(gameConfig.reactionVideo&&recordedChunks.length>0) document.getElementById('videoSaveBtn').style.display='';
 /* Feature 11: notification opt-in */
 if(gameConfig.notifications) document.getElementById('notifOptin').style.display='';
+
+/* === PRIZE DISPLAY === */
+var prizeDisplay=document.getElementById('prizeWonDisplay');
+var prizeText=document.getElementById('prizeWonText');
+prizeDisplay.style.display='none';
+if(abs===0 && prizeConfig.exact){
+prizeDisplay.style.display='';
+prizeText.textContent=prizeConfig.exact;
+prizeDisplay.style.borderColor='rgba(255,215,0,0.4)';
+} else if(abs<=50 && prizeConfig.close50){
+prizeDisplay.style.display='';
+prizeText.textContent=prizeConfig.close50;
+} else if(abs<=200 && prizeConfig.close200){
+prizeDisplay.style.display='';
+prizeText.textContent=prizeConfig.close200;
+}
+
+/* === INSTAGRAM BONUS (show when NOT exact win) === */
+var igBonus=document.getElementById('instagramBonus');
+igBonus.style.display='none';
+if(abs>0 && prizeConfig.instagramBonus){
+igBonus.style.display='';
+document.getElementById('instagramHandleDisplay').textContent=prizeConfig.instagramHandle||'@milkypot';
+document.getElementById('instagramChancesDisplay').textContent='+'+(prizeConfig.instagramExtraChances||3);
+}
 
 renderRanking();
 }

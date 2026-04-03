@@ -485,19 +485,72 @@
                             </div>
                         </div>
 
+                        <!-- ACERTO EXATO -->
                         <div class="config-form-group">
                             <label>🏆 Premio - Acerto Exato (10.000ms)</label>
-                            <input type="text" id="cfgExact" value="1 MilkyPot Gratis!" placeholder="Ex: 1 MilkyPot Gratis!">
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px">
+                                <select id="cfgExactType" style="padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem">
+                                    <option value="produto">Produto gratis</option>
+                                    <option value="percentual">% desconto</option>
+                                    <option value="valor">R$ valor fixo</option>
+                                    <option value="custom">Texto livre</option>
+                                </select>
+                                <input type="number" id="cfgExactValue" placeholder="Valor" style="width:80px;padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem;display:none">
+                            </div>
+                            <input type="text" id="cfgExact" value="1 MilkyPot Gratis!" placeholder="Descricao do premio">
                         </div>
 
+                        <!-- QUASE ACERTOU -->
                         <div class="config-form-group">
                             <label>🔥 Premio - Quase Acertou (ate 50ms)</label>
-                            <input type="text" id="cfgClose50" value="10% de desconto no proximo pedido!" placeholder="Ex: 10% de desconto">
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px">
+                                <select id="cfgClose50Type" style="padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem">
+                                    <option value="percentual" selected>% desconto</option>
+                                    <option value="produto">Produto gratis</option>
+                                    <option value="valor">R$ valor fixo</option>
+                                    <option value="custom">Texto livre</option>
+                                </select>
+                                <input type="number" id="cfgClose50Value" value="10" placeholder="%" style="width:80px;padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem">
+                            </div>
+                            <input type="text" id="cfgClose50" value="10% de desconto no proximo pedido!" placeholder="Descricao do premio">
                         </div>
 
+                        <!-- CHEGOU PERTO -->
                         <div class="config-form-group">
                             <label>✅ Premio - Chegou Perto (ate 200ms)</label>
-                            <input type="text" id="cfgClose200" value="5% de desconto no proximo pedido!" placeholder="Ex: 5% de desconto">
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px">
+                                <select id="cfgClose200Type" style="padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem">
+                                    <option value="percentual" selected>% desconto</option>
+                                    <option value="produto">Produto gratis</option>
+                                    <option value="valor">R$ valor fixo</option>
+                                    <option value="custom">Texto livre</option>
+                                </select>
+                                <input type="number" id="cfgClose200Value" value="5" placeholder="%" style="width:80px;padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem">
+                            </div>
+                            <input type="text" id="cfgClose200" value="5% de desconto no proximo pedido!" placeholder="Descricao do premio">
+                        </div>
+
+                        <hr style="border:none;border-top:1px solid #e0d6eb;margin:16px 0">
+
+                        <!-- INSTAGRAM BONUS -->
+                        <div class="config-form-group">
+                            <label>📸 Bonus Instagram (+3 tentativas)</label>
+                            <p style="font-size:0.8rem;color:#9484A8;margin-bottom:6px">Se nao acertar: "Poste o video da tentativa, marque @milkypot e ganhe +3 chances!"</p>
+                            <div class="toggle-wrapper">
+                                <label class="toggle-switch"><input type="checkbox" id="cfgInstagramBonus" checked><span class="toggle-slider"></span></label>
+                                <span class="toggle-label">Ativo</span>
+                            </div>
+                            <input type="text" id="cfgInstagramHandle" value="@milkypot" placeholder="@ do Instagram" style="margin-top:6px;width:200px;padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem">
+                            <input type="number" id="cfgInstagramExtraChances" value="3" min="1" max="10" style="width:80px;padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem;margin-left:8px">
+                            <span style="font-size:0.8rem;color:#9484A8">chances extras</span>
+                        </div>
+
+                        <!-- TENTATIVAS POR COMPRA -->
+                        <div class="config-form-group">
+                            <label>🎟️ Tentativas por Compra</label>
+                            <p style="font-size:0.8rem;color:#9484A8;margin-bottom:6px">Quantas tentativas o cliente ganha a cada compra</p>
+                            <input type="number" id="cfgAttemptsPerPurchase" value="1" min="1" max="10" style="width:80px;padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem">
+                            <span style="font-size:0.8rem;color:#9484A8">tentativa(s) por compra</span>
                         </div>
 
                         <button class="btn-save" onclick="saveConfig()">💾 Salvar Premios</button>
@@ -700,17 +753,44 @@
             try {
                 const doc = await db.collection('config').doc('desafio_premios').get();
                 if (doc.exists) {
-                    const data = doc.data();
-                    document.getElementById('cfgEnabled').checked = data.enabled !== false;
-                    document.getElementById('toggleStatusText').textContent = data.enabled !== false ? 'Ativo' : 'Inativo';
-                    if (data.exact) document.getElementById('cfgExact').value = data.exact;
-                    if (data.close50) document.getElementById('cfgClose50').value = data.close50;
-                    if (data.close200) document.getElementById('cfgClose200').value = data.close200;
+                    const d = doc.data();
+                    document.getElementById('cfgEnabled').checked = d.enabled !== false;
+                    document.getElementById('toggleStatusText').textContent = d.enabled !== false ? 'Ativo' : 'Inativo';
+                    if (d.exact) document.getElementById('cfgExact').value = d.exact;
+                    if (d.close50) document.getElementById('cfgClose50').value = d.close50;
+                    if (d.close200) document.getElementById('cfgClose200').value = d.close200;
+                    if (d.exactType) document.getElementById('cfgExactType').value = d.exactType;
+                    if (d.close50Type) document.getElementById('cfgClose50Type').value = d.close50Type;
+                    if (d.close200Type) document.getElementById('cfgClose200Type').value = d.close200Type;
+                    if (d.exactValue) document.getElementById('cfgExactValue').value = d.exactValue;
+                    if (d.close50Value) document.getElementById('cfgClose50Value').value = d.close50Value;
+                    if (d.close200Value) document.getElementById('cfgClose200Value').value = d.close200Value;
+                    if (typeof d.instagramBonus !== 'undefined') document.getElementById('cfgInstagramBonus').checked = d.instagramBonus;
+                    if (d.instagramHandle) document.getElementById('cfgInstagramHandle').value = d.instagramHandle;
+                    if (d.instagramExtraChances) document.getElementById('cfgInstagramExtraChances').value = d.instagramExtraChances;
+                    if (d.attemptsPerPurchase) document.getElementById('cfgAttemptsPerPurchase').value = d.attemptsPerPurchase;
+                    // Show/hide value fields based on type
+                    updatePrizeValueFields();
                 }
             } catch (err) {
                 console.error('Erro ao carregar config:', err);
             }
         }
+
+        function updatePrizeValueFields() {
+            ['Exact','Close50','Close200'].forEach(function(k) {
+                var sel = document.getElementById('cfg'+k+'Type');
+                var val = document.getElementById('cfg'+k+'Value');
+                if (sel && val) {
+                    val.style.display = (sel.value === 'percentual' || sel.value === 'valor') ? '' : 'none';
+                    val.placeholder = sel.value === 'percentual' ? '%' : 'R$';
+                }
+            });
+        }
+        // Listen for type changes
+        ['cfgExactType','cfgClose50Type','cfgClose200Type'].forEach(function(id) {
+            document.getElementById(id).addEventListener('change', updatePrizeValueFields);
+        });
 
         // ============================================
         // Save Config to Firebase
@@ -721,6 +801,16 @@
                 exact: document.getElementById('cfgExact').value.trim(),
                 close50: document.getElementById('cfgClose50').value.trim(),
                 close200: document.getElementById('cfgClose200').value.trim(),
+                exactType: document.getElementById('cfgExactType').value,
+                close50Type: document.getElementById('cfgClose50Type').value,
+                close200Type: document.getElementById('cfgClose200Type').value,
+                exactValue: parseFloat(document.getElementById('cfgExactValue').value) || 0,
+                close50Value: parseFloat(document.getElementById('cfgClose50Value').value) || 0,
+                close200Value: parseFloat(document.getElementById('cfgClose200Value').value) || 0,
+                instagramBonus: document.getElementById('cfgInstagramBonus').checked,
+                instagramHandle: document.getElementById('cfgInstagramHandle').value.trim(),
+                instagramExtraChances: parseInt(document.getElementById('cfgInstagramExtraChances').value) || 3,
+                attemptsPerPurchase: parseInt(document.getElementById('cfgAttemptsPerPurchase').value) || 1,
                 updatedAt: new Date().toISOString()
             };
 
