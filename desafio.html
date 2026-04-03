@@ -356,7 +356,8 @@ background:rgba(255,255,255,0.05);padding:6px 14px;border-radius:50px;
 <img src="images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
 <h1 class="main-title">Acerte 10.000</h1>
 <p class="main-sub">Acerte 10.000 milissegundos.<br>Sera que voce tem o <strong style="color:#FF0040">tempo perfeito</strong> da MilkyPot?</p>
-<input type="text" class="name-input" id="playerName" placeholder="Seu nome aqui..." maxlength="20" autocomplete="off">
+<input type="text" class="name-input" id="playerName" placeholder="Seu nome" maxlength="20" autocomplete="off">
+<input type="tel" class="name-input" id="playerPhone" placeholder="WhatsApp (11) 99999-9999" maxlength="15" autocomplete="off" style="font-size:clamp(16px,2.5vw,24px)">
 <button class="btn btn-start" onclick="goToPhoto()">Comecar &#9889;</button>
 </div>
 
@@ -409,20 +410,36 @@ background:rgba(255,255,255,0.05);padding:6px 14px;border-radius:50px;
 
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+if(!firebase.apps.length){firebase.initializeApp({apiKey:"AIzaSyAbQ1fe0pK4prhfzYJypod2ie4DyNsq6BA",authDomain:"milkypot-ad945.firebaseapp.com",projectId:"milkypot-ad945",storageBucket:"milkypot-ad945.firebasestorage.app",messagingSenderId:"859364650620",appId:"1:859364650620:web:aecf11f4cf99b7792463f9"});}
+</script>
 <script>
 (function(){
 /* STATE */
 var playerN = '';
+var playerPhone = '';
 var timer = null;
 var startT = 0;
 var elapsed = 0;
-var gameState = 'idle'; // idle, running, done
+var gameState = 'idle';
 var attempts = parseInt(localStorage.getItem('mp_d_att') || '0');
 var best = JSON.parse(localStorage.getItem('mp_d_rank') || '[]');
 var photoStream = null;
 var webcamStream = null;
 
 document.getElementById('attCount').textContent = attempts;
+
+/* Phone mask */
+document.getElementById('playerPhone').addEventListener('input',function(e){
+var v=e.target.value.replace(/\D/g,'');
+if(v.length>11)v=v.substring(0,11);
+if(v.length>7)v='('+v.substring(0,2)+') '+v.substring(2,7)+'-'+v.substring(7);
+else if(v.length>2)v='('+v.substring(0,2)+') '+v.substring(2);
+else if(v.length>0)v='('+v;
+e.target.value=v;
+});
 
 /* NAV */
 function showStep(n) {
@@ -433,6 +450,21 @@ document.getElementById('step'+n).classList.add('active');
 /* STEP 0 -> 1: Photo */
 window.goToPhoto = function(){
 playerN = document.getElementById('playerName').value.trim() || 'Jogador';
+playerPhone = document.getElementById('playerPhone').value.replace(/\D/g,'');
+if(playerPhone.length < 10){
+document.getElementById('playerPhone').style.borderColor='#FF0040';
+document.getElementById('playerPhone').setAttribute('placeholder','WhatsApp obrigatorio!');
+return;
+}
+/* Check if player already exists (returning customer) */
+var existing = best.filter(function(b){return b.phone===playerPhone});
+if(existing.length>0){
+playerN = existing[0].name; /* Use saved name */
+var bestAttempt = existing.reduce(function(min,b){
+var d=Math.abs(10000-b.val);var dm=Math.abs(10000-min.val);return d<dm?b:min;
+});
+document.getElementById('playerName').value = playerN;
+}
 showStep(1);
 startCamera('photoVideo');
 };
@@ -538,11 +570,22 @@ document.getElementById('attCount').textContent=attempts;
 var diff=elapsed-10000;
 var abs=Math.abs(diff);
 
-/* Save ranking */
-best.push({name:playerN,val:elapsed});
+/* Save ranking with phone */
+best.push({name:playerN,phone:playerPhone,val:elapsed,date:new Date().toISOString()});
 best.sort(function(a,b){return Math.abs(10000-a.val)-Math.abs(10000-b.val)});
-best=best.slice(0,20);
+best=best.slice(0,50);
 localStorage.setItem('mp_d_rank',JSON.stringify(best));
+
+/* Save to Firebase if available */
+if(typeof firebase!=='undefined'&&firebase.firestore){
+try{
+firebase.firestore().collection('desafio_10000').add({
+name:playerN,phone:playerPhone,elapsed:elapsed,
+diff:Math.abs(10000-elapsed),won:elapsed===10000,
+attempts:attempts,date:new Date().toISOString()
+});
+}catch(e){}
+}
 
 /* Show result */
 showStep(3);
