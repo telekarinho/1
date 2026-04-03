@@ -557,6 +557,10 @@ border-radius:16px;object-fit:cover;margin:0 auto 10px;display:block;
 <div id="tournamentList"></div>
 </div>
 <div class="attract-feed" id="attractFeed"></div>
+<div class="ranking" id="attractGlobalRanking" style="margin-top:16px;max-width:clamp(300px,50vw,500px)">
+<div class="ranking-title" style="color:#FFD700">&#11088; Top 10 Global - Todos os Tempos</div>
+<div id="attractGlobalList"></div>
+</div>
 <div class="attract-cta" id="attractCta">Toque na tela para jogar!</div>
 </div>
 
@@ -677,9 +681,13 @@ border-radius:16px;object-fit:cover;margin:0 auto 10px;display:block;
 <div class="notif-toggle" id="notifToggle"></div>
 <span>&#128276; Quer ser avisado quando alguem bater seu recorde?</span>
 </div>
-<div class="ranking" id="rankingBox">
-<div class="ranking-title">&#127942; Hall da Fama</div>
+<div class="ranking" id="rankingBox" style="margin-bottom:12px">
+<div class="ranking-title">&#127942; Ranking da Semana</div>
 <div id="rankingList"></div>
+</div>
+<div class="ranking" id="globalRankingBox">
+<div class="ranking-title" style="color:#FFD700">&#11088; Top 10 Global - Todos os Tempos</div>
+<div id="globalRankingList"></div>
 </div>
 </div>
 
@@ -1250,11 +1258,14 @@ draw();
 
 /* ========== RANKING ========== */
 function renderRanking(){
+/* Weekly ranking (resets every Monday) */
 var list=document.getElementById('rankingList');
-var items=best.slice(0,5);
-if(!items.length){list.innerHTML='<div style="text-align:center;color:rgba(255,255,255,0.2);font-size:13px;padding:12px">Nenhuma tentativa ainda</div>';return}
+var weekStart=getWeekStart();
+var weekItems=best.filter(function(r){return r.date&&new Date(r.date)>=weekStart}).slice(0,5);
+if(!weekItems.length){list.innerHTML='<div style="text-align:center;color:rgba(255,255,255,0.2);font-size:13px;padding:12px">Nenhuma tentativa esta semana</div>';}
+else{
 var html='';
-items.forEach(function(r,i){
+weekItems.forEach(function(r,i){
 var cls=i===0?'rp1':i===1?'rp2':i===2?'rp3':'rp'+(i+1);
 var medals=['&#129351;','&#129352;','&#129353;','4','5'];
 var d=Math.abs(gameTarget-r.val);
@@ -1264,6 +1275,23 @@ else html+='<div class="ranking-pos '+cls+'">'+medals[i]+'</div>';
 html+='<span class="ranking-name">'+r.name+'</span><span class="ranking-val">'+(d===0?'EXATO!':d+'ms')+'</span></div>';
 });
 list.innerHTML=html;
+}
+
+/* Global ranking (ALL TIME - never resets) */
+var globalList=document.getElementById('globalRankingList');
+var globalItems=best.slice(0,10);
+if(!globalItems.length){globalList.innerHTML='<div style="text-align:center;color:rgba(255,255,255,0.2);font-size:13px;padding:12px">Nenhuma tentativa ainda</div>';return}
+var ghtml='';
+globalItems.forEach(function(r,i){
+var cls=i===0?'rp1':i===1?'rp2':i===2?'rp3':'rp'+(i+1);
+var medals=['&#129351;','&#129352;','&#129353;','4','5','6','7','8','9','10'];
+var d=Math.abs(10000-r.val);
+ghtml+='<div class="ranking-row">';
+if(r.photo) ghtml+='<img src="'+r.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">';
+else ghtml+='<div class="ranking-pos '+cls+'">'+medals[i]+'</div>';
+ghtml+='<span class="ranking-name">'+r.name+'</span><span class="ranking-val">'+(d===0?'EXATO!':d+'ms')+'</span></div>';
+});
+globalList.innerHTML=ghtml;
 }
 
 /* ========== RESTART ========== */
@@ -1382,8 +1410,27 @@ var ctas=['Toque na tela para jogar!','Voce consegue acertar?','Desafie seus ami
 document.getElementById('attractCta').textContent=ctas[attractIdx%ctas.length];
 }
 
+function renderAttractGlobalRanking(){
+var gl=document.getElementById('attractGlobalList');
+if(!gl)return;
+var items=best.slice(0,10);
+if(!items.length){gl.innerHTML='<div style="text-align:center;color:rgba(255,255,255,0.2);font-size:13px;padding:12px">Seja o primeiro a entrar no ranking!</div>';return}
+var html='';
+items.forEach(function(r,i){
+var cls=i===0?'rp1':i===1?'rp2':i===2?'rp3':'rp'+(i+1);
+var medals=['&#129351;','&#129352;','&#129353;','4','5','6','7','8','9','10'];
+var d=Math.abs(10000-r.val);
+html+='<div class="ranking-row">';
+if(r.photo) html+='<img src="'+r.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">';
+else html+='<div class="ranking-pos '+cls+'">'+medals[i]+'</div>';
+html+='<span class="ranking-name">'+r.name+'</span><span class="ranking-val">'+(d===0?'EXATO!':d+'ms')+'</span></div>';
+});
+gl.innerHTML=html;
+}
+
 function startAttract(){
 if(gameConfig.tournament) loadWeeklyTournament();
+renderAttractGlobalRanking();
 rotateAttract();
 attractTimer=setInterval(rotateAttract,5000);
 }
