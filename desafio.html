@@ -318,6 +318,49 @@ background:rgba(255,255,255,0.05);padding:6px 14px;border-radius:50px;
 
 /* Footer */
 .foot{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.15);z-index:10;text-align:center;white-space:nowrap}
+
+/* === SCREENSAVER / ATTRACT MODE === */
+.attract{text-align:center}
+.attract-title{
+font-family:'Baloo 2',cursive;
+font-size:clamp(36px,8vw,80px);font-weight:800;
+background:linear-gradient(135deg,#E8A0BF,#C8A2E8,#A0D2F5,#FFD700);
+background-size:300% 300%;animation:gradShift 4s ease infinite;
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+margin-bottom:8px;
+}
+.attract-sub{
+font-size:clamp(16px,2.5vw,28px);font-weight:700;
+color:rgba(255,255,255,0.4);margin-bottom:32px;
+}
+.attract-feed{
+width:clamp(320px,60vw,600px);
+overflow:hidden;position:relative;
+}
+.attract-card{
+background:rgba(255,255,255,0.05);
+border:1px solid rgba(255,255,255,0.08);
+border-radius:20px;padding:clamp(16px,2vw,28px);
+margin-bottom:16px;text-align:center;
+animation:cardSlideIn 0.6s ease;
+}
+@keyframes cardSlideIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.attract-card-emoji{font-size:clamp(28px,5vw,48px);margin-bottom:8px}
+.attract-card-name{font-size:clamp(16px,2.5vw,24px);font-weight:800;color:#E8A0BF;margin-bottom:4px}
+.attract-card-msg{font-size:clamp(13px,1.8vw,18px);font-weight:600;color:rgba(255,255,255,0.5);margin-bottom:4px}
+.attract-card-val{
+font-family:'Orbitron',monospace;
+font-size:clamp(20px,4vw,36px);font-weight:900;
+color:#FF0040;text-shadow:0 0 15px rgba(255,0,64,0.3);
+}
+.attract-card-val.gold{color:#FFD700;text-shadow:0 0 15px rgba(255,215,0,0.4)}
+.attract-cta{
+margin-top:24px;
+font-size:clamp(14px,2vw,22px);font-weight:800;
+color:#FF0040;animation:ctaPulse 2s ease infinite;
+}
+@keyframes ctaPulse{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+.attract-logo{width:clamp(60px,10vw,100px);margin-bottom:16px;filter:drop-shadow(0 0 16px rgba(232,160,191,0.3))}
 </style>
 </head>
 <body>
@@ -350,8 +393,17 @@ background:rgba(255,255,255,0.05);padding:6px 14px;border-radius:50px;
 <div class="ambient ambient-2"></div>
 <div class="ambient ambient-3"></div>
 
-<!-- STEP 0: ATTRACT / NAME INPUT -->
-<div class="step active" id="step0">
+<!-- STEP ATTRACT: SCREENSAVER -->
+<div class="step active attract" id="stepAttract">
+<img src="images/logo-milkypot.png" alt="MilkyPot" class="attract-logo">
+<div class="attract-title">Desafio 10.000</div>
+<div class="attract-sub">Acerte 10.000 milissegundos e ganhe premio!</div>
+<div class="attract-feed" id="attractFeed"></div>
+<div class="attract-cta" id="attractCta">Toque na tela para jogar!</div>
+</div>
+
+<!-- STEP 0: NAME INPUT -->
+<div class="step" id="step0">
 <div class="badge-top">&#127942; Desafio Oficial MilkyPot</div>
 <img src="images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
 <h1 class="main-title">Acerte 10.000</h1>
@@ -431,6 +483,28 @@ var webcamStream = null;
 
 document.getElementById('attCount').textContent = attempts;
 
+/* Load prize config from Firebase */
+var prizeConfig = {
+exact: '1 MilkyPot Gratis!',
+close50: '10% de desconto no proximo pedido!',
+close200: '5% de desconto no proximo pedido!',
+enabled: true
+};
+if(typeof firebase!=='undefined'&&firebase.firestore){
+try{
+firebase.firestore().collection('config').doc('desafio_premios').get().then(function(doc){
+if(doc.exists){
+var d=doc.data();
+if(d.exact) prizeConfig.exact=d.exact;
+if(d.close50) prizeConfig.close50=d.close50;
+if(d.close200) prizeConfig.close200=d.close200;
+if(typeof d.enabled!=='undefined') prizeConfig.enabled=d.enabled;
+document.querySelector('.win-prize-text').textContent=prizeConfig.exact;
+}
+});
+}catch(e){}
+}
+
 /* Phone mask */
 document.getElementById('playerPhone').addEventListener('input',function(e){
 var v=e.target.value.replace(/\D/g,'');
@@ -444,7 +518,8 @@ e.target.value=v;
 /* NAV */
 function showStep(n) {
 document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active')});
-document.getElementById('step'+n).classList.add('active');
+var el = document.getElementById('step'+n) || document.getElementById('step'+n.toString());
+if(el) el.classList.add('active');
 }
 
 /* STEP 0 -> 1: Photo */
@@ -697,6 +772,98 @@ window.open('https://wa.me/?text='+t,'_blank');
 window.copyPhrase = function(){
 navigator.clipboard.writeText('Eu fiz '+fmt(elapsed)+' no Desafio 10.000 da MilkyPot. Voce consegue? milkypot.com/desafio.html');
 };
+
+/* === SCREENSAVER / ATTRACT MODE === */
+var attractTimer = null;
+var attractIdx = 0;
+
+var attractMsgs = [
+{emoji:'&#127942;',type:'win',name:'',msg:'ACERTOU EXATAMENTE 10.000!',val:'10.000',copy:'Inacreditavel! Levou 1 MilkyPot gratis!'},
+{emoji:'&#128293;',type:'close',name:'',msg:'Passou por um fio!',val:'',copy:'Diferenca de apenas Xms. Quase levou!'},
+{emoji:'&#128170;',type:'try',name:'',msg:'Tentou o desafio!',val:'',copy:'Sera que voce faz melhor?'},
+{emoji:'&#127881;',type:'prize',name:'',msg:'Ganhou premio!',val:'EXATO',copy:'Mostre que voce tambem consegue!'},
+{emoji:'&#129321;',type:'close',name:'',msg:'Foi por muito pouco!',val:'',copy:'Voce tem coragem de tentar?'},
+];
+
+function buildAttractCards(){
+var cards = [];
+/* Mix real ranking data with attract messages */
+best.forEach(function(b){
+var d = Math.abs(10000-b.val);
+if(d===0){
+cards.push({emoji:'&#127942;',name:b.name,msg:'ACERTOU 10.000!',val:'10.000',cls:'gold',copy:'Ganhou 1 MilkyPot gratis!'});
+} else if(d<=50){
+cards.push({emoji:'&#128293;',name:b.name,msg:'Quase acertou!',val:fmt(b.val),cls:'',copy:'Diferenca de apenas '+d+'ms!'});
+} else if(d<=500){
+cards.push({emoji:'&#128170;',name:b.name,msg:'Chegou perto!',val:fmt(b.val),cls:'',copy:'Fez '+fmt(b.val)+'. Voce faz melhor?'});
+} else {
+cards.push({emoji:'&#129321;',name:b.name,msg:'Tentou o desafio!',val:fmt(b.val),cls:'',copy:'Bora superar?'});
+}
+});
+/* If no real data, use template messages */
+if(cards.length===0){
+cards = [
+{emoji:'&#127942;',name:'???',msg:'Ninguem acertou ainda!',val:'10.000',cls:'gold',copy:'Sera voce o primeiro?'},
+{emoji:'&#128293;',name:'Desafio',msg:'Acerte 10.000 milissegundos',val:'10.000ms',cls:'',copy:'10 segundos exatos. Parece facil?'},
+{emoji:'&#127873;',name:'Premio',msg:'1 MilkyPot Gratis!',val:'GRATIS',cls:'gold',copy:'Acertou? Ganhou!'},
+{emoji:'&#128170;',name:'Ranking',msg:'Entre pro Hall da Fama',val:'TOP 5',cls:'',copy:'Os melhores ficam na tela!'},
+];
+}
+return cards;
+}
+
+function rotateAttract(){
+var feed = document.getElementById('attractFeed');
+if(!feed) return;
+var cards = buildAttractCards();
+if(cards.length===0) return;
+var c = cards[attractIdx % cards.length];
+attractIdx++;
+feed.innerHTML = '<div class="attract-card">'+
+'<div class="attract-card-emoji">'+c.emoji+'</div>'+
+'<div class="attract-card-name">'+c.name+'</div>'+
+'<div class="attract-card-msg">'+c.msg+'</div>'+
+'<div class="attract-card-val '+(c.cls||'')+'">'+c.val+'</div>'+
+'<div style="font-size:clamp(11px,1.5vw,14px);color:rgba(255,255,255,0.3);margin-top:6px">'+c.copy+'</div>'+
+'</div>';
+/* Alternate CTA messages */
+var ctas = ['Toque na tela para jogar!','Voce consegue acertar?','Desafie seus amigos!','Quem sera o proximo?','Toque aqui e tente!'];
+document.getElementById('attractCta').textContent = ctas[attractIdx % ctas.length];
+}
+
+function startAttract(){
+rotateAttract();
+attractTimer = setInterval(rotateAttract, 4000);
+}
+
+function stopAttract(){
+if(attractTimer){clearInterval(attractTimer);attractTimer=null}
+}
+
+/* Touch screen to start from attract */
+document.getElementById('stepAttract').addEventListener('click',function(){
+stopAttract();
+showStep(0);
+document.getElementById('playerName').focus();
+});
+
+/* Start attract mode */
+startAttract();
+
+/* Auto-return to attract after 60s of inactivity on step0 */
+var idleTimer;
+function resetIdle(){
+clearTimeout(idleTimer);
+idleTimer = setTimeout(function(){
+if(document.getElementById('step0').classList.contains('active')){
+document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active')});
+document.getElementById('stepAttract').classList.add('active');
+startAttract();
+}
+},60000);
+}
+document.addEventListener('click',resetIdle);
+document.addEventListener('touchstart',resetIdle);
 
 /* FULLSCREEN on first touch */
 document.addEventListener('click',function fs(){
