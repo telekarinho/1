@@ -1854,6 +1854,17 @@
                         formaPagamento: payload.formaPagamento
                     };
 
+                    /* Generate desafio voucher for NFC-e */
+                    var vc='MP'+Date.now().toString(36).toUpperCase().slice(-6);
+                    var vFormatted=vc.slice(0,2)+'-'+vc.slice(2);
+                    nota.voucherCode=vFormatted;
+                    if(typeof firebase!=='undefined'&&firebase.firestore){
+                        firebase.firestore().collection('desafio_vouchers').doc(vc).set({
+                            code:vFormatted,orderId:nota.numero||nota.id||'',orderSource:'fiscal_nfce',
+                            customerName:payload.cliente.nome||'',customerPhone:'',franchiseId:franchiseId,
+                            attempts:1,attemptsUsed:0,createdAt:new Date().toISOString(),used:false
+                        }).catch(function(){});
+                    }
                     Utils.showToast(data.warning || 'NFC-e registrada com sucesso!', 'success');
                     showDanfe(nota);
                 } else {
@@ -1919,6 +1930,18 @@
                 }
 
                 var nota = result.note;
+                /* Generate desafio voucher for this fiscal document */
+                var vc='MP'+Date.now().toString(36).toUpperCase().slice(-6);
+                var vFormatted=vc.slice(0,2)+'-'+vc.slice(2);
+                nota.voucherCode=vFormatted;
+                if(typeof firebase!=='undefined'&&firebase.firestore){
+                    firebase.firestore().collection('desafio_vouchers').doc(vc).set({
+                        code:vFormatted,orderId:nota.numero||nota.id||'',orderSource:'fiscal_cupom',
+                        customerName:document.getElementById('cupomClienteNome').value.trim()||'',
+                        customerPhone:'',franchiseId:franchiseId,
+                        attempts:1,attemptsUsed:0,createdAt:new Date().toISOString(),used:false
+                    }).catch(function(){});
+                }
                 persistFiscalNote(nota);
                 Utils.showToast('Cupom gerado com sucesso!', 'success');
                 showDanfe(nota);
@@ -1981,12 +2004,21 @@
                 html += '<div style="font-size:9px; word-break:break-all; text-align:center; color:#666;">Chave: ' + nota.chave + '</div>';
             }
 
+            /* Desafio 10.000 voucher on receipt */
+            if (nota.voucherCode) {
+                html += '<div style="border:2px dashed #9B59B6;border-radius:8px;padding:8px;margin:8px 0;text-align:center">';
+                html += '<div style="font-size:11px;font-weight:800;color:#9B59B6">** DESAFIO 10.000 **</div>';
+                html += '<div style="font-size:9px;color:#666;margin:2px 0">Acerte e ganhe premio!</div>';
+                html += '<div style="font-size:16px;font-weight:900;color:#FF0040;letter-spacing:2px;margin:4px 0">' + nota.voucherCode + '</div>';
+                html += '<div style="font-size:8px;color:#666">milkypot.com/desafio.html</div>';
+                html += '</div>';
+            }
             html += '<div class="danfe-footer">';
             if (isNfce) {
                 html += 'Documento auxiliar da Nota Fiscal de Consumidor Eletronica<br>';
                 if (nota.protocolo) html += 'Protocolo: ' + nota.protocolo + '<br>';
             }
-            html += 'MilkyPot - Sistema de Gestao';
+            html += 'MilkyPot - Sistema de Gestao<br>@milkypot';
             html += '</div>';
             html += '</div>';
 
