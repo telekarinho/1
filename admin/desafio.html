@@ -565,10 +565,27 @@
                     <div class="config-card">
                         <div class="config-form-group">
                             <label>🎚️ Niveis de Dificuldade</label>
-                            <p style="font-size:0.8rem;color:#9484A8;margin-bottom:6px">Facil (5s) / Medio (10s) / Impossivel (30s)</p>
-                            <div class="toggle-wrapper">
+                            <p style="font-size:0.8rem;color:#9484A8;margin-bottom:6px">Configure os tempos de cada nivel (em milissegundos)</p>
+                            <div class="toggle-wrapper" style="margin-bottom:8px">
                                 <label class="toggle-switch"><input type="checkbox" id="cfgDifficulty" checked><span class="toggle-slider"></span></label>
                                 <span class="toggle-label">Ativo</span>
+                            </div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                                <div style="text-align:center">
+                                    <div style="font-size:0.75rem;font-weight:700;color:#4CAF50;margin-bottom:2px">🟢 Facil</div>
+                                    <input type="number" id="cfgDiffEasy" value="5000" style="width:90px;padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem;text-align:center">
+                                    <div style="font-size:0.7rem;color:#9484A8">ms</div>
+                                </div>
+                                <div style="text-align:center">
+                                    <div style="font-size:0.75rem;font-weight:700;color:#FF9800;margin-bottom:2px">🟡 Medio</div>
+                                    <input type="number" id="cfgDiffMedium" value="10000" style="width:90px;padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem;text-align:center">
+                                    <div style="font-size:0.7rem;color:#9484A8">ms</div>
+                                </div>
+                                <div style="text-align:center">
+                                    <div style="font-size:0.75rem;font-weight:700;color:#F44336;margin-bottom:2px">🔴 Impossivel</div>
+                                    <input type="number" id="cfgDiffHard" value="30000" style="width:90px;padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem;text-align:center">
+                                    <div style="font-size:0.7rem;color:#9484A8">ms</div>
+                                </div>
                             </div>
                         </div>
 
@@ -829,6 +846,9 @@
         async function saveGameConfig() {
             const config = {
                 difficulty: document.getElementById('cfgDifficulty').checked,
+                diffEasy: parseInt(document.getElementById('cfgDiffEasy').value) || 5000,
+                diffMedium: parseInt(document.getElementById('cfgDiffMedium').value) || 10000,
+                diffHard: parseInt(document.getElementById('cfgDiffHard').value) || 30000,
                 tournament: document.getElementById('cfgTournament').checked,
                 streak: document.getElementById('cfgStreak').checked,
                 personalRecord: document.getElementById('cfgPersonalRecord').checked,
@@ -863,6 +883,9 @@
                 if (doc.exists) {
                     const c = doc.data();
                     if (typeof c.difficulty !== 'undefined') document.getElementById('cfgDifficulty').checked = c.difficulty;
+                    if (c.diffEasy) document.getElementById('cfgDiffEasy').value = c.diffEasy;
+                    if (c.diffMedium) document.getElementById('cfgDiffMedium').value = c.diffMedium;
+                    if (c.diffHard) document.getElementById('cfgDiffHard').value = c.diffHard;
                     if (typeof c.tournament !== 'undefined') document.getElementById('cfgTournament').checked = c.tournament;
                     if (typeof c.streak !== 'undefined') document.getElementById('cfgStreak').checked = c.streak;
                     if (typeof c.personalRecord !== 'undefined') document.getElementById('cfgPersonalRecord').checked = c.personalRecord;

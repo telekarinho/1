@@ -859,6 +859,15 @@ document.getElementById('attCount').textContent=attempts;
 
 /* Difficulty settings */
 var DIFF={easy:{target:5000,label:'5.000ms',sec:'5 segundos'},medium:{target:10000,label:'10.000ms',sec:'10 segundos'},hard:{target:30000,label:'30.000ms',sec:'30 segundos'}};
+/* Load custom difficulty from Firebase */
+function updateDiffFromConfig(c){
+if(c.diffEasy){DIFF.easy.target=c.diffEasy;DIFF.easy.label=fmt(c.diffEasy);DIFF.easy.sec=(c.diffEasy/1000)+' segundos'}
+if(c.diffMedium){DIFF.medium.target=c.diffMedium;DIFF.medium.label=fmt(c.diffMedium);DIFF.medium.sec=(c.diffMedium/1000)+' segundos'}
+if(c.diffHard){DIFF.hard.target=c.diffHard;DIFF.hard.label=fmt(c.diffHard);DIFF.hard.sec=(c.diffHard/1000)+' segundos'}
+/* Update buttons text if they exist */
+var btns=document.querySelectorAll('[data-diff]');
+btns.forEach(function(b){var d=b.dataset.diff;if(DIFF[d]){var lbl=b.querySelector('.diff-label');if(lbl) lbl.textContent=DIFF[d].sec}});
+}
 
 /* ========== FIREBASE INIT ========== */
 var prizeConfig={exact:'1 MilkyPot Gratis!',close50:'10% de desconto no proximo pedido!',close200:'5% de desconto no proximo pedido!',enabled:true,instagramBonus:true,instagramHandle:'@milkypot',instagramExtraChances:3,attemptsPerPurchase:1};
@@ -876,6 +885,7 @@ db.collection('config').doc('desafio_config').get().then(function(doc){
 if(doc.exists){
 var d=doc.data();
 Object.keys(gameConfig).forEach(function(k){if(typeof d[k]!=='undefined') gameConfig[k]=d[k]});
+updateDiffFromConfig(d);
 applyConfig();
 }
 });
