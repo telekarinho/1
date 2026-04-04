@@ -770,10 +770,42 @@
                     </div>
                 </div>
 
+                <!-- Admin Voucher Generator -->
+                <div class="section-block">
+                    <h3 class="section-title">🔑 Gerador de Codigos VIP (Somente Admin)</h3>
+                    <p class="section-subtitle">Gere codigos manualmente para promocoes, influencers, acoes especiais. Atendentes so geram via pedido.</p>
+
+                    <div class="config-card">
+                        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end">
+                            <div class="config-form-group" style="flex:1;min-width:200px;margin-bottom:0">
+                                <label>Nome / Motivo</label>
+                                <input type="text" id="vipName" placeholder="Ex: Influencer Maria, Promo Inauguracao" style="width:100%">
+                            </div>
+                            <div class="config-form-group" style="width:100px;margin-bottom:0">
+                                <label>Tentativas</label>
+                                <input type="number" id="vipAttempts" value="3" min="1" max="99" style="width:100%">
+                            </div>
+                            <div class="config-form-group" style="width:120px;margin-bottom:0">
+                                <label>Quantidade</label>
+                                <input type="number" id="vipQty" value="1" min="1" max="50" style="width:100%">
+                            </div>
+                            <button class="btn-save" onclick="generateVIPCodes()" style="height:42px">🔑 Gerar Codigos</button>
+                        </div>
+                        <div id="vipCodesResult" style="display:none;margin-top:16px;background:rgba(76,175,80,0.05);border:1px solid rgba(76,175,80,0.2);border-radius:12px;padding:16px">
+                            <div style="font-size:0.85rem;font-weight:700;color:#4CAF50;margin-bottom:8px">&#9989; Codigos gerados:</div>
+                            <div id="vipCodesList" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+                            <div style="margin-top:12px;display:flex;gap:8px">
+                                <button class="btn btn-sm btn-outline" onclick="copyVIPCodes()" style="font-size:0.8rem;padding:6px 12px;border:1px solid #e0d6eb;border-radius:6px;cursor:pointer;background:#fff">&#128203; Copiar Todos</button>
+                                <button class="btn btn-sm btn-outline" onclick="printVIPCodes()" style="font-size:0.8rem;padding:6px 12px;border:1px solid #e0d6eb;border-radius:6px;cursor:pointer;background:#fff">&#128424; Imprimir</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Voucher Management -->
                 <div class="section-block">
                     <h3 class="section-title">🎟️ Vouchers do Desafio</h3>
-                    <p class="section-subtitle">Codigos gerados a cada compra (PDV e Site) para jogar o Desafio 10.000</p>
+                    <p class="section-subtitle">Codigos gerados a cada compra (PDV e Site) para jogar o Desafio</p>
 
                     <div class="voucher-stats-row" id="voucherStats">
                         <div class="voucher-stat-card">
@@ -1434,6 +1466,88 @@
         // ============================================
         // Init
         // ============================================
+        // ============================================
+        // VIP Code Generator (Admin Only)
+        // ============================================
+        var generatedVIPCodes = [];
+
+        async function generateVIPCodes() {
+            var name = document.getElementById('vipName').value.trim() || 'VIP';
+            var attempts = parseInt(document.getElementById('vipAttempts').value) || 3;
+            var qty = Math.min(parseInt(document.getElementById('vipQty').value) || 1, 50);
+
+            generatedVIPCodes = [];
+            var batch = db.batch ? db.batch() : null;
+
+            for (var i = 0; i < qty; i++) {
+                var raw = 'VIP' + Date.now().toString(36).toUpperCase().slice(-5) + Math.random().toString(36).toUpperCase().slice(-2);
+                var code = raw.slice(0, 3) + '-' + raw.slice(3);
+                var docId = raw.replace('-', '');
+
+                var voucher = {
+                    code: code,
+                    orderId: 'admin_vip',
+                    orderSource: 'admin',
+                    customerName: name,
+                    customerPhone: '',
+                    franchiseId: 'admin',
+                    attempts: attempts,
+                    attemptsUsed: 0,
+                    createdAt: new Date().toISOString(),
+                    used: false,
+                    vip: true,
+                    generatedBy: 'super_admin'
+                };
+
+                if (batch) {
+                    batch.set(db.collection('desafio_vouchers').doc(docId), voucher);
+                } else {
+                    await db.collection('desafio_vouchers').doc(docId).set(voucher);
+                }
+                generatedVIPCodes.push(code);
+            }
+
+            if (batch) {
+                try { await batch.commit(); } catch(e) {
+                    for (var j = 0; j < generatedVIPCodes.length; j++) {
+                        var did = generatedVIPCodes[j].replace(/-/g, '');
+                        await db.collection('desafio_vouchers').doc(did).set({
+                            code: generatedVIPCodes[j], orderId: 'admin_vip', orderSource: 'admin',
+                            customerName: name, customerPhone: '', franchiseId: 'admin',
+                            attempts: attempts, attemptsUsed: 0, createdAt: new Date().toISOString(),
+                            used: false, vip: true, generatedBy: 'super_admin'
+                        });
+                    }
+                }
+            }
+
+            // Show results
+            var list = document.getElementById('vipCodesList');
+            list.innerHTML = generatedVIPCodes.map(function(c) {
+                return '<div style="background:#fff;border:2px dashed #9B59B6;border-radius:10px;padding:8px 16px;font-family:Orbitron,monospace;font-size:1rem;font-weight:800;color:#5A4570;letter-spacing:2px">' + c + '</div>';
+            }).join('');
+            document.getElementById('vipCodesResult').style.display = '';
+
+            Utils.showToast(qty + ' codigo(s) VIP gerado(s)!', 'success');
+            loadVouchers();
+        }
+
+        function copyVIPCodes() {
+            navigator.clipboard.writeText(generatedVIPCodes.join('\n'));
+            Utils.showToast('Codigos copiados!', 'success');
+        }
+
+        function printVIPCodes() {
+            var w = window.open('', '_blank', 'width=400,height=600');
+            var html = '<html><head><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet"><style>body{font-family:Arial;padding:20px;text-align:center} .code{border:2px dashed #9B59B6;border-radius:12px;padding:12px;margin:10px;display:inline-block;font-family:Orbitron,monospace;font-size:18px;font-weight:700;letter-spacing:3px} .title{font-size:14px;color:#666;margin-bottom:4px} .brand{font-size:20px;font-weight:800;color:#5A4570;margin-bottom:16px}</style></head><body>';
+            html += '<div class="brand">Desafio 10 MilkyPot</div>';
+            generatedVIPCodes.forEach(function(c) {
+                html += '<div><div class="title">Codigo VIP</div><div class="code">' + c + '</div></div>';
+            });
+            html += '<script>window.print();setTimeout(function(){window.close()},1000)<\/script></body></html>';
+            w.document.write(html);
+        }
+
         loadConfig();
         loadGameConfig();
         loadParticipants();
