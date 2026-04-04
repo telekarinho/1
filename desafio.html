@@ -712,7 +712,17 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 <div class="step active attract" id="stepAttract">
 <img src="images/logo-milkypot.png" alt="MilkyPot" class="attract-logo">
 <div class="attract-title">Desafio 10.000</div>
-<div class="attract-sub">Acerte 10.000 milissegundos e ganhe premio!</div>
+<div class="attract-sub">Pare o cronometro em <strong style="color:#FF0040">exatamente 10 segundos</strong> e ganhe premio!</div>
+<!-- Demo counter preview -->
+<div class="counter-box" style="margin:12px 0;padding:clamp(16px,3vw,32px) clamp(24px,5vw,60px)">
+<div class="counter-label">CRONOMETRO</div>
+<div class="counter-num" id="attractCounter" style="color:#42A5F5;font-size:clamp(48px,12vw,120px)">00:00.000</div>
+<div style="display:flex;justify-content:center;gap:clamp(8px,2vw,16px);margin-top:8px;font-size:clamp(11px,1.3vw,14px);font-weight:700">
+<span style="background:rgba(76,175,80,0.15);color:#4CAF50;padding:4px 12px;border-radius:20px">&#128994; 5s</span>
+<span style="background:rgba(255,152,0,0.15);color:#FF9800;padding:4px 12px;border-radius:20px">&#128993; 10s</span>
+<span style="background:rgba(244,67,54,0.15);color:#F44336;padding:4px 12px;border-radius:20px">&#128308; 30s</span>
+</div>
+</div>
 <div class="attract-feed" id="attractFeed"></div>
 <div class="attract-cta" id="attractCta">&#128073; Toque na tela para jogar!</div>
 <!-- Hidden containers for JS -->
@@ -816,7 +826,7 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 <div class="player-name-display" id="playerDisplay"></div>
 <div class="counter-box">
 <div class="counter-label">Cronometro</div>
-<div class="counter-num" id="counter">00.000</div>
+<div class="counter-num" id="counter">00:00.000</div>
 <div class="counter-target" id="counterTarget">Alvo: <span>10.000ms</span> (10 segundos)</div>
 </div>
 <div class="status-msg" id="statusMsg">Preparado? Toque para iniciar!</div>
@@ -826,7 +836,7 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 <!-- STEP 3: RESULT -->
 <div class="step" id="step3">
 <div class="player-name-display" id="resultName"></div>
-<div class="result-value" id="resultValue">00.000</div>
+<div class="result-value" id="resultValue">00:00.000</div>
 <div class="result-diff-badge" id="resultDiffBadge"></div>
 <div class="result-msg" id="resultMsg"></div>
 <div class="result-sub" id="resultSub"></div>
@@ -1240,7 +1250,7 @@ pip.style.display='block';pip.classList.add('recording');
 }
 
 /* ========== FORMAT ========== */
-function fmt(ms){var s=Math.floor(ms/1000);var m=ms%1000;return String(s).padStart(2,'0')+'.'+String(m).padStart(3,'0')}
+function fmt(ms){var s=Math.floor(ms/1000);var milli=ms%1000;var min=Math.floor(s/60);var sec=s%60;return String(min).padStart(2,'0')+':'+String(sec).padStart(2,'0')+'.'+String(milli).padStart(3,'0')}
 
 /* ========== GAME LOOP ========== */
 function tick(){elapsed=Date.now()-startT;document.getElementById('counter').textContent=fmt(elapsed);timer=requestAnimationFrame(tick)}
@@ -1704,7 +1714,7 @@ globalList.innerHTML=ghtml;
 /* ========== RESTART ========== */
 window.restart=function(){
 gameState='idle';
-document.getElementById('counter').textContent='00.000';
+document.getElementById('counter').textContent='00:00.000';
 document.getElementById('gameBtn').className='btn btn-start';
 document.getElementById('gameBtn').innerHTML='Iniciar Desafio &#9889;';
 document.getElementById('statusMsg').textContent='Preparado? Toque para iniciar!';
@@ -1940,15 +1950,68 @@ html+='<span class="ranking-name">'+r.name+'</span><span class="ranking-val">'+(
 gl.innerHTML=html;
 }
 
+/* Demo counter animation in attract */
+var demoTimer=null;
+var demoStart=0;
+var demoTarget=10000;
+var demoCycleTimer=null;
+function fmtDemo(ms){
+var s=Math.floor(ms/1000);
+var m=ms%1000;
+var min=Math.floor(s/60);
+var sec=s%60;
+return String(min).padStart(2,'0')+':'+String(sec).padStart(2,'0')+'.'+String(m).padStart(3,'0');
+}
+function runDemoCounter(){
+var el=document.getElementById('attractCounter');
+if(!el)return;
+var now=Date.now()-demoStart;
+if(now>=demoTarget+500){
+/* Show final number briefly then restart */
+el.textContent=fmtDemo(demoTarget);
+el.style.color='#4CAF50';
+setTimeout(function(){
+el.style.color='#42A5F5';
+demoStart=Date.now();
+demoTarget=[5000,10000,30000][Math.floor(Math.random()*3)];
+},2000);
+return;
+}
+if(now>demoTarget){now=demoTarget}
+el.textContent=fmtDemo(now);
+el.style.color=now>=demoTarget?'#4CAF50':'#FF0040';
+demoTimer=requestAnimationFrame(runDemoCounter);
+}
+function startDemoCounter(){
+demoStart=Date.now();
+demoTarget=[5000,10000][Math.floor(Math.random()*2)];
+runDemoCounter();
+/* Cycle: run for target+2s, pause 1s, repeat */
+demoCycleTimer=setInterval(function(){
+cancelAnimationFrame(demoTimer);
+demoStart=Date.now();
+demoTarget=[5000,10000,30000][Math.floor(Math.random()*3)];
+var el=document.getElementById('attractCounter');
+if(el){el.style.color='#42A5F5';el.textContent='00:00.000'}
+setTimeout(function(){runDemoCounter()},800);
+},15000);
+}
+function stopDemoCounter(){
+cancelAnimationFrame(demoTimer);
+if(demoCycleTimer){clearInterval(demoCycleTimer);demoCycleTimer=null}
+}
+
 function startAttract(){
 if(gameConfig.tournament) loadWeeklyTournament();
 renderAttractGlobalRanking();
 rotateAttract();
 attractTimer=setInterval(rotateAttract,5000);
+startDemoCounter();
 }
 
 function stopAttract(){
 if(attractTimer){clearInterval(attractTimer);attractTimer=null}
+stopDemoCounter();
 }
 
 /* Touch to start */
