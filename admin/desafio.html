@@ -381,6 +381,92 @@
             color: var(--mp-text-light);
             margin-left: auto;
         }
+
+        /* Voucher Management */
+        .voucher-filter-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+        }
+        .voucher-filter-tab {
+            padding: 8px 18px;
+            border: 1px solid var(--mp-border);
+            border-radius: 8px;
+            background: var(--mp-card);
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--mp-text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .voucher-filter-tab:hover { background: rgba(212, 165, 255, 0.06); }
+        .voucher-filter-tab.active {
+            background: linear-gradient(135deg, var(--mp-dark), var(--mp-purple));
+            color: #fff;
+            border-color: transparent;
+        }
+        .voucher-code {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #FF0040;
+            letter-spacing: 1px;
+        }
+        .voucher-origin {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .voucher-origin.pdv { background: rgba(124,77,255,0.12); color: #7C4DFF; }
+        .voucher-origin.site { background: rgba(66,165,245,0.12); color: #1976D2; }
+        .voucher-attempts-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .voucher-attempts-bar .bar-bg {
+            flex: 1;
+            height: 6px;
+            background: var(--mp-border);
+            border-radius: 3px;
+            overflow: hidden;
+            min-width: 40px;
+        }
+        .voucher-attempts-bar .bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        .voucher-attempts-bar .bar-fill.used { background: #FF5722; }
+        .voucher-attempts-bar .bar-fill.active { background: #4CAF50; }
+        .voucher-stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .voucher-stat-card {
+            background: var(--mp-card);
+            border-radius: 12px;
+            padding: 14px 16px;
+            box-shadow: var(--mp-shadow);
+            text-align: center;
+        }
+        .voucher-stat-val {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--mp-dark);
+        }
+        .voucher-stat-label {
+            font-size: 0.75rem;
+            color: var(--mp-text-light);
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -681,6 +767,58 @@
                         </div>
 
                         <button class="btn-save" onclick="saveGameConfig()" style="margin-top:12px">💾 Salvar Mecanicas</button>
+                    </div>
+                </div>
+
+                <!-- Voucher Management -->
+                <div class="section-block">
+                    <h3 class="section-title">🎟️ Vouchers do Desafio</h3>
+                    <p class="section-subtitle">Codigos gerados a cada compra (PDV e Site) para jogar o Desafio 10.000</p>
+
+                    <div class="voucher-stats-row" id="voucherStats">
+                        <div class="voucher-stat-card">
+                            <div class="voucher-stat-val" id="vStatTotal">0</div>
+                            <div class="voucher-stat-label">Total Vouchers</div>
+                        </div>
+                        <div class="voucher-stat-card">
+                            <div class="voucher-stat-val" id="vStatActive" style="color:#4CAF50">0</div>
+                            <div class="voucher-stat-label">Ativos</div>
+                        </div>
+                        <div class="voucher-stat-card">
+                            <div class="voucher-stat-val" id="vStatUsed" style="color:#FF5722">0</div>
+                            <div class="voucher-stat-label">Utilizados</div>
+                        </div>
+                        <div class="voucher-stat-card">
+                            <div class="voucher-stat-val" id="vStatConversion" style="color:#7C4DFF">0%</div>
+                            <div class="voucher-stat-label">Taxa Conversao</div>
+                        </div>
+                    </div>
+
+                    <div class="voucher-filter-tabs">
+                        <button class="voucher-filter-tab active" onclick="filterVouchers('all',this)">Todos</button>
+                        <button class="voucher-filter-tab" onclick="filterVouchers('active',this)">Ativos</button>
+                        <button class="voucher-filter-tab" onclick="filterVouchers('used',this)">Utilizados</button>
+                        <button class="voucher-filter-tab" onclick="filterVouchers('pdv',this)">PDV</button>
+                        <button class="voucher-filter-tab" onclick="filterVouchers('site',this)">Site</button>
+                        <button class="btn-export" onclick="exportVouchersCSV()" style="margin-left:auto">📥 Exportar CSV</button>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="desafio-table">
+                            <thead>
+                                <tr>
+                                    <th>Codigo</th>
+                                    <th>Pedido</th>
+                                    <th>Origem</th>
+                                    <th>Cliente</th>
+                                    <th>Tentativas</th>
+                                    <th>Data</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vouchersTableBody">
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -1157,11 +1295,149 @@
         }
 
         // ============================================
+        // Voucher Management
+        // ============================================
+        let allVouchers = [];
+        let currentVoucherFilter = 'all';
+
+        async function loadVouchers() {
+            try {
+                const snapshot = await db.collection('desafio_vouchers').orderBy('createdAt', 'desc').get();
+                allVouchers = [];
+                snapshot.forEach(doc => {
+                    allVouchers.push({ docId: doc.id, ...doc.data() });
+                });
+                updateVoucherStats();
+                renderVouchers();
+            } catch (err) {
+                console.error('Erro ao carregar vouchers:', err);
+                // Try without orderBy if index not available
+                try {
+                    const snapshot2 = await db.collection('desafio_vouchers').get();
+                    allVouchers = [];
+                    snapshot2.forEach(doc => {
+                        allVouchers.push({ docId: doc.id, ...doc.data() });
+                    });
+                    allVouchers.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+                    updateVoucherStats();
+                    renderVouchers();
+                } catch (err2) {
+                    console.error('Erro ao carregar vouchers (fallback):', err2);
+                }
+            }
+        }
+
+        function updateVoucherStats() {
+            const total = allVouchers.length;
+            const used = allVouchers.filter(v => v.attemptsUsed >= v.attempts).length;
+            const active = total - used;
+            const played = allVouchers.filter(v => v.attemptsUsed > 0).length;
+            const conversion = total > 0 ? Math.round((played / total) * 100) : 0;
+
+            document.getElementById('vStatTotal').textContent = total;
+            document.getElementById('vStatActive').textContent = active;
+            document.getElementById('vStatUsed').textContent = used;
+            document.getElementById('vStatConversion').textContent = conversion + '%';
+        }
+
+        function filterVouchers(filter, btn) {
+            currentVoucherFilter = filter;
+            document.querySelectorAll('.voucher-filter-tab').forEach(t => t.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            renderVouchers();
+        }
+
+        function renderVouchers() {
+            const tbody = document.getElementById('vouchersTableBody');
+            let filtered = allVouchers;
+
+            if (currentVoucherFilter === 'active') {
+                filtered = filtered.filter(v => v.attemptsUsed < v.attempts);
+            } else if (currentVoucherFilter === 'used') {
+                filtered = filtered.filter(v => v.attemptsUsed >= v.attempts);
+            } else if (currentVoucherFilter === 'pdv') {
+                filtered = filtered.filter(v => v.orderSource === 'pdv');
+            } else if (currentVoucherFilter === 'site') {
+                filtered = filtered.filter(v => v.orderSource === 'site');
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px 20px;color:#999;font-size:0.9rem;">Nenhum voucher encontrado.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(v => {
+                const used = v.attemptsUsed || 0;
+                const total = v.attempts || 1;
+                const remaining = total - used;
+                const isUsed = remaining <= 0;
+                const pct = Math.min(100, Math.round((used / total) * 100));
+                const origin = v.orderSource || 'pdv';
+                const dateStr = v.createdAt
+                    ? new Date(v.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
+                    : '-';
+                const statusBadge = isUsed
+                    ? '<span class="status-badge quase">Utilizado</span>'
+                    : used > 0
+                        ? '<span class="status-badge participou">Em uso</span>'
+                        : '<span class="status-badge" style="background:rgba(66,165,245,0.12);color:#1976D2">Novo</span>';
+
+                return `<tr>
+                    <td><span class="voucher-code">${Utils.escapeHtml(v.code || v.docId)}</span></td>
+                    <td style="font-size:0.82rem">${Utils.escapeHtml(v.orderId || '-')}</td>
+                    <td><span class="voucher-origin ${origin}">${origin.toUpperCase()}</span></td>
+                    <td>
+                        <strong style="color:var(--mp-dark)">${Utils.escapeHtml(v.customerName || '-')}</strong>
+                        ${v.customerPhone ? '<br><small style="color:var(--mp-text-light)">' + Utils.escapeHtml(v.customerPhone) + '</small>' : ''}
+                    </td>
+                    <td>
+                        <div class="voucher-attempts-bar">
+                            <span style="font-size:0.82rem;font-weight:700">${used}/${total}</span>
+                            <div class="bar-bg"><div class="bar-fill ${isUsed ? 'used' : 'active'}" style="width:${pct}%"></div></div>
+                        </div>
+                    </td>
+                    <td style="color:var(--mp-text-light);font-size:0.82rem">${dateStr}</td>
+                    <td>${statusBadge}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function exportVouchersCSV() {
+            if (allVouchers.length === 0) {
+                Utils.showToast('Nenhum voucher para exportar', 'warning');
+                return;
+            }
+            const headers = ['Codigo', 'Pedido', 'Origem', 'Cliente', 'Telefone', 'Tentativas Usadas', 'Tentativas Total', 'Data', 'Status'];
+            const rows = allVouchers.map(v => {
+                const used = v.attemptsUsed || 0;
+                const total = v.attempts || 1;
+                const status = used >= total ? 'Utilizado' : used > 0 ? 'Em uso' : 'Novo';
+                return [v.code || v.docId, v.orderId || '', v.orderSource || '', v.customerName || '', v.customerPhone || '', used, total, v.createdAt || '', status];
+            });
+            let csv = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csv += row.map(cell => {
+                    const str = String(cell);
+                    return str.includes(',') || str.includes('"') ? '"' + str.replace(/"/g, '""') + '"' : str;
+                }).join(',') + '\n';
+            });
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'desafio_vouchers_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            Utils.showToast('CSV de vouchers exportado!', 'success');
+        }
+
+        // ============================================
         // Init
         // ============================================
         loadConfig();
         loadGameConfig();
         loadParticipants();
+        loadVouchers();
     </script>
 </body>
 </html>

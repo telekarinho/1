@@ -607,6 +607,55 @@ border:3px solid rgba(232,160,191,0.3);display:block;
 width:clamp(180px,30vw,280px);height:clamp(100px,18vw,160px);
 border-radius:16px;object-fit:cover;margin:0 auto 10px;display:block;
 }
+
+/* === VOUCHER INPUT === */
+.voucher-input-wrap{
+position:relative;width:clamp(300px,55vw,460px);margin-bottom:16px;
+}
+.voucher-input{
+background:rgba(255,255,255,0.95);
+border:3px solid rgba(200,162,232,0.3);
+border-radius:20px;
+padding:clamp(16px,2.5vw,24px) clamp(24px,4vw,40px);
+font-family:'Orbitron',monospace;
+font-size:clamp(24px,5vw,40px);font-weight:900;
+color:#5A4570;text-align:center;
+width:100%;outline:none;
+transition:border-color 0.3s,box-shadow 0.3s;
+letter-spacing:4px;
+box-shadow:0 4px 20px rgba(90,69,112,0.08);
+text-transform:uppercase;
+}
+.voucher-input::placeholder{color:rgba(90,69,112,0.25);font-weight:700;letter-spacing:2px}
+.voucher-input:focus{border-color:#E8A0BF;box-shadow:0 4px 24px rgba(232,160,191,0.2)}
+.voucher-input.valid{border-color:#00DC82;box-shadow:0 4px 24px rgba(0,220,130,0.25);animation:voucherValid 0.5s ease}
+.voucher-input.invalid{border-color:#FF0040;animation:voucherShake 0.5s ease}
+@keyframes voucherShake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-6px)}20%,40%,60%,80%{transform:translateX(6px)}}
+@keyframes voucherValid{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
+.voucher-status{
+min-height:32px;
+font-size:clamp(13px,1.8vw,16px);font-weight:700;
+text-align:center;margin-bottom:12px;
+transition:opacity 0.3s;
+}
+.voucher-status.error{color:#FF0040}
+.voucher-status.success{color:#00DC82}
+.voucher-helper{
+font-size:clamp(12px,1.5vw,14px);color:rgba(90,69,112,0.4);
+text-align:center;margin-bottom:12px;
+}
+.voucher-helper a{color:#E8A0BF;text-decoration:none;font-weight:700}
+.voucher-helper a:hover{text-decoration:underline}
+.voucher-check{
+position:absolute;right:16px;top:50%;transform:translateY(-50%);
+font-size:clamp(24px,4vw,36px);opacity:0;transition:opacity 0.3s;
+}
+.voucher-check.show{opacity:1}
+.voucher-attempts-info{
+font-size:clamp(11px,1.3vw,13px);font-weight:700;
+color:rgba(90,69,112,0.5);margin-bottom:16px;
+background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
+}
 </style>
 </head>
 <body>
@@ -671,14 +720,26 @@ border-radius:16px;object-fit:cover;margin:0 auto 10px;display:block;
 <div id="attractGlobalRanking" style="display:none"><div id="attractGlobalList"></div></div>
 </div>
 
-<!-- STEP 0: NAME INPUT -->
+<!-- STEP 0: VOUCHER VALIDATION -->
 <div class="step" id="step0">
 <div class="badge-top">&#127942; Desafio Oficial MilkyPot</div>
 <img src="images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
 <h1 class="main-title" id="mainTitle">Acerte 10.000</h1>
 <p class="main-sub" id="mainSub">Acerte 10.000 milissegundos.<br>Sera que voce tem o <strong style="color:#FF0040">tempo perfeito</strong> da MilkyPot?</p>
+
+<!-- Voucher code input -->
+<div class="voucher-input-wrap">
+<input type="text" class="voucher-input" id="voucherInput" placeholder="MP-XXXXXX" maxlength="9" autocomplete="off" inputmode="text">
+<div class="voucher-check" id="voucherCheck">&#9989;</div>
+</div>
+<div class="voucher-status" id="voucherStatus"></div>
+<div class="voucher-helper">Comprou um MilkyPot? O codigo esta no seu cupom!<br><a href="/cardapio.html">Nao tem codigo? Peca pelo nosso cardapio!</a></div>
+
+<!-- Name/phone (pre-filled from voucher, shown after validation) -->
+<div id="voucherPlayerInfo" style="display:none;width:100%;max-width:500px">
 <input type="text" class="name-input" id="playerName" placeholder="Seu nome" maxlength="20" autocomplete="off">
 <input type="tel" class="name-input" id="playerPhone" placeholder="WhatsApp (11) 99999-9999" maxlength="15" autocomplete="off" style="font-size:clamp(16px,2.5vw,24px)">
+<div class="voucher-attempts-info" id="voucherAttemptsInfo"></div>
 <!-- Product combo (feature 9) -->
 <select class="product-select" id="productSelect" style="display:none">
 <option value="">Qual MilkyPot voce comprou? (opcional)</option>
@@ -698,7 +759,10 @@ border-radius:16px;object-fit:cover;margin:0 auto 10px;display:block;
 <div class="stamp-stars" id="stampStars"></div>
 <div class="stamp-count" id="stampCount"></div>
 </div>
-<button class="btn btn-start" onclick="goToPhoto()">Comecar &#9889;</button>
+</div>
+
+<button class="btn btn-start" id="btnValidateVoucher" onclick="validateVoucher()">Validar Codigo &#128274;</button>
+<button class="btn btn-start" id="btnGoToPhoto" onclick="goToPhoto()" style="display:none">Comecar &#9889;</button>
 </div>
 
 <!-- STEP 1: PHOTO WITH PRODUCT -->
@@ -776,6 +840,8 @@ border-radius:16px;object-fit:cover;margin:0 auto 10px;display:block;
 <div id="instagramBonus" style="display:none;background:linear-gradient(135deg,rgba(193,53,132,0.1),rgba(131,58,180,0.08));border:2px solid rgba(193,53,132,0.2);border-radius:16px;padding:14px 20px;margin:8px 0 12px;text-align:center;max-width:400px;width:100%">
 <div style="font-size:clamp(13px,1.8vw,16px);font-weight:800;color:#C13584;margin-bottom:4px">&#128248; Quer mais chances?</div>
 <div id="instagramBonusText" style="font-size:clamp(12px,1.5vw,14px);color:#5A4570;line-height:1.4">Poste o video da tentativa no Instagram,<br>marque <strong id="instagramHandleDisplay">@milkypot</strong> e ganhe <strong id="instagramChancesDisplay">+3</strong> tentativas!</div>
+<button id="instagramClaimBtn" onclick="claimInstagramBonus()" style="margin-top:10px;background:linear-gradient(135deg,#C13584,#833AB4);color:#fff;border:none;padding:10px 24px;border-radius:50px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer">Ja postei! Liberar tentativas</button>
+<div id="instagramClaimStatus" style="font-size:12px;margin-top:6px;color:#C13584;display:none"></div>
 </div>
 <!-- Personal record display (feature 4) -->
 <div id="prDisplay" style="display:none"></div>
@@ -847,6 +913,8 @@ var gameDifficulty='medium';
 var attempts=parseInt(localStorage.getItem('mp_d_att')||'0');
 var best=JSON.parse(localStorage.getItem('mp_d_rank')||'[]');
 var photoStream=null;
+var activeVoucher=null; /* holds validated voucher data */
+var activeVoucherCode=null;
 var webcamStream=null;
 var mediaRecorder=null;
 var recordedChunks=[];
@@ -937,6 +1005,127 @@ else if(v.length>0)v='('+v;
 e.target.value=v;
 });
 
+/* ========== VOUCHER INPUT AUTO-FORMAT ========== */
+document.getElementById('voucherInput').addEventListener('input',function(e){
+var v=e.target.value.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+/* Ensure starts with MP */
+if(v.length>=2 && v.substring(0,2)==='MP'){
+v='MP-'+v.substring(2);
+} else if(v.length>=1 && v[0]==='M'){
+/* partial MP */
+} else if(v.length>0 && v[0]!=='M'){
+v='MP-'+v;
+}
+if(v.replace(/-/g,'').length>8) v=v.substring(0,9);
+e.target.value=v;
+});
+document.getElementById('voucherInput').addEventListener('keydown',function(e){
+if(e.key==='Enter'){e.preventDefault();validateVoucher()}
+});
+
+/* ========== VOUCHER VALIDATION ========== */
+window.validateVoucher=function(){
+var input=document.getElementById('voucherInput');
+var status=document.getElementById('voucherStatus');
+var check=document.getElementById('voucherCheck');
+var raw=input.value.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+if(raw.length<4){
+status.className='voucher-status error';
+status.textContent='Digite o codigo do voucher!';
+input.classList.remove('valid');input.classList.add('invalid');
+setTimeout(function(){input.classList.remove('invalid')},600);
+return;
+}
+/* Normalize: remove MP prefix for doc lookup */
+var docId=raw;
+var displayCode='MP-'+raw.replace(/^MP/,'');
+status.className='voucher-status';
+status.textContent='Validando...';
+if(!db){
+status.className='voucher-status error';
+status.textContent='Erro de conexao. Tente novamente.';
+return;
+}
+db.collection('desafio_vouchers').doc(docId).get().then(function(doc){
+if(!doc.exists){
+/* Try with MP prefix stripped */
+var altId=raw.replace(/^MP/,'');
+return db.collection('desafio_vouchers').doc(altId).get().then(function(doc2){
+if(!doc2.exists){
+/* Try searching by code field */
+return db.collection('desafio_vouchers').where('code','==',displayCode).limit(1).get().then(function(snap){
+if(snap.empty){
+status.className='voucher-status error';
+status.textContent='Codigo invalido. Compre um MilkyPot para jogar!';
+input.classList.remove('valid');input.classList.add('invalid');
+setTimeout(function(){input.classList.remove('invalid')},600);
+check.classList.remove('show');
+activeVoucher=null;activeVoucherCode=null;
+} else {
+var found=null;var foundId=null;
+snap.forEach(function(d){found=d.data();foundId=d.id});
+processVoucherResult(found,foundId);
+}
+});
+}
+processVoucherResult(doc2.data(),altId);
+});
+}
+processVoucherResult(doc.data(),docId);
+}).catch(function(err){
+console.error('Voucher lookup error:',err);
+status.className='voucher-status error';
+status.textContent='Erro ao validar. Tente novamente.';
+});
+};
+
+function processVoucherResult(data,docId){
+var input=document.getElementById('voucherInput');
+var status=document.getElementById('voucherStatus');
+var check=document.getElementById('voucherCheck');
+if(!data){
+status.className='voucher-status error';
+status.textContent='Codigo invalido. Compre um MilkyPot para jogar!';
+input.classList.remove('valid');input.classList.add('invalid');
+setTimeout(function(){input.classList.remove('invalid')},600);
+check.classList.remove('show');
+activeVoucher=null;activeVoucherCode=null;
+return;
+}
+var remaining=data.attempts-data.attemptsUsed;
+if(remaining<=0){
+status.className='voucher-status error';
+status.textContent='Codigo ja utilizado. Compre outro MilkyPot!';
+input.classList.remove('valid');input.classList.add('invalid');
+setTimeout(function(){input.classList.remove('invalid')},600);
+check.classList.remove('show');
+activeVoucher=null;activeVoucherCode=null;
+return;
+}
+/* Valid voucher! */
+activeVoucher=data;
+activeVoucherCode=docId;
+status.className='voucher-status success';
+status.textContent='Codigo valido! '+remaining+' tentativa'+(remaining>1?'s':'')+' disponivel'+(remaining>1?'is':'')+'!';
+input.classList.remove('invalid');input.classList.add('valid');
+check.classList.add('show');
+/* Pre-fill name and phone */
+if(data.customerName) document.getElementById('playerName').value=data.customerName;
+if(data.customerPhone){
+var ph=data.customerPhone.replace(/\D/g,'');
+if(ph.length>=10){
+var formatted='('+ph.substring(0,2)+') '+ph.substring(2,7)+'-'+ph.substring(7);
+document.getElementById('playerPhone').value=formatted;
+}
+}
+/* Show player info and switch buttons */
+document.getElementById('voucherPlayerInfo').style.display='';
+document.getElementById('voucherAttemptsInfo').textContent='🎟️ '+remaining+' tentativa'+(remaining>1?'s':'')+' restante'+(remaining>1?'s':'');
+document.getElementById('btnValidateVoucher').style.display='none';
+document.getElementById('btnGoToPhoto').style.display='';
+document.getElementById('playerName').focus();
+}
+
 /* ========== NAV ========== */
 function showStep(n){
 document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active')});
@@ -948,6 +1137,18 @@ if(el) el.classList.add('active');
 
 /* ========== STEP 0 -> 1: Photo ========== */
 window.goToPhoto=function(){
+/* Require validated voucher */
+if(!activeVoucher||!activeVoucherCode){
+document.getElementById('voucherStatus').className='voucher-status error';
+document.getElementById('voucherStatus').textContent='Valide seu codigo primeiro!';
+return;
+}
+var remaining=activeVoucher.attempts-activeVoucher.attemptsUsed;
+if(remaining<=0){
+document.getElementById('voucherStatus').className='voucher-status error';
+document.getElementById('voucherStatus').textContent='Codigo ja utilizado. Compre outro MilkyPot!';
+return;
+}
 playerN=document.getElementById('playerName').value.trim()||'Jogador';
 playerPhone=document.getElementById('playerPhone').value.replace(/\D/g,'');
 if(playerPhone.length<10){
@@ -1077,6 +1278,22 @@ if(navigator.vibrate) navigator.vibrate([50,30,80]);
 if(gameConfig.reactionVideo&&mediaRecorder&&mediaRecorder.state==='recording') mediaRecorder.stop();
 attempts++;localStorage.setItem('mp_d_att',attempts);
 document.getElementById('attCount').textContent=attempts;
+
+/* === UPDATE VOUCHER ATTEMPTS USED === */
+if(activeVoucher&&activeVoucherCode&&db){
+activeVoucher.attemptsUsed=(activeVoucher.attemptsUsed||0)+1;
+try{
+db.collection('desafio_vouchers').doc(activeVoucherCode).update({
+attemptsUsed:activeVoucher.attemptsUsed,
+lastUsedAt:new Date().toISOString(),
+used:activeVoucher.attemptsUsed>=activeVoucher.attempts
+});
+}catch(e){console.warn('Voucher update error:',e)}
+/* Update remaining display */
+var rem=activeVoucher.attempts-activeVoucher.attemptsUsed;
+var attInfo=document.getElementById('voucherAttemptsInfo');
+if(attInfo) attInfo.textContent='🎟️ '+Math.max(0,rem)+' tentativa'+(rem!==1?'s':'')+' restante'+(rem!==1?'s':'');
+}
 
 var diff=elapsed-gameTarget;
 var abs=Math.abs(diff);
@@ -1377,6 +1594,37 @@ try{db.collection('desafio_notifications').doc(playerPhone).set({phone:playerPho
 }
 };
 
+/* ========== INSTAGRAM BONUS CLAIM ========== */
+window.claimInstagramBonus=function(){
+var btn=document.getElementById('instagramClaimBtn');
+var statusEl=document.getElementById('instagramClaimStatus');
+if(!activeVoucher||!activeVoucherCode||!db){
+statusEl.style.display='';statusEl.textContent='Erro: voucher nao encontrado.';
+return;
+}
+if(activeVoucher.instagramBonusUsed){
+statusEl.style.display='';statusEl.textContent='Bonus ja resgatado neste voucher!';
+btn.disabled=true;btn.style.opacity='0.5';
+return;
+}
+var extraChances=prizeConfig.instagramExtraChances||3;
+activeVoucher.attempts=(activeVoucher.attempts||1)+extraChances;
+activeVoucher.instagramBonusUsed=true;
+try{
+db.collection('desafio_vouchers').doc(activeVoucherCode).update({
+attempts:activeVoucher.attempts,
+instagramBonusUsed:true,
+used:false /* re-open since we added attempts */
+});
+}catch(e){console.warn('Instagram bonus update error:',e)}
+statusEl.style.display='';statusEl.textContent='+'+extraChances+' tentativas liberadas! Total agora: '+(activeVoucher.attempts-activeVoucher.attemptsUsed);
+btn.disabled=true;btn.style.opacity='0.5';btn.textContent='Bonus resgatado!';
+/* Update attempts badge */
+var rem=activeVoucher.attempts-activeVoucher.attemptsUsed;
+var attInfo=document.getElementById('voucherAttemptsInfo');
+if(attInfo) attInfo.textContent='🎟️ '+rem+' tentativa'+(rem!==1?'s':'')+' restante'+(rem!==1?'s':'');
+};
+
 /* ========== WIN ========== */
 function showWin(){
 document.getElementById('winOverlay').classList.add('show');
@@ -1462,6 +1710,24 @@ document.getElementById('gameBtn').innerHTML='Iniciar Desafio &#9889;';
 document.getElementById('statusMsg').textContent='Preparado? Toque para iniciar!';
 document.getElementById('videoSaveBtn').style.display='none';
 recordedChunks=[];reactionVideoBlob=null;
+/* Check if voucher has remaining attempts */
+if(activeVoucher){
+var rem=activeVoucher.attempts-activeVoucher.attemptsUsed;
+if(rem<=0){
+/* No more attempts, go back to voucher input */
+activeVoucher=null;activeVoucherCode=null;
+document.getElementById('voucherInput').value='';
+document.getElementById('voucherInput').classList.remove('valid');
+document.getElementById('voucherCheck').classList.remove('show');
+document.getElementById('voucherStatus').className='voucher-status error';
+document.getElementById('voucherStatus').textContent='Suas tentativas acabaram! Use outro codigo.';
+document.getElementById('voucherPlayerInfo').style.display='none';
+document.getElementById('btnValidateVoucher').style.display='';
+document.getElementById('btnGoToPhoto').style.display='none';
+showStep(0);
+return;
+}
+}
 showStep(2);
 };
 
