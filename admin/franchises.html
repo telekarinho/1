@@ -192,14 +192,41 @@
                             <input type="email" class="form-control" id="fOwnerEmail" placeholder="franqueado@email.com">
                         </div>
                     </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Senha <span id="fPwdHint" style="font-weight:400;font-size:12px;color:#999">(em branco = nao alterar)</span></label>
+                            <div style="display:flex;gap:8px">
+                                <input type="password" class="form-control" id="fOwnerPassword" placeholder="Deixe em branco para manter a atual" autocomplete="new-password">
+                                <button type="button" class="btn btn-sm btn-outline" onclick="togglePasswordView()" style="white-space:nowrap" id="btnShowPwd">👁 Ver</button>
+                                <button type="button" class="btn btn-sm btn-outline" onclick="generatePassword()" style="white-space:nowrap">🎲 Gerar</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Telefone de contato</label>
+                            <input type="tel" class="form-control" id="fOwnerPhone" placeholder="(11) 99999-9999">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>URL de Login</label>
+                            <input type="url" class="form-control" id="fLoginUrl" placeholder="https://milkypot.com/login.html" value="https://milkypot.com/login.html">
+                        </div>
+                        <div class="form-group">
+                            <label>URL do Painel</label>
+                            <input type="url" class="form-control" id="fPanelUrl" placeholder="https://milkypot.com/painel/index.html" value="https://milkypot.com/painel/index.html">
+                        </div>
+                    </div>
                     <div class="form-group">
-                        <label>Senha Inicial</label>
-                        <input type="password" class="form-control" id="fOwnerPassword" placeholder="Sera usada no primeiro acesso">
+                        <label>Observacoes de acesso</label>
+                        <textarea class="form-control" id="fAccessNotes" rows="2" placeholder="Ex: tem 2FA, usa biometria, PIN do caixa = 1234..."></textarea>
                     </div>
 
-                    <div class="panel-modal-footer" style="padding:0;border:0;margin-top:24px">
-                        <button type="button" class="btn btn-outline" onclick="closeModal()">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar Franquia</button>
+                    <div class="panel-modal-footer" style="padding:0;border:0;margin-top:24px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+                        <button type="button" class="btn btn-outline" id="btnDeleteFromModal" onclick="deleteFranchiseFromModal()" style="color:#e53935;border-color:#e53935;display:none">🗑️ Excluir franquia</button>
+                        <div style="display:flex;gap:8px;margin-left:auto">
+                            <button type="button" class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Salvar Franquia</button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -232,6 +259,12 @@
         function openNewFranchiseModal() {
             document.getElementById('franchiseForm').reset();
             document.getElementById('fId').value = '';
+            document.getElementById('fLoginUrl').value = 'https://milkypot.com/login.html';
+            document.getElementById('fPanelUrl').value = 'https://milkypot.com/painel/index.html';
+            document.getElementById('btnDeleteFromModal').style.display = 'none';
+            document.getElementById('fPwdHint').textContent = '(obrigatoria no cadastro)';
+            document.getElementById('fOwnerPassword').type = 'password';
+            document.getElementById('btnShowPwd').textContent = '👁 Ver';
             document.getElementById('newFranchiseModal').classList.add('active');
         }
 
@@ -240,6 +273,7 @@
             const f = franchises.find(x => x.id === id);
             if (!f) return;
 
+            document.getElementById('franchiseForm').reset();
             document.getElementById('fId').value = f.id;
             document.getElementById('fName').value = f.name;
             document.getElementById('fSlug').value = f.slug;
@@ -252,11 +286,112 @@
             document.getElementById('fMonthlyFee').value = f.monthlyFee;
             document.getElementById('fHours').value = f.hours;
             document.getElementById('fDeliveryFee').value = f.deliveryFee;
+
+            // Dados de acesso
+            const access = f.access || {};
+            document.getElementById('fOwnerName').value = access.ownerName || '';
+            document.getElementById('fOwnerEmail').value = access.ownerEmail || '';
+            document.getElementById('fOwnerPassword').value = access.ownerPassword || '';
+            document.getElementById('fOwnerPhone').value = access.ownerPhone || '';
+            document.getElementById('fLoginUrl').value = access.loginUrl || 'https://milkypot.com/login.html';
+            document.getElementById('fPanelUrl').value = access.panelUrl || 'https://milkypot.com/painel/index.html';
+            document.getElementById('fAccessNotes').value = access.notes || '';
+
+            document.getElementById('btnDeleteFromModal').style.display = 'inline-flex';
+            document.getElementById('fPwdHint').textContent = '(em branco = nao alterar)';
+            document.getElementById('fOwnerPassword').type = 'password';
+            document.getElementById('btnShowPwd').textContent = '👁 Ver';
             document.getElementById('newFranchiseModal').classList.add('active');
         }
 
         function closeModal() {
             document.getElementById('newFranchiseModal').classList.remove('active');
+            document.getElementById('fOwnerPassword').type = 'password';
+        }
+
+        function togglePasswordView() {
+            const fld = document.getElementById('fOwnerPassword');
+            const btn = document.getElementById('btnShowPwd');
+            if (fld.type === 'password') { fld.type = 'text'; btn.textContent = '🙈 Ocultar'; }
+            else { fld.type = 'password'; btn.textContent = '👁 Ver'; }
+        }
+
+        function generatePassword() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+            let p = '';
+            for (let i = 0; i < 10; i++) p += chars.charAt(Math.floor(Math.random() * chars.length));
+            const fld = document.getElementById('fOwnerPassword');
+            fld.value = p;
+            fld.type = 'text';
+            document.getElementById('btnShowPwd').textContent = '🙈 Ocultar';
+            Utils.showToast('Senha gerada. Copie antes de salvar!', 'info');
+        }
+
+        function deleteFranchiseFromModal() {
+            const id = document.getElementById('fId').value;
+            if (!id) return;
+            closeModal();
+            deleteFranchise(id);
+        }
+
+        function deleteFranchise(id) {
+            const franchises = DataStore.getAllFranchises();
+            const f = franchises.find(x => x.id === id);
+            if (!f) return;
+
+            const ownerEmail = (f.access && f.access.ownerEmail) || '';
+            const msg = `Tem certeza que deseja EXCLUIR a franquia "${f.name}"?\n\n` +
+                        `Isso ira apagar:\n` +
+                        `  - Dados da franquia\n` +
+                        `  - Pedidos, financeiro, estoque, equipe (todas as colecoes vinculadas)\n` +
+                        (ownerEmail ? `  - O franqueado ${ownerEmail} pode precisar ser removido do Firebase Auth manualmente\n` : '') +
+                        `\nEsta acao NAO pode ser desfeita. Digite o nome da franquia para confirmar.`;
+            const answer = prompt(msg, '');
+            if (answer === null) return;
+            if (answer.trim() !== f.name.trim()) {
+                Utils.showToast('Nome nao confere. Exclusao cancelada.', 'error');
+                return;
+            }
+
+            // Remove franquia
+            const remaining = franchises.filter(x => x.id !== id);
+            DataStore.set('franchises', remaining);
+
+            // Remove colecoes vinculadas
+            const collections = ['orders', 'finances', 'staff', 'inventory', 'products', 'campaigns', 'audit'];
+            collections.forEach(c => {
+                try { DataStore.remove(c + '_' + id); } catch(e) {
+                    try { localStorage.removeItem('mp_' + c + '_' + id); } catch(_) {}
+                }
+            });
+
+            // Audit log
+            try {
+                if (typeof Audit !== 'undefined' && Audit.log) {
+                    Audit.log('franchise_deleted', { franchiseId: id, name: f.name, ownerEmail });
+                }
+            } catch(e) {}
+
+            // Tentar remover usuario Firebase via backend (se tiver service account)
+            if (ownerEmail && confirm(`Deseja tambem remover a conta Firebase do franqueado ${ownerEmail}?\n\nOK = remover | Cancelar = manter conta`)) {
+                try {
+                    if (typeof CloudFunctions !== 'undefined' && CloudFunctions.deleteUserAccount) {
+                        CloudFunctions.deleteUserAccount({ email: ownerEmail }).then(r => {
+                            if (r && r.success) Utils.showToast('Conta Firebase removida', 'success');
+                            else Utils.showToast('Conta nao removida: ' + (r && r.error || 'erro'), 'warning');
+                        }).catch(e => {
+                            Utils.showToast('Erro ao remover conta: ' + e.message, 'warning');
+                        });
+                    } else {
+                        Utils.showToast('Remova a conta manualmente no Firebase Console', 'info');
+                    }
+                } catch(e) {
+                    Utils.showToast('Remova a conta manualmente no Firebase Console', 'info');
+                }
+            }
+
+            Utils.showToast('Franquia excluida com sucesso', 'success');
+            renderFranchises();
         }
 
         function saveFranchise(e) {
@@ -265,6 +400,27 @@
             const id = document.getElementById('fId').value;
             const isNew = !id;
             const existingFranchise = isNew ? null : (franchises.find(f => f.id === id) || null);
+
+            const ownerName = document.getElementById('fOwnerName').value.trim();
+            const ownerEmail = document.getElementById('fOwnerEmail').value.trim();
+            const ownerPassword = document.getElementById('fOwnerPassword').value;
+            const ownerPhone = document.getElementById('fOwnerPhone').value.trim();
+            const loginUrl = document.getElementById('fLoginUrl').value.trim();
+            const panelUrl = document.getElementById('fPanelUrl').value.trim();
+            const accessNotes = document.getElementById('fAccessNotes').value.trim();
+
+            const previousAccess = (existingFranchise && existingFranchise.access) || {};
+            const access = {
+                ownerName: ownerName || previousAccess.ownerName || '',
+                ownerEmail: ownerEmail || previousAccess.ownerEmail || '',
+                ownerPhone: ownerPhone || previousAccess.ownerPhone || '',
+                // Se o campo de senha veio vazio na edicao, preservamos a senha anterior
+                ownerPassword: ownerPassword || previousAccess.ownerPassword || '',
+                loginUrl: loginUrl || previousAccess.loginUrl || 'https://milkypot.com/login.html',
+                panelUrl: panelUrl || previousAccess.panelUrl || 'https://milkypot.com/painel/index.html',
+                notes: accessNotes,
+                updatedAt: new Date().toISOString()
+            };
 
             const data = {
                 id: id || document.getElementById('fSlug').value,
@@ -279,10 +435,11 @@
                 monthlyFee: parseFloat(document.getElementById('fMonthlyFee').value),
                 hours: document.getElementById('fHours').value,
                 deliveryFee: parseFloat(document.getElementById('fDeliveryFee').value),
-                rating: 5.0,
-                deliveryTime: '20-35 min',
-                status: 'ativo',
-                createdAt: existingFranchise ? (existingFranchise.createdAt || new Date().toISOString()) : new Date().toISOString()
+                rating: existingFranchise ? (existingFranchise.rating || 5.0) : 5.0,
+                deliveryTime: existingFranchise ? (existingFranchise.deliveryTime || '20-35 min') : '20-35 min',
+                status: existingFranchise ? (existingFranchise.status || 'ativo') : 'ativo',
+                createdAt: existingFranchise ? (existingFranchise.createdAt || new Date().toISOString()) : new Date().toISOString(),
+                access: access
             };
 
             if (isNew) {
@@ -294,10 +451,6 @@
                 franchises.push(data);
 
                 // Create user account for franchisee (Firebase Auth)
-                const ownerName = document.getElementById('fOwnerName').value;
-                const ownerEmail = document.getElementById('fOwnerEmail').value;
-                const ownerPassword = document.getElementById('fOwnerPassword').value;
-
                 if (ownerEmail) {
                     try {
                         Auth.createUser({
@@ -308,16 +461,24 @@
                             franchiseId: data.id
                         }).then(result => {
                             if (result.success) {
-                                Utils.showToast('Conta do franqueado criada! Senha: ' + result.tempPassword, 'success');
+                                // Persiste senha usada (inclusive a auto-gerada quando nenhuma foi fornecida)
+                                const franchisesNow = DataStore.getAllFranchises();
+                                const idx = franchisesNow.findIndex(f => f.id === data.id);
+                                if (idx !== -1 && result.tempPassword) {
+                                    franchisesNow[idx].access = franchisesNow[idx].access || {};
+                                    franchisesNow[idx].access.ownerPassword = result.tempPassword;
+                                    DataStore.set('franchises', franchisesNow);
+                                }
+                                Utils.showToast('Conta criada! Senha: ' + result.tempPassword, 'success');
                             } else {
                                 Utils.showToast('Erro ao criar conta: ' + result.error, 'error');
                             }
                         }).catch(function(e) {
-                            console.error('Usuário não criado:', e);
+                            console.error('Usuario nao criado:', e);
                             alert('Franquia salva mas erro ao criar login: ' + e.message);
                         });
                     } catch(e) {
-                        console.error('Usuário não criado:', e);
+                        console.error('Usuario nao criado:', e);
                         alert('Franquia salva mas erro ao criar login: ' + e.message);
                     }
                 }
@@ -333,6 +494,23 @@
                 const idx = franchises.findIndex(f => f.id === id);
                 if (idx !== -1) {
                     franchises[idx] = { ...franchises[idx], ...data };
+                }
+                // Se senha foi alterada no modo edicao, tenta atualizar no Firebase Auth
+                const pwdChanged = ownerPassword && ownerPassword !== previousAccess.ownerPassword;
+                if (pwdChanged && access.ownerEmail) {
+                    try {
+                        if (typeof CloudFunctions !== 'undefined' && CloudFunctions.setUserPassword) {
+                            CloudFunctions.setUserPassword({ email: access.ownerEmail, password: ownerPassword })
+                                .then(r => {
+                                    if (r && r.success) Utils.showToast('Senha Firebase atualizada', 'success');
+                                    else Utils.showToast('Senha salva localmente; atualize manualmente no Firebase: ' + (r && r.error || ''), 'warning');
+                                }).catch(e => Utils.showToast('Senha salva localmente. Firebase: ' + e.message, 'warning'));
+                        } else {
+                            Utils.showToast('Senha salva localmente. Atualize no Firebase Console se necessario.', 'info');
+                        }
+                    } catch(e) {
+                        Utils.showToast('Senha salva localmente. Firebase manual: ' + e.message, 'warning');
+                    }
                 }
                 Utils.showToast('Franquia atualizada!', 'success');
             }
@@ -423,10 +601,17 @@
                                 <div class="franchise-stat-label">Avaliacao</div>
                             </div>
                         </div>
-                        <div style="display:flex;gap:8px;margin-top:16px">
+                        ${f.access && f.access.ownerEmail ? `
+                        <div style="margin-top:12px;padding:10px 12px;background:#f8f9fa;border-radius:8px;font-size:13px;line-height:1.5">
+                            <div><strong>👤 ${Utils.escapeHtml(f.access.ownerName || '—')}</strong></div>
+                            <div style="color:#666">📧 ${Utils.escapeHtml(f.access.ownerEmail)}${f.access.ownerPhone ? ' · 📞 ' + Utils.escapeHtml(f.access.ownerPhone) : ''}</div>
+                            ${f.access.loginUrl ? `<div><a href="${Utils.escapeHtml(f.access.loginUrl)}" target="_blank" style="color:#42A5F5;font-size:12px">🔗 Login</a>${f.access.panelUrl ? ` · <a href="${Utils.escapeHtml(f.access.panelUrl)}" target="_blank" style="color:#42A5F5;font-size:12px">🏠 Painel</a>` : ''}</div>` : ''}
+                        </div>` : ''}
+                        <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
                             <button class="btn btn-sm btn-outline" onclick="editFranchise('${Utils.escapeHtml(f.id)}')">✏️ Editar</button>
                             <button class="btn btn-sm btn-outline" onclick="toggleFranchiseStatus('${Utils.escapeHtml(f.id)}')">${f.status === 'ativo' ? '🔴 Desativar' : '🟢 Ativar'}</button>
                             <a href="franchise-detail.html?id=${encodeURIComponent(f.id)}" class="btn btn-sm btn-primary">📊 Detalhes</a>
+                            <button class="btn btn-sm btn-outline" onclick="deleteFranchise('${Utils.escapeHtml(f.id)}')" style="color:#e53935;border-color:#e53935;margin-left:auto" title="Excluir franquia">🗑️</button>
                         </div>
                     </div>
                 `;
