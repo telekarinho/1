@@ -12,25 +12,41 @@ const CloudFunctions = {
 
     init() {
         // Detecta URL base da API
-        // Em producao (Vercel): usa a mesma origem
-        // Em dev (GitHub Pages): usa VERCEL_API_URL se definido
-        if (window.location.hostname.includes('vercel.app')) {
+        var h = window.location.hostname;
+
+        if (h.includes('vercel.app')) {
+            // Vercel: usa mesma origem
             this._apiUrl = '/api/cloud-functions';
+
         } else if (window.MP_VERCEL_API_URL) {
+            // URL customizada definida antes de carregar este script
             this._apiUrl = window.MP_VERCEL_API_URL + '/api/cloud-functions';
+
+        } else if (
+            h === 'milkypot.com' ||
+            h === 'www.milkypot.com' ||
+            h.endsWith('.milkypot.com') ||
+            h === 'milkypot-ad945.web.app' ||
+            h === 'milkypot-ad945.firebaseapp.com' ||
+            h === 'telekarinho.github.io'
+        ) {
+            // Producao: Hostinger PHP API (nao requer Firebase Blaze)
+            this._apiUrl = 'https://api.milkypot.com/api/cloud-functions';
+
         } else {
-            // Fallback: tenta Firebase Functions se disponivel
+            // Dev local: tenta Firebase Functions como fallback
             if (typeof firebase !== 'undefined' && firebase.functions) {
                 this._functions = firebase.app().functions('southamerica-east1');
                 console.log('☁️ CloudFunctions: Firebase Functions (southamerica-east1)');
                 return;
             }
-            console.warn('⚠️ CloudFunctions: nenhum backend configurado. Defina window.MP_VERCEL_API_URL');
+            console.warn('⚠️ CloudFunctions: nenhum backend configurado. ' +
+                'Em producao usa api.milkypot.com automaticamente.');
             return;
         }
 
         this._functions = true; // flag para indicar que esta disponivel
-        console.log('☁️ CloudFunctions: Vercel API (' + this._apiUrl + ')');
+        console.log('☁️ CloudFunctions: Hostinger PHP API (' + this._apiUrl + ')');
     },
 
     // ============================================

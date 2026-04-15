@@ -100,59 +100,98 @@ const Auth = {
         }
 
         const tempPassword = userData.tempPassword || Utils.generateSecurePassword();
+        const role = userData.role || MP.ROLES.FRANCHISEE;
+        const franchiseId = userData.franchiseId || null;
 
-        // BUG C — Salva sessao do admin antes de qualquer operacao
-        var adminSession = null;
-        var adminEmail = null;
-        var adminPassword = null;
-        try {
-            adminSession = this.getSession(); // Salva sessao atual
-            if (adminSession) {
-                adminEmail = adminSession.email;
+        // ─── CAMINHO PREFERIDO: API PHP (Hostinger) ────────────────────
+        // Cria usuario + seta custom claims de forma atomica.
+        // Preserva a sessao do admin (nao troca Firebase Auth state).
+        if (typeof CloudFunctions !== 'undefined' && CloudFunctions._functions) {
+            try {
+                const apiResult = await CloudFunctions.createUserWithRole(
+                    userData.email, userData.name, tempPassword, role, franchiseId
+                );
+
+                if (apiResult && apiResult.success) {
+                    const profile = this._createUserProfile({
+                        email: userData.email,
+                        name: userData.name,
+                        role: role,
+                        franchiseId: franchiseId,
+                        firebaseUid: apiResult.uid
+                    });
+
+                    if (typeof AuditLog !== 'undefined') {
+                        AuditLog.logAuth(AuditLog.EVENTS.USER_CREATED, {
+                            email: userData.email, role, franchiseId, via: 'api'
+                        });
+                    }
+
+                    return {
+                        success: true,
+                        user: profile,
+                        tempPassword: tempPassword,
+                        message: `Usuario criado. Senha temporaria: ${tempPassword}`
+                    };
+                }
+
+                // Se a API retornou erro que NAO seja de service account,
+                // propaga o erro ao inves de tentar fallback (evita duplicacao).
+                var apiErr = (apiResult && apiResult.error) || '';
+                var isServiceAccountMissing = /service account/i.test(apiErr);
+                if (!isServiceAccountMissing && apiErr) {
+                    return { success: false, error: apiErr };
+                }
+
+                console.warn('[Auth.createUser] API sem service account — usando fallback client-side:', apiErr);
+            } catch (e) {
+                console.warn('[Auth.createUser] API indisponivel — usando fallback client-side:', e);
             }
-        } catch(e) {}
+        }
 
-        var newUser = null;
-        var profile = null;
+        // ─── FALLBACK: Criacao client-side (sem custom claims) ─────────
+        // Usado quando a API PHP nao esta configurada.
+        // Limitacao: custom claims NAO sao definidas — Firestore rules que
+        // dependem de request.auth.token.role nao funcionam para este usuario
+        // ate que um super_admin rode setUserRole via API.
+        var adminSession = null;
+        try { adminSession = this.getSession(); } catch(e) {}
 
         try {
             const result = await firebaseAuth.createUserWithEmailAndPassword(userData.email, tempPassword);
-            newUser = result.user;
+            const newUser = result.user;
 
-            // Atualiza displayName no Firebase
             await newUser.updateProfile({ displayName: userData.name });
-
-            // Sign out the newly created user
             await firebaseAuth.signOut();
 
-            // Cria perfil local
-            profile = this._createUserProfile({
+            const profile = this._createUserProfile({
                 email: userData.email,
                 name: userData.name,
-                role: userData.role || MP.ROLES.FRANCHISEE,
-                franchiseId: userData.franchiseId || null,
+                role: role,
+                franchiseId: franchiseId,
                 firebaseUid: newUser.uid
             });
 
-            if (typeof AuditLog !== 'undefined') AuditLog.logAuth(AuditLog.EVENTS.USER_CREATED, { email: userData.email, role: userData.role, franchiseId: userData.franchiseId });
+            if (typeof AuditLog !== 'undefined') {
+                AuditLog.logAuth(AuditLog.EVENTS.USER_CREATED, {
+                    email: userData.email, role, franchiseId, via: 'client-fallback'
+                });
+            }
 
             return {
                 success: true,
                 user: profile,
                 tempPassword: tempPassword,
-                message: `Usuario criado. Senha temporaria: ${tempPassword}`
+                message: `Usuario criado (modo fallback). Senha temporaria: ${tempPassword}. ` +
+                         `Configure a service account para custom claims automaticas.`
             };
         } catch (error) {
-            console.error('Auth.createUser error:', error);
+            console.error('Auth.createUser fallback error:', error);
             return { success: false, error: this._translateError(error.code) };
         } finally {
-            // BUG C — Restaura sessao do admin independente de erro
+            // Restaura sessao local do admin (Firebase Auth state foi limpo pelo signOut)
             if (adminSession) {
-                this._saveSession(adminSession);
-                if (adminEmail && adminPassword) {
-                    try { await firebaseAuth.signInWithEmailAndPassword(adminEmail, adminPassword); }
-                    catch(e) { console.warn('Sessao admin nao restaurada automaticamente'); }
-                }
+                try { this._saveSession(adminSession); } catch(e) {}
             }
         }
     },
