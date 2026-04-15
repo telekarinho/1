@@ -47,8 +47,39 @@ if (!firebase.apps.length && !window._mpDomainBlocked) {
     firebase.initializeApp(firebaseConfig);
 }
 
-// Firebase Auth instance (only if firebase-auth-compat.js is loaded)
+// Enable Firestore offline persistence (IndexedDB cache).
+// Allows reads/writes to work offline; writes are queued and synced when back online.
+// Must be called BEFORE any Firestore operation. Only one tab can hold the cache at a time;
+// failsafe = other tabs keep working via network-only reads.
+if (typeof firebase.firestore === 'function' && !window._mpDomainBlocked && !window._mpFsPersistenceTried) {
+    window._mpFsPersistenceTried = true;
+    try {
+        firebase.firestore().enablePersistence({ synchronizeTabs: true })
+            .then(function() {
+                window._mpFsOffline = true;
+                console.log('[MilkyPot] Firestore offline persistence enabled');
+            })
+            .catch(function(err) {
+                // failed-precondition = multiple tabs (ok), unimplemented = browser sem suporte
+                if (err && err.code === 'failed-precondition') {
+                    console.info('[MilkyPot] Firestore persistence: multi-tab fallback ativo');
+                } else if (err && err.code === 'unimplemented') {
+                    console.warn('[MilkyPot] Firestore persistence nao suportado neste navegador');
+                } else {
+                    console.warn('[MilkyPot] Firestore persistence:', err && err.message);
+                }
+            });
+    } catch (e) {
+        console.warn('[MilkyPot] Firestore persistence init falhou:', e && e.message);
+    }
+}
+
+// Firebase Auth instance (only if firebase-auth-compat.js is loaded).
+// Uses LOCAL persistence by default (IndexedDB) — user stays logged in offline.
 const firebaseAuth = typeof firebase.auth === 'function' ? firebase.auth() : null;
+if (firebaseAuth && firebase.auth.Auth && firebase.auth.Auth.Persistence) {
+    try { firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch(e) {}
+}
 
 // Google Auth Provider (only if firebase-auth-compat.js is loaded)
 let googleProvider = null;

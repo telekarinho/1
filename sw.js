@@ -1,25 +1,50 @@
-const CACHE_VERSION = 'mp-v5';
-const CACHE_NAME = 'milkypot-v5';
+const CACHE_VERSION = 'mp-v6';
+const CACHE_NAME = 'milkypot-v6';
 
+// Critical local assets that must be available offline
 const PRECACHE_URLS = [
     '/',
     '/index.html',
     '/login.html',
     '/cardapio.html',
+    '/desafio.html',
+    // Franqueado panel pages (PDV + pages they might navigate to after login)
+    '/painel/index.html',
+    '/painel/pdv.html',
+    '/painel/pedidos.html',
+    '/painel/produtos.html',
+    '/painel/financeiro.html',
+    '/painel/fiscal.html',
+    '/painel/entregas.html',
+    '/painel/equipe.html',
+    '/painel/fidelidade.html',
+    '/painel/ifood.html',
+    '/painel/marketing.html',
+    '/painel/despesas.html',
+    '/painel/configuracoes.html',
+    // Styles
     '/css/style.css',
     '/css/animations.css',
     '/css/responsive.css',
     '/css/mobile-app.css',
     '/css/shared-panel.css',
+    // Core JS
     '/js/core/constants.js',
+    '/js/core/i18n.js',
     '/js/core/utils.js',
     '/js/core/datastore.js',
     '/js/core/firebase-config.js',
+    '/js/core/cloud-functions.js',
     '/js/core/auth.js',
+    '/js/core/audit.js',
+    '/js/core/notifications.js',
+    // Feature JS
     '/js/cardapio.js',
     '/js/cardapio-data.js',
+    // Assets
     '/images/logo-milkypot.png',
     '/manifest.json',
+    // Franquia landing pages
     '/f/ibirapuera/',
     '/f/morumbi/',
     '/f/jardins/',
@@ -29,6 +54,16 @@ const PRECACHE_URLS = [
     '/f/curitiba/'
 ];
 
+// External CDN assets (Firebase SDK + Google Fonts) — cached on first successful fetch,
+// then served from cache. Version-locked in URLs so they're safe to cache aggressively.
+const CDN_PRECACHE_URLS = [
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js',
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js',
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js',
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js'
+];
+
 const OFFLINE_QUEUE_KEY = 'milkypot-offline-queue';
 
 // Install: precache key files
@@ -36,7 +71,15 @@ self.addEventListener('install', event => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            return cache.addAll(PRECACHE_URLS);
+            // Precache local files — fail if any are missing
+            const localPromise = cache.addAll(PRECACHE_URLS);
+            // Precache CDN files — tolerate individual failures (they'll be cached on first use)
+            const cdnPromise = Promise.allSettled(
+                CDN_PRECACHE_URLS.map(u => fetch(u, { mode: 'cors' })
+                    .then(r => r.ok ? cache.put(u, r) : null)
+                    .catch(() => null))
+            );
+            return Promise.all([localPromise, cdnPromise]);
         })
     );
 });
@@ -54,7 +97,8 @@ self.addEventListener('activate', event => {
     );
 });
 
-// Fetch: Cache First for static assets, Network First for API/Firestore
+// Fetch: Cache First for static assets, Stale-While-Revalidate for CDN libs,
+// Network First for API/Firestore and HTML
 self.addEventListener('fetch', event => {
     const { request } = event;
     const url = new URL(request.url);
@@ -74,13 +118,25 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Network First for API / Firestore requests
+    // Firebase SDK + Google Fonts: Cache-First (version-locked URLs)
+    if (isVersionLockedCdn(url)) {
+        event.respondWith(cacheFirst(request));
+        return;
+    }
+
+    // Google Fonts CSS: Stale-While-Revalidate (CSS URL is stable but content may change)
+    if (isGoogleFontsCss(url)) {
+        event.respondWith(staleWhileRevalidate(request));
+        return;
+    }
+
+    // Firestore / Firebase Auth / Functions: Network First
     if (isApiRequest(url)) {
         event.respondWith(networkFirst(request));
         return;
     }
 
-    // Cache First for static assets (CSS, JS, images, fonts)
+    // Static assets (CSS, JS, images, fonts): Cache First
     if (isStaticAsset(url)) {
         event.respondWith(cacheFirst(request));
         return;
@@ -95,6 +151,9 @@ self.addEventListener('message', event => {
     if (event.data && event.data.type === 'REPLAY_OFFLINE_QUEUE') {
         replayOfflineQueue();
     }
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });
 
 // --- Strategy helpers ---
@@ -103,13 +162,27 @@ function cacheFirst(request) {
     return caches.match(request).then(cached => {
         if (cached) return cached;
         return fetch(request).then(response => {
-            if (response && response.status === 200) {
+            if (response && (response.status === 200 || response.type === 'opaque')) {
                 const clone = response.clone();
                 caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
             }
             return response;
         });
     }).catch(() => caches.match(request));
+}
+
+function staleWhileRevalidate(request) {
+    return caches.open(CACHE_NAME).then(cache => {
+        return cache.match(request).then(cached => {
+            const fetchPromise = fetch(request).then(response => {
+                if (response && (response.status === 200 || response.type === 'opaque')) {
+                    cache.put(request, response.clone());
+                }
+                return response;
+            }).catch(() => cached);
+            return cached || fetchPromise;
+        });
+    });
 }
 
 function networkFirst(request) {
@@ -125,7 +198,7 @@ function networkFirst(request) {
             // Offline fallback for navigation requests
             if (request.mode === 'navigate') {
                 return new Response(
-                    '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>MilkyPot - Offline</title><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#F0F7FF;color:#333;text-align:center}div{padding:2rem}h1{color:#42A5F5}p{margin-top:1rem;font-size:1.1rem}</style></head><body><div><h1>MilkyPot</h1><p>Voce esta offline no momento.</p><p>Verifique sua conexao e tente novamente.</p></div></body></html>',
+                    '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>MilkyPot - Offline</title><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#F0F7FF;color:#333;text-align:center}div{padding:2rem}h1{color:#42A5F5}p{margin-top:1rem;font-size:1.1rem}button{margin-top:1.5rem;padding:.75rem 1.5rem;background:#42A5F5;color:#fff;border:0;border-radius:8px;font-size:1rem;cursor:pointer}</style></head><body><div><h1>MilkyPot</h1><p>Voce esta offline no momento.</p><p>Verifique sua conexao e tente novamente.</p><button onclick="location.reload()">Tentar novamente</button></div></body></html>',
                     { status: 503, headers: { 'Content-Type': 'text/html; charset=UTF-8' } }
                 );
             }
@@ -138,9 +211,27 @@ function networkFirst(request) {
 
 function isApiRequest(url) {
     return url.hostname.includes('firestore.googleapis.com') ||
-           url.hostname.includes('firebase') ||
-           url.hostname.includes('googleapis.com') ||
+           url.hostname.includes('identitytoolkit.googleapis.com') ||
+           url.hostname.includes('securetoken.googleapis.com') ||
+           url.hostname.includes('cloudfunctions.net') ||
+           url.hostname === 'api.milkypot.com' ||
            url.pathname.startsWith('/api/');
+}
+
+function isVersionLockedCdn(url) {
+    // Firebase SDK uses version-locked URLs like /firebasejs/10.12.0/...
+    if (url.hostname === 'www.gstatic.com' && /\/firebasejs\/\d+\.\d+\.\d+\//.test(url.pathname)) {
+        return true;
+    }
+    // Google Fonts static files (fonts.gstatic.com) are hashed — safe to cache forever
+    if (url.hostname === 'fonts.gstatic.com') {
+        return true;
+    }
+    return false;
+}
+
+function isGoogleFontsCss(url) {
+    return url.hostname === 'fonts.googleapis.com';
 }
 
 function isStaticAsset(url) {
