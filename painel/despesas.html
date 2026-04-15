@@ -1078,8 +1078,18 @@
     function toggleRecurring() {
         var checked = document.getElementById('toggleRecurring').checked;
         var sel = document.getElementById('frequencySelector');
-        if (checked) { sel.classList.add('visible'); }
-        else { sel.classList.remove('visible'); }
+        if (checked) {
+            sel.classList.add('visible');
+            setupRecurring(null);
+        } else {
+            sel.classList.remove('visible');
+        }
+    }
+
+    function setupRecurring(despesa) {
+        // TODO: Implementar geração automática de lançamentos futuros
+        // Por enquanto apenas marca a despesa como recorrente para referência visual
+        console.info('[DESPESAS] Recorrência registrada - lançamentos automáticos futuros não implementados ainda');
     }
 
     // ========== RECEIPT UPLOAD ==========
@@ -1196,6 +1206,20 @@
 
     // ========== CAMERA ==========
     function openCamera() {
+        if (typeof jsQR === 'undefined') {
+            var script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+            script.onload = function() { startQRScanner(); };
+            script.onerror = function() {
+                alert('Leitor de QR Code não disponível. Digite a chave da NF manualmente.');
+            };
+            document.head.appendChild(script);
+        } else {
+            startQRScanner();
+        }
+    }
+
+    function startQRScanner() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             showToast('Camera nao disponivel neste dispositivo. Use a entrada manual.', 'error');
             return;

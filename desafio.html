@@ -39,13 +39,24 @@ filter:blur(120px);opacity:0.15;pointer-events:none;
 /* === STEP SCREENS === */
 .step{
 display:none;flex-direction:column;align-items:center;justify-content:center;
-width:100%;min-height:100vh;position:absolute;inset:0;
+width:100%;height:100vh;position:absolute;inset:0;
 padding:40px;padding-bottom:env(safe-area-inset-bottom,20px);
-overflow-y:auto;
+overflow-y:auto;overflow-x:hidden;
 }
 .step.active{display:flex}
-.step.attract{height:100vh;overflow:hidden;padding:clamp(16px,3vh,40px) 20px !important;justify-content:space-evenly !important}
-#step2{height:100vh;overflow:hidden}
+.step.attract{overflow:hidden;padding:clamp(16px,3vh,40px) 20px !important;justify-content:space-evenly !important}
+#step2{overflow:hidden}
+
+/* Step0 scrolls from top on small screens */
+#step0{
+justify-content:flex-start;
+padding-top:max(32px,env(safe-area-inset-top,32px));
+padding-left:clamp(16px,5vw,40px);
+padding-right:clamp(16px,5vw,40px);
+}
+@media(min-height:780px){
+  #step0{justify-content:center;padding-top:40px}
+}
 
 /* === STEP 0: IDLE / ATTRACT === */
 .badge-top{
@@ -548,36 +559,36 @@ font-size:clamp(12px,1.5vw,15px);font-weight:700;color:#FF0040;
 
 /* === PRODUCT COMBO === */
 .product-select{
-background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.15);
+background:rgba(255,255,255,0.95);border:2px solid rgba(200,162,232,0.3);
 border-radius:16px;padding:clamp(10px,1.5vw,16px) clamp(16px,2vw,24px);
 font-family:'Nunito',sans-serif;font-size:clamp(14px,2vw,20px);font-weight:700;
-color:#fff;width:clamp(280px,50vw,500px);outline:none;
+color:#5A4570;width:clamp(280px,50vw,500px);outline:none;
 -webkit-appearance:none;appearance:none;cursor:pointer;margin-bottom:12px;
 background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='2' fill='none'/%3E%3C/svg%3E");
 background-repeat:no-repeat;background-position:right 16px center;
 }
-.product-select option{background:#1a0a2e;color:#fff}
+.product-select option{background:#fff;color:#5A4570}
 
 /* === STAMP CARD === */
 .stamp-card{
-background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+background:rgba(255,255,255,0.9);border:1px solid rgba(200,162,232,0.2);
 border-radius:16px;padding:12px 20px;margin-bottom:16px;text-align:center;
 }
-.stamp-card-title{font-size:clamp(11px,1.3vw,13px);font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.stamp-card-title{font-size:clamp(11px,1.3vw,13px);font-weight:800;color:rgba(90,69,112,0.6);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
 .stamp-stars{font-size:clamp(20px,3vw,28px);letter-spacing:4px;margin-bottom:4px}
-.stamp-count{font-size:clamp(11px,1.3vw,13px);font-weight:700;color:rgba(255,255,255,0.3)}
+.stamp-count{font-size:clamp(11px,1.3vw,13px);font-weight:700;color:rgba(90,69,112,0.5)}
 
 /* === NOTIFICATION OPT-IN === */
 .notif-optin{
 display:flex;align-items:center;gap:10px;
-background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+background:rgba(255,255,255,0.9);border:1px solid rgba(200,162,232,0.2);
 border-radius:12px;padding:10px 16px;margin-top:12px;
-font-size:clamp(11px,1.3vw,13px);font-weight:700;color:rgba(255,255,255,0.4);
+font-size:clamp(11px,1.3vw,13px);font-weight:700;color:rgba(90,69,112,0.6);
 cursor:pointer;
 }
 .notif-toggle{
 width:36px;height:20px;border-radius:10px;
-background:rgba(255,255,255,0.15);position:relative;
+background:rgba(90,69,112,0.15);position:relative;
 transition:background 0.3s;flex-shrink:0;
 }
 .notif-toggle::after{
@@ -608,9 +619,20 @@ width:clamp(180px,30vw,280px);height:clamp(100px,18vw,160px);
 border-radius:16px;object-fit:cover;margin:0 auto 10px;display:block;
 }
 
+/* === SMALL SCREEN COMPACTOR === */
+@media(max-height:680px){
+  .badge-top{margin-bottom:4px}
+  .logo-img{width:clamp(64px,12vw,100px)!important;margin-bottom:4px}
+  .main-title{font-size:clamp(28px,7vw,56px)!important;margin-bottom:4px}
+  .main-sub{font-size:clamp(12px,1.8vw,16px)!important;margin-bottom:8px}
+  .voucher-input-wrap{margin-bottom:8px}
+  .voucher-helper{margin-top:4px!important}
+  .btn-start{padding:clamp(12px,2vw,18px) clamp(32px,6vw,72px)!important;font-size:clamp(15px,2.5vw,22px)!important}
+}
+
 /* === VOUCHER INPUT === */
 .voucher-input-wrap{
-position:relative;width:clamp(300px,55vw,460px);margin-bottom:16px;
+position:relative;width:min(100%,460px);margin-bottom:16px;
 }
 .voucher-input{
 background:rgba(255,255,255,0.95);
@@ -739,7 +761,7 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 
 <!-- Voucher code input -->
 <div class="voucher-input-wrap">
-<input type="text" class="voucher-input" id="voucherInput" placeholder="MP-XXXXXX" maxlength="9" autocomplete="off" inputmode="text">
+<input type="text" class="voucher-input" id="voucherInput" placeholder="MP-XXXXXX" maxlength="15" autocomplete="off" inputmode="text">
 <div class="voucher-check" id="voucherCheck">&#9989;</div>
 </div>
 <div class="voucher-status" id="voucherStatus"></div>
@@ -1021,15 +1043,20 @@ e.target.value=v;
 /* ========== VOUCHER INPUT AUTO-FORMAT ========== */
 document.getElementById('voucherInput').addEventListener('input',function(e){
 var v=e.target.value.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
-/* Ensure starts with MP */
-if(v.length>=2 && v.substring(0,2)==='MP'){
+if(v.length>=3 && v.substring(0,3)==='VIP'){
+/* VIP-XXXXXXX format, max 15 chars */
+v='VIP-'+v.substring(3);
+if(v.length>15) v=v.substring(0,15);
+} else if(v.length>=2 && v.substring(0,2)==='MP'){
+/* MP-XXXXXX format, max 9 chars */
 v='MP-'+v.substring(2);
+if(v.length>9) v=v.substring(0,9);
+} else if(v.length>=1 && v[0]==='V'){
+/* partial VIP — leave as-is */
 } else if(v.length>=1 && v[0]==='M'){
-/* partial MP */
-} else if(v.length>0 && v[0]!=='M'){
-v='MP-'+v;
+/* partial MP — leave as-is */
 }
-if(v.replace(/-/g,'').length>8) v=v.substring(0,9);
+/* Otherwise leave as typed */
 e.target.value=v;
 });
 document.getElementById('voucherInput').addEventListener('keydown',function(e){
@@ -1235,7 +1262,7 @@ gameTarget=getActiveTarget();
 /* Update UI target display */
 var sec=(gameTarget/1000);
 var tEl=document.getElementById('counterTarget');
-if(tEl) tEl.innerHTML='Alvo: <span>'+fmt(gameTarget)+'ms</span> ('+sec+' segundos)';
+if(tEl) tEl.innerHTML='Alvo: <span>'+(gameTarget/1000)+'s</span> (pare em '+fmt(gameTarget)+')';
 showStep(2);
 document.getElementById('playerDisplay').textContent=playerN;
 startWebcam();
@@ -1376,7 +1403,7 @@ rs.textContent='Seu tempo: '+fmt(elapsed);
 }
 
 /* Feature 4: personal record celebration */
-if(gameConfig.streak) checkPersonalRecord(prevBest,abs);
+if(gameConfig.streak || gameConfig.badge) checkPersonalRecord(prevBest,abs);
 /* Feature 5: digital badge */
 if(gameConfig.badge) renderBadge();
 /* Feature 7: show video save if available */
@@ -1407,6 +1434,11 @@ if(abs>0 && prizeConfig.instagramBonus){
 igBonus.style.display='';
 document.getElementById('instagramHandleDisplay').textContent=prizeConfig.instagramHandle||'@milkypot';
 document.getElementById('instagramChancesDisplay').textContent='+'+(prizeConfig.instagramExtraChances||3);
+if(activeVoucher && activeVoucher.instagramBonusUsed){
+document.getElementById('instagramClaimBtn').disabled=true;
+document.getElementById('instagramClaimBtn').textContent='Bonus ja resgatado!';
+document.getElementById('instagramClaimBtn').style.opacity='0.5';
+}
 }
 
 renderRanking();
@@ -1682,13 +1714,13 @@ function renderRanking(){
 var list=document.getElementById('rankingList');
 var weekStart=getWeekStart();
 var weekItems=best.filter(function(r){return r.date&&new Date(r.date)>=weekStart}).slice(0,5);
-if(!weekItems.length){list.innerHTML='<div style="text-align:center;color:rgba(255,255,255,0.2);font-size:13px;padding:12px">Nenhuma tentativa esta semana</div>';}
+if(!weekItems.length){list.innerHTML='<div style="text-align:center;color:rgba(90,69,112,0.4);font-size:13px;padding:12px">Nenhuma tentativa esta semana</div>';}
 else{
 var html='';
 weekItems.forEach(function(r,i){
 var cls=i===0?'rp1':i===1?'rp2':i===2?'rp3':'rp'+(i+1);
 var medals=['&#129351;','&#129352;','&#129353;','4','5'];
-var d=Math.abs(gameTarget-r.val);
+var d=Math.abs((r.target||gameTarget)-r.val);
 html+='<div class="ranking-row">';
 if(r.photo) html+='<img src="'+r.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">';
 else html+='<div class="ranking-pos '+cls+'">'+medals[i]+'</div>';
@@ -1700,18 +1732,81 @@ list.innerHTML=html;
 /* Global ranking (ALL TIME - never resets) */
 var globalList=document.getElementById('globalRankingList');
 var globalItems=best.slice(0,10);
-if(!globalItems.length){globalList.innerHTML='<div style="text-align:center;color:rgba(255,255,255,0.2);font-size:13px;padding:12px">Nenhuma tentativa ainda</div>';return}
+if(!globalItems.length){globalList.innerHTML='<div style="text-align:center;color:rgba(90,69,112,0.4);font-size:13px;padding:12px">Nenhuma tentativa ainda</div>';return}
 var ghtml='';
 globalItems.forEach(function(r,i){
 var cls=i===0?'rp1':i===1?'rp2':i===2?'rp3':'rp'+(i+1);
 var medals=['&#129351;','&#129352;','&#129353;','4','5','6','7','8','9','10'];
-var d=Math.abs(10000-r.val);
+var d=Math.abs((r.target||10000)-r.val);
 ghtml+='<div class="ranking-row">';
 if(r.photo) ghtml+='<img src="'+r.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">';
 else ghtml+='<div class="ranking-pos '+cls+'">'+medals[i]+'</div>';
 ghtml+='<span class="ranking-name">'+r.name+'</span><span class="ranking-val">'+(d===0?'EXATO!':d+'ms')+'</span></div>';
 });
 globalList.innerHTML=ghtml;
+// Atualiza com dados reais do Firebase (substitui os locais)
+loadRankingFromFirebase();
+}
+
+function renderRankingWithData(items, listId, isGlobal) {
+var list = document.getElementById(listId);
+if (!list) return;
+if (!items.length) {
+list.innerHTML = '<div style="text-align:center;color:rgba(90,69,112,0.4);font-size:13px;padding:12px">Nenhuma tentativa ainda \u2014 seja o primeiro!</div>';
+return;
+}
+var medals = ['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49','4','5','6','7','8','9','10'];
+var html = '';
+items.forEach(function(r, i) {
+var cls = i === 0 ? 'rp1' : i === 1 ? 'rp2' : i === 2 ? 'rp3' : 'rp' + (i+1);
+var d = Math.abs((r.target||10000) - r.val);
+html += '<div class="ranking-row">';
+if (r.photo) html += '<img src="' + r.photo + '" style="width:28px;height:28px;border-radius:50%;object-fit:cover">';
+else html += '<div class="ranking-pos ' + cls + '">' + medals[i] + '</div>';
+html += '<span class="ranking-name">' + r.name + '</span>';
+html += '<span class="ranking-val">' + (d === 0 ? 'EXATO!' : d + 'ms') + '</span></div>';
+});
+list.innerHTML = html;
+}
+
+function loadRankingFromFirebase() {
+if (!db) { renderRanking(); return; }
+var weekStart = getWeekStart();
+
+// Ranking semanal: query dos últimos 7 dias, ordenado por diff (menor = melhor)
+db.collection('desafio_10000')
+.where('date', '>=', weekStart.toISOString())
+.orderBy('date', 'desc')
+.limit(50)
+.get()
+.then(function(snap) {
+var weekItems = [];
+snap.forEach(function(doc) {
+var d = doc.data();
+weekItems.push({ name: d.name, phone: d.phone, val: d.elapsed, target: d.target || 10000, date: d.date, photo: d.photo || null });
+});
+// Ordenar por proximidade ao target
+weekItems.sort(function(a, b) {
+return Math.abs((a.target||10000) - a.val) - Math.abs((b.target||10000) - b.val);
+});
+renderRankingWithData(weekItems.slice(0, 5), 'rankingList', false);
+})
+.catch(function() { renderRanking(); }); // fallback para localStorage
+
+// Ranking global: top 10 de todos os tempos
+db.collection('desafio_10000')
+.orderBy('diff', 'asc')
+.limit(10)
+.get()
+.then(function(snap) {
+var globalItems = [];
+snap.forEach(function(doc) {
+var d = doc.data();
+globalItems.push({ name: d.name, phone: d.phone, val: d.elapsed, target: d.target || 10000, date: d.date, photo: d.photo || null });
+});
+renderRankingWithData(globalItems, 'globalRankingList', true);
+})
+.catch(function() {}); // falha silenciosa, localStorage já foi renderizado
 }
 
 /* ========== RESTART ========== */
@@ -1777,16 +1872,15 @@ countdown.textContent='Faltam '+daysLeft+' dia'+(daysLeft>1?'s':'')+' para o ran
 var weekStart=getWeekStart();
 /* Filter local data for this week */
 var weekEntries=best.filter(function(b){return new Date(b.date)>=weekStart});
-weekEntries.sort(function(a,b){return Math.abs(10000-a.val)-Math.abs(10000-b.val)});
+weekEntries.sort(function(a,b){return Math.abs((a.target||10000)-a.val)-Math.abs((b.target||10000)-b.val)});
 var top3=weekEntries.slice(0,3);
 if(top3.length===0){
 list.innerHTML='<div style="text-align:center;color:rgba(255,215,0,0.3);font-size:12px;padding:8px">Nenhum jogador esta semana</div>';
-return;
-}
+} else {
 var html='';
 var medals=['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49'];
 top3.forEach(function(r,i){
-var d=Math.abs(10000-r.val);
+var d=Math.abs((r.target||10000)-r.val);
 html+='<div class="tournament-row">';
 if(r.photo) html+='<img src="'+r.photo+'" class="tournament-photo">';
 else html+='<span style="font-size:20px">'+medals[i]+'</span>';
@@ -1794,6 +1888,41 @@ html+='<span class="ranking-name" style="flex:1;color:#FFD700">'+r.name+'</span>
 html+='<span class="ranking-val">'+(d===0?'EXATO!':d+'ms')+'</span></div>';
 });
 list.innerHTML=html;
+}
+// Busca dados reais do Firebase para o torneio
+if(db){
+var weekStart2=getWeekStart();
+db.collection('desafio_10000')
+.where('date','>=',weekStart2.toISOString())
+.orderBy('date','desc')
+.limit(50)
+.get()
+.then(function(snap){
+var entries=[];
+snap.forEach(function(doc){
+var d=doc.data();
+entries.push({name:d.name,val:d.elapsed,target:d.target||10000,photo:d.photo||null});
+});
+entries.sort(function(a,b){
+return Math.abs((a.target||10000)-a.val)-Math.abs((b.target||10000)-b.val);
+});
+var top3fb=entries.slice(0,3);
+if(top3fb.length){
+var medals2=['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49'];
+var html2='';
+top3fb.forEach(function(r,i){
+var d=Math.abs((r.target||10000)-r.val);
+html2+='<div class="tournament-row">';
+if(r.photo) html2+='<img src="'+r.photo+'" class="tournament-photo">';
+else html2+='<span style="font-size:20px">'+medals2[i]+'</span>';
+html2+='<span class="ranking-name" style="flex:1;color:#FFD700">'+r.name+'</span>';
+html2+='<span class="ranking-val">'+(d===0?'EXATO!':d+'ms')+'</span></div>';
+});
+list.innerHTML=html2;
+}
+})
+.catch(function(){}); // fallback já foi renderizado
+}
 }
 
 /* ========== FEATURE 8: SCREENSAVER WITH MEDIA ========== */
@@ -1842,7 +1971,7 @@ mediaHtml+
 '<div class="attract-card-name">'+c.name+'</div>'+
 '<div class="attract-card-msg">'+c.msg+'</div>'+
 '<div class="attract-card-val '+(c.cls||'')+'">'+c.val+'</div>'+
-'<div style="font-size:clamp(11px,1.5vw,14px);color:rgba(255,255,255,0.3);margin-top:6px">'+c.copy+'</div>'+
+'<div style="font-size:clamp(11px,1.5vw,14px);color:rgba(90,69,112,0.4);margin-top:6px">'+c.copy+'</div>'+
 '</div>';
 var ctas=['Toque na tela para jogar!','Voce consegue acertar?','Desafie seus amigos!','Quem sera o proximo?','Toque aqui e tente!'];
 document.getElementById('attractCta').textContent=ctas[attractIdx%ctas.length];
@@ -1852,9 +1981,9 @@ document.getElementById('attractCta').textContent=ctas[attractIdx%ctas.length];
 function showReturningWelcome(records){
 records.sort(function(a,b){return new Date(b.date)-new Date(a.date)});
 var bestRecord=records.reduce(function(min,r){
-return Math.abs(10000-r.val)<Math.abs(10000-min.val)?r:min;
+return Math.abs((r.target||10000)-r.val)<Math.abs((min.target||10000)-min.val)?r:min;
 });
-var bestDiff=Math.abs(10000-bestRecord.val);
+var bestDiff=Math.abs((bestRecord.target||10000)-bestRecord.val);
 
 document.getElementById('welcomeTitle').textContent='Que bom te ver de novo, '+playerN+'!';
 document.getElementById('welcomeSub').textContent='Voce ja tentou '+records.length+' vez'+(records.length>1?'es':'')+'. Vamos melhorar?';
@@ -1864,7 +1993,7 @@ var hhtml='';
 records.slice(0,8).forEach(function(r){
 var d=new Date(r.date);
 var dateStr=d.getDate()+'/'+(d.getMonth()+1);
-var diff=Math.abs(10000-r.val);
+var diff=Math.abs((r.target||10000)-r.val);
 var emoji=diff===0?'&#127942;':diff<=50?'&#128293;':diff<=200?'&#128170;':'&#127919;';
 hhtml+='<div class="welcome-history-item"><span class="welcome-history-date">'+emoji+' '+dateStr+'</span><span class="welcome-history-val">'+fmt(r.val)+' ('+diff+'ms)</span></div>';
 });
@@ -1938,19 +2067,27 @@ startSheepTalk();
 function renderAttractGlobalRanking(){
 var gl=document.getElementById('attractGlobalList');
 if(!gl)return;
-var items=best.slice(0,10);
-if(!items.length){gl.innerHTML='<div style="text-align:center;color:rgba(255,255,255,0.2);font-size:13px;padding:12px">Seja o primeiro a entrar no ranking!</div>';return}
-var html='';
-items.forEach(function(r,i){
-var cls=i===0?'rp1':i===1?'rp2':i===2?'rp3':'rp'+(i+1);
-var medals=['&#129351;','&#129352;','&#129353;','4','5','6','7','8','9','10'];
-var d=Math.abs(10000-r.val);
-html+='<div class="ranking-row">';
-if(r.photo) html+='<img src="'+r.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">';
-else html+='<div class="ranking-pos '+cls+'">'+medals[i]+'</div>';
-html+='<span class="ranking-name">'+r.name+'</span><span class="ranking-val">'+(d===0?'EXATO!':d+'ms')+'</span></div>';
+
+// Mostra dados locais imediatamente como placeholder
+var localItems=best.slice(0,10);
+if(localItems.length) renderRankingWithData(localItems,'attractGlobalList',true);
+
+// Busca dados reais do Firebase
+if(db){
+db.collection('desafio_10000')
+.orderBy('diff','asc')
+.limit(10)
+.get()
+.then(function(snap){
+var items=[];
+snap.forEach(function(doc){
+var d=doc.data();
+items.push({name:d.name,val:d.elapsed,target:d.target||10000,photo:d.photo||null});
 });
-gl.innerHTML=html;
+if(items.length) renderRankingWithData(items,'attractGlobalList',true);
+})
+.catch(function(){});
+}
 }
 
 /* Demo counter animation in attract */

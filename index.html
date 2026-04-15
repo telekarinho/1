@@ -97,9 +97,10 @@
         }
     </style>
 
-    <!-- Google Analytics (substituir G-XXXXXXXXXX pelo ID real) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+    <!-- TODO: Substitua pelo ID real do Google Analytics antes de publicar -->
+    <!-- GA: configurar ID real - desativado até configuração -->
+    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script> -->
 </head>
 <body>
     <!-- Floating Particles Background -->
@@ -592,7 +593,7 @@
                         <span class="contact-icon">📱</span>
                         <div>
                             <strong>WhatsApp</strong>
-                            <span>(11) 99999-9999</span>
+                            <span>(11) XXXX-XXXX</span>
                         </div>
                     </div>
                     <div class="contact-item">
@@ -603,13 +604,13 @@
                         </div>
                     </div>
                     <div class="contact-socials">
-                        <a href="#" class="social-link" aria-label="Instagram">📸 Instagram</a>
-                        <a href="#" class="social-link" aria-label="Facebook">👍 Facebook</a>
-                        <a href="#" class="social-link" aria-label="TikTok">🎵 TikTok</a>
-                        <a href="#" class="social-link" aria-label="YouTube">▶️ YouTube</a>
+                        <a href="https://instagram.com/milkypot" target="_blank" rel="noopener" class="social-link" aria-label="Instagram">📸 Instagram</a>
+                        <a href="https://facebook.com/milkypot" target="_blank" rel="noopener" class="social-link" aria-label="Facebook">👍 Facebook</a>
+                        <a href="https://tiktok.com/@milkypot" target="_blank" rel="noopener" class="social-link" aria-label="TikTok">🎵 TikTok</a>
+                        <a href="#" class="social-link" aria-label="YouTube" title="YouTube - em breve">▶️ YouTube</a>
                     </div>
                 </div>
-                <form class="contact-form" id="contactForm">
+                <form class="contact-form" id="contactForm" onsubmit="return enviarContato(event)">
                     <div class="form-group">
                         <label for="contactName">Nome</label>
                         <input type="text" id="contactName" placeholder="Seu nome completo" required>
@@ -835,15 +836,15 @@
                 </div>
                 <div class="footer-links">
                     <h4>Institucional</h4>
-                    <a href="#">Sobre Nós</a>
-                    <a href="#">Política de Privacidade</a>
-                    <a href="#">Termos de Uso</a>
-                    <a href="#">Trabalhe Conosco</a>
+                    <a href="#" title="Sobre nós - em breve">Sobre Nós</a>
+                    <a href="/privacidade.html">Política de Privacidade</a>
+                    <a href="/termos.html">Termos de Uso</a>
+                    <a href="#" title="Trabalhe conosco - em breve">Trabalhe Conosco</a>
                 </div>
                 <div class="footer-links">
                     <h4>Franqueado</h4>
                     <a href="#franquia">Seja Franqueado</a>
-                    <a href="#">Portal do Franqueado</a>
+                    <a href="/login.html">Portal do Franqueado</a>
                     <a href="#">Suporte</a>
                     <a href="#">FAQ</a>
                 </div>
@@ -851,7 +852,7 @@
             <div class="trust-badges">
                 <div class="trust-badge">🔒 Site Seguro SSL</div>
                 <div class="trust-badge">🏆 Selo ABF</div>
-                <div class="trust-badge">✅ CNPJ: 12.345.678/0001-90</div>
+                <!-- CNPJ: configurar antes de publicar -->
                 <div class="trust-badge">🌱 Embalagem Sustentável</div>
                 <div class="trust-badge">💳 Pagamento Seguro</div>
             </div>
@@ -1075,7 +1076,7 @@
             <button class="modal-close" onclick="closeFranchiseForm()">&times;</button>
             <h2>🏪 Quero ser Franqueado</h2>
             <p class="modal-desc">Preencha o formulário e nossa equipe entrará em contato em até 24h!</p>
-            <form id="franchiseForm">
+            <form id="franchiseForm" onsubmit="return enviarFranquia(event)">
                 <input type="hidden" id="franchiseModel" value="">
                 <div class="form-group">
                     <label>Nome Completo *</label>
@@ -1154,7 +1155,7 @@
     </div>
 
     <!-- WhatsApp Float -->
-    <a href="https://wa.me/5511999999999?text=Oi!%20Vim%20do%20card%C3%A1pio%20online%20da%20MilkyPot%20e%20gostaria%20de%20fazer%20um%20pedido!" class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp">
+    <a href="https://wa.me/5511XXXXXXXX?text=Oi!%20Vim%20do%20card%C3%A1pio%20online%20da%20MilkyPot%20e%20gostaria%20de%20fazer%20um%20pedido!" class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp" title="WhatsApp - configurar número antes de publicar">
         <span>💬</span>
     </a>
 
@@ -2025,6 +2026,36 @@
         });
     }
 })();
+</script>
+<script>
+/* ============================================
+   Formulário de Contato - Fallback WhatsApp
+   ============================================ */
+function enviarContato(e) {
+  e.preventDefault();
+  var nome = e.target.querySelector('[name="nome"],[placeholder*="nome"],[id*="nome"]');
+  var msg = e.target.querySelector('textarea,[name="mensagem"],[placeholder*="mensagem"]');
+  var nomeVal = nome ? nome.value : 'Cliente';
+  var msgVal = msg ? msg.value : '';
+  var texto = encodeURIComponent('Contato do site\nNome: ' + nomeVal + '\nMensagem: ' + msgVal);
+  window.open('https://wa.me/5511XXXXXXXX?text=' + texto, '_blank');
+  return false;
+}
+
+/* ============================================
+   Formulário de Franquia - Fallback WhatsApp
+   ============================================ */
+function enviarFranquia(e) {
+  e.preventDefault();
+  var campos = {};
+  e.target.querySelectorAll('input,select,textarea').forEach(function(el) {
+    if (el.name || el.id) campos[el.name || el.id] = el.value;
+  });
+  var texto = encodeURIComponent('Interesse em Franquia MilkyPot\n' +
+    Object.keys(campos).map(function(k) { return k + ': ' + campos[k]; }).join('\n'));
+  window.open('https://wa.me/5511XXXXXXXX?text=' + texto, '_blank');
+  return false;
+}
 </script>
 </body>
 </html>

@@ -2,6 +2,10 @@
  * MilkyPot - Sistema de Fidelidade (Loyalty Points)
  * 1 ponto por R$1 gasto. 100 pontos = recompensa.
  */
+
+// BUG H — Chave unificada para DataStore (evita inconsistência entre funções)
+var LOYALTY_KEY = function(fid) { return 'loyalty_' + fid; };
+
 const Loyalty = {
     POINTS_PER_REAL: 1,
     REWARD_THRESHOLD: 100,
@@ -10,13 +14,13 @@ const Loyalty = {
 
     // Busca cliente por telefone
     getCustomer(phone, franchiseId) {
-        const customers = DataStore.getCollection('loyalty', franchiseId);
+        const customers = DataStore.get(LOYALTY_KEY(franchiseId)) || [];
         return customers.find(c => c.phone === phone) || null;
     },
 
     // Registra ou atualiza cliente
     registerCustomer(phone, name, franchiseId) {
-        let customers = DataStore.getCollection('loyalty', franchiseId);
+        let customers = DataStore.get(LOYALTY_KEY(franchiseId)) || [];
         let customer = customers.find(c => c.phone === phone);
 
         if (!customer) {
@@ -34,7 +38,7 @@ const Loyalty = {
             if (name) customer.name = name;
         }
 
-        DataStore.set('loyalty_' + franchiseId, customers);
+        DataStore.set(LOYALTY_KEY(franchiseId), customers);
         return customer;
     },
 
@@ -68,18 +72,18 @@ const Loyalty = {
             rewardEarned = true;
         }
 
-        // Save
-        const customers = DataStore.getCollection('loyalty', franchiseId);
+        // Save — usando a mesma chave unificada
+        const customers = DataStore.get(LOYALTY_KEY(franchiseId)) || [];
         const idx = customers.findIndex(c => c.id === customer.id);
         if (idx !== -1) customers[idx] = customer;
-        DataStore.set('loyalty_' + franchiseId, customers);
+        DataStore.set(LOYALTY_KEY(franchiseId), customers);
 
         return { customer, pointsAdded: points, rewardEarned };
     },
 
     // Resgata recompensa
     redeemReward(customerId, rewardId, franchiseId) {
-        const customers = DataStore.getCollection('loyalty', franchiseId);
+        const customers = DataStore.get(LOYALTY_KEY(franchiseId)) || [];
         const customer = customers.find(c => c.id === customerId);
         if (!customer) return { success: false, error: 'Cliente nao encontrado' };
 
@@ -92,14 +96,14 @@ const Loyalty = {
 
         const idx = customers.findIndex(c => c.id === customerId);
         if (idx !== -1) customers[idx] = customer;
-        DataStore.set('loyalty_' + franchiseId, customers);
+        DataStore.set(LOYALTY_KEY(franchiseId), customers);
 
         return { success: true, reward };
     },
 
     // Lista clientes com mais pontos
     getTopCustomers(franchiseId, limit = 10) {
-        const customers = DataStore.getCollection('loyalty', franchiseId);
+        const customers = DataStore.get(LOYALTY_KEY(franchiseId)) || [];
         return customers
             .slice()
             .sort((a, b) => b.points - a.points)
@@ -108,7 +112,7 @@ const Loyalty = {
 
     // Estatisticas
     getStats(franchiseId) {
-        const customers = DataStore.getCollection('loyalty', franchiseId);
+        const customers = DataStore.get(LOYALTY_KEY(franchiseId)) || [];
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 

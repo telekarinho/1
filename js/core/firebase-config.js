@@ -2,6 +2,36 @@
    MilkyPot - Firebase Configuration
    ============================================ */
 
+// ============================================
+// PROTEÇÃO DE DOMÍNIO (camada JavaScript)
+// A restrição definitiva deve ser configurada
+// em: console.cloud.google.com → APIs & Services
+// → Credentials → editar a chave de API →
+// "HTTP referrers (websites)" → adicionar:
+//   milkypot.com/*
+//   *.milkypot.com/*
+//   localhost/* (apenas para desenvolvimento)
+// ============================================
+(function() {
+    var ALLOWED_DOMAINS = [
+        'milkypot.com',
+        'www.milkypot.com',
+        'milkypot-ad945.web.app',
+        'milkypot-ad945.firebaseapp.com',
+        'localhost',
+        '127.0.0.1'
+    ];
+    var host = window.location.hostname.toLowerCase();
+    var allowed = ALLOWED_DOMAINS.some(function(d) {
+        return host === d || host.endsWith('.' + d);
+    });
+    if (!allowed) {
+        console.error('[MilkyPot] Domínio não autorizado:', host);
+        // Bloqueia silenciosamente — não expõe detalhes ao usuário
+        window._mpDomainBlocked = true;
+    }
+})();
+
 const firebaseConfig = {
     apiKey: "AIzaSyAbQ1fe0pK4prhfzYJypod2ie4DyNsq6BA",
     authDomain: "milkypot-ad945.firebaseapp.com",
@@ -12,8 +42,8 @@ const firebaseConfig = {
     measurementId: "G-N2B5V05MEN"
 };
 
-// Initialize Firebase (only once)
-if (!firebase.apps.length) {
+// Initialize Firebase (only once, only on allowed domains)
+if (!firebase.apps.length && !window._mpDomainBlocked) {
     firebase.initializeApp(firebaseConfig);
 }
 

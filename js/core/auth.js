@@ -93,40 +93,40 @@ const Auth = {
     // Registro de novo usuario (Admin cria conta)
     // ============================================
     async createUser(userData) {
+        // Verifica se ja existe no perfil local (antes de qualquer operacao Firebase)
+        const users = DataStore.get('users') || [];
+        if (users.find(u => u.email === userData.email)) {
+            return { success: false, error: 'E-mail ja cadastrado' };
+        }
+
+        const tempPassword = userData.tempPassword || Utils.generateSecurePassword();
+
+        // BUG C — Salva sessao do admin antes de qualquer operacao
+        var adminSession = null;
+        var adminEmail = null;
+        var adminPassword = null;
         try {
-            // Verifica se ja existe no perfil local
-            const users = DataStore.get('users') || [];
-            if (users.find(u => u.email === userData.email)) {
-                return { success: false, error: 'E-mail ja cadastrado' };
+            adminSession = this.getSession(); // Salva sessao atual
+            if (adminSession) {
+                adminEmail = adminSession.email;
             }
+        } catch(e) {}
 
-            // Cria conta no Firebase Auth
-            // NOTA: No Spark plan sem Functions, admin cria com
-            // createUserWithEmailAndPassword e depois volta pra propria sessao
-            const tempPassword = userData.tempPassword || Utils.generateSecurePassword();
+        var newUser = null;
+        var profile = null;
 
-            // Salva sessao atual antes de criar
-            const currentSession = this.getSession();
-
+        try {
             const result = await firebaseAuth.createUserWithEmailAndPassword(userData.email, tempPassword);
-            const newUser = result.user;
+            newUser = result.user;
 
             // Atualiza displayName no Firebase
             await newUser.updateProfile({ displayName: userData.name });
 
-            // Sign out the newly created user so the admin's auth state
-            // can be restored. The admin's localStorage session remains valid
-            // and Firebase auth will be re-established on next page load
-            // via onAuthStateChanged or the next explicit login.
+            // Sign out the newly created user
             await firebaseAuth.signOut();
 
-            // Restore the admin's localStorage session
-            if (currentSession) {
-                this._saveSession(currentSession);
-            }
-
             // Cria perfil local
-            const profile = this._createUserProfile({
+            profile = this._createUserProfile({
                 email: userData.email,
                 name: userData.name,
                 role: userData.role || MP.ROLES.FRANCHISEE,
@@ -145,6 +145,15 @@ const Auth = {
         } catch (error) {
             console.error('Auth.createUser error:', error);
             return { success: false, error: this._translateError(error.code) };
+        } finally {
+            // BUG C — Restaura sessao do admin independente de erro
+            if (adminSession) {
+                this._saveSession(adminSession);
+                if (adminEmail && adminPassword) {
+                    try { await firebaseAuth.signInWithEmailAndPassword(adminEmail, adminPassword); }
+                    catch(e) { console.warn('Sessao admin nao restaurada automaticamente'); }
+                }
+            }
         }
     },
 
@@ -252,6 +261,17 @@ const Auth = {
             var ql = localStorage.getItem('mp_quick_login');
             if (!ql) return false;
             var data = JSON.parse(ql);
+
+            // BUG A — Verificar expiração por createdAt (máx 1 hora)
+            var tokenData = JSON.parse(localStorage.getItem('mp_quick_login') || 'null');
+            if (tokenData && tokenData.createdAt) {
+                var age = Date.now() - new Date(tokenData.createdAt).getTime();
+                if (age > 3600000) { // 1 hora
+                    localStorage.removeItem('mp_quick_login');
+                    return false;
+                }
+            }
+
             if (new Date(data.expiresAt) < new Date()) {
                 localStorage.removeItem('mp_quick_login');
                 return false;
@@ -466,12 +486,17 @@ const Auth = {
     // para Firebase Auth. Remove apos transicao.
     // ============================================
     loginLegacy(email, password) {
+        // BUG B — Aviso de deprecação obrigatório
+        console.warn('[AUTH] loginLegacy é obsoleto e será removido. Migre para Firebase Auth.');
+
         const users = DataStore.get('users') || [];
         const user = users.find(u => u.email === email);
         if (!user) return { success: false, error: 'E-mail ou senha incorretos' };
 
         // Se usuario tem password legado, tenta migrar
         if (user.password && user.password === password) {
+            // BUG B — Senha em texto puro detectada
+            console.error('[SEGURANÇA] Senha em texto puro detectada. Contate o administrador.');
             console.warn('⚠️ Login legado usado para:', email, '- Migrando para Firebase Auth...');
 
             // Cria sessao temporaria enquanto migra

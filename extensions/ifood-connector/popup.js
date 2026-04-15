@@ -18,6 +18,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Bug D — heurística de centavos mais segura (mesmo padrão do background.js)
+function parseOrderValue(val) {
+  if (typeof val === 'number') {
+    // iFood geralmente retorna em centavos (inteiro grande)
+    // Se > 10000 assume centavos (R$100+), senão assume reais
+    return val > 10000 ? val / 100 : val;
+  }
+  return parseFloat(val) || 0;
+}
+
 function loadState() {
     chrome.storage.local.get([CONFIG_KEY, ORDERS_KEY], (result) => {
         const config = result[CONFIG_KEY] || {};
@@ -38,8 +48,7 @@ function loadState() {
         document.getElementById('totalOrders').textContent = todayOrders.length;
 
         const revenue = todayOrders.reduce((sum, o) => {
-            const val = o.total?.total || 0;
-            return sum + (val > 1000 ? val / 100 : val); // Handle cents vs reais
+            return sum + parseOrderValue(o.total?.total || 0);
         }, 0);
         document.getElementById('totalRevenue').textContent = 'R$ ' + revenue.toFixed(0);
 
@@ -73,7 +82,7 @@ function renderOrders(orders) {
         const shortId = o.ifoodShortId || o.ifoodId?.slice(-6) || '???';
         const itemNames = o.items?.map(i => i.quantity + 'x ' + i.name).join(', ') || '';
         const total = o.total?.total || 0;
-        const totalStr = (total > 1000 ? total / 100 : total).toFixed(2).replace('.', ',');
+        const totalStr = parseOrderValue(total).toFixed(2).replace('.', ',');
         const time = o.createdAt ? new Date(o.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
 
         return '<div class="order-item">' +

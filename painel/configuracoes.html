@@ -388,11 +388,23 @@
         var idx = allFranchises.findIndex(function(f) { return f.id === franchiseId; });
         if (idx === -1) return alert('Franquia nao encontrada.');
 
+        var existingData = allFranchises[idx];
+
         allFranchises[idx].address = document.getElementById('storeAddress').value.trim();
         allFranchises[idx].city = document.getElementById('storeCity').value.trim();
         allFranchises[idx].state = document.getElementById('storeState').value;
         allFranchises[idx].phone = document.getElementById('storePhone').value.trim();
         allFranchises[idx].whatsapp = document.getElementById('storeWhatsapp').value.trim();
+
+        // Campos protegidos que o franqueado não pode alterar
+        var protectedFields = ['monthlyFee', 'rating', 'status', 'createdAt', 'slug', 'id', 'ownerId'];
+        protectedFields.forEach(function(f) {
+            if (existingData && existingData[f] !== undefined) {
+                allFranchises[idx][f] = existingData[f]; // Restaura valor original
+            } else {
+                delete allFranchises[idx][f];
+            }
+        });
 
         DataStore.set('franchises', allFranchises);
         alert('Dados da loja salvos com sucesso!');

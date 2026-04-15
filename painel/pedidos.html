@@ -334,7 +334,7 @@
                             <div class="order-items">${itemsSummary}</div>
                             <div class="order-card-footer">
                                 <span class="order-total">${Utils.formatCurrency(o.total)}</span>
-                                <span class="order-type-badge order-type-${o.delivery}">${o.delivery === 'delivery' ? '🛵 Delivery' : '🏪 Retirada'}</span>
+                                <span class="order-type-badge order-type-${(o.delivery || o.type)}">${(o.delivery || o.type) === 'delivery' ? '🛵 Delivery' : '🏪 Retirada'}</span>
                             </div>
                             ${status !== 'entregue' ? `
                                 <div class="order-actions">
@@ -404,7 +404,7 @@
             document.getElementById('orderModalBody').innerHTML = `
                 <div style="margin-bottom:16px">
                     ${Utils.statusBadge(o.status)}
-                    <span class="order-type-badge order-type-${o.delivery}" style="margin-left:8px">${o.delivery === 'delivery' ? '🛵 Delivery' : '🏪 Retirada'}</span>
+                    <span class="order-type-badge order-type-${(o.delivery || o.type)}" style="margin-left:8px">${(o.delivery || o.type) === 'delivery' ? '🛵 Delivery' : '🏪 Retirada'}</span>
                 </div>
                 <p style="font-size:0.85rem;color:var(--mp-text-light);margin-bottom:16px">
                     📅 ${Utils.formatDateTime(o.createdAt)} | 💳 ${o.payment || 'N/A'}

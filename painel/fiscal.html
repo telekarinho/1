@@ -840,9 +840,9 @@
                                 <label for="cfgRegimeTributario">Regime Tributário</label>
                                 <select id="cfgRegimeTributario">
                                     <option value="">Selecione...</option>
-                                    <option value="simples_nacional">Simples Nacional</option>
-                                    <option value="lucro_presumido">Lucro Presumido</option>
-                                    <option value="lucro_real">Lucro Real</option>
+                                    <option value="1">Simples Nacional</option>
+                                    <option value="2">Lucro Presumido</option>
+                                    <option value="3">Lucro Real</option>
                                 </select>
                             </div>
                         </div>
@@ -1567,6 +1567,15 @@
                     }
 
                     DataStore.setItem('fiscal_cert_' + franchiseId, certResult.certificate);
+                    console.warn('[FISCAL] Certificado armazenado localmente. Para produção, use armazenamento seguro no servidor.');
+                    var avisoEl = document.getElementById('certAviso') || document.createElement('div');
+                    avisoEl.id = 'certAviso';
+                    avisoEl.style.cssText = 'background:#FFF3CD;border:1px solid #FFD700;border-radius:8px;padding:8px 12px;font-size:12px;color:#856404;margin-top:8px';
+                    avisoEl.textContent = '⚠️ Certificado salvo localmente. Em produção, use armazenamento seguro no servidor.';
+                    var certFileInput = document.getElementById('cfgCertFile');
+                    if (certFileInput && certFileInput.parentNode && !document.getElementById('certAviso')) {
+                        certFileInput.parentNode.appendChild(avisoEl);
+                    }
                     updateCertStatus(certResult.certificate);
                     document.getElementById('cfgCertFile').value = '';
                     document.getElementById('cfgCertPassword').value = '';
@@ -1787,6 +1796,10 @@
 
         // ========== EMITIR NFC-e ==========
         async function emitirNfce() {
+            if (typeof CloudFunctions === 'undefined' || !CloudFunctions.emitFiscalDocument) {
+                alert('⚠️ Módulo fiscal não configurado. Contate o suporte técnico para ativar emissão de NFC-e.');
+                return;
+            }
             var cfg = fiscalConfig;
             if (!cfg.cnpj) {
                 Utils.showToast('Configure os dados fiscais primeiro.', 'error');
@@ -1891,6 +1904,10 @@
 
         // ========== EMITIR CUPOM ==========
         async function emitirCupom() {
+            if (typeof CloudFunctions === 'undefined' || !CloudFunctions.emitFiscalDocument) {
+                alert('⚠️ Módulo fiscal não configurado. Contate o suporte técnico para ativar emissão de NFC-e.');
+                return;
+            }
             var validItems = cupomItems.filter(function(i) { return i.nome && i.valorUnit > 0; });
             if (validItems.length === 0) {
                 Utils.showToast('Adicione pelo menos um item valido.', 'error');

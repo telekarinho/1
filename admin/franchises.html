@@ -194,7 +194,7 @@
                     </div>
                     <div class="form-group">
                         <label>Senha Inicial</label>
-                        <input type="text" class="form-control" id="fOwnerPassword" placeholder="Sera usada no primeiro acesso">
+                        <input type="password" class="form-control" id="fOwnerPassword" placeholder="Sera usada no primeiro acesso">
                     </div>
 
                     <div class="panel-modal-footer" style="padding:0;border:0;margin-top:24px">
@@ -264,6 +264,7 @@
             const franchises = DataStore.getAllFranchises();
             const id = document.getElementById('fId').value;
             const isNew = !id;
+            const existingFranchise = isNew ? null : (franchises.find(f => f.id === id) || null);
 
             const data = {
                 id: id || document.getElementById('fSlug').value,
@@ -281,7 +282,7 @@
                 rating: 5.0,
                 deliveryTime: '20-35 min',
                 status: 'ativo',
-                createdAt: new Date().toISOString()
+                createdAt: existingFranchise ? (existingFranchise.createdAt || new Date().toISOString()) : new Date().toISOString()
             };
 
             if (isNew) {
@@ -298,19 +299,27 @@
                 const ownerPassword = document.getElementById('fOwnerPassword').value;
 
                 if (ownerEmail) {
-                    Auth.createUser({
-                        email: ownerEmail,
-                        tempPassword: ownerPassword || undefined,
-                        name: ownerName || data.name,
-                        role: MP.ROLES.FRANCHISEE,
-                        franchiseId: data.id
-                    }).then(result => {
-                        if (result.success) {
-                            Utils.showToast('Conta do franqueado criada! Senha: ' + result.tempPassword, 'success');
-                        } else {
-                            Utils.showToast('Erro ao criar conta: ' + result.error, 'error');
-                        }
-                    });
+                    try {
+                        Auth.createUser({
+                            email: ownerEmail,
+                            tempPassword: ownerPassword || undefined,
+                            name: ownerName || data.name,
+                            role: MP.ROLES.FRANCHISEE,
+                            franchiseId: data.id
+                        }).then(result => {
+                            if (result.success) {
+                                Utils.showToast('Conta do franqueado criada! Senha: ' + result.tempPassword, 'success');
+                            } else {
+                                Utils.showToast('Erro ao criar conta: ' + result.error, 'error');
+                            }
+                        }).catch(function(e) {
+                            console.error('Usuário não criado:', e);
+                            alert('Franquia salva mas erro ao criar login: ' + e.message);
+                        });
+                    } catch(e) {
+                        console.error('Usuário não criado:', e);
+                        alert('Franquia salva mas erro ao criar login: ' + e.message);
+                    }
                 }
 
                 // Initialize empty collections

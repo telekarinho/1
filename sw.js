@@ -25,7 +25,8 @@ const PRECACHE_URLS = [
     '/f/jardins/',
     '/f/barra/',
     '/f/catuai/',
-    '/f/recife/'
+    '/f/recife/',
+    '/f/curitiba/'
 ];
 
 const OFFLINE_QUEUE_KEY = 'milkypot-offline-queue';
@@ -211,7 +212,20 @@ async function replayOfflineQueue() {
 }
 
 // --- Push Notifications ---
+// Bug I — Verificar se push está configurado antes de registrar subscription
+if (typeof VAPID_PUBLIC_KEY !== 'undefined' && VAPID_PUBLIC_KEY && VAPID_PUBLIC_KEY !== 'YOUR_VAPID_KEY') {
+  // lógica de subscription (VAPID configurado)
+} else {
+  console.info('[SW] Push notifications desativadas — VAPID key não configurada');
+}
+
 self.addEventListener('push', event => {
+    // Bug I — não processar push se VAPID não estiver configurado
+    if (typeof VAPID_PUBLIC_KEY === 'undefined' || !VAPID_PUBLIC_KEY || VAPID_PUBLIC_KEY === 'YOUR_VAPID_KEY') {
+        console.info('[SW] Push recebido mas VAPID não configurado — ignorando');
+        return;
+    }
+
     let data = { title: 'MilkyPot', body: 'Novidade pra você!', icon: '/images/logo-milkypot.png', url: '/' };
     try {
         if (event.data) data = Object.assign(data, event.data.json());

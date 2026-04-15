@@ -1,3 +1,7 @@
+// AVISO DE SEGURANÇA: Esta extensão grava no Firestore sem autenticação Firebase.
+// As Firestore Rules permitem escrita em ifood_* sem auth temporariamente.
+// TODO: Implementar Firebase Auth anônimo para identificar escritas da extensão.
+
 /* ============================================
    MilkyPot iFood Connector - Background Script
    Recebe pedidos do content script e envia pro Firestore
@@ -5,6 +9,19 @@
 
 const FIREBASE_PROJECT = 'milkypot-ad945';
 const FIRESTORE_URL = 'https://firestore.googleapis.com/v1/projects/' + FIREBASE_PROJECT + '/databases/(default)/documents';
+
+// Tentar auth anônima para identificar a extensão
+async function getFirebaseToken() {
+  try {
+    var authResp = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyAbQ1fe0pK4prhfzYJypod2ie4DyNsq6BA', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({returnSecureToken: true})
+    });
+    var authData = await authResp.json();
+    return authData.idToken || null;
+  } catch(e) { return null; }
+}
 
 // Listen for orders from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -18,6 +35,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true; // Keep channel open for async response
     }
 });
+
+// Bug C — heurística de centavos mais segura
+function parseOrderValue(val) {
+  if (typeof val === 'number') {
+    // iFood geralmente retorna em centavos (inteiro grande)
+    // Se > 10000 assume centavos (R$100+), senão assume reais
+    return val > 10000 ? val / 100 : val;
+  }
+  return parseFloat(val) || 0;
+}
 
 async function handleOrder(order) {
     // Save locally first (offline-safe)
@@ -37,7 +64,7 @@ async function handleOrder(order) {
         iconUrl: 'icons/icon128.png',
         title: 'MilkyPot - Pedido iFood',
         message: 'Pedido #' + (order.ifoodShortId || order.ifoodId.slice(-4)) + ' capturado! ' +
-                 order.items.length + ' item(s) - R$ ' + (order.total.total / 100).toFixed(2).replace('.', ','),
+                 order.items.length + ' item(s) - R$ ' + parseOrderValue(order.total?.total || 0).toFixed(2).replace('.', ','),
         priority: 2
     });
 }
@@ -59,37 +86,25 @@ async function saveLocally(order) {
     });
 }
 
+// BUG B — Anti-padrão corrigido: cada pedido é salvo como documento individual
+// em vez de acumular tudo em ifood_${storeId} (limite 1MB por documento).
 async function saveToFirestore(order) {
-    // Use Firestore REST API (no auth needed for public collection)
-    const docId = 'ifood_' + order.storeId;
+    // Obter token de auth anônima (Bug A)
+    const token = await getFirebaseToken();
+    const authHeader = token ? { 'Authorization': 'Bearer ' + token } : {};
 
-    // Get existing orders for this store
-    let existingOrders = [];
-    try {
-        const getRes = await fetch(FIRESTORE_URL + '/datastore/' + docId);
-        if (getRes.ok) {
-            const doc = await getRes.json();
-            if (doc.fields?.value?.stringValue) {
-                existingOrders = JSON.parse(doc.fields.value.stringValue);
-            }
-        }
-    } catch (e) {}
+    // Salvar cada pedido como documento individual (Bug B)
+    var pedidoDoc = 'ifood_' + order.storeId + '_' + (order.ifoodId || order.id || Date.now());
 
-    // Avoid duplicates
-    if (existingOrders.find(o => o.ifoodId === order.ifoodId)) return;
-
-    // Add new order at beginning
-    existingOrders.unshift(order);
-    // Keep last 100
-    if (existingOrders.length > 100) existingOrders.splice(100);
-
-    // Save back
-    const res = await fetch(FIRESTORE_URL + '/datastore/' + docId + '?updateMask.fieldPaths=value', {
+    const res = await fetch(FIRESTORE_URL + '/datastore/' + pedidoDoc, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader },
         body: JSON.stringify({
             fields: {
-                value: { stringValue: JSON.stringify(existingOrders) }
+                ifoodId:   { stringValue: order.ifoodId || '' },
+                storeId:   { stringValue: order.storeId || '' },
+                createdAt: { stringValue: order.createdAt || new Date().toISOString() },
+                value:     { stringValue: JSON.stringify(order) }
             }
         })
     });

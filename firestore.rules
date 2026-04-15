@@ -6,33 +6,26 @@ service cloud.firestore {
     // Helper Functions
     // ============================================
 
-    // Verifica se usuario esta autenticado
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Obtem role do token customizado (custom claims)
-    // Fallback: verifica no documento do usuario
     function getUserRole() {
-      return request.auth.token.role;
+      return request.auth != null ? request.auth.token.role : null;
     }
 
-    // Verifica se e super_admin
     function isSuperAdmin() {
       return isAuthenticated() && getUserRole() == 'super_admin';
     }
 
-    // Verifica se e franqueado
     function isFranchisee() {
       return isAuthenticated() && getUserRole() == 'franchisee';
     }
 
-    // Verifica se usuario pertence a franquia
     function belongsToFranchise(franchiseId) {
       return isAuthenticated() && request.auth.token.franchiseId == franchiseId;
     }
 
-    // Verifica se e admin OU dono da franquia
     function isAdminOrFranchiseOwner(franchiseId) {
       return isSuperAdmin() || belongsToFranchise(franchiseId);
     }
@@ -41,23 +34,25 @@ service cloud.firestore {
     // DataStore Collection (legado - fase de migracao)
     // ============================================
     match /datastore/{document} {
-      // Franchises list is public (needed for store listing page)
-      // iFood orders (ifood_*) are writable by extension (no auth)
+      // Franchises list e publica (necessario para listagem de lojas)
+      // iFood docs sao escritos pela extensao Chrome (sem auth - limitacao tecnica)
       allow read: if document == 'franchises' || document.matches('ifood_.*') || isAuthenticated();
-      allow write: if document.matches('ifood_.*') || isAuthenticated();
+      // Franchises: somente super_admin pode escrever
+      // iFood: extensao escreve sem auth (aceito temporariamente)
+      // Outros: usuarios autenticados (franqueados) escrevem seus proprios dados
+      allow write: if document.matches('ifood_.*') ||
+                      (isSuperAdmin() && document == 'franchises') ||
+                      (isAuthenticated() && document != 'franchises');
     }
 
     // ============================================
     // Users (perfis de usuario)
     // ============================================
     match /users/{userId} {
-      // Qualquer autenticado pode ler seu proprio perfil
       allow read: if isAuthenticated() && (
         request.auth.uid == userId || isSuperAdmin()
       );
-      // Apenas super_admin pode criar/editar usuarios
       allow create, update: if isSuperAdmin();
-      // Apenas super_admin pode deletar (exceto outros super_admin)
       allow delete: if isSuperAdmin() && resource.data.role != 'super_admin';
     }
 
@@ -68,7 +63,6 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isSuperAdmin();
 
-      // Subcollections da franquia
       match /orders/{orderId} {
         allow read: if isAdminOrFranchiseOwner(franchiseId);
         allow create: if isAdminOrFranchiseOwner(franchiseId);
@@ -93,10 +87,10 @@ service cloud.firestore {
     }
 
     // ============================================
-    // Products (cardapio centralizado)
+    // Products (cardapio centralizado - publico)
     // ============================================
     match /products/{productId} {
-      allow read: if true; // Publico (cardapio)
+      allow read: if true;
       allow write: if isSuperAdmin();
     }
 
@@ -109,19 +103,28 @@ service cloud.firestore {
     }
 
     // ============================================
-    // Settings (configuracoes do sistema)
+    // Settings / Config (configuracoes do sistema)
     // ============================================
     match /settings/{settingId} {
       allow read: if isAuthenticated();
       allow write: if isSuperAdmin();
     }
 
+    // Config publica (necessario para o jogo Desafio ler premios/config)
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
     // ============================================
-    // Audit Log (somente leitura para admin)
+    // Audit Log (somente admin le, imutavel)
     // ============================================
     match /audit_log/{logId} {
       allow read: if isSuperAdmin();
-      allow create: if isAuthenticated(); // Qualquer autenticado cria log
+      // Apenas permite criar se o userId do log corresponde ao usuario autenticado
+      // Impede injecao de logs falsos
+      allow create: if isAuthenticated() &&
+                       request.resource.data.userId == request.auth.uid;
       allow update, delete: if false; // Imutavel
     }
 
@@ -131,11 +134,52 @@ service cloud.firestore {
     match /delivery_tracking/{orderId} {
       allow read: if isAuthenticated();
       allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated();
+      allow delete: if isSuperAdmin(); // Apenas admin pode deletar rastreamento
     }
 
     // ============================================
-    // Bloqueia tudo que nao foi definido
+    // DESAFIO 10 MILKYPOT — Collections do jogo
+    // ============================================
+
+    // Vouchers gerados pelo PDV / fiscal / delivery
+    match /desafio_vouchers/{voucherId} {
+      // Leitura publica: necessario para validar voucher no jogo
+      allow read: if true;
+      // Criacao: apenas sistemas autenticados (PDV, fiscal)
+      allow create: if isAuthenticated();
+      // Update: jogo marca como usado (idealmente via Cloud Function)
+      allow update: if true;
+      allow delete: if isSuperAdmin();
+    }
+
+    // Resultados das partidas
+    match /desafio_10000/{gameId} {
+      allow read: if true;  // Publico para ranking
+      allow create: if true; // Qualquer jogador salva resultado
+      allow update: if true; // Atualiza URL do video de reacao
+      allow delete: if isSuperAdmin();
+    }
+
+    // Streaks dos jogadores (por telefone)
+    match /desafio_streaks/{playerId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Cartelas de carimbo (stamp cards)
+    match /desafio_stamps/{playerId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Opt-in de notificacoes WhatsApp
+    match /desafio_notifications/{playerId} {
+      allow read: if isSuperAdmin();
+      allow write: if true;
+    }
+
+    // ============================================
+    // Bloqueia tudo que nao foi definido explicitamente
     // ============================================
     match /{document=**} {
       allow read, write: if false;

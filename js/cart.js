@@ -26,15 +26,30 @@
 
 const CART_KEY = 'milkypot_cart';
 
-// Load cart from localStorage
-let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+// BUG F — JSON.parse com try/catch para carrinho corrompido
+var cart = [];
+try {
+    cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || [];
+    if (!Array.isArray(cart)) cart = [];
+} catch(e) {
+    console.warn('[CART] Carrinho corrompido, resetando.', e);
+    cart = [];
+    localStorage.removeItem(CART_KEY);
+}
 
 function saveCart() {
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
 }
 
 function reloadCart() {
-    cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    try {
+        cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || [];
+        if (!Array.isArray(cart)) cart = [];
+    } catch(e) {
+        console.warn('[CART] Carrinho corrompido ao recarregar, resetando.', e);
+        cart = [];
+        localStorage.removeItem(CART_KEY);
+    }
 }
 
 // ============================================
@@ -63,8 +78,8 @@ function calcItemTotal(item) {
 // ============================================
 function addItemToCart(item) {
     reloadCart();
-    // Ensure total is calculated
-    if (!item.total) item.total = calcItemTotal(item);
+    // BUG G — Usar verificação estrita para aceitar R$0,00 como valor válido
+    if (item.total === undefined || item.total === null) item.total = calcItemTotal(item);
     cart.push(item);
     saveCart();
     updateCartUI();

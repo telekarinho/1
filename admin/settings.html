@@ -371,16 +371,24 @@
             var reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    var data = JSON.parse(e.target.result);
-                    for (var key in data) {
-                        if (data.hasOwnProperty(key)) {
-                            localStorage.setItem(key, typeof data[key] === 'string' ? data[key] : JSON.stringify(data[key]));
-                        }
+                    var parsed = typeof e.target.result === 'string' ? JSON.parse(e.target.result) : e.target.result;
+                    // Validar estrutura mínima
+                    if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+                        throw new Error('Formato de backup inválido');
                     }
-                    alert('Backup importado com sucesso! A pagina sera recarregada.');
+                    // Proibir sobrescrever campos críticos de sessão
+                    var forbidden = ['mp_session', 'mp_quick_login', 'mp_user'];
+                    forbidden.forEach(function(k) { delete parsed[k]; });
+                    // Confirmar com usuário
+                    if (!confirm('Importar backup? Isso sobrescreverá dados atuais. Continuar?')) return;
+                    Object.keys(parsed).forEach(function(k) {
+                        try { localStorage.setItem(k, typeof parsed[k] === 'string' ? parsed[k] : JSON.stringify(parsed[k])); }
+                        catch(e) { console.warn('Não foi possível restaurar:', k); }
+                    });
+                    alert('Backup importado com sucesso!');
                     location.reload();
                 } catch (err) {
-                    alert('Erro ao importar backup: arquivo invalido.');
+                    alert('Erro ao importar backup: ' + err.message);
                 }
             };
             reader.readAsText(file);
@@ -388,7 +396,8 @@
 
         // Clear demo data
         function clearDemoData() {
-            if (!confirm('Tem certeza que deseja limpar todos os dados demo? Esta acao nao pode ser desfeita.')) return;
+            if (!confirm('⚠️ ATENÇÃO: Isso apagará TODOS os dados (pedidos, franquias, financeiro). Em produção isso é irreversível. Continuar?')) return;
+            if (!confirm('Tem CERTEZA? Esta ação não pode ser desfeita.')) return;
             var keysToKeep = ['settings'];
             var allKeys = Object.keys(localStorage);
             allKeys.forEach(function(key) {
@@ -414,6 +423,24 @@
         document.getElementById('secondaryColor').addEventListener('input', function() {
             document.getElementById('secondaryColorText').value = this.value;
         });
+
+        // CNPJ validation on blur
+        var cnpjField = document.getElementById('cnpj') || document.querySelector('[name="cnpj"]');
+        if (cnpjField) {
+            cnpjField.addEventListener('blur', function() {
+                var v = this.value.replace(/\D/g, '');
+                if (v.length > 0 && v.length !== 14) {
+                    this.style.borderColor = '#FF0040';
+                    this.title = 'CNPJ deve ter 14 dígitos';
+                } else {
+                    this.style.borderColor = '';
+                    // Formatar: XX.XXX.XXX/XXXX-XX
+                    if (v.length === 14) {
+                        this.value = v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+                    }
+                }
+            });
+        }
 
         // Initialize
         loadSettings();

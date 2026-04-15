@@ -78,8 +78,8 @@
                         <div class="kpi-value" id="kpiTotalUtilizados">0</div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-label">Receita com Cupons</div>
-                        <div class="kpi-value" id="kpiReceitaCupons">R$ 0,00</div>
+                        <div class="kpi-label">Receita com Cupons <span style="font-size:0.75em;color:#999;font-weight:400;">(estimativa)</span></div>
+                        <div class="kpi-value" id="kpiReceitaCupons">R$ --</div>
                     </div>
                 </div>
 
@@ -269,13 +269,14 @@
                 couponRevenue += (o.total || 0);
             }
         });
-        if (couponRevenue === 0) {
-            couponRevenue = totalUsed * 28.50;
-        }
+
+        // Receita estimada com cupons - exibir como estimativa clara
+        var estimatedRevenue = totalUsed > 0 ? (couponRevenue > 0 ? couponRevenue : totalUsed * 28.50) : 0;
+        var receitaEl = document.getElementById('kpiReceitaCupons');
 
         document.getElementById('kpiCuponsAtivos').textContent = activeCoupons;
         document.getElementById('kpiTotalUtilizados').textContent = totalUsed;
-        document.getElementById('kpiReceitaCupons').textContent = 'R$ ' + couponRevenue.toFixed(2).replace('.', ',');
+        receitaEl.textContent = totalUsed > 0 ? 'R$' + estimatedRevenue.toFixed(2).replace('.', ',') + ' (est.)' : 'R$ --';
     }
 
     // Render coupons table

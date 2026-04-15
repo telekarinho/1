@@ -142,6 +142,12 @@
                 <button class="status-tab" data-status="delivered" onclick="filterByStatus('delivered')">✅ Entregues</button>
             </div>
 
+            <!-- iFood Integration Status -->
+            <div id="ifoodStatus" style="background:#FFF3CD;border:1px solid #FFD700;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:13px;color:#856404">
+                ⚠️ Instale a extensão Chrome MilkyPot para capturar pedidos do iFood automaticamente.
+                <a href="#" style="color:#5A4570;font-weight:700">Saiba como →</a>
+            </div>
+
             <!-- Orders List -->
             <div id="ordersList"></div>
         </div>
@@ -166,8 +172,12 @@
 <script src="../js/core/auth.js"></script>
 
 <script>
-(function() {
-    if (!Auth.requireAuth('franchisee')) return;
+(async function() {
+    var session = await Auth.requireAuth();
+    if (!session) {
+        window.location.href = '../login.html';
+        return;
+    }
     DataStore.init();
 
     var session = Auth.getSession();
@@ -183,8 +193,21 @@
     var soundEnabled = true;
     var lastOrderCount = 0;
 
+    // ---- Monetary value parser (iFood returns centavos when integer > 10000) ----
+    function parseMoney(val) {
+        if (!val && val !== 0) return 0;
+        var n = typeof val === 'object' ? (val.total || val.value || 0) : val;
+        // iFood retorna em centavos apenas quando integer > 10000
+        return (Number.isInteger(n) && n > 10000) ? n / 100 : parseFloat(n) || 0;
+    }
+
     // ---- Load Orders ----
     function loadOrders() {
+        var statusEl = document.getElementById('ifoodStatus') || document.querySelector('.ifood-status');
+        if (statusEl) {
+            statusEl.textContent = 'Usando extensão Chrome para captura de pedidos';
+            statusEl.style.color = '#FF9800';
+        }
         var storeOrders = DataStore.get('ifood_' + franchiseId);
         allOrders = (storeOrders && Array.isArray(storeOrders)) ? storeOrders : [];
         allOrders.sort(function(a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
@@ -204,8 +227,7 @@
         var today = new Date().toISOString().split('T')[0];
         var todayOrders = allOrders.filter(function(o) { return o.createdAt && o.createdAt.startsWith(today); });
         var revenue = todayOrders.reduce(function(s, o) {
-            var t = o.total ? o.total.total : 0;
-            return s + (t > 1000 ? t / 100 : t);
+            return s + parseMoney(o.total);
         }, 0);
         var pending = todayOrders.filter(function(o) { return o.status === 'confirmed'; }).length;
 
@@ -253,8 +275,7 @@
         orders.forEach(function(o) {
             var shortId = o.ifoodShortId || (o.ifoodId ? o.ifoodId.slice(-6) : '???');
             var time = o.createdAt ? new Date(o.createdAt).toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
-            var total = o.total ? o.total.total : 0;
-            if (total > 1000) total = total / 100;
+            var total = parseMoney(o.total);
             var statusLabels = { confirmed:'Confirmado', preparing:'Preparando', ready:'Pronto', delivered:'Entregue' };
             var statusLabel = statusLabels[o.status] || 'Pendente';
             var isDelivery = o.orderType !== 'TAKEOUT';
@@ -265,8 +286,7 @@
             if (o.items && o.items.length > 0) {
                 itemsHtml = '<ul class="ocf-items">';
                 o.items.forEach(function(item) {
-                    var price = item.totalPrice || item.unitPrice || 0;
-                    if (price > 1000) price = price / 100;
+                    var price = parseMoney(item.totalPrice || item.unitPrice || 0);
                     itemsHtml += '<li><span>' + item.quantity + 'x ' + Utils.escapeHtml(item.name) + '</span><span>R$ ' + price.toFixed(2).replace('.',',') + '</span></li>';
                     if (item.subItems && item.subItems.length > 0) {
                         itemsHtml += '<li class="ocf-subs">&nbsp;&nbsp;↳ ' + item.subItems.map(function(s) { return s.name; }).join(', ') + '</li>';

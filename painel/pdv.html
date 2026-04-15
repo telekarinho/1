@@ -162,6 +162,7 @@
                 <label for="nfCk">NF-e</label>
                 <input type="text" id="nfCpf" placeholder="CPF">
             </div>
+            <select id="paymentMethod" style="margin-bottom:8px;width:100%;padding:8px;border-radius:8px;border:1px solid #ccc;font-family:inherit"><option value="Dinheiro">Dinheiro</option><option value="Pix">Pix</option><option value="Débito">Débito</option><option value="Crédito">Crédito</option></select>
             <div class="cart-acts">
                 <button class="btn bc" onclick="clearCart()">🗑️</button>
                 <button class="btn bp" onclick="printOrder()">🖨️</button>
@@ -571,6 +572,8 @@
         var order={
             id:Utils.generateId(),createdAt:new Date().toISOString(),status:'confirmado',
             type:orderType,source:'pdv',
+            delivery:orderType==='delivery'?'delivery':null,
+            payment:document.getElementById('paymentMethod')?document.getElementById('paymentMethod').value:'Não informado',
             items:cart.map(function(c){return{name:c.name,size:c.size,extras:c.extras,qty:c.qty,unitPrice:c.unitPrice,total:c.unitPrice*c.qty}}),
             total:total,
             customer:{name:oName,phone:document.getElementById('cPhone').value||''},
@@ -647,7 +650,7 @@
             t+='   R$ '+(c.unitPrice*c.qty).toFixed(2).replace('.',',')+'\n';
         });
         t+='--------------------------------\nTOTAL: R$ '+total.toFixed(2).replace('.',',')+'\n';
-        if(document.getElementById('cName').value)t+='Cliente: '+document.getElementById('cName').value+'\n';
+        if(document.getElementById('orderName').value)t+='Cliente: '+document.getElementById('orderName').value+'\n';
         if(orderType==='delivery'&&document.getElementById('cAddr').value)t+='Endereco: '+document.getElementById('cAddr').value+'\n';
         t+='================================\n';
         var lastVoucher=document.getElementById('voucherCodeDisplay').textContent;

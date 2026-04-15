@@ -275,7 +275,7 @@
                 <div class="kpi-label">Concluidas Hoje</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-value" id="kpiTempoMedio">~25 min</div>
+                <div class="kpi-value" id="kpiTempoMedio">Calculando...</div>
                 <div class="kpi-label">Tempo Medio</div>
             </div>
         </div>
@@ -338,7 +338,7 @@
 
     function getDeliveryOrders() {
         var orders = DataStore.getCollection('orders', franchiseId) || [];
-        return orders.filter(function(o) { return o.delivery === 'delivery'; });
+        return orders.filter(function(o) { return (o.delivery || o.type) === 'delivery'; });
     }
 
     function getEntregadores() {
@@ -374,7 +374,19 @@
         document.getElementById('kpiEntregasHoje').textContent = todayOrders.length;
         document.getElementById('kpiEmAndamento').textContent = inProgress.length;
         document.getElementById('kpiConcluidas').textContent = completedToday.length;
-        document.getElementById('kpiTempoMedio').textContent = '~25 min';
+        // Calcula tempo médio real a partir dos pedidos entregues hoje com timestamps
+        var tempoMedioText = 'Calculando...';
+        var entreguesComTempo = completedToday.filter(function(o) {
+            return o.createdAt && o.updatedAt;
+        });
+        if (entreguesComTempo.length > 0) {
+            var somaMs = entreguesComTempo.reduce(function(acc, o) {
+                return acc + (new Date(o.updatedAt).getTime() - new Date(o.createdAt).getTime());
+            }, 0);
+            var mediaMins = Math.round(somaMs / entreguesComTempo.length / 60000);
+            tempoMedioText = mediaMins + ' min';
+        }
+        document.getElementById('kpiTempoMedio').textContent = tempoMedioText;
     }
 
     function filterOrders(deliveryOrders) {

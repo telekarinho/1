@@ -138,9 +138,10 @@ function placeOrder() {
         return;
     }
 
-    orderCounter++;
-    localStorage.setItem('milkypot_order_counter', orderCounter.toString());
-    var orderNumber = '#MP' + orderCounter;
+    // BUG D — orderCounter com sufixo de timestamp para garantir unicidade
+    var counter = parseInt(localStorage.getItem('mp_order_counter') || '0') + 1;
+    localStorage.setItem('mp_order_counter', counter);
+    var orderNumber = '#MP' + counter + '_' + Date.now().toString(36).toUpperCase().slice(-4);
 
     // Gather customer data
     var customerName = (document.getElementById('checkoutName') || {}).value || '';
@@ -529,7 +530,8 @@ function handleChatInput() {
     processUserMessage(text);
 }
 
-function handleChatOption(value) {
+// BUG E — event recebido explicitamente como parâmetro (não mais global implícito)
+function handleChatOption(event, value) {
     var btn = event.target;
     addUserMessage(btn.textContent);
     var parent = btn.closest('.chat-options');
@@ -693,7 +695,7 @@ function addBotMessageWithOptions(text, options) {
         '<div class="chat-bubble">' + text + '</div>' +
         '<div class="chat-options">' +
             options.map(function(opt) {
-                return '<button class="chat-option-btn" onclick="handleChatOption(\'' + opt.value + '\')">' + opt.label + '</button>';
+                return '<button class="chat-option-btn" onclick="handleChatOption(event, \'' + opt.value + '\')">' + opt.label + '</button>';
             }).join('') +
         '</div>';
     messages.appendChild(msg);
@@ -714,7 +716,7 @@ function addProductCard(product) {
                 '<span class="price">' + formatCurrency(product.price) + '</span>' +
             '</div>' +
             '<div class="chat-product-actions">' +
-                '<button class="chat-add-btn chat-option-btn" onclick="handleChatOption(\'add_' + product.id + '\')">Adicionar 🛒</button>' +
+                '<button class="chat-add-btn chat-option-btn" onclick="handleChatOption(event, \'add_' + product.id + '\')">Adicionar 🛒</button>' +
             '</div>' +
         '</div>';
     messages.appendChild(msg);
