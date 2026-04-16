@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Radio Indoor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#42A5F5">
+    <style>
+        /* Audio library grid */
+        .audio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:24px}
+        .audio-item{display:flex;align-items:center;gap:12px;background:#fff;border-radius:14px;padding:12px 16px;box-shadow:0 2px 10px rgba(0,0,0,.05);transition:transform .15s}
+        .audio-item:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.08)}
+        .audio-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#6C63FF,#42A5F5);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+        .audio-info{flex:1;overflow:hidden}
+        .audio-name{font-family:'Baloo 2',cursive;font-weight:700;font-size:14px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .audio-meta{font-size:11px;color:#999}
+        .audio-actions{display:flex;gap:6px;align-items:center}
+
+        /* Drop zone */
+        .drop-zone{border:2px dashed #bbb;border-radius:16px;padding:32px;text-align:center;color:#999;cursor:pointer;transition:all .2s;margin-bottom:20px}
+        .drop-zone.drag-over{border-color:#6C63FF;background:#f0f0ff;color:#6C63FF}
+        .drop-zone input{display:none}
+
+        /* Playlist */
+        .playlist-container{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);padding:20px;margin-bottom:24px}
+        .playlist-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:4px;transition:background .15s}
+        .playlist-item:hover{background:#f5f5ff}
+        .playlist-item.playing{background:#e8f5e9}
+        .playlist-item .pl-num{width:28px;text-align:center;font-size:13px;font-weight:700;color:#bbb}
+        .playlist-item.playing .pl-num{color:#4CAF50}
+        .playlist-item .pl-icon{width:36px;height:36px;border-radius:10px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+        .playlist-item.playing .pl-icon{background:#C8E6C9}
+        .playlist-item .pl-name{flex:1;font-size:13px;font-weight:600;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .playlist-item .pl-dur{font-size:12px;color:#999;min-width:40px;text-align:center}
+        .playlist-item .pl-remove{background:none;border:0;color:#e53935;cursor:pointer;font-size:14px;padding:4px;opacity:.5;transition:opacity .15s}
+        .playlist-item .pl-remove:hover{opacity:1}
+
+        /* Player bar */
+        .player-bar{position:sticky;bottom:0;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.1);padding:16px 24px;display:flex;align-items:center;gap:16px;z-index:10;margin:0 -16px -16px}
+        .player-bar .now-playing{flex:1;overflow:hidden}
+        .player-bar .now-title{font-family:'Baloo 2',cursive;font-weight:700;font-size:15px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .player-bar .now-meta{font-size:12px;color:#999}
+        .player-controls{display:flex;gap:8px;align-items:center}
+        .player-controls button{width:40px;height:40px;border-radius:50%;border:0;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:background .2s}
+        .player-controls .btn-play{width:48px;height:48px;background:linear-gradient(135deg,#6C63FF,#42A5F5);color:#fff;font-size:22px;box-shadow:0 4px 12px rgba(108,99,255,.3)}
+        .player-controls .btn-play:hover{box-shadow:0 4px 20px rgba(108,99,255,.5)}
+        .player-controls .btn-secondary{background:#f0f0f0;color:#555}
+        .player-controls .btn-secondary:hover{background:#e0e0e0}
+        .player-controls .btn-secondary.active{background:#E8EAF6;color:#6C63FF}
+        .volume-slider{width:80px;accent-color:#6C63FF}
+
+        /* URL box */
+        .radio-url-box{display:flex;gap:8px;align-items:center;background:#f5f5f5;padding:10px 14px;border-radius:12px;margin-top:12px}
+        .radio-url-box input{flex:1;border:0;background:transparent;font-size:13px;font-family:monospace;color:#333;outline:none}
+
+        /* Config cards */
+        .config-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+        .config-card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+
+        /* Toggle switch */
+        .toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+        .toggle input{opacity:0;width:0;height:0}
+        .toggle-slider{position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:24px;transition:.3s}
+        .toggle-slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+        .toggle input:checked + .toggle-slider{background:#6C63FF}
+        .toggle input:checked + .toggle-slider:before{transform:translateX(20px)}
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <a href="despesas.html" class="sidebar-link"><span class="icon">💰</span> Despesas</a>
+                <a href="fiscal.html" class="sidebar-link"><span class="icon">🧾</span> Fiscal</a>
+                <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+                <a href="entregas.html" class="sidebar-link"><span class="icon">🛵</span> Entregas</a>
+                <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
+                <a href="fidelidade.html" class="sidebar-link"><span class="icon">🎁</span> Fidelidade</a>
+                <a href="ifood.html" class="sidebar-link"><span class="icon">🛵</span> iFood</a>
+                <div class="sidebar-nav-group">Midia da Loja</div>
+                <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
+                <a href="radio-indoor.html" class="sidebar-link active"><span class="icon">📻</span> Radio Indoor</a>
+                <div class="sidebar-nav-group">Loja Online</div>
+                <a href="#" class="sidebar-link" id="linkSiteFranquia"><span class="icon">🌐</span> Meu Site</a>
+                <a href="marketing.html" class="sidebar-link"><span class="icon">📢</span> Marketing</a>
+                <div class="sidebar-nav-group">Config</div>
+                <a href="configuracoes.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">🏪</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Franqueado</strong>
+                        <small>Franqueado</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="panel-main">
+            <header class="panel-header">
+                <button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+                <h1>📻 Radio Indoor</h1>
+                <div class="header-actions">
+                    <button class="btn btn-outline" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <!-- Player URL -->
+                <div style="background:linear-gradient(135deg,#6C63FF 0%,#42A5F5 100%);border-radius:16px;padding:20px 24px;color:#fff;margin-bottom:24px">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+                        <span style="font-size:28px">📻</span>
+                        <div>
+                            <strong style="font-size:16px">Player de Radio</strong><br>
+                            <span style="font-size:13px;opacity:.8">Abra esta URL no dispositivo de som da loja (celular, tablet, computador ligado na caixa de som)</span>
+                        </div>
+                    </div>
+                    <div class="radio-url-box">
+                        <input readonly id="radioUrl" value="">
+                        <button class="btn btn-sm btn-primary" onclick="copyRadioUrl()">📋 Copiar</button>
+                        <a id="radioUrlLink" href="#" target="_blank" class="btn btn-sm btn-outline" style="color:#333">👁 Abrir</a>
+                    </div>
+                </div>
+
+                <!-- Upload -->
+                <div class="drop-zone" id="dropZone">
+                    <div style="font-size:36px;margin-bottom:8px">🎵</div>
+                    <strong>Arraste arquivos de audio aqui</strong>
+                    <p style="margin:4px 0 0;font-size:13px">ou clique para selecionar &bull; MP3, WAV, OGG, M4A &bull; max 50MB</p>
+                    <input type="file" id="fileInput" multiple accept="audio/*">
+                </div>
+
+                <!-- Audio Library -->
+                <h3 style="font-family:'Baloo 2',cursive;margin-bottom:12px">🎵 Biblioteca de Audio</h3>
+                <div class="audio-grid" id="audioGrid"></div>
+
+                <hr style="border:0;border-top:2px solid #e8e8e8;margin:32px 0">
+
+                <!-- Playlist -->
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                    <h3 style="font-family:'Baloo 2',cursive">📋 Playlist da Loja</h3>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn btn-sm btn-primary" onclick="addAllToPlaylist()">+ Todas as musicas</button>
+                        <button class="btn btn-sm btn-outline" onclick="clearPlaylist()">🗑️ Limpar</button>
+                    </div>
+                </div>
+                <div class="playlist-container" id="playlistContainer">
+                    <p id="playlistEmpty" style="color:#ccc;text-align:center;padding:20px">Playlist vazia. Adicione musicas da biblioteca acima.</p>
+                </div>
+                <div style="text-align:right;font-size:13px;color:#888;margin-top:8px" id="playlistInfo"></div>
+
+                <hr style="border:0;border-top:2px solid #e8e8e8;margin:32px 0">
+
+                <!-- Config -->
+                <h3 style="font-family:'Baloo 2',cursive;margin-bottom:16px">⚙️ Configuracoes do Player</h3>
+                <div class="config-grid">
+                    <div class="config-card">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <span style="font-size:24px">🔀</span>
+                                <div><strong>Modo Aleatorio</strong><br><small style="color:#888">Tocar musicas em ordem aleatoria</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgShuffle" onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+                    </div>
+                    <div class="config-card">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <span style="font-size:24px">🔁</span>
+                                <div><strong>Repetir Playlist</strong><br><small style="color:#888">Reiniciar ao terminar todas as faixas</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgLoop" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+                    </div>
+                    <div class="config-card">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                            <span style="font-size:24px">🔊</span>
+                            <div><strong>Volume Padrao</strong><br><small style="color:#888">Volume inicial do player</small></div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px">
+                            <span style="font-size:12px;color:#999">🔇</span>
+                            <input type="range" min="0" max="100" value="80" id="cfgVolume" style="flex:1;accent-color:#6C63FF" onchange="saveConfig()">
+                            <span style="font-size:12px;color:#999">🔊</span>
+                            <span style="font-size:13px;font-weight:700;color:#333;min-width:36px;text-align:right" id="cfgVolumeLabel">80%</span>
+                        </div>
+                    </div>
+                    <div class="config-card">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <span style="font-size:24px">▶️</span>
+                                <div><strong>Autoplay</strong><br><small style="color:#888">Iniciar automaticamente ao abrir</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgAutoplay" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/i18n.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/cloud-functions.js"></script>
+    <script src="../js/core/auth.js"></script>
+<script>
+/* ============================================
+   Radio Indoor — Management Page
+   ============================================ */
+(function(){
+    if(!Auth.requireAuth()) return;
+    var fid = Auth.getFranchiseId();
+    document.getElementById('sidebarStoreName').textContent = fid || 'Franqueado';
+    document.getElementById('sidebarUserName').textContent = Auth.getUserName();
+
+    /* --- Data Keys --- */
+    var TRACKS_KEY = 'radio_tracks_' + fid;
+    var PLAYLIST_KEY = 'radio_playlist_' + fid;
+    var CONFIG_KEY = 'radio_config_' + fid;
+
+    /* --- Radio URL --- */
+    var base = location.origin || 'https://milkypot.com';
+    var radioUrl = base + '/radio.html?f=' + encodeURIComponent(fid);
+    document.getElementById('radioUrl').value = radioUrl;
+    document.getElementById('radioUrlLink').href = radioUrl;
+
+    window.copyRadioUrl = function(){
+        navigator.clipboard.writeText(radioUrl).then(function(){
+            Utils.showToast('URL copiada!', 'success');
+        }).catch(function(){ prompt('Copie a URL:', radioUrl); });
+    };
+
+    /* === Audio Library === */
+    function getTracks(){ return DataStore.get(TRACKS_KEY) || []; }
+    function saveTracks(list){ DataStore.set(TRACKS_KEY, list); }
+
+    var dropZone = document.getElementById('dropZone');
+    var fileInput = document.getElementById('fileInput');
+
+    dropZone.addEventListener('click', function(){ fileInput.click(); });
+    dropZone.addEventListener('dragover', function(e){ e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', function(){ dropZone.classList.remove('drag-over'); });
+    dropZone.addEventListener('drop', function(e){ e.preventDefault(); dropZone.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+    fileInput.addEventListener('change', function(){ handleFiles(this.files); this.value=''; });
+
+    function handleFiles(files){
+        var tracks = getTracks();
+        var count = 0;
+        Array.from(files).forEach(function(file){
+            if(file.size > 50*1024*1024){ Utils.showToast(file.name + ' muito grande (max 50MB)','error'); return; }
+            if(!file.type.startsWith('audio/')){ Utils.showToast(file.name + ' formato invalido','error'); return; }
+
+            var reader = new FileReader();
+            reader.onload = function(ev){
+                var item = {
+                    id: 'a_' + Date.now().toString(36) + Math.random().toString(36).substr(2,4),
+                    name: file.name.replace(/\.[^.]+$/, ''),
+                    fileName: file.name,
+                    dataUrl: ev.target.result,
+                    size: file.size,
+                    duration: 0,
+                    addedAt: new Date().toISOString()
+                };
+                // Get duration
+                var audio = document.createElement('audio');
+                audio.preload = 'metadata';
+                audio.onloadedmetadata = function(){
+                    item.duration = Math.ceil(audio.duration);
+                    tracks.push(item);
+                    saveTracks(tracks);
+                    renderTracks();
+                    count++;
+                };
+                audio.onerror = function(){
+                    item.duration = 0;
+                    tracks.push(item);
+                    saveTracks(tracks);
+                    renderTracks();
+                    count++;
+                };
+                audio.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+        setTimeout(function(){ if(count) Utils.showToast(count + ' faixa(s) adicionada(s)', 'success'); }, 800);
+    }
+
+    window.deleteTrack = function(id){
+        if(!confirm('Excluir esta faixa?')) return;
+        saveTracks(getTracks().filter(function(t){return t.id!==id}));
+        var pl = getPlaylist().filter(function(p){return p.trackId!==id});
+        savePlaylist(pl);
+        renderTracks();
+        renderPlaylist();
+        Utils.showToast('Faixa removida', 'success');
+    };
+
+    window.addToPlaylist = function(trackId){
+        var pl = getPlaylist();
+        pl.push({ trackId: trackId });
+        savePlaylist(pl);
+        renderPlaylist();
+        Utils.showToast('Adicionado a playlist', 'success');
+    };
+
+    function formatDuration(secs){
+        if(!secs) return '--:--';
+        var m = Math.floor(secs/60);
+        var s = secs % 60;
+        return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function formatSize(bytes){
+        if(bytes < 1024*1024) return (bytes/1024).toFixed(0) + ' KB';
+        return (bytes/(1024*1024)).toFixed(1) + ' MB';
+    }
+
+    function renderTracks(){
+        var tracks = getTracks();
+        document.getElementById('audioGrid').innerHTML = tracks.length ? tracks.map(function(t){
+            return '<div class="audio-item">' +
+                '<div class="audio-icon">🎵</div>' +
+                '<div class="audio-info">' +
+                    '<div class="audio-name" title="' + esc(t.name) + '">' + esc(t.name) + '</div>' +
+                    '<div class="audio-meta">' + formatDuration(t.duration) + ' &bull; ' + formatSize(t.size) + '</div>' +
+                '</div>' +
+                '<div class="audio-actions">' +
+                    '<button class="btn btn-sm btn-primary" onclick="addToPlaylist(\'' + esc(t.id) + '\')">+ Playlist</button>' +
+                    '<button class="btn btn-sm btn-outline" onclick="deleteTrack(\'' + esc(t.id) + '\')" style="color:#e53935;border-color:#e53935">🗑️</button>' +
+                '</div>' +
+                '</div>';
+        }).join('') : '<p style="color:#999;font-size:14px;grid-column:1/-1">Nenhuma faixa de audio. Arraste arquivos MP3 para a area acima.</p>';
+    }
+
+    /* === Playlist === */
+    function getPlaylist(){ return DataStore.get(PLAYLIST_KEY) || []; }
+    function savePlaylist(list){ DataStore.set(PLAYLIST_KEY, list); }
+
+    window.addAllToPlaylist = function(){
+        var tracks = getTracks();
+        var pl = tracks.map(function(t){ return { trackId: t.id }; });
+        savePlaylist(pl);
+        renderPlaylist();
+        Utils.showToast('Todas as faixas adicionadas', 'success');
+    };
+
+    window.clearPlaylist = function(){
+        if(!confirm('Limpar toda a playlist?')) return;
+        savePlaylist([]);
+        renderPlaylist();
+    };
+
+    window.removeFromPlaylist = function(idx){
+        var pl = getPlaylist();
+        pl.splice(idx,1);
+        savePlaylist(pl);
+        renderPlaylist();
+    };
+
+    window.movePlaylistItem = function(from, to){
+        var pl = getPlaylist();
+        if(to < 0 || to >= pl.length) return;
+        var item = pl.splice(from,1)[0];
+        pl.splice(to,0,item);
+        savePlaylist(pl);
+        renderPlaylist();
+    };
+
+    function renderPlaylist(){
+        var pl = getPlaylist();
+        var tracks = getTracks();
+        var totalSec = 0;
+        var html = '';
+        pl.forEach(function(p, i){
+            var t = tracks.find(function(x){return x.id===p.trackId});
+            if(!t) return;
+            totalSec += t.duration || 0;
+            html += '<div class="playlist-item">' +
+                '<span class="pl-num">' + (i+1) + '</span>' +
+                (i > 0 ? '<button class="btn btn-sm btn-outline" onclick="movePlaylistItem('+i+','+(i-1)+')" style="padding:2px 6px;font-size:11px">▲</button>' : '<span style="width:30px"></span>') +
+                (i < pl.length-1 ? '<button class="btn btn-sm btn-outline" onclick="movePlaylistItem('+i+','+(i+1)+')" style="padding:2px 6px;font-size:11px">▼</button>' : '<span style="width:30px"></span>') +
+                '<div class="pl-icon">🎵</div>' +
+                '<div class="pl-name">' + esc(t.name) + '</div>' +
+                '<span class="pl-dur">' + formatDuration(t.duration) + '</span>' +
+                '<button class="pl-remove" onclick="removeFromPlaylist('+i+')" title="Remover">&times;</button>' +
+                '</div>';
+        });
+        var container = document.getElementById('playlistContainer');
+        var empty = document.getElementById('playlistEmpty');
+        if(html){
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p style="color:#ccc;text-align:center;padding:20px">Playlist vazia. Adicione musicas da biblioteca acima.</p>';
+        }
+        var mins = Math.floor(totalSec/60);
+        var secs = totalSec % 60;
+        document.getElementById('playlistInfo').textContent = pl.length ?
+            pl.length + ' faixa(s) \u00B7 ' + (mins > 0 ? mins + 'min ' : '') + secs + 's total' : '';
+    }
+
+    /* === Config === */
+    function getConfig(){ return DataStore.get(CONFIG_KEY) || {}; }
+    function setConfig(c){ DataStore.set(CONFIG_KEY, c); }
+
+    document.getElementById('cfgVolume').addEventListener('input', function(){
+        document.getElementById('cfgVolumeLabel').textContent = this.value + '%';
+    });
+
+    window.saveConfig = function(){
+        var c = {
+            shuffle: document.getElementById('cfgShuffle').checked,
+            loop: document.getElementById('cfgLoop').checked,
+            volume: parseInt(document.getElementById('cfgVolume').value),
+            autoplay: document.getElementById('cfgAutoplay').checked,
+            updatedAt: new Date().toISOString()
+        };
+        setConfig(c);
+        Utils.showToast('Configuracao salva!', 'success');
+    };
+
+    function loadConfig(){
+        var c = getConfig();
+        document.getElementById('cfgShuffle').checked = !!c.shuffle;
+        document.getElementById('cfgLoop').checked = c.loop !== false;
+        document.getElementById('cfgVolume').value = c.volume != null ? c.volume : 80;
+        document.getElementById('cfgVolumeLabel').textContent = (c.volume != null ? c.volume : 80) + '%';
+        document.getElementById('cfgAutoplay').checked = c.autoplay !== false;
+    }
+
+    /* === Utilities === */
+    function esc(s){ return Utils.escapeHtml ? Utils.escapeHtml(String(s||'')) : String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
+
+    /* === Init === */
+    renderTracks();
+    renderPlaylist();
+    loadConfig();
+
+    /* === Service Worker === */
+    if('serviceWorker' in navigator){
+        navigator.serviceWorker.register('/sw.js').then(function(reg){
+            window.addEventListener('online', function(){ reg.active && reg.active.postMessage({type:'REPLAY_OFFLINE_QUEUE'}); });
+        }).catch(function(){});
+    }
+})();
+</script>
+</body>
+</html>

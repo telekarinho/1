@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v6';
-const CACHE_NAME = 'milkypot-v6';
+const CACHE_VERSION = 'mp-v7';
+const CACHE_NAME = 'milkypot-v7';
 
 // Critical local assets that must be available offline
 const PRECACHE_URLS = [
@@ -22,12 +22,20 @@ const PRECACHE_URLS = [
     '/painel/marketing.html',
     '/painel/despesas.html',
     '/painel/configuracoes.html',
+    '/painel/tv-indoor.html',
+    '/painel/radio-indoor.html',
+    '/painel/finance-os.html',
+    // TV + Radio player pages
+    '/tv.html',
+    '/radio.html',
+    '/manifest-tv.json',
     // Styles
     '/css/style.css',
     '/css/animations.css',
     '/css/responsive.css',
     '/css/mobile-app.css',
     '/css/shared-panel.css',
+    '/css/tv-slides.css',
     // Core JS
     '/js/core/constants.js',
     '/js/core/i18n.js',

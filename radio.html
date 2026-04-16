@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MilkyPot Radio</title>
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:linear-gradient(135deg,#1a1a2e,#16213e);font-family:'Segoe UI',Tahoma,sans-serif;color:#fff;overflow:hidden}
+#app{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:24px;text-align:center}
+.logo{width:80px;height:80px;border-radius:24px;background:linear-gradient(135deg,#6C63FF,#42A5F5);display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:16px;box-shadow:0 8px 32px rgba(108,99,255,.3)}
+h1{font-size:28px;font-weight:800;margin-bottom:4px}
+.subtitle{font-size:14px;opacity:.6;margin-bottom:32px}
+.now-playing{background:rgba(255,255,255,.08);border-radius:20px;padding:24px 32px;margin-bottom:24px;min-width:300px;backdrop-filter:blur(8px)}
+.now-label{font-size:11px;text-transform:uppercase;letter-spacing:2px;opacity:.5;margin-bottom:8px}
+.now-title{font-size:20px;font-weight:700}
+.now-artist{font-size:14px;opacity:.7;margin-top:4px}
+.progress-bar{width:100%;height:4px;background:rgba(255,255,255,.1);border-radius:4px;margin-top:16px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#6C63FF,#42A5F5);border-radius:4px;width:0%;transition:width .5s linear}
+.time-row{display:flex;justify-content:space-between;font-size:11px;opacity:.5;margin-top:6px}
+.controls{display:flex;gap:16px;align-items:center;margin-bottom:24px}
+.controls button{border:0;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,background .2s}
+.controls button:active{transform:scale(.9)}
+.btn-main{width:64px;height:64px;background:linear-gradient(135deg,#6C63FF,#42A5F5);color:#fff;font-size:28px;box-shadow:0 4px 20px rgba(108,99,255,.4)}
+.btn-sec{width:44px;height:44px;background:rgba(255,255,255,.1);color:#fff;font-size:18px}
+.btn-sec:hover{background:rgba(255,255,255,.2)}
+.btn-sec.active{background:rgba(108,99,255,.4)}
+.volume-row{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.volume-row input{width:120px;accent-color:#6C63FF}
+.volume-label{font-size:12px;opacity:.6;min-width:30px}
+.playlist-box{background:rgba(255,255,255,.05);border-radius:16px;padding:12px;max-height:200px;overflow-y:auto;width:100%;max-width:400px}
+.pl-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;cursor:pointer;transition:background .15s;font-size:13px}
+.pl-item:hover{background:rgba(255,255,255,.08)}
+.pl-item.active{background:rgba(108,99,255,.2)}
+.pl-item .pl-num{width:20px;text-align:center;font-size:11px;opacity:.5}
+.pl-item.active .pl-num{opacity:1;color:#42A5F5}
+.pl-item .pl-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-item .pl-dur{font-size:11px;opacity:.5}
+.status-bar{position:fixed;bottom:12px;font-size:11px;opacity:.4}
+#loadingScreen{position:fixed;inset:0;background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:100}
+#loadingScreen.hidden{display:none}
+#loadingScreen h2{font-size:24px;margin-bottom:8px}
+#loadingScreen p{font-size:14px;opacity:.6}
+.spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.15);border-top-color:#42A5F5;border-radius:50%;animation:spin .8s linear infinite;margin-top:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+    <div id="loadingScreen">
+        <h2>📻 MilkyPot Radio</h2>
+        <p id="loadingMsg">Carregando playlist...</p>
+        <div class="spinner"></div>
+    </div>
+
+    <div id="app" style="display:none">
+        <div class="logo">📻</div>
+        <h1>MilkyPot Radio</h1>
+        <p class="subtitle" id="storeName">Radio da Loja</p>
+
+        <div class="now-playing">
+            <div class="now-label">Tocando agora</div>
+            <div class="now-title" id="nowTitle">--</div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="time-row"><span id="timeElapsed">0:00</span><span id="timeDuration">0:00</span></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-sec" id="btnShuffle" onclick="toggleShuffle()" title="Aleatorio">🔀</button>
+            <button class="btn-sec" onclick="playPrev()" title="Anterior">⏮</button>
+            <button class="btn-main" id="btnPlay" onclick="togglePlay()">▶</button>
+            <button class="btn-sec" onclick="playNext()" title="Proxima">⏭</button>
+            <button class="btn-sec" id="btnLoop" onclick="toggleLoop()" title="Repetir">🔁</button>
+        </div>
+
+        <div class="volume-row">
+            <span style="font-size:14px">🔇</span>
+            <input type="range" min="0" max="100" value="80" id="volumeSlider" oninput="setVolume(this.value)">
+            <span style="font-size:14px">🔊</span>
+            <span class="volume-label" id="volumeLabel">80%</span>
+        </div>
+
+        <div class="playlist-box" id="playlistBox"></div>
+    </div>
+
+    <div class="status-bar" id="statusBar"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="/js/core/constants.js"></script>
+    <script src="/js/core/utils.js"></script>
+    <script src="/js/core/datastore.js"></script>
+    <script src="/js/core/firebase-config.js"></script>
+<script>
+/* ============================================
+   MilkyPot Radio Player — Ambient Store Music
+   ============================================
+   URL: milkypot.com/radio.html?f=FRANCHISE_ID
+   ============================================ */
+(function(){
+    var loadingScreen = document.getElementById('loadingScreen');
+    var loadingMsg = document.getElementById('loadingMsg');
+    var appDiv = document.getElementById('app');
+
+    var franchiseId = null;
+    var tracks = [];
+    var playlist = [];
+    var config = {};
+    var currentIdx = -1;
+    var audio = new Audio();
+    var isPlaying = false;
+    var isShuffle = false;
+    var isLoop = true;
+    var shuffledOrder = [];
+
+    /* === Parse URL === */
+    function parseUrl(){
+        var params = new URLSearchParams(location.search);
+        franchiseId = params.get('f');
+        if(!franchiseId){
+            var hash = location.hash.replace('#','');
+            if(hash) franchiseId = decodeURIComponent(hash);
+        }
+    }
+
+    /* === Load data === */
+    function loadData(){
+        if(!franchiseId){
+            loadingMsg.textContent = 'Franquia nao encontrada. Verifique a URL.';
+            return;
+        }
+
+        config = DataStore.get('radio_config_' + franchiseId) || {};
+        var trackData = DataStore.get('radio_tracks_' + franchiseId) || [];
+        var playlistData = DataStore.get('radio_playlist_' + franchiseId) || [];
+
+        // Index tracks
+        var trackMap = {};
+        trackData.forEach(function(t){ trackMap[t.id] = t; });
+
+        // Resolve playlist
+        playlist = [];
+        playlistData.forEach(function(p){
+            if(trackMap[p.trackId]) playlist.push(trackMap[p.trackId]);
+        });
+
+        if(!playlist.length){
+            loadingMsg.textContent = 'Playlist vazia. Adicione musicas no painel da franquia.';
+            return;
+        }
+
+        // Apply config
+        isShuffle = !!config.shuffle;
+        isLoop = config.loop !== false;
+        var vol = config.volume != null ? config.volume : 80;
+        audio.volume = vol / 100;
+        document.getElementById('volumeSlider').value = vol;
+        document.getElementById('volumeLabel').textContent = vol + '%';
+
+        if(isShuffle) document.getElementById('btnShuffle').classList.add('active');
+        if(isLoop) document.getElementById('btnLoop').classList.add('active');
+
+        generateShuffleOrder();
+        renderPlaylist();
+
+        loadingScreen.classList.add('hidden');
+        appDiv.style.display = 'flex';
+
+        if(config.autoplay !== false && currentIdx < 0){
+            currentIdx = -1;
+            playNext();
+        }
+    }
+
+    function generateShuffleOrder(){
+        shuffledOrder = playlist.map(function(_,i){return i});
+        for(var i = shuffledOrder.length - 1; i > 0; i--){
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = shuffledOrder[i];
+            shuffledOrder[i] = shuffledOrder[j];
+            shuffledOrder[j] = tmp;
+        }
+    }
+
+    /* === Playback === */
+    function playTrack(idx){
+        if(idx < 0 || idx >= playlist.length) return;
+        currentIdx = idx;
+        var track = playlist[idx];
+
+        audio.src = track.dataUrl;
+        audio.play().catch(function(){});
+        isPlaying = true;
+        document.getElementById('btnPlay').textContent = '⏸';
+        document.getElementById('nowTitle').textContent = track.name;
+
+        renderPlaylist();
+    }
+
+    window.playNext = function(){
+        if(!playlist.length) return;
+        var nextIdx;
+        if(isShuffle){
+            var shufflePos = shuffledOrder.indexOf(currentIdx);
+            shufflePos = (shufflePos + 1) % shuffledOrder.length;
+            if(shufflePos === 0 && !isLoop && currentIdx >= 0){
+                audio.pause(); isPlaying = false;
+                document.getElementById('btnPlay').textContent = '▶';
+                return;
+            }
+            nextIdx = shuffledOrder[shufflePos];
+        } else {
+            nextIdx = currentIdx + 1;
+            if(nextIdx >= playlist.length){
+                if(!isLoop){ audio.pause(); isPlaying=false; document.getElementById('btnPlay').textContent='▶'; return; }
+                nextIdx = 0;
+            }
+        }
+        playTrack(nextIdx);
+    };
+
+    window.playPrev = function(){
+        if(!playlist.length) return;
+        if(audio.currentTime > 3){ audio.currentTime = 0; return; }
+        var prevIdx = currentIdx - 1;
+        if(prevIdx < 0) prevIdx = playlist.length - 1;
+        playTrack(prevIdx);
+    };
+
+    window.togglePlay = function(){
+        if(!playlist.length) return;
+        if(currentIdx < 0){ playNext(); return; }
+        if(isPlaying){ audio.pause(); isPlaying=false; document.getElementById('btnPlay').textContent='▶'; }
+        else { audio.play().catch(function(){}); isPlaying=true; document.getElementById('btnPlay').textContent='⏸'; }
+    };
+
+    window.toggleShuffle = function(){
+        isShuffle = !isShuffle;
+        document.getElementById('btnShuffle').classList.toggle('active', isShuffle);
+        if(isShuffle) generateShuffleOrder();
+    };
+
+    window.toggleLoop = function(){
+        isLoop = !isLoop;
+        document.getElementById('btnLoop').classList.toggle('active', isLoop);
+    };
+
+    window.setVolume = function(val){
+        audio.volume = val / 100;
+        document.getElementById('volumeLabel').textContent = val + '%';
+    };
+
+    window.playFromPlaylist = function(idx){
+        playTrack(idx);
+    };
+
+    audio.addEventListener('ended', function(){ playNext(); });
+    audio.addEventListener('error', function(){ setTimeout(playNext, 1000); });
+
+    /* === Progress === */
+    function updateProgress(){
+        if(!audio.duration) return;
+        var pct = (audio.currentTime / audio.duration) * 100;
+        document.getElementById('progressFill').style.width = pct + '%';
+        document.getElementById('timeElapsed').textContent = fmtTime(audio.currentTime);
+        document.getElementById('timeDuration').textContent = fmtTime(audio.duration);
+    }
+    setInterval(updateProgress, 500);
+
+    function fmtTime(s){
+        var m = Math.floor(s/60);
+        var sec = Math.floor(s%60);
+        return m + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+
+    /* === Render playlist === */
+    function renderPlaylist(){
+        var html = '';
+        playlist.forEach(function(t, i){
+            html += '<div class="pl-item' + (i===currentIdx?' active':'') + '" onclick="playFromPlaylist('+i+')">' +
+                '<span class="pl-num">' + (i===currentIdx ? '▶' : (i+1)) + '</span>' +
+                '<span class="pl-name">' + esc(t.name) + '</span>' +
+                '<span class="pl-dur">' + fmtTime(t.duration||0) + '</span>' +
+                '</div>';
+        });
+        document.getElementById('playlistBox').innerHTML = html;
+    }
+
+    /* === Refresh data every 30s === */
+    setInterval(function(){
+        if(navigator.onLine && franchiseId){
+            var oldLen = playlist.length;
+            config = DataStore.get('radio_config_' + franchiseId) || {};
+            var trackData = DataStore.get('radio_tracks_' + franchiseId) || [];
+            var playlistData = DataStore.get('radio_playlist_' + franchiseId) || [];
+            var trackMap = {};
+            trackData.forEach(function(t){ trackMap[t.id] = t; });
+            playlist = [];
+            playlistData.forEach(function(p){ if(trackMap[p.trackId]) playlist.push(trackMap[p.trackId]); });
+            if(playlist.length !== oldLen){ generateShuffleOrder(); renderPlaylist(); }
+        }
+    }, 30000);
+
+    /* === Utilities === */
+    function esc(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
+
+    /* === Service Worker === */
+    if('serviceWorker' in navigator){
+        navigator.serviceWorker.register('/sw.js').catch(function(){});
+    }
+
+    /* === Boot === */
+    parseUrl();
+    setTimeout(loadData, 800);
+})();
+</script>
+</body>
+</html>

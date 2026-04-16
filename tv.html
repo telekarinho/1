@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>MilkyPot TV</title>
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="/manifest-tv.json">
+<link rel="stylesheet" href="/css/tv-slides.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Segoe UI',Tahoma,sans-serif;cursor:none}
+body.idle{cursor:none}
+body:not(.idle){cursor:default}
+
+/* Fullscreen player */
+#player{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center}
+#player img,#player video{width:100%;height:100%;object-fit:contain;position:absolute;inset:0}
+#player .text-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5vw;text-align:center}
+#player .text-slide h1{font-size:clamp(32px,6vw,96px);font-weight:800;line-height:1.1;text-shadow:0 4px 20px rgba(0,0,0,.3)}
+#player .text-slide p{font-size:clamp(18px,3vw,48px);margin-top:1vw;opacity:.9;text-shadow:0 2px 10px rgba(0,0,0,.2)}
+
+/* Progress bar */
+#progressBar{position:fixed;bottom:0;left:0;height:4px;background:#42A5F5;z-index:10;transition:width linear}
+#progressBar.hidden{opacity:0}
+
+/* Loading / error */
+#loadingScreen{position:fixed;inset:0;background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:100}
+#loadingScreen.hidden{display:none}
+#loadingScreen h1{font-size:48px;margin-bottom:8px}
+#loadingScreen p{font-size:18px;opacity:.7}
+#loadingScreen .spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:#42A5F5;border-radius:50%;animation:spin 1s linear infinite;margin-top:24px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Status */
+#status{position:fixed;top:16px;right:16px;z-index:20;display:flex;gap:8px;opacity:0;transition:opacity .5s}
+#status.show{opacity:1}
+#status .tag{padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(0,0,0,.6);color:#fff}
+#status .tag.offline{background:rgba(255,152,0,.9)}
+#status .tag.online{background:rgba(76,175,80,.9)}
+
+/* Clock overlay */
+#clock{position:fixed;font-size:28px;font-weight:700;color:rgba(255,255,255,.8);z-index:10;text-shadow:0 2px 8px rgba(0,0,0,.7);padding:12px 20px}
+
+/* Logo watermark */
+#watermark{position:fixed;z-index:10;opacity:.5;height:36px;padding:12px 20px}
+
+/* Weather widget */
+#weather{position:fixed;z-index:10;display:none;padding:10px 16px;background:rgba(0,0,0,.5);border-radius:12px;color:#fff;font-size:14px;backdrop-filter:blur(6px)}
+#weather .weather-temp{font-size:32px;font-weight:800;line-height:1}
+#weather .weather-city{font-size:12px;opacity:.7;margin-top:2px}
+#weather .weather-desc{font-size:12px;opacity:.8}
+
+/* News ticker */
+#newsTicker{position:fixed;bottom:0;left:0;right:0;z-index:15;background:linear-gradient(90deg,rgba(0,0,0,.85),rgba(0,0,0,.7));padding:10px 0;display:none;overflow:hidden;white-space:nowrap}
+#newsTicker .ticker-content{display:inline-block;animation:tickerScroll 20s linear infinite;color:#fff;font-size:18px;font-weight:600;padding-left:100%}
+@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+#newsTicker.active{display:block}
+#newsTicker.active ~ #progressBar{bottom:42px}
+</style>
+</head>
+<body>
+    <div id="loadingScreen">
+        <h1>MilkyPot TV</h1>
+        <p id="loadingMsg">Carregando playlist...</p>
+        <div class="spinner"></div>
+    </div>
+
+    <div id="player"></div>
+    <div id="progressBar"></div>
+    <div id="status"><span class="tag" id="statusTag"></span></div>
+    <div id="clock"></div>
+    <img id="watermark" src="/images/logo-milkypot.png" alt="" onerror="this.style.display='none'">
+    <div id="weather">
+        <div class="weather-temp" id="weatherTemp">--</div>
+        <div class="weather-desc" id="weatherDesc"></div>
+        <div class="weather-city" id="weatherCity"></div>
+    </div>
+    <div id="newsTicker">
+        <div class="ticker-content" id="tickerText"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="/js/core/constants.js"></script>
+    <script src="/js/core/utils.js"></script>
+    <script src="/js/core/datastore.js"></script>
+    <script src="/js/core/firebase-config.js"></script>
+<script>
+/* ============================================
+   MilkyPot TV Player — Fullscreen Digital Signage
+   ============================================
+   URL format: milkypot.com/tv.html?f=FRANCHISE&tv=TVID
+           or: milkypot.com/tv.html#FRANCHISE/TVID
+   ============================================ */
+(function(){
+    var player = document.getElementById('player');
+    var progressBar = document.getElementById('progressBar');
+    var loadingScreen = document.getElementById('loadingScreen');
+    var loadingMsg = document.getElementById('loadingMsg');
+    var clockEl = document.getElementById('clock');
+    var watermark = document.getElementById('watermark');
+    var statusTag = document.getElementById('statusTag');
+    var statusDiv = document.getElementById('status');
+    var weatherEl = document.getElementById('weather');
+    var tickerEl = document.getElementById('newsTicker');
+    var tickerText = document.getElementById('tickerText');
+
+    var playlist = [];
+    var media = {};
+    var currentIdx = -1;
+    var timer = null;
+    var franchiseId = null;
+    var tvId = null;
+    var config = {};
+
+    /* === Parse URL === */
+    function parseUrl(){
+        var hash = location.hash.replace('#','');
+        if(!hash){
+            var params = new URLSearchParams(location.search);
+            franchiseId = params.get('f');
+            tvId = params.get('tv');
+        } else {
+            var parts = hash.split('/');
+            if(parts.length >= 2){
+                franchiseId = decodeURIComponent(parts[0]);
+                tvId = decodeURIComponent(parts[1]);
+            } else {
+                tvId = decodeURIComponent(parts[0]);
+            }
+        }
+    }
+
+    /* === Load config from DataStore === */
+    function loadConfig(){
+        if(!franchiseId) return;
+        config = DataStore.get('tv_config_' + franchiseId) || {};
+        applyConfig();
+    }
+
+    function applyConfig(){
+        /* --- Object fit --- */
+        var fit = config.objectFit || 'contain';
+        var styleTag = document.getElementById('dynamicFitStyle');
+        if(!styleTag){
+            styleTag = document.createElement('style');
+            styleTag.id = 'dynamicFitStyle';
+            document.head.appendChild(styleTag);
+        }
+        styleTag.textContent = '#player img,#player video{object-fit:' + fit + ' !important}';
+
+        /* --- Clock --- */
+        if(config.showClock === false){
+            clockEl.style.display = 'none';
+        } else {
+            clockEl.style.display = 'block';
+            positionElement(clockEl, config.clockPosition || 'bottom-right');
+        }
+
+        /* --- Logo / Watermark --- */
+        if(config.showLogo === false){
+            watermark.style.display = 'none';
+        } else {
+            watermark.style.display = 'block';
+            if(config.customLogo){
+                watermark.src = config.customLogo;
+            }
+            positionElement(watermark, config.logoPosition || 'top-left');
+        }
+
+        /* --- Weather --- */
+        if(config.showWeather){
+            weatherEl.style.display = 'block';
+            // Position weather opposite to clock to avoid overlap
+            var clockPos = config.clockPosition || 'bottom-right';
+            var weatherPos = clockPos === 'bottom-right' ? 'top-right' :
+                             clockPos === 'bottom-left' ? 'top-left' :
+                             clockPos === 'top-right' ? 'bottom-right' : 'bottom-left';
+            positionElement(weatherEl, weatherPos);
+            fetchWeather(config.weatherCity || 'Sao Paulo');
+        } else {
+            weatherEl.style.display = 'none';
+        }
+
+        /* --- News Ticker --- */
+        if(config.showNews && config.newsTicker){
+            tickerEl.classList.add('active');
+            tickerText.textContent = config.newsTicker + '     \u2022     ' + config.newsTicker + '     \u2022     ';
+            // Adjust ticker scroll speed based on text length
+            var duration = Math.max(15, config.newsTicker.length * 0.4);
+            tickerText.style.animationDuration = duration + 's';
+        } else {
+            tickerEl.classList.remove('active');
+        }
+    }
+
+    function positionElement(el, pos){
+        el.style.top = el.style.bottom = el.style.left = el.style.right = 'auto';
+        switch(pos){
+            case 'top-left':     el.style.top = '16px'; el.style.left = '20px'; break;
+            case 'top-right':    el.style.top = '16px'; el.style.right = '20px'; break;
+            case 'bottom-left':  el.style.bottom = '20px'; el.style.left = '20px'; break;
+            case 'bottom-right': el.style.bottom = '20px'; el.style.right = '24px'; break;
+        }
+        // Push up if news ticker is active and element is at bottom
+        if(config.showNews && config.newsTicker && (pos === 'bottom-left' || pos === 'bottom-right')){
+            el.style.bottom = '60px';
+        }
+    }
+
+    /* === Weather === */
+    var weatherCache = { data: null, time: 0 };
+    function fetchWeather(city){
+        // Cache for 15 min
+        if(weatherCache.data && (Date.now() - weatherCache.time) < 900000){
+            renderWeather(weatherCache.data);
+            return;
+        }
+        var url = 'https://wttr.in/' + encodeURIComponent(city) + '?format=j1';
+        fetch(url).then(function(r){ return r.json(); }).then(function(data){
+            if(data && data.current_condition && data.current_condition[0]){
+                weatherCache = { data: data, time: Date.now() };
+                renderWeather(data);
+            }
+        }).catch(function(){
+            // Silently fail — weather is non-critical
+            document.getElementById('weatherTemp').textContent = '--';
+        });
+    }
+
+    function renderWeather(data){
+        var c = data.current_condition[0];
+        var temp = c.temp_C || '--';
+        var desc = '';
+        if(c.lang_pt && c.lang_pt[0]) desc = c.lang_pt[0].value;
+        else if(c.weatherDesc && c.weatherDesc[0]) desc = c.weatherDesc[0].value;
+        document.getElementById('weatherTemp').textContent = temp + '\u00B0C';
+        document.getElementById('weatherDesc').textContent = desc;
+        document.getElementById('weatherCity').textContent = config.weatherCity || '';
+    }
+
+    /* === Load playlist from DataStore === */
+    function loadPlaylist(){
+        var fid = franchiseId;
+
+        if(!fid){
+            var franchises = DataStore.get('franchises') || [];
+            for(var i=0; i<franchises.length; i++){
+                var f = franchises[i];
+                var tvs = DataStore.get('tv_devices_' + f.id) || [];
+                var match = tvs.find(function(t){ return t.id === tvId || t.slug === tvId; });
+                if(match){
+                    fid = f.id;
+                    tvId = match.id;
+                    break;
+                }
+            }
+        }
+
+        if(!fid){
+            loadingMsg.textContent = 'TV nao encontrada. Verifique a URL.';
+            return;
+        }
+
+        franchiseId = fid;
+
+        // Reload config on each playlist refresh
+        loadConfig();
+
+        var playlistData = DataStore.get('tv_playlist_' + fid) || [];
+        var mediaData = DataStore.get('tv_media_' + fid) || [];
+
+        media = {};
+        mediaData.forEach(function(m){ media[m.id] = m; });
+
+        playlist = [];
+        playlistData.forEach(function(p){
+            if(media[p.mediaId]){
+                playlist.push({
+                    media: media[p.mediaId],
+                    duration: (p.duration || media[p.mediaId].duration || 8) * 1000
+                });
+            }
+        });
+
+        if(!playlist.length){
+            loadingMsg.textContent = 'Playlist vazia. Adicione midias no painel da franquia.';
+            return;
+        }
+
+        loadingScreen.classList.add('hidden');
+        if(currentIdx < 0){
+            currentIdx = -1;
+            playNext();
+        }
+    }
+
+    /* === Playback === */
+    function playNext(){
+        if(!playlist.length) return;
+        currentIdx = (currentIdx + 1) % playlist.length;
+        var item = playlist[currentIdx];
+        var m = item.media;
+        var fit = config.objectFit || 'contain';
+
+        clearTimeout(timer);
+        player.innerHTML = '';
+
+        if(m.type === 'image'){
+            var img = document.createElement('img');
+            img.src = m.dataUrl;
+            img.alt = m.name;
+            img.style.objectFit = fit;
+            player.appendChild(img);
+            startProgress(item.duration);
+            timer = setTimeout(playNext, item.duration);
+        }
+        else if(m.type === 'video'){
+            var video = document.createElement('video');
+            video.src = m.dataUrl;
+            video.muted = false;
+            video.autoplay = true;
+            video.playsInline = true;
+            video.style.objectFit = fit;
+            video.onloadedmetadata = function(){
+                var dur = item.duration || (video.duration * 1000);
+                startProgress(dur);
+                timer = setTimeout(playNext, dur);
+            };
+            video.onended = function(){ playNext(); };
+            video.onerror = function(){ playNext(); };
+            player.appendChild(video);
+            video.play().catch(function(){
+                video.muted = true;
+                video.play().catch(function(){});
+            });
+        }
+        else if(m.type === 'text'){
+            var div = document.createElement('div');
+            div.className = 'text-slide';
+            div.style.background = m.bg || 'linear-gradient(135deg,#6C63FF,#FF6B6B)';
+            div.style.color = m.textColor || '#fff';
+            div.innerHTML = '<h1>' + esc(m.title || '') + '</h1>' + (m.subtitle ? '<p>' + esc(m.subtitle) + '</p>' : '');
+            player.appendChild(div);
+            startProgress(item.duration);
+            timer = setTimeout(playNext, item.duration);
+        }
+        else if(m.type === 'product'){
+            player.innerHTML = renderProductHero(m);
+            startProgress(item.duration);
+            timer = setTimeout(playNext, item.duration);
+        }
+        else if(m.type === 'promo'){
+            player.innerHTML = renderPromoFlash(m);
+            startProgress(item.duration);
+            timer = setTimeout(playNext, item.duration);
+        }
+        else if(m.type === 'combo'){
+            player.innerHTML = renderComboDeal(m);
+            startProgress(item.duration);
+            timer = setTimeout(playNext, item.duration);
+        }
+        else if(m.type === 'menu'){
+            player.innerHTML = renderMenuGrid(m);
+            startProgress(item.duration);
+            timer = setTimeout(playNext, item.duration);
+        }
+        else if(m.type === 'story'){
+            player.innerHTML = renderStory(m);
+            startProgress(item.duration);
+            timer = setTimeout(playNext, item.duration);
+        }
+        else {
+            timer = setTimeout(playNext, 1000);
+        }
+    }
+
+    /* === Template Renderers === */
+    function renderProductHero(m){
+        var oldPrice = m.productOldPrice ? '<span class="hero-price-old">R$ ' + esc(m.productOldPrice) + '</span>' : '';
+        var badge = m.productBadge ? '<span class="hero-badge">' + esc(m.productBadge) + '</span>' : '';
+        return '<div class="tv-slide slide-product-hero" data-animate="slide-left">' +
+            '<div class="hero-info">' +
+            '<span class="hero-tagline">' + esc(m.productTagline || 'MilkyPot') + '</span>' +
+            '<h1 class="hero-product-name">' + esc(m.productName || m.name) + '</h1>' +
+            '<p class="hero-description">' + esc(m.productDesc || '') + '</p>' +
+            '<div class="hero-price-block">' + oldPrice +
+            '<span class="hero-price"><span class="hero-price-currency">R$</span> ' + esc(m.productPrice || '') + '</span>' +
+            '</div></div>' +
+            '<div class="hero-photo">' + badge +
+            (m.productImage ? '<img src="' + m.productImage + '" alt="' + esc(m.name) + '">' : '') +
+            '</div></div>';
+    }
+
+    function renderPromoFlash(m){
+        var savings = m.promoSavings ? '<span class="promo-savings">' + esc(m.promoSavings) + '</span>' : '';
+        var oldPrice = m.promoOldPrice ? '<div class="promo-price-before">' +
+            '<span class="promo-price-before-label">De</span>' +
+            '<span class="promo-price-before-value">R$ ' + esc(m.promoOldPrice) + '</span></div>' +
+            '<span class="promo-price-arrow">\u2192</span>' : '';
+        return '<div class="tv-slide slide-promo-flash" data-animate="slide-left">' +
+            '<div class="promo-content">' +
+            '<span class="promo-urgency-tag">\u26A1 ' + esc(m.promoUrgency || 'PROMOCAO') + '</span>' +
+            '<h1 class="promo-headline">' + esc(m.promoHeadline || m.name) + '</h1>' +
+            '<p class="promo-subtext">' + esc(m.promoSubtext || '') + '</p>' +
+            '<div class="promo-prices">' + oldPrice +
+            '<span class="promo-price-after">R$ ' + esc(m.promoPrice || '') + savings + '</span>' +
+            '</div></div>' +
+            '<div class="promo-photo">' +
+            (m.promoImage ? '<img src="' + m.promoImage + '" alt="">' : '') +
+            '</div></div>';
+    }
+
+    function renderComboDeal(m){
+        var items = m.comboItems || [];
+        var productsHtml = '';
+        items.forEach(function(ci, idx){
+            if(idx > 0) productsHtml += '<span class="combo-plus">+</span>';
+            productsHtml += '<div class="combo-product">' +
+                '<div class="combo-product-photo">' +
+                (ci.image ? '<img src="' + ci.image + '" alt="">' : '<div style="font-size:48px">🍨</div>') +
+                '</div><span class="combo-product-name">' + esc(ci.name) + '</span></div>';
+        });
+        var oldPrice = m.comboOldPrice ? '<span class="combo-original-price">R$ ' + esc(m.comboOldPrice) + '</span>' : '';
+        return '<div class="tv-slide slide-combo-deal" data-animate="combo">' +
+            '<div class="combo-header"><span class="combo-label">Oferta Especial</span>' +
+            '<h1 class="combo-title">' + esc(m.comboTitle || m.name) + '</h1></div>' +
+            '<div class="combo-products">' + productsHtml + '</div>' +
+            '<div class="combo-total">' + oldPrice +
+            '<span class="combo-equals">=</span>' +
+            '<span class="combo-total-price">R$ ' + esc(m.comboPrice || '') + '</span></div>' +
+            (m.comboFooter ? '<p class="combo-footer">' + esc(m.comboFooter) + '</p>' : '') +
+            '</div>';
+    }
+
+    function renderMenuGrid(m){
+        var items = m.menuItems || [];
+        var cols = items.length <= 4 ? 'cols-2' : 'cols-3';
+        var gridHtml = '';
+        items.forEach(function(mi){
+            var tag = mi.tag ? '<span class="grid-item-tag">' + esc(mi.tag) + '</span>' : '';
+            gridHtml += '<div class="grid-item"><div class="grid-item-photo">' + tag +
+                (mi.image ? '<img src="' + mi.image + '" alt="">' : '<div style="width:100%;height:100%;background:#1A1730;display:flex;align-items:center;justify-content:center;font-size:36px">🍨</div>') +
+                '</div><div class="grid-item-info">' +
+                '<span class="grid-item-name">' + esc(mi.name) + '</span>' +
+                '<span class="grid-item-price">R$ ' + esc(mi.price) + '</span>' +
+                '</div></div>';
+        });
+        return '<div class="tv-slide slide-menu-grid" data-animate="stagger">' +
+            '<div class="grid-header"><h2 class="grid-category">' + esc(m.menuTitle || 'Cardapio') + '</h2>' +
+            '<img class="grid-logo" src="/images/logo-milkypot.png" alt="" onerror="this.style.display=\'none\'">' +
+            '</div><div class="grid-products ' + cols + '">' + gridHtml + '</div></div>';
+    }
+
+    function renderStory(m){
+        var oldPrice = m.storyOldPrice ? '<span class="story-price-old">R$ ' + esc(m.storyOldPrice) + '</span>' : '';
+        return '<div class="tv-slide slide-story" data-animate="slide-up">' +
+            '<div class="story-bg">' +
+            (m.storyImage ? '<img src="' + m.storyImage + '" alt="">' : '') +
+            '</div><div class="story-overlay"></div>' +
+            '<img class="story-logo" src="/images/logo-milkypot.png" alt="" onerror="this.style.display=\'none\'">' +
+            '<div class="story-content">' +
+            '<span class="story-brand-tag">' + esc(m.storyBrandTag || 'MilkyPot') + '</span>' +
+            '<h1 class="story-product-name">' + esc(m.storyProductName || m.name) + '</h1>' +
+            '<p class="story-description">' + esc(m.storyDesc || '') + '</p>' +
+            '<div class="story-price">' + oldPrice +
+            '<span class="story-price-value">R$ ' + esc(m.storyPrice || '') + '</span>' +
+            '</div></div><div class="story-frame"></div></div>';
+    }
+
+    function startProgress(durMs){
+        progressBar.style.transition = 'none';
+        progressBar.style.width = '0%';
+        requestAnimationFrame(function(){
+            requestAnimationFrame(function(){
+                progressBar.style.transition = 'width ' + (durMs/1000) + 's linear';
+                progressBar.style.width = '100%';
+            });
+        });
+    }
+
+    /* === Clock === */
+    function updateClock(){
+        var d = new Date();
+        clockEl.textContent = d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    }
+    setInterval(updateClock, 30000);
+    updateClock();
+
+    /* === Online/Offline indicator === */
+    function updateStatus(){
+        if(navigator.onLine){
+            statusTag.textContent = 'Online';
+            statusTag.className = 'tag online';
+            statusDiv.classList.add('show');
+            setTimeout(function(){ statusDiv.classList.remove('show'); }, 3000);
+        } else {
+            statusTag.textContent = 'Offline';
+            statusTag.className = 'tag offline';
+            statusDiv.classList.add('show');
+        }
+    }
+    window.addEventListener('online', function(){
+        updateStatus();
+        setTimeout(loadPlaylist, 2000);
+    });
+    window.addEventListener('offline', updateStatus);
+
+    /* === Auto-hide cursor after 3s === */
+    var cursorTimer;
+    document.addEventListener('mousemove', function(){
+        document.body.classList.remove('idle');
+        clearTimeout(cursorTimer);
+        cursorTimer = setTimeout(function(){ document.body.classList.add('idle'); }, 3000);
+    });
+    document.body.classList.add('idle');
+
+    /* === Fullscreen on click/tap === */
+    document.addEventListener('click', function(){
+        if(!document.fullscreenElement){
+            document.documentElement.requestFullscreen().catch(function(){});
+        }
+    });
+
+    /* === Keyboard controls === */
+    document.addEventListener('keydown', function(e){
+        if(e.key === 'ArrowRight' || e.key === ' ') playNext();
+        if(e.key === 'ArrowLeft'){ currentIdx = Math.max(-1, currentIdx - 2); playNext(); }
+        if(e.key === 'f' || e.key === 'F'){
+            if(document.fullscreenElement) document.exitFullscreen();
+            else document.documentElement.requestFullscreen().catch(function(){});
+        }
+    });
+
+    /* === Periodic playlist + config refresh (online only, every 30s) === */
+    setInterval(function(){
+        if(navigator.onLine && franchiseId) loadPlaylist();
+    }, 30000);
+
+    /* === Refresh weather every 15 min === */
+    setInterval(function(){
+        if(navigator.onLine && config.showWeather && config.weatherCity){
+            weatherCache.time = 0; // Force refresh
+            fetchWeather(config.weatherCity);
+        }
+    }, 900000);
+
+    /* === Escape hatch === */
+    function esc(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
+
+    /* === Service Worker === */
+    if('serviceWorker' in navigator){
+        navigator.serviceWorker.register('/sw.js').then(function(reg){
+            window.addEventListener('online', function(){ reg.active && reg.active.postMessage({type:'REPLAY_OFFLINE_QUEUE'}); });
+        }).catch(function(e){ console.warn('SW:', e); });
+    }
+
+    /* === Boot === */
+    parseUrl();
+    setTimeout(loadPlaylist, 800);
+    if(!navigator.onLine) updateStatus();
+})();
+</script>
+</body>
+</html>
