@@ -116,6 +116,9 @@ body:not(.idle){cursor:default}
     var franchiseId = null;
     var tvId = null;
     var config = {};
+    var tvDevice = null; // { wallPosition, wallTotal }
+    var wallPosition = 1;
+    var wallTotal = 1;
 
     /* === Parse URL === */
     function parseUrl(){
@@ -198,6 +201,40 @@ body:not(.idle){cursor:default}
         }
     }
 
+    /* === Video Wall Mode === */
+    function applyWallMode(){
+        // Add CSS that transforms the player viewport for wall mode
+        var styleTag = document.getElementById('wallModeStyle');
+        if(!styleTag){
+            styleTag = document.createElement('style');
+            styleTag.id = 'wallModeStyle';
+            document.head.appendChild(styleTag);
+        }
+        if(wallTotal > 1){
+            // For span slides: scale width to total and translate by position
+            // For non-span slides: render normally (each TV shows same content)
+            var translateX = -(wallPosition - 1) * 100;
+            styleTag.textContent =
+                '.tv-slide[data-wall="span"]{' +
+                    'position:fixed !important;' +
+                    'top:0 !important;' +
+                    'right:auto !important;' +
+                    'bottom:auto !important;' +
+                    'left:' + translateX + 'vw !important;' +
+                    'width:' + (wallTotal * 100) + 'vw !important;' +
+                    'height:100vh !important;' +
+                '}';
+        } else {
+            styleTag.textContent = '';
+        }
+    }
+
+    /* === Wall-aware slide attributes === */
+    function wallAttr(m){
+        // Returns data-wall="span" if this slide should span across wall
+        return (m.wallMode === 'span' && wallTotal > 1) ? ' data-wall="span"' : '';
+    }
+
     function positionElement(el, pos){
         el.style.top = el.style.bottom = el.style.left = el.style.right = 'auto';
         switch(pos){
@@ -268,6 +305,15 @@ body:not(.idle){cursor:default}
 
         franchiseId = fid;
 
+        // Load this TV's device info for video wall config
+        var tvs = DataStore.get('tv_devices_' + fid) || [];
+        tvDevice = tvs.find(function(t){ return t.id === tvId; });
+        if(tvDevice){
+            wallPosition = parseInt(tvDevice.wallPosition) || 1;
+            wallTotal = parseInt(tvDevice.wallTotal) || 1;
+            applyWallMode();
+        }
+
         // Reload config on each playlist refresh
         loadConfig();
 
@@ -300,9 +346,31 @@ body:not(.idle){cursor:default}
     }
 
     /* === Playback === */
+    // Calculate sync index for wall mode - all TVs on same wall show same slide at same time
+    function getSyncedIndex(){
+        if(wallTotal <= 1 || !playlist.length) return null;
+        // Build cumulative duration array
+        var cumul = [0];
+        var total = 0;
+        playlist.forEach(function(it){ total += it.duration; cumul.push(total); });
+        if(!total) return 0;
+        // Use Unix time modulo total duration to find slide
+        var t = Date.now() % total;
+        for(var i = 0; i < cumul.length - 1; i++){
+            if(t >= cumul[i] && t < cumul[i+1]) return i;
+        }
+        return 0;
+    }
+
     function playNext(){
         if(!playlist.length) return;
-        currentIdx = (currentIdx + 1) % playlist.length;
+        // For wall mode, use time-synced index; otherwise increment
+        var syncIdx = getSyncedIndex();
+        if(syncIdx !== null){
+            currentIdx = syncIdx;
+        } else {
+            currentIdx = (currentIdx + 1) % playlist.length;
+        }
         var item = playlist[currentIdx];
         var m = item.media;
         var fit = config.objectFit || 'contain';
@@ -379,17 +447,32 @@ body:not(.idle){cursor:default}
         }
     }
 
+    /* === Price Formatting (menu engineering) === */
+    // When config.hidePriceSymbol is true, omit R$ (proven to increase conversion ~8%)
+    function priceFmt(val){
+        if(!val && val !== 0) return '';
+        var clean = esc(String(val).replace(/^R\$\s*/i,''));
+        return config.hidePriceSymbol ? clean : ('R$ ' + clean);
+    }
+    function priceFmtBadge(val){
+        if(!val && val !== 0) return '';
+        var clean = esc(String(val).replace(/^R\$\s*/i,''));
+        return config.hidePriceSymbol
+            ? clean
+            : '<span class="hero-price-currency">R$</span> ' + clean;
+    }
+
     /* === Template Renderers === */
     function renderProductHero(m){
-        var oldPrice = m.productOldPrice ? '<span class="hero-price-old">R$ ' + esc(m.productOldPrice) + '</span>' : '';
+        var oldPrice = m.productOldPrice ? '<span class="hero-price-old">' + priceFmt(m.productOldPrice) + '</span>' : '';
         var badge = m.productBadge ? '<span class="hero-badge">' + esc(m.productBadge) + '</span>' : '';
-        return '<div class="tv-slide slide-product-hero" data-animate="slide-left">' +
+        return '<div class="tv-slide slide-product-hero" data-animate="slide-left"' + wallAttr(m) + '>' +
             '<div class="hero-info">' +
             '<span class="hero-tagline">' + esc(m.productTagline || 'MilkyPot') + '</span>' +
             '<h1 class="hero-product-name">' + esc(m.productName || m.name) + '</h1>' +
             '<p class="hero-description">' + esc(m.productDesc || '') + '</p>' +
             '<div class="hero-price-block">' + oldPrice +
-            '<span class="hero-price"><span class="hero-price-currency">R$</span> ' + esc(m.productPrice || '') + '</span>' +
+            '<span class="hero-price">' + priceFmtBadge(m.productPrice) + '</span>' +
             '</div></div>' +
             '<div class="hero-photo">' + badge +
             (m.productImage ? '<img src="' + m.productImage + '" alt="' + esc(m.name) + '">' : '') +
@@ -400,15 +483,15 @@ body:not(.idle){cursor:default}
         var savings = m.promoSavings ? '<span class="promo-savings">' + esc(m.promoSavings) + '</span>' : '';
         var oldPrice = m.promoOldPrice ? '<div class="promo-price-before">' +
             '<span class="promo-price-before-label">De</span>' +
-            '<span class="promo-price-before-value">R$ ' + esc(m.promoOldPrice) + '</span></div>' +
+            '<span class="promo-price-before-value">' + priceFmt(m.promoOldPrice) + '</span></div>' +
             '<span class="promo-price-arrow">\u2192</span>' : '';
-        return '<div class="tv-slide slide-promo-flash" data-animate="slide-left">' +
+        return '<div class="tv-slide slide-promo-flash" data-animate="slide-left"' + wallAttr(m) + '>' +
             '<div class="promo-content">' +
             '<span class="promo-urgency-tag">\u26A1 ' + esc(m.promoUrgency || 'PROMOCAO') + '</span>' +
             '<h1 class="promo-headline">' + esc(m.promoHeadline || m.name) + '</h1>' +
             '<p class="promo-subtext">' + esc(m.promoSubtext || '') + '</p>' +
             '<div class="promo-prices">' + oldPrice +
-            '<span class="promo-price-after">R$ ' + esc(m.promoPrice || '') + savings + '</span>' +
+            '<span class="promo-price-after">' + priceFmt(m.promoPrice) + savings + '</span>' +
             '</div></div>' +
             '<div class="promo-photo">' +
             (m.promoImage ? '<img src="' + m.promoImage + '" alt="">' : '') +
@@ -425,14 +508,14 @@ body:not(.idle){cursor:default}
                 (ci.image ? '<img src="' + ci.image + '" alt="">' : '<div style="font-size:48px">🍨</div>') +
                 '</div><span class="combo-product-name">' + esc(ci.name) + '</span></div>';
         });
-        var oldPrice = m.comboOldPrice ? '<span class="combo-original-price">R$ ' + esc(m.comboOldPrice) + '</span>' : '';
-        return '<div class="tv-slide slide-combo-deal" data-animate="combo">' +
+        var oldPrice = m.comboOldPrice ? '<span class="combo-original-price">' + priceFmt(m.comboOldPrice) + '</span>' : '';
+        return '<div class="tv-slide slide-combo-deal" data-animate="combo"' + wallAttr(m) + '>' +
             '<div class="combo-header"><span class="combo-label">Oferta Especial</span>' +
             '<h1 class="combo-title">' + esc(m.comboTitle || m.name) + '</h1></div>' +
             '<div class="combo-products">' + productsHtml + '</div>' +
             '<div class="combo-total">' + oldPrice +
             '<span class="combo-equals">=</span>' +
-            '<span class="combo-total-price">R$ ' + esc(m.comboPrice || '') + '</span></div>' +
+            '<span class="combo-total-price">' + priceFmt(m.comboPrice) + '</span></div>' +
             (m.comboFooter ? '<p class="combo-footer">' + esc(m.comboFooter) + '</p>' : '') +
             '</div>';
     }
@@ -447,18 +530,18 @@ body:not(.idle){cursor:default}
                 (mi.image ? '<img src="' + mi.image + '" alt="">' : '<div style="width:100%;height:100%;background:#1A1730;display:flex;align-items:center;justify-content:center;font-size:36px">🍨</div>') +
                 '</div><div class="grid-item-info">' +
                 '<span class="grid-item-name">' + esc(mi.name) + '</span>' +
-                '<span class="grid-item-price">R$ ' + esc(mi.price) + '</span>' +
+                '<span class="grid-item-price">' + priceFmt(mi.price) + '</span>' +
                 '</div></div>';
         });
-        return '<div class="tv-slide slide-menu-grid" data-animate="stagger">' +
+        return '<div class="tv-slide slide-menu-grid" data-animate="stagger"' + wallAttr(m) + '>' +
             '<div class="grid-header"><h2 class="grid-category">' + esc(m.menuTitle || 'Cardapio') + '</h2>' +
             '<img class="grid-logo" src="/images/logo-milkypot.png" alt="" onerror="this.style.display=\'none\'">' +
             '</div><div class="grid-products ' + cols + '">' + gridHtml + '</div></div>';
     }
 
     function renderStory(m){
-        var oldPrice = m.storyOldPrice ? '<span class="story-price-old">R$ ' + esc(m.storyOldPrice) + '</span>' : '';
-        return '<div class="tv-slide slide-story" data-animate="slide-up">' +
+        var oldPrice = m.storyOldPrice ? '<span class="story-price-old">' + priceFmt(m.storyOldPrice) + '</span>' : '';
+        return '<div class="tv-slide slide-story" data-animate="slide-up"' + wallAttr(m) + '>' +
             '<div class="story-bg">' +
             (m.storyImage ? '<img src="' + m.storyImage + '" alt="">' : '') +
             '</div><div class="story-overlay"></div>' +
@@ -468,7 +551,7 @@ body:not(.idle){cursor:default}
             '<h1 class="story-product-name">' + esc(m.storyProductName || m.name) + '</h1>' +
             '<p class="story-description">' + esc(m.storyDesc || '') + '</p>' +
             '<div class="story-price">' + oldPrice +
-            '<span class="story-price-value">R$ ' + esc(m.storyPrice || '') + '</span>' +
+            '<span class="story-price-value">' + priceFmt(m.storyPrice) + '</span>' +
             '</div></div><div class="story-frame"></div></div>';
     }
 

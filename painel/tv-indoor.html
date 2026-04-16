@@ -156,6 +156,18 @@
                 <div class="tab-panel" id="tabVitrine">
                     <p style="font-size:14px;color:#888;margin-bottom:16px">Escolha um template profissional, preencha os dados e adicione a biblioteca. Cada template e otimizado pra vender mais!</p>
 
+                    <!-- 10 Campanhas prontas (atalho) -->
+                    <details style="background:#fff5e6;border-radius:12px;padding:0;margin-bottom:20px;border:1px solid #ffe0b8">
+                        <summary style="padding:14px 18px;cursor:pointer;font-family:'Baloo 2',cursive;font-size:15px;font-weight:700;color:#d97706;list-style:none;display:flex;align-items:center;justify-content:space-between">
+                            <span>🚀 10 Campanhas Prontas - Adicionar em 1 clique</span>
+                            <span style="font-size:12px;font-weight:600;opacity:.7">ver todas ▾</span>
+                        </summary>
+                        <div style="padding:0 18px 18px">
+                            <p style="font-size:12px;color:#a0702b;margin-bottom:12px">Templates testados que aumentam vendas em momentos especificos. Clique pra adicionar a biblioteca.</p>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px" id="campaignsList"></div>
+                        </div>
+                    </details>
+
                     <!-- Template selector cards -->
                     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px" id="templateCards">
                         <div class="tv-card" style="padding:16px;cursor:pointer;text-align:center;border:2px solid transparent;transition:border .2s" onclick="selectTemplate('product')" id="tplProduct">
@@ -249,6 +261,17 @@
                         <button class="btn btn-sm btn-outline" onclick="addMenuItem()" style="margin-bottom:12px">+ Adicionar produto ao cardapio</button>
                         <div class="form-group"><label>Duracao (seg)</label><input type="number" class="form-control" id="menuDuration" value="15" min="8" max="30"></div>
                         <button class="btn btn-primary" onclick="addMenuSlide()" style="width:100%;margin-top:8px">+ Adicionar Cardapio</button>
+                    </div>
+
+                    <!-- Video Wall mode toggle (applies to whichever template is being created) -->
+                    <div id="wallModeToggle" style="display:none;background:linear-gradient(135deg,#f0e8ff,#e8f0ff);border-radius:12px;padding:12px 16px;margin-bottom:16px;max-width:600px">
+                        <label style="display:flex;align-items:center;gap:12px;cursor:pointer">
+                            <input type="checkbox" id="slideWallSpan" style="width:20px;height:20px;accent-color:#6C63FF">
+                            <div>
+                                <strong style="font-size:14px;color:#6C63FF">📺 Atravessar Video Wall</strong>
+                                <p style="font-size:12px;color:#666;margin-top:2px">Este slide sera esticado ao longo de todas as TVs do video wall (1 conteudo em varias telas). So funciona se a franquia tem TVs com wall configurado.</p>
+                            </div>
+                        </label>
                     </div>
 
                     <div id="tplFormStory" class="tpl-form" style="display:none;max-width:500px">
@@ -409,6 +432,18 @@
                         <textarea class="form-control" id="cfgNewsTxt" rows="2" placeholder="Bem-vindo ao MilkyPot! Promocoes incriveis hoje..." onchange="saveConfig()"></textarea>
                     </div>
 
+                    <!-- Psicologia de Preco -->
+                    <div class="tv-card" style="padding:16px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <span style="font-size:24px">💰</span>
+                                <div><strong>Ocultar simbolo R$</strong><br><small style="color:#888">+8% conversao (estudo Cornell)</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgHidePriceSymbol" onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <p style="font-size:11px;color:#999;margin:0">Sem o R$ o cerebro decide sobre a compra em vez de pensar em dinheiro. Ideal para TV de loja.</p>
+                    </div>
+
                     <!-- Instagram -->
                     <div class="tv-card" style="padding:16px">
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -442,6 +477,30 @@
                     <label>Local / Descricao</label>
                     <input type="text" class="form-control" id="tvLocation" placeholder="Acima do caixa, parede esquerda">
                 </div>
+
+                <div style="background:#f0f0ff;border-radius:12px;padding:12px 16px;margin-bottom:12px">
+                    <strong style="font-size:13px;color:#6C63FF">📺 Video Wall (multi-TV lado a lado)</strong>
+                    <p style="font-size:11px;color:#888;margin:4px 0 10px">Se esta TV faz parte de um conjunto (2 ou 3 TVs lado a lado), configure a posicao. Conteudo pode atravessar todas as telas.</p>
+                    <div style="display:flex;gap:12px">
+                        <div class="form-group" style="flex:1;margin-bottom:0">
+                            <label style="font-size:12px">Total de TVs do conjunto</label>
+                            <select class="form-control" id="tvWallTotal">
+                                <option value="1">1 - TV sozinha</option>
+                                <option value="2">2 - Duas lado a lado</option>
+                                <option value="3">3 - Tres lado a lado</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1;margin-bottom:0">
+                            <label style="font-size:12px">Posicao desta TV</label>
+                            <select class="form-control" id="tvWallPosition">
+                                <option value="1">1a (esquerda)</option>
+                                <option value="2">2a (meio)</option>
+                                <option value="3">3a (direita)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <input type="hidden" id="tvEditId">
                 <p style="font-size:13px;color:#888;margin-top:16px">Depois de criar, voce recebera uma URL unica para abrir na TV.</p>
                 <div class="panel-modal-footer" style="padding:0;border:0;margin-top:16px">
@@ -486,6 +545,8 @@
         document.getElementById('tvName').value = '';
         document.getElementById('tvLocation').value = '';
         document.getElementById('tvEditId').value = '';
+        document.getElementById('tvWallTotal').value = '1';
+        document.getElementById('tvWallPosition').value = '1';
         document.getElementById('addTvModal').classList.add('active');
     };
     window.closeTvModal = function(){
@@ -496,15 +557,24 @@
         if(!name) return alert('Digite o nome da TV');
         var tvs = getTvs();
         var editId = document.getElementById('tvEditId').value;
+        var wallTotal = parseInt(document.getElementById('tvWallTotal').value) || 1;
+        var wallPosition = parseInt(document.getElementById('tvWallPosition').value) || 1;
         if(editId){
             var t = tvs.find(function(x){return x.id===editId});
-            if(t){ t.name=name; t.location=document.getElementById('tvLocation').value.trim(); }
+            if(t){
+                t.name=name;
+                t.location=document.getElementById('tvLocation').value.trim();
+                t.wallTotal = wallTotal;
+                t.wallPosition = wallPosition;
+            }
         } else {
             var id = 'tv_' + Date.now().toString(36) + Math.random().toString(36).substr(2,4);
             tvs.push({
                 id: id,
                 name: name,
                 location: document.getElementById('tvLocation').value.trim(),
+                wallTotal: wallTotal,
+                wallPosition: wallPosition,
                 createdAt: new Date().toISOString()
             });
         }
@@ -520,6 +590,8 @@
         document.getElementById('tvEditId').value = t.id;
         document.getElementById('tvName').value = t.name;
         document.getElementById('tvLocation').value = t.location || '';
+        document.getElementById('tvWallTotal').value = t.wallTotal || 1;
+        document.getElementById('tvWallPosition').value = t.wallPosition || 1;
         document.getElementById('addTvModal').classList.add('active');
     };
     window.deleteTv = function(id){
@@ -544,8 +616,9 @@
         var playlist = getPlaylist();
         document.getElementById('tvGrid').innerHTML = tvs.length ? tvs.map(function(t){
             var url = base + '/tv.html?f=' + encodeURIComponent(fid) + '&tv=' + encodeURIComponent(t.id);
-            return '<div class="tv-card"><div class="tv-thumb">📺</div><div class="tv-info">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center"><div class="tv-name">' + esc(t.name) + '</div></div>' +
+            var wallBadge = (t.wallTotal && t.wallTotal > 1) ? '<span style="background:#6C63FF;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px">Wall ' + t.wallPosition + '/' + t.wallTotal + '</span>' : '';
+            return '<div class="tv-card"><div class="tv-thumb">📺' + (t.wallTotal > 1 ? '<div style="position:absolute;bottom:4px;right:4px;background:rgba(108,99,255,.9);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px">'+t.wallPosition+'/'+t.wallTotal+'</div>' : '') + '</div><div class="tv-info">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="tv-name">' + esc(t.name) + '</div>' + wallBadge + '</div>' +
                 (t.location ? '<div class="tv-meta">📍 ' + esc(t.location) + '</div>' : '') +
                 '<div class="tv-meta">' + playlist.length + ' midia(s) na playlist</div>' +
                 '<div class="tv-url-box"><input readonly value="' + esc(url) + '"><button class="btn btn-sm btn-primary" onclick="copyTvUrl(\'' + esc(t.id) + '\')">📋 Copiar</button></div>' +
@@ -775,39 +848,133 @@
     function esc(s){ return Utils.escapeHtml ? Utils.escapeHtml(String(s||'')) : String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
 
     /* === Vitrine Templates === */
-    var COPY_PHRASES = [
-        'Feito na hora. Feito pra voce.',
-        'Seu acai do jeito que voce merece.',
-        'Bateu a vontade? A gente resolve.',
-        'Leva dois, paga menos.',
-        'Refrescancia que nao espera.',
-        'Tem coisa nova no cardapio.',
-        'So hoje nesse preco. Vai perder?',
-        'O combo que todo mundo ta pedindo.',
-        'Milkshake de verdade. Sem enrolacao.',
-        'Acai carregado. Preco leve.',
-        'Pede logo antes que acabe.',
-        'Novidade fresquinha saindo do balcao.',
-        'Dois e melhor que um. Leva o combo.',
-        'De quem entende de acai.',
-        'A melhor pausa do seu dia.'
+    // 30 copys profissionais categorizadas - cada uma tem psicologia de venda definida
+    var COPY_CATEGORIES = {
+        'Acai': [
+            'Acai de verdade, batido na hora',
+            '500ml por R$14,90 ate 17h',
+            'Do Para direto pra tigela',
+            'Energia que dura a tarde inteira',
+            'Monte o seu. 12 toppings.',
+            'Pos-treino pede acai MilkyPot'
+        ],
+        'Milkshake': [
+            'Sorvete italiano. Nao e base.',
+            'Ovomaltine crocante de verdade',
+            'Gelado, cremoso, na medida certa',
+            'Shake grande por +R$3 so',
+            'Escolha 2 sabores no mesmo copo',
+            'Aquele shake depois do almoco'
+        ],
+        'Combo/Upsell': [
+            'Combo shake + batata: R$24,90',
+            'Leve 2 acais por R$25',
+            'Adicione leite ninho por R$2',
+            'Duplo topping, so hoje gratis',
+            'Troque agua por shake +R$6',
+            'Tamanho familia, divide com quem ama'
+        ],
+        'Urgencia/Promo': [
+            'So hoje: acai 300ml R$9,90',
+            'Ultimas 20 tigelas do dia',
+            'Terca e dia de shake em dobro',
+            'Promo acaba as 17h',
+            'Chegou a hora do acai (14h-17h)',
+            'Semana do morango: -20%'
+        ],
+        'Prova Social': [
+            'O mais pedido ha 3 anos',
+            '9 em cada 10 pedem de novo',
+            '+40 mil tigelas em 2025',
+            'Campeao do Instagram @milkypot',
+            'Escolhido por nutricionistas',
+            'Favorito da galera do skate'
+        ]
+    };
+
+    // Render copy phrase chips by category
+    var phrasesEl = document.getElementById('copyPhrases');
+    phrasesEl.style.cssText = 'display:flex;flex-direction:column;gap:8px;margin-top:8px';
+    Object.keys(COPY_CATEGORIES).forEach(function(cat){
+        var row = document.createElement('div');
+        var label = document.createElement('div');
+        label.textContent = cat + ':';
+        label.style.cssText = 'font-size:10px;font-weight:800;color:#9060D0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px';
+        row.appendChild(label);
+        var chips = document.createElement('div');
+        chips.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px';
+        COPY_CATEGORIES[cat].forEach(function(phrase){
+            var chip = document.createElement('span');
+            chip.textContent = phrase;
+            chip.style.cssText = 'display:inline-block;padding:4px 10px;background:#e8e0ff;color:#6C63FF;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;transition:background .15s';
+            chip.onclick = function(){
+                var visible = document.querySelector('.tpl-form[style*="block"] input[type="text"]:not([type="file"])');
+                if(visible && !visible.value) visible.value = phrase;
+                else navigator.clipboard.writeText(phrase).catch(function(){});
+                Utils.showToast('Copy copiada!', 'success');
+            };
+            chips.appendChild(chip);
+        });
+        row.appendChild(chips);
+        phrasesEl.appendChild(row);
+    });
+
+    /* === 10 Campanhas Sazonais Prontas === */
+    var CAMPAIGNS = [
+        { id:'hora-acai', emoji:'🍨', name:'Hora do Acai', when:'14h-17h dias uteis', trigger:'Combater queda de fluxo da tarde',
+          tpl:{ type:'promo', promoHeadline:'Chegou a hora do Acai', promoSubtext:'300ml fresquinho ate as 17h', promoUrgency:'14h - 17h', promoPrice:'9,90', promoOldPrice:'14,90', promoSavings:'-33%', duration:10 } },
+        { id:'terca-shake', emoji:'🥤', name:'Terca do Shake', when:'Toda terca o dia todo', trigger:'Criar habito semanal recorrente',
+          tpl:{ type:'promo', promoHeadline:'Terca e dia de Shake', promoSubtext:'Shake M por R$12 o dia todo', promoUrgency:'So hoje', promoPrice:'12,00', promoOldPrice:'17,00', promoSavings:'-30%', duration:10 } },
+        { id:'esquenta-fds', emoji:'🎉', name:'Esquenta Fim de Semana', when:'Sexta 17h-21h', trigger:'Aumentar ticket pre-balada',
+          tpl:{ type:'combo', comboTitle:'Combo Casal MilkyPot', comboItems:[{name:'Shake 500ml'},{name:'Shake 500ml'}], comboPrice:'29,90', comboOldPrice:'38,00', comboFooter:'Sexta a noite pede isso aqui', duration:12 } },
+        { id:'chuva', emoji:'☔', name:'Chuva MilkyPot', when:'Quando esta chovendo', trigger:'Reverter queda de movimento',
+          tpl:{ type:'promo', promoHeadline:'Ta chovendo la fora?', promoSubtext:'Shake quente de chocolate pra esquentar', promoUrgency:'Hoje', promoPrice:'13,90', promoOldPrice:'17,90', duration:10 } },
+        { id:'calorao', emoji:'☀️', name:'Calorao 30°+', when:'Dias acima de 30°C', trigger:'Dobrar venda de acai em dia quente',
+          tpl:{ type:'promo', promoHeadline:'30°C la fora?', promoSubtext:'Acai 500ml gelado pra refrescar', promoUrgency:'So hoje', promoPrice:'13,90', promoOldPrice:'18,90', duration:10 } },
+        { id:'pos-treino', emoji:'💪', name:'Pos-treino', when:'18h-20h perto de academia', trigger:'Capturar publico fitness',
+          tpl:{ type:'product', productTagline:'Pos-treino', productName:'Acai Proteico + Whey', productDesc:'Recuperacao + energia pra valer. 500ml com whey, banana e granola.', productPrice:'17,90', productBadge:'Fitness', duration:10 } },
+        { id:'semana-crianca', emoji:'🧸', name:'Semana da Crianca', when:'01-12 outubro', trigger:'Aumentar ticket familia',
+          tpl:{ type:'product', productTagline:'Para os pequenos', productName:'Kid Shake 200ml', productDesc:'Tamanho ideal pra criancada. Sabores preferidos.', productPrice:'7,90', productBadge:'Semana da Crianca', duration:10 } },
+        { id:'volta-aulas', emoji:'🎒', name:'Volta as Aulas', when:'Fevereiro e agosto', trigger:'Estudante recorrente',
+          tpl:{ type:'promo', promoHeadline:'Mostra a carteirinha', promoSubtext:'Leva topping gratis no seu acai', promoUrgency:'Volta as aulas', promoPrice:'14,90', duration:10 } },
+        { id:'black-november', emoji:'🔥', name:'Black November', when:'Novembro inteiro', trigger:'Volume mensal',
+          tpl:{ type:'promo', promoHeadline:'Black November MilkyPot', promoSubtext:'Leve 2, pague 1,5 em qualquer acai', promoUrgency:'Mes todo', promoPrice:'22,00', promoOldPrice:'30,00', promoSavings:'-25%', duration:10 } },
+        { id:'aniversario', emoji:'🎂', name:'Aniversario da Loja', when:'Mes aniversario da franquia', trigger:'Fidelizacao + buzz local',
+          tpl:{ type:'promo', promoHeadline:'MilkyPot faz aniversario', promoSubtext:'Tudo por R$10 no dia da festa', promoUrgency:'So neste dia', promoPrice:'10,00', promoSavings:'Festa', duration:10 } }
     ];
 
-    // Render copy phrase chips
-    var phrasesEl = document.getElementById('copyPhrases');
-    COPY_PHRASES.forEach(function(phrase){
-        var chip = document.createElement('span');
-        chip.textContent = phrase;
-        chip.style.cssText = 'display:inline-block;padding:4px 10px;background:#e8e0ff;color:#6C63FF;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;transition:background .15s';
-        chip.onclick = function(){
-            // Copy to currently focused/visible text input
-            var visible = document.querySelector('.tpl-form[style*="block"] input[type="text"]:not([type="file"])');
-            if(visible && !visible.value) visible.value = phrase;
-            else navigator.clipboard.writeText(phrase).catch(function(){});
-            Utils.showToast('Copy copiada!', 'success');
-        };
-        phrasesEl.appendChild(chip);
-    });
+    window.applyCampaign = function(id){
+        var c = CAMPAIGNS.find(function(x){return x.id===id});
+        if(!c) return;
+        if(!confirm('Adicionar campanha "' + c.name + '" a biblioteca?\n\n' + c.trigger + '\n\nQuando: ' + c.when)) return;
+        var media = getMedia();
+        var item = Object.assign({}, c.tpl, {
+            id: genId(),
+            name: c.name,
+            campaignId: c.id,
+            wallMode: 'single',
+            addedAt: new Date().toISOString()
+        });
+        media.push(item);
+        saveMedia(media);
+        renderMedia();
+        Utils.showToast('Campanha "' + c.name + '" adicionada!', 'success');
+    };
+
+    function renderCampaigns(){
+        var container = document.getElementById('campaignsList');
+        if(!container) return;
+        container.innerHTML = CAMPAIGNS.map(function(c){
+            return '<div style="background:#fff;border-radius:12px;padding:12px 14px;border:1px solid #f0e8ff;cursor:pointer;transition:transform .15s,box-shadow .15s" onclick="applyCampaign(\'' + c.id + '\')" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 4px 16px rgba(108,99,255,.15)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'">' +
+                '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">' +
+                    '<span style="font-size:24px">' + c.emoji + '</span>' +
+                    '<strong style="font-family:\'Baloo 2\',cursive;font-size:14px;color:#5A4570">' + esc(c.name) + '</strong>' +
+                '</div>' +
+                '<div style="font-size:11px;color:#888;line-height:1.4"><strong>Quando:</strong> ' + esc(c.when) + '</div>' +
+                '<div style="font-size:11px;color:#888;line-height:1.4"><strong>Funciona:</strong> ' + esc(c.trigger) + '</div>' +
+            '</div>';
+        }).join('');
+    }
 
     var selectedTemplate = null;
     window.selectTemplate = function(tpl){
@@ -817,7 +984,16 @@
         document.querySelectorAll('.tpl-form').forEach(function(f){ f.style.display = 'none'; });
         var formId = 'tplForm' + tpl.charAt(0).toUpperCase() + tpl.slice(1);
         document.getElementById(formId).style.display = 'block';
+        // Show wall mode toggle (only if franchise has wall-configured TVs)
+        var tvs = getTvs();
+        var hasWall = tvs.some(function(t){ return (t.wallTotal||1) > 1; });
+        document.getElementById('wallModeToggle').style.display = hasWall ? 'block' : 'none';
+        document.getElementById('slideWallSpan').checked = false;
     };
+
+    function getWallSpan(){
+        return document.getElementById('slideWallSpan').checked ? 'span' : 'single';
+    }
 
     function readFileAsDataUrl(inputId, cb){
         var file = document.getElementById(inputId).files[0];
@@ -847,6 +1023,7 @@
                 productBadge: document.getElementById('prodBadge').value.trim(),
                 productImage: imgData,
                 duration: parseInt(document.getElementById('prodDuration').value) || 10,
+                wallMode: getWallSpan(),
                 addedAt: new Date().toISOString()
             });
             saveMedia(media);
@@ -880,6 +1057,7 @@
                 promoSavings: document.getElementById('promoSavings').value.trim(),
                 promoImage: imgData,
                 duration: parseInt(document.getElementById('promoDuration').value) || 10,
+                wallMode: getWallSpan(),
                 addedAt: new Date().toISOString()
             });
             saveMedia(media);
@@ -953,6 +1131,7 @@
                 comboOldPrice: document.getElementById('comboOldPrice').value.trim(),
                 comboFooter: document.getElementById('comboFooter').value.trim(),
                 duration: parseInt(document.getElementById('comboDuration').value) || 12,
+                wallMode: getWallSpan(),
                 addedAt: new Date().toISOString()
             });
             saveMedia(media);
@@ -1028,6 +1207,7 @@
                 menuTitle: title,
                 menuItems: menuItems,
                 duration: parseInt(document.getElementById('menuDuration').value) || 15,
+                wallMode: getWallSpan(),
                 addedAt: new Date().toISOString()
             });
             saveMedia(media);
@@ -1059,6 +1239,7 @@
                 storyOldPrice: document.getElementById('storyOldPrice').value.trim(),
                 storyImage: imgData,
                 duration: parseInt(document.getElementById('storyDuration').value) || 10,
+                wallMode: getWallSpan(),
                 addedAt: new Date().toISOString()
             });
             saveMedia(media);
@@ -1092,6 +1273,7 @@
             showNews: document.getElementById('cfgNews').checked,
             newsTicker: document.getElementById('cfgNewsTxt').value.trim(),
             instagramUser: document.getElementById('cfgInstaUser').value.trim(),
+            hidePriceSymbol: document.getElementById('cfgHidePriceSymbol').checked,
             updatedAt: new Date().toISOString()
         };
         setConfig(c);
@@ -1133,6 +1315,7 @@
         document.getElementById('cfgNews').checked = !!c.showNews;
         document.getElementById('cfgNewsTxt').value = c.newsTicker || '';
         document.getElementById('cfgInstaUser').value = c.instagramUser || '';
+        document.getElementById('cfgHidePriceSymbol').checked = !!c.hidePriceSymbol;
         if(c.customLogo) document.getElementById('cfgLogoPreview').src = c.customLogo;
     }
 
@@ -1140,6 +1323,7 @@
     renderTvs();
     renderMedia();
     renderPlaylist();
+    renderCampaigns();
     loadConfig();
 
     /* === Service Worker === */
