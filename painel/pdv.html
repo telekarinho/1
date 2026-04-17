@@ -259,11 +259,27 @@
             <button class="modal-close" onclick="closeRedeemModal()">×</button>
         </div>
         <div class="buffet-body">
-            <p style="font-size:13px;color:#666;margin-bottom:14px">Digite o codigo da raspinha que o cliente mostrou na tela. O premio sera aplicado no pedido atual.</p>
+            <p style="font-size:13px;color:#666;margin-bottom:14px">📱 Escaneie o QR code do recibo OU digite o codigo curto (6 letras). Super rapido!</p>
+
+            <!-- Big scanner button -->
+            <button class="buffet-btn primary" id="btnScanQR" onclick="startQRScanner()" style="background:linear-gradient(135deg,#4CAF50,#2E7D32);border-color:#2E7D32;padding:16px;font-size:16px;margin-bottom:14px;width:100%">📷 Escanear QR Code do Recibo</button>
+
+            <!-- Scanner video container -->
+            <div id="qrScanContainer" style="display:none;margin-bottom:14px;border-radius:14px;overflow:hidden;background:#000;position:relative">
+                <video id="qrVideo" style="width:100%;display:block" autoplay muted playsinline></video>
+                <canvas id="qrCanvas" style="display:none"></canvas>
+                <div style="position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+                    <span style="background:rgba(0,0,0,.7);color:#4CAF50;font-size:12px;font-weight:700;padding:4px 10px;border-radius:10px;animation:pulse 1.5s infinite">🟢 SCANEANDO...</span>
+                    <button onclick="stopQRScanner()" style="background:rgba(0,0,0,.7);color:#fff;border:0;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px">×</button>
+                </div>
+                <div style="position:absolute;bottom:0;left:0;right:0;padding:10px;background:linear-gradient(transparent,rgba(0,0,0,.8));color:#fff;font-size:12px;text-align:center">Aponte a camera pro QR Code do recibo</div>
+            </div>
+
+            <div style="text-align:center;margin:10px 0;color:#999;font-size:12px;font-weight:700">OU DIGITE MANUALMENTE</div>
 
             <div class="buffet-field" style="margin-bottom:14px">
-                <label>Codigo da Raspinha</label>
-                <input type="text" id="redeemCode" placeholder="MKP-XXXX-20260416-ABCDEFGH" style="font-family:monospace;text-transform:uppercase;letter-spacing:1px;font-size:16px" autocomplete="off">
+                <label>Codigo Curto (6 letras)</label>
+                <input type="text" id="redeemCode" placeholder="XXX-XXX" maxlength="27" style="font-family:monospace;text-transform:uppercase;letter-spacing:2px;font-size:22px;font-weight:800;text-align:center" autocomplete="off" inputmode="text">
             </div>
 
             <!-- Status display (preenchido dinamicamente) -->
@@ -274,7 +290,7 @@
                 <button class="buffet-btn primary" id="btnConfirmRedeem" onclick="confirmRedeem()" style="background:linear-gradient(135deg,#EC407A,#AD1457);border-color:#AD1457">✅ Validar Codigo</button>
             </div>
 
-            <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">💡 O cliente pode mostrar o QR Code ou a tela com o codigo apos raspar.</p>
+            <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">💡 Codigo curto tem 6 letras (XXX-XXX). Ja impresso no recibo.</p>
         </div>
     </div>
 </div>
@@ -782,6 +798,12 @@
         return 'MKP-' + (fid||'XXX').toUpperCase().slice(0,4).padEnd(4,'X') + '-' + ymd + '-' + nanoId(8);
     }
 
+    // Codigo curto 6 chars formato XXX-XXX - facil de digitar pelo cliente
+    // 28^6 = 481 milhoes combinacoes - suficiente se limpar antigos
+    function buildShortCode(){
+        return nanoId(3) + '-' + nanoId(3);
+    }
+
     function saveScratch(scratch){
         var key = 'scratches_' + fid;
         var arr = DataStore.get(key) || [];
@@ -812,12 +834,14 @@
         if(scratchCfg.enabled !== false){
             var scratchPrize = rollScratchPrize();
             var scratchCode = buildScratchCode();
+            var shortCode = buildShortCode();
             var createdAt = new Date();
             var expiresAt = scratchPrize.validity > 0
                 ? new Date(createdAt.getTime() + scratchPrize.validity*24*60*60*1000).toISOString()
                 : null;
             scratchData = {
                 code: scratchCode,
+                shortCode: shortCode,
                 franchiseId: fid,
                 storeName: fr ? fr.name : 'MilkyPot',
                 prizeCode: scratchPrize.code,
@@ -1172,31 +1196,132 @@
     };
 
     function findScratchAnywhere(code){
-        // Try Firestore first (cross-device) then localStorage
+        // Accepts short code (XXX-XXX) OR full code (MKP-XXXX-YYYYMMDD-XXXXXXXX) OR full URL
         return new Promise(function(resolve){
+            // Extract code from URL if scanned (might be full raspinha URL)
             var codeUp = code.toUpperCase();
+            var urlMatch = codeUp.match(/[?&]C=([A-Z0-9-]+)/);
+            if(urlMatch) codeUp = urlMatch[1];
+            else {
+                // Try plain query param format
+                var qMatch = codeUp.match(/CODE=([A-Z0-9-]+)/);
+                if(qMatch) codeUp = qMatch[1];
+            }
+
+            var isShort = codeUp.length <= 8; // Short codes are 7 chars (XXX-XXX)
+
             // Check localStorage first (fast)
             var keys = Object.keys(localStorage);
             for(var i=0;i<keys.length;i++){
                 if(keys[i].indexOf('mp_scratches_') === 0){
                     try {
                         var arr = JSON.parse(localStorage.getItem(keys[i]));
-                        var found = arr.find(function(s){ return (s.code||'').toUpperCase() === codeUp; });
+                        var found = arr.find(function(s){
+                            var fullMatch = (s.code||'').toUpperCase() === codeUp;
+                            var shortMatch = (s.shortCode||'').toUpperCase() === codeUp;
+                            return fullMatch || shortMatch;
+                        });
                         if(found) return resolve(found);
                     } catch(e){}
                 }
             }
-            // Fallback Firestore
+            // Fallback Firestore - full code query
             if(typeof firebase !== 'undefined' && firebase.firestore){
-                firebase.firestore().collection('scratches').doc(codeUp).get().then(function(doc){
-                    if(doc.exists) resolve(doc.data());
-                    else resolve(null);
-                }).catch(function(){ resolve(null); });
+                if(isShort){
+                    // Firestore query by shortCode
+                    firebase.firestore().collection('scratches').where('shortCode','==',codeUp).limit(1).get().then(function(snap){
+                        if(!snap.empty) resolve(snap.docs[0].data());
+                        else resolve(null);
+                    }).catch(function(){ resolve(null); });
+                } else {
+                    firebase.firestore().collection('scratches').doc(codeUp).get().then(function(doc){
+                        if(doc.exists) resolve(doc.data());
+                        else resolve(null);
+                    }).catch(function(){ resolve(null); });
+                }
             } else {
                 resolve(null);
             }
         });
     }
+
+    // QR Code Scanner usando jsQR + getUserMedia
+    var qrStream = null;
+    var qrScanActive = false;
+    var qrJsLoaded = false;
+
+    function loadJsQR(){
+        return new Promise(function(resolve, reject){
+            if(qrJsLoaded || typeof jsQR !== 'undefined'){ qrJsLoaded = true; return resolve(); }
+            var s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+            s.onload = function(){ qrJsLoaded = true; resolve(); };
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+    }
+
+    window.startQRScanner = async function(){
+        try {
+            await loadJsQR();
+            document.getElementById('qrScanContainer').style.display = 'block';
+            document.getElementById('btnScanQR').style.display = 'none';
+
+            var video = document.getElementById('qrVideo');
+            qrStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
+            });
+            video.srcObject = qrStream;
+            qrScanActive = true;
+            requestAnimationFrame(scanQRFrame);
+        } catch(err){
+            toast('Erro ao abrir camera: ' + err.message);
+            stopQRScanner();
+        }
+    };
+
+    window.stopQRScanner = function(){
+        qrScanActive = false;
+        if(qrStream){
+            qrStream.getTracks().forEach(function(t){ t.stop(); });
+            qrStream = null;
+        }
+        document.getElementById('qrScanContainer').style.display = 'none';
+        document.getElementById('btnScanQR').style.display = 'block';
+    };
+
+    function scanQRFrame(){
+        if(!qrScanActive) return;
+        var video = document.getElementById('qrVideo');
+        var canvas = document.getElementById('qrCanvas');
+        if(video.readyState === video.HAVE_ENOUGH_DATA && typeof jsQR !== 'undefined'){
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var qr = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+            if(qr && qr.data){
+                // Extract code from URL or use raw
+                var found = qr.data;
+                var m = found.match(/[?&]c=([A-Za-z0-9-]+)/);
+                if(m) found = m[1];
+                document.getElementById('redeemCode').value = found.toUpperCase();
+                stopQRScanner();
+                toast('📷 QR Code lido! Validando...');
+                setTimeout(window.confirmRedeem, 300);
+                return;
+            }
+        }
+        requestAnimationFrame(scanQRFrame);
+    }
+
+    // Stop scanner on modal close
+    var _origCloseRedeem = window.closeRedeemModal;
+    window.closeRedeemModal = function(){
+        if(qrScanActive) stopQRScanner();
+        _origCloseRedeem();
+    };
 
     window.confirmRedeem = async function(){
         var code = document.getElementById('redeemCode').value.trim().toUpperCase();
@@ -1381,7 +1506,7 @@
         var now = new Date(order.createdAt).toLocaleString('pt-BR');
         var tl = {balcao:'BALCAO',retirada:'RETIRADA',delivery:'DELIVERY'};
         var t = buildReceipt(name, tl[order.type]||order.type.toUpperCase(), now, order.items, order.total, order.customer.name, order.address, order.payment, voucherCode, order.id, scratchData);
-        openPrintWindow(t);
+        openPrintWindow(t, scratchData);
     };
 
     window.printOrder=function(){
@@ -1397,7 +1522,7 @@
         var voucher=document.getElementById('voucherCodeDisplay').textContent || window._lastVoucherCode || '';
         var scratch=window._lastScratchData;
         var t=buildReceipt(name, tl[orderType], now, items, total, customerName, addr, payment, voucher, null, scratch);
-        openPrintWindow(t);
+        openPrintWindow(t, scratch);
     };
 
     // Shared receipt builder with MARKETING COPY for Desafio 10.000 + RASPINHA DA SORTE
@@ -1459,6 +1584,7 @@
         // === RASPINHA DA SORTE - copy viral pra recompra ===
         if(scratch && scratch.code){
             var expiresLabel = scratch.expiresAt ? new Date(scratch.expiresAt).toLocaleDateString('pt-BR') : 'sem validade';
+            var displayCode = scratch.shortCode || scratch.code;
             t += '\n';
             t += '  *** RASPINHA DA SORTE ***\n';
             t += '     VOCE FOI SORTEADO!\n';
@@ -1467,15 +1593,20 @@
             t += '       Raspa pra descobrir!\n';
             t += '\n';
             t += '  ------------------------------\n';
-            t += '    CODIGO DA SUA RASPINHA:\n';
+            t += '    SEU CODIGO DA RASPINHA:\n';
             t += '\n';
-            t += '  ' + centerPad(scratch.code, 30) + '\n';
+            t += '  ' + centerPad('>>>  ' + displayCode + '  <<<', 30) + '\n';
+            t += '\n';
+            t += '  [QR_CODE_PLACEHOLDER]\n';  // Will be replaced by image
+            t += '       Aponte a camera\n';
+            t += '     do celular no QR Code\n';
             t += '\n';
             t += '  ------------------------------\n';
             t += '  COMO DESCOBRIR o que ganhou:\n';
-            t += '  1. milkypot.com/raspinha\n';
-            t += '  2. Digite o codigo acima\n';
-            t += '  3. RASPE e revele na tela!\n';
+            t += '  1. Escaneie o QR Code OU\n';
+            t += '  2. Acesse milkypot.com/raspinha\n';
+            t += '  3. Digite o codigo acima\n';
+            t += '  4. RASPE e revele na tela!\n';
             t += '\n';
             t += '     VALIDO ATE: ' + expiresLabel + '\n';
             t += '\n';
@@ -1507,13 +1638,30 @@
         return ' '.repeat(left) + s;
     }
 
-    function openPrintWindow(text){
-        var w = window.open('', '_blank', 'width=320,height=700');
+    function openPrintWindow(text, scratchData){
+        var w = window.open('', '_blank', 'width=340,height=800');
         if(!w){ toast('Bloqueio de popup - libere impressao'); return; }
-        w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Recibo MilkyPot</title><style>@page{margin:4mm}body{margin:0;padding:6mm}pre{font-family:"Courier New",monospace;font-size:11px;white-space:pre-wrap;line-height:1.25;margin:0}</style></head><body>');
-        w.document.write('<pre>' + text.replace(/</g,'&lt;') + '</pre>');
-        w.document.write('<script>window.onload=function(){window.print();setTimeout(function(){window.close()},400)}<\/script>');
-        w.document.write('</body></html>');
+
+        // Build QR code HTML for client raspinha (deeplinking directly to raspinha page)
+        var qrHtml = '';
+        if(scratchData && scratchData.shortCode){
+            var raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratchData.shortCode);
+            // Uses goqr.me API - renders crisp QR even on thermal printers
+            qrHtml = '<div style="text-align:center;margin:4mm 0"><img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' +
+                encodeURIComponent(raspUrl) + '&ecc=M&margin=0" alt="QR Raspinha" style="width:36mm;height:36mm"></div>';
+        }
+
+        // Split pre text at placeholder and inject QR image
+        var parts = text.split('[QR_CODE_PLACEHOLDER]');
+        var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Recibo MilkyPot</title>' +
+            '<style>@page{margin:4mm}body{margin:0;padding:6mm;font-family:"Courier New",monospace}pre{font-size:11px;white-space:pre-wrap;line-height:1.25;margin:0}</style>' +
+            '</head><body>' +
+            '<pre>' + parts[0].replace(/</g,'&lt;') + '</pre>' +
+            (parts.length > 1 ? qrHtml + '<pre>' + parts.slice(1).join('').replace(/</g,'&lt;') + '</pre>' : '') +
+            '<script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},600)},500)}<\/script>' +
+            '</body></html>';
+
+        w.document.write(html);
         w.document.close();
     }
 

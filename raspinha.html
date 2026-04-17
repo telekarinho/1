@@ -88,7 +88,7 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
     <!-- Stage 1: Code Entry -->
     <div id="codeStage" class="code-box">
         <h2>🎟️ Seu codigo da raspinha</h2>
-        <input type="text" class="code-input" id="codeInput" placeholder="MKP-XXXX-20260416-xxxxxxxx" autocomplete="off" autocapitalize="off">
+        <input type="text" class="code-input" id="codeInput" placeholder="XXX-XXX" autocomplete="off" autocapitalize="characters" style="font-size:24px;font-weight:800;letter-spacing:3px">
         <div class="error-msg" id="errorMsg"></div>
         <button class="btn gold" onclick="checkCode()">✨ Descobrir meu premio</button>
         <p style="text-align:center;font-size:11px;color:#9484A8;margin-top:14px">O codigo esta impresso no seu recibo</p>
@@ -179,15 +179,17 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
     };
 
     function findInLocalStorage(code){
-        // Fallback: look through all franchise scratches in localStorage
-        // Case-insensitive match (codes use nanoid which can be mixed-case)
+        // Accepts full code or short code (XXX-XXX)
         var codeUp = (code || '').toUpperCase();
         var keys = Object.keys(localStorage);
         for(var i=0;i<keys.length;i++){
             if(keys[i].indexOf('mp_scratches_') === 0){
                 try {
                     var arr = JSON.parse(localStorage.getItem(keys[i]));
-                    var found = arr.find(function(s){ return (s.code||'').toUpperCase() === codeUp; });
+                    var found = arr.find(function(s){
+                        return (s.code||'').toUpperCase() === codeUp ||
+                               (s.shortCode||'').toUpperCase() === codeUp;
+                    });
                     if(found) return found;
                 } catch(e){}
             }
@@ -212,7 +214,7 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         var err = document.getElementById('errorMsg');
         err.classList.remove('show');
 
-        if(!code || code.length < 10){
+        if(!code || code.length < 6){
             err.textContent = 'Digite um codigo valido';
             err.classList.add('show');
             return;
@@ -231,8 +233,16 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
             return;
         }
 
-        db.collection('scratches').doc(code).get().then(function(doc){
-            if(!doc.exists){
+        // Short code path (XXX-XXX format, max 8 chars)
+        var isShort = code.length <= 8;
+        var fetchPromise = isShort
+            ? db.collection('scratches').where('shortCode','==',code).limit(1).get().then(function(snap){
+                return snap.empty ? null : { exists: true, data: function(){ return snap.docs[0].data(); } };
+              })
+            : db.collection('scratches').doc(code).get();
+
+        fetchPromise.then(function(doc){
+            if(!doc || !doc.exists){
                 if(tryLocal()) return;
                 err.textContent = 'Codigo nao encontrado. Verifique seu recibo.';
                 err.classList.add('show');
@@ -462,8 +472,9 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         location.href = '/cardapio.html';
     };
 
-    // Auto-check code from URL if present
-    var urlCode = new URLSearchParams(location.search).get('code') || location.hash.replace('#','');
+    // Auto-check code from URL if present (accepts ?c=SHORT or ?code=FULL)
+    var urlParams = new URLSearchParams(location.search);
+    var urlCode = urlParams.get('c') || urlParams.get('code') || location.hash.replace('#','');
     if(urlCode){
         document.getElementById('codeInput').value = urlCode.toUpperCase();
         setTimeout(window.checkCode, 400);
