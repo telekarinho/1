@@ -60,6 +60,26 @@ const Auth = {
                 });
             }
 
+            // Auto-registra franqueado se email bate com access.ownerEmail de alguma franquia
+            if (!profile) {
+                const franchises = DataStore.get('franchises') || [];
+                const matchedFranchise = franchises.find(f => f.access && f.access.ownerEmail === user.email);
+                if (matchedFranchise) {
+                    profile = this._createUserProfile({
+                        email: user.email,
+                        name: user.displayName || (matchedFranchise.access.ownerName || 'Franqueado'),
+                        role: MP.ROLES.FRANCHISEE,
+                        franchiseId: matchedFranchise.id,
+                        firebaseUid: user.uid
+                    });
+                    if (typeof AuditLog !== 'undefined') {
+                        AuditLog.logAuth(AuditLog.EVENTS.USER_CREATED, {
+                            email: user.email, role: MP.ROLES.FRANCHISEE, franchiseId: matchedFranchise.id, via: 'auto-franchise-match'
+                        });
+                    }
+                }
+            }
+
             if (!profile) {
                 await firebaseAuth.signOut();
                 return { success: false, error: 'Este e-mail Google nao esta cadastrado no sistema. Solicite acesso ao administrador.' };
