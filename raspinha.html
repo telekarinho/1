@@ -180,12 +180,14 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
 
     function findInLocalStorage(code){
         // Fallback: look through all franchise scratches in localStorage
+        // Case-insensitive match (codes use nanoid which can be mixed-case)
+        var codeUp = (code || '').toUpperCase();
         var keys = Object.keys(localStorage);
         for(var i=0;i<keys.length;i++){
             if(keys[i].indexOf('mp_scratches_') === 0){
                 try {
                     var arr = JSON.parse(localStorage.getItem(keys[i]));
-                    var found = arr.find(function(s){ return s.code === code; });
+                    var found = arr.find(function(s){ return (s.code||'').toUpperCase() === codeUp; });
                     if(found) return found;
                 } catch(e){}
             }
