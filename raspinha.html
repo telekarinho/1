@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no">
+<title>Raspinha da Sorte - MilkyPot</title>
+<meta name="theme-color" content="#6C63FF">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#E3F2FD 0%,#F0E0FF 40%,#FFF0C8 100%);min-height:100vh;color:#3D2A55;padding:20px}
+.wrap{max-width:440px;margin:0 auto;padding:20px 0}
+.logo{text-align:center;margin-bottom:8px}
+.logo img{height:60px}
+h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;text-align:center;margin-bottom:4px;line-height:1.1}
+.subtitle{text-align:center;font-size:14px;color:#9484A8;margin-bottom:24px}
+
+/* Code input */
+.code-box{background:#fff;border-radius:20px;padding:24px;box-shadow:0 8px 32px rgba(144,202,249,.15);margin-bottom:20px}
+.code-box h2{font-family:'Baloo 2',cursive;font-size:18px;color:#5A4570;text-align:center;margin-bottom:14px}
+.code-input{width:100%;padding:14px 16px;border:2px solid #E3F2FD;border-radius:12px;font-family:monospace;font-size:16px;text-align:center;text-transform:uppercase;letter-spacing:1px;outline:none}
+.code-input:focus{border-color:#42A5F5}
+.btn{width:100%;padding:14px;background:linear-gradient(135deg,#42A5F5,#6C63FF);color:#fff;border:0;border-radius:50px;font-size:16px;font-weight:800;cursor:pointer;font-family:'Baloo 2',cursive;box-shadow:0 6px 20px rgba(108,99,255,.35);margin-top:12px;transition:transform .15s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(108,99,255,.45)}
+.btn:active{transform:scale(.97)}
+.btn.gold{background:linear-gradient(135deg,#FFD54F,#FF9800);box-shadow:0 6px 20px rgba(255,152,0,.35)}
+.btn.secondary{background:#fff;color:#6C63FF;box-shadow:none;border:2px solid #D4A5FF}
+.error-msg{background:#FFEBEE;color:#C62828;padding:10px 14px;border-radius:10px;font-size:13px;margin-top:12px;text-align:center;display:none}
+.error-msg.show{display:block}
+
+/* Scratch canvas area */
+.scratch-section{display:none}
+.scratch-section.active{display:block}
+.scratch-wrap{position:relative;width:100%;aspect-ratio:1.4/1;border-radius:24px;overflow:hidden;box-shadow:0 12px 40px rgba(144,202,249,.25);background:#fff;margin-bottom:20px}
+.prize-layer{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;background:linear-gradient(135deg,#FFF5D1,#FFE0EC,#E0F0FF)}
+.prize-emoji{font-size:72px;margin-bottom:8px;animation:bounce 1.2s ease-in-out infinite}
+.prize-emoji.big{font-size:96px}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.prize-name{font-family:'Baloo 2',cursive;font-size:26px;font-weight:800;color:#5A4570;line-height:1.1;margin-bottom:6px}
+.prize-desc{font-size:13px;color:#9484A8;padding:0 10px}
+.prize-validity{font-size:11px;color:#FF6B6B;font-weight:800;margin-top:10px;text-transform:uppercase;letter-spacing:1px}
+.prize-validity strong{font-size:14px;color:#E53935}
+#scratchCanvas{position:absolute;inset:0;cursor:grab;touch-action:none}
+#scratchCanvas:active{cursor:grabbing}
+.scratch-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(255,255,255,.95);padding:8px 14px;border-radius:20px;font-size:12px;font-weight:700;color:#5A4570;pointer-events:none;animation:hintPulse 1.5s ease-in-out infinite}
+@keyframes hintPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.05)}}
+
+/* Revelation */
+.reveal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+.reveal-overlay.show{display:flex;animation:fadeBg .4s ease}
+@keyframes fadeBg{from{background:rgba(0,0,0,0)}to{background:rgba(0,0,0,.88)}}
+.reveal-card{background:linear-gradient(135deg,#FFF8F0,#F0E0FF);border-radius:24px;padding:32px 28px;max-width:400px;width:100%;text-align:center;position:relative;animation:revealIn .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes revealIn{from{transform:scale(.5) rotateY(90deg);opacity:0}to{transform:scale(1) rotateY(0);opacity:1}}
+.confetti{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;overflow:hidden;border-radius:24px}
+.confetti div{position:absolute;width:8px;height:8px;background:#FFD54F;border-radius:50%;animation:confetti 3s linear infinite}
+.reveal-title{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;line-height:1;margin-bottom:8px;color:#5A4570}
+.reveal-prize{font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;color:#42A5F5;margin:14px 0 8px}
+.reveal-desc{font-size:13px;color:#9484A8;margin-bottom:16px;line-height:1.4}
+.reveal-actions{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+
+/* Status labels */
+.status-chip{display:inline-block;padding:4px 12px;background:#E8F5E9;color:#2E7D32;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.status-chip.expired{background:#FFEBEE;color:#C62828}
+.status-chip.redeemed{background:#E3F2FD;color:#1565C0}
+
+/* Viral section */
+.viral-card{background:linear-gradient(135deg,#FFF0F0,#FFE0F0);border-radius:20px;padding:18px 20px;margin-bottom:14px;border:2px dashed #FF6B6B}
+.viral-card h3{font-family:'Baloo 2',cursive;font-size:16px;color:#C62828;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.viral-card p{font-size:13px;color:#880E4F;margin-bottom:10px;line-height:1.4}
+
+/* Countdown */
+.countdown{background:#FFF3E0;border-radius:14px;padding:12px 14px;margin-bottom:14px;text-align:center;font-size:13px;color:#E65100;font-weight:700}
+.countdown strong{font-size:20px;color:#BF360C}
+
+/* Footer */
+.footer{text-align:center;margin-top:24px;font-size:11px;color:#9484A8}
+.footer a{color:#42A5F5;text-decoration:none;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div class="logo"><img src="/images/logo-milkypot.png" alt="MilkyPot" onerror="this.style.display='none'"></div>
+    <h1>Raspinha da Sorte</h1>
+    <p class="subtitle">Digite seu codigo e descubra seu premio!</p>
+
+    <!-- Stage 1: Code Entry -->
+    <div id="codeStage" class="code-box">
+        <h2>🎟️ Seu codigo da raspinha</h2>
+        <input type="text" class="code-input" id="codeInput" placeholder="MKP-XXXX-20260416-xxxxxxxx" autocomplete="off" autocapitalize="off">
+        <div class="error-msg" id="errorMsg"></div>
+        <button class="btn gold" onclick="checkCode()">✨ Descobrir meu premio</button>
+        <p style="text-align:center;font-size:11px;color:#9484A8;margin-top:14px">O codigo esta impresso no seu recibo</p>
+    </div>
+
+    <!-- Stage 2: Scratch Experience -->
+    <div id="scratchStage" class="scratch-section">
+        <div id="statusLabel" style="text-align:center;margin-bottom:8px"></div>
+
+        <div class="countdown" id="countdown" style="display:none">
+            Expira em <strong id="countdownValue">--</strong>
+        </div>
+
+        <div class="scratch-wrap" id="scratchWrap">
+            <div class="prize-layer" id="prizeLayer">
+                <div class="prize-emoji" id="prizeEmoji">🎁</div>
+                <div class="prize-name" id="prizeName">Seu premio</div>
+                <div class="prize-desc" id="prizeDesc"></div>
+                <div class="prize-validity" id="prizeValidity" style="display:none"></div>
+            </div>
+            <canvas id="scratchCanvas"></canvas>
+            <div class="scratch-hint" id="scratchHint">👆 Raspe aqui</div>
+        </div>
+
+        <button class="btn gold" id="btnRevealAll" onclick="revealAll()" style="display:none">✨ Revelar tudo</button>
+
+        <div id="actionArea" style="display:none">
+            <div class="viral-card">
+                <h3>📸 POSTE E GANHE RASPINHA EXTRA</h3>
+                <p>Tire print da sua raspinha, poste no Instagram marcando <strong>@milkypot</strong> com <strong>#RaspinhaMilkyPot</strong> e ganhe +1 raspinha BONUS no proximo pedido!</p>
+                <button class="btn gold" onclick="openInstagramShare()">📱 Postar agora</button>
+            </div>
+
+            <div class="viral-card" style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-color:#4CAF50">
+                <h3 style="color:#2E7D32">💬 COMPARTILHE NO WHATSAPP</h3>
+                <p style="color:#1B5E20">Manda pro seu amigo e os DOIS ganham 1 raspinha EXTRA no proximo pedido juntos!</p>
+                <button class="btn" style="background:linear-gradient(135deg,#25D366,#128C7E)" onclick="shareWhatsApp()">📲 Enviar no Zap</button>
+            </div>
+
+            <button class="btn secondary" onclick="goToMenu()">🍨 Ver Cardapio</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2026 MilkyPot - Siga <a href="https://instagram.com/milkypot" target="_blank">@milkypot</a></p>
+    </div>
+</div>
+
+<!-- Reveal Overlay -->
+<div class="reveal-overlay" id="revealOverlay">
+    <div class="reveal-card">
+        <div class="confetti" id="confetti"></div>
+        <div class="reveal-title" id="revealTitle">🎉 PARABENS!</div>
+        <div style="font-size:48px;margin:12px 0" id="revealEmoji">🎁</div>
+        <div class="reveal-prize" id="revealPrize">PREMIO AQUI</div>
+        <div class="reveal-desc" id="revealDesc"></div>
+        <div class="reveal-actions">
+            <button class="btn gold" onclick="closeReveal()">Entendi, quero usar!</button>
+            <button class="btn secondary" onclick="shareInstagram()">📱 Postar no Instagram</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="/js/core/firebase-config.js"></script>
+<script>
+(function(){
+    var currentScratch = null;
+    var db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+
+    // Check URL for code
+    var urlCode = new URLSearchParams(location.search).get('code') || location.hash.replace('#','');
+    if(urlCode){
+        document.getElementById('codeInput').value = urlCode.toUpperCase();
+        setTimeout(checkCode, 400);
+    }
+
+    // Prize emoji mapping by tier
+    var TIER_EMOJI = {
+        none:'💭',
+        small:'🎁',
+        medium:'⭐',
+        big:'🎊',
+        mega:'💎'
+    };
+    var TIER_TITLES = {
+        none:'Quase!',
+        small:'Voce ganhou!',
+        medium:'Boa! Voce ganhou!',
+        big:'UAU! Voce ganhou!',
+        mega:'🚨 SUPER PREMIO! 🚨'
+    };
+
+    window.checkCode = function(){
+        var code = document.getElementById('codeInput').value.trim().toUpperCase();
+        var err = document.getElementById('errorMsg');
+        err.classList.remove('show');
+
+        if(!code || code.length < 10){
+            err.textContent = 'Digite um codigo valido';
+            err.classList.add('show');
+            return;
+        }
+
+        if(!db){
+            err.textContent = 'Sem conexao. Verifique internet.';
+            err.classList.add('show');
+            return;
+        }
+
+        db.collection('scratches').doc(code).get().then(function(doc){
+            if(!doc.exists){
+                err.textContent = 'Codigo nao encontrado. Verifique seu recibo.';
+                err.classList.add('show');
+                return;
+            }
+            var scratch = doc.data();
+            scratch.code = code;
+            currentScratch = scratch;
+
+            // Check expiration
+            if(scratch.expiresAt && new Date(scratch.expiresAt) < new Date()){
+                showExpired(scratch);
+                return;
+            }
+
+            // Check if already redeemed
+            if(scratch.status === 'redeemed'){
+                showRedeemed(scratch);
+                return;
+            }
+
+            // Show scratch UI
+            showScratchStage(scratch);
+        }).catch(function(e){
+            console.error(e);
+            err.textContent = 'Erro ao buscar codigo. Tente novamente.';
+            err.classList.add('show');
+        });
+    };
+
+    function showScratchStage(scratch){
+        document.getElementById('codeStage').style.display = 'none';
+        document.getElementById('scratchStage').classList.add('active');
+
+        var tier = scratch.prizeTier || 'small';
+        document.getElementById('prizeEmoji').textContent = TIER_EMOJI[tier];
+        document.getElementById('prizeName').textContent = scratch.prizeName;
+        document.getElementById('prizeDesc').textContent = scratch.prizeDesc || '';
+
+        if(scratch.expiresAt){
+            var exp = new Date(scratch.expiresAt);
+            document.getElementById('prizeValidity').style.display = 'block';
+            document.getElementById('prizeValidity').innerHTML = 'Valido ate <strong>' + exp.toLocaleDateString('pt-BR') + '</strong>';
+            startCountdown(exp);
+        }
+
+        if(scratch.status === 'scratched'){
+            // Already scratched, show result without animation
+            document.getElementById('scratchCanvas').style.display = 'none';
+            document.getElementById('scratchHint').style.display = 'none';
+            document.getElementById('btnRevealAll').style.display = 'none';
+            document.getElementById('actionArea').style.display = 'block';
+            document.getElementById('statusLabel').innerHTML = '<span class="status-chip">Raspada - aguardando resgate</span>';
+        } else {
+            initScratchCanvas(scratch);
+        }
+    }
+
+    function showExpired(scratch){
+        document.getElementById('codeStage').style.display = 'none';
+        document.getElementById('scratchStage').classList.add('active');
+        document.getElementById('statusLabel').innerHTML = '<span class="status-chip expired">Expirada</span>';
+        document.getElementById('prizeEmoji').textContent = '😢';
+        document.getElementById('prizeName').textContent = 'Poxa, essa raspinha ja venceu';
+        document.getElementById('prizeDesc').textContent = 'Venceu em ' + new Date(scratch.expiresAt).toLocaleDateString('pt-BR') + '. Sem drama - faz um novo pedido e vem raspinha novinha!';
+        document.getElementById('scratchCanvas').style.display = 'none';
+        document.getElementById('scratchHint').style.display = 'none';
+        document.getElementById('actionArea').style.display = 'block';
+    }
+
+    function showRedeemed(scratch){
+        document.getElementById('codeStage').style.display = 'none';
+        document.getElementById('scratchStage').classList.add('active');
+        document.getElementById('statusLabel').innerHTML = '<span class="status-chip redeemed">Ja resgatada</span>';
+        document.getElementById('prizeEmoji').textContent = '✅';
+        document.getElementById('prizeName').textContent = 'Esse premio ja foi usado';
+        var redeemedDate = scratch.redeemedAt ? new Date(scratch.redeemedAt).toLocaleDateString('pt-BR') : '';
+        document.getElementById('prizeDesc').textContent = 'Usado em ' + redeemedDate + '. Bora ganhar outra?';
+        document.getElementById('scratchCanvas').style.display = 'none';
+        document.getElementById('scratchHint').style.display = 'none';
+        document.getElementById('actionArea').style.display = 'block';
+    }
+
+    function startCountdown(expAt){
+        function update(){
+            var diff = expAt.getTime() - Date.now();
+            if(diff <= 0){
+                document.getElementById('countdown').innerHTML = '<strong style="color:#C62828">EXPIRADO</strong>';
+                return;
+            }
+            var d = Math.floor(diff/(1000*60*60*24));
+            var h = Math.floor((diff/(1000*60*60))%24);
+            var m = Math.floor((diff/(1000*60))%60);
+            var txt = (d > 0 ? d+'d ' : '') + h+'h '+m+'m';
+            document.getElementById('countdown').style.display = 'block';
+            document.getElementById('countdownValue').textContent = txt;
+        }
+        update();
+        setInterval(update, 30000);
+    }
+
+    function initScratchCanvas(scratch){
+        var canvas = document.getElementById('scratchCanvas');
+        var wrap = document.getElementById('scratchWrap');
+        var rect = wrap.getBoundingClientRect();
+        canvas.width = rect.width * 2;
+        canvas.height = rect.height * 2;
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+        var ctx = canvas.getContext('2d');
+        ctx.scale(2,2);
+
+        // Paint the silver "scratch" layer
+        var grad = ctx.createLinearGradient(0,0,rect.width,rect.height);
+        grad.addColorStop(0,'#B0BEC5');
+        grad.addColorStop(.5,'#CFD8DC');
+        grad.addColorStop(1,'#90A4AE');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0,0,rect.width,rect.height);
+
+        ctx.fillStyle = 'rgba(255,255,255,.3)';
+        ctx.font = 'bold 20px "Baloo 2", cursive';
+        ctx.textAlign = 'center';
+        ctx.fillText('🪙 RASPE AQUI 🪙', rect.width/2, rect.height/2 - 10);
+        ctx.font = '12px Nunito';
+        ctx.fillText('Use o dedo', rect.width/2, rect.height/2 + 14);
+
+        var isDrawing = false;
+        var scratched = 0;
+        var totalPixels = rect.width * rect.height;
+
+        function getPos(e){
+            var r = canvas.getBoundingClientRect();
+            var x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+            var y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+            return {x:x, y:y};
+        }
+
+        function scratch(e){
+            if(!isDrawing) return;
+            e.preventDefault();
+            var p = getPos(e);
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 28, 0, 2*Math.PI);
+            ctx.fill();
+            document.getElementById('scratchHint').style.display = 'none';
+            scratched++;
+            if(scratched === 20) {
+                document.getElementById('btnRevealAll').style.display = 'block';
+            }
+            if(scratched > 80) {
+                // Auto-reveal
+                revealAll();
+            }
+        }
+
+        canvas.addEventListener('mousedown', function(e){ isDrawing = true; scratch(e); });
+        canvas.addEventListener('mousemove', scratch);
+        canvas.addEventListener('mouseup', function(){ isDrawing = false; });
+        canvas.addEventListener('mouseleave', function(){ isDrawing = false; });
+        canvas.addEventListener('touchstart', function(e){ isDrawing = true; scratch(e); }, {passive:false});
+        canvas.addEventListener('touchmove', scratch, {passive:false});
+        canvas.addEventListener('touchend', function(){ isDrawing = false; });
+
+        // Update scratch status in firestore
+        if(db){
+            db.collection('scratches').doc(scratch.code || currentScratch.code).update({
+                status: 'scratched',
+                scratchedAt: new Date().toISOString()
+            }).catch(function(){});
+        }
+    }
+
+    window.revealAll = function(){
+        var canvas = document.getElementById('scratchCanvas');
+        canvas.style.transition = 'opacity .6s ease';
+        canvas.style.opacity = '0';
+        setTimeout(function(){
+            canvas.style.display = 'none';
+            document.getElementById('btnRevealAll').style.display = 'none';
+            document.getElementById('scratchHint').style.display = 'none';
+            showRevealOverlay();
+        }, 600);
+    };
+
+    function showRevealOverlay(){
+        var tier = currentScratch.prizeTier || 'small';
+        document.getElementById('revealTitle').textContent = TIER_TITLES[tier];
+        document.getElementById('revealEmoji').textContent = TIER_EMOJI[tier];
+        document.getElementById('revealPrize').textContent = currentScratch.prizeName;
+        document.getElementById('revealDesc').textContent = currentScratch.prizeDesc;
+        // Confetti
+        var confetti = document.getElementById('confetti');
+        confetti.innerHTML = '';
+        if(tier !== 'none'){
+            var colors = ['#FFD54F','#FF6B6B','#42A5F5','#B87EDC','#66BB6A'];
+            for(var i=0;i<30;i++){
+                var c = document.createElement('div');
+                c.style.background = colors[i%colors.length];
+                c.style.left = (Math.random()*100)+'%';
+                c.style.top = (Math.random()*30)+'%';
+                c.style.animationDelay = (Math.random()*2)+'s';
+                c.style.animationDuration = (2+Math.random()*2)+'s';
+                confetti.appendChild(c);
+            }
+        }
+        document.getElementById('revealOverlay').classList.add('show');
+    }
+
+    window.closeReveal = function(){
+        document.getElementById('revealOverlay').classList.remove('show');
+        document.getElementById('actionArea').style.display = 'block';
+    };
+
+    window.openInstagramShare = function(){
+        var text = 'Acabei de raspar minha Raspinha MilkyPot e ganhei: ' + currentScratch.prizeName + '! 🍨 @milkypot #RaspinhaMilkyPot';
+        if(navigator.share){
+            navigator.share({
+                title:'Raspinha MilkyPot',
+                text:text,
+                url:location.origin + '/raspinha.html?code=' + currentScratch.code
+            }).catch(function(){});
+        } else {
+            // Fallback: copy + open instagram
+            try { navigator.clipboard.writeText(text); } catch(e){}
+            alert('Texto copiado! Agora abra o Instagram e cole na sua story.');
+            location.href = 'https://www.instagram.com/milkypot/';
+        }
+    };
+
+    window.shareInstagram = window.openInstagramShare;
+
+    window.shareWhatsApp = function(){
+        var text = 'Olha o que ganhei na MilkyPot! 🍨 ' + currentScratch.prizeName +
+                   '\n\nAbra a raspinha aqui: ' + location.origin + '/raspinha.html?code=' + currentScratch.code +
+                   '\n\nManda tua raspinha tambem pra gente ir junto na loja!';
+        var url = 'https://wa.me/?text=' + encodeURIComponent(text);
+        window.open(url, '_blank');
+    };
+
+    window.goToMenu = function(){
+        location.href = '/cardapio.html';
+    };
+
+})();
+</script>
+</body>
+</html>

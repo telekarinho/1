@@ -686,6 +686,75 @@
     // ============================================
     // FINISH ORDER (Fechar conta)
     // ============================================
+    // =============================================================
+    // RASPINHA DA SORTE - Prize table (weighted probabilities)
+    // Activate/deactivate per franchise via mp_scratch_prizes_FID config
+    // =============================================================
+    var DEFAULT_SCRATCH_PRIZES = [
+        {code:'RSP_TRY_AGAIN',   name:'Quase! Tente no proximo pedido', desc:'Hoje nao foi! Mas volta amanha que tem raspinha nova.', prob:30, cost:0,   validity:0,  scope:'any',   minOrder:0,  tier:'none'},
+        {code:'RSP_TOPPING_FREE',name:'1 Topping Gratis',               desc:'Voce ganhou 1 topping gratis no proximo shake ou acai!', prob:22, cost:4,   validity:7,  scope:'same',  minOrder:15, tier:'small'},
+        {code:'RSP_UPSIZE',      name:'Upgrade de Tamanho',             desc:'Pediu M? Leva G. Pediu G? Leva GG. Proximo pedido.',     prob:15, cost:5,   validity:10, scope:'same',  minOrder:15, tier:'small'},
+        {code:'RSP_DISC_5',      name:'R$ 5 OFF',                       desc:'R$ 5 de desconto no proximo pedido acima de R$ 20.',     prob:12, cost:5,   validity:15, scope:'any',   minOrder:20, tier:'medium'},
+        {code:'RSP_2BY1_TOPPING',name:'Toppings 2 x 1',                 desc:'Leve 2 toppings pagando 1 no proximo pedido.',           prob:8,  cost:4,   validity:10, scope:'same',  minOrder:15, tier:'medium'},
+        {code:'RSP_BUFFET_100G', name:'+100g Buffet',                   desc:'100g gratis no buffet de acai no proximo check-in.',     prob:5,  cost:6,   validity:15, scope:'same',  minOrder:0,  tier:'medium'},
+        {code:'RSP_COMBO_15',    name:'Combo 15% OFF',                  desc:'15% OFF em qualquer combo no proximo pedido.',           prob:4,  cost:7.5, validity:15, scope:'any',   minOrder:30, tier:'medium'},
+        {code:'RSP_SHAKE_FREE',  name:'Shake M Gratis',                 desc:'SHAKE M GRATIS! Qualquer sabor, proximo pedido.',        prob:2.5,cost:16,  validity:20, scope:'same',  minOrder:15, tier:'big'},
+        {code:'RSP_ACAI_500G',   name:'Acai 500g + 3 toppings',         desc:'Acai 500g com 3 toppings de brinde. Proximo pedido.',    prob:1,  cost:30,  validity:20, scope:'same',  minOrder:15, tier:'big'},
+        {code:'RSP_MEGA_150',    name:'MEGA R$ 150 em creditos',        desc:'VOCE GANHOU R$150 MilkyPot! Use em ate 30 dias.',        prob:0.5,cost:150, validity:30, scope:'any',   minOrder:0,  tier:'mega'}
+    ];
+
+    function getScratchPrizes(){
+        var custom = DataStore.get('scratch_prizes_'+fid);
+        if(custom && custom.length) return custom;
+        return DEFAULT_SCRATCH_PRIZES;
+    }
+
+    function getScratchConfig(){
+        return DataStore.get('scratch_config_'+fid) || {
+            enabled: true,
+            maxDailyBudget: 500,
+            cooldownHours: 0
+        };
+    }
+
+    function rollScratchPrize(){
+        var prizes = getScratchPrizes().filter(function(p){return !p.disabled});
+        var totalProb = prizes.reduce(function(s,p){return s+p.prob},0);
+        var r = Math.random() * totalProb;
+        var acc = 0;
+        for(var i=0;i<prizes.length;i++){
+            acc += prizes[i].prob;
+            if(r <= acc) return prizes[i];
+        }
+        return prizes[0];
+    }
+
+    function nanoId(n){
+        var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        var out = '';
+        for(var i=0;i<n;i++) out += chars.charAt(Math.floor(Math.random()*chars.length));
+        return out;
+    }
+
+    function buildScratchCode(){
+        var today = new Date();
+        var ymd = today.getFullYear().toString() + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0');
+        return 'MKP-' + (fid||'XXX').toUpperCase().slice(0,4).padEnd(4,'X') + '-' + ymd + '-' + nanoId(8);
+    }
+
+    function saveScratch(scratch){
+        var key = 'scratches_' + fid;
+        var arr = DataStore.get(key) || [];
+        arr.push(scratch);
+        DataStore.set(key, arr);
+        // Also sync to firestore for cross-device access
+        try {
+            if(typeof firebase !== 'undefined' && firebase.firestore){
+                firebase.firestore().collection('scratches').doc(scratch.code).set(scratch);
+            }
+        } catch(e) { console.warn('Scratch firestore save:', e); }
+    }
+
     window.finishOrder=function(){
         if(!cart.length){toast('Adicione itens');return}
         // Round to 2 decimals to avoid float precision issues (ex: 0.5*59.99 = 29.995)
@@ -696,6 +765,42 @@
         var voucherCode = 'MP' + Date.now().toString(36).toUpperCase().slice(-4) + Math.random().toString(36).toUpperCase().slice(2,4);
         var voucherDisplay = 'MP-' + voucherCode.slice(2);
         var attemptsPerPurchase = parseInt(localStorage.getItem('mp_desafio_attempts_per_purchase') || '1');
+
+        // === RASPINHA DA SORTE ===
+        var scratchCfg = getScratchConfig();
+        var scratchData = null;
+        if(scratchCfg.enabled !== false){
+            var scratchPrize = rollScratchPrize();
+            var scratchCode = buildScratchCode();
+            var createdAt = new Date();
+            var expiresAt = scratchPrize.validity > 0
+                ? new Date(createdAt.getTime() + scratchPrize.validity*24*60*60*1000).toISOString()
+                : null;
+            scratchData = {
+                code: scratchCode,
+                franchiseId: fid,
+                storeName: fr ? fr.name : 'MilkyPot',
+                prizeCode: scratchPrize.code,
+                prizeName: scratchPrize.name,
+                prizeDesc: scratchPrize.desc,
+                prizeTier: scratchPrize.tier,
+                prizeScope: scratchPrize.scope,
+                minOrder: scratchPrize.minOrder,
+                customerName: oName || '',
+                customerPhone: document.getElementById('cPhone').value || '',
+                status: 'not_scratched',
+                createdAt: createdAt.toISOString(),
+                expiresAt: expiresAt,
+                scratchedAt: null,
+                redeemedAt: null,
+                redeemedStoreId: null,
+                redeemedEmployeeId: null,
+                redeemedOrderId: null,
+                sharedOnInstagram: false,
+                instagramBonusGranted: false
+            };
+            saveScratch(scratchData);
+        }
 
         var order={
             id:Utils.generateId(),createdAt:new Date().toISOString(),status:'confirmado',
@@ -758,11 +863,24 @@
             } catch(e) { console.warn('Voucher save error:', e); }
         }
 
+        // Save scratch code to order too
+        if(scratchData){
+            order.scratchCode = scratchData.code;
+            // Update order in storage (add scratch reference)
+            try {
+                var key = 'orders_' + fid;
+                var ord = DataStore.get(key) || [];
+                var idx = ord.findIndex(function(o){return o.id === order.id});
+                if(idx !== -1){ ord[idx].scratchCode = scratchData.code; DataStore.set(key, ord); }
+            } catch(e){}
+        }
+
         // Save last voucher for immediate auto-print
         window._lastVoucherCode = voucherDisplay;
+        window._lastScratchData = scratchData;
 
         // Auto-print receipt with challenge BEFORE clearing cart
-        try { if(typeof autoPrintOrder==='function') autoPrintOrder(order, voucherDisplay); } catch(e) { console.warn('Auto print:', e); }
+        try { if(typeof autoPrintOrder==='function') autoPrintOrder(order, voucherDisplay, scratchData); } catch(e) { console.warn('Auto print:', e); }
 
         // Show voucher modal
         showVoucherModal(voucherDisplay);
@@ -996,11 +1114,11 @@
     });
 
     // Auto-print called during finishOrder (cart still filled, order object available)
-    window.autoPrintOrder = function(order, voucherCode){
+    window.autoPrintOrder = function(order, voucherCode, scratchData){
         var name = fr ? fr.name : 'MilkyPot';
         var now = new Date(order.createdAt).toLocaleString('pt-BR');
         var tl = {balcao:'BALCAO',retirada:'RETIRADA',delivery:'DELIVERY'};
-        var t = buildReceipt(name, tl[order.type]||order.type.toUpperCase(), now, order.items, order.total, order.customer.name, order.address, order.payment, voucherCode, order.id);
+        var t = buildReceipt(name, tl[order.type]||order.type.toUpperCase(), now, order.items, order.total, order.customer.name, order.address, order.payment, voucherCode, order.id, scratchData);
         openPrintWindow(t);
     };
 
@@ -1015,12 +1133,13 @@
         var addr=orderType==='delivery'?document.getElementById('cAddr').value:'';
         var payment=document.getElementById('paymentMethod')?document.getElementById('paymentMethod').value:'';
         var voucher=document.getElementById('voucherCodeDisplay').textContent || window._lastVoucherCode || '';
-        var t=buildReceipt(name, tl[orderType], now, items, total, customerName, addr, payment, voucher, null);
+        var scratch=window._lastScratchData;
+        var t=buildReceipt(name, tl[orderType], now, items, total, customerName, addr, payment, voucher, null, scratch);
         openPrintWindow(t);
     };
 
-    // Shared receipt builder with MARKETING COPY for Desafio 10.000
-    function buildReceipt(storeName, typeLabel, when, items, total, customerName, addr, payment, voucher, orderId){
+    // Shared receipt builder with MARKETING COPY for Desafio 10.000 + RASPINHA DA SORTE
+    function buildReceipt(storeName, typeLabel, when, items, total, customerName, addr, payment, voucher, orderId, scratch){
         var t = '';
         t += '================================\n';
         t += '    ' + centerPad(storeName.toUpperCase(), 24) + '\n';
@@ -1072,6 +1191,42 @@
             t += '  Ja foram entregues +40 mil\n';
             t += '   codigos em 2025. Proximo\n';
             t += '    ganhador pode ser VOCE!\n';
+            t += '================================\n';
+        }
+
+        // === RASPINHA DA SORTE - copy viral pra recompra ===
+        if(scratch && scratch.code){
+            var expiresLabel = scratch.expiresAt ? new Date(scratch.expiresAt).toLocaleDateString('pt-BR') : 'sem validade';
+            t += '\n';
+            t += '  *** RASPINHA DA SORTE ***\n';
+            t += '     VOCE FOI SORTEADO!\n';
+            t += '\n';
+            t += '   Seu premio esta ESCONDIDO.\n';
+            t += '       Raspa pra descobrir!\n';
+            t += '\n';
+            t += '  ------------------------------\n';
+            t += '    CODIGO DA SUA RASPINHA:\n';
+            t += '\n';
+            t += '  ' + centerPad(scratch.code, 30) + '\n';
+            t += '\n';
+            t += '  ------------------------------\n';
+            t += '  COMO DESCOBRIR o que ganhou:\n';
+            t += '  1. milkypot.com/raspinha\n';
+            t += '  2. Digite o codigo acima\n';
+            t += '  3. RASPE e revele na tela!\n';
+            t += '\n';
+            t += '     VALIDO ATE: ' + expiresLabel + '\n';
+            t += '\n';
+            t += '  === POSTOU, GANHOU EXTRA! ===\n';
+            t += '  Raspe, tire print e poste no\n';
+            t += '   Instagram marcando @milkypot\n';
+            t += '  + #RaspinhaMilkyPot e voce\n';
+            t += '   ganha UMA RASPINHA BONUS!\n';
+            t += '\n';
+            t += '  === COMPARTILHA NO ZAP ===\n';
+            t += '  Manda pro seu amigo e os DOIS\n';
+            t += '   ganham 1 raspinha EXTRA no\n';
+            t += '       proximo pedido.\n';
             t += '================================\n';
         }
 
