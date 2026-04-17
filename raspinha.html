@@ -160,12 +160,7 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
     var currentScratch = null;
     var db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
 
-    // Check URL for code
-    var urlCode = new URLSearchParams(location.search).get('code') || location.hash.replace('#','');
-    if(urlCode){
-        document.getElementById('codeInput').value = urlCode.toUpperCase();
-        setTimeout(checkCode, 400);
-    }
+    // URL code check moved to bottom of script (after function definitions)
 
     // Prize emoji mapping by tier
     var TIER_EMOJI = {
@@ -302,7 +297,7 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         setInterval(update, 30000);
     }
 
-    function initScratchCanvas(scratch){
+    function initScratchCanvas(scratchItem){
         var canvas = document.getElementById('scratchCanvas');
         var wrap = document.getElementById('scratchWrap');
         var rect = wrap.getBoundingClientRect();
@@ -339,7 +334,7 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
             return {x:x, y:y};
         }
 
-        function scratch(e){
+        function doScratch(e){
             if(!isDrawing) return;
             e.preventDefault();
             var p = getPos(e);
@@ -358,17 +353,17 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
             }
         }
 
-        canvas.addEventListener('mousedown', function(e){ isDrawing = true; scratch(e); });
-        canvas.addEventListener('mousemove', scratch);
+        canvas.addEventListener('mousedown', function(e){ isDrawing = true; doScratch(e); });
+        canvas.addEventListener('mousemove', doScratch);
         canvas.addEventListener('mouseup', function(){ isDrawing = false; });
         canvas.addEventListener('mouseleave', function(){ isDrawing = false; });
-        canvas.addEventListener('touchstart', function(e){ isDrawing = true; scratch(e); }, {passive:false});
-        canvas.addEventListener('touchmove', scratch, {passive:false});
+        canvas.addEventListener('touchstart', function(e){ isDrawing = true; doScratch(e); }, {passive:false});
+        canvas.addEventListener('touchmove', doScratch, {passive:false});
         canvas.addEventListener('touchend', function(){ isDrawing = false; });
 
         // Update scratch status in firestore
         if(db){
-            db.collection('scratches').doc(scratch.code || currentScratch.code).update({
+            db.collection('scratches').doc(scratchItem.code || currentScratch.code).update({
                 status: 'scratched',
                 scratchedAt: new Date().toISOString()
             }).catch(function(){});
@@ -445,6 +440,13 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
     window.goToMenu = function(){
         location.href = '/cardapio.html';
     };
+
+    // Auto-check code from URL if present
+    var urlCode = new URLSearchParams(location.search).get('code') || location.hash.replace('#','');
+    if(urlCode){
+        document.getElementById('codeInput').value = urlCode.toUpperCase();
+        setTimeout(window.checkCode, 400);
+    }
 
 })();
 </script>
