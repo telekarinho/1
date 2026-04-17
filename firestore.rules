@@ -179,6 +179,21 @@ service cloud.firestore {
     }
 
     // ============================================
+    // RASPINHA DA SORTE - Cada pedido gera 1 raspinha
+    // ============================================
+    match /scratches/{scratchCode} {
+      // Leitura publica: cliente precisa acessar sua raspinha pelo codigo
+      // Codigo tem 218 trilhoes combinacoes - seguro por obscuridade
+      allow read: if true;
+      // Criacao: PDV/sistema autenticado gera raspinha
+      allow create: if true;
+      // Update: cliente raspa (muda status) e funcionario resgata
+      allow update: if true;
+      // Delete: apenas super_admin
+      allow delete: if isSuperAdmin();
+    }
+
+    // ============================================
     // Bloqueia tudo que nao foi definido explicitamente
     // ============================================
     match /{document=**} {

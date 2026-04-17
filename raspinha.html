@@ -178,6 +178,33 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         mega:'🚨 SUPER PREMIO! 🚨'
     };
 
+    function findInLocalStorage(code){
+        // Fallback: look through all franchise scratches in localStorage
+        var keys = Object.keys(localStorage);
+        for(var i=0;i<keys.length;i++){
+            if(keys[i].indexOf('mp_scratches_') === 0){
+                try {
+                    var arr = JSON.parse(localStorage.getItem(keys[i]));
+                    var found = arr.find(function(s){ return s.code === code; });
+                    if(found) return found;
+                } catch(e){}
+            }
+        }
+        return null;
+    }
+
+    function processScratch(scratch, code){
+        scratch.code = code;
+        currentScratch = scratch;
+        if(scratch.expiresAt && new Date(scratch.expiresAt) < new Date()){
+            showExpired(scratch); return;
+        }
+        if(scratch.status === 'redeemed'){
+            showRedeemed(scratch); return;
+        }
+        showScratchStage(scratch);
+    }
+
     window.checkCode = function(){
         var code = document.getElementById('codeInput').value.trim().toUpperCase();
         var err = document.getElementById('errorMsg');
@@ -189,7 +216,14 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
             return;
         }
 
+        var tryLocal = function(){
+            var local = findInLocalStorage(code);
+            if(local){ processScratch(local, code); return true; }
+            return false;
+        };
+
         if(!db){
+            if(tryLocal()) return;
             err.textContent = 'Sem conexao. Verifique internet.';
             err.classList.add('show');
             return;
@@ -197,30 +231,15 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
 
         db.collection('scratches').doc(code).get().then(function(doc){
             if(!doc.exists){
+                if(tryLocal()) return;
                 err.textContent = 'Codigo nao encontrado. Verifique seu recibo.';
                 err.classList.add('show');
                 return;
             }
-            var scratch = doc.data();
-            scratch.code = code;
-            currentScratch = scratch;
-
-            // Check expiration
-            if(scratch.expiresAt && new Date(scratch.expiresAt) < new Date()){
-                showExpired(scratch);
-                return;
-            }
-
-            // Check if already redeemed
-            if(scratch.status === 'redeemed'){
-                showRedeemed(scratch);
-                return;
-            }
-
-            // Show scratch UI
-            showScratchStage(scratch);
+            processScratch(doc.data(), code);
         }).catch(function(e){
-            console.error(e);
+            console.warn('Firestore error, trying localStorage:', e);
+            if(tryLocal()) return;
             err.textContent = 'Erro ao buscar codigo. Tente novamente.';
             err.classList.add('show');
         });
