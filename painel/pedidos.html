@@ -297,7 +297,8 @@
             const today = Utils.today();
 
             if (filter === 'today') {
-                return orders.filter(o => o.createdAt.startsWith(today));
+                // Compara data LOCAL, nao UTC (pedido noturno no BRT pode ter ISO do dia seguinte UTC)
+                return orders.filter(o => Utils.localDateOf(o.createdAt) === today);
             } else if (filter === 'week') {
                 const weekAgo = new Date();
                 weekAgo.setDate(weekAgo.getDate() - 7);

@@ -34,9 +34,25 @@ const Utils = {
         return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     },
 
-    // Data de hoje ISO
+    // Data de hoje em formato YYYY-MM-DD (TIMEZONE LOCAL, nao UTC)
+    // Importante: pedidos criados a noite em BRT podem ter timestamp UTC do dia seguinte
     today() {
-        return new Date().toISOString().split('T')[0];
+        const d = new Date();
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return yyyy + '-' + mm + '-' + dd;
+    },
+
+    // Converte timestamp ISO (geralmente UTC) para YYYY-MM-DD em timezone local
+    localDateOf(isoTimestamp) {
+        if (!isoTimestamp) return '';
+        const d = new Date(isoTimestamp);
+        if (isNaN(d.getTime())) return '';
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return yyyy + '-' + mm + '-' + dd;
     },
 
     // Início do mês atual

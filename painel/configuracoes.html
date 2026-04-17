@@ -239,6 +239,43 @@
                         </div>
                     </div>
 
+                    <!-- Card: Raspinha da Sorte -->
+                    <div class="panel-card" style="grid-column:1/-1">
+                        <div class="card-header" style="background:linear-gradient(135deg,#FF9800,#F57C00);color:#fff">
+                            <h3 style="color:#fff">🎰 Raspinha da Sorte</h3>
+                            <p style="margin:4px 0 0;font-size:12px;opacity:.9">Cada pedido gera uma raspinha com premio aleatorio - aumenta recompra e viraliza a loja</p>
+                        </div>
+                        <div class="card-body">
+                            <!-- Master toggle -->
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#FFF3E0;border-radius:10px;margin-bottom:16px">
+                                <div>
+                                    <strong>Sistema Raspinha ativo</strong>
+                                    <p style="margin:2px 0 0;font-size:12px;color:#666">Desligando, nenhuma raspinha sera gerada em novos pedidos</p>
+                                </div>
+                                <label style="position:relative;display:inline-block;width:54px;height:30px">
+                                    <input type="checkbox" id="scratchEnabled" checked onchange="saveScratchConfig()" style="opacity:0;width:0;height:0">
+                                    <span id="scratchEnabledSlider" style="position:absolute;cursor:pointer;inset:0;background:#FF9800;border-radius:30px;transition:.3s"></span>
+                                </label>
+                            </div>
+
+                            <!-- Stats mini -->
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px">
+                                <div style="background:#F5F5F5;padding:10px 12px;border-radius:10px"><div style="font-size:11px;color:#888;text-transform:uppercase;font-weight:700">Emitidas (30d)</div><div style="font-size:20px;font-weight:800;color:#FF9800" id="scratchStatEmit">0</div></div>
+                                <div style="background:#F5F5F5;padding:10px 12px;border-radius:10px"><div style="font-size:11px;color:#888;text-transform:uppercase;font-weight:700">Raspadas</div><div style="font-size:20px;font-weight:800;color:#6C63FF" id="scratchStatScratched">0</div></div>
+                                <div style="background:#F5F5F5;padding:10px 12px;border-radius:10px"><div style="font-size:11px;color:#888;text-transform:uppercase;font-weight:700">Resgatadas</div><div style="font-size:20px;font-weight:800;color:#4CAF50" id="scratchStatRedeemed">0</div></div>
+                                <div style="background:#F5F5F5;padding:10px 12px;border-radius:10px"><div style="font-size:11px;color:#888;text-transform:uppercase;font-weight:700">Custo total</div><div style="font-size:20px;font-weight:800;color:#E53935" id="scratchStatCost">R$ 0</div></div>
+                            </div>
+
+                            <h4 style="margin-bottom:10px;color:#333">🎁 Premios disponiveis</h4>
+                            <p style="font-size:12px;color:#888;margin-bottom:12px">Ative ou desative cada premio individualmente. Probabilidades sao redistribuidas automaticamente entre os ativos.</p>
+                            <div id="scratchPrizesList"></div>
+
+                            <div style="margin-top:14px;padding:12px;background:#FFF8E1;border-radius:10px;font-size:12px;color:#825500">
+                                💡 <strong>Dica:</strong> O premio MEGA (R$ 150) tem probabilidade de 0.5% - pode ser desativado se a franquia nao tem margem. Pequenos premios como Topping Gratis mantem a recompra alta.
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </main>
@@ -455,12 +492,144 @@
         });
     }
 
+    // ============================================
+    // RASPINHA DA SORTE - Admin
+    // ============================================
+    const DEFAULT_SCRATCH_PRIZES = [
+        {code:'RSP_TRY_AGAIN',   name:'Quase! Tente no proximo pedido', desc:'Hoje nao foi! Volta amanha.', prob:30, cost:0,   validity:0,  scope:'any',   minOrder:0,  tier:'none', emoji:'🔁'},
+        {code:'RSP_TOPPING_FREE',name:'1 Topping Gratis',               desc:'1 topping gratis no proximo pedido', prob:22, cost:4,   validity:7,  scope:'same',  minOrder:15, tier:'small', emoji:'🍒'},
+        {code:'RSP_UPSIZE',      name:'Upgrade de Tamanho',             desc:'Pediu M? Leva G. Pediu G? Leva GG.', prob:15, cost:5,   validity:10, scope:'same',  minOrder:15, tier:'small', emoji:'📈'},
+        {code:'RSP_DISC_5',      name:'R$ 5 OFF',                       desc:'R$ 5 de desconto no proximo pedido', prob:12, cost:5,   validity:15, scope:'any',   minOrder:20, tier:'medium', emoji:'💸'},
+        {code:'RSP_2BY1_TOPPING',name:'Toppings 2 x 1',                 desc:'Leve 2 toppings pagando 1',          prob:8,  cost:4,   validity:10, scope:'same',  minOrder:15, tier:'medium', emoji:'✌️'},
+        {code:'RSP_BUFFET_100G', name:'+100g Buffet',                   desc:'100g gratis no buffet de acai',      prob:5,  cost:6,   validity:15, scope:'same',  minOrder:0,  tier:'medium', emoji:'⚖️'},
+        {code:'RSP_COMBO_15',    name:'Combo 15% OFF',                  desc:'15% OFF em qualquer combo',          prob:4,  cost:7.5, validity:15, scope:'any',   minOrder:30, tier:'medium', emoji:'🎯'},
+        {code:'RSP_SHAKE_FREE',  name:'Shake M Gratis',                 desc:'SHAKE M GRATIS no proximo pedido',   prob:2.5,cost:16,  validity:20, scope:'same',  minOrder:15, tier:'big', emoji:'🥤'},
+        {code:'RSP_ACAI_500G',   name:'Acai 500g + 3 toppings',         desc:'Acai 500g com 3 toppings gratis',    prob:1,  cost:30,  validity:20, scope:'same',  minOrder:15, tier:'big', emoji:'🍇'},
+        {code:'RSP_MEGA_150',    name:'MEGA R$ 150 em creditos',        desc:'R$150 MilkyPot! Use em 30 dias.',    prob:0.5,cost:150, validity:30, scope:'any',   minOrder:0,  tier:'mega', emoji:'💎'}
+    ];
+
+    function getScratchConfig() {
+        return DataStore.get('scratch_config_' + franchiseId) || { enabled: true };
+    }
+
+    function getScratchPrizes() {
+        var saved = DataStore.get('scratch_prizes_' + franchiseId);
+        if (saved && saved.length) {
+            // Merge saved with defaults (preserves disabled flags, adds new default prizes)
+            return DEFAULT_SCRATCH_PRIZES.map(function(def) {
+                var found = saved.find(function(p) { return p.code === def.code; });
+                return Object.assign({}, def, found || {});
+            });
+        }
+        return DEFAULT_SCRATCH_PRIZES.slice();
+    }
+
+    function saveScratchConfig() {
+        var cfg = getScratchConfig();
+        cfg.enabled = document.getElementById('scratchEnabled').checked;
+        cfg.updatedAt = new Date().toISOString();
+        DataStore.set('scratch_config_' + franchiseId, cfg);
+        updateScratchEnabledSlider();
+        Utils.showToast('Raspinha ' + (cfg.enabled ? 'ativada' : 'desativada') + '!', 'success');
+    }
+
+    function updateScratchEnabledSlider() {
+        var enabled = document.getElementById('scratchEnabled').checked;
+        var slider = document.getElementById('scratchEnabledSlider');
+        slider.style.background = enabled ? '#FF9800' : '#ccc';
+        slider.innerHTML = '<span style="content:\'\';position:absolute;height:24px;width:24px;left:' + (enabled ? '27px' : '3px') + ';top:3px;background:#fff;border-radius:50%;transition:.3s;display:block"></span>';
+    }
+
+    window.toggleScratchPrize = function(code) {
+        var prizes = getScratchPrizes();
+        var p = prizes.find(function(x) { return x.code === code; });
+        if (!p) return;
+        p.disabled = !p.disabled;
+        DataStore.set('scratch_prizes_' + franchiseId, prizes);
+        renderScratchPrizes();
+        Utils.showToast('Premio ' + (p.disabled ? 'desativado' : 'ativado'), 'success');
+    };
+
+    function renderScratchPrizes() {
+        var prizes = getScratchPrizes();
+        var container = document.getElementById('scratchPrizesList');
+        if (!container) return;
+
+        // Calculate redistributed probabilities
+        var activePrizes = prizes.filter(function(p) { return !p.disabled; });
+        var totalActiveProb = activePrizes.reduce(function(s, p) { return s + p.prob; }, 0);
+
+        container.innerHTML = prizes.map(function(p) {
+            var isActive = !p.disabled;
+            var effectiveProb = isActive && totalActiveProb > 0 ? (p.prob / totalActiveProb * 100).toFixed(1) : '0';
+            var tierColor = {none:'#9E9E9E',small:'#4CAF50',medium:'#2196F3',big:'#FF9800',mega:'#E91E63'}[p.tier] || '#666';
+            var costLabel = p.cost > 0 ? 'R$ ' + p.cost.toFixed(2).replace('.', ',') + ' custo' : 'Sem custo';
+            var validityLabel = p.validity > 0 ? p.validity + ' dias validade' : 'Sem validade';
+            var scopeLabel = p.scope === 'same' ? 'Mesma loja' : 'Qualquer loja';
+            var minOrderLabel = p.minOrder > 0 ? 'Min R$ ' + p.minOrder : '';
+
+            return '<div style="display:flex;align-items:center;gap:14px;padding:12px;background:' + (isActive ? '#fff' : '#FAFAFA') + ';border:1px solid ' + (isActive ? tierColor + '40' : '#E0E0E0') + ';border-radius:10px;margin-bottom:8px;transition:all .2s;opacity:' + (isActive ? '1' : '.55') + '">' +
+                '<div style="font-size:32px;width:48px;text-align:center;flex-shrink:0">' + p.emoji + '</div>' +
+                '<div style="flex:1;min-width:0">' +
+                    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
+                        '<strong style="font-size:14px;color:#333">' + p.name + '</strong>' +
+                        '<span style="background:' + tierColor + ';color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;text-transform:uppercase">' + p.tier + '</span>' +
+                    '</div>' +
+                    '<div style="font-size:12px;color:#888;margin-bottom:4px">' + p.desc + '</div>' +
+                    '<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:#666">' +
+                        '<span>🎯 ' + effectiveProb + '% chance</span>' +
+                        '<span>💰 ' + costLabel + '</span>' +
+                        '<span>⏱️ ' + validityLabel + '</span>' +
+                        '<span>📍 ' + scopeLabel + '</span>' +
+                        (minOrderLabel ? '<span>🛒 ' + minOrderLabel + '</span>' : '') +
+                    '</div>' +
+                '</div>' +
+                '<label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;cursor:pointer">' +
+                    '<input type="checkbox" ' + (isActive ? 'checked' : '') + ' onchange="toggleScratchPrize(\'' + p.code + '\')" style="opacity:0;width:0;height:0">' +
+                    '<span style="position:absolute;inset:0;background:' + (isActive ? tierColor : '#ccc') + ';border-radius:24px;transition:.3s"><span style="content:\'\';position:absolute;height:18px;width:18px;left:' + (isActive ? '23px' : '3px') + ';top:3px;background:#fff;border-radius:50%;transition:.3s;display:block"></span></span>' +
+                '</label>' +
+            '</div>';
+        }).join('');
+    }
+
+    function loadScratchConfig() {
+        var cfg = getScratchConfig();
+        document.getElementById('scratchEnabled').checked = cfg.enabled !== false;
+        updateScratchEnabledSlider();
+        renderScratchPrizes();
+        loadScratchStats();
+    }
+
+    function loadScratchStats() {
+        var key = 'scratches_' + franchiseId;
+        var scratches = DataStore.get(key) || [];
+        var thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        var recent = scratches.filter(function(s) { return new Date(s.createdAt) >= thirtyDaysAgo; });
+        var scratched = recent.filter(function(s) { return s.status === 'scratched' || s.status === 'redeemed'; }).length;
+        var redeemed = recent.filter(function(s) { return s.status === 'redeemed'; }).length;
+        // Cost is sum of prize cost for redeemed only
+        var prizes = getScratchPrizes();
+        var totalCost = recent.filter(function(s) { return s.status === 'redeemed'; }).reduce(function(sum, s) {
+            var prize = prizes.find(function(p) { return p.code === s.prizeCode; });
+            return sum + (prize ? (prize.cost || 0) : 0);
+        }, 0);
+
+        document.getElementById('scratchStatEmit').textContent = recent.length;
+        document.getElementById('scratchStatScratched').textContent = scratched;
+        document.getElementById('scratchStatRedeemed').textContent = redeemed;
+        document.getElementById('scratchStatCost').textContent = 'R$ ' + totalCost.toFixed(2).replace('.', ',');
+    }
+
+    window.saveScratchConfig = saveScratchConfig;
+
     // Init
     loadStoreData();
     loadOperationData();
     loadAccountData();
     loadFranchiseInfo();
     loadNotifSettings();
+    loadScratchConfig();
     </script>
 </body>
 </html>

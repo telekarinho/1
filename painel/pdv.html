@@ -75,6 +75,11 @@
         .buffet-fab:hover { transform: scale(1.08); box-shadow: 0 10px 28px rgba(255,152,0,0.55); }
         .buffet-fab:active { transform: scale(0.95); }
 
+        /* Redeem Scratch FAB */
+        .redeem-fab { position: fixed; bottom: 18px; left: 110px; width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, #EC407A, #AD1457); color: #fff; border: none; box-shadow: 0 6px 20px rgba(236,64,122,0.45); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; transition: transform 0.15s; }
+        .redeem-fab:hover { transform: scale(1.08); box-shadow: 0 10px 28px rgba(236,64,122,0.55); }
+        .redeem-fab:active { transform: scale(0.95); }
+
         /* Buffet / Weight Modal */
         .buffet-modal { background: #fff; border-radius: 20px; width: 520px; max-width: 95vw; max-height: 92vh; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.25); display: flex; flex-direction: column; }
         .buffet-head { background: linear-gradient(135deg, #FF9800, #F57C00); color: #fff; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -184,6 +189,12 @@
         <span style="font-size:26px">⚖️</span>
         <span style="font-size:10px;font-weight:800;display:block">BUFFET</span>
     </button>
+
+    <!-- Floating Redeem Scratch Button -->
+    <button class="redeem-fab" onclick="openRedeemModal()" title="Resgatar raspinha do cliente">
+        <span style="font-size:24px">🎟️</span>
+        <span style="font-size:10px;font-weight:800;display:block">RESGATAR</span>
+    </button>
     <div class="pdv-cart">
         <div class="cart-head">
             <h2>🛒 Pedido</h2>
@@ -236,6 +247,34 @@
                 <button onclick="mQty(1)">+</button>
             </div>
             <button class="mf-add" id="mAddBtn" onclick="mAddToCart()">Adicionar — R$ 18,00</button>
+        </div>
+    </div>
+</div>
+
+<!-- Resgatar Raspinha Modal -->
+<div class="modal-bg" id="redeemModalBg" onclick="if(event.target===this)closeRedeemModal()" style="z-index:1500">
+    <div class="buffet-modal" style="max-width:480px">
+        <div class="buffet-head" style="background:linear-gradient(135deg,#EC407A,#AD1457)">
+            <h3>🎟️ Resgatar Raspinha do Cliente</h3>
+            <button class="modal-close" onclick="closeRedeemModal()">×</button>
+        </div>
+        <div class="buffet-body">
+            <p style="font-size:13px;color:#666;margin-bottom:14px">Digite o codigo da raspinha que o cliente mostrou na tela. O premio sera aplicado no pedido atual.</p>
+
+            <div class="buffet-field" style="margin-bottom:14px">
+                <label>Codigo da Raspinha</label>
+                <input type="text" id="redeemCode" placeholder="MKP-XXXX-20260416-ABCDEFGH" style="font-family:monospace;text-transform:uppercase;letter-spacing:1px;font-size:16px" autocomplete="off">
+            </div>
+
+            <!-- Status display (preenchido dinamicamente) -->
+            <div id="redeemStatus" style="display:none;border-radius:14px;padding:16px;margin-bottom:14px"></div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <button class="buffet-btn" onclick="closeRedeemModal()">Cancelar</button>
+                <button class="buffet-btn primary" id="btnConfirmRedeem" onclick="confirmRedeem()" style="background:linear-gradient(135deg,#EC407A,#AD1457);border-color:#AD1457">✅ Validar Codigo</button>
+            </div>
+
+            <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">💡 O cliente pode mostrar o QR Code ou a tela com o codigo apos raspar.</p>
         </div>
     </div>
 </div>
@@ -1113,6 +1152,228 @@
     window.addEventListener('beforeunload', function(){
         if(scalePort) disconnectScale();
     });
+
+    // =============================================================
+    // RESGATAR RASPINHA - Funcionario valida codigo e aplica premio
+    // =============================================================
+    var pendingRedeemedScratch = null; // Scratch to redeem on next finishOrder
+
+    window.openRedeemModal = function(){
+        document.getElementById('redeemCode').value = '';
+        document.getElementById('redeemStatus').style.display = 'none';
+        document.getElementById('btnConfirmRedeem').textContent = '✅ Validar Codigo';
+        document.getElementById('btnConfirmRedeem').disabled = false;
+        document.getElementById('redeemModalBg').classList.add('open');
+        setTimeout(function(){ document.getElementById('redeemCode').focus(); }, 100);
+    };
+
+    window.closeRedeemModal = function(){
+        document.getElementById('redeemModalBg').classList.remove('open');
+    };
+
+    function findScratchAnywhere(code){
+        // Try Firestore first (cross-device) then localStorage
+        return new Promise(function(resolve){
+            var codeUp = code.toUpperCase();
+            // Check localStorage first (fast)
+            var keys = Object.keys(localStorage);
+            for(var i=0;i<keys.length;i++){
+                if(keys[i].indexOf('mp_scratches_') === 0){
+                    try {
+                        var arr = JSON.parse(localStorage.getItem(keys[i]));
+                        var found = arr.find(function(s){ return (s.code||'').toUpperCase() === codeUp; });
+                        if(found) return resolve(found);
+                    } catch(e){}
+                }
+            }
+            // Fallback Firestore
+            if(typeof firebase !== 'undefined' && firebase.firestore){
+                firebase.firestore().collection('scratches').doc(codeUp).get().then(function(doc){
+                    if(doc.exists) resolve(doc.data());
+                    else resolve(null);
+                }).catch(function(){ resolve(null); });
+            } else {
+                resolve(null);
+            }
+        });
+    }
+
+    window.confirmRedeem = async function(){
+        var code = document.getElementById('redeemCode').value.trim().toUpperCase();
+        var statusEl = document.getElementById('redeemStatus');
+        var btn = document.getElementById('btnConfirmRedeem');
+
+        if(!code || code.length < 10){
+            statusEl.style.display = 'block';
+            statusEl.style.background = '#FFEBEE';
+            statusEl.style.color = '#C62828';
+            statusEl.innerHTML = '<strong>⚠️ Codigo invalido</strong><br><span style="font-size:12px">Digite um codigo com pelo menos 10 caracteres</span>';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Buscando...';
+
+        var scratch = await findScratchAnywhere(code);
+
+        if(!scratch){
+            statusEl.style.display = 'block';
+            statusEl.style.background = '#FFEBEE';
+            statusEl.style.color = '#C62828';
+            statusEl.innerHTML = '<strong>❌ Codigo nao encontrado</strong><br><span style="font-size:12px">Verifique se o cliente digitou corretamente</span>';
+            btn.disabled = false;
+            btn.textContent = '✅ Validar Codigo';
+            return;
+        }
+
+        // Check status
+        if(scratch.status === 'redeemed'){
+            statusEl.style.display = 'block';
+            statusEl.style.background = '#FFF3E0';
+            statusEl.style.color = '#E65100';
+            var when = scratch.redeemedAt ? new Date(scratch.redeemedAt).toLocaleDateString('pt-BR') : '?';
+            statusEl.innerHTML = '<strong>⚠️ Raspinha ja utilizada</strong><br><span style="font-size:12px">Resgatada em ' + when + '</span>';
+            btn.disabled = false;
+            btn.textContent = '✅ Validar Codigo';
+            return;
+        }
+
+        if(scratch.expiresAt && new Date(scratch.expiresAt) < new Date()){
+            statusEl.style.display = 'block';
+            statusEl.style.background = '#FFEBEE';
+            statusEl.style.color = '#C62828';
+            statusEl.innerHTML = '<strong>❌ Raspinha expirada</strong><br><span style="font-size:12px">Expirou em ' + new Date(scratch.expiresAt).toLocaleDateString('pt-BR') + '</span>';
+            btn.disabled = false;
+            btn.textContent = '✅ Validar Codigo';
+            return;
+        }
+
+        if(scratch.status === 'not_scratched'){
+            statusEl.style.display = 'block';
+            statusEl.style.background = '#FFF3E0';
+            statusEl.style.color = '#E65100';
+            statusEl.innerHTML = '<strong>ℹ️ Cliente ainda nao raspou</strong><br><span style="font-size:12px">Peca pro cliente abrir milkypot.com/raspinha e raspar antes do resgate</span>';
+            btn.disabled = false;
+            btn.textContent = '✅ Validar Codigo';
+            return;
+        }
+
+        // Check scope (same store vs any)
+        if(scratch.prizeScope === 'same' && scratch.franchiseId !== fid){
+            statusEl.style.display = 'block';
+            statusEl.style.background = '#FFEBEE';
+            statusEl.style.color = '#C62828';
+            statusEl.innerHTML = '<strong>❌ Raspinha de outra loja</strong><br><span style="font-size:12px">Este premio so pode ser resgatado em ' + (scratch.storeName||'outra unidade') + '</span>';
+            btn.disabled = false;
+            btn.textContent = '✅ Validar Codigo';
+            return;
+        }
+
+        // Check minimum order
+        var cartTotal = cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
+        if(scratch.minOrder > 0 && cartTotal < scratch.minOrder){
+            statusEl.style.display = 'block';
+            statusEl.style.background = '#FFF3E0';
+            statusEl.style.color = '#E65100';
+            statusEl.innerHTML = '<strong>⚠️ Pedido abaixo do minimo</strong><br><span style="font-size:12px">Este premio requer pedido de R$ ' + scratch.minOrder.toFixed(2).replace('.',',') + ' (atual: R$ ' + cartTotal.toFixed(2).replace('.',',') + ')</span>';
+            btn.disabled = false;
+            btn.textContent = '✅ Validar Codigo';
+            return;
+        }
+
+        // SUCCESS - Show prize and allow confirmation
+        var tier = scratch.prizeTier || 'small';
+        var tierColors = {none:'#9E9E9E',small:'#4CAF50',medium:'#2196F3',big:'#FF9800',mega:'#E91E63'};
+        statusEl.style.display = 'block';
+        statusEl.style.background = 'linear-gradient(135deg,#E8F5E9,#C8E6C9)';
+        statusEl.style.color = '#1B5E20';
+        statusEl.innerHTML =
+            '<strong style="font-size:16px">✅ Raspinha valida!</strong>' +
+            '<div style="background:#fff;border-radius:10px;padding:10px;margin-top:10px">' +
+                '<div style="display:flex;align-items:center;gap:10px">' +
+                    '<span style="background:' + tierColors[tier] + ';color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:8px;text-transform:uppercase">' + tier + '</span>' +
+                    '<strong style="color:#333">' + scratch.prizeName + '</strong>' +
+                '</div>' +
+                '<p style="font-size:12px;color:#666;margin:6px 0 0">' + scratch.prizeDesc + '</p>' +
+                '<p style="font-size:11px;color:#888;margin:4px 0 0">Cliente: ' + (scratch.customerName || 'Sem nome') + '</p>' +
+            '</div>';
+
+        pendingRedeemedScratch = scratch;
+        btn.textContent = '💎 Confirmar Resgate';
+        btn.disabled = false;
+        btn.onclick = applyRedeem;
+    };
+
+    async function applyRedeem(){
+        if(!pendingRedeemedScratch) return;
+        var scratch = pendingRedeemedScratch;
+        var btn = document.getElementById('btnConfirmRedeem');
+        btn.disabled = true;
+        btn.textContent = 'Aplicando...';
+
+        // Mark redeemed in localStorage
+        var key = 'scratches_' + scratch.franchiseId;
+        var arr = DataStore.get(key) || [];
+        var idx = arr.findIndex(function(s){ return s.code === scratch.code; });
+        if(idx !== -1){
+            arr[idx].status = 'redeemed';
+            arr[idx].redeemedAt = new Date().toISOString();
+            arr[idx].redeemedStoreId = fid;
+            arr[idx].redeemedEmployeeId = (typeof Auth !== 'undefined' ? Auth.getSession().userId : 'unknown');
+            DataStore.set(key, arr);
+        }
+
+        // Also mark in Firestore
+        try {
+            if(typeof firebase !== 'undefined' && firebase.firestore){
+                await firebase.firestore().collection('scratches').doc(scratch.code).update({
+                    status: 'redeemed',
+                    redeemedAt: new Date().toISOString(),
+                    redeemedStoreId: fid,
+                    redeemedEmployeeId: (typeof Auth !== 'undefined' ? Auth.getSession().userId : 'unknown')
+                });
+            }
+        } catch(e){ console.warn('Firestore redeem update:', e); }
+
+        // Apply prize to cart (add as item with appropriate adjustment)
+        applyPrizeToCart(scratch);
+
+        pendingRedeemedScratch = null;
+        closeRedeemModal();
+        toast('🎉 Raspinha resgatada! Premio aplicado ao pedido.');
+    }
+
+    function applyPrizeToCart(scratch){
+        // Add prize as a cart item with discount/bonus based on prize type
+        var prizeItem = {
+            baseId: 'prize',
+            fmtId: 'scratch',
+            sabId: scratch.prizeCode,
+            name: '🎁 ' + scratch.prizeName,
+            emoji: '🎁',
+            size: 'Raspinha ' + scratch.code.slice(-8),
+            extras: [],
+            qty: 1,
+            unitPrice: 0,
+            total: 0,
+            isPrize: true,
+            prizeCode: scratch.prizeCode,
+            scratchCode: scratch.code
+        };
+
+        // Apply monetary discount for specific prize types
+        var discountMap = {
+            'RSP_DISC_5': -5,
+            'RSP_MEGA_150': -Math.min(150, cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0))
+        };
+        if(discountMap[scratch.prizeCode]){
+            prizeItem.unitPrice = discountMap[scratch.prizeCode];
+            prizeItem.total = discountMap[scratch.prizeCode];
+        }
+
+        cart.push(prizeItem);
+        renderCart();
+    }
 
     // Auto-print called during finishOrder (cart still filled, order object available)
     window.autoPrintOrder = function(order, voucherCode, scratchData){
