@@ -688,19 +688,38 @@
     // ============================================
     window.finishOrder=function(){
         if(!cart.length){toast('Adicione itens');return}
-        var total=cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
+        // Round to 2 decimals to avoid float precision issues (ex: 0.5*59.99 = 29.995)
+        var total=Math.round(cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0)*100)/100;
         var oName=document.getElementById('orderName').value||(orderType==='balcao'?'Balcao':'');
+
+        // === DESAFIO VOUCHER GENERATION (generate FIRST so we can save with order) ===
+        var voucherCode = 'MP' + Date.now().toString(36).toUpperCase().slice(-4) + Math.random().toString(36).toUpperCase().slice(2,4);
+        var voucherDisplay = 'MP-' + voucherCode.slice(2);
+        var attemptsPerPurchase = parseInt(localStorage.getItem('mp_desafio_attempts_per_purchase') || '1');
+
         var order={
             id:Utils.generateId(),createdAt:new Date().toISOString(),status:'confirmado',
             type:orderType,source:'pdv',
             delivery:orderType==='delivery'?'delivery':null,
             payment:document.getElementById('paymentMethod')?document.getElementById('paymentMethod').value:'Não informado',
-            items:cart.map(function(c){return{name:c.name,size:c.size,extras:c.extras,qty:c.qty,unitPrice:c.unitPrice,total:c.unitPrice*c.qty}}),
+            items:cart.map(function(c){
+                return{
+                    name:c.name,size:c.size,extras:c.extras,qty:c.qty,
+                    unitPrice:Math.round(c.unitPrice*100)/100,
+                    total:Math.round(c.unitPrice*c.qty*100)/100,
+                    byWeight:c.byWeight||false,
+                    weightKg:c.weightKg,
+                    pricePerKg:c.pricePerKg,
+                    emoji:c.emoji
+                };
+            }),
             total:total,
             customer:{name:oName,phone:document.getElementById('cPhone').value||''},
             address:orderType==='delivery'?document.getElementById('cAddr').value:'',
             nf:document.getElementById('nfCk').checked,cpf:document.getElementById('nfCpf').value||'',
-            franchiseId:fid
+            franchiseId:fid,
+            voucherCode: voucherDisplay,       // Desafio 10.000 code
+            challengeAttempts: attemptsPerPurchase
         };
         DataStore.addToCollection('orders',fid,order);
 
@@ -718,10 +737,7 @@
         };
         DataStore.addToCollection('finances', fid, financeEntry);
 
-        // === DESAFIO VOUCHER GENERATION ===
-        var voucherCode = 'MP' + Date.now().toString(36).toUpperCase().slice(-4) + Math.random().toString(36).toUpperCase().slice(2,4);
-        var voucherDisplay = 'MP-' + voucherCode.slice(2);
-        var attemptsPerPurchase = parseInt(localStorage.getItem('mp_desafio_attempts_per_purchase') || '1');
+        // Save voucher to Firestore
         var voucher = {
             code: voucherDisplay,
             orderId: order.id,
@@ -741,6 +757,13 @@
                 firebase.firestore().collection('desafio_vouchers').doc(voucherCode).set(voucher);
             } catch(e) { console.warn('Voucher save error:', e); }
         }
+
+        // Save last voucher for immediate auto-print
+        window._lastVoucherCode = voucherDisplay;
+
+        // Auto-print receipt with challenge BEFORE clearing cart
+        try { if(typeof autoPrintOrder==='function') autoPrintOrder(order, voucherDisplay); } catch(e) { console.warn('Auto print:', e); }
+
         // Show voucher modal
         showVoucherModal(voucherDisplay);
 
@@ -972,40 +995,110 @@
         if(scalePort) disconnectScale();
     });
 
+    // Auto-print called during finishOrder (cart still filled, order object available)
+    window.autoPrintOrder = function(order, voucherCode){
+        var name = fr ? fr.name : 'MilkyPot';
+        var now = new Date(order.createdAt).toLocaleString('pt-BR');
+        var tl = {balcao:'BALCAO',retirada:'RETIRADA',delivery:'DELIVERY'};
+        var t = buildReceipt(name, tl[order.type]||order.type.toUpperCase(), now, order.items, order.total, order.customer.name, order.address, order.payment, voucherCode, order.id);
+        openPrintWindow(t);
+    };
+
     window.printOrder=function(){
         if(!cart.length){toast('Nada para imprimir');return}
-        var total=cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
+        var total=Math.round(cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0)*100)/100;
         var name=fr?fr.name:'MilkyPot';
         var now=new Date().toLocaleString('pt-BR');
         var tl={balcao:'BALCAO',retirada:'RETIRADA',delivery:'DELIVERY'};
-        var t='================================\n       '+name+'\n================================\n'+tl[orderType]+' | '+now+'\n--------------------------------\n';
-        cart.forEach(function(c){
-            t+=c.qty+'x '+c.name+(c.size?' ('+c.size+')':'')+'\n';
-            if(c.extras.length)t+='   + '+c.extras.map(function(e){return e.name}).join(', ')+'\n';
-            t+='   R$ '+(c.unitPrice*c.qty).toFixed(2).replace('.',',')+'\n';
-        });
-        t+='--------------------------------\nTOTAL: R$ '+total.toFixed(2).replace('.',',')+'\n';
-        if(document.getElementById('orderName').value)t+='Cliente: '+document.getElementById('orderName').value+'\n';
-        if(orderType==='delivery'&&document.getElementById('cAddr').value)t+='Endereco: '+document.getElementById('cAddr').value+'\n';
-        t+='================================\n';
-        var lastVoucher=document.getElementById('voucherCodeDisplay').textContent;
-        if(lastVoucher){
-        t+='\n================================\n';
-        t+='   ** DESAFIO 10.000 **\n';
-        t+='   Acerte e ganhe premio!\n\n';
-        t+='   SEU CODIGO:\n';
-        t+='   >>> '+lastVoucher+' <<<\n\n';
-        t+='   Acesse:\n';
-        t+='   milkypot.com/desafio.html\n';
-        t+='   ou escaneie o QR Code\n';
-        t+='================================\n';
-        }
-        t+='     Obrigado pela preferencia!\n';
-        t+='        @milkypot\n';
-        var w=window.open('','_blank','width=300,height=600');
-        w.document.write('<pre style="font-family:monospace;font-size:12px;white-space:pre-wrap;">'+t+'</pre>');
-        w.document.write('<script>window.print();setTimeout(function(){window.close()},500)<\/script>');
+        var items=cart.map(function(c){return {name:c.name,size:c.size,extras:c.extras,qty:c.qty,unitPrice:c.unitPrice,total:c.unitPrice*c.qty};});
+        var customerName=document.getElementById('orderName').value;
+        var addr=orderType==='delivery'?document.getElementById('cAddr').value:'';
+        var payment=document.getElementById('paymentMethod')?document.getElementById('paymentMethod').value:'';
+        var voucher=document.getElementById('voucherCodeDisplay').textContent || window._lastVoucherCode || '';
+        var t=buildReceipt(name, tl[orderType], now, items, total, customerName, addr, payment, voucher, null);
+        openPrintWindow(t);
     };
+
+    // Shared receipt builder with MARKETING COPY for Desafio 10.000
+    function buildReceipt(storeName, typeLabel, when, items, total, customerName, addr, payment, voucher, orderId){
+        var t = '';
+        t += '================================\n';
+        t += '    ' + centerPad(storeName.toUpperCase(), 24) + '\n';
+        t += '     O Potinho Mais Feliz!\n';
+        t += '================================\n';
+        if(orderId) t += 'Pedido: #' + String(orderId).slice(-6).toUpperCase() + '\n';
+        t += typeLabel + ' | ' + when + '\n';
+        t += '--------------------------------\n';
+        items.forEach(function(c){
+            t += c.qty + 'x ' + c.name + (c.size?' ('+c.size+')':'') + '\n';
+            if(c.extras && c.extras.length) t += '   + ' + c.extras.map(function(e){return e.name}).join(', ') + '\n';
+            t += '   R$ ' + (c.unitPrice*c.qty).toFixed(2).replace('.',',') + '\n';
+        });
+        t += '--------------------------------\n';
+        t += 'TOTAL: R$ ' + total.toFixed(2).replace('.',',') + '\n';
+        if(payment) t += 'Pagamento: ' + payment + '\n';
+        if(customerName) t += 'Cliente: ' + customerName + '\n';
+        if(addr) t += 'Endereco: ' + addr + '\n';
+        t += '================================\n';
+
+        // === DESAFIO 10.000 - COPY DE MARKETING INCENTIVADOR ===
+        if(voucher){
+            t += '\n';
+            t += '  *** DESAFIO 10.000 ***\n';
+            t += '   VOCE PODE GANHAR!\n';
+            t += '\n';
+            t += '  Acertou 5 numeros na loteria?\n';
+            t += '   Leve R$ 10.000 em MILKSHAKE\n';
+            t += '      pelo RESTO DA VIDA!\n';
+            t += '\n';
+            t += '  ------------------------------\n';
+            t += '      SEU CODIGO DA SORTE:\n';
+            t += '\n';
+            t += '      >>> ' + voucher + ' <<<\n';
+            t += '\n';
+            t += '  ------------------------------\n';
+            t += '  Como participar (30 segundos):\n';
+            t += '  1. Abra milkypot.com/desafio\n';
+            t += '  2. Digite o codigo acima\n';
+            t += '  3. Escolha seus 5 numeros\n';
+            t += '  4. Torca na loteria do sabado!\n';
+            t += '\n';
+            t += '  === TENTATIVA EXTRA GRATIS ===\n';
+            t += '  Poste no Instagram marcando\n';
+            t += '        @milkypot\n';
+            t += '   usando #Desafio10Mil e ganhe\n';
+            t += '    +1 tentativa no proximo!\n';
+            t += '\n';
+            t += '  Ja foram entregues +40 mil\n';
+            t += '   codigos em 2025. Proximo\n';
+            t += '    ganhador pode ser VOCE!\n';
+            t += '================================\n';
+        }
+
+        t += '\n';
+        t += '  Obrigado pela preferencia!\n';
+        t += '  Nos siga: @milkypot\n';
+        t += '  www.milkypot.com\n';
+        t += '\n';
+        t += ' ---- Documento NAO fiscal ----\n';
+        return t;
+    }
+
+    function centerPad(s, w){
+        if(s.length >= w) return s;
+        var left = Math.floor((w - s.length)/2);
+        return ' '.repeat(left) + s;
+    }
+
+    function openPrintWindow(text){
+        var w = window.open('', '_blank', 'width=320,height=700');
+        if(!w){ toast('Bloqueio de popup - libere impressao'); return; }
+        w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Recibo MilkyPot</title><style>@page{margin:4mm}body{margin:0;padding:6mm}pre{font-family:"Courier New",monospace;font-size:11px;white-space:pre-wrap;line-height:1.25;margin:0}</style></head><body>');
+        w.document.write('<pre>' + text.replace(/</g,'&lt;') + '</pre>');
+        w.document.write('<script>window.onload=function(){window.print();setTimeout(function(){window.close()},400)}<\/script>');
+        w.document.write('</body></html>');
+        w.document.close();
+    }
 
     // Fullscreen
     window.toggleFullscreen=function(){
