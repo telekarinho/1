@@ -62,8 +62,18 @@ const Auth = {
 
             // Auto-registra franqueado se email bate com access.ownerEmail de alguma franquia
             if (!profile) {
-                const franchises = DataStore.get('franchises') || [];
-                const matchedFranchise = franchises.find(f => f.access && f.access.ownerEmail === user.email);
+                let franchises = DataStore.get('franchises') || [];
+                let matchedFranchise = franchises.find(f => f.access && f.access.ownerEmail && f.access.ownerEmail.toLowerCase() === user.email.toLowerCase());
+
+                // Fallback: busca do Firestore se cache local nao tem match
+                if (!matchedFranchise && typeof DataStore.fetchPublicFranchises === 'function') {
+                    const cloudFranchises = await DataStore.fetchPublicFranchises();
+                    if (cloudFranchises && cloudFranchises.length) {
+                        franchises = cloudFranchises;
+                        matchedFranchise = franchises.find(f => f.access && f.access.ownerEmail && f.access.ownerEmail.toLowerCase() === user.email.toLowerCase());
+                    }
+                }
+
                 if (matchedFranchise) {
                     profile = this._createUserProfile({
                         email: user.email,
