@@ -518,7 +518,17 @@
     }
     setInterval(function(){document.getElementById('clk').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})},1000);
 
-    var C=CARDAPIO_CONFIG;
+    // Cardapio: le custom da franquia via CardapioService (fallback: CARDAPIO_CONFIG default)
+    var C = (typeof CardapioService !== 'undefined' && CardapioService.get) ? CardapioService.get(fid) : CARDAPIO_CONFIG;
+    // Atualiza em background com versao mais recente do Firestore
+    if (typeof CardapioService !== 'undefined' && CardapioService.getFromCloud) {
+        CardapioService.getFromCloud(fid).then(function(fresh){
+            if (fresh && JSON.stringify(fresh) !== JSON.stringify(C)) {
+                C = fresh;
+                if (typeof renderProducts === 'function') try { renderProducts(); } catch(e){}
+            }
+        });
+    }
     var cart=[], orderType='balcao';
     // Current modal state
     var mProduct=null, mSize=null, mExtras=[], mQtyVal=1;

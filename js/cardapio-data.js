@@ -204,3 +204,66 @@ const CARDAPIO_CONFIG = {
         { baseId: 'ninho', saborId: 'oreo',           label: 'Crocante' }
     ]
 };
+
+/* ============================================
+   CardapioService — bridge entre editor e consumidores
+   ============================================
+   Franqueado edita em painel/cardapio.html.
+   Cardapio delivery (cardapio.html) e PDV (painel/pdv.html)
+   consomem via CardapioService.get(fid).
+   ============================================ */
+const CardapioService = (function(){
+    function storageKey(fid){ return 'cardapio_' + fid; }
+
+    function get(franchiseId){
+        try {
+            if (typeof DataStore !== 'undefined' && DataStore.get && franchiseId) {
+                const custom = DataStore.get(storageKey(franchiseId));
+                if (custom && typeof custom === 'object' && custom.bases) return custom;
+            }
+        } catch(e){}
+        return CARDAPIO_CONFIG;
+    }
+
+    async function getFromCloud(franchiseId){
+        try {
+            if (typeof firebase === 'undefined' || !firebase.firestore) return get(franchiseId);
+            const doc = await firebase.firestore().collection('datastore').doc(storageKey(franchiseId)).get({ source:'server' });
+            if (doc.exists) {
+                const val = JSON.parse(doc.data().value || 'null');
+                if (val && val.bases) {
+                    try { localStorage.setItem('mp_' + storageKey(franchiseId), JSON.stringify(val)); } catch(e){}
+                    return val;
+                }
+            }
+        } catch(e){ console.warn('CardapioService.getFromCloud:', e); }
+        return get(franchiseId);
+    }
+
+    function save(franchiseId, config){
+        if (!franchiseId || !config || !config.bases) return { success:false, error:'Dados invalidos' };
+        try {
+            if (typeof DataStore !== 'undefined' && DataStore.set) {
+                DataStore.set(storageKey(franchiseId), config);
+                return { success:true };
+            }
+        } catch(e){ return { success:false, error: e.message }; }
+        return { success:false, error:'DataStore indisponivel' };
+    }
+
+    function reset(franchiseId){
+        try {
+            if (typeof DataStore !== 'undefined' && DataStore.set) {
+                DataStore.set(storageKey(franchiseId), null);
+                return { success:true };
+            }
+        } catch(e){ return { success:false, error: e.message }; }
+        return { success:false };
+    }
+
+    function cloneDefault(){
+        return JSON.parse(JSON.stringify(CARDAPIO_CONFIG));
+    }
+
+    return { get, getFromCloud, save, reset, cloneDefault, DEFAULT: CARDAPIO_CONFIG };
+})();

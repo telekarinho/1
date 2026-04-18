@@ -319,6 +319,39 @@
     <script src="js/cart.js"></script>
     <script src="js/checkout.js"></script>
     <script>
+    // Detecta franquia e aplica custom cardapio (se houver) in-place em CARDAPIO_CONFIG
+    (function(){
+        var fid = null;
+        try {
+            var qs = new URLSearchParams(location.search);
+            fid = qs.get('f') || qs.get('fid');
+            if (!fid && typeof Auth !== 'undefined' && Auth.getSession) {
+                var s = Auth.getSession();
+                if (s) fid = s.franchiseId;
+            }
+            if (!fid && typeof localStorage !== 'undefined') fid = localStorage.getItem('mp_selected_franchise');
+        } catch(e){}
+        if (!fid) return;
+        window.__MP_FID = fid;
+        // Merge sync (usa cache local se existir)
+        try {
+            var cached = CardapioService.get(fid);
+            if (cached && cached !== CARDAPIO_CONFIG && cached.bases) {
+                Object.keys(cached).forEach(function(k){ CARDAPIO_CONFIG[k] = cached[k]; });
+            }
+        } catch(e){}
+        // Merge async (Firestore fresh) e re-render
+        if (CardapioService.getFromCloud) {
+            CardapioService.getFromCloud(fid).then(function(fresh){
+                if (fresh && fresh.bases) {
+                    Object.keys(fresh).forEach(function(k){ CARDAPIO_CONFIG[k] = fresh[k]; });
+                    if (typeof window.__renderCatalog === 'function') try { window.__renderCatalog(); } catch(e){}
+                }
+            }).catch(function(){});
+        }
+    })();
+    </script>
+    <script>
     /* ============================================
        Product Catalog + Bottom Sheet (same as index.html)
        ============================================ */

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MilkyPot - Cardápio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link rel="stylesheet" href="../css/mobile-app.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#42A5F5">
+<style>
+  .sec-title { font-family:'Baloo 2',cursive; font-size:1.05rem; margin:20px 0 10px; color:#1F2937; border-bottom:2px solid #eee; padding-bottom:6px }
+  .item-row { display:grid; grid-template-columns: 44px 1fr 120px 120px 70px 40px; gap:10px; align-items:center; padding:10px 12px; background:#FAFAFA; border:1px solid #eee; border-radius:10px; margin-bottom:6px; }
+  .item-row .ico { font-size:24px; text-align:center }
+  .item-row .info input { width:100%; padding:7px 10px; border:1px solid #ddd; border-radius:6px; font-size:.9rem; box-sizing:border-box; }
+  .item-row .info .name { font-weight:700 }
+  .item-row .info .desc { font-size:.8rem; color:#666; margin-top:2px }
+  .item-row .price-input { font-weight:700; color:#E91E63; text-align:right }
+  .item-row .price-input.disabled { background:#eee; color:#999 }
+  .item-row .toggle { display:flex; align-items:center; gap:6px; font-size:.78rem; color:#666 }
+  .item-row .del { background:transparent; border:none; cursor:pointer; font-size:16px; color:#888 }
+  .tam-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:12px 0 20px }
+  .tam-box { background:linear-gradient(135deg,#EDE7F6,#F3E5F5); border-radius:12px; padding:14px; text-align:center }
+  .tam-box label { display:block; font-size:.78rem; color:#555; margin-bottom:4px }
+  .tam-box strong { font-family:'Baloo 2',cursive; font-size:1.1rem; color:#6C63FF; display:block; margin-bottom:6px }
+  .tam-box input { width:100%; padding:8px; border:1px solid #D1C4E9; border-radius:6px; text-align:center; font-weight:800; font-size:1rem; color:#E91E63 }
+  .help { background:#FEF9C3; border-left:3px solid #F59E0B; padding:10px 14px; border-radius:8px; font-size:.85rem; color:#713F12; margin-bottom:18px }
+  .add-btn { background:#fff; border:2px dashed #D1C4E9; color:#6C63FF; padding:10px 14px; border-radius:8px; cursor:pointer; font-weight:700; font-size:.85rem; width:100% }
+  .add-btn:hover { background:#F3E5F5 }
+</style>
+</head>
+<body>
+<div class="panel-layout">
+  <aside class="panel-sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+      <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-nav-group">Principal</div>
+      <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Painel</a>
+      <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+      <div class="sidebar-nav-group">Gestão</div>
+      <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+      <a href="cardapio.html" class="sidebar-link active"><span class="icon">🍨</span> Cardápio</a>
+      <a href="produtos.html" class="sidebar-link"><span class="icon">📦</span> Estoque</a>
+      <a href="entregas.html" class="sidebar-link"><span class="icon">🛵</span> Entregas</a>
+      <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
+      <a href="operacional.html" class="sidebar-link"><span class="icon">🎯</span> Operacional</a>
+      <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
+    </nav>
+  </aside>
+
+  <main class="panel-main">
+    <header class="panel-header">
+      <div class="panel-header-left">
+        <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <h1>🍨 Cardápio — <span id="storeNameInline">sua loja</span></h1>
+      </div>
+      <div class="panel-header-right">
+        <button class="btn btn-outline" onclick="resetToDefault()">↺ Padrão da rede</button>
+        <button class="btn btn-primary" onclick="saveAll()">💾 Salvar alterações</button>
+        <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+      </div>
+    </header>
+
+    <div class="panel-content">
+      <div class="help">
+        💡 Edite preços dos tamanhos, ative/desative sabores, adicione coberturas. <strong>Tudo salvo aqui aparece automaticamente no delivery online, no PDV e no cardápio impresso.</strong> Altere o mínimo (preço) e os valores se atualizam em todo lugar.
+      </div>
+
+      <!-- TAMANHOS (preços base) -->
+      <h3 class="sec-title">📏 Tamanhos e preços base</h3>
+      <div class="tam-grid" id="tamGrid"></div>
+
+      <!-- BASES -->
+      <h3 class="sec-title">🌊 Bases</h3>
+      <div id="basesList"></div>
+      <button class="add-btn" onclick="addItem('bases')">+ Nova base</button>
+
+      <!-- FORMATOS -->
+      <h3 class="sec-title">🥤 Formatos</h3>
+      <div id="formatosList"></div>
+      <button class="add-btn" onclick="addItem('formatos')">+ Novo formato</button>
+
+      <!-- SABORES -->
+      <h3 class="sec-title">🍓 Sabores</h3>
+      <p style="font-size:.82rem;color:#666;margin:0 0 10px">Organizados por categoria (Clássicos, Frutas, Especiais, etc). Sabor desativado não aparece no cardápio do cliente.</p>
+      <div id="saboresList"></div>
+
+      <!-- ADICIONAIS -->
+      <h3 class="sec-title">✨ Adicionais e coberturas</h3>
+      <div id="adicionaisList"></div>
+
+      <!-- BEBIDAS -->
+      <h3 class="sec-title">🥤 Bebidas</h3>
+      <div id="bebidasList"></div>
+      <button class="add-btn" onclick="addItem('bebidas')">+ Nova bebida</button>
+    </div>
+  </main>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/auth.js"></script>
+<script src="../js/core/audit.js"></script>
+<script src="../js/cardapio-data.js"></script>
+<script>
+(async function(){
+  if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+  const session = Auth.getSession();
+  const fid = session.franchiseId;
+  if (!fid) { alert('Sua conta não está vinculada a uma franquia.'); throw new Error('no fid'); }
+
+  const franchises = DataStore.getAllFranchises();
+  const franchise = franchises.find(f => f.id === fid);
+  const storeName = franchise ? franchise.name : 'Minha loja';
+  document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ','') : 'Franquia';
+  document.getElementById('storeNameInline').textContent = storeName;
+
+  DataStore.init && DataStore.init();
+  let cfg = await CardapioService.getFromCloud(fid);
+  cfg = JSON.parse(JSON.stringify(cfg)); // clone editável
+
+  function esc(s){ return Utils.escapeHtml(s || ''); }
+
+  function renderTamanhos(){
+    document.getElementById('tamGrid').innerHTML = (cfg.tamanhos || []).map((t,i) => `
+      <div class="tam-box">
+        <strong>${esc(t.name)}</strong>
+        <label>${t.ml || 0} ml · preço base</label>
+        <input type="text" value="${(t.price||0).toFixed(2).replace('.',',')}"
+          oninput="maskPrice(this, ${i}, 'tamanho')">
+        <label style="margin-top:8px;font-size:.7rem">
+          <input type="checkbox" ${t.available !== false ? 'checked':''} onchange="toggleTam(${i}, this.checked)">
+          Ativo
+        </label>
+      </div>
+    `).join('');
+  }
+
+  function renderList(listName, containerId, hasPrice) {
+    const items = cfg[listName] || [];
+    document.getElementById(containerId).innerHTML = items.map((it,i) => rowHtml(it, i, listName, hasPrice)).join('');
+  }
+
+  function rowHtml(it, i, list, hasPrice){
+    return `
+      <div class="item-row">
+        <div class="ico">${esc(it.emoji || '🔸')}</div>
+        <div class="info">
+          <input class="name" type="text" value="${esc(it.name||'')}" placeholder="Nome" onchange="updateField('${list}',${i},'name',this.value)">
+          ${it.desc !== undefined ? `<input class="desc" type="text" value="${esc(it.desc||'')}" placeholder="Descrição" onchange="updateField('${list}',${i},'desc',this.value)" style="margin-top:4px;font-size:.78rem">` : ''}
+        </div>
+        <div>
+          <input class="name" type="text" value="${esc(it.emoji||'')}" placeholder="Emoji" maxlength="3" onchange="updateField('${list}',${i},'emoji',this.value)">
+        </div>
+        ${hasPrice ? `<input class="price-input" type="text" value="${(it.price||0).toFixed(2).replace('.',',')}" oninput="maskPrice(this, ${i}, '${list}')">` : '<div></div>'}
+        <label class="toggle"><input type="checkbox" ${it.available !== false ? 'checked':''} onchange="toggleItem('${list}',${i},this.checked)"> ${it.available !== false ? 'Ativo' : 'Inativo'}</label>
+        <button class="del" onclick="removeItem('${list}',${i})" title="Remover">🗑️</button>
+      </div>
+    `;
+  }
+
+  function renderSabores(){
+    const s = cfg.sabores || {};
+    const cats = Object.keys(s);
+    if (cats.length === 0) {
+      document.getElementById('saboresList').innerHTML = '<p style="color:#888">Nenhum sabor cadastrado.</p>';
+      return;
+    }
+    document.getElementById('saboresList').innerHTML = cats.map(cat => {
+      const items = s[cat].items || [];
+      return `
+        <div style="margin-bottom:16px">
+          <h4 style="margin:8px 0 6px;font-size:.92rem;color:#6C63FF">${esc(s[cat].emoji||'')} ${esc(s[cat].name || cat)}</h4>
+          ${items.map((it,i) => `
+            <div class="item-row">
+              <div class="ico">${esc(it.emoji || '🍧')}</div>
+              <div class="info">
+                <input class="name" type="text" value="${esc(it.name||'')}" onchange="updateSabor('${cat}',${i},'name',this.value)">
+              </div>
+              <input type="text" value="${esc(it.emoji||'')}" maxlength="3" onchange="updateSabor('${cat}',${i},'emoji',this.value)" placeholder="Emoji">
+              <div></div>
+              <label class="toggle"><input type="checkbox" ${it.available !== false ? 'checked':''} onchange="toggleSabor('${cat}',${i},this.checked)"> ${it.available !== false ? 'Ativo' : 'Inativo'}</label>
+              <button class="del" onclick="removeSabor('${cat}',${i})" title="Remover">🗑️</button>
+            </div>
+          `).join('')}
+          <button class="add-btn" onclick="addSabor('${cat}')" style="margin-top:6px">+ Novo sabor em ${esc(s[cat].name || cat)}</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderAdicionais(){
+    const a = cfg.adicionais || {};
+    const cats = Object.keys(a);
+    document.getElementById('adicionaisList').innerHTML = cats.map(cat => {
+      const items = a[cat].items || [];
+      return `
+        <div style="margin-bottom:16px">
+          <h4 style="margin:8px 0 6px;font-size:.92rem;color:#6C63FF">${esc(a[cat].emoji||'')} ${esc(a[cat].name || cat)}</h4>
+          ${items.map((it,i) => `
+            <div class="item-row">
+              <div class="ico">${esc(it.emoji || '✨')}</div>
+              <div class="info"><input class="name" type="text" value="${esc(it.name||'')}" onchange="updateAdicional('${cat}',${i},'name',this.value)"></div>
+              <input type="text" value="${esc(it.emoji||'')}" maxlength="3" onchange="updateAdicional('${cat}',${i},'emoji',this.value)" placeholder="Emoji">
+              <input class="price-input" type="text" value="${(it.price||0).toFixed(2).replace('.',',')}" oninput="maskPriceAdd(this, '${cat}', ${i})">
+              <label class="toggle"><input type="checkbox" ${it.available !== false ? 'checked':''} onchange="toggleAdicional('${cat}',${i},this.checked)"> ${it.available !== false ? 'Ativo' : 'Inativo'}</label>
+              <button class="del" onclick="removeAdicional('${cat}',${i})" title="Remover">🗑️</button>
+            </div>
+          `).join('')}
+          <button class="add-btn" onclick="addAdicional('${cat}')" style="margin-top:6px">+ Novo adicional em ${esc(a[cat].name || cat)}</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ============ Handlers ============
+  window.maskPrice = function(inp, idx, type){
+    const digits = (inp.value || '').replace(/\D/g,'');
+    const v = parseInt(digits||'0',10) / 100;
+    inp.value = v.toFixed(2).replace('.', ',');
+    if (type === 'tamanho') cfg.tamanhos[idx].price = v;
+    else if (cfg[type] && cfg[type][idx]) cfg[type][idx].price = v;
+  };
+  window.maskPriceAdd = function(inp, cat, idx){
+    const digits = (inp.value || '').replace(/\D/g,'');
+    const v = parseInt(digits||'0',10) / 100;
+    inp.value = v.toFixed(2).replace('.', ',');
+    if (cfg.adicionais && cfg.adicionais[cat] && cfg.adicionais[cat].items[idx]) cfg.adicionais[cat].items[idx].price = v;
+  };
+  window.toggleTam = function(idx, checked){ cfg.tamanhos[idx].available = checked; };
+  window.updateField = function(list, idx, field, value){ if (cfg[list] && cfg[list][idx]) cfg[list][idx][field] = value; };
+  window.toggleItem = function(list, idx, checked){ if (cfg[list] && cfg[list][idx]) cfg[list][idx].available = checked; renderList(list, list + 'List', list === 'bebidas'); };
+  window.removeItem = function(list, idx){ if (!confirm('Remover este item?')) return; cfg[list].splice(idx,1); renderAll(); };
+  window.addItem = function(list){
+    const templates = {
+      bases: { id:'nova-base-'+Date.now(), name:'Nova base', emoji:'🥛', desc:'', color:'#ccc', available:true },
+      formatos: { id:'novo-formato-'+Date.now(), name:'Novo formato', emoji:'🥤', desc:'', compatibleBases:[], available:true },
+      bebidas: { id:'nova-bebida-'+Date.now(), name:'Nova bebida', price:3, emoji:'🥤', available:true }
+    };
+    if (!cfg[list]) cfg[list] = [];
+    cfg[list].push(templates[list]);
+    renderAll();
+  };
+
+  window.updateSabor = function(cat, idx, field, value){ if (cfg.sabores[cat]) cfg.sabores[cat].items[idx][field] = value; };
+  window.toggleSabor = function(cat, idx, checked){ cfg.sabores[cat].items[idx].available = checked; renderSabores(); };
+  window.removeSabor = function(cat, idx){ if (!confirm('Remover sabor?')) return; cfg.sabores[cat].items.splice(idx,1); renderSabores(); };
+  window.addSabor = function(cat){
+    cfg.sabores[cat].items.push({ id:'sabor-'+Date.now(), name:'Novo sabor', emoji:'🍧', available:true });
+    renderSabores();
+  };
+
+  window.updateAdicional = function(cat, idx, field, value){ if (cfg.adicionais[cat]) cfg.adicionais[cat].items[idx][field] = value; };
+  window.toggleAdicional = function(cat, idx, checked){ cfg.adicionais[cat].items[idx].available = checked; renderAdicionais(); };
+  window.removeAdicional = function(cat, idx){ if (!confirm('Remover?')) return; cfg.adicionais[cat].items.splice(idx,1); renderAdicionais(); };
+  window.addAdicional = function(cat){
+    cfg.adicionais[cat].items.push({ id:'add-'+Date.now(), name:'Novo adicional', price:3, emoji:'✨', available:true });
+    renderAdicionais();
+  };
+
+  window.saveAll = function(){
+    const r = CardapioService.save(fid, cfg);
+    if (!r.success) { Utils.showToast(r.error || 'Erro ao salvar', 'error'); return; }
+    if (typeof AuditLog !== 'undefined' && AuditLog.log) AuditLog.log('cardapio.updated', { fid });
+    Utils.showToast('✅ Cardápio salvo! Aparece no delivery, PDV e TV em até 30s.', 'success');
+  };
+
+  window.resetToDefault = function(){
+    if (!confirm('Voltar ao cardápio padrão da rede? Suas edições serão perdidas.')) return;
+    CardapioService.reset(fid);
+    cfg = CardapioService.cloneDefault();
+    renderAll();
+    Utils.showToast('Cardápio restaurado ao padrão da rede', 'success');
+  };
+
+  function renderAll(){
+    renderTamanhos();
+    renderList('bases','basesList', false);
+    renderList('formatos','formatosList', false);
+    renderSabores();
+    renderAdicionais();
+    renderList('bebidas','bebidasList', true);
+  }
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
