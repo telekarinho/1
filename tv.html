@@ -3,7 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>MilkyPot TV</title>
+<script>
+  // TV nunca mantem cache HTML. Desregistra SW antigo na primeira carga.
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => { regs.forEach(r => r.unregister()); }).catch(()=>{});
+  }
+  if (window.caches) {
+    caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(()=>{});
+  }
+</script>
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -280,15 +292,30 @@ body:not(.idle){cursor:default}
         document.getElementById('weatherCity').textContent = config.weatherCity || '';
     }
 
-    /* === Load playlist from DataStore === */
-    function loadPlaylist(){
+    /* === Fetch direto do Firestore (bypass de cache local) === */
+    async function fetchFromCloud(docId) {
+        try {
+            if (typeof firebase === 'undefined' || !firebase.firestore) return null;
+            var doc = await firebase.firestore().collection('datastore').doc(docId).get({ source: 'server' });
+            if (!doc.exists) return null;
+            var raw = doc.data().value || '';
+            if (typeof raw === 'string') return JSON.parse(raw || 'null');
+            return raw;
+        } catch (e) {
+            console.warn('fetchFromCloud', docId, e);
+            return null;
+        }
+    }
+
+    /* === Load playlist: sempre rede primeiro, localStorage só como fallback === */
+    async function loadPlaylist(){
         var fid = franchiseId;
 
         if(!fid){
-            var franchises = DataStore.get('franchises') || [];
+            var franchises = (await fetchFromCloud('franchises')) || DataStore.get('franchises') || [];
             for(var i=0; i<franchises.length; i++){
                 var f = franchises[i];
-                var tvs = DataStore.get('tv_devices_' + f.id) || [];
+                var tvs = (await fetchFromCloud('tv_devices_' + f.id)) || DataStore.get('tv_devices_' + f.id) || [];
                 var match = tvs.find(function(t){ return t.id === tvId || t.slug === tvId; });
                 if(match){
                     fid = f.id;
@@ -305,8 +332,8 @@ body:not(.idle){cursor:default}
 
         franchiseId = fid;
 
-        // Load this TV's device info for video wall config
-        var tvs = DataStore.get('tv_devices_' + fid) || [];
+        // === SEMPRE BUSCA DO FIRESTORE (nunca usa cache localStorage sem revalidar) ===
+        var tvs = (await fetchFromCloud('tv_devices_' + fid)) || DataStore.get('tv_devices_' + fid) || [];
         tvDevice = tvs.find(function(t){ return t.id === tvId; });
         if(tvDevice){
             wallPosition = parseInt(tvDevice.wallPosition) || 1;
@@ -314,21 +341,47 @@ body:not(.idle){cursor:default}
             applyWallMode();
         }
 
-        // Reload config on each playlist refresh
-        loadConfig();
+        // Config: busca do Firestore também
+        var cloudConfig = await fetchFromCloud('tv_config_' + fid);
+        if (cloudConfig) {
+            config = cloudConfig;
+            try { localStorage.setItem('mp_tv_config_' + fid, JSON.stringify(cloudConfig)); } catch(e){}
+        } else {
+            loadConfig();
+        }
+        applyConfig();
 
-        var playlistData = DataStore.get('tv_playlist_' + fid) || [];
-        var mediaData = DataStore.get('tv_media_' + fid) || [];
+        // Playlist + biblioteca: Firestore primeiro
+        var playlistData = (await fetchFromCloud('tv_playlist_' + fid)) || DataStore.get('tv_playlist_' + fid) || [];
+        var mediaData = (await fetchFromCloud('tv_media_' + fid)) || DataStore.get('tv_media_' + fid) || [];
+
+        // Grava localmente o que veio do servidor (pra recovery offline)
+        try {
+            localStorage.setItem('mp_tv_playlist_' + fid, JSON.stringify(playlistData));
+            localStorage.setItem('mp_tv_media_' + fid, JSON.stringify(mediaData));
+        } catch(e){}
 
         media = {};
         mediaData.forEach(function(m){ media[m.id] = m; });
 
+        // AUTO-FIX: se a playlist esta vazia mas a biblioteca tem midias,
+        // usa a biblioteca inteira como playlist (fallback seguro).
+        var effectivePlaylist = playlistData;
+        if ((!playlistData || !playlistData.length) && mediaData && mediaData.length) {
+            effectivePlaylist = mediaData.map(function(m){
+                return { mediaId: m.id, duration: Math.max(5, m.duration || 10) };
+            });
+        }
+
         playlist = [];
-        playlistData.forEach(function(p){
-            if(media[p.mediaId]){
+        effectivePlaylist.forEach(function(p){
+            // Compat: p pode ser string (id) ou objeto {mediaId, duration}
+            var mid = (typeof p === 'string') ? p : p.mediaId;
+            var dur = (typeof p === 'string') ? null : p.duration;
+            if(media[mid]){
                 playlist.push({
-                    media: media[p.mediaId],
-                    duration: (p.duration || media[p.mediaId].duration || 8) * 1000
+                    media: media[mid],
+                    duration: (dur || media[mid].duration || 8) * 1000
                 });
             }
         });
@@ -635,12 +688,7 @@ body:not(.idle){cursor:default}
     /* === Escape hatch === */
     function esc(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
 
-    /* === Service Worker === */
-    if('serviceWorker' in navigator){
-        navigator.serviceWorker.register('/sw.js').then(function(reg){
-            window.addEventListener('online', function(){ reg.active && reg.active.postMessage({type:'REPLAY_OFFLINE_QUEUE'}); });
-        }).catch(function(e){ console.warn('SW:', e); });
-    }
+    /* === Service Worker: TVs NAO registram SW (cache e inimigo aqui) === */
 
     /* === Boot === */
     parseUrl();

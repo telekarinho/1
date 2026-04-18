@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v14';
-const CACHE_NAME = 'milkypot-v14';
+const CACHE_VERSION = 'mp-v16';
+const CACHE_NAME = 'milkypot-v16';
 
 // Critical local assets that must be available offline
 const PRECACHE_URLS = [
@@ -22,12 +22,8 @@ const PRECACHE_URLS = [
     '/painel/marketing.html',
     '/painel/despesas.html',
     '/painel/configuracoes.html',
-    '/painel/tv-indoor.html',
-    '/painel/radio-indoor.html',
     '/painel/finance-os.html',
-    // TV + Radio player pages
-    '/tv.html',
-    '/radio.html',
+    // (rotas de TV/Radio sao deliberadamente fora do precache — nunca devem cachear)
     '/manifest-tv.json',
     // Styles
     '/css/style.css',
@@ -126,6 +122,16 @@ self.addEventListener('fetch', event => {
         return;
     }
 
+    // TV routes: bypass total — sempre rede, nunca cache.
+    // (/t, /t.html, /tv.html, /tv1, /tv2, ..., /tvN ou /tvN.html, /painel/tv-indoor.html)
+    if (isTvRoute(url)) {
+        event.respondWith(
+            fetch(request, { cache: 'no-store' })
+                .catch(() => caches.match(request).then(c => c || new Response('Offline', { status: 503 })))
+        );
+        return;
+    }
+
     // Firebase SDK + Google Fonts: Cache-First (version-locked URLs)
     if (isVersionLockedCdn(url)) {
         event.respondWith(cacheFirst(request));
@@ -216,6 +222,16 @@ function networkFirst(request) {
 }
 
 // --- Utility helpers ---
+
+function isTvRoute(url) {
+    const p = url.pathname;
+    // /t, /t.html, /tv.html, /tv1, /tv2, ..., /tv1.html (qualquer nN), /painel/tv-indoor.html, /painel/radio-indoor.html, /radio.html
+    if (p === '/t' || p === '/t.html') return true;
+    if (p === '/tv.html' || p === '/radio.html') return true;
+    if (/^\/tv\d+(\.html)?$/.test(p)) return true;
+    if (p === '/painel/tv-indoor.html' || p === '/painel/radio-indoor.html') return true;
+    return false;
+}
 
 function isApiRequest(url) {
     return url.hostname.includes('firestore.googleapis.com') ||

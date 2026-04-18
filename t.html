@@ -3,7 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>MilkyPot TV — Atalho</title>
+  <script>
+    // TV nao pode manter cache. Desregistra SW antigo e limpa caches na primeira carga.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+      }).catch(()=>{});
+    }
+    if (window.caches) {
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(()=>{});
+    }
+  </script>
   <style>
     html, body { height:100%; margin:0; background:#000; color:#fff; font-family:'Segoe UI',Tahoma,sans-serif; }
     .box { height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; padding:20px; text-align:center; }
