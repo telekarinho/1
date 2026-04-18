@@ -154,8 +154,18 @@ const AdminConfig = (function () {
         return all[franchiseId] && all[franchiseId][periodKey] ? all[franchiseId][periodKey] : null;
     }
 
+    // Permissão relaxada: super_admin pode editar qualquer franquia; franchisee/manager só a própria.
+    function requireFranchiseScope(franchiseId) {
+        const s = sessionInfo();
+        if (s.role === 'super_admin') return { ok: true, user: s };
+        if ((s.role === 'franchisee' || s.role === 'manager') && s.franchiseId && s.franchiseId === franchiseId) {
+            return { ok: true, user: s };
+        }
+        return { ok: false, error: 'Sem permissão para editar dados desta franquia.' };
+    }
+
     function setMeta(franchiseId, periodKey, valor) {
-        const g = requireAdmin();
+        const g = requireFranchiseScope(franchiseId);
         if (!g.ok) return { success: false, error: g.error };
         if (isNaN(valor) || valor < 0) return { success: false, error: 'Valor inválido.' };
         const all = getMetasAll();
@@ -172,7 +182,7 @@ const AdminConfig = (function () {
     }
 
     function removeMeta(franchiseId, periodKey) {
-        const g = requireAdmin();
+        const g = requireFranchiseScope(franchiseId);
         if (!g.ok) return { success: false, error: g.error };
         const all = getMetasAll();
         if (all[franchiseId]) delete all[franchiseId][periodKey];
@@ -202,28 +212,79 @@ const AdminConfig = (function () {
     /* ============================================
        Checklist de turno
        ============================================ */
-    function getChecklistTemplates() {
-        const custom = getSetting('settings_checklist', null);
-        if (!custom || typeof custom !== 'object') return JSON.parse(JSON.stringify(DEFAULT_CHECKLIST));
-        return {
-            abertura: Array.isArray(custom.abertura) && custom.abertura.length ? custom.abertura : DEFAULT_CHECKLIST.abertura,
-            fechamento: Array.isArray(custom.fechamento) && custom.fechamento.length ? custom.fechamento : DEFAULT_CHECKLIST.fechamento
-        };
+    function _checklistKey(franchiseId) {
+        return franchiseId ? ('settings_checklist_' + franchiseId) : 'settings_checklist';
     }
 
-    function saveChecklistTemplates(tpls) {
-        const g = requireAdmin();
-        if (!g.ok) return { success: false, error: g.error };
-        setSetting('settings_checklist', tpls);
-        audit('config.checklist_updated', { by: g.user.name });
+    /** Retorna checklist: por-franquia se existir; senão global; senão default. */
+    function getChecklistTemplates(franchiseId) {
+        // 1. Tenta por-franquia
+        if (franchiseId) {
+            const perFranchise = getSetting(_checklistKey(franchiseId), null);
+            if (perFranchise && typeof perFranchise === 'object' &&
+                ((perFranchise.abertura && perFranchise.abertura.length) ||
+                 (perFranchise.fechamento && perFranchise.fechamento.length))) {
+                return {
+                    abertura: Array.isArray(perFranchise.abertura) && perFranchise.abertura.length ? perFranchise.abertura : DEFAULT_CHECKLIST.abertura,
+                    fechamento: Array.isArray(perFranchise.fechamento) && perFranchise.fechamento.length ? perFranchise.fechamento : DEFAULT_CHECKLIST.fechamento,
+                    _source: 'franchise'
+                };
+            }
+        }
+        // 2. Fallback global (super_admin pode ter definido um template padrão)
+        const custom = getSetting('settings_checklist', null);
+        if (custom && typeof custom === 'object' &&
+            ((custom.abertura && custom.abertura.length) || (custom.fechamento && custom.fechamento.length))) {
+            return {
+                abertura: Array.isArray(custom.abertura) && custom.abertura.length ? custom.abertura : DEFAULT_CHECKLIST.abertura,
+                fechamento: Array.isArray(custom.fechamento) && custom.fechamento.length ? custom.fechamento : DEFAULT_CHECKLIST.fechamento,
+                _source: 'global'
+            };
+        }
+        // 3. Defaults
+        const d = JSON.parse(JSON.stringify(DEFAULT_CHECKLIST));
+        d._source = 'default';
+        return d;
+    }
+
+    /**
+     * Salva templates. Se franchiseId passado: grava em settings_checklist_{fid}.
+     * Super_admin: pode salvar global (sem franchiseId) ou de qualquer franquia.
+     * Franchisee/manager: só a própria franquia (franchiseId obrigatório e == session.franchiseId).
+     */
+    function saveChecklistTemplates(franchiseId, tpls) {
+        // Compat: chamadas antigas passam só tpls (super_admin, global)
+        if (franchiseId && typeof franchiseId === 'object' && tpls === undefined) {
+            tpls = franchiseId;
+            franchiseId = null;
+        }
+        const s = sessionInfo();
+        if (!franchiseId) {
+            // Global — só super_admin
+            if (s.role !== 'super_admin') return { success: false, error: 'Apenas super_admin pode alterar checklist global.' };
+            setSetting('settings_checklist', tpls);
+            audit('config.checklist_updated', { scope: 'global', by: s.name });
+        } else {
+            const g = requireFranchiseScope(franchiseId);
+            if (!g.ok) return { success: false, error: g.error };
+            setSetting(_checklistKey(franchiseId), tpls);
+            audit('config.checklist_updated', { scope: 'franchise', franchiseId, by: g.user.name });
+        }
         return { success: true };
     }
 
-    function resetChecklistTemplates() {
-        const g = requireAdmin();
-        if (!g.ok) return { success: false, error: g.error };
-        setSetting('settings_checklist', null);
-        audit('config.checklist_reset', { by: g.user.name });
+    function resetChecklistTemplates(franchiseId) {
+        const s = sessionInfo();
+        if (!franchiseId) {
+            if (s.role !== 'super_admin') return { success: false, error: 'Apenas super_admin pode alterar checklist global.' };
+            setSetting('settings_checklist', null);
+            audit('config.checklist_reset', { scope: 'global', by: s.name });
+        } else {
+            const g = requireFranchiseScope(franchiseId);
+            if (!g.ok) return { success: false, error: g.error };
+            setSetting(_checklistKey(franchiseId), null);
+            audit('config.checklist_reset', { scope: 'franchise', franchiseId, by: g.user.name });
+        }
         return { success: true };
     }
 
