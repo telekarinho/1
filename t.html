@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MilkyPot TV — Atalho</title>
+  <style>
+    html, body { height:100%; margin:0; background:#000; color:#fff; font-family:'Segoe UI',Tahoma,sans-serif; }
+    .box { height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; padding:20px; text-align:center; }
+    h1 { font-size:22px; font-weight:700; margin:0; }
+    p { opacity:.7; margin:0; font-size:14px; max-width:480px; }
+    .spinner { width:48px; height:48px; border:4px solid rgba(255,255,255,.15); border-top-color:#42A5F5; border-radius:50%; animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .err { color:#EF4444; }
+  </style>
+</head>
+<body>
+  <div class="box" id="box">
+    <div class="spinner"></div>
+    <h1 id="msg">Carregando TV...</h1>
+    <p id="sub">Buscando o código curto.</p>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="/js/core/constants.js"></script>
+  <script src="/js/core/utils.js"></script>
+  <script src="/js/core/datastore.js"></script>
+  <script src="/js/core/firebase-config.js"></script>
+  <script src="/js/core/adminconfig.js?v=mp-v10"></script>
+  <script>
+    (async function () {
+      function fail(title, sub) {
+        document.getElementById('box').innerHTML =
+          '<h1 class="err" style="font-size:26px">❌ ' + title + '</h1>' +
+          '<p>' + (sub || '') + '</p>' +
+          '<p style="margin-top:20px">Peça ao franqueado o código correto em <br><strong>/painel/tv-indoor.html</strong></p>';
+      }
+
+      // Código pode vir como ?c=mq1 ou ?mq1 (primeiro param sem "=")
+      let code = null;
+      const rawQs = location.search.substring(1);
+      if (rawQs) {
+        const params = new URLSearchParams(location.search);
+        code = params.get('c');
+        if (!code) {
+          const first = rawQs.split('&')[0];
+          if (first && !first.includes('=')) code = first;
+        }
+      }
+      if (!code && location.hash) {
+        code = location.hash.replace('#', '');
+      }
+
+      if (!code) {
+        fail('Código ausente', 'Use: milkypot.com/t?seucodigo');
+        return;
+      }
+
+      // 1) tenta localStorage (pode já estar sincronizado)
+      let mapping = null;
+      try {
+        if (typeof AdminConfig !== 'undefined') mapping = AdminConfig.getTvShortcode(code);
+      } catch (e) {}
+
+      // 2) busca direto do Firestore se não achou local
+      if (!mapping) {
+        try {
+          DataStore.init && DataStore.init();
+          const doc = await firebase.firestore().collection('datastore').doc('tv_shortcodes').get();
+          if (doc.exists) {
+            const map = JSON.parse(doc.data().value || '{}');
+            mapping = map[String(code).toLowerCase()] || null;
+          }
+        } catch (e) {
+          console.warn('Firestore lookup fail:', e);
+        }
+      }
+
+      if (!mapping || !mapping.fid || !mapping.tvId) {
+        fail('Código não encontrado: ' + code, 'Verifique se o código está correto ou crie um novo atalho.');
+        return;
+      }
+
+      // Redireciona pra URL completa da TV
+      const target = '/tv.html?f=' + encodeURIComponent(mapping.fid) + '&tv=' + encodeURIComponent(mapping.tvId);
+      location.replace(target);
+    })();
+  </script>
+</body>
+</html>

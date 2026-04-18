@@ -314,6 +314,60 @@ const AdminConfig = (function () {
         return all.find(e => e.phase === phase && e.dateKey === today) || null;
     }
 
+    /* ============================================
+       Códigos curtos de TV (URLs /t?mq1)
+       ============================================ */
+    function getTvShortcodesAll() {
+        return getSetting('tv_shortcodes', {}) || {};
+    }
+
+    function getTvShortcode(code) {
+        if (!code) return null;
+        const map = getTvShortcodesAll();
+        return map[String(code).toLowerCase()] || null;
+    }
+
+    function listTvShortcodesForFranchise(franchiseId) {
+        const map = getTvShortcodesAll();
+        return Object.entries(map)
+            .filter(([_, v]) => v && v.fid === franchiseId)
+            .map(([code, v]) => ({ code, ...v }));
+    }
+
+    function setTvShortcode(franchiseId, code, tvId) {
+        const c = String(code || '').toLowerCase().trim();
+        if (!/^[a-z0-9]{1,8}$/.test(c)) return { success: false, error: 'Código deve ter 1 a 8 letras/números (sem espaço).' };
+        if (!tvId) return { success: false, error: 'TV inválida.' };
+        const g = requireFranchiseScope(franchiseId);
+        if (!g.ok) return { success: false, error: g.error };
+        const map = getTvShortcodesAll();
+        if (map[c] && map[c].fid !== franchiseId) {
+            return { success: false, error: 'Código "' + c + '" já está em uso por outra franquia.' };
+        }
+        map[c] = {
+            fid: franchiseId,
+            tvId: tvId,
+            createdBy: g.user.name,
+            createdAt: new Date().toISOString()
+        };
+        setSetting('tv_shortcodes', map);
+        audit('config.tv_shortcode_set', { code: c, fid: franchiseId, tvId: tvId, by: g.user.name });
+        return { success: true, code: c };
+    }
+
+    function removeTvShortcode(franchiseId, code) {
+        const c = String(code || '').toLowerCase().trim();
+        const map = getTvShortcodesAll();
+        const existing = map[c];
+        if (!existing) return { success: false, error: 'Código não encontrado.' };
+        const g = requireFranchiseScope(existing.fid);
+        if (!g.ok) return { success: false, error: g.error };
+        delete map[c];
+        setSetting('tv_shortcodes', map);
+        audit('config.tv_shortcode_removed', { code: c, fid: existing.fid, by: g.user.name });
+        return { success: true };
+    }
+
     /* ---- Format helpers ---- */
     function formatBRL(v) {
         const n = Number(v || 0);
@@ -344,6 +398,13 @@ const AdminConfig = (function () {
         resetChecklistTemplates,
         recordChecklistExec,
         getTodayChecklistExec,
+
+        // TV shortcodes
+        getTvShortcodesAll,
+        getTvShortcode,
+        listTvShortcodesForFranchise,
+        setTvShortcode,
+        removeTvShortcode,
 
         formatBRL
     };
