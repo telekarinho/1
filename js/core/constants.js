@@ -88,11 +88,8 @@ const MP = {
         AUDIT_LOG: 'audit_log'
     },
 
-    // Owner email principal (para auto-registro como super_admin)
+    // Owner email (para auto-registro como super_admin)
     OWNER_EMAIL: 'jocimarrodrigo@gmail.com',
-
-    // Owners adicionais — todos viram super_admin no primeiro login com Google
-    OWNER_EMAILS: ['jocimarrodrigo@gmail.com', 'milkypot.com@gmail.com'],
 
     // Session config
     SESSION_DURATION_MS: 24 * 60 * 60 * 1000, // 24 horas
