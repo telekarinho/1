@@ -410,6 +410,9 @@ const AdminConfig = (function () {
     }
 
     function addFranchiseIp(franchiseId, ip) {
+        if (!franchiseId || typeof franchiseId !== 'string' || franchiseId === 'null' || franchiseId === 'undefined') {
+            return { success: false, error: 'Franquia inválida. Faça logout e login novamente.' };
+        }
         const g = requireFranchiseScope(franchiseId);
         if (!g.ok) return { success: false, error: g.error };
         const normalized = String(ip || '').trim();
