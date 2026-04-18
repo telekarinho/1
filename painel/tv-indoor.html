@@ -522,6 +522,8 @@
     <script src="../js/core/firebase-config.js"></script>
     <script src="../js/core/cloud-functions.js"></script>
     <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+    <script src="../js/core/adminconfig.js?v=mp-v10"></script>
 <script>
 /* ============================================
    TV Indoor — Management Page
@@ -610,6 +612,41 @@
         });
     };
 
+    function shortcodesForTv(tvId) {
+        if (typeof AdminConfig === 'undefined' || !AdminConfig.listTvShortcodesForFranchise) return [];
+        return AdminConfig.listTvShortcodesForFranchise(fid).filter(function(sc){ return sc.tvId === tvId; });
+    }
+
+    window.saveTvShortcode = function(tvId) {
+        var input = document.getElementById('sc_' + tvId);
+        if (!input) return;
+        var code = (input.value || '').trim();
+        if (!code) { Utils.showToast('Digite um código curto', 'error'); return; }
+        if (typeof AdminConfig === 'undefined') { Utils.showToast('Módulo indisponível', 'error'); return; }
+        var r = AdminConfig.setTvShortcode(fid, code, tvId);
+        if (!r.success) { Utils.showToast(r.error, 'error'); return; }
+        Utils.showToast('Atalho /t?' + r.code + ' criado!', 'success');
+        renderTvs();
+    };
+
+    window.removeTvShortcode = function(code) {
+        if (!confirm('Remover o atalho /t?' + code + '?')) return;
+        var r = AdminConfig.removeTvShortcode(fid, code);
+        if (!r.success) { Utils.showToast(r.error, 'error'); return; }
+        Utils.showToast('Atalho removido', 'success');
+        renderTvs();
+    };
+
+    window.copyShortUrl = function(code) {
+        var base = location.origin || 'https://milkypot.com';
+        var short = base + '/t?' + code;
+        navigator.clipboard.writeText(short).then(function(){
+            Utils.showToast('Atalho copiado: ' + short, 'success');
+        }).catch(function(){
+            prompt('Copie o atalho:', short);
+        });
+    };
+
     function renderTvs(){
         var tvs = getTvs();
         var base = location.origin || 'https://milkypot.com';
@@ -617,12 +654,33 @@
         document.getElementById('tvGrid').innerHTML = tvs.length ? tvs.map(function(t){
             var url = base + '/tv.html?f=' + encodeURIComponent(fid) + '&tv=' + encodeURIComponent(t.id);
             var wallBadge = (t.wallTotal && t.wallTotal > 1) ? '<span style="background:#6C63FF;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px">Wall ' + t.wallPosition + '/' + t.wallTotal + '</span>' : '';
+            var codes = shortcodesForTv(t.id);
+            var shortBlock = '';
+            if (codes.length > 0) {
+                shortBlock = '<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 10px;margin-top:8px">' +
+                    '<div style="font-size:11px;color:#065F46;font-weight:700;margin-bottom:4px">✨ Atalhos curtos:</div>' +
+                    codes.map(function(sc){
+                        var shortUrl = base + '/t?' + sc.code;
+                        return '<div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">' +
+                            '<code style="flex:1;background:#fff;padding:4px 8px;border-radius:4px;font-size:12px;color:#065F46;font-weight:700">' + esc(shortUrl) + '</code>' +
+                            '<button class="btn btn-sm" style="padding:4px 8px;background:#10B981;color:#fff" onclick="copyShortUrl(\'' + esc(sc.code) + '\')" title="Copiar">📋</button>' +
+                            '<button class="btn btn-sm" style="padding:4px 8px;background:#EF4444;color:#fff" onclick="removeTvShortcode(\'' + esc(sc.code) + '\')" title="Remover atalho">🗑️</button>' +
+                        '</div>';
+                    }).join('') + '</div>';
+            }
+            var newShortcodeBox = '<div style="display:flex;gap:4px;margin-top:8px">' +
+                '<input id="sc_' + esc(t.id) + '" placeholder="Ex: mq1" maxlength="8" style="flex:1;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:monospace" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,\'\')">' +
+                '<button class="btn btn-sm btn-primary" onclick="saveTvShortcode(\'' + esc(t.id) + '\')" title="Criar atalho curto /t?codigo">✨ Atalho</button>' +
+            '</div>';
+
             return '<div class="tv-card"><div class="tv-thumb">📺' + (t.wallTotal > 1 ? '<div style="position:absolute;bottom:4px;right:4px;background:rgba(108,99,255,.9);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px">'+t.wallPosition+'/'+t.wallTotal+'</div>' : '') + '</div><div class="tv-info">' +
                 '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="tv-name">' + esc(t.name) + '</div>' + wallBadge + '</div>' +
                 (t.location ? '<div class="tv-meta">📍 ' + esc(t.location) + '</div>' : '') +
                 '<div class="tv-meta">' + playlist.length + ' midia(s) na playlist</div>' +
-                '<div class="tv-url-box"><input readonly value="' + esc(url) + '"><button class="btn btn-sm btn-primary" onclick="copyTvUrl(\'' + esc(t.id) + '\')">📋 Copiar</button></div>' +
-                '<div class="tv-actions">' +
+                '<div class="tv-url-box"><input readonly value="' + esc(url) + '"><button class="btn btn-sm btn-primary" onclick="copyTvUrl(\'' + esc(t.id) + '\')">📋 Copiar URL longa</button></div>' +
+                shortBlock +
+                newShortcodeBox +
+                '<div class="tv-actions" style="margin-top:10px">' +
                 '<a href="' + esc(url) + '" target="_blank" class="btn btn-sm btn-outline">👁 Visualizar</a>' +
                 '<button class="btn btn-sm btn-outline" onclick="editTv(\'' + esc(t.id) + '\')">✏️</button>' +
                 '<button class="btn btn-sm btn-outline" onclick="deleteTv(\'' + esc(t.id) + '\')" style="color:#e53935;border-color:#e53935">🗑️</button>' +
