@@ -176,10 +176,11 @@
         <button class="btn-back" onclick="window.location.href='pedidos.html'">← Voltar</button>
         <h1>🏪 PDV — <span id="pdvStore">MilkyPot</span></h1>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;" id="pdvStatusRow">
-        <!-- Status compacto do caixa + meta (preenchido por JS) -->
-        <div id="pdvCaixaChip" style="display:none"></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end" id="pdvStatusRow">
+        <!-- Status compacto do caixa + meta + checklist (preenchido por JS) -->
+        <div id="pdvChecklistChip" style="display:none"></div>
         <div id="pdvMetaChip" style="display:none"></div>
+        <div id="pdvCaixaChip" style="display:none"></div>
         <div style="font-size:12px;opacity:0.8;" id="clk"></div>
         <button class="btn-back" onclick="toggleFullscreen()" title="Tela cheia (F11)">⛶</button>
     </div>
@@ -435,7 +436,7 @@
                 caixaChip.innerHTML = '<span style="background:' + color + '22;color:' + color + ';padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700">' + label + saldo + '</span>' + btn;
                 caixaChip.style.display = '';
             }
-            // Chip da meta
+            // Chip da meta (sempre visivel)
             var metaChip = document.getElementById('pdvMetaChip');
             if (metaChip && typeof AdminConfig !== 'undefined' && typeof Financas !== 'undefined') {
                 var pk = Financas.currentPeriodKey();
@@ -444,12 +445,46 @@
                     var pct = Math.round(prog.pct * 100);
                     var c = pct >= 100 ? '#10B981' : pct >= 70 ? '#F59E0B' : '#E91E63';
                     metaChip.innerHTML = '<span style="background:' + c + '22;color:' + c + ';padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700" title="Meta do mês">🎯 ' + pct + '% · ' + AdminConfig.formatBRL(prog.realizado) + '/' + AdminConfig.formatBRL(prog.valor) + '</span>';
-                    metaChip.style.display = '';
                 } else {
-                    metaChip.style.display = 'none';
+                    // Mostra "Sem meta" clicavel pro admin cadastrar
+                    metaChip.innerHTML = '<span onclick="window.location.href=\'../admin/operacional.html\'" style="background:#9E9E9E22;color:#555;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer" title="Nenhuma meta cadastrada. Clique para configurar no admin.">🎯 Sem meta do mês</span>';
                 }
+                metaChip.style.display = '';
+            }
+            // Chip de checklist (sempre visivel, mostra quantos itens pendentes)
+            var checkChip = document.getElementById('pdvChecklistChip');
+            if (checkChip && typeof AdminConfig !== 'undefined') {
+                try {
+                    var tpl = AdminConfig.getChecklistTemplates();
+                    var phase = 'abertura';
+                    var tplItems = (tpl && tpl[phase]) || [];
+                    var requiredCount = tplItems.filter(function(i){ return i.required; }).length;
+                    var execToday = AdminConfig.getTodayChecklistExec(fid, phase);
+                    var done, missing;
+                    if (execToday) {
+                        done = execToday.completedCount;
+                        missing = execToday.requiredMissing;
+                    } else {
+                        done = 0;
+                        missing = requiredCount;
+                    }
+                    var ccColor = missing === 0 ? '#10B981' : '#F59E0B';
+                    var ccLabel = missing === 0 ? '✅ Checklist ok' : '📋 Checklist · ' + missing + ' pendente' + (missing > 1 ? 's' : '');
+                    checkChip.innerHTML = '<span onclick="openPdvChecklist()" style="background:' + ccColor + '22;color:' + ccColor + ';padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer" title="Abrir checklist de abertura">' + ccLabel + '</span>';
+                    checkChip.style.display = '';
+                } catch (e) { checkChip.style.display = 'none'; }
             }
         } catch (e) { console.warn('renderPdvStatusChips:', e); }
+    };
+    // Atalho global pra abrir checklist a qualquer hora
+    window.openPdvChecklist = function () {
+        if (typeof Caixa === 'undefined' || !Caixa.showChecklistModal) {
+            alert('Checklist indisponivel. Aguarde o carregamento completo.');
+            return;
+        }
+        Caixa.showChecklistModal(fid, 'abertura', function () {
+            if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
+        });
     };
     renderPdvStatusChips();
     // Atualiza a cada 30s (caso outro atendente mexa em paralelo)
