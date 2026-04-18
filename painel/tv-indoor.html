@@ -538,7 +538,7 @@
     <script src="../js/core/cloud-functions.js"></script>
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/audit.js"></script>
-    <script src="../js/core/adminconfig.js?v=mp-v12"></script>
+    <script src="../js/core/adminconfig.js?v=mp-v13"></script>
 <script>
 /* ============================================
    TV Indoor — Management Page
@@ -800,7 +800,34 @@
 
     /* === Media Library === */
     function getMedia(){ return DataStore.get(MEDIA_KEY) || []; }
-    function saveMedia(list){ DataStore.set(MEDIA_KEY, list); }
+    function saveMedia(list){
+        DataStore.set(MEDIA_KEY, list);
+        // Auto-sync com playlist: todo item da biblioteca que ainda nao esta na
+        // playlist e adicionado automaticamente. Assim basta criar uma mídia
+        // ou promo e ela ja aparece na TV sem passar pela aba Playlist.
+        try {
+            var playlist = DataStore.get(PLAYLIST_KEY) || [];
+            // Normaliza: playlist pode vir como strings antigas ou objetos
+            playlist = playlist.map(function(p){
+                if (typeof p === 'string') return { mediaId: p, duration: 10 };
+                return p;
+            }).filter(function(p){ return p && p.mediaId; });
+            var existing = {};
+            playlist.forEach(function(p){ existing[p.mediaId] = true; });
+            var added = 0;
+            list.forEach(function(m){
+                if (m && m.id && !existing[m.id]) {
+                    playlist.push({ mediaId: m.id, duration: Math.max(5, m.duration || 10) });
+                    added++;
+                }
+            });
+            // Remove da playlist itens que nao existem mais na biblioteca
+            var mediaIds = {};
+            list.forEach(function(m){ if (m && m.id) mediaIds[m.id] = true; });
+            playlist = playlist.filter(function(p){ return mediaIds[p.mediaId]; });
+            DataStore.set(PLAYLIST_KEY, playlist);
+        } catch (e) { console.warn('auto-sync playlist:', e); }
+    }
 
     var dropZone = document.getElementById('dropZone');
     var fileInput = document.getElementById('fileInput');
@@ -889,14 +916,112 @@
             else if(m.type === 'story') thumbHtml = m.storyImage ? '<img src="' + m.storyImage + '">' : '<div style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700">📸 Story</div>';
             else thumbHtml = '📄';
             var typeIcons = {image:'🖼️',video:'🎬',text:'✏️',product:'🌟',promo:'⚡',combo:'🤝',menu:'📋',story:'📸'};
-            return '<div class="media-item" onclick="addToPlaylist(\'' + esc(m.id) + '\')">' +
-                '<button class="media-delete" onclick="event.stopPropagation();deleteMedia(\'' + esc(m.id) + '\')">&times;</button>' +
+            return '<div class="media-item" onclick="editMedia(\'' + esc(m.id) + '\')" title="Clique para editar">' +
+                '<button class="media-delete" onclick="event.stopPropagation();deleteMedia(\'' + esc(m.id) + '\')" title="Remover">&times;</button>' +
                 '<div class="thumb">' + thumbHtml + '</div>' +
                 '<span class="media-type">' + (typeIcons[m.type] || '📄') + '</span>' +
                 (m.duration ? '<span class="media-dur">' + m.duration + 's</span>' : '') +
-                '<div class="media-label" title="' + esc(m.name) + '">' + esc(m.name) + '</div></div>';
+                '<div class="media-label" title="' + esc(m.name) + '">' + esc(m.name) + '</div>' +
+                '<div style="position:absolute;bottom:2px;right:4px;font-size:10px;color:#666;background:rgba(255,255,255,.85);padding:1px 5px;border-radius:4px">✏️ editar</div>' +
+            '</div>';
         }).join('') : '<p style="color:#999;font-size:14px;grid-column:1/-1">Arraste arquivos para a area acima ou crie slides de texto.</p>';
     }
+
+    /* === Edição de mídia existente === */
+    var EDIT_FIELDS = {
+        promo: [
+            { k:'name', label:'Nome interno', type:'text', placeholder:'Hora do Acai' },
+            { k:'promoHeadline', label:'Título da promo *', type:'text' },
+            { k:'promoSubtext', label:'Subtexto', type:'text' },
+            { k:'promoUrgency', label:'Urgência', type:'text', placeholder:'SO HOJE, ATE 18H' },
+            { k:'promoPrice', label:'Preço promocional *', type:'text', placeholder:'14,90' },
+            { k:'promoOldPrice', label:'Preço original (riscado)', type:'text', placeholder:'22,90' },
+            { k:'promoSavings', label:'Economia (-35%)', type:'text' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:5, max:60 }
+        ],
+        text: [
+            { k:'title', label:'Título *', type:'text' },
+            { k:'subtitle', label:'Subtítulo', type:'text' },
+            { k:'bg', label:'Cor fundo (hex)', type:'text', placeholder:'#6C63FF' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:3, max:60 }
+        ],
+        image: [
+            { k:'name', label:'Nome', type:'text' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:3, max:60 }
+        ],
+        video: [
+            { k:'name', label:'Nome', type:'text' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:3, max:120 }
+        ],
+        story: [
+            { k:'storyHeadline', label:'Título', type:'text' },
+            { k:'storyBottomText', label:'Texto rodapé', type:'text' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:5, max:30 }
+        ],
+        product: [
+            { k:'productName', label:'Nome do produto', type:'text' },
+            { k:'productTagline', label:'Tagline', type:'text' },
+            { k:'productPrice', label:'Preço', type:'text' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:5, max:30 }
+        ],
+        combo: [
+            { k:'name', label:'Nome', type:'text' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:5, max:30 }
+        ],
+        menu: [
+            { k:'name', label:'Nome', type:'text' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:5, max:60 }
+        ]
+    };
+
+    window.editMedia = function(id) {
+        var media = getMedia();
+        var m = media.find(function(x){ return x.id === id; });
+        if (!m) return;
+        var fields = EDIT_FIELDS[m.type] || EDIT_FIELDS.image;
+        var formHtml = fields.map(function(f){
+            var v = m[f.k] == null ? '' : String(m[f.k]);
+            var attrs = 'id="edit_' + f.k + '"';
+            if (f.placeholder) attrs += ' placeholder="' + esc(f.placeholder) + '"';
+            if (f.min) attrs += ' min="' + f.min + '"';
+            if (f.max) attrs += ' max="' + f.max + '"';
+            return '<div style="margin-bottom:10px"><label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">' + esc(f.label) + '</label>' +
+                '<input type="' + f.type + '" ' + attrs + ' value="' + esc(v) + '" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;box-sizing:border-box"></div>';
+        }).join('');
+        var icons = {promo:'⚡',text:'✏️',image:'🖼️',video:'🎬',story:'📸',product:'🌟',combo:'🤝',menu:'📋'};
+        var overlay = document.createElement('div');
+        overlay.className = 'edit-media-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .15s ease-out';
+        overlay.innerHTML =
+            '<div style="background:#fff;border-radius:14px;max-width:460px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;display:flex;flex-direction:column">' +
+                '<div style="background:linear-gradient(135deg,#6C63FF,#5A52E0);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center">' +
+                    '<h3 style="margin:0;font-size:16px;font-family:\'Baloo 2\',cursive">' + (icons[m.type]||'📄') + ' Editar ' + esc(m.type) + '</h3>' +
+                    '<button onclick="this.closest(\'.edit-media-overlay\').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px">✕</button>' +
+                '</div>' +
+                '<div style="padding:16px 20px;overflow-y:auto">' + formHtml + '</div>' +
+                '<div style="padding:12px 20px;border-top:1px solid #eee;display:flex;gap:8px;justify-content:flex-end;background:#fafafa">' +
+                    '<button onclick="this.closest(\'.edit-media-overlay\').remove()" style="padding:10px 18px;border:1px solid #ddd;background:#fff;border-radius:8px;cursor:pointer;font-weight:600">Cancelar</button>' +
+                    '<button id="saveMediaEditBtn" style="padding:10px 18px;background:#6C63FF;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">💾 Salvar</button>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', function(e){ if (e.target === overlay) overlay.remove(); });
+        document.getElementById('saveMediaEditBtn').addEventListener('click', function(){
+            var updates = {};
+            fields.forEach(function(f){
+                var el = document.getElementById('edit_' + f.k);
+                if (!el) return;
+                var val = el.value;
+                if (f.type === 'number') val = parseInt(val, 10) || m[f.k] || 8;
+                updates[f.k] = val;
+            });
+            Object.assign(m, updates);
+            saveMedia(media);
+            renderMedia();
+            overlay.remove();
+            Utils.showToast('Alterações salvas · TV atualiza em até 30s', 'success');
+        });
+    };
 
     /* === Text Slides === */
     window.updateTextPreview = function(){
