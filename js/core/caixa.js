@@ -752,6 +752,7 @@ const Caixa = (function () {
         showCloseModal: showCloseModal,
         showSangriaModal: showSangriaModal,
         showReforcoModal: showReforcoModal,
+        showChecklistModal: showChecklistModal,
         // Widget
         renderWidget: renderWidget,
         refreshWidget: refreshWidget,
