@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Reset TV</title>
+<style>
+  body{margin:0;background:#000;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px;text-align:center;padding:20px}
+  h1{font-size:28px;margin:0}
+  p{opacity:.8;max-width:520px}
+  code{background:rgba(255,255,255,.1);padding:4px 8px;border-radius:4px}
+</style>
+</head>
+<body>
+<div>
+  <h1 id="title">🔄 Resetando TV...</h1>
+  <p id="msg">Limpando cache, service workers e dados locais.</p>
+  <p id="log" style="font-size:12px;opacity:.6;font-family:monospace"></p>
+</div>
+<script>
+  const log = (m) => { const el = document.getElementById('log'); el.textContent += m + ' · '; };
+  (async () => {
+    try {
+      // 1. Desregistra TODOS os service workers
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const r of regs) { try { await r.unregister(); log('sw unreg'); } catch(e){} }
+      }
+      // 2. Limpa todos os caches
+      if (window.caches) {
+        const keys = await caches.keys();
+        for (const k of keys) { try { await caches.delete(k); log('cache ' + k.slice(0,10) + ' del'); } catch(e){} }
+      }
+      // 3. Limpa localStorage
+      try { localStorage.clear(); log('localStorage clear'); } catch(e){}
+      // 4. Limpa sessionStorage
+      try { sessionStorage.clear(); log('session clear'); } catch(e){}
+
+      document.getElementById('title').textContent = '✅ TV resetada';
+      document.getElementById('msg').innerHTML = 'Redirecionando em <span id="cd">3</span>s para <code>' + (getTarget() || 'milkypot.com') + '</code>';
+
+      let t = 3;
+      const interval = setInterval(() => {
+        t--;
+        const cd = document.getElementById('cd');
+        if (cd) cd.textContent = t;
+        if (t <= 0) {
+          clearInterval(interval);
+          location.replace(getTarget() || '/');
+        }
+      }, 1000);
+    } catch (e) {
+      document.getElementById('title').textContent = '⚠️ Erro no reset';
+      document.getElementById('msg').textContent = e.message;
+    }
+  })();
+
+  function getTarget() {
+    // Se veio com ?to=tv3 ou similar, redireciona pra lá depois do reset
+    const qs = new URLSearchParams(location.search);
+    const to = qs.get('to');
+    if (!to) return null;
+    // Aceita: /tv1, tv1, https://...
+    if (to.startsWith('http') || to.startsWith('/')) return to;
+    return '/' + to;
+  }
+</script>
+</body></html>
