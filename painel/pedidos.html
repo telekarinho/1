@@ -279,6 +279,9 @@
     <script src="../js/core/notifications.js"></script>
     <script src="../js/core/whatsapp.js"></script>
     <script src="../js/core/reports.js"></script>
+    <script src="../js/core/adminconfig.js"></script>
+    <script src="../js/core/motivacional.js"></script>
+    <script src="../js/core/caixa.js"></script>
     <script>
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
         const session = Auth.getSession();
@@ -379,6 +382,12 @@
                     const result = Loyalty.addPointsFromOrder(orders[idx], franchiseId);
                     if (result && result.rewardEarned) {
                         Utils.showToast(`🎉 Cliente ${orders[idx].customer?.name || ''} ganhou uma recompensa!`, 'success');
+                    }
+                }
+                if (typeof Caixa !== 'undefined' && Caixa.registerSale) {
+                    const r = Caixa.registerSale(franchiseId, orders[idx]);
+                    if (r && r.warn === 'caixa_nao_aberto') {
+                        Utils.showToast('⚠️ Venda registrada, mas o caixa ainda não foi aberto hoje.', 'warning');
                     }
                 }
             }

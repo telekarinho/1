@@ -262,6 +262,10 @@
     <script src="../js/core/notifications.js"></script>
     <script src="../js/core/whatsapp.js"></script>
     <script src="../js/core/reports.js"></script>
+    <script src="../js/core/adminconfig.js"></script>
+    <script src="../js/core/motivacional.js"></script>
+    <script src="../js/core/caixa.js"></script>
+    <script src="../js/core/financas.js"></script>
     <script>
         // Auth Guard
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
@@ -433,6 +437,49 @@
         // Init
         loadDashboard();
         i18n.translatePage();
+
+        // Banner motivacional + toasts periodicos
+        if (typeof Motivacional !== 'undefined') {
+            try {
+                Motivacional.initPanel({
+                    subtitle: franchise ? (franchise.name + ' · ' + franchise.address) : '',
+                    intervalMs: 25 * 60 * 1000
+                });
+            } catch (e) { console.warn('Motivacional init:', e); }
+        }
+        // Widget de caixa (PDV auditavel)
+        if (typeof Caixa !== 'undefined') {
+            try { Caixa.initPanel(); } catch (e) { console.warn('Caixa init:', e); }
+        }
+        // Widget de meta do mes + KPI de saude da franquia
+        if (typeof Financas !== 'undefined' && typeof AdminConfig !== 'undefined') {
+            try {
+                const pk = Financas.currentPeriodKey();
+                const prog = AdminConfig.getMetaProgress(franchiseId, pk);
+                const mountM = document.getElementById('metaMount');
+                if (mountM && prog) {
+                    const pct = Math.round(prog.pct * 100);
+                    const color = pct >= 100 ? '#10B981' : pct >= 70 ? '#F59E0B' : '#E91E63';
+                    const hit = pct >= 100 ? '🎉 Meta batida!' : pct >= 70 ? '💪 Quase lá!' : '🎯 Vamos juntos!';
+                    mountM.innerHTML = `
+                        <div class="panel-card" style="margin-bottom:20px">
+                          <div class="panel-card-header">
+                            <h3>🎯 Meta de ${Financas.formatPeriodLabel(pk)}</h3>
+                            <span style="font-size:.82rem;color:${color};font-weight:700">${hit}</span>
+                          </div>
+                          <div class="panel-card-body">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:.92rem">
+                              <span>Realizado: <strong>${AdminConfig.formatBRL(prog.realizado)}</strong></span>
+                              <span>Meta: <strong>${AdminConfig.formatBRL(prog.valor)}</strong> · <strong style="color:${color}">${pct}%</strong></span>
+                            </div>
+                            <div style="background:#E5E7EB;height:14px;border-radius:7px;overflow:hidden">
+                              <div style="height:100%;width:${Math.min(100,pct)}%;background:${color};border-radius:7px;transition:width .3s"></div>
+                            </div>
+                          </div>
+                        </div>`;
+                }
+            } catch (e) { console.warn('Meta widget:', e); }
+        }
 
         // Check for scheduled reports (runs once per page load)
         if (typeof Reports !== 'undefined') {
