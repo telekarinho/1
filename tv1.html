@@ -5,9 +5,21 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>MilkyPot TV 1</title>
+<style>body{background:#000;color:#fff;font-family:sans-serif;text-align:center;padding-top:30vh;margin:0}</style>
 <script>
-  if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(r => r.forEach(x => x.unregister())).catch(()=>{});
-  if (window.caches) caches.keys().then(k => k.forEach(x => caches.delete(x))).catch(()=>{});
-  location.replace('/tv.html?f=muffato-quintino&tv=tv_mo4mirx4f001');
+(async function(){
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister().catch(()=>{})));
+    }
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k).catch(()=>{})));
+    }
+  } catch(e){}
+  // Timestamp na URL força browser a buscar tv.html fresco (não serve do cache)
+  location.replace('/tv.html?f=muffato-quintino&tv=tv_mo4mirx4f001&t=' + Date.now());
+})();
 </script>
-</head><body style="background:#000"></body></html>
+</head><body><p>Carregando TV 1...</p></body></html>
