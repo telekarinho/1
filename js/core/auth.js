@@ -50,7 +50,7 @@ const Auth = {
             // Busca perfil local ou auto-registra owner
             let profile = this._findUserProfile(user.email);
 
-            if (!profile && user.email === MP.OWNER_EMAIL) {
+            if (!profile && this._isOwnerEmail(user.email)) {
                 // Auto-registra owner como super_admin
                 profile = this._createUserProfile({
                     email: user.email,
@@ -462,6 +462,15 @@ const Auth = {
         return users.find(u => u.email === email) || null;
     },
 
+    _isOwnerEmail(email) {
+        if (!email) return false;
+        const normalized = email.toLowerCase().trim();
+        if (Array.isArray(MP.OWNER_EMAILS) && MP.OWNER_EMAILS.length) {
+            return MP.OWNER_EMAILS.some(e => e && e.toLowerCase().trim() === normalized);
+        }
+        return MP.OWNER_EMAIL && MP.OWNER_EMAIL.toLowerCase().trim() === normalized;
+    },
+
     _createUserProfile(data) {
         const users = DataStore.get('users') || [];
         const profile = {
@@ -525,7 +534,7 @@ const Auth = {
     // Auto-setup: ativa super_admin claim do owner
     // ============================================
     async _trySetupOwner(email) {
-        if (email !== MP.OWNER_EMAIL) return;
+        if (!this._isOwnerEmail(email)) return;
         if (typeof CloudFunctions === 'undefined' || !CloudFunctions._functions) return;
 
         try {
