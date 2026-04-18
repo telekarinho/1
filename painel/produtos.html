@@ -479,6 +479,7 @@
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/audit.js"></script>
     <script src="../js/core/notifications.js"></script>
+    <script src="../js/core/estoque.js"></script>
     <script>
         // Auth guard
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
@@ -593,8 +594,11 @@
                     '<td>' + item.minStock + '</td>' +
                     '<td>' + getStatusBadge(status) + '</td>' +
                     '<td>' +
-                        '<div class="actions-cell">' +
-                            '<button class="btn-entrada" onclick="openEntradaForProduct(\'' + item.id + '\')">Entrada</button>' +
+                        '<div class="actions-cell" style="display:flex;gap:4px;flex-wrap:wrap">' +
+                            '<button class="btn-entrada" onclick="quickEntry(\'' + item.id + '\')" title="Entrada de estoque" style="background:#10B981;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:.72rem">↑ Entrada</button>' +
+                            '<button onclick="quickExit(\'' + item.id + '\')" title="Saida (perda/ajuste)" style="background:#F59E0B;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:.72rem">↓ Saida</button>' +
+                            '<button onclick="quickCount(\'' + item.id + '\')" title="Contagem fisica" style="background:#6366F1;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:.72rem">📋 Contar</button>' +
+                            '<button onclick="showHistory(\'' + item.id + '\')" title="Historico" style="background:#E5E7EB;color:#374151;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:.72rem">📜</button>' +
                             '<button class="btn-editar" onclick="openEditModal(\'' + item.id + '\')">Editar</button>' +
                             '<button class="btn-remover" onclick="removeProduct(\'' + item.id + '\')">Remover</button>' +
                         '</div>' +
@@ -761,6 +765,105 @@
             Utils.downloadCSV('estoque_' + franchiseId + '.csv', headers, rows);
             Utils.showToast('CSV exportado com sucesso!', 'success');
         }
+
+        // ====== Entrada / Saida / Contagem (anti-roubo + auditoria) ======
+        window.quickEntry = function(itemId) {
+            var item = inventory.find(function(p){ return p.id===itemId; });
+            if (!item) return;
+            var qtyStr = prompt('↑ ENTRADA de ' + item.name + '\\n\\nQuantidade a adicionar:', '');
+            if (!qtyStr) return;
+            var qty = parseFloat(String(qtyStr).replace(',', '.'));
+            if (isNaN(qty) || qty <= 0) { Utils.showToast('Quantidade invalida', 'error'); return; }
+            var costStr = prompt('Custo unitario em R$ (opcional):', '');
+            var cost = costStr ? parseFloat(String(costStr).replace(',', '.')) : null;
+            var motivo = prompt('Motivo (obrigatorio):\\nEx: Compra NF 123, Reabastecimento, Devolucao...', '');
+            if (!motivo || motivo.trim().length < 3) { Utils.showToast('Motivo obrigatorio', 'error'); return; }
+            var r = Estoque.registerEntry(franchiseId, {
+                itemId: itemId, itemName: item.name, categoria: item.category,
+                qty: qty, unitCost: cost, motivo: motivo, subtype: 'compra'
+            });
+            if (!r.success) { Utils.showToast(r.error, 'error'); return; }
+            // Atualiza o saldo no inventory tambem
+            item.quantity = (Number(item.quantity) || 0) + qty;
+            saveInventory();
+            renderTable();
+            updateKPIs();
+            Utils.showToast('✅ Entrada +' + qty + ' ' + item.unit + ' registrada com motivo', 'success');
+        };
+
+        window.quickExit = function(itemId) {
+            var item = inventory.find(function(p){ return p.id===itemId; });
+            if (!item) return;
+            var subtype = prompt('↓ SAIDA de ' + item.name + '\\n\\nTipo:\\n1 = perda/vencido\\n2 = quebra\\n3 = consumo interno\\n4 = ajuste\\n\\nDigite 1, 2, 3 ou 4:', '1');
+            var subtypes = {'1':'perda','2':'quebra','3':'consumo','4':'ajuste'};
+            var st = subtypes[subtype];
+            if (!st) { Utils.showToast('Tipo invalido', 'error'); return; }
+            var qtyStr = prompt('Quantidade a retirar:', '');
+            if (!qtyStr) return;
+            var qty = parseFloat(String(qtyStr).replace(',', '.'));
+            if (isNaN(qty) || qty <= 0) { Utils.showToast('Quantidade invalida', 'error'); return; }
+            var motivo = prompt('Motivo detalhado (obrigatorio, minimo 3 chars):\\nEx: Vencido, caiu no chao, cliente nao levou, contagem...', '');
+            if (!motivo || motivo.trim().length < 3) { Utils.showToast('Motivo obrigatorio', 'error'); return; }
+            var r = Estoque.registerExit(franchiseId, {
+                itemId: itemId, itemName: item.name, categoria: item.category,
+                qty: qty, subtype: st, motivo: motivo
+            });
+            if (!r.success) { Utils.showToast(r.error, 'error'); return; }
+            item.quantity = (Number(item.quantity) || 0) - qty;
+            saveInventory();
+            renderTable();
+            updateKPIs();
+            Utils.showToast('✅ Saida -' + qty + ' ' + item.unit + ' (' + st + ')', 'success');
+        };
+
+        window.quickCount = function(itemId) {
+            var item = inventory.find(function(p){ return p.id===itemId; });
+            if (!item) return;
+            var expected = Number(item.quantity) || 0;
+            var countedStr = prompt('📋 CONTAGEM FISICA de ' + item.name + '\\n\\nSaldo esperado: ' + expected + ' ' + item.unit + '\\n\\nDigite a quantidade REAL contada:', String(expected));
+            if (countedStr === null) return;
+            var counted = parseFloat(String(countedStr).replace(',', '.'));
+            if (isNaN(counted) || counted < 0) { Utils.showToast('Quantidade invalida', 'error'); return; }
+            var r = Estoque.registerCount(franchiseId, { itemId: itemId, itemName: item.name, qtyContada: counted });
+            if (!r.success) { Utils.showToast(r.error, 'error'); return; }
+            var diff = counted - expected;
+            if (Math.abs(diff) < 0.001) {
+                Utils.showToast('✅ Contagem OK · sem divergencia', 'success');
+                return;
+            }
+            var sign = diff > 0 ? '+' : '';
+            var msg = '⚠️ DIVERGENCIA de ' + sign + diff + ' ' + item.unit + '\\n' +
+                (diff > 0 ? '(sobrou — entrada nao registrada? Devolucao?)' : '(faltou — vazou? Perda? ROUBO?)') + '\\n\\n' +
+                'Digite o motivo pra registrar o ajuste (ou cancele pra anotar e nao ajustar agora):';
+            var motivo = prompt(msg, '');
+            if (!motivo || motivo.trim().length < 3) {
+                Utils.showToast('Contagem registrada sem ajuste. Divergencia: ' + sign + diff, 'warning');
+                return;
+            }
+            var adj = Estoque.applyCountAdjustment(franchiseId, itemId, diff, motivo);
+            if (!adj.success) { Utils.showToast(adj.error, 'error'); return; }
+            item.quantity = counted;
+            saveInventory();
+            renderTable();
+            updateKPIs();
+            Utils.showToast('✅ Ajuste aplicado. Saldo: ' + counted + ' ' + item.unit, 'success');
+        };
+
+        window.showHistory = function(itemId) {
+            var item = inventory.find(function(p){ return p.id===itemId; });
+            if (!item) return;
+            var history = Estoque.getHistory(franchiseId, itemId, 50);
+            if (!history.length) { alert('Sem movimentacoes registradas pra ' + item.name); return; }
+            var lines = history.map(function(m){
+                var dt = new Date(m.createdAt).toLocaleString('pt-BR');
+                var sign = m.qty > 0 ? '+' : '';
+                return '[' + dt + '] ' + m.type.toUpperCase() + (m.subtype ? '/' + m.subtype : '') +
+                    ' · ' + sign + m.qty + ' ' + (item.unit||'') +
+                    ' · ' + (m.createdByName || '—') +
+                    (m.motivo ? ' · ' + m.motivo : '');
+            });
+            alert('📜 HISTORICO de ' + item.name + '\\n\\n' + lines.join('\\n\\n'));
+        };
 
         // Init
         loadInventory();
