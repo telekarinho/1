@@ -538,7 +538,7 @@
     <script src="../js/core/cloud-functions.js"></script>
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/audit.js"></script>
-    <script src="../js/core/adminconfig.js?v=mp-v11"></script>
+    <script src="../js/core/adminconfig.js?v=mp-v12"></script>
 <script>
 /* ============================================
    TV Indoor — Management Page
@@ -594,11 +594,27 @@
                 wallPosition: wallPosition,
                 createdAt: new Date().toISOString()
             });
+            // Auto-gera atalho tv1/tv2/tv3 automaticamente (proximo numero livre).
+            try {
+                if (typeof AdminConfig !== 'undefined' && AdminConfig.setTvShortcode && AdminConfig.listTvShortcodesForFranchise) {
+                    var codesUsadas = AdminConfig.listTvShortcodesForFranchise(fid).map(function(sc){
+                        var m = String(sc.code).match(/^tv(\d+)$/);
+                        return m ? parseInt(m[1], 10) : 0;
+                    }).filter(function(n){ return n > 0; });
+                    var proximo = 1;
+                    while (codesUsadas.indexOf(proximo) !== -1) proximo++;
+                    var novoCode = 'tv' + proximo;
+                    AdminConfig.setTvShortcode(fid, novoCode, id);
+                    setTimeout(function(){
+                        if (Utils.showToast) Utils.showToast('📺 Atalho criado: milkypot.com/t?' + novoCode, 'success');
+                    }, 800);
+                }
+            } catch (e) { console.warn('Auto-shortcode:', e); }
         }
         saveTvs(tvs);
         closeTvModal();
         renderTvs();
-        Utils.showToast(editId ? 'TV atualizada!' : 'TV criada! Copie a URL e abra na TV.', 'success');
+        Utils.showToast(editId ? 'TV atualizada!' : 'TV criada! Atalho curto gerado automaticamente.', 'success');
     };
     window.editTv = function(id){
         var tvs = getTvs();
@@ -651,6 +667,23 @@
         if (detectedIp) {
             label.textContent = 'IP desta rede: ' + detectedIp;
             if (btn) btn.disabled = false;
+
+            // Auto-registra IP se ainda não está cadastrado pra esta franquia.
+            // Processo 100% automatico: basta o franqueado abrir a pagina da rede da loja uma vez.
+            try {
+                if (typeof AdminConfig !== 'undefined' && AdminConfig.listFranchiseIps && AdminConfig.addFranchiseIp && fid) {
+                    var existing = AdminConfig.listFranchiseIps(fid);
+                    if (existing.indexOf(detectedIp) === -1) {
+                        var res = AdminConfig.addFranchiseIp(fid, detectedIp);
+                        if (res && res.success) {
+                            if (Utils.showToast) Utils.showToast('✅ Rede (' + detectedIp + ') cadastrada automaticamente. As TVs desta loja ja funcionam via /t?tv1', 'success');
+                            renderIpList();
+                        } else if (res && res.error && !/ja registrado/.test(res.error)) {
+                            console.warn('Auto IP register:', res.error);
+                        }
+                    }
+                }
+            } catch (e) { console.warn('Auto IP register err:', e); }
         } else {
             label.textContent = 'Não foi possível detectar o IP';
         }
