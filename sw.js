@@ -22,12 +22,8 @@ const PRECACHE_URLS = [
     '/painel/marketing.html',
     '/painel/despesas.html',
     '/painel/configuracoes.html',
-    '/painel/tv-indoor.html',
-    '/painel/radio-indoor.html',
     '/painel/finance-os.html',
-    // TV + Radio player pages
-    '/tv.html',
-    '/radio.html',
+    // (rotas de TV/Radio sao deliberadamente fora do precache — nunca devem cachear)
     '/manifest-tv.json',
     // Styles
     '/css/style.css',
