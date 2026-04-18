@@ -129,6 +129,21 @@
             </header>
 
             <div class="panel-content">
+                <!-- Rede autorizada (IPs da franquia) -->
+                <div id="networkBox" style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:20px;box-shadow:0 2px 6px rgba(0,0,0,.05)">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+                    <div>
+                      <h3 style="margin:0;font-family:'Baloo 2',cursive;font-size:16px">🌐 Rede autorizada</h3>
+                      <p style="margin:4px 0 0;color:#666;font-size:13px">As TVs só funcionam via atalho (<code>/t?tv1</code>) na internet desta loja. Registre o IP público da sua rede aqui.</p>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center">
+                      <span id="myIpLabel" style="font-family:monospace;font-size:14px;background:#F3F4F6;padding:6px 12px;border-radius:8px;color:#1F2937">Detectando IP...</span>
+                      <button class="btn btn-primary btn-sm" onclick="registerCurrentIp()" id="regIpBtn" disabled>+ Registrar este IP</button>
+                    </div>
+                  </div>
+                  <div id="ipList" style="margin-top:10px"></div>
+                </div>
+
                 <!-- TVs registered -->
                 <h3 style="font-family:'Baloo 2',cursive;margin-bottom:12px">Suas TVs</h3>
                 <div class="tv-grid" id="tvGrid"></div>
@@ -616,6 +631,68 @@
         if (typeof AdminConfig === 'undefined' || !AdminConfig.listTvShortcodesForFranchise) return [];
         return AdminConfig.listTvShortcodesForFranchise(fid).filter(function(sc){ return sc.tvId === tvId; });
     }
+
+    /* ====== Gestão de IPs autorizados ====== */
+    var detectedIp = null;
+
+    async function detectAndRenderIp() {
+        var label = document.getElementById('myIpLabel');
+        var btn = document.getElementById('regIpBtn');
+        try {
+            var r = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+            if (r.ok) { detectedIp = (await r.json()).ip; }
+        } catch (e) {}
+        if (!detectedIp) {
+            try {
+                var r2 = await fetch('https://ipapi.co/json/', { cache: 'no-store' });
+                if (r2.ok) { detectedIp = (await r2.json()).ip; }
+            } catch (e) {}
+        }
+        if (detectedIp) {
+            label.textContent = 'IP desta rede: ' + detectedIp;
+            if (btn) btn.disabled = false;
+        } else {
+            label.textContent = 'Não foi possível detectar o IP';
+        }
+        renderIpList();
+    }
+
+    function renderIpList() {
+        if (typeof AdminConfig === 'undefined' || !AdminConfig.listFranchiseIps) return;
+        var ips = AdminConfig.listFranchiseIps(fid);
+        var el = document.getElementById('ipList');
+        if (!el) return;
+        if (ips.length === 0) {
+            el.innerHTML = '<p style="color:#c00;font-size:13px;margin:8px 0 0"><strong>⚠️ Nenhum IP registrado</strong> — os atalhos /t? não vão funcionar até você registrar pelo menos um IP da rede da loja.</p>';
+            return;
+        }
+        el.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">' + ips.map(function(ip){
+            var isCurrent = ip === detectedIp;
+            return '<span style="display:inline-flex;align-items:center;gap:6px;background:' + (isCurrent ? '#D1FAE5' : '#F3F4F6') + ';padding:4px 10px;border-radius:16px;font-family:monospace;font-size:12px;color:#1F2937">' +
+                (isCurrent ? '✅ ' : '') + esc(ip) +
+                '<button class="btn-icon" onclick="removeRegisteredIp(\'' + esc(ip) + '\')" title="Remover" style="background:transparent;border:none;cursor:pointer;padding:0;font-size:12px;color:#EF4444">✕</button>' +
+            '</span>';
+        }).join('') + '</div>';
+    }
+
+    window.registerCurrentIp = function () {
+        if (!detectedIp) { Utils.showToast('IP ainda não detectado', 'error'); return; }
+        var r = AdminConfig.addFranchiseIp(fid, detectedIp);
+        if (!r.success) { Utils.showToast(r.error, 'error'); return; }
+        Utils.showToast('IP ' + detectedIp + ' registrado! As TVs desta rede agora funcionam via /t?', 'success');
+        renderIpList();
+    };
+
+    window.removeRegisteredIp = function (ip) {
+        if (!confirm('Remover IP ' + ip + '? TVs nesta rede param de funcionar via /t?.')) return;
+        var r = AdminConfig.removeFranchiseIp(fid, ip);
+        if (!r.success) { Utils.showToast(r.error, 'error'); return; }
+        Utils.showToast('IP removido', 'success');
+        renderIpList();
+    };
+
+    // Dispara detecção no load
+    detectAndRenderIp();
 
     window.saveTvShortcode = function(tvId) {
         var input = document.getElementById('sc_' + tvId);
