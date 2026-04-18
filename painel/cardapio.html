@@ -133,18 +133,26 @@
   function esc(s){ return Utils.escapeHtml(s || ''); }
 
   function renderTamanhos(){
-    document.getElementById('tamGrid').innerHTML = (cfg.tamanhos || []).map((t,i) => `
+    document.getElementById('tamGrid').innerHTML = (cfg.tamanhos || []).map((t,i) => {
+      const price = t.price || 0;
+      const cost = t.cost || 0;
+      const margin = price > 0 ? Math.round(((price - cost) / price) * 100) : 0;
+      const mcColor = margin >= 60 ? '#10B981' : margin >= 40 ? '#F59E0B' : '#EF4444';
+      return `
       <div class="tam-box">
         <strong>${esc(t.name)}</strong>
-        <label>${t.ml || 0} ml · preço base</label>
-        <input type="text" value="${(t.price||0).toFixed(2).replace('.',',')}"
-          oninput="maskPrice(this, ${i}, 'tamanho')">
-        <label style="margin-top:8px;font-size:.7rem">
+        <label>${t.ml || 0} ml</label>
+        <label style="font-size:.7rem;color:#666;margin-top:6px">💰 Preço de venda</label>
+        <input type="text" value="${price.toFixed(2).replace('.',',')}" oninput="maskPrice(this, ${i}, 'tamanho')">
+        <label style="font-size:.7rem;color:#666;margin-top:6px">📦 Custo (insumos)</label>
+        <input type="text" value="${cost.toFixed(2).replace('.',',')}" oninput="maskCost(this, ${i}, 'tamanho')" style="background:#F3F4F6;color:#6B7280">
+        <div style="font-size:.72rem;color:${mcColor};font-weight:700;margin-top:6px">Margem ${margin}%</div>
+        <label style="margin-top:6px;font-size:.7rem">
           <input type="checkbox" ${t.available !== false ? 'checked':''} onchange="toggleTam(${i}, this.checked)">
           Ativo
         </label>
       </div>
-    `).join('');
+    `}).join('');
   }
 
   function renderList(listName, containerId, hasPrice) {
@@ -208,16 +216,23 @@
       return `
         <div style="margin-bottom:16px">
           <h4 style="margin:8px 0 6px;font-size:.92rem;color:#6C63FF">${esc(a[cat].emoji||'')} ${esc(a[cat].name || cat)}</h4>
-          ${items.map((it,i) => `
-            <div class="item-row">
-              <div class="ico">${esc(it.emoji || '✨')}</div>
-              <div class="info"><input class="name" type="text" value="${esc(it.name||'')}" onchange="updateAdicional('${cat}',${i},'name',this.value)"></div>
-              <input type="text" value="${esc(it.emoji||'')}" maxlength="3" onchange="updateAdicional('${cat}',${i},'emoji',this.value)" placeholder="Emoji">
-              <input class="price-input" type="text" value="${(it.price||0).toFixed(2).replace('.',',')}" oninput="maskPriceAdd(this, '${cat}', ${i})">
-              <label class="toggle"><input type="checkbox" ${it.available !== false ? 'checked':''} onchange="toggleAdicional('${cat}',${i},this.checked)"> ${it.available !== false ? 'Ativo' : 'Inativo'}</label>
+          ${items.map((it,i) => {
+            const price = it.price || 0;
+            const cost = it.cost || 0;
+            const margin = price > 0 ? Math.round(((price-cost)/price)*100) : 0;
+            const mc = margin >= 60 ? '#10B981' : margin >= 40 ? '#F59E0B' : '#EF4444';
+            return `
+            <div style="display:grid;grid-template-columns:36px 1fr 60px 90px 90px 60px 40px 30px;gap:8px;align-items:center;padding:8px 10px;background:#FAFAFA;border:1px solid #eee;border-radius:8px;margin-bottom:4px">
+              <div style="font-size:20px;text-align:center">${esc(it.emoji || '✨')}</div>
+              <input class="name" type="text" value="${esc(it.name||'')}" onchange="updateAdicional('${cat}',${i},'name',this.value)" style="padding:6px 8px;border:1px solid #ddd;border-radius:5px;font-size:.85rem">
+              <input type="text" value="${esc(it.emoji||'')}" maxlength="3" onchange="updateAdicional('${cat}',${i},'emoji',this.value)" placeholder="Emoji" style="padding:6px;border:1px solid #ddd;border-radius:5px;text-align:center;font-size:.85rem">
+              <input type="text" value="${price.toFixed(2).replace('.',',')}" oninput="maskPriceAdd(this, '${cat}', ${i})" style="padding:6px;border:1px solid #ddd;border-radius:5px;text-align:right;color:#E91E63;font-weight:700;font-size:.85rem" title="Preço venda">
+              <input type="text" value="${cost.toFixed(2).replace('.',',')}" oninput="maskCostAdd(this, '${cat}', ${i})" style="padding:6px;border:1px solid #ddd;border-radius:5px;text-align:right;background:#F3F4F6;color:#6B7280;font-size:.85rem" title="Custo insumos">
+              <span style="color:${mc};font-weight:700;font-size:.78rem;text-align:center">${margin}%</span>
+              <label class="toggle"><input type="checkbox" ${it.available !== false ? 'checked':''} onchange="toggleAdicional('${cat}',${i},this.checked)"></label>
               <button class="del" onclick="removeAdicional('${cat}',${i})" title="Remover">🗑️</button>
             </div>
-          `).join('')}
+          `;}).join('')}
           <button class="add-btn" onclick="addAdicional('${cat}')" style="margin-top:6px">+ Novo adicional em ${esc(a[cat].name || cat)}</button>
         </div>
       `;
@@ -231,12 +246,27 @@
     inp.value = v.toFixed(2).replace('.', ',');
     if (type === 'tamanho') cfg.tamanhos[idx].price = v;
     else if (cfg[type] && cfg[type][idx]) cfg[type][idx].price = v;
+    renderTamanhos(); // atualiza margem
+  };
+  window.maskCost = function(inp, idx, type){
+    const digits = (inp.value || '').replace(/\D/g,'');
+    const v = parseInt(digits||'0',10) / 100;
+    inp.value = v.toFixed(2).replace('.', ',');
+    if (type === 'tamanho') cfg.tamanhos[idx].cost = v;
+    else if (cfg[type] && cfg[type][idx]) cfg[type][idx].cost = v;
+    renderTamanhos(); // atualiza margem
   };
   window.maskPriceAdd = function(inp, cat, idx){
     const digits = (inp.value || '').replace(/\D/g,'');
     const v = parseInt(digits||'0',10) / 100;
     inp.value = v.toFixed(2).replace('.', ',');
     if (cfg.adicionais && cfg.adicionais[cat] && cfg.adicionais[cat].items[idx]) cfg.adicionais[cat].items[idx].price = v;
+  };
+  window.maskCostAdd = function(inp, cat, idx){
+    const digits = (inp.value || '').replace(/\D/g,'');
+    const v = parseInt(digits||'0',10) / 100;
+    inp.value = v.toFixed(2).replace('.', ',');
+    if (cfg.adicionais && cfg.adicionais[cat] && cfg.adicionais[cat].items[idx]) cfg.adicionais[cat].items[idx].cost = v;
   };
   window.toggleTam = function(idx, checked){ cfg.tamanhos[idx].available = checked; };
   window.updateField = function(list, idx, field, value){ if (cfg[list] && cfg[list][idx]) cfg[list][idx][field] = value; };

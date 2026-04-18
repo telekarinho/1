@@ -709,14 +709,19 @@
         if(!mProduct||!mSize)return;
         var unitPrice=mSize.price;
         mExtras.forEach(function(e){unitPrice+=e.price});
+        // CUSTO UNITARIO (pra CMV real no Finance OS)
+        var unitCost = Number(mSize.cost || 0);
+        mExtras.forEach(function(e){ unitCost += Number(e.cost || 0); });
         var item={
             id:Utils.generateId(),
             name:mProduct.name,
             emoji:mProduct.emoji,
             size:mSize.name+' ('+mSize.ml+'ml)',
             sizeId:mSize.id,
-            extras:mExtras.map(function(e){return{name:e.name,price:e.price}}),
+            extras:mExtras.map(function(e){return{name:e.name,price:e.price,cost:e.cost||0}}),
             unitPrice:unitPrice,
+            unitCost:unitCost,
+            costUnit:unitCost, // alias pra compat Finance OS
             qty:mQtyVal,
             baseId:mProduct.baseId,
             fmtId:mProduct.fmtId,
