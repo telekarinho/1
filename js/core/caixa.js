@@ -420,14 +420,14 @@ const Caixa = (function () {
 
     function shouldShowChecklist(phase, franchiseId) {
         if (typeof AdminConfig === 'undefined') return false;
-        const tpls = AdminConfig.getChecklistTemplates();
+        const tpls = AdminConfig.getChecklistTemplates(franchiseId);
         if (!tpls[phase] || tpls[phase].length === 0) return false;
         const exec = AdminConfig.getTodayChecklistExec(franchiseId, phase);
         return !exec; // só mostra se ainda não foi executado hoje
     }
 
     function showChecklistModal(franchiseId, phase, onDone) {
-        const tpls = AdminConfig.getChecklistTemplates();
+        const tpls = AdminConfig.getChecklistTemplates(franchiseId);
         const items = (tpls[phase] || []).map(i => Object.assign({}, i, { done: false }));
         const isAbertura = phase === 'abertura';
         const headerGradient = isAbertura

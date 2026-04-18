@@ -401,10 +401,10 @@
 <script src="../js/core/firebase-config.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v9"></script>
-<script src="../js/core/motivacional.js?v=mp-v9"></script>
-<script src="../js/core/caixa.js?v=mp-v9"></script>
-<script src="../js/core/financas.js?v=mp-v9"></script>
+<script src="../js/core/adminconfig.js?v=mp-v10"></script>
+<script src="../js/core/motivacional.js?v=mp-v10"></script>
+<script src="../js/core/caixa.js?v=mp-v10"></script>
+<script src="../js/core/financas.js?v=mp-v10"></script>
 <script src="../js/cardapio-data.js"></script>
 <script>
 (function(){
@@ -447,7 +447,7 @@
                     metaChip.innerHTML = '<span style="background:' + c + '22;color:' + c + ';padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700" title="Meta do mês">🎯 ' + pct + '% · ' + AdminConfig.formatBRL(prog.realizado) + '/' + AdminConfig.formatBRL(prog.valor) + '</span>';
                 } else {
                     // Mostra "Sem meta" clicavel pro admin cadastrar
-                    metaChip.innerHTML = '<span onclick="window.location.href=\'../admin/operacional.html\'" style="background:#9E9E9E22;color:#555;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer" title="Nenhuma meta cadastrada. Clique para configurar no admin.">🎯 Sem meta do mês</span>';
+                    metaChip.innerHTML = '<span onclick="window.location.href=\'operacional.html\'" style="background:#9E9E9E22;color:#555;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer" title="Nenhuma meta cadastrada. Clique para configurar.">🎯 Sem meta do mês</span>';
                 }
                 metaChip.style.display = '';
             }
@@ -455,7 +455,7 @@
             var checkChip = document.getElementById('pdvChecklistChip');
             if (checkChip && typeof AdminConfig !== 'undefined') {
                 try {
-                    var tpl = AdminConfig.getChecklistTemplates();
+                    var tpl = AdminConfig.getChecklistTemplates(fid);
                     var phase = 'abertura';
                     var tplItems = (tpl && tpl[phase]) || [];
                     var requiredCount = tplItems.filter(function(i){ return i.required; }).length;
