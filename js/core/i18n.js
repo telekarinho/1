@@ -22,12 +22,13 @@ const i18n = {
     // Inicialização
     // ============================================
     init() {
-        // Carrega idioma salvo ou detecta do navegador
+        // MilkyPot eh brasileiro. Default SEMPRE pt-BR, nao detecta do navegador.
+        // So usa outro idioma se o usuario EXPLICITAMENTE escolheu em localStorage.
         const saved = localStorage.getItem('mp_language');
         if (saved && this.LANGUAGES[saved]) {
             this._currentLang = saved;
         } else {
-            this._currentLang = this._detectLanguage();
+            this._currentLang = 'pt-BR';
         }
         this._initialized = true;
         return this._currentLang;

@@ -8,13 +8,34 @@
 <meta http-equiv="Expires" content="0">
 <title>MilkyPot TV</title>
 <script>
-  // TV nunca mantem cache HTML. Desregistra SW antigo na primeira carga.
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(regs => { regs.forEach(r => r.unregister()); }).catch(()=>{});
-  }
-  if (window.caches) {
-    caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(()=>{});
-  }
+  // Auto-recuperacao: se tem SW antigo controlando a pagina, desregistra E recarrega
+  // (uma unica vez, evita loop infinito). Garante versao nova sempre.
+  (async () => {
+    try {
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        const already = sessionStorage.getItem('__mp_tv_reset');
+        if (!already) {
+          sessionStorage.setItem('__mp_tv_reset', '1');
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r => r.unregister().catch(()=>{})));
+          if (window.caches) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k).catch(()=>{})));
+          }
+          // Reload completa — navegador busca tv.html fresco porque SW nao esta mais ativo
+          const u = new URL(location.href);
+          u.searchParams.set('_r', Date.now());
+          window.location.replace(u.toString());
+          return; // aborta execucao dessa versao potencialmente antiga
+        }
+      }
+      // Mesmo sem SW, limpa caches residuais
+      if (window.caches) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k).catch(()=>{})));
+      }
+    } catch (e) { console.warn('TV auto-reset:', e); }
+  })();
 </script>
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
