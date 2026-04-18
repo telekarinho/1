@@ -176,11 +176,16 @@
         <button class="btn-back" onclick="window.location.href='pedidos.html'">← Voltar</button>
         <h1>🏪 PDV — <span id="pdvStore">MilkyPot</span></h1>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
+    <div style="display:flex;align-items:center;gap:10px;" id="pdvStatusRow">
+        <!-- Status compacto do caixa + meta (preenchido por JS) -->
+        <div id="pdvCaixaChip" style="display:none"></div>
+        <div id="pdvMetaChip" style="display:none"></div>
         <div style="font-size:12px;opacity:0.8;" id="clk"></div>
         <button class="btn-back" onclick="toggleFullscreen()" title="Tela cheia (F11)">⛶</button>
     </div>
 </div>
+<!-- Mensagem motivacional compacta (preenchida por JS) -->
+<div id="pdvMotivBanner"></div>
 <div class="pdv-layout">
     <div class="pdv-products" id="allProds"></div>
 
@@ -394,6 +399,11 @@
 <script src="../js/core/datastore.js"></script>
 <script src="../js/core/firebase-config.js"></script>
 <script src="../js/core/auth.js"></script>
+<script src="../js/core/audit.js"></script>
+<script src="../js/core/adminconfig.js"></script>
+<script src="../js/core/motivacional.js"></script>
+<script src="../js/core/caixa.js"></script>
+<script src="../js/core/financas.js"></script>
 <script src="../js/cardapio-data.js"></script>
 <script>
 (function(){
@@ -403,6 +413,63 @@
     var franchises=DataStore.getAllFranchises()||[];
     var fr=franchises.find(function(f){return f.id===fid});
     document.getElementById('pdvStore').textContent=fr?fr.name:'MilkyPot';
+
+    // ───── Finance OS no PDV: mensagem motivacional + chip caixa + chip meta ─────
+    window.renderPdvStatusChips = function () {
+        try {
+            // Chip do caixa (compacto): aberto/fechado + botoes
+            var caixaChip = document.getElementById('pdvCaixaChip');
+            if (caixaChip && typeof Caixa !== 'undefined') {
+                var st = Caixa.getTurnoState(fid);
+                var color = st.status === 'aberto' ? '#10B981' : st.status === 'fechado' ? '#2196F3' : '#9E9E9E';
+                var label = st.status === 'aberto' ? '🟢 Caixa aberto' : st.status === 'fechado' ? '🔒 Caixa fechado hoje' : '⚪ Caixa fechado';
+                var saldo = st.status === 'aberto' ? ' · ' + Caixa.formatBRL(st.saldoEsperadoDinheiro) : '';
+                var btn = '';
+                if (st.status === 'nao_aberto') {
+                    btn = '<button onclick="Caixa.showOpenModal(\'' + fid + '\', renderPdvStatusChips)" style="margin-left:6px;background:#10B981;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">Abrir caixa</button>';
+                } else if (st.status === 'aberto') {
+                    btn = '<button onclick="Caixa.showCloseModal(\'' + fid + '\', renderPdvStatusChips)" style="margin-left:6px;background:#DC2626;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">Fechar</button>' +
+                          '<button onclick="Caixa.showSangriaModal(\'' + fid + '\', renderPdvStatusChips)" style="margin-left:4px;background:#F59E0B;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer" title="Sangria">📤</button>' +
+                          '<button onclick="Caixa.showReforcoModal(\'' + fid + '\', renderPdvStatusChips)" style="margin-left:4px;background:#059669;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer" title="Reforço">📥</button>';
+                }
+                caixaChip.innerHTML = '<span style="background:' + color + '22;color:' + color + ';padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700">' + label + saldo + '</span>' + btn;
+                caixaChip.style.display = '';
+            }
+            // Chip da meta
+            var metaChip = document.getElementById('pdvMetaChip');
+            if (metaChip && typeof AdminConfig !== 'undefined' && typeof Financas !== 'undefined') {
+                var pk = Financas.currentPeriodKey();
+                var prog = AdminConfig.getMetaProgress(fid, pk);
+                if (prog) {
+                    var pct = Math.round(prog.pct * 100);
+                    var c = pct >= 100 ? '#10B981' : pct >= 70 ? '#F59E0B' : '#E91E63';
+                    metaChip.innerHTML = '<span style="background:' + c + '22;color:' + c + ';padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700" title="Meta do mês">🎯 ' + pct + '% · ' + AdminConfig.formatBRL(prog.realizado) + '/' + AdminConfig.formatBRL(prog.valor) + '</span>';
+                    metaChip.style.display = '';
+                } else {
+                    metaChip.style.display = 'none';
+                }
+            }
+        } catch (e) { console.warn('renderPdvStatusChips:', e); }
+    };
+    renderPdvStatusChips();
+    // Atualiza a cada 30s (caso outro atendente mexa em paralelo)
+    setInterval(renderPdvStatusChips, 30000);
+
+    // Banner motivacional compacto (uma mensagem por sessao)
+    try {
+        if (typeof Motivacional !== 'undefined' && Motivacional.getLoginMessage) {
+            var msg = Motivacional.getLoginMessage();
+            var first = (s.name || 'Atendente').split(' ')[0];
+            var mount = document.getElementById('pdvMotivBanner');
+            if (mount && msg) {
+                mount.innerHTML = '<div style="background:linear-gradient(135deg,#E91E63,#D4A5FF);color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;font-family:\'Nunito\',sans-serif">' +
+                    '<span style="font-size:24px;line-height:1">' + msg.icon + '</span>' +
+                    '<span style="flex:1;font-size:13px"><strong>' + first + '</strong> — ' + msg.text + '</span>' +
+                    '<button onclick="this.parentElement.parentElement.style.display=\'none\'" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:12px">✕</button>' +
+                '</div>';
+            }
+        }
+    } catch (e) { console.warn('Motiv banner PDV:', e); }
 
     // Load desafio config for attemptsPerPurchase
     if(typeof firebase!=='undefined'&&firebase.firestore){
@@ -905,6 +972,20 @@
             createdAt: new Date().toISOString()
         };
         DataStore.addToCollection('finances', fid, financeEntry);
+
+        // Registra venda no caixa (PDV auditavel)
+        if (typeof Caixa !== 'undefined' && Caixa.registerSale) {
+            try {
+                var rSale = Caixa.registerSale(fid, order);
+                if (rSale && rSale.warn === 'caixa_nao_aberto') {
+                    if (typeof Utils !== 'undefined' && Utils.showToast) {
+                        Utils.showToast('⚠️ Venda registrada, mas o caixa ainda não foi aberto hoje.', 'warning');
+                    }
+                }
+            } catch (e) { console.warn('Caixa.registerSale:', e); }
+        }
+        // Atualiza chip de status apos venda
+        if (typeof renderPdvStatusChips === 'function') { try { renderPdvStatusChips(); } catch (e) {} }
 
         // Save voucher to Firestore
         var voucher = {

@@ -101,6 +101,9 @@
             </header>
 
             <div class="panel-content">
+                <!-- ============ FINANCE OS - Saude financeira por competencia ============ -->
+                <div id="financeOSMount"></div>
+
                 <!-- FILTROS -->
                 <div class="panel-card">
                     <div class="panel-card-body" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
@@ -293,6 +296,10 @@
     <script src="../js/core/audit.js"></script>
     <script src="../js/core/notifications.js"></script>
     <script src="../js/core/reports.js"></script>
+    <script src="../js/core/adminconfig.js"></script>
+    <script src="../js/core/caixa.js"></script>
+    <script src="../js/core/financas.js"></script>
+    <script src="../js/pages/finance-os-ui.js"></script>
 
     <script>
         // ========== REPORT EXPORTS ==========
@@ -878,6 +885,12 @@
                 initDRESelectors();
                 loadData();
                 i18n.translatePage();
+
+                // Finance OS - saude da franquia por competencia (auditavel)
+                if (typeof FinanceOSUI !== 'undefined') {
+                    try { FinanceOSUI.init({ franchiseId: franchiseId }); }
+                    catch (e) { console.warn('FinanceOSUI init:', e); }
+                }
             } catch (err) {
                 console.error('Erro ao inicializar financeiro:', err);
             }
