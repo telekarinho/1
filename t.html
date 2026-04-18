@@ -8,17 +8,19 @@
     html, body { height:100%; margin:0; background:#000; color:#fff; font-family:'Segoe UI',Tahoma,sans-serif; }
     .box { height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; padding:20px; text-align:center; }
     h1 { font-size:22px; font-weight:700; margin:0; }
-    p { opacity:.7; margin:0; font-size:14px; max-width:480px; }
+    p { opacity:.7; margin:0; font-size:14px; max-width:560px; line-height:1.5; }
+    .ip { background:rgba(255,255,255,.08); padding:6px 12px; border-radius:8px; font-family:monospace; font-size:13px; }
     .spinner { width:48px; height:48px; border:4px solid rgba(255,255,255,.15); border-top-color:#42A5F5; border-radius:50%; animation:spin 1s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
     .err { color:#EF4444; }
+    .step { font-size:12px; opacity:.5; text-transform:uppercase; letter-spacing:1px; }
   </style>
 </head>
 <body>
   <div class="box" id="box">
     <div class="spinner"></div>
     <h1 id="msg">Carregando TV...</h1>
-    <p id="sub">Buscando o código curto.</p>
+    <p id="sub" class="step">Detectando rede</p>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -30,14 +32,18 @@
   <script src="/js/core/adminconfig.js?v=mp-v10"></script>
   <script>
     (async function () {
-      function fail(title, sub) {
-        document.getElementById('box').innerHTML =
+      function show(html) { document.getElementById('box').innerHTML = html; }
+      function fail(title, sub, ip) {
+        show(
           '<h1 class="err" style="font-size:26px">❌ ' + title + '</h1>' +
-          '<p>' + (sub || '') + '</p>' +
-          '<p style="margin-top:20px">Peça ao franqueado o código correto em <br><strong>/painel/tv-indoor.html</strong></p>';
+          (sub ? '<p>' + sub + '</p>' : '') +
+          (ip ? '<p class="ip">Seu IP: ' + ip + '</p>' : '') +
+          '<p style="margin-top:20px;font-size:13px">Peça pro franqueado configurar em <br><strong>milkypot.com/painel/tv-indoor.html</strong></p>'
+        );
       }
+      function setStep(s) { const el = document.getElementById('sub'); if (el) el.textContent = s; }
 
-      // Código pode vir como ?c=mq1 ou ?mq1 (primeiro param sem "=")
+      // 1. Código da URL
       let code = null;
       const rawQs = location.search.substring(1);
       if (rawQs) {
@@ -48,42 +54,88 @@
           if (first && !first.includes('=')) code = first;
         }
       }
-      if (!code && location.hash) {
-        code = location.hash.replace('#', '');
-      }
+      if (!code && location.hash) code = location.hash.replace('#', '');
+      if (!code) { fail('Código ausente', 'Use: milkypot.com/t?tv1'); return; }
 
-      if (!code) {
-        fail('Código ausente', 'Use: milkypot.com/t?seucodigo');
-        return;
-      }
+      // 2. Query param "f=fid" permite forçar franquia (bypass de IP pra casos especiais)
+      const params = new URLSearchParams(location.search);
+      let forcedFid = params.get('f');
 
-      // 1) tenta localStorage (pode já estar sincronizado)
-      let mapping = null;
+      // 3. Detecta IP público (tenta 2 serviços)
+      setStep('Detectando IP da rede');
+      let ip = null;
       try {
-        if (typeof AdminConfig !== 'undefined') mapping = AdminConfig.getTvShortcode(code);
+        const r = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+        if (r.ok) ip = (await r.json()).ip;
+      } catch (e) {}
+      if (!ip) {
+        try {
+          const r = await fetch('https://ipapi.co/json/', { cache: 'no-store' });
+          if (r.ok) ip = (await r.json()).ip;
+        } catch (e) {}
+      }
+
+      // 4. Descobre franquia pelo IP (se não foi forçada)
+      setStep('Localizando franquia');
+      try {
+        // Sincroniza os settings do Firestore antes de consultar
+        if (typeof DataStore !== 'undefined' && DataStore.init) DataStore.init();
+        // Força fetch dos documentos que precisamos
+        const db = firebase.firestore();
+        await Promise.all([
+          db.collection('datastore').doc('franchise_ips').get().then(d => {
+            if (d.exists) localStorage.setItem('mp_franchise_ips', d.data().value || '{}');
+          }).catch(()=>{}),
+          db.collection('datastore').doc('franchises').get().then(d => {
+            if (d.exists) localStorage.setItem('mp_franchises', d.data().value || '[]');
+          }).catch(()=>{})
+        ]);
       } catch (e) {}
 
-      // 2) busca direto do Firestore se não achou local
-      if (!mapping) {
-        try {
-          DataStore.init && DataStore.init();
-          const doc = await firebase.firestore().collection('datastore').doc('tv_shortcodes').get();
-          if (doc.exists) {
-            const map = JSON.parse(doc.data().value || '{}');
-            mapping = map[String(code).toLowerCase()] || null;
-          }
-        } catch (e) {
-          console.warn('Firestore lookup fail:', e);
-        }
+      let fid = forcedFid;
+      if (!fid && ip && typeof AdminConfig !== 'undefined') {
+        fid = AdminConfig.getFranchiseByIp(ip);
       }
 
-      if (!mapping || !mapping.fid || !mapping.tvId) {
-        fail('Código não encontrado: ' + code, 'Verifique se o código está correto ou crie um novo atalho.');
+      if (!fid) {
+        fail(
+          'Rede não reconhecida',
+          'O IP desta rede não está registrado em nenhuma franquia. Peça pro franqueado acessar /painel/tv-indoor.html e clicar em "Registrar este IP".',
+          ip || 'não detectado'
+        );
         return;
       }
 
-      // Redireciona pra URL completa da TV
-      const target = '/tv.html?f=' + encodeURIComponent(mapping.fid) + '&tv=' + encodeURIComponent(mapping.tvId);
+      // 5. Carrega shortcodes da franquia
+      setStep('Resolvendo código ' + code);
+      try {
+        const db = firebase.firestore();
+        const d = await db.collection('datastore').doc('tv_shortcodes_' + fid).get();
+        if (d.exists) localStorage.setItem('mp_tv_shortcodes_' + fid, d.data().value || '{}');
+      } catch (e) {}
+
+      let mapping = null;
+      try {
+        if (typeof AdminConfig !== 'undefined') mapping = AdminConfig.getTvShortcodeForFranchise(fid, code);
+      } catch (e) {}
+
+      // Fallback: formato antigo global
+      if (!mapping) {
+        try {
+          if (typeof AdminConfig !== 'undefined') mapping = AdminConfig.getTvShortcode(code);
+          if (mapping && mapping.fid !== fid && !forcedFid) {
+            // Atalho achado em outra franquia — rejeita se o IP não bate
+            mapping = null;
+          }
+        } catch (e) {}
+      }
+
+      if (!mapping || !mapping.tvId) {
+        fail('Atalho "' + code + '" não existe nesta franquia', 'Verifique o código ou cadastre em /painel/tv-indoor.html', ip);
+        return;
+      }
+
+      const target = '/tv.html?f=' + encodeURIComponent(mapping.fid || fid) + '&tv=' + encodeURIComponent(mapping.tvId);
       location.replace(target);
     })();
   </script>

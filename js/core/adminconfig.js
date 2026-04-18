@@ -315,23 +315,45 @@ const AdminConfig = (function () {
     }
 
     /* ============================================
-       Códigos curtos de TV (URLs /t?mq1)
+       Códigos curtos de TV (URLs /t?tv1)
+       Códigos são únicos POR FRANQUIA, não globalmente.
+       Resolução usa o IP público pra descobrir a franquia.
        ============================================ */
-    function getTvShortcodesAll() {
-        return getSetting('tv_shortcodes', {}) || {};
-    }
-
-    function getTvShortcode(code) {
-        if (!code) return null;
-        const map = getTvShortcodesAll();
-        return map[String(code).toLowerCase()] || null;
+    function _tvShortKey(franchiseId) {
+        return 'tv_shortcodes_' + franchiseId;
     }
 
     function listTvShortcodesForFranchise(franchiseId) {
-        const map = getTvShortcodesAll();
-        return Object.entries(map)
-            .filter(([_, v]) => v && v.fid === franchiseId)
-            .map(([code, v]) => ({ code, ...v }));
+        if (!franchiseId) return [];
+        const map = getSetting(_tvShortKey(franchiseId), {}) || {};
+        return Object.entries(map).map(([code, v]) => ({ code, fid: franchiseId, ...v }));
+    }
+
+    /** Busca atalho específico numa franquia. */
+    function getTvShortcodeForFranchise(franchiseId, code) {
+        if (!franchiseId || !code) return null;
+        const map = getSetting(_tvShortKey(franchiseId), {}) || {};
+        const entry = map[String(code).toLowerCase()];
+        if (!entry) return null;
+        return { code: String(code).toLowerCase(), fid: franchiseId, ...entry };
+    }
+
+    /** Mantido pra compatibilidade: busca o código em TODAS as franquias (retorna primeiro match). */
+    function getTvShortcode(code) {
+        if (!code) return null;
+        const c = String(code).toLowerCase();
+        // Novo formato: procura em todas as franquias
+        const franchises = (typeof DataStore !== 'undefined' && DataStore.getCollection)
+            ? (DataStore.getCollection('franchises', null) || [])
+            : [];
+        for (const f of franchises) {
+            const entry = getTvShortcodeForFranchise(f.id, c);
+            if (entry) return entry;
+        }
+        // Fallback formato antigo (durante migração)
+        const legacy = getSetting('tv_shortcodes', null);
+        if (legacy && legacy[c]) return { code: c, ...legacy[c] };
+        return null;
     }
 
     function setTvShortcode(franchiseId, code, tvId) {
@@ -340,31 +362,83 @@ const AdminConfig = (function () {
         if (!tvId) return { success: false, error: 'TV inválida.' };
         const g = requireFranchiseScope(franchiseId);
         if (!g.ok) return { success: false, error: g.error };
-        const map = getTvShortcodesAll();
-        if (map[c] && map[c].fid !== franchiseId) {
-            return { success: false, error: 'Código "' + c + '" já está em uso por outra franquia.' };
-        }
+        const key = _tvShortKey(franchiseId);
+        const map = getSetting(key, {}) || {};
         map[c] = {
-            fid: franchiseId,
             tvId: tvId,
             createdBy: g.user.name,
             createdAt: new Date().toISOString()
         };
-        setSetting('tv_shortcodes', map);
+        setSetting(key, map);
         audit('config.tv_shortcode_set', { code: c, fid: franchiseId, tvId: tvId, by: g.user.name });
         return { success: true, code: c };
     }
 
     function removeTvShortcode(franchiseId, code) {
         const c = String(code || '').toLowerCase().trim();
-        const map = getTvShortcodesAll();
-        const existing = map[c];
-        if (!existing) return { success: false, error: 'Código não encontrado.' };
-        const g = requireFranchiseScope(existing.fid);
+        const g = requireFranchiseScope(franchiseId);
         if (!g.ok) return { success: false, error: g.error };
+        const key = _tvShortKey(franchiseId);
+        const map = getSetting(key, {}) || {};
+        if (!map[c]) return { success: false, error: 'Código não encontrado.' };
         delete map[c];
-        setSetting('tv_shortcodes', map);
-        audit('config.tv_shortcode_removed', { code: c, fid: existing.fid, by: g.user.name });
+        setSetting(key, map);
+        audit('config.tv_shortcode_removed', { code: c, fid: franchiseId, by: g.user.name });
+        return { success: true };
+    }
+
+    /* ============================================
+       IPs autorizados por franquia
+       ============================================ */
+    function getFranchiseIpsAll() {
+        return getSetting('franchise_ips', {}) || {};
+    }
+
+    /** Retorna a franquia cujo IP autorizado bate com o IP dado. */
+    function getFranchiseByIp(ip) {
+        if (!ip) return null;
+        const map = getFranchiseIpsAll();
+        for (const [fid, list] of Object.entries(map)) {
+            if (Array.isArray(list) && list.indexOf(ip) !== -1) return fid;
+        }
+        return null;
+    }
+
+    function listFranchiseIps(franchiseId) {
+        const map = getFranchiseIpsAll();
+        return (map[franchiseId] || []).slice();
+    }
+
+    function addFranchiseIp(franchiseId, ip) {
+        const g = requireFranchiseScope(franchiseId);
+        if (!g.ok) return { success: false, error: g.error };
+        const normalized = String(ip || '').trim();
+        if (!/^[0-9a-fA-F:.]{3,45}$/.test(normalized)) return { success: false, error: 'IP inválido.' };
+        const map = getFranchiseIpsAll();
+        // Verifica se esse IP já pertence a outra franquia (evita colisão)
+        for (const [fid, list] of Object.entries(map)) {
+            if (fid !== franchiseId && Array.isArray(list) && list.indexOf(normalized) !== -1) {
+                return { success: false, error: 'Este IP já está registrado para outra franquia. Verifique ou peça ao admin.' };
+            }
+        }
+        if (!map[franchiseId]) map[franchiseId] = [];
+        if (map[franchiseId].indexOf(normalized) !== -1) return { success: false, error: 'IP já está registrado.' };
+        map[franchiseId].push(normalized);
+        setSetting('franchise_ips', map);
+        audit('config.franchise_ip_added', { fid: franchiseId, ip: normalized, by: g.user.name });
+        return { success: true };
+    }
+
+    function removeFranchiseIp(franchiseId, ip) {
+        const g = requireFranchiseScope(franchiseId);
+        if (!g.ok) return { success: false, error: g.error };
+        const map = getFranchiseIpsAll();
+        if (!map[franchiseId]) return { success: false, error: 'Nenhum IP registrado.' };
+        const before = map[franchiseId].length;
+        map[franchiseId] = map[franchiseId].filter(x => x !== ip);
+        if (map[franchiseId].length === before) return { success: false, error: 'IP não encontrado.' };
+        setSetting('franchise_ips', map);
+        audit('config.franchise_ip_removed', { fid: franchiseId, ip, by: g.user.name });
         return { success: true };
     }
 
@@ -399,12 +473,17 @@ const AdminConfig = (function () {
         recordChecklistExec,
         getTodayChecklistExec,
 
-        // TV shortcodes
-        getTvShortcodesAll,
+        // TV shortcodes (por-franquia + por-IP)
         getTvShortcode,
+        getTvShortcodeForFranchise,
         listTvShortcodesForFranchise,
         setTvShortcode,
         removeTvShortcode,
+        // IPs por franquia
+        getFranchiseByIp,
+        listFranchiseIps,
+        addFranchiseIp,
+        removeFranchiseIp,
 
         formatBRL
     };
