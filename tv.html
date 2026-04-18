@@ -46,7 +46,14 @@ body:not(.idle){cursor:default}
 #clock{position:fixed;font-size:28px;font-weight:700;color:rgba(255,255,255,.8);z-index:10;text-shadow:0 2px 8px rgba(0,0,0,.7);padding:12px 20px}
 
 /* Logo watermark */
-#watermark{position:fixed;z-index:10;opacity:.5;height:36px;padding:12px 20px}
+#watermark{
+    position:fixed;
+    z-index:10;
+    opacity:.92;
+    height:72px;
+    padding:16px 24px;
+    filter:drop-shadow(0 4px 14px rgba(0,0,0,.45));
+}
 
 /* Weather widget */
 #weather{position:fixed;z-index:10;display:none;padding:10px 16px;background:rgba(0,0,0,.5);border-radius:12px;color:#fff;font-size:14px;backdrop-filter:blur(6px)}
@@ -378,29 +385,73 @@ body:not(.idle){cursor:default}
         clearTimeout(timer);
         player.innerHTML = '';
 
+        if(!m || !m.type){
+            playFallback('Midia invalida na playlist.');
+            return;
+        }
+
         if(m.type === 'image'){
+            if(!m.dataUrl){
+                playFallback('Imagem indisponivel.');
+                return;
+            }
             var img = document.createElement('img');
+            var imgHandled = false;
+            var imgTimeout = setTimeout(function(){
+                if(imgHandled) return;
+                imgHandled = true;
+                playFallback('Imagem demorou para carregar.');
+            }, 4000);
             img.src = m.dataUrl;
             img.alt = m.name;
             img.style.objectFit = fit;
+            img.onload = function(){
+                if(imgHandled) return;
+                imgHandled = true;
+                clearTimeout(imgTimeout);
+                startProgress(item.duration);
+                timer = setTimeout(playNext, item.duration);
+            };
+            img.onerror = function(){
+                if(imgHandled) return;
+                imgHandled = true;
+                clearTimeout(imgTimeout);
+                playFallback('Falha ao abrir imagem.');
+            };
             player.appendChild(img);
-            startProgress(item.duration);
-            timer = setTimeout(playNext, item.duration);
         }
         else if(m.type === 'video'){
+            if(!m.dataUrl){
+                playFallback('Video indisponivel.');
+                return;
+            }
             var video = document.createElement('video');
+            var videoHandled = false;
+            var videoTimeout = setTimeout(function(){
+                if(videoHandled) return;
+                videoHandled = true;
+                playFallback('Video demorou para carregar.');
+            }, 5000);
             video.src = m.dataUrl;
             video.muted = false;
             video.autoplay = true;
             video.playsInline = true;
             video.style.objectFit = fit;
             video.onloadedmetadata = function(){
+                if(videoHandled) return;
+                videoHandled = true;
+                clearTimeout(videoTimeout);
                 var dur = item.duration || (video.duration * 1000);
                 startProgress(dur);
                 timer = setTimeout(playNext, dur);
             };
             video.onended = function(){ playNext(); };
-            video.onerror = function(){ playNext(); };
+            video.onerror = function(){
+                if(videoHandled) return;
+                videoHandled = true;
+                clearTimeout(videoTimeout);
+                playFallback('Falha ao abrir video.');
+            };
             player.appendChild(video);
             video.play().catch(function(){
                 video.muted = true;
@@ -443,8 +494,20 @@ body:not(.idle){cursor:default}
             timer = setTimeout(playNext, item.duration);
         }
         else {
-            timer = setTimeout(playNext, 1000);
+            playFallback('Tipo de midia nao suportado.');
         }
+    }
+
+    function playFallback(reason){
+        player.innerHTML =
+            '<div class="text-slide" style="background:linear-gradient(135deg,#12101f,#1b1730 35%,#2a1f47 100%);color:#fff">' +
+                '<img src="/images/logo-milkypot.png" alt="Milkypot" style="width:min(26vw,320px);max-width:42%;margin-bottom:2vh;filter:drop-shadow(0 8px 22px rgba(0,0,0,.45))" onerror="this.style.display=\'none\'">' +
+                '<h1 style="font-family:var(--mp-font-display);font-size:clamp(42px,5vw,88px);margin:0">Milkypot TV</h1>' +
+                '<p style="max-width:48vw;font-size:clamp(18px,2vw,32px);line-height:1.4;margin-top:1.5vh">Conteudo em atualizacao. A proxima midia entra automaticamente.</p>' +
+                (reason ? '<p style="font-size:14px;opacity:.55;margin-top:1vh">' + esc(reason) + '</p>' : '') +
+            '</div>';
+        startProgress(2500);
+        timer = setTimeout(playNext, 2500);
     }
 
     /* === Price Formatting (menu engineering) === */
