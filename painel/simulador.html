@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Simulador de Faturamento</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="stylesheet" href="../css/mobile-app.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#42A5F5">
+    <style>
+      .sim-hero { background:linear-gradient(135deg,#E91E63,#D4A5FF); color:#fff; border-radius:16px; padding:28px 32px; margin-bottom:22px; box-shadow:0 8px 22px rgba(233,30,99,.18) }
+      .sim-hero h1 { font-family:'Baloo 2',cursive; font-size:1.7rem; margin:0 0 6px }
+      .sim-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px }
+      @media (max-width: 900px) { .sim-grid { grid-template-columns:1fr } }
+      .sim-panel { background:#fff; border-radius:14px; padding:22px; box-shadow:0 2px 6px rgba(0,0,0,.05); border:1px solid #eee }
+      .sim-label { font-size:.78rem; color:#666; text-transform:uppercase; letter-spacing:.5px; font-weight:700; margin-bottom:6px }
+      .sim-input-row { display:flex; align-items:center; gap:12px; margin-bottom:18px }
+      .sim-input-row input[type=range] { flex:1 }
+      .sim-val { font-size:2.2rem; font-weight:800; color:#E91E63; font-family:'Baloo 2',cursive; min-width:90px; text-align:right }
+      .sim-card { background:linear-gradient(135deg,#10B981,#059669); color:#fff; border-radius:14px; padding:22px; margin-bottom:14px; position:relative; overflow:hidden }
+      .sim-card.alt { background:linear-gradient(135deg,#6C63FF,#5A52E0) }
+      .sim-card.lucro { background:linear-gradient(135deg,#F59E0B,#D97706) }
+      .sim-card h2 { font-size:.85rem; font-weight:700; margin:0 0 6px; opacity:.9; letter-spacing:.5px; text-transform:uppercase }
+      .sim-card .big { font-size:2.4rem; font-weight:800; font-family:'Baloo 2',cursive; line-height:1 }
+      .sim-card .sub { font-size:.82rem; opacity:.9; margin-top:6px }
+      .preset-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:18px }
+      .preset-btn { padding:10px; border:2px solid #E91E63; background:#fff; color:#E91E63; border-radius:10px; cursor:pointer; font-weight:700; font-size:.85rem; text-align:center; line-height:1.3 }
+      .preset-btn:hover { background:#fce4ec }
+      .preset-btn.active { background:#E91E63; color:#fff }
+      .preset-btn small { display:block; font-size:.7rem; opacity:.8; margin-top:2px }
+      .breakdown-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px dashed #eee; font-size:.92rem }
+      .breakdown-row:last-child { border-bottom:none; font-weight:700; color:#E91E63; font-size:1rem }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Painel</a>
+                <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <a href="simulador.html" class="sidebar-link active"><span class="icon">📈</span> Simulador</a>
+                <div class="sidebar-nav-group">Gestão</div>
+                <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+                <a href="operacional.html" class="sidebar-link"><span class="icon">🎯</span> Operacional</a>
+                <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">🏪</div>
+                    <div class="sidebar-user-info"><strong id="sidebarUserName">Franqueado</strong><small>Franqueado</small></div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+                    <h1>📈 Simulador de Faturamento</h1>
+                </div>
+                <div class="panel-header-right">
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <div class="sim-hero">
+                    <h1>Quanto sua MilkyPot pode faturar?</h1>
+                    <p style="margin:0;opacity:.92;font-size:.95rem;max-width:640px">Ajuste os deslizadores com a sua realidade. Veja o faturamento diário, mensal e lucro estimado baseado em margens reais do negócio.</p>
+                </div>
+
+                <div class="sim-grid">
+                    <!-- Inputs -->
+                    <div class="sim-panel">
+                        <h3 style="margin:0 0 16px;font-family:'Baloo 2',cursive">🎚️ Seus números</h3>
+
+                        <div class="preset-row">
+                            <button class="preset-btn" onclick="setPreset(8, 22)">Conservador<small>8 pedidos × R$22</small></button>
+                            <button class="preset-btn active" onclick="setPreset(15, 28)">Realista<small>15 × R$28</small></button>
+                            <button class="preset-btn" onclick="setPreset(30, 32)">Forte<small>30 × R$32</small></button>
+                        </div>
+
+                        <div class="sim-label">Pedidos por dia</div>
+                        <div class="sim-input-row">
+                            <input type="range" id="pedidos" min="1" max="80" value="15" oninput="update()">
+                            <span class="sim-val" id="pedidosVal">15</span>
+                        </div>
+
+                        <div class="sim-label">Ticket médio (R$ por pedido)</div>
+                        <div class="sim-input-row">
+                            <input type="range" id="ticket" min="10" max="60" step="0.5" value="28" oninput="update()">
+                            <span class="sim-val" id="ticketVal">R$ 28</span>
+                        </div>
+
+                        <div class="sim-label">Dias de operação por mês</div>
+                        <div class="sim-input-row">
+                            <input type="range" id="dias" min="20" max="30" value="26" oninput="update()">
+                            <span class="sim-val" id="diasVal">26</span>
+                        </div>
+
+                        <div class="sim-label">Margem líquida estimada</div>
+                        <div class="sim-input-row">
+                            <input type="range" id="margem" min="15" max="55" value="35" oninput="update()">
+                            <span class="sim-val" id="margemVal">35%</span>
+                        </div>
+
+                        <p style="font-size:.78rem;color:#888;margin:10px 0 0;line-height:1.45">
+                            💡 <strong>Margem típica MilkyPot:</strong> 30–45% após custos de insumos, embalagens, taxas de cartão e impostos.
+                        </p>
+                    </div>
+
+                    <!-- Outputs -->
+                    <div>
+                        <div class="sim-card">
+                            <h2>📅 Faturamento diário</h2>
+                            <div class="big" id="diarioOut">R$ 420</div>
+                            <div class="sub" id="diarioSub">15 pedidos × R$ 28,00</div>
+                        </div>
+                        <div class="sim-card alt">
+                            <h2>📈 Faturamento mensal</h2>
+                            <div class="big" id="mensalOut">R$ 10.920</div>
+                            <div class="sub" id="mensalSub">× 26 dias úteis</div>
+                        </div>
+                        <div class="sim-card lucro">
+                            <h2>💰 Lucro líquido estimado</h2>
+                            <div class="big" id="lucroOut">R$ 3.822</div>
+                            <div class="sub" id="lucroSub">35% de margem líquida</div>
+                        </div>
+
+                        <div class="sim-panel" style="margin-top:14px">
+                            <h3 style="margin:0 0 12px;font-family:'Baloo 2',cursive;font-size:1rem">🧮 Breakdown do mês</h3>
+                            <div class="breakdown-row"><span>Receita bruta</span><strong id="brReceita">R$ 10.920</strong></div>
+                            <div class="breakdown-row"><span>CMV + variáveis (~45%)</span><strong id="brCmv" style="color:#DC2626">- R$ 4.914</strong></div>
+                            <div class="breakdown-row"><span>Custos fixos estimados</span><strong id="brFixos" style="color:#DC2626">- R$ 2.184</strong></div>
+                            <div class="breakdown-row"><span>Lucro líquido</span><strong id="brLucro">R$ 3.822</strong></div>
+                        </div>
+
+                        <div id="retornoBox" class="sim-panel" style="margin-top:14px;display:none">
+                            <h3 style="margin:0 0 8px;font-family:'Baloo 2',cursive;font-size:1rem">⏱️ Retorno do investimento</h3>
+                            <p style="margin:0;font-size:.92rem;line-height:1.5;color:#555">
+                                Com lucro estimado de <strong id="retornoLucro">R$ 3.822/mês</strong> e investimento inicial de
+                                <strong id="retornoInvest">R$ 5.499</strong>, retorno em
+                                <strong style="color:#E91E63;font-size:1.1rem" id="retornoMeses">1,4 meses</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-card" style="margin-top:22px">
+                    <div class="panel-card-body" style="text-align:center;padding:22px">
+                        <h3 style="margin:0 0 6px;font-family:'Baloo 2',cursive">💡 Próximos passos pra esse faturamento virar realidade</h3>
+                        <p style="margin:0 0 14px;color:#666;font-size:.9rem">Defina uma meta compatível, monte um checklist e comece a vender.</p>
+                        <a href="operacional.html" class="btn btn-primary">🎯 Cadastrar minha meta mensal</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/cloud-functions.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script>
+        if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+        const session = Auth.getSession();
+        document.getElementById('sidebarUserName').textContent = session.name;
+        const franchises = DataStore.getAllFranchises();
+        const franchise = franchises.find(f => f.id === session.franchiseId);
+        document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia';
+
+        function brl(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+        function brl2(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+        function update() {
+            const pedidos = parseInt(document.getElementById('pedidos').value);
+            const ticket = parseFloat(document.getElementById('ticket').value);
+            const dias = parseInt(document.getElementById('dias').value);
+            const margem = parseInt(document.getElementById('margem').value);
+
+            document.getElementById('pedidosVal').textContent = pedidos;
+            document.getElementById('ticketVal').textContent = brl(ticket);
+            document.getElementById('diasVal').textContent = dias;
+            document.getElementById('margemVal').textContent = margem + '%';
+
+            const diario = pedidos * ticket;
+            const mensal = diario * dias;
+            const lucro = mensal * (margem / 100);
+
+            // CMV + variáveis estimados em 45%, fixos em 20% (sobra margem ~35%)
+            const cmv = mensal * 0.45;
+            const fixos = mensal * 0.20;
+
+            document.getElementById('diarioOut').textContent = brl(diario);
+            document.getElementById('diarioSub').textContent = `${pedidos} pedidos × ${brl2(ticket)}`;
+            document.getElementById('mensalOut').textContent = brl(mensal);
+            document.getElementById('mensalSub').textContent = `× ${dias} dias úteis`;
+            document.getElementById('lucroOut').textContent = brl(lucro);
+            document.getElementById('lucroSub').textContent = `${margem}% de margem líquida`;
+
+            document.getElementById('brReceita').textContent = brl(mensal);
+            document.getElementById('brCmv').textContent = '- ' + brl(cmv);
+            document.getElementById('brFixos').textContent = '- ' + brl(fixos);
+            document.getElementById('brLucro').textContent = brl(lucro);
+
+            // Retorno do investimento
+            const invest = (franchise && (franchise.investimentoTotalEstimado || franchise.investimentoBase)) || 5499;
+            if (lucro > 0) {
+                const meses = invest / lucro;
+                const label = meses < 1
+                    ? Math.ceil(meses * 30) + ' dias'
+                    : meses.toFixed(1).replace('.', ',') + ' meses';
+                document.getElementById('retornoBox').style.display = 'block';
+                document.getElementById('retornoLucro').textContent = brl(lucro) + '/mês';
+                document.getElementById('retornoInvest').textContent = brl(invest);
+                document.getElementById('retornoMeses').textContent = label;
+            } else {
+                document.getElementById('retornoBox').style.display = 'none';
+            }
+        }
+
+        function setPreset(ped, tk) {
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            event.target.closest('.preset-btn').classList.add('active');
+            document.getElementById('pedidos').value = ped;
+            document.getElementById('ticket').value = tk;
+            update();
+        }
+
+        update();
+    </script>
+</body>
+</html>

@@ -221,6 +221,33 @@
                         <textarea class="form-control" id="fAccessNotes" rows="2" placeholder="Ex: tem 2FA, usa biometria, PIN do caixa = 1234..."></textarea>
                     </div>
 
+                    <h4 style="margin:24px 0 16px;font-family:'Baloo 2',cursive">💸 Investimento & Treinamento</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Investimento base (kit + sistema)</label>
+                            <input type="number" class="form-control" id="fInvestimentoBase" step="0.01" min="0" placeholder="3499.99">
+                        </div>
+                        <div class="form-group">
+                            <label>Estrutura (freezer, mesa...)</label>
+                            <input type="number" class="form-control" id="fInvestimentoEstrutura" step="0.01" min="0" placeholder="2000.00">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Total estimado (R$)</label>
+                            <input type="number" class="form-control" id="fInvestimentoTotal" step="0.01" min="0" placeholder="5499.99" readonly style="background:#f9f9f9">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de treinamento</label>
+                            <select class="form-control" id="fTreinamentoTipo">
+                                <option value="online">Online (vídeos no sistema)</option>
+                                <option value="presencial">Presencial (loja modelo)</option>
+                                <option value="hibrido" selected>Híbrido (online + presencial)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p style="font-size:12px;color:#888;margin-top:-8px">Esses campos aparecem no painel do franqueado (card "Seu Negócio") e no simulador para mostrar o retorno do investimento.</p>
+
                     <div class="panel-modal-footer" style="padding:0;border:0;margin-top:24px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
                         <button type="button" class="btn btn-outline" id="btnDeleteFromModal" onclick="deleteFranchiseFromModal()" style="color:#e53935;border-color:#e53935;display:none">🗑️ Excluir franquia</button>
                         <div style="display:flex;gap:8px;margin-left:auto">
@@ -248,6 +275,20 @@
     <script src="../js/core/notifications.js"></script>
     <script>
         if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+
+        // Auto-calcular total de investimento ao digitar base ou estrutura
+        document.addEventListener('DOMContentLoaded', function() {
+            const base = document.getElementById('fInvestimentoBase');
+            const estrutura = document.getElementById('fInvestimentoEstrutura');
+            const total = document.getElementById('fInvestimentoTotal');
+            function recalc() {
+                const b = parseFloat(base.value) || 0;
+                const e = parseFloat(estrutura.value) || 0;
+                total.value = (b + e).toFixed(2);
+            }
+            if (base) base.addEventListener('input', recalc);
+            if (estrutura) estrutura.addEventListener('input', recalc);
+        });
         document.getElementById('sidebarUserName').textContent = Auth.getUserName();
 
         // Auto-generate slug from name
@@ -296,6 +337,12 @@
             document.getElementById('fLoginUrl').value = access.loginUrl || 'https://milkypot.com/login.html';
             document.getElementById('fPanelUrl').value = access.panelUrl || 'https://milkypot.com/painel/index.html';
             document.getElementById('fAccessNotes').value = access.notes || '';
+
+            // Investimento e treinamento
+            document.getElementById('fInvestimentoBase').value = f.investimentoBase || '';
+            document.getElementById('fInvestimentoEstrutura').value = f.investimentoEstrutura || '';
+            document.getElementById('fInvestimentoTotal').value = f.investimentoTotalEstimado || '';
+            document.getElementById('fTreinamentoTipo').value = f.treinamentoTipo || 'hibrido';
 
             document.getElementById('btnDeleteFromModal').style.display = 'inline-flex';
             document.getElementById('fPwdHint').textContent = '(em branco = nao alterar)';
@@ -439,7 +486,12 @@
                 deliveryTime: existingFranchise ? (existingFranchise.deliveryTime || '20-35 min') : '20-35 min',
                 status: existingFranchise ? (existingFranchise.status || 'ativo') : 'ativo',
                 createdAt: existingFranchise ? (existingFranchise.createdAt || new Date().toISOString()) : new Date().toISOString(),
-                access: access
+                access: access,
+                // Investimento e treinamento (comunicacao comercial)
+                investimentoBase: parseFloat(document.getElementById('fInvestimentoBase').value) || 0,
+                investimentoEstrutura: parseFloat(document.getElementById('fInvestimentoEstrutura').value) || 0,
+                investimentoTotalEstimado: (parseFloat(document.getElementById('fInvestimentoBase').value) || 0) + (parseFloat(document.getElementById('fInvestimentoEstrutura').value) || 0),
+                treinamentoTipo: document.getElementById('fTreinamentoTipo').value || 'hibrido'
             };
 
             if (isNew) {
