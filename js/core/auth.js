@@ -498,10 +498,16 @@ const Auth = {
         }
     },
 
-    // Reset de senha por email
+    // Reset de senha por email (forçando idioma pt-BR)
     async sendPasswordReset(email) {
         try {
-            await firebaseAuth.sendPasswordResetEmail(email);
+            // Garante que o email sai em português (título + corpo)
+            try { firebaseAuth.languageCode = 'pt'; } catch (e) {}
+            await firebaseAuth.sendPasswordResetEmail(email, {
+                // URL do site — Firebase respeita este domínio nos links
+                url: 'https://milkypot.com/login.html',
+                handleCodeInApp: false
+            });
             return { success: true };
         } catch (error) {
             return { success: false, error: this._translateError(error.code) };
