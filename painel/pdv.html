@@ -408,6 +408,7 @@
 <script src="../js/core/motivacional.js?v=mp-v14"></script>
 <script src="../js/core/caixa.js?v=mp-v14"></script>
 <script src="../js/core/financas.js?v=mp-v14"></script>
+<script src="../js/core/onboarding.js?v=mp-v14"></script>
 <script src="../js/cardapio-data.js"></script>
 <script>
 (function(){
@@ -1264,6 +1265,21 @@
         showVoucherModal(voucherDisplay);
 
         toast('✅ '+oName+' — R$ '+total.toFixed(2).replace('.',',')+' finalizado!');
+
+        // Feedback especial Onda 1: Primeiro Pedido
+        const currentOrders = DataStore.getCollection('orders', fid);
+        if (currentOrders.length === 1) {
+            setTimeout(function() {
+                if (typeof Notifications !== 'undefined') {
+                    Notifications.add(
+                        '🚀 Primeira Venda!',
+                        'Parabéns! Sua jornada oficial começou agora. Continue assim!',
+                        'success'
+                    );
+                }
+                console.log('🎉 CELEBRAÇÃO: Primeira Venda MilkyPot!');
+            }, 1500);
+        }
 
         // Remove from open tabs if was editing
         if(editingTabId){
