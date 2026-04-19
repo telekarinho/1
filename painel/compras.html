@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Compras Inteligentes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#42A5F5">
+    <style>
+        .compras-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .compras-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .compras-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .compras-header h3 {
+            margin: 0;
+            font-family: 'Baloo 2', cursive;
+            color: #5A4570;
+            font-size: 1.4rem;
+        }
+        .compras-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .compras-table th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #eee;
+            color: #666;
+            font-weight: 700;
+        }
+        .compras-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+        .input-qty {
+            width: 90px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            text-align: right;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-qty:focus {
+            border-color: #27ae60;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+        .status-def { background: #FFEBEE; color: #C62828; }
+        .status-ok { background: #E8F5E9; color: #2E7D32; }
+        .btn-large {
+            padding: 12px 20px;
+            font-size: 1rem;
+            border-radius: 10px;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-large:hover { opacity: 0.9; }
+        .btn-primary { background: #27ae60; }
+        .btn-secondary { background: #3498db; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #ddd;
+            color: #555;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn-outline:hover { background: #f9f9f9; }
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .filter-btn {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            background: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            color: #666;
+        }
+        .filter-btn.active {
+            background: #27ae60;
+            color: #fff;
+            border-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <!-- Sidebar -->
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <a href="pdv.html" class="sidebar-link"><span class="icon">💻</span> PDV</a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+                <a href="auditoria.html" class="sidebar-link"><span class="icon">🔍</span> Auditoria Cega</a>
+                <a href="compras.html" class="sidebar-link active"><span class="icon">🛒</span> Compras</a>
+                <a href="operacional.html" class="sidebar-link"><span class="icon">🎯</span> Operacional</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="panel-main">
+            <header class="panel-header">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+                <h1>🛒 Projeção de Compras</h1>
+            </header>
+
+            <section class="panel-content">
+                <div class="compras-container">
+                    
+                    <div class="compras-card">
+                        <div class="compras-header">
+                            <h3>Sugestão Automática</h3>
+                            <div>
+                                <button class="btn-outline" onclick="loadSuggestions()">🔄 Atualizar</button>
+                            </div>
+                        </div>
+                        <p style="color:#666; margin-bottom: 16px;">
+                            Lista de itens que estão abaixo do estoque mínimo. Você pode ajustar a quantidade livremente, como compras para final de semana.
+                        </p>
+
+                        <div class="filters">
+                            <button class="filter-btn active" id="f-deficit" onclick="setFilter('deficit')">Apenas em Falta</button>
+                            <button class="filter-btn" id="f-all" onclick="setFilter('all')">Ver Todos</button>
+                        </div>
+
+                        <div style="overflow-x: auto;">
+                            <table class="compras-table">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th>Estoque Atual</th>
+                                        <th>Estoque Mínimo</th>
+                                        <th>Falta Estimada</th>
+                                        <th style="text-align: right;">Quantidade a Comprar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="comprasBody">
+                                    <tr><td colspan="5">Carregando itens...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap;">
+                            <button class="btn-large btn-secondary" onclick="exportToWhatsApp()">
+                                📱 Enviar Lista para WhatsApp
+                            </button>
+                            <button class="btn-large btn-primary" onclick="confirmPurchases()">
+                                📦 Registrar Entrada (Somar ao Estoque)
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+
+    <script>
+        // Auth guard - requires management role
+        if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+        const session = Auth.getSession();
+        const franchiseId = session.franchiseId;
+        
+        let inventoryData = [];
+        let viewMode = 'deficit'; // deficit or all
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function setFilter(mode) {
+            viewMode = mode;
+            document.getElementById('f-deficit').classList.toggle('active', mode === 'deficit');
+            document.getElementById('f-all').classList.toggle('active', mode === 'all');
+            renderTable();
+        }
+
+        function loadSuggestions() {
+            inventoryData = DataStore.getCollection('inventory', franchiseId) || [];
+            
+            // Sort by category then name
+            inventoryData.sort((a,b) => {
+                if(a.category !== b.category) return a.category.localeCompare(b.category);
+                return a.name.localeCompare(b.name);
+            });
+
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('comprasBody');
+            tbody.innerHTML = '';
+            
+            if (inventoryData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum produto cadastrado no estoque.</td></tr>';
+                return;
+            }
+
+            let hasItems = false;
+
+            inventoryData.forEach(item => {
+                const min = parseFloat(item.minStock) || 0;
+                const qty = parseFloat(item.quantity) || 0;
+                let deficit = Math.max(0, min - qty);
+                
+                // Exibe apenas se mode=all ou se estiver em deficit
+                if (viewMode === 'deficit' && deficit <= 0) return;
+                
+                hasItems = true;
+
+                let statusBadge = '';
+                if (qty <= min) {
+                    statusBadge = '<span class="status-badge status-def">Estoque Baixo</span>';
+                } else {
+                    statusBadge = '<span class="status-badge status-ok">OK</span>';
+                }
+
+                // Recomendacao: Adiciona 20% de sobra se tiver faltando
+                let recomended = deficit > 0 ? Math.ceil(deficit * 1.2) : 0;
+                if (item.unit === 'g' || item.unit === 'kg' || item.unit === 'litro') {
+                    // Pra pesos nao precisa int exato
+                    recomended = (deficit * 1.2).toFixed(2);
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${Utils.escapeHtml(item.name)}</strong><br><small style="color:#666;">${item.category}</small></td>
+                    <td>${qty} ${item.unit} ${statusBadge}</td>
+                    <td>${min} ${item.unit}</td>
+                    <td><strong>${deficit > 0 ? deficit.toFixed(2) : 0}</strong> ${item.unit}</td>
+                    <td style="text-align: right;">
+                        <input type="number" step="0.01" min="0" class="input-qty" data-item-id="${item.id}" value="${recomended}">
+                        <span style="font-size:0.9em;color:#666;margin-left:5px;">${item.unit}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if (!hasItems) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#666;">Todos os produtos estao com estoque Saudavel 🎉</td></tr>';
+            }
+        }
+
+        function getCheckedList() {
+            const inputs = document.querySelectorAll('.input-qty');
+            const list = [];
+            
+            inputs.forEach(input => {
+                const val = parseFloat(input.value);
+                if (val > 0) {
+                    const item = inventoryData.find(i => i.id === input.dataset.itemId);
+                    if (item) {
+                        list.push({
+                            id: item.id,
+                            name: item.name,
+                            unit: item.unit,
+                            qtyToAdd: val
+                        });
+                    }
+                }
+            });
+            return list;
+        }
+
+        function exportToWhatsApp() {
+            const list = getCheckedList();
+            if (list.length === 0) {
+                alert("Não há produtos com quantidade maior que zero para gerar a lista.");
+                return;
+            }
+
+            let text = "🛒 *LISTA DE COMPRAS - MILKYPOT*\n";
+            text += "Data: " + new Date().toLocaleDateString('pt-BR') + "\n\n";
+            
+            list.forEach(i => {
+                text += `• ${i.name}: *${i.qtyToAdd} ${i.unit}*\n`;
+            });
+
+            text += "\nPor favor, verificar disponibilidade e precos.";
+            
+            const encodedText = encodeURIComponent(text);
+            const wappUrl = `https://wa.me/?text=${encodedText}`;
+            window.open(wappUrl, '_blank');
+        }
+
+        function confirmPurchases() {
+            const list = getCheckedList();
+            if (list.length === 0) {
+                alert("Nenhuma quantidade inserida para registrar entrada.");
+                return;
+            }
+
+            if (!confirm(`Deseja registrar e SOMAR a entrada de ${list.length} itens no estoque do sistema?`)) {
+                return;
+            }
+
+            let currentInv = DataStore.getCollection('inventory', franchiseId) || [];
+            
+            list.forEach(purchased => {
+                let invItem = currentInv.find(i => i.id === purchased.id);
+                if (invItem) {
+                    const before = parseFloat(invItem.quantity) || 0;
+                    invItem.quantity = before + purchased.qtyToAdd;
+
+                    if (typeof AuditLog !== 'undefined') {
+                        AuditLog.log('INVENTORY_ENTRY', {
+                            itemId: invItem.id,
+                            itemName: invItem.name,
+                            qtyAdded: purchased.qtyToAdd,
+                            newTotal: invItem.quantity,
+                            source: 'compras_inteligentes'
+                        }, franchiseId);
+                    }
+                }
+            });
+
+            DataStore.setCollection('inventory', franchiseId, currentInv);
+            alert("✅ Entrada de produtos registrada com sucesso! O estoque foi atualizado.");
+            loadSuggestions(); // Reloads table
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSuggestions();
+        });
+    </script>
+</body>
+</html>

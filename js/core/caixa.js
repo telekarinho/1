@@ -188,11 +188,31 @@ const Caixa = (function () {
         const st = getTurnoState(franchiseId);
         if (st.status === 'nao_aberto') return { success: false, error: 'Nenhum caixa aberto hoje.' };
         if (st.status === 'fechado') return { success: false, error: 'O caixa de hoje já foi fechado.' };
+
+        // REGRA DE SEGURANÇA: Bloquear se houver pedidos pendentes (Fase 2)
+        const orders = DataStore.getCollection('orders', franchiseId) || [];
+        const pendingOrders = orders.filter(o => o.status !== 'entregue' && o.status !== 'cancelado');
+        if (pendingOrders.length > 0) {
+            return { 
+                success: false, 
+                error: `⚠️ Não é possível fechar o caixa. Existem ${pendingOrders.length} pedido(s) pendente(s). Finalize ou cancele tudo antes.` 
+            };
+        }
+
+        // REGRA DE SEGURANÇA: Bloquear se houver comandas/contas abertas
+        const openTabs = DataStore.get('open_tabs_' + franchiseId) || [];
+        if (openTabs.length > 0) {
+            return { 
+                success: false, 
+                error: `⚠️ Existem ${openTabs.length} conta(s) aberta(s). Feche todas antes de encerrar o turno.` 
+            };
+        }
+
         if (isNaN(valorContado) || valorContado < 0) return { success: false, error: 'Valor contado inválido.' };
 
         const diff = valorContado - st.saldoEsperadoDinheiro;
         if (Math.abs(diff) > 5 && !(motivoQuebra && motivoQuebra.trim())) {
-            return { success: false, error: 'Diferença maior que R$ 5 exige justificativa.', diff: diff, esperado: st.saldoEsperadoDinheiro };
+            return { success: false, error: '⚠️ Diferença maior que R$ 5,00 exige justificativa obrigatória.', diff: diff, esperado: st.saldoEsperadoDinheiro };
         }
 
         const r = createMovement(franchiseId, {
@@ -212,6 +232,25 @@ const Caixa = (function () {
         if (typeof Motivacional !== 'undefined' && Motivacional.toastCaixaFechado) {
             Motivacional.toastCaixaFechado();
         }
+
+        // Trigger Automated Report via Cloud Functions
+        try {
+            if (typeof CloudFunctions !== 'undefined' && CloudFunctions.sendClosingReport) {
+                const session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+                CloudFunctions.sendClosingReport(franchiseId, {
+                    operatorName: session ? session.name : 'Operador Desconhecido',
+                    operatorEmail: session ? session.email : '',
+                    valorContado: valorContado,
+                    saldoEsperado: st.saldoEsperadoDinheiro,
+                    diferenca: diff,
+                    motivo: motivoQuebra,
+                    fechamentoDate: new Date().toISOString()
+                });
+            }
+        } catch (e) {
+            console.error('Falha ao acionar CloudFunctions (sendClosingReport):', e);
+        }
+
         return Object.assign({}, r, { diff: diff, esperado: st.saldoEsperadoDinheiro });
     }
 
@@ -472,12 +511,28 @@ const Caixa = (function () {
             const boxes = Array.from(overlay.querySelectorAll('#checklistItems input[type=checkbox]'));
             const result = boxes.map((b, i) => Object.assign({}, items[i], { done: b.checked }));
             const missingRequired = result.filter(r => r.required && !r.done);
+            
             if (missingRequired.length > 0) {
                 const warn = overlay.querySelector('[data-checklist-warn]');
-                warn.innerHTML = '⚠️ Faltam itens obrigatórios: <strong>' + missingRequired.map(r => r.text).join(', ') + '</strong>. Confirme-os ou peça autorização do gerente.';
+                warn.innerHTML = '⚠️ Faltam itens obrigatórios: <strong>' + missingRequired.map(r => r.text).join(', ') + '</strong>.';
                 warn.style.display = 'block';
-                // Permite seguir? Registramos com pendencia mas bloqueamos por padrão.
-                if (!confirm('Há ' + missingRequired.length + ' item(ns) obrigatório(s) sem marcação. Continuar mesmo assim? (ficará registrado como pendência na auditoria)')) return;
+                
+                const userSession = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+                const role = userSession ? userSession.role : 'operator';
+                
+                if (role !== 'super_admin' && role !== 'franchisee' && role !== 'manager') {
+                    alert('❌ AÇÃO BLOQUEADA\nVocê não concluiu todos os itens obrigatórios do checklist. Apenas o gerente pode forçar este avanço.');
+                    return;
+                } else {
+                    const justificativa = prompt('⚠️ AUTORIZAÇÃO DE GERÊNCIA\n\nExistem ' + missingRequired.length + ' item(ns) obrigatório(s) pendente(s).\n\nInforme o motivo para forçar o fechamento/avanço:');
+                    if (!justificativa || justificativa.trim().length < 3) {
+                        alert('Justificativa obrigatória cancelada.');
+                        return;
+                    }
+                    if (typeof AuditLog !== 'undefined') {
+                        AuditLog.log('CHECKLIST_BYPASSED', { phase, justificativa, missingCount: missingRequired.length, missingItems: missingRequired.map(r => r.text) }, franchiseId);
+                    }
+                }
             }
             AdminConfig.recordChecklistExec(franchiseId, phase, result);
             close();

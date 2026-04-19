@@ -60,7 +60,8 @@
         .cart-empty { text-align: center; padding: 30px 14px; color: #bbb; font-size: 12px; }
         .cart-foot { border-top: 3px solid #6C63FF; padding: 8px 14px; background: #f8f5ff; flex-shrink: 0; }
         .cart-total { display: flex; justify-content: space-between; font-size: 18px; font-weight: 800; margin-bottom: 4px; }
-        .cart-total .tv { color: #6C63FF; font-size: 20px; }
+        .cart-total .tv { color: #E91E63; font-size: 20px; }
+        .cart-total .weight-info { font-size: 10px; color: #999; font-weight: 400; text-align: right; display: block; }
         .cart-nf { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; font-size: 11px; }
         .cart-nf input[type=text] { flex: 1; padding: 3px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 10px; display: none; }
         .cart-acts { display: grid; grid-template-columns: 40px 40px 1fr 1fr; gap: 4px; }
@@ -115,6 +116,25 @@
         .keypad button { padding: 14px 0; font-size: 20px; font-weight: 800; border: 1px solid #e0e0e0; background: #fff; border-radius: 10px; cursor: pointer; color: #333; transition: all 0.1s; }
         .keypad button:hover { background: #F5F5F5; border-color: #FF9800; color: #FF9800; }
         .keypad button.special { background: #FFF3E0; color: #E65100; }
+        
+        /* Novas Estilizações Modernas para Peso & Conferência */
+        .quick-weights { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
+        .btn-qw { padding: 10px; border: 1px solid #FF9800; border-radius: 8px; background: #fff; color: #FF9800; font-weight: 700; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+        .btn-qw:hover { background: #FF9800; color: #fff; }
+
+        .weight-confirm-box { background: #FFF9F0; border: 2px solid #FFE0B2; border-radius: 12px; padding: 15px; margin-top: 15px; text-align: center; }
+        .weight-confirm-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; color: #555; }
+        .weight-confirm-total { font-size: 28px; font-weight: 800; color: #E65100; margin-top: 5px; font-family: 'Baloo 2', cursive; letter-spacing: 0.5px; }
+        
+        .card-fraud-alert { color: #D32F2F; font-size: 10px; font-weight: 700; margin-top: 4px; display: none; }
+        
+        .quick-weights { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
+        .btn-qw { padding: 10px; border: 1px solid #FF9800; border-radius: 8px; background: #fff; color: #FF9800; font-weight: 700; cursor: pointer; font-size: 12px; }
+        .btn-qw:hover { background: #FF9800; color: #fff; }
+
+        .weight-confirm-box { background: #f8f9fa; border: 2px solid #eee; border-radius: 12px; padding: 15px; margin-top: 15px; text-align: center; }
+        .weight-confirm-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; }
+        .weight-confirm-total { font-size: 24px; font-weight: 800; color: #E65100; margin-top: 5px; font-family: 'Baloo 2', cursive; }
 
         /* Customization Modal */
         .modal-bg { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center; }
@@ -301,74 +321,57 @@
     </div>
 </div>
 
-<!-- Buffet / Peso Modal -->
-<div class="modal-bg" id="buffetModalBg" onclick="if(event.target===this)closeBuffetModal()" style="z-index:1500">
+<!-- Modal de Peso (Substitui Buffet) -->
+<div class="modal-bg" id="weightModal">
     <div class="buffet-modal">
         <div class="buffet-head">
-            <h3>⚖️ Venda por Peso / Buffet</h3>
-            <button class="modal-close" onclick="closeBuffetModal()">×</button>
+            <h3 id="weightModalTitle">⚖️ Item por Peso</h3>
+            <button class="modal-close" onclick="PDV_Dynamics.closeWeightModal()">✕</button>
         </div>
         <div class="buffet-body">
-            <!-- Scale Connection Status -->
-            <div class="scale-status" id="scaleStatus">
-                <span class="sdot"></span>
-                <span id="scaleStatusText">Balanca desconectada - use Conectar ou digite o peso manualmente</span>
-                <button class="buffet-btn" style="flex:0 0 auto;padding:6px 12px;font-size:11px" onclick="toggleScale()" id="btnScaleToggle">Conectar</button>
-            </div>
-
-            <!-- Weight Display (big screen) -->
             <div class="weight-display" id="weightDisplay">
-                <div class="wv" id="weightValue">0,000</div>
-                <div class="wu">KG</div>
+                <div class="wv" id="weightVal">0</div>
+                <div class="wu">GRAMAS</div>
             </div>
 
-            <!-- Manual Keypad -->
+            <div class="quick-weights">
+                <button class="btn-qw" onclick="PDV_Dynamics.setQuickWeight(100)">100g</button>
+                <button class="btn-qw" onclick="PDV_Dynamics.setQuickWeight(200)">200g</button>
+                <button class="btn-qw" onclick="PDV_Dynamics.setQuickWeight(300)">300g</button>
+                <button class="btn-qw" onclick="PDV_Dynamics.setQuickWeight(500)">500g</button>
+            </div>
+
             <div class="keypad">
-                <button onclick="kpPress('1')">1</button>
-                <button onclick="kpPress('2')">2</button>
-                <button onclick="kpPress('3')">3</button>
-                <button onclick="kpPress('4')">4</button>
-                <button onclick="kpPress('5')">5</button>
-                <button onclick="kpPress('6')">6</button>
-                <button onclick="kpPress('7')">7</button>
-                <button onclick="kpPress('8')">8</button>
-                <button onclick="kpPress('9')">9</button>
-                <button class="special" onclick="kpPress('.')">,</button>
-                <button onclick="kpPress('0')">0</button>
-                <button class="special" onclick="kpPress('back')">⌫</button>
+                <button onclick="PDV_Dynamics.pressWeight('1')">1</button>
+                <button onclick="PDV_Dynamics.pressWeight('2')">2</button>
+                <button onclick="PDV_Dynamics.pressWeight('3')">3</button>
+                <button onclick="PDV_Dynamics.pressWeight('4')">4</button>
+                <button onclick="PDV_Dynamics.pressWeight('5')">5</button>
+                <button onclick="PDV_Dynamics.pressWeight('6')">6</button>
+                <button onclick="PDV_Dynamics.pressWeight('7')">7</button>
+                <button onclick="PDV_Dynamics.pressWeight('8')">8</button>
+                <button onclick="PDV_Dynamics.pressWeight('9')">9</button>
+                <button class="special" onclick="PDV_Dynamics.pressWeight('C')">C</button>
+                <button onclick="PDV_Dynamics.pressWeight('0')">0</button>
+                <button class="special" onclick="PDV_Dynamics.pressWeight('DEL')">←</button>
             </div>
 
-            <!-- Price per Kg -->
-            <div class="buffet-row">
-                <div class="buffet-field">
-                    <label>Preco por KG</label>
-                    <div style="display:flex;align-items:center;gap:6px">
-                        <span style="font-size:16px;color:#999;font-weight:700">R$</span>
-                        <input type="number" id="pricePerKg" step="0.01" min="0" value="59.99" oninput="updateBuffetTotal()">
-                    </div>
+            <div class="weight-confirm-box" id="confirmBox">
+                <div class="weight-confirm-row">
+                    <span>Preço p/ kg:</span>
+                    <strong id="confirm-price-kg">R$ 0,00</strong>
                 </div>
-                <div class="buffet-field">
-                    <label>Descricao (opcional)</label>
-                    <input type="text" id="buffetDesc" placeholder="Buffet Self-service" style="font-size:14px" value="Buffet Self-service">
+                <div class="weight-confirm-row">
+                    <span>Peso final:</span>
+                    <strong id="confirm-weight">0g</strong>
                 </div>
+                <div class="weight-confirm-total" id="confirm-total">R$ 0,00</div>
             </div>
 
-            <!-- Total -->
-            <div class="buffet-total">
-                <div class="buffet-total-val" id="buffetTotalVal">R$ 0,00</div>
-                <div class="buffet-total-lbl">Total a cobrar</div>
-            </div>
-
-            <!-- Actions -->
-            <div class="buffet-actions">
-                <button class="buffet-btn" onclick="kpPress('clear')">🔄 Zerar</button>
-                <button class="buffet-btn primary" onclick="addBuffetToCart()">✅ Adicionar ao Pedido</button>
-            </div>
-
-            <!-- Help text -->
-            <div style="font-size:11px;color:#888;text-align:center;margin-top:8px;line-height:1.5">
-                <strong>💡 Balanca:</strong> use USB-Serial (Toledo, Filizola, Urano) ou digite manualmente.<br>
-                Protocolos suportados: Toledo Prix III/IV, Filizola, Urano Pop.
+            <div style="margin-top:20px">
+                <button class="buffet-btn primary" style="width:100%; height: 50px; font-size: 16px;" onclick="PDV_Dynamics.confirmWeight()">
+                    ✅ CONFIRMAR E ADICIONAR
+                </button>
             </div>
         </div>
     </div>
@@ -414,6 +417,191 @@
     var franchises=DataStore.getAllFranchises()||[];
     var fr=franchises.find(function(f){return f.id===fid});
     document.getElementById('pdvStore').textContent=fr?fr.name:'MilkyPot';
+
+    /**
+     * PDV_Dynamics: Motor de Sincronia e Regras de Negócio Modernas
+     */
+    const PDV_Dynamics = {
+        catalog: null,
+        currentWeightItem: null,
+        weightInput: "",
+
+        init() {
+            this.catalog = DataStore.get('catalog_config');
+            if (this.catalog) {
+                this.renderProducts();
+            } else {
+                console.log('🔄 Aguardando seed do catálogo...');
+            }
+
+            // Escuta atualizações do catálogo em background (Fase 1)
+            window.addEventListener('mp_catalog_updated', (e) => {
+                this.catalog = e.detail;
+                this.renderProducts();
+                console.log('🚀 Catálogo sincronizado e atualizado no PDV.');
+            });
+        },
+
+        renderProducts() {
+            const container = document.getElementById('allProds');
+            if (!container) return;
+            container.innerHTML = '';
+
+            // 1. Bases e Grupos (Simplificado para Loja)
+            if (this.catalog.bases) {
+                this._renderSection(container, '🔥 Bases Populares', 'pop', this.catalog.bases.filter(b => b.available));
+            }
+
+            // 2. Sabores por Categoria
+            Object.entries(this.catalog.sabores).forEach(([key, group]) => {
+                const items = group.items.filter(i => i.available && i.canalVenda !== 'delivery');
+                if (items.length > 0) {
+                    this._renderSection(container, group.name, '', items);
+                }
+            });
+
+            // 3. Bebidas
+            if (this.catalog.bebidas) {
+                this._renderSection(container, '🥤 Bebidas', '', this.catalog.bebidas.filter(b => b.available));
+            }
+        },
+
+        _renderSection(container, title, className, items) {
+            const h = document.createElement('div');
+            h.className = 'sec-title ' + className;
+            h.textContent = title;
+            container.appendChild(h);
+
+            const grid = document.createElement('div');
+            grid.className = 'pgrid';
+            items.forEach(it => {
+                const div = document.createElement('div');
+                div.className = 'pitem ' + (it.isHighlight ? 'pop' : '');
+                div.innerHTML = `
+                    <div class="pe">${it.emoji || '🍨'}</div>
+                    <div class="pn">${it.name}</div>
+                    <div class="pp">${it.tipoVenda === 'por_peso' ? 'R$ '+it.price.toFixed(2)+'/kg' : (it.price ? 'R$ '+it.price.toFixed(2) : 'Ajustar')}</div>
+                `;
+                div.onclick = () => this.handleProductClick(it);
+                grid.appendChild(div);
+            });
+            container.appendChild(grid);
+        },
+
+        handleProductClick(it) {
+            if (it.tipoVenda === 'por_peso') {
+                this.openWeightModal(it);
+            } else if (!it.price || it.modoMontagem === 'montado') {
+                // Chama lógica de customização legada
+                if (window.openModal) window.openModal(it);
+            } else {
+                // Venda direta unitária
+                this.addToCart({
+                    id: it.id,
+                    name: it.name,
+                    price: it.price,
+                    emoji: it.emoji,
+                    qty: 1,
+                    type: 'unitario'
+                });
+            }
+        },
+
+        /* --- Lógica de Peso (Fase 2) --- */
+        openWeightModal(it) {
+            this.currentWeightItem = it;
+            this.weightInput = "";
+            this.updateWeightUI();
+            document.getElementById('weightModal').classList.add('open');
+            document.getElementById('weightModalTitle').textContent = `⚖️ ${it.name}`;
+            document.getElementById('confirm-price-kg').textContent = `R$ ${it.price.toFixed(2)}`;
+        },
+
+        closeWeightModal() {
+            document.getElementById('weightModal').classList.remove('open');
+        },
+
+        pressWeight(key) {
+            if (key === 'C') this.weightInput = "";
+            else if (key === 'DEL') this.weightInput = this.weightInput.slice(0, -1);
+            else if (this.weightInput.length < 5) this.weightInput += key;
+            this.updateWeightUI();
+        },
+
+        setQuickWeight(val) {
+            this.weightInput = val.toString();
+            this.updateWeightUI();
+        },
+
+        updateWeightUI() {
+            const g = parseInt(this.weightInput || "0");
+            const priceKg = this.currentWeightItem ? this.currentWeightItem.price : 0;
+            const total = (g / 1000) * priceKg;
+            const finalTotal = Math.round(total * 100) / 100; // Arredondamento Crítico (Fase 2)
+
+            document.getElementById('weightVal').textContent = g;
+            document.getElementById('confirm-weight').textContent = `${g}g`;
+            document.getElementById('confirm-total').textContent = `R$ ${finalTotal.toFixed(2).replace('.', ',')}`;
+        },
+
+        confirmWeight() {
+            const g = parseInt(this.weightInput || "0");
+            if (g <= 0) {
+                alert("Por favor, digite o peso em gramas.");
+                return;
+            }
+
+            const total = (g / 1000) * this.currentWeightItem.price;
+            const finalTotal = Math.round(total * 100) / 100;
+
+            this.addToCart({
+                id: this.currentWeightItem.id,
+                name: this.currentWeightItem.name,
+                unitPrice: this.currentWeightItem.price, // preço/kg
+                total: finalTotal,
+                weightG: g,
+                qty: 1,
+                type: 'por_peso',
+                emoji: this.currentWeightItem.emoji || '⚖️'
+            });
+
+            this.closeWeightModal();
+        },
+
+        addToCart(item) {
+            // Integração com o objeto global 'cart' do PDV legada
+            // Se for unitário e já existir, aumenta qty
+            if (item.type === 'unitario') {
+                const existing = cart.find(c => c.id === item.id && c.type === 'unitario' && !c.customItems);
+                if (existing) {
+                    existing.qty += 1;
+                    existing.total = existing.qty * existing.unitPrice;
+                    if (window.renderCart) window.renderCart();
+                    return;
+                }
+            }
+
+            // Mapeamento para o formato legado do sistema
+            const cartItem = {
+                id: item.id || Utils.generateId(),
+                name: item.name,
+                emoji: item.emoji,
+                unitPrice: item.price || item.unitPrice,
+                qty: item.qty || 1,
+                total: item.total || (item.price * item.qty),
+                type: item.type,
+                weightG: item.weightG || null,
+                size: item.weightG ? `${item.weightG}g @ R$${item.unitPrice.toFixed(2)}/kg` : 'Unidade'
+            };
+
+            cart.push(cartItem);
+            if (window.renderCart) window.renderCart();
+            if (typeof Utils !== 'undefined' && Utils.playSuccessSound) Utils.playSuccessSound();
+        }
+    };
+
+    // Inicializa motor dinâmico
+    PDV_Dynamics.init();
 
     // ───── Finance OS no PDV: mensagem motivacional + chip caixa + chip meta ─────
     window.renderPdvStatusChips = function () {
