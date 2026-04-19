@@ -9,7 +9,18 @@
 (function() {
     'use strict';
 
-    const API_ENDPOINT = '/api/chat-lulu';
+    // Se estiver em domínio sem /api/ (GitHub Pages no milkypot.com), chama Vercel absoluto.
+    const VERCEL_BASE = 'https://milkypot.vercel.app';
+    function resolveEndpoint() {
+        var host = location.hostname;
+        // Vercel ou localhost resolvem endpoint relativo
+        if (host.endsWith('.vercel.app') || host === 'localhost' || host === '127.0.0.1') {
+            return '/api/chat-lulu';
+        }
+        // Firebase Hosting, GitHub Pages ou domínio custom: aponta pro Vercel absoluto
+        return VERCEL_BASE + '/api/chat-lulu';
+    }
+    const API_ENDPOINT = resolveEndpoint();
     const STORAGE_KEY = 'milkypot_lulu_history';
     const MAX_HISTORY = 10;
 
