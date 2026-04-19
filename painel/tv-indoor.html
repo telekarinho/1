@@ -162,7 +162,7 @@
                     <div class="drop-zone" id="dropZone">
                         <div style="font-size:36px;margin-bottom:8px">📤</div>
                         <strong>Arraste imagens ou videos aqui</strong>
-                        <p style="margin:4px 0 0;font-size:13px">ou clique para selecionar &bull; JPG, PNG, MP4, WEBM &bull; max 50MB</p>
+                        <p style="margin:4px 0 0;font-size:13px">ou clique para selecionar &bull; JPG, PNG, MP4, WEBM &bull; max 300MB</p>
                         <input type="file" id="fileInput" multiple accept="image/*,video/*">
                     </div>
                     <div class="media-grid" id="mediaGrid"></div>
@@ -868,6 +868,40 @@
        Firestore armazena apenas a URL pública de download — sem Base64,
        sem limite de 1MB, carrega em qualquer dispositivo (TV, celular).
     ---------------------------------------------------------------- */
+
+    // Barra de progresso persistente (canto inferior direito)
+    function showUploadProgress(taskId, name, pct, errMsg){
+        var c = document.getElementById('uploadProgress');
+        if(!c){
+            c = document.createElement('div');
+            c.id = 'uploadProgress';
+            c.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:360px;font-family:Nunito,sans-serif';
+            document.body.appendChild(c);
+        }
+        var row = document.getElementById('up_'+taskId);
+        if(!row){
+            row = document.createElement('div');
+            row.id = 'up_'+taskId;
+            row.style.cssText = 'background:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.15);font-size:13px;border-left:4px solid #6C63FF';
+            c.appendChild(row);
+        }
+        if(errMsg){
+            row.style.borderLeftColor = '#e53935';
+            row.innerHTML = '<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-weight:600;color:#c62828">❌ ' + name + '</span></div>' +
+                            '<div style="font-size:11px;color:#c62828;margin-top:4px;word-break:break-word">' + errMsg + '</div>';
+            setTimeout(function(){ var r=document.getElementById('up_'+taskId); if(r) r.remove(); }, 10000);
+        } else {
+            row.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>⬆️ ' + name + '</span><strong>' + pct + '%</strong></div>' +
+                            '<div style="background:#eee;height:6px;border-radius:3px;overflow:hidden"><div style="background:#6C63FF;height:100%;width:' + pct + '%;transition:width .2s"></div></div>';
+        }
+    }
+    function hideUploadProgress(taskId){
+        var row = document.getElementById('up_'+taskId);
+        if(row) row.remove();
+        var c = document.getElementById('uploadProgress');
+        if(c && !c.children.length) c.remove();
+    }
+
     function handleFiles(files){
         Array.from(files).forEach(function(file){
             if(file.size > 300*1024*1024){ Utils.showToast(file.name + ' muito grande (max 300MB)','error'); return; }
@@ -876,7 +910,7 @@
             if(!isVideo && !isImage){ Utils.showToast(file.name + ' formato inválido','error'); return; }
 
             var id = 'm_' + Date.now().toString(36) + Math.random().toString(36).substr(2,4);
-            Utils.showToast('⬆️ Enviando ' + file.name + '…', 'info');
+            showUploadProgress(id, file.name, 0);
 
             function doUpload(blob){
                 var ext      = isVideo ? (file.name.split('.').pop().toLowerCase() || 'mp4') : 'jpg';
@@ -884,42 +918,55 @@
                 var path     = 'tv-media/' + fid + '/' + filename;
                 var ref      = firebase.storage().ref(path);
 
-                ref.put(blob)
-                .then(function(snapshot){ return snapshot.ref.getDownloadURL(); })
-                .then(function(url){
-                    var item = {
-                        id: id,
-                        name: file.name,
-                        type: isVideo ? 'video' : 'image',
-                        url: url,            // ← URL pública Firebase CDN
-                        storagePath: path,   // ← para deletar depois
-                        size: blob.size || file.size,
-                        duration: isImage ? 8 : 0,
-                        addedAt: new Date().toISOString()
-                    };
-                    if(isVideo){
-                        var v = document.createElement('video');
-                        v.preload = 'metadata';
-                        v.onloadedmetadata = function(){
-                            item.duration = Math.ceil(v.duration) || 15;
-                            var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
-                            Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
-                        };
-                        v.onerror = function(){
-                            item.duration = 15;
-                            var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
-                            Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
-                        };
-                        v.src = url;
-                    } else {
-                        var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
-                        Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
+                var task = ref.put(blob, { contentType: blob.type || file.type });
+                task.on('state_changed',
+                    function(snap){
+                        var pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+                        showUploadProgress(id, file.name, pct);
+                    },
+                    function(err){
+                        console.error('[TV Upload] erro:', err, 'code:', err.code, 'serverResponse:', err.serverResponse);
+                        var code = err.code || 'unknown';
+                        var msg  = 'storage/' === code.substring(0,8) ? code.substring(8) : (err.message || code);
+                        showUploadProgress(id, file.name, 0, code + ' — ' + msg);
+                    },
+                    function(){
+                        task.snapshot.ref.getDownloadURL().then(function(url){
+                            hideUploadProgress(id);
+                            var item = {
+                                id: id,
+                                name: file.name,
+                                type: isVideo ? 'video' : 'image',
+                                url: url,
+                                storagePath: path,
+                                size: blob.size || file.size,
+                                duration: isImage ? 8 : 0,
+                                addedAt: new Date().toISOString()
+                            };
+                            if(isVideo){
+                                var v = document.createElement('video');
+                                v.preload = 'metadata';
+                                v.onloadedmetadata = function(){
+                                    item.duration = Math.ceil(v.duration) || 15;
+                                    var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
+                                    Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
+                                };
+                                v.onerror = function(){
+                                    item.duration = 15;
+                                    var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
+                                    Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
+                                };
+                                v.src = url;
+                            } else {
+                                var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
+                                Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
+                            }
+                        }).catch(function(err){
+                            console.error('[TV Upload] getDownloadURL falhou:', err);
+                            showUploadProgress(id, file.name, 0, 'getDownloadURL: ' + (err.message || err.code));
+                        });
                     }
-                })
-                .catch(function(err){
-                    console.error('Upload error:', err);
-                    Utils.showToast('❌ Erro ao enviar ' + file.name + ': ' + err.message, 'error');
-                });
+                );
             }
 
             if(isImage){
