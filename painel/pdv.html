@@ -489,7 +489,17 @@
         },
 
         handleProductClick(it) {
+            var session = Auth.getSession();
+            var franchises = DataStore.getAllFranchises() || [];
+            var currentFranchise = franchises.find(f => f.id === session.franchiseId);
+            var isDeliveryModel = currentFranchise && currentFranchise.tipoOperacao === 'delivery';
+
             if (it.tipoVenda === 'por_peso') {
+                if (isDeliveryModel) {
+                    Utils.showToast('🚫 Venda por peso bloqueada no modelo Delivery. Use apenas itens unitários.', 'error');
+                    console.warn('Bloqueio Core: Tentativa de venda por peso em franquia Delivery.');
+                    return;
+                }
                 this.openWeightModal(it);
             } else if (!it.price || it.modoMontagem === 'montado') {
                 // Chama lógica de customização legada

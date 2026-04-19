@@ -140,11 +140,51 @@ const DataStore = {
         const franchises = this.getAllFranchises();
         let allOrders = [];
         franchises.forEach(f => {
-            const orders = this.getCollection('orders', f.id);
+            const orders = (this.getCollection('orders', f.id) || []);
             orders.forEach(o => { o._franchiseId = f.id; o._franchiseName = f.name; });
             allOrders = allOrders.concat(orders);
         });
         return filterFn ? allOrders.filter(filterFn) : allOrders;
+    },
+
+    // ============================================
+    // Onboarding & Setup (Scale-Ready)
+    // ============================================
+    initStore(franchiseId, config = {}) {
+        const franchises = this.getAllFranchises() || [];
+        const idx = franchises.findIndex(f => f.id === franchiseId);
+        if (idx === -1) return { success: false, error: 'Franchise not found' };
+
+        // 1. Update basic metadata
+        franchises[idx].tipoOperacao = config.tipoOperacao || 'loja';
+        franchises[idx].setupCompleto = false;
+        franchises[idx].territorio = {
+            cidade: config.cidade || '',
+            bairro: config.bairro || '',
+            raioEntrega: config.raioEntrega || 3,
+            status: config.status || 'reservado',
+            dataReserva: new Date().toISOString()
+        };
+        this.set('franchises', franchises);
+
+        // 2. Seed Default Catalog if empty
+        const currentCat = this.get('catalog_config');
+        if (!currentCat) {
+            // Se nao tem catalogo global, usa o seed do cardapio-data
+            if (window.CARDAPIO_CONFIG) {
+                this.set('catalog_config', window.CARDAPIO_CONFIG);
+            }
+        }
+
+        // 3. Set Initial Onboarding Checklist
+        const setupChecklist = [
+            { id: 'stock', text: 'Cadastrar estoque inicial', done: false, required: true },
+            { id: 'test_sale', text: 'Realizar uma venda de teste', done: false, required: true },
+            { id: 'close_shift', text: 'Realizar o primeiro fechamento de caixa', done: false, required: true }
+        ];
+        this.setCollection('checklist_onboarding', franchiseId, setupChecklist);
+
+        return { success: true, franchise: franchises[idx] };
     },
 
     getFinancesAllFranchises(filterFn) {
@@ -587,11 +627,22 @@ const DataStore = {
                 hours: '10:00 - 22:00',
                 type: 'express',
                 status: 'ativo',
+                tipoOperacao: 'delivery',
+                setupCompleto: true,
+                territorio: { cidade: 'Recife', bairro: 'Boa Viagem', raioEntrega: 5, status: 'ativo' },
                 monthlyFee: 3500,
                 createdAt: '2024-01-01T00:00:00Z',
                 lat: -8.1186, lng: -34.9056
             }
         ];
+        // Add metadata to existing ones
+        franchises.forEach(f => {
+            if (!f.tipoOperacao) f.tipoOperacao = 'loja';
+            if (f.setupCompleto === undefined) f.setupCompleto = true;
+            if (!f.territorio) {
+                f.territorio = { cidade: f.city || '', bairro: '', raioEntrega: 3, status: 'ativo' };
+            }
+        });
         this.set('franchises', franchises);
 
         // ---- Pedidos demo para cada franquia ----

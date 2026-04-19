@@ -800,6 +800,57 @@ const Financas = (function () {
     }
 
     /* ============================================
+       Escala de Franquias (Ranking & Performance)
+       ============================================ */
+    function getFranchiseRanking(periodKey) {
+        const pk = periodKey || currentPeriodKey();
+        const franchises = (typeof DataStore !== 'undefined') ? (DataStore.getAllFranchises() || []) : [];
+        
+        const rank = franchises.map(f => {
+            const dre = computeDRE(f.id, pk);
+            const auditLoss = (DataStore.getCollection('audit_results', f.id) || [])
+                .filter(a => a.periodKey === pk)
+                .reduce((sum, a) => sum + (a.financialLoss || 0), 0);
+
+            return {
+                id: f.id,
+                name: f.name,
+                city: f.city,
+                revenue: dre.receitaBruta,
+                ticketMedio: dre.salesCount > 0 ? (dre.receitaBruta / dre.salesCount) : 0,
+                loss: auditLoss,
+                health: computeHealthScore(f.id, pk).score
+            };
+        });
+
+        // Sort by Revenue desc
+        return rank.sort((a,b) => b.revenue - a.revenue);
+    }
+
+    /** Helper para calcular ROI de Marketing / Desafios */
+    function getMarketingImpact(franchiseId, periodKey) {
+        const pk = periodKey || currentPeriodKey();
+        const costs = getCostsByPeriod(franchiseId, pk);
+        const rewards = costs.filter(c => c.categoria === 'marketing_local' || c.categoria === 'desafio');
+        
+        const totalInvested = rewards.reduce((sum, r) => sum + r.valor, 0);
+        const dre = computeDRE(franchiseId, pk);
+        
+        return {
+            totalInvested,
+            salesVolume: dre.receitaBruta,
+            roi: totalInvested > 0 ? (dre.receitaBruta / totalInvested) : 0,
+            rewardsCount: rewards.length
+        };
+    }
+
+    return {
+        // ... (existing exports)
+        getFranchiseRanking,
+        getMarketingImpact,
+        // ... (keep others)
+
+    /* ============================================
        Helpers de formatação
        ============================================ */
     function formatBRL(v) {
