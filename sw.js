@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v7';
-const CACHE_NAME = 'milkypot-v7';
+const CACHE_VERSION = 'mp-v8';
+const CACHE_NAME = 'milkypot-v8';
 
 // Critical local assets that must be available offline
 const PRECACHE_URLS = [
@@ -52,14 +52,8 @@ const PRECACHE_URLS = [
     // Assets
     '/images/logo-milkypot.png',
     '/manifest.json',
-    // Franquia landing pages
-    '/f/ibirapuera/',
-    '/f/morumbi/',
-    '/f/jardins/',
-    '/f/barra/',
-    '/f/catuai/',
-    '/f/recife/',
-    '/f/curitiba/'
+    // Franquia landing pages (apenas unidades reais)
+    '/f/muffato-quintino/'
 ];
 
 // External CDN assets (Firebase SDK + Google Fonts) — cached on first successful fetch,
