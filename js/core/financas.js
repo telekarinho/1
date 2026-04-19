@@ -844,11 +844,7 @@ const Financas = (function () {
         };
     }
 
-    return {
-        // ... (existing exports)
-        getFranchiseRanking,
-        getMarketingImpact,
-        // ... (keep others)
+    // ... (helper logic continued)
 
     /* ============================================
        Helpers de formatação
@@ -920,6 +916,10 @@ const Financas = (function () {
         pillarLabel,
         pillarHint,
         pillarWeight,
+
+        // Inteligência e Rede
+        getFranchiseRanking,
+        getMarketingImpact,
 
         // Fechamento + retificação
         closePeriod,
