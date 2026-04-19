@@ -444,7 +444,9 @@ body:not(.idle){cursor:default}
         }
 
         if(m.type === 'image'){
-            if(!m.dataUrl){
+            /* Suporta mídias novas (url = Firebase Storage) e antigas (dataUrl = Base64) */
+            var imgSrc = m.url || m.dataUrl || '';
+            if(!imgSrc){
                 playFallback('Imagem indisponivel.');
                 return;
             }
@@ -454,8 +456,8 @@ body:not(.idle){cursor:default}
                 if(imgHandled) return;
                 imgHandled = true;
                 playFallback('Imagem demorou para carregar.');
-            }, 4000);
-            img.src = m.dataUrl;
+            }, 10000);
+            img.src = imgSrc;
             img.alt = m.name;
             img.style.objectFit = fit;
             img.onload = function(){
@@ -474,7 +476,8 @@ body:not(.idle){cursor:default}
             player.appendChild(img);
         }
         else if(m.type === 'video'){
-            if(!m.dataUrl){
+            var videoSrc = m.url || m.dataUrl || '';
+            if(!videoSrc){
                 playFallback('Video indisponivel.');
                 return;
             }
@@ -484,8 +487,8 @@ body:not(.idle){cursor:default}
                 if(videoHandled) return;
                 videoHandled = true;
                 playFallback('Video demorou para carregar.');
-            }, 5000);
-            video.src = m.dataUrl;
+            }, 15000);
+            video.src = videoSrc;
             video.muted = false;
             video.autoplay = true;
             video.playsInline = true;
