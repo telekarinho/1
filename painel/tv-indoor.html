@@ -862,86 +862,92 @@
         img.src = objUrl;
     }
 
-    /* --- Upload para Firebase Storage → armazena só a URL no Firestore ---
-       Resolve o problema de:
-       1) dataUrl Base64 estourar o limite de 1MB do Firestore
-       2) Celular/TV não conseguir carregar documentos grandes
-       3) Perda de qualidade por compressão excessiva */
+    /* ----------------------------------------------------------------
+       Upload para Hostinger via upload-media.php
+       Arquivo salvo em: milkypot.com/uploads/tv-media/
+       Firestore armazena apenas a URL pública (sem Base64).
+       ----------------------------------------------------------------
+       Para configurar:
+         1. Copie upload-media.php para a raiz do seu hosting Hostinger
+         2. Crie a pasta uploads/tv-media/ com permissão 755
+         3. Ajuste UPLOAD_TOKEN abaixo (igual ao do PHP)
+    ---------------------------------------------------------------- */
+    var UPLOAD_ENDPOINT = 'https://milkypot.com/upload-media.php';
+    var UPLOAD_TOKEN    = 'mp_tv_muda_aqui_123'; // mesmo valor do PHP
+
     function handleFiles(files){
-        if(!firebase || typeof firebase.storage !== 'function'){
-            Utils.showToast('Firebase Storage indisponível — recarregue a página', 'error');
-            return;
-        }
         Array.from(files).forEach(function(file){
-            if(file.size > 500*1024*1024){ Utils.showToast(file.name + ' muito grande (max 500MB)','error'); return; }
+            if(file.size > 300*1024*1024){ Utils.showToast(file.name + ' muito grande (max 300MB)','error'); return; }
             var isVideo = file.type.startsWith('video/');
             var isImage = file.type.startsWith('image/');
             if(!isVideo && !isImage){ Utils.showToast(file.name + ' formato inválido','error'); return; }
 
             var id = 'm_' + Date.now().toString(36) + Math.random().toString(36).substr(2,4);
-            var storagePath = 'tv-media/' + fid + '/' + id;
-
             Utils.showToast('⬆️ Enviando ' + file.name + '…', 'info');
 
             function doUpload(blob){
-                var ref = firebase.storage().ref(storagePath);
-                var task = ref.put(blob, { contentType: isVideo ? file.type : 'image/jpeg' });
-                task.on('state_changed',
-                    function(){}, // progress (não bloqueia UI)
-                    function(err){
-                        console.error('Storage upload error:', err);
-                        Utils.showToast('❌ Erro ao enviar ' + file.name + ': ' + (err.message || err.code), 'error');
-                    },
-                    function(){
-                        task.snapshot.ref.getDownloadURL().then(function(url){
-                            var item = {
-                                id: id,
-                                name: file.name,
-                                type: isVideo ? 'video' : 'image',
-                                url: url,              // ← URL do Storage (sem Base64)
-                                storagePath: storagePath,
-                                size: blob.size || file.size,
-                                duration: isImage ? 8 : 0,
-                                addedAt: new Date().toISOString()
-                            };
-                            if(isVideo){
-                                var v = document.createElement('video');
-                                v.preload = 'metadata';
-                                v.onloadedmetadata = function(){
-                                    item.duration = Math.ceil(v.duration) || 15;
-                                    var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
-                                    Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
-                                };
-                                v.onerror = function(){
-                                    item.duration = 15;
-                                    var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
-                                    Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
-                                };
-                                v.src = url;
-                            } else {
-                                var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
-                                Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
-                            }
-                        }).catch(function(err){
-                            Utils.showToast('❌ URL indisponível: ' + (err.message || err.code), 'error');
-                        });
+                var fd = new FormData();
+                fd.append('file', blob, isVideo ? file.name : id + '.jpg');
+                fetch(UPLOAD_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'X-Upload-Token': UPLOAD_TOKEN },
+                    body: fd
+                })
+                .then(function(r){ return r.json(); })
+                .then(function(json){
+                    if(!json.ok) throw new Error(json.error || 'Upload falhou');
+                    var url = json.url;
+                    var item = {
+                        id: id,
+                        name: file.name,
+                        type: isVideo ? 'video' : 'image',
+                        url: url,           // ← URL pública no Hostinger
+                        hostingerFile: json.filename,
+                        size: blob.size || file.size,
+                        duration: isImage ? 8 : 0,
+                        addedAt: new Date().toISOString()
+                    };
+                    if(isVideo){
+                        var v = document.createElement('video');
+                        v.preload = 'metadata';
+                        v.onloadedmetadata = function(){
+                            item.duration = Math.ceil(v.duration) || 15;
+                            var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
+                            Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
+                        };
+                        v.onerror = function(){
+                            item.duration = 15;
+                            var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
+                            Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
+                        };
+                        v.src = url;
+                    } else {
+                        var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
+                        Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
                     }
-                );
+                })
+                .catch(function(err){
+                    console.error('Upload error:', err);
+                    Utils.showToast('❌ Erro ao enviar ' + file.name + ': ' + err.message, 'error');
+                });
             }
 
             if(isImage){
                 compressImageFile(file, doUpload);
             } else {
-                doUpload(file); // vídeo: sem compressão, upload direto
+                doUpload(file);
             }
         });
     }
 
     window.deleteMedia = function(id){
         var item = getMedia().find(function(m){ return m.id === id; });
-        // Limpa arquivo do Firebase Storage (falha silenciosa se não existir)
-        if(item && item.storagePath){
-            try { firebase.storage().ref(item.storagePath).delete().catch(function(){}); } catch(e){}
+        // Limpa arquivo do Hostinger (falha silenciosa se não existir)
+        if(item && item.hostingerFile){
+            fetch(UPLOAD_ENDPOINT + '?file=' + encodeURIComponent(item.hostingerFile), {
+                method: 'DELETE',
+                headers: { 'X-Upload-Token': UPLOAD_TOKEN }
+            }).catch(function(){});
         }
         saveMedia(getMedia().filter(function(m){return m.id!==id}));
         var pl = getPlaylist().filter(function(p){return p.mediaId!==id});
