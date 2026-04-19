@@ -8,7 +8,16 @@
 (function() {
     'use strict';
 
-    const ENDPOINT = '/api/chat-assistant';
+    // Se estiver em domínio sem /api/ (Firebase Hosting, GitHub Pages), chama Vercel absoluto.
+    const VERCEL_BASE = 'https://milkypot.vercel.app';
+    function resolveEndpoint() {
+        var host = location.hostname;
+        if (host.endsWith('.vercel.app') || host === 'localhost' || host === '127.0.0.1') {
+            return '/api/chat-assistant';
+        }
+        return VERCEL_BASE + '/api/chat-assistant';
+    }
+    const ENDPOINT = resolveEndpoint();
     const STORAGE_KEY = 'milkypot_assistant_history';
     const MAX_HISTORY = 20;
 

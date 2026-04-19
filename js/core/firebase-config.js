@@ -80,6 +80,10 @@ const firebaseAuth = typeof firebase.auth === 'function' ? firebase.auth() : nul
 if (firebaseAuth && firebase.auth.Auth && firebase.auth.Auth.Persistence) {
     try { firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch(e) {}
 }
+// Garante TODOS os emails transacionais em PT-BR (reset senha, verificação, etc.)
+if (firebaseAuth) {
+    try { firebaseAuth.languageCode = 'pt'; } catch (e) {}
+}
 
 // Google Auth Provider (only if firebase-auth-compat.js is loaded)
 let googleProvider = null;
