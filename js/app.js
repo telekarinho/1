@@ -557,20 +557,25 @@ function calculateROI() {
      * - Ticket médio: R$ 22 (combos + casamento de itens)
      * - 26 dias operacionais/mês
      *
-     * Kit Delivery em Casa (3.499,99):
-     *   - Pedidos/dia: 10 (conservador), 15 (médio), 22 (ótimo)
-     *   - Faturamento base: 15 × 22 × 26 = 8.580  (arredondado 8.500)
-     *   - Margem LÍQUIDA: 30% (já descontado insumo ~40%, embalagem ~5%,
-     *     taxa iFood 22% do canal delivery blended, taxa cartão 2%)
+     * Kit Delivery em Casa (3.499,99) — 1 mixer, treinamento online:
+     *   - Pedidos/dia: 10 (conserv), 15 (médio), 22 (ótimo)
+     *   - Faturamento base: 15 × 22 × 26 = 8.580 (arredondado 8.500)
+     *   - Margem LÍQUIDA: 30%
      *
-     * Kit Loja / Quiosque (25.000):
-     *   - Pedidos/dia: 60 (conservador), 80 (médio), 100 (ótimo)
+     * Kit Pro Dark Kitchen (4.997) — 2 mixers, treinamento PRESENCIAL na loja modelo:
+     *   - Pedidos/dia: 20 (conserv), 25 (médio), 35 (ótimo)
+     *   - Faturamento base: 25 × 22 × 26 = 14.300 (arredondado 14.000)
+     *   - Margem LÍQUIDA: 30% (mesma operação; dobro de capacidade + melhor curva
+     *     de aprendizado pelo treinamento presencial na loja modelo)
+     *
+     * Kit Loja / Quiosque (25.000) — operação física completa:
+     *   - Pedidos/dia: 60 (conserv), 80 (médio), 100 (ótimo)
      *   - Faturamento base: 80 × 22 × 26 = 45.760 (arredondado 42.000 p/ conservadorismo)
-     *   - Margem LÍQUIDA: 22% (já descontado insumo, aluguel, funcionários,
-     *     utilities, embalagem, taxas de plataforma mix canal)
+     *   - Margem LÍQUIDA: 22% (já descontado insumo, aluguel, funcionários, utilities)
      */
     const models = {
         delivery: { investment: 3499.99,  revenueBase: 8500,  marginPct: 0.30 },
+        pro:      { investment: 4997.00,  revenueBase: 14000, marginPct: 0.30 },
         loja:     { investment: 25000.00, revenueBase: 42000, marginPct: 0.22 }
     };
 
