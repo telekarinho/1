@@ -873,77 +873,47 @@
     ---------------------------------------------------------------- */
     var STORAGE_BUCKET = 'milkypot-ad945.firebasestorage.app';
 
-    // Aguarda Firebase Auth restaurar sessão do IndexedDB (até 8s)
-    function waitForFirebaseUser(){
-        return new Promise(function(resolve, reject){
-            var immediate = firebase.auth().currentUser;
-            if(immediate){ resolve(immediate); return; }
-            var done = false;
-            var unsub = firebase.auth().onAuthStateChanged(function(u){
-                if(done) return;
-                if(u){
-                    done = true;
-                    try { unsub(); } catch(e){}
-                    resolve(u);
-                }
-            });
-            setTimeout(function(){
-                if(done) return;
-                done = true;
-                try { unsub(); } catch(e){}
-                var final = firebase.auth().currentUser;
-                if(final) resolve(final);
-                else reject(new Error('Sessão Firebase Auth não detectada — clique em Sair e faça login novamente'));
-            }, 8000);
-        });
-    }
-
     function uploadToFirebaseStorage(blob, path, onProgress){
         return new Promise(function(resolve, reject){
-            waitForFirebaseUser().then(function(user){
-                return user.getIdToken();
-            }).then(function(idToken){
-                var encodedPath = encodeURIComponent(path);
-                var url = 'https://firebasestorage.googleapis.com/v0/b/' + STORAGE_BUCKET + '/o?uploadType=media&name=' + encodedPath;
+            var encodedPath = encodeURIComponent(path);
+            var url = 'https://firebasestorage.googleapis.com/v0/b/' + STORAGE_BUCKET + '/o?uploadType=media&name=' + encodedPath;
 
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', url, true);
-                xhr.setRequestHeader('Content-Type', blob.type || 'application/octet-stream');
-                xhr.setRequestHeader('Authorization', 'Firebase ' + idToken);
-                xhr.timeout = 15 * 60 * 1000; // 15 min para conexões lentas
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('Content-Type', blob.type || 'application/octet-stream');
+            xhr.timeout = 15 * 60 * 1000; // 15 min para conexões lentas
 
-                xhr.upload.onprogress = function(e){
-                    if(e.lengthComputable && onProgress){
-                        onProgress(Math.round((e.loaded / e.total) * 100));
+            xhr.upload.onprogress = function(e){
+                if(e.lengthComputable && onProgress){
+                    onProgress(Math.round((e.loaded / e.total) * 100));
+                }
+            };
+
+            xhr.onload = function(){
+                if(xhr.status >= 200 && xhr.status < 300){
+                    try {
+                        var meta = JSON.parse(xhr.responseText);
+                        var token = meta.downloadTokens;
+                        if(!token){ reject(new Error('Sem downloadToken na resposta')); return; }
+                        var downloadUrl = 'https://firebasestorage.googleapis.com/v0/b/' + STORAGE_BUCKET + '/o/' + encodedPath + '?alt=media&token=' + token;
+                        resolve({ url: downloadUrl, path: path });
+                    } catch(e){
+                        reject(new Error('Resposta inválida do Storage: ' + xhr.responseText.substring(0,200)));
                     }
-                };
+                } else {
+                    var errMsg = 'HTTP ' + xhr.status;
+                    try {
+                        var errBody = JSON.parse(xhr.responseText);
+                        errMsg += ' — ' + (errBody.error && errBody.error.message || xhr.responseText.substring(0,200));
+                    } catch(e){ errMsg += ' — ' + xhr.responseText.substring(0,200); }
+                    reject(new Error(errMsg));
+                }
+            };
+            xhr.onerror   = function(){ reject(new Error('Falha de rede durante upload')); };
+            xhr.ontimeout = function(){ reject(new Error('Timeout (15min) — conexão muito lenta')); };
+            xhr.onabort   = function(){ reject(new Error('Upload cancelado')); };
 
-                xhr.onload = function(){
-                    if(xhr.status >= 200 && xhr.status < 300){
-                        try {
-                            var meta = JSON.parse(xhr.responseText);
-                            var token = meta.downloadTokens;
-                            if(!token){ reject(new Error('Sem downloadToken na resposta')); return; }
-                            var downloadUrl = 'https://firebasestorage.googleapis.com/v0/b/' + STORAGE_BUCKET + '/o/' + encodedPath + '?alt=media&token=' + token;
-                            resolve({ url: downloadUrl, path: path });
-                        } catch(e){
-                            reject(new Error('Resposta inválida do Storage: ' + xhr.responseText.substring(0,200)));
-                        }
-                    } else {
-                        var errMsg = 'HTTP ' + xhr.status;
-                        try {
-                            var errBody = JSON.parse(xhr.responseText);
-                            errMsg += ' — ' + (errBody.error && errBody.error.message || xhr.responseText.substring(0,200));
-                        } catch(e){ errMsg += ' — ' + xhr.responseText.substring(0,200); }
-                        reject(new Error(errMsg));
-                    }
-                };
-                xhr.onerror   = function(){ reject(new Error('Falha de rede durante upload')); };
-                xhr.ontimeout = function(){ reject(new Error('Timeout (15min) — conexão muito lenta')); };
-                xhr.onabort   = function(){ reject(new Error('Upload cancelado')); };
-
-                xhr.send(blob);
-            }).catch(function(err){ reject(err instanceof Error ? err : new Error(String(err))); });
+            xhr.send(blob);
         });
     }
 
