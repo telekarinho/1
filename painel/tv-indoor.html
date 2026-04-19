@@ -863,57 +863,38 @@
     }
 
     /* ----------------------------------------------------------------
-       Upload para Firebase Storage via REST API single-POST
+       Upload para Firebase Storage via SDK (resumable)
        Caminho: tv-media/{franchiseId}/{id}.jpg|mp4
 
-       Usamos POST direto em firebasestorage.googleapis.com ao invés
-       do SDK .put() porque o SDK usa "resumable upload" para arquivos
-       grandes (>5MB), e resumable requer CORS configurado no bucket.
-       Single-POST funciona até 256MB e dispensa CORS bucket-level.
+       O SDK faz resumable upload automaticamente para arquivos > 5MB,
+       suportando qualquer tamanho com retry/backoff nativo.
+       Requer CORS configurado no bucket (ver cors.json no repo).
     ---------------------------------------------------------------- */
     var STORAGE_BUCKET = 'milkypot-ad945.firebasestorage.app';
 
     function uploadToFirebaseStorage(blob, path, onProgress){
         return new Promise(function(resolve, reject){
-            var encodedPath = encodeURIComponent(path);
-            var url = 'https://firebasestorage.googleapis.com/v0/b/' + STORAGE_BUCKET + '/o?uploadType=media&name=' + encodedPath;
+            try {
+                var storageRef = firebase.storage().ref(path);
+                var task = storageRef.put(blob, { contentType: blob.type || 'application/octet-stream' });
 
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', url, true);
-            xhr.setRequestHeader('Content-Type', blob.type || 'application/octet-stream');
-            xhr.timeout = 15 * 60 * 1000; // 15 min para conexões lentas
-
-            xhr.upload.onprogress = function(e){
-                if(e.lengthComputable && onProgress){
-                    onProgress(Math.round((e.loaded / e.total) * 100));
-                }
-            };
-
-            xhr.onload = function(){
-                if(xhr.status >= 200 && xhr.status < 300){
-                    try {
-                        var meta = JSON.parse(xhr.responseText);
-                        var token = meta.downloadTokens;
-                        if(!token){ reject(new Error('Sem downloadToken na resposta')); return; }
-                        var downloadUrl = 'https://firebasestorage.googleapis.com/v0/b/' + STORAGE_BUCKET + '/o/' + encodedPath + '?alt=media&token=' + token;
-                        resolve({ url: downloadUrl, path: path });
-                    } catch(e){
-                        reject(new Error('Resposta inválida do Storage: ' + xhr.responseText.substring(0,200)));
+                task.on('state_changed', function(snap){
+                    if(onProgress && snap.totalBytes){
+                        onProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100));
                     }
-                } else {
-                    var errMsg = 'HTTP ' + xhr.status;
-                    try {
-                        var errBody = JSON.parse(xhr.responseText);
-                        errMsg += ' — ' + (errBody.error && errBody.error.message || xhr.responseText.substring(0,200));
-                    } catch(e){ errMsg += ' — ' + xhr.responseText.substring(0,200); }
-                    reject(new Error(errMsg));
-                }
-            };
-            xhr.onerror   = function(){ reject(new Error('Falha de rede durante upload')); };
-            xhr.ontimeout = function(){ reject(new Error('Timeout (15min) — conexão muito lenta')); };
-            xhr.onabort   = function(){ reject(new Error('Upload cancelado')); };
-
-            xhr.send(blob);
+                }, function(err){
+                    var msg = err && err.code ? err.code : (err && err.message ? err.message : String(err));
+                    reject(new Error('Upload falhou: ' + msg));
+                }, function(){
+                    task.snapshot.ref.getDownloadURL().then(function(url){
+                        resolve({ url: url, path: path });
+                    }).catch(function(e){
+                        reject(new Error('Upload OK mas falhou ao obter URL: ' + (e.message || e)));
+                    });
+                });
+            } catch(e){
+                reject(new Error('Erro ao iniciar upload: ' + (e.message || e)));
+            }
         });
     }
 
