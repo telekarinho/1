@@ -435,7 +435,7 @@ function showToast(message) {
 }
 
 function formatCurrency(value) {
-    return `R$ ${value.toFixed(2).replace('.', ',')}`;
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 }
 
 function createConfetti() {
@@ -552,24 +552,27 @@ function calculateROI() {
     if (!model) return;
 
     const models = {
-        express:  { investment: 89000,  revenueBase: 45000, marginPct: 0.20 },
-        store:    { investment: 169000, revenueBase: 95000, marginPct: 0.20 },
-        mega:     { investment: 289000, revenueBase: 160000, marginPct: 0.22 }
+        start: { investment: 3499.99,  revenueBase: 10000, marginPct: 0.30 },
+        pro:   { investment: 4997.00,  revenueBase: 15000, marginPct: 0.30 },
+        loja:  { investment: 25000.00, revenueBase: 42000, marginPct: 0.22 }
     };
 
-    const locationMult = { shopping: 1.15, rua: 1.0, galeria: 0.9 };
-    const expMult = { none: 0.9, some: 1.0, food: 1.1 };
+    const locationMult = { shopping: 1.2, rua: 1.0, galeria: 0.9 };
+    const expMult = { none: 0.85, some: 1.0, food: 1.15 };
 
-    const data = models[model];
+    const data = models[model] || models.pro;
     const locMul = locationMult[location] || 1;
     const expMul = expMult[experience] || 1;
 
     const revenue = Math.round(data.revenueBase * locMul * expMul);
-    const profit = Math.round(revenue * data.marginPct * locMul * expMul);
-    const payback = Math.ceil(data.investment / profit);
+    const profit = Math.round(revenue * data.marginPct);
+    const paybackMonths = data.investment / (profit || 1);
+    const paybackText = paybackMonths < 1
+        ? `${Math.max(1, Math.round(paybackMonths * 30))} dias`
+        : `${paybackMonths.toFixed(paybackMonths < 2 ? 1 : 0)} meses`;
 
     document.getElementById('roiInvestment').textContent = formatCurrency(data.investment);
     document.getElementById('roiRevenue').textContent = formatCurrency(revenue);
     document.getElementById('roiProfit').textContent = formatCurrency(profit);
-    document.getElementById('roiPayback').textContent = `${payback} meses`;
+    document.getElementById('roiPayback').textContent = paybackText;
 }
