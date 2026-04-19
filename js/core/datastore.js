@@ -216,6 +216,13 @@ const DataStore = {
     async _syncFromCloud() {
         if (!this._ready || !this._db) return;
         try {
+            // Priority 1: Check for catalog_config specifically for seeding
+            const catalogDoc = await this._db.collection('datastore').doc('catalog_config').get();
+            if (!catalogDoc.exists && typeof CARDAPIO_CONFIG !== 'undefined') {
+                console.log('🌱 Seed: Enviando configuração inicial do cardápio para o Firestore...');
+                this.set('catalog_config', CARDAPIO_CONFIG);
+            }
+
             const snapshot = await this._db.collection('datastore').get();
             if (snapshot.empty) {
                 // First time: push local data to cloud
@@ -228,6 +235,7 @@ const DataStore = {
                     const key = doc.id;
                     try {
                         const cloudData = JSON.parse(doc.data().value);
+                        // Only update if cloud data is different/newer (simplified here as overwrite)
                         localStorage.setItem(this.PREFIX + key, JSON.stringify(cloudData));
                     } catch (e) {
                         console.warn('Sync parse error for:', key, e);
@@ -235,6 +243,18 @@ const DataStore = {
                 });
                 console.log(`✅ ${snapshot.size} registros sincronizados do Firestore`);
             }
+
+            // Real-time listener for the catalog and global settings
+            this._db.collection('datastore').doc('catalog_config').onSnapshot(doc => {
+                if (doc.exists) {
+                    const newData = JSON.parse(doc.data().value);
+                    localStorage.setItem(this.PREFIX + 'catalog_config', doc.data().value);
+                    console.log('🔄 Catálogo atualizado via Firebase (Background)');
+                    // Trigger a custom event for UI updates
+                    window.dispatchEvent(new CustomEvent('mp_catalog_updated', { detail: newData }));
+                }
+            });
+
         } catch (e) {
             console.warn('_syncFromCloud error:', e);
         }

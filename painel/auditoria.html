@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Auditoria de Estoque</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#42A5F5">
+    <style>
+        .audit-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .audit-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .audit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .audit-header h3 {
+            margin: 0;
+            font-family: 'Baloo 2', cursive;
+            color: #5A4570;
+            font-size: 1.4rem;
+        }
+        .audit-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .audit-table th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #eee;
+            color: #666;
+            font-weight: 700;
+        }
+        .audit-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+        .input-count {
+            width: 100px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            text-align: right;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-count:focus {
+            border-color: #9c27b0;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+        .status-normal { background: #E8F5E9; color: #2E7D32; }
+        .status-alert { background: #FFF3E0; color: #E65100; }
+        .status-critical { background: #FFEBEE; color: #C62828; }
+        .btn-large {
+            padding: 14px 24px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            background: #9c27b0;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-large:hover { background: #7b1fa2; }
+        .hidden { display: none; }
+        .diff-val { font-weight: bold; }
+        .diff-neg { color: #C62828; }
+        .diff-pos { color: #2E7D32; }
+        .diff-zero { color: #757575; }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <!-- Sidebar -->
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <a href="pdv.html" class="sidebar-link"><span class="icon">💻</span> PDV</a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+                <a href="auditoria.html" class="sidebar-link active"><span class="icon">🔍</span> Auditoria Cega</a>
+                <a href="compras.html" class="sidebar-link"><span class="icon">🛒</span> Compras</a>
+                <a href="operacional.html" class="sidebar-link"><span class="icon">🎯</span> Operacional</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="panel-main">
+            <header class="panel-header">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+                <h1>🔍 Auditoria Cega de Estoque</h1>
+            </header>
+
+            <section class="panel-content">
+                <div class="audit-container">
+                    
+                    <!-- Passo 1: Contagem -->
+                    <div class="audit-card" id="stepCounting">
+                        <div class="audit-header">
+                            <h3>1. Contagem Física</h3>
+                            <button class="btn btn-outline" onclick="loadInventory()">Recarregar Itens</button>
+                        </div>
+                        <p style="color:#666; margin-bottom: 20px;">Informe a quantidade física exata encontrada na loja para cada item. A expectativa do sistema está oculta para evitar vícios de contagem.</p>
+                        
+                        <div style="overflow-x: auto;">
+                            <table class="audit-table">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th>Categoria</th>
+                                        <th>Unidade</th>
+                                        <th style="text-align: right;">Contagem Física (Real)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="countingBody">
+                                    <tr><td colspan="4">Carregando itens...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="margin-top: 24px; text-align: right;">
+                            <button class="btn-large" onclick="finishCounting()">Finalizar Contagem e Gerar Relatório</button>
+                        </div>
+                    </div>
+
+                    <!-- Passo 2: Relatório de Divergências -->
+                    <div class="audit-card hidden" id="stepReport">
+                        <div class="audit-header">
+                            <h3>2. Relatório de Divergências</h3>
+                            <button class="btn btn-outline" onclick="backToCounting()">← Voltar para Correção</button>
+                        </div>
+                        <p style="color:#666; margin-bottom: 20px;">
+                            <strong>Regras de Criticidade:</strong><br>
+                            <span class="status-badge status-normal">Normal</span> Até 2,99% de perda<br>
+                            <span class="status-badge status-alert">Alerta</span> De 3% a 4,99% de perda<br>
+                            <span class="status-badge status-critical">Crítico</span> 5% ou mais, OU perda financeira estimada &gt;= R$ 50,00
+                        </p>
+                        
+                        <div style="overflow-x: auto;">
+                            <table class="audit-table">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th>Contado</th>
+                                        <th>Esperado (Sistema)</th>
+                                        <th>Diferença</th>
+                                        <th>Status Categoria</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportBody">
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div style="margin-top: 24px; padding: 20px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px;">
+                            <h4 style="margin:0 0 10px 0; color: #856404;">⚠️ Importante</h4>
+                            <p style="margin:0; color: #856404;">Ao aplicar este ajuste, o estoque do sistema será substituído pelo valor contado. Esta ação gerará um log imediato e não pode ser desfeita.</p>
+                        </div>
+
+                        <div style="margin-top: 24px; text-align: right;">
+                            <button class="btn-large" style="background:#2E7D32;" onclick="applyAuditAdjustment()">Aplicar Ajuste de Estoque</button>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+
+    <script>
+        // Auth guard - requires management role
+        if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+        const session = Auth.getSession();
+        const franchiseId = session.franchiseId;
+        
+        let inventoryData = [];
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function loadInventory() {
+            inventoryData = DataStore.getCollection('inventory', franchiseId) || [];
+            const tbody = document.getElementById('countingBody');
+            tbody.innerHTML = '';
+            
+            if (inventoryData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum produto cadastrado no estoque.</td></tr>';
+                return;
+            }
+
+            // Sort by category then name
+            inventoryData.sort((a,b) => {
+                if(a.category !== b.category) return a.category.localeCompare(b.category);
+                return a.name.localeCompare(b.name);
+            });
+
+            inventoryData.forEach(item => {
+                // Expected is hidden from UX, only the input is visible for blind audit
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${Utils.escapeHtml(item.name)}</strong></td>
+                    <td><span style="background:#eee;padding:4px 8px;border-radius:6px;font-size:0.85em;">${item.category}</span></td>
+                    <td>${item.unit}</td>
+                    <td style="text-align: right;">
+                        <input type="number" step="0.01" min="0" class="input-count" data-item-id="${item.id}" placeholder="Ex: 5" required>
+                        <span style="font-size:0.9em;color:#666;margin-left:5px;">${item.unit}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function finishCounting() {
+            const inputs = document.querySelectorAll('.input-count');
+            let hasEmpty = false;
+            let reportData = [];
+
+            inputs.forEach(input => {
+                if (input.value === '') hasEmpty = true;
+                const id = input.dataset.itemId;
+                const counted = parseFloat(input.value) || 0;
+                
+                const item = inventoryData.find(i => i.id === id);
+                if (item) {
+                    const expected = parseFloat(item.quantity) || 0;
+                    const diff = counted - expected;
+                    const lossPerc = expected > 0 ? (Math.abs(diff) / expected) * 100 : 0;
+                    
+                    // Estimate generic cost per kg/unit just for the R$50 rule (simplified if no real cost exists)
+                    // You could expand this logic to query a real cost DB. For now, estimate $20/unit or kg.
+                    const estimatedCostPerUnit = item.cost || 20; 
+                    const financialLoss = Math.abs(diff) * estimatedCostPerUnit;
+                    
+                    let status = 'normal';
+                    let statusLabel = 'Normal';
+                    if (diff < 0) {
+                        // Perda
+                        if (lossPerc >= 5 || financialLoss >= 50) {
+                            status = 'critical';
+                            statusLabel = 'Crítico';
+                        } else if (lossPerc >= 3) {
+                            status = 'alert';
+                            statusLabel = 'Alerta';
+                        }
+                    } else if (diff > 0) {
+                        // Sobra
+                        status = 'alert';
+                        statusLabel = 'Sobra/Erro';
+                    }
+
+                    reportData.push({
+                        id: item.id,
+                        name: item.name,
+                        unit: item.unit,
+                        counted: counted,
+                        expected: expected,
+                        diff: diff,
+                        status: status,
+                        statusLabel: statusLabel
+                    });
+                }
+            });
+
+            if (hasEmpty) {
+                if (!confirm("Existem itens sem contagem preenchida (serão considerados como ZERO). Deseja continuar?")) {
+                    return;
+                }
+            }
+
+            renderReport(reportData);
+            document.getElementById('stepCounting').classList.add('hidden');
+            document.getElementById('stepReport').classList.remove('hidden');
+            
+            // Store report data temporarily
+            window._pendingAudit = reportData;
+        }
+
+        function renderReport(data) {
+            const tbody = document.getElementById('reportBody');
+            tbody.innerHTML = '';
+
+            data.forEach(item => {
+                let diffStyle = 'diff-zero';
+                let diffText = '0';
+                
+                if (item.diff > 0) {
+                    diffStyle = 'diff-pos';
+                    diffText = '+' + item.diff.toFixed(2);
+                } else if (item.diff < 0) {
+                    diffStyle = 'diff-neg';
+                    diffText = item.diff.toFixed(2);
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.name}</strong><br><small style="color:#666;">Unidade: ${item.unit}</small></td>
+                    <td>${item.counted.toFixed(2)}</td>
+                    <td>${item.expected.toFixed(2)}</td>
+                    <td class="diff-val ${diffStyle}">${diffText}</td>
+                    <td><span class="status-badge status-${item.status}">${item.statusLabel}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function backToCounting() {
+            document.getElementById('stepReport').classList.add('hidden');
+            document.getElementById('stepCounting').classList.remove('hidden');
+        }
+
+        function applyAuditAdjustment() {
+            if (!window._pendingAudit) return;
+            
+            if (!confirm("Tem certeza que deseja sobrescrever o estoque atual do sistema com estes valores contados?")) {
+                return;
+            }
+
+            const data = window._pendingAudit;
+            let currentInv = DataStore.getCollection('inventory', franchiseId) || [];
+            
+            // Aplicar os novos valores e criar logs
+            data.forEach(auditItem => {
+                let invItem = currentInv.find(i => i.id === auditItem.id);
+                if (invItem && auditItem.diff !== 0) {
+                    // Log adjustment before update
+                    if (typeof AuditLog !== 'undefined') {
+                        AuditLog.log('INVENTORY_AUDIT_ADJUSTMENT', {
+                            itemId: auditItem.id,
+                            itemName: auditItem.name,
+                            expected: auditItem.expected,
+                            counted: auditItem.counted,
+                            diff: auditItem.diff,
+                            status: auditItem.status
+                        }, franchiseId);
+                    }
+                    invItem.quantity = auditItem.counted;
+                }
+            });
+
+            DataStore.setCollection('inventory', franchiseId, currentInv);
+            
+            alert("✅ Ajuste de estoque realizado com sucesso! Todos os logs de auditoria foram salvos.");
+            window.location.href = 'produtos.html';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadInventory();
+        });
+    </script>
+</body>
+</html>

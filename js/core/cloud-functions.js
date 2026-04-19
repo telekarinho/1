@@ -181,5 +181,35 @@ const CloudFunctions = {
 
     async cancelFiscalNote(noteId, reason, franchiseId) {
         return this.call('cancelFiscalNote', { noteId, reason, franchiseId });
+    },
+
+    // ============================================
+    // Automations (Reports & Alerts)
+    // ============================================
+
+    // Envia relatorio do fechamento + auditoria cega
+    async sendClosingReport(franchiseId, reportData) {
+        const managers = ['milkypot.com@gmail.com', 'jocimarrodrigo@gmail.com', 'joseanemse@gmail.com'];
+        // Regra: operador so recebe se a config estiver ativada
+        const config = (typeof AdminConfig !== 'undefined') ? AdminConfig.getConfig(franchiseId) : {};
+        const sendToOperator = config.enviarComprovanteOperador === true;
+        
+        return this.call('sendClosingReport', {
+            franchiseId,
+            managers,
+            sendToOperator,
+            operatorEmail: reportData.operatorEmail, // Only if sendToOperator is true it will be used
+            data: reportData
+        });
+    },
+
+    // Notifica gestor sobre estoque critico
+    async sendLowStockAlert(franchiseId, items) {
+        const managers = ['milkypot.com@gmail.com', 'jocimarrodrigo@gmail.com', 'joseanemse@gmail.com'];
+        return this.call('sendLowStockAlert', {
+            franchiseId,
+            managers,
+            items: items
+        });
     }
 };

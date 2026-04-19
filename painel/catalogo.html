@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Gestão de Catálogo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --mp-pink: #E91E63;
+            --mp-purple: #9C27B0;
+            --mp-bg: #F8F9FA;
+        }
+
+        .catalog-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .tabs-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            border-radius: 12px 12px 0 0;
+            border: none;
+            background: none;
+            font-family: 'Baloo 2', cursive;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--mp-pink);
+            background: rgba(233, 30, 99, 0.05);
+        }
+
+        .tab-btn.active {
+            color: var(--mp-pink);
+            background: #fff;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+            border-bottom: 3px solid var(--mp-pink);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card-item {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .card-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .card-emoji {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .card-desc {
+            font-size: 0.85rem;
+            color: #777;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .card-price {
+            font-weight: 800;
+            color: var(--mp-pink);
+            font-size: 1.1rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f5f5f5;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-edit { background: #E3F2FD; color: #1976D2; }
+        .btn-delete { background: #FFEBEE; color: #D32F2F; }
+        .btn-toggle { background: #F5F5F5; color: #666; }
+
+        .btn-icon:hover { opacity: 0.8; transform: scale(1.05); }
+
+        .btn-add-float {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            background: var(--mp-pink);
+            color: #fff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 10px 25px rgba(233, 30, 99, 0.4);
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+
+        .btn-add-float:hover {
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal-content {
+            background: #fff;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-family: inherit;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .badge-unit { background: #E8F5E9; color: #2E7D32; }
+        .badge-weight { background: #FFF3E0; color: #EF6C00; }
+        .badge-inactive { background: #EEEEEE; color: #757575; }
+
+        .portions-list {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 10px;
+        }
+
+        .portion-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .btn-remove-p {
+            background: none;
+            border: none;
+            color: #D32F2F;
+            cursor: pointer;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="panel-layout">
+    
+    <!-- Sidebar será injetada por JS se necessário, ou fixa aqui -->
+    <div id="sidebarMount"></div>
+
+    <main class="panel-main">
+        <header class="panel-header">
+            <div class="header-info">
+                <h1>🍨 Gestão de Catálogo</h1>
+                <p>Configure o cardápio dinâmico para Loja e Delivery.</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-outline" onclick="CatalogManager.saveAll()">
+                    <i class="fas fa-cloud-upload-alt"></i> Publicar Alterações
+                </button>
+            </div>
+        </header>
+
+        <div class="catalog-container">
+            <nav class="tabs-nav" id="tabsNav">
+                <button class="tab-btn active" data-tab="bases">Bases</button>
+                <button class="tab-btn" data-tab="formatos">Formatos</button>
+                <button class="tab-btn" data-tab="tamanhos">Tamanhos</button>
+                <button class="tab-btn" data-tab="sabores">Sabores</button>
+                <button class="tab-btn" data-tab="adicionais">Adicionais</button>
+                <button class="tab-btn" data-tab="bebidas">Bebidas</button>
+            </nav>
+
+            <!-- Bases -->
+            <div id="tab-bases" class="tab-content active">
+                <div class="section-header">
+                    <h2>Bases (Açaí, Ninho...)</h2>
+                    <button class="btn btn-primary btn-sm" onclick="CatalogManager.showAddModal('bases')">+ Nova Base</button>
+                </div>
+                <div class="grid-cards" id="grid-bases"></div>
+            </div>
+
+            <!-- Formatos -->
+            <div id="tab-formatos" class="tab-content">
+                <div class="section-header">
+                    <h2>Formatos (Shake, Sundae...)</h2>
+                    <button class="btn btn-primary btn-sm" onclick="CatalogManager.showAddModal('formatos')">+ Novo Formato</button>
+                </div>
+                <div class="grid-cards" id="grid-formatos"></div>
+            </div>
+
+            <!-- Tamanhos -->
+            <div id="tab-tamanhos" class="tab-content">
+                <div class="section-header">
+                    <h2>Tamanhos & Preços</h2>
+                    <button class="btn btn-primary btn-sm" onclick="CatalogManager.showAddModal('tamanhos')">+ Novo Tamanho</button>
+                </div>
+                <div class="grid-cards" id="grid-tamanhos"></div>
+            </div>
+
+            <!-- Sabores -->
+            <div id="tab-sabores" class="tab-content">
+                <div class="section-header">
+                    <h2>Sabores por Categoria</h2>
+                    <select id="flavorCategoryFilter" class="form-control" style="width: 200px;" onchange="CatalogManager.renderSabores()">
+                        <!-- dinâmico -->
+                    </select>
+                    <button class="btn btn-primary btn-sm" onclick="CatalogManager.showAddModal('sabores')">+ Novo Sabor</button>
+                </div>
+                <div class="grid-cards" id="grid-sabores"></div>
+            </div>
+
+            <!-- Adicionais -->
+            <div id="tab-adicionais" class="tab-content">
+                <div class="section-header">
+                    <h2>Adicionais & Complementos</h2>
+                    <select id="extraCategoryFilter" class="form-control" style="width: 200px;" onchange="CatalogManager.renderAdicionais()">
+                        <!-- dinâmico -->
+                    </select>
+                    <button class="btn btn-primary btn-sm" onclick="CatalogManager.showAddModal('adicionais')">+ Novo Adicional</button>
+                </div>
+                <div class="grid-cards" id="grid-adicionais"></div>
+            </div>
+
+            <!-- Bebidas -->
+            <div id="tab-bebidas" class="tab-content">
+                <div class="section-header">
+                    <h2>Bebidas & Outros</h2>
+                    <button class="btn btn-primary btn-sm" onclick="CatalogManager.showAddModal('bebidas')">+ Nova Bebida</button>
+                </div>
+                <div class="grid-cards" id="grid-bebidas"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Adicionar/Editar -->
+    <div class="modal-overlay" id="itemModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Editar Item</h3>
+            <form id="catalogForm">
+                <input type="hidden" id="edit-tab">
+                <input type="hidden" id="edit-id">
+                <input type="hidden" id="edit-category">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nome do Item</label>
+                        <input type="text" id="item-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Emoji/Ícone</label>
+                        <input type="text" id="item-emoji" placeholder="🍨">
+                    </div>
+                </div>
+
+                <div class="form-group" id="group-desc">
+                    <label>Descrição Curta</label>
+                    <textarea id="item-desc" rows="2"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo de Venda</label>
+                        <select id="item-typeVenda" onchange="CatalogManager.toggleWeightFields()">
+                            <option value="unitario">Unitário (Preço Fixo)</option>
+                            <option value="por_peso">Por Peso (kg)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Canal de Venda</label>
+                        <select id="item-canalVenda">
+                            <option value="ambos">Ambos (Loja + Delivery)</option>
+                            <option value="loja">Só Loja</option>
+                            <option value="delivery">Só Delivery</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Modo de Montagem</label>
+                        <select id="item-modoMontagem">
+                            <option value="montado">Copo Montado</option>
+                            <option value="self_service">Self-Service / Peso Livre</option>
+                            <option value="simples">Pronto (Picolé, Bebida)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="group-price">
+                        <label id="label-price">Preço (R$)</label>
+                        <input type="number" id="item-price" step="0.01">
+                    </div>
+                </div>
+
+                <!-- Campos específicos para PESO -->
+                <div id="weight-fields" style="display:none;">
+                    <div class="form-group">
+                        <label>Porções Fixas para Delivery (Configurável)</label>
+                        <div class="portions-list" id="portions-list">
+                            <!-- JS -->
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline" style="margin-top:5px" onclick="CatalogManager.addPortionRow()">+ Adicionar Porção</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Disponibilidade</label>
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer">
+                        <input type="checkbox" id="item-available" checked style="width: auto"> Ativo no cardápio
+                    </label>
+                </div>
+
+                <div style="display:flex; justify-content: flex-end; gap:10px; margin-top:20px;">
+                    <button type="button" class="btn btn-secondary" onclick="CatalogManager.closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/audit.js"></script>
+    <!-- Seed fallback if needed -->
+    <script src="../js/cardapio-data.js"></script>
+
+    <script>
+        const CatalogManager = {
+            config: null,
+
+            init() {
+                // Carrega do DataStore
+                this.config = DataStore.get('catalog_config');
+                
+                if (!this.config) {
+                    console.log('🔄 Aguardando DataStore sync...');
+                    setTimeout(() => this.init(), 500);
+                    return;
+                }
+
+                this.setupEvents();
+                this.renderAll();
+                this.updateFilters();
+            },
+
+            setupEvents() {
+                // Tabs
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                        btn.classList.add('active');
+                        document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+                    });
+                });
+
+                // Form Submit
+                document.getElementById('catalogForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveItem();
+                });
+            },
+
+            updateFilters() {
+                // Categorias de sabores
+                const sCat = document.getElementById('flavorCategoryFilter');
+                sCat.innerHTML = Object.keys(this.config.sabores || {}).map(k => 
+                    `<option value="${k}">${this.config.sabores[k].name}</option>`
+                ).join('');
+
+                // Categorias de adicionais
+                const aCat = document.getElementById('extraCategoryFilter');
+                aCat.innerHTML = Object.keys(this.config.adicionais || {}).map(k => 
+                    `<option value="${k}">${this.config.adicionais[k].name}</option>`
+                ).join('');
+            },
+
+            renderAll() {
+                this.renderBases();
+                this.renderFormatos();
+                this.renderTamanhos();
+                this.renderSabores();
+                this.renderAdicionais();
+                this.renderBebidas();
+            },
+
+            _createCard(item, tab, category = null) {
+                const isWeight = item.tipoVenda === 'por_peso';
+                const priceLabel = isWeight ? 'R$ ' + item.price.toFixed(2) + '/kg' : 'R$ ' + item.price.toFixed(2);
+                
+                return `
+                    <div class="card-item ${!item.available ? 'inactive' : ''}">
+                        <div class="card-header">
+                            <div class="card-emoji">${item.emoji || '🍦'}</div>
+                            <span class="badge ${isWeight ? 'badge-weight' : 'badge-unit'}">
+                                ${isWeight ? 'POR PESO' : 'UNITÁRIO'}
+                            </span>
+                        </div>
+                        <div class="card-title">${item.name}</div>
+                        <div class="card-desc">${item.desc || ''}</div>
+                        <div class="card-price">${priceLabel}</div>
+                        <div style="font-size: 10px; color: #999; margin-top: 5px;">
+                            Canal: ${item.canalVenda || 'ambos'} | Modo: ${item.modoMontagem || 'montado'}
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn-icon btn-edit" title="Editar" onclick="CatalogManager.showEditModal('${tab}', '${item.id}', '${category}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon btn-toggle" title="Ativo/Inativo" onclick="CatalogManager.toggleActive('${tab}', '${item.id}', '${category}')">
+                                <i class="fas ${item.available ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                            </button>
+                            <button class="btn-icon btn-delete" title="Excluir" onclick="CatalogManager.deleteItem('${tab}', '${item.id}', '${category}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderBases() {
+                const grid = document.getElementById('grid-bases');
+                grid.innerHTML = (this.config.bases || []).map(b => this._createCard(b, 'bases')).join('');
+            },
+
+            renderFormatos() {
+                const grid = document.getElementById('grid-formatos');
+                grid.innerHTML = (this.config.formatos || []).map(f => this._createCard(f, 'formatos')).join('');
+            },
+
+            renderTamanhos() {
+                const grid = document.getElementById('grid-tamanhos');
+                grid.innerHTML = (this.config.tamanhos || []).map(t => this._createCard(t, 'tamanhos')).join('');
+            },
+
+            renderSabores() {
+                const cat = document.getElementById('flavorCategoryFilter').value;
+                const grid = document.getElementById('grid-sabores');
+                if (!cat || !this.config.sabores[cat]) return;
+                grid.innerHTML = (this.config.sabores[cat].items || []).map(s => this._createCard(s, 'sabores', cat)).join('');
+            },
+
+            renderAdicionais() {
+                const cat = document.getElementById('extraCategoryFilter').value;
+                const grid = document.getElementById('grid-adicionais');
+                if (!cat || !this.config.adicionais[cat]) return;
+                grid.innerHTML = (this.config.adicionais[cat].items || []).map(a => this._createCard(a, 'adicionais', cat)).join('');
+            },
+
+            renderBebidas() {
+                const grid = document.getElementById('grid-bebidas');
+                grid.innerHTML = (this.config.bebidas || []).map(b => this._createCard(b, 'bebidas')).join('');
+            },
+
+            // --- Lógica do Modal ---
+
+            showAddModal(tab) {
+                const catFilter = tab === 'sabores' ? 'flavorCategoryFilter' : 'extraCategoryFilter';
+                const cat = (tab === 'sabores' || tab === 'adicionais') ? document.getElementById(catFilter).value : null;
+                
+                document.getElementById('edit-tab').value = tab;
+                document.getElementById('edit-id').value = '';
+                document.getElementById('edit-category').value = cat;
+                document.getElementById('modalTitle').textContent = `Novo em ${tab}`;
+                
+                document.getElementById('catalogForm').reset();
+                document.getElementById('portions-list').innerHTML = '';
+                this.toggleWeightFields();
+                
+                document.getElementById('itemModal').classList.add('active');
+            },
+
+            showEditModal(tab, id, category) {
+                let item;
+                if (category && category !== 'null') {
+                    item = this.config[tab][category].items.find(i => i.id === id);
+                } else {
+                    item = this.config[tab].find(i => i.id === id);
+                }
+
+                if (!item) return;
+
+                document.getElementById('edit-tab').value = tab;
+                document.getElementById('edit-id').value = id;
+                document.getElementById('edit-category').value = category;
+                document.getElementById('modalTitle').textContent = `Editar ${item.name}`;
+
+                document.getElementById('item-name').value = item.name;
+                document.getElementById('item-emoji').value = item.emoji || '';
+                document.getElementById('item-desc').value = item.desc || '';
+                document.getElementById('item-price').value = item.price || 0;
+                document.getElementById('item-typeVenda').value = item.tipoVenda || 'unitario';
+                document.getElementById('item-canalVenda').value = item.canalVenda || 'ambos';
+                document.getElementById('item-modoMontagem').value = item.modoMontagem || 'montado';
+                document.getElementById('item-available').checked = item.available !== false;
+
+                // Porções
+                const pList = document.getElementById('portions-list');
+                pList.innerHTML = '';
+                if (item.porcoesDelivery) {
+                    item.porcoesDelivery.forEach(p => this.addPortionRow(p.label, p.peso));
+                }
+
+                this.toggleWeightFields();
+                document.getElementById('itemModal').classList.add('active');
+            },
+
+            closeModal() {
+                document.getElementById('itemModal').classList.remove('active');
+            },
+
+            toggleWeightFields() {
+                const isWeight = document.getElementById('item-typeVenda').value === 'por_peso';
+                document.getElementById('weight-fields').style.display = isWeight ? 'block' : 'none';
+                document.getElementById('label-price').textContent = isWeight ? 'Preço por KG (R$)' : 'Preço Unitário (R$)';
+            },
+
+            addPortionRow(label = '', peso = '') {
+                const div = document.createElement('div');
+                div.className = 'portion-row';
+                div.innerHTML = `
+                    <input type="text" placeholder="Ex: 300g" value="${label}" style="flex:2">
+                    <input type="number" placeholder="Peso (g)" value="${peso}" style="flex:1">
+                    <button type="button" class="btn-remove-p" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                document.getElementById('portions-list').appendChild(div);
+            },
+
+            saveItem() {
+                // Coleta dados
+                const tab = document.getElementById('edit-tab').value;
+                const id = document.getElementById('edit-id').value;
+                const category = document.getElementById('edit-category').value;
+
+                const porcoes = [];
+                document.querySelectorAll('.portion-row').forEach(row => {
+                    const inputs = row.querySelectorAll('input');
+                    if (inputs[0].value && inputs[1].value) {
+                        porcoes.push({ label: inputs[0].value, peso: parseFloat(inputs[1].value) });
+                    }
+                });
+
+                const item = {
+                    id: id || Utils.generateId(),
+                    name: document.getElementById('item-name').value,
+                    emoji: document.getElementById('item-emoji').value,
+                    desc: document.getElementById('item-desc').value,
+                    price: parseFloat(document.getElementById('item-price').value || 0),
+                    tipoVenda: document.getElementById('item-typeVenda').value,
+                    canalVenda: document.getElementById('item-canalVenda').value,
+                    modoMontagem: document.getElementById('item-modoMontagem').value,
+                    available: document.getElementById('item-available').checked,
+                    porcoesDelivery: porcoes
+                };
+
+                // Atualiza no config local
+                if (!this.config[tab]) this.config[tab] = [];
+
+                if (category && category !== 'null') {
+                    const catItems = this.config[tab][category].items;
+                    const idx = catItems.findIndex(i => i.id === item.id);
+                    if (idx > -1) catItems[idx] = item;
+                    else catItems.push(item);
+                } else {
+                    const idx = this.config[tab].findIndex(i => i.id === item.id);
+                    if (idx > -1) this.config[tab][idx] = item;
+                    else this.config[tab].push(item);
+                }
+
+                // Log audit
+                AuditLog.log(id ? AuditLog.EVENTS.PRODUCT_UPDATED : AuditLog.EVENTS.PRODUCT_CREATED, {
+                    name: item.name, tab, category
+                });
+
+                this.renderAll();
+                this.closeModal();
+            },
+
+            deleteItem(tab, id, category) {
+                if (!confirm('Tem certeza que deseja excluir permanentemente este item?')) return;
+
+                if (category && category !== 'null') {
+                    this.config[tab][category].items = this.config[tab][category].items.filter(i => i.id !== id);
+                } else {
+                    this.config[tab] = this.config[tab].filter(i => i.id !== id);
+                }
+
+                AuditLog.log(AuditLog.EVENTS.PRODUCT_TOGGLED, { action: 'delete', id, tab });
+                this.renderAll();
+            },
+
+            toggleActive(tab, id, category) {
+                let item;
+                if (category && category !== 'null') {
+                    item = this.config[tab][category].items.find(i => i.id === id);
+                } else {
+                    item = this.config[tab].find(i => i.id === id);
+                }
+                if (item) {
+                    item.available = !item.available;
+                    this.renderAll();
+                }
+            },
+
+            saveAll() {
+                // Persiste no DataStore (ele vai levar pro Firebase)
+                DataStore.set('catalog_config', this.config);
+                alert('🚀 Alterações salvas com sucesso! O catálogo será atualizado em todas as telas agora.');
+            }
+        };
+
+        // Inicia
+        window.addEventListener('load', () => CatalogManager.init());
+    </script>
+</body>
+</html>
