@@ -552,13 +552,13 @@ function calculateROI() {
     if (!model) return;
 
     const models = {
-        start: { investment: 3499.99,  revenueBase: 12000, marginPct: 0.30 },
-        pro:   { investment: 4497.00,  revenueBase: 18000, marginPct: 0.30 },
-        elite: { investment: 15000.00, revenueBase: 35000, marginPct: 0.25 }
+        start: { investment: 3499.99,  revenueBase: 12000, marginPct: 0.35 },
+        pro:   { investment: 4997.00,  revenueBase: 18000, marginPct: 0.35 },
+        elite: { investment: 25000.00, revenueBase: 45000, marginPct: 0.28 }
     };
 
-    const locationMult = { shopping: 1.15, rua: 1.0, galeria: 0.9 };
-    const expMult = { none: 0.9, some: 1.0, food: 1.1 };
+    const locationMult = { shopping: 1.2, rua: 1.0, galeria: 0.9 };
+    const expMult = { none: 0.85, some: 1.0, food: 1.15 };
 
     const data = models[model] || models.pro;
     const locMul = locationMult[location] || 1;
@@ -566,7 +566,7 @@ function calculateROI() {
 
     const revenue = Math.round(data.revenueBase * locMul * expMul);
     const profit = Math.round(revenue * data.marginPct);
-    const payback = (data.investment / (profit || 1)).toFixed(1);
+    const payback = (data.investment / (profit || 1)).toFixed(payback < 1 ? 1 : 0);
 
     document.getElementById('roiInvestment').textContent = formatCurrency(data.investment);
     document.getElementById('roiRevenue').textContent = formatCurrency(revenue);

@@ -121,36 +121,65 @@
                 <!-- Meta mensal (injetado pelo loadDashboard) -->
                 <div id="metaMount"></div>
 
-                <!-- Welcome -->
-                <div style="background:linear-gradient(135deg,#4CAF50,#2E7D32);border-radius:var(--mp-radius);padding:24px 32px;color:#fff;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
-                    <div>
-                        <h2 style="font-family:'Baloo 2',cursive;font-size:1.3rem;margin-bottom:4px" id="welcomeMsg">Bom dia!</h2>
-                        <p style="opacity:0.9;font-size:0.85rem" id="storeInfo">Carregando...</p>
+                    <!-- Card Seu Negócio (Comercial Align) -->
+                    <div class="mp-biz-card">
+                        <div class="mp-biz-header">
+                            <div class="mp-biz-title">🚀 Seu Negócio Milkypot</div>
+                            <div class="mp-biz-badge" id="bizBadge">Iniciando Jornada</div>
+                        </div>
+                        <div class="mp-biz-stats">
+                            <div class="mp-stat-item">
+                                <div class="label">Investimento Real</div>
+                                <div class="value" id="bizInvestValue">R$ 0</div>
+                            </div>
+                            <div class="mp-stat-item">
+                                <div class="label">Vendas Hoje</div>
+                                <div class="value" id="bizSalesToday">R$ 0</div>
+                            </div>
+                            <div class="mp-stat-item">
+                                <div class="label">Payback Est.</div>
+                                <div class="value" id="bizPaybackEst">...</div>
+                            </div>
+                        </div>
+                        <div class="mp-goal-container">
+                            <div class="mp-goal-header">
+                                <span>Progresso Meta / Faturamento</span>
+                                <span id="bizGoalPerc">0%</span>
+                            </div>
+                            <div class="mp-goal-bar-bg">
+                                <div class="mp-goal-bar-fill" id="bizGoalBar" style="width: 0%"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div style="display:flex;gap:12px;flex-wrap:wrap">
-                        <button class="btn" style="background:rgba(255,255,255,0.2);color:#fff" onclick="newWalkInOrder()">+ Novo Pedido</button>
-                        <a href="pedidos.html" class="btn" style="background:rgba(255,255,255,0.2);color:#fff">📋 Ver Pedidos</a>
-                    </div>
-                </div>
 
-                <!-- KPI Cards -->
+                    <!-- Simulador Visual (Comercial Align) -->
+                    <div class="mp-sim-card">
+                        <div class="mp-sim-title">💰 Simulador de Ganhos</div>
+                        <div class="mp-sim-slider-box">
+                            <div style="font-size: 0.9rem; color: #64748B; margin-bottom: 10px;">
+                                Se você vender <strong id="simQtyText" style="color: #7E57C2; font-size: 1.2rem;">20</strong> pedidos por dia...
+                            </div>
+                            <input type="range" min="5" max="100" value="20" class="mp-sim-slider" id="simSlider" oninput="updateSim()">
+                        </div>
+                        <div class="mp-sim-projection">
+                            <div class="mp-proj-item revenue">
+                                <div class="label">Faturamento Mensal</div>
+                                <div class="value" id="simMonthlyRevenue">R$ 0</div>
+                            </div>
+                            <div class="mp-proj-item profit">
+                                <div class="label">Lucro Estimado (35%)</div>
+                                <div class="value" id="simMonthlyProfit">R$ 0</div>
+                            </div>
+                        </div>
+                        <p style="margin-top: 15px; font-size: 0.8rem; color: #94A3B8; text-align: center;">
+                            *Isso é possível seguindo o <strong>Padrão Milkypot</strong>.
+                        </p>
+                    </div>
+
+                <!-- KPI Cards (Opcional - mantendo secundários para clareza técnica) -->
                 <div class="kpi-grid">
                     <div class="kpi-card">
-                        <div class="kpi-icon green">💰</div>
-                        <div class="kpi-info">
-                            <div class="kpi-label" data-i18n="dashboard.today_revenue">Faturamento Hoje</div>
-                            <div class="kpi-value" id="kpiRevenueToday">R$ 0</div>
-                        </div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-icon blue">📋</div>
-                        <div class="kpi-info">
-                            <div class="kpi-label" data-i18n="dashboard.today_orders">Pedidos Hoje</div>
-                            <div class="kpi-value" id="kpiOrdersToday">0</div>
-                        </div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-icon yellow">🛵</div>
+                        <div class="kpi-icon pink">🛵</div>
                         <div class="kpi-info">
                             <div class="kpi-label" data-i18n="dashboard.pending_deliveries">Entregas Pendentes</div>
                             <div class="kpi-value" id="kpiPendingDelivery">0</div>
@@ -284,6 +313,7 @@
     <script src="../js/core/motivacional.js?v=mp-v14"></script>
     <script src="../js/core/caixa.js?v=mp-v14"></script>
     <script src="../js/core/financas.js?v=mp-v14"></script>
+    <script src="../js/core/onboarding.js?v=mp-v14"></script>
     <script>
         // Auth Guard
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
@@ -324,8 +354,42 @@
             const pendingDelivery = orders.filter(o => o.delivery === 'delivery' && ['novo', 'preparando', 'pronto'].includes(o.status));
 
             document.getElementById('kpiRevenueToday').textContent = Utils.formatCurrency(todayRevenue);
-            document.getElementById('kpiOrdersToday').textContent = todayOrders.length;
             document.getElementById('kpiPendingDelivery').textContent = pendingDelivery.length;
+
+            // --- Onda Comercial: Card Seu Negócio ---
+            const age = DataStore.getFranchiseAge(franchiseId);
+            const investBase = franchise?.investimentoBase || 3499.99;
+            const investEst = franchise?.investimentoEstrutura || 2000.00;
+            const totalInvest = investBase + investEst;
+
+            document.getElementById('bizInvestValue').textContent = Utils.formatCurrency(totalInvest);
+            document.getElementById('bizSalesToday').textContent = Utils.formatCurrency(todayRevenue);
+            
+            // Meta Mensal
+            let metaValor = 12000; // Nova meta padrâo de R$ 12k/mês
+            if (typeof AdminConfig !== 'undefined') {
+                const metaObj = AdminConfig.getMetaProgress(franchiseId, Financas.currentPeriodKey());
+                if (metaObj) metaValor = metaObj.valor;
+            }
+            
+            const monthOrders = orders.filter(o => o.createdAt.startsWith(today.slice(0, 7)));
+            const monthRevenue = monthOrders.reduce((s, o) => s + o.total, 0);
+            const goalPct = Math.min(100, Math.round((monthRevenue / metaValor) * 100));
+            
+            document.getElementById('bizGoalPerc').textContent = goalPct + '%';
+            document.getElementById('bizGoalBar').style.width = goalPct + '%';
+            
+            // Payback Est.
+            const avgProfitMonth = 4000; // Média estimada
+            const paybackMonths = Math.max(1, Math.ceil(totalInvest / avgProfitMonth));
+            document.getElementById('bizPaybackEst').textContent = paybackMonths + ' meses';
+
+            // Badge
+            if (age > 30 && goalPct >= 100) document.getElementById('bizBadge').textContent = 'Franqueado Elite';
+            else if (age > 0) document.getElementById('bizBadge').textContent = 'Franqueado Ativo';
+
+            // --- Onda 1: Simulador ROI ---
+            updateSim();
 
             // New orders badge
             const newOrders = orders.filter(o => o.status === 'novo');
@@ -443,6 +507,20 @@
             });
         }
 
+        // --- Onda 1: Motor do Simulador ---
+        function updateSim() {
+            const slider = document.getElementById('simSlider');
+            const qty = parseInt(slider.value);
+            const ticketMedio = franchise?.ticketMedioBase || 20; // Ticket base R$ 20.00
+            
+            const monthlyRevenue = qty * ticketMedio * 30;
+            const monthlyProfit = monthlyRevenue * 0.35; // Margem 35% conforme proposta comercial
+            
+            document.getElementById('simQtyText').textContent = qty;
+            document.getElementById('simMonthlyRevenue').textContent = Utils.formatCurrency(monthlyRevenue);
+            document.getElementById('simMonthlyProfit').textContent = Utils.formatCurrency(monthlyProfit);
+        }
+
         // Poll for new orders every 5 seconds
         setInterval(() => {
             const orders = DataStore.getCollection('orders', franchiseId);
@@ -468,35 +546,6 @@
         // Widget de caixa (PDV auditavel)
         if (typeof Caixa !== 'undefined') {
             try { Caixa.initPanel(); } catch (e) { console.warn('Caixa init:', e); }
-        }
-        // Widget de meta do mes + KPI de saude da franquia
-        if (typeof Financas !== 'undefined' && typeof AdminConfig !== 'undefined') {
-            try {
-                const pk = Financas.currentPeriodKey();
-                const prog = AdminConfig.getMetaProgress(franchiseId, pk);
-                const mountM = document.getElementById('metaMount');
-                if (mountM && prog) {
-                    const pct = Math.round(prog.pct * 100);
-                    const color = pct >= 100 ? '#10B981' : pct >= 70 ? '#F59E0B' : '#E91E63';
-                    const hit = pct >= 100 ? '🎉 Meta batida!' : pct >= 70 ? '💪 Quase lá!' : '🎯 Vamos juntos!';
-                    mountM.innerHTML = `
-                        <div class="panel-card" style="margin-bottom:20px">
-                          <div class="panel-card-header">
-                            <h3>🎯 Meta de ${Financas.formatPeriodLabel(pk)}</h3>
-                            <span style="font-size:.82rem;color:${color};font-weight:700">${hit}</span>
-                          </div>
-                          <div class="panel-card-body">
-                            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:.92rem">
-                              <span>Realizado: <strong>${AdminConfig.formatBRL(prog.realizado)}</strong></span>
-                              <span>Meta: <strong>${AdminConfig.formatBRL(prog.valor)}</strong> · <strong style="color:${color}">${pct}%</strong></span>
-                            </div>
-                            <div style="background:#E5E7EB;height:14px;border-radius:7px;overflow:hidden">
-                              <div style="height:100%;width:${Math.min(100,pct)}%;background:${color};border-radius:7px;transition:width .3s"></div>
-                            </div>
-                          </div>
-                        </div>`;
-                }
-            } catch (e) { console.warn('Meta widget:', e); }
         }
 
         // === Boas-vindas (primeiro acesso) ===

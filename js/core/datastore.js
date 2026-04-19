@@ -155,9 +155,19 @@ const DataStore = {
         const idx = franchises.findIndex(f => f.id === franchiseId);
         if (idx === -1) return { success: false, error: 'Franchise not found' };
 
-        // 1. Update basic metadata
-        franchises[idx].tipoOperacao = config.tipoOperacao || 'loja';
+        // 1. Update basic metadata (Comercial Align)
+        franchises[idx].tipoOperacao = config.tipoOperacao || 'delivery';
         franchises[idx].setupCompleto = false;
+        franchises[idx].setupStatus = 'pending'; 
+        
+        // Investment Breakdown
+        franchises[idx].investimentoBase = config.investimentoBase || 3499.99;
+        franchises[idx].investimentoEstrutura = config.investimentoEstrutura || 2000.00;
+        franchises[idx].investimentoTotalEstimado = franchises[idx].investimentoBase + franchises[idx].investimentoEstrutura;
+        
+        franchises[idx].ticketMedioBase = config.ticketMedio || 20.00;
+        franchises[idx].treinamentoTipo = config.treinamentoTipo || 'online'; // online | presencial | hibrido
+
         franchises[idx].territorio = {
             cidade: config.cidade || '',
             bairro: config.bairro || '',
@@ -176,15 +186,45 @@ const DataStore = {
             }
         }
 
-        // 3. Set Initial Onboarding Checklist
+        // 3. Set Initial Onboarding Checklist (Foco em Clareza Comercial)
         const setupChecklist = [
-            { id: 'stock', text: 'Cadastrar estoque inicial', done: false, required: true },
-            { id: 'test_sale', text: 'Realizar uma venda de teste', done: false, required: true },
-            { id: 'close_shift', text: 'Realizar o primeiro fechamento de caixa', done: false, required: true }
+            { id: 'menu', text: 'Entender cardápio e precificação', done: false, required: true },
+            { id: 'stock', text: 'Configurar estoque inicial', done: false, required: true },
+            { id: 'test_sale', text: 'Realizar uma venda de teste no PDV', done: false, required: true }
         ];
         this.setCollection('checklist_onboarding', franchiseId, setupChecklist);
 
         return { success: true, franchise: franchises[idx] };
+    },
+
+    markSetupComplete(franchiseId) {
+        const franchises = this.getAllFranchises() || [];
+        const idx = franchises.findIndex(f => f.id === franchiseId);
+        if (idx === -1) return false;
+
+        franchises[idx].setupCompleto = true;
+        franchises[idx].setupStatus = 'pronto';
+        franchises[idx].activatedAt = new Date().toISOString();
+        this.set('franchises', franchises);
+
+        // Trigger notification (to be implemented in notifications.js)
+        if (typeof Notifications !== 'undefined' && Notifications.notifyAdminOnActivation) {
+            Notifications.notifyAdminOnActivation(franchises[idx]);
+        }
+
+        return true;
+    },
+
+    getFranchiseAge(franchiseId) {
+        const franchises = this.getAllFranchises() || [];
+        const f = franchises.find(f => f.id === franchiseId);
+        if (!f || !f.createdAt) return 0;
+
+        const start = new Date(f.createdAt);
+        const now = new Date();
+        const diffTime = Math.abs(now - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays || 1;
     },
 
     getFinancesAllFranchises(filterFn) {
