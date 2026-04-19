@@ -56,9 +56,10 @@ const Recipes = {
         if (!order || !order.items) return allIngredients;
 
         order.items.forEach(item => {
-            const sabor = item.sabor || item.name || '';
-            const tamanho = item.tamanho || 'Medio';
-            const formato = item.formato || '';
+            const parsed = this._parseItem(item);
+            const sabor = parsed.sabor;
+            const tamanho = parsed.tamanho || 'Medio';
+            const formato = parsed.formato || '';
 
             // Check custom recipes first, then default
             const recipe = this.recipes[sabor];
@@ -101,6 +102,8 @@ const Recipes = {
 
     // Deduz ingredientes do estoque
     deductFromInventory(franchiseId, order) {
+        if (!order || order.inventoryDeducted) return [];
+
         const ingredients = this.getIngredientsForOrder(order);
         const inventory = DataStore.getCollection('inventory', franchiseId);
 
@@ -116,6 +119,8 @@ const Recipes = {
         });
 
         DataStore.set('inventory_' + franchiseId, inventory);
+        order.inventoryDeducted = true;
+        order.inventoryDeductedAt = new Date().toISOString();
 
         // Audit log
         if (typeof AuditLog !== 'undefined') {
@@ -126,6 +131,41 @@ const Recipes = {
         }
 
         return ingredients;
+    },
+
+    _parseItem(item) {
+        const rawName = String((item && (item.sabor || item.name)) || '').trim();
+        const rawSize = String((item && (item.tamanho || item.size)) || '').trim();
+        const normalizedName = rawName.toLowerCase();
+        const normalizedSize = rawSize.toLowerCase();
+
+        let sabor = rawName;
+        if (normalizedName.startsWith('shake ')) sabor = rawName.substring(6).trim();
+        else if (normalizedName.startsWith('sundae ')) sabor = rawName.substring(7).trim();
+        else if (normalizedName.startsWith('bowl ')) sabor = rawName.substring(5).trim();
+        else if (normalizedName.startsWith('acai shake ')) sabor = rawName.substring(11).trim();
+        else if (normalizedName.startsWith('acai bowl ')) sabor = rawName.substring(10).trim();
+
+        let formato = item && item.formato ? item.formato : '';
+        if (!formato) {
+            if (normalizedName.indexOf('shake') !== -1) formato = 'Shake';
+            else if (normalizedName.indexOf('sundae') !== -1) formato = 'Sundae';
+        }
+
+        let tamanho = item && item.tamanho ? item.tamanho : '';
+        if (!tamanho && normalizedSize) {
+            if (normalizedSize.indexOf('medio') !== -1 || normalizedSize.indexOf('500ml') !== -1) tamanho = 'Medio';
+            else if (normalizedSize.indexOf('mini') !== -1) tamanho = 'Mini';
+            else if (normalizedSize.indexOf('pequeno') !== -1 || normalizedSize.indexOf('300ml') !== -1) tamanho = 'Pequeno';
+            else if (normalizedSize.indexOf('grande') !== -1 || normalizedSize.indexOf('700ml') !== -1) tamanho = 'Grande';
+            else if (normalizedSize.indexOf('gigante') !== -1) tamanho = 'Gigante';
+        }
+
+        return {
+            sabor: sabor,
+            tamanho: tamanho || 'Medio',
+            formato: formato
+        };
     },
 
     // Custom recipes from DataStore

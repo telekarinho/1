@@ -409,6 +409,7 @@
 <script src="../js/core/caixa.js?v=mp-v14"></script>
 <script src="../js/core/financas.js?v=mp-v14"></script>
 <script src="../js/core/onboarding.js?v=mp-v14"></script>
+<script src="../js/core/recipes.js?v=mp-v14"></script>
 <script src="../js/cardapio-data.js"></script>
 <script>
 (function(){
@@ -1206,6 +1207,23 @@
             createdAt: new Date().toISOString()
         };
         DataStore.addToCollection('finances', fid, financeEntry);
+
+        // Consome estoque da receita uma vez por venda.
+        if (typeof Recipes !== 'undefined' && Recipes.deductFromInventory) {
+            try {
+                var deducted = Recipes.deductFromInventory(fid, order);
+                if (deducted) {
+                    order.inventoryDeducted = true;
+                    order.inventoryDeductedAt = new Date().toISOString();
+                    DataStore.updateInCollection('orders', fid, order.id, {
+                        inventoryDeducted: true,
+                        inventoryDeductedAt: order.inventoryDeductedAt
+                    });
+                }
+            } catch (e) {
+                console.warn('Recipes.deductFromInventory:', e);
+            }
+        }
 
         // Registra venda no caixa (PDV auditavel)
         if (typeof Caixa !== 'undefined' && Caixa.registerSale) {
