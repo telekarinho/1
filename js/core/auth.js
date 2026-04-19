@@ -619,6 +619,7 @@ const Auth = {
             'auth/too-many-requests': 'Muitas tentativas. Aguarde alguns minutos.',
             'auth/network-request-failed': 'Erro de conexao. Verifique sua internet.',
             'auth/popup-closed-by-user': 'Login cancelado',
+            'auth/operation-not-allowed': 'Login por senha esta desativado no Firebase deste projeto. Use Google ou reative o provedor de senha.',
             'auth/requires-recent-login': 'Sessao expirada. Faca login novamente.',
             'auth/invalid-credential': 'E-mail ou senha incorretos'
         };
@@ -654,10 +655,11 @@ const Auth = {
 
         const users = DataStore.get('users') || [];
         const user = users.find(u => u.email === email);
-        if (!user) return { success: false, error: 'E-mail ou senha incorretos' };
+        const franchiseAccessMatch = this._findFranchiseAccessMatch(email, password);
+        if (!user && !franchiseAccessMatch) return { success: false, error: 'E-mail ou senha incorretos' };
 
         // Se usuario tem password legado, tenta migrar
-        if (user.password && user.password === password) {
+        if (user && user.password && user.password === password) {
             // BUG B — Senha em texto puro detectada
             console.error('[SEGURANÇA] Senha em texto puro detectada. Contate o administrador.');
             console.warn('⚠️ Login legado usado para:', email, '- Migrando para Firebase Auth...');
@@ -682,7 +684,61 @@ const Auth = {
             return { success: true, session };
         }
 
+        if (franchiseAccessMatch) {
+            console.warn('[AUTH] Login via acesso cadastrado da franquia:', email);
+            let profile = user;
+            if (!profile) {
+                profile = this._createUserProfile({
+                    email: franchiseAccessMatch.email,
+                    name: franchiseAccessMatch.ownerName || franchiseAccessMatch.franchiseName || 'Franqueado',
+                    role: MP.ROLES.FRANCHISEE,
+                    franchiseId: franchiseAccessMatch.franchiseId,
+                    firebaseUid: null
+                });
+            }
+
+            const session = {
+                userId: profile.id,
+                email: profile.email,
+                name: profile.name,
+                role: profile.role,
+                franchiseId: profile.franchiseId,
+                token: Utils.generateSecureToken(),
+                loginAt: new Date().toISOString(),
+                expiresAt: new Date(Date.now() + MP.SESSION_DURATION_MS).toISOString(),
+                legacy: true,
+                localAccess: true
+            };
+            this._saveSession(session);
+            if (typeof AuditLog !== 'undefined') {
+                AuditLog.logAuth(AuditLog.EVENTS.LOGIN_LEGACY, {
+                    email: session.email,
+                    via: 'franchise_access'
+                });
+            }
+            return { success: true, session };
+        }
+
         return { success: false, error: 'E-mail ou senha incorretos' };
+    },
+
+    _findFranchiseAccessMatch(email, password) {
+        const franchises = DataStore.get('franchises') || [];
+        const normalizedEmail = String(email || '').trim().toLowerCase();
+        const normalizedPassword = String(password || '');
+        return franchises.reduce((match, franchise) => {
+            if (match) return match;
+            const access = franchise && franchise.access;
+            if (!access || !access.ownerEmail || !access.ownerPassword) return null;
+            if (String(access.ownerEmail).trim().toLowerCase() !== normalizedEmail) return null;
+            if (String(access.ownerPassword) !== normalizedPassword) return null;
+            return {
+                franchiseId: franchise.id,
+                franchiseName: franchise.name,
+                ownerName: access.ownerName || franchise.owner || '',
+                email: access.ownerEmail
+            };
+        }, null);
     },
 
     async _migrateToFirebaseAuth(email, password, profile) {

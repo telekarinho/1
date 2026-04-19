@@ -1043,6 +1043,12 @@
                         <input type="text" id="franchiseCity" required placeholder="Sua cidade">
                     </div>
                     <div class="form-group">
+                        <label>Bairro/Região *</label>
+                        <input type="text" id="franchiseNeighborhood" required placeholder="Seu bairro principal">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
                         <label>Estado *</label>
                         <select id="franchiseState" required>
                             <option value="">Selecione...</option>
@@ -1054,6 +1060,10 @@
                             <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
                             <option>SP</option><option>SE</option><option>TO</option>
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Plano de operação</label>
+                        <input type="text" id="franchiseStoreCount" placeholder="Ex: primeira unidade ou 2 lojas" value="Primeira unidade">
                     </div>
                 </div>
                 <div class="form-group">
@@ -1954,8 +1964,8 @@ function enviarContato(e) {
   var msg = e.target.querySelector('textarea,[name="mensagem"],[placeholder*="mensagem"]');
   var nomeVal = nome ? nome.value : 'Cliente';
   var msgVal = msg ? msg.value : '';
-  var texto = encodeURIComponent('🍨 Contato via site MilkyPot\n\n👤 ' + nomeVal + '\n💬 ' + msgVal);
-  window.open('https://wa.me/' + MILKYPOT_WA + '?text=' + texto, '_blank');
+  var texto = encodeURIComponent('Contato do site MilkyPot\nNome: ' + nomeVal + '\nMensagem: ' + msgVal);
+  window.open('https://api.whatsapp.com/send/?phone=' + MILKYPOT_WA + '&text=' + texto + '&type=phone_number&app_absent=0', '_blank');
   return false;
 }
 
@@ -1964,13 +1974,56 @@ function enviarContato(e) {
    ============================================ */
 function enviarFranquia(e) {
   e.preventDefault();
-  var campos = {};
-  e.target.querySelectorAll('input,select,textarea').forEach(function(el) {
-    if ((el.name || el.id) && el.value) campos[el.name || el.id] = el.value;
-  });
-  var texto = encodeURIComponent('🚀 Quero ser Franqueado MilkyPot!\n\n' +
-    Object.keys(campos).map(function(k) { return '• ' + k + ': ' + campos[k]; }).join('\n'));
-  window.open('https://wa.me/' + MILKYPOT_WA + '?text=' + texto, '_blank');
+  var form = e.target;
+  var payload = {
+    model: document.getElementById('franchiseModel').value || '',
+    name: document.getElementById('franchiseName').value.trim(),
+    email: document.getElementById('franchiseEmail').value.trim(),
+    whatsapp: document.getElementById('franchisePhone').value.trim(),
+    city: document.getElementById('franchiseCity').value.trim(),
+    neighborhood: document.getElementById('franchiseNeighborhood').value.trim(),
+    state: document.getElementById('franchiseState').value.trim(),
+    storeCount: document.getElementById('franchiseStoreCount').value.trim(),
+    capital: document.getElementById('franchiseCapital').value.trim(),
+    experience: document.getElementById('franchiseExperience').value.trim(),
+    message: document.getElementById('franchiseMsg').value.trim(),
+    createdAt: new Date().toISOString(),
+    source: 'site_franchise_form'
+  };
+
+  try {
+    var leads = JSON.parse(localStorage.getItem('mp_site_leads') || '[]');
+    leads.unshift(payload);
+    localStorage.setItem('mp_site_leads', JSON.stringify(leads.slice(0, 50)));
+  } catch (err) {
+    console.warn('Lead local save error:', err);
+  }
+
+  var lines = [
+    'Quero ser Franqueado MilkyPot!',
+    '',
+    '- Modelo: ' + (payload.model || 'nao informado'),
+    '- Nome: ' + payload.name,
+    '- WhatsApp: ' + payload.whatsapp,
+    '- Cidade: ' + payload.city,
+    '- Bairro/Regiao: ' + payload.neighborhood,
+    '- Estado: ' + payload.state,
+    '- Quantas lojas: ' + (payload.storeCount || 'nao informado'),
+    '- Capital: ' + payload.capital,
+    '- Experiencia: ' + (payload.experience || 'nao informado')
+  ];
+
+  if (payload.email) lines.push('- E-mail: ' + payload.email);
+  if (payload.message) {
+    lines.push('');
+    lines.push('Mensagem adicional:');
+    lines.push(payload.message);
+  }
+
+  var texto = encodeURIComponent(lines.join('\n'));
+  window.open('https://api.whatsapp.com/send/?phone=' + MILKYPOT_WA + '&text=' + texto + '&type=phone_number&app_absent=0', '_blank');
+  form.reset();
+  document.getElementById('franchiseModel').value = '';
   return false;
 }
 </script>

@@ -379,6 +379,7 @@
             if (newStatus === 'entregue' || newStatus === MP.ORDER_STATUS.DELIVERED) {
                 if (typeof Recipes !== 'undefined') {
                     Recipes.deductFromInventory(franchiseId, orders[idx]);
+                    DataStore.set('orders_' + franchiseId, orders);
                 }
                 if (typeof Loyalty !== 'undefined') {
                     const result = Loyalty.addPointsFromOrder(orders[idx], franchiseId);
