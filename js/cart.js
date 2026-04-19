@@ -57,7 +57,7 @@ function reloadCart() {
 // ============================================
 function formatCurrency(value) {
     if (typeof value !== 'number' || isNaN(value)) value = 0;
-    return 'R$ ' + value.toFixed(2).replace('.', ',');
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 }
 
 function calcItemTotal(item) {
