@@ -863,18 +863,11 @@
     }
 
     /* ----------------------------------------------------------------
-       Upload para Hostinger via upload-media.php
-       Arquivo salvo em: milkypot.com/uploads/tv-media/
-       Firestore armazena apenas a URL pública (sem Base64).
-       ----------------------------------------------------------------
-       Para configurar:
-         1. Copie upload-media.php para a raiz do seu hosting Hostinger
-         2. Crie a pasta uploads/tv-media/ com permissão 755
-         3. Ajuste UPLOAD_TOKEN abaixo (igual ao do PHP)
+       Upload para Firebase Storage (Plano Blaze)
+       Caminho: tv-media/{franchiseId}/{id}.jpg|mp4
+       Firestore armazena apenas a URL pública de download — sem Base64,
+       sem limite de 1MB, carrega em qualquer dispositivo (TV, celular).
     ---------------------------------------------------------------- */
-    var UPLOAD_ENDPOINT = 'https://milkypot.com/upload-media.php';
-    var UPLOAD_TOKEN    = 'mp_tv_muda_aqui_123'; // mesmo valor do PHP
-
     function handleFiles(files){
         Array.from(files).forEach(function(file){
             if(file.size > 300*1024*1024){ Utils.showToast(file.name + ' muito grande (max 300MB)','error'); return; }
@@ -886,23 +879,20 @@
             Utils.showToast('⬆️ Enviando ' + file.name + '…', 'info');
 
             function doUpload(blob){
-                var fd = new FormData();
-                fd.append('file', blob, isVideo ? file.name : id + '.jpg');
-                fetch(UPLOAD_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'X-Upload-Token': UPLOAD_TOKEN },
-                    body: fd
-                })
-                .then(function(r){ return r.json(); })
-                .then(function(json){
-                    if(!json.ok) throw new Error(json.error || 'Upload falhou');
-                    var url = json.url;
+                var ext      = isVideo ? (file.name.split('.').pop().toLowerCase() || 'mp4') : 'jpg';
+                var filename = id + '.' + ext;
+                var path     = 'tv-media/' + fid + '/' + filename;
+                var ref      = firebase.storage().ref(path);
+
+                ref.put(blob)
+                .then(function(snapshot){ return snapshot.ref.getDownloadURL(); })
+                .then(function(url){
                     var item = {
                         id: id,
                         name: file.name,
                         type: isVideo ? 'video' : 'image',
-                        url: url,           // ← URL pública no Hostinger
-                        hostingerFile: json.filename,
+                        url: url,            // ← URL pública Firebase CDN
+                        storagePath: path,   // ← para deletar depois
                         size: blob.size || file.size,
                         duration: isImage ? 8 : 0,
                         addedAt: new Date().toISOString()
@@ -942,12 +932,9 @@
 
     window.deleteMedia = function(id){
         var item = getMedia().find(function(m){ return m.id === id; });
-        // Limpa arquivo do Hostinger (falha silenciosa se não existir)
-        if(item && item.hostingerFile){
-            fetch(UPLOAD_ENDPOINT + '?file=' + encodeURIComponent(item.hostingerFile), {
-                method: 'DELETE',
-                headers: { 'X-Upload-Token': UPLOAD_TOKEN }
-            }).catch(function(){});
+        // Remove do Firebase Storage (silencioso se não existir)
+        if(item && item.storagePath){
+            try { firebase.storage().ref(item.storagePath).delete().catch(function(){}); } catch(e){}
         }
         saveMedia(getMedia().filter(function(m){return m.id!==id}));
         var pl = getPlaylist().filter(function(p){return p.mediaId!==id});
