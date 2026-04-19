@@ -698,17 +698,17 @@
                         <div class="form-group">
                             <label>Kit de Franquia</label>
                             <select id="roiModel" onchange="calculateROI()">
-                                <option value="delivery">Kit Delivery em Casa — R$ 3.499,99</option>
-                                <option value="pro" selected>Kit Pro Dark Kitchen — R$ 4.997</option>
-                                <option value="loja">Kit Loja / Quiosque — a partir de R$ 25.000</option>
+                                <option value="delivery">🛵 Kit Delivery — R$ 3.499,99</option>
+                                <option value="pro" selected>🚀 Kit Pro — R$ 4.997</option>
+                                <option value="loja">🏪 Kit Loja / Quiosque — R$ 25.000+</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Cenário de demanda</label>
                             <select id="roiDemand" onchange="calculateROI()">
-                                <option value="conservador">Conservador (início da operação)</option>
-                                <option value="medio" selected>Médio (operação madura, 3-6 meses)</option>
-                                <option value="otimo">Ótimo (alta demanda, boa localização)</option>
+                                <option value="conservador">Conservador (início)</option>
+                                <option value="medio" selected>Médio (madura, 3-6 meses)</option>
+                                <option value="otimo">Ótimo (alta demanda)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -1099,9 +1099,17 @@
         </div>
     </div>
 
-    <!-- WhatsApp Float -->
-    <a href="https://wa.me/5511XXXXXXXX?text=Oi!%20Vim%20do%20card%C3%A1pio%20online%20da%20MilkyPot%20e%20gostaria%20de%20fazer%20um%20pedido!" class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp" title="WhatsApp - configurar número antes de publicar">
-        <span>💬</span>
+    <!-- WhatsApp Float (número real Muffato Quintino) -->
+    <a href="https://wa.me/5543998042424?text=Oi!%20Vim%20do%20site%20da%20MilkyPot%20e%20gostaria%20de%20fazer%20um%20pedido!"
+       class="whatsapp-float"
+       target="_blank"
+       rel="noopener"
+       aria-label="Falar no WhatsApp"
+       title="Fale com a MilkyPot no WhatsApp">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.966-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+        </svg>
+        <span class="whatsapp-float-label">Pedir agora</span>
     </a>
 
     <!-- Product Bottom Sheet -->
@@ -1936,14 +1944,17 @@
 /* ============================================
    Formulário de Contato - Fallback WhatsApp
    ============================================ */
+// WhatsApp oficial MilkyPot (Muffato Quintino, Londrina - owner Jocimar)
+var MILKYPOT_WA = '5543998042424';
+
 function enviarContato(e) {
   e.preventDefault();
   var nome = e.target.querySelector('[name="nome"],[placeholder*="nome"],[id*="nome"]');
   var msg = e.target.querySelector('textarea,[name="mensagem"],[placeholder*="mensagem"]');
   var nomeVal = nome ? nome.value : 'Cliente';
   var msgVal = msg ? msg.value : '';
-  var texto = encodeURIComponent('Contato do site\nNome: ' + nomeVal + '\nMensagem: ' + msgVal);
-  window.open('https://wa.me/5511XXXXXXXX?text=' + texto, '_blank');
+  var texto = encodeURIComponent('🍨 Contato via site MilkyPot\n\n👤 ' + nomeVal + '\n💬 ' + msgVal);
+  window.open('https://wa.me/' + MILKYPOT_WA + '?text=' + texto, '_blank');
   return false;
 }
 
@@ -1954,11 +1965,11 @@ function enviarFranquia(e) {
   e.preventDefault();
   var campos = {};
   e.target.querySelectorAll('input,select,textarea').forEach(function(el) {
-    if (el.name || el.id) campos[el.name || el.id] = el.value;
+    if ((el.name || el.id) && el.value) campos[el.name || el.id] = el.value;
   });
-  var texto = encodeURIComponent('Interesse em Franquia MilkyPot\n' +
-    Object.keys(campos).map(function(k) { return k + ': ' + campos[k]; }).join('\n'));
-  window.open('https://wa.me/5511XXXXXXXX?text=' + texto, '_blank');
+  var texto = encodeURIComponent('🚀 Quero ser Franqueado MilkyPot!\n\n' +
+    Object.keys(campos).map(function(k) { return '• ' + k + ': ' + campos[k]; }).join('\n'));
+  window.open('https://wa.me/' + MILKYPOT_WA + '?text=' + texto, '_blank');
   return false;
 }
 </script>
