@@ -191,9 +191,9 @@ const PRODUCTS = [
 ];
 
 const CHAT_GREETINGS = [
-    "Oii! Bem-vindo à MilkyPot! 🐑✨",
-    "Eu sou a Lulú, a ovelhinha mais doce do mundo!",
-    "Posso te ajudar a fazer seu pedido de um jeito super fácil! O que você gostaria?"
+    "Oii! Bem-vindo(a) à MilkyPot! 🐑✨",
+    "Eu sou a Lulú, atendente virtual (sim, sou ovelhinha 🐑)",
+    "Pode me perguntar qualquer coisa: cardápio, franquia, entrega, horário… Ou escolha uma opção abaixo 👇"
 ];
 
 const CHAT_CATEGORIES_MSG = "Escolha uma categoria para ver os produtos:";

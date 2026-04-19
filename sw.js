@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v17';
-const CACHE_NAME = 'milkypot-v17';
+const CACHE_VERSION = 'mp-v18';
+const CACHE_NAME = 'milkypot-v18';
 
 // Critical local assets that must be available offline
 const PRECACHE_URLS = [
@@ -45,6 +45,7 @@ const PRECACHE_URLS = [
     // Feature JS
     '/js/cardapio.js',
     '/js/cardapio-data.js',
+    '/js/chat-ai.js',
     // Assets
     '/images/logo-milkypot.png',
     '/manifest.json',
