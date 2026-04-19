@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Desafios Premiados</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&family=Orbitron:wght@600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <style>
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        .game-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .game-card:hover {
+            transform: translateY(-10px);
+            border-color: #E91E63;
+        }
+        .game-icon { font-size: 4rem; margin-bottom: 20px; }
+        .game-title { 
+            font-family: 'Baloo 2', cursive; 
+            font-size: 1.8rem; 
+            color: #5A4570;
+            margin-bottom: 15px;
+        }
+        .game-desc { color: #888; margin-bottom: 25px; line-height: 1.5; }
+        
+        /* Modal do Jogo */
+        .game-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .game-overlay.active { display: flex; }
+        .game-screen {
+            background: #fff;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 32px;
+            padding: 40px;
+            position: relative;
+            text-align: center;
+        }
+        
+        /* Cronometro */
+        .timer-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 5rem;
+            color: #E91E63;
+            margin: 30px 0;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 20px;
+            border: 4px solid #eee;
+        }
+        
+        .btn-game {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Baloo 2', cursive;
+        }
+        .btn-primary { background: #E91E63; color: #fff; box-shadow: 0 8px 25px rgba(233, 30, 99, 0.3); }
+        .btn-stop { background: #333; color: #fff; }
+        .btn-game:active { transform: scale(0.95); }
+
+        .result-msg {
+            margin-top: 20px;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+        .text-win { color: #27ae60; animation: bounce 0.5s infinite; }
+        .text-lose { color: #c0392b; }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .prize-control {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            display: none;
+        }
+
+        .input-prize {
+            width: 100px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="panel-layout">
+    
+    <main class="panel-main">
+        <header class="panel-header">
+            <h1>🎮 Desafios MilkyPot</h1>
+            <p>Gamificação exclusiva para lojas físicas e quiosques.</p>
+        </header>
+
+        <div class="panel-content">
+            <!-- Bloqueio para Delivery -->
+            <div id="deliveryBlocker" style="display:none; background:#FFF3E0; border:2px solid #FF9800; padding:30px; border-radius:12px; text-align:center;">
+                <h2 style="color:#E65100;">🛑 Acesso Restrito</h2>
+                <p>O Módulo de Desafios é exclusivo para modelos **LOJA / QUIOSQUE**.</p>
+                <p>Franquias Delivery operam apenas com produtos unitários e porções fixas.</p>
+            </div>
+
+            <div class="games-grid" id="mainGames">
+                <!-- Acerte o Tempo -->
+                <div class="game-card" onclick="Games.open('timer')">
+                    <div class="game-icon">⏱️</div>
+                    <div class="game-title">Acerte o Tempo</div>
+                    <div class="game-desc">Pare o cronômetro exatamente em **10.00** segundos. Se acertar (margem 0.05), o cliente ganha o prêmio!</div>
+                    <button class="btn btn-primary" style="width:100%">Jogar Agora</button>
+                </div>
+
+                <!-- Acerte o Peso -->
+                <div class="game-card" onclick="Games.open('weight')">
+                    <div class="game-icon">⚖️</div>
+                    <div class="game-title">Acerte o Peso</div>
+                    <div class="game-desc">Peça pro cliente adivinhar o peso do copo dele. Se ele acertar na mosca, o potinho é brinde!</div>
+                    <button class="btn btn-primary" style="width:100%">Jogar Agora</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Overlay Timer -->
+    <div class="game-overlay" id="timerOverlay">
+        <div class="game-screen">
+            <h2 class="game-title">Desafio 10 Segundos</h2>
+            <p>O cliente deve parar o cronômetro sem olhar!</p>
+            <div class="timer-display" id="timeDisplay">0.00</div>
+            
+            <button class="btn-game btn-primary" id="btnAction" onclick="Games.timerAction()">INICIAR</button>
+            
+            <div id="timerResult" class="result-msg"></div>
+
+            <div id="prizeControlTimer" class="prize-control">
+                <p>O cliente ganhou! Qual o valor do prêmio dado?</p>
+                <div style="margin:10px 0;">
+                    R$ <input type="number" step="0.01" value="15.00" class="input-prize" id="prizeValueTimer">
+                </div>
+                <button class="btn btn-success" onclick="Games.registerPrize('timer')">Registrar Brinde no Financeiro</button>
+            </div>
+            
+            <button class="btn btn-link" style="margin-top:20px" onclick="Games.close()">Fechar Jogo</button>
+        </div>
+    </div>
+
+    <!-- Overlay Weight (Simplificado) -->
+    <div class="game-overlay" id="weightOverlay">
+        <div class="game-screen">
+            <h2 class="game-title">Chute o Peso</h2>
+            <p>Peça pro cliente falar um peso antes de colocar na balança.</p>
+            
+            <div style="margin:30px 0; font-size:1.5rem;">
+                <label>Palpite do Cliente:</label><br>
+                <input type="number" id="guessVal" class="input-prize" style="width:150px"> g
+            </div>
+            <div style="margin:20px 0; font-size:1.5rem;">
+                <label>Peso Real na Balança:</label><br>
+                <input type="number" id="realVal" class="input-prize" style="width:150px"> g
+            </div>
+
+            <button class="btn btn-primary" style="width:100%" onclick="Games.checkWeight()">Verificar Acerto</button>
+            <div id="weightResult" class="result-msg"></div>
+
+            <div id="prizeControlWeight" class="prize-control">
+                <p>ACERTOU! Valor do brinde:</p>
+                R$ <input type="number" step="0.01" value="20.00" class="input-prize" id="prizeValueWeight">
+                <button class="btn btn-success" onclick="Games.registerPrize('weight')">Registrar no Financeiro</button>
+            </div>
+
+            <button class="btn btn-link" style="margin-top:30px" onclick="Games.close()">Fechar Jogo</button>
+        </div>
+    </div>
+
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+    <script src="../js/core/financas.js"></script>
+
+    <script>
+        const Games = {
+            timerState: 'ready',
+            timerStart: 0,
+            timerInterval: null,
+            franchiseId: null,
+
+            init() {
+                const session = Auth.getSession();
+                this.franchiseId = session.franchiseId;
+                
+                const franchises = DataStore.getAllFranchises() || [];
+                const store = franchises.find(f => f.id === this.franchiseId);
+
+                if (store && store.tipoOperacao === 'delivery') {
+                    document.getElementById('mainGames').style.display = 'none';
+                    document.getElementById('deliveryBlocker').style.display = 'block';
+                }
+            },
+
+            open(type) {
+                document.getElementById(type + 'Overlay').classList.add('active');
+                if(type === 'timer') this.resetTimer();
+            },
+
+            close() {
+                document.querySelectorAll('.game-overlay').forEach(o => o.classList.remove('active'));
+            },
+
+            // --- Jogo do Cronômetro ---
+            resetTimer() {
+                this.timerState = 'ready';
+                document.getElementById('timeDisplay').textContent = '0.00';
+                document.getElementById('btnAction').textContent = 'INICIAR';
+                document.getElementById('btnAction').className = 'btn-game btn-primary';
+                document.getElementById('timerResult').innerHTML = '';
+                document.getElementById('prizeControlTimer').style.display = 'none';
+            },
+
+            timerAction() {
+                if(this.timerState === 'ready') {
+                    this.timerState = 'running';
+                    this.timerStart = Date.now();
+                    document.getElementById('btnAction').textContent = 'PARAR';
+                    document.getElementById('btnAction').className = 'btn-game btn-stop';
+                    this.timerInterval = setInterval(() => {
+                        const elapsed = (Date.now() - this.timerStart) / 1000;
+                        document.getElementById('timeDisplay').textContent = elapsed.toFixed(2);
+                    }, 50);
+                } else if(this.timerState === 'running') {
+                    this.timerState = 'stopped';
+                    clearInterval(this.timerInterval);
+                    this.checkTimerResult();
+                } else {
+                    this.resetTimer();
+                }
+            },
+
+            checkTimerResult() {
+                const val = parseFloat(document.getElementById('timeDisplay').textContent);
+                const diff = Math.abs(10.00 - val);
+                const msg = document.getElementById('timerResult');
+                
+                if (diff <= 0.05) {
+                    msg.innerHTML = '<span class="text-win">🌟 INCRÍVEL! EXATAMENTE 10 SEGUNDOS! 🌟</span>';
+                    document.getElementById('prizeControlTimer').style.display = 'block';
+                } else {
+                    msg.innerHTML = '<span class="text-lose">Por pouco! Errou por ' + diff.toFixed(2) + 's</span>';
+                    document.getElementById('btnAction').textContent = 'TENTAR NOVAMENTE';
+                }
+            },
+
+            // --- Jogo do Peso ---
+            checkWeight() {
+                const g = parseFloat(document.getElementById('guessVal').value);
+                const r = parseFloat(document.getElementById('realVal').value);
+                const msg = document.getElementById('weightResult');
+
+                if (g === r) {
+                    msg.innerHTML = '<span class="text-win">🏆 ACERTOU NA MOSCA! Potinho Grátis!</span>';
+                    document.getElementById('prizeControlWeight').style.display = 'block';
+                } else {
+                    msg.innerHTML = '<span class="text-lose">Quase! Diferença de ' + Math.abs(r-g) + 'g.</span>';
+                }
+            },
+
+            // --- Registro Financeiro (Auditável) ---
+            registerPrize(type) {
+                const valInput = document.getElementById('prizeValue' + (type === 'timer' ? 'Timer' : 'Weight'));
+                const valor = parseFloat(valInput.value);
+
+                if (valor < 0) return alert("Valor inválido");
+
+                // Registra como custo variável de marketing
+                const res = Financas.addCost(this.franchiseId, {
+                    kind: 'variable',
+                    categoria: 'marketing_local',
+                    descricao: `BRINDE DESAFIO: ${type === 'timer' ? '10 Segundos' : 'Acerte o Peso'}`,
+                    valor: valor,
+                    notes: `Prêmio concedido em jogo de gamificação em loja.`,
+                    source: 'marketing'
+                });
+
+                if (res.success) {
+                    AuditLog.log('marketing.challenge_reward', { type, valor }, this.franchiseId);
+                    alert("✅ Brinde registrado como investimento de marketing!");
+                    this.close();
+                } else {
+                    alert("Erro ao registrar: " + res.error);
+                }
+            }
+        };
+
+        window.addEventListener('load', () => Games.init());
+    </script>
+</body>
+</html>

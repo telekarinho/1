@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Gestão de Territórios</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <style>
+        .territory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .territory-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-left: 6px solid #ccc;
+            position: relative;
+        }
+        .status-ativo { border-color: #4CAF50; }
+        .status-reservado { border-color: #FF9800; }
+        .status-disponivel { border-color: #2196F3; }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            float: right;
+        }
+        .badge-ativo { background: #E8F5E9; color: #2E7D32; }
+        .badge-reservado { background: #FFF3E0; color: #E65100; }
+        .badge-disponivel { background: #E3F2FD; color: #1565C0; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 100px;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .input-field {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .btn-add {
+            background: #E91E63;
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="panel-layout">
+    <main class="panel-main">
+        <header class="panel-header">
+            <h1>📍 Gestão de Territórios & Expansão</h1>
+            <p>Controle de exclusividade e reserva de regiões para novas franquias.</p>
+        </header>
+
+        <div class="panel-content">
+            <!-- Super Admin View: Add New Territory -->
+            <div id="adminPanel">
+                <h3>Cadastrar Nova Região</h3>
+                <div class="form-row">
+                    <input type="text" id="inCidade" placeholder="Cidade" class="input-field">
+                    <input type="text" id="inBairro" placeholder="Bairro" class="input-field">
+                    <select id="inStatus" class="input-field">
+                        <option value="disponivel">Disponível</option>
+                        <option value="reservado">Reservado</option>
+                        <option value="ativo">Ativo</option>
+                    </select>
+                </div>
+                <button class="btn-add" onclick="Territory.add()">+ Adicionar Território</button>
+            </div>
+
+            <div class="territory-grid" id="territoryList">
+                <!-- Cards will be injected here -->
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+
+    <script>
+        const Territory = {
+            init() {
+                this.render();
+            },
+
+            getAll() {
+                // Combina territorios de franquias existentes + reservados no datastore
+                const franchises = DataStore.getAllFranchises() || [];
+                const extra = DataStore.get('territory_leads') || [];
+                
+                let list = franchises.map(f => ({
+                    id: f.id,
+                    name: f.name,
+                    cidade: f.territorio?.cidade || f.city,
+                    bairro: f.territorio?.bairro || 'Centro',
+                    status: f.territorio?.status || 'ativo',
+                    raio: f.territorio?.raioEntrega || 3,
+                    dataReserva: f.territorio?.dataReserva || f.createdAt
+                }));
+
+                return list.concat(extra);
+            },
+
+            add() {
+                const cidade = document.getElementById('inCidade').value.trim();
+                const bairro = document.getElementById('inBairro').value.trim();
+                const status = document.getElementById('inStatus').value;
+
+                if (!cidade || !bairro) return alert("Preencha cidade e bairro");
+
+                // Prevenção de Duplicidade
+                const all = this.getAll();
+                const exists = all.find(t => 
+                    t.cidade.toLowerCase() === cidade.toLowerCase() && 
+                    t.bairro.toLowerCase() === bairro.toLowerCase()
+                );
+
+                if (exists) {
+                    return alert("🛑 Esta região já possui um registro (Ativo ou Reservado). Escolha outro bairro.");
+                }
+
+                const newTerritory = {
+                    id: 'lead_' + Date.now(),
+                    cidade,
+                    bairro,
+                    status,
+                    dataReserva: new Date().toISOString()
+                };
+
+                let extra = DataStore.get('territory_leads') || [];
+                extra.push(newTerritory);
+                DataStore.set('territory_leads', extra);
+
+                AuditLog.log('franchise.territory_reserved', newTerritory);
+                alert("✅ Território registrado com sucesso!");
+                this.render();
+            },
+
+            render() {
+                const list = this.getAll();
+                const container = document.getElementById('territoryList');
+                container.innerHTML = '';
+
+                list.forEach(t => {
+                    const card = document.createElement('div');
+                    card.className = `territory-card status-${t.status}`;
+                    card.innerHTML = `
+                        <span class="badge badge-${t.status}">${t.status}</span>
+                        <h4 style="margin:0; font-family:'Baloo 2'; font-size:1.3rem;">${t.bairro}</h4>
+                        <p style="margin:5px 0; color:#666;">${t.cidade}</p>
+                        <hr style="border:none; border-top:1px solid #eee; margin:10px 0;">
+                        <small style="color:#999;">
+                            ${t.name ? `Franqueado: <strong>${t.name}</strong>` : 'Vaga Disponível'}
+                            <br>
+                            Reserva: ${new Date(t.dataReserva).toLocaleDateString()}
+                        </small>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+        };
+
+        window.onload = () => Territory.init();
+    </script>
+</body>
+</html>

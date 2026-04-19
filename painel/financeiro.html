@@ -204,6 +204,19 @@
                     </div>
                 </div>
 
+                <!-- RANKING DE FRANQUIAS (Network Power) -->
+                <div class="panel-card" id="rankingCard" style="border: 2px solid var(--primary);">
+                    <div class="panel-card-header" style="background: linear-gradient(90deg, var(--secondary), var(--primary)); color:#fff; border-radius: 12px 12px 0 0;">
+                        <h3 style="margin:0; color:#fff;">🏆 Ranking de Performance da Rede</h3>
+                        <p style="margin:0; font-size:0.85rem; opacity:0.8;">Benchmark baseado nas vendas e precisão operacional deste mês.</p>
+                    </div>
+                    <div class="panel-card-body">
+                        <div id="rankingContent">
+                            <p style="text-align:center;">Processando ranking da rede...</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- DRE - DEMONSTRATIVO DE RESULTADO -->
                 <div class="panel-card" id="dreSection">
                     <div class="panel-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
@@ -434,6 +447,33 @@
 
             // DRE
             renderDRE();
+
+            // Ranking
+            renderRanking();
+        }
+
+        function renderRanking() {
+            if (typeof Financas === 'undefined' || !Financas.getFranchiseRanking) return;
+            var rank = Financas.getFranchiseRanking();
+            var container = document.getElementById('rankingContent');
+            
+            if (!rank || rank.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999;">Dados insuficientes para gerar ranking.</p>';
+                return;
+            }
+
+            var html = '<table class="panel-table"><thead><tr><th>Posicao</th><th>Franquia</th><th>Cidade</th><th style="text-align:right;">Receita</th></tr></thead><tbody>';
+            rank.forEach(function(item, idx) {
+                var medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : (idx + 1) + 'º'));
+                html += '<tr>';
+                html += '<td style="font-weight:800; font-size:1.1rem;">' + medal + '</td>';
+                html += '<td><strong>' + Utils.escapeHtml(item.name) + '</strong></td>';
+                html += '<td>' + Utils.escapeHtml(item.city) + '</td>';
+                html += '<td style="text-align:right; font-weight:700; color:var(--primary);">' + Utils.formatCurrency(item.revenue) + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
         }
 
         function updateKpiChanges(allFinances, allOrders, range, currentIncome, currentExpenses, currentProfit, currentTicket) {
