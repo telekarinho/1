@@ -863,11 +863,66 @@
     }
 
     /* ----------------------------------------------------------------
-       Upload para Firebase Storage (Plano Blaze)
+       Upload para Firebase Storage via REST API single-POST
        Caminho: tv-media/{franchiseId}/{id}.jpg|mp4
-       Firestore armazena apenas a URL pública de download — sem Base64,
-       sem limite de 1MB, carrega em qualquer dispositivo (TV, celular).
+
+       Usamos POST direto em firebasestorage.googleapis.com ao invés
+       do SDK .put() porque o SDK usa "resumable upload" para arquivos
+       grandes (>5MB), e resumable requer CORS configurado no bucket.
+       Single-POST funciona até 256MB e dispensa CORS bucket-level.
     ---------------------------------------------------------------- */
+    var STORAGE_BUCKET = 'milkypot-ad945.firebasestorage.app';
+
+    function uploadToFirebaseStorage(blob, path, onProgress){
+        return new Promise(function(resolve, reject){
+            var user = firebase.auth().currentUser;
+            if(!user){ reject(new Error('Usuário não autenticado — faça login novamente')); return; }
+
+            user.getIdToken().then(function(idToken){
+                var encodedPath = encodeURIComponent(path);
+                var url = 'https://firebasestorage.googleapis.com/v0/b/' + STORAGE_BUCKET + '/o?uploadType=media&name=' + encodedPath;
+
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', url, true);
+                xhr.setRequestHeader('Content-Type', blob.type || 'application/octet-stream');
+                xhr.setRequestHeader('Authorization', 'Firebase ' + idToken);
+                xhr.timeout = 15 * 60 * 1000; // 15 min para conexões lentas
+
+                xhr.upload.onprogress = function(e){
+                    if(e.lengthComputable && onProgress){
+                        onProgress(Math.round((e.loaded / e.total) * 100));
+                    }
+                };
+
+                xhr.onload = function(){
+                    if(xhr.status >= 200 && xhr.status < 300){
+                        try {
+                            var meta = JSON.parse(xhr.responseText);
+                            var token = meta.downloadTokens;
+                            if(!token){ reject(new Error('Sem downloadToken na resposta')); return; }
+                            var downloadUrl = 'https://firebasestorage.googleapis.com/v0/b/' + STORAGE_BUCKET + '/o/' + encodedPath + '?alt=media&token=' + token;
+                            resolve({ url: downloadUrl, path: path });
+                        } catch(e){
+                            reject(new Error('Resposta inválida do Storage: ' + xhr.responseText.substring(0,200)));
+                        }
+                    } else {
+                        var errMsg = 'HTTP ' + xhr.status;
+                        try {
+                            var errBody = JSON.parse(xhr.responseText);
+                            errMsg += ' — ' + (errBody.error && errBody.error.message || xhr.responseText.substring(0,200));
+                        } catch(e){ errMsg += ' — ' + xhr.responseText.substring(0,200); }
+                        reject(new Error(errMsg));
+                    }
+                };
+                xhr.onerror   = function(){ reject(new Error('Falha de rede durante upload')); };
+                xhr.ontimeout = function(){ reject(new Error('Timeout (15min) — conexão muito lenta')); };
+                xhr.onabort   = function(){ reject(new Error('Upload cancelado')); };
+
+                xhr.send(blob);
+            }).catch(function(err){ reject(new Error('Erro ao obter token: ' + err.message)); });
+        });
+    }
+
 
     // Barra de progresso persistente (canto inferior direito)
     function showUploadProgress(taskId, name, pct, errMsg){
@@ -916,57 +971,45 @@
                 var ext      = isVideo ? (file.name.split('.').pop().toLowerCase() || 'mp4') : 'jpg';
                 var filename = id + '.' + ext;
                 var path     = 'tv-media/' + fid + '/' + filename;
-                var ref      = firebase.storage().ref(path);
 
-                var task = ref.put(blob, { contentType: blob.type || file.type });
-                task.on('state_changed',
-                    function(snap){
-                        var pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-                        showUploadProgress(id, file.name, pct);
-                    },
-                    function(err){
-                        console.error('[TV Upload] erro:', err, 'code:', err.code, 'serverResponse:', err.serverResponse);
-                        var code = err.code || 'unknown';
-                        var msg  = 'storage/' === code.substring(0,8) ? code.substring(8) : (err.message || code);
-                        showUploadProgress(id, file.name, 0, code + ' — ' + msg);
-                    },
-                    function(){
-                        task.snapshot.ref.getDownloadURL().then(function(url){
-                            hideUploadProgress(id);
-                            var item = {
-                                id: id,
-                                name: file.name,
-                                type: isVideo ? 'video' : 'image',
-                                url: url,
-                                storagePath: path,
-                                size: blob.size || file.size,
-                                duration: isImage ? 8 : 0,
-                                addedAt: new Date().toISOString()
-                            };
-                            if(isVideo){
-                                var v = document.createElement('video');
-                                v.preload = 'metadata';
-                                v.onloadedmetadata = function(){
-                                    item.duration = Math.ceil(v.duration) || 15;
-                                    var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
-                                    Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
-                                };
-                                v.onerror = function(){
-                                    item.duration = 15;
-                                    var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
-                                    Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
-                                };
-                                v.src = url;
-                            } else {
-                                var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
-                                Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
-                            }
-                        }).catch(function(err){
-                            console.error('[TV Upload] getDownloadURL falhou:', err);
-                            showUploadProgress(id, file.name, 0, 'getDownloadURL: ' + (err.message || err.code));
-                        });
+                uploadToFirebaseStorage(blob, path, function(pct){
+                    showUploadProgress(id, file.name, pct);
+                })
+                .then(function(result){
+                    hideUploadProgress(id);
+                    var item = {
+                        id: id,
+                        name: file.name,
+                        type: isVideo ? 'video' : 'image',
+                        url: result.url,
+                        storagePath: result.path,
+                        size: blob.size || file.size,
+                        duration: isImage ? 8 : 0,
+                        addedAt: new Date().toISOString()
+                    };
+                    if(isVideo){
+                        var v = document.createElement('video');
+                        v.preload = 'metadata';
+                        v.onloadedmetadata = function(){
+                            item.duration = Math.ceil(v.duration) || 15;
+                            var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
+                            Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
+                        };
+                        v.onerror = function(){
+                            item.duration = 15;
+                            var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
+                            Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
+                        };
+                        v.src = result.url;
+                    } else {
+                        var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
+                        Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
                     }
-                );
+                })
+                .catch(function(err){
+                    console.error('[TV Upload] erro:', err);
+                    showUploadProgress(id, file.name, 0, err.message || 'Falha no upload');
+                });
             }
 
             if(isImage){
@@ -979,9 +1022,16 @@
 
     window.deleteMedia = function(id){
         var item = getMedia().find(function(m){ return m.id === id; });
-        // Remove do Firebase Storage (silencioso se não existir)
+        // Remove do Firebase Storage via REST API (silencioso se não existir)
         if(item && item.storagePath){
-            try { firebase.storage().ref(item.storagePath).delete().catch(function(){}); } catch(e){}
+            try {
+                firebase.auth().currentUser.getIdToken().then(function(idToken){
+                    fetch('https://firebasestorage.googleapis.com/v0/b/' + STORAGE_BUCKET + '/o/' + encodeURIComponent(item.storagePath), {
+                        method: 'DELETE',
+                        headers: { 'Authorization': 'Firebase ' + idToken }
+                    }).catch(function(){});
+                }).catch(function(){});
+            } catch(e){}
         }
         saveMedia(getMedia().filter(function(m){return m.id!==id}));
         var pl = getPlaylist().filter(function(p){return p.mediaId!==id});
