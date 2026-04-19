@@ -320,6 +320,94 @@ const Auth = {
         return true;
     },
 
+    /**
+     * Require that the current user has one of the allowed roles.
+     * Used pelo novo modelo de acesso granular (staff só no PDV, dono em tudo, etc.)
+     *
+     * @param {string[]} allowedRoles  — roles permitidas (ex: ['staff', 'franchisee'])
+     * @param {object} [opts]
+     * @param {string} [opts.redirectTo] — onde mandar se não tiver acesso (padrão /painel/pdv.html pra staff, /painel/ pro resto)
+     * @returns {boolean}
+     */
+    requireAnyRole(allowedRoles, opts) {
+        var quickLogin = this._checkQuickLogin();
+        if (quickLogin) return true;
+
+        var session = this.getSession();
+        if (!session) {
+            window.location.href = '/login.html';
+            return false;
+        }
+        // super_admin sempre passa
+        if (session.role === MP.ROLES.SUPER_ADMIN) return true;
+        if (Array.isArray(allowedRoles) && allowedRoles.indexOf(session.role) !== -1) return true;
+
+        // Não tem acesso: staff vai pra PDV; outros vão pra /painel/
+        var fallback = (opts && opts.redirectTo) || (session.role === 'staff' ? '/painel/pdv.html' : '/painel/');
+        window.location.href = fallback;
+        return false;
+    },
+
+    /**
+     * Gate pra informações sensíveis (faturamento, folha, relatórios).
+     * Pede um PIN de 4-6 dígitos antes de revelar. PIN fica em mp_sensitive_pin
+     * (localStorage, só o dono define — nunca enviado ao servidor).
+     *
+     * Uso:
+     *   if (!Auth.unlockSensitive('Ver faturamento do mês')) return;
+     *
+     * @param {string} [reason] — mensagem contextual pro prompt
+     * @returns {boolean}
+     */
+    unlockSensitive(reason) {
+        var session = this.getSession();
+        if (!session) return false;
+        // super_admin passa sem PIN
+        if (session.role === MP.ROLES.SUPER_ADMIN) return true;
+
+        var stored = '';
+        try { stored = localStorage.getItem('mp_sensitive_pin_' + session.firebaseUid) || ''; } catch (e) {}
+
+        // Primeira vez: oferece criar PIN
+        if (!stored) {
+            var first = prompt((reason ? reason + '\n\n' : '') + 'Você ainda não tem PIN de segurança. Crie um agora (4-6 dígitos) para proteger informações sensíveis:');
+            if (!first || !/^\d{4,6}$/.test(first)) {
+                alert('PIN inválido. Use 4 a 6 dígitos numéricos.');
+                return false;
+            }
+            var confirm = prompt('Confirme o PIN:');
+            if (confirm !== first) {
+                alert('PIN não confere.');
+                return false;
+            }
+            try { localStorage.setItem('mp_sensitive_pin_' + session.firebaseUid, first); } catch (e) {}
+            return true;
+        }
+
+        // Já tem PIN: verifica na sessão (cache 10 min)
+        var cacheKey = 'mp_pin_unlocked_' + session.firebaseUid;
+        var cached = 0;
+        try { cached = parseInt(sessionStorage.getItem(cacheKey) || '0', 10); } catch (e) {}
+        if (cached && Date.now() - cached < 10 * 60 * 1000) return true;
+
+        var pin = prompt((reason ? reason + '\n\n' : '') + 'Digite o PIN de segurança para continuar:');
+        if (pin !== stored) {
+            alert('PIN incorreto.');
+            return false;
+        }
+        try { sessionStorage.setItem(cacheKey, String(Date.now())); } catch (e) {}
+        return true;
+    },
+
+    /** Limpa PIN desbloqueado (usado ao fazer logout). */
+    clearSensitiveUnlock() {
+        try {
+            Object.keys(sessionStorage).forEach(function(k) {
+                if (k.indexOf('mp_pin_unlocked_') === 0) sessionStorage.removeItem(k);
+            });
+        } catch (e) {}
+    },
+
     // Quick login: admin creates temp session to access franchise panel
     _checkQuickLogin() {
         try {
