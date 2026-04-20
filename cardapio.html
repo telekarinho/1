@@ -384,18 +384,44 @@
             var items = getFilteredCatalogItems(filter);
             var html = '';
 
+            // Preço padrao derivado dos tamanhos do catalogo (quando o item nao tem price proprio).
+            // No modelo "monta o seu" o preco vem do tamanho escolhido, nao do sabor.
+            // Pegamos o menor preco disponivel (pra exibir "a partir de").
+            var fallbackMinPrice = 0;
+            var fallbackPrefix = '';
+            if (catalog && Array.isArray(catalog.tamanhos) && catalog.tamanhos.length) {
+                var prices = catalog.tamanhos
+                    .filter(function(t){ return t && t.available !== false && typeof t.price === 'number'; })
+                    .map(function(t){ return t.price; });
+                if (prices.length) {
+                    fallbackMinPrice = Math.min.apply(null, prices);
+                    fallbackPrefix = 'a partir de ';
+                }
+            }
+
             items.forEach(function(it) {
                 var badgeHtml = '';
-                if (it.isHighlight) badgeHtml = '<span class="card-badge badge-popular">⭐</span>';
+                if (it.isHighlight || it.highlight) badgeHtml = '<span class="card-badge badge-popular">⭐</span>';
 
-                // Se for por peso no delivery, mostrar preço da porção menor como "a partir de"
-                var displayPrice = it.price;
-                if (it.tipoVenda === 'por_peso') {
-                    const minPortion = (it.porcoes && it.porcoes.length > 0) ? it.porcoes[0] : null;
-                    displayPrice = minPortion ? (it.price * minPortion.peso / 1000) : it.price;
+                // Calcula preco de exibicao:
+                // 1. Se o item tem price proprio, usa
+                // 2. Se tipoVenda = por_peso, calcula da porcao minima
+                // 3. Senao, usa o menor preco dos tamanhos do catalogo (fallback)
+                var displayPrice, priceLabel;
+                if (typeof it.price === 'number') {
+                    displayPrice = it.price;
+                    if (it.tipoVenda === 'por_peso') {
+                        const minPortion = (it.porcoes && it.porcoes.length > 0) ? it.porcoes[0] : null;
+                        displayPrice = minPortion ? (it.price * minPortion.peso / 1000) : it.price;
+                        priceLabel = 'a partir de ';
+                    } else {
+                        priceLabel = '';
+                    }
+                } else {
+                    displayPrice = fallbackMinPrice;
+                    priceLabel = fallbackPrefix;
                 }
-
-                var priceLabel = it.tipoVenda === 'por_peso' ? 'a partir de ' : '';
+                if (!isFinite(displayPrice) || displayPrice <= 0) displayPrice = 0;
 
                 html += '<div class="product-card-mobile" onclick="openProductSheet(\'' + it.id + '\')">' +
                     '<div class="card-emoji-wrap">' +
