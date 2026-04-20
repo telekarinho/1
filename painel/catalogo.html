@@ -448,6 +448,24 @@
                     </label>
                 </div>
 
+                <!-- RECEITA (BoM) — só pra itens que consomem insumos -->
+                <div class="form-group" id="group-receita" style="background:#FFF7ED;border:1px solid #FDBA74;border-radius:12px;padding:14px;margin-top:14px">
+                    <label style="display:flex;justify-content:space-between;align-items:center;font-size:.9rem;font-weight:700;color:#9A3412;margin-bottom:8px">
+                        🧪 Receita (insumos necessários)
+                        <button type="button" onclick="CatalogManager.addRecipeLine()" style="padding:6px 12px;font-size:12px;border:none;background:#EA580C;color:#fff;border-radius:8px;cursor:pointer;font-weight:700">+ Adicionar insumo</button>
+                    </label>
+                    <div id="recipeLines" style="display:flex;flex-direction:column;gap:8px"></div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px dashed #FDBA74;font-size:13px">
+                        <span><b>Custo da receita:</b> <span id="recipeBaseCost" style="color:#9A3412;font-weight:700">R$ 0,00</span></span>
+                        <span>
+                            <label style="font-size:12px;color:#9A3412">Ajuste manual (R$):
+                                <input type="number" step="0.01" id="item-costAdjust" value="0" oninput="CatalogManager.updateRecipeCost()" style="width:90px;padding:4px 8px;border:1px solid #FDBA74;border-radius:6px;margin-left:6px">
+                            </label>
+                        </span>
+                    </div>
+                    <div id="recipeWarning" style="margin-top:8px;font-size:12px;color:#9A3412;display:none"></div>
+                </div>
+
                 <div style="display:flex; justify-content: flex-end; gap:10px; margin-top:20px;">
                     <button type="button" class="btn btn-secondary" onclick="CatalogManager.closeModal()">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Salvar Item</button>
@@ -465,6 +483,9 @@
     <script src="../js/core/datastore.js"></script>
     <script src="../js/core/utils.js"></script>
     <script src="../js/core/audit.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/units.js"></script>
+    <script src="../js/core/recipes.js"></script>
     <!-- Seed fallback: CARDAPIO_CONFIG default se o Firestore estiver vazio -->
     <script src="../js/cardapio-data.js"></script>
 
@@ -578,6 +599,14 @@
                 const commissionBlock = commission > 0 ? `<div style="font-size:11px;color:#7c3aed;margin-top:2px"><b>Comissão:</b> ${commission}%</div>` : '';
                 const auditBlock = item.lastModifiedBy ? `<div style="font-size:10px;color:#bbb;margin-top:6px">atualizado por ${item.lastModifiedBy}</div>` : '';
 
+                // Badge de receita (Etapa 2)
+                let recipeBadgeBlock = '';
+                if (window.Recipes && (tab === 'sabores' || tab === 'bebidas' || tab === 'adicionais')) {
+                    const inv = this._loadInventory ? this._loadInventory() : [];
+                    const b = window.Recipes.badge(item, inv);
+                    recipeBadgeBlock = `<div style="display:inline-block;margin-top:6px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${b.color}15;color:${b.color};border:1px solid ${b.color}40">${b.icon} ${b.label}</div>`;
+                }
+
                 return `
                     <div class="card-item ${!item.available ? 'inactive' : ''}">
                         <div class="card-header">
@@ -591,6 +620,7 @@
                         <div class="card-price">${priceLabel}</div>
                         ${marginBlock}
                         ${commissionBlock}
+                        ${recipeBadgeBlock}
                         <div style="font-size: 10px; color: #999; margin-top: 5px;">
                             Canal: ${item.canalVenda || 'ambos'} | Modo: ${item.modoMontagem || 'montado'}
                         </div>
@@ -659,6 +689,10 @@
                 document.getElementById('portions-list').innerHTML = '';
                 document.getElementById('item-cost').value = 0;
                 document.getElementById('item-commission').value = 0;
+                document.getElementById('item-costAdjust').value = 0;
+                document.getElementById('recipeLines').innerHTML = '';
+                this._recipeBuffer = [];
+                this.updateRecipeCost();
                 this.toggleWeightFields();
                 this.updateMargin();
 
@@ -698,9 +732,105 @@
                     item.porcoesDelivery.forEach(p => this.addPortionRow(p.label, p.peso));
                 }
 
+                // Carrega receita do item (ou vazia)
+                document.getElementById('item-costAdjust').value = item.costAdjust || 0;
+                document.getElementById('recipeLines').innerHTML = '';
+                this._recipeBuffer = (item.receita || []).map(function(r){ return Object.assign({}, r); });
+                this._renderRecipeLines();
+                this.updateRecipeCost();
+
                 this.toggleWeightFields();
                 this.updateMargin();
                 document.getElementById('itemModal').classList.add('active');
+            },
+
+            _loadInventory() {
+                var session = (typeof Auth !== 'undefined' && Auth.getSession) ? (Auth.getSession() || {}) : {};
+                var fid = session.franchiseId || session.fid;
+                if (!fid) return [];
+                var inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+                this._inventoryCache = inv;
+                return inv;
+            },
+
+            _recipeBuffer: [],
+
+            addRecipeLine() {
+                this._recipeBuffer = this._recipeBuffer || [];
+                this._recipeBuffer.push({ insumoId: '', qty: 0, unit: 'g' });
+                this._renderRecipeLines();
+            },
+
+            removeRecipeLine(idx) {
+                if (!this._recipeBuffer) return;
+                this._recipeBuffer.splice(idx, 1);
+                this._renderRecipeLines();
+                this.updateRecipeCost();
+            },
+
+            _renderRecipeLines() {
+                var container = document.getElementById('recipeLines');
+                if (!container) return;
+                var inv = this._loadInventory();
+                var UNITS = (window.Units && window.Units.VALID_UNITS) || ['g','kg','ml','L','unid'];
+                if (!this._recipeBuffer.length) {
+                    container.innerHTML = '<div style="font-size:12px;color:#9A3412;opacity:.7;padding:6px 2px">Nenhum insumo cadastrado. Produto ficará marcado como <b>Receita pendente</b>.</div>';
+                    return;
+                }
+                container.innerHTML = this._recipeBuffer.map(function(r, i){
+                    var invOpts = '<option value="">— selecione —</option>' + inv.map(function(ii){
+                        return '<option value="' + ii.id + '" data-unit="' + (ii.unit || '') + '" ' + (ii.id === r.insumoId ? 'selected' : '') + '>' + ii.name + ' (' + (ii.unit || '?') + ')</option>';
+                    }).join('');
+                    var unitOpts = UNITS.map(function(u){ return '<option ' + (u === r.unit ? 'selected' : '') + '>' + u + '</option>'; }).join('');
+                    return '<div style="display:flex;gap:8px;align-items:center">' +
+                        '<select onchange="CatalogManager._recipeField(' + i + ', \'insumoId\', this.value); CatalogManager._onInsumoChange(' + i + ', this);" style="flex:3;padding:6px 8px;border:1px solid #FDBA74;border-radius:6px;background:#fff">' + invOpts + '</select>' +
+                        '<input type="number" step="0.01" min="0" value="' + (r.qty || 0) + '" onchange="CatalogManager._recipeField(' + i + ', \'qty\', parseFloat(this.value)||0)" placeholder="qty" style="flex:1;padding:6px 8px;border:1px solid #FDBA74;border-radius:6px;min-width:70px">' +
+                        '<select onchange="CatalogManager._recipeField(' + i + ', \'unit\', this.value)" style="padding:6px 8px;border:1px solid #FDBA74;border-radius:6px;background:#fff">' + unitOpts + '</select>' +
+                        '<button type="button" onclick="CatalogManager.removeRecipeLine(' + i + ')" style="padding:6px 10px;background:#fee;border:1px solid #FDBA74;color:#9A3412;border-radius:6px;cursor:pointer">✕</button>' +
+                    '</div>';
+                }).join('');
+            },
+
+            _recipeField(i, field, val) {
+                if (!this._recipeBuffer || !this._recipeBuffer[i]) return;
+                this._recipeBuffer[i][field] = val;
+                this.updateRecipeCost();
+            },
+
+            // Ao escolher um insumo, sugere a unidade dele por padrao
+            _onInsumoChange(i, selectEl) {
+                var opt = selectEl.options[selectEl.selectedIndex];
+                var unit = opt && opt.getAttribute('data-unit');
+                if (unit && this._recipeBuffer[i] && !this._recipeBuffer[i].unit) {
+                    this._recipeBuffer[i].unit = unit;
+                    this._renderRecipeLines();
+                }
+            },
+
+            updateRecipeCost() {
+                var inv = this._loadInventory();
+                var fakeItem = { receita: this._recipeBuffer || [] };
+                var result = (window.Recipes && window.Recipes.calcRecipeCost) ? window.Recipes.calcRecipeCost(fakeItem, inv) : { cost: 0, valid: false };
+                var label = document.getElementById('recipeBaseCost');
+                if (label) label.textContent = 'R$ ' + (Number(result.cost) || 0).toFixed(2).replace('.', ',');
+
+                var warn = document.getElementById('recipeWarning');
+                if (warn) {
+                    if (result.missing && result.missing.length) {
+                        warn.style.display = 'block';
+                        warn.innerHTML = '⚠ Insumo(s) não cadastrado(s) no estoque: <b>' + result.missing.join(', ') + '</b>. Cadastre em Produtos & Estoque.';
+                    } else if (result.mismatches && result.mismatches.length) {
+                        warn.style.display = 'block';
+                        warn.innerHTML = '⚠ Unidade incompatível em algum insumo — revise';
+                    } else { warn.style.display = 'none'; warn.innerHTML = ''; }
+                }
+
+                // Atualiza o campo "Custo" com (base + ajuste)
+                var adjust = Number(document.getElementById('item-costAdjust')?.value || 0);
+                var total = Math.round((result.cost + adjust) * 100) / 100;
+                var costInput = document.getElementById('item-cost');
+                if (costInput) costInput.value = total;
+                this.updateMargin();
             },
 
             closeModal() {
@@ -754,6 +884,9 @@
                     modoMontagem: document.getElementById('item-modoMontagem').value,
                     available: document.getElementById('item-available').checked,
                     porcoesDelivery: porcoes,
+                    // Receita / BoM
+                    receita: (this._recipeBuffer || []).filter(function(r){ return r.insumoId && r.qty > 0 && r.unit; }),
+                    costAdjust: parseFloat(document.getElementById('item-costAdjust').value || 0),
                     // Auditoria
                     createdAt: existing && existing.createdAt ? existing.createdAt : new Date().toISOString(),
                     createdBy: existing && existing.createdBy ? existing.createdBy : (session.email || session.name || 'system'),
