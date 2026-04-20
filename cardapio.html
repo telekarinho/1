@@ -348,26 +348,33 @@
         function getFilteredCatalogItems(category) {
             if (!catalog) return [];
             
-            // Map category tags to sabores groups
+            // Map category tabs to sabores group keys.
+            // Alguns grupos tem nomes diferentes (classicos vs tradicionais).
+            // Aceita ambos pra compatibilidade com dados legacy + novo.
             const categoryMap = {
-                'ninho': 'tradicionais',
-                'acai': 'acai',
-                'fit': 'zero_fit',
-                'limitada': 'edicao_limitada',
-                'bebida': 'bebidas'
+                'ninho': ['classicos', 'tradicionais', 'especiais'],
+                'acai': ['acai'],
+                'fit': ['zero_fit'],
+                'limitada': ['edicao_limitada'],
+                'bebida': ['bebidas']
             };
 
-            const groupKey = categoryMap[category] || category;
+            const groups = categoryMap[category] || [category];
             let items = [];
 
-            if (groupKey === 'bebidas') {
-                items = catalog.bebidas || [];
-            } else if (catalog.sabores[groupKey]) {
-                items = catalog.sabores[groupKey].items;
-            }
+            groups.forEach(groupKey => {
+                if (groupKey === 'bebidas') {
+                    items = items.concat(catalog.bebidas || []);
+                } else if (catalog.sabores && catalog.sabores[groupKey]) {
+                    items = items.concat(catalog.sabores[groupKey].items || []);
+                }
+            });
 
-            // Filter for delivery-enabled items
-            return items.filter(i => i.available && (i.canalVenda === 'delivery' || i.canalVenda === 'ambos'));
+            // Filter: mostra item disponivel, com canal delivery/ambos ou sem canal definido (legacy)
+            return items.filter(i =>
+                i.available !== false &&
+                (!i.canalVenda || i.canalVenda === 'delivery' || i.canalVenda === 'ambos')
+            );
         }
 
         function renderProducts(filter) {
