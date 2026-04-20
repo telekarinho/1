@@ -8,814 +8,237 @@
 <meta http-equiv="Expires" content="0">
 <title>MilkyPot TV</title>
 <script>
-  // TV nunca mantem cache HTML. Desregistra SW antigo na primeira carga.
+  // Desregistra SW e limpa caches antes de qualquer coisa (TV nunca cacheia)
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(regs => { regs.forEach(r => r.unregister()); }).catch(()=>{});
+    navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister(); }); }).catch(function(){});
   }
-  if (window.caches) {
-    caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(()=>{});
-  }
+  if (window.caches) { caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); }).catch(function(){}); }
 </script>
-<meta name="theme-color" content="#000000">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" href="/manifest-tv.json">
-<link rel="stylesheet" href="/css/tv-slides.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Segoe UI',Tahoma,sans-serif;cursor:none}
-body.idle{cursor:none}
-body:not(.idle){cursor:default}
-
-/* Fullscreen player */
-#player{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center}
-#player img,#player video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
-#player .text-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5vw;text-align:center}
-#player .text-slide h1{font-size:clamp(32px,6vw,96px);font-weight:800;line-height:1.1;text-shadow:0 4px 20px rgba(0,0,0,.3)}
-#player .text-slide p{font-size:clamp(18px,3vw,48px);margin-top:1vw;opacity:.9;text-shadow:0 2px 10px rgba(0,0,0,.2)}
-
-/* Progress bar */
-#progressBar{position:fixed;bottom:0;left:0;height:4px;background:#42A5F5;z-index:10;transition:width linear}
-#progressBar.hidden{opacity:0}
-
-/* Loading / error */
-#loadingScreen{position:fixed;inset:0;background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:100}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:sans-serif;cursor:none}
+#player{position:fixed;inset:0;background:#000}
+#player img,#player video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:block}
+#player .text-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4vw;text-align:center}
+#player .text-slide h1{font-size:clamp(28px,6vw,72px);font-weight:800;line-height:1.1}
+#player .text-slide p{font-size:clamp(16px,3vw,36px);margin-top:1vw;opacity:.9}
+#loadingScreen{position:fixed;inset:0;background:#1a1a2e;display:flex;align-items:center;justify-content:center;color:#fff;z-index:100;font-size:18px;opacity:.85;text-align:center;padding:16px}
 #loadingScreen.hidden{display:none}
-#loadingScreen h1{font-size:48px;margin-bottom:8px}
-#loadingScreen p{font-size:18px;opacity:.7}
-#loadingScreen .spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:#42A5F5;border-radius:50%;animation:spin 1s linear infinite;margin-top:24px}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* Status */
-#status{position:fixed;top:16px;right:16px;z-index:20;display:flex;gap:8px;opacity:0;transition:opacity .5s}
-#status.show{opacity:1}
-#status .tag{padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(0,0,0,.6);color:#fff}
-#status .tag.offline{background:rgba(255,152,0,.9)}
-#status .tag.online{background:rgba(76,175,80,.9)}
-
-/* Clock overlay */
-#clock{position:fixed;font-size:28px;font-weight:700;color:rgba(255,255,255,.8);z-index:10;text-shadow:0 2px 8px rgba(0,0,0,.7);padding:12px 20px}
-
-/* Logo watermark */
-#watermark{
-    position:fixed;
-    z-index:10;
-    opacity:.92;
-    height:72px;
-    padding:16px 24px;
-    filter:drop-shadow(0 4px 14px rgba(0,0,0,.45));
-}
-
-/* Weather widget */
-#weather{position:fixed;z-index:10;display:none;padding:10px 16px;background:rgba(0,0,0,.5);border-radius:12px;color:#fff;font-size:14px;backdrop-filter:blur(6px)}
-#weather .weather-temp{font-size:32px;font-weight:800;line-height:1}
-#weather .weather-city{font-size:12px;opacity:.7;margin-top:2px}
-#weather .weather-desc{font-size:12px;opacity:.8}
-
-/* News ticker */
-#newsTicker{position:fixed;bottom:0;left:0;right:0;z-index:15;background:linear-gradient(90deg,rgba(0,0,0,.85),rgba(0,0,0,.7));padding:10px 0;display:none;overflow:hidden;white-space:nowrap}
-#newsTicker .ticker-content{display:inline-block;animation:tickerScroll 20s linear infinite;color:#fff;font-size:18px;font-weight:600;padding-left:100%}
-@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
-#newsTicker.active{display:block}
-#newsTicker.active ~ #progressBar{bottom:42px}
+#clock{position:fixed;top:12px;left:12px;font-size:22px;font-weight:700;color:rgba(255,255,255,.9);z-index:10;text-shadow:0 2px 6px rgba(0,0,0,.7);padding:8px 12px;background:rgba(0,0,0,.3);border-radius:8px}
 </style>
 </head>
 <body>
-    <div id="loadingScreen">
-        <h1>MilkyPot TV</h1>
-        <p id="loadingMsg">Carregando playlist...</p>
-        <div class="spinner"></div>
-    </div>
+<div id="loadingScreen">Carregando…</div>
+<div id="player"></div>
+<div id="clock" style="display:none"></div>
 
-    <div id="player"></div>
-    <div id="progressBar"></div>
-    <div id="status"><span class="tag" id="statusTag"></span></div>
-    <div id="clock"></div>
-    <img id="watermark" src="/images/logo-milkypot.png" alt="" onerror="this.style.display='none'">
-    <div id="weather">
-        <div class="weather-temp" id="weatherTemp">--</div>
-        <div class="weather-desc" id="weatherDesc"></div>
-        <div class="weather-city" id="weatherCity"></div>
-    </div>
-    <div id="newsTicker">
-        <div class="ticker-content" id="tickerText"></div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <script src="/js/core/constants.js"></script>
-    <script src="/js/core/utils.js"></script>
-    <script src="/js/core/datastore.js"></script>
-    <script src="/js/core/firebase-config.js"></script>
 <script>
-/* ============================================
-   MilkyPot TV Player — Fullscreen Digital Signage
-   ============================================
-   URL format: milkypot.com/tv.html?f=FRANCHISE&tv=TVID
-           or: milkypot.com/tv.html#FRANCHISE/TVID
-   ============================================ */
+/* =============================================================
+   MilkyPot TV Player — LEVE
+   Sem Firebase SDK. Sem DataStore. So fetch REST + <video loop>.
+   URL: /tv.html?f=FRANCHISE&tv=TVID
+   ============================================================= */
 (function(){
-    var player = document.getElementById('player');
-    var progressBar = document.getElementById('progressBar');
-    var loadingScreen = document.getElementById('loadingScreen');
-    var loadingMsg = document.getElementById('loadingMsg');
-    var clockEl = document.getElementById('clock');
-    var watermark = document.getElementById('watermark');
-    var statusTag = document.getElementById('statusTag');
-    var statusDiv = document.getElementById('status');
-    var weatherEl = document.getElementById('weather');
-    var tickerEl = document.getElementById('newsTicker');
-    var tickerText = document.getElementById('tickerText');
+  var FIRESTORE_BASE = 'https://firestore.googleapis.com/v1/projects/milkypot-ad945/databases/(default)/documents/datastore/';
+  var RELOAD_AFTER_MS = 30 * 60 * 1000; // 30min — libera memoria acumulada
+  var tvStart = Date.now();
 
-    var playlist = [];
-    var media = {};
-    var currentIdx = -1;
-    var timer = null;
-    var franchiseId = null;
-    var tvId = null;
-    var config = {};
-    var tvDevice = null; // { wallPosition, wallTotal }
-    var wallPosition = 1;
-    var wallTotal = 1;
+  var player = document.getElementById('player');
+  var loadingScreen = document.getElementById('loadingScreen');
+  var clockEl = document.getElementById('clock');
 
-    /* === Parse URL === */
-    function parseUrl(){
-        var hash = location.hash.replace('#','');
-        if(!hash){
-            var params = new URLSearchParams(location.search);
-            franchiseId = params.get('f');
-            tvId = params.get('tv');
-        } else {
-            var parts = hash.split('/');
-            if(parts.length >= 2){
-                franchiseId = decodeURIComponent(parts[0]);
-                tvId = decodeURIComponent(parts[1]);
-            } else {
-                tvId = decodeURIComponent(parts[0]);
-            }
-        }
-    }
+  var params = new URLSearchParams(location.search);
+  var hash = location.hash.replace('#','');
+  var franchiseId = params.get('f') || (hash.split('/')[0] || null);
+  var tvId = params.get('tv') || (hash.split('/')[1] || hash || null);
 
-    /* === Load config from DataStore === */
-    function loadConfig(){
-        if(!franchiseId) return;
-        config = DataStore.get('tv_config_' + franchiseId) || {};
-        applyConfig();
-    }
+  var playlist = [];
+  var media = {};
+  var currentIdx = -1;
+  var timer = null;
+  var config = {};
 
-    function applyConfig(){
-        /* --- Object fit --- */
-        var fit = config.objectFit || 'cover';
-        var styleTag = document.getElementById('dynamicFitStyle');
-        if(!styleTag){
-            styleTag = document.createElement('style');
-            styleTag.id = 'dynamicFitStyle';
-            document.head.appendChild(styleTag);
-        }
-        styleTag.textContent = '#player img,#player video{object-fit:' + fit + ' !important}';
+  function loading(txt){ if(loadingScreen){ loadingScreen.textContent = txt||'Carregando…'; loadingScreen.classList.remove('hidden'); } }
+  function hideLoading(){ if(loadingScreen){ loadingScreen.classList.add('hidden'); } }
 
-        /* --- Clock --- */
-        if(config.showClock === false){
-            clockEl.style.display = 'none';
-        } else {
-            clockEl.style.display = 'block';
-            positionElement(clockEl, config.clockPosition || 'bottom-right');
-        }
+  // Fetch REST direto do Firestore — sem SDK, sem WebSocket, sem cache
+  function fetchDoc(docId){
+    return fetch(FIRESTORE_BASE + encodeURIComponent(docId), { cache: 'no-store' })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){
+        if(!d || !d.fields || !d.fields.value) return null;
+        try { return JSON.parse(d.fields.value.stringValue || 'null'); }
+        catch(e){ return null; }
+      })
+      .catch(function(){ return null; });
+  }
 
-        /* --- Logo / Watermark --- */
-        if(config.showLogo === false){
-            watermark.style.display = 'none';
-        } else {
-            watermark.style.display = 'block';
-            if(config.customLogo){
-                watermark.src = config.customLogo;
-            }
-            positionElement(watermark, config.logoPosition || 'top-left');
-        }
-
-        /* --- Weather --- */
-        if(config.showWeather){
-            weatherEl.style.display = 'block';
-            // Position weather opposite to clock to avoid overlap
-            var clockPos = config.clockPosition || 'bottom-right';
-            var weatherPos = clockPos === 'bottom-right' ? 'top-right' :
-                             clockPos === 'bottom-left' ? 'top-left' :
-                             clockPos === 'top-right' ? 'bottom-right' : 'bottom-left';
-            positionElement(weatherEl, weatherPos);
-            fetchWeather(config.weatherCity || 'Sao Paulo');
-        } else {
-            weatherEl.style.display = 'none';
-        }
-
-        /* --- News Ticker --- */
-        if(config.showNews && config.newsTicker){
-            tickerEl.classList.add('active');
-            tickerText.textContent = config.newsTicker + '     \u2022     ' + config.newsTicker + '     \u2022     ';
-            // Adjust ticker scroll speed based on text length
-            var duration = Math.max(15, config.newsTicker.length * 0.4);
-            tickerText.style.animationDuration = duration + 's';
-        } else {
-            tickerEl.classList.remove('active');
-        }
-    }
-
-    /* === Video Wall Mode === */
-    function applyWallMode(){
-        // Add CSS that transforms the player viewport for wall mode
-        var styleTag = document.getElementById('wallModeStyle');
-        if(!styleTag){
-            styleTag = document.createElement('style');
-            styleTag.id = 'wallModeStyle';
-            document.head.appendChild(styleTag);
-        }
-        if(wallTotal > 1){
-            // For span slides: scale width to total and translate by position
-            // For non-span slides: render normally (each TV shows same content)
-            var translateX = -(wallPosition - 1) * 100;
-            styleTag.textContent =
-                '.tv-slide[data-wall="span"]{' +
-                    'position:fixed !important;' +
-                    'top:0 !important;' +
-                    'right:auto !important;' +
-                    'bottom:auto !important;' +
-                    'left:' + translateX + 'vw !important;' +
-                    'width:' + (wallTotal * 100) + 'vw !important;' +
-                    'height:100vh !important;' +
-                '}';
-        } else {
-            styleTag.textContent = '';
-        }
-    }
-
-    /* === Wall-aware slide attributes === */
-    function wallAttr(m){
-        // Returns data-wall="span" if this slide should span across wall
-        return (m.wallMode === 'span' && wallTotal > 1) ? ' data-wall="span"' : '';
-    }
-
-    function positionElement(el, pos){
-        el.style.top = el.style.bottom = el.style.left = el.style.right = 'auto';
-        switch(pos){
-            case 'top-left':     el.style.top = '16px'; el.style.left = '20px'; break;
-            case 'top-right':    el.style.top = '16px'; el.style.right = '20px'; break;
-            case 'bottom-left':  el.style.bottom = '20px'; el.style.left = '20px'; break;
-            case 'bottom-right': el.style.bottom = '20px'; el.style.right = '24px'; break;
-        }
-        // Push up if news ticker is active and element is at bottom
-        if(config.showNews && config.newsTicker && (pos === 'bottom-left' || pos === 'bottom-right')){
-            el.style.bottom = '60px';
-        }
-    }
-
-    /* === Weather === */
-    var weatherCache = { data: null, time: 0 };
-    function fetchWeather(city){
-        // Cache for 15 min
-        if(weatherCache.data && (Date.now() - weatherCache.time) < 900000){
-            renderWeather(weatherCache.data);
-            return;
-        }
-        var url = 'https://wttr.in/' + encodeURIComponent(city) + '?format=j1';
-        fetch(url).then(function(r){ return r.json(); }).then(function(data){
-            if(data && data.current_condition && data.current_condition[0]){
-                weatherCache = { data: data, time: Date.now() };
-                renderWeather(data);
-            }
-        }).catch(function(){
-            // Silently fail — weather is non-critical
-            document.getElementById('weatherTemp').textContent = '--';
+  function resolveTvByShortcode(code){
+    return fetchDoc('franchises').then(function(fs){
+      var list = Array.isArray(fs) ? fs : [];
+      return Promise.all(list.map(function(f){
+        return fetchDoc('tv_shortcodes_' + f.id).then(function(map){
+          if(map && map[code] && map[code].tvId) return { fid: f.id, tvId: map[code].tvId };
+          return null;
         });
-    }
-
-    function renderWeather(data){
-        var c = data.current_condition[0];
-        var temp = c.temp_C || '--';
-        var desc = '';
-        if(c.lang_pt && c.lang_pt[0]) desc = c.lang_pt[0].value;
-        else if(c.weatherDesc && c.weatherDesc[0]) desc = c.weatherDesc[0].value;
-        document.getElementById('weatherTemp').textContent = temp + '\u00B0C';
-        document.getElementById('weatherDesc').textContent = desc;
-        document.getElementById('weatherCity').textContent = config.weatherCity || '';
-    }
-
-    /* === Fetch direto do Firestore (bypass de cache local) === */
-    async function fetchFromCloud(docId) {
-        try {
-            if (typeof firebase === 'undefined' || !firebase.firestore) return null;
-            var doc = await firebase.firestore().collection('datastore').doc(docId).get({ source: 'server' });
-            if (!doc.exists) return null;
-            var raw = doc.data().value || '';
-            if (typeof raw === 'string') return JSON.parse(raw || 'null');
-            return raw;
-        } catch (e) {
-            console.warn('fetchFromCloud', docId, e);
-            return null;
-        }
-    }
-
-    /* === Load playlist: sempre rede primeiro, localStorage só como fallback === */
-    async function loadPlaylist(){
-        var fid = franchiseId;
-
-        if(!fid){
-            var franchises = (await fetchFromCloud('franchises')) || DataStore.get('franchises') || [];
-            for(var i=0; i<franchises.length; i++){
-                var f = franchises[i];
-                var tvs = (await fetchFromCloud('tv_devices_' + f.id)) || DataStore.get('tv_devices_' + f.id) || [];
-                var match = tvs.find(function(t){ return t.id === tvId || t.slug === tvId; });
-                if(match){
-                    fid = f.id;
-                    tvId = match.id;
-                    break;
-                }
-            }
-        }
-
-        if(!fid){
-            loadingMsg.textContent = 'TV nao encontrada. Verifique a URL.';
-            return;
-        }
-
-        franchiseId = fid;
-
-        // === SEMPRE BUSCA DO FIRESTORE (nunca usa cache localStorage sem revalidar) ===
-        var tvs = (await fetchFromCloud('tv_devices_' + fid)) || DataStore.get('tv_devices_' + fid) || [];
-        tvDevice = tvs.find(function(t){ return t.id === tvId; });
-        if(tvDevice){
-            wallPosition = parseInt(tvDevice.wallPosition) || 1;
-            wallTotal = parseInt(tvDevice.wallTotal) || 1;
-            applyWallMode();
-        }
-
-        // Config: busca do Firestore também
-        var cloudConfig = await fetchFromCloud('tv_config_' + fid);
-        if (cloudConfig) {
-            config = cloudConfig;
-            try { localStorage.setItem('mp_tv_config_' + fid, JSON.stringify(cloudConfig)); } catch(e){}
-        } else {
-            loadConfig();
-        }
-        applyConfig();
-
-        // Playlist + biblioteca: Firestore primeiro
-        var playlistData = (await fetchFromCloud('tv_playlist_' + fid)) || DataStore.get('tv_playlist_' + fid) || [];
-        var mediaData = (await fetchFromCloud('tv_media_' + fid)) || DataStore.get('tv_media_' + fid) || [];
-
-        // Grava localmente o que veio do servidor (pra recovery offline)
-        try {
-            localStorage.setItem('mp_tv_playlist_' + fid, JSON.stringify(playlistData));
-            localStorage.setItem('mp_tv_media_' + fid, JSON.stringify(mediaData));
-        } catch(e){}
-
-        media = {};
-        mediaData.forEach(function(m){ media[m.id] = m; });
-
-        // AUTO-FIX: se a playlist esta vazia mas a biblioteca tem midias,
-        // usa a biblioteca inteira como playlist (fallback seguro).
-        var effectivePlaylist = playlistData;
-        if ((!playlistData || !playlistData.length) && mediaData && mediaData.length) {
-            effectivePlaylist = mediaData.map(function(m){
-                return { mediaId: m.id, duration: Math.max(5, m.duration || 10) };
-            });
-        }
-
-        playlist = [];
-        effectivePlaylist.forEach(function(p){
-            // Compat: p pode ser string (id) ou objeto {mediaId, duration}
-            var mid = (typeof p === 'string') ? p : p.mediaId;
-            var dur = (typeof p === 'string') ? null : p.duration;
-            if(media[mid]){
-                playlist.push({
-                    media: media[mid],
-                    duration: (dur || media[mid].duration || 8) * 1000
-                });
-            }
-        });
-
-        if(!playlist.length){
-            loadingMsg.textContent = 'Playlist vazia. Adicione midias no painel da franquia.';
-            return;
-        }
-
-        loadingScreen.classList.add('hidden');
-        if(currentIdx < 0){
-            currentIdx = -1;
-            playNext();
-        }
-    }
-
-    /* === Playback === */
-    // Calculate sync index for wall mode - all TVs on same wall show same slide at same time
-    function getSyncedIndex(){
-        if(wallTotal <= 1 || !playlist.length) return null;
-        // Build cumulative duration array
-        var cumul = [0];
-        var total = 0;
-        playlist.forEach(function(it){ total += it.duration; cumul.push(total); });
-        if(!total) return 0;
-        // Use Unix time modulo total duration to find slide
-        var t = Date.now() % total;
-        for(var i = 0; i < cumul.length - 1; i++){
-            if(t >= cumul[i] && t < cumul[i+1]) return i;
-        }
-        return 0;
-    }
-
-    // Ao trocar de midia, descarrega o elemento anterior do DOM pra liberar memoria.
-    // Sem isso, em TVs Android modestas o decodificador de video pode acumular
-    // buffers e eventualmente travar o aparelho.
-    function _releasePlayerChildren(){
-        try {
-            var prev = player.querySelectorAll('video, img');
-            prev.forEach(function(el){
-                try {
-                    if (el.tagName === 'VIDEO') {
-                        el.pause();
-                        el.removeAttribute('src');
-                        el.load();
-                    }
-                } catch(e){}
-                if (el.parentNode) el.parentNode.removeChild(el);
-            });
-        } catch(e){}
-    }
-
-    function playNext(){
-        if(!playlist.length) return;
-        // For wall mode, use time-synced index; otherwise increment
-        var syncIdx = getSyncedIndex();
-        if(syncIdx !== null){
-            currentIdx = syncIdx;
-        } else {
-            currentIdx = (currentIdx + 1) % playlist.length;
-        }
-        var item = playlist[currentIdx];
-        var m = item.media;
-        var fit = config.objectFit || 'cover';
-
-        clearTimeout(timer);
-        _releasePlayerChildren();
-        player.innerHTML = '';
-
-        if(!m || !m.type){
-            playFallback('Midia invalida na playlist.');
-            return;
-        }
-
-        if(m.type === 'image'){
-            /* Suporta mídias novas (url = Firebase Storage) e antigas (dataUrl = Base64) */
-            var imgSrc = m.url || m.dataUrl || '';
-            if(!imgSrc){
-                playFallback('Imagem indisponivel.');
-                return;
-            }
-            var img = document.createElement('img');
-            var imgHandled = false;
-            var imgTimeout = setTimeout(function(){
-                if(imgHandled) return;
-                imgHandled = true;
-                playFallback('Imagem demorou para carregar.');
-            }, 10000);
-            img.src = imgSrc;
-            img.alt = m.name;
-            img.style.objectFit = fit;
-            img.onload = function(){
-                if(imgHandled) return;
-                imgHandled = true;
-                clearTimeout(imgTimeout);
-                startProgress(item.duration);
-                timer = setTimeout(playNext, item.duration);
-            };
-            img.onerror = function(){
-                if(imgHandled) return;
-                imgHandled = true;
-                clearTimeout(imgTimeout);
-                playFallback('Falha ao abrir imagem.');
-            };
-            player.appendChild(img);
-        }
-        else if(m.type === 'video'){
-            var videoSrc = m.url || m.dataUrl || '';
-            if(!videoSrc){
-                playFallback('Video indisponivel.');
-                return;
-            }
-            var video = document.createElement('video');
-            var videoHandled = false;
-            // Quando ha um unico vídeo, usa loop NATIVO do <video>.
-            // Na TV Android um segundo .play() sem gesture falha, entao evitamos
-            // destruir/recriar o elemento. O browser reinicia o vídeo sozinho.
-            var singleVideo = (playlist.length === 1);
-            var videoTimeout = setTimeout(function(){
-                if(videoHandled) return;
-                videoHandled = true;
-                playFallback('Video demorou para carregar.');
-            }, 15000);
-            video.src = videoSrc;
-            video.muted = false;
-            video.autoplay = true;
-            video.playsInline = true;
-            video.loop = singleVideo;
-            video.style.objectFit = fit;
-            video.onloadedmetadata = function(){
-                if(videoHandled) return;
-                videoHandled = true;
-                clearTimeout(videoTimeout);
-                var realDur = (video.duration && isFinite(video.duration)) ? video.duration * 1000 : 0;
-                if(singleVideo){
-                    // Sem setTimeout p/ playNext — deixa o loop nativo correr.
-                    if(realDur) startProgress(realDur);
-                } else {
-                    // Playlist com mais de 1 item: usa a duracao real do video
-                    // (ignora item.duration porque era muito curto pra videos grandes)
-                    var dur = realDur ? realDur + 200 : (item.duration || 8000);
-                    startProgress(dur);
-                    timer = setTimeout(playNext, dur);
-                }
-            };
-            video.onended = function(){
-                if(!singleVideo) playNext();
-                // Se for unico e loop nativo estiver rodando, nao faz nada
-            };
-            video.onerror = function(){
-                if(videoHandled) return;
-                videoHandled = true;
-                clearTimeout(videoTimeout);
-                playFallback('Falha ao abrir video.');
-            };
-            player.appendChild(video);
-            video.play().catch(function(){
-                video.muted = true;
-                video.play().catch(function(){});
-            });
-        }
-        else if(m.type === 'text'){
-            var div = document.createElement('div');
-            div.className = 'text-slide';
-            div.style.background = m.bg || 'linear-gradient(135deg,#6C63FF,#FF6B6B)';
-            div.style.color = m.textColor || '#fff';
-            div.innerHTML = '<h1>' + esc(m.title || '') + '</h1>' + (m.subtitle ? '<p>' + esc(m.subtitle) + '</p>' : '');
-            player.appendChild(div);
-            startProgress(item.duration);
-            timer = setTimeout(playNext, item.duration);
-        }
-        else if(m.type === 'product'){
-            player.innerHTML = renderProductHero(m);
-            startProgress(item.duration);
-            timer = setTimeout(playNext, item.duration);
-        }
-        else if(m.type === 'promo'){
-            player.innerHTML = renderPromoFlash(m);
-            startProgress(item.duration);
-            timer = setTimeout(playNext, item.duration);
-        }
-        else if(m.type === 'combo'){
-            player.innerHTML = renderComboDeal(m);
-            startProgress(item.duration);
-            timer = setTimeout(playNext, item.duration);
-        }
-        else if(m.type === 'menu'){
-            player.innerHTML = renderMenuGrid(m);
-            startProgress(item.duration);
-            timer = setTimeout(playNext, item.duration);
-        }
-        else if(m.type === 'story'){
-            player.innerHTML = renderStory(m);
-            startProgress(item.duration);
-            timer = setTimeout(playNext, item.duration);
-        }
-        else {
-            playFallback('Tipo de midia nao suportado.');
-        }
-    }
-
-    function playFallback(reason){
-        player.innerHTML =
-            '<div class="text-slide" style="background:linear-gradient(135deg,#12101f,#1b1730 35%,#2a1f47 100%);color:#fff">' +
-                '<img src="/images/logo-milkypot.png" alt="Milkypot" style="width:min(26vw,320px);max-width:42%;margin-bottom:2vh;filter:drop-shadow(0 8px 22px rgba(0,0,0,.45))" onerror="this.style.display=\'none\'">' +
-                '<h1 style="font-family:var(--mp-font-display);font-size:clamp(42px,5vw,88px);margin:0">Milkypot TV</h1>' +
-                '<p style="max-width:48vw;font-size:clamp(18px,2vw,32px);line-height:1.4;margin-top:1.5vh">Conteudo em atualizacao. A proxima midia entra automaticamente.</p>' +
-                (reason ? '<p style="font-size:14px;opacity:.55;margin-top:1vh">' + esc(reason) + '</p>' : '') +
-            '</div>';
-        startProgress(2500);
-        timer = setTimeout(playNext, 2500);
-    }
-
-    /* === Price Formatting (menu engineering) === */
-    // When config.hidePriceSymbol is true, omit R$ (proven to increase conversion ~8%)
-    function priceFmt(val){
-        if(!val && val !== 0) return '';
-        var clean = esc(String(val).replace(/^R\$\s*/i,''));
-        return config.hidePriceSymbol ? clean : ('R$ ' + clean);
-    }
-    function priceFmtBadge(val){
-        if(!val && val !== 0) return '';
-        var clean = esc(String(val).replace(/^R\$\s*/i,''));
-        return config.hidePriceSymbol
-            ? clean
-            : '<span class="hero-price-currency">R$</span> ' + clean;
-    }
-
-    /* === Template Renderers === */
-    function renderProductHero(m){
-        var oldPrice = m.productOldPrice ? '<span class="hero-price-old">' + priceFmt(m.productOldPrice) + '</span>' : '';
-        var badge = m.productBadge ? '<span class="hero-badge">' + esc(m.productBadge) + '</span>' : '';
-        return '<div class="tv-slide slide-product-hero" data-animate="slide-left"' + wallAttr(m) + '>' +
-            '<div class="hero-info">' +
-            '<span class="hero-tagline">' + esc(m.productTagline || 'MilkyPot') + '</span>' +
-            '<h1 class="hero-product-name">' + esc(m.productName || m.name) + '</h1>' +
-            '<p class="hero-description">' + esc(m.productDesc || '') + '</p>' +
-            '<div class="hero-price-block">' + oldPrice +
-            '<span class="hero-price">' + priceFmtBadge(m.productPrice) + '</span>' +
-            '</div></div>' +
-            '<div class="hero-photo">' + badge +
-            (m.productImage ? '<img src="' + m.productImage + '" alt="' + esc(m.name) + '">' : '') +
-            '</div></div>';
-    }
-
-    function renderPromoFlash(m){
-        var savings = m.promoSavings ? '<span class="promo-savings">' + esc(m.promoSavings) + '</span>' : '';
-        var oldPrice = m.promoOldPrice ? '<div class="promo-price-before">' +
-            '<span class="promo-price-before-label">De</span>' +
-            '<span class="promo-price-before-value">' + priceFmt(m.promoOldPrice) + '</span></div>' +
-            '<span class="promo-price-arrow">\u2192</span>' : '';
-        return '<div class="tv-slide slide-promo-flash" data-animate="slide-left"' + wallAttr(m) + '>' +
-            '<div class="promo-content">' +
-            '<span class="promo-urgency-tag">\u26A1 ' + esc(m.promoUrgency || 'PROMOCAO') + '</span>' +
-            '<h1 class="promo-headline">' + esc(m.promoHeadline || m.name) + '</h1>' +
-            '<p class="promo-subtext">' + esc(m.promoSubtext || '') + '</p>' +
-            '<div class="promo-prices">' + oldPrice +
-            '<span class="promo-price-after">' + priceFmt(m.promoPrice) + savings + '</span>' +
-            '</div></div>' +
-            '<div class="promo-photo">' +
-            (m.promoImage ? '<img src="' + m.promoImage + '" alt="">' : '') +
-            '</div></div>';
-    }
-
-    function renderComboDeal(m){
-        var items = m.comboItems || [];
-        var productsHtml = '';
-        items.forEach(function(ci, idx){
-            if(idx > 0) productsHtml += '<span class="combo-plus">+</span>';
-            productsHtml += '<div class="combo-product">' +
-                '<div class="combo-product-photo">' +
-                (ci.image ? '<img src="' + ci.image + '" alt="">' : '<div style="font-size:48px">🍨</div>') +
-                '</div><span class="combo-product-name">' + esc(ci.name) + '</span></div>';
-        });
-        var oldPrice = m.comboOldPrice ? '<span class="combo-original-price">' + priceFmt(m.comboOldPrice) + '</span>' : '';
-        return '<div class="tv-slide slide-combo-deal" data-animate="combo"' + wallAttr(m) + '>' +
-            '<div class="combo-header"><span class="combo-label">Oferta Especial</span>' +
-            '<h1 class="combo-title">' + esc(m.comboTitle || m.name) + '</h1></div>' +
-            '<div class="combo-products">' + productsHtml + '</div>' +
-            '<div class="combo-total">' + oldPrice +
-            '<span class="combo-equals">=</span>' +
-            '<span class="combo-total-price">' + priceFmt(m.comboPrice) + '</span></div>' +
-            (m.comboFooter ? '<p class="combo-footer">' + esc(m.comboFooter) + '</p>' : '') +
-            '</div>';
-    }
-
-    function renderMenuGrid(m){
-        var items = m.menuItems || [];
-        var cols = items.length <= 4 ? 'cols-2' : 'cols-3';
-        var gridHtml = '';
-        items.forEach(function(mi){
-            var tag = mi.tag ? '<span class="grid-item-tag">' + esc(mi.tag) + '</span>' : '';
-            gridHtml += '<div class="grid-item"><div class="grid-item-photo">' + tag +
-                (mi.image ? '<img src="' + mi.image + '" alt="">' : '<div style="width:100%;height:100%;background:#1A1730;display:flex;align-items:center;justify-content:center;font-size:36px">🍨</div>') +
-                '</div><div class="grid-item-info">' +
-                '<span class="grid-item-name">' + esc(mi.name) + '</span>' +
-                '<span class="grid-item-price">' + priceFmt(mi.price) + '</span>' +
-                '</div></div>';
-        });
-        return '<div class="tv-slide slide-menu-grid" data-animate="stagger"' + wallAttr(m) + '>' +
-            '<div class="grid-header"><h2 class="grid-category">' + esc(m.menuTitle || 'Cardapio') + '</h2>' +
-            '<img class="grid-logo" src="/images/logo-milkypot.png" alt="" onerror="this.style.display=\'none\'">' +
-            '</div><div class="grid-products ' + cols + '">' + gridHtml + '</div></div>';
-    }
-
-    function renderStory(m){
-        var oldPrice = m.storyOldPrice ? '<span class="story-price-old">' + priceFmt(m.storyOldPrice) + '</span>' : '';
-        return '<div class="tv-slide slide-story" data-animate="slide-up"' + wallAttr(m) + '>' +
-            '<div class="story-bg">' +
-            (m.storyImage ? '<img src="' + m.storyImage + '" alt="">' : '') +
-            '</div><div class="story-overlay"></div>' +
-            '<img class="story-logo" src="/images/logo-milkypot.png" alt="" onerror="this.style.display=\'none\'">' +
-            '<div class="story-content">' +
-            '<span class="story-brand-tag">' + esc(m.storyBrandTag || 'MilkyPot') + '</span>' +
-            '<h1 class="story-product-name">' + esc(m.storyProductName || m.name) + '</h1>' +
-            '<p class="story-description">' + esc(m.storyDesc || '') + '</p>' +
-            '<div class="story-price">' + oldPrice +
-            '<span class="story-price-value">' + priceFmt(m.storyPrice) + '</span>' +
-            '</div></div><div class="story-frame"></div></div>';
-    }
-
-    function startProgress(durMs){
-        progressBar.style.transition = 'none';
-        progressBar.style.width = '0%';
-        requestAnimationFrame(function(){
-            requestAnimationFrame(function(){
-                progressBar.style.transition = 'width ' + (durMs/1000) + 's linear';
-                progressBar.style.width = '100%';
-            });
-        });
-    }
-
-    /* === Clock === */
-    function updateClock(){
-        var d = new Date();
-        clockEl.textContent = d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-    }
-    setInterval(updateClock, 30000);
-    updateClock();
-
-    /* === Online/Offline indicator === */
-    function updateStatus(){
-        if(navigator.onLine){
-            statusTag.textContent = 'Online';
-            statusTag.className = 'tag online';
-            statusDiv.classList.add('show');
-            setTimeout(function(){ statusDiv.classList.remove('show'); }, 3000);
-        } else {
-            statusTag.textContent = 'Offline';
-            statusTag.className = 'tag offline';
-            statusDiv.classList.add('show');
-        }
-    }
-    window.addEventListener('online', function(){
-        updateStatus();
-        setTimeout(loadPlaylist, 2000);
+      })).then(function(results){
+        return results.find(function(r){ return !!r; }) || null;
+      });
     });
-    window.addEventListener('offline', updateStatus);
+  }
 
-    /* === Auto-hide cursor after 3s === */
-    var cursorTimer;
-    document.addEventListener('mousemove', function(){
-        document.body.classList.remove('idle');
-        clearTimeout(cursorTimer);
-        cursorTimer = setTimeout(function(){ document.body.classList.add('idle'); }, 3000);
+  function updateClock(){
+    if(!clockEl || clockEl.style.display === 'none') return;
+    var d = new Date();
+    var hh = String(d.getHours()).padStart(2,'0');
+    var mm = String(d.getMinutes()).padStart(2,'0');
+    clockEl.textContent = hh + ':' + mm;
+  }
+
+  function applyConfig(){
+    if(config.showClock){
+      clockEl.style.display = 'block';
+      updateClock();
+    } else {
+      clockEl.style.display = 'none';
+    }
+  }
+
+  function loadPlaylist(){
+    if(!franchiseId){ loading('Aguarde… resolvendo TV'); return; }
+
+    return Promise.all([
+      fetchDoc('tv_media_' + franchiseId),
+      fetchDoc('tv_playlist_' + franchiseId),
+      fetchDoc('tv_config_' + franchiseId)
+    ]).then(function(results){
+      var mediaData = results[0] || [];
+      var playlistData = results[1] || [];
+      config = results[2] || {};
+
+      media = {};
+      mediaData.forEach(function(m){ if(m && m.id) media[m.id] = m; });
+
+      var eff = playlistData;
+      if((!eff || !eff.length) && mediaData && mediaData.length){
+        eff = mediaData.map(function(m){ return { mediaId: m.id, duration: m.duration || 10 }; });
+      }
+
+      playlist = [];
+      (eff || []).forEach(function(p){
+        var mid = (typeof p === 'string') ? p : p.mediaId;
+        var dur = (typeof p === 'string') ? null : p.duration;
+        if(media[mid]){
+          playlist.push({ media: media[mid], duration: (dur || media[mid].duration || 8) * 1000 });
+        }
+      });
+
+      if(!playlist.length){ loading('Playlist vazia. Adicione mídias no painel.'); return; }
+
+      applyConfig();
+      hideLoading();
+      if(currentIdx < 0){ currentIdx = -1; playNext(); }
+    }).catch(function(){
+      loading('Erro de rede. Tentando de novo…');
+      setTimeout(loadPlaylist, 10000);
     });
-    document.body.classList.add('idle');
+  }
 
-    /* === Fullscreen on click/tap === */
-    document.addEventListener('click', function(){
-        if(!document.fullscreenElement){
-            document.documentElement.requestFullscreen().catch(function(){});
+  function releasePrev(){
+    try {
+      var prev = player.querySelectorAll('video, img, .text-slide');
+      for(var i=0; i<prev.length; i++){
+        var el = prev[i];
+        if(el.tagName === 'VIDEO'){
+          try { el.pause(); el.removeAttribute('src'); el.load(); } catch(e){}
         }
+        if(el.parentNode) el.parentNode.removeChild(el);
+      }
+    } catch(e){}
+  }
+
+  function playNext(){
+    if(!playlist.length) return;
+    currentIdx = (currentIdx + 1) % playlist.length;
+    var item = playlist[currentIdx];
+    var m = item.media;
+
+    clearTimeout(timer);
+    releasePrev();
+
+    if(!m || !m.type){ timer = setTimeout(playNext, 2000); return; }
+
+    var single = (playlist.length === 1);
+
+    if(m.type === 'image'){
+      var isrc = m.url || m.dataUrl;
+      if(!isrc){ timer = setTimeout(playNext, 2000); return; }
+      var img = document.createElement('img');
+      img.src = isrc;
+      img.onload = function(){ timer = setTimeout(playNext, item.duration); };
+      img.onerror = function(){ timer = setTimeout(playNext, 2000); };
+      player.appendChild(img);
+    } else if(m.type === 'video'){
+      var vsrc = m.url || m.dataUrl;
+      if(!vsrc){ timer = setTimeout(playNext, 2000); return; }
+      var video = document.createElement('video');
+      video.src = vsrc;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.muted = true;                // TVs exigem mute pra autoplay
+      video.loop = single;               // loop nativo quando for 1 vídeo
+      video.preload = 'auto';
+      video.onloadedmetadata = function(){
+        if(!single){
+          var dur = (video.duration && isFinite(video.duration)) ? (video.duration*1000 + 200) : item.duration;
+          timer = setTimeout(playNext, dur);
+        }
+      };
+      video.onended = function(){ if(!single) playNext(); };
+      video.onerror = function(){ timer = setTimeout(playNext, 2000); };
+      player.appendChild(video);
+      try { video.play(); } catch(e){}
+    } else if(m.type === 'text'){
+      var div = document.createElement('div');
+      div.className = 'text-slide';
+      div.style.background = m.bgColor || '#1a1a2e';
+      div.innerHTML = '<h1>' + esc(m.title || '') + '</h1>' + (m.subtitle ? '<p>' + esc(m.subtitle) + '</p>' : '');
+      player.appendChild(div);
+      timer = setTimeout(playNext, item.duration);
+    } else {
+      timer = setTimeout(playNext, 2000);
+    }
+  }
+
+  function esc(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
+
+  // === AUTO-RELOAD leve a cada 30min ===
+  // Libera memoria de decoder, buffers, event listeners. Feito num
+  // momento seguro (primeiros 1.5s do loop do video) pra nao cortar.
+  setInterval(function(){
+    if(Date.now() - tvStart < RELOAD_AFTER_MS) return;
+    var v = player.querySelector('video');
+    var safe = !v || !isFinite(v.duration) || v.currentTime < 1.5;
+    if(safe) location.reload();
+  }, 60000);
+
+  // Relogio (1x por minuto, so se habilitado)
+  setInterval(function(){ if(config.showClock) updateClock(); }, 60000);
+
+  // === Init ===
+  if(!franchiseId && !tvId){
+    loading('Parâmetros ausentes. Use /tv.html?f=FRANQUIA&tv=TVID');
+    return;
+  }
+  if(!franchiseId && tvId){
+    loading('Resolvendo TV…');
+    resolveTvByShortcode(tvId).then(function(hit){
+      if(hit){ franchiseId = hit.fid; tvId = hit.tvId; loadPlaylist(); }
+      else { loading('TV não encontrada.'); }
     });
-
-    /* === Keyboard controls === */
-    document.addEventListener('keydown', function(e){
-        if(e.key === 'ArrowRight' || e.key === ' ') playNext();
-        if(e.key === 'ArrowLeft'){ currentIdx = Math.max(-1, currentIdx - 2); playNext(); }
-        if(e.key === 'f' || e.key === 'F'){
-            if(document.fullscreenElement) document.exitFullscreen();
-            else document.documentElement.requestFullscreen().catch(function(){});
-        }
-    });
-
-    /* === Periodic playlist + config refresh ===
-       Antes era 30s (muito agressivo — gerava pressao de memoria em TVs
-       Android modestas e podia travar o aparelho apos horas em loop).
-       Agora refresh a cada 5 min, suficiente pra pegar updates do painel. */
-    setInterval(function(){
-        if(navigator.onLine && franchiseId) loadPlaylist();
-    }, 300000);
-
-    /* === Auto-reload preventivo a cada 60 min ===
-       Libera memoria de decodificadores de video, cache do Firestore SDK,
-       buffers de video, e qualquer vazamento acumulado. Reload e feito
-       apenas quando o video atual estiver proximo do inicio do loop
-       (evita corte visivel). */
-    var TV_RELOAD_AFTER_MS = 60 * 60 * 1000; // 60 min
-    var tvStartTime = Date.now();
-    setInterval(function(){
-        if (Date.now() - tvStartTime < TV_RELOAD_AFTER_MS) return;
-        var vid = document.querySelector('#player video');
-        // Se nao ha video ou o video acabou de iniciar o loop, reload agora
-        if (!vid || !isFinite(vid.duration) || vid.currentTime < 1.5) {
-            console.log('[tv] auto-reload preventivo para liberar memoria');
-            location.reload();
-        }
-    }, 30000);
-
-    /* === Refresh weather every 15 min === */
-    setInterval(function(){
-        if(navigator.onLine && config.showWeather && config.weatherCity){
-            weatherCache.time = 0; // Force refresh
-            fetchWeather(config.weatherCity);
-        }
-    }, 900000);
-
-    /* === Escape hatch === */
-    function esc(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
-
-    /* === Service Worker: TVs NAO registram SW (cache e inimigo aqui) === */
-
-    /* === Boot === */
-    parseUrl();
-    setTimeout(loadPlaylist, 800);
-    if(!navigator.onLine) updateStatus();
+  } else {
+    loadPlaylist();
+  }
 })();
 </script>
 </body>
