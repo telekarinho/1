@@ -422,6 +422,25 @@ body:not(.idle){cursor:default}
         return 0;
     }
 
+    // Ao trocar de midia, descarrega o elemento anterior do DOM pra liberar memoria.
+    // Sem isso, em TVs Android modestas o decodificador de video pode acumular
+    // buffers e eventualmente travar o aparelho.
+    function _releasePlayerChildren(){
+        try {
+            var prev = player.querySelectorAll('video, img');
+            prev.forEach(function(el){
+                try {
+                    if (el.tagName === 'VIDEO') {
+                        el.pause();
+                        el.removeAttribute('src');
+                        el.load();
+                    }
+                } catch(e){}
+                if (el.parentNode) el.parentNode.removeChild(el);
+            });
+        } catch(e){}
+    }
+
     function playNext(){
         if(!playlist.length) return;
         // For wall mode, use time-synced index; otherwise increment
@@ -436,6 +455,7 @@ body:not(.idle){cursor:default}
         var fit = config.objectFit || 'cover';
 
         clearTimeout(timer);
+        _releasePlayerChildren();
         player.innerHTML = '';
 
         if(!m || !m.type){
@@ -754,9 +774,29 @@ body:not(.idle){cursor:default}
         }
     });
 
-    /* === Periodic playlist + config refresh (online only, every 30s) === */
+    /* === Periodic playlist + config refresh ===
+       Antes era 30s (muito agressivo — gerava pressao de memoria em TVs
+       Android modestas e podia travar o aparelho apos horas em loop).
+       Agora refresh a cada 5 min, suficiente pra pegar updates do painel. */
     setInterval(function(){
         if(navigator.onLine && franchiseId) loadPlaylist();
+    }, 300000);
+
+    /* === Auto-reload preventivo a cada 60 min ===
+       Libera memoria de decodificadores de video, cache do Firestore SDK,
+       buffers de video, e qualquer vazamento acumulado. Reload e feito
+       apenas quando o video atual estiver proximo do inicio do loop
+       (evita corte visivel). */
+    var TV_RELOAD_AFTER_MS = 60 * 60 * 1000; // 60 min
+    var tvStartTime = Date.now();
+    setInterval(function(){
+        if (Date.now() - tvStartTime < TV_RELOAD_AFTER_MS) return;
+        var vid = document.querySelector('#player video');
+        // Se nao ha video ou o video acabou de iniciar o loop, reload agora
+        if (!vid || !isFinite(vid.duration) || vid.currentTime < 1.5) {
+            console.log('[tv] auto-reload preventivo para liberar memoria');
+            location.reload();
+        }
     }, 30000);
 
     /* === Refresh weather every 15 min === */
