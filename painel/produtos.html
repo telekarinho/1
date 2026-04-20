@@ -499,9 +499,62 @@
             document.getElementById('sidebar').classList.toggle('open');
         }
 
-        // Load inventory
+        // Seed padrão de ingredientes/insumos MilkyPot.
+        // Usado quando a franquia abre essa pagina pela primeira vez e o
+        // inventario esta vazio. Derivado dos produtos do catalog_config
+        // (sabores, adicionais, tamanhos).
+        function defaultIngredientsSeed() {
+            var id = function(s){ return s.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''); };
+            var mk = function(name, category, unit, minStock){
+                return { id: id(name), name: name, category: category, unit: unit, quantity: 0, minStock: minStock, cost: 0 };
+            };
+            return [
+                // INGREDIENTES (base, cremes, caldas, extras liquidos/secos)
+                mk('Leite Ninho em po',      'ingredientes', 'kg', 2),
+                mk('Creme de leite',         'ingredientes', 'L',  3),
+                mk('Leite condensado',       'ingredientes', 'L',  3),
+                mk('Polpa de acai',          'ingredientes', 'kg', 5),
+                mk('Pasta de Nutella',       'ingredientes', 'kg', 1),
+                mk('Pasta de Oreo',          'ingredientes', 'kg', 1),
+                mk('Calda de morango',       'ingredientes', 'L',  2),
+                mk('Calda de chocolate',     'ingredientes', 'L',  2),
+                mk('Granola',                'ingredientes', 'kg', 2),
+                mk('Oreo em pedacos',        'ingredientes', 'kg', 1),
+                mk('Confete colorido',       'ingredientes', 'kg', 0.5),
+                mk('Pasta de amendoim',      'ingredientes', 'kg', 1),
+                mk('Whey protein',           'ingredientes', 'kg', 1),
+                mk('Capuccino em po',        'ingredientes', 'kg', 1),
+                mk('Licor Amarula',          'ingredientes', 'L',  0.5),
+                mk('Licor Baileys',          'ingredientes', 'L',  0.5),
+                mk('Chantilly spray',        'ingredientes', 'unid', 2),
+
+                // FRUTAS (fresco / congelado)
+                mk('Morango fresco',         'frutas', 'kg', 2),
+                mk('Banana',                 'frutas', 'kg', 2),
+
+                // EMBALAGENS
+                mk('Copo Mini 180ml',        'embalagens', 'unid', 50),
+                mk('Copo Pequeno 300ml',     'embalagens', 'unid', 50),
+                mk('Copo Medio 500ml',       'embalagens', 'unid', 50),
+                mk('Copo Gigante 700ml',     'embalagens', 'unid', 30),
+                mk('Tampa de copo',          'embalagens', 'unid', 100),
+                mk('Colher descartavel',     'embalagens', 'unid', 100),
+                mk('Guardanapo',             'embalagens', 'unid', 100),
+                mk('Saco para delivery',     'embalagens', 'unid', 50),
+                mk('Rotulo / lacre',         'embalagens', 'unid', 100)
+            ];
+        }
+
+        // Load inventory (com auto-seed na primeira vez)
         function loadInventory() {
             inventory = DataStore.getCollection('inventory', franchiseId) || [];
+            if (!inventory.length) {
+                inventory = defaultIngredientsSeed();
+                DataStore.setCollection('inventory', franchiseId, inventory);
+                if (typeof Utils !== 'undefined' && Utils.showToast) {
+                    Utils.showToast('Inventario inicial carregado — ajuste as quantidades', 'info');
+                }
+            }
             updateKPIs();
             renderTable();
         }
