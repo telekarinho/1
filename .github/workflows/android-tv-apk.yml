@@ -34,11 +34,17 @@ jobs:
         working-directory: android-tv
         run: ./gradlew --no-daemon clean assembleRelease
 
+      - name: Rename APK to tv.apk (nome fixo para download publico)
+        run: |
+          SRC=$(ls android-tv/app/build/outputs/apk/release/*.apk | head -n 1)
+          cp "$SRC" android-tv/app/build/outputs/apk/release/tv.apk
+          ls -la android-tv/app/build/outputs/apk/release/
+
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
           name: milkypot-tv-apk
-          path: android-tv/app/build/outputs/apk/release/*.apk
+          path: android-tv/app/build/outputs/apk/release/tv.apk
           retention-days: 30
 
       - name: Publish rolling release (MilkyPot TV APK)
@@ -50,15 +56,17 @@ jobs:
           body: |
             APK do MilkyPot TV gerado automaticamente do commit ${{ github.sha }}.
 
-            **Como instalar:**
-            1. Baixe o arquivo `app-release.apk` abaixo direto na TV (ou transfira via pendrive/USB)
-            2. Abra o APK na TV. Se pedir, autorize "Fontes desconhecidas"
-            3. Abra o app "MilkyPot TV" no menu da TV
-            4. Selecione TV 1 / TV 2 / TV 3 (só na primeira vez)
-            5. Pronto — vídeos começam a tocar em loop com decoder nativo
+            **Link rápido pra instalar direto na TV:**
+            https://milkypot.com/tv.apk
 
-            Pra trocar a TV escolhida, segure o botão VOLTAR no controle por 2s.
-          files: android-tv/app/build/outputs/apk/release/*.apk
+            **Passos:**
+            1. Na TV, abra o browser e digite `milkypot.com/tv.apk`
+            2. Se pedir, autorize "Fontes desconhecidas"
+            3. Instale e abra o app "MilkyPot TV" no menu
+            4. Selecione TV 1 / TV 2 / TV 3 (só na primeira vez)
+
+            Pra trocar a TV escolhida, segure VOLTAR por 2s.
+          files: android-tv/app/build/outputs/apk/release/tv.apk
           prerelease: false
           make_latest: true
         env:
