@@ -456,25 +456,65 @@
         </div>
     </div>
 
+    <!-- Firebase compat para sincronizar com Firestore em tempo real -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
     <script src="../js/core/datastore.js"></script>
     <script src="../js/core/utils.js"></script>
     <script src="../js/core/audit.js"></script>
-    <!-- Seed fallback if needed -->
+    <!-- Seed fallback: CARDAPIO_CONFIG default se o Firestore estiver vazio -->
     <script src="../js/cardapio-data.js"></script>
 
     <script>
         const CatalogManager = {
             config: null,
+            _initTries: 0,
 
             init() {
-                // Carrega do DataStore
+                this._initTries = (this._initTries || 0) + 1;
+                // Inicializa DataStore (sync com Firestore) na primeira chamada
+                if (this._initTries === 1 && typeof DataStore !== 'undefined' && DataStore.init) {
+                    try { DataStore.init(); } catch(e) { console.warn('DataStore.init err:', e); }
+                }
+
+                // Carrega do DataStore (local)
                 this.config = DataStore.get('catalog_config');
-                
+
+                // Se ainda nao tem local apos 2 tentativas e CARDAPIO_CONFIG existe, faz seed
+                if (!this.config && this._initTries >= 3 && typeof CARDAPIO_CONFIG !== 'undefined') {
+                    console.log('🌱 Seed local: usando CARDAPIO_CONFIG hardcoded como ponto de partida');
+                    this.config = JSON.parse(JSON.stringify(CARDAPIO_CONFIG));
+                    DataStore.set('catalog_config', this.config);
+                }
+
                 if (!this.config) {
-                    console.log('🔄 Aguardando DataStore sync...');
-                    setTimeout(() => this.init(), 500);
+                    // Ainda esperando sync do Firestore (ou DataStore inicializar)
+                    if (this._initTries < 10) {
+                        console.log('🔄 Aguardando catalog_config... tentativa ' + this._initTries);
+                        setTimeout(() => this.init(), 500);
+                    } else if (typeof CARDAPIO_CONFIG !== 'undefined') {
+                        // Timeout final: usa hardcoded
+                        this.config = JSON.parse(JSON.stringify(CARDAPIO_CONFIG));
+                        DataStore.set('catalog_config', this.config);
+                        this.setupEvents();
+                        this.renderAll();
+                        this.updateFilters();
+                    } else {
+                        alert('Catálogo vazio e sem fallback. Verifique sua conexão.');
+                    }
                     return;
                 }
+
+                // Escuta atualizacoes externas (outras telas editando)
+                window.addEventListener('mp_catalog_updated', (e) => {
+                    if (e.detail) {
+                        this.config = e.detail;
+                        this.renderAll();
+                    }
+                });
 
                 this.setupEvents();
                 this.renderAll();
