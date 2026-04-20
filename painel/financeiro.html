@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/shared-panel.css">
     <link rel="stylesheet" href="../css/mobile-app.css">
+    <link rel="stylesheet" href="../css/ios-premium.css">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#42A5F5">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -108,17 +109,18 @@
                 <!-- ============ FINANCE OS - Saude financeira por competencia ============ -->
                 <div id="financeOSMount"></div>
 
-                <!-- FILTROS -->
-                <div class="panel-card">
-                    <div class="panel-card-body" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                        <strong data-i18n="common.period">Periodo:</strong>
-                        <button class="btn btn-sm btn-outline filter-btn" data-period="today" onclick="setPeriod('today')" data-i18n="common.today">Hoje</button>
-                        <button class="btn btn-sm btn-outline filter-btn" data-period="week" onclick="setPeriod('week')" data-i18n="common.this_week">Esta Semana</button>
-                        <button class="btn btn-sm btn-primary filter-btn" data-period="month" onclick="setPeriod('month')" data-i18n="common.this_month">Este Mês</button>
-                        <button class="btn btn-sm btn-outline filter-btn" data-period="30days" onclick="setPeriod('30days')" data-i18n="common.last_30_days">Últimos 30 Dias</button>
-                        <div style="flex:1"></div>
-                        <button class="btn btn-sm btn-primary" onclick="openModal()">+ <span data-i18n="common.new_transaction">Nova Transação</span></button>
+                <!-- FILTROS — iOS segmented + primary CTA -->
+                <div class="ios-card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+                    <div class="ios-segmented" id="periodSeg">
+                        <button type="button" data-period="today" onclick="setPeriod('today')" data-i18n="common.today">Hoje</button>
+                        <button type="button" data-period="week" onclick="setPeriod('week')" data-i18n="common.this_week">Esta Semana</button>
+                        <button type="button" class="active" data-period="month" onclick="setPeriod('month')" data-i18n="common.this_month">Este Mês</button>
+                        <button type="button" data-period="30days" onclick="setPeriod('30days')" data-i18n="common.last_30_days">30 Dias</button>
                     </div>
+                    <div style="flex:1"></div>
+                    <button class="ios-btn ios-btn-pill" style="background:#007AFF;color:#fff" onclick="openModal()">
+                        + <span data-i18n="common.new_transaction">Nova Transação</span>
+                    </button>
                 </div>
 
                 <!-- KPIs -->
@@ -370,14 +372,19 @@
         // ========== PERIOD FILTER ==========
         function setPeriod(period) {
             currentPeriod = period;
+            // Novo: segmented control iOS (#periodSeg) com .active
+            document.querySelectorAll('#periodSeg button').forEach(function(btn) {
+                btn.classList.toggle('active', btn.getAttribute('data-period') === period);
+            });
+            // Compat: mantém logica antiga caso algum lugar ainda use .filter-btn
             document.querySelectorAll('.filter-btn').forEach(function(btn) {
                 btn.classList.remove('btn-primary');
                 btn.classList.add('btn-outline');
             });
-            var activeBtn = document.querySelector('.filter-btn[data-period="' + period + '"]');
-            if (activeBtn) {
-                activeBtn.classList.remove('btn-outline');
-                activeBtn.classList.add('btn-primary');
+            var legacyActive = document.querySelector('.filter-btn[data-period="' + period + '"]');
+            if (legacyActive) {
+                legacyActive.classList.remove('btn-outline');
+                legacyActive.classList.add('btn-primary');
             }
             loadData();
         }
