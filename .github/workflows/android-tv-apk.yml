@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write     # pra publicar release
+      pull-requests: write # pra abrir PR com update do tv.apk
 
     steps:
       - uses: actions/checkout@v4
@@ -73,9 +74,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # GitHub Pages serve arquivos direto do repo. Copiamos o APK para
-      # a raiz e commitamos de volta em main — assim milkypot.com/tv.apk
-      # serve o arquivo real (não tem redirect server-side em GH Pages).
-      - name: Copy APK to repo root and commit
+      # a raiz e abrimos um PR com a atualização — a branch main é
+      # protegida e exige PR + check manifest, então push direto falha.
+      # O PR fica aberto aguardando merge manual (ou auto-merge se habilitado).
+      - name: Open PR updating tv.apk in repo root
         if: github.ref == 'refs/heads/main'
         run: |
           cp android-tv/app/build/outputs/apk/release/tv.apk tv.apk
@@ -83,10 +85,23 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add tv.apk
           if git diff --cached --quiet; then
-            echo "Sem mudanças no tv.apk (mesmo conteúdo)."
+            echo "tv.apk sem mudanças — pulando PR."
             exit 0
           fi
-          git commit -m "chore: update tv.apk from build ${GITHUB_SHA:0:7} [skip ci]"
-          git push origin HEAD:main
+
+          BRANCH="chore/update-tv-apk-${GITHUB_SHA:0:7}"
+          git checkout -b "$BRANCH"
+          git commit -m "chore: update tv.apk from build ${GITHUB_SHA:0:7}"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --title "chore(tv-apk): update to build ${GITHUB_SHA:0:7}" \
+            --body "APK atualizado automaticamente pelo build. Release: https://github.com/telekarinho/1/releases/tag/tv-apk-latest" \
+            --base main \
+            --head "$BRANCH" || echo "gh pr create falhou (PR ja pode existir)"
+
+          # Tenta habilitar auto-merge assim que os checks passarem.
+          gh pr merge "$BRANCH" --squash --auto --delete-branch || echo "auto-merge indisponivel; PR aguardando merge manual"
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
