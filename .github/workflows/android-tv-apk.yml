@@ -71,3 +71,22 @@ jobs:
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # GitHub Pages serve arquivos direto do repo. Copiamos o APK para
+      # a raiz e commitamos de volta em main — assim milkypot.com/tv.apk
+      # serve o arquivo real (não tem redirect server-side em GH Pages).
+      - name: Copy APK to repo root and commit
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cp android-tv/app/build/outputs/apk/release/tv.apk tv.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tv.apk
+          if git diff --cached --quiet; then
+            echo "Sem mudanças no tv.apk (mesmo conteúdo)."
+            exit 0
+          fi
+          git commit -m "chore: update tv.apk from build ${GITHUB_SHA:0:7} [skip ci]"
+          git push origin HEAD:main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
