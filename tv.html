@@ -483,6 +483,10 @@ body:not(.idle){cursor:default}
             }
             var video = document.createElement('video');
             var videoHandled = false;
+            // Quando ha um unico vídeo, usa loop NATIVO do <video>.
+            // Na TV Android um segundo .play() sem gesture falha, entao evitamos
+            // destruir/recriar o elemento. O browser reinicia o vídeo sozinho.
+            var singleVideo = (playlist.length === 1);
             var videoTimeout = setTimeout(function(){
                 if(videoHandled) return;
                 videoHandled = true;
@@ -492,16 +496,28 @@ body:not(.idle){cursor:default}
             video.muted = false;
             video.autoplay = true;
             video.playsInline = true;
+            video.loop = singleVideo;
             video.style.objectFit = fit;
             video.onloadedmetadata = function(){
                 if(videoHandled) return;
                 videoHandled = true;
                 clearTimeout(videoTimeout);
-                var dur = item.duration || (video.duration * 1000);
-                startProgress(dur);
-                timer = setTimeout(playNext, dur);
+                var realDur = (video.duration && isFinite(video.duration)) ? video.duration * 1000 : 0;
+                if(singleVideo){
+                    // Sem setTimeout p/ playNext — deixa o loop nativo correr.
+                    if(realDur) startProgress(realDur);
+                } else {
+                    // Playlist com mais de 1 item: usa a duracao real do video
+                    // (ignora item.duration porque era muito curto pra videos grandes)
+                    var dur = realDur ? realDur + 200 : (item.duration || 8000);
+                    startProgress(dur);
+                    timer = setTimeout(playNext, dur);
+                }
             };
-            video.onended = function(){ playNext(); };
+            video.onended = function(){
+                if(!singleVideo) playNext();
+                // Se for unico e loop nativo estiver rodando, nao faz nada
+            };
             video.onerror = function(){
                 if(videoHandled) return;
                 videoHandled = true;
