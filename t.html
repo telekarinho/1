@@ -73,22 +73,31 @@
       const params = new URLSearchParams(location.search);
       let forcedFid = params.get('f') || null;
 
-      // === Resolução sem IP-lock ===
-      // Qualquer rede pode abrir o atalho. Busca a(s) franquia(s) que têm esse código.
+      // === Resolução sem IP-lock e sem auth (TVs/celulares abrem anonimos) ===
+      // Evita collection().get() (falha se houver qualquer doc sem read publico
+      // na collection). Busca franquias e depois cada tv_shortcodes_{fid} individualmente.
       let candidates = [];
       try {
         if (typeof DataStore !== 'undefined' && DataStore.init) DataStore.init();
         const db = firebase.firestore();
-        const snap = await db.collection('datastore').get();
-        snap.forEach(doc => {
-          if (doc.id.indexOf('tv_shortcodes_') !== 0) return;
-          const map = JSON.parse(doc.data().value || '{}');
-          if (map[code] && map[code].tvId) {
-            candidates.push({ fid: doc.id.replace('tv_shortcodes_', ''), tvId: map[code].tvId });
-          }
-        });
+        // 1. Lista de franquias (doc publico)
         const fdoc = await db.collection('datastore').doc('franchises').get();
+        const franchises = fdoc.exists ? JSON.parse(fdoc.data().value || '[]') : [];
         if (fdoc.exists) localStorage.setItem('mp_franchises', fdoc.data().value || '[]');
+        // 2. Para cada franquia, le o doc de shortcodes (falha individual nao quebra o resto)
+        const lookups = franchises.map(async f => {
+          try {
+            const d = await db.collection('datastore').doc('tv_shortcodes_' + f.id).get();
+            if (!d.exists) return null;
+            const map = JSON.parse(d.data().value || '{}');
+            if (map[code] && map[code].tvId) {
+              return { fid: f.id, tvId: map[code].tvId };
+            }
+          } catch (e) { console.warn('shortcodes lookup for', f.id, e); }
+          return null;
+        });
+        const results = await Promise.all(lookups);
+        candidates = results.filter(Boolean);
       } catch (e) { console.warn('lookup:', e); }
 
       const franchises = JSON.parse(localStorage.getItem('mp_franchises') || '[]');
