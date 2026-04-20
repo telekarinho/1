@@ -83,7 +83,7 @@ const FinanceOSUI = (function () {
                 <div style="flex:1;min-width:240px">
                   <div style="font-size:.72rem;color:#777;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">Finance OS · Saúde da franquia</div>
                   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-                    <select onchange="FinanceOSUI.setPeriod(this.value)" class="fos-select">${periodOptions}</select>
+                    <select onchange="FinanceOSUI.setPeriod(this.value)" class="ios-field" style="padding:8px 14px;font-size:14px;font-weight:600;width:auto;min-width:160px">${periodOptions}</select>
                     ${statusBadge}
                   </div>
                 </div>
@@ -104,15 +104,15 @@ const FinanceOSUI = (function () {
             const role = sessionRole();
             if (role === 'super_admin') {
                 return `
-                    <button class="btn btn-sm" style="background:#F59E0B;color:#fff" onclick="FinanceOSUI.reopenPeriod()">🔓 Reabrir período</button>
-                    <button class="btn btn-sm btn-outline" onclick="FinanceOSUI.showRetifyModal()">📝 Retificar</button>
+                    <button class="ios-btn ios-btn-pill" style="background:#FF9500;color:#fff" onclick="FinanceOSUI.reopenPeriod()">🔓 Reabrir</button>
+                    <button class="ios-btn ios-btn-pill ios-btn-secondary" onclick="FinanceOSUI.showRetifyModal()">📝 Retificar</button>
                 `;
             }
-            return `<span style="font-size:.8rem;color:#888">Somente super_admin pode retificar.</span>`;
+            return `<span style="font-size:13px;color:var(--ios-secondary-label)">Somente super_admin pode retificar.</span>`;
         }
         return `
-            <button class="btn btn-sm btn-outline" onclick="FinanceOSUI.generateRecurring()">🔁 Gerar recorrentes</button>
-            <button class="btn btn-sm" style="background:#DC2626;color:#fff" onclick="FinanceOSUI.confirmClose()">🔒 Fechar mês</button>
+            <button class="ios-btn ios-btn-pill ios-btn-secondary" onclick="FinanceOSUI.generateRecurring()">🔁 Gerar recorrentes</button>
+            <button class="ios-btn ios-btn-pill" style="background:#FF3B30;color:#fff" onclick="FinanceOSUI.confirmClose()">🔒 Fechar mês</button>
         `;
     }
 
@@ -307,7 +307,7 @@ const FinanceOSUI = (function () {
               🟡 Faltam obrigatórios: ${faltantes.map(f => esc(f.label)).join(', ')}
             </div>` : '';
 
-        const addBtn = !closed ? `<button class="btn btn-sm btn-primary" onclick="FinanceOSUI.showAddCostModal('${kind}')">+ Adicionar</button>` : '';
+        const addBtn = !closed ? `<button class="ios-btn ios-btn-sm" style="background:${kind === 'fixed' ? '#5856D6' : '#FF9500'};color:#fff" onclick="FinanceOSUI.showAddCostModal('${kind}')">+ Adicionar</button>` : '';
 
         return `
             <div class="panel-card">
@@ -337,7 +337,7 @@ const FinanceOSUI = (function () {
                 <div class="panel-card">
                   <div class="panel-card-header">
                     <h3>🔁 Recorrências ativas</h3>
-                    <button class="btn btn-sm btn-outline" onclick="FinanceOSUI.showAddRecurringModal()">+ Cadastrar</button>
+                    <button class="ios-btn ios-btn-sm" style="background:#8B5CF6;color:#fff" onclick="FinanceOSUI.showAddRecurringModal()">+ Cadastrar</button>
                   </div>
                   <div class="panel-card-body" style="color:#888;text-align:center;padding:20px">
                     Nenhuma recorrência cadastrada. Crie templates que geram automaticamente os custos do mês.
@@ -356,7 +356,7 @@ const FinanceOSUI = (function () {
             <div class="panel-card">
               <div class="panel-card-header">
                 <h3>🔁 Recorrências ativas</h3>
-                <button class="btn btn-sm btn-outline" onclick="FinanceOSUI.showAddRecurringModal()">+ Cadastrar</button>
+                <button class="ios-btn ios-btn-sm" style="background:#8B5CF6;color:#fff" onclick="FinanceOSUI.showAddRecurringModal()">+ Cadastrar</button>
               </div>
               <div class="panel-card-body" style="padding:0">
                 <table class="panel-table">
@@ -400,30 +400,62 @@ const FinanceOSUI = (function () {
        ============================================ */
     function showAddCostModal(kind) {
         const cats = Financas.allCategories(kind);
-        const options = cats.map(c => `<option value="${c.key}">${esc(c.label)}${c.mandatory ? ' *' : ''}</option>`).join('');
+        const headerIcon = kind === 'fixed' ? '🏢' : '📦';
+        const headerTitle = kind === 'fixed' ? 'Novo custo fixo' : 'Novo custo variável';
+        const headerColor = kind === 'fixed' ? '#5856D6' : '#FF9500';
+
+        // Tiles de categoria em grid (mais visual que select) — mas com fallback <select> pra muitas
+        const useTiles = cats.length <= 9;
+        const categoryPicker = useTiles
+            ? `<div class="ios-icon-grid" data-cat-grid>
+                 ${cats.map((c, idx) => `
+                    <div class="ios-icon-tile${idx === 0 ? ' active' : ''}" data-cat-value="${esc(c.key)}">
+                      <span class="ios-icon-tile-emoji">${_iconForCategory(c.key)}</span>
+                      <span>${esc(c.label)}${c.mandatory ? ' <span style="color:#FF3B30">*</span>' : ''}</span>
+                    </div>`).join('')}
+               </div>
+               <input type="hidden" data-name="categoria" value="${esc(cats[0]?.key || '')}">`
+            : `<select class="ios-field" data-name="categoria">
+                 ${cats.map(c => `<option value="${esc(c.key)}">${esc(c.label)}${c.mandatory ? ' *' : ''}</option>`).join('')}
+               </select>`;
+
         openModal(`
-            <div class="caixa-modal" role="dialog">
-              <div class="caixa-modal-header">
-                <h3>${kind === 'fixed' ? '🏢 Novo custo fixo' : '📦 Novo custo variável'}</h3>
-                <button class="caixa-modal-close" data-caixa-close>✕</button>
-              </div>
-              <div class="caixa-modal-body">
-                <label>Categoria</label>
-                <select data-name="categoria">${options}</select>
-                <label>Descrição</label>
-                <input type="text" data-name="descricao" placeholder="Ex: aluguel loja matriz">
-                <label>Valor</label>
-                <input type="text" class="caixa-brl" data-caixa-brl data-name="valor" inputmode="numeric">
-                <label>Dia de vencimento (opcional)</label>
-                <input type="number" data-name="dueDay" min="1" max="31" placeholder="Ex: 5">
-                <div class="caixa-info">Período: <strong>${esc(Financas.formatPeriodLabel(_currentPK))}</strong></div>
-                <div class="caixa-danger" data-caixa-error style="display:none"></div>
-              </div>
-              <div class="caixa-modal-footer">
-                <button class="caixa-btn-secondary" data-caixa-close>Cancelar</button>
-                <button class="caixa-btn-primary" data-caixa-confirm>Lançar</button>
-              </div>
+          <div class="ios-sheet" role="dialog" aria-modal="true">
+            <div class="ios-sheet-handle"></div>
+            <div class="ios-sheet-header" style="padding-top:10px">
+              <h3>${headerIcon} ${headerTitle}</h3>
+              <button class="ios-sheet-close" data-ios-close aria-label="Fechar">✕</button>
             </div>
+            <div class="ios-sheet-body">
+
+              <div class="ios-field-group">
+                <label class="ios-field-label">Valor</label>
+                <input type="text" class="ios-field ios-field-xl" data-ios-brl data-caixa-brl data-name="valor" inputmode="numeric" placeholder="R$ 0,00">
+              </div>
+
+              <div class="ios-field-group">
+                <label class="ios-field-label">Categoria</label>
+                ${categoryPicker}
+              </div>
+
+              <div class="ios-field-group">
+                <label class="ios-field-label">Descrição</label>
+                <input type="text" class="ios-field" data-name="descricao" placeholder="Ex: aluguel loja matriz" autocomplete="off">
+              </div>
+
+              <div class="ios-field-group">
+                <label class="ios-field-label">Dia do vencimento (opcional)</label>
+                <input type="number" class="ios-field" data-name="dueDay" min="1" max="31" placeholder="Ex: 5" inputmode="numeric">
+              </div>
+
+              <div class="ios-pill ios-pill-info" style="margin-top:4px">📅 Período: <strong style="margin-left:4px">${esc(Financas.formatPeriodLabel(_currentPK))}</strong></div>
+              <div data-caixa-error style="display:none;margin-top:12px;padding:10px 14px;background:rgba(255,59,48,.1);color:#8A1A12;border-radius:10px;font-size:14px"></div>
+            </div>
+            <div class="ios-sheet-footer">
+              <button class="ios-btn ios-btn-secondary" data-ios-close>Cancelar</button>
+              <button class="ios-btn ios-btn-primary" data-ios-confirm style="background:${headerColor}">Lançar</button>
+            </div>
+          </div>
         `, (data) => {
             const r = Financas.addCost(_fid, {
                 kind: kind,
@@ -437,35 +469,92 @@ const FinanceOSUI = (function () {
             render();
             return true;
         });
+
+        // Bind category tiles (click to select + update hidden input)
+        const overlay = document.querySelector('.ios-sheet-overlay');
+        if (overlay) {
+            const tiles = overlay.querySelectorAll('[data-cat-value]');
+            tiles.forEach(tile => {
+                tile.addEventListener('click', () => {
+                    tiles.forEach(t => t.classList.remove('active'));
+                    tile.classList.add('active');
+                    const hidden = overlay.querySelector('[data-name="categoria"]');
+                    if (hidden) hidden.value = tile.getAttribute('data-cat-value');
+                });
+            });
+            // Auto-focus no campo de valor (ja aberto)
+            setTimeout(() => {
+                const firstInput = overlay.querySelector('input[data-name="valor"]');
+                firstInput && firstInput.focus();
+            }, 420);
+        }
+    }
+
+    function _iconForCategory(key) {
+        const map = {
+            aluguel: '🏠', agua: '💧', luz: '💡', internet: '🌐',
+            folha_pagamento: '👥', pro_labore: '💼', contador: '📑',
+            software: '💻', seguros: '🛡️', taxa_franquia: '🏛️',
+            impostos: '📊', compras_insumos: '📦', embalagens: '📦',
+            taxa_cartao: '💳', comissao_apps: '📱', logistica: '🚚',
+            marketing: '📢', manutencao: '🔧', limpeza: '🧼',
+            perdas: '⚠️', outros: '📌', energia: '⚡'
+        };
+        // Tenta casamento por substring antes de fallback
+        const lc = String(key || '').toLowerCase();
+        for (const k in map) if (lc.includes(k)) return map[k];
+        return '💰';
     }
 
     function showAddRecurringModal() {
-        const kindOptions = `<option value="fixed">Fixo</option><option value="variable">Variável</option>`;
         openModal(`
-            <div class="caixa-modal" role="dialog">
-              <div class="caixa-modal-header" style="background:linear-gradient(135deg,#8B5CF6,#6366F1)">
-                <h3>🔁 Nova recorrência</h3>
-                <button class="caixa-modal-close" data-caixa-close>✕</button>
-              </div>
-              <div class="caixa-modal-body">
-                <label>Tipo</label>
-                <select data-name="kind" id="fosRecKind">${kindOptions}</select>
-                <label>Categoria</label>
-                <select data-name="categoria" id="fosRecCat"></select>
-                <label>Descrição</label>
-                <input type="text" data-name="descricao" placeholder="Ex: Aluguel mensal loja">
-                <label>Valor mensal</label>
-                <input type="text" class="caixa-brl" data-caixa-brl data-name="valor" inputmode="numeric">
-                <label>Dia de vencimento</label>
-                <input type="number" data-name="dueDay" min="1" max="31">
-                <div class="caixa-info">A cada mês que você clicar em "Gerar recorrentes", este lançamento será criado automaticamente (sem duplicar).</div>
-                <div class="caixa-danger" data-caixa-error style="display:none"></div>
-              </div>
-              <div class="caixa-modal-footer">
-                <button class="caixa-btn-secondary" data-caixa-close>Cancelar</button>
-                <button class="caixa-btn-primary" data-caixa-confirm>Salvar recorrência</button>
-              </div>
+          <div class="ios-sheet" role="dialog" aria-modal="true">
+            <div class="ios-sheet-handle"></div>
+            <div class="ios-sheet-header" style="padding-top:10px">
+              <h3>🔁 Nova recorrência</h3>
+              <button class="ios-sheet-close" data-ios-close aria-label="Fechar">✕</button>
             </div>
+            <div class="ios-sheet-body">
+
+              <div class="ios-field-group">
+                <label class="ios-field-label">Valor mensal</label>
+                <input type="text" class="ios-field ios-field-xl" data-ios-brl data-caixa-brl data-name="valor" inputmode="numeric" placeholder="R$ 0,00">
+              </div>
+
+              <div class="ios-field-group">
+                <label class="ios-field-label">Tipo</label>
+                <div class="ios-segmented" data-kind-seg>
+                  <button type="button" class="active" data-kind-value="fixed">🏢 Fixo</button>
+                  <button type="button" data-kind-value="variable">📦 Variável</button>
+                </div>
+                <input type="hidden" data-name="kind" id="fosRecKind" value="fixed">
+              </div>
+
+              <div class="ios-field-group">
+                <label class="ios-field-label">Categoria</label>
+                <select class="ios-field" data-name="categoria" id="fosRecCat"></select>
+              </div>
+
+              <div class="ios-field-group">
+                <label class="ios-field-label">Descrição</label>
+                <input type="text" class="ios-field" data-name="descricao" placeholder="Ex: Aluguel mensal loja" autocomplete="off">
+              </div>
+
+              <div class="ios-field-group">
+                <label class="ios-field-label">Dia do vencimento</label>
+                <input type="number" class="ios-field" data-name="dueDay" min="1" max="31" inputmode="numeric" placeholder="Ex: 5">
+              </div>
+
+              <div class="ios-pill ios-pill-info" style="margin-top:4px">
+                🔄 Este lançamento será gerado automaticamente a cada mês em "Gerar recorrentes".
+              </div>
+              <div data-caixa-error style="display:none;margin-top:12px;padding:10px 14px;background:rgba(255,59,48,.1);color:#8A1A12;border-radius:10px;font-size:14px"></div>
+            </div>
+            <div class="ios-sheet-footer">
+              <button class="ios-btn ios-btn-secondary" data-ios-close>Cancelar</button>
+              <button class="ios-btn ios-btn-primary" data-ios-confirm style="background:#8B5CF6">Salvar recorrência</button>
+            </div>
+          </div>
         `, (data) => {
             const r = Financas.addRecurring(_fid, {
                 kind: data.kind,
@@ -478,17 +567,32 @@ const FinanceOSUI = (function () {
             render();
             return true;
         });
-        // Popula categorias dinamicamente
+        // Bind segmented control + popula categorias dinamicamente
         setTimeout(() => {
-            const kindSel = document.getElementById('fosRecKind');
+            const kindInput = document.getElementById('fosRecKind');
             const catSel = document.getElementById('fosRecCat');
+            const segButtons = document.querySelectorAll('[data-kind-seg] button');
             function populate() {
-                const kind = kindSel.value;
+                const kind = kindInput ? kindInput.value : 'fixed';
+                if (!catSel) return;
                 catSel.innerHTML = Financas.allCategories(kind)
-                    .map(c => `<option value="${c.key}">${esc(c.label)}</option>`).join('');
+                    .map(c => `<option value="${esc(c.key)}">${esc(c.label)}</option>`).join('');
             }
-            kindSel.addEventListener('change', populate);
+            segButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    segButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    if (kindInput) kindInput.value = btn.getAttribute('data-kind-value');
+                    populate();
+                });
+            });
             populate();
+            // Auto-focus valor
+            const overlay = document.querySelector('.ios-sheet-overlay');
+            if (overlay) {
+                const firstInput = overlay.querySelector('input[data-name="valor"]');
+                firstInput && firstInput.focus();
+            }
         }, 60);
     }
 
@@ -589,19 +693,37 @@ const FinanceOSUI = (function () {
     }
 
     /* ============================================
-       Modal helpers (reusa estilos do caixa.js)
+       Sheet helper — bottom-sheet iOS-style
+       Substitui o openModal antigo. Aceita o mesmo HTML de formulario
+       (usando data-name / data-caixa-brl) mas renderiza como sheet
+       premium com slide-up, handle, scale-press feedback.
        ============================================ */
     function openModal(html, onConfirm) {
         const overlay = document.createElement('div');
-        overlay.className = 'caixa-modal-overlay';
-        overlay.innerHTML = html;
+        overlay.className = 'ios-sheet-overlay';
+
+        // Envolve o HTML original num container .ios-sheet se ainda nao tiver.
+        // Mantemos compat com .caixa-modal-* elements (data-attrs)
+        const hasNewShell = /ios-sheet(\s|")/.test(html);
+        overlay.innerHTML = hasNewShell ? html : `
+          <div class="ios-sheet" role="dialog" aria-modal="true">
+            <div class="ios-sheet-handle"></div>
+            ${html}
+          </div>`;
         document.body.appendChild(overlay);
 
-        function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+        function close() {
+            overlay.classList.add('closing');
+            setTimeout(function(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 260);
+        }
         overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
-        overlay.querySelectorAll('[data-caixa-close]').forEach(el => el.addEventListener('click', close));
+        overlay.querySelectorAll('[data-caixa-close],[data-ios-close]').forEach(el => el.addEventListener('click', close));
+        document.addEventListener('keydown', function escHandler(e){
+            if (e.key === 'Escape') { close(); document.removeEventListener('keydown', escHandler); }
+        });
 
-        overlay.querySelectorAll('input[data-caixa-brl]').forEach(inp => {
+        // BRL input formatting (mantem compat com caixa-brl antigo)
+        overlay.querySelectorAll('input[data-caixa-brl],input[data-ios-brl]').forEach(inp => {
             inp.addEventListener('input', e => {
                 const digits = (e.target.value || '').replace(/\D/g, '');
                 const reais = parseInt(digits || '0', 10) / 100;
@@ -610,14 +732,14 @@ const FinanceOSUI = (function () {
             if (!inp.value) inp.value = Financas.formatBRL(0);
         });
 
-        const confirmBtn = overlay.querySelector('[data-caixa-confirm]');
+        const confirmBtn = overlay.querySelector('[data-caixa-confirm],[data-ios-confirm]');
         if (confirmBtn) {
             confirmBtn.addEventListener('click', () => {
                 const data = {};
                 overlay.querySelectorAll('[data-name]').forEach(el => {
                     const name = el.dataset.name;
                     let v = el.value;
-                    if (el.dataset.caixaBrl !== undefined) {
+                    if (el.dataset.caixaBrl !== undefined || el.dataset.iosBrl !== undefined) {
                         const digits = String(v || '').replace(/\D/g, '');
                         v = parseInt(digits || '0', 10) / 100;
                     }
