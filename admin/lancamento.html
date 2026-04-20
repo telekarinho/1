@@ -3,113 +3,485 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MilkyPot Admin - Lançamento</title>
-    <meta http-equiv="refresh" content="0; url=campaigns.html">
+    <title>MilkyPot Admin - Lançamento Viral</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#42A5F5">
     <style>
-        :root{
-            --bg-a:#fff6fb;
-            --bg-b:#eef7ff;
-            --card:#ffffffcc;
-            --text:#5a4570;
-            --muted:#8f83a3;
-            --pink:#ff7eb6;
-            --blue:#42a5f5;
-            --border:#ffffffd9;
-        }
-        *{box-sizing:border-box}
-        body{
-            margin:0;
-            min-height:100vh;
-            display:grid;
-            place-items:center;
-            padding:24px;
-            font-family:'Nunito',sans-serif;
-            color:var(--text);
-            background:
-                radial-gradient(circle at top left, #ffd8ec 0, transparent 28%),
-                radial-gradient(circle at bottom right, #d9f0ff 0, transparent 30%),
-                linear-gradient(135deg, var(--bg-a), var(--bg-b));
-        }
-        .card{
-            width:min(560px,100%);
-            padding:32px;
-            border-radius:32px;
-            background:var(--card);
-            border:1px solid var(--border);
-            box-shadow:0 24px 60px rgba(103, 80, 164, 0.14);
-            backdrop-filter:blur(14px);
-            text-align:center;
-        }
-        .logo{
-            width:96px;
-            height:96px;
-            object-fit:contain;
-            margin-bottom:18px;
-        }
-        h1{
-            margin:0 0 10px;
-            font-family:'Baloo 2',cursive;
-            font-size:clamp(2rem,5vw,3rem);
-            line-height:1;
-        }
-        p{
-            margin:0 0 22px;
-            font-size:1rem;
-            line-height:1.6;
-            color:var(--muted);
-        }
-        .actions{
-            display:flex;
-            gap:12px;
-            justify-content:center;
-            flex-wrap:wrap;
-        }
-        .btn{
-            display:inline-flex;
-            align-items:center;
-            justify-content:center;
-            min-width:190px;
-            padding:14px 20px;
-            border-radius:999px;
-            text-decoration:none;
-            font-weight:800;
-            transition:transform .18s ease, box-shadow .18s ease;
-        }
-        .btn:hover{transform:translateY(-1px)}
-        .btn-primary{
-            color:#fff;
-            background:linear-gradient(135deg, var(--pink), var(--blue));
-            box-shadow:0 14px 30px rgba(66,165,245,.24);
-        }
-        .btn-secondary{
-            color:var(--text);
-            background:#fff;
-            border:1px solid #efe8f8;
-        }
-        .hint{
-            margin-top:18px;
-            font-size:.92rem;
+        .launch-hero{background:linear-gradient(135deg,#ff7eb6,#ff8d5c 55%,#7ec8ff);border-radius:28px;padding:28px;color:#fff;box-shadow:0 18px 45px rgba(255,126,182,.25);margin-bottom:22px}
+        .launch-hero h2{font-family:'Baloo 2',cursive;font-size:2rem;margin:0 0 6px}
+        .launch-sub{opacity:.95;font-size:.98rem;max-width:760px;line-height:1.6}
+        .launch-meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+        .launch-chip{background:rgba(255,255,255,.16);backdrop-filter:blur(10px);padding:10px 14px;border-radius:999px;font-size:.86rem;font-weight:700}
+        .launch-progress{background:#fff;border-radius:22px;padding:18px 18px 14px;box-shadow:var(--mp-shadow);margin-bottom:20px}
+        .launch-progress-top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+        .progress-bar{height:14px;background:#efeaf8;border-radius:999px;overflow:hidden;margin-top:12px}
+        .progress-bar-fill{height:100%;background:linear-gradient(135deg,#42a5f5,#d4a5ff);border-radius:999px;width:0;transition:width .25s ease}
+        .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+        .tab-btn{border:none;background:#fff;border-radius:999px;padding:10px 16px;font-weight:800;color:var(--mp-dark);box-shadow:var(--mp-shadow-sm);cursor:pointer}
+        .tab-btn.active{background:linear-gradient(135deg,var(--mp-pink),var(--mp-purple));color:#fff}
+        .panel-surface{background:#fff;border-radius:24px;box-shadow:var(--mp-shadow);padding:22px}
+        .today-grid,.grid-2x,.ideas-grid,.script-grid,.activation-grid,.campaign-grid,.vehicles-grid{display:grid;gap:16px}
+        .today-grid,.ideas-grid,.script-grid,.activation-grid,.campaign-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+        .grid-2x{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+        .vehicles-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+        .task-card,.content-card,.vehicle-card{background:#fff;border:1px solid #f0e7fb;border-radius:22px;padding:18px;box-shadow:0 10px 30px rgba(73,40,108,.06)}
+        .task-card.done{border-color:#bce6c8;background:linear-gradient(180deg,#fff,#f7fff9)}
+        .task-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}
+        .task-title{font-family:'Baloo 2',cursive;font-size:1.08rem;color:var(--mp-dark);line-height:1.1}
+        .mini-badge{padding:6px 10px;border-radius:999px;font-size:.72rem;font-weight:800;background:#f4edff;color:#7b55a8}
+        .task-copy,.content-copy,pre.release-box{white-space:pre-wrap;font-family:inherit;line-height:1.55;font-size:.92rem;color:#6e5d84}
+        .task-actions,.card-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+        .action-btn{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
+        .copy-btn{background:#eef6ff;color:#2f63b7}
+        .done-btn{background:#f3e9ff;color:#7b4bc4}
+        .done-btn.is-done{background:#dff7e6;color:#167b3e}
+        .section-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
+        .section-head h3{margin:0;font-family:'Baloo 2',cursive;font-size:1.35rem;color:var(--mp-dark)}
+        .section-head p{margin:4px 0 0;color:#8d7fa3;font-size:.92rem}
+        .countdown{font-weight:800;color:#ff5f8f}
+        .hidden{display:none !important}
+        .carousel-slide{padding:14px;border-radius:18px;background:#fbf8ff;border:1px solid #efe7fa;margin-top:12px}
+        .small-label{font-size:.76rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#9b8eb0}
+        .sidebar-link.launch-link{background:linear-gradient(135deg,rgba(255,126,182,.18),rgba(126,200,255,.18));border:1px solid rgba(255,255,255,.08)}
+        @media (max-width: 768px){
+            .launch-hero h2{font-size:1.5rem}
+            .panel-surface{padding:16px}
         }
     </style>
 </head>
 <body>
-    <main class="card">
-        <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo">
-        <h1>Área de Lançamento</h1>
-        <p>Essa rota foi mantida por compatibilidade. Você está sendo direcionado para a central de campanhas do admin.</p>
-        <div class="actions">
-            <a href="campaigns.html" class="btn btn-primary">Abrir Campanhas</a>
-            <a href="index.html" class="btn btn-secondary">Voltar ao Admin</a>
-        </div>
-        <p class="hint">Se o redirecionamento não acontecer automaticamente, use um dos botões acima.</p>
-    </main>
+    <div class="panel-layout">
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small>Central Admin</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="franchises.html" class="sidebar-link"><span class="icon">🏪</span> Franquias</a>
+                <a href="finances.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <div class="sidebar-nav-group">Marketing</div>
+                <a href="campaigns.html" class="sidebar-link"><span class="icon">📢</span> Campanhas</a>
+                <a href="lancamento.html" class="sidebar-link active launch-link"><span class="icon">🚀</span> Lançamento Viral</a>
+                <a href="seo.html" class="sidebar-link"><span class="icon">🔍</span> SEO & Delivery</a>
+                <a href="ifood.html" class="sidebar-link"><span class="icon">🛵</span> iFood</a>
+                <a href="desafio.html" class="sidebar-link"><span class="icon">🎮</span> Desafio</a>
+                <div class="sidebar-nav-group">Sistema</div>
+                <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Configurações</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">🐑</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Admin</strong>
+                        <small>Lançamento</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+                    <h1>🚀 Lançamento Viral</h1>
+                </div>
+                <div class="panel-header-right">
+                    <button class="btn btn-sm btn-outline" onclick="copyTodayPack()">📋 Copiar tudo de hoje</button>
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <section class="launch-hero">
+                    <h2 id="heroTitle">Lançamento Viral Milkypot</h2>
+                    <div class="launch-sub" id="heroSub"></div>
+                    <div class="launch-meta">
+                        <span class="launch-chip" id="heroAddress"></span>
+                        <span class="launch-chip" id="heroHours"></span>
+                        <span class="launch-chip" id="heroCountdown"></span>
+                    </div>
+                </section>
+
+                <section class="launch-progress">
+                    <div class="launch-progress-top">
+                        <div>
+                            <strong style="font-size:1rem;color:var(--mp-dark)">Execução do lançamento</strong>
+                            <div style="font-size:.88rem;color:#8d7fa3;margin-top:4px">Checklist salvo no navegador. Marque cada item publicado para acompanhar o progresso da operação.</div>
+                        </div>
+                        <div style="font-weight:900;font-size:1.1rem;color:var(--mp-purple)" id="progressText">0 / 0</div>
+                    </div>
+                    <div class="progress-bar"><div class="progress-bar-fill" id="progressBar"></div></div>
+                </section>
+
+                <div class="tabs" id="tabs"></div>
+
+                <section class="panel-surface" id="tab-today"></section>
+                <section class="panel-surface hidden" id="tab-calendar"></section>
+                <section class="panel-surface hidden" id="tab-carousels"></section>
+                <section class="panel-surface hidden" id="tab-lana"></section>
+                <section class="panel-surface hidden" id="tab-heygen"></section>
+                <section class="panel-surface hidden" id="tab-activations"></section>
+                <section class="panel-surface hidden" id="tab-ads"></section>
+                <section class="panel-surface hidden" id="tab-press"></section>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/lancamento-content.js"></script>
     <script>
-        setTimeout(function () {
-            window.location.replace('campaigns.html');
-        }, 120);
+        if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+
+        const launchContent = window.LANCAMENTO_CONTENT;
+        const launchStoreKey = 'mp_lancamento_status_v1';
+        const launchState = JSON.parse(localStorage.getItem(launchStoreKey) || '{}');
+
+        function saveLaunchState() {
+            localStorage.setItem(launchStoreKey, JSON.stringify(launchState));
+            renderProgress();
+            renderToday();
+            renderCalendar();
+        }
+
+        function setDone(id) {
+            launchState[id] = !launchState[id];
+            saveLaunchState();
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(function () {
+                if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast('Conteúdo copiado!');
+            });
+        }
+
+        function getTodayBucket() {
+            const today = new Date();
+            const todayKey = today.toISOString().slice(0, 10);
+            let found = launchContent.timeline.find(day => day.date === todayKey);
+            if (!found) {
+                found = launchContent.timeline.find(day => day.label === 'D-3') || launchContent.timeline[0];
+            }
+            return found;
+        }
+
+        function renderHero() {
+            const meta = launchContent.meta;
+            document.getElementById('heroTitle').textContent = meta.title;
+            document.getElementById('heroSub').textContent = 'Centro operacional do lançamento: calendário, copies, scripts, ativações e PR numa única tela. Entra em “Hoje”, executa e marca publicado.';
+            document.getElementById('heroAddress').textContent = '📍 ' + meta.address;
+            document.getElementById('heroHours').textContent = '🕒 ' + meta.hours;
+            updateCountdown();
+            setInterval(updateCountdown, 60000);
+        }
+
+        function updateCountdown() {
+            const launchDate = new Date(launchContent.meta.launchDate);
+            const now = new Date();
+            const diff = launchDate - now;
+            const el = document.getElementById('heroCountdown');
+            if (diff <= 0) {
+                el.textContent = '🎉 Lançamento em andamento';
+                return;
+            }
+            const days = Math.floor(diff / 86400000);
+            const hours = Math.floor((diff % 86400000) / 3600000);
+            const mins = Math.floor((diff % 3600000) / 60000);
+            el.textContent = '⏳ Faltam ' + days + 'd ' + hours + 'h ' + mins + 'min';
+        }
+
+        function allTaskIds() {
+            return launchContent.timeline.flatMap(day => day.tasks.map(task => task.id));
+        }
+
+        function renderProgress() {
+            const ids = allTaskIds();
+            const done = ids.filter(id => launchState[id]).length;
+            const percent = ids.length ? Math.round((done / ids.length) * 100) : 0;
+            document.getElementById('progressText').textContent = done + ' / ' + ids.length + ' publicados';
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        function taskCard(task) {
+            const done = !!launchState[task.id];
+            return `
+                <article class="task-card ${done ? 'done' : ''}">
+                    <div class="task-top">
+                        <div class="task-title">${task.title}</div>
+                        <span class="mini-badge">${task.type}</span>
+                    </div>
+                    <div class="task-copy">${task.copy}</div>
+                    <div class="task-actions">
+                        <button class="action-btn copy-btn" onclick='copyText(${JSON.stringify(task.copy)})'>📋 Copiar tudo</button>
+                        <button class="action-btn done-btn ${done ? 'is-done' : ''}" onclick='setDone(${JSON.stringify(task.id)})'>${done ? '✓ Publicado' : 'Marcar publicado'}</button>
+                    </div>
+                </article>`;
+        }
+
+        function renderTabs() {
+            document.getElementById('tabs').innerHTML = launchContent.tabs.map((tab, index) => `
+                <button class="tab-btn ${index === 0 ? 'active' : ''}" data-tab="${tab.id}" onclick='openTab(${JSON.stringify(tab.id)})'>${tab.label}</button>
+            `).join('');
+        }
+
+        function openTab(id) {
+            launchContent.tabs.forEach(tab => {
+                document.getElementById('tab-' + tab.id).classList.toggle('hidden', tab.id !== id);
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === id));
+        }
+
+        function renderToday() {
+            const today = getTodayBucket();
+            document.getElementById('tab-today').innerHTML = `
+                <div class="section-head">
+                    <div>
+                        <h3>${today.label} · ${today.title}</h3>
+                        <p>${today.focus}</p>
+                    </div>
+                    <div class="countdown">Aba padrão: execute isso primeiro</div>
+                </div>
+                <div class="today-grid">${today.tasks.map(taskCard).join('')}</div>
+            `;
+        }
+
+        function renderCalendar() {
+            document.getElementById('tab-calendar').innerHTML = `
+                <div class="section-head">
+                    <div>
+                        <h3>Calendário D-4 até Dia D</h3>
+                        <p>Plano operacional diário com foco, data e tarefas da virada.</p>
+                    </div>
+                </div>
+                <div class="grid-2x">
+                    ${launchContent.timeline.map(day => `
+                        <article class="content-card">
+                            <div class="task-top">
+                                <div>
+                                    <div class="small-label">${day.date}</div>
+                                    <div class="task-title">${day.label} · ${day.title}</div>
+                                </div>
+                                <span class="mini-badge">${day.tasks.filter(task => launchState[task.id]).length}/${day.tasks.length}</span>
+                            </div>
+                            <div class="content-copy">${day.focus}</div>
+                            <div class="card-actions">
+                                <button class="action-btn copy-btn" onclick='copyText(${JSON.stringify(day.tasks.map(t => '- ' + t.title + ':\\n' + t.copy).join('\\n\\n'))})'>📋 Copiar pack do dia</button>
+                            </div>
+                        </article>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderCarousels() {
+            document.getElementById('tab-carousels').innerHTML = `
+                <div class="section-head">
+                    <div>
+                        <h3>3 carrosséis prontos</h3>
+                        <p>Legenda completa + prompts por slide para gerar no Whisk/Ideogram.</p>
+                    </div>
+                </div>
+                <div class="grid-2x">
+                    ${launchContent.carousels.map(carousel => `
+                        <article class="content-card">
+                            <div class="task-top">
+                                <div>
+                                    <div class="small-label">${carousel.goal}</div>
+                                    <div class="task-title">${carousel.title}</div>
+                                </div>
+                            </div>
+                            <div class="task-copy">${carousel.caption}</div>
+                            ${carousel.slides.map((slide, index) => `
+                                <div class="carousel-slide">
+                                    <div class="small-label">Slide ${index + 1} · ${slide.title}</div>
+                                    <div class="content-copy">${slide.prompt}</div>
+                                </div>
+                            `).join('')}
+                            <div class="card-actions">
+                                <button class="action-btn copy-btn" onclick='copyText(${JSON.stringify(carousel.caption)})'>📋 Copiar legenda</button>
+                                <button class="action-btn copy-btn" onclick='copyText(${JSON.stringify(carousel.slides.map((s, i) => 'SLIDE ' + (i + 1) + ' — ' + s.title + '\\n' + s.prompt).join('\\n\\n'))})'>🖼️ Copiar prompts</button>
+                            </div>
+                        </article>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderLana() {
+            document.getElementById('tab-lana').innerHTML = `
+                <div class="section-head">
+                    <div>
+                        <h3>Lana Lab</h3>
+                        <p>Bíblia da personagem, mensagens automáticas e ideias de conteúdo.</p>
+                    </div>
+                </div>
+                <div class="grid-2x">
+                    <article class="content-card">
+                        <div class="task-title">Bíblia da personagem</div>
+                        <div class="task-copy">${launchContent.lana.bible.join('\n\n')}</div>
+                    </article>
+                    <article class="content-card">
+                        <div class="task-title">WhatsApp automático</div>
+                        ${launchContent.lana.whatsappFlows.map(item => `
+                            <div class="carousel-slide">
+                                <div class="small-label">${item.title}</div>
+                                <div class="content-copy">${item.text}</div>
+                                <div class="card-actions"><button class="action-btn copy-btn" onclick='copyText(${JSON.stringify(item.text)})'>📋 Copiar</button></div>
+                            </div>
+                        `).join('')}
+                    </article>
+                </div>
+                <div class="section-head" style="margin-top:20px">
+                    <div><h3>30 ideias Lana vibes</h3><p>Use como munição rápida para TikTok, Reel, story e WhatsApp.</p></div>
+                </div>
+                <div class="ideas-grid">
+                    ${launchContent.lana.ideas.map((idea, index) => `
+                        <article class="content-card">
+                            <div class="small-label">Ideia ${index + 1}</div>
+                            <div class="task-title">${idea}</div>
+                            <div class="card-actions"><button class="action-btn copy-btn" onclick='copyText(${JSON.stringify(idea)})'>📋 Copiar</button></div>
+                        </article>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderHeyGen() {
+            document.getElementById('tab-heygen').innerHTML = `
+                <div class="section-head">
+                    <div>
+                        <h3>Scripts HeyGen</h3>
+                        <p>10 falas prontas da Lana para avatar, vídeo curto e story em 3 minutos.</p>
+                    </div>
+                </div>
+                <div class="script-grid">
+                    ${launchContent.heygen.map(item => `
+                        <article class="content-card">
+                            <div class="task-title">${item.title}</div>
+                            <div class="task-copy">${item.script}</div>
+                            <div class="card-actions"><button class="action-btn copy-btn" onclick='copyText(${JSON.stringify(item.script)})'>🎬 Copiar script</button></div>
+                        </article>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderActivations() {
+            document.getElementById('tab-activations').innerHTML = `
+                <div class="section-head">
+                    <div>
+                        <h3>Ativações de loja</h3>
+                        <p>Mecânicas físicas pensadas para fila, UGC, prêmio e boca a boca no Muffato.</p>
+                    </div>
+                </div>
+                <div class="activation-grid">
+                    ${launchContent.activations.map(item => `
+                        <article class="content-card">
+                            <div class="task-title">${item.title}</div>
+                            <div class="task-copy">${item.text}</div>
+                            <div class="card-actions"><button class="action-btn copy-btn" onclick='copyText(${JSON.stringify(item.title + '\\n' + item.text)})'>📋 Copiar</button></div>
+                        </article>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderAds() {
+            document.getElementById('tab-ads').innerHTML = `
+                <div class="section-head">
+                    <div>
+                        <h3>Campanhas + copies prontas</h3>
+                        <p>Budget, objetivo, canal e blocos de texto para subir rápido.</p>
+                    </div>
+                </div>
+                <div class="campaign-grid">
+                    ${launchContent.ads.campaigns.map(item => `
+                        <article class="content-card">
+                            <div class="task-title">${item.name}</div>
+                            <div class="task-copy">Budget: ${item.budget}\nObjetivo: ${item.objective}\nCanal: ${item.channels}</div>
+                        </article>
+                    `).join('')}
+                </div>
+                <div class="section-head" style="margin-top:20px">
+                    <div><h3>Copies prioritárias</h3><p>Suba, adapte e publique.</p></div>
+                </div>
+                <div class="campaign-grid">
+                    ${launchContent.ads.copies.map(copy => `
+                        <article class="content-card">
+                            <div class="task-title">${copy.title}</div>
+                            <div class="task-copy">${copy.text}</div>
+                            <div class="card-actions"><button class="action-btn copy-btn" onclick='copyText(${JSON.stringify(copy.text)})'>📋 Copiar copy</button></div>
+                        </article>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderPress() {
+            document.getElementById('tab-press').innerHTML = `
+                <div class="section-head">
+                    <div>
+                        <h3>Press release + veículos</h3>
+                        <p>Disparo imediato para redações e creators locais.</p>
+                    </div>
+                </div>
+                <div class="grid-2x">
+                    <article class="content-card">
+                        <div class="task-title">Press release</div>
+                        <pre class="release-box">${launchContent.press.release}</pre>
+                        <div class="card-actions"><button class="action-btn copy-btn" onclick='copyText(${JSON.stringify(launchContent.press.release)})'>📋 Copiar release</button></div>
+                    </article>
+                    <article class="content-card">
+                        <div class="task-title">10 veículos / perfis para disparo</div>
+                        <div class="vehicles-grid">
+                            ${launchContent.press.vehicles.map(vehicle => `
+                                <div class="vehicle-card">
+                                    <div class="task-title" style="font-size:1rem">${vehicle}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="card-actions"><button class="action-btn copy-btn" onclick='copyText(${JSON.stringify(launchContent.press.vehicles.join('\\n'))})'>📋 Copiar lista</button></div>
+                    </article>
+                </div>
+            `;
+        }
+
+        function copyTodayPack() {
+            const today = getTodayBucket();
+            const pack = today.tasks.map(task => task.title + '\n' + task.copy).join('\n\n');
+            copyText(pack);
+        }
+
+        function boot() {
+            document.getElementById('sidebarUserName').textContent = Auth.getUserName() || 'Admin';
+            renderHero();
+            renderTabs();
+            renderToday();
+            renderCalendar();
+            renderCarousels();
+            renderLana();
+            renderHeyGen();
+            renderActivations();
+            renderAds();
+            renderPress();
+            renderProgress();
+            openTab('today');
+        }
+
+        boot();
     </script>
 </body>
 </html>
