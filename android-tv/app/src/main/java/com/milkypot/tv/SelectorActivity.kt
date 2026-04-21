@@ -6,21 +6,18 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
 /**
- * Primeira tela do app. Se o usuário já escolheu uma TV antes,
- * pula direto pro PlayerActivity. Senão mostra botões TV1/TV2/TV3
- * e campo pra código custom.
+ * Primeira tela do app. Se o usuário já escolheu um modo antes,
+ * pula direto pra Activity correspondente (PlayerActivity pras TVs normais
+ * ou ChallengeActivity pra TV do Desafio). Senão mostra os modos.
  */
 class SelectorActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Fullscreen + keep screen on
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         window.decorView.systemUiVisibility = (
             View.SYSTEM_UI_FLAG_FULLSCREEN or
@@ -30,37 +27,52 @@ class SelectorActivity : AppCompatActivity() {
             View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
         )
 
-        // Se já configurou, pula direto ao player (a menos que usuario peca reset via long-press)
-        val savedCode = Prefs.getTvCode(this)
         val forceSelect = intent.getBooleanExtra("reset", false)
-        if (!savedCode.isNullOrBlank() && !forceSelect) {
-            startPlayer(savedCode)
-            finish()
-            return
+        if (!forceSelect) {
+            // Modo desafio salvo?
+            if (Prefs.isChallengeMode(this)) { startChallenge(); finish(); return }
+            // Código de TV salvo?
+            val savedCode = Prefs.getTvCode(this)
+            if (!savedCode.isNullOrBlank()) { startPlayer(savedCode); finish(); return }
         }
 
         setContentView(R.layout.activity_selector)
 
-        findViewById<Button>(R.id.btnTv1).setOnClickListener { pick("tv1") }
-        findViewById<Button>(R.id.btnTv2).setOnClickListener { pick("tv2") }
-        findViewById<Button>(R.id.btnTv3).setOnClickListener { pick("tv3") }
+        findViewById<Button>(R.id.btnTv1).setOnClickListener { pickTv("tv1") }
+        findViewById<Button>(R.id.btnTv2).setOnClickListener { pickTv("tv2") }
+        findViewById<Button>(R.id.btnTv3).setOnClickListener { pickTv("tv3") }
+
+        // Botão especial: TV dedicada ao Desafio
+        findViewById<Button>(R.id.btnChallenge)?.setOnClickListener { pickChallenge() }
 
         val customEdit = findViewById<EditText>(R.id.customCode)
         findViewById<Button>(R.id.btnCustom).setOnClickListener {
             val v = customEdit.text.toString().trim().lowercase()
-            if (v.isNotBlank()) pick(v)
+            if (v.isNotBlank()) pickTv(v)
         }
     }
 
-    private fun pick(code: String) {
+    private fun pickTv(code: String) {
+        Prefs.setChallengeMode(this, false)
         Prefs.setTvCode(this, code)
         startPlayer(code)
         finish()
     }
 
+    private fun pickChallenge() {
+        Prefs.setChallengeMode(this, true)
+        Prefs.clearTvCode(this)
+        startChallenge()
+        finish()
+    }
+
     private fun startPlayer(code: String) {
-        val intent = Intent(this, PlayerActivity::class.java)
-        intent.putExtra("code", code)
-        startActivity(intent)
+        val i = Intent(this, PlayerActivity::class.java)
+        i.putExtra("code", code)
+        startActivity(i)
+    }
+
+    private fun startChallenge() {
+        startActivity(Intent(this, ChallengeActivity::class.java))
     }
 }
