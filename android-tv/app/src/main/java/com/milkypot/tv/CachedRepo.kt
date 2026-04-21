@@ -2,8 +2,10 @@ package com.milkypot.tv
 
 import android.content.Context
 import android.util.Log
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
 /**
@@ -82,12 +84,11 @@ object CachedRepo {
      */
     fun writeRaw(docId: String, jsonBodyRaw: String): Boolean {
         return try {
+            val mediaType = "application/json; charset=utf-8".toMediaType()
+            val body = jsonBodyRaw.toRequestBody(mediaType)
             val req = Request.Builder()
                 .url(FIRESTORE_BASE + docId + "?updateMask.fieldPaths=value")
-                .patch(okhttp3.RequestBody.create(
-                    okhttp3.MediaType.parse("application/json"),
-                    jsonBodyRaw
-                ))
+                .patch(body)
                 .build()
             http.newCall(req).execute().use { it.isSuccessful }
         } catch (e: Exception) {
