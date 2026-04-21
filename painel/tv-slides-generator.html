@@ -7,6 +7,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../css/shared-panel.css">
 <link rel="stylesheet" href="../css/ios-premium.css">
+<!-- Firebase compat pra DataStore funcionar off-painel -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/auth.js"></script>
+<script src="../js/pages/tv-live-data.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root {
@@ -243,8 +253,22 @@
         </div>
 
         <div class="download-bar">
-          <button class="ios-btn ios-btn-primary" style="background:#FF4F8A" onclick="downloadPNG()">📥 Baixar PNG 1920x1080</button>
+          <button class="ios-btn ios-btn-secondary" id="btnLiveData" onclick="fillWithLiveData()">⚡ Usar dados reais do PDV</button>
+          <button class="ios-btn ios-btn-primary" style="background:#FF4F8A" onclick="downloadPNG()">📥 Baixar PNG</button>
+          <button class="ios-btn ios-btn-primary" style="background:#7E57C2" onclick="publishToTV()">🚀 Publicar direto na TV</button>
           <button class="ios-btn ios-btn-secondary" onclick="openTvIndoor()">📺 Ir pra TV Indoor</button>
+        </div>
+
+        <div id="autoPublishBar" style="margin-top:16px;padding:14px 18px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <div>
+            <strong style="color:#0284c7">🔄 Modo automático</strong>
+            <p style="margin:4px 0 0;font-size:13px;color:#666">Este slide se atualiza com os dados reais a cada 15 min e publica automaticamente na TV.</p>
+          </div>
+          <label class="ios-toggle">
+            <input type="checkbox" id="autoPublishToggle" onchange="toggleAutoPublish(this.checked)">
+            <span class="ios-toggle-track"></span>
+            <span class="ios-toggle-thumb"></span>
+          </label>
         </div>
       </div>
     </div>
@@ -533,6 +557,81 @@ document.querySelectorAll('[data-tpl]').forEach(card => {
 });
 
 window.addEventListener('resize', fitPreview);
+
+// ============================================
+// Fase B — Live data + publish
+// ============================================
+function getFranchiseId() {
+    try {
+        const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+        if (s && s.franchiseId) return s.franchiseId;
+    } catch (e) {}
+    return null;
+}
+
+async function fillWithLiveData() {
+    const fid = getFranchiseId();
+    if (!fid) { alert('Sessão não encontrada. Faça login de novo.'); return; }
+    if (typeof TvLiveData === 'undefined') { alert('Helper indisponível'); return; }
+
+    const btn = document.getElementById('btnLiveData');
+    btn.textContent = '⏳ Buscando…';
+    btn.disabled = true;
+    try {
+        const filled = await TvLiveData.fillTemplate(currentTpl, fid, currentData);
+        currentData = filled;
+        // Atualiza campos do form
+        document.querySelectorAll('#controls [data-key]').forEach(el => {
+            if (filled[el.dataset.key] != null) el.value = filled[el.dataset.key];
+        });
+        renderSlide();
+        btn.textContent = '✅ Atualizado';
+        setTimeout(() => { btn.textContent = '⚡ Usar dados reais do PDV'; btn.disabled = false; }, 1500);
+    } catch (e) {
+        btn.textContent = '❌ Erro';
+        setTimeout(() => { btn.textContent = '⚡ Usar dados reais do PDV'; btn.disabled = false; }, 2000);
+        console.error(e);
+    }
+}
+
+async function publishToTV() {
+    const fid = getFranchiseId();
+    if (!fid) { alert('Sessão não encontrada'); return; }
+
+    const canvas = document.getElementById('slideCanvas');
+    const prev = canvas.style.transform;
+    canvas.style.transform = 'none';
+
+    try {
+        const c = await html2canvas(canvas, { width: 1920, height: 1080, scale: 1, useCORS: true });
+        const dataUrl = c.toDataURL('image/jpeg', 0.85);
+        canvas.style.transform = prev;
+        const slug = 'mp_slide_' + currentTpl;
+        const ok = await TvLiveData.publishToPlaylist(fid, slug, dataUrl, 10);
+        if (ok) {
+            alert('✅ Slide publicado na playlist das TVs.\nAparece em até 2 min.');
+        } else {
+            alert('❌ Falha ao publicar.');
+        }
+    } catch (e) {
+        canvas.style.transform = prev;
+        alert('Erro: ' + e.message);
+    }
+}
+
+let autoPublishTimer = null;
+function toggleAutoPublish(on) {
+    if (autoPublishTimer) { clearInterval(autoPublishTimer); autoPublishTimer = null; }
+    if (!on) return;
+    const tick = async () => {
+        try {
+            await fillWithLiveData();
+            await publishToTV();
+        } catch (e) { console.warn(e); }
+    };
+    tick(); // primeira vez imediatamente
+    autoPublishTimer = setInterval(tick, 15 * 60 * 1000); // 15 min
+}
 
 // Init
 initTemplate('a1');
