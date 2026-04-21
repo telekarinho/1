@@ -460,6 +460,65 @@
                         <p style="font-size:11px;color:#999;margin:0">Sem o R$ o cerebro decide sobre a compra em vez de pensar em dinheiro. Ideal para TV de loja.</p>
                     </div>
 
+                    <!-- Horário de funcionamento -->
+                    <div class="tv-card" style="padding:16px">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                            <span style="font-size:24px">🕘</span>
+                            <div><strong>Horário de funcionamento</strong><br><small style="color:#888">Fora disso aparece "Loja fechada"</small></div>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-bottom:8px">
+                            <div style="flex:1">
+                                <label style="font-size:11px;color:#888">Abertura</label>
+                                <input type="number" class="form-control" id="cfgOpenHour" min="0" max="23" placeholder="8" onchange="saveConfig()">
+                            </div>
+                            <div style="flex:1">
+                                <label style="font-size:11px;color:#888">Fechamento</label>
+                                <input type="number" class="form-control" id="cfgCloseHour" min="0" max="23" placeholder="22" onchange="saveConfig()">
+                            </div>
+                        </div>
+                        <p style="font-size:11px;color:#999;margin:0">Deixe vazio pra tocar 24h. Janela pode virar madrugada (ex: 18 → 02).</p>
+                    </div>
+
+                    <!-- Pause remoto -->
+                    <div class="tv-card" style="padding:16px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <span style="font-size:24px">⏸</span>
+                                <div><strong>Pausar TVs agora</strong><br><small style="color:#888">Todas as TVs entram em modo pausa</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgPauseRemote" onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <p style="font-size:11px;color:#999;margin:0">Útil pra manutenção ou silenciar rapidinho. Desligue pra voltar ao loop.</p>
+                    </div>
+
+                    <!-- Mensagem de emergência -->
+                    <div class="tv-card" style="padding:16px">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                            <span style="font-size:24px">🚨</span>
+                            <div><strong>Mensagem de emergência</strong><br><small style="color:#888">Banner vermelho no topo das TVs</small></div>
+                        </div>
+                        <textarea class="form-control" id="cfgEmergency" rows="2" placeholder="Ex: Promoção relâmpago — últimas 2h!" onchange="saveConfig()"></textarea>
+                        <p style="font-size:11px;color:#999;margin:6px 0 0">Deixe vazio pra remover o banner.</p>
+                    </div>
+
+                    <!-- QR code overlay -->
+                    <div class="tv-card" style="padding:16px">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                            <span style="font-size:24px">📱</span>
+                            <div><strong>QR code no canto</strong><br><small style="color:#888">Cliente escaneia e vai pro cardápio</small></div>
+                        </div>
+                        <input type="url" class="form-control" id="cfgQrUrl" placeholder="https://milkypot.com/cardapio.html" onchange="saveConfig()">
+                        <p style="font-size:11px;color:#999;margin:6px 0 0">Deixe vazio pra ocultar. Adicione UTM pra rastrear conversão.</p>
+                    </div>
+                </div>
+
+                <!-- Status Heartbeat -->
+                <h3 style="font-family:'Baloo 2',cursive;margin:24px 0 12px">📡 Status das TVs</h3>
+                <p style="font-size:13px;color:#888;margin-bottom:12px">Cada TV reporta status a cada 5 min. <span style="color:#10B981">🟢 online</span> · <span style="color:#dc2626">🔴 offline há mais de 10 min</span></p>
+                <div id="tvStatusList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px"></div>
+
+                <div style="margin-top:24px"><!-- segue com outros cards abaixo -->
+
                     <!-- Instagram -->
                     <div class="tv-card" style="padding:16px">
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -1677,6 +1736,8 @@
     function setConfig(c){ DataStore.set(CONFIG_KEY, c); }
 
     window.saveConfig = function(){
+        var openH = parseInt(document.getElementById('cfgOpenHour').value, 10);
+        var closeH = parseInt(document.getElementById('cfgCloseHour').value, 10);
         var c = {
             layout: document.getElementById('cfgLayout').value,
             objectFit: document.getElementById('cfgFit').value,
@@ -1689,8 +1750,16 @@
             weatherCity: document.getElementById('cfgWeatherCity').value.trim() || 'Sao Paulo',
             showNews: document.getElementById('cfgNews').checked,
             newsTicker: document.getElementById('cfgNewsTxt').value.trim(),
+            // Tambem salva como `ticker` (nome novo usado pelo APK nativo)
+            ticker: document.getElementById('cfgNewsTxt').value.trim(),
             instagramUser: document.getElementById('cfgInstaUser').value.trim(),
             hidePriceSymbol: document.getElementById('cfgHidePriceSymbol').checked,
+            // ==== Novos campos v1.2 (APK nativo) ====
+            openHour:  isFinite(openH)  ? openH  : null,
+            closeHour: isFinite(closeH) ? closeH : null,
+            pauseRemote: document.getElementById('cfgPauseRemote').checked,
+            emergencyMessage: document.getElementById('cfgEmergency').value.trim(),
+            qrUrl: document.getElementById('cfgQrUrl').value.trim(),
             updatedAt: new Date().toISOString()
         };
         setConfig(c);
@@ -1730,10 +1799,65 @@
         document.getElementById('cfgWeather').checked = !!c.showWeather;
         document.getElementById('cfgWeatherCity').value = c.weatherCity || 'Sao Paulo';
         document.getElementById('cfgNews').checked = !!c.showNews;
-        document.getElementById('cfgNewsTxt').value = c.newsTicker || '';
+        document.getElementById('cfgNewsTxt').value = c.newsTicker || c.ticker || '';
         document.getElementById('cfgInstaUser').value = c.instagramUser || '';
         document.getElementById('cfgHidePriceSymbol').checked = !!c.hidePriceSymbol;
+        // Novos v1.2
+        document.getElementById('cfgOpenHour').value = (c.openHour != null ? c.openHour : '');
+        document.getElementById('cfgCloseHour').value = (c.closeHour != null ? c.closeHour : '');
+        document.getElementById('cfgPauseRemote').checked = !!c.pauseRemote;
+        document.getElementById('cfgEmergency').value = c.emergencyMessage || '';
+        document.getElementById('cfgQrUrl').value = c.qrUrl || '';
         if(c.customLogo) document.getElementById('cfgLogoPreview').src = c.customLogo;
+        // Status heartbeat (atualiza 1x ao carregar, e a cada 60s)
+        renderTvStatus();
+        if (!window._heartbeatPoll) window._heartbeatPoll = setInterval(renderTvStatus, 60000);
+    }
+
+    function renderTvStatus(){
+        var list = document.getElementById('tvStatusList');
+        if (!list) return;
+        var tvs = getTvs();
+        if (!tvs.length) { list.innerHTML = '<div style="color:#888;font-size:13px">Nenhuma TV cadastrada ainda</div>'; return; }
+        if (typeof firebase === 'undefined' || !firebase.firestore) {
+            list.innerHTML = '<div style="color:#888;font-size:13px">Firestore indisponível</div>'; return;
+        }
+        var db = firebase.firestore();
+        list.innerHTML = tvs.map(function(t){
+            return '<div class="tv-card" id="status_' + t.id + '" style="padding:14px"><strong>' + esc(t.name || t.id) + '</strong><br><small style="color:#888">Consultando…</small></div>';
+        }).join('');
+        tvs.forEach(function(t){
+            db.collection('datastore').doc('tv_heartbeat_' + fid + '_' + t.id).get().then(function(doc){
+                var card = document.getElementById('status_' + t.id);
+                if (!card) return;
+                if (!doc.exists) {
+                    card.innerHTML = '<strong>' + esc(t.name || t.id) + '</strong><br><span style="color:#999">⚪ Nunca conectou</span>';
+                    return;
+                }
+                try {
+                    var hb = JSON.parse(doc.data().value || '{}');
+                    var lastSeen = hb.lastSeen ? new Date(hb.lastSeen) : null;
+                    var age = lastSeen ? (Date.now() - lastSeen.getTime()) / 60000 : 9999;
+                    var online = age < 10;
+                    var ageTxt = age < 1 ? 'agora' : (age < 60 ? Math.round(age) + ' min atrás' : Math.round(age/60) + ' h atrás');
+                    card.innerHTML =
+                        '<strong>' + esc(t.name || t.id) + '</strong>' +
+                        '<div style="margin-top:4px;font-size:13px">' +
+                            '<span style="color:' + (online ? '#10B981' : '#dc2626') + '">' +
+                                (online ? '🟢 online' : '🔴 offline') + ' · ' + ageTxt +
+                            '</span>' +
+                        '</div>' +
+                        '<div style="font-size:11px;color:#888;margin-top:6px">' +
+                            esc((hb.device || '—') + ' · v' + (hb.version || '?')) + ' · cache ' + (hb.cacheMB || '0') + 'MB' +
+                        '</div>';
+                } catch (e) {
+                    card.innerHTML = '<strong>' + esc(t.name || t.id) + '</strong><br><span style="color:#dc2626">erro lendo status</span>';
+                }
+            }).catch(function(){
+                var card = document.getElementById('status_' + t.id);
+                if (card) card.innerHTML = '<strong>' + esc(t.name || t.id) + '</strong><br><span style="color:#dc2626">sem conexão</span>';
+            });
+        });
     }
 
     /* === Initial render === */
