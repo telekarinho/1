@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black"
     android:keepScreenOn="true">
 
+    <!-- Video Player -->
     <androidx.media3.ui.PlayerView
         android:id="@+id/playerView"
         android:layout_width="match_parent"
@@ -14,6 +16,122 @@
         app:use_controller="false"
         app:surface_type="surface_view" />
 
+    <!-- Relógio top-left -->
+    <TextView
+        android:id="@+id/clockView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_margin="16dp"
+        android:padding="8dp"
+        android:background="#66000000"
+        android:textColor="@android:color/white"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        tools:ignore="HardcodedText" />
+
+    <!-- QR code top-right -->
+    <ImageView
+        android:id="@+id/qrView"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="16dp"
+        android:background="#FFFFFF"
+        android:padding="6dp"
+        android:contentDescription="@string/app_name"
+        android:visibility="gone" />
+
+    <!-- Ticker rolante (bottom) -->
+    <TextView
+        android:id="@+id/tickerView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_marginBottom="12dp"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:background="#AA000000"
+        android:textColor="@android:color/white"
+        android:textSize="20sp"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:ellipsize="none"
+        android:visibility="gone" />
+
+    <!-- Emergency banner (centralizado, grande) -->
+    <TextView
+        android:id="@+id/emergencyView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:padding="18dp"
+        android:background="#D92D20"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <!-- Loja Fechada overlay -->
+    <LinearLayout
+        android:id="@+id/closedView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#EE0f0c29"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🌙"
+            android:textSize="80sp"
+            android:textColor="@android:color/white"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Loja fechada agora"
+            android:textColor="@android:color/white"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"/>
+        <TextView
+            android:id="@+id/closedText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#CCCCCC"
+            android:textSize="18sp"
+            android:layout_marginTop="8dp"
+            tools:ignore="HardcodedText"/>
+    </LinearLayout>
+
+    <!-- Pause remoto overlay -->
+    <LinearLayout
+        android:id="@+id/pausedView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#EE000000"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⏸"
+            android:textSize="80sp"
+            android:textColor="@android:color/white"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pausado pelo painel"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:layout_marginTop="16dp"/>
+    </LinearLayout>
+
+    <!-- Status / loading -->
     <TextView
         android:id="@+id/statusView"
         android:layout_width="wrap_content"
