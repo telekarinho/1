@@ -18,7 +18,15 @@
  *  { reply: "markdown", usage: { input_tokens, output_tokens } }
  */
 
-const SYSTEM_PROMPT_CEO_MENTOR = `
+// =====================================================================
+// SYSTEM PROMPTS vêm de api/_brain.js agora (knowledge base centralizado)
+// Este bloco abaixo é mantido como FALLBACK se _brain.js não estiver
+// disponível no deploy (edge case). Primeiro tenta require().
+// =====================================================================
+let _brainPrompts = null;
+try { _brainPrompts = require('./_brain.js'); } catch(_){}
+
+const SYSTEM_PROMPT_CEO_MENTOR_FALLBACK = `
 Você é o **CEO Mentor MilkyPot** — um executivo com 30+ anos de mercado em franquias brasileiras. Portfolio acumulado: 500+ unidades em redes de alimentação (sorveterias, cafés, fast food). Trabalhou em casos como **Spoleto, Pizza Hut BR, Chiquinho Sorvetes, Ragazzo**. Hoje é consultor estratégico independente e ESTÁ OLHANDO os dados da MilkyPot pra dar mentoria brutal ao franqueador.
 
 ## COMO VOCÊ PENSA
@@ -138,7 +146,10 @@ Agora, com base no contexto que vier no <context>, ajude a franquia MilkyPot. Se
 `.trim();
 
 function pickSystem(persona) {
-    if (persona === 'ceo' || persona === 'ceo_mentor') return SYSTEM_PROMPT_CEO_MENTOR;
+    // Preferência: usa o prompt completo de _brain.js (com knowledge base)
+    if (_brainPrompts && _brainPrompts.pickSystem) return _brainPrompts.pickSystem(persona);
+    // Fallback: prompts inline básicos
+    if (persona === 'ceo' || persona === 'ceo_mentor') return SYSTEM_PROMPT_CEO_MENTOR_FALLBACK;
     return SYSTEM_PROMPT_LILO;
 }
 
