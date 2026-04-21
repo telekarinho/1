@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MilkyPot — Studio dos Desafios</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link rel="stylesheet" href="../css/ios-premium.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/auth.js"></script>
+<script src="../js/pages/challenge-live.js"></script>
+<style>
+  body { background: linear-gradient(180deg, #FF4F8A 0%, #7E57C2 100%); min-height:100vh; }
+  .stage { max-width:980px; margin:30px auto; padding:0 20px; }
+  .header { color:#fff; text-align:center; margin-bottom:30px; }
+  .header h1 { font-family:'Baloo 2',cursive; font-size:48px; margin:0 0 10px; }
+  .header p { opacity:.9; font-size:16px; }
+
+  .type-picker { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:24px; }
+  .type-card {
+    background:#fff; border-radius:24px; padding:32px; text-align:center; cursor:pointer;
+    transition: all .2s var(--ios-easing);
+  }
+  .type-card:hover { transform: translateY(-4px); box-shadow:0 20px 50px rgba(0,0,0,.15); }
+  .type-card.active { outline: 4px solid #fff; transform: translateY(-4px); }
+  .type-card .emoji { font-size:72px; line-height:1; }
+  .type-card h3 { font-family:'Baloo 2',cursive; font-size:28px; margin:12px 0 8px; color:#1F2937; }
+  .type-card p { font-size:14px; color:#666; margin:0; line-height:1.4; }
+
+  .action-card {
+    background:#fff; border-radius:24px; padding:32px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  }
+  .action-card h2 { font-family:'Baloo 2',cursive; font-size:26px; margin:0 0 16px; color:#1F2937; }
+
+  .timer {
+    font-size:140px; font-weight:900; color:#FF4F8A; text-align:center;
+    font-family:'Baloo 2',cursive; letter-spacing:-4px;
+    margin: 20px 0;
+  }
+  .timer.won { color:#16a34a; animation: pulse 0.6s ease-in-out 3; }
+  .timer.lost { color:#dc2626; }
+  @keyframes pulse { 0%,100% { transform:scale(1);} 50%{ transform:scale(1.15);} }
+
+  .btn-big {
+    width:100%; padding:28px; font-size:28px; font-weight:800; border:none; border-radius:20px;
+    cursor:pointer; color:#fff; font-family:'Baloo 2',cursive;
+    transition: transform .1s var(--ios-easing);
+  }
+  .btn-big:active { transform: scale(.97); }
+  .btn-start { background: linear-gradient(135deg, #10B981, #059669); }
+  .btn-stop { background: linear-gradient(135deg, #DC2626, #991B1B); }
+  .btn-cancel { background: #6B7280; }
+
+  .result-box {
+    padding:24px; border-radius:16px; text-align:center; margin-top:16px;
+    font-size:22px; font-weight:800; font-family:'Baloo 2',cursive;
+  }
+  .result-box.won { background:#D1FAE5; color:#065F46; }
+  .result-box.lost { background:#FEE2E2; color:#991B1B; }
+
+  .hall-section { margin-top:24px; background:rgba(255,255,255,.95); border-radius:20px; padding:24px; }
+  .hall-section h3 { font-family:'Baloo 2',cursive; font-size:20px; margin:0 0 12px; color:#1F2937; }
+  .hall-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #F3F4F6; font-size:15px; }
+  .hall-row:last-child { border:none; }
+  .hall-row strong { color:#16a34a; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="header">
+    <h1>🎯 Studio dos Desafios</h1>
+    <p>Operador da loja dispara daqui → aparece em tempo real na TV 3</p>
+  </div>
+
+  <!-- Type picker -->
+  <div class="type-picker" id="typePicker">
+    <div class="type-card active" data-type="10s">
+      <div class="emoji">⏱️</div>
+      <h3>Desafio 10 Segundos</h3>
+      <p>Cliente aperta START, tenta parar em <b>10.00s</b> exatos.<br>Tolerância: ±0,3s</p>
+    </div>
+    <div class="type-card" data-type="300g">
+      <div class="emoji">⚖️</div>
+      <h3>Desafio 300 Gramas</h3>
+      <p>Cliente monta seu potinho.<br>Se bater <b>300g</b> na balança, leva grátis. Tolerância: ±3g</p>
+    </div>
+  </div>
+
+  <!-- Action card -->
+  <div class="action-card" id="actionCard">
+    <h2 id="actionTitle">Desafio 10 Segundos</h2>
+
+    <!-- IDLE -->
+    <div id="stateIdle">
+      <div class="ios-field-group">
+        <label class="ios-field-label">Nome do cliente</label>
+        <input type="text" class="ios-field" id="playerName" placeholder="Ex: Marina" autocomplete="off">
+      </div>
+      <button class="btn-big btn-start" onclick="handleStart()">▶️ INICIAR DESAFIO</button>
+    </div>
+
+    <!-- RUNNING -->
+    <div id="stateRunning" style="display:none">
+      <div style="text-align:center;font-size:16px;color:#666;margin-bottom:10px">
+        <span id="runningPlayer">—</span> está jogando…
+      </div>
+      <div class="timer" id="timerDisplay">0.00</div>
+      <div class="ios-field-group">
+        <label class="ios-field-label" id="resultLabel">Resultado (segundos)</label>
+        <input type="number" class="ios-field" id="resultValue" step="0.01" placeholder="ex: 10.03" autofocus>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-big btn-stop" style="flex:2" onclick="handleStop()">⏹️ REGISTRAR RESULTADO</button>
+        <button class="btn-big btn-cancel" style="flex:1;font-size:18px" onclick="handleCancel()">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- FINISHED -->
+    <div id="stateFinished" style="display:none">
+      <div class="timer" id="finishedTimer">—</div>
+      <div class="result-box" id="resultBox"></div>
+      <button class="btn-big btn-start" style="margin-top:16px" onclick="handleNewChallenge()">🎯 Próximo cliente</button>
+    </div>
+  </div>
+
+  <!-- Hall da Fama -->
+  <div class="hall-section" id="hallSection"></div>
+</div>
+
+<script>
+(function(){
+  if (!Auth.requireAuth('franchisee')) return;
+  DataStore.init();
+  const session = Auth.getSession();
+  const fid = session.franchiseId;
+
+  let currentType = '10s';
+  let runningStart = 0;
+  let runningTick = null;
+
+  // ============ Type picker ============
+  document.querySelectorAll('.type-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.type-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      currentType = card.dataset.type;
+      updateTitle();
+      renderHall();
+    });
+  });
+
+  function updateTitle() {
+    document.getElementById('actionTitle').textContent = currentType === '10s'
+      ? 'Desafio 10 Segundos' : 'Desafio 300 Gramas';
+    document.getElementById('resultLabel').textContent = currentType === '10s'
+      ? 'Resultado (segundos)' : 'Peso final (gramas)';
+    document.getElementById('resultValue').placeholder = currentType === '10s' ? '10.03' : '300.5';
+  }
+
+  // ============ State machine ============
+  function setState(name) {
+    ['Idle','Running','Finished'].forEach(s => {
+      document.getElementById('state' + s).style.display = s.toLowerCase() === name ? 'block' : 'none';
+    });
+  }
+
+  window.handleStart = function() {
+    const nm = document.getElementById('playerName').value.trim() || 'Cliente';
+    const r = ChallengeLive.start(fid, currentType, nm);
+    if (!r.success) { alert(r.error); return; }
+    runningStart = Date.now();
+    document.getElementById('runningPlayer').textContent = nm;
+    document.getElementById('resultValue').value = '';
+    setState('running');
+    if (currentType === '10s') startTimerTick();
+    setTimeout(() => document.getElementById('resultValue').focus(), 100);
+  };
+
+  function startTimerTick() {
+    if (runningTick) clearInterval(runningTick);
+    runningTick = setInterval(() => {
+      const secs = ((Date.now() - runningStart) / 1000).toFixed(2);
+      document.getElementById('timerDisplay').textContent = secs;
+      if (parseFloat(secs) > 20) { clearInterval(runningTick); runningTick = null; }
+    }, 50);
+  }
+
+  window.handleStop = function() {
+    if (runningTick) { clearInterval(runningTick); runningTick = null; }
+    const valRaw = document.getElementById('resultValue').value;
+    const val = parseFloat(valRaw);
+    if (isNaN(val)) { alert('Digite o valor final'); return; }
+
+    const r = ChallengeLive.finish(fid, val);
+    if (!r.success) { alert(r.error); return; }
+
+    document.getElementById('finishedTimer').textContent = val.toFixed(2) + (currentType === '10s' ? 's' : 'g');
+    document.getElementById('finishedTimer').className = 'timer ' + (r.won ? 'won' : 'lost');
+    const box = document.getElementById('resultBox');
+    box.className = 'result-box ' + (r.won ? 'won' : 'lost');
+    box.innerHTML = r.won
+      ? '🎉 GANHOU! 🎉<br><small style="font-size:14px;opacity:.8">Cliente leva o potinho de graça / desconto</small>'
+      : '😢 PERDEU<br><small style="font-size:14px;opacity:.8">Distância do alvo: ' + Math.abs(val - (currentType === '10s' ? 10 : 300)).toFixed(2) + '</small>';
+    setState('finished');
+    renderHall();
+  };
+
+  window.handleCancel = function() {
+    if (runningTick) { clearInterval(runningTick); runningTick = null; }
+    ChallengeLive.cancel(fid);
+    setState('idle');
+  };
+
+  window.handleNewChallenge = function() {
+    document.getElementById('playerName').value = '';
+    setState('idle');
+    document.getElementById('playerName').focus();
+  };
+
+  // ============ Hall da Fama ============
+  function renderHall() {
+    const el = document.getElementById('hallSection');
+    const key10 = 'challenge_10s_winners_' + fid;
+    const key300 = 'challenge_300g_winners_' + fid;
+    const w10 = (DataStore.get(key10) || []).slice(-5).reverse();
+    const w300 = (DataStore.get(key300) || []).slice(-5).reverse();
+
+    let html = '<h3>🏆 Últimos ganhadores</h3>';
+
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">';
+    html += '<div><h4 style="color:#FF4F8A;margin:0 0 8px;font-size:15px">⏱ 10 Segundos</h4>';
+    html += w10.length
+      ? w10.map(w => '<div class="hall-row"><span>' + escapeHtml(w.name) + '</span><strong>' + Number(w.stoppedAt).toFixed(2) + 's</strong></div>').join('')
+      : '<div style="color:#999;font-size:14px">Sem ganhadores ainda</div>';
+    html += '</div>';
+
+    html += '<div><h4 style="color:#7E57C2;margin:0 0 8px;font-size:15px">⚖ 300g</h4>';
+    html += w300.length
+      ? w300.map(w => '<div class="hall-row"><span>' + escapeHtml(w.name) + '</span><strong>' + Number(w.weight).toFixed(1) + 'g</strong></div>').join('')
+      : '<div style="color:#999;font-size:14px">Sem ganhadores ainda</div>';
+    html += '</div>';
+    html += '</div>';
+
+    el.innerHTML = html;
+  }
+
+  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // Init
+  updateTitle();
+  renderHall();
+  setState('idle');
+  // Shortcut: Enter em resultValue = stop
+  document.getElementById('resultValue').addEventListener('keydown', e => { if (e.key === 'Enter') handleStop(); });
+  document.getElementById('playerName').addEventListener('keydown', e => { if (e.key === 'Enter') handleStart(); });
+})();
+</script>
+</body>
+</html>

@@ -56,6 +56,14 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var closedView: View
     private lateinit var closedText: TextView
     private lateinit var pausedView: View
+    // FASE F — Challenge Live overlay
+    private lateinit var challengeOverlay: View
+    private lateinit var challengeTitle: TextView
+    private lateinit var challengePlayer: TextView
+    private lateinit var challengeTimer: TextView
+    private lateinit var challengeResult: TextView
+    private var challengeStartMs: Long = 0
+    private var challengeTickRunnable: Runnable? = null
 
     private var player: ExoPlayer? = null
     private val io = Executors.newSingleThreadExecutor()
@@ -99,6 +107,11 @@ class PlayerActivity : AppCompatActivity() {
         closedView = findViewById(R.id.closedView)
         closedText = findViewById(R.id.closedText)
         pausedView = findViewById(R.id.pausedView)
+        challengeOverlay = findViewById(R.id.challengeOverlay)
+        challengeTitle = findViewById(R.id.challengeTitle)
+        challengePlayer = findViewById(R.id.challengePlayer)
+        challengeTimer = findViewById(R.id.challengeTimer)
+        challengeResult = findViewById(R.id.challengeResult)
 
         // WebView config enxuta pra HTML slides
         slideWebView.settings.apply {
@@ -121,6 +134,7 @@ class PlayerActivity : AppCompatActivity() {
         main.postDelayed(autoRestartTick, 60_000)
         main.post(clockTick)
         main.postDelayed(configRefreshTick, 2 * 60_000)
+        main.post(challengeLivePoll)
     }
 
     private fun goFullscreen() {
@@ -172,6 +186,81 @@ class PlayerActivity : AppCompatActivity() {
     }
     private val configRefreshTick = object : Runnable {
         override fun run() { reloadConfigOnly(); main.postDelayed(this, 2 * 60_000) }
+    }
+
+    /**
+     * FASE F — Challenge Live poll.
+     * A cada 3s consulta challenge_live_{fid} no Firestore. Se active=true,
+     * mostra overlay com timer contando. Se result != null, mostra resultado
+     * por 6s e some.
+     */
+    private val challengeLivePoll = object : Runnable {
+        override fun run() {
+            val fid = franchiseId
+            if (fid == null) { main.postDelayed(this, 3_000); return }
+            io.execute {
+                val raw = CachedRepo.fetch(this@PlayerActivity, "challenge_live_$fid")
+                val obj = parseObj(raw)
+                main.post {
+                    applyChallengeLive(obj)
+                    main.postDelayed(this, 3_000)
+                }
+            }
+        }
+    }
+
+    private fun applyChallengeLive(live: JSONObject) {
+        val active = live.optBoolean("active", false)
+        val result = live.optString("result").ifBlank { null }
+        val cleared = live.optBoolean("_clearedFromTv", false)
+
+        if (!active && (result == null || cleared)) {
+            // Nao ha desafio em andamento
+            challengeOverlay.visibility = View.GONE
+            challengeTickRunnable?.let { main.removeCallbacks(it) }
+            challengeTickRunnable = null
+            return
+        }
+
+        val type = live.optString("type", "10s")
+        val playerName = live.optString("playerName", "Cliente")
+        challengeTitle.text = if (type == "10s") "🎯 DESAFIO 10 SEGUNDOS" else "⚖️ DESAFIO 300 GRAMAS"
+
+        challengeOverlay.visibility = View.VISIBLE
+
+        if (active) {
+            challengePlayer.text = "$playerName está jogando…"
+            challengeResult.text = ""
+            val startedAt = live.optString("startedAt")
+            if (startedAt.isNotBlank()) {
+                challengeStartMs = runCatching { java.time.Instant.parse(startedAt).toEpochMilli() }.getOrDefault(System.currentTimeMillis())
+            } else {
+                challengeStartMs = System.currentTimeMillis()
+            }
+            // Tick 50ms pra timer fluido (apenas pra 10s)
+            if (type == "10s" && challengeTickRunnable == null) {
+                val tick = object : Runnable {
+                    override fun run() {
+                        if (challengeOverlay.visibility != View.VISIBLE) return
+                        val secs = (System.currentTimeMillis() - challengeStartMs) / 1000.0
+                        challengeTimer.text = "%.2f".format(secs)
+                        main.postDelayed(this, 50)
+                    }
+                }
+                challengeTickRunnable = tick
+                main.post(tick)
+            } else if (type == "300g") {
+                challengeTimer.text = "⚖️"
+            }
+        } else if (result != null) {
+            challengeTickRunnable?.let { main.removeCallbacks(it) }
+            challengeTickRunnable = null
+            val finalValue = live.optDouble("finalValue", 0.0)
+            challengePlayer.text = playerName
+            challengeTimer.text = if (type == "10s") "%.2fs".format(finalValue) else "%.1fg".format(finalValue)
+            challengeTimer.setTextColor(if (result == "won") 0xFF16A34A.toInt() else 0xFFDC2626.toInt())
+            challengeResult.text = if (result == "won") "🎉 GANHOU 🎉" else "😢 PERDEU"
+        }
     }
 
     // =============== Loader ===============
@@ -529,6 +618,8 @@ class PlayerActivity : AppCompatActivity() {
         main.removeCallbacks(autoRestartTick)
         main.removeCallbacks(clockTick)
         main.removeCallbacks(configRefreshTick)
+        main.removeCallbacks(challengeLivePoll)
+        challengeTickRunnable?.let { main.removeCallbacks(it) }
         nextSlideTick?.let { main.removeCallbacks(it) }
         player?.release(); player = null
         super.onDestroy()
