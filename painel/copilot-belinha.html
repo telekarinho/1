@@ -17,6 +17,7 @@
 <script src="../js/core/auth.js"></script>
 <script src="../js/pages/tv-live-data.js"></script>
 <script src="../js/pages/lilo-scanner.js"></script>
+<script src="../js/pages/copilot-transport.js"></script>
 <style>
   :root { --lilo-pink:#FF4F8A; --lilo-purple:#7E57C2; --lilo-blue:#42A5F5; }
 
@@ -318,16 +319,24 @@
     appendBotMsg('✅ Configuração salva. Já posso responder!');
   };
 
+  let _localServer = false;
   function updateAgentStatus() {
     const s = getSettings();
     const st = document.getElementById('agentStatus');
-    if (s.apiKey) {
+    if (_localServer) {
       st.classList.remove('offline');
-      st.querySelector('.status-dot').textContent = 'online · ' + (s.model || 'claude-sonnet-4-5');
+      st.querySelector('.status-dot').textContent = '🟢 servidor local (R$ 0,00)';
+    } else if (s.apiKey) {
+      st.classList.remove('offline');
+      st.querySelector('.status-dot').textContent = '🔵 API · ' + (s.model || 'claude-sonnet-4-5');
     } else {
       st.classList.add('offline');
-      st.querySelector('.status-dot').textContent = 'sem API key';
+      st.querySelector('.status-dot').textContent = 'sem servidor local · sem API key';
     }
+  }
+  function updateLocalBadge(isLocal) {
+    _localServer = !!isLocal;
+    updateAgentStatus();
   }
 
   // ====== Context: recolhe dados da franquia pra mandar junto ======
@@ -458,25 +467,17 @@
 
     try {
       const ctx = await buildContext();
-      const resp = await fetch('/api/copilot', {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({
-          apiKey: settings.apiKey,
-          model: settings.model || 'claude-sonnet-4-5',
-          messages: messages,
-          context: ctx
-        })
+      const data = await CopilotTransport.send({
+        apiKey: settings.apiKey,
+        model: settings.model || 'claude-sonnet-4-5',
+        persona: 'belinha',
+        messages: messages,
+        context: ctx
       });
       thinkingEl.remove();
-      if (!resp.ok) {
-        const err = await resp.text();
-        appendBotMsg('❌ Erro: ' + err);
-        document.getElementById('sendBtn').disabled = false;
-        return;
-      }
-      const data = await resp.json();
       const reply = data.reply || '(sem resposta)';
+      if (data.source === 'local') updateLocalBadge(true);
+      else updateLocalBadge(false);
       messages.push({ role:'assistant', content: reply });
       if (data.usage) {
         totalCost += estimateCost(data.usage, settings.model);
@@ -589,19 +590,16 @@ ${JSON.stringify(state, null, 2)}`;
     document.getElementById('chatMessages').appendChild(thinkingEl);
 
     try {
-      const resp = await fetch('/api/copilot', {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({
-          apiKey: s.apiKey,
-          model: s.model || 'claude-sonnet-4-5',
-          messages: [{ role:'user', content: briefingPrompt }],
-          context: null  // contexto ja ta no prompt
-        })
+      const data = await CopilotTransport.send({
+        apiKey: s.apiKey,
+        model: s.model || 'claude-sonnet-4-5',
+        persona: 'belinha',
+        messages: [{ role:'user', content: briefingPrompt }],
+        context: null
       });
       thinkingEl.remove();
-      if (resp.ok) {
-        const data = await resp.json();
+      if (data && data.reply) {
+        updateLocalBadge(data.source === 'local');
         messages.pop(); // remove o placeholder virtual
         messages.push({ role: 'assistant', content: data.reply });
         if (data.usage) {
@@ -621,6 +619,15 @@ ${JSON.stringify(state, null, 2)}`;
   updateAgentStatus();
   loadHistory();
   inp.focus();
+
+  // Detecta servidor local (MilkyPot Autopilot.bat rodando?)
+  if (window.CopilotTransport) {
+    CopilotTransport.probeLocal().then(on => {
+      _localServer = on;
+      updateAgentStatus();
+      if (on) console.log('[Belinha] ✅ servidor local ativo em http://localhost:5757');
+    });
+  }
 
   // Roda briefing depois que a pagina ta visivel
   setTimeout(autoBriefingIfNeeded, 800);

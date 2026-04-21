@@ -17,6 +17,7 @@
 <script src="../js/core/auth.js"></script>
 <script src="../js/pages/lilo-scanner.js"></script>
 <script src="../js/pages/setup-checklist.js"></script>
+<script src="../js/pages/copilot-transport.js"></script>
 <style>
   :root { --ceo-navy:#0f172a; --ceo-gold:#F59E0B; --ceo-steel:#475569; }
 
@@ -306,31 +307,25 @@
 
     try {
       const ctx = LiloScanner.scanSuperAdmin();
-      const resp = await fetch('/api/copilot', {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({
-          apiKey: settings.apiKey,
-          model: settings.model || 'claude-sonnet-4-5',
-          persona: 'ceo_mentor',
-          messages: messages,
-          context: ctx
-        })
+      const data = await CopilotTransport.send({
+        apiKey: settings.apiKey,
+        model: settings.model || 'claude-sonnet-4-5',
+        persona: 'ceo_mentor',
+        messages: messages,
+        context: ctx
       });
       thinkingEl.remove();
-      if (!resp.ok) {
-        const err = await resp.text();
-        messages.push({ role:'assistant', content: '❌ Erro: ' + err });
-      } else {
-        const data = await resp.json();
-        messages.push({ role: 'assistant', content: data.reply });
-        if (data.usage) {
-          const prices = {'claude-opus-4':{in:15,out:75},'claude-sonnet-4-5':{in:3,out:15},'claude-haiku-4':{in:0.8,out:4}};
-          const p = prices[settings.model] || prices['claude-sonnet-4-5'];
-          const usd = ((data.usage.input_tokens||0)/1e6)*p.in + ((data.usage.output_tokens||0)/1e6)*p.out;
-          totalCost += usd * 5.5;
-          document.getElementById('costBadge').textContent = 'Custo: R$ ' + totalCost.toFixed(3);
-        }
+      messages.push({ role: 'assistant', content: data.reply });
+      // badge visual de fonte
+      const srcBadge = document.getElementById('costBadge');
+      if (data.source === 'local') {
+        srcBadge.textContent = '🟢 local (R$ 0)';
+      } else if (data.usage) {
+        const prices = {'claude-opus-4':{in:15,out:75},'claude-sonnet-4-5':{in:3,out:15},'claude-haiku-4':{in:0.8,out:4}};
+        const p = prices[settings.model] || prices['claude-sonnet-4-5'];
+        const usd = ((data.usage.input_tokens||0)/1e6)*p.in + ((data.usage.output_tokens||0)/1e6)*p.out;
+        totalCost += usd * 5.5;
+        srcBadge.textContent = '🔵 API · Custo: R$ ' + totalCost.toFixed(3);
       }
       renderMessages();
       DataStore.set('ceo_history', messages.slice(-50));
