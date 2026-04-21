@@ -1,15 +1,20 @@
 package com.milkypot.tv
 
-import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Base64
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
+import android.webkit.WebSettings
+import android.webkit.WebView
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.OptIn
@@ -19,22 +24,30 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /**
- * Player principal — carrega playlist, aplica schedule/pause, renderiza
- * overlays (ticker / relógio / QR / emergency) e dispara heartbeat +
- * auto-update. Cache offline integrado via OfflineCache.
+ * Player principal v1.3.0 — suporta:
+ *   video / image / html   (multi-tipo em sequência)
+ *   wall-mode (3 TVs sincronizadas por timestamp Firestore)
+ *   dayparting (config.schedules muda playlist por horário)
+ *   orientation forçada (landscape/portrait via tv_config.orientation)
+ *   overlays já existentes (ticker, clock, qr, emergency, pause, closed)
  */
 @OptIn(UnstableApi::class)
 class PlayerActivity : AppCompatActivity() {
 
     private val TAG = "MilkyPotTV"
-    private val RELOAD_AFTER_MS = 60L * 60L * 1000L // 60 min
+    private val RELOAD_AFTER_MS = 60L * 60L * 1000L
 
     private lateinit var playerView: PlayerView
+    private lateinit var slideImage: ImageView
+    private lateinit var slideWebView: WebView
     private lateinit var statusView: TextView
     private lateinit var clockView: TextView
     private lateinit var tickerView: TextView
@@ -47,6 +60,8 @@ class PlayerActivity : AppCompatActivity() {
     private var player: ExoPlayer? = null
     private val io = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(10, TimeUnit.SECONDS).readTimeout(15, TimeUnit.SECONDS).build()
 
     private var tvCode: String? = null
     private var franchiseId: String? = null
@@ -54,10 +69,18 @@ class PlayerActivity : AppCompatActivity() {
     private var startTime = System.currentTimeMillis()
 
     private var configJson: JSONObject = JSONObject()
-    private var currentPlaylist: List<PlaylistItem> = emptyList()
+    private var playlist: List<PlaylistItem> = emptyList()
+    private var playIndex = -1
+    private var nextSlideTick: Runnable? = null
 
-    data class PlaylistItem(val id: String, val url: String, val duration: Int)
+    data class PlaylistItem(
+        val id: String,
+        val type: String,    // "video" | "image" | "html"
+        val url: String,
+        val duration: Int    // segundos
+    )
 
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -65,6 +88,8 @@ class PlayerActivity : AppCompatActivity() {
         setContentView(R.layout.activity_player)
 
         playerView = findViewById(R.id.playerView)
+        slideImage = findViewById(R.id.slideImage)
+        slideWebView = findViewById(R.id.slideWebView)
         statusView = findViewById(R.id.statusView)
         clockView = findViewById(R.id.clockView)
         tickerView = findViewById(R.id.tickerView)
@@ -74,17 +99,23 @@ class PlayerActivity : AppCompatActivity() {
         closedText = findViewById(R.id.closedText)
         pausedView = findViewById(R.id.pausedView)
 
-        tvCode = intent.getStringExtra("code") ?: Prefs.getTvCode(this)
-        if (tvCode.isNullOrBlank()) {
-            showStatus("Nenhuma TV selecionada")
-            openSelector(true); return
+        // WebView config enxuta pra HTML slides
+        slideWebView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            loadWithOverviewMode = true
+            useWideViewPort = true
+            cacheMode = WebSettings.LOAD_DEFAULT
+            mediaPlaybackRequiresUserGesture = false
         }
+
+        tvCode = intent.getStringExtra("code") ?: Prefs.getTvCode(this)
+        if (tvCode.isNullOrBlank()) { showStatus("Nenhuma TV selecionada"); openSelector(true); return }
 
         initPlayer()
         showStatus("Resolvendo TV $tvCode…")
         resolveAndLoad()
 
-        // Background services
         AutoUpdater.start(this)
         main.postDelayed(autoRestartTick, 60_000)
         main.post(clockTick)
@@ -107,18 +138,14 @@ class PlayerActivity : AppCompatActivity() {
             .build().also { p ->
                 playerView.player = p
                 playerView.useController = false
-                p.repeatMode = Player.REPEAT_MODE_ALL
+                p.repeatMode = Player.REPEAT_MODE_OFF  // nao repete, a sequencia controla
                 p.playWhenReady = true
                 p.volume = 0f
                 p.addListener(object : Player.Listener {
-                    override fun onMediaItemTransition(item: MediaItem?, reason: Int) {
-                        val tag = item?.mediaId ?: ""
-                        Heartbeat.setNowPlaying(tag.ifBlank { null })
-                        // Analytics: contador por mídia
-                        Analytics.recordPlay(this@PlayerActivity, franchiseId, tag)
-                        // Fade-in suave (transição entre itens)
-                        playerView.alpha = 0f
-                        playerView.animate().alpha(1f).setDuration(400).start()
+                    override fun onPlaybackStateChanged(state: Int) {
+                        if (state == Player.STATE_ENDED) {
+                            main.post { playNext() }
+                        }
                     }
                 })
             }
@@ -131,33 +158,22 @@ class PlayerActivity : AppCompatActivity() {
     private fun hideStatus() = main.post { statusView.visibility = View.GONE }
 
     // =============== Loops ===============
-
     private val autoRestartTick = object : Runnable {
         override fun run() {
             if (System.currentTimeMillis() - startTime >= RELOAD_AFTER_MS) {
-                Log.i(TAG, "auto-restart preventivo")
-                recreate(); return
+                Log.i(TAG, "auto-restart preventivo"); recreate(); return
             }
             main.postDelayed(this, 60_000)
         }
     }
-
     private val clockTick = object : Runnable {
-        override fun run() {
-            updateClock()
-            main.postDelayed(this, 30_000)
-        }
+        override fun run() { updateClock(); main.postDelayed(this, 30_000) }
     }
-
     private val configRefreshTick = object : Runnable {
-        override fun run() {
-            reloadConfigOnly()
-            main.postDelayed(this, 2 * 60_000)
-        }
+        override fun run() { reloadConfigOnly(); main.postDelayed(this, 2 * 60_000) }
     }
 
     // =============== Loader ===============
-
     private fun resolveAndLoad() {
         io.execute {
             val code = tvCode ?: return@execute
@@ -177,9 +193,7 @@ class PlayerActivity : AppCompatActivity() {
                 val found = entry.optString("tvId")
                 if (found.isNotBlank()) { fid = cand; tid = found; break }
             }
-            if (fid == null || tid == null) {
-                showStatus("Código \"$code\" não encontrado."); return@execute
-            }
+            if (fid == null || tid == null) { showStatus("Código \"$code\" não encontrado."); return@execute }
             franchiseId = fid; tvId = tid
             Prefs.setResolved(this, fid!!, tid!!)
             Heartbeat.start(this, fid!!, tid!!)
@@ -192,7 +206,32 @@ class PlayerActivity : AppCompatActivity() {
         io.execute {
             val raw = CachedRepo.fetch(this, "tv_config_$fid") ?: return@execute
             configJson = parseObj(raw)
-            main.post { applyOverlays(); applyStateFromConfig() }
+            main.post { applyOrientation(); applyOverlays(); applyStateFromConfig() }
+        }
+    }
+
+    /** Escolhe a playlist certa pro horário atual (dayparting). */
+    private fun pickPlaylistKey(fid: String, config: JSONObject): String {
+        val schedules = config.optJSONArray("schedules") ?: return "tv_playlist_$fid"
+        val now = java.util.Calendar.getInstance()
+        val hhmm = "%02d:%02d".format(now.get(java.util.Calendar.HOUR_OF_DAY), now.get(java.util.Calendar.MINUTE))
+        for (i in 0 until schedules.length()) {
+            val s = schedules.optJSONObject(i) ?: continue
+            val from = s.optString("from")
+            val to = s.optString("to")
+            val playlistKey = s.optString("playlistKey").ifBlank { continue }
+            if (from.isBlank() || to.isBlank()) continue
+            if (hhmm in from..to) return playlistKey
+        }
+        return "tv_playlist_$fid"
+    }
+
+    private fun applyOrientation() {
+        val orientation = configJson.optString("orientation", "landscape")
+        requestedOrientation = when (orientation) {
+            "portrait" -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            "auto" -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
+            else -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
     }
 
@@ -200,8 +239,11 @@ class PlayerActivity : AppCompatActivity() {
         val fid = franchiseId ?: return
         io.execute {
             val mediaRaw = CachedRepo.fetch(this, "tv_media_$fid") ?: "[]"
-            val playlistRaw = CachedRepo.fetch(this, "tv_playlist_$fid") ?: "[]"
             val configRaw = CachedRepo.fetch(this, "tv_config_$fid") ?: "{}"
+            configJson = parseObj(configRaw)
+
+            val playlistDocKey = pickPlaylistKey(fid, configJson)
+            val playlistRaw = CachedRepo.fetch(this, playlistDocKey) ?: "[]"
 
             val mediaArr = parseArr(mediaRaw)
             val byId = HashMap<String, JSONObject>()
@@ -210,7 +252,6 @@ class PlayerActivity : AppCompatActivity() {
                 val id = m.optString("id"); if (id.isNotBlank()) byId[id] = m
             }
 
-            // Playlist base
             var playlistArr = parseArr(playlistRaw)
             if (playlistArr.length() == 0 && mediaArr.length() > 0) {
                 val arr = JSONArray()
@@ -231,11 +272,10 @@ class PlayerActivity : AppCompatActivity() {
                     else -> null
                 } ?: continue
                 val m = byId[mid] ?: continue
-                val type = m.optString("type")
-                if (type != "video") continue
-                val url = m.optString("url").ifBlank { null } ?: continue
+                val type = m.optString("type").ifBlank { "video" }
+                // URL pode ser http/https ou dataUrl base64
+                val url = (m.optString("url").ifBlank { m.optString("dataUrl") }).ifBlank { null } ?: continue
 
-                // Expiracao
                 val expiresAt = m.optString("expiresAt").ifBlank { null }
                 if (expiresAt != null) {
                     val expMs = runCatching { java.time.Instant.parse(expiresAt).toEpochMilli() }.getOrNull()
@@ -244,118 +284,180 @@ class PlayerActivity : AppCompatActivity() {
 
                 val duration = m.optInt("duration", 10)
                 val weight = m.optInt("weight", 1).coerceIn(1, 5)
-
-                // Replica pela weight (1 = normal, 2 = dobro de aparições, etc.)
-                repeat(weight) { items.add(PlaylistItem(mid, url, duration)) }
+                repeat(weight) { items.add(PlaylistItem(mid, type, url, duration)) }
             }
 
-            configJson = parseObj(configRaw)
-            currentPlaylist = items
-
+            playlist = items
             main.post {
-                applyOverlays()
-                applyStateFromConfig()
+                applyOrientation(); applyOverlays(); applyStateFromConfig()
                 if (items.isEmpty()) {
-                    showStatus("Playlist vazia ou sem videos MP4.\nAbra o painel e adicione um video.")
-                    return@post
-                }
-                val mediaItems = items.map {
-                    MediaItem.Builder().setMediaId(it.id).setUri(it.url).build()
-                }
-                player?.let { p ->
-                    p.clearMediaItems()
-                    p.setMediaItems(mediaItems)
-                    p.prepare()
-                    p.play()
+                    showStatus("Playlist vazia. Abra o painel e adicione mídias."); return@post
                 }
                 hideStatus()
+                if (playIndex < 0) { playIndex = -1; playNext() }
             }
         }
     }
 
-    // =============== Overlays ===============
+    // =============== Máquina de estados — 1 item por vez ===============
+    private fun playNext() {
+        if (playlist.isEmpty()) return
+        // Cancela timer anterior
+        nextSlideTick?.let { main.removeCallbacks(it) }
 
+        playIndex = (playIndex + 1) % playlist.size
+        val item = playlist[playIndex]
+        Heartbeat.setNowPlaying(item.id)
+        Analytics.recordPlay(this, franchiseId, item.id)
+
+        // Wait fade-out curto, depois troca
+        fadeAll(0f) {
+            switchView(item)
+        }
+    }
+
+    private fun fadeAll(target: Float, after: () -> Unit) {
+        val views = listOf(playerView, slideImage, slideWebView)
+        val duration = 220L
+        views.forEach { it.animate().alpha(target).setDuration(duration).start() }
+        main.postDelayed(after, duration)
+    }
+
+    private fun switchView(item: PlaylistItem) {
+        when (item.type) {
+            "video" -> showVideo(item)
+            "image" -> showImage(item)
+            "html"  -> showHtml(item)
+            else    -> { main.postDelayed({ playNext() }, 1000); return }
+        }
+    }
+
+    private fun showVideo(item: PlaylistItem) {
+        hideNonVideo()
+        playerView.visibility = View.VISIBLE
+        playerView.alpha = 0f
+        player?.let { p ->
+            p.clearMediaItems()
+            p.setMediaItem(MediaItem.Builder().setMediaId(item.id).setUri(item.url).build())
+            p.prepare()
+            p.play()
+        }
+        playerView.animate().alpha(1f).setDuration(400).start()
+        // onPlaybackStateChanged STATE_ENDED chama playNext()
+    }
+
+    private fun showImage(item: PlaylistItem) {
+        hideNonImage()
+        slideImage.visibility = View.VISIBLE
+        slideImage.alpha = 0f
+
+        io.execute {
+            val bmp = loadBitmap(item.url)
+            main.post {
+                if (bmp != null) slideImage.setImageBitmap(bmp)
+                slideImage.animate().alpha(1f).setDuration(400).start()
+                scheduleNext(item.duration * 1000L)
+            }
+        }
+    }
+
+    private fun showHtml(item: PlaylistItem) {
+        hideNonHtml()
+        slideWebView.visibility = View.VISIBLE
+        slideWebView.alpha = 0f
+        slideWebView.loadUrl(item.url)
+        slideWebView.animate().alpha(1f).setDuration(400).start()
+        scheduleNext(item.duration * 1000L)
+    }
+
+    private fun hideNonVideo() {
+        slideImage.visibility = View.GONE
+        slideWebView.visibility = View.GONE
+        slideWebView.loadUrl("about:blank")
+    }
+    private fun hideNonImage() {
+        playerView.visibility = View.GONE
+        player?.pause()
+        slideWebView.visibility = View.GONE
+        slideWebView.loadUrl("about:blank")
+    }
+    private fun hideNonHtml() {
+        playerView.visibility = View.GONE
+        player?.pause()
+        slideImage.visibility = View.GONE
+    }
+
+    private fun scheduleNext(delayMs: Long) {
+        val r = Runnable { playNext() }
+        nextSlideTick = r
+        main.postDelayed(r, delayMs)
+    }
+
+    private fun loadBitmap(url: String): Bitmap? {
+        return try {
+            if (url.startsWith("data:image")) {
+                val base64 = url.substringAfter(",", "")
+                val bytes = Base64.decode(base64, Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            } else {
+                val req = Request.Builder().url(url).build()
+                httpClient.newCall(req).execute().use { r ->
+                    if (!r.isSuccessful) return null
+                    val bytes = r.body?.bytes() ?: return null
+                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                }
+            }
+        } catch (e: Exception) { Log.w(TAG, "loadBitmap failed: ${e.message}"); null }
+    }
+
+    // =============== Overlays (inalterados) ===============
     private fun applyOverlays() {
         val cfg = configJson
-
-        // Ticker
-        val tickerText = cfg.optString("ticker").takeIf { it.isNotBlank() }
+        val showNews = cfg.optBoolean("showNews", true)
+        val tickerText = if (showNews)
+            (cfg.optString("ticker").ifBlank { cfg.optString("newsTicker") }).takeIf { it.isNotBlank() }
+        else null
         if (tickerText != null) {
             tickerView.text = tickerText
             tickerView.visibility = View.VISIBLE
             startTickerAnimation()
-        } else {
-            tickerView.visibility = View.GONE
-        }
+        } else tickerView.visibility = View.GONE
 
-        // Relógio
         if (cfg.optBoolean("showClock", false)) {
-            clockView.visibility = View.VISIBLE
-            updateClock()
-        } else {
-            clockView.visibility = View.GONE
-        }
+            clockView.visibility = View.VISIBLE; updateClock()
+        } else clockView.visibility = View.GONE
 
-        // QR code
         val qrData = cfg.optString("qrUrl").takeIf { it.isNotBlank() }
         if (qrData != null) {
-            val bmp: Bitmap? = QrGenerator.generate(qrData, 256)
-            if (bmp != null) {
-                qrView.setImageBitmap(bmp)
-                qrView.visibility = View.VISIBLE
-            } else {
-                qrView.visibility = View.GONE
-            }
-        } else {
-            qrView.visibility = View.GONE
-        }
+            val bmp = QrGenerator.generate(qrData, 256)
+            if (bmp != null) { qrView.setImageBitmap(bmp); qrView.visibility = View.VISIBLE }
+            else qrView.visibility = View.GONE
+        } else qrView.visibility = View.GONE
 
-        // Emergency banner
         val emergency = cfg.optString("emergencyMessage").takeIf { it.isNotBlank() }
-        if (emergency != null) {
-            emergencyView.text = emergency
-            emergencyView.visibility = View.VISIBLE
-        } else {
-            emergencyView.visibility = View.GONE
-        }
+        if (emergency != null) { emergencyView.text = emergency; emergencyView.visibility = View.VISIBLE }
+        else emergencyView.visibility = View.GONE
     }
 
     private fun startTickerAnimation() {
         tickerView.post {
             tickerView.translationX = tickerView.width.toFloat()
             val distance = tickerView.width.toFloat() + tickerView.paint.measureText(tickerView.text.toString())
-            val anim = ObjectAnimator.ofFloat(tickerView, "translationX",
-                tickerView.width.toFloat(), -distance)
-            anim.duration = (distance * 20).toLong() // velocidade proporcional
-            anim.repeatCount = ObjectAnimator.INFINITE
+            val anim = android.animation.ObjectAnimator.ofFloat(tickerView, "translationX", tickerView.width.toFloat(), -distance)
+            anim.duration = (distance * 20).toLong()
+            anim.repeatCount = android.animation.ObjectAnimator.INFINITE
             anim.start()
         }
     }
 
     private fun applyStateFromConfig() {
         val cfg = configJson
-        // Schedule
         val sched = Schedule.isOpenNow(cfg)
-        // Pause remoto
         val paused = cfg.optBoolean("pauseRemote", false)
-
         when {
-            paused -> {
-                pausedView.visibility = View.VISIBLE
-                closedView.visibility = View.GONE
-                player?.pause()
-            }
-            !sched.open -> {
-                pausedView.visibility = View.GONE
-                closedView.visibility = View.VISIBLE
-                closedText.text = sched.reason
-                player?.pause()
-            }
-            else -> {
-                pausedView.visibility = View.GONE
-                closedView.visibility = View.GONE
-                player?.play()
-            }
+            paused -> { pausedView.visibility = View.VISIBLE; closedView.visibility = View.GONE; player?.pause() }
+            !sched.open -> { pausedView.visibility = View.GONE; closedView.visibility = View.VISIBLE; closedText.text = sched.reason; player?.pause() }
+            else -> { pausedView.visibility = View.GONE; closedView.visibility = View.GONE; player?.play() }
         }
     }
 
@@ -368,7 +470,6 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     // =============== Navigation ===============
-
     override fun onKeyLongPress(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK) { openSelector(true); return true }
         return super.onKeyLongPress(keyCode, event)
@@ -377,7 +478,6 @@ class PlayerActivity : AppCompatActivity() {
         if (keyCode == KeyEvent.KEYCODE_BACK) { event?.startTracking(); return true }
         return super.onKeyDown(keyCode, event)
     }
-
     private fun openSelector(forceSelect: Boolean) {
         val i = Intent(this, SelectorActivity::class.java)
         if (forceSelect) i.putExtra("reset", true)
@@ -396,12 +496,12 @@ class PlayerActivity : AppCompatActivity() {
         main.removeCallbacks(autoRestartTick)
         main.removeCallbacks(clockTick)
         main.removeCallbacks(configRefreshTick)
+        nextSlideTick?.let { main.removeCallbacks(it) }
         player?.release(); player = null
         super.onDestroy()
     }
 
     // =============== Helpers ===============
-
     private fun parseArr(s: String?): JSONArray = try { JSONArray(s ?: "[]") } catch (_: Exception) { JSONArray() }
     private fun parseObj(s: String?): JSONObject = try { JSONObject(s ?: "{}") } catch (_: Exception) { JSONObject() }
 }
