@@ -11,8 +11,8 @@ android {
         applicationId = "com.milkypot.tv"
         minSdk = 21          // Android 5.0+ cobre 99% do mercado
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.2.0"
     }
 
     buildTypes {
@@ -26,6 +26,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true   // habilita java.time em API 21+
     }
     kotlinOptions { jvmTarget = "17" }
 
@@ -48,4 +49,10 @@ dependencies {
 
     // HTTP simples
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // QR code generator (~250KB, MIT)
+    implementation("com.google.zxing:core:3.5.3")
+
+    // Desugar pra usar java.time em API 21+
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
