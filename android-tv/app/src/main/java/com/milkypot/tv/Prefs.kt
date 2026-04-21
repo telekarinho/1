@@ -7,6 +7,7 @@ object Prefs {
     private const val KEY_CODE = "tv_code"
     private const val KEY_FID = "franchise_id"
     private const val KEY_TVID = "tv_id_resolved"
+    private const val KEY_CHALLENGE = "challenge_mode"
 
     private fun p(c: Context) = c.getSharedPreferences(NAME, Context.MODE_PRIVATE)
 
@@ -19,4 +20,9 @@ object Prefs {
     }
     fun getFranchiseId(c: Context): String? = p(c).getString(KEY_FID, null)
     fun getResolvedTvId(c: Context): String? = p(c).getString(KEY_TVID, null)
+
+    fun isChallengeMode(c: Context): Boolean = p(c).getBoolean(KEY_CHALLENGE, false)
+    fun setChallengeMode(c: Context, on: Boolean) {
+        p(c).edit().putBoolean(KEY_CHALLENGE, on).apply()
+    }
 }

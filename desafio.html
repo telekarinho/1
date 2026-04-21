@@ -6,6 +6,14 @@
 <title>Desafio 10 MilkyPot Milissegundos | MilkyPot</title>
 <meta name="theme-color" content="#F0F7FF">
 <link rel="manifest" href="/manifest.json">
+<!-- Service Worker pra funcionar OFFLINE (cache-first) -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw-desafio.js').catch(function(){});
+  });
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;700;800;900&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
@@ -1296,6 +1304,8 @@ if(gameState==='idle'){
 gameState='running';
 screen.classList.add('running');
 startT=Date.now();elapsed=0;
+/* === BRIDGE TVs: broadcast START */
+if (window._tvChallengeStart) { try { window._tvChallengeStart(playerN, '10s'); } catch(e){} }
 btn.className='btn btn-stop';
 btn.innerHTML='PARAR EM '+fmt(gameTarget)+' &#9899;';
 document.getElementById('statusMsg').textContent=runMsgs[0];
@@ -1314,6 +1324,8 @@ if(gameConfig.reactionVideo&&webcamStream) startReactionRecording();
 cancelAnimationFrame(timer);clearInterval(msgTimer);
 gameState='done';
 document.getElementById('screen').classList.remove('running');
+/* === BRIDGE TVs: broadcast FINISH */
+if (window._tvChallengeFinish) { try { window._tvChallengeFinish(elapsed/1000, '10s'); } catch(e){} }
 if(navigator.vibrate) navigator.vibrate([50,30,80]);
 /* Feature 7: stop recording */
 if(gameConfig.reactionVideo&&mediaRecorder&&mediaRecorder.state==='recording') mediaRecorder.stop();
@@ -2223,5 +2235,7 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   if(!navigator.onLine) update();
 })();
 </script>
+<!-- Bridge pra broadcasting nas TVs + botao share viral -->
+<script src="/js/pages/desafio-tv-bridge.js?v=mp-v1"></script>
 </body>
 </html>
