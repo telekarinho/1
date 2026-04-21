@@ -219,7 +219,8 @@ class PlayerActivity : AppCompatActivity() {
             val s = schedules.optJSONObject(i) ?: continue
             val from = s.optString("from")
             val to = s.optString("to")
-            val playlistKey = s.optString("playlistKey").ifBlank { continue }
+            val playlistKey = s.optString("playlistKey")
+            if (playlistKey.isBlank()) continue
             if (from.isBlank() || to.isBlank()) continue
             if (hhmm in from..to) return playlistKey
         }
