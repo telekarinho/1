@@ -515,6 +515,15 @@
                     </div>
                 </div>
 
+                <!-- Wall Mode (Fase E) -->
+                <h3 style="font-family:'Baloo 2',cursive;margin:24px 0 12px">🎬 Wall Mode — vídeo sincronizado nas 3 TVs</h3>
+                <p style="font-size:13px;color:#888;margin-bottom:12px">
+                    Defina qual posição cada TV ocupa na "parede". Depois cadastre uma mídia com <code>wallParts</code>
+                    (3 URLs: left/center/right) e todas as 3 vão tocar sincronizadas. Documentação:
+                    <a href="https://github.com/telekarinho/1/blob/main/docs/WALL_MODE_SETUP.md" target="_blank">WALL_MODE_SETUP.md</a>
+                </p>
+                <div id="wallRolesList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:16px"></div>
+
                 <!-- Status Heartbeat -->
                 <h3 style="font-family:'Baloo 2',cursive;margin:24px 0 12px">📡 Status das TVs</h3>
                 <p style="font-size:13px;color:#888;margin-bottom:12px">Cada TV reporta status a cada 5 min. <span style="color:#10B981">🟢 online</span> · <span style="color:#dc2626">🔴 offline há mais de 10 min</span></p>
@@ -1815,7 +1824,46 @@
         // Status heartbeat (atualiza 1x ao carregar, e a cada 60s)
         renderTvStatus();
         if (!window._heartbeatPoll) window._heartbeatPoll = setInterval(renderTvStatus, 60000);
+        // Wall roles por TV (Fase E)
+        renderWallRoles();
     }
+
+    // ============ FASE E: Wall Mode por TV ============
+    function renderWallRoles() {
+        var el = document.getElementById('wallRolesList');
+        if (!el) return;
+        var tvs = getTvs();
+        var cfg = getConfig();
+        var roles = cfg.wallRoles || {};
+        if (!tvs.length) {
+            el.innerHTML = '<div style="padding:14px;color:#888;font-size:13px">Cadastre ao menos 1 TV acima pra configurar Wall Mode.</div>';
+            return;
+        }
+        el.innerHTML = tvs.map(function(t){
+            var cur = roles[t.id] || 'none';
+            function opt(v, lbl){ return '<option value="'+v+'"'+(cur===v?' selected':'')+'>'+lbl+'</option>'; }
+            return '<div class="tv-card" style="padding:14px">' +
+              '<div style="font-weight:700;margin-bottom:8px">' + esc(t.name || t.id) + '</div>' +
+              '<select class="form-control" onchange="setWallRole(\''+t.id+'\', this.value)">' +
+                opt('none','— Sem Wall Mode —') +
+                opt('left','⬅ Esquerda') +
+                opt('center','⬛ Centro') +
+                opt('right','➡ Direita') +
+              '</select>' +
+              (cur !== 'none' ? '<div style="margin-top:8px;font-size:12px;color:#7E57C2;font-weight:700">🎬 ' + cur.toUpperCase() + '</div>' : '') +
+            '</div>';
+        }).join('');
+    }
+
+    window.setWallRole = function(tvId, role){
+        var cfg = getConfig();
+        cfg.wallRoles = cfg.wallRoles || {};
+        if (role === 'none') delete cfg.wallRoles[tvId];
+        else cfg.wallRoles[tvId] = role;
+        setConfig(cfg);
+        renderWallRoles();
+        Utils.showToast('Wall role atualizado pra ' + role, 'success');
+    };
 
     function renderTvStatus(){
         var list = document.getElementById('tvStatusList');

@@ -77,7 +77,8 @@ class PlayerActivity : AppCompatActivity() {
         val id: String,
         val type: String,    // "video" | "image" | "html"
         val url: String,
-        val duration: Int    // segundos
+        val duration: Int,   // segundos
+        val wallSync: Boolean = false  // FASE E — se true, seek sincronizado por timestamp
     )
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -210,6 +211,18 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * FASE E — Wall Mode: descobre o papel desta TV ("left"/"center"/"right"/"none").
+     * O papel vem de tv_config.wallRoles[tvId], ou alternativamente de
+     * tv_shortcodes_{fid}[code].wallRole. Se nada setado, retorna "none".
+     */
+    private fun resolveWallRole(config: JSONObject): String? {
+        val tid = tvId ?: return null
+        val wallRoles = config.optJSONObject("wallRoles") ?: return null
+        val role = wallRoles.optString(tid).ifBlank { null }
+        return role
+    }
+
     /** Escolhe a playlist certa pro horário atual (dayparting). */
     private fun pickPlaylistKey(fid: String, config: JSONObject): String {
         val schedules = config.optJSONArray("schedules") ?: return "tv_playlist_$fid"
@@ -274,8 +287,20 @@ class PlayerActivity : AppCompatActivity() {
                 } ?: continue
                 val m = byId[mid] ?: continue
                 val type = m.optString("type").ifBlank { "video" }
-                // URL pode ser http/https ou dataUrl base64
-                val url = (m.optString("url").ifBlank { m.optString("dataUrl") }).ifBlank { null } ?: continue
+
+                // FASE E — Wall Mode: mídia pode ter wallParts = { left, center, right }
+                // cada TV escolhe a URL conforme seu wallRole no tv_config
+                val wallParts = m.optJSONObject("wallParts")
+                val wallRole = resolveWallRole(configJson)
+                val pickedUrl = if (wallParts != null && wallRole != null && wallRole != "none") {
+                    wallParts.optString(wallRole).ifBlank { null }
+                } else null
+
+                val url = (pickedUrl
+                    ?: m.optString("url").ifBlank { m.optString("dataUrl") })
+                    .ifBlank { null } ?: continue
+
+                val wallSync = wallParts != null && pickedUrl != null
 
                 val expiresAt = m.optString("expiresAt").ifBlank { null }
                 if (expiresAt != null) {
@@ -285,7 +310,7 @@ class PlayerActivity : AppCompatActivity() {
 
                 val duration = m.optInt("duration", 10)
                 val weight = m.optInt("weight", 1).coerceIn(1, 5)
-                repeat(weight) { items.add(PlaylistItem(mid, type, url, duration)) }
+                repeat(weight) { items.add(PlaylistItem(mid, type, url, duration, wallSync)) }
             }
 
             playlist = items
@@ -341,10 +366,17 @@ class PlayerActivity : AppCompatActivity() {
             p.clearMediaItems()
             p.setMediaItem(MediaItem.Builder().setMediaId(item.id).setUri(item.url).build())
             p.prepare()
+
+            // FASE E — Wall sync: seek pro offset correto baseado no relogio do sistema
+            // Assume duracao == item.duration. Todas as 3 TVs calculam o mesmo offset.
+            if (item.wallSync && item.duration > 0) {
+                val dMs = item.duration * 1000L
+                val offsetMs = System.currentTimeMillis() % dMs
+                p.seekTo(offsetMs)
+            }
             p.play()
         }
         playerView.animate().alpha(1f).setDuration(400).start()
-        // onPlaybackStateChanged STATE_ENDED chama playNext()
     }
 
     private fun showImage(item: PlaylistItem) {
