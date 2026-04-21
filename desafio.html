@@ -13,6 +13,20 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw-desafio.js').catch(function(){});
   });
 }
+// Kiosk mode: TV dedicada do Desafio passa ?kiosk=1.
+// Aplica body.kiosk-mode cedo pra CSS pegar antes do first paint.
+(function(){
+  try {
+    var qs = new URLSearchParams(location.search);
+    if (qs.get('kiosk') === '1' || qs.get('kiosk') === 'true') {
+      document.addEventListener('DOMContentLoaded', function(){
+        document.body.classList.add('kiosk-mode');
+      });
+      // Se body ja existe, aplica direto
+      if (document.body) document.body.classList.add('kiosk-mode');
+    }
+  } catch(e) {}
+})();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,6 +47,60 @@ align-items:center;justify-content:center;
 position:relative;overflow:hidden;
 background:linear-gradient(135deg,#F0F7FF 0%,#E8F4FD 30%,#F5E6F0 60%,#EDE0F5 100%);
 }
+
+/* === Fit-in-viewport (desktop/TV normal) — garante que nao haja overflow
+   em telas >= 720px altura sem precisar de ?kiosk=1. Proporcoes mais enxutas */
+@media (min-height: 720px) {
+  .step { padding: clamp(16px, 3vh, 32px) !important; }
+  .counter-num { font-size: clamp(60px, 13vh, 140px) !important; }
+  .logo-img { width: clamp(80px, 11vh, 130px) !important; margin-bottom: 4px !important; }
+  .main-title { font-size: clamp(36px, 6vh, 68px) !important; margin-bottom: 6px !important; }
+  .main-sub   { margin-bottom: 10px !important; }
+  .counter-box { padding: clamp(18px, 3vh, 36px) clamp(24px, 5vw, 64px) !important; margin-bottom: clamp(12px, 2vh, 24px) !important; }
+}
+/* telas baixas (notebook 13", tablet landscape) */
+@media (max-height: 720px) {
+  .step { padding: 16px !important; justify-content: space-evenly !important; }
+  .counter-num { font-size: clamp(52px, 11vh, 100px) !important; letter-spacing: 2px !important; }
+  .main-title  { font-size: clamp(30px, 5.5vh, 52px) !important; margin-bottom: 4px !important; }
+  .main-sub    { font-size: clamp(13px, 1.8vh, 18px) !important; margin-bottom: 6px !important; }
+  .logo-img    { width: clamp(60px, 9vh, 110px) !important; margin-bottom: 2px !important; }
+  .counter-box { padding: clamp(12px, 2vh, 22px) clamp(18px, 4vw, 44px) !important; margin-bottom: 10px !important; }
+  .btn-start   { font-size: clamp(16px, 2.5vh, 22px) !important; padding: clamp(12px, 2vh, 18px) clamp(40px, 6vw, 72px) !important; }
+}
+
+/* === KIOSK MODE (TV dedicada do Desafio no APK) ===
+   Ativado via ?kiosk=1 na URL. Forca todo conteudo a caber em 100vh
+   sem scroll, sem clipping, com fontes proporcionais ao viewport. */
+body.kiosk-mode,
+body.kiosk-mode .screen { overflow:hidden !important; height:100vh !important; }
+body.kiosk-mode .step { padding: clamp(12px, 2vh, 28px) clamp(16px, 3vw, 36px) !important; overflow:hidden !important; justify-content: space-around !important; }
+body.kiosk-mode #step0 { justify-content: space-around !important; padding-top: clamp(12px, 2vh, 24px) !important; }
+body.kiosk-mode .logo-img { width: clamp(60px, 10vh, 130px) !important; margin-bottom: 2px !important; }
+body.kiosk-mode .badge-top { margin-bottom: 4px !important; }
+body.kiosk-mode .main-title { font-size: clamp(32px, 6vh, 64px) !important; margin-bottom: 4px !important; }
+body.kiosk-mode .main-sub  { font-size: clamp(13px, 2vh, 20px) !important; margin-bottom: 6px !important; max-width: 80vw; }
+body.kiosk-mode .counter-box { padding: clamp(12px, 2vh, 28px) clamp(18px, 4vw, 48px) !important; margin-bottom: clamp(8px, 1.5vh, 20px) !important; }
+body.kiosk-mode .counter-num  { font-size: clamp(56px, 14vh, 140px) !important; letter-spacing: 2px !important; }
+body.kiosk-mode .counter-label { margin-bottom: 2px !important; }
+body.kiosk-mode .counter-target { margin-top: 4px !important; }
+body.kiosk-mode .player-name-display { font-size: clamp(14px, 2vh, 22px) !important; margin-bottom: 6px !important; }
+body.kiosk-mode .status-msg { min-height: 20px !important; margin-bottom: 8px !important; font-size: clamp(13px, 2vh, 20px) !important; }
+body.kiosk-mode .btn { padding: clamp(10px, 1.8vh, 20px) clamp(30px, 5vw, 70px) !important; font-size: clamp(15px, 2.3vh, 22px) !important; }
+body.kiosk-mode .btn-start { font-size: clamp(17px, 2.8vh, 26px) !important; padding: clamp(12px, 2vh, 22px) clamp(36px, 6vw, 90px) !important; }
+body.kiosk-mode .attract-title { font-size: clamp(16px, 2.6vh, 24px) !important; margin: 6px 0 !important; }
+body.kiosk-mode .attract-sub   { font-size: clamp(12px, 1.8vh, 18px) !important; margin-bottom: 6px !important; }
+body.kiosk-mode .attract-feed  { max-height: 20vh !important; overflow:hidden !important; }
+body.kiosk-mode .stats-line, body.kiosk-mode .badge-card-sub { font-size: clamp(11px, 1.6vh, 15px) !important; }
+body.kiosk-mode #offlineBar    { display:none !important; }
+body.kiosk-mode [data-tv-share] { display:none !important; } /* botao IG so faz sentido no celular do cliente */
+body.kiosk-mode .attempt-badge { top: 8px !important; right: 8px !important; }
+body.kiosk-mode .diff-label,
+body.kiosk-mode .counter-box + * { margin-bottom: 0 !important; }
+/* ranking / creditos escondidos em kiosk pra caber */
+body.kiosk-mode footer,
+body.kiosk-mode .credits,
+body.kiosk-mode .ranking-week { display:none !important; }
 
 /* Ambient glow */
 .ambient{
