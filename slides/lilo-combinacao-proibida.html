@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Lilo Combinação Proibida</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; background:linear-gradient(180deg, #FFF3E0, #FFE4F0); font-family:'Baloo 2', sans-serif; }
+.stage { width:100vw; height:100vh; position:relative; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+
+.pote-row { display:flex; gap:20vmin; margin-bottom:4vmin; }
+.pote {
+  width:20vmin; height:20vmin; border-radius:50% 50% 30% 30%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12vmin; position:relative;
+  box-shadow: 0 10px 40px rgba(0,0,0,.15);
+}
+.pote-a { background: linear-gradient(180deg,#FFB1D1, #FF4F8A); }
+.pote-b { background: linear-gradient(180deg,#8b6ecc, #533A8B); }
+
+.pote-label {
+  position:absolute; bottom:-6vmin; left:50%; transform:translateX(-50%);
+  font-size:3vmin; font-weight:700; color:#6B7280; white-space:nowrap;
+}
+
+.ovelhinha {
+  font-size:30vmin; line-height:1;
+  animation: decisao 10s cubic-bezier(0.42,0,0.1,1) infinite;
+  filter: hue-rotate(0deg);
+}
+@keyframes decisao {
+  0%, 20%  { transform: rotate(-15deg); }     /* olha pro pote A */
+  25%, 40% { transform: rotate(15deg); }      /* olha pro pote B */
+  50%      { transform: scale(1.3) rotate(0); }  /* prova B */
+  60%      { filter: hue-rotate(100deg); transform: scale(1.1); }  /* fica verde */
+  70%, 80% { transform: rotate(-25deg) scale(1.1); filter:hue-rotate(100deg); }  /* cara de nojo */
+  85%      { filter: hue-rotate(0deg); transform: rotate(0); }
+  95%, 100%{ filter: hue-rotate(0deg); }
+}
+
+.verdict {
+  position:absolute; bottom:10%; left:50%; transform:translateX(-50%);
+  font-size:6vmin; font-weight:800; color:#dc2626;
+  background:rgba(255,255,255,.95); padding:2vmin 6vmin; border-radius:100vmin;
+  opacity:0;
+  animation: verdict 10s cubic-bezier(0.42,0,0.1,1) infinite;
+  box-shadow: 0 10px 40px rgba(220,38,38,.2);
+}
+.verdict strong { color:#16a34a; }
+@keyframes verdict {
+  0%, 75%  { opacity:0; transform:translateX(-50%) translateY(3vmin); }
+  85%, 95% { opacity:1; transform:translateX(-50%) translateY(0); }
+  100%     { opacity:0; }
+}
+
+.nojoStars {
+  position:absolute; font-size:5vmin; opacity:0;
+  animation: nojo 10s cubic-bezier(0.42,0,0.1,1) infinite;
+}
+.nojoStars:nth-child(1) { top:30%; left:40%; animation-delay: 0s; }
+.nojoStars:nth-child(2) { top:38%; right:40%; animation-delay: 0.1s; }
+.nojoStars:nth-child(3) { top:45%; left:48%; animation-delay: 0.2s; }
+@keyframes nojo {
+  0%, 55% { opacity:0; transform: scale(0) rotate(0); }
+  65%, 75% { opacity:1; transform: scale(1.5) rotate(180deg); }
+  85% { opacity:0; transform: scale(2) rotate(360deg); }
+  100% { opacity:0; }
+}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="pote-row">
+    <div class="pote pote-a">🍓<div class="pote-label">Morango com Ninho</div></div>
+    <div class="pote pote-b">🫒<div class="pote-label">Sabor Azeitona?!</div></div>
+  </div>
+  <div class="ovelhinha">🐑</div>
+  <div class="nojoStars">💫</div>
+  <div class="nojoStars">✖</div>
+  <div class="nojoStars">💫</div>
+  <div class="verdict">Lilo diz: <strong>"Fica no Morango"</strong></div>
+</div>
+</body>
+</html>
