@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MilkyPot — Analytics Avançado</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link rel="stylesheet" href="../css/ios-premium.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/auth.js"></script>
+<script src="../js/core/analytics-advanced.js"></script>
+<style>
+  body { background: #F2F2F7; }
+  .an-wrap { max-width: 1400px; margin: 0 auto; padding: 20px; }
+  .tabs { display: flex; gap: 6px; background: #fff; padding: 6px; border-radius: 14px; border: 1px solid #E5E7EB; margin-bottom: 20px; }
+  .tab { padding: 10px 18px; border-radius: 10px; background: transparent; border: none; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; color: #6B7280; }
+  .tab.active { background: linear-gradient(135deg,#FF4F8A,#7E57C2); color: #fff; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 12px; margin-bottom: 20px; }
+  .kpi { background: #fff; border-radius: 14px; padding: 16px; border: 1px solid #E5E7EB; }
+  .kpi .lbl { font-size: 11px; color: #6B7280; text-transform: uppercase; font-weight: 700; }
+  .kpi .val { font-size: 26px; font-weight: 900; color: #1F2937; margin-top: 4px; }
+  .kpi .sub { font-size: 11px; color: #6B7280; }
+
+  .insight-box { background: linear-gradient(135deg,#FFFBEB,#FEF3C7); border: 1px solid #FCD34D; border-radius: 12px; padding: 14px; margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-start; }
+  .insight-box .e { font-size: 28px; }
+  .insight-box p { margin: 0; color: #78350F; font-size: 14px; }
+
+  .abc-row { display: grid; grid-template-columns: 36px 40px 1fr 100px 100px 120px; gap: 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid #F3F4F6; font-size: 14px; background: #fff; }
+  .abc-row.head { background: #F9FAFB; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #6B7280; }
+  .abc-tag { display: inline-block; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 800; }
+  .abc-tag.A { background: #16A34A; color: #fff; }
+  .abc-tag.B { background: #F59E0B; color: #fff; }
+  .abc-tag.C { background: #6B7280; color: #fff; }
+  .bar-bg { background: #F3F4F6; height: 6px; border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg, #FF4F8A, #7E57C2); border-radius: 3px; }
+
+  .cohort-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #E5E7EB; }
+  .cohort-table th, .cohort-table td { padding: 12px; text-align: center; border-bottom: 1px solid #F3F4F6; font-size: 13px; }
+  .cohort-table th { background: #F9FAFB; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #6B7280; }
+
+  .top-clients { background: #fff; border-radius: 12px; padding: 0; overflow: hidden; border: 1px solid #E5E7EB; }
+  .top-clients .tr { display: grid; grid-template-columns: 40px 1fr 100px 140px 120px 120px; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #F3F4F6; font-size: 14px; align-items: center; }
+  .top-clients .tr.head { background: #F9FAFB; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #6B7280; }
+  .vip { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 10px; font-weight: 800; background: linear-gradient(135deg,#F59E0B,#DC2626); color: #fff; }
+
+  .operator-card { background: #fff; border-radius: 14px; padding: 16px; border: 1px solid #E5E7EB; display: grid; grid-template-columns: 1fr 120px 120px 140px; gap: 14px; align-items: center; margin-bottom: 10px; }
+  .operator-card.top { background: linear-gradient(135deg,#FFFBEB,#FEF3C7); border-color: #FCD34D; }
+  .operator-card h4 { font-family: 'Baloo 2', cursive; font-size: 17px; margin: 0; color: #1F2937; }
+  .operator-card .metric { text-align: center; }
+  .operator-card .metric b { font-size: 18px; color: #16A34A; display: block; }
+  .operator-card .metric small { font-size: 11px; color: #6B7280; }
+</style>
+</head>
+<body>
+<div class="panel-layout">
+<aside class="panel-sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <img src="../images/logo-milkypot.png" alt="" class="logo-img">
+    <h2>MilkyPot<small>Franqueado</small></h2>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-nav-group">Financeiro</div>
+    <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> DRE / Saúde</a>
+    <a href="fluxo-caixa.html" class="sidebar-link"><span class="icon">📈</span> Fluxo de Caixa</a>
+    <a href="analytics.html" class="sidebar-link active"><span class="icon">📊</span> Analytics</a>
+    <a href="conciliacao.html" class="sidebar-link"><span class="icon">🏦</span> Conciliação</a>
+  </nav>
+</aside>
+
+<main class="panel-main">
+  <header class="panel-header">
+    <div class="panel-header-left">
+      <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <h1>📊 Analytics Avançado</h1>
+    </div>
+  </header>
+
+  <div class="panel-content">
+    <div class="an-wrap">
+      <div class="tabs">
+        <button class="tab active" data-p="p-abc">🔤 Curva ABC (produtos)</button>
+        <button class="tab" data-p="p-cohort">🔁 Retenção / Cohort</button>
+        <button class="tab" data-p="p-top">👑 Top Clientes</button>
+        <button class="tab" data-p="p-comissao">💼 Comissão Operadores</button>
+      </div>
+
+      <div class="panel active" id="p-abc">
+        <div id="abcInsight"></div>
+        <div id="abcKpi" class="kpi-row"></div>
+        <div id="abcList"></div>
+      </div>
+
+      <div class="panel" id="p-cohort">
+        <div id="cohortInsight"></div>
+        <div id="cohortKpi" class="kpi-row"></div>
+        <div id="cohortDetail"></div>
+      </div>
+
+      <div class="panel" id="p-top">
+        <div id="topClients"></div>
+      </div>
+
+      <div class="panel" id="p-comissao">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
+          <label style="font-size:13px;color:#6B7280">Período:</label>
+          <input type="month" id="periodInput" style="padding:6px 10px;border:1px solid #E5E7EB;border-radius:8px">
+        </div>
+        <div id="comissaoOut"></div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="../js/pages/copilot-transport.js"></script>
+<script src="../js/core/belinha-page-scanners.js"></script>
+<script src="../js/core/belinha-widget.js"></script>
+<script>
+(function(){
+  if (!Auth.requireAuth('franchisee')) return;
+  DataStore.init();
+  const fid = Auth.getSession().franchiseId;
+
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById(t.dataset.p).classList.add('active');
+    });
+  });
+
+  function brl(v) { return 'R$ ' + Number(v||0).toFixed(2).replace('.',','); }
+  function esc(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // ===== ABC =====
+  function renderABC() {
+    const abc = AnalyticsAdvanced.curveABC(fid, 30);
+    document.getElementById('abcInsight').innerHTML = `<div class="insight-box"><span class="e">💡</span><p><b>Pareto 80/20:</b> ${esc(abc.insight)}</p></div>`;
+
+    document.getElementById('abcKpi').innerHTML = `
+      <div class="kpi"><div class="lbl">Total receita 30d</div><div class="val">${brl(abc.totalRev)}</div></div>
+      <div class="kpi"><div class="lbl">Produtos classe A (80% receita)</div><div class="val" style="color:#16A34A">${abc.classeA.length}</div></div>
+      <div class="kpi"><div class="lbl">Produtos classe B</div><div class="val" style="color:#F59E0B">${abc.classeB.length}</div></div>
+      <div class="kpi"><div class="lbl">Produtos classe C (5%)</div><div class="val" style="color:#6B7280">${abc.classeC.length}</div></div>
+    `;
+
+    if (!abc.produtos.length) {
+      document.getElementById('abcList').innerHTML = '<p style="color:#6B7280;padding:20px;text-align:center;background:#fff;border-radius:14px">Sem vendas nos últimos 30 dias.</p>';
+      return;
+    }
+
+    document.getElementById('abcList').innerHTML = `<div style="background:#fff;border-radius:14px;overflow:hidden;border:1px solid #E5E7EB">
+      <div class="abc-row head"><div>#</div><div>Cls</div><div>Produto</div><div>Qtd</div><div>Receita</div><div>% acumulado</div></div>
+      ${abc.produtos.map((p,i) => `
+        <div class="abc-row">
+          <div>${i+1}</div>
+          <div><span class="abc-tag ${p.classe}">${p.classe}</span></div>
+          <div><b>${esc(p.name)}</b></div>
+          <div>${p.qty}</div>
+          <div>${brl(p.receita)}</div>
+          <div>${p.cumPct.toFixed(1)}% <div class="bar-bg" style="margin-top:4px"><div class="bar-fill" style="width:${Math.min(100,p.cumPct)}%"></div></div></div>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  // ===== COHORT =====
+  function renderCohort() {
+    const c = AnalyticsAdvanced.cohortAnalysis(fid);
+    document.getElementById('cohortInsight').innerHTML = `<div class="insight-box"><span class="e">🔁</span><p><b>Retenção de clientes:</b> ${esc(c.insight)}</p></div>`;
+
+    document.getElementById('cohortKpi').innerHTML = `
+      <div class="kpi"><div class="lbl">Clientes únicos</div><div class="val">${c.totalClients}</div></div>
+      <div class="kpi"><div class="lbl">Retenção D7</div><div class="val" style="color:${c.retencao.d7>=15?'#16A34A':'#F59E0B'}">${c.retencao.d7}%</div><div class="sub">voltaram em 7d</div></div>
+      <div class="kpi"><div class="lbl">Retenção D30</div><div class="val" style="color:${c.retencao.d30>=20?'#16A34A':'#DC2626'}">${c.retencao.d30}%</div><div class="sub">benchmark: 20%+</div></div>
+      <div class="kpi"><div class="lbl">Retenção D60</div><div class="val">${c.retencao.d60}%</div></div>
+    `;
+
+    const cohortKeys = Object.keys(c.cohorts).sort().reverse().slice(0, 6);
+    if (cohortKeys.length) {
+      document.getElementById('cohortDetail').innerHTML = `<h3 style="font-family:'Baloo 2',cursive;font-size:18px;margin:20px 0 10px">Retenção por mês de 1ª compra</h3>
+        <table class="cohort-table">
+          <thead><tr><th>Mês cohort</th><th>Clientes</th><th>D7 %</th><th>D14 %</th><th>D30 %</th><th>D60 %</th></tr></thead>
+          <tbody>
+            ${cohortKeys.map(k => {
+              const group = c.cohorts[k];
+              const n = group.length;
+              const d7 = group.filter(x => x.retornos.d7).length;
+              const d14 = group.filter(x => x.retornos.d14).length;
+              const d30 = group.filter(x => x.retornos.d30).length;
+              const d60 = group.filter(x => x.retornos.d60).length;
+              return `<tr><td><b>${k}</b></td><td>${n}</td><td>${Math.round(d7/n*100)}%</td><td>${Math.round(d14/n*100)}%</td><td>${Math.round(d30/n*100)}%</td><td>${Math.round(d60/n*100)}%</td></tr>`;
+            }).join('')}
+          </tbody>
+        </table>`;
+    } else {
+      document.getElementById('cohortDetail').innerHTML = '<p style="color:#6B7280;padding:20px;text-align:center;background:#fff;border-radius:14px">Sem clientes cadastrados com telefone ainda.</p>';
+    }
+  }
+
+  // ===== TOP CLIENTS =====
+  function renderTop() {
+    const c = AnalyticsAdvanced.cohortAnalysis(fid);
+    if (!c.topClients.length) {
+      document.getElementById('topClients').innerHTML = '<p style="color:#6B7280;padding:20px;text-align:center;background:#fff;border-radius:14px">Nenhum cliente registrado com telefone ainda. Garanta que o PDV capture o telefone do cliente.</p>';
+      return;
+    }
+    document.getElementById('topClients').innerHTML = `<div class="top-clients">
+      <div class="tr head"><div>#</div><div>Cliente</div><div>Visitas</div><div>Último pedido</div><div>Total gasto</div><div>Status</div></div>
+      ${c.topClients.map((cl,i) => {
+        const vip = cl.visits >= 5 || cl.totalSpent >= 200;
+        const last = new Date(cl.lastVisit);
+        const days = Math.floor((Date.now()-last.getTime())/86400000);
+        return `<div class="tr">
+          <div>${i+1}</div>
+          <div><b>${esc(cl.name)}</b><br><small style="color:#6B7280">${esc(cl.phone||'')}</small></div>
+          <div>${cl.visits}</div>
+          <div>${days}d atrás</div>
+          <div><b style="color:#16A34A">${brl(cl.totalSpent)}</b></div>
+          <div>${vip ? '<span class="vip">VIP ⭐</span>' : ''}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  // ===== COMISSÃO =====
+  function renderComissao() {
+    const pk = document.getElementById('periodInput').value || new Date().toISOString().slice(0,7);
+    const rep = AnalyticsAdvanced.commissionReport(fid, pk);
+    let html = `<div class="kpi-row">
+      <div class="kpi"><div class="lbl">Total vendas período</div><div class="val">${brl(rep.totalVendas)}</div></div>
+      <div class="kpi"><div class="lbl">Total comissão</div><div class="val" style="color:#F59E0B">${brl(rep.totalComissao)}</div></div>
+      <div class="kpi"><div class="lbl">Operadores ativos</div><div class="val">${rep.operadores.length}</div></div>
+    </div>`;
+
+    if (!rep.operadores.length) {
+      html += '<p style="color:#6B7280;padding:20px;text-align:center;background:#fff;border-radius:14px">Nenhuma venda com operador identificado. Garanta que o PDV grave quem atendeu.</p>';
+    } else {
+      html += rep.operadores.map((op, i) => `
+        <div class="operator-card ${i === 0 ? 'top' : ''}">
+          <div>
+            <h4>${i === 0 ? '🥇 ' : (i === 1 ? '🥈 ' : (i === 2 ? '🥉 ' : ''))}${esc(op.operatorId)}</h4>
+            <small style="color:#6B7280">${op.orders} pedido(s) · ticket médio ${brl(op.avgTicket)}</small>
+          </div>
+          <div class="metric"><b>${brl(op.revenue)}</b><small>vendas</small></div>
+          <div class="metric"><b style="color:#F59E0B">${brl(op.commission)}</b><small>comissão</small></div>
+          <div style="text-align:right;color:#6B7280;font-size:12px">${((op.commission/op.revenue)*100).toFixed(1)}% sobre vendas</div>
+        </div>
+      `).join('');
+    }
+    document.getElementById('comissaoOut').innerHTML = html;
+  }
+
+  // Init
+  document.getElementById('periodInput').value = new Date().toISOString().slice(0,7);
+  document.getElementById('periodInput').addEventListener('change', renderComissao);
+
+  renderABC();
+  renderCohort();
+  renderTop();
+  renderComissao();
+})();
+</script>
+</body>
+</html>

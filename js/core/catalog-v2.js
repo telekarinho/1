@@ -261,37 +261,92 @@
         ];
 
         const allTopIds = d.toppings.map(t => t.id);
-        d.produtos = prodSeed.map(s => ({
-            id: newId('prod'),
-            categoriaId: s.cat,
-            name: s.name,
-            desc: '',
-            midia: { fotos: [], video: '', emoji: s.emoji },
-            custos: {
-                insumos: [],
-                custoInsumos: s.cInsumos,
-                custoAdicional: { embalagem: s.cAdd, energia: 0, mao_obra: 0, outros: 0 },
-                custoTotal: s.cInsumos + s.cAdd
-            },
-            precos: { loja:{recomendado:0,real:0}, delivery:{recomendado:0,real:0}, ifood:{recomendado:0,real:0} },
-            kits: s.cat === 'cat_picole' ? [
-                { label:'1 unidade',  qty:1,  precoLoja:0, precoDelivery:0, precoIfood:0 },
-                { label:'3 unidades', qty:3,  precoLoja:0, precoDelivery:0, precoIfood:0 },
-                { label:'10 unidades',qty:10, precoLoja:0, precoDelivery:0, precoIfood:0 },
-                { label:'20 unidades',qty:20, precoLoja:0, precoDelivery:0, precoIfood:0 }
-            ] : [],
-            variantes: s.cat === 'cat_sorvete_kg' ? [
-                { id: newId('var'), name: '250g (pote pequeno)', tipo:'pote', gramas:250, custoExtra:0, precoLoja:0, precoDelivery:0, precoIfood:0 },
-                { id: newId('var'), name: '500g (pote médio)',   tipo:'pote', gramas:500, custoExtra:0, precoLoja:0, precoDelivery:0, precoIfood:0 },
-                { id: newId('var'), name: '1kg (balde pequeno)', tipo:'balde', gramas:1000, custoExtra:0, precoLoja:0, precoDelivery:0, precoIfood:0 },
-                { id: newId('var'), name: '5kg (balde grande)',  tipo:'balde', gramas:5000, custoExtra:0, precoLoja:0, precoDelivery:0, precoIfood:0 }
-            ] : [],
-            toppingsIds: ['cat_potinho','cat_sundae','cat_acai','cat_milkshake'].includes(s.cat) ? allTopIds : [],
-            buffet: s.cat === 'cat_buffet' ? { ativo:true, precoPorKg:89.90, toppingsInclusos: allTopIds } : { ativo:false, precoPorKg:0, toppingsInclusos:[] },
-            canal: 'ambos',
-            active: true,
-            createdAt: new Date().toISOString()
-        }));
+        const CC = global.CostCalculator;
+
+        // Helper: aplica preços sugeridos pelo CostCalculator
+        function precosSugeridos(custoTotal, categoriaId) {
+            if (!CC || !custoTotal) {
+                return { loja:{recomendado:0,real:0}, delivery:{recomendado:0,real:0}, ifood:{recomendado:0,real:0} };
+            }
+            const sug = CC.suggestAll(custoTotal, categoriaId);
+            return {
+                loja:     { recomendado: sug.loja.preco,     real: sug.loja.preco },
+                delivery: { recomendado: sug.delivery.preco, real: sug.delivery.preco },
+                ifood:    { recomendado: sug.ifood.preco,    real: sug.ifood.preco }
+            };
+        }
+
+        d.produtos = prodSeed.map(s => {
+            const custoTotal = s.cInsumos + s.cAdd;
+            const precos = precosSugeridos(custoTotal, s.cat);
+
+            // Kits de picolé: preço unitário base + desconto de volume
+            const kits = s.cat === 'cat_picole' && CC ? (() => {
+                const p1L = precos.loja.real, p1D = precos.delivery.real, p1I = precos.ifood.real;
+                // desconto progressivo (3: 5%, 10: 12%, 20: 18%) — pacote promocional
+                const apply = (p, qty, pct) => {
+                    const total = p * qty * (1 - pct);
+                    return Math.round(total * 100) / 100;
+                };
+                return [
+                    { label:'1 unidade',  qty:1,  precoLoja: p1L,            precoDelivery: p1D,            precoIfood: p1I },
+                    { label:'3 unidades', qty:3,  precoLoja: apply(p1L,3,0.05),  precoDelivery: apply(p1D,3,0.05),  precoIfood: apply(p1I,3,0.05) },
+                    { label:'10 unidades',qty:10, precoLoja: apply(p1L,10,0.12), precoDelivery: apply(p1D,10,0.12), precoIfood: apply(p1I,10,0.12) },
+                    { label:'20 unidades',qty:20, precoLoja: apply(p1L,20,0.18), precoDelivery: apply(p1D,20,0.18), precoIfood: apply(p1I,20,0.18) }
+                ];
+            })() : [];
+
+            // Variantes sorvete kg: custo por grama + preço por variante
+            const variantes = s.cat === 'cat_sorvete_kg' && CC ? (() => {
+                // Custo estimado por kg (média sorvete artesanal: R$ 18/kg)
+                const custoPorKg = 18;
+                const sizes = [
+                    { name: '250g (pote pequeno)',  gramas: 250,  tipo:'pote' },
+                    { name: '500g (pote médio)',    gramas: 500,  tipo:'pote' },
+                    { name: '1kg (balde pequeno)',  gramas: 1000, tipo:'balde' },
+                    { name: '5kg (balde grande)',   gramas: 5000, tipo:'balde' }
+                ];
+                return sizes.map(v => {
+                    const custoV = (custoPorKg * v.gramas / 1000) + 1.5; // + embalagem
+                    const sug = CC.suggestAll(custoV, 'cat_sorvete_kg');
+                    return {
+                        id: newId('var'), name: v.name, tipo: v.tipo, gramas: v.gramas,
+                        custoExtra: Math.round(custoV*100)/100,
+                        precoLoja: sug.loja.preco, precoDelivery: sug.delivery.preco, precoIfood: sug.ifood.preco
+                    };
+                });
+            })() : [];
+
+            // Buffet: preço/kg sugerido direto
+            const buffet = s.cat === 'cat_buffet' ? (() => {
+                // Custo médio sorvete+toppings: ~25/kg. Margem alvo buffet 70%.
+                const custoKg = 25;
+                const sug = CC ? CC.suggest(custoKg, 'loja', 'cat_buffet') : { preco: 89.90 };
+                return { ativo: true, precoPorKg: sug.preco, toppingsInclusos: allTopIds };
+            })() : { ativo:false, precoPorKg:0, toppingsInclusos:[] };
+
+            return {
+                id: newId('prod'),
+                categoriaId: s.cat,
+                name: s.name,
+                desc: '',
+                midia: { fotos: [], video: '', emoji: s.emoji },
+                custos: {
+                    insumos: [],
+                    custoInsumos: s.cInsumos,
+                    custoAdicional: { embalagem: s.cAdd, energia: 0, mao_obra: 0, outros: 0 },
+                    custoTotal: custoTotal
+                },
+                precos: precos,
+                kits: kits,
+                variantes: variantes,
+                toppingsIds: ['cat_potinho','cat_sundae','cat_acai','cat_milkshake'].includes(s.cat) ? allTopIds : [],
+                buffet: buffet,
+                canal: 'ambos',
+                active: true,
+                createdAt: new Date().toISOString()
+            };
+        });
 
         save(fid, d);
         return { seeded: true, produtos: d.produtos.length, toppings: d.toppings.length };

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MilkyPot — Conciliação Bancária</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link rel="stylesheet" href="../css/ios-premium.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/auth.js"></script>
+<script src="../js/core/cashflow.js"></script>
+<style>
+  body { background: #F2F2F7; }
+  .cn-wrap { max-width: 1400px; margin: 0 auto; padding: 20px; }
+  .drop-zone { background: #fff; border: 2px dashed #FCE4EC; border-radius: 14px; padding: 40px; text-align: center; cursor: pointer; transition: all .2s; margin-bottom: 20px; }
+  .drop-zone:hover { border-color: #FF4F8A; background: #FFF0F6; }
+  .drop-zone .icon { font-size: 60px; }
+  .drop-zone h3 { font-family: 'Baloo 2', cursive; font-size: 22px; margin: 12px 0 8px; color: #9A3412; }
+  .drop-zone p { color: #6B7280; font-size: 14px; margin: 0; }
+  #fileInp { display: none; }
+
+  .table { background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid #E5E7EB; }
+  .tr { display: grid; grid-template-columns: 110px 1fr 140px 120px 120px; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #F3F4F6; align-items: center; font-size: 14px; }
+  .tr.head { background: #F9FAFB; font-size: 11px; text-transform: uppercase; color: #6B7280; font-weight: 700; }
+  .tr .match-ok { color: #16A34A; font-weight: 700; }
+  .tr .match-warn { color: #F59E0B; font-weight: 700; }
+  .tr .match-err { color: #DC2626; font-weight: 700; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 12px; margin-bottom: 20px; }
+  .s-card { background: #fff; border-radius: 14px; padding: 16px; border: 1px solid #E5E7EB; }
+  .s-card .lbl { font-size: 11px; color: #6B7280; text-transform: uppercase; font-weight: 700; }
+  .s-card .val { font-size: 24px; font-weight: 900; color: #1F2937; }
+</style>
+</head>
+<body>
+<div class="panel-layout">
+<aside class="panel-sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <img src="../images/logo-milkypot.png" alt="" class="logo-img">
+    <h2>MilkyPot<small>Franqueado</small></h2>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-nav-group">Financeiro</div>
+    <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> DRE / Saúde</a>
+    <a href="fluxo-caixa.html" class="sidebar-link"><span class="icon">📈</span> Fluxo de Caixa</a>
+    <a href="analytics.html" class="sidebar-link"><span class="icon">📊</span> Analytics</a>
+    <a href="conciliacao.html" class="sidebar-link active"><span class="icon">🏦</span> Conciliação</a>
+  </nav>
+</aside>
+
+<main class="panel-main">
+  <header class="panel-header">
+    <div class="panel-header-left">
+      <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <h1>🏦 Conciliação Bancária</h1>
+    </div>
+  </header>
+
+  <div class="panel-content">
+    <div class="cn-wrap">
+
+      <label class="drop-zone" for="fileInp">
+        <div class="icon">🏦</div>
+        <h3>Import do extrato do banco</h3>
+        <p>Arraste OFX/CSV ou clique pra escolher. Vou cruzar com suas vendas + contas a pagar.</p>
+      </label>
+      <input type="file" id="fileInp" accept=".ofx,.csv,.txt">
+
+      <div id="out"></div>
+
+      <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:14px;margin-top:20px">
+        <h4 style="margin:0 0 6px;color:#1E40AF;font-family:'Baloo 2',cursive">💡 Como exportar extrato do seu banco</h4>
+        <ul style="margin:0;padding-left:20px;font-size:13px;color:#1E3A8A">
+          <li><b>Itaú/Bradesco/Santander:</b> Extrato → Download → OFX</li>
+          <li><b>Nubank:</b> app → Extrato → ⋯ → Exportar → OFX ou CSV</li>
+          <li><b>PJ Inter/C6:</b> web → Extrato → Baixar OFX</li>
+          <li><b>Stone/PagSeguro:</b> painel → Repasse → Exportar CSV</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="../js/pages/copilot-transport.js"></script>
+<script src="../js/core/belinha-page-scanners.js"></script>
+<script src="../js/core/belinha-widget.js"></script>
+<script>
+(function(){
+  if (!Auth.requireAuth('franchisee')) return;
+  DataStore.init();
+  const fid = Auth.getSession().franchiseId;
+
+  function brl(v) { return 'R$ ' + Number(v||0).toFixed(2).replace('.',','); }
+  function esc(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  document.getElementById('fileInp').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    file.text().then(txt => {
+      const tx = file.name.toLowerCase().endsWith('.ofx') ? parseOFX(txt) : parseCSV(txt);
+      if (!tx.length) { document.getElementById('out').innerHTML = '<div style="padding:20px;background:#FEE2E2;border-radius:12px;color:#991B1B">Não consegui extrair transações. Tente outro formato.</div>'; return; }
+      render(tx);
+    });
+  });
+
+  // OFX parser simples
+  function parseOFX(txt) {
+    const tx = [];
+    const re = /<STMTTRN>[\s\S]*?<\/STMTTRN>/g;
+    const found = txt.match(re) || [];
+    found.forEach(block => {
+      const d = (block.match(/<DTPOSTED>([^<\s]+)/) || [])[1];
+      const v = parseFloat((block.match(/<TRNAMT>([^<\s]+)/) || [])[1] || 0);
+      const m = (block.match(/<MEMO>([^<]+)/) || [])[1] || '';
+      const n = (block.match(/<NAME>([^<]+)/) || [])[1] || '';
+      const t = (block.match(/<TRNTYPE>([^<\s]+)/) || [])[1] || '';
+      if (d && v) {
+        const dateIso = d.slice(0,4) + '-' + d.slice(4,6) + '-' + d.slice(6,8);
+        tx.push({ date: dateIso, valor: v, desc: (n + ' ' + m).trim(), tipo: t });
+      }
+    });
+    return tx;
+  }
+
+  // CSV parser simples (assume: data, descrição, valor)
+  function parseCSV(txt) {
+    const lines = txt.split(/\r?\n/).filter(l => l.trim());
+    const tx = [];
+    lines.forEach(line => {
+      const cols = line.split(/[,;]/).map(c => c.replace(/"/g,'').trim());
+      if (cols.length < 3) return;
+      // Tenta detectar data em vários formatos
+      const d = cols.find(c => /\d{4}-\d{2}-\d{2}/.test(c) || /\d{2}\/\d{2}\/\d{4}/.test(c));
+      const v = cols.find(c => /^-?[\d.,]+$/.test(c) && c.length >= 2);
+      if (!d || !v) return;
+      const dateIso = d.includes('/') ? d.split('/').reverse().join('-') : d;
+      const valor = parseFloat(v.replace(/\./g,'').replace(',','.'));
+      if (!isNaN(valor)) {
+        const desc = cols.filter(c => c !== d && c !== v).join(' ').trim();
+        tx.push({ date: dateIso, valor, desc, tipo: valor > 0 ? 'CREDIT' : 'DEBIT' });
+      }
+    });
+    return tx;
+  }
+
+  function render(tx) {
+    // Match com orders (crédito) e payables (débito)
+    const orders = DataStore.getCollection ? DataStore.getCollection('orders', fid) || [] : [];
+    const payables = Cashflow.listPayables(fid);
+
+    let matchedIn = 0, matchedOut = 0, unmatched = 0;
+    let totalIn = 0, totalOut = 0;
+
+    const rows = tx.map(t => {
+      let match = null;
+      if (t.valor > 0) {
+        // Match com order (total similar no mesmo dia)
+        const o = orders.find(o => o.createdAt && o.createdAt.slice(0,10) === t.date && Math.abs(o.total - t.valor) < 0.02);
+        if (o) { match = { type: 'order', id: o.id }; matchedIn++; }
+        totalIn += t.valor;
+      } else {
+        // Match com payable
+        const p = payables.find(p => p.vencimento && p.vencimento.slice(0,10) === t.date && Math.abs(Number(p.valor) + t.valor) < 0.02);
+        if (p) { match = { type: 'payable', id: p.id }; matchedOut++; }
+        totalOut += Math.abs(t.valor);
+      }
+      if (!match) unmatched++;
+      return { ...t, match };
+    });
+
+    const out = document.getElementById('out');
+    out.innerHTML = `
+      <div class="summary">
+        <div class="s-card"><div class="lbl">Transações</div><div class="val">${tx.length}</div></div>
+        <div class="s-card"><div class="lbl">Entradas</div><div class="val" style="color:#16A34A">${brl(totalIn)}</div><small style="font-size:11px;color:#6B7280">${matchedIn} com match</small></div>
+        <div class="s-card"><div class="lbl">Saídas</div><div class="val" style="color:#DC2626">${brl(totalOut)}</div><small style="font-size:11px;color:#6B7280">${matchedOut} com match</small></div>
+        <div class="s-card"><div class="lbl">Sem match</div><div class="val" style="color:${unmatched>0?'#F59E0B':'#16A34A'}">${unmatched}</div><small style="font-size:11px;color:#6B7280">verificar divergência</small></div>
+      </div>
+
+      <div class="table">
+        <div class="tr head"><div>Data</div><div>Descrição</div><div>Valor</div><div>Match</div><div>Ação</div></div>
+        ${rows.map(r => `<div class="tr">
+          <div>${new Date(r.date).toLocaleDateString('pt-BR')}</div>
+          <div><b>${esc(r.desc || '—')}</b></div>
+          <div style="color:${r.valor>0?'#16A34A':'#DC2626'};font-weight:800">${brl(r.valor)}</div>
+          <div>${r.match ? '<span class="match-ok">✓ ' + r.match.type + '</span>' : '<span class="match-warn">Sem match</span>'}</div>
+          <div>${!r.match ? '<button onclick="addMissing(\''+r.date+'\','+r.valor+',\''+esc(r.desc).replace(/\\\\|\\\'/g,'')+'\')" style="padding:4px 10px;background:#FF4F8A;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">+ Lançar</button>' : ''}</div>
+        </div>`).join('')}
+      </div>
+
+      ${unmatched ? `<div style="margin-top:16px;padding:14px;background:#FEF3C7;border-radius:10px;color:#78350F;font-size:13px">
+        ⚠ <b>${unmatched} transação(ões) sem match.</b> Pode ser: (a) taxa de adquirente/antecipação, (b) iFood repasse D+14, (c) custo não cadastrado.
+        Clique em "+ Lançar" pra cadastrar como despesa/receita.
+      </div>` : ''}
+    `;
+  }
+
+  window.addMissing = function(date, valor, desc) {
+    if (valor < 0) {
+      Cashflow.addPayable(fid, { desc: desc || 'Importado do extrato', valor: Math.abs(valor), vencimento: date, categoria: 'outros', pago: true, pagoAt: date });
+      alert('Cadastrado como conta paga em ' + date);
+    } else {
+      Cashflow.addReceivable(fid, { desc: desc || 'Crédito extrato', valor, vencimento: date, categoria: 'outros', recebido: true, recebidoAt: date });
+      alert('Cadastrado como recebido em ' + date);
+    }
+  };
+})();
+</script>
+</body>
+</html>
