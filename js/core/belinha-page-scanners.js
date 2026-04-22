@@ -48,16 +48,39 @@
                         action: 'Clica em "+ Adicionar" no card de custos fixos. Sem esses dados, a saúde da franquia mente.'
                     });
                 }
-                // Meta
+                // Meta — comparação PROPORCIONAL ao dia do mês (realizado vs esperado até hoje)
                 if (dre.meta && dre.meta.valor > 0) {
                     const pct = Math.round((dre.meta.realizado / dre.meta.valor) * 100);
-                    kpis.push({ label: 'Meta do mês', value: pct + '%', target: '100%', color: pct >= 80 ? 'green' : pct >= 50 ? 'amber' : 'red' });
-                    if (pct < 60 && new Date().getDate() > 20) {
+                    const now = new Date();
+                    const diaAtual = now.getDate();
+                    const diasMes = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+                    const pctEsperado = Math.round((diaAtual / diasMes) * 100);
+                    const gap = pctEsperado - pct;           // atraso em pontos percentuais
+                    const diasRestantes = diasMes - diaAtual;
+                    const faltaReais = dre.meta.valor - dre.meta.realizado;
+
+                    kpis.push({
+                        label: 'Meta do mês',
+                        value: pct + '% / ' + pctEsperado + '% esperado',
+                        target: '100% dia ' + diasMes,
+                        color: gap <= 5 ? 'green' : gap <= 15 ? 'amber' : 'red'
+                    });
+
+                    if (gap >= 15) {
                         alerts.push({
-                            level: 'high',
-                            title: 'Meta do mês em ' + pct + '% com menos de 10 dias pro fechamento',
-                            detail: 'Falta R$ ' + (dre.meta.valor - dre.meta.realizado).toFixed(0) + ' em receita.',
-                            action: 'Ativa slides A1 (Escassez) e A5 (Ancoragem de preço) nas TVs + promo relâmpago 48h.'
+                            level: diasRestantes <= 10 ? 'critical' : 'high',
+                            title: 'Meta ATRASADA: ' + pct + '% realizado vs ' + pctEsperado + '% esperado',
+                            detail: 'Gap de ' + gap + ' pts. Faltam ' + diasRestantes + ' dias e R$ ' + faltaReais.toFixed(0) + ' em receita.',
+                            action: diasRestantes <= 10
+                                ? 'Ativa slides A1 (Escassez) e A5 (Ancoragem) nas TVs + combo relâmpago 48h + boost iFood.'
+                                : 'Intensifica conteúdo Instagram, promo da semana, push fidelidade. Meta diária: R$ ' + Math.ceil(faltaReais / Math.max(diasRestantes,1))
+                        });
+                    } else if (gap >= 8) {
+                        alerts.push({
+                            level: 'medium',
+                            title: 'Meta levemente atrasada (' + gap + ' pts)',
+                            detail: pct + '% realizado vs ' + pctEsperado + '% esperado. Faltam ' + diasRestantes + ' dia(s).',
+                            action: 'Fecha R$ ' + Math.ceil(faltaReais / Math.max(diasRestantes,1)) + '/dia pra bater. Reforça combos + upsell.'
                         });
                     }
                 } else {

@@ -199,6 +199,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end" id="pdvStatusRow">
         <!-- Status compacto do caixa + meta + checklist (preenchido por JS) -->
         <div id="pdvChecklistChip" style="display:none"></div>
+        <div id="pdvComissaoChip" style="display:none"></div>
         <div id="pdvMetaChip" style="display:none"></div>
         <div id="pdvCaixaChip" style="display:none"></div>
         <div style="font-size:12px;opacity:0.8;" id="clk"></div>
@@ -392,6 +393,33 @@
 @keyframes winIn{from{opacity:0;transform:scale(0.6)}to{opacity:1;transform:scale(1)}}
 </style>
 
+<!-- Modal Kit/Variante (_v2) -->
+<div class="modal-bg" id="kitVariantModal">
+    <div class="buffet-modal" style="max-width:560px">
+        <div class="buffet-head">
+            <h3 id="kvTitle">🎁 Escolha a opção</h3>
+            <button class="modal-close" onclick="document.getElementById('kitVariantModal').classList.remove('open')">✕</button>
+        </div>
+        <div class="buffet-body">
+            <div id="kvCanalSwitch" style="display:flex;gap:6px;background:#F3F4F6;padding:4px;border-radius:10px;margin-bottom:14px">
+                <button class="kv-canal" data-c="loja" onclick="PDV_Dynamics.kvSetCanal('loja')">🏪 Loja</button>
+                <button class="kv-canal" data-c="delivery" onclick="PDV_Dynamics.kvSetCanal('delivery')">🛵 Delivery</button>
+                <button class="kv-canal" data-c="ifood" onclick="PDV_Dynamics.kvSetCanal('ifood')">🍔 iFood</button>
+            </div>
+            <div id="kvOptions" style="display:grid;gap:10px"></div>
+        </div>
+    </div>
+</div>
+<style>
+    .kv-canal{flex:1;padding:8px 10px;border:none;background:transparent;border-radius:8px;font-family:inherit;font-weight:700;font-size:13px;color:#6B7280;cursor:pointer}
+    .kv-canal.active{background:linear-gradient(135deg,#FF4F8A,#7E57C2);color:#fff}
+    .kv-opt{background:#fff;border:2px solid #E5E7EB;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .15s}
+    .kv-opt:hover{border-color:#FF4F8A;background:#FFF0F6}
+    .kv-opt .kv-label{font-weight:800;color:#1F2937;font-size:15px}
+    .kv-opt .kv-sub{font-size:12px;color:#6B7280;margin-top:2px}
+    .kv-opt .kv-price{font-size:18px;font-weight:900;color:#16A34A}
+</style>
+
 <div class="toast" id="tst"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -411,6 +439,7 @@
 <script src="../js/core/onboarding.js?v=mp-v14"></script>
 <script src="../js/core/units.js?v=mp-v14"></script>
 <script src="../js/core/recipes.js?v=mp-v14"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v14"></script>
 <script src="../js/cardapio-data.js"></script>
 <script>
 (function(){
@@ -497,6 +526,12 @@
             var currentFranchise = franchises.find(f => f.id === session.franchiseId);
             var isDeliveryModel = currentFranchise && currentFranchise.tipoOperacao === 'delivery';
 
+            // v2: se o item tem kits OU variantes, abre modal de escolha
+            if (it._v2 && ((it._v2.kits && it._v2.kits.length) || (it._v2.variantes && it._v2.variantes.length))) {
+                this.openKitVariantModal(it);
+                return;
+            }
+
             if (it.tipoVenda === 'por_peso') {
                 if (isDeliveryModel) {
                     Utils.showToast('🚫 Venda por peso bloqueada no modelo Delivery. Use apenas itens unitários.', 'error');
@@ -508,16 +543,113 @@
                 // Chama lógica de customização legada
                 if (window.openModal) window.openModal(it);
             } else {
-                // Venda direta unitária
+                // Venda direta unitária — preço por canal (_v2) se disponível
+                const price = this._priceForCanal(it, this.kvCanal) || it.price;
                 this.addToCart({
                     id: it.id,
                     name: it.name,
-                    price: it.price,
+                    price: price,
                     emoji: it.emoji,
                     qty: 1,
                     type: 'unitario'
                 });
             }
+        },
+
+        // ===== Kit/Variante modal (_v2) =====
+        kvCanal: 'loja',
+        _kvCurrentItem: null,
+
+        _priceForCanal(it, canal) {
+            if (!it._v2 || !it._v2.precos) return null;
+            const c = it._v2.precos[canal || 'loja'];
+            if (!c) return null;
+            return Number(c.real) || Number(c.recomendado) || null;
+        },
+
+        openKitVariantModal(it) {
+            this._kvCurrentItem = it;
+            document.getElementById('kvTitle').textContent = (it.emoji || '🎁') + ' ' + it.name;
+            this.kvSetCanal(this.kvCanal);
+            document.getElementById('kitVariantModal').classList.add('open');
+        },
+
+        kvSetCanal(canal) {
+            this.kvCanal = canal;
+            document.querySelectorAll('#kvCanalSwitch .kv-canal').forEach(b => {
+                b.classList.toggle('active', b.dataset.c === canal);
+            });
+            this._renderKvOptions();
+        },
+
+        _renderKvOptions() {
+            const it = this._kvCurrentItem;
+            if (!it) return;
+            const canal = this.kvCanal;
+            const container = document.getElementById('kvOptions');
+            container.innerHTML = '';
+
+            const priceKey = canal === 'loja' ? 'precoLoja' : (canal === 'delivery' ? 'precoDelivery' : 'precoIfood');
+            const brl = v => 'R$ ' + Number(v||0).toFixed(2).replace('.',',');
+
+            // Kits
+            (it._v2.kits || []).forEach(k => {
+                const price = Number(k[priceKey]) || 0;
+                if (!price) return;
+                const unit = k.qty > 1 ? ' (unit R$ ' + (price/k.qty).toFixed(2) + ')' : '';
+                const div = document.createElement('div');
+                div.className = 'kv-opt';
+                div.innerHTML = `<div>
+                    <div class="kv-label">📦 ${k.label}</div>
+                    <div class="kv-sub">${k.qty} ${k.qty > 1 ? 'unidades' : 'unidade'}${unit}</div>
+                </div>
+                <div class="kv-price">${brl(price)}</div>`;
+                div.onclick = () => this._confirmKv({ kit: k, price, label: k.label });
+                container.appendChild(div);
+            });
+
+            // Variantes (sorvete kg, potes, baldes)
+            (it._v2.variantes || []).forEach(v => {
+                const price = Number(v[priceKey]) || 0;
+                if (!price) return;
+                const div = document.createElement('div');
+                div.className = 'kv-opt';
+                const sub = v.gramas ? v.gramas + 'g · ' + v.tipo : v.tipo;
+                div.innerHTML = `<div>
+                    <div class="kv-label">⚖️ ${v.name}</div>
+                    <div class="kv-sub">${sub}</div>
+                </div>
+                <div class="kv-price">${brl(price)}</div>`;
+                div.onclick = () => this._confirmKv({ variante: v, price, label: v.name });
+                container.appendChild(div);
+            });
+
+            // Fallback: preço canal direto (se não tem kit/variante)
+            if (!container.children.length) {
+                const p = this._priceForCanal(it, canal) || it.price;
+                const div = document.createElement('div');
+                div.className = 'kv-opt';
+                div.innerHTML = `<div><div class="kv-label">Unidade</div></div><div class="kv-price">${brl(p)}</div>`;
+                div.onclick = () => this._confirmKv({ price: p, label: 'Unidade' });
+                container.appendChild(div);
+            }
+        },
+
+        _confirmKv(choice) {
+            const it = this._kvCurrentItem;
+            if (!it) return;
+            const qty = choice.kit ? choice.kit.qty : 1;
+            this.addToCart({
+                id: it.id,
+                name: it.name + ' · ' + choice.label + ' · ' + this.kvCanal,
+                price: choice.price,
+                emoji: it.emoji,
+                qty: 1, // linha única no carrinho, mas quantity do kit embutida no label
+                type: 'unitario',
+                kitQty: qty,
+                canal: this.kvCanal
+            });
+            document.getElementById('kitVariantModal').classList.remove('open');
         },
 
         /* --- Lógica de Peso (Fase 2) --- */
@@ -652,6 +784,26 @@
                 }
                 metaChip.style.display = '';
             }
+            // Chip de comissão do operador (mostra ganho acumulado HOJE)
+            try {
+                var comChip = document.getElementById('pdvComissaoChip');
+                if (comChip && typeof AnalyticsAdvanced !== 'undefined' && AnalyticsAdvanced.commissionReport) {
+                    var pk = (new Date()).toISOString().slice(0,7);
+                    var rep = AnalyticsAdvanced.commissionReport(fid, pk);
+                    // Filtra apenas vendas do dia (cut pelo report full — mas mostra total mês pra operador ver acúmulo)
+                    var operId = s.uid || s.name || 'indefinido';
+                    var meu = rep.operadores.find(function(o){ return o.operatorId === operId || o.operatorId === s.name; });
+                    if (meu && meu.commission > 0) {
+                        var pos = rep.operadores.findIndex(function(o){ return o.operatorId === meu.operatorId; }) + 1;
+                        var medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '💼';
+                        comChip.innerHTML = '<span onclick="window.location.href=\'analytics.html\'" style="background:#FCD34D33;color:#92400E;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer" title="Sua comissão acumulada no mês · clique p/ ver ranking">' + medal + ' Comissão · R$ ' + meu.commission.toFixed(2).replace('.',',') + '</span>';
+                        comChip.style.display = '';
+                    } else {
+                        comChip.style.display = 'none';
+                    }
+                }
+            } catch (e) { console.warn('comissao chip', e); }
+
             // Chip de checklist (sempre visivel, mostra quantos itens pendentes)
             var checkChip = document.getElementById('pdvChecklistChip');
             if (checkChip && typeof AdminConfig !== 'undefined') {
