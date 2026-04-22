@@ -1,5 +1,39 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #4 — 2026-04-22
+
+**Área:** Conversão — Funil WhatsApp + Conteúdo semana 1 pós-inauguração
+
+**Contexto:** Inauguração em 3 dias (25/04/2026). SEO e Schema.org já cobertos (ciclos #1-3). Prioridade agora: capacitar a equipe para converter leads em vendas no canal principal (WhatsApp, sem iFood/Rappi). Conteúdo pós-evento para manter momentum.
+
+**O que analisou:**
+- `belinha/content/inauguracao-25abr-captions.md` (ciclo #1): cobre pré-inauguração (23-25/04) mas não tem pós
+- Nenhum script de atendimento WhatsApp existia → gap crítico pois todo delivery passa por lá
+- Semana 1 pós-inauguração (26/04–02/05) inclui feriado 01/05 (Dia do Trabalho) — oportunidade de tráfego
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/whatsapp-funil.md` | CRIADO — 8 etapas de atendimento (boas-vindas → upsell fidelidade), atalhos WhatsApp Business, tratamento de reclamações, copy bio IG |
+| `belinha/content/pos-inauguracao-semana1.md` | CRIADO — 7 posts diários 26/04–02/05 + roteiro reel 15s + template UGC repost + métricas semana 1 |
+
+**Commit:** `4ade888`
+
+**Impacto esperado:**
+- Atendentes da loja têm script pronto → menos tempo de resposta, mais conversão
+- Programa fidelidade é comunicado ativamente em toda interação (retenção)
+- 7 posts diários pré-agendados = equipe foca em atendimento, não em criar copy na hora
+- Feriado 01/05 capitalizado com post específico "abre feriado"
+- Template UGC = máquina de conteúdo orgânico gratuito
+
+**Próximo passo sugerido:**
+- Ciclo #5: UX mobile — testar `cardapio.html` em 375px (iPhone SE) e `index.html`. Verificar CTAs visíveis above the fold, tamanho de fonte mínimo 16px, botão WhatsApp flutuante
+- Ciclo #5 alternativo: Adicionar `potinho raspinha da sorte` — mecânica de gamificação no PDV (descrição do sistema + copy)
+- Auto-aprimoramento (ciclo #5 = múltiplo de 5): reler log completo e ajustar estratégia
+
+---
+
 ## Ciclo #1 — 2026-04-22
 
 **Área:** SEO local Londrina + Pesquisa concorrentes + Conteúdo inauguração
