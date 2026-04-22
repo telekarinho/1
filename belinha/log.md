@@ -1,5 +1,38 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #9 — 2026-04-22
+
+**Área:** Conteúdo marketing — Playbook operacional dia da inauguração 25/04
+
+**Contexto:** 3 dias para inauguração (25/04/2026). `belinha/content/inauguracao-25abr-captions.md` (ciclo #1) tinha apenas 3 linhas de stories muito rasas — a equipe não teria guia prático para cobertura em tempo real. Prioridade máxima: conteúdo que a equipe executa autonomamente no dia.
+
+**O que analisou:**
+- `belinha/content/inauguracao-25abr-captions.md`: stories com apenas descrições mínimas ("Story 1: ABRIMOS! 🎊 — foto da entrada") — sem copy, sem CTA, sem horário, sem checklist
+- Lacuna crítica: equipe sem roteiro hora a hora → risco de silêncio nas redes no dia mais importante do ano
+- `belinha/content/pos-inauguracao-semana1.md` já cobre 26/04–02/05 (bem detalhado) — gap era o próprio dia 25/04
+- Broadcast WhatsApp também inexistente — lista de clientes não seria ativada no timing certo
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/dia-inauguracao-playbook.md` | CRIADO — 178 linhas: checklist pré-abertura (13h30), broadcast WhatsApp pronto (13h45), 8 stories hora a hora (13h50–22h45) com copy completo + tipo de mídia + sticker sugerido, post de feed (14h05), roteiro reel 30s "Dia 1", bloco de hashtags, 6 dicas operacionais do dia |
+
+**Commit:** `813b2d3`
+
+**Impacto:**
+- Equipe da loja tem roteiro autoexplicativo — não precisa inventar copy na hora
+- Broadcast WhatsApp enviado às 13h45 ativa clientes antes da abertura → fila desde as 14h
+- 8 stories espaçados mantêm engajamento ativo das 14h às 23h (algoritmo IG favorece consistência)
+- Checklist pré-abertura evita erros básicos (bateria descarregada, conta não logada)
+- Coleta de UGC ativada desde o primeiro dia → combustível para semana 1
+
+**Próximo passo sugerido:**
+- Ciclo #10: Pesquisa MilkyMoo atualizada (preços, promoções de inauguração de novas unidades, ads recentes) — não atualizada desde ciclo #1, 3 dias de defasagem de dados
+- Ciclo #10 alternativo: Verificar `index.html` — adicionar `openingHoursSpecification` ao Schema.org (sáb 14h–23h, horário futuro regular) para aparecer no Google Maps
+
+---
+
 ## Ciclo #8 — 2026-04-22
 
 **Área:** UX/Frontend — Mobile accessibility: font-size inputs em `style.css` (index.html)
