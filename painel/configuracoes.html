@@ -239,6 +239,40 @@
                         </div>
                     </div>
 
+                    <!-- Card: Custos de Produção -->
+                    <div class="panel-card" style="grid-column:1/-1">
+                        <div class="card-header" style="background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff">
+                            <h3 style="color:#fff">⚙️ Custos de Produção (auto)</h3>
+                            <p style="margin:4px 0 0;font-size:12px;opacity:.9">Config global da loja — alimenta automaticamente "energia" e "mão-de-obra" de cada produto.</p>
+                        </div>
+                        <div class="card-body">
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px">
+                                <div>
+                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Custo kWh (R$)</label>
+                                    <input type="number" id="prodKwh" step="0.01" value="0.85" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                                    <small style="color:#999">Copel Londrina: ~R$ 0,80 - 0,95</small>
+                                </div>
+                                <div>
+                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Potência média (kW)</label>
+                                    <input type="number" id="prodPotencia" step="0.1" value="1.5" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                                    <small style="color:#999">Blender + vitrine + iluminação rateada</small>
+                                </div>
+                                <div>
+                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Custo hora operador (R$)</label>
+                                    <input type="number" id="prodCustoHora" step="0.01" value="8.50" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                                    <small style="color:#999">Salário mín / 176h + encargos ≈ R$ 8-12/h</small>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                                <button onclick="salvarProducao()" style="padding:10px 20px;background:#F59E0B;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">💾 Salvar custos de produção</button>
+                                <span id="prodStatus" style="font-size:13px;color:#6B7280"></span>
+                            </div>
+                            <div style="margin-top:12px;padding:12px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;font-size:13px;color:#78350F">
+                                💡 <b>Como funciona:</b> em cada produto você informa o <b>tempo de preparo</b> (min). O sistema calcula energia = kWh × potência × tempo/60 e mão-de-obra = custo_hora × tempo/60. Aparece automático no custo total do produto e afeta margem/DRE.
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Card: Pagamentos & Nota Fiscal -->
                     <div class="panel-card" style="grid-column:1/-1">
                         <div class="card-header" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff">
@@ -364,6 +398,7 @@
     <script src="../js/core/notifications.js"></script>
     <script src="../js/core/pix.js"></script>
     <script src="../js/core/nfce.js"></script>
+    <script src="../js/core/producao-calc.js"></script>
 
     <script>
     // Auth guard
@@ -772,6 +807,32 @@
 
     document.getElementById('nfeMode').addEventListener('change', toggleNFeBling);
 
+    // ============================================
+    // PRODUÇÃO (kWh, potência, custo/hora) — auto-calc nos produtos
+    // ============================================
+    function loadProducao() {
+        if (typeof ProducaoCalc === 'undefined') return;
+        const cfg = ProducaoCalc.getConfig(franchiseId);
+        document.getElementById('prodKwh').value = cfg.custoKwh;
+        document.getElementById('prodPotencia').value = cfg.potenciaMediaKw;
+        document.getElementById('prodCustoHora').value = cfg.custoHora;
+        if (cfg.custoKwh !== 0.85 || cfg.custoHora !== 8.50) {
+            document.getElementById('prodStatus').innerHTML = '<span style="color:#F59E0B">✓ Configurado</span>';
+        }
+    }
+
+    function salvarProducao() {
+        if (typeof ProducaoCalc === 'undefined') { alert('Módulo de produção não carregou. Recarregue a página.'); return; }
+        const cfg = {
+            custoKwh: parseFloat(document.getElementById('prodKwh').value) || 0.85,
+            potenciaMediaKw: parseFloat(document.getElementById('prodPotencia').value) || 1.5,
+            custoHora: parseFloat(document.getElementById('prodCustoHora').value) || 8.50
+        };
+        ProducaoCalc.setConfig(franchiseId, cfg);
+        document.getElementById('prodStatus').innerHTML = '<span style="color:#10B981">✓ Salvo! Use "Recalcular preços" em Produtos pra re-aplicar.</span>';
+        setTimeout(() => { loadProducao(); }, 3500);
+    }
+
     // Init
     loadStoreData();
     loadOperationData();
@@ -781,6 +842,7 @@
     loadScratchConfig();
     loadPix();
     loadNFe();
+    loadProducao();
     </script>
 <script src="../js/core/copilot-transport.js" defer></script>
 <script src="../js/pages/lilo-scanner.js" defer></script>
