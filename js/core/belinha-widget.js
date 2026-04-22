@@ -79,6 +79,15 @@
                 position: absolute; inset: 0; border-radius: 50%;
                 background: rgba(255,79,138,.4); animation: belinhaPulse 2s infinite;
             }
+            #belinha-fab .alert-dot {
+                position: absolute; top: -4px; right: -4px;
+                background: #DC2626; color: #fff; min-width: 22px; height: 22px;
+                border-radius: 11px; font-size: 12px; font-weight: 800;
+                display: flex; align-items: center; justify-content: center;
+                padding: 0 6px; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(220,38,38,.5);
+                animation: belinhaBounce .8s ease infinite alternate;
+            }
+            @keyframes belinhaBounce { from { transform: scale(1); } to { transform: scale(1.12); } }
             @keyframes belinhaPulse {
                 0% { transform: scale(1); opacity: .6; }
                 100% { transform: scale(1.6); opacity: 0; }
@@ -219,10 +228,30 @@
         return { fab, panel, overlay };
     }
 
+    function showAlertBadge(count, priority) {
+        const fab = document.getElementById('belinha-fab');
+        if (!fab) return;
+        // Remove badge anterior
+        const existing = fab.querySelector('.alert-dot');
+        if (existing) existing.remove();
+        if (!count) return;
+        const dot = document.createElement('div');
+        dot.className = 'alert-dot';
+        dot.textContent = count > 9 ? '9+' : count;
+        if (priority === 'critical') dot.style.background = '#DC2626';
+        else if (priority === 'high') dot.style.background = '#EA580C';
+        else if (priority === 'medium') dot.style.background = '#F59E0B';
+        else dot.style.background = '#3B82F6';
+        fab.appendChild(dot);
+    }
+
     function open() {
         document.getElementById('belinha-panel').classList.add('open');
         document.getElementById('belinha-overlay').classList.add('open');
         document.getElementById('bwInput').focus();
+        // Remove badge quando abre
+        const dot = document.querySelector('#belinha-fab .alert-dot');
+        if (dot) dot.remove();
     }
     function close() {
         document.getElementById('belinha-panel').classList.remove('open');
@@ -432,9 +461,29 @@
         document.getElementById('bwContextBar').innerHTML =
             '📍 Estou na tela <b>' + ctx.title + '</b> com você — posso ajudar com: <i>' + ctx.hint + '</i>';
 
-        const initialMsg = session.role === 'super_admin'
-            ? 'Oi! Sou o **CEO Mentor MilkyPot**. Enquanto você navega pelo super_admin, posso analisar dados consolidados da rede, sugerir estratégia, comparar franquias. Clica numa pergunta abaixo ou fala livre.'
-            : 'Oi! Sou a **Belinha** 🐑 — tô aqui nessa tela com você. Pergunta o que tá precisando ou clica numa das sugestões abaixo.';
+        // PROATIVIDADE: faz scan da tela antes de falar
+        let scanResult = null;
+        if (global.BelinhaScanners) {
+            try { scanResult = global.BelinhaScanners.scanCurrent(session); } catch(e){}
+        }
+
+        let initialMsg;
+        if (scanResult && scanResult.alerts && scanResult.alerts.length) {
+            const levelEmoji = { critical:'🚨', high:'⚠️', medium:'💡', low:'👋' };
+            const role = session.role === 'super_admin' ? 'CEO Mentor' : 'Belinha 🐑';
+            initialMsg = `Oi! Sou a **${role}**. Acabei de escanear essa tela (${ctx.title}) — vi **${scanResult.alerts.length} ponto(s) que precisa(m) da sua atenção**:\n\n` +
+                scanResult.alerts.slice(0, 3).map((a, i) =>
+                    `${levelEmoji[a.level]||'•'} **${i+1}. ${a.title}**\n${a.detail}\n➜ *${a.action}*`
+                ).join('\n\n') +
+                (scanResult.alerts.length > 3 ? `\n\n_Mais ${scanResult.alerts.length - 3} abaixo — me pede "mostra o resto" pra eu detalhar._` : '') +
+                '\n\nOu faz uma pergunta livre que eu respondo com base no contexto da tela.';
+            // Badge vermelho no FAB
+            showAlertBadge(scanResult.alerts.length, scanResult.priority);
+        } else {
+            initialMsg = session.role === 'super_admin'
+                ? 'Oi! Sou o **CEO Mentor MilkyPot**. Escaneei essa tela (' + ctx.title + ') e tá tudo tranquilo. Posso analisar dados consolidados da rede, sugerir estratégia, comparar franquias.'
+                : 'Oi! Sou a **Belinha** 🐑. Escaneei essa tela (' + ctx.title + ') e tá em ordem. Pergunta o que tá precisando ou clica numa das sugestões abaixo.';
+        }
         state.messages.push({ role: 'assistant', content: initialMsg });
         renderMessages();
         renderQuick();
