@@ -1,5 +1,36 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #6 — 2026-04-22
+
+**Área:** Conversão — Correção bug viral mechanic `raspinha.html` (Instagram handle errado)
+
+**Contexto:** 3 dias para inauguração (25/04/2026). Primeira auditoria de `raspinha.html` (nunca analisado). Schema.org `openingHoursSpecification` já estava correto em `index.html` desde ciclo #1 — não era necessário retrabalho.
+
+**O que analisou:**
+- `raspinha.html`: 486 linhas, sistema completo de raspinha digital (Canvas API, Firebase Firestore, compartilhamento viral)
+- Encontrado bug crítico: handle `@milkypot` em 4 lugares — conta errada (a oficial é `@milkypotbr`)
+- **Impacto real**: mecânica "poste e ganhe raspinha extra" é o motor viral principal do PDV. Com handle errado, clientes marcavam a conta errada → MilkyPot não via os posts → promessa de raspinha bônus não podia ser cumprida → perda de UGC gratuito + quebra de confiança
+- Verificado: sistema Firebase funcional, compartilhamento WhatsApp correto, canvas scratch funcionando, fallback localStorage presente
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `raspinha.html` | 4x `@milkypot` → `@milkypotbr`: instrução UX (linha 121), footer link (linha 136), texto de share Instagram (linha 446), URL de fallback Instagram (linha 457) |
+
+**Commit:** `28a6dc7`
+
+**Impacto:**
+- **CRÍTICO RESOLVIDO**: viral loop da raspinha agora funciona de verdade — marcações chegam ao perfil correto
+- UGC (User Generated Content) capturável a partir da inauguração
+- Promessa de "raspinha bônus" pode ser honrada pela equipe monitorando `@milkypotbr`
+
+**Próximo passo sugerido:**
+- Ciclo #7: UX mobile — testar `cardapio.html` em 375px (iPhone SE). Verificar: tamanho de fonte mínimo 16px nos inputs, botão WhatsApp flutuante visível, CTAs above the fold
+- Ciclo #7 alternativo: Pesquisar MilkyMoo atualizado (preços, promoções inauguração de novas unidades) para benchmark pré-inauguração
+
+---
+
 ## Ciclo #5 — 2026-04-22
 
 **Área:** UX/Frontend — Correção crítica WhatsApp (pré-inauguração) + Auto-aprimoramento
