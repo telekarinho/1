@@ -85,6 +85,15 @@ echo   Backend: claude CLI (plano Claude Pro/Max)
 echo   Health: http://localhost:%PORT%/health
 echo.
 cd /d "%AP_DIR%"
+
+REM Verifica se porta ja tem processo zumbi (evita EADDRINUSE)
+echo   🔍 Verificando porta %PORT%...
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :%PORT% ^| findstr LISTENING') do (
+  echo   ⚠️  Porta ocupada pelo PID %%a — matando processo zumbi...
+  taskkill /F /PID %%a >nul 2>&1
+  timeout /t 1 /nobreak >nul
+)
+
 if not exist node_modules (
   echo   📦 Instalando dependências (primeira vez, ~1min)...
   call npm install
