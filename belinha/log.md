@@ -1,5 +1,39 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #8 — 2026-04-22
+
+**Área:** UX/Frontend — Mobile accessibility: font-size inputs em `style.css` (index.html)
+
+**Contexto:** 3 dias para inauguração (25/04/2026). Ciclo #7 corrigiu `cardapio.css` (checkout). Ciclo #8 seguiu a sugestão do log: verificar `index.html` — formulário de contato e de franquia.
+
+**O que analisou:**
+- `css/style.css` linha 1968: `.form-group input, .form-group select, .form-group textarea { font-size: 0.95rem }` = 15.2px → **abaixo do mínimo 16px iOS Safari** — auto-zoom ao tocar
+- Afetados: formulário de contato (`contactName`, `contactEmail`, `contactSubject`, `contactMsg`), formulário de franquia (`franchiseName`, `franchiseEmail`, `franchisePhone`, `franchiseCity`, `franchiseState`, `franchiseCapital`, `franchiseMsg`), ROI calculator selects (`roiModel`, `roiLocation`, `roiExperience`) — todos via `.form-group`
+- `css/style.css` linha 3977: `.franchise-search-checkout .search-input { font-size: 0.95rem }` — busca de loja no contexto de franquia também afetado
+- Global `input, select, textarea { font-size: 1rem }` (linha 126) estava correto, mas `.form-group` sobrescrevia com 0.95rem
+- Demais 0.95rem restantes em `style.css` verificados: todos em elementos não-interativos (textos, headings, labels) — sem impacto
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `css/style.css` (linha 1968) | `.form-group input/select/textarea`: `font-size: 0.95rem` → `1rem` |
+| `css/style.css` (linha 3977) | `.franchise-search-checkout .search-input`: `font-size: 0.95rem` → `1rem` |
+
+**Commit:** `a71d145`
+
+**Impacto:**
+- **Conversão de franqueados protegida**: formulário de franquia (leads de R$3.499–R$25k cada) funciona sem auto-zoom em iOS
+- **ROI calculator**: potenciais franqueados conseguem usar os selects sem tela pular
+- **Formulário de contato**: clientes com dúvidas não têm experiência degradada
+- Consistente com fix do ciclo #7 (mesmo padrão, arquivo diferente)
+
+**Próximo passo sugerido:**
+- Ciclo #9: Pesquisa MilkyMoo atualizada — última pesquisa foi ciclo #1 (dados podem estar desatualizados). Foco: preços atuais, promoções de inauguração de novas unidades, copy/ads recentes para benchmark pré-inauguração 25/04
+- Ciclo #9 alternativo: Criar conteúdo `belinha/content/` para stories/reels do DIA da inauguração (25/04) — sequência de 3 stories para postar em tempo real durante a festa
+
+---
+
 ## Ciclo #7 — 2026-04-22
 
 **Área:** UX/Frontend — Mobile accessibility: viewport + font-size inputs checkout
