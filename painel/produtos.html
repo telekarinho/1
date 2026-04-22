@@ -10,6 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <script src="../js/core/firebase-config.js"></script>
 <script src="../js/core/constants.js"></script>
 <script src="../js/core/datastore.js"></script>
@@ -325,6 +326,7 @@
   </div>
 </div>
 
+<script src="../js/core/media-upload.js"></script>
 <script src="../js/core/copilot-transport.js"></script>
 <script src="../js/core/belinha-page-scanners.js"></script>
 <script src="../js/core/belinha-widget.js"></script>
@@ -648,6 +650,114 @@
   };
   window.closeProduto = function() { document.getElementById('modalProduto').classList.remove('open'); };
 
+  // ===== UPLOAD DE FOTOS/VIDEO =====
+  function getCurrentFotos() {
+    const raw = document.getElementById('pFotos')?.value || '';
+    return raw.split('\n').map(s => s.trim()).filter(Boolean);
+  }
+  function setFotos(list) {
+    document.getElementById('pFotos').value = list.join('\n');
+    renderFotoGrid();
+  }
+  function renderFotoGrid() {
+    const grid = document.getElementById('pFotosGrid');
+    if (!grid) return;
+    const fotos = getCurrentFotos();
+    if (!fotos.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#9CA3AF;font-size:13px">Nenhuma foto ainda — clica em "Adicionar fotos".</div>';
+      return;
+    }
+    grid.innerHTML = fotos.map((url, i) => `
+      <div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:2px solid #E5E7EB;background:#F3F4F6">
+        <img src="${esc(url)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML+='<div style=padding:20px;text-align:center;color:#DC2626;font-size:11px>⚠ Falhou<br><small>${esc(url.slice(-20))}</small></div>'">
+        <button type="button" onclick="removeFoto(${i})" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(220,38,38,.9);color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:700">✕</button>
+      </div>`).join('');
+  }
+  function renderVideoPreview() {
+    const url = document.getElementById('pVideo')?.value || '';
+    const el = document.getElementById('pVideoPreview');
+    if (!el) return;
+    if (!url) { el.innerHTML = ''; return; }
+    el.innerHTML = `
+      <div style="position:relative;margin-bottom:10px;border-radius:10px;overflow:hidden;border:2px solid #E5E7EB;background:#000">
+        <video src="${esc(url)}" controls style="width:100%;max-height:280px;display:block" preload="metadata"></video>
+        <button type="button" onclick="removeVideo()" style="position:absolute;top:8px;right:8px;padding:6px 12px;background:rgba(220,38,38,.9);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700">🗑 Remover</button>
+      </div>`;
+  }
+
+  window.removeFoto = function(idx) {
+    const list = getCurrentFotos();
+    const url = list[idx];
+    list.splice(idx, 1);
+    setFotos(list);
+    // Best-effort delete do Storage
+    if (url && typeof MediaUpload !== 'undefined') MediaUpload.remove(url).catch(()=>{});
+  };
+  window.removeVideo = function() {
+    const url = document.getElementById('pVideo').value;
+    document.getElementById('pVideo').value = '';
+    renderVideoPreview();
+    if (url && typeof MediaUpload !== 'undefined') MediaUpload.remove(url).catch(()=>{});
+  };
+
+  window.uploadProdPhotos = function(ev) {
+    const files = Array.from(ev.target.files || []);
+    if (!files.length) return;
+    if (typeof MediaUpload === 'undefined') { alert('Upload indisponível. Recarrega a página.'); return; }
+    const prog = document.getElementById('pFotosProgress');
+    let done = 0, total = files.length;
+    prog.innerHTML = `Enviando ${total} foto(s)...`;
+
+    const tasks = files.map((file, i) => {
+      return MediaUpload.photo(file, fid, {
+        onProgress: pct => {
+          prog.innerHTML = `Foto ${i+1}/${total}: ${pct}% (comprimindo + enviando)`;
+        }
+      })
+      .then(res => {
+        const list = getCurrentFotos();
+        list.push(res.url);
+        setFotos(list);
+        done++;
+        prog.innerHTML = `✅ ${done}/${total} — <small>última: ${Math.round(res.size/1024)}KB · ${res.width}×${res.height}</small>`;
+      })
+      .catch(e => {
+        console.error('Upload falhou:', e);
+        prog.innerHTML = `<span style="color:#DC2626">❌ ${file.name}: ${e.message}</span>`;
+      });
+    });
+    Promise.all(tasks).then(() => {
+      setTimeout(() => { prog.innerHTML = ''; }, 3000);
+      ev.target.value = '';  // reset input
+    });
+  };
+
+  window.uploadProdVideo = function(ev) {
+    const file = (ev.target.files || [])[0];
+    if (!file) return;
+    if (typeof MediaUpload === 'undefined') { alert('Upload indisponível. Recarrega a página.'); return; }
+    const prog = document.getElementById('pVideoProgress');
+    prog.innerHTML = `Enviando ${(file.size/1024/1024).toFixed(1)}MB...`;
+
+    MediaUpload.video(file, fid, {
+      onProgress: pct => { prog.innerHTML = `Upload: ${pct}%`; }
+    })
+    .then(res => {
+      // Remove vídeo anterior se existia
+      const oldUrl = document.getElementById('pVideo').value;
+      document.getElementById('pVideo').value = res.url;
+      renderVideoPreview();
+      prog.innerHTML = `✅ Vídeo enviado (${(res.size/1024/1024).toFixed(1)}MB)`;
+      if (oldUrl && oldUrl !== res.url) MediaUpload.remove(oldUrl).catch(()=>{});
+      setTimeout(() => { prog.innerHTML = ''; }, 3000);
+      ev.target.value = '';
+    })
+    .catch(e => {
+      prog.innerHTML = `<span style="color:#DC2626">❌ ${e.message}</span>`;
+      ev.target.value = '';
+    });
+  };
+
   function renderProdutoForm() {
     const p = currentProduto || { midia:{}, custos:{custoAdicional:{}}, precos:{loja:{},delivery:{},ifood:{}}, kits:[], variantes:[], toppingsIds:[], buffet:{} };
     const cats = CatalogV2.listCategorias(fid);
@@ -675,8 +785,30 @@
           </div>
           <div class="form-field col-2"><label>Descrição</label><textarea id="pDesc" rows="2" placeholder="Um cremoso com raspas de Oreo e calda morango…">${esc(p.desc||'')}</textarea></div>
           <div class="form-field"><label>Emoji</label><input type="text" id="pEmoji" value="${esc(p.midia?.emoji||'')}" maxlength="2"></div>
-          <div class="form-field col-2"><label>URL do vídeo (opcional)</label><input type="url" id="pVideo" value="${esc(p.midia?.video||'')}" placeholder="https://..."></div>
-          <div class="form-field col-2"><label>URLs de fotos (uma por linha)</label><textarea id="pFotos" rows="3" placeholder="https://…/foto1.jpg&#10;https://…/foto2.jpg">${(p.midia?.fotos||[]).join('\n')}</textarea></div>
+          <div class="form-field col-2">
+            <label>📸 Fotos do produto <small style="color:#6B7280;font-weight:400">(otimizadas automaticamente para 1200px · JPEG 85%)</small></label>
+            <div id="pFotosUpload" style="background:#FAFAFA;border:2px dashed #E5E7EB;border-radius:12px;padding:14px">
+              <div id="pFotosGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:10px"></div>
+              <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:#FF4F8A;color:#fff;border-radius:10px;cursor:pointer;font-weight:700;font-size:13px">
+                <input type="file" accept="image/*" multiple style="display:none" onchange="uploadProdPhotos(event)">
+                <span>📸</span><span>Adicionar fotos</span>
+              </label>
+              <div id="pFotosProgress" style="font-size:12px;color:#6B7280;margin-top:6px;text-align:center"></div>
+            </div>
+            <input type="hidden" id="pFotos" value="${(p.midia?.fotos||[]).join('\n')}">
+          </div>
+          <div class="form-field col-2">
+            <label>🎬 Vídeo do produto <small style="color:#6B7280;font-weight:400">(até 50MB · MP4/MOV/WebM)</small></label>
+            <div id="pVideoUpload" style="background:#FAFAFA;border:2px dashed #E5E7EB;border-radius:12px;padding:14px">
+              <div id="pVideoPreview"></div>
+              <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:#7E57C2;color:#fff;border-radius:10px;cursor:pointer;font-weight:700;font-size:13px">
+                <input type="file" accept="video/*" style="display:none" onchange="uploadProdVideo(event)">
+                <span>🎬</span><span>Adicionar vídeo</span>
+              </label>
+              <div id="pVideoProgress" style="font-size:12px;color:#6B7280;margin-top:6px;text-align:center"></div>
+            </div>
+            <input type="hidden" id="pVideo" value="${esc(p.midia?.video||'')}">
+          </div>
         </div>
       </div>
 
@@ -757,6 +889,12 @@
         </div>
       </div>
     `;
+
+    // Renderiza preview de fotos/video já salvos
+    setTimeout(() => {
+      if (typeof renderFotoGrid === 'function') renderFotoGrid();
+      if (typeof renderVideoPreview === 'function') renderVideoPreview();
+    }, 0);
   }
 
   window.recalc = function() {
