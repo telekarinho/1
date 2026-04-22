@@ -239,6 +239,74 @@
                         </div>
                     </div>
 
+                    <!-- Card: Pagamentos & Nota Fiscal -->
+                    <div class="panel-card" style="grid-column:1/-1">
+                        <div class="card-header" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff">
+                            <h3 style="color:#fff">💳 Pagamentos & Nota Fiscal</h3>
+                            <p style="margin:4px 0 0;font-size:12px;opacity:.9">Configure Pix (QR para cliente pagar) e emissão de NFC-e</p>
+                        </div>
+                        <div class="card-body">
+                            <!-- Pix -->
+                            <h4 style="margin:0 0 10px;color:#059669">💠 Pix (QR Code no balcão)</h4>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px">
+                                <div>
+                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Chave Pix</label>
+                                    <input id="pixChave" placeholder="CPF, CNPJ, email, telefone ou aleatória" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                                </div>
+                                <div>
+                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Nome do beneficiário</label>
+                                    <input id="pixNome" placeholder="MILKYPOT LONDRINA" maxlength="25" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;text-transform:uppercase">
+                                </div>
+                                <div>
+                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Cidade</label>
+                                    <input id="pixCidade" placeholder="LONDRINA" maxlength="15" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;text-transform:uppercase">
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
+                                <button onclick="salvarPix()" style="padding:10px 20px;background:#10B981;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">💾 Salvar Pix</button>
+                                <button onclick="testarPix()" style="padding:10px 20px;background:#6B7280;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">🧪 Testar (gerar QR R$ 1,00)</button>
+                                <span id="pixStatus" style="font-size:13px;color:#6B7280"></span>
+                            </div>
+                            <div id="pixPreview" style="display:none;background:#F9FAFB;padding:16px;border-radius:10px;border:1px solid #E5E7EB;text-align:center;margin-bottom:20px">
+                                <img id="pixQr" src="" style="max-width:200px;border:2px solid #10B981;border-radius:8px">
+                                <div style="margin-top:10px;font-size:11px;color:#6B7280">Copia-e-cola:</div>
+                                <textarea id="pixPayload" readonly style="width:100%;max-width:400px;padding:8px;font-family:monospace;font-size:10px;border:1px solid #E5E7EB;border-radius:6px;margin-top:4px;height:60px"></textarea>
+                            </div>
+
+                            <!-- NFC-e -->
+                            <h4 style="margin:16px 0 10px;color:#059669">🧾 NFC-e (Nota Fiscal do Consumidor)</h4>
+                            <div style="padding:12px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;margin-bottom:12px;font-size:13px;color:#78350F">
+                                ⚠️ NFC-e em produção exige certificado A1, IE ativa e NCM cadastrado. Modo <b>Manual</b> deixa o operador emitir fora do sistema (Bling/SEFAZ) e é adequado pro dia-1. Quando contratar Bling, mude pro modo automático.
+                            </div>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:10px">
+                                <div>
+                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Modo de emissão</label>
+                                    <select id="nfeMode" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                                        <option value="manual">Manual (registra pendente)</option>
+                                        <option value="bling">Bling API (automático)</option>
+                                    </select>
+                                </div>
+                                <div class="nfe-bling" style="display:none">
+                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Token Bling API</label>
+                                    <input id="nfeApiKey" type="password" placeholder="Bearer token" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                                </div>
+                                <div class="nfe-bling" style="display:none">
+                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">CNPJ loja</label>
+                                    <input id="nfeCnpj" placeholder="00.000.000/0001-00" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                                </div>
+                                <div class="nfe-bling" style="display:none">
+                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">NCM padrão (sorvete: 21050000)</label>
+                                    <input id="nfeNcm" value="21050000" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                                <button onclick="salvarNFe()" style="padding:10px 20px;background:#10B981;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">💾 Salvar NFC-e</button>
+                                <span id="nfeStatus" style="font-size:13px;color:#6B7280"></span>
+                            </div>
+                            <div id="nfeResumo" style="margin-top:14px"></div>
+                        </div>
+                    </div>
+
                     <!-- Card: Raspinha da Sorte -->
                     <div class="panel-card" style="grid-column:1/-1">
                         <div class="card-header" style="background:linear-gradient(135deg,#FF9800,#F57C00);color:#fff">
@@ -294,6 +362,8 @@
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/audit.js"></script>
     <script src="../js/core/notifications.js"></script>
+    <script src="../js/core/pix.js"></script>
+    <script src="../js/core/nfce.js"></script>
 
     <script>
     // Auth guard
@@ -623,6 +693,85 @@
 
     window.saveScratchConfig = saveScratchConfig;
 
+    // ============================================
+    // PIX: configurar chave pra aparecer no PDV
+    // ============================================
+    function loadPix() {
+        if (typeof Pix === 'undefined' || !Pix.getConfig) return;
+        const cfg = Pix.getConfig(franchiseId) || {};
+        document.getElementById('pixChave').value = cfg.chave || '';
+        document.getElementById('pixNome').value = cfg.nome || '';
+        document.getElementById('pixCidade').value = cfg.cidade || '';
+        if (cfg.chave) {
+            document.getElementById('pixStatus').innerHTML = '<span style="color:#10B981">✓ Configurado</span>';
+        }
+    }
+
+    function salvarPix() {
+        const chave = document.getElementById('pixChave').value.trim();
+        const nome = document.getElementById('pixNome').value.trim().toUpperCase();
+        const cidade = document.getElementById('pixCidade').value.trim().toUpperCase();
+        if (!chave) { alert('Informe a chave Pix'); return; }
+        if (!nome) { alert('Informe o nome do beneficiário'); return; }
+        if (!cidade) { alert('Informe a cidade'); return; }
+        Pix.configLoja(franchiseId, { chave, nome, cidade });
+        document.getElementById('pixStatus').innerHTML = '<span style="color:#10B981">✓ Salvo com sucesso</span>';
+        setTimeout(() => { document.getElementById('pixStatus').innerHTML = '<span style="color:#10B981">✓ Configurado</span>'; }, 3000);
+    }
+
+    function testarPix() {
+        const cfg = Pix.getConfig(franchiseId);
+        if (!cfg || !cfg.chave) { alert('Salva primeiro a chave Pix'); return; }
+        const r = Pix.forOrder(franchiseId, { id: 'TEST', total: 1.00 });
+        if (r.error) { alert(r.error); return; }
+        document.getElementById('pixPreview').style.display = 'block';
+        document.getElementById('pixQr').src = r.qrUrl;
+        document.getElementById('pixPayload').value = r.payload;
+    }
+
+    // ============================================
+    // NFC-e: configurar modo (manual ou Bling)
+    // ============================================
+    function loadNFe() {
+        if (typeof NFCe === 'undefined' || !NFCe.getConfig) return;
+        const cfg = NFCe.getConfig(franchiseId) || { mode: 'manual' };
+        document.getElementById('nfeMode').value = cfg.mode || 'manual';
+        document.getElementById('nfeApiKey').value = cfg.apiKey || '';
+        document.getElementById('nfeCnpj').value = cfg.cnpj || '';
+        document.getElementById('nfeNcm').value = cfg.ncmPadrao || '21050000';
+        toggleNFeBling();
+
+        const r = NFCe.resumoPendentes(franchiseId);
+        if (r.total > 0) {
+            document.getElementById('nfeResumo').innerHTML =
+                '<div style="padding:12px;background:#F0FDF4;border-radius:10px;font-size:13px">' +
+                '📊 <b>Resumo NFC-e:</b> ' + r.total + ' emissões · ' + r.autorizadas + ' autorizadas · ' + r.pendentes + ' pendentes · ' + r.rejeitadas + ' rejeitadas' +
+                '</div>';
+        }
+    }
+
+    function toggleNFeBling() {
+        const show = document.getElementById('nfeMode').value === 'bling';
+        document.querySelectorAll('.nfe-bling').forEach(el => { el.style.display = show ? 'block' : 'none'; });
+    }
+
+    function salvarNFe() {
+        const cfg = {
+            mode: document.getElementById('nfeMode').value,
+            apiKey: document.getElementById('nfeApiKey').value.trim(),
+            cnpj: document.getElementById('nfeCnpj').value.trim(),
+            ncmPadrao: document.getElementById('nfeNcm').value.trim() || '21050000'
+        };
+        if (cfg.mode === 'bling' && (!cfg.apiKey || !cfg.cnpj)) {
+            alert('Modo Bling exige Token e CNPJ'); return;
+        }
+        NFCe.setConfig(franchiseId, cfg);
+        document.getElementById('nfeStatus').innerHTML = '<span style="color:#10B981">✓ Salvo</span>';
+        setTimeout(() => { document.getElementById('nfeStatus').innerHTML = ''; }, 3000);
+    }
+
+    document.getElementById('nfeMode').addEventListener('change', toggleNFeBling);
+
     // Init
     loadStoreData();
     loadOperationData();
@@ -630,6 +779,8 @@
     loadFranchiseInfo();
     loadNotifSettings();
     loadScratchConfig();
+    loadPix();
+    loadNFe();
     </script>
 <script src="../js/core/copilot-transport.js" defer></script>
 <script src="../js/pages/lilo-scanner.js" defer></script>

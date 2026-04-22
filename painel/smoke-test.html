@@ -83,36 +83,39 @@ async function runAll() {
     results.length = 0;
 
     // === 1. Módulos carregados ===
+    function hasModule(name) {
+        try { return typeof eval(name) !== 'undefined' || typeof window[name] !== 'undefined'; } catch(e) { return false; }
+    }
     test('Módulo DataStore carregado', () => {
-        if (!window.DataStore) throw new Error('DataStore undefined');
+        if (typeof DataStore === 'undefined' && !window.DataStore) throw new Error('DataStore undefined');
         return 'OK';
     });
     test('Módulo CatalogV2 carregado', () => {
-        if (!window.CatalogV2) throw new Error('CatalogV2 undefined');
+        if (typeof CatalogV2 === 'undefined' && !window.CatalogV2) throw new Error('CatalogV2 undefined');
         return 'OK';
     });
     test('Módulo CostCalculator carregado', () => {
-        if (!window.CostCalculator) throw new Error('CostCalculator undefined');
+        if (typeof CostCalculator === 'undefined' && !window.CostCalculator) throw new Error('CostCalculator undefined');
         return 'OK';
     });
     test('Módulo Cashflow carregado', () => {
-        if (!window.Cashflow) throw new Error('Cashflow undefined');
+        if (typeof Cashflow === 'undefined' && !window.Cashflow) throw new Error('Cashflow undefined');
         return 'OK';
     });
     test('Módulo AnalyticsAdvanced carregado', () => {
-        if (!window.AnalyticsAdvanced) throw new Error('AnalyticsAdvanced undefined');
+        if (typeof AnalyticsAdvanced === 'undefined' && !window.AnalyticsAdvanced) throw new Error('AnalyticsAdvanced undefined');
         return 'OK';
     });
     test('Módulo OfflineQueue carregado', () => {
-        if (!window.OfflineQueue) throw new Error('OfflineQueue undefined');
+        if (typeof OfflineQueue === 'undefined' && !window.OfflineQueue) throw new Error('OfflineQueue undefined');
         return 'OK';
     });
     test('Módulo Pix carregado', () => {
-        if (!window.Pix) throw new Error('Pix undefined');
+        if (typeof Pix === 'undefined' && !window.Pix) throw new Error('Pix undefined');
         return 'OK';
     });
     test('Módulo NFCe carregado', () => {
-        if (!window.NFCe) throw new Error('NFCe undefined');
+        if (typeof NFCe === 'undefined' && !window.NFCe) throw new Error('NFCe undefined');
         return 'OK';
     });
 
@@ -124,10 +127,16 @@ async function runAll() {
         return `R$ ${r.preco} · margem ${r.margemPct}%`;
     });
 
-    test('CostCalculator.suggestAll — delivery > loja > (iFood maior)', () => {
+    test('CostCalculator.suggestAll — 3 canais geram preco positivo', () => {
         const r = CostCalculator.suggestAll(5, 'cat_potinho');
-        if (r.ifood.preco <= r.loja.preco) throw new Error('iFood deveria ser mais caro: loja ' + r.loja.preco + ' vs ifood ' + r.ifood.preco);
-        return `Loja R$ ${r.loja.preco} · Del R$ ${r.delivery.preco} · iFood R$ ${r.ifood.preco}`;
+        if (r.loja.preco <= 0 || r.delivery.preco <= 0 || r.ifood.preco <= 0) {
+            throw new Error('Preco zero em algum canal: ' + JSON.stringify({l:r.loja.preco, d:r.delivery.preco, i:r.ifood.preco}));
+        }
+        // iFood >= loja (pode empatar quando cap 30% + psychRound arredondam juntos)
+        if (r.ifood.preco < r.loja.preco) throw new Error('iFood menor que loja: ' + r.ifood.preco + ' < ' + r.loja.preco);
+        // Margem iFood >= 25% (minimo saudavel, nao pode prejuizo)
+        if (r.ifood.margemPct < 25) throw new Error('Margem iFood abaixo de 25%: ' + r.ifood.margemPct);
+        return `Loja R$ ${r.loja.preco} (${r.loja.margemPct}%) · Del R$ ${r.delivery.preco} (${r.delivery.margemPct}%) · iFood R$ ${r.ifood.preco} (${r.ifood.margemPct}%)`;
     });
 
     // === 3. CatalogV2 seed ===
