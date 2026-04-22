@@ -450,6 +450,154 @@
         return { alerts, kpis };
     };
 
+    // ---------- CADASTRO AVANÇADO V2 ----------
+    SCANNERS['produtos-v2'] = function(fid) {
+        const alerts = []; const kpis = [];
+        if (typeof global.CatalogV2 === 'undefined' || typeof global.CostCalculator === 'undefined') {
+            return { alerts, kpis };
+        }
+        const prods = global.CatalogV2.listProdutos(fid);
+        const cats = global.CatalogV2.listCategorias(fid);
+        const tops = global.CatalogV2.listToppings(fid);
+
+        kpis.push({ label: 'Produtos', value: prods.length, target: '10+', color: prods.length >= 10 ? 'green' : 'amber' });
+        kpis.push({ label: 'Categorias', value: cats.length, target: '6+', color: cats.length >= 6 ? 'green' : 'amber' });
+        kpis.push({ label: 'Toppings', value: tops.length, target: '8+', color: tops.length >= 8 ? 'green' : 'amber' });
+
+        if (!prods.length) {
+            alerts.push({
+                level: 'critical',
+                title: 'Catálogo vazio',
+                detail: 'Sem produtos cadastrados, PDV, financeiro e TVs não têm o que exibir.',
+                action: 'Clica em "🪄 Seed inicial" pra carregar 12 produtos-exemplo MilkyPot em 1 segundo.'
+            });
+            return { alerts, kpis };
+        }
+
+        // Produtos SEM CUSTO
+        const semCusto = prods.filter(p => global.CostCalculator.computeCustoTotal(p) <= 0);
+        if (semCusto.length) {
+            alerts.push({
+                level: 'critical',
+                title: semCusto.length + ' produto(s) SEM custo cadastrado',
+                detail: semCusto.slice(0,4).map(p => p.name).join(', '),
+                action: 'Sem custo, preço sugerido é 0 e margem é mentirosa. Abre o produto → Custos → preenche insumos + embalagem.'
+            });
+        }
+
+        // Produtos em PREJUÍZO no iFood
+        let prejIfood = 0; let prejLoja = 0;
+        const detalhes = [];
+        prods.forEach(p => {
+            const total = global.CostCalculator.computeCustoTotal(p);
+            if (total <= 0) return;
+            const vI = global.CostCalculator.validatePrice(total, p.precos?.ifood?.real, 'ifood');
+            const vL = global.CostCalculator.validatePrice(total, p.precos?.loja?.real, 'loja');
+            if (vI.status === 'prejuizo') { prejIfood++; detalhes.push(p.name + ' (iFood)'); }
+            if (vL.status === 'prejuizo') { prejLoja++; detalhes.push(p.name + ' (Loja)'); }
+        });
+        if (prejIfood + prejLoja > 0) {
+            alerts.push({
+                level: 'critical',
+                title: (prejIfood + prejLoja) + ' produto(s) em PREJUÍZO',
+                detail: detalhes.slice(0,4).join(', '),
+                action: 'Vai na aba "Análise de Margem" e corrige — clica "Usar" no preço sugerido de cada canal vermelho.'
+            });
+        }
+
+        // Sem foto/emoji
+        const semFoto = prods.filter(p => !p.midia?.emoji && !(p.midia?.fotos||[]).length && !p.midia?.video);
+        if (semFoto.length >= Math.max(3, prods.length * 0.3)) {
+            alerts.push({
+                level: 'high',
+                title: semFoto.length + ' produto(s) sem foto/emoji',
+                detail: 'Cardápio sem visual vende 40% menos no delivery (benchmark iFood).',
+                action: 'Adiciona emoji (🍨, 🥤, 🍇) no mínimo. Ou upload de foto em cada produto.'
+            });
+        }
+
+        // Sem descrição
+        const semDesc = prods.filter(p => !p.desc || p.desc.length < 15);
+        if (semDesc.length >= Math.max(3, prods.length * 0.3)) {
+            alerts.push({
+                level: 'medium',
+                title: semDesc.length + ' produto(s) sem descrição',
+                detail: '"Cremoso com raspas de Oreo" converte mais que só "Oreo".',
+                action: 'Posso escrever descrições de todos em 30 segundos — me pede.'
+            });
+        }
+
+        // Sem preço em canal
+        const canaisFaltando = prods.filter(p => {
+            const v = p.precos || {};
+            return !v.loja?.real || !v.delivery?.real || !v.ifood?.real;
+        });
+        if (canaisFaltando.length) {
+            alerts.push({
+                level: 'high',
+                title: canaisFaltando.length + ' produto(s) sem preço em algum canal',
+                detail: 'Vai estourar no PDV/delivery quando cliente tentar comprar.',
+                action: 'Abre o produto → Preços → clica "Usar" no sugerido de cada canal.'
+            });
+        }
+
+        // CMV médio (agregado)
+        let totalCusto = 0, totalReceita = 0;
+        prods.forEach(p => {
+            const c = global.CostCalculator.computeCustoTotal(p);
+            const preco = p.precos?.loja?.real || p.precos?.loja?.recomendado || 0;
+            if (c > 0 && preco > 0) {
+                totalCusto += c;
+                totalReceita += preco;
+            }
+        });
+        if (totalReceita > 0) {
+            const cmv = Math.round((totalCusto / totalReceita) * 100);
+            kpis.push({ label: 'CMV médio catálogo', value: cmv + '%', target: '28-32%', color: cmv <= 32 ? 'green' : cmv <= 38 ? 'amber' : 'red' });
+            if (cmv > 38) {
+                alerts.push({
+                    level: 'high',
+                    title: 'CMV médio em ' + cmv + '% (benchmark MilkyPot: 28-32%)',
+                    detail: 'Você tá operando com margem apertada. Em R$45k/mês, cada 1% extra = R$450 de lucro perdido.',
+                    action: 'Revisa custos: embalagem barata, porção scoop, negocie insumo, suba preço dos produtos com margem abaixo de 60%.'
+                });
+            }
+        }
+
+        // Kits vazios onde deveria ter
+        const picoles = prods.filter(p => p.categoriaId === 'cat_picole' && (!p.kits || !p.kits.length));
+        if (picoles.length) {
+            alerts.push({
+                level: 'low',
+                title: picoles.length + ' picolé(s) sem kits cadastrados',
+                detail: 'Cliente quer comprar 3, 10 ou 20 picolés com desconto.',
+                action: 'Abre o picolé → Kits → + Adicionar kit (1un, 3un, 10un, 20un).'
+            });
+        }
+
+        return { alerts, kpis };
+    };
+
+    // ---------- ESCANEAR NOTA ----------
+    SCANNERS['escanear-nota'] = function(fid) {
+        const alerts = []; const kpis = [];
+        const compras = DS().getCollection ? DS().getCollection('compras', fid) || [] : [];
+        const ultima = compras[compras.length - 1];
+        if (ultima) {
+            const days = Math.round((Date.now() - new Date(ultima.date).getTime()) / 86400000);
+            kpis.push({ label: 'Última compra', value: days + 'd', target: '< 7d', color: days <= 7 ? 'green' : 'amber' });
+        } else {
+            kpis.push({ label: 'Compras registradas', value: '0', target: '1+', color: 'red' });
+            alerts.push({
+                level: 'medium',
+                title: 'Nenhuma compra registrada via scanner',
+                detail: 'Scanner economiza 20min/compra vs lançamento manual.',
+                action: 'Tira foto da próxima nota no celular — IA extrai tudo em 8 segundos.'
+            });
+        }
+        return { alerts, kpis };
+    };
+
     // ---------- DEFAULT (outras páginas) ----------
     SCANNERS['default'] = function(fid) {
         return { alerts: [], kpis: [] };

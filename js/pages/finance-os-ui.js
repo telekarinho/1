@@ -205,6 +205,86 @@ const FinanceOSUI = (function () {
     }
 
     /* ---- DRE ---- */
+    /** Bloco de CMV real calculado a partir de vendas + catalog_v2. */
+    function renderCMVReal(periodKey) {
+        if (typeof FinanceRealtime === 'undefined' || typeof CatalogV2 === 'undefined') return '';
+        let data;
+        try { data = FinanceRealtime.computeCMV(_fid, periodKey); }
+        catch(e) { return ''; }
+
+        if (!data.ordersAnalisados) return '';
+
+        const fmt = Financas.formatBRL;
+        const cmvColor = data.cmvPct <= 32 ? '#16a34a' : (data.cmvPct <= 38 ? '#F59E0B' : '#DC2626');
+
+        const top5 = data.porProduto.slice(0, 5);
+        const worst = data.porProduto.filter(p => p.margemPct < 50).slice(0, 3);
+
+        let html = `
+            <div style="margin-top:20px;padding:16px;background:linear-gradient(135deg,#F0FDF4,#ECFDF5);border:1px solid #86EFAC;border-radius:12px">
+              <h4 style="margin:0 0 10px;font-family:'Baloo 2',cursive;color:#065F46;font-size:16px;display:flex;align-items:center;gap:8px">
+                📊 CMV Real <small style="font-weight:normal;color:#4B5563">(calculado das vendas + custos dos produtos)</small>
+              </h4>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px">
+                <div style="background:#fff;padding:10px 14px;border-radius:10px">
+                  <div style="font-size:11px;color:#6B7280;text-transform:uppercase;font-weight:700">Receita (${data.ordersAnalisados} vendas)</div>
+                  <div style="font-size:20px;font-weight:800;color:#065F46">${fmt(data.receita)}</div>
+                </div>
+                <div style="background:#fff;padding:10px 14px;border-radius:10px">
+                  <div style="font-size:11px;color:#6B7280;text-transform:uppercase;font-weight:700">CMV Real</div>
+                  <div style="font-size:20px;font-weight:800;color:${cmvColor}">${data.cmvPct}%</div>
+                  <div style="font-size:11px;color:#6B7280">${fmt(data.custo)}</div>
+                </div>
+                <div style="background:#fff;padding:10px 14px;border-radius:10px">
+                  <div style="font-size:11px;color:#6B7280;text-transform:uppercase;font-weight:700">Margem bruta</div>
+                  <div style="font-size:20px;font-weight:800;color:#065F46">${data.margemPct}%</div>
+                  <div style="font-size:11px;color:#6B7280">${fmt(data.margem)}</div>
+                </div>
+                <div style="background:#fff;padding:10px 14px;border-radius:10px">
+                  <div style="font-size:11px;color:#6B7280;text-transform:uppercase;font-weight:700">Vendas órfãs</div>
+                  <div style="font-size:20px;font-weight:800;color:${data.vendasOrfas > 0 ? '#DC2626' : '#065F46'}">${data.vendasOrfas}</div>
+                  <div style="font-size:11px;color:#6B7280">sem match no catálogo</div>
+                </div>
+              </div>`;
+
+        if (top5.length) {
+            html += `<div style="margin-top:10px"><b style="font-size:13px;color:#065F46">🔝 Top 5 produtos por receita</b>
+                <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px">`;
+            top5.forEach(p => {
+                const cor = p.margemPct >= 60 ? '#16a34a' : (p.margemPct >= 40 ? '#F59E0B' : '#DC2626');
+                html += `<div style="display:flex;justify-content:space-between;background:#fff;padding:8px 12px;border-radius:8px;font-size:13px">
+                    <span>${esc(p.name)} <small style="color:#6B7280">(${p.qty}un)</small></span>
+                    <span><b>${fmt(p.receita)}</b> · <span style="color:${cor};font-weight:700">${p.margemPct}% margem</span></span>
+                </div>`;
+            });
+            html += `</div></div>`;
+        }
+
+        if (worst.length) {
+            html += `<div style="margin-top:10px;padding:10px;background:#FEF2F2;border-radius:8px;border-left:3px solid #DC2626">
+                <b style="font-size:13px;color:#991B1B">⚠ Produtos com margem baixa (<50%)</b>
+                <div style="font-size:12px;color:#4B5563;margin-top:4px">
+                    ${worst.map(p => `<b>${esc(p.name)}</b> (${p.margemPct}%)`).join(' · ')}<br>
+                    <small>→ revisa preços desses na aba Análise de Margem</small>
+                </div>
+            </div>`;
+        }
+
+        if (data.vendasOrfas > 0) {
+            html += `<div style="margin-top:10px;padding:10px;background:#FEF3C7;border-radius:8px;border-left:3px solid #F59E0B;font-size:12px;color:#78350F">
+                ⚠ <b>${data.vendasOrfas}</b> unidade(s) vendida(s) sem match no catálogo_v2 — tá subestimando o CMV. Cadastra esses produtos no Cadastro Avançado.
+            </div>`;
+        }
+
+        html += `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-sm" style="background:#16a34a;color:#fff" onclick="FinanceOSUI.autoImportCMV()">📥 Importar como custo variável</button>
+            <small style="color:#4B5563;align-self:center">Lança o CMV real no DRE automaticamente</small>
+        </div>`;
+
+        html += `</div>`;
+        return html;
+    }
+
     function renderDRE(dre) {
         const fmt = Financas.formatBRL;
         const pct = Financas.formatPct;
@@ -243,6 +323,8 @@ const FinanceOSUI = (function () {
                     <div class="fos-kpi-value">${dre.receitaLiquida > 0 ? pct(dre.mcPercent) : '—'}</div>
                   </div>
                 </div>
+
+                ${renderCMVReal(dre.periodKey || _currentPK)}
               </div>
             </div>
         `;
@@ -840,6 +922,17 @@ const FinanceOSUI = (function () {
         document.head.appendChild(style);
     }
 
+    function autoImportCMV() {
+        if (typeof FinanceRealtime === 'undefined') { alert('FinanceRealtime não carregado'); return; }
+        const r = FinanceRealtime.autoImportToFinanceCost(_fid, _currentPK);
+        if (r.ok) {
+            Utils.showToast('✅ CMV real importado: ' + Financas.formatBRL(r.cmv.custo) + ' (' + r.cmv.cmvPct + '%)', 'success');
+            render();
+        } else {
+            Utils.showToast('❌ ' + (r.error || 'Falha ao importar'), 'error');
+        }
+    }
+
     return {
         init,
         setPeriod,
@@ -851,6 +944,7 @@ const FinanceOSUI = (function () {
         confirmClose,
         reopenPeriod,
         showRetifyModal,
+        autoImportCMV,
         render
     };
 })();
