@@ -84,15 +84,21 @@ app.post('/copilot', async (req, res) => {
         });
         finalPrompt = finalPrompt.trim();
 
-        const cliArgs = [
-            '-p', finalPrompt,
-            '--append-system-prompt', systemPrompt,
-            '--output-format', 'json'
-        ];
+        // FIX: Windows cmd.exe tem limite de 8191 chars na linha.
+        // System prompt MilkyPot tem ~12KB. Solução: embutir o system
+        // prompt no próprio user message com tags <system> e mandar
+        // TUDO via stdin. Args ficam mínimos (~50 chars).
+        const combined = `<system_instructions>\n${systemPrompt}\n</system_instructions>\n\n${finalPrompt}`;
+
+        const cliArgs = ['-p', '--output-format', 'json'];
         if (model) cliArgs.push('--model', model);
 
         const startTs = Date.now();
         const claudeProc = spawn('claude', cliArgs, { shell: true });
+
+        // Envia prompt completo via stdin — sem limite de tamanho
+        claudeProc.stdin.write(combined, 'utf8');
+        claudeProc.stdin.end();
 
         let output = '';
         let errorBuf = '';
