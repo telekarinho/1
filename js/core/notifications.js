@@ -610,3 +610,7 @@ if (document.readyState === 'loading') {
 } else {
     Notifications.init();
 }
+
+// Expose globally for browser (const is script-scoped, not a window property)
+if (typeof window !== 'undefined') window.Notifications = Notifications;
+if (typeof globalThis !== 'undefined') globalThis.Notifications = Notifications;

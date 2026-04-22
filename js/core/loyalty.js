@@ -132,3 +132,7 @@ const Loyalty = {
         };
     }
 };
+
+// Expose globally for browser (const is script-scoped, not a window property)
+if (typeof window !== 'undefined') { window.Loyalty = Loyalty; window.LOYALTY_KEY = LOYALTY_KEY; }
+if (typeof globalThis !== 'undefined') { globalThis.Loyalty = Loyalty; globalThis.LOYALTY_KEY = LOYALTY_KEY; }

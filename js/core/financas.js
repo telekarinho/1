@@ -933,3 +933,7 @@ const Financas = (function () {
         formatPct
     };
 })();
+
+// Expose globally for browser (const is script-scoped, not a window property)
+if (typeof window !== 'undefined') window.Financas = Financas;
+if (typeof globalThis !== 'undefined') globalThis.Financas = Financas;

@@ -818,3 +818,7 @@ const Caixa = (function () {
         _fid: _fid
     };
 })();
+
+// Expose globally for browser (const is script-scoped, not a window property)
+if (typeof window !== 'undefined') window.Caixa = Caixa;
+if (typeof globalThis !== 'undefined') globalThis.Caixa = Caixa;

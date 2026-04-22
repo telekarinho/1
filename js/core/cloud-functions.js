@@ -213,3 +213,7 @@ const CloudFunctions = {
         });
     }
 };
+
+// Expose globally for browser (const is script-scoped, not a window property)
+if (typeof window !== 'undefined') window.CloudFunctions = CloudFunctions;
+if (typeof globalThis !== 'undefined') globalThis.CloudFunctions = CloudFunctions;

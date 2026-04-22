@@ -101,3 +101,7 @@ const MP = {
 
 // Configura URL da API Vercel globalmente
 window.MP_VERCEL_API_URL = MP.VERCEL_API_URL;
+
+// Expose globally for browser (const is script-scoped, not a window property)
+if (typeof window !== 'undefined') window.MP = MP;
+if (typeof globalThis !== 'undefined') globalThis.MP = MP;

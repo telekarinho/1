@@ -317,3 +317,7 @@ const AuditLog = {
 
 // Auto-inicializa
 AuditLog.init();
+
+// Expose globally for browser (const is script-scoped, not a window property)
+if (typeof window !== 'undefined') window.AuditLog = AuditLog;
+if (typeof globalThis !== 'undefined') globalThis.AuditLog = AuditLog;

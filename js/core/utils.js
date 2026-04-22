@@ -185,3 +185,7 @@ const Utils = {
         URL.revokeObjectURL(url);
     }
 };
+
+// Expose globally for browser (const is script-scoped, not a window property)
+if (typeof window !== 'undefined') window.Utils = Utils;
+if (typeof globalThis !== 'undefined') globalThis.Utils = Utils;
