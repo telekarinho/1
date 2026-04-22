@@ -280,21 +280,32 @@
             const custoTotal = s.cInsumos + s.cAdd;
             const precos = precosSugeridos(custoTotal, s.cat);
 
-            // Kits de picolé: preço unitário base + desconto de volume
-            const kits = s.cat === 'cat_picole' && CC ? (() => {
-                const p1L = precos.loja.real, p1D = precos.delivery.real, p1I = precos.ifood.real;
-                // desconto progressivo (3: 5%, 10: 12%, 20: 18%) — pacote promocional
-                const apply = (p, qty, pct) => {
-                    const total = p * qty * (1 - pct);
-                    return Math.round(total * 100) / 100;
-                };
-                return [
-                    { label:'1 unidade',  qty:1,  precoLoja: p1L,            precoDelivery: p1D,            precoIfood: p1I },
-                    { label:'3 unidades', qty:3,  precoLoja: apply(p1L,3,0.05),  precoDelivery: apply(p1D,3,0.05),  precoIfood: apply(p1I,3,0.05) },
-                    { label:'10 unidades',qty:10, precoLoja: apply(p1L,10,0.12), precoDelivery: apply(p1D,10,0.12), precoIfood: apply(p1I,10,0.12) },
-                    { label:'20 unidades',qty:20, precoLoja: apply(p1L,20,0.18), precoDelivery: apply(p1D,20,0.18), precoIfood: apply(p1I,20,0.18) }
+            // Kits de picolé — preços PROMOCIONAIS MilkyPot (hardcoded de mercado)
+            // User definiu: 1→R$3 / 4→R$10 / 10→R$23 / 20→R$39,99 (LOJA)
+            // Delivery = loja ×1.12 | iFood = loja ×1.28 (psychRound)
+            const kits = s.cat === 'cat_picole' ? (() => {
+                const tabela = [
+                    { label: '1 unidade',    qty:  1, loja:  3.00, delivery:  3.50, ifood:  3.90 },
+                    { label: '4 unidades',   qty:  4, loja: 10.00, delivery: 11.50, ifood: 12.90 },
+                    { label: '10 unidades',  qty: 10, loja: 23.00, delivery: 25.90, ifood: 29.90 },
+                    { label: '20 unidades',  qty: 20, loja: 39.99, delivery: 44.90, ifood: 49.99 }
                 ];
+                return tabela.map(k => ({
+                    label: k.label, qty: k.qty,
+                    precoLoja: k.loja,
+                    precoDelivery: k.delivery,
+                    precoIfood: k.ifood
+                }));
             })() : [];
+
+            // Se for picolé, sobrescreve precos unitários com o preço do kit de 1
+            // (pra o PDV e tabela principal mostrarem o preço "regular")
+            if (s.cat === 'cat_picole' && kits.length) {
+                const k1 = kits[0];
+                precos.loja     = { recomendado: k1.precoLoja,     real: k1.precoLoja };
+                precos.delivery = { recomendado: k1.precoDelivery, real: k1.precoDelivery };
+                precos.ifood    = { recomendado: k1.precoIfood,    real: k1.precoIfood };
+            }
 
             // Variantes sorvete kg: custo por grama + preço por variante
             const variantes = s.cat === 'cat_sorvete_kg' && CC ? (() => {
