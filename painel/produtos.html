@@ -1118,9 +1118,8 @@
     document.getElementById('pEnergia').value = c.energia;
     document.getElementById('pMao').value = c.mao_obra;
     document.getElementById('pCTotal').value = 'R$ ' + (c.total + c.outros).toFixed(2);
-    // Atualiza subtotais nas linhas
+    // Atualiza subtotais nas linhas (reusa inv acima)
     const rows = document.querySelectorAll('#receitaLinhas .receita-row[data-type="insumo"]');
-    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
     const invMap = {}; inv.forEach(i => invMap[i.id] = i);
     rows.forEach((row, i) => {
       const sub = row.querySelector('.subtot');
