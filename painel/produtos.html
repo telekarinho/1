@@ -855,18 +855,49 @@
         </div>
       </div>
 
-      <!-- Custos AUTO-CALCULADOS -->
-      <div class="form-section">
-        <h3>💰 Custos (auto-calculados pela receita) <span class="mp-help" data-tip="Os 4 primeiros campos são READ-ONLY — vêm da receita e da config da loja. Só edite 'Outros' (impostos, marketing, rateio admin).">(?)</span></h3>
-        <p style="font-size:12px;color:#6B7280;margin:-4px 0 10px">Baseado na receita acima + config da loja. <a href="configuracoes.html#producao" style="color:#7E57C2;font-weight:700">⚙️ Configurar kWh e salário/hora →</a></p>
+      <!-- BLOCO 1: CUSTO DIRETO (o que entra no produto) -->
+      <div class="form-section" style="background:#F0FDF4;border:1px solid #86EFAC">
+        <h3 style="color:#065F46">✅ Custo DIRETO — o que entra no produto <span class="mp-help" data-tip="Tudo que é fisicamente consumido pra fazer 1 unidade: ingredientes, embalagem e mão-de-obra direta do operador. Campos readonly — vêm da receita.">(?)</span></h3>
         <div class="form-grid">
-          <div class="form-field"><label>Insumos (R$) <span class="mp-help" data-tip="Soma da receita: Σ (qtd usada × custo do ingrediente no estoque). Cadastre ingredientes na aba Ingredientes pra popular isso.">(?)</span></label><input type="number" step="0.01" id="pCInsumos" value="${p.custos?.custoInsumos||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
-          <div class="form-field"><label>Embalagem (R$) <span class="mp-help" data-tip="Custo total das embalagens (copo + tampa + colher) adicionadas na receita.">(?)</span></label><input type="number" step="0.01" id="pEmbalagem" value="${p.custos?.custoAdicional?.embalagem||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
-          <div class="form-field"><label>⚡ Energia (R$) <span class="mp-help" data-tip="Tempo preparo × kWh × potência / 60. Precisa do tempo de preparo preenchido + kWh configurado em Configurações.">(?)</span></label><input type="number" step="0.01" id="pEnergia" value="${p.custos?.custoAdicional?.energia||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
-          <div class="form-field"><label>👷 Mão de obra (R$) <span class="mp-help" data-tip="Tempo preparo × custo/hora do operador / 60. Define o salário/hora em Configurações → Custos de Produção.">(?)</span></label><input type="number" step="0.01" id="pMao" value="${p.custos?.custoAdicional?.mao_obra||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
-          <div class="form-field"><label>Outros (R$) <span class="mp-help" data-tip="Custos que não encaixam em nenhum dos 4 acima: impostos diferidos, rateio marketing, embalagem especial, etc.">(?)</span></label><input type="number" step="0.01" id="pOutros" value="${p.custos?.custoAdicional?.outros||0}" oninput="recalcCusto()" placeholder="impostos, marketing..."></div>
-          <div class="form-field"><label style="color:#16a34a;font-weight:800">CUSTO TOTAL <span class="mp-help" data-tip="Custo total de produzir 1 unidade. Esse valor é usado pra sugerir preço por canal com margem saudável (loja +60% / delivery +12% / iFood +28%).">(?)</span></label><input type="text" id="pCTotal" value="R$ ${cTotal.toFixed(2)}" readonly style="font-weight:900;color:#16a34a;background:#F0FDF4;font-size:16px"></div>
+          <div class="form-field"><label>Insumos <span class="mp-help" data-tip="Σ (ingrediente × qtd × custo unitário do estoque)">(?)</span></label><input type="text" id="pCInsumos" value="R$ 0,00" readonly style="background:#fff;color:#065F46;font-weight:800"></div>
+          <div class="form-field"><label>Embalagem <span class="mp-help" data-tip="Copo + tampa + colher + canudo">(?)</span></label><input type="text" id="pEmbalagem" value="R$ 0,00" readonly style="background:#fff;color:#065F46;font-weight:800"></div>
+          <div class="form-field"><label>👷 Mão de obra <span class="mp-help" data-tip="Tempo × (custo/hora + 33% encargos CLT: 13º, férias, FGTS, INSS). Se paga R$8,50/h 'na mão', custo real é R$11,30/h.">(?)</span></label><input type="text" id="pMao" value="R$ 0,00" readonly style="background:#fff;color:#065F46;font-weight:800"></div>
+          <div class="form-field"><label>⚡ Energia direta <span class="mp-help" data-tip="Só equipamentos sob demanda (blender, micro). Freezer 24h vai no rateio fixo.">(?)</span></label><input type="text" id="pEnergia" value="R$ 0,00" readonly style="background:#fff;color:#065F46;font-weight:800"></div>
+          <div class="form-field" style="grid-column:span 2"><label style="color:#065F46;font-weight:800">SUBTOTAL DIRETO</label><input type="text" id="pSubDireto" value="R$ 0,00" readonly style="background:#DCFCE7;color:#065F46;font-weight:900;font-size:15px"></div>
         </div>
+      </div>
+
+      <!-- BLOCO 2: CUSTO INDIRETO (fatia da estrutura) -->
+      <div class="form-section" style="background:#FFF7ED;border:1px solid #FCD34D">
+        <h3 style="color:#92400E">🏢 Custo INDIRETO — fatia da estrutura <span class="mp-help" data-tip="É a fatia da conta do mês (aluguel, luz, salários, pró-labore, DAS) que cada unidade vendida paga. Os valores mudam conforme seu movimento do mês.">(?)</span></h3>
+        <p style="font-size:12px;color:#92400E;margin:-4px 0 10px"><span id="rateioStatus"></span>
+        <a href="configuracoes.html#producao" style="color:#7E57C2;font-weight:700">⚙️ Configurar custos estrutura →</a>
+        · <a href="financeiro.html" style="color:#7E57C2;font-weight:700">💰 Cadastrar custos fixos →</a></p>
+        <div class="form-grid">
+          <div class="form-field"><label>🏪 Rateio fixos <span class="mp-help" data-tip="Aluguel + luz + salário fixo + internet + contador. Rateado por R$ de receita (produto caro absorve mais). Fórmula: fixos_mês ÷ receita_mês × preço_loja.">(?)</span></label><input type="text" id="pRateioFix" value="R$ 0,00" readonly style="background:#fff;color:#92400E;font-weight:800"></div>
+          <div class="form-field"><label>📦 Rateio variáveis <span class="mp-help" data-tip="Marketing + manutenção + limpeza + sacolas delivery. Rateado por unidade vendida. Fórmula: variáveis_mês ÷ unidades_vendidas.">(?)</span></label><input type="text" id="pRateioVar" value="R$ 0,00" readonly style="background:#fff;color:#92400E;font-weight:800"></div>
+          <div class="form-field"><label>🧾 DAS Simples <span class="mp-help" data-tip="Anexo I Comércio: ~4% do faturamento. Sai direto do preço de venda.">(?)</span></label><input type="text" id="pDAS" value="R$ 0,00" readonly style="background:#fff;color:#92400E;font-weight:800"></div>
+          <div class="form-field"><label>👔 Pró-labore <span class="mp-help" data-tip="Seu salário como dono + INSS (~R$1.685/mês padrão). Rateado por unidade vendida. Senão você está 'trabalhando de graça'.">(?)</span></label><input type="text" id="pProLabore" value="R$ 0,00" readonly style="background:#fff;color:#92400E;font-weight:800"></div>
+          <div class="form-field"><label>📉 Depreciação <span class="mp-help" data-tip="Freezer R$15k ÷ 60 meses = R$250/mês. Maquininha, balcão, ar condicionado. Rateado por unidade.">(?)</span></label><input type="text" id="pDeprec" value="R$ 0,00" readonly style="background:#fff;color:#92400E;font-weight:800"></div>
+          <div class="form-field"><label>🗑 Perdas <span class="mp-help" data-tip="3-5% do CMV típico em sorveteria: derretimento, quebra, validade, erro de pedido.">(?)</span></label><input type="text" id="pPerdas" value="R$ 0,00" readonly style="background:#fff;color:#92400E;font-weight:800"></div>
+          <div class="form-field"><label>Outros <span class="mp-help" data-tip="Taxa fixa iFood 'Entrega' (R$100/mês), seguro, alvará, Wi-Fi — o que não encaixa acima.">(?)</span></label><input type="number" step="0.01" id="pOutros" value="${p.custos?.custoAdicional?.outros||0}" oninput="recalcCusto()" placeholder="0"></div>
+          <div class="form-field"><label style="color:#92400E;font-weight:800">SUBTOTAL INDIRETO</label><input type="text" id="pSubIndireto" value="R$ 0,00" readonly style="background:#FEF3C7;color:#92400E;font-weight:900;font-size:15px"></div>
+        </div>
+      </div>
+
+      <!-- BLOCO 3: TOTAL -->
+      <div class="form-section" style="background:linear-gradient(135deg,#F3E8FF,#DBEAFE);border:2px solid #7E57C2">
+        <div class="form-grid" style="grid-template-columns:1fr 1fr">
+          <div class="form-field">
+            <label style="color:#5B21B6;font-weight:800;font-size:13px">💼 CUSTO TOTAL POR UNIDADE <span class="mp-help" data-tip="Direto + Indireto = quanto custa REAL fabricar 1 unidade, considerando absolutamente TUDO. É esse valor que tem que ser comparado com o preço de venda pra saber seu lucro real.">(?)</span></label>
+            <input type="text" id="pCTotal" value="R$ 0,00" readonly style="background:#fff;color:#5B21B6;font-weight:900;font-size:22px;padding:14px;border:2px solid #7E57C2">
+          </div>
+          <div class="form-field">
+            <label style="color:#5B21B6;font-weight:800;font-size:13px">📊 MARGEM LÍQUIDA (Loja) <span class="mp-help" data-tip="Preço Loja − Custo Total − Taxa cartão = Lucro REAL por unidade. Benchmark saudável: 12-18% líquida após TODOS os custos.">(?)</span></label>
+            <input type="text" id="pMargemLiq" value="—" readonly style="background:#fff;font-weight:900;font-size:22px;padding:14px;border:2px solid #7E57C2">
+          </div>
+        </div>
+        <div id="margensPorCanal" style="margin-top:12px;font-size:13px"></div>
       </div>
 
       <!-- Preços -->
@@ -877,7 +908,7 @@
           ${['loja','delivery','ifood'].map(ch => `
             <div class="price-row">
               <div style="font-weight:700;color:#1F2937">${ch === 'loja' ? '🏪 Loja' : ch === 'delivery' ? '🛵 Delivery' : '📱 iFood'}</div>
-              <div class="form-field"><label>Preço REAL (R$)</label><input type="number" step="0.01" id="p_real_${ch}" value="${p.precos?.[ch]?.real||0}"></div>
+              <div class="form-field"><label>Preço REAL (R$)</label><input type="number" step="0.01" id="p_real_${ch}" value="${p.precos?.[ch]?.real||0}" oninput="recalcCusto()"></div>
               <div class="price-suggest" id="sug_${ch}">
                 <strong>Sugerido:</strong> R$ ${sug[ch].preco.toFixed(2)} <small>(margem ${sug[ch].margemPct}%)</small>
                 <button onclick="applySuggest('${ch}')">Usar</button>
@@ -1105,19 +1136,84 @@
 
     if (tempoGuide) {
       if (tempoMin <= 0) {
-        tempoGuide.innerHTML = `💡 Com tempo 0, energia e mão-de-obra ficam R$ 0,00. Informe quantos minutos leva pra preparar 1 unidade.`;
+        tempoGuide.innerHTML = `💡 Com tempo 0, mão-de-obra fica R$ 0,00. Informe quantos minutos leva pra preparar 1 unidade.`;
       } else {
-        tempoGuide.innerHTML = `⚡ Energia: <b>R$ ${c.energia.toFixed(2)}</b> · 👷 Mão-obra: <b>R$ ${c.mao_obra.toFixed(2)}</b><br>
-          <small>(${tempoMin}min × R$ ${cfg.custoKwh}/kWh × ${cfg.potenciaMediaKw}kW + R$ ${cfg.custoHora}/h)</small>
-          · <a href="configuracoes.html" target="_blank" style="color:#7E57C2">ajustar config</a>`;
+        const custoHoraCheio = cfg.custoHora * (1 + (cfg.encargosPct || 0));
+        tempoGuide.innerHTML = `👷 Mão-de-obra (com encargos CLT +${Math.round((cfg.encargosPct||0)*100)}%): <b>R$ ${c.mao_obra.toFixed(2)}</b><br>
+          <small>(${tempoMin}min × R$ ${custoHoraCheio.toFixed(2)}/h cheio)</small>`;
       }
     }
-    // Preenche campos readonly
-    document.getElementById('pCInsumos').value = c.insumos;
-    document.getElementById('pEmbalagem').value = c.embalagem;
-    document.getElementById('pEnergia').value = c.energia;
-    document.getElementById('pMao').value = c.mao_obra;
-    document.getElementById('pCTotal').value = 'R$ ' + (c.total + c.outros).toFixed(2);
+
+    // BLOCO DIRETO
+    const brl = v => 'R$ ' + Number(v||0).toFixed(2).replace('.',',');
+    document.getElementById('pCInsumos').value = brl(c.insumos);
+    document.getElementById('pEmbalagem').value = brl(c.embalagem);
+    document.getElementById('pMao').value = brl(c.mao_obra);
+    document.getElementById('pEnergia').value = brl(c.energia_direta);
+    document.getElementById('pSubDireto').value = brl(c.subtotalDireto);
+
+    // BLOCO INDIRETO
+    document.getElementById('pRateioFix').value = brl(c.rateioFixos);
+    document.getElementById('pRateioVar').value = brl(c.rateioVariaveis);
+    document.getElementById('pDAS').value = brl(c.das);
+    document.getElementById('pProLabore').value = brl(c.proLabore);
+    document.getElementById('pDeprec').value = brl(c.depreciacao);
+    document.getElementById('pPerdas').value = brl(c.perdas);
+    document.getElementById('pSubIndireto').value = brl(c.subtotalIndireto);
+
+    // Status do rateio (informa contexto)
+    const rateioStatus = document.getElementById('rateioStatus');
+    if (rateioStatus) {
+      if (c.rampUp) {
+        rateioStatus.innerHTML = `<b>⚠ Modo Ramp-up</b> (loja com &lt;200 pedidos/mês): usando meta (${c.context.qtdBase} un · ${brl(c.context.receitaBase)}) em vez do realizado. · `;
+      } else {
+        rateioStatus.innerHTML = `<b>✅ Baseado no realizado do mês</b> (${c.context.qtdReal} un · ${brl(c.context.receitaReal)}). · `;
+      }
+    }
+
+    // BLOCO TOTAL
+    document.getElementById('pCTotal').value = brl(c.total);
+
+    // MARGEM REAL POR CANAL
+    const prodTmp = {
+      custos: { insumos: r.insumos, embalagemIds: r.embalagemIds, custoAdicional: { outros: Number(document.getElementById('pOutros')?.value)||0 } },
+      tempoPreparoMin: tempoMin,
+      precos: {
+        loja:     { real: parseFloat(document.getElementById('p_real_loja')?.value)||0 },
+        delivery: { real: parseFloat(document.getElementById('p_real_delivery')?.value)||0 },
+        ifood:    { real: parseFloat(document.getElementById('p_real_ifood')?.value)||0 }
+      }
+    };
+    if (typeof ProducaoCalc.marginsReal === 'function') {
+      const margens = ProducaoCalc.marginsReal(prodTmp, fid);
+      const mL = margens.loja;
+      if (mL.preco > 0) {
+        const corL = mL.status === 'prejuizo' ? '#DC2626' : mL.status === 'ruim' ? '#F59E0B' : '#16A34A';
+        document.getElementById('pMargemLiq').value = brl(mL.margem) + ' (' + mL.margemPct + '%)';
+        document.getElementById('pMargemLiq').style.color = corL;
+      } else {
+        document.getElementById('pMargemLiq').value = '— sem preço';
+        document.getElementById('pMargemLiq').style.color = '#6B7280';
+      }
+
+      const mount = document.getElementById('margensPorCanal');
+      if (mount) {
+        mount.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px">
+          ${['loja','delivery','ifood'].map(ch => {
+            const m = margens[ch];
+            const lbl = ch === 'loja' ? '🏪 Loja' : ch === 'delivery' ? '🛵 Delivery' : '📱 iFood';
+            const cor = m.status === 'prejuizo' ? '#DC2626' : m.status === 'ruim' ? '#F59E0B' : m.status === 'aceitavel' ? '#D97706' : '#16A34A';
+            const bg = m.status === 'prejuizo' ? '#FEE2E2' : m.status === 'ruim' ? '#FEF3C7' : m.status === 'aceitavel' ? '#FED7AA' : '#DCFCE7';
+            const statusTxt = m.status === 'prejuizo' ? 'PREJUÍZO' : m.status === 'ruim' ? '<10% RUIM' : m.status === 'aceitavel' ? '10-20%' : '>20% ✓';
+            return `<div style="background:${bg};padding:10px 12px;border-radius:10px;border:1px solid ${cor}33">
+              <div style="font-weight:800;color:#1F2937;margin-bottom:4px">${lbl}</div>
+              <div style="font-size:11px;color:#6B7280">Preço: <b>${brl(m.preco)}</b> · Custo: ${brl(m.custoTotal)} · Taxa: ${brl(m.taxa)}</div>
+              <div style="margin-top:6px;font-size:15px;font-weight:900;color:${cor}">${brl(m.margem)} <small style="font-size:11px;background:${cor};color:#fff;padding:2px 6px;border-radius:100px;margin-left:4px">${statusTxt}</small></div>
+            </div>`;
+          }).join('')}
+        </div>`;
+      }
+    }
     // Atualiza subtotais nas linhas (reusa inv acima)
     const rows = document.querySelectorAll('#receitaLinhas .receita-row[data-type="insumo"]');
     const invMap = {}; inv.forEach(i => invMap[i.id] = i);
