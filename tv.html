@@ -182,22 +182,28 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
       var vsrc = m.url || m.dataUrl;
       if(!vsrc){ timer = setTimeout(playNext, 2000); return; }
       var video = document.createElement('video');
-      video.src = vsrc;
       video.autoplay = true;
       video.playsInline = true;
-      video.muted = true;                // TVs exigem mute pra autoplay
-      video.loop = single;               // loop nativo quando for 1 vídeo
+      video.muted = true;
+      video.loop = single;
       video.preload = 'auto';
-      video.onloadedmetadata = function(){
+      var videoStuck = setTimeout(function(){
+        try { video.pause(); video.removeAttribute('src'); video.load(); } catch(e){}
+        timer = setTimeout(playNext, 500);
+      }, 15000);
+      video.onloadeddata = function(){
+        clearTimeout(videoStuck);
         if(!single){
           var dur = (video.duration && isFinite(video.duration)) ? (video.duration*1000 + 200) : item.duration;
           timer = setTimeout(playNext, dur);
         }
       };
-      video.onended = function(){ if(!single) playNext(); };
-      video.onerror = function(){ timer = setTimeout(playNext, 2000); };
+      video.onended = function(){ clearTimeout(videoStuck); if(!single) playNext(); };
+      video.onerror = function(){ clearTimeout(videoStuck); timer = setTimeout(playNext, 2000); };
       player.appendChild(video);
-      try { video.play(); } catch(e){}
+      video.src = vsrc;
+      video.load();
+      try { video.play().catch(function(){ timer = setTimeout(playNext, 2000); }); } catch(e){ timer = setTimeout(playNext, 2000); }
     } else if(m.type === 'text'){
       var div = document.createElement('div');
       div.className = 'text-slide';
