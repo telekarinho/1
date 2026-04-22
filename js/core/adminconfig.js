@@ -491,3 +491,7 @@ const AdminConfig = (function () {
         formatBRL
     };
 })();
+
+// Expose globally for browser (const is script-scoped, not a window property)
+if (typeof window !== 'undefined') window.AdminConfig = AdminConfig;
+if (typeof globalThis !== 'undefined') globalThis.AdminConfig = AdminConfig;
