@@ -1062,9 +1062,134 @@
             if(isImage){
                 compressImageFile(file, doUpload);
             } else {
-                doUpload(file);
+                transcodeForTV(file, id, function(blob){
+                    doUpload(blob);
+                });
             }
         });
+    }
+
+    // Re-codifica video para H.264 Baseline (compativel com 100% dos Android TV)
+    function transcodeForTV(file, taskId, callback){
+        // Detecta melhor formato suportado pelo MediaRecorder
+        var tvMime = null;
+        var tryMimes = [
+            'video/mp4;codecs=avc1.42E01E',
+            'video/mp4;codecs=avc1',
+            'video/mp4',
+            'video/webm;codecs=h264',
+            'video/webm;codecs=vp8'
+        ];
+        for(var i=0; i<tryMimes.length; i++){
+            if(typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(tryMimes[i])){
+                tvMime = tryMimes[i]; break;
+            }
+        }
+        if(!tvMime){
+            showUploadProgress(taskId, file.name, 0, 'Navegador nao suporta conversao. Envie MP4 H.264.');
+            callback(file);
+            return;
+        }
+
+        showUploadProgress(taskId, '🔄 Convertendo ' + file.name + '…', 0);
+
+        var video = document.createElement('video');
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        var objUrl = URL.createObjectURL(file);
+        video.src = objUrl;
+
+        var abortTimer = setTimeout(function(){
+            cleanup();
+            Utils.showToast('Conversao demorou demais, enviando original','warning');
+            callback(file);
+        }, 300000);
+
+        function cleanup(){
+            clearTimeout(abortTimer);
+            try { URL.revokeObjectURL(objUrl); } catch(e){}
+            try { video.pause(); video.removeAttribute('src'); } catch(e){}
+        }
+
+        video.onerror = function(){
+            cleanup();
+            Utils.showToast('Erro ao decodificar video, enviando original','warning');
+            callback(file);
+        };
+
+        video.onloadedmetadata = function(){
+            var ow = video.videoWidth, oh = video.videoHeight;
+            if(!ow || !oh){ cleanup(); callback(file); return; }
+
+            // Cap em 1080p mantendo aspect ratio
+            var scale = Math.min(1, 1920/ow, 1080/oh);
+            var w = Math.round(ow * scale); w -= w%2;
+            var h = Math.round(oh * scale); h -= h%2;
+
+            var canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            var ctx = canvas.getContext('2d');
+
+            var canvasStream = canvas.captureStream(30);
+            var tracks = canvasStream.getVideoTracks().slice();
+
+            // Captura audio
+            try {
+                var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                var src = audioCtx.createMediaElementSource(video);
+                var dest = audioCtx.createMediaStreamDestination();
+                src.connect(dest);
+                dest.stream.getAudioTracks().forEach(function(t){ tracks.push(t); });
+            } catch(e){}
+
+            var combined = new MediaStream(tracks);
+            var recorder = new MediaRecorder(combined, {
+                mimeType: tvMime,
+                videoBitsPerSecond: 4000000
+            });
+            var chunks = [];
+
+            recorder.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+            recorder.onstop = function(){
+                cleanup();
+                try { if(typeof audioCtx !== 'undefined') audioCtx.close(); } catch(e){}
+                var ext = tvMime.indexOf('mp4') >= 0 ? 'video/mp4' : 'video/webm';
+                var blob = new Blob(chunks, { type: ext });
+                showUploadProgress(taskId, file.name, 100);
+                Utils.showToast('✅ Video convertido para TV!','success');
+                callback(blob);
+            };
+
+            var totalDur = video.duration || 1;
+
+            function drawLoop(){
+                if(video.ended || video.paused){
+                    try { setTimeout(function(){ recorder.stop(); }, 300); } catch(e){}
+                    return;
+                }
+                ctx.drawImage(video, 0, 0, w, h);
+                showUploadProgress(taskId, '🔄 Convertendo ' + file.name, Math.round((video.currentTime/totalDur)*90));
+                requestAnimationFrame(drawLoop);
+            }
+
+            recorder.start(500);
+            video.muted = false;
+            video.volume = 0;
+            video.play().then(function(){
+                drawLoop();
+            }).catch(function(){
+                cleanup();
+                Utils.showToast('Nao foi possivel converter, enviando original','warning');
+                callback(file);
+            });
+
+            video.onended = function(){
+                setTimeout(function(){
+                    try { recorder.stop(); } catch(e){}
+                }, 500);
+            };
+        };
     }
 
     window.deleteMedia = function(id){
