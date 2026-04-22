@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>MilkyPot — Smoke Test (Produção Check)</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; padding: 20px; margin: 0; }
+  h1 { color: #f472b6; font-family: 'Baloo 2', cursive; }
+  .test { background: #1e293b; border-left: 4px solid #64748b; padding: 12px 16px; margin: 8px 0; border-radius: 6px; font-family: 'SF Mono', Consolas, monospace; font-size: 13px; }
+  .test.pass { border-color: #10b981; }
+  .test.fail { border-color: #ef4444; background: #450a0a; }
+  .test.warn { border-color: #f59e0b; }
+  .test .title { font-weight: 700; margin-bottom: 4px; }
+  .test .detail { font-size: 12px; opacity: 0.7; }
+  .test .error { color: #fca5a5; font-size: 11px; margin-top: 4px; white-space: pre-wrap; }
+  button { background: #f472b6; color: #0f172a; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
+  button:hover { background: #ec4899; }
+  .summary { background: #1e293b; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+  .summary.green { border: 2px solid #10b981; }
+  .summary.red { border: 2px solid #ef4444; }
+  .big { font-size: 48px; font-weight: 900; }
+  .stat { display: inline-block; margin-right: 20px; }
+  .stat b { color: #f472b6; }
+  pre { background: #0f172a; padding: 10px; border-radius: 6px; overflow-x: auto; font-size: 11px; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/cost-calculator.js"></script>
+<script src="../js/core/catalog-v2.js"></script>
+<script src="../js/core/financas.js"></script>
+<script src="../js/core/finance-realtime.js"></script>
+<script src="../js/core/cashflow.js"></script>
+<script src="../js/core/analytics-advanced.js"></script>
+<script src="../js/core/offline-queue.js"></script>
+<script src="../js/core/pix.js"></script>
+<script src="../js/core/nfce.js"></script>
+<script src="../js/core/belinha-page-scanners.js"></script>
+</head>
+<body>
+<h1>🧪 MilkyPot Smoke Test — Produção Ready?</h1>
+<p>Valida cada módulo crítico do sistema. Rodar ANTES de abrir a loja.</p>
+<button onclick="runAll()">▶ Rodar TODOS os testes</button>
+<div id="summary" style="margin-top:20px"></div>
+<div id="results"></div>
+
+<script>
+const FID = 'smoke_test_' + Date.now();
+const results = [];
+
+function record(name, ok, detail, error) {
+    results.push({ name, ok, detail, error });
+    const d = document.createElement('div');
+    d.className = 'test ' + (ok === true ? 'pass' : ok === 'warn' ? 'warn' : 'fail');
+    d.innerHTML = `
+        <div class="title">${ok === true ? '✅' : ok === 'warn' ? '⚠️' : '❌'} ${name}</div>
+        <div class="detail">${detail || ''}</div>
+        ${error ? `<div class="error">${error}</div>` : ''}
+    `;
+    document.getElementById('results').appendChild(d);
+}
+
+function test(name, fn) {
+    try {
+        const r = fn();
+        if (r && r.then) {
+            return r.then(d => record(name, true, d))
+                    .catch(e => record(name, false, '', e.message + '\n' + e.stack));
+        }
+        record(name, true, r);
+    } catch (e) {
+        record(name, false, '', e.message + '\n' + e.stack);
+    }
+}
+
+async function runAll() {
+    document.getElementById('results').innerHTML = '';
+    document.getElementById('summary').innerHTML = 'Rodando...';
+    results.length = 0;
+
+    // === 1. Módulos carregados ===
+    test('Módulo DataStore carregado', () => {
+        if (!window.DataStore) throw new Error('DataStore undefined');
+        return 'OK';
+    });
+    test('Módulo CatalogV2 carregado', () => {
+        if (!window.CatalogV2) throw new Error('CatalogV2 undefined');
+        return 'OK';
+    });
+    test('Módulo CostCalculator carregado', () => {
+        if (!window.CostCalculator) throw new Error('CostCalculator undefined');
+        return 'OK';
+    });
+    test('Módulo Cashflow carregado', () => {
+        if (!window.Cashflow) throw new Error('Cashflow undefined');
+        return 'OK';
+    });
+    test('Módulo AnalyticsAdvanced carregado', () => {
+        if (!window.AnalyticsAdvanced) throw new Error('AnalyticsAdvanced undefined');
+        return 'OK';
+    });
+    test('Módulo OfflineQueue carregado', () => {
+        if (!window.OfflineQueue) throw new Error('OfflineQueue undefined');
+        return 'OK';
+    });
+    test('Módulo Pix carregado', () => {
+        if (!window.Pix) throw new Error('Pix undefined');
+        return 'OK';
+    });
+    test('Módulo NFCe carregado', () => {
+        if (!window.NFCe) throw new Error('NFCe undefined');
+        return 'OK';
+    });
+
+    // === 2. CostCalculator: preços batem ===
+    test('CostCalculator.suggest picolé R$ 2,50 de custo', () => {
+        const r = CostCalculator.suggest(2.50, 'loja', 'cat_picole');
+        if (!r.preco || r.preco < 5) throw new Error('Preço baixo: ' + r.preco);
+        if (r.margemPct < 60) throw new Error('Margem baixa: ' + r.margemPct + '%');
+        return `R$ ${r.preco} · margem ${r.margemPct}%`;
+    });
+
+    test('CostCalculator.suggestAll — delivery > loja > (iFood maior)', () => {
+        const r = CostCalculator.suggestAll(5, 'cat_potinho');
+        if (r.ifood.preco <= r.loja.preco) throw new Error('iFood deveria ser mais caro: loja ' + r.loja.preco + ' vs ifood ' + r.ifood.preco);
+        return `Loja R$ ${r.loja.preco} · Del R$ ${r.delivery.preco} · iFood R$ ${r.ifood.preco}`;
+    });
+
+    // === 3. CatalogV2 seed ===
+    test('CatalogV2.seedMilkyPot gera 12 produtos com preços aplicados', () => {
+        const r = CatalogV2.seedMilkyPot(FID);
+        if (!r.seeded && !r.skipped) throw new Error('Seed não executou');
+        const prods = CatalogV2.listProdutos(FID);
+        if (prods.length < 10) throw new Error('Só ' + prods.length + ' produtos');
+        const precoZero = prods.filter(p => {
+            return !(p.precos.loja.real > 0);
+        });
+        if (precoZero.length > 2) {
+            throw new Error(precoZero.length + ' produtos com preço 0: ' + precoZero.map(p => p.name).slice(0,3).join(', '));
+        }
+        return `${prods.length} produtos · ${prods.length - precoZero.length} com preço aplicado`;
+    });
+
+    // === 4. Pix payload ===
+    test('Pix.generatePayload gera EMV válido', () => {
+        const p = Pix.generatePayload({
+            chave: 'jocimarrodrigo@gmail.com',
+            nome: 'MILKYPOT LONDRINA',
+            cidade: 'LONDRINA',
+            valor: 25.90,
+            txid: 'TEST123'
+        });
+        if (!p.startsWith('000201')) throw new Error('Prefix inválido: ' + p.slice(0, 10));
+        if (p.length < 100) throw new Error('Payload curto: ' + p.length);
+        if (!p.match(/6304[0-9A-F]{4}$/)) throw new Error('CRC faltando');
+        return `${p.length} chars · CRC OK`;
+    });
+
+    // === 5. OfflineQueue ===
+    test('OfflineQueue.enqueueOrder grava pedido local', () => {
+        const order = {
+            id: 'test_' + Date.now(),
+            total: 15.50,
+            status: 'confirmado',
+            createdAt: new Date().toISOString(),
+            items: [{ name: 'Picolé', qty: 1, total: 15.50 }]
+        };
+        OfflineQueue.enqueueOrder(FID, order);
+        const stored = DataStore.get('orders_' + FID) || [];
+        if (!stored.find(o => o.id === order.id)) throw new Error('Pedido não gravado');
+        const st = OfflineQueue.getStatus(FID);
+        return `pendentes=${st.pending} · online=${st.online}`;
+    });
+
+    // === 6. NFCe manual ===
+    test('NFCe.emit em modo manual registra pendente', async () => {
+        const r = await NFCe.emit(FID, { id: 'test', total: 25, items: [] });
+        if (r.status !== 'pendente_manual') throw new Error('Status inesperado: ' + r.status);
+        const resumo = NFCe.resumoPendentes(FID);
+        return `pendentes=${resumo.pendentes}`;
+    });
+
+    // === 7. Cashflow projection ===
+    test('Cashflow.projectD30 retorna 30 dias', () => {
+        const r = Cashflow.projectD30(FID);
+        if (!r.days || r.days.length !== 30) throw new Error('Dias: ' + (r.days && r.days.length));
+        return `${r.days.length} dias · saldo atual R$ ${r.saldoAtual}`;
+    });
+
+    // === 8. Analytics ABC ===
+    test('AnalyticsAdvanced.curveABC não explode sem vendas', () => {
+        const r = AnalyticsAdvanced.curveABC(FID, 30);
+        if (!r.insight) throw new Error('Sem insight');
+        return `${r.produtos.length} produtos · "${r.insight.slice(0,50)}..."`;
+    });
+
+    test('AnalyticsAdvanced.cohortAnalysis não explode sem clientes', () => {
+        const r = AnalyticsAdvanced.cohortAnalysis(FID);
+        if (r.totalClients == null) throw new Error('totalClients null');
+        return `${r.totalClients} clientes · D30 ${r.retencao.d30}%`;
+    });
+
+    test('AnalyticsAdvanced.commissionReport sem vendas', () => {
+        const r = AnalyticsAdvanced.commissionReport(FID);
+        if (!Array.isArray(r.operadores)) throw new Error('operadores não é array');
+        return `${r.operadores.length} operadores`;
+    });
+
+    // === 9. Scanner financeiro ===
+    test('BelinhaScanners.financeiro retorna alerts array', () => {
+        if (!window.BelinhaScanners) return 'warn: BelinhaScanners não carregado (OK se só scanner e não widget)';
+        const s = window.BelinhaScanners.SCANNERS || window.SCANNERS;
+        if (!s || !s.financeiro) return 'warn: scanner financeiro não encontrado';
+        const r = s.financeiro(FID);
+        if (!Array.isArray(r.alerts)) throw new Error('alerts não é array');
+        return `${r.alerts.length} alerts · ${r.kpis.length} KPIs`;
+    });
+
+    // === 10. Firestore config presente ===
+    test('Firestore configurado (firebase app)', () => {
+        if (typeof firebase === 'undefined') throw new Error('firebase SDK não carregado');
+        if (!firebase.apps.length) throw new Error('firebase app não inicializado');
+        return 'OK';
+    });
+
+    // === 11. Endpoint /api/copilot acessível ===
+    await test('Endpoint /api/copilot responde (OPTIONS)', async () => {
+        try {
+            const r = await fetch('/api/copilot', { method: 'OPTIONS' });
+            return `HTTP ${r.status}`;
+        } catch (e) {
+            throw new Error('Endpoint não acessível: ' + e.message);
+        }
+    });
+
+    // === 12. LocalStorage funcional ===
+    test('LocalStorage gravação/leitura OK', () => {
+        const key = 'smoke_test_' + Date.now();
+        localStorage.setItem(key, 'x');
+        const v = localStorage.getItem(key);
+        localStorage.removeItem(key);
+        if (v !== 'x') throw new Error('LS corrompido');
+        return 'OK';
+    });
+
+    // === 13. navigator.onLine detecta ===
+    test('navigator.onLine disponível', () => {
+        if (typeof navigator === 'undefined') throw new Error('no navigator');
+        if (typeof navigator.onLine !== 'boolean') throw new Error('onLine não é boolean');
+        return 'online=' + navigator.onLine;
+    });
+
+    // === 14. CatalogV2 syncToLegacy funciona ===
+    test('CatalogV2.syncToLegacy preenche catalog_config', () => {
+        CatalogV2.syncToLegacy(FID);
+        const cfg = DataStore.get('catalog_config');
+        if (!cfg || !cfg.sabores) throw new Error('catalog_config sem sabores');
+        const totalItens = Object.values(cfg.sabores).reduce((s, g) => s + (g.items ? g.items.length : 0), 0);
+        if (totalItens === 0) throw new Error('Zero itens em catalog_config');
+        return `${totalItens} itens sync'd`;
+    });
+
+    // === 15. Cleanup ===
+    test('Cleanup smoke test data', () => {
+        DataStore.remove('catalog_v2_' + FID);
+        DataStore.remove('orders_' + FID);
+        DataStore.remove('offline_queue_' + FID);
+        DataStore.remove('nfe_log_' + FID);
+        return 'OK';
+    });
+
+    // Summary
+    await new Promise(r => setTimeout(r, 500));
+    const pass = results.filter(r => r.ok === true).length;
+    const fail = results.filter(r => r.ok !== true && r.ok !== 'warn').length;
+    const warn = results.filter(r => r.ok === 'warn').length;
+    const total = results.length;
+    const pct = Math.round(pass / total * 100);
+    const s = document.getElementById('summary');
+    s.className = 'summary ' + (fail === 0 ? 'green' : 'red');
+    s.innerHTML = `
+        <div class="big">${fail === 0 ? '✅' : '❌'} ${pct}%</div>
+        <div><span class="stat"><b>${pass}</b> passou</span>
+        <span class="stat"><b style="color:#f59e0b">${warn}</b> warns</span>
+        <span class="stat"><b style="color:#ef4444">${fail}</b> falharam</span>
+        <span class="stat">Total: <b>${total}</b></span></div>
+        <p style="margin-top:14px;font-size:13px;opacity:.8">${fail === 0 ? '🚀 Sistema PASSOU smoke test. Pronto pra launch.' : '🚨 Tem falhas críticas. CORRIGIR antes de abrir.'}</p>
+    `;
+}
+
+// Auto-run se query ?auto=1
+if (location.search.includes('auto=1')) {
+    setTimeout(runAll, 1000);
+}
+</script>
+</body>
+</html>

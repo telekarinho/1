@@ -159,10 +159,19 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { apiKey, model, messages, context, persona, image } = req.body || {};
+        const { apiKey: bodyKey, model, messages, context, persona, image } = req.body || {};
 
-        if (!apiKey || typeof apiKey !== 'string') {
-            return res.status(400).json({ error: 'api_key_missing' });
+        // Prioridade: chave do body (usuário pagou) > ENV do Vercel (fallback servidor)
+        // Isso garante que a Belinha funcione em prod mesmo se o servidor local cair.
+        const apiKey = (bodyKey && typeof bodyKey === 'string' && bodyKey.startsWith('sk-ant-'))
+                       ? bodyKey
+                       : process.env.ANTHROPIC_API_KEY;
+
+        if (!apiKey) {
+            return res.status(400).json({
+                error: 'api_key_missing',
+                hint: 'Configure ANTHROPIC_API_KEY no Vercel ou envie apiKey no body'
+            });
         }
         if (!Array.isArray(messages) || messages.length === 0) {
             return res.status(400).json({ error: 'messages_empty' });

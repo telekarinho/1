@@ -17,7 +17,7 @@
 (function(global){
     'use strict';
 
-    // Margens-alvo por categoria (% do preço)
+    // Margens-alvo por categoria (% do preço) — PARA CANAL LOJA
     const MARGEM_POR_CATEGORIA = {
         'cat_picole':     0.75, // picolé: 72-78% margem
         'cat_sorvete_kg': 0.70,
@@ -28,6 +28,22 @@
         'cat_bebida':     0.65,
         'cat_buffet':     0.70,
         'default':        0.60
+    };
+
+    // Ajuste de margem por canal — canais com taxa alta ACEITAM margem menor.
+    // Sem isso, iFood explode preço (ex: potinho R$ 80 em vez de R$ 24).
+    // Delivery perde 5pp, iFood perde 20pp em margem alvo (cliente NÃO paga pelo iFood).
+    const AJUSTE_MARGEM_POR_CANAL = {
+        loja:     0,      // mantém margem alvo
+        delivery: -0.05,  // aceita 5pp a menos (taxa de entrega)
+        ifood:    -0.20   // aceita 20pp a menos (iFood come margem)
+    };
+
+    // Multiplicador máximo sobre preço loja — evita preço absurdo no iFood.
+    const MAX_MULT_VS_LOJA = {
+        loja:     1.00,
+        delivery: 1.18,   // delivery até 18% acima da loja
+        ifood:    1.30    // iFood até 30% acima (compensa parte da taxa)
     };
 
     // Taxas por canal (% adicionais sobre o preço que saem do bolso)
@@ -48,19 +64,24 @@
         const c = Number(custoTotal) || 0;
         if (c <= 0) return { preco: 0, margem: 0, margemPct: 0, detalhe: 'custo zero' };
 
-        const margemAlvo = MARGEM_POR_CATEGORIA[categoriaId] || MARGEM_POR_CATEGORIA.default;
+        const margemBase = MARGEM_POR_CATEGORIA[categoriaId] || MARGEM_POR_CATEGORIA.default;
+        const ajuste = AJUSTE_MARGEM_POR_CANAL[canal] || 0;
+        const margemAlvo = Math.max(0.25, margemBase + ajuste);  // mínimo 25% de margem
         const taxaCanal = TAXAS[canal] || TAXAS.loja;
 
-        // preço bruto: precisa cobrir custo + taxa canal + margem
-        // preco * (1 - taxaCanal - margemAlvo) = custo
-        // preco = custo / (1 - taxa - margem)
         const denom = 1 - taxaCanal - margemAlvo;
         if (denom <= 0) return { preco: 0, margem: 0, margemPct: 0, detalhe: 'margem+taxa > 100%' };
 
         let preco = c / denom;
-
-        // Arredondamento psicológico:
         preco = _psychRound(preco);
+
+        // Limite máximo: não deixar delivery/ifood ficar absurdamente acima da loja
+        if (canal !== 'loja') {
+            const precoLoja = _calcLoja(c, categoriaId);
+            const maxMult = MAX_MULT_VS_LOJA[canal] || 1.3;
+            const precoMax = _psychRound(precoLoja * maxMult);
+            if (preco > precoMax) preco = precoMax;
+        }
 
         const margem = preco - c - (preco * taxaCanal);
         const margemPct = Math.round((margem / preco) * 100);
@@ -72,6 +93,14 @@
             canal: canal,
             detalhe: `custo R$ ${c.toFixed(2)} · taxa ${(taxaCanal*100).toFixed(1)}% · margem alvo ${(margemAlvo*100).toFixed(0)}%`
         };
+    }
+
+    // helper interno: calcula preço canal loja sem recursão
+    function _calcLoja(c, categoriaId) {
+        const m = MARGEM_POR_CATEGORIA[categoriaId] || MARGEM_POR_CATEGORIA.default;
+        const denom = 1 - TAXAS.loja - m;
+        if (denom <= 0) return c * 2;
+        return _psychRound(c / denom);
     }
 
     /**
