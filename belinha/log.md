@@ -68,3 +68,37 @@
 - Ciclo #3: Adicionar Schema.org `Menu` + `MenuItem` em `cardapio.html` (rich results p/ busca "cardápio milkypot londrina")
 - Pesquisar concorrente Jhoy (ainda não mapeado em `belinha/competitors/`)
 - Criar conteúdo pós-inauguração para stories do dia 25/04 (template de repost de clientes)
+
+---
+
+## Ciclo #3 — 2026-04-22
+
+**Área:** SEO — Schema.org Menu + MenuItem + pesquisa concorrente Jhoy
+
+**Contexto:** Inauguração em 3 dias (25/04/2026). Com sitemap.xml já enviado, adicionar dados estruturados de menu permite que o Google exiba preços diretamente na SERP para buscas como "potinho ninho londrina".
+
+**O que analisou:**
+- `cardapio.html` já tinha OG e canonical (ciclo #2) mas sem dados estruturados de menu
+- `js/cardapio-data.js` tem preços reais: Mini R$10 / Pequeno R$14 / Médio R$18 / Gigante R$22
+- 4 linhas de produto: Ninho, Açaí, Zero/Fit, Milkshake
+- Pesquisa Jhoy iniciada em paralelo (agente em background)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `cardapio.html` | +Schema.org JSON-LD: `FoodEstablishment` + `hasMenu` → 4 `MenuSection` + 16 `MenuItem` com preços reais em BRL |
+
+**Commit:** `ae51fa6`
+
+**Validação:** JSON-LD validado por `python3 json.loads()` — 4 seções, 16 itens, sem erros de sintaxe.
+
+**Impacto esperado:**
+- Rich results no Google com preços visíveis antes do clique ("a partir de R$10")
+- Melhora ranking para "cardápio milkypot", "potinho ninho londrina", "açaí muffato londrina"
+- Base para futuro uso de `priceRange` e `openingHoursSpecification` em `index.html`
+
+**Próximo passo sugerido:**
+- Ciclo #4: Criar `belinha/competitors/jhoy.md` com resultado da pesquisa (agente em background)
+- Ciclo #4: Conteúdo pós-inauguração — template de repost de clientes para stories do dia 25/04
+- Ciclo #4: Adicionar `openingHoursSpecification` ao Schema.org LocalBusiness em `index.html`
