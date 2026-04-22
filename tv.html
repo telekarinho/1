@@ -383,6 +383,8 @@ body:not(.idle){cursor:default}
         var fit = config.objectFit || 'contain';
 
         clearTimeout(timer);
+        var oldVideos = player.querySelectorAll('video');
+        oldVideos.forEach(function(v){ v.pause(); v.removeAttribute('src'); v.load(); });
         player.innerHTML = '';
 
         if(!m || !m.type){
@@ -426,36 +428,41 @@ body:not(.idle){cursor:default}
                 return;
             }
             var video = document.createElement('video');
-            var videoHandled = false;
-            var videoTimeout = setTimeout(function(){
-                if(videoHandled) return;
-                videoHandled = true;
-                playFallback('Video demorou para carregar.');
-            }, 5000);
-            video.src = m.dataUrl;
-            video.muted = false;
+            video.muted = true;
             video.autoplay = true;
             video.playsInline = true;
+            video.setAttribute('preload','auto');
             video.style.objectFit = fit;
-            video.onloadedmetadata = function(){
-                if(videoHandled) return;
-                videoHandled = true;
+            var videoTimeout = setTimeout(function(){
+                video.removeAttribute('src');
+                video.load();
+                playFallback('Video demorou para carregar.');
+            }, 12000);
+            video.onloadeddata = function(){
                 clearTimeout(videoTimeout);
                 var dur = item.duration || (video.duration * 1000);
                 startProgress(dur);
                 timer = setTimeout(playNext, dur);
+                if(config.videoSound !== false){
+                    video.muted = false;
+                }
             };
-            video.onended = function(){ playNext(); };
+            video.onended = function(){ clearTimeout(videoTimeout); playNext(); };
             video.onerror = function(){
-                if(videoHandled) return;
-                videoHandled = true;
                 clearTimeout(videoTimeout);
+                video.removeAttribute('src');
+                video.load();
                 playFallback('Falha ao abrir video.');
             };
             player.appendChild(video);
+            video.src = m.dataUrl;
+            video.load();
             video.play().catch(function(){
                 video.muted = true;
-                video.play().catch(function(){});
+                video.play().catch(function(){
+                    clearTimeout(videoTimeout);
+                    playFallback('Falha ao reproduzir video.');
+                });
             });
         }
         else if(m.type === 'text'){
