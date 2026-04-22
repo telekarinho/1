@@ -91,6 +91,28 @@
   .btn-add { padding: 8px 14px; background: #F3F4F6; border: 1px dashed #D1D5DB; border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; color: #374151; margin-top: 8px; }
   .btn-add:hover { background: #FFF0F6; color: #9A3412; border-color: #FF4F8A; }
 
+  /* Tooltip (?) informativo */
+  .mp-help { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-left: 4px; border-radius: 50%; background: #E5E7EB; color: #4B5563; font-size: 10px; font-weight: 800; cursor: help; position: relative; text-transform: none; letter-spacing: 0; vertical-align: middle; }
+  .mp-help:hover { background: #7E57C2; color: #fff; }
+  .mp-help::after {
+    content: attr(data-tip);
+    position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%);
+    background: #1F2937; color: #fff; padding: 10px 14px; border-radius: 10px;
+    font-size: 12px; font-weight: 500; line-height: 1.5; letter-spacing: normal;
+    width: max-content; max-width: 320px; text-transform: none; text-align: left;
+    white-space: normal; opacity: 0; pointer-events: none; transition: opacity .15s ease, transform .15s ease;
+    z-index: 99999; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  }
+  .mp-help:hover::after { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+  /* Banner guide interativo */
+  .mp-guide { background: linear-gradient(135deg,#FFF7ED,#FEF3C7); border: 1px solid #FCD34D; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; font-size: 13px; color: #78350F; display: flex; align-items: flex-start; gap: 10px; }
+  .mp-guide .g-icon { font-size: 20px; line-height: 1; flex-shrink: 0; }
+  .mp-guide a, .mp-guide button.lnk { color: #7E57C2; font-weight: 800; text-decoration: none; background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; font-size: 13px; }
+  .mp-guide a:hover, .mp-guide button.lnk:hover { text-decoration: underline; }
+  .mp-guide.success { background: linear-gradient(135deg,#F0FDF4,#DCFCE7); border-color: #86EFAC; color: #065F46; }
+  .mp-guide.info { background: linear-gradient(135deg,#EFF6FF,#DBEAFE); border-color: #93C5FD; color: #1E40AF; }
+
   .topping-chip { display: inline-flex; align-items: center; gap: 6px; background: #F3F4F6; padding: 6px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; cursor: pointer; margin: 3px; border: 2px solid transparent; }
   .topping-chip.selected { background: rgba(255,79,138,.1); border-color: #FF4F8A; color: #9A3412; }
 
@@ -815,35 +837,42 @@
 
       <!-- Receita (ingredientes usados) -->
       <div class="form-section">
-        <h3>📋 Receita (ingredientes)</h3>
-        <p style="font-size:12px;color:#6B7280;margin:-4px 0 10px">Cadastra o que vai em 1 unidade deste produto. O custo insumos e total são calculados automaticamente.</p>
+        <h3>📋 Receita (ingredientes) <span class="mp-help" data-tip="Lista o que compõe 1 unidade deste produto. Ex: Milkshake = 80g leite em pó + 40g pasta Nutella + 1 copo. O custo é calculado multiplicando a quantidade usada pelo custo do ingrediente no estoque.">(?)</span></h3>
+        <p style="font-size:12px;color:#6B7280;margin:-4px 0 10px">Cadastra o que vai em <b>1 unidade</b> deste produto. O custo de insumos e total são calculados automaticamente.</p>
+        <div id="receitaGuide"></div>
         <div id="receitaList"></div>
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
           <button class="btn-add" onclick="addReceitaLinha()">+ Adicionar ingrediente</button>
           <button class="btn-add" style="background:#F3F4F6;color:#1F2937" onclick="addEmbalagemLinha()">+ Embalagem (copo/tampa/colher)</button>
+          <button class="btn-add" style="background:#F3F4F6;color:#1F2937" onclick="closeProduto(); setTimeout(()=>document.querySelector('.ct-tab[data-tab=ingredientes]')?.click(),100);" title="Vai pra aba de ingredientes cadastrar novo">🥛 Cadastrar novo ingrediente →</button>
         </div>
-        <div style="margin-top:10px;display:grid;grid-template-columns:1fr 180px;gap:10px;align-items:center">
-          <div class="form-field"><label>⏱ Tempo de preparo (min)</label><input type="number" step="0.5" id="pTempoPreparo" value="${p.tempoPreparoMin||0}" oninput="recalcCusto()" placeholder="0" style="max-width:180px"></div>
+        <div style="margin-top:12px;display:grid;grid-template-columns:180px 1fr;gap:10px;align-items:flex-start">
+          <div class="form-field">
+            <label>⏱ Tempo de preparo (min) <span class="mp-help" data-tip="Quanto tempo leva pra fazer 1 unidade desse produto (do blender ligar até entregar pro cliente). É usado pra calcular energia (kWh × potência × tempo) e mão-de-obra (custo/hora × tempo).">(?)</span></label>
+            <input type="number" step="0.5" id="pTempoPreparo" value="${p.tempoPreparoMin||0}" oninput="recalcCusto()" placeholder="0">
+          </div>
+          <div id="tempoGuide" style="font-size:12px;color:#6B7280;padding-top:20px"></div>
         </div>
       </div>
 
       <!-- Custos AUTO-CALCULADOS -->
       <div class="form-section">
-        <h3>💰 Custos (auto-calculados pela receita)</h3>
-        <p style="font-size:12px;color:#6B7280;margin:-4px 0 10px">Baseado na receita acima + config da loja (kWh, salário/hora). Só "Outros" é manual.</p>
+        <h3>💰 Custos (auto-calculados pela receita) <span class="mp-help" data-tip="Os 4 primeiros campos são READ-ONLY — vêm da receita e da config da loja. Só edite 'Outros' (impostos, marketing, rateio admin).">(?)</span></h3>
+        <p style="font-size:12px;color:#6B7280;margin:-4px 0 10px">Baseado na receita acima + config da loja. <a href="configuracoes.html#producao" style="color:#7E57C2;font-weight:700">⚙️ Configurar kWh e salário/hora →</a></p>
         <div class="form-grid">
-          <div class="form-field"><label>Insumos (R$)</label><input type="number" step="0.01" id="pCInsumos" value="${p.custos?.custoInsumos||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
-          <div class="form-field"><label>Embalagem (R$)</label><input type="number" step="0.01" id="pEmbalagem" value="${p.custos?.custoAdicional?.embalagem||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
-          <div class="form-field"><label>⚡ Energia (R$)</label><input type="number" step="0.01" id="pEnergia" value="${p.custos?.custoAdicional?.energia||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
-          <div class="form-field"><label>👷 Mão de obra (R$)</label><input type="number" step="0.01" id="pMao" value="${p.custos?.custoAdicional?.mao_obra||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
-          <div class="form-field"><label>Outros (R$)</label><input type="number" step="0.01" id="pOutros" value="${p.custos?.custoAdicional?.outros||0}" oninput="recalcCusto()" placeholder="impostos, marketing..."></div>
-          <div class="form-field"><label style="color:#16a34a;font-weight:800">CUSTO TOTAL</label><input type="text" id="pCTotal" value="R$ ${cTotal.toFixed(2)}" readonly style="font-weight:900;color:#16a34a;background:#F0FDF4;font-size:16px"></div>
+          <div class="form-field"><label>Insumos (R$) <span class="mp-help" data-tip="Soma da receita: Σ (qtd usada × custo do ingrediente no estoque). Cadastre ingredientes na aba Ingredientes pra popular isso.">(?)</span></label><input type="number" step="0.01" id="pCInsumos" value="${p.custos?.custoInsumos||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
+          <div class="form-field"><label>Embalagem (R$) <span class="mp-help" data-tip="Custo total das embalagens (copo + tampa + colher) adicionadas na receita.">(?)</span></label><input type="number" step="0.01" id="pEmbalagem" value="${p.custos?.custoAdicional?.embalagem||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
+          <div class="form-field"><label>⚡ Energia (R$) <span class="mp-help" data-tip="Tempo preparo × kWh × potência / 60. Precisa do tempo de preparo preenchido + kWh configurado em Configurações.">(?)</span></label><input type="number" step="0.01" id="pEnergia" value="${p.custos?.custoAdicional?.energia||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
+          <div class="form-field"><label>👷 Mão de obra (R$) <span class="mp-help" data-tip="Tempo preparo × custo/hora do operador / 60. Define o salário/hora em Configurações → Custos de Produção.">(?)</span></label><input type="number" step="0.01" id="pMao" value="${p.custos?.custoAdicional?.mao_obra||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
+          <div class="form-field"><label>Outros (R$) <span class="mp-help" data-tip="Custos que não encaixam em nenhum dos 4 acima: impostos diferidos, rateio marketing, embalagem especial, etc.">(?)</span></label><input type="number" step="0.01" id="pOutros" value="${p.custos?.custoAdicional?.outros||0}" oninput="recalcCusto()" placeholder="impostos, marketing..."></div>
+          <div class="form-field"><label style="color:#16a34a;font-weight:800">CUSTO TOTAL <span class="mp-help" data-tip="Custo total de produzir 1 unidade. Esse valor é usado pra sugerir preço por canal com margem saudável (loja +60% / delivery +12% / iFood +28%).">(?)</span></label><input type="text" id="pCTotal" value="R$ ${cTotal.toFixed(2)}" readonly style="font-weight:900;color:#16a34a;background:#F0FDF4;font-size:16px"></div>
         </div>
       </div>
 
       <!-- Preços -->
       <div class="form-section">
-        <h3>🏷️ Preços de venda</h3>
+        <h3>🏷️ Preços de venda <span class="mp-help" data-tip="Cada canal tem taxa diferente (loja 2.8%, delivery 7.5%, iFood 26%). O botão 'Usar' aplica o preço sugerido com margem saudável. Loja é a base; Delivery = Loja +12%, iFood = Loja +28%.">(?)</span></h3>
+        <p style="font-size:12px;color:#6B7280;margin:-4px 0 10px">Clica em <b>"Usar"</b> pra aplicar o preço sugerido automaticamente. Sugestão leva em conta custo + taxa do canal + margem saudável.</p>
         <div id="priceRows">
           ${['loja','delivery','ifood'].map(ch => `
             <div class="price-row">
@@ -861,7 +890,7 @@
 
       <!-- Kits (combos) -->
       <div class="form-section">
-        <h3>🎁 Kits / Combos</h3>
+        <h3>🎁 Kits / Combos <span class="mp-help" data-tip="Promoções por volume. Ex: Picolé individual R$ 3,00 mas pack de 10 sai R$ 23,00 (desconto 23%). No PDV aparece como opção ao clicar no produto.">(?)</span></h3>
         <div id="kitsList">
           ${(p.kits||[]).map((k,i) => `
             <div class="kit-row" data-idx="${i}">
@@ -879,7 +908,7 @@
 
       <!-- Variantes (pra sorvete por kg/balde/pote) -->
       <div class="form-section">
-        <h3>⚖️ Variantes (tamanho/peso)</h3>
+        <h3>⚖️ Variantes (tamanho/peso) <span class="mp-help" data-tip="Use para produtos vendidos em diferentes tamanhos (250g, 500g, 1kg, 5kg). Cada variante tem seu preço por canal. Ex: Sorvete por Kg em pote pequeno/médio/balde.">(?)</span></h3>
         <div id="variantesList">
           ${(p.variantes||[]).map((v,i) => `
             <div class="variante-row" data-idx="${i}">
@@ -897,7 +926,7 @@
 
       <!-- Toppings disponíveis -->
       <div class="form-section">
-        <h3>✨ Toppings que podem ser adicionados</h3>
+        <h3>✨ Toppings que podem ser adicionados <span class="mp-help" data-tip="Marque os adicionais que o cliente pode escolher neste produto. Ex: um Açaí pode receber granola + banana + Nutella. Cadastra toppings na aba ✨ Toppings.">(?)</span></h3>
         <div>
           ${toppings.length ? toppings.map(t => `
             <span class="topping-chip ${(p.toppingsIds||[]).includes(t.id)?'selected':''}" data-tid="${t.id}" onclick="toggleTop(this)">${esc(t.name)} +R$ ${Number(t.precoExtra||0).toFixed(2)}</span>
@@ -1039,14 +1068,50 @@
   window.receitaChanged = function() {
     if (typeof ProducaoCalc === 'undefined') return;
     const r = _collectReceitaFromUI();
+    const tempoMin = Number(document.getElementById('pTempoPreparo')?.value) || 0;
     // Monta objeto temporário pra calcular
     const tmp = {
       custos: { insumos: r.insumos, embalagemIds: r.embalagemIds, custoAdicional: {
         outros: Number(document.getElementById('pOutros')?.value) || 0
       }},
-      tempoPreparoMin: Number(document.getElementById('pTempoPreparo')?.value) || 0
+      tempoPreparoMin: tempoMin
     };
     const c = ProducaoCalc.totalCost(tmp, fid);
+
+    // ===== BANNERS INTERATIVOS / INFORMATIVOS =====
+    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+    const hasReceita = r.insumos.length + r.embalagemIds.length > 0;
+    const cfg = c.config || {};
+    const guide = document.getElementById('receitaGuide');
+    const tempoGuide = document.getElementById('tempoGuide');
+
+    if (guide) {
+      if (!inv.length) {
+        guide.innerHTML = `<div class="mp-guide"><span class="g-icon">📭</span><div>
+          <b>Nenhum ingrediente cadastrado ainda.</b> Cadastre primeiro na aba de estoque.<br>
+          <button class="lnk" onclick="closeProduto(); setTimeout(()=>document.querySelector('.ct-tab[data-tab=ingredientes]')?.click(),100);">🥛 Ir para Ingredientes →</button>
+        </div></div>`;
+      } else if (!hasReceita) {
+        guide.innerHTML = `<div class="mp-guide info"><span class="g-icon">💡</span><div>
+          <b>Comece adicionando ingredientes desta receita.</b> Ex: Milkshake leva 80g de leite ninho + 40g de Nutella + copo + tampa.<br>
+          Clica em <b>"+ Adicionar ingrediente"</b> abaixo. Se não tem o ingrediente ainda, <button class="lnk" onclick="closeProduto(); setTimeout(()=>document.querySelector('.ct-tab[data-tab=ingredientes]')?.click(),100);">cadastre primeiro →</button>
+        </div></div>`;
+      } else {
+        guide.innerHTML = `<div class="mp-guide success"><span class="g-icon">✅</span><div>
+          <b>${r.insumos.length} ingrediente(s) + ${r.embalagemIds.length} embalagem(ns)</b> na receita. Custo direto: <b>R$ ${(c.insumos + c.embalagem).toFixed(2)}</b> por unidade.
+        </div></div>`;
+      }
+    }
+
+    if (tempoGuide) {
+      if (tempoMin <= 0) {
+        tempoGuide.innerHTML = `💡 Com tempo 0, energia e mão-de-obra ficam R$ 0,00. Informe quantos minutos leva pra preparar 1 unidade.`;
+      } else {
+        tempoGuide.innerHTML = `⚡ Energia: <b>R$ ${c.energia.toFixed(2)}</b> · 👷 Mão-obra: <b>R$ ${c.mao_obra.toFixed(2)}</b><br>
+          <small>(${tempoMin}min × R$ ${cfg.custoKwh}/kWh × ${cfg.potenciaMediaKw}kW + R$ ${cfg.custoHora}/h)</small>
+          · <a href="configuracoes.html" target="_blank" style="color:#7E57C2">ajustar config</a>`;
+      }
+    }
     // Preenche campos readonly
     document.getElementById('pCInsumos').value = c.insumos;
     document.getElementById('pEmbalagem').value = c.embalagem;
