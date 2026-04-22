@@ -147,40 +147,6 @@
         return { alerts, kpis };
     };
 
-    // ---------- PRODUTOS & ESTOQUE ----------
-    SCANNERS['produtos'] = function(fid) {
-        const alerts = []; const kpis = [];
-        const inv = DS().getCollection ? DS().getCollection('inventory', fid) || [] : [];
-        const baixos = inv.filter(i => Number(i.quantity||0) < Number(i.minStock||0));
-        const criticos = inv.filter(i => Number(i.quantity||0) < Number(i.minStock||0) * 0.3);
-
-        kpis.push({ label: 'Insumos cadastrados', value: inv.length, target: '20+', color: inv.length >= 20 ? 'green' : 'amber' });
-        if (criticos.length) {
-            alerts.push({
-                level: 'critical',
-                title: criticos.length + ' insumo(s) em nível CRÍTICO',
-                detail: criticos.slice(0,5).map(i => i.name + ': ' + i.quantity + ' ' + i.unit).join(' · '),
-                action: 'Comprar HOJE. Risco de faltar produto nos próximos pedidos.'
-            });
-        } else if (baixos.length) {
-            alerts.push({
-                level: 'high',
-                title: baixos.length + ' insumo(s) abaixo do estoque mínimo',
-                detail: baixos.slice(0,5).map(i => i.name).join(', '),
-                action: 'Planeja compra nos próximos 2-3 dias.'
-            });
-        }
-        if (!inv.length) {
-            alerts.push({
-                level: 'medium',
-                title: 'Nenhum insumo cadastrado ainda',
-                detail: 'Sem inventário, não rastreamos consumo, margem nem alertas de reposição.',
-                action: 'Clica em "+ Novo Produto" e cadastra ao menos Leite Ninho, Morango, Nutella, Oreo, Açaí e copos.'
-            });
-        }
-        return { alerts, kpis };
-    };
-
     // ---------- PDV ----------
     SCANNERS['pdv'] = function(fid) {
         const alerts = []; const kpis = [];
@@ -474,7 +440,7 @@
     };
 
     // ---------- CADASTRO AVANÇADO V2 ----------
-    SCANNERS['produtos-v2'] = function(fid) {
+    SCANNERS['produtos'] = function(fid) {
         const alerts = []; const kpis = [];
         if (typeof global.CatalogV2 === 'undefined' || typeof global.CostCalculator === 'undefined') {
             return { alerts, kpis };
