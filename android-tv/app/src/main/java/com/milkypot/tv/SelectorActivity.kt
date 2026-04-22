@@ -45,6 +45,9 @@ class SelectorActivity : AppCompatActivity() {
         // Botão especial: TV dedicada ao Desafio
         findViewById<Button>(R.id.btnChallenge)?.setOnClickListener { pickChallenge() }
 
+        // Botão Belinha AI (copiloto)
+        findViewById<Button>(R.id.btnBelinha)?.setOnClickListener { pickBelinha() }
+
         val customEdit = findViewById<EditText>(R.id.customCode)
         findViewById<Button>(R.id.btnCustom).setOnClickListener {
             val v = customEdit.text.toString().trim().lowercase()
@@ -64,6 +67,11 @@ class SelectorActivity : AppCompatActivity() {
         Prefs.clearTvCode(this)
         startChallenge()
         finish()
+    }
+
+    private fun pickBelinha() {
+        // Belinha não vira modo padrão do dispositivo — só abre na hora
+        startActivity(Intent(this, BelinhaActivity::class.java))
     }
 
     private fun startPlayer(code: String) {
