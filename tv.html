@@ -4,284 +4,245 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <title>MilkyPot TV</title>
-<script>
-  // Desregistra SW e limpa caches antes de qualquer coisa (TV nunca cacheia)
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister(); }); }).catch(function(){});
-  }
-  if (window.caches) { caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); }).catch(function(){}); }
-</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:sans-serif;cursor:none}
-#player{position:fixed;inset:0;background:#000}
-#player img,#player video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:block}
-#player .text-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4vw;text-align:center}
-#player .text-slide h1{font-size:clamp(28px,6vw,72px);font-weight:800;line-height:1.1}
-#player .text-slide p{font-size:clamp(16px,3vw,36px);margin-top:1vw;opacity:.9}
-#loadingScreen{position:fixed;inset:0;background:#1a1a2e;display:flex;align-items:center;justify-content:center;color:#fff;z-index:100;font-size:18px;opacity:.85;text-align:center;padding:16px}
-#loadingScreen.hidden{display:none}
-#clock{position:fixed;top:12px;left:12px;font-size:22px;font-weight:700;color:rgba(255,255,255,.9);z-index:10;text-shadow:0 2px 6px rgba(0,0,0,.7);padding:8px 12px;background:rgba(0,0,0,.3);border-radius:8px}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:sans-serif}
+#vid{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;background:#000;display:none}
+#pic{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;background:#000;display:none}
+#msg{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;text-align:center;padding:20px;background:#1a1a2e}
 </style>
 </head>
 <body>
-<div id="loadingScreen">Carregando…</div>
-<div id="player"></div>
-<div id="clock" style="display:none"></div>
+<div id="msg">Carregando...</div>
+<img id="pic">
+<video id="vid" muted autoplay playsinline webkit-playsinline preload="none"></video>
 
 <script>
-/* =============================================================
-   MilkyPot TV Player — LEVE
-   Sem Firebase SDK. Sem DataStore. So fetch REST + <video loop>.
-   URL: /tv.html?f=FRANCHISE&tv=TVID
-   ============================================================= */
-(function(){
-  var FIRESTORE_BASE = 'https://firestore.googleapis.com/v1/projects/milkypot-ad945/databases/(default)/documents/datastore/';
-  var RELOAD_AFTER_MS = 30 * 60 * 1000; // 30min — libera memoria acumulada
-  var tvStart = Date.now();
+/*
+  MilkyPot TV — Ultra Light
+  1 video element reusado, 0 DOM create/destroy, 0 Promises
+  Compativel com Android TV 4.4+, WebView antigo, pouca RAM
+  URL: /tv.html?f=FRANCHISE_ID
+*/
+var FIRE = 'https://firestore.googleapis.com/v1/projects/milkypot-ad945/databases/(default)/documents/datastore/';
 
-  var player = document.getElementById('player');
-  var loadingScreen = document.getElementById('loadingScreen');
-  var clockEl = document.getElementById('clock');
+var vid = document.getElementById('vid');
+var pic = document.getElementById('pic');
+var msg = document.getElementById('msg');
 
-  var params = new URLSearchParams(location.search);
-  var hash = location.hash.replace('#','');
-  var franchiseId = params.get('f') || (hash.split('/')[0] || null);
-  var tvId = params.get('tv') || (hash.split('/')[1] || hash || null);
+var playlist = [];
+var idx = -1;
+var tmr = null;
 
-  var playlist = [];
-  var media = {};
-  var currentIdx = -1;
-  var timer = null;
-  var config = {};
+// Parse URL
+var qs = location.search || '';
+var fid = null;
+var m = qs.match(/[?&]f=([^&#]*)/);
+if(m) fid = decodeURIComponent(m[1]);
+if(!fid){
+  var h = location.hash.replace('#','');
+  if(h) fid = decodeURIComponent(h.split('/')[0]);
+}
 
-  function loading(txt){ if(loadingScreen){ loadingScreen.textContent = txt||'Carregando…'; loadingScreen.classList.remove('hidden'); } }
-  function hideLoading(){ if(loadingScreen){ loadingScreen.classList.add('hidden'); } }
-
-  // Fetch REST direto do Firestore — sem SDK, sem WebSocket, sem cache
-  function fetchDoc(docId){
-    return fetch(FIRESTORE_BASE + encodeURIComponent(docId), { cache: 'no-store' })
-      .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(d){
-        if(!d || !d.fields || !d.fields.value) return null;
-        try { return JSON.parse(d.fields.value.stringValue || 'null'); }
-        catch(e){ return null; }
-      })
-      .catch(function(){ return null; });
-  }
-
-  function resolveTvByShortcode(code){
-    return fetchDoc('franchises').then(function(fs){
-      var list = Array.isArray(fs) ? fs : [];
-      return Promise.all(list.map(function(f){
-        return fetchDoc('tv_shortcodes_' + f.id).then(function(map){
-          if(map && map[code] && map[code].tvId) return { fid: f.id, tvId: map[code].tvId };
-          return null;
-        });
-      })).then(function(results){
-        return results.find(function(r){ return !!r; }) || null;
-      });
-    });
-  }
-
-  function updateClock(){
-    if(!clockEl || clockEl.style.display === 'none') return;
-    var d = new Date();
-    var hh = String(d.getHours()).padStart(2,'0');
-    var mm = String(d.getMinutes()).padStart(2,'0');
-    clockEl.textContent = hh + ':' + mm;
-  }
-
-  function applyConfig(){
-    if(config.showClock){
-      clockEl.style.display = 'block';
-      updateClock();
-    } else {
-      clockEl.style.display = 'none';
-    }
-  }
-
-  function loadPlaylist(){
-    if(!franchiseId){ loading('Aguarde… resolvendo TV'); return; }
-
-    return Promise.all([
-      fetchDoc('tv_media_' + franchiseId),
-      fetchDoc('tv_playlist_' + franchiseId),
-      fetchDoc('tv_config_' + franchiseId)
-    ]).then(function(results){
-      var mediaData = results[0] || [];
-      var playlistData = results[1] || [];
-      config = results[2] || {};
-
-      media = {};
-      mediaData.forEach(function(m){ if(m && m.id) media[m.id] = m; });
-
-      var eff = playlistData;
-      if((!eff || !eff.length) && mediaData && mediaData.length){
-        eff = mediaData.map(function(m){ return { mediaId: m.id, duration: m.duration || 10 }; });
-      }
-
-      playlist = [];
-      (eff || []).forEach(function(p){
-        var mid = (typeof p === 'string') ? p : p.mediaId;
-        var dur = (typeof p === 'string') ? null : p.duration;
-        if(media[mid]){
-          playlist.push({ media: media[mid], duration: (dur || media[mid].duration || 8) * 1000 });
-        }
-      });
-
-      if(!playlist.length){ loading('Playlist vazia. Adicione mídias no painel.'); return; }
-
-      applyConfig();
-      hideLoading();
-      if(currentIdx < 0){ currentIdx = -1; playNext(); }
-    }).catch(function(){
-      loading('Erro de rede. Tentando de novo…');
-      setTimeout(loadPlaylist, 10000);
-    });
-  }
-
-  function releasePrev(){
+// XMLHttpRequest (funciona em WebView antigo, sem Promise/fetch)
+function getDoc(docId, cb){
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', FIRE + encodeURIComponent(docId), true);
+  xhr.onreadystatechange = function(){
+    if(xhr.readyState !== 4) return;
+    if(xhr.status !== 200){ cb(null); return; }
     try {
-      var prev = player.querySelectorAll('video, img, .text-slide');
-      for(var i=0; i<prev.length; i++){
-        var el = prev[i];
-        if(el.tagName === 'VIDEO'){
-          try { el.pause(); el.removeAttribute('src'); el.load(); } catch(e){}
-        }
-        if(el.parentNode) el.parentNode.removeChild(el);
+      var d = JSON.parse(xhr.responseText);
+      if(d && d.fields && d.fields.value && d.fields.value.stringValue){
+        cb(JSON.parse(d.fields.value.stringValue));
+      } else { cb(null); }
+    } catch(e){ cb(null); }
+  };
+  xhr.onerror = function(){ cb(null); };
+  try { xhr.send(); } catch(e){ cb(null); }
+}
+
+// Carrega playlist
+function loadPlaylist(){
+  if(!fid){ msg.textContent = 'Parametro f= ausente na URL'; return; }
+
+  var loaded = 0;
+  var mediaData = null;
+  var playlistData = null;
+
+  function check(){
+    loaded++;
+    if(loaded < 2) return;
+
+    var mediaMap = {};
+    var i;
+    if(mediaData){
+      for(i = 0; i < mediaData.length; i++){
+        if(mediaData[i] && mediaData[i].id) mediaMap[mediaData[i].id] = mediaData[i];
       }
-    } catch(e){}
-  }
-
-  function playNext(){
-    if(!playlist.length) return;
-    currentIdx = (currentIdx + 1) % playlist.length;
-    var item = playlist[currentIdx];
-    var m = item.media;
-
-    clearTimeout(timer);
-    releasePrev();
-
-    if(!m || !m.type){ timer = setTimeout(playNext, 2000); return; }
-
-    var single = (playlist.length === 1);
-
-    if(m.type === 'image'){
-      var isrc = m.url || m.dataUrl;
-      if(!isrc){ timer = setTimeout(playNext, 2000); return; }
-      var img = document.createElement('img');
-      img.src = isrc;
-      img.onload = function(){ timer = setTimeout(playNext, item.duration); };
-      img.onerror = function(){ timer = setTimeout(playNext, 2000); };
-      player.appendChild(img);
-    } else if(m.type === 'video'){
-      var vsrc = m.url || m.dataUrl;
-      if(!vsrc){ timer = setTimeout(playNext, 2000); return; }
-
-      var video = document.createElement('video');
-      var vDone = false;
-      function vClean(){
-        if(vDone) return; vDone = true;
-        clearTimeout(vStuck); clearTimeout(vPlayCheck);
-      }
-
-      video.autoplay = true;
-      video.playsInline = true;
-      video.muted = true;
-      video.loop = single;
-      video.preload = 'auto';
-      video.setAttribute('playsinline','');
-      video.setAttribute('webkit-playsinline','');
-
-      // Seguranca: se nada acontecer em 8s, pula
-      var vStuck = setTimeout(function(){
-        if(vDone) return; vClean();
-        try { video.pause(); video.removeAttribute('src'); video.load(); } catch(e){}
-        timer = setTimeout(playNext, 300);
-      }, 8000);
-
-      // Detecta tela preta: se timeupdate nao disparar em 4s, decoder falhou
-      var vGotFrame = false;
-      var vPlayCheck = setTimeout(function(){
-        if(vDone) return;
-        if(!vGotFrame){
-          vClean();
-          try { video.pause(); video.removeAttribute('src'); video.load(); } catch(e){}
-          timer = setTimeout(playNext, 300);
-        }
-      }, 4000);
-
-      video.addEventListener('timeupdate', function(){
-        if(!vGotFrame){ vGotFrame = true; clearTimeout(vPlayCheck); }
-      });
-
-      video.onloadeddata = function(){
-        clearTimeout(vStuck);
-        if(!single){
-          var dur = (video.duration && isFinite(video.duration)) ? (video.duration*1000 + 200) : item.duration;
-          vStuck = setTimeout(function(){ if(!vDone) playNext(); }, dur + 2000);
-          timer = setTimeout(function(){ vClean(); playNext(); }, dur);
-        }
-      };
-      video.onended = function(){ if(!vDone){ vClean(); if(!single) playNext(); } };
-      video.onerror = function(){
-        vClean();
-        try { video.pause(); video.removeAttribute('src'); video.load(); } catch(e){}
-        timer = setTimeout(playNext, 500);
-      };
-
-      player.appendChild(video);
-      video.src = vsrc;
-      video.load();
-      var vP;
-      try { vP = video.play(); } catch(e){}
-      if(vP && vP.catch){ vP.catch(function(){ if(!vDone){ vClean(); timer = setTimeout(playNext, 500); } }); }
-    } else if(m.type === 'text'){
-      var div = document.createElement('div');
-      div.className = 'text-slide';
-      div.style.background = m.bgColor || '#1a1a2e';
-      div.innerHTML = '<h1>' + esc(m.title || '') + '</h1>' + (m.subtitle ? '<p>' + esc(m.subtitle) + '</p>' : '');
-      player.appendChild(div);
-      timer = setTimeout(playNext, item.duration);
-    } else {
-      timer = setTimeout(playNext, 2000);
     }
+
+    var order = playlistData;
+    if((!order || !order.length) && mediaData && mediaData.length){
+      order = [];
+      for(i = 0; i < mediaData.length; i++){
+        order.push({ mediaId: mediaData[i].id, duration: mediaData[i].duration || 10 });
+      }
+    }
+
+    playlist = [];
+    if(order){
+      for(i = 0; i < order.length; i++){
+        var p = order[i];
+        var mid = (typeof p === 'string') ? p : p.mediaId;
+        var dur = (typeof p === 'string') ? 10 : (p.duration || 10);
+        if(mediaMap[mid]){
+          playlist.push({ m: mediaMap[mid], dur: dur * 1000 });
+        }
+      }
+    }
+
+    if(!playlist.length){
+      msg.textContent = 'Playlist vazia.';
+      setTimeout(loadPlaylist, 30000);
+      return;
+    }
+
+    msg.style.display = 'none';
+    idx = -1;
+    next();
   }
 
-  function esc(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
+  getDoc('tv_media_' + fid, function(d){ mediaData = d || []; check(); });
+  getDoc('tv_playlist_' + fid, function(d){ playlistData = d || []; check(); });
+}
 
-  // === AUTO-RELOAD leve a cada 30min ===
-  // Libera memoria de decoder, buffers, event listeners. Feito num
-  // momento seguro (primeiros 1.5s do loop do video) pra nao cortar.
-  setInterval(function(){
-    if(Date.now() - tvStart < RELOAD_AFTER_MS) return;
-    var v = player.querySelector('video');
-    var safe = !v || !isFinite(v.duration) || v.currentTime < 1.5;
-    if(safe) location.reload();
-  }, 60000);
+// Mostra imagem
+function showImage(src, durMs){
+  vid.style.display = 'none';
+  vid.removeAttribute('src');
+  pic.style.display = 'block';
+  pic.src = src;
+  tmr = setTimeout(next, durMs);
+}
 
-  // Relogio (1x por minuto, so se habilitado)
-  setInterval(function(){ if(config.showClock) updateClock(); }, 60000);
+// Mostra video
+function showVideo(src, durMs, single){
+  pic.style.display = 'none';
+  vid.style.display = 'block';
+  vid.loop = single;
+  vid.src = src;
 
-  // === Init ===
-  if(!franchiseId && !tvId){
-    loading('Parâmetros ausentes. Use /tv.html?f=FRANQUIA&tv=TVID');
+  // Timeout: se video nao carregar em 6s, pula
+  var stuck = setTimeout(function(){
+    vid.removeAttribute('src');
+    next();
+  }, 6000);
+
+  vid.oncanplay = function(){
+    vid.oncanplay = null;
+    clearTimeout(stuck);
+
+    // Pra video com loop (unico na playlist), deixa rodar
+    if(single) return;
+
+    // Agenda proximo slide
+    var d = durMs;
+    if(vid.duration && isFinite(vid.duration)){
+      d = vid.duration * 1000 + 200;
+    }
+    tmr = setTimeout(next, d);
+  };
+
+  vid.onended = function(){
+    if(!single) next();
+  };
+
+  vid.onerror = function(){
+    clearTimeout(stuck);
+    next();
+  };
+
+  try { vid.play(); } catch(e){}
+}
+
+// Mostra texto
+function showText(item, durMs){
+  vid.style.display = 'none';
+  vid.removeAttribute('src');
+  pic.style.display = 'none';
+  msg.style.display = 'flex';
+  msg.style.background = item.bgColor || '#1a1a2e';
+  var t = item.title || '';
+  var s = item.subtitle || '';
+  msg.innerHTML = '<div><h1 style="font-size:clamp(28px,6vw,72px);font-weight:800">' + esc(t) + '</h1>' +
+    (s ? '<p style="font-size:clamp(16px,3vw,36px);margin-top:8px;opacity:.9">' + esc(s) + '</p>' : '') + '</div>';
+  tmr = setTimeout(next, durMs);
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Proximo slide
+function next(){
+  clearTimeout(tmr);
+  if(!playlist.length) return;
+
+  idx = (idx + 1) % playlist.length;
+  var item = playlist[idx];
+  var m = item.m;
+  var dur = item.dur;
+  var single = (playlist.length === 1);
+  var src = m.url || m.dataUrl || '';
+
+  if(!m.type || !src){
+    tmr = setTimeout(next, 2000);
     return;
   }
-  if(!franchiseId && tvId){
-    loading('Resolvendo TV…');
-    resolveTvByShortcode(tvId).then(function(hit){
-      if(hit){ franchiseId = hit.fid; tvId = hit.tvId; loadPlaylist(); }
-      else { loading('TV não encontrada.'); }
-    });
+
+  if(m.type === 'image'){
+    showImage(src, dur);
+  } else if(m.type === 'video'){
+    showVideo(src, dur, single);
+  } else if(m.type === 'text'){
+    showText(m, dur);
   } else {
-    loadPlaylist();
+    tmr = setTimeout(next, 2000);
   }
-})();
+}
+
+// Refresh playlist a cada 60s (sem recarregar pagina)
+setInterval(function(){
+  if(!fid) return;
+  getDoc('tv_media_' + fid, function(md){
+    getDoc('tv_playlist_' + fid, function(pd){
+      if(!md && !pd) return;
+      var mediaMap = {};
+      var i;
+      if(md) for(i=0;i<md.length;i++) if(md[i]&&md[i].id) mediaMap[md[i].id]=md[i];
+      var order = pd;
+      if((!order||!order.length)&&md&&md.length){
+        order=[];for(i=0;i<md.length;i++) order.push({mediaId:md[i].id,duration:md[i].duration||10});
+      }
+      var newPl=[];
+      if(order) for(i=0;i<order.length;i++){
+        var p=order[i];var mid=(typeof p==='string')?p:p.mediaId;var dur=(typeof p==='string')?10:(p.duration||10);
+        if(mediaMap[mid]) newPl.push({m:mediaMap[mid],dur:dur*1000});
+      }
+      if(newPl.length) playlist=newPl;
+    });
+  });
+}, 60000);
+
+// Reload pagina a cada 30min pra liberar memoria
+setTimeout(function(){ location.reload(); }, 30*60*1000);
+
+// Inicia
+if(fid){
+  loadPlaylist();
+} else {
+  msg.textContent = 'Use: /tv.html?f=ID_DA_FRANQUIA';
+}
 </script>
 </body>
 </html>
