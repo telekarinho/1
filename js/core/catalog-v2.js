@@ -297,12 +297,138 @@
         return { seeded: true, produtos: d.produtos.length, toppings: d.toppings.length };
     }
 
+    // ==========================================================
+    // BRIDGE: sincroniza catalog_v2 pro catalog_config (legado) que o
+    // PDV atual lê. Chamado automaticamente ao salvar qualquer produto.
+    // O PDV segue funcionando sem mexer no código dele.
+    // ==========================================================
+    function syncToLegacy(fid) {
+        if (!global.DataStore) return;
+        const d = load(fid);
+        const cats = d.categorias.filter(c => c.active !== false);
+        const legacy = global.DataStore.get('catalog_config') || {};
+
+        // Sabores: categorias que são consumíveis (não toppings/bebidas)
+        legacy.sabores = legacy.sabores || {};
+
+        cats.forEach(cat => {
+            const prods = d.produtos.filter(p =>
+                p.categoriaId === cat.id && p.active !== false &&
+                ['cat_potinho','cat_milkshake','cat_acai','cat_sundae','cat_picole'].includes(cat.id)
+            );
+            if (!prods.length) return;
+            const legacyKey = cat.id.replace('cat_', '');
+            legacy.sabores[legacyKey] = legacy.sabores[legacyKey] || { name: cat.name, items: [] };
+            legacy.sabores[legacyKey].name = cat.name;
+            legacy.sabores[legacyKey].items = prods.map(p => ({
+                id: p.id,
+                name: p.name,
+                emoji: p.midia?.emoji || cat.icon || '🍨',
+                desc: p.desc || '',
+                price: Number(p.precos?.loja?.real || p.precos?.loja?.recomendado || 0),
+                cost: Number(p.custos?.custoTotal || 0),
+                costAdjust: 0,
+                available: p.active !== false,
+                tipoVenda: 'unitario',
+                canalVenda: p.canal || 'ambos',
+                modoMontagem: 'montado',
+                commissionRate: 5,
+                // Preserva receita caso tenha (permite dedução de estoque)
+                receita: (p.custos?.insumos || []).filter(r => r.insumoId && r.qty)
+                                                   .map(r => ({ insumoId: r.insumoId, qty: r.qty, unit: r.unit || 'unid' })),
+                // Campos v2 pra PDV avançado consumir
+                _v2: {
+                    precos: p.precos,
+                    kits: p.kits,
+                    variantes: p.variantes,
+                    toppingsIds: p.toppingsIds
+                }
+            }));
+        });
+
+        // Bebidas (array plano)
+        const bebidas = d.produtos.filter(p => p.categoriaId === 'cat_bebida' && p.active !== false);
+        if (bebidas.length) {
+            legacy.bebidas = bebidas.map(p => ({
+                id: p.id, name: p.name, emoji: p.midia?.emoji || '🧃',
+                price: Number(p.precos?.loja?.real || 0),
+                cost: Number(p.custos?.custoTotal || 0),
+                available: true
+            }));
+        }
+
+        // Adicionais (toppings)
+        if (d.toppings.length) {
+            legacy.adicionais = legacy.adicionais || {};
+            legacy.adicionais.geral = {
+                name: 'Toppings',
+                items: d.toppings.filter(t => t.active !== false).map(t => ({
+                    id: t.id, name: t.name, emoji: '✨',
+                    price: Number(t.precoExtra || 0),
+                    cost: Number(t.custo || 0),
+                    available: true,
+                    commissionRate: 5
+                }))
+            };
+        }
+
+        global.DataStore.set('catalog_config', legacy);
+        return legacy;
+    }
+
+    // Wrap os saves pra sincronizar legacy automaticamente
+    const _origSaveProduto = saveProduto;
+    function saveProdutoAndSync(fid, p) {
+        const res = _origSaveProduto(fid, p);
+        try { syncToLegacy(fid); } catch(e) { console.warn('sync legacy', e); }
+        return res;
+    }
+
+    const _origSaveTopping = saveTopping;
+    function saveToppingAndSync(fid, t) {
+        const res = _origSaveTopping(fid, t);
+        try { syncToLegacy(fid); } catch(e) {}
+        return res;
+    }
+
+    const _origSeed = seedMilkyPot;
+    function seedMilkyPotAndSync(fid) {
+        const res = _origSeed(fid);
+        try { syncToLegacy(fid); } catch(e) {}
+        return res;
+    }
+
+    // Auto-sync ao load (garante PDV sempre atualizado)
+    function autoSyncIfNeeded(fid) {
+        try {
+            const d = load(fid);
+            if (d.produtos.length > 0) syncToLegacy(fid);
+        } catch(e){}
+    }
+
     global.CatalogV2 = {
         load, save,
         listCategorias, saveCategoria, deleteCategoria,
-        listProdutos, getProduto, saveProduto, deleteProduto,
-        listToppings, saveTopping, deleteTopping,
-        seedMilkyPot, newId,
+        listProdutos, getProduto,
+        saveProduto: saveProdutoAndSync,
+        deleteProduto,
+        listToppings,
+        saveTopping: saveToppingAndSync,
+        deleteTopping,
+        seedMilkyPot: seedMilkyPotAndSync,
+        syncToLegacy,
+        autoSyncIfNeeded,
+        newId,
         CATEGORIAS_SEED
     };
+
+    // Auto-sync leve quando a página carrega (se tiver sessão)
+    if (typeof window !== 'undefined') {
+        setTimeout(() => {
+            try {
+                const s = global.Auth && global.Auth.getSession && global.Auth.getSession();
+                if (s && s.franchiseId) autoSyncIfNeeded(s.franchiseId);
+            } catch(e){}
+        }, 2500);
+    }
 })(typeof window !== 'undefined' ? window : this);
