@@ -159,7 +159,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { apiKey, model, messages, context, persona } = req.body || {};
+        const { apiKey, model, messages, context, persona, image } = req.body || {};
 
         if (!apiKey || typeof apiKey !== 'string') {
             return res.status(400).json({ error: 'api_key_missing' });
@@ -171,8 +171,18 @@ export default async function handler(req, res) {
         const chosenModel = (model || 'claude-sonnet-4-5').trim();
 
         // Injeta contexto na PRIMEIRA mensagem do usuário como bloco <context>
+        // Se tem imagem, usa formato de content array (vision)
         const augmented = messages.map((m, i) => {
-            if (i === messages.length - 1 && m.role === 'user' && context) {
+            const isLastUser = (i === messages.length - 1 && m.role === 'user');
+            if (isLastUser && image) {
+                // Vision: content = [image, text]
+                const imgPart = { type: 'image', source: image.source || image };
+                const textWithCtx = context
+                    ? `<context>\n${JSON.stringify(context, null, 2)}\n</context>\n\n${m.content}`
+                    : m.content;
+                return { role: 'user', content: [imgPart, { type: 'text', text: textWithCtx }] };
+            }
+            if (isLastUser && context) {
                 return {
                     role: 'user',
                     content: `<context>\n${JSON.stringify(context, null, 2)}\n</context>\n\n${m.content}`

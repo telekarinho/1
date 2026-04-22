@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MilkyPot — Escanear Nota Fiscal</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link rel="stylesheet" href="../css/ios-premium.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/auth.js"></script>
+<script src="../js/core/catalog-v2.js"></script>
+<script src="../js/pages/copilot-transport.js"></script>
+<style>
+  body { background: #F2F2F7; }
+  .scan-wrap { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .step { background: #fff; border-radius: 16px; padding: 22px; margin-bottom: 16px; border: 1px solid #E5E7EB; }
+  .step h2 { font-family: 'Baloo 2', cursive; font-size: 20px; margin: 0 0 12px; color: #1F2937; display: flex; align-items: center; gap: 10px; }
+  .step .n { background: linear-gradient(135deg,#FF4F8A,#7E57C2); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; }
+
+  .capture-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 600px) { .capture-grid { grid-template-columns: 1fr; } }
+  .capture-btn {
+    background: #FFF0F6; border: 2px dashed #FCE4EC; border-radius: 14px;
+    padding: 30px 20px; text-align: center; cursor: pointer; transition: all .2s;
+  }
+  .capture-btn:hover { background: #FFE4F0; border-color: #FF4F8A; transform: translateY(-2px); }
+  .capture-btn .icon { font-size: 48px; }
+  .capture-btn h3 { font-family: 'Baloo 2', cursive; font-size: 18px; margin: 8px 0 4px; color: #9A3412; }
+  .capture-btn p { font-size: 13px; color: #6B7280; margin: 0; }
+
+  #fotoInput, #fileInput { display: none; }
+
+  .preview-box { position: relative; background: #F9FAFB; border-radius: 12px; padding: 16px; text-align: center; margin-top: 14px; }
+  .preview-box img { max-width: 100%; max-height: 500px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,.1); }
+  .preview-box .preview-actions { display: flex; gap: 10px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+
+  .items-table { width: 100%; border-collapse: collapse; }
+  .items-table th, .items-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #F3F4F6; font-size: 14px; }
+  .items-table th { background: #F9FAFB; font-size: 12px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; }
+  .items-table input, .items-table select { padding: 6px 10px; border: 1px solid #E5E7EB; border-radius: 8px; font-family: inherit; font-size: 13px; width: 100%; }
+  .items-table .match-pill { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 100px; display: inline-block; }
+  .items-table .match-pill.ok { background: #D1FAE5; color: #065F46; }
+  .items-table .match-pill.new { background: #FEF3C7; color: #92400E; }
+  .items-table .remove-btn { background: #FEE2E2; color: #991B1B; border: none; border-radius: 8px; padding: 5px 10px; cursor: pointer; font-weight: 700; }
+
+  .summary { background: linear-gradient(135deg, #ECFDF5, #F0FDF4); border: 1px solid #86EFAC; border-radius: 12px; padding: 14px; margin-top: 14px; }
+  .summary .line { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; }
+  .summary .total { font-size: 18px; font-weight: 800; color: #065F46; border-top: 1px dashed #86EFAC; margin-top: 8px; padding-top: 8px; }
+
+  .pulse-btn { background: linear-gradient(135deg, #FF4F8A, #7E57C2); color: #fff; padding: 14px 30px; border: none; border-radius: 100px; font-weight: 800; font-size: 16px; cursor: pointer; box-shadow: 0 8px 20px rgba(255,79,138,.3); }
+  .pulse-btn:hover { transform: scale(1.03); }
+  .pulse-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .hint-box { background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #92400E; margin-top: 10px; }
+
+  .ia-loading { display: flex; align-items: center; gap: 10px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 12px; padding: 14px; color: #1E40AF; font-weight: 700; }
+  .ia-loading .spinner { width: 20px; height: 20px; border: 3px solid #BFDBFE; border-top-color: #1E40AF; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .action-bar { position: sticky; bottom: 0; background: #fff; border-top: 2px solid #E5E7EB; padding: 14px 20px; margin: 0 -20px -20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+</style>
+</head>
+<body>
+<div class="panel-layout">
+<aside class="panel-sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <img src="../images/logo-milkypot.png" alt="" class="logo-img">
+    <h2>MilkyPot<small>Franqueado</small></h2>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-nav-group">Gestão</div>
+    <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos & Estoque</a>
+    <a href="produtos-v2.html" class="sidebar-link"><span class="icon">📦</span> Cadastro Avançado</a>
+    <a href="escanear-nota.html" class="sidebar-link active"><span class="icon">📸</span> Escanear Nota</a>
+    <a href="compras.html" class="sidebar-link"><span class="icon">🛒</span> Compras</a>
+  </nav>
+</aside>
+
+<main class="panel-main">
+  <header class="panel-header">
+    <div class="panel-header-left">
+      <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <h1>📸 Escanear Nota Fiscal</h1>
+      <span style="background:linear-gradient(135deg,#FF4F8A,#7E57C2);color:#fff;padding:4px 12px;border-radius:100px;font-size:11px;font-weight:700">IA Claude Vision</span>
+    </div>
+  </header>
+
+  <div class="panel-content">
+    <div class="scan-wrap">
+
+      <!-- STEP 1 — Capturar -->
+      <div class="step" id="step1">
+        <h2><span class="n">1</span> Tire a foto ou faça upload</h2>
+        <p style="color:#6B7280;font-size:14px;margin:0 0 14px">Aceita: NFe impressa, cupom fiscal, recibo manual, foto de WhatsApp do fornecedor.</p>
+        <div class="capture-grid">
+          <label class="capture-btn">
+            <input type="file" id="fotoInput" accept="image/*" capture="environment" onchange="handleFile(event, 'camera')">
+            <div class="icon">📷</div>
+            <h3>Tirar foto agora</h3>
+            <p>Usa a câmera do celular</p>
+          </label>
+          <label class="capture-btn">
+            <input type="file" id="fileInput" accept="image/*,.xml,.pdf" onchange="handleFile(event, 'upload')">
+            <div class="icon">📤</div>
+            <h3>Upload do arquivo</h3>
+            <p>JPG, PNG ou XML da NFe</p>
+          </label>
+        </div>
+        <div class="hint-box">💡 <b>Dica:</b> se a foto tiver QR code da NFe visível, a IA extrai automaticamente a chave de acesso. Quanto mais nítida a foto dos itens, melhor a extração.</div>
+
+        <div id="previewBox" style="display:none" class="preview-box">
+          <img id="previewImg" alt="preview">
+          <div class="preview-actions">
+            <button class="pulse-btn" onclick="analyze()">🧠 Analisar com IA</button>
+            <button class="ios-btn ios-btn-secondary" onclick="resetScan()">🔄 Trocar foto</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 — Análise IA -->
+      <div class="step" id="step2" style="display:none">
+        <h2><span class="n">2</span> Itens detectados pela IA</h2>
+        <div id="iaBox"></div>
+        <div id="itemsBox" style="display:none">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width:32px"></th>
+                <th>Item</th>
+                <th style="width:100px">Qtd</th>
+                <th style="width:80px">Unid</th>
+                <th style="width:120px">Custo unit.</th>
+                <th style="width:120px">Total</th>
+                <th style="width:90px">Match</th>
+                <th style="width:60px"></th>
+              </tr>
+            </thead>
+            <tbody id="itemsTbody"></tbody>
+          </table>
+          <div class="summary" id="summaryBox"></div>
+        </div>
+      </div>
+
+      <!-- STEP 3 — Confirmar -->
+      <div class="step" id="step3" style="display:none">
+        <h2><span class="n">3</span> Confirmar e alimentar estoque</h2>
+        <p style="color:#6B7280;font-size:14px">Ao confirmar:</p>
+        <ul style="color:#4B5563;font-size:14px;line-height:1.8">
+          <li>✅ Inventário <b>atualizado</b> (quantidades somadas)</li>
+          <li>✅ Custo unitário <b>recalculado</b> (média ponderada) — apenas se você marcar o toggle abaixo</li>
+          <li>✅ Lançamento em <b>Compras</b> (histórico consultável)</li>
+          <li>✅ Despesa em <b>Financeiro</b> → custos variáveis automaticamente</li>
+        </ul>
+        <div style="display:flex;align-items:center;gap:10px;margin:14px 0">
+          <input type="checkbox" id="updateCost" checked style="width:20px;height:20px">
+          <label for="updateCost" style="font-size:14px;cursor:pointer">Atualizar custo médio dos insumos no inventário</label>
+        </div>
+
+        <div class="action-bar">
+          <div style="font-size:14px;color:#6B7280">Total da nota: <b id="finalTotal" style="color:#16a34a">R$ 0,00</b></div>
+          <div style="display:flex;gap:8px">
+            <button class="ios-btn ios-btn-secondary" onclick="resetScan()">Cancelar</button>
+            <button class="pulse-btn" onclick="confirmAndSave()">✅ Confirmar e atualizar estoque</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4 — Sucesso -->
+      <div class="step" id="step4" style="display:none">
+        <h2>🎉 Tudo pronto!</h2>
+        <div id="successMsg"></div>
+        <div style="margin-top:14px;display:flex;gap:10px">
+          <button class="pulse-btn" onclick="resetScan()">📸 Escanear outra nota</button>
+          <a href="produtos.html" class="ios-btn ios-btn-secondary" style="text-decoration:none;display:inline-block">Ver inventário</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="../js/core/belinha-page-scanners.js"></script>
+<script src="../js/core/belinha-widget.js"></script>
+<script>
+(function(){
+  if (!Auth.requireAuth('franchisee')) return;
+  DataStore.init();
+  const session = Auth.getSession();
+  const fid = session.franchiseId;
+
+  let currentImage = null;   // base64 da foto
+  let extractedItems = [];   // itens extraídos pela IA
+
+  window.handleFile = function(ev, source) {
+    const file = ev.target.files[0];
+    if (!file) return;
+    // Se for XML, parse direto (melhor acurácia)
+    if (file.name.toLowerCase().endsWith('.xml')) {
+      file.text().then(xml => parseNfeXml(xml));
+      return;
+    }
+    // Senão, imagem
+    const reader = new FileReader();
+    reader.onload = e => {
+      currentImage = e.target.result;
+      document.getElementById('previewImg').src = currentImage;
+      document.getElementById('previewBox').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.resetScan = function() {
+    currentImage = null;
+    extractedItems = [];
+    document.getElementById('previewBox').style.display = 'none';
+    document.getElementById('previewImg').src = '';
+    document.getElementById('fotoInput').value = '';
+    document.getElementById('fileInput').value = '';
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'none';
+    document.getElementById('step4').style.display = 'none';
+    document.getElementById('iaBox').innerHTML = '';
+    document.getElementById('itemsBox').style.display = 'none';
+  };
+
+  window.analyze = async function() {
+    if (!currentImage) return alert('Selecione uma foto primeiro');
+
+    const settings = DataStore.get('belinha_settings') || {};
+    const step2 = document.getElementById('step2');
+    step2.style.display = 'block';
+
+    const iaBox = document.getElementById('iaBox');
+    iaBox.innerHTML = '<div class="ia-loading"><div class="spinner"></div> A Belinha tá analisando sua nota… (5-15 segundos)</div>';
+
+    // Extrai base64 puro (sem prefixo data:image/...)
+    const match = currentImage.match(/^data:(image\/\w+);base64,(.+)$/);
+    if (!match) { iaBox.innerHTML = '<div style="color:#DC2626">Erro ao processar imagem'; return; }
+    const mediaType = match[1];
+    const base64Data = match[2];
+
+    const prompt = `Você está recebendo uma foto de uma NOTA FISCAL, cupom fiscal, DANFE ou recibo de compra de insumos pra uma sorveteria MilkyPot.
+
+**Sua tarefa:** Extraia TODOS os itens da nota em JSON estrito. Ignore: taxas, impostos destacados (ICMS, PIS, COFINS), descontos agregados, frete (a não ser que seja item próprio).
+
+**Formato EXATO** (sem texto fora do JSON):
+\`\`\`json
+{
+  "fornecedor": "nome do fornecedor/mercado/distribuidor",
+  "dataCompra": "YYYY-MM-DD",
+  "numeroNota": "string ou null",
+  "items": [
+    {
+      "nome": "Leite Condensado Moça 395g",
+      "quantidade": 12,
+      "unidade": "unid",
+      "custoUnit": 4.50,
+      "total": 54.00
+    }
+  ],
+  "totalNota": 382.40,
+  "observacoes": "qualquer alerta: desconto aplicado, promoção, frete, etc"
+}
+\`\`\`
+
+**Regras:**
+- Se quantidade estiver em kg, usa "kg" na unidade. Se em mililitros, usa "ml". Se não especificada, usa "unid".
+- Custo unit = total do item / quantidade (calcule se não estiver explícito)
+- Se ilegível, inclua o item com "nome": "(ilegível)" e deixe numéricos em 0
+- Se foto estiver muito ruim/sem nota, retorne "items": [] e "observacoes": "foto não processável"
+
+Retorne SOMENTE o JSON, nada mais.`;
+
+    try {
+      const data = await CopilotTransport.send({
+        apiKey: settings.apiKey,
+        model: settings.model || 'claude-sonnet-4-5',  // Sonnet tem vision
+        persona: 'belinha',
+        messages: [{ role: 'user', content: prompt }],
+        context: null,
+        image: { source: { type: 'base64', media_type: mediaType, data: base64Data } }
+      });
+
+      // Parse do JSON
+      const raw = data.reply || '';
+      const match2 = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+      const jsonStr = match2 ? match2[1] : raw;
+      let parsed;
+      try { parsed = JSON.parse(jsonStr); }
+      catch(e) {
+        iaBox.innerHTML = '<div style="color:#DC2626;padding:14px;background:#FEE2E2;border-radius:10px">❌ Não consegui parsear a resposta. A IA respondeu:<br><pre style="white-space:pre-wrap;font-size:11px">' + esc(raw.slice(0,600)) + '</pre></div>';
+        return;
+      }
+
+      // Renderiza
+      extractedItems = parsed.items || [];
+      renderItems(parsed);
+    } catch (e) {
+      iaBox.innerHTML = '<div style="color:#DC2626;padding:14px;background:#FEE2E2;border-radius:10px">❌ ' + e.message + '<br><small>Configure sua API key em Belinha AI → ⚙️ Configurar. Precisa de Sonnet 4.5 (suporta visão).</small></div>';
+    }
+  };
+
+  function renderItems(parsed) {
+    const iaBox = document.getElementById('iaBox');
+    iaBox.innerHTML = `
+      <div style="background:#ECFDF5;border:1px solid #86EFAC;border-radius:10px;padding:12px;margin-bottom:14px;font-size:14px">
+        <b>🧾 ${esc(parsed.fornecedor || 'Fornecedor não identificado')}</b>
+        ${parsed.dataCompra ? ' · ' + parsed.dataCompra : ''}
+        ${parsed.numeroNota ? ' · Nota nº ' + esc(parsed.numeroNota) : ''}
+        ${parsed.observacoes ? `<br><small style="color:#4B5563">💡 ${esc(parsed.observacoes)}</small>` : ''}
+      </div>
+    `;
+
+    if (!extractedItems.length) {
+      iaBox.innerHTML += '<div style="color:#92400E;padding:14px;background:#FEF3C7;border-radius:10px">⚠️ Nenhum item identificado. Tente outra foto mais nítida.</div>';
+      return;
+    }
+
+    // Enriquece com match no inventário
+    const inv = DataStore.getCollection ? DataStore.getCollection('inventory', fid) || [] : [];
+    extractedItems.forEach(item => {
+      item.match = fuzzyMatch(item.nome, inv);
+    });
+
+    renderItemsTable();
+    document.getElementById('itemsBox').style.display = 'block';
+    document.getElementById('step3').style.display = 'block';
+  }
+
+  function renderItemsTable() {
+    const tbody = document.getElementById('itemsTbody');
+    tbody.innerHTML = extractedItems.map((it, i) => `
+      <tr data-idx="${i}">
+        <td>${i+1}</td>
+        <td><input type="text" value="${esc(it.nome||'')}" onchange="updateItem(${i},'nome',this.value)"></td>
+        <td><input type="number" step="0.01" value="${it.quantidade||0}" onchange="updateItem(${i},'quantidade',parseFloat(this.value))"></td>
+        <td>
+          <select onchange="updateItem(${i},'unidade',this.value)">
+            ${['unid','g','kg','ml','L','pct','cx'].map(u => `<option value="${u}" ${it.unidade===u?'selected':''}>${u}</option>`).join('')}
+          </select>
+        </td>
+        <td><input type="number" step="0.01" value="${it.custoUnit||0}" onchange="updateItem(${i},'custoUnit',parseFloat(this.value))"></td>
+        <td><b style="color:#16a34a">R$ ${((it.quantidade||0) * (it.custoUnit||0)).toFixed(2)}</b></td>
+        <td>${it.match ? `<span class="match-pill ok" title="${esc(it.match.name)}">✓ ${esc(it.match.name).slice(0,16)}</span>` : '<span class="match-pill new">+ Novo</span>'}</td>
+        <td><button class="remove-btn" onclick="removeItem(${i})">✕</button></td>
+      </tr>
+    `).join('');
+    updateSummary();
+  }
+
+  window.updateItem = function(idx, field, val) {
+    extractedItems[idx][field] = val;
+    if (field === 'nome') {
+      const inv = DataStore.getCollection ? DataStore.getCollection('inventory', fid) || [] : [];
+      extractedItems[idx].match = fuzzyMatch(val, inv);
+      renderItemsTable();
+      return;
+    }
+    updateSummary();
+  };
+  window.removeItem = function(idx) {
+    extractedItems.splice(idx, 1);
+    renderItemsTable();
+  };
+
+  function updateSummary() {
+    const total = extractedItems.reduce((s, it) => s + (it.quantidade||0)*(it.custoUnit||0), 0);
+    document.getElementById('summaryBox').innerHTML = `
+      <div class="line"><span>Itens:</span><span>${extractedItems.length}</span></div>
+      <div class="line"><span>Já no inventário:</span><span>${extractedItems.filter(i => i.match).length}</span></div>
+      <div class="line"><span>Novos insumos:</span><span>${extractedItems.filter(i => !i.match).length}</span></div>
+      <div class="line total"><span>Total da nota:</span><span>R$ ${total.toFixed(2)}</span></div>
+    `;
+    document.getElementById('finalTotal').textContent = 'R$ ' + total.toFixed(2);
+  }
+
+  // ========== Fuzzy Match ==========
+  function fuzzyMatch(name, inv) {
+    if (!name || !inv.length) return null;
+    const target = norm(name);
+    let best = null, bestScore = 0;
+    inv.forEach(item => {
+      const n = norm(item.name);
+      const score = similarity(target, n);
+      if (score > bestScore && score > 0.55) { // limiar 55%
+        bestScore = score;
+        best = item;
+      }
+    });
+    return best;
+  }
+  function norm(s) { return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim(); }
+  function similarity(a, b) {
+    if (!a || !b) return 0;
+    if (a === b) return 1;
+    // Jaccard sobre tokens (simples e robusto pra nome de produto)
+    const A = new Set(a.split(' ').filter(x => x.length > 2));
+    const B = new Set(b.split(' ').filter(x => x.length > 2));
+    if (!A.size || !B.size) return 0;
+    let inter = 0;
+    A.forEach(t => { if (B.has(t)) inter++; });
+    const union = A.size + B.size - inter;
+    return inter / union;
+  }
+
+  // ========== Confirmar e gravar ==========
+  window.confirmAndSave = function() {
+    if (!extractedItems.length) return alert('Sem itens pra gravar');
+    const updateCost = document.getElementById('updateCost').checked;
+    const total = extractedItems.reduce((s, it) => s + (it.quantidade||0)*(it.custoUnit||0), 0);
+
+    // 1. Atualiza inventário
+    const inv = DataStore.getCollection('inventory', fid) || [];
+    let novosCount = 0, atualizadosCount = 0;
+    extractedItems.forEach(it => {
+      if (!it.quantidade || !it.nome) return;
+      let target = it.match;
+      if (!target) {
+        // cria novo insumo
+        target = {
+          id: 'ins_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+          name: it.nome,
+          category: 'ingredientes',
+          unit: it.unidade || 'unid',
+          quantity: 0,
+          minStock: Math.ceil((it.quantidade||0) * 0.25),
+          cost: it.custoUnit || 0
+        };
+        inv.push(target);
+        novosCount++;
+      } else {
+        atualizadosCount++;
+      }
+      // Atualiza qty
+      target.quantity = (Number(target.quantity) || 0) + Number(it.quantidade || 0);
+      // Atualiza cost (média ponderada) se toggle ligado
+      if (updateCost && it.custoUnit > 0) {
+        const oldQty = Number(target.quantity) - Number(it.quantidade);
+        const oldCost = Number(target.cost) || 0;
+        const newTotal = (oldQty * oldCost) + (Number(it.quantidade) * Number(it.custoUnit));
+        target.cost = Math.round((newTotal / target.quantity) * 100) / 100;
+      }
+    });
+    DataStore.setCollection('inventory', fid, inv);
+
+    // 2. Lança em compras
+    const compras = DataStore.getCollection('compras', fid) || [];
+    compras.push({
+      id: 'cmp_' + Date.now().toString(36),
+      date: new Date().toISOString(),
+      fornecedor: document.querySelector('#iaBox b')?.textContent || '—',
+      total: total,
+      items: extractedItems.map(it => ({
+        nome: it.nome, qty: it.quantidade, unit: it.unidade, custoUnit: it.custoUnit, total: (it.quantidade||0)*(it.custoUnit||0)
+      })),
+      source: 'ocr-nfiscal',
+      createdBy: session.email || session.name
+    });
+    DataStore.setCollection('compras', fid, compras);
+
+    // 3. Lança despesa em financeiro
+    try {
+      if (typeof Financas !== 'undefined' && Financas.addCost) {
+        const pk = Financas.currentPeriodKey();
+        Financas.addCost(fid, {
+          kind: 'variable',
+          periodKey: pk,
+          categoria: 'compras_insumos',
+          descricao: 'Compra OCR — ' + extractedItems.length + ' insumos',
+          valor: total
+        });
+      }
+    } catch(e) { console.warn('financeiro', e); }
+
+    // 4. Mostra sucesso
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'none';
+    document.getElementById('step4').style.display = 'block';
+    document.getElementById('successMsg').innerHTML = `
+      <div style="background:#ECFDF5;border:1px solid #86EFAC;border-radius:12px;padding:18px;font-size:15px">
+        ✅ <b>${atualizadosCount}</b> insumo(s) existente(s) atualizado(s)<br>
+        ✅ <b>${novosCount}</b> novo(s) insumo(s) cadastrado(s)<br>
+        ✅ Compra de <b>R$ ${total.toFixed(2)}</b> registrada no histórico<br>
+        ✅ Despesa lançada em Financeiro → Custos Variáveis
+      </div>
+    `;
+  };
+
+  // ========== NFe XML Parser (fallback) ==========
+  function parseNfeXml(xml) {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xml, 'text/xml');
+      const items = [];
+      doc.querySelectorAll('det').forEach(det => {
+        const prod = det.querySelector('prod');
+        if (!prod) return;
+        items.push({
+          nome: prod.querySelector('xProd')?.textContent || '(sem nome)',
+          quantidade: parseFloat(prod.querySelector('qCom')?.textContent) || 0,
+          unidade: prod.querySelector('uCom')?.textContent || 'unid',
+          custoUnit: parseFloat(prod.querySelector('vUnCom')?.textContent) || 0,
+          total: parseFloat(prod.querySelector('vProd')?.textContent) || 0
+        });
+      });
+      extractedItems = items;
+      const fornecedor = doc.querySelector('emit xNome')?.textContent || 'Fornecedor NFe';
+      const totalNota = parseFloat(doc.querySelector('vNF')?.textContent) || 0;
+      document.getElementById('step2').style.display = 'block';
+      renderItems({ fornecedor, totalNota, items });
+    } catch (e) {
+      alert('XML inválido: ' + e.message);
+    }
+  }
+
+  function esc(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+})();
+</script>
+</body>
+</html>
