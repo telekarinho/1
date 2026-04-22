@@ -368,10 +368,11 @@
         if (!el || !global.CopilotTransport) return;
         global.CopilotTransport.status().then(s => {
             if (s.local) { el.className = 'bw-status-pill local'; el.textContent = '🟢 local'; }
+            else if (s.mixedBlocked) { el.className = 'bw-status-pill off'; el.textContent = '🔒 Chrome bloqueou'; el.title = 'Chrome bloqueia HTTPS→HTTP. Clique no cadeado da URL → Configurações → Permitir conteúdo inseguro.'; }
             else {
                 const settings = global.DataStore && DataStore.get('belinha_settings') || {};
                 if (settings.apiKey) { el.className = 'bw-status-pill api'; el.textContent = '🔵 API'; }
-                else { el.className = 'bw-status-pill off'; el.textContent = '— sem IA'; }
+                else { el.className = 'bw-status-pill off'; el.textContent = '📚 offline (scanner)'; el.title = 'Sem servidor local ligado. Respostas com base no scanner da tela.'; }
             }
         });
     }
