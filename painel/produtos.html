@@ -327,6 +327,7 @@
 </div>
 
 <script src="../js/core/media-upload.js"></script>
+<script src="../js/core/producao-calc.js"></script>
 <script src="../js/core/copilot-transport.js"></script>
 <script src="../js/core/belinha-page-scanners.js"></script>
 <script src="../js/core/belinha-widget.js"></script>
@@ -812,16 +813,31 @@
         </div>
       </div>
 
-      <!-- Custos -->
+      <!-- Receita (ingredientes usados) -->
       <div class="form-section">
-        <h3>💰 Custos</h3>
+        <h3>📋 Receita (ingredientes)</h3>
+        <p style="font-size:12px;color:#6B7280;margin:-4px 0 10px">Cadastra o que vai em 1 unidade deste produto. O custo insumos e total são calculados automaticamente.</p>
+        <div id="receitaList"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn-add" onclick="addReceitaLinha()">+ Adicionar ingrediente</button>
+          <button class="btn-add" style="background:#F3F4F6;color:#1F2937" onclick="addEmbalagemLinha()">+ Embalagem (copo/tampa/colher)</button>
+        </div>
+        <div style="margin-top:10px;display:grid;grid-template-columns:1fr 180px;gap:10px;align-items:center">
+          <div class="form-field"><label>⏱ Tempo de preparo (min)</label><input type="number" step="0.5" id="pTempoPreparo" value="${p.tempoPreparoMin||0}" oninput="recalcCusto()" placeholder="0" style="max-width:180px"></div>
+        </div>
+      </div>
+
+      <!-- Custos AUTO-CALCULADOS -->
+      <div class="form-section">
+        <h3>💰 Custos (auto-calculados pela receita)</h3>
+        <p style="font-size:12px;color:#6B7280;margin:-4px 0 10px">Baseado na receita acima + config da loja (kWh, salário/hora). Só "Outros" é manual.</p>
         <div class="form-grid">
-          <div class="form-field"><label>Custo insumos (R$)</label><input type="number" step="0.01" id="pCInsumos" value="${p.custos?.custoInsumos||0}" oninput="recalc()"></div>
-          <div class="form-field"><label>Embalagem (R$)</label><input type="number" step="0.01" id="pEmbalagem" value="${p.custos?.custoAdicional?.embalagem||0}" oninput="recalc()"></div>
-          <div class="form-field"><label>Energia (R$)</label><input type="number" step="0.01" id="pEnergia" value="${p.custos?.custoAdicional?.energia||0}" oninput="recalc()"></div>
-          <div class="form-field"><label>Mão de obra (R$)</label><input type="number" step="0.01" id="pMao" value="${p.custos?.custoAdicional?.mao_obra||0}" oninput="recalc()"></div>
-          <div class="form-field"><label>Outros (R$)</label><input type="number" step="0.01" id="pOutros" value="${p.custos?.custoAdicional?.outros||0}" oninput="recalc()"></div>
-          <div class="form-field"><label style="color:#16a34a">Custo TOTAL</label><input type="text" id="pCTotal" value="R$ ${cTotal.toFixed(2)}" readonly style="font-weight:800;color:#16a34a;background:#F0FDF4"></div>
+          <div class="form-field"><label>Insumos (R$)</label><input type="number" step="0.01" id="pCInsumos" value="${p.custos?.custoInsumos||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
+          <div class="form-field"><label>Embalagem (R$)</label><input type="number" step="0.01" id="pEmbalagem" value="${p.custos?.custoAdicional?.embalagem||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
+          <div class="form-field"><label>⚡ Energia (R$)</label><input type="number" step="0.01" id="pEnergia" value="${p.custos?.custoAdicional?.energia||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
+          <div class="form-field"><label>👷 Mão de obra (R$)</label><input type="number" step="0.01" id="pMao" value="${p.custos?.custoAdicional?.mao_obra||0}" readonly style="background:#F0FDF4;color:#065F46"></div>
+          <div class="form-field"><label>Outros (R$)</label><input type="number" step="0.01" id="pOutros" value="${p.custos?.custoAdicional?.outros||0}" oninput="recalcCusto()" placeholder="impostos, marketing..."></div>
+          <div class="form-field"><label style="color:#16a34a;font-weight:800">CUSTO TOTAL</label><input type="text" id="pCTotal" value="R$ ${cTotal.toFixed(2)}" readonly style="font-weight:900;color:#16a34a;background:#F0FDF4;font-size:16px"></div>
         </div>
       </div>
 
@@ -890,12 +906,172 @@
       </div>
     `;
 
-    // Renderiza preview de fotos/video já salvos
+    // Renderiza preview de fotos/video já salvos + receita
     setTimeout(() => {
       if (typeof renderFotoGrid === 'function') renderFotoGrid();
       if (typeof renderVideoPreview === 'function') renderVideoPreview();
+      if (typeof renderReceita === 'function') renderReceita();
     }, 0);
   }
+
+  // ===== RECEITA (ingredientes + embalagem) =====
+  function renderReceita() {
+    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+    const ingredientes = inv.filter(i => i.category !== 'embalagens');
+    const embalagens = inv.filter(i => i.category === 'embalagens');
+
+    if (!inv.length) {
+      document.getElementById('receitaList').innerHTML =
+        '<div style="padding:16px;background:#FEF3C7;border-radius:10px;font-size:13px;color:#78350F">⚠ Nenhum ingrediente cadastrado ainda. Vá na aba <b>🥛 Ingredientes</b> e clica em <b>🪄 Seed inicial</b> ou cadastre os seus.</div>';
+      return;
+    }
+
+    const receita = (currentProduto && currentProduto.custos && currentProduto.custos.insumos) || [];
+    const pkgIds = (currentProduto && currentProduto.custos && currentProduto.custos.embalagemIds) || [];
+    const invMap = {}; inv.forEach(i => invMap[i.id] = i);
+
+    let html = '<div id="receitaLinhas" style="display:flex;flex-direction:column;gap:6px">';
+    // Insumos
+    receita.forEach((r, i) => {
+      const ing = invMap[r.insumoId];
+      const optsIng = ingredientes.map(x => `<option value="${x.id}" ${x.id===r.insumoId?'selected':''}>${esc(x.name)} (R$ ${Number(x.costUnit||0).toFixed(2)}/${x.unit||'un'})</option>`).join('');
+      html += `<div class="receita-row" data-type="insumo" data-idx="${i}" style="display:grid;grid-template-columns:1fr 90px 70px 90px 32px;gap:6px;align-items:center">
+        <select onchange="receitaChanged()">${optsIng}</select>
+        <input type="number" step="0.01" value="${r.qty||0}" placeholder="qtd" onchange="receitaChanged()">
+        <select onchange="receitaChanged()">
+          <option value="g"  ${r.unit==='g'?'selected':''}>g</option>
+          <option value="kg" ${r.unit==='kg'?'selected':''}>kg</option>
+          <option value="ml" ${r.unit==='ml'?'selected':''}>ml</option>
+          <option value="L"  ${r.unit==='L'?'selected':''}>L</option>
+          <option value="un" ${r.unit==='un'?'selected':''}>un</option>
+        </select>
+        <div style="font-size:12px;color:#16A34A;font-weight:700" class="subtot">—</div>
+        <button onclick="this.parentElement.remove(); receitaChanged();" style="background:#FEE2E2;color:#991B1B;border:none;border-radius:6px;cursor:pointer">✕</button>
+      </div>`;
+    });
+    // Embalagens (selecionadas via checkbox)
+    pkgIds.forEach((pid, i) => {
+      const e = invMap[pid];
+      if (!e) return;
+      html += `<div class="receita-row" data-type="embalagem" data-pid="${pid}" style="display:grid;grid-template-columns:1fr 90px 70px 90px 32px;gap:6px;align-items:center;background:#F9FAFB;padding:6px 8px;border-radius:8px">
+        <div style="font-size:13px">📦 ${esc(e.name)}</div>
+        <div style="font-size:12px;color:#6B7280">1</div>
+        <div style="font-size:12px;color:#6B7280">${esc(e.unit||'un')}</div>
+        <div style="font-size:12px;color:#16A34A;font-weight:700">R$ ${Number(e.costUnit||0).toFixed(2)}</div>
+        <button onclick="this.parentElement.remove(); receitaChanged();" style="background:#FEE2E2;color:#991B1B;border:none;border-radius:6px;cursor:pointer">✕</button>
+      </div>`;
+    });
+    html += '</div>';
+    document.getElementById('receitaList').innerHTML = html;
+    receitaChanged();
+  }
+
+  window.addReceitaLinha = function() {
+    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+    const ingredientes = inv.filter(i => i.category !== 'embalagens');
+    if (!ingredientes.length) { alert('Cadastre ingredientes primeiro na aba "Ingredientes".'); return; }
+    const cont = document.getElementById('receitaLinhas');
+    if (!cont) return;
+    const opts = ingredientes.map(x => `<option value="${x.id}">${esc(x.name)} (R$ ${Number(x.costUnit||0).toFixed(2)}/${x.unit||'un'})</option>`).join('');
+    const row = document.createElement('div');
+    row.className = 'receita-row';
+    row.dataset.type = 'insumo';
+    row.style.cssText = 'display:grid;grid-template-columns:1fr 90px 70px 90px 32px;gap:6px;align-items:center';
+    row.innerHTML = `
+      <select onchange="receitaChanged()">${opts}</select>
+      <input type="number" step="0.01" value="0" placeholder="qtd" onchange="receitaChanged()">
+      <select onchange="receitaChanged()">
+        <option value="g">g</option><option value="kg">kg</option>
+        <option value="ml">ml</option><option value="L">L</option>
+        <option value="un" selected>un</option>
+      </select>
+      <div style="font-size:12px;color:#16A34A;font-weight:700" class="subtot">—</div>
+      <button onclick="this.parentElement.remove(); receitaChanged();" style="background:#FEE2E2;color:#991B1B;border:none;border-radius:6px;cursor:pointer">✕</button>`;
+    cont.appendChild(row);
+    receitaChanged();
+  };
+
+  window.addEmbalagemLinha = function() {
+    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+    const embs = inv.filter(i => i.category === 'embalagens');
+    if (!embs.length) { alert('Cadastre embalagens primeiro (copo, tampa, colher) na aba "Ingredientes".'); return; }
+    const nome = prompt(`Escolha a embalagem (digita o número):\n\n` + embs.map((e,i)=>`${i+1}. ${e.name} (R$ ${Number(e.costUnit||0).toFixed(2)})`).join('\n'));
+    const idx = parseInt(nome) - 1;
+    if (isNaN(idx) || !embs[idx]) return;
+    const e = embs[idx];
+    const cont = document.getElementById('receitaLinhas');
+    if (!cont) return;
+    const row = document.createElement('div');
+    row.className = 'receita-row';
+    row.dataset.type = 'embalagem';
+    row.dataset.pid = e.id;
+    row.style.cssText = 'display:grid;grid-template-columns:1fr 90px 70px 90px 32px;gap:6px;align-items:center;background:#F9FAFB;padding:6px 8px;border-radius:8px';
+    row.innerHTML = `
+      <div style="font-size:13px">📦 ${esc(e.name)}</div>
+      <div style="font-size:12px;color:#6B7280">1</div>
+      <div style="font-size:12px;color:#6B7280">${esc(e.unit||'un')}</div>
+      <div style="font-size:12px;color:#16A34A;font-weight:700">R$ ${Number(e.costUnit||0).toFixed(2)}</div>
+      <button onclick="this.parentElement.remove(); receitaChanged();" style="background:#FEE2E2;color:#991B1B;border:none;border-radius:6px;cursor:pointer">✕</button>`;
+    cont.appendChild(row);
+    receitaChanged();
+  };
+
+  // Lê a UI da receita e monta a estrutura do produto
+  function _collectReceitaFromUI() {
+    const rows = document.querySelectorAll('#receitaLinhas .receita-row');
+    const insumos = [], embalagemIds = [];
+    rows.forEach(row => {
+      if (row.dataset.type === 'insumo') {
+        const sel = row.querySelector('select');
+        const qty = row.querySelector('input[type="number"]');
+        const unit = row.querySelectorAll('select')[1];
+        if (sel && qty && unit && sel.value && Number(qty.value) > 0) {
+          insumos.push({ insumoId: sel.value, qty: Number(qty.value), unit: unit.value });
+        }
+      } else if (row.dataset.type === 'embalagem') {
+        if (row.dataset.pid) embalagemIds.push(row.dataset.pid);
+      }
+    });
+    return { insumos, embalagemIds };
+  }
+
+  // Recalcula insumos + embalagem usando ProducaoCalc e atualiza inputs readonly
+  window.receitaChanged = function() {
+    if (typeof ProducaoCalc === 'undefined') return;
+    const r = _collectReceitaFromUI();
+    // Monta objeto temporário pra calcular
+    const tmp = {
+      custos: { insumos: r.insumos, embalagemIds: r.embalagemIds, custoAdicional: {
+        outros: Number(document.getElementById('pOutros')?.value) || 0
+      }},
+      tempoPreparoMin: Number(document.getElementById('pTempoPreparo')?.value) || 0
+    };
+    const c = ProducaoCalc.totalCost(tmp, fid);
+    // Preenche campos readonly
+    document.getElementById('pCInsumos').value = c.insumos;
+    document.getElementById('pEmbalagem').value = c.embalagem;
+    document.getElementById('pEnergia').value = c.energia;
+    document.getElementById('pMao').value = c.mao_obra;
+    document.getElementById('pCTotal').value = 'R$ ' + (c.total + c.outros).toFixed(2);
+    // Atualiza subtotais nas linhas
+    const rows = document.querySelectorAll('#receitaLinhas .receita-row[data-type="insumo"]');
+    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+    const invMap = {}; inv.forEach(i => invMap[i.id] = i);
+    rows.forEach((row, i) => {
+      const sub = row.querySelector('.subtot');
+      const r2 = r.insumos[i]; if (!sub || !r2) return;
+      const ing = invMap[r2.insumoId];
+      if (!ing) { sub.textContent = '⚠'; return; }
+      // Reutiliza lógica do ProducaoCalc (calc 1 item por vez)
+      const c1 = ProducaoCalc.recipeCost({ custos: { insumos: [r2] } }, inv);
+      sub.textContent = 'R$ ' + c1.insumos.toFixed(2);
+    });
+    // Dispara recálculo de preços sugeridos também
+    if (typeof recalc === 'function') recalc();
+  };
+
+  // Nova função pública — mantém compatibilidade com oninput "recalcCusto"
+  window.recalcCusto = window.receitaChanged;
 
   window.recalc = function() {
     const cIns = parseFloat(document.getElementById('pCInsumos').value) || 0;
@@ -961,18 +1137,24 @@
     }).filter(v => v.name);
     const toppingsIds = Array.from(document.querySelectorAll('.topping-chip.selected')).map(c => c.dataset.tid);
 
+    // Lê receita da UI (insumos + embalagens)
+    const receita = (typeof _collectReceitaFromUI === 'function') ? _collectReceitaFromUI() : { insumos: currentProduto?.custos?.insumos || [], embalagemIds: currentProduto?.custos?.embalagemIds || [] };
+    const tempoPreparoMin = parseFloat(document.getElementById('pTempoPreparo')?.value) || 0;
+
     const p = Object.assign({}, currentProduto || {}, {
       name: document.getElementById('pName').value.trim(),
       desc: document.getElementById('pDesc').value.trim(),
       categoriaId: document.getElementById('pCategoria').value,
       canal: document.getElementById('pCanal').value,
+      tempoPreparoMin: tempoPreparoMin,
       midia: {
         emoji: document.getElementById('pEmoji').value,
         video: document.getElementById('pVideo').value,
         fotos: document.getElementById('pFotos').value.split('\n').map(s=>s.trim()).filter(Boolean)
       },
       custos: {
-        insumos: currentProduto?.custos?.insumos || [],
+        insumos: receita.insumos,                 // receita linkada a DataStore.inventory
+        embalagemIds: receita.embalagemIds,       // IDs das embalagens do produto
         custoInsumos: parseFloat(document.getElementById('pCInsumos').value)||0,
         custoAdicional: {
           embalagem: parseFloat(document.getElementById('pEmbalagem').value)||0,
@@ -990,6 +1172,8 @@
       variantes: variantes,
       toppingsIds: toppingsIds
     });
+    // Auto-recalcula custos usando ProducaoCalc se modulo disponivel
+    if (typeof ProducaoCalc !== 'undefined') ProducaoCalc.applyToProduto(p, fid);
     p.custos.custoTotal = CostCalculator.computeCustoTotal(p);
     // Atualiza recomendados
     const sug = CostCalculator.suggestAll(p.custos.custoTotal, p.categoriaId);
@@ -1133,6 +1317,10 @@
 
     let updated = 0;
     prods.forEach(p => {
+      // Se tem receita cadastrada, recalcula custos automaticamente
+      if (typeof ProducaoCalc !== 'undefined' && p.custos?.insumos?.length) {
+        ProducaoCalc.applyToProduto(p, fid);
+      }
       const custo = CostCalculator.computeCustoTotal(p);
       if (custo <= 0) return;
       const sug = CostCalculator.suggestAll(custo, p.categoriaId);
