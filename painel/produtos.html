@@ -118,7 +118,6 @@
     <div class="sidebar-nav-group">Gestão</div>
     <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
     <a href="produtos.html" class="sidebar-link active"><span class="icon">🍨</span> Produtos</a>
-    <a href="catalogo.html" class="sidebar-link"><span class="icon">📖</span> Catálogo (cardápio)</a>
     <a href="entregas.html" class="sidebar-link"><span class="icon">🛵</span> Entregas</a>
     <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
     <a href="fiscal.html" class="sidebar-link"><span class="icon">🧾</span> Fiscal</a>
@@ -142,6 +141,7 @@
 
       <div class="ct-tabs">
         <button class="ct-tab active" data-tab="produtos">📦 Produtos</button>
+        <button class="ct-tab" data-tab="ingredientes">🥛 Ingredientes</button>
         <button class="ct-tab" data-tab="categorias">🏷️ Categorias</button>
         <button class="ct-tab" data-tab="toppings">✨ Toppings</button>
         <button class="ct-tab" data-tab="buffet">🍽️ Buffet / Self-Service</button>
@@ -161,6 +161,20 @@
           </div>
         </div>
         <div id="prodList"></div>
+      </div>
+
+      <!-- INGREDIENTES (estoque de matéria-prima) -->
+      <div class="ct-panel" id="panel-ingredientes">
+        <div class="bar-top">
+          <h2>Ingredientes & Estoque</h2>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" id="ingSearch" placeholder="Buscar..." style="padding:8px 12px;border:1px solid #E5E7EB;border-radius:10px;font-size:14px" oninput="renderIngredientes()">
+            <button class="btn-primary" onclick="seedIngredientes()" title="Carrega ingredientes-base MilkyPot">🪄 Seed inicial</button>
+            <button class="btn-primary" onclick="openIngrediente()">+ Novo Ingrediente</button>
+          </div>
+        </div>
+        <div id="ingAlerts" style="margin-bottom:16px"></div>
+        <div id="ingList"></div>
       </div>
 
       <!-- CATEGORIAS -->
@@ -241,6 +255,51 @@
   </div>
 </div>
 
+<!-- Modal Ingrediente -->
+<div class="modal-bg" id="modalIng">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-head">
+      <h2 id="modalIngTitle">Novo Ingrediente</h2>
+      <button onclick="closeIngrediente()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-section" style="background:#fff">
+        <div class="form-grid">
+          <div class="form-field col-2"><label>Nome</label><input type="text" id="ingName" placeholder="Ex: Leite Ninho em pó"></div>
+          <div class="form-field"><label>Categoria</label>
+            <select id="ingCat">
+              <option value="ingredientes">🥛 Ingredientes</option>
+              <option value="frutas">🍓 Frutas</option>
+              <option value="embalagens">📦 Embalagens</option>
+              <option value="outros">🧂 Outros</option>
+            </select>
+          </div>
+          <div class="form-field"><label>Unidade</label>
+            <select id="ingUnit">
+              <option value="kg">kg</option>
+              <option value="g">g</option>
+              <option value="L">L</option>
+              <option value="ml">ml</option>
+              <option value="un">un (unidade)</option>
+              <option value="pct">pct (pacote)</option>
+              <option value="cx">cx (caixa)</option>
+            </select>
+          </div>
+          <div class="form-field"><label>Qtd atual</label><input type="number" step="0.01" id="ingQty" min="0" value="0"></div>
+          <div class="form-field"><label>Estoque mínimo</label><input type="number" step="0.01" id="ingMinStock" min="0" value="1"></div>
+          <div class="form-field"><label>Custo unitário (R$)</label><input type="number" step="0.01" id="ingCusto" min="0" value="0" placeholder="custo por 1 unidade"></div>
+          <div class="form-field"><label>Fornecedor (opcional)</label><input type="text" id="ingFornecedor"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="ios-btn ios-btn-secondary" onclick="closeIngrediente()">Cancelar</button>
+      <button id="ingDeleteBtn" class="ios-btn" style="background:#FEE2E2;color:#991B1B;margin-right:auto;display:none" onclick="deleteIngrediente()">🗑 Excluir</button>
+      <button class="ios-btn ios-btn-primary" style="background:#FF4F8A" onclick="saveIngrediente()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Topping -->
 <div class="modal-bg" id="modalTop">
   <div class="modal-box" style="max-width:520px">
@@ -288,8 +347,202 @@
       document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
       if (btn.dataset.tab === 'analise') renderAnalise();
       if (btn.dataset.tab === 'buffet') renderBuffet();
+      if (btn.dataset.tab === 'ingredientes') renderIngredientes();
     });
   });
+
+  // ========== INGREDIENTES (estoque de matéria-prima) ==========
+  // Fonte de verdade: DataStore.getCollection('inventory', fid)
+  // Entrada de estoque SEMPRE lança despesa em Financas → DRE
+  function listInventory() {
+    return (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+  }
+  function saveInventory(list) {
+    if (DataStore.setCollection) DataStore.setCollection('inventory', fid, list);
+    else DataStore.set('inventory_' + fid, list);
+  }
+  let currentIng = null;
+
+  window.renderIngredientes = function() {
+    const inv = listInventory();
+    const term = (document.getElementById('ingSearch')?.value || '').toLowerCase();
+    const filtered = term ? inv.filter(i => (i.name||'').toLowerCase().includes(term)) : inv;
+
+    const criticos = inv.filter(i => Number(i.quantity||0) < Number(i.minStock||0) * 0.3);
+    const baixos = inv.filter(i => Number(i.quantity||0) < Number(i.minStock||0) && !criticos.includes(i));
+    const alertsEl = document.getElementById('ingAlerts');
+    alertsEl.innerHTML = `
+      ${criticos.length ? `<div style="background:#FEE2E2;border:1px solid #FCA5A5;padding:12px 16px;border-radius:12px;margin-bottom:8px;color:#991B1B;font-size:13px"><b>🚨 ${criticos.length} CRÍTICO:</b> ${criticos.slice(0,4).map(i=>esc(i.name)).join(', ')}. Comprar HOJE.</div>` : ''}
+      ${baixos.length ? `<div style="background:#FEF3C7;border:1px solid #FCD34D;padding:12px 16px;border-radius:12px;color:#92400E;font-size:13px"><b>⚠️ ${baixos.length} abaixo do mínimo:</b> ${baixos.slice(0,4).map(i=>esc(i.name)).join(', ')}. Planejar compra.</div>` : ''}
+      ${!criticos.length && !baixos.length && inv.length ? '<div style="background:#F0FDF4;border:1px solid #86EFAC;padding:12px 16px;border-radius:12px;color:#065F46;font-size:13px">✅ Estoque em ordem.</div>' : ''}
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        <a href="escanear-nota.html" style="padding:8px 14px;background:linear-gradient(135deg,#7E57C2,#5E35B1);color:#fff;text-decoration:none;border-radius:10px;font-size:13px;font-weight:700">📸 Escanear NFe (alimenta estoque + financeiro)</a>
+      </div>`;
+
+    if (!filtered.length) {
+      document.getElementById('ingList').innerHTML = `<div class="empty-state"><div class="e-icon">🥛</div><h3>Nenhum ingrediente ainda</h3><p>Clica em "🪄 Seed inicial" pra carregar 20 ingredientes-base MilkyPot, "+ Novo Ingrediente", ou "📸 Escanear NFe" pra importar direto da nota.</p></div>`;
+      return;
+    }
+
+    document.getElementById('ingList').innerHTML = `
+      <div style="background:#fff;border-radius:14px;border:1px solid #E5E7EB;overflow:hidden">
+        <div style="display:grid;grid-template-columns:60px 1fr 110px 110px 110px 130px 180px;gap:10px;padding:12px 16px;background:#F9FAFB;font-size:11px;font-weight:800;color:#6B7280;text-transform:uppercase">
+          <div></div><div>NOME</div><div>QTD ATUAL</div><div>MÍNIMO</div><div>CUSTO/un</div><div>STATUS</div><div>AÇÕES</div>
+        </div>
+        ${filtered.map(i => {
+          const q = Number(i.quantity||0), m = Number(i.minStock||0);
+          const pct = m > 0 ? Math.round((q/m) * 100) : 100;
+          const st = q < m*0.3 ? {c:'#DC2626',bg:'#FEE2E2',t:'CRÍTICO'} : q < m ? {c:'#F59E0B',bg:'#FEF3C7',t:'BAIXO'} : {c:'#16A34A',bg:'#F0FDF4',t:'OK'};
+          const icon = i.category === 'frutas' ? '🍓' : i.category === 'embalagens' ? '📦' : i.category === 'outros' ? '🧂' : '🥛';
+          return `
+            <div style="display:grid;grid-template-columns:60px 1fr 110px 110px 110px 130px 180px;gap:10px;padding:12px 16px;border-bottom:1px solid #F3F4F6;align-items:center;font-size:14px">
+              <div style="font-size:24px;text-align:center">${icon}</div>
+              <div><b>${esc(i.name||'—')}</b>${i.fornecedor?`<br><small style="color:#6B7280">${esc(i.fornecedor)}</small>`:''}</div>
+              <div><b>${q.toFixed(2)}</b> <small style="color:#6B7280">${esc(i.unit||'')}</small></div>
+              <div style="color:#6B7280">${m.toFixed(2)} ${esc(i.unit||'')}</div>
+              <div>R$ ${Number(i.costUnit||0).toFixed(2)}</div>
+              <div><span style="background:${st.bg};color:${st.c};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:800">${st.t}</span></div>
+              <div style="display:flex;gap:4px">
+                <button onclick="entradaEstoque('${i.id}')" style="padding:6px 10px;background:#10B981;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">＋ Compra</button>
+                <button onclick="openIngrediente('${i.id}')" style="padding:6px 10px;background:#F3F4F6;color:#374151;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">✏</button>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>`;
+  };
+
+  window.openIngrediente = function(id) {
+    currentIng = id ? listInventory().find(i => i.id === id) : null;
+    document.getElementById('modalIngTitle').textContent = id ? 'Editar Ingrediente' : 'Novo Ingrediente';
+    document.getElementById('ingName').value = currentIng?.name || '';
+    document.getElementById('ingCat').value = currentIng?.category || 'ingredientes';
+    document.getElementById('ingUnit').value = currentIng?.unit || 'kg';
+    document.getElementById('ingQty').value = currentIng?.quantity || 0;
+    document.getElementById('ingMinStock').value = currentIng?.minStock || 1;
+    document.getElementById('ingCusto').value = currentIng?.costUnit || 0;
+    document.getElementById('ingFornecedor').value = currentIng?.fornecedor || '';
+    document.getElementById('ingDeleteBtn').style.display = id ? 'inline-flex' : 'none';
+    document.getElementById('modalIng').classList.add('open');
+  };
+  window.closeIngrediente = function() { document.getElementById('modalIng').classList.remove('open'); };
+
+  window.saveIngrediente = function() {
+    const name = document.getElementById('ingName').value.trim();
+    if (!name) return alert('Informe o nome do ingrediente');
+    const list = listInventory();
+    const data = {
+      id: currentIng?.id || 'ing_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+      name: name,
+      category: document.getElementById('ingCat').value,
+      unit: document.getElementById('ingUnit').value,
+      quantity: Number(document.getElementById('ingQty').value) || 0,
+      minStock: Number(document.getElementById('ingMinStock').value) || 0,
+      costUnit: Number(document.getElementById('ingCusto').value) || 0,
+      fornecedor: document.getElementById('ingFornecedor').value.trim(),
+      updatedAt: new Date().toISOString(),
+      createdAt: currentIng?.createdAt || new Date().toISOString()
+    };
+    const idx = list.findIndex(x => x.id === data.id);
+    if (idx >= 0) list[idx] = data; else list.push(data);
+    saveInventory(list);
+    closeIngrediente();
+    renderIngredientes();
+    try { AuditLog && AuditLog.log && AuditLog.log('ingrediente.salvo', { id: data.id, nome: data.name }); } catch(e){}
+    if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast('✅ Ingrediente salvo', 'success');
+  };
+
+  window.deleteIngrediente = function() {
+    if (!currentIng) return;
+    if (!confirm('Excluir "' + currentIng.name + '"? Isso remove do estoque mas mantém histórico financeiro.')) return;
+    const list = listInventory().filter(i => i.id !== currentIng.id);
+    saveInventory(list);
+    try { AuditLog && AuditLog.log && AuditLog.log('ingrediente.excluido', { id: currentIng.id, nome: currentIng.name }); } catch(e){}
+    closeIngrediente();
+    renderIngredientes();
+  };
+
+  /**
+   * ENTRADA DE ESTOQUE — aumenta qtd + registra despesa em Financas.
+   * Garante auditoria: cada compra vira lancamento 'insumos' (variable)
+   * que aparece no DRE automaticamente.
+   */
+  window.entradaEstoque = function(id) {
+    const list = listInventory();
+    const ing = list.find(i => i.id === id);
+    if (!ing) return;
+    const qtd = parseFloat(prompt(`Entrada de ${ing.name}\n\nQuantidade (${ing.unit}):`, '1'));
+    if (!qtd || qtd <= 0) return;
+    const custoUnit = parseFloat(prompt(`Custo por ${ing.unit} (R$):`, ing.costUnit || '0'));
+    if (isNaN(custoUnit) || custoUnit < 0) return;
+    const total = qtd * custoUnit;
+    const nota = prompt('Nota/fornecedor (opcional):', ing.fornecedor || '');
+
+    ing.quantity = Number(ing.quantity||0) + qtd;
+    ing.costUnit = custoUnit;
+    ing.updatedAt = new Date().toISOString();
+    if (nota) ing.fornecedor = nota;
+    saveInventory(list);
+
+    try {
+      if (typeof Financas !== 'undefined' && Financas.addCost) {
+        Financas.addCost(fid, {
+          category: 'insumos',
+          type: 'variable',
+          valor: total,
+          description: `Compra ${qtd} ${ing.unit} ${ing.name}` + (nota ? ' ('+nota+')' : ''),
+          date: new Date().toISOString().slice(0,10),
+          source: 'estoque-entrada',
+          meta: { ingredienteId: ing.id, qtd, custoUnit }
+        });
+      } else {
+        const finRec = { id:'fin_'+Date.now().toString(36), type:'expense', category:'insumos', amount:total, description:`Compra ${qtd} ${ing.unit} ${ing.name}`, source:'estoque-entrada', date:new Date().toISOString().slice(0,10), createdAt:new Date().toISOString() };
+        DataStore.addToCollection && DataStore.addToCollection('finances', fid, finRec);
+      }
+    } catch(e) { console.warn('Financas.addCost:', e); }
+
+    try { AuditLog && AuditLog.log && AuditLog.log('estoque.entrada', { ingredienteId: ing.id, nome: ing.name, qtd, custoUnit, total }); } catch(e){}
+
+    renderIngredientes();
+    if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast(`✅ +${qtd} ${ing.unit} · R$ ${total.toFixed(2)} lançado no financeiro`, 'success');
+  };
+
+  window.seedIngredientes = function() {
+    if (listInventory().length && !confirm('Já tem ingredientes cadastrados. Adicionar 20 base mesmo assim?')) return;
+    const base = [
+      { name:'Leite Ninho em pó', category:'ingredientes', unit:'kg', quantity:2, minStock:1, costUnit:85, fornecedor:'Atacadão' },
+      { name:'Leite condensado', category:'ingredientes', unit:'un', quantity:12, minStock:6, costUnit:6.5 },
+      { name:'Creme de leite', category:'ingredientes', unit:'un', quantity:12, minStock:6, costUnit:4.8 },
+      { name:'Polpa de açaí', category:'ingredientes', unit:'kg', quantity:5, minStock:3, costUnit:18 },
+      { name:'Pasta de Nutella', category:'ingredientes', unit:'kg', quantity:1, minStock:0.5, costUnit:45 },
+      { name:'Pasta de Oreo', category:'ingredientes', unit:'kg', quantity:0.5, minStock:0.3, costUnit:55 },
+      { name:'Calda de morango', category:'ingredientes', unit:'L', quantity:2, minStock:1, costUnit:22 },
+      { name:'Calda de chocolate', category:'ingredientes', unit:'L', quantity:2, minStock:1, costUnit:18 },
+      { name:'Granola', category:'ingredientes', unit:'kg', quantity:2, minStock:1, costUnit:24 },
+      { name:'Oreo em pedaços', category:'ingredientes', unit:'kg', quantity:1, minStock:0.5, costUnit:38 },
+      { name:'Confete colorido', category:'ingredientes', unit:'kg', quantity:0.5, minStock:0.3, costUnit:28 },
+      { name:'Pasta de amendoim', category:'ingredientes', unit:'kg', quantity:1, minStock:0.5, costUnit:32 },
+      { name:'Whey protein', category:'outros', unit:'kg', quantity:1, minStock:0.5, costUnit:180 },
+      { name:'Morango fresco', category:'frutas', unit:'kg', quantity:3, minStock:2, costUnit:16 },
+      { name:'Banana', category:'frutas', unit:'kg', quantity:5, minStock:3, costUnit:6 },
+      { name:'Copo Mini 180ml', category:'embalagens', unit:'un', quantity:300, minStock:200, costUnit:0.18 },
+      { name:'Copo Pequeno 300ml', category:'embalagens', unit:'un', quantity:300, minStock:200, costUnit:0.28 },
+      { name:'Copo Médio 500ml', category:'embalagens', unit:'un', quantity:200, minStock:100, costUnit:0.42 },
+      { name:'Tampa de copo', category:'embalagens', unit:'un', quantity:500, minStock:200, costUnit:0.12 },
+      { name:'Colher descartável', category:'embalagens', unit:'un', quantity:500, minStock:300, costUnit:0.08 }
+    ];
+    const list = listInventory();
+    base.forEach(b => {
+      if (!list.find(i => i.name === b.name)) {
+        list.push(Object.assign({
+          id: 'ing_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+          createdAt: new Date().toISOString()
+        }, b));
+      }
+    });
+    saveInventory(list);
+    renderIngredientes();
+    alert('✅ ' + base.length + ' ingredientes-base MilkyPot carregados.');
+  };
 
   // ========== CATEGORIAS ==========
   function renderCategorias() {
