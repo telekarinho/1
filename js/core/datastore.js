@@ -719,3 +719,8 @@ const DataStore = {
 
 // Auto-seed on load
 DataStore.seed();
+
+// Garante acesso global (IIFE-less const é escopo de script em browser;
+// publicar como window.DataStore evita "undefined" em testes e módulos externos)
+if (typeof window !== 'undefined') window.DataStore = DataStore;
+if (typeof globalThis !== 'undefined') globalThis.DataStore = DataStore;

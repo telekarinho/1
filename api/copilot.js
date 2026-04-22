@@ -159,18 +159,15 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { apiKey: bodyKey, model, messages, context, persona, image } = req.body || {};
+        const { apiKey, model, messages, context, persona, image } = req.body || {};
 
-        // Prioridade: chave do body (usuário pagou) > ENV do Vercel (fallback servidor)
-        // Isso garante que a Belinha funcione em prod mesmo se o servidor local cair.
-        const apiKey = (bodyKey && typeof bodyKey === 'string' && bodyKey.startsWith('sk-ant-'))
-                       ? bodyKey
-                       : process.env.ANTHROPIC_API_KEY;
-
-        if (!apiKey) {
+        // Estratégia MilkyPot: API key vem SEMPRE do body (servidor local Claude CLI).
+        // Se o autopilot local cair, o usuário precisa religar — não usamos ENV do
+        // Vercel pra evitar burn acidental de créditos.
+        if (!apiKey || typeof apiKey !== 'string') {
             return res.status(400).json({
                 error: 'api_key_missing',
-                hint: 'Configure ANTHROPIC_API_KEY no Vercel ou envie apiKey no body'
+                hint: 'Servidor local MilkyPot Autopilot offline. Abra o .bat pra religar.'
             });
         }
         if (!Array.isArray(messages) || messages.length === 0) {
