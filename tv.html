@@ -181,29 +181,65 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
     } else if(m.type === 'video'){
       var vsrc = m.url || m.dataUrl;
       if(!vsrc){ timer = setTimeout(playNext, 2000); return; }
+
       var video = document.createElement('video');
+      var vDone = false;
+      function vClean(){
+        if(vDone) return; vDone = true;
+        clearTimeout(vStuck); clearTimeout(vPlayCheck);
+      }
+
       video.autoplay = true;
       video.playsInline = true;
       video.muted = true;
       video.loop = single;
       video.preload = 'auto';
-      var videoStuck = setTimeout(function(){
+      video.setAttribute('playsinline','');
+      video.setAttribute('webkit-playsinline','');
+
+      // Seguranca: se nada acontecer em 8s, pula
+      var vStuck = setTimeout(function(){
+        if(vDone) return; vClean();
         try { video.pause(); video.removeAttribute('src'); video.load(); } catch(e){}
-        timer = setTimeout(playNext, 500);
-      }, 15000);
+        timer = setTimeout(playNext, 300);
+      }, 8000);
+
+      // Detecta tela preta: se timeupdate nao disparar em 4s, decoder falhou
+      var vGotFrame = false;
+      var vPlayCheck = setTimeout(function(){
+        if(vDone) return;
+        if(!vGotFrame){
+          vClean();
+          try { video.pause(); video.removeAttribute('src'); video.load(); } catch(e){}
+          timer = setTimeout(playNext, 300);
+        }
+      }, 4000);
+
+      video.addEventListener('timeupdate', function(){
+        if(!vGotFrame){ vGotFrame = true; clearTimeout(vPlayCheck); }
+      });
+
       video.onloadeddata = function(){
-        clearTimeout(videoStuck);
+        clearTimeout(vStuck);
         if(!single){
           var dur = (video.duration && isFinite(video.duration)) ? (video.duration*1000 + 200) : item.duration;
-          timer = setTimeout(playNext, dur);
+          vStuck = setTimeout(function(){ if(!vDone) playNext(); }, dur + 2000);
+          timer = setTimeout(function(){ vClean(); playNext(); }, dur);
         }
       };
-      video.onended = function(){ clearTimeout(videoStuck); if(!single) playNext(); };
-      video.onerror = function(){ clearTimeout(videoStuck); timer = setTimeout(playNext, 2000); };
+      video.onended = function(){ if(!vDone){ vClean(); if(!single) playNext(); } };
+      video.onerror = function(){
+        vClean();
+        try { video.pause(); video.removeAttribute('src'); video.load(); } catch(e){}
+        timer = setTimeout(playNext, 500);
+      };
+
       player.appendChild(video);
       video.src = vsrc;
       video.load();
-      try { video.play().catch(function(){ timer = setTimeout(playNext, 2000); }); } catch(e){ timer = setTimeout(playNext, 2000); }
+      var vP;
+      try { vP = video.play(); } catch(e){}
+      if(vP && vP.catch){ vP.catch(function(){ if(!vDone){ vClean(); timer = setTimeout(playNext, 500); } }); }
     } else if(m.type === 'text'){
       var div = document.createElement('div');
       div.className = 'text-slide';
