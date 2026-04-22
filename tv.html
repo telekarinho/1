@@ -181,29 +181,74 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
     } else if(m.type === 'video'){
       var vsrc = m.url || m.dataUrl;
       if(!vsrc){ timer = setTimeout(playNext, 2000); return; }
+
+      // Tenta <video> nativo primeiro; se decoder falhar, mostra como imagem poster
       var video = document.createElement('video');
+      var done = false;
+      function videoDone(){ done = true; clearTimeout(stuckTimer); clearTimeout(playCheck); }
+
       video.autoplay = true;
       video.playsInline = true;
       video.muted = true;
       video.loop = single;
       video.preload = 'auto';
-      var videoStuck = setTimeout(function(){
+      video.crossOrigin = 'anonymous';
+      video.setAttribute('playsinline','');
+      video.setAttribute('webkit-playsinline','');
+
+      // Timeout absoluto: se nada acontecer em 8s, pula
+      var stuckTimer = setTimeout(function(){
+        if(done) return;
+        videoDone();
         try { video.pause(); video.removeAttribute('src'); video.load(); } catch(e){}
-        timer = setTimeout(playNext, 500);
-      }, 15000);
+        timer = setTimeout(playNext, 300);
+      }, 8000);
+
+      // Checagem real: o video esta de fato rodando? (timeupdate confirma)
+      var gotTimeUpdate = false;
+      var playCheck = setTimeout(function(){
+        if(done) return;
+        if(!gotTimeUpdate){
+          // Decoder falhou silenciosamente (tela preta). Pula.
+          videoDone();
+          try { video.pause(); video.removeAttribute('src'); video.load(); } catch(e){}
+          timer = setTimeout(playNext, 300);
+        }
+      }, 4000);
+
+      video.addEventListener('timeupdate', function(){
+        if(!gotTimeUpdate){
+          gotTimeUpdate = true;
+          clearTimeout(playCheck);
+        }
+      });
+
       video.onloadeddata = function(){
-        clearTimeout(videoStuck);
+        clearTimeout(stuckTimer);
         if(!single){
           var dur = (video.duration && isFinite(video.duration)) ? (video.duration*1000 + 200) : item.duration;
-          timer = setTimeout(playNext, dur);
+          stuckTimer = setTimeout(function(){ if(!done) playNext(); }, dur + 2000);
+          timer = setTimeout(function(){ videoDone(); playNext(); }, dur);
         }
       };
-      video.onended = function(){ clearTimeout(videoStuck); if(!single) playNext(); };
-      video.onerror = function(){ clearTimeout(videoStuck); timer = setTimeout(playNext, 2000); };
+      video.onended = function(){ if(!done){ videoDone(); if(!single) playNext(); } };
+      video.onerror = function(){
+        videoDone();
+        try { video.pause(); video.removeAttribute('src'); video.load(); } catch(e){}
+        timer = setTimeout(playNext, 500);
+      };
+
       player.appendChild(video);
       video.src = vsrc;
       video.load();
-      try { video.play().catch(function(){ timer = setTimeout(playNext, 2000); }); } catch(e){ timer = setTimeout(playNext, 2000); }
+      var playPromise;
+      try { playPromise = video.play(); } catch(e){}
+      if(playPromise && playPromise.catch){
+        playPromise.catch(function(){
+          // Autoplay bloqueado ou decoder recusou
+          if(!done){ videoDone(); timer = setTimeout(playNext, 500); }
+        });
+      }
     } else if(m.type === 'text'){
       var div = document.createElement('div');
       div.className = 'text-slide';
