@@ -84,15 +84,33 @@ echo   Porta: %PORT%
 echo   Backend: claude CLI (plano Claude Pro/Max)
 echo   Health: http://localhost:%PORT%/health
 echo.
-echo   Deixa essa janela aberta! Pra parar, Ctrl+C.
-echo.
-pause
 cd /d "%AP_DIR%"
 if not exist node_modules (
-  echo   📦 Instalando dependências primeiro...
+  echo   📦 Instalando dependências (primeira vez, ~1min)...
   call npm install
+  if errorlevel 1 (
+    echo.
+    echo  [ERRO] npm install falhou. Verifique sua conexão e tente opção [12].
+    pause
+    goto MENU
+  )
 )
+echo   ✅ Dependências OK. Testando Claude CLI...
+call claude --version >nul 2>&1
+if errorlevel 1 (
+  echo.
+  echo  [ERRO] Claude CLI não encontrado. Use opção [13] pra fazer login primeiro.
+  pause
+  goto MENU
+)
+echo   ✅ Claude CLI OK. Iniciando servidor...
+echo.
+echo   ⭐ SERVIDOR RODANDO. Deixa essa janela aberta!
+echo      Pra parar: Ctrl+C ou feche a janela.
+echo.
 node server.js
+echo.
+echo  [AVISO] Servidor parou. Se caiu inesperado, rode [3] Status pra diagnosticar.
 pause
 goto MENU
 
