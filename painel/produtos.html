@@ -156,6 +156,7 @@
             <select id="filterCategoria" style="padding:8px 12px;border:1px solid #E5E7EB;border-radius:10px;font-size:14px">
               <option value="">Todas as categorias</option>
             </select>
+            <button class="btn-primary" style="background:linear-gradient(135deg,#7E57C2,#5E35B1)" onclick="recalcularPrecos()" title="Aplica fórmula atual em TODOS os produtos (útil após atualização de regras)">🔄 Recalcular preços</button>
             <button class="btn-primary" onclick="seedCatalog()" title="Carrega produtos-exemplo MilkyPot">🪄 Seed inicial</button>
             <button class="btn-primary" onclick="openProduto()">+ Novo Produto</button>
           </div>
@@ -612,12 +613,17 @@
       const vD = CostCalculator.validatePrice(cTotal, p.precos.delivery?.real, 'delivery');
       const vI = CostCalculator.validatePrice(cTotal, p.precos.ifood?.real, 'ifood');
       const cls = v => v.status === 'prejuizo' ? 'danger' : (v.status === 'abaixo' ? 'warn' : '');
+      // Sub-info: se tem kits, mostra resumo
+      const kitInfo = (p.kits && p.kits.length > 1)
+        ? '<div style="font-size:11px;color:#7E57C2;margin-top:3px;font-weight:700">🎁 ' + p.kits.length + ' kits: ' + p.kits.map(k => `${k.qty}/R$${Number(k.precoLoja||0).toFixed(2).replace('.',',')}`).join(' · ') + '</div>'
+        : '';
       rows.push(`
         <div class="prod-row" onclick="openProduto('${p.id}')">
           <div class="prod-emoji">${p.midia?.emoji||cat.icon}</div>
           <div>
             <div class="prod-name">${esc(p.name)}</div>
             <div class="prod-sub">${cat.icon} ${esc(cat.name)}${p.desc ? ' · ' + esc(p.desc) : ''}</div>
+            ${kitInfo}
           </div>
           <div>R$ ${cTotal.toFixed(2)}</div>
           <div class="prod-price ${cls(vL)}">${p.precos.loja?.real ? 'R$ '+Number(p.precos.loja.real).toFixed(2) : '—'}</div>
@@ -973,6 +979,50 @@
       ${rows}
     </div>`;
   }
+
+  // ========== RECALCULAR PRECOS ==========
+  // Re-aplica CostCalculator em TODOS os produtos existentes (util apos
+  // atualizar a formula de precos pra propagar em produtos ja salvos).
+  window.recalcularPrecos = function() {
+    const prods = CatalogV2.listProdutos(fid);
+    if (!prods.length) { alert('Nenhum produto pra recalcular. Clica em "Seed inicial" primeiro.'); return; }
+    if (!confirm(`Recalcular precos de ${prods.length} produto(s) com a formula atual?\n\n` +
+                 '• Loja: custo + margem alvo\n' +
+                 '• Delivery: loja +12%\n' +
+                 '• iFood: loja +28%\n' +
+                 '• Picole: kits promocionais 1/4/10/20\n\n' +
+                 'Isso sobrescreve os precos real de todos produtos.')) return;
+
+    let updated = 0;
+    prods.forEach(p => {
+      const custo = CostCalculator.computeCustoTotal(p);
+      if (custo <= 0) return;
+      const sug = CostCalculator.suggestAll(custo, p.categoriaId);
+      p.precos = {
+        loja:     { recomendado: sug.loja.preco,     real: sug.loja.preco },
+        delivery: { recomendado: sug.delivery.preco, real: sug.delivery.preco },
+        ifood:    { recomendado: sug.ifood.preco,    real: sug.ifood.preco }
+      };
+      // Picole: aplica tabela promocional hardcoded
+      if (p.categoriaId === 'cat_picole') {
+        p.kits = [
+          { label:'1 unidade',   qty:1,  precoLoja: 3.00,  precoDelivery: 3.50,  precoIfood: 3.90 },
+          { label:'4 unidades',  qty:4,  precoLoja:10.00,  precoDelivery:11.50,  precoIfood:12.90 },
+          { label:'10 unidades', qty:10, precoLoja:23.00,  precoDelivery:25.90,  precoIfood:29.90 },
+          { label:'20 unidades', qty:20, precoLoja:39.99,  precoDelivery:44.90,  precoIfood:49.99 }
+        ];
+        // Preco unitario = preco do kit de 1
+        p.precos.loja     = { recomendado: 3.00, real: 3.00 };
+        p.precos.delivery = { recomendado: 3.50, real: 3.50 };
+        p.precos.ifood    = { recomendado: 3.90, real: 3.90 };
+      }
+      CatalogV2.saveProduto(fid, p);
+      updated++;
+    });
+    try { AuditLog && AuditLog.log && AuditLog.log('produtos.recalc', { count: updated }); } catch(e){}
+    renderProdutos();
+    alert(`✅ ${updated} produto(s) recalculado(s).\n\nPicolé agora tem kits promocionais: 1/R$3, 4/R$10, 10/R$23, 20/R$39,99.`);
+  };
 
   // ========== SEED ==========
   window.seedCatalog = function() {
