@@ -1,5 +1,50 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #5 — 2026-04-22
+
+**Área:** UX/Frontend — Correção crítica WhatsApp (pré-inauguração) + Auto-aprimoramento
+
+**Contexto:** 3 dias para inauguração (25/04/2026). Ciclo múltiplo de 5 = auto-aprimoramento. Análise de UX revelou bug crítico: número WhatsApp placeholder `5511XXXXXXXX` em produção — qualquer cliente que clicasse no botão flutuante ou enviasse formulário seria direcionado para um número inexistente.
+
+**O que analisou:**
+- `index.html`: botão `.whatsapp-float` com `5511XXXXXXXX` (3 ocorrências: float, fallback contato, fallback franquia)
+- `cardapio.html`: botão `.whatsapp-float` ausente no HTML (JS tentava atualizar elemento inexistente → silenciosamente falhava)
+- Lista `CHECKOUT_STORES` em ambos os arquivos: unidade Muffato Londrina inexistente (só lojas SP/RJ/PE genéricas)
+- Schema.org já tinha número correto `+5543998042424` desde ciclo #1 — inconsistência perigosa
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `index.html` | 3x `5511XXXXXXXX` → `5543998042424` (float btn + 2 fallbacks de formulário) |
+| `index.html` | Unidade Muffato Londrina adicionada como 1ª opção em `CHECKOUT_STORES` |
+| `cardapio.html` | Botão `.whatsapp-float` adicionado ao HTML com número Londrina |
+| `cardapio.html` | Unidade Muffato Londrina adicionada como 1ª opção em `CHECKOUT_STORES` |
+
+**Commit:** `0cbee36`
+
+**Impacto:**
+- **CRÍTICO RESOLVIDO**: qualquer visita ao site agora direciona para o WhatsApp real da loja
+- Clientes em Londrina veem Muffato como 1ª opção de loja no checkout
+- Frete R$0 configurado para Muffato Londrina (política local de delivery)
+
+**Auto-aprimoramento (ciclo #5):**
+
+Análise dos 5 ciclos:
+- ✅ **Alto valor**: Ciclos de SEO (#1-3) geraram base indexável antes da inauguração — efeito cumulativo
+- ✅ **Alto valor**: Ciclo #5 (hoje) corrigiu bug crítico que bloquearia conversões reais
+- ⚠️ **Médio valor**: Ciclos #1 e #3 produziram conteúdo/análises úteis mas sem impacto técnico imediato
+- ❌ **Oportunidade perdida**: Ciclo #4 (funil WhatsApp) ficou só em documentação Markdown — faltou validar o número real no HTML
+- 📊 **Padrão**: Ciclos de código > ciclos só de conteúdo. Priorizar sempre mudanças em HTML/JS/CSS com impacto direto no usuário.
+
+**Ajuste de estratégia:** ver `belinha/estrategia.md`
+
+**Próximo passo sugerido:**
+- Ciclo #6: Adicionar `openingHoursSpecification` ao Schema.org em `index.html` (sáb 14h-23h) + verificar `raspinha.html` — existe mas nunca foi analisado
+- Ciclo #6 alternativo: Pesquisar concorrente MilkyMoo atualizado (preços, promoções de inauguração de outras unidades para benchmark)
+
+---
+
 ## Ciclo #4 — 2026-04-22
 
 **Área:** Conversão — Funil WhatsApp + Conteúdo semana 1 pós-inauguração
