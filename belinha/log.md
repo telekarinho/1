@@ -1,5 +1,44 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #13 — 2026-04-23
+
+**Área:** Concorrentes + Fix Domínio — TheBest Açaí Londrina + correção milkypot.com.br
+
+**Contexto:** Inauguração AMANHÃ (25/04/2026). Ciclo #12 havia identificado referências ao domínio errado `milkypot.com.br` e a necessidade de mapear TheBest Açaí com dados reais (preços, unidades Londrina).
+
+**O que analisou:**
+- WebSearch: TheBest Açaí Londrina — preços, localidades, produtos, modelo self-service
+- Confirmado: R$ 6,29/100g no preço regular (loja Gleba Palhano), inauguração R$ 3,99/100g
+- Mapeadas 5 unidades em Londrina (Gleba Palhano flagship 310m², San Conrado, Pio XII, Arthur Thomas, Higienópolis)
+- **SEM unidade confirmada no Muffato** — janela de oportunidade para MilkyPot
+- Comparativo por porção: TheBest e MilkyPot são price-competitive (~R$18-22 para porção média/gigante)
+- `termos.html` linha 267: milkypot.com.br → corrigido
+- `privacidade.html` linha 347: email DPO no placeholder com .com.br → corrigido
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `termos.html` | Fix domínio: `milkypot.com.br` → `milkypot.com` na Seção 1 |
+| `privacidade.html` | Fix email DPO no placeholder: `privacidade@milkypot.com.br` → `@milkypot.com` |
+| `belinha/competitors/the-best-acai.md` | Reescrito com dados reais 2026: preços por 100g, 5 unidades Londrina, comparativo porções vs MilkyPot, copy de diferenciação |
+| `belinha/blockers.md` | Blocker de domínio marcado como ✅ resolvido |
+
+**Commit:** `3c5c12b`
+
+**Insight estratégico:** TheBest cobra R$6,29/100g. Uma porção de 300g = R$18,87 — quase igual ao MilkyPot Médio R$18. Mas o cliente TheBest tende a montar mais (~350g = R$22), igualando o Gigante MilkyPot. O diferencial real não é preço, é **experiência + identidade + Ninho base + Fit line**.
+
+**Blockers ainda abertos:**
+- 🔴 CNPJ + Razão Social (termos/privacidade/footers)
+- 🔴 DPO nome + endereço (privacidade.html Seção 7)
+- 🟡 Google Analytics ID real (cardapio.html com G-XXXXXXXXXX ativo)
+
+**Próximo passo sugerido:**
+- Ciclo #14: UX/Conversão — verificar fluxo WhatsApp: o link `https://wa.me/5543998042424` aparece em quantos lugares? Testar se CTAs de "Pedir agora" em `index.html` e `cardapio.html` estão todos apontando para o WhatsApp correto
+- Ciclo #14 alternativo: Criar caption/reel de inauguração com copy "SEM FILA DE SELF-SERVICE" contrapondo TheBest explicitamente (sem citar nome)
+
+---
+
 ## Ciclo #12 — 2026-04-23
 
 **Área:** Legal/Compliance — Placeholders em `privacidade.html` e `termos.html` + criação de `belinha/blockers.md`
