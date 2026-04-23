@@ -80,8 +80,9 @@ Google Analytics 4 Property ID: G-__________
 | CNPJ + Razão Social | 🔴 Crítico | ❌ Aguardando |
 | DPO (encarregado LGPD) | 🔴 Crítico | ❌ Aguardando |
 | Google Analytics ID | 🟡 Secundário | ❌ Aguardando |
-| Domínio correto em termos.html | 🟡 Secundário | ❌ Aguardando |
+| Domínio correto (termos.html + privacidade.html) | 🟡 Secundário | ✅ Resolvido (Ciclo #13) |
 
 ---
 
 *Criado por Belinha — Ciclo #12 — 2026-04-23*
+*Atualizado — Ciclo #13 — 2026-04-23*
