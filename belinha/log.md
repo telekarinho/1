@@ -1,5 +1,42 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #15 — 2026-04-23
+
+**Área:** UX/Conversão — Banner de inauguração com texto dinâmico por fase
+
+**Contexto:** Inauguração AMANHÃ (25/04/2026). O banner do ciclo #14 tinha texto fixo "INAUGURAÇÃO SÁBADO 25/04 ÀS 14H" que não mudaria automaticamente no dia da abertura nem se apagaria depois. Visitantes no sábado veriam mensagem errada: "inauguração sábado" quando a loja já está aberta.
+
+**O que analisou:**
+- Banner ciclo #14: sem lógica de data, texto imutável em HTML
+- Risco: visitante no sábado às 15h veria "INAUGURAÇÃO SÁBADO 25/04 ÀS 14H" — incoerente
+- Oportunidade: 3 fases com mensagens distintas = banner sempre correto, zero intervenção manual
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `index.html` (linhas 177-239) | Banner com IDs `inaugBannerText` e `inaugBannerCta` + `getBrasiliaDate()` (UTC-3 fixo) + `configureBanner()` que muda texto/CTA por fase |
+
+**Fases implementadas:**
+- **Antes de 25/04:** texto original "INAUGURAÇÃO SÁBADO 25/04 ÀS 14H" + "Quero ir! →"
+- **25/04 antes das 14h:** "ABRIMOS HOJE ÀS 14H!" + "Me avisa! →" (WhatsApp pré-preenchido)
+- **25/04 das 14h às 23h:** "ESTAMOS ABERTOS AGORA! 🎊" + "Pedir agora! →" (WhatsApp pedido)
+- **Após 23h do dia 25 ou qualquer dia depois:** banner some automaticamente
+
+**Commit:** `01cbfbd`
+
+**Impacto:**
+- Zero intervenção manual necessária no dia da inauguração
+- CTA muda junto com o texto — contexto sempre correto para conversão
+- `getBrasiliaDate()` usa UTC-3 fixo: não depende do fuso do dispositivo do visitante
+
+**Próximo passo sugerido:**
+- Ciclo #16: Conteúdo de pós-inauguração — criar template de repost de clientes (stories "Compartilhe seu potinho") para usar no final do dia 25/04
+- Ciclo #16: Verificar mobile UX no `cardapio.html` — testar fluxo de pedido no WhatsApp em viewport 375px
+- Ciclo #16: Atualizar Schema.org `openingHoursSpecification` em `index.html` com horário real (14h-23h sábado)
+
+---
+
 ## Ciclo #14 — 2026-04-23
 
 **Área:** UX/Conversão — Banner de inauguração fixo em `index.html`
