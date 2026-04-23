@@ -393,6 +393,32 @@ body:not(.idle){cursor:default}
             }
         });
 
+        /* --- MARKETING INJECTION: Promos Globais Injetadas --- */
+        var marketingPromo1 = {
+            type: 'promo',
+            promoUrgency: 'PROMOÇÃO IMPERDÍVEL',
+            promoHeadline: 'ACERTOU, GANHOU!',
+            promoSubtext: 'Pese exatamente 300 gramas no seu pote e NÃO PAGUE NADA!',
+            promoPrice: 'GRÁTIS',
+            promoSavings: 'Confie na sua balança'
+        };
+        var marketingPromo2 = {
+            type: 'story',
+            storyBrandTag: 'Desafio Oficial MilkyPot',
+            storyProductName: 'Craque do Tempo? 10.000ms!',
+            storyDesc: 'Acesse o Desafio no tablet da loja. Pare o cronômetro em exatamente 10 segundos e ganhe 1 MilkyPot grátis na hora!',
+            storyPrice: 'GRÁTIS'
+        };
+        if(playlist.length > 0){
+            // Injeta a cada 3~4 slides
+            playlist.splice(Math.floor(playlist.length / 2), 0, { media: marketingPromo1, duration: 12000 });
+            playlist.push({ media: marketingPromo2, duration: 12000 });
+        } else {
+            playlist.push({ media: marketingPromo1, duration: 12000 });
+            playlist.push({ media: marketingPromo2, duration: 12000 });
+        }
+        /* ----------------------------------------------------- */
+
         if(!playlist.length){
             loadingMsg.textContent = 'Playlist vazia. Adicione midias no painel da franquia.';
             return;

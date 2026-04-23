@@ -90,6 +90,7 @@ const MP = {
 
     // Owner email (para auto-registro como super_admin)
     OWNER_EMAIL: 'jocimarrodrigo@gmail.com',
+    SUPPORT_WHATSAPP: '5543999999999',
 
     // Session config
     SESSION_DURATION_MS: 24 * 60 * 60 * 1000, // 24 horas
