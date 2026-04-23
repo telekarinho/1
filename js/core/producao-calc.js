@@ -250,11 +250,18 @@
         const precoLoja = Number(produto?.precos?.loja?.real) || Number(produto?.precos?.loja?.recomendado) || 0;
         const das = Math.round((precoLoja * (config.dasPct || 0)) * 100) / 100;
 
-        // Pró-labore rateado por unidade projetada
-        const proLaboreUnit = ctx.qtdBase > 0 ? Math.round((config.proLabore / ctx.qtdBase) * 100) / 100 : 0;
-
-        // Depreciação rateada por unidade
-        const depreciacaoUnit = ctx.qtdBase > 0 ? Math.round((config.depreciacaoMensal / ctx.qtdBase) * 100) / 100 : 0;
+        // ANTI-DUPLICACAO:
+        // Se user cadastrou pro-labore/depreciacao nas despesas do Financeiro,
+        // esses valores ja estao em ctx.totalFixed e foram rateados em
+        // "fixed". Adicionar config.proLabore/depreciacaoMensal de novo
+        // seria contar em dobro. Config tem flags proLaboreEmFixos e
+        // depreciacaoEmFixos pro user sinalizar isso (default false = soma).
+        const proLaboreUnit = (config.proLaboreEmFixos || ctx.qtdBase <= 0)
+            ? 0
+            : Math.round((config.proLabore / ctx.qtdBase) * 100) / 100;
+        const depreciacaoUnit = (config.depreciacaoEmFixos || ctx.qtdBase <= 0)
+            ? 0
+            : Math.round((config.depreciacaoMensal / ctx.qtdBase) * 100) / 100;
 
         // Perdas (% do CMV)
         const cmv = recipe.insumos + recipe.embalagem;
