@@ -1,5 +1,45 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #14 — 2026-04-23
+
+**Área:** UX/Conversão — Banner de inauguração fixo em `index.html`
+
+**Contexto:** Inauguração AMANHÃ (25/04/2026). Auditoria de WhatsApp confirmou que todos os links estão corretos (`5543998042424`). Gap identificado: o site não anunciava em nenhum lugar visível que a loja inaugura amanhã — visitante que chegasse hoje não sabia do evento.
+
+**O que analisou:**
+- WhatsApp: todos os CTAs corretos (float, checkout, formulários) — nenhuma correção necessária
+- Botão nav "Pedir Agora" → ancla `#produtos` ✅
+- Checkout `placeOrder()` → redireciona para WhatsApp da loja selecionada ✅
+- Hero de `index.html`: sem menção de inauguração. Oportunidade óbvia de conversão (tráfego orgânico amanhã)
+- `hero-compact` tem `padding: 100px 20px 20px` para acomodar navbar fixed — o banner extra exigia ajuste proporcional
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `index.html` (linha 177-201) | Banner fixo `#inaugBanner` inserido antes da `<nav>`: gradiente roxo-rosa, texto "INAUGURAÇÃO SÁBADO 25/04 ÀS 14H · Muffato Londrina · Av. Quintino Bocaiuva, 1045", botão "Quero ir! →" (WhatsApp link), X de fechar, z-index 1100 (acima da navbar 1000) |
+| `index.html` (script inline) | `applyBannerOffset()`: ajusta `navbar.style.top` e `hero-compact.style.paddingTop` dinamicamente baseado na altura real do banner. Roda no `DOMContentLoaded`, no `resize` e após 200ms (para fontes Baloo 2). `closeBanner()` global: esconde banner + restaura layout |
+
+**Commit:** `5827e22`
+
+**Impacto:**
+- Todo visitante de `index.html` vê imediatamente o anúncio de inauguração amanhã
+- CTA WhatsApp pré-preenchido ("Vim do site e quero saber mais!") captura curiosos antes mesmo da abertura
+- Botão de fechar mantém UX limpa para quem não precisa do aviso
+- Layout não quebra: navbar e hero se ajustam dinamicamente à altura real do banner em qualquer tamanho de tela
+
+**Blockers ainda abertos:**
+- 🔴 CNPJ + Razão Social (termos/privacidade/footers)
+- 🔴 DPO nome + endereço (privacidade.html Seção 7)
+- 🟡 Google Analytics ID real (cardapio.html com G-XXXXXXXXXX ativo)
+- ⚠️ Banner deve ser removido após 26/04/2026 (comentário no HTML indica isso)
+
+**Próximo passo sugerido:**
+- Ciclo #15: Pré-inauguração urgente — verificar `cardapio.html` se o CTA "Finalizar Pedido" gera uma mensagem WhatsApp com os itens do carrinho, ou apenas texto genérico. Se genérico → criar mensagem estruturada com nome, loja, itens e total para facilitar o atendimento
+- Ciclo #15 alternativo: Criar reel/story de inauguração com copy "O potinho mais feliz do mundo chega ao Muffato AMANHÃ" para publicar hoje à noite no Instagram
+
+---
+
 ## Ciclo #13 — 2026-04-23
 
 **Área:** Concorrentes + Fix Domínio — TheBest Açaí Londrina + correção milkypot.com.br
