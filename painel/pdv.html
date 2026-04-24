@@ -474,8 +474,9 @@
                 </label>
             </div>
 
-            <div style="margin-top:24px">
-                <button class="buffet-btn primary" style="width:100%" onclick="closePrinterSettings()">Salvar e Fechar</button>
+            <div style="margin-top:24px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button class="buffet-btn" onclick="testPrinter()">📑 Imprimir Teste</button>
+                <button class="buffet-btn primary" onclick="closePrinterSettings()">Salvar e Fechar</button>
             </div>
         </div>
     </div>
@@ -2403,6 +2404,35 @@
         const cfg = Printer.getConfig();
         cfg.useBrowserDialog = document.getElementById('chkUseDialog').checked;
         Printer.saveConfig(cfg);
+    };
+
+    window.testPrinter = function() {
+        const cfg = Printer.getConfig();
+        const activeProfiles = cfg.profiles.filter(p => p.active);
+        const profile = activeProfiles.length > 0 ? activeProfiles[0] : cfg.profiles[0];
+        
+        var t = "";
+        t += "================================\n";
+        t += "       TESTE DE IMPRESSAO       \n";
+        t += "           MILKYPOT             \n";
+        t += "================================\n";
+        t += "Data: " + new Date().toLocaleString('pt-BR') + "\n";
+        t += "Largura: " + cfg.width + "\n";
+        t += "Perfil: " + profile.name + "\n";
+        t += "--------------------------------\n";
+        t += "1x Produto de Teste\n";
+        t += "   R$ 10,00\n";
+        t += "--------------------------------\n";
+        t += "TOTAL: R$ 10,00\n";
+        t += "================================\n";
+        t += "\n";
+        t += "Se voce esta lendo isso, sua\n";
+        t += "impressora esta configurada\n";
+        t += "corretamente! 🚀\n";
+        t += "\n";
+        t += "--------------------------------\n";
+        
+        openPrintWindow(t, null, profile.id);
     };
 
     function openPrintWindow(text, scratchData, profileId){
