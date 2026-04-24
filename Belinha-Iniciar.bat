@@ -52,24 +52,17 @@ echo.
 echo  ==========================================================
 echo    SERVIDOR RODANDO - NAO FECHE ESTA JANELA
 echo.
-echo    Health: http://localhost:5757/health
-echo    Se voltar ao menu abaixo, o servidor caiu.
+echo    Painel local: http://localhost:5757/painel/copilot-belinha.html
+echo    Health check: http://localhost:5757/health
 echo  ==========================================================
 echo.
-echo  IMPORTANTE - Chrome bloqueia HTTP^<^>HTTPS por seguranca.
-echo  Para conectar ao servidor, faca UMA VEZ:
-echo.
-echo    1. Abra milkypot.com no Chrome
-echo    2. Clique no cadeado ao lado da URL
-echo    3. Configuracoes do site ^> Conteudo inseguro: PERMITIR
-echo    4. Recarregue a pagina ^(F5^)
-echo.
-echo  Ou copie esta URL no Chrome e pressione Enter:
-echo  chrome://settings/content/siteDetails?site=https://milkypot.com
+echo  O painel abrira AUTOMATICAMENTE no seu browser em 4 segundos.
+echo  Belinha vai conectar sem precisar mexer no Chrome.
 echo.
 
-REM Tenta abrir Chrome nas configuracoes do site para facilitar
-start "" "chrome.exe" "chrome://settings/content/siteDetails?site=https://milkypot.com" 2>nul
+REM Aguarda 4s para o servidor subir e abre o painel local no browser padrao
+REM Usa localhost (HTTP) em vez de milkypot.com (HTTPS) = sem Mixed Content
+start "" /B cmd /c "timeout /t 4 /nobreak >nul & start http://localhost:5757/painel/copilot-belinha.html"
 
 node server.js
 
