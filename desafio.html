@@ -5,29 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Desafio 10 MilkyPot Milissegundos | MilkyPot</title>
 <meta name="theme-color" content="#F0F7FF">
-<link rel="manifest" href="/manifest.json">
-<!-- Service Worker pra funcionar OFFLINE (cache-first) -->
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw-desafio.js').catch(function(){});
-  });
-}
-// Kiosk mode: TV dedicada do Desafio passa ?kiosk=1.
-// Aplica body.kiosk-mode cedo pra CSS pegar antes do first paint.
-(function(){
-  try {
-    var qs = new URLSearchParams(location.search);
-    if (qs.get('kiosk') === '1' || qs.get('kiosk') === 'true') {
-      document.addEventListener('DOMContentLoaded', function(){
-        document.body.classList.add('kiosk-mode');
-      });
-      // Se body ja existe, aplica direto
-      if (document.body) document.body.classList.add('kiosk-mode');
-    }
-  } catch(e) {}
-})();
-</script>
+<link rel="manifest" href="/manifest-desafio.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;700;800;900&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
@@ -47,60 +25,6 @@ align-items:center;justify-content:center;
 position:relative;overflow:hidden;
 background:linear-gradient(135deg,#F0F7FF 0%,#E8F4FD 30%,#F5E6F0 60%,#EDE0F5 100%);
 }
-
-/* === Fit-in-viewport (desktop/TV normal) — garante que nao haja overflow
-   em telas >= 720px altura sem precisar de ?kiosk=1. Proporcoes mais enxutas */
-@media (min-height: 720px) {
-  .step { padding: clamp(16px, 3vh, 32px) !important; }
-  .counter-num { font-size: clamp(60px, 13vh, 140px) !important; }
-  .logo-img { width: clamp(80px, 11vh, 130px) !important; margin-bottom: 4px !important; }
-  .main-title { font-size: clamp(36px, 6vh, 68px) !important; margin-bottom: 6px !important; }
-  .main-sub   { margin-bottom: 10px !important; }
-  .counter-box { padding: clamp(18px, 3vh, 36px) clamp(24px, 5vw, 64px) !important; margin-bottom: clamp(12px, 2vh, 24px) !important; }
-}
-/* telas baixas (notebook 13", tablet landscape) */
-@media (max-height: 720px) {
-  .step { padding: 16px !important; justify-content: space-evenly !important; }
-  .counter-num { font-size: clamp(52px, 11vh, 100px) !important; letter-spacing: 2px !important; }
-  .main-title  { font-size: clamp(30px, 5.5vh, 52px) !important; margin-bottom: 4px !important; }
-  .main-sub    { font-size: clamp(13px, 1.8vh, 18px) !important; margin-bottom: 6px !important; }
-  .logo-img    { width: clamp(60px, 9vh, 110px) !important; margin-bottom: 2px !important; }
-  .counter-box { padding: clamp(12px, 2vh, 22px) clamp(18px, 4vw, 44px) !important; margin-bottom: 10px !important; }
-  .btn-start   { font-size: clamp(16px, 2.5vh, 22px) !important; padding: clamp(12px, 2vh, 18px) clamp(40px, 6vw, 72px) !important; }
-}
-
-/* === KIOSK MODE (TV dedicada do Desafio no APK) ===
-   Ativado via ?kiosk=1 na URL. Forca todo conteudo a caber em 100vh
-   sem scroll, sem clipping, com fontes proporcionais ao viewport. */
-body.kiosk-mode,
-body.kiosk-mode .screen { overflow:hidden !important; height:100vh !important; }
-body.kiosk-mode .step { padding: clamp(12px, 2vh, 28px) clamp(16px, 3vw, 36px) !important; overflow:hidden !important; justify-content: space-around !important; }
-body.kiosk-mode #step0 { justify-content: space-around !important; padding-top: clamp(12px, 2vh, 24px) !important; }
-body.kiosk-mode .logo-img { width: clamp(60px, 10vh, 130px) !important; margin-bottom: 2px !important; }
-body.kiosk-mode .badge-top { margin-bottom: 4px !important; }
-body.kiosk-mode .main-title { font-size: clamp(32px, 6vh, 64px) !important; margin-bottom: 4px !important; }
-body.kiosk-mode .main-sub  { font-size: clamp(13px, 2vh, 20px) !important; margin-bottom: 6px !important; max-width: 80vw; }
-body.kiosk-mode .counter-box { padding: clamp(12px, 2vh, 28px) clamp(18px, 4vw, 48px) !important; margin-bottom: clamp(8px, 1.5vh, 20px) !important; }
-body.kiosk-mode .counter-num  { font-size: clamp(56px, 14vh, 140px) !important; letter-spacing: 2px !important; }
-body.kiosk-mode .counter-label { margin-bottom: 2px !important; }
-body.kiosk-mode .counter-target { margin-top: 4px !important; }
-body.kiosk-mode .player-name-display { font-size: clamp(14px, 2vh, 22px) !important; margin-bottom: 6px !important; }
-body.kiosk-mode .status-msg { min-height: 20px !important; margin-bottom: 8px !important; font-size: clamp(13px, 2vh, 20px) !important; }
-body.kiosk-mode .btn { padding: clamp(10px, 1.8vh, 20px) clamp(30px, 5vw, 70px) !important; font-size: clamp(15px, 2.3vh, 22px) !important; }
-body.kiosk-mode .btn-start { font-size: clamp(17px, 2.8vh, 26px) !important; padding: clamp(12px, 2vh, 22px) clamp(36px, 6vw, 90px) !important; }
-body.kiosk-mode .attract-title { font-size: clamp(16px, 2.6vh, 24px) !important; margin: 6px 0 !important; }
-body.kiosk-mode .attract-sub   { font-size: clamp(12px, 1.8vh, 18px) !important; margin-bottom: 6px !important; }
-body.kiosk-mode .attract-feed  { max-height: 20vh !important; overflow:hidden !important; }
-body.kiosk-mode .stats-line, body.kiosk-mode .badge-card-sub { font-size: clamp(11px, 1.6vh, 15px) !important; }
-body.kiosk-mode #offlineBar    { display:none !important; }
-body.kiosk-mode [data-tv-share] { display:none !important; } /* botao IG so faz sentido no celular do cliente */
-body.kiosk-mode .attempt-badge { top: 8px !important; right: 8px !important; }
-body.kiosk-mode .diff-label,
-body.kiosk-mode .counter-box + * { margin-bottom: 0 !important; }
-/* ranking / creditos escondidos em kiosk pra caber */
-body.kiosk-mode footer,
-body.kiosk-mode .credits,
-body.kiosk-mode .ranking-week { display:none !important; }
 
 /* Ambient glow */
 .ambient{
@@ -823,8 +747,6 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 </div>
 </div>
 <div class="attract-feed" id="attractFeed"></div>
-<!-- Rotacao de promocoes: Desafio 10s + Acertou Ganhou 300g (12 copies misturadas) -->
-<div data-tv-promos="all" data-interval="5500" style="max-width:min(92vw,720px);width:100%;margin:clamp(12px,2vw,20px) auto 0"></div>
 <div class="attract-cta" id="attractCta">&#128073; Toque na tela para jogar!</div>
 <!-- Hidden containers for JS -->
 <div id="tournamentSection" style="display:none"><div id="tournamentCountdown"></div><div id="tournamentList"></div></div>
@@ -893,11 +815,8 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 <img id="photoImg" style="width:clamp(200px,40vw,360px);border-radius:16px;margin-bottom:16px">
 </div>
 <button class="btn btn-pink" id="photoBtn" onclick="takePhoto()">&#128248; Tirar Foto</button>
+<button class="btn btn-outline" id="photoSkip" onclick="skipMedia()" style="margin-top:12px;">Não quero filmar/foto &#128584;</button>
 <button class="btn btn-outline" id="photoNext" onclick="goToDifficulty()" style="display:none">Bora pro Desafio! &#128293;</button>
-<div style="margin-top:18px;text-align:center">
-  <button class="btn btn-skip" id="skipMediaBtn" onclick="skipMedia()" style="background:transparent;border:1.5px dashed rgba(255,255,255,.45);color:rgba(255,255,255,.85);padding:10px 22px;border-radius:100px;font-size:clamp(12px,1.4vw,14px);font-weight:600;cursor:pointer">🙈 Prefiro não tirar foto / filmar</button>
-  <p style="margin:8px 0 0;font-size:clamp(10px,1.1vw,12px);color:rgba(255,255,255,.6)">Tudo bem! Você continua jogando, só não ganha bônus de compartilhamento.</p>
-</div>
 </div>
 
 <!-- STEP DIFFICULTY: DIFFICULTY SELECTOR (feature 1) -->
@@ -1291,6 +1210,7 @@ showReturningWelcome(existing);
 if(gameConfig.stampCard) updateStampCard();
 /* Update streak (feature 3) */
 if(gameConfig.streak) loadStreak();
+localStorage.removeItem('mp_skip_media');
 showStep(1);
 startCamera('photoVideo');
 };
@@ -1317,34 +1237,6 @@ v.style.display='none';
 document.getElementById('photoBtn').style.display='none';
 document.getElementById('photoNext').style.display='';
 if(photoStream) photoStream.getTracks().forEach(function(t){t.stop()});
-};
-
-/* ========== OPT-OUT: jogador nao quer filmar/fotografar ========== */
-window.skipMedia=function(){
-  // Marca opt-out pra toda a sessao — nada de foto, webcam ou video de reacao
-  try {
-    window._mediaOptOut = true;
-    sessionStorage.setItem('milkypot_media_optout','1');
-    // Para qualquer stream ativo
-    var v = document.getElementById('photoVideo');
-    if (v && v.srcObject) {
-      try { v.srcObject.getTracks().forEach(function(t){t.stop()}); } catch(e){}
-      v.srcObject = null;
-    }
-    var webcam = document.getElementById('webcamVid');
-    if (webcam && webcam.srcObject) {
-      try { webcam.srcObject.getTracks().forEach(function(t){t.stop()}); } catch(e){}
-      webcam.srcObject = null;
-    }
-    // Esconde PIP da webcam
-    var pip = document.getElementById('webcamPip');
-    if (pip) pip.style.display = 'none';
-    // Substitui foto por emoji placeholder pro Firestore nao quebrar
-    try { if (typeof gameConfig !== 'undefined') gameConfig._skipMedia = true; } catch(e){}
-    if (typeof window.playerPhotoDataUrl !== 'undefined') window.playerPhotoDataUrl = null;
-  } catch(e) { console.warn('skipMedia:', e); }
-  // Vai direto pra escolha de dificuldade
-  goToDifficulty();
 };
 
 /* ========== FEATURE 1: DIFFICULTY SELECTOR ========== */
@@ -1380,7 +1272,15 @@ startWebcam();
 };
 
 /* ========== WEBCAM PIP ========== */
+window.skipMedia=function(){
+playerPhotoData=null;
+localStorage.setItem('mp_skip_media','true');
+if(photoStream) photoStream.getTracks().forEach(function(t){t.stop()});
+goToDifficulty();
+};
+
 function startWebcam(){
+if(localStorage.getItem('mp_skip_media')==='true') return;
 var pip=document.getElementById('webcamPip');
 var v=document.getElementById('webcamVid');
 navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:320}},audio:false})
@@ -1406,8 +1306,6 @@ if(gameState==='idle'){
 gameState='running';
 screen.classList.add('running');
 startT=Date.now();elapsed=0;
-/* === BRIDGE TVs: broadcast START */
-if (window._tvChallengeStart) { try { window._tvChallengeStart(playerN, '10s'); } catch(e){} }
 btn.className='btn btn-stop';
 btn.innerHTML='PARAR EM '+fmt(gameTarget)+' &#9899;';
 document.getElementById('statusMsg').textContent=runMsgs[0];
@@ -1426,8 +1324,6 @@ if(gameConfig.reactionVideo&&webcamStream) startReactionRecording();
 cancelAnimationFrame(timer);clearInterval(msgTimer);
 gameState='done';
 document.getElementById('screen').classList.remove('running');
-/* === BRIDGE TVs: broadcast FINISH */
-if (window._tvChallengeFinish) { try { window._tvChallengeFinish(elapsed/1000, '10s'); } catch(e){} }
 if(navigator.vibrate) navigator.vibrate([50,30,80]);
 /* Feature 7: stop recording */
 if(gameConfig.reactionVideo&&mediaRecorder&&mediaRecorder.state==='recording') mediaRecorder.stop();
@@ -2046,6 +1942,8 @@ var attractIdx=0;
 
 function buildAttractCards(){
 var cards=[];
+cards.push({emoji:'&#127873;',name:'ACERTOU GANHOU',msg:'Acerte 300g no peso e NAO PAGUE!',val:'PROMO',cls:'gold',copy:'Pese 300 gramas exatos e o MilkyPot e na faixa!'});
+
 best.forEach(function(b){
 var d=Math.abs((b.target||10000)-b.val);
 var card={name:b.name,val:fmt(b.val),cls:'',photo:b.photo||null,video:b.reactionVideo||null};
@@ -2055,8 +1953,9 @@ else if(d<=500){card.emoji='&#128170;';card.msg='Chegou perto!';card.copy='Fez '
 else{card.emoji='&#129321;';card.msg='Tentou o desafio!';card.copy='Bora superar?'}
 cards.push(card);
 });
-if(cards.length===0){
+if(cards.length===1){
 cards=[
+{emoji:'&#127873;',name:'ACERTOU GANHOU',msg:'Acerte 300g no peso e NAO PAGUE!',val:'PROMO',cls:'gold',copy:'Mostre que voce tem olho clinico!'},
 {emoji:'&#9201;',name:'10 segundos',msg:'Voce consegue acertar?',val:'10.000ms',cls:'',copy:'Parece facil, mas nao e!'},
 {emoji:'&#128170;',name:'Desafio',msg:'Toque na tela e tente!',val:'JOGAR',cls:'gold',copy:'Sera que voce tem o timing?'},
 {emoji:'&#128293;',name:'Ranking',msg:'Ninguem jogou ainda!',val:'1o lugar',cls:'',copy:'Seja o primeiro do ranking!'},
@@ -2337,10 +2236,5 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   if(!navigator.onLine) update();
 })();
 </script>
-<!-- Bridge pra broadcasting nas TVs + botao share viral -->
-<script src="/js/pages/desafio-tv-bridge.js?v=mp-v1"></script>
-<!-- Copies rotativas + rotator das 2 promocoes (Desafio 10s + Acertou Ganhou 300g) -->
-<script src="/js/core/promocoes-copy.js?v=mp-v1"></script>
-<script src="/js/core/tv-promo-rotator.js?v=mp-v1"></script>
 </body>
 </html>

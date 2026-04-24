@@ -172,6 +172,11 @@ const Onboarding = {
             .mp-lock-icon { font-size: 4rem; margin-bottom: 16px; }
             .mp-lock-title { font-family: 'Baloo 2', cursive; font-size: 1.8rem; color: #2D1B4E; margin: 0 0 12px; }
             .mp-lock-msg { color: #666; max-width: 460px; line-height: 1.5; margin: 0 0 24px; }
+            .mp-pdv-checklist-box {
+                background: #fff; border-radius: 16px; padding: 24px; width: 100%; max-width: 450px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #E5E7EB; text-align: left;
+                margin-bottom: 16px;
+            }
         `;
         document.head.appendChild(style);
     },
@@ -326,16 +331,78 @@ const Onboarding = {
 
     showPDVLock() {
         if (document.getElementById('mp-pdv-lock')) return;
+
+        const checklist = this._items || DataStore.getCollection('checklist_onboarding', this._franchise.id);
+        const doneCount = checklist.filter(i => i.done).length;
+        const total = checklist.length;
+        const progress = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+
+        const checklistHTML = total > 0
+            ? checklist.map(item => `
+                <div class="mp-check-item ${item.done ? 'done' : ''}" onclick="Onboarding.toggleStepPDV('${item.id}')">
+                    <div class="mp-check-circle">${item.done ? '✓' : ''}</div>
+                    <div class="mp-check-text">${item.text}</div>
+                </div>
+            `).join('')
+            : '<p style="color:#999;text-align:center;padding:12px;">Nenhum item de checklist encontrado.</p>';
+
         const lock = document.createElement('div');
         lock.id = 'mp-pdv-lock';
         lock.className = 'mp-pdv-locked';
         lock.innerHTML = `
             <div class="mp-lock-icon">🔒</div>
             <h2 class="mp-lock-title">Vendas Bloqueadas</h2>
-            <p class="mp-lock-msg">Finalize o checklist de onboarding no Dashboard pra liberar o PDV.</p>
-            <button class="mp-btn-full" style="max-width:300px" onclick="window.location.href='index.html'">Voltar ao Dashboard</button>
+            <p class="mp-lock-msg">Finalize o checklist de onboarding pra liberar o PDV.</p>
+            <div class="mp-pdv-checklist-box">
+                <div class="mp-checklist-title">🚀 Passo a Passo para Vender (${doneCount}/${total})</div>
+                <div class="mp-progress-container">
+                    <div class="mp-progress-bar" id="pdvOnboardProgress" style="width: ${progress}%"></div>
+                </div>
+                <div id="pdvOnboardChecklist">
+                    ${checklistHTML}
+                </div>
+                <button class="mp-btn-full" id="btnFinishSetupPDV" ${doneCount < total ? 'disabled' : ''} onclick="Onboarding.finishSetup()" style="margin-top:20px;">Finalizar e Liberar PDV</button>
+            </div>
+            <button class="mp-btn-full" style="max-width:300px;background:transparent;color:#7E57C2;border:2px solid #7E57C2" onclick="window.location.href='index.html'">Voltar ao Dashboard</button>
         `;
         document.body.appendChild(lock);
+    },
+
+    toggleStepPDV(id) {
+        const items = this._items || DataStore.getCollection('checklist_onboarding', this._franchise.id);
+        const item = items.find(i => i.id === id);
+        if (!item) return;
+
+        item.done = !item.done;
+        this._items = items;
+        DataStore.setCollection('checklist_onboarding', this._franchise.id, items);
+
+        if (this._franchise.setupStatus === 'pending') {
+            this.updateStatus('em_configuracao');
+        }
+
+        const doneCount = items.filter(i => i.done).length;
+        const total = items.length;
+        const progress = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+
+        const container = document.getElementById('pdvOnboardChecklist');
+        if (container) {
+            container.innerHTML = items.map(ci => `
+                <div class="mp-check-item ${ci.done ? 'done' : ''}" onclick="Onboarding.toggleStepPDV('${ci.id}')">
+                    <div class="mp-check-circle">${ci.done ? '✓' : ''}</div>
+                    <div class="mp-check-text">${ci.text}</div>
+                </div>
+            `).join('');
+        }
+
+        const bar = document.getElementById('pdvOnboardProgress');
+        if (bar) bar.style.width = progress + '%';
+
+        const title = document.querySelector('.mp-pdv-checklist-box .mp-checklist-title');
+        if (title) title.innerHTML = `🚀 Passo a Passo para Vender (${doneCount}/${total})`;
+
+        const btn = document.getElementById('btnFinishSetupPDV');
+        if (btn) btn.disabled = (doneCount < total);
     }
 };
 
