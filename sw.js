@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v7';
-const CACHE_NAME = 'milkypot-v7';
+const CACHE_VERSION = 'mp-v8';
+const CACHE_NAME = 'milkypot-v8';
 
 // Critical local assets that must be available offline
 const PRECACHE_URLS = [
@@ -8,6 +8,13 @@ const PRECACHE_URLS = [
     '/login.html',
     '/cardapio.html',
     '/desafio.html',
+    // MilkyClube (PWA cliente final)
+    '/clube.html',
+    '/regulamento-milkyclube.html',
+    '/js/core/milkyclub.js',
+    '/js/core/milkyclub-push.js',
+    '/firebase-messaging-sw.js',
+    '/manifest-clube.json',
     // Franqueado panel pages (PDV + pages they might navigate to after login)
     '/painel/index.html',
     '/painel/pdv.html',

@@ -67,6 +67,47 @@ body:not(.idle){cursor:default}
 @keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
 #newsTicker.active{display:block}
 #newsTicker.active ~ #progressBar{bottom:42px}
+
+/* MilkyClube QR overlay — app download + cadastro */
+#clubeQr{
+    position:fixed;
+    z-index:11;
+    right:24px;
+    bottom:24px;
+    display:none;
+    background:linear-gradient(135deg,#42A5F5,#1E88E5);
+    color:#fff;
+    border-radius:20px;
+    padding:16px 18px;
+    box-shadow:0 10px 30px rgba(0,0,0,.45);
+    animation:clubePulse 4s ease-in-out infinite;
+    max-width:240px;
+    text-align:center;
+    font-family:'Segoe UI',Tahoma,sans-serif;
+}
+#clubeQr.show{display:block}
+#clubeQr .cq-title{font-size:14px;font-weight:800;letter-spacing:.5px;margin-bottom:4px;text-transform:uppercase}
+#clubeQr .cq-sub{font-size:11px;opacity:.95;margin-bottom:8px;line-height:1.25}
+#clubeQr .cq-code{background:#fff;padding:10px;border-radius:14px;display:inline-block;line-height:0}
+#clubeQr .cq-code canvas,#clubeQr .cq-code img{display:block;width:128px;height:128px}
+#clubeQr .cq-cta{margin-top:8px;font-size:11px;font-weight:700;letter-spacing:.4px}
+#clubeQr .cq-cta .pill{display:inline-block;background:rgba(255,255,255,.2);padding:3px 8px;border-radius:10px;margin:0 2px}
+@keyframes clubePulse{
+    0%,100%{transform:scale(1);box-shadow:0 10px 30px rgba(0,0,0,.45)}
+    50%{transform:scale(1.03);box-shadow:0 14px 40px rgba(66,165,245,.7)}
+}
+/* Fullscreen MilkyClube slide — injetado a cada N rotacoes da playlist */
+.clube-promo-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4vw;text-align:center;background:linear-gradient(135deg,#42A5F5 0%,#EC407A 100%);color:#fff;font-family:'Segoe UI',Tahoma,sans-serif;overflow:hidden}
+.clube-promo-slide::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.15) 0%,transparent 50%),radial-gradient(circle at 80% 70%,rgba(255,255,255,.1) 0%,transparent 50%);pointer-events:none}
+.clube-promo-slide h1{font-size:clamp(40px,7vw,110px);font-weight:900;line-height:1;margin-bottom:1vw;letter-spacing:-1px;z-index:1;position:relative}
+.clube-promo-slide .cp-tag{display:inline-block;background:rgba(255,255,255,.25);padding:.5vw 1.5vw;border-radius:99px;font-weight:700;font-size:clamp(14px,1.8vw,28px);margin-bottom:2vw;backdrop-filter:blur(8px);z-index:1;position:relative}
+.clube-promo-slide .cp-benefits{display:flex;gap:3vw;margin:2vw 0;z-index:1;position:relative;flex-wrap:wrap;justify-content:center}
+.clube-promo-slide .cp-benefit{background:rgba(255,255,255,.18);padding:1.2vw 2vw;border-radius:16px;font-size:clamp(14px,1.6vw,24px);font-weight:700;backdrop-filter:blur(8px)}
+.clube-promo-slide .cp-benefit strong{display:block;font-size:clamp(22px,3vw,44px);font-weight:900;margin-bottom:.2vw}
+.clube-promo-slide .cp-qr-box{background:#fff;padding:2vw;border-radius:24px;display:inline-block;line-height:0;margin-top:2vw;box-shadow:0 20px 60px rgba(0,0,0,.3);z-index:1;position:relative}
+.clube-promo-slide .cp-qr-box canvas,.clube-promo-slide .cp-qr-box img{display:block;width:clamp(200px,22vw,340px);height:clamp(200px,22vw,340px)}
+.clube-promo-slide .cp-footer{margin-top:2vw;font-size:clamp(16px,2vw,32px);font-weight:700;z-index:1;position:relative}
+.clube-promo-slide .cp-url{font-family:'Courier New',monospace;background:rgba(0,0,0,.3);padding:.5vw 1.5vw;border-radius:12px;display:inline-block;margin-top:1vw}
 </style>
 </head>
 <body>
@@ -90,6 +131,15 @@ body:not(.idle){cursor:default}
         <div class="ticker-content" id="tickerText"></div>
     </div>
 
+    <!-- MilkyClube QR overlay (corner, sempre visivel) -->
+    <div id="clubeQr" aria-label="Baixe o app MilkyClube">
+        <div class="cq-title">MilkyClube</div>
+        <div class="cq-sub">Cashback em MilkyCoins<br>Aponte a camera e baixe</div>
+        <div class="cq-code" id="clubeQrCode"></div>
+        <div class="cq-cta"><span class="pill">Gratis</span> <span class="pill">Android</span> <span class="pill">iPhone</span></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="/js/core/constants.js"></script>
@@ -345,6 +395,12 @@ body:not(.idle){cursor:default}
             return;
         }
 
+        // Auto-injeta slide promocional do MilkyClube a cada N itens
+        playlist = injectClubePromo(playlist);
+
+        // Gera/atualiza o QR corner overlay (sempre visivel)
+        applyClubeQr();
+
         loadingScreen.classList.add('hidden');
         if(currentIdx < 0){
             currentIdx = -1;
@@ -493,9 +549,123 @@ body:not(.idle){cursor:default}
             startProgress(item.duration);
             timer = setTimeout(playNext, item.duration);
         }
+        else if(m.type === 'clube'){
+            renderClubePromo(m, item);
+        }
         else {
             playFallback('Tipo de midia nao suportado.');
         }
+    }
+
+    /* === MilkyClube promo slide (cashback + QR app download) === */
+    function getClubeUrl(){
+        try {
+            var u = (config && config.clubeUrl) ? String(config.clubeUrl) : '';
+            if(u) return u;
+            var origin = (location && location.origin && location.origin.indexOf('http') === 0) ? location.origin : 'https://milkypot.com';
+            var ref = franchiseId ? ('?ref=tv-' + encodeURIComponent(franchiseId)) : '';
+            return origin + '/clube.html' + ref;
+        } catch(e){ return 'https://milkypot.com/clube.html'; }
+    }
+
+    function renderClubePromo(m, item){
+        var url = (m && m.clubeUrl) || getClubeUrl();
+        var headline = (m && m.headline) || 'Entre no MilkyClube';
+        var sub = (m && m.subtitle) || 'Cashback em MilkyCoins a cada sorvete';
+        var tag = (m && m.tag) || 'Baixe o app gratis';
+        var benefits = (m && m.benefits) || [
+            { label: 'Cashback', value: 'ate 7%' },
+            { label: 'Bonus cadastro', value: 'G$ 20' },
+            { label: 'Indicacao', value: 'G$ 100' }
+        ];
+        var footer = (m && m.footer) || 'Aponte a camera para o QR Code';
+
+        var benefitsHtml = benefits.map(function(b){
+            return '<div class="cp-benefit"><strong>' + esc(b.value) + '</strong>' + esc(b.label) + '</div>';
+        }).join('');
+
+        player.innerHTML =
+            '<div class="clube-promo-slide">' +
+                '<span class="cp-tag">' + esc(tag) + '</span>' +
+                '<h1>' + esc(headline) + '</h1>' +
+                '<p style="font-size:clamp(18px,2.2vw,34px);margin-bottom:2vw;opacity:.95;z-index:1;position:relative;max-width:80%;line-height:1.25">' + esc(sub) + '</p>' +
+                '<div class="cp-benefits">' + benefitsHtml + '</div>' +
+                '<div class="cp-qr-box" id="cpQrBox"></div>' +
+                '<div class="cp-footer">' + esc(footer) + '</div>' +
+                '<div class="cp-url">' + esc(url.replace(/^https?:\/\//, '')) + '</div>' +
+            '</div>';
+
+        var box = document.getElementById('cpQrBox');
+        if(box && typeof QRCode !== 'undefined'){
+            try {
+                // Compat: qrcode@1.5 expõe toCanvas como método top-level
+                var c = document.createElement('canvas');
+                box.appendChild(c);
+                QRCode.toCanvas(c, url, { width: 340, margin: 1, color: { dark: '#0D47A1', light: '#ffffff' } }, function(err){
+                    if(err){ box.innerHTML = '<img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=340x340&data=' + encodeURIComponent(url) + '">'; }
+                });
+            } catch(e){
+                box.innerHTML = '<img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=340x340&data=' + encodeURIComponent(url) + '">';
+            }
+        } else if(box){
+            box.innerHTML = '<img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=340x340&data=' + encodeURIComponent(url) + '">';
+        }
+
+        var dur = (item && item.duration) || 12000;
+        startProgress(dur);
+        timer = setTimeout(playNext, dur);
+    }
+
+    /* === QR corner overlay (sempre visivel durante a rotacao) === */
+    function applyClubeQr(){
+        var overlay = document.getElementById('clubeQr');
+        if(!overlay) return;
+        var showCorner = config.showClubeQr !== false; // default: on
+        if(!showCorner){ overlay.classList.remove('show'); return; }
+        var url = getClubeUrl();
+        var box = document.getElementById('clubeQrCode');
+        if(box){
+            box.innerHTML = '';
+            if(typeof QRCode !== 'undefined'){
+                try {
+                    var c = document.createElement('canvas');
+                    box.appendChild(c);
+                    QRCode.toCanvas(c, url, { width: 128, margin: 1, color: { dark: '#0D47A1', light: '#ffffff' } }, function(err){
+                        if(err){ box.innerHTML = '<img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=' + encodeURIComponent(url) + '">'; }
+                    });
+                } catch(e){
+                    box.innerHTML = '<img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=' + encodeURIComponent(url) + '">';
+                }
+            } else {
+                box.innerHTML = '<img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=' + encodeURIComponent(url) + '">';
+            }
+        }
+        // Posiciona oposto ao relogio para evitar sobreposicao
+        var clockPos = config.clockPosition || 'bottom-right';
+        overlay.style.left = overlay.style.right = overlay.style.top = overlay.style.bottom = 'auto';
+        if(clockPos === 'bottom-right'){ overlay.style.bottom = '24px'; overlay.style.left = '24px'; }
+        else if(clockPos === 'bottom-left'){ overlay.style.bottom = '24px'; overlay.style.right = '24px'; }
+        else if(clockPos === 'top-right'){ overlay.style.top = '24px'; overlay.style.left = '24px'; }
+        else { overlay.style.top = '24px'; overlay.style.right = '24px'; }
+        overlay.classList.add('show');
+    }
+
+    /* === Auto-inject MilkyClube promo slide a cada N itens da playlist === */
+    function injectClubePromo(pl){
+        if(!Array.isArray(pl)) return pl;
+        if(config.autoClubePromo === false) return pl;
+        var every = Math.max(3, parseInt(config.clubePromoEvery || 5, 10) || 5);
+        var duration = parseInt(config.clubePromoDuration || 12000, 10) || 12000;
+        var out = [];
+        for(var i = 0; i < pl.length; i++){
+            out.push(pl[i]);
+            if(((i + 1) % every) === 0){
+                var promoId = '__clube_auto_' + i;
+                media[promoId] = { type: 'clube', name: 'MilkyClube' };
+                out.push({ mediaId: promoId, duration: duration });
+            }
+        }
+        return out;
     }
 
     function playFallback(reason){
