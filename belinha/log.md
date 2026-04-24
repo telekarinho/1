@@ -1,5 +1,45 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #22 — 2026-04-25
+
+**Área:** Conversão — badge "● ABERTO" pulsante no botão flutuante WhatsApp
+
+**Contexto:** Dia da inauguração (25/04/2026). Site e checkout estavam prontos. Identificada oportunidade de conversão permanente: o botão WhatsApp flutuante não sinalizava visualmente que a loja estava aberta, deixando usuários com dúvida antes de clicar.
+
+**O que analisou:**
+- Banner de inauguração já tratava "ABERTO AGORA" com countdown e CTA corretos
+- Botão flutuante (`.whatsapp-float`) em `index.html` e `cardapio.html` — sem indicação de status
+- Horário de funcionamento confirmado no Schema.org: 14h–23h todos os dias
+- Playbook tinha placeholder `[horário regular]` sem horário real e sem story de urgência de fechamento
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `css/style.css` | `overflow:visible` em `.whatsapp-float` + nova classe `.wa-open-badge` (pill verde, posicionado 18px acima do círculo, animação `waBadgePulse 2.2s`) |
+| `index.html` | `<span id="waOpenBadge">● ABERTO</span>` dentro do botão + script inline que lê hora de Brasília (UTC-3) e exibe entre 14h–23h; atualiza a cada 60s |
+| `cardapio.html` | Mesma mudança do `index.html` — badge no botão flutuante do cardápio |
+| `belinha/content/dia-inauguracao-playbook.md` | Story 22h15 "ÚLTIMA CHANCE DE DELIVERY" adicionada; `[horário regular]` → `"seg-dom, 14h às 23h"` |
+
+**Comportamento do badge:**
+- Exibido: 14h00 → 22h59 (Brasília) todos os dias
+- Oculto: fora do horário (não mostra "FECHADO", apenas some)
+- Não interfere com hover/transform do botão (pointer-events: none)
+- Funciona em `index.html` e `cardapio.html`
+
+**Commit:** `b33abfd`
+
+**Impacto esperado:**
+- Usuários que chegam ao site entre 14h–23h têm confirmação visual imediata de que podem pedir AGORA
+- Reduz hesitação antes do clique → mais conversões WhatsApp
+- Permanente — funciona todos os dias, não só na inauguração
+
+**Próximo passo sugerido:**
+- Ciclo #23: Implementar estrutura básica do sistema de fidelidade (raspinha da sorte / stamp card) em `belinha/` como protótipo JS
+- Ou: acompanhar métricas pós-inauguração e ajustar SEO local para buscas "potinho londrina" com base em novos dados do Google Search Console
+
+---
+
 ## Ciclo #21 — 2026-04-24
 
 **Área:** Conversão — auto-seleção de loja no checkout + bloqueio de lojas demo
