@@ -632,9 +632,47 @@
 
             // Escuta atualizações do catálogo em background (Fase 1)
             window.addEventListener('mp_catalog_updated', (e) => {
+                // Defesa contra cloud override: se veio catalog_config legado (sem _fromV2)
+                // mas CatalogV2 local tem produtos, re-aplica syncToLegacy pra não perder v2
+                if (this._reassertInFlight) {
+                    this.catalog = e.detail;
+                    this.renderProducts();
+                    return;
+                }
+                try {
+                    const session = window.Auth && Auth.getSession && Auth.getSession();
+                    const fid = session && session.franchiseId;
+                    const incoming = e.detail || {};
+                    if (fid && window.CatalogV2 && !incoming._fromV2) {
+                        const v2 = CatalogV2.load(fid);
+                        if (v2 && v2.produtos && v2.produtos.length > 0) {
+                            console.log('⚠️ Cloud enviou catalog legado — re-asserting CatalogV2');
+                            this._reassertInFlight = true;
+                            CatalogV2.syncToLegacy(fid);
+                            this._reassertInFlight = false;
+                            return; // syncToLegacy dispara novo evento com _fromV2:true
+                        }
+                    }
+                } catch(err) { console.warn('PDV reassert', err); }
                 this.catalog = e.detail;
                 this.renderProducts();
                 console.log('🚀 Catálogo sincronizado e atualizado no PDV.');
+            });
+
+            // Sync from Firestore terminou — re-aplica v2 caso cloud tenha trazido legado
+            window.addEventListener('mp_synced', () => {
+                try {
+                    const session = window.Auth && Auth.getSession && Auth.getSession();
+                    const fid = session && session.franchiseId;
+                    if (fid && window.CatalogV2) {
+                        const v2 = CatalogV2.load(fid);
+                        const cfg = DataStore.get('catalog_config') || {};
+                        if (v2 && v2.produtos && v2.produtos.length > 0 && !cfg._fromV2) {
+                            console.log('🔁 Pós-sync: reforçando CatalogV2 como fonte de verdade');
+                            CatalogV2.syncToLegacy(fid);
+                        }
+                    }
+                } catch(err) {}
             });
         },
 
