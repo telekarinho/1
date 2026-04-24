@@ -1020,7 +1020,12 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
 
     function applyRoute() {
         var route = currentRoute();
-        $$('.mc-route').forEach(function(el) { el.classList.remove('active'); });
+        // NAO toca em #route-welcome — a visibilidade dele e controlada pelo
+        // renderMember() baseada no estado de login. Tirar .active aqui
+        // deixava a pagina em branco para usuarios anonimos.
+        $$('.mc-route').forEach(function(el) {
+            if (el.id !== 'route-welcome') el.classList.remove('active');
+        });
         var target = $('#route-' + route);
         if (target) target.classList.add('active');
         $$('#mc-nav button').forEach(function(b) {
@@ -1357,12 +1362,10 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
         }
     }
 
-    // Auto-complete magic link se o user caiu aqui pelo email
-    (async function tryCompleteEmailLink() {
+    // Auto-complete magic link (chamado do boot apos MilkyClube.init())
+    async function tryCompleteEmailLink() {
         try {
             if (!MilkyClube.isEmailLinkUrl(window.location.href)) return;
-            // Tenta completar com email do localStorage. Se nao tiver,
-            // abre modal no passo 'email-confirm' pra pedir ao user.
             try {
                 var r = await MilkyClube.completeEmailLinkSignIn();
                 openModal('modal-login');
@@ -1375,7 +1378,7 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
         } catch(e) {
             console.warn('[Clube] completeEmailLink auto:', e && e.message);
         }
-    })();
+    }
 
     // ============================================
     // Binds — Enroll
@@ -1593,6 +1596,10 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
         // Render inicial
         renderMember(MilkyClube.getCurrentMember());
         applyRoute();
+
+        // Se o user chegou por magic link (email), completa o sign-in agora
+        // que state.auth ja esta inicializado.
+        await tryCompleteEmailLink();
 
         // Se estiver logado mas sem member (ex.: Auth pronto, enroll incompleto),
         // reabre modal no passo enroll
