@@ -687,6 +687,10 @@
                         <span class="label">Pendentes</span>
                         <span class="value purple" id="sumPendentes">0 itens</span>
                     </div>
+                    <div class="summary-item" style="cursor:pointer" onclick="renderFixedCosts();updateSummary();showToast('Totais atualizados!','success');" title="Recarregar totais">
+                        <span class="label">Atualizar</span>
+                        <span class="value" style="font-size:26px">&#x1F504;</span>
+                    </div>
                 </div>
 
                 <!-- TABS -->
@@ -1869,6 +1873,13 @@
                 // Load data
                 renderFixedCosts();
                 updateSummary();
+
+                // Re-renderiza apos sync do Firestore terminar (evita race
+                // condition onde sync sobrescreve localStorage depois do init)
+                window.addEventListener('mp_synced', function() {
+                    renderFixedCosts();
+                    updateSummary();
+                }, { once: true });
             });
         } else {
             // Fallback for dev/testing
