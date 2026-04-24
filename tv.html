@@ -11,12 +11,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
 #vid{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;background:#000;display:none}
 #pic{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;background:#000;display:none}
 #msg{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;text-align:center;padding:20px;background:#1a1a2e}
+#promoBar{position:fixed;left:0;right:0;bottom:0;z-index:50;pointer-events:none;padding:0 0 16px}
+#promoBar .promoInner{margin:0 16px;padding:14px 20px;border-radius:18px;backdrop-filter:blur(8px);box-shadow:0 8px 32px rgba(0,0,0,.5);display:flex;align-items:center;gap:14px;font-family:sans-serif;animation:promoSlide .5s ease}
+#promoBar .promoEmoji{font-size:40px;line-height:1;flex-shrink:0}
+#promoBar .promoText{flex:1;min-width:0}
+#promoBar .promoTag{font-size:10px;letter-spacing:1px;font-weight:800;opacity:.85}
+#promoBar .promoTitle{font-size:22px;font-weight:900;line-height:1.1;margin-top:2px}
+#promoBar .promoSub{font-size:13px;opacity:.92;line-height:1.3;margin-top:2px}
+#promoBar .promoCta{background:rgba(255,255,255,.95);color:#111;font-weight:900;padding:8px 16px;border-radius:100px;font-size:13px;flex-shrink:0;letter-spacing:.3px}
+@keyframes promoSlide{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
 <div id="msg">Carregando...</div>
 <img id="pic">
 <video id="vid" muted autoplay playsinline webkit-playsinline preload="none"></video>
+<div id="promoBar" style="display:none"><div class="promoInner" id="promoInner"></div></div>
 
 <script>
 /*
@@ -243,6 +253,48 @@ if(fid){
 } else {
   msg.textContent = 'Use: /tv.html?f=ID_DA_FRANQUIA';
 }
+
+// ======== PROMO ROTATOR (bar inferior) — ultra leve, sem fetch/Promise ========
+// 12 copies das 2 promocoes principais: Desafio 10s + Acertou Ganhou 300g
+var PROMOS = [
+  {p:'d10',e:'\u23F1\uFE0F',t:'PAROU NO 10?',      s:'Cronometro na mao. Acertou, levou.',               c:'JOGA AGORA'},
+  {p:'d10',e:'\uD83D\uDCB0',t:'R$ 150 NA MESA',    s:'Mega premio pra quem travar no segundo certo.',    c:'EU QUERO'},
+  {p:'d10',e:'\uD83C\uDFAF',t:'TOPPING GRATIS',    s:'Parou no 5, 10 ou 30? Ta seu.',                    c:'TENTA'},
+  {p:'d10',e:'\u26A1',      t:'DEDO RAPIDO PAGA',  s:'Reflexo ruim nao leva premio nenhum.',             c:'ENCARA'},
+  {p:'d10',e:'\uD83C\uDF66',t:'SORVETE DE GRACA',  s:'So travar o cronometro no numero certo.',          c:'APERTA AI'},
+  {p:'d10',e:'\uD83D\uDC11',t:'A BELINHA DESAFIA', s:'Duvido voce parar no 10 de primeira.',             c:'PROVA'},
+  {p:'p3', e:'\u2696\uFE0F',t:'300g = GRATIS',     s:'Acertou o peso exato na balanca, nao paga nada.',  c:'MONTA'},
+  {p:'p3', e:'\uD83D\uDE2C',t:'ERROU 1g, PAGOU',   s:'Margem zero. Balanca nao tem do.',                 c:'TENTA'},
+  {p:'p3', e:'\uD83C\uDFC6',t:'MAO DE OURO',       s:'Quem cravar 300g sai com pote de graca.',          c:'VAI FUNDO'},
+  {p:'p3', e:'\uD83D\uDC40',t:'JA TEVE GENTE',     s:'Varios clientes sairam sem pagar essa semana.',    c:'TUA VEZ'},
+  {p:'p3', e:'\uD83C\uDFB0',t:'BALANCA OU NADA',   s:'So 300 gramas te separam do pote free.',           c:'MONTA JA'},
+  {p:'p3', e:'\uD83D\uDC41\uFE0F',t:'OLHOMETRO VALE',s:'Confia no seu instinto e leva sem pagar.',       c:'ARRISCA'}
+];
+var promoBar = document.getElementById('promoBar');
+var promoInner = document.getElementById('promoInner');
+var promoIdx = Math.floor(Math.random()*PROMOS.length);
+function renderPromo(){
+  if(!promoBar || !promoInner) return;
+  var x = PROMOS[promoIdx % PROMOS.length];
+  promoIdx++;
+  var bg = x.p === 'p3'
+    ? 'linear-gradient(90deg,rgba(0,200,83,.92),rgba(100,221,23,.92))'
+    : 'linear-gradient(90deg,rgba(255,0,64,.92),rgba(255,107,107,.92))';
+  var tag = x.p === 'p3' ? 'ACERTOU GANHOU 300g' : 'DESAFIO 10s';
+  promoInner.style.background = bg;
+  promoInner.style.color = '#fff';
+  promoInner.innerHTML =
+    '<div class="promoEmoji">'+x.e+'</div>'+
+    '<div class="promoText">'+
+      '<div class="promoTag">'+tag+'</div>'+
+      '<div class="promoTitle">'+x.t+'</div>'+
+      '<div class="promoSub">'+x.s+'</div>'+
+    '</div>'+
+    '<div class="promoCta">'+x.c+' \u2192</div>';
+  promoBar.style.display = 'block';
+}
+renderPromo();
+setInterval(renderPromo, 7000);
 </script>
 </body>
 </html>
