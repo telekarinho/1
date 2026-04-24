@@ -1,5 +1,38 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #25 — 2026-04-24
+
+**Área:** Conteúdo + Auto-aprimoramento — Semana 2 pós-inauguração + rotação estratégica
+
+**Contexto:** Véspera da inauguração (25/04/2026 às 14h). Ciclo de auto-aprimoramento obrigatório (a cada 5 ciclos). `estrategia.md` ainda refletia a fase pré-inauguração; com a abertura da loja amanhã, era urgente virar a estratégia para retenção/fidelização. `pos-inauguracao-semana1.md` cobre 26/04–02/05 mas sem conteúdo para a semana seguinte.
+
+**O que analisou:**
+- `belinha/log.md` ciclos #20–24: padrão claro — bug fixes e UX geraram mais valor que SEO/documentação
+- `estrategia.md`: regras datadas (última atualização ciclo #5), fase pré-inauguração obsoleta a partir de amanhã
+- `pos-inauguracao-semana1.md`: cobre domingo 26/04 até sábado 02/05 — semana 2 sem conteúdo
+- Concorrentes pesquisados (MilkyMoo, JohnnyJoy, Jhoy, The Best) não geraram mudanças concretas no site ainda
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana2.md` | CRIADO — 7 dias de captions prontas (03–09/mai): domingo retrospectiva 2 semanas, segunda volta à rotina, terça açaí buffet, quarta UGC/fidelidade, quinta Linha Fit, sexta urgência finde; reel "Por que volta sempre"; mensagem de reativação WA; tabela de métricas semana 2 vs semana 1 |
+| `belinha/estrategia.md` | Auto-aprimoramento ciclo #25: nova seção "Aprendizados ciclos #20–24", tabela pré vs pós-inauguração, rotação de áreas atualizada, KPIs específicos, roadmap ciclos 26–30 |
+
+**Commit:** `92bda91`
+
+**Impacto esperado:**
+- Equipe tem conteúdo de 2 semanas preparado antes da abertura — sem lacunas de posting
+- Ângulo Semana 2: reativação dos que vieram na inauguração + converter curiosos em recorrentes
+- `estrategia.md` agora guia Belinha para foco em fidelização/conversão, não mais só SEO
+
+**Próximo passo sugerido:**
+- Ciclo #26: `aggregateRating` stub no Schema.org de `index.html` (preparar para primeiras avaliações Google Maps — os clientes vão avaliar após a inauguração)
+- Ciclo #26: Verificar Google Business Profile do Muffato Londrina — endereço correto? Horário 14h-23h atualizado?
+- Ciclo #27: Page de produto `/potinho-ninho-londrina.html` — SEO long tail local ("potinho ninho londrina", "açaí muffato londrina")
+
+---
+
 ## Ciclo #24 — 2026-04-25
 
 **Área:** Conversão — Template WhatsApp Cartão Fidelidade Digital + Schema.org inauguração
