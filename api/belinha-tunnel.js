@@ -31,17 +31,19 @@ const admin = require('firebase-admin');
 
 let _app = null;
 function getAdmin() {
-    if (_app) return admin;
+    if (_app) return _app;
     const saJson = process.env.FIREBASE_ADMIN_SA_JSON
         || process.env.FIREBASE_SERVICE_ACCOUNT
         || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
     if (!saJson) throw new Error('FIREBASE service account env var missing (FIREBASE_ADMIN_SA_JSON ou FIREBASE_SERVICE_ACCOUNT)');
     const parsed = typeof saJson === 'string' ? JSON.parse(saJson) : saJson;
-    _app = admin.initializeApp(
-        { credential: admin.credential.cert(parsed) },
-        'belinha-tunnel-' + Date.now()
-    );
-    return admin;
+    // Reusa default app se ja existir (evita erro em cold start com reuse)
+    try {
+        _app = admin.app();
+    } catch (_) {
+        _app = admin.initializeApp({ credential: admin.credential.cert(parsed) });
+    }
+    return _app;
 }
 
 function corsHeaders(req, res) {
@@ -68,8 +70,8 @@ module.exports = async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     try {
-        const a = getAdmin();
-        const db = a.firestore();
+        const app = getAdmin();
+        const db = app.firestore();
         const docRef = db.collection('datastore').doc('belinha_tunnel_global');
 
         if (req.method === 'GET') {
