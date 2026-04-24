@@ -106,6 +106,10 @@ const Onboarding = {
             .mp-lock-icon { font-size: 4rem; margin-bottom: 20px; }
             .mp-lock-title { font-family: 'Baloo 2', cursive; font-size: 2rem; color: #2D1B4E; margin-bottom: 15px; }
             .mp-lock-msg { color: #666; max-width: 450px; line-height: 1.5; margin-bottom: 30px; }
+            .mp-pdv-checklist-box {
+                background: #fff; border-radius: 16px; padding: 24px; width: 100%; max-width: 450px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #E5E7EB; text-align: left;
+            }
         `;
         document.head.appendChild(style);
     },
@@ -240,7 +244,20 @@ const Onboarding = {
 
     showPDVLock() {
         if (document.getElementById('mp-pdv-lock')) return;
-        
+
+        const checklist = DataStore.getCollection('checklist_onboarding', this._franchise.id);
+        const doneCount = checklist.filter(i => i.done).length;
+        const progress = checklist.length > 0 ? Math.round((doneCount / checklist.length) * 100) : 0;
+
+        const checklistHTML = checklist.length > 0
+            ? checklist.map(item => `
+                <div class="mp-check-item ${item.done ? 'done' : ''}" onclick="Onboarding.toggleStepPDV('${item.id}')">
+                    <div class="mp-check-circle">${item.done ? '✓' : ''}</div>
+                    <div class="mp-check-text">${item.text}</div>
+                </div>
+            `).join('')
+            : '<p style="color:#999;text-align:center;padding:12px;">Nenhum item de checklist encontrado.</p>';
+
         const lock = document.createElement('div');
         lock.id = 'mp-pdv-lock';
         lock.className = 'mp-pdv-locked';
@@ -248,12 +265,54 @@ const Onboarding = {
             <div class="mp-lock-icon">🔒</div>
             <h2 class="mp-lock-title">Vendas Bloqueadas</h2>
             <p class="mp-lock-msg">
-                Sua unidade ainda não completou a configuração inicial obrigatória.<br>
-                <strong>Cadastre seu estoque e finalize o checklist no Dashboard para liberar o PDV.</strong>
+                Finalize o checklist de onboarding pra liberar o PDV.
             </p>
-            <button class="mp-btn-full" style="max-width:300px" onclick="window.location.href='index.html'">Voltar para Dashboard</button>
+            <div class="mp-pdv-checklist-box">
+                <div class="mp-checklist-title">🚀 Passo a Passo para Vender</div>
+                <div class="mp-progress-container">
+                    <div class="mp-progress-bar" id="pdvOnboardProgress" style="width: ${progress}%"></div>
+                </div>
+                <div id="pdvOnboardChecklist">
+                    ${checklistHTML}
+                </div>
+                <button class="mp-btn-full" id="btnFinishSetupPDV" ${doneCount < checklist.length ? 'disabled' : ''} onclick="Onboarding.finishSetup()" style="margin-top:20px;">Finalizar e Liberar PDV</button>
+            </div>
+            <button class="mp-btn-full" style="max-width:300px;margin-top:16px;background:transparent;color:#7E57C2;border:2px solid #7E57C2" onclick="window.location.href='index.html'">Voltar ao Dashboard</button>
         `;
         document.body.appendChild(lock);
+    },
+
+    toggleStepPDV(id) {
+        const checklist = DataStore.getCollection('checklist_onboarding', this._franchise.id);
+        const item = checklist.find(i => i.id === id);
+        if (item) {
+            item.done = !item.done;
+            DataStore.setCollection('checklist_onboarding', this._franchise.id, checklist);
+
+            if (this._franchise.setupStatus === 'pending') {
+                this.updateStatus('em_configuracao');
+            }
+
+            // Re-render PDV checklist
+            const doneCount = checklist.filter(i => i.done).length;
+            const progress = checklist.length > 0 ? Math.round((doneCount / checklist.length) * 100) : 0;
+
+            const container = document.getElementById('pdvOnboardChecklist');
+            if (container) {
+                container.innerHTML = checklist.map(ci => `
+                    <div class="mp-check-item ${ci.done ? 'done' : ''}" onclick="Onboarding.toggleStepPDV('${ci.id}')">
+                        <div class="mp-check-circle">${ci.done ? '✓' : ''}</div>
+                        <div class="mp-check-text">${ci.text}</div>
+                    </div>
+                `).join('');
+            }
+
+            const bar = document.getElementById('pdvOnboardProgress');
+            if (bar) bar.style.width = progress + '%';
+
+            const btn = document.getElementById('btnFinishSetupPDV');
+            if (btn) btn.disabled = (doneCount < checklist.length);
+        }
     }
 };
 
