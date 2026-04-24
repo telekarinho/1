@@ -1,5 +1,39 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #21 — 2026-04-24
+
+**Área:** Conversão — auto-seleção de loja no checkout + bloqueio de lojas demo
+
+**Contexto:** Véspera da inauguração (25/04/2026 às 14h). Auditoria do fluxo de checkout revelou dois problemas encadeados:
+1. `CHECKOUT_STORES` em `index.html` tinha 5 lojas demo (ibirapuera, morumbi, jardins, barra, recife) com `open: true` mas WhatsApp placeholder (55119999900XX) — qualquer usuário que selecionasse uma dessas lojas enviaria pedido para número inexistente
+2. `renderCheckoutStores` não tinha auto-seleção — no dia da inauguração (única loja real ativa), o usuário precisaria clicar manualmente para selecionar a loja antes de continuar
+
+**O que analisou:**
+- Rastreou fluxo completo: `index.html → CHECKOUT_STORES → renderCheckoutStores → selectCheckoutStore → window._selectedStoreWhatsApp`
+- Verificou que `window._selectedStoreWhatsApp` é LIDO em `cardapio.js:996` e `checkout.js:153`, mas SETADO apenas via `selectCheckoutStore` em `index.html:1866`
+- Confirmou que a loja Muffato Londrina (adicionada no Ciclo #20) é a ÚNICA real e operacional
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `index.html` | `renderCheckoutStores`: adicionado bloco de auto-seleção — se só há 1 loja aberta e nenhuma selecionada, chama `selectCheckoutStore` automaticamente |
+| `index.html` | `CHECKOUT_STORES`: ibirapuera, morumbi, jardins, barra, recife → `open: false` (tinham números placeholder, não podiam receber pedidos reais) |
+
+**Fluxo pós-fix:**
+1. Usuário adiciona itens → checkout → step 2 "Escolha a Loja"
+2. `renderCheckoutStores` detecta 1 loja aberta → auto-chama `selectCheckoutStore('muffato-londrina')`
+3. Usuário já vê ✅ MilkyPot Muffato Londrina selecionada + botão "Continuar →" habilitado
+4. Um clique a menos no funil → menos abandono no dia de maior tráfego
+
+**Commit:** `745f17f`
+
+**Próximo passo sugerido:**
+- Ciclo #22: Verificar `cardapio.html` — garantir que o Schema.org LocalBusiness reflita horário 14h-23h e status `openNow` para o dia 25/04
+- Ou: criar caption "ABRIMOS HOJE!" para Instagram (publicar às 13h45 do dia 25/04) com urgência e CTA WhatsApp
+
+---
+
 ## Ciclo #20 — 2026-04-24
 
 **Área:** Conversão — bugfix crítico WhatsApp checkout + cadastro loja Londrina
