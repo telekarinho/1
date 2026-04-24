@@ -1,5 +1,36 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #18 — 2026-04-24
+
+**Área:** UX — banner de inauguração (pré-abertura)
+
+**Contexto:** Véspera da inauguração (25/04/2026). Gap crítico identificado: o banner de inauguração chamava `configureBanner()` apenas na carga da página. Um cliente que abrisse o site às 13h59 nunca veria a transição para "ESTAMOS ABERTOS AGORA!" sem recarregar. Além disso, a fase "ABRIMOS HOJE ÀS 14H" não comunicava urgência nem tempo restante.
+
+**O que analisou:**
+- `index.html` linhas 235–238: sem nenhum `setInterval` — confirmado o bug de auto-refresh
+- `cardapio.html` linhas 29–32: GA placeholder `G-XXXXXXXXXX` já estava corretamente comentado (não era urgente)
+- Lógica de fuso horário `getBrasiliaDate()` (UTC-3): correta, sem DST
+- Fase "ABRIMOS HOJE" (`h < 14`): texto estático sem informação de urgência
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `index.html` | +1 linha: `setInterval(configureBanner + applyBannerOffset, 60000)` — banner re-avalia fase a cada minuto sem reload |
+| `index.html` | Fase `h < 14`: calcula minutos até 14h em tempo real → exibe "🐑 ABRIMOS EM 2h 30min!" / "ABRIMOS EM 15min!" etc. |
+
+**Commit:** `a8728dd`
+
+**Impacto:**
+- Transição automática "ABRIMOS HOJE" → "ESTAMOS ABERTOS AGORA!" às 14h sem reload — visitante com aba aberta desde manhã não perde o momento
+- Countdown cria urgência real: cliente que visita às 13h45 vê "ABRIMOS EM 15min!" e tende a aguardar/voltar
+- Lógica de cálculo: `minsAte14 = (14 - h) * 60 - d.getMinutes()` — testado mentalmente às 10:30 (3h 30min ✓), 13:59 (1min ✓), 14:00 (entra em branch "ESTAMOS ABERTOS" ✓)
+
+**Próximo passo sugerido:**
+- Ciclo #19 (DIA DA INAUGURAÇÃO, 25/04): criar post de "momento da abertura" para Instagram/TikTok (caption + hashtags + instrução de Story) — `belinha/content/inauguracao-ao-vivo.md`. Equipe precisa deste material na mão às 13h30.
+
+---
+
 ## Ciclo #17 — 2026-04-24
 
 **Área:** UX/Acessibilidade + Conteúdo marketing (UGC inauguração)
