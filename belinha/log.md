@@ -780,3 +780,42 @@ Análise dos 5 ciclos:
 - Ciclo #4: Criar `belinha/competitors/jhoy.md` com resultado da pesquisa (agente em background)
 - Ciclo #4: Conteúdo pós-inauguração — template de repost de clientes para stories do dia 25/04
 - Ciclo #4: Adicionar `openingHoursSpecification` ao Schema.org LocalBusiness em `index.html`
+
+---
+
+## Ciclo #23 — 2026-04-25
+
+**Área:** Conversão — Cartão Fidelidade Digital (inauguração day)
+
+**Contexto:** Dia da inauguração (25/04/2026). Com loja abrindo às 14h, a prioridade é converter os primeiros clientes em recorrentes. O programa de fidelidade estava documentado apenas no FAQ (`index.html`), mas sem página própria para o operador compartilhar via WhatsApp com cada cliente.
+
+**O que analisou:**
+- `js/core/loyalty.js` já tem lógica de pontos, mas sem UI pública
+- `raspinha.html` já existe como mecânica de sorte (ciclos anteriores)
+- FAQ menciona "1pt por R$1" mas sem visual, sem link, sem CTA
+- Oportunidade: operador pode enviar link personalizado `?stamps=N` para cada cliente no WhatsApp
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `cartao-fidelidade.html` | CRIADO — página standalone do cartão fidelidade. 10 carimbos = 1 Mini grátis. Grid visual de selos 🐑, barra de progresso animada, "Como Funciona" em 3 passos, CTA direto WhatsApp. Suporta `?stamps=N` (0–10) para links personalizados por cliente. |
+| `sitemap.xml` | +entrada `cartao-fidelidade.html` com prioridade 0.7 e lastmod 2026-04-25 |
+
+**Commit:** `b66441e`
+
+**Mecânica do link personalizado:**
+- Operador envia: `milkypot.com/cartao-fidelidade.html?stamps=3` ao cliente
+- Página mostra 3 selos preenchidos + 7 restantes + barra de progresso 30%
+- Não requer login — simples, sem fricção, funciona direto pelo WhatsApp
+
+**Impacto esperado:**
+- Cliente sai da inauguração hoje já com o link do cartão dele → âncora para voltar
+- Operador pode personalizar o link manualmente via WhatsApp (custo zero de infraestrutura)
+- UX: página bonita com identidade visual MilkyPot que o cliente vai querer mostrar
+
+**Próximo passo sugerido:**
+- Ciclo #24: Criar snippet de mensagem WhatsApp para o operador enviar ao registrar cliente (template copy-paste no playbook)
+- Ciclo #24: Schema.org `openingHoursSpecification` em `index.html` (atualizar lastmod para 25/04)
+- Ciclo #25: Monitorar resultados pós-inauguração e ajustar estratégia em `belinha/estrategia.md` (auto-aprimoramento do ciclo 20)
+
