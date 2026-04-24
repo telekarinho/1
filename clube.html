@@ -5,6 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>MilkyClube - Fidelidade MilkyPot</title>
 <meta name="description" content="Acumule MilkyCoins, ganhe bônus e suba de tier no MilkyClube.">
+<script>
+/* Gatekeeper: usuarios anonimos chegando em /clube.html sao redirecionados
+   para a landing /clube/ (melhor UX de marketing). Quem ja tem sessao
+   Firebase Auth permanece no app. Quem clica "Entrar" na landing vem com
+   ?login=1 para pular este redirect. */
+(function(){
+    try {
+        var params = new URLSearchParams(location.search);
+        if (params.get('login') === '1') return;
+        if (params.get('ref')) return; // preservar deep link de indicacao
+        var hasAuth = false;
+        for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            if (k && k.indexOf('firebase:authUser:') === 0) { hasAuth = true; break; }
+        }
+        if (!hasAuth) {
+            location.replace('/clube/');
+        }
+    } catch(e) { /* fail open: deixa o app carregar */ }
+})();
+</script>
 
 <link rel="manifest" href="/manifest-clube.json">
 <meta name="theme-color" content="#42A5F5">
