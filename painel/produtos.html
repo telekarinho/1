@@ -1336,134 +1336,348 @@
   window.toggleTop = function(chip) { chip.classList.toggle('selected'); };
 
   // ==========================================================
-  // ✨ Belinha sugere receita
+  // ✨ Belinha sugere receita — heuristica local + preview interativo
   // ==========================================================
-  // Manda nome+categoria+descricao + inventario disponivel pro Copilot,
-  // pede retorno em JSON e auto-preenche a receita + tempo + preco sugerido.
-  window.belinhaSugereReceita = async function() {
+  // Templates baseados no knowledge MilkyPot (milkshake, acai, picole,
+  // sundae, potinho, buffet, affogato, waffle). Casam com estoque real
+  // por fuzzy match (ignora acento/case). Benchmarks CMV do _brain:
+  // picole 22-28%, potinho 28-34%, sundae 32-38%, shake 38-45%, acai 45-55%.
+  // Sempre mostra PREVIEW editavel antes de aplicar.
+  const MILKYPOT_RECEITAS = {
+    milkshake: { keywords:['milkshake','milk shake','shake'],
+      insumos:[ {match:['leite em po','leite ninho','ninho'],qty:40,unit:'g'},
+        {match:['sorvete','base sorvete','sorvete baunilha'],qty:150,unit:'g'},
+        {match:['leite integral','leite'],qty:120,unit:'ml'},
+        {match:['nutella','calda chocolate','brigadeiro','calda morango'],qty:40,unit:'g',optional:true} ],
+      embalagem:['copo','tampa','canudo'], tempoMin:4, cmvAlvoPct:0.40,
+      justif:'Milkshake MilkyPot classico: leite ninho + sorvete + leite + topping. CMV alvo 38-45%.' },
+    acai: { keywords:['acai','açai','açaí','bowl'],
+      insumos:[ {match:['polpa acai','acai polpa','acai'],qty:300,unit:'g'},
+        {match:['banana'],qty:60,unit:'g'}, {match:['granola'],qty:30,unit:'g'},
+        {match:['leite condensado'],qty:20,unit:'g',optional:true} ],
+      embalagem:['copo','tampa','colher'], tempoMin:3, cmvAlvoPct:0.50,
+      justif:'Acai bowl: 300g polpa + banana + granola. CMV alvo 45-55%.' },
+    picole: { keywords:['picole','picolé'],
+      insumos:[ {match:['leite condensado'],qty:40,unit:'g'},
+        {match:['leite integral','leite'],qty:60,unit:'ml'},
+        {match:['chocolate em po','cacau','chocolate'],qty:15,unit:'g',optional:true},
+        {match:['morango fresco','morango','polpa'],qty:30,unit:'g',optional:true} ],
+      embalagem:['saco picole','saquinho','palito','embalagem picole'],
+      tempoMin:2, cmvAlvoPct:0.25,
+      justif:'Picole gourmet: CMV baixo (22-28%), margem alta.' },
+    sundae: { keywords:['sundae'],
+      insumos:[ {match:['sorvete','base sorvete'],qty:120,unit:'g'},
+        {match:['calda chocolate','calda morango','nutella'],qty:40,unit:'g'},
+        {match:['pacoca','paçoca','oreo','granola','chantilly'],qty:20,unit:'g'} ],
+      embalagem:['copo sundae','copo','colher'], tempoMin:3, cmvAlvoPct:0.35,
+      justif:'Sundae: sorvete + calda + topping crocante. CMV 32-38%.' },
+    potinho: { keywords:['potinho','sorvete potinho','sorvete pote','pote de sorvete','personalizado'],
+      insumos:[ {match:['sorvete','base sorvete'],qty:200,unit:'g'},
+        {match:['calda','calda chocolate','calda morango'],qty:20,unit:'g',optional:true},
+        {match:['granola','oreo','pacoca','paçoca'],qty:25,unit:'g',optional:true} ],
+      embalagem:['potinho','pote 300g','tampa','colher'], tempoMin:2, cmvAlvoPct:0.30,
+      justif:'Potinho personalizado (hero product): ~200g sorvete + toppings. CMV 28-34%.' },
+    buffet: { keywords:['buffet','self-service','self service','granel','por kg','por quilo'],
+      insumos:[ {match:['sorvete','base sorvete'],qty:200,unit:'g'} ],
+      embalagem:['potinho','pote','tampa','colher'], tempoMin:1, cmvAlvoPct:0.30,
+      justif:'Buffet self-service: ~200g/porcao media. Cliente monta, cobra por kg.' },
+    affogato: { keywords:['affogato','cafe com sorvete'],
+      insumos:[ {match:['sorvete','base sorvete'],qty:80,unit:'g'},
+        {match:['cafe espresso','cafe expresso','cafe'],qty:30,unit:'ml'} ],
+      embalagem:['copo pequeno','copo','xicara'], tempoMin:3, cmvAlvoPct:0.30,
+      justif:'Affogato: sorvete + espresso. Margem premium.' },
+    waffle: { keywords:['waffle'],
+      insumos:[ {match:['farinha trigo','farinha'],qty:80,unit:'g'},
+        {match:['ovo'],qty:1,unit:'un'}, {match:['leite integral','leite'],qty:80,unit:'ml'},
+        {match:['manteiga','margarina'],qty:20,unit:'g'},
+        {match:['sorvete','base sorvete'],qty:80,unit:'g',optional:true} ],
+      embalagem:['prato','embalagem','colher'], tempoMin:8, cmvAlvoPct:0.35,
+      justif:'Waffle + sorvete (linha quente inverno PR). CMV 30-38%.' }
+  };
+
+  function _normMP(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+  function _detectarTemplate(nome, catName, desc) {
+    const q = _normMP(nome + ' ' + catName + ' ' + desc);
+    let best = null, bestScore = 0;
+    for (const [key, tpl] of Object.entries(MILKYPOT_RECEITAS)) {
+      for (const k of tpl.keywords) {
+        const kn = _normMP(k);
+        if (q.includes(kn) && kn.length > bestScore) { best = { key, tpl }; bestScore = kn.length; }
+      }
+    }
+    return best;
+  }
+
+  function _matchInv(terms, pool) {
+    for (const t of terms) { const tn = _normMP(t); const x = pool.find(i => _normMP(i.name) === tn); if (x) return x; }
+    for (const t of terms) { const tn = _normMP(t); const x = pool.find(i => _normMP(i.name).includes(tn)); if (x) return x; }
+    for (const t of terms) {
+      const words = _normMP(t).split(/\s+/).filter(w => w.length >= 3);
+      if (!words.length) continue;
+      const ranked = pool.map(i => ({ i, score: words.filter(w => _normMP(i.name).includes(w)).length }))
+        .filter(x => x.score >= Math.min(2, words.length)).sort((a,b) => b.score - a.score);
+      if (ranked[0]) return ranked[0].i;
+    }
+    return null;
+  }
+
+  function _suggestReceitaLocal(nome, catName, desc, inv) {
+    const ingredientes = inv.filter(i => i.category !== 'embalagens');
+    const embalagens = inv.filter(i => i.category === 'embalagens');
+    const det = _detectarTemplate(nome, catName, desc);
+    if (!det) {
+      return { _notFound:true, insumos:[], insumosFaltando:[],
+        embalagemIds: embalagens.slice(0,2).map(e => e.id),
+        tempoPreparoMin:3, precoSugeridoLoja:0, custoEstimado:0,
+        justificativa:'Nao reconheci o tipo. Inclua no nome "milkshake", "acai", "picole", "sundae", "potinho", "buffet", "affogato" ou "waffle".',
+        fonte:'heuristica_local' };
+    }
+    const tpl = det.tpl;
+    const insumos = [], faltando = [];
+    let custoEstimado = 0;
+    for (const item of tpl.insumos) {
+      const ing = _matchInv(item.match, ingredientes);
+      if (!ing) { if (!item.optional) faltando.push({ _missing: item.match[0], qty: item.qty, unit: item.unit }); continue; }
+      insumos.push({ insumoId: ing.id, name: ing.name, qty: item.qty, unit: item.unit, costUnit: ing.costUnit });
+      const f = (item.unit === 'g' && ing.unit === 'kg') ? 0.001 : (item.unit === 'kg' && ing.unit === 'g') ? 1000 : (item.unit === 'ml' && ing.unit === 'L') ? 0.001 : 1;
+      custoEstimado += Number(ing.costUnit||0) * item.qty * f;
+    }
+    const embIds = [];
+    for (const kw of tpl.embalagem) {
+      const e = _matchInv([kw], embalagens);
+      if (e && !embIds.includes(e.id)) { embIds.push(e.id); custoEstimado += Number(e.costUnit||0); }
+    }
+    const precoSug = custoEstimado > 0 ? Math.round((custoEstimado / tpl.cmvAlvoPct) * 100) / 100 : 0;
+    return { _templateKey: det.key, insumos, insumosFaltando: faltando, embalagemIds: embIds,
+      tempoPreparoMin: tpl.tempoMin, precoSugeridoLoja: precoSug, custoEstimado,
+      cmvAlvoPct: tpl.cmvAlvoPct, justificativa: tpl.justif, fonte: 'heuristica_local' };
+  }
+
+  let _previewSugestao = null;
+
+  window.belinhaSugereReceita = function() {
     const box = document.getElementById('belinhaSugestaoBox');
     if (!box) return;
-
     const nome = (document.getElementById('pName')?.value || '').trim();
     if (!nome) {
       box.style.display = 'block';
-      box.innerHTML = '⚠️ Preencha o <b>nome do produto</b> primeiro.';
+      box.innerHTML = '⚠️ Preencha o <b>nome do produto</b> primeiro (ex: "Milkshake Nutella", "Acai Bowl", "Potinho Personalizado").';
       return;
     }
-    if (typeof CopilotTransport === 'undefined') {
-      box.style.display = 'block';
-      box.innerHTML = '⚠️ Belinha não carregada nesta página.';
-      return;
-    }
-
     const catSel = document.getElementById('pCategoria');
     const catName = catSel?.selectedOptions[0]?.text || '';
     const desc = (document.getElementById('pDesc')?.value || '').trim();
     const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
-    const ingList = inv.filter(i => i.category !== 'embalagens').map(i => ({ id: i.id, name: i.name, unit: i.unit, costUnit: i.costUnit }));
-    const embList = inv.filter(i => i.category === 'embalagens').map(i => ({ id: i.id, name: i.name, costUnit: i.costUnit }));
+    _previewSugestao = _suggestReceitaLocal(nome, catName, desc, inv);
+    _renderPreviewSugestao(_previewSugestao);
+  };
 
+  function _renderPreviewSugestao(sug) {
+    const box = document.getElementById('belinhaSugestaoBox');
+    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+    const invMap = {}; inv.forEach(i => invMap[i.id] = i);
+    const fonteBadge = sug.fonte === 'ai_refined'
+      ? '<span style="background:#7E57C2;color:#fff;padding:2px 8px;border-radius:100px;font-size:11px">🧠 Belinha AI</span>'
+      : '<span style="background:#F59E0B;color:#fff;padding:2px 8px;border-radius:100px;font-size:11px">⚡ heuristica local</span>';
     box.style.display = 'block';
-    box.innerHTML = '🐑 Belinha pensando... <span style="opacity:.6">analisando "' + esc(nome) + '" + categoria + ' + ingList.length + ' ingrediente(s) no estoque</span>';
 
-    const session = Auth.getSession();
+    if (sug._notFound) {
+      box.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">🐑 <b>Belinha sugere:</b> ${fonteBadge}</div>
+        <div style="color:#92400E;background:#FEF3C7;padding:10px;border-radius:8px;font-size:13px">${esc(sug.justificativa)}</div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+          <button class="ios-btn" style="background:#F3F4F6" onclick="document.getElementById('belinhaSugestaoBox').style.display='none'">✗ Fechar</button>
+          <button class="ios-btn" style="background:linear-gradient(135deg,#7E57C2,#5E35B1);color:#fff" onclick="refinarComBelinhaAI()">🧠 Tentar com Belinha AI</button>
+        </div>`;
+      return;
+    }
+
+    const insumoRows = sug.insumos.map((r, i) => {
+      const ing = invMap[r.insumoId];
+      const nm = ing ? ing.name : (r.name || '?');
+      const f = (r.unit === 'g' && (ing||{}).unit === 'kg') ? 0.001 : (r.unit === 'ml' && (ing||{}).unit === 'L') ? 0.001 : 1;
+      const sub = Number(r.costUnit||0) * Number(r.qty||0) * f;
+      return `<tr>
+        <td style="padding:6px 4px">🥛 ${esc(nm)}</td>
+        <td style="padding:6px 4px"><input type="number" step="0.01" value="${Number(r.qty)||0}" data-sug-idx="${i}" data-sug-field="qty" style="width:70px;padding:4px 6px;border:1px solid #E5E7EB;border-radius:6px;font-size:13px"></td>
+        <td style="padding:6px 4px">
+          <select data-sug-idx="${i}" data-sug-field="unit" style="padding:4px 6px;border:1px solid #E5E7EB;border-radius:6px;font-size:13px">
+            ${['g','kg','ml','L','un'].map(u => `<option value="${u}" ${r.unit===u?'selected':''}>${u}</option>`).join('')}
+          </select>
+        </td>
+        <td style="padding:6px 4px;color:#16A34A;font-size:12px;font-weight:700">R$ ${sub.toFixed(2)}</td>
+      </tr>`;
+    }).join('');
+
+    const faltandoHtml = (sug.insumosFaltando || []).length
+      ? `<div style="margin-top:8px;padding:8px;background:#FEF3C7;border-radius:8px;font-size:12px;color:#92400E">
+          ⚠️ <b>Nao achei no estoque:</b> ${sug.insumosFaltando.map(m=>esc(m._missing)).join(', ')}.
+          <button class="lnk" onclick="closeProduto(); setTimeout(()=>document.querySelector('.ct-tab[data-tab=ingredientes]')?.click(),100);">Cadastrar agora →</button>
+        </div>` : '';
+
+    const embsHtml = sug.embalagemIds.length
+      ? `<div style="font-size:12px;color:#374151;margin-top:6px">📦 <b>Embalagem:</b> ${sug.embalagemIds.map(id => esc((invMap[id]||{}).name||'?')).join(' + ')}</div>`
+      : `<div style="font-size:12px;color:#92400E;margin-top:6px">⚠️ Nenhuma embalagem casou. Cadastre copo/tampa/colher.</div>`;
+    const cmvLabel = sug.cmvAlvoPct ? ` <small style="color:#6B7280">(CMV alvo ${Math.round(sug.cmvAlvoPct*100)}%)</small>` : '';
+    const tplBadge = sug._templateKey ? `<small style="color:#6B7280">template: <b>${sug._templateKey}</b></small>` : '';
+
+    box.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        🐑 <b>Belinha sugere:</b> ${fonteBadge} ${tplBadge}
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:10px;margin-bottom:8px">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="color:#6B7280;font-size:11px;text-transform:uppercase">
+            <th style="text-align:left;padding:4px">Ingrediente</th>
+            <th style="text-align:left;padding:4px">Qtd</th>
+            <th style="text-align:left;padding:4px">Un</th>
+            <th style="text-align:left;padding:4px">Subtotal</th>
+          </tr></thead>
+          <tbody>${insumoRows || '<tr><td colspan="4" style="color:#6B7280;padding:6px">Nenhum ingrediente do template bateu com o estoque. Refina com AI ou cadastra os ingredientes.</td></tr>'}</tbody>
+        </table>
+        ${embsHtml}
+        <div style="display:flex;gap:14px;margin-top:10px;padding-top:10px;border-top:1px dashed #E5E7EB;font-size:13px;flex-wrap:wrap;align-items:center">
+          <div>⏱ Tempo: <input type="number" step="0.5" value="${sug.tempoPreparoMin||0}" id="sugTempo" style="width:60px;padding:3px 6px;border:1px solid #E5E7EB;border-radius:6px"> min</div>
+          <div>💰 Preço loja: R$ <input type="number" step="0.01" value="${Number(sug.precoSugeridoLoja).toFixed(2)}" id="sugPreco" style="width:80px;padding:3px 6px;border:1px solid #E5E7EB;border-radius:6px">${cmvLabel}</div>
+          ${sug.custoEstimado?`<div style="color:#6B7280">📊 custo est.: R$ ${Number(sug.custoEstimado).toFixed(2)}</div>`:''}
+        </div>
+      </div>
+      ${faltandoHtml}
+      <div style="margin-top:8px;font-style:italic;color:#5B21B6;font-size:13px">💭 ${esc(sug.justificativa)}</div>
+      <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="ios-btn" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;font-weight:700" onclick="aceitarSugestaoBelinha()">✅ Aceitar e preencher receita</button>
+        <button class="ios-btn" style="background:linear-gradient(135deg,#7E57C2,#5E35B1);color:#fff" onclick="refinarComBelinhaAI()" title="Refinamento pela Belinha online (precisa .bat rodando ou API configurada)">🧠 Refinar com Belinha AI</button>
+        <button class="ios-btn" style="background:#F3F4F6" onclick="document.getElementById('belinhaSugestaoBox').style.display='none'; _previewSugestao=null;">✗ Descartar</button>
+      </div>`;
+  }
+  window._renderPreviewSugestao = _renderPreviewSugestao;
+
+  window.aceitarSugestaoBelinha = function() {
+    if (!_previewSugestao) return;
+    const box = document.getElementById('belinhaSugestaoBox');
+    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+    const invMap = {}; inv.forEach(i => invMap[i.id] = i);
+    const qtyInputs = box.querySelectorAll('input[data-sug-field="qty"]');
+    const unitInputs = box.querySelectorAll('select[data-sug-field="unit"]');
+    const insumosFinal = _previewSugestao.insumos.map((r, i) => ({
+      insumoId: r.insumoId, qty: Number(qtyInputs[i]?.value) || r.qty,
+      unit: unitInputs[i]?.value || r.unit
+    })).filter(r => invMap[r.insumoId] && r.qty > 0);
+    const embIdsFinal = (_previewSugestao.embalagemIds || []).filter(id => invMap[id]);
+    const tempoFinal = Number(document.getElementById('sugTempo')?.value) || _previewSugestao.tempoPreparoMin || 0;
+    const precoFinal = Number(document.getElementById('sugPreco')?.value) || _previewSugestao.precoSugeridoLoja || 0;
+
+    document.getElementById('receitaList').innerHTML = '<div id="receitaLinhas" style="display:flex;flex-direction:column;gap:6px"></div>';
+    const cont = document.getElementById('receitaLinhas');
+    const ingredientes = inv.filter(i => i.category !== 'embalagens');
+    insumosFinal.forEach(r => {
+      const opts = ingredientes.map(x => `<option value="${x.id}" ${x.id===r.insumoId?'selected':''}>${esc(x.name)} (R$ ${Number(x.costUnit||0).toFixed(2)}/${x.unit||'un'})</option>`).join('');
+      const row = document.createElement('div');
+      row.className = 'receita-row';
+      row.dataset.type = 'insumo';
+      row.style.cssText = 'display:grid;grid-template-columns:1fr 90px 70px 90px 32px;gap:6px;align-items:center';
+      row.innerHTML = `
+        <select onchange="receitaChanged()">${opts}</select>
+        <input type="number" step="0.01" value="${r.qty}" placeholder="qtd" onchange="receitaChanged()">
+        <select onchange="receitaChanged()">
+          ${['g','kg','ml','L','un'].map(u => `<option value="${u}" ${r.unit===u?'selected':''}>${u}</option>`).join('')}
+        </select>
+        <div style="font-size:12px;color:#16A34A;font-weight:700" class="subtot">—</div>
+        <button onclick="this.parentElement.remove(); receitaChanged();" style="background:#FEE2E2;color:#991B1B;border:none;border-radius:6px;cursor:pointer">✕</button>`;
+      cont.appendChild(row);
+    });
+    embIdsFinal.forEach(id => _appendEmbalagemRow(invMap[id]));
+    if (document.getElementById('pTempoPreparo')) document.getElementById('pTempoPreparo').value = tempoFinal;
+    if (precoFinal > 0 && document.getElementById('p_real_loja')) document.getElementById('p_real_loja').value = precoFinal.toFixed(2);
+    receitaChanged();
+    box.innerHTML = `<div style="color:#065F46;background:#DCFCE7;padding:10px;border-radius:8px;font-weight:700">✅ Sugestao aplicada. Revise e clica em 💾 Salvar.</div>`;
+    setTimeout(() => { box.style.display = 'none'; }, 2500);
+    _previewSugestao = null;
+  };
+
+  window.refinarComBelinhaAI = async function() {
+    if (typeof CopilotTransport === 'undefined') { alert('CopilotTransport não carregado.'); return; }
+    const box = document.getElementById('belinhaSugestaoBox');
+    const nome = (document.getElementById('pName')?.value || '').trim();
+    const catSel = document.getElementById('pCategoria');
+    const catName = catSel?.selectedOptions[0]?.text || '';
+    const desc = (document.getElementById('pDesc')?.value || '').trim();
+    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+    const ingList = inv.filter(i => i.category !== 'embalagens');
+    const embList = inv.filter(i => i.category === 'embalagens');
     const settings = (DataStore.get && DataStore.get('belinha_settings')) || {};
+    const status = await CopilotTransport.status();
+    const statusLabel = status.local ? '🟢 servidor local' : (status.mixedBlocked ? '🔒 Chrome bloqueando HTTPS→HTTP' : (settings.apiKey ? '🔵 via API Anthropic' : '⚪ SEM API key'));
+    box.innerHTML = `<div style="padding:10px">🧠 Belinha AI pensando... <small style="color:#6B7280">(${statusLabel})</small></div>`;
+
     const prompt =
-      `Produto: "${nome}"\n` +
-      `Categoria: ${catName}\n` +
-      (desc ? `Descrição: ${desc}\n` : '') +
-      `\nIngredientes disponíveis no estoque (use SOMENTE esses ids):\n` +
+      `Produto: "${nome}"\nCategoria: ${catName}\n${desc?`Descrição: ${desc}\n`:''}` +
+      `\nHeuristica local ja sugeriu:\n${JSON.stringify(_previewSugestao||{}, null, 2)}\n` +
+      `\nIngredientes disponiveis (use SOMENTE esses ids):\n` +
       ingList.map(i => `- id=${i.id} | ${i.name} (R$${Number(i.costUnit||0).toFixed(2)}/${i.unit})`).join('\n') +
-      `\n\nEmbalagens disponíveis:\n` +
+      `\n\nEmbalagens disponiveis:\n` +
       embList.map(e => `- id=${e.id} | ${e.name} (R$${Number(e.costUnit||0).toFixed(2)})`).join('\n') +
-      `\n\nTarefa: sugira a receita pra UMA unidade deste produto. Responde APENAS com um bloco JSON no formato exato:\n` +
-      '```json\n' +
-      `{\n  "insumos": [ { "insumoId": "<id>", "qty": <numero>, "unit": "g|kg|ml|L|un" } ],\n  "embalagemIds": ["<id>"],\n  "tempoPreparoMin": <numero>,\n  "precoSugeridoLoja": <numero>,\n  "justificativa": "1 linha curta"\n}\n` +
-      '```\n' +
-      `Use apenas ids que eu listei. Se não tem um ingrediente essencial, omite ele (não invente id). Preço sugerido: considere custo real + margem saudável ~25-35% líquida.`;
+      `\n\nRefine considerando marca MilkyPot (potinhos personalizados Londrina), publico 20-24 anos, preco value-premium. ` +
+      `Responde APENAS com o bloco JSON:\n\`\`\`json\n` +
+      `{\n  "insumos": [ { "insumoId":"<id>", "qty":<num>, "unit":"g|kg|ml|L|un" } ],\n  "embalagemIds": ["<id>"],\n  "tempoPreparoMin": <num>,\n  "precoSugeridoLoja": <num>,\n  "justificativa": "1 linha"\n}\n\`\`\``;
 
     try {
       const data = await CopilotTransport.send({
         apiKey: settings.apiKey,
         model: settings.model || 'claude-sonnet-4-5',
         persona: 'belinha',
-        messages: [{ role: 'user', content: prompt }],
-        context: { page: 'produtos.html', task: 'sugerir_receita', fid }
+        messages: [{ role:'user', content: prompt }],
+        context: { page:'produtos.html', task:'sugerir_receita', fid }
       });
-
       const reply = String(data?.reply || '');
-      const jsonMatch = reply.match(/```json\s*([\s\S]*?)```/) || reply.match(/\{[\s\S]*"insumos"[\s\S]*\}/);
-      if (!jsonMatch) {
-        box.innerHTML = '🐑 Belinha respondeu em texto (sem JSON). Confira manualmente:<br><br><pre style="white-space:pre-wrap;font-family:inherit;font-size:12px;background:#fff;padding:10px;border-radius:8px;max-height:300px;overflow:auto">' + esc(reply) + '</pre>';
+      const m = reply.match(/```json\s*([\s\S]*?)```/) || reply.match(/\{[\s\S]*"insumos"[\s\S]*\}/);
+      if (data.source === 'offline' || !m) {
+        const guia = `
+          <div style="padding:12px;background:#FEF3C7;border-radius:8px;color:#92400E;font-size:13px;margin-bottom:8px">
+            ⚠️ <b>Belinha AI offline</b> — respondeu sem JSON util.<br><br>
+            <b>Pra versao completa (cerebro CEO + marca + trends):</b><br>
+            🖥️ <b>Opcao 1 (gratis):</b> abre <code>Belinha-Iniciar.bat</code> na pasta local. No Chrome, clique 🔒 ao lado de "milkypot.com" → Configuracoes do site → Conteudo inseguro: <b>Permitir</b> → F5.<br>
+            🔑 <b>Opcao 2:</b> cola sua API key em <a href="copilot-belinha.html" style="color:#7E57C2;font-weight:700">copilot-belinha.html ⚙️</a>.<br><br>
+            Enquanto isso, a heuristica local ja te da uma receita boa 👇
+          </div>`;
+        box.innerHTML = guia + '<button class="ios-btn" style="background:#F3F4F6" onclick="_renderPreviewSugestao(_previewSugestao)">← Voltar</button>';
         return;
       }
       let parsed;
-      try { parsed = JSON.parse(jsonMatch[1] || jsonMatch[0]); }
-      catch (e) {
-        box.innerHTML = '⚠️ JSON inválido da Belinha. Resposta bruta:<br><br><pre style="white-space:pre-wrap;font-family:inherit;font-size:12px;background:#fff;padding:10px;border-radius:8px;max-height:300px;overflow:auto">' + esc(reply) + '</pre>';
-        return;
+      try { parsed = JSON.parse(m[1] || m[0]); }
+      catch (e) { box.innerHTML = '⚠️ JSON invalido da Belinha AI. <button class="ios-btn" style="background:#F3F4F6;margin-left:8px" onclick="_renderPreviewSugestao(_previewSugestao)">← Voltar</button>'; return; }
+
+      const invMap = {}; inv.forEach(i => invMap[i.id] = i);
+      const insumosEnriq = (parsed.insumos || []).filter(r => invMap[r.insumoId]).map(r => ({
+        insumoId: r.insumoId, qty: r.qty, unit: r.unit,
+        name: invMap[r.insumoId].name, costUnit: invMap[r.insumoId].costUnit
+      }));
+      const embIdsValidas = (parsed.embalagemIds || []).filter(id => invMap[id]);
+      let custoEst = 0;
+      for (const r of insumosEnriq) {
+        const f = (r.unit === 'g' && invMap[r.insumoId].unit === 'kg') ? 0.001 : (r.unit === 'ml' && invMap[r.insumoId].unit === 'L') ? 0.001 : 1;
+        custoEst += Number(r.costUnit||0) * Number(r.qty||0) * f;
       }
-      applyBelinhaSugestao(parsed, data.source);
+      for (const id of embIdsValidas) custoEst += Number(invMap[id].costUnit || 0);
+
+      _previewSugestao = {
+        _templateKey: _previewSugestao?._templateKey,
+        insumos: insumosEnriq,
+        insumosFaltando: _previewSugestao?.insumosFaltando || [],
+        embalagemIds: embIdsValidas,
+        tempoPreparoMin: Number(parsed.tempoPreparoMin) || _previewSugestao?.tempoPreparoMin || 3,
+        precoSugeridoLoja: Number(parsed.precoSugeridoLoja) || _previewSugestao?.precoSugeridoLoja || 0,
+        custoEstimado: custoEst,
+        cmvAlvoPct: _previewSugestao?.cmvAlvoPct,
+        justificativa: parsed.justificativa || _previewSugestao?.justificativa || '',
+        fonte: 'ai_refined'
+      };
+      _renderPreviewSugestao(_previewSugestao);
     } catch (e) {
-      box.innerHTML = '❌ Belinha falhou: ' + esc(e.message);
+      box.innerHTML = `❌ Belinha AI falhou: ${esc(e.message)} <button class="ios-btn" style="background:#F3F4F6;margin-left:8px" onclick="_renderPreviewSugestao(_previewSugestao)">← Voltar</button>`;
     }
   };
-
-  function applyBelinhaSugestao(s, source) {
-    const box = document.getElementById('belinhaSugestaoBox');
-    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
-    const invMap = {}; inv.forEach(i => invMap[i.id] = i);
-
-    // Limpa receita atual (so se AI retornou algo valido — senao mantem)
-    const insumosValidos = (s.insumos || []).filter(i => invMap[i.insumoId]);
-    const embIdsValidas = (s.embalagemIds || []).filter(id => invMap[id]);
-
-    if (insumosValidos.length || embIdsValidas.length) {
-      // garante container
-      document.getElementById('receitaList').innerHTML = '<div id="receitaLinhas" style="display:flex;flex-direction:column;gap:6px"></div>';
-      const cont = document.getElementById('receitaLinhas');
-      const ingredientes = inv.filter(i => i.category !== 'embalagens');
-
-      insumosValidos.forEach(r => {
-        const opts = ingredientes.map(x => `<option value="${x.id}" ${x.id===r.insumoId?'selected':''}>${esc(x.name)} (R$ ${Number(x.costUnit||0).toFixed(2)}/${x.unit||'un'})</option>`).join('');
-        const row = document.createElement('div');
-        row.className = 'receita-row';
-        row.dataset.type = 'insumo';
-        row.style.cssText = 'display:grid;grid-template-columns:1fr 90px 70px 90px 32px;gap:6px;align-items:center';
-        row.innerHTML = `
-          <select onchange="receitaChanged()">${opts}</select>
-          <input type="number" step="0.01" value="${Number(r.qty)||0}" placeholder="qtd" onchange="receitaChanged()">
-          <select onchange="receitaChanged()">
-            <option value="g"  ${r.unit==='g'?'selected':''}>g</option>
-            <option value="kg" ${r.unit==='kg'?'selected':''}>kg</option>
-            <option value="ml" ${r.unit==='ml'?'selected':''}>ml</option>
-            <option value="L"  ${r.unit==='L'?'selected':''}>L</option>
-            <option value="un" ${r.unit==='un'?'selected':''}>un</option>
-          </select>
-          <div style="font-size:12px;color:#16A34A;font-weight:700" class="subtot">—</div>
-          <button onclick="this.parentElement.remove(); receitaChanged();" style="background:#FEE2E2;color:#991B1B;border:none;border-radius:6px;cursor:pointer">✕</button>`;
-        cont.appendChild(row);
-      });
-      embIdsValidas.forEach(id => _appendEmbalagemRow(invMap[id]));
-    }
-
-    if (s.tempoPreparoMin && document.getElementById('pTempoPreparo')) {
-      document.getElementById('pTempoPreparo').value = Number(s.tempoPreparoMin) || 0;
-    }
-    if (s.precoSugeridoLoja && document.getElementById('p_real_loja')) {
-      document.getElementById('p_real_loja').value = Number(s.precoSugeridoLoja).toFixed(2);
-    }
-
-    receitaChanged();
-
-    const sourceBadge = source === 'local' ? '🟢 servidor local' : source === 'api' ? '🔵 API Anthropic' : '⚪ offline';
-    const justif = s.justificativa ? `<br><i>💭 ${esc(s.justificativa)}</i>` : '';
-    box.innerHTML = `
-      ✨ <b>Belinha preencheu:</b>
-      ${insumosValidos.length} insumo(s), ${embIdsValidas.length} embalagem(ns)${s.tempoPreparoMin?`, ${s.tempoPreparoMin}min`:''}${s.precoSugeridoLoja?`, preço loja R$ ${Number(s.precoSugeridoLoja).toFixed(2)}`:''}.
-      ${justif}
-      <div style="margin-top:6px;font-size:11px;color:#6B7280">${sourceBadge} · revise antes de salvar 🙏</div>`;
-  }
 
   window.saveProdutoFromForm = function() {
     const kits = Array.from(document.querySelectorAll('#kitsList .kit-row')).map(r => {
