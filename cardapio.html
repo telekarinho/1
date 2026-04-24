@@ -353,7 +353,7 @@
             // que o cliente veja "Ajustar" sem preço no cardápio delivery.
             // ============================================================
             try {
-                const session = window.Auth && Auth.getSession && Auth.getSession();
+                const session = typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession();
                 const fid = session && session.franchiseId;
                 if (fid && window.CatalogV2 && CatalogV2.load) {
                     const v2 = CatalogV2.load(fid);
@@ -382,7 +382,7 @@
                 // Defesa: se cloud enviou catalog legado mas CatalogV2 tem produtos, re-aplica v2
                 if (!_reassertInFlight) {
                     try {
-                        const s = window.Auth && Auth.getSession && Auth.getSession();
+                        const s = typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession();
                         const f = s && s.franchiseId;
                         const incoming = e.detail || {};
                         if (f && window.CatalogV2 && !incoming._fromV2) {
@@ -407,7 +407,7 @@
             // Pós-sync Firestore: re-assert CatalogV2 caso cloud tenha trazido legado
             window.addEventListener('mp_synced', () => {
                 try {
-                    const s = window.Auth && Auth.getSession && Auth.getSession();
+                    const s = typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession();
                     const f = s && s.franchiseId;
                     if (f && window.CatalogV2) {
                         const v2 = CatalogV2.load(f);
@@ -469,7 +469,7 @@
             // Defense: se CatalogV2 tem produtos, só aceita grupos v2 (ignora lixo legado)
             let v2ValidKeys = null;
             try {
-                const sess = window.Auth && Auth.getSession && Auth.getSession();
+                const sess = typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession();
                 const fid = sess && sess.franchiseId;
                 if (fid && window.CatalogV2) {
                     const v2 = CatalogV2.load(fid);
