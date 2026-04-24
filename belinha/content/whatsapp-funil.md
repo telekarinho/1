@@ -184,6 +184,55 @@ E lembra: você tem [X] pontos acumulados no fidelidade! 🎁
 
 ---
 
+## ETAPA 9 — Cadastro no Cartão Fidelidade Digital
+
+> **Quando usar:** Após confirmar o primeiro pedido do cliente (presencial ou delivery).  
+> **Como gerar o link:** Substitua `N` pelo número de selos ganhos (1 pedido = 1 selo; para mais selos por valor alto, veja tabela abaixo).  
+> **Link base:** `milkypot.com/cartao-fidelidade.html?stamps=N`
+
+```
+[NOME], você agora faz parte do clube MilkyPot! 🐑🎉
+
+Aqui está seu Cartão Fidelidade Digital:
+👇
+milkypot.com/cartao-fidelidade.html?stamps=1
+
+Cada pedido = 1 carimbo 🐑
+10 carimbos = 1 Mini GRÁTIS! 🎁
+
+Guarda esse link — toda vez que pedir, a gente atualiza pra você! 
+```
+
+### Tabela de selos por pedido (regra padrão)
+| Valor do pedido | Selos |
+|----------------|-------|
+| Qualquer valor | 1 selo |
+| Acima de R$40 | 2 selos |
+| Acima de R$70 | 3 selos |
+
+> **Dica operacional:** Ao atualizar o cartão, edite o número no link e reenvie a mensagem acima. Ex: na 2ª compra manda `?stamps=2`, na 3ª `?stamps=3`, e assim por diante. Simples, sem app, funciona no WhatsApp Business.
+
+### Mensagem de resgate (quando cliente chegar aos 10 selos)
+
+```
+🎊 PARABÉNS [NOME]! 🎊
+
+Você completou seu Cartão Fidelidade MilkyPot! 🐑✨
+
+Você ganhou 1 Potinho Mini GRÁTIS! 🫙🎁
+
+É só vir buscar na loja ou pedir pelo delivery.
+Fala aqui no WhatsApp que a gente separa pra você! 
+
+Obrigada pela fidelidade 💛 A ovelhinha te ama!
+```
+
+---
+
+## ETAPA 8 — Upsell / Próxima compra (enviar 3-5 dias depois) _(continuação)_
+
+---
+
 ## MENSAGENS RÁPIDAS (salve como respostas rápidas no WhatsApp Business)
 
 | Atalho | Mensagem |
@@ -195,6 +244,8 @@ E lembra: você tem [X] pontos acumulados no fidelidade! 🎁
 | `/pix` | Confirmação PIX (Etapa 5) |
 | `/saiu` | Pedido saiu (Etapa 6) |
 | `/obrigada` | Follow-up pós-entrega (Etapa 7) |
+| `/fidelidade` | Cadastro Cartão Fidelidade Digital (Etapa 9) |
+| `/resgate` | Resgate do Mini grátis (10 selos completos) |
 
 ---
 
