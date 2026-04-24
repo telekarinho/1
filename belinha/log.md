@@ -1,5 +1,54 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #16 — 2026-04-24
+
+**Área:** Conversão — Botão WhatsApp com pedido pré-preenchido no modal de sucesso do checkout
+
+**Contexto:** Inauguração AMANHÃ (25/04/2026). Auditoria do fluxo de checkout revelou gap crítico: após clicar "Confirmar Pedido", o modal de sucesso exibia só o botão "Voltar ao Cardápio" — sem nenhum CTA de WhatsApp. O cliente fechava o modal acreditando que o pedido foi enviado, mas a loja jamais recebia nada. Funil quebrado na etapa final.
+
+**O que analisou:**
+- `placeOrder()` em `js/checkout.js` (linha 134): salva pedido no localStorage, exibe modal, limpa carrinho — sem abrir WhatsApp
+- Override em `cardapio.html` (linha 862): só atualiza o `href` do botão flutuante — não aciona nada
+- Modal de sucesso em `cardapio.html` (linha 359): `<button onclick="closeSuccessModal()">Voltar ao Cardápio</button>` — único CTA
+- Conclusão: 100% dos clientes que concluíam o checkout NO site não chegavam ao WhatsApp da loja
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `js/checkout.js` | +46 linhas: construção de mensagem WhatsApp pré-formatada (nº pedido, itens c/ tamanho e adicionais, entrega, pagamento, total) + injeção de botão verde `#successWaBtn` no modal, acima de "Voltar ao Cardápio" |
+
+**Mensagem gerada (exemplo):**
+```
+Oi! Fiz meu pedido pelo site 🐑✨
+
+*Pedido:* #MP1_ABCD
+*Loja:* MilkyPot Muffato Londrina
+*Itens:*
+• Potinho Ninho Médio (+Morango) — R$ 18,00
+
+*Retirada na loja*
+*Pagamento:* PIX
+*Total:* R$ 18,00
+
+Pode confirmar? 🙏
+```
+
+**Commit:** `3618199`
+
+**Impacto:**
+- Zero friction: cliente só toca no botão verde → WhatsApp abre com mensagem completa → toca enviar
+- Loja recebe pedido completo via WhatsApp sem ligação ou retrabalho
+- Botão é injetado uma vez e `href` atualizado se o modal for reutilizado (múltiplos pedidos na mesma sessão)
+- `storeWhatsapp` usa o número da loja selecionada — pedido vai para o WhatsApp certo
+
+**Próximo passo sugerido:**
+- Ciclo #17: Criar template de stories "Compartilhe seu potinho" para UGC durante a inauguração (com link na bio e tag @milkypotbr)
+- Ciclo #17: Verificar se `closeSuccessModal()` limpa o `#successWaBtn` corretamente para a próxima ordem
+- Ciclo #17: Adicionar `aria-label` acessível no botão WhatsApp injetado
+
+---
+
 ## Ciclo #15 — 2026-04-23
 
 **Área:** UX/Conversão — Banner de inauguração com texto dinâmico por fase
