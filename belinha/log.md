@@ -1,5 +1,38 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #24 — 2026-04-25
+
+**Área:** Conversão — Template WhatsApp Cartão Fidelidade Digital + Schema.org inauguração
+
+**Contexto:** Dia da inauguração (25/04/2026). O cartão fidelidade digital foi criado no ciclo #23 (`cartao-fidelidade.html?stamps=N`), mas o operador não tinha um script copy-paste para enviar ao cliente após o primeiro pedido. Sem o template, o link ficaria subutilizado no dia mais importante do ano.
+
+**O que analisou:**
+- `belinha/content/whatsapp-funil.md` tinha Etapas 1–8 mas nenhuma para o cartão fidelidade
+- `cartao-fidelidade.html` suporta `?stamps=N` (0–10) — pronto para uso
+- Schema.org em `index.html` tinha `openingHoursSpecification` sem `validFrom` nem `foundingDate`
+- `foundingDate` sinaliza para o Google Maps/Search quando o negócio abriu — importante no dia 1
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/whatsapp-funil.md` | Nova **Etapa 9** — Cadastro no Cartão Fidelidade Digital: copy-paste do link `?stamps=N`, tabela de selos por valor (1/2/3 selos segundo ticket), mensagem de resgate quando completa 10 carimbos; novos atalhos `/fidelidade` e `/resgate` na tabela de respostas rápidas |
+| `index.html` | Schema.org: `"foundingDate": "2026-04-25"` + `"validFrom": "2026-04-25"` em `openingHoursSpecification` |
+
+**Commit:** `9329e14`
+
+**Impacto esperado:**
+- Operador tem script pronto para enviar cartão fidelidade no mesmo WhatsApp do pedido — zero fricção
+- `foundingDate` no Schema.org ajuda Google Maps/Search a reconhecer o negócio como recém-inaugurado (pode aparecer como "Novo" no Maps)
+- `validFrom` confirma quando o horário de funcionamento entrou em vigor
+
+**Próximo passo sugerido:**
+- Ciclo #25: Auto-aprimoramento — reler `belinha/log.md` completo e atualizar `belinha/estrategia.md` com o que gerou mais valor nos ciclos 20–24
+- Ciclo #25: Criar `belinha/content/pos-inauguracao-semana1-parte2.md` com scripts de stories para segunda-feira (primeiro dia de operação regular pós-inauguração)
+- Ciclo #26: Adicionar `aggregateRating` stub no Schema.org de `index.html` (preparar para primeiras avaliações no Google)
+
+---
+
 ## Ciclo #22 — 2026-04-25
 
 **Área:** Conversão — badge "● ABERTO" pulsante no botão flutuante WhatsApp
