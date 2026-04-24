@@ -16,6 +16,22 @@
     'use strict';
 
     const LOCAL_URL = 'http://localhost:5757';
+
+    // URL base da API. Se o site estiver em milkypot.com (GitHub Pages, sem API),
+    // aponta direto pra Vercel. Se ja estiver em vercel.app ou localhost, usa rota
+    // relativa. Isso evita migrar DNS e funciona de qualquer hospedagem.
+    function apiBase() {
+        try {
+            const host = location.hostname;
+            // milkypot.com/www.milkypot.com estao no GitHub Pages — precisam apontar
+            // pra Vercel pra ter acesso as Serverless Functions
+            if (host === 'milkypot.com' || host === 'www.milkypot.com') {
+                return 'https://milkypot.vercel.app';
+            }
+        } catch(e){}
+        return ''; // mesmo origin
+    }
+
     let _localAvailable = null;
     let _mixedBlocked = false;   // true quando Chrome bloqueou mixed content
     let _lastCheck = 0;
@@ -71,7 +87,8 @@
     async function sendApi(payload) {
         // Nao exige apiKey — se vazia, Vercel Function usa ANTHROPIC_API_KEY env var.
         // Belinha funciona de qualquer PC sem configuracao do usuario.
-        const r = await fetch('/api/copilot', {
+        // apiBase() aponta pra Vercel quando estamos em milkypot.com (GitHub Pages).
+        const r = await fetch(apiBase() + '/api/copilot', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
