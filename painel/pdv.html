@@ -213,7 +213,7 @@
     <div class="pdv-products" id="allProds"></div>
 
     <!-- Floating Buffet Button -->
-    <button class="buffet-fab" onclick="openBuffetModal()" title="Vender por peso / Buffet">
+    <button class="buffet-fab" onclick="PDV_Dynamics.openWeightModal({id:'buffet_gen', name:'Buffet Self-Service', price:99.90, emoji:'⚖️'})" title="Vender por peso / Buffet">
         <span style="font-size:26px">⚖️</span>
         <span style="font-size:10px;font-weight:800;display:block">BUFFET</span>
     </button>
@@ -363,7 +363,13 @@
     <div class="buffet-modal">
         <div class="buffet-head">
             <h3 id="weightModalTitle">⚖️ Item por Peso</h3>
-            <button class="modal-close" onclick="PDV_Dynamics.closeWeightModal()">✕</button>
+            <div style="display:flex; gap:8px;">
+                <button class="btn-back" id="btnScaleToggle" onclick="PDV_Dynamics.toggleScale()" style="font-size:10px; padding:4px 8px;">Conectar Balança</button>
+                <button class="modal-close" onclick="PDV_Dynamics.closeWeightModal()">✕</button>
+            </div>
+        </div>
+        <div class="scale-status" id="scaleStatus" style="border-radius:0; margin:0; padding:6px 20px; font-size:10px; display:none;">
+            <span class="sdot"></span> <span id="scaleStatusText">Balança desconectada</span>
         </div>
         <div class="buffet-body">
             <div class="weight-display" id="weightDisplay">
@@ -779,7 +785,11 @@
             document.getElementById('kitVariantModal').classList.remove('open');
         },
 
-        /* --- Lógica de Peso (Fase 2) --- */
+        /* --- Lógica de Peso (Fase 2) + Balança --- */
+        scalePort: null,
+        scaleReader: null,
+        scaleReadLoopActive: false,
+
         openWeightModal(it) {
             this.currentWeightItem = it;
             this.weightInput = "";
@@ -787,6 +797,10 @@
             document.getElementById('weightModal').classList.add('open');
             document.getElementById('weightModalTitle').textContent = `⚖️ ${it.name}`;
             document.getElementById('confirm-price-kg').textContent = `R$ ${it.price.toFixed(2)}`;
+            
+            // Se já tiver balança ativa, garante que o loop está rodando
+            if (this.scalePort && !this.scaleReadLoopActive) this.startScaleReadLoop();
+            document.getElementById('scaleStatus').style.display = this.scalePort ? 'flex' : 'none';
         },
 
         closeWeightModal() {
@@ -809,7 +823,7 @@
             const g = parseInt(this.weightInput || "0");
             const priceKg = this.currentWeightItem ? this.currentWeightItem.price : 0;
             const total = (g / 1000) * priceKg;
-            const finalTotal = Math.round(total * 100) / 100; // Arredondamento Crítico (Fase 2)
+            const finalTotal = Math.round(total * 100) / 100;
 
             document.getElementById('weightVal').textContent = g;
             document.getElementById('confirm-weight').textContent = `${g}g`;
@@ -819,7 +833,7 @@
         confirmWeight() {
             const g = parseInt(this.weightInput || "0");
             if (g <= 0) {
-                alert("Por favor, digite o peso em gramas.");
+                Utils.showToast("Digite o peso ou capture da balança.", "error");
                 return;
             }
 
@@ -829,7 +843,7 @@
             this.addToCart({
                 id: this.currentWeightItem.id,
                 name: this.currentWeightItem.name,
-                unitPrice: this.currentWeightItem.price, // preço/kg
+                unitPrice: this.currentWeightItem.price,
                 total: finalTotal,
                 weightG: g,
                 qty: 1,
@@ -840,13 +854,94 @@
             this.closeWeightModal();
         },
 
+        /* Web Serial API Integration */
+        async toggleScale() {
+            if (this.scalePort) await this.disconnectScale();
+            else await this.connectScale();
+        },
+
+        async connectScale() {
+            if (!('serial' in navigator)) {
+                this.setScaleStatus('error', 'Navegador não suporta Balança USB');
+                return;
+            }
+            try {
+                this.setScaleStatus('pending', 'Selecione a porta...');
+                const port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 9600 });
+                this.scalePort = port;
+                this.setScaleStatus('connected', 'Balança ON');
+                document.getElementById('weightDisplay').classList.add('live');
+                document.getElementById('btnScaleToggle').textContent = 'Desconectar';
+                this.startScaleReadLoop();
+            } catch (err) {
+                this.setScaleStatus('error', 'Falha: ' + err.message);
+            }
+        },
+
+        async disconnectScale() {
+            this.scaleReadLoopActive = false;
+            if (this.scaleReader) { await this.scaleReader.cancel(); this.scaleReader = null; }
+            if (this.scalePort) { await this.scalePort.close(); this.scalePort = null; }
+            this.setScaleStatus('', 'Balança OFF');
+            document.getElementById('weightDisplay').classList.remove('live');
+            document.getElementById('btnScaleToggle').textContent = 'Conectar Balança';
+            document.getElementById('scaleStatus').style.display = 'none';
+        },
+
+        async startScaleReadLoop() {
+            if (!this.scalePort || this.scaleReadLoopActive) return;
+            this.scaleReadLoopActive = true;
+            document.getElementById('scaleStatus').style.display = 'flex';
+            const decoder = new TextDecoderStream();
+            this.scalePort.readable.pipeTo(decoder.writable).catch(() => {});
+            this.scaleReader = decoder.readable.getReader();
+            let buffer = '';
+            try {
+                while (this.scaleReadLoopActive) {
+                    const { value, done } = await this.scaleReader.read();
+                    if (done) break;
+                    buffer += value;
+                    const lines = buffer.split(/[\r\n]/);
+                    buffer = lines.pop() || '';
+                    lines.forEach(ln => {
+                        const g = this.parseWeight(ln);
+                        if (g !== null) {
+                            this.weightInput = g.toString();
+                            this.updateWeightUI();
+                        }
+                    });
+                }
+            } catch (e) {
+                console.warn('Scale loop error:', e);
+            } finally {
+                this.scaleReadLoopActive = false;
+            }
+        },
+
+        parseWeight(s) {
+            if (!s) return null;
+            // Toledo/Urano: "ST,GS,+00012.345kg" ou "1234g"
+            const m = s.match(/[+-]?(\d{1,5}[\.,]\d{1,3})\s*kg/i);
+            if (m) return Math.round(parseFloat(m[1].replace(',', '.')) * 1000);
+            const mg = s.match(/(\d{1,6})\s*g/i);
+            if (mg) return parseInt(mg[1]);
+            return null;
+        },
+
+        setScaleStatus(kind, msg) {
+            const el = document.getElementById('scaleStatus');
+            el.className = 'scale-status ' + kind;
+            document.getElementById('scaleStatusText').textContent = msg;
+            el.style.display = 'flex';
+        },
+
         addToCart(item) {
             // Integração com o objeto global 'cart' do PDV legada
-            // Se for unitário e já existir, aumenta qty
             if (item.type === 'unitario') {
                 const existing = cart.find(c => c.id === item.id && c.type === 'unitario' && !c.customItems);
                 if (existing) {
-                    existing.qty += 1;
+                    existing.qty += (item.qty || 1);
                     existing.total = existing.qty * existing.unitPrice;
                     if (window.renderCart) window.renderCart();
                     return;
@@ -854,21 +949,26 @@
             }
 
             // Mapeamento para o formato legado do sistema
+            // Se for por peso, o 'unitPrice' no cart global deve ser o subtotal calculado (considerando que qty=1)
+            // ou unitPrice=precoKg e qty=kg. Usaremos unitPrice=subtotal e qty=1 para flexibilidade de exibição.
             const cartItem = {
                 id: item.id || Utils.generateId(),
                 name: item.name,
-                emoji: item.emoji,
-                unitPrice: item.price || item.unitPrice,
+                emoji: item.emoji || '🍨',
+                unitPrice: item.type === 'por_peso' ? item.total : (item.price || item.unitPrice),
                 qty: item.qty || 1,
-                total: item.total || (item.price * item.qty),
+                total: item.total || (item.price * (item.qty || 1)),
+                extras: item.extras || [],
                 type: item.type,
                 weightG: item.weightG || null,
-                size: item.weightG ? `${item.weightG}g @ R$${item.unitPrice.toFixed(2)}/kg` : 'Unidade'
+                size: item.type === 'por_peso' ? `${item.weightG}g @ R$ ${item.unitPrice.toFixed(2).replace('.',',')}/kg` : (item.size || 'Unidade')
             };
 
             cart.push(cartItem);
             if (window.renderCart) window.renderCart();
-            if (typeof Utils !== 'undefined' && Utils.playSuccessSound) Utils.playSuccessSound();
+            if (typeof Utils !== 'undefined' && Utils.playSuccessSound) {
+                try { Utils.playSuccessSound(); } catch(e){}
+            }
         }
     };
 
@@ -1658,14 +1758,14 @@
             saveOpenTabs();
         }
 
+        // Cleanup on unload
+        window.addEventListener('beforeunload', function(){
+            if(PDV_Dynamics.scalePort) PDV_Dynamics.disconnectScale();
+        });
+
         cart=[];renderCart();
         document.getElementById('orderName').value='';document.getElementById('cPhone').value='';document.getElementById('cAddr').value='';
         document.getElementById('nfCk').checked=false;document.getElementById('nfCpf').style.display='none';
-    };
-
-    // ============================================
-    // BUFFET / VENDA POR PESO + INTEGRACAO BALANCA
-    // ============================================
     var weightKg = 0;              // current weight in kg
     var scalePort = null;          // SerialPort instance
     var scaleReader = null;        // reader stream
@@ -1871,11 +1971,6 @@
         if(kind) el.classList.add(kind);
         document.getElementById('scaleStatusText').textContent = msg;
     }
-
-    // Cleanup on unload
-    window.addEventListener('beforeunload', function(){
-        if(scalePort) disconnectScale();
-    });
 
     // =============================================================
     // RESGATAR RASPINHA - Funcionario valida codigo e aplica premio
