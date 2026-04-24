@@ -1753,28 +1753,28 @@
             id: 'ibirapuera', name: 'MilkyPot Shopping Ibirapuera',
             address: 'Av. Ibirapuera, 3103 - Moema, São Paulo - SP',
             rating: 4.9, deliveryTime: '20-35 min', deliveryFee: 5.90,
-            hours: '10:00 - 22:00', open: true,
+            hours: '10:00 - 22:00', open: false,
             whatsapp: '5511999990001', lat: -23.6092, lng: -46.6654
         },
         {
             id: 'morumbi', name: 'MilkyPot Shopping Morumbi',
             address: 'Av. Roque Petroni Jr, 1089 - Morumbi, São Paulo - SP',
             rating: 4.8, deliveryTime: '25-40 min', deliveryFee: 6.90,
-            hours: '10:00 - 22:00', open: true,
+            hours: '10:00 - 22:00', open: false,
             whatsapp: '5511999990002', lat: -23.6233, lng: -46.6984
         },
         {
             id: 'jardins', name: 'MilkyPot Jardins',
             address: 'Rua Oscar Freire, 725 - Jardins, São Paulo - SP',
             rating: 4.9, deliveryTime: '15-25 min', deliveryFee: 4.90,
-            hours: '09:00 - 23:00', open: true,
+            hours: '09:00 - 23:00', open: false,
             whatsapp: '5511999990003', lat: -23.5631, lng: -46.6699
         },
         {
             id: 'barra', name: 'MilkyPot Barra Shopping',
             address: 'Av. das Américas, 4666 - Barra, Rio de Janeiro - RJ',
             rating: 4.7, deliveryTime: '25-40 min', deliveryFee: 7.90,
-            hours: '10:00 - 22:00', open: true,
+            hours: '10:00 - 22:00', open: false,
             whatsapp: '5521999990004', lat: -22.9994, lng: -43.3632
         },
         {
@@ -1788,7 +1788,7 @@
             id: 'recife', name: 'MilkyPot Shopping Recife',
             address: 'R. Padre Carapuceiro, 777 - Boa Viagem, Recife - PE',
             rating: 4.9, deliveryTime: '20-35 min', deliveryFee: 5.00,
-            hours: '10:00 - 22:00', open: true,
+            hours: '10:00 - 22:00', open: false,
             whatsapp: '5581999990006', lat: -8.1184, lng: -34.9046
         }
     ];
@@ -1802,6 +1802,13 @@
 
         if (!stores || stores.length === 0) {
             list.innerHTML = '<div class="checkout-no-stores">Nenhuma loja encontrada. Tente outro CEP ou bairro.</div>';
+            return;
+        }
+
+        // Auto-select when only one open store to reduce checkout friction
+        var openStores = stores.filter(function(s) { return s.open; });
+        if (!selectedStore && openStores.length === 1) {
+            window.selectCheckoutStore(openStores[0].id);
             return;
         }
 
