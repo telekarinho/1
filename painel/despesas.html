@@ -1400,17 +1400,22 @@
     }
 
     function saveFixedCosts() {
-        var costs = {};
+        var costs = getFixedCosts(); // preserva campos ja existentes
         fixedCostsDefs.forEach(function(def) {
             var input = document.getElementById('fc_' + def.key);
-            if (input) {
-                var val = parseCurrency(input.value);
-                if (val > 0) {
-                    costs[def.key] = {
-                        value: val,
-                        updatedAt: new Date().toISOString()
-                    };
-                }
+            var dueInput = document.getElementById('fcd_' + def.key);
+            if (!input) return;
+            var val = parseCurrency(input.value);
+            var dueDayRaw = dueInput ? parseInt(dueInput.value, 10) : NaN;
+            var dueDay = (Number.isFinite(dueDayRaw) && dueDayRaw >= 1 && dueDayRaw <= 31) ? dueDayRaw : 5;
+            if (val > 0) {
+                costs[def.key] = {
+                    value: val,
+                    dueDay: dueDay,
+                    updatedAt: new Date().toISOString()
+                };
+            } else {
+                delete costs[def.key];
             }
         });
         if (typeof DataStore !== 'undefined') {
@@ -1428,6 +1433,7 @@
         fixedCostsDefs.forEach(function(def) {
             var data = costs[def.key] || {};
             var value = data.value || 0;
+            var dueDay = data.dueDay || 5;
             var updated = data.updatedAt ? new Date(data.updatedAt).toLocaleDateString('pt-BR') : '';
             var statusClass = value > 0 ? 'active' : 'pending';
             var statusText = value > 0 ? '&#x2705; Cadastrado' : '&#x274C; Pendente';
@@ -1438,6 +1444,10 @@
             html += '    <div class="fc-name">' + def.name + '</div>';
             html += '  </div>';
             html += '  <input type="text" class="fc-value-input" id="fc_' + def.key + '" value="' + (value > 0 ? value.toFixed(2).replace('.', ',') : '') + '" placeholder="R$ 0,00" oninput="maskCurrency(this)">';
+            html += '  <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:#475569">';
+            html += '    <span>&#x1F4C5; Vence dia</span>';
+            html += '    <input type="number" id="fcd_' + def.key + '" min="1" max="31" value="' + dueDay + '" style="width:48px;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;text-align:center" title="Dia do mes (1-31) em que esse custo vence">';
+            html += '  </div>';
             html += '  <div class="fc-status ' + statusClass + '">' + statusText;
             if (updated) html += ' - ' + updated;
             html += '  </div>';
@@ -1511,11 +1521,22 @@
         return { removed: totalRemoved, months: touchedMonths };
     }
 
+    // Calcula a data real YYYY-MM-DD baseada em yearMonth + dueDay.
+    // Garante que nao exceda o ultimo dia do mes (dueDay=31 em fevereiro
+    // vira 28 ou 29).
+    function computeDueDate(yearMonth, dueDay) {
+        var parts = yearMonth.split('-');
+        var year = parseInt(parts[0], 10);
+        var month = parseInt(parts[1], 10);
+        var lastDay = new Date(year, month, 0).getDate();
+        var day = Math.min(Math.max(1, dueDay || 5), lastDay);
+        return yearMonth + '-' + String(day).padStart(2, '0');
+    }
+
     function generateMonthlyFixedCosts() {
         var costs = getFixedCosts();
         var now = new Date();
         var yearMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-        var date = yearMonth + '-01';
 
         if (typeof DataStore === 'undefined') return;
 
@@ -1542,15 +1563,20 @@
             var data = costs[def.key];
             if (!data || !(data.value > 0)) return;
 
+            var cardDue = Number.isFinite(data.dueDay) ? data.dueDay : 5;
+            var entryDate = computeDueDate(yearMonth, cardDue);
+
             var existing = existingByCat[def.key];
             if (existing) {
-                // UPDATE: so salva se valor realmente mudou
-                if (Number(existing.amount) !== Number(data.value)) {
+                // UPDATE: atualiza se valor OU data de vencimento mudou
+                var needsUpdate = Number(existing.amount) !== Number(data.value) || existing.date !== entryDate;
+                if (needsUpdate) {
                     existing.amount = data.value;
+                    existing.date = entryDate;
+                    existing.dueDay = cardDue;
                     existing.description = def.name + ' - ' + yearMonth;
                     existing.supplier = def.name;
                     existing.recurring = existing.recurring || 'mensal';
-                    existing.dueDay = existing.dueDay || 5; // default dia 5 pra vencimento
                     existing.updatedAt = new Date().toISOString();
                     updated++;
                     dirty = true;
@@ -1567,8 +1593,8 @@
                     description: def.name + ' - ' + yearMonth,
                     supplier: def.name,
                     nfKey: '',
-                    date: date,
-                    dueDay: 5,
+                    date: entryDate,
+                    dueDay: cardDue,
                     createdAt: new Date().toISOString(),
                     recurring: 'mensal'
                 };
@@ -1638,8 +1664,10 @@
             var dateStr = e.date ? e.date.split('-').reverse().join('/') : '-';
             var catLabel = categoryLabels[e.category] || e.category || '-';
             var sourceBadge = '<span class="badge badge-' + (e.source || 'manual') + '">' + (e.source === 'nf' ? 'NF-e' : e.source === 'fixo' ? 'Fixo' : 'Manual') + '</span>';
+            // Data editavel inline — user clica no calendario pra mudar vencimento
+            var dateCell = '<input type="date" value="' + (e.date || '') + '" onchange="updateExpenseDate(\'' + e.id + '\', this.value)" style="border:1px solid #e2e8f0;border-radius:6px;padding:4px 6px;font-size:12px;width:130px" title="Clica pra editar a data de vencimento">';
             return '<tr>' +
-                '<td>' + dateStr + '</td>' +
+                '<td>' + dateCell + '</td>' +
                 '<td>' + catLabel + '</td>' +
                 '<td>' + (e.supplier || '-') + '</td>' +
                 '<td>' + (e.description || '-') + '</td>' +
@@ -1652,6 +1680,36 @@
             '</tr>';
         }).join('');
     }
+
+    // Atualiza apenas a data de uma despesa no historico (inline).
+    // Usado quando o user quer corrigir a data de vencimento sem ter
+    // que trocar de aba e re-preencher o form.
+    window.updateExpenseDate = function(id, newDate) {
+        if (!newDate || !/^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
+            showToast('Data invalida.', 'error');
+            renderHistory();
+            return;
+        }
+        if (typeof DataStore === 'undefined') return;
+        var finances = DataStore.getCollection('finances', franchiseId) || [];
+        var idx = finances.findIndex(function(f) { return f.id === id; });
+        if (idx === -1) {
+            showToast('Despesa nao encontrada.', 'error');
+            return;
+        }
+        var oldDate = finances[idx].date || '';
+        finances[idx].date = newDate;
+        // Se for custo fixo, sincroniza dueDay com o novo dia escolhido
+        if (finances[idx].source === 'fixo') {
+            var day = parseInt(newDate.split('-')[2], 10);
+            if (Number.isFinite(day) && day >= 1 && day <= 31) finances[idx].dueDay = day;
+        }
+        finances[idx].updatedAt = new Date().toISOString();
+        DataStore.set('finances_' + franchiseId, finances);
+        showToast('Data atualizada: ' + (oldDate ? oldDate.split('-').reverse().join('/') : '?') + ' -> ' + newDate.split('-').reverse().join('/'), 'success');
+        updateSummary();
+        renderHistory();
+    };
 
     function editExpense(id) {
         var expenses = getExpenses();
@@ -1738,17 +1796,38 @@
             return e.date && e.date.startsWith(yearMonth);
         });
 
-        var total = monthExpenses.reduce(function(s, e) { return s + (e.amount || 0); }, 0);
-        var fixos = monthExpenses.filter(function(e) { return e.source === 'fixo'; }).reduce(function(s, e) { return s + (e.amount || 0); }, 0);
-        var variaveis = monthExpenses.filter(function(e) { return e.source !== 'fixo' && e.category !== 'insumos'; }).reduce(function(s, e) { return s + (e.amount || 0); }, 0);
-        var compras = monthExpenses.filter(function(e) { return e.category === 'insumos' || e.category === 'embalagens'; }).reduce(function(s, e) { return s + (e.amount || 0); }, 0);
-
-        // Pending fixed costs
+        // CUSTOS FIXOS = soma dos valores cadastrados em fixed_costs_{fid}.
+        // Sempre reflete o mensal esperado — nao depende de "Gerar Lancamentos"
+        // ter rodado nem sofre race com sync do Firestore (fixed_costs e
+        // master data, nao entry transacional).
         var costs = getFixedCosts();
-        var totalFixedRegistered = Object.keys(costs).filter(function(k) { return costs[k] && costs[k].value > 0; }).length;
-        var fixedLaunched = monthExpenses.filter(function(e) { return e.source === 'fixo'; });
+        var fixos = 0;
+        fixedCostsDefs.forEach(function(def) {
+            if (costs[def.key] && costs[def.key].value > 0) {
+                fixos += costs[def.key].value;
+            }
+        });
+
+        // VARIAVEIS = entries que NAO sao fixos recorrentes nem compras.
+        var variaveis = monthExpenses.filter(function(e) {
+            return e.source !== 'fixo' && e.category !== 'insumos' && e.category !== 'embalagens';
+        }).reduce(function(s, e) { return s + (e.amount || 0); }, 0);
+
+        // COMPRAS = insumos + embalagens (lancamentos com NF-e ou manual)
+        var compras = monthExpenses.filter(function(e) {
+            return e.category === 'insumos' || e.category === 'embalagens';
+        }).reduce(function(s, e) { return s + (e.amount || 0); }, 0);
+
+        // TOTAL = fixos (cadastrados) + variaveis + compras.
+        // Entries source='fixo' em finances NAO somam aqui (evita duplicar
+        // com o fixos acima) — eles servem so de trilha de auditoria.
+        var total = fixos + variaveis + compras;
+
+        // Pendentes = custos cadastrados mas ainda NAO gerados como entry no mes.
         var launchedKeys = {};
-        fixedLaunched.forEach(function(e) { launchedKeys[e.category] = true; });
+        monthExpenses.forEach(function(e) {
+            if (e.source === 'fixo') launchedKeys[e.category] = true;
+        });
         var pendingCount = 0;
         fixedCostsDefs.forEach(function(def) {
             if (costs[def.key] && costs[def.key].value > 0 && !launchedKeys[def.key]) {
