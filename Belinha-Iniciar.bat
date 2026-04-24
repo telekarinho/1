@@ -56,6 +56,20 @@ echo    Health: http://localhost:5757/health
 echo    Se voltar ao menu abaixo, o servidor caiu.
 echo  ==========================================================
 echo.
+echo  IMPORTANTE - Chrome bloqueia HTTP^<^>HTTPS por seguranca.
+echo  Para conectar ao servidor, faca UMA VEZ:
+echo.
+echo    1. Abra milkypot.com no Chrome
+echo    2. Clique no cadeado ao lado da URL
+echo    3. Configuracoes do site ^> Conteudo inseguro: PERMITIR
+echo    4. Recarregue a pagina ^(F5^)
+echo.
+echo  Ou copie esta URL no Chrome e pressione Enter:
+echo  chrome://settings/content/siteDetails?site=https://milkypot.com
+echo.
+
+REM Tenta abrir Chrome nas configuracoes do site para facilitar
+start "" "chrome.exe" "chrome://settings/content/siteDetails?site=https://milkypot.com" 2>nul
 
 node server.js
 
