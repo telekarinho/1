@@ -10,7 +10,7 @@ const PRECACHE_URLS = [
     '/desafio.html',
     // MilkyClube (PWA cliente final + landing viral)
     '/clube.html',
-    '/clube-landing.html',
+    '/clube/',
     '/regulamento-milkyclube.html',
     '/js/core/milkyclub.js',
     '/js/core/milkyclub-push.js',
