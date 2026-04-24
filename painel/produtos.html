@@ -2023,31 +2023,166 @@
   // ========== BUFFET ==========
   function renderBuffet() {
     const d = CatalogV2.load(fid);
-    const buffetProd = d.produtos.find(p => p.categoriaId === 'cat_buffet' && p.buffet?.ativo);
+    // Qualquer produto com buffet.ativo é considerado buffet (permite vários)
+    const buffets = d.produtos.filter(p =>
+      (p.categoriaId === 'cat_buffet' || p.buffet?.ativo) && p.active !== false
+    );
     const tops = CatalogV2.listToppings(fid);
     const el = document.getElementById('buffetConfig');
-    if (!buffetProd) {
-      el.innerHTML = '<p style="color:#6B7280">Nenhum produto buffet ativo. Crie um produto na categoria "Buffet" e ative o modo buffet.</p>';
+
+    if (!buffets.length) {
+      el.innerHTML = `
+        <div style="padding:18px;border:2px dashed #FFB300;border-radius:12px;background:#FFF8E1">
+          <h4 style="margin:0 0 8px">🍽️ Nenhum buffet ativo</h4>
+          <p style="color:#6B7280;margin:0 0 12px">
+            Crie um produto buffet padrão (preço por kg editável aqui, aparece automático no PDV e cardápio).
+          </p>
+          <button class="ios-btn ios-btn-primary" style="background:#FF9800" onclick="criarBuffetPadrao()">
+            ➕ Criar Buffet Self-Service padrão
+          </button>
+        </div>
+      `;
       return;
     }
-    el.innerHTML = `
-      <div class="form-grid">
-        <div class="form-field"><label>Preço por Kg (R$)</label><input type="number" step="0.01" id="buffetKg" value="${buffetProd.buffet.precoPorKg||0}"></div>
-      </div>
-      <h4 style="margin-top:16px">Toppings inclusos no buffet</h4>
-      <div id="buffetToppings">
-        ${tops.map(t => `<span class="topping-chip ${(buffetProd.buffet.toppingsInclusos||[]).includes(t.id)?'selected':''}" data-tid="${t.id}" onclick="toggleTop(this)">${esc(t.name)}</span>`).join('')}
-      </div>
-      <button class="ios-btn ios-btn-primary" style="background:#FF4F8A;margin-top:14px" onclick="saveBuffet('${buffetProd.id}')">💾 Salvar config buffet</button>
-    `;
+
+    el.innerHTML = buffets.map(buffetProd => {
+      const custoKg = Number(buffetProd.custos?.custoTotal || 0);
+      const precoKg = Number(buffetProd.buffet?.precoPorKg || 0);
+      const margem = precoKg > 0 ? Math.round((1 - custoKg/precoKg) * 1000)/10 : 0;
+      const margemColor = margem >= 60 ? '#16a34a' : (margem >= 40 ? '#F59E0B' : '#DC2626');
+
+      return `
+        <div style="border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:14px;background:#fff">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <h4 style="margin:0">${buffetProd.midia?.emoji||'🍽️'} ${esc(buffetProd.name)}</h4>
+            <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="checkbox" ${buffetProd.buffet?.ativo?'checked':''} id="buffetAtivo_${buffetProd.id}">
+              <span>Ativo (FAB no PDV)</span>
+            </label>
+          </div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <div class="form-field">
+              <label>💰 Preço por Kg (R$)</label>
+              <input type="number" step="0.01" min="0" id="buffetKg_${buffetProd.id}" value="${precoKg.toFixed(2)}" oninput="previewBuffetMargem('${buffetProd.id}')">
+            </div>
+            <div class="form-field">
+              <label>🧾 Custo por Kg (R$)</label>
+              <input type="number" step="0.01" min="0" id="buffetCusto_${buffetProd.id}" value="${custoKg.toFixed(2)}" oninput="previewBuffetMargem('${buffetProd.id}')">
+            </div>
+            <div class="form-field">
+              <label>📊 Margem atual</label>
+              <div id="buffetMargem_${buffetProd.id}" style="padding:10px;border-radius:8px;background:${margemColor}22;color:${margemColor};font-weight:800;font-size:16px;text-align:center">
+                ${margem.toFixed(1)}%
+              </div>
+            </div>
+          </div>
+          <h4 style="margin:14px 0 6px;font-size:13px;color:#374151">🍬 Toppings inclusos no buffet</h4>
+          <div id="buffetToppings_${buffetProd.id}" style="display:flex;flex-wrap:wrap;gap:6px">
+            ${tops.map(t => `
+              <span class="topping-chip ${(buffetProd.buffet?.toppingsInclusos||[]).includes(t.id)?'selected':''}"
+                    data-tid="${t.id}" onclick="toggleTop(this)">${esc(t.name)}</span>
+            `).join('') || '<span style="color:#9CA3AF;font-size:12px">Cadastre toppings na aba de Toppings primeiro.</span>'}
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <button class="ios-btn ios-btn-primary" style="background:#FF4F8A" onclick="saveBuffet('${buffetProd.id}')">💾 Salvar (sincroniza PDV + cardápio)</button>
+            <button class="ios-btn" style="background:#f3f4f6;color:#374151" onclick="abrirProduto('${buffetProd.id}')">✏️ Editar produto completo</button>
+          </div>
+          <p style="margin:10px 0 0;font-size:11px;color:#6B7280">
+            💡 O botão Buffet do PDV usa este produto automaticamente. Qualquer mudança aqui aparece no PDV e no cardápio em tempo real.
+          </p>
+        </div>
+      `;
+    }).join('');
   }
+
+  window.previewBuffetMargem = function(prodId) {
+    const preco = parseFloat(document.getElementById('buffetKg_'+prodId).value) || 0;
+    const custo = parseFloat(document.getElementById('buffetCusto_'+prodId).value) || 0;
+    const margem = preco > 0 ? Math.round((1 - custo/preco) * 1000)/10 : 0;
+    const color = margem >= 60 ? '#16a34a' : (margem >= 40 ? '#F59E0B' : '#DC2626');
+    const el = document.getElementById('buffetMargem_'+prodId);
+    if (el) {
+      el.style.background = color+'22';
+      el.style.color = color;
+      el.textContent = margem.toFixed(1) + '%';
+    }
+  };
+
   window.saveBuffet = function(prodId) {
     const p = CatalogV2.getProduto(fid, prodId);
     if (!p) return;
-    p.buffet.precoPorKg = parseFloat(document.getElementById('buffetKg').value)||0;
-    p.buffet.toppingsInclusos = Array.from(document.querySelectorAll('#buffetToppings .topping-chip.selected')).map(c => c.dataset.tid);
+    p.buffet = p.buffet || {};
+    p.buffet.ativo = document.getElementById('buffetAtivo_'+prodId).checked;
+    p.buffet.precoPorKg = parseFloat(document.getElementById('buffetKg_'+prodId).value) || 0;
+    // custoTotal reflete o custo/kg do buffet (usado pra CMV)
+    const novoCusto = parseFloat(document.getElementById('buffetCusto_'+prodId).value) || 0;
+    p.custos = p.custos || { custoAdicional: {} };
+    p.custos.custoTotal = novoCusto;
+    // Mantém precos.loja atualizado para o PDV refletir o preço/kg
+    p.precos = p.precos || {};
+    p.precos.loja     = p.precos.loja     || {};
+    p.precos.delivery = p.precos.delivery || {};
+    p.precos.ifood    = p.precos.ifood    || {};
+    p.precos.loja.real = p.buffet.precoPorKg;
+    if (!p.precos.delivery.real) p.precos.delivery.real = Math.round(p.buffet.precoPorKg * 1.12 * 100)/100;
+    if (!p.precos.ifood.real)    p.precos.ifood.real    = Math.round(p.buffet.precoPorKg * 1.28 * 100)/100;
+
+    p.buffet.toppingsInclusos = Array.from(
+      document.querySelectorAll('#buffetToppings_'+prodId+' .topping-chip.selected')
+    ).map(c => c.dataset.tid);
+    p.toppingsIds = p.buffet.toppingsInclusos.slice();  // mantém em sincronia
+
     CatalogV2.saveProduto(fid, p);
-    alert('Buffet atualizado');
+    if (typeof showToast === 'function') {
+      showToast('✅ Buffet salvo. PDV e cardápio atualizados em tempo real.');
+    } else {
+      alert('Buffet salvo. PDV e cardápio atualizados.');
+    }
+    renderBuffet();
+  };
+
+  window.criarBuffetPadrao = function() {
+    const d = CatalogV2.load(fid);
+    // Garante categoria
+    if (!d.categorias.find(c => c.id === 'cat_buffet')) {
+      CatalogV2.saveCategoria(fid, { id:'cat_buffet', name:'Buffet / Self-Service', icon:'🍽️', color:'#66BB6A', order:7, active:true });
+    }
+    const tops = CatalogV2.listToppings(fid);
+    const novo = {
+      categoriaId: 'cat_buffet',
+      name: 'Buffet Self-Service',
+      desc: 'Venda por peso — sorvete + toppings à vontade.',
+      midia: { fotos:[], video:'', emoji:'⚖️' },
+      custos: {
+        insumos: [],
+        custoInsumos: 0,
+        custoAdicional: { embalagem:1.5, energia:0, mao_obra:0, outros:0 },
+        custoTotal: 25
+      },
+      precos: {
+        loja:     { recomendado: 89.90, real: 89.90 },
+        delivery: { recomendado: 99.90, real: 99.90 },
+        ifood:    { recomendado: 109.90, real: 109.90 }
+      },
+      kits: [],
+      variantes: [],
+      toppingsIds: tops.map(t => t.id),
+      buffet: { ativo: true, precoPorKg: 89.90, toppingsInclusos: tops.map(t => t.id) },
+      canal: 'ambos',
+      active: true
+    };
+    CatalogV2.saveProduto(fid, novo);
+    if (typeof showToast === 'function') showToast('✅ Buffet criado. Edite preço e custo abaixo.');
+    renderBuffet();
+  };
+
+  window.abrirProduto = function(prodId) {
+    // Troca pra aba produtos e abre editor do produto
+    const tabBtn = document.querySelector('.ct-tab[data-tab="produtos"]');
+    if (tabBtn) tabBtn.click();
+    setTimeout(() => {
+      if (typeof openProduto === 'function') openProduto(prodId);
+    }, 100);
   };
 
   // ========== ANÁLISE ==========

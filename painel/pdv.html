@@ -212,8 +212,8 @@
 <div class="pdv-layout">
     <div class="pdv-products" id="allProds"></div>
 
-    <!-- Floating Buffet Button -->
-    <button class="buffet-fab" onclick="PDV_Dynamics.openWeightModal({id:'buffet_gen', name:'Buffet Self-Service', price:99.90, emoji:'⚖️'})" title="Vender por peso / Buffet">
+    <!-- Floating Buffet Button (integrado com CatalogV2 — preço vem do produto cadastrado em /painel/produtos.html) -->
+    <button class="buffet-fab" onclick="PDV_Dynamics.openBuffetFab()" title="Vender por peso / Buffet (edite em Produtos)">
         <span style="font-size:26px">⚖️</span>
         <span style="font-size:10px;font-weight:800;display:block">BUFFET</span>
     </button>
@@ -574,6 +574,8 @@
 <script src="../js/core/nfce.js?v=mp-v14"></script>
 <script src="../js/core/printer.js?v=mp-v14"></script>
 <script src="../js/cardapio-data.js"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v14"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v14"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -592,6 +594,35 @@
         weightInput: "",
 
         init() {
+            // ============================================================
+            // Migração automática: se CatalogV2 está vazio (franquia nova
+            // ou antiga sem produtos cadastrados), auto-seed com produtos
+            // padrão MilkyPot. Isso ELIMINA os itens hardcoded de
+            // CARDAPIO_CONFIG ("Ajustar" nas bases/clássicos/especiais)
+            // e dá ao usuário produtos REAIS, editáveis em produtos.html.
+            // ============================================================
+            try {
+                const session = window.Auth && Auth.getSession && Auth.getSession();
+                const fid = session && session.franchiseId;
+                if (fid && window.CatalogV2 && CatalogV2.load) {
+                    const v2 = CatalogV2.load(fid);
+                    const hasProdutos = v2 && v2.produtos && v2.produtos.length > 0;
+
+                    if (!hasProdutos && CatalogV2.seedMilkyPot) {
+                        // Primeira vez neste PDV: seed padrão + buffet ativo
+                        console.log('🌱 Auto-seed CatalogV2 MilkyPot — migrando do CARDAPIO_CONFIG legado...');
+                        const r = CatalogV2.seedMilkyPot(fid);
+                        console.log('✅ Seed:', r);
+                        if (typeof Utils !== 'undefined' && Utils.showToast) {
+                            Utils.showToast('🌱 Catálogo MilkyPot pronto! Edite preços em Painel → Produtos.', 'success');
+                        }
+                    } else if (hasProdutos) {
+                        // Já tem produtos: só força re-sync pra PDV refletir mudanças recentes
+                        CatalogV2.syncToLegacy(fid);
+                    }
+                }
+            } catch(e) { console.warn('PDV init auto-seed', e); }
+
             this.catalog = DataStore.get('catalog_config');
             if (this.catalog) {
                 this.renderProducts();
@@ -612,16 +643,18 @@
             if (!container) return;
             container.innerHTML = '';
 
-            // 1. Bases e Grupos (Simplificado para Loja)
-            if (this.catalog.bases) {
+            // 1. Bases Populares: só aparece se não há CatalogV2 (modelo legado "monta o seu")
+            if (this.catalog.bases && Array.isArray(this.catalog.bases) && !this.catalog._fromV2) {
                 this._renderSection(container, '🔥 Bases Populares', 'pop', this.catalog.bases.filter(b => b.available));
             }
 
-            // 2. Sabores por Categoria
+            // 2. Sabores por Categoria (inclui grupos do CatalogV2 e legado CARDAPIO_CONFIG)
             Object.entries(this.catalog.sabores).forEach(([key, group]) => {
+                if (!group || !Array.isArray(group.items)) return;
                 const items = group.items.filter(i => i.available && i.canalVenda !== 'delivery');
                 if (items.length > 0) {
-                    this._renderSection(container, group.name, '', items);
+                    const title = (group.icon ? group.icon + ' ' : '') + (group.name || key);
+                    this._renderSection(container, title, '', items);
                 }
             });
 
@@ -796,11 +829,146 @@
             this.updateWeightUI();
             document.getElementById('weightModal').classList.add('open');
             document.getElementById('weightModalTitle').textContent = `⚖️ ${it.name}`;
-            document.getElementById('confirm-price-kg').textContent = `R$ ${it.price.toFixed(2)}`;
-            
+            document.getElementById('confirm-price-kg').textContent = `R$ ${Number(it.price||0).toFixed(2)}`;
+
             // Se já tiver balança ativa, garante que o loop está rodando
             if (this.scalePort && !this.scaleReadLoopActive) this.startScaleReadLoop();
             document.getElementById('scaleStatus').style.display = this.scalePort ? 'flex' : 'none';
+        },
+
+        /* -------------------------------------------------------
+         * BUFFET FAB — 100% integrado com CatalogV2
+         * Fluxo:
+         *  1. Lê catalog_config (já sincronizado do CatalogV2)
+         *  2. Procura produto buffet (cat_buffet ou _v2.buffet.ativo)
+         *  3. Se não existe, auto-seed um produto padrão no CatalogV2
+         *     (editável em /painel/produtos.html — preço, custo, toppings)
+         *  4. Abre modal de peso com o produto REAL (price/kg, id, cost)
+         *     — para rastreio de CMV no financeiro
+         * ------------------------------------------------------- */
+        openBuffetFab() {
+            const catalog = DataStore.get('catalog_config') || {};
+            const buffetProducts = this._findBuffetProducts(catalog);
+
+            // Se tem múltiplos buffets, abre seletor (raro, mas suportado)
+            if (buffetProducts.length > 1) {
+                this._openBuffetPicker(buffetProducts);
+                return;
+            }
+
+            let buffet = buffetProducts[0];
+
+            // Sem produto buffet cadastrado? Auto-seed um padrão editável.
+            if (!buffet) {
+                buffet = this._autoSeedBuffet();
+                if (!buffet) {
+                    Utils.showToast('⚠️ Crie um produto Buffet em Painel → Produtos.', 'error');
+                    return;
+                }
+                Utils.showToast('✅ Buffet criado. Edite preço/custo em Painel → Produtos.', 'success');
+            }
+
+            this.openWeightModal(buffet);
+        },
+
+        _findBuffetProducts(catalog) {
+            const results = [];
+            if (!catalog || !catalog.sabores) return results;
+
+            // Categoria "buffet" (legacy key) ou categorias com _v2.buffet.ativo
+            Object.entries(catalog.sabores).forEach(([key, group]) => {
+                if (!group || !Array.isArray(group.items)) return;
+                const isBuffetCategory = key === 'buffet';
+                group.items.forEach(it => {
+                    if (!it || it.available === false) return;
+                    const isV2Buffet = it._v2 && it._v2.buffet && it._v2.buffet.ativo;
+                    if (isBuffetCategory || isV2Buffet) {
+                        // Extrai preço/kg — prioridade: _v2.buffet.precoPorKg > price
+                        const pricePerKg = (it._v2 && it._v2.buffet && Number(it._v2.buffet.precoPorKg))
+                            || Number(it.price) || 0;
+                        results.push({
+                            id: it.id,
+                            name: it.name,
+                            price: pricePerKg,
+                            cost: Number(it.cost) || 0,
+                            emoji: it.emoji || '⚖️',
+                            _v2: it._v2,
+                            _source: 'catalog_v2'
+                        });
+                    }
+                });
+            });
+            return results;
+        },
+
+        _autoSeedBuffet() {
+            try {
+                const session = Auth.getSession();
+                if (!session || !session.franchiseId || !window.CatalogV2) return null;
+                const fid = session.franchiseId;
+                const d = CatalogV2.load(fid);
+
+                // Garante que a categoria cat_buffet existe e está ativa
+                let catBuffet = d.categorias.find(c => c.id === 'cat_buffet');
+                if (!catBuffet) {
+                    catBuffet = { id: 'cat_buffet', name: 'Buffet / Self-Service', icon: '🍽️', color: '#66BB6A', order: 7, active: true };
+                    CatalogV2.saveCategoria(fid, catBuffet);
+                }
+
+                // Cria produto buffet padrão
+                const novo = {
+                    categoriaId: 'cat_buffet',
+                    name: 'Buffet Self-Service',
+                    desc: 'Venda por peso — monte seu potinho com sorvetes e toppings à vontade.',
+                    midia: { fotos: [], video: '', emoji: '⚖️' },
+                    custos: {
+                        insumos: [],
+                        custoInsumos: 0,
+                        custoAdicional: { embalagem: 1.5, energia: 0, mao_obra: 0, outros: 0 },
+                        custoTotal: 25 // R$ 25/kg estimado (edite em produtos.html)
+                    },
+                    precos: {
+                        loja:     { recomendado: 89.90, real: 89.90 },
+                        delivery: { recomendado: 99.90, real: 99.90 },
+                        ifood:    { recomendado: 109.90, real: 109.90 }
+                    },
+                    kits: [],
+                    variantes: [],
+                    toppingsIds: (d.toppings || []).map(t => t.id),
+                    buffet: {
+                        ativo: true,
+                        precoPorKg: 89.90,
+                        toppingsInclusos: (d.toppings || []).map(t => t.id)
+                    },
+                    canal: 'ambos',
+                    active: true
+                };
+                const saved = CatalogV2.saveProduto(fid, novo);
+                // syncToLegacy foi chamado automaticamente; relê catalog_config
+                const catalog = DataStore.get('catalog_config') || {};
+                this.catalog = catalog;
+                const found = this._findBuffetProducts(catalog);
+                return found[0] || {
+                    id: saved.id, name: saved.name,
+                    price: 89.90, cost: 25, emoji: '⚖️',
+                    _v2: { buffet: saved.buffet },
+                    _source: 'catalog_v2'
+                };
+            } catch(e) {
+                console.warn('autoSeedBuffet', e);
+                return null;
+            }
+        },
+
+        _openBuffetPicker(products) {
+            // Modal simples: se tiver múltiplos buffets (ex: buffet tradicional + açaí buffet)
+            const escolhas = products.map((p, i) =>
+                `${i+1}) ${p.name} — R$ ${Number(p.price||0).toFixed(2)}/kg`
+            ).join('\n');
+            const pick = prompt('Escolha o buffet:\n' + escolhas + '\n\nDigite o número:');
+            const idx = parseInt(pick) - 1;
+            if (isNaN(idx) || !products[idx]) return;
+            this.openWeightModal(products[idx]);
         },
 
         closeWeightModal() {
@@ -837,18 +1005,24 @@
                 return;
             }
 
-            const total = (g / 1000) * this.currentWeightItem.price;
+            const item = this.currentWeightItem;
+            const total = (g / 1000) * Number(item.price || 0);
             const finalTotal = Math.round(total * 100) / 100;
 
+            // Custo proporcional ao peso (pra CMV correto no financeiro)
+            const custoKg = Number(item.cost || 0);
+            const custoProporcional = Math.round((g / 1000) * custoKg * 100) / 100;
+
             this.addToCart({
-                id: this.currentWeightItem.id,
-                name: this.currentWeightItem.name,
-                unitPrice: this.currentWeightItem.price,
+                id: item.id,
+                name: item.name + ' (' + g + 'g)',
+                unitPrice: finalTotal,   // preço da linha — não repete × qty
                 total: finalTotal,
                 weightG: g,
+                cost: custoProporcional,
                 qty: 1,
                 type: 'por_peso',
-                emoji: this.currentWeightItem.emoji || '⚖️'
+                emoji: item.emoji || '⚖️'
             });
 
             this.closeWeightModal();
@@ -951,6 +1125,9 @@
             // Mapeamento para o formato legado do sistema
             // Se for por peso, o 'unitPrice' no cart global deve ser o subtotal calculado (considerando que qty=1)
             // ou unitPrice=precoKg e qty=kg. Usaremos unitPrice=subtotal e qty=1 para flexibilidade de exibição.
+            const pricePerKgDisplay = item.type === 'por_peso' && item.weightG
+                ? (item.total / (item.weightG / 1000))
+                : null;
             const cartItem = {
                 id: item.id || Utils.generateId(),
                 name: item.name,
@@ -961,7 +1138,10 @@
                 extras: item.extras || [],
                 type: item.type,
                 weightG: item.weightG || null,
-                size: item.type === 'por_peso' ? `${item.weightG}g @ R$ ${item.unitPrice.toFixed(2).replace('.',',')}/kg` : (item.size || 'Unidade')
+                cost: Number(item.cost) || 0,  // pré-calculado (ex: buffet proporcional ao peso) — flui para CMV
+                size: item.type === 'por_peso' && pricePerKgDisplay
+                    ? `${item.weightG}g @ R$ ${pricePerKgDisplay.toFixed(2).replace('.',',')}/kg`
+                    : (item.size || 'Unidade')
             };
 
             cart.push(cartItem);
@@ -1590,12 +1770,16 @@
             payment:document.getElementById('paymentMethod')?document.getElementById('paymentMethod').value:'Não informado',
             items:cart.map(function(c){
                 return{
+                    productId:c.id||null,  // referência ao catalog_v2 product ID (p/ CMV e finance-realtime)
                     name:c.name,size:c.size,extras:c.extras,qty:c.qty,
                     unitPrice:Math.round(c.unitPrice*100)/100,
                     total:Math.round(c.unitPrice*c.qty*100)/100,
-                    byWeight:c.byWeight||false,
-                    weightKg:c.weightKg,
+                    byWeight:c.type==='por_peso'||c.byWeight||false,
+                    type:c.type||'unitario',
+                    weightG:c.weightG||null,
+                    weightKg:c.weightKg||(c.weightG?c.weightG/1000:null),
                     pricePerKg:c.pricePerKg,
+                    cost:Math.round((Number(c.cost)||0)*100)/100,  // CMV pré-calculado (buffet etc)
                     emoji:c.emoji
                 };
             }),
@@ -1642,12 +1826,86 @@
         }
 
         // Auto-create financial entry from PDV sale
+        // Inclui CMV (custo da mercadoria vendida) para rastreio de margem no Financeiro
+        var _catalogCfg = DataStore.get('catalog_config') || {};
+        var _totalCusto = 0;
+        var _itemsWithCost = order.items.map(function(item) {
+            // 1) Custo pré-calculado (buffet/por_peso já traz custo proporcional)
+            var preCusto = Number(item.cost) || 0;
+            if (preCusto > 0) {
+                _totalCusto += preCusto;
+                return {
+                    name: item.name, qty: item.qty, unitPrice: item.unitPrice,
+                    productId: item.productId || null,
+                    type: item.type || 'unitario',
+                    weightG: item.weightG || null,
+                    unitCost: item.type === 'por_peso' && item.weightG
+                        ? Math.round((preCusto / (item.weightG/1000)) * 100) / 100  // custo/kg
+                        : preCusto,
+                    custo: Math.round(preCusto * 100) / 100
+                };
+            }
+
+            // 2) Lookup por productId (fonte mais confiável) ou nome no catálogo
+            var unitCost = 0;
+            if (item.productId && _catalogCfg.sabores) {
+                Object.values(_catalogCfg.sabores).some(function(grupo) {
+                    if (!grupo || !grupo.items) return false;
+                    var found = grupo.items.find(function(ci) { return ci.id === item.productId; });
+                    if (found) { unitCost = Number(found.cost) || 0; return true; }
+                    return false;
+                });
+            }
+            if (!unitCost && _catalogCfg.sabores) {
+                Object.values(_catalogCfg.sabores).some(function(grupo) {
+                    if (!grupo || !grupo.items) return false;
+                    var found = grupo.items.find(function(ci) {
+                        return ci.name === item.name || item.name.indexOf(ci.name) === 0;
+                    });
+                    if (found) { unitCost = Number(found.cost) || 0; return true; }
+                    return false;
+                });
+            }
+            // Bebidas (por productId ou nome)
+            if (!unitCost && _catalogCfg.bebidas) {
+                var bev = _catalogCfg.bebidas.find(function(b) {
+                    return (item.productId && b.id === item.productId) || b.name === item.name;
+                });
+                if (bev) unitCost = Number(bev.cost) || 0;
+            }
+            // Custo dos extras/toppings
+            var extrasCost = 0;
+            if (item.extras && _catalogCfg.adicionais) {
+                item.extras.forEach(function(ex) {
+                    Object.values(_catalogCfg.adicionais).forEach(function(ag) {
+                        if (ag && ag.items) {
+                            var ai = ag.items.find(function(a) { return a.name === ex.name; });
+                            if (ai) extrasCost += Number(ai.cost) || 0;
+                        }
+                    });
+                });
+            }
+            var itemCusto = (unitCost + extrasCost) * (item.qty || 1);
+            _totalCusto += itemCusto;
+            return {
+                name: item.name, qty: item.qty, unitPrice: item.unitPrice,
+                productId: item.productId || null,
+                type: item.type || 'unitario',
+                unitCost: unitCost,
+                custo: Math.round(itemCusto * 100) / 100
+            };
+        });
+        var _margem = total > 0 ? Math.round((1 - _totalCusto / total) * 1000) / 10 : null;
+
         var financeEntry = {
             id: Utils.generateId(),
             type: 'income',
-            category: 'vendas_pdv',
+            category: 'vendas',
             source: 'pdv',
             amount: total,
+            custo: Math.round(_totalCusto * 100) / 100,
+            margem: _margem,
+            items: _itemsWithCost,
             description: 'PDV ' + order.id + ' - ' + (oName || 'Balcao'),
             orderId: order.id,
             date: new Date().toISOString().split('T')[0],

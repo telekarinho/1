@@ -316,6 +316,8 @@
     <script src="js/stores-data.js"></script>
     <script src="js/analytics.js"></script>
     <script src="js/cardapio-data.js"></script>
+    <script src="js/core/cost-calculator.js?v=mp-v14"></script>
+    <script src="js/core/catalog-v2.js?v=mp-v14"></script>
     <script src="js/cart.js"></script>
     <script src="js/checkout.js"></script>
     <script src="js/chat-ai.js" defer></script>
@@ -326,37 +328,119 @@
     (function() {
         var catalog = null;
 
+        // Labels e emojis para grupos de categoria (legado + CatalogV2)
+        const SABORES_GROUP_META = {
+            // CatalogV2 (catalog-v2.js cria esses keys via syncToLegacy)
+            'milkshake':  { label: 'Milkshakes',     emoji: '🥤', tab: 'ninho' },
+            'potinho':    { label: 'Potinhos',        emoji: '🍨', tab: 'ninho' },
+            'sundae':     { label: 'Sundae',          emoji: '🍦', tab: 'ninho' },
+            'picole':     { label: 'Picolés',         emoji: '🍡', tab: 'picole' },
+            'sorvete_kg': { label: 'Sorvete por Kg',  emoji: '⚖️', tab: 'sorvete' },
+            'buffet':     { label: 'Buffet',          emoji: '🍽️', tab: 'buffet' },
+            'acai':       { label: 'Açaí Bowls',      emoji: '🫐', tab: 'acai' },
+            // CARDAPIO_CONFIG legado
+            'classicos':       { label: 'Clássicos',      emoji: '☁️', tab: 'ninho' },
+            'tradicionais':    { label: 'Tradicionais',   emoji: '☁️', tab: 'ninho' },
+            'especiais':       { label: 'Especiais',      emoji: '✨', tab: 'ninho' },
+            'zero_fit':        { label: 'Zero / Fit',     emoji: '💪', tab: 'fit' },
+            'edicao_limitada': { label: 'Ed. Limitada',   emoji: '⭐', tab: 'limitada' }
+        };
+
         function initCatalog() {
+            // ============================================================
+            // Migração automática: garante que CatalogV2 tem produtos antes
+            // de renderizar. Se franquia nova/vazia, auto-seed para evitar
+            // que o cliente veja "Ajustar" sem preço no cardápio delivery.
+            // ============================================================
+            try {
+                const session = window.Auth && Auth.getSession && Auth.getSession();
+                const fid = session && session.franchiseId;
+                if (fid && window.CatalogV2 && CatalogV2.load) {
+                    const v2 = CatalogV2.load(fid);
+                    const hasProdutos = v2 && v2.produtos && v2.produtos.length > 0;
+                    if (!hasProdutos && CatalogV2.seedMilkyPot) {
+                        console.log('🌱 Auto-seed CatalogV2 no cardápio delivery...');
+                        CatalogV2.seedMilkyPot(fid);
+                    } else if (hasProdutos) {
+                        CatalogV2.syncToLegacy(fid);
+                    }
+                }
+            } catch(e) { console.warn('cardapio init auto-seed', e); }
+
             catalog = DataStore.get('catalog_config');
             if (catalog) {
-                renderProducts('ninho'); // Default category
+                _renderCatalogTabs();
+                renderProducts('ninho');
             } else {
                 console.log('🔄 Sincronizando catálogo delivery...');
                 setTimeout(initCatalog, 500);
             }
 
-            // Sync listener for delivery
+            // Sync listener: atualiza tabs + produtos em tempo real quando produtos.html salva
             window.addEventListener('mp_catalog_updated', (e) => {
                 catalog = e.detail;
+                _renderCatalogTabs();
                 const activeTab = document.querySelector('.cat-tab.active');
                 const cat = activeTab ? activeTab.dataset.category : 'ninho';
                 renderProducts(cat);
             });
         }
 
+        // Gera/atualiza as tabs de categoria dinamicamente a partir do catálogo atual.
+        // Preserva tabs estáticas do HTML e adiciona novas categorias do CatalogV2.
+        function _renderCatalogTabs() {
+            if (!catalog || !catalog.sabores) return;
+            const container = document.getElementById('categoryTabs');
+            if (!container) return;
+
+            // Descobre quais tabs já cobrem os grupos disponíveis
+            const tabsNeeded = new Set();
+            tabsNeeded.add('ninho'); // sempre presente
+            Object.keys(catalog.sabores).forEach(groupKey => {
+                const meta = SABORES_GROUP_META[groupKey];
+                if (meta) tabsNeeded.add(meta.tab);
+            });
+            if (catalog.bebidas && catalog.bebidas.length) tabsNeeded.add('bebida');
+
+            // Configuração das tabs (ordem + display)
+            const TAB_DEF = [
+                { key: 'ninho',    label: '🍨 MilkyPot' },
+                { key: 'acai',     label: '🫐 Açaí' },
+                { key: 'picole',   label: '🍡 Picolé' },
+                { key: 'sorvete',  label: '⚖️ Sorvete Kg' },
+                { key: 'buffet',   label: '🍽️ Buffet' },
+                { key: 'fit',      label: '💪 Zero/Fit' },
+                { key: 'bebida',   label: '🥤 Bebidas' }
+            ];
+
+            // Mantém tab ativa atual
+            const activeTab = container.querySelector('.cat-tab.active');
+            const activeCat = activeTab ? activeTab.dataset.category : 'ninho';
+
+            // Reconstrói somente as tabs que têm produtos
+            let html = '';
+            TAB_DEF.forEach(({ key, label }) => {
+                if (!tabsNeeded.has(key)) return;
+                const isActive = key === activeCat ? ' active' : '';
+                html += `<button class="cat-tab${isActive}" data-category="${key}" onclick="filterProducts(event,'${key}')">${label}</button>`;
+            });
+            container.innerHTML = html;
+        }
+
         // Generate dynamic lists for delivery
         function getFilteredCatalogItems(category) {
             if (!catalog) return [];
-            
-            // Map category tabs to sabores group keys.
-            // Alguns grupos tem nomes diferentes (classicos vs tradicionais).
-            // Aceita ambos pra compatibilidade com dados legacy + novo.
+
+            // Mapeia tabs → grupos de sabores (inclui chaves CatalogV2 + legado)
             const categoryMap = {
-                'ninho': ['classicos', 'tradicionais', 'especiais'],
-                'acai': ['acai'],
-                'fit': ['zero_fit'],
-                'limitada': ['edicao_limitada'],
-                'bebida': ['bebidas']
+                'ninho':   ['classicos', 'tradicionais', 'especiais', 'milkshake', 'potinho', 'sundae'],
+                'acai':    ['acai'],
+                'picole':  ['picole'],
+                'sorvete': ['sorvete_kg'],
+                'buffet':  ['buffet'],
+                'fit':     ['zero_fit'],
+                'limitada':['edicao_limitada'],
+                'bebida':  ['bebidas']
             };
 
             const groups = categoryMap[category] || [category];
@@ -370,7 +454,7 @@
                 }
             });
 
-            // Filter: mostra item disponivel, com canal delivery/ambos ou sem canal definido (legacy)
+            // Filtro canal: delivery ou ambos (omitido = legacy sem restrição)
             return items.filter(i =>
                 i.available !== false &&
                 (!i.canalVenda || i.canalVenda === 'delivery' || i.canalVenda === 'ambos')

@@ -256,8 +256,8 @@
             { cat: 'cat_sundae',    name: 'Sundae Clássico',              emoji:'🍦', cInsumos:3.90, cAdd:0.80 },
             { cat: 'cat_picole',    name: 'Picolé Ninho com Morango',     emoji:'🍡', cInsumos:2.10, cAdd:0.40 },
             { cat: 'cat_picole',    name: 'Picolé Nutella',               emoji:'🍡', cInsumos:2.50, cAdd:0.40 },
-            { cat: 'cat_sorvete_kg', name: 'Sorvete por Kg (varietes)',   emoji:'⚖️', cInsumos:0, cAdd:0 },
-            { cat: 'cat_buffet',    name: 'Buffet a Granel',              emoji:'🍽️', cInsumos:0, cAdd:0 }
+            { cat: 'cat_sorvete_kg', name: 'Sorvete por Kg (variantes)',  emoji:'⚖️', cInsumos:18, cAdd:1.5 },
+            { cat: 'cat_buffet',    name: 'Buffet Self-Service',          emoji:'🍽️', cInsumos:25, cAdd:1.5 }
         ];
 
         const allTopIds = d.toppings.map(t => t.id);
@@ -372,62 +372,147 @@
         if (!global.DataStore) return;
         const d = load(fid);
         const cats = d.categorias.filter(c => c.active !== false);
-        const legacy = global.DataStore.get('catalog_config') || {};
 
-        // Sabores: categorias que são consumíveis (não toppings/bebidas)
-        legacy.sabores = legacy.sabores || {};
+        // Quando CatalogV2 tem produtos cadastrados, ELE é a fonte de verdade.
+        // Partimos de um objeto limpo — sem carregar o catalog_config antigo —
+        // para que os itens do CARDAPIO_CONFIG legado (bases, clássicos, especiais,
+        // adulto+18…) NÃO apareçam misturados com os produtos do novo cadastro.
+        const hasProdutos = d.produtos.length > 0;
+        const legacy = hasProdutos ? {} : (global.DataStore.get('catalog_config') || {});
+
+        // Remove explicitamente seções do modelo "monta o seu" que não existem no CatalogV2
+        if (hasProdutos) {
+            legacy.bases = null;      // "Bases Populares" — modelo antigo de configuração
+            legacy.tamanhos = null;   // tamanhos globais — cada produto v2 tem os próprios
+            legacy.formatos = null;   // formatos (shake/bowl/sundae) — modelo antigo
+        }
+
+        // -------------------------------------------------------
+        // Sabores: TODAS as categorias de produto (exceto bebidas
+        // e toppings, que têm seções próprias no legado)
+        // -------------------------------------------------------
+        const EXCLUIR_SABORES = ['cat_bebida', 'cat_topping'];
+        legacy.sabores = {};
 
         cats.forEach(cat => {
+            if (EXCLUIR_SABORES.includes(cat.id)) return;
             const prods = d.produtos.filter(p =>
-                p.categoriaId === cat.id && p.active !== false &&
-                ['cat_potinho','cat_milkshake','cat_acai','cat_sundae','cat_picole'].includes(cat.id)
+                p.categoriaId === cat.id && p.active !== false
             );
             if (!prods.length) return;
             const legacyKey = cat.id.replace('cat_', '');
-            legacy.sabores[legacyKey] = legacy.sabores[legacyKey] || { name: cat.name, items: [] };
+            legacy.sabores[legacyKey] = legacy.sabores[legacyKey] || {};
             legacy.sabores[legacyKey].name = cat.name;
-            legacy.sabores[legacyKey].items = prods.map(p => ({
-                id: p.id,
-                name: p.name,
-                emoji: p.midia?.emoji || cat.icon || '🍨',
-                desc: p.desc || '',
-                price: Number(p.precos?.loja?.real || p.precos?.loja?.recomendado || 0),
-                cost: Number(p.custos?.custoTotal || 0),
-                costAdjust: 0,
-                available: p.active !== false,
-                tipoVenda: 'unitario',
-                canalVenda: p.canal || 'ambos',
-                modoMontagem: 'montado',
-                commissionRate: 5,
-                // Preserva receita caso tenha (permite dedução de estoque)
-                receita: (p.custos?.insumos || []).filter(r => r.insumoId && r.qty)
-                                                   .map(r => ({ insumoId: r.insumoId, qty: r.qty, unit: r.unit || 'unid' })),
-                // Campos v2 pra PDV avançado consumir
-                _v2: {
-                    precos: p.precos,
-                    kits: p.kits,
-                    variantes: p.variantes,
-                    toppingsIds: p.toppingsIds
+            legacy.sabores[legacyKey].icon = cat.icon || '';
+            legacy.sabores[legacyKey].color = cat.color || '';
+            legacy.sabores[legacyKey].items = prods.map(p => {
+                // tipoVenda:
+                //  - cat_sorvete_kg: sempre por peso
+                //  - cat_buffet OU qualquer produto com buffet.ativo: por peso
+                //  - produtos com variantes (balde/pote): por peso
+                //  - resto: unitário
+                const hasBuffet = p.buffet && p.buffet.ativo;
+                const tipoVenda = (
+                    cat.id === 'cat_sorvete_kg' ||
+                    cat.id === 'cat_buffet' ||
+                    hasBuffet ||
+                    (p.variantes && p.variantes.length)
+                ) ? 'por_peso' : 'unitario';
+
+                // preço exposto ao PDV/cardápio
+                //  - se buffet/por peso: preço por kg (buffet.precoPorKg tem prioridade sobre precos.loja)
+                //  - se tem variantes: menor preço de variante
+                //  - senão: preço loja real/recomendado
+                let price = 0;
+                if (hasBuffet && Number(p.buffet.precoPorKg)) {
+                    price = Number(p.buffet.precoPorKg);
+                } else {
+                    price = Number(p.precos?.loja?.real || p.precos?.loja?.recomendado || 0);
                 }
-            }));
+                if (!price && p.variantes?.length) {
+                    price = Math.min(...p.variantes.map(v => Number(v.precoLoja || 0)).filter(v => v > 0));
+                }
+
+                // Custo por kg para produtos por peso (pro CMV ficar correto)
+                // Se custoTotal é por porção, o PDV usa isso direto. Buffet: custoTotal já é estimativa por kg.
+                const cost = Number(p.custos?.custoTotal || 0);
+
+                // Porções padrão para produtos vendidos por peso (cardápio delivery mostra seletor de tamanho)
+                // - buffet: porções populares (250g/350g/500g/750g/1kg)
+                // - sorvete_kg: usa variantes como porções se existirem, senão padrão
+                let porcoes = null;
+                if (tipoVenda === 'por_peso') {
+                    if (p.variantes && p.variantes.length) {
+                        porcoes = p.variantes
+                            .filter(v => v.gramas && Number(v.gramas) > 0)
+                            .map(v => ({ label: v.name, peso: Number(v.gramas) }));
+                    }
+                    if (!porcoes || !porcoes.length) {
+                        // Buffet/por-peso genérico
+                        porcoes = [
+                            { label: '250g',  peso: 250 },
+                            { label: '350g',  peso: 350 },
+                            { label: '500g',  peso: 500 },
+                            { label: '750g',  peso: 750 },
+                            { label: '1kg',   peso: 1000 }
+                        ];
+                    }
+                }
+
+                return {
+                    id: p.id,
+                    name: p.name,
+                    emoji: p.midia?.emoji || cat.icon || '🍨',
+                    desc: p.desc || '',
+                    price: price,
+                    cost: cost,
+                    costAdjust: 0,
+                    available: p.active !== false,
+                    tipoVenda,
+                    porcoes: porcoes,  // exposto pro cardápio mobile por peso
+                    canalVenda: p.canal || 'ambos',
+                    modoMontagem: 'montado',
+                    commissionRate: 5,
+                    // Receita para dedução de estoque
+                    receita: (p.custos?.insumos || [])
+                        .filter(r => r.insumoId && r.qty)
+                        .map(r => ({ insumoId: r.insumoId, qty: r.qty, unit: r.unit || 'unid' })),
+                    // Dados v2 completos para PDV avançado
+                    _v2: {
+                        precos: p.precos,
+                        kits: p.kits,
+                        variantes: p.variantes,
+                        toppingsIds: p.toppingsIds,
+                        buffet: p.buffet
+                    }
+                };
+            });
         });
 
-        // Bebidas (array plano)
+        // -------------------------------------------------------
+        // Bebidas (array plano — mantém canal delivery/loja)
+        // -------------------------------------------------------
         const bebidas = d.produtos.filter(p => p.categoriaId === 'cat_bebida' && p.active !== false);
         if (bebidas.length) {
             legacy.bebidas = bebidas.map(p => ({
-                id: p.id, name: p.name, emoji: p.midia?.emoji || '🧃',
-                price: Number(p.precos?.loja?.real || 0),
+                id: p.id,
+                name: p.name,
+                emoji: p.midia?.emoji || '🧃',
+                price: Number(p.precos?.loja?.real || p.precos?.loja?.recomendado || 0),
+                priceDelivery: Number(p.precos?.delivery?.real || p.precos?.delivery?.recomendado || 0),
                 cost: Number(p.custos?.custoTotal || 0),
-                available: true
+                available: p.active !== false,
+                canalVenda: p.canal || 'ambos'
             }));
         }
 
-        // Adicionais (toppings)
+        // -------------------------------------------------------
+        // Toppings / Adicionais
+        // -------------------------------------------------------
         if (d.toppings.length) {
             legacy.adicionais = legacy.adicionais || {};
-            legacy.adicionais.geral = {
-                name: 'Toppings',
+            legacy.adicionais.coberturas = {
+                name: 'Coberturas & Toppings',
                 items: d.toppings.filter(t => t.active !== false).map(t => ({
                     id: t.id, name: t.name, emoji: '✨',
                     price: Number(t.precoExtra || 0),
@@ -436,9 +521,22 @@
                     commissionRate: 5
                 }))
             };
+            // Mantém alias 'geral' para compatibilidade com código antigo
+            legacy.adicionais.geral = legacy.adicionais.coberturas;
         }
 
+        // Flag para que PDV e cardapio saibam que o catálogo veio do CatalogV2
+        if (hasProdutos) legacy._fromV2 = true;
+
         global.DataStore.set('catalog_config', legacy);
+
+        // Dispara evento LOCAL imediatamente (sem aguardar round-trip Firestore).
+        // Isso garante que pdv.html e cardapio.html atualizam na mesma frame
+        // que produtos.html salva — sem latência de rede.
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('mp_catalog_updated', { detail: legacy }));
+        }
+
         return legacy;
     }
 
