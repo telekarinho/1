@@ -209,8 +209,13 @@
                     if(textEl) textEl.innerHTML = '🎊 <strong>ESTAMOS ABERTOS AGORA!</strong> &nbsp;·&nbsp; MilkyPot Muffato Londrina · Av. Quintino Bocaiuva, 1045';
                     if(ctaEl){ ctaEl.textContent = 'Pedir agora! →'; ctaEl.href = 'https://wa.me/5543998042424?text=Ol%C3%A1!%20Quero%20pedir%20um%20potinho%20da%20MilkyPot%20Muffato%20Londrina%20%F0%9F%90%91'; }
                 } else if(h < 14){
-                    // Dia da inauguração, ainda não abriu
-                    if(textEl) textEl.innerHTML = '🐑 <strong>ABRIMOS HOJE ÀS 14H!</strong> &nbsp;·&nbsp; MilkyPot Muffato · Av. Quintino Bocaiuva, 1045';
+                    // Dia da inauguração, ainda não abriu — exibe contagem regressiva
+                    var minsAte14 = (14 - h) * 60 - d.getMinutes();
+                    var hRest = Math.floor(minsAte14 / 60), mRest = minsAte14 % 60;
+                    var countdown = hRest > 0
+                        ? hRest + 'h' + (mRest > 0 ? ' ' + mRest + 'min' : '')
+                        : mRest + 'min';
+                    if(textEl) textEl.innerHTML = '🐑 <strong>ABRIMOS EM ' + countdown + '!</strong> &nbsp;·&nbsp; MilkyPot Muffato · Av. Quintino Bocaiuva, 1045';
                     if(ctaEl){ ctaEl.textContent = 'Me avisa! →'; ctaEl.href = 'https://wa.me/5543998042424?text=Oi!%20Quero%20ser%20avisado%20quando%20a%20MilkyPot%20Muffato%20Londrina%20abrir%20hoje%20%F0%9F%90%91'; }
                 } else {
                     // Após 23h — evento encerrado
@@ -236,6 +241,7 @@
         document.addEventListener('DOMContentLoaded', function(){ configureBanner(); applyBannerOffset(); });
         window.addEventListener('resize', applyBannerOffset);
         setTimeout(function(){ configureBanner(); applyBannerOffset(); }, 200);
+        setInterval(function(){ configureBanner(); applyBannerOffset(); }, 60000);
     })();
     </script>
 
