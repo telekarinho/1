@@ -32,6 +32,18 @@ const { pickSystem } = require('./_brain-local.js');
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 
+// ====================================================================
+// STATIC FILES (elimina Mixed Content HTTPS->HTTP do Chrome)
+// ====================================================================
+// Serve o painel direto pelo servidor local, entao o user abre
+//   http://localhost:5757/painel/copilot-belinha.html
+// e tudo e HTTP-HTTP, sem bloqueio do Chrome.
+const MP_ROOT = path.join(__dirname, '..');
+app.use(express.static(MP_ROOT, { index: false, extensions: ['html'] }));
+
+// Raiz redireciona direto pra Belinha
+app.get('/', (req, res) => res.redirect('/painel/copilot-belinha.html'));
+
 // CORS: aceita requests do painel web milkypot.com e localhost dev
 app.use((req, res, next) => {
     const origin = req.headers.origin || '';
@@ -176,10 +188,10 @@ app.listen(PORT, () => {
     console.log('   ⚙️  Backend: claude CLI (seu plano Claude Pro/Max)');
     console.log('   💰 Custo: R$ 0,00 — usa sua conta autenticada');
     console.log('');
-    console.log('   Pra usar no painel web, abre milkypot.com/painel/');
-    console.log('   copilot-belinha.html — ele vai detectar este server');
-    console.log('   automaticamente e usar em vez da API Anthropic.');
+    console.log('   🐑 BELINHA (sem Mixed Content, zero config):');
+    console.log('   http://localhost:' + PORT + '/painel/copilot-belinha.html');
     console.log('');
+    console.log('   O .bat ja abre essa URL automaticamente no browser.');
     console.log('   Ctrl+C pra parar.');
     console.log('═══════════════════════════════════════════════');
 });
