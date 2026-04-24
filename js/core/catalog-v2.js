@@ -229,18 +229,30 @@
         const d = load(fid);
         if (d.produtos.length) return { skipped: true, reason: 'já tem produtos' };
 
-        // Toppings base
+        // Toppings base — cardápio oficial MilkyPot
         const topSeed = [
-            { name: 'Granola',       custo: 0.80, precoExtra: 2.50 },
-            { name: 'Morango fresco', custo: 1.20, precoExtra: 3.50 },
-            { name: 'Nutella',       custo: 1.50, precoExtra: 4.00 },
-            { name: 'Paçoca',        custo: 0.40, precoExtra: 2.00 },
-            { name: 'Oreo',          custo: 0.60, precoExtra: 2.50 },
-            { name: 'Chantilly',     custo: 0.50, precoExtra: 2.00 },
-            { name: 'Leite Ninho em pó', custo: 0.90, precoExtra: 3.00 },
-            { name: 'Brigadeiro',    custo: 0.70, precoExtra: 3.00 },
-            { name: 'Calda chocolate', custo: 0.30, precoExtra: 1.50 },
-            { name: 'Calda morango', custo: 0.30, precoExtra: 1.50 }
+            { name: 'Leitinho Morango Calda',   custo: 0.40, precoExtra: 2.00 },
+            { name: 'Calda Avelã',              custo: 0.40, precoExtra: 2.00 },
+            { name: 'Maracujá Calda',           custo: 0.30, precoExtra: 2.00 },
+            { name: 'Pistache',                 custo: 1.20, precoExtra: 3.50 },
+            { name: 'Banana Caramelizada',      custo: 0.70, precoExtra: 2.50 },
+            { name: 'Limão em Calda',           custo: 0.30, precoExtra: 2.00 },
+            { name: 'Ovomaltine',               custo: 0.80, precoExtra: 2.50 },
+            { name: 'Chicletinho',              custo: 0.50, precoExtra: 2.00 },
+            { name: 'M&M',                      custo: 0.80, precoExtra: 2.50 },
+            { name: 'Granulado',                custo: 0.30, precoExtra: 1.50 },
+            { name: 'Chocobol',                 custo: 0.50, precoExtra: 2.00 },
+            { name: 'Chocobol Mega',            custo: 0.70, precoExtra: 2.50 },
+            { name: 'Leite em Pó',              custo: 0.60, precoExtra: 2.00 },
+            { name: 'Beijinho',                 custo: 0.70, precoExtra: 2.50 },
+            { name: 'Brigadeiro',               custo: 0.70, precoExtra: 2.50 },
+            { name: 'Crocante de Amendoim',     custo: 0.60, precoExtra: 2.00 },
+            { name: 'Xerem',                    custo: 0.30, precoExtra: 1.50 },
+            { name: 'Ameixa',                   custo: 0.70, precoExtra: 2.50 },
+            { name: 'Cereja',                   custo: 0.80, precoExtra: 2.50 },
+            { name: 'Gotas de Chocolate',       custo: 0.40, precoExtra: 1.50 },
+            { name: 'Creme de Cookies',         custo: 0.80, precoExtra: 2.50 },
+            { name: 'Creme de Amendoim',        custo: 0.70, precoExtra: 2.50 }
         ];
         d.toppings = topSeed.map(t => Object.assign({ id: newId('top'), active: true }, t));
 
@@ -328,13 +340,10 @@
                 });
             })() : [];
 
-            // Buffet: preço/kg sugerido direto
-            const buffet = s.cat === 'cat_buffet' ? (() => {
-                // Custo médio sorvete+toppings: ~25/kg. Margem alvo buffet 70%.
-                const custoKg = 25;
-                const sug = CC ? CC.suggest(custoKg, 'loja', 'cat_buffet') : { preco: 89.90 };
-                return { ativo: true, precoPorKg: sug.preco, toppingsInclusos: allTopIds };
-            })() : { ativo:false, precoPorKg:0, toppingsInclusos:[] };
+            // Buffet: R$ 5,99/100g = R$ 59,90/kg — somente loja
+            const buffet = s.cat === 'cat_buffet'
+                ? { ativo: true, precoPorKg: 59.90, toppingsInclusos: allTopIds }
+                : { ativo: false, precoPorKg: 0, toppingsInclusos: [] };
 
             return {
                 id: newId('prod'),
@@ -353,7 +362,7 @@
                 variantes: variantes,
                 toppingsIds: ['cat_potinho','cat_sundae','cat_acai','cat_milkshake'].includes(s.cat) ? allTopIds : [],
                 buffet: buffet,
-                canal: 'ambos',
+                canal: s.cat === 'cat_buffet' ? 'loja' : 'ambos',
                 active: true,
                 createdAt: new Date().toISOString()
             };
@@ -540,6 +549,64 @@
         return legacy;
     }
 
+    // Migração única: substitui toppings e reconfigura buffet para R$5,99/100g somente loja
+    function migrateBuffetV1(fid) {
+        const d = load(fid);
+        if (!d.produtos.length) return { skipped: true, reason: 'sem produtos' };
+        if (d.__buffetMigratedV1) return { skipped: true, reason: 'já migrado' };
+
+        const newTops = [
+            { name: 'Leitinho Morango Calda',   custo: 0.40, precoExtra: 2.00 },
+            { name: 'Calda Avelã',              custo: 0.40, precoExtra: 2.00 },
+            { name: 'Maracujá Calda',           custo: 0.30, precoExtra: 2.00 },
+            { name: 'Pistache',                 custo: 1.20, precoExtra: 3.50 },
+            { name: 'Banana Caramelizada',      custo: 0.70, precoExtra: 2.50 },
+            { name: 'Limão em Calda',           custo: 0.30, precoExtra: 2.00 },
+            { name: 'Ovomaltine',               custo: 0.80, precoExtra: 2.50 },
+            { name: 'Chicletinho',              custo: 0.50, precoExtra: 2.00 },
+            { name: 'M&M',                      custo: 0.80, precoExtra: 2.50 },
+            { name: 'Granulado',                custo: 0.30, precoExtra: 1.50 },
+            { name: 'Chocobol',                 custo: 0.50, precoExtra: 2.00 },
+            { name: 'Chocobol Mega',            custo: 0.70, precoExtra: 2.50 },
+            { name: 'Leite em Pó',              custo: 0.60, precoExtra: 2.00 },
+            { name: 'Beijinho',                 custo: 0.70, precoExtra: 2.50 },
+            { name: 'Brigadeiro',               custo: 0.70, precoExtra: 2.50 },
+            { name: 'Crocante de Amendoim',     custo: 0.60, precoExtra: 2.00 },
+            { name: 'Xerem',                    custo: 0.30, precoExtra: 1.50 },
+            { name: 'Ameixa',                   custo: 0.70, precoExtra: 2.50 },
+            { name: 'Cereja',                   custo: 0.80, precoExtra: 2.50 },
+            { name: 'Gotas de Chocolate',       custo: 0.40, precoExtra: 1.50 },
+            { name: 'Creme de Cookies',         custo: 0.80, precoExtra: 2.50 },
+            { name: 'Creme de Amendoim',        custo: 0.70, precoExtra: 2.50 }
+        ];
+        d.toppings = newTops.map(t => Object.assign({ id: newId('top'), active: true }, t));
+        const allTopIds = d.toppings.map(t => t.id);
+
+        // Atualiza produto buffet existente
+        const buffetProd = d.produtos.find(p => p.categoriaId === 'cat_buffet');
+        if (buffetProd) {
+            buffetProd.buffet = { ativo: true, precoPorKg: 59.90, toppingsInclusos: allTopIds };
+            buffetProd.canal = 'loja';
+            buffetProd.precos = {
+                loja:     { recomendado: 59.90, real: 59.90 },
+                delivery: { recomendado: 0,     real: 0 },
+                ifood:    { recomendado: 0,     real: 0 }
+            };
+            buffetProd.toppingsIds = allTopIds;
+        }
+
+        // Atualiza toppingsIds dos outros produtos (cardápio a la carte)
+        d.produtos.forEach(p => {
+            if (['cat_potinho','cat_sundae','cat_acai','cat_milkshake'].includes(p.categoriaId)) {
+                p.toppingsIds = allTopIds;
+            }
+        });
+
+        d.__buffetMigratedV1 = true;
+        save(fid, d);
+        return { ok: true };
+    }
+
     // Wrap os saves pra sincronizar legacy automaticamente
     const _origSaveProduto = saveProduto;
     function saveProdutoAndSync(fid, p) {
@@ -580,6 +647,7 @@
         saveTopping: saveToppingAndSync,
         deleteTopping,
         seedMilkyPot: seedMilkyPotAndSync,
+        migrateBuffetV1,
         syncToLegacy,
         autoSyncIfNeeded,
         newId,

@@ -617,7 +617,8 @@
                             Utils.showToast('🌱 Catálogo MilkyPot pronto! Edite preços em Painel → Produtos.', 'success');
                         }
                     } else if (hasProdutos) {
-                        // Já tem produtos: só força re-sync pra PDV refletir mudanças recentes
+                        // Migração única: toppings reais + buffet R$5,99/100g somente loja
+                        if (CatalogV2.migrateBuffetV1) CatalogV2.migrateBuffetV1(fid);
                         CatalogV2.syncToLegacy(fid);
                     }
                 }
@@ -991,19 +992,19 @@
                         custoTotal: 25 // R$ 25/kg estimado (edite em produtos.html)
                     },
                     precos: {
-                        loja:     { recomendado: 89.90, real: 89.90 },
-                        delivery: { recomendado: 99.90, real: 99.90 },
-                        ifood:    { recomendado: 109.90, real: 109.90 }
+                        loja:     { recomendado: 59.90, real: 59.90 },
+                        delivery: { recomendado: 0,     real: 0 },
+                        ifood:    { recomendado: 0,     real: 0 }
                     },
                     kits: [],
                     variantes: [],
                     toppingsIds: (d.toppings || []).map(t => t.id),
                     buffet: {
                         ativo: true,
-                        precoPorKg: 89.90,
+                        precoPorKg: 59.90,
                         toppingsInclusos: (d.toppings || []).map(t => t.id)
                     },
-                    canal: 'ambos',
+                    canal: 'loja',
                     active: true
                 };
                 const saved = CatalogV2.saveProduto(fid, novo);
@@ -1013,7 +1014,7 @@
                 const found = this._findBuffetProducts(catalog);
                 return found[0] || {
                     id: saved.id, name: saved.name,
-                    price: 89.90, cost: 25, emoji: '⚖️',
+                    price: 59.90, cost: 25, emoji: '⚖️',
                     _v2: { buffet: saved.buffet },
                     _source: 'catalog_v2'
                 };
