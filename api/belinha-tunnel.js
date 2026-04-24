@@ -32,8 +32,10 @@ const admin = require('firebase-admin');
 let _app = null;
 function getAdmin() {
     if (_app) return admin;
-    const saJson = process.env.FIREBASE_ADMIN_SA_JSON;
-    if (!saJson) throw new Error('FIREBASE_ADMIN_SA_JSON env var missing');
+    const saJson = process.env.FIREBASE_ADMIN_SA_JSON
+        || process.env.FIREBASE_SERVICE_ACCOUNT
+        || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+    if (!saJson) throw new Error('FIREBASE service account env var missing (FIREBASE_ADMIN_SA_JSON ou FIREBASE_SERVICE_ACCOUNT)');
     const parsed = typeof saJson === 'string' ? JSON.parse(saJson) : saJson;
     _app = admin.initializeApp(
         { credential: admin.credential.cert(parsed) },
