@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v18';
-const CACHE_NAME = 'milkypot-v18';
+const CACHE_VERSION = 'mp-v19';
+const CACHE_NAME = 'milkypot-v19';
 
 // Critical local assets that must be available offline
 const PRECACHE_URLS = [
@@ -46,6 +46,10 @@ const PRECACHE_URLS = [
     '/js/cardapio.js',
     '/js/cardapio-data.js',
     '/js/chat-ai.js',
+    // Desafio — copies rotativas (Desafio 10s + Acertou Ganhou 300g)
+    '/js/core/promocoes-copy.js',
+    '/js/core/tv-promo-rotator.js',
+    '/js/pages/desafio-tv-bridge.js',
     // Assets
     '/images/logo-milkypot.png',
     '/manifest.json',
