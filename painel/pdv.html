@@ -203,6 +203,7 @@
         <div id="pdvMetaChip" style="display:none"></div>
         <div id="pdvCaixaChip" style="display:none"></div>
         <div style="font-size:12px;opacity:0.8;" id="clk"></div>
+        <button class="btn-back" onclick="openPrinterSettings()" title="Configurações de Impressão">⚙️</button>
         <button class="btn-back" onclick="toggleFullscreen()" title="Tela cheia (F11)">⛶</button>
     </div>
 </div>
@@ -428,6 +429,58 @@
 @keyframes winIn{from{opacity:0;transform:scale(0.6)}to{opacity:1;transform:scale(1)}}
 </style>
 
+<!-- Printer Settings Modal -->
+<div class="modal-bg" id="printerSettingsModal">
+    <div class="buffet-modal" style="max-width:480px">
+        <div class="buffet-head" style="background:linear-gradient(135deg,#607D8B,#455A64)">
+            <h3>🖨️ Configurações de Impressão</h3>
+            <button class="modal-close" onclick="closePrinterSettings()">×</button>
+        </div>
+        <div class="buffet-body">
+            <div class="modal-sec">
+                <h4>Papel e Formato</h4>
+                <div class="size-grid">
+                    <div class="size-btn" id="printW80" onclick="setPrinterWidth('80mm')">
+                        <div class="sz-name">80mm</div>
+                        <div class="sz-ml">Padrão Térmico</div>
+                    </div>
+                    <div class="size-btn" id="printW58" onclick="setPrinterWidth('58mm')">
+                        <div class="sz-name">58mm</div>
+                        <div class="sz-ml">Compacto</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-sec" style="margin-top:20px">
+                <h4>Onde imprimir?</h4>
+                <div class="ext-list">
+                    <div class="ext-item" onclick="togglePrintProfile('balcao')">
+                        <input type="checkbox" id="chkProfileBalcao" class="ext-check" onclick="event.stopPropagation()">
+                        <span class="ext-emoji">🏪</span>
+                        <span class="ext-name">Recibo Balcão (Completo)</span>
+                    </div>
+                    <div class="ext-item" onclick="togglePrintProfile('cozinha')">
+                        <input type="checkbox" id="chkProfileCozinha" class="ext-check" onclick="event.stopPropagation()">
+                        <span class="ext-emoji">🍳</span>
+                        <span class="ext-name">Pedido Cozinha (Sem Preços)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-sec" style="margin-top:20px">
+                <h4>Interface</h4>
+                <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+                    <input type="checkbox" id="chkUseDialog" onchange="savePrinterOptions()"> Sempre abrir diálogo do Windows
+                </label>
+            </div>
+
+            <div style="margin-top:24px">
+                <button class="buffet-btn primary" style="width:100%" onclick="closePrinterSettings()">Salvar e Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Kit/Variante (_v2) -->
 <div class="modal-bg" id="kitVariantModal">
     <div class="buffet-modal" style="max-width:560px">
@@ -512,6 +565,7 @@
 <script src="../js/core/offline-queue.js?v=mp-v14"></script>
 <script src="../js/core/pix.js?v=mp-v14"></script>
 <script src="../js/core/nfce.js?v=mp-v14"></script>
+<script src="../js/core/printer.js?v=mp-v14"></script>
 <script src="../js/cardapio-data.js"></script>
 <script>
 (function(){
@@ -1569,7 +1623,12 @@
         window._lastScratchData = scratchData;
 
         // Auto-print receipt with challenge BEFORE clearing cart
-        try { if(typeof autoPrintOrder==='function') autoPrintOrder(order, voucherDisplay, scratchData); } catch(e) { console.warn('Auto print:', e); }
+        try { 
+            const cfg = Printer.getConfig();
+            cfg.profiles.filter(p => p.active).forEach(p => {
+                if(typeof autoPrintOrder==='function') autoPrintOrder(order, voucherDisplay, scratchData, p.id); 
+            });
+        } catch(e) { console.warn('Auto print:', e); }
 
         // Show voucher modal
         showVoucherModal(voucherDisplay);
@@ -2141,36 +2200,50 @@
     }
 
     // Auto-print called during finishOrder (cart still filled, order object available)
-    window.autoPrintOrder = function(order, voucherCode, scratchData){
+    window.autoPrintOrder = function(order, voucherCode, scratchData, profileId){
         var name = fr ? fr.name : 'MilkyPot';
         var now = new Date(order.createdAt).toLocaleString('pt-BR');
         var tl = {balcao:'BALCAO',retirada:'RETIRADA',delivery:'DELIVERY'};
-        var t = buildReceipt(name, tl[order.type]||order.type.toUpperCase(), now, order.items, order.total, order.customer.name, order.address, order.payment, voucherCode, order.id, scratchData);
-        openPrintWindow(t, scratchData);
+        var t = buildReceipt(name, tl[order.type]||order.type.toUpperCase(), now, order.items, order.total, order.customer.name, order.address, order.payment, voucherCode, order.id, scratchData, profileId);
+        openPrintWindow(t, scratchData, profileId);
     };
 
     window.printOrder=function(){
         if(!cart.length){toast('Nada para imprimir');return}
-        var total=Math.round(cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0)*100)/100;
-        var name=fr?fr.name:'MilkyPot';
-        var now=new Date().toLocaleString('pt-BR');
-        var tl={balcao:'BALCAO',retirada:'RETIRADA',delivery:'DELIVERY'};
-        var items=cart.map(function(c){return {name:c.name,size:c.size,extras:c.extras,qty:c.qty,unitPrice:c.unitPrice,total:c.unitPrice*c.qty};});
-        var customerName=document.getElementById('orderName').value;
-        var addr=orderType==='delivery'?document.getElementById('cAddr').value:'';
-        var payment=document.getElementById('paymentMethod')?document.getElementById('paymentMethod').value:'';
-        var voucher=document.getElementById('voucherCodeDisplay').textContent || window._lastVoucherCode || '';
-        var scratch=window._lastScratchData;
-        var t=buildReceipt(name, tl[orderType], now, items, total, customerName, addr, payment, voucher, null, scratch);
-        openPrintWindow(t, scratch);
+        const cfg = Printer.getConfig();
+        const activeProfiles = cfg.profiles.filter(p => p.active);
+        
+        if (activeProfiles.length === 0) {
+            toast('Nenhum perfil de impressão ativo. Verifique as configurações (⚙️).');
+            openPrinterSettings();
+            return;
+        }
+
+        activeProfiles.forEach(p => {
+            var total=Math.round(cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0)*100)/100;
+            var name=fr?fr.name:'MilkyPot';
+            var now=new Date().toLocaleString('pt-BR');
+            var tl={balcao:'BALCAO',retirada:'RETIRADA',delivery:'DELIVERY'};
+            var items=cart.map(function(c){return {name:c.name,size:c.size,extras:c.extras,qty:c.qty,unitPrice:c.unitPrice,total:c.unitPrice*c.qty};});
+            var customerName=document.getElementById('orderName').value;
+            var addr=orderType==='delivery'?document.getElementById('cAddr').value:'';
+            var payment=document.getElementById('paymentMethod')?document.getElementById('paymentMethod').value:'';
+            var voucher=document.getElementById('voucherCodeDisplay').textContent || window._lastVoucherCode || '';
+            var scratch=window._lastScratchData;
+            var t=buildReceipt(name, tl[orderType||'balcao'], now, items, total, customerName, addr, payment, voucher, null, scratch, p.id);
+            openPrintWindow(t, scratch, p.id);
+        });
     };
 
     // Shared receipt builder with MARKETING COPY for Desafio 10.000 + RASPINHA DA SORTE
-    function buildReceipt(storeName, typeLabel, when, items, total, customerName, addr, payment, voucher, orderId, scratch){
+    function buildReceipt(storeName, typeLabel, when, items, total, customerName, addr, payment, voucher, orderId, scratch, profileId){
         var t = '';
+        const isKitchen = profileId === 'cozinha';
+        
         t += '================================\n';
         t += '    ' + centerPad(storeName.toUpperCase(), 24) + '\n';
-        t += '     O Potinho Mais Feliz!\n';
+        if(isKitchen) t += '       *** COZINHA ***\n';
+        else t += '     O Potinho Mais Feliz!\n';
         t += '================================\n';
         if(orderId) t += 'Pedido: #' + String(orderId).slice(-6).toUpperCase() + '\n';
         t += typeLabel + ' | ' + when + '\n';
@@ -2178,96 +2251,102 @@
         items.forEach(function(c){
             t += c.qty + 'x ' + c.name + (c.size?' ('+c.size+')':'') + '\n';
             if(c.extras && c.extras.length) t += '   + ' + c.extras.map(function(e){return e.name}).join(', ') + '\n';
-            t += '   R$ ' + (c.unitPrice*c.qty).toFixed(2).replace('.',',') + '\n';
+            if(!isKitchen) t += '   R$ ' + (c.unitPrice*c.qty).toFixed(2).replace('.',',') + '\n';
         });
         t += '--------------------------------\n';
-        t += 'TOTAL: R$ ' + total.toFixed(2).replace('.',',') + '\n';
-        if(payment) t += 'Pagamento: ' + payment + '\n';
+        if(!isKitchen) {
+            t += 'TOTAL: R$ ' + total.toFixed(2).replace('.',',') + '\n';
+            if(payment) t += 'Pagamento: ' + payment + '\n';
+        }
         if(customerName) t += 'Cliente: ' + customerName + '\n';
         if(addr) t += 'Endereco: ' + addr + '\n';
         t += '================================\n';
 
-        // === DESAFIO 10.000 - COPY DE MARKETING INCENTIVADOR ===
-        if(voucher){
-            t += '\n';
-            t += '  *** DESAFIO 10.000 ***\n';
-            t += '   VOCE PODE GANHAR!\n';
-            t += '\n';
-            t += '  Acertou 5 numeros na loteria?\n';
-            t += '   Leve R$ 10.000 em MILKSHAKE\n';
-            t += '      pelo RESTO DA VIDA!\n';
-            t += '\n';
-            t += '  ------------------------------\n';
-            t += '      SEU CODIGO DA SORTE:\n';
-            t += '\n';
-            t += '      >>> ' + voucher + ' <<<\n';
-            t += '\n';
-            t += '  ------------------------------\n';
-            t += '  Como participar (30 segundos):\n';
-            t += '  1. Abra milkypot.com/desafio\n';
-            t += '  2. Digite o codigo acima\n';
-            t += '  3. Escolha seus 5 numeros\n';
-            t += '  4. Torca na loteria do sabado!\n';
-            t += '\n';
-            t += '  === TENTATIVA EXTRA GRATIS ===\n';
-            t += '  Poste no Instagram marcando\n';
-            t += '        @milkypot\n';
-            t += '   usando #Desafio10Mil e ganhe\n';
-            t += '    +1 tentativa no proximo!\n';
-            t += '\n';
-            t += '  Ja foram entregues +40 mil\n';
-            t += '   codigos em 2025. Proximo\n';
-            t += '    ganhador pode ser VOCE!\n';
-            t += '================================\n';
-        }
+        // Marketing stuff only on Balcao
+        if(!isKitchen){
+            // === DESAFIO 10.000 - COPY DE MARKETING INCENTIVADOR ===
+            if(voucher){
+                t += '\n';
+                t += '  *** DESAFIO 10.000 ***\n';
+                t += '   VOCE PODE GANHAR!\n';
+                t += '\n';
+                t += '  Acertou 5 numeros na loteria?\n';
+                t += '   Leve R$ 10.000 em MILKSHAKE\n';
+                t += '      pelo RESTO DA VIDA!\n';
+                t += '\n';
+                t += '  ------------------------------\n';
+                t += '      SEU CODIGO DA SORTE:\n';
+                t += '\n';
+                t += '      >>> ' + voucher + ' <<<\n';
+                t += '\n';
+                t += '  ------------------------------\n';
+                t += '  Como participar (30 segundos):\n';
+                t += '  1. Abra milkypot.com/desafio\n';
+                t += '  2. Digite o codigo acima\n';
+                t += '  3. Escolha seus 5 numeros\n';
+                t += '  4. Torca na loteria do sabado!\n';
+                t += '\n';
+                t += '  === TENTATIVA EXTRA GRATIS ===\n';
+                t += '  Poste no Instagram marcando\n';
+                t += '        @milkypot\n';
+                t += '   usando #Desafio10Mil e ganhe\n';
+                t += '    +1 tentativa no proximo!\n';
+                t += '\n';
+                t += '  Ja foram entregues +40 mil\n';
+                t += '   codigos em 2025. Proximo\n';
+                t += '    ganhador pode ser VOCE!\n';
+                t += '================================\n';
+            }
 
-        // === RASPINHA DA SORTE - copy viral pra recompra ===
-        if(scratch && scratch.code){
-            var expiresLabel = scratch.expiresAt ? new Date(scratch.expiresAt).toLocaleDateString('pt-BR') : 'sem validade';
-            var displayCode = scratch.shortCode || scratch.code;
-            t += '\n';
-            t += '  *** RASPINHA DA SORTE ***\n';
-            t += '     VOCE FOI SORTEADO!\n';
-            t += '\n';
-            t += '   Seu premio esta ESCONDIDO.\n';
-            t += '       Raspa pra descobrir!\n';
-            t += '\n';
-            t += '  ------------------------------\n';
-            t += '    SEU CODIGO DA RASPINHA:\n';
-            t += '\n';
-            t += '  ' + centerPad('>>>  ' + displayCode + '  <<<', 30) + '\n';
-            t += '\n';
-            t += '  [QR_CODE_PLACEHOLDER]\n';  // Will be replaced by image
-            t += '       Aponte a camera\n';
-            t += '     do celular no QR Code\n';
-            t += '\n';
-            t += '  ------------------------------\n';
-            t += '  COMO DESCOBRIR o que ganhou:\n';
-            t += '  1. Escaneie o QR Code OU\n';
-            t += '  2. Acesse milkypot.com/raspinha\n';
-            t += '  3. Digite o codigo acima\n';
-            t += '  4. RASPE e revele na tela!\n';
-            t += '\n';
-            t += '     VALIDO ATE: ' + expiresLabel + '\n';
-            t += '\n';
-            t += '  === POSTOU, GANHOU EXTRA! ===\n';
-            t += '  Raspe, tire print e poste no\n';
-            t += '   Instagram marcando @milkypot\n';
-            t += '  + #RaspinhaMilkyPot e voce\n';
-            t += '   ganha UMA RASPINHA BONUS!\n';
-            t += '\n';
-            t += '  === COMPARTILHA NO ZAP ===\n';
-            t += '  Manda pro seu amigo e os DOIS\n';
-            t += '   ganham 1 raspinha EXTRA no\n';
-            t += '       proximo pedido.\n';
-            t += '================================\n';
-        }
+            // === RASPINHA DA SORTE - copy viral pra recompra ===
+            if(scratch && scratch.code){
+                var expiresLabel = scratch.expiresAt ? new Date(scratch.expiresAt).toLocaleDateString('pt-BR') : 'sem validade';
+                var displayCode = scratch.shortCode || scratch.code;
+                t += '\n';
+                t += '  *** RASPINHA DA SORTE ***\n';
+                t += '     VOCE FOI SORTEADO!\n';
+                t += '\n';
+                t += '   Seu premio esta ESCONDIDO.\n';
+                t += '       Raspa pra descobrir!\n';
+                t += '\n';
+                t += '  ------------------------------\n';
+                t += '    SEU CODIGO DA RASPINHA:\n';
+                t += '\n';
+                t += '  ' + centerPad('>>>  ' + displayCode + '  <<<', 30) + '\n';
+                t += '\n';
+                t += '  [QR_CODE_PLACEHOLDER]\n';  // Will be replaced by image
+                t += '       Aponte a camera\n';
+                t += '     do celular no QR Code\n';
+                t += '\n';
+                t += '  ------------------------------\n';
+                t += '  COMO DESCOBRIR o que ganhou:\n';
+                t += '  1. Escaneie o QR Code OU\n';
+                t += '  2. Acesse milkypot.com/raspinha\n';
+                t += '  3. Digite o codigo acima\n';
+                t += '  4. RASPE e revele na tela!\n';
+                t += '\n';
+                t += '     VALIDO ATE: ' + expiresLabel + '\n';
+                t += '\n';
+                t += '  === POSTOU, GANHOU EXTRA! ===\n';
+                t += '  Raspe, tire print e poste no\n';
+                t += '   Instagram marcando @milkypot\n';
+                t += '  + #RaspinhaMilkyPot e voce\n';
+                t += '   ganha UMA RASPINHA BONUS!\n';
+                t += '\n';
+                t += '  === COMPARTILHA NO ZAP ===\n';
+                t += '  Manda pro seu amigo e os DOIS\n';
+                t += '   ganham 1 raspinha EXTRA no\n';
+                t += '       proximo pedido.\n';
+                t += '================================\n';
+            }
 
-        t += '\n';
-        t += '  Obrigado pela preferencia!\n';
-        t += '  Nos siga: @milkypot\n';
-        t += '  www.milkypot.com\n';
-        t += '\n';
+            t += '\n';
+            t += '  Obrigado pela preferencia!\n';
+            t += '  Nos siga: @milkypot\n';
+            t += '  www.milkypot.com\n';
+            t += '\n';
+        }
+        
         t += ' ---- Documento NAO fiscal ----\n';
         return t;
     }
@@ -2278,23 +2357,70 @@
         return ' '.repeat(left) + s;
     }
 
-    function openPrintWindow(text, scratchData){
+    // ============================================
+    // PRINTER SETTINGS & LOGIC
+    // ============================================
+    window.openPrinterSettings = function() {
+        const cfg = Printer.getConfig();
+        document.getElementById('printW80').classList.toggle('sel', cfg.width === '80mm');
+        document.getElementById('printW58').classList.toggle('sel', cfg.width === '58mm');
+        
+        const balcao = cfg.profiles.find(p => p.id === 'balcao');
+        const cozinha = cfg.profiles.find(p => p.id === 'cozinha');
+        
+        document.getElementById('chkProfileBalcao').checked = balcao ? balcao.active : true;
+        document.getElementById('chkProfileCozinha').checked = cozinha ? cozinha.active : false;
+        document.getElementById('chkUseDialog').checked = cfg.useBrowserDialog;
+        
+        document.getElementById('printerSettingsModal').classList.add('open');
+    };
+
+    window.closePrinterSettings = function() {
+        document.getElementById('printerSettingsModal').classList.remove('open');
+    };
+
+    window.setPrinterWidth = function(w) {
+        const cfg = Printer.getConfig();
+        cfg.width = w;
+        cfg.charsPerLine = (w === '58mm' ? 32 : 42);
+        Printer.saveConfig(cfg);
+        
+        document.getElementById('printW80').classList.toggle('sel', w === '80mm');
+        document.getElementById('printW58').classList.toggle('sel', w === '58mm');
+    };
+
+    window.togglePrintProfile = function(id) {
+        const cfg = Printer.getConfig();
+        const p = cfg.profiles.find(x => x.id === id);
+        if (p) {
+            p.active = !p.active;
+            document.getElementById('chkProfile' + id.charAt(0).toUpperCase() + id.slice(1)).checked = p.active;
+            Printer.saveConfig(cfg);
+        }
+    };
+
+    window.savePrinterOptions = function() {
+        const cfg = Printer.getConfig();
+        cfg.useBrowserDialog = document.getElementById('chkUseDialog').checked;
+        Printer.saveConfig(cfg);
+    };
+
+    function openPrintWindow(text, scratchData, profileId){
+        const cfg = Printer.getConfig();
         var w = window.open('', '_blank', 'width=340,height=800');
         if(!w){ toast('Bloqueio de popup - libere impressao'); return; }
 
-        // Build QR code HTML for client raspinha (deeplinking directly to raspinha page)
         var qrHtml = '';
         if(scratchData && scratchData.shortCode){
             var raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratchData.shortCode);
-            // Uses goqr.me API - renders crisp QR even on thermal printers
             qrHtml = '<div style="text-align:center;margin:4mm 0"><img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' +
                 encodeURIComponent(raspUrl) + '&ecc=M&margin=0" alt="QR Raspinha" style="width:36mm;height:36mm"></div>';
         }
 
-        // Split pre text at placeholder and inject QR image
         var parts = text.split('[QR_CODE_PLACEHOLDER]');
-        var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Recibo MilkyPot</title>' +
-            '<style>@page{margin:4mm}body{margin:0;padding:6mm;font-family:"Courier New",monospace}pre{font-size:11px;white-space:pre-wrap;line-height:1.25;margin:0}</style>' +
+        var fontSize = cfg.width === '58mm' ? '10px' : '11px';
+        var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Recibo MilkyPot - ' + (profileId || 'Geral') + '</title>' +
+            '<style>@page{margin:2mm}body{margin:0;padding:2mm;font-family:"Courier New",monospace}pre{font-size:' + fontSize + ';white-space:pre-wrap;line-height:1.2;margin:0}</style>' +
             '</head><body>' +
             '<pre>' + parts[0].replace(/</g,'&lt;') + '</pre>' +
             (parts.length > 1 ? qrHtml + '<pre>' + parts.slice(1).join('').replace(/</g,'&lt;') + '</pre>' : '') +
