@@ -843,9 +843,15 @@
         <div id="receitaList"></div>
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
           <button class="btn-add" onclick="addReceitaLinha()">+ Adicionar ingrediente</button>
-          <button class="btn-add" style="background:#F3F4F6;color:#1F2937" onclick="addEmbalagemLinha()">+ Embalagem (copo/tampa/colher)</button>
+          <button class="btn-add" style="background:#F3F4F6;color:#1F2937" onclick="toggleEmbalagemPicker()">+ Embalagem (copo/tampa/colher)</button>
+          <button class="btn-add" style="background:linear-gradient(135deg,#FF4F8A,#7E57C2);color:#fff;border:none" onclick="belinhaSugereReceita()" title="Belinha analisa nome+categoria e sugere ingredientes, tempo e preço">✨ Belinha sugere receita</button>
           <button class="btn-add" style="background:#F3F4F6;color:#1F2937" onclick="closeProduto(); setTimeout(()=>document.querySelector('.ct-tab[data-tab=ingredientes]')?.click(),100);" title="Vai pra aba de ingredientes cadastrar novo">🥛 Cadastrar novo ingrediente →</button>
         </div>
+        <div id="embalagemPicker" style="display:none;margin-top:10px;padding:12px;background:#F9FAFB;border:1px dashed #D1D5DB;border-radius:10px">
+          <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px">Escolha a embalagem:</div>
+          <div id="embalagemPickerList" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        </div>
+        <div id="belinhaSugestaoBox" style="display:none;margin-top:10px;padding:12px;background:linear-gradient(135deg,#FFF0F6,#F3E8FF);border:1px solid #E9D5FF;border-radius:10px;font-size:13px"></div>
         <div style="margin-top:12px;display:grid;grid-template-columns:180px 1fr;gap:10px;align-items:flex-start">
           <div class="form-field">
             <label>⏱ Tempo de preparo (min) <span class="mp-help" data-tip="Quanto tempo leva pra fazer 1 unidade desse produto (do blender ligar até entregar pro cliente). É usado pra calcular energia (kWh × potência × tempo) e mão-de-obra (custo/hora × tempo).">(?)</span></label>
@@ -1051,16 +1057,15 @@
     receitaChanged();
   };
 
-  window.addEmbalagemLinha = function() {
-    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
-    const embs = inv.filter(i => i.category === 'embalagens');
-    if (!embs.length) { alert('Cadastre embalagens primeiro (copo, tampa, colher) na aba "Ingredientes".'); return; }
-    const nome = prompt(`Escolha a embalagem (digita o número):\n\n` + embs.map((e,i)=>`${i+1}. ${e.name} (R$ ${Number(e.costUnit||0).toFixed(2)})`).join('\n'));
-    const idx = parseInt(nome) - 1;
-    if (isNaN(idx) || !embs[idx]) return;
-    const e = embs[idx];
-    const cont = document.getElementById('receitaLinhas');
-    if (!cont) return;
+  function _appendEmbalagemRow(e) {
+    let cont = document.getElementById('receitaLinhas');
+    if (!cont) {
+      // receita vazia ainda — renderReceita nao criou #receitaLinhas. Cria.
+      document.getElementById('receitaList').innerHTML = '<div id="receitaLinhas" style="display:flex;flex-direction:column;gap:6px"></div>';
+      cont = document.getElementById('receitaLinhas');
+    }
+    // evita duplicar mesma embalagem
+    if (cont.querySelector(`.receita-row[data-pid="${e.id}"]`)) return false;
     const row = document.createElement('div');
     row.className = 'receita-row';
     row.dataset.type = 'embalagem';
@@ -1073,8 +1078,51 @@
       <div style="font-size:12px;color:#16A34A;font-weight:700">R$ ${Number(e.costUnit||0).toFixed(2)}</div>
       <button onclick="this.parentElement.remove(); receitaChanged();" style="background:#FEE2E2;color:#991B1B;border:none;border-radius:6px;cursor:pointer">✕</button>`;
     cont.appendChild(row);
-    receitaChanged();
+    return true;
+  }
+
+  window.toggleEmbalagemPicker = function() {
+    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+    const embs = inv.filter(i => i.category === 'embalagens');
+    const box = document.getElementById('embalagemPicker');
+    const list = document.getElementById('embalagemPickerList');
+    if (!box || !list) return;
+    if (!embs.length) {
+      box.style.display = 'block';
+      list.innerHTML = '<div style="font-size:13px;color:#991B1B">Nenhuma embalagem cadastrada ainda. <button class="lnk" onclick="closeProduto(); setTimeout(()=>document.querySelector(\'.ct-tab[data-tab=ingredientes]\')?.click(),100);">Cadastre primeiro →</button></div>';
+      return;
+    }
+    // toggle
+    if (box.style.display === 'block') { box.style.display = 'none'; return; }
+    list.innerHTML = embs.map(e => `
+      <button type="button" class="emb-chip" onclick="pickEmbalagem('${e.id}')" style="padding:8px 12px;background:#fff;border:1.5px solid #E5E7EB;border-radius:10px;cursor:pointer;font-size:13px;display:inline-flex;gap:6px;align-items:center">
+        <span>📦</span>
+        <b>${esc(e.name)}</b>
+        <small style="color:#16A34A;font-weight:700">R$ ${Number(e.costUnit||0).toFixed(2)}</small>
+      </button>`).join('');
+    box.style.display = 'block';
   };
+
+  window.pickEmbalagem = function(id) {
+    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+    const e = inv.find(i => i.id === id);
+    if (!e) return;
+    const added = _appendEmbalagemRow(e);
+    if (!added) {
+      // feedback sutil: pisca a linha existente
+      const existing = document.querySelector(`#receitaLinhas .receita-row[data-pid="${id}"]`);
+      if (existing) { existing.style.outline = '2px solid #F59E0B'; setTimeout(()=>existing.style.outline='',600); }
+    }
+    receitaChanged();
+    // fecha picker quando todas as embalagens ja foram adicionadas
+    const inv2 = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+    const embs = inv2.filter(i => i.category === 'embalagens');
+    const picked = new Set(Array.from(document.querySelectorAll('#receitaLinhas .receita-row[data-type="embalagem"]')).map(r => r.dataset.pid));
+    if (embs.every(e => picked.has(e.id))) document.getElementById('embalagemPicker').style.display = 'none';
+  };
+
+  // Compat: addEmbalagemLinha antiga agora apenas abre o picker
+  window.addEmbalagemLinha = window.toggleEmbalagemPicker;
 
   // Lê a UI da receita e monta a estrutura do produto
   function _collectReceitaFromUI() {
@@ -1233,14 +1281,18 @@
   // Nova função pública — mantém compatibilidade com oninput "recalcCusto"
   window.recalcCusto = window.receitaChanged;
 
+  // Parse "R$ 1,23" → 1.23  (parseFloat direto em "R$ X,YZ" retorna NaN)
+  function _parseBRL(s) {
+    if (typeof s === 'number') return s;
+    const t = String(s||'').replace(/[^\d,.\-]/g, '').replace(/\./g, '').replace(',', '.');
+    const n = parseFloat(t);
+    return isFinite(n) ? n : 0;
+  }
+
   window.recalc = function() {
-    const cIns = parseFloat(document.getElementById('pCInsumos').value) || 0;
-    const emb  = parseFloat(document.getElementById('pEmbalagem').value) || 0;
-    const ene  = parseFloat(document.getElementById('pEnergia').value) || 0;
-    const mao  = parseFloat(document.getElementById('pMao').value) || 0;
-    const out  = parseFloat(document.getElementById('pOutros').value) || 0;
-    const total = cIns + emb + ene + mao + out;
-    document.getElementById('pCTotal').value = 'R$ ' + total.toFixed(2);
+    // pCTotal ja foi calculado corretamente em receitaChanged() via ProducaoCalc
+    // (direto + indireto completo). Aqui so atualiza sugestoes de preco por canal.
+    const total = _parseBRL(document.getElementById('pCTotal').value);
     const catId = document.getElementById('pCategoria').value;
     const sug = CostCalculator.suggestAll(total, catId);
     ['loja','delivery','ifood'].forEach(ch => {
@@ -1282,6 +1334,136 @@
   };
 
   window.toggleTop = function(chip) { chip.classList.toggle('selected'); };
+
+  // ==========================================================
+  // ✨ Belinha sugere receita
+  // ==========================================================
+  // Manda nome+categoria+descricao + inventario disponivel pro Copilot,
+  // pede retorno em JSON e auto-preenche a receita + tempo + preco sugerido.
+  window.belinhaSugereReceita = async function() {
+    const box = document.getElementById('belinhaSugestaoBox');
+    if (!box) return;
+
+    const nome = (document.getElementById('pName')?.value || '').trim();
+    if (!nome) {
+      box.style.display = 'block';
+      box.innerHTML = '⚠️ Preencha o <b>nome do produto</b> primeiro.';
+      return;
+    }
+    if (typeof CopilotTransport === 'undefined') {
+      box.style.display = 'block';
+      box.innerHTML = '⚠️ Belinha não carregada nesta página.';
+      return;
+    }
+
+    const catSel = document.getElementById('pCategoria');
+    const catName = catSel?.selectedOptions[0]?.text || '';
+    const desc = (document.getElementById('pDesc')?.value || '').trim();
+    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+    const ingList = inv.filter(i => i.category !== 'embalagens').map(i => ({ id: i.id, name: i.name, unit: i.unit, costUnit: i.costUnit }));
+    const embList = inv.filter(i => i.category === 'embalagens').map(i => ({ id: i.id, name: i.name, costUnit: i.costUnit }));
+
+    box.style.display = 'block';
+    box.innerHTML = '🐑 Belinha pensando... <span style="opacity:.6">analisando "' + esc(nome) + '" + categoria + ' + ingList.length + ' ingrediente(s) no estoque</span>';
+
+    const session = Auth.getSession();
+    const settings = (DataStore.get && DataStore.get('belinha_settings')) || {};
+    const prompt =
+      `Produto: "${nome}"\n` +
+      `Categoria: ${catName}\n` +
+      (desc ? `Descrição: ${desc}\n` : '') +
+      `\nIngredientes disponíveis no estoque (use SOMENTE esses ids):\n` +
+      ingList.map(i => `- id=${i.id} | ${i.name} (R$${Number(i.costUnit||0).toFixed(2)}/${i.unit})`).join('\n') +
+      `\n\nEmbalagens disponíveis:\n` +
+      embList.map(e => `- id=${e.id} | ${e.name} (R$${Number(e.costUnit||0).toFixed(2)})`).join('\n') +
+      `\n\nTarefa: sugira a receita pra UMA unidade deste produto. Responde APENAS com um bloco JSON no formato exato:\n` +
+      '```json\n' +
+      `{\n  "insumos": [ { "insumoId": "<id>", "qty": <numero>, "unit": "g|kg|ml|L|un" } ],\n  "embalagemIds": ["<id>"],\n  "tempoPreparoMin": <numero>,\n  "precoSugeridoLoja": <numero>,\n  "justificativa": "1 linha curta"\n}\n` +
+      '```\n' +
+      `Use apenas ids que eu listei. Se não tem um ingrediente essencial, omite ele (não invente id). Preço sugerido: considere custo real + margem saudável ~25-35% líquida.`;
+
+    try {
+      const data = await CopilotTransport.send({
+        apiKey: settings.apiKey,
+        model: settings.model || 'claude-sonnet-4-5',
+        persona: 'belinha',
+        messages: [{ role: 'user', content: prompt }],
+        context: { page: 'produtos.html', task: 'sugerir_receita', fid }
+      });
+
+      const reply = String(data?.reply || '');
+      const jsonMatch = reply.match(/```json\s*([\s\S]*?)```/) || reply.match(/\{[\s\S]*"insumos"[\s\S]*\}/);
+      if (!jsonMatch) {
+        box.innerHTML = '🐑 Belinha respondeu em texto (sem JSON). Confira manualmente:<br><br><pre style="white-space:pre-wrap;font-family:inherit;font-size:12px;background:#fff;padding:10px;border-radius:8px;max-height:300px;overflow:auto">' + esc(reply) + '</pre>';
+        return;
+      }
+      let parsed;
+      try { parsed = JSON.parse(jsonMatch[1] || jsonMatch[0]); }
+      catch (e) {
+        box.innerHTML = '⚠️ JSON inválido da Belinha. Resposta bruta:<br><br><pre style="white-space:pre-wrap;font-family:inherit;font-size:12px;background:#fff;padding:10px;border-radius:8px;max-height:300px;overflow:auto">' + esc(reply) + '</pre>';
+        return;
+      }
+      applyBelinhaSugestao(parsed, data.source);
+    } catch (e) {
+      box.innerHTML = '❌ Belinha falhou: ' + esc(e.message);
+    }
+  };
+
+  function applyBelinhaSugestao(s, source) {
+    const box = document.getElementById('belinhaSugestaoBox');
+    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+    const invMap = {}; inv.forEach(i => invMap[i.id] = i);
+
+    // Limpa receita atual (so se AI retornou algo valido — senao mantem)
+    const insumosValidos = (s.insumos || []).filter(i => invMap[i.insumoId]);
+    const embIdsValidas = (s.embalagemIds || []).filter(id => invMap[id]);
+
+    if (insumosValidos.length || embIdsValidas.length) {
+      // garante container
+      document.getElementById('receitaList').innerHTML = '<div id="receitaLinhas" style="display:flex;flex-direction:column;gap:6px"></div>';
+      const cont = document.getElementById('receitaLinhas');
+      const ingredientes = inv.filter(i => i.category !== 'embalagens');
+
+      insumosValidos.forEach(r => {
+        const opts = ingredientes.map(x => `<option value="${x.id}" ${x.id===r.insumoId?'selected':''}>${esc(x.name)} (R$ ${Number(x.costUnit||0).toFixed(2)}/${x.unit||'un'})</option>`).join('');
+        const row = document.createElement('div');
+        row.className = 'receita-row';
+        row.dataset.type = 'insumo';
+        row.style.cssText = 'display:grid;grid-template-columns:1fr 90px 70px 90px 32px;gap:6px;align-items:center';
+        row.innerHTML = `
+          <select onchange="receitaChanged()">${opts}</select>
+          <input type="number" step="0.01" value="${Number(r.qty)||0}" placeholder="qtd" onchange="receitaChanged()">
+          <select onchange="receitaChanged()">
+            <option value="g"  ${r.unit==='g'?'selected':''}>g</option>
+            <option value="kg" ${r.unit==='kg'?'selected':''}>kg</option>
+            <option value="ml" ${r.unit==='ml'?'selected':''}>ml</option>
+            <option value="L"  ${r.unit==='L'?'selected':''}>L</option>
+            <option value="un" ${r.unit==='un'?'selected':''}>un</option>
+          </select>
+          <div style="font-size:12px;color:#16A34A;font-weight:700" class="subtot">—</div>
+          <button onclick="this.parentElement.remove(); receitaChanged();" style="background:#FEE2E2;color:#991B1B;border:none;border-radius:6px;cursor:pointer">✕</button>`;
+        cont.appendChild(row);
+      });
+      embIdsValidas.forEach(id => _appendEmbalagemRow(invMap[id]));
+    }
+
+    if (s.tempoPreparoMin && document.getElementById('pTempoPreparo')) {
+      document.getElementById('pTempoPreparo').value = Number(s.tempoPreparoMin) || 0;
+    }
+    if (s.precoSugeridoLoja && document.getElementById('p_real_loja')) {
+      document.getElementById('p_real_loja').value = Number(s.precoSugeridoLoja).toFixed(2);
+    }
+
+    receitaChanged();
+
+    const sourceBadge = source === 'local' ? '🟢 servidor local' : source === 'api' ? '🔵 API Anthropic' : '⚪ offline';
+    const justif = s.justificativa ? `<br><i>💭 ${esc(s.justificativa)}</i>` : '';
+    box.innerHTML = `
+      ✨ <b>Belinha preencheu:</b>
+      ${insumosValidos.length} insumo(s), ${embIdsValidas.length} embalagem(ns)${s.tempoPreparoMin?`, ${s.tempoPreparoMin}min`:''}${s.precoSugeridoLoja?`, preço loja R$ ${Number(s.precoSugeridoLoja).toFixed(2)}`:''}.
+      ${justif}
+      <div style="margin-top:6px;font-size:11px;color:#6B7280">${sourceBadge} · revise antes de salvar 🙏</div>`;
+  }
 
   window.saveProdutoFromForm = function() {
     const kits = Array.from(document.querySelectorAll('#kitsList .kit-row')).map(r => {
