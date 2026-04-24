@@ -5,11 +5,12 @@
    Fonte da verdade: .claude/MILKYCLUBE_CONTRACT.md
 
    Responsabilidades:
-   - Phone Auth (SMS OTP) com reCAPTCHA invisible.
+   - Email Link Auth (magic link passwordless) — gratis e funciona
+     sem servidor de SMS/WhatsApp.
    - Cadastro (enroll) via Cloud Function `clubEnroll`.
-   - Saldo / histórico via `clubGetBalance` + listener Firestore.
-   - Resgate, aniversário, referral, conta, FCM tokens.
-   - Helpers de formatação (MilkyCoins = R$ 0,01) e tiers.
+   - Saldo / historico via `clubGetBalance` + listener Firestore.
+   - Resgate, aniversario, referral, conta, FCM tokens.
+   - Helpers de formatacao (MilkyCoins = R$ 0,01) e tiers.
    ============================================ */
 
 (function() {
@@ -23,17 +24,17 @@
         auth: null,
         firestore: null,
         functions: null,
-        recaptchaVerifier: null,
-        recaptchaContainerId: 'milkyclube-recaptcha-container',
         currentUser: null,           // firebase.User
         currentMember: null,         // { uid, phone, name, coins, tier, ... }
         memberUnsubscribe: null,     // Firestore onSnapshot unsubscribe
         configCache: null,
         configCacheAt: 0,
-        memberChangeListeners: [],
-        // Confirmation result do signInWithPhoneNumber (reutilizado pelo verifyOTP)
-        _lastConfirmation: null
+        memberChangeListeners: []
     };
+
+    // Chave localStorage onde guardamos o email enquanto o user clica o magic link
+    var PENDING_EMAIL_KEY = 'mc_pending_email';
+    var PENDING_REF_KEY = 'mc_pending_ref';
 
     var CONFIG_TTL_MS = 5 * 60 * 1000;   // 5 minutos
     var REF_PARAM = 'ref';
@@ -124,43 +125,27 @@
         });
     }
 
-    // ---------------------------------------------
-    // reCAPTCHA
-    // ---------------------------------------------
-    function ensureRecaptchaContainer() {
-        var id = state.recaptchaContainerId;
-        var el = document.getElementById(id);
-        if (!el) {
-            el = document.createElement('div');
-            el.id = id;
-            el.style.position = 'fixed';
-            el.style.bottom = '0';
-            el.style.right = '0';
-            el.style.opacity = '0';
-            el.style.pointerEvents = 'none';
-            document.body.appendChild(el);
-        }
-        return id;
+    // Valida email basico (RFC 5322 simplificado)
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
     }
 
-    function buildRecaptcha() {
-        if (state.recaptchaVerifier) return state.recaptchaVerifier;
-        var containerId = ensureRecaptchaContainer();
-        // Firebase compat v10 — RecaptchaVerifier(containerIdOrElement, params, auth?)
-        state.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(containerId, {
-            size: 'invisible',
-            callback: function() { /* token resolvido — segue fluxo */ }
-        });
-        return state.recaptchaVerifier;
-    }
-
-    function resetRecaptcha() {
-        try {
-            if (state.recaptchaVerifier && typeof state.recaptchaVerifier.clear === 'function') {
-                state.recaptchaVerifier.clear();
-            }
-        } catch(e) {}
-        state.recaptchaVerifier = null;
+    // Traduz mensagens de erro comuns do Firebase Auth para pt-BR
+    function translateAuthError(err) {
+        if (!err) return null;
+        var code = err.code || '';
+        var map = {
+            'auth/invalid-email':          'E-mail invalido.',
+            'auth/user-disabled':          'Conta desativada. Fale com o suporte.',
+            'auth/expired-action-code':    'O link expirou. Pedir outro.',
+            'auth/invalid-action-code':    'Link invalido ou ja usado. Pedir outro.',
+            'auth/missing-email':          'Informe o e-mail para continuar.',
+            'auth/too-many-requests':      'Muitas tentativas. Aguarde alguns minutos.',
+            'auth/network-request-failed': 'Sem conexao. Verifique sua internet.',
+            'auth/operation-not-allowed':  'Login por e-mail nao esta habilitado no projeto.',
+            'auth/unauthorized-domain':    'Dominio nao autorizado no Firebase Auth.'
+        };
+        return map[code] || err.message || 'Erro de autenticacao.';
     }
 
     // ---------------------------------------------
@@ -283,60 +268,128 @@
         },
 
         /**
-         * Envia OTP por SMS.
-         * @param {string} phone - Formato livre (55, 43, com/sem DDI).
-         * @returns {Promise<{ verificationId: string }>}
+         * Envia o magic link de login para o email informado.
+         * O user recebe um link, clica e cai de volta em /clube.html?login=1
+         * ja autenticado (completeEmailLinkSignIn resolve o sign-in).
+         *
+         * Usa Firebase Email Link Auth (passwordless) — gratis, sem SMS/WhatsApp.
+         *
+         * @param {string} email
+         * @param {object} [opts] - { continueUrl?: string, referralCode?: string }
+         * @returns {Promise<{ sent: true, email: string }>}
          */
-        async sendPhoneOTP(phone) {
+        async sendEmailLink(email, opts) {
             await this.init();
-            var e164 = normalizeBRPhone(phone);
-            if (!isValidBRPhone(e164)) {
-                throw new Error('Telefone inválido. Use DDD + número.');
+            opts = opts || {};
+            var clean = String(email || '').trim().toLowerCase();
+            if (!isValidEmail(clean)) {
+                throw new Error('E-mail invalido.');
             }
-            var verifier = buildRecaptcha();
+
+            // URL de retorno do magic link. Preservamos ?login=1 pro gatekeeper
+            // de clube.html pular o redirect, e ?ref=CODE se veio indicacao.
+            var base = window.location.origin || 'https://milkypot.com';
+            var retUrl = (opts.continueUrl || (base + '/clube.html?login=1'));
             try {
-                var confirmation = await state.auth.signInWithPhoneNumber(e164, verifier);
-                state._lastConfirmation = confirmation;
-                return { verificationId: confirmation.verificationId || 'pending' };
+                var u = new URL(retUrl);
+                u.searchParams.set('login', '1');
+                if (opts.referralCode) u.searchParams.set('ref', opts.referralCode);
+                retUrl = u.toString();
+            } catch(e) {}
+
+            var actionSettings = {
+                url: retUrl,
+                handleCodeInApp: true
+            };
+
+            try {
+                await state.auth.sendSignInLinkToEmail(clean, actionSettings);
+                // Guarda localmente — ao voltar pelo link precisamos re-informar
+                // o email para o Firebase (medida anti-phishing).
+                try {
+                    window.localStorage.setItem(PENDING_EMAIL_KEY, clean);
+                    if (opts.referralCode) {
+                        window.localStorage.setItem(PENDING_REF_KEY, opts.referralCode);
+                    }
+                } catch(e) {}
+                return { sent: true, email: clean };
             } catch (err) {
-                // reCAPTCHA queima após uso/erro — reseta pra próxima tentativa
-                resetRecaptcha();
-                throw err;
+                warn('sendEmailLink error', err && err.message);
+                throw new Error(translateAuthError(err) || 'Nao foi possivel enviar o link.');
             }
         },
 
         /**
-         * Confirma OTP.
-         * @param {string} _verificationId - Ignorado (usamos ConfirmationResult do último send).
-         * @param {string} code - Código SMS.
-         * @returns {Promise<{ user, isNewMember: boolean }>}
+         * Retorna true se a URL atual e um magic link valido do Firebase
+         * (contem os parametros necessarios do sign-in).
          */
-        async verifyOTP(_verificationId, code) {
-            if (!state._lastConfirmation) {
-                throw new Error('Nenhum código enviado. Reenvie o SMS.');
-            }
-            if (!code || String(code).replace(/\D/g, '').length < 4) {
-                throw new Error('Código inválido.');
-            }
-            var result = await state._lastConfirmation.confirm(String(code).trim());
-            state._lastConfirmation = null;
-            // Reseta reCAPTCHA para próximo uso
-            resetRecaptcha();
+        isEmailLinkUrl(url) {
+            try {
+                return !!(state.auth && state.auth.isSignInWithEmailLink(url || window.location.href));
+            } catch(e) { return false; }
+        },
 
-            var user = result.user;
+        /**
+         * Completa o sign-in apos o user clicar no magic link do email.
+         * Deve ser chamado no load da pagina quando isEmailLinkUrl() === true.
+         *
+         * @param {string} [emailPrompt] - Email para caso localStorage tenha sido
+         *   limpo (outro dispositivo). Se nao fornecido, tenta localStorage.
+         * @returns {Promise<{ user, isNewMember: boolean, referralCode: string|null }>}
+         */
+        async completeEmailLinkSignIn(emailPrompt) {
+            await this.init();
+            var href = window.location.href;
+            if (!state.auth.isSignInWithEmailLink(href)) {
+                throw new Error('Link invalido ou expirado.');
+            }
+            var email = emailPrompt || '';
+            try {
+                email = email || (window.localStorage.getItem(PENDING_EMAIL_KEY) || '');
+            } catch(e) {}
+            if (!isValidEmail(email)) {
+                throw new Error('Precisamos do email para confirmar o login.');
+            }
+
+            var result;
+            try {
+                result = await state.auth.signInWithEmailLink(email, href);
+            } catch (err) {
+                throw new Error(translateAuthError(err) || 'Link expirado. Pedir um novo.');
+            }
+
+            // Limpa o email pendente — sign-in completo
+            try { window.localStorage.removeItem(PENDING_EMAIL_KEY); } catch(e) {}
+            // Recupera ref salvo (limpa tambem)
+            var pendingRef = null;
+            try {
+                pendingRef = window.localStorage.getItem(PENDING_REF_KEY);
+                if (pendingRef) window.localStorage.removeItem(PENDING_REF_KEY);
+            } catch(e) {}
+
+            var user = result && result.user;
             state.currentUser = user;
 
-            // Checa se member existe
             var isNewMember = true;
             if (state.firestore && user) {
                 try {
                     var doc = await state.firestore.collection('club_members').doc(user.uid).get();
                     isNewMember = !doc.exists;
                 } catch(e) {
-                    warn('verifyOTP: check member failed', e && e.message);
+                    warn('completeEmailLinkSignIn: check member failed', e && e.message);
                 }
             }
-            return { user: user, isNewMember: isNewMember };
+
+            // Limpa os params login/oobCode/apiKey/mode/lang/etc da URL pra nao poluir
+            try {
+                var cleanUrl = new URL(href);
+                ['apiKey','oobCode','mode','lang','continueUrl','apn','ibi'].forEach(function(p){
+                    cleanUrl.searchParams.delete(p);
+                });
+                window.history.replaceState({}, document.title, cleanUrl.toString());
+            } catch(e) {}
+
+            return { user: user, isNewMember: isNewMember, referralCode: pendingRef };
         },
 
         /**
@@ -359,11 +412,14 @@
                 throw new Error('É necessário aceitar o regulamento (LGPD).');
             }
 
+            // Email vem automaticamente do sign-in link. Phone fica opcional
+            // ate termos servidor SMS/WhatsApp configurado.
+            var authEmail = (state.currentUser.email || '').toLowerCase();
             var body = {
-                phone: (state.currentUser.phoneNumber || normalizeBRPhone(payload.phone)),
+                phone: normalizeBRPhone(payload.phone) || null,
                 cpf: String(payload.cpf).replace(/\D/g, ''),
                 name: String(payload.name).trim(),
-                email: payload.email ? String(payload.email).trim().toLowerCase() : null,
+                email: authEmail || (payload.email ? String(payload.email).trim().toLowerCase() : null),
                 birthDate: payload.birthDate || null,
                 referralCode: (payload.referralCode || '').toUpperCase().trim() || null,
                 consents: {
@@ -471,6 +527,13 @@
             }
             if (typeof updates.birthDate === 'string' || updates.birthDate === null) {
                 allowed.birthDate = updates.birthDate || null;
+            }
+            if (typeof updates.phone === 'string' || updates.phone === null) {
+                var normalized = normalizeBRPhone(updates.phone || '');
+                if (updates.phone && !isValidBRPhone(normalized)) {
+                    throw new Error('Telefone invalido.');
+                }
+                allowed.phone = normalized || null;
             }
             if (updates.consents && typeof updates.consents === 'object') {
                 var cur = (state.currentMember && state.currentMember.consents) || {};
