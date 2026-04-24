@@ -1,5 +1,39 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #20 — 2026-04-24
+
+**Área:** Conversão — bugfix crítico WhatsApp checkout + cadastro loja Londrina
+
+**Contexto:** Dia anterior à inauguração (25/04/2026 às 14h). Inspeção do fluxo de checkout revelou bug de máximo impacto: número de WhatsApp hardcoded como placeholder em 2 arquivos — qualquer pedido feito via cardápio/checkout seria enviado para `5511999999999` (número inexistente), causando perda total de pedidos no dia de maior tráfego.
+
+**O que analisou:**
+- `js/cardapio.js` linha 996: `const waNumber = '5511999999999'` — número hardcoded, sem usar `window._selectedStoreWhatsApp`
+- `js/checkout.js` linha 153: `window._selectedStoreWhatsApp || '5511999999999'` — fallback errado
+- `js/stores-data.js`: loja Muffato Londrina completamente ausente do array `MILKYPOT_STORES` — seletor de loja nunca encontraria a unidade correta
+- `index.html` já usava o número correto `5543998042424` em todos os links diretos (WA float, banner, raspinha)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `js/cardapio.js` | `'5511999999999'` → `window._selectedStoreWhatsApp \|\| '5543998042424'` — respeita seleção de loja e tem fallback correto |
+| `js/checkout.js` | Fallback `'5511999999999'` → `'5543998042424'` |
+| `js/stores-data.js` | ADICIONADO: entrada `muffato-londrina` com dados completos (endereço, horário 14h-23h, deliveryTime, whatsapp correto, lat/lng) |
+
+**Commit:** `b296fe2`
+
+**Impacto:**
+- **CRÍTICO:** Sem esta correção, 100% dos pedidos via cardápio.html na inauguração seriam perdidos (WA abrindo para número fantasma)
+- Com `window._selectedStoreWhatsApp || '5543998042424'`, o fluxo multi-loja continua funcionando no futuro quando outras unidades forem ativadas
+- Loja Londrina agora aparece corretamente no seletor de lojas
+
+**Próximo passo sugerido:**
+- Ciclo #21: Verificar se há mais placeholders (`TODO`, `999990`, `XXXXXXXXXX`) em outros arquivos JS que possam causar problemas
+- Criar `belinha/content/pos-inauguracao-primeiras24h.md` — recap de métricas + templates para o dia 26/04
+- Monitorar reviews Google Maps e Instagram após inauguração
+
+---
+
 ## Ciclo #19 — 2026-04-24
 
 **Área:** UX (bugfix banner) + Conteúdo marketing (toolkit inauguração ao vivo)
