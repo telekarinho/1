@@ -781,12 +781,22 @@
             var income = monthFinances.filter(function(f) { return f.type === 'income'; });
             var expenses = monthFinances.filter(function(f) { return f.type === 'expense'; });
 
-            // Categorize income
-            var vendasTotal = income.filter(function(f) { return f.category === 'vendas'; })
-                .reduce(function(s, f) { return s + (f.amount || 0); }, 0);
-            var outrasReceitas = income.filter(function(f) { return f.category !== 'vendas'; })
-                .reduce(function(s, f) { return s + (f.amount || 0); }, 0);
+            // Categorize income — 'vendas' inclui vendas_pdv (source:pdv) e lançamentos manuais
+            var vendasTotal = income.filter(function(f) {
+                return f.category === 'vendas' || f.category === 'vendas_pdv';
+            }).reduce(function(s, f) { return s + (f.amount || 0); }, 0);
+            var outrasReceitas = income.filter(function(f) {
+                return f.category !== 'vendas' && f.category !== 'vendas_pdv';
+            }).reduce(function(s, f) { return s + (f.amount || 0); }, 0);
             var receitaBruta = vendasTotal + outrasReceitas;
+
+            // CMV (Custo da Mercadoria Vendida) — calculado automaticamente pelo PDV
+            // com base nos custos cadastrados em Produtos. Zero se o custo não foi rastreado.
+            var cmv = income.filter(function(f) {
+                return (f.category === 'vendas' || f.category === 'vendas_pdv') && f.custo > 0;
+            }).reduce(function(s, f) { return s + (f.custo || 0); }, 0);
+            var margemBrutaVendas = vendasTotal > 0 && cmv > 0
+                ? Math.round((1 - cmv / vendasTotal) * 1000) / 10 : null;
 
             // Deductions
             var impostos = receitaBruta * 0.06;
@@ -846,6 +856,18 @@
                 html += '<tr class="dre-row"><td class="dre-indent">(+) Outras Receitas</td><td class="dre-value dre-positive">' + fmtVal(outrasReceitas) + '</td></tr>';
             }
             html += '<tr class="dre-subtotal"><td>Total Receita Bruta</td><td class="dre-value ' + totalClass(receitaBruta) + '">' + fmtVal(receitaBruta) + '</td></tr>';
+
+            // CMV — só aparece se houver dados rastreados pelo PDV
+            if (cmv > 0) {
+                html += '<tr class="dre-section-header"><td colspan="2">CMV — CUSTO DA MERCADORIA VENDIDA</td></tr>';
+                html += '<tr class="dre-row"><td class="dre-indent">(-) CMV apurado pelo PDV</td><td class="dre-value dre-negative">' + fmtVal(cmv) + '</td></tr>';
+                html += '<tr class="dre-margin" title="Percentual que sobra da receita de vendas após descontar o custo dos produtos">';
+                html +=   '<td class="dre-indent">📊 Margem Bruta das Vendas</td>';
+                html +=   '<td class="dre-value ' + (margemBrutaVendas >= 30 ? 'dre-positive' : 'dre-negative') + '">';
+                html +=     margemBrutaVendas !== null ? margemBrutaVendas.toFixed(1) + '%' : '—';
+                html +=   '</td>';
+                html += '</tr>';
+            }
 
             // DEDUCOES
             html += '<tr class="dre-section-header"><td colspan="2">DEDUCOES</td></tr>';
