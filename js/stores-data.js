@@ -84,5 +84,18 @@ var MILKYPOT_STORES = [
         whatsapp: '5581999990006', // TODO: substituir pelo número real
         lat: -8.1184,
         lng: -34.9046
+    },
+    {
+        id: 'muffato-londrina',
+        name: 'MilkyPot Muffato Londrina',
+        address: 'Av. Quintino Bocaiuva, 1045 - Londrina - PR',
+        rating: 5.0,
+        deliveryTime: '15-40 min',
+        deliveryFee: 5.00,
+        hours: '14:00 - 23:00',
+        open: true,
+        whatsapp: '5543998042424',
+        lat: -23.3045,
+        lng: -51.1696
     }
 ];

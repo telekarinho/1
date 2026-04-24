@@ -150,7 +150,7 @@ function placeOrder() {
 
     // Store data
     var storeName = window._selectedStoreName || 'MilkyPot';
-    var storeWhatsapp = window._selectedStoreWhatsApp || '5511999999999';
+    var storeWhatsapp = window._selectedStoreWhatsApp || '5543998042424';
     var storeTime = window._selectedStoreTime || '20-35 min';
     var storeFee = window._selectedStoreDeliveryFee || 0;
 

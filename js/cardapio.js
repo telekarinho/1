@@ -993,7 +993,7 @@ const CardapioApp = {
         this.closeCheckoutModal();
         this.showSuccessModal();
 
-        const waNumber = '5511999999999';
+        const waNumber = window._selectedStoreWhatsApp || '5543998042424';
         window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
 
         console.log('Order captured:', order);
