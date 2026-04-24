@@ -16,52 +16,66 @@
     'use strict';
 
     const LOCAL_URL = 'http://localhost:5757';
-
-    // Resolve qual endpoint usar para a API:
-    //   1. Se tem tunnel cloudflared ativo (servidor local Belinha.bat rodando
-    //      em ALGUM PC), usa ele — R$0,00 via Claude CLI. URL vem do Firestore
-    //      (preenchida pelo server local ao iniciar).
-    //   2. Se estiver em milkypot.com (GitHub Pages, sem API), usa Vercel
-    //      Function como fallback (precisa ANTHROPIC_API_KEY env var).
-    //   3. Se estiver em localhost ou vercel.app, usa mesmo origin.
-    function getApiTarget() {
-        // 1. Tunnel do server local registrado no Firestore
-        try {
-            if (typeof DataStore !== 'undefined') {
-                const t = DataStore.get('belinha_tunnel_global');
-                if (t && t.url && /^https:\/\/[a-z0-9-]+\.trycloudflare\.com/i.test(t.url)) {
-                    // Valida idade: tunnel ativo se registrado < 24h
-                    if (t.updatedAt) {
-                        const age = Date.now() - new Date(t.updatedAt).getTime();
-                        if (age < 24*60*60*1000) {
-                            return { base: t.url, path: '/copilot', source: 'tunnel' };
-                        }
-                    }
-                }
-            }
-        } catch(e){}
-
-        // 2. milkypot.com → Vercel Function (requer env var ANTHROPIC_API_KEY)
-        try {
-            const host = location.hostname;
-            if (host === 'milkypot.com' || host === 'www.milkypot.com') {
-                return { base: 'https://milkypot.vercel.app', path: '/api/copilot', source: 'vercel' };
-            }
-        } catch(e){}
-
-        // 3. localhost ou vercel.app → mesmo origin
-        return { base: '', path: '/api/copilot', source: 'origin' };
-    }
-
-    // Retrocompat com codigo antigo
-    function apiBase() { return getApiTarget().base; }
-
+    const REMOTE_TUNNEL_KEY = 'belinha_tunnel_global';
     let _localAvailable = null;
+    let _remoteAvailable = null;
+    let _remoteUrl = null;
     let _mixedBlocked = false;   // true quando Chrome bloqueou mixed content
     let _lastCheck = 0;
+    let _lastRemoteCheck = 0;
 
     function isHttpsPage() {
         return typeof location !== 'undefined' && location.protocol === 'https:';
+    }
+
+    function normalizeBaseUrl(url) {
+        return String(url || '').trim().replace(/\/+$/, '');
+    }
+
+    function readRemoteTunnelFromStore() {
+        try {
+            const raw = global.DataStore && typeof global.DataStore.get === 'function'
+                ? global.DataStore.get(REMOTE_TUNNEL_KEY)
+                : null;
+            if (!raw) return '';
+            if (typeof raw === 'string') return normalizeBaseUrl(raw);
+            if (raw && typeof raw.url === 'string') return normalizeBaseUrl(raw.url);
+        } catch (e) {}
+        return '';
+    }
+
+    async function fetchRemoteTunnelFromFirestore() {
+        try {
+            if (!global.firebase || typeof global.firebase.firestore !== 'function') return '';
+            const snap = await global.firebase.firestore().collection('datastore').doc(REMOTE_TUNNEL_KEY).get();
+            if (!snap.exists) return '';
+            const payload = snap.data() || {};
+            const parsed = payload.value ? JSON.parse(payload.value) : payload;
+            const url = typeof parsed === 'string' ? parsed : parsed && parsed.url;
+            const normalized = normalizeBaseUrl(url);
+            if (normalized && global.DataStore && typeof global.DataStore.set === 'function') {
+                global.DataStore.set(REMOTE_TUNNEL_KEY, { url: normalized, syncedAt: new Date().toISOString() });
+            }
+            return normalized;
+        } catch (e) {
+            return '';
+        }
+    }
+
+    async function getRemoteTunnelUrl(forceRefresh) {
+        if (!forceRefresh) {
+            const stored = readRemoteTunnelFromStore();
+            if (stored) {
+                _remoteUrl = stored;
+                return stored;
+            }
+        }
+        const fromCloud = await fetchRemoteTunnelFromFirestore();
+        if (fromCloud) {
+            _remoteUrl = fromCloud;
+            return fromCloud;
+        }
+        return _remoteUrl || '';
     }
 
     async function probeLocal() {
@@ -91,6 +105,33 @@
         }
     }
 
+    async function probeRemote(forceRefresh) {
+        const now = Date.now();
+        if (!forceRefresh && _remoteAvailable === true && (now - _lastRemoteCheck) < 60000) return true;
+        if (!forceRefresh && _remoteAvailable === false && (now - _lastRemoteCheck) < 15000) return false;
+
+        const baseUrl = await getRemoteTunnelUrl(forceRefresh);
+        if (!baseUrl) {
+            _remoteAvailable = false;
+            _lastRemoteCheck = now;
+            return false;
+        }
+
+        try {
+            const r = await Promise.race([
+                fetch(baseUrl + '/health', { method: 'GET', mode: 'cors', cache: 'no-store' }),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3500))
+            ]);
+            _remoteAvailable = !!(r && r.ok);
+            _lastRemoteCheck = now;
+            return _remoteAvailable;
+        } catch (e) {
+            _remoteAvailable = false;
+            _lastRemoteCheck = now;
+            return false;
+        }
+    }
+
     async function sendLocal(payload) {
         const r = await fetch(LOCAL_URL + '/copilot', {
             method: 'POST',
@@ -108,39 +149,44 @@
         return { reply: data.reply, usage: data.usage || { input_tokens: 0, output_tokens: 0 }, source: 'local' };
     }
 
-    async function sendApi(payload) {
-        const target = getApiTarget();
-        const isTunnel = target.source === 'tunnel';
-        // Tunnel espera body do server local (/copilot); Vercel espera com apiKey
-        const body = isTunnel
-            ? {
+    async function sendRemote(payload) {
+        const baseUrl = await getRemoteTunnelUrl(false);
+        if (!baseUrl) throw new Error('remote_tunnel_missing');
+        const r = await fetch(baseUrl + '/copilot', {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
                 persona: payload.persona,
                 messages: payload.messages,
                 context: payload.context,
                 model: payload.model
-            }
-            : {
-                apiKey: payload.apiKey || '',
+            })
+        });
+        if (!r.ok) throw new Error('remote ' + r.status);
+        const data = await r.json();
+        return { reply: data.reply, usage: data.usage || { input_tokens: 0, output_tokens: 0 }, source: 'remote' };
+    }
+
+    async function sendApi(payload) {
+        if (!payload.apiKey) throw new Error('api_key_missing');
+        const r = await fetch('/api/copilot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                apiKey: payload.apiKey,
                 model: payload.model || 'claude-sonnet-4-5',
                 persona: payload.persona,
                 messages: payload.messages,
                 context: payload.context
-            };
-        const r = await fetch(target.base + target.path, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
+            })
         });
         if (!r.ok) {
             const err = await r.text();
             throw new Error(err || ('api ' + r.status));
         }
         const data = await r.json();
-        return {
-            reply: data.reply,
-            usage: data.usage || null,
-            source: isTunnel ? 'tunnel' : 'api'
-        };
+        return { reply: data.reply, usage: data.usage || null, source: 'api' };
     }
 
     /**
@@ -211,21 +257,33 @@
     }
 
     async function send(payload) {
-        // Ordem: servidor local (se rodando) -> API Vercel (env var) -> offline.
-        // Usuario NAO precisa configurar nada — apenas Vercel tem que ter
-        // ANTHROPIC_API_KEY configurada como env var.
+        // Preferência: servidor local. Se não responde, cai na API. Se não, offline.
         const localOn = await probeLocal();
         if (localOn) {
             try { return await sendLocal(payload); }
             catch (e) { console.warn('[CopilotTransport] local falhou:', e.message); }
         }
 
-        // API sempre tentada (Vercel Function usa env var se apiKey vazia)
-        try { return await sendApi(payload); }
-        catch (e) {
-            console.warn('[CopilotTransport] API falhou:', e.message);
-            return sendOffline(payload);
+        const remoteOn = await probeRemote(false);
+        if (remoteOn) {
+            try { return await sendRemote(payload); }
+            catch (e) { console.warn('[CopilotTransport] tunnel remoto falhou:', e.message); }
         }
+
+        // Só tenta API se tiver apiKey configurada
+        if (payload.apiKey) {
+            try { return await sendApi(payload); }
+            catch (e) {
+                console.warn('[CopilotTransport] API falhou:', e.message);
+                if (e.message === 'api_key_missing') {
+                    return sendOffline(payload);
+                }
+                throw e;
+            }
+        }
+
+        // Sem apiKey e sem local → modo offline (respostas canned)
+        return sendOffline(payload);
     }
 
     async function status() {
@@ -238,5 +296,48 @@
         };
     }
 
-    global.CopilotTransport = { send, probeLocal, status };
+    async function sendWithTunnel(payload) {
+        const localOn = await probeLocal();
+        if (localOn) {
+            try { return await sendLocal(payload); }
+            catch (e) { console.warn('[CopilotTransport] local falhou:', e.message); }
+        }
+
+        const remoteOn = await probeRemote(false);
+        if (remoteOn) {
+            try { return await sendRemote(payload); }
+            catch (e) { console.warn('[CopilotTransport] tunnel remoto falhou:', e.message); }
+        }
+
+        if (payload.apiKey) {
+            try { return await sendApi(payload); }
+            catch (e) {
+                console.warn('[CopilotTransport] API falhou:', e.message);
+                if (e.message === 'api_key_missing') return sendOffline(payload);
+                throw e;
+            }
+        }
+
+        return sendOffline(payload);
+    }
+
+    async function statusWithTunnel() {
+        const localOn = await probeLocal();
+        const remoteOn = localOn ? false : await probeRemote(false);
+        const remoteUrl = remoteOn ? await getRemoteTunnelUrl(false) : '';
+        return {
+            local: localOn,
+            remote: remoteOn,
+            remoteUrl: remoteUrl || '',
+            mixedBlocked: _mixedBlocked,
+            badge: localOn
+                ? 'ðŸŸ¢ servidor local (R$ 0)'
+                : (remoteOn
+                    ? '🟢 servidor remoto via tunnel (R$ 0,00)'
+                    : (_mixedBlocked ? 'ðŸ”’ bloqueado (Chrome)' : 'âšª offline')),
+            url: localOn ? LOCAL_URL : (remoteOn ? remoteUrl : '/api/copilot')
+        };
+    }
+
+    global.CopilotTransport = { send: sendWithTunnel, probeLocal, probeRemote, status: statusWithTunnel, getRemoteTunnelUrl };
 })(typeof window !== 'undefined' ? window : this);
