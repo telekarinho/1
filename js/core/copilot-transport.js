@@ -17,20 +17,44 @@
 
     const LOCAL_URL = 'http://localhost:5757';
 
-    // URL base da API. Se o site estiver em milkypot.com (GitHub Pages, sem API),
-    // aponta direto pra Vercel. Se ja estiver em vercel.app ou localhost, usa rota
-    // relativa. Isso evita migrar DNS e funciona de qualquer hospedagem.
-    function apiBase() {
+    // Resolve qual endpoint usar para a API:
+    //   1. Se tem tunnel cloudflared ativo (servidor local Belinha.bat rodando
+    //      em ALGUM PC), usa ele — R$0,00 via Claude CLI. URL vem do Firestore
+    //      (preenchida pelo server local ao iniciar).
+    //   2. Se estiver em milkypot.com (GitHub Pages, sem API), usa Vercel
+    //      Function como fallback (precisa ANTHROPIC_API_KEY env var).
+    //   3. Se estiver em localhost ou vercel.app, usa mesmo origin.
+    function getApiTarget() {
+        // 1. Tunnel do server local registrado no Firestore
         try {
-            const host = location.hostname;
-            // milkypot.com/www.milkypot.com estao no GitHub Pages — precisam apontar
-            // pra Vercel pra ter acesso as Serverless Functions
-            if (host === 'milkypot.com' || host === 'www.milkypot.com') {
-                return 'https://milkypot.vercel.app';
+            if (typeof DataStore !== 'undefined') {
+                const t = DataStore.get('belinha_tunnel_global');
+                if (t && t.url && /^https:\/\/[a-z0-9-]+\.trycloudflare\.com/i.test(t.url)) {
+                    // Valida idade: tunnel ativo se registrado < 24h
+                    if (t.updatedAt) {
+                        const age = Date.now() - new Date(t.updatedAt).getTime();
+                        if (age < 24*60*60*1000) {
+                            return { base: t.url, path: '/copilot', source: 'tunnel' };
+                        }
+                    }
+                }
             }
         } catch(e){}
-        return ''; // mesmo origin
+
+        // 2. milkypot.com → Vercel Function (requer env var ANTHROPIC_API_KEY)
+        try {
+            const host = location.hostname;
+            if (host === 'milkypot.com' || host === 'www.milkypot.com') {
+                return { base: 'https://milkypot.vercel.app', path: '/api/copilot', source: 'vercel' };
+            }
+        } catch(e){}
+
+        // 3. localhost ou vercel.app → mesmo origin
+        return { base: '', path: '/api/copilot', source: 'origin' };
     }
+
+    // Retrocompat com codigo antigo
+    function apiBase() { return getApiTarget().base; }
 
     let _localAvailable = null;
     let _mixedBlocked = false;   // true quando Chrome bloqueou mixed content
@@ -85,26 +109,38 @@
     }
 
     async function sendApi(payload) {
-        // Nao exige apiKey — se vazia, Vercel Function usa ANTHROPIC_API_KEY env var.
-        // Belinha funciona de qualquer PC sem configuracao do usuario.
-        // apiBase() aponta pra Vercel quando estamos em milkypot.com (GitHub Pages).
-        const r = await fetch(apiBase() + '/api/copilot', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+        const target = getApiTarget();
+        const isTunnel = target.source === 'tunnel';
+        // Tunnel espera body do server local (/copilot); Vercel espera com apiKey
+        const body = isTunnel
+            ? {
+                persona: payload.persona,
+                messages: payload.messages,
+                context: payload.context,
+                model: payload.model
+            }
+            : {
                 apiKey: payload.apiKey || '',
                 model: payload.model || 'claude-sonnet-4-5',
                 persona: payload.persona,
                 messages: payload.messages,
                 context: payload.context
-            })
+            };
+        const r = await fetch(target.base + target.path, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
         });
         if (!r.ok) {
             const err = await r.text();
             throw new Error(err || ('api ' + r.status));
         }
         const data = await r.json();
-        return { reply: data.reply, usage: data.usage || null, source: 'api' };
+        return {
+            reply: data.reply,
+            usage: data.usage || null,
+            source: isTunnel ? 'tunnel' : 'api'
+        };
     }
 
     /**

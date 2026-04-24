@@ -181,6 +181,63 @@ app.post('/briefing', async (req, res) => {
     }
 });
 
+// ========================================================
+// CLOUDFLARE TUNNEL (expoe servidor local via HTTPS publica)
+// ========================================================
+// Sem tunnel, milkypot.com (HTTPS) nao consegue chamar localhost:5757 (HTTP)
+// por Mixed Content. Com tunnel, a URL publica HTTPS resolve pro local.
+// Registramos a URL no Firestore (via Vercel Function) pra que o painel
+// leia automaticamente. Zero config no browser.
+// ========================================================
+let TUNNEL_URL = null;
+const VERCEL_REGISTRY = 'https://milkypot.vercel.app/api/belinha-tunnel';
+
+function startTunnel(port) {
+    console.log('');
+    console.log('🌐 Iniciando tunnel publico (cloudflared)...');
+    const tunnel = spawn('cloudflared', ['tunnel', '--url', `http://localhost:${port}`], { shell: true });
+
+    const tryRegister = async (url) => {
+        try {
+            const resp = await fetch(VERCEL_REGISTRY, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+            if (resp.ok) {
+                console.log('✅ Tunnel registrado no Firestore — painel milkypot.com ja funciona!');
+            } else {
+                const txt = await resp.text();
+                console.warn('⚠️ Falha ao registrar tunnel:', resp.status, txt);
+            }
+        } catch (e) {
+            console.warn('⚠️ Falha ao registrar tunnel:', e.message);
+        }
+    };
+
+    const onData = (chunk) => {
+        const txt = chunk.toString();
+        const match = txt.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/i);
+        if (match && !TUNNEL_URL) {
+            TUNNEL_URL = match[0];
+            console.log('');
+            console.log('✨ URL publica HTTPS:', TUNNEL_URL);
+            console.log('   Health via tunnel: ' + TUNNEL_URL + '/health');
+            tryRegister(TUNNEL_URL);
+        }
+    };
+    tunnel.stdout.on('data', onData);
+    tunnel.stderr.on('data', onData);
+    tunnel.on('error', (e) => console.warn('⚠️ Tunnel erro:', e.message));
+    tunnel.on('close', (code) => {
+        console.warn('⚠️ Tunnel encerrou (exit ' + code + '). Belinha em milkypot.com nao funcionara ate reiniciar o .bat.');
+        TUNNEL_URL = null;
+    });
+
+    // Expoe endpoint local pra consulta
+    app.get('/tunnel-url', (req, res) => res.json({ url: TUNNEL_URL }));
+}
+
 // ========== INIT ==========
 const PORT = process.env.MILKYPOT_PORT || 5757;
 app.listen(PORT, () => {
@@ -194,10 +251,13 @@ app.listen(PORT, () => {
     console.log('   ⚙️  Backend: claude CLI (seu plano Claude Pro/Max)');
     console.log('   💰 Custo: R$ 0,00 — usa sua conta autenticada');
     console.log('');
-    console.log('   🐑 BELINHA (sem Mixed Content, zero config):');
-    console.log('   http://localhost:' + PORT + '/painel/copilot-belinha.html');
+    console.log('   🐑 BELINHA LOCAL: http://localhost:' + PORT + '/painel/copilot-belinha.html');
+    console.log('   🐑 BELINHA ONLINE: https://milkypot.com/painel/copilot-belinha.html');
+    console.log('   (ambas usam este servidor local — R$ 0,00)');
     console.log('');
-    console.log('   O .bat ja abre essa URL automaticamente no browser.');
     console.log('   Ctrl+C pra parar.');
     console.log('═══════════════════════════════════════════════');
+
+    // Inicia tunnel em paralelo para expor o servidor na internet (HTTPS)
+    startTunnel(PORT);
 });
