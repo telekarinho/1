@@ -25,12 +25,16 @@
 
 const express = require('express');
 const { spawn } = require('child_process');
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 const { pickSystem } = require('./_brain-local.js');
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
+
+const CODEX_BIN = 'C:\\Users\\rodri\\AppData\\Local\\Packages\\OpenAI.Codex_2p2nqsd0c76g0\\LocalCache\\Local\\OpenAI\\Codex\\bin\\codex.exe';
 
 // ====================================================================
 // STATIC FILES (elimina Mixed Content HTTPS->HTTP do Chrome)
@@ -70,9 +74,115 @@ app.get('/health', (req, res) => {
         service: 'MilkyPot Autopilot',
         version: '1.0.0',
         uptime: Math.round(process.uptime()) + 's',
-        cliBackend: 'claude' // pode virar 'claude-code' ou 'anthropic-sdk'
+        primaryBackend: fs.existsSync(CODEX_BIN) ? 'codex' : 'claude',
+        fallbackBackend: fs.existsSync(CODEX_BIN) ? 'claude' : null
     });
 });
+
+function collectProcess(proc) {
+    return new Promise((resolve, reject) => {
+        let stdout = '';
+        let stderr = '';
+        proc.stdout.on('data', chunk => { stdout += chunk.toString(); });
+        proc.stderr.on('data', chunk => { stderr += chunk.toString(); });
+        proc.on('close', exitCode => resolve({ exitCode, stdout, stderr }));
+        proc.on('error', reject);
+    });
+}
+
+async function runClaude(combined, model) {
+    const cliArgs = ['-p', '--output-format', 'json'];
+    const VALID_ALIASES = ['sonnet', 'opus', 'haiku'];
+    if (model && (VALID_ALIASES.includes(model) || /\d{8}$/.test(model))) {
+        cliArgs.push('--model', model);
+    }
+
+    // Garante HOME + CLAUDE_CODE_OAUTH_TOKEN no env.
+    // Em cmd.exe / bat, HOME e o token OAuth podem estar ausentes.
+    // Estratégia: (1) env herdado, (2) arquivo bridge escrito pela sessão
+    // ativa do Claude Code, (3) .credentials.json como último recurso.
+    let sessionToken = process.env.CLAUDE_CODE_OAUTH_TOKEN || '';
+    if (!sessionToken) {
+        try {
+            const bridgeFile = path.join(os.homedir(), '.claude', '.milkypot-token');
+            if (fs.existsSync(bridgeFile)) {
+                sessionToken = fs.readFileSync(bridgeFile, 'utf8').trim();
+            }
+        } catch (e) {}
+    }
+    if (!sessionToken) {
+        try {
+            const credFile = path.join(os.homedir(), '.claude', '.credentials.json');
+            const creds = JSON.parse(fs.readFileSync(credFile, 'utf8'));
+            sessionToken = (creds.claudeAiOauth && creds.claudeAiOauth.accessToken) || '';
+        } catch (e) {}
+    }
+    const claudeEnv = {
+        ...process.env,
+        HOME: process.env.HOME || process.env.USERPROFILE || os.homedir(),
+        ...(sessionToken ? { CLAUDE_CODE_OAUTH_TOKEN: sessionToken } : {})
+    };
+    const claudeProc = spawn('claude', cliArgs, { shell: true, env: claudeEnv });
+    claudeProc.stdin.write(combined, 'utf8');
+    claudeProc.stdin.end();
+
+    const { exitCode, stdout, stderr } = await collectProcess(claudeProc);
+    if (exitCode !== 0) {
+        console.error('[runClaude] exit', exitCode, '| stderr:', stderr.slice(0, 300), '| stdout:', stdout.slice(0, 200));
+        throw new Error(stderr || stdout || ('claude_exit_' + exitCode));
+    }
+
+    let reply = '';
+    let usage = null;
+    try {
+        const parsed = JSON.parse(stdout);
+        reply = parsed.result || parsed.content || '';
+        usage = parsed.usage || null;
+    } catch (e) {
+        reply = stdout.trim();
+    }
+
+    return { reply, usage, backend: 'claude' };
+}
+
+async function runCodex(combined) {
+    if (!fs.existsSync(CODEX_BIN)) throw new Error('codex_missing');
+
+    const outFile = path.join(os.tmpdir(), 'milkypot-codex-last-message.txt');
+    try { if (fs.existsSync(outFile)) fs.unlinkSync(outFile); } catch (e) {}
+
+    // Use shell:true + quoted path to bypass WindowsApps ACL restriction.
+    // cmd.exe can invoke WindowsApps binaries even when Node spawn can't.
+    const quotedBin = '"' + CODEX_BIN + '"';
+    const quotedOut = '"' + outFile + '"';
+    const quotedDir = '"' + path.join(__dirname, '..') + '"';
+    const cmdLine = [
+        quotedBin,
+        'exec',
+        '--skip-git-repo-check',
+        '--dangerously-bypass-approvals-and-sandbox',
+        '--output-last-message', quotedOut,
+        '-C', quotedDir,
+        '-'
+    ].join(' ');
+
+    const codexProc = spawn(cmdLine, [], { shell: true });
+    codexProc.stdin.write(combined, 'utf8');
+    codexProc.stdin.end();
+
+    const { exitCode, stdout, stderr } = await collectProcess(codexProc);
+
+    // Check output file first — may exist even on non-zero exit (warnings-only)
+    const reply = fs.existsSync(outFile) ? fs.readFileSync(outFile, 'utf8').trim() : '';
+    if (reply) return { reply, usage: null, backend: 'codex' };
+
+    if (exitCode !== 0) {
+        // Truncate stderr — Codex emits huge HTML pages on some errors
+        const errMsg = (stderr || stdout || ('codex_exit_' + exitCode)).slice(0, 400);
+        throw new Error(errMsg);
+    }
+    throw new Error('codex_empty_reply');
+}
 
 // ========== COPILOT ==========
 app.post('/copilot', async (req, res) => {
@@ -102,62 +212,27 @@ app.post('/copilot', async (req, res) => {
         // TUDO via stdin. Args ficam mínimos (~50 chars).
         const combined = `<system_instructions>\n${systemPrompt}\n</system_instructions>\n\n${finalPrompt}`;
 
-        const cliArgs = ['-p', '--output-format', 'json'];
-        // Nao passa --model por default. Modelos antigos (claude-sonnet-4-5
-        // sem sufixo de data) causam exit=1 no CLI. Passa so se for alias
-        // curto (sonnet/opus/haiku) ou modelo completo com data (20250929).
-        const VALID_ALIASES = ['sonnet', 'opus', 'haiku'];
-        if (model && (VALID_ALIASES.includes(model) || /\d{8}$/.test(model))) {
-            cliArgs.push('--model', model);
-        }
-
-        const startTs = Date.now();
-        const claudeProc = spawn('claude', cliArgs, { shell: true });
-
-        // Envia prompt completo via stdin — sem limite de tamanho
-        claudeProc.stdin.write(combined, 'utf8');
-        claudeProc.stdin.end();
-
-        let output = '';
-        let errorBuf = '';
-        claudeProc.stdout.on('data', chunk => { output += chunk.toString(); });
-        claudeProc.stderr.on('data', chunk => { errorBuf += chunk.toString(); });
-
-        const exitCode = await new Promise((resolve, reject) => {
-            claudeProc.on('close', resolve);
-            claudeProc.on('error', reject);
-        });
-
-        if (exitCode !== 0) {
-            console.error('[claude cli] exit', exitCode, errorBuf);
-            return res.status(500).json({
-                error: 'cli_failed',
-                exit: exitCode,
-                stderr: errorBuf.slice(0, 800)
-            });
-        }
-
-        // O CLI retorna { result, session_id, total_cost_usd, usage, ... } em JSON
-        let reply = '';
-        let usage = null;
+        const primaryStartTs = Date.now();
+        let result;
         try {
-            const parsed = JSON.parse(output);
-            reply = parsed.result || parsed.content || '';
-            usage = parsed.usage || null;
-        } catch (e) {
-            // Se o output não for JSON (modo stream ou formato antigo), trata como texto puro
-            reply = output.trim();
+            // Primário: Codex local (OpenAI plano do usuário — R$ 0)
+            result = await runCodex(combined);
+        } catch (codexErr) {
+            console.warn('[copilot] codex falhou, tentando claude backup:', codexErr.message.slice(0, 120));
+            // Backup: Claude CLI (plano Claude Pro/Max — R$ 0)
+            result = await runClaude(combined, model);
         }
 
-        const elapsedMs = Date.now() - startTs;
-        console.log(`[copilot] ${(persona || 'belinha')} · ${elapsedMs}ms · ${reply.length} chars`);
+        const primaryElapsedMs = Date.now() - primaryStartTs;
+        console.log(`[copilot] ${(persona || 'belinha')} · ${result.backend} · ${primaryElapsedMs}ms · ${result.reply.length} chars`);
 
         return res.json({
-            reply: reply,
-            usage: usage,
-            model: model || 'claude-default',
-            elapsedMs: elapsedMs,
-            source: 'local'
+            reply: result.reply,
+            usage: result.usage,
+            model: model || (result.backend === 'claude' ? 'claude-default' : 'codex-default'),
+            elapsedMs: primaryElapsedMs,
+            source: 'local',
+            backend: result.backend
         });
 
     } catch (e) {
@@ -240,7 +315,7 @@ function startTunnel(port) {
 
 // ========== INIT ==========
 const PORT = process.env.MILKYPOT_PORT || 5757;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log('═══════════════════════════════════════════════');
     console.log(' 🐑 MilkyPot Autopilot — Servidor Local v1.0.0');
     console.log('═══════════════════════════════════════════════');
@@ -260,4 +335,16 @@ app.listen(PORT, () => {
 
     // Inicia tunnel em paralelo para expor o servidor na internet (HTTPS)
     startTunnel(PORT);
+});
+
+server.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+        console.error('');
+        console.error('⚠️ A porta 5757 já está em uso.');
+        console.error('Se for outra janela da Belinha, reutilize a instância já aberta em http://localhost:5757/painel/copilot-belinha.html');
+        console.error('');
+        process.exit(1);
+    }
+    console.error('[server] erro ao iniciar', err);
+    process.exit(1);
 });
