@@ -377,12 +377,47 @@
             }
 
             // Sync listener: atualiza tabs + produtos em tempo real quando produtos.html salva
+            let _reassertInFlight = false;
             window.addEventListener('mp_catalog_updated', (e) => {
+                // Defesa: se cloud enviou catalog legado mas CatalogV2 tem produtos, re-aplica v2
+                if (!_reassertInFlight) {
+                    try {
+                        const s = window.Auth && Auth.getSession && Auth.getSession();
+                        const f = s && s.franchiseId;
+                        const incoming = e.detail || {};
+                        if (f && window.CatalogV2 && !incoming._fromV2) {
+                            const v2 = CatalogV2.load(f);
+                            if (v2 && v2.produtos && v2.produtos.length > 0) {
+                                console.log('⚠️ Cardapio: cloud enviou catalog legado — re-asserting CatalogV2');
+                                _reassertInFlight = true;
+                                CatalogV2.syncToLegacy(f);
+                                _reassertInFlight = false;
+                                return;
+                            }
+                        }
+                    } catch(err) {}
+                }
                 catalog = e.detail;
                 _renderCatalogTabs();
                 const activeTab = document.querySelector('.cat-tab.active');
                 const cat = activeTab ? activeTab.dataset.category : 'ninho';
                 renderProducts(cat);
+            });
+
+            // Pós-sync Firestore: re-assert CatalogV2 caso cloud tenha trazido legado
+            window.addEventListener('mp_synced', () => {
+                try {
+                    const s = window.Auth && Auth.getSession && Auth.getSession();
+                    const f = s && s.franchiseId;
+                    if (f && window.CatalogV2) {
+                        const v2 = CatalogV2.load(f);
+                        const cfg = DataStore.get('catalog_config') || {};
+                        if (v2 && v2.produtos && v2.produtos.length > 0 && !cfg._fromV2) {
+                            console.log('🔁 Cardapio pós-sync: reforçando CatalogV2');
+                            CatalogV2.syncToLegacy(f);
+                        }
+                    }
+                } catch(err) {}
             });
         }
 
