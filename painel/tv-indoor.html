@@ -543,6 +543,44 @@
                         <p style="font-size:12px;color:#999;margin-bottom:8px">Salve a imagem do post do Instagram e arraste na biblioteca de midias (aba acima). Aparecerao automaticamente na playlist.</p>
                         <input type="text" class="form-control" id="cfgInstaUser" placeholder="@milkypotoficial (so referencia)" onchange="saveConfig()">
                     </div>
+
+                    <!-- MilkyClube (QR + auto-promo) -->
+                    <div class="tv-card" style="padding:16px;border:2px solid #42A5F5;background:linear-gradient(135deg,#E3F2FD 0%,#FCE4EC 100%)">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <span style="font-size:24px">🎁</span>
+                                <div><strong>MilkyClube (cashback)</strong><br><small style="color:#555">QR de cadastro + slide promocional automatico</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgClubeQr" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <p style="font-size:12px;color:#555;margin-bottom:10px">QR fixo no canto da TV aponta para /clube.html. Cliente escaneia, baixa o app e ja ganha G$20.</p>
+
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid rgba(66,165,245,.2)">
+                            <div>
+                                <strong style="font-size:13px">Auto slide promocional</strong>
+                                <br><small style="color:#777">Slide MilkyClube fullscreen a cada N midias</small>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgAutoClubePromo" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+
+                        <div style="display:flex;gap:8px;margin-top:8px">
+                            <div style="flex:1">
+                                <small style="color:#777">A cada</small>
+                                <input type="number" min="3" max="20" class="form-control" id="cfgClubePromoEvery" value="5" onchange="saveConfig()" style="text-align:center;font-weight:700">
+                            </div>
+                            <div style="flex:1">
+                                <small style="color:#777">Duracao (ms)</small>
+                                <input type="number" min="5000" max="30000" step="1000" class="form-control" id="cfgClubePromoDuration" value="12000" onchange="saveConfig()" style="text-align:center;font-weight:700">
+                            </div>
+                        </div>
+
+                        <div style="margin-top:10px">
+                            <small style="color:#777">URL do clube (opcional, padrao /clube.html)</small>
+                            <input type="url" class="form-control" id="cfgClubeUrl" placeholder="https://milkypot.com/clube.html" onchange="saveConfig()">
+                        </div>
+
+                        <button type="button" class="btn btn-primary" style="width:100%;margin-top:10px" onclick="addClubeSlide()">+ Adicionar slide MilkyClube manual</button>
+                    </div>
                 </div>
 
             </div>
@@ -1898,10 +1936,37 @@
             pauseRemote: document.getElementById('cfgPauseRemote').checked,
             emergencyMessage: document.getElementById('cfgEmergency').value.trim(),
             qrUrl: document.getElementById('cfgQrUrl').value.trim(),
+
+            // ==== MilkyClube ====
+            showClubeQr: document.getElementById('cfgClubeQr') ? document.getElementById('cfgClubeQr').checked : true,
+            autoClubePromo: document.getElementById('cfgAutoClubePromo') ? document.getElementById('cfgAutoClubePromo').checked : true,
+            clubePromoEvery: parseInt((document.getElementById('cfgClubePromoEvery')||{}).value || 5, 10) || 5,
+            clubePromoDuration: parseInt((document.getElementById('cfgClubePromoDuration')||{}).value || 12000, 10) || 12000,
+            clubeUrl: (document.getElementById('cfgClubeUrl')||{}).value ? document.getElementById('cfgClubeUrl').value.trim() : '',
             updatedAt: new Date().toISOString()
         };
         setConfig(c);
         Utils.showToast('Configuracao salva! TVs atualizam automaticamente.', 'success');
+    };
+
+    /* --- MilkyClube: adiciona slide manual na biblioteca --- */
+    window.addClubeSlide = function(){
+        var media = getMedia();
+        media.push({
+            id: genId(), type: 'clube',
+            name: 'MilkyClube - Cashback',
+            headline: 'Entre no MilkyClube',
+            subtitle: 'Cashback em MilkyCoins a cada sorvete',
+            tag: 'Baixe o app gratis',
+            footer: 'Aponte a camera no QR Code',
+            clubeUrl: (document.getElementById('cfgClubeUrl')||{}).value || '',
+            duration: Math.round((parseInt((document.getElementById('cfgClubePromoDuration')||{}).value || 12000, 10) || 12000) / 1000),
+            wallMode: (typeof getWallSpan === 'function' ? getWallSpan() : null),
+            addedAt: new Date().toISOString()
+        });
+        saveMedia(media);
+        renderMedia();
+        Utils.showToast('Slide MilkyClube adicionado na biblioteca!', 'success');
     };
 
     window.uploadLogo = function(input){
@@ -1946,6 +2011,13 @@
         document.getElementById('cfgPauseRemote').checked = !!c.pauseRemote;
         document.getElementById('cfgEmergency').value = c.emergencyMessage || '';
         document.getElementById('cfgQrUrl').value = c.qrUrl || '';
+
+        // MilkyClube
+        var qr = document.getElementById('cfgClubeQr'); if(qr) qr.checked = c.showClubeQr !== false;
+        var auto = document.getElementById('cfgAutoClubePromo'); if(auto) auto.checked = c.autoClubePromo !== false;
+        var every = document.getElementById('cfgClubePromoEvery'); if(every) every.value = c.clubePromoEvery || 5;
+        var dur = document.getElementById('cfgClubePromoDuration'); if(dur) dur.value = c.clubePromoDuration || 12000;
+        var curl = document.getElementById('cfgClubeUrl'); if(curl) curl.value = c.clubeUrl || '';
         if(c.customLogo) document.getElementById('cfgLogoPreview').src = c.customLogo;
         // Status heartbeat (atualiza 1x ao carregar, e a cada 60s)
         renderTvStatus();

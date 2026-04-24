@@ -236,6 +236,41 @@
             <input type="tel" id="cPhone" placeholder="WhatsApp (opcional)">
             <input type="text" id="cAddr" placeholder="Endereco completo">
         </div>
+
+        <!-- MilkyClube block -->
+        <div class="club-block" id="clubBlock" style="padding:4px 14px 8px;flex-shrink:0;">
+            <div id="clubEmpty" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#F3E5F5,#E3F2FD);border-radius:10px;padding:8px 10px;font-size:11px;">
+                <span style="font-size:16px;">🎁</span>
+                <div style="flex:1;">
+                    <strong style="display:block;font-size:11px;color:#5A4570;">MilkyClube</strong>
+                    <span style="font-size:10px;color:#7a6a90;">Identificar cliente para cashback</span>
+                </div>
+                <button type="button" onclick="openClubModal()" style="background:#5A4570;color:#fff;border:0;padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;">Identificar</button>
+            </div>
+            <div id="clubCard" style="display:none;background:#fff;border:2px solid #B39DDB;border-radius:10px;padding:8px 10px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <div id="clubAvatar" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#5A4570,#7B5EA7);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;">?</div>
+                    <div style="flex:1;min-width:0;">
+                        <strong id="clubName" style="display:block;font-size:12px;color:#3a2e4a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">-</strong>
+                        <span id="clubTier" style="font-size:10px;color:#7a6a90;font-weight:700;">-</span>
+                    </div>
+                    <button type="button" onclick="clearClubMember()" title="Remover" style="background:#ffebee;color:#c62828;border:0;padding:3px 8px;border-radius:6px;font-size:10px;cursor:pointer;">Remover</button>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;background:#F3E5F5;border-radius:8px;padding:6px 8px;margin-bottom:6px;">
+                    <span style="font-size:10px;color:#5A4570;font-weight:700;">Saldo:</span>
+                    <strong id="clubBalance" style="font-size:13px;color:#5A4570;">G$ 0 = R$ 0,00</strong>
+                </div>
+                <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#3a2e4a;cursor:pointer;margin-bottom:4px;">
+                    <input type="checkbox" id="clubUseToggle" onchange="toggleClubRedeem()"> Usar MilkyCoins
+                </label>
+                <div id="clubUseRow" style="display:none;align-items:center;gap:6px;">
+                    <span style="font-size:10px;color:#666;">G$</span>
+                    <input type="number" id="clubUseAmount" min="0" step="1" value="0" oninput="onClubUseAmountChange()" style="flex:1;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:11px;">
+                    <span id="clubUseMax" style="font-size:10px;color:#666;">max: 0</span>
+                </div>
+                <div id="clubRedeemHint" style="display:none;margin-top:4px;font-size:10px;color:#2E7D32;font-weight:700;">Desconto: R$ 0,00</div>
+            </div>
+        </div>
         <div id="openTabs" style="padding:4px 14px;display:none;flex-shrink:0;">
             <div style="font-size:11px;font-weight:700;color:#FF9800;margin-bottom:3px;">📋 Contas Abertas:</div>
             <div id="openTabsList"></div>
@@ -419,6 +454,39 @@
     .kv-opt .kv-sub{font-size:12px;color:#6B7280;margin-top:2px}
     .kv-opt .kv-price{font-size:18px;font-weight:900;color:#16A34A}
 </style>
+
+<!-- MilkyClube Identification Modal -->
+<div class="modal-bg" id="clubModalBg" onclick="if(event.target===this)closeClubModal()" style="z-index:1500">
+    <div class="buffet-modal" style="max-width:460px">
+        <div class="buffet-head" style="background:linear-gradient(135deg,#5A4570,#42A5F5)">
+            <h3>🎁 Identificar Cliente MilkyClube</h3>
+            <button class="modal-close" onclick="closeClubModal()">×</button>
+        </div>
+        <div class="buffet-body">
+            <p style="font-size:13px;color:#666;margin-bottom:14px">Escolha uma opcao para identificar o cliente:</p>
+            <button class="buffet-btn primary" onclick="startClubQRScanner()" style="background:linear-gradient(135deg,#5A4570,#7B5EA7);border-color:#5A4570;padding:14px;font-size:15px;margin-bottom:10px;width:100%">📷 Ler QR Code do Cliente</button>
+            <div id="clubQRContainer" style="display:none;margin-bottom:14px;border-radius:14px;overflow:hidden;background:#000;position:relative;min-height:240px;">
+                <div id="clubQRReader" style="width:100%"></div>
+                <button type="button" onclick="stopClubQRScanner()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.7);color:#fff;border:0;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;z-index:10">×</button>
+            </div>
+            <div style="text-align:center;margin:10px 0;color:#999;font-size:12px;font-weight:700">OU BUSCAR POR</div>
+            <div class="buffet-field" style="margin-bottom:10px">
+                <label>CPF (apenas numeros)</label>
+                <input type="text" id="clubSearchCPF" placeholder="00000000000" maxlength="11" inputmode="numeric" autocomplete="off">
+            </div>
+            <div class="buffet-field" style="margin-bottom:14px">
+                <label>OU Telefone (com DDD, apenas numeros)</label>
+                <input type="tel" id="clubSearchPhone" placeholder="43999999999" inputmode="numeric" autocomplete="off">
+            </div>
+            <div id="clubSearchStatus" style="display:none;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <button class="buffet-btn" onclick="closeClubModal()">Cancelar</button>
+                <button class="buffet-btn primary" onclick="searchClubMember()" style="background:linear-gradient(135deg,#5A4570,#42A5F5);border-color:#5A4570">🔍 Buscar cliente</button>
+            </div>
+            <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">💡 O cliente precisa estar cadastrado no MilkyClube. Se ainda nao tiver conta, oriente a acessar <strong>milkypot.com/clube</strong>.</p>
+        </div>
+    </div>
+</div>
 
 <div class="toast" id="tst"></div>
 
@@ -2260,6 +2328,279 @@
     };
 
     function toast(m){var e=document.getElementById('tst');e.textContent=m;e.classList.add('show');setTimeout(function(){e.classList.remove('show')},2500)}
+
+    // ============================================
+    // MILKYCLUBE INTEGRATION (nao quebra nada existente)
+    // ============================================
+    var clubMember = null;       // membro atualmente identificado
+    var clubRedeemAmount = 0;    // MilkyCoins a resgatar (centavos)
+    var clubQRScanner = null;    // instancia do html5-qrcode
+
+    function clubToast(m){ toast(m); }
+
+    function formatCoins(coins){
+        var reais = (coins/100).toFixed(2).replace('.',',');
+        return 'G$ '+coins+' = R$ '+reais;
+    }
+    function tierInfo(tier){
+        if(tier==='chantilly') return { label:'Chantilly', emoji:'👑' };
+        if(tier==='nata')      return { label:'Nata',      emoji:'✨' };
+        return { label:'Leite', emoji:'🥛' };
+    }
+
+    window.openClubModal = function(){
+        var st = document.getElementById('clubSearchStatus');
+        if(st){ st.style.display='none'; st.textContent=''; }
+        document.getElementById('clubSearchCPF').value='';
+        document.getElementById('clubSearchPhone').value='';
+        document.getElementById('clubModalBg').classList.add('open');
+    };
+    window.closeClubModal = function(){
+        stopClubQRScanner();
+        document.getElementById('clubModalBg').classList.remove('open');
+    };
+
+    function ensureQRLib(cb){
+        if(typeof Html5Qrcode !== 'undefined'){ cb(); return; }
+        var s = document.createElement('script');
+        s.src = 'https://unpkg.com/html5-qrcode';
+        s.onload = cb;
+        s.onerror = function(){ clubToast('Erro ao carregar scanner QR'); };
+        document.head.appendChild(s);
+    }
+
+    window.startClubQRScanner = function(){
+        ensureQRLib(function(){
+            var wrap = document.getElementById('clubQRContainer');
+            wrap.style.display = 'block';
+            try {
+                clubQRScanner = new Html5Qrcode('clubQRReader');
+                clubQRScanner.start(
+                    { facingMode: 'environment' },
+                    { fps: 10, qrbox: { width: 220, height: 220 } },
+                    function(decoded){
+                        // Esperamos formato MILKYCLUBE:{uid}
+                        var m = /^MILKYCLUBE:(.+)$/.exec((decoded||'').trim());
+                        if(!m){ clubToast('QR invalido - formato esperado MILKYCLUBE:{uid}'); return; }
+                        stopClubQRScanner();
+                        loadClubMemberByUid(m[1]);
+                    },
+                    function(){}
+                ).catch(function(err){
+                    clubToast('Sem permissao de camera');
+                    console.warn('QR start error', err);
+                });
+            } catch(e){
+                console.warn('QR scanner err:', e);
+                clubToast('Nao foi possivel abrir a camera');
+            }
+        });
+    };
+    window.stopClubQRScanner = function(){
+        try { if(clubQRScanner){ clubQRScanner.stop().then(function(){ clubQRScanner.clear(); clubQRScanner=null; }).catch(function(){}); } } catch(e){}
+        var wrap = document.getElementById('clubQRContainer');
+        if(wrap) wrap.style.display = 'none';
+    };
+
+    function showClubStatus(msg, type){
+        var st = document.getElementById('clubSearchStatus');
+        if(!st) return;
+        st.style.display = 'block';
+        st.textContent = msg;
+        if(type==='error'){ st.style.background='#FFEBEE'; st.style.color='#C62828'; }
+        else if(type==='ok'){ st.style.background='#E8F5E9'; st.style.color='#2E7D32'; }
+        else { st.style.background='#FFF8E1'; st.style.color='#7a5a00'; }
+    }
+
+    function loadClubMemberByUid(uid){
+        if(typeof firebase==='undefined' || !firebase.firestore){ clubToast('Firebase indisponivel'); return; }
+        showClubStatus('Buscando cliente...', 'info');
+        firebase.firestore().collection('club_members').doc(uid).get().then(function(doc){
+            if(!doc.exists){ showClubStatus('Cliente nao encontrado no MilkyClube.', 'error'); return; }
+            setClubMember(Object.assign({ id: doc.id }, doc.data()));
+            closeClubModal();
+        }).catch(function(err){
+            console.warn('club get err', err);
+            showClubStatus('Erro ao buscar cliente.', 'error');
+        });
+    }
+
+    window.searchClubMember = function(){
+        if(typeof firebase==='undefined' || !firebase.firestore){ showClubStatus('Firebase indisponivel','error'); return; }
+        var cpf = (document.getElementById('clubSearchCPF').value||'').replace(/\D/g,'');
+        var phoneRaw = (document.getElementById('clubSearchPhone').value||'').replace(/\D/g,'');
+        if(!cpf && !phoneRaw){ showClubStatus('Informe CPF ou telefone.','error'); return; }
+        showClubStatus('Buscando cliente...', 'info');
+        var col = firebase.firestore().collection('club_members');
+        var queries = [];
+        if(cpf){ queries.push(col.where('cpf','==',cpf).limit(1).get()); }
+        if(phoneRaw){
+            var candidates = [phoneRaw];
+            if(!phoneRaw.startsWith('+')) candidates.push('+55'+phoneRaw);
+            candidates.forEach(function(ph){ queries.push(col.where('phone','==',ph).limit(1).get()); });
+        }
+        Promise.all(queries).then(function(results){
+            var found = null;
+            for(var i=0;i<results.length;i++){
+                if(!results[i].empty){ var d = results[i].docs[0]; found = Object.assign({id:d.id}, d.data()); break; }
+            }
+            if(!found){ showClubStatus('Cliente nao encontrado.','error'); return; }
+            setClubMember(found);
+            closeClubModal();
+        }).catch(function(err){
+            console.warn('club search err', err);
+            showClubStatus('Erro ao buscar cliente.','error');
+        });
+    };
+
+    function setClubMember(m){
+        clubMember = m;
+        clubRedeemAmount = 0;
+        var empty = document.getElementById('clubEmpty');
+        var card  = document.getElementById('clubCard');
+        if(empty) empty.style.display = 'none';
+        if(card)  card.style.display  = 'block';
+        document.getElementById('clubName').textContent = m.name || 'Cliente MilkyClube';
+        var t = tierInfo(m.tier);
+        document.getElementById('clubTier').textContent = t.emoji+' '+t.label;
+        document.getElementById('clubAvatar').textContent = (m.name||'?').charAt(0).toUpperCase();
+        var coins = (m.coins|0);
+        document.getElementById('clubBalance').textContent = formatCoins(coins);
+        document.getElementById('clubUseToggle').checked = false;
+        document.getElementById('clubUseRow').style.display = 'none';
+        document.getElementById('clubRedeemHint').style.display = 'none';
+        document.getElementById('clubUseAmount').value = 0;
+        updateClubMax();
+        clubToast('🎁 Cliente '+ (m.name || '')+' identificado!');
+    }
+    window.clearClubMember = function(){
+        clubMember = null;
+        clubRedeemAmount = 0;
+        var empty = document.getElementById('clubEmpty');
+        var card  = document.getElementById('clubCard');
+        if(empty) empty.style.display = 'flex';
+        if(card)  card.style.display  = 'none';
+    };
+
+    function cartTotalCents(){
+        // Replica o calculo do cart
+        var el = document.getElementById('cTotal');
+        if(!el) return 0;
+        var txt = (el.textContent||'').replace(/[^\d,]/g,'').replace(',','.');
+        var v = parseFloat(txt)||0;
+        return Math.round(v*100);
+    }
+    function updateClubMax(){
+        if(!clubMember) return;
+        var coins = clubMember.coins|0;
+        var cart = cartTotalCents();
+        var max = Math.min(coins, cart);
+        var inp = document.getElementById('clubUseAmount');
+        var lbl = document.getElementById('clubUseMax');
+        if(lbl) lbl.textContent = 'max: '+max;
+        if(inp){ inp.max = max; if(parseInt(inp.value||0)>max) inp.value = max; }
+    }
+    window.toggleClubRedeem = function(){
+        var on = document.getElementById('clubUseToggle').checked;
+        document.getElementById('clubUseRow').style.display = on?'flex':'none';
+        document.getElementById('clubRedeemHint').style.display = on?'block':'none';
+        if(!on){ clubRedeemAmount = 0; }
+        updateClubMax();
+        onClubUseAmountChange();
+    };
+    window.onClubUseAmountChange = function(){
+        if(!clubMember){ clubRedeemAmount = 0; return; }
+        var on = document.getElementById('clubUseToggle').checked;
+        if(!on){ clubRedeemAmount = 0; return; }
+        var v = parseInt(document.getElementById('clubUseAmount').value||'0',10)||0;
+        var max = Math.min(clubMember.coins|0, cartTotalCents());
+        if(v<0) v=0; if(v>max) v=max;
+        document.getElementById('clubUseAmount').value = v;
+        clubRedeemAmount = v;
+        var reais = (v/100).toFixed(2).replace('.',',');
+        document.getElementById('clubRedeemHint').textContent = 'Desconto: R$ '+reais;
+    };
+
+    // Expoe helpers para o finishOrder
+    window.MilkyClubPDV = {
+        getMember: function(){ return clubMember; },
+        getRedeemAmount: function(){ return clubRedeemAmount|0; },
+        updateCartTotal: function(){ updateClubMax(); onClubUseAmountChange(); },
+        handleAfterOrder: function(orderId, totalBRL){
+            if(!clubMember) return;
+            var memberId = clubMember.id || clubMember.uid;
+            if(typeof firebase==='undefined' || !firebase.functions) return;
+            var fns = firebase.app().functions('southamerica-east1');
+
+            // 1) Se houver redeem solicitado, chama clubRedeem primeiro
+            var chain = Promise.resolve();
+            if(clubRedeemAmount>0){
+                chain = chain.then(function(){
+                    return fns.httpsCallable('clubRedeem')({
+                        memberId: memberId,
+                        amount: clubRedeemAmount,
+                        franchiseId: fid,
+                        orderId: orderId
+                    }).catch(function(e){ console.warn('clubRedeem err', e); });
+                });
+            }
+            // 2) Concede cashback sobre o total pago apos o desconto
+            chain.then(function(){
+                return fns.httpsCallable('clubGrantCashback')({
+                    orderId: orderId,
+                    franchiseId: fid,
+                    memberId: memberId,
+                    total: totalBRL
+                });
+            }).then(function(res){
+                try {
+                    var coinsEarned = res && res.data && res.data.coinsEarned;
+                    if(coinsEarned){ clubToast('🎁 Cliente ganhou G$'+coinsEarned+' em MilkyCoins!'); }
+                } catch(e){}
+            }).catch(function(err){
+                console.warn('clubGrantCashback err', err);
+            });
+
+            // Limpa o estado apos uso
+            window.clearClubMember();
+        }
+    };
+
+    // Atualiza max sempre que carrinho mudar (observa o textContent do #cTotal)
+    try {
+        var _cTotalEl = document.getElementById('cTotal');
+        if(_cTotalEl && typeof MutationObserver!=='undefined'){
+            new MutationObserver(function(){ if(clubMember){ updateClubMax(); onClubUseAmountChange(); } })
+              .observe(_cTotalEl, { childList:true, characterData:true, subtree:true });
+        }
+    } catch(e){}
+
+    // Wrapper do finishOrder para integrar MilkyClube sem alterar a funcao original
+    (function(){
+        var _origFinish = window.finishOrder;
+        if(typeof _origFinish !== 'function') return;
+        window.finishOrder = function(){
+            // Captura estado antes de executar (cart sera zerado)
+            var memberActive = !!clubMember;
+            var redeem = clubRedeemAmount|0;
+            var totalBefore = cartTotalCents();
+            // Aplica desconto logico: NAO altera o cart (preserva precos) mas
+            // registra redeem via Cloud Function. O total do pedido ja e o total bruto.
+            var ret = _origFinish.apply(this, arguments);
+            if(memberActive){
+                // Recupera id do ultimo pedido salvo (DataStore append em 'orders')
+                try {
+                    var orders = DataStore.getCollection('orders', fid) || [];
+                    var last = orders[orders.length-1];
+                    if(last && last.id){
+                        var totalBRL = (totalBefore - redeem) / 100; // total efetivamente pago
+                        window.MilkyClubPDV.handleAfterOrder(last.id, totalBRL);
+                    }
+                } catch(e){ console.warn('club after-order err', e); }
+            }
+            return ret;
+        };
+    })();
 })();
 </script>
 

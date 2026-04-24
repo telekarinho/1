@@ -1874,12 +1874,27 @@
                 renderFixedCosts();
                 updateSummary();
 
-                // Re-renderiza apos sync do Firestore terminar (evita race
-                // condition onde sync sobrescreve localStorage depois do init)
-                window.addEventListener('mp_synced', function() {
+                // Re-renderiza apos sync do Firestore terminar.
+                // Dois cenarios possiveis:
+                //   A) sync > auth: _syncDone=true quando chegamos aqui →
+                //      re-renderiza imediatamente (mp_synced ja disparou)
+                //   B) auth > sync: _syncDone=false → escuta evento e
+                //      re-renderiza quando sync completar
+                if (typeof DataStore !== 'undefined' && DataStore._syncDone) {
+                    // Sync ja terminou — re-renderiza agora
                     renderFixedCosts();
                     updateSummary();
-                }, { once: true });
+                } else {
+                    window.addEventListener('mp_synced', function() {
+                        renderFixedCosts();
+                        updateSummary();
+                    }, { once: true });
+                    // Fallback de seguranca: se mp_synced nunca disparar
+                    // (Firestore offline), re-renderiza em 3s com localStorage
+                    setTimeout(function() {
+                        if (franchiseId) { renderFixedCosts(); updateSummary(); }
+                    }, 3000);
+                }
             });
         } else {
             // Fallback for dev/testing

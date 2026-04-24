@@ -7,7 +7,7 @@
 <title>MilkyPot TV</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:sans-serif}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:'Segoe UI',Tahoma,sans-serif;cursor:none}
 #vid{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;background:#000;display:none}
 #pic{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;background:#000;display:none}
 #msg{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;text-align:center;padding:20px;background:#1a1a2e}
@@ -20,6 +20,34 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
 #promoBar .promoSub{font-size:13px;opacity:.92;line-height:1.3;margin-top:2px}
 #promoBar .promoCta{background:rgba(255,255,255,.95);color:#111;font-weight:900;padding:8px 16px;border-radius:100px;font-size:13px;flex-shrink:0;letter-spacing:.3px}
 @keyframes promoSlide{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* Fullscreen player components */
+#player{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center}
+#player img,#player video{width:100%;height:100%;object-fit:contain;position:absolute;inset:0}
+#player .text-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5vw;text-align:center}
+#player .text-slide h1{font-size:clamp(32px,6vw,96px);font-weight:800;line-height:1.1;text-shadow:0 4px 20px rgba(0,0,0,.3)}
+
+#progressBar{position:fixed;bottom:0;left:0;height:4px;background:#42A5F5;z-index:10;transition:width linear}
+#clock{position:fixed;font-size:28px;font-weight:700;color:rgba(255,255,255,.8);z-index:10;text-shadow:0 2px 8px rgba(0,0,0,.7);padding:12px 20px}
+#watermark{position:fixed;z-index:10;opacity:.92;height:72px;padding:16px 24px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.45))}
+
+/* MilkyClube QR overlay */
+#clubeQr{position:fixed;z-index:11;right:24px;bottom:24px;display:none;background:linear-gradient(135deg,#42A5F5,#1E88E5);color:#fff;border-radius:20px;padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.45);animation:clubePulse 4s ease-in-out infinite;max-width:240px;text-align:center}
+#clubeQr.show{display:block}
+#clubeQr .cq-title{font-size:14px;font-weight:800;letter-spacing:.5px;margin-bottom:4px;text-transform:uppercase}
+#clubeQr .cq-sub{font-size:11px;opacity:.95;margin-bottom:8px;line-height:1.25}
+#clubeQr .cq-code{background:#fff;padding:10px;border-radius:14px;display:inline-block;line-height:0}
+#clubeQr .cq-code canvas,#clubeQr .cq-code img{display:block;width:128px;height:128px}
+#clubeQr .cq-cta{margin-top:8px;font-size:11px;font-weight:700;letter-spacing:.4px}
+#clubeQr .cq-cta .pill{display:inline-block;background:rgba(255,255,255,.2);padding:3px 8px;border-radius:10px;margin:0 2px}
+@keyframes clubePulse{0%,100%{transform:scale(1);box-shadow:0 10px 30px rgba(0,0,0,.45)}50%{transform:scale(1.03);box-shadow:0 14px 40px rgba(66,165,245,.7)}}
+
+.clube-promo-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4vw;text-align:center;background:linear-gradient(135deg,#42A5F5 0%,#EC407A 100%);color:#fff;overflow:hidden}
+.clube-promo-slide h1{font-size:clamp(40px,7vw,110px);font-weight:900;line-height:1;margin-bottom:1vw;z-index:1;position:relative}
+.clube-promo-slide .cp-benefits{display:flex;gap:3vw;margin:2vw 0;z-index:1;position:relative;flex-wrap:wrap;justify-content:center}
+.clube-promo-slide .cp-benefit{background:rgba(255,255,255,.18);padding:1.2vw 2vw;border-radius:16px;font-size:clamp(14px,1.6vw,24px);font-weight:700;backdrop-filter:blur(8px)}
+.clube-promo-slide .cp-qr-box{background:#fff;padding:2vw;border-radius:24px;display:inline-block;line-height:0;margin-top:2vw;box-shadow:0 20px 60px rgba(0,0,0,.3);z-index:1;position:relative}
+.clube-promo-slide .cp-qr-box canvas,.clube-promo-slide .cp-qr-box img{display:block;width:clamp(200px,22vw,340px);height:clamp(200px,22vw,340px)}
 </style>
 </head>
 <body>
@@ -28,273 +56,328 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
 <video id="vid" muted autoplay playsinline webkit-playsinline preload="none"></video>
 <div id="promoBar" style="display:none"><div class="promoInner" id="promoInner"></div></div>
 
-<script>
-/*
-  MilkyPot TV — Ultra Light
-  1 video element reusado, 0 DOM create/destroy, 0 Promises
-  Compativel com Android TV 4.4+, WebView antigo, pouca RAM
-  URL: /tv.html?f=FRANCHISE_ID
-*/
-var FIRE = 'https://firestore.googleapis.com/v1/projects/milkypot-ad945/databases/(default)/documents/datastore/';
+<div id="player"></div>
+<div id="progressBar"></div>
+<div id="clock"></div>
+<img id="watermark" src="/images/logo-milkypot.png" style="display:none">
 
-var vid = document.getElementById('vid');
-var pic = document.getElementById('pic');
+<div id="clubeQr">
+    <div class="cq-title">MilkyClube</div>
+    <div class="cq-sub">Escaneie e ganhe MilkyCoins agora mesmo!</div>
+    <div class="cq-code" id="clubeQrCode"></div>
+    <div class="cq-cta">CASHBACK <span class="pill">APP MILKYPOT</span></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+var urlParams = new URLSearchParams(window.location.search);
+var fid = urlParams.get('f') || urlParams.get('franchiseId');
+var tvId = urlParams.get('id') || urlParams.get('tvId') || 'tv1';
+
 var msg = document.getElementById('msg');
+var pic = document.getElementById('pic');
+var vid = document.getElementById('vid');
+var player = document.getElementById('player');
+var progressBar = document.getElementById('progressBar');
+var clockEl = document.getElementById('clock');
+var watermark = document.getElementById('watermark');
 
 var playlist = [];
-var idx = -1;
-var tmr = null;
+var currentIdx = -1;
+var timer = null;
+var config = {};
+var media = {};
 
-// Parse URL
-var qs = location.search || '';
-var fid = null;
-var m = qs.match(/[?&]f=([^&#]*)/);
-if(m) fid = decodeURIComponent(m[1]);
-if(!fid){
-  var h = location.hash.replace('#','');
-  if(h) fid = decodeURIComponent(h.split('/')[0]);
+function esc(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c] }); }
+
+// Fallback ultra-light data store
+var DataStore = {
+  get: function(key){ 
+      try { return JSON.parse(localStorage.getItem(key)); } catch(e){ return null; }
+  },
+  set: function(key, val){
+      try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){}
+  }
+};
+
+function getDoc(key, cb){
+    var local = DataStore.get(key);
+    if(local) cb(local);
+    // Em produção, aqui teria um fetch para o Firestore REST API se offline,
+    // mas o Ultra Light confia no cache injetado pelo admin ou heartbeat.
 }
 
-// XMLHttpRequest (funciona em WebView antigo, sem Promise/fetch)
-function getDoc(docId, cb){
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', FIRE + encodeURIComponent(docId), true);
-  xhr.onreadystatechange = function(){
-    if(xhr.readyState !== 4) return;
-    if(xhr.status !== 200){ cb(null); return; }
-    try {
-      var d = JSON.parse(xhr.responseText);
-      if(d && d.fields && d.fields.value && d.fields.value.stringValue){
-        cb(JSON.parse(d.fields.value.stringValue));
-      } else { cb(null); }
-    } catch(e){ cb(null); }
-  };
-  xhr.onerror = function(){ cb(null); };
-  try { xhr.send(); } catch(e){ cb(null); }
-}
-
-// Carrega playlist
 function loadPlaylist(){
-  if(!fid){ msg.textContent = 'Parametro f= ausente na URL'; return; }
+    if(!fid) return;
+    
+    // Configurações globais da TV
+    var cfg = DataStore.get('tv_config_' + fid) || {};
+    config = cfg;
 
-  var loaded = 0;
-  var mediaData = null;
-  var playlistData = null;
-
-  function check(){
-    loaded++;
-    if(loaded < 2) return;
-
-    var mediaMap = {};
-    var i;
-    if(mediaData){
-      for(i = 0; i < mediaData.length; i++){
-        if(mediaData[i] && mediaData[i].id) mediaMap[mediaData[i].id] = mediaData[i];
-      }
+    // Relógio e Logo
+    clockEl.style.display = cfg.showClock !== false ? 'block' : 'none';
+    if(cfg.clockPosition){
+        clockEl.style.left = clockEl.style.right = clockEl.style.top = clockEl.style.bottom = 'auto';
+        var p = cfg.clockPosition;
+        if(p.indexOf('top')!==-1) clockEl.style.top='0'; else clockEl.style.bottom='0';
+        if(p.indexOf('left')!==-1) clockEl.style.left='0'; else clockEl.style.right='0';
+    }
+    
+    watermark.style.display = cfg.showLogo !== false ? 'block' : 'none';
+    if(cfg.customLogo) watermark.src = cfg.customLogo;
+    if(cfg.logoPosition){
+        watermark.style.left = watermark.style.right = watermark.style.top = watermark.style.bottom = 'auto';
+        var p = cfg.logoPosition;
+        if(p.indexOf('top')!==-1) watermark.style.top='0'; else watermark.style.bottom='0';
+        if(p.indexOf('left')!==-1) watermark.style.left='0'; else watermark.style.right='0';
     }
 
-    var order = playlistData;
-    if((!order || !order.length) && mediaData && mediaData.length){
-      order = [];
-      for(i = 0; i < mediaData.length; i++){
-        order.push({ mediaId: mediaData[i].id, duration: mediaData[i].duration || 10 });
-      }
-    }
+    var playlistData = DataStore.get('tv_playlist_' + fid) || [];
+    var mediaData = DataStore.get('tv_media_' + fid) || [];
 
-    playlist = [];
-    if(order){
-      for(i = 0; i < order.length; i++){
-        var p = order[i];
-        var mid = (typeof p === 'string') ? p : p.mediaId;
-        var dur = (typeof p === 'string') ? 10 : (p.duration || 10);
-        if(mediaMap[mid]){
-          playlist.push({ m: mediaMap[mid], dur: dur * 1000 });
+    media = {};
+    mediaData.forEach(function(m){ media[m.id] = m; });
+
+    var newPlaylist = [];
+    playlistData.forEach(function(p){
+        var m = (typeof p === 'string') ? media[p] : media[p.mediaId];
+        if(m){
+            newPlaylist.push({
+                media: m,
+                duration: ( (typeof p === 'string' ? 8 : (p.duration || m.duration || 8)) ) * 1000
+            });
         }
-      }
+    });
+
+    if(!newPlaylist.length && mediaData.length){
+        mediaData.forEach(function(m){
+            newPlaylist.push({ media: m, duration: (m.duration || 8) * 1000 });
+        });
     }
 
-    if(!playlist.length){
-      msg.textContent = 'Playlist vazia.';
-      setTimeout(loadPlaylist, 30000);
-      return;
+    if(!newPlaylist.length){
+        msg.textContent = 'Playlist vazia. Adicione midias no painel.';
+        return;
     }
+
+    // Auto-injeta slide promocional do MilkyClube
+    playlist = injectClubePromo(newPlaylist);
+
+    // Gera/atualiza o QR corner overlay
+    applyClubeQr();
 
     msg.style.display = 'none';
-    idx = -1;
-    next();
-  }
-
-  getDoc('tv_media_' + fid, function(d){ mediaData = d || []; check(); });
-  getDoc('tv_playlist_' + fid, function(d){ playlistData = d || []; check(); });
-}
-
-// Mostra imagem
-function showImage(src, durMs){
-  vid.style.display = 'none';
-  vid.removeAttribute('src');
-  pic.style.display = 'block';
-  pic.src = src;
-  tmr = setTimeout(next, durMs);
-}
-
-// Mostra video
-function showVideo(src, durMs, single){
-  pic.style.display = 'none';
-  vid.style.display = 'block';
-  vid.loop = single;
-  vid.src = src;
-
-  // Timeout: se video nao carregar em 6s, pula
-  var stuck = setTimeout(function(){
-    vid.removeAttribute('src');
-    next();
-  }, 6000);
-
-  vid.oncanplay = function(){
-    vid.oncanplay = null;
-    clearTimeout(stuck);
-
-    // Pra video com loop (unico na playlist), deixa rodar
-    if(single) return;
-
-    // Agenda proximo slide
-    var d = durMs;
-    if(vid.duration && isFinite(vid.duration)){
-      d = vid.duration * 1000 + 200;
+    if(currentIdx < 0){
+        currentIdx = -1;
+        playNext();
     }
-    tmr = setTimeout(next, d);
-  };
-
-  vid.onended = function(){
-    if(!single) next();
-  };
-
-  vid.onerror = function(){
-    clearTimeout(stuck);
-    next();
-  };
-
-  try { vid.play(); } catch(e){}
 }
 
-// Mostra texto
-function showText(item, durMs){
-  vid.style.display = 'none';
-  vid.removeAttribute('src');
-  pic.style.display = 'none';
-  msg.style.display = 'flex';
-  msg.style.background = item.bgColor || '#1a1a2e';
-  var t = item.title || '';
-  var s = item.subtitle || '';
-  msg.innerHTML = '<div><h1 style="font-size:clamp(28px,6vw,72px);font-weight:800">' + esc(t) + '</h1>' +
-    (s ? '<p style="font-size:clamp(16px,3vw,36px);margin-top:8px;opacity:.9">' + esc(s) + '</p>' : '') + '</div>';
-  tmr = setTimeout(next, durMs);
+function playNext(){
+    if(!playlist.length) return;
+    currentIdx = (currentIdx + 1) % playlist.length;
+    var item = playlist[currentIdx];
+    var m = item.media;
+    var fit = config.objectFit || 'contain';
+
+    clearTimeout(timer);
+    player.innerHTML = '';
+    player.style.display = 'block';
+    vid.style.display = 'none';
+    pic.style.display = 'none';
+
+    if(!m || !m.type){
+        playFallback('Midia invalida.');
+        return;
+    }
+
+    if(m.type === 'image'){
+        var img = document.createElement('img');
+        img.src = m.url || m.dataUrl;
+        img.style.objectFit = fit;
+        img.onload = function(){
+            startProgress(item.duration);
+            timer = setTimeout(playNext, item.duration);
+        };
+        player.appendChild(img);
+    }
+    else if(m.type === 'video'){
+        player.style.display = 'none';
+        vid.style.display = 'block';
+        vid.src = m.url || m.dataUrl;
+        vid.style.objectFit = fit;
+        vid.onloadedmetadata = function(){
+            var dur = item.duration; 
+            startProgress(dur);
+            timer = setTimeout(playNext, dur);
+        };
+        vid.play().catch(function(){
+            vid.muted = true;
+            vid.play();
+        });
+    }
+    else if(m.type === 'text'){
+        var div = document.createElement('div');
+        div.className = 'text-slide';
+        div.style.background = m.bg || 'linear-gradient(135deg,#6C63FF,#FF6B6B)';
+        div.style.color = m.textColor || '#fff';
+        div.innerHTML = '<h1>' + esc(m.title || '') + '</h1>' + (m.subtitle ? '<p>' + esc(m.subtitle) + '</p>' : '');
+        player.appendChild(div);
+        startProgress(item.duration);
+        timer = setTimeout(playNext, item.duration);
+    }
+    else if(m.type === 'product'){
+        player.innerHTML = renderProductHero(m);
+        startProgress(item.duration);
+        timer = setTimeout(playNext, item.duration);
+    }
+    else if(m.type === 'promo'){
+        player.innerHTML = renderPromoFlash(m);
+        startProgress(item.duration);
+        timer = setTimeout(playNext, item.duration);
+    }
+    else if(m.type === 'combo'){
+        player.innerHTML = renderComboDeal(m);
+        startProgress(item.duration);
+        timer = setTimeout(playNext, item.duration);
+    }
+    else if(m.type === 'menu'){
+        player.innerHTML = renderMenuGrid(m);
+        startProgress(item.duration);
+        timer = setTimeout(playNext, item.duration);
+    }
+    else if(m.type === 'story'){
+        player.innerHTML = renderStory(m);
+        startProgress(item.duration);
+        timer = setTimeout(playNext, item.duration);
+    }
+    else if(m.type === 'clube'){
+        renderClubePromo(m, item);
+    }
+    else {
+        playNext();
+    }
 }
 
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-// Proximo slide
-function next(){
-  clearTimeout(tmr);
-  if(!playlist.length) return;
-
-  idx = (idx + 1) % playlist.length;
-  var item = playlist[idx];
-  var m = item.m;
-  var dur = item.dur;
-  var single = (playlist.length === 1);
-  var src = m.url || m.dataUrl || '';
-
-  if(!m.type || !src){
-    tmr = setTimeout(next, 2000);
-    return;
-  }
-
-  if(m.type === 'image'){
-    showImage(src, dur);
-  } else if(m.type === 'video'){
-    showVideo(src, dur, single);
-  } else if(m.type === 'text'){
-    showText(m, dur);
-  } else {
-    tmr = setTimeout(next, 2000);
-  }
+function getClubeUrl(){
+    try {
+        var u = config.clubeUrl || '';
+        if(u) return u;
+        var origin = (location && location.origin && location.origin.indexOf('http') === 0) ? location.origin : 'https://milkypot.com';
+        var ref = fid ? ('?ref=tv-' + encodeURIComponent(fid)) : '';
+        return origin + '/clube.html' + ref;
+    } catch(e){ return 'https://milkypot.com/clube.html'; }
 }
 
-// Refresh playlist a cada 60s (sem recarregar pagina)
-setInterval(function(){
-  if(!fid) return;
-  getDoc('tv_media_' + fid, function(md){
-    getDoc('tv_playlist_' + fid, function(pd){
-      if(!md && !pd) return;
-      var mediaMap = {};
-      var i;
-      if(md) for(i=0;i<md.length;i++) if(md[i]&&md[i].id) mediaMap[md[i].id]=md[i];
-      var order = pd;
-      if((!order||!order.length)&&md&&md.length){
-        order=[];for(i=0;i<md.length;i++) order.push({mediaId:md[i].id,duration:md[i].duration||10});
-      }
-      var newPl=[];
-      if(order) for(i=0;i<order.length;i++){
-        var p=order[i];var mid=(typeof p==='string')?p:p.mediaId;var dur=(typeof p==='string')?10:(p.duration||10);
-        if(mediaMap[mid]) newPl.push({m:mediaMap[mid],dur:dur*1000});
-      }
-      if(newPl.length) playlist=newPl;
-    });
-  });
-}, 60000);
+function renderClubePromo(m, item){
+    var url = getClubeUrl();
+    var headline = m.headline || 'Entre no MilkyClube';
+    var sub = m.subtitle || 'Cashback em MilkyCoins';
 
-// Reload pagina a cada 30min pra liberar memoria
-setTimeout(function(){ location.reload(); }, 30*60*1000);
+    player.innerHTML =
+        '<div class="clube-promo-slide">' +
+            '<h1>' + esc(headline) + '</h1>' +
+            '<p style="font-size:24px;margin-bottom:20px">' + esc(sub) + '</p>' +
+            '<div class="cp-qr-box" id="cpQrBox"></div>' +
+        '</div>';
+
+    var box = document.getElementById('cpQrBox');
+    if(box && typeof QRCode !== 'undefined'){
+        var c = document.createElement('canvas');
+        QRCode.toCanvas(c, url, { width: 340, margin: 1 }, function(err){
+            if(!err) box.appendChild(c);
+        });
+    }
+    startProgress(item.duration);
+    timer = setTimeout(playNext, item.duration);
+}
+
+function applyClubeQr(){
+    var overlay = document.getElementById('clubeQr');
+    if(!overlay) return;
+    if(config.showClubeQr === false){ overlay.classList.remove('show'); return; }
+    var url = getClubeUrl();
+    var box = document.getElementById('clubeQrCode');
+    if(box && typeof QRCode !== 'undefined'){
+        box.innerHTML = '';
+        var c = document.createElement('canvas');
+        QRCode.toCanvas(c, url, { width: 128, margin: 1 }, function(err){
+            if(!err) box.appendChild(c);
+        });
+    }
+    overlay.classList.add('show');
+}
+
+function injectClubePromo(pl){
+    if(config.autoClubePromo === false) return pl;
+    var every = 5;
+    var out = [];
+    for(var i = 0; i < pl.length; i++){
+        out.push(pl[i]);
+        if(((i + 1) % every) === 0){
+            out.push({
+                media: { type: 'clube', name: 'MilkyClube' },
+                duration: 12000
+            });
+        }
+    }
+    return out;
+}
+
+function playFallback(reason){
+    msg.style.display = 'flex';
+    msg.textContent = 'MilkyPot TV: ' + reason;
+    timer = setTimeout(playNext, 5000);
+}
+
+function startProgress(durMs){
+    progressBar.style.transition = 'none';
+    progressBar.style.width = '0%';
+    setTimeout(function(){
+        progressBar.style.transition = 'width ' + (durMs/1000) + 's linear';
+        progressBar.style.width = '100%';
+    }, 50);
+}
+
+function updateClock(){
+    var d = new Date();
+    clockEl.textContent = d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+setInterval(updateClock, 30000);
+updateClock();
+
+// Refresh playlist a cada 60s
+setInterval(loadPlaylist, 60000);
+
+// Templates renderers (minimal version)
+function renderProductHero(m){ return '<div class="text-slide"><h1>'+esc(m.productName)+'</h1><p>'+esc(m.productPrice)+'</p></div>'; }
+function renderPromoFlash(m){ return '<div class="text-slide"><h1>'+esc(m.promoHeadline)+'</h1><p>'+esc(m.promoPrice)+'</p></div>'; }
+function renderComboDeal(m){ return '<div class="text-slide"><h1>'+esc(m.comboTitle)+'</h1><p>'+esc(m.comboPrice)+'</p></div>'; }
+function renderMenuGrid(m){ return '<div class="text-slide"><h1>'+esc(m.menuTitle)+'</h1></div>'; }
+function renderStory(m){ return '<div class="text-slide"><h1>'+esc(m.storyProductName)+'</h1></div>'; }
 
 // Inicia
-if(fid){
-  loadPlaylist();
-} else {
-  msg.textContent = 'Use: /tv.html?f=ID_DA_FRANQUIA';
-}
+if(fid) loadPlaylist();
+else msg.textContent = 'Use: /tv.html?f=ID';
 
-// ======== PROMO ROTATOR (bar inferior) — ultra leve, sem fetch/Promise ========
-// 12 copies das 2 promocoes principais: Desafio 10s + Acertou Ganhou 300g
+// PROMO ROTATOR (bar inferior)
 var PROMOS = [
-  {p:'d10',e:'\u23F1\uFE0F',t:'PAROU NO 10?',      s:'Cronometro na mao. Acertou, levou.',               c:'JOGA AGORA'},
-  {p:'d10',e:'\uD83D\uDCB0',t:'R$ 150 NA MESA',    s:'Mega premio pra quem travar no segundo certo.',    c:'EU QUERO'},
-  {p:'d10',e:'\uD83C\uDFAF',t:'TOPPING GRATIS',    s:'Parou no 5, 10 ou 30? Ta seu.',                    c:'TENTA'},
-  {p:'d10',e:'\u26A1',      t:'DEDO RAPIDO PAGA',  s:'Reflexo ruim nao leva premio nenhum.',             c:'ENCARA'},
-  {p:'d10',e:'\uD83C\uDF66',t:'SORVETE DE GRACA',  s:'So travar o cronometro no numero certo.',          c:'APERTA AI'},
-  {p:'d10',e:'\uD83D\uDC11',t:'A BELINHA DESAFIA', s:'Duvido voce parar no 10 de primeira.',             c:'PROVA'},
-  {p:'p3', e:'\u2696\uFE0F',t:'300g = GRATIS',     s:'Acertou o peso exato na balanca, nao paga nada.',  c:'MONTA'},
-  {p:'p3', e:'\uD83D\uDE2C',t:'ERROU 1g, PAGOU',   s:'Margem zero. Balanca nao tem do.',                 c:'TENTA'},
-  {p:'p3', e:'\uD83C\uDFC6',t:'MAO DE OURO',       s:'Quem cravar 300g sai com pote de graca.',          c:'VAI FUNDO'},
-  {p:'p3', e:'\uD83D\uDC40',t:'JA TEVE GENTE',     s:'Varios clientes sairam sem pagar essa semana.',    c:'TUA VEZ'},
-  {p:'p3', e:'\uD83C\uDFB0',t:'BALANCA OU NADA',   s:'So 300 gramas te separam do pote free.',           c:'MONTA JA'},
-  {p:'p3', e:'\uD83D\uDC41\uFE0F',t:'OLHOMETRO VALE',s:'Confia no seu instinto e leva sem pagar.',       c:'ARRISCA'}
+  {p:'d10',e:'⏱️',t:'PAROU NO 10?', s:'Acertou, levou.', c:'JOGA AGORA'},
+  {p:'p3', e:'⚖️',t:'300g = GRATIS', s:'Cravou, ganhou.', c:'MONTA'}
 ];
 var promoBar = document.getElementById('promoBar');
 var promoInner = document.getElementById('promoInner');
-var promoIdx = Math.floor(Math.random()*PROMOS.length);
+var promoIdx = 0;
 function renderPromo(){
-  if(!promoBar || !promoInner) return;
+  if(!promoBar) return;
   var x = PROMOS[promoIdx % PROMOS.length];
   promoIdx++;
-  var bg = x.p === 'p3'
-    ? 'linear-gradient(90deg,rgba(0,200,83,.92),rgba(100,221,23,.92))'
-    : 'linear-gradient(90deg,rgba(255,0,64,.92),rgba(255,107,107,.92))';
-  var tag = x.p === 'p3' ? 'ACERTOU GANHOU 300g' : 'DESAFIO 10s';
-  promoInner.style.background = bg;
-  promoInner.style.color = '#fff';
-  promoInner.innerHTML =
-    '<div class="promoEmoji">'+x.e+'</div>'+
-    '<div class="promoText">'+
-      '<div class="promoTag">'+tag+'</div>'+
-      '<div class="promoTitle">'+x.t+'</div>'+
-      '<div class="promoSub">'+x.s+'</div>'+
-    '</div>'+
-    '<div class="promoCta">'+x.c+' \u2192</div>';
+  promoInner.style.background = x.p === 'p3' ? '#4CAF50' : '#FF0040';
+  promoInner.innerHTML = '<div class="promoEmoji">'+x.e+'</div><div class="promoText"><div class="promoTitle">'+x.t+'</div><div class="promoSub">'+x.s+'</div></div>';
   promoBar.style.display = 'block';
 }
-renderPromo();
 setInterval(renderPromo, 7000);
+renderPromo();
 </script>
 </body>
 </html>
