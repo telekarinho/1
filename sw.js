@@ -8,8 +8,9 @@ const PRECACHE_URLS = [
     '/login.html',
     '/cardapio.html',
     '/desafio.html',
-    // MilkyClube (PWA cliente final)
+    // MilkyClube (PWA cliente final + landing viral)
     '/clube.html',
+    '/clube-landing.html',
     '/regulamento-milkyclube.html',
     '/js/core/milkyclub.js',
     '/js/core/milkyclub-push.js',
