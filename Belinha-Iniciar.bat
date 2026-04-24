@@ -8,8 +8,8 @@ set "AP_DIR=%MP_DIR%autopilot"
 cls
 echo.
 echo  ==========================================================
-echo        BELINHA - Servidor Local + Painel
-echo        http://localhost:5757
+echo        BELINHA - Servidor Local
+echo        Porta 5757 - Modo padrao: Codex Local
 echo  ==========================================================
 echo.
 
@@ -33,7 +33,7 @@ if not exist node_modules (
     echo [1/3] Dependencias OK.
 )
 
-echo [2/3] Verificando Claude CLI...
+echo [2/3] Verificando Claude CLI ^(principal^)...
 call claude --version >nul 2>&1
 if errorlevel 1 (
     echo.
@@ -47,15 +47,39 @@ if errorlevel 1 (
     exit /b 1
 )
 
+echo [2.1/3] Verificando autenticacao do Claude...
+@echo Responda apenas OK> "%TEMP%\mp-claude-auth-check.txt"
+type "%TEMP%\mp-claude-auth-check.txt" | claude -p --output-format json > "%TEMP%\mp-claude-auth-out.txt" 2>nul
+findstr /C:"authentication_error" "%TEMP%\mp-claude-auth-out.txt" >nul 2>&1
+if not errorlevel 1 (
+    echo [AVISO] Claude encontrado, mas sem login valido. A Belinha vai tentar Codex como backup.
+    echo         Pra restaurar o principal: rode ^`claude login^`.
+)
+
+echo [3/3] Verificando porta 5757...
+powershell -NoProfile -Command "try { $r = Invoke-WebRequest -UseBasicParsing 'http://localhost:5757/health' -TimeoutSec 2; if ($r.StatusCode -eq 200) { exit 0 } else { exit 1 } } catch { exit 1 }"
+if not errorlevel 1 (
+    echo.
+    echo  ==========================================================
+    echo    JA EXISTE UMA BELINHA RODANDO NA PORTA 5757
+    echo.
+    echo    Health: http://localhost:5757/health
+    echo    Painel: http://localhost:5757/painel/copilot-belinha.html
+    echo    Reaproveitando a instancia atual sem reiniciar.
+    echo  ==========================================================
+    echo.
+    start "" "http://localhost:5757/painel/copilot-belinha.html"
+    exit /b 0
+)
+
 echo [3/3] Iniciando servidor Node...
 echo.
 echo  ==========================================================
 echo    SERVIDOR RODANDO - NAO FECHE ESTA JANELA
 echo.
-echo    PAINEL BELINHA:
-echo    http://localhost:5757/painel/copilot-belinha.html
-echo.
-echo    Abrira automaticamente no seu navegador em 4s.
+echo    Health: http://localhost:5757/health
+echo    Painel: http://localhost:5757/painel/copilot-belinha.html
+echo    Se voltar ao menu abaixo, o servidor caiu.
 echo  ==========================================================
 echo.
 
@@ -70,7 +94,7 @@ echo    [AVISO] Servidor parou inesperadamente.
 echo    Mensagem de erro acima ^(se houver^).
 echo.
 echo    Causa comum: porta 5757 ocupada por outro processo.
-echo    Solucao: feche outras janelas do Belinha, ou reinicie o PC.
+echo    Se ja existir outra janela da Belinha, use a instancia que ja esta aberta.
 echo  ==========================================================
 echo.
 pause

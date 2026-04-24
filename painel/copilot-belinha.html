@@ -144,7 +144,7 @@
       <div class="agent-status" id="agentStatus">
         <div class="sheep">🐑</div>
         <h4>Belinha está pronta</h4>
-        <div class="status-dot">online · Claude Sonnet</div>
+        <div class="status-dot">preferindo codex local</div>
       </div>
 
       <h3>⚡ Ações rápidas</h3>
@@ -207,7 +207,7 @@
       <div style="margin-top:18px;padding-top:14px;border-top:1px solid #F3F4F6">
         <button class="quick-action" onclick="openSettings()" style="background:#FFF7ED;border-color:#FED7AA">
           <span class="emoji">⚙️</span>
-          <span class="qa-text">Configurar API key / modelo</span>
+          <span class="qa-text">Configurar fallback API / modelo</span>
         </button>
       </div>
     </aside>
@@ -261,24 +261,25 @@
     </div>
     <div class="ios-sheet-body">
       <p style="color:#666;font-size:13px;margin:0 0 16px">
-        A Belinha usa a <b>Anthropic API</b> (plano Claude). Gere uma key em
+        A Belinha tenta primeiro o <b>codex local</b> na sua máquina. Se você quiser fallback pela nuvem, configure a <b>Anthropic API</b> abaixo.
+        Gere uma key em
         <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>
         e cole aqui. <a href="https://github.com/telekarinho/1/blob/main/docs/COPILOT_LILO_SETUP.md" target="_blank">Guia passo-a-passo</a>.
       </p>
       <div class="ios-field-group">
-        <label class="ios-field-label">Anthropic API Key</label>
+        <label class="ios-field-label">Anthropic API Key (fallback)</label>
         <input type="password" class="ios-field" id="inpApiKey" placeholder="sk-ant-api03-…">
       </div>
       <div class="ios-field-group">
         <label class="ios-field-label">Modelo</label>
         <select class="ios-field" id="inpModel">
-          <option value="claude-sonnet-4-5">claude-sonnet-4-5 (padrão — melhor custo/benefício)</option>
+          <option value="claude-sonnet-4-5">claude-sonnet-4-5 (fallback padrão — melhor custo/benefício)</option>
           <option value="claude-opus-4">claude-opus-4 (mais inteligente, 5× custo)</option>
           <option value="claude-haiku-4">claude-haiku-4 (econômico, resposta rápida)</option>
         </select>
       </div>
       <div style="font-size:12px;color:#888;margin-top:8px">
-        💡 Estimativa de custo: R$ 0,05 a R$ 0,30 por conversa média com Sonnet. Pra uso diário operacional, R$ 30-80/mês.
+        💡 Com codex local ativo, a Belinha tenta custo zero primeiro. Esse custo abaixo só vale quando cair no fallback via API.
       </div>
     </div>
     <div class="ios-sheet-footer">
@@ -300,7 +301,7 @@
   let totalCost = 0;
 
   // ====== Settings ======
-  function getSettings() { return DataStore.get('belinha_settings') || { apiKey:'', model:'claude-sonnet-4-5' }; }
+  function getSettings() { return DataStore.get('belinha_settings') || { apiKey:'', model:'claude-sonnet-4-5', mode:'codex_local' }; }
   function setSettings(s) { DataStore.set('belinha_settings', s); updateAgentStatus(); }
 
   window.openSettings = function() {
@@ -313,7 +314,8 @@
   window.saveSettings = function() {
     setSettings({
       apiKey: document.getElementById('inpApiKey').value.trim(),
-      model: document.getElementById('inpModel').value
+      model: document.getElementById('inpModel').value,
+      mode: 'codex_local'
     });
     closeSettings();
     appendBotMsg('✅ Configuração salva. Já posso responder!');
