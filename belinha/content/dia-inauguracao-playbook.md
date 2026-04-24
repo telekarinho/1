@@ -117,11 +117,19 @@ Peça por aqui mesmo ou venha nos visitar 😊
 
 ---
 
+### 🟢 22h15 — Story Urgência de Fechamento (NOVIDADE)
+**Tipo:** Vídeo rápido do balcão com produtos  
+**Texto sobreposto:** "ÚLTIMA CHANCE DE DELIVERY HOJE! 🛵"  
+**Subtexto:** "Pedidos até 22h30 garantem entrega! Pedidos presenciais até 22h50"  
+**CTA:** Sticker link direto para https://wa.me/5543998042424  
+**Obs:** Urgência real — fecha pedidos delivery nos últimos 45min  
+
+---
+
 ### 🟢 22h45 — Story de Encerramento
-**Tipo:** Foto vídeo de trás — loja no encerramento  
-**Texto sobreposto:** "Até semana que vem! 🐑💛"  
-**Info:** "Funciona de [horário regular] — link na bio"  
-**Nota:** Postar horário regular assim que confirmado com a franquia  
+**Tipo:** Foto/vídeo da loja no encerramento  
+**Texto sobreposto:** "Até amanhã! 🐑💛"  
+**Info:** "Funcionamos seg-dom, das 14h às 23h — link na bio"  
 
 ---
 
