@@ -466,6 +466,23 @@
         function getFilteredCatalogItems(category) {
             if (!catalog) return [];
 
+            // Defense: se CatalogV2 tem produtos, só aceita grupos v2 (ignora lixo legado)
+            let v2ValidKeys = null;
+            try {
+                const sess = window.Auth && Auth.getSession && Auth.getSession();
+                const fid = sess && sess.franchiseId;
+                if (fid && window.CatalogV2) {
+                    const v2 = CatalogV2.load(fid);
+                    if (v2 && v2.produtos && v2.produtos.length > 0) {
+                        v2ValidKeys = new Set(
+                            (v2.categorias || [])
+                                .filter(c => c.active !== false && !['cat_bebida','cat_topping'].includes(c.id))
+                                .map(c => c.id.replace(/^cat_/, ''))
+                        );
+                    }
+                }
+            } catch(e) {}
+
             // Mapeia tabs → grupos de sabores (inclui chaves CatalogV2 + legado)
             const categoryMap = {
                 'ninho':   ['classicos', 'tradicionais', 'especiais', 'milkshake', 'potinho', 'sundae'],
@@ -485,6 +502,8 @@
                 if (groupKey === 'bebidas') {
                     items = items.concat(catalog.bebidas || []);
                 } else if (catalog.sabores && catalog.sabores[groupKey]) {
+                    // Se v2 ativo e grupo não é v2, pula (lixo legado)
+                    if (v2ValidKeys && !v2ValidKeys.has(groupKey)) return;
                     items = items.concat(catalog.sabores[groupKey].items || []);
                 }
             });
