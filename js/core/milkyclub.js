@@ -286,9 +286,15 @@
                 throw new Error('E-mail invalido.');
             }
 
-            // URL de retorno do magic link. Preservamos ?login=1 pro gatekeeper
-            // de clube.html pular o redirect, e ?ref=CODE se veio indicacao.
-            var base = window.location.origin || 'https://milkypot.com';
+            // URL de retorno do magic link. Force sempre o dominio canonico
+            // de producao, exceto se explicitamente opts.continueUrl for passado.
+            // Isso evita gerar links com localhost/preview em testes que nao
+            // funcionariam quando o user clicar do celular/desktop normal.
+            var PROD_HOST = 'milkypot.com';
+            var origin = window.location.origin || ('https://' + PROD_HOST);
+            var host = (function(){ try { return new URL(origin).hostname; } catch(e){ return ''; } })();
+            var isLocal = /^(localhost|127\.|192\.168\.|10\.|0\.0\.0\.0)/.test(host) || host.endsWith('.local');
+            var base = isLocal ? ('https://' + PROD_HOST) : origin;
             var retUrl = (opts.continueUrl || (base + '/clube.html?login=1'));
             try {
                 var u = new URL(retUrl);
