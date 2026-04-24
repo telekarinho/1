@@ -446,27 +446,9 @@
     const text = input.value.trim();
     if (!text) return;
     const settings = getSettings();
-
-    // Servidor local ativo: nao precisa de apiKey (R$ 0)
-    // Sem servidor E sem apiKey: verifica se e Mixed Content ou falta de config
-    if (!_localServer && !settings.apiKey) {
-      const st = await CopilotTransport.status();
-      if (st.mixedBlocked) {
-        appendBotMsg(
-          '🔒 **Chrome bloqueando conexão com servidor local (Mixed Content).**\n\n' +
-          'Seu servidor está rodando em `http://` mas o painel é `https://milkypot.com`.\n\n' +
-          '**Resolver em 3 cliques:**\n' +
-          '1. Clique no 🔒 cadeado à esquerda da URL (milkypot.com)\n' +
-          '2. "Configurações do site" → **Conteúdo inseguro: Permitir**\n' +
-          '3. F5 para recarregar — servidor conecta automaticamente ✅\n\n' +
-          '💡 Ou cola no Chrome: `chrome://settings/content/siteDetails?site=https%3A%2F%2Fmilkypot.com`'
-        );
-        return;
-      }
-      appendBotMsg('⚙️ Servidor local não detectado. Configure sua Anthropic API key abaixo, ou abra o **Belinha-Iniciar.bat** na pasta do sistema e recarregue (F5).');
-      openSettings();
-      return;
-    }
+    // Belinha funciona sem apiKey — a Vercel Function usa ANTHROPIC_API_KEY
+    // env var (compartilhada MilkyPot). User NAO precisa configurar nada.
+    // Se o user tem apiKey propria configurada, ela tem prioridade.
 
     messages.push({ role:'user', content: text });
     input.value = '';
