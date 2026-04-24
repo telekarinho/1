@@ -69,12 +69,13 @@
     }
 
     async function sendApi(payload) {
-        if (!payload.apiKey) throw new Error('api_key_missing');
+        // Nao exige apiKey — se vazia, Vercel Function usa ANTHROPIC_API_KEY env var.
+        // Belinha funciona de qualquer PC sem configuracao do usuario.
         const r = await fetch('/api/copilot', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                apiKey: payload.apiKey,
+                apiKey: payload.apiKey || '',
                 model: payload.model || 'claude-sonnet-4-5',
                 persona: payload.persona,
                 messages: payload.messages,
@@ -157,27 +158,21 @@
     }
 
     async function send(payload) {
-        // Preferência: servidor local. Se não responde, cai na API. Se não, offline.
+        // Ordem: servidor local (se rodando) -> API Vercel (env var) -> offline.
+        // Usuario NAO precisa configurar nada — apenas Vercel tem que ter
+        // ANTHROPIC_API_KEY configurada como env var.
         const localOn = await probeLocal();
         if (localOn) {
             try { return await sendLocal(payload); }
             catch (e) { console.warn('[CopilotTransport] local falhou:', e.message); }
         }
 
-        // Só tenta API se tiver apiKey configurada
-        if (payload.apiKey) {
-            try { return await sendApi(payload); }
-            catch (e) {
-                console.warn('[CopilotTransport] API falhou:', e.message);
-                if (e.message === 'api_key_missing') {
-                    return sendOffline(payload);
-                }
-                throw e;
-            }
+        // API sempre tentada (Vercel Function usa env var se apiKey vazia)
+        try { return await sendApi(payload); }
+        catch (e) {
+            console.warn('[CopilotTransport] API falhou:', e.message);
+            return sendOffline(payload);
         }
-
-        // Sem apiKey e sem local → modo offline (respostas canned)
-        return sendOffline(payload);
     }
 
     async function status() {
