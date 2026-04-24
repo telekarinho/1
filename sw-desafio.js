@@ -8,10 +8,12 @@
      - Firestore API: network-only (nada de cache POST)
    ============================================================ */
 
-const CACHE = 'milkypot-desafio-v3';
+const CACHE = 'milkypot-desafio-v4';
 const APP_SHELL = [
     '/desafio.html',
     '/js/pages/desafio-tv-bridge.js',
+    '/js/core/promocoes-copy.js',
+    '/js/core/tv-promo-rotator.js',
     '/manifest.json',
     '/images/logo-milkypot.png',
     'https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;700;800;900&family=Orbitron:wght@700;800;900&display=swap'
