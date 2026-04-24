@@ -98,7 +98,10 @@ self.addEventListener('install', event => {
     );
 });
 
-// Activate: clean old caches
+// Activate: clean old caches + force-reload controlled tabs so they pick up new JS.
+// Sem isso, tabs abertas continuam executando o bundle velho do SW anterior
+// (cache-first em .js) até o usuário fechar e abrir. O reload aqui é idempotente
+// — só roda uma vez quando uma NOVA versão do SW ativa (skipWaiting + claim).
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
@@ -107,7 +110,26 @@ self.addEventListener('activate', event => {
                     .filter(name => name !== CACHE_NAME)
                     .map(name => caches.delete(name))
             );
-        }).then(() => self.clients.claim())
+        })
+        .then(() => self.clients.claim())
+        .then(() => self.clients.matchAll({ type: 'window' }))
+        .then(windowClients => {
+            windowClients.forEach(client => {
+                // client.navigate(url) re-navega a aba — força re-fetch via novo SW.
+                // Evita bounce em rotas sensíveis (TV/radio indoor) que não devem piscar.
+                try {
+                    const u = new URL(client.url);
+                    const bypass = /\/(tv|radio|t|tv-indoor|radio-indoor)(\.html)?$/.test(u.pathname)
+                                   || /^\/tv\d+(\.html)?$/.test(u.pathname);
+                    if (bypass) return;
+                    if (typeof client.navigate === 'function') {
+                        client.navigate(client.url);
+                    } else {
+                        client.postMessage({ type: 'SW_ACTIVATED_RELOAD' });
+                    }
+                } catch(e) {}
+            });
+        })
     );
 });
 
