@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v19';
-const CACHE_NAME = 'milkypot-v19';
+const CACHE_VERSION = 'mp-v20';
+const CACHE_NAME = 'milkypot-v20';
 
 // Critical local assets that must be available offline
 const PRECACHE_URLS = [
@@ -50,6 +50,9 @@ const PRECACHE_URLS = [
     '/js/core/auth.js',
     '/js/core/audit.js',
     '/js/core/notifications.js',
+    '/js/core/copilot-transport.js',
+    '/js/core/belinha-page-scanners.js',
+    '/js/core/belinha-widget.js',
     // Feature JS
     '/js/cardapio.js',
     '/js/cardapio-data.js',
