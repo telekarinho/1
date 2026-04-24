@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no">
+<title>Cartão Fidelidade — MilkyPot 🐑</title>
+<meta name="description" content="Programa de fidelidade MilkyPot: a cada R$1 você ganha 1 ponto. Junte 100 pontos e ganhe um Mini grátis!">
+<meta name="robots" content="noindex">
+<link rel="icon" href="images/logo-milkypot.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:linear-gradient(145deg,#FFF0F5 0%,#EEF0FF 45%,#FFF8E1 100%);min-height:100vh;color:#3D2A55;padding:20px 16px 40px}
+.wrap{max-width:420px;margin:0 auto}
+
+/* Header */
+.header{text-align:center;margin-bottom:24px;padding-top:8px}
+.header img{height:52px;margin-bottom:10px;filter:drop-shadow(0 4px 8px rgba(90,69,112,.18))}
+.header h1{font-family:'Baloo 2',cursive;font-size:28px;font-weight:800;color:#5A4570;line-height:1.1;margin-bottom:4px}
+.header .tagline{font-size:13px;color:#9484A8;letter-spacing:.3px}
+
+/* Main card */
+.loyalty-card{background:#fff;border-radius:24px;padding:24px 22px 28px;box-shadow:0 12px 40px rgba(144,100,220,.12);margin-bottom:20px;position:relative;overflow:hidden}
+.loyalty-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(212,165,255,.25) 0%,transparent 70%);border-radius:50%}
+.card-title{font-family:'Baloo 2',cursive;font-size:17px;font-weight:800;color:#5A4570;margin-bottom:6px;text-align:center}
+.card-subtitle{font-size:12px;color:#9484A8;text-align:center;margin-bottom:20px;line-height:1.4}
+.card-subtitle strong{color:#E91E8C;font-weight:800}
+
+/* Stamp grid */
+.stamps-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+.stamp{aspect-ratio:1/1;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;border:2.5px dashed #D4A5FF;background:transparent;transition:transform .2s;position:relative}
+.stamp.filled{background:linear-gradient(135deg,#F3E5FF,#E8F0FF);border:2.5px solid #C084FC;box-shadow:0 3px 10px rgba(192,132,252,.25)}
+.stamp.prize{border:2.5px solid #FFD54F;background:linear-gradient(135deg,#FFFDE7,#FFF9C4);box-shadow:0 3px 14px rgba(255,193,7,.3)}
+.stamp.prize::after{content:'🎁';position:absolute;font-size:10px;bottom:2px;right:3px}
+.stamp-count{text-align:center;font-size:12px;color:#9484A8;margin-top:4px}
+.stamp-count strong{color:#6C3FC7;font-size:13px}
+
+/* Progress bar */
+.progress-wrap{margin-bottom:8px}
+.progress-label{display:flex;justify-content:space-between;font-size:11px;color:#9484A8;margin-bottom:6px}
+.progress-label span:last-child{color:#6C3FC7;font-weight:700}
+.progress-bar{background:#F3E5FF;border-radius:99px;height:10px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#C084FC,#6C3FC7);border-radius:99px;transition:width 1.2s cubic-bezier(.34,1.56,.64,1)}
+
+/* How it works */
+.how-section{background:#fff;border-radius:20px;padding:20px 18px;box-shadow:0 8px 28px rgba(144,100,220,.08);margin-bottom:20px}
+.how-section h2{font-family:'Baloo 2',cursive;font-size:16px;font-weight:800;color:#5A4570;text-align:center;margin-bottom:16px}
+.steps{display:flex;flex-direction:column;gap:12px}
+.step{display:flex;align-items:flex-start;gap:12px}
+.step-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.step-icon.blue{background:linear-gradient(135deg,#E3F2FD,#BBDEFB)}
+.step-icon.purple{background:linear-gradient(135deg,#F3E5FF,#E1BEE7)}
+.step-icon.gold{background:linear-gradient(135deg,#FFFDE7,#FFF9C4)}
+.step-text{flex:1;padding-top:2px}
+.step-text strong{font-size:13px;font-weight:800;color:#5A4570;display:block;margin-bottom:2px}
+.step-text span{font-size:12px;color:#9484A8;line-height:1.4}
+
+/* Reward card */
+.reward-card{background:linear-gradient(135deg,#5A4570,#7C3AED);border-radius:20px;padding:20px 18px;margin-bottom:20px;color:#fff;text-align:center;position:relative;overflow:hidden}
+.reward-card::before{content:'✨';position:absolute;font-size:60px;right:-8px;top:-10px;opacity:.15;transform:rotate(15deg)}
+.reward-emoji{font-size:42px;margin-bottom:8px;display:block;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.reward-card h3{font-family:'Baloo 2',cursive;font-size:18px;font-weight:800;margin-bottom:4px}
+.reward-card p{font-size:12px;opacity:.85;line-height:1.5;margin-bottom:4px}
+.reward-card .reward-value{font-size:11px;background:rgba(255,255,255,.2);border-radius:99px;padding:4px 12px;display:inline-block;margin-top:6px;font-weight:700;letter-spacing:.5px}
+
+/* CTA */
+.cta-btn{display:block;width:100%;padding:17px 20px;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;text-decoration:none;border-radius:50px;font-family:'Baloo 2',cursive;font-size:17px;font-weight:800;text-align:center;box-shadow:0 8px 24px rgba(37,211,102,.35);margin-bottom:12px;transition:transform .15s,box-shadow .15s}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(37,211,102,.45)}
+.cta-btn:active{transform:scale(.97)}
+.cta-btn .wa-icon{margin-right:6px;font-size:20px;vertical-align:-2px}
+.cta-hint{text-align:center;font-size:12px;color:#9484A8;margin-bottom:20px;line-height:1.5}
+.cta-hint strong{color:#6C3FC7}
+
+/* Footer */
+.footer-links{display:flex;justify-content:center;gap:20px;margin-bottom:8px}
+.footer-links a{font-size:12px;color:#9484A8;text-decoration:none;font-weight:700;transition:color .15s}
+.footer-links a:hover{color:#5A4570}
+.footer-note{text-align:center;font-size:11px;color:#BDB2CC;line-height:1.5}
+
+/* Stamp animation on load */
+@keyframes stampIn{0%{transform:scale(0) rotate(-20deg);opacity:0}80%{transform:scale(1.15) rotate(2deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+.stamp.filled{animation:stampIn .4s cubic-bezier(.34,1.56,.64,1) both}
+.stamp.filled:nth-child(1){animation-delay:.05s}
+.stamp.filled:nth-child(2){animation-delay:.1s}
+.stamp.filled:nth-child(3){animation-delay:.15s}
+.stamp.filled:nth-child(4){animation-delay:.2s}
+.stamp.filled:nth-child(5){animation-delay:.25s}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="header">
+    <img src="images/logo-milkypot.png" alt="MilkyPot">
+    <h1>Cartão Fidelidade 🐑</h1>
+    <p class="tagline">Cada potinho te deixa mais perto de um brinde!</p>
+  </div>
+
+  <!-- Stamp Card -->
+  <div class="loyalty-card">
+    <p class="card-title">Seus Carimbos</p>
+    <p class="card-subtitle">A cada <strong>R$10 em compras</strong> você ganha 1 carimbo 🐑<br>Junte <strong>10 carimbos</strong> e ganhe 1 Mini grátis!</p>
+
+    <div class="stamps-grid">
+      <!-- Example showing 3 filled stamps for illustration; in production, server populates these -->
+      <div class="stamp filled" title="Carimbo 1">🐑</div>
+      <div class="stamp filled" title="Carimbo 2">🐑</div>
+      <div class="stamp filled" title="Carimbo 3">🐑</div>
+      <div class="stamp" title="Carimbo 4">4</div>
+      <div class="stamp" title="Carimbo 5">5</div>
+      <div class="stamp" title="Carimbo 6">6</div>
+      <div class="stamp" title="Carimbo 7">7</div>
+      <div class="stamp" title="Carimbo 8">8</div>
+      <div class="stamp" title="Carimbo 9">9</div>
+      <div class="stamp prize" title="Carimbo 10 — BRINDE!">🏆</div>
+    </div>
+    <p class="stamp-count">Faltam <strong id="stampsLeft">7</strong> carimbos para o seu brinde!</p>
+
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>0 carimbos</span>
+        <span id="progressPct">30% do caminho!</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:30%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="how-section">
+    <h2>✨ Como Funciona</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon blue">🛍️</div>
+        <div class="step-text">
+          <strong>Compre a cada visita</strong>
+          <span>A cada R$10 em compras você ganha 1 carimbo — qualquer item do cardápio conta!</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-icon purple">🐑</div>
+        <div class="step-text">
+          <strong>Acumule 10 carimbos</strong>
+          <span>Guarde seu link ou mostre ao atendente. Os carimbos ficam salvos no seu WhatsApp com a gente.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-icon gold">🎁</div>
+        <div class="step-text">
+          <strong>Resgate seu brinde!</strong>
+          <span>1 Potinho Mini grátis (qualquer sabor) — no balcão ou na próxima entrega.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reward highlight -->
+  <div class="reward-card">
+    <span class="reward-emoji">🫙</span>
+    <h3>Sua recompensa</h3>
+    <p>1 Potinho Mini grátis<br>(qualquer sabor: Ninho, Açaí ou Fit)</p>
+    <span class="reward-value">Válido por 30 dias após ganhar</span>
+  </div>
+
+  <!-- CTA -->
+  <a class="cta-btn" href="https://wa.me/5543998042424?text=Oi%20MilkyPot!%20Quero%20participar%20do%20programa%20de%20fidelidade%20e%20ganhar%20meus%20carimbos%20%F0%9F%90%91%E2%9C%A8" target="_blank" rel="noopener">
+    <span class="wa-icon">💬</span> Quero meus carimbos!
+  </a>
+  <p class="cta-hint">
+    Mande mensagem no WhatsApp e a gente registra você.<br>
+    <strong>(43) 99804-2424</strong> · atendimento seg-dom 14h–23h
+  </p>
+
+  <!-- Footer -->
+  <div class="footer-links">
+    <a href="https://milkypot.com/cardapio.html">Ver Cardápio</a>
+    <a href="https://milkypot.com">Início</a>
+    <a href="https://wa.me/5543998042424" target="_blank" rel="noopener">WhatsApp</a>
+  </div>
+  <p class="footer-note">MilkyPot Londrina · Muffato Av. Quintino Bocaiuva, 1045<br>© 2026 MilkyPot · O Potinho Mais Feliz do Mundo</p>
+
+</div>
+
+<script>
+// Animate progress bar after paint
+document.addEventListener('DOMContentLoaded', function() {
+  var fill = document.getElementById('progressFill');
+  var pct = document.getElementById('progressPct');
+  var left = document.getElementById('stampsLeft');
+
+  // Read URL param ?stamps=N for operator-personalized links
+  var params = new URLSearchParams(window.location.search);
+  var stampsEarned = Math.min(10, Math.max(0, parseInt(params.get('stamps') || '3', 10)));
+  var remaining = 10 - stampsEarned;
+  var percent = Math.round((stampsEarned / 10) * 100);
+
+  fill.style.width = '0%';
+  setTimeout(function() { fill.style.width = percent + '%'; }, 120);
+
+  left.textContent = remaining;
+  if (remaining === 0) {
+    pct.textContent = 'BRINDE DISPONÍVEL! 🎉';
+    pct.style.color = '#E91E8C';
+    pct.style.fontWeight = '800';
+  } else {
+    pct.textContent = percent + '% do caminho!';
+  }
+
+  // Update visible stamps based on param
+  var grid = document.querySelectorAll('.stamp');
+  grid.forEach(function(stamp, i) {
+    if (i < stampsEarned && i < 9) {
+      stamp.classList.add('filled');
+      stamp.textContent = '🐑';
+    } else if (i < 9) {
+      stamp.classList.remove('filled');
+      stamp.textContent = (i + 1).toString();
+    }
+  });
+});
+</script>
+</body>
+</html>
