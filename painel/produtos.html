@@ -113,6 +113,43 @@
   .mp-guide.success { background: linear-gradient(135deg,#F0FDF4,#DCFCE7); border-color: #86EFAC; color: #065F46; }
   .mp-guide.info { background: linear-gradient(135deg,#EFF6FF,#DBEAFE); border-color: #93C5FD; color: #1E40AF; }
 
+  .wizard-card {
+    background: linear-gradient(135deg,#FFF7ED,#F3E8FF);
+    border: 1px solid #E9D5FF;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 10px 30px rgba(126,87,194,.08);
+  }
+  .wizard-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:12px; }
+  .wizard-head h3 { margin:0; font-family:'Baloo 2', cursive; font-size:22px; color:#4C1D95; }
+  .wizard-head p { margin:4px 0 0; font-size:13px; color:#6B7280; }
+  .wizard-badge { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:8px 12px; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+  .wizard-badge.ok { background:#DCFCE7; color:#065F46; }
+  .wizard-badge.warn { background:#FEF3C7; color:#92400E; }
+  .wizard-badge.bad { background:#FEE2E2; color:#991B1B; }
+  .wizard-next { background:#fff; border:1px solid #E9D5FF; border-radius:14px; padding:12px; margin-bottom:12px; }
+  .wizard-next strong { display:block; font-size:14px; color:#1F2937; margin-bottom:4px; }
+  .wizard-next small { display:block; font-size:12px; color:#6B7280; line-height:1.5; }
+  .wizard-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .wizard-btn { border:none; border-radius:999px; padding:9px 14px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:800; }
+  .wizard-btn.primary { background:linear-gradient(135deg,#FF4F8A,#7E57C2); color:#fff; }
+  .wizard-btn.secondary { background:#F3F4F6; color:#1F2937; }
+  .wizard-steps { display:grid; gap:10px; }
+  .wizard-step { display:grid; grid-template-columns:32px 1fr auto; gap:10px; align-items:center; background:rgba(255,255,255,.75); border:1px solid #E5E7EB; border-radius:12px; padding:10px 12px; }
+  .wizard-step-index { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; background:#E5E7EB; color:#4B5563; }
+  .wizard-step.ok .wizard-step-index { background:#16A34A; color:#fff; }
+  .wizard-step.warn .wizard-step-index { background:#F59E0B; color:#fff; }
+  .wizard-step.bad .wizard-step-index { background:#EF4444; color:#fff; }
+  .wizard-step strong { display:block; font-size:13px; color:#1F2937; }
+  .wizard-step small { display:block; font-size:12px; color:#6B7280; line-height:1.4; }
+  .wizard-step button { border:none; border-radius:999px; background:#F3F4F6; color:#374151; cursor:pointer; font-size:11px; font-weight:800; padding:8px 10px; }
+  .wizard-step button.primary { background:linear-gradient(135deg,#FF4F8A,#7E57C2); color:#fff; }
+  @media (max-width: 680px) {
+    .wizard-step { grid-template-columns:32px 1fr; }
+    .wizard-step button { grid-column:2; justify-self:start; }
+  }
+
   .topping-chip { display: inline-flex; align-items: center; gap: 6px; background: #F3F4F6; padding: 6px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; cursor: pointer; margin: 3px; border: 2px solid transparent; }
   .topping-chip.selected { background: rgba(255,79,138,.1); border-color: #FF4F8A; color: #9A3412; }
 
@@ -361,6 +398,7 @@
   const fid = session.franchiseId;
 
   let currentProduto = null;
+  let _belinhaStatus = { state: 'idle', detail: '' };
   let currentCat = null;
   let currentTop = null;
 
@@ -667,6 +705,7 @@
 
   window.openProduto = function(id) {
     currentProduto = id ? CatalogV2.getProduto(fid, id) : null;
+    _belinhaStatus = { state: 'idle', detail: '' };
     document.getElementById('modalProdTitle').textContent = id ? 'Editar Produto' : 'Novo Produto';
     renderProdutoForm();
     document.getElementById('modalProduto').classList.add('open');
@@ -789,6 +828,8 @@
     const sug = CostCalculator.suggestAll(cTotal, p.categoriaId);
 
     document.getElementById('modalProdBody').innerHTML = `
+      <div id="produtoWizard"></div>
+
       <!-- Básico -->
       <div class="form-section">
         <h3>🧾 Básico</h3>
@@ -977,7 +1018,173 @@
       if (typeof renderFotoGrid === 'function') renderFotoGrid();
       if (typeof renderVideoPreview === 'function') renderVideoPreview();
       if (typeof renderReceita === 'function') renderReceita();
+      bindProdutoWizardListeners();
+      renderProdutoWizard();
     }, 0);
+  }
+
+  function focusProdutoField(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.focus();
+    if (typeof el.select === 'function') el.select();
+    el.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+  window.focusProdutoField = focusProdutoField;
+
+  function openIngredientesFromProduto() {
+    closeProduto();
+    setTimeout(() => document.querySelector('.ct-tab[data-tab=ingredientes]')?.click(), 100);
+  }
+  window.openIngredientesFromProduto = openIngredientesFromProduto;
+
+  function getProdutoWizardState() {
+    const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
+    const receita = (typeof _collectReceitaFromUI === 'function')
+      ? _collectReceitaFromUI()
+      : { insumos: currentProduto?.custos?.insumos || [], embalagemIds: currentProduto?.custos?.embalagemIds || [] };
+    const nome = (document.getElementById('pName')?.value || '').trim();
+    const categoriaId = document.getElementById('pCategoria')?.value || '';
+    const tempo = Number(document.getElementById('pTempoPreparo')?.value) || 0;
+    const precoLoja = Number(document.getElementById('p_real_loja')?.value) || 0;
+    const canal = document.getElementById('pCanal')?.value || 'ambos';
+    const precoDelivery = Number(document.getElementById('p_real_delivery')?.value) || 0;
+    const precoIfood = Number(document.getElementById('p_real_ifood')?.value) || 0;
+    const hasReceita = (receita.insumos?.length || 0) + (receita.embalagemIds?.length || 0) > 0;
+    const hasBelinhaPreview = !!(_previewSugestao && document.getElementById('belinhaSugestaoBox')?.style.display !== 'none');
+    const missingChannels = [];
+    if (canal === 'ambos' || canal === 'delivery') {
+      if (precoDelivery <= 0) missingChannels.push('delivery');
+      if (precoIfood <= 0) missingChannels.push('iFood');
+    }
+
+    const steps = [
+      {
+        key: 'basico',
+        title: 'Preencha nome e categoria',
+        done: !!(nome && categoriaId),
+        detail: nome && categoriaId
+          ? `Produto identificado como "${nome}".`
+          : 'Sem isso a Belinha nao consegue sugerir uma receita boa.',
+        action: { label: nome ? 'Escolher categoria' : 'Preencher basico', onClick: `focusProdutoField('${nome ? 'pCategoria' : 'pName'}')`, primary: true }
+      },
+      {
+        key: 'estoque',
+        title: 'Garanta ingredientes no estoque',
+        done: inv.length > 0,
+        detail: inv.length
+          ? `${inv.length} item(ns) cadastrados no estoque para montar a receita.`
+          : 'Cadastre pelo menos sorvete, embalagens e bases principais antes de montar a receita.',
+        action: inv.length ? null : { label: 'Abrir ingredientes', onClick: 'openIngredientesFromProduto()', primary: true }
+      },
+      {
+        key: 'receita',
+        title: hasBelinhaPreview ? 'Revise a sugestao da Belinha' : 'Monte a receita do produto',
+        done: hasReceita,
+        detail: hasBelinhaPreview
+          ? 'A sugestao esta visivel. Revise quantidades, aceite ou refine antes de continuar.'
+          : hasReceita
+            ? `${receita.insumos.length} ingrediente(s) e ${receita.embalagemIds.length} embalagem(ns) preenchidos.`
+            : 'Use a Belinha para preencher rapido ou adicione manualmente os ingredientes da unidade.',
+        action: hasBelinhaPreview
+          ? { label: 'Ver sugestao', onClick: "document.getElementById('belinhaSugestaoBox')?.scrollIntoView({behavior:'smooth',block:'center'})", primary: true }
+          : {
+              label: nome && categoriaId && inv.length ? 'Usar Belinha' : 'Adicionar manual',
+              onClick: nome && categoriaId && inv.length ? 'belinhaSugereReceita()' : 'addReceitaLinha()',
+              primary: true
+            }
+      },
+      {
+        key: 'tempo',
+        title: 'Defina o tempo de preparo',
+        done: tempo > 0,
+        detail: tempo > 0
+          ? `${tempo} min informado(s); mao de obra e energia ja entram no custo.`
+          : 'Sem tempo de preparo o custo de mao de obra fica zerado e a margem fica enganosa.',
+        action: tempo > 0 ? null : { label: 'Informar tempo', onClick: "focusProdutoField('pTempoPreparo')", primary: true }
+      },
+      {
+        key: 'preco',
+        title: 'Feche os precos de venda',
+        done: precoLoja > 0 && missingChannels.length === 0,
+        detail: precoLoja <= 0
+          ? 'Defina pelo menos o preco loja para validar a margem real.'
+          : missingChannels.length
+            ? `Falta preencher: ${missingChannels.join(', ')}.`
+            : 'Precos obrigatorios preenchidos para o(s) canal(is) selecionado(s).',
+        action: (precoLoja > 0 && missingChannels.length === 0)
+          ? null
+          : {
+              label: precoLoja <= 0 ? 'Preencher preco loja' : `Preencher ${missingChannels[0]}`,
+              onClick: `focusProdutoField('${precoLoja <= 0 ? 'p_real_loja' : missingChannels[0] === 'delivery' ? 'p_real_delivery' : 'p_real_ifood'}')`,
+              primary: true
+            }
+      }
+    ];
+
+    let nextStep = steps.find(step => !step.done) || null;
+    if (_belinhaStatus.state && ['not_found','ai_error','ai_offline'].includes(_belinhaStatus.state)) {
+      nextStep = nextStep || steps[2];
+      nextStep.detail = _belinhaStatus.detail || nextStep.detail;
+    }
+
+    const completed = steps.filter(step => step.done).length;
+    const badgeType = completed === steps.length ? 'ok' : completed >= 2 ? 'warn' : 'bad';
+    const badgeLabel = completed === steps.length ? 'pronto para salvar' : `${steps.length - completed} passo(s) pendente(s)`;
+    return { steps, nextStep, completed, total: steps.length, badgeType, badgeLabel };
+  }
+
+  function renderProdutoWizard() {
+    const mount = document.getElementById('produtoWizard');
+    if (!mount) return;
+    const state = getProdutoWizardState();
+    const next = state.nextStep;
+    mount.innerHTML = `
+      <div class="wizard-card">
+        <div class="wizard-head">
+          <div>
+            <h3>🪄 Passo a passo da Belinha</h3>
+            <p>Preencha na ordem. O topo sempre mostra o proximo passo para esse produto ficar pronto.</p>
+          </div>
+          <span class="wizard-badge ${state.badgeType}">${state.completed}/${state.total} concluido(s) · ${state.badgeLabel}</span>
+        </div>
+        <div class="wizard-next">
+          <strong>${next ? `Proximo passo: ${next.title}` : 'Tudo preenchido. Pode salvar com seguranca.'}</strong>
+          <small>${next ? next.detail : 'Receita, tempo e precos ja estao preenchidos. Revise se quiser e clique em salvar.'}</small>
+          ${next && next.action ? `
+            <div class="wizard-actions">
+              <button class="wizard-btn primary" onclick="${next.action.onClick}">${next.action.label}</button>
+              ${next.key === 'receita' ? '<button class="wizard-btn secondary" onclick="addReceitaLinha()">Adicionar manualmente</button>' : ''}
+            </div>
+          ` : ''}
+        </div>
+        <div class="wizard-steps">
+          ${state.steps.map((step, index) => `
+            <div class="wizard-step ${step.done ? 'ok' : (next && next.key === step.key ? 'bad' : 'warn')}">
+              <div class="wizard-step-index">${step.done ? '✓' : index + 1}</div>
+              <div>
+                <strong>${step.title}</strong>
+                <small>${step.detail}</small>
+              </div>
+              ${step.done || !step.action ? '' : `<button class="${step.action.primary ? 'primary' : ''}" onclick="${step.action.onClick}">${step.action.label}</button>`}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+  window.renderProdutoWizard = renderProdutoWizard;
+
+  function bindProdutoWizardListeners() {
+    const modal = document.getElementById('modalProdBody');
+    if (!modal || modal.dataset.wizardBound === '1') return;
+    modal.dataset.wizardBound = '1';
+    modal.addEventListener('input', (event) => {
+      if (event.target.closest('#modalProdBody')) renderProdutoWizard();
+    });
+    modal.addEventListener('change', (event) => {
+      if (event.target.closest('#modalProdBody')) renderProdutoWizard();
+    });
   }
 
   // ===== RECEITA (ingredientes + embalagem) =====
@@ -1030,6 +1237,7 @@
     html += '</div>';
     document.getElementById('receitaList').innerHTML = html;
     receitaChanged();
+    renderProdutoWizard();
   }
 
   window.addReceitaLinha = function() {
@@ -1276,6 +1484,7 @@
     });
     // Dispara recálculo de preços sugeridos também
     if (typeof recalc === 'function') recalc();
+    renderProdutoWizard();
   };
 
   // Nova função pública — mantém compatibilidade com oninput "recalcCusto"
@@ -1459,10 +1668,14 @@
   window.belinhaSugereReceita = function() {
     const box = document.getElementById('belinhaSugestaoBox');
     if (!box) return;
+    const wizardRefresh = () => { try { renderProdutoWizard(); } catch (_) {} };
     const nome = (document.getElementById('pName')?.value || '').trim();
     if (!nome) {
       box.style.display = 'block';
       box.innerHTML = '⚠️ Preencha o <b>nome do produto</b> primeiro (ex: "Milkshake Nutella", "Acai Bowl", "Potinho Personalizado").';
+      _belinhaStatus = { state:'missing_name', detail:'Preencha o nome do produto antes de pedir a sugestao.' };
+      wizardRefresh();
+      renderProdutoWizard();
       return;
     }
     const catSel = document.getElementById('pCategoria');
@@ -1470,6 +1683,7 @@
     const desc = (document.getElementById('pDesc')?.value || '').trim();
     const inv = (DataStore.getCollection && DataStore.getCollection('inventory', fid)) || [];
     _previewSugestao = _suggestReceitaLocal(nome, catName, desc, inv);
+    _belinhaStatus = { state:'preview', detail:'A Belinha montou uma sugestao. Agora revise e aceite ou refine.' };
     _renderPreviewSugestao(_previewSugestao);
   };
 
@@ -1483,6 +1697,7 @@
     box.style.display = 'block';
 
     if (sug._notFound) {
+      _belinhaStatus = { state:'not_found', detail:sug.justificativa };
       box.innerHTML = `
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">🐑 <b>Belinha sugere:</b> ${fonteBadge}</div>
         <div style="color:#92400E;background:#FEF3C7;padding:10px;border-radius:8px;font-size:13px">${esc(sug.justificativa)}</div>
@@ -1490,6 +1705,7 @@
           <button class="ios-btn" style="background:#F3F4F6" onclick="document.getElementById('belinhaSugestaoBox').style.display='none'">✗ Fechar</button>
           <button class="ios-btn" style="background:linear-gradient(135deg,#7E57C2,#5E35B1);color:#fff" onclick="refinarComBelinhaAI()">🧠 Tentar com Belinha AI</button>
         </div>`;
+      renderProdutoWizard();
       return;
     }
 
@@ -1522,6 +1738,7 @@
     const cmvLabel = sug.cmvAlvoPct ? ` <small style="color:#6B7280">(CMV alvo ${Math.round(sug.cmvAlvoPct*100)}%)</small>` : '';
     const tplBadge = sug._templateKey ? `<small style="color:#6B7280">template: <b>${sug._templateKey}</b></small>` : '';
 
+    _belinhaStatus = { state:'preview', detail:'Sugestao pronta para revisao. Confira ingredientes, tempo e preco.' };
     box.innerHTML = `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
         🐑 <b>Belinha sugere:</b> ${fonteBadge} ${tplBadge}
@@ -1551,6 +1768,7 @@
         <button class="ios-btn" style="background:#F3F4F6" onclick="document.getElementById('belinhaSugestaoBox').style.display='none'; _previewSugestao=null;">✗ Descartar</button>
       </div>`;
   }
+  renderProdutoWizard();
   window._renderPreviewSugestao = _renderPreviewSugestao;
 
   window.aceitarSugestaoBelinha = function() {
@@ -1593,7 +1811,9 @@
     receitaChanged();
     box.innerHTML = `<div style="color:#065F46;background:#DCFCE7;padding:10px;border-radius:8px;font-weight:700">✅ Sugestao aplicada. Revise e clica em 💾 Salvar.</div>`;
     setTimeout(() => { box.style.display = 'none'; }, 2500);
+    _belinhaStatus = { state:'applied', detail:'Sugestao aplicada na receita. Agora ajuste tempo e precos se precisar.' };
     _previewSugestao = null;
+    renderProdutoWizard();
   };
 
   window.refinarComBelinhaAI = async function() {
@@ -1608,6 +1828,7 @@
     const embList = inv.filter(i => i.category === 'embalagens');
     const settings = (DataStore.get && DataStore.get('belinha_settings')) || {};
     const status = await CopilotTransport.status();
+    _belinhaStatus = { state:'ai_loading', detail:'Belinha AI pensando no refinamento da receita.' };
     const statusLabel = status.local ? '🟢 servidor local' : (status.mixedBlocked ? '🔒 Chrome bloqueando HTTPS→HTTP' : (settings.apiKey ? '🔵 via API Anthropic' : '⚪ SEM API key'));
     box.innerHTML = `<div style="padding:10px">🧠 Belinha AI pensando... <small style="color:#6B7280">(${statusLabel})</small></div>`;
 
@@ -1642,6 +1863,8 @@
             Enquanto isso, a heuristica local ja te da uma receita boa 👇
           </div>`;
         box.innerHTML = guia + '<button class="ios-btn" style="background:#F3F4F6" onclick="_renderPreviewSugestao(_previewSugestao)">← Voltar</button>';
+        _belinhaStatus = { state:'ai_offline', detail:'Belinha AI offline. Use o modo local ou configure a API para refinamento completo.' };
+        renderProdutoWizard();
         return;
       }
       let parsed;

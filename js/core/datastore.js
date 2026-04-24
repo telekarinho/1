@@ -324,6 +324,11 @@ const DataStore = {
                 console.log(`✅ ${snapshot.size} registros sincronizados do Firestore`);
             }
 
+            // Notifica paginas que a sincronizacao com Firestore terminou.
+            // Paginas como despesas.html re-renderizam para refletir o estado
+            // atual do localStorage apos o sync (evita race condition).
+            window.dispatchEvent(new CustomEvent('mp_synced'));
+
             // Real-time listener for the catalog and global settings
             this._db.collection('datastore').doc('catalog_config').onSnapshot(doc => {
                 if (doc.exists) {
