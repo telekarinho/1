@@ -103,7 +103,13 @@ app.post('/copilot', async (req, res) => {
         const combined = `<system_instructions>\n${systemPrompt}\n</system_instructions>\n\n${finalPrompt}`;
 
         const cliArgs = ['-p', '--output-format', 'json'];
-        if (model) cliArgs.push('--model', model);
+        // Nao passa --model por default. Modelos antigos (claude-sonnet-4-5
+        // sem sufixo de data) causam exit=1 no CLI. Passa so se for alias
+        // curto (sonnet/opus/haiku) ou modelo completo com data (20250929).
+        const VALID_ALIASES = ['sonnet', 'opus', 'haiku'];
+        if (model && (VALID_ALIASES.includes(model) || /\d{8}$/.test(model))) {
+            cliArgs.push('--model', model);
+        }
 
         const startTs = Date.now();
         const claudeProc = spawn('claude', cliArgs, { shell: true });
