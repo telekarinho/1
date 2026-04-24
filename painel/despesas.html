@@ -1849,53 +1849,69 @@
     // ========== INIT ==========
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof Auth !== 'undefined') {
-            Auth.requireAuth('franchisee', function(user, data) {
-                franchiseId = data.franchiseId || data.storeId || user.uid;
-                var storeName = data.storeName || data.franchiseName || '';
-                document.getElementById('sidebarStoreName').textContent = storeName;
-                document.getElementById('sidebarUserName').textContent = data.name || user.email || 'Franqueado';
-                document.getElementById('headerStoreName').textContent = storeName ? '- ' + storeName : '';
+            // Auth guard — Auth.requireAuth(role) retorna BOOLEAN (nao aceita callback).
+            // Pattern correto usado por compras.html, entregas.html, fiscal.html etc.
+            if (!Auth.requireAuth('franchisee')) return;
+            var session = Auth.getSession();
+            franchiseId = (session && session.franchiseId) || Auth.getFranchiseId() || (session && session.firebaseUid) || 'default_store';
+            var storeName = (session && (session.storeName || session.franchiseName)) || '';
+            var userName = (session && session.name) || 'Franqueado';
+            document.getElementById('sidebarStoreName').textContent = storeName;
+            document.getElementById('sidebarUserName').textContent = userName;
+            document.getElementById('headerStoreName').textContent = storeName ? '- ' + storeName : '';
 
-                // Set default date
-                document.getElementById('inputDate').value = new Date().toISOString().slice(0, 10);
+            // Set default date
+            document.getElementById('inputDate').value = new Date().toISOString().slice(0, 10);
 
-                // Set default history filter to current month
-                var now = new Date();
-                document.getElementById('filterDateFrom').value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
-                document.getElementById('filterDateTo').value = now.toISOString().slice(0, 10);
+            // Set default history filter to current month
+            var now = new Date();
+            document.getElementById('filterDateFrom').value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
+            document.getElementById('filterDateTo').value = now.toISOString().slice(0, 10);
 
-                // Auto-limpa duplicatas legacy de TODOS os meses (silencioso)
-                // Custos fixos: 1 por (yearMonth, category). Entradas extras
-                // sao dupes causadas por cliques repetidos no botao "Gerar"
-                // antes do fix de idempotencia.
-                dedupAllFixedCosts();
+            // Migracao: dados salvos com franchiseId=null antes do fix do auth
+            // callback (bug que impedia franchiseId de ser setado). Se
+            // fixed_costs_null existe e fixed_costs_{franchiseId} esta vazio,
+            // move os dados para o franchiseId correto.
+            try {
+                if (typeof DataStore !== 'undefined') {
+                    var legacyNull = DataStore.get('fixed_costs_null');
+                    var currentCosts = DataStore.get('fixed_costs_' + franchiseId);
+                    if (legacyNull && Object.keys(legacyNull).length > 0 && (!currentCosts || Object.keys(currentCosts).length === 0)) {
+                        DataStore.set('fixed_costs_' + franchiseId, legacyNull);
+                        DataStore.remove('fixed_costs_null');
+                        console.log('[despesas] Migrado fixed_costs_null para fixed_costs_' + franchiseId);
+                    }
+                    // Mesma migracao para finances_null
+                    var legacyFin = DataStore.get('finances_null');
+                    var currentFin = DataStore.get('finances_' + franchiseId);
+                    if (legacyFin && legacyFin.length > 0 && (!currentFin || currentFin.length === 0)) {
+                        DataStore.set('finances_' + franchiseId, legacyFin);
+                        DataStore.remove('finances_null');
+                        console.log('[despesas] Migrado finances_null para finances_' + franchiseId);
+                    }
+                }
+            } catch(e) { console.warn('[despesas] migracao legacy falhou:', e); }
 
-                // Load data
+            // Auto-limpa duplicatas legacy de TODOS os meses (silencioso)
+            dedupAllFixedCosts();
+
+            // Load data
+            renderFixedCosts();
+            updateSummary();
+
+            // Re-renderiza apos sync do Firestore terminar (se ainda nao terminou)
+            if (typeof DataStore !== 'undefined' && DataStore._syncDone) {
                 renderFixedCosts();
                 updateSummary();
-
-                // Re-renderiza apos sync do Firestore terminar.
-                // Dois cenarios possiveis:
-                //   A) sync > auth: _syncDone=true quando chegamos aqui →
-                //      re-renderiza imediatamente (mp_synced ja disparou)
-                //   B) auth > sync: _syncDone=false → escuta evento e
-                //      re-renderiza quando sync completar
-                if (typeof DataStore !== 'undefined' && DataStore._syncDone) {
-                    // Sync ja terminou — re-renderiza agora
+            } else {
+                window.addEventListener('mp_synced', function() {
                     renderFixedCosts();
                     updateSummary();
-                } else {
-                    window.addEventListener('mp_synced', function() {
-                        renderFixedCosts();
-                        updateSummary();
-                    }, { once: true });
-                    // Fallback de seguranca: se mp_synced nunca disparar
-                    // (Firestore offline), re-renderiza em 3s com localStorage
-                    setTimeout(function() {
-                        if (franchiseId) { renderFixedCosts(); updateSummary(); }
-                    }, 3000);
-                }
-            });
+                }, { once: true });
+                setTimeout(function() {
+                    if (franchiseId) { renderFixedCosts(); updateSummary(); }
+                }, 3000);
+            }
         } else {
             // Fallback for dev/testing
             franchiseId = 'dev_store';
