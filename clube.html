@@ -768,16 +768,21 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
             <h2 id="acc-h" class="mc-section-title">Minha conta</h2>
             <form id="form-profile" class="mc-card">
                 <div class="mc-field">
+                    <label for="f-email-display">E-mail (login)</label>
+                    <input type="email" id="f-email-display" disabled>
+                    <div class="mc-hint">Seu e-mail e usado como login e nao pode ser alterado aqui.</div>
+                </div>
+                <div class="mc-field">
                     <label for="f-phone">Telefone</label>
-                    <input type="tel" id="f-phone" disabled>
-                    <div class="mc-hint">Seu telefone é usado como login e não pode ser alterado aqui.</div>
+                    <input type="tel" id="f-phone" placeholder="(43) 99999-9999" autocomplete="tel-national" inputmode="tel" maxlength="15">
+                    <div class="mc-hint">Opcional. Sera usado para notificacoes por WhatsApp.</div>
                 </div>
                 <div class="mc-field">
                     <label for="f-name">Nome completo</label>
                     <input type="text" id="f-name" autocomplete="name" required minlength="2">
                 </div>
                 <div class="mc-field">
-                    <label for="f-email">E-mail (opcional)</label>
+                    <label for="f-email">E-mail de contato (opcional)</label>
                     <input type="email" id="f-email" autocomplete="email">
                 </div>
                 <div class="mc-field">
@@ -843,31 +848,46 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
     <div class="mc-modal-card" style="position:relative;">
         <button type="button" class="mc-modal-close" data-close>✕</button>
 
-        <!-- Step 1: número -->
-        <div id="login-step-phone">
+        <!-- Step 1: email -->
+        <div id="login-step-email">
             <h2 id="modal-login-h">Entrar / Cadastrar</h2>
-            <p class="mc-hint">Vamos enviar um código por SMS para confirmar seu número.</p>
-            <form id="form-phone">
+            <p class="mc-hint">Sem senha. A gente envia um <strong>link magico</strong> pro seu e-mail. Voce clica e entra.</p>
+            <form id="form-email">
                 <div class="mc-field">
-                    <label for="phone-input">Seu telefone</label>
-                    <input type="tel" id="phone-input" placeholder="(43) 99999-9999" autocomplete="tel-national" inputmode="tel" required>
-                    <div class="mc-hint">Formato brasileiro. Não cobramos nada pelo SMS.</div>
+                    <label for="email-input">Seu e-mail</label>
+                    <input type="email" id="email-input" placeholder="voce@exemplo.com" autocomplete="email" required>
+                    <div class="mc-hint">Usamos so pra identificar sua conta. Nunca vendemos seus dados.</div>
                 </div>
-                <button type="submit" class="mc-btn mc-btn-primary" id="btn-send-otp">Enviar código</button>
+                <button type="submit" class="mc-btn mc-btn-primary" id="btn-send-email">Enviar link de acesso</button>
             </form>
         </div>
 
-        <!-- Step 2: OTP -->
-        <div id="login-step-otp" style="display:none;">
-            <h2>Código recebido?</h2>
-            <p class="mc-hint">Digite o código de 6 dígitos que enviamos para <strong id="otp-phone-display"></strong>.</p>
-            <form id="form-otp">
+        <!-- Step 2: email enviado (aguardando clique no link) -->
+        <div id="login-step-email-sent" style="display:none;">
+            <h2>Pronto! 📧</h2>
+            <p class="mc-hint">Enviamos um link magico para <strong id="email-sent-display"></strong>.</p>
+            <div style="background:#F5FAFF;border:1px solid #E3F2FD;border-radius:12px;padding:16px;margin:16px 0;">
+                <strong style="color:#1976D2;">Proximos passos:</strong>
+                <ol style="margin:8px 0 0 20px;padding:0;line-height:1.7;">
+                    <li>Abra sua caixa de entrada (ou o spam).</li>
+                    <li>Clique no link do e-mail "MilkyClube — acesso".</li>
+                    <li>Voce volta automaticamente para ca ja logado.</li>
+                </ol>
+            </div>
+            <p class="mc-hint" style="font-size:.85rem;">Nao chegou em 2 min? Veja se o e-mail esta correto e <a href="#" id="btn-resend-email">envie de novo</a>.</p>
+            <button type="button" class="mc-btn mc-btn-ghost" id="btn-change-email">Trocar e-mail</button>
+        </div>
+
+        <!-- Step: Confirmar email (caso o user volte por outro dispositivo) -->
+        <div id="login-step-email-confirm" style="display:none;">
+            <h2>Confirmar acesso 🔐</h2>
+            <p class="mc-hint">Pra sua seguranca, confirme qual e-mail voce usou para pedir o link.</p>
+            <form id="form-email-confirm">
                 <div class="mc-field">
-                    <label for="otp-input">Código SMS</label>
-                    <input type="text" id="otp-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" required placeholder="000000" autocomplete="one-time-code">
+                    <label for="email-confirm-input">Seu e-mail</label>
+                    <input type="email" id="email-confirm-input" placeholder="voce@exemplo.com" autocomplete="email" required>
                 </div>
-                <button type="submit" class="mc-btn mc-btn-primary">Confirmar</button>
-                <button type="button" class="mc-btn mc-btn-ghost" style="margin-top:8px;" id="btn-resend-otp">Reenviar código</button>
+                <button type="submit" class="mc-btn mc-btn-primary">Entrar</button>
             </form>
         </div>
 
@@ -886,8 +906,9 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
                     <div class="mc-hint">Seu CPF identifica sua conta no caixa.</div>
                 </div>
                 <div class="mc-field">
-                    <label for="enr-email">E-mail (opcional)</label>
-                    <input type="email" id="enr-email" autocomplete="email">
+                    <label for="enr-phone">Telefone (opcional)</label>
+                    <input type="tel" id="enr-phone" placeholder="(43) 99999-9999" autocomplete="tel-national" inputmode="tel" maxlength="15">
+                    <div class="mc-hint">Sera usado quando ativarmos notificacoes por WhatsApp.</div>
                 </div>
                 <div class="mc-field">
                     <label for="enr-bday">Data de nascimento (opcional)</label>
@@ -1035,15 +1056,15 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
 
     // Passo atual do modal login
     function setLoginStep(step) {
-        $('#login-step-phone').style.display   = step === 'phone'   ? '' : 'none';
-        $('#login-step-otp').style.display     = step === 'otp'     ? '' : 'none';
-        $('#login-step-enroll').style.display  = step === 'enroll'  ? '' : 'none';
+        $('#login-step-email').style.display         = step === 'email'         ? '' : 'none';
+        $('#login-step-email-sent').style.display    = step === 'email-sent'    ? '' : 'none';
+        $('#login-step-email-confirm').style.display = step === 'email-confirm' ? '' : 'none';
+        $('#login-step-enroll').style.display        = step === 'enroll'        ? '' : 'none';
     }
 
     // ----- Estado local -----
     var state = {
-        currentPhone: null,
-        verificationId: null,
+        currentEmail: null,
         pendingReferral: null,
         installPrompt: null,
         qrInstance: null,
@@ -1221,9 +1242,11 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
     // ============================================
     function fillProfileForm() {
         var m = MilkyClube.getCurrentMember() || {};
-        $('#f-phone').value = m.phone || (MilkyClube.getCurrentUser() && MilkyClube.getCurrentUser().phoneNumber) || '';
+        var u = MilkyClube.getCurrentUser() || {};
+        $('#f-email-display').value = u.email || m.email || '';
+        $('#f-phone').value = m.phone || '';
         $('#f-name').value = m.name || '';
-        $('#f-email').value = m.email || '';
+        $('#f-email').value = m.email || u.email || '';
         $('#f-bday').value = m.birthDate || '';
         $('#f-cons-marketing').checked = !!(m.consents && m.consents.marketing);
         $('#f-cons-whatsapp').checked  = !!(m.consents && m.consents.whatsapp);
@@ -1239,7 +1262,7 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
 
     // Welcome → login
     $('#btn-welcome-enter').addEventListener('click', function() {
-        setLoginStep('phone');
+        setLoginStep('email');
         openModal('modal-login');
     });
 
@@ -1258,69 +1281,101 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
     });
 
     // ============================================
-    // Binds — Phone auth
+    // Binds — Email Link Auth (magic link passwordless)
     // ============================================
-    var phoneInput = $('#phone-input');
-    phoneInput.addEventListener('input', function() {
-        var caret = phoneInput.selectionStart;
-        phoneInput.value = maskPhoneInput(phoneInput.value);
-        try { phoneInput.setSelectionRange(caret + 1, caret + 1); } catch(e){}
-    });
-
-    $('#form-phone').addEventListener('submit', async function(e) {
+    $('#form-email').addEventListener('submit', async function(e) {
         e.preventDefault();
-        var btn = $('#btn-send-otp');
+        var btn = $('#btn-send-email');
         btn.disabled = true; btn.textContent = 'Enviando...';
         try {
-            var raw = phoneInput.value;
-            var res = await MilkyClube.sendPhoneOTP(raw);
-            state.currentPhone = MilkyClube.normalizeBRPhone(raw);
-            state.verificationId = res.verificationId;
-            $('#otp-phone-display').textContent = state.currentPhone;
-            setLoginStep('otp');
-            toast('Código enviado!', 'success');
+            var raw = $('#email-input').value;
+            var ref = state.pendingReferral || MilkyClube.getReferralFromURL();
+            var res = await MilkyClube.sendEmailLink(raw, { referralCode: ref });
+            state.currentEmail = res.email;
+            $('#email-sent-display').textContent = res.email;
+            setLoginStep('email-sent');
+            toast('Link enviado! Olhe seu e-mail.', 'success');
         } catch(err) {
-            toast(err.message || 'Não foi possível enviar.', 'error');
+            toast(err.message || 'Nao foi possivel enviar.', 'error');
         } finally {
-            btn.disabled = false; btn.textContent = 'Enviar código';
+            btn.disabled = false; btn.textContent = 'Enviar link de acesso';
         }
     });
 
-    $('#btn-resend-otp').addEventListener('click', async function() {
-        if (!state.currentPhone) return;
-        var btn = this; btn.disabled = true; btn.textContent = 'Reenviando...';
+    $('#btn-resend-email').addEventListener('click', async function(e) {
+        e.preventDefault();
+        if (!state.currentEmail) { setLoginStep('email'); return; }
+        var link = this;
+        var original = link.textContent;
+        link.textContent = 'Reenviando...';
         try {
-            var r = await MilkyClube.sendPhoneOTP(state.currentPhone);
-            state.verificationId = r.verificationId;
-            toast('Código reenviado.', 'success');
+            var ref = state.pendingReferral || MilkyClube.getReferralFromURL();
+            var r = await MilkyClube.sendEmailLink(state.currentEmail, { referralCode: ref });
+            toast('Link reenviado para ' + r.email, 'success');
         } catch(err) {
             toast(err.message || 'Falha no reenvio.', 'error');
         } finally {
-            btn.disabled = false; btn.textContent = 'Reenviar código';
+            link.textContent = original;
         }
     });
 
-    $('#form-otp').addEventListener('submit', async function(e) {
+    $('#btn-change-email').addEventListener('click', function() {
+        state.currentEmail = null;
+        $('#email-input').value = '';
+        setLoginStep('email');
+    });
+
+    // Quando o user chega por outro dispositivo, localStorage nao tem o email original.
+    // Pedimos confirmacao manual.
+    $('#form-email-confirm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        var code = $('#otp-input').value.trim();
+        var email = $('#email-confirm-input').value.trim();
+        var btn = this.querySelector('button[type=submit]');
+        btn.disabled = true; btn.textContent = 'Entrando...';
         try {
-            var r = await MilkyClube.verifyOTP(state.verificationId, code);
-            if (r.isNewMember) {
-                // Preenche referral da URL se houver
-                var ref = state.pendingReferral || MilkyClube.getReferralFromURL();
-                if (ref) {
-                    $('#enr-ref-wrap').style.display = '';
-                    $('#enr-ref').value = ref;
-                }
-                setLoginStep('enroll');
-            } else {
-                closeModal('modal-login');
-                toast('Bem-vindo de volta! 🐑', 'success');
-            }
+            var r = await MilkyClube.completeEmailLinkSignIn(email);
+            await handleSignInResult(r);
         } catch(err) {
-            toast(err.message || 'Código inválido.', 'error');
+            toast(err.message || 'Link invalido.', 'error');
+        } finally {
+            btn.disabled = false; btn.textContent = 'Entrar';
         }
     });
+
+    // Handler comum para resultado do sign-in (via link novo OU confirmacao)
+    async function handleSignInResult(r) {
+        if (r && r.isNewMember) {
+            var ref = r.referralCode || state.pendingReferral || MilkyClube.getReferralFromURL();
+            if (ref) {
+                $('#enr-ref-wrap').style.display = '';
+                $('#enr-ref').value = ref;
+            }
+            setLoginStep('enroll');
+        } else {
+            closeModal('modal-login');
+            toast('Bem-vindo de volta! 🐑', 'success');
+        }
+    }
+
+    // Auto-complete magic link se o user caiu aqui pelo email
+    (async function tryCompleteEmailLink() {
+        try {
+            if (!MilkyClube.isEmailLinkUrl(window.location.href)) return;
+            // Tenta completar com email do localStorage. Se nao tiver,
+            // abre modal no passo 'email-confirm' pra pedir ao user.
+            try {
+                var r = await MilkyClube.completeEmailLinkSignIn();
+                openModal('modal-login');
+                await handleSignInResult(r);
+            } catch (e) {
+                // Provavelmente veio de outro dispositivo — pede email manual
+                openModal('modal-login');
+                setLoginStep('email-confirm');
+            }
+        } catch(e) {
+            console.warn('[Clube] completeEmailLink auto:', e && e.message);
+        }
+    })();
 
     // ============================================
     // Binds — Enroll
@@ -1329,13 +1384,29 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
     cpfInput.addEventListener('input', function() {
         cpfInput.value = maskCPFInput(cpfInput.value);
     });
+    var enrPhoneInput = $('#enr-phone');
+    if (enrPhoneInput) {
+        enrPhoneInput.addEventListener('input', function() {
+            var caret = enrPhoneInput.selectionStart;
+            enrPhoneInput.value = maskPhoneInput(enrPhoneInput.value);
+            try { enrPhoneInput.setSelectionRange(caret + 1, caret + 1); } catch(e){}
+        });
+    }
+    var fPhoneInput = $('#f-phone');
+    if (fPhoneInput) {
+        fPhoneInput.addEventListener('input', function() {
+            var caret = fPhoneInput.selectionStart;
+            fPhoneInput.value = maskPhoneInput(fPhoneInput.value);
+            try { fPhoneInput.setSelectionRange(caret + 1, caret + 1); } catch(e){}
+        });
+    }
 
     $('#form-enroll').addEventListener('submit', async function(e) {
         e.preventDefault();
         var payload = {
             name: $('#enr-name').value,
             cpf: $('#enr-cpf').value,
-            email: $('#enr-email').value || null,
+            phone: $('#enr-phone').value || null,
             birthDate: $('#enr-bday').value || null,
             referralCode: $('#enr-ref').value || null,
             consents: {
@@ -1465,6 +1536,7 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
         e.preventDefault();
         var updates = {
             name: $('#f-name').value,
+            phone: $('#f-phone').value || null,
             email: $('#f-email').value || '',
             birthDate: $('#f-bday').value || null,
             consents: {
