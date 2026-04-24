@@ -105,6 +105,7 @@
                 <a href="tv-ugc-curadoria.html" class="sidebar-link"><span class="icon">📸</span> UGC Curadoria</a>
                 <a href="tv-auto-stories.html" class="sidebar-link"><span class="icon">📱</span> Auto Stories IG</a>
                 <a href="challenge-studio.html" class="sidebar-link"><span class="icon">🎯</span> Studio dos Desafios</a>
+                <a href="promocoes-oficiais.html" class="sidebar-link"><span class="icon">⚡</span> Promocoes Oficiais</a>
                 <a href="radio-indoor.html" class="sidebar-link"><span class="icon">📻</span> Radio Indoor</a>
                 <div class="sidebar-nav-group">Loja Online</div>
                 <a href="#" class="sidebar-link" id="linkSiteFranquia"><span class="icon">🌐</span> Meu Site</a>
@@ -493,6 +494,19 @@
                             <label class="toggle"><input type="checkbox" id="cfgPauseRemote" onchange="saveConfig()"><span class="toggle-slider"></span></label>
                         </div>
                         <p style="font-size:11px;color:#999;margin:0">Útil pra manutenção ou silenciar rapidinho. Desligue pra voltar ao loop.</p>
+                    </div>
+
+                    <!-- Promoções Oficiais Banner -->
+                    <div class="tv-card" style="padding:16px;border:2px solid #ef4444;background:linear-gradient(135deg,#fff1f1 0%,#fff8f0 100%)">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <span style="font-size:24px">⚡</span>
+                                <div><strong style="color:#dc2626">Promoções Oficiais</strong><br><small style="color:#888">Banner rotativo: Desafio 10s + Acertou Ganhou 300g</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgPromosOficiais" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <p style="font-size:11px;color:#a16207;margin:0 0 8px">Exibe 12 versões rotativas das promos nas TVs desta franquia (rodapé da tela).</p>
+                        <a href="promocoes-oficiais.html" class="btn btn-sm btn-outline" style="border-color:#dc2626;color:#dc2626;font-size:12px">⚡ Configurar + ver estatísticas →</a>
                     </div>
 
                     <!-- Mensagem de emergência -->
@@ -1943,6 +1957,8 @@
             clubePromoEvery: parseInt((document.getElementById('cfgClubePromoEvery')||{}).value || 5, 10) || 5,
             clubePromoDuration: parseInt((document.getElementById('cfgClubePromoDuration')||{}).value || 12000, 10) || 12000,
             clubeUrl: (document.getElementById('cfgClubeUrl')||{}).value ? document.getElementById('cfgClubeUrl').value.trim() : '',
+            // ==== Promoções Oficiais ====
+            showPromosOficiais: document.getElementById('cfgPromosOficiais') ? document.getElementById('cfgPromosOficiais').checked : true,
             updatedAt: new Date().toISOString()
         };
         setConfig(c);
@@ -2011,6 +2027,9 @@
         document.getElementById('cfgPauseRemote').checked = !!c.pauseRemote;
         document.getElementById('cfgEmergency').value = c.emergencyMessage || '';
         document.getElementById('cfgQrUrl').value = c.qrUrl || '';
+
+        // Promoções Oficiais
+        var po = document.getElementById('cfgPromosOficiais'); if(po) po.checked = c.showPromosOficiais !== false;
 
         // MilkyClube
         var qr = document.getElementById('cfgClubeQr'); if(qr) qr.checked = c.showClubeQr !== false;

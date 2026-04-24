@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Promoções Oficiais</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#FF0040">
+    <style>
+        .promo-hero{background:linear-gradient(135deg,#FF0040 0%,#FF6B6B 100%);color:#fff;border-radius:20px;padding:24px 28px;margin-bottom:24px;box-shadow:0 8px 30px rgba(255,0,64,.25)}
+        .promo-hero h2{font-family:'Baloo 2',cursive;font-size:24px;margin:0 0 6px}
+        .promo-hero p{margin:0;opacity:.95;font-size:14px;line-height:1.4}
+        .card{background:#fff;border-radius:16px;padding:20px 24px;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:20px}
+        .card h3{font-family:'Baloo 2',cursive;margin:0 0 14px;font-size:18px;color:#333}
+        .stat-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+        .stat-box{background:#f8f6ff;border-radius:14px;padding:14px 16px;border-left:4px solid #6C63FF}
+        .stat-box.g{border-left-color:#00C853;background:#f1fbf4}
+        .stat-box.o{border-left-color:#FF9800;background:#fff8ed}
+        .stat-num{font-family:'Orbitron',monospace;font-size:26px;font-weight:900;color:#333;line-height:1}
+        .stat-label{font-size:12px;color:#666;margin-top:6px;font-weight:600}
+        .toggle{position:relative;display:inline-block;width:52px;height:28px;flex-shrink:0}
+        .toggle input{opacity:0;width:0;height:0}
+        .toggle-slider{position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:28px;transition:.3s}
+        .toggle-slider:before{content:'';position:absolute;height:22px;width:22px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+        .toggle input:checked + .toggle-slider{background:#00C853}
+        .toggle input:checked + .toggle-slider:before{transform:translateX(24px)}
+        .toggle-row{display:flex;align-items:center;gap:14px;background:#f8f8ff;border-radius:14px;padding:14px 18px;cursor:pointer}
+        .toggle-row:hover{background:#f0f0ff}
+        .toggle-info{flex:1}
+        .toggle-info strong{display:block;font-family:'Baloo 2',cursive;font-size:15px;color:#333}
+        .toggle-info small{font-size:12px;color:#777}
+        .preview-stage{background:#0F0D1A;border-radius:20px;padding:40px 24px;display:flex;align-items:center;justify-content:center;min-height:340px;position:relative;overflow:hidden}
+        .preview-stage::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 20%,rgba(255,0,64,.12),transparent 40%),radial-gradient(circle at 70% 80%,rgba(0,200,83,.12),transparent 40%)}
+        .preview-slot{width:100%;max-width:560px;position:relative;z-index:1}
+        .copies-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:16px}
+        .copy-mini{border-radius:12px;padding:12px 14px;color:#fff;font-size:12px;line-height:1.3}
+        .copy-mini.d10{background:linear-gradient(135deg,#FF0040,#FF6B6B)}
+        .copy-mini.p3{background:linear-gradient(135deg,#00C853,#64DD17)}
+        .copy-mini .cm-title{font-weight:900;font-size:14px;margin-top:4px}
+        .copy-mini .cm-sub{opacity:.92;margin-top:2px;font-size:11px}
+        .copy-mini .cm-cta{margin-top:6px;background:rgba(255,255,255,.92);color:#111;padding:3px 10px;border-radius:100px;font-weight:800;font-size:10px;display:inline-block}
+        .badge-promo{display:inline-block;padding:2px 8px;border-radius:100px;font-size:9px;font-weight:900;letter-spacing:.5px;background:rgba(255,255,255,.22)}
+        .checklist{margin:0;padding:0;list-style:none}
+        .checklist li{padding:8px 0 8px 28px;position:relative;font-size:14px;color:#333;line-height:1.45}
+        .checklist li::before{content:'✓';position:absolute;left:0;top:8px;width:20px;height:20px;border-radius:50%;background:#00C853;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900}
+    </style>
+</head>
+<body>
+<div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+            <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-group">Principal</div>
+            <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+            <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+            <div class="sidebar-nav-group">Gestao</div>
+            <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+            <a href="despesas.html" class="sidebar-link"><span class="icon">💰</span> Despesas</a>
+            <a href="fiscal.html" class="sidebar-link"><span class="icon">🧾</span> Fiscal</a>
+            <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+            <a href="entregas.html" class="sidebar-link"><span class="icon">🛵</span> Entregas</a>
+            <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
+            <a href="fidelidade.html" class="sidebar-link"><span class="icon">🎁</span> Fidelidade</a>
+            <a href="ifood.html" class="sidebar-link"><span class="icon">🛵</span> iFood</a>
+            <div class="sidebar-nav-group">Midia</div>
+            <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
+            <a href="tv-slides-generator.html" class="sidebar-link"><span class="icon">🎨</span> Gerador de Slides</a>
+            <a href="tv-ugc-curadoria.html" class="sidebar-link"><span class="icon">📸</span> UGC Curadoria</a>
+            <a href="tv-auto-stories.html" class="sidebar-link"><span class="icon">📱</span> Auto Stories IG</a>
+            <a href="challenge-studio.html" class="sidebar-link"><span class="icon">🎯</span> Studio dos Desafios</a>
+            <a href="promocoes-oficiais.html" class="sidebar-link active"><span class="icon">⚡</span> Promoções Oficiais</a>
+            <a href="radio-indoor.html" class="sidebar-link"><span class="icon">📻</span> Radio Indoor</a>
+            <div class="sidebar-nav-group">Marketing</div>
+            <a href="marketing.html" class="sidebar-link"><span class="icon">📢</span> Marketing</a>
+            <div class="sidebar-nav-group">Configuracao</div>
+            <a href="configuracoes.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
+        </nav>
+        <div class="sidebar-user">
+            <span id="sidebarUserName">-</span>
+        </div>
+    </aside>
+
+    <main class="panel-main">
+        <header class="panel-header">
+            <button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+            <h1>⚡ Promoções Oficiais MilkyPot</h1>
+            <div class="header-actions">
+                <button class="btn btn-outline" onclick="Auth.logout()">Sair</button>
+            </div>
+        </header>
+
+        <div class="panel-content">
+            <!-- Hero -->
+            <div class="promo-hero">
+                <h2>2 promoções viralizantes, já ativas nas suas TVs</h2>
+                <p><strong>Desafio 10 segundos</strong> (pare o cronômetro no 5/10/30 e ganhe) + <strong>Acertou Ganhou 300g</strong> (crave 300g exatos na balança e não paga nada). 12 copies rotativas criadas pelos estrategistas de criativo + growth da marca — sem esforço seu.</p>
+            </div>
+
+            <!-- Toggle -->
+            <div class="card">
+                <h3>🎛️ Controle do banner nas TVs</h3>
+                <label class="toggle-row" for="togPromos">
+                    <span class="toggle">
+                        <input type="checkbox" id="togPromos" checked>
+                        <span class="toggle-slider"></span>
+                    </span>
+                    <div class="toggle-info">
+                        <strong>Mostrar banner de promoções oficiais nas minhas TVs</strong>
+                        <small>Rotaciona as 12 copies a cada 7 segundos no rodapé das TVs. Aplica em até 60s após trocar.</small>
+                    </div>
+                    <span id="togState" style="font-size:13px;font-weight:800;color:#00C853">ATIVO</span>
+                </label>
+            </div>
+
+            <!-- Preview ao vivo -->
+            <div class="card">
+                <h3>👀 Preview ao vivo (rotação real a cada 5.5s)</h3>
+                <div class="preview-stage">
+                    <div class="preview-slot" data-tv-promos="all" data-interval="5500"></div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="card">
+                <h3>📊 Desempenho na sua loja</h3>
+                <div class="stat-row" id="statRow">
+                    <div class="stat-box"><div class="stat-num" id="sAttempts">0</div><div class="stat-label">Tentativas do Desafio (últimos 30d)</div></div>
+                    <div class="stat-box g"><div class="stat-num" id="sWinners">0</div><div class="stat-label">Ganhadores (acerto exato)</div></div>
+                    <div class="stat-box o"><div class="stat-num" id="sHotStreak">0</div><div class="stat-label">Quase-acertos (&lt; 50ms)</div></div>
+                    <div class="stat-box"><div class="stat-num" id="sVouchers">0</div><div class="stat-label">Códigos VIP gerados</div></div>
+                </div>
+                <p style="margin:12px 0 0;font-size:12px;color:#888">Stats carregam do Firestore. Demora 1-2s pra puxar. Atualização automática a cada minuto.</p>
+            </div>
+
+            <!-- Todas as 12 copies -->
+            <div class="card">
+                <h3>📝 Todas as 12 copies (6 Desafio 10s + 6 Acertou Ganhou 300g)</h3>
+                <div class="copies-grid" id="copiesGrid"></div>
+            </div>
+
+            <!-- Instruções operacionais -->
+            <div class="card">
+                <h3>✅ Como aplicar na operação</h3>
+                <ul class="checklist">
+                    <li><strong>Desafio 10s:</strong> o código VIP sai no cupom do cliente (PDV já integrado). Ele digita no totem e joga. Ganhador tem direito a topping grátis / MilkyPot grátis dependendo do acerto. Retirada: na própria loja, na hora.</li>
+                    <li><strong>Acertou Ganhou 300g:</strong> cliente monta o pote no buffet e pesa na balança. Se cravar exatamente 300g (margem zero), o pote é grátis. Se errar 1g, paga o valor normal. Instrua o operador a destacar "só conferir a balança".</li>
+                    <li>Banner rotativo passa em todas as TVs da loja (TV Indoor + TV do Desafio) — cria presença constante e conversa cruzada entre cliente e operador.</li>
+                    <li>Para maximizar viralização: oriente o operador a dizer "grava um vídeo se ganhar, marca @milkypot e tá viral". O botão "Não filmar" no desafio existe pra quem não quiser — respeite.</li>
+                    <li>Retenção pós-jogo: o MilkyPot envia automaticamente cupom D+1 pra ganhadores ("volta amanhã com 1 amigo") e perdedores ("10% OFF pra tentar de novo"). Nada que você precise fazer.</li>
+                </ul>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/i18n.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/auth.js"></script>
+
+<!-- Copies + Rotator (mesmo motor que roda no desafio.html e tv.html) -->
+<script src="../js/core/promocoes-copy.js?v=mp-v1"></script>
+<script src="../js/core/tv-promo-rotator.js?v=mp-v1"></script>
+
+<script>
+(function(){
+    if(!Auth.requireAuth()) return;
+    var fid = Auth.getFranchiseId();
+    document.getElementById('sidebarStoreName').textContent = fid || 'Franqueado';
+    document.getElementById('sidebarUserName').textContent = Auth.getUserName();
+
+    /* ===== Toggle — config da franquia ===== */
+    var CONFIG_KEY = 'promos_oficiais_config_' + fid;
+    var defaults = { bannerAtivo: true };
+    function loadCfg(){ return Object.assign({}, defaults, DataStore.get(CONFIG_KEY) || {}); }
+    function saveCfg(cfg){ DataStore.set(CONFIG_KEY, cfg); }
+
+    var tog = document.getElementById('togPromos');
+    var togState = document.getElementById('togState');
+    function applyTogUI(cfg){
+        tog.checked = !!cfg.bannerAtivo;
+        togState.textContent = cfg.bannerAtivo ? 'ATIVO' : 'DESATIVADO';
+        togState.style.color = cfg.bannerAtivo ? '#00C853' : '#E53935';
+    }
+    applyTogUI(loadCfg());
+    tog.addEventListener('change', function(){
+        var cfg = loadCfg();
+        cfg.bannerAtivo = !!tog.checked;
+        saveCfg(cfg);
+        applyTogUI(cfg);
+        if(window.Utils && Utils.showToast){
+            Utils.showToast(cfg.bannerAtivo ? 'Banner ativado nas TVs' : 'Banner desativado', cfg.bannerAtivo ? 'success' : 'info');
+        }
+    });
+
+    /* ===== Grid das 12 copies ===== */
+    var grid = document.getElementById('copiesGrid');
+    if(window.PromocoesCopy && grid){
+        var html = PromocoesCopy.COPIES.map(function(c){
+            var cls = c.promo === 'peso300' ? 'p3' : 'd10';
+            var tag = c.promo === 'peso300' ? 'ACERTOU GANHOU 300g' : 'DESAFIO 10s';
+            return '<div class="copy-mini '+cls+'">'+
+                '<span class="badge-promo">'+tag+'</span>'+
+                '<div class="cm-title">'+c.emoji+' '+c.title+'</div>'+
+                '<div class="cm-sub">'+c.subtitle+'</div>'+
+                '<div class="cm-cta">'+c.cta+' →</div>'+
+            '</div>';
+        }).join('');
+        grid.innerHTML = html;
+    }
+
+    /* ===== Stats — Firestore ===== */
+    function loadStats(){
+        if(!firebase || !firebase.firestore) return;
+        var db = firebase.firestore();
+        var since = new Date(Date.now() - 30*24*3600*1000);
+        try {
+            db.collection('desafio_10000')
+              .where('franchiseId','==',fid)
+              .where('timestamp','>=',since)
+              .get().then(function(snap){
+                var attempts=0, winners=0, hot=0;
+                snap.forEach(function(d){
+                    var x = d.data();
+                    attempts++;
+                    var diff = Math.abs((x.target||10000) - (x.tempo ? x.tempo*1000 : x.val||999999));
+                    if(diff === 0) winners++;
+                    else if(diff <= 50) hot++;
+                });
+                document.getElementById('sAttempts').textContent = attempts;
+                document.getElementById('sWinners').textContent = winners;
+                document.getElementById('sHotStreak').textContent = hot;
+              }).catch(function(){});
+            db.collection('desafio_vouchers')
+              .where('franchiseId','==',fid).get().then(function(snap){
+                document.getElementById('sVouchers').textContent = snap.size || 0;
+              }).catch(function(){});
+        } catch(e){ /* silencioso — stats nao sao criticas */ }
+    }
+    loadStats();
+    setInterval(loadStats, 60000);
+
+    /* ===== Service Worker ===== */
+    if('serviceWorker' in navigator){
+        navigator.serviceWorker.register('/sw.js').then(function(reg){
+            window.addEventListener('online', function(){ reg.active && reg.active.postMessage({type:'REPLAY_OFFLINE_QUEUE'}); });
+        }).catch(function(){});
+    }
+})();
+</script>
+<script src="../js/core/copilot-transport.js" defer></script>
+<script src="../js/pages/lilo-scanner.js" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
+</body>
+</html>
