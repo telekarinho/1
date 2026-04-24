@@ -11,6 +11,10 @@ const DataStore = {
     _db: null,
     _ready: false,
     _pendingWrites: [],
+    // Flag: true apos _syncFromCloud() completar. Paginas verificam
+    // esta flag para nao perder o evento mp_synced quando sync termina
+    // antes do listener ser registrado.
+    _syncDone: false,
 
     // ============================================
     // Inicializacao Firestore
@@ -327,6 +331,9 @@ const DataStore = {
             // Notifica paginas que a sincronizacao com Firestore terminou.
             // Paginas como despesas.html re-renderizam para refletir o estado
             // atual do localStorage apos o sync (evita race condition).
+            // _syncDone=true permite que listeners tardios (auth > sync)
+            // detectem que o sync ja correu sem precisar do evento.
+            this._syncDone = true;
             window.dispatchEvent(new CustomEvent('mp_synced'));
 
             // Real-time listener for the catalog and global settings
