@@ -1,5 +1,38 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #17 — 2026-04-24
+
+**Área:** UX/Acessibilidade + Conteúdo marketing (UGC inauguração)
+
+**Contexto:** VÉSPERA DA INAUGURAÇÃO (25/04/2026). Dois pontos pendentes do ciclo #16: (1) `aria-label` faltando no botão WhatsApp injetado no modal de sucesso; (2) template UGC para captura de conteúdo gerado por clientes durante a inauguração — sem isso a equipe improvisa no balcão e perde oportunidade de UGC orgânico.
+
+**O que analisou:**
+- `js/checkout.js` linha 362: `waBtn` criado sem `aria-label` — leitores de tela anunciariam o SVG + emoji ao invés de texto descritivo
+- `closeSuccessModal()` verificado: não remove `#successWaBtn` — comportamento correto, href é atualizado a cada pedido (`waBtn.href = waUrl` linha 373)
+- `belinha/content/` já tinha: captions de inauguração, playbook do dia, semana 1, funil WhatsApp — mas nenhum template de incentivo a UGC com scripts verbais e passo a passo para repost
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `js/checkout.js` | +1 linha: `waBtn.setAttribute('aria-label', 'Confirmar pedido no WhatsApp')` na criação do botão |
+| `belinha/content/ugc-compartilhe-potinho.md` | CRIADO — template completo de UGC: plaquinha de balcão (para imprimir), script verbal para atendentes, story de incentivo, passo a passo de repost, respostas padrão para comentários, pack de 20 hashtags, mimo sugerido, meta do dia |
+
+**Commit:** `1151178`
+
+**Impacto:**
+- Botão WhatsApp agora acessível via screen reader ("Confirmar pedido no WhatsApp")
+- Equipe tem guia prático completo para maximizar UGC orgânico no dia da inauguração
+- Template de repost garante que nenhuma menção seja desperdiçada sem resposta
+- Meta definida: 10 menções, 3 posts feed, 5 reposts, 10 UGCs guardados
+
+**Próximo passo sugerido:**
+- Ciclo #18 (DIA DA INAUGURAÇÃO): monitorar se o banner fase "ESTAMOS ABERTOS AGORA!" exibe corretamente às 14h
+- Ciclo #18: adicionar Schema.org `openingHoursSpecification` em `index.html` para SEO local pós-inauguração
+- Ciclo #18: criar `belinha/content/semana2-retencao.md` com campanha de retenção (retorno de clientes da inauguração)
+
+---
+
 ## Ciclo #16 — 2026-04-24
 
 **Área:** Conversão — Botão WhatsApp com pedido pré-preenchido no modal de sucesso do checkout
