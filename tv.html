@@ -361,22 +361,36 @@ if(fid) loadPlaylist();
 else msg.textContent = 'Use: /tv.html?f=ID';
 
 // PROMO ROTATOR (bar inferior)
+// Respeita cfg.showPromosOficiais — se false, oculta o banner.
 var PROMOS = [
-  {p:'d10',e:'⏱️',t:'PAROU NO 10?', s:'Acertou, levou.', c:'JOGA AGORA'},
-  {p:'p3', e:'⚖️',t:'300g = GRATIS', s:'Cravou, ganhou.', c:'MONTA'}
+  {p:'d10',e:'\u23F1\uFE0F',t:'PAROU NO 10?',    s:'Acertou o tempo certo, levou!',    c:'JOGA AGORA'},
+  {p:'p3', e:'\u2696\uFE0F',t:'300g = GR\u00C1TIS',s:'Cravou na balanca, ganhou!',      c:'MONTA O SEU'},
+  {p:'d10',e:'\uD83C\uDF89',t:'DESAFIO 10 SEGUNDOS',s:'Para no 10 e nao paga. Simples.', c:'EU ACEITO'},
+  {p:'p3', e:'\uD83C\uDF66',t:'ACERTOU 300g?',   s:'Seu potinho sai de gra\u00E7a!',   c:'TENTA A\u00ED'},
+  {p:'d10',e:'\uD83D\uDD25',t:'100% GRATIS?',    s:'Sim, se parar exato em 10s.',      c:'QUERO TENTAR'},
+  {p:'p3', e:'\uD83C\uDFC6',t:'O PESO PERFEITO', s:'300 gramas = zero reais.',         c:'PARTICIPO'},
+  {p:'d10',e:'\u26A1',      t:'MILKYPOT DESAFIO',s:'Pause o sorvete em 10s e vence.', c:'BORA'},
+  {p:'p3', e:'\uD83D\uDCAF',t:'EXATAMENTE 300g', s:'Ganhou? Potinho na casa.',         c:'ACEITO O DESAFIO'}
 ];
 var promoBar = document.getElementById('promoBar');
 var promoInner = document.getElementById('promoInner');
 var promoIdx = 0;
+var _promoInterval = null;
 function renderPromo(){
   if(!promoBar) return;
+  // Recheck config a cada ciclo (permite toggle em tempo real)
+  var cfg2 = fid ? (DataStore.get('tv_config_' + fid) || {}) : {};
+  if(cfg2.showPromosOficiais === false){ promoBar.style.display='none'; return; }
   var x = PROMOS[promoIdx % PROMOS.length];
   promoIdx++;
-  promoInner.style.background = x.p === 'p3' ? '#4CAF50' : '#FF0040';
-  promoInner.innerHTML = '<div class="promoEmoji">'+x.e+'</div><div class="promoText"><div class="promoTitle">'+x.t+'</div><div class="promoSub">'+x.s+'</div></div>';
+  promoInner.style.background = x.p === 'p3'
+    ? 'linear-gradient(135deg,#2E7D32,#388E3C)'
+    : 'linear-gradient(135deg,#B71C1C,#E53935)';
+  promoInner.innerHTML = '<div class="promoEmoji">'+x.e+'</div>'
+    +'<div class="promoText"><div class="promoTitle">'+x.t+'</div><div class="promoSub">'+x.s+'</div></div>';
   promoBar.style.display = 'block';
 }
-setInterval(renderPromo, 7000);
+_promoInterval = setInterval(renderPromo, 7000);
 renderPromo();
 </script>
 </body>
