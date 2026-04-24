@@ -89,6 +89,44 @@
             font-size: 0.75rem;
             color: var(--mp-text-light);
         }
+        /* Tabs MilkyClube */
+        .loy-tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 2px solid var(--mp-border);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .loy-tab {
+            background: transparent;
+            border: 0;
+            padding: 10px 18px;
+            font-family: 'Baloo 2', cursive;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--mp-text-light);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+        .loy-tab.active {
+            color: var(--mp-primary);
+            border-bottom-color: var(--mp-primary);
+        }
+        .loy-pane { display: none; }
+        .loy-pane.active { display: block; }
+        .club-tier-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .club-tier-leite     { background: #E3F2FD; color: #1565C0; }
+        .club-tier-nata      { background: #FFF8E1; color: #7a5a00; }
+        .club-tier-chantilly { background: #FCE4EC; color: #AD1457; }
     </style>
 </head>
 <body>
@@ -172,6 +210,14 @@
             </header>
 
             <div class="panel-content">
+                <!-- Tabs MilkyClube -->
+                <div class="loy-tabs" role="tablist">
+                    <button class="loy-tab active" id="tabLegacyBtn" onclick="switchLoyTab('legacy')" role="tab">📋 Legado (Pontos)</button>
+                    <button class="loy-tab" id="tabClubBtn" onclick="switchLoyTab('club')" role="tab">🎁 MilkyClube (Novo)</button>
+                </div>
+
+                <!-- Pane legado (conteudo original) -->
+                <div class="loy-pane active" id="paneLegacy" role="tabpanel">
                 <!-- KPIs -->
                 <div class="kpi-grid">
                     <div class="kpi-card">
@@ -232,8 +278,93 @@
                         </table>
                     </div>
                 </div>
+                </div><!-- /paneLegacy -->
+
+                <!-- Pane MilkyClube (novo) -->
+                <div class="loy-pane" id="paneClub" role="tabpanel">
+                    <!-- KPIs MilkyClube -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-icon blue">👥</div>
+                            <div class="kpi-info">
+                                <div class="kpi-label">Total Members</div>
+                                <div class="kpi-value" id="clubKpiTotal">0</div>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon yellow">🪙</div>
+                            <div class="kpi-info">
+                                <div class="kpi-label">MilkyCoins em Circulacao</div>
+                                <div class="kpi-value" id="clubKpiCoins">0</div>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon green">✨</div>
+                            <div class="kpi-info">
+                                <div class="kpi-label">Membros Tier Nata</div>
+                                <div class="kpi-value" id="clubKpiNata">0</div>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon pink">👑</div>
+                            <div class="kpi-info">
+                                <div class="kpi-label">Membros Tier Chantilly</div>
+                                <div class="kpi-value" id="clubKpiChantilly">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Club -->
+                    <div class="search-bar">
+                        <input type="text" class="form-control" id="clubSearchInput" placeholder="Buscar por nome, telefone ou CPF..." onkeyup="if(event.key==='Enter') filterClubMembers()">
+                        <button class="btn btn-primary" onclick="filterClubMembers()">🔍 Buscar</button>
+                        <button class="btn btn-secondary" onclick="loadClubMembers()">🔄 Atualizar</button>
+                    </div>
+
+                    <!-- Club Members Table -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <h3>🎁 Clientes MilkyClube (nacional)</h3>
+                            <small style="color:var(--mp-text-light);font-size:0.8rem;">O MilkyClube e nacional - exibindo todos os clientes cadastrados.</small>
+                        </div>
+                        <div class="panel-card-body" style="overflow-x:auto">
+                            <table class="panel-table" id="clubMembersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Telefone</th>
+                                        <th>CPF</th>
+                                        <th>Tier</th>
+                                        <th class="text-right">MilkyCoins</th>
+                                        <th class="text-right">Total Gasto</th>
+                                        <th class="text-center">Pedidos</th>
+                                        <th>Ultima Compra</th>
+                                        <th>Acoes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clubMembersBody">
+                                    <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--mp-text-light)">Carregando clientes MilkyClube...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div><!-- /paneClub -->
             </div>
         </main>
+    </div>
+
+    <!-- Modal Detalhe Member MilkyClube -->
+    <div class="panel-modal-overlay" id="clubMemberModal">
+        <div class="panel-modal">
+            <div class="panel-modal-header">
+                <h3 id="clubMemberModalTitle">Detalhes do Cliente MilkyClube</h3>
+                <button class="panel-modal-close" onclick="document.getElementById('clubMemberModal').classList.remove('active')">&times;</button>
+            </div>
+            <div class="panel-modal-body" id="clubMemberModalBody"></div>
+            <div class="panel-modal-footer" id="clubMemberModalFooter">
+                <button class="btn btn-secondary" onclick="document.getElementById('clubMemberModal').classList.remove('active')">Fechar</button>
+            </div>
+        </div>
     </div>
 
     <!-- Customer Detail Modal -->
@@ -419,6 +550,185 @@
         // Init
         refreshKPIs();
         renderCustomers();
+
+        // ==========================
+        // MilkyClube tab (novo)
+        // ==========================
+        var clubMembersCache = [];
+        var isSuper = session.role === (MP.ROLES && MP.ROLES.SUPER_ADMIN) || session.role === 'super_admin';
+
+        window.switchLoyTab = function(tab){
+            document.getElementById('tabLegacyBtn').classList.toggle('active', tab==='legacy');
+            document.getElementById('tabClubBtn').classList.toggle('active', tab==='club');
+            document.getElementById('paneLegacy').classList.toggle('active', tab==='legacy');
+            document.getElementById('paneClub').classList.toggle('active', tab==='club');
+            if(tab==='club' && !clubMembersCache.length){ loadClubMembers(); }
+        };
+
+        function tierBadgeHTML(tier){
+            var cls = 'club-tier-leite', label='🥛 Leite';
+            if(tier==='nata'){ cls='club-tier-nata'; label='✨ Nata'; }
+            if(tier==='chantilly'){ cls='club-tier-chantilly'; label='👑 Chantilly'; }
+            return '<span class="club-tier-badge '+cls+'">'+label+'</span>';
+        }
+        function cpfMask(cpf){
+            if(!cpf) return '-';
+            var c = String(cpf).replace(/\D/g,'');
+            if(c.length !== 11) return cpf;
+            return c.slice(0,3)+'.***.***-'+c.slice(9,11);
+        }
+        function fmtCoinsSimple(c){ return 'G$ '+(c|0)+' <small style="color:#999">('+((c|0)/100).toFixed(2).replace('.',',')+' R$)</small>'; }
+
+        window.loadClubMembers = function(){
+            var tbody = document.getElementById('clubMembersBody');
+            if(typeof firebase==='undefined' || !firebase.firestore){
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--mp-text-light)">Firebase indisponivel.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--mp-text-light)">Carregando...</td></tr>';
+            firebase.firestore().collection('club_members').orderBy('totalSpent','desc').limit(200).get()
+                .then(function(snap){
+                    clubMembersCache = [];
+                    snap.forEach(function(d){ clubMembersCache.push(Object.assign({id:d.id}, d.data())); });
+                    renderClubMembers(clubMembersCache);
+                    refreshClubKPIs();
+                })
+                .catch(function(err){
+                    console.warn('club members err', err);
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#c62828">Erro ao carregar: '+Utils.escapeHtml(err.message||'')+'</td></tr>';
+                });
+        };
+
+        function refreshClubKPIs(){
+            var total=0, coins=0, nata=0, chantilly=0;
+            clubMembersCache.forEach(function(m){
+                total++;
+                coins += (m.coins|0);
+                if(m.tier==='nata') nata++;
+                if(m.tier==='chantilly') chantilly++;
+            });
+            document.getElementById('clubKpiTotal').textContent = total;
+            document.getElementById('clubKpiCoins').textContent = coins.toLocaleString('pt-BR');
+            document.getElementById('clubKpiNata').textContent = nata;
+            document.getElementById('clubKpiChantilly').textContent = chantilly;
+        }
+
+        function renderClubMembers(list){
+            var tbody = document.getElementById('clubMembersBody');
+            if(!list || !list.length){
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--mp-text-light)">Nenhum cliente MilkyClube encontrado.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = list.map(function(m){
+                var lastOrder = m.lastOrderAt ? Utils.formatDateTime(m.lastOrderAt) : '-';
+                return '<tr>'+
+                    '<td><strong>'+Utils.escapeHtml(m.name||'-')+'</strong></td>'+
+                    '<td>'+Utils.escapeHtml(m.phone||'-')+'</td>'+
+                    '<td style="font-family:monospace">'+Utils.escapeHtml(cpfMask(m.cpf))+'</td>'+
+                    '<td>'+tierBadgeHTML(m.tier)+'</td>'+
+                    '<td class="text-right">'+fmtCoinsSimple(m.coins)+'</td>'+
+                    '<td class="text-right">'+Utils.formatCurrency(m.totalSpent||0)+'</td>'+
+                    '<td class="text-center">'+(m.ordersCount||0)+'</td>'+
+                    '<td>'+Utils.escapeHtml(lastOrder)+'</td>'+
+                    '<td><button class="btn btn-sm btn-primary" onclick="showClubMember(\''+m.id+'\')">Ver</button></td>'+
+                    '</tr>';
+            }).join('');
+        }
+
+        window.filterClubMembers = function(){
+            var q = (document.getElementById('clubSearchInput').value||'').toLowerCase().trim();
+            if(!q){ renderClubMembers(clubMembersCache); return; }
+            var digits = q.replace(/\D/g,'');
+            var filtered = clubMembersCache.filter(function(m){
+                var name = (m.name||'').toLowerCase();
+                var phone = (m.phone||'').replace(/\D/g,'');
+                var cpf = (m.cpf||'').replace(/\D/g,'');
+                return name.indexOf(q) !== -1 || (digits && (phone.indexOf(digits)!==-1 || cpf.indexOf(digits)!==-1));
+            });
+            renderClubMembers(filtered);
+        };
+
+        window.showClubMember = function(memberId){
+            var m = clubMembersCache.find(function(x){ return x.id===memberId; });
+            if(!m) return;
+            document.getElementById('clubMemberModalTitle').textContent = (m.name||'Cliente')+' - MilkyClube';
+            document.getElementById('clubMemberModalBody').innerHTML =
+                '<div class="customer-detail-section">'+
+                    '<h4>📊 Resumo</h4>'+
+                    '<div class="kpi-grid" style="margin-bottom:0">'+
+                        '<div class="kpi-card"><div class="kpi-info"><div class="kpi-label">MilkyCoins</div><div class="kpi-value">'+(m.coins|0)+'</div></div></div>'+
+                        '<div class="kpi-card"><div class="kpi-info"><div class="kpi-label">Total Gasto</div><div class="kpi-value">'+Utils.formatCurrency(m.totalSpent||0)+'</div></div></div>'+
+                        '<div class="kpi-card"><div class="kpi-info"><div class="kpi-label">Pedidos</div><div class="kpi-value">'+(m.ordersCount||0)+'</div></div></div>'+
+                        '<div class="kpi-card"><div class="kpi-info"><div class="kpi-label">Tier</div><div class="kpi-value" style="font-size:1.2rem;">'+tierBadgeHTML(m.tier)+'</div></div></div>'+
+                    '</div>'+
+                '</div>'+
+                '<div class="customer-detail-section">'+
+                    '<h4>📋 Dados Cadastrais</h4>'+
+                    '<p style="font-size:0.85rem;color:var(--mp-text-light);line-height:1.7">'+
+                        '📞 '+Utils.escapeHtml(m.phone||'-')+'<br>'+
+                        '🆔 CPF: '+Utils.escapeHtml(cpfMask(m.cpf))+'<br>'+
+                        (m.email ? '✉️ '+Utils.escapeHtml(m.email)+'<br>' : '')+
+                        (m.birthDate ? '🎂 '+Utils.escapeHtml(m.birthDate)+'<br>' : '')+
+                        '📅 Desde: '+Utils.escapeHtml(m.createdAt ? Utils.formatDateTime(m.createdAt) : '-')+'<br>'+
+                        (m.referralCode ? '🎟️ Codigo de indicacao: <strong>'+Utils.escapeHtml(m.referralCode)+'</strong> ('+((m.referralCount||0))+' indicacoes)<br>' : '')+
+                    '</p>'+
+                '</div>'+
+                '<div class="customer-detail-section">'+
+                    '<h4>💸 Ultimas Transacoes</h4>'+
+                    '<div id="clubTxList" style="font-size:0.85rem;color:var(--mp-text-light)">Carregando...</div>'+
+                '</div>';
+
+            // Footer com acoes
+            var footer = '<button class="btn btn-secondary" onclick="document.getElementById(\'clubMemberModal\').classList.remove(\'active\')">Fechar</button>';
+            if(m.phone){
+                var whatsappMsg = encodeURIComponent('Oi '+(m.name||'')+'! Voce tem '+(m.coins|0)+' MilkyCoins no MilkyClube (R$ '+((m.coins|0)/100).toFixed(2).replace('.',',')+'). Que tal aproveitar no seu proximo MilkyPot? 🥛✨');
+                var wppNum = (m.phone||'').replace(/\D/g,'');
+                footer += ' <a class="btn btn-success" target="_blank" rel="noopener" href="https://wa.me/'+wppNum+'?text='+whatsappMsg+'">💬 WhatsApp</a>';
+            }
+            if(isSuper){
+                footer += ' <button class="btn btn-primary" onclick="sendClubPush(\''+m.id+'\')">🔔 Enviar Push</button>';
+            }
+            document.getElementById('clubMemberModalFooter').innerHTML = footer;
+            document.getElementById('clubMemberModal').classList.add('active');
+
+            // Carrega transacoes
+            if(typeof firebase!=='undefined' && firebase.firestore){
+                firebase.firestore().collection('milkycoins_transactions')
+                    .where('memberId','==',m.id)
+                    .orderBy('createdAt','desc')
+                    .limit(20).get()
+                    .then(function(snap){
+                        var el = document.getElementById('clubTxList');
+                        if(snap.empty){ el.innerHTML='<p>Nenhuma transacao ainda.</p>'; return; }
+                        var rows = [];
+                        snap.forEach(function(d){
+                            var t = d.data();
+                            var sign = t.amount>=0 ? '+' : '';
+                            var color = t.amount>=0 ? '#2E7D32' : '#C62828';
+                            rows.push('<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--mp-border)">'+
+                                '<span>'+Utils.escapeHtml(t.description||t.type||'Transacao')+'<br><small style="color:#999">'+Utils.escapeHtml(t.createdAt ? Utils.formatDateTime(t.createdAt) : '')+'</small></span>'+
+                                '<strong style="color:'+color+'">'+sign+(t.amount|0)+' G$</strong>'+
+                            '</div>');
+                        });
+                        el.innerHTML = rows.join('');
+                    })
+                    .catch(function(err){
+                        document.getElementById('clubTxList').innerHTML = '<p style="color:#c62828">Erro: '+Utils.escapeHtml(err.message||'')+'</p>';
+                    });
+            }
+        };
+
+        window.sendClubPush = function(memberId){
+            if(!isSuper){ Utils.showToast('Apenas super_admin pode enviar push','error'); return; }
+            var title = prompt('Titulo do push:'); if(!title) return;
+            var body  = prompt('Mensagem:'); if(!body)  return;
+            var url   = prompt('URL (opcional, ex: /clube.html):','/clube.html')||'/clube.html';
+            if(typeof firebase==='undefined' || !firebase.functions){ Utils.showToast('Firebase indisponivel','error'); return; }
+            var fns = firebase.app().functions('southamerica-east1');
+            fns.httpsCallable('clubSendPush')({ memberId: memberId, title: title, body: body, url: url })
+                .then(function(){ Utils.showToast('Push enviado!','success'); })
+                .catch(function(err){ Utils.showToast('Erro: '+(err.message||err),'error'); });
+        };
     </script>
 <script src="../js/core/copilot-transport.js" defer></script>
 <script src="../js/pages/lilo-scanner.js" defer></script>

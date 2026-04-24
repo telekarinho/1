@@ -204,6 +204,71 @@ service cloud.firestore {
     }
 
     // ============================================
+    // MILKYCLUBE — Programa de fidelidade v1
+    // Coins/Tiers/Transactions/Referrals/FCM
+    // ============================================
+
+    // Config global do MilkyClube (tiers, bonus, feature flags)
+    // Leitura publica para o PWA do clube montar a UI
+    match /club_config/{configId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    // Membros do clube (1 doc por UID Firebase Auth)
+    // Cliente pode ler seu proprio doc e atualizar dados cadastrais
+    // mas NUNCA coins/tier/totals (somente Cloud Functions)
+    match /club_members/{memberId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == memberId || isSuperAdmin() || isFranchisee()
+      );
+      allow create: if isAuthenticated() && request.auth.uid == memberId;
+      allow update: if isAuthenticated()
+        && request.auth.uid == memberId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'coins', 'totalEarned', 'totalRedeemed',
+          'tier', 'tierProgress', 'ordersCount', 'totalSpent',
+          'birthdayClaimedYear', 'firstOrderBonusClaimed',
+          'referralCount', 'referralCode', 'referredBy'
+        ]);
+      allow delete: if isSuperAdmin();
+    }
+
+    // Transacoes de MilkyCoins - imutaveis, so Cloud Function escreve
+    match /milkycoins_transactions/{txId} {
+      allow read: if isAuthenticated() && (
+        resource.data.memberId == request.auth.uid || isSuperAdmin() || isFranchisee()
+      );
+      allow write: if false; // Somente Cloud Functions via admin SDK
+    }
+
+    // Codigos de indicacao (referral) - leitura publica para validar codigo
+    match /club_referrals/{code} {
+      allow read: if true;
+      allow write: if false; // Somente Cloud Functions
+    }
+
+    // Tokens FCM (push) - somente Cloud Functions gravam
+    match /fcm_tokens/{tokenHash} {
+      allow read: if isSuperAdmin();
+      allow write: if false; // Somente Cloud Functions
+    }
+
+    // Fila de envios WhatsApp - franqueado le sua fila, CF escreve
+    match /whatsapp_queue/{queueId} {
+      allow read: if isAuthenticated() && (isSuperAdmin() || isFranchisee());
+      allow update: if isAuthenticated() && (isSuperAdmin() || isFranchisee());
+      allow create, delete: if false; // Somente Cloud Functions criam
+    }
+
+    // Agenda de postagens de marketing (plano viral MilkyClube IG/TikTok)
+    match /marketing_agenda/{postId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ============================================
     // Bloqueia tudo que nao foi definido explicitamente
     // ============================================
     match /{document=**} {
