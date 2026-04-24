@@ -823,6 +823,8 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 </div>
 </div>
 <div class="attract-feed" id="attractFeed"></div>
+<!-- Rotacao de promocoes: Desafio 10s + Acertou Ganhou 300g (12 copies misturadas) -->
+<div data-tv-promos="all" data-interval="5500" style="max-width:min(92vw,720px);width:100%;margin:clamp(12px,2vw,20px) auto 0"></div>
 <div class="attract-cta" id="attractCta">&#128073; Toque na tela para jogar!</div>
 <!-- Hidden containers for JS -->
 <div id="tournamentSection" style="display:none"><div id="tournamentCountdown"></div><div id="tournamentList"></div></div>
@@ -892,6 +894,10 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 </div>
 <button class="btn btn-pink" id="photoBtn" onclick="takePhoto()">&#128248; Tirar Foto</button>
 <button class="btn btn-outline" id="photoNext" onclick="goToDifficulty()" style="display:none">Bora pro Desafio! &#128293;</button>
+<div style="margin-top:18px;text-align:center">
+  <button class="btn btn-skip" id="skipMediaBtn" onclick="skipMedia()" style="background:transparent;border:1.5px dashed rgba(255,255,255,.45);color:rgba(255,255,255,.85);padding:10px 22px;border-radius:100px;font-size:clamp(12px,1.4vw,14px);font-weight:600;cursor:pointer">🙈 Prefiro não tirar foto / filmar</button>
+  <p style="margin:8px 0 0;font-size:clamp(10px,1.1vw,12px);color:rgba(255,255,255,.6)">Tudo bem! Você continua jogando, só não ganha bônus de compartilhamento.</p>
+</div>
 </div>
 
 <!-- STEP DIFFICULTY: DIFFICULTY SELECTOR (feature 1) -->
@@ -1311,6 +1317,34 @@ v.style.display='none';
 document.getElementById('photoBtn').style.display='none';
 document.getElementById('photoNext').style.display='';
 if(photoStream) photoStream.getTracks().forEach(function(t){t.stop()});
+};
+
+/* ========== OPT-OUT: jogador nao quer filmar/fotografar ========== */
+window.skipMedia=function(){
+  // Marca opt-out pra toda a sessao — nada de foto, webcam ou video de reacao
+  try {
+    window._mediaOptOut = true;
+    sessionStorage.setItem('milkypot_media_optout','1');
+    // Para qualquer stream ativo
+    var v = document.getElementById('photoVideo');
+    if (v && v.srcObject) {
+      try { v.srcObject.getTracks().forEach(function(t){t.stop()}); } catch(e){}
+      v.srcObject = null;
+    }
+    var webcam = document.getElementById('webcamVid');
+    if (webcam && webcam.srcObject) {
+      try { webcam.srcObject.getTracks().forEach(function(t){t.stop()}); } catch(e){}
+      webcam.srcObject = null;
+    }
+    // Esconde PIP da webcam
+    var pip = document.getElementById('webcamPip');
+    if (pip) pip.style.display = 'none';
+    // Substitui foto por emoji placeholder pro Firestore nao quebrar
+    try { if (typeof gameConfig !== 'undefined') gameConfig._skipMedia = true; } catch(e){}
+    if (typeof window.playerPhotoDataUrl !== 'undefined') window.playerPhotoDataUrl = null;
+  } catch(e) { console.warn('skipMedia:', e); }
+  // Vai direto pra escolha de dificuldade
+  goToDifficulty();
 };
 
 /* ========== FEATURE 1: DIFFICULTY SELECTOR ========== */
@@ -2305,5 +2339,8 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
 </script>
 <!-- Bridge pra broadcasting nas TVs + botao share viral -->
 <script src="/js/pages/desafio-tv-bridge.js?v=mp-v1"></script>
+<!-- Copies rotativas + rotator das 2 promocoes (Desafio 10s + Acertou Ganhou 300g) -->
+<script src="/js/core/promocoes-copy.js?v=mp-v1"></script>
+<script src="/js/core/tv-promo-rotator.js?v=mp-v1"></script>
 </body>
 </html>
