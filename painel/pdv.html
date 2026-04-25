@@ -724,22 +724,22 @@
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v50"></script>
-<script src="../js/core/motivacional.js?v=mp-v50"></script>
-<script src="../js/core/caixa.js?v=mp-v50"></script>
-<script src="../js/core/financas.js?v=mp-v50"></script>
-<script src="../js/core/onboarding.js?v=mp-v50"></script>
-<script src="../js/core/units.js?v=mp-v50"></script>
-<script src="../js/core/error-tracking.js?v=mp-v50"></script>
-<script src="../js/core/recipes.js?v=mp-v50"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v50"></script>
-<script src="../js/core/offline-queue.js?v=mp-v50"></script>
-<script src="../js/core/pix.js?v=mp-v50"></script>
-<script src="../js/core/nfce.js?v=mp-v50"></script>
-<script src="../js/core/printer.js?v=mp-v50"></script>
+<script src="../js/core/adminconfig.js?v=mp-v51"></script>
+<script src="../js/core/motivacional.js?v=mp-v51"></script>
+<script src="../js/core/caixa.js?v=mp-v51"></script>
+<script src="../js/core/financas.js?v=mp-v51"></script>
+<script src="../js/core/onboarding.js?v=mp-v51"></script>
+<script src="../js/core/units.js?v=mp-v51"></script>
+<script src="../js/core/error-tracking.js?v=mp-v51"></script>
+<script src="../js/core/recipes.js?v=mp-v51"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v51"></script>
+<script src="../js/core/offline-queue.js?v=mp-v51"></script>
+<script src="../js/core/pix.js?v=mp-v51"></script>
+<script src="../js/core/nfce.js?v=mp-v51"></script>
+<script src="../js/core/printer.js?v=mp-v51"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v50"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v50"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v51"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v51"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -2168,13 +2168,14 @@
         return elapsed < cooldown;
     }
 
-    // Aplica regra de minTicket — anti-prejuízo. Pedido pequeno não emite raspinha.
+    // Inauguração: TODA venda gera raspinha (marketing máximo).
+    // Anti-prejuízo migrou pro lado da REDENÇÃO — cada prêmio tem prize.minOrder
+    // que bloqueia resgate em pedido pequeno. O minTicket de emissão estava cortando
+    // raspinhas em milkshakes solo (R$9.99 < R$15) e isolando o cliente do funil viral.
+    // Cooldown anti-fraude segue ativo (1 raspinha por CPF/telefone a cada N min).
     function shouldEmitScratch(orderTotal, customerKey){
         var cfg = getScratchConfig();
         if (!cfg.enabled) return { ok:false, reason:'sistema desativado' };
-        if (orderTotal < (cfg.minTicketForLoop || 15)) {
-            return { ok:false, reason:'ticket abaixo do mínimo R$' + (cfg.minTicketForLoop || 15) };
-        }
         if (isInCooldown(customerKey)) {
             return { ok:false, reason:'cooldown ativo (' + (cfg.cooldownMinutes || 90) + ' min/cliente)' };
         }
@@ -2968,11 +2969,28 @@
     }
 
     // Auto-print called during finishOrder (cart still filled, order object available)
+    // Cozinha tem template HTML separado (buildKitchenTicket) — letras grandes pra preparo.
+    // Cliente tem template térmico (buildReceipt) com raspinha + voucher + bloco PRODUCAO.
     window.autoPrintOrder = function(order, voucherCode, scratchData, profileId){
         var name = fr ? fr.name : 'MilkyPot';
         var now = new Date(order.createdAt).toLocaleString('pt-BR');
         var tl = {balcao:'BALCAO',retirada:'RETIRADA',delivery:'DELIVERY'};
-        var t = buildReceipt(name, tl[order.type]||order.type.toUpperCase(), now, order.items, order.total, order.customer.name, order.address, order.payment, voucherCode, order.id, scratchData, profileId);
+        var customerName = (order.customer && order.customer.name) || '';
+        var addr = order.address || '';
+
+        // Cozinha: layout HTML grande, sem preço, foco em receita + nome bem visível
+        if (profileId === 'cozinha') {
+            var kitchenItems = (order.items || []).filter(function (c) {
+                return (typeof Printer !== 'undefined' && Printer.isKitchenItem) ? Printer.isKitchenItem(c) : true;
+            });
+            if (!kitchenItems.length) return; // só grab-and-go, sem preparo
+            var ticketHtml = buildKitchenTicket(name, tl[order.type]||order.type.toUpperCase(), now, kitchenItems, customerName, addr);
+            openKitchenPrintWindow(ticketHtml);
+            return;
+        }
+
+        // Demais perfis (balcao/cliente): receipt térmico tradicional
+        var t = buildReceipt(name, tl[order.type]||order.type.toUpperCase(), now, order.items, order.total, customerName, addr, order.payment, voucherCode, order.id, scratchData, profileId);
         openPrintWindow(t, scratchData, profileId);
     };
 
@@ -3128,7 +3146,15 @@
         t += '================================\n';
         if(orderId) t += 'Pedido #' + String(orderId).slice(-6).toUpperCase() + '\n';
         t += typeLabel + ' | ' + when + '\n';
-        if(customerName) t += 'Cliente: ' + customerName + '\n';
+
+        // Cliente em CAIXA ALTA bem visível — bloco destacado (operador identifica de longe)
+        if(customerName) {
+            var nomeUp = String(customerName).toUpperCase();
+            t += '--------------------------------\n';
+            t += centerPad('>>> CLIENTE <<<', 32) + '\n';
+            t += centerPad(nomeUp, 32) + '\n';
+            t += '--------------------------------\n';
+        }
         if(addr) t += 'Entrega: ' + addr + '\n';
         t += '--------------------------------\n';
 
@@ -3170,6 +3196,39 @@
                 t += 'Valido ate ' + new Date(scratch.expiresAt).toLocaleDateString('pt-BR') + '\n';
             }
             t += '--------------------------------\n';
+        }
+
+        // BLOCO PRODUCAO — nome cliente + receita por milkshake/sundae/açaí (cozinha conferir)
+        // Cliente leva o recibo, cozinha vê pra quem é cada drink mesmo sem o ticket separado.
+        var prodItems = (items || []).filter(function (c) {
+            var n = (c && c.name || '').toLowerCase();
+            return n.includes('milkshake') || n.includes('milk shake') || n.includes('shake') ||
+                   n.includes('sundae') ||
+                   n.includes('acai') || n.includes('açaí') || n.includes('açai') || n.includes('bowl') ||
+                   n.includes('potinho');
+        });
+        if (prodItems.length) {
+            t += '\n';
+            t += '++++++ PRODUCAO ++++++\n';
+            if (customerName) {
+                t += centerPad('PARA: ' + String(customerName).toUpperCase(), 32) + '\n';
+            } else {
+                t += centerPad('PARA: --- SEM NOME ---', 32) + '\n';
+            }
+            t += '--------------------------------\n';
+            prodItems.forEach(function (c, idx) {
+                var sizeLbl = c.size ? ' (' + c.size + ')' : '';
+                t += '> ' + (c.qty || 1) + 'x ' + String(c.name || '').toUpperCase() + sizeLbl + '\n';
+                if (c.extras && c.extras.length) {
+                    c.extras.forEach(function (e) {
+                        t += '   + ' + e.name + '\n';
+                    });
+                } else {
+                    t += '   (sem adicionais)\n';
+                }
+                if (idx < prodItems.length - 1) t += '   . . . . . . . . . . . . . . . .\n';
+            });
+            t += '++++++++++++++++++++++++\n';
         }
 
         t += '\n';
