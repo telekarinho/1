@@ -1,5 +1,37 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #29 — 2026-04-25
+
+**Área:** UX/Frontend — Core Web Vitals: LCP mobile em `cardapio.html`
+
+**Contexto:** Pós-inauguração. Estratégia indicava ciclo #29 para LCP mobile em `cardapio.html`. O logo MilkyPot (`images/logo-milkypot.png`, 1900×1070px) aparece 2× na página: navbar e hero. O elemento hero é o LCP no mobile — sem preload ou fetchpriority, o browser só o descobria ao parsear o DOM, atrasando o LCP. Sem width/height explícitos, o browser não reserva espaço antes do CSS carregar → CLS.
+
+**O que analisou:**
+- `cardapio.html` — 2 instâncias de logo sem `width`/`height`; nenhum preload hint no `<head>`
+- CSS `style.css`: `.logo-img { height:72px; width:auto }` e `.hero-logo-small { width:280px; height:auto }`
+- Logo PNG: 1900×1070 (aspect ratio 1.78:1 = wide, não quadrada)
+- Scripts externos (linhas 391–398) são seguidos de scripts inline dependentes → `defer` quebraria a ordem de execução (não tocado)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `cardapio.html` | `<link rel="preload" as="image" href="images/logo-milkypot.png" fetchpriority="high">` no `<head>` (linha 10); `fetchpriority="high"` no hero-logo-small; `width="1900" height="1070"` nas 2 imagens |
+
+**Commit:** `63a1f70`
+
+**Impacto esperado:**
+- **LCP**: browser inicia fetch da imagem durante parse do `<head>`, antes de descobrir qualquer `<img>` no DOM — redução estimada de 200–500ms no LCP mobile em 4G lento
+- **CLS**: browser reserva espaço correto (aspect ratio 1900:1070) antes do CSS carregar → CLS próximo a 0 para usuários em conexão lenta
+- `fetchpriority="high"` no hero garante que o browser priorize esta imagem sobre recursos secundários (fontes, CSS de terceiros)
+
+**Próximo passo sugerido:**
+- Ciclo #30: Auto-aprimoramento — reler log ciclos 25–29, ajustar `belinha/estrategia.md` + verificar KPIs (ciclo de auto-aprimoramento obrigatório a cada 5 ciclos)
+- Ciclo #30: Ativar `aggregateRating` em `index.html` se já houver reviews no Google Maps (template pronto desde ciclo #26)
+- Ciclo #31: Conteúdo semana 3 pós-inauguração (10/05–16/05) — dar continuidade à régua de posts
+
+---
+
 ## Ciclo #28 — 2026-04-25
 
 **Área:** Pesquisa concorrentes → ação concreta em copy (Conversão)
