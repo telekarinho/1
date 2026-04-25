@@ -444,7 +444,7 @@ body:not(.idle){cursor:default}
             { emoji:'🍑', gradient:'linear-gradient(135deg,#6A1B9A 0%,#AB47BC 60%,#CE93D8 100%)', name:'Ameixa Roxinha',            copy:'Roxa, polpuda, exótica. Pra quem quer fugir do óbvio e descobrir um sabor novo no meio do caminho.' },
             { emoji:'🍌', gradient:'linear-gradient(135deg,#F9A825 0%,#FFEB3B 60%,#FFF9C4 100%)', name:'Banana Caramelizada',       copy:'Banana douradinha, queimadinha na medida, beijada pelo caramelo. Doçura de fazenda em copo gelado.' }
         ];
-        // PREMIUM: Capitão Açaí — flagship com badge dourado
+        // PREMIUM: Capitão Açaí — flagship Milkshake com badge dourado
         var marketingPremium = {
             type: 'milkshake-card',
             mode: 'premium',
@@ -455,6 +455,20 @@ body:not(.idle){cursor:default}
             subtitle: 'O bowl gigante virou shake gigante. Açaí da Amazônia, granola crocante, banana caramelizada, leite condensado e raspas de chocolate. Não é só um milkshake — é a coroa.',
             priceLabel: 'R$ 24,99',
             priceUnit: '/ 600ml',
+            footer: '🍦 600ml · ingredientes premium · feito na hora'
+        };
+
+        // PREMIUM: Capitão Açaí Sundae
+        var marketingPremiumSundae = {
+            type: 'milkshake-card',
+            mode: 'premium',
+            emoji: '👑',
+            gradient: 'linear-gradient(135deg,#1A237E 0%,#5E35B1 40%,#F9A825 100%)',
+            tag: '👑 PREMIUM · COROA DOS SUNDAES',
+            title: 'Capitão Açaí Sundae',
+            subtitle: 'Camadas generosas de açaí da Amazônia, granola crocante, banana caramelizada, leite condensado e raspas de chocolate. Não é só um sundae — é uma experiência. Coroa do cardápio gourmet.',
+            priceLabel: 'R$ 24,99',
+            priceUnit: '/ 600ml taça',
             footer: '🍦 600ml · ingredientes premium · feito na hora'
         };
 
@@ -472,25 +486,56 @@ body:not(.idle){cursor:default}
             }, duration: 8000 };
         });
 
-        // Embaralha levemente (Fisher-Yates) — sabores não saem na mesma ordem sempre
-        for (var i = milkshakeSlides.length - 1; i > 0; i--) {
-            var j = Math.floor(Math.random() * (i + 1));
-            var tmp = milkshakeSlides[i]; milkshakeSlides[i] = milkshakeSlides[j]; milkshakeSlides[j] = tmp;
+        // Cria slides pros sundaes (mesma vibe, copy adaptada)
+        var sundaeSlides = MILKSHAKE_CARDS.map(function(m){
+            // Adapta copy: troca "milkshake" por "sundae" quando aparecer
+            var sundaeCopy = m.copy
+                .replace(/milkshake/gi, 'sundae')
+                .replace(/copo gelado/gi, 'taça gelada')
+                .replace(/num copo/gi, 'numa taça')
+                .replace(/no copo/gi, 'na taça')
+                .replace(/primeiro gole/gi, 'primeira colher')
+                .replace(/um gole/gi, 'uma colher')
+                .replace(/em forma de sundae\b/gi, 'em forma de sundae');
+            return { media: {
+                type: 'milkshake-card', mode: 'sundae',
+                emoji: m.emoji, gradient: m.gradient,
+                tag: '🍦 SUNDAE GOURMET MILKYPOT',
+                title: m.name,
+                subtitle: sundaeCopy,
+                priceLabel: 'R$ 9,99',
+                priceUnit: '/ P 250ml — Promoção Inauguração',
+                footer: 'Tamanhos: P 250ml · M 400ml · G 500ml — taça com toppings'
+            }, duration: 8000 };
+        });
+
+        // Embaralha (Fisher-Yates) — sabores variam ordem
+        function shuffle(arr){
+            for (var i = arr.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+            }
         }
+        shuffle(milkshakeSlides);
+        shuffle(sundaeSlides);
 
         // Respeita toggles do admin (painel/tv-indoor.html → config)
         // Default = ON (compatibilidade pra TVs sem config salvo)
-        var cfgShowPromos   = config.showPromosOficiais !== false;
-        var cfgShowFlavors  = config.showTvCardsFlavors !== false;
-        var cfgShowPremium  = config.showTvCardsPremium !== false;
-        var cfgShowBuffet   = config.showTvCardsBuffet  !== false;
+        var cfgShowPromos        = config.showPromosOficiais !== false;
+        var cfgShowFlavors       = config.showTvCardsFlavors !== false;
+        var cfgShowPremium       = config.showTvCardsPremium !== false;
+        var cfgShowBuffet        = config.showTvCardsBuffet  !== false;
+        var cfgShowSundae        = config.showTvCardsSundae  !== false;
+        var cfgShowSundaePremium = config.showTvCardsSundaePremium !== false;
 
         var marketingSlides = [];
-        if (cfgShowPromos)  marketingSlides.push({ media: marketingPromo1,  duration: 10000 });  // Acertou 300g
-        if (cfgShowPromos)  marketingSlides.push({ media: marketingPromo2,  duration: 10000 });  // Desafio 10s
-        if (cfgShowBuffet)  marketingSlides.push({ media: marketingBuffet,  duration: 10000 });  // Buffet R$5,99/100g
-        if (cfgShowPremium) marketingSlides.push({ media: marketingPremium, duration: 10000 });  // Capitão Açaí
-        if (cfgShowFlavors) marketingSlides = marketingSlides.concat(milkshakeSlides);          // 17 sabores
+        if (cfgShowPromos)        marketingSlides.push({ media: marketingPromo1,        duration: 10000 });  // Acertou 300g
+        if (cfgShowPromos)        marketingSlides.push({ media: marketingPromo2,        duration: 10000 });  // Desafio 10s
+        if (cfgShowBuffet)        marketingSlides.push({ media: marketingBuffet,        duration: 10000 });  // Buffet R$5,99/100g
+        if (cfgShowPremium)       marketingSlides.push({ media: marketingPremium,       duration: 10000 });  // Capitão Açaí Milkshake
+        if (cfgShowSundaePremium) marketingSlides.push({ media: marketingPremiumSundae, duration: 10000 });  // Capitão Açaí Sundae
+        if (cfgShowFlavors)       marketingSlides = marketingSlides.concat(milkshakeSlides);                 // 17 sabores Milkshake
+        if (cfgShowSundae)        marketingSlides = marketingSlides.concat(sundaeSlides);                    // 17 sabores Sundae
 
         if (playlist.length > 0) {
             if (marketingSlides.length > 0) {

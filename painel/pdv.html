@@ -862,10 +862,12 @@
                 const div = document.createElement('div');
                 div.className = 'kv-opt';
                 // Sub-label: ml para copo (milkshake), gramas para pote/balde
-                const isCopo = v.tipo === 'copo';
-                const unidade = v.gramas ? (isCopo ? v.gramas + 'ml' : v.gramas + 'g') : '';
-                const sub = unidade ? unidade + (v.tipo ? ' · ' + v.tipo : '') : (v.tipo || '');
-                const icon = isCopo ? '🥤' : '⚖️';
+                // 'copo' = milkshake, 'taca' = sundae — ambos vendidos por ml
+                const isLiquid = v.tipo === 'copo' || v.tipo === 'taca';
+                const unidade = v.gramas ? (isLiquid ? v.gramas + 'ml' : v.gramas + 'g') : '';
+                const tipoLabel = v.tipo === 'taca' ? 'taça' : v.tipo;
+                const sub = unidade ? unidade + (tipoLabel ? ' · ' + tipoLabel : '') : (tipoLabel || '');
+                const icon = v.tipo === 'copo' ? '🥤' : (v.tipo === 'taca' ? '🍦' : '⚖️');
 
                 // Promoção: mostra preço original riscado + label
                 const isPromoLoja = canal === 'loja' && v.promoAtivo && Number(v.precoLojaOriginal) > price;

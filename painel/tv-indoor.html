@@ -540,6 +540,22 @@
                             </div>
                             <label class="toggle"><input type="checkbox" id="cfgTvCardsBuffet" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
                         </div>
+
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #F3E5F5">
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <span style="font-size:18px">🍦</span>
+                                <div><strong style="font-size:13px">Sundaes Gourmet (17)</strong><br><small style="color:#888;font-size:10px">Mesmos sabores em taça — copy adaptada · 8s cada</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgTvCardsSundae" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #F3E5F5">
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <span style="font-size:18px">🏆</span>
+                                <div><strong style="font-size:13px">Capitão Açaí Sundae</strong><br><small style="color:#888;font-size:10px">600ml R$24,99 — premium em taça</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgTvCardsSundaePremium" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
                     </div>
 
                     <!-- Mensagem de emergência -->
@@ -1992,10 +2008,12 @@
             clubeUrl: (document.getElementById('cfgClubeUrl')||{}).value ? document.getElementById('cfgClubeUrl').value.trim() : '',
             // ==== Promoções Oficiais ====
             showPromosOficiais: document.getElementById('cfgPromosOficiais') ? document.getElementById('cfgPromosOficiais').checked : true,
-            // ==== Cards MilkyPot (sabores/premium/buffet) ====
-            showTvCardsFlavors: document.getElementById('cfgTvCardsFlavors') ? document.getElementById('cfgTvCardsFlavors').checked : true,
-            showTvCardsPremium: document.getElementById('cfgTvCardsPremium') ? document.getElementById('cfgTvCardsPremium').checked : true,
-            showTvCardsBuffet:  document.getElementById('cfgTvCardsBuffet')  ? document.getElementById('cfgTvCardsBuffet').checked  : true,
+            // ==== Cards MilkyPot (sabores/premium/buffet/sundae) ====
+            showTvCardsFlavors:        document.getElementById('cfgTvCardsFlavors') ? document.getElementById('cfgTvCardsFlavors').checked : true,
+            showTvCardsPremium:        document.getElementById('cfgTvCardsPremium') ? document.getElementById('cfgTvCardsPremium').checked : true,
+            showTvCardsBuffet:         document.getElementById('cfgTvCardsBuffet')  ? document.getElementById('cfgTvCardsBuffet').checked  : true,
+            showTvCardsSundae:         document.getElementById('cfgTvCardsSundae')  ? document.getElementById('cfgTvCardsSundae').checked  : true,
+            showTvCardsSundaePremium:  document.getElementById('cfgTvCardsSundaePremium') ? document.getElementById('cfgTvCardsSundaePremium').checked : true,
             updatedAt: new Date().toISOString()
         };
         setConfig(c);
@@ -2067,10 +2085,12 @@
 
         // Promoções Oficiais
         var po = document.getElementById('cfgPromosOficiais'); if(po) po.checked = c.showPromosOficiais !== false;
-        // Cards MilkyPot (sabores/premium/buffet)
+        // Cards MilkyPot (sabores/premium/buffet/sundae)
         var cf = document.getElementById('cfgTvCardsFlavors'); if(cf) cf.checked = c.showTvCardsFlavors !== false;
         var cp = document.getElementById('cfgTvCardsPremium'); if(cp) cp.checked = c.showTvCardsPremium !== false;
         var cb = document.getElementById('cfgTvCardsBuffet');  if(cb) cb.checked = c.showTvCardsBuffet  !== false;
+        var cs  = document.getElementById('cfgTvCardsSundae');         if(cs)  cs.checked  = c.showTvCardsSundae  !== false;
+        var csp = document.getElementById('cfgTvCardsSundaePremium');  if(csp) csp.checked = c.showTvCardsSundaePremium !== false;
 
         // MilkyClube
         var qr = document.getElementById('cfgClubeQr'); if(qr) qr.checked = c.showClubeQr !== false;
