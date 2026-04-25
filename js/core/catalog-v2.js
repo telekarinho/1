@@ -260,15 +260,9 @@
         const prodSeed = [
             { cat: 'cat_milkshake', name: 'Milkshake Ninho com Morango', emoji:'🥤', cInsumos:4.80, cAdd:1.20 },
             { cat: 'cat_milkshake', name: 'Milkshake Nutella',            emoji:'🥤', cInsumos:5.50, cAdd:1.20 },
-            { cat: 'cat_potinho',   name: 'Potinho 180ml',                emoji:'🍨', cInsumos:2.80, cAdd:0.70 },
-            { cat: 'cat_potinho',   name: 'Potinho 300ml',                emoji:'🍨', cInsumos:4.20, cAdd:0.90 },
-            { cat: 'cat_potinho',   name: 'Potinho 500ml',                emoji:'🍨', cInsumos:6.50, cAdd:1.10 },
-            { cat: 'cat_acai',      name: 'Açaí Bowl 300ml',              emoji:'🍇', cInsumos:7.20, cAdd:1.30 },
-            { cat: 'cat_acai',      name: 'Açaí Bowl 500ml',              emoji:'🍇', cInsumos:11.50, cAdd:1.50 },
-            { cat: 'cat_sundae',    name: 'Sundae Clássico',              emoji:'🍦', cInsumos:3.90, cAdd:0.80 },
-            { cat: 'cat_picole',    name: 'Picolé Ninho com Morango',     emoji:'🍡', cInsumos:2.10, cAdd:0.40 },
-            { cat: 'cat_picole',    name: 'Picolé Nutella',               emoji:'🍡', cInsumos:2.50, cAdd:0.40 },
-            { cat: 'cat_sorvete_kg', name: 'Sorvete por Kg (variantes)',  emoji:'⚖️', cInsumos:18, cAdd:1.5 },
+            // Potinhos/Açaí Bowls/Sorvete-kg removidos do seed — cardápio fica
+            // limpo e os 17+1 milkshakes/sundaes + picolé genérico + buffet são
+            // adicionados pelas migrations específicas.
             { cat: 'cat_buffet',    name: 'Buffet Self-Service',          emoji:'🍽️', cInsumos:25, cAdd:1.5 }
         ];
 
@@ -1036,6 +1030,89 @@
         return { ok: true, fixed: fixed };
     }
 
+    // ==========================================================
+    // PERMANENT DENYLIST — produtos placeholder/seed que devem
+    // SEMPRE ser removidos. Roda em TODA chamada de applyAllMigrations
+    // (sem gate) pra cobrir caso de cloud override resyncar dados velhos.
+    // ==========================================================
+    const PLACEHOLDER_DENYLIST = [
+        // Potinhos genéricos (substituídos pelos sabores numerados)
+        'Potinho 180ml', 'Potinho 300ml', 'Potinho 500ml',
+        // Açaí Bowl genérico (vai ser revisado depois)
+        'Açaí Bowl 300ml', 'Açaí Bowl 500ml', 'Acai Bowl 300ml', 'Acai Bowl 500ml',
+        // Sorvete por Kg placeholder
+        'Sorvete por Kg (variantes)', 'Sorvete por Kg (varietes)',
+        // Picolés antigos — substituídos pelo Picolé de Leite/Fruta genérico
+        'Picolé Ninho com Morango', 'Picolé Nutella', 'Picole Ninho com Morango', 'Picole Nutella',
+        // Milkshakes/Sundae antigos do seed (já removidos por cleanup, mas reforça)
+        'Milkshake Ninho com Morango', 'Milkshake Nutella', 'Sundae Clássico'
+    ];
+
+    function purgePlaceholders(fid) {
+        const d = load(fid);
+        const before = d.produtos.length;
+        d.produtos = d.produtos.filter(p => PLACEHOLDER_DENYLIST.indexOf(p.name) === -1);
+        const purged = before - d.produtos.length;
+        if (purged > 0) save(fid, d);
+        return { ok: true, purged: purged };
+    }
+
+    // Cria o picolé genérico "Picolé de Leite/Fruta" com 22 sabores na descrição
+    function migratePicoleGenericoV1(fid) {
+        const d = load(fid);
+        if (d.__picoleGenericoV1) return { skipped: true, reason: 'já migrado' };
+
+        // Verifica se já existe (idempotência extra)
+        const exists = d.produtos.some(p =>
+            p.categoriaId === 'cat_picole' && p.active !== false && /Leite\/Fruta|Leite ou Fruta/i.test(p.name)
+        );
+
+        if (!exists) {
+            const desc =
+                '22 sabores rotativos · pergunte os sabores do dia! ' +
+                '🥛 LEITE: Ninho · Brigadeiro · Romeu e Julieta · Morango Cremoso · Doce de Leite · ' +
+                'Cookies & Cream · Beijinho · Pavê · Banana · Paçoca · Coco. ' +
+                '🍓 FRUTA: Morango · Maracujá · Açaí · Limão · Coco Verde · Manga · Abacaxi · Uva · ' +
+                'Tangerina · Frutas Vermelhas · Kiwi.';
+
+            d.produtos.push({
+                id: newId('prod'),
+                categoriaId: 'cat_picole',
+                name: 'Picolé de Leite/Fruta',
+                desc: desc,
+                midia: { fotos: [], video: '', emoji: '🍡' },
+                custos: {
+                    insumos: [],
+                    custoInsumos: 2.20,
+                    custoAdicional: { embalagem: 0.40, energia: 0, mao_obra: 0, outros: 0 },
+                    custoTotal: 2.60
+                },
+                precos: {
+                    loja:     { recomendado: 3.00, real: 3.00 },
+                    delivery: { recomendado: 3.50, real: 3.50 },
+                    ifood:    { recomendado: 3.90, real: 3.90 }
+                },
+                kits: [
+                    { label: '1 unidade',   qty:  1, precoLoja:  3.00, precoDelivery:  3.50, precoIfood:  3.90 },
+                    { label: '4 unidades',  qty:  4, precoLoja: 10.00, precoDelivery: 11.50, precoIfood: 12.90 },
+                    { label: '10 unidades', qty: 10, precoLoja: 23.00, precoDelivery: 25.90, precoIfood: 29.90 },
+                    { label: '20 unidades', qty: 20, precoLoja: 39.99, precoDelivery: 44.90, precoIfood: 49.99 }
+                ],
+                variantes: [],
+                toppingsIds: [],
+                buffet: { ativo: false, precoPorKg: 0, toppingsInclusos: [] },
+                canal: 'ambos',
+                active: true,
+                order: 1,
+                createdAt: new Date().toISOString()
+            });
+        }
+
+        d.__picoleGenericoV1 = true;
+        save(fid, d);
+        return { ok: true, created: !exists };
+    }
+
     // Renomeia produtos: "Amora Apaixonada" → "1. Milkshake Amora Apaixonada"
     // (mesma numeração 1-17 pra milkshake e sundae · Premium = 18)
     function renameProductsNumberedV1(fid) {
@@ -1117,7 +1194,10 @@
             try { results.sundaeGourmet = migrateSundaeGourmetFlavorsV1(fid); } catch(e) { results.sundaeGourmet_err = e.message; }
             try { results.cleanupSundaes = cleanupInactiveSundaesV1(fid); } catch(e) { results.cleanupSundaes_err = e.message; }
             try { results.sundaeTipoCopo = fixSundaeTipoCopoV1(fid); } catch(e) { results.sundaeTipoCopo_err = e.message; }
+            try { results.picoleGenerico = migratePicoleGenericoV1(fid); } catch(e) { results.picoleGenerico_err = e.message; }
             try { results.numbered = renameProductsNumberedV1(fid); } catch(e) { results.numbered_err = e.message; }
+            // SEM gate — roda em toda chamada (cobre cloud override resyncando placeholders velhos)
+            try { results.purged = purgePlaceholders(fid); } catch(e) { results.purged_err = e.message; }
             return results;
         } catch(e) { return { error: e.message }; }
     }
@@ -1151,6 +1231,8 @@
         cleanupInactiveSundaesV1,
         fixSundaeTipoCopoV1,
         renameProductsNumberedV1,
+        migratePicoleGenericoV1,
+        purgePlaceholders,
         applyAllMigrations,
         syncToLegacy,
         autoSyncIfNeeded,
