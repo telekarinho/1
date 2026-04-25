@@ -183,10 +183,109 @@
         .toast.show { display: block; animation: fiu 0.3s; }
         @keyframes fiu { from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)} }
 
+        /* === RESPONSIVIDADE PDV ===
+           Tablet (≤1100px): cart sidebar mais estreita
+           Mobile (≤768px):  cart vira gaveta inferior 60vh, FAB reposicionado
+           Phone  (≤480px):  cart 65vh, layout super compacto */
+
+        @media(max-width:1100px) {
+            .pdv-layout { grid-template-columns: 1fr 320px; }
+            .cart-acts { grid-template-columns: 36px 36px 1fr 1fr; }
+            .cart-acts .btn { padding: 10px 4px; font-size: 11px; }
+        }
+
+        @media(max-width:900px) {
+            .pdv-layout { grid-template-columns: 1fr 280px; }
+            .cart-acts {
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            .cart-acts .bc, .cart-acts .bp {
+                padding: 10px;
+                font-size: 14px;
+            }
+            .cart-acts .btn[onclick="openTab()"],
+            .cart-acts .bf {
+                padding: 12px 6px;
+                font-size: 13px;
+            }
+        }
+
         @media(max-width:768px) {
             .pdv-layout { grid-template-columns: 1fr; }
-            .pdv-cart { position: fixed; bottom: 0; left: 0; right: 0; height: 50vh; z-index: 500; }
-            .pdv-products { height: calc(50vh - 44px); }
+            .pdv-cart {
+                position: fixed; bottom: 0; left: 0; right: 0;
+                height: 62vh; z-index: 500;
+                border-left: 0;
+                border-top: 1px solid #e0e0e0;
+                box-shadow: 0 -6px 24px rgba(108,99,255,.15);
+                border-radius: 18px 18px 0 0;
+            }
+            .pdv-products {
+                height: calc(38vh - 44px);
+                padding: 8px;
+            }
+            .pdv-cart::before {
+                content: '';
+                position: absolute; top: 6px; left: 50%;
+                transform: translateX(-50%);
+                width: 40px; height: 4px;
+                background: #ddd; border-radius: 2px;
+            }
+            .cart-head { padding: 12px 14px 8px }
+            .cart-acts {
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            .cart-acts .bc, .cart-acts .bp {
+                padding: 12px; font-size: 16px;
+            }
+            .cart-acts .btn[onclick="openTab()"],
+            .cart-acts .bf {
+                padding: 14px 8px; font-size: 13px;
+            }
+            /* Buffet FAB e Resgatar FAB sobem pra evitar a gaveta de cart */
+            .buffet-fab {
+                bottom: calc(62vh + 12px) !important;
+                width: 64px; height: 64px;
+                font-size: 24px;
+            }
+            .redeem-fab {
+                bottom: calc(62vh + 12px) !important;
+                left: 92px;
+                width: 56px; height: 56px;
+            }
+        }
+
+        @media(max-width:480px) {
+            .pdv-cart { height: 68vh; }
+            .pdv-products { height: calc(32vh - 44px); padding: 6px; }
+            .pgrid { grid-template-columns: repeat(3, 1fr) !important; gap: 4px !important; }
+            .pitem { padding: 6px 3px !important; }
+            .pitem .pe { font-size: 18px !important; }
+            .pitem .pn { font-size: 9px !important; }
+            .pitem .pp { font-size: 10px !important; }
+            .cart-head h2 { font-size: 13px }
+            .ct-btn { font-size: 9px; padding: 5px 3px; }
+            .cart-acts {
+                grid-template-columns: 1fr 1fr;
+                gap: 5px;
+            }
+            .cart-acts .btn { font-size: 12px; padding: 11px 4px; }
+            .buffet-fab {
+                bottom: calc(68vh + 8px) !important;
+                width: 56px; height: 56px;
+                font-size: 20px;
+                left: 12px;
+            }
+            .redeem-fab {
+                bottom: calc(68vh + 8px) !important;
+                left: 78px;
+                width: 50px; height: 50px;
+            }
+            /* Header compacto no celular */
+            .pdv-header { padding: 8px 10px; }
+            .pdv-header h1 { font-size: 13px; }
         }
     </style>
 </head>
