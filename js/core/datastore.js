@@ -390,6 +390,37 @@ const DataStore = {
                 });
             }
 
+            // ===== POLLING FALLBACK (belt + suspenders) =====
+            // Se o onSnapshot falhar silenciosamente (rede instável, Firestore quota,
+            // listener morto após sleep do PC etc), garante eventual consistency em <30s.
+            // Pull leve: só lê. Se diff vs local, atualiza + dispara mp_remote_update.
+            if (!this._pollFallbackId) {
+                const self = this;
+                this._pollFallbackId = setInterval(() => {
+                    if (!self._ready || !self._db) return;
+                    self._db.collection('datastore').get().then(snap => {
+                        let changes = 0;
+                        snap.forEach(doc => {
+                            if (doc.id === 'catalog_config') return; // listener próprio
+                            try {
+                                const cloudStr = doc.data().value;
+                                const localStr = localStorage.getItem(self.PREFIX + doc.id);
+                                if (localStr !== cloudStr) {
+                                    localStorage.setItem(self.PREFIX + doc.id, cloudStr);
+                                    let parsed = null;
+                                    try { parsed = JSON.parse(cloudStr); } catch (_) {}
+                                    window.dispatchEvent(new CustomEvent('mp_remote_update', {
+                                        detail: { key: doc.id, data: parsed, source: 'poll' }
+                                    }));
+                                    changes++;
+                                }
+                            } catch (e) {}
+                        });
+                        if (changes > 0) console.log('🔁 Poll fallback: ' + changes + ' doc(s) sincronizados');
+                    }).catch(e => console.warn('Poll fallback error:', e.message));
+                }, 25000); // 25s — não muito frequente pra economizar quota
+            }
+
         } catch (e) {
             console.warn('_syncFromCloud error:', e);
         }
