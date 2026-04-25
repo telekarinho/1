@@ -764,7 +764,7 @@
             d.produtos.push({
                 id: newId('prod'),
                 categoriaId: 'cat_milkshake',
-                name: f.name,
+                name: (idx + 1) + '. Milkshake ' + f.name,
                 desc: f.desc,
                 midia: { fotos: [], video: '', emoji: f.emoji },
                 custos: {
@@ -795,7 +795,7 @@
         d.produtos.push({
             id: newId('prod'),
             categoriaId: 'cat_milkshake',
-            name: premium.name,
+            name: '18. Milkshake Capitão Açaí Premium',
             desc: premium.desc,
             midia: { fotos: [], video: '', emoji: premium.emoji },
             custos: {
@@ -934,7 +934,7 @@
             d.produtos.push({
                 id: newId('prod'),
                 categoriaId: 'cat_sundae',
-                name: f.name,
+                name: (idx + 1) + '. Sundae ' + f.name,
                 desc: f.desc,
                 midia: { fotos: [], video: '', emoji: f.emoji },
                 custos: {
@@ -965,7 +965,7 @@
         d.produtos.push({
             id: newId('prod'),
             categoriaId: 'cat_sundae',
-            name: premium.name,
+            name: '18. Sundae Capitão Açaí Premium',
             desc: premium.desc,
             midia: { fotos: [], video: '', emoji: premium.emoji },
             custos: {
@@ -1036,6 +1036,50 @@
         return { ok: true, fixed: fixed };
     }
 
+    // Renomeia produtos: "Amora Apaixonada" → "1. Milkshake Amora Apaixonada"
+    // (mesma numeração 1-17 pra milkshake e sundae · Premium = 18)
+    function renameProductsNumberedV1(fid) {
+        const d = load(fid);
+        if (d.__productsNumberedV1) return { skipped: true, reason: 'já numerado' };
+
+        // Mapa nome-original → número (mesma ordem em milkshake e sundae)
+        const flavorOrder = {};
+        MILKSHAKE_FLAVORS.forEach((f, idx) => { flavorOrder[f.name] = idx + 1; });
+
+        let renamed = 0;
+
+        d.produtos.forEach(p => {
+            if (p.active === false) return;
+
+            // Detecta categoria → prefixo
+            let prefix;
+            if (p.categoriaId === 'cat_milkshake') prefix = 'Milkshake';
+            else if (p.categoriaId === 'cat_sundae') prefix = 'Sundae';
+            else return;
+
+            // Se já tem número no início, pula (idempotência extra)
+            if (/^\d{1,2}\.\s/.test(p.name)) return;
+
+            const isPremium = p.name.indexOf('Capitão Açaí') !== -1;
+            if (isPremium) {
+                p.name = '18. ' + prefix + ' Capitão Açaí Premium';
+                p.order = 18;
+            } else {
+                // Tenta achar pelo nome original (limpa o "Sundae " caso o nome tenha sido prefixado antes)
+                const cleanName = p.name.replace(/^Sundae\s+/i, '').replace(/^Milkshake\s+/i, '');
+                const num = flavorOrder[cleanName];
+                if (!num) return;  // não bate com sabor oficial — preserva
+                p.name = num + '. ' + prefix + ' ' + cleanName;
+                p.order = num;
+            }
+            renamed++;
+        });
+
+        d.__productsNumberedV1 = true;
+        save(fid, d);
+        return { ok: true, renamed: renamed };
+    }
+
     // Wrap os saves pra sincronizar legacy automaticamente
     const _origSaveProduto = saveProduto;
     function saveProdutoAndSync(fid, p) {
@@ -1073,6 +1117,7 @@
             try { results.sundaeGourmet = migrateSundaeGourmetFlavorsV1(fid); } catch(e) { results.sundaeGourmet_err = e.message; }
             try { results.cleanupSundaes = cleanupInactiveSundaesV1(fid); } catch(e) { results.cleanupSundaes_err = e.message; }
             try { results.sundaeTipoCopo = fixSundaeTipoCopoV1(fid); } catch(e) { results.sundaeTipoCopo_err = e.message; }
+            try { results.numbered = renameProductsNumberedV1(fid); } catch(e) { results.numbered_err = e.message; }
             return results;
         } catch(e) { return { error: e.message }; }
     }
@@ -1105,6 +1150,7 @@
         migrateSundaeGourmetFlavorsV1,
         cleanupInactiveSundaesV1,
         fixSundaeTipoCopoV1,
+        renameProductsNumberedV1,
         applyAllMigrations,
         syncToLegacy,
         autoSyncIfNeeded,
