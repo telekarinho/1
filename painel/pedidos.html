@@ -283,7 +283,7 @@
     <script src="../js/core/reports.js"></script>
     <script src="../js/core/adminconfig.js?v=mp-v14"></script>
     <script src="../js/core/motivacional.js?v=mp-v14"></script>
-    <script src="../js/core/caixa.js?v=mp-v55"></script>
+    <script src="../js/core/caixa.js?v=mp-v56"></script>
     <script>
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
         const session = Auth.getSession();
@@ -492,13 +492,165 @@
             const nextStatus = { novo: 'confirmado', confirmado: 'preparando', preparando: 'pronto', pronto: 'em_entrega', em_entrega: 'entregue' };
             const nextLabel = { novo: '✔️ Confirmar', confirmado: '▶️ Preparar', preparando: '✅ Pronto', pronto: '🛵 Enviar', em_entrega: '📦 Entregue' };
 
+            const reprintBtn = `<button class="btn btn-sm" style="background:#1565C0;color:#fff" onclick="reprintOrder('${o.id}')" title="Imprimir novamente o recibo deste pedido">🖨️ Reimprimir</button>`;
             document.getElementById('orderModalFooter').innerHTML = o.status !== 'entregue' && o.status !== 'cancelado'
-                ? `<button class="btn btn-danger btn-sm" onclick="moveOrder('${o.id}','cancelado');document.getElementById('orderModal').classList.remove('active')">Cancelar</button>
+                ? `${reprintBtn}
+                   <button class="btn btn-danger btn-sm" onclick="moveOrder('${o.id}','cancelado');document.getElementById('orderModal').classList.remove('active')">Cancelar</button>
                    <button class="btn btn-primary" onclick="moveOrder('${o.id}','${nextStatus[o.status]}');document.getElementById('orderModal').classList.remove('active')">${nextLabel[o.status]}</button>`
-                : '';
+                : reprintBtn;
 
             document.getElementById('orderModal').classList.add('active');
         }
+
+        // ============================================
+        // REIMPRIMIR PEDIDO — recria o recibo do pedido salvo (mesmo layout do PDV)
+        // Reusa scratchCode/voucherCode que já estavam no order. Não gera código novo.
+        // ============================================
+        function reprintOrder(orderId) {
+            const orders = DataStore.getCollection('orders', franchiseId);
+            const o = orders.find(x => x.id === orderId);
+            if (!o) { alert('Pedido não encontrado.'); return; }
+
+            const franchises = DataStore.getAllFranchises() || [];
+            const fr = franchises.find(f => f.id === franchiseId);
+            const storeName = (fr && fr.name) || 'MilkyPot';
+            const typeLabel = ({balcao:'BALCAO', retirada:'RETIRADA', delivery:'DELIVERY'})[o.type] || (o.type || 'BALCAO').toUpperCase();
+            const when = new Date(o.createdAt).toLocaleString('pt-BR');
+            const customerName = (o.customer && o.customer.name) || '';
+            const addr = o.address || '';
+            const items = o.items || [];
+            const total = Number(o.total || 0);
+            const payment = o.payment || '';
+            const voucher = o.voucherCode || '';
+
+            // Tenta achar a raspinha relacionada (localStorage primeiro, fallback no que tem no order)
+            let scratch = null;
+            if (o.scratchCode) {
+                try {
+                    const allScratches = DataStore.get('scratches_' + franchiseId) || [];
+                    scratch = allScratches.find(s => s.code === o.scratchCode) || null;
+                } catch(e) {}
+            }
+
+            const W = 32; // largura recibo térmico
+            const center = (s) => {
+                s = String(s);
+                if (s.length >= W) return s;
+                const left = Math.floor((W - s.length) / 2);
+                return ' '.repeat(left) + s;
+            };
+            let t = '';
+            t += '================================\n';
+            t += center(storeName.toUpperCase()) + '\n';
+            t += '================================\n';
+            t += 'Pedido #' + String(o.id).slice(-6).toUpperCase() + ' (REIMPRESSAO)\n';
+            t += typeLabel + ' | ' + when + '\n';
+            if (customerName) {
+                const nomeUp = String(customerName).toUpperCase();
+                t += '--------------------------------\n';
+                t += center('>>> CLIENTE <<<') + '\n';
+                t += center(nomeUp) + '\n';
+                t += '--------------------------------\n';
+            }
+            if (addr) t += 'Entrega: ' + addr + '\n';
+            t += '--------------------------------\n';
+            items.forEach(c => {
+                const line = (c.qty || 1) + 'x ' + (c.name || '?') + (c.size ? ' (' + c.size + ')' : '');
+                const priceTxt = 'R$ ' + Number((c.unitPrice || c.price || 0) * (c.qty || 1)).toFixed(2).replace('.', ',');
+                t += line + '\n';
+                if (c.extras && c.extras.length) {
+                    t += '  + ' + c.extras.map(e => e.name).join(', ') + '\n';
+                }
+                t += ' '.repeat(Math.max(0, W - priceTxt.length)) + priceTxt + '\n';
+            });
+            t += '--------------------------------\n';
+            t += 'TOTAL  R$ ' + total.toFixed(2).replace('.', ',') + '\n';
+            if (payment) t += 'Pagamento: ' + payment + '\n';
+            t += '================================\n';
+
+            if (voucher) {
+                t += '\n🎟️ DESAFIO 10 SEGUNDOS\n';
+                t += 'Codigo: ' + voucher + '\n';
+                t += 'Jogue: milkypot.com/desafio\n';
+                t += '--------------------------------\n';
+            }
+            let qrPlaceholder = false;
+            if (scratch && scratch.code) {
+                const displayCode = scratch.shortCode || scratch.code;
+                t += '\n🎰 RASPINHA DA SORTE\n';
+                t += 'Codigo: ' + displayCode + '\n';
+                t += '[QR_CODE_PLACEHOLDER]\n';
+                t += 'Raspe: milkypot.com/raspinha\n';
+                if (scratch.expiresAt) {
+                    t += 'Valido ate ' + new Date(scratch.expiresAt).toLocaleDateString('pt-BR') + '\n';
+                }
+                t += '--------------------------------\n';
+                qrPlaceholder = true;
+            }
+
+            // Bloco PRODUCAO — só pra milkshake/sundae/açaí/bowl/potinho
+            const prodItems = items.filter(c => {
+                const n = ((c && c.name) || '').toLowerCase();
+                return n.includes('milkshake') || n.includes('milk shake') || n.includes('shake') ||
+                       n.includes('sundae') || n.includes('acai') || n.includes('açaí') ||
+                       n.includes('açai') || n.includes('bowl') || n.includes('potinho');
+            });
+            if (prodItems.length) {
+                t += '\n++++++ PRODUCAO ++++++\n';
+                t += center('PARA: ' + (customerName ? String(customerName).toUpperCase() : '--- SEM NOME ---')) + '\n';
+                t += '--------------------------------\n';
+                prodItems.forEach((c, idx) => {
+                    const sizeLbl = c.size ? ' (' + c.size + ')' : '';
+                    t += '> ' + (c.qty || 1) + 'x ' + String(c.name || '').toUpperCase() + sizeLbl + '\n';
+                    if (c.extras && c.extras.length) {
+                        c.extras.forEach(e => { t += '   + ' + e.name + '\n'; });
+                    } else {
+                        t += '   (sem adicionais)\n';
+                    }
+                    if (idx < prodItems.length - 1) t += '   . . . . . . . . . . . . . . . .\n';
+                });
+                t += '++++++++++++++++++++++++\n';
+            }
+            t += '\n' + center('Obrigado! @milkypot') + '\n';
+            t += center('-- Documento nao fiscal --') + '\n';
+
+            // Build QR HTML inline pro QR (mesma fórmula do PDV)
+            let qrHtml = '';
+            if (scratch && scratch.shortCode) {
+                const inline = {
+                    code: scratch.code, shortCode: scratch.shortCode,
+                    franchiseId: scratch.franchiseId, storeName: scratch.storeName,
+                    prizeCode: scratch.prizeCode, prizeName: scratch.prizeName,
+                    prizeDesc: scratch.prizeDesc, prizeTier: scratch.prizeTier,
+                    prizeScope: scratch.prizeScope, prizeCategoria: scratch.prizeCategoria || null,
+                    minOrder: scratch.minOrder, expiresAt: scratch.expiresAt,
+                    validityDays: scratch.validityDays, createdAt: scratch.createdAt
+                };
+                let encInline = '';
+                try {
+                    encInline = btoa(unescape(encodeURIComponent(JSON.stringify(inline))))
+                        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                } catch(e) {}
+                const raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratch.shortCode)
+                    + (encInline ? '&d=' + encInline : '');
+                qrHtml = '<div style="text-align:center;margin:4mm 0"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' +
+                    encodeURIComponent(raspUrl) + '&ecc=L&margin=0" alt="QR Raspinha" style="width:36mm;height:36mm"></div>';
+            }
+
+            const w = window.open('', '_blank', 'width=340,height=800');
+            if (!w) { alert('Bloqueio de popup — libere impressão pra esta página.'); return; }
+            const parts = t.split('[QR_CODE_PLACEHOLDER]');
+            const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Reimpressao Pedido #' + String(o.id).slice(-6) + '</title>' +
+                '<style>@page{margin:2mm}body{margin:0;padding:2mm;font-family:"Courier New",monospace}pre{font-size:11px;white-space:pre-wrap;line-height:1.2;margin:0}</style>' +
+                '</head><body>' +
+                '<pre>' + parts[0].replace(/</g, '&lt;') + '</pre>' +
+                (parts.length > 1 ? qrHtml + '<pre>' + parts.slice(1).join('').replace(/</g, '&lt;') + '</pre>' : '') +
+                '<' + 'script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},700)},400)}<\/script>' +
+                '</body></html>';
+            w.document.write(html);
+            w.document.close();
+        }
+        window.reprintOrder = reprintOrder;
 
         // Poll for new orders
         let lastOrderCount = 0;
