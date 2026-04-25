@@ -1601,7 +1601,21 @@
             '<div class="pp">a partir R$ '+p.minPrice.toFixed(0)+'</div></div>';
     }
 
-    renderAll();
+    // Só renderiza catálogo legado (CARDAPIO_CONFIG) se CatalogV2 NÃO tem produtos.
+    // Se v2 tem produtos, PDV_Dynamics.renderProducts() já renderizou — não sobrescreve.
+    (function() {
+        try {
+            var legacy = DataStore.get('catalog_config');
+            if (legacy && legacy._fromV2) return;  // v2 ativo, deixa PDV_Dynamics
+            var sess = typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession();
+            var fid = sess && sess.franchiseId;
+            if (fid && window.CatalogV2) {
+                var v2 = CatalogV2.load(fid);
+                if (v2 && v2.produtos && v2.produtos.length > 0) return;  // v2 tem produtos
+            }
+        } catch(e){}
+        renderAll();  // Fallback: nenhum v2 — usa CARDAPIO_CONFIG legado
+    })();
 
     // ============================================
     // CUSTOMIZATION MODAL
@@ -2734,118 +2748,62 @@
 
     // Shared receipt builder with MARKETING COPY for Desafio 10 Segundos + RASPINHA DA SORTE
     function buildReceipt(storeName, typeLabel, when, items, total, customerName, addr, payment, voucher, orderId, scratch, profileId){
+        // RECIBO RESUMIDO — só o essencial. Cozinha usa template HTML separado (buildKitchenTicket).
         var t = '';
-        const isKitchen = profileId === 'cozinha';
-        
+
+        // Cabeçalho
         t += '================================\n';
-        t += '    ' + centerPad(storeName.toUpperCase(), 24) + '\n';
-        if(isKitchen) t += '       *** COZINHA ***\n';
-        else t += '     O Potinho Mais Feliz!\n';
+        t += centerPad(storeName.toUpperCase(), 32) + '\n';
         t += '================================\n';
-        if(orderId) t += 'Pedido: #' + String(orderId).slice(-6).toUpperCase() + '\n';
+        if(orderId) t += 'Pedido #' + String(orderId).slice(-6).toUpperCase() + '\n';
         t += typeLabel + ' | ' + when + '\n';
-        t += '--------------------------------\n';
-        items.forEach(function(c){
-            t += c.qty + 'x ' + c.name + (c.size?' ('+c.size+')':'') + '\n';
-            if(c.extras && c.extras.length) t += '   + ' + c.extras.map(function(e){return e.name}).join(', ') + '\n';
-            if(!isKitchen) t += '   R$ ' + (c.unitPrice*c.qty).toFixed(2).replace('.',',') + '\n';
-        });
-        t += '--------------------------------\n';
-        if(!isKitchen) {
-            t += 'TOTAL: R$ ' + total.toFixed(2).replace('.',',') + '\n';
-            if(payment) t += 'Pagamento: ' + payment + '\n';
-        }
         if(customerName) t += 'Cliente: ' + customerName + '\n';
-        if(addr) t += 'Endereco: ' + addr + '\n';
+        if(addr) t += 'Entrega: ' + addr + '\n';
+        t += '--------------------------------\n';
+
+        // Itens — uma linha cada, preço alinhado à direita
+        items.forEach(function(c){
+            var line = c.qty + 'x ' + c.name + (c.size ? ' ('+c.size+')' : '');
+            var priceTxt = 'R$ ' + (c.unitPrice*c.qty).toFixed(2).replace('.',',');
+            t += line + '\n';
+            if(c.extras && c.extras.length) {
+                t += '  + ' + c.extras.map(function(e){return e.name}).join(', ') + '\n';
+            }
+            t += centerPad('', 32 - priceTxt.length).slice(0, -priceTxt.length) + priceTxt + '\n';
+        });
+
+        t += '--------------------------------\n';
+        t += 'TOTAL  R$ ' + total.toFixed(2).replace('.',',') + '\n';
+        if(payment) t += 'Pagamento: ' + payment + '\n';
         t += '================================\n';
 
-        // Marketing stuff only on Balcao
-        if(!isKitchen){
-            // === DESAFIO 10 SEGUNDOS - COPY DE MARKETING INCENTIVADOR ===
-            if(voucher){
-                t += '\n';
-                t += '  *** DESAFIO 10 SEGUNDOS ***\n';
-                t += '    VOCE TOPA O DESAFIO?\n';
-                t += '\n';
-                t += '  Pare o cronometro em EXATOS\n';
-                t += '   10.000ms (10 segundos) e\n';
-                t += '   GANHE PREMIO NA HORA!\n';
-                t += '\n';
-                t += '  ------------------------------\n';
-                t += '       SEU CODIGO MAGICO:\n';
-                t += '\n';
-                t += '      >>> ' + voucher + ' <<<\n';
-                t += '\n';
-                t += '  ------------------------------\n';
-                t += '  Como jogar (30 segundos):\n';
-                t += '  1. Abra milkypot.com/desafio\n';
-                t += '  2. Digite o codigo acima\n';
-                t += '  3. Toque START e tente parar\n';
-                t += '     EXATO em 10.000ms\n';
-                t += '  4. Acertou? Ganha na hora!\n';
-                t += '\n';
-                t += '  === TENTATIVA EXTRA GRATIS ===\n';
-                t += '  Poste no Instagram marcando\n';
-                t += '        @milkypot\n';
-                t += '   usando #Desafio10Segundos\n';
-                t += '   e ganhe +1 tentativa no\n';
-                t += '       proximo pedido!\n';
-                t += '\n';
-                t += '   Sera que voce e craque\n';
-                t += '       do tempo? Topa?\n';
-                t += '================================\n';
-            }
-
-            // === RASPINHA DA SORTE - copy viral pra recompra ===
-            if(scratch && scratch.code){
-                var expiresLabel = scratch.expiresAt ? new Date(scratch.expiresAt).toLocaleDateString('pt-BR') : 'sem validade';
-                var displayCode = scratch.shortCode || scratch.code;
-                t += '\n';
-                t += '  *** RASPINHA DA SORTE ***\n';
-                t += '     VOCE FOI SORTEADO!\n';
-                t += '\n';
-                t += '   Seu premio esta ESCONDIDO.\n';
-                t += '       Raspa pra descobrir!\n';
-                t += '\n';
-                t += '  ------------------------------\n';
-                t += '    SEU CODIGO DA RASPINHA:\n';
-                t += '\n';
-                t += '  ' + centerPad('>>>  ' + displayCode + '  <<<', 30) + '\n';
-                t += '\n';
-                t += '  [QR_CODE_PLACEHOLDER]\n';  // Will be replaced by image
-                t += '       Aponte a camera\n';
-                t += '     do celular no QR Code\n';
-                t += '\n';
-                t += '  ------------------------------\n';
-                t += '  COMO DESCOBRIR o que ganhou:\n';
-                t += '  1. Escaneie o QR Code OU\n';
-                t += '  2. Acesse milkypot.com/raspinha\n';
-                t += '  3. Digite o codigo acima\n';
-                t += '  4. RASPE e revele na tela!\n';
-                t += '\n';
-                t += '     VALIDO ATE: ' + expiresLabel + '\n';
-                t += '\n';
-                t += '  === POSTOU, GANHOU EXTRA! ===\n';
-                t += '  Raspe, tire print e poste no\n';
-                t += '   Instagram marcando @milkypot\n';
-                t += '  + #RaspinhaMilkyPot e voce\n';
-                t += '   ganha UMA RASPINHA BONUS!\n';
-                t += '\n';
-                t += '  === COMPARTILHA NO ZAP ===\n';
-                t += '  Manda pro seu amigo e os DOIS\n';
-                t += '   ganham 1 raspinha EXTRA no\n';
-                t += '       proximo pedido.\n';
-                t += '================================\n';
-            }
-
+        // Bloco compacto Desafio 10 Segundos (só voucher + URL — sem marketing)
+        if(voucher){
             t += '\n';
-            t += '  Obrigado pela preferencia!\n';
-            t += '  Nos siga: @milkypot\n';
-            t += '  www.milkypot.com\n';
-            t += '\n';
+            t += '🎟️ DESAFIO 10 SEGUNDOS\n';
+            t += 'Codigo: ' + voucher + '\n';
+            t += 'Jogue: milkypot.com/desafio\n';
+            t += 'Pare em 10s exatos e ganhe!\n';
+            t += '--------------------------------\n';
         }
-        
-        t += ' ---- Documento NAO fiscal ----\n';
+
+        // Bloco compacto Raspinha (código + QR + URL)
+        if(scratch && scratch.code){
+            var displayCode = scratch.shortCode || scratch.code;
+            t += '\n';
+            t += '🎰 RASPINHA DA SORTE\n';
+            t += 'Codigo: ' + displayCode + '\n';
+            t += '[QR_CODE_PLACEHOLDER]\n';
+            t += 'Raspe: milkypot.com/raspinha\n';
+            if(scratch.expiresAt) {
+                t += 'Valido ate ' + new Date(scratch.expiresAt).toLocaleDateString('pt-BR') + '\n';
+            }
+            t += '--------------------------------\n';
+        }
+
+        t += '\n';
+        t += centerPad('Obrigado! @milkypot', 32) + '\n';
+        t += centerPad('-- Documento nao fiscal --', 32) + '\n';
         return t;
     }
 
