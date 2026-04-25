@@ -675,18 +675,92 @@
     // ============================================
     // RASPINHA DA SORTE - Admin
     // ============================================
+    // Catálogo oficial MilkyPot — calibrado pelos agentes Behavioral + Growth
+    // Variable Reward Schedule: NONE 42% · SMALL 35% · MEDIUM 18% · BIG 4.3% · MEGA 0.7%
+    // Validade default 5 dias (sweet spot entre urgência e procrastinação)
+    // Toda compra exige minOrder pra prevenir prejuízo (regra de ouro)
+    // Categorias vinculadas a produtos REAIS: cat_milkshake, cat_sundae, cat_acai, cat_potinho, cat_buffet, cat_picole
     const DEFAULT_SCRATCH_PRIZES = [
-        {code:'RSP_TRY_AGAIN',   name:'Quase! Tente no proximo pedido', desc:'Hoje nao foi! Volta amanha.', prob:30, cost:0,   validity:0,  scope:'any',   minOrder:0,  tier:'none', emoji:'🔁'},
-        {code:'RSP_TOPPING_FREE',name:'1 Topping Gratis',               desc:'1 topping gratis no proximo pedido', prob:22, cost:4,   validity:7,  scope:'same',  minOrder:15, tier:'small', emoji:'🍒'},
-        {code:'RSP_UPSIZE',      name:'Upgrade de Tamanho',             desc:'Pediu M? Leva G. Pediu G? Leva GG.', prob:15, cost:5,   validity:10, scope:'same',  minOrder:15, tier:'small', emoji:'📈'},
-        {code:'RSP_DISC_5',      name:'R$ 5 OFF',                       desc:'R$ 5 de desconto no proximo pedido', prob:12, cost:5,   validity:15, scope:'any',   minOrder:20, tier:'medium', emoji:'💸'},
-        {code:'RSP_2BY1_TOPPING',name:'Toppings 2 x 1',                 desc:'Leve 2 toppings pagando 1',          prob:8,  cost:4,   validity:10, scope:'same',  minOrder:15, tier:'medium', emoji:'✌️'},
-        {code:'RSP_BUFFET_100G', name:'+100g Buffet',                   desc:'100g gratis no buffet de acai',      prob:5,  cost:6,   validity:15, scope:'same',  minOrder:0,  tier:'medium', emoji:'⚖️'},
-        {code:'RSP_COMBO_15',    name:'Combo 15% OFF',                  desc:'15% OFF em qualquer combo',          prob:4,  cost:7.5, validity:15, scope:'any',   minOrder:30, tier:'medium', emoji:'🎯'},
-        {code:'RSP_SHAKE_FREE',  name:'Shake M Gratis',                 desc:'SHAKE M GRATIS no proximo pedido',   prob:2.5,cost:16,  validity:20, scope:'same',  minOrder:15, tier:'big', emoji:'🥤'},
-        {code:'RSP_ACAI_500G',   name:'Acai 500g + 3 toppings',         desc:'Acai 500g com 3 toppings gratis',    prob:1,  cost:30,  validity:20, scope:'same',  minOrder:15, tier:'big', emoji:'🍇'},
-        {code:'RSP_MEGA_150',    name:'MEGA R$ 150 em creditos',        desc:'R$150 MilkyPot! Use em 30 dias.',    prob:0.5,cost:150, validity:30, scope:'any',   minOrder:0,  tier:'mega', emoji:'💎'}
+        // ───── NONE — "Quase!" com loss aversion (3 variações rotativas) ─────
+        {code:'RSP_TRY_AGAIN',   name:'Quase! Faltou 1 milímetro',
+         desc:'Aí, aí... passou raspando! Próximo pedido a sorte vira. A ovelhinha já tá mexendo as patinhas pra te dar algo bom.',
+         prob:42, cost:0, validity:0, scope:'any', minOrder:0, tier:'none', emoji:'🔁',
+         categoria:null, copyVariants:[
+            'Aí, aí... passou raspando! Próximo pedido a sorte vira.',
+            'Ó, escapou por POUCO. A ovelhinha viu — tá guardando algo bom pra próxima.',
+            'Quase! Esse não foi seu prêmio... mas tem outra raspadinha te esperando no próximo potinho.'
+         ]},
+
+        // ───── SMALL — adicionais (low cost, high perceived value) ─────
+        {code:'RSP_TOPPING_FREE',name:'1 Topping Grátis',
+         desc:'Escolhe 1 topping da casa pro próximo milkshake, sundae ou potinho. Cremes, caldas, granulados — você decide.',
+         prob:22, cost:0.80, validity:5, scope:'same', minOrder:15, tier:'small', emoji:'🍒',
+         categoria:'cat_milkshake,cat_sundae,cat_potinho,cat_acai'},
+
+        {code:'RSP_UPSIZE',      name:'Upgrade Grátis P→M ou M→G',
+         desc:'Pediu Milkshake/Sundae P? Leva M. Pediu M? Leva G. Mesma quantidade de toppings, MAIS sorvete soft.',
+         prob:13, cost:5, validity:5, scope:'same', minOrder:15, tier:'small', emoji:'📈',
+         categoria:'cat_milkshake,cat_sundae'},
+
+        // ───── MEDIUM — desconto/combo (controlado por minOrder) ─────
+        {code:'RSP_DISC_5',      name:'R$ 5 OFF acima de R$ 20',
+         desc:'R$ 5 de desconto no próximo pedido (mínimo R$ 20). Vale pra qualquer item do cardápio.',
+         prob:8, cost:5, validity:5, scope:'any', minOrder:20, tier:'medium', emoji:'💸',
+         categoria:null},
+
+        {code:'RSP_2BY1_TOPPING',name:'Toppings 2 por 1',
+         desc:'Escolhe 2 toppings, paga só 1. Vale uma vez no próximo pedido em milkshake/sundae/potinho.',
+         prob:5, cost:1.50, validity:5, scope:'same', minOrder:15, tier:'medium', emoji:'✌️',
+         categoria:'cat_milkshake,cat_sundae,cat_potinho'},
+
+        {code:'RSP_BUFFET_100G', name:'+100g de Buffet Grátis',
+         desc:'No próximo buffet a granel, ganha 100g extras na pesagem. Sem custo, sem mistério.',
+         prob:3, cost:6, validity:5, scope:'same', minOrder:0, tier:'medium', emoji:'⚖️',
+         categoria:'cat_buffet'},
+
+        {code:'RSP_PICOLE_2BY1', name:'Picolés 2 por 1',
+         desc:'Pediu 1 picolé? Leva 2. Misture os 22 sabores (Leite ou Fruta) que quiser. Vale R$3.',
+         prob:2, cost:2.60, validity:5, scope:'same', minOrder:0, tier:'medium', emoji:'🍡',
+         categoria:'cat_picole'},
+
+        // ───── BIG — itens grátis (raros, efeito cassino) ─────
+        {code:'RSP_SHAKE_P_FREE',name:'Milkshake P Grátis',
+         desc:'Milkshake P 250ml de qualquer sabor da casa GRÁTIS no próximo pedido. Você só paga os adicionais que escolher.',
+         prob:3.3, cost:9.99, validity:5, scope:'same', minOrder:15, tier:'big', emoji:'🥤',
+         categoria:'cat_milkshake'},
+
+        {code:'RSP_SUNDAE_P_FREE',name:'Sundae P Grátis',
+         desc:'Sundae P 250ml de qualquer sabor da casa GRÁTIS. Só paga os adicionais que escolher.',
+         prob:1, cost:9.99, validity:5, scope:'same', minOrder:15, tier:'big', emoji:'🍦',
+         categoria:'cat_sundae'},
+
+        // ───── MEGA — efeito "viu alguém ganhar no Insta" ─────
+        {code:'RSP_CAPITAO_50',  name:'50% OFF no Capitão Açaí',
+         desc:'O Premium 600ml por metade do preço (de R$24,99 por R$12,49). Foto pro Instagram obrigatória.',
+         prob:0.5, cost:12.50, validity:5, scope:'same', minOrder:0, tier:'mega', emoji:'👑',
+         categoria:'cat_milkshake,cat_sundae'},
+
+        {code:'RSP_MEGA_50',     name:'MEGA R$ 50 em créditos',
+         desc:'R$ 50 em créditos MilkyPot pra usar em até 7 dias. Vale pra qualquer item.',
+         prob:0.2, cost:50, validity:7, scope:'any', minOrder:0, tier:'mega', emoji:'💎',
+         categoria:null}
     ];
+
+    // Configurações globais do sistema (editáveis no admin futuro)
+    const SCRATCH_GLOBAL_DEFAULTS = {
+        loopOnRedeem: true,           // gera nova raspadinha quando cliente RESGATA
+        minTicketForLoop: 15,         // ticket mínimo pra disparar nova raspadinha (anti-prejuízo)
+        cooldownMinutes: 90,          // 1 raspadinha a cada 90min por mesmo CPF/telefone
+        defaultValidityDays: 5,       // sweet spot (Behavioral Nudge agent)
+        boostOnRain: true,            // chuva >2mm = boost auto via OpenWeather
+        boostOnMonday: true,          // segunda-feira = +1.8x prob nos prêmios SMALL
+        endcardByTier: {              // copy pós-raspar por categoria
+            small:  'Anota aí: [PRÊMIO] válido até [DATA]. Cola aqui antes de [DIA] que a ovelhinha te espera 🐑',
+            medium: 'Bem-vindo ao #TimeMilkyPot. Seu prêmio entrou na conta — usa quando vier matar a saudade da gente 🥛',
+            big:    'AAAAH! Olha o que a ovelhinha te deu! Mostra pra galera: print + @milkypot nos stories 📸',
+            mega:   'PERAÍ. Você ganhou um MEGA. Print, posta nos stories @milkypot e vem buscar — a galera não vai acreditar 👑'
+        }
+    };
 
     function getScratchConfig() {
         return DataStore.get('scratch_config_' + franchiseId) || { enabled: true };
