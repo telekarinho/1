@@ -393,29 +393,112 @@ body:not(.idle){cursor:default}
             }
         });
 
-        /* --- MARKETING INJECTION: Promos Globais Injetadas --- */
+        /* --- MARKETING INJECTION: Promos Globais + Cards Milkshake + Buffet --- */
+        // Promo 1: Acertou Ganhou 300g (sempre ativo — peça-chave da marca)
         var marketingPromo1 = {
             type: 'promo',
-            promoUrgency: 'PROMOÇÃO IMPERDÍVEL',
-            promoHeadline: 'ACERTOU, GANHOU!',
-            promoSubtext: 'Pese exatamente 300 gramas no seu pote e NÃO PAGUE NADA!',
+            promoUrgency: '⚡ PROMOÇÃO OFICIAL — ATIVA AGORA',
+            promoHeadline: 'ACERTOU 300g, NÃO PAGOU!',
+            promoSubtext: 'Pese exatamente 300 gramas no seu pote e leve de GRAÇA. Sem pegadinha. Confia na balança e arrisca.',
             promoPrice: 'GRÁTIS',
-            promoSavings: 'Confie na sua balança'
+            promoSavings: '⚖️ desafio diário'
         };
+        // Promo 2: Desafio 10 segundos
         var marketingPromo2 = {
             type: 'story',
-            storyBrandTag: 'Desafio Oficial MilkyPot',
-            storyProductName: 'Craque do Tempo? 10.000ms!',
-            storyDesc: 'Acesse o Desafio no tablet da loja. Pare o cronômetro em exatamente 10 segundos e ganhe 1 MilkyPot grátis na hora!',
+            storyBrandTag: '🏆 Desafio Oficial MilkyPot',
+            storyProductName: 'Craque do Tempo? 10.000 ms!',
+            storyDesc: 'Acesse o Desafio no tablet da loja. Pare o cronômetro em exatamente 10 segundos e ganhe 1 MilkyPot na hora — sem custo nenhum.',
             storyPrice: 'GRÁTIS'
         };
-        if(playlist.length > 0){
-            // Injeta a cada 3~4 slides
-            playlist.splice(Math.floor(playlist.length / 2), 0, { media: marketingPromo1, duration: 12000 });
-            playlist.push({ media: marketingPromo2, duration: 12000 });
+        // BUFFET A GRANEL — card profissional com 22 toppings
+        var marketingBuffet = {
+            type: 'milkshake-card',
+            mode: 'buffet',
+            emoji: '🍦',
+            gradient: 'linear-gradient(135deg,#FF9800 0%,#FF5722 60%,#D84315 100%)',
+            tag: '🍽️ BUFFET A GRANEL',
+            title: 'Monte seu sorvete do seu jeito',
+            subtitle: '22 toppings reais, 12 sabores, calda à vontade. Você é o chef do seu pote — nós só pesamos no fim.',
+            priceLabel: 'R$ 5,99',
+            priceUnit: '/ 100g',
+            footer: 'Caldas · Granulados · Frutas · Cremes premium · Crocantes'
+        };
+        // 17 SABORES DE MILKSHAKE — cards rotativos com copy viral
+        var MILKSHAKE_CARDS = [
+            { emoji:'💜', gradient:'linear-gradient(135deg,#7B1FA2 0%,#AB47BC 60%,#E1BEE7 100%)', name:'Amora Apaixonada',          copy:'Roxa, doce e teimosa — que nem aquele crush que sua mente não desliga. A amora chegou pintando seu feed de roxo. #AmoraVibe' },
+            { emoji:'🧊', gradient:'linear-gradient(135deg,#0288D1 0%,#29B6F6 60%,#81D4FA 100%)', name:'Blue Ice — Crush Gelado',   copy:'Azul que nem o céu de Londrina ao entardecer. Sabor surpresa, frescor de praia e foto que viraliza antes do primeiro gole.' },
+            { emoji:'🍓', gradient:'linear-gradient(135deg,#C2185B 0%,#EC407A 60%,#F8BBD0 100%)', name:'Morango Romântico',         copy:'O clássico que sempre volta — porque amor verdadeiro não envelhece. Cremosinho, vermelhinho, abraço em forma de milkshake.' },
+            { emoji:'🟣', gradient:'linear-gradient(135deg,#311B92 0%,#5E35B1 60%,#9575CD 100%)', name:'Açaí Liberdade',            copy:'Bowl de açaí virou líquido. Energia da Amazônia, doçura de Londrina, canudinho na boca. Açaí dos preguiçosos felizes.' },
+            { emoji:'🍯', gradient:'linear-gradient(135deg,#E65100 0%,#FB8C00 60%,#FFCC80 100%)', name:'Caramelo Derretido',        copy:'Caramelo que escorre devagar — igual beijo demorado de quinta à noite. Dourado, gostoso e impossível de resistir.' },
+            { emoji:'🍋', gradient:'linear-gradient(135deg,#F57F17 0%,#FBC02D 60%,#FFF59D 100%)', name:'Limão Refresca-Tudo',       copy:'Azedinho na medida, gelado no ponto. Pra quando o sol de Londrina aperta e você precisa de um respiro com graça.' },
+            { emoji:'🍫', gradient:'linear-gradient(135deg,#3E2723 0%,#6D4C41 60%,#A1887F 100%)', name:'Chocolate Apaixonante',     copy:'Bombom líquido. Abraço quente do chocolate com a frescura do milkshake. Conforto que cabe num copo.' },
+            { emoji:'🍇', gradient:'linear-gradient(135deg,#4A148C 0%,#8E24AA 60%,#BA68C8 100%)', name:'Uva da Vovó',               copy:'Aquela uva roxinha do quintal da vovó, mas crescida e bem-vestida. Suco de infância na versão Geração TikTok.' },
+            { emoji:'💛', gradient:'linear-gradient(135deg,#F57F17 0%,#FFB300 60%,#FFE082 100%)', name:'Maracujá Calmaria',         copy:'Tropical, levemente azedinho, totalmente relaxante. Maracujá chegou pra desacelerar seu rolê com um gole zen.' },
+            { emoji:'😬', gradient:'linear-gradient(135deg,#E91E63 0%,#FF4081 30%,#FFEB3B 65%,#03A9F4 100%)', name:'Dentadura Doidinha', copy:'Milkshake colorido que deixa sua boca igual desenho animado. Diversão visual + sabor explosivo. Foto obrigatória.' },
+            { emoji:'🤍', gradient:'linear-gradient(135deg,#37474F 0%,#90A4AE 60%,#ECEFF1 100%)', name:'Cookies Snow',              copy:'Branquinho, cremoso, com pedaços de cookie crocante. Tipo neve em Londrina: raríssima, mas gostosa demais.' },
+            { emoji:'🥛', gradient:'linear-gradient(135deg,#FFB300 0%,#FFE082 60%,#FFFDE7 100%)', name:'Ninho da Vovó',             copy:'Cremosidade de berço. Aquele cheirinho que lembra colo, pé no sofá e desenho da Disney no domingo de manhã.' },
+            { emoji:'🟢', gradient:'linear-gradient(135deg,#1B5E20 0%,#43A047 60%,#A5D6A7 100%)', name:'Pistache Esmeralda',        copy:'Verdinho gourmet, sofisticado, crocante. Pistache premium com clima italiano — pra quem gosta de chique no copo.' },
+            { emoji:'🥜', gradient:'linear-gradient(135deg,#3E2723 0%,#795548 60%,#BCAAA4 100%)', name:'Peanut Heaven',             copy:'Cremoso, salgadinho, viciante. O peanut butter virou milkshake — e a vida nunca mais foi a mesma.' },
+            { emoji:'🍒', gradient:'linear-gradient(135deg,#B71C1C 0%,#E53935 60%,#FFCDD2 100%)', name:'Cereja Beijada',            copy:'Vermelhinha, brincalhona, top de bolo. A cereja que coroou seu milkshake — e provavelmente seu dia.' },
+            { emoji:'🍑', gradient:'linear-gradient(135deg,#6A1B9A 0%,#AB47BC 60%,#CE93D8 100%)', name:'Ameixa Roxinha',            copy:'Roxa, polpuda, exótica. Pra quem quer fugir do óbvio e descobrir um sabor novo no meio do caminho.' },
+            { emoji:'🍌', gradient:'linear-gradient(135deg,#F9A825 0%,#FFEB3B 60%,#FFF9C4 100%)', name:'Banana Caramelizada',       copy:'Banana douradinha, queimadinha na medida, beijada pelo caramelo. Doçura de fazenda em copo gelado.' }
+        ];
+        // PREMIUM: Capitão Açaí — flagship com badge dourado
+        var marketingPremium = {
+            type: 'milkshake-card',
+            mode: 'premium',
+            emoji: '👑',
+            gradient: 'linear-gradient(135deg,#311B92 0%,#5E35B1 40%,#FFB300 100%)',
+            tag: '👑 PREMIUM · COROA DO CARDÁPIO',
+            title: 'Capitão Açaí',
+            subtitle: 'O bowl gigante virou shake gigante. Açaí da Amazônia, granola crocante, banana caramelizada, leite condensado e raspas de chocolate. Não é só um milkshake — é a coroa.',
+            priceLabel: 'R$ 24,99',
+            priceUnit: '/ 600ml',
+            footer: '🍦 600ml · ingredientes premium · feito na hora'
+        };
+
+        // Cria slides pra cada milkshake (8s cada)
+        var milkshakeSlides = MILKSHAKE_CARDS.map(function(m){
+            return { media: {
+                type: 'milkshake-card', mode: 'flavor',
+                emoji: m.emoji, gradient: m.gradient,
+                tag: '🥤 SABOR OFICIAL MILKYPOT',
+                title: m.name,
+                subtitle: m.copy,
+                priceLabel: 'R$ 9,99',
+                priceUnit: '/ P 250ml — Promoção Inauguração',
+                footer: 'Tamanhos: P 250ml · M 400ml · G 500ml — toppings à vontade'
+            }, duration: 8000 };
+        });
+
+        // Embaralha levemente (Fisher-Yates) — sabores não saem na mesma ordem sempre
+        for (var i = milkshakeSlides.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = milkshakeSlides[i]; milkshakeSlides[i] = milkshakeSlides[j]; milkshakeSlides[j] = tmp;
+        }
+
+        // Injeta tudo: 300g, Desafio, Buffet, Premium e os 17 sabores
+        var marketingSlides = [
+            { media: marketingPromo1,  duration: 10000 },  // Acertou 300g
+            { media: marketingPromo2,  duration: 10000 },  // Desafio 10s
+            { media: marketingBuffet,  duration: 10000 },  // Buffet R$5,99/100g
+            { media: marketingPremium, duration: 10000 }   // Capitão Açaí Premium
+        ].concat(milkshakeSlides);
+
+        if (playlist.length > 0) {
+            // Mescla: a cada 1 mídia da franquia, intercala 1 marketing
+            var mixed = [];
+            var mIdx = 0;
+            playlist.forEach(function(slot){
+                mixed.push(slot);
+                if (marketingSlides[mIdx]) mixed.push(marketingSlides[mIdx++]);
+            });
+            // Restante do marketing entra no fim
+            while (mIdx < marketingSlides.length) mixed.push(marketingSlides[mIdx++]);
+            playlist = mixed;
         } else {
-            playlist.push({ media: marketingPromo1, duration: 12000 });
-            playlist.push({ media: marketingPromo2, duration: 12000 });
+            playlist = marketingSlides.slice();
         }
         /* ----------------------------------------------------- */
 
@@ -572,6 +655,11 @@ body:not(.idle){cursor:default}
             startProgress(item.duration);
             timer = setTimeout(playNext, item.duration);
         }
+        else if(m.type === 'milkshake-card'){
+            player.innerHTML = renderMilkshakeCard(m);
+            startProgress(item.duration);
+            timer = setTimeout(playNext, item.duration);
+        }
         else {
             playFallback('Tipo de midia nao suportado.');
         }
@@ -695,6 +783,72 @@ body:not(.idle){cursor:default}
             '<div class="story-price">' + oldPrice +
             '<span class="story-price-value">' + priceFmt(m.storyPrice) + '</span>' +
             '</div></div><div class="story-frame"></div></div>';
+    }
+
+    /* === MILKYPOT MILKSHAKE CARD ===
+       Design profissional com cores MilkyPot (azul/roxo/rosa pastel),
+       ovelhinha mascote 🐑 e logo. Usado para os 17 sabores + premium + buffet. */
+    function renderMilkshakeCard(m){
+        var modeBadge = m.mode === 'premium'
+            ? 'background:linear-gradient(135deg,#FFB300,#FF6F00);color:#fff;box-shadow:0 4px 16px rgba(255,179,0,.5)'
+            : (m.mode === 'buffet'
+                ? 'background:linear-gradient(135deg,#FF9800,#E65100);color:#fff;box-shadow:0 4px 16px rgba(255,152,0,.45)'
+                : 'background:linear-gradient(135deg,#42A5F5,#7E57C2);color:#fff;box-shadow:0 4px 16px rgba(126,87,194,.4)');
+
+        return ''+
+        '<div class="tv-slide slide-mp-shake" style="'+
+            'width:100%;height:100%;display:grid;grid-template-columns:5fr 6fr;'+
+            'background:linear-gradient(180deg,#F0F7FF 0%,#F5EEFF 50%,#FCE4EC 100%);'+
+            'position:relative;overflow:hidden;font-family:\'Baloo 2\',\'Nunito\',sans-serif">'+
+
+            /* Hero panel: gradiente do sabor + emoji gigante + ovelhinha mascote */
+            '<div style="position:relative;background:'+m.gradient+';display:flex;align-items:center;justify-content:center;overflow:hidden">'+
+                /* Bolhas decorativas (vibe MilkyPot) */
+                '<div style="position:absolute;top:-80px;left:-80px;width:240px;height:240px;background:rgba(255,255,255,.15);border-radius:50%"></div>'+
+                '<div style="position:absolute;bottom:-100px;right:-60px;width:300px;height:300px;background:rgba(255,255,255,.10);border-radius:50%"></div>'+
+                '<div style="position:absolute;top:30%;right:-40px;width:120px;height:120px;background:rgba(255,255,255,.12);border-radius:50%"></div>'+
+                /* Emoji gigante do sabor */
+                '<div style="font-size:clamp(180px,22vw,320px);line-height:1;filter:drop-shadow(0 12px 30px rgba(0,0,0,.3));z-index:2;animation:mpShakeBob 3s ease-in-out infinite">'+m.emoji+'</div>'+
+                /* Ovelhinha mascote no canto */
+                '<div style="position:absolute;bottom:24px;left:24px;font-size:clamp(56px,5vw,84px);filter:drop-shadow(0 4px 12px rgba(0,0,0,.25));animation:mpSheepBob 4s ease-in-out infinite">🐑</div>'+
+            '</div>'+
+
+            /* Content panel: tag + título viral + storytelling + preço + footer */
+            '<div style="padding:clamp(28px,4vw,64px);display:flex;flex-direction:column;justify-content:center;position:relative">'+
+                /* Logo MilkyPot no topo direito */
+                '<img src="/images/logo-milkypot.png" alt="" style="position:absolute;top:24px;right:28px;width:clamp(60px,5vw,90px);opacity:.85;filter:drop-shadow(0 2px 8px rgba(212,165,255,.4))" onerror="this.style.display=\'none\'">'+
+
+                /* Tag superior */
+                '<div style="display:inline-block;'+modeBadge+';padding:8px 18px;border-radius:100px;font-size:clamp(11px,1.1vw,15px);font-weight:800;letter-spacing:1px;margin-bottom:clamp(14px,2vh,24px);align-self:flex-start">'+
+                    esc(m.tag)+
+                '</div>'+
+
+                /* Título viral */
+                '<h1 style="font-size:clamp(38px,5vw,76px);font-weight:900;color:#3D2A55;line-height:1.05;margin:0 0 clamp(12px,1.8vh,22px);letter-spacing:-1px;text-shadow:0 2px 8px rgba(212,165,255,.2)">'+
+                    esc(m.title)+
+                '</h1>'+
+
+                /* Storytelling */
+                '<p style="font-size:clamp(16px,1.7vw,26px);color:#5A4570;line-height:1.45;margin:0 0 clamp(20px,3vh,36px);max-width:95%;font-family:\'Nunito\',sans-serif;font-weight:500">'+
+                    esc(m.subtitle)+
+                '</p>'+
+
+                /* Preço grande */
+                '<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:clamp(14px,2vh,22px);padding:clamp(18px,2.5vh,28px) clamp(22px,2.5vw,32px);background:linear-gradient(135deg,#fff 0%,#FCE4EC 100%);border-radius:24px;border:3px solid #FF4F8A;box-shadow:0 8px 32px rgba(255,79,138,.18);align-self:flex-start">'+
+                    '<span style="font-size:clamp(38px,5vw,68px);font-weight:900;color:#FF4F8A;line-height:1;font-family:\'Baloo 2\',cursive">'+esc(m.priceLabel)+'</span>'+
+                    '<span style="font-size:clamp(13px,1.3vw,18px);color:#7E57C2;font-weight:700">'+esc(m.priceUnit)+'</span>'+
+                '</div>'+
+
+                /* Footer */
+                (m.footer ? '<div style="font-size:clamp(11px,1.1vw,15px);color:#9484A8;font-weight:600;letter-spacing:.3px">'+esc(m.footer)+'</div>' : '')+
+            '</div>'+
+
+            /* Animations */
+            '<style>'+
+                '@keyframes mpShakeBob { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-12px) rotate(2deg)} }'+
+                '@keyframes mpSheepBob { 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-8px) rotate(3deg)} }'+
+            '</style>'+
+        '</div>';
     }
 
     function startProgress(durMs){

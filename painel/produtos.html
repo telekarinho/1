@@ -397,6 +397,16 @@
   const session = Auth.getSession();
   const fid = session.franchiseId;
 
+  // Sincroniza com PDV/cardápio: aplica todas migrations idempotentes
+  // antes de listar produtos. Garante que o admin sempre vê o mesmo
+  // estado que PDV e cardápio online estão consumindo.
+  try {
+    if (window.CatalogV2 && CatalogV2.applyAllMigrations) {
+      CatalogV2.applyAllMigrations(fid);
+      CatalogV2.syncToLegacy(fid);
+    }
+  } catch(e) { console.warn('produtos.html migrations:', e); }
+
   let currentProduto = null;
   let _belinhaStatus = { state: 'idle', detail: '' };
   let currentCat = null;
