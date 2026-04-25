@@ -1,5 +1,37 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #28 — 2026-04-25
+
+**Área:** Pesquisa concorrentes → ação concreta em copy (Conversão)
+
+**Contexto:** Pós-inauguração. Estratégia indicava ciclo #28 para fechar pesquisa Jhoy/The Best com ação concreta no site. The Best Açaí é o principal concorrente local em Londrina (680+ unidades, origem LDA, modelo self-service por peso). JAH do Açaí confirmado como a marca "Jhoy" (confusão de grafia).
+
+**O que analisou:**
+- `belinha/competitors/jhoy.md` — ciclo #3 tinha análise parcial; busca confirmou Jhoy = JAH do Açaí (self-service, 180+ unidades, açaí por peso, sem linha Fit)
+- `belinha/competitors/the-best-acai.md` — modelo self-service R$6,29/100g, variável; cliente não sabe o preço antes de montar
+- Benefits bar (`index.html`) tinha 4 itens genéricos: "Frete Grátis", "Pontos", "Entrega Rápida", "Pagamento Seguro"
+- Oportunidade: substituir os 2 itens mais fracos por diferenciadores diretos contra o modelo de balança dos concorrentes
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `index.html` | Benefits bar: `Frete Grátis / Acima de R$49,90` → `🏷️ Preço Fixo / Sem surpresa na balança` (vs self-service por peso); `Pagamento Seguro / PIX, Cartão e Dinheiro` → `💳 Crédito 3x Sem Juros / PIX, Débito e Dinheiro` |
+| `belinha/competitors/jhoy.md` | Pesquisa fechada: confirmado = JAH do Açaí. Análise completa vs MilkyPot com tabela de diferenciadores e copy gerado. |
+
+**Commit:** `b87edb1`
+
+**Raciocínio:**
+- "Preço fixo, sem surpresa na balança" é a contraproposta mais forte ao modelo self-service pesado — lembrete visual logo na primeira dobra da página
+- Clientes que vieram do The Best/JAH veem imediatamente a diferença antes de qualquer scroll
+- "Crédito 3x Sem Juros" é mais conversor que "Pagamento Seguro" (genérico) — especialmente para ticket médio R$14-22
+
+**Próximo passo sugerido:**
+- Ciclo #29: Core Web Vitals / LCP mobile em `cardapio.html` (estratégia indica este ciclo)
+- Ciclo #30: Auto-aprimoramento — reler log ciclos 25–29, ajustar rotação
+
+---
+
 ## Ciclo #27 — 2026-04-25
 
 **Área:** SEO técnico — Landing page long-tail local `potinho-ninho-londrina.html`
