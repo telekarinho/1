@@ -1,17 +1,18 @@
 # Concorrente: Jhoy / JAH do Açaí
 
-> **Nota de pesquisa:** Busca por "Jhoy Açaí" e "Jhoy potinho" não retornou marca específica com esse nome.
-> O concorrente mais próximo encontrado é o **JAH do Açaí** (possível grafia alternativa ou confusão de nome).
-> Verificar com equipe MilkyPot se "Jhoy" é nome local/regional diferente.
+> **Status de pesquisa:** FECHADO — ciclos #3 e #28 confirmam que "Jhoy" não é marca identificável no mercado nacional.
+> Hipótese mais provável: confusão de grafia ou nome regional para **JAH do Açaí** (jahdoacai.com.br).
 
 ---
 
-## JAH do Açaí e Sorvete
+## JAH do Açaí, Sorvetes e Picolés
 
-**Segmento:** Açaí + sorvetes gourmet  
-**Modelo:** Self-service + potinhos + picolés  
-**Desde:** 2009 (pioneiro em self-service de açaí no Brasil)  
+**Segmento:** Açaí + sorvetes + picolés self-service  
+**Modelo:** Self-service por peso / quilo  
+**Fundação:** 2009 (MG) — pioneiro em self-service de açaí no Brasil  
 **Instagram:** @jahdoacai  
+**Unidades:** 180+ (meta de 900 até 2026 com investimento de R$200 milhões)  
+**Expansão:** 9 rotas de expansão anunciadas
 
 ---
 
@@ -19,56 +20,68 @@
 
 | Produto | Preço |
 |---|---|
-| Potinho açaí 480ml | ~R$14,90 |
-| Potinho açaí 1L | a consultar |
-| Sorvetes self-service | a consultar |
-| Picolés gourmet | a consultar |
+| Açaí self-service | ~por peso (R$/100g varia por unidade) |
+| Sorvete de Ninho | topping/sabor opcional |
+| Açaí Zero Açúcar | disponível |
+| Picolés artesanais | 30+ opções |
+| Milkshakes | disponíveis |
+| Fondue | disponível |
+| Toppings | 40+ |
 
 - 100% artesanal, natural, sem conservantes
-- Opções: zero açúcar, vegana, sem lactose
+- Opções: zero açúcar, vegana, sem lactose, sem glúten
+- **Ninho** aparece como sabor de sorvete — não como base cremosa de potinho
 
 ---
 
-## Rede de Franquias
+## Franquia (dados 2026)
 
-- **Unidades:** 180+ no Brasil
-- **Investimento inicial:** a partir de R$460.000+ (varia por formato)
-- **Faturamento médio:** R$37.000/mês
-- **ROI estimado:** ~8 meses
-- **Margem:** 15%+
-- **Formatos:** lojas, quiosques, containers
-
----
-
-## Delivery e Canais
-
-- **iFood:** sim ✅
-- **Rappi:** sim ✅
-- **Canal próprio:** não identificado
+| Item | Valor |
+|---|---|
+| Investimento | a partir de R$460.000 |
+| Faturamento médio | R$37.000/mês |
+| ROI estimado | ~8 meses |
+| Formatos | loja, quiosque, container, etc. |
+| Delivery | iFood + Rappi ✅ |
+| Canal próprio | não identificado |
 
 ---
 
 ## Presença em Londrina-PR
 
-- Não localizada unidade próxima ao Muffato Londrina nas buscas
-- Verificar diretamente em jahdoacai.com.br/unidades
+- Unidade confirmada: **@jahdoacai_jm** (Instagram)
+- Localização exata: verificar em jahdoacai.com.br/unidades
+- **Sem unidade confirmada no Muffato Av. Quintino Bocaiuva**
 
 ---
 
-## Análise Estratégica para MilkyPot
+## Análise vs MilkyPot (ciclo #28)
 
 | Aspecto | JAH do Açaí | MilkyPot (vantagem) |
 |---|---|---|
-| Self-service | sim | não (personalizado no pedido) |
-| iFood/Rappi | sim (paga comissão) | não (funil próprio = margem maior) |
-| Franquia | R$460k+ | Kit entrada R$3.499 |
-| Potinho personalizado | limitado | total (base+formato+topping livres) |
-| Mascote/estética | não identificado | ovelhinha pastel — diferencial forte |
-
-**Copy de diferenciação sugerido:**  
-> "No JAH você serve sozinho. No MilkyPot, a gente monta do seu jeito — com amor, ovelhinha e sem taxa de delivery."
+| Modelo | Self-service por peso | Potinho personalizado por operador |
+| Preço | Variável (surpresa na balança) | **Fixo (Mini R$10 → Gigante R$22)** |
+| Ninho | Sabor de sorvete/topping | **Base cremosa de potinho** |
+| Linha Fit c/ proteína | ❌ não identificada | **✅ linha Zero/Fit exclusiva** |
+| iFood/Rappi | ✅ sim (paga ~30% comissão) | ❌ canal próprio (margem maior) |
+| Investimento franquia | R$460.000+ | **R$3.499 (Kit Entrada)** |
+| Mascote / identidade | não identificado | **Ovelhinha pastel — diferencial forte** |
+| Presença no Muffato | ❌ não | **✅ MilkyPot está lá** |
 
 ---
 
-*Pesquisa: Belinha — Ciclo #3 (2026-04-22)*  
-*Status: parcial — verificar grafia "Jhoy" com equipe*
+## Copy de Diferenciação (baseado nesta análise)
+
+Aplicado na benefits bar do `index.html` no ciclo #28:
+- **"Preço Fixo / Sem surpresa na balança"** — contraposição direta ao self-service por peso do JAH e The Best
+- **"Crédito 3x Sem Juros / PIX, Débito e Dinheiro"** — pagamento mais flexível que concorrentes self-service
+
+Outros ângulos para usar em copy futuro:
+- "No JAH você serve, no MilkyPot a gente monta do seu jeito."
+- "Preço fixo. Personalizado. Sem balança, sem susto."
+- "Ninho de verdade — base cremosa, não só topping."
+
+---
+
+*Atualizado por Belinha — Ciclo #28 — 2026-04-25*  
+*Ciclo #3: pesquisa inicial parcial | Ciclo #28: pesquisa fechada com ação concreta no site*
