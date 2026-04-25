@@ -268,10 +268,44 @@ const Auth = {
             if (!data) return null;
             const session = JSON.parse(data);
             if (new Date(session.expiresAt) < new Date()) {
-                this.logout();
+                // Nao chame logout() aqui. getSession() e usado por sync/background;
+                // logout() faz firebaseAuth.signOut() + redirect e derruba o PDV.
+                // Se Firebase Auth ainda esta vivo, renova a sessao local em silencio.
+                const renewed = this._renewExpiredSession(session);
+                if (renewed) return renewed;
+                localStorage.removeItem(this.SESSION_KEY);
                 return null;
             }
             return session;
+        } catch (e) {
+            return null;
+        }
+    },
+
+    // Leitura crua da sessao para fluxos que nao podem ter efeitos colaterais
+    // (sync publico por franquia, logs, widgets). Nao valida expiracao.
+    getSessionRaw() {
+        try {
+            const data = localStorage.getItem(this.SESSION_KEY);
+            return data ? JSON.parse(data) : null;
+        } catch (e) {
+            return null;
+        }
+    },
+
+    _renewExpiredSession(session) {
+        try {
+            const user = (typeof firebaseAuth !== 'undefined') ? firebaseAuth.currentUser : null;
+            if (!user) return null;
+            if (session.email && user.email && session.email.toLowerCase() !== user.email.toLowerCase()) return null;
+            const renewed = {
+                ...session,
+                firebaseUid: user.uid || session.firebaseUid,
+                loginAt: new Date().toISOString(),
+                expiresAt: new Date(Date.now() + MP.SESSION_DURATION_MS).toISOString()
+            };
+            this._saveSession(renewed);
+            return renewed;
         } catch (e) {
             return null;
         }
