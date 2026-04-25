@@ -883,22 +883,22 @@
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v59"></script>
-<script src="../js/core/motivacional.js?v=mp-v59"></script>
-<script src="../js/core/caixa.js?v=mp-v59"></script>
-<script src="../js/core/financas.js?v=mp-v59"></script>
-<script src="../js/core/onboarding.js?v=mp-v59"></script>
-<script src="../js/core/units.js?v=mp-v59"></script>
-<script src="../js/core/error-tracking.js?v=mp-v59"></script>
-<script src="../js/core/recipes.js?v=mp-v59"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v59"></script>
-<script src="../js/core/offline-queue.js?v=mp-v59"></script>
-<script src="../js/core/pix.js?v=mp-v59"></script>
-<script src="../js/core/nfce.js?v=mp-v59"></script>
-<script src="../js/core/printer.js?v=mp-v59"></script>
+<script src="../js/core/adminconfig.js?v=mp-v60"></script>
+<script src="../js/core/motivacional.js?v=mp-v60"></script>
+<script src="../js/core/caixa.js?v=mp-v60"></script>
+<script src="../js/core/financas.js?v=mp-v60"></script>
+<script src="../js/core/onboarding.js?v=mp-v60"></script>
+<script src="../js/core/units.js?v=mp-v60"></script>
+<script src="../js/core/error-tracking.js?v=mp-v60"></script>
+<script src="../js/core/recipes.js?v=mp-v60"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v60"></script>
+<script src="../js/core/offline-queue.js?v=mp-v60"></script>
+<script src="../js/core/pix.js?v=mp-v60"></script>
+<script src="../js/core/nfce.js?v=mp-v60"></script>
+<script src="../js/core/printer.js?v=mp-v60"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v59"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v59"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v60"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v60"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -1769,6 +1769,19 @@
             try { renderPdvStatusChips(); } catch (_) {}
             try { if (typeof ensureCaixaAberto === 'function') ensureCaixaAberto(); } catch (_) {}
         }
+    });
+
+    // Banner crítico se sessão Firebase Auth não existir (mp_session órfão).
+    // Sem isso, vendas não saem do PC e sync não chega — operador precisa sair e entrar.
+    window.addEventListener('mp_auth_orphan', function () {
+        if (document.getElementById('pdvAuthOrphanBanner')) return;
+        var b = document.createElement('div');
+        b.id = 'pdvAuthOrphanBanner';
+        b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;padding:14px 20px;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 4px 18px rgba(0,0,0,.3);font-family:"Nunito",sans-serif;flex-wrap:wrap;font-weight:700';
+        b.innerHTML = '<div style="font-size:14px">⚠️ <strong>Sessão Firebase expirou neste PC</strong> · Pedidos não estão sincronizando · Saia e entre novamente</div>' +
+            '<button onclick="if(typeof Auth!==\'undefined\'&&Auth.logout)Auth.logout()" style="background:#fff;color:#7F1D1D;border:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer">🔓 Sair e entrar de novo</button>';
+        document.body.insertBefore(b, document.body.firstChild);
+        document.body.style.paddingTop = (b.offsetHeight) + 'px';
     });
 
     // ========== AUTO-ABRIR CAIXA ==========
