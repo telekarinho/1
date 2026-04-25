@@ -27,8 +27,12 @@ const Caixa = (function () {
     /* ============================================
        Cálculo de estado do turno
        ============================================ */
+    // Data LOCAL (UTC-3 Brasília) — toISOString() em UTC fazia o caixa
+    // "rolar" pra amanhã às 21h locais, bloqueando reabertura no dia seguinte.
     function todayKey() {
-        return new Date().toISOString().slice(0, 10);
+        const d = new Date();
+        return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+            .toISOString().slice(0, 10);
     }
 
     function turnoIdForDate(dateKey) {

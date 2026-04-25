@@ -75,28 +75,47 @@ const Printer = (function() {
     // Categorias que precisam de preparo na cozinha (milkshake, sundae,
     // açaí bowl, potinho montado). Buffet/picolé/sorvete-kg/bebida não.
     const KITCHEN_PREP_CATEGORIES = ['cat_milkshake', 'cat_sundae', 'cat_acai', 'cat_potinho'];
+    // Categorias que NUNCA vão pra cozinha (grab-and-go).
+    const NON_KITCHEN_CATEGORIES = ['cat_picole', 'cat_sorvete_kg', 'cat_buffet', 'cat_bebida', 'cat_topping'];
 
     function isKitchenItem(cartItem) {
         if (!cartItem) return false;
         // Buffet vendido por peso (cliente monta)
         if (cartItem.type === 'por_peso') return false;
 
-        // Tenta achar categoria via CatalogV2 (fonte da verdade)
-        try {
-            const fid = getFid();
-            if (typeof CatalogV2 !== 'undefined' && CatalogV2.load && fid !== 'global') {
-                const v2 = CatalogV2.load(fid);
-                const prod = (v2.produtos || []).find(p => p.id === cartItem.id);
-                if (prod) return KITCHEN_PREP_CATEGORIES.includes(prod.categoriaId);
-            }
-        } catch(e){}
-
-        // Fallback: detecta por nome (caso não ache no v2)
+        // Exclusões por nome — sempre se aplicam (buffet/picolé/bebida nunca vão pra cozinha)
         const n = (cartItem.name || '').toLowerCase();
         if (n.includes('picol')) return false;
         if (n.includes('buffet')) return false;
         if (n.includes('sorvete') && n.includes('kg')) return false;
         if (n.includes('bebida') || n.includes('refri') || n.includes('agua')) return false;
+        if (n.includes('coca') || n.includes('guarana') || n.includes('guaraná') || n.includes('suco')) return false;
+
+        // Decisão via CatalogV2 (fonte da verdade)
+        try {
+            const fid = getFid();
+            if (typeof CatalogV2 !== 'undefined' && CatalogV2.load && fid !== 'global') {
+                const v2 = CatalogV2.load(fid);
+                const prod = (v2.produtos || []).find(p => p.id === cartItem.id);
+                if (prod) {
+                    if (NON_KITCHEN_CATEGORIES.includes(prod.categoriaId)) return false;
+                    if (KITCHEN_PREP_CATEGORIES.includes(prod.categoriaId)) return true;
+                    // Categoria desconhecida (admin criou cat custom) — não decide aqui,
+                    // cai pro match por nome abaixo. ANTES desse fix retornava false
+                    // direto e cozinha nunca via o pedido.
+                }
+            }
+        } catch(e){}
+
+        // Match positivo por nome (milkshake, sundae, açaí, bowl, potinho)
+        if (n.includes('milkshake') || n.includes('milk shake') || n.includes('shake')) return true;
+        if (n.includes('sundae')) return true;
+        if (n.includes('acai') || n.includes('açaí') || n.includes('açai') || n.includes('bowl')) return true;
+        if (n.includes('potinho')) return true;
+
+        // Default permissivo: se não bateu nem em exclusão nem em match positivo, manda pra cozinha.
+        // Pior caso: imprime um ticket extra (recuperável). Caso oposto: cozinha não
+        // recebe pedido e cliente espera (catastrófico em dia de inauguração).
         return true;
     }
 
