@@ -1,5 +1,48 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #27 — 2026-04-25
+
+**Área:** SEO técnico — Landing page long-tail local `potinho-ninho-londrina.html`
+
+**Contexto:** Pós-inauguração imediata (25/04/2026). Ciclo #26 completou FAQPage Schema.org no `index.html`. O próximo passo lógico era criar uma página de produto dedicada para capturar tráfego de busca long-tail local — termos que alguém em Londrina usa quando procura o produto: "potinho ninho londrina", "açaí muffato londrina", "sobremesa muffato londrina".
+
+**O que analisou:**
+- `index.html` e `cardapio.html` cobrem homepage e listagem, mas não têm URL específica por produto → sem chance de ranquear para "potinho ninho londrina" (busca transacional)
+- `cartao-fidelidade.html` serviu de referência visual para standalone pages com estilo pastel MilkyPot
+- Schema.org `Product` com `offers.price` "10.00" permite rich results com preço na SERP antes do clique
+- `BreadcrumbList` reforça hierarquia para o Google: Home > Cardápio > Potinho de Ninho — Londrina
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `potinho-ninho-londrina.html` | CRIADO — landing page SEO standalone. Schema.org @graph: BreadcrumbList + Product (offers R$10) + FoodEstablishment. Hero com CTA WhatsApp, grid de 8 toppings, tabela de 3 tamanhos, steps de pedido, card de localização com link Google Maps. Mobile-first, CSS inline. |
+| `sitemap.xml` | +entrada `potinho-ninho-londrina.html` prioridade 0.8, lastmod 2026-04-25 |
+
+**Commit:** `835428b`
+
+**Validação:** `python3 json.loads()` — 1 bloco JSON-LD `@graph` com 3 tipos. WA link `wa.me/5543998042424` presente. Sitemap: 1 ocorrência confirmada.
+
+**Keywords alvo:**
+- "potinho ninho londrina" (intent transacional local)
+- "potinho de ninho em londrina"
+- "açaí muffato londrina"
+- "sobremesa muffato londrina"
+- "potinho personalizado londrina"
+
+**Impacto esperado:**
+- Rich result de produto com preço (R$10) visível na SERP para buscas locais
+- BreadcrumbList melhora hierarquia de site para o Google
+- URL semântica `/potinho-ninho-londrina.html` é anchor de backlinks naturais (Instagram bio, Google Business)
+- Funil direto: SERP → página produto → WhatsApp (sem passar pelo cardápio geral)
+
+**Próximo passo sugerido:**
+- Ciclo #28: Pesquisa Jhoy/The Best com ação concreta — extrair ângulo de preço/produto e adaptar copy no site ou criar nova landing `/acai-londrina.html`
+- Ciclo #28: Ativar `aggregateRating` em `index.html` quando primeiras reviews Google chegarem (template já pronto — ciclo #26)
+- Ciclo #29: Conteúdo semana 3 pós-inauguração (03/05–09/05 coberto, falta 10/05–16/05)
+
+---
+
 ## Ciclo #26 — 2026-04-25
 
 **Área:** SEO técnico — FAQPage Schema.org + template aggregateRating
