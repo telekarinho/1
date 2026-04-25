@@ -648,8 +648,9 @@
                 <button class="buffet-btn" onclick="closeRedeemModal()">Cancelar</button>
                 <button class="buffet-btn primary" id="btnConfirmRedeem" onclick="confirmRedeem()" style="background:linear-gradient(135deg,#EC407A,#AD1457);border-color:#AD1457">✅ Validar Codigo</button>
             </div>
-
-            <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">💡 Codigo curto tem 6 letras (XXX-XXX). Ja impresso no recibo.</p>
+            <button onclick="adminForceRedeem()" style="width:100%;margin-top:8px;background:#fff;color:#7F1D1D;border:2px solid #DC2626;padding:10px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">🔧 Resgatar Manualmente (admin) — código órfão</button>
+            <p style="font-size:11px;color:#999;text-align:center;margin-top:8px">💡 Codigo curto tem 6 letras (XXX-XXX). Ja impresso no recibo.</p>
+            <p style="font-size:10px;color:#aaa;text-align:center;margin-top:4px">Use o botão Manual se o cliente tem o recibo mas o código não foi sincronizado.</p>
         </div>
     </div>
 </div>
@@ -883,22 +884,22 @@
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v63"></script>
-<script src="../js/core/motivacional.js?v=mp-v63"></script>
-<script src="../js/core/caixa.js?v=mp-v63"></script>
-<script src="../js/core/financas.js?v=mp-v63"></script>
-<script src="../js/core/onboarding.js?v=mp-v63"></script>
-<script src="../js/core/units.js?v=mp-v63"></script>
-<script src="../js/core/error-tracking.js?v=mp-v63"></script>
-<script src="../js/core/recipes.js?v=mp-v63"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v63"></script>
-<script src="../js/core/offline-queue.js?v=mp-v63"></script>
-<script src="../js/core/pix.js?v=mp-v63"></script>
-<script src="../js/core/nfce.js?v=mp-v63"></script>
-<script src="../js/core/printer.js?v=mp-v63"></script>
+<script src="../js/core/adminconfig.js?v=mp-v64"></script>
+<script src="../js/core/motivacional.js?v=mp-v64"></script>
+<script src="../js/core/caixa.js?v=mp-v64"></script>
+<script src="../js/core/financas.js?v=mp-v64"></script>
+<script src="../js/core/onboarding.js?v=mp-v64"></script>
+<script src="../js/core/units.js?v=mp-v64"></script>
+<script src="../js/core/error-tracking.js?v=mp-v64"></script>
+<script src="../js/core/recipes.js?v=mp-v64"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v64"></script>
+<script src="../js/core/offline-queue.js?v=mp-v64"></script>
+<script src="../js/core/pix.js?v=mp-v64"></script>
+<script src="../js/core/nfce.js?v=mp-v64"></script>
+<script src="../js/core/printer.js?v=mp-v64"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v63"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v63"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v64"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v64"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -3041,19 +3042,25 @@
     };
 
     function findScratchAnywhere(code){
-        // Accepts short code (XXX-XXX) OR full code (MKP-XXXX-YYYYMMDD-XXXXXXXX) OR full URL
+        // Aceita short code (XXX-XXX), full code (MKP-XXXX-YYYYMMDD-XXXXXXXX), URL ou variações (sem dash, com espaços)
         return new Promise(function(resolve){
-            // Extract code from URL if scanned (might be full raspinha URL)
-            var codeUp = code.toUpperCase();
+            var codeUp = (code || '').toUpperCase().trim();
             var urlMatch = codeUp.match(/[?&]C=([A-Z0-9-]+)/);
             if(urlMatch) codeUp = urlMatch[1];
             else {
-                // Try plain query param format
                 var qMatch = codeUp.match(/CODE=([A-Z0-9-]+)/);
                 if(qMatch) codeUp = qMatch[1];
             }
+            // Normaliza variações: sem dash → adiciona ("TXPAJW" → "TXP-AJW")
+            // Com espaço → vira dash ("TXP AJW" → "TXP-AJW")
+            var withoutDash = codeUp.replace(/[-\s]/g, '');
+            var candidates = [codeUp];
+            if (withoutDash.length === 6) {
+                candidates.push(withoutDash.slice(0, 3) + '-' + withoutDash.slice(3));
+            }
+            if (codeUp !== withoutDash) candidates.push(withoutDash);
 
-            var isShort = codeUp.length <= 8; // Short codes are 7 chars (XXX-XXX)
+            var isShort = codeUp.length <= 8;
 
             // Check localStorage first (fast)
             var keys = Object.keys(localStorage);
@@ -3062,33 +3069,102 @@
                     try {
                         var arr = JSON.parse(localStorage.getItem(keys[i]));
                         var found = arr.find(function(s){
-                            var fullMatch = (s.code||'').toUpperCase() === codeUp;
-                            var shortMatch = (s.shortCode||'').toUpperCase() === codeUp;
-                            return fullMatch || shortMatch;
+                            var sc = (s.code||'').toUpperCase();
+                            var ss = (s.shortCode||'').toUpperCase();
+                            return candidates.some(function(c){ return sc === c || ss === c; });
                         });
                         if(found) return resolve(found);
                     } catch(e){}
                 }
             }
-            // Fallback Firestore - full code query
+            // Fallback Firestore — tenta cada candidato
             if(typeof firebase !== 'undefined' && firebase.firestore){
-                if(isShort){
-                    // Firestore query by shortCode
-                    firebase.firestore().collection('scratches').where('shortCode','==',codeUp).limit(1).get().then(function(snap){
-                        if(!snap.empty) resolve(snap.docs[0].data());
-                        else resolve(null);
-                    }).catch(function(){ resolve(null); });
+                var queries = [];
+                if (isShort) {
+                    candidates.forEach(function(c){
+                        queries.push(firebase.firestore().collection('scratches').where('shortCode','==',c).limit(1).get());
+                    });
                 } else {
-                    firebase.firestore().collection('scratches').doc(codeUp).get().then(function(doc){
-                        if(doc.exists) resolve(doc.data());
-                        else resolve(null);
-                    }).catch(function(){ resolve(null); });
+                    queries.push(firebase.firestore().collection('scratches').doc(codeUp).get());
                 }
+                Promise.all(queries.map(function(p){ return p.catch(function(){ return null; }); })).then(function(results){
+                    for (var i = 0; i < results.length; i++) {
+                        var r = results[i];
+                        if (!r) continue;
+                        if (r.exists && r.data) return resolve(r.data());
+                        if (r.docs && r.docs.length) return resolve(r.docs[0].data());
+                    }
+                    resolve(null);
+                });
             } else {
                 resolve(null);
             }
         });
     }
+
+    // Override admin: aceita código órfão (não sincronizado) e cria scratch fictício
+    // pra resgatar manualmente. Operador valida o recibo impresso visualmente.
+    // Loga em audit pra rastreabilidade.
+    window.adminForceRedeem = function(){
+        var code = document.getElementById('redeemCode').value.trim().toUpperCase();
+        if (!code || code.length < 6) { alert('Digite o código primeiro.'); return; }
+        var session = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+        var role = session ? session.role : null;
+        if (role !== 'super_admin' && role !== 'franchisee' && role !== 'manager') {
+            alert('Apenas gerente/franqueado pode forçar resgate de código órfão.');
+            return;
+        }
+        // Pergunta o tipo de prêmio pra registrar — operador escolhe
+        var prizeOptions = '\n1 = Topping Grátis\n2 = Upgrade de Tamanho\n3 = R$ 5 OFF\n4 = Picolés 2 por 1\n5 = Outro (descreva)';
+        var choice = prompt('Forçar resgate do código ' + code + '?\n\nQual prêmio o cliente ganhou? (digite o número):' + prizeOptions);
+        if (!choice) return;
+        var prizeMap = {
+            '1': { name: '1 Topping Grátis', tier: 'small' },
+            '2': { name: 'Upgrade de Tamanho', tier: 'small' },
+            '3': { name: 'R$ 5 OFF', tier: 'medium' },
+            '4': { name: 'Picolés 2 por 1', tier: 'medium' }
+        };
+        var prize = prizeMap[choice.trim()];
+        if (!prize) {
+            var custom = prompt('Descreva o prêmio (ex: "Milkshake P Grátis"):');
+            if (!custom) return;
+            prize = { name: custom, tier: 'small' };
+        }
+        var motivo = prompt('Motivo do override (será logado em auditoria):') || 'Código órfão (não sincronizado)';
+        // Cria scratch retroativo
+        var fakeScratch = {
+            code: 'OVERRIDE-' + code + '-' + Date.now(),
+            shortCode: code,
+            franchiseId: fid,
+            storeName: fr ? fr.name : 'MilkyPot',
+            prizeName: prize.name,
+            prizeDesc: prize.name + ' — resgate manual',
+            prizeTier: prize.tier,
+            prizeScope: 'mesma_loja',
+            minOrder: 0,
+            customerName: '',
+            status: 'redeemed',
+            createdAt: new Date().toISOString(),
+            redeemedAt: new Date().toISOString(),
+            redeemedStoreId: fid,
+            redeemedBy: session ? session.name : 'admin',
+            generatedBy: 'override',
+            overrideReason: motivo
+        };
+        try {
+            saveScratch(fakeScratch);
+            if (typeof AuditLog !== 'undefined' && AuditLog.log) {
+                AuditLog.log('SCRATCH_FORCE_REDEEM', { code: code, prize: prize.name, motivo: motivo }, fid);
+            }
+            // Aplica o prêmio no cart
+            applyScratchPrize(fakeScratch);
+            closeRedeemModal();
+            toast('✅ Resgate forçado: ' + prize.name);
+        } catch (e) {
+            console.error('adminForceRedeem:', e);
+            alert('Erro: ' + e.message);
+        }
+    };
 
     // QR Code Scanner usando jsQR + getUserMedia
     var qrStream = null;
@@ -3173,11 +3249,14 @@
         var statusEl = document.getElementById('redeemStatus');
         var btn = document.getElementById('btnConfirmRedeem');
 
-        if(!code || code.length < 10){
+        // Aceita short code (XXX-XXX = 7 chars) OU full code (MKP-XXXX-YYYYMMDD-XXXXXXXX = 28 chars).
+        // ANTES exigia >= 10 chars — bloqueava TODOS os shortcodes (TXP-AJW etc).
+        // Mínimo: 6 (XXXXXX sem dash) — permite tolerância ao usuário.
+        if(!code || code.length < 6){
             statusEl.style.display = 'block';
             statusEl.style.background = '#FFEBEE';
             statusEl.style.color = '#C62828';
-            statusEl.innerHTML = '<strong>⚠️ Codigo invalido</strong><br><span style="font-size:12px">Digite um codigo com pelo menos 10 caracteres</span>';
+            statusEl.innerHTML = '<strong>⚠️ Codigo invalido</strong><br><span style="font-size:12px">Digite o codigo do recibo (ex: TXP-AJW)</span>';
             return;
         }
 
