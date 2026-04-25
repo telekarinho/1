@@ -1,5 +1,47 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #34 — 2026-04-25
+
+**Área:** Conteúdo acionável — Semana 4 pós-inauguração (10–16/05/2026)
+
+**Contexto:** Semana 4 é decisiva para consolidação de hábito. Quem veio nas semanas 1 e 2 precisa de um gatilho para virar frequentador fixo. Prioridade: conteúdo pronto que o operador pode publicar sem retrabalho + upsell do açaí buffet self-service (exclusivo Muffato, diferencial competitivo ainda pouco explorado nas redes).
+
+**O que analisou:**
+- `belinha/content/pos-inauguracao-semana3.md` como referência de formato (ciclo #30)
+- Ciclos 31–33 cobriram upsell no site, playbook reativação WA e link SEO
+- Açaí buffet self-service mencionado em semana 2 mas sem post dedicado ainda
+- Cartão fidelidade (`cartao-fidelidade.html`) criado no ciclo #23 — semana 4 é o momento ideal de ativar quem ainda não resgatou
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana4.md` | CRIADO — 4 posts (Dom/Ter/Qui/Sáb) + stories avulsos de review Google + templates WhatsApp de upsell açaí buffet + KPIs da semana + nota operacional |
+
+**Commit:** `7b84273`
+
+**Conteúdo criado:**
+- Post Dom 10/05: "Domingo virou MilkyPot" — hábito
+- Post Ter 12/05: Upsell açaí buffet self-service (reels 15s + carrossel)
+- Post Qui 14/05: Cartão fidelidade — ativação "4 semanas, já tem seus carimbos?"
+- Post Sáb 16/05: "Sábado é sagrado" — ritual semanal (reels 15s)
+- Scripts de stories para incentivo a review Google
+- Templates WhatsApp para upsell do buffet durante atendimento delivery
+- KPIs: 2 reviews, 5 cartões fidelidade, 1 UGC buffet, ticket médio
+
+**Impacto esperado:**
+- Operador tem 4 semanas de conteúdo completo sem improvisar
+- Açaí buffet como exclusividade Muffato reforçado visualmente → diferenciação competitiva
+- Cartão fidelidade com CTA direto (`cartao-fidelidade.html?stamps=N`) integrado ao post
+- Roteiro de reels 15s pronto para gravar na loja sem diretor
+
+**Próximo passo sugerido:**
+- Ciclo #35: Auto-aprimoramento obrigatório — reler log ciclos #30–34, ajustar rotação e KPIs em `belinha/estrategia.md`
+- Ciclo #35 alternativo: Adicionar link `cardapio.html` → `potinho-ninho-londrina.html` (reforçar segundo crawl path além do `index.html`)
+- Ciclo #36: Criar `belinha/content/pos-inauguracao-semana5.md` com foco em "mês de MilkyPot" (aniversário de 1 mês da loja)
+
+---
+
 ## Ciclo #33 — 2026-04-25
 
 **Área:** SEO técnico — Link interno para `potinho-ninho-londrina.html`
