@@ -117,6 +117,59 @@
         .bp { background: #e3f2fd; color: #1565C0; }
         .bc { background: #ffebee; color: #e53935; }
 
+        /* FAB FLUTUANTE: Conta Aberta + Fechar SEMPRE visíveis no bottom da viewport,
+           independente do tamanho do PDV. Aparece somente quando cart tem itens.
+           z-index 9500 — fica acima do banner de caixa (9000) e do cart sidebar. */
+        .pdv-action-fab {
+            position: fixed;
+            bottom: 14px;
+            right: 14px;
+            z-index: 9500;
+            display: none;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: nowrap;
+            font-family: 'Nunito', sans-serif;
+        }
+        .pdv-action-fab.show { display: flex; }
+        .pdv-action-fab button {
+            border: none;
+            padding: 14px 22px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 6px 22px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: transform .12s, box-shadow .12s;
+        }
+        .pdv-action-fab button:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(0,0,0,0.3); }
+        .pdv-action-fab button:active { transform: scale(.96); }
+        .pdv-action-fab .fab-tab {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            color: #fff;
+        }
+        .pdv-action-fab .fab-finish {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: #fff;
+        }
+        .pdv-action-fab .fab-total {
+            background: rgba(255,255,255,0.96);
+            color: #E91E63;
+            padding: 14px 18px;
+            font-weight: 900;
+            border-radius: 50px;
+            box-shadow: 0 6px 22px rgba(0,0,0,0.18);
+        }
+        @media (max-width: 480px) {
+            .pdv-action-fab { left: 8px; right: 8px; justify-content: center; }
+            .pdv-action-fab button { font-size: 13px; padding: 12px 14px; flex: 1; justify-content: center; }
+            .pdv-action-fab .fab-total { display: none; }
+        }
+
         /* Buffet FAB */
         .buffet-fab { position: fixed; bottom: 18px; left: 18px; width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #FF9800, #F57C00); color: #fff; border: none; box-shadow: 0 6px 20px rgba(255,152,0,0.45); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; transition: transform 0.15s; }
         .buffet-fab:hover { transform: scale(1.08); box-shadow: 0 10px 28px rgba(255,152,0,0.55); }
@@ -368,6 +421,14 @@
         <span style="font-size:24px">🎟️</span>
         <span style="font-size:10px;font-weight:800;display:block">RESGATAR</span>
     </button>
+
+    <!-- FAB FLUTUANTE: Conta Aberta + Fechar SEMPRE visíveis quando carrinho tem itens.
+         Independe do tamanho do PDV — não some em viewport pequeno. -->
+    <div class="pdv-action-fab" id="pdvActionFab" role="toolbar" aria-label="Ações do pedido">
+        <span class="fab-total" id="pdvFabTotal">R$ 0,00</span>
+        <button class="fab-tab" onclick="if(typeof openTab==='function') openTab()" title="Salvar pedido como conta aberta">📋 Conta Aberta</button>
+        <button class="fab-finish" onclick="if(typeof finishOrder==='function') finishOrder()" title="Fechar pedido (F4)">✅ Fechar Pedido</button>
+    </div>
     <div class="pdv-cart">
         <div class="cart-head">
             <h2>🛒 Pedido</h2>
@@ -724,22 +785,22 @@
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v52"></script>
-<script src="../js/core/motivacional.js?v=mp-v52"></script>
-<script src="../js/core/caixa.js?v=mp-v52"></script>
-<script src="../js/core/financas.js?v=mp-v52"></script>
-<script src="../js/core/onboarding.js?v=mp-v52"></script>
-<script src="../js/core/units.js?v=mp-v52"></script>
-<script src="../js/core/error-tracking.js?v=mp-v52"></script>
-<script src="../js/core/recipes.js?v=mp-v52"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v52"></script>
-<script src="../js/core/offline-queue.js?v=mp-v52"></script>
-<script src="../js/core/pix.js?v=mp-v52"></script>
-<script src="../js/core/nfce.js?v=mp-v52"></script>
-<script src="../js/core/printer.js?v=mp-v52"></script>
+<script src="../js/core/adminconfig.js?v=mp-v53"></script>
+<script src="../js/core/motivacional.js?v=mp-v53"></script>
+<script src="../js/core/caixa.js?v=mp-v53"></script>
+<script src="../js/core/financas.js?v=mp-v53"></script>
+<script src="../js/core/onboarding.js?v=mp-v53"></script>
+<script src="../js/core/units.js?v=mp-v53"></script>
+<script src="../js/core/error-tracking.js?v=mp-v53"></script>
+<script src="../js/core/recipes.js?v=mp-v53"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v53"></script>
+<script src="../js/core/offline-queue.js?v=mp-v53"></script>
+<script src="../js/core/pix.js?v=mp-v53"></script>
+<script src="../js/core/nfce.js?v=mp-v53"></script>
+<script src="../js/core/printer.js?v=mp-v53"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v52"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v52"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v53"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v53"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -1947,7 +2008,15 @@
     // ============================================
     function renderCart(){
         var el=document.getElementById('cartList');
-        if(!cart.length){el.innerHTML='<div class="cart-empty">Toque em um produto para montar</div>';document.getElementById('cTotal').textContent='R$ 0,00';return}
+        var fab = document.getElementById('pdvActionFab');
+        var fabTotal = document.getElementById('pdvFabTotal');
+        if(!cart.length){
+            el.innerHTML='<div class="cart-empty">Toque em um produto para montar</div>';
+            document.getElementById('cTotal').textContent='R$ 0,00';
+            if (fab) fab.classList.remove('show');
+            if (fabTotal) fabTotal.textContent = 'R$ 0,00';
+            return;
+        }
         var total=0;
         var html=cart.map(function(it,i){
             var sub=it.unitPrice*it.qty;total+=sub;
@@ -1960,7 +2029,11 @@
                 '<button class="ci-rm" onclick="cRm('+i+')">×</button></div>';
         }).join('');
         el.innerHTML=html;
-        document.getElementById('cTotal').textContent='R$ '+total.toFixed(2).replace('.',',');
+        var totalTxt = 'R$ '+total.toFixed(2).replace('.',',');
+        document.getElementById('cTotal').textContent = totalTxt;
+        // FAB de ação SEMPRE visível enquanto cart tem itens (Conta Aberta + Fechar)
+        if (fab) fab.classList.add('show');
+        if (fabTotal) fabTotal.textContent = totalTxt;
     }
 
     // Expõe renderCart ao window pra PDV_Dynamics.addToCart conseguir re-renderizar o carrinho
