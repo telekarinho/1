@@ -1,5 +1,44 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #26 — 2026-04-25
+
+**Área:** SEO técnico — FAQPage Schema.org + template aggregateRating
+
+**Contexto:** Dia da inauguração (25/04/2026). O ciclo #25 sugeriu `aggregateRating` stub, mas avaliações Google Maps só existem após clientes reais. A abordagem mais valiosa para o dia 1 foi adicionar `FAQPage` Schema.org — rich results imediatos na SERP, sem dependência de reviews.
+
+**O que analisou:**
+- `index.html` já tinha `FoodEstablishment` LocalBusiness (ciclos #2, #24) mas sem FAQPage
+- Seção FAQ em HTML (#faq) existia com 4 perguntas de clientes — base pronta para Schema.org
+- `aggregateRating` requer `ratingCount > 0` válido — stub inválido pode penalizar no Google
+- Estratégia correta: FAQPage agora (imediato) + template `aggregateRating` comentado (ativar após primeira review)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `index.html` | +`FAQPage` Schema.org com 6 perguntas: localização, delivery, iFood/Uber Eats (funil próprio!), pagamento, fidelidade, Linha Fit. +template `aggregateRating` comentado pronto para ativar. |
+
+**Commit:** `e65ceea`
+
+**Validação:** `python3 json.loads()` — 2 blocos JSON-LD ativos válidos (FoodEstablishment + FAQPage). Bloco comentado corretamente ignorado por browsers/Google.
+
+**Impacto esperado:**
+- FAQ aparece como rich result expansível no Google para buscas como "MilkyPot Londrina endereço", "MilkyPot tem delivery?", "MilkyPot iFood?" — no dia da inauguração, máxima relevância
+- Pergunta "iFood/Uber Eats" na SERP reforça o funil próprio (WhatsApp/site) antes do clique
+- Template `aggregateRating` pronto: operador só descomenta e preenche ratingValue/reviewCount após primeiras avaliações
+
+**Como ativar aggregateRating:**
+1. Abrir `index.html`, remover `<!--` e `-->` em volta do bloco (linhas 135–151)
+2. Preencher `ratingValue` (ex: "4.8") e `reviewCount` (ex: "12") com dados reais do Google Maps
+3. Commitar com `feat(belinha/seo): ativar aggregateRating — N reviews`
+
+**Próximo passo sugerido:**
+- Ciclo #27: Page de produto `/potinho-ninho-londrina.html` — SEO long tail local ("potinho ninho londrina", "açaí muffato londrina")
+- Ciclo #27: Revisar `belinha/content/ugc-compartilhe-potinho.md` — acionar campanha UGC pós-inauguração para gerar reviews orgânicos no Google
+- Ciclo #28: Pesquisa Jhoy/The Best com ação concreta em copy do site
+
+---
+
 ## Ciclo #25 — 2026-04-24
 
 **Área:** Conteúdo + Auto-aprimoramento — Semana 2 pós-inauguração + rotação estratégica
