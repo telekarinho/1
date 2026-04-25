@@ -2514,10 +2514,109 @@
             var payment=document.getElementById('paymentMethod')?document.getElementById('paymentMethod').value:'';
             var voucher=document.getElementById('voucherCodeDisplay').textContent || window._lastVoucherCode || '';
             var scratch=window._lastScratchData;
+
+            // Cozinha: layout HTML grande, sem preço, foco em receita
+            if (p.id === 'cozinha') {
+                var ticketHtml = buildKitchenTicket(name, tl[orderType||'balcao'], now, items, customerName, addr);
+                openKitchenPrintWindow(ticketHtml);
+                return;
+            }
+
+            // Demais perfis (balcao/cliente): receipt térmico tradicional
             var t=buildReceipt(name, tl[orderType||'balcao'], now, items, total, customerName, addr, payment, voucher, null, scratch, p.id);
             openPrintWindow(t, scratch, p.id);
         });
     };
+
+    // === COZINHA: Template HTML grande, sem preço, fácil de ler ===
+    function buildKitchenTicket(storeName, typeLabel, when, items, customerName, addr) {
+        var customerBlock = customerName
+            ? '<div class="k-customer"><div class="k-customer-label">CLIENTE</div><div class="k-customer-name">' + escHtml(customerName) + '</div></div>'
+            : '<div class="k-customer"><div class="k-customer-label">CLIENTE</div><div class="k-customer-name k-no-name">— sem nome —</div></div>';
+
+        var addrBlock = addr ? '<div class="k-addr">📍 ' + escHtml(addr) + '</div>' : '';
+
+        var itemsHtml = items.map(function(c, idx){
+            var sizeBlock = c.size ? '<div class="k-size">📏 ' + escHtml(c.size) + '</div>' : '';
+            var extrasBlock = '';
+            if (c.extras && c.extras.length) {
+                extrasBlock = '<div class="k-recipe-label">RECEITA / TOPPINGS</div><ul class="k-extras">' +
+                    c.extras.map(function(e){ return '<li>✓ ' + escHtml(e.name) + '</li>'; }).join('') +
+                    '</ul>';
+            }
+            return '<div class="k-item">' +
+                '<div class="k-item-num">ITEM ' + (idx+1) + ' DE ' + items.length + '</div>' +
+                '<div class="k-qty-name"><span class="k-qty">' + c.qty + 'x</span> ' + escHtml(c.name) + '</div>' +
+                sizeBlock +
+                extrasBlock +
+            '</div>';
+        }).join('');
+
+        return '<div class="k-ticket">' +
+            '<div class="k-header">' +
+                '<div class="k-store">' + escHtml(storeName.toUpperCase()) + '</div>' +
+                '<div class="k-cozinha-badge">🍳 COZINHA</div>' +
+                '<div class="k-type">' + escHtml(typeLabel) + '</div>' +
+                '<div class="k-when">' + escHtml(when) + '</div>' +
+            '</div>' +
+            customerBlock +
+            addrBlock +
+            '<div class="k-divider"></div>' +
+            itemsHtml +
+            '<div class="k-footer">' +
+                '<div class="k-footer-line">━━━━━━━━━━━━━━━━━</div>' +
+                '<div class="k-footer-text">' + items.length + ' item' + (items.length > 1 ? 's' : '') + ' · ' + when + '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function escHtml(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    // Abre janela de impressão da cozinha — letras GRANDES, sem preço, foco no preparo
+    function openKitchenPrintWindow(ticketHtml) {
+        var w = window.open('', '_blank', 'width=420,height=900');
+        if (!w) { toast('Bloqueio de popup — libere impressao'); return; }
+
+        var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Pedido Cozinha · MilkyPot</title>' +
+            '<style>' +
+                '@page { margin: 4mm }' +
+                '* { box-sizing: border-box; margin: 0; padding: 0 }' +
+                'body { font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif; padding: 4mm; color: #000; line-height: 1.25 }' +
+                '.k-ticket { width: 100%; max-width: 78mm }' +
+                '.k-header { text-align: center; padding-bottom: 8px; border-bottom: 4px solid #000 }' +
+                '.k-store { font-size: 22px; font-weight: 900; letter-spacing: 0.5px }' +
+                '.k-cozinha-badge { display: inline-block; background: #000; color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 22px; font-weight: 900; margin: 8px 0; letter-spacing: 1.5px }' +
+                '.k-type { font-size: 28px; font-weight: 900; letter-spacing: 2px; padding: 4px 0 }' +
+                '.k-when { font-size: 13px; font-weight: 600; opacity: 0.7 }' +
+                '.k-customer { margin: 12px 0; padding: 12px 8px; border: 4px dashed #000; border-radius: 8px; text-align: center }' +
+                '.k-customer-label { font-size: 12px; font-weight: 700; opacity: 0.6; letter-spacing: 2px }' +
+                '.k-customer-name { font-size: 38px; font-weight: 900; letter-spacing: 0.5px; margin-top: 4px; word-break: break-word }' +
+                '.k-customer-name.k-no-name { font-size: 20px; opacity: 0.5; font-style: italic }' +
+                '.k-addr { font-size: 16px; font-weight: 700; padding: 8px; background: #f0f0f0; border-radius: 6px; margin-bottom: 10px; word-break: break-word }' +
+                '.k-divider { height: 4px; background: #000; margin: 14px 0 }' +
+                '.k-item { padding: 14px 0; border-bottom: 2px dashed #000 }' +
+                '.k-item:last-child { border-bottom: 0 }' +
+                '.k-item-num { font-size: 11px; font-weight: 700; letter-spacing: 2px; opacity: 0.6; margin-bottom: 4px }' +
+                '.k-qty-name { font-size: 26px; font-weight: 900; line-height: 1.15; word-break: break-word }' +
+                '.k-qty { display: inline-block; background: #000; color: #fff; padding: 2px 10px; border-radius: 4px; margin-right: 6px; font-size: 24px }' +
+                '.k-size { display: inline-block; background: #FF4F8A; color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 20px; font-weight: 900; margin-top: 8px; letter-spacing: 0.5px }' +
+                '.k-recipe-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; opacity: 0.7; margin-top: 12px; padding-bottom: 4px; border-bottom: 2px solid #000 }' +
+                '.k-extras { list-style: none; padding: 6px 0; margin: 0 }' +
+                '.k-extras li { font-size: 22px; font-weight: 800; padding: 5px 0; line-height: 1.25; word-break: break-word }' +
+                '.k-footer { margin-top: 16px; padding-top: 8px; text-align: center }' +
+                '.k-footer-line { font-size: 14px; opacity: 0.4 }' +
+                '.k-footer-text { font-size: 12px; font-weight: 700; opacity: 0.6; margin-top: 4px }' +
+            '</style></head><body>' + ticketHtml +
+            '<' + 'script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},700)},400)}<\/script>' +
+            '</body></html>';
+
+        w.document.write(html);
+        w.document.close();
+    }
 
     // Shared receipt builder with MARKETING COPY for Desafio 10.000 + RASPINHA DA SORTE
     function buildReceipt(storeName, typeLabel, when, items, total, customerName, addr, payment, voucher, orderId, scratch, profileId){
