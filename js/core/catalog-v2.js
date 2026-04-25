@@ -829,6 +829,29 @@
         return { ok: true, count: MILKSHAKE_FLAVORS.length + 1 };
     }
 
+    // Limpeza: remove milkshakes inativos do seed antigo (Ninho com Morango,
+    // Nutella) que ficaram visíveis no admin mesmo desativados.
+    // Idempotente — gate __inactiveMilkshakesCleanedV1.
+    function cleanupInactiveMilkshakesV1(fid) {
+        const d = load(fid);
+        if (d.__inactiveMilkshakesCleanedV1) return { skipped: true, reason: 'já limpo' };
+
+        const before = d.produtos.length;
+        d.produtos = d.produtos.filter(p => {
+            // Remove APENAS os milkshakes inativos cujo nome bate com o seed antigo
+            // (preserva qualquer customização do franqueado)
+            if (p.categoriaId !== 'cat_milkshake') return true;
+            if (p.active !== false) return true;  // mantém os ativos (novos sabores)
+            const oldSeedNames = ['Milkshake Ninho com Morango', 'Milkshake Nutella'];
+            return !oldSeedNames.includes(p.name);
+        });
+        const removed = before - d.produtos.length;
+
+        d.__inactiveMilkshakesCleanedV1 = true;
+        save(fid, d);
+        return { ok: true, removed: removed };
+    }
+
     // Wrap os saves pra sincronizar legacy automaticamente
     const _origSaveProduto = saveProduto;
     function saveProdutoAndSync(fid, p) {
@@ -862,6 +885,7 @@
             try { results.buffet = migrateBuffetV1(fid); } catch(e) { results.buffet_err = e.message; }
             try { results.milkshakeSizes = migrateMilkshakeSizesV1(fid); } catch(e) { results.milkshakeSizes_err = e.message; }
             try { results.milkshakeFlavors = migrateMilkshakeFlavorsV1(fid); } catch(e) { results.milkshakeFlavors_err = e.message; }
+            try { results.cleanupInactive = cleanupInactiveMilkshakesV1(fid); } catch(e) { results.cleanupInactive_err = e.message; }
             return results;
         } catch(e) { return { error: e.message }; }
     }
@@ -890,6 +914,7 @@
         migrateBuffetV1,
         migrateMilkshakeSizesV1,
         migrateMilkshakeFlavorsV1,
+        cleanupInactiveMilkshakesV1,
         applyAllMigrations,
         syncToLegacy,
         autoSyncIfNeeded,
