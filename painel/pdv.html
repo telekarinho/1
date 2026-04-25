@@ -47,7 +47,9 @@
         .cart-cust { padding: 0 14px 6px; display: none; flex-shrink: 0; }
         .cart-cust.show { display: block; }
         .cart-cust input { width: 100%; padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 11px; margin-bottom: 4px; }
-        .cart-items { flex: 1; overflow-y: auto; padding: 6px 14px; min-height: 0; }
+        /* cart-items absorve o que sobra. min-height:0 essencial pro flex
+           respeitar cart-foot e nunca esconder os botões finais. */
+        .cart-items { flex: 1 1 auto; overflow-y: auto; padding: 6px 14px; min-height: 60px; }
         .ci { display: flex; align-items: center; gap: 6px; padding: 6px 0; border-bottom: 1px solid #f5f5f5; font-size: 11px; }
         .ci-info { flex: 1; }
         .ci-name { font-weight: 700; font-size: 11px; }
@@ -58,14 +60,23 @@
         .ci-qty span { font-weight: 700; min-width: 14px; text-align: center; }
         .ci-rm { background: none; border: none; color: #e53935; cursor: pointer; font-size: 14px; }
         .cart-empty { text-align: center; padding: 30px 14px; color: #bbb; font-size: 12px; }
-        .cart-foot { border-top: 3px solid #6C63FF; padding: 8px 14px; background: #f8f5ff; flex-shrink: 0; }
-        .cart-total { display: flex; justify-content: space-between; font-size: 18px; font-weight: 800; margin-bottom: 4px; }
-        .cart-total .tv { color: #E91E63; font-size: 20px; }
+        /* cart-foot SEMPRE visível — sticky no bottom + compactado */
+        .cart-foot {
+            border-top: 3px solid #6C63FF;
+            padding: 6px 12px 8px;
+            background: #f8f5ff;
+            flex-shrink: 0;
+            position: sticky; bottom: 0; z-index: 10;
+            box-shadow: 0 -2px 12px rgba(108,99,255,.10);
+        }
+        .cart-total { display: flex; justify-content: space-between; align-items: baseline; font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+        .cart-total .tv { color: #E91E63; font-size: 18px; }
         .cart-total .weight-info { font-size: 10px; color: #999; font-weight: 400; text-align: right; display: block; }
         .cart-nf { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; font-size: 11px; }
         .cart-nf input[type=text] { flex: 1; padding: 3px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 10px; display: none; }
-        .cart-acts { display: grid; grid-template-columns: 40px 40px 1fr 1fr; gap: 4px; }
-        .cart-acts .btn { padding: 10px 6px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; }
+        #paymentMethod { padding: 6px 8px !important; font-size: 12px !important; margin-bottom: 6px !important; }
+        .cart-acts { display: grid; grid-template-columns: 38px 38px 1fr 1fr; gap: 4px; }
+        .cart-acts .btn { padding: 12px 6px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; }
         .bf { background: #4CAF50; color: #fff; }
         .bf:hover { background: #388E3C; }
         .bp { background: #e3f2fd; color: #1565C0; }
@@ -385,10 +396,15 @@
             </div>
             <select id="paymentMethod" style="margin-bottom:8px;width:100%;padding:8px;border-radius:8px;border:1px solid #ccc;font-family:inherit"><option value="Dinheiro">Dinheiro</option><option value="Pix">Pix</option><option value="Débito">Débito</option><option value="Crédito">Crédito</option></select>
             <div class="cart-acts">
-                <button class="btn bc" onclick="clearCart()">🗑️</button>
-                <button class="btn bp" onclick="printOrder()">🖨️</button>
-                <button class="btn" style="flex:1;background:#FF9800;color:#fff;" onclick="openTab()">📋 Conta Aberta</button>
-                <button class="btn bf" onclick="finishOrder()">✅ Fechar</button>
+                <button class="btn bc" onclick="clearCart()" title="Limpar carrinho (Esc)">🗑️</button>
+                <button class="btn bp" onclick="printOrder()" title="Imprimir (F2)">🖨️</button>
+                <button class="btn" style="background:#FF9800;color:#fff;" onclick="openTab()" title="Conta Aberta (F3)">📋 Conta Aberta</button>
+                <button class="btn bf" onclick="finishOrder()" title="Fechar pedido (F4)">✅ Fechar</button>
+            </div>
+            <div style="display:flex;justify-content:center;gap:10px;margin-top:6px;font-size:9px;color:#999;font-weight:600;letter-spacing:.3px">
+                <span title="Imprimir">F2 · imprimir</span>
+                <span title="Conta aberta">F3 · conta</span>
+                <span title="Fechar pedido">F4 · fechar</span>
             </div>
         </div>
     </div>
@@ -2924,9 +2940,24 @@
             document.exitFullscreen().catch(function(){});
         }
     };
-    // F11 shortcut
+    // Atalhos de teclado pro PDV — F2 imprimir · F3 conta aberta · F4 fechar · Esc limpar · F11 fullscreen
     document.addEventListener('keydown',function(e){
-        if(e.key==='F11'){e.preventDefault();toggleFullscreen()}
+        // Não interfere quando user tá digitando em input/textarea/select
+        var tag = (e.target && e.target.tagName) || '';
+        var isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+        if (isTyping && e.key !== 'F11' && !e.key.match(/^F[2-4]$/)) return;
+
+        if(e.key==='F11'){ e.preventDefault(); toggleFullscreen(); return; }
+        if(e.key==='F2'){  e.preventDefault(); if(typeof printOrder==='function') printOrder(); return; }
+        if(e.key==='F3'){  e.preventDefault(); if(typeof openTab==='function') openTab(); return; }
+        if(e.key==='F4'){  e.preventDefault(); if(typeof finishOrder==='function') finishOrder(); return; }
+        // Esc só limpa carrinho se não tem modal aberto e não tá digitando
+        if(e.key==='Escape' && !isTyping) {
+            var anyModalOpen = document.querySelector('.modal-bg.open');
+            if(!anyModalOpen && cart && cart.length && typeof clearCart==='function') {
+                if(confirm('Limpar carrinho?')) clearCart();
+            }
+        }
     });
 
     // === VOUCHER MODAL ===
