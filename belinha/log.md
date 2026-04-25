@@ -1,5 +1,49 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #32 — 2026-04-25
+
+**Área:** Conversão — Playbook de Reativação WhatsApp
+
+**Contexto:** Dia da inauguração (25/04/2026). Loja abriu às 14h. Os primeiros clientes foram atendidos hoje — mas sem um playbook de reativação, o operador não sabia como reengajar esses clientes nos dias seguintes. O `whatsapp-funil.md` existente só cobria o atendimento inbound (cliente chama → resposta). Faltava o fluxo outbound: cliente comprou, sumiu → o que fazer?
+
+**O que analisou:**
+- `belinha/content/whatsapp-funil.md` cobre recepção e cardápio, mas não reativação
+- Nenhum arquivo existente tinha templates D+1, D+7, D+14, D+30
+- Estratégia confirmada (ciclo #31 já fez upsell banner; próxima prioridade = retenção)
+- 8 templates distintos necessários para cobrir toda a jornada do cliente silencioso
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/whatsapp-reativacao.md` | CRIADO — 8 templates de reativação + tabela de etiquetas WA Business + horários ideais de envio |
+| `belinha/content/whatsapp-funil.md` | +link de referência para `whatsapp-reativacao.md` no rodapé |
+
+**Commit:** `7f14e7d`
+
+**Templates incluídos:**
+1. Boas-vindas pós-compra (mesmo dia / D+1)
+2. Reativação D+7 (com pontos no cartão)
+3. Reativação D+7 (sem cartão ativado)
+4. Reativação D+14 (com CTA lista de novidades)
+5. Reativação D+30 (cupom surpresa R$5 — última tentativa)
+6. Lembrete fidelidade (8–9 selos, 1–2 da meta)
+7. Upsell exclusivos Muffato (buffet açaí, milkshake, picolés, chocolates)
+8. Promoção sábado (broadcast semanal)
+9. Agradecimento por review Google (+ brinde surpresa)
+
+**Impacto esperado:**
+- Operador tem script pronto → zero fricção para reengajar clientes silenciosos
+- Cartão fidelidade tem gatilho de lembrete (8–9 selos) → aumenta conversão do prêmio
+- Template D+30 com cupom de R$5 = última tentativa estruturada antes de arquivar contato
+
+**Próximo passo sugerido:**
+- Ciclo #33: Conteúdo semana 4 pós-inauguração (19–25/05) — captions + roteiro reels
+- Ciclo #34: Verificar se `potinho-ninho-londrina.html` indexou — adicionar link interno de `index.html` se necessário
+- Ciclo #35: Auto-aprimoramento — reler log ciclos 30–34, ajustar rotação
+
+---
+
 ## Ciclo #31 — 2026-04-25
 
 **Área:** Conversão — Upsell Banner Exclusivos Muffato Londrina
