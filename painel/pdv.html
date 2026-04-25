@@ -19,9 +19,60 @@
         .pdv-layout { display: grid; grid-template-columns: 1fr 380px; height: calc(100vh - 44px); }
 
         /* Header */
-        .pdv-header { background: linear-gradient(135deg, #6C63FF, #5A52E0); color: #fff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .pdv-header { background: linear-gradient(135deg, #6C63FF, #5A52E0); color: #fff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
         .pdv-header h1 { margin: 0; font-size: 15px; font-family: 'Baloo 2', cursive; }
         .pdv-header .btn-back { background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+
+        /* ATALHOS DE TECLADO no header — destaque visual + clicáveis (também funcionam como botão) */
+        .pdv-shortcuts {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .pdv-shortcuts .ks {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.16);
+            border: 1px solid rgba(255,255,255,0.28);
+            padding: 5px 10px 5px 6px;
+            border-radius: 22px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            transition: background .12s, transform .08s;
+            color: #fff;
+            white-space: nowrap;
+        }
+        .pdv-shortcuts .ks:hover { background: rgba(255,255,255,0.28); }
+        .pdv-shortcuts .ks:active { transform: scale(.96); }
+        .pdv-shortcuts .ks kbd {
+            font-family: 'Nunito', sans-serif;
+            background: #fff;
+            color: #5A52E0;
+            border-radius: 14px;
+            padding: 3px 9px;
+            font-size: 11px;
+            font-weight: 900;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2) inset, 0 1px 2px rgba(0,0,0,0.15);
+            min-width: 24px;
+            text-align: center;
+        }
+        .pdv-shortcuts .ks-label { letter-spacing: 0.3px; }
+        .pdv-shortcuts .ks-print kbd { color: #1565C0; }
+        .pdv-shortcuts .ks-tab kbd { color: #E65100; }
+        .pdv-shortcuts .ks-finish { background: rgba(76,175,80,0.32); border-color: rgba(76,175,80,0.55); }
+        .pdv-shortcuts .ks-finish:hover { background: rgba(76,175,80,0.5); }
+        .pdv-shortcuts .ks-finish kbd { color: #2E7D32; }
+
+        /* Esconde labels (só mostra teclas) em viewport bem pequeno pra não quebrar */
+        @media (max-width: 720px) {
+            .pdv-shortcuts .ks { padding: 5px 8px; }
+            .pdv-shortcuts .ks-label { display: none; }
+        }
 
         /* Products area */
         .pdv-products { padding: 12px; overflow-y: auto; height: 100%; }
@@ -393,6 +444,18 @@
     <div style="display:flex;align-items:center;gap:10px;">
         <button class="btn-back" onclick="window.location.href='pedidos.html'">← Voltar</button>
         <h1>🏪 PDV — <span id="pdvStore">MilkyPot</span></h1>
+    </div>
+    <!-- ATALHOS DE TECLADO — sempre visíveis no header (operador encontra rápido) -->
+    <div class="pdv-shortcuts" id="pdvShortcuts" aria-label="Atalhos de teclado">
+        <span class="ks ks-print" onclick="if(typeof printOrder==='function')printOrder()" title="Imprimir pedido">
+            <kbd>F2</kbd><span class="ks-label">Imprimir</span>
+        </span>
+        <span class="ks ks-tab" onclick="if(typeof openTab==='function')openTab()" title="Salvar como conta aberta">
+            <kbd>F3</kbd><span class="ks-label">Conta</span>
+        </span>
+        <span class="ks ks-finish" onclick="if(typeof finishOrder==='function')finishOrder()" title="Fechar pedido">
+            <kbd>F4</kbd><span class="ks-label">Fechar</span>
+        </span>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end" id="pdvStatusRow">
         <!-- Status compacto do caixa + meta + checklist (preenchido por JS) -->
@@ -785,22 +848,22 @@
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v54"></script>
-<script src="../js/core/motivacional.js?v=mp-v54"></script>
-<script src="../js/core/caixa.js?v=mp-v54"></script>
-<script src="../js/core/financas.js?v=mp-v54"></script>
-<script src="../js/core/onboarding.js?v=mp-v54"></script>
-<script src="../js/core/units.js?v=mp-v54"></script>
-<script src="../js/core/error-tracking.js?v=mp-v54"></script>
-<script src="../js/core/recipes.js?v=mp-v54"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v54"></script>
-<script src="../js/core/offline-queue.js?v=mp-v54"></script>
-<script src="../js/core/pix.js?v=mp-v54"></script>
-<script src="../js/core/nfce.js?v=mp-v54"></script>
-<script src="../js/core/printer.js?v=mp-v54"></script>
+<script src="../js/core/adminconfig.js?v=mp-v55"></script>
+<script src="../js/core/motivacional.js?v=mp-v55"></script>
+<script src="../js/core/caixa.js?v=mp-v55"></script>
+<script src="../js/core/financas.js?v=mp-v55"></script>
+<script src="../js/core/onboarding.js?v=mp-v55"></script>
+<script src="../js/core/units.js?v=mp-v55"></script>
+<script src="../js/core/error-tracking.js?v=mp-v55"></script>
+<script src="../js/core/recipes.js?v=mp-v55"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v55"></script>
+<script src="../js/core/offline-queue.js?v=mp-v55"></script>
+<script src="../js/core/pix.js?v=mp-v55"></script>
+<script src="../js/core/nfce.js?v=mp-v55"></script>
+<script src="../js/core/printer.js?v=mp-v55"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v54"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v54"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v55"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v55"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
