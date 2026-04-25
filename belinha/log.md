@@ -1,5 +1,39 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #36 — 2026-04-25
+
+**Área:** Conteúdo marketing — Semana 5 pós-inauguração (17–23/05/2026)
+
+**Contexto:** ~3 semanas após inauguração. Prioridade: reativar clientes de inauguração que não retornaram, colher reviews Google Maps, celebrar "1 mês de MilkyPot", nutrir cartão fidelidade.
+
+**O que analisou:**
+- Log ciclo #35 e estrategia.md: próximo passo indicado era semana 5
+- Conteúdo semanas 1–4 já cobrem lançamento e primeiras semanas; semana 5 é inflexão de fidelização
+- Gap identificado: nenhum template de reativação D+21 existia no repositório
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana5.md` | CRIADO — 7 dias de conteúdo (Dom–Sáb), 2 reels com roteiro completo, sequências de stories, captions Instagram, 2 templates WhatsApp (reativação D+21 + solicitação de review), KPIs da semana |
+
+**Commit:** `ea9a73c`
+
+**Destaques do conteúdo:**
+- **Dom 17/05:** Celebração "1 mês" com enquete sabor favorito
+- **Ter 19/05:** Reel 15s com roteiro "1 mês de MilkyPot"
+- **Qua 20/05:** Post de social proof + CTA review Google Maps (crítico para aggregateRating)
+- **Sex 22/05:** Reel 30s "Por que o MilkyPot é diferente?" — edutainment + diferenciais vs iFood
+- **Sáb 23/05:** Promoção "topping extra grátis" para gerar tráfego no fim de semana
+
+**Próximo passo sugerido:**
+- Ciclo #37: Performance mobile `index.html` — verificar LCP e CLS via PageSpeed Insights
+- Ciclo #38: Link `cartao-fidelidade.html` → `potinho-ninho-londrina.html` + testar Schema.org Rich Results
+- Quando operador confirmar ≥3 reviews Google: ativar `aggregateRating` em `index.html`
+
+---
+
+
 ## Ciclo #34 — 2026-04-25
 
 **Área:** Conteúdo acionável — Semana 4 pós-inauguração (10–16/05/2026)
