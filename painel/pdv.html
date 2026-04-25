@@ -621,6 +621,8 @@
                         if (CatalogV2.migrateBuffetV1) CatalogV2.migrateBuffetV1(fid);
                         // Migração única: milkshakes ganham tamanhos P/M/G com preços oficiais
                         if (CatalogV2.migrateMilkshakeSizesV1) CatalogV2.migrateMilkshakeSizesV1(fid);
+                        // Migração única: 17 sabores virais + 1 premium Capitão Açaí
+                        if (CatalogV2.migrateMilkshakeFlavorsV1) CatalogV2.migrateMilkshakeFlavorsV1(fid);
                         CatalogV2.syncToLegacy(fid);
                     }
                 }
@@ -736,15 +738,31 @@
             h.textContent = title;
             container.appendChild(h);
 
+            // Ordena por order (campo de _v2 syncToLegacy) — premium fica no fim
+            const sorted = items.slice().sort((a, b) => (a.order || 999) - (b.order || 999));
+
             const grid = document.createElement('div');
             grid.className = 'pgrid';
-            items.forEach(it => {
+            sorted.forEach(it => {
                 const div = document.createElement('div');
                 div.className = 'pitem ' + (it.isHighlight ? 'pop' : '');
+                // Badge premium / promo
+                const badgeHtml = it.badge
+                    ? `<div style="position:absolute;top:6px;right:6px;background:linear-gradient(135deg,#FFB300,#FF6F00);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;letter-spacing:.3px">${it.badge}</div>`
+                    : '';
+                // Preço: "a partir de" se tem variantes
+                const priceLabel = it.tipoVenda === 'por_peso'
+                    ? 'R$ ' + it.price.toFixed(2) + '/kg'
+                    : (it.price
+                        ? (it.aPartirDe ? '<span style="font-size:9px;color:#999;font-weight:600;display:block;line-height:1">a partir de</span>R$ ' + it.price.toFixed(2)
+                                        : 'R$ ' + it.price.toFixed(2))
+                        : 'Ajustar');
+                div.style.position = 'relative';
                 div.innerHTML = `
+                    ${badgeHtml}
                     <div class="pe">${it.emoji || '🍨'}</div>
                     <div class="pn">${it.name}</div>
-                    <div class="pp">${it.tipoVenda === 'por_peso' ? 'R$ '+it.price.toFixed(2)+'/kg' : (it.price ? 'R$ '+it.price.toFixed(2) : 'Ajustar')}</div>
+                    <div class="pp">${priceLabel}</div>
                 `;
                 div.onclick = () => this.handleProductClick(it);
                 grid.appendChild(div);

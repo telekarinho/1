@@ -468,6 +468,9 @@
                     }
                 }
 
+                // Detecta se tem variantes (mostra "a partir de" no card)
+                const hasVariantes = p.variantes && p.variantes.length > 1;
+
                 return {
                     id: p.id,
                     name: p.name,
@@ -482,6 +485,9 @@
                     canalVenda: p.canal || 'ambos',
                     modoMontagem: 'montado',
                     commissionRate: 5,
+                    badge: p.badge || '',           // ex: 'PREMIUM' no Capitão Açaí
+                    aPartirDe: hasVariantes,        // mostra "a partir de R$ X" no card
+                    order: typeof p.order === 'number' ? p.order : 999,
                     // Receita para dedução de estoque
                     receita: (p.custos?.insumos || [])
                         .filter(r => r.insumoId && r.qty)
@@ -674,6 +680,155 @@
         return { ok: true, count: milkshakes.length };
     }
 
+    // Cardápio oficial MilkyPot — 17 sabores virais + 1 premium
+    // Nomes e copies pensadas pra Instagram/TikTok (Geração Z, Londrina)
+    const MILKSHAKE_FLAVORS = [
+        { name: 'Amora Apaixonada',          emoji: '💜', cInsumos: 4.80, cAdd: 1.20,
+          desc: 'Roxa, doce e teimosa — que nem aquele crush que sua mente não desliga. Amora chegou pintando seu feed de roxo. #AmoraVibe' },
+        { name: 'Blue Ice — Crush Gelado',   emoji: '🧊', cInsumos: 4.50, cAdd: 1.20,
+          desc: 'Azul que nem o céu de Londrina ao entardecer. Sabor surpresa, frescor de praia e foto que viraliza antes do primeiro gole.' },
+        { name: 'Morango Romântico',         emoji: '🍓', cInsumos: 4.80, cAdd: 1.20,
+          desc: 'O clássico que sempre volta — porque amor verdadeiro não envelhece. Cremosinho, vermelhinho, abraço em forma de milkshake.' },
+        { name: 'Açaí Liberdade',            emoji: '🟣', cInsumos: 5.20, cAdd: 1.20,
+          desc: 'Bowl de açaí virou líquido. Energia da Amazônia, doçura de Londrina, canudinho na boca. O açaí dos preguiçosos felizes.' },
+        { name: 'Caramelo Derretido',        emoji: '🍯', cInsumos: 4.60, cAdd: 1.20,
+          desc: 'Caramelo que escorre devagar — igual beijo demorado de quinta à noite. Dourado, gostoso e impossível de resistir.' },
+        { name: 'Limão Suíço Refresca-Tudo', emoji: '🍋', cInsumos: 4.40, cAdd: 1.20,
+          desc: 'Azedinho na medida, gelado no ponto. Pra quando o sol de Londrina aperta e você precisa de um respiro com graça.' },
+        { name: 'Chocolate Apaixonante',     emoji: '🍫', cInsumos: 5.00, cAdd: 1.20,
+          desc: 'Bombom líquido. O abraço quente do chocolate com a frescura do milkshake. Conforto que cabe num copo.' },
+        { name: 'Uva da Vovó',               emoji: '🍇', cInsumos: 4.60, cAdd: 1.20,
+          desc: 'Aquela uva roxinha do quintal da vovó, mas crescida e bem-vestida. Suco de infância na versão Geração TikTok.' },
+        { name: 'Maracujá Calmaria',         emoji: '💛', cInsumos: 4.70, cAdd: 1.20,
+          desc: 'Tropical, levemente azedinho, totalmente relaxante. Maracujá chegou pra desacelerar seu rolê com um gole zen.' },
+        { name: 'Dentadura Doidinha',        emoji: '😬', cInsumos: 4.50, cAdd: 1.20,
+          desc: 'O milkshake colorido que deixa sua boca igual desenho animado. Diversão visual + sabor explosivo. Foto obrigatória.' },
+        { name: 'Cookies Snow',              emoji: '🤍', cInsumos: 5.50, cAdd: 1.30,
+          desc: 'Branquinho, cremoso, com pedaços de cookie crocante. Tipo neve em Londrina: raríssima, mas gostosa demais.' },
+        { name: 'Ninho da Vovó',             emoji: '🥛', cInsumos: 5.20, cAdd: 1.20,
+          desc: 'Cremosidade de berço. Aquele cheirinho que lembra colo, pé no sofá e desenho da Disney no domingo de manhã.' },
+        { name: 'Pistache Esmeralda',        emoji: '🟢', cInsumos: 6.20, cAdd: 1.30,
+          desc: 'Verdinho gourmet, sofisticado, crocante. Pistache premium com clima italiano — pra quem gosta de chique no copo.' },
+        { name: 'Peanut Heaven',             emoji: '🥜', cInsumos: 5.50, cAdd: 1.30,
+          desc: 'Cremoso, salgadinho, viciante. O peanut butter virou milkshake — e a vida nunca mais foi a mesma.' },
+        { name: 'Cereja Beijada',            emoji: '🍒', cInsumos: 4.80, cAdd: 1.20,
+          desc: 'Vermelhinha, brincalhona, top de bolo. A cereja que coroou seu milkshake — e provavelmente seu dia.' },
+        { name: 'Ameixa Roxinha',            emoji: '🍑', cInsumos: 4.80, cAdd: 1.20,
+          desc: 'Roxa, polpuda, exótica. Pra quem quer fugir do óbvio e descobrir um sabor novo no meio do caminho.' },
+        { name: 'Banana Caramelizada',       emoji: '🍌', cInsumos: 4.60, cAdd: 1.20,
+          desc: 'Banana douradinha, queimadinha na medida, beijada pelo caramelo. Doçura de fazenda em copo gelado.' }
+    ];
+
+    // Premium: Capitão Açaí — flagship do cardápio
+    const MILKSHAKE_PREMIUM_ACAI = {
+        name: 'Capitão Açaí · Premium',
+        emoji: '👑',
+        desc: 'O bowl gigante virou shake gigante. Açaí da Amazônia, granola crocante, banana caramelizada, leite condensado e raspas de chocolate. Não é só um milkshake — é a coroa do cardápio MilkyPot. 600ml de experiência pura.',
+        cInsumos: 9.50,
+        cAdd: 2.50
+    };
+
+    // Migração: substitui milkshakes seed pelos 17 sabores oficiais + 1 premium
+    function migrateMilkshakeFlavorsV1(fid) {
+        const d = load(fid);
+        if (!d.produtos.length) return { skipped: true, reason: 'sem produtos' };
+        if (d.__milkshakeFlavorsMigratedV1) return { skipped: true, reason: 'já migrado' };
+
+        // Desativa milkshakes antigos (preserva histórico — não deleta)
+        d.produtos.forEach(p => {
+            if (p.categoriaId === 'cat_milkshake') p.active = false;
+        });
+
+        // Helper: cria variantes P/M/G padrão (com promo P R$9,99)
+        function makeVariantesPMG(baseCusto) {
+            return [
+                { id: newId('var'), name: 'P (250ml)', tipo: 'copo', gramas: 250,
+                  custoExtra: Math.round(baseCusto * 0.7 * 100) / 100,
+                  precoLoja: 9.99, precoLojaOriginal: 14.99,
+                  precoDelivery: 11.49, precoIfood: 12.99,
+                  promoAtivo: true, promoLabel: 'Promoção Inauguração' },
+                { id: newId('var'), name: 'M (400ml)', tipo: 'copo', gramas: 400,
+                  custoExtra: Math.round(baseCusto * 1.0 * 100) / 100,
+                  precoLoja: 17.99, precoDelivery: 19.99, precoIfood: 22.99 },
+                { id: newId('var'), name: 'G (500ml)', tipo: 'copo', gramas: 500,
+                  custoExtra: Math.round(baseCusto * 1.25 * 100) / 100,
+                  precoLoja: 19.99, precoDelivery: 22.99, precoIfood: 25.99 }
+            ];
+        }
+
+        const allTopIds = (d.toppings || []).map(t => t.id);
+
+        // Insere os 17 sabores
+        MILKSHAKE_FLAVORS.forEach((f, idx) => {
+            const custoTotal = f.cInsumos + f.cAdd;
+            d.produtos.push({
+                id: newId('prod'),
+                categoriaId: 'cat_milkshake',
+                name: f.name,
+                desc: f.desc,
+                midia: { fotos: [], video: '', emoji: f.emoji },
+                custos: {
+                    insumos: [],
+                    custoInsumos: f.cInsumos,
+                    custoAdicional: { embalagem: f.cAdd, energia: 0, mao_obra: 0, outros: 0 },
+                    custoTotal: custoTotal
+                },
+                precos: {
+                    loja:     { recomendado: 9.99,  real: 9.99 },
+                    delivery: { recomendado: 11.49, real: 11.49 },
+                    ifood:    { recomendado: 12.99, real: 12.99 }
+                },
+                kits: [],
+                variantes: makeVariantesPMG(custoTotal),
+                toppingsIds: allTopIds,
+                buffet: { ativo: false, precoPorKg: 0, toppingsInclusos: [] },
+                canal: 'ambos',
+                active: true,
+                order: idx + 1,
+                createdAt: new Date().toISOString()
+            });
+        });
+
+        // Premium: Capitão Açaí — 600ml único, preço diferenciado
+        const premium = MILKSHAKE_PREMIUM_ACAI;
+        const custoPremium = premium.cInsumos + premium.cAdd;
+        d.produtos.push({
+            id: newId('prod'),
+            categoriaId: 'cat_milkshake',
+            name: premium.name,
+            desc: premium.desc,
+            midia: { fotos: [], video: '', emoji: premium.emoji },
+            custos: {
+                insumos: [],
+                custoInsumos: premium.cInsumos,
+                custoAdicional: { embalagem: premium.cAdd, energia: 0, mao_obra: 0, outros: 0 },
+                custoTotal: custoPremium
+            },
+            precos: {
+                loja:     { recomendado: 24.99, real: 24.99 },
+                delivery: { recomendado: 28.99, real: 28.99 },
+                ifood:    { recomendado: 32.99, real: 32.99 }
+            },
+            kits: [],
+            variantes: [
+                { id: newId('var'), name: 'Premium (600ml)', tipo: 'copo', gramas: 600,
+                  custoExtra: custoPremium,
+                  precoLoja: 24.99, precoDelivery: 28.99, precoIfood: 32.99 }
+            ],
+            toppingsIds: allTopIds,
+            buffet: { ativo: false, precoPorKg: 0, toppingsInclusos: [] },
+            canal: 'ambos',
+            active: true,
+            order: 100,
+            badge: 'PREMIUM',
+            createdAt: new Date().toISOString()
+        });
+
+        d.__milkshakeFlavorsMigratedV1 = true;
+        save(fid, d);
+        return { ok: true, count: MILKSHAKE_FLAVORS.length + 1 };
+    }
+
     // Wrap os saves pra sincronizar legacy automaticamente
     const _origSaveProduto = saveProduto;
     function saveProdutoAndSync(fid, p) {
@@ -716,6 +871,7 @@
         seedMilkyPot: seedMilkyPotAndSync,
         migrateBuffetV1,
         migrateMilkshakeSizesV1,
+        migrateMilkshakeFlavorsV1,
         syncToLegacy,
         autoSyncIfNeeded,
         newId,
