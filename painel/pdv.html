@@ -785,22 +785,22 @@
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v53"></script>
-<script src="../js/core/motivacional.js?v=mp-v53"></script>
-<script src="../js/core/caixa.js?v=mp-v53"></script>
-<script src="../js/core/financas.js?v=mp-v53"></script>
-<script src="../js/core/onboarding.js?v=mp-v53"></script>
-<script src="../js/core/units.js?v=mp-v53"></script>
-<script src="../js/core/error-tracking.js?v=mp-v53"></script>
-<script src="../js/core/recipes.js?v=mp-v53"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v53"></script>
-<script src="../js/core/offline-queue.js?v=mp-v53"></script>
-<script src="../js/core/pix.js?v=mp-v53"></script>
-<script src="../js/core/nfce.js?v=mp-v53"></script>
-<script src="../js/core/printer.js?v=mp-v53"></script>
+<script src="../js/core/adminconfig.js?v=mp-v54"></script>
+<script src="../js/core/motivacional.js?v=mp-v54"></script>
+<script src="../js/core/caixa.js?v=mp-v54"></script>
+<script src="../js/core/financas.js?v=mp-v54"></script>
+<script src="../js/core/onboarding.js?v=mp-v54"></script>
+<script src="../js/core/units.js?v=mp-v54"></script>
+<script src="../js/core/error-tracking.js?v=mp-v54"></script>
+<script src="../js/core/recipes.js?v=mp-v54"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v54"></script>
+<script src="../js/core/offline-queue.js?v=mp-v54"></script>
+<script src="../js/core/pix.js?v=mp-v54"></script>
+<script src="../js/core/nfce.js?v=mp-v54"></script>
+<script src="../js/core/printer.js?v=mp-v54"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v53"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v53"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v54"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v54"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -2287,13 +2287,59 @@
         var arr = DataStore.get(key) || [];
         arr.push(scratch);
         DataStore.set(key, arr);
-        // Also sync to firestore for cross-device access
+        // Marca como pendente de sync — backfillScratchesToFirestore retoma se falhar
+        var pendingKey = 'scratches_pending_sync_' + fid;
+        var pending = DataStore.get(pendingKey) || [];
+        if (pending.indexOf(scratch.code) === -1) {
+            pending.push(scratch.code);
+            DataStore.set(pendingKey, pending);
+        }
+        // Sync to firestore (cross-device redemption)
         try {
             if(typeof firebase !== 'undefined' && firebase.firestore){
-                firebase.firestore().collection('scratches').doc(scratch.code).set(scratch);
+                firebase.firestore().collection('scratches').doc(scratch.code).set(scratch)
+                    .then(function(){
+                        // Sucesso: remove da lista de pending
+                        var p = DataStore.get(pendingKey) || [];
+                        var idx = p.indexOf(scratch.code);
+                        if (idx !== -1) { p.splice(idx, 1); DataStore.set(pendingKey, p); }
+                    })
+                    .catch(function(e){ console.warn('[Raspinha] sync falhou (vai re-tentar onload):', e); });
             }
         } catch(e) { console.warn('Scratch firestore save:', e); }
     }
+
+    // Backfill: re-tenta enviar pra Firestore raspinhas que falharam.
+    // Roda no onload do PDV — pega tudo que ficou pendente em sessões anteriores.
+    function backfillScratchesToFirestore() {
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
+        var pendingKey = 'scratches_pending_sync_' + fid;
+        var pending = DataStore.get(pendingKey) || [];
+        if (!pending.length) return;
+        var all = DataStore.get('scratches_' + fid) || [];
+        console.info('[Raspinha] Backfill: re-tentando', pending.length, 'raspinha(s) não-sincronizadas');
+        var fs = firebase.firestore();
+        var done = [];
+        pending.forEach(function(code){
+            var s = all.find(function(x){ return x.code === code; });
+            if (!s) { done.push(code); return; } // doc local sumiu, não tem como recuperar
+            fs.collection('scratches').doc(code).set(s)
+                .then(function(){
+                    var p = DataStore.get(pendingKey) || [];
+                    var idx = p.indexOf(code);
+                    if (idx !== -1) { p.splice(idx, 1); DataStore.set(pendingKey, p); }
+                    console.info('[Raspinha] Backfill OK:', code);
+                })
+                .catch(function(e){ console.warn('[Raspinha] Backfill falhou', code, e); });
+        });
+        if (done.length) {
+            var p = DataStore.get(pendingKey) || [];
+            var p2 = p.filter(function(c){ return done.indexOf(c) === -1; });
+            DataStore.set(pendingKey, p2);
+        }
+    }
+    // Roda 2s após carregar (dá tempo de DataStore + Auth iniciarem)
+    setTimeout(function(){ try { backfillScratchesToFirestore(); } catch(e){ console.warn('[Raspinha] backfill init:', e); } }, 2000);
 
     window.finishOrder=function(){
         if(!cart.length){toast('Adicione itens');return}
@@ -3400,9 +3446,36 @@
 
         var qrHtml = '';
         if(scratchData && scratchData.shortCode){
-            var raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratchData.shortCode);
-            qrHtml = '<div style="text-align:center;margin:4mm 0"><img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' +
-                encodeURIComponent(raspUrl) + '&ecc=M&margin=0" alt="QR Raspinha" style="width:36mm;height:36mm"></div>';
+            // Encoda o payload da raspinha INLINE no QR — funciona mesmo se Firestore
+            // estiver indisponível / sem internet / código sumido na sync.
+            // raspinha.html prioriza o payload inline (?d=...) e cai pra lookup
+            // Firestore só pra estado mutável (raspada/resgatada).
+            var inline = {
+                code: scratchData.code,
+                shortCode: scratchData.shortCode,
+                franchiseId: scratchData.franchiseId,
+                storeName: scratchData.storeName,
+                prizeCode: scratchData.prizeCode,
+                prizeName: scratchData.prizeName,
+                prizeDesc: scratchData.prizeDesc,
+                prizeTier: scratchData.prizeTier,
+                prizeScope: scratchData.prizeScope,
+                prizeCategoria: scratchData.prizeCategoria || null,
+                minOrder: scratchData.minOrder,
+                expiresAt: scratchData.expiresAt,
+                validityDays: scratchData.validityDays,
+                createdAt: scratchData.createdAt
+            };
+            var encodedInline = '';
+            try {
+                // base64url-safe (sem +/= que quebram em URL)
+                encodedInline = btoa(unescape(encodeURIComponent(JSON.stringify(inline))))
+                    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            } catch (e) { console.warn('[Raspinha] inline encode falhou:', e); }
+            var raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratchData.shortCode)
+                + (encodedInline ? '&d=' + encodedInline : '');
+            qrHtml = '<div style="text-align:center;margin:4mm 0"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' +
+                encodeURIComponent(raspUrl) + '&ecc=L&margin=0" alt="QR Raspinha" style="width:36mm;height:36mm"></div>';
         }
 
         var parts = text.split('[QR_CODE_PLACEHOLDER]');
