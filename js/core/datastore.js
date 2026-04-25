@@ -333,22 +333,29 @@ const DataStore = {
         });
     },
 
-    _mergePdvTabs(docId, cloudStr) {
-        if (!docId || !docId.startsWith('pdv_tabs_')) return { value: cloudStr, changed: false };
+    _isMergeableListDoc(docId) {
+        return !!docId && (
+            docId.startsWith('orders_') ||
+            docId.startsWith('pdv_tabs_')
+        );
+    },
+
+    _mergeListDoc(docId, cloudStr) {
+        if (!this._isMergeableListDoc(docId)) return { value: cloudStr, changed: false };
         try {
             const localStr = localStorage.getItem(this.PREFIX + docId);
-            const cloudTabs = cloudStr ? JSON.parse(cloudStr) : [];
-            const localTabs = localStr ? JSON.parse(localStr) : [];
-            if (!Array.isArray(cloudTabs) || !Array.isArray(localTabs)) {
+            const cloudItems = cloudStr ? JSON.parse(cloudStr) : [];
+            const localItems = localStr ? JSON.parse(localStr) : [];
+            if (!Array.isArray(cloudItems) || !Array.isArray(localItems)) {
                 return { value: cloudStr, changed: false };
             }
             const byId = {};
-            cloudTabs.concat(localTabs).forEach(tab => {
-                if (!tab || !tab.id) return;
-                const prev = byId[tab.id];
-                const tabTs = new Date(tab.updatedAt || tab.createdAt || 0).getTime();
+            cloudItems.concat(localItems).forEach(item => {
+                if (!item || !item.id) return;
+                const prev = byId[item.id];
+                const itemTs = new Date(item.updatedAt || item.createdAt || 0).getTime();
                 const prevTs = prev ? new Date(prev.updatedAt || prev.createdAt || 0).getTime() : -1;
-                if (!prev || tabTs >= prevTs) byId[tab.id] = tab;
+                if (!prev || itemTs >= prevTs) byId[item.id] = item;
             });
             const merged = Object.values(byId).sort((a, b) => {
                 return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
@@ -356,7 +363,7 @@ const DataStore = {
             const mergedStr = JSON.stringify(merged);
             return { value: mergedStr, changed: mergedStr !== cloudStr };
         } catch (e) {
-            console.warn('merge pdv_tabs ignorado:', e.message || e);
+            console.warn('merge ' + docId + ' ignorado:', e.message || e);
             return { value: cloudStr, changed: false };
         }
     },
@@ -425,12 +432,12 @@ const DataStore = {
                 try {
                     const doc = await this._db.collection('datastore').doc(docId).get();
                     if (doc.exists) {
-                        const merged = this._mergePdvTabs(docId, doc.data().value);
+                        const merged = this._mergeListDoc(docId, doc.data().value);
                         const cloudStr = merged.value;
                         localStorage.setItem(this.PREFIX + docId, cloudStr);
                         if (merged.changed) this._writeToCloud(docId, JSON.parse(cloudStr));
                         synced++;
-                    } else if (docId.startsWith('pdv_tabs_')) {
+                    } else if (this._isMergeableListDoc(docId)) {
                         const localStr = localStorage.getItem(this.PREFIX + docId);
                         if (localStr) this._writeToCloud(docId, JSON.parse(localStr));
                     }
@@ -465,7 +472,7 @@ const DataStore = {
                     self._db.collection('datastore').doc(docId).onSnapshot(doc => {
                         if (!doc.exists) return;
                         try {
-                            const merged = self._mergePdvTabs(docId, doc.data().value);
+                            const merged = self._mergeListDoc(docId, doc.data().value);
                             const cloudStr = merged.value;
                             const localStr = localStorage.getItem(self.PREFIX + docId);
                             if (localStr !== cloudStr) {
@@ -498,13 +505,13 @@ const DataStore = {
                         try {
                             const doc = await self._db.collection('datastore').doc(docId).get();
                             if (!doc.exists) {
-                                if (docId.startsWith('pdv_tabs_')) {
+                                if (self._isMergeableListDoc(docId)) {
                                     const localStr = localStorage.getItem(self.PREFIX + docId);
                                     if (localStr) self._writeToCloud(docId, JSON.parse(localStr));
                                 }
                                 continue;
                             }
-                            const merged = self._mergePdvTabs(docId, doc.data().value);
+                            const merged = self._mergeListDoc(docId, doc.data().value);
                             const cloudStr = merged.value;
                             const localStr = localStorage.getItem(self.PREFIX + docId);
                             if (localStr !== cloudStr) {
@@ -544,13 +551,13 @@ const DataStore = {
                     const doc = await this._db.collection('datastore').doc(docId).get();
                     total++;
                     if (!doc.exists) {
-                        if (docId.startsWith('pdv_tabs_')) {
+                        if (this._isMergeableListDoc(docId)) {
                             const localStr = localStorage.getItem(this.PREFIX + docId);
                             if (localStr) this._writeToCloud(docId, JSON.parse(localStr));
                         }
                         continue;
                     }
-                    const merged = this._mergePdvTabs(docId, doc.data().value);
+                    const merged = this._mergeListDoc(docId, doc.data().value);
                     const cloudStr = merged.value;
                     const localStr = localStorage.getItem(this.PREFIX + docId);
                     if (localStr !== cloudStr) {
