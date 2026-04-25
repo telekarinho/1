@@ -40,27 +40,33 @@ const DataStore = {
     },
 
     // Detecta estado órfão: mp_session existe em localStorage mas firebase.auth().currentUser=null.
-    // Causa: Firebase Auth perdeu o token (clear cache, browser separado, IndexedDB corrupto).
+    // Causa: Firebase Auth perdeu o token (cache limpo, browser separado, IDB corrupto, terceiros bloqueando).
     // Sintoma: TODA query Firestore retorna 'Missing or insufficient permissions'.
-    // Sem isso, operador fica frustrado — UI mostra logado mas nada sincroniza.
+    // Self-heal: signInAnonymously() silencioso. Anônimo satisfaz isAuthenticated() em rules.
+    // Operador NUNCA precisa relogar — sistema se cura sozinho em ~1s.
     _setupAuthWatcher() {
         try {
             if (!firebase || !firebase.auth) return;
             var self = this;
-            firebase.auth().onAuthStateChanged(function (user) {
+            firebase.auth().onAuthStateChanged(async function (user) {
                 self._firebaseUser = user;
                 var hasMpSession = !!localStorage.getItem('mp_session');
                 if (hasMpSession && !user) {
-                    // Sessão MilkyPot existe mas Firebase Auth está vazio = sync NUNCA vai funcionar
-                    console.warn('🔒 DataStore: mp_session presente mas Firebase Auth vazio — sync bloqueado');
-                    if (!self._authOrphanWarned) {
+                    console.warn('🔒 mp_session sem Firebase user — tentando self-heal via signInAnonymously');
+                    var healed = await self._attemptAnonymousAuth();
+                    if (healed) {
+                        console.log('✅ Self-heal OK — sync vai funcionar via anon auth');
+                        // onAuthStateChanged vai disparar de novo com o anon user.
+                    } else if (!self._authOrphanWarned) {
+                        // Anon auth falhou (provavelmente desabilitado no Firebase Console).
+                        // Cai pro banner manual.
                         self._authOrphanWarned = true;
                         window.dispatchEvent(new CustomEvent('mp_auth_orphan', {
                             detail: { reason: 'firebase_no_user', mpSession: true }
                         }));
                     }
                 } else if (user) {
-                    // Reautenticou: re-tenta sync e flush de pending writes
+                    // Tem user (anon ou email) — sync rola
                     self._authOrphanWarned = false;
                     self._flushPendingWrites();
                     self._syncFromCloud();
@@ -68,6 +74,23 @@ const DataStore = {
             });
         } catch (e) {
             console.warn('_setupAuthWatcher error:', e);
+        }
+    },
+
+    // Self-heal: signInAnonymously cria user Firebase válido SEM credenciais.
+    // Anon user satisfaz isAuthenticated() nas rules → sync passa a funcionar.
+    // Não cobre rules que checam .uid específico, mas pra collection 'datastore' rola.
+    async _attemptAnonymousAuth() {
+        if (!firebase || !firebase.auth) return false;
+        // Evita loop: tenta no máximo 1 vez por sessão
+        if (this._anonAuthAttempted) return false;
+        this._anonAuthAttempted = true;
+        try {
+            const result = await firebase.auth().signInAnonymously();
+            return !!(result && result.user);
+        } catch (e) {
+            console.warn('signInAnonymously falhou:', e.code, e.message);
+            return false;
         }
     },
 
