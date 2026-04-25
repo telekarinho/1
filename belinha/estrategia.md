@@ -1,6 +1,6 @@
 # Belinha — Estratégia de Ciclos
 
-_Atualizado no ciclo #25 (auto-aprimoramento obrigatório a cada 5 ciclos)_
+_Atualizado no ciclo #30 (auto-aprimoramento obrigatório a cada 5 ciclos)_
 
 ---
 
@@ -84,14 +84,51 @@ A inauguração aconteceu (25/04/2026). O foco muda:
 
 ---
 
-## Próximas iniciativas sugeridas (ciclos 26–30)
+---
 
-- **Ciclo #26:** `aggregateRating` stub no Schema.org — preparar para primeiras avaliações Google
-- **Ciclo #27:** Page de produto `/potinho-ninho-londrina.html` ou `/cardapio` SEO-first (long tail local)
-- **Ciclo #28:** Pesquisa Jhoy/The Best com ação concreta — copiar ângulo de preço/produto que funciona para eles e adaptar no copy do site
-- **Ciclo #29:** Revisão de performance Core Web Vitals — LCP, CLS em mobile (especialmente `cardapio.html`)
-- **Ciclo #30:** Auto-aprimoramento — reler log completo ciclos 25–29, ajustar rotação
+## Aprendizados dos ciclos #26–29
+
+### O que gerou mais valor concreto
+1. **Landing page SEO local `potinho-ninho-londrina.html` (ciclo #27)** — página dedicada ao termo long-tail captura tráfego orgânico sem concorrer com `index.html`; impacto SEO cumulativo de longo prazo.
+2. **Benefits bar com copy anti-self-service + pesquisa Jhoy (ciclo #28)** — análise de concorrente resultou em mudança concreta no site (benefits bar), não apenas em doc. Padrão correto: pesquisa → ação imediata.
+3. **LCP mobile `cardapio.html` (ciclo #29)** — preload + fetchpriority + dimensões explícitas: melhoria técnica que afeta diretamente usuários em conexões lentas (maioria mobile).
+4. **FAQPage Schema.org + template aggregateRating (ciclo #26)** — baixo custo, pronto para ativar quando reviews chegarem; boa preparação de infraestrutura SEO.
+
+### O que foi menos eficaz
+- **Ciclo #26 (FAQPage)**: Schema.org é assíncrono — efeito real só aparece semanas após indexação. Correto fazer, mas não conta como "impacto rápido".
+- **Pesquisa Jhoy**: chegou tarde (ciclo #28). Próximas pesquisas de concorrentes devem ser sempre vinculadas a uma mudança concreta planejada antecipadamente.
+
+### Padrão consolidado
+> **Bug/fix crítico > Conversão direta > UX/Performance > Conteúdo acionável > SEO técnico > Pesquisa concorrente (só com follow-up imediato)**
 
 ---
 
-_Belinha — Ciclo #25 | 2026-04-24_
+## Novo contexto: Semana 2 pós-inauguração (a partir de 02/05/2026)
+
+| Prioridade | Área | Ação |
+|---|---|---|
+| 1 | **Reviews Google Maps** | CTA visual no site (feito ciclo #30) + stories incentivo semana 3 (feito ciclo #30) |
+| 2 | **Retenção** | Cartão fidelidade sendo usado? Operador enviando links? Monitorar. |
+| 3 | **aggregateRating** | Ativar Schema.org quando tiver ≥5 reviews reais no Google |
+| 4 | **Conteúdo recorrente** | Semana 4, 5 — criar templates que reduzam trabalho operador |
+| 5 | **Ticket médio / Upsell** | Banner de milkshake/açaí self-service no cardapio.html |
+
+---
+
+## Bloqueadores identificados
+- `aggregateRating` só pode ser ativado com reviews reais verificáveis → **dependente da operação** (não do código)
+- Google Analytics ID ainda é `G-XXXXXXXXXX` → impede medição de KPIs → **necessita autorização usuário** para substituir pelo ID real
+
+---
+
+## Próximas iniciativas sugeridas (ciclos 31–35)
+
+- **Ciclo #31:** Ativar `aggregateRating` em `index.html` se operador confirmar ≥3 reviews Google (monitorar)
+- **Ciclo #32:** Upsell banner em `cardapio.html` — milkshake / açaí self-service Muffato como topping premium
+- **Ciclo #33:** Conteúdo semana 4 pós-inauguração + template "mensagem reativação WhatsApp" para clientes silenciosos
+- **Ciclo #34:** Verificar se `potinho-ninho-londrina.html` indexou — adicionar link interno de `index.html` se não aparecer
+- **Ciclo #35:** Auto-aprimoramento — reler log ciclos 30–34, ajustar rotação e KPIs
+
+---
+
+_Belinha — Ciclo #30 | 2026-04-25_
