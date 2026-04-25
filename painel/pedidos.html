@@ -166,7 +166,7 @@
                 <div class="panel-header-right">
                     <select class="form-control" style="width:auto" id="filterDate" onchange="renderKanban()">
                         <option value="today" data-i18n="orders.filter_today">Hoje</option>
-                        <option value="week" data-i18n="orders.filter_week">Esta Semana</option>
+                        <option value="week" selected data-i18n="orders.filter_week">Esta Semana</option>
                         <option value="all" data-i18n="orders.filter_all">Todos</option>
                     </select>
                     <button class="btn btn-primary btn-sm" onclick="newWalkInOrder()">+ <span data-i18n="orders.new_order">Novo Pedido</span></button>
@@ -314,7 +314,34 @@
 
         function renderKanban() {
             const orders = getFilteredOrders();
+            const allOrders = DataStore.getCollection('orders', franchiseId);
             const statuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'entregue'];
+
+            // Aviso quando há pedidos NO STORAGE mas o filtro atual esconde — evita
+            // operador achar que sumiu (pedido feito ontem, filtro Hoje vazio)
+            const hidden = allOrders.length - orders.length;
+            let bannerEl = document.getElementById('ordersHiddenBanner');
+            if (!bannerEl) {
+                const panel = document.querySelector('.panel-content');
+                if (panel) {
+                    bannerEl = document.createElement('div');
+                    bannerEl.id = 'ordersHiddenBanner';
+                    bannerEl.style.cssText = 'background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border:2px solid #FFB74D;color:#E65100;padding:10px 16px;border-radius:10px;margin-bottom:14px;font-weight:700;font-size:13px;display:none;align-items:center;gap:10px;cursor:pointer';
+                    bannerEl.onclick = function(){
+                        var sel = document.getElementById('filterDate');
+                        if (sel) { sel.value = 'all'; renderKanban(); }
+                    };
+                    panel.insertBefore(bannerEl, panel.firstChild);
+                }
+            }
+            if (bannerEl) {
+                if (hidden > 0) {
+                    bannerEl.innerHTML = '⚠️ <span>Tem ' + hidden + ' pedido' + (hidden>1?'s':'') + ' fora do filtro atual</span> · <strong style="text-decoration:underline">Clique pra ver TODOS</strong>';
+                    bannerEl.style.display = 'flex';
+                } else {
+                    bannerEl.style.display = 'none';
+                }
+            }
 
             statuses.forEach(status => {
                 const statusOrders = orders
@@ -474,6 +501,18 @@
             }
             lastOrderCount = newOrders.length;
         }, 3000);
+
+        // Tenta sincronizar pedidos pendentes (offline queue) ao abrir a página
+        try {
+            if (typeof OfflineQueue !== 'undefined' && OfflineQueue.syncPending && franchiseId) {
+                OfflineQueue.syncPending(franchiseId).then(function(r){
+                    if (r && r.synced > 0) {
+                        console.log('[Pedidos] ' + r.synced + ' pedidos sincronizados com Firestore');
+                        renderKanban();
+                    }
+                });
+            }
+        } catch(e) { console.warn('OfflineQueue.syncPending error:', e); }
 
         renderKanban();
         i18n.translatePage();

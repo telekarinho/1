@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v45';
-const CACHE_NAME = 'milkypot-v45';
+const CACHE_VERSION = 'mp-v46';
+const CACHE_NAME = 'milkypot-v46';
 
 // Critical local assets that must be available offline
 const PRECACHE_URLS = [
