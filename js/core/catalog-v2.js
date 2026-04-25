@@ -913,15 +913,15 @@
 
         function makeVariantesPMG(baseCusto) {
             return [
-                { id: newId('var'), name: 'P (250ml)', tipo: 'taca', gramas: 250,
+                { id: newId('var'), name: 'P (250ml)', tipo: 'copo', gramas: 250,
                   custoExtra: Math.round(baseCusto * 0.7 * 100) / 100,
                   precoLoja: 9.99, precoLojaOriginal: 14.99,
                   precoDelivery: 11.49, precoIfood: 12.99,
                   promoAtivo: true, promoLabel: 'Promoção Inauguração' },
-                { id: newId('var'), name: 'M (400ml)', tipo: 'taca', gramas: 400,
+                { id: newId('var'), name: 'M (400ml)', tipo: 'copo', gramas: 400,
                   custoExtra: Math.round(baseCusto * 1.0 * 100) / 100,
                   precoLoja: 17.99, precoDelivery: 19.99, precoIfood: 22.99 },
-                { id: newId('var'), name: 'G (500ml)', tipo: 'taca', gramas: 500,
+                { id: newId('var'), name: 'G (500ml)', tipo: 'copo', gramas: 500,
                   custoExtra: Math.round(baseCusto * 1.25 * 100) / 100,
                   precoLoja: 19.99, precoDelivery: 22.99, precoIfood: 25.99 }
             ];
@@ -981,7 +981,7 @@
             },
             kits: [],
             variantes: [
-                { id: newId('var'), name: 'Premium (600ml)', tipo: 'taca', gramas: 600,
+                { id: newId('var'), name: 'Premium (600ml)', tipo: 'copo', gramas: 600,
                   custoExtra: custoPremium,
                   precoLoja: 24.99, precoDelivery: 28.99, precoIfood: 32.99 }
             ],
@@ -1016,6 +1016,24 @@
         d.__inactiveSundaesCleanedV1 = true;
         save(fid, d);
         return { ok: true, removed: removed };
+    }
+
+    // Fix: sundaes com tipo='taca' (versão antiga) → 'copo' (mesmo recipiente que milkshake)
+    function fixSundaeTipoCopoV1(fid) {
+        const d = load(fid);
+        if (d.__sundaeTipoCopoFixedV1) return { skipped: true, reason: 'já corrigido' };
+
+        let fixed = 0;
+        d.produtos.forEach(p => {
+            if (p.categoriaId !== 'cat_sundae') return;
+            (p.variantes || []).forEach(v => {
+                if (v.tipo === 'taca') { v.tipo = 'copo'; fixed++; }
+            });
+        });
+
+        d.__sundaeTipoCopoFixedV1 = true;
+        save(fid, d);
+        return { ok: true, fixed: fixed };
     }
 
     // Wrap os saves pra sincronizar legacy automaticamente
@@ -1054,6 +1072,7 @@
             try { results.cleanupInactive = cleanupInactiveMilkshakesV1(fid); } catch(e) { results.cleanupInactive_err = e.message; }
             try { results.sundaeGourmet = migrateSundaeGourmetFlavorsV1(fid); } catch(e) { results.sundaeGourmet_err = e.message; }
             try { results.cleanupSundaes = cleanupInactiveSundaesV1(fid); } catch(e) { results.cleanupSundaes_err = e.message; }
+            try { results.sundaeTipoCopo = fixSundaeTipoCopoV1(fid); } catch(e) { results.sundaeTipoCopo_err = e.message; }
             return results;
         } catch(e) { return { error: e.message }; }
     }
@@ -1085,6 +1104,7 @@
         cleanupInactiveMilkshakesV1,
         migrateSundaeGourmetFlavorsV1,
         cleanupInactiveSundaesV1,
+        fixSundaeTipoCopoV1,
         applyAllMigrations,
         syncToLegacy,
         autoSyncIfNeeded,
