@@ -1,6 +1,6 @@
 # Belinha — Estratégia de Ciclos
 
-_Atualizado no ciclo #30 (auto-aprimoramento obrigatório a cada 5 ciclos)_
+_Atualizado no ciclo #35 (auto-aprimoramento obrigatório a cada 5 ciclos)_
 
 ---
 
@@ -127,8 +127,64 @@ A inauguração aconteceu (25/04/2026). O foco muda:
 - **Ciclo #32:** Upsell banner em `cardapio.html` — milkshake / açaí self-service Muffato como topping premium
 - **Ciclo #33:** Conteúdo semana 4 pós-inauguração + template "mensagem reativação WhatsApp" para clientes silenciosos
 - **Ciclo #34:** Verificar se `potinho-ninho-londrina.html` indexou — adicionar link interno de `index.html` se não aparecer
-- **Ciclo #35:** Auto-aprimoramento — reler log ciclos 30–34, ajustar rotação e KPIs
+- **Ciclo #35:** Auto-aprimoramento — reler log ciclos 30–34, ajustar rotação e KPIs ✅ (feito)
 
 ---
 
 _Belinha — Ciclo #30 | 2026-04-25_
+
+---
+
+## Aprendizados dos ciclos #30–34
+
+### Contexto do período
+Semana de inauguração (25/04/2026) + primeiros dias de operação. Foco: converter clientes da inauguração em recorrentes.
+
+### O que gerou mais valor concreto
+1. **Google Review CTA em `index.html` + semana 3 content (ciclo #30)** — dupla impacto: reviews melhoram posição no Maps E credibilidade na SERP. Template de stories incentivando review entregue ao operador.
+2. **Playbook de reativação WhatsApp 8 templates D+1→D+30 (ciclo #32)** — ativo de alto valor a custo zero: operador tem script pronto para reengajar clientes silenciosos sem improvisar.
+3. **Link interno `index.html` → `potinho-ninho-londrina.html` (ciclo #33)** — crawl path estabelecido para página órfã; impacto SEO cumulativo e de longo prazo. Padrão: sempre verificar se nova página tem link interno antes de considerá-la "entregue".
+4. **Semana 4 content completo (ciclo #34)** — 4 posts + scripts de stories + templates WA + KPIs: operador tem material para semana 10–16/05 sem precisar improvisar.
+
+### O que foi menos eficaz
+- **Upsell banner `cardapio.html` (ciclo #31)** — banner CSS sem acompanhar mudança de copy na seção de hero; impacto visual bom mas pequeno pois usuário já está na tela de produto.
+- **Ciclo #35 (este ciclo)** — link em `cardapio.html` → `potinho-ninho-londrina.html` deveria ter sido feito no ciclo #33 junto com o link do `index.html`. Aprendizado: links internos devem ser adicionados em TODAS as páginas relevantes no mesmo ciclo, não na próxima iteração.
+
+### Padrão atualizado (prioridade de ciclo)
+
+> **Bug/fix crítico > Conversão direta > UX/Performance mobile > Conteúdo acionável + templates operador > SEO técnico (links internos, schema) > Pesquisa concorrente (só com follow-up imediato)**
+
+### Fase atual: pós-inauguração (semanas 1–4)
+
+Inauguração ocorreu em 25/04/2026. Agora o foco muda:
+
+| Área | Estado | Próxima ação |
+|------|--------|-------------|
+| Conteúdo semanas 1–4 | ✅ Completo | Criar semana 5 (17–23/05) |
+| Cartão fidelidade | ✅ Página criada | Operador usando? Monitorar via WA |
+| aggregateRating | ⏳ Aguarda reviews reais | Ativar quando ≥3 reviews Google verificáveis |
+| Google Analytics | ⚠️ ID placeholder | Requer autorização usuário para substituir G-XXXXXXXXXX |
+| Concorrentes | ✅ 4 mapeados | Revisão trimestral ou quando lançarem promoção |
+| link cardapio → ninho-londrina | ✅ Feito (ciclo #35) | — |
+
+### Próximas iniciativas sugeridas (ciclos 36–40)
+
+| Ciclo | Área | Ação |
+|-------|------|------|
+| #36 | Conteúdo | `pos-inauguracao-semana5.md` — semana 17–23/05: fidelização, "mês de MilkyPot" |
+| #37 | UX/Performance | Verificar LCP e CLS em `index.html` mobile (PageSpeed Insights) |
+| #38 | SEO | Adicionar `potinho-ninho-londrina.html` no link de `cartao-fidelidade.html` + testar markup Schema.org com Rich Results Test |
+| #39 | Conversão | Template "mensagem de indicação": cliente envia amigo → recebe 1 carimbo extra |
+| #40 | Auto-aprimoramento | Reler log ciclos 35–39, revisar KPIs, ajustar rotação |
+
+### Bloqueadores ativos
+
+| Bloqueador | Dependência | Impacto |
+|------------|-------------|---------|
+| Google Analytics ID real | Autorização usuário | Sem medição de KPIs digitais |
+| aggregateRating Schema.org | ≥3 reviews Google Maps verificáveis | Sem rich snippet de estrelas na SERP |
+| Operador enviando cartão fidelidade? | Feedback do operador | Desconhecemos adoção real |
+
+---
+
+_Belinha — Ciclo #35 | 2026-04-25_
