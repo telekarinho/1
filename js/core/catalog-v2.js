@@ -869,7 +869,7 @@
         { name: 'Limão Suíço Refresca-Tudo', emoji: '🍋', cInsumos: 4.40, cAdd: 1.30,
           desc: 'Azedinho na medida, gelado no ponto. Sundae pra quando o sol de Londrina aperta e você precisa de um respiro com graça.' },
         { name: 'Chocolate Apaixonante',     emoji: '🍫', cInsumos: 5.00, cAdd: 1.30,
-          desc: 'Bombom em camadas. O abraço quente do chocolate com a frescura do sundae. Conforto que cabe numa taça gourmet.' },
+          desc: 'Bombom em camadas. O abraço quente do chocolate com a frescura do sundae. Conforto que cabe num copo.' },
         { name: 'Uva da Vovó',               emoji: '🍇', cInsumos: 4.60, cAdd: 1.30,
           desc: 'Aquela uva roxinha do quintal da vovó, mas crescida e bem-vestida. Sundae de infância na versão Geração TikTok.' },
         { name: 'Maracujá Calmaria',         emoji: '💛', cInsumos: 4.70, cAdd: 1.30,
@@ -881,7 +881,7 @@
         { name: 'Ninho da Vovó',             emoji: '🥛', cInsumos: 5.20, cAdd: 1.30,
           desc: 'Cremosidade de berço. Aquele cheirinho que lembra colo, pé no sofá e desenho da Disney no domingo de manhã.' },
         { name: 'Pistache Esmeralda',        emoji: '🟢', cInsumos: 6.20, cAdd: 1.40,
-          desc: 'Verdinho gourmet, sofisticado, crocante. Sundae de pistache premium com clima italiano — pra quem gosta de chique na taça.' },
+          desc: 'Verdinho gourmet, sofisticado, crocante. Sundae de pistache premium com clima italiano — pra quem gosta de chique no copo.' },
         { name: 'Peanut Heaven',             emoji: '🥜', cInsumos: 5.50, cAdd: 1.40,
           desc: 'Cremoso, salgadinho, viciante. O peanut butter virou sundae — e a vida nunca mais foi a mesma.' },
         { name: 'Cereja Beijada',            emoji: '🍒', cInsumos: 4.80, cAdd: 1.30,
@@ -889,7 +889,7 @@
         { name: 'Ameixa Roxinha',            emoji: '🍑', cInsumos: 4.80, cAdd: 1.30,
           desc: 'Roxa, polpuda, exótica. Sundae pra quem quer fugir do óbvio e descobrir um sabor novo no meio do caminho.' },
         { name: 'Banana Caramelizada',       emoji: '🍌', cInsumos: 4.60, cAdd: 1.30,
-          desc: 'Banana douradinha, queimadinha na medida, beijada pelo caramelo. Sundae de fazenda em taça gelada.' }
+          desc: 'Banana douradinha, queimadinha na medida, beijada pelo caramelo. Sundae de fazenda em copo gelado.' }
     ];
 
     const SUNDAE_PREMIUM_ACAI = {
