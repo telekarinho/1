@@ -284,7 +284,7 @@
     <script src="../js/core/reports.js"></script>
     <script src="../js/core/adminconfig.js?v=mp-v14"></script>
     <script src="../js/core/motivacional.js?v=mp-v14"></script>
-    <script src="../js/core/caixa.js?v=mp-v61"></script>
+    <script src="../js/core/caixa.js?v=mp-v62"></script>
     <script>
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
         const session = Auth.getSession();
@@ -711,32 +711,24 @@
                     if (typeof Utils !== 'undefined' && Utils.showToast) {
                         Utils.showToast(r.changes > 0 ? `🔄 ${r.changes} atualização(ões) recebida(s)!` : '✅ Tudo sincronizado.', 'success', 2500);
                     }
-                } else if (r.code === 'auth_orphan' || r.code === 'permission_denied') {
-                    // Sessão órfã: mp_session local sem token Firebase. Sync NUNCA vai funcionar
-                    // até relogar. Oferece logout direto pro usuário não ficar tentando sem fim.
-                    var ok = confirm('⚠️ Permissão negada — sessão Firebase expirou neste PC.\n\nA sessão local existe mas o Firebase Auth perdeu o token. ÚNICA forma de corrigir: sair e entrar de novo NESTE PC.\n\nClique OK pra sair agora (vai redirecionar pra login).');
-                    if (ok && typeof Auth !== 'undefined' && Auth.logout) Auth.logout();
                 } else {
-                    alert('Erro ao sincronizar: ' + (r.error || 'desconhecido'));
+                    // Erro real do Firestore (rede/quota) — toast curto, NUNCA desloga
+                    console.warn('forceSync error:', r.code, r.error);
+                    if (typeof Utils !== 'undefined' && Utils.showToast) {
+                        Utils.showToast('⚠️ ' + (r.error || 'Erro ao sincronizar'), 'error', 3500);
+                    }
                 }
             } catch (e) {
-                alert('Falha no sync: ' + e.message);
+                console.warn('forceSync exception:', e);
+                if (typeof Utils !== 'undefined' && Utils.showToast) {
+                    Utils.showToast('⚠️ Falha no sync: ' + e.message, 'error', 3500);
+                }
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = orig || '🔄 Sincronizar'; }
             }
         };
-
-        // Listener global: se DataStore detectar sessão órfã, mostra banner pedindo relogin
-        window.addEventListener('mp_auth_orphan', function () {
-            if (document.getElementById('authOrphanBanner')) return;
-            var b = document.createElement('div');
-            b.id = 'authOrphanBanner';
-            b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;padding:14px 20px;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 4px 18px rgba(0,0,0,.3);font-family:"Nunito",sans-serif;flex-wrap:wrap;font-weight:700';
-            b.innerHTML = '<div style="font-size:14px">⚠️ <strong>Sessão Firebase expirou neste PC</strong> · Sync de pedidos entre PCs está bloqueado · Saia e entre novamente</div>' +
-                '<button onclick="if(typeof Auth!==\'undefined\'&&Auth.logout)Auth.logout()" style="background:#fff;color:#7F1D1D;border:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer">🔓 Sair e entrar de novo</button>';
-            document.body.insertBefore(b, document.body.firstChild);
-            document.body.style.paddingTop = (b.offsetHeight) + 'px';
-        });
+        // Banner mp_auth_orphan REMOVIDO em v62 — rules públicas cobrem reads de sync,
+        // banner só causava deslogins desnecessários. Mantém cobertura via rules.
 
         // ===== SYNC ENTRE PCs em tempo real =====
         // DataStore agora dispara mp_remote_update quando outro PC altera orders_FID

@@ -39,11 +39,10 @@ const DataStore = {
         }
     },
 
-    // Detecta estado órfão: mp_session existe em localStorage mas firebase.auth().currentUser=null.
-    // Causa: Firebase Auth perdeu o token (cache limpo, browser separado, IDB corrupto, terceiros bloqueando).
-    // Sintoma: TODA query Firestore retorna 'Missing or insufficient permissions'.
-    // Self-heal: signInAnonymously() silencioso. Anônimo satisfaz isAuthenticated() em rules.
-    // Operador NUNCA precisa relogar — sistema se cura sozinho em ~1s.
+    // Auth watcher — apenas tenta self-heal silencioso quando Firebase Auth some.
+    // NÃO mostra banner pro user: rules de orders_/caixa_/pdv_tabs_/finances_ são
+    // públicas (allow read: true), então sync de leitura funciona SEM auth.
+    // Self-heal anonymous = bonus pra writes funcionarem em PCs sem login completo.
     _setupAuthWatcher() {
         try {
             if (!firebase || !firebase.auth) return;
@@ -52,22 +51,10 @@ const DataStore = {
                 self._firebaseUser = user;
                 var hasMpSession = !!localStorage.getItem('mp_session');
                 if (hasMpSession && !user) {
-                    console.warn('🔒 mp_session sem Firebase user — tentando self-heal via signInAnonymously');
-                    var healed = await self._attemptAnonymousAuth();
-                    if (healed) {
-                        console.log('✅ Self-heal OK — sync vai funcionar via anon auth');
-                        // onAuthStateChanged vai disparar de novo com o anon user.
-                    } else if (!self._authOrphanWarned) {
-                        // Anon auth falhou (provavelmente desabilitado no Firebase Console).
-                        // Cai pro banner manual.
-                        self._authOrphanWarned = true;
-                        window.dispatchEvent(new CustomEvent('mp_auth_orphan', {
-                            detail: { reason: 'firebase_no_user', mpSession: true }
-                        }));
-                    }
+                    // Tenta anon auth silencioso pra liberar writes. Se falhar,
+                    // não mostra banner — reads públicos cobrem o caso de sync.
+                    await self._attemptAnonymousAuth();
                 } else if (user) {
-                    // Tem user (anon ou email) — sync rola
-                    self._authOrphanWarned = false;
                     self._flushPendingWrites();
                     self._syncFromCloud();
                 }
@@ -489,16 +476,8 @@ const DataStore = {
             console.warn('forceSync: Firestore não conectado');
             return { success: false, error: 'Firestore offline', code: 'no_db' };
         }
-        // Detecta sessão órfã ANTES de tentar — falha rápido com mensagem útil
-        var fbUser = (firebase && firebase.auth) ? firebase.auth().currentUser : null;
-        if (!fbUser) {
-            console.warn('forceSync: sem firebase.auth().currentUser — sessão órfã');
-            return {
-                success: false,
-                error: 'Sessão expirou. Saia e entre novamente neste PC pra sincronizar.',
-                code: 'auth_orphan'
-            };
-        }
+        // NÃO faz pre-check de auth — rules de orders_/caixa_/pdv_tabs_/finances_
+        // permitem read público. Deixa Firestore decidir e capture erro real.
         try {
             const snap = await this._db.collection('datastore').get();
             let changes = 0;
