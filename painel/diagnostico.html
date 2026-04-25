@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MilkyPot — Diagnóstico de Sync</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Nunito', sans-serif; background: #f4f4f9; color: #222;
+    padding: 16px; max-width: 980px; margin: 0 auto; line-height: 1.4;
+}
+h1 { font-family: 'Baloo 2', cursive; font-size: 26px; margin-bottom: 6px; color: #5A52E0; }
+.subtitle { color: #666; font-size: 13px; margin-bottom: 18px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.btn {
+    border: none; padding: 10px 16px; border-radius: 10px; font-weight: 800;
+    font-size: 13px; cursor: pointer; font-family: inherit; box-shadow: 0 2px 6px rgba(0,0,0,.1);
+    transition: transform .08s;
+}
+.btn:active { transform: scale(.96); }
+.btn-primary { background: #10B981; color: #fff; }
+.btn-secondary { background: #5A52E0; color: #fff; }
+.btn-warn { background: #F59E0B; color: #fff; }
+.btn-danger { background: #DC2626; color: #fff; }
+.btn-light { background: #fff; color: #333; border: 1px solid #ddd; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.card {
+    background: #fff; border-radius: 12px; padding: 14px 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06); border-left: 6px solid #ddd;
+}
+.card.ok { border-left-color: #10B981; }
+.card.warn { border-left-color: #F59E0B; }
+.card.err { border-left-color: #DC2626; }
+.card.info { border-left-color: #5A52E0; }
+.card h3 { font-size: 13px; color: #777; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.card .v { font-size: 22px; font-weight: 900; color: #222; line-height: 1; word-break: break-all; }
+.card .vs { font-size: 14px; font-weight: 700; }
+.card .sub { font-size: 12px; color: #888; margin-top: 4px; }
+
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px; padding: 8px 12px; border-radius: 8px; background: #fff; }
+.row.ok { background: #D1FAE5; }
+.row.warn { background: #FEF3C7; }
+.row.err { background: #FEE2E2; }
+.row .k { font-weight: 700; color: #555; font-size: 13px; }
+.row .v { font-family: monospace; font-size: 12px; word-break: break-all; }
+
+.section { background: #fff; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+.section h2 { font-family: 'Baloo 2', cursive; font-size: 18px; margin-bottom: 10px; color: #444; display: flex; align-items: center; gap: 8px; }
+
+.test-result { padding: 10px 14px; border-radius: 8px; margin-top: 8px; font-size: 13px; }
+.test-result.pass { background: #D1FAE5; color: #065F46; border-left: 4px solid #10B981; }
+.test-result.fail { background: #FEE2E2; color: #991B1B; border-left: 4px solid #DC2626; }
+.test-result.run { background: #FEF3C7; color: #92400E; border-left: 4px solid #F59E0B; }
+
+pre.log { background: #1F2937; color: #D1FAE5; padding: 10px; border-radius: 8px; font-size: 11px; max-height: 220px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; }
+
+.timestamp { font-size: 11px; color: #999; text-align: right; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<h1>🔧 Diagnóstico de Sincronização</h1>
+<div class="subtitle">Mostra status de Auth, Firestore, sync entre PCs, e roda testes em tempo real. Auto-atualiza a cada 5s.</div>
+
+<div class="actions">
+    <button class="btn btn-primary" onclick="runAll()">🔄 Atualizar Tudo</button>
+    <button class="btn btn-secondary" onclick="forceSyncNow()">☁️ Forçar Sync Firestore → Local</button>
+    <button class="btn btn-warn" onclick="testWrite()">✍️ Testar Write</button>
+    <button class="btn btn-light" onclick="copyAll()">📋 Copiar pra mandar pro Suporte</button>
+    <button class="btn btn-danger" onclick="if(confirm('Limpa localStorage de sync e força sair?')){localStorage.removeItem('mp_session');location.reload();}">🚨 Resetar Sessão</button>
+</div>
+
+<div class="cards" id="topCards"></div>
+
+<div class="section">
+    <h2>👤 Sessão & Auth</h2>
+    <div id="sessionRows"></div>
+</div>
+
+<div class="section">
+    <h2>☁️ Firestore — Conexão & Sync</h2>
+    <div id="firestoreRows"></div>
+</div>
+
+<div class="section">
+    <h2>🧪 Testes em tempo real</h2>
+    <div id="testResults"></div>
+</div>
+
+<div class="section">
+    <h2>📜 Log</h2>
+    <pre class="log" id="log"></pre>
+    <div class="timestamp" id="lastUpdate"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/auth.js"></script>
+<script>
+(function () {
+    'use strict';
+    var logEl = document.getElementById('log');
+    var logBuf = [];
+    function log(msg) {
+        var t = new Date().toLocaleTimeString('pt-BR');
+        logBuf.push('[' + t + '] ' + msg);
+        if (logBuf.length > 60) logBuf.shift();
+        logEl.textContent = logBuf.join('\n');
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function row(parent, label, value, status) {
+        var r = document.createElement('div');
+        r.className = 'row ' + (status || '');
+        r.innerHTML = '<span class="k">' + label + '</span><span class="v">' + (value == null ? '—' : value) + '</span>';
+        parent.appendChild(r);
+        return r;
+    }
+    function card(parent, title, value, sub, status) {
+        var c = document.createElement('div');
+        c.className = 'card ' + (status || 'info');
+        c.innerHTML = '<h3>' + title + '</h3>' +
+            '<div class="' + (typeof value === 'string' && value.length > 12 ? 'vs' : 'v') + '">' + value + '</div>' +
+            (sub ? '<div class="sub">' + sub + '</div>' : '');
+        parent.appendChild(c);
+    }
+
+    function getFid() {
+        try { return (Auth.getSession() || {}).franchiseId || null; } catch (e) { return null; }
+    }
+
+    function renderTop() {
+        var top = document.getElementById('topCards');
+        top.innerHTML = '';
+        var fid = getFid();
+        var orders = fid ? (DataStore.getCollection('orders', fid) || []) : [];
+        var today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        var todayOrders = orders.filter(function (o) { return o.createdAt && o.createdAt.slice(0, 10) === today; });
+        var todayRev = todayOrders.reduce(function (s, o) { return s + (o.total || 0); }, 0);
+        var lastSeq = todayOrders.length ? (todayOrders[todayOrders.length - 1].dailySeq || '-') : '-';
+
+        card(top, 'Pedidos hoje', todayOrders.length, 'Local (sincronizado): ' + orders.length + ' total', todayOrders.length ? 'ok' : 'info');
+        card(top, 'Receita hoje', 'R$ ' + todayRev.toFixed(2).replace('.', ','), 'Soma de orders.total de hoje', todayRev > 0 ? 'ok' : 'info');
+        card(top, 'Último pedido', '#' + lastSeq, 'Numeração sequencial diária', lastSeq !== '-' ? 'ok' : 'info');
+        card(top, 'Sync ativo', DataStore._realtimeListenerAttached ? '✅ SIM' : '❌ NÃO',
+            'Real-time listener Firestore', DataStore._realtimeListenerAttached ? 'ok' : 'err');
+    }
+
+    function renderSession() {
+        var p = document.getElementById('sessionRows');
+        p.innerHTML = '';
+        var s = null;
+        try { s = Auth.getSession(); } catch (e) {}
+        var fbUser = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+
+        row(p, 'mp_session', s ? 'OK (' + s.email + ')' : 'AUSENTE', s ? 'ok' : 'err');
+        row(p, 'mp_session.franchiseId', s ? s.franchiseId : '—', s && s.franchiseId ? 'ok' : 'warn');
+        row(p, 'mp_session.role', s ? s.role : '—', s && s.role ? 'ok' : 'warn');
+        row(p, 'firebase.auth().currentUser', fbUser ? fbUser.email + ' (' + fbUser.uid.slice(0, 8) + '...)' : 'NULL — sessão órfã (rules públicas cobrem leitura)', fbUser ? 'ok' : 'warn');
+        row(p, 'fbUser.isAnonymous', fbUser ? (fbUser.isAnonymous ? 'SIM (self-heal)' : 'não') : '—');
+        row(p, 'Cookies habilitados', navigator.cookieEnabled ? 'SIM' : 'NÃO', navigator.cookieEnabled ? 'ok' : 'err');
+        row(p, 'IndexedDB suportado', typeof indexedDB !== 'undefined' ? 'SIM' : 'NÃO', typeof indexedDB !== 'undefined' ? 'ok' : 'err');
+        row(p, 'Online (navigator)', navigator.onLine ? 'SIM' : 'NÃO', navigator.onLine ? 'ok' : 'err');
+    }
+
+    function renderFirestore() {
+        var p = document.getElementById('firestoreRows');
+        p.innerHTML = '';
+        row(p, 'Firebase SDK carregado', typeof firebase !== 'undefined' ? 'SIM' : 'NÃO', typeof firebase !== 'undefined' ? 'ok' : 'err');
+        row(p, 'Firestore disponível', (typeof firebase !== 'undefined' && firebase.firestore) ? 'SIM' : 'NÃO', (typeof firebase !== 'undefined' && firebase.firestore) ? 'ok' : 'err');
+        row(p, 'DataStore._ready', DataStore._ready ? 'SIM' : 'NÃO', DataStore._ready ? 'ok' : 'err');
+        row(p, 'DataStore._db', DataStore._db ? 'OK' : 'NULL', DataStore._db ? 'ok' : 'err');
+        row(p, 'Realtime listener', DataStore._realtimeListenerAttached ? 'ATIVO' : 'INATIVO', DataStore._realtimeListenerAttached ? 'ok' : 'err');
+        row(p, 'Polling fallback (5s)', DataStore._pollFallbackId ? 'ATIVO' : 'INATIVO', DataStore._pollFallbackId ? 'ok' : 'err');
+        row(p, 'Sync inicial concluído', DataStore._syncDone ? 'SIM' : 'NÃO', DataStore._syncDone ? 'ok' : 'warn');
+        row(p, 'Pending writes', (DataStore._pendingWrites || []).length, (DataStore._pendingWrites || []).length === 0 ? 'ok' : 'warn');
+        row(p, 'cardápio (catalog_config)', localStorage.getItem('mp_catalog_config') ? 'OK em local' : 'AUSENTE');
+    }
+
+    var testRunning = false;
+    function showTest(idx, status, msg) {
+        var p = document.getElementById('testResults');
+        var el = document.getElementById('test-' + idx);
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'test-' + idx;
+            el.className = 'test-result ' + status;
+            p.appendChild(el);
+        }
+        el.className = 'test-result ' + status;
+        el.innerHTML = msg;
+    }
+
+    async function runTests() {
+        if (testRunning) return;
+        testRunning = true;
+        document.getElementById('testResults').innerHTML = '';
+        var fid = getFid();
+
+        // Test 1: Read franchises (sempre público)
+        showTest(1, 'run', '⏳ <strong>Teste 1:</strong> Lendo lista de lojas (sempre público)...');
+        try {
+            var doc1 = await firebase.firestore().collection('datastore').doc('franchises').get();
+            if (doc1.exists) {
+                showTest(1, 'pass', '✅ <strong>Teste 1:</strong> OK — leu doc <code>franchises</code> do Firestore');
+                log('Test 1 PASS: franchises read');
+            } else {
+                showTest(1, 'fail', '⚠️ <strong>Teste 1:</strong> Doc franchises não existe no Firestore');
+                log('Test 1 WARN: franchises empty');
+            }
+        } catch (e) {
+            showTest(1, 'fail', '❌ <strong>Teste 1 FAIL:</strong> ' + e.code + ' — ' + e.message);
+            log('Test 1 FAIL: ' + e.message);
+        }
+
+        // Test 2: Read orders_FID (público pelas novas rules)
+        showTest(2, 'run', '⏳ <strong>Teste 2:</strong> Lendo pedidos da loja no Firestore (deve ser público)...');
+        try {
+            if (!fid) throw new Error('Sem franchiseId na sessão');
+            var doc2 = await firebase.firestore().collection('datastore').doc('orders_' + fid).get();
+            if (doc2.exists) {
+                var data = JSON.parse(doc2.data().value);
+                showTest(2, 'pass', '✅ <strong>Teste 2:</strong> OK — <strong>' + data.length + ' pedido(s)</strong> no Firestore p/ <code>' + fid + '</code>');
+                log('Test 2 PASS: ' + data.length + ' orders read');
+            } else {
+                showTest(2, 'fail', '⚠️ <strong>Teste 2:</strong> Doc <code>orders_' + fid + '</code> NÃO existe no Firestore (sync não publicou)');
+                log('Test 2 WARN: orders doc missing');
+            }
+        } catch (e) {
+            showTest(2, 'fail', '❌ <strong>Teste 2 FAIL:</strong> ' + e.code + ' — ' + e.message);
+            log('Test 2 FAIL: ' + e.message);
+        }
+
+        // Test 3: Comparar local vs Firestore
+        showTest(3, 'run', '⏳ <strong>Teste 3:</strong> Comparando pedidos local vs nuvem...');
+        try {
+            if (!fid) throw new Error('Sem franchiseId');
+            var doc3 = await firebase.firestore().collection('datastore').doc('orders_' + fid).get();
+            var localOrders = DataStore.getCollection('orders', fid) || [];
+            var cloudOrders = doc3.exists ? JSON.parse(doc3.data().value) : [];
+            var diff = Math.abs(localOrders.length - cloudOrders.length);
+            if (diff === 0) {
+                showTest(3, 'pass', '✅ <strong>Teste 3:</strong> Igual: ' + localOrders.length + ' local · ' + cloudOrders.length + ' cloud');
+            } else {
+                showTest(3, 'fail', '⚠️ <strong>Teste 3:</strong> Diferença: <strong>' + diff + '</strong> pedidos · local=' + localOrders.length + ' · cloud=' + cloudOrders.length + ' — clica "Forçar Sync"');
+            }
+            log('Test 3: local=' + localOrders.length + ' cloud=' + cloudOrders.length);
+        } catch (e) {
+            showTest(3, 'fail', '❌ <strong>Teste 3 FAIL:</strong> ' + e.message);
+        }
+
+        // Test 4: Realtime listener event count
+        showTest(4, 'pass', 'ℹ️ <strong>Teste 4:</strong> Realtime: ' +
+            (DataStore._realtimeListenerAttached ? '✅ listener anexado' : '❌ NÃO anexado') +
+            ' · Poll: ' + (DataStore._pollFallbackId ? '✅ rodando a cada 5s' : '❌ parado'));
+
+        testRunning = false;
+    }
+
+    window.testWrite = async function () {
+        var fid = getFid();
+        if (!fid) { alert('Sem sessão. Faça login antes.'); return; }
+        try {
+            var key = 'diag_test_' + Date.now();
+            await firebase.firestore().collection('datastore').doc('orders_' + fid).update({
+                _diagTest: { at: new Date().toISOString(), pc: navigator.userAgent.slice(0, 80) }
+            });
+            log('Test write OK');
+            alert('✅ Write funcionou — Firestore aceitou. Sync entre PCs deve estar 100%.');
+        } catch (e) {
+            log('Test write FAIL: ' + e.code + ' ' + e.message);
+            alert('❌ Write FALHOU: ' + e.code + '\n\n' + e.message + '\n\nIsso significa que vendas DESTE PC não estão chegando ao Firestore — outros PCs nunca veem os pedidos.');
+        }
+    };
+
+    window.forceSyncNow = async function () {
+        log('Forçando sync...');
+        try {
+            var r = await DataStore.forceSync();
+            if (r.success) {
+                log('✅ Sync ok: ' + r.changes + ' mudanças, ' + r.total + ' docs lidos');
+                alert(r.changes > 0 ? '✅ ' + r.changes + ' atualização(ões) recebida(s)' : '✅ Tudo já sincronizado');
+                runAll();
+            } else {
+                log('❌ Sync fail: ' + (r.code || '?') + ' — ' + r.error);
+                alert('❌ Falha: ' + r.error);
+            }
+        } catch (e) {
+            log('Sync exception: ' + e.message);
+            alert('❌ Exceção: ' + e.message);
+        }
+    };
+
+    window.copyAll = function () {
+        var s = null; try { s = Auth.getSession(); } catch (e) {}
+        var fbUser = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+        var fid = getFid();
+        var orders = fid ? (DataStore.getCollection('orders', fid) || []) : [];
+        var dump = {
+            page: location.href,
+            ts: new Date().toISOString(),
+            session: s ? { email: s.email, franchiseId: s.franchiseId, role: s.role } : null,
+            firebaseUser: fbUser ? { email: fbUser.email, uid: fbUser.uid, anon: fbUser.isAnonymous } : null,
+            datastore: {
+                ready: DataStore._ready,
+                db: !!DataStore._db,
+                realtime: !!DataStore._realtimeListenerAttached,
+                poll: !!DataStore._pollFallbackId,
+                syncDone: DataStore._syncDone
+            },
+            orders: { total: orders.length, lastSeq: orders.length ? orders[orders.length - 1].dailySeq : null },
+            log: logBuf.slice(-30)
+        };
+        var txt = JSON.stringify(dump, null, 2);
+        try {
+            navigator.clipboard.writeText(txt).then(function () { alert('✅ Copiado. Cola no chat de suporte.'); });
+        } catch (e) { prompt('Copia manual:', txt); }
+    };
+
+    function runAll() {
+        renderTop();
+        renderSession();
+        renderFirestore();
+        runTests();
+        document.getElementById('lastUpdate').textContent = '🕐 Última atualização: ' + new Date().toLocaleTimeString('pt-BR');
+    }
+    window.runAll = runAll;
+
+    // Auto-init: espera DataStore inicializar
+    function tryInit(retries) {
+        if (typeof firebase === 'undefined' || typeof DataStore === 'undefined' || typeof Auth === 'undefined') {
+            if (retries > 0) return setTimeout(function () { tryInit(retries - 1); }, 200);
+            log('❌ Falha ao carregar libs (firebase/DataStore/Auth)');
+            return;
+        }
+        log('🔧 Diagnóstico iniciado');
+        runAll();
+        // Auto-refresh a cada 5s
+        setInterval(runAll, 5000);
+        // Listener pra mp_remote_update mostrar no log
+        window.addEventListener('mp_remote_update', function (e) {
+            log('📡 mp_remote_update: ' + (e.detail && e.detail.key) + ' (source=' + (e.detail && e.detail.source || 'realtime') + ')');
+        });
+    }
+    tryInit(20);
+})();
+</script>
+</body>
+</html>
