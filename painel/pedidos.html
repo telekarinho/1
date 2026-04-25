@@ -283,7 +283,7 @@
     <script src="../js/core/reports.js"></script>
     <script src="../js/core/adminconfig.js?v=mp-v14"></script>
     <script src="../js/core/motivacional.js?v=mp-v14"></script>
-    <script src="../js/core/caixa.js?v=mp-v56"></script>
+    <script src="../js/core/caixa.js?v=mp-v57"></script>
     <script>
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
         const session = Auth.getSession();
@@ -564,6 +564,14 @@
                 t += ' '.repeat(Math.max(0, W - priceTxt.length)) + priceTxt + '\n';
             });
             t += '--------------------------------\n';
+            // Subtotal/Desconto se o pedido teve desconto aplicado
+            if (o.discount && Number(o.discount.amount) > 0) {
+                const subt = (Number(total) || 0) + (Number(o.discount.amount) || 0);
+                t += 'Subtotal       R$ ' + subt.toFixed(2).replace('.', ',') + '\n';
+                const dLabel = o.discount.type === 'perc' ? 'Desconto (' + o.discount.value + '%)' : 'Desconto';
+                const padDl = dLabel.length < 14 ? ' '.repeat(14 - dLabel.length) : '';
+                t += dLabel + padDl + '-R$ ' + Number(o.discount.amount).toFixed(2).replace('.', ',') + '\n';
+            }
             t += 'TOTAL  R$ ' + total.toFixed(2).replace('.', ',') + '\n';
             if (payment) t += 'Pagamento: ' + payment + '\n';
             t += '================================\n';
@@ -684,6 +692,25 @@
 
         renderKanban();
         i18n.translatePage();
+
+        // ===== SYNC ENTRE PCs em tempo real =====
+        // DataStore agora dispara mp_remote_update quando outro PC altera orders_FID
+        // Re-renderiza o kanban e mostra toast pra avisar que entrou pedido novo de outro PC.
+        window.addEventListener('mp_remote_update', function (e) {
+            if (!e.detail || !e.detail.key) return;
+            const k = e.detail.key;
+            // Re-render se a mudança afeta pedidos da loja atual
+            if (k === 'orders_' + franchiseId) {
+                renderKanban();
+                if (typeof Utils !== 'undefined' && Utils.showToast) {
+                    Utils.showToast('🔄 Pedidos sincronizados de outro PC.', 'info', 2000);
+                }
+            }
+            // Se caixa mudou em outro PC, dispara re-render do chip lateral (se existir)
+            if (k === 'caixa_' + franchiseId && typeof renderPdvStatusChips === 'function') {
+                try { renderPdvStatusChips(); } catch (_) {}
+            }
+        });
     </script>
 <script src="../js/core/copilot-transport.js" defer></script>
 <script src="../js/pages/lilo-scanner.js" defer></script>
