@@ -1,5 +1,39 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #33 — 2026-04-25
+
+**Área:** SEO técnico — Link interno para `potinho-ninho-londrina.html`
+
+**Contexto:** A landing page `potinho-ninho-londrina.html` foi criada no ciclo #27 para capturar tráfego orgânico do termo long-tail "potinho ninho londrina", mas estava completamente órfã — nenhuma página do site apontava para ela. O Google não consegue indexar páginas sem um crawl path interno. A estratégia.md já previa esta ação para o ciclo #34; antecipamos para o #33.
+
+**O que analisou:**
+- `grep "potinho-ninho" index.html cardapio.html` retornou vazio — confirmado: zero links internos
+- Seção de produtos em `index.html` (linha 444) tem CTA "Monte do Seu Jeito" como ponto de saída natural
+- Anchor text ideal para SEO: contém o termo exato + localização ("Tudo sobre o Potinho de Ninho em Londrina")
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `index.html` | +1 linha: link contextual abaixo do botão "Monte do Seu Jeito" na seção de produtos → `potinho-ninho-londrina.html` com anchor text SEO otimizado |
+
+**Commit:** `3ca2980`
+
+**Validação:** `grep -n "potinho-ninho-londrina" index.html` → linha 446 confirmada.
+
+**Impacto esperado:**
+- Googlebot agora tem caminho de crawl: `index.html` → `potinho-ninho-londrina.html`
+- Anchor text "Tudo sobre o Potinho de Ninho em Londrina" reforça relevância local da página destino
+- PageRank interno flui do `index.html` (página principal) para a landing page de SEO local
+- Indexação esperada em 3-14 dias após próximo crawl do Google
+
+**Próximo passo sugerido:**
+- Ciclo #34: Criar `belinha/content/pos-inauguracao-semana4.md` — conteúdo pronto para semana 10-16/05/2026 (foco: hábito semanal + upsell açaí self-service)
+- Ciclo #35: Auto-aprimoramento ciclos #30-34 — reler log, ajustar rotação e KPIs em `belinha/estrategia.md`
+- Ciclo #35 alternativo: Adicionar link interno de `cardapio.html` → `potinho-ninho-londrina.html` (reforçar crawl path)
+
+---
+
 ## Ciclo #32 — 2026-04-25
 
 **Área:** Conversão — Playbook de Reativação WhatsApp
