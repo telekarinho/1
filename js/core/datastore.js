@@ -344,7 +344,18 @@ const DataStore = {
     // Lista de docs públicos por franquia — sync funciona SEM auth via per-doc gets
     // (collection.get() exige rule de LIST que não temos pra unauth).
     _publicSyncDocs() {
-        var fid = (typeof Auth !== 'undefined' && Auth.getSession) ? (Auth.getSession() || {}).franchiseId : null;
+        // Nao use Auth.getSession() aqui: se a sessao local estiver expirada,
+        // getSession pode redirecionar a tela. Sync publico precisa ser
+        // side-effect-free para nao derrubar o operador no PDV.
+        var fid = null;
+        try {
+            if (typeof Auth !== 'undefined' && Auth.getSessionRaw) {
+                fid = (Auth.getSessionRaw() || {}).franchiseId;
+            } else {
+                var raw = localStorage.getItem('mp_session');
+                fid = raw ? (JSON.parse(raw) || {}).franchiseId : null;
+            }
+        } catch (_) {}
         if (!fid) return [];
         return [
             'orders_' + fid,
@@ -358,10 +369,16 @@ const DataStore = {
         if (!this._ready || !this._db) return;
         try {
             // Priority 1: Check for catalog_config specifically for seeding
-            const catalogDoc = await this._db.collection('datastore').doc('catalog_config').get();
-            if (!catalogDoc.exists && typeof CARDAPIO_CONFIG !== 'undefined') {
-                console.log('🌱 Seed: Enviando configuração inicial do cardápio para o Firestore...');
-                this.set('catalog_config', CARDAPIO_CONFIG);
+            try {
+                const catalogDoc = await this._db.collection('datastore').doc('catalog_config').get();
+                if (!catalogDoc.exists && typeof CARDAPIO_CONFIG !== 'undefined') {
+                    console.log('🌱 Seed: Enviando configuração inicial do cardápio para o Firestore...');
+                    this.set('catalog_config', CARDAPIO_CONFIG);
+                }
+            } catch (e) {
+                // catalog_config pode exigir auth em algumas rules. Nao pode bloquear
+                // o sync publico de orders/caixa/pdv_tabs/finances da loja.
+                console.warn('catalog_config sync ignorado:', e.code || e.message);
             }
 
             // PER-DOC reads — funciona sem auth pq cada doc tem allow read individual
@@ -393,6 +410,8 @@ const DataStore = {
                     console.log('🔄 Catálogo atualizado via Firebase (Background)');
                     window.dispatchEvent(new CustomEvent('mp_catalog_updated', { detail: newData }));
                 }
+            }, err => {
+                console.warn('catalog_config listener ignorado:', err.code || err.message);
             });
 
             // ===== REAL-TIME SYNC entre PCs (per-doc, sem auth) =====
