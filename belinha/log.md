@@ -1224,3 +1224,37 @@ Análise dos 5 ciclos:
 - Ciclo #24: Schema.org `openingHoursSpecification` em `index.html` (atualizar lastmod para 25/04)
 - Ciclo #25: Monitorar resultados pós-inauguração e ajustar estratégia em `belinha/estrategia.md` (auto-aprimoramento do ciclo 20)
 
+
+---
+
+## Ciclo #35 — 2026-04-25
+
+**Área:** Auto-aprimoramento (ciclos #30–34) + SEO — link interno `cardapio.html`
+
+**Contexto:** Ciclo obrigatório de auto-aprimoramento a cada 5 ciclos. Período analisado cobre a semana de inauguração (25/04/2026) e primeiros conteúdos de retenção pós-abertura. Melhoria concreta associada: link SEO faltante em `cardapio.html` identificado durante revisão.
+
+**O que analisou:**
+- Ciclos #30–34: revisão completa de entregas, impacto e padrões de eficiência
+- Identificado gap: link `cardapio.html` → `potinho-ninho-londrina.html` ausente apesar do link equivalente existir em `index.html` desde o ciclo #33
+- Bloqueadores ativos documentados: GA ID placeholder + aggregateRating aguardando reviews
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `cardapio.html` | +link contextual abaixo dos tabs de categoria → `potinho-ninho-londrina.html` com anchor text SEO otimizado |
+| `belinha/estrategia.md` | Aprendizados ciclos 30–34 · Padrão atualizado · Roadmap ciclos 36–40 · Tabela de bloqueadores ativos |
+
+**Commits:**
+- `d445f97` — feat(belinha/seo): link interno cardapio.html → potinho-ninho-londrina.html
+- `ff3d1be` — docs(belinha): auto-aprimoramento ciclo #35 — estrategia.md ciclos 30-34
+
+**Principais aprendizados do período:**
+1. Links internos devem ser criados em TODAS as páginas relevantes no mesmo ciclo — não deixar para o próximo
+2. Conteúdo acionável (playbooks WA, semanas de posts) tem alto valor porque reduz trabalho do operador
+3. Concorrentes: pesquisa só tem valor real quando gera mudança concreta no mesmo ciclo
+
+**Próximo passo sugerido:**
+- Ciclo #36: `belinha/content/pos-inauguracao-semana5.md` — conteúdo 17–23/05/2026 ("mês de MilkyPot", fidelização, social proof)
+- Ciclo #37: Performance mobile `index.html` — verificar LCP e CLS via PageSpeed Insights
+- Quando operador confirmar ≥3 reviews Google: ativar `aggregateRating` em `index.html`
