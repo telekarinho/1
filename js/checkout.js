@@ -318,7 +318,7 @@ function placeOrder() {
                 '⏳ <strong>Status:</strong> Aguardando pagamento' +
             '</p>' +
             '<div style="margin-top:12px;padding:14px;background:linear-gradient(135deg,#FFF5F7,#F5F0FF);border:2px dashed #FF0040;border-radius:12px;text-align:center">' +
-                '<div style="font-size:12px;font-weight:700;color:#9B59B6;margin-bottom:4px">🎟️ Desafio 10.000 Milissegundos</div>' +
+                '<div style="font-size:12px;font-weight:700;color:#9B59B6;margin-bottom:4px">🎟️ Desafio 10 Segundos</div>' +
                 '<div style="font-family:monospace;font-size:28px;font-weight:900;color:#FF0040;letter-spacing:3px;margin-bottom:4px">' + voucherDisplay + '</div>' +
                 '<div style="font-size:11px;color:#888">Use este codigo em milkypot.com/desafio.html</div>' +
             '</div>';
