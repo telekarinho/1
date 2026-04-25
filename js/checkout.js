@@ -297,6 +297,28 @@ function placeOrder() {
     }
 
     // ============================================
+    // RASPINHA DA SORTE — geração no checkout (delivery)
+    // Gera junto com o pagamento (regra: sempre na hora da finalização)
+    // ============================================
+    var scratchData = null;
+    if (typeof RaspinhaEngine !== 'undefined' && RaspinhaEngine.generate) {
+        try {
+            var raspResult = RaspinhaEngine.generate({
+                franchiseId: storeId || 'muffato-quintino',
+                storeName: storeName,
+                customerName: customerName,
+                customerPhone: customerPhone,
+                orderTotal: total,
+                orderId: orderNumber,
+                orderSource: 'delivery',
+                generatedBy: 'order'
+            });
+            scratchData = raspResult.scratch;
+            if (!scratchData) console.info('[Raspinha checkout]', raspResult.reason);
+        } catch(e) { console.warn('Raspinha generate error:', e); }
+    }
+
+    // ============================================
     // SHOW SUCCESS
     // ============================================
     closeCheckout();
@@ -308,6 +330,20 @@ function placeOrder() {
     if (orderNumEl) orderNumEl.textContent = orderNumber;
 
     if (detailsEl) {
+        // Bloco da raspadinha (só se foi emitida)
+        var raspadinhaBlock = '';
+        if (scratchData) {
+            var raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratchData.shortCode);
+            var qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(raspUrl) + '&ecc=M&margin=0';
+            raspadinhaBlock =
+                '<div style="margin-top:12px;padding:16px;background:linear-gradient(135deg,#FFF8E7,#FFE8D6);border:2px dashed #FF9800;border-radius:14px;text-align:center">' +
+                    '<div style="font-size:13px;font-weight:800;color:#E65100;margin-bottom:6px;letter-spacing:.5px">🎰 RASPINHA DA SORTE</div>' +
+                    '<div style="font-family:monospace;font-size:32px;font-weight:900;color:#FF6F00;letter-spacing:4px;margin-bottom:8px">' + scratchData.shortCode + '</div>' +
+                    '<img src="' + qrSrc + '" alt="QR Raspinha" style="width:120px;height:120px;display:block;margin:8px auto;border-radius:6px;background:#fff;padding:6px">' +
+                    '<div style="font-size:12px;color:#8D6E63;font-weight:600">Raspe agora em <strong>milkypot.com/raspinha</strong></div>' +
+                    '<div style="font-size:11px;color:#A1887F;margin-top:4px">Resgate o prêmio pessoalmente na loja ou no próximo pedido pelo site</div>' +
+                '</div>';
+        }
         detailsEl.innerHTML =
             '<p><strong>Loja:</strong> ' + storeName + '</p>' +
             '<p><strong>Entrega:</strong> ' + (deliveryType === 'delivery' ? 'Delivery' : 'Retirada na loja') + '</p>' +
@@ -321,7 +357,8 @@ function placeOrder() {
                 '<div style="font-size:12px;font-weight:700;color:#9B59B6;margin-bottom:4px">🎟️ Desafio 10 Segundos</div>' +
                 '<div style="font-family:monospace;font-size:28px;font-weight:900;color:#FF0040;letter-spacing:3px;margin-bottom:4px">' + voucherDisplay + '</div>' +
                 '<div style="font-size:11px;color:#888">Use este codigo em milkypot.com/desafio.html</div>' +
-            '</div>';
+            '</div>' +
+            raspadinhaBlock;
     }
 
     if (successModal) {
