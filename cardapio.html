@@ -362,6 +362,8 @@
                         console.log('🌱 Auto-seed CatalogV2 no cardápio delivery...');
                         CatalogV2.seedMilkyPot(fid);
                     } else if (hasProdutos) {
+                        // Aplica migrations centralizadas — sincroniza com PDV/admin
+                        if (CatalogV2.applyAllMigrations) CatalogV2.applyAllMigrations(fid);
                         CatalogV2.syncToLegacy(fid);
                     }
                 }

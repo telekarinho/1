@@ -851,11 +851,29 @@
         return res;
     }
 
-    // Auto-sync ao load (garante PDV sempre atualizado)
+    // Aplica TODAS as migrations idempotentes — chamada centralizada
+    // pra garantir que admin/PDV/cardápio/financeiro vejam os mesmos dados.
+    // Cada migrate tem seu próprio gate (__xxxMigratedV1) e pula se já rodou.
+    function applyAllMigrations(fid) {
+        try {
+            const d = load(fid);
+            if (!d.produtos.length) return { skipped: true, reason: 'sem produtos seed' };
+            const results = {};
+            try { results.buffet = migrateBuffetV1(fid); } catch(e) { results.buffet_err = e.message; }
+            try { results.milkshakeSizes = migrateMilkshakeSizesV1(fid); } catch(e) { results.milkshakeSizes_err = e.message; }
+            try { results.milkshakeFlavors = migrateMilkshakeFlavorsV1(fid); } catch(e) { results.milkshakeFlavors_err = e.message; }
+            return results;
+        } catch(e) { return { error: e.message }; }
+    }
+
+    // Auto-sync ao load (garante PDV/admin/cardápio sempre atualizados)
     function autoSyncIfNeeded(fid) {
         try {
             const d = load(fid);
-            if (d.produtos.length > 0) syncToLegacy(fid);
+            if (d.produtos.length > 0) {
+                applyAllMigrations(fid);
+                syncToLegacy(fid);
+            }
         } catch(e){}
     }
 
@@ -872,8 +890,12 @@
         migrateBuffetV1,
         migrateMilkshakeSizesV1,
         migrateMilkshakeFlavorsV1,
+        applyAllMigrations,
         syncToLegacy,
         autoSyncIfNeeded,
+        // Catálogo dos sabores oficiais — usado por TV indoor e marketing
+        MILKSHAKE_FLAVORS,
+        MILKSHAKE_PREMIUM_ACAI,
         newId,
         CATEGORIAS_SEED
     };
