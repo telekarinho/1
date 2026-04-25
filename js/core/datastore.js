@@ -29,11 +29,45 @@ const DataStore = {
                 this._flushPendingWrites();
                 // Load cloud data to local cache
                 this._syncFromCloud();
+                // Watcher de Firebase Auth — detecta mp_session ÓRFÃ (sem user no Firebase)
+                this._setupAuthWatcher();
             } else {
                 console.warn('⚠️ DataStore: Firestore nao disponivel, usando localStorage apenas');
             }
         } catch (e) {
             console.error('DataStore.init error:', e);
+        }
+    },
+
+    // Detecta estado órfão: mp_session existe em localStorage mas firebase.auth().currentUser=null.
+    // Causa: Firebase Auth perdeu o token (clear cache, browser separado, IndexedDB corrupto).
+    // Sintoma: TODA query Firestore retorna 'Missing or insufficient permissions'.
+    // Sem isso, operador fica frustrado — UI mostra logado mas nada sincroniza.
+    _setupAuthWatcher() {
+        try {
+            if (!firebase || !firebase.auth) return;
+            var self = this;
+            firebase.auth().onAuthStateChanged(function (user) {
+                self._firebaseUser = user;
+                var hasMpSession = !!localStorage.getItem('mp_session');
+                if (hasMpSession && !user) {
+                    // Sessão MilkyPot existe mas Firebase Auth está vazio = sync NUNCA vai funcionar
+                    console.warn('🔒 DataStore: mp_session presente mas Firebase Auth vazio — sync bloqueado');
+                    if (!self._authOrphanWarned) {
+                        self._authOrphanWarned = true;
+                        window.dispatchEvent(new CustomEvent('mp_auth_orphan', {
+                            detail: { reason: 'firebase_no_user', mpSession: true }
+                        }));
+                    }
+                } else if (user) {
+                    // Reautenticou: re-tenta sync e flush de pending writes
+                    self._authOrphanWarned = false;
+                    self._flushPendingWrites();
+                    self._syncFromCloud();
+                }
+            });
+        } catch (e) {
+            console.warn('_setupAuthWatcher error:', e);
         }
     },
 
@@ -430,7 +464,17 @@ const DataStore = {
     async forceSync() {
         if (!this._ready || !this._db) {
             console.warn('forceSync: Firestore não conectado');
-            return { success: false, error: 'Firestore offline' };
+            return { success: false, error: 'Firestore offline', code: 'no_db' };
+        }
+        // Detecta sessão órfã ANTES de tentar — falha rápido com mensagem útil
+        var fbUser = (firebase && firebase.auth) ? firebase.auth().currentUser : null;
+        if (!fbUser) {
+            console.warn('forceSync: sem firebase.auth().currentUser — sessão órfã');
+            return {
+                success: false,
+                error: 'Sessão expirou. Saia e entre novamente neste PC pra sincronizar.',
+                code: 'auth_orphan'
+            };
         }
         try {
             const snap = await this._db.collection('datastore').get();
@@ -455,7 +499,15 @@ const DataStore = {
             return { success: true, changes: changes, total: snap.size };
         } catch (e) {
             console.error('forceSync error:', e);
-            return { success: false, error: e.message };
+            // Permissão = sessão órfã ou rule mismatch
+            if (e && (e.code === 'permission-denied' || /permission/i.test(e.message))) {
+                return {
+                    success: false,
+                    error: 'Permissão negada. Saia e entre novamente neste PC.',
+                    code: 'permission_denied'
+                };
+            }
+            return { success: false, error: e.message, code: 'unknown' };
         }
     },
 
