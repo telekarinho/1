@@ -341,6 +341,19 @@ const DataStore = {
         return null;
     },
 
+    // Lista de docs públicos por franquia — sync funciona SEM auth via per-doc gets
+    // (collection.get() exige rule de LIST que não temos pra unauth).
+    _publicSyncDocs() {
+        var fid = (typeof Auth !== 'undefined' && Auth.getSession) ? (Auth.getSession() || {}).franchiseId : null;
+        if (!fid) return [];
+        return [
+            'orders_' + fid,
+            'caixa_' + fid,
+            'pdv_tabs_' + fid,
+            'finances_' + fid
+        ];
+    },
+
     async _syncFromCloud() {
         if (!this._ready || !this._db) return;
         try {
@@ -351,32 +364,24 @@ const DataStore = {
                 this.set('catalog_config', CARDAPIO_CONFIG);
             }
 
-            const snapshot = await this._db.collection('datastore').get();
-            if (snapshot.empty) {
-                // First time: push local data to cloud
-                console.log('☁️ Firestore vazio, enviando dados locais...');
-                this._pushAllToCloud();
-            } else {
-                // Cloud has data: update local cache
-                console.log('☁️ Sincronizando dados do Firestore...');
-                snapshot.forEach(doc => {
-                    const key = doc.id;
-                    try {
-                        const cloudData = JSON.parse(doc.data().value);
-                        // Only update if cloud data is different/newer (simplified here as overwrite)
-                        localStorage.setItem(this.PREFIX + key, JSON.stringify(cloudData));
-                    } catch (e) {
-                        console.warn('Sync parse error for:', key, e);
+            // PER-DOC reads — funciona sem auth pq cada doc tem allow read individual
+            // pelas patterns orders_*, caixa_*, etc. Collection.get() exigia LIST permission.
+            const docsToSync = this._publicSyncDocs();
+            let synced = 0;
+            for (const docId of docsToSync) {
+                try {
+                    const doc = await this._db.collection('datastore').doc(docId).get();
+                    if (doc.exists) {
+                        const cloudStr = doc.data().value;
+                        localStorage.setItem(this.PREFIX + docId, cloudStr);
+                        synced++;
                     }
-                });
-                console.log(`✅ ${snapshot.size} registros sincronizados do Firestore`);
+                } catch (e) {
+                    console.warn('per-doc sync error', docId, e.message);
+                }
             }
+            console.log(`☁️ Per-doc sync: ${synced}/${docsToSync.length} docs`);
 
-            // Notifica paginas que a sincronizacao com Firestore terminou.
-            // Paginas como despesas.html re-renderizam para refletir o estado
-            // atual do localStorage apos o sync (evita race condition).
-            // _syncDone=true permite que listeners tardios (auth > sync)
-            // detectem que o sync ja correu sem precisar do evento.
             this._syncDone = true;
             window.dispatchEvent(new CustomEvent('mp_synced'));
 
@@ -386,83 +391,66 @@ const DataStore = {
                     const newData = JSON.parse(doc.data().value);
                     localStorage.setItem(this.PREFIX + 'catalog_config', doc.data().value);
                     console.log('🔄 Catálogo atualizado via Firebase (Background)');
-                    // Trigger a custom event for UI updates
                     window.dispatchEvent(new CustomEvent('mp_catalog_updated', { detail: newData }));
                 }
             });
 
-            // ===== REAL-TIME SYNC entre PCs (inauguração) =====
-            // Antes: _syncFromCloud só rodava 1x no carregamento. PC B nunca via pedidos
-            // criados em PC A enquanto a aba estava aberta.
-            // Agora: listener em toda a collection 'datastore'. Sempre que QUALQUER
-            // doc mudar (orders_FID, caixa_FID, finances_FID etc), atualiza localStorage
-            // e dispara mp_remote_update. Pedidos.html reage e re-renderiza o kanban.
-            // Não toca em catalog_config (já tem listener separado).
+            // ===== REAL-TIME SYNC entre PCs (per-doc, sem auth) =====
+            // Listener separado pra cada doc público. Evita problema de
+            // collection-level LIST permission que falha em unauth.
             if (!this._realtimeListenerAttached) {
                 this._realtimeListenerAttached = true;
-                this._db.collection('datastore').onSnapshot(snap => {
-                    snap.docChanges().forEach(change => {
-                        if (change.doc.id === 'catalog_config') return; // listener próprio
-                        if (change.type === 'removed') {
-                            localStorage.removeItem(this.PREFIX + change.doc.id);
-                            window.dispatchEvent(new CustomEvent('mp_remote_update', {
-                                detail: { key: change.doc.id, removed: true }
-                            }));
-                            return;
-                        }
+                const self = this;
+                docsToSync.forEach(docId => {
+                    self._db.collection('datastore').doc(docId).onSnapshot(doc => {
+                        if (!doc.exists) return;
                         try {
-                            const key = change.doc.id;
-                            const cloudStr = change.doc.data().value;
-                            const localStr = localStorage.getItem(this.PREFIX + key);
-                            // Só dispara se o conteúdo mudou (evita echo do próprio write)
+                            const cloudStr = doc.data().value;
+                            const localStr = localStorage.getItem(self.PREFIX + docId);
                             if (localStr !== cloudStr) {
-                                localStorage.setItem(this.PREFIX + key, cloudStr);
+                                localStorage.setItem(self.PREFIX + docId, cloudStr);
                                 let parsed = null;
                                 try { parsed = JSON.parse(cloudStr); } catch(_) {}
                                 window.dispatchEvent(new CustomEvent('mp_remote_update', {
-                                    detail: { key, data: parsed }
+                                    detail: { key: docId, data: parsed }
                                 }));
-                                console.log('🔄 Sync remoto:', key);
+                                console.log('🔄 Sync remoto:', docId);
                             }
                         } catch (e) {
-                            console.warn('Realtime sync error:', change.doc.id, e);
+                            console.warn('Realtime sync error:', docId, e);
                         }
+                    }, err => {
+                        console.warn('Listener err', docId, err.code || err.message);
                     });
-                }, err => {
-                    console.warn('Realtime listener error:', err);
-                    this._realtimeListenerAttached = false;
                 });
             }
 
-            // ===== POLLING FALLBACK (belt + suspenders) =====
-            // Se o onSnapshot falhar silenciosamente (rede instável, Firestore quota,
-            // listener morto após sleep do PC etc), garante eventual consistency em <30s.
-            // Pull leve: só lê. Se diff vs local, atualiza + dispara mp_remote_update.
+            // ===== POLLING FALLBACK (per-doc, 5s) =====
             if (!this._pollFallbackId) {
                 const self = this;
-                this._pollFallbackId = setInterval(() => {
+                this._pollFallbackId = setInterval(async () => {
                     if (!self._ready || !self._db) return;
-                    self._db.collection('datastore').get().then(snap => {
-                        let changes = 0;
-                        snap.forEach(doc => {
-                            if (doc.id === 'catalog_config') return; // listener próprio
-                            try {
-                                const cloudStr = doc.data().value;
-                                const localStr = localStorage.getItem(self.PREFIX + doc.id);
-                                if (localStr !== cloudStr) {
-                                    localStorage.setItem(self.PREFIX + doc.id, cloudStr);
-                                    let parsed = null;
-                                    try { parsed = JSON.parse(cloudStr); } catch (_) {}
-                                    window.dispatchEvent(new CustomEvent('mp_remote_update', {
-                                        detail: { key: doc.id, data: parsed, source: 'poll' }
-                                    }));
-                                    changes++;
-                                }
-                            } catch (e) {}
-                        });
-                        if (changes > 0) console.log('🔁 Poll fallback: ' + changes + ' doc(s) sincronizados');
-                    }).catch(e => console.warn('Poll fallback error:', e.message));
-                }, 5000); // 5s — sync agressivo pra inauguração; ajusta pra 15-30s depois
+                    const docs = self._publicSyncDocs();
+                    let changes = 0;
+                    for (const docId of docs) {
+                        try {
+                            const doc = await self._db.collection('datastore').doc(docId).get();
+                            if (!doc.exists) continue;
+                            const cloudStr = doc.data().value;
+                            const localStr = localStorage.getItem(self.PREFIX + docId);
+                            if (localStr !== cloudStr) {
+                                localStorage.setItem(self.PREFIX + docId, cloudStr);
+                                let parsed = null;
+                                try { parsed = JSON.parse(cloudStr); } catch (_) {}
+                                window.dispatchEvent(new CustomEvent('mp_remote_update', {
+                                    detail: { key: docId, data: parsed, source: 'poll' }
+                                }));
+                                changes++;
+                            }
+                        } catch (e) { /* ignora — listener pega ou próximo poll */ }
+                    }
+                    if (changes > 0) console.log('🔁 Poll: ' + changes + ' doc(s) atualizado(s)');
+                }, 5000);
             }
 
         } catch (e) {
@@ -471,45 +459,44 @@ const DataStore = {
     },
 
     // Manual force sync — botão "Sincronizar Agora" no UI
+    // PER-DOC gets pra não depender de LIST permission da collection.
     async forceSync() {
         if (!this._ready || !this._db) {
             console.warn('forceSync: Firestore não conectado');
             return { success: false, error: 'Firestore offline', code: 'no_db' };
         }
-        // NÃO faz pre-check de auth — rules de orders_/caixa_/pdv_tabs_/finances_
-        // permitem read público. Deixa Firestore decidir e capture erro real.
         try {
-            const snap = await this._db.collection('datastore').get();
+            const docsToSync = this._publicSyncDocs();
             let changes = 0;
-            snap.forEach(doc => {
-                if (doc.id === 'catalog_config') return;
+            let total = 0;
+            for (const docId of docsToSync) {
                 try {
+                    const doc = await this._db.collection('datastore').doc(docId).get();
+                    total++;
+                    if (!doc.exists) continue;
                     const cloudStr = doc.data().value;
-                    const localStr = localStorage.getItem(this.PREFIX + doc.id);
+                    const localStr = localStorage.getItem(this.PREFIX + docId);
                     if (localStr !== cloudStr) {
-                        localStorage.setItem(this.PREFIX + doc.id, cloudStr);
+                        localStorage.setItem(this.PREFIX + docId, cloudStr);
                         let parsed = null;
                         try { parsed = JSON.parse(cloudStr); } catch(_) {}
                         window.dispatchEvent(new CustomEvent('mp_remote_update', {
-                            detail: { key: doc.id, data: parsed, source: 'force' }
+                            detail: { key: docId, data: parsed, source: 'force' }
                         }));
                         changes++;
                     }
-                } catch (e) {}
-            });
+                } catch (e) {
+                    console.warn('forceSync per-doc:', docId, e.code || e.message);
+                }
+            }
+            // Para compat com código existente que itera snap.forEach
+            const snap = { size: total };
             console.log('🔄 ForceSync: ' + changes + ' doc(s) atualizado(s)');
             return { success: true, changes: changes, total: snap.size };
         } catch (e) {
             console.error('forceSync error:', e);
-            // Permissão = sessão órfã ou rule mismatch
-            if (e && (e.code === 'permission-denied' || /permission/i.test(e.message))) {
-                return {
-                    success: false,
-                    error: 'Permissão negada. Saia e entre novamente neste PC.',
-                    code: 'permission_denied'
-                };
-            }
-            return { success: false, error: e.message, code: 'unknown' };
+            // Per-doc gets protegem contra permission-denied — mensagem genérica
+            return { success: false, error: e.message || 'Erro ao sincronizar', code: 'unknown' };
         }
     },
 
