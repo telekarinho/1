@@ -721,6 +721,7 @@
 <script src="../js/core/utils.js"></script>
 <script src="../js/core/datastore.js"></script>
 <script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
 <script src="../js/core/adminconfig.js?v=mp-v14"></script>
@@ -2674,68 +2675,158 @@
         btn.disabled = true;
         btn.textContent = 'Aplicando...';
 
-        // Mark redeemed in localStorage
+        // Validação minOrder ANTES de marcar como resgatada
+        var cartTotal = cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
+        if (scratch.minOrder && cartTotal < scratch.minOrder) {
+            btn.disabled = false;
+            btn.textContent = '✅ Validar Codigo';
+            toast('🚫 Pedido mínimo R$ ' + scratch.minOrder + ' pra resgatar este prêmio. Atual: R$ ' + cartTotal.toFixed(2));
+            return;
+        }
+
+        // Aplica o prêmio no carrinho (calcula desconto)
+        var applied = applyPrizeToCart(scratch);
+        if (!applied) {
+            btn.disabled = false;
+            btn.textContent = '✅ Validar Codigo';
+            return;
+        }
+
+        // Marca como resgatada (local + Firestore)
         var key = 'scratches_' + scratch.franchiseId;
         var arr = DataStore.get(key) || [];
         var idx = arr.findIndex(function(s){ return s.code === scratch.code; });
+        var employeeId = (typeof Auth !== 'undefined' ? Auth.getSession().userId : 'unknown');
         if(idx !== -1){
             arr[idx].status = 'redeemed';
             arr[idx].redeemedAt = new Date().toISOString();
             arr[idx].redeemedStoreId = fid;
-            arr[idx].redeemedEmployeeId = (typeof Auth !== 'undefined' ? Auth.getSession().userId : 'unknown');
+            arr[idx].redeemedEmployeeId = employeeId;
             DataStore.set(key, arr);
         }
-
-        // Also mark in Firestore
         try {
             if(typeof firebase !== 'undefined' && firebase.firestore){
                 await firebase.firestore().collection('scratches').doc(scratch.code).update({
                     status: 'redeemed',
                     redeemedAt: new Date().toISOString(),
                     redeemedStoreId: fid,
-                    redeemedEmployeeId: (typeof Auth !== 'undefined' ? Auth.getSession().userId : 'unknown')
+                    redeemedEmployeeId: employeeId
                 });
             }
         } catch(e){ console.warn('Firestore redeem update:', e); }
 
-        // Apply prize to cart (add as item with appropriate adjustment)
-        applyPrizeToCart(scratch);
+        // LOOP ON REDEEM — gera nova raspadinha pro cliente (próxima visita)
+        var loopScratch = tryGenerateLoopScratch(scratch, cartTotal);
+        var loopMsg = loopScratch
+            ? ' 🎁 Cliente ganhou NOVA raspinha (' + loopScratch.shortCode + ') pra usar no próximo pedido!'
+            : '';
 
         pendingRedeemedScratch = null;
         closeRedeemModal();
-        toast('🎉 Raspinha resgatada! Premio aplicado ao pedido.');
+        toast('🎉 Raspinha resgatada! Prêmio aplicado.' + loopMsg);
+    }
+
+    // Mapa: prizeCode → cálculo do desconto a aplicar (negativo = abate do total)
+    // Atendente confirma o resgate só se cliente já tem o item correspondente no carrinho
+    function calculatePrizeDiscount(scratch, cartTotal){
+        var code = scratch.prizeCode;
+        switch(code){
+            case 'RSP_TRY_AGAIN':     return 0;                              // Não é resgatável
+            case 'RSP_TOPPING_FREE':  return -2.50;                          // 1 topping ~R$2,50
+            case 'RSP_UPSIZE':        return -3.00;                          // delta P→M ou M→G aproximado
+            case 'RSP_DISC_5':        return -5.00;                          // R$5 OFF
+            case 'RSP_2BY1_TOPPING':  return -2.50;                          // 1 topping grátis
+            case 'RSP_BUFFET_100G':   return -5.99;                          // 100g de buffet (R$5,99)
+            case 'RSP_PICOLE_2BY1':   return -3.00;                          // 1 picolé grátis
+            case 'RSP_SHAKE_P_FREE':  return -9.99;                          // Milkshake P grátis
+            case 'RSP_SUNDAE_P_FREE': return -9.99;                          // Sundae P grátis
+            case 'RSP_CAPITAO_50':    return -12.50;                         // 50% de R$24,99
+            case 'RSP_MEGA_50':       return -Math.min(50, cartTotal);       // R$50 capped pelo total
+            default:                  return 0;
+        }
     }
 
     function applyPrizeToCart(scratch){
-        // Add prize as a cart item with discount/bonus based on prize type
+        var cartTotal = cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
+
+        // Validação minOrder — só aplica se carrinho atende mínimo
+        if (scratch.minOrder && cartTotal < scratch.minOrder) {
+            toast('🚫 Pedido mínimo R$ ' + scratch.minOrder + ' pra usar este prêmio. Atual: R$ ' + cartTotal.toFixed(2));
+            return false;
+        }
+
+        var discount = calculatePrizeDiscount(scratch, cartTotal);
+        if (discount === 0) {
+            toast('Esta raspinha não dá desconto monetário (cliente já ganhou no anterior).');
+            return false;
+        }
+
         var prizeItem = {
+            id: Utils.generateId(),
             baseId: 'prize',
             fmtId: 'scratch',
             sabId: scratch.prizeCode,
             name: '🎁 ' + scratch.prizeName,
             emoji: '🎁',
-            size: 'Raspinha ' + scratch.code.slice(-8),
+            size: 'Raspinha ' + (scratch.shortCode || scratch.code.slice(-8)),
             extras: [],
             qty: 1,
-            unitPrice: 0,
-            total: 0,
+            unitPrice: discount,
+            total: discount,
             isPrize: true,
             prizeCode: scratch.prizeCode,
+            prizeCategoria: scratch.prizeCategoria || null,
             scratchCode: scratch.code
         };
 
-        // Apply monetary discount for specific prize types
-        var discountMap = {
-            'RSP_DISC_5': -5,
-            'RSP_MEGA_150': -Math.min(150, cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0))
-        };
-        if(discountMap[scratch.prizeCode]){
-            prizeItem.unitPrice = discountMap[scratch.prizeCode];
-            prizeItem.total = discountMap[scratch.prizeCode];
-        }
-
         cart.push(prizeItem);
         renderCart();
+        return true;
+    }
+
+    // LOOP ON REDEEM — gera NOVA raspadinha pro cliente quando ele resgata
+    // (Behavioral Nudge agent: efeito de loop infinito de retorno)
+    // Só dispara se loopOnRedeem=true E novo pedido atende minTicketForLoop
+    function tryGenerateLoopScratch(originalScratch, newOrderTotal){
+        var cfg = getScratchConfig();
+        if (!cfg.loopOnRedeem) return null;
+        if (newOrderTotal < (cfg.minTicketForLoop || 15)) {
+            console.info('[Raspinha Loop] Pedido R$' + newOrderTotal + ' abaixo do mín R$' + (cfg.minTicketForLoop || 15));
+            return null;
+        }
+        // Gera nova raspadinha (vinculada ao loop) — ignora cooldown porque é recompensa por resgate
+        var newPrize = rollScratchPrize();
+        var newPrizeDesc = pickNearMissCopy(newPrize) || newPrize.desc;
+        var validityDays = newPrize.validity > 0 ? newPrize.validity : (newPrize.tier === 'none' ? 0 : (cfg.defaultValidityDays || 5));
+        var createdAt = new Date();
+        var newScratch = {
+            code: buildScratchCode(),
+            shortCode: buildShortCode(),
+            franchiseId: fid,
+            storeName: fr ? fr.name : 'MilkyPot',
+            prizeCode: newPrize.code,
+            prizeName: newPrize.name,
+            prizeDesc: newPrizeDesc,
+            prizeTier: newPrize.tier,
+            prizeScope: newPrize.scope,
+            prizeCategoria: newPrize.categoria || null,
+            minOrder: newPrize.minOrder,
+            customerName: originalScratch.customerName || '',
+            customerPhone: originalScratch.customerPhone || '',
+            customerKey: originalScratch.customerKey || null,
+            orderTotal: newOrderTotal,
+            status: 'not_scratched',
+            createdAt: createdAt.toISOString(),
+            expiresAt: validityDays > 0 ? new Date(createdAt.getTime() + validityDays*24*60*60*1000).toISOString() : null,
+            validityDays: validityDays,
+            scratchedAt: null, redeemedAt: null,
+            redeemedStoreId: null, redeemedEmployeeId: null, redeemedOrderId: null,
+            sharedOnInstagram: false, instagramBonusGranted: false,
+            generatedBy: 'redeem_loop',           // marca que veio do loop
+            loopFromCode: originalScratch.code     // rastreabilidade
+        };
+        saveScratch(newScratch);
+        return newScratch;
     }
 
     // Auto-print called during finishOrder (cart still filled, order object available)
