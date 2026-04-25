@@ -478,26 +478,34 @@ body:not(.idle){cursor:default}
             var tmp = milkshakeSlides[i]; milkshakeSlides[i] = milkshakeSlides[j]; milkshakeSlides[j] = tmp;
         }
 
-        // Injeta tudo: 300g, Desafio, Buffet, Premium e os 17 sabores
-        var marketingSlides = [
-            { media: marketingPromo1,  duration: 10000 },  // Acertou 300g
-            { media: marketingPromo2,  duration: 10000 },  // Desafio 10s
-            { media: marketingBuffet,  duration: 10000 },  // Buffet R$5,99/100g
-            { media: marketingPremium, duration: 10000 }   // Capitão Açaí Premium
-        ].concat(milkshakeSlides);
+        // Respeita toggles do admin (painel/tv-indoor.html → config)
+        // Default = ON (compatibilidade pra TVs sem config salvo)
+        var cfgShowPromos   = config.showPromosOficiais !== false;
+        var cfgShowFlavors  = config.showTvCardsFlavors !== false;
+        var cfgShowPremium  = config.showTvCardsPremium !== false;
+        var cfgShowBuffet   = config.showTvCardsBuffet  !== false;
+
+        var marketingSlides = [];
+        if (cfgShowPromos)  marketingSlides.push({ media: marketingPromo1,  duration: 10000 });  // Acertou 300g
+        if (cfgShowPromos)  marketingSlides.push({ media: marketingPromo2,  duration: 10000 });  // Desafio 10s
+        if (cfgShowBuffet)  marketingSlides.push({ media: marketingBuffet,  duration: 10000 });  // Buffet R$5,99/100g
+        if (cfgShowPremium) marketingSlides.push({ media: marketingPremium, duration: 10000 });  // Capitão Açaí
+        if (cfgShowFlavors) marketingSlides = marketingSlides.concat(milkshakeSlides);          // 17 sabores
 
         if (playlist.length > 0) {
-            // Mescla: a cada 1 mídia da franquia, intercala 1 marketing
-            var mixed = [];
-            var mIdx = 0;
-            playlist.forEach(function(slot){
-                mixed.push(slot);
-                if (marketingSlides[mIdx]) mixed.push(marketingSlides[mIdx++]);
-            });
-            // Restante do marketing entra no fim
-            while (mIdx < marketingSlides.length) mixed.push(marketingSlides[mIdx++]);
-            playlist = mixed;
-        } else {
+            if (marketingSlides.length > 0) {
+                // Mescla: a cada 1 mídia da franquia, intercala 1 marketing
+                var mixed = [];
+                var mIdx = 0;
+                playlist.forEach(function(slot){
+                    mixed.push(slot);
+                    if (marketingSlides[mIdx]) mixed.push(marketingSlides[mIdx++]);
+                });
+                // Restante do marketing entra no fim
+                while (mIdx < marketingSlides.length) mixed.push(marketingSlides[mIdx++]);
+                playlist = mixed;
+            }
+        } else if (marketingSlides.length > 0) {
             playlist = marketingSlides.slice();
         }
         /* ----------------------------------------------------- */
