@@ -619,6 +619,8 @@
                     } else if (hasProdutos) {
                         // Migração única: toppings reais + buffet R$5,99/100g somente loja
                         if (CatalogV2.migrateBuffetV1) CatalogV2.migrateBuffetV1(fid);
+                        // Migração única: milkshakes ganham tamanhos P/M/G com preços oficiais
+                        if (CatalogV2.migrateMilkshakeSizesV1) CatalogV2.migrateMilkshakeSizesV1(fid);
                         CatalogV2.syncToLegacy(fid);
                     }
                 }
@@ -838,18 +840,32 @@
                 container.appendChild(div);
             });
 
-            // Variantes (sorvete kg, potes, baldes)
+            // Variantes (sorvete kg, potes, baldes, milkshakes P/M/G)
             (it._v2.variantes || []).forEach(v => {
                 const price = Number(v[priceKey]) || 0;
                 if (!price) return;
                 const div = document.createElement('div');
                 div.className = 'kv-opt';
-                const sub = v.gramas ? v.gramas + 'g · ' + v.tipo : v.tipo;
+                // Sub-label: ml para copo (milkshake), gramas para pote/balde
+                const isCopo = v.tipo === 'copo';
+                const unidade = v.gramas ? (isCopo ? v.gramas + 'ml' : v.gramas + 'g') : '';
+                const sub = unidade ? unidade + (v.tipo ? ' · ' + v.tipo : '') : (v.tipo || '');
+                const icon = isCopo ? '🥤' : '⚖️';
+
+                // Promoção: mostra preço original riscado + label
+                const isPromoLoja = canal === 'loja' && v.promoAtivo && Number(v.precoLojaOriginal) > price;
+                const promoBadge = isPromoLoja
+                    ? `<span style="background:#FF4F8A;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;margin-left:6px;letter-spacing:.3px">${(v.promoLabel || 'PROMO').toUpperCase()}</span>`
+                    : '';
+                const priceHtml = isPromoLoja
+                    ? `<div style="text-align:right"><div style="text-decoration:line-through;color:#999;font-size:11px">${brl(v.precoLojaOriginal)}</div><div class="kv-price" style="color:#FF4F8A">${brl(price)}</div></div>`
+                    : `<div class="kv-price">${brl(price)}</div>`;
+
                 div.innerHTML = `<div>
-                    <div class="kv-label">⚖️ ${v.name}</div>
+                    <div class="kv-label">${icon} ${v.name}${promoBadge}</div>
                     <div class="kv-sub">${sub}</div>
                 </div>
-                <div class="kv-price">${brl(price)}</div>`;
+                ${priceHtml}`;
                 div.onclick = () => this._confirmKv({ variante: v, price, label: v.name });
                 container.appendChild(div);
             });
