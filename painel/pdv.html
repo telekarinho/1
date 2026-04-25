@@ -724,22 +724,22 @@
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v48"></script>
-<script src="../js/core/motivacional.js?v=mp-v48"></script>
-<script src="../js/core/caixa.js?v=mp-v48"></script>
-<script src="../js/core/financas.js?v=mp-v48"></script>
-<script src="../js/core/onboarding.js?v=mp-v48"></script>
-<script src="../js/core/units.js?v=mp-v48"></script>
-<script src="../js/core/error-tracking.js?v=mp-v48"></script>
-<script src="../js/core/recipes.js?v=mp-v48"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v48"></script>
-<script src="../js/core/offline-queue.js?v=mp-v48"></script>
-<script src="../js/core/pix.js?v=mp-v48"></script>
-<script src="../js/core/nfce.js?v=mp-v48"></script>
-<script src="../js/core/printer.js?v=mp-v48"></script>
+<script src="../js/core/adminconfig.js?v=mp-v49"></script>
+<script src="../js/core/motivacional.js?v=mp-v49"></script>
+<script src="../js/core/caixa.js?v=mp-v49"></script>
+<script src="../js/core/financas.js?v=mp-v49"></script>
+<script src="../js/core/onboarding.js?v=mp-v49"></script>
+<script src="../js/core/units.js?v=mp-v49"></script>
+<script src="../js/core/error-tracking.js?v=mp-v49"></script>
+<script src="../js/core/recipes.js?v=mp-v49"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v49"></script>
+<script src="../js/core/offline-queue.js?v=mp-v49"></script>
+<script src="../js/core/pix.js?v=mp-v49"></script>
+<script src="../js/core/nfce.js?v=mp-v49"></script>
+<script src="../js/core/printer.js?v=mp-v49"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v48"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v48"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v49"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v49"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -1515,6 +1515,61 @@
     renderPdvStatusChips();
     // Atualiza a cada 30s (caso outro atendente mexa em paralelo)
     setInterval(renderPdvStatusChips, 30000);
+
+    // ========== AUTO-ABRIR CAIXA ==========
+    // Se caixa não foi aberto hoje, banner gigante no topo + modal automático.
+    // Operador NÃO precisa achar chip pequeno — fluxo é dirigido.
+    function ensureCaixaAberto() {
+        if (typeof Caixa === 'undefined' || !Caixa.getTurnoState) return;
+        try {
+            var st = Caixa.getTurnoState(fid);
+            var existing = document.getElementById('pdvCaixaBlocker');
+            if (st.status === 'aberto') {
+                if (existing) existing.remove();
+                return;
+            }
+            if (existing) return; // já mostrando, não duplica
+            var blocker = document.createElement('div');
+            blocker.id = 'pdvCaixaBlocker';
+            blocker.style.cssText = 'position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;padding:14px 20px;z-index:9000;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 4px 18px rgba(0,0,0,.25);font-family:"Nunito",sans-serif;flex-wrap:wrap';
+            var label = st.status === 'fechado'
+                ? '🔒 <strong>Caixa de hoje já foi fechado</strong> · Para vender, peça reabertura ao gerente'
+                : '⚠️ <strong>Caixa fechado</strong> · Antes de vender, abra o caixa com o valor de troco inicial';
+            blocker.innerHTML =
+                '<div style="font-size:14px;line-height:1.3;flex:1;min-width:200px">' + label + '</div>' +
+                '<button id="pdvCaixaBlockerBtn" style="background:#fff;color:#D97706;border:none;padding:10px 22px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);font-family:inherit">🟢 Abrir Caixa Agora</button>';
+            document.body.insertBefore(blocker, document.body.firstChild);
+            // Empurra o conteúdo do PDV pra baixo pra não cobrir
+            document.body.style.paddingTop = (blocker.offsetHeight) + 'px';
+            document.getElementById('pdvCaixaBlockerBtn').addEventListener('click', function () {
+                if (!Caixa.showOpenModal) { alert('Módulo Caixa ainda carregando, tente em 3s'); return; }
+                Caixa.showOpenModal(fid, function () {
+                    var b = document.getElementById('pdvCaixaBlocker');
+                    if (b) { document.body.style.paddingTop = ''; b.remove(); }
+                    if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
+                });
+            });
+        } catch (e) { console.warn('ensureCaixaAberto:', e); }
+    }
+    // Roda 1x já + tenta abrir modal automaticamente após 800ms (dá tempo do DOM/Caixa carregar)
+    ensureCaixaAberto();
+    setTimeout(function () {
+        ensureCaixaAberto();
+        try {
+            if (typeof Caixa !== 'undefined' && Caixa.getTurnoState) {
+                var st = Caixa.getTurnoState(fid);
+                if (st.status === 'nao_aberto' && Caixa.showOpenModal) {
+                    Caixa.showOpenModal(fid, function () {
+                        var b = document.getElementById('pdvCaixaBlocker');
+                        if (b) { document.body.style.paddingTop = ''; b.remove(); }
+                        if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
+                    });
+                }
+            }
+        } catch (e) { console.warn('auto-open caixa:', e); }
+    }, 800);
+    // Re-checa a cada 30s (caso operador feche caixa em outra aba)
+    setInterval(ensureCaixaAberto, 30000);
 
     // ========== OFFLINE QUEUE: indicador visual + init ==========
     try {
