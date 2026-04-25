@@ -883,22 +883,22 @@
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v58"></script>
-<script src="../js/core/motivacional.js?v=mp-v58"></script>
-<script src="../js/core/caixa.js?v=mp-v58"></script>
-<script src="../js/core/financas.js?v=mp-v58"></script>
-<script src="../js/core/onboarding.js?v=mp-v58"></script>
-<script src="../js/core/units.js?v=mp-v58"></script>
-<script src="../js/core/error-tracking.js?v=mp-v58"></script>
-<script src="../js/core/recipes.js?v=mp-v58"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v58"></script>
-<script src="../js/core/offline-queue.js?v=mp-v58"></script>
-<script src="../js/core/pix.js?v=mp-v58"></script>
-<script src="../js/core/nfce.js?v=mp-v58"></script>
-<script src="../js/core/printer.js?v=mp-v58"></script>
+<script src="../js/core/adminconfig.js?v=mp-v59"></script>
+<script src="../js/core/motivacional.js?v=mp-v59"></script>
+<script src="../js/core/caixa.js?v=mp-v59"></script>
+<script src="../js/core/financas.js?v=mp-v59"></script>
+<script src="../js/core/onboarding.js?v=mp-v59"></script>
+<script src="../js/core/units.js?v=mp-v59"></script>
+<script src="../js/core/error-tracking.js?v=mp-v59"></script>
+<script src="../js/core/recipes.js?v=mp-v59"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v59"></script>
+<script src="../js/core/offline-queue.js?v=mp-v59"></script>
+<script src="../js/core/pix.js?v=mp-v59"></script>
+<script src="../js/core/nfce.js?v=mp-v59"></script>
+<script src="../js/core/printer.js?v=mp-v59"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v58"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v58"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v59"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v59"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -2736,8 +2736,20 @@
             console.info('[Raspinha] Não emitida:', scratchCheck.reason);
         }
 
+        // Numeração sequencial DIÁRIA por franquia — operador acompanha #1, #2, #3...
+        // Calcula no momento da venda baseado nos pedidos do dia (sincronizados via Firestore)
+        var _todayKeyLocal = (function(){
+            var dt = new Date();
+            return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
+        })();
+        var _allOrders = DataStore.getCollection('orders', fid) || [];
+        var _todayOrders = _allOrders.filter(function(o){ return o.createdAt && o.createdAt.slice(0,10) === _todayKeyLocal; });
+        var _seqNum = _todayOrders.length + 1;
+
         var order={
             id:Utils.generateId(),createdAt:new Date().toISOString(),status:'confirmado',
+            dailySeq:_seqNum,                  // numeração diária pra exibição no kanban
+            dailyDate:_todayKeyLocal,
             type:orderType,source:'pdv',
             delivery:orderType==='delivery'?'delivery':null,
             payment:document.getElementById('paymentMethod')?document.getElementById('paymentMethod').value:'Não informado',

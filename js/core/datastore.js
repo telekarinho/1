@@ -418,11 +418,44 @@ const DataStore = {
                         });
                         if (changes > 0) console.log('🔁 Poll fallback: ' + changes + ' doc(s) sincronizados');
                     }).catch(e => console.warn('Poll fallback error:', e.message));
-                }, 25000); // 25s — não muito frequente pra economizar quota
+                }, 5000); // 5s — sync agressivo pra inauguração; ajusta pra 15-30s depois
             }
 
         } catch (e) {
             console.warn('_syncFromCloud error:', e);
+        }
+    },
+
+    // Manual force sync — botão "Sincronizar Agora" no UI
+    async forceSync() {
+        if (!this._ready || !this._db) {
+            console.warn('forceSync: Firestore não conectado');
+            return { success: false, error: 'Firestore offline' };
+        }
+        try {
+            const snap = await this._db.collection('datastore').get();
+            let changes = 0;
+            snap.forEach(doc => {
+                if (doc.id === 'catalog_config') return;
+                try {
+                    const cloudStr = doc.data().value;
+                    const localStr = localStorage.getItem(this.PREFIX + doc.id);
+                    if (localStr !== cloudStr) {
+                        localStorage.setItem(this.PREFIX + doc.id, cloudStr);
+                        let parsed = null;
+                        try { parsed = JSON.parse(cloudStr); } catch(_) {}
+                        window.dispatchEvent(new CustomEvent('mp_remote_update', {
+                            detail: { key: doc.id, data: parsed, source: 'force' }
+                        }));
+                        changes++;
+                    }
+                } catch (e) {}
+            });
+            console.log('🔄 ForceSync: ' + changes + ' doc(s) atualizado(s)');
+            return { success: true, changes: changes, total: snap.size };
+        } catch (e) {
+            console.error('forceSync error:', e);
+            return { success: false, error: e.message };
         }
     },
 
