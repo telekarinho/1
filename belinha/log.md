@@ -1,5 +1,39 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #30 — 2026-04-25
+
+**Área:** Conversão + Auto-aprimoramento (obrigatório a cada 5 ciclos)
+
+**Contexto:** Ciclo #30 — 2 ações: (1) auto-aprimoramento dos ciclos 26–29 e (2) melhoria concreta de conversão pós-inauguração. Com a loja aberta há horas, o próximo grande alavancador de SEO local são reviews no Google Maps. O site não tinha nenhum CTA direcionando clientes a avaliar — gap identificado.
+
+**O que analisou:**
+- Log ciclos 26–29: FAQPage Schema (assíncrono, ok), landing page long-tail (SEO cumulativo), benefits bar/Jhoy (pesquisa + ação imediata = padrão correto), LCP mobile (impacto direto no usuário)
+- `index.html`: seção de depoimentos menciona "2.847 avaliações" (nacional) mas sem link para o cliente deixar sua própria avaliação na unidade Londrina
+- `belinha/estrategia.md`: defasada (ciclo #25) — atualizada com bloqueadores reais (GA ID pendente, aggregateRating aguardando reviews reais)
+- `belinha/content/`: semana 3 não existia → criada
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `index.html` | +seção `review-cta-section` entre depoimentos e mídia: botão "Avaliar no Google" (Google Maps Londrina) + botão "Marcar @milkypotbr" (Instagram). Design pastel consistente. Responsivo <680px. |
+| `belinha/content/pos-inauguracao-semana3.md` | CRIADO — 4 posts (dom/ter/qui/sáb) + 3 stories com foco em reviews Google e UGC semana 3 |
+| `belinha/estrategia.md` | Auto-aprimoramento: aprendizados ciclos 26–29, bloqueadores identificados, rotação 31–35 atualizada |
+
+**Commits:** `2326cf8` (review CTA + semana 3), `934adc9` (estrategia.md)
+
+**Impacto esperado:**
+- Reviews Google Maps: CTA visível logo após leitura de depoimentos → momento de maior propensão a agir
+- UGC Instagram: facilita o cliente marcar a loja nas stories (reach orgânico)
+- Reviews reais desbloqueiam `aggregateRating` Schema.org (template já pronto desde ciclo #26) → rich results no Google
+
+**Próximo passo sugerido:**
+- Ciclo #31: Ativar `aggregateRating` em `index.html` se operador confirmar ≥3 reviews reais no Google Maps
+- Ciclo #32: Upsell banner em `cardapio.html` — milkshake / açaí self-service como premium cross-sell
+- Monitorar: operador deve reportar quantas avaliações chegaram até 02/05
+
+---
+
 ## Ciclo #29 — 2026-04-25
 
 **Área:** UX/Frontend — Core Web Vitals: LCP mobile em `cardapio.html`
