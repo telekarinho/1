@@ -145,6 +145,8 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         <div style="font-size:48px;margin:12px 0" id="revealEmoji">🎁</div>
         <div class="reveal-prize" id="revealPrize">PREMIO AQUI</div>
         <div class="reveal-desc" id="revealDesc"></div>
+        <!-- Endcard MilkyPot — copy por tier (calibrado pelo agente Behavioral) -->
+        <div id="revealEndcard" style="font-size:13px;color:#5A4570;margin:14px 0 18px;line-height:1.45;padding:12px;background:#F0F7FF;border-radius:10px;border:1px dashed #B8D8F8"></div>
         <div class="reveal-actions">
             <button class="btn gold" onclick="closeReveal()">Entendi, quero usar!</button>
             <button class="btn secondary" onclick="shareInstagram()">📱 Postar no Instagram</button>
@@ -170,13 +172,29 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         big:'🎊',
         mega:'💎'
     };
+    // Títulos calibrados pelo agente Behavioral Nudge (loss aversion + dopamine drip)
     var TIER_TITLES = {
         none:'Quase!',
-        small:'Voce ganhou!',
-        medium:'Boa! Voce ganhou!',
-        big:'UAU! Voce ganhou!',
-        mega:'🚨 SUPER PREMIO! 🚨'
+        small:'🐑 Você ganhou!',
+        medium:'🎉 Boa! Você ganhou!',
+        big:'🤩 UAU! Você ganhou!',
+        mega:'🚨 PERAÍ! Você ganhou um MEGA! 🚨'
     };
+
+    // Endcards (frase final pós-raspar) — calibrados por tier
+    // small=urgência amigável · medium=comunidade · big/mega=celebração viral
+    var TIER_ENDCARDS = {
+        none:   'A ovelhinha 🐑 já tá mexendo as patinhas pra te dar algo bom no próximo pedido.',
+        small:  'Anota aí: válido por {DIAS} dias. Cola aqui antes de domingo que a ovelhinha 🐑 te espera.',
+        medium: 'Bem-vindo ao #TimeMilkyPot 🥛 — seu prêmio entrou na conta. Usa quando vier matar a saudade.',
+        big:    'AAAAH! Olha o que a ovelhinha 🐑 te deu! Mostra pra galera: print + @milkypot nos stories 📸',
+        mega:   'PERAÍ. Você ganhou um MEGA 👑 Print, posta nos stories @milkypot e vem buscar — a galera não vai acreditar.'
+    };
+
+    function buildEndcard(tier, validityDays){
+        var template = TIER_ENDCARDS[tier] || TIER_ENDCARDS.small;
+        return template.replace('{DIAS}', validityDays || 5);
+    }
 
     function findInLocalStorage(code){
         // Accepts full code or short code (XXX-XXX)
@@ -419,6 +437,11 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         document.getElementById('revealEmoji').textContent = TIER_EMOJI[tier];
         document.getElementById('revealPrize').textContent = currentScratch.prizeName;
         document.getElementById('revealDesc').textContent = currentScratch.prizeDesc;
+        // Endcard motivacional por tier
+        var endcardEl = document.getElementById('revealEndcard');
+        if (endcardEl) {
+            endcardEl.textContent = buildEndcard(tier, currentScratch.validityDays);
+        }
         // Confetti
         var confetti = document.getElementById('confetti');
         confetti.innerHTML = '';

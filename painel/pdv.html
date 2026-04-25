@@ -1948,30 +1948,54 @@
     // RASPINHA DA SORTE - Prize table (weighted probabilities)
     // Activate/deactivate per franchise via mp_scratch_prizes_FID config
     // =============================================================
+    // === RASPINHA INTELIGENTE V2 ===
+    // Calibragem behavioral: NONE 42% · SMALL 35% · MEDIUM 18% · BIG 4.3% · MEGA 0.7%
+    // Validade default 5 dias · cooldown 90min/CPF · minTicket pra loop infinito
+    // Pr êmios atrelados a produtos REAIS via campo "categoria"
     var DEFAULT_SCRATCH_PRIZES = [
-        {code:'RSP_TRY_AGAIN',   name:'Quase! Tente no proximo pedido', desc:'Hoje nao foi! Mas volta amanha que tem raspinha nova.', prob:30, cost:0,   validity:0,  scope:'any',   minOrder:0,  tier:'none'},
-        {code:'RSP_TOPPING_FREE',name:'1 Topping Gratis',               desc:'Voce ganhou 1 topping gratis no proximo shake ou acai!', prob:22, cost:4,   validity:7,  scope:'same',  minOrder:15, tier:'small'},
-        {code:'RSP_UPSIZE',      name:'Upgrade de Tamanho',             desc:'Pediu M? Leva G. Pediu G? Leva GG. Proximo pedido.',     prob:15, cost:5,   validity:10, scope:'same',  minOrder:15, tier:'small'},
-        {code:'RSP_DISC_5',      name:'R$ 5 OFF',                       desc:'R$ 5 de desconto no proximo pedido acima de R$ 20.',     prob:12, cost:5,   validity:15, scope:'any',   minOrder:20, tier:'medium'},
-        {code:'RSP_2BY1_TOPPING',name:'Toppings 2 x 1',                 desc:'Leve 2 toppings pagando 1 no proximo pedido.',           prob:8,  cost:4,   validity:10, scope:'same',  minOrder:15, tier:'medium'},
-        {code:'RSP_BUFFET_100G', name:'+100g Buffet',                   desc:'100g gratis no buffet de acai no proximo check-in.',     prob:5,  cost:6,   validity:15, scope:'same',  minOrder:0,  tier:'medium'},
-        {code:'RSP_COMBO_15',    name:'Combo 15% OFF',                  desc:'15% OFF em qualquer combo no proximo pedido.',           prob:4,  cost:7.5, validity:15, scope:'any',   minOrder:30, tier:'medium'},
-        {code:'RSP_SHAKE_FREE',  name:'Shake M Gratis',                 desc:'SHAKE M GRATIS! Qualquer sabor, proximo pedido.',        prob:2.5,cost:16,  validity:20, scope:'same',  minOrder:15, tier:'big'},
-        {code:'RSP_ACAI_500G',   name:'Acai 500g + 3 toppings',         desc:'Acai 500g com 3 toppings de brinde. Proximo pedido.',    prob:1,  cost:30,  validity:20, scope:'same',  minOrder:15, tier:'big'},
-        {code:'RSP_MEGA_150',    name:'MEGA R$ 150 em creditos',        desc:'VOCE GANHOU R$150 MilkyPot! Use em ate 30 dias.',        prob:0.5,cost:150, validity:30, scope:'any',   minOrder:0,  tier:'mega'}
+        // NONE — "Quase!" com loss aversion (3 variações rotativas)
+        {code:'RSP_TRY_AGAIN',   name:'Quase! Faltou 1 milímetro', desc:'Aí, aí... passou raspando! Próximo pedido a sorte vira.', prob:42, cost:0, validity:0, scope:'any', minOrder:0, tier:'none', categoria:null,
+         copyVariants:[
+             'Aí, aí... passou raspando! Próximo pedido a sorte vira.',
+             'Ó, escapou por POUCO. A ovelhinha tá guardando algo bom pra próxima.',
+             'Quase! Esse não foi seu prêmio... mas tem outra raspadinha te esperando no próximo potinho.'
+         ]},
+        // SMALL
+        {code:'RSP_TOPPING_FREE',name:'1 Topping Grátis',         desc:'Escolhe 1 topping da casa pro próximo milkshake, sundae ou potinho.', prob:22, cost:0.80, validity:5, scope:'same', minOrder:15, tier:'small', categoria:'cat_milkshake,cat_sundae,cat_potinho,cat_acai'},
+        {code:'RSP_UPSIZE',      name:'Upgrade Grátis P→M ou M→G',desc:'Pediu Milkshake/Sundae P? Leva M. Pediu M? Leva G.', prob:13, cost:5, validity:5, scope:'same', minOrder:15, tier:'small', categoria:'cat_milkshake,cat_sundae'},
+        // MEDIUM
+        {code:'RSP_DISC_5',      name:'R$ 5 OFF acima de R$ 20',  desc:'R$ 5 de desconto no próximo pedido (mínimo R$ 20).', prob:8, cost:5, validity:5, scope:'any', minOrder:20, tier:'medium', categoria:null},
+        {code:'RSP_2BY1_TOPPING',name:'Toppings 2 por 1',         desc:'Escolhe 2 toppings, paga só 1.', prob:5, cost:1.50, validity:5, scope:'same', minOrder:15, tier:'medium', categoria:'cat_milkshake,cat_sundae,cat_potinho'},
+        {code:'RSP_BUFFET_100G', name:'+100g de Buffet Grátis',   desc:'No próximo buffet a granel, ganha 100g extras na pesagem.', prob:3, cost:6, validity:5, scope:'same', minOrder:0, tier:'medium', categoria:'cat_buffet'},
+        {code:'RSP_PICOLE_2BY1', name:'Picolés 2 por 1',          desc:'Pediu 1 picolé? Leva 2. Misture os 22 sabores que quiser.', prob:2, cost:2.60, validity:5, scope:'same', minOrder:0, tier:'medium', categoria:'cat_picole'},
+        // BIG
+        {code:'RSP_SHAKE_P_FREE',name:'Milkshake P Grátis',       desc:'Milkshake P 250ml de qualquer sabor da casa GRÁTIS.', prob:3.3, cost:9.99, validity:5, scope:'same', minOrder:15, tier:'big', categoria:'cat_milkshake'},
+        {code:'RSP_SUNDAE_P_FREE',name:'Sundae P Grátis',         desc:'Sundae P 250ml de qualquer sabor da casa GRÁTIS.', prob:1, cost:9.99, validity:5, scope:'same', minOrder:15, tier:'big', categoria:'cat_sundae'},
+        // MEGA
+        {code:'RSP_CAPITAO_50',  name:'50% OFF no Capitão Açaí',  desc:'O Premium 600ml por metade do preço (R$ 12,49).', prob:0.5, cost:12.50, validity:5, scope:'same', minOrder:0, tier:'mega', categoria:'cat_milkshake,cat_sundae'},
+        {code:'RSP_MEGA_50',     name:'MEGA R$ 50 em créditos',   desc:'R$ 50 em créditos MilkyPot pra usar em até 7 dias.', prob:0.2, cost:50, validity:7, scope:'any', minOrder:0, tier:'mega', categoria:null}
     ];
 
     function getScratchPrizes(){
         var custom = DataStore.get('scratch_prizes_'+fid);
-        if(custom && custom.length) return custom;
-        return DEFAULT_SCRATCH_PRIZES;
+        if(custom && custom.length){
+            // Mescla com defaults (preserva customizações + adiciona prêmios novos)
+            return DEFAULT_SCRATCH_PRIZES.map(function(def){
+                var found = custom.find(function(p){return p.code === def.code});
+                return Object.assign({}, def, found || {});
+            });
+        }
+        return DEFAULT_SCRATCH_PRIZES.slice();
     }
 
     function getScratchConfig(){
         return DataStore.get('scratch_config_'+fid) || {
             enabled: true,
             maxDailyBudget: 500,
-            cooldownHours: 0
+            cooldownMinutes: 90,           // Behavioral Nudge agent: 1 raspinha/90min/CPF
+            minTicketForLoop: 15,          // anti-prejuízo (Growth Hacker)
+            loopOnRedeem: true,            // gera nova raspadinha no resgate
+            defaultValidityDays: 5         // sweet spot
         };
     }
 
@@ -1985,6 +2009,44 @@
             if(r <= acc) return prizes[i];
         }
         return prizes[0];
+    }
+
+    // Cooldown anti-fraude — 1 raspinha por CPF/telefone a cada N minutos
+    // (cliente farma de pedidos pequenos pra raspadinha = bloqueado)
+    function isInCooldown(customerKey){
+        if (!customerKey) return false;
+        var cfg = getScratchConfig();
+        var cooldown = (cfg.cooldownMinutes || 90) * 60 * 1000;
+        var key = 'scratches_' + fid;
+        var arr = DataStore.get(key) || [];
+        var lastForKey = arr.filter(function(s){
+            return s.customerKey === customerKey;
+        }).sort(function(a,b){
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        })[0];
+        if (!lastForKey) return false;
+        var elapsed = Date.now() - new Date(lastForKey.createdAt).getTime();
+        return elapsed < cooldown;
+    }
+
+    // Aplica regra de minTicket — anti-prejuízo. Pedido pequeno não emite raspinha.
+    function shouldEmitScratch(orderTotal, customerKey){
+        var cfg = getScratchConfig();
+        if (!cfg.enabled) return { ok:false, reason:'sistema desativado' };
+        if (orderTotal < (cfg.minTicketForLoop || 15)) {
+            return { ok:false, reason:'ticket abaixo do mínimo R$' + (cfg.minTicketForLoop || 15) };
+        }
+        if (isInCooldown(customerKey)) {
+            return { ok:false, reason:'cooldown ativo (' + (cfg.cooldownMinutes || 90) + ' min/cliente)' };
+        }
+        return { ok:true };
+    }
+
+    // Rotaciona copy de "Quase!" — agente Behavioral Nudge sugeriu A/B/C
+    function pickNearMissCopy(prize){
+        if (!prize || prize.tier !== 'none') return prize.desc;
+        if (!Array.isArray(prize.copyVariants) || !prize.copyVariants.length) return prize.desc;
+        return prize.copyVariants[Math.floor(Math.random() * prize.copyVariants.length)];
     }
 
     function nanoId(n){
@@ -2031,16 +2093,25 @@
         var voucherDisplay = 'MP-' + voucherCode.slice(2);
         var attemptsPerPurchase = parseInt(localStorage.getItem('mp_desafio_attempts_per_purchase') || '1');
 
-        // === RASPINHA DA SORTE ===
-        var scratchCfg = getScratchConfig();
+        // === RASPINHA DA SORTE V2 — anti-prejuízo + anti-fraude ===
+        var customerPhone = document.getElementById('cPhone') ? document.getElementById('cPhone').value : '';
+        var customerKey = (customerPhone || oName || '').replace(/\D/g, '').slice(-11) || null;
         var scratchData = null;
-        if(scratchCfg.enabled !== false){
+        var scratchCheck = shouldEmitScratch(total, customerKey);
+        if (scratchCheck.ok) {
             var scratchPrize = rollScratchPrize();
+            // Rotaciona copy do "Quase!" se for tier none
+            var scratchPrizeDesc = pickNearMissCopy(scratchPrize) || scratchPrize.desc;
+            var scratchCfg = getScratchConfig();
+            // Validade: usa o do prêmio se definido, senão o default global (5 dias)
+            var validityDays = scratchPrize.validity > 0
+                ? scratchPrize.validity
+                : (scratchPrize.tier === 'none' ? 0 : (scratchCfg.defaultValidityDays || 5));
             var scratchCode = buildScratchCode();
             var shortCode = buildShortCode();
             var createdAt = new Date();
-            var expiresAt = scratchPrize.validity > 0
-                ? new Date(createdAt.getTime() + scratchPrize.validity*24*60*60*1000).toISOString()
+            var expiresAt = validityDays > 0
+                ? new Date(createdAt.getTime() + validityDays*24*60*60*1000).toISOString()
                 : null;
             scratchData = {
                 code: scratchCode,
@@ -2049,24 +2120,31 @@
                 storeName: fr ? fr.name : 'MilkyPot',
                 prizeCode: scratchPrize.code,
                 prizeName: scratchPrize.name,
-                prizeDesc: scratchPrize.desc,
+                prizeDesc: scratchPrizeDesc,
                 prizeTier: scratchPrize.tier,
                 prizeScope: scratchPrize.scope,
+                prizeCategoria: scratchPrize.categoria || null,  // vínculo a produtos reais
                 minOrder: scratchPrize.minOrder,
                 customerName: oName || '',
-                customerPhone: document.getElementById('cPhone').value || '',
+                customerPhone: customerPhone,
+                customerKey: customerKey,
+                orderTotal: total,                               // pra métrica de lift
                 status: 'not_scratched',
                 createdAt: createdAt.toISOString(),
                 expiresAt: expiresAt,
+                validityDays: validityDays,
                 scratchedAt: null,
                 redeemedAt: null,
                 redeemedStoreId: null,
                 redeemedEmployeeId: null,
                 redeemedOrderId: null,
                 sharedOnInstagram: false,
-                instagramBonusGranted: false
+                instagramBonusGranted: false,
+                generatedBy: 'order'  // 'order' ou 'redeem_loop' (futuro)
             };
             saveScratch(scratchData);
+        } else {
+            console.info('[Raspinha] Não emitida:', scratchCheck.reason);
         }
 
         var order={
