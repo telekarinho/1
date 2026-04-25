@@ -852,6 +852,172 @@
         return { ok: true, removed: removed };
     }
 
+    // ==========================================================
+    // SUNDAE GOURMET — mesmo cardápio dos milkshakes adaptado
+    // ==========================================================
+    const SUNDAE_FLAVORS = [
+        { name: 'Amora Apaixonada',          emoji: '💜', cInsumos: 4.80, cAdd: 1.30,
+          desc: 'Roxa, doce e teimosa — que nem aquele crush que sua mente não desliga. Sundae cremoso de amora pintando seu feed de roxo. #AmoraVibe' },
+        { name: 'Blue Ice — Crush Gelado',   emoji: '🧊', cInsumos: 4.50, cAdd: 1.30,
+          desc: 'Azul que nem o céu de Londrina ao entardecer. Sundae surpresa, frescor de praia e foto que viraliza antes da primeira colher.' },
+        { name: 'Morango Romântico',         emoji: '🍓', cInsumos: 4.80, cAdd: 1.30,
+          desc: 'O clássico que sempre volta — porque amor verdadeiro não envelhece. Cremosinho, vermelhinho, abraço em forma de sundae.' },
+        { name: 'Açaí Liberdade',            emoji: '🟣', cInsumos: 5.20, cAdd: 1.30,
+          desc: 'Bowl de açaí virou sundae cremoso. Energia da Amazônia, doçura de Londrina, colher na mão. Açaí dos preguiçosos felizes.' },
+        { name: 'Caramelo Derretido',        emoji: '🍯', cInsumos: 4.60, cAdd: 1.30,
+          desc: 'Caramelo que escorre devagar — igual beijo demorado de quinta à noite. Sundae dourado, gostoso e impossível de resistir.' },
+        { name: 'Limão Suíço Refresca-Tudo', emoji: '🍋', cInsumos: 4.40, cAdd: 1.30,
+          desc: 'Azedinho na medida, gelado no ponto. Sundae pra quando o sol de Londrina aperta e você precisa de um respiro com graça.' },
+        { name: 'Chocolate Apaixonante',     emoji: '🍫', cInsumos: 5.00, cAdd: 1.30,
+          desc: 'Bombom em camadas. O abraço quente do chocolate com a frescura do sundae. Conforto que cabe numa taça gourmet.' },
+        { name: 'Uva da Vovó',               emoji: '🍇', cInsumos: 4.60, cAdd: 1.30,
+          desc: 'Aquela uva roxinha do quintal da vovó, mas crescida e bem-vestida. Sundae de infância na versão Geração TikTok.' },
+        { name: 'Maracujá Calmaria',         emoji: '💛', cInsumos: 4.70, cAdd: 1.30,
+          desc: 'Tropical, levemente azedinho, totalmente relaxante. Sundae de maracujá pra desacelerar seu rolê com uma colherada zen.' },
+        { name: 'Dentadura Doidinha',        emoji: '😬', cInsumos: 4.50, cAdd: 1.30,
+          desc: 'O sundae colorido que deixa sua boca igual desenho animado. Diversão visual + sabor explosivo. Foto obrigatória.' },
+        { name: 'Cookies Snow',              emoji: '🤍', cInsumos: 5.50, cAdd: 1.40,
+          desc: 'Branquinho, cremoso, com pedaços de cookie crocante por cima. Tipo neve em Londrina: raríssima, mas gostosa demais.' },
+        { name: 'Ninho da Vovó',             emoji: '🥛', cInsumos: 5.20, cAdd: 1.30,
+          desc: 'Cremosidade de berço. Aquele cheirinho que lembra colo, pé no sofá e desenho da Disney no domingo de manhã.' },
+        { name: 'Pistache Esmeralda',        emoji: '🟢', cInsumos: 6.20, cAdd: 1.40,
+          desc: 'Verdinho gourmet, sofisticado, crocante. Sundae de pistache premium com clima italiano — pra quem gosta de chique na taça.' },
+        { name: 'Peanut Heaven',             emoji: '🥜', cInsumos: 5.50, cAdd: 1.40,
+          desc: 'Cremoso, salgadinho, viciante. O peanut butter virou sundae — e a vida nunca mais foi a mesma.' },
+        { name: 'Cereja Beijada',            emoji: '🍒', cInsumos: 4.80, cAdd: 1.30,
+          desc: 'Vermelhinha, brincalhona, top de bolo. A cereja que coroou seu sundae — e provavelmente seu dia.' },
+        { name: 'Ameixa Roxinha',            emoji: '🍑', cInsumos: 4.80, cAdd: 1.30,
+          desc: 'Roxa, polpuda, exótica. Sundae pra quem quer fugir do óbvio e descobrir um sabor novo no meio do caminho.' },
+        { name: 'Banana Caramelizada',       emoji: '🍌', cInsumos: 4.60, cAdd: 1.30,
+          desc: 'Banana douradinha, queimadinha na medida, beijada pelo caramelo. Sundae de fazenda em taça gelada.' }
+    ];
+
+    const SUNDAE_PREMIUM_ACAI = {
+        name: 'Capitão Açaí Sundae · Premium',
+        emoji: '👑',
+        desc: 'Coroa do cardápio de sundaes. Açaí da Amazônia em camadas generosas, granola crocante, banana caramelizada, leite condensado e raspas de chocolate. Não é só um sundae — é uma experiência. 600ml de pura indulgência.',
+        cInsumos: 9.50,
+        cAdd: 2.50
+    };
+
+    // Migração: substitui sundaes seed pelos 17 sabores oficiais + 1 premium
+    function migrateSundaeGourmetFlavorsV1(fid) {
+        const d = load(fid);
+        if (!d.produtos.length) return { skipped: true, reason: 'sem produtos' };
+        if (d.__sundaeGourmetMigratedV1) return { skipped: true, reason: 'já migrado' };
+
+        // Desativa sundaes antigos do seed (Sundae Clássico)
+        d.produtos.forEach(p => {
+            if (p.categoriaId === 'cat_sundae') p.active = false;
+        });
+
+        function makeVariantesPMG(baseCusto) {
+            return [
+                { id: newId('var'), name: 'P (250ml)', tipo: 'taca', gramas: 250,
+                  custoExtra: Math.round(baseCusto * 0.7 * 100) / 100,
+                  precoLoja: 9.99, precoLojaOriginal: 14.99,
+                  precoDelivery: 11.49, precoIfood: 12.99,
+                  promoAtivo: true, promoLabel: 'Promoção Inauguração' },
+                { id: newId('var'), name: 'M (400ml)', tipo: 'taca', gramas: 400,
+                  custoExtra: Math.round(baseCusto * 1.0 * 100) / 100,
+                  precoLoja: 17.99, precoDelivery: 19.99, precoIfood: 22.99 },
+                { id: newId('var'), name: 'G (500ml)', tipo: 'taca', gramas: 500,
+                  custoExtra: Math.round(baseCusto * 1.25 * 100) / 100,
+                  precoLoja: 19.99, precoDelivery: 22.99, precoIfood: 25.99 }
+            ];
+        }
+
+        const allTopIds = (d.toppings || []).map(t => t.id);
+
+        SUNDAE_FLAVORS.forEach((f, idx) => {
+            const custoTotal = f.cInsumos + f.cAdd;
+            d.produtos.push({
+                id: newId('prod'),
+                categoriaId: 'cat_sundae',
+                name: f.name,
+                desc: f.desc,
+                midia: { fotos: [], video: '', emoji: f.emoji },
+                custos: {
+                    insumos: [],
+                    custoInsumos: f.cInsumos,
+                    custoAdicional: { embalagem: f.cAdd, energia: 0, mao_obra: 0, outros: 0 },
+                    custoTotal: custoTotal
+                },
+                precos: {
+                    loja:     { recomendado: 9.99,  real: 9.99 },
+                    delivery: { recomendado: 11.49, real: 11.49 },
+                    ifood:    { recomendado: 12.99, real: 12.99 }
+                },
+                kits: [],
+                variantes: makeVariantesPMG(custoTotal),
+                toppingsIds: allTopIds,
+                buffet: { ativo: false, precoPorKg: 0, toppingsInclusos: [] },
+                canal: 'ambos',
+                active: true,
+                order: idx + 1,
+                createdAt: new Date().toISOString()
+            });
+        });
+
+        // Premium: Capitão Açaí Sundae 600ml
+        const premium = SUNDAE_PREMIUM_ACAI;
+        const custoPremium = premium.cInsumos + premium.cAdd;
+        d.produtos.push({
+            id: newId('prod'),
+            categoriaId: 'cat_sundae',
+            name: premium.name,
+            desc: premium.desc,
+            midia: { fotos: [], video: '', emoji: premium.emoji },
+            custos: {
+                insumos: [],
+                custoInsumos: premium.cInsumos,
+                custoAdicional: { embalagem: premium.cAdd, energia: 0, mao_obra: 0, outros: 0 },
+                custoTotal: custoPremium
+            },
+            precos: {
+                loja:     { recomendado: 24.99, real: 24.99 },
+                delivery: { recomendado: 28.99, real: 28.99 },
+                ifood:    { recomendado: 32.99, real: 32.99 }
+            },
+            kits: [],
+            variantes: [
+                { id: newId('var'), name: 'Premium (600ml)', tipo: 'taca', gramas: 600,
+                  custoExtra: custoPremium,
+                  precoLoja: 24.99, precoDelivery: 28.99, precoIfood: 32.99 }
+            ],
+            toppingsIds: allTopIds,
+            buffet: { ativo: false, precoPorKg: 0, toppingsInclusos: [] },
+            canal: 'ambos',
+            active: true,
+            order: 100,
+            badge: 'PREMIUM',
+            createdAt: new Date().toISOString()
+        });
+
+        d.__sundaeGourmetMigratedV1 = true;
+        save(fid, d);
+        return { ok: true, count: SUNDAE_FLAVORS.length + 1 };
+    }
+
+    // Cleanup: remove sundaes inativos do seed antigo
+    function cleanupInactiveSundaesV1(fid) {
+        const d = load(fid);
+        if (d.__inactiveSundaesCleanedV1) return { skipped: true, reason: 'já limpo' };
+
+        const before = d.produtos.length;
+        d.produtos = d.produtos.filter(p => {
+            if (p.categoriaId !== 'cat_sundae') return true;
+            if (p.active !== false) return true;
+            const oldSeedNames = ['Sundae Clássico'];
+            return !oldSeedNames.includes(p.name);
+        });
+        const removed = before - d.produtos.length;
+
+        d.__inactiveSundaesCleanedV1 = true;
+        save(fid, d);
+        return { ok: true, removed: removed };
+    }
+
     // Wrap os saves pra sincronizar legacy automaticamente
     const _origSaveProduto = saveProduto;
     function saveProdutoAndSync(fid, p) {
@@ -886,6 +1052,8 @@
             try { results.milkshakeSizes = migrateMilkshakeSizesV1(fid); } catch(e) { results.milkshakeSizes_err = e.message; }
             try { results.milkshakeFlavors = migrateMilkshakeFlavorsV1(fid); } catch(e) { results.milkshakeFlavors_err = e.message; }
             try { results.cleanupInactive = cleanupInactiveMilkshakesV1(fid); } catch(e) { results.cleanupInactive_err = e.message; }
+            try { results.sundaeGourmet = migrateSundaeGourmetFlavorsV1(fid); } catch(e) { results.sundaeGourmet_err = e.message; }
+            try { results.cleanupSundaes = cleanupInactiveSundaesV1(fid); } catch(e) { results.cleanupSundaes_err = e.message; }
             return results;
         } catch(e) { return { error: e.message }; }
     }
@@ -915,12 +1083,16 @@
         migrateMilkshakeSizesV1,
         migrateMilkshakeFlavorsV1,
         cleanupInactiveMilkshakesV1,
+        migrateSundaeGourmetFlavorsV1,
+        cleanupInactiveSundaesV1,
         applyAllMigrations,
         syncToLegacy,
         autoSyncIfNeeded,
         // Catálogo dos sabores oficiais — usado por TV indoor e marketing
         MILKSHAKE_FLAVORS,
         MILKSHAKE_PREMIUM_ACAI,
+        SUNDAE_FLAVORS,
+        SUNDAE_PREMIUM_ACAI,
         newId,
         CATEGORIAS_SEED
     };
