@@ -1637,12 +1637,36 @@
     window.cRm=function(i){cart.splice(i,1);renderCart()};
 
     window.setType=function(t){
+        // Bloqueio: delivery desativado pela franquia em configurações
+        if (t === 'delivery' && fr && fr.deliveryEnabled === false) {
+            if (typeof Utils !== 'undefined' && Utils.showToast) {
+                Utils.showToast('🚫 Delivery desativado nas configurações desta loja.', 'error');
+            } else {
+                alert('Delivery desativado. Ative em Configurações → Operação.');
+            }
+            return;
+        }
         orderType=t;
         document.querySelectorAll('.ct-btn').forEach(function(b){b.classList.toggle('active',b.dataset.type===t)});
         var cf=document.getElementById('custF'),addr=document.getElementById('cAddr');
         cf.classList.toggle('show',t!=='balcao');
         addr.style.display=t==='delivery'?'block':'none';
     };
+
+    // Aplica visual ao botão Delivery se a franquia desativou
+    (function applyDeliveryToggleUI(){
+        try {
+            if (fr && fr.deliveryEnabled === false) {
+                var btn = document.querySelector('.ct-btn[data-type="delivery"]');
+                if (btn) {
+                    btn.style.opacity = '0.4';
+                    btn.style.cursor = 'not-allowed';
+                    btn.title = 'Delivery desativado em Configurações';
+                    btn.innerHTML = '🚫 Delivery OFF';
+                }
+            }
+        } catch(e){}
+    })();
 
     window.clearCart=function(){if(!cart.length)return;cart=[];renderCart();toast('Pedido limpo')};
 

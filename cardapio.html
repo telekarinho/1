@@ -910,12 +910,42 @@
         var btn = document.getElementById('btnToDelivery');
         btn.disabled = false;
         btn.textContent = 'Continuar →';
+
+        // Toggle delivery: se a loja desativou delivery, esconde a opção
+        var deliveryEnabled = selectedStore.deliveryEnabled !== false;
+        var deliveryRadio = document.querySelector('input[name="delivery"][value="delivery"]');
+        var deliveryLabel = deliveryRadio ? deliveryRadio.closest('.delivery-option') : null;
+        if (deliveryLabel) {
+            deliveryLabel.style.display = deliveryEnabled ? '' : 'none';
+        }
+        if (!deliveryEnabled) {
+            // Força modo retirada
+            var pickupRadio = document.querySelector('input[name="delivery"][value="pickup"]');
+            if (pickupRadio) {
+                pickupRadio.checked = true;
+                pickupRadio.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            // Avisa o cliente
+            var deliverySection = document.querySelector('#checkoutStep3 .delivery-options');
+            if (deliverySection && !document.getElementById('deliveryOffNotice')) {
+                var notice = document.createElement('div');
+                notice.id = 'deliveryOffNotice';
+                notice.style.cssText = 'background:#FFF3E0;border:1px solid #FFB74D;border-radius:10px;padding:10px 14px;margin-top:10px;color:#E65100;font-size:0.85rem;font-weight:600';
+                notice.innerHTML = '🛵 Esta loja está aceitando apenas <strong>retirada</strong> no momento.';
+                deliverySection.appendChild(notice);
+            }
+        } else {
+            var existingNotice = document.getElementById('deliveryOffNotice');
+            if (existingNotice) existingNotice.remove();
+        }
+
         var feeText = document.getElementById('deliveryFeeText');
         if (feeText) feeText.textContent = 'Taxa: R$ ' + selectedStore.deliveryFee.toFixed(2).replace('.', ',');
         window._selectedStoreWhatsApp = selectedStore.whatsapp;
         window._selectedStoreName = selectedStore.name;
         window._selectedStoreTime = selectedStore.deliveryTime;
         window._selectedStoreDeliveryFee = selectedStore.deliveryFee;
+        window._selectedStoreDeliveryEnabled = deliveryEnabled;
         window._selectedStoreId = selectedStore.id;
         renderCheckoutStores(CHECKOUT_STORES);
         if ('vibrate' in navigator) navigator.vibrate(30);

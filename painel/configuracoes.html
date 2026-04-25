@@ -135,6 +135,16 @@
                             <h3>Operacao</h3>
                         </div>
                         <div class="card-body">
+                            <!-- Toggle: aceitar pedidos delivery -->
+                            <div class="form-group" style="background:#FFF8F0;border:2px solid #FFE0B2;border-radius:12px;padding:14px;margin-bottom:14px">
+                                <label style="display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:0">
+                                    <input type="checkbox" id="storeDeliveryEnabled" style="width:20px;height:20px;cursor:pointer;accent-color:#FF9800">
+                                    <div style="flex:1">
+                                        <strong style="display:block;color:#E65100;font-size:1rem">🛵 Aceitar pedidos delivery</strong>
+                                        <small style="color:#8D6E63;font-size:0.82rem">Quando desligado: cardápio online só aceita retirada e PDV bloqueia novos pedidos delivery</small>
+                                    </div>
+                                </label>
+                            </div>
                             <div class="form-group">
                                 <label>Horario de funcionamento</label>
                                 <input type="text" id="storeHours" class="form-control" placeholder="10:00 - 22:00">
@@ -495,6 +505,9 @@
     // Load operation data into form
     function loadOperationData() {
         if (!franchise) return;
+        // deliveryEnabled default = true (compatível com lojas existentes sem o flag)
+        var deliveryEnabled = franchise.deliveryEnabled !== false;
+        document.getElementById('storeDeliveryEnabled').checked = deliveryEnabled;
         document.getElementById('storeHours').value = franchise.hours || '';
         document.getElementById('storeDeliveryFee').value = franchise.deliveryFee || '';
         document.getElementById('storeDeliveryTime').value = franchise.deliveryTime || '';
@@ -623,13 +636,15 @@
         var idx = allFranchises.findIndex(function(f) { return f.id === franchiseId; });
         if (idx === -1) return alert('Franquia nao encontrada.');
 
+        allFranchises[idx].deliveryEnabled = document.getElementById('storeDeliveryEnabled').checked;
         allFranchises[idx].hours = document.getElementById('storeHours').value.trim();
         allFranchises[idx].deliveryFee = parseFloat(document.getElementById('storeDeliveryFee').value) || 0;
         allFranchises[idx].deliveryTime = document.getElementById('storeDeliveryTime').value.trim();
         allFranchises[idx].deliveryRadius = parseInt(document.getElementById('storeDeliveryRadius').value) || 0;
 
         DataStore.set('franchises', allFranchises);
-        alert('Dados de operacao salvos com sucesso!');
+        var msg = allFranchises[idx].deliveryEnabled ? '✅ Delivery ATIVO' : '🚫 Delivery DESATIVADO';
+        alert('Dados de operacao salvos! ' + msg);
     }
 
     // Change password
