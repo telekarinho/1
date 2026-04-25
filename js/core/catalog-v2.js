@@ -416,16 +416,16 @@
             legacy.sabores[legacyKey].color = cat.color || '';
             legacy.sabores[legacyKey].items = prods.map(p => {
                 // tipoVenda:
-                //  - cat_sorvete_kg: sempre por peso
+                //  - cat_sorvete_kg: sempre por peso (variantes = potes/baldes em gramas)
                 //  - cat_buffet OU qualquer produto com buffet.ativo: por peso
-                //  - produtos com variantes (balde/pote): por peso
+                //  - milkshakes/potinhos com variantes P/M/G: ainda unitario
+                //    (variant modal mostra os tamanhos com preços fixos discretos)
                 //  - resto: unitário
                 const hasBuffet = p.buffet && p.buffet.ativo;
                 const tipoVenda = (
                     cat.id === 'cat_sorvete_kg' ||
                     cat.id === 'cat_buffet' ||
-                    hasBuffet ||
-                    (p.variantes && p.variantes.length)
+                    hasBuffet
                 ) ? 'por_peso' : 'unitario';
 
                 // preço exposto ao PDV/cardápio
@@ -607,6 +607,73 @@
         return { ok: true };
     }
 
+    // Migração: aplica variantes P/M/G nos milkshakes com preços oficiais MilkyPot
+    // P 250ml: R$14,99 (promo inauguração R$9,99) — editável
+    // M 400ml: R$17,99
+    // G 500ml: R$19,99
+    function migrateMilkshakeSizesV1(fid) {
+        const d = load(fid);
+        if (!d.produtos.length) return { skipped: true, reason: 'sem produtos' };
+        if (d.__milkshakeSizesMigratedV1) return { skipped: true, reason: 'já migrado' };
+
+        const milkshakes = d.produtos.filter(p => p.categoriaId === 'cat_milkshake');
+        if (!milkshakes.length) {
+            d.__milkshakeSizesMigratedV1 = true;
+            save(fid, d);
+            return { skipped: true, reason: 'sem milkshakes' };
+        }
+
+        milkshakes.forEach(p => {
+            const baseCusto = Number(p.custos?.custoTotal || 6);
+            p.variantes = [
+                {
+                    id: newId('var'),
+                    name: 'P (250ml)',
+                    tipo: 'copo',
+                    gramas: 250,
+                    custoExtra: Math.round(baseCusto * 0.7 * 100) / 100,
+                    // Promoção Inauguração: ativa = R$9,99; original = R$14,99
+                    precoLoja: 9.99,
+                    precoLojaOriginal: 14.99,
+                    precoDelivery: 11.49,
+                    precoIfood: 12.99,
+                    promoAtivo: true,
+                    promoLabel: 'Promoção Inauguração'
+                },
+                {
+                    id: newId('var'),
+                    name: 'M (400ml)',
+                    tipo: 'copo',
+                    gramas: 400,
+                    custoExtra: Math.round(baseCusto * 1.0 * 100) / 100,
+                    precoLoja: 17.99,
+                    precoDelivery: 19.99,
+                    precoIfood: 22.99
+                },
+                {
+                    id: newId('var'),
+                    name: 'G (500ml)',
+                    tipo: 'copo',
+                    gramas: 500,
+                    custoExtra: Math.round(baseCusto * 1.25 * 100) / 100,
+                    precoLoja: 19.99,
+                    precoDelivery: 22.99,
+                    precoIfood: 25.99
+                }
+            ];
+
+            // Atualiza precos.loja.real para o menor preço (P promo R$9,99) — vira "a partir de" no card
+            p.precos = p.precos || {};
+            p.precos.loja     = { recomendado: 9.99,  real: 9.99 };
+            p.precos.delivery = { recomendado: 11.49, real: 11.49 };
+            p.precos.ifood    = { recomendado: 12.99, real: 12.99 };
+        });
+
+        d.__milkshakeSizesMigratedV1 = true;
+        save(fid, d);
+        return { ok: true, count: milkshakes.length };
+    }
+
     // Wrap os saves pra sincronizar legacy automaticamente
     const _origSaveProduto = saveProduto;
     function saveProdutoAndSync(fid, p) {
@@ -648,6 +715,7 @@
         deleteTopping,
         seedMilkyPot: seedMilkyPotAndSync,
         migrateBuffetV1,
+        migrateMilkshakeSizesV1,
         syncToLegacy,
         autoSyncIfNeeded,
         newId,

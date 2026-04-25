@@ -607,6 +607,7 @@
             window._sheetQty = 1;
             window._sheetExtras = [];
             window._sheetPortion = null;
+            window._sheetVariante = null;
 
             let html = `
                 <div class="sheet-product-hero">
@@ -636,8 +637,41 @@
                     if (idx === 0) window._sheetPortion = { ...p, price: portionPrice };
                 });
                 html += `</div></div>`;
+            } else if (item._v2 && item._v2.variantes && item._v2.variantes.length) {
+                // Case 2a: Unit items COM variantes (P/M/G — milkshakes etc.)
+                // Pega preço por canal: delivery por padrão no cardápio online
+                const priceKey = 'precoDelivery';
+                html += `
+                    <div class="sheet-section">
+                        <h4 class="sheet-section-title">Escolha o tamanho</h4>
+                        <div class="sheet-sizes">
+                `;
+                item._v2.variantes.forEach((v, idx) => {
+                    const price = Number(v[priceKey]) || Number(v.precoLoja) || 0;
+                    if (!price) return;
+                    const isPromo = v.promoAtivo && Number(v.precoLojaOriginal) > Number(v.precoLoja);
+                    const promoBadge = isPromo
+                        ? `<span class="size-promo-badge">${(v.promoLabel || 'PROMO').toUpperCase()}</span>`
+                        : '';
+                    const priceLine = isPromo
+                        ? `<span class="size-price-original">R$ ${Number(v.precoLojaOriginal).toFixed(2).replace('.',',')}</span><span class="size-price size-price-promo">R$ ${price.toFixed(2).replace('.',',')}</span>`
+                        : `<span class="size-price">R$ ${price.toFixed(2).replace('.',',')}</span>`;
+                    const ml = v.gramas ? `<span class="size-ml">${v.gramas}ml</span>` : '';
+                    html += `
+                        <button class="sheet-size-btn ${idx === 0 ? 'selected' : ''}"
+                            onclick="selectVariante(this, ${idx})">
+                            ${ml}
+                            <span class="size-name">${v.name}${promoBadge}</span>
+                            ${priceLine}
+                        </button>
+                    `;
+                    if (idx === 0) {
+                        window._sheetVariante = { idx, price, name: v.name };
+                    }
+                });
+                html += `</div></div>`;
             } else {
-                // Case 2: Unit items (Bases or Simple Products)
+                // Case 2b: Unit items simples (preço único)
                 html += `
                     <div class="sheet-section">
                         <div class="sheet-price-row">
@@ -703,6 +737,16 @@
             updateSheetTotalDelivery();
         };
 
+        window.selectVariante = function(btn, idx) {
+            document.querySelectorAll('.sheet-size-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            const item = window._sheetProduct;
+            const v = item._v2.variantes[idx];
+            const price = Number(v.precoDelivery) || Number(v.precoLoja) || 0;
+            window._sheetVariante = { idx, price, name: v.name, gramas: v.gramas };
+            updateSheetTotalDelivery();
+        };
+
         window.toggleExtraDelivery = function(label) {
             const cb = label.querySelector('.extra-check');
             cb.checked = !cb.checked;
@@ -715,6 +759,8 @@
             let basePrice = item.price;
             if (item.tipoVenda === 'por_peso' && window._sheetPortion) {
                 basePrice = window._sheetPortion.price;
+            } else if (window._sheetVariante) {
+                basePrice = window._sheetVariante.price;
             }
 
             let extrasTotal = 0;
@@ -730,23 +776,25 @@
             const item = window._sheetProduct;
             const qty = window._sheetQty || 1;
             const portion = window._sheetPortion;
-            
+            const variante = window._sheetVariante;
+
             const extras = [];
             document.querySelectorAll('.extra-check:checked').forEach(cb => {
                 extras.push({ name: cb.dataset.name, price: parseFloat(cb.dataset.price) });
             });
 
-            const unitPrice = portion ? portion.price : item.price;
+            const unitPrice = portion ? portion.price : (variante ? variante.price : item.price);
+            const sizeSuffix = portion ? ' (' + portion.peso + 'g)' : (variante ? ' · ' + variante.name : '');
             const cartItem = {
                 id: Utils.generateId(),
-                name: item.name + (portion ? ' (' + portion.peso + 'g)' : ''),
+                name: item.name + sizeSuffix,
                 emoji: item.emoji,
                 unitPrice: unitPrice,
                 qty: qty,
                 extras: extras,
                 total: (unitPrice + extras.reduce((s, e) => s + e.price, 0)) * qty,
                 type: item.tipoVenda,
-                peso: portion ? portion.peso : null
+                peso: portion ? portion.peso : (variante ? variante.gramas : null)
             };
 
             // Use legacy cart object/methods
