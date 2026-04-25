@@ -39,11 +39,19 @@ service cloud.firestore {
       // tv_* docs (media library, playlist, config) sao lidos por TVs Android,
       // celulares e browsers kiosk que nao tem sessao auth
       // tv_remote_* docs (comandos da TV Remote) tambem sao publicos p/ controlar TVs
+      // orders_* / caixa_* / pdv_tabs_* / finances_*: leitura publica pra sync entre
+      // PCs do PDV funcionar mesmo se Firebase Auth perdeu o token (IDB limpo, browser
+      // separado). Writes continuam restritos a auth — operadores PRECISAM logar pra
+      // criar/alterar pedidos. Inauguracao prioriza disponibilidade; tightening pos.
       allow read: if document == 'franchises'
                     || document.matches('ifood_.*')
                     || document.matches('tv_.*')
                     || document.matches('tvremote_.*')
                     || document.matches('radio_.*')
+                    || document.matches('orders_.*')
+                    || document.matches('caixa_.*')
+                    || document.matches('pdv_tabs_.*')
+                    || document.matches('finances_.*')
                     || isAuthenticated();
       // Franchises: somente super_admin pode escrever
       // iFood: extensao escreve sem auth (aceito temporariamente)
