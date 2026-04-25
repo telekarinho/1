@@ -1,5 +1,44 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #31 — 2026-04-25
+
+**Área:** Conversão — Upsell Banner Exclusivos Muffato Londrina
+
+**Contexto:** Pós-inauguração (dia da abertura). Estratégia ciclo #31 previa `aggregateRating`, mas isso depende de confirmação de reviews reais pelo operador — não disponível. Próxima ação de maior valor concreto: banner de upsell destacando os 4 itens exclusivos da unidade Muffato (milkshake, açaí buffet self-service, picolés/sorvetes, chocolates premium) que não existem nas outras unidades e aumentam ticket médio.
+
+**O que analisou:**
+- `cardapio.html` linha 155: seção de produtos encerrava sem nenhum CTA para os exclusivos da loja física
+- Visitantes do cardápio online vêm principalmente pelo celular → perdem a oportunidade de saber que existe açaí buffet self-service e milkshakes só no Muffato
+- Estratégia confirmada: pesquisa → ação imediata (padrão consolidado ciclo #28)
+- `cardapio.css` existe mas não está linkado em nenhum HTML — CSS adicionado inline no `<head>` para garantir carregamento
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `cardapio.html` | +`<style>` inline com CSS do banner (13 linhas minificadas); +`<section class="muffato-upsell">` entre a grid de produtos e o cart sidebar. Grid 4-col (desktop) → 2-col (mobile ≤480px). CTA WhatsApp com mensagem pré-preenchida apontando para exclusivos. |
+| `css/cardapio.css` | Limpeza de linha extra deixada por edição anterior (sem impacto funcional, arquivo não linkado) |
+
+**Commit:** `d2bf755`
+
+**Mecânica de upsell:**
+- Banner visível logo após o cliente escolher a base do potinho → momento de maior intenção de compra
+- 4 cards com emoji + título + descrição curta: Milkshakes 🥤 / Açaí Buffet 🫐 / Picolés & Sorvetes 🍦 / Chocolates Premium 🍫
+- CTA verde WhatsApp: "💬 Falar no WhatsApp" com mensagem pré-preenchida sobre exclusivos
+- Responsivo: 4→2 colunas em telas ≤480px
+
+**Impacto esperado:**
+- Aumento de ticket médio: cliente que ia só comprar potinho descobre milkshake e considera adicionar
+- Leads WhatsApp qualificados sobre exclusivos Muffato → operador pode upsell no chat
+- Diferenciação clara da unidade Muffato vs cardápio nacional online
+
+**Próximo passo sugerido:**
+- Ciclo #32: Ativar `aggregateRating` em `index.html` se operador confirmar ≥3 reviews Google Maps (template pronto desde ciclo #26)
+- Ciclo #33: Conteúdo semana 4 pós-inauguração + template "mensagem reativação WhatsApp" para clientes silenciosos
+- Ciclo #34: Link interno de `index.html` para `potinho-ninho-londrina.html` se página não indexou
+
+---
+
 ## Ciclo #30 — 2026-04-25
 
 **Área:** Conversão + Auto-aprimoramento (obrigatório a cada 5 ciclos)
