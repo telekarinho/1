@@ -285,3 +285,9 @@ Sua satisfação é o que mais importa pra gente 💕
 ---
 
 *Belinha — Ciclo #4 | 2026-04-22*
+
+---
+
+## Ver também
+
+- **[whatsapp-reativacao.md](whatsapp-reativacao.md)** — Templates para clientes que compraram mas não voltaram (D+1, D+7, D+14, D+30, fidelidade, upsell exclusivos Muffato)
