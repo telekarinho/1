@@ -238,10 +238,15 @@ function placeOrder() {
     if (typeof DataStore !== 'undefined' && typeof Utils !== 'undefined' && storeId) {
         try {
             // Save order to DataStore for franchise tracking
+            // status='novo' (não aguardando_pagamento) — kanban renderiza só
+            // ['novo','confirmado','preparando','pronto','em_entrega','entregue']
+            // pedido do site precisa cair em 'novo' pra operador ver e ir confirmando
             DataStore.addToCollection('orders', storeId, {
                 id: Utils.generateId(),
                 orderNumber: orderNumber,
-                status: 'aguardando_pagamento',
+                franchiseId: storeId,
+                status: 'novo',
+                source: 'delivery',
                 createdAt: new Date().toISOString(),
                 customer: { name: customerName, phone: customerPhone },
                 delivery: { type: deliveryType, address: deliveryAddress, fee: deliveryFee },

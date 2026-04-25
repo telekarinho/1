@@ -150,16 +150,25 @@
 
         var workingInventory = inventory;
         var anyDeducted = false;
+        var warnings = [];  // itens que NÃO deduziram — UI pode alertar operador
         (order.items || []).forEach(function(line){
             var produto = itemsById[line.productId || line.id];
-            if (!produto) return;
-            if (!hasRecipe(produto)) return; // sem receita: nao deduz (receitaPendente)
-            var qtd = Number(line.quantity || 1);
+            if (!produto) {
+                // Item buffet/por_peso/legado sem productId reconhecido
+                if (line.name) warnings.push('Item "' + line.name + '" sem produto vinculado — estoque NÃO deduzido');
+                return;
+            }
+            if (!hasRecipe(produto)) {
+                warnings.push('"' + (produto.name || produto.id) + '" sem receita configurada — estoque NÃO deduzido');
+                return;
+            }
+            var qtd = Number(line.quantity || line.qty || 1);
             var result = deduct(produto, qtd, workingInventory);
             if (result && result.ok && result.inventoryAtualizado) {
                 workingInventory = result.inventoryAtualizado;
                 anyDeducted = true;
             } else if (result && !result.ok) {
+                warnings.push('Falha ao deduzir "' + (produto.name || produto.id) + '": ' + (result.error || 'erro desconhecido'));
                 console.warn('[Recipes] deduct falhou para', produto.id, result.error);
             }
         });
@@ -167,6 +176,9 @@
         if (anyDeducted) {
             DataStore.setCollection('inventory', franchiseId, workingInventory);
         }
+
+        // Retorna warnings pra caller (PDV / pedidos.html) poder mostrar toast
+        return { ok: true, deducted: anyDeducted, warnings: warnings };
         return anyDeducted;
     }
 

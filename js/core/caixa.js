@@ -190,12 +190,21 @@ const Caixa = (function () {
         if (st.status === 'fechado') return { success: false, error: 'O caixa de hoje já foi fechado.' };
 
         // REGRA DE SEGURANÇA: Bloquear se houver pedidos pendentes (Fase 2)
+        // Considera SOMENTE pedidos do dia atual em estados ativos do kanban.
+        // 'aguardando_pagamento' (delivery legado) não bloqueia — cliente não pagou.
+        // Pedidos antigos (>24h) também não bloqueiam — provavelmente abandonados.
         const orders = DataStore.getCollection('orders', franchiseId) || [];
-        const pendingOrders = orders.filter(o => o.status !== 'entregue' && o.status !== 'cancelado');
+        const today = new Date().toISOString().slice(0,10);
+        const pendingOrders = orders.filter(o => {
+            if (o.status === 'entregue' || o.status === 'cancelado') return false;
+            if (o.status === 'aguardando_pagamento') return false;
+            if (o.createdAt && o.createdAt.slice(0,10) !== today) return false;
+            return true;
+        });
         if (pendingOrders.length > 0) {
-            return { 
-                success: false, 
-                error: `⚠️ Não é possível fechar o caixa. Existem ${pendingOrders.length} pedido(s) pendente(s). Finalize ou cancele tudo antes.` 
+            return {
+                success: false,
+                error: `⚠️ Não é possível fechar o caixa. Existem ${pendingOrders.length} pedido(s) ativo(s) HOJE. Finalize ou cancele antes.`
             };
         }
 
