@@ -462,13 +462,13 @@
                 <div class="ext-list">
                     <div class="ext-item" onclick="togglePrintProfile('balcao')">
                         <input type="checkbox" id="chkProfileBalcao" class="ext-check" onclick="event.stopPropagation()">
-                        <span class="ext-emoji">🏪</span>
-                        <span class="ext-name">Recibo Balcão (Completo)</span>
+                        <span class="ext-emoji">🧾</span>
+                        <span class="ext-name">Recibo Cliente (não-fiscal)</span>
                     </div>
                     <div class="ext-item" onclick="togglePrintProfile('cozinha')">
                         <input type="checkbox" id="chkProfileCozinha" class="ext-check" onclick="event.stopPropagation()">
                         <span class="ext-emoji">🍳</span>
-                        <span class="ext-name">Pedido Cozinha (Sem Preços)</span>
+                        <span class="ext-name">Pedido Cozinha (milkshake/sundae/bowl/potinho)</span>
                     </div>
                 </div>
             </div>
@@ -2517,7 +2517,22 @@
 
             // Cozinha: layout HTML grande, sem preço, foco em receita
             if (p.id === 'cozinha') {
-                var ticketHtml = buildKitchenTicket(name, tl[orderType||'balcao'], now, items, customerName, addr);
+                // Filtra itens que não precisam de cozinha:
+                //   buffet (cliente monta no balcão)
+                //   picolé (já vem pronto do freezer)
+                //   sorvete por kg (peso direto)
+                //   bebida (pega da geladeira)
+                var kitchenCart = cart.filter(function(c) {
+                    return Printer.isKitchenItem ? Printer.isKitchenItem(c) : true;
+                });
+                if (!kitchenCart.length) {
+                    // Pedido só com itens grab-and-go — não tem o que preparar
+                    return;
+                }
+                var kitchenItems = kitchenCart.map(function(c){
+                    return { name:c.name, size:c.size, extras:c.extras, qty:c.qty };
+                });
+                var ticketHtml = buildKitchenTicket(name, tl[orderType||'balcao'], now, kitchenItems, customerName, addr);
                 openKitchenPrintWindow(ticketHtml);
                 return;
             }
