@@ -724,22 +724,22 @@
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v49"></script>
-<script src="../js/core/motivacional.js?v=mp-v49"></script>
-<script src="../js/core/caixa.js?v=mp-v49"></script>
-<script src="../js/core/financas.js?v=mp-v49"></script>
-<script src="../js/core/onboarding.js?v=mp-v49"></script>
-<script src="../js/core/units.js?v=mp-v49"></script>
-<script src="../js/core/error-tracking.js?v=mp-v49"></script>
-<script src="../js/core/recipes.js?v=mp-v49"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v49"></script>
-<script src="../js/core/offline-queue.js?v=mp-v49"></script>
-<script src="../js/core/pix.js?v=mp-v49"></script>
-<script src="../js/core/nfce.js?v=mp-v49"></script>
-<script src="../js/core/printer.js?v=mp-v49"></script>
+<script src="../js/core/adminconfig.js?v=mp-v50"></script>
+<script src="../js/core/motivacional.js?v=mp-v50"></script>
+<script src="../js/core/caixa.js?v=mp-v50"></script>
+<script src="../js/core/financas.js?v=mp-v50"></script>
+<script src="../js/core/onboarding.js?v=mp-v50"></script>
+<script src="../js/core/units.js?v=mp-v50"></script>
+<script src="../js/core/error-tracking.js?v=mp-v50"></script>
+<script src="../js/core/recipes.js?v=mp-v50"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v50"></script>
+<script src="../js/core/offline-queue.js?v=mp-v50"></script>
+<script src="../js/core/pix.js?v=mp-v50"></script>
+<script src="../js/core/nfce.js?v=mp-v50"></script>
+<script src="../js/core/printer.js?v=mp-v50"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v49"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v49"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v50"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v50"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -1519,36 +1519,118 @@
     // ========== AUTO-ABRIR CAIXA ==========
     // Se caixa não foi aberto hoje, banner gigante no topo + modal automático.
     // Operador NÃO precisa achar chip pequeno — fluxo é dirigido.
+
+    function removeBlocker() {
+        var b = document.getElementById('pdvCaixaBlocker');
+        if (b) { document.body.style.paddingTop = ''; b.remove(); }
+    }
+
+    // Reabertura admin: apaga aberturas/fechamentos fantasma do dia e libera o caixa
+    // pra abrir do zero. Vendas (type='venda') ficam preservadas.
+    // Caso de uso: bug de timezone pré-fix deixou movimento "fechamento" com dateKey
+    // errado que ainda bate com hoje, travando o caixa.
+    function adminForceReopen() {
+        if (typeof DataStore === 'undefined') { alert('DataStore indisponível'); return; }
+        var session = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+        var role = session ? session.role : null;
+        if (role !== 'super_admin' && role !== 'franchisee' && role !== 'manager') {
+            alert('Apenas gerente/franqueado pode forçar reabertura.');
+            return;
+        }
+        var ok = confirm('Forçar reabertura do caixa de hoje?\n\nIsso limpa abertura/fechamento fantasma do dia (do bug de timezone) e libera você pra abrir um novo turno.\n\nVendas reais NÃO são afetadas.\n\nContinuar?');
+        if (!ok) return;
+        try {
+            var d = new Date();
+            var todayLocal = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+            var todayUTC = new Date().toISOString().slice(0, 10);
+            var yestUTC = new Date(Date.now() - 24*3600*1000).toISOString().slice(0, 10);
+
+            var all = DataStore.getCollection('caixa', fid) || [];
+            var keep = all.filter(function (m) {
+                if (m.type === 'venda') return true;
+                if (m.type === 'abertura' || m.type === 'fechamento') {
+                    if (m.dateKey === todayLocal || m.dateKey === todayUTC || m.dateKey === yestUTC) return false;
+                }
+                return true;
+            });
+            var removed = all.length - keep.length;
+            if (typeof DataStore.setCollection === 'function') {
+                DataStore.setCollection('caixa', fid, keep);
+            } else {
+                localStorage.setItem('mp_caixa_' + fid, JSON.stringify(keep));
+            }
+            if (typeof AuditLog !== 'undefined' && AuditLog.log) {
+                AuditLog.log('CAIXA_FORCE_REOPEN', { removidos: removed, dateKeys: [todayLocal, todayUTC, yestUTC] }, fid);
+            }
+            alert('✅ Limpou ' + removed + ' movimento(s) fantasma. Vou abrir o modal de abertura agora.');
+            removeBlocker();
+            setTimeout(function () {
+                if (typeof Caixa !== 'undefined' && Caixa.showOpenModal) {
+                    Caixa.showOpenModal(fid, function () {
+                        if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
+                    });
+                } else {
+                    location.reload();
+                }
+            }, 200);
+        } catch (e) {
+            console.error('adminForceReopen:', e);
+            alert('Erro ao forçar reabertura: ' + e.message);
+        }
+    }
+    window.adminForceReopen = adminForceReopen;
+
     function ensureCaixaAberto() {
         if (typeof Caixa === 'undefined' || !Caixa.getTurnoState) return;
         try {
             var st = Caixa.getTurnoState(fid);
             var existing = document.getElementById('pdvCaixaBlocker');
             if (st.status === 'aberto') {
-                if (existing) existing.remove();
+                if (existing) { document.body.style.paddingTop = ''; existing.remove(); }
                 return;
             }
-            if (existing) return; // já mostrando, não duplica
+            var session = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+            var role = session ? session.role : null;
+            var isAdmin = (role === 'super_admin' || role === 'franchisee' || role === 'manager');
+
+            if (existing) existing.remove();
+
             var blocker = document.createElement('div');
             blocker.id = 'pdvCaixaBlocker';
             blocker.style.cssText = 'position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;padding:14px 20px;z-index:9000;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 4px 18px rgba(0,0,0,.25);font-family:"Nunito",sans-serif;flex-wrap:wrap';
-            var label = st.status === 'fechado'
-                ? '🔒 <strong>Caixa de hoje já foi fechado</strong> · Para vender, peça reabertura ao gerente'
-                : '⚠️ <strong>Caixa fechado</strong> · Antes de vender, abra o caixa com o valor de troco inicial';
+
+            var label, btnHtml;
+            if (st.status === 'fechado') {
+                if (isAdmin) {
+                    label = '🔒 <strong>Caixa travado em "fechado"</strong> · Use o botão pra forçar nova abertura';
+                    btnHtml = '<button id="pdvCaixaForceBtn" style="background:#fff;color:#7F1D1D;border:none;padding:10px 22px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);font-family:inherit">🔧 Forçar Reabertura</button>';
+                } else {
+                    label = '🔒 <strong>Caixa de hoje já foi fechado</strong> · Peça ao gerente pra reabrir';
+                    btnHtml = '';
+                }
+            } else {
+                label = '⚠️ <strong>Caixa fechado</strong> · Antes de vender, abra o caixa com o valor de troco inicial';
+                btnHtml = '<button id="pdvCaixaBlockerBtn" style="background:#fff;color:#D97706;border:none;padding:10px 22px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);font-family:inherit">🟢 Abrir Caixa Agora</button>';
+            }
+
             blocker.innerHTML =
                 '<div style="font-size:14px;line-height:1.3;flex:1;min-width:200px">' + label + '</div>' +
-                '<button id="pdvCaixaBlockerBtn" style="background:#fff;color:#D97706;border:none;padding:10px 22px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);font-family:inherit">🟢 Abrir Caixa Agora</button>';
+                btnHtml;
             document.body.insertBefore(blocker, document.body.firstChild);
-            // Empurra o conteúdo do PDV pra baixo pra não cobrir
             document.body.style.paddingTop = (blocker.offsetHeight) + 'px';
-            document.getElementById('pdvCaixaBlockerBtn').addEventListener('click', function () {
-                if (!Caixa.showOpenModal) { alert('Módulo Caixa ainda carregando, tente em 3s'); return; }
-                Caixa.showOpenModal(fid, function () {
-                    var b = document.getElementById('pdvCaixaBlocker');
-                    if (b) { document.body.style.paddingTop = ''; b.remove(); }
-                    if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
+
+            var openBtn = document.getElementById('pdvCaixaBlockerBtn');
+            if (openBtn) {
+                openBtn.addEventListener('click', function () {
+                    if (!Caixa.showOpenModal) { alert('Módulo Caixa ainda carregando, tente em 3s'); return; }
+                    Caixa.showOpenModal(fid, function () {
+                        removeBlocker();
+                        if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
+                    });
                 });
-            });
+            }
+            var forceBtn = document.getElementById('pdvCaixaForceBtn');
+            if (forceBtn) forceBtn.addEventListener('click', adminForceReopen);
         } catch (e) { console.warn('ensureCaixaAberto:', e); }
     }
     // Roda 1x já + tenta abrir modal automaticamente após 800ms (dá tempo do DOM/Caixa carregar)
@@ -1558,10 +1640,11 @@
         try {
             if (typeof Caixa !== 'undefined' && Caixa.getTurnoState) {
                 var st = Caixa.getTurnoState(fid);
+                // Auto-modal SOMENTE se status é nao_aberto. Se é 'fechado', operador
+                // precisa decidir manualmente (peça reabertura OU admin força).
                 if (st.status === 'nao_aberto' && Caixa.showOpenModal) {
                     Caixa.showOpenModal(fid, function () {
-                        var b = document.getElementById('pdvCaixaBlocker');
-                        if (b) { document.body.style.paddingTop = ''; b.remove(); }
+                        removeBlocker();
                         if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
                     });
                 }
