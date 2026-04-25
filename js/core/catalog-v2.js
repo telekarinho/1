@@ -759,7 +759,7 @@
                 id: newId('prod'),
                 categoriaId: 'cat_milkshake',
                 name: (idx + 1) + '. Milkshake ' + f.name,
-                desc: f.desc,
+                desc: f.desc + SOFT_EXPRESSO_FOOTER,
                 midia: { fotos: [], video: '', emoji: f.emoji },
                 custos: {
                     insumos: [],
@@ -790,7 +790,7 @@
             id: newId('prod'),
             categoriaId: 'cat_milkshake',
             name: '18. Milkshake Capitão Açaí Premium',
-            desc: premium.desc,
+            desc: premium.desc + SOFT_EXPRESSO_FOOTER,
             midia: { fotos: [], video: '', emoji: premium.emoji },
             custos: {
                 insumos: [],
@@ -929,7 +929,7 @@
                 id: newId('prod'),
                 categoriaId: 'cat_sundae',
                 name: (idx + 1) + '. Sundae ' + f.name,
-                desc: f.desc,
+                desc: f.desc + SOFT_EXPRESSO_FOOTER,
                 midia: { fotos: [], video: '', emoji: f.emoji },
                 custos: {
                     insumos: [],
@@ -960,7 +960,7 @@
             id: newId('prod'),
             categoriaId: 'cat_sundae',
             name: '18. Sundae Capitão Açaí Premium',
-            desc: premium.desc,
+            desc: premium.desc + SOFT_EXPRESSO_FOOTER,
             midia: { fotos: [], video: '', emoji: premium.emoji },
             custos: {
                 insumos: [],
@@ -1113,6 +1113,31 @@
         return { ok: true, created: !exists };
     }
 
+    // Footer que comunica ao cliente que a base é soft expresso Baunilha/Ninho
+    const SOFT_EXPRESSO_FOOTER = ' 🥛 Base: sorvete soft expresso · Baunilha/Ninho · cremoso e na hora.';
+
+    // Adiciona o footer 'soft expresso Baunilha/Ninho' nas descrições dos
+    // milkshakes e sundaes existentes — idempotente (gate + check de presença).
+    function addSoftExpressoDescV1(fid) {
+        const d = load(fid);
+        if (d.__softExpressoDescV1) return { skipped: true, reason: 'já adicionado' };
+
+        let updated = 0;
+        d.produtos.forEach(p => {
+            if (p.active === false) return;
+            if (p.categoriaId !== 'cat_milkshake' && p.categoriaId !== 'cat_sundae') return;
+            if (!p.desc) p.desc = '';
+            // Pula se já tem (defesa dupla)
+            if (p.desc.indexOf('soft expresso') !== -1) return;
+            p.desc = p.desc.trim() + SOFT_EXPRESSO_FOOTER;
+            updated++;
+        });
+
+        d.__softExpressoDescV1 = true;
+        save(fid, d);
+        return { ok: true, updated: updated };
+    }
+
     // Renomeia produtos: "Amora Apaixonada" → "1. Milkshake Amora Apaixonada"
     // (mesma numeração 1-17 pra milkshake e sundae · Premium = 18)
     function renameProductsNumberedV1(fid) {
@@ -1195,6 +1220,7 @@
             try { results.cleanupSundaes = cleanupInactiveSundaesV1(fid); } catch(e) { results.cleanupSundaes_err = e.message; }
             try { results.sundaeTipoCopo = fixSundaeTipoCopoV1(fid); } catch(e) { results.sundaeTipoCopo_err = e.message; }
             try { results.picoleGenerico = migratePicoleGenericoV1(fid); } catch(e) { results.picoleGenerico_err = e.message; }
+            try { results.softExpresso = addSoftExpressoDescV1(fid); } catch(e) { results.softExpresso_err = e.message; }
             try { results.numbered = renameProductsNumberedV1(fid); } catch(e) { results.numbered_err = e.message; }
             // SEM gate — roda em toda chamada (cobre cloud override resyncando placeholders velhos)
             try { results.purged = purgePlaceholders(fid); } catch(e) { results.purged_err = e.message; }
@@ -1232,6 +1258,7 @@
         fixSundaeTipoCopoV1,
         renameProductsNumberedV1,
         migratePicoleGenericoV1,
+        addSoftExpressoDescV1,
         purgePlaceholders,
         applyAllMigrations,
         syncToLegacy,
