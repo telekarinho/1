@@ -164,6 +164,7 @@
                     <h1>📋 <span data-i18n="nav.orders">Pedidos</span></h1>
                 </div>
                 <div class="panel-header-right">
+                    <button class="btn btn-sm" id="btnForceSync" style="background:#10B981;color:#fff;font-weight:700" onclick="forceSyncNow(this)" title="Buscar pedidos de outro PC agora">🔄 Sincronizar</button>
                     <select class="form-control" style="width:auto" id="filterDate" onchange="renderKanban()">
                         <option value="today" data-i18n="orders.filter_today">Hoje</option>
                         <option value="week" selected data-i18n="orders.filter_week">Esta Semana</option>
@@ -283,7 +284,7 @@
     <script src="../js/core/reports.js"></script>
     <script src="../js/core/adminconfig.js?v=mp-v14"></script>
     <script src="../js/core/motivacional.js?v=mp-v14"></script>
-    <script src="../js/core/caixa.js?v=mp-v58"></script>
+    <script src="../js/core/caixa.js?v=mp-v59"></script>
     <script>
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
         const session = Auth.getSession();
@@ -365,10 +366,13 @@
                     const nextStatus = { novo: 'confirmado', confirmado: 'preparando', preparando: 'pronto', pronto: 'em_entrega', em_entrega: 'entregue' };
                     const nextLabel = { novo: '✔️ Confirmar', confirmado: '▶️ Preparar', preparando: '✅ Pronto', pronto: '🛵 Enviar', em_entrega: '📦 Entregue' };
 
+                    // Numeração sequencial diária preferida; fallback pro hash legado
+                    const seqLabel = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
+                    const seqTitle = o.dailySeq ? `Pedido nº ${o.dailySeq} do dia · ${o.id.slice(-6)}` : `Pedido ${o.id.slice(-6)}`;
                     return `
                         <div class="order-card" onclick="showOrderDetail('${o.id}')">
                             <div class="order-card-header">
-                                <span class="order-id">#${o.id.slice(-6)}</span>
+                                <span class="order-id" title="${seqTitle}">${seqLabel}</span>
                                 <span class="order-time">${Utils.formatTime(o.createdAt)}</span>
                             </div>
                             <div class="order-customer">👤 ${Utils.escapeHtml(o.customer?.name || o.items?.[0]?.nomeCliente || 'Cliente')}</div>
@@ -459,7 +463,8 @@
             const o = orders.find(x => x.id === orderId);
             if (!o) return;
 
-            document.getElementById('orderModalTitle').textContent = `Pedido #${o.id.slice(-6)}`;
+            const _modalSeq = o.dailySeq ? `Pedido #${o.dailySeq}` : `Pedido #${o.id.slice(-6)}`;
+            document.getElementById('orderModalTitle').textContent = _modalSeq + (o.dailySeq ? ` · ${o.id.slice(-6)}` : '');
             document.getElementById('orderModalBody').innerHTML = `
                 <div style="margin-bottom:16px">
                     ${Utils.statusBadge(o.status)}
@@ -692,6 +697,29 @@
 
         renderKanban();
         i18n.translatePage();
+
+        // ===== Sincronizar Agora (botão manual no header) =====
+        // Útil quando operador quer forçar sync sem esperar o poll de 5s ou listener
+        window.forceSyncNow = async function (btn) {
+            if (!DataStore.forceSync) { alert('Sincronização indisponível.'); return; }
+            const orig = btn ? btn.innerHTML : null;
+            if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Sincronizando...'; }
+            try {
+                const r = await DataStore.forceSync();
+                if (r.success) {
+                    renderKanban();
+                    if (typeof Utils !== 'undefined' && Utils.showToast) {
+                        Utils.showToast(r.changes > 0 ? `🔄 ${r.changes} atualização(ões) recebida(s)!` : '✅ Tudo sincronizado.', 'success', 2500);
+                    }
+                } else {
+                    alert('Erro ao sincronizar: ' + (r.error || 'desconhecido'));
+                }
+            } catch (e) {
+                alert('Falha no sync: ' + e.message);
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = orig || '🔄 Sincronizar'; }
+            }
+        };
 
         // ===== SYNC ENTRE PCs em tempo real =====
         // DataStore agora dispara mp_remote_update quando outro PC altera orders_FID
