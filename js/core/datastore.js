@@ -347,6 +347,49 @@ const DataStore = {
                 }
             });
 
+            // ===== REAL-TIME SYNC entre PCs (inauguração) =====
+            // Antes: _syncFromCloud só rodava 1x no carregamento. PC B nunca via pedidos
+            // criados em PC A enquanto a aba estava aberta.
+            // Agora: listener em toda a collection 'datastore'. Sempre que QUALQUER
+            // doc mudar (orders_FID, caixa_FID, finances_FID etc), atualiza localStorage
+            // e dispara mp_remote_update. Pedidos.html reage e re-renderiza o kanban.
+            // Não toca em catalog_config (já tem listener separado).
+            if (!this._realtimeListenerAttached) {
+                this._realtimeListenerAttached = true;
+                this._db.collection('datastore').onSnapshot(snap => {
+                    snap.docChanges().forEach(change => {
+                        if (change.doc.id === 'catalog_config') return; // listener próprio
+                        if (change.type === 'removed') {
+                            localStorage.removeItem(this.PREFIX + change.doc.id);
+                            window.dispatchEvent(new CustomEvent('mp_remote_update', {
+                                detail: { key: change.doc.id, removed: true }
+                            }));
+                            return;
+                        }
+                        try {
+                            const key = change.doc.id;
+                            const cloudStr = change.doc.data().value;
+                            const localStr = localStorage.getItem(this.PREFIX + key);
+                            // Só dispara se o conteúdo mudou (evita echo do próprio write)
+                            if (localStr !== cloudStr) {
+                                localStorage.setItem(this.PREFIX + key, cloudStr);
+                                let parsed = null;
+                                try { parsed = JSON.parse(cloudStr); } catch(_) {}
+                                window.dispatchEvent(new CustomEvent('mp_remote_update', {
+                                    detail: { key, data: parsed }
+                                }));
+                                console.log('🔄 Sync remoto:', key);
+                            }
+                        } catch (e) {
+                            console.warn('Realtime sync error:', change.doc.id, e);
+                        }
+                    });
+                }, err => {
+                    console.warn('Realtime listener error:', err);
+                    this._realtimeListenerAttached = false;
+                });
+            }
+
         } catch (e) {
             console.warn('_syncFromCloud error:', e);
         }
