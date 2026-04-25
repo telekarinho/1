@@ -353,9 +353,14 @@
 
                 document.getElementById(countId).textContent = statusOrders.length;
                 document.getElementById(listId).innerHTML = statusOrders.slice(0, status === 'entregue' ? 10 : 50).map(o => {
-                    const itemsSummary = o.items ? o.items.map(i =>
-                        `<span class="item-name">${Utils.escapeHtml(i.sabor || i.name || '?')}</span> (${Utils.escapeHtml(i.tamanho || '')} ${Utils.escapeHtml(i.formato || '')})`
-                    ).join('<br>') : '-';
+                    const itemsSummary = o.items ? o.items.map(i => {
+                        // PDV salva i.name + i.size; legado salvava i.sabor + i.tamanho. Usa o que tiver.
+                        const itemName = i.name || i.sabor || '?';
+                        const itemSize = i.size || i.tamanho || '';
+                        const itemQty = i.qty ? `${i.qty}x ` : '';
+                        const sizeLabel = itemSize ? ` (${itemSize})` : '';
+                        return `<span class="item-name">${itemQty}${Utils.escapeHtml(itemName)}</span>${Utils.escapeHtml(sizeLabel)}`;
+                    }).join('<br>') : '-';
 
                     const nextStatus = { novo: 'confirmado', confirmado: 'preparando', preparando: 'pronto', pronto: 'em_entrega', em_entrega: 'entregue' };
                     const nextLabel = { novo: '✔️ Confirmar', confirmado: '▶️ Preparar', preparando: '✅ Pronto', pronto: '🛵 Enviar', em_entrega: '📦 Entregue' };
@@ -404,8 +409,19 @@
             }
             DataStore.set('orders_' + franchiseId, orders);
             if (newStatus === 'entregue' || newStatus === MP.ORDER_STATUS.DELIVERED) {
-                if (typeof Recipes !== 'undefined') {
-                    Recipes.deductFromInventory(franchiseId, orders[idx]);
+                // Guard contra dedução dupla — PDV.finishOrder já deduz no momento da venda.
+                // Se inventoryDeducted já tiver true, pula. Senão deduz e marca a flag.
+                if (typeof Recipes !== 'undefined' && !orders[idx].inventoryDeducted) {
+                    try {
+                        var deducted = Recipes.deductFromInventory(franchiseId, orders[idx]);
+                        orders[idx].inventoryDeducted = true;
+                        orders[idx].inventoryDeductedAt = new Date().toISOString();
+                        if (deducted && deducted.warnings && deducted.warnings.length) {
+                            console.warn('[Estoque] Itens sem receita configurada:', deducted.warnings);
+                        }
+                    } catch(e) {
+                        console.warn('Recipes.deductFromInventory error:', e);
+                    }
                     DataStore.set('orders_' + franchiseId, orders);
                 }
                 if (typeof Loyalty !== 'undefined') {
