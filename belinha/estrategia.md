@@ -244,3 +244,66 @@ D+0 a D+1 pós-inauguração (25–26/04/2026). Ciclos focados em performance fr
 ---
 
 _Belinha — Ciclo #39 | 2026-04-26_
+
+---
+
+## Aprendizados dos ciclos #39–43
+
+### Contexto do período
+Ciclos 39–43 abrangem 26/04/2026 (D+1 pós-inauguração). Foco predominante: finalizar sweep técnico de performance + construir arsenal de conversão e conteúdo para o mês de maio.
+
+### O que gerou mais valor concreto
+1. **Sweep Google Fonts non-blocking 100% (#40)** — Domínio inteiro livre de render-blocking fonts após 4 ciclos consecutivos (37→38→39→40). Impacto direto no LCP mobile de todas as páginas, especialmente `login.html` e `desafio.html` que antes bloqueavam o render inteiro. Lição: problema sistêmico identificado → resolver TODAS as instâncias no menor número de ciclos possível (idealmente 1).
+2. **Indica & Ganha (#41)** — 4 templates WhatsApp prontos + regras + rastreamento manual. Operador tem material completo para ativar sem precisar criar copy do zero. Padrão de sucesso: entregável acionável imediatamente pelo operador, sem dependência técnica.
+3. **Desafio UGC #PotinhoMaisFeliz (#43)** — Conteúdo de 330 linhas para a semana do 1º mês: 7 dias de posts planejados, roteiros de Reel, 4 templates WhatsApp, KPIs e critérios de seleção. Aproveita momento emocional de marco para gerar prova social orgânica. A mecânica do desafio é simples e replicável.
+
+### O que foi menos eficaz
+- **Ciclo #42 — refetch The Best Açaí**: pesquisa de concorrente sem follow-up concreto no mesmo ciclo. Valor marginal. Regra reforçada: pesquisar concorrente **apenas** quando vai gerar mudança de copy, preço ou feature no mesmo ciclo.
+- **Ciclo #43 desviou do planejado (SEO)**: o roadmap previa ativação do `aggregateRating`, mas o bloqueador ativo (≥3 reviews confirmados pelo operador) impedia a execução. Desvio foi correto — mas sinaliza que bloqueadores não resolvidos ocupam slots no roadmap. Ação: quando um bloqueador dura >3 ciclos, marcar como "suspenso" e não listar mais no roadmap ativo.
+
+### Padrão consolidado (v4)
+
+> **Bug/fix crítico > Conversão direta > UX/Performance sweep batch (TODAS as instâncias no mesmo ciclo) > Conteúdo acionável (playbooks com templates prontos) > SEO técnico (não bloqueado) > Concorrente (só com follow-up imediato)**
+
+### Estado das áreas em 26/04/2026
+
+| Área | Estado | Próxima ação |
+|------|--------|--------------|
+| Google Fonts non-blocking | ✅ 100% completo | — |
+| Conteúdo pós-inauguração | ✅ Semanas 1–7 prontas (até 06/06) | Semana 8 (07–13/06) |
+| Programa Fidelidade `cartao-fidelidade.html` | ✅ Online + links personalizados | Confirmar adoção c/ operador |
+| Indica & Ganha (templates WA) | ✅ Pronto para ativar | Operador acionar |
+| Desafio UGC #PotinhoMaisFeliz | ✅ Planejado 25–30/05 | Anunciar vencedores 31/05 |
+| aggregateRating SEO | ⛔ SUSPENSO | Aguardar ≥3 reviews Google Maps confirmados pelo operador |
+| Google Analytics ID real | ⛔ SUSPENSO | Aguardar autorização do usuário |
+
+### Estratégia para junho 2026 (mês 2 de operação)
+
+**Pilares:**
+1. **Prova social** — Repostar UGC dos vencedores do desafio; solicitar mais reviews Google
+2. **Hábito semanal** — Manter cadência de 1 post feed + 3 stories/semana no mínimo
+3. **Reativação** — Ativar template Indica & Ganha para base de clientes do mês 1
+4. **SEO** — Quando `aggregateRating` desbloqueado, ativar imediatamente
+
+**Tom de junho:** Celebração consolidada → "vocês nos escolheram, a gente está aqui pra ficar". Menos energy de lançamento, mais de marca estabelecida local.
+
+### Próximas iniciativas (ciclos 45–49)
+
+| Ciclo | Área | Ação |
+|-------|------|------|
+| #45 | Conteúdo | `pos-inauguracao-semana8.md` — semana 07–13/06: indicação como tema + ativar Indica & Ganha |
+| #46 | SEO | Se `aggregateRating` desbloqueado: ativar em `index.html` + verificar Rich Results Test |
+| #47 | Conteúdo | `pos-inauguracao-semana9.md` — semana 14–20/06: novidade de cardápio ou promoção mid-month |
+| #48 | Conversão | Revisitar funil WhatsApp (`whatsapp-funil.md`): ajustar fluxo com aprendizados do mês 1 |
+| #49 | Auto-aprimoramento | Reler log ciclos 44–48, ajustar estratégia para julho (mês 3) |
+
+### Bloqueadores suspensos (não listar no roadmap ativo até desbloqueados)
+
+| Bloqueador | Dependência | Ciclo que bloqueou |
+|------------|-------------|-------------------|
+| aggregateRating Schema.org | ≥3 reviews Google Maps verificáveis pelo operador | #43 |
+| Google Analytics ID real | Autorização explícita do usuário | #15 |
+
+---
+
+_Belinha — Ciclo #44 | 2026-04-26_
