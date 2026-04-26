@@ -230,8 +230,11 @@ h1 { font-family: 'Baloo 2', cursive; font-size: 32px; color: #5A52E0; margin-bo
         } else {
             document.getElementById('cloudCount').textContent = '?';
             document.getElementById('cloudSub').textContent = 'nuvem inacessível: ' + r.error;
-            setStatus('⚠️ Não consegui ler a nuvem — pode estar travado. Tenta SINCRONIZAR mesmo assim.', 'warn');
+            setStatus('🚨 Este PC NÃO consegue ler a nuvem. Vai pro OUTRO PC e sincroniza lá. NÃO clique SINCRONIZAR aqui — vai sobrescrever.', 'err');
             log('Erro lendo cloud: ' + r.error);
+            // Bloqueia botão pra não causar perda de dados
+            var bb = document.getElementById('bigBtn');
+            if (bb) { bb.disabled = true; bb.textContent = '🚫 NUVEM INACESSÍVEL — não pode sincronizar daqui'; bb.style.background = '#9CA3AF'; }
         }
     }
 
@@ -248,11 +251,18 @@ h1 { font-family: 'Baloo 2', cursive; font-size: 32px; color: #5A52E0; margin-bo
         var localItems = (DataStore.getCollection && DataStore.getCollection('orders', fid)) || [];
         log('Local: ' + localItems.length + ' itens');
 
-        // Lê cloud com timeout
+        // Lê cloud com timeout — SE FALHAR, NÃO ESCREVE (proteção contra data loss)
         var cloudR = await getCloudOrdersWithTimeout(fid, 8000);
-        var cloudItems = cloudR.ok ? cloudR.items : [];
-        if (!cloudR.ok) log('⚠️ Não li cloud (' + cloudR.error + ') — vou escrever só o local');
-        else log('Cloud: ' + cloudItems.length + ' itens');
+        if (!cloudR.ok) {
+            log('🚨 Cloud INACESSÍVEL: ' + cloudR.error + ' — abortando pra não sobrescrever dados de outro PC');
+            setStatus('🚨 Este PC não consegue ler a nuvem. Vai pro OUTRO PC e sincroniza LÁ. Os ' + localItems.length + ' pedidos deste PC ficam guardados no local até o outro PC trazer eles.', 'err');
+            btn.disabled = true;
+            btn.textContent = '🚫 NÃO PODE SINCRONIZAR DAQUI';
+            btn.style.background = '#9CA3AF';
+            return;
+        }
+        var cloudItems = cloudR.items;
+        log('Cloud: ' + cloudItems.length + ' itens');
 
         // Merge
         var merged = mergeArrays(localItems, cloudItems);
