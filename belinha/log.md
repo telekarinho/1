@@ -1,5 +1,42 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #41 — 2026-04-26
+
+**Área:** Conversão — Programa Indica & Ganha (referral WhatsApp)
+
+**Contexto:** D+1 da inauguração. Com clientes da abertura "frescos", o momento ideal para acionar o programa de indicação — receptividade máxima, memória do produto ainda viva. O cartão fidelidade (ciclo #23) já existe como âncora de retorno; o Indica & Ganha cria o vetor de aquisição orgânica.
+
+**O que analisou:**
+- `belinha/content/whatsapp-funil.md`: tom de voz e formatação WhatsApp estabelecidos
+- `cartao-fidelidade.html`: mecânica de carimbos existente — indicação gera 1 carimbo extra, integra sem fricção
+- Estratégia ciclo #41: template referral copy-paste com rastreamento manual (sem custo de sistema)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/whatsapp-indicacao.md` | CRIADO — 4 templates prontos: (A) operador → cliente existente, (B) card de indicação para o amigo encaminhar, (C) confirmação de carimbo extra para quem indicou, (D) reativação de cliente sumido com gancho de indicação. + regras do programa + calendário de envio + planilha de rastreamento manual |
+
+**Commit:** `4713d5c`
+
+**Mecânica completa:**
+1. Operador envia Template A ao cliente → cliente encaminha Template B ao amigo
+2. Amigo vem, menciona quem indicou → ganha carimbo normal
+3. Operador envia Template C para quem indicou → ganha 1 carimbo extra
+4. Link `cartao-fidelidade.html?stamps=N` atualizado para mostrar novo total
+
+**Impacto esperado:**
+- Aquisição orgânica zero custo: cada cliente vira potencial embaixador
+- Loop de fidelidade: indicação → carimbo → aproximação do brinde → mais engajamento
+- Reativação embutida no Template D para clientes que sumiram após inauguração
+
+**Próximo passo sugerido:**
+- Ciclo #42: Pesquisa concorrente TheBest — WebSearch/WebFetch para extrair preços, produtos, copy e diferenciais. Salvar em `belinha/competitors/thebest.md`
+- Ciclo #43: `pos-inauguracao-semana6.md` — conteúdo 24–30/05 (consolidação de hábito, desafio UGC, 1 mês e meio de MilkyPot)
+- Ciclo #44: Auto-aprimoramento #9 — reler log ciclos 40–43, ajustar estratégia para junho
+
+---
+
 ## Ciclo #40 — 2026-04-26
 
 **Área:** UX/Performance — Google Fonts non-blocking sweep (batch final)
