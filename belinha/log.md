@@ -1,5 +1,37 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #46 — 2026-04-26
+
+**Área:** SEO — Schema.org FAQPage: +2 perguntas (Cartão Fidelidade e Indica & Ganha)
+
+**Contexto:** `aggregateRating` permanece suspenso (aguarda ≥3 reviews Google Maps confirmados pelo operador). Gap identificado: FAQPage tinha apenas 6 perguntas, sem mencionar os dois programas que entram em foco em junho — o Cartão Fidelidade Digital (lançado no ciclo #23) e o Indica & Ganha (ativado na semana 8, ciclo #41).
+
+**O que analisou:**
+- `index.html` FAQPage: 6 perguntas existentes (localização, delivery, pagamentos, fidelidade genérica, Zero/Fit)
+- `cartao-fidelidade.html`: mecânica dos 10 carimbos + Mini Potinho grátis já documentada
+- `whatsapp-indicacao.md`: regras e templates do Indica & Ganha prontos desde ciclo #41
+- Gap: queries de busca como "cartão fidelidade milkypot", "programa de indicação milkypot londrina" não tinham cobertura em rich results
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `index.html` | FAQPage: +2 perguntas — "Como funciona o Cartão Fidelidade Digital?" e "O MilkyPot tem programa de indicação?". FAQPage 6→8 perguntas. JSON-LD validado. |
+
+**Commit:** `e7c44ee`
+
+**Impacto esperado:**
+- Rich results Google para queries sobre fidelidade e indicação alinhadas com a programação de junho
+- "Indica & Ganha" indexado como FAQ antes da ativação do programa (semana 8) — ancoragem SEO antecipada
+- CTA WhatsApp na resposta da FAQ de indicação: captura orgânica de leads curiosos via busca
+
+**Próximo passo sugerido:**
+- Ciclo #47: `pos-inauguracao-semana9.md` — 14–20/06/2026: resultados do Indica & Ganha + novidade de cardápio ou promoção mid-month
+- Ciclo #48: Revisitar funil WhatsApp (`whatsapp-funil.md`): ajustar fluxo com aprendizados do mês 1
+- Ciclo #49: Auto-aprimoramento — reler log ciclos #44–48, ajustar estratégia para julho
+
+---
+
 ## Ciclo #45 — 2026-04-26
 
 **Área:** Conteúdo — `pos-inauguracao-semana8.md`
