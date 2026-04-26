@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Fix com Log Remoto</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #1A237E, #3949AB);
+            min-height: 100vh;
+            padding: 24px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+        h1 { font-family: 'Baloo 2', cursive; margin: 0 0 8px; color: #1A237E; }
+        h2 { font-family: 'Baloo 2', cursive; color: #1A237E; font-size: 1.1rem; margin-top: 18px; }
+        p { color: #444; line-height: 1.5; }
+        button {
+            padding: 18px 24px;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 8px;
+            width: 100%;
+        }
+        .btn-fix {
+            background: linear-gradient(135deg, #B71C1C, #E53935);
+            box-shadow: 0 6px 20px rgba(183,28,28,0.4);
+        }
+        button:hover { transform: translateY(-2px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .log {
+            background: #0D0D0D;
+            color: #4FC3F7;
+            font-family: 'Courier New', monospace;
+            font-size: 0.78rem;
+            padding: 16px;
+            border-radius: 10px;
+            margin-top: 16px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .ok { color: #69F0AE; }
+        .err { color: #FF8A80; }
+        .warn { color: #FFD54F; }
+        .step { color: #FFC107; font-weight: 700; }
+        .info { color: #B3E5FC; }
+        .stats { background: #F5F5F5; padding: 14px; border-radius: 10px; margin: 12px 0; }
+        a { color: #1A237E; font-weight: 700; text-decoration: none; }
+        code { background: #FFF3E0; padding: 2px 6px; border-radius: 4px; }
+        .session-id { background: #FFC107; color: #000; padding: 4px 10px; border-radius: 6px; font-family: monospace; font-size: 0.9rem; font-weight: 700; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="card">
+        <h1>🔧 Fix com Log Remoto</h1>
+        <p>Esta página faz a correção <strong>e escreve TODO o log na nuvem</strong> pra o desenvolvedor poder analisar exatamente o que aconteceu no SEU PC, mesmo se a correção falhar.</p>
+
+        <p>Sessão: <span class="session-id" id="sessionId">aguarde…</span></p>
+
+        <h2>📋 Instruções:</h2>
+        <ol>
+            <li>Clica no botão vermelho abaixo</li>
+            <li>Aguarda finalizar (~10 segundos)</li>
+            <li>Manda print desta tela pro dev OU manda só o ID da sessão acima</li>
+            <li>Dev consegue ler o log completo na nuvem com esse ID</li>
+        </ol>
+
+        <button class="btn-fix" id="btnFix">🔥 RODAR FIX + GRAVAR LOG NA NUVEM</button>
+
+        <div style="margin-top:16px;text-align:center">
+            <a href="pdv.html" style="margin-right:14px">← PDV</a>
+            <a href="pedidos.html">← Pedidos</a>
+        </div>
+
+        <div id="log" class="log" style="display:none"></div>
+    </div>
+
+    <script>
+        var SESSION_ID = 'fixlog_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        document.getElementById('sessionId').textContent = SESSION_ID;
+        var logBuffer = [];
+        var logEl = document.getElementById('log');
+
+        function log(msg, cls) {
+            logEl.style.display = 'block';
+            var s = document.createElement('span');
+            if (cls) s.className = cls;
+            s.textContent = msg + '\n';
+            logEl.appendChild(s);
+            logEl.scrollTop = logEl.scrollHeight;
+            logBuffer.push({ ts: new Date().toISOString(), level: cls || 'info', msg: msg });
+        }
+        log('Iniciando — sessão: ' + SESSION_ID, 'step');
+
+        var firebaseConfig = {
+            apiKey: "AIzaSyAbQ1fe0pK4prhfzYJypod2ie4DyNsq6BA",
+            authDomain: "milkypot-ad945.firebaseapp.com",
+            projectId: "milkypot-ad945",
+            storageBucket: "milkypot-ad945.firebasestorage.app",
+            messagingSenderId: "859364650620",
+            appId: "1:859364650620:web:aecf11f4cf99b7792463f9"
+        };
+        try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); log('Firebase OK', 'ok'); }
+        catch(e) { log('Firebase erro: ' + e.message, 'err'); }
+        var db; try { db = firebase.firestore(); } catch(e) { log('Firestore erro: ' + e.message, 'err'); }
+
+        async function persistLog(extra) {
+            if (!db) return;
+            try {
+                await db.collection('datastore').doc('debug_' + SESSION_ID).set({
+                    value: JSON.stringify({
+                        sessionId: SESSION_ID,
+                        userAgent: navigator.userAgent,
+                        url: location.href,
+                        startedAt: logBuffer[0] && logBuffer[0].ts,
+                        finishedAt: new Date().toISOString(),
+                        logs: logBuffer,
+                        extra: extra || {}
+                    }),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch(e) {
+                log('persistLog falhou: ' + (e.code||e.message), 'err');
+            }
+        }
+
+        function todayKey() {
+            var d = new Date();
+            return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+        }
+        function detectFid() {
+            try {
+                var raw = localStorage.getItem('mp_session') || sessionStorage.getItem('mp_session');
+                if (raw) { var s = JSON.parse(raw); if (s && s.franchiseId) return s.franchiseId; }
+            } catch(_) {}
+            for (var i = 0; i < localStorage.length; i++) {
+                var k = localStorage.key(i);
+                if (k && k.indexOf('mp_orders_') === 0 && !k.endsWith('global')) return k.replace('mp_orders_','');
+                if (k && k.indexOf('mp_pdv_tabs_') === 0 && !k.endsWith('global')) return k.replace('mp_pdv_tabs_','');
+            }
+            return 'muffato-quintino';
+        }
+
+        document.getElementById('btnFix').onclick = async function() {
+            var btn = this;
+            btn.disabled = true;
+            btn.textContent = '⏳ Rodando…';
+
+            var FID = detectFid();
+            log('FID: ' + FID, 'info');
+
+            // STEP 1: Lista TODAS as keys de localStorage relevantes
+            log('\n━━━ STEP 1: Inspecionando localStorage ━━━', 'step');
+            var allKeys = [];
+            try {
+                for (var i = 0; i < localStorage.length; i++) allKeys.push(localStorage.key(i));
+            } catch(e) { log('localStorage list erro: ' + e.message, 'err'); }
+            log('Total de chaves: ' + allKeys.length);
+            var relevantKeys = allKeys.filter(function(k){
+                return k && (k.indexOf('mp_orders_') !== -1 || k.indexOf('mp_pdv_tabs_') !== -1 || k.indexOf('orders_') !== -1 || k.indexOf('pdv_tabs_') !== -1);
+            });
+            log('Chaves relevantes (' + relevantKeys.length + '):', 'info');
+            relevantKeys.forEach(function(k){
+                try {
+                    var v = JSON.parse(localStorage.getItem(k) || '[]');
+                    log('  ' + k + ' → ' + (Array.isArray(v) ? v.length + ' itens' : typeof v));
+                } catch(_) {
+                    log('  ' + k + ' → (parse fail)');
+                }
+            });
+
+            // STEP 2: Lê cloud
+            log('\n━━━ STEP 2: Lendo Firestore ━━━', 'step');
+            var cloudOrders = [];
+            var cloudTabs = [];
+            try {
+                var snap = await db.collection('datastore').doc('orders_' + FID).get();
+                if (snap.exists) {
+                    cloudOrders = JSON.parse((snap.data() || {}).value || '[]');
+                    log('cloud orders: ' + cloudOrders.length, 'ok');
+                } else log('cloud orders: doc não existe', 'warn');
+            } catch(e) { log('cloud orders erro: ' + (e.code||e.message), 'err'); }
+            try {
+                var snap2 = await db.collection('datastore').doc('pdv_tabs_' + FID).get();
+                if (snap2.exists) {
+                    cloudTabs = JSON.parse((snap2.data() || {}).value || '[]');
+                    log('cloud tabs: ' + cloudTabs.length, 'ok');
+                } else log('cloud tabs: doc não existe', 'warn');
+            } catch(e) { log('cloud tabs erro: ' + (e.code||e.message), 'err'); }
+
+            // STEP 3: Identifica stuck
+            log('\n━━━ STEP 3: Identificando stuck ━━━', 'step');
+            var today = todayKey();
+            log('Hoje: ' + today);
+            var openStatuses = ['novo','confirmado','preparando','pronto','em_entrega'];
+            var stuckCloud = cloudOrders.filter(function(o){
+                return o && !o.deleted && openStatuses.indexOf(o.status) !== -1 && o.createdAt && o.createdAt.slice(0,10) < today;
+            });
+            log('Stuck no cloud: ' + stuckCloud.length, stuckCloud.length ? 'warn' : 'ok');
+            stuckCloud.forEach(function(o){
+                log('  ' + o.id + ' · ' + o.status + ' · ' + o.createdAt.slice(0,10));
+            });
+
+            // STEP 4: HARD-DELETE no CLOUD (filtrar dos arrays)
+            log('\n━━━ STEP 4: HARD-DELETE no cloud ━━━', 'step');
+            try {
+                var stuckIds = new Set(stuckCloud.map(function(s){return s.id;}));
+                var cleanedCloud = cloudOrders.filter(function(o){ return !stuckIds.has(o.id); });
+                await db.collection('datastore').doc('orders_' + FID).set({
+                    value: JSON.stringify(cleanedCloud),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                log('Cloud orders: ' + cloudOrders.length + ' → ' + cleanedCloud.length, 'ok');
+            } catch(e) { log('cloud cleanup erro: ' + (e.code||e.message), 'err'); }
+
+            try {
+                await db.collection('datastore').doc('pdv_tabs_' + FID).set({
+                    value: '[]',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                log('Cloud tabs: zerado', 'ok');
+            } catch(e) { log('cloud tabs zero erro: ' + (e.code||e.message), 'err'); }
+
+            // STEP 5: NUKE LOCAL — apaga TODAS as chaves relevantes
+            log('\n━━━ STEP 5: NUKE localStorage ━━━', 'step');
+            for (var i = relevantKeys.length - 1; i >= 0; i--) {
+                try {
+                    localStorage.removeItem(relevantKeys[i]);
+                    log('  ✅ removed ' + relevantKeys[i], 'ok');
+                } catch(e) { log('  ❌ ' + relevantKeys[i] + ': ' + e.message, 'err'); }
+            }
+
+            // STEP 6: SW unregister + cache clear
+            log('\n━━━ STEP 6: Service Worker + Caches ━━━', 'step');
+            try {
+                if ('serviceWorker' in navigator) {
+                    var regs = await navigator.serviceWorker.getRegistrations();
+                    log('SW registrations: ' + regs.length);
+                    for (var i = 0; i < regs.length; i++) {
+                        await regs[i].unregister();
+                        log('  ✅ unregistered ' + (regs[i].scope || ''), 'ok');
+                    }
+                }
+                if ('caches' in window) {
+                    var keys = await caches.keys();
+                    log('Caches: ' + keys.length);
+                    for (var i = 0; i < keys.length; i++) {
+                        await caches.delete(keys[i]);
+                        log('  ✅ deleted cache ' + keys[i], 'ok');
+                    }
+                }
+            } catch(e) { log('SW/cache erro: ' + e.message, 'warn'); }
+
+            // STEP 7: Verificação pós-fix
+            log('\n━━━ STEP 7: Verificação final ━━━', 'step');
+            try {
+                var verifySnap = await db.collection('datastore').doc('orders_' + FID).get();
+                var verifyArr = JSON.parse((verifySnap.data() || {}).value || '[]');
+                var verifyStuck = verifyArr.filter(function(o){
+                    return o && !o.deleted && openStatuses.indexOf(o.status) !== -1 && o.createdAt && o.createdAt.slice(0,10) < today;
+                });
+                log('Cloud agora: ' + verifyArr.length + ' total, ' + verifyStuck.length + ' stuck', verifyStuck.length ? 'warn' : 'ok');
+            } catch(e) { log('verify erro: ' + e.message, 'err'); }
+
+            var localOrdersAfter = [];
+            try {
+                var localKey = 'mp_orders_' + FID;
+                localOrdersAfter = JSON.parse(localStorage.getItem(localKey) || '[]');
+            } catch(_) {}
+            log('Local orders após nuke: ' + localOrdersAfter.length, localOrdersAfter.length === 0 ? 'ok' : 'warn');
+
+            // STEP 8: Persiste log na nuvem
+            log('\n━━━ STEP 8: Salvando log na nuvem ━━━', 'step');
+            await persistLog({
+                fid: FID,
+                relevantKeys: relevantKeys,
+                cloudOrdersCount: cloudOrders.length,
+                cloudTabsCount: cloudTabs.length,
+                stuckBefore: stuckCloud.length,
+                localOrdersAfter: localOrdersAfter.length
+            });
+            log('✅ Log salvo: debug_' + SESSION_ID, 'ok');
+
+            log('\n✅ FIX COMPLETO. Recarregando em 5 segundos…', 'ok');
+            btn.textContent = '✅ Pronto — recarregando…';
+            btn.style.background = 'linear-gradient(135deg,#2E7D32,#4CAF50)';
+            btn.disabled = false;
+
+            setTimeout(function(){
+                window.location.href = 'pedidos.html?fixed=' + Date.now();
+            }, 5000);
+        };
+    </script>
+</body>
+</html>
