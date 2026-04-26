@@ -55,14 +55,24 @@ const Caixa = (function () {
     }
 
     // Retorna { ok, reason, currentHHMM, expectedOpen, expectedClose }
-    // ok=true se está dentro da janela de tolerância
+    // ok=true se está dentro da janela de tolerância.
+    // Fora dela, modal pede justificativa (ver showOpenModal/showCloseModal).
+    // Pra desabilitar totalmente: localStorage.setItem('mp_validate_business_hours_<fid>','0')
     function checkBusinessHours(franchiseId, kind /* 'open'|'close' */) {
         var hours = getBusinessHours(franchiseId);
         var now = new Date();
+        var hh = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+        // Permite desabilitar via flag (escape hatch pra emergência)
+        try {
+            var disabled = localStorage.getItem('mp_validate_business_hours_' + franchiseId) === '0';
+            if (disabled) {
+                return { ok: true, currentHHMM: hh, expectedOpen: hours.open, expectedClose: hours.close, validationDisabled: true };
+            }
+        } catch(_e) {}
+
         var nowMin = now.getHours() * 60 + now.getMinutes();
         var openMin = _hhmmToMinutes(hours.open);
         var closeMin = _hhmmToMinutes(hours.close);
-        var hh = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
 
         if (kind === 'open') {
             var earliest = openMin - TOLERANCE_OPEN_BEFORE_MIN;
@@ -544,6 +554,17 @@ const Caixa = (function () {
             });
         }
 
+        // Pre-check do horário: se fora, já mostra textarea de justificativa
+        var hourCheck = checkBusinessHours(franchiseId, 'open');
+        var offHoursWarning = !hourCheck.ok ? `
+            <div style="background:#FFF3E0;border:2px solid #FB8C00;color:#E65100;padding:12px;border-radius:8px;margin:10px 0;font-weight:600">
+                ⏰ <strong>Fora do horário comercial</strong><br>
+                <small style="font-weight:400">${hourCheck.reason || 'Horário previsto: ' + hourCheck.expectedOpen}</small>
+            </div>
+            <label style="margin-top:8px"><strong>Justificativa (obrigatória)</strong></label>
+            <textarea data-name="motivoForaHorario" placeholder="Ex: shopping abriu mais cedo, evento, treinamento..." rows="2" style="width:100%;padding:10px;border:2px solid #FB8C00;border-radius:8px;font-family:inherit;font-size:14px"></textarea>
+        ` : '';
+
         const html = `
             <div class="caixa-modal" role="dialog" aria-label="Abrir caixa">
               <div class="caixa-modal-header">
@@ -554,6 +575,7 @@ const Caixa = (function () {
                 <label>Valor de abertura (troco inicial)</label>
                 <input type="text" class="caixa-brl" data-caixa-brl data-name="valor" inputmode="numeric" placeholder="R$ 0,00">
                 <div class="caixa-info">💡 Registre o valor em dinheiro no caixa antes de começar o turno. Esse será o saldo inicial para conferência no fechamento.</div>
+                ${offHoursWarning}
                 <div class="caixa-danger" data-caixa-error style="display:none"></div>
               </div>
               <div class="caixa-modal-footer">
@@ -562,23 +584,18 @@ const Caixa = (function () {
               </div>
             </div>`;
         const modal = openModal(html, (data) => {
-            // 1ª tentativa SEM motivo
-            var r = openShift(franchiseId, data.valor);
-            // Se exige justificativa por horário fora do padrão, prompt e re-tenta
-            if (!r.success && r.requiresReason) {
-                var motivo = prompt(
-                    '⏰ FORA DO HORÁRIO COMERCIAL\n\n' +
-                    r.error + '\n\n' +
-                    'Por que você está abrindo o caixa fora do horário?\n' +
-                    '(Ex: evento, abertura antecipada, treinamento...)'
-                );
-                if (!motivo || motivo.trim().length < 3) {
+            // Se fora do horário e textarea vazia, bloqueia
+            if (!hourCheck.ok) {
+                var motivo = (data.motivoForaHorario || '').trim();
+                if (motivo.length < 3) {
                     const err = modal.overlay.querySelector('[data-caixa-error]');
-                    err.textContent = 'Justificativa cancelada. Caixa NÃO foi aberto.';
+                    err.textContent = '⚠️ Justificativa obrigatória (mínimo 3 caracteres).';
                     err.style.display = 'block';
                     return false;
                 }
-                r = openShift(franchiseId, data.valor, motivo.trim());
+                var r = openShift(franchiseId, data.valor, motivo);
+            } else {
+                var r = openShift(franchiseId, data.valor);
             }
             if (!r.success) {
                 const err = modal.overlay.querySelector('[data-caixa-error]');
@@ -682,6 +699,17 @@ const Caixa = (function () {
         }
 
         const st = getTurnoState(franchiseId);
+        // Pre-check do horário
+        var hourCheckClose = checkBusinessHours(franchiseId, 'close');
+        var offHoursCloseWarning = !hourCheckClose.ok ? `
+            <div style="background:#FFF3E0;border:2px solid #FB8C00;color:#E65100;padding:12px;border-radius:8px;margin:10px 0;font-weight:600">
+                ⏰ <strong>Fora do horário comercial</strong><br>
+                <small style="font-weight:400">${hourCheckClose.reason || 'Horário previsto: ' + hourCheckClose.expectedClose}</small>
+            </div>
+            <label style="margin-top:8px"><strong>Justificativa de horário (obrigatória)</strong></label>
+            <textarea data-name="motivoForaHorario" placeholder="Ex: shopping fechou cedo, problema técnico, sem movimento..." rows="2" style="width:100%;padding:10px;border:2px solid #FB8C00;border-radius:8px;font-family:inherit;font-size:14px"></textarea>
+        ` : '';
+
         const html = `
             <div class="caixa-modal" role="dialog" aria-label="Fechar caixa">
               <div class="caixa-modal-header" style="background:linear-gradient(135deg,#DC2626,#F59E0B)">
@@ -701,6 +729,7 @@ const Caixa = (function () {
                 <input type="text" class="caixa-brl" data-caixa-brl data-name="valor" inputmode="numeric" placeholder="R$ 0,00">
                 <label>Justificativa (obrigatória se diferença &gt; R$ 5)</label>
                 <textarea data-name="motivo" placeholder="Ex: troco dado a mais, erro de conferência..."></textarea>
+                ${offHoursCloseWarning}
                 <div class="caixa-danger" data-caixa-error style="display:none"></div>
               </div>
               <div class="caixa-modal-footer">
@@ -709,24 +738,18 @@ const Caixa = (function () {
               </div>
             </div>`;
         const modal = openModal(html, (data) => {
-            // 1ª tentativa SEM motivoForaHorario
-            var r = closeShift(franchiseId, data.valor, data.motivo);
-            // Se exige justificativa por horário, prompt e re-tenta
-            if (!r.success && r.requiresReason) {
-                var motivoH = prompt(
-                    '⏰ FORA DO HORÁRIO COMERCIAL\n\n' +
-                    r.error + '\n\n' +
-                    'Por que você está fechando o caixa fora do horário?\n' +
-                    '(Ex: shopping fechou cedo, problema técnico, sem movimento...)'
-                );
-                if (!motivoH || motivoH.trim().length < 3) {
+            // Se fora do horário e textarea vazia, bloqueia
+            var motivoH = '';
+            if (!hourCheckClose.ok) {
+                motivoH = (data.motivoForaHorario || '').trim();
+                if (motivoH.length < 3) {
                     const err = modal.overlay.querySelector('[data-caixa-error]');
-                    err.textContent = 'Justificativa cancelada. Caixa NÃO foi fechado.';
+                    err.textContent = '⚠️ Justificativa de horário obrigatória (mínimo 3 caracteres).';
                     err.style.display = 'block';
                     return false;
                 }
-                r = closeShift(franchiseId, data.valor, data.motivo, motivoH.trim());
             }
+            var r = closeShift(franchiseId, data.valor, data.motivo, motivoH);
             if (!r.success) {
                 const err = modal.overlay.querySelector('[data-caixa-error]');
                 err.textContent = r.error + (r.esperado !== undefined ? ' (esperado ' + formatBRL(r.esperado) + ', diferença ' + formatBRL(r.diff) + ')' : '');
