@@ -1,5 +1,38 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #40 — 2026-04-26
+
+**Área:** UX/Performance — Google Fonts non-blocking sweep (batch final)
+
+**Contexto:** Conclusão do sweep de fontes bloqueantes iniciado no ciclo #38. As 4 páginas restantes (`login.html`, `desafio.html`, `termos.html`, `privacidade.html`) ainda usavam `rel="stylesheet"` síncrono para Google Fonts, atrasando o render-blocking em cada carregamento.
+
+**O que analisou:**
+- Confirmação via `grep` que todas as 4 páginas tinham o padrão bloqueante
+- Verificação do padrão correto já aplicado nas páginas de alto tráfego nos ciclos #37–39
+- Após o ciclo #40, TODAS as páginas do domínio estarão com fontes non-blocking
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `login.html` | `rel="stylesheet"` → `preload as="style"` + `onload` + `<noscript>` fallback |
+| `desafio.html` | Mesmo padrão non-blocking (inclui Orbitron além de Baloo 2 e Nunito) |
+| `termos.html` | Mesmo padrão non-blocking |
+| `privacidade.html` | Mesmo padrão non-blocking |
+
+**Commit:** `4512e0c`
+
+**Impacto:**
+- Sweep de render-blocking fonts 100% completo em todo o domínio milkypot.com
+- Todas as páginas agora carregam HTML/CSS crítico sem aguardar resposta do servidor Google Fonts
+- Melhora FCP e LCP especialmente em conexões móveis 4G/3G
+
+**Próximo passo sugerido:**
+- Ciclo #41: Template "mensagem de indicação" cliente → amigo (referral program copy WhatsApp) — copy pronto para operador copiar e enviar
+- Ciclo #42: Pesquisa concorrente TheBest — WebSearch/WebFetch para extrair preços, produtos e diferenciais
+
+---
+
 ## Ciclo #39 — 2026-04-26
 
 **Área:** Auto-aprimoramento (#8, ciclos #35–39) + UX/Performance — Google Fonts non-blocking sweep
