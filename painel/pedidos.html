@@ -386,9 +386,14 @@
                             ${status !== 'entregue' ? `
                                 <div class="order-actions">
                                     <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();moveOrder('${o.id}','${nextStatus[status]}')">${nextLabel[status]}</button>
-                                    ${status === 'novo' ? `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();moveOrder('${o.id}','cancelado')">❌</button>` : ''}
+                                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();moveOrder('${o.id}','cancelado')" title="Cancelar pedido">❌</button>
+                                    <button class="btn btn-sm" style="background:#B71C1C;color:#fff;padding:6px 8px" onclick="event.stopPropagation();deleteOrder('${o.id}')" title="Excluir permanentemente">🗑️</button>
                                 </div>
-                            ` : ''}
+                            ` : `
+                                <div class="order-actions">
+                                    <button class="btn btn-sm" style="background:#B71C1C;color:#fff;padding:6px 8px" onclick="event.stopPropagation();deleteOrder('${o.id}')" title="Excluir permanentemente">🗑️</button>
+                                </div>
+                            `}
                         </div>
                     `;
                 }).join('');
@@ -794,6 +799,33 @@
         // ENCERRAR DIA — finaliza pedidos abertos do dia + abre modal pra fechar caixa
         // ============================================
         window.encerrarDia = function() {
+            // Valida horario comercial - se fora da janela de fechamento, exige justificativa
+            try {
+                if (typeof Caixa !== 'undefined' && Caixa.checkBusinessHours) {
+                    var hc = Caixa.checkBusinessHours(franchiseId, 'close');
+                    if (!hc.ok) {
+                        var motivoH = prompt(
+                            'FORA DO HORARIO COMERCIAL\n\n' +
+                            hc.reason + '\n\n' +
+                            'Por que voce esta encerrando o dia fora do horario?\n' +
+                            '(Ex: shopping fechou cedo, sem movimento, problema tecnico...)'
+                        );
+                        if (!motivoH || motivoH.trim().length < 3) {
+                            if (typeof Utils !== 'undefined' && Utils.showToast) {
+                                Utils.showToast('Encerramento cancelado.', 'error', 2500);
+                            }
+                            return;
+                        }
+                        try {
+                            AuditLog.log('ENCERRAR_DIA_OFF_HOURS',
+                                { hora: hc.currentHHMM, horarioPrevisto: hc.expectedClose, motivo: motivoH.trim() },
+                                franchiseId);
+                        } catch(_e){}
+                        window._mpEncerrarDiaMotivo = motivoH.trim();
+                    }
+                }
+            } catch(_e){ console.warn('Encerrar Dia hour check falhou:', _e); }
+
             const today = (function(){
                 var dt = new Date();
                 return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);

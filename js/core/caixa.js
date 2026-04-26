@@ -25,6 +25,69 @@ const Caixa = (function () {
     const COLLECTION = 'caixa';
 
     /* ============================================
+       HORÁRIO COMERCIAL — validação de abertura/fechamento
+       ============================================
+       Default: shopping mall hours (10h-22h). Configurável por loja
+       via localStorage mp_business_hours_<fid> = {open:"HH:MM", close:"HH:MM"}.
+       Tolerância: abrir até 60min antes ou 120min depois sem justificar.
+       Fora dessa janela, exige motivo no openShift/closeShift.
+       ============================================ */
+    const DEFAULT_BUSINESS_HOURS = { open: '10:00', close: '22:00' };
+    const TOLERANCE_OPEN_BEFORE_MIN = 60;   // 1h antes da abertura: ok
+    const TOLERANCE_OPEN_AFTER_MIN = 120;   // 2h depois da abertura: ok
+    const TOLERANCE_CLOSE_BEFORE_MIN = 60;  // 1h antes do fechamento: ok
+    const TOLERANCE_CLOSE_AFTER_MIN = 120;  // 2h depois do fechamento: ok
+
+    function getBusinessHours(franchiseId) {
+        try {
+            var raw = localStorage.getItem('mp_business_hours_' + franchiseId);
+            if (raw) {
+                var cfg = JSON.parse(raw);
+                if (cfg && cfg.open && cfg.close) return cfg;
+            }
+        } catch(e) {}
+        return Object.assign({}, DEFAULT_BUSINESS_HOURS);
+    }
+
+    function _hhmmToMinutes(s) {
+        var p = (s || '00:00').split(':');
+        return (parseInt(p[0],10) || 0) * 60 + (parseInt(p[1],10) || 0);
+    }
+
+    // Retorna { ok, reason, currentHHMM, expectedOpen, expectedClose }
+    // ok=true se está dentro da janela de tolerância
+    function checkBusinessHours(franchiseId, kind /* 'open'|'close' */) {
+        var hours = getBusinessHours(franchiseId);
+        var now = new Date();
+        var nowMin = now.getHours() * 60 + now.getMinutes();
+        var openMin = _hhmmToMinutes(hours.open);
+        var closeMin = _hhmmToMinutes(hours.close);
+        var hh = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+        if (kind === 'open') {
+            var earliest = openMin - TOLERANCE_OPEN_BEFORE_MIN;
+            var latest = openMin + TOLERANCE_OPEN_AFTER_MIN;
+            if (nowMin >= earliest && nowMin <= latest) {
+                return { ok: true, currentHHMM: hh, expectedOpen: hours.open, expectedClose: hours.close };
+            }
+            var msg = nowMin < earliest
+                ? 'Você está abrindo o caixa MUITO ANTES do horário (' + hours.open + '). Agora são ' + hh + '.'
+                : 'Você está abrindo o caixa FORA do horário previsto (' + hours.open + '). Agora são ' + hh + '.';
+            return { ok: false, reason: msg, currentHHMM: hh, expectedOpen: hours.open, expectedClose: hours.close };
+        }
+        // kind === 'close'
+        var earliest2 = closeMin - TOLERANCE_CLOSE_BEFORE_MIN;
+        var latest2 = closeMin + TOLERANCE_CLOSE_AFTER_MIN;
+        if (nowMin >= earliest2 && nowMin <= latest2) {
+            return { ok: true, currentHHMM: hh, expectedOpen: hours.open, expectedClose: hours.close };
+        }
+        var msg2 = nowMin < earliest2
+            ? 'Você está fechando o caixa ANTES do horário (' + hours.close + '). Agora são ' + hh + '.'
+            : 'Você está fechando o caixa MUITO DEPOIS do horário (' + hours.close + '). Agora são ' + hh + '.';
+        return { ok: false, reason: msg2, currentHHMM: hh, expectedOpen: hours.open, expectedClose: hours.close };
+    }
+
+    /* ============================================
        Cálculo de estado do turno
        ============================================ */
     // Data LOCAL (UTC-3 Brasília) — toISOString() em UTC fazia o caixa
@@ -166,20 +229,41 @@ const Caixa = (function () {
     /* ============================================
        API pública — operações
        ============================================ */
-    function openShift(franchiseId, valorAbertura) {
+    function openShift(franchiseId, valorAbertura, motivoForaHorario) {
         if (!franchiseId) return { success: false, error: 'Franquia inválida.' };
         const st = getTurnoState(franchiseId);
         if (st.status === 'aberto') return { success: false, error: 'Já existe um caixa aberto hoje.' };
         if (st.status === 'fechado') return { success: false, error: 'O caixa de hoje já foi fechado. Peça ao gerente para abrir um novo turno.' };
         if (isNaN(valorAbertura) || valorAbertura < 0) return { success: false, error: 'Valor de abertura inválido.' };
 
+        // === HORÁRIO COMERCIAL ===
+        var hourCheck = checkBusinessHours(franchiseId, 'open');
+        if (!hourCheck.ok) {
+            if (!motivoForaHorario || !motivoForaHorario.trim()) {
+                return {
+                    success: false,
+                    error: hourCheck.reason,
+                    requiresReason: true,
+                    reasonField: 'motivoForaHorario',
+                    hourCheck: hourCheck
+                };
+            }
+            // Justificativa fornecida — registra
+            audit('CAIXA_OPENED_OFF_HOURS', franchiseId, {
+                hora: hourCheck.currentHHMM,
+                horarioPrevisto: hourCheck.expectedOpen,
+                motivo: motivoForaHorario
+            });
+        }
+
         const r = createMovement(franchiseId, {
             type: 'abertura',
             valor: valorAbertura,
-            descricao: 'Abertura de caixa'
+            descricao: 'Abertura de caixa' + (motivoForaHorario ? ' (fora do horário · ' + motivoForaHorario + ')' : ''),
+            motivo: motivoForaHorario || ''
         });
         if (!r.success) return r;
-        audit(AuditLog.EVENTS.CAIXA_OPENED, franchiseId, { valor: valorAbertura, turnoId: r.move.turnoId });
+        audit(AuditLog.EVENTS.CAIXA_OPENED, franchiseId, { valor: valorAbertura, turnoId: r.move.turnoId, motivoForaHorario: motivoForaHorario || null });
 
         if (typeof Motivacional !== 'undefined' && Motivacional.toastCaixaAberto) {
             Motivacional.toastCaixaAberto();
@@ -187,11 +271,30 @@ const Caixa = (function () {
         return r;
     }
 
-    function closeShift(franchiseId, valorContado, motivoQuebra) {
+    function closeShift(franchiseId, valorContado, motivoQuebra, motivoForaHorario) {
         if (!franchiseId) return { success: false, error: 'Franquia inválida.' };
         const st = getTurnoState(franchiseId);
         if (st.status === 'nao_aberto') return { success: false, error: 'Nenhum caixa aberto hoje.' };
         if (st.status === 'fechado') return { success: false, error: 'O caixa de hoje já foi fechado.' };
+
+        // === HORÁRIO COMERCIAL ===
+        var hourCheck = checkBusinessHours(franchiseId, 'close');
+        if (!hourCheck.ok) {
+            if (!motivoForaHorario || !motivoForaHorario.trim()) {
+                return {
+                    success: false,
+                    error: hourCheck.reason,
+                    requiresReason: true,
+                    reasonField: 'motivoForaHorario',
+                    hourCheck: hourCheck
+                };
+            }
+            audit('CAIXA_CLOSED_OFF_HOURS', franchiseId, {
+                hora: hourCheck.currentHHMM,
+                horarioPrevisto: hourCheck.expectedClose,
+                motivo: motivoForaHorario
+            });
+        }
 
         // REGRA DE SEGURANÇA: Bloquear se houver pedidos pendentes (Fase 2)
         // Considera SOMENTE pedidos do dia atual em estados ativos do kanban.
@@ -459,7 +562,24 @@ const Caixa = (function () {
               </div>
             </div>`;
         const modal = openModal(html, (data) => {
-            const r = openShift(franchiseId, data.valor);
+            // 1ª tentativa SEM motivo
+            var r = openShift(franchiseId, data.valor);
+            // Se exige justificativa por horário fora do padrão, prompt e re-tenta
+            if (!r.success && r.requiresReason) {
+                var motivo = prompt(
+                    '⏰ FORA DO HORÁRIO COMERCIAL\n\n' +
+                    r.error + '\n\n' +
+                    'Por que você está abrindo o caixa fora do horário?\n' +
+                    '(Ex: evento, abertura antecipada, treinamento...)'
+                );
+                if (!motivo || motivo.trim().length < 3) {
+                    const err = modal.overlay.querySelector('[data-caixa-error]');
+                    err.textContent = 'Justificativa cancelada. Caixa NÃO foi aberto.';
+                    err.style.display = 'block';
+                    return false;
+                }
+                r = openShift(franchiseId, data.valor, motivo.trim());
+            }
             if (!r.success) {
                 const err = modal.overlay.querySelector('[data-caixa-error]');
                 err.textContent = r.error;
@@ -589,7 +709,24 @@ const Caixa = (function () {
               </div>
             </div>`;
         const modal = openModal(html, (data) => {
-            const r = closeShift(franchiseId, data.valor, data.motivo);
+            // 1ª tentativa SEM motivoForaHorario
+            var r = closeShift(franchiseId, data.valor, data.motivo);
+            // Se exige justificativa por horário, prompt e re-tenta
+            if (!r.success && r.requiresReason) {
+                var motivoH = prompt(
+                    '⏰ FORA DO HORÁRIO COMERCIAL\n\n' +
+                    r.error + '\n\n' +
+                    'Por que você está fechando o caixa fora do horário?\n' +
+                    '(Ex: shopping fechou cedo, problema técnico, sem movimento...)'
+                );
+                if (!motivoH || motivoH.trim().length < 3) {
+                    const err = modal.overlay.querySelector('[data-caixa-error]');
+                    err.textContent = 'Justificativa cancelada. Caixa NÃO foi fechado.';
+                    err.style.display = 'block';
+                    return false;
+                }
+                r = closeShift(franchiseId, data.valor, data.motivo, motivoH.trim());
+            }
             if (!r.success) {
                 const err = modal.overlay.querySelector('[data-caixa-error]');
                 err.textContent = r.error + (r.esperado !== undefined ? ' (esperado ' + formatBRL(r.esperado) + ', diferença ' + formatBRL(r.diff) + ')' : '');
@@ -825,6 +962,9 @@ const Caixa = (function () {
         renderWidget: renderWidget,
         refreshWidget: refreshWidget,
         initPanel: initPanel,
+        // Horário comercial
+        getBusinessHours: getBusinessHours,
+        checkBusinessHours: checkBusinessHours,
         // Utils
         formatBRL: formatBRL,
         parseBRL: parseBRL,
