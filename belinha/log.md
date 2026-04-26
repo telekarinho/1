@@ -1,5 +1,38 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #42 — 2026-04-26
+
+**Área:** Pesquisa Concorrentes — The Best Açaí (refetch dados 2024/2025)
+
+**Contexto:** Sugerido no ciclo #41. The Best Açaí é o concorrente local mais relevante — nasceu em Londrina em 2017, tem 5 unidades na cidade. O arquivo `competitors/the-best-acai.md` tinha dados de 2023 (ciclo #13): 680 unidades e R$215M de faturamento. Dados desatualizados geram análise competitiva incorreta.
+
+**O que analisou:**
+- WebSearch: "TheBest Açaí franquia cardápio preços 2026" + "The Best Açaí Londrina"
+- WebSearch: "The Best Açaí diferencial potinho personalizado ninho vs self-service"
+- WebSearch: "The Best Açaí preço self-service Londrina 2025 100g"
+- WebFetch tentado em thebestacai.com.br, portaldofranchising, pricelisto.com.br → 403 bloqueados
+- Dados confiáveis extraídos via TikTok @marceladegusta (preço R$6,29/100g confirmado), foodbizbrasil.com (The Best Donuts), fontes de franquia
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/competitors/the-best-acai.md` | Refetch completo: faturamento R$215M→R$777M (2024), unidades 680→900+, novo produto The Best Donuts (jan/2025), 100k clientes/dia, fábrica Amadelli 80t/dia, alertas estratégicos ciclo #42 |
+
+**Commit:** `b07bd18`
+
+**Principais descobertas:**
+1. **The Best Donuts (jan/2025):** 1º self-service de donuts do Brasil, ativo em 580+ lojas. Expansão para o segmento "doce artesanal" — monitorar impacto na percepção de potinho artesanal
+2. **Escala brutal:** R$777M/ano e 100k clientes/dia. Competir em volume/preço é suicídio — diferenciação por experiência e produto é a única estratégia
+3. **Gap no Muffato continua:** nenhuma unidade da TheBest no Quintino Bocaiuva — janela de oportunidade MilkyPot intacta
+
+**Próximo passo sugerido:**
+- Ciclo #43: `belinha/content/pos-inauguracao-semana6.md` — conteúdo 24–30/05 (consolidação de hábito, desafio UGC "1 mês e meio de MilkyPot")
+- Ciclo #44: Auto-aprimoramento #9 — reler log ciclos #40–43, ajustar estratégia para maio/junho
+- Ciclo #45: Monitorar se TheBest Donuts chega em Londrina — documentar em `the-best-acai.md`
+
+---
+
 ## Ciclo #41 — 2026-04-26
 
 **Área:** Conversão — Programa Indica & Ganha (referral WhatsApp)
