@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Reset Comandas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #B71C1C, #E53935);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            max-width: 560px;
+            width: 100%;
+            padding: 32px;
+        }
+        h1 {
+            font-family: 'Baloo 2', cursive;
+            margin: 0 0 8px;
+            color: #B71C1C;
+            font-size: 1.8rem;
+        }
+        p { color: #444; line-height: 1.5; }
+        button {
+            width: 100%;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, #B71C1C, #E53935);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 16px;
+            font-family: inherit;
+        }
+        button:hover { transform: translateY(-2px); }
+        .log {
+            background: #1A1A1A;
+            color: #4FC3F7;
+            font-family: monospace;
+            font-size: 0.85rem;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            max-height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .ok { color: #69F0AE; }
+        .err { color: #FF8A80; }
+        a { color: #B71C1C; font-weight: 700; text-decoration: none; display: block; margin-top: 12px; text-align: center; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="card">
+        <h1>🔥 Reset Comandas</h1>
+        <p>Apaga TODAS as comandas abertas do PC atual + nuvem. Use quando comanda fechada continua voltando.</p>
+        <p><strong style="color:#B71C1C">⚠️ Apaga só comandas abertas. Pedidos NÃO são afetados.</strong></p>
+
+        <button id="btnReset">🔥 RESETAR COMANDAS AGORA</button>
+
+        <a href="pdv.html">← Voltar pro PDV</a>
+        <a href="pedidos.html">← Voltar pra Pedidos</a>
+
+        <div id="log" class="log" style="display:none"></div>
+    </div>
+
+    <script>
+        var logEl = document.getElementById('log');
+        function log(msg, cls) {
+            logEl.style.display = 'block';
+            var s = document.createElement('span');
+            if (cls) s.className = cls;
+            s.textContent = msg + '\n';
+            logEl.appendChild(s);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        var firebaseConfig = {
+            apiKey: "AIzaSyAbQ1fe0pK4prhfzYJypod2ie4DyNsq6BA",
+            authDomain: "milkypot-ad945.firebaseapp.com",
+            projectId: "milkypot-ad945",
+            storageBucket: "milkypot-ad945.firebasestorage.app",
+            messagingSenderId: "859364650620",
+            appId: "1:859364650620:web:aecf11f4cf99b7792463f9"
+        };
+        try {
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        } catch(e) {}
+
+        function detectFid() {
+            try {
+                var raw = localStorage.getItem('mp_session') || sessionStorage.getItem('mp_session');
+                if (raw) {
+                    var s = JSON.parse(raw);
+                    if (s && s.franchiseId) return s.franchiseId;
+                }
+            } catch(_) {}
+            for (var i = 0; i < localStorage.length; i++) {
+                var k = localStorage.key(i);
+                if (k && (k.indexOf('mp_pdv_tabs_') === 0 || k.indexOf('orders_') === 0) && !k.endsWith('global')) {
+                    return k.replace('mp_pdv_tabs_', '').replace('orders_', '');
+                }
+            }
+            return 'muffato-quintino';
+        }
+
+        document.getElementById('btnReset').onclick = async function() {
+            var fid = detectFid();
+            log('FID: ' + fid);
+            var btn = this;
+            btn.disabled = true;
+            btn.textContent = '⏳ Resetando...';
+
+            // 1. Limpa localStorage de pdv_tabs (todas as variações de chave)
+            var keys = ['mp_pdv_tabs_' + fid, 'pdv_tabs_' + fid];
+            for (var i = 0; i < localStorage.length; i++) {
+                var k = localStorage.key(i);
+                if (k && (k.indexOf('pdv_tabs') !== -1 || k.indexOf('open_tabs') !== -1)) {
+                    keys.push(k);
+                }
+            }
+            keys = [...new Set(keys)];
+            keys.forEach(function(k) {
+                try {
+                    localStorage.removeItem(k);
+                    log('Local: removido ' + k, 'ok');
+                } catch(e) { log('Erro removendo ' + k + ': ' + e.message, 'err'); }
+            });
+
+            // 2. Escreve [] na nuvem
+            try {
+                var db = firebase.firestore();
+                await db.collection('datastore').doc('pdv_tabs_' + fid).set({
+                    value: '[]',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                log('Nuvem: pdv_tabs_' + fid + ' = []', 'ok');
+            } catch(e) {
+                log('Nuvem erro: ' + (e.code || e.message), 'err');
+            }
+
+            log('\n✅ Reset completo. Recarregando em 2s...', 'ok');
+            btn.textContent = '✅ Resetado';
+            setTimeout(function() {
+                window.location.href = 'pdv.html';
+            }, 2000);
+        };
+    </script>
+</body>
+</html>
