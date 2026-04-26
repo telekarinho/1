@@ -597,7 +597,7 @@ const DataStore = {
                         } catch (e) { /* ignora — próximo poll tenta */ }
                     }
                     if (changes > 0) console.log('🔁 Poll: ' + changes + ' doc(s) atualizado(s)');
-                }, 5000);
+                }, 30000); // 30s — alivia CPU/rede; realtime listener cobre delta em <1s
             }
         } catch (e) {
             console.warn('_setupListenersAndPoll error:', e);
