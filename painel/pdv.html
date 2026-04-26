@@ -447,6 +447,9 @@
     </div>
     <!-- ATALHOS DE TECLADO — sempre visíveis no header (operador encontra rápido) -->
     <div class="pdv-shortcuts" id="pdvShortcuts" aria-label="Atalhos de teclado">
+        <span class="ks ks-vendas" onclick="if(typeof showVendasDoDia==='function')showVendasDoDia()" title="Vendas do dia (relatório completo)" style="background:rgba(106,27,154,0.32);border-color:rgba(106,27,154,0.55)">
+            <kbd style="color:#4A148C">F1</kbd><span class="ks-label">Vendas</span>
+        </span>
         <span class="ks ks-print" onclick="if(typeof printOrder==='function')printOrder()" title="Imprimir pedido">
             <kbd>F2</kbd><span class="ks-label">Imprimir</span>
         </span>
@@ -884,22 +887,22 @@
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v82"></script>
-<script src="../js/core/motivacional.js?v=mp-v82"></script>
-<script src="../js/core/caixa.js?v=mp-v82"></script>
-<script src="../js/core/financas.js?v=mp-v82"></script>
-<script src="../js/core/onboarding.js?v=mp-v82"></script>
-<script src="../js/core/units.js?v=mp-v82"></script>
-<script src="../js/core/error-tracking.js?v=mp-v82"></script>
-<script src="../js/core/recipes.js?v=mp-v82"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v82"></script>
-<script src="../js/core/offline-queue.js?v=mp-v82"></script>
-<script src="../js/core/pix.js?v=mp-v82"></script>
-<script src="../js/core/nfce.js?v=mp-v82"></script>
-<script src="../js/core/printer.js?v=mp-v82"></script>
+<script src="../js/core/adminconfig.js?v=mp-v84"></script>
+<script src="../js/core/motivacional.js?v=mp-v84"></script>
+<script src="../js/core/caixa.js?v=mp-v84"></script>
+<script src="../js/core/financas.js?v=mp-v84"></script>
+<script src="../js/core/onboarding.js?v=mp-v84"></script>
+<script src="../js/core/units.js?v=mp-v84"></script>
+<script src="../js/core/error-tracking.js?v=mp-v84"></script>
+<script src="../js/core/recipes.js?v=mp-v84"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v84"></script>
+<script src="../js/core/offline-queue.js?v=mp-v84"></script>
+<script src="../js/core/pix.js?v=mp-v84"></script>
+<script src="../js/core/nfce.js?v=mp-v84"></script>
+<script src="../js/core/printer.js?v=mp-v84"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v82"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v82"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v84"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v84"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -3563,6 +3566,223 @@
         openPrintWindow(t, scratchData, profileId);
     };
 
+    /* ============================================
+       F1 — VENDAS DO DIA (relatório de bolso pro operador)
+       ============================================
+       Mostra: total, qtd pedidos, ticket médio, breakdown por forma
+       de pagamento, top 5 produtos, lista de pedidos do dia.
+       Fonte: orders_<fid> filtrado por createdAt local hoje.
+       ============================================ */
+    window.showVendasDoDia = function() {
+        try {
+            var today = (function(){
+                var dt = new Date();
+                return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
+            })();
+            var allOrders = (DataStore.getCollection('orders', fid) || []).filter(function(o){
+                return !o.deleted && o.createdAt && o.createdAt.slice(0,10) === today;
+            });
+
+            // Considera só pedidos finalizados pra faturamento real
+            var finalizados = allOrders.filter(function(o){
+                return o.status === 'entregue' || o.status === 'pronto' || o.status === 'em_entrega';
+            });
+            var cancelados = allOrders.filter(function(o){ return o.status === 'cancelado'; });
+            var emAndamento = allOrders.filter(function(o){
+                return ['novo','confirmado','preparando'].indexOf(o.status) !== -1;
+            });
+
+            var totalDia = finalizados.reduce(function(s, o){ return s + (Number(o.total) || 0); }, 0);
+            var qtdPedidos = finalizados.length;
+            var ticketMedio = qtdPedidos > 0 ? (totalDia / qtdPedidos) : 0;
+
+            // Breakdown por forma de pagamento
+            var porPagto = {};
+            finalizados.forEach(function(o){
+                var p = (o.payment || 'Não informado').toLowerCase().trim();
+                var key = p;
+                if (p.indexOf('pix') !== -1) key = 'pix';
+                else if (p.indexOf('din') !== -1) key = 'dinheiro';
+                else if (p.indexOf('debit') !== -1 || p.indexOf('débit') !== -1) key = 'cartao_debito';
+                else if (p.indexOf('credit') !== -1 || p.indexOf('crédit') !== -1) key = 'cartao_credito';
+                else if (p.indexOf('vale') !== -1 || p.indexOf('vr') !== -1 || p.indexOf('va') !== -1) key = 'vale';
+                else if (p.indexOf('voucher') !== -1 || p.indexOf('cortesia') !== -1) key = 'cortesia';
+                porPagto[key] = (porPagto[key] || 0) + (Number(o.total) || 0);
+            });
+            var pagtoLabel = {
+                pix: '💸 PIX', dinheiro: '💵 Dinheiro',
+                cartao_debito: '💳 Débito', cartao_credito: '💳 Crédito',
+                vale: '🍴 Vale', cortesia: '🎁 Cortesia',
+                'não informado': '❓ Não informado'
+            };
+
+            // Top produtos por qtd
+            var prodCount = {};
+            finalizados.forEach(function(o){
+                (o.items || []).forEach(function(it){
+                    var name = it.name || '?';
+                    prodCount[name] = (prodCount[name] || 0) + (Number(it.qty) || 1);
+                });
+            });
+            var topProdutos = Object.keys(prodCount)
+                .map(function(n){ return { name: n, qty: prodCount[n] }; })
+                .sort(function(a,b){ return b.qty - a.qty; })
+                .slice(0, 5);
+
+            function brl(v) {
+                return 'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+
+            // HTML do modal
+            var pagtoHtml = Object.keys(porPagto).length === 0
+                ? '<div style="color:#999;padding:8px">Nenhuma venda registrada hoje.</div>'
+                : Object.keys(porPagto).sort(function(a,b){ return porPagto[b] - porPagto[a]; }).map(function(k){
+                    var pct = totalDia > 0 ? (porPagto[k] / totalDia * 100).toFixed(0) : 0;
+                    return '<div style="display:flex;justify-content:space-between;padding:10px 14px;background:#fafafa;border-radius:8px;margin-bottom:6px;align-items:center">' +
+                        '<span style="font-weight:600">' + (pagtoLabel[k] || k) + '</span>' +
+                        '<span><strong style="color:#2E7D32;font-size:1.1rem">' + brl(porPagto[k]) + '</strong> <small style="color:#999">(' + pct + '%)</small></span>' +
+                    '</div>';
+                }).join('');
+
+            var topProdHtml = topProdutos.length === 0
+                ? '<div style="color:#999;padding:8px">—</div>'
+                : topProdutos.map(function(p, i){
+                    var medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+                    return '<div style="display:flex;justify-content:space-between;padding:8px 14px;background:#fafafa;border-radius:6px;margin-bottom:4px">' +
+                        '<span>' + medals[i] + ' ' + p.name + '</span>' +
+                        '<strong>' + p.qty + 'x</strong>' +
+                    '</div>';
+                }).join('');
+
+            var listaPedidosHtml = finalizados.length === 0
+                ? '<div style="color:#999;padding:8px;text-align:center">Nenhum pedido finalizado hoje ainda.</div>'
+                : finalizados.slice().reverse().slice(0, 30).map(function(o){
+                    var seq = o.dailySeq ? '#' + o.dailySeq : '#' + o.id.slice(-6);
+                    var hh = o.createdAt ? new Date(o.createdAt).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit'}) : '—';
+                    var customer = (o.customer && o.customer.name) || 'Balcão';
+                    return '<tr>' +
+                        '<td style="padding:6px 8px;font-weight:700">' + seq + '</td>' +
+                        '<td style="padding:6px 8px;color:#666">' + hh + '</td>' +
+                        '<td style="padding:6px 8px">' + customer + '</td>' +
+                        '<td style="padding:6px 8px;text-align:right;font-weight:700;color:#2E7D32">' + brl(o.total) + '</td>' +
+                    '</tr>';
+                }).join('');
+
+            var html =
+                '<div id="vendasDiaOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:inherit;padding:16px;overflow:auto">' +
+                '  <div style="background:#fff;border-radius:18px;max-width:880px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,0.4)">' +
+                '    <div style="background:linear-gradient(135deg,#6A1B9A,#AB47BC);color:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1">' +
+                '      <h2 style="margin:0;font-family:Baloo 2,cursive;font-size:1.5rem">📊 Vendas do Dia · ' + new Date().toLocaleDateString('pt-BR') + '</h2>' +
+                '      <button id="vendasDiaClose" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1.2rem;font-weight:700">✕</button>' +
+                '    </div>' +
+                '    <div style="padding:24px">' +
+                       // KPIs grandes
+                '      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">' +
+                '        <div style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-radius:12px;padding:18px;text-align:center">' +
+                '          <div style="font-size:0.75rem;color:#558B2F;font-weight:700;text-transform:uppercase">Total Vendido</div>' +
+                '          <div style="font-size:1.6rem;font-weight:800;color:#1B5E20;margin-top:4px">' + brl(totalDia) + '</div>' +
+                '        </div>' +
+                '        <div style="background:linear-gradient(135deg,#E3F2FD,#BBDEFB);border-radius:12px;padding:18px;text-align:center">' +
+                '          <div style="font-size:0.75rem;color:#1565C0;font-weight:700;text-transform:uppercase">Pedidos</div>' +
+                '          <div style="font-size:1.6rem;font-weight:800;color:#0D47A1;margin-top:4px">' + qtdPedidos + '</div>' +
+                '        </div>' +
+                '        <div style="background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border-radius:12px;padding:18px;text-align:center">' +
+                '          <div style="font-size:0.75rem;color:#E65100;font-weight:700;text-transform:uppercase">Ticket Médio</div>' +
+                '          <div style="font-size:1.6rem;font-weight:800;color:#BF360C;margin-top:4px">' + brl(ticketMedio) + '</div>' +
+                '        </div>' +
+                '      </div>' +
+
+                       // Status secundário
+                '      <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap">' +
+                '        <div style="font-size:0.9rem"><strong style="color:#FB8C00">⏳ Em andamento:</strong> ' + emAndamento.length + '</div>' +
+                '        <div style="font-size:0.9rem"><strong style="color:#D32F2F">❌ Cancelados:</strong> ' + cancelados.length + '</div>' +
+                '      </div>' +
+
+                       // Breakdown por forma de pagamento
+                '      <h3 style="margin:0 0 12px;color:#4A148C;font-family:Baloo 2,cursive">💳 Por Forma de Pagamento</h3>' +
+                '      <div style="margin-bottom:24px">' + pagtoHtml + '</div>' +
+
+                       // Top produtos
+                '      <h3 style="margin:0 0 12px;color:#4A148C;font-family:Baloo 2,cursive">🏆 Top 5 Produtos</h3>' +
+                '      <div style="margin-bottom:24px">' + topProdHtml + '</div>' +
+
+                       // Lista de pedidos
+                '      <h3 style="margin:0 0 12px;color:#4A148C;font-family:Baloo 2,cursive">📋 Histórico (últimos 30)</h3>' +
+                '      <div style="overflow-x:auto;margin-bottom:16px">' +
+                '        <table style="width:100%;border-collapse:collapse;font-size:0.9rem">' +
+                '          <thead><tr style="background:#F3E5F5;color:#4A148C">' +
+                '            <th style="padding:10px 8px;text-align:left">Pedido</th>' +
+                '            <th style="padding:10px 8px;text-align:left">Hora</th>' +
+                '            <th style="padding:10px 8px;text-align:left">Cliente</th>' +
+                '            <th style="padding:10px 8px;text-align:right">Total</th>' +
+                '          </tr></thead>' +
+                '          <tbody>' + listaPedidosHtml + '</tbody>' +
+                '        </table>' +
+                '      </div>' +
+
+                '      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">' +
+                '        <button id="vendasDiaPrint" style="padding:10px 20px;background:#1565C0;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">🖨️ Imprimir</button>' +
+                '        <button id="vendasDiaCloseBtn" style="padding:10px 20px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">Fechar (Esc)</button>' +
+                '      </div>' +
+                '    </div>' +
+                '  </div>' +
+                '</div>';
+
+            // Remove modal anterior se houver
+            var prev = document.getElementById('vendasDiaOverlay');
+            if (prev) prev.remove();
+
+            var div = document.createElement('div');
+            div.innerHTML = html;
+            document.body.appendChild(div.firstChild);
+
+            var overlay = document.getElementById('vendasDiaOverlay');
+            function closeModal() { if (overlay) overlay.remove(); document.removeEventListener('keydown', escListener); }
+            function escListener(ev) { if (ev.key === 'Escape') { ev.preventDefault(); closeModal(); } }
+            document.getElementById('vendasDiaClose').onclick = closeModal;
+            document.getElementById('vendasDiaCloseBtn').onclick = closeModal;
+            overlay.onclick = function(e) { if (e.target === overlay) closeModal(); };
+            document.addEventListener('keydown', escListener);
+
+            // Imprimir versão simplificada
+            document.getElementById('vendasDiaPrint').onclick = function() {
+                var w = window.open('', '_blank', 'width=400,height=700');
+                if (!w) { alert('Habilite popups pra imprimir.'); return; }
+                var fr = (DataStore.getAllFranchises() || []).find(function(x){return x.id === fid;});
+                var fname = (fr && fr.name) || 'MilkyPot';
+                w.document.write(
+                    '<html><head><title>Vendas do Dia</title><style>' +
+                    'body{font-family:monospace;font-size:13px;padding:12px;width:280px}' +
+                    'h2{text-align:center;font-size:14px;margin:8px 0}' +
+                    'hr{border:none;border-top:1px dashed #000;margin:8px 0}' +
+                    '.row{display:flex;justify-content:space-between;padding:2px 0}' +
+                    '</style></head><body>' +
+                    '<h2>' + fname + '</h2>' +
+                    '<h2>VENDAS DO DIA</h2>' +
+                    '<div style="text-align:center;font-size:11px">' + new Date().toLocaleString('pt-BR') + '</div>' +
+                    '<hr>' +
+                    '<div class="row"><span>Total:</span><strong>' + brl(totalDia) + '</strong></div>' +
+                    '<div class="row"><span>Pedidos:</span><strong>' + qtdPedidos + '</strong></div>' +
+                    '<div class="row"><span>Ticket medio:</span><strong>' + brl(ticketMedio) + '</strong></div>' +
+                    '<hr><strong>Por pagamento:</strong>' +
+                    Object.keys(porPagto).map(function(k){
+                        return '<div class="row"><span>' + (pagtoLabel[k] || k).replace(/[^\w\s]/g,'') + ':</span><strong>' + brl(porPagto[k]) + '</strong></div>';
+                    }).join('') +
+                    '<hr><strong>Em andamento:</strong> ' + emAndamento.length + '<br>' +
+                    '<strong>Cancelados:</strong> ' + cancelados.length +
+                    '<hr style="border-top:2px solid #000">' +
+                    '<div style="text-align:center;font-size:11px">Relatório operacional</div>' +
+                    '<script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},700)},300)}<' + '/script>' +
+                    '</body></html>'
+                );
+                w.document.close();
+            };
+        } catch(e) {
+            console.error('[Vendas do Dia] erro:', e);
+            alert('Erro ao abrir vendas do dia: ' + e.message);
+        }
+    };
+
     window.printOrder=function(){
         if(!cart.length){toast('Nada para imprimir');return}
         const cfg = Printer.getConfig();
@@ -3970,9 +4190,10 @@
         // Não interfere quando user tá digitando em input/textarea/select
         var tag = (e.target && e.target.tagName) || '';
         var isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
-        if (isTyping && e.key !== 'F11' && !e.key.match(/^F[2-4]$/)) return;
+        if (isTyping && e.key !== 'F11' && !e.key.match(/^F[1-4]$/)) return;
 
         if(e.key==='F11'){ e.preventDefault(); toggleFullscreen(); return; }
+        if(e.key==='F1'){  e.preventDefault(); if(typeof showVendasDoDia==='function') showVendasDoDia(); return; }
         if(e.key==='F2'){  e.preventDefault(); if(typeof printOrder==='function') printOrder(); return; }
         if(e.key==='F3'){  e.preventDefault(); if(typeof openTab==='function') openTab(); return; }
         if(e.key==='F4'){  e.preventDefault(); if(typeof finishOrder==='function') finishOrder(); return; }
