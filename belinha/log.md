@@ -1,5 +1,37 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #44 — 2026-04-26
+
+**Área:** Auto-aprimoramento (ciclos #39–43) + Conteúdo — `pos-inauguracao-semana7.md`
+
+**Contexto:** Ciclo obrigatório de auto-aprimoramento (a cada 5 ciclos). Período #39–43 encerra o sweep técnico de performance e constrói o arsenal de conteúdo/conversão para maio. Melhoria concreta associada: semana 7 é a semana do anúncio dos vencedores do Desafio UGC e a virada para junho (mês 2).
+
+**O que analisou:**
+- Ciclos #39–43: revisão completa — sweep Google Fonts (#39, #40), Indica & Ganha (#41), refetch concorrente (#42), semana6/desafio UGC (#43)
+- Identificado padrão negativo: ciclo #42 pesquisou concorrente sem gerar follow-up imediato → regra reforçada
+- Identificado padrão negativo: bloqueadores (`aggregateRating`, GA ID) ocupando slots no roadmap há >3 ciclos → marcados como "suspensos"
+- Padrão consolidado v4: sweep batch completo > conteúdo acionável > SEO não-bloqueado > concorrente c/ follow-up
+- Estratégia de junho definida: prova social via UGC, hábito semanal, reativação com Indica & Ganha
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana7.md` | CRIADO — Calendário 31/05–06/06. Tema: anúncio vencedores + virada de mês. Reel anúncio 30–45s (script completo), 8 stories de repost UGC, template WhatsApp vencedores, posts para todos os 7 dias, checklist operacional, KPIs e nota para semana 8. |
+| `belinha/estrategia.md` | Aprendizados ciclos 39–43 · Padrão v4 · Estado das áreas · Estratégia junho · Roadmap ciclos 45–49 · Bloqueadores suspensos (sem listar no roadmap ativo) |
+
+**Principais aprendizados do período:**
+1. Sweep técnico sistêmico deve ser resolvido em batch (mínimo de ciclos) — não diluir por ciclos
+2. Entregáveis acionáveis pelo operador (templates prontos, playbooks) = maior ROI por ciclo
+3. Bloqueadores sem previsão de resolução não devem ocupar slot no roadmap ativo — suspender até desbloqueio
+
+**Próximo passo sugerido:**
+- Ciclo #45: `belinha/content/pos-inauguracao-semana8.md` — semana 07–13/06 com tema de indicação + ativação Indica & Ganha
+- Ciclo #46: Se operador confirmar ≥3 reviews Google Maps → ativar `aggregateRating` em `index.html`
+- Operador: acionar templates Indica & Ganha (`belinha/content/whatsapp-indicacao.md`) com a base de clientes do mês 1
+
+---
+
 ## Ciclo #43 — 2026-04-26
 
 **Área:** Conteúdo Marketing — `pos-inauguracao-semana6.md` (Desafio UGC #PotinhoMaisFeliz)
