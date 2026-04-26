@@ -1,5 +1,36 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #48 — 2026-04-26
+
+**Área:** Conversão — `whatsapp-funil.md` v2 — aprendizados do mês 1
+
+**Contexto:** O funil WhatsApp original (ciclo #4, 22/04/2026) foi criado antes da inauguração e nunca foi atualizado. Após 1 mês de operação, 3 lacunas críticas foram identificadas: (1) review Google Maps não era solicitado ativamente no pós-entrega; (2) o Indica & Ganha (ciclo #41) não tinha entrada no fluxo de atendimento; (3) o upsell de sazonalidade (Potinho Junino) e do Açaí self-service não tinham template pronto para o operador.
+
+**O que analisou:**
+- `whatsapp-funil.md`: arquivo original criado pré-inauguração, sem atualizações desde o ciclo #4
+- `belinha/estrategia.md`: roadmap ciclo #48 = revisitar funil WA com aprendizados do mês 1
+- `whatsapp-indicacao.md`: Indica & Ganha documentado no ciclo #41, sem integração no funil principal
+- `pos-inauguracao-semana9.md`: Potinho Junino lançado na semana 9, sem script WA pronto
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/whatsapp-funil.md` | +182 linhas (293 → 475). Seção "Atualização v2" com: Etapa 7 v2 (follow-up pós-entrega com CTA review Google Maps), script `/voltou` (cliente recorrente), script `/indica` (ativar Indica & Ganha durante atendimento), script `/junino` (upsell Potinho Junino), script `/acai` (upsell Açaí self-service), tabela unificada v1+v2 de atalhos WhatsApp Business e fluxo visual completo. |
+
+**Commit:** `b7569b7`
+
+**Impacto esperado:**
+- `/obrigada2` com CTA de review Google → mais reviews Maps → melhor ranqueamento local (problema crônico identificado nos ciclos 30+)
+- `/indica` durante atendimento → ativar Indica & Ganha passivamente em cada pedido sem esforço extra do operador
+- `/junino` e `/acai` → aumentar ticket médio com upsell acionável (copy pronto, zero improviso)
+- `/voltou` → reduzir atrito com clientes recorrentes, que percebem ser reconhecidos
+
+**Próximo passo sugerido:**
+- Ciclo #49: Auto-aprimoramento (obrigatório a cada 5 ciclos) — reler log ciclos 44–48, ajustar estratégia para julho (mês 3)
+
+---
+
 ## Ciclo #47 — 2026-04-26
 
 **Área:** Conteúdo — `pos-inauguracao-semana9.md` — 14–20/06/2026
