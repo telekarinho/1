@@ -285,7 +285,7 @@
     <script src="../js/core/reports.js"></script>
     <script src="../js/core/adminconfig.js?v=mp-v14"></script>
     <script src="../js/core/motivacional.js?v=mp-v14"></script>
-    <script src="../js/core/caixa.js?v=mp-v80"></script>
+    <script src="../js/core/caixa.js?v=mp-v81"></script>
     <script>
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
         const session = Auth.getSession();
@@ -384,14 +384,14 @@
                                 <span class="order-type-badge order-type-${(o.delivery || o.type)}">${(o.delivery || o.type) === 'delivery' ? '🛵 Delivery' : '🏪 Retirada'}</span>
                             </div>
                             ${status !== 'entregue' ? `
-                                <div class="order-actions">
-                                    <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();moveOrder('${o.id}','${nextStatus[status]}')">${nextLabel[status]}</button>
-                                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();moveOrder('${o.id}','cancelado')" title="Cancelar pedido">❌</button>
-                                    <button class="btn btn-sm" style="background:#B71C1C;color:#fff;padding:6px 8px" onclick="event.stopPropagation();deleteOrder('${o.id}')" title="Excluir permanentemente">🗑️</button>
+                                <div class="order-actions" data-noprop="1">
+                                    <button type="button" class="btn btn-sm btn-primary" data-action="advance" data-order-id="${o.id}" data-target-status="${nextStatus[status]}">${nextLabel[status]}</button>
+                                    <button type="button" class="btn btn-sm btn-danger" data-action="cancel" data-order-id="${o.id}" title="Cancelar pedido">❌</button>
+                                    <button type="button" class="btn btn-sm" style="background:#B71C1C;color:#fff;padding:6px 8px" data-action="delete" data-order-id="${o.id}" title="Excluir permanentemente">🗑️</button>
                                 </div>
                             ` : `
-                                <div class="order-actions">
-                                    <button class="btn btn-sm" style="background:#B71C1C;color:#fff;padding:6px 8px" onclick="event.stopPropagation();deleteOrder('${o.id}')" title="Excluir permanentemente">🗑️</button>
+                                <div class="order-actions" data-noprop="1">
+                                    <button type="button" class="btn btn-sm" style="background:#B71C1C;color:#fff;padding:6px 8px" data-action="delete" data-order-id="${o.id}" title="Excluir permanentemente">🗑️</button>
                                 </div>
                             `}
                         </div>
@@ -965,6 +965,85 @@
         renderKanban();
         i18n.translatePage();
 
+        // ============================================
+        // DELEGAÇÃO DE EVENTOS — handler único pro kanban
+        // Resolve "botão não clicável" causado por inline onclick + bubble
+        // Funciona mesmo se moveOrder/deleteOrder não estiver em window
+        // ============================================
+        document.addEventListener('click', function(ev) {
+            const btn = ev.target.closest('[data-action]');
+            if (!btn) return;
+            ev.preventDefault();
+            ev.stopPropagation();
+            const action = btn.dataset.action;
+            const orderId = btn.dataset.orderId;
+            const target = btn.dataset.targetStatus;
+            console.log('[Kanban] click', action, orderId, target);
+            try {
+                if (action === 'advance' && target) {
+                    moveOrder(orderId, target);
+                } else if (action === 'cancel') {
+                    if (window.confirm('Cancelar este pedido? Ele sai do kanban mas fica no histórico.')) {
+                        moveOrder(orderId, 'cancelado');
+                    }
+                } else if (action === 'delete') {
+                    deleteOrderFlow(orderId);
+                }
+            } catch(e) {
+                console.error('[Kanban] erro click', e);
+                alert('Erro ao executar ação: ' + e.message);
+            }
+        }, true); // capture=true: roda ANTES do onclick do card
+
+        // Bloquear bubble do .order-actions pra modal não abrir
+        document.addEventListener('click', function(ev) {
+            if (ev.target.closest('[data-noprop]')) {
+                ev.stopPropagation();
+            }
+        }, true);
+
+        // Fluxo de exclusão SEM confirm()/prompt() — usa modal inline
+        // (Brave/Chrome às vezes bloqueiam confirm/prompt repetidos como spam)
+        function deleteOrderFlow(orderId) {
+            const orders = DataStore.getCollection('orders', franchiseId);
+            const o = orders.find(x => x.id === orderId);
+            if (!o) { alert('Pedido não encontrado.'); return; }
+            const seq = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
+            const totalLabel = (typeof Utils !== 'undefined' && Utils.formatCurrency) ? Utils.formatCurrency(o.total || 0) : ('R$ ' + (o.total || 0));
+
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:inherit';
+            overlay.innerHTML = `
+                <div style="background:#fff;border-radius:14px;padding:24px;max-width:420px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+                    <h3 style="margin:0 0 12px 0;color:#B71C1C;font-size:1.2rem">🗑️ Excluir pedido ${seq}</h3>
+                    <p style="margin:0 0 16px 0;color:#333;line-height:1.5">
+                        Excluir o pedido <strong>${seq}</strong> de <strong>${totalLabel}</strong>?<br>
+                        <small style="color:#B71C1C">⚠️ Diferente de "Cancelar". Pedido some da base. Não pode desfazer.</small>
+                    </p>
+                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+                        <button id="dlgCancel" style="padding:10px 18px;background:#eee;color:#333;border:none;border-radius:8px;cursor:pointer;font-weight:600">Cancelar</button>
+                        <button id="dlgConfirm" style="padding:10px 18px;background:#B71C1C;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">EXCLUIR</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+            const cleanup = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+            overlay.addEventListener('click', e => { if (e.target === overlay) cleanup(); });
+            overlay.querySelector('#dlgCancel').addEventListener('click', cleanup);
+            overlay.querySelector('#dlgConfirm').addEventListener('click', function() {
+                const idx = orders.findIndex(x => x.id === orderId);
+                if (idx === -1) { cleanup(); return; }
+                orders[idx].deleted = true;
+                orders[idx].deletedAt = new Date().toISOString();
+                orders[idx].status = 'excluido';
+                orders[idx].updatedAt = new Date().toISOString();
+                DataStore.set('orders_' + franchiseId, orders);
+                try { AuditLog.logOrder('order_deleted', orderId, { seq: seq, total: o.total || 0 }, franchiseId); } catch(_){}
+                cleanup();
+                renderKanban();
+                if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast(`🗑️ Pedido ${seq} excluído.`, 'success', 2000);
+            });
+        }
+
         // ===== Sincronizar Agora (botão manual no header) =====
         // Útil quando operador quer forçar sync sem esperar o poll de 5s ou listener
         window.forceSyncNow = async function (btn) {
@@ -1020,6 +1099,6 @@
 <script src="../js/pages/lilo-scanner.js" defer></script>
 <script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
 <script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
-<script src="../js/core/register-sw.js?v=mp-v80"></script>
+<script src="../js/core/register-sw.js?v=mp-v81"></script>
 </body>
 </html>
