@@ -459,17 +459,25 @@ const DataStore = {
 
     async _syncFromCloud() {
         if (!this._ready || !this._db) return;
+
+        // CRÍTICO: anexa listeners e poll ANTES dos awaits do sync inicial.
+        // Se um await travar (rede lenta, Firestore offline, etc), os listeners
+        // ainda assim ficam ativos e o sync acontece via realtime/poll quando
+        // a rede normalizar. Isolation total das duas fases.
+        this._setupListenersAndPoll();
+
         try {
-            // Priority 1: Check for catalog_config specifically for seeding
+            // Priority 1: Check for catalog_config specifically for seeding (timeout 5s)
             try {
-                const catalogDoc = await this._db.collection('datastore').doc('catalog_config').get();
+                const catalogDoc = await Promise.race([
+                    this._db.collection('datastore').doc('catalog_config').get(),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 5s')), 5000))
+                ]);
                 if (!catalogDoc.exists && typeof CARDAPIO_CONFIG !== 'undefined') {
                     console.log('🌱 Seed: Enviando configuração inicial do cardápio para o Firestore...');
                     this.set('catalog_config', CARDAPIO_CONFIG);
                 }
             } catch (e) {
-                // catalog_config pode exigir auth em algumas rules. Nao pode bloquear
-                // o sync publico de orders/caixa/pdv_tabs/finances da loja.
                 console.warn('catalog_config sync ignorado:', e.code || e.message);
             }
 
@@ -499,24 +507,37 @@ const DataStore = {
             this._syncDone = true;
             window.dispatchEvent(new CustomEvent('mp_synced'));
 
-            // Real-time listener for the catalog and global settings
-            this._db.collection('datastore').doc('catalog_config').onSnapshot(doc => {
-                if (doc.exists) {
-                    const newData = JSON.parse(doc.data().value);
-                    localStorage.setItem(this.PREFIX + 'catalog_config', doc.data().value);
-                    console.log('🔄 Catálogo atualizado via Firebase (Background)');
-                    window.dispatchEvent(new CustomEvent('mp_catalog_updated', { detail: newData }));
-                }
-            }, err => {
-                console.warn('catalog_config listener ignorado:', err.code || err.message);
-            });
+        } catch (e) {
+            console.warn('_syncFromCloud error:', e);
+        }
+    },
 
-            // ===== REAL-TIME SYNC entre PCs (per-doc, sem auth) =====
-            // Listener separado pra cada doc público. Evita problema de
-            // collection-level LIST permission que falha em unauth.
+    // Setup listeners + poll. Idempotente. Chamado pelo _syncFromCloud BEFORE awaits
+    // pra garantir que mesmo se o sync inicial travar, realtime/poll ficam ativos.
+    _setupListenersAndPoll() {
+        if (!this._ready || !this._db) return;
+        try {
+            // catalog_config listener (background)
+            if (!this._catalogListenerAttached) {
+                this._catalogListenerAttached = true;
+                this._db.collection('datastore').doc('catalog_config').onSnapshot(doc => {
+                    if (doc.exists) {
+                        const newData = JSON.parse(doc.data().value);
+                        localStorage.setItem(this.PREFIX + 'catalog_config', doc.data().value);
+                        console.log('🔄 Catálogo atualizado via Firebase (Background)');
+                        window.dispatchEvent(new CustomEvent('mp_catalog_updated', { detail: newData }));
+                    }
+                }, err => {
+                    console.warn('catalog_config listener ignorado:', err.code || err.message);
+                    this._catalogListenerAttached = false;
+                });
+            }
+
+            // Per-doc realtime listeners (orders/caixa/pdv_tabs/finances)
             if (!this._realtimeListenerAttached) {
                 this._realtimeListenerAttached = true;
                 const self = this;
+                const docsToSync = this._publicSyncDocs();
                 docsToSync.forEach(docId => {
                     self._db.collection('datastore').doc(docId).onSnapshot(doc => {
                         if (!doc.exists) return;
@@ -543,7 +564,7 @@ const DataStore = {
                 });
             }
 
-            // ===== POLLING FALLBACK (per-doc, 5s) =====
+            // Polling fallback (per-doc, 5s) — belt+suspenders
             if (!this._pollFallbackId) {
                 const self = this;
                 this._pollFallbackId = setInterval(async () => {
@@ -573,14 +594,13 @@ const DataStore = {
                                 }));
                                 changes++;
                             }
-                        } catch (e) { /* ignora — listener pega ou próximo poll */ }
+                        } catch (e) { /* ignora — próximo poll tenta */ }
                     }
                     if (changes > 0) console.log('🔁 Poll: ' + changes + ' doc(s) atualizado(s)');
                 }, 5000);
             }
-
         } catch (e) {
-            console.warn('_syncFromCloud error:', e);
+            console.warn('_setupListenersAndPoll error:', e);
         }
     },
 
