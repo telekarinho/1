@@ -1,5 +1,37 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #47 — 2026-04-26
+
+**Área:** Conteúdo — `pos-inauguracao-semana9.md` — 14–20/06/2026
+
+**Contexto:** Semana 9 é a primeira semana pós-ativação do Indica & Ganha. Dois objetivos simultâneos: (1) revelar resultados do programa e nomear eventual Embaixador MilkyPot; (2) lançar o "Potinho Junino" — edição limitada de Festa Junina (paçoca + calda de amendoim + granulado tricolor) como novidade de cardápio mid-month que cria urgência e sazonalidade.
+
+**O que analisou:**
+- `pos-inauguracao-semana8.md`: nota final sugeria revelar resultados do Indica & Ganha + novidade de cardápio
+- `estrategia.md`: roadmap ciclo #47 = semana 9 com novidade de cardápio ou promoção mid-month
+- Sazonalidade: junho no Brasil = Festa Junina peak → paçoca/amendoim são sabores altamente associados, criam urgência de edição limitada com custo zero de novos insumos (paçoca é ingrediente barato e acessível)
+- Mecânica do Embaixador MilkyPot: documentada como progressão natural do Indica & Ganha para gamificação de longo prazo
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana9.md` | CRIADO — 341 linhas. Semana 14–20/06: 7 dias de posts planejados (2 Reels, posts feed, sequências de stories), roteiros completos, captions prontas, checklist operacional, gestão de estoque do Potinho Junino, mecânica de Embaixador MilkyPot, KPIs e nota para semana 10. |
+
+**Commit:** `61b1b1e`
+
+**Diferencial criativo desta semana:**
+- Potinho Junino = novidade sazonal com zero investimento em insumos novos (paçoca já é topping comum) + urgência natural de "só em junho"
+- Reel de lançamento na quarta (17/06) aproveita midweek para maximizar alcance orgânico antes do fim de semana
+- Enquete de teaser na segunda cria antecipação orgânica sem revelar o produto
+
+**Próximo passo sugerido:**
+- Ciclo #48: Revisitar `whatsapp-funil.md` — ajustar fluxo com aprendizados do mês 1 (conversão, dúvidas mais frequentes, ponto de abandono)
+- Ciclo #49: Auto-aprimoramento — reler log ciclos #44–48, ajustar estratégia para julho (mês 3 de operação)
+- Opcional: Se operador confirmar que Potinho Junino teve boa demanda → ciclo extra de "variação Fit" (base açaí + paçoca)
+
+---
+
 ## Ciclo #46 — 2026-04-26
 
 **Área:** SEO — Schema.org FAQPage: +2 perguntas (Cartão Fidelidade e Indica & Ganha)
