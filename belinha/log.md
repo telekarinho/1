@@ -1,5 +1,44 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #43 — 2026-04-26
+
+**Área:** Conteúdo Marketing — `pos-inauguracao-semana6.md` (Desafio UGC #PotinhoMaisFeliz)
+
+**Contexto:** D+1 do primeiro mês de operação. Semana 5 (17–23/05) celebrou "quase 1 mês"; o dia 25/05 é o marco exato de 1 mês. Momento ideal para lançar o primeiro desafio UGC da marca — receptividade alta, base de clientes aquecida pelo programa fidelidade e pelo Indica & Ganha.
+
+**O que analisou:**
+- Revisou `pos-inauguracao-semana5.md` para manter coerência de formato e tom
+- Revisou `ugc-compartilhe-potinho.md` (inauguração): mecânica de UGC já testada no D0 — replicar em escala maior
+- Verificou calendário: 25/05 = segunda-feira → dia perfeito para reel comemorativo de máximo alcance
+- Identificou que o desafio fecha no sábado 30/05 com anúncio no domingo 31/05 — dá tempo para o operador selecionar vencedores
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana6.md` | CRIADO — 330 linhas. Calendário completo Domingo 24/05 → Sábado 30/05. Desafio UGC #PotinhoMaisFeliz: 3 vencedores × Potinho Grande grátis. 4 templates WhatsApp (lançamento, reativação D+30, resposta participantes, anúncio vencedores). Roteiros de Reel para 25/05 (30s, aniversário 1 mês) e 29/05 (15s, urgência). Planejamento antecipado do Domingo 31/05 (anúncio). KPIs + critérios de seleção dos vencedores. |
+
+**Commit:** `4afdd26`
+
+**Mecânica do desafio UGC:**
+- Período: 25–30/05/2026
+- Participação: foto/vídeo do potinho + @milkypotbr + #PotinhoMaisFeliz no Instagram/TikTok
+- Prêmio: 3 melhores ganham 1 Potinho Grande GRÁTIS
+- Operador notifica vencedores via WhatsApp; anúncio público nos stories 31/05
+- Critérios subjetivos (criatividade, engajamento, espírito MilkyPot) — evita gamificação por bots
+
+**Impacto esperado:**
+- Conteúdo orgânico gerado por clientes reais → prova social para novos visitantes
+- Alcance multiplicado pelo efeito "desafio" — cada participante puxa o círculo social dele
+- Reativação de clientes D+30 via WhatsApp com pretexto concreto (desafio + aniversário)
+
+**Próximo passo sugerido:**
+- Ciclo #44: Auto-aprimoramento #9 — reler log ciclos #40–43, ajustar estratégia para maio/junho em `belinha/estrategia.md`
+- Ciclo #45: SEO — ativar `aggregateRating` em `index.html` se operador confirmar ≥3 reviews Google Maps
+- Ciclo #46: Criar `pos-inauguracao-semana7.md` — semana 31/05–06/06 (resultados do desafio, consolidação mês 2)
+
+---
+
 ## Ciclo #42 — 2026-04-26
 
 **Área:** Pesquisa Concorrentes — The Best Açaí (refetch dados 2024/2025)
