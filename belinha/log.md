@@ -1,5 +1,41 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #38 — 2026-04-26
+
+**Área:** UX/Frontend — Google Fonts non-blocking em páginas standalone
+
+**Contexto:** D+1 pós-inauguração. Ciclo #37 corrigiu fontes bloqueantes em `index.html`. Auditoria revelou que `cartao-fidelidade.html` e `potinho-ninho-londrina.html` (SEO crítica) ainda usavam `rel="stylesheet"` padrão para Google Fonts — render-blocking.
+
+**O que analisou:**
+- `cartao-fidelidade.html`: Google Fonts blocking `rel="stylesheet"` · link footer sem entrada para `potinho-ninho-londrina.html`
+- `potinho-ninho-londrina.html`: mesma URL de font, mesma tag blocking · página SEO principal da loja
+- Varredura geral: `raspinha.html`, `desafio.html`, `login.html`, `cardapio.html`, `termos.html`, `privacidade.html` ainda têm fontes bloqueantes → documentado como próximo passo
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `cartao-fidelidade.html` | Google Fonts convertido para non-blocking: `preload as="style"` + `media="print" onload="this.media='all'"` + `<noscript>` fallback |
+| `cartao-fidelidade.html` | Footer nav: adicionado link `→ potinho-ninho-londrina.html` com texto "Potinho de Ninho" |
+| `potinho-ninho-londrina.html` | Mesma fix de Google Fonts (página SEO crítica — maior impacto de LCP) |
+
+**Commit:** `df53e28`
+
+**Impacto esperado:**
+- Eliminação de render-blocking nas duas páginas com tráfego orgânico real: página SEO `potinho-ninho-londrina` e página de fidelidade compartilhada via WhatsApp
+- `cartao-fidelidade.html`: usuário que chega pelo link do operador agora tem atalho para o produto principal
+
+**Páginas com fontes ainda bloqueantes (próximo ciclo):**
+- `cardapio.html` — alta prioridade (tráfego de cardápio)
+- `raspinha.html` — URL de font idêntica
+- `login.html`, `termos.html`, `privacidade.html` — baixa prioridade de LCP
+
+**Próximo passo sugerido:**
+- Ciclo #39: Fix Google Fonts blocking em `cardapio.html` + `raspinha.html` (mesma URL de font)
+- Ciclo #40 (auto-aprimoramento #8): reler log ciclos 35–39, atualizar `belinha/estrategia.md`
+
+---
+
 ## Ciclo #37 — 2026-04-26
 
 **Área:** UX/Frontend — Performance mobile LCP (index.html)
