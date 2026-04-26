@@ -62,6 +62,11 @@ table th { background: #f9fafb; color: #555; font-weight: 700; }
 <div class="section">
     <h2>💾 Memória + Storage</h2>
     <div id="storage"></div>
+    <h3 style="font-size:14px;margin:12px 0 6px;color:#444">Top 20 chaves do localStorage por tamanho</h3>
+    <table id="lsTable"><thead><tr><th>Chave</th><th>Tamanho</th><th>Items (se array)</th></tr></thead><tbody></tbody></table>
+    <h3 style="font-size:14px;margin:12px 0 6px;color:#444">Distribuição por prefixo (qual módulo está enchendo)</h3>
+    <table id="lsPrefixTable"><thead><tr><th>Prefixo</th><th>Qtd chaves</th><th>Tamanho</th></tr></thead><tbody></tbody></table>
+    <button class="btn btn-warn" style="margin-top:10px" onclick="cleanupLS()">🧹 Limpar entries de log/audit antigas (mantém vendas/caixa)</button>
 </div>
 
 <div class="section">
@@ -157,9 +162,69 @@ table th { background: #f9fafb; color: #555; font-weight: 700; }
     }
     var lsKeys = Object.keys(localStorage);
     var lsBytes = 0;
-    lsKeys.forEach(function (k) { try { lsBytes += k.length + (localStorage.getItem(k) || '').length; } catch (e) {} });
+    var keyDetails = [];
+    lsKeys.forEach(function (k) {
+        try {
+            var v = localStorage.getItem(k) || '';
+            var sz = k.length + v.length;
+            lsBytes += sz;
+            var items = null;
+            if (v.length > 1 && (v[0] === '[' || v[0] === '{')) {
+                try { var p = JSON.parse(v); if (Array.isArray(p)) items = p.length; } catch (e) {}
+            }
+            keyDetails.push({ key: k, size: sz * 2, items: items });
+        } catch (e) {}
+    });
     row(s, 'localStorage entries', lsKeys.length, lsKeys.length > 200 ? 'warn' : 'ok');
     row(s, 'localStorage tamanho', bytes(lsBytes * 2), lsBytes * 2 > 5*1024*1024 ? 'warn' : 'ok');
+
+    // Top 20 chaves
+    keyDetails.sort(function (a, b) { return b.size - a.size; });
+    var lsBody = document.querySelector('#lsTable tbody');
+    keyDetails.slice(0, 20).forEach(function (d) {
+        var tr = document.createElement('tr');
+        var cls = d.size > 500*1024 ? 'slow' : (d.size > 50*1024 ? 'medium' : 'fast');
+        tr.innerHTML = '<td style="word-break:break-all;font-family:monospace;font-size:11px">' + d.key + '</td>' +
+                       '<td class="' + cls + '">' + bytes(d.size) + '</td>' +
+                       '<td>' + (d.items != null ? d.items + ' items' : '-') + '</td>';
+        lsBody.appendChild(tr);
+    });
+
+    // Distribuição por prefixo
+    var byPrefix = {};
+    keyDetails.forEach(function (d) {
+        var prefix = d.key.split('_').slice(0, 2).join('_'); // ex: mp_scratches, mp_audit, etc
+        if (!byPrefix[prefix]) byPrefix[prefix] = { count: 0, size: 0 };
+        byPrefix[prefix].count++;
+        byPrefix[prefix].size += d.size;
+    });
+    var prefixArr = Object.keys(byPrefix).map(function (p) { return { prefix: p, count: byPrefix[p].count, size: byPrefix[p].size }; });
+    prefixArr.sort(function (a, b) { return b.count - a.count; });
+    var pBody = document.querySelector('#lsPrefixTable tbody');
+    prefixArr.slice(0, 15).forEach(function (d) {
+        var tr = document.createElement('tr');
+        var cls = d.count > 1000 ? 'slow' : (d.count > 100 ? 'medium' : 'fast');
+        tr.innerHTML = '<td style="font-family:monospace;font-size:11px">' + d.prefix + '_*</td>' +
+                       '<td class="' + cls + '">' + d.count + ' chaves</td>' +
+                       '<td>' + bytes(d.size) + '</td>';
+        pBody.appendChild(tr);
+    });
+
+    window.cleanupLS = function () {
+        if (!confirm('🧹 Vai apagar entries antigas que NÃO sejam:\n\n• vendas (orders, scratches, caixa)\n• catalog/produtos\n• sessão (mp_session)\n\nIsso libera localStorage. Continuar?')) return;
+        var KEEP_PREFIXES = ['mp_orders', 'mp_scratches', 'mp_caixa', 'mp_pdv_tabs', 'mp_finances', 'mp_inventory', 'mp_session', 'mp_franchises', 'mp_catalog', 'mp_users', 'mp_staff', 'mp_recipes', 'mp_despesas'];
+        var removed = 0;
+        var keys = Object.keys(localStorage).slice();
+        keys.forEach(function (k) {
+            var keep = KEEP_PREFIXES.some(function (p) { return k === p || k.indexOf(p + '_') === 0 || k.indexOf(p) === 0; });
+            if (!keep) {
+                localStorage.removeItem(k);
+                removed++;
+            }
+        });
+        alert('✅ Removidas ' + removed + ' entries. Recarregando...');
+        setTimeout(function () { location.reload(); }, 500);
+    };
 
     // === Service Worker ===
     var sw = document.getElementById('sw');
