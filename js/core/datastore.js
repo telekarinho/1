@@ -492,7 +492,12 @@ const DataStore = {
                         const merged = this._mergeListDoc(docId, doc.data().value);
                         const cloudStr = merged.value;
                         localStorage.setItem(this.PREFIX + docId, cloudStr);
-                        if (merged.changed) this._writeToCloud(docId, JSON.parse(cloudStr));
+                        // FIX LOOP: NÃO escreve de volta no cloud por iniciativa do listener.
+                        // Se merge produz resultado diferente do cloud, isso só significa que
+                        // local tinha algo a mais — esse algo será propagado no próximo
+                        // DataStore.set explícito do user (ordem nova, status, etc).
+                        // Auto-writeback aqui causava loop infinito entre PCs (4+ writes/s).
+                        // if (merged.changed) this._writeToCloud(docId, JSON.parse(cloudStr));
                         synced++;
                     } else if (this._isMergeableListDoc(docId)) {
                         const localStr = localStorage.getItem(this.PREFIX + docId);
@@ -547,7 +552,8 @@ const DataStore = {
                             const localStr = localStorage.getItem(self.PREFIX + docId);
                             if (localStr !== cloudStr) {
                                 localStorage.setItem(self.PREFIX + docId, cloudStr);
-                                if (merged.changed) self._writeToCloud(docId, JSON.parse(cloudStr));
+                                // FIX LOOP: NÃO auto-writeback (causa loop infinito multi-PC)
+                                // if (merged.changed) self._writeToCloud(docId, JSON.parse(cloudStr));
                                 let parsed = null;
                                 try { parsed = JSON.parse(cloudStr); } catch(_) {}
                                 window.dispatchEvent(new CustomEvent('mp_remote_update', {
@@ -586,7 +592,8 @@ const DataStore = {
                             const localStr = localStorage.getItem(self.PREFIX + docId);
                             if (localStr !== cloudStr) {
                                 localStorage.setItem(self.PREFIX + docId, cloudStr);
-                                if (merged.changed) self._writeToCloud(docId, JSON.parse(cloudStr));
+                                // FIX LOOP: NÃO auto-writeback (causa loop infinito multi-PC)
+                                // if (merged.changed) self._writeToCloud(docId, JSON.parse(cloudStr));
                                 let parsed = null;
                                 try { parsed = JSON.parse(cloudStr); } catch (_) {}
                                 window.dispatchEvent(new CustomEvent('mp_remote_update', {
@@ -631,7 +638,12 @@ const DataStore = {
                     const localStr = localStorage.getItem(this.PREFIX + docId);
                     if (localStr !== cloudStr) {
                         localStorage.setItem(this.PREFIX + docId, cloudStr);
-                        if (merged.changed) this._writeToCloud(docId, JSON.parse(cloudStr));
+                        // FIX LOOP: NÃO escreve de volta no cloud por iniciativa do listener.
+                        // Se merge produz resultado diferente do cloud, isso só significa que
+                        // local tinha algo a mais — esse algo será propagado no próximo
+                        // DataStore.set explícito do user (ordem nova, status, etc).
+                        // Auto-writeback aqui causava loop infinito entre PCs (4+ writes/s).
+                        // if (merged.changed) this._writeToCloud(docId, JSON.parse(cloudStr));
                         let parsed = null;
                         try { parsed = JSON.parse(cloudStr); } catch(_) {}
                         window.dispatchEvent(new CustomEvent('mp_remote_update', {
