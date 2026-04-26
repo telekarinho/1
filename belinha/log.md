@@ -1,5 +1,36 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #45 — 2026-04-26
+
+**Área:** Conteúdo — `pos-inauguracao-semana8.md`
+
+**Contexto:** Semana 8 (07–13/06/2026) é a semana de ativação oficial do programa Indica & Ganha. Templates WA já estavam prontos (`whatsapp-indicacao.md`) desde o ciclo #41; faltava o conteúdo orgânico de rede social para impulsionar a mecânica e instruir o operador a disparar para toda a base de clientes.
+
+**O que analisou:**
+- Roadmap `estrategia.md` apontava ciclo #45 para ativação do Indica & Ganha
+- `whatsapp-indicacao.md` (ciclo #41): Templates A e B já prontos — só faltava o wrapper de conteúdo
+- `cartao-fidelidade.html` (ciclo #23): cartão com 10 carimbos já online — a mecânica de carimbo extra é o incentivo central
+- Semanas 1–7 cobertas; semana 8 é o gap imediato no arsenal de conteúdo
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana8.md` | CRIADO — Calendário 07–13/06. Tema: ativar Indica & Ganha como conteúdo orgânico. Reel "quem te indicou" (Dom), stories enquete triagem, carrossel explicativo Indica & Ganha (Ter, dia do disparo WA), Reel CTA fim de semana (Sáb), tabela de registro manual de indicações, checklist operacional completo, KPIs, remissão aos templates WA e nota para semana 9. |
+
+**Commit:** `8ab50c3`
+
+**Instrução operador (urgente na terça 09/06):**
+- Abrir `whatsapp-indicacao.md`, enviar Template A para todos os clientes cadastrados em lotes de ≤20
+- Anotar indicações na tabela de registro manual do arquivo semana8
+
+**Próximo passo sugerido:**
+- Ciclo #46: SEO — se `aggregateRating` desbloqueado, ativar em `index.html`; senão, verificar outros gaps de Schema.org (ex: `openingHoursSpecification` atualizado para junho)
+- Ciclo #47: `pos-inauguracao-semana9.md` — 14–20/06, anunciar resultados do Indica & Ganha + novidade de cardápio ou promoção mid-month
+- Ciclo #48: Revisitar funil WhatsApp (`whatsapp-funil.md`) com aprendizados do mês 1
+
+---
+
 ## Ciclo #44 — 2026-04-26
 
 **Área:** Auto-aprimoramento (ciclos #39–43) + Conteúdo — `pos-inauguracao-semana7.md`
