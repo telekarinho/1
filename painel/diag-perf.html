@@ -72,6 +72,10 @@ table th { background: #f9fafb; color: #555; font-weight: 700; }
 <div class="section">
     <h2>🌐 Service Worker</h2>
     <div id="sw"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" style="background:#5A52E0" onclick="forceSWNow()">⚡ Forçar Ativação SW + Reload</button>
+        <button class="btn btn-warn" onclick="unregisterAndReload()">🗑️ Desregistrar SW e tentar limpo</button>
+    </div>
 </div>
 
 <div class="section">
@@ -230,19 +234,62 @@ table th { background: #f9fafb; color: #555; font-weight: 700; }
     var sw = document.getElementById('sw');
     if (navigator.serviceWorker && navigator.serviceWorker.controller) {
         row(sw, 'SW ativo', '✅ controlando esta página', 'ok');
+        row(sw, 'controller.scriptURL', navigator.serviceWorker.controller.scriptURL.split('/').pop());
     } else {
-        row(sw, 'SW ativo', '❌ não controlando', 'warn');
+        row(sw, 'SW ativo', '❌ não controlando — clica "Forçar Ativação" abaixo', 'warn');
     }
     if (navigator.serviceWorker) {
         navigator.serviceWorker.getRegistrations().then(function (regs) {
+            row(sw, 'Registrations encontradas', regs.length, regs.length ? 'ok' : 'warn');
             regs.forEach(function (r, i) {
                 row(sw, 'Reg #' + (i + 1) + ' scope', r.scope);
-                if (r.active) row(sw, 'Reg #' + (i + 1) + ' active', r.active.scriptURL.split('/').pop());
+                if (r.active) {
+                    row(sw, 'Reg #' + (i + 1) + ' active.state', r.active.state, r.active.state === 'activated' ? 'ok' : 'warn');
+                    row(sw, 'Reg #' + (i + 1) + ' active.script', r.active.scriptURL.split('/').pop());
+                } else {
+                    row(sw, 'Reg #' + (i + 1) + ' active', 'NULO', 'warn');
+                }
+                if (r.installing) row(sw, 'Reg #' + (i + 1) + ' installing', r.installing.state, 'warn');
+                if (r.waiting) row(sw, 'Reg #' + (i + 1) + ' waiting', r.waiting.state + ' (precisa skipWaiting)', 'warn');
             });
+            // Tenta atualizar registrations
+            regs.forEach(function (r) { try { r.update(); } catch (e) {} });
         });
+    } else {
+        row(sw, 'navigator.serviceWorker', 'INDISPONÍVEL — browser sem suporte ou contexto inseguro', 'err');
     }
     row(sw, 'navigator.onLine', navigator.onLine ? '✅ online' : '❌ offline', navigator.onLine ? 'ok' : 'warn');
     row(sw, 'connection.effectiveType', (navigator.connection && navigator.connection.effectiveType) || '?');
+
+    // === Botões de força bruta SW ===
+    window.forceSWNow = async function () {
+        if (!navigator.serviceWorker) return alert('Browser sem suporte a Service Worker');
+        try {
+            // 1. Re-registra (caso não esteja)
+            var reg = await navigator.serviceWorker.register('/sw.js');
+            console.log('Reg ok:', reg.scope);
+            // 2. Manda skipWaiting pro waiting (se houver)
+            if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            // 3. Update + claim
+            await reg.update();
+            // 4. Aguarda 1s e recarrega
+            alert('SW forçado a ativar. Vou recarregar em 1s...');
+            setTimeout(function () { location.reload(); }, 1000);
+        } catch (e) {
+            alert('Erro: ' + e.message);
+        }
+    };
+    window.unregisterAndReload = async function () {
+        if (!confirm('🗑️ Vai desregistrar TODOS os Service Workers deste site e recarregar.\n\nIsso força um install limpo. Não perde dados (localStorage fica). Continuar?')) return;
+        try {
+            var regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(function (r) { return r.unregister(); }));
+            alert('✅ ' + regs.length + ' SW(s) desregistrado(s). Recarregando...');
+            setTimeout(function () { location.reload(); }, 800);
+        } catch (e) {
+            alert('Erro: ' + e.message);
+        }
+    };
 
     // === Recursos lentos ===
     var resources = performance.getEntriesByType('resource').slice();
@@ -297,6 +344,6 @@ table th { background: #f9fafb; color: #555; font-weight: 700; }
     };
 })();
 </script>
-<script src="../js/core/register-sw.js?v=mp-v73"></script>
+<script src="../js/core/register-sw.js?v=mp-v74"></script>
 </body>
 </html>
