@@ -291,3 +291,185 @@ Sua satisfação é o que mais importa pra gente 💕
 ## Ver também
 
 - **[whatsapp-reativacao.md](whatsapp-reativacao.md)** — Templates para clientes que compraram mas não voltaram (D+1, D+7, D+14, D+30, fidelidade, upsell exclusivos Muffato)
+
+---
+
+---
+
+# ATUALIZAÇÃO V2 — Aprendizados do Mês 1 (Ciclo #48 | 2026-04-26)
+
+> **O que mudou:** Após 1 mês de operação, 3 novos blocos foram identificados como lacunas no funil original: (1) o review Google Maps nunca era pedido ativamente durante o atendimento; (2) o Indica & Ganha não tinha entrada no fluxo de atendimento; (3) o upsell de sazonalidade (Potinho Junino) e do Açaí self-service não tinham template pronto. Abaixo os novos scripts para integrar ao WhatsApp Business.
+
+---
+
+## ETAPA 7 V2 — Follow-up pós-entrega com CTA de Review Google Maps
+
+> **Substituir Etapa 7 original por esta versão.** Adicionar pedido de review Google, que tem impacto direto no ranqueamento local.
+
+```
+Oi [NOME]! 🐑✨
+
+Seu potinho chegou bem? Ficou gostoso?
+
+Se você curtiu, pode nos ajudar com uma coisa rápida? 🙏
+
+⭐ Deixa uma avaliação no Google — leva 30 segundos e ajuda muito a gente:
+👉 [LINK GOOGLE MAPS DA LOJA]
+
+📸 E se bater uma foto, marca a gente: @milkypotbr
+
+🎁 Você tem [VALOR] pontos no fidelidade acumulados! Guarda o link do seu cartão:
+milkypot.com/cartao-fidelidade.html?stamps=[N]
+
+Obrigada! A ovelhinha te ama 💕
+```
+
+**Atalho WhatsApp Business:** `/obrigada2`
+
+> **Nota operacional:** Link do Google Maps da loja → buscar "MilkyPot Muffato Londrina" no Google e copiar o link de "Avalie este local". Cole o link real no template antes de salvar como resposta rápida.
+
+---
+
+## ETAPA NOVA — Reconhecimento de Cliente Recorrente
+
+> **Quando usar:** Cliente que já aparece no histórico do WhatsApp (comprou antes). Use no lugar da Etapa 1 padrão.
+
+```
+Oi [NOME]! Que saudade! 🐑💛
+
+Bem-vindo(a) de volta ao MilkyPot!
+
+Seu cartão fidelidade está em:
+milkypot.com/cartao-fidelidade.html?stamps=[N]
+
+O que vai ser hoje? Cardápio completo em milkypot.com/cardapio.html 😍
+
+(Temos novidade esta semana: *Potinho Junino* 🌽🎪 — só em junho!)
+```
+
+**Atalho WhatsApp Business:** `/voltou`
+
+---
+
+## ETAPA NOVA — Ativação do Indica & Ganha no Atendimento
+
+> **Quando usar:** Após confirmar o pedido (logo depois da Etapa 4 ou 5). Clientes novos são o melhor momento para apresentar o programa — ainda estão empolgados.
+
+```
+[NOME], tenho uma novidade pra você! 🎁
+
+*Indica & Ganha* — nosso programa de indicação:
+
+👉 Indique um amigo que ainda não conhece o MilkyPot
+👉 Quando ele fizer o 1º pedido, você ganha 1 carimbo extra no fidelidade!
+👉 Sem limite — quanto mais amigos, mais carimbos!
+
+É simples: só mandar essa mensagem pra eles:
+
+---
+*Oi! Conhece o MilkyPot Londrina? 🐑*
+*Potinhos personalizados, açaí, milkshakes… melhor sobremesa do Muffato!*
+*Pede pelo WhatsApp: wa.me/5543998042424*
+---
+
+Me manda o nome do amigo quando ele chegar e eu anoto o carimbo pra você! 🐑✨
+```
+
+**Atalho WhatsApp Business:** `/indica`
+
+---
+
+## ETAPA NOVA — Upsell Potinho Junino (junho 2026)
+
+> **Quando usar:** Quando cliente está escolhendo o pedido e não mencionou topping específico. Ativa sazonalidade com urgência natural.
+
+```
+Posso sugerir uma coisa? 🌽🎪
+
+Temos o *Potinho Junino* — edição especial só em junho!
+
+🫙 Base Ninho cremoso
++ Paçoca esfarelada
++ Calda de amendoim
++ Granulado tricolor
+
+Fica uma delícia e está disponível nos tamanhos Mini, Pequeno, Médio e Gigante!
+
+Quer incluir no pedido? (Disponível só este mês!)
+```
+
+**Atalho WhatsApp Business:** `/junino`
+
+---
+
+## ETAPA NOVA — Upsell Açaí Self-Service Muffato
+
+> **Quando usar:** Quando cliente pede potinho e pode adicionar o açaí buffet, ou quando menciona açaí. Diferencial exclusivo da unidade Muffato.
+
+```
+Você sabia que aqui no Muffato temos *Açaí Buffet Self-Service*? 🫐
+
+Monta do seu jeito, com quantos toppings quiser!
+
+Dá pra combinar com o seu potinho ou pedir separado 😋
+
+Quer adicionar ao pedido?
+```
+
+**Atalho WhatsApp Business:** `/acai`
+
+---
+
+## MENSAGENS RÁPIDAS V2 — Atalhos Atualizados
+
+> **Lista completa de atalhos (v1 + v2). Configure todos no WhatsApp Business → Respostas rápidas.**
+
+| Atalho | Mensagem | Versão |
+|--------|----------|--------|
+| `/oi` | Boas-vindas (Etapa 1) | v1 |
+| `/cardapio` | Cardápio completo (Etapa 2A) | v1 |
+| `/delivery` | Info entrega (Etapa 2B) | v1 |
+| `/confirm` | Confirmação pedido (Etapa 4) | v1 |
+| `/pix` | Confirmação PIX (Etapa 5) | v1 |
+| `/saiu` | Pedido saiu (Etapa 6) | v1 |
+| `/obrigada` | Follow-up pós-entrega v1 (sem review) | v1 |
+| `/obrigada2` | Follow-up pós-entrega **com CTA review Google** | **v2** |
+| `/fidelidade` | Cadastro Cartão Fidelidade Digital (Etapa 9) | v1 |
+| `/resgate` | Resgate do Mini grátis (10 selos completos) | v1 |
+| `/voltou` | Reconhecimento de cliente recorrente | **v2** |
+| `/indica` | Ativação do Indica & Ganha | **v2** |
+| `/junino` | Upsell Potinho Junino (só junho) | **v2** |
+| `/acai` | Upsell Açaí Self-Service | **v2** |
+| `/reclamacao` | Tratamento de reclamações | v1 |
+
+> **Recomendação operacional:** Substitua `/obrigada` por `/obrigada2` como resposta padrão pós-entrega a partir de agora. O CTA de review Google aumenta reviews Maps que impactam diretamente o ranqueamento local.
+
+---
+
+## FLUXO SUGERIDO (cliente novo, pedido delivery)
+
+```
+CLIENTE ENTRA → /oi
+↓
+Pede cardápio → /cardapio
+↓
+Pede delivery → /delivery
+↓
+Fecha pedido → /confirm
+↓
+PIX → /pix
+↓
+Saiu → /saiu
+↓
+[+30min] → /obrigada2  ← NOVO (com CTA review Google)
+↓
+[Na confirmação do pedido] → /indica  ← NOVO (Indica & Ganha)
+↓
+[Na escolha do topping, se junho] → /junino  ← NOVO (sazonalidade)
+↓
+[Próxima visita] → /voltou  ← NOVO (reconhecimento)
+```
+
+---
+
+*Belinha — Ciclo #48 | 2026-04-26*
