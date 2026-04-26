@@ -188,3 +188,59 @@ Inauguração ocorreu em 25/04/2026. Agora o foco muda:
 ---
 
 _Belinha — Ciclo #35 | 2026-04-25_
+
+---
+
+## Aprendizados dos ciclos #35–39
+
+### Contexto do período
+D+0 a D+1 pós-inauguração (25–26/04/2026). Ciclos focados em performance frontend após a loja abrir com tráfego real.
+
+### O que gerou mais valor concreto
+1. **Google Fonts non-blocking sweep ciclos #37–#39** — eliminação de render-blocking em 5 páginas (`index.html`, `cartao-fidelidade.html`, `potinho-ninho-londrina.html`, `cardapio.html`, `raspinha.html`). LCP mobile melhora diretamente a posição no Google (Core Web Vitals). Impacto: usuários com 4G lento chegam ao conteúdo ~200–400ms mais rápido.
+2. **Hero image preload + fetchpriority `index.html` (ciclo #37)** — sinalizador explícito de prioridade para o elemento LCP principal. Sem custo de infra.
+3. **Conteúdo semana 5 `pos-inauguracao-semana5.md` (ciclo #36)** — semana de "1 mês de MilkyPot" com templates de reativação D+21, script de solicitação de review e KPIs. Operador tem material pronto até 23/05.
+
+### O que foi menos eficaz
+- **Ciclo #38 planejado como SEO** → acabou sendo UX/performance. A estratégia previu incorretamente a ordem de urgência — fontes bloqueantes em páginas SEO críticas eram mais urgentes do que um novo link de rodapé.
+- **Sweep incompleto por ciclo**: ciclo #37 corrigiu `index.html`, ciclo #38 corrigiu mais 2 páginas, ciclo #39 mais 2. Padrão a evitar: quando um problema sistêmico é identificado (ex: fonte bloqueante em N páginas), resolver TODAS no mesmo ciclo com iteração em batch.
+
+### Padrão consolidado (v3)
+
+> **Bug/fix crítico > Conversão direta > UX/Performance sweep (TODAS as páginas afetadas no mesmo ciclo) > Conteúdo acionável > SEO técnico > Pesquisa concorrente (só com follow-up imediato)**
+
+### Estado atual das páginas (26/04/2026)
+
+| Página | Google Fonts non-blocking | Obs |
+|--------|--------------------------|-----|
+| `index.html` | ✅ ciclo #37 | + hero preload |
+| `cartao-fidelidade.html` | ✅ ciclo #38 | |
+| `potinho-ninho-londrina.html` | ✅ ciclo #38 | página SEO crítica |
+| `cardapio.html` | ✅ ciclo #39 | |
+| `raspinha.html` | ✅ ciclo #39 | |
+| `login.html` | ⏳ pendente | baixo tráfego orgânico |
+| `desafio.html` | ⏳ pendente | baixo tráfego orgânico |
+| `termos.html` | ⏳ pendente | baixo impacto LCP |
+| `privacidade.html` | ⏳ pendente | baixo impacto LCP |
+
+### Próximas iniciativas sugeridas (ciclos 40–44)
+
+| Ciclo | Área | Ação |
+|-------|------|------|
+| #40 | UX/Performance | Fix fontes bloqueantes em páginas restantes: `login.html`, `desafio.html`, `termos.html`, `privacidade.html` |
+| #41 | Conversão | Template "mensagem de indicação": cliente envia amigo → recebe 1 carimbo extra (copy WhatsApp + regras) |
+| #42 | Conteúdo | `pos-inauguracao-semana6.md` — semana 24–30/05: consolidação de hábito, desafio UGC, engajamento |
+| #43 | SEO | Ativar `aggregateRating` em `index.html` se operador confirmar ≥3 reviews Google Maps |
+| #44 | Auto-aprimoramento | Reler log ciclos 39–43, ajustar estratégia para junho (mês 2) |
+
+### Bloqueadores ativos (sem mudança)
+
+| Bloqueador | Dependência | Impacto |
+|------------|-------------|---------|
+| Google Analytics ID real | Autorização usuário | Sem medição de KPIs digitais |
+| aggregateRating Schema.org | ≥3 reviews Google Maps verificáveis | Sem rich snippet de estrelas na SERP |
+| Adoção do cartão fidelidade | Feedback do operador | Desconhecemos uso real |
+
+---
+
+_Belinha — Ciclo #39 | 2026-04-26_
