@@ -1,5 +1,37 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #37 — 2026-04-26
+
+**Área:** UX/Frontend — Performance mobile LCP (index.html)
+
+**Contexto:** Dia após inauguração (25/04). Site ativo, tráfego orgânico começa a crescer. Foco: garantir LCP <2.5s no mobile para não perder posição no Google.
+
+**O que analisou:**
+- `index.html` head: Google Fonts carregado com `rel="stylesheet"` padrão (render-blocking)
+- Hero section: `images/logo-milkypot.png` (LCP element) sem `fetchpriority` nem `preload`
+- Nav logo e footer logo: padrão OK (footer já tinha `loading="lazy"`)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `index.html` | Adicionado `<link rel="preload" as="image" href="images/logo-milkypot.png" fetchpriority="high">` no `<head>` |
+| `index.html` | Hero img: `fetchpriority="high" loading="eager"` adicionados |
+| `index.html` | Google Fonts convertido para padrão não-bloqueante: `media="print" onload="this.media='all'"` + `<noscript>` fallback |
+
+**Commit:** `8963467`
+
+**Impacto esperado:**
+- LCP mobile: eliminação de render-blocking de fontes externas (~200-400ms no 4G médio)
+- Hero image descoberta pelo browser no preload scan antes do HTML parser chegar na tag
+- `fetchpriority="high"` sinaliza ao browser para priorizar o download da imagem LCP
+
+**Próximo passo sugerido:**
+- Ciclo #38: Link `cartao-fidelidade.html` → `potinho-ninho-londrina.html` + testar Schema.org Rich Results
+- Ciclo #39 (auto-aprimoramento #8): reler log completo ciclos 35-39 e atualizar `belinha/estrategia.md`
+
+---
+
 ## Ciclo #36 — 2026-04-25
 
 **Área:** Conteúdo marketing — Semana 5 pós-inauguração (17–23/05/2026)
