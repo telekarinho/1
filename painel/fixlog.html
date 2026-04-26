@@ -123,22 +123,30 @@
 
         async function persistLog(extra) {
             if (!db) return;
-            try {
-                await db.collection('datastore').doc('debug_' + SESSION_ID).set({
-                    value: JSON.stringify({
-                        sessionId: SESSION_ID,
-                        userAgent: navigator.userAgent,
-                        url: location.href,
-                        startedAt: logBuffer[0] && logBuffer[0].ts,
-                        finishedAt: new Date().toISOString(),
-                        logs: logBuffer,
-                        extra: extra || {}
-                    }),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } catch(e) {
-                log('persistLog falhou: ' + (e.code||e.message), 'err');
+            // Tenta múltiplos prefixos (regras de read/write variam)
+            var prefixes = ['orders_DEBUG_', 'tv_DEBUG_', 'pdv_tabs_DEBUG_', 'caixa_DEBUG_'];
+            var payload = {
+                value: JSON.stringify({
+                    sessionId: SESSION_ID,
+                    userAgent: navigator.userAgent,
+                    url: location.href,
+                    startedAt: logBuffer[0] && logBuffer[0].ts,
+                    finishedAt: new Date().toISOString(),
+                    logs: logBuffer,
+                    extra: extra || {}
+                }),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            for (var i = 0; i < prefixes.length; i++) {
+                try {
+                    await db.collection('datastore').doc(prefixes[i] + SESSION_ID).set(payload);
+                    log('  ✅ log persistido em ' + prefixes[i] + SESSION_ID, 'ok');
+                    return; // primeira que funcionar, para
+                } catch(e) {
+                    log('  ⚠️ ' + prefixes[i] + ': ' + (e.code||e.message), 'warn');
+                }
             }
+            log('❌ TODAS as tentativas de persistir log falharam', 'err');
         }
 
         function todayKey() {
