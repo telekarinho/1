@@ -884,22 +884,22 @@
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v85"></script>
-<script src="../js/core/motivacional.js?v=mp-v85"></script>
-<script src="../js/core/caixa.js?v=mp-v85"></script>
-<script src="../js/core/financas.js?v=mp-v85"></script>
-<script src="../js/core/onboarding.js?v=mp-v85"></script>
-<script src="../js/core/units.js?v=mp-v85"></script>
-<script src="../js/core/error-tracking.js?v=mp-v85"></script>
-<script src="../js/core/recipes.js?v=mp-v85"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v85"></script>
-<script src="../js/core/offline-queue.js?v=mp-v85"></script>
-<script src="../js/core/pix.js?v=mp-v85"></script>
-<script src="../js/core/nfce.js?v=mp-v85"></script>
-<script src="../js/core/printer.js?v=mp-v85"></script>
+<script src="../js/core/adminconfig.js?v=mp-v86"></script>
+<script src="../js/core/motivacional.js?v=mp-v86"></script>
+<script src="../js/core/caixa.js?v=mp-v86"></script>
+<script src="../js/core/financas.js?v=mp-v86"></script>
+<script src="../js/core/onboarding.js?v=mp-v86"></script>
+<script src="../js/core/units.js?v=mp-v86"></script>
+<script src="../js/core/error-tracking.js?v=mp-v86"></script>
+<script src="../js/core/recipes.js?v=mp-v86"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v86"></script>
+<script src="../js/core/offline-queue.js?v=mp-v86"></script>
+<script src="../js/core/pix.js?v=mp-v86"></script>
+<script src="../js/core/nfce.js?v=mp-v86"></script>
+<script src="../js/core/printer.js?v=mp-v86"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v85"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v85"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v86"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v86"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -2417,9 +2417,11 @@
     function renderOpenTabs(){
         var el=document.getElementById('openTabs');
         var list=document.getElementById('openTabsList');
-        if(!openTabs.length){el.style.display='none';return}
+        // Filtra tombstones (tab.deleted=true) na hora de renderizar
+        var visible = openTabs.filter(function(t){ return !t.deleted; });
+        if(!visible.length){el.style.display='none';return}
         el.style.display='block';
-        list.innerHTML=openTabs.map(function(tab){
+        list.innerHTML=visible.map(function(tab){
             var total=tab.items.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
             return '<div class="tab-chip" onclick="loadTab(\''+tab.id+'\')">'+
                 '<span>📋</span><span class="tc-name">'+Utils.escapeHtml(tab.name)+'</span>'+
@@ -2472,7 +2474,17 @@
     };
 
     window.removeTab=function(tabId){
-        openTabs=openTabs.filter(function(t){return t.id!==tabId});
+        // TOMBSTONE: marca como deleted em vez de remover do array.
+        // Razão: sync entre PCs faz merge por id; remover do array local
+        // não propaga como delete — outro PC re-mergeia a comanda de volta.
+        // Com tab.deleted=true, o merge mantém o tombstone e renderOpenTabs filtra.
+        var ts = new Date().toISOString();
+        openTabs = openTabs.map(function(t){
+            if (t.id === tabId) {
+                return Object.assign({}, t, { deleted: true, deletedAt: ts, updatedAt: ts });
+            }
+            return t;
+        });
         if(editingTabId===tabId)editingTabId=null;
         saveOpenTabs();
         toast('Conta removida');
