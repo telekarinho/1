@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v75';
-const CACHE_NAME = 'milkypot-v75';
+const CACHE_VERSION = 'mp-v76';
+const CACHE_NAME = 'milkypot-v76';
 
 // Critical local assets that must be available offline
 const PRECACHE_URLS = [
@@ -81,14 +81,21 @@ const CDN_PRECACHE_URLS = [
 
 const OFFLINE_QUEUE_KEY = 'milkypot-offline-queue';
 
-// Install: precache key files
+// Install: precache key files (TOLERATE individual failures)
+// Antes: cache.addAll rejeitava TUDO se 1 URL desse 404. SW ficava
+// travado em "installing" sem nunca ativar (reg.active = NULL).
+// Agora: cada URL é cacheado individualmente. Falha em 1 não trava o resto.
 self.addEventListener('install', event => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            // Precache local files — fail if any are missing
-            const localPromise = cache.addAll(PRECACHE_URLS);
-            // Precache CDN files — tolerate individual failures (they'll be cached on first use)
+            // Local files — tolerate per-URL failures
+            const localPromise = Promise.allSettled(
+                PRECACHE_URLS.map(u => fetch(u, { cache: 'reload' })
+                    .then(r => r.ok ? cache.put(u, r.clone()) : null)
+                    .catch(() => null))
+            );
+            // CDN files
             const cdnPromise = Promise.allSettled(
                 CDN_PRECACHE_URLS.map(u => fetch(u, { mode: 'cors' })
                     .then(r => r.ok ? cache.put(u, r) : null)
