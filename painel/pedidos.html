@@ -285,7 +285,7 @@
     <script src="../js/core/reports.js"></script>
     <script src="../js/core/adminconfig.js?v=mp-v14"></script>
     <script src="../js/core/motivacional.js?v=mp-v14"></script>
-    <script src="../js/core/caixa.js?v=mp-v84"></script>
+    <script src="../js/core/caixa.js?v=mp-v90"></script>
     <script>
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
         const session = Auth.getSession();
@@ -384,14 +384,14 @@
                                 <span class="order-type-badge order-type-${(o.delivery || o.type)}">${(o.delivery || o.type) === 'delivery' ? '🛵 Delivery' : '🏪 Retirada'}</span>
                             </div>
                             ${status !== 'entregue' ? `
-                                <div class="order-actions" data-noprop="1">
-                                    <button type="button" class="btn btn-sm btn-primary" data-action="advance" data-order-id="${o.id}" data-target-status="${nextStatus[status]}">${nextLabel[status]}</button>
-                                    <button type="button" class="btn btn-sm btn-danger" data-action="cancel" data-order-id="${o.id}" title="Cancelar pedido">❌</button>
-                                    <button type="button" class="btn btn-sm" style="background:#B71C1C;color:#fff;padding:6px 8px" data-action="delete" data-order-id="${o.id}" title="Excluir permanentemente">🗑️</button>
+                                <div class="order-actions" data-noprop="1" style="position:relative;z-index:50;pointer-events:auto">
+                                    <button type="button" class="btn btn-sm btn-primary" style="position:relative;z-index:51;pointer-events:auto;cursor:pointer" data-action="advance" data-order-id="${o.id}" data-target-status="${nextStatus[status]}" onclick="kanbanAction(event,'advance','${o.id}','${nextStatus[status]}')">${nextLabel[status]}</button>
+                                    <button type="button" class="btn btn-sm btn-danger" style="position:relative;z-index:51;pointer-events:auto;cursor:pointer" data-action="cancel" data-order-id="${o.id}" onclick="kanbanAction(event,'cancel','${o.id}')" title="Cancelar pedido">❌</button>
+                                    <button type="button" class="btn btn-sm" style="background:#B71C1C;color:#fff;padding:6px 8px;position:relative;z-index:51;pointer-events:auto;cursor:pointer" data-action="delete" data-order-id="${o.id}" onclick="kanbanAction(event,'delete','${o.id}')" title="Excluir permanentemente">🗑️</button>
                                 </div>
                             ` : `
-                                <div class="order-actions" data-noprop="1">
-                                    <button type="button" class="btn btn-sm" style="background:#B71C1C;color:#fff;padding:6px 8px" data-action="delete" data-order-id="${o.id}" title="Excluir permanentemente">🗑️</button>
+                                <div class="order-actions" data-noprop="1" style="position:relative;z-index:50;pointer-events:auto">
+                                    <button type="button" class="btn btn-sm" style="background:#B71C1C;color:#fff;padding:6px 8px;position:relative;z-index:51;pointer-events:auto;cursor:pointer" data-action="delete" data-order-id="${o.id}" onclick="kanbanAction(event,'delete','${o.id}')" title="Excluir permanentemente">🗑️</button>
                                 </div>
                             `}
                         </div>
@@ -1002,6 +1002,29 @@
             }
         }, true);
 
+        // ============================================
+        // BULLETPROOF: handler chamado direto pelo onclick inline.
+        // Funciona mesmo se a delegação no document falhar.
+        // ============================================
+        window.kanbanAction = function(ev, action, orderId, target) {
+            try {
+                if (ev && ev.stopPropagation) ev.stopPropagation();
+                if (ev && ev.preventDefault) ev.preventDefault();
+                console.log('[kanbanAction]', action, orderId, target);
+                if (action === 'advance' && target) {
+                    moveOrder(orderId, target);
+                } else if (action === 'cancel') {
+                    moveOrder(orderId, 'cancelado');
+                } else if (action === 'delete') {
+                    deleteOrderFlow(orderId);
+                }
+            } catch(e) {
+                console.error('[kanbanAction] erro:', e);
+                alert('Erro: ' + e.message + '\n\nUse milkypot.com/painel/limpar.html');
+            }
+            return false;
+        };
+
         // Fluxo de exclusão SEM confirm()/prompt() — usa modal inline
         // (Brave/Chrome às vezes bloqueiam confirm/prompt repetidos como spam)
         function deleteOrderFlow(orderId) {
@@ -1099,6 +1122,6 @@
 <script src="../js/pages/lilo-scanner.js" defer></script>
 <script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
 <script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
-<script src="../js/core/register-sw.js?v=mp-v84"></script>
+<script src="../js/core/register-sw.js?v=mp-v90"></script>
 </body>
 </html>

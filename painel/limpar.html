@@ -21,7 +21,7 @@
             background: #fff;
             border-radius: 18px;
             box-shadow: 0 25px 60px rgba(0,0,0,0.3);
-            max-width: 560px;
+            max-width: 600px;
             width: 100%;
             padding: 32px;
         }
@@ -37,58 +37,65 @@
             border-radius: 12px;
             padding: 16px;
             margin: 16px 0;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
         }
-        .stat strong { color: #6A1B9A; font-size: 1.5rem; }
+        .stat strong { color: #6A1B9A; font-size: 1.3rem; }
         button {
             width: 100%;
             padding: 16px 24px;
-            background: linear-gradient(135deg, #6A1B9A, #AB47BC);
             color: #fff;
             border: none;
             border-radius: 12px;
             font-size: 1.1rem;
             font-weight: 700;
             cursor: pointer;
-            margin-top: 16px;
+            margin-top: 12px;
             font-family: inherit;
             transition: transform 0.15s;
+            display: block;
         }
         button:hover { transform: translateY(-2px); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-danger {
-            background: linear-gradient(135deg, #B71C1C, #E53935);
-        }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-primary { background: linear-gradient(135deg, #6A1B9A, #AB47BC); }
+        .btn-danger { background: linear-gradient(135deg, #B71C1C, #E53935); }
+        .btn-secondary { background: linear-gradient(135deg, #455A64, #607D8B); }
         .log {
             background: #1A1A1A;
             color: #4FC3F7;
             font-family: 'Courier New', monospace;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             padding: 12px;
             border-radius: 8px;
             margin-top: 16px;
-            max-height: 200px;
+            max-height: 220px;
             overflow-y: auto;
             white-space: pre-wrap;
         }
         .log .ok { color: #69F0AE; }
         .log .err { color: #FF8A80; }
+        .log .warn { color: #FFD54F; }
         ul { margin: 8px 0; padding-left: 20px; }
         li { margin: 4px 0; color: #555; font-size: 0.9rem; }
         .home {
             display: inline-block;
-            margin-top: 16px;
+            margin-top: 12px;
             color: #6A1B9A;
             text-decoration: none;
             font-weight: 700;
+            text-align: center;
+            width: 100%;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #E1BEE7;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            box-sizing: border-box;
+            margin-top: 4px;
         }
     </style>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <script src="../js/core/datastore.js"></script>
-    <script src="../js/core/firebase-config.js"></script>
-    <script src="../js/core/auth.js"></script>
 </head>
 <body>
     <div class="card">
@@ -96,144 +103,265 @@
         <p>Remove pedidos abertos de dias anteriores que estão travando o kanban.<br>
         <strong>Não toca nos pedidos de hoje.</strong></p>
 
-        <div id="stats" class="stat">⏳ Carregando…</div>
+        <div id="phase-loading" class="stat">⏳ Inicializando…</div>
 
-        <ul id="orderList"></ul>
+        <div id="phase-fid" style="display:none">
+            <p>Não consegui detectar o ID da franquia automaticamente.<br>
+            <small>Digite o ID (default: <code>muffato-quintino</code>):</small></p>
+            <input type="text" id="manualFid" value="muffato-quintino" />
+            <button class="btn-primary" id="btnSetFid">Continuar →</button>
+        </div>
 
-        <button id="btnClean" class="btn-danger" disabled>🗑️ Limpar pedidos antigos</button>
+        <div id="phase-analyze" style="display:none">
+            <div id="stats" class="stat">⏳ Analisando…</div>
+            <ul id="orderList"></ul>
+            <button id="btnClean" class="btn-danger" disabled>🗑️ Limpar pedidos antigos</button>
+        </div>
+
         <a href="pedidos.html" class="home">← Voltar pra Pedidos</a>
+        <a href="pdv.html" class="home" style="margin-top:4px">↪ Ir pro PDV</a>
 
         <div id="log" class="log" style="display:none"></div>
     </div>
 
     <script>
-        const logEl = document.getElementById('log');
-        const statsEl = document.getElementById('stats');
-        const listEl = document.getElementById('orderList');
-        const btn = document.getElementById('btnClean');
-
+        // === LOG VISÍVEL — mesmo se algum script falhar ===
+        var logEl = document.getElementById('log');
+        var startTime = Date.now();
         function log(msg, cls) {
-            logEl.style.display = 'block';
-            const span = document.createElement('span');
-            if (cls) span.className = cls;
-            span.textContent = msg + '\n';
-            logEl.appendChild(span);
-            logEl.scrollTop = logEl.scrollHeight;
+            try {
+                logEl.style.display = 'block';
+                var t = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
+                var span = document.createElement('span');
+                if (cls) span.className = cls;
+                span.textContent = '[' + t + '] ' + msg + '\n';
+                logEl.appendChild(span);
+                logEl.scrollTop = logEl.scrollHeight;
+            } catch(_) {}
+        }
+        // Captura erros globais
+        window.onerror = function(msg, url, line) {
+            log('ERROR: ' + msg + ' @ ' + (url||'?') + ':' + (line||'?'), 'err');
+        };
+        log('Página iniciada');
+
+        function showPhase(name) {
+            ['loading','fid','analyze'].forEach(function(p){
+                var el = document.getElementById('phase-' + p);
+                if (el) el.style.display = (p === name ? 'block' : 'none');
+            });
+        }
+    </script>
+
+    <!-- Carrega scripts em ordem com fallback -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" onerror="log('firebase-app falhou','err')"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" onerror="log('firebase-firestore falhou','err')"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" onerror="log('firebase-auth falhou','err')"></script>
+
+    <script>
+        // ============================================
+        // STANDALONE — não depende de Auth/DataStore.
+        // Lê localStorage direto + Firestore opcional.
+        // ============================================
+        var firebaseConfig = {
+            apiKey: "AIzaSyAbQ1fe0pK4prhfzYJypod2ie4DyNsq6BA",
+            authDomain: "milkypot-ad945.firebaseapp.com",
+            projectId: "milkypot-ad945",
+            storageBucket: "milkypot-ad945.firebasestorage.app",
+            messagingSenderId: "859364650620",
+            appId: "1:859364650620:web:aecf11f4cf99b7792463f9"
+        };
+
+        var db = null;
+        try {
+            if (typeof firebase !== 'undefined' && firebase.initializeApp) {
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                log('Firebase OK', 'ok');
+            } else {
+                log('Firebase não disponível, vai usar só localStorage', 'warn');
+            }
+        } catch (e) {
+            log('Erro inicializando Firebase: ' + e.message, 'err');
+        }
+
+        // === Detecta franchiseId ===
+        function detectFid() {
+            // 1. Tenta sessionStorage (Auth.session)
+            try {
+                var raw = localStorage.getItem('mp_session') || localStorage.getItem('milkypot_session') || sessionStorage.getItem('mp_session');
+                if (raw) {
+                    var s = JSON.parse(raw);
+                    if (s && s.franchiseId) { log('Fid via session: ' + s.franchiseId); return s.franchiseId; }
+                }
+            } catch(_) {}
+            // 2. Procura nas chaves do localStorage (orders_<fid>)
+            try {
+                for (var i = 0; i < localStorage.length; i++) {
+                    var k = localStorage.key(i);
+                    if (k && k.indexOf('orders_') === 0 && k !== 'orders_global') {
+                        var fid = k.replace('orders_', '');
+                        log('Fid via localStorage key: ' + fid);
+                        return fid;
+                    }
+                }
+            } catch(_) {}
+            return null;
+        }
+
+        var fid = detectFid();
+        if (fid) {
+            log('Fid detectado: ' + fid);
+            startAnalyze(fid);
+        } else {
+            log('Fid não detectado — pedindo manualmente', 'warn');
+            showPhase('fid');
+            document.getElementById('btnSetFid').onclick = function() {
+                fid = document.getElementById('manualFid').value.trim();
+                if (!fid) return alert('Digite o ID da franquia');
+                log('Fid manual: ' + fid);
+                startAnalyze(fid);
+            };
         }
 
         function todayKey() {
-            const d = new Date();
+            var d = new Date();
             return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
         }
 
-        async function loadAndAnalyze() {
+        function readLocalOrders(fid) {
             try {
-                if (!Auth.requireAuth('franchisee')) return;
-                const session = Auth.getSession();
-                const fid = session.franchiseId;
+                var raw = localStorage.getItem('orders_' + fid);
+                if (!raw) return [];
+                var v = JSON.parse(raw);
+                return Array.isArray(v) ? v : [];
+            } catch(e) { log('Erro lendo local: ' + e.message, 'err'); return []; }
+        }
 
-                // Lê do Firestore direto (não confia no cache local)
-                const db = firebase.firestore();
-                let cloudOrders = [];
-                try {
-                    const doc = await db.collection('datastore').doc('orders_' + fid).get();
-                    if (doc.exists) {
-                        const raw = doc.data() && doc.data().value;
-                        if (raw) cloudOrders = JSON.parse(raw) || [];
-                    }
-                } catch (e) { log('Erro lendo nuvem: ' + e.message, 'err'); }
+        async function readCloudOrders(fid) {
+            if (!db) return null;
+            try {
+                var doc = await db.collection('datastore').doc('orders_' + fid).get();
+                if (!doc.exists) { log('Doc não existe na nuvem'); return []; }
+                var data = doc.data();
+                if (!data || !data.value) return [];
+                var v = JSON.parse(data.value);
+                return Array.isArray(v) ? v : [];
+            } catch (e) {
+                log('Erro lendo nuvem: ' + (e.code || e.message), 'err');
+                return null;
+            }
+        }
 
-                const local = DataStore.getCollection('orders', fid) || [];
-                // Merge por id, prefere mais recente
-                const map = new Map();
-                cloudOrders.forEach(o => map.set(o.id, o));
-                local.forEach(o => {
-                    const c = map.get(o.id);
-                    if (!c || (o.updatedAt || o.createdAt) > (c.updatedAt || c.createdAt)) {
-                        map.set(o.id, o);
-                    }
-                });
-                const all = Array.from(map.values());
+        async function startAnalyze(fid) {
+            showPhase('analyze');
+            var statsEl = document.getElementById('stats');
+            var listEl = document.getElementById('orderList');
+            var btn = document.getElementById('btnClean');
 
-                const today = todayKey();
-                const openStatuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega'];
-                const stuck = all.filter(o => !o.deleted && openStatuses.includes(o.status) && (!o.createdAt || o.createdAt.slice(0,10) < today));
+            log('Lendo localStorage…');
+            var local = readLocalOrders(fid);
+            log('Local: ' + local.length + ' pedidos', 'ok');
 
-                statsEl.innerHTML = `
-                    Total de pedidos: <strong>${all.length}</strong><br>
-                    <small>Pedidos travados de dia(s) anterior(es): <strong>${stuck.length}</strong></small>
-                `;
+            log('Lendo nuvem…');
+            var cloud = await readCloudOrders(fid);
+            if (cloud === null) {
+                log('Nuvem indisponível, usando só local', 'warn');
+                cloud = [];
+            } else {
+                log('Nuvem: ' + cloud.length + ' pedidos', 'ok');
+            }
 
-                if (stuck.length === 0) {
-                    listEl.innerHTML = '<li style="color:#2E7D32"><strong>✅ Nada pra limpar — kanban tá limpo</strong></li>';
-                    btn.textContent = '✅ Já está limpo';
-                    btn.disabled = true;
-                    return;
+            // Merge por id, prefere mais recente
+            var map = new Map();
+            cloud.forEach(function(o){ if(o&&o.id) map.set(o.id, o); });
+            local.forEach(function(o){
+                if (!o || !o.id) return;
+                var c = map.get(o.id);
+                if (!c || (o.updatedAt || o.createdAt || '') > (c.updatedAt || c.createdAt || '')) {
+                    map.set(o.id, o);
                 }
+            });
+            var all = Array.from(map.values());
+            log('Total mergeado: ' + all.length, 'ok');
 
-                listEl.innerHTML = stuck.slice(0, 10).map(o => {
-                    const seq = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
-                    const date = o.createdAt ? o.createdAt.slice(0,10) : 'sem data';
-                    const total = (o.total || 0).toFixed(2).replace('.', ',');
-                    return `<li>${seq} · ${o.status} · R$ ${total} · ${date}</li>`;
-                }).join('') + (stuck.length > 10 ? `<li>… e mais ${stuck.length - 10}</li>` : '');
+            var today = todayKey();
+            var openStatuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega'];
+            var stuck = all.filter(function(o){
+                if (!o || o.deleted) return false;
+                if (openStatuses.indexOf(o.status) === -1) return false;
+                if (!o.createdAt) return true; // sem data = stuck
+                return o.createdAt.slice(0,10) < today;
+            });
 
-                btn.disabled = false;
-                btn.textContent = `🗑️ Limpar ${stuck.length} pedido(s) antigo(s)`;
+            statsEl.innerHTML =
+                'Franquia: <strong>' + fid + '</strong><br>' +
+                'Total de pedidos: <strong>' + all.length + '</strong><br>' +
+                '<span style="color:#B71C1C">Travados de dia(s) anterior(es): <strong>' + stuck.length + '</strong></span>';
 
-                btn.onclick = async () => {
-                    btn.disabled = true;
-                    btn.textContent = '⏳ Limpando…';
-                    log(`Marcando ${stuck.length} pedidos como deletados…`);
+            if (stuck.length === 0) {
+                listEl.innerHTML = '<li style="color:#2E7D32"><strong>✅ Nada pra limpar — kanban tá limpo</strong></li>';
+                btn.textContent = '✅ Já está limpo';
+                btn.disabled = true;
+                return;
+            }
 
-                    const ts = new Date().toISOString();
-                    const updated = all.map(o => {
-                        if (stuck.find(s => s.id === o.id)) {
-                            return Object.assign({}, o, {
-                                deleted: true,
-                                deletedAt: ts,
-                                deletedReason: 'cleanup_old_open_orders',
-                                status: 'excluido',
-                                updatedAt: ts
-                            });
-                        }
-                        return o;
-                    });
+            listEl.innerHTML = stuck.slice(0, 15).map(function(o){
+                var seq = o.dailySeq ? '#' + o.dailySeq : '#' + (o.id||'').slice(-6);
+                var date = o.createdAt ? o.createdAt.slice(0,10) : '?';
+                var total = (Number(o.total) || 0).toFixed(2).replace('.', ',');
+                return '<li>' + seq + ' · <strong>' + (o.status||'?') + '</strong> · R$ ' + total + ' · ' + date + '</li>';
+            }).join('') + (stuck.length > 15 ? '<li>… e mais ' + (stuck.length - 15) + '</li>' : '');
 
-                    // Salva localmente
-                    try {
-                        DataStore.set('orders_' + fid, updated);
-                        log('Local: salvo', 'ok');
-                    } catch (e) { log('Erro local: ' + e.message, 'err'); }
+            btn.disabled = false;
+            btn.textContent = '🗑️ Limpar ' + stuck.length + ' pedido(s) travado(s)';
 
-                    // Salva na nuvem no formato que o DataStore usa
+            btn.onclick = async function() {
+                btn.disabled = true;
+                btn.textContent = '⏳ Limpando…';
+                log('Marcando ' + stuck.length + ' como deleted=true…');
+
+                var ts = new Date().toISOString();
+                var stuckIds = new Set(stuck.map(function(s){ return s.id; }));
+                var updated = all.map(function(o){
+                    if (stuckIds.has(o.id)) {
+                        return Object.assign({}, o, {
+                            deleted: true,
+                            deletedAt: ts,
+                            deletedReason: 'cleanup_old_open_orders',
+                            status: 'excluido',
+                            updatedAt: ts
+                        });
+                    }
+                    return o;
+                });
+
+                // Local
+                try {
+                    localStorage.setItem('orders_' + fid, JSON.stringify(updated));
+                    log('localStorage: salvo', 'ok');
+                } catch (e) { log('Erro local: ' + e.message, 'err'); }
+
+                // Nuvem
+                if (db) {
                     try {
                         await db.collection('datastore').doc('orders_' + fid).set({
                             value: JSON.stringify(updated),
                             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                         });
-                        log('Nuvem: salvo', 'ok');
-                    } catch (e) { log('Erro nuvem: ' + e.message, 'err'); }
+                        log('Firestore: salvo', 'ok');
+                    } catch (e) {
+                        log('Erro nuvem: ' + (e.code || e.message), 'err');
+                    }
+                } else {
+                    log('Sem nuvem — só local', 'warn');
+                }
 
-                    log(`✅ ${stuck.length} pedido(s) marcado(s) como excluído(s).`, 'ok');
-                    btn.textContent = '✅ Limpeza concluída';
-                    setTimeout(() => { window.location.href = 'pedidos.html'; }, 2000);
-                };
-            } catch (e) {
-                statsEl.innerHTML = '❌ Erro: ' + e.message;
-                log(e.stack, 'err');
-            }
+                log('✅ Pronto. ' + stuck.length + ' pedido(s) excluído(s).', 'ok');
+                btn.textContent = '✅ Limpeza concluída';
+                setTimeout(function() { window.location.href = 'pedidos.html'; }, 2500);
+            };
         }
-
-        // Esperar Firebase + Auth carregarem
-        function bootstrap() {
-            if (typeof Auth === 'undefined' || typeof DataStore === 'undefined' || typeof firebase === 'undefined') {
-                setTimeout(bootstrap, 200);
-                return;
-            }
-            loadAndAnalyze();
-        }
-        bootstrap();
     </script>
 </body>
 </html>
