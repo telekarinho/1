@@ -884,22 +884,22 @@
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v77"></script>
-<script src="../js/core/motivacional.js?v=mp-v77"></script>
-<script src="../js/core/caixa.js?v=mp-v77"></script>
-<script src="../js/core/financas.js?v=mp-v77"></script>
-<script src="../js/core/onboarding.js?v=mp-v77"></script>
-<script src="../js/core/units.js?v=mp-v77"></script>
-<script src="../js/core/error-tracking.js?v=mp-v77"></script>
-<script src="../js/core/recipes.js?v=mp-v77"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v77"></script>
-<script src="../js/core/offline-queue.js?v=mp-v77"></script>
-<script src="../js/core/pix.js?v=mp-v77"></script>
-<script src="../js/core/nfce.js?v=mp-v77"></script>
-<script src="../js/core/printer.js?v=mp-v77"></script>
+<script src="../js/core/adminconfig.js?v=mp-v78"></script>
+<script src="../js/core/motivacional.js?v=mp-v78"></script>
+<script src="../js/core/caixa.js?v=mp-v78"></script>
+<script src="../js/core/financas.js?v=mp-v78"></script>
+<script src="../js/core/onboarding.js?v=mp-v78"></script>
+<script src="../js/core/units.js?v=mp-v78"></script>
+<script src="../js/core/error-tracking.js?v=mp-v78"></script>
+<script src="../js/core/recipes.js?v=mp-v78"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v78"></script>
+<script src="../js/core/offline-queue.js?v=mp-v78"></script>
+<script src="../js/core/pix.js?v=mp-v78"></script>
+<script src="../js/core/nfce.js?v=mp-v78"></script>
+<script src="../js/core/printer.js?v=mp-v78"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v77"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v77"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v78"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v78"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -2748,7 +2748,8 @@
             return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
         })();
         var _allOrders = DataStore.getCollection('orders', fid) || [];
-        var _todayOrders = _allOrders.filter(function(o){ return o.createdAt && o.createdAt.slice(0,10) === _todayKeyLocal; });
+        // Ignora tombstones (deleted) na contagem da numeração diária
+        var _todayOrders = _allOrders.filter(function(o){ return !o.deleted && o.createdAt && o.createdAt.slice(0,10) === _todayKeyLocal; });
         var _seqNum = _todayOrders.length + 1;
 
         var order={
@@ -2783,6 +2784,28 @@
             voucherCode: voucherDisplay,       // Desafio 10 Segundos code
             challengeAttempts: attemptsPerPurchase
         };
+
+        // === AUTO-PRONTO ===
+        // Pedido só com itens grab-and-go (buffet/picolé/água/sorvete-kg/bebida)
+        // pula direto pra "pronto" — não passa por Confirmar/Preparar.
+        // Se tiver pelo menos UM milkshake/sundae/açaí, segue fluxo normal (status='confirmado').
+        try {
+            var _hasKitchenItem = (order.items || []).some(function(it){
+                if (typeof Printer === 'undefined' || !Printer.isKitchenItem) return true; // fail-safe: assume cozinha
+                // isKitchenItem espera {id, name, type}; order item usa productId
+                return Printer.isKitchenItem({
+                    id: it.productId || it.id || null,
+                    name: it.name || '',
+                    type: it.type || 'unitario'
+                });
+            });
+            if (!_hasKitchenItem) {
+                order.status = 'pronto';
+                order.autoReady = true;
+                order.autoReadyAt = new Date().toISOString();
+            }
+        } catch(_e) { console.warn('[finishOrder] auto-pronto check falhou:', _e); }
+
         // OfflineQueue: grava SEMPRE (online ou offline) — PDV sobrevive sem internet
         if (typeof OfflineQueue !== 'undefined' && OfflineQueue.enqueueOrder) {
             try {
