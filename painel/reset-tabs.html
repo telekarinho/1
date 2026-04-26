@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MilkyPot - Reset Comandas</title>
+    <title>MilkyPot - Reset Sync</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -21,7 +21,7 @@
             background: #fff;
             border-radius: 18px;
             box-shadow: 0 25px 60px rgba(0,0,0,0.3);
-            max-width: 560px;
+            max-width: 600px;
             width: 100%;
             padding: 32px;
         }
@@ -32,34 +32,38 @@
             font-size: 1.8rem;
         }
         p { color: #444; line-height: 1.5; }
+        .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
         button {
             width: 100%;
-            padding: 18px 24px;
-            background: linear-gradient(135deg, #B71C1C, #E53935);
+            padding: 16px 20px;
             color: #fff;
             border: none;
             border-radius: 12px;
-            font-size: 1.2rem;
+            font-size: 1.05rem;
             font-weight: 800;
             cursor: pointer;
-            margin-top: 16px;
             font-family: inherit;
         }
+        .btn-nuclear { background: linear-gradient(135deg, #B71C1C, #E53935); }
+        .btn-tabs { background: linear-gradient(135deg, #6A1B9A, #AB47BC); }
+        .btn-orders { background: linear-gradient(135deg, #1565C0, #2196F3); }
         button:hover { transform: translateY(-2px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         .log {
             background: #1A1A1A;
             color: #4FC3F7;
             font-family: monospace;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             padding: 12px;
             border-radius: 8px;
             margin-top: 16px;
-            max-height: 250px;
+            max-height: 280px;
             overflow-y: auto;
             white-space: pre-wrap;
         }
         .ok { color: #69F0AE; }
         .err { color: #FF8A80; }
+        .warn { color: #FFD54F; }
         a { color: #B71C1C; font-weight: 700; text-decoration: none; display: block; margin-top: 12px; text-align: center; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -67,11 +71,14 @@
 </head>
 <body>
     <div class="card">
-        <h1>🔥 Reset Comandas</h1>
-        <p>Apaga TODAS as comandas abertas do PC atual + nuvem. Use quando comanda fechada continua voltando.</p>
-        <p><strong style="color:#B71C1C">⚠️ Apaga só comandas abertas. Pedidos NÃO são afetados.</strong></p>
+        <h1>🔥 Reset Forçado</h1>
+        <p>Quando local + nuvem ficam fora de sincronia. <strong>Sobrescreve o LOCAL com o que está na NUVEM.</strong></p>
 
-        <button id="btnReset">🔥 RESETAR COMANDAS AGORA</button>
+        <div class="btn-group">
+            <button class="btn-tabs" id="btnTabs">📋 Resetar COMANDAS (local + nuvem = [])</button>
+            <button class="btn-orders" id="btnOrders">📦 Forçar PEDIDOS local = nuvem</button>
+            <button class="btn-nuclear" id="btnAll">🔥 RESETAR TUDO (Comandas + Pedidos)</button>
+        </div>
 
         <a href="pdv.html">← Voltar pro PDV</a>
         <a href="pedidos.html">← Voltar pra Pedidos</a>
@@ -98,67 +105,86 @@
             messagingSenderId: "859364650620",
             appId: "1:859364650620:web:aecf11f4cf99b7792463f9"
         };
-        try {
-            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        } catch(e) {}
+        try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } catch(_) {}
 
         function detectFid() {
             try {
                 var raw = localStorage.getItem('mp_session') || sessionStorage.getItem('mp_session');
-                if (raw) {
-                    var s = JSON.parse(raw);
-                    if (s && s.franchiseId) return s.franchiseId;
-                }
+                if (raw) { var s = JSON.parse(raw); if (s && s.franchiseId) return s.franchiseId; }
             } catch(_) {}
             for (var i = 0; i < localStorage.length; i++) {
                 var k = localStorage.key(i);
-                if (k && (k.indexOf('mp_pdv_tabs_') === 0 || k.indexOf('orders_') === 0) && !k.endsWith('global')) {
-                    return k.replace('mp_pdv_tabs_', '').replace('orders_', '');
-                }
+                if (k && k.indexOf('mp_pdv_tabs_') === 0 && !k.endsWith('global')) return k.replace('mp_pdv_tabs_','');
+                if (k && k.indexOf('mp_orders_') === 0 && !k.endsWith('global')) return k.replace('mp_orders_','');
             }
             return 'muffato-quintino';
         }
 
-        document.getElementById('btnReset').onclick = async function() {
-            var fid = detectFid();
-            log('FID: ' + fid);
-            var btn = this;
-            btn.disabled = true;
-            btn.textContent = '⏳ Resetando...';
-
-            // 1. Limpa localStorage de pdv_tabs (todas as variações de chave)
-            var keys = ['mp_pdv_tabs_' + fid, 'pdv_tabs_' + fid];
-            for (var i = 0; i < localStorage.length; i++) {
+        async function resetTabs(fid) {
+            log('=== RESET COMANDAS ===');
+            for (var i = localStorage.length - 1; i >= 0; i--) {
                 var k = localStorage.key(i);
                 if (k && (k.indexOf('pdv_tabs') !== -1 || k.indexOf('open_tabs') !== -1)) {
-                    keys.push(k);
+                    localStorage.removeItem(k);
+                    log('local: removido ' + k, 'ok');
                 }
             }
-            keys = [...new Set(keys)];
-            keys.forEach(function(k) {
-                try {
-                    localStorage.removeItem(k);
-                    log('Local: removido ' + k, 'ok');
-                } catch(e) { log('Erro removendo ' + k + ': ' + e.message, 'err'); }
-            });
-
-            // 2. Escreve [] na nuvem
             try {
                 var db = firebase.firestore();
                 await db.collection('datastore').doc('pdv_tabs_' + fid).set({
                     value: '[]',
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                log('Nuvem: pdv_tabs_' + fid + ' = []', 'ok');
-            } catch(e) {
-                log('Nuvem erro: ' + (e.code || e.message), 'err');
-            }
+                log('nuvem: pdv_tabs_' + fid + ' = []', 'ok');
+            } catch(e) { log('nuvem erro: ' + (e.code || e.message), 'err'); }
+        }
 
-            log('\n✅ Reset completo. Recarregando em 2s...', 'ok');
-            btn.textContent = '✅ Resetado';
-            setTimeout(function() {
-                window.location.href = 'pdv.html';
-            }, 2000);
+        async function syncOrdersFromCloud(fid) {
+            log('=== SYNC PEDIDOS (cloud → local) ===');
+            try {
+                var db = firebase.firestore();
+                var snap = await db.collection('datastore').doc('orders_' + fid).get();
+                if (!snap.exists) { log('nuvem: doc não existe', 'warn'); return; }
+                var raw = (snap.data() || {}).value;
+                if (!raw) { log('nuvem: vazio', 'warn'); return; }
+                // Sobrescreve local com a versão da nuvem (sem merge)
+                var keys = ['mp_orders_' + fid, 'orders_' + fid];
+                for (var i = 0; i < localStorage.length; i++) {
+                    var k = localStorage.key(i);
+                    if (k && k.indexOf('orders_') !== -1 && !k.endsWith('global')) keys.push(k);
+                }
+                keys = [...new Set(keys)];
+                keys.forEach(function(k) {
+                    try { localStorage.setItem(k, raw); log('local: sobrescrito ' + k, 'ok'); } catch(e) {}
+                });
+                var arr = JSON.parse(raw);
+                log('Total: ' + arr.length + ' pedidos sincronizados da nuvem', 'ok');
+            } catch(e) { log('erro: ' + (e.code || e.message), 'err'); }
+        }
+
+        document.getElementById('btnTabs').onclick = async function() {
+            this.disabled = true; this.textContent = '⏳ Resetando...';
+            await resetTabs(detectFid());
+            log('\n✅ Comandas resetadas. Recarregando em 2s...', 'ok');
+            setTimeout(function() { window.location.href = 'pdv.html'; }, 2000);
+        };
+
+        document.getElementById('btnOrders').onclick = async function() {
+            this.disabled = true; this.textContent = '⏳ Sincronizando...';
+            await syncOrdersFromCloud(detectFid());
+            log('\n✅ Pedidos sincronizados. Recarregando em 2s...', 'ok');
+            setTimeout(function() { window.location.href = 'pedidos.html'; }, 2000);
+        };
+
+        document.getElementById('btnAll').onclick = async function() {
+            this.disabled = true; this.textContent = '⏳ Resetando tudo...';
+            var fid = detectFid();
+            log('FID detectado: ' + fid);
+            await resetTabs(fid);
+            log('');
+            await syncOrdersFromCloud(fid);
+            log('\n✅ Reset completo. Recarregando em 3s...', 'ok');
+            setTimeout(function() { window.location.href = 'pedidos.html'; }, 3000);
         };
     </script>
 </body>
