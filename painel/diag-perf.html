@@ -215,18 +215,25 @@ table th { background: #f9fafb; color: #555; font-weight: 700; }
     });
 
     window.cleanupLS = function () {
-        if (!confirm('🧹 Vai apagar entries antigas que NÃO sejam:\n\n• vendas (orders, scratches, caixa)\n• catalog/produtos\n• sessão (mp_session)\n\nIsso libera localStorage. Continuar?')) return;
-        var KEEP_PREFIXES = ['mp_orders', 'mp_scratches', 'mp_caixa', 'mp_pdv_tabs', 'mp_finances', 'mp_inventory', 'mp_session', 'mp_franchises', 'mp_catalog', 'mp_users', 'mp_staff', 'mp_recipes', 'mp_despesas'];
-        var removed = 0;
+        if (!confirm('🧹 Vai apagar entries antigas que NÃO sejam:\n\n• vendas (orders, scratches, caixa)\n• catalog/produtos\n• sessão (mp_session)\n\nInclui as 2210 chaves firestore_* (mutations/targets) que estão poluindo o storage.\n\nContinuar?')) return;
+        var KEEP_PREFIXES = ['mp_orders', 'mp_scratches', 'mp_caixa', 'mp_pdv_tabs', 'mp_finances', 'mp_inventory', 'mp_session', 'mp_franchises', 'mp_catalog', 'mp_users', 'mp_staff', 'mp_recipes', 'mp_despesas', 'mp_payments', 'mp_notifications', 'mp_tv'];
+        var removed = 0, firestoreCount = 0;
         var keys = Object.keys(localStorage).slice();
         keys.forEach(function (k) {
+            // Sempre apaga firestore_* (mutations/targets/clients/zombie spam)
+            if (k.indexOf('firestore_') === 0) {
+                localStorage.removeItem(k);
+                firestoreCount++;
+                removed++;
+                return;
+            }
             var keep = KEEP_PREFIXES.some(function (p) { return k === p || k.indexOf(p + '_') === 0 || k.indexOf(p) === 0; });
             if (!keep) {
                 localStorage.removeItem(k);
                 removed++;
             }
         });
-        alert('✅ Removidas ' + removed + ' entries. Recarregando...');
+        alert('✅ Removidas ' + removed + ' entries (' + firestoreCount + ' do Firestore antigo). Recarregando...');
         setTimeout(function () { location.reload(); }, 500);
     };
 
@@ -344,6 +351,6 @@ table th { background: #f9fafb; color: #555; font-weight: 700; }
     };
 })();
 </script>
-<script src="../js/core/register-sw.js?v=mp-v75"></script>
+<script src="../js/core/register-sw.js?v=mp-v76"></script>
 </body>
 </html>
