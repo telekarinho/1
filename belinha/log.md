@@ -1,5 +1,38 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #39 — 2026-04-26
+
+**Área:** Auto-aprimoramento (#8, ciclos #35–39) + UX/Performance — Google Fonts non-blocking sweep
+
+**Contexto:** D+1 pós-inauguração. Ciclo obrigatório de auto-aprimoramento (a cada 5 ciclos). Período analisado cobre ciclos #35–38: link SEO, conteúdo semana 5, LCP index.html e fontes non-blocking em páginas standalone. Melhoria concreta associada: completar sweep de fontes bloqueantes nas páginas de alto tráfego restantes (`cardapio.html` e `raspinha.html`).
+
+**O que analisou:**
+- Log ciclos #35–38 + `estrategia.md` (estado atual das páginas)
+- Varredura: 5 páginas já corrigidas, 4 ainda com `rel="stylesheet"` bloqueante
+- Prioridade: `cardapio.html` (maior tráfego de conversão) e `raspinha.html` — restantes têm tráfego orgânico baixo
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `cardapio.html` | Google Fonts convertido para non-blocking: `preload as="style"` + `onload="this.rel='stylesheet'"` + `<noscript>` fallback |
+| `raspinha.html` | Mesma fix de Google Fonts (padrão idêntico ao já aplicado nas demais páginas) |
+| `belinha/estrategia.md` | Aprendizados ciclos #35–39 · Tabela de estado por página · Padrão consolidado v3 · Roadmap ciclos 40–44 |
+
+**Commit:** `9de2e49`
+
+**Aprendizado principal do período:**
+- Problemas sistêmicos (mesma tag de font em N páginas) devem ser resolvidos em batch completo no mesmo ciclo — distribuir por ciclos gera trabalho acumulado desnecessário.
+
+**Páginas com fontes ainda bloqueantes (próximo ciclo):**
+- `login.html`, `desafio.html`, `termos.html`, `privacidade.html` — baixo impacto LCP
+
+**Próximo passo sugerido:**
+- Ciclo #40: Fix fontes bloqueantes nas 4 páginas restantes (batch completo) — `login.html`, `desafio.html`, `termos.html`, `privacidade.html`
+- Ciclo #41: Template "mensagem de indicação" cliente → amigo (referral program copy WhatsApp)
+
+---
+
 ## Ciclo #38 — 2026-04-26
 
 **Área:** UX/Frontend — Google Fonts non-blocking em páginas standalone
