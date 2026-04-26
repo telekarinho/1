@@ -289,15 +289,60 @@ const DataStore = {
     // ============================================
     // Firestore Sync (background)
     // ============================================
-    _writeToCloud(key, data) {
+    // Keys que precisam de merge (arrays compartilhadas entre PCs).
+    // Sem merge: cada PC sobrescreve o array INTEIRO → race condition fatal,
+    // PC com menos itens locais apaga itens do outro PC do cloud.
+    _isMergeable(key) {
+        return /^(orders_|caixa_|pdv_tabs_|finances_)/.test(key || '');
+    },
+    // Merge inteligente: une dois arrays por id, prefere o mais recente
+    // (updatedAt > createdAt). Idempotente — pode rodar várias vezes sem efeito ruim.
+    _mergeArrays(localArr, cloudArr) {
+        if (!Array.isArray(localArr)) localArr = [];
+        if (!Array.isArray(cloudArr)) cloudArr = [];
+        var byId = {};
+        function pickNewest(a, b) {
+            var ta = (a && (a.updatedAt || a.createdAt)) || '';
+            var tb = (b && (b.updatedAt || b.createdAt)) || '';
+            return ta >= tb ? a : b;
+        }
+        cloudArr.forEach(function (it) { if (it && it.id) byId[it.id] = it; });
+        localArr.forEach(function (it) {
+            if (!it || !it.id) return;
+            byId[it.id] = byId[it.id] ? pickNewest(byId[it.id], it) : it;
+        });
+        return Object.keys(byId).map(function (k) { return byId[k]; });
+    },
+    async _writeToCloud(key, data) {
         if (!this._ready || !this._db) {
             this._pendingWrites.push({ action: 'set', key, data });
             return;
         }
         try {
+            // Para keys mergeable (orders_, caixa_, finances_, pdv_tabs_) — lê cloud
+            // primeiro, mescla com local pelo id, e escreve a união. Evita perda de
+            // dados quando 2+ PCs escrevem em paralelo. Não-mergeables: write direto.
+            var finalData = data;
+            if (this._isMergeable(key) && Array.isArray(data)) {
+                try {
+                    var snap = await this._db.collection('datastore').doc(key).get();
+                    if (snap.exists) {
+                        var cloudArr = JSON.parse(snap.data().value || '[]');
+                        finalData = this._mergeArrays(data, cloudArr);
+                        // Atualiza localStorage com a versão mesclada (não dispara
+                        // _writeToCloud de novo pra evitar loop — set direto)
+                        try { localStorage.setItem(this.PREFIX + key, JSON.stringify(finalData)); } catch (e) {}
+                        if (finalData.length !== data.length) {
+                            console.log('🔀 Merge ' + key + ': local=' + data.length + ' + cloud=' + cloudArr.length + ' = ' + finalData.length);
+                        }
+                    }
+                } catch (mergeErr) {
+                    console.warn('Merge falhou (escrevendo local):', key, mergeErr.message);
+                }
+            }
             // Store as a document in 'datastore' collection
             this._db.collection('datastore').doc(key).set({
-                value: JSON.stringify(data),
+                value: JSON.stringify(finalData),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }).catch(async err => {
                 console.warn('Firestore write error:', key, err.code || err.message);
@@ -334,9 +379,13 @@ const DataStore = {
     },
 
     _isMergeableListDoc(docId) {
+        // Arrays compartilhadas entre PCs — sem merge dá race condition fatal.
+        // PCs com listas locais diferentes sobrescrevem o array do outro.
         return !!docId && (
             docId.startsWith('orders_') ||
-            docId.startsWith('pdv_tabs_')
+            docId.startsWith('pdv_tabs_') ||
+            docId.startsWith('caixa_') ||
+            docId.startsWith('finances_')
         );
     },
 
