@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MilkyPot — Sincronizar PCs</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Nunito', sans-serif; background: linear-gradient(135deg, #6C63FF 0%, #5A52E0 100%);
+    min-height: 100vh; padding: 20px; display: flex; align-items: center; justify-content: center;
+    color: #333;
+}
+.box {
+    background: #fff; border-radius: 24px; padding: 30px 28px; max-width: 560px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+h1 { font-family: 'Baloo 2', cursive; font-size: 32px; color: #5A52E0; margin-bottom: 6px; text-align: center; }
+.subtitle { color: #666; font-size: 14px; text-align: center; margin-bottom: 24px; line-height: 1.4; }
+
+.status-bar {
+    background: #F3F4F6; border-radius: 14px; padding: 16px; margin-bottom: 18px;
+    text-align: center; font-size: 14px; font-weight: 700; color: #555;
+    border-left: 6px solid #9CA3AF; transition: all .2s;
+}
+.status-bar.ok { border-left-color: #10B981; background: #D1FAE5; color: #065F46; }
+.status-bar.warn { border-left-color: #F59E0B; background: #FEF3C7; color: #92400E; }
+.status-bar.err { border-left-color: #DC2626; background: #FEE2E2; color: #991B1B; }
+.status-bar.run { border-left-color: #3B82F6; background: #DBEAFE; color: #1E40AF; }
+
+.numbers {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px;
+}
+.num {
+    background: #F9FAFB; border: 2px solid #E5E7EB; border-radius: 12px; padding: 14px;
+    text-align: center;
+}
+.num .label { font-size: 11px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.num .val { font-size: 32px; font-weight: 900; color: #5A52E0; line-height: 1; }
+.num .sub { font-size: 11px; color: #888; margin-top: 4px; }
+
+.big-btn {
+    width: 100%; padding: 22px; border: none; border-radius: 16px;
+    font-size: 18px; font-weight: 900; cursor: pointer; font-family: inherit;
+    background: linear-gradient(135deg, #10B981, #059669); color: #fff;
+    box-shadow: 0 8px 24px rgba(16,185,129,.4);
+    transition: transform .12s, box-shadow .12s;
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 12px;
+}
+.big-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(16,185,129,.5); }
+.big-btn:active { transform: scale(.97); }
+.big-btn:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; transform: none; }
+
+.small-btn {
+    width: 100%; padding: 14px; border: 2px solid #E5E7EB; border-radius: 12px;
+    font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit;
+    background: #fff; color: #555; margin-bottom: 8px;
+}
+.small-btn:hover { background: #F3F4F6; }
+
+.steps {
+    background: #FFFBEB; border-radius: 12px; padding: 14px 16px; margin: 16px 0;
+    border-left: 4px solid #F59E0B; font-size: 13px; line-height: 1.6;
+}
+.steps strong { color: #92400E; }
+.steps ol { padding-left: 18px; margin-top: 6px; }
+
+.log-box {
+    background: #1F2937; color: #D1FAE5; border-radius: 10px; padding: 12px;
+    font-size: 11px; max-height: 180px; overflow-y: auto; white-space: pre-wrap;
+    line-height: 1.5; font-family: 'Courier New', monospace;
+    margin-top: 14px; display: none;
+}
+.log-box.show { display: block; }
+.toggle-log { font-size: 11px; color: #888; text-decoration: underline; cursor: pointer; text-align: center; display: block; margin-top: 8px; }
+
+.success-card {
+    background: #D1FAE5; border: 3px solid #10B981; border-radius: 14px; padding: 18px;
+    text-align: center; display: none;
+}
+.success-card.show { display: block; }
+.success-card .check { font-size: 48px; margin-bottom: 8px; }
+.success-card .title { font-size: 18px; font-weight: 900; color: #065F46; margin-bottom: 4px; }
+.success-card .sub { font-size: 13px; color: #047857; }
+</style>
+</head>
+<body>
+<div class="box">
+    <h1>🔄 Sincronizar</h1>
+    <div class="subtitle">Unifica pedidos de todos os PCs em uma única lista. Funciona mesmo se um PC tava travado.</div>
+
+    <div class="status-bar" id="status">⏳ Carregando…</div>
+
+    <div class="numbers">
+        <div class="num">
+            <div class="label">Neste PC</div>
+            <div class="val" id="localCount">—</div>
+            <div class="sub" id="localSub">pedidos no local</div>
+        </div>
+        <div class="num">
+            <div class="label">Na Nuvem</div>
+            <div class="val" id="cloudCount">—</div>
+            <div class="sub" id="cloudSub">pedidos sincronizados</div>
+        </div>
+    </div>
+
+    <button class="big-btn" id="bigBtn" onclick="syncNow()">🔄 SINCRONIZAR AGORA</button>
+
+    <div class="success-card" id="successCard">
+        <div class="check">✅</div>
+        <div class="title" id="successTitle">Sincronizado!</div>
+        <div class="sub" id="successSub"></div>
+    </div>
+
+    <div class="steps" id="stepsBox" style="display:none">
+        <strong>📋 Como usar nos 2 PCs:</strong>
+        <ol>
+            <li>Clica <strong>SINCRONIZAR AGORA</strong> aqui no PC atual</li>
+            <li>Espera ver <strong>"Sincronizado!"</strong></li>
+            <li>Vai pro <strong>OUTRO PC</strong> e abre esta mesma página</li>
+            <li>Clica <strong>SINCRONIZAR AGORA</strong> lá também</li>
+            <li>Ambos PCs vão ter exatamente os mesmos pedidos</li>
+        </ol>
+    </div>
+
+    <button class="small-btn" onclick="clearAndReload()">🧹 PC travado? Limpar cache e tentar de novo</button>
+    <a href="/painel/pedidos.html" class="small-btn" style="display:block;text-decoration:none;text-align:center;color:#5A52E0;border-color:#5A52E0">📋 Ir pra Pedidos</a>
+
+    <span class="toggle-log" onclick="document.getElementById('logBox').classList.toggle('show')">Ver log técnico</span>
+    <pre class="log-box" id="logBox"></pre>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/auth.js"></script>
+<script>
+(function () {
+    'use strict';
+    var logEl = document.getElementById('logBox');
+    var logBuf = [];
+    function log(m) {
+        var t = new Date().toLocaleTimeString('pt-BR');
+        logBuf.push('[' + t + '] ' + m);
+        if (logBuf.length > 80) logBuf.shift();
+        logEl.textContent = logBuf.join('\n');
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+    function setStatus(text, kind) {
+        var s = document.getElementById('status');
+        s.textContent = text;
+        s.className = 'status-bar' + (kind ? ' ' + kind : '');
+    }
+    function showSteps() { document.getElementById('stepsBox').style.display = 'block'; }
+    function showSuccess(title, sub) {
+        var c = document.getElementById('successCard');
+        document.getElementById('successTitle').textContent = title;
+        document.getElementById('successSub').textContent = sub || '';
+        c.classList.add('show');
+    }
+    function hideSuccess() { document.getElementById('successCard').classList.remove('show'); }
+
+    function getFid() {
+        try { return (Auth.getSession() || {}).franchiseId || null; } catch (e) { return null; }
+    }
+
+    // Lê doc do Firestore com timeout — não trava se o Firestore tá com problema
+    async function getCloudOrdersWithTimeout(fid, timeoutMs) {
+        timeoutMs = timeoutMs || 8000;
+        try {
+            var doc = await Promise.race([
+                firebase.firestore().collection('datastore').doc('orders_' + fid).get(),
+                new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, timeoutMs); })
+            ]);
+            if (!doc.exists) return { ok: true, items: [] };
+            var arr = JSON.parse(doc.data().value || '[]');
+            return { ok: true, items: Array.isArray(arr) ? arr : [] };
+        } catch (e) {
+            return { ok: false, error: e.message };
+        }
+    }
+
+    function mergeArrays(a, b) {
+        var byId = {};
+        function pickNewest(x, y) {
+            var tx = (x && (x.updatedAt || x.createdAt)) || '';
+            var ty = (y && (y.updatedAt || y.createdAt)) || '';
+            return tx >= ty ? x : y;
+        }
+        a.forEach(function (it) { if (it && it.id) byId[it.id] = it; });
+        b.forEach(function (it) {
+            if (!it || !it.id) return;
+            byId[it.id] = byId[it.id] ? pickNewest(byId[it.id], it) : it;
+        });
+        return Object.keys(byId).map(function (k) { return byId[k]; });
+    }
+
+    async function refreshCounts() {
+        var fid = getFid();
+        if (!fid) {
+            setStatus('❌ Sem login. Entra primeiro.', 'err');
+            document.getElementById('localCount').textContent = '—';
+            document.getElementById('cloudCount').textContent = '—';
+            return;
+        }
+        var local = (DataStore.getCollection && DataStore.getCollection('orders', fid)) || [];
+        document.getElementById('localCount').textContent = local.length;
+        log('Local: ' + local.length + ' pedidos');
+
+        document.getElementById('cloudCount').textContent = '⏳';
+        document.getElementById('cloudSub').textContent = 'lendo nuvem...';
+        var r = await getCloudOrdersWithTimeout(fid, 6000);
+        if (r.ok) {
+            document.getElementById('cloudCount').textContent = r.items.length;
+            document.getElementById('cloudSub').textContent = 'pedidos na nuvem';
+            log('Cloud: ' + r.items.length + ' pedidos');
+            if (r.items.length === local.length) {
+                setStatus('✅ Já sincronizado: ' + local.length + ' pedidos local = nuvem', 'ok');
+            } else if (r.items.length > local.length) {
+                setStatus('⚠️ Faltam ' + (r.items.length - local.length) + ' pedidos da nuvem aqui — clica SINCRONIZAR', 'warn');
+            } else {
+                setStatus('⚠️ Nuvem está atrasada (' + (local.length - r.items.length) + ' pedidos a menos) — clica SINCRONIZAR', 'warn');
+            }
+        } else {
+            document.getElementById('cloudCount').textContent = '?';
+            document.getElementById('cloudSub').textContent = 'nuvem inacessível: ' + r.error;
+            setStatus('⚠️ Não consegui ler a nuvem — pode estar travado. Tenta SINCRONIZAR mesmo assim.', 'warn');
+            log('Erro lendo cloud: ' + r.error);
+        }
+    }
+
+    window.syncNow = async function () {
+        var fid = getFid();
+        if (!fid) { setStatus('❌ Sem login. Entra primeiro.', 'err'); return; }
+
+        var btn = document.getElementById('bigBtn');
+        btn.disabled = true; btn.textContent = '⏳ SINCRONIZANDO...';
+        hideSuccess();
+        setStatus('⏳ Lendo local + nuvem...', 'run');
+        log('Sync iniciado. Franchise: ' + fid);
+
+        var localItems = (DataStore.getCollection && DataStore.getCollection('orders', fid)) || [];
+        log('Local: ' + localItems.length + ' itens');
+
+        // Lê cloud com timeout
+        var cloudR = await getCloudOrdersWithTimeout(fid, 8000);
+        var cloudItems = cloudR.ok ? cloudR.items : [];
+        if (!cloudR.ok) log('⚠️ Não li cloud (' + cloudR.error + ') — vou escrever só o local');
+        else log('Cloud: ' + cloudItems.length + ' itens');
+
+        // Merge
+        var merged = mergeArrays(localItems, cloudItems);
+        log('Merge: local(' + localItems.length + ') + cloud(' + cloudItems.length + ') = ' + merged.length);
+
+        // Salva merged no localStorage
+        try {
+            localStorage.setItem('mp_orders_' + fid, JSON.stringify(merged));
+            log('💾 Local atualizado: ' + merged.length);
+        } catch (e) { log('Erro salvando local: ' + e.message); }
+
+        // Escreve no Firestore com timeout
+        setStatus('⏳ Enviando ' + merged.length + ' pedidos pra nuvem...', 'run');
+        try {
+            var writeP = firebase.firestore().collection('datastore').doc('orders_' + fid).set({
+                value: JSON.stringify(merged),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            await Promise.race([
+                writeP,
+                new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout 10s')); }, 10000); })
+            ]);
+            log('☁️ Cloud atualizado: ' + merged.length);
+        } catch (e) {
+            log('❌ Falha escrevendo cloud: ' + e.message);
+            setStatus('⚠️ Salvei local mas a nuvem não respondeu. Tenta de novo em alguns segundos.', 'warn');
+            btn.disabled = false; btn.textContent = '🔄 SINCRONIZAR AGORA';
+            return;
+        }
+
+        // Sucesso
+        document.getElementById('localCount').textContent = merged.length;
+        document.getElementById('cloudCount').textContent = merged.length;
+        var added = merged.length - localItems.length;
+        var sentToCloud = merged.length - cloudItems.length;
+        var msg = '';
+        if (added > 0) msg += 'Recuperei ' + added + ' pedido(s) que estavam só na nuvem. ';
+        if (sentToCloud > 0) msg += 'Enviei ' + sentToCloud + ' pedido(s) deste PC pra nuvem.';
+        if (!msg) msg = 'Tudo já estava igual. ' + merged.length + ' pedidos.';
+        setStatus('✅ ' + merged.length + ' pedidos sincronizados', 'ok');
+        showSuccess('Sincronizado!', msg);
+        showSteps();
+        log('✅ Concluído. Total: ' + merged.length);
+        btn.disabled = false; btn.textContent = '🔄 SINCRONIZAR DE NOVO';
+    };
+
+    window.clearAndReload = async function () {
+        if (!confirm('🧹 Limpar cache do Firestore neste PC?\n\nUse se este PC tá travado (botão Sincronizar não funciona).\n\nNão perde vendas (localStorage fica intacto). Vai recarregar a página.')) return;
+        log('Limpando cache Firestore...');
+        try {
+            try { await firebase.firestore().clearPersistence(); log('clearPersistence OK'); } catch (e) { log('clearPersistence: ' + e.message); }
+            if (indexedDB.databases) {
+                var dbs = await indexedDB.databases();
+                for (var i = 0; i < dbs.length; i++) {
+                    if (!dbs[i].name) continue;
+                    if (dbs[i].name.indexOf('firestore') === -1 && dbs[i].name.indexOf('firebase') === -1) continue;
+                    try { await new Promise(function (resolve) { var r = indexedDB.deleteDatabase(dbs[i].name); r.onsuccess = r.onerror = r.onblocked = resolve; }); log('🗑️ ' + dbs[i].name); } catch (e) {}
+                }
+            }
+            log('✅ Cache limpo. Recarregando...');
+            setTimeout(function () { location.reload(); }, 800);
+        } catch (e) {
+            log('Erro: ' + e.message);
+            location.reload();
+        }
+    };
+
+    // Listener: se outro PC sincronizar via realtime, atualiza counts
+    window.addEventListener('mp_remote_update', function (e) {
+        if (e.detail && e.detail.key && e.detail.key.startsWith('orders_')) {
+            log('📡 Update remoto detectado — atualizando contadores');
+            setTimeout(refreshCounts, 500);
+        }
+    });
+
+    function tryInit(retries) {
+        if (typeof firebase === 'undefined' || typeof DataStore === 'undefined' || typeof Auth === 'undefined') {
+            if (retries > 0) return setTimeout(function () { tryInit(retries - 1); }, 200);
+            setStatus('❌ Erro carregando o sistema. Recarrega a página.', 'err');
+            return;
+        }
+        log('🔧 Página carregada');
+        var fid = getFid();
+        if (!fid) {
+            setStatus('❌ Sem login. Entra em /login.html primeiro.', 'err');
+            return;
+        }
+        log('Franchise: ' + fid);
+        refreshCounts();
+        // Auto-refresh contadores a cada 8s
+        setInterval(refreshCounts, 8000);
+    }
+    tryInit(20);
+})();
+</script>
+</body>
+</html>
