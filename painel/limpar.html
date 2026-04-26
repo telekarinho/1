@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Limpar Pedidos Antigos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #6A1B9A, #AB47BC);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            max-width: 560px;
+            width: 100%;
+            padding: 32px;
+        }
+        h1 {
+            font-family: 'Baloo 2', cursive;
+            margin: 0 0 8px;
+            color: #4A148C;
+            font-size: 1.8rem;
+        }
+        p { color: #444; line-height: 1.5; }
+        .stat {
+            background: #F3E5F5;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            font-size: 1.1rem;
+        }
+        .stat strong { color: #6A1B9A; font-size: 1.5rem; }
+        button {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #6A1B9A, #AB47BC);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 16px;
+            font-family: inherit;
+            transition: transform 0.15s;
+        }
+        button:hover { transform: translateY(-2px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-danger {
+            background: linear-gradient(135deg, #B71C1C, #E53935);
+        }
+        .log {
+            background: #1A1A1A;
+            color: #4FC3F7;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .log .ok { color: #69F0AE; }
+        .log .err { color: #FF8A80; }
+        ul { margin: 8px 0; padding-left: 20px; }
+        li { margin: 4px 0; color: #555; font-size: 0.9rem; }
+        .home {
+            display: inline-block;
+            margin-top: 16px;
+            color: #6A1B9A;
+            text-decoration: none;
+            font-weight: 700;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/auth.js"></script>
+</head>
+<body>
+    <div class="card">
+        <h1>🧹 Limpar Pedidos Antigos</h1>
+        <p>Remove pedidos abertos de dias anteriores que estão travando o kanban.<br>
+        <strong>Não toca nos pedidos de hoje.</strong></p>
+
+        <div id="stats" class="stat">⏳ Carregando…</div>
+
+        <ul id="orderList"></ul>
+
+        <button id="btnClean" class="btn-danger" disabled>🗑️ Limpar pedidos antigos</button>
+        <a href="pedidos.html" class="home">← Voltar pra Pedidos</a>
+
+        <div id="log" class="log" style="display:none"></div>
+    </div>
+
+    <script>
+        const logEl = document.getElementById('log');
+        const statsEl = document.getElementById('stats');
+        const listEl = document.getElementById('orderList');
+        const btn = document.getElementById('btnClean');
+
+        function log(msg, cls) {
+            logEl.style.display = 'block';
+            const span = document.createElement('span');
+            if (cls) span.className = cls;
+            span.textContent = msg + '\n';
+            logEl.appendChild(span);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function todayKey() {
+            const d = new Date();
+            return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+        }
+
+        async function loadAndAnalyze() {
+            try {
+                if (!Auth.requireAuth('franchisee')) return;
+                const session = Auth.getSession();
+                const fid = session.franchiseId;
+
+                // Lê do Firestore direto (não confia no cache local)
+                const db = firebase.firestore();
+                let cloudOrders = [];
+                try {
+                    const doc = await db.collection('datastore').doc('orders_' + fid).get();
+                    if (doc.exists) {
+                        const raw = doc.data() && doc.data().value;
+                        if (raw) cloudOrders = JSON.parse(raw) || [];
+                    }
+                } catch (e) { log('Erro lendo nuvem: ' + e.message, 'err'); }
+
+                const local = DataStore.getCollection('orders', fid) || [];
+                // Merge por id, prefere mais recente
+                const map = new Map();
+                cloudOrders.forEach(o => map.set(o.id, o));
+                local.forEach(o => {
+                    const c = map.get(o.id);
+                    if (!c || (o.updatedAt || o.createdAt) > (c.updatedAt || c.createdAt)) {
+                        map.set(o.id, o);
+                    }
+                });
+                const all = Array.from(map.values());
+
+                const today = todayKey();
+                const openStatuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega'];
+                const stuck = all.filter(o => !o.deleted && openStatuses.includes(o.status) && (!o.createdAt || o.createdAt.slice(0,10) < today));
+
+                statsEl.innerHTML = `
+                    Total de pedidos: <strong>${all.length}</strong><br>
+                    <small>Pedidos travados de dia(s) anterior(es): <strong>${stuck.length}</strong></small>
+                `;
+
+                if (stuck.length === 0) {
+                    listEl.innerHTML = '<li style="color:#2E7D32"><strong>✅ Nada pra limpar — kanban tá limpo</strong></li>';
+                    btn.textContent = '✅ Já está limpo';
+                    btn.disabled = true;
+                    return;
+                }
+
+                listEl.innerHTML = stuck.slice(0, 10).map(o => {
+                    const seq = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
+                    const date = o.createdAt ? o.createdAt.slice(0,10) : 'sem data';
+                    const total = (o.total || 0).toFixed(2).replace('.', ',');
+                    return `<li>${seq} · ${o.status} · R$ ${total} · ${date}</li>`;
+                }).join('') + (stuck.length > 10 ? `<li>… e mais ${stuck.length - 10}</li>` : '');
+
+                btn.disabled = false;
+                btn.textContent = `🗑️ Limpar ${stuck.length} pedido(s) antigo(s)`;
+
+                btn.onclick = async () => {
+                    btn.disabled = true;
+                    btn.textContent = '⏳ Limpando…';
+                    log(`Marcando ${stuck.length} pedidos como deletados…`);
+
+                    const ts = new Date().toISOString();
+                    const updated = all.map(o => {
+                        if (stuck.find(s => s.id === o.id)) {
+                            return Object.assign({}, o, {
+                                deleted: true,
+                                deletedAt: ts,
+                                deletedReason: 'cleanup_old_open_orders',
+                                status: 'excluido',
+                                updatedAt: ts
+                            });
+                        }
+                        return o;
+                    });
+
+                    // Salva localmente
+                    try {
+                        DataStore.set('orders_' + fid, updated);
+                        log('Local: salvo', 'ok');
+                    } catch (e) { log('Erro local: ' + e.message, 'err'); }
+
+                    // Salva na nuvem no formato que o DataStore usa
+                    try {
+                        await db.collection('datastore').doc('orders_' + fid).set({
+                            value: JSON.stringify(updated),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        log('Nuvem: salvo', 'ok');
+                    } catch (e) { log('Erro nuvem: ' + e.message, 'err'); }
+
+                    log(`✅ ${stuck.length} pedido(s) marcado(s) como excluído(s).`, 'ok');
+                    btn.textContent = '✅ Limpeza concluída';
+                    setTimeout(() => { window.location.href = 'pedidos.html'; }, 2000);
+                };
+            } catch (e) {
+                statsEl.innerHTML = '❌ Erro: ' + e.message;
+                log(e.stack, 'err');
+            }
+        }
+
+        // Esperar Firebase + Auth carregarem
+        function bootstrap() {
+            if (typeof Auth === 'undefined' || typeof DataStore === 'undefined' || typeof firebase === 'undefined') {
+                setTimeout(bootstrap, 200);
+                return;
+            }
+            loadAndAnalyze();
+        }
+        bootstrap();
+    </script>
+</body>
+</html>
