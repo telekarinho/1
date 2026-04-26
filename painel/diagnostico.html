@@ -70,7 +70,8 @@ pre.log { background: #1F2937; color: #D1FAE5; padding: 10px; border-radius: 8px
     <button class="btn btn-secondary" onclick="forceSyncNow()">☁️ Forçar Sync Firestore → Local</button>
     <button class="btn btn-warn" onclick="testWrite()">✍️ Testar Write</button>
     <button class="btn btn-light" onclick="copyAll()">📋 Copiar pra mandar pro Suporte</button>
-    <button class="btn btn-danger" onclick="if(confirm('Limpa localStorage de sync e força sair?')){localStorage.removeItem('mp_session');location.reload();}">🚨 Resetar Sessão</button>
+    <button class="btn btn-danger" onclick="clearFirestoreCache()">🧹 Limpar Cache Firestore (corrige PC travado)</button>
+    <button class="btn btn-light" onclick="if(confirm('Limpa localStorage de sync e força sair?')){localStorage.removeItem('mp_session');location.reload();}">🚨 Resetar Sessão</button>
 </div>
 
 <div class="cards" id="topCards"></div>
@@ -296,6 +297,38 @@ pre.log { background: #1F2937; color: #D1FAE5; padding: 10px; border-radius: 8px
         } catch (e) {
             log('Sync exception: ' + e.message);
             alert('❌ Exceção: ' + e.message);
+        }
+    };
+
+    window.clearFirestoreCache = async function () {
+        if (!confirm('🧹 Limpar cache Firestore deste PC?\n\nIsso resolve PCs travados onde sync nunca completa (Firestore IDB corrompido).\n\nVai apagar todos os IndexedDB do site e forçar reload. Não perde nada do localStorage (vendas/caixa ficam).\n\nContinuar?')) return;
+        log('🧹 Limpando cache Firestore...');
+        try {
+            // 1. Try clearPersistence (proper Firebase API)
+            try {
+                await firebase.firestore().clearPersistence();
+                log('✅ clearPersistence OK');
+            } catch (e) {
+                log('⚠️ clearPersistence falhou: ' + e.message + ' — vou apagar IDB direto');
+            }
+            // 2. Nuclear: apaga todos os IDBs do site
+            if (indexedDB.databases) {
+                var dbs = await indexedDB.databases();
+                for (var i = 0; i < dbs.length; i++) {
+                    try {
+                        await new Promise(function (resolve) {
+                            var req = indexedDB.deleteDatabase(dbs[i].name);
+                            req.onsuccess = req.onerror = req.onblocked = resolve;
+                        });
+                        log('🗑️ Apagado: ' + dbs[i].name);
+                    } catch (e) {}
+                }
+            }
+            log('✅ Cache limpo. Recarregando em 1s...');
+            setTimeout(function () { location.reload(); }, 1000);
+        } catch (e) {
+            log('❌ Falha: ' + e.message);
+            alert('Erro: ' + e.message);
         }
     };
 
