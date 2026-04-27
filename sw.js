@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v92';
-const CACHE_NAME = 'milkypot-v92';
+const CACHE_VERSION = 'mp-v93';
+const CACHE_NAME = 'milkypot-v93';
 
 // Critical local assets that must be available offline
 const PRECACHE_URLS = [
@@ -8,14 +8,6 @@ const PRECACHE_URLS = [
     '/login.html',
     '/cardapio.html',
     '/desafio.html',
-    // MilkyClube (PWA cliente final + landing viral)
-    '/clube.html',
-    '/clube/',
-    '/regulamento-milkyclube.html',
-    '/js/core/milkyclub.js',
-    '/js/core/milkyclub-push.js',
-    '/firebase-messaging-sw.js',
-    '/manifest-clube.json',
     // Franqueado panel pages (PDV + pages they might navigate to after login)
     '/painel/index.html',
     '/painel/pdv.html',
@@ -30,8 +22,13 @@ const PRECACHE_URLS = [
     '/painel/marketing.html',
     '/painel/despesas.html',
     '/painel/configuracoes.html',
+    '/painel/uber-entregas.html',
+    '/painel/tv-indoor.html',
+    '/painel/radio-indoor.html',
     '/painel/finance-os.html',
-    // (rotas de TV/Radio sao deliberadamente fora do precache — nunca devem cachear)
+    // TV + Radio player pages
+    '/tv.html',
+    '/radio.html',
     '/manifest-tv.json',
     // Styles
     '/css/style.css',
@@ -49,24 +46,22 @@ const PRECACHE_URLS = [
     '/js/core/cloud-functions.js',
     '/js/core/auth.js',
     '/js/core/audit.js',
+    '/js/core/uber-direct.js',
     '/js/core/notifications.js',
-    '/js/core/copilot-transport.js',
-    '/js/core/belinha-page-scanners.js',
-    '/js/core/belinha-widget.js',
-    '/js/core/raspinha-engine.js',
     // Feature JS
     '/js/cardapio.js',
     '/js/cardapio-data.js',
-    '/js/chat-ai.js',
-    // Desafio — copies rotativas (Desafio 10s + Acertou Ganhou 300g)
-    '/js/core/promocoes-copy.js',
-    '/js/core/tv-promo-rotator.js',
-    '/js/pages/desafio-tv-bridge.js',
     // Assets
     '/images/logo-milkypot.png',
     '/manifest.json',
-    // Franquia landing pages (apenas unidades reais)
-    '/f/muffato-quintino/'
+    // Franquia landing pages
+    '/f/ibirapuera/',
+    '/f/morumbi/',
+    '/f/jardins/',
+    '/f/barra/',
+    '/f/catuai/',
+    '/f/recife/',
+    '/f/curitiba/'
 ];
 
 // External CDN assets (Firebase SDK + Google Fonts) — cached on first successful fetch,
@@ -81,21 +76,14 @@ const CDN_PRECACHE_URLS = [
 
 const OFFLINE_QUEUE_KEY = 'milkypot-offline-queue';
 
-// Install: precache key files (TOLERATE individual failures)
-// Antes: cache.addAll rejeitava TUDO se 1 URL desse 404. SW ficava
-// travado em "installing" sem nunca ativar (reg.active = NULL).
-// Agora: cada URL é cacheado individualmente. Falha em 1 não trava o resto.
+// Install: precache key files
 self.addEventListener('install', event => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            // Local files — tolerate per-URL failures
-            const localPromise = Promise.allSettled(
-                PRECACHE_URLS.map(u => fetch(u, { cache: 'reload' })
-                    .then(r => r.ok ? cache.put(u, r.clone()) : null)
-                    .catch(() => null))
-            );
-            // CDN files
+            // Precache local files — fail if any are missing
+            const localPromise = cache.addAll(PRECACHE_URLS);
+            // Precache CDN files — tolerate individual failures (they'll be cached on first use)
             const cdnPromise = Promise.allSettled(
                 CDN_PRECACHE_URLS.map(u => fetch(u, { mode: 'cors' })
                     .then(r => r.ok ? cache.put(u, r) : null)
@@ -106,10 +94,7 @@ self.addEventListener('install', event => {
     );
 });
 
-// Activate: clean old caches + force-reload controlled tabs so they pick up new JS.
-// Sem isso, tabs abertas continuam executando o bundle velho do SW anterior
-// (cache-first em .js) até o usuário fechar e abrir. O reload aqui é idempotente
-// — só roda uma vez quando uma NOVA versão do SW ativa (skipWaiting + claim).
+// Activate: clean old caches
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
@@ -118,26 +103,7 @@ self.addEventListener('activate', event => {
                     .filter(name => name !== CACHE_NAME)
                     .map(name => caches.delete(name))
             );
-        })
-        .then(() => self.clients.claim())
-        .then(() => self.clients.matchAll({ type: 'window' }))
-        .then(windowClients => {
-            windowClients.forEach(client => {
-                // client.navigate(url) re-navega a aba — força re-fetch via novo SW.
-                // Evita bounce em rotas sensíveis (TV/radio indoor) que não devem piscar.
-                try {
-                    const u = new URL(client.url);
-                    const bypass = /\/(tv|radio|t|tv-indoor|radio-indoor)(\.html)?$/.test(u.pathname)
-                                   || /^\/tv\d+(\.html)?$/.test(u.pathname);
-                    if (bypass) return;
-                    if (typeof client.navigate === 'function') {
-                        client.navigate(client.url);
-                    } else {
-                        client.postMessage({ type: 'SW_ACTIVATED_RELOAD' });
-                    }
-                } catch(e) {}
-            });
-        })
+        }).then(() => self.clients.claim())
     );
 });
 
@@ -158,16 +124,6 @@ self.addEventListener('fetch', event => {
                     );
                 });
             })
-        );
-        return;
-    }
-
-    // TV routes: bypass total — sempre rede, nunca cache.
-    // (/t, /t.html, /tv.html, /tv1, /tv2, ..., /tvN ou /tvN.html, /painel/tv-indoor.html)
-    if (isTvRoute(url)) {
-        event.respondWith(
-            fetch(request, { cache: 'no-store' })
-                .catch(() => caches.match(request).then(c => c || new Response('Offline', { status: 503 })))
         );
         return;
     }
@@ -262,16 +218,6 @@ function networkFirst(request) {
 }
 
 // --- Utility helpers ---
-
-function isTvRoute(url) {
-    const p = url.pathname;
-    // /t, /t.html, /tv.html, /tv1, /tv2, ..., /tv1.html (qualquer nN), /painel/tv-indoor.html, /painel/radio-indoor.html, /radio.html
-    if (p === '/t' || p === '/t.html') return true;
-    if (p === '/tv.html' || p === '/radio.html') return true;
-    if (/^\/tv\d+(\.html)?$/.test(p)) return true;
-    if (p === '/painel/tv-indoor.html' || p === '/painel/radio-indoor.html') return true;
-    return false;
-}
 
 function isApiRequest(url) {
     return url.hostname.includes('firestore.googleapis.com') ||

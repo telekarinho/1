@@ -124,6 +124,11 @@ function updateOrderSummary() {
     var deliveryFee = deliveryType === 'delivery' ? storeFee : 0;
 
     if (summarySubtotal) summarySubtotal.textContent = formatCurrency(subtotal);
+    // Se Uber Direct ativo com quote calculado, usa o valor do cliente
+    if (deliveryType === 'delivery' && window._uberQuoteId && window._uberCustomerFee !== undefined) {
+        deliveryFee = window._uberCustomerFee;
+    }
+
     if (summaryDelivery) summaryDelivery.textContent = deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Grátis';
     if (summaryTotal) summaryTotal.textContent = formatCurrency(subtotal + deliveryFee);
 }
@@ -158,6 +163,11 @@ function placeOrder() {
     var deliveryRadio = document.querySelector('input[name="delivery"]:checked');
     var deliveryType = deliveryRadio ? deliveryRadio.value : 'pickup';
     var deliveryFee = deliveryType === 'delivery' ? storeFee : 0;
+
+    // Se delivery + Uber Direct ativo: usar quote ja calculado
+    if (deliveryType === 'delivery' && window._uberQuoteId && window._uberCustomerFee !== undefined) {
+        deliveryFee = window._uberCustomerFee;
+    }
     var deliveryAddress = '';
     if (deliveryType === 'delivery') {
         var addr = (document.getElementById('checkoutAddress') || {}).value || '';
@@ -223,7 +233,10 @@ function placeOrder() {
         }),
         subtotal: subtotal,
         deliveryFee: deliveryFee,
-        total: total
+        total: total,
+        // Uber Direct quote data (preenchido se cotacao foi feita)
+        uberQuoteId: (deliveryType === 'delivery' && window._uberQuoteId) ? window._uberQuoteId : null,
+        uberEnabled: !!(deliveryType === 'delivery' && window._uberQuoteId)
     };
 
     // Save order to orders list
@@ -400,6 +413,43 @@ function closeSidebar() {
 }
 
 // ============================================
+// UBER DIRECT — dispara cotacao quando endereco e confirmado
+// ============================================
+function triggerUberQuote() {
+    if (typeof UberDirect === 'undefined' || !UberDirect.isActive()) return;
+    if (!document.getElementById('uberDeliveryBlock')) return;
+
+    var addressInput = document.getElementById('checkoutAddress');
+    var address = addressInput ? addressInput.value.trim() : '';
+    if (!address) return;
+
+    var storeId = window._selectedStoreId || null;
+    if (!storeId) return;
+
+    reloadCart();
+    var manifest = cart.map(function(item) {
+        return {
+            name: item.name || 'Produto',
+            quantity: item.qty || 1,
+            price: Math.round((item.total || 0) * 100) // centavos
+        };
+    });
+
+    var dropoff = {
+        address: address,
+        lat: window._uberDropoffLat || 0,
+        lng: window._uberDropoffLng || 0,
+        name: (document.getElementById('checkoutName') || {}).value || 'Cliente',
+        phone: (document.getElementById('checkoutPhone') || {}).value || ''
+    };
+
+    var orderId = 'quote_' + Date.now();
+    var orderTotal = getCartTotal();
+
+    UberDirect.renderDeliveryBlock('uberDeliveryBlock', storeId, orderId, dropoff, manifest, orderTotal);
+}
+
+// ============================================
 // DELIVERY TOGGLE & PAYMENT OPTIONS
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -413,8 +463,25 @@ document.addEventListener('DOMContentLoaded', function() {
             if (addressDiv) {
                 addressDiv.style.display = radio && radio.value === 'delivery' ? 'block' : 'none';
             }
+            // Reset quote quando troca para retirada
+            if (radio && radio.value !== 'delivery') {
+                window._uberQuoteId = null;
+                window._uberCustomerFee = undefined;
+            }
         });
     });
+
+    // Disparar cotacao ao perder foco no campo de endereco
+    var addressInput = document.getElementById('checkoutAddress');
+    if (addressInput) {
+        addressInput.addEventListener('blur', triggerUberQuote);
+    }
+
+    // Disparar cotacao ao clicar no botao de avancar para pagamento (step 3 -> 4)
+    var btnToPayment = document.getElementById('btnToPayment');
+    if (btnToPayment) {
+        btnToPayment.addEventListener('click', triggerUberQuote);
+    }
 
     document.querySelectorAll('.payment-option').forEach(function(opt) {
         opt.addEventListener('click', function() {
