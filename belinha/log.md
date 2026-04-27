@@ -1,5 +1,35 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #51 — 2026-04-27
+
+**Área:** Conteúdo — `pos-inauguracao-semana12.md` (05–11/07/2026)
+
+**O que analisou:**
+- Revisou semana 11 (ciclo #50) para continuidade narrativa e tom
+- Identificou que semana 12 coincide com o pico das férias escolares de julho e o feriado do 9 de Julho (PR/SP)
+- Oportunidade de dupla agenda: tema família (semana toda) + 1º teaser do aniversário de 3 meses (sábado 11/07)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana12.md` | CRIADO — calendário completo 05–11/07. Tema "Família de Potinho". Post criativo de "combo família" (terça), post de feriado 9 de Julho (quinta), post de sábado com 1º teaser do aniversário de 3 meses. 3 templates WhatsApp Business. Checklist operacional. Nota para semana 13. |
+
+**Commit:** `0d4b4be`
+
+**Destaques do conteúdo:**
+- Terça 07/07: carrossel "família de potinho" — argumento de combo + fidelidade como conversão
+- Quinta 09/07: post de feriado 9 de Julho — tom leve, oportunidade de saída com família
+- Sábado 11/07: 1º teaser do aniversário de 3 meses (25/07) — gera expectativa antecipada por 2 semanas
+- Templates `/familia`, `/feriascombo` e `/teaser3meses` prontos para WhatsApp Business
+
+**Próximo passo sugerido:**
+- Ciclo #52: Template "Embaixador do Mês" — nomear 1º embaixador se Indica & Ganha estiver ativo
+- Ciclo #53: SEO — `aggregateRating` se desbloqueado; senão: landing page `acai-self-service-londrina.html`
+- Ciclo #54: Auto-aprimoramento — reler log ciclos 49–53, ajustar estratégia para agosto (mês 4)
+
+---
+
 ## Ciclo #50 — 2026-04-27
 
 **Área:** Conteúdo — `pos-inauguracao-semana11.md` (28/06–04/07/2026)
