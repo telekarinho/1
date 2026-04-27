@@ -307,3 +307,98 @@ Ciclos 39–43 abrangem 26/04/2026 (D+1 pós-inauguração). Foco predominante: 
 ---
 
 _Belinha — Ciclo #44 | 2026-04-26_
+
+---
+
+## Aprendizados dos ciclos #44–48
+
+### Contexto do período
+Ciclos 44–48 abrangem 26/04/2026 (D+1 pós-inauguração). Foco: construir arsenal de conteúdo para junho (mês 2) e atualizar infraestrutura operacional WhatsApp com aprendizados do mês 1.
+
+### O que gerou mais valor concreto
+1. **Funil WhatsApp v2 (#48)** — Revisão completa do funil com 6 novos scripts prontos: `/obrigada2` com CTA review Google, `/voltou` (recorrente), `/indica`, `/junino`, `/acai`. Scripts acionáveis imediatamente pelo operador sem improviso. Maior ROI do período por cobrir lacunas críticas identificadas no mês 1.
+2. **Potinho Junino via semana9 (#47)** — Produto sazonal de Festa Junina com ingredientes acessíveis (paçoca). Template perfeito: edição limitada, zero custo de novos insumos, urgência natural. A mecânica de sazonalidade é replicável para qualquer data comemorativa (Dia das Mães, Dia dos Namorados, Natal, etc.).
+3. **FAQPage +2 perguntas SEO (#46)** — Adicionar perguntas de fidelidade e indicação antes da ativação do programa cria cobertura SEO antecipada. Boa prática: adicionar FAQ para features antes do lançamento, não depois.
+4. **Semana8 Indica & Ganha (#45)** — Conteúdo + instrução operacional claros no mesmo arquivo: "na terça 09/06, dispare o Template A para até 20 clientes". Reduz margem de erro do operador vs. documentação genérica.
+
+### O que foi menos eficaz
+- **Ciclo #44 (semana7 — anúncio de vencedores do desafio UGC)**: conteúdo contingente — assume que houve participantes no desafio. Padrão a evitar: criar conteúdo que depende de resultados que o bot não consegue verificar. Preferir conteúdo não-contingente ou criar versão A (com vencedores) + versão B (sem vencedores).
+- **Ciclo #46 (FAQPage)**: impacto SEO real leva semanas após indexação. Continuar fazendo (baixo custo, bom efeito cumulativo), mas não contar como "impacto rápido" do ciclo.
+
+### Padrão consolidado (v5)
+
+> **Bug/fix crítico > Scripts/templates operador acionáveis > Conteúdo não-contingente > UX/Performance sweep batch > SEO técnico acumulativo > Pesquisa concorrente (só com follow-up imediato)**
+
+### Estado das áreas em 27/04/2026
+
+| Área | Estado | Próxima ação |
+|------|--------|--------------|
+| Conteúdo pós-inauguração | ✅ Semanas 1–10 prontas (até 27/06) | Semana 11 (28/06–04/07) |
+| Potinho Junino | ✅ Ativo até 30/06 | Decidir continuidade em julho |
+| Indica & Ganha | ✅ Ativo — operador com templates | Nomear Embaixador se ≥3 indicações confirmadas |
+| Funil WhatsApp | ✅ v2 com 6 novos scripts | — |
+| aggregateRating SEO | ⛔ SUSPENSO | Aguardar ≥3 reviews Google Maps |
+| Google Analytics ID real | ⛔ SUSPENSO | Aguardar autorização do usuário |
+| Contagem de reviews Google Maps | ⚠️ Desconhecida | Verificar Google Business Profile |
+
+---
+
+## Estratégia de julho 2026 (mês 3 de operação)
+
+### Contexto
+Julho marca o **3º mês de operação** e coincide com:
+- **Férias escolares** (julho inteiro) → público familiar, crianças, saídas de fim de tarde
+- **Aniversário de 3 meses** em **25/07** → grande momento de comunicação emocional
+- **Pós-Festa Junina** → transição de sabores; fim do Potinho Junino (30/06)
+- **Inverno** → chocolates quentes, caramelo, comfort food são tendência de venda
+
+### Pilares estratégicos de julho
+
+| Pilar | Ação concreta |
+|-------|---------------|
+| **Sazonalidade de inverno** | Novo produto de julho: Potinho Caramelado ou versão chocolate quente? Ingredientes de baixo custo + alta percepção de valor invernal |
+| **Família + férias escolares** | Combo "família" (2+ potinhos), call-to-action para saída de tarde com criança |
+| **Aniversário 3 meses (25/07)** | Campanha emocional "3 meses com vocês 🐑" — UGC, sorteio, carta da ovelhinha |
+| **Embaixador MilkyPot** | Se Indica & Ganha gerou indicações, nomear 1º Embaixador do Mês em julho |
+| **SEO** | Ativar `aggregateRating` assim que operador confirmar ≥3 reviews; SEO de "açaí self-service londrina" |
+
+### Cadência de conteúdo (julho)
+
+| Semana | Período | Tema |
+|--------|---------|------|
+| Semana 11 | 28/06–04/07 | Virada para julho: revelar novidade + despedida do Potinho Junino |
+| Semana 12 | 05–11/07 | Férias escolares: "família de potinho" |
+| Semana 13 | 12–18/07 | Mid-month: engajamento + UGC invernal |
+| Semana 14 | 19–25/07 | Aniversário 3 meses MilkyPot Londrina 🎉 |
+
+### Produto sazonal de julho
+
+**Candidato principal:** Potinho Caramelado (Caramel Edition)
+- Base: Ninho cremoso
+- Toppings: calda de caramelo, granola crocante, floco de aveia
+- Posicionamento: "conforto de inverno no potinho"
+- Custo de insumos: baixo (calda de caramelo barata, granola disponível)
+- Nome alternativo: "Potinho Quentinho" ou "Potinho Aconchego"
+
+> Decisão final é do operador. O ponto crítico é ter o produto pronto para revelar na semana 11 (virada de julho).
+
+### Próximas iniciativas (ciclos 50–54)
+
+| Ciclo | Área | Ação |
+|-------|------|------|
+| #50 | Conteúdo | `pos-inauguracao-semana11.md` — 28/06–04/07: virada para julho + revelar produto sazonal de inverno |
+| #51 | Conteúdo | `pos-inauguracao-semana12.md` — 05–11/07: férias escolares, público família |
+| #52 | Conversão | Template "Embaixador do Mês" — nomear 1º embaixador se Indica & Ganha ativo |
+| #53 | SEO | Ativar `aggregateRating` se desbloqueado; senão: nova landing page `acai-self-service-londrina.html` |
+| #54 | Auto-aprimoramento | Reler log ciclos 49–53, ajustar estratégia para agosto (mês 4) |
+
+### Bloqueadores suspensos (sem mudança)
+
+| Bloqueador | Dependência | Ciclo que bloqueou |
+|------------|-------------|-------------------|
+| aggregateRating Schema.org | ≥3 reviews Google Maps verificáveis pelo operador | #43 |
+| Google Analytics ID real | Autorização explícita do usuário | #15 |
+
+---
+
+_Belinha — Ciclo #49 | 2026-04-27_
