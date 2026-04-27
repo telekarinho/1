@@ -53,10 +53,16 @@
             detail: 'Vendas sem caixa aberto geram alerta em auditoria.',
             help: '/painel/pdv.html',
             check: fid => {
-                const caixas = DataStore.getCollection('caixa_sessions', fid) || [];
-                const today = new Date(); today.setHours(0,0,0,0);
-                const hoje = caixas.find(c => c.openedAt && new Date(c.openedAt) >= today);
-                return hoje ? 'done' : 'pending';
+                // Coleção real é 'caixa' com movimentos. Verifica se há abertura HOJE
+                // usando todayKey local (Brasília) — toISOString puro quebra após 21h.
+                try {
+                    const all = DataStore.getCollection('caixa', fid) || [];
+                    const now = new Date();
+                    const offsetMs = now.getTimezoneOffset() * 60000;
+                    const localKey = new Date(now.getTime() - offsetMs).toISOString().slice(0, 10);
+                    const hoje = all.find(m => m && m.type === 'abertura' && m.dateKey === localKey);
+                    return hoje ? 'done' : 'pending';
+                } catch (e) { return 'pending'; }
             }
         },
 
