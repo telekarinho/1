@@ -297,7 +297,8 @@
         }
 
         function getFilteredOrders() {
-            const orders = DataStore.getCollection('orders', franchiseId);
+            // Exclui pedidos com deleted:true — evita que sync do Firestore os ressuscite
+            const orders = DataStore.getCollection('orders', franchiseId).filter(o => !o.deleted);
             const filter = document.getElementById('filterDate').value;
             const today = Utils.today();
 
@@ -314,7 +315,8 @@
 
         function renderKanban() {
             const orders = getFilteredOrders();
-            const allOrders = DataStore.getCollection('orders', franchiseId);
+            // allOrders também exclui deletados — banner "pedidos ocultos" não conta lixo
+            const allOrders = DataStore.getCollection('orders', franchiseId).filter(o => !o.deleted);
             const statuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'entregue'];
 
             // Aviso quando há pedidos NO STORAGE mas o filtro atual esconde — evita
@@ -377,12 +379,11 @@
                                 <span class="order-total">${Utils.formatCurrency(o.total)}</span>
                                 <span class="order-type-badge order-type-${(o.delivery || o.type)}">${(o.delivery || o.type) === 'delivery' ? '🛵 Delivery' : '🏪 Retirada'}</span>
                             </div>
-                            ${status !== 'entregue' ? `
-                                <div class="order-actions">
-                                    <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();moveOrder('${o.id}','${nextStatus[status]}')">${nextLabel[status]}</button>
-                                    ${status === 'novo' ? `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();moveOrder('${o.id}','cancelado')">❌</button>` : ''}
-                                </div>
-                            ` : ''}
+                            <div class="order-actions">
+                                ${status !== 'entregue' ? `<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();moveOrder('${o.id}','${nextStatus[status]}')">${nextLabel[status]}</button>` : ''}
+                                ${status === 'novo' ? `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();moveOrder('${o.id}','cancelado')">❌</button>` : ''}
+                                <button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;padding:6px 8px;margin-left:auto" title="Excluir pedido" onclick="event.stopPropagation();deleteOrder('${o.id}')">🗑️</button>
+                            </div>
                         </div>
                     `;
                 }).join('');
@@ -454,6 +455,26 @@
             Utils.showToast(`Pedido #${orderId.slice(-6)} → ${newStatus.toUpperCase()}`);
         }
 
+        // Soft-delete: marca deleted:true e grava de volta no DataStore/Firestore.
+        // O Firestore fica com o flag — próximos onSnapshot e _syncFromCloud recebem
+        // o item com deleted:true e getFilteredOrders() o filtra, impedindo ressurreição.
+        function deleteOrder(orderId) {
+            if (!confirm(`Excluir pedido #${orderId.slice(-6)} permanentemente?\n\nEsta ação não pode ser desfeita.`)) return;
+            const orders = DataStore.getCollection('orders', franchiseId);
+            const idx = orders.findIndex(o => o.id === orderId);
+            if (idx === -1) return;
+            orders[idx].deleted = true;
+            orders[idx].deletedAt = new Date().toISOString();
+            orders[idx].deletedBy = (typeof Auth !== 'undefined' && Auth.getSession) ? (Auth.getSession()?.email || 'operador') : 'operador';
+            DataStore.set('orders_' + franchiseId, orders);
+            document.getElementById('orderModal').classList.remove('active');
+            renderKanban();
+            Utils.showToast(`🗑️ Pedido #${orderId.slice(-6)} excluído`, 'success');
+            if (typeof AuditLog !== 'undefined') {
+                AuditLog.logOrder('ORDER_DELETED', orderId, { total: orders[idx].total }, franchiseId);
+            }
+        }
+
         function showOrderDetail(orderId) {
             const orders = DataStore.getCollection('orders', franchiseId);
             const o = orders.find(x => x.id === orderId);
@@ -492,10 +513,12 @@
             const nextStatus = { novo: 'confirmado', confirmado: 'preparando', preparando: 'pronto', pronto: 'em_entrega', em_entrega: 'entregue' };
             const nextLabel = { novo: '✔️ Confirmar', confirmado: '▶️ Preparar', preparando: '✅ Pronto', pronto: '🛵 Enviar', em_entrega: '📦 Entregue' };
 
+            const deleteBtn = `<button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5" onclick="deleteOrder('${o.id}')">🗑️ Excluir</button>`;
             document.getElementById('orderModalFooter').innerHTML = o.status !== 'entregue' && o.status !== 'cancelado'
-                ? `<button class="btn btn-danger btn-sm" onclick="moveOrder('${o.id}','cancelado');document.getElementById('orderModal').classList.remove('active')">Cancelar</button>
+                ? `${deleteBtn}
+                   <button class="btn btn-danger btn-sm" onclick="moveOrder('${o.id}','cancelado');document.getElementById('orderModal').classList.remove('active')">Cancelar</button>
                    <button class="btn btn-primary" onclick="moveOrder('${o.id}','${nextStatus[o.status]}');document.getElementById('orderModal').classList.remove('active')">${nextLabel[o.status]}</button>`
-                : '';
+                : deleteBtn;
 
             document.getElementById('orderModal').classList.add('active');
         }
