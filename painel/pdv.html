@@ -24,18 +24,44 @@
         .pdv-header .btn-back { background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; }
 
         /* Products area */
-        .pdv-products { padding: 12px; overflow-y: auto; height: 100%; }
+        .pdv-products { padding: 0 12px 12px; overflow-y: auto; height: 100%; }
+        .pdv-filter-bar { position: sticky; top: 0; z-index: 5; background: #f0f2f5; padding: 10px 0 8px; margin: 0 -12px; padding-left: 12px; padding-right: 12px; border-bottom: 1px solid #e0e0e0; }
+        .pdv-search { position: relative; margin-bottom: 8px; }
+        .pdv-search input { width: 100%; padding: 10px 12px 10px 36px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; font-family: inherit; background: #fff; outline: none; transition: border-color 0.15s; }
+        .pdv-search input:focus { border-color: #6C63FF; }
+        .pdv-search::before { content: '🔍'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; pointer-events: none; }
+        .pdv-search .clear-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #e0e0e0; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 12px; color: #666; display: none; }
+        .pdv-search input:not(:placeholder-shown) ~ .clear-btn { display: block; }
+        .pdv-cat-pills { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
+        .pdv-cat-pills::-webkit-scrollbar { height: 4px; }
+        .pdv-cat-pills::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+        .pdv-cat-pill { flex-shrink: 0; padding: 6px 12px; border: 1px solid #e0e0e0; border-radius: 20px; background: #fff; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; color: #555; transition: all 0.12s; user-select: none; }
+        .pdv-cat-pill:hover { border-color: #6C63FF; color: #6C63FF; }
+        .pdv-cat-pill.active { background: #6C63FF; color: #fff; border-color: #6C63FF; }
+        .pdv-cat-pill .count { opacity: 0.7; margin-left: 4px; font-weight: 600; font-size: 10px; }
+        .pdv-no-results { text-align: center; padding: 40px 20px; color: #999; }
+        .pdv-no-results .nr-emoji { font-size: 36px; margin-bottom: 8px; }
+        .pdv-no-results .nr-msg { font-size: 14px; font-weight: 700; color: #666; }
+        .pdv-no-results .nr-hint { font-size: 12px; margin-top: 4px; }
         .sec-title { font-family: 'Baloo 2', cursive; font-size: 13px; font-weight: 700; color: #555; margin: 12px 0 6px; padding-bottom: 3px; border-bottom: 2px solid #e0e0e0; }
         .sec-title:first-child { margin-top: 0; }
         .sec-title.pop { color: #6C63FF; border-color: #6C63FF; }
         .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; margin-bottom: 6px; }
-        .pitem { background: #fff; border-radius: 10px; padding: 10px 6px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.12s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); user-select: none; }
+        .pitem { position: relative; background: #fff; border-radius: 10px; padding: 10px 6px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.12s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); user-select: none; min-height: 78px; }
         .pitem:hover { border-color: #6C63FF; transform: translateY(-1px); }
         .pitem:active { transform: scale(0.95); }
         .pitem .pe { font-size: 22px; }
         .pitem .pn { font-size: 10px; font-weight: 700; color: #333; line-height: 1.1; margin: 2px 0; }
         .pitem .pp { font-size: 11px; font-weight: 800; color: #6C63FF; }
         .pitem.pop { border-color: #D1C4E9; background: #f8f5ff; }
+        .pitem.esgotado { opacity: 0.55; cursor: not-allowed; background: #FAFAFA; border-color: #FECACA; }
+        .pitem.esgotado:hover { border-color: #FECACA; transform: none; }
+        .pitem.esgotado .pp { color: #9CA3AF; text-decoration: line-through; }
+        .pitem.baixoestoque { border-color: #FCD34D; }
+        .pitem.baixoestoque:hover { border-color: #F59E0B; }
+        .pbadge { position: absolute; top: 4px; right: 4px; padding: 2px 6px; border-radius: 8px; font-size: 9px; font-weight: 800; line-height: 1.2; z-index: 1; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .pbadge.bd-out { background: #DC2626; color: #fff; }
+        .pbadge.bd-low { background: #FBBF24; color: #78350F; }
 
         /* Cart sidebar */
         .pdv-cart { background: #fff; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
@@ -210,7 +236,16 @@
 <!-- Mensagem motivacional compacta (preenchida por JS) -->
 <div id="pdvMotivBanner"></div>
 <div class="pdv-layout">
-    <div class="pdv-products" id="allProds"></div>
+    <div class="pdv-products">
+        <div class="pdv-filter-bar">
+            <div class="pdv-search">
+                <input type="text" id="pdvSearch" placeholder="Buscar produto por nome..." autocomplete="off" oninput="PDV_Dynamics.onSearchInput(this.value)">
+                <button type="button" class="clear-btn" onclick="PDV_Dynamics.clearSearch()" title="Limpar busca">×</button>
+            </div>
+            <div class="pdv-cat-pills" id="pdvCatPills"></div>
+        </div>
+        <div id="allProds"></div>
+    </div>
 
     <!-- Floating Buffet Button (integrado com CatalogV2 — preço vem do produto cadastrado em /painel/produtos.html) -->
     <button class="buffet-fab" onclick="PDV_Dynamics.openBuffetFab()" title="Vender por peso / Buffet (edite em Produtos)">
@@ -564,7 +599,7 @@
 <script src="../js/core/motivacional.js?v=mp-v14"></script>
 <script src="../js/core/caixa.js?v=mp-v14"></script>
 <script src="../js/core/financas.js?v=mp-v14"></script>
-<script src="../js/core/onboarding.js?v=mp-v14"></script>
+<script src="../js/core/onboarding.js?v=mp-v15-selfheal"></script>
 <script src="../js/core/units.js?v=mp-v14"></script>
 <script src="../js/core/error-tracking.js?v=mp-v14"></script>
 <script src="../js/core/recipes.js?v=mp-v14"></script>
@@ -592,6 +627,9 @@
         catalog: null,
         currentWeightItem: null,
         weightInput: "",
+        _searchQuery: '',
+        _activeCategory: 'all',
+        _searchDebounce: null,
 
         init() {
             // ============================================================
@@ -676,17 +714,9 @@
             });
         },
 
-        renderProducts() {
-            const container = document.getElementById('allProds');
-            if (!container) return;
-            container.innerHTML = '';
-
-            // ============================================================
-            // Defense-in-depth: se CatalogV2 local tem produtos, ELE é
-            // a fonte de verdade. Ignora QUALQUER categoria legada sobrando
-            // em catalog_config (bases/classicos/especiais/adulto/zero_fit)
-            // mesmo se a cloud enviou dados sujos. Filtro cliente-side.
-            // ============================================================
+        // Coleta as seções que seriam renderizadas (sem aplicar busca/cat) — usado por pills + render
+        _collectSections() {
+            const sections = [];
             let v2ValidKeys = null;
             try {
                 const sess = typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession();
@@ -701,30 +731,142 @@
                         );
                     }
                 }
-            } catch(e) {}
+            } catch (e) {}
 
-            // 1. Bases Populares: só aparece se não há CatalogV2 ativo
             if (this.catalog.bases && Array.isArray(this.catalog.bases)
                 && !this.catalog._fromV2 && !v2ValidKeys) {
-                this._renderSection(container, '🔥 Bases Populares', 'pop', this.catalog.bases.filter(b => b.available));
+                const items = this.catalog.bases.filter(b => b.available);
+                if (items.length) sections.push({ key: 'bases', title: '🔥 Bases Populares', className: 'pop', items });
             }
 
-            // 2. Sabores por Categoria
             Object.entries(this.catalog.sabores || {}).forEach(([key, group]) => {
                 if (!group || !Array.isArray(group.items)) return;
-                // Se v2 ativo e key NÃO é de uma categoria v2, ignora (é lixo legado)
                 if (v2ValidKeys && !v2ValidKeys.has(key)) return;
                 const items = group.items.filter(i => i.available && i.canalVenda !== 'delivery');
                 if (items.length > 0) {
                     const title = (group.icon ? group.icon + ' ' : '') + (group.name || key);
-                    this._renderSection(container, title, '', items);
+                    sections.push({ key, title, className: '', items });
                 }
             });
 
-            // 3. Bebidas
             if (this.catalog.bebidas) {
-                this._renderSection(container, '🥤 Bebidas', '', this.catalog.bebidas.filter(b => b.available));
+                const items = this.catalog.bebidas.filter(b => b.available);
+                if (items.length) sections.push({ key: 'bebidas', title: '🥤 Bebidas', className: '', items });
             }
+            return sections;
+        },
+
+        _matchesSearch(item) {
+            const q = (this._searchQuery || '').trim().toLowerCase();
+            if (!q) return true;
+            const name = (item.name || '').toLowerCase();
+            return name.indexOf(q) !== -1;
+        },
+
+        renderCategoryPills(sections) {
+            const pillsEl = document.getElementById('pdvCatPills');
+            if (!pillsEl) return;
+            const totalCount = sections.reduce((s, sec) => s + sec.items.length, 0);
+            const pills = [{ key: 'all', title: '✨ Todos', count: totalCount }]
+                .concat(sections.map(s => ({ key: s.key, title: s.title, count: s.items.length })));
+            pillsEl.innerHTML = pills.map(p =>
+                `<button type="button" class="pdv-cat-pill ${this._activeCategory === p.key ? 'active' : ''}" onclick="PDV_Dynamics.setCategory('${p.key}')">${p.title}<span class="count">${p.count}</span></button>`
+            ).join('');
+        },
+
+        setCategory(key) {
+            this._activeCategory = key;
+            this.renderProducts();
+        },
+
+        onSearchInput(value) {
+            // Debounce simples — operador digita rápido em loja cheia
+            clearTimeout(this._searchDebounce);
+            this._searchDebounce = setTimeout(() => {
+                this._searchQuery = value || '';
+                this.renderProducts();
+            }, 120);
+        },
+
+        clearSearch() {
+            const inp = document.getElementById('pdvSearch');
+            if (inp) inp.value = '';
+            this._searchQuery = '';
+            this.renderProducts();
+        },
+
+        _loadInventory() {
+            try {
+                const sess = typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession();
+                const fid = sess && sess.franchiseId;
+                if (!fid) return [];
+                return DataStore.getCollection('inventory', fid) || [];
+            } catch (e) { return []; }
+        },
+
+        // Calcula quantas unidades do item ainda dá pra produzir com o inventory atual.
+        // Retorna { units: number|Infinity, hasRecipe: boolean, missing: boolean }
+        _stockState(item, inventory) {
+            if (!item || !item.receita || !item.receita.length) {
+                return { units: Infinity, hasRecipe: false, missing: false };
+            }
+            if (typeof Recipes === 'undefined' || !Recipes.availability) {
+                return { units: Infinity, hasRecipe: true, missing: false };
+            }
+            // Status binário (sem estoque pra 1 unidade) via Recipes
+            const av = Recipes.availability(item, inventory || []);
+            if (av.status === 'indisponivel') {
+                return { units: 0, hasRecipe: true, missing: false };
+            }
+            // Conta quantas unidades dá pra fazer (heurística: usa o ingrediente mais escasso)
+            let minUnits = Infinity;
+            const byId = {};
+            (inventory || []).forEach(i => { if (i && i.id) byId[i.id] = i; });
+            for (const r of item.receita) {
+                const ins = byId[r.insumoId];
+                if (!ins) continue;
+                let need = Number(r.qty || 0);
+                if (need <= 0) continue;
+                // Conversão de unidades quando possível
+                if (typeof Units !== 'undefined' && Units.convert && Units.sameGroup) {
+                    if (Units.sameGroup(r.unit, ins.unit)) {
+                        const conv = Units.convert(need, r.unit, ins.unit);
+                        if (conv && conv.ok) need = conv.qty;
+                    }
+                }
+                const have = Number(ins.quantity || 0);
+                const units = need > 0 ? Math.floor(have / need) : Infinity;
+                if (units < minUnits) minUnits = units;
+            }
+            return { units: minUnits === Infinity ? Infinity : minUnits, hasRecipe: true, missing: false };
+        },
+
+        renderProducts() {
+            const container = document.getElementById('allProds');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const sections = this._collectSections();
+            this.renderCategoryPills(sections);
+
+            const visibleSections = (this._activeCategory === 'all'
+                ? sections
+                : sections.filter(s => s.key === this._activeCategory)
+            ).map(s => ({ ...s, items: s.items.filter(i => this._matchesSearch(i)) }))
+             .filter(s => s.items.length > 0);
+
+            if (!visibleSections.length) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'pdv-no-results';
+                const q = (this._searchQuery || '').trim();
+                emptyDiv.innerHTML = q
+                    ? `<div class="nr-emoji">🔍</div><div class="nr-msg">Nenhum produto com "${q}"</div><div class="nr-hint">Tente outro termo ou troque a categoria</div>`
+                    : `<div class="nr-emoji">📦</div><div class="nr-msg">Nenhum produto nessa categoria</div><div class="nr-hint">Cadastre em Painel → Produtos</div>`;
+                container.appendChild(emptyDiv);
+                return;
+            }
+
+            visibleSections.forEach(s => this._renderSection(container, s.title, s.className, s.items));
         },
 
         _renderSection(container, title, className, items) {
@@ -733,17 +875,41 @@
             h.textContent = title;
             container.appendChild(h);
 
+            const inventory = this._loadInventory();
+            const lowStockThreshold = 5; // ≤ 5 unidades produzíveis = baixo estoque
+
             const grid = document.createElement('div');
             grid.className = 'pgrid';
             items.forEach(it => {
+                const stock = this._stockState(it, inventory);
+                const isOut = stock.hasRecipe && stock.units === 0;
+                const isLow = stock.hasRecipe && stock.units > 0 && stock.units <= lowStockThreshold && stock.units !== Infinity;
+
                 const div = document.createElement('div');
-                div.className = 'pitem ' + (it.isHighlight ? 'pop' : '');
+                div.className = 'pitem ' + (it.isHighlight ? 'pop ' : '') + (isOut ? 'esgotado ' : '') + (isLow ? 'baixoestoque' : '');
+
+                let badgeHtml = '';
+                if (isOut) {
+                    badgeHtml = '<div class="pbadge bd-out">❌ Esgotado</div>';
+                } else if (isLow) {
+                    badgeHtml = `<div class="pbadge bd-low">⚠️ Restam ${stock.units}</div>`;
+                }
+
                 div.innerHTML = `
+                    ${badgeHtml}
                     <div class="pe">${it.emoji || '🍨'}</div>
                     <div class="pn">${it.name}</div>
                     <div class="pp">${it.tipoVenda === 'por_peso' ? 'R$ '+it.price.toFixed(2)+'/kg' : (it.price ? 'R$ '+it.price.toFixed(2) : 'Ajustar')}</div>
                 `;
-                div.onclick = () => this.handleProductClick(it);
+                if (isOut) {
+                    div.onclick = () => {
+                        if (typeof Utils !== 'undefined' && Utils.showToast) {
+                            Utils.showToast('❌ ' + it.name + ' está esgotado. Reabasteça em Painel → Produtos.', 'error');
+                        }
+                    };
+                } else {
+                    div.onclick = () => this.handleProductClick(it);
+                }
                 grid.appendChild(div);
             });
             container.appendChild(grid);
@@ -1468,7 +1634,10 @@
             '<div class="pp">a partir R$ '+p.minPrice.toFixed(0)+'</div></div>';
     }
 
-    renderAll();
+    // Legacy fallback: só renderiza se PDV_Dynamics ainda não conseguiu
+    // (sem catalog_config carregado). Caso contrário, PDV_Dynamics.renderProducts
+    // é a fonte de verdade — ela aplica busca/filtro de categoria.
+    if (!PDV_Dynamics.catalog) renderAll();
 
     // ============================================
     // CUSTOMIZATION MODAL
