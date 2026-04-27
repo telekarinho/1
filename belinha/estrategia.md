@@ -402,3 +402,90 @@ Julho marca o **3º mês de operação** e coincide com:
 ---
 
 _Belinha — Ciclo #49 | 2026-04-27_
+
+---
+
+## Aprendizados dos ciclos #49–53
+
+### Contexto do período
+Ciclos 49–53 abrangem 27/04/2026 (D+2 pós-inauguração). Foco: completar cobertura de conteúdo para julho 2026 (féries escolares, aniversário 3 meses, produto sazonal), lançar programa Embaixador do Mês, e expandir SEO local com segunda landing page temática.
+
+### O que gerou mais valor concreto
+1. **SEO segunda landing page — `acai-self-service-londrina.html` (#53)** — Diferencial competitivo único (açaí buffet exclusivo Muffato) mapeado em URL própria com Schema.org MenuItem + FoodEstablishment. Consulta de alta intenção local ("açaí self-service londrina") sem concorrência direta de grandes players. Padrão confirmado: uma landing por produto/diferencial distinto.
+2. **Playbook Embaixador do Mês (#52)** — Templates E1–E4 cobrem todos os cenários: desde o primeiro embaixador histórico até o mês sem indicações (template de re-engajamento). O script "1º Embaixador de sempre" usa exclusividade emocional como incentivo sem custo adicional. Padrão: sempre criar versão de fallback para ações que dependem de resultados externos.
+3. **Conteúdo semanas 11–12 (ciclos #50–51)** — Dois pilares de julho antecipados: revelação do Potinho Caramelado (semana 11) e temática família/férias escolares (semana 12). Roteiros Reel + stories + WhatsApp templates por semana → operador não improvisa.
+4. **Auto-aprimoramento #49 + roadmap julio** — Estratégia de julho definida com produto sazonal, aniversário 3 meses e cadência semanal de conteúdo. Planejamento antecipado de 4–5 semanas é o padrão correto.
+
+### O que foi menos eficaz
+- **Ciclo #49 reforçou padrão já conhecido** (scripts operacionais > conteúdo contingente) sem adicionar aprendizado novo. Auto-aprimoramento tem mais valor quando identifica gaps, não apenas confirma o que já funciona. Próximos auto-aprimoramentos devem focar em: (a) o que ainda não foi feito, (b) o que gerou resultado negativo.
+- **Link interno `acai-self-service-londrina.html` → `index.html` não foi criado no ciclo #53** (esquecido). Regra reconfirmada: links internos criam-se no mesmo ciclo, não no próximo.
+
+### Padrão consolidado (v6)
+
+> **Bug/fix crítico > Landing page SEO por diferencial distinto > Scripts/templates operador acionáveis > Conteúdo não-contingente c/ versão fallback > UX/Performance sweep batch > SEO técnico acumulativo > Pesquisa concorrente (só com follow-up imediato)**
+
+Adição v6: **Links internos criam-se no mesmo ciclo da página — nunca diferidos**.
+
+### Estado das áreas em 27/04/2026 (pós-ciclo #53)
+
+| Área | Estado | Próxima ação |
+|------|--------|--------------|
+| Conteúdo pós-inauguração | ✅ Semanas 1–12 prontas (até 11/07) | Semana 13 (12–18/07) |
+| Produto sazonal julho | ✅ Potinho Caramelado revelado na semana 11 | Confirmação do operador |
+| Indica & Ganha | ✅ Ativo — operador com templates | Nomear 1º Embaixador se ≥3 indicações |
+| Playbook Embaixador do Mês | ✅ Completo (E1–E4 + carrossel IG + story) | Ativar em julho |
+| SEO — Potinho Ninho | ✅ `potinho-ninho-londrina.html` + links internos | — |
+| SEO — Açaí Self-Service | ✅ `acai-self-service-londrina.html` + links internos | — |
+| aggregateRating Schema.org | ⛔ SUSPENSO | Aguardar ≥3 reviews Google Maps |
+| Google Analytics ID real | ⛔ SUSPENSO | Aguardar autorização do usuário |
+
+---
+
+## Estratégia de agosto 2026 (mês 4 de operação)
+
+### Contexto
+Agosto marca o **4º mês de operação** após a inauguração de 25/04/2026. O aniversário de 3 meses acontece em 25/07 (semana 14, ciclos #55-59 cobrem até agosto). Contexto:
+- **Pós-férias escolares** (julho acabou) → retorno à rotina, público jovem adulto e office-goers
+- **Inverno continua** → comfort food, chocolates, caramelo ainda em alta
+- **Consolidação de fidelidade** → clientes de abril–julho chegando ao 10º carimbo
+- **Aniversário 3 meses** (25/07 = semana 14) já tratado no roadmap anterior; agosto = sequência do pós-aniversário
+
+### Pilares estratégicos de agosto
+
+| Pilar | Ação concreta |
+|-------|---------------|
+| **Rotina do pós-férias** | Copy muda de "família/férias" para "seu momento" — adultos voltando à rotina, potinho como pausa do dia |
+| **Fidelidade matura** | Primeiros clientes de abril atingem 10 carimbos em agosto → campanha "Ganhou! Hora do Mini Grátis" |
+| **Novo produto sazonal?** | Potinho de Chocolate Quente (agosto = auge do inverno) ou reforçar o Caramelado |
+| **UGC estratégico** | Pedir fotos/vídeos de clientes com o potinho na faixa de temperatura fria — visual de "aconchego" |
+| **SEO técnico** | Ativar `aggregateRating` se ≥3 reviews disponíveis; verificar Core Web Vitals `index.html` mobile |
+
+### Cadência de conteúdo (agosto)
+
+| Semana | Período | Tema |
+|--------|---------|------|
+| Semana 13 | 12–18/07 | Mid-july: engajamento + UGC invernal + convite Embaixador |
+| Semana 14 | 19–25/07 | Aniversário 3 meses MilkyPot Londrina 🎉 |
+| Semana 15 | 26/07–01/08 | Pós-aniversário: "obrigada por 3 meses" + transição agosto |
+| Semana 16 | 02–08/08 | Agosto rotina: "sua pausa favorita do dia" |
+
+### Próximas iniciativas (ciclos 55–59)
+
+| Ciclo | Área | Ação |
+|-------|------|------|
+| #55 | Conteúdo | `pos-inauguracao-semana13.md` — 12–18/07: mid-month + UGC invernal + convite Embaixador |
+| #56 | Conteúdo | `pos-inauguracao-semana14.md` — 19–25/07: aniversário 3 meses (campanha emocional completa) |
+| #57 | Conversão | Script WhatsApp "Ganhou! 10 carimbos → Mini grátis" — ativação fidelidade matura |
+| #58 | SEO ou UX | `aggregateRating` se desbloqueado; senão: Core Web Vitals sweep `index.html` mobile |
+| #59 | Auto-aprimoramento | Reler log ciclos 54–58, ajustar estratégia setembro |
+
+### Bloqueadores suspensos (sem mudança)
+
+| Bloqueador | Dependência | Ciclo que bloqueou |
+|------------|-------------|-------------------|
+| aggregateRating Schema.org | ≥3 reviews Google Maps verificáveis pelo operador | #43 |
+| Google Analytics ID real | Autorização explícita do usuário | #15 |
+
+---
+
+_Belinha — Ciclo #54 | 2026-04-27_
