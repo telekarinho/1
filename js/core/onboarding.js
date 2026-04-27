@@ -34,6 +34,26 @@ const Onboarding = {
             return;
         }
 
+        // Self-heal: franquia que já está operando (qualquer pedido criado)
+        // entra direto pra 'pronto' sem modal. Resolve o caso de quem ficou
+        // preso no checklist por bug de detecção em versões antigas.
+        try {
+            const orders = (DataStore.getCollection && DataStore.getCollection('orders', this._franchise.id)) || [];
+            const caixaMoves = (DataStore.getCollection && DataStore.getCollection('caixa', this._franchise.id)) || [];
+            const jaOperando = orders.length > 0 || caixaMoves.some(m => m && (m.type === 'abertura' || m.type === 'venda'));
+            if (jaOperando) {
+                if (typeof DataStore.markSetupComplete === 'function') {
+                    DataStore.markSetupComplete(this._franchise.id);
+                } else {
+                    this._franchise.setupStatus = 'pronto';
+                    this._franchise.setupCompleto = true;
+                    this._franchise.activatedAt = this._franchise.activatedAt || new Date().toISOString();
+                    DataStore.set('franchises', franchises);
+                }
+                return;
+            }
+        } catch (e) { /* segue fluxo normal */ }
+
         this._injectStyles();
 
         // Popula o checklist se nao existe
@@ -75,16 +95,30 @@ const Onboarding = {
                 return tvs.length > 0;
             },
             caixaOpened: () => {
-                // se houver qualquer registro de caixa para essa franquia
+                // Coleção real do Caixa é 'caixa' (não 'caixa_sessions')
+                // Qualquer movimento type='abertura' já vale como "caixa aberto pela primeira vez"
                 try {
-                    const caixas = DataStore.getCollection && DataStore.getCollection('caixa_sessions', fid) || [];
-                    return caixas.length > 0;
+                    if (typeof Caixa !== 'undefined' && Caixa.getTurnoState) {
+                        // Se a franquia já abriu caixa em qualquer dia, considera feito
+                        const all = DataStore.getCollection('caixa', fid) || [];
+                        if (all.some(m => m && m.type === 'abertura')) return true;
+                    }
+                    const caixaMoves = (DataStore.getCollection && DataStore.getCollection('caixa', fid)) || [];
+                    if (caixaMoves.some(m => m && m.type === 'abertura')) return true;
+                    // Compat legado: alguns ambientes antigos podem ter 'caixa_sessions'
+                    const legacy = (DataStore.getCollection && DataStore.getCollection('caixa_sessions', fid)) || [];
+                    return legacy.length > 0;
                 } catch(e) { return false; }
             },
             hasFirstSale: () => {
                 try {
-                    const orders = DataStore.getCollection && DataStore.getCollection('orders', fid) || [];
-                    return orders.filter(o => o.status === 'entregue' || o.status === 'pago').length > 0;
+                    // Qualquer pedido criado já conta como "venda de teste" — PDV cria com status='confirmado',
+                    // pedidos.html depois muda pra 'pago'/'entregue'. Não filtrar por status.
+                    const orders = (DataStore.getCollection && DataStore.getCollection('orders', fid)) || [];
+                    if (orders.length > 0) return true;
+                    // Reforço: se houve venda registrada no Caixa, também conta
+                    const caixaMoves = (DataStore.getCollection && DataStore.getCollection('caixa', fid)) || [];
+                    return caixaMoves.some(m => m && m.type === 'venda');
                 } catch(e) { return false; }
             }
         };
