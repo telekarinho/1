@@ -1,5 +1,39 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #53 — 2026-04-27
+
+**Área:** SEO — Landing page `acai-self-service-londrina.html`
+
+**O que analisou:**
+- Ciclo #52 recomendava criar landing SEO "açaí self-service londrina" como próxima prioridade (alternativa ao `aggregateRating` bloqueado)
+- Verificado: `potinho-ninho-londrina.html` como template de referência (design system, Schema.org, OG tags, estrutura)
+- Identificado: `cardapio.html` já tinha link para `potinho-ninho-londrina.html` mas não para a página de açaí
+- `sitemap.xml` sem entrada para açaí self-service
+- Diferencial único: o self-service buffet é exclusivo da unidade Muffato — alta intenção de busca local
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `acai-self-service-londrina.html` | CRIADO — 380 linhas. Landing SEO targeting "açaí self-service londrina", "açaí buffet londrina", "açaí muffato londrina". Schema.org BreadcrumbList + MenuItem + FoodEstablishment, OG tags, Twitter Card. Design pastel azul/roxo (diferente do rosa do Ninho). Badge "Exclusivo unidade Muffato". Seções: "Como Funciona" (4 passos), Estação de Toppings (10 itens), Diferenciais, Cross-sell (Potinho de Ninho + Milkshakes + Fidelidade), Localização, CTA WhatsApp. |
+| `sitemap.xml` | +entrada `acai-self-service-londrina.html` prioridade 0.8, lastmod 2026-04-27 |
+| `cardapio.html` | +link interno contextual → `acai-self-service-londrina.html` (junto ao link do Potinho de Ninho, seção de produtos) |
+
+**Commit:** `a4f2f63`
+
+**Destaques técnicos:**
+- Schema.org `MenuItem` com `menuAddOn` lista toppings (rich result em potencial)
+- Badge "Exclusivo unidade Muffato" — diferenciador que outros concorrentes não podem copiar
+- Cross-sell orgânico: "Também Experimente" com scroll horizontal (3 cards: Ninho, Milkshakes, Fidelidade)
+- Mesma paleta de fonte/componentes do design system, mas cor dominante azul/roxo vs rosa do Ninho — distingue visualmente as duas páginas SEO
+
+**Próximo passo sugerido:**
+- Ciclo #54: Auto-aprimoramento obrigatório (ciclos 49–53) + atualizar `belinha/estrategia.md`
+- Ciclo #55: Conteúdo semana 13 (12–18/07) — engajamento mid-month, UGC invernal, convite Embaixador
+- Ciclo #56: Adicionar link para `acai-self-service-londrina.html` em `index.html` (seção Exclusivos Muffato ou hero)
+
+---
+
 ## Ciclo #52 — 2026-04-27
 
 **Área:** Conversão — Programa "Embaixador do Mês"
