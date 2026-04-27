@@ -19,9 +19,60 @@
         .pdv-layout { display: grid; grid-template-columns: 1fr 380px; height: calc(100vh - 44px); }
 
         /* Header */
-        .pdv-header { background: linear-gradient(135deg, #6C63FF, #5A52E0); color: #fff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .pdv-header { background: linear-gradient(135deg, #6C63FF, #5A52E0); color: #fff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
         .pdv-header h1 { margin: 0; font-size: 15px; font-family: 'Baloo 2', cursive; }
         .pdv-header .btn-back { background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+
+        /* ATALHOS DE TECLADO no header — destaque visual + clicáveis (também funcionam como botão) */
+        .pdv-shortcuts {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .pdv-shortcuts .ks {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.16);
+            border: 1px solid rgba(255,255,255,0.28);
+            padding: 5px 10px 5px 6px;
+            border-radius: 22px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            transition: background .12s, transform .08s;
+            color: #fff;
+            white-space: nowrap;
+        }
+        .pdv-shortcuts .ks:hover { background: rgba(255,255,255,0.28); }
+        .pdv-shortcuts .ks:active { transform: scale(.96); }
+        .pdv-shortcuts .ks kbd {
+            font-family: 'Nunito', sans-serif;
+            background: #fff;
+            color: #5A52E0;
+            border-radius: 14px;
+            padding: 3px 9px;
+            font-size: 11px;
+            font-weight: 900;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2) inset, 0 1px 2px rgba(0,0,0,0.15);
+            min-width: 24px;
+            text-align: center;
+        }
+        .pdv-shortcuts .ks-label { letter-spacing: 0.3px; }
+        .pdv-shortcuts .ks-print kbd { color: #1565C0; }
+        .pdv-shortcuts .ks-tab kbd { color: #E65100; }
+        .pdv-shortcuts .ks-finish { background: rgba(76,175,80,0.32); border-color: rgba(76,175,80,0.55); }
+        .pdv-shortcuts .ks-finish:hover { background: rgba(76,175,80,0.5); }
+        .pdv-shortcuts .ks-finish kbd { color: #2E7D32; }
+
+        /* Esconde labels (só mostra teclas) em viewport bem pequeno pra não quebrar */
+        @media (max-width: 720px) {
+            .pdv-shortcuts .ks { padding: 5px 8px; }
+            .pdv-shortcuts .ks-label { display: none; }
+        }
 
         /* Products area */
         .pdv-products { padding: 12px; overflow-y: auto; height: 100%; }
@@ -116,6 +167,59 @@
         .bf:hover { background: #388E3C; }
         .bp { background: #e3f2fd; color: #1565C0; }
         .bc { background: #ffebee; color: #e53935; }
+
+        /* FAB FLUTUANTE: Conta Aberta + Fechar SEMPRE visíveis no bottom da viewport,
+           independente do tamanho do PDV. Aparece somente quando cart tem itens.
+           z-index 9500 — fica acima do banner de caixa (9000) e do cart sidebar. */
+        .pdv-action-fab {
+            position: fixed;
+            bottom: 14px;
+            right: 14px;
+            z-index: 9500;
+            display: none;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: nowrap;
+            font-family: 'Nunito', sans-serif;
+        }
+        .pdv-action-fab.show { display: flex; }
+        .pdv-action-fab button {
+            border: none;
+            padding: 14px 22px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 6px 22px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: transform .12s, box-shadow .12s;
+        }
+        .pdv-action-fab button:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(0,0,0,0.3); }
+        .pdv-action-fab button:active { transform: scale(.96); }
+        .pdv-action-fab .fab-tab {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            color: #fff;
+        }
+        .pdv-action-fab .fab-finish {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: #fff;
+        }
+        .pdv-action-fab .fab-total {
+            background: rgba(255,255,255,0.96);
+            color: #E91E63;
+            padding: 14px 18px;
+            font-weight: 900;
+            border-radius: 50px;
+            box-shadow: 0 6px 22px rgba(0,0,0,0.18);
+        }
+        @media (max-width: 480px) {
+            .pdv-action-fab { left: 8px; right: 8px; justify-content: center; }
+            .pdv-action-fab button { font-size: 13px; padding: 12px 14px; flex: 1; justify-content: center; }
+            .pdv-action-fab .fab-total { display: none; }
+        }
 
         /* Buffet FAB */
         .buffet-fab { position: fixed; bottom: 18px; left: 18px; width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #FF9800, #F57C00); color: #fff; border: none; box-shadow: 0 6px 20px rgba(255,152,0,0.45); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; transition: transform 0.15s; }
@@ -341,6 +445,21 @@
         <button class="btn-back" onclick="window.location.href='pedidos.html'">← Voltar</button>
         <h1>🏪 PDV — <span id="pdvStore">MilkyPot</span></h1>
     </div>
+    <!-- ATALHOS DE TECLADO — sempre visíveis no header (operador encontra rápido) -->
+    <div class="pdv-shortcuts" id="pdvShortcuts" aria-label="Atalhos de teclado">
+        <span class="ks ks-vendas" onclick="if(typeof showVendasDoDia==='function')showVendasDoDia()" title="Vendas do dia (relatório completo)" style="background:rgba(106,27,154,0.32);border-color:rgba(106,27,154,0.55)">
+            <kbd style="color:#4A148C">F1</kbd><span class="ks-label">Vendas</span>
+        </span>
+        <span class="ks ks-print" onclick="if(typeof printOrder==='function')printOrder()" title="Imprimir pedido">
+            <kbd>F2</kbd><span class="ks-label">Imprimir</span>
+        </span>
+        <span class="ks ks-tab" onclick="if(typeof openTab==='function')openTab()" title="Salvar como conta aberta">
+            <kbd>F3</kbd><span class="ks-label">Conta</span>
+        </span>
+        <span class="ks ks-finish" onclick="if(typeof finishOrder==='function')finishOrder()" title="Fechar pedido">
+            <kbd>F4</kbd><span class="ks-label">Fechar</span>
+        </span>
+    </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end" id="pdvStatusRow">
         <!-- Status compacto do caixa + meta + checklist (preenchido por JS) -->
         <div id="pdvChecklistChip" style="display:none"></div>
@@ -368,6 +487,14 @@
         <span style="font-size:24px">🎟️</span>
         <span style="font-size:10px;font-weight:800;display:block">RESGATAR</span>
     </button>
+
+    <!-- FAB FLUTUANTE: Conta Aberta + Fechar SEMPRE visíveis quando carrinho tem itens.
+         Independe do tamanho do PDV — não some em viewport pequeno. -->
+    <div class="pdv-action-fab" id="pdvActionFab" role="toolbar" aria-label="Ações do pedido">
+        <span class="fab-total" id="pdvFabTotal">R$ 0,00</span>
+        <button class="fab-tab" onclick="if(typeof openTab==='function') openTab()" title="Salvar pedido como conta aberta">📋 Conta Aberta</button>
+        <button class="fab-finish" onclick="if(typeof finishOrder==='function') finishOrder()" title="Fechar pedido (F4)">✅ Fechar Pedido</button>
+    </div>
     <div class="pdv-cart">
         <div class="cart-head">
             <h2>🛒 Pedido</h2>
@@ -436,11 +563,20 @@
                     <option value="Crédito">💳 Crédito</option>
                 </select>
             </div>
-            <!-- Linha 2: NF-e (checkbox + input opcional) -->
+            <!-- Linha de DESCONTO — visível só quando aplicado, com botão pra editar/limpar -->
+            <div id="cartDiscountRow" style="display:none;font-size:11px;margin:4px 0;padding:5px 8px;background:#FEF3C7;border:1px dashed #F59E0B;border-radius:6px;color:#92400E;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:6px">
+                <span id="cartDiscountLabel">Desconto: -R$ 0,00</span>
+                <span style="display:flex;gap:4px">
+                    <button onclick="openDiscountModal()" style="background:#F59E0B;color:#fff;border:none;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer">editar</button>
+                    <button onclick="clearDiscount()" style="background:#fff;color:#991B1B;border:1px solid #F59E0B;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer">×</button>
+                </span>
+            </div>
+            <!-- Linha 2: NF-e (checkbox + input opcional) + botão Desconto -->
             <div class="cart-nf-row">
                 <input type="checkbox" id="nfCk" onchange="document.getElementById('nfCpf').classList.toggle('show', this.checked)">
                 <label for="nfCk">NF-e</label>
                 <input type="text" id="nfCpf" placeholder="CPF do consumidor">
+                <button onclick="openDiscountModal()" id="btnDiscount" style="background:#F59E0B;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap" title="Aplicar desconto no pedido">🏷️ Desconto</button>
             </div>
             <!-- Botões de ação — SEMPRE VISÍVEIS por causa do grid -->
             <div class="cart-acts">
@@ -515,8 +651,9 @@
                 <button class="buffet-btn" onclick="closeRedeemModal()">Cancelar</button>
                 <button class="buffet-btn primary" id="btnConfirmRedeem" onclick="confirmRedeem()" style="background:linear-gradient(135deg,#EC407A,#AD1457);border-color:#AD1457">✅ Validar Codigo</button>
             </div>
-
-            <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">💡 Codigo curto tem 6 letras (XXX-XXX). Ja impresso no recibo.</p>
+            <button onclick="adminForceRedeem()" style="width:100%;margin-top:8px;background:#fff;color:#7F1D1D;border:2px solid #DC2626;padding:10px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">🔧 Resgatar Manualmente (admin) — código órfão</button>
+            <p style="font-size:11px;color:#999;text-align:center;margin-top:8px">💡 Codigo curto tem 6 letras (XXX-XXX). Ja impresso no recibo.</p>
+            <p style="font-size:10px;color:#aaa;text-align:center;margin-top:4px">Use o botão Manual se o cliente tem o recibo mas o código não foi sincronizado.</p>
         </div>
     </div>
 </div>
@@ -535,16 +672,19 @@
             <span class="sdot"></span> <span id="scaleStatusText">Balança desconectada</span>
         </div>
         <div class="buffet-body">
-            <div class="weight-display" id="weightDisplay">
-                <div class="wv" id="weightVal">0</div>
-                <div class="wu">GRAMAS</div>
+            <!-- Toggle PESO / VALOR — operador escolhe se digita peso (g) ou valor (R$) -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
+                <button id="modePeso" class="buffet-btn primary" style="height:42px;font-size:14px" onclick="PDV_Dynamics.setWeightMode('peso')">⚖️ Por Peso (g)</button>
+                <button id="modeValor" class="buffet-btn" style="height:42px;font-size:14px" onclick="PDV_Dynamics.setWeightMode('valor')">💰 Por Valor (R$)</button>
             </div>
 
-            <div class="quick-weights">
-                <button class="btn-qw" onclick="PDV_Dynamics.setQuickWeight(100)">100g</button>
-                <button class="btn-qw" onclick="PDV_Dynamics.setQuickWeight(200)">200g</button>
-                <button class="btn-qw" onclick="PDV_Dynamics.setQuickWeight(300)">300g</button>
-                <button class="btn-qw" onclick="PDV_Dynamics.setQuickWeight(500)">500g</button>
+            <div class="weight-display" id="weightDisplay">
+                <div class="wv" id="weightVal">0</div>
+                <div class="wu" id="weightUnit">GRAMAS</div>
+            </div>
+
+            <div class="quick-weights" id="quickButtonsRow">
+                <!-- preenchido dinamicamente conforme modo (peso vs valor) -->
             </div>
 
             <div class="keypad">
@@ -568,7 +708,7 @@
                     <strong id="confirm-price-kg">R$ 0,00</strong>
                 </div>
                 <div class="weight-confirm-row">
-                    <span>Peso final:</span>
+                    <span id="confirm-weight-label">Peso final:</span>
                     <strong id="confirm-weight">0g</strong>
                 </div>
                 <div class="weight-confirm-total" id="confirm-total">R$ 0,00</div>
@@ -579,6 +719,29 @@
                     ✅ CONFIRMAR E ADICIONAR
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Desconto -->
+<div class="modal-bg" id="discountModal" style="z-index:1900" onclick="if(event.target===this)closeDiscountModal()">
+    <div style="background:#fff;border-radius:16px;padding:22px 24px;max-width:380px;width:92%;box-shadow:0 12px 40px rgba(0,0,0,0.25);font-family:'Nunito',sans-serif">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <h3 style="margin:0;font-family:'Baloo 2',cursive;font-size:18px;color:#92400E">🏷️ Desconto</h3>
+            <button onclick="closeDiscountModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#666">✕</button>
+        </div>
+        <div style="font-size:12px;color:#666;margin-bottom:10px">Subtotal atual: <strong id="discountSubtotal" style="color:#333">R$ 0,00</strong></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+            <button id="discountTypeReais" onclick="setDiscountType('reais')" style="padding:10px;border:2px solid #F59E0B;background:#F59E0B;color:#fff;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit">R$ Reais</button>
+            <button id="discountTypePerc" onclick="setDiscountType('perc')" style="padding:10px;border:2px solid #F59E0B;background:#fff;color:#F59E0B;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit">% Percentual</button>
+        </div>
+        <label style="display:block;font-size:11px;color:#666;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px" id="discountInputLabel">Valor (R$)</label>
+        <input type="number" id="discountValue" step="0.01" min="0" placeholder="0,00" style="width:100%;padding:12px 14px;border:2px solid #ddd;border-radius:8px;font-size:18px;font-weight:800;font-family:inherit;color:#92400E;text-align:center" oninput="previewDiscount()">
+        <div style="margin-top:10px;padding:10px;background:#FFF8E1;border-radius:8px;font-size:13px;color:#92400E;font-weight:700" id="discountPreview">Total final: R$ 0,00</div>
+        <div id="discountError" style="display:none;margin-top:8px;padding:8px;background:#FEE2E2;border-radius:8px;font-size:12px;color:#991B1B;font-weight:700"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+            <button onclick="closeDiscountModal()" style="padding:11px;border:2px solid #ddd;background:#fff;color:#666;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit">Cancelar</button>
+            <button onclick="applyDiscount()" style="padding:11px;border:none;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit">✅ Aplicar</button>
         </div>
     </div>
 </div>
@@ -724,22 +887,22 @@
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v14"></script>
-<script src="../js/core/motivacional.js?v=mp-v14"></script>
-<script src="../js/core/caixa.js?v=mp-v14"></script>
-<script src="../js/core/financas.js?v=mp-v14"></script>
-<script src="../js/core/onboarding.js?v=mp-v14"></script>
-<script src="../js/core/units.js?v=mp-v14"></script>
-<script src="../js/core/error-tracking.js?v=mp-v14"></script>
-<script src="../js/core/recipes.js?v=mp-v14"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v14"></script>
-<script src="../js/core/offline-queue.js?v=mp-v14"></script>
-<script src="../js/core/pix.js?v=mp-v14"></script>
-<script src="../js/core/nfce.js?v=mp-v14"></script>
-<script src="../js/core/printer.js?v=mp-v14"></script>
+<script src="../js/core/adminconfig.js?v=mp-v91"></script>
+<script src="../js/core/motivacional.js?v=mp-v91"></script>
+<script src="../js/core/caixa.js?v=mp-v91"></script>
+<script src="../js/core/financas.js?v=mp-v91"></script>
+<script src="../js/core/onboarding.js?v=mp-v91"></script>
+<script src="../js/core/units.js?v=mp-v91"></script>
+<script src="../js/core/error-tracking.js?v=mp-v91"></script>
+<script src="../js/core/recipes.js?v=mp-v91"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v91"></script>
+<script src="../js/core/offline-queue.js?v=mp-v91"></script>
+<script src="../js/core/pix.js?v=mp-v91"></script>
+<script src="../js/core/nfce.js?v=mp-v91"></script>
+<script src="../js/core/printer.js?v=mp-v91"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v14"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v14"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v91"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v91"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -1087,7 +1250,8 @@
         openWeightModal(it) {
             this.currentWeightItem = it;
             this.weightInput = "";
-            this.updateWeightUI();
+            this.weightMode = this.weightMode || 'peso'; // default 'peso' (mantém comportamento antigo)
+            this.setWeightMode(this.weightMode); // re-sintoniza UI conforme modo atual
             document.getElementById('weightModal').classList.add('open');
             document.getElementById('weightModalTitle').textContent = `⚖️ ${it.name}`;
             document.getElementById('confirm-price-kg').textContent = `R$ ${Number(it.price||0).toFixed(2)}`;
@@ -1095,6 +1259,47 @@
             // Se já tiver balança ativa, garante que o loop está rodando
             if (this.scalePort && !this.scaleReadLoopActive) this.startScaleReadLoop();
             document.getElementById('scaleStatus').style.display = this.scalePort ? 'flex' : 'none';
+        },
+
+        // Toggle entre 2 modos de venda por peso:
+        //  - 'peso' : operador digita gramas, sistema calcula valor
+        //  - 'valor': operador digita R$, sistema calcula peso equivalente
+        setWeightMode(mode) {
+            this.weightMode = (mode === 'valor') ? 'valor' : 'peso';
+            this.weightInput = ""; // reset ao trocar de modo
+            // Toggle visual dos botões
+            var bp = document.getElementById('modePeso');
+            var bv = document.getElementById('modeValor');
+            if (bp && bv) {
+                if (this.weightMode === 'peso') {
+                    bp.classList.add('primary');
+                    bv.classList.remove('primary');
+                } else {
+                    bv.classList.add('primary');
+                    bp.classList.remove('primary');
+                }
+            }
+            // Atualiza unit label e quick buttons row
+            var unit = document.getElementById('weightUnit');
+            if (unit) unit.textContent = this.weightMode === 'peso' ? 'GRAMAS' : 'REAIS';
+            var quick = document.getElementById('quickButtonsRow');
+            if (quick) {
+                if (this.weightMode === 'peso') {
+                    quick.innerHTML =
+                        '<button class="btn-qw" onclick="PDV_Dynamics.setQuickWeight(100)">100g</button>' +
+                        '<button class="btn-qw" onclick="PDV_Dynamics.setQuickWeight(200)">200g</button>' +
+                        '<button class="btn-qw" onclick="PDV_Dynamics.setQuickWeight(300)">300g</button>' +
+                        '<button class="btn-qw" onclick="PDV_Dynamics.setQuickWeight(500)">500g</button>';
+                } else {
+                    // Quick em centavos: 500=R$5, 1000=R$10, 1500=R$15, 2000=R$20
+                    quick.innerHTML =
+                        '<button class="btn-qw" onclick="PDV_Dynamics.setQuickValue(500)">R$ 5</button>' +
+                        '<button class="btn-qw" onclick="PDV_Dynamics.setQuickValue(1000)">R$ 10</button>' +
+                        '<button class="btn-qw" onclick="PDV_Dynamics.setQuickValue(1500)">R$ 15</button>' +
+                        '<button class="btn-qw" onclick="PDV_Dynamics.setQuickValue(2000)">R$ 20</button>';
+                }
+            }
+            this.updateWeightUI();
         },
 
         /* -------------------------------------------------------
@@ -1239,7 +1444,7 @@
         pressWeight(key) {
             if (key === 'C') this.weightInput = "";
             else if (key === 'DEL') this.weightInput = this.weightInput.slice(0, -1);
-            else if (this.weightInput.length < 5) this.weightInput += key;
+            else if (this.weightInput.length < 6) this.weightInput += key; // 6 dígitos cobre R$ 9999,99
             this.updateWeightUI();
         },
 
@@ -1248,27 +1453,69 @@
             this.updateWeightUI();
         },
 
-        updateWeightUI() {
-            const g = parseInt(this.weightInput || "0");
-            const priceKg = this.currentWeightItem ? this.currentWeightItem.price : 0;
-            const total = (g / 1000) * priceKg;
-            const finalTotal = Math.round(total * 100) / 100;
+        // Quick em modo 'valor': val está em CENTAVOS (500 = R$ 5,00)
+        setQuickValue(centavos) {
+            this.weightInput = centavos.toString();
+            this.updateWeightUI();
+        },
 
-            document.getElementById('weightVal').textContent = g;
-            document.getElementById('confirm-weight').textContent = `${g}g`;
-            document.getElementById('confirm-total').textContent = `R$ ${finalTotal.toFixed(2).replace('.', ',')}`;
+        updateWeightUI() {
+            const priceKg = this.currentWeightItem ? Number(this.currentWeightItem.price || 0) : 0;
+            const mode = this.weightMode || 'peso';
+
+            if (mode === 'peso') {
+                const g = parseInt(this.weightInput || "0");
+                const total = (g / 1000) * priceKg;
+                const finalTotal = Math.round(total * 100) / 100;
+                document.getElementById('weightVal').textContent = g;
+                const wlabel = document.getElementById('confirm-weight-label');
+                if (wlabel) wlabel.textContent = 'Peso final:';
+                document.getElementById('confirm-weight').textContent = `${g}g`;
+                document.getElementById('confirm-total').textContent = `R$ ${finalTotal.toFixed(2).replace('.', ',')}`;
+            } else {
+                // Modo 'valor': weightInput representa centavos (ex: "1250" = R$ 12,50)
+                const cents = parseInt(this.weightInput || "0");
+                const reais = cents / 100;
+                // Calcula peso equivalente em gramas
+                const g = priceKg > 0 ? Math.round((reais / priceKg) * 1000) : 0;
+                document.getElementById('weightVal').textContent = reais.toFixed(2).replace('.', ',');
+                const wlabel = document.getElementById('confirm-weight-label');
+                if (wlabel) wlabel.textContent = 'Peso equivalente:';
+                document.getElementById('confirm-weight').textContent = `${g}g`;
+                document.getElementById('confirm-total').textContent = `R$ ${reais.toFixed(2).replace('.', ',')}`;
+            }
         },
 
         confirmWeight() {
-            const g = parseInt(this.weightInput || "0");
-            if (g <= 0) {
-                Utils.showToast("Digite o peso ou capture da balança.", "error");
-                return;
-            }
-
             const item = this.currentWeightItem;
-            const total = (g / 1000) * Number(item.price || 0);
-            const finalTotal = Math.round(total * 100) / 100;
+            if (!item) return;
+            const priceKg = Number(item.price || 0);
+            const mode = this.weightMode || 'peso';
+
+            let g, finalTotal;
+            if (mode === 'peso') {
+                g = parseInt(this.weightInput || "0");
+                if (g <= 0) {
+                    Utils.showToast("Digite o peso ou capture da balança.", "error");
+                    return;
+                }
+                const total = (g / 1000) * priceKg;
+                finalTotal = Math.round(total * 100) / 100;
+            } else {
+                const cents = parseInt(this.weightInput || "0");
+                const reais = cents / 100;
+                if (reais <= 0) {
+                    Utils.showToast("Digite o valor em reais.", "error");
+                    return;
+                }
+                if (priceKg <= 0) {
+                    Utils.showToast("Produto sem preço/kg cadastrado. Abra Painel → Produtos.", "error");
+                    return;
+                }
+                finalTotal = Math.round(reais * 100) / 100;
+                // Peso equivalente — usado pra exibição e CMV proporcional
+                g = Math.round((reais / priceKg) * 1000);
+            }
 
             // Custo proporcional ao peso (pra CMV correto no financeiro)
             const custoKg = Number(item.cost || 0);
@@ -1515,6 +1762,160 @@
     renderPdvStatusChips();
     // Atualiza a cada 30s (caso outro atendente mexa em paralelo)
     setInterval(renderPdvStatusChips, 30000);
+
+    // ===== SYNC ENTRE PCs em tempo real (caixa + outros) =====
+    // Quando outro PC abre/fecha caixa, faz sangria/reforço, registra venda etc,
+    // o DataStore dispara mp_remote_update. PDV reage atualizando o chip do caixa.
+    window.addEventListener('mp_remote_update', function (e) {
+        if (!e.detail || !e.detail.key) return;
+        var k = e.detail.key;
+        if (k === 'caixa_' + fid) {
+            try { renderPdvStatusChips(); } catch (_) {}
+            try { if (typeof ensureCaixaAberto === 'function') ensureCaixaAberto(); } catch (_) {}
+        }
+    });
+
+    // Banner mp_auth_orphan REMOVIDO em v62 — rules públicas cobrem reads de sync,
+    // o banner só causava deslogins desnecessários. Self-heal anônimo segue ativo
+    // em datastore.js pra liberar writes em PCs sem login completo.
+
+    // ========== AUTO-ABRIR CAIXA ==========
+    // Se caixa não foi aberto hoje, banner gigante no topo + modal automático.
+    // Operador NÃO precisa achar chip pequeno — fluxo é dirigido.
+
+    function removeBlocker() {
+        var b = document.getElementById('pdvCaixaBlocker');
+        if (b) { document.body.style.paddingTop = ''; b.remove(); }
+    }
+
+    // Reabertura admin: apaga aberturas/fechamentos fantasma do dia e libera o caixa
+    // pra abrir do zero. Vendas (type='venda') ficam preservadas.
+    // Caso de uso: bug de timezone pré-fix deixou movimento "fechamento" com dateKey
+    // errado que ainda bate com hoje, travando o caixa.
+    function adminForceReopen() {
+        if (typeof DataStore === 'undefined') { alert('DataStore indisponível'); return; }
+        var session = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+        var role = session ? session.role : null;
+        if (role !== 'super_admin' && role !== 'franchisee' && role !== 'manager') {
+            alert('Apenas gerente/franqueado pode forçar reabertura.');
+            return;
+        }
+        var ok = confirm('Forçar reabertura do caixa de hoje?\n\nIsso limpa abertura/fechamento fantasma do dia (do bug de timezone) e libera você pra abrir um novo turno.\n\nVendas reais NÃO são afetadas.\n\nContinuar?');
+        if (!ok) return;
+        try {
+            var d = new Date();
+            var todayLocal = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+            var todayUTC = new Date().toISOString().slice(0, 10);
+            var yestUTC = new Date(Date.now() - 24*3600*1000).toISOString().slice(0, 10);
+
+            var all = DataStore.getCollection('caixa', fid) || [];
+            var keep = all.filter(function (m) {
+                if (m.type === 'venda') return true;
+                if (m.type === 'abertura' || m.type === 'fechamento') {
+                    if (m.dateKey === todayLocal || m.dateKey === todayUTC || m.dateKey === yestUTC) return false;
+                }
+                return true;
+            });
+            var removed = all.length - keep.length;
+            if (typeof DataStore.setCollection === 'function') {
+                DataStore.setCollection('caixa', fid, keep);
+            } else {
+                localStorage.setItem('mp_caixa_' + fid, JSON.stringify(keep));
+            }
+            if (typeof AuditLog !== 'undefined' && AuditLog.log) {
+                AuditLog.log('CAIXA_FORCE_REOPEN', { removidos: removed, dateKeys: [todayLocal, todayUTC, yestUTC] }, fid);
+            }
+            alert('✅ Limpou ' + removed + ' movimento(s) fantasma. Vou abrir o modal de abertura agora.');
+            removeBlocker();
+            setTimeout(function () {
+                if (typeof Caixa !== 'undefined' && Caixa.showOpenModal) {
+                    Caixa.showOpenModal(fid, function () {
+                        if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
+                    });
+                } else {
+                    location.reload();
+                }
+            }, 200);
+        } catch (e) {
+            console.error('adminForceReopen:', e);
+            alert('Erro ao forçar reabertura: ' + e.message);
+        }
+    }
+    window.adminForceReopen = adminForceReopen;
+
+    function ensureCaixaAberto() {
+        if (typeof Caixa === 'undefined' || !Caixa.getTurnoState) return;
+        try {
+            var st = Caixa.getTurnoState(fid);
+            var existing = document.getElementById('pdvCaixaBlocker');
+            if (st.status === 'aberto') {
+                if (existing) { document.body.style.paddingTop = ''; existing.remove(); }
+                return;
+            }
+            var session = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+            var role = session ? session.role : null;
+            var isAdmin = (role === 'super_admin' || role === 'franchisee' || role === 'manager');
+
+            if (existing) existing.remove();
+
+            var blocker = document.createElement('div');
+            blocker.id = 'pdvCaixaBlocker';
+            blocker.style.cssText = 'position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;padding:14px 20px;z-index:9000;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 4px 18px rgba(0,0,0,.25);font-family:"Nunito",sans-serif;flex-wrap:wrap';
+
+            var label, btnHtml;
+            if (st.status === 'fechado') {
+                if (isAdmin) {
+                    label = '🔒 <strong>Caixa travado em "fechado"</strong> · Use o botão pra forçar nova abertura';
+                    btnHtml = '<button id="pdvCaixaForceBtn" style="background:#fff;color:#7F1D1D;border:none;padding:10px 22px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);font-family:inherit">🔧 Forçar Reabertura</button>';
+                } else {
+                    label = '🔒 <strong>Caixa de hoje já foi fechado</strong> · Peça ao gerente pra reabrir';
+                    btnHtml = '';
+                }
+            } else {
+                label = '⚠️ <strong>Caixa fechado</strong> · Antes de vender, abra o caixa com o valor de troco inicial';
+                btnHtml = '<button id="pdvCaixaBlockerBtn" style="background:#fff;color:#D97706;border:none;padding:10px 22px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);font-family:inherit">🟢 Abrir Caixa Agora</button>';
+            }
+
+            blocker.innerHTML =
+                '<div style="font-size:14px;line-height:1.3;flex:1;min-width:200px">' + label + '</div>' +
+                btnHtml;
+            document.body.insertBefore(blocker, document.body.firstChild);
+            document.body.style.paddingTop = (blocker.offsetHeight) + 'px';
+
+            var openBtn = document.getElementById('pdvCaixaBlockerBtn');
+            if (openBtn) {
+                openBtn.addEventListener('click', function () {
+                    if (!Caixa.showOpenModal) { alert('Módulo Caixa ainda carregando, tente em 3s'); return; }
+                    Caixa.showOpenModal(fid, function () {
+                        removeBlocker();
+                        if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
+                    });
+                });
+            }
+            var forceBtn = document.getElementById('pdvCaixaForceBtn');
+            if (forceBtn) forceBtn.addEventListener('click', adminForceReopen);
+        } catch (e) { console.warn('ensureCaixaAberto:', e); }
+    }
+    // Roda 1x já + tenta abrir modal automaticamente após 800ms (dá tempo do DOM/Caixa carregar)
+    ensureCaixaAberto();
+    setTimeout(function () {
+        ensureCaixaAberto();
+        try {
+            if (typeof Caixa !== 'undefined' && Caixa.getTurnoState) {
+                var st = Caixa.getTurnoState(fid);
+                // Auto-modal SOMENTE se status é nao_aberto. Se é 'fechado', operador
+                // precisa decidir manualmente (peça reabertura OU admin força).
+                if (st.status === 'nao_aberto' && Caixa.showOpenModal) {
+                    Caixa.showOpenModal(fid, function () {
+                        removeBlocker();
+                        if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
+                    });
+                }
+            }
+        } catch (e) { console.warn('auto-open caixa:', e); }
+    }, 800);
+    // Re-checa a cada 30s (caso operador feche caixa em outra aba)
+    setInterval(ensureCaixaAberto, 30000);
 
     // ========== OFFLINE QUEUE: indicador visual + init ==========
     try {
@@ -1809,7 +2210,19 @@
     // ============================================
     function renderCart(){
         var el=document.getElementById('cartList');
-        if(!cart.length){el.innerHTML='<div class="cart-empty">Toque em um produto para montar</div>';document.getElementById('cTotal').textContent='R$ 0,00';return}
+        var fab = document.getElementById('pdvActionFab');
+        var fabTotal = document.getElementById('pdvFabTotal');
+        var discRow = document.getElementById('cartDiscountRow');
+        if(!cart.length){
+            el.innerHTML='<div class="cart-empty">Toque em um produto para montar</div>';
+            document.getElementById('cTotal').textContent='R$ 0,00';
+            if (fab) fab.classList.remove('show');
+            if (fabTotal) fabTotal.textContent = 'R$ 0,00';
+            if (discRow) discRow.style.display = 'none';
+            // Cart vazio = limpa desconto também (não persiste entre vendas)
+            window._cartDiscount = null;
+            return;
+        }
         var total=0;
         var html=cart.map(function(it,i){
             var sub=it.unitPrice*it.qty;total+=sub;
@@ -1822,7 +2235,26 @@
                 '<button class="ci-rm" onclick="cRm('+i+')">×</button></div>';
         }).join('');
         el.innerHTML=html;
-        document.getElementById('cTotal').textContent='R$ '+total.toFixed(2).replace('.',',');
+        // Aplica desconto se houver
+        var discAmount = (typeof calcDiscountAmount === 'function') ? calcDiscountAmount(total) : 0;
+        var finalTotal = Math.max(0, Math.round((total - discAmount) * 100) / 100);
+        var totalTxt = 'R$ '+finalTotal.toFixed(2).replace('.',',');
+        document.getElementById('cTotal').textContent = totalTxt;
+        if (discRow) {
+            if (discAmount > 0 && window._cartDiscount) {
+                var d = window._cartDiscount;
+                var lbl = 'Subtotal R$ ' + total.toFixed(2).replace('.', ',')
+                    + ' · Desconto ' + (d.type === 'perc' ? d.value + '%' : '')
+                    + ' -R$ ' + discAmount.toFixed(2).replace('.', ',');
+                document.getElementById('cartDiscountLabel').textContent = lbl;
+                discRow.style.display = 'flex';
+            } else {
+                discRow.style.display = 'none';
+            }
+        }
+        // FAB de ação SEMPRE visível enquanto cart tem itens (Conta Aberta + Fechar)
+        if (fab) fab.classList.add('show');
+        if (fabTotal) fabTotal.textContent = totalTxt;
     }
 
     // Expõe renderCart ao window pra PDV_Dynamics.addToCart conseguir re-renderizar o carrinho
@@ -1863,18 +2295,127 @@
         } catch(e){}
     })();
 
-    window.clearCart=function(){if(!cart.length)return;cart=[];renderCart();toast('Pedido limpo')};
+    window.clearCart=function(){if(!cart.length)return;cart=[];window._cartDiscount=null;renderCart();toast('Pedido limpo')};
+
+    // ========== DESCONTO NO PEDIDO ==========
+    // Estado armazenado em window._cartDiscount = { type:'reais'|'perc', value:N } | null
+    // Aplicado em renderCart pra exibir Subtotal/Desconto/Total e em finishOrder pro
+    // total final. Resetado no clearCart e após finalizar venda.
+    var _discountType = 'reais';
+    function getCartSubtotal() {
+        return Math.round(cart.reduce(function (s, c) { return s + (c.unitPrice || 0) * (c.qty || 1); }, 0) * 100) / 100;
+    }
+    function calcDiscountAmount(subtotal) {
+        var d = window._cartDiscount;
+        if (!d || subtotal <= 0) return 0;
+        var n = Number(d.value) || 0;
+        if (n <= 0) return 0;
+        if (d.type === 'perc') {
+            return Math.round((subtotal * n / 100) * 100) / 100;
+        }
+        return Math.round(Math.min(n, subtotal) * 100) / 100;
+    }
+    window.openDiscountModal = function () {
+        if (!cart.length) { toast('Adicione itens ao carrinho antes do desconto.'); return; }
+        var modal = document.getElementById('discountModal');
+        var current = window._cartDiscount;
+        _discountType = current ? current.type : 'reais';
+        document.getElementById('discountTypeReais').style.background = _discountType === 'reais' ? '#F59E0B' : '#fff';
+        document.getElementById('discountTypeReais').style.color = _discountType === 'reais' ? '#fff' : '#F59E0B';
+        document.getElementById('discountTypePerc').style.background = _discountType === 'perc' ? '#F59E0B' : '#fff';
+        document.getElementById('discountTypePerc').style.color = _discountType === 'perc' ? '#fff' : '#F59E0B';
+        document.getElementById('discountInputLabel').textContent = _discountType === 'reais' ? 'Valor (R$)' : 'Percentual (%)';
+        document.getElementById('discountValue').value = current ? current.value : '';
+        document.getElementById('discountSubtotal').textContent = 'R$ ' + getCartSubtotal().toFixed(2).replace('.', ',');
+        document.getElementById('discountError').style.display = 'none';
+        previewDiscount();
+        modal.classList.add('open');
+        setTimeout(function () { document.getElementById('discountValue').focus(); }, 100);
+    };
+    window.closeDiscountModal = function () {
+        document.getElementById('discountModal').classList.remove('open');
+    };
+    window.setDiscountType = function (type) {
+        _discountType = type === 'perc' ? 'perc' : 'reais';
+        document.getElementById('discountTypeReais').style.background = _discountType === 'reais' ? '#F59E0B' : '#fff';
+        document.getElementById('discountTypeReais').style.color = _discountType === 'reais' ? '#fff' : '#F59E0B';
+        document.getElementById('discountTypePerc').style.background = _discountType === 'perc' ? '#F59E0B' : '#fff';
+        document.getElementById('discountTypePerc').style.color = _discountType === 'perc' ? '#fff' : '#F59E0B';
+        document.getElementById('discountInputLabel').textContent = _discountType === 'reais' ? 'Valor (R$)' : 'Percentual (%)';
+        previewDiscount();
+    };
+    window.previewDiscount = function () {
+        var subtotal = getCartSubtotal();
+        var v = Number(document.getElementById('discountValue').value) || 0;
+        var amount;
+        if (_discountType === 'perc') {
+            amount = Math.round((subtotal * v / 100) * 100) / 100;
+            if (v > 100) {
+                document.getElementById('discountError').textContent = 'Percentual não pode ser maior que 100%.';
+                document.getElementById('discountError').style.display = 'block';
+                amount = subtotal;
+            } else {
+                document.getElementById('discountError').style.display = 'none';
+            }
+        } else {
+            amount = Math.round(Math.min(v, subtotal) * 100) / 100;
+            if (v > subtotal) {
+                document.getElementById('discountError').textContent = 'Desconto maior que o subtotal — limitado ao total.';
+                document.getElementById('discountError').style.display = 'block';
+            } else {
+                document.getElementById('discountError').style.display = 'none';
+            }
+        }
+        var finalTotal = Math.max(0, Math.round((subtotal - amount) * 100) / 100);
+        document.getElementById('discountPreview').textContent = 'Total final: R$ ' + finalTotal.toFixed(2).replace('.', ',') + ' (-R$ ' + amount.toFixed(2).replace('.', ',') + ')';
+    };
+    window.applyDiscount = function () {
+        var v = Number(document.getElementById('discountValue').value) || 0;
+        if (v <= 0) {
+            document.getElementById('discountError').textContent = 'Informe um valor maior que zero.';
+            document.getElementById('discountError').style.display = 'block';
+            return;
+        }
+        if (_discountType === 'perc' && v > 100) v = 100;
+        window._cartDiscount = { type: _discountType, value: v };
+        closeDiscountModal();
+        renderCart();
+        toast('🏷️ Desconto aplicado.');
+    };
+    window.clearDiscount = function () {
+        window._cartDiscount = null;
+        renderCart();
+        toast('Desconto removido.');
+    };
 
     // ============================================
     // OPEN TABS (Conta Aberta)
     // ============================================
-    var openTabs = JSON.parse(localStorage.getItem('mp_pdv_tabs_'+fid) || '[]');
+    // ANTES: localStorage.setItem direto → contas abertas não sincronizavam entre PCs.
+    // AGORA: DataStore.set → escreve no Firestore + dispara realtime listener pros
+    // outros PCs receberem em <1s.
+    var openTabs = (typeof DataStore !== 'undefined' && DataStore.get)
+        ? (DataStore.get('pdv_tabs_' + fid) || [])
+        : JSON.parse(localStorage.getItem('mp_pdv_tabs_' + fid) || '[]');
     var editingTabId = null; // if editing an open tab
 
     function saveOpenTabs(){
-        localStorage.setItem('mp_pdv_tabs_'+fid, JSON.stringify(openTabs));
+        if (typeof DataStore !== 'undefined' && DataStore.set) {
+            DataStore.set('pdv_tabs_' + fid, openTabs); // sincroniza via Firestore
+        } else {
+            localStorage.setItem('mp_pdv_tabs_'+fid, JSON.stringify(openTabs));
+        }
         renderOpenTabs();
     }
+
+    // Reage a contas abertas atualizadas em outro PC (realtime listener do DataStore)
+    window.addEventListener('mp_remote_update', function (ev) {
+        if (!ev.detail || ev.detail.key !== 'pdv_tabs_' + fid) return;
+        try {
+            openTabs = ev.detail.data || [];
+            renderOpenTabs();
+        } catch (e) { console.warn('sync open tabs:', e); }
+    });
 
     function renderOpenTabs(){
         var el=document.getElementById('openTabs');
@@ -2030,13 +2571,14 @@
         return elapsed < cooldown;
     }
 
-    // Aplica regra de minTicket — anti-prejuízo. Pedido pequeno não emite raspinha.
+    // Inauguração: TODA venda gera raspinha (marketing máximo).
+    // Anti-prejuízo migrou pro lado da REDENÇÃO — cada prêmio tem prize.minOrder
+    // que bloqueia resgate em pedido pequeno. O minTicket de emissão estava cortando
+    // raspinhas em milkshakes solo (R$9.99 < R$15) e isolando o cliente do funil viral.
+    // Cooldown anti-fraude segue ativo (1 raspinha por CPF/telefone a cada N min).
     function shouldEmitScratch(orderTotal, customerKey){
         var cfg = getScratchConfig();
         if (!cfg.enabled) return { ok:false, reason:'sistema desativado' };
-        if (orderTotal < (cfg.minTicketForLoop || 15)) {
-            return { ok:false, reason:'ticket abaixo do mínimo R$' + (cfg.minTicketForLoop || 15) };
-        }
         if (isInCooldown(customerKey)) {
             return { ok:false, reason:'cooldown ativo (' + (cfg.cooldownMinutes || 90) + ' min/cliente)' };
         }
@@ -2075,18 +2617,72 @@
         var arr = DataStore.get(key) || [];
         arr.push(scratch);
         DataStore.set(key, arr);
-        // Also sync to firestore for cross-device access
+        // Marca como pendente de sync — backfillScratchesToFirestore retoma se falhar
+        var pendingKey = 'scratches_pending_sync_' + fid;
+        var pending = DataStore.get(pendingKey) || [];
+        if (pending.indexOf(scratch.code) === -1) {
+            pending.push(scratch.code);
+            DataStore.set(pendingKey, pending);
+        }
+        // Sync to firestore (cross-device redemption)
         try {
             if(typeof firebase !== 'undefined' && firebase.firestore){
-                firebase.firestore().collection('scratches').doc(scratch.code).set(scratch);
+                firebase.firestore().collection('scratches').doc(scratch.code).set(scratch)
+                    .then(function(){
+                        // Sucesso: remove da lista de pending
+                        var p = DataStore.get(pendingKey) || [];
+                        var idx = p.indexOf(scratch.code);
+                        if (idx !== -1) { p.splice(idx, 1); DataStore.set(pendingKey, p); }
+                    })
+                    .catch(function(e){ console.warn('[Raspinha] sync falhou (vai re-tentar onload):', e); });
             }
         } catch(e) { console.warn('Scratch firestore save:', e); }
     }
 
+    // Backfill: re-tenta enviar pra Firestore raspinhas que falharam.
+    // Roda no onload do PDV — pega tudo que ficou pendente em sessões anteriores.
+    function backfillScratchesToFirestore() {
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
+        var pendingKey = 'scratches_pending_sync_' + fid;
+        var pending = DataStore.get(pendingKey) || [];
+        if (!pending.length) return;
+        var all = DataStore.get('scratches_' + fid) || [];
+        console.info('[Raspinha] Backfill: re-tentando', pending.length, 'raspinha(s) não-sincronizadas');
+        var fs = firebase.firestore();
+        var done = [];
+        pending.forEach(function(code){
+            var s = all.find(function(x){ return x.code === code; });
+            if (!s) { done.push(code); return; } // doc local sumiu, não tem como recuperar
+            fs.collection('scratches').doc(code).set(s)
+                .then(function(){
+                    var p = DataStore.get(pendingKey) || [];
+                    var idx = p.indexOf(code);
+                    if (idx !== -1) { p.splice(idx, 1); DataStore.set(pendingKey, p); }
+                    console.info('[Raspinha] Backfill OK:', code);
+                })
+                .catch(function(e){ console.warn('[Raspinha] Backfill falhou', code, e); });
+        });
+        if (done.length) {
+            var p = DataStore.get(pendingKey) || [];
+            var p2 = p.filter(function(c){ return done.indexOf(c) === -1; });
+            DataStore.set(pendingKey, p2);
+        }
+    }
+    // Roda 2s após carregar (dá tempo de DataStore + Auth iniciarem)
+    setTimeout(function(){ try { backfillScratchesToFirestore(); } catch(e){ console.warn('[Raspinha] backfill init:', e); } }, 2000);
+
     window.finishOrder=function(){
         if(!cart.length){toast('Adicione itens');return}
         // Round to 2 decimals to avoid float precision issues (ex: 0.5*59.99 = 29.995)
-        var total=Math.round(cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0)*100)/100;
+        var subtotal=Math.round(cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0)*100)/100;
+        // Aplica desconto se houver (window._cartDiscount = {type, value})
+        var discountAmount = (typeof calcDiscountAmount === 'function') ? calcDiscountAmount(subtotal) : 0;
+        var discountInfo = window._cartDiscount ? {
+            type: window._cartDiscount.type,
+            value: Number(window._cartDiscount.value) || 0,
+            amount: discountAmount
+        } : null;
+        var total = Math.max(0, Math.round((subtotal - discountAmount) * 100) / 100);
         var oName=document.getElementById('orderName').value||(orderType==='balcao'?'Balcao':'');
 
         // === DESAFIO VOUCHER GENERATION (generate FIRST so we can save with order) ===
@@ -2148,8 +2744,21 @@
             console.info('[Raspinha] Não emitida:', scratchCheck.reason);
         }
 
+        // Numeração sequencial DIÁRIA por franquia — operador acompanha #1, #2, #3...
+        // Calcula no momento da venda baseado nos pedidos do dia (sincronizados via Firestore)
+        var _todayKeyLocal = (function(){
+            var dt = new Date();
+            return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
+        })();
+        var _allOrders = DataStore.getCollection('orders', fid) || [];
+        // Ignora tombstones (deleted) na contagem da numeração diária
+        var _todayOrders = _allOrders.filter(function(o){ return !o.deleted && o.createdAt && o.createdAt.slice(0,10) === _todayKeyLocal; });
+        var _seqNum = _todayOrders.length + 1;
+
         var order={
             id:Utils.generateId(),createdAt:new Date().toISOString(),status:'confirmado',
+            dailySeq:_seqNum,                  // numeração diária pra exibição no kanban
+            dailyDate:_todayKeyLocal,
             type:orderType,source:'pdv',
             delivery:orderType==='delivery'?'delivery':null,
             payment:document.getElementById('paymentMethod')?document.getElementById('paymentMethod').value:'Não informado',
@@ -2168,6 +2777,8 @@
                     emoji:c.emoji
                 };
             }),
+            subtotal:subtotal,
+            discount:discountInfo,             // {type, value, amount} | null
             total:total,
             customer:{name:oName,phone:document.getElementById('cPhone').value||''},
             address:orderType==='delivery'?document.getElementById('cAddr').value:'',
@@ -2176,6 +2787,28 @@
             voucherCode: voucherDisplay,       // Desafio 10 Segundos code
             challengeAttempts: attemptsPerPurchase
         };
+
+        // === AUTO-PRONTO ===
+        // Pedido só com itens grab-and-go (buffet/picolé/água/sorvete-kg/bebida)
+        // pula direto pra "pronto" — não passa por Confirmar/Preparar.
+        // Se tiver pelo menos UM milkshake/sundae/açaí, segue fluxo normal (status='confirmado').
+        try {
+            var _hasKitchenItem = (order.items || []).some(function(it){
+                if (typeof Printer === 'undefined' || !Printer.isKitchenItem) return true; // fail-safe: assume cozinha
+                // isKitchenItem espera {id, name, type}; order item usa productId
+                return Printer.isKitchenItem({
+                    id: it.productId || it.id || null,
+                    name: it.name || '',
+                    type: it.type || 'unitario'
+                });
+            });
+            if (!_hasKitchenItem) {
+                order.status = 'pronto';
+                order.autoReady = true;
+                order.autoReadyAt = new Date().toISOString();
+            }
+        } catch(_e) { console.warn('[finishOrder] auto-pronto check falhou:', _e); }
+
         // OfflineQueue: grava SEMPRE (online ou offline) — PDV sobrevive sem internet
         if (typeof OfflineQueue !== 'undefined' && OfflineQueue.enqueueOrder) {
             try {
@@ -2406,7 +3039,7 @@
             if(PDV_Dynamics.scalePort) PDV_Dynamics.disconnectScale();
         });
 
-        cart=[];renderCart();
+        cart=[];window._cartDiscount=null;renderCart();
         document.getElementById('orderName').value='';document.getElementById('cPhone').value='';document.getElementById('cAddr').value='';
         document.getElementById('nfCk').checked=false;document.getElementById('nfCpf').style.display='none';
     };
@@ -2435,19 +3068,25 @@
     };
 
     function findScratchAnywhere(code){
-        // Accepts short code (XXX-XXX) OR full code (MKP-XXXX-YYYYMMDD-XXXXXXXX) OR full URL
+        // Aceita short code (XXX-XXX), full code (MKP-XXXX-YYYYMMDD-XXXXXXXX), URL ou variações (sem dash, com espaços)
         return new Promise(function(resolve){
-            // Extract code from URL if scanned (might be full raspinha URL)
-            var codeUp = code.toUpperCase();
+            var codeUp = (code || '').toUpperCase().trim();
             var urlMatch = codeUp.match(/[?&]C=([A-Z0-9-]+)/);
             if(urlMatch) codeUp = urlMatch[1];
             else {
-                // Try plain query param format
                 var qMatch = codeUp.match(/CODE=([A-Z0-9-]+)/);
                 if(qMatch) codeUp = qMatch[1];
             }
+            // Normaliza variações: sem dash → adiciona ("TXPAJW" → "TXP-AJW")
+            // Com espaço → vira dash ("TXP AJW" → "TXP-AJW")
+            var withoutDash = codeUp.replace(/[-\s]/g, '');
+            var candidates = [codeUp];
+            if (withoutDash.length === 6) {
+                candidates.push(withoutDash.slice(0, 3) + '-' + withoutDash.slice(3));
+            }
+            if (codeUp !== withoutDash) candidates.push(withoutDash);
 
-            var isShort = codeUp.length <= 8; // Short codes are 7 chars (XXX-XXX)
+            var isShort = codeUp.length <= 8;
 
             // Check localStorage first (fast)
             var keys = Object.keys(localStorage);
@@ -2456,33 +3095,102 @@
                     try {
                         var arr = JSON.parse(localStorage.getItem(keys[i]));
                         var found = arr.find(function(s){
-                            var fullMatch = (s.code||'').toUpperCase() === codeUp;
-                            var shortMatch = (s.shortCode||'').toUpperCase() === codeUp;
-                            return fullMatch || shortMatch;
+                            var sc = (s.code||'').toUpperCase();
+                            var ss = (s.shortCode||'').toUpperCase();
+                            return candidates.some(function(c){ return sc === c || ss === c; });
                         });
                         if(found) return resolve(found);
                     } catch(e){}
                 }
             }
-            // Fallback Firestore - full code query
+            // Fallback Firestore — tenta cada candidato
             if(typeof firebase !== 'undefined' && firebase.firestore){
-                if(isShort){
-                    // Firestore query by shortCode
-                    firebase.firestore().collection('scratches').where('shortCode','==',codeUp).limit(1).get().then(function(snap){
-                        if(!snap.empty) resolve(snap.docs[0].data());
-                        else resolve(null);
-                    }).catch(function(){ resolve(null); });
+                var queries = [];
+                if (isShort) {
+                    candidates.forEach(function(c){
+                        queries.push(firebase.firestore().collection('scratches').where('shortCode','==',c).limit(1).get());
+                    });
                 } else {
-                    firebase.firestore().collection('scratches').doc(codeUp).get().then(function(doc){
-                        if(doc.exists) resolve(doc.data());
-                        else resolve(null);
-                    }).catch(function(){ resolve(null); });
+                    queries.push(firebase.firestore().collection('scratches').doc(codeUp).get());
                 }
+                Promise.all(queries.map(function(p){ return p.catch(function(){ return null; }); })).then(function(results){
+                    for (var i = 0; i < results.length; i++) {
+                        var r = results[i];
+                        if (!r) continue;
+                        if (r.exists && r.data) return resolve(r.data());
+                        if (r.docs && r.docs.length) return resolve(r.docs[0].data());
+                    }
+                    resolve(null);
+                });
             } else {
                 resolve(null);
             }
         });
     }
+
+    // Override admin: aceita código órfão (não sincronizado) e cria scratch fictício
+    // pra resgatar manualmente. Operador valida o recibo impresso visualmente.
+    // Loga em audit pra rastreabilidade.
+    window.adminForceRedeem = function(){
+        var code = document.getElementById('redeemCode').value.trim().toUpperCase();
+        if (!code || code.length < 6) { alert('Digite o código primeiro.'); return; }
+        var session = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+        var role = session ? session.role : null;
+        if (role !== 'super_admin' && role !== 'franchisee' && role !== 'manager') {
+            alert('Apenas gerente/franqueado pode forçar resgate de código órfão.');
+            return;
+        }
+        // Pergunta o tipo de prêmio pra registrar — operador escolhe
+        var prizeOptions = '\n1 = Topping Grátis\n2 = Upgrade de Tamanho\n3 = R$ 5 OFF\n4 = Picolés 2 por 1\n5 = Outro (descreva)';
+        var choice = prompt('Forçar resgate do código ' + code + '?\n\nQual prêmio o cliente ganhou? (digite o número):' + prizeOptions);
+        if (!choice) return;
+        var prizeMap = {
+            '1': { name: '1 Topping Grátis', tier: 'small' },
+            '2': { name: 'Upgrade de Tamanho', tier: 'small' },
+            '3': { name: 'R$ 5 OFF', tier: 'medium' },
+            '4': { name: 'Picolés 2 por 1', tier: 'medium' }
+        };
+        var prize = prizeMap[choice.trim()];
+        if (!prize) {
+            var custom = prompt('Descreva o prêmio (ex: "Milkshake P Grátis"):');
+            if (!custom) return;
+            prize = { name: custom, tier: 'small' };
+        }
+        var motivo = prompt('Motivo do override (será logado em auditoria):') || 'Código órfão (não sincronizado)';
+        // Cria scratch retroativo
+        var fakeScratch = {
+            code: 'OVERRIDE-' + code + '-' + Date.now(),
+            shortCode: code,
+            franchiseId: fid,
+            storeName: fr ? fr.name : 'MilkyPot',
+            prizeName: prize.name,
+            prizeDesc: prize.name + ' — resgate manual',
+            prizeTier: prize.tier,
+            prizeScope: 'mesma_loja',
+            minOrder: 0,
+            customerName: '',
+            status: 'redeemed',
+            createdAt: new Date().toISOString(),
+            redeemedAt: new Date().toISOString(),
+            redeemedStoreId: fid,
+            redeemedBy: session ? session.name : 'admin',
+            generatedBy: 'override',
+            overrideReason: motivo
+        };
+        try {
+            saveScratch(fakeScratch);
+            if (typeof AuditLog !== 'undefined' && AuditLog.log) {
+                AuditLog.log('SCRATCH_FORCE_REDEEM', { code: code, prize: prize.name, motivo: motivo }, fid);
+            }
+            // Aplica o prêmio no cart
+            applyScratchPrize(fakeScratch);
+            closeRedeemModal();
+            toast('✅ Resgate forçado: ' + prize.name);
+        } catch (e) {
+            console.error('adminForceRedeem:', e);
+            alert('Erro: ' + e.message);
+        }
+    };
 
     // QR Code Scanner usando jsQR + getUserMedia
     var qrStream = null;
@@ -2567,11 +3275,14 @@
         var statusEl = document.getElementById('redeemStatus');
         var btn = document.getElementById('btnConfirmRedeem');
 
-        if(!code || code.length < 10){
+        // Aceita short code (XXX-XXX = 7 chars) OU full code (MKP-XXXX-YYYYMMDD-XXXXXXXX = 28 chars).
+        // ANTES exigia >= 10 chars — bloqueava TODOS os shortcodes (TXP-AJW etc).
+        // Mínimo: 6 (XXXXXX sem dash) — permite tolerância ao usuário.
+        if(!code || code.length < 6){
             statusEl.style.display = 'block';
             statusEl.style.background = '#FFEBEE';
             statusEl.style.color = '#C62828';
-            statusEl.innerHTML = '<strong>⚠️ Codigo invalido</strong><br><span style="font-size:12px">Digite um codigo com pelo menos 10 caracteres</span>';
+            statusEl.innerHTML = '<strong>⚠️ Codigo invalido</strong><br><span style="font-size:12px">Digite o codigo do recibo (ex: TXP-AJW)</span>';
             return;
         }
 
@@ -2830,12 +3541,246 @@
     }
 
     // Auto-print called during finishOrder (cart still filled, order object available)
+    // Cozinha tem template HTML separado (buildKitchenTicket) — letras grandes pra preparo.
+    // Cliente tem template térmico (buildReceipt) com raspinha + voucher + bloco PRODUCAO.
     window.autoPrintOrder = function(order, voucherCode, scratchData, profileId){
         var name = fr ? fr.name : 'MilkyPot';
         var now = new Date(order.createdAt).toLocaleString('pt-BR');
         var tl = {balcao:'BALCAO',retirada:'RETIRADA',delivery:'DELIVERY'};
-        var t = buildReceipt(name, tl[order.type]||order.type.toUpperCase(), now, order.items, order.total, order.customer.name, order.address, order.payment, voucherCode, order.id, scratchData, profileId);
+        var customerName = (order.customer && order.customer.name) || '';
+        var addr = order.address || '';
+
+        // Cozinha: layout HTML grande, sem preço, foco em receita + nome bem visível
+        if (profileId === 'cozinha') {
+            var kitchenItems = (order.items || []).filter(function (c) {
+                return (typeof Printer !== 'undefined' && Printer.isKitchenItem) ? Printer.isKitchenItem(c) : true;
+            });
+            if (!kitchenItems.length) return; // só grab-and-go, sem preparo
+            var ticketHtml = buildKitchenTicket(name, tl[order.type]||order.type.toUpperCase(), now, kitchenItems, customerName, addr);
+            openKitchenPrintWindow(ticketHtml);
+            return;
+        }
+
+        // Demais perfis (balcao/cliente): receipt térmico tradicional
+        var t = buildReceipt(name, tl[order.type]||order.type.toUpperCase(), now, order.items, order.total, customerName, addr, order.payment, voucherCode, order.id, scratchData, profileId, order.discount || null);
         openPrintWindow(t, scratchData, profileId);
+    };
+
+    /* ============================================
+       F1 — VENDAS DO DIA (relatório de bolso pro operador)
+       ============================================
+       Mostra: total, qtd pedidos, ticket médio, breakdown por forma
+       de pagamento, top 5 produtos, lista de pedidos do dia.
+       Fonte: orders_<fid> filtrado por createdAt local hoje.
+       ============================================ */
+    window.showVendasDoDia = function() {
+        try {
+            var today = (function(){
+                var dt = new Date();
+                return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
+            })();
+            var allOrders = (DataStore.getCollection('orders', fid) || []).filter(function(o){
+                return !o.deleted && o.createdAt && o.createdAt.slice(0,10) === today;
+            });
+
+            // Considera só pedidos finalizados pra faturamento real
+            var finalizados = allOrders.filter(function(o){
+                return o.status === 'entregue' || o.status === 'pronto' || o.status === 'em_entrega';
+            });
+            var cancelados = allOrders.filter(function(o){ return o.status === 'cancelado'; });
+            var emAndamento = allOrders.filter(function(o){
+                return ['novo','confirmado','preparando'].indexOf(o.status) !== -1;
+            });
+
+            var totalDia = finalizados.reduce(function(s, o){ return s + (Number(o.total) || 0); }, 0);
+            var qtdPedidos = finalizados.length;
+            var ticketMedio = qtdPedidos > 0 ? (totalDia / qtdPedidos) : 0;
+
+            // Breakdown por forma de pagamento
+            var porPagto = {};
+            finalizados.forEach(function(o){
+                var p = (o.payment || 'Não informado').toLowerCase().trim();
+                var key = p;
+                if (p.indexOf('pix') !== -1) key = 'pix';
+                else if (p.indexOf('din') !== -1) key = 'dinheiro';
+                else if (p.indexOf('debit') !== -1 || p.indexOf('débit') !== -1) key = 'cartao_debito';
+                else if (p.indexOf('credit') !== -1 || p.indexOf('crédit') !== -1) key = 'cartao_credito';
+                else if (p.indexOf('vale') !== -1 || p.indexOf('vr') !== -1 || p.indexOf('va') !== -1) key = 'vale';
+                else if (p.indexOf('voucher') !== -1 || p.indexOf('cortesia') !== -1) key = 'cortesia';
+                porPagto[key] = (porPagto[key] || 0) + (Number(o.total) || 0);
+            });
+            var pagtoLabel = {
+                pix: '💸 PIX', dinheiro: '💵 Dinheiro',
+                cartao_debito: '💳 Débito', cartao_credito: '💳 Crédito',
+                vale: '🍴 Vale', cortesia: '🎁 Cortesia',
+                'não informado': '❓ Não informado'
+            };
+
+            // Top produtos por qtd
+            var prodCount = {};
+            finalizados.forEach(function(o){
+                (o.items || []).forEach(function(it){
+                    var name = it.name || '?';
+                    prodCount[name] = (prodCount[name] || 0) + (Number(it.qty) || 1);
+                });
+            });
+            var topProdutos = Object.keys(prodCount)
+                .map(function(n){ return { name: n, qty: prodCount[n] }; })
+                .sort(function(a,b){ return b.qty - a.qty; })
+                .slice(0, 5);
+
+            function brl(v) {
+                return 'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+
+            // HTML do modal
+            var pagtoHtml = Object.keys(porPagto).length === 0
+                ? '<div style="color:#999;padding:8px">Nenhuma venda registrada hoje.</div>'
+                : Object.keys(porPagto).sort(function(a,b){ return porPagto[b] - porPagto[a]; }).map(function(k){
+                    var pct = totalDia > 0 ? (porPagto[k] / totalDia * 100).toFixed(0) : 0;
+                    return '<div style="display:flex;justify-content:space-between;padding:10px 14px;background:#fafafa;border-radius:8px;margin-bottom:6px;align-items:center">' +
+                        '<span style="font-weight:600">' + (pagtoLabel[k] || k) + '</span>' +
+                        '<span><strong style="color:#2E7D32;font-size:1.1rem">' + brl(porPagto[k]) + '</strong> <small style="color:#999">(' + pct + '%)</small></span>' +
+                    '</div>';
+                }).join('');
+
+            var topProdHtml = topProdutos.length === 0
+                ? '<div style="color:#999;padding:8px">—</div>'
+                : topProdutos.map(function(p, i){
+                    var medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+                    return '<div style="display:flex;justify-content:space-between;padding:8px 14px;background:#fafafa;border-radius:6px;margin-bottom:4px">' +
+                        '<span>' + medals[i] + ' ' + p.name + '</span>' +
+                        '<strong>' + p.qty + 'x</strong>' +
+                    '</div>';
+                }).join('');
+
+            var listaPedidosHtml = finalizados.length === 0
+                ? '<div style="color:#999;padding:8px;text-align:center">Nenhum pedido finalizado hoje ainda.</div>'
+                : finalizados.slice().reverse().slice(0, 30).map(function(o){
+                    var seq = o.dailySeq ? '#' + o.dailySeq : '#' + o.id.slice(-6);
+                    var hh = o.createdAt ? new Date(o.createdAt).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit'}) : '—';
+                    var customer = (o.customer && o.customer.name) || 'Balcão';
+                    return '<tr>' +
+                        '<td style="padding:6px 8px;font-weight:700">' + seq + '</td>' +
+                        '<td style="padding:6px 8px;color:#666">' + hh + '</td>' +
+                        '<td style="padding:6px 8px">' + customer + '</td>' +
+                        '<td style="padding:6px 8px;text-align:right;font-weight:700;color:#2E7D32">' + brl(o.total) + '</td>' +
+                    '</tr>';
+                }).join('');
+
+            var html =
+                '<div id="vendasDiaOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:inherit;padding:16px;overflow:auto">' +
+                '  <div style="background:#fff;border-radius:18px;max-width:880px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,0.4)">' +
+                '    <div style="background:linear-gradient(135deg,#6A1B9A,#AB47BC);color:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1">' +
+                '      <h2 style="margin:0;font-family:Baloo 2,cursive;font-size:1.5rem">📊 Vendas do Dia · ' + new Date().toLocaleDateString('pt-BR') + '</h2>' +
+                '      <button id="vendasDiaClose" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1.2rem;font-weight:700">✕</button>' +
+                '    </div>' +
+                '    <div style="padding:24px">' +
+                       // KPIs grandes
+                '      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">' +
+                '        <div style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-radius:12px;padding:18px;text-align:center">' +
+                '          <div style="font-size:0.75rem;color:#558B2F;font-weight:700;text-transform:uppercase">Total Vendido</div>' +
+                '          <div style="font-size:1.6rem;font-weight:800;color:#1B5E20;margin-top:4px">' + brl(totalDia) + '</div>' +
+                '        </div>' +
+                '        <div style="background:linear-gradient(135deg,#E3F2FD,#BBDEFB);border-radius:12px;padding:18px;text-align:center">' +
+                '          <div style="font-size:0.75rem;color:#1565C0;font-weight:700;text-transform:uppercase">Pedidos</div>' +
+                '          <div style="font-size:1.6rem;font-weight:800;color:#0D47A1;margin-top:4px">' + qtdPedidos + '</div>' +
+                '        </div>' +
+                '        <div style="background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border-radius:12px;padding:18px;text-align:center">' +
+                '          <div style="font-size:0.75rem;color:#E65100;font-weight:700;text-transform:uppercase">Ticket Médio</div>' +
+                '          <div style="font-size:1.6rem;font-weight:800;color:#BF360C;margin-top:4px">' + brl(ticketMedio) + '</div>' +
+                '        </div>' +
+                '      </div>' +
+
+                       // Status secundário
+                '      <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap">' +
+                '        <div style="font-size:0.9rem"><strong style="color:#FB8C00">⏳ Em andamento:</strong> ' + emAndamento.length + '</div>' +
+                '        <div style="font-size:0.9rem"><strong style="color:#D32F2F">❌ Cancelados:</strong> ' + cancelados.length + '</div>' +
+                '      </div>' +
+
+                       // Breakdown por forma de pagamento
+                '      <h3 style="margin:0 0 12px;color:#4A148C;font-family:Baloo 2,cursive">💳 Por Forma de Pagamento</h3>' +
+                '      <div style="margin-bottom:24px">' + pagtoHtml + '</div>' +
+
+                       // Top produtos
+                '      <h3 style="margin:0 0 12px;color:#4A148C;font-family:Baloo 2,cursive">🏆 Top 5 Produtos</h3>' +
+                '      <div style="margin-bottom:24px">' + topProdHtml + '</div>' +
+
+                       // Lista de pedidos
+                '      <h3 style="margin:0 0 12px;color:#4A148C;font-family:Baloo 2,cursive">📋 Histórico (últimos 30)</h3>' +
+                '      <div style="overflow-x:auto;margin-bottom:16px">' +
+                '        <table style="width:100%;border-collapse:collapse;font-size:0.9rem">' +
+                '          <thead><tr style="background:#F3E5F5;color:#4A148C">' +
+                '            <th style="padding:10px 8px;text-align:left">Pedido</th>' +
+                '            <th style="padding:10px 8px;text-align:left">Hora</th>' +
+                '            <th style="padding:10px 8px;text-align:left">Cliente</th>' +
+                '            <th style="padding:10px 8px;text-align:right">Total</th>' +
+                '          </tr></thead>' +
+                '          <tbody>' + listaPedidosHtml + '</tbody>' +
+                '        </table>' +
+                '      </div>' +
+
+                '      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">' +
+                '        <button id="vendasDiaPrint" style="padding:10px 20px;background:#1565C0;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">🖨️ Imprimir</button>' +
+                '        <button id="vendasDiaCloseBtn" style="padding:10px 20px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">Fechar (Esc)</button>' +
+                '      </div>' +
+                '    </div>' +
+                '  </div>' +
+                '</div>';
+
+            // Remove modal anterior se houver
+            var prev = document.getElementById('vendasDiaOverlay');
+            if (prev) prev.remove();
+
+            var div = document.createElement('div');
+            div.innerHTML = html;
+            document.body.appendChild(div.firstChild);
+
+            var overlay = document.getElementById('vendasDiaOverlay');
+            function closeModal() { if (overlay) overlay.remove(); document.removeEventListener('keydown', escListener); }
+            function escListener(ev) { if (ev.key === 'Escape') { ev.preventDefault(); closeModal(); } }
+            document.getElementById('vendasDiaClose').onclick = closeModal;
+            document.getElementById('vendasDiaCloseBtn').onclick = closeModal;
+            overlay.onclick = function(e) { if (e.target === overlay) closeModal(); };
+            document.addEventListener('keydown', escListener);
+
+            // Imprimir versão simplificada
+            document.getElementById('vendasDiaPrint').onclick = function() {
+                var w = window.open('', '_blank', 'width=400,height=700');
+                if (!w) { alert('Habilite popups pra imprimir.'); return; }
+                var fr = (DataStore.getAllFranchises() || []).find(function(x){return x.id === fid;});
+                var fname = (fr && fr.name) || 'MilkyPot';
+                w.document.write(
+                    '<html><head><title>Vendas do Dia</title><style>' +
+                    'body{font-family:monospace;font-size:13px;padding:12px;width:280px}' +
+                    'h2{text-align:center;font-size:14px;margin:8px 0}' +
+                    'hr{border:none;border-top:1px dashed #000;margin:8px 0}' +
+                    '.row{display:flex;justify-content:space-between;padding:2px 0}' +
+                    '</style></head><body>' +
+                    '<h2>' + fname + '</h2>' +
+                    '<h2>VENDAS DO DIA</h2>' +
+                    '<div style="text-align:center;font-size:11px">' + new Date().toLocaleString('pt-BR') + '</div>' +
+                    '<hr>' +
+                    '<div class="row"><span>Total:</span><strong>' + brl(totalDia) + '</strong></div>' +
+                    '<div class="row"><span>Pedidos:</span><strong>' + qtdPedidos + '</strong></div>' +
+                    '<div class="row"><span>Ticket medio:</span><strong>' + brl(ticketMedio) + '</strong></div>' +
+                    '<hr><strong>Por pagamento:</strong>' +
+                    Object.keys(porPagto).map(function(k){
+                        return '<div class="row"><span>' + (pagtoLabel[k] || k).replace(/[^\w\s]/g,'') + ':</span><strong>' + brl(porPagto[k]) + '</strong></div>';
+                    }).join('') +
+                    '<hr><strong>Em andamento:</strong> ' + emAndamento.length + '<br>' +
+                    '<strong>Cancelados:</strong> ' + cancelados.length +
+                    '<hr style="border-top:2px solid #000">' +
+                    '<div style="text-align:center;font-size:11px">Relatório operacional</div>' +
+                    '<script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},700)},300)}<' + '/script>' +
+                    '</body></html>'
+                );
+                w.document.close();
+            };
+        } catch(e) {
+            console.error('[Vendas do Dia] erro:', e);
+            alert('Erro ao abrir vendas do dia: ' + e.message);
+        }
     };
 
     window.printOrder=function(){
@@ -2850,7 +3795,15 @@
         }
 
         activeProfiles.forEach(p => {
-            var total=Math.round(cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0)*100)/100;
+            var subtotal=Math.round(cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0)*100)/100;
+            // Aplica desconto atual do cart (botão Desconto), se houver
+            var discAmount = (typeof calcDiscountAmount === 'function') ? calcDiscountAmount(subtotal) : 0;
+            var discountObj = window._cartDiscount ? {
+                type: window._cartDiscount.type,
+                value: Number(window._cartDiscount.value) || 0,
+                amount: discAmount
+            } : null;
+            var total = Math.max(0, Math.round((subtotal - discAmount) * 100) / 100);
             var name=fr?fr.name:'MilkyPot';
             var now=new Date().toLocaleString('pt-BR');
             var tl={balcao:'BALCAO',retirada:'RETIRADA',delivery:'DELIVERY'};
@@ -2884,7 +3837,7 @@
             }
 
             // Demais perfis (balcao/cliente): receipt térmico tradicional
-            var t=buildReceipt(name, tl[orderType||'balcao'], now, items, total, customerName, addr, payment, voucher, null, scratch, p.id);
+            var t=buildReceipt(name, tl[orderType||'balcao'], now, items, total, customerName, addr, payment, voucher, null, scratch, p.id, discountObj);
             openPrintWindow(t, scratch, p.id);
         });
     };
@@ -2980,7 +3933,7 @@
     }
 
     // Shared receipt builder with MARKETING COPY for Desafio 10 Segundos + RASPINHA DA SORTE
-    function buildReceipt(storeName, typeLabel, when, items, total, customerName, addr, payment, voucher, orderId, scratch, profileId){
+    function buildReceipt(storeName, typeLabel, when, items, total, customerName, addr, payment, voucher, orderId, scratch, profileId, discount){
         // RECIBO RESUMIDO — só o essencial. Cozinha usa template HTML separado (buildKitchenTicket).
         var t = '';
 
@@ -2990,7 +3943,15 @@
         t += '================================\n';
         if(orderId) t += 'Pedido #' + String(orderId).slice(-6).toUpperCase() + '\n';
         t += typeLabel + ' | ' + when + '\n';
-        if(customerName) t += 'Cliente: ' + customerName + '\n';
+
+        // Cliente em CAIXA ALTA bem visível — bloco destacado (operador identifica de longe)
+        if(customerName) {
+            var nomeUp = String(customerName).toUpperCase();
+            t += '--------------------------------\n';
+            t += centerPad('>>> CLIENTE <<<', 32) + '\n';
+            t += centerPad(nomeUp, 32) + '\n';
+            t += '--------------------------------\n';
+        }
         if(addr) t += 'Entrega: ' + addr + '\n';
         t += '--------------------------------\n';
 
@@ -3006,6 +3967,13 @@
         });
 
         t += '--------------------------------\n';
+        if (discount && Number(discount.amount) > 0) {
+            // Subtotal = total + amount (re-deriva pra evitar dupla aplicação)
+            var subt = (Number(total) || 0) + (Number(discount.amount) || 0);
+            t += 'Subtotal       R$ ' + subt.toFixed(2).replace('.',',') + '\n';
+            var dLabel = discount.type === 'perc' ? 'Desconto (' + discount.value + '%)' : 'Desconto';
+            t += dLabel + (dLabel.length < 14 ? ' '.repeat(14 - dLabel.length) : '') + '-R$ ' + Number(discount.amount).toFixed(2).replace('.',',') + '\n';
+        }
         t += 'TOTAL  R$ ' + total.toFixed(2).replace('.',',') + '\n';
         if(payment) t += 'Pagamento: ' + payment + '\n';
         t += '================================\n';
@@ -3032,6 +4000,39 @@
                 t += 'Valido ate ' + new Date(scratch.expiresAt).toLocaleDateString('pt-BR') + '\n';
             }
             t += '--------------------------------\n';
+        }
+
+        // BLOCO PRODUCAO — nome cliente + receita por milkshake/sundae/açaí (cozinha conferir)
+        // Cliente leva o recibo, cozinha vê pra quem é cada drink mesmo sem o ticket separado.
+        var prodItems = (items || []).filter(function (c) {
+            var n = (c && c.name || '').toLowerCase();
+            return n.includes('milkshake') || n.includes('milk shake') || n.includes('shake') ||
+                   n.includes('sundae') ||
+                   n.includes('acai') || n.includes('açaí') || n.includes('açai') || n.includes('bowl') ||
+                   n.includes('potinho');
+        });
+        if (prodItems.length) {
+            t += '\n';
+            t += '++++++ PRODUCAO ++++++\n';
+            if (customerName) {
+                t += centerPad('PARA: ' + String(customerName).toUpperCase(), 32) + '\n';
+            } else {
+                t += centerPad('PARA: --- SEM NOME ---', 32) + '\n';
+            }
+            t += '--------------------------------\n';
+            prodItems.forEach(function (c, idx) {
+                var sizeLbl = c.size ? ' (' + c.size + ')' : '';
+                t += '> ' + (c.qty || 1) + 'x ' + String(c.name || '').toUpperCase() + sizeLbl + '\n';
+                if (c.extras && c.extras.length) {
+                    c.extras.forEach(function (e) {
+                        t += '   + ' + e.name + '\n';
+                    });
+                } else {
+                    t += '   (sem adicionais)\n';
+                }
+                if (idx < prodItems.length - 1) t += '   . . . . . . . . . . . . . . . .\n';
+            });
+            t += '++++++++++++++++++++++++\n';
         }
 
         t += '\n';
@@ -3130,9 +4131,36 @@
 
         var qrHtml = '';
         if(scratchData && scratchData.shortCode){
-            var raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratchData.shortCode);
-            qrHtml = '<div style="text-align:center;margin:4mm 0"><img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' +
-                encodeURIComponent(raspUrl) + '&ecc=M&margin=0" alt="QR Raspinha" style="width:36mm;height:36mm"></div>';
+            // Encoda o payload da raspinha INLINE no QR — funciona mesmo se Firestore
+            // estiver indisponível / sem internet / código sumido na sync.
+            // raspinha.html prioriza o payload inline (?d=...) e cai pra lookup
+            // Firestore só pra estado mutável (raspada/resgatada).
+            var inline = {
+                code: scratchData.code,
+                shortCode: scratchData.shortCode,
+                franchiseId: scratchData.franchiseId,
+                storeName: scratchData.storeName,
+                prizeCode: scratchData.prizeCode,
+                prizeName: scratchData.prizeName,
+                prizeDesc: scratchData.prizeDesc,
+                prizeTier: scratchData.prizeTier,
+                prizeScope: scratchData.prizeScope,
+                prizeCategoria: scratchData.prizeCategoria || null,
+                minOrder: scratchData.minOrder,
+                expiresAt: scratchData.expiresAt,
+                validityDays: scratchData.validityDays,
+                createdAt: scratchData.createdAt
+            };
+            var encodedInline = '';
+            try {
+                // base64url-safe (sem +/= que quebram em URL)
+                encodedInline = btoa(unescape(encodeURIComponent(JSON.stringify(inline))))
+                    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            } catch (e) { console.warn('[Raspinha] inline encode falhou:', e); }
+            var raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratchData.shortCode)
+                + (encodedInline ? '&d=' + encodedInline : '');
+            qrHtml = '<div style="text-align:center;margin:4mm 0"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' +
+                encodeURIComponent(raspUrl) + '&ecc=L&margin=0" alt="QR Raspinha" style="width:36mm;height:36mm"></div>';
         }
 
         var parts = text.split('[QR_CODE_PLACEHOLDER]');
@@ -3162,9 +4190,10 @@
         // Não interfere quando user tá digitando em input/textarea/select
         var tag = (e.target && e.target.tagName) || '';
         var isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
-        if (isTyping && e.key !== 'F11' && !e.key.match(/^F[2-4]$/)) return;
+        if (isTyping && e.key !== 'F11' && !e.key.match(/^F[1-4]$/)) return;
 
         if(e.key==='F11'){ e.preventDefault(); toggleFullscreen(); return; }
+        if(e.key==='F1'){  e.preventDefault(); if(typeof showVendasDoDia==='function') showVendasDoDia(); return; }
         if(e.key==='F2'){  e.preventDefault(); if(typeof printOrder==='function') printOrder(); return; }
         if(e.key==='F3'){  e.preventDefault(); if(typeof openTab==='function') openTab(); return; }
         if(e.key==='F4'){  e.preventDefault(); if(typeof finishOrder==='function') finishOrder(); return; }

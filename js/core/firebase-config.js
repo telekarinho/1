@@ -47,32 +47,15 @@ if (!firebase.apps.length && !window._mpDomainBlocked) {
     firebase.initializeApp(firebaseConfig);
 }
 
-// Enable Firestore offline persistence (IndexedDB cache).
-// Allows reads/writes to work offline; writes are queued and synced when back online.
-// Must be called BEFORE any Firestore operation. Only one tab can hold the cache at a time;
-// failsafe = other tabs keep working via network-only reads.
-if (typeof firebase.firestore === 'function' && !window._mpDomainBlocked && !window._mpFsPersistenceTried) {
-    window._mpFsPersistenceTried = true;
-    try {
-        firebase.firestore().enablePersistence({ synchronizeTabs: true })
-            .then(function() {
-                window._mpFsOffline = true;
-                console.log('[MilkyPot] Firestore offline persistence enabled');
-            })
-            .catch(function(err) {
-                // failed-precondition = multiple tabs (ok), unimplemented = browser sem suporte
-                if (err && err.code === 'failed-precondition') {
-                    console.info('[MilkyPot] Firestore persistence: multi-tab fallback ativo');
-                } else if (err && err.code === 'unimplemented') {
-                    console.warn('[MilkyPot] Firestore persistence nao suportado neste navegador');
-                } else {
-                    console.warn('[MilkyPot] Firestore persistence:', err && err.message);
-                }
-            });
-    } catch (e) {
-        console.warn('[MilkyPot] Firestore persistence init falhou:', e && e.message);
-    }
-}
+// Firestore offline persistence — DESABILITADA em produção.
+// Razão: enablePersistence cria localStorage entries `firestore_mutations_*`
+// e `firestore_targets_*` que crescem sem parar (>2000 entries em horas).
+// User reportou storage cheio (24K entries antes do primeiro cleanup).
+//
+// Nosso DataStore já tem queue de offline própria + SW caching. Firestore
+// persistence era redundante e fonte de bug.
+//
+// Pra reativar no futuro: usar IndexedDB-only (não localStorage) via newer SDK.
 
 // Firebase Auth instance (only if firebase-auth-compat.js is loaded).
 // Uses LOCAL persistence by default (IndexedDB) — user stays logged in offline.

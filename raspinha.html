@@ -498,6 +498,51 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
     // Auto-check code from URL if present (accepts ?c=SHORT or ?code=FULL)
     var urlParams = new URLSearchParams(location.search);
     var urlCode = urlParams.get('c') || urlParams.get('code') || location.hash.replace('#','');
+
+    // ?d=base64url(JSON da raspinha) — payload INLINE no QR.
+    // Funciona mesmo se Firestore estiver indisponível ou doc sumido.
+    var urlData = urlParams.get('d');
+    if (urlData) {
+        try {
+            // base64url -> base64
+            var b64 = urlData.replace(/-/g, '+').replace(/_/g, '/');
+            while (b64.length % 4) b64 += '=';
+            var decoded = decodeURIComponent(escape(atob(b64)));
+            var inlineScratch = JSON.parse(decoded);
+            // Sanity: precisa ter pelo menos shortCode e prizeName
+            if (inlineScratch && inlineScratch.shortCode && inlineScratch.prizeName) {
+                // Tenta buscar status atualizado no Firestore (pode estar raspada/resgatada).
+                // Se Firestore falhar/timeout, usa o payload inline direto.
+                var lookupTimeout = setTimeout(function () {
+                    if (currentScratch) return; // já processou
+                    console.info('[Raspinha] Firestore lento — usando payload inline');
+                    processScratch(inlineScratch, inlineScratch.shortCode);
+                }, 1500);
+
+                if (db) {
+                    db.collection('scratches').doc(inlineScratch.code).get().then(function (doc) {
+                        clearTimeout(lookupTimeout);
+                        if (currentScratch) return;
+                        // Merge: dados imutáveis do inline + estado atual do Firestore (status)
+                        var merged = doc.exists ? Object.assign({}, inlineScratch, doc.data()) : inlineScratch;
+                        processScratch(merged, inlineScratch.shortCode);
+                    }).catch(function (e) {
+                        clearTimeout(lookupTimeout);
+                        if (currentScratch) return;
+                        console.warn('[Raspinha] Firestore erro, usando inline:', e);
+                        processScratch(inlineScratch, inlineScratch.shortCode);
+                    });
+                } else {
+                    clearTimeout(lookupTimeout);
+                    processScratch(inlineScratch, inlineScratch.shortCode);
+                }
+                return; // não tenta o flow tradicional
+            }
+        } catch (e) {
+            console.warn('[Raspinha] Falha ao decodar ?d=, caindo pro lookup tradicional:', e);
+        }
+    }
+
     if(urlCode){
         document.getElementById('codeInput').value = urlCode.toUpperCase();
         setTimeout(window.checkCode, 400);

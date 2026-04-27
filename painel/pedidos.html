@@ -164,9 +164,11 @@
                     <h1>📋 <span data-i18n="nav.orders">Pedidos</span></h1>
                 </div>
                 <div class="panel-header-right">
+                    <button class="btn btn-sm" id="btnForceSync" style="background:#10B981;color:#fff;font-weight:700" onclick="forceSyncNow(this)" title="Buscar pedidos de outro PC agora">🔄 Sincronizar</button>
+                    <button class="btn btn-sm" id="btnEncerrarDia" style="background:#7B1FA2;color:#fff;font-weight:700" onclick="encerrarDia()" title="Finaliza pedidos abertos do dia + fecha caixa">🌙 Encerrar Dia</button>
                     <select class="form-control" style="width:auto" id="filterDate" onchange="renderKanban()">
-                        <option value="today" data-i18n="orders.filter_today">Hoje</option>
-                        <option value="week" selected data-i18n="orders.filter_week">Esta Semana</option>
+                        <option value="today" selected data-i18n="orders.filter_today">Hoje</option>
+                        <option value="week" data-i18n="orders.filter_week">Esta Semana</option>
                         <option value="all" data-i18n="orders.filter_all">Todos</option>
                     </select>
                     <button class="btn btn-primary btn-sm" onclick="newWalkInOrder()">+ <span data-i18n="orders.new_order">Novo Pedido</span></button>
@@ -283,7 +285,7 @@
     <script src="../js/core/reports.js"></script>
     <script src="../js/core/adminconfig.js?v=mp-v14"></script>
     <script src="../js/core/motivacional.js?v=mp-v14"></script>
-    <script src="../js/core/caixa.js?v=mp-v14"></script>
+    <script src="../js/core/caixa.js?v=mp-v91"></script>
     <script>
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
         const session = Auth.getSession();
@@ -297,7 +299,7 @@
         }
 
         function getFilteredOrders() {
-            // Exclui pedidos com deleted:true — evita que sync do Firestore os ressuscite
+            // Filtra pedidos excluídos (tombstones) — não aparecem no kanban
             const orders = DataStore.getCollection('orders', franchiseId).filter(o => !o.deleted);
             const filter = document.getElementById('filterDate').value;
             const today = Utils.today();
@@ -315,8 +317,7 @@
 
         function renderKanban() {
             const orders = getFilteredOrders();
-            // allOrders também exclui deletados — banner "pedidos ocultos" não conta lixo
-            const allOrders = DataStore.getCollection('orders', franchiseId).filter(o => !o.deleted);
+            const allOrders = DataStore.getCollection('orders', franchiseId);
             const statuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'entregue'];
 
             // Aviso quando há pedidos NO STORAGE mas o filtro atual esconde — evita
@@ -367,10 +368,13 @@
                     const nextStatus = { novo: 'confirmado', confirmado: 'preparando', preparando: 'pronto', pronto: 'em_entrega', em_entrega: 'entregue' };
                     const nextLabel = { novo: '✔️ Confirmar', confirmado: '▶️ Preparar', preparando: '✅ Pronto', pronto: '🛵 Enviar', em_entrega: '📦 Entregue' };
 
+                    // Numeração sequencial diária preferida; fallback pro hash legado
+                    const seqLabel = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
+                    const seqTitle = o.dailySeq ? `Pedido nº ${o.dailySeq} do dia · ${o.id.slice(-6)}` : `Pedido ${o.id.slice(-6)}`;
                     return `
                         <div class="order-card" onclick="showOrderDetail('${o.id}')">
                             <div class="order-card-header">
-                                <span class="order-id">#${o.id.slice(-6)}</span>
+                                <span class="order-id" title="${seqTitle}">${seqLabel}</span>
                                 <span class="order-time">${Utils.formatTime(o.createdAt)}</span>
                             </div>
                             <div class="order-customer">👤 ${Utils.escapeHtml(o.customer?.name || o.items?.[0]?.nomeCliente || 'Cliente')}</div>
@@ -379,11 +383,17 @@
                                 <span class="order-total">${Utils.formatCurrency(o.total)}</span>
                                 <span class="order-type-badge order-type-${(o.delivery || o.type)}">${(o.delivery || o.type) === 'delivery' ? '🛵 Delivery' : '🏪 Retirada'}</span>
                             </div>
-                            <div class="order-actions">
-                                ${status !== 'entregue' ? `<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();moveOrder('${o.id}','${nextStatus[status]}')">${nextLabel[status]}</button>` : ''}
-                                ${status === 'novo' ? `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();moveOrder('${o.id}','cancelado')">❌</button>` : ''}
-                                <button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;padding:6px 8px;margin-left:auto" title="Excluir pedido" onclick="event.stopPropagation();deleteOrder('${o.id}')">🗑️</button>
-                            </div>
+                            ${status !== 'entregue' ? `
+                                <div class="order-actions" data-noprop="1" style="position:relative;z-index:50;pointer-events:auto">
+                                    <button type="button" class="btn btn-sm btn-primary" style="position:relative;z-index:51;pointer-events:auto;cursor:pointer" data-action="advance" data-order-id="${o.id}" data-target-status="${nextStatus[status]}" onclick="kanbanAction(event,'advance','${o.id}','${nextStatus[status]}')">${nextLabel[status]}</button>
+                                    <button type="button" class="btn btn-sm btn-danger" style="position:relative;z-index:51;pointer-events:auto;cursor:pointer" data-action="cancel" data-order-id="${o.id}" onclick="kanbanAction(event,'cancel','${o.id}')" title="Cancelar pedido">❌</button>
+                                    <button type="button" class="btn btn-sm" style="background:#B71C1C;color:#fff;padding:6px 8px;position:relative;z-index:51;pointer-events:auto;cursor:pointer" data-action="delete" data-order-id="${o.id}" onclick="kanbanAction(event,'delete','${o.id}')" title="Excluir permanentemente">🗑️</button>
+                                </div>
+                            ` : `
+                                <div class="order-actions" data-noprop="1" style="position:relative;z-index:50;pointer-events:auto">
+                                    <button type="button" class="btn btn-sm" style="background:#B71C1C;color:#fff;padding:6px 8px;position:relative;z-index:51;pointer-events:auto;cursor:pointer" data-action="delete" data-order-id="${o.id}" onclick="kanbanAction(event,'delete','${o.id}')" title="Excluir permanentemente">🗑️</button>
+                                </div>
+                            `}
                         </div>
                     `;
                 }).join('');
@@ -398,11 +408,40 @@
             );
         }
 
+        // Pedido tem item de cozinha (milkshake/sundae/açaí/potinho)?
+        // Se NÃO tem, pula direto pra 'pronto' (buffet/picolé/água não preparam).
+        function _orderHasKitchenItem(o) {
+            if (!o || !o.items || !o.items.length) return false;
+            try {
+                return o.items.some(function(it){
+                    if (typeof Printer === 'undefined' || !Printer.isKitchenItem) return true;
+                    return Printer.isKitchenItem({
+                        id: it.productId || it.id || null,
+                        name: it.name || it.sabor || '',
+                        type: it.type || 'unitario'
+                    });
+                });
+            } catch(_e) { return true; } // fail-safe
+        }
+
         function moveOrder(orderId, newStatus) {
             const orders = DataStore.getCollection('orders', franchiseId);
             const idx = orders.findIndex(o => o.id === orderId);
             if (idx === -1) return;
             const oldStatus = orders[idx].status;
+
+            // === AUTO-SKIP PREPARANDO ===
+            // Se operador tentar advance pra 'preparando' mas pedido só tem grab-and-go,
+            // pula direto pra 'pronto'. Mantém 'cancelado' e demais status normais.
+            if (newStatus === 'preparando' && !_orderHasKitchenItem(orders[idx])) {
+                newStatus = 'pronto';
+            }
+            // Caso oldStatus seja 'novo' ou 'confirmado' e operador clique "Confirmar"
+            // (newStatus='confirmado'), também checa: se já não precisa cozinha, vai pra pronto.
+            if (newStatus === 'confirmado' && !_orderHasKitchenItem(orders[idx])) {
+                newStatus = 'pronto';
+            }
+
             orders[idx].status = newStatus;
             orders[idx].updatedAt = new Date().toISOString();
             if (newStatus === 'cancelado') {
@@ -455,32 +494,13 @@
             Utils.showToast(`Pedido #${orderId.slice(-6)} → ${newStatus.toUpperCase()}`);
         }
 
-        // Soft-delete: marca deleted:true e grava de volta no DataStore/Firestore.
-        // O Firestore fica com o flag — próximos onSnapshot e _syncFromCloud recebem
-        // o item com deleted:true e getFilteredOrders() o filtra, impedindo ressurreição.
-        function deleteOrder(orderId) {
-            if (!confirm(`Excluir pedido #${orderId.slice(-6)} permanentemente?\n\nEsta ação não pode ser desfeita.`)) return;
-            const orders = DataStore.getCollection('orders', franchiseId);
-            const idx = orders.findIndex(o => o.id === orderId);
-            if (idx === -1) return;
-            orders[idx].deleted = true;
-            orders[idx].deletedAt = new Date().toISOString();
-            orders[idx].deletedBy = (typeof Auth !== 'undefined' && Auth.getSession) ? (Auth.getSession()?.email || 'operador') : 'operador';
-            DataStore.set('orders_' + franchiseId, orders);
-            document.getElementById('orderModal').classList.remove('active');
-            renderKanban();
-            Utils.showToast(`🗑️ Pedido #${orderId.slice(-6)} excluído`, 'success');
-            if (typeof AuditLog !== 'undefined') {
-                AuditLog.logOrder('ORDER_DELETED', orderId, { total: orders[idx].total }, franchiseId);
-            }
-        }
-
         function showOrderDetail(orderId) {
             const orders = DataStore.getCollection('orders', franchiseId);
             const o = orders.find(x => x.id === orderId);
             if (!o) return;
 
-            document.getElementById('orderModalTitle').textContent = `Pedido #${o.id.slice(-6)}`;
+            const _modalSeq = o.dailySeq ? `Pedido #${o.dailySeq}` : `Pedido #${o.id.slice(-6)}`;
+            document.getElementById('orderModalTitle').textContent = _modalSeq + (o.dailySeq ? ` · ${o.id.slice(-6)}` : '');
             document.getElementById('orderModalBody').innerHTML = `
                 <div style="margin-bottom:16px">
                     ${Utils.statusBadge(o.status)}
@@ -513,15 +533,404 @@
             const nextStatus = { novo: 'confirmado', confirmado: 'preparando', preparando: 'pronto', pronto: 'em_entrega', em_entrega: 'entregue' };
             const nextLabel = { novo: '✔️ Confirmar', confirmado: '▶️ Preparar', preparando: '✅ Pronto', pronto: '🛵 Enviar', em_entrega: '📦 Entregue' };
 
-            const deleteBtn = `<button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5" onclick="deleteOrder('${o.id}')">🗑️ Excluir</button>`;
-            document.getElementById('orderModalFooter').innerHTML = o.status !== 'entregue' && o.status !== 'cancelado'
-                ? `${deleteBtn}
+            const reprintBtn = `<button class="btn btn-sm" style="background:#1565C0;color:#fff" onclick="reprintOrder('${o.id}')" title="Imprimir novamente o recibo deste pedido">🖨️ Reimprimir</button>`;
+            const editBtn = `<button class="btn btn-sm" style="background:#FFA000;color:#fff" onclick="editOrder('${o.id}')" title="Editar cliente, pagamento ou observação">✏️ Editar</button>`;
+            const deleteBtn = `<button class="btn btn-sm" style="background:#B71C1C;color:#fff" onclick="deleteOrder('${o.id}')" title="EXCLUIR pedido permanentemente (irreversível)">🗑️ Excluir</button>`;
+
+            const isFinal = o.status === 'entregue' || o.status === 'cancelado';
+            document.getElementById('orderModalFooter').innerHTML = !isFinal
+                ? `${reprintBtn} ${editBtn} ${deleteBtn}
                    <button class="btn btn-danger btn-sm" onclick="moveOrder('${o.id}','cancelado');document.getElementById('orderModal').classList.remove('active')">Cancelar</button>
                    <button class="btn btn-primary" onclick="moveOrder('${o.id}','${nextStatus[o.status]}');document.getElementById('orderModal').classList.remove('active')">${nextLabel[o.status]}</button>`
-                : deleteBtn;
+                : `${reprintBtn} ${deleteBtn}`;
 
             document.getElementById('orderModal').classList.add('active');
         }
+
+        // ============================================
+        // EDITAR PEDIDO — modifica nome cliente, telefone, pagamento, observação
+        // NÃO mexe em itens (afeta CMV/raspinha/estoque). Pra mudar itens: cancela e refaz.
+        // ============================================
+        window.editOrder = function(orderId) {
+            const orders = DataStore.getCollection('orders', franchiseId);
+            const idx = orders.findIndex(x => x.id === orderId);
+            if (idx === -1) { alert('Pedido não encontrado.'); return; }
+            const o = orders[idx];
+
+            const curName = (o.customer && o.customer.name) || '';
+            const curPhone = (o.customer && o.customer.phone) || '';
+            const curPayment = o.payment || '';
+            const curObs = o.observacao || '';
+
+            const newName = prompt('Nome do cliente:', curName);
+            if (newName === null) return; // cancelou
+            const newPhone = prompt('Telefone:', curPhone);
+            if (newPhone === null) return;
+            const newPayment = prompt('Forma de pagamento (pix, dinheiro, cartao_credito, cartao_debito):', curPayment);
+            if (newPayment === null) return;
+            const newObs = prompt('Observação (opcional):', curObs);
+            if (newObs === null) return;
+
+            orders[idx].customer = orders[idx].customer || {};
+            orders[idx].customer.name = newName.trim();
+            orders[idx].customer.phone = newPhone.trim();
+            orders[idx].payment = newPayment.trim();
+            orders[idx].observacao = newObs.trim();
+            orders[idx].updatedAt = new Date().toISOString();
+            orders[idx].editedAt = new Date().toISOString();
+
+            DataStore.set('orders_' + franchiseId, orders);
+            try {
+                AuditLog.logOrder(AuditLog.EVENTS.ORDER_STATUS_CHANGED || 'order_edited', orderId,
+                    { edit: { name: newName, phone: newPhone, payment: newPayment } }, franchiseId);
+            } catch(_e){}
+            document.getElementById('orderModal').classList.remove('active');
+            renderKanban();
+            if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast('✅ Pedido atualizado.', 'success', 2000);
+        };
+
+        // ============================================
+        // EXCLUIR PEDIDO — REMOÇÃO PERMANENTE (irreversível)
+        // Diferente de "Cancelar": tira o pedido da base inteiramente.
+        // Uso: pedidos de teste, duplicados ou erro grave de digitação.
+        // ============================================
+        window.deleteOrder = function(orderId) {
+            const orders = DataStore.getCollection('orders', franchiseId);
+            const idx = orders.findIndex(x => x.id === orderId);
+            if (idx === -1) { alert('Pedido não encontrado.'); return; }
+            const o = orders[idx];
+            const seq = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
+            const totalLabel = (typeof Utils !== 'undefined' && Utils.formatCurrency) ? Utils.formatCurrency(o.total || 0) : ('R$ ' + (o.total || 0));
+
+            const confirm1 = confirm(
+                `EXCLUIR PERMANENTEMENTE o pedido ${seq} (${totalLabel})?\n\n` +
+                `Diferente de "Cancelar", essa ação remove o pedido da base inteira.\n` +
+                `NÃO PODE SER DESFEITO.\n\n` +
+                `Use "Cancelar" se quiser manter o histórico.`
+            );
+            if (!confirm1) return;
+
+            const confirm2 = prompt('Pra confirmar, digite EXCLUIR (em maiúsculas):');
+            if (confirm2 !== 'EXCLUIR') {
+                alert('Exclusão cancelada — texto não confere.');
+                return;
+            }
+
+            // TOMBSTONE — marca como excluído mas mantém no array.
+            // Razão: sync mergeia por id; se removêssemos do array, o outro PC
+            // (que ainda tem o pedido) faria merge e RE-CRIARIA o pedido.
+            // Filtro renderKanban() esconde os deleted. AuditLog preserva o quê.
+            orders[idx].deleted = true;
+            orders[idx].deletedAt = new Date().toISOString();
+            orders[idx].status = 'excluido'; // sai de todas as colunas do kanban
+            orders[idx].updatedAt = new Date().toISOString();
+            const total = orders[idx].total || 0;
+            const itemsCount = (orders[idx].items || []).length;
+            DataStore.set('orders_' + franchiseId, orders);
+            try {
+                AuditLog.logOrder('order_deleted', orderId,
+                    { seq: seq, total: total, items: itemsCount }, franchiseId);
+            } catch(_e){}
+
+            document.getElementById('orderModal').classList.remove('active');
+            renderKanban();
+            if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast(`🗑️ Pedido ${seq} excluído.`, 'success', 2500);
+        };
+
+        // ============================================
+        // REIMPRIMIR PEDIDO — recria o recibo do pedido salvo (mesmo layout do PDV)
+        // Reusa scratchCode/voucherCode que já estavam no order. Não gera código novo.
+        // ============================================
+        function reprintOrder(orderId) {
+            const orders = DataStore.getCollection('orders', franchiseId);
+            const o = orders.find(x => x.id === orderId);
+            if (!o) { alert('Pedido não encontrado.'); return; }
+
+            const franchises = DataStore.getAllFranchises() || [];
+            const fr = franchises.find(f => f.id === franchiseId);
+            const storeName = (fr && fr.name) || 'MilkyPot';
+            const typeLabel = ({balcao:'BALCAO', retirada:'RETIRADA', delivery:'DELIVERY'})[o.type] || (o.type || 'BALCAO').toUpperCase();
+            const when = new Date(o.createdAt).toLocaleString('pt-BR');
+            const customerName = (o.customer && o.customer.name) || '';
+            const addr = o.address || '';
+            const items = o.items || [];
+            const total = Number(o.total || 0);
+            const payment = o.payment || '';
+            const voucher = o.voucherCode || '';
+
+            // Tenta achar a raspinha relacionada (localStorage primeiro, fallback no que tem no order)
+            let scratch = null;
+            if (o.scratchCode) {
+                try {
+                    const allScratches = DataStore.get('scratches_' + franchiseId) || [];
+                    scratch = allScratches.find(s => s.code === o.scratchCode) || null;
+                } catch(e) {}
+            }
+
+            const W = 32; // largura recibo térmico
+            const center = (s) => {
+                s = String(s);
+                if (s.length >= W) return s;
+                const left = Math.floor((W - s.length) / 2);
+                return ' '.repeat(left) + s;
+            };
+            let t = '';
+            t += '================================\n';
+            t += center(storeName.toUpperCase()) + '\n';
+            t += '================================\n';
+            t += 'Pedido #' + String(o.id).slice(-6).toUpperCase() + ' (REIMPRESSAO)\n';
+            t += typeLabel + ' | ' + when + '\n';
+            if (customerName) {
+                const nomeUp = String(customerName).toUpperCase();
+                t += '--------------------------------\n';
+                t += center('>>> CLIENTE <<<') + '\n';
+                t += center(nomeUp) + '\n';
+                t += '--------------------------------\n';
+            }
+            if (addr) t += 'Entrega: ' + addr + '\n';
+            t += '--------------------------------\n';
+            items.forEach(c => {
+                const line = (c.qty || 1) + 'x ' + (c.name || '?') + (c.size ? ' (' + c.size + ')' : '');
+                const priceTxt = 'R$ ' + Number((c.unitPrice || c.price || 0) * (c.qty || 1)).toFixed(2).replace('.', ',');
+                t += line + '\n';
+                if (c.extras && c.extras.length) {
+                    t += '  + ' + c.extras.map(e => e.name).join(', ') + '\n';
+                }
+                t += ' '.repeat(Math.max(0, W - priceTxt.length)) + priceTxt + '\n';
+            });
+            t += '--------------------------------\n';
+            // Subtotal/Desconto se o pedido teve desconto aplicado
+            if (o.discount && Number(o.discount.amount) > 0) {
+                const subt = (Number(total) || 0) + (Number(o.discount.amount) || 0);
+                t += 'Subtotal       R$ ' + subt.toFixed(2).replace('.', ',') + '\n';
+                const dLabel = o.discount.type === 'perc' ? 'Desconto (' + o.discount.value + '%)' : 'Desconto';
+                const padDl = dLabel.length < 14 ? ' '.repeat(14 - dLabel.length) : '';
+                t += dLabel + padDl + '-R$ ' + Number(o.discount.amount).toFixed(2).replace('.', ',') + '\n';
+            }
+            t += 'TOTAL  R$ ' + total.toFixed(2).replace('.', ',') + '\n';
+            if (payment) t += 'Pagamento: ' + payment + '\n';
+            t += '================================\n';
+
+            if (voucher) {
+                t += '\n🎟️ DESAFIO 10 SEGUNDOS\n';
+                t += 'Codigo: ' + voucher + '\n';
+                t += 'Jogue: milkypot.com/desafio\n';
+                t += '--------------------------------\n';
+            }
+            let qrPlaceholder = false;
+            if (scratch && scratch.code) {
+                const displayCode = scratch.shortCode || scratch.code;
+                t += '\n🎰 RASPINHA DA SORTE\n';
+                t += 'Codigo: ' + displayCode + '\n';
+                t += '[QR_CODE_PLACEHOLDER]\n';
+                t += 'Raspe: milkypot.com/raspinha\n';
+                if (scratch.expiresAt) {
+                    t += 'Valido ate ' + new Date(scratch.expiresAt).toLocaleDateString('pt-BR') + '\n';
+                }
+                t += '--------------------------------\n';
+                qrPlaceholder = true;
+            }
+
+            // Bloco PRODUCAO — só pra milkshake/sundae/açaí/bowl/potinho
+            const prodItems = items.filter(c => {
+                const n = ((c && c.name) || '').toLowerCase();
+                return n.includes('milkshake') || n.includes('milk shake') || n.includes('shake') ||
+                       n.includes('sundae') || n.includes('acai') || n.includes('açaí') ||
+                       n.includes('açai') || n.includes('bowl') || n.includes('potinho');
+            });
+            if (prodItems.length) {
+                t += '\n++++++ PRODUCAO ++++++\n';
+                t += center('PARA: ' + (customerName ? String(customerName).toUpperCase() : '--- SEM NOME ---')) + '\n';
+                t += '--------------------------------\n';
+                prodItems.forEach((c, idx) => {
+                    const sizeLbl = c.size ? ' (' + c.size + ')' : '';
+                    t += '> ' + (c.qty || 1) + 'x ' + String(c.name || '').toUpperCase() + sizeLbl + '\n';
+                    if (c.extras && c.extras.length) {
+                        c.extras.forEach(e => { t += '   + ' + e.name + '\n'; });
+                    } else {
+                        t += '   (sem adicionais)\n';
+                    }
+                    if (idx < prodItems.length - 1) t += '   . . . . . . . . . . . . . . . .\n';
+                });
+                t += '++++++++++++++++++++++++\n';
+            }
+            t += '\n' + center('Obrigado! @milkypot') + '\n';
+            t += center('-- Documento nao fiscal --') + '\n';
+
+            // Build QR HTML inline pro QR (mesma fórmula do PDV)
+            let qrHtml = '';
+            if (scratch && scratch.shortCode) {
+                const inline = {
+                    code: scratch.code, shortCode: scratch.shortCode,
+                    franchiseId: scratch.franchiseId, storeName: scratch.storeName,
+                    prizeCode: scratch.prizeCode, prizeName: scratch.prizeName,
+                    prizeDesc: scratch.prizeDesc, prizeTier: scratch.prizeTier,
+                    prizeScope: scratch.prizeScope, prizeCategoria: scratch.prizeCategoria || null,
+                    minOrder: scratch.minOrder, expiresAt: scratch.expiresAt,
+                    validityDays: scratch.validityDays, createdAt: scratch.createdAt
+                };
+                let encInline = '';
+                try {
+                    encInline = btoa(unescape(encodeURIComponent(JSON.stringify(inline))))
+                        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                } catch(e) {}
+                const raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratch.shortCode)
+                    + (encInline ? '&d=' + encInline : '');
+                qrHtml = '<div style="text-align:center;margin:4mm 0"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' +
+                    encodeURIComponent(raspUrl) + '&ecc=L&margin=0" alt="QR Raspinha" style="width:36mm;height:36mm"></div>';
+            }
+
+            const w = window.open('', '_blank', 'width=340,height=800');
+            if (!w) { alert('Bloqueio de popup — libere impressão pra esta página.'); return; }
+            const parts = t.split('[QR_CODE_PLACEHOLDER]');
+            const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Reimpressao Pedido #' + String(o.id).slice(-6) + '</title>' +
+                '<style>@page{margin:2mm}body{margin:0;padding:2mm;font-family:"Courier New",monospace}pre{font-size:11px;white-space:pre-wrap;line-height:1.2;margin:0}</style>' +
+                '</head><body>' +
+                '<pre>' + parts[0].replace(/</g, '&lt;') + '</pre>' +
+                (parts.length > 1 ? qrHtml + '<pre>' + parts.slice(1).join('').replace(/</g, '&lt;') + '</pre>' : '') +
+                '<' + 'script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},700)},400)}<\/script>' +
+                '</body></html>';
+            w.document.write(html);
+            w.document.close();
+        }
+        window.reprintOrder = reprintOrder;
+
+        // ============================================
+        // ENCERRAR DIA — finaliza pedidos abertos do dia + abre modal pra fechar caixa
+        // ============================================
+        window.encerrarDia = function() {
+            // Valida horario comercial - se fora da janela de fechamento, exige justificativa
+            try {
+                if (typeof Caixa !== 'undefined' && Caixa.checkBusinessHours) {
+                    var hc = Caixa.checkBusinessHours(franchiseId, 'close');
+                    if (!hc.ok) {
+                        var motivoH = prompt(
+                            'FORA DO HORARIO COMERCIAL\n\n' +
+                            hc.reason + '\n\n' +
+                            'Por que voce esta encerrando o dia fora do horario?\n' +
+                            '(Ex: shopping fechou cedo, sem movimento, problema tecnico...)'
+                        );
+                        if (!motivoH || motivoH.trim().length < 3) {
+                            if (typeof Utils !== 'undefined' && Utils.showToast) {
+                                Utils.showToast('Encerramento cancelado.', 'error', 2500);
+                            }
+                            return;
+                        }
+                        try {
+                            AuditLog.log('ENCERRAR_DIA_OFF_HOURS',
+                                { hora: hc.currentHHMM, horarioPrevisto: hc.expectedClose, motivo: motivoH.trim() },
+                                franchiseId);
+                        } catch(_e){}
+                        window._mpEncerrarDiaMotivo = motivoH.trim();
+                    }
+                }
+            } catch(_e){ console.warn('Encerrar Dia hour check falhou:', _e); }
+
+            const today = (function(){
+                var dt = new Date();
+                return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
+            })();
+            const allOrders = DataStore.getCollection('orders', franchiseId);
+            const openStatuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega'];
+            const todayOpen = allOrders.filter(o =>
+                !o.deleted &&
+                openStatuses.includes(o.status) &&
+                o.createdAt && o.createdAt.slice(0,10) === today
+            );
+            const oldOpen = allOrders.filter(o =>
+                !o.deleted &&
+                openStatuses.includes(o.status) &&
+                (!o.createdAt || o.createdAt.slice(0,10) < today)
+            );
+
+            const totalOpen = todayOpen.length + oldOpen.length;
+            if (totalOpen === 0) {
+                if (confirm('Não há pedidos abertos.\n\nFechar o caixa agora?')) {
+                    if (typeof Caixa !== 'undefined' && Caixa.showCloseModal) {
+                        Caixa.showCloseModal(franchiseId, function(){ renderKanban(); });
+                    } else {
+                        alert('Módulo Caixa não disponível.');
+                    }
+                }
+                return;
+            }
+
+            const msg =
+                `Encerrar o dia?\n\n` +
+                `Pedidos abertos HOJE: ${todayOpen.length}\n` +
+                `Pedidos abertos de DIAS ANTERIORES: ${oldOpen.length}\n\n` +
+                `Os pedidos abertos serão marcados como ENTREGUES.\n` +
+                `Em seguida, abre o modal de fechamento de caixa.\n\n` +
+                `Continuar?`;
+            if (!confirm(msg)) return;
+
+            // Finaliza todos os abertos
+            const targets = todayOpen.concat(oldOpen);
+            const ts = new Date().toISOString();
+            targets.forEach(o => {
+                const idx = allOrders.findIndex(x => x.id === o.id);
+                if (idx === -1) return;
+                allOrders[idx].status = 'entregue';
+                allOrders[idx].updatedAt = ts;
+                allOrders[idx].finalizedByEncerrarDia = true;
+                allOrders[idx].finalizedAt = ts;
+                // Audit
+                try {
+                    AuditLog.logOrder(AuditLog.EVENTS.ORDER_STATUS_CHANGED || 'order_status_changed',
+                        o.id, { from: o.status, to: 'entregue', via: 'encerrar_dia' }, franchiseId);
+                } catch(_e){}
+            });
+            DataStore.set('orders_' + franchiseId, allOrders);
+            renderKanban();
+            if (typeof Utils !== 'undefined' && Utils.showToast) {
+                Utils.showToast(`✅ ${targets.length} pedido(s) finalizados.`, 'success', 2500);
+            }
+
+            // Abre modal de fechar caixa em sequência
+            setTimeout(function(){
+                if (typeof Caixa !== 'undefined' && Caixa.showCloseModal) {
+                    Caixa.showCloseModal(franchiseId, function(){ renderKanban(); });
+                } else {
+                    alert('Pedidos finalizados. Abra o módulo Caixa pra fechar o turno.');
+                }
+            }, 600);
+        };
+
+        // Banner: avisa quando há pedidos abertos de dias anteriores (clutter no kanban)
+        function _renderOldOpenBanner() {
+            try {
+                const today = (function(){
+                    var dt = new Date();
+                    return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
+                })();
+                const allOrders = DataStore.getCollection('orders', franchiseId);
+                const openStatuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega'];
+                const oldOpen = allOrders.filter(o =>
+                    !o.deleted &&
+                    openStatuses.includes(o.status) &&
+                    (!o.createdAt || o.createdAt.slice(0,10) < today)
+                );
+                let banner = document.getElementById('oldOpenBanner');
+                if (oldOpen.length === 0) { if (banner) banner.style.display = 'none'; return; }
+                if (!banner) {
+                    const panel = document.querySelector('.panel-content');
+                    if (!panel) return;
+                    banner = document.createElement('div');
+                    banner.id = 'oldOpenBanner';
+                    banner.style.cssText = 'background:linear-gradient(135deg,#FCE4EC,#F8BBD0);border:2px solid #E91E63;color:#880E4F;padding:10px 16px;border-radius:10px;margin-bottom:14px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:10px;cursor:pointer';
+                    banner.onclick = window.encerrarDia;
+                    panel.insertBefore(banner, panel.firstChild);
+                }
+                banner.innerHTML = '🌙 <span>Tem ' + oldOpen.length + ' pedido' + (oldOpen.length>1?'s':'') + ' aberto' + (oldOpen.length>1?'s':'') + ' de dia(s) anterior(es)</span> · <strong style="text-decoration:underline">Clique pra Encerrar Dia</strong>';
+                banner.style.display = 'flex';
+            } catch(_e){}
+        }
+        // Re-render banner sempre que kanban renderiza
+        const _origRenderKanban = renderKanban;
+        renderKanban = function(){
+            _origRenderKanban.apply(this, arguments);
+            _renderOldOpenBanner();
+        };
 
         // Poll for new orders
         let lastOrderCount = 0;
@@ -555,10 +964,164 @@
 
         renderKanban();
         i18n.translatePage();
+
+        // ============================================
+        // DELEGAÇÃO DE EVENTOS — handler único pro kanban
+        // Resolve "botão não clicável" causado por inline onclick + bubble
+        // Funciona mesmo se moveOrder/deleteOrder não estiver em window
+        // ============================================
+        document.addEventListener('click', function(ev) {
+            const btn = ev.target.closest('[data-action]');
+            if (!btn) return;
+            ev.preventDefault();
+            ev.stopPropagation();
+            const action = btn.dataset.action;
+            const orderId = btn.dataset.orderId;
+            const target = btn.dataset.targetStatus;
+            console.log('[Kanban] click', action, orderId, target);
+            try {
+                if (action === 'advance' && target) {
+                    moveOrder(orderId, target);
+                } else if (action === 'cancel') {
+                    if (window.confirm('Cancelar este pedido? Ele sai do kanban mas fica no histórico.')) {
+                        moveOrder(orderId, 'cancelado');
+                    }
+                } else if (action === 'delete') {
+                    deleteOrderFlow(orderId);
+                }
+            } catch(e) {
+                console.error('[Kanban] erro click', e);
+                alert('Erro ao executar ação: ' + e.message);
+            }
+        }, true); // capture=true: roda ANTES do onclick do card
+
+        // Bloquear bubble do .order-actions pra modal não abrir
+        document.addEventListener('click', function(ev) {
+            if (ev.target.closest('[data-noprop]')) {
+                ev.stopPropagation();
+            }
+        }, true);
+
+        // ============================================
+        // BULLETPROOF: handler chamado direto pelo onclick inline.
+        // Funciona mesmo se a delegação no document falhar.
+        // ============================================
+        window.kanbanAction = function(ev, action, orderId, target) {
+            try {
+                if (ev && ev.stopPropagation) ev.stopPropagation();
+                if (ev && ev.preventDefault) ev.preventDefault();
+                console.log('[kanbanAction]', action, orderId, target);
+                if (action === 'advance' && target) {
+                    moveOrder(orderId, target);
+                } else if (action === 'cancel') {
+                    moveOrder(orderId, 'cancelado');
+                } else if (action === 'delete') {
+                    deleteOrderFlow(orderId);
+                }
+            } catch(e) {
+                console.error('[kanbanAction] erro:', e);
+                alert('Erro: ' + e.message + '\n\nUse milkypot.com/painel/limpar.html');
+            }
+            return false;
+        };
+
+        // Fluxo de exclusão SEM confirm()/prompt() — usa modal inline
+        // (Brave/Chrome às vezes bloqueiam confirm/prompt repetidos como spam)
+        function deleteOrderFlow(orderId) {
+            const orders = DataStore.getCollection('orders', franchiseId);
+            const o = orders.find(x => x.id === orderId);
+            if (!o) { alert('Pedido não encontrado.'); return; }
+            const seq = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
+            const totalLabel = (typeof Utils !== 'undefined' && Utils.formatCurrency) ? Utils.formatCurrency(o.total || 0) : ('R$ ' + (o.total || 0));
+
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:inherit';
+            overlay.innerHTML = `
+                <div style="background:#fff;border-radius:14px;padding:24px;max-width:420px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+                    <h3 style="margin:0 0 12px 0;color:#B71C1C;font-size:1.2rem">🗑️ Excluir pedido ${seq}</h3>
+                    <p style="margin:0 0 16px 0;color:#333;line-height:1.5">
+                        Excluir o pedido <strong>${seq}</strong> de <strong>${totalLabel}</strong>?<br>
+                        <small style="color:#B71C1C">⚠️ Diferente de "Cancelar". Pedido some da base. Não pode desfazer.</small>
+                    </p>
+                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+                        <button id="dlgCancel" style="padding:10px 18px;background:#eee;color:#333;border:none;border-radius:8px;cursor:pointer;font-weight:600">Cancelar</button>
+                        <button id="dlgConfirm" style="padding:10px 18px;background:#B71C1C;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">EXCLUIR</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+            const cleanup = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+            overlay.addEventListener('click', e => { if (e.target === overlay) cleanup(); });
+            overlay.querySelector('#dlgCancel').addEventListener('click', cleanup);
+            overlay.querySelector('#dlgConfirm').addEventListener('click', function() {
+                const idx = orders.findIndex(x => x.id === orderId);
+                if (idx === -1) { cleanup(); return; }
+                orders[idx].deleted = true;
+                orders[idx].deletedAt = new Date().toISOString();
+                orders[idx].status = 'excluido';
+                orders[idx].updatedAt = new Date().toISOString();
+                DataStore.set('orders_' + franchiseId, orders);
+                try { AuditLog.logOrder('order_deleted', orderId, { seq: seq, total: o.total || 0 }, franchiseId); } catch(_){}
+                cleanup();
+                renderKanban();
+                if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast(`🗑️ Pedido ${seq} excluído.`, 'success', 2000);
+            });
+        }
+
+        // ===== Sincronizar Agora (botão manual no header) =====
+        // Útil quando operador quer forçar sync sem esperar o poll de 5s ou listener
+        window.forceSyncNow = async function (btn) {
+            if (!DataStore.forceSync) { alert('Sincronização indisponível.'); return; }
+            const orig = btn ? btn.innerHTML : null;
+            if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Sincronizando...'; }
+            try {
+                const r = await DataStore.forceSync();
+                if (r.success) {
+                    renderKanban();
+                    if (typeof Utils !== 'undefined' && Utils.showToast) {
+                        Utils.showToast(r.changes > 0 ? `🔄 ${r.changes} atualização(ões) recebida(s)!` : '✅ Tudo sincronizado.', 'success', 2500);
+                    }
+                } else {
+                    // Erro real do Firestore (rede/quota) — toast curto, NUNCA desloga
+                    console.warn('forceSync error:', r.code, r.error);
+                    if (typeof Utils !== 'undefined' && Utils.showToast) {
+                        Utils.showToast('⚠️ ' + (r.error || 'Erro ao sincronizar'), 'error', 3500);
+                    }
+                }
+            } catch (e) {
+                console.warn('forceSync exception:', e);
+                if (typeof Utils !== 'undefined' && Utils.showToast) {
+                    Utils.showToast('⚠️ Falha no sync: ' + e.message, 'error', 3500);
+                }
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = orig || '🔄 Sincronizar'; }
+            }
+        };
+        // Banner mp_auth_orphan REMOVIDO em v62 — rules públicas cobrem reads de sync,
+        // banner só causava deslogins desnecessários. Mantém cobertura via rules.
+
+        // ===== SYNC ENTRE PCs em tempo real =====
+        // DataStore agora dispara mp_remote_update quando outro PC altera orders_FID
+        // Re-renderiza o kanban e mostra toast pra avisar que entrou pedido novo de outro PC.
+        window.addEventListener('mp_remote_update', function (e) {
+            if (!e.detail || !e.detail.key) return;
+            const k = e.detail.key;
+            // Re-render se a mudança afeta pedidos da loja atual
+            if (k === 'orders_' + franchiseId) {
+                renderKanban();
+                if (typeof Utils !== 'undefined' && Utils.showToast) {
+                    Utils.showToast('🔄 Pedidos sincronizados de outro PC.', 'info', 2000);
+                }
+            }
+            // Se caixa mudou em outro PC, dispara re-render do chip lateral (se existir)
+            if (k === 'caixa_' + franchiseId && typeof renderPdvStatusChips === 'function') {
+                try { renderPdvStatusChips(); } catch (_) {}
+            }
+        });
     </script>
 <script src="../js/core/copilot-transport.js" defer></script>
 <script src="../js/pages/lilo-scanner.js" defer></script>
 <script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
 <script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
+<script src="../js/core/register-sw.js?v=mp-v91"></script>
 </body>
 </html>
