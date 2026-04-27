@@ -39,7 +39,12 @@ function mergeFranchiseFlags() {
         MILKYPOT_STORES.forEach(function(s) {
             var f = dsFranchises.find(function(d) { return d.id === s.id; });
             if (f) {
+                // Loja aberta/fechada (master toggle — bloqueia tudo quando false)
+                if (typeof f.storeOnlineOpen === 'boolean') s.open = f.storeOnlineOpen;
+                // Delivery e retirada independentes
                 if (typeof f.deliveryEnabled === 'boolean') s.deliveryEnabled = f.deliveryEnabled;
+                if (typeof f.pickupEnabled === 'boolean') s.pickupEnabled = f.pickupEnabled;
+                // Dados operacionais
                 if (typeof f.deliveryFee === 'number') s.deliveryFee = f.deliveryFee;
                 if (f.hours) s.hours = f.hours;
                 if (f.deliveryTime) s.deliveryTime = f.deliveryTime;
