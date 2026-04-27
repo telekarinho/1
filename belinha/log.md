@@ -1,5 +1,47 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #49 — 2026-04-27
+
+**Área:** Auto-aprimoramento (ciclos #44–48) + Conteúdo — `pos-inauguracao-semana10.md`
+
+**Contexto:** Ciclo obrigatório de auto-aprimoramento (a cada 5 ciclos). Período analisado: ciclos #44–48 (26/04/2026), semana de conteúdo junho, funil WhatsApp v2 e Potinho Junino. Melhoria concreta: semana 10 (21–27/06/2026) com São João como pico de alcance + transição para julho.
+
+**O que analisou:**
+- Ciclos #44–48: revisão completa — auto-aprimoramento #9 (semana7/vencedores UGC), semana8 (Indica & Ganha ativo), FAQPage SEO +2 perguntas, semana9 (Potinho Junino + Embaixador), funil WA v2 (6 novos scripts)
+- Identificado padrão de alto valor: scripts operacionais prontos (WhatsApp) > conteúdo contingente (que depende de resultados não verificáveis)
+- Potinho Junino = template replicável para sazonalidade: produto limitado + ingrediente acessível + urgência natural
+- Dia de São João (24/06) não estava coberto na semana 10 → lacuna de pico de alcance identificada
+- Estratégia de julho definida: férias escolares + aniversário 3 meses (25/07) + novo produto sazonal de inverno
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana10.md` | CRIADO — 200+ linhas. Semana 21–27/06 com São João (24/06) como pico. Roteiro Reel 15–30s, 3 templates WhatsApp (`/saojao`, `/ultimosjunino`, `/teaserjulho`), stories para todos os 7 dias, checklist operacional, promoção opcional de carimbo extra no São João, KPIs, nota para semana 11. |
+| `belinha/estrategia.md` | Aprendizados ciclos 44–48 · Padrão v5 · Estratégia julho 2026 (férias escolares, 3 meses, produto invernal) · Roadmap ciclos 50–54 |
+
+**Commits:**
+- Feat: `pos-inauguracao-semana10.md`
+- Docs: auto-aprimoramento ciclo #49 — `estrategia.md` atualizado
+
+**Principais aprendizados do período (#44–48):**
+1. Scripts operacionais prontos (WhatsApp) são o entregável de maior ROI — zero improviso do operador
+2. Produtos sazonais de edição limitada (Potinho Junino) criam urgência natural e diferenciação sem custo de novos insumos
+3. Conteúdo contingente (que pressupõe resultados não verificáveis) deve ter sempre uma versão B — ou ser substituído por conteúdo não-contingente
+4. FAQ Schema.org antecipado (antes do lançamento do feature) é a prática correta de SEO
+
+**Impacto esperado:**
+- São João (24/06) = pico máximo de alcance orgânico da temporada junina → Reel planejado com antecedência, operador não perde a data
+- Templates `/saojao` e `/teaserjulho` → transição limpa de junho para julho sem lacuna de comunicação
+- `estrategia.md` define produto sazonal de julho (Potinho Caramelado/Aconchego) e roadmap ciclos 50–54
+
+**Próximo passo sugerido:**
+- Ciclo #50: `pos-inauguracao-semana11.md` — 28/06–04/07: virada para julho + revelar produto sazonal de inverno (Potinho Caramelado?)
+- Operador: decidir produto sazonal de julho antes de 28/06 para revelar na virada
+- Operador: verificar contagem de reviews Google Maps (≥3 para desbloquear `aggregateRating`)
+
+---
+
 ## Ciclo #48 — 2026-04-26
 
 **Área:** Conversão — `whatsapp-funil.md` v2 — aprendizados do mês 1
