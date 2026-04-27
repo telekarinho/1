@@ -1,5 +1,43 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #50 — 2026-04-27
+
+**Área:** Conteúdo — `pos-inauguracao-semana11.md` (28/06–04/07/2026)
+
+**Contexto:** Semana de virada de junho para julho — encerramento do Potinho Junino (30/06) e estreia do produto sazonal de inverno: Potinho Caramelado (01/07). Ciclo #49 mapeou esta semana no roadmap 50–54. Férias escolares em andamento → público familiar crescente.
+
+**O que analisou:**
+- `belinha/estrategia.md`: roadmap ciclo #50 = semana11, virada julho + produto invernal
+- `pos-inauguracao-semana10.md`: referência de formato e profundidade (São João como pico de semana 10)
+- Estratégia de julho: Potinho Caramelado (Ninho + calda caramelo + granola + floco aveia) já definida em `estrategia.md`
+- Identificada janela emocional única: despedida do Potinho Junino + estreia simultânea = narrativa de continuidade que reengaja a base
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana11.md` | CRIADO — 358 linhas. Calendário completo 28/06–04/07 (domingo a sábado). Inclui: roteiro Reels 30s de estreia do Potinho Caramelado (01/07), post de despedida do Potinho Junino (30/06), 3 templates WhatsApp (`/caramelado`, `/boasferiasescolar`, `/tchauJunino`), stories para todos os 7 dias, checklist operacional, KPIs da semana, nota de transição para semana 12. |
+
+**Commit:** `1f5d001`
+
+**Destaques do conteúdo:**
+- 30/06 = post emocional de despedida do Potinho Junino + teaser máximo para o dia seguinte
+- 01/07 = roteiro Reels 30s de revelação com câmera lenta da calda de caramelo + texto animado dos ingredientes
+- Template `/tchauJunino` para reengajar clientes que compraram o Potinho Junino durante junho
+- Ação do operador documentada: confirmar nome final do produto e garantir insumos antes de 28/06
+
+**Impacto esperado:**
+- Transição de sazonalidade sem lacuna de comunicação (junho → julho sem silêncio)
+- Estreia do Potinho Caramelado com Reels de revelação planejado — operador não improvisa
+- Templates WhatsApp prontos eliminam fricção no atendimento de julho
+
+**Próximo passo sugerido:**
+- Ciclo #51: `pos-inauguracao-semana12.md` — 05–11/07: "Família de Potinho" (férias escolares + combos)
+- Ciclo #52: Template "Embaixador do Mês" — nomear 1º embaixador se Indica & Ganha ativo
+- Operador: confirmar nome e insumos do Potinho Caramelado antes de 28/06
+
+---
+
 ## Ciclo #49 — 2026-04-27
 
 **Área:** Auto-aprimoramento (ciclos #44–48) + Conteúdo — `pos-inauguracao-semana10.md`
