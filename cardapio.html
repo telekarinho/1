@@ -422,6 +422,54 @@
                     }
                 } catch(err) {}
             });
+
+            // Pós-sync: stores-data.js re-mergeia deliveryEnabled do Firestore e dispara
+            // mp_stores_updated. Recarrega CHECKOUT_STORES e, se loja já selecionada,
+            // atualiza a opção de delivery na tela imediatamente.
+            window.addEventListener('mp_stores_updated', () => {
+                try {
+                    if (Array.isArray(window.MILKYPOT_STORES)) {
+                        // Atualiza array de lojas do checkout com os valores frescos do Firestore
+                        window.MILKYPOT_STORES.forEach(function(fresh) {
+                            var idx = CHECKOUT_STORES.findIndex(function(c) { return c.id === fresh.id; });
+                            if (idx !== -1) {
+                                CHECKOUT_STORES[idx].deliveryEnabled = fresh.deliveryEnabled;
+                                CHECKOUT_STORES[idx].deliveryFee = fresh.deliveryFee;
+                                CHECKOUT_STORES[idx].deliveryTime = fresh.deliveryTime;
+                                CHECKOUT_STORES[idx].hours = fresh.hours;
+                            }
+                        });
+                    }
+                    // Se o cliente já selecionou uma loja, re-aplica a lógica de delivery/retirada
+                    if (window.selectedStore && window.selectedStore.id) {
+                        var updated = CHECKOUT_STORES.find(function(c) { return c.id === window.selectedStore.id; });
+                        if (updated) {
+                            window.selectedStore = updated;
+                            var deliveryEnabled = updated.deliveryEnabled !== false;
+                            window._selectedStoreDeliveryEnabled = deliveryEnabled;
+                            var deliveryRadio = document.querySelector('input[name="delivery"][value="delivery"]');
+                            var deliveryLabel = deliveryRadio ? deliveryRadio.closest('.delivery-option') : null;
+                            if (deliveryLabel) deliveryLabel.style.display = deliveryEnabled ? '' : 'none';
+                            if (!deliveryEnabled) {
+                                var pickupRadio = document.querySelector('input[name="delivery"][value="pickup"]');
+                                if (pickupRadio) { pickupRadio.checked = true; }
+                                // Mostra aviso se não existir
+                                var deliverySection = document.querySelector('#checkoutStep3 .delivery-options');
+                                if (deliverySection && !document.getElementById('deliveryOffNotice')) {
+                                    var notice = document.createElement('div');
+                                    notice.id = 'deliveryOffNotice';
+                                    notice.style.cssText = 'background:#FFF3E0;border:1px solid #FFB74D;border-radius:10px;padding:10px 14px;margin-top:10px;color:#E65100;font-size:0.85rem;font-weight:600';
+                                    notice.innerHTML = '🛵 Esta loja está aceitando apenas <strong>retirada</strong> no momento.';
+                                    deliverySection.appendChild(notice);
+                                }
+                            } else {
+                                var existingNotice = document.getElementById('deliveryOffNotice');
+                                if (existingNotice) existingNotice.remove();
+                            }
+                        }
+                    }
+                } catch(e) {}
+            });
         }
 
         // Gera/atualiza as tabs de categoria dinamicamente a partir do catálogo atual.

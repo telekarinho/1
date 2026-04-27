@@ -32,7 +32,7 @@ var MILKYPOT_STORES = [
 
 // Mescla com franchises do DataStore (fonte de verdade no painel)
 // para que o cardápio respeite o toggle deliveryEnabled em tempo real.
-(function mergeFranchiseFlags() {
+function mergeFranchiseFlags() {
     try {
         if (typeof DataStore === 'undefined' || !DataStore.getAllFranchises) return;
         var dsFranchises = DataStore.getAllFranchises() || [];
@@ -46,4 +46,19 @@ var MILKYPOT_STORES = [
             }
         });
     } catch(e) {}
-})();
+}
+
+// Roda imediatamente (localStorage já carregado)
+mergeFranchiseFlags();
+
+// Re-roda após o Firestore sincronizar — garante que o toggle do admin
+// (deliveryEnabled salvo no Firestore) seja respeitado em tempo real,
+// mesmo que o sync termine depois que stores-data.js já rodou.
+if (typeof window !== 'undefined') {
+    window.addEventListener('mp_synced', function() {
+        mergeFranchiseFlags();
+        // Notifica o cardápio para re-verificar a opção de delivery
+        // caso o cliente já tenha selecionado uma loja.
+        window.dispatchEvent(new CustomEvent('mp_stores_updated'));
+    });
+}
