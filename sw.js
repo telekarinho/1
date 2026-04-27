@@ -23,8 +23,8 @@ const PRECACHE_URLS = [
     '/painel/despesas.html',
     '/painel/configuracoes.html',
     '/painel/uber-entregas.html',
-    '/painel/tv-indoor.html',
-    '/painel/radio-indoor.html',
+
+
     '/painel/finance-os.html',
     // TV + Radio player pages
     '/tv.html',
