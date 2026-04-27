@@ -1,5 +1,36 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #55 — 2026-04-27
+
+**Área:** Conteúdo — Semana 13 pós-inauguração (12–18/07/2026)
+
+**O que analisou:**
+- Log ciclo #54 e roadmap ciclos 55–59 em `belinha/estrategia.md`
+- Conteúdo semana12 como referência de formato e profundidade
+- Contexto: segunda metade das férias escolares de julho, inverno em Londrina, aniversário 3 meses (25/07) se aproximando
+- Sequência planejada: UGC invernal → convite Embaixador Agosto → teaser aniversário
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana13.md` | CRIADO — plano editorial completo 12–18/07: 7 dias de stories/posts/reels, campanha UGC "Potinho no Frio", convite Embaixador do Mês Agosto (post feed + DM template + stories), primeiro teaser aniversário 3 meses (25/07), reel 15s roteirizado, checklist operador, tabela de métricas |
+
+**Commit:** `4c80c60`
+
+**Destaques do plano:**
+- **UGC Invernal:** campanha de domingo a sábado pedindo fotos "look inverno + potinho" — foto vencedora vira post no sábado 18/07
+- **Embaixador Agosto:** lançamento na quarta 15/07 com post carrossel + template DM personalizado para cliente frequente
+- **Teaser Aniversário 3 meses:** primeira menção na quinta 16/07, segunda no sábado 18/07 — gera expectativa antes da semana 14
+- **Linha Zero/Fit:** carrossel na segunda educando público de saúde no inverno
+
+**Próximo passo sugerido:**
+- Ciclo #56: `pos-inauguracao-semana14.md` — 19–25/07: campanha completa aniversário 3 meses (sorteio, post emocional, stories contagem regressiva, oferta especial)
+- Ciclo #57: Script WhatsApp "Ganhou! 10 carimbos → Mini grátis" — ativação fidelidade matura
+- Ciclo #58: `aggregateRating` se desbloqueado; senão Core Web Vitals sweep `index.html` mobile
+
+---
+
 ## Ciclo #54 — 2026-04-27
 
 **Área:** Auto-aprimoramento (ciclos #49–53) + SEO — link `acai-self-service-londrina.html` em `index.html`
