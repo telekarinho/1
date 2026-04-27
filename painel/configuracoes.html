@@ -135,42 +135,6 @@
                             <h3>Operacao</h3>
                         </div>
                         <div class="card-body">
-                            <!-- ============================================================
-                                 CONTROLES DE OPERAÇÃO ONLINE — 3 toggles independentes
-                                 ============================================================ -->
-
-                            <!-- Toggle master: loja aberta/fechada -->
-                            <div id="storeOpenBanner" class="form-group" style="background:#E8F5E9;border:2px solid #66BB6A;border-radius:12px;padding:14px;margin-bottom:10px">
-                                <label style="display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:0">
-                                    <input type="checkbox" id="storeOnlineOpen" style="width:22px;height:22px;cursor:pointer;accent-color:#2E7D32" onchange="updateStoreOpenBanner()">
-                                    <div style="flex:1">
-                                        <strong id="storeOpenLabel" style="display:block;font-size:1.05rem">🟢 Loja online ABERTA</strong>
-                                        <small style="color:#4E6045;font-size:0.82rem">Desligar: bloqueia <strong>todos</strong> os pedidos online (delivery E retirada). Use pra manutenção ou fora do horário.</small>
-                                    </div>
-                                </label>
-                            </div>
-
-                            <!-- Toggle: aceitar pedidos delivery -->
-                            <div class="form-group" style="background:#FFF8F0;border:2px solid #FFE0B2;border-radius:12px;padding:14px;margin-bottom:10px">
-                                <label style="display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:0">
-                                    <input type="checkbox" id="storeDeliveryEnabled" style="width:20px;height:20px;cursor:pointer;accent-color:#FF9800">
-                                    <div style="flex:1">
-                                        <strong style="display:block;color:#E65100;font-size:1rem">🛵 Aceitar pedidos delivery</strong>
-                                        <small style="color:#8D6E63;font-size:0.82rem">Quando desligado: cardápio online só aceita retirada na loja</small>
-                                    </div>
-                                </label>
-                            </div>
-
-                            <!-- Toggle: aceitar retirada -->
-                            <div class="form-group" style="background:#E3F2FD;border:2px solid #90CAF9;border-radius:12px;padding:14px;margin-bottom:14px">
-                                <label style="display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:0">
-                                    <input type="checkbox" id="storePickupEnabled" style="width:20px;height:20px;cursor:pointer;accent-color:#1565C0">
-                                    <div style="flex:1">
-                                        <strong style="display:block;color:#0D47A1;font-size:1rem">🏪 Aceitar retirada na loja</strong>
-                                        <small style="color:#455A64;font-size:0.82rem">Quando desligado: cardápio online só aceita delivery (se delivery também off → loja fechada)</small>
-                                    </div>
-                                </label>
-                            </div>
                             <div class="form-group">
                                 <label>Horario de funcionamento</label>
                                 <input type="text" id="storeHours" class="form-control" placeholder="10:00 - 22:00">
@@ -275,165 +239,92 @@
                         </div>
                     </div>
 
-                    <!-- Redirect: Custos de Produção agora em Financeiro -->
-                    <div class="panel-card" id="producao" style="grid-column:1/-1;scroll-margin-top:80px">
-                        <div class="card-header" style="background:linear-gradient(135deg,#7E57C2,#5E35B1);color:#fff">
-                            <h3 style="color:#fff">⚙️ Parâmetros de Custeio → movido pra Financeiro</h3>
-                            <p style="margin:4px 0 0;font-size:12px;opacity:.9">Todos os parâmetros (kWh, salário, encargos, pró-labore, depreciação, perdas) agora ficam no hub financeiro único</p>
-                        </div>
-                        <div class="card-body" style="text-align:center;padding:30px">
-                            <a href="financeiro.html#custeioParams" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;text-decoration:none;border-radius:10px;font-weight:800;font-size:14px">🩺 Abrir parâmetros no Financeiro →</a>
-                            <p style="margin:12px 0 0;font-size:13px;color:#6B7280">Motivo: tudo que afeta seu dinheiro — vendas, despesas, parâmetros de custo — fica num lugar só, pra saúde financeira real da loja.</p>
-                        </div>
-                    </div>
-                    <!-- (card antigo escondido abaixo — será removido no próximo deploy) -->
-                    <div class="panel-card" style="display:none"><div class="card-header" style="background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff">
-                            <h3 style="color:#fff">⚙️ Custos de Produção (legacy)</h3>
-                            <p style="margin:4px 0 0;font-size:12px;opacity:.9">Config global da loja — alimenta automaticamente "energia" e "mão-de-obra" de cada produto.</p>
-                        </div>
-                        <div class="card-body">
-                            <h4 style="margin:0 0 10px;color:#92400E">Custo direto (mão-de-obra + energia)</h4>
-                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px">
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">⚡ Custo kWh (R$)</label>
-                                    <input type="number" id="prodKwh" step="0.01" value="0.85" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
-                                    <small style="color:#999">Copel Londrina: R$ 0,80-0,95</small>
-                                </div>
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Potência média (kW)</label>
-                                    <input type="number" id="prodPotencia" step="0.1" value="1.5" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
-                                    <small style="color:#999">Blender + vitrine rateados</small>
-                                </div>
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Salário/hora operador (R$)</label>
-                                    <input type="number" id="prodCustoHora" step="0.01" value="8.50" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
-                                    <small style="color:#999">"Na mão", sem encargos</small>
-                                </div>
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Encargos CLT (%)</label>
-                                    <input type="number" id="prodEncargos" step="1" value="33" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
-                                    <small style="color:#999">CLT +33% (13º/férias/FGTS/INSS) · RPA 0%</small>
-                                </div>
-                            </div>
-
-                            <h4 style="margin:16px 0 10px;color:#92400E">Custo indireto (estrutura mensal)</h4>
-                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px">
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">🧾 DAS Simples (%)</label>
-                                    <input type="number" id="prodDasPct" step="0.1" value="4" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
-                                    <small style="color:#999">Anexo I comércio: 4% inicial</small>
-                                </div>
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">👔 Pró-labore + INSS (R$/mês)</label>
-                                    <input type="number" id="prodProLabore" step="1" value="1685" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
-                                    <small style="color:#999">R$1.518 + 11% INSS = R$1.685 mínimo</small>
-                                </div>
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">📉 Depreciação (R$/mês)</label>
-                                    <input type="number" id="prodDepreciacao" step="1" value="500" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
-                                    <small style="color:#999">Equipamentos ÷ 60 meses</small>
-                                </div>
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">🗑 Perdas/quebra (%)</label>
-                                    <input type="number" id="prodPerdasPct" step="0.5" value="4" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
-                                    <small style="color:#999">% do CMV: 3-5% típico sorveteria</small>
-                                </div>
-                            </div>
-
-                            <h4 style="margin:16px 0 10px;color:#92400E">Meta ramp-up (mês 1-2 — loja nova)</h4>
-                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px">
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">💰 Meta vendas mês (R$)</label>
-                                    <input type="number" id="prodMetaVendas" step="500" value="45000" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
-                                    <small style="color:#999">Usado p/ rateio enquanto loja nova</small>
-                                </div>
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">📦 Meta unidades mês</label>
-                                    <input type="number" id="prodMetaProdutos" step="50" value="2000" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
-                                    <small style="color:#999">Total de produtos vendidos/mês</small>
-                                </div>
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">🎯 Mín pedidos p/ sair ramp-up</label>
-                                    <input type="number" id="prodMinReal" step="10" value="200" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
-                                    <small style="color:#999">Acima disso usa dados reais</small>
-                                </div>
-                            </div>
-
-                            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-                                <button onclick="salvarProducao()" style="padding:10px 20px;background:#F59E0B;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">💾 Salvar custos de produção</button>
-                                <span id="prodStatus" style="font-size:13px;color:#6B7280"></span>
-                            </div>
-                            <div style="margin-top:12px;padding:12px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;font-size:13px;color:#78350F">
-                                💡 <b>Como funciona:</b> cada produto puxa esses valores pra calcular automaticamente seu custo real (direto + indireto = total). O rateio fixos/variáveis puxa o que você cadastrou em <a href="financeiro.html" style="color:#7E57C2;font-weight:700">Financeiro → Despesas</a> dividido pelos pedidos do mês. Resultado: lucro REAL por produto, não chute.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card: Pagamentos & Nota Fiscal -->
+                    <!-- Card: Uber Direct Credenciais -->
                     <div class="panel-card" style="grid-column:1/-1">
-                        <div class="card-header" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff">
-                            <h3 style="color:#fff">💳 Pagamentos & Nota Fiscal</h3>
-                            <p style="margin:4px 0 0;font-size:12px;opacity:.9">Configure Pix (QR para cliente pagar) e emissão de NFC-e</p>
+                        <div class="card-header" style="background:linear-gradient(135deg,#1a1a1a,#333);color:#fff">
+                            <h3 style="color:#fff">&#128663; Uber Direct — Credenciais</h3>
+                            <p style="margin:4px 0 0;font-size:12px;opacity:.85">Integre com a API Uber Direct para entregas dinamicas com rastreamento em tempo real</p>
                         </div>
                         <div class="card-body">
-                            <!-- Pix -->
-                            <h4 style="margin:0 0 10px;color:#059669">💠 Pix (QR Code no balcão)</h4>
-                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px">
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Chave Pix</label>
-                                    <input id="pixChave" placeholder="CPF, CNPJ, email, telefone ou aleatória" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
-                                </div>
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Nome do beneficiário</label>
-                                    <input id="pixNome" placeholder="MILKYPOT LONDRINA" maxlength="25" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;text-transform:uppercase">
-                                </div>
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Cidade</label>
-                                    <input id="pixCidade" placeholder="LONDRINA" maxlength="15" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;text-transform:uppercase">
-                                </div>
-                            </div>
-                            <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
-                                <button onclick="salvarPix()" style="padding:10px 20px;background:#10B981;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">💾 Salvar Pix</button>
-                                <button onclick="testarPix()" style="padding:10px 20px;background:#6B7280;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">🧪 Testar (gerar QR R$ 1,00)</button>
-                                <span id="pixStatus" style="font-size:13px;color:#6B7280"></span>
-                            </div>
-                            <div id="pixPreview" style="display:none;background:#F9FAFB;padding:16px;border-radius:10px;border:1px solid #E5E7EB;text-align:center;margin-bottom:20px">
-                                <img id="pixQr" src="" style="max-width:200px;border:2px solid #10B981;border-radius:8px">
-                                <div style="margin-top:10px;font-size:11px;color:#6B7280">Copia-e-cola:</div>
-                                <textarea id="pixPayload" readonly style="width:100%;max-width:400px;padding:8px;font-family:monospace;font-size:10px;border:1px solid #E5E7EB;border-radius:6px;margin-top:4px;height:60px"></textarea>
-                            </div>
-
-                            <!-- NFC-e -->
-                            <h4 style="margin:16px 0 10px;color:#059669">🧾 NFC-e (Nota Fiscal do Consumidor)</h4>
-                            <div style="padding:12px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;margin-bottom:12px;font-size:13px;color:#78350F">
-                                ⚠️ NFC-e em produção exige certificado A1, IE ativa e NCM cadastrado. Modo <b>Manual</b> deixa o operador emitir fora do sistema (Bling/SEFAZ) e é adequado pro dia-1. Quando contratar Bling, mude pro modo automático.
-                            </div>
-                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:10px">
-                                <div>
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Modo de emissão</label>
-                                    <select id="nfeMode" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
-                                        <option value="manual">Manual (registra pendente)</option>
-                                        <option value="bling">Bling API (automático)</option>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:16px">
+                                <!-- Ambiente -->
+                                <div class="form-group">
+                                    <label>Ambiente</label>
+                                    <select id="uberEnvironment" class="form-control">
+                                        <option value="sandbox">Teste (Sandbox)</option>
+                                        <option value="production">Producao</option>
                                     </select>
                                 </div>
-                                <div class="nfe-bling" style="display:none">
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">Token Bling API</label>
-                                    <input id="nfeApiKey" type="password" placeholder="Bearer token" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                                <!-- Customer ID -->
+                                <div class="form-group">
+                                    <label>Customer ID</label>
+                                    <input type="text" id="uberCustomerId" class="form-control" placeholder="customer_XXXXXXXX">
                                 </div>
-                                <div class="nfe-bling" style="display:none">
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">CNPJ loja</label>
-                                    <input id="nfeCnpj" placeholder="00.000.000/0001-00" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                                <!-- Client ID -->
+                                <div class="form-group">
+                                    <label>Client ID</label>
+                                    <input type="text" id="uberClientId" class="form-control" placeholder="client_XXXXXXXX">
                                 </div>
-                                <div class="nfe-bling" style="display:none">
-                                    <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px">NCM padrão (sorvete: 21050000)</label>
-                                    <input id="nfeNcm" value="21050000" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                                <!-- Client Secret -->
+                                <div class="form-group" style="position:relative">
+                                    <label>Client Secret</label>
+                                    <div style="display:flex;gap:6px">
+                                        <input type="password" id="uberClientSecret" class="form-control" placeholder="***masked***" style="flex:1">
+                                        <button type="button" onclick="toggleSecretVisibility()" style="padding:0 10px;border:1px solid #ddd;background:#f5f5f5;border-radius:8px;cursor:pointer;font-size:13px" title="Mostrar/ocultar">&#128065;</button>
+                                    </div>
                                 </div>
                             </div>
-                            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-                                <button onclick="salvarNFe()" style="padding:10px 20px;background:#10B981;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">💾 Salvar NFC-e</button>
-                                <span id="nfeStatus" style="font-size:13px;color:#6B7280"></span>
+
+                            <hr style="margin:4px 0 16px;border:none;border-top:1px solid #eee">
+                            <h4 style="margin-bottom:12px;color:#333;font-size:.95rem">Ponto de Retirada</h4>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px">
+                                <div class="form-group">
+                                    <label>Nome do ponto</label>
+                                    <input type="text" id="uberPickupName" class="form-control" placeholder="MilkyPot Loja Centro">
+                                </div>
+                                <div class="form-group">
+                                    <label>Telefone</label>
+                                    <input type="text" id="uberPickupPhone" class="form-control" placeholder="+5511999999999">
+                                </div>
+                                <div class="form-group" style="grid-column:1/-1">
+                                    <label>Endereco completo (para Uber)</label>
+                                    <input type="text" id="uberPickupAddress" class="form-control" placeholder="Rua Exemplo, 123, Centro, Sao Paulo - SP">
+                                </div>
+                                <div class="form-group">
+                                    <label>Latitude</label>
+                                    <input type="number" id="uberPickupLat" class="form-control" step="any" placeholder="-23.5505">
+                                </div>
+                                <div class="form-group">
+                                    <label>Longitude</label>
+                                    <input type="number" id="uberPickupLng" class="form-control" step="any" placeholder="-46.6333">
+                                </div>
+                                <div class="form-group">
+                                    <label>Tempo de preparo (min)</label>
+                                    <input type="number" id="uberPrepTime" class="form-control" step="1" min="0" max="120" placeholder="15">
+                                </div>
                             </div>
-                            <div id="nfeResumo" style="margin-top:14px"></div>
+
+                            <!-- Ativar integracao -->
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#F3F0FF;border-radius:10px;margin-bottom:16px">
+                                <div>
+                                    <strong>Ativar integracao Uber Direct</strong>
+                                    <p style="margin:2px 0 0;font-size:12px;color:#666">Quando ativo, o checkout oferece entrega via Uber automaticamente</p>
+                                </div>
+                                <label style="position:relative;display:inline-block;width:54px;height:30px">
+                                    <input type="checkbox" id="uberActive" onchange="syncUberActiveSlider()" style="opacity:0;width:0;height:0">
+                                    <span id="uberActiveSlider" style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:30px;transition:.3s">
+                                        <span id="uberActiveThumb" style="position:absolute;height:24px;width:24px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;display:block"></span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Botoes e resultado do teste -->
+                            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+                                <button class="btn btn-primary" onclick="saveUberSettings()">&#128190; Salvar Credenciais</button>
+                                <button class="btn btn-outline" onclick="testUberConnection()">&#128279; Testar Conexao</button>
+                                <span id="uberLastValidation" style="font-size:12px;color:#888"></span>
+                            </div>
+                            <div id="uberTestResult" style="margin-top:10px"></div>
                         </div>
                     </div>
 
@@ -492,9 +383,7 @@
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/audit.js"></script>
     <script src="../js/core/notifications.js"></script>
-    <script src="../js/core/pix.js"></script>
-    <script src="../js/core/nfce.js"></script>
-    <script src="../js/core/producao-calc.js"></script>
+    <script src="../js/core/uber-direct.js"></script>
 
     <script>
     // Auth guard
@@ -528,35 +417,9 @@
         document.getElementById('storeWhatsapp').value = franchise.whatsapp || '';
     }
 
-    // Atualiza aparência do banner "Loja aberta/fechada"
-    function updateStoreOpenBanner() {
-        var open = document.getElementById('storeOnlineOpen').checked;
-        var banner = document.getElementById('storeOpenBanner');
-        var label = document.getElementById('storeOpenLabel');
-        if (open) {
-            banner.style.background = '#E8F5E9';
-            banner.style.borderColor = '#66BB6A';
-            label.textContent = '🟢 Loja online ABERTA';
-            label.style.color = '#1B5E20';
-        } else {
-            banner.style.background = '#FFEBEE';
-            banner.style.borderColor = '#EF9A9A';
-            label.textContent = '🔴 Loja online FECHADA — nenhum pedido aceito';
-            label.style.color = '#B71C1C';
-        }
-    }
-
     // Load operation data into form
     function loadOperationData() {
         if (!franchise) return;
-        // Defaults = true (compatível com lojas existentes sem os flags)
-        var onlineOpen = franchise.storeOnlineOpen !== false;
-        var deliveryEnabled = franchise.deliveryEnabled !== false;
-        var pickupEnabled = franchise.pickupEnabled !== false;
-        document.getElementById('storeOnlineOpen').checked = onlineOpen;
-        document.getElementById('storeDeliveryEnabled').checked = deliveryEnabled;
-        document.getElementById('storePickupEnabled').checked = pickupEnabled;
-        updateStoreOpenBanner();
         document.getElementById('storeHours').value = franchise.hours || '';
         document.getElementById('storeDeliveryFee').value = franchise.deliveryFee || '';
         document.getElementById('storeDeliveryTime').value = franchise.deliveryTime || '';
@@ -685,29 +548,13 @@
         var idx = allFranchises.findIndex(function(f) { return f.id === franchiseId; });
         if (idx === -1) return alert('Franquia nao encontrada.');
 
-        var onlineOpen = document.getElementById('storeOnlineOpen').checked;
-        var deliveryEnabled = document.getElementById('storeDeliveryEnabled').checked;
-        var pickupEnabled = document.getElementById('storePickupEnabled').checked;
-
-        allFranchises[idx].storeOnlineOpen = onlineOpen;
-        allFranchises[idx].deliveryEnabled = deliveryEnabled;
-        allFranchises[idx].pickupEnabled = pickupEnabled;
         allFranchises[idx].hours = document.getElementById('storeHours').value.trim();
         allFranchises[idx].deliveryFee = parseFloat(document.getElementById('storeDeliveryFee').value) || 0;
         allFranchises[idx].deliveryTime = document.getElementById('storeDeliveryTime').value.trim();
         allFranchises[idx].deliveryRadius = parseInt(document.getElementById('storeDeliveryRadius').value) || 0;
 
         DataStore.set('franchises', allFranchises);
-
-        var lines = [];
-        if (!onlineOpen) {
-            lines.push('🔴 Loja online FECHADA — nenhum pedido aceito');
-        } else {
-            lines.push('🟢 Loja online ABERTA');
-            lines.push(deliveryEnabled ? '✅ Delivery ATIVO' : '🚫 Delivery DESATIVADO');
-            lines.push(pickupEnabled ? '✅ Retirada ATIVA' : '🚫 Retirada DESATIVADA');
-        }
-        alert('Operacao salva!\n\n' + lines.join('\n'));
+        alert('Dados de operacao salvos com sucesso!');
     }
 
     // Change password
@@ -738,92 +585,18 @@
     // ============================================
     // RASPINHA DA SORTE - Admin
     // ============================================
-    // Catálogo oficial MilkyPot — calibrado pelos agentes Behavioral + Growth
-    // Variable Reward Schedule: NONE 42% · SMALL 35% · MEDIUM 18% · BIG 4.3% · MEGA 0.7%
-    // Validade default 5 dias (sweet spot entre urgência e procrastinação)
-    // Toda compra exige minOrder pra prevenir prejuízo (regra de ouro)
-    // Categorias vinculadas a produtos REAIS: cat_milkshake, cat_sundae, cat_acai, cat_potinho, cat_buffet, cat_picole
     const DEFAULT_SCRATCH_PRIZES = [
-        // ───── NONE — "Quase!" com loss aversion (3 variações rotativas) ─────
-        {code:'RSP_TRY_AGAIN',   name:'Quase! Faltou 1 milímetro',
-         desc:'Aí, aí... passou raspando! Próximo pedido a sorte vira. A ovelhinha já tá mexendo as patinhas pra te dar algo bom.',
-         prob:42, cost:0, validity:0, scope:'any', minOrder:0, tier:'none', emoji:'🔁',
-         categoria:null, copyVariants:[
-            'Aí, aí... passou raspando! Próximo pedido a sorte vira.',
-            'Ó, escapou por POUCO. A ovelhinha viu — tá guardando algo bom pra próxima.',
-            'Quase! Esse não foi seu prêmio... mas tem outra raspadinha te esperando no próximo potinho.'
-         ]},
-
-        // ───── SMALL — adicionais (low cost, high perceived value) ─────
-        {code:'RSP_TOPPING_FREE',name:'1 Topping Grátis',
-         desc:'Escolhe 1 topping da casa pro próximo milkshake, sundae ou potinho. Cremes, caldas, granulados — você decide.',
-         prob:22, cost:0.80, validity:5, scope:'same', minOrder:15, tier:'small', emoji:'🍒',
-         categoria:'cat_milkshake,cat_sundae,cat_potinho,cat_acai'},
-
-        {code:'RSP_UPSIZE',      name:'Upgrade Grátis P→M ou M→G',
-         desc:'Pediu Milkshake/Sundae P? Leva M. Pediu M? Leva G. Mesma quantidade de toppings, MAIS sorvete soft.',
-         prob:13, cost:5, validity:5, scope:'same', minOrder:15, tier:'small', emoji:'📈',
-         categoria:'cat_milkshake,cat_sundae'},
-
-        // ───── MEDIUM — desconto/combo (controlado por minOrder) ─────
-        {code:'RSP_DISC_5',      name:'R$ 5 OFF acima de R$ 20',
-         desc:'R$ 5 de desconto no próximo pedido (mínimo R$ 20). Vale pra qualquer item do cardápio.',
-         prob:8, cost:5, validity:5, scope:'any', minOrder:20, tier:'medium', emoji:'💸',
-         categoria:null},
-
-        {code:'RSP_2BY1_TOPPING',name:'Toppings 2 por 1',
-         desc:'Escolhe 2 toppings, paga só 1. Vale uma vez no próximo pedido em milkshake/sundae/potinho.',
-         prob:5, cost:1.50, validity:5, scope:'same', minOrder:15, tier:'medium', emoji:'✌️',
-         categoria:'cat_milkshake,cat_sundae,cat_potinho'},
-
-        {code:'RSP_BUFFET_100G', name:'+100g de Buffet Grátis',
-         desc:'No próximo buffet a granel, ganha 100g extras na pesagem. Sem custo, sem mistério.',
-         prob:3, cost:6, validity:5, scope:'same', minOrder:0, tier:'medium', emoji:'⚖️',
-         categoria:'cat_buffet'},
-
-        {code:'RSP_PICOLE_2BY1', name:'Picolés 2 por 1',
-         desc:'Pediu 1 picolé? Leva 2. Misture os 22 sabores (Leite ou Fruta) que quiser. Vale R$3.',
-         prob:2, cost:2.60, validity:5, scope:'same', minOrder:0, tier:'medium', emoji:'🍡',
-         categoria:'cat_picole'},
-
-        // ───── BIG — itens grátis (raros, efeito cassino) ─────
-        {code:'RSP_SHAKE_P_FREE',name:'Milkshake P Grátis',
-         desc:'Milkshake P 250ml de qualquer sabor da casa GRÁTIS no próximo pedido. Você só paga os adicionais que escolher.',
-         prob:3.3, cost:9.99, validity:5, scope:'same', minOrder:15, tier:'big', emoji:'🥤',
-         categoria:'cat_milkshake'},
-
-        {code:'RSP_SUNDAE_P_FREE',name:'Sundae P Grátis',
-         desc:'Sundae P 250ml de qualquer sabor da casa GRÁTIS. Só paga os adicionais que escolher.',
-         prob:1, cost:9.99, validity:5, scope:'same', minOrder:15, tier:'big', emoji:'🍦',
-         categoria:'cat_sundae'},
-
-        // ───── MEGA — efeito "viu alguém ganhar no Insta" ─────
-        {code:'RSP_CAPITAO_50',  name:'50% OFF no Capitão Açaí',
-         desc:'O Premium 600ml por metade do preço (de R$24,99 por R$12,49). Foto pro Instagram obrigatória.',
-         prob:0.5, cost:12.50, validity:5, scope:'same', minOrder:0, tier:'mega', emoji:'👑',
-         categoria:'cat_milkshake,cat_sundae'},
-
-        {code:'RSP_MEGA_50',     name:'MEGA R$ 50 em créditos',
-         desc:'R$ 50 em créditos MilkyPot pra usar em até 7 dias. Vale pra qualquer item.',
-         prob:0.2, cost:50, validity:7, scope:'any', minOrder:0, tier:'mega', emoji:'💎',
-         categoria:null}
+        {code:'RSP_TRY_AGAIN',   name:'Quase! Tente no proximo pedido', desc:'Hoje nao foi! Volta amanha.', prob:30, cost:0,   validity:0,  scope:'any',   minOrder:0,  tier:'none', emoji:'🔁'},
+        {code:'RSP_TOPPING_FREE',name:'1 Topping Gratis',               desc:'1 topping gratis no proximo pedido', prob:22, cost:4,   validity:7,  scope:'same',  minOrder:15, tier:'small', emoji:'🍒'},
+        {code:'RSP_UPSIZE',      name:'Upgrade de Tamanho',             desc:'Pediu M? Leva G. Pediu G? Leva GG.', prob:15, cost:5,   validity:10, scope:'same',  minOrder:15, tier:'small', emoji:'📈'},
+        {code:'RSP_DISC_5',      name:'R$ 5 OFF',                       desc:'R$ 5 de desconto no proximo pedido', prob:12, cost:5,   validity:15, scope:'any',   minOrder:20, tier:'medium', emoji:'💸'},
+        {code:'RSP_2BY1_TOPPING',name:'Toppings 2 x 1',                 desc:'Leve 2 toppings pagando 1',          prob:8,  cost:4,   validity:10, scope:'same',  minOrder:15, tier:'medium', emoji:'✌️'},
+        {code:'RSP_BUFFET_100G', name:'+100g Buffet',                   desc:'100g gratis no buffet de acai',      prob:5,  cost:6,   validity:15, scope:'same',  minOrder:0,  tier:'medium', emoji:'⚖️'},
+        {code:'RSP_COMBO_15',    name:'Combo 15% OFF',                  desc:'15% OFF em qualquer combo',          prob:4,  cost:7.5, validity:15, scope:'any',   minOrder:30, tier:'medium', emoji:'🎯'},
+        {code:'RSP_SHAKE_FREE',  name:'Shake M Gratis',                 desc:'SHAKE M GRATIS no proximo pedido',   prob:2.5,cost:16,  validity:20, scope:'same',  minOrder:15, tier:'big', emoji:'🥤'},
+        {code:'RSP_ACAI_500G',   name:'Acai 500g + 3 toppings',         desc:'Acai 500g com 3 toppings gratis',    prob:1,  cost:30,  validity:20, scope:'same',  minOrder:15, tier:'big', emoji:'🍇'},
+        {code:'RSP_MEGA_150',    name:'MEGA R$ 150 em creditos',        desc:'R$150 MilkyPot! Use em 30 dias.',    prob:0.5,cost:150, validity:30, scope:'any',   minOrder:0,  tier:'mega', emoji:'💎'}
     ];
-
-    // Configurações globais do sistema (editáveis no admin futuro)
-    const SCRATCH_GLOBAL_DEFAULTS = {
-        loopOnRedeem: true,           // gera nova raspadinha quando cliente RESGATA
-        minTicketForLoop: 15,         // ticket mínimo pra disparar nova raspadinha (anti-prejuízo)
-        cooldownMinutes: 90,          // 1 raspadinha a cada 90min por mesmo CPF/telefone
-        defaultValidityDays: 5,       // sweet spot (Behavioral Nudge agent)
-        boostOnRain: true,            // chuva >2mm = boost auto via OpenWeather
-        boostOnMonday: true,          // segunda-feira = +1.8x prob nos prêmios SMALL
-        endcardByTier: {              // copy pós-raspar por categoria
-            small:  'Anota aí: [PRÊMIO] válido até [DATA]. Cola aqui antes de [DIA] que a ovelhinha te espera 🐑',
-            medium: 'Bem-vindo ao #TimeMilkyPot. Seu prêmio entrou na conta — usa quando vier matar a saudade da gente 🥛',
-            big:    'AAAAH! Olha o que a ovelhinha te deu! Mostra pra galera: print + @milkypot nos stories 📸',
-            mega:   'PERAÍ. Você ganhou um MEGA. Print, posta nos stories @milkypot e vem buscar — a galera não vai acreditar 👑'
-        }
-    };
 
     function getScratchConfig() {
         return DataStore.get('scratch_config_' + franchiseId) || { enabled: true };
@@ -941,122 +714,93 @@
     window.saveScratchConfig = saveScratchConfig;
 
     // ============================================
-    // PIX: configurar chave pra aparecer no PDV
+    // UBER DIRECT — Credenciais
     // ============================================
-    function loadPix() {
-        if (typeof Pix === 'undefined' || !Pix.getConfig) return;
-        const cfg = Pix.getConfig(franchiseId) || {};
-        document.getElementById('pixChave').value = cfg.chave || '';
-        document.getElementById('pixNome').value = cfg.nome || '';
-        document.getElementById('pixCidade').value = cfg.cidade || '';
-        if (cfg.chave) {
-            document.getElementById('pixStatus').innerHTML = '<span style="color:#10B981">✓ Configurado</span>';
+    function syncUberActiveSlider() {
+        var checked = document.getElementById('uberActive').checked;
+        var slider = document.getElementById('uberActiveSlider');
+        var thumb = document.getElementById('uberActiveThumb');
+        slider.style.background = checked ? '#7C3AED' : '#ccc';
+        thumb.style.left = checked ? '27px' : '3px';
+    }
+
+    function toggleSecretVisibility() {
+        var inp = document.getElementById('uberClientSecret');
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    async function loadUberSettings() {
+        try {
+            var result = await CloudFunctions.call('uberDirect_getSettings', { franchiseId: franchiseId });
+            if (!result || !result.success) return;
+            var s = result.settings || {};
+            document.getElementById('uberEnvironment').value = s.environment || 'sandbox';
+            document.getElementById('uberCustomerId').value = s.customer_id || '';
+            document.getElementById('uberClientId').value = s.client_id || '';
+            document.getElementById('uberClientSecret').value = s.client_secret || '';
+            document.getElementById('uberPickupName').value = s.pickup_name || '';
+            document.getElementById('uberPickupPhone').value = s.pickup_phone || '';
+            document.getElementById('uberPickupAddress').value = s.pickup_address_json || '';
+            document.getElementById('uberPickupLat').value = s.pickup_lat || '';
+            document.getElementById('uberPickupLng').value = s.pickup_lng || '';
+            document.getElementById('uberPrepTime').value = s.preparation_time_minutes || '';
+            document.getElementById('uberActive').checked = !!s.active;
+            syncUberActiveSlider();
+            if (s.last_validated_at) {
+                document.getElementById('uberLastValidation').textContent =
+                    'Ultima validacao: ' + new Date(s.last_validated_at).toLocaleString('pt-BR');
+            }
+        } catch (e) {
+            console.warn('loadUberSettings error:', e);
         }
     }
 
-    function salvarPix() {
-        const chave = document.getElementById('pixChave').value.trim();
-        const nome = document.getElementById('pixNome').value.trim().toUpperCase();
-        const cidade = document.getElementById('pixCidade').value.trim().toUpperCase();
-        if (!chave) { alert('Informe a chave Pix'); return; }
-        if (!nome) { alert('Informe o nome do beneficiário'); return; }
-        if (!cidade) { alert('Informe a cidade'); return; }
-        Pix.configLoja(franchiseId, { chave, nome, cidade });
-        document.getElementById('pixStatus').innerHTML = '<span style="color:#10B981">✓ Salvo com sucesso</span>';
-        setTimeout(() => { document.getElementById('pixStatus').innerHTML = '<span style="color:#10B981">✓ Configurado</span>'; }, 3000);
-    }
+    window.saveUberSettings = async function() {
+        var secretVal = document.getElementById('uberClientSecret').value.trim();
+        var settings = {
+            environment: document.getElementById('uberEnvironment').value,
+            customer_id: document.getElementById('uberCustomerId').value.trim(),
+            client_id: document.getElementById('uberClientId').value.trim(),
+            pickup_name: document.getElementById('uberPickupName').value.trim(),
+            pickup_phone: document.getElementById('uberPickupPhone').value.trim(),
+            pickup_address_json: document.getElementById('uberPickupAddress').value.trim(),
+            pickup_lat: parseFloat(document.getElementById('uberPickupLat').value) || 0,
+            pickup_lng: parseFloat(document.getElementById('uberPickupLng').value) || 0,
+            preparation_time_minutes: parseInt(document.getElementById('uberPrepTime').value) || 0,
+            active: document.getElementById('uberActive').checked
+        };
+        // Nao enviar o secret se ainda esta mascarado (backend preserva)
+        if (secretVal && secretVal !== '***masked***') {
+            settings.client_secret = secretVal;
+        }
+        var result = await CloudFunctions.call('uberDirect_saveSettings', {
+            franchiseId: franchiseId,
+            settings: settings
+        });
+        if (result && result.success) {
+            alert('Credenciais Uber Direct salvas com sucesso!');
+        } else {
+            alert('Erro ao salvar: ' + ((result && result.error) || 'sem resposta'));
+        }
+    };
 
-    function testarPix() {
-        const cfg = Pix.getConfig(franchiseId);
-        if (!cfg || !cfg.chave) { alert('Salva primeiro a chave Pix'); return; }
-        const r = Pix.forOrder(franchiseId, { id: 'TEST', total: 1.00 });
-        if (r.error) { alert(r.error); return; }
-        document.getElementById('pixPreview').style.display = 'block';
-        document.getElementById('pixQr').src = r.qrUrl;
-        document.getElementById('pixPayload').value = r.payload;
-    }
-
-    // ============================================
-    // NFC-e: configurar modo (manual ou Bling)
-    // ============================================
-    function loadNFe() {
-        if (typeof NFCe === 'undefined' || !NFCe.getConfig) return;
-        const cfg = NFCe.getConfig(franchiseId) || { mode: 'manual' };
-        document.getElementById('nfeMode').value = cfg.mode || 'manual';
-        document.getElementById('nfeApiKey').value = cfg.apiKey || '';
-        document.getElementById('nfeCnpj').value = cfg.cnpj || '';
-        document.getElementById('nfeNcm').value = cfg.ncmPadrao || '21050000';
-        toggleNFeBling();
-
-        const r = NFCe.resumoPendentes(franchiseId);
-        if (r.total > 0) {
-            document.getElementById('nfeResumo').innerHTML =
-                '<div style="padding:12px;background:#F0FDF4;border-radius:10px;font-size:13px">' +
-                '📊 <b>Resumo NFC-e:</b> ' + r.total + ' emissões · ' + r.autorizadas + ' autorizadas · ' + r.pendentes + ' pendentes · ' + r.rejeitadas + ' rejeitadas' +
+    window.testUberConnection = async function() {
+        var resultEl = document.getElementById('uberTestResult');
+        resultEl.innerHTML = '<span style="color:#888;font-size:.88rem">Testando conexao...</span>';
+        var result = await CloudFunctions.call('uberDirect_testConnection', { franchiseId: franchiseId });
+        if (result && result.success) {
+            resultEl.innerHTML = '<div style="padding:10px 14px;background:#E8F5E9;color:#1B5E20;border-radius:8px;font-size:.88rem">' +
+                '&#9989; Conexao OK &mdash; Latencia: ' + (result.latency_ms || 0) + ' ms' +
+                (result.message ? ' &mdash; ' + result.message : '') +
+                '</div>';
+            document.getElementById('uberLastValidation').textContent =
+                'Ultima validacao: ' + new Date().toLocaleString('pt-BR');
+        } else {
+            resultEl.innerHTML = '<div style="padding:10px 14px;background:#FFEBEE;color:#B71C1C;border-radius:8px;font-size:.88rem">' +
+                '&#10060; Falha na conexao: ' + ((result && result.error) || 'sem resposta') +
                 '</div>';
         }
-    }
-
-    function toggleNFeBling() {
-        const show = document.getElementById('nfeMode').value === 'bling';
-        document.querySelectorAll('.nfe-bling').forEach(el => { el.style.display = show ? 'block' : 'none'; });
-    }
-
-    function salvarNFe() {
-        const cfg = {
-            mode: document.getElementById('nfeMode').value,
-            apiKey: document.getElementById('nfeApiKey').value.trim(),
-            cnpj: document.getElementById('nfeCnpj').value.trim(),
-            ncmPadrao: document.getElementById('nfeNcm').value.trim() || '21050000'
-        };
-        if (cfg.mode === 'bling' && (!cfg.apiKey || !cfg.cnpj)) {
-            alert('Modo Bling exige Token e CNPJ'); return;
-        }
-        NFCe.setConfig(franchiseId, cfg);
-        document.getElementById('nfeStatus').innerHTML = '<span style="color:#10B981">✓ Salvo</span>';
-        setTimeout(() => { document.getElementById('nfeStatus').innerHTML = ''; }, 3000);
-    }
-
-    document.getElementById('nfeMode').addEventListener('change', toggleNFeBling);
-
-    // ============================================
-    // PRODUÇÃO (kWh, potência, custo/hora) — auto-calc nos produtos
-    // ============================================
-    function loadProducao() {
-        if (typeof ProducaoCalc === 'undefined') return;
-        const cfg = ProducaoCalc.getConfig(franchiseId);
-        document.getElementById('prodKwh').value = cfg.custoKwh;
-        document.getElementById('prodPotencia').value = cfg.potenciaMediaKw;
-        document.getElementById('prodCustoHora').value = cfg.custoHora;
-        document.getElementById('prodEncargos').value = Math.round((cfg.encargosPct || 0.33) * 100);
-        document.getElementById('prodDasPct').value = Math.round((cfg.dasPct || 0.04) * 1000) / 10;
-        document.getElementById('prodProLabore').value = cfg.proLabore;
-        document.getElementById('prodDepreciacao').value = cfg.depreciacaoMensal;
-        document.getElementById('prodPerdasPct').value = Math.round((cfg.perdasPct || 0.04) * 1000) / 10;
-        document.getElementById('prodMetaVendas').value = cfg.metaVendasMes;
-        document.getElementById('prodMetaProdutos').value = cfg.metaProdutosMes;
-        document.getElementById('prodMinReal').value = cfg.minPedidosReal;
-    }
-
-    function salvarProducao() {
-        if (typeof ProducaoCalc === 'undefined') { alert('Módulo de produção não carregou. Recarregue a página.'); return; }
-        const cfg = {
-            custoKwh: parseFloat(document.getElementById('prodKwh').value) || 0.85,
-            potenciaMediaKw: parseFloat(document.getElementById('prodPotencia').value) || 1.5,
-            custoHora: parseFloat(document.getElementById('prodCustoHora').value) || 8.50,
-            encargosPct: (parseFloat(document.getElementById('prodEncargos').value) || 33) / 100,
-            dasPct: (parseFloat(document.getElementById('prodDasPct').value) || 4) / 100,
-            proLabore: parseFloat(document.getElementById('prodProLabore').value) || 1685,
-            depreciacaoMensal: parseFloat(document.getElementById('prodDepreciacao').value) || 500,
-            perdasPct: (parseFloat(document.getElementById('prodPerdasPct').value) || 4) / 100,
-            metaVendasMes: parseFloat(document.getElementById('prodMetaVendas').value) || 45000,
-            metaProdutosMes: parseFloat(document.getElementById('prodMetaProdutos').value) || 2000,
-            minPedidosReal: parseFloat(document.getElementById('prodMinReal').value) || 200
-        };
-        ProducaoCalc.setConfig(franchiseId, cfg);
-        document.getElementById('prodStatus').innerHTML = '<span style="color:#10B981">✓ Salvo! Use "Recalcular preços" em Produtos pra aplicar nos existentes.</span>';
-        setTimeout(() => { document.getElementById('prodStatus').innerHTML = ''; }, 4000);
-    }
+    };
 
     // Init
     loadStoreData();
@@ -1065,13 +809,7 @@
     loadFranchiseInfo();
     loadNotifSettings();
     loadScratchConfig();
-    loadPix();
-    loadNFe();
-    loadProducao();
+    loadUberSettings();
     </script>
-<script src="../js/core/copilot-transport.js" defer></script>
-<script src="../js/pages/lilo-scanner.js" defer></script>
-<script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
-<script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
 </body>
 </html>
