@@ -2,6 +2,39 @@
 
 ---
 
+## Ciclo #63 — 2026-04-28
+
+**Área:** Conteúdo — Semana 18 (16–22/08/2026)
+
+**Contexto:** Ciclo prescrito pelo roadmap #62–63. Semana 18 fecha o mês de agosto com dois eixos: (1) posicionamento familiar para capturar tráfego de fim de semana no Muffato; (2) cross-sell do açaí self-service para aumentar ticket médio e apresentar o produto a clientes que só conhecem os potinhos. Teaser de setembro (primavera/morango) plantado na quinta e no sábado — aquece base para lançamento do produto sazonal.
+
+**O que analisou:**
+- Semanas 16+17 criadas no ciclo #61 como referência de formato (padrão v7: calendário completo Dom–Sab, templates WA, checklist, métricas)
+- Mecânica "Sexta do Potinho" entra na 3ª semana — ponto de consolidação de hábito
+- Ciclo #60: MilkyMoo Londrina não tem açaí self-service em formato buffet — oportunidade de diferenciação com carrossel educativo na segunda
+- Público familiar = tráfego concentrado sab/dom no Muffato (hipermercado + praça de alimentação)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana18.md` | CRIADO — Semana 18 (16–22/08): tema "família + cross-sell açaí". 7 posts dia-a-dia. Carrossel educativo açaí self-service (5 slides). Reel família 15s roteirizado. Teaser setembro/primavera (quinta + sábado). Sexta do Potinho #3 (3ª semana = hábito formado). 2 templates WA (família + cross-sell açaí). Checklist operador + métricas + tabela calendário. |
+
+**Commit:** `b22a00f`
+
+**Destaques da semana:**
+- **Cross-sell açaí self-service:** carrossel educativo de segunda — audiência que conhece só os potinhos ainda não sabe do buffet. Diferencial vs. MilkyMoo que não tem esse formato.
+- **Domingo familiar:** post que mostra Mini (criança) + Tradicional + Linha Zero lado a lado — uma imagem que resolve a objeção "tem para todos?"
+- **Teaser setembro:** plantado em dois momentos (quinta isolado + sábado com encerramento de agosto) para criar antecipação sem revelar produto
+- **Sexta do Potinho #3:** 3ª execução = crossing point de hábito formado; caption reforça "virou tradição"
+
+**Próximo passo sugerido:**
+- Ciclo #64 (AUTO-APRIMORAMENTO): reler log #59–#63, ajustar estratégia outubro 2026 em `belinha/estrategia.md` + criar `belinha/content/pos-inauguracao-semana19.md` (23–29/08) como melhoria associada
+- Semana 19: tema transição inverno→primavera + pré-lançamento produto sazonal setembro
+- Quando operador confirmar produto sazonal setembro (morango/primavera): criar post de lançamento formal
+
+---
+
 ## Ciclo #62 — 2026-04-28
 
 **Área:** Performance/UX — CLS sweep batch (páginas secundárias)
