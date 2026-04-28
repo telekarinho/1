@@ -79,13 +79,20 @@ const CDN_PRECACHE_URLS = [
 const OFFLINE_QUEUE_KEY = 'milkypot-offline-queue';
 
 // Install: precache key files
+// IMPORTANTE: usa Promise.allSettled em VEZ de cache.addAll porque addAll
+// rejeita inteiro se UM unico URL der 404 — bloqueia install do SW novo
+// e o browser mantem o SW antigo controlando a pagina (cache stale).
 self.addEventListener('install', event => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            // Precache local files — fail if any are missing
-            const localPromise = cache.addAll(PRECACHE_URLS);
-            // Precache CDN files — tolerate individual failures (they'll be cached on first use)
+            // Precache local: tolerar 404s individuais
+            const localPromise = Promise.allSettled(
+                PRECACHE_URLS.map(u => fetch(u, { credentials: 'same-origin' })
+                    .then(r => r.ok ? cache.put(u, r) : null)
+                    .catch(() => null))
+            );
+            // Precache CDN: tolerar falhas individuais
             const cdnPromise = Promise.allSettled(
                 CDN_PRECACHE_URLS.map(u => fetch(u, { mode: 'cors' })
                     .then(r => r.ok ? cache.put(u, r) : null)
@@ -114,6 +121,12 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     const { request } = event;
     const url = new URL(request.url);
+
+    // Ignora schemes nao-http (chrome-extension://, devtools://, etc) —
+    // tentar cache.put() neles dispara "Request scheme is unsupported".
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        return; // deixa o browser fazer fetch nativo
+    }
 
     // Skip non-GET requests — queue failed writes for offline
     // CRITICAL: Firebase Auth/Firestore/Functions têm seu próprio retry/offline.
