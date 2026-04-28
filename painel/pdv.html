@@ -463,6 +463,13 @@
         <div id="pdvComissaoChip" style="display:none"></div>
         <div id="pdvMetaChip" style="display:none"></div>
         <div id="pdvCaixaChip" style="display:none"></div>
+        
+        <!-- Widget de Sincronia (Cloud Sync) -->
+        <div id="pdvSyncWidget" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);padding:4px 8px;border-radius:12px;cursor:pointer" onclick="forcePdvSync()" title="Status de Sincronia (Clique para forçar)">
+            <span id="pdvSyncIcon">☁️</span>
+            <span id="pdvSyncLabel" style="font-size:11px;font-weight:700">Conectando...</span>
+        </div>
+
         <div style="font-size:12px;opacity:0.8;" id="clk"></div>
         <button class="btn-back" onclick="openPrinterSettings()" title="Configurações de Impressão">⚙️</button>
         <button class="btn-back" onclick="toggleFullscreen()" title="Tela cheia (F11)">⛶</button>
@@ -4182,6 +4189,70 @@
 </div>
 <script>
 (function(){
+    // === PDV Sync UI Controller ===
+    window.forcePdvSync = async function() {
+        if (typeof DataStore === 'undefined' || !DataStore.forceSync) return;
+        var label = document.getElementById('pdvSyncLabel');
+        var icon = document.getElementById('pdvSyncIcon');
+        if (label) label.textContent = 'Sincronizando...';
+        if (icon) icon.style.animation = 'spin 1s linear infinite';
+        
+        try {
+            await DataStore.forceSync();
+            toast('✅ Sincronia completa!');
+        } catch(e) {
+            toast('❌ Erro na sincronia');
+        } finally {
+            if (icon) icon.style.animation = '';
+            updateSyncUI();
+        }
+    };
+
+    function updateSyncUI() {
+        if (typeof DataStore === 'undefined' || !DataStore.getStatus) return;
+        var st = DataStore.getStatus();
+        var label = document.getElementById('pdvSyncLabel');
+        var icon = document.getElementById('pdvSyncIcon');
+        var widget = document.getElementById('pdvSyncWidget');
+        if (!label || !icon) return;
+
+        if (!st.online) {
+            icon.textContent = '❌';
+            label.textContent = 'Offline';
+            widget.style.background = 'rgba(239, 68, 68, 0.2)';
+        } else if (st.pending > 0) {
+            icon.textContent = '🔄';
+            label.textContent = st.pending + ' pendente(s)';
+            widget.style.background = 'rgba(245, 158, 11, 0.2)';
+            icon.style.animation = 'spin 2s linear infinite';
+        } else if (st.status === 'syncing') {
+            icon.textContent = '🔄';
+            label.textContent = 'Sync...';
+            widget.style.background = 'rgba(59, 130, 246, 0.2)';
+        } else {
+            icon.textContent = '✅';
+            label.textContent = 'Sincronizado';
+            widget.style.background = 'rgba(16, 185, 129, 0.2)';
+            icon.style.animation = '';
+        }
+        
+        // Tooltip com detalhes
+        var last = st.lastSync ? new Date(st.lastSync).toLocaleTimeString('pt-BR') : 'nunca';
+        widget.title = 'Status: ' + st.status + '\nÚltima sync: ' + last + '\nPendentes: ' + st.pending + '\nClique para forçar.';
+    }
+    
+    // Keyframes pro icone rodar
+    if (!document.getElementById('syncSpinCss')) {
+        var s = document.createElement('style');
+        s.id = 'syncSpinCss';
+        s.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+        document.head.appendChild(s);
+    }
+
+    // Update UI every 5s
+    setInterval(updateSyncUI, 5000);
+    window.addEventListener('mp_synced', updateSyncUI);
+
     if('serviceWorker' in navigator){
         navigator.serviceWorker.register('/sw.js').then(function(reg){
             console.log('[PDV] SW registered:', reg.scope);

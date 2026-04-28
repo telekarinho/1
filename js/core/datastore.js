@@ -6,6 +6,9 @@
    API sincrona mantida para compatibilidade.
    ============================================ */
 
+const CACHE_VERSION = 'mp-v70';
+const CACHE_NAME = 'milkypot-v70';
+
 const DataStore = {
     PREFIX: 'mp_',
     _db: null,
@@ -15,6 +18,8 @@ const DataStore = {
     // esta flag para nao perder o evento mp_synced quando sync termina
     // antes do listener ser registrado.
     _syncDone: false,
+    _lastSyncTime: null,
+    _syncStatus: 'idle', // 'idle', 'syncing', 'success', 'error'
 
     // ============================================
     // Inicializacao Firestore
@@ -31,6 +36,8 @@ const DataStore = {
                 this._syncFromCloud();
                 // Watcher de Firebase Auth — detecta mp_session ÓRFÃ (sem user no Firebase)
                 this._setupAuthWatcher();
+                // Processamento constante da fila em background
+                setInterval(() => this._processPendingWrites(), 10000);
             } else {
                 console.warn('⚠️ DataStore: Firestore nao disponivel, usando localStorage apenas');
             }
@@ -290,27 +297,17 @@ const DataStore = {
     // Firestore Sync (background)
     // ============================================
     _writeToCloud(key, data) {
-        if (!this._ready || !this._db) {
-            this._pendingWrites.push({ action: 'set', key, data });
-            return;
+        // Deduplicacao: se o mesmo doc ja esta na fila, atualiza os dados
+        // e nao adiciona outro item. Isso evita crescimento exponencial do 'pendentes'.
+        var existing = this._pendingWrites.find(function(it){ return it.key === key; });
+        if (existing) {
+            existing.data = data;
+        } else {
+            this._pendingWrites.push({ action: 'set', key: key, data: data });
         }
-        try {
-            // Store as a document in 'datastore' collection
-            this._db.collection('datastore').doc(key).set({
-                value: JSON.stringify(data),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(async err => {
-                console.warn('Firestore write error:', key, err.code || err.message);
-                this._pendingWrites.push({ action: 'set', key, data });
-                if (err && (err.code === 'permission-denied' || err.code === 'unauthenticated')) {
-                    const healed = await this._attemptAnonymousAuth();
-                    if (healed) this._flushPendingWrites();
-                }
-            });
-        } catch (e) {
-            console.warn('_writeToCloud error:', e);
-            this._pendingWrites.push({ action: 'set', key, data });
-        }
+
+        if (!this._ready || !this._db || this._processingQueue) return;
+        this._processPendingWrites();
     },
 
     _deleteFromCloud(key) {
@@ -323,14 +320,64 @@ const DataStore = {
         }
     },
 
+    async _processPendingWrites() {
+        if (!this._ready || !this._db || this._processingQueue || !this._pendingWrites.length) return;
+        this._processingQueue = true;
+        try {
+            // Processa um por um para nao sobrecarregar e garantir ordem
+            while (this._pendingWrites.length > 0) {
+                var item = this._pendingWrites[0];
+                try {
+                    if (item.action === 'set') {
+                        await this._db.collection('datastore').doc(item.key).set({
+                            value: JSON.stringify(item.data),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    } else if (item.action === 'delete') {
+                        await this._db.collection('datastore').doc(item.key).delete();
+                    }
+                    // Sucesso: remove da fila
+                    this._pendingWrites.shift();
+                    console.log('✅ Background Sync: ' + item.key + ' publicado');
+                } catch (err) {
+                    console.warn('⚠️ SDK Sync failed, trying REST API fallback:', item.key, err.code || err.message);
+                    
+                    // Fallback REST API (mesmo metodo de sync-rescue.html)
+                    try {
+                        const baseUrl = 'https://firestore.googleapis.com/v1/projects/milkypot-ad945/databases/(default)/documents/datastore/';
+                        const body = {
+                            fields: {
+                                value: { stringValue: JSON.stringify(item.data) },
+                                updatedAt: { timestampValue: new Date().toISOString() }
+                            }
+                        };
+                        const res = await fetch(baseUrl + encodeURIComponent(item.key) + '?updateMask.fieldPaths=value&updateMask.fieldPaths=updatedAt', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(body)
+                        });
+                        if (res.ok) {
+                            this._pendingWrites.shift();
+                            console.log('✅ REST API Sync: ' + item.key + ' publicado');
+                            continue; // Sucesso, vai pro proximo sem break
+                        }
+                    } catch (restErr) {
+                        console.error('❌ REST API Fallback also failed:', restErr);
+                    }
+
+                    if (err.code === 'permission-denied' || err.code === 'unauthenticated') {
+                        await this._attemptAnonymousAuth();
+                    }
+                    break; // Para e espera o proximo ciclo de 10s
+                }
+            }
+        } finally {
+            this._processingQueue = false;
+        }
+    },
+
     _flushPendingWrites() {
-        if (!this._ready) return;
-        const pending = [...this._pendingWrites];
-        this._pendingWrites = [];
-        pending.forEach(op => {
-            if (op.action === 'set') this._writeToCloud(op.key, op.data);
-            if (op.action === 'delete') this._deleteFromCloud(op.key);
-        });
+        this._processPendingWrites();
     },
 
     _isMergeableListDoc(docId) {
@@ -399,6 +446,22 @@ const DataStore = {
                 fid = raw ? (JSON.parse(raw) || {}).franchiseId : null;
             }
         } catch (_) {}
+
+        // Proactive: se nao tem fid na sessao, varre o localStorage em busca de pedidos
+        // (Isso resolve casos onde o usuario foi deslogado mas tem dados locais pra subir)
+        if (!fid) {
+            try {
+                for (var i = 0; i < localStorage.length; i++) {
+                    var key = localStorage.key(i);
+                    if (key && key.indexOf(this.PREFIX + 'orders_') === 0) {
+                        fid = key.substring((this.PREFIX + 'orders_').length);
+                        console.log('🔍 DataStore: FID detectado via localStorage:', fid);
+                        break;
+                    }
+                }
+            } catch(e) {}
+        }
+
         if (!fid) return [];
         return [
             'orders_' + fid,
@@ -406,6 +469,25 @@ const DataStore = {
             'pdv_tabs_' + fid,
             'finances_' + fid
         ];
+    },
+
+    // Return status for UI mapping
+    getStatus() {
+        return {
+            status: this._syncStatus,
+            lastSync: this._lastSyncTime,
+            pending: this._pendingWrites.length,
+            online: navigator.onLine,
+            dbReady: !!this._db
+        };
+    },
+
+    async forceSync() {
+        console.log('🔄 DataStore: Forçando sincronização manual');
+        this._syncStatus = 'syncing';
+        await this._syncFromCloud();
+        await this._processPendingWrites();
+        return this.getStatus();
     },
 
     async _syncFromCloud() {
@@ -448,6 +530,8 @@ const DataStore = {
             console.log(`☁️ Per-doc sync: ${synced}/${docsToSync.length} docs`);
 
             this._syncDone = true;
+            this._lastSyncTime = new Date().toISOString();
+            this._syncStatus = (synced > 0 || docsToSync.length === 0) ? 'success' : 'idle';
             window.dispatchEvent(new CustomEvent('mp_synced'));
 
             // Real-time listener for the catalog and global settings
@@ -462,76 +546,43 @@ const DataStore = {
                 console.warn('catalog_config listener ignorado:', err.code || err.message);
             });
 
-            // ===== REAL-TIME SYNC entre PCs (per-doc, sem auth) =====
-            // Listener separado pra cada doc público. Evita problema de
-            // collection-level LIST permission que falha em unauth.
-            if (!this._realtimeListenerAttached) {
-                this._realtimeListenerAttached = true;
-                const self = this;
-                docsToSync.forEach(docId => {
-                    self._db.collection('datastore').doc(docId).onSnapshot(doc => {
-                        if (!doc.exists) return;
-                        try {
-                            const merged = self._mergeListDoc(docId, doc.data().value);
-                            const cloudStr = merged.value;
-                            const localStr = localStorage.getItem(self.PREFIX + docId);
-                            if (localStr !== cloudStr) {
-                                localStorage.setItem(self.PREFIX + docId, cloudStr);
-                                if (merged.changed) self._writeToCloud(docId, JSON.parse(cloudStr));
-                                let parsed = null;
-                                try { parsed = JSON.parse(cloudStr); } catch(_) {}
-                                window.dispatchEvent(new CustomEvent('mp_remote_update', {
-                                    detail: { key: docId, data: parsed }
-                                }));
-                                console.log('🔄 Sync remoto:', docId);
-                            }
-                        } catch (e) {
-                            console.warn('Realtime sync error:', docId, e);
-                        }
-                    }, err => {
-                        console.warn('Listener err', docId, err.code || err.message);
-                    });
-                });
-            }
+            // REAL-TIME INSTANTANEO para todos os documentos da franquia
+            docsToSync.forEach(docId => {
+                // Se já temos um listener ativo para esse doc, não duplica
+                if (this._activeListeners && this._activeListeners[docId]) return;
+                this._activeListeners = this._activeListeners || {};
+                
+                this._activeListeners[docId] = this._db.collection('datastore').doc(docId).onSnapshot(doc => {
+                    if (doc.exists) {
+                        const cloudVal = doc.data().value;
+                        const merged = this._mergeListDoc(docId, cloudVal);
+                        
+                        // Atualiza local cache
+                        localStorage.setItem(this.PREFIX + docId, merged.value);
+                        
+                        // Notifica a UI e outros componentes
+                        const detail = { key: docId, data: JSON.parse(merged.value) };
+                        window.dispatchEvent(new CustomEvent('mp_synced', { detail: detail }));
+                        window.dispatchEvent(new CustomEvent('mp_remote_update', { detail: detail }));
 
-            // ===== POLLING FALLBACK (per-doc, 5s) =====
-            if (!this._pollFallbackId) {
-                const self = this;
-                this._pollFallbackId = setInterval(async () => {
-                    if (!self._ready || !self._db) return;
-                    const docs = self._publicSyncDocs();
-                    let changes = 0;
-                    for (const docId of docs) {
-                        try {
-                            const doc = await self._db.collection('datastore').doc(docId).get();
-                            if (!doc.exists) {
-                                if (self._isMergeableListDoc(docId)) {
-                                    const localStr = localStorage.getItem(self.PREFIX + docId);
-                                    if (localStr) self._writeToCloud(docId, JSON.parse(localStr));
-                                }
-                                continue;
-                            }
-                            const merged = self._mergeListDoc(docId, doc.data().value);
-                            const cloudStr = merged.value;
-                            const localStr = localStorage.getItem(self.PREFIX + docId);
-                            if (localStr !== cloudStr) {
-                                localStorage.setItem(self.PREFIX + docId, cloudStr);
-                                if (merged.changed) self._writeToCloud(docId, JSON.parse(cloudStr));
-                                let parsed = null;
-                                try { parsed = JSON.parse(cloudStr); } catch (_) {}
-                                window.dispatchEvent(new CustomEvent('mp_remote_update', {
-                                    detail: { key: docId, data: parsed, source: 'poll' }
-                                }));
-                                changes++;
-                            }
-                        } catch (e) { /* ignora — listener pega ou próximo poll */ }
+                        // Se local tinha algo que a nuvem não tinha, reconcilia
+                        if (merged.changed) {
+                            console.log('☁️ Reconciliando local -> nuvem para ' + docId);
+                            this._writeToCloud(docId, JSON.parse(merged.value));
+                        }
                     }
-                    if (changes > 0) console.log('🔁 Poll: ' + changes + ' doc(s) atualizado(s)');
-                }, 5000);
+                }, err => {
+                    console.warn('Erro no listener de ' + docId + ':', err.message);
+                });
+            });
+
+            // Polling de segurança (mais lento) caso os listeners falhem
+            if (!this._pollId) {
+                this._pollId = setInterval(() => this.forceSync(), 60000);
             }
 
         } catch (e) {
-            console.warn('_syncFromCloud error:', e);
+            console.error('DataStore._syncFromCloud fatal error:', e);
         }
     },
 

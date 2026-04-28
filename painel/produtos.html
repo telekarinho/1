@@ -859,6 +859,13 @@
           </div>
           <div class="form-field col-2"><label>Descrição</label><textarea id="pDesc" rows="2" placeholder="Um cremoso com raspas de Oreo e calda morango…">${esc(p.desc||'')}</textarea></div>
           <div class="form-field"><label>Emoji</label><input type="text" id="pEmoji" value="${esc(p.midia?.emoji||'')}" maxlength="2"></div>
+          <div class="form-field">
+            <label>Status</label>
+            <label style="display:flex;align-items:center;gap:6px;margin-top:8px;cursor:pointer;font-size:14px">
+              <input type="checkbox" id="pActive" ${p.active !== false ? 'checked' : ''} style="width:18px;height:18px">
+              Produto Ativo
+            </label>
+          </div>
           <div class="form-field col-2">
             <label>📸 Fotos do produto <small style="color:#6B7280;font-weight:400">(otimizadas automaticamente para 1200px · JPEG 85%)</small></label>
             <div id="pFotosUpload" style="background:#FAFAFA;border:2px dashed #E5E7EB;border-radius:12px;padding:14px">
@@ -1959,7 +1966,8 @@
       },
       kits: kits,
       variantes: variantes,
-      toppingsIds: toppingsIds
+      toppingsIds: toppingsIds,
+      active: document.getElementById('pActive') ? document.getElementById('pActive').checked : true
     });
     // Auto-recalcula custos usando ProducaoCalc se modulo disponivel
     if (typeof ProducaoCalc !== 'undefined') ProducaoCalc.applyToProduto(p, fid);
