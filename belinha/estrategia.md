@@ -489,3 +489,96 @@ Agosto marca o **4º mês de operação** após a inauguração de 25/04/2026. O
 ---
 
 _Belinha — Ciclo #54 | 2026-04-27_
+
+---
+
+## Aprendizados dos ciclos #54–58
+
+### O que gerou mais valor concreto
+
+1. **Campanha Aniversário 3 Meses — semana14 (#56):** O plano editorial mais denso e completo do projeto. Inclui sorteio com mecânica definida, reel 15s roteirizado, 5 blocos de stories no dia 25/07 (12h/14h/16h/18h/20h), carrossel "3 meses em números" com dados reais, ativação de fidelidade matura integrada (WA para clientes com 9–10 carimbos no dia do evento). Alta densidade = alto valor por ciclo. Padrão: datas âncora (aniversários, inaugurações) merecem plano editorial de ≥5 peças de conteúdo distintas.
+2. **Fidelidade matura — resgate 10 carimbos (#57):** 4 templates WA (A–D) cobrem todo o funil. Template D ("quase lá" com 8–9 carimbos) é o mais valioso — motiva a visita ANTES do resgate, quando o cliente ainda não sabe que vai ganhar. Template C reinicia o ciclo imediatamente com `?stamps=1`. Playbook sem sistema/app (caderninho + lista WA) garante adoção real pelo operador.
+3. **CLS sweep batch index.html (#58):** Todos os `<img>` corrigidos em um único ciclo — nav, hero LCP e footer. `display:none` no banner pós-inauguração eliminou risco de layout shift que persistia desde 25/04. Padrão confirmado: sweeps técnicos em batch (tudo de uma vez) têm melhor ROI que correções pontuais por ciclo.
+
+### O que foi menos eficaz
+
+- **Semana 13 (#55) separada da semana 14 (#56):** As duas semanas têm temática contínua (inverno/aniversário). Criar ambas no mesmo ciclo teria sido mais eficiente — 1 ciclo poupado para outra área. Adição ao padrão: **semanas de conteúdo adjacentes com mesma temática = mesmo ciclo**.
+- **Auto-aprimoramento #54 confirmou padrão já consolidado** (links internos = mesmo ciclo) sem identificar gaps FUTUROS. Auto-aprimoramento tem mais valor quando antecipa o que ainda não existe, não quando revisa o que já foi aprendido.
+
+### Padrão consolidado (v7)
+
+> **Bug/fix crítico > Landing page SEO por diferencial distinto > Scripts/templates operador acionáveis (c/ fallback) > Conteúdo não-contingente — semanas adjacentes mesma temática = mesmo ciclo > UX/Performance sweep batch > SEO técnico acumulativo > Pesquisa concorrente (só com follow-up imediato no mesmo ciclo)**
+
+Adições v7:
+- **Datas âncora = plano editorial de ≥5 peças** (aniversários, lançamentos, sorteios)
+- **Sweeps técnicos = batch completo** (nunca 1 imagem por ciclo — todas as páginas relevantes de uma vez)
+- **Auto-aprimoramento = identificar GAPS FUTUROS**, não confirmar padrões passados
+
+---
+
+## Estado das áreas em 28/04/2026 (pós-ciclo #58)
+
+| Área | Estado | Próxima ação |
+|------|--------|--------------|
+| Conteúdo pós-inauguração | ✅ Semanas 1–15 prontas (até 01/08) | Semana 16 (02–08/08) — agosto rotina |
+| Fidelidade matura | ✅ Templates A–D + playbook completo | Ativar em agosto (primeiros 10 carimbos) |
+| Aniversário 3 meses (25/07) | ✅ Campanha completa semana 14 | — |
+| Pós-aniversário (26/07–01/08) | ✅ Semana 15 criada neste ciclo #59 | — |
+| Core Web Vitals — index.html | ✅ CLS sweep completo (#58) | — |
+| Core Web Vitals — cardapio.html | ⚠️ width/height = dimensões fonte (1900×1070), não display | Ajustar para dimensões CSS reais |
+| Core Web Vitals — demais páginas | ⚠️ Não verificado | Sweep batch: acai-self-service, cartao-fidelidade, raspinha |
+| aggregateRating Schema.org | ⛔ SUSPENSO | Aguardar ≥3 reviews Google Maps |
+| Google Analytics ID real | ⛔ SUSPENSO | Aguardar autorização do usuário |
+| Pesquisa concorrentes | ⚠️ Última pesquisa: ciclo #47–48 | Atualizar MilkyMoo ou TheBest (#60 ou #61) |
+
+---
+
+## Estratégia de setembro 2026 (mês 5 de operação)
+
+### Contexto
+Setembro = **5º mês de operação**. Agosto foi de rotina e consolidação de fidelidade (primeiros resgates de 10 carimbos). Setembro traz:
+- **Pós-inverno:** temperatura ainda amena em Londrina, mas subindo — oportunidade para sabores mais leves/frescos
+- **Fidelidade madura:** clientes de maio–junho chegando ao 10º carimbo
+- **Social proof acumulado:** se ≥3 reviews Google Maps confirmados → ativar `aggregateRating`
+- **4–5 meses de dados** → operador tem histórico de produtos mais vendidos e dias/horários de pico
+
+### Pilares estratégicos de setembro
+
+| Pilar | Ação concreta |
+|-------|---------------|
+| **Conteúdo semana 16–18** | Agosto rotina → início de setembro → "primavera se aproximando" (virada estética pastel claro) |
+| **Produto sazonal** | Potinho de Morango (pré-primavera) ou reforçar Caramelado com topping crocante |
+| **Sweep CLS demais páginas** | `cardapio.html`, `acai-self-service-londrina.html`, `cartao-fidelidade.html` — ajustar width/height |
+| **Pesquisa concorrentes** | MilkyMoo ou TheBest: preços agosto/setembro, novos produtos, ads recentes |
+| **aggregateRating** | Ativar se operador confirmar ≥3 reviews — alto impacto SEO local |
+
+### Cadência de conteúdo (agosto–setembro)
+
+| Semana | Período | Tema |
+|--------|---------|------|
+| Semana 15 | 26/07–01/08 | Pós-aniversário: obrigada + abertura de agosto ✅ |
+| Semana 16 | 02–08/08 | Agosto rotina: "sua pausa favorita do dia" |
+| Semana 17 | 09–15/08 | Inverno de saída: comfort food + Linha Zero (foco fitness de fim de agosto) |
+| Semana 18 | 16–22/08 | Teaser de produto sazonal setembro (morango/primavera ou novidade operador) |
+| Semana 19 | 23–29/08 | Lançamento do produto sazonal + primeiros UGCs |
+
+### Roadmap ciclos #60–64
+
+| Ciclo | Área | Ação |
+|-------|------|------|
+| #60 | Concorrentes | Pesquisa atualizada MilkyMoo ou TheBest — preços, novos produtos, ads, UGC recentes. Salvar em `belinha/competitors/<nome>.md` + 1 mudança concreta derivada |
+| #61 | Conteúdo | Semanas 16 + 17 juntas (mesma temática — agosto rotina/inverno) em um único ciclo |
+| #62 | Performance | CLS sweep batch: `cardapio.html`, `acai-self-service-londrina.html`, `cartao-fidelidade.html` — ajustar width/height para display CSS |
+| #63 | Conteúdo ou Conversão | Semana 18 (teaser produto sazonal) + template WA de lançamento de produto |
+| #64 | Auto-aprimoramento | Reler log ciclos 59–63, ajustar estratégia outubro 2026 |
+
+### Bloqueadores suspensos (sem mudança)
+
+| Bloqueador | Dependência | Ciclo que bloqueou |
+|------------|-------------|-------------------|
+| aggregateRating Schema.org | ≥3 reviews Google Maps verificáveis | #43 |
+| Google Analytics ID real | Autorização explícita do usuário | #15 |
+
+---
+
+_Belinha — Ciclo #59 | 2026-04-28_
