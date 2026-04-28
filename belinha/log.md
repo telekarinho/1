@@ -1,5 +1,38 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #58 — 2026-04-28
+
+**Área:** UX/Performance — Core Web Vitals CLS sweep `index.html` mobile
+
+**O que analisou:**
+- Auditou todos os `<img>` em `index.html`: nenhum possuía atributos `width`/`height` explícitos, impedindo o browser de reservar espaço antes do carregamento (causa CLS)
+- Identificou que o `inaugBanner` (div fixo no topo) estava com `display:flex` por padrão no HTML; o script o ocultava após parse, mas havia risco de flash/layout shift entre parse e execução do script
+- Hoje (28/04/2026) a inauguração já passou — o banner jamais será exibido novamente; `display:none` por padrão elimina o problema definitivamente
+- Logo fonte: 1900×1070 px → calculadas dimensões CSS para cada contexto (nav 128×72, hero 280×158, footer 142×80)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | `inaugBanner`: `display:flex` → `display:none` por padrão (script usa `display:'flex'` para exibir se necessário) |
+| `index.html` | Nav logo: +`width="128" height="72" loading="eager" decoding="sync"` |
+| `index.html` | Hero logo LCP: +`width="280" height="158" decoding="sync"` (já tinha `fetchpriority="high"`) |
+| `index.html` | Footer logo: +`width="142" height="80" decoding="async"` (já tinha `loading="lazy"`) |
+
+**Commit:** `e4e3318`
+
+**Impacto esperado:**
+- CLS reduzido: browser reserva espaço exato para cada logo antes do carregamento
+- Zero flash do banner pós-inauguração (sem layout shift no topo)
+- `decoding="sync"` no LCP element (hero logo) garante que o decode não adie a pintura inicial
+- Melhoria mensurável no CLS score do PageSpeed Insights (alvo: CLS < 0.1)
+
+**Próximo passo sugerido:**
+- Ciclo #59: Auto-aprimoramento ciclos #54–58 + `belinha/estrategia.md` roadmap agosto/setembro 2026
+- Ciclo #60: Concorrentes — pesquisa atualizada MilkyMoo ou TheBest (preços, novos produtos, ads recentes)
+
+---
+
 ## Ciclo #57 — 2026-04-28
 
 **Área:** Conversão — Script WhatsApp resgate fidelidade matura (10 carimbos → Mini grátis)
