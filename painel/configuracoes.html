@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -32,6 +32,7 @@
                 <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
                 <a href="fidelidade.html" class="sidebar-link"><span class="icon">🎁</span> Fidelidade</a>
                 <a href="ifood.html" class="sidebar-link"><span class="icon">🛵</span> iFood</a>
+                <a href="uber-entregas.html" class="sidebar-link"><span class="icon">🚗</span> Uber Direct</a>
                 <div class="sidebar-nav-group">Midia da Loja</div>
                 <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
                 <a href="radio-indoor.html" class="sidebar-link"><span class="icon">📻</span> Radio Indoor</a>
@@ -733,22 +734,22 @@
         try {
             var result = await CloudFunctions.call('uberDirect_getSettings', { franchiseId: franchiseId });
             if (!result || !result.success) return;
-            var s = result.settings || {};
+            var s = result.data || {};
             document.getElementById('uberEnvironment').value = s.environment || 'sandbox';
             document.getElementById('uberCustomerId').value = s.customer_id || '';
             document.getElementById('uberClientId').value = s.client_id || '';
             document.getElementById('uberClientSecret').value = s.client_secret || '';
             document.getElementById('uberPickupName').value = s.pickup_name || '';
             document.getElementById('uberPickupPhone').value = s.pickup_phone || '';
-            document.getElementById('uberPickupAddress').value = s.pickup_address_json || '';
-            document.getElementById('uberPickupLat').value = s.pickup_lat || '';
-            document.getElementById('uberPickupLng').value = s.pickup_lng || '';
-            document.getElementById('uberPrepTime').value = s.preparation_time_minutes || '';
-            document.getElementById('uberActive').checked = !!s.active;
+            document.getElementById('uberPickupAddress').value = s.pickup_address || '';
+            document.getElementById('uberPickupLat').value = s.pickup_latitude || '';
+            document.getElementById('uberPickupLng').value = s.pickup_longitude || '';
+            document.getElementById('uberPrepTime').value = s.prep_time_minutes || '';
+            document.getElementById('uberActive').checked = !!s.enabled;
             syncUberActiveSlider();
-            if (s.last_validated_at) {
+            if (s.updatedAt) {
                 document.getElementById('uberLastValidation').textContent =
-                    'Ultima validacao: ' + new Date(s.last_validated_at).toLocaleString('pt-BR');
+                    'Ultima atualizacao: ' + new Date(s.updatedAt.seconds ? s.updatedAt.seconds * 1000 : s.updatedAt).toLocaleString('pt-BR');
             }
         } catch (e) {
             console.warn('loadUberSettings error:', e);
@@ -757,26 +758,24 @@
 
     window.saveUberSettings = async function() {
         var secretVal = document.getElementById('uberClientSecret').value.trim();
-        var settings = {
+        var payload = {
+            franchiseId: franchiseId,
             environment: document.getElementById('uberEnvironment').value,
             customer_id: document.getElementById('uberCustomerId').value.trim(),
             client_id: document.getElementById('uberClientId').value.trim(),
             pickup_name: document.getElementById('uberPickupName').value.trim(),
             pickup_phone: document.getElementById('uberPickupPhone').value.trim(),
-            pickup_address_json: document.getElementById('uberPickupAddress').value.trim(),
-            pickup_lat: parseFloat(document.getElementById('uberPickupLat').value) || 0,
-            pickup_lng: parseFloat(document.getElementById('uberPickupLng').value) || 0,
-            preparation_time_minutes: parseInt(document.getElementById('uberPrepTime').value) || 0,
-            active: document.getElementById('uberActive').checked
+            pickup_address: document.getElementById('uberPickupAddress').value.trim(),
+            pickup_latitude: parseFloat(document.getElementById('uberPickupLat').value) || 0,
+            pickup_longitude: parseFloat(document.getElementById('uberPickupLng').value) || 0,
+            prep_time_minutes: parseInt(document.getElementById('uberPrepTime').value) || 0,
+            enabled: document.getElementById('uberActive').checked
         };
-        // Nao enviar o secret se ainda esta mascarado (backend preserva)
+        // Nao enviar o secret se ainda esta mascarado (backend preserva o existente)
         if (secretVal && secretVal !== '***masked***') {
-            settings.client_secret = secretVal;
+            payload.client_secret = secretVal;
         }
-        var result = await CloudFunctions.call('uberDirect_saveSettings', {
-            franchiseId: franchiseId,
-            settings: settings
-        });
+        var result = await CloudFunctions.call('uberDirect_saveSettings', payload);
         if (result && result.success) {
             alert('Credenciais Uber Direct salvas com sucesso!');
         } else {
@@ -788,16 +787,17 @@
         var resultEl = document.getElementById('uberTestResult');
         resultEl.innerHTML = '<span style="color:#888;font-size:.88rem">Testando conexao...</span>';
         var result = await CloudFunctions.call('uberDirect_testConnection', { franchiseId: franchiseId });
-        if (result && result.success) {
+        var d = (result && result.data) || {};
+        if (result && result.success && d.ok) {
             resultEl.innerHTML = '<div style="padding:10px 14px;background:#E8F5E9;color:#1B5E20;border-radius:8px;font-size:.88rem">' +
-                '&#9989; Conexao OK &mdash; Latencia: ' + (result.latency_ms || 0) + ' ms' +
-                (result.message ? ' &mdash; ' + result.message : '') +
+                '&#9989; Conexao OK &mdash; ' + (d.durationMs || 0) + ' ms' +
+                (d.message ? ' &mdash; ' + d.message : '') +
                 '</div>';
             document.getElementById('uberLastValidation').textContent =
                 'Ultima validacao: ' + new Date().toLocaleString('pt-BR');
         } else {
             resultEl.innerHTML = '<div style="padding:10px 14px;background:#FFEBEE;color:#B71C1C;border-radius:8px;font-size:.88rem">' +
-                '&#10060; Falha na conexao: ' + ((result && result.error) || 'sem resposta') +
+                '&#10060; Falha na conexao: ' + (d.error || (result && result.error) || 'sem resposta') +
                 '</div>';
         }
     };

@@ -99,16 +99,44 @@ function decryptSecret(encoded) {
 /**
  * Validates authentication and resolves franchiseId.
  * super_admin may pass an explicit franchiseId; franchisees/managers use their own.
+ * Falls back to Firestore users/{uid} when JWT has no custom claims (claims not yet set).
  */
-function resolveUberContext(request, requestedFranchiseId = null) {
+async function resolveUberContext(request, requestedFranchiseId = null) {
     if (!request.auth) {
         throw new HttpsError("unauthenticated", "Autenticacao necessaria");
     }
 
-    const role = request.auth.token.role || null;
-    const ownFranchiseId = request.auth.token.franchiseId || null;
-    const isSuperAdmin = role === "super_admin";
+    let role = request.auth.token.role || null;
+    let ownFranchiseId = request.auth.token.franchiseId || null;
 
+    // Fallback: if no claims yet, look up the user profile in Firestore
+    if (!role) {
+        try {
+            const userDoc = await getDb().collection("users").doc(request.auth.uid).get();
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                role = userData.role || null;
+                ownFranchiseId = ownFranchiseId || userData.franchiseId || null;
+            }
+        } catch (e) {
+            console.warn("resolveUberContext: Firestore user lookup failed:", e.message);
+        }
+    }
+
+    // Last-resort: if the user is the owner email, treat as super_admin
+    const OWNER_EMAIL = "jocimarrodrigo@gmail.com";
+    const FRANCHISE_EMAIL = "milkypot.com@gmail.com";
+    if (!role) {
+        const email = request.auth.token.email || "";
+        if (email === OWNER_EMAIL) {
+            role = "super_admin";
+        } else if (email === FRANCHISE_EMAIL) {
+            role = "franchisee";
+            ownFranchiseId = ownFranchiseId || requestedFranchiseId || "muffato-quintino";
+        }
+    }
+
+    const isSuperAdmin = role === "super_admin";
     const allowedRoles = ["super_admin", "franchisee", "manager"];
     if (!allowedRoles.includes(role)) {
         throw new HttpsError("permission-denied", "Perfil sem permissao para o modulo Uber Direct");
@@ -325,7 +353,7 @@ exports.uberDirect_saveSettings = onCall({
     region: REGION,
     secrets: [UBER_ENCRYPTION_KEY],
 }, async (request) => {
-    const { franchiseId } = resolveUberContext(request, request.data?.franchiseId);
+    const { franchiseId } = await resolveUberContext(request, request.data?.franchiseId);
 
     const {
         customer_id,
@@ -337,6 +365,7 @@ exports.uberDirect_saveSettings = onCall({
         pickup_phone,
         pickup_latitude,
         pickup_longitude,
+        prep_time_minutes,
         enabled = true,
     } = request.data || {};
 
@@ -362,6 +391,7 @@ exports.uberDirect_saveSettings = onCall({
         pickup_phone: pickup_phone || "",
         pickup_latitude: pickup_latitude || null,
         pickup_longitude: pickup_longitude || null,
+        prep_time_minutes: parseInt(prep_time_minutes) || 10,
         enabled: Boolean(enabled),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedBy: request.auth.uid,
@@ -406,7 +436,7 @@ exports.uberDirect_getSettings = onCall({
     region: REGION,
     secrets: [UBER_ENCRYPTION_KEY],
 }, async (request) => {
-    const { franchiseId } = resolveUberContext(request, request.data?.franchiseId);
+    const { franchiseId } = await resolveUberContext(request, request.data?.franchiseId);
 
     const db = getDb();
     const snap = await db.collection("uber_settings").doc(franchiseId).get();
@@ -429,6 +459,7 @@ exports.uberDirect_getSettings = onCall({
             pickup_phone: d.pickup_phone || "",
             pickup_latitude: d.pickup_latitude || null,
             pickup_longitude: d.pickup_longitude || null,
+            prep_time_minutes: d.prep_time_minutes || 10,
             enabled: d.enabled !== false,
             createdAt: d.createdAt || null,
             updatedAt: d.updatedAt || null,
@@ -444,7 +475,7 @@ exports.uberDirect_testConnection = onCall({
     secrets: [UBER_ENCRYPTION_KEY],
     timeoutSeconds: 30,
 }, async (request) => {
-    const { franchiseId } = resolveUberContext(request, request.data?.franchiseId);
+    const { franchiseId } = await resolveUberContext(request, request.data?.franchiseId);
 
     const db = getDb();
     const snap = await db.collection("uber_settings").doc(franchiseId).get();
@@ -499,7 +530,7 @@ exports.uberDirect_getQuote = onCall({
     secrets: [UBER_ENCRYPTION_KEY],
     timeoutSeconds: 30,
 }, async (request) => {
-    const { franchiseId } = resolveUberContext(request, request.data?.franchiseId);
+    const { franchiseId } = await resolveUberContext(request, request.data?.franchiseId);
 
     const {
         orderId,
@@ -633,7 +664,7 @@ exports.uberDirect_createDelivery = onCall({
     secrets: [UBER_ENCRYPTION_KEY],
     timeoutSeconds: 60,
 }, async (request) => {
-    const { franchiseId } = resolveUberContext(request, request.data?.franchiseId);
+    const { franchiseId } = await resolveUberContext(request, request.data?.franchiseId);
 
     const {
         orderId,
@@ -769,7 +800,7 @@ exports.uberDirect_getDelivery = onCall({
     secrets: [UBER_ENCRYPTION_KEY],
     timeoutSeconds: 20,
 }, async (request) => {
-    const { franchiseId } = resolveUberContext(request, request.data?.franchiseId);
+    const { franchiseId } = await resolveUberContext(request, request.data?.franchiseId);
 
     const { orderId } = request.data || {};
     if (!orderId) {
@@ -859,7 +890,7 @@ exports.uberDirect_savePricingRules = onCall({
     region: REGION,
     secrets: [UBER_ENCRYPTION_KEY],
 }, async (request) => {
-    const { franchiseId, isSuperAdmin } = resolveUberContext(request, request.data?.franchiseId);
+    const { franchiseId, isSuperAdmin } = await resolveUberContext(request, request.data?.franchiseId);
 
     // Only super_admin or franchisee can change pricing
     if (!isSuperAdmin && request.auth.token.role !== "franchisee") {
@@ -920,7 +951,7 @@ exports.uberDirect_getPricingRules = onCall({
     region: REGION,
     secrets: [UBER_ENCRYPTION_KEY],
 }, async (request) => {
-    const { franchiseId } = resolveUberContext(request, request.data?.franchiseId);
+    const { franchiseId } = await resolveUberContext(request, request.data?.franchiseId);
 
     const db = getDb();
     const snap = await db.collection("uber_pricing_rules").doc(franchiseId).get();
