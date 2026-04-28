@@ -359,6 +359,54 @@
         .toast.show { display: block; animation: fiu 0.3s; }
         @keyframes fiu { from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)} }
 
+        /* ================ Faturamento + chips ================ */
+        .pdv-fat-chip { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.18); border-radius: 12px; padding: 4px 10px; font-size: 12px; font-weight: 700; color: #fff; }
+        .pdv-fat-chip .fat-sep { opacity: 0.5; padding: 0 4px; }
+        .pdv-fat-chip .fat-num { font-weight: 800; }
+
+        /* ================ Desconto com PIN ================ */
+        .cart-discount-row-pin { display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 4px 0; color: #DC2626; font-weight: 700; }
+        .cart-discount-row-pin .dc-rm { background: none; border: none; color: #DC2626; cursor: pointer; font-size: 14px; padding: 0 4px; }
+        .cart-subtotal-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 2px 0; color: #555; }
+        .btn-discount-pin { width: 100%; padding: 8px; background: #FFF3E0; color: #E65100; border: 1px dashed #FB923C; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; margin-bottom: 6px; }
+        .btn-discount-pin:hover { background: #FFE0B2; }
+        .btn-discount-pin.applied { background: #ECFDF5; color: #059669; border-color: #10B981; border-style: solid; }
+        .discount-modal-body { padding: 18px 20px; }
+        .pin-input-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+        .pin-digit { padding: 16px 0; text-align: center; font-size: 24px; font-weight: 800; border: 2px solid #e0e0e0; border-radius: 10px; outline: none; font-family: monospace; }
+        .pin-digit:focus { border-color: #6C63FF; }
+        .discount-type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .discount-type-btn { padding: 10px; border: 2px solid #e0e0e0; border-radius: 10px; background: #fff; cursor: pointer; font-weight: 700; font-size: 13px; color: #555; }
+        .discount-type-btn.active { border-color: #FB923C; background: #FFF3E0; color: #E65100; }
+        .discount-error { background: #FEE2E2; color: #B91C1C; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; margin-top: 10px; display: none; }
+        .discount-error.show { display: block; }
+
+        /* ================ Status do pedido ================ */
+        .orders-modal-body { padding: 12px 18px; max-height: 70vh; overflow-y: auto; }
+        .order-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+        .order-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .order-name { font-weight: 800; font-size: 14px; color: #333; }
+        .order-meta { font-size: 11px; color: #888; }
+        .order-status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; }
+        .ost-confirmado { background: #FEF3C7; color: #92400E; }
+        .ost-em_preparo { background: #DBEAFE; color: #1E40AF; }
+        .ost-pronto { background: #D1FAE5; color: #065F46; }
+        .ost-entregue { background: #E0E7FF; color: #3730A3; }
+        .ost-pago { background: #ECFDF5; color: #059669; }
+        .order-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+        .order-action-btn { flex: 1; min-width: 72px; padding: 8px; border: none; border-radius: 8px; font-weight: 700; font-size: 11px; cursor: pointer; color: #fff; }
+        .oa-prep { background: #3B82F6; }
+        .oa-ready { background: #10B981; }
+        .oa-deliver { background: #6366F1; }
+        .oa-prep:hover { background: #2563EB; }
+        .oa-ready:hover { background: #059669; }
+        .oa-deliver:hover { background: #4F46E5; }
+        .order-items-mini { font-size: 11px; color: #666; margin-top: 4px; line-height: 1.4; }
+        .orders-empty { text-align: center; padding: 30px 10px; color: #999; font-size: 13px; }
+        .pdv-orders-btn { background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; }
+        .pdv-orders-btn:hover { background: rgba(255,255,255,0.3); }
+        .pdv-orders-btn .pending-dot { display: inline-block; width: 8px; height: 8px; background: #F59E0B; border-radius: 50%; margin-left: 4px; animation: pulse 1.5s infinite; }
+
         /* === RESPONSIVIDADE PDV ===
            Tablet (≤1100px): cart sidebar mais estreita
            Mobile (≤768px):  cart vira gaveta inferior 60vh, FAB reposicionado
@@ -420,6 +468,7 @@
             .cart-acts .bf {
                 padding: 14px 8px; font-size: 13px;
             }
+            .pdv-fat-chip { font-size: 10px; padding: 3px 7px; }
             /* Buffet FAB e Resgatar FAB sobem pra evitar a gaveta de cart */
             .buffet-fab {
                 bottom: calc(62vh + 12px) !important;
@@ -448,6 +497,8 @@
                 gap: 5px;
             }
             .cart-acts .btn { font-size: 12px; padding: 11px 4px; }
+            .pdv-cat-pill { font-size: 11px; padding: 5px 10px; }
+            .pdv-search input { padding: 8px 10px 8px 32px; font-size: 13px; }
             .buffet-fab {
                 bottom: calc(68vh + 8px) !important;
                 width: 56px; height: 56px;
@@ -488,10 +539,12 @@
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end" id="pdvStatusRow">
         <!-- Status compacto do caixa + meta + checklist (preenchido por JS) -->
+        <div id="pdvFaturamentoChip" style="display:none"></div>
         <div id="pdvChecklistChip" style="display:none"></div>
         <div id="pdvComissaoChip" style="display:none"></div>
         <div id="pdvMetaChip" style="display:none"></div>
         <div id="pdvCaixaChip" style="display:none"></div>
+        <button class="pdv-orders-btn" id="pdvOrdersBtn" onclick="openOrdersModal()" title="Pedidos de hoje (status)">📋 Pedidos<span id="pdvOrdersBtnCount"></span></button>
         <div style="font-size:12px;opacity:0.8;" id="clk"></div>
         <button class="btn-back" onclick="openPrinterSettings()" title="Configurações de Impressão">⚙️</button>
         <button class="btn-back" onclick="toggleFullscreen()" title="Tela cheia (F11)">⛶</button>
@@ -758,22 +811,32 @@
     </div>
 </div>
 
-<!-- Modal de Desconto -->
+<!-- Modal de Desconto (com PIN + motivo + limite + AuditLog) -->
 <div class="modal-bg" id="discountModal" style="z-index:1900" onclick="if(event.target===this)closeDiscountModal()">
-    <div style="background:#fff;border-radius:16px;padding:22px 24px;max-width:380px;width:92%;box-shadow:0 12px 40px rgba(0,0,0,0.25);font-family:'Nunito',sans-serif">
+    <div style="background:#fff;border-radius:16px;padding:22px 24px;max-width:420px;width:92%;box-shadow:0 12px 40px rgba(0,0,0,0.25);font-family:'Nunito',sans-serif">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
             <h3 style="margin:0;font-family:'Baloo 2',cursive;font-size:18px;color:#92400E">🏷️ Desconto</h3>
             <button onclick="closeDiscountModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#666">✕</button>
         </div>
-        <div style="font-size:12px;color:#666;margin-bottom:10px">Subtotal atual: <strong id="discountSubtotal" style="color:#333">R$ 0,00</strong></div>
+        <p style="font-size:12px;color:#666;margin:0 0 6px;font-weight:700">PIN do gerente (4 dígitos)</p>
+        <div class="pin-input-grid">
+            <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" data-pin="0" autocomplete="off">
+            <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" data-pin="1" autocomplete="off">
+            <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" data-pin="2" autocomplete="off">
+            <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" data-pin="3" autocomplete="off">
+        </div>
+        <div style="font-size:12px;color:#666;margin:6px 0 10px">Subtotal atual: <strong id="discountSubtotal" style="color:#333">R$ 0,00</strong></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
             <button id="discountTypeReais" onclick="setDiscountType('reais')" style="padding:10px;border:2px solid #F59E0B;background:#F59E0B;color:#fff;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit">R$ Reais</button>
             <button id="discountTypePerc" onclick="setDiscountType('perc')" style="padding:10px;border:2px solid #F59E0B;background:#fff;color:#F59E0B;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit">% Percentual</button>
         </div>
         <label style="display:block;font-size:11px;color:#666;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px" id="discountInputLabel">Valor (R$)</label>
         <input type="number" id="discountValue" step="0.01" min="0" placeholder="0,00" style="width:100%;padding:12px 14px;border:2px solid #ddd;border-radius:8px;font-size:18px;font-weight:800;font-family:inherit;color:#92400E;text-align:center" oninput="previewDiscount()">
+        <label style="display:block;font-size:11px;color:#666;font-weight:700;margin-top:10px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Motivo (obrigatório)</label>
+        <input type="text" id="discountReason" placeholder="Ex: cliente fiel, promoção interna..." style="width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;font-weight:600">
         <div style="margin-top:10px;padding:10px;background:#FFF8E1;border-radius:8px;font-size:13px;color:#92400E;font-weight:700" id="discountPreview">Total final: R$ 0,00</div>
         <div id="discountError" style="display:none;margin-top:8px;padding:8px;background:#FEE2E2;border-radius:8px;font-size:12px;color:#991B1B;font-weight:700"></div>
+        <p style="font-size:10px;color:#999;margin:8px 0 0;text-align:center">Limite: <span id="discountMaxPctHint">30</span>% · toda aplicação é registrada no log de auditoria</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
             <button onclick="closeDiscountModal()" style="padding:11px;border:2px solid #ddd;background:#fff;color:#666;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit">Cancelar</button>
             <button onclick="applyDiscount()" style="padding:11px;border:none;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit">✅ Aplicar</button>
@@ -905,6 +968,21 @@
                 <button class="buffet-btn primary" onclick="searchClubMember()" style="background:linear-gradient(135deg,#5A4570,#42A5F5);border-color:#5A4570">🔍 Buscar cliente</button>
             </div>
             <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">💡 O cliente precisa estar cadastrado no MilkyClube. Se ainda nao tiver conta, oriente a acessar <strong>milkypot.com/clube</strong>.</p>
+        </div>
+    </div>
+</div>
+
+<!-- (modal de desconto duplicado removido — usar #discountModal acima) -->
+
+<!-- Orders Status Modal (Fase 4) -->
+<div class="modal-bg" id="ordersModalBg" onclick="if(event.target===this)closeOrdersModal()" style="z-index:1500">
+    <div class="buffet-modal" style="max-width:600px">
+        <div class="buffet-head" style="background:linear-gradient(135deg,#3B82F6,#1E40AF)">
+            <h3>📋 Pedidos de Hoje</h3>
+            <button class="modal-close" onclick="closeOrdersModal()">×</button>
+        </div>
+        <div class="orders-modal-body" id="ordersModalBody">
+            <div class="orders-empty">Carregando...</div>
         </div>
     </div>
 </div>
@@ -2404,7 +2482,7 @@
                 '<button class="ci-rm" onclick="cRm('+i+')">×</button></div>';
         }).join('');
         el.innerHTML=html;
-        // Aplica desconto se houver
+        // Aplica desconto se houver (window._cartDiscount = {type, value, reason, by, at})
         var discAmount = (typeof calcDiscountAmount === 'function') ? calcDiscountAmount(total) : 0;
         var finalTotal = Math.max(0, Math.round((total - discAmount) * 100) / 100);
         var totalTxt = 'R$ '+finalTotal.toFixed(2).replace('.',',');
@@ -2414,7 +2492,8 @@
                 var d = window._cartDiscount;
                 var lbl = 'Subtotal R$ ' + total.toFixed(2).replace('.', ',')
                     + ' · Desconto ' + (d.type === 'perc' ? d.value + '%' : '')
-                    + ' -R$ ' + discAmount.toFixed(2).replace('.', ',');
+                    + ' -R$ ' + discAmount.toFixed(2).replace('.', ',')
+                    + (d.reason ? ' · ' + d.reason : '');
                 document.getElementById('cartDiscountLabel').textContent = lbl;
                 discRow.style.display = 'flex';
             } else {
@@ -2466,11 +2545,19 @@
 
     window.clearCart=function(){if(!cart.length)return;cart=[];window._cartDiscount=null;renderCart();toast('Pedido limpo')};
 
-    // ========== DESCONTO NO PEDIDO ==========
-    // Estado armazenado em window._cartDiscount = { type:'reais'|'perc', value:N } | null
-    // Aplicado em renderCart pra exibir Subtotal/Desconto/Total e em finishOrder pro
-    // total final. Resetado no clearCart e após finalizar venda.
+    // ========== DESCONTO NO PEDIDO (com PIN + limite + AuditLog) ==========
+    // Estado: window._cartDiscount = { type:'reais'|'perc', value, reason, by, at }
+    // Configuracao: franchise.descontoPin (default '1234'), franchise.descontoMaxPct (default 30)
     var _discountType = 'reais';
+    function getDiscountConfig(){
+        var franchises = DataStore.get('franchises') || [];
+        var f = franchises.find(function(x){return x.id===fid}) || {};
+        return {
+            pin: (f.descontoPin || '1234'),
+            maxPct: Number(f.descontoMaxPct || 30),
+            isDefault: !f.descontoPin
+        };
+    }
     function getCartSubtotal() {
         return Math.round(cart.reduce(function (s, c) { return s + (c.unitPrice || 0) * (c.qty || 1); }, 0) * 100) / 100;
     }
@@ -2487,6 +2574,7 @@
     window.openDiscountModal = function () {
         if (!cart.length) { toast('Adicione itens ao carrinho antes do desconto.'); return; }
         var modal = document.getElementById('discountModal');
+        var cfg = getDiscountConfig();
         var current = window._cartDiscount;
         _discountType = current ? current.type : 'reais';
         document.getElementById('discountTypeReais').style.background = _discountType === 'reais' ? '#F59E0B' : '#fff';
@@ -2497,9 +2585,19 @@
         document.getElementById('discountValue').value = current ? current.value : '';
         document.getElementById('discountSubtotal').textContent = 'R$ ' + getCartSubtotal().toFixed(2).replace('.', ',');
         document.getElementById('discountError').style.display = 'none';
+        // Reset PIN + reason fields se existirem (adicionados via JS abaixo)
+        var pinInputs = document.querySelectorAll('#discountModal .pin-digit');
+        pinInputs.forEach(function(i){i.value=''});
+        var reasonEl = document.getElementById('discountReason');
+        if (reasonEl) reasonEl.value = '';
+        var maxPctEl = document.getElementById('discountMaxPctHint');
+        if (maxPctEl) maxPctEl.textContent = cfg.maxPct;
         previewDiscount();
         modal.classList.add('open');
-        setTimeout(function () { document.getElementById('discountValue').focus(); }, 100);
+        setTimeout(function () {
+            var firstPin = document.querySelector('#discountModal .pin-digit[data-pin="0"]');
+            if (firstPin) firstPin.focus(); else document.getElementById('discountValue').focus();
+        }, 100);
     };
     window.closeDiscountModal = function () {
         document.getElementById('discountModal').classList.remove('open');
@@ -2538,24 +2636,215 @@
         var finalTotal = Math.max(0, Math.round((subtotal - amount) * 100) / 100);
         document.getElementById('discountPreview').textContent = 'Total final: R$ ' + finalTotal.toFixed(2).replace('.', ',') + ' (-R$ ' + amount.toFixed(2).replace('.', ',') + ')';
     };
+    function _showDiscountError(msg){
+        var el = document.getElementById('discountError');
+        el.textContent = msg;
+        el.style.display = 'block';
+    }
     window.applyDiscount = function () {
         var v = Number(document.getElementById('discountValue').value) || 0;
-        if (v <= 0) {
-            document.getElementById('discountError').textContent = 'Informe um valor maior que zero.';
-            document.getElementById('discountError').style.display = 'block';
+        if (v <= 0) { _showDiscountError('Informe um valor maior que zero.'); return; }
+
+        var cfg = getDiscountConfig();
+        var subtotal = getCartSubtotal();
+
+        // Valida PIN do gerente
+        var pinInputs = document.querySelectorAll('#discountModal .pin-digit');
+        if (pinInputs.length === 4) {
+            var pin = Array.from(pinInputs).map(function(i){return i.value}).join('');
+            if (pin.length !== 4) { _showDiscountError('Digite o PIN de 4 dígitos do gerente.'); return; }
+            if (pin !== cfg.pin) { _showDiscountError('PIN incorreto. Procure o gerente.'); return; }
+        }
+
+        // Valida motivo (se campo existir)
+        var reasonEl = document.getElementById('discountReason');
+        var reason = reasonEl ? (reasonEl.value || '').trim() : '';
+        if (reasonEl && !reason) { _showDiscountError('Informe o motivo do desconto.'); return; }
+
+        // Valida limite
+        var pct;
+        if (_discountType === 'perc') {
+            if (v > 100) v = 100;
+            pct = v;
+        } else {
+            pct = subtotal > 0 ? (Math.min(v, subtotal) / subtotal) * 100 : 0;
+        }
+        if (pct > cfg.maxPct) {
+            _showDiscountError('Desconto equivale a ' + pct.toFixed(1) + '% — limite da loja é ' + cfg.maxPct + '%.');
             return;
         }
-        if (_discountType === 'perc' && v > 100) v = 100;
-        window._cartDiscount = { type: _discountType, value: v };
+
+        var session = (typeof Auth !== 'undefined' && Auth.getSession) ? (Auth.getSession() || {}) : {};
+        var by = session.email || session.name || 'desconhecido';
+        window._cartDiscount = {
+            type: _discountType,
+            value: v,
+            reason: reason,
+            by: by,
+            byName: session.name || '',
+            at: new Date().toISOString(),
+            usedDefaultPin: cfg.isDefault
+        };
+
+        // AuditLog
+        try {
+            if (typeof AuditLog !== 'undefined' && AuditLog.log) {
+                AuditLog.log('discount_applied', {
+                    type: _discountType, value: v, pct: Math.round(pct*10)/10,
+                    subtotal: subtotal, reason: reason, by: by,
+                    usedDefaultPin: cfg.isDefault, cartItems: cart.length
+                }, fid);
+            }
+        } catch(e){ console.warn('AuditLog discount:', e); }
+
         closeDiscountModal();
         renderCart();
-        toast('🏷️ Desconto aplicado.');
+        toast(cfg.isDefault ? '⚠️ Desconto OK — configure PIN próprio em Configurações' : '🏷️ Desconto aplicado.');
     };
     window.clearDiscount = function () {
+        if (window._cartDiscount) {
+            try {
+                if (typeof AuditLog !== 'undefined' && AuditLog.log) {
+                    AuditLog.log('discount_removed', { previous: window._cartDiscount }, fid);
+                }
+            } catch(e){}
+        }
         window._cartDiscount = null;
         renderCart();
         toast('Desconto removido.');
     };
+
+    // PIN auto-advance e backspace (se modal de desconto tiver pin-digit fields)
+    document.addEventListener('keyup', function(ev){
+        var t = ev.target;
+        if(!t || !t.classList || !t.classList.contains('pin-digit'))return;
+        var idx = Number(t.dataset.pin);
+        if(ev.key === 'Backspace' && !t.value && idx > 0){
+            var prev = document.querySelector('#discountModal .pin-digit[data-pin="'+(idx-1)+'"]');
+            if(prev){prev.focus(); prev.value=''}
+            return;
+        }
+        if(/^\d$/.test(t.value) && idx < 3){
+            var next = document.querySelector('#discountModal .pin-digit[data-pin="'+(idx+1)+'"]');
+            if(next)next.focus();
+        }
+    });
+
+    // ============================================
+    // STATUS DO PEDIDO (Em preparo / Pronto / Entregue)
+    // ============================================
+    function todayLocalKey(){
+        var now = new Date();
+        var off = now.getTimezoneOffset() * 60000;
+        return new Date(now.getTime() - off).toISOString().slice(0,10);
+    }
+
+    function loadTodayOrders(){
+        var all = DataStore.getCollection('orders', fid) || [];
+        var key = todayLocalKey();
+        return all.filter(function(o){
+            if(!o || !o.createdAt) return false;
+            var d = new Date(o.createdAt);
+            if(isNaN(d.getTime())) return false;
+            var off = d.getTimezoneOffset() * 60000;
+            var localKey = new Date(d.getTime() - off).toISOString().slice(0,10);
+            return localKey === key;
+        }).sort(function(a,b){return (b.createdAt||'').localeCompare(a.createdAt||'')});
+    }
+
+    function statusLabel(s){
+        var map = {confirmado:'🟡 Confirmado', em_preparo:'🔵 Em preparo', pronto:'🟢 Pronto', entregue:'🟣 Entregue', pago:'💚 Pago', cancelado:'❌ Cancelado'};
+        return map[s] || s || '—';
+    }
+
+    function nextStatusButtons(o){
+        var st = o.status || 'confirmado';
+        var btns = '';
+        if(st === 'confirmado'){
+            btns += '<button class="order-action-btn oa-prep" onclick="setOrderStatus(\''+o.id+'\',\'em_preparo\')">▶ Em preparo</button>';
+        } else if(st === 'em_preparo'){
+            btns += '<button class="order-action-btn oa-ready" onclick="setOrderStatus(\''+o.id+'\',\'pronto\')">✓ Pronto</button>';
+        } else if(st === 'pronto'){
+            btns += '<button class="order-action-btn oa-deliver" onclick="setOrderStatus(\''+o.id+'\',\'entregue\')">📦 Entregue</button>';
+        }
+        return btns;
+    }
+
+    window.openOrdersModal = function(){
+        renderOrdersModal();
+        document.getElementById('ordersModalBg').classList.add('open');
+    };
+
+    window.closeOrdersModal = function(){
+        document.getElementById('ordersModalBg').classList.remove('open');
+    };
+
+    function renderOrdersModal(){
+        var body = document.getElementById('ordersModalBody');
+        if(!body)return;
+        var orders = loadTodayOrders();
+        if(!orders.length){
+            body.innerHTML = '<div class="orders-empty">Nenhum pedido hoje ainda. 🌱<br><span style="font-size:11px">Novos pedidos aparecem aqui automaticamente.</span></div>';
+            return;
+        }
+        body.innerHTML = orders.map(function(o){
+            var st = o.status || 'confirmado';
+            var time = o.createdAt ? new Date(o.createdAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
+            var name = (o.customer && o.customer.name) || 'Sem nome';
+            var itemsTxt = (o.items||[]).map(function(i){return i.qty+'× '+i.name}).slice(0,3).join(' · ');
+            if((o.items||[]).length > 3) itemsTxt += ' · +'+((o.items||[]).length-3)+' mais';
+            return '<div class="order-card">'+
+                '<div class="order-card-head">'+
+                    '<div><div class="order-name">'+Utils.escapeHtml(name)+'</div>'+
+                    '<div class="order-meta">'+time+' · R$ '+Number(o.total||0).toFixed(2).replace('.',',')+' · '+(o.payment||'?')+'</div></div>'+
+                    '<span class="order-status-badge ost-'+st+'">'+statusLabel(st)+'</span>'+
+                '</div>'+
+                '<div class="order-items-mini">'+Utils.escapeHtml(itemsTxt||'—')+'</div>'+
+                '<div class="order-actions">'+nextStatusButtons(o)+'</div>'+
+            '</div>';
+        }).join('');
+    }
+
+    window.setOrderStatus = function(orderId, newStatus){
+        try {
+            DataStore.updateInCollection('orders', fid, orderId, { status: newStatus, statusUpdatedAt: new Date().toISOString() });
+            if(typeof AuditLog !== 'undefined' && AuditLog.log){
+                AuditLog.log('order_status_change', { orderId: orderId, to: newStatus }, fid);
+            }
+            toast('Status: '+statusLabel(newStatus));
+            renderOrdersModal();
+            renderOrdersBadge();
+        } catch(e){ console.warn('setOrderStatus:', e); toast('Erro ao atualizar status') }
+    };
+
+    function renderOrdersBadge(){
+        var orders = loadTodayOrders();
+        var pending = orders.filter(function(o){return o.status==='confirmado'||o.status==='em_preparo'}).length;
+        var btn = document.getElementById('pdvOrdersBtnCount');
+        if(!btn)return;
+        btn.innerHTML = pending > 0 ? ' <span class="pending-dot" title="'+pending+' pedidos abertos"></span>' : '';
+    }
+
+    // ============================================
+    // FATURAMENTO PROEMINENTE (chip no header)
+    // ============================================
+    function renderFaturamentoChip(){
+        try {
+            var orders = loadTodayOrders();
+            var validas = orders.filter(function(o){return o.status !== 'cancelado'});
+            var total = validas.reduce(function(s,o){return s + Number(o.total||0)},0);
+            var n = validas.length;
+            var ticket = n > 0 ? total/n : 0;
+            var chip = document.getElementById('pdvFaturamentoChip');
+            if(!chip)return;
+            chip.innerHTML = '<div class="pdv-fat-chip" title="Faturamento de hoje">💰 <span class="fat-num">R$ '+total.toFixed(2).replace('.',',')+'</span><span class="fat-sep">·</span>🛒 <span class="fat-num">'+n+'</span><span class="fat-sep">·</span>🎯 R$ <span class="fat-num">'+ticket.toFixed(2).replace('.',',')+'</span></div>';
+            chip.style.display = '';
+        } catch(e){ console.warn('Faturamento chip:', e) }
+    }
+
+    // Refresh chips a cada 30s + bootstrap após 800ms
+    setInterval(function(){ renderFaturamentoChip(); renderOrdersBadge(); }, 30000);
+    setTimeout(function(){ renderFaturamentoChip(); renderOrdersBadge(); }, 800);
 
     // ============================================
     // OPEN TABS (Conta Aberta)
@@ -2627,7 +2916,7 @@
             toast('📋 '+tabName+' — conta aberta! Cliente pode consumir mais.');
         }
         saveOpenTabs();
-        cart=[];renderCart();
+        cart=[];cartDiscount=null;renderCart();
         document.getElementById('orderName').value='';
     };
 
@@ -2844,12 +3133,17 @@
         if(!cart.length){toast('Adicione itens');return}
         // Round to 2 decimals to avoid float precision issues (ex: 0.5*59.99 = 29.995)
         var subtotal=Math.round(cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0)*100)/100;
-        // Aplica desconto se houver (window._cartDiscount = {type, value})
+        // Aplica desconto se houver (window._cartDiscount = {type, value, reason, by, at})
         var discountAmount = (typeof calcDiscountAmount === 'function') ? calcDiscountAmount(subtotal) : 0;
         var discountInfo = window._cartDiscount ? {
             type: window._cartDiscount.type,
             value: Number(window._cartDiscount.value) || 0,
-            amount: discountAmount
+            amount: discountAmount,
+            reason: window._cartDiscount.reason || '',
+            by: window._cartDiscount.by || '',
+            byName: window._cartDiscount.byName || '',
+            at: window._cartDiscount.at || null,
+            usedDefaultPin: !!window._cartDiscount.usedDefaultPin
         } : null;
         var total = Math.max(0, Math.round((subtotal - discountAmount) * 100) / 100);
         var oName=document.getElementById('orderName').value||(orderType==='balcao'?'Balcao':'');
@@ -2947,7 +3241,7 @@
                 };
             }),
             subtotal:subtotal,
-            discount:discountInfo,             // {type, value, amount} | null
+            discount:discountInfo,             // {type, value, amount, reason, by, byName, at, usedDefaultPin} | null
             total:total,
             customer:{name:oName,phone:document.getElementById('cPhone').value||''},
             address:orderType==='delivery'?document.getElementById('cAddr').value:'',
@@ -3211,6 +3505,8 @@
         cart=[];window._cartDiscount=null;renderCart();
         document.getElementById('orderName').value='';document.getElementById('cPhone').value='';document.getElementById('cAddr').value='';
         document.getElementById('nfCk').checked=false;document.getElementById('nfCpf').style.display='none';
+        // Refresh status row counters após gravar pedido
+        try { renderFaturamentoChip(); renderOrdersBadge(); } catch(e){}
     };
 
     // Cleanup balança on unload
