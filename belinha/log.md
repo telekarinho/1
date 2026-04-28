@@ -1,5 +1,37 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #56 — 2026-04-28
+
+**Área:** Conteúdo — Semana 14 pós-inauguração (19–25/07/2026) — Aniversário 3 Meses
+
+**O que analisou:**
+- Log ciclo #55 e roadmap em `belinha/estrategia.md` (ciclos 55–59)
+- Formato e profundidade de `pos-inauguracao-semana13.md` como referência
+- Contexto: 25/07 = exatos 3 meses da inauguração de 25/04/2026 — semana mais importante de julho
+- Teasers da semana 13 (16/07 e 18/07) precisam converter em campanha real nesta semana
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana14.md` | CRIADO — plano editorial completo 19–25/07: sorteio de aniversário (regras + script sorteio ao vivo), retrospectiva UGC, reel 15s de bastidores roteirizado, post emocional âncora (sábado 25/07), carrossel "3 meses em números", 5 blocos de stories para o dia 25/07 (12h/14h/16h/18h/20h), templates WA para clientes com 9–10 carimbos + base geral, checklist completo do operador, tabela de métricas de sucesso |
+
+**Commit:** `2cb34c1`
+
+**Destaques do plano:**
+- **Post âncora emocional (25/07 às 10h):** texto de gratidão genuíno — tom de aniversário real, não promo
+- **Sorteio com mecânica simples:** compartilhar post + marcar @milkypotbr → resultado ao vivo às 18h
+- **Ativação fidelidade matura:** clientes com 9–10 carimbos recebem WA personalizado (terça 22/07) para resgatar Mini Grátis no dia do aniversário
+- **Reel 15s roteirizado:** slow motion da calda + entrega ao cliente + tela final "3 meses de felicidade em potinho"
+- **Carrossel "3 meses em números":** dados reais pedidos ao operador (topping favorito, quantidade de potinhos)
+
+**Próximo passo sugerido:**
+- Ciclo #57: Script WhatsApp "Ganhou! 10 carimbos → Mini grátis" — ativação fidelidade matura (complementa a semana 14)
+- Ciclo #58: `aggregateRating` se desbloqueado; senão Core Web Vitals sweep `index.html` mobile
+- Ciclo #59: Auto-aprimoramento ciclos 54–58 + `estrategia.md` setembro 2026
+
+---
+
 ## Ciclo #55 — 2026-04-27
 
 **Área:** Conteúdo — Semana 13 pós-inauguração (12–18/07/2026)
