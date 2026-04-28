@@ -1,5 +1,39 @@
 # Belinha — Log de Ciclos
 
+---
+
+## Ciclo #62 — 2026-04-28
+
+**Área:** Performance/UX — CLS sweep batch (páginas secundárias)
+
+**Contexto:** Ciclo prescrito pelo roadmap. Após ciclo #58 ter corrigido CLS em `index.html` (banner display:none + img dimensions), este ciclo faz o mesmo sweep nas páginas secundárias: `cardapio.html`, `acai-self-service-londrina.html`, `cartao-fidelidade.html`.
+
+**O que analisou:**
+- `cardapio.html`: logos já têm `width="1900" height="1070"` ✅ — sem CLS pendente
+- `acai-self-service-londrina.html`: única img já tem `width="120" height="48"` ✅ — sem CLS pendente
+- `cartao-fidelidade.html` linha 100: logo `<img src="images/logo-milkypot.png" alt="MilkyPot">` sem width/height ❌
+  - CSS: `.header img{height:52px}` — sem width → browser não reserva espaço antes do carregamento
+  - Ratio nativo da imagem: 1900×1070 → 92×52 para altura CSS 52px
+- Nenhuma das páginas tem imagens `loading="lazy"` above-the-fold (sem falso-positivo)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `cartao-fidelidade.html` | Logo: adicionado `width="92" height="52" fetchpriority="high"` → browser reserva 92×52px de espaço antes do paint; fetchpriority="high" porque é o primeiro elemento visual da página |
+
+**Commit:** `9c32b56`
+
+**Racional técnico:**
+- Sem `width`/`height` no HTML, o browser só sabe o tamanho da img após o download → layout shift no paint inicial
+- Com `width="92" height="52"`, o browser reserva o espaço correto via aspect ratio antes de baixar a imagem → CLS ≈ 0
+- `fetchpriority="high"` antecipa o download do logo (é LCP candidate nesta página simples sem hero image)
+
+**Próximo passo sugerido:**
+- Ciclo #63: Conteúdo — semana 18 (16–22/08/2026) tema "MilkyPot da família / fim de semana" + cross-sell açaí self-service
+- Ciclo #64 (auto-aprimoramento): reler log #59–#63, ajustar estratégia outubro 2026 em `belinha/estrategia.md`
+- Quando operador tiver ≥3 reviews Google: ativar `aggregateRating` em `index.html` (blocker documentado)
+
 ## Ciclo #61 — 2026-04-28
 
 **Área:** Conteúdo — Semanas 16 + 17 (02–15/08/2026)
