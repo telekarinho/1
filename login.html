@@ -117,16 +117,33 @@
         })();
 
         // Check if already logged in
+        // IMPORTANTE: nao redireciona se chegou aqui por role_mismatch (evita loop)
+        var qsParams = new URLSearchParams(window.location.search);
+        var redirectReason = qsParams.get('reason');
         const session = Auth.getSession();
-        if (session) {
+        if (session && redirectReason !== 'role_mismatch') {
             redirectByRole(session.role);
+        } else if (redirectReason === 'role_mismatch') {
+            // Limpa qualquer estado residual e mostra mensagem
+            try { localStorage.removeItem('mp_session'); } catch(e) {}
+            try { localStorage.removeItem('mp_admin_session_backup'); } catch(e) {}
+            try { localStorage.removeItem('mp_quick_login'); } catch(e) {}
+            try { if (typeof firebaseAuth !== 'undefined' && firebaseAuth) firebaseAuth.signOut().catch(function(){}); } catch(e) {}
+            setTimeout(function() {
+                showError('Sessao invalida ou perfil sem acesso a este painel. Faça login novamente.');
+            }, 50);
         }
 
         function redirectByRole(role) {
             if (role === MP.ROLES.SUPER_ADMIN) {
                 window.location.href = 'admin/';
-            } else {
+            } else if (role === MP.ROLES.FRANCHISEE) {
                 window.location.href = 'painel/';
+            } else {
+                // Role desconhecido (manager, staff, undefined) — limpa sessao e mostra erro
+                try { localStorage.removeItem('mp_session'); } catch(e) {}
+                try { if (typeof firebaseAuth !== 'undefined' && firebaseAuth) firebaseAuth.signOut().catch(function(){}); } catch(e) {}
+                showError('Seu perfil (' + (role || 'sem role') + ') nao tem acesso a este painel. Contate o administrador.');
             }
         }
 

@@ -327,6 +327,7 @@
             <div class="uber-tabs">
                 <button class="uber-tab-btn active" onclick="switchTab('entregas')">Entregas</button>
                 <button class="uber-tab-btn" onclick="switchTab('precificacao')">Precificacao</button>
+                <button class="uber-tab-btn" onclick="switchTab('webhook')" id="tabBtnWebhook">🔗 Webhook</button>
             </div>
 
             <!-- ======================== TAB: ENTREGAS ======================== -->
@@ -516,6 +517,65 @@
                 </div>
             </div><!-- /tab-precificacao -->
 
+            <!-- ======================== TAB: WEBHOOK ======================== -->
+            <div class="uber-tab-panel" id="tab-webhook">
+                <div class="panel-card" style="grid-column:1/-1">
+                    <div class="card-header">
+                        <h3>🔗 Webhook Uber Direct</h3>
+                    </div>
+                    <div class="card-body">
+
+                        <!-- Status do webhook -->
+                        <div id="webhookStatusBanner" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;margin-bottom:20px;background:#FFF9C4;border:1px solid #F9A825;">
+                            <span style="font-size:20px">⚠️</span>
+                            <div>
+                                <div style="font-weight:700;font-size:.9rem;color:#F57F17">Webhook nao verificado</div>
+                                <div style="font-size:.8rem;color:#795548;margin-top:2px">Clique em <strong>Verificar Status</strong> para confirmar que o webhook esta ativo.</div>
+                            </div>
+                            <button class="btn btn-outline" onclick="checkWebhookStatus()" style="margin-left:auto;padding:6px 14px;font-size:.82rem;white-space:nowrap">Verificar Status</button>
+                        </div>
+
+                        <!-- URL do endpoint -->
+                        <div style="margin-bottom:20px">
+                            <label style="display:block;font-weight:700;font-size:.85rem;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Endpoint URL do Webhook</label>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <input id="webhookUrlInput" type="text" readonly
+                                    value="https://southamerica-east1-milkypot-ad945.cloudfunctions.net/uberDirect_webhook"
+                                    style="flex:1;padding:10px 12px;border:2px solid #e0e0e0;border-radius:8px;font-family:monospace;font-size:.82rem;background:#F9F9F9;color:#333;outline:none">
+                                <button class="btn btn-primary" onclick="copyWebhookUrl()" id="copyWebhookBtn" style="padding:10px 18px;white-space:nowrap">📋 Copiar</button>
+                            </div>
+                            <div style="font-size:.78rem;color:#888;margin-top:6px">Esta e a URL que deve ser registrada no painel Uber Direct (Developer Dashboard → Webhooks).</div>
+                        </div>
+
+                        <!-- Instrucoes de registro -->
+                        <div style="background:#F3E5F5;border-radius:10px;padding:16px 18px;margin-bottom:20px">
+                            <div style="font-weight:800;font-size:.88rem;color:#6A1B9A;margin-bottom:10px">📋 Como registrar o webhook na Uber</div>
+                            <ol style="margin:0;padding-left:18px;font-size:.84rem;color:#4A148C;line-height:1.8">
+                                <li>Acesse o <a href="https://developer.uber.com/dashboard" target="_blank" rel="noopener" style="color:#7B1FA2;font-weight:700">Uber Developer Dashboard</a></li>
+                                <li>Va em <strong>Apps → sua app → Webhooks</strong></li>
+                                <li>Clique em <strong>Add Endpoint</strong></li>
+                                <li>Cole a URL acima no campo <em>Endpoint URL</em></li>
+                                <li>Selecione os eventos: <code style="background:#E1BEE7;padding:1px 5px;border-radius:4px">delivery.status.changed</code></li>
+                                <li>Clique em <strong>Save</strong> e anote o <em>Signing Secret</em></li>
+                                <li>Salve o Signing Secret nas <a href="configuracoes.html" style="color:#7B1FA2;font-weight:700">Configuracoes → Uber Direct</a></li>
+                            </ol>
+                        </div>
+
+                        <!-- Ultimos eventos recebidos -->
+                        <div style="margin-bottom:8px">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                                <div style="font-weight:700;font-size:.88rem;color:#555;text-transform:uppercase;letter-spacing:.4px">Ultimos Eventos Recebidos</div>
+                                <button class="btn btn-outline" onclick="loadWebhookEvents()" style="padding:4px 12px;font-size:.8rem">Atualizar</button>
+                            </div>
+                            <div id="webhookEventsList" style="font-size:.84rem;color:#888;text-align:center;padding:20px">
+                                Clique em Atualizar para carregar eventos recentes.
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div><!-- /tab-webhook -->
+
         </div><!-- /panel-content -->
     </main>
 </div>
@@ -570,7 +630,7 @@ function toggleSidebar() {
 // ============================================
 function switchTab(tab) {
     document.querySelectorAll('.uber-tab-btn').forEach(function(b, i) {
-        var tabs = ['entregas', 'precificacao'];
+        var tabs = ['entregas', 'precificacao', 'webhook'];
         b.classList.toggle('active', tabs[i] === tab);
     });
     document.querySelectorAll('.uber-tab-panel').forEach(function(p) {
@@ -581,6 +641,9 @@ function switchTab(tab) {
 
     if (tab === 'precificacao') {
         loadPricingRules();
+    }
+    if (tab === 'webhook') {
+        checkWebhookStatus();
     }
 }
 
@@ -928,6 +991,97 @@ window.savePricingRules = async function() {
         Utils.showToast('Regras de precificacao salvas!', 'success');
     } else {
         alert('Erro ao salvar: ' + ((result && result.error) || 'sem resposta'));
+    }
+};
+
+// ============================================
+// WEBHOOK TAB
+// ============================================
+var WEBHOOK_URL = 'https://southamerica-east1-milkypot-ad945.cloudfunctions.net/uberDirect_webhook';
+
+window.copyWebhookUrl = function() {
+    var input = document.getElementById('webhookUrlInput');
+    if (!input) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(input.value).then(function() {
+            Utils.showToast('URL copiada!', 'success');
+        }).catch(function() {
+            input.select();
+            document.execCommand('copy');
+            Utils.showToast('URL copiada!', 'success');
+        });
+    } else {
+        input.select();
+        document.execCommand('copy');
+        Utils.showToast('URL copiada!', 'success');
+    }
+};
+
+window.checkWebhookStatus = async function() {
+    var banner = document.getElementById('webhookStatusBanner');
+    var btnEl = document.getElementById('btnCheckWebhook');
+    if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Verificando...'; }
+
+    try {
+        var resp = await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-uber-signature': 'health_check' },
+            body: JSON.stringify({ event_type: 'health_check' })
+        });
+        // Endpoint exists if it returns any HTTP response (even 400/401 — it's reachable)
+        var reachable = resp.status !== 0 && resp.status < 500;
+        if (banner) {
+            banner.style.background = reachable ? '#E8F5E9' : '#FFF3E0';
+            banner.style.borderLeft = reachable ? '4px solid #2E7D32' : '4px solid #E65100';
+            banner.style.color = reachable ? '#2E7D32' : '#E65100';
+            banner.textContent = reachable
+                ? '✅ Endpoint ativo e acessivel (HTTP ' + resp.status + ')'
+                : '⚠️ Endpoint retornou HTTP ' + resp.status + ' — verifique as configuracoes';
+        }
+    } catch (e) {
+        if (banner) {
+            banner.style.background = '#FFEBEE';
+            banner.style.borderLeft = '4px solid #C62828';
+            banner.style.color = '#C62828';
+            banner.textContent = '❌ Endpoint inalcancavel — Cloud Function pode estar offline ou CORS bloqueando';
+        }
+    }
+
+    if (btnEl) { btnEl.disabled = false; btnEl.textContent = 'Verificar Status'; }
+};
+
+window.loadWebhookEvents = async function() {
+    var list = document.getElementById('webhookEventsList');
+    if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:#888">Carregando...</div>';
+
+    try {
+        var result = await CloudFunctions.call('uberDirect_getWebhookEvents', { franchiseId: franchiseId, limit: 10 });
+        if (result && result.success && result.events && result.events.length) {
+            var html = '<table style="width:100%;border-collapse:collapse;font-size:.84rem">';
+            html += '<thead><tr style="background:#f5f5f5">';
+            html += '<th style="padding:6px 10px;text-align:left;font-weight:700;color:#555">Data/Hora</th>';
+            html += '<th style="padding:6px 10px;text-align:left;font-weight:700;color:#555">Evento</th>';
+            html += '<th style="padding:6px 10px;text-align:left;font-weight:700;color:#555">Entrega ID</th>';
+            html += '<th style="padding:6px 10px;text-align:left;font-weight:700;color:#555">Status</th>';
+            html += '</tr></thead><tbody>';
+            result.events.forEach(function(ev) {
+                html += '<tr style="border-bottom:1px solid #f0f0f0">';
+                html += '<td style="padding:6px 10px;color:#666">' + fmtDate(ev.receivedAt || ev.timestamp) + '</td>';
+                html += '<td style="padding:6px 10px;font-family:monospace;font-size:.8rem">' + Utils.escapeHtml(ev.event_type || '-') + '</td>';
+                html += '<td style="padding:6px 10px;font-size:.78rem;color:#888">' + Utils.escapeHtml((ev.delivery_id || '-').substring(0, 20)) + '</td>';
+                html += '<td style="padding:6px 10px"><span class="uber-status uber-badge-' + Utils.escapeHtml(ev.status || 'cotado') + '">' + Utils.escapeHtml(ev.status || '-') + '</span></td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            if (list) list.innerHTML = html;
+        } else if (result && result.success) {
+            if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:#888">Nenhum evento registrado ainda.</div>';
+        } else {
+            var msg = (result && result.error) ? result.error : 'Funcao nao disponivel';
+            if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:#C62828">Erro: ' + Utils.escapeHtml(msg) + '</div>';
+        }
+    } catch (e) {
+        if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:#C62828">Erro ao carregar eventos.</div>';
     }
 };
 
