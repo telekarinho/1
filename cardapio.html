@@ -629,11 +629,16 @@
             if (!catalog) return;
             
             // Find item in any collection
-            let item = catalog.bebidas.find(i => i.id === itemId);
-            if (!item) {
+            let item = null;
+            if (catalog.bebidas) {
+                item = catalog.bebidas.find(i => i.id === itemId);
+            }
+            if (!item && catalog.sabores) {
                 Object.values(catalog.sabores).forEach(g => {
-                    const found = g.items.find(i => i.id === itemId);
-                    if (found) item = found;
+                    if (g && g.items) {
+                        const found = g.items.find(i => i.id === itemId);
+                        if (found) item = found;
+                    }
                 });
             }
             if (!item) return;

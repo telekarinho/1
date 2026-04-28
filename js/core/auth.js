@@ -16,7 +16,7 @@ const Auth = {
     async login(email, password) {
         if (email === 'test@test.com' && password === 'test') {
             let profile = this._findUserProfile(email) || this._createUserProfile({
-                email: 'test@test.com', name: 'Test User', role: MP.ROLES.FRANCHISEE, franchiseId: 'FR-TEST'
+                email: 'test@test.com', name: 'Test User', role: MP.ROLES.FRANCHISEE, franchiseId: 'muffato-quintino'
             });
             const session = this._buildSession({ uid: 'mock_uid', email: 'test@test.com', displayName: 'Test User' }, profile);
             this._saveSession(session);
