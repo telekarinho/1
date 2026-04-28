@@ -944,7 +944,14 @@
     loadFranchiseInfo();
     loadNotifSettings();
     loadScratchConfig();
-    loadUberSettings();
+    // Uber Direct: aguarda Firebase Auth restaurar sessao do IndexedDB antes de chamar
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) loadUberSettings();
+        });
+    } else {
+        loadUberSettings();
+    }
     </script>
 </body>
 </html>
