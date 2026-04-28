@@ -893,15 +893,47 @@
     }
 
     window.saveUberSettings = async function() {
-        var secretVal = document.getElementById('uberClientSecret').value.trim();
+        var customerId = document.getElementById('uberCustomerId').value.trim();
+        var clientId   = document.getElementById('uberClientId').value.trim();
+        var secretVal  = document.getElementById('uberClientSecret').value.trim();
+        var pickupName = document.getElementById('uberPickupName').value.trim();
+        var pickupPhone= document.getElementById('uberPickupPhone').value.trim();
+        var pickupAddr = document.getElementById('uberPickupAddress').value.trim();
+        var env        = document.getElementById('uberEnvironment').value;
+
+        // Validacao de campos obrigatorios
+        var missing = [];
+        if (!customerId)                        missing.push('Customer ID');
+        if (!clientId)                          missing.push('Client ID');
+        if (!secretVal)                         missing.push('Client Secret');
+        if (!pickupName)                        missing.push('Nome do ponto de coleta');
+        if (!pickupPhone)                       missing.push('Telefone do ponto de coleta');
+        if (!pickupAddr)                        missing.push('Endereco do ponto de coleta');
+
+        if (missing.length) {
+            alert('Preencha os campos obrigatorios antes de salvar:\n\n• ' + missing.join('\n• '));
+            return;
+        }
+
+        // Aviso de ambiente sandbox
+        if (env === 'sandbox') {
+            var confirmSandbox = confirm(
+                'ATENCAO: Voce esta salvando em modo SANDBOX.\n\n' +
+                'Entregas Uber Direct NAO serao reais.\n' +
+                'Para ativar entregas reais, altere o ambiente para "Producao".\n\n' +
+                'Deseja salvar mesmo assim?'
+            );
+            if (!confirmSandbox) return;
+        }
+
         var payload = {
             franchiseId: franchiseId,
-            environment: document.getElementById('uberEnvironment').value,
-            customer_id: document.getElementById('uberCustomerId').value.trim(),
-            client_id: document.getElementById('uberClientId').value.trim(),
-            pickup_name: document.getElementById('uberPickupName').value.trim(),
-            pickup_phone: document.getElementById('uberPickupPhone').value.trim(),
-            pickup_address: document.getElementById('uberPickupAddress').value.trim(),
+            environment: env,
+            customer_id: customerId,
+            client_id: clientId,
+            pickup_name: pickupName,
+            pickup_phone: pickupPhone,
+            pickup_address: pickupAddr,
             pickup_latitude: parseFloat(document.getElementById('uberPickupLat').value) || 0,
             pickup_longitude: parseFloat(document.getElementById('uberPickupLng').value) || 0,
             prep_time_minutes: parseInt(document.getElementById('uberPrepTime').value) || 0,
@@ -911,6 +943,17 @@
         if (secretVal && secretVal !== '***masked***') {
             payload.client_secret = secretVal;
         }
+
+        // Aguarda auth antes de chamar Cloud Function
+        if (typeof firebase !== 'undefined' && firebase.auth && !firebase.auth().currentUser) {
+            await new Promise(function(resolve) {
+                var unsub = firebase.auth().onAuthStateChanged(function(u) {
+                    unsub();
+                    resolve(u);
+                });
+            });
+        }
+
         var result = await CloudFunctions.call('uberDirect_saveSettings', payload);
         if (result && result.success) {
             alert('Credenciais Uber Direct salvas com sucesso!');
@@ -922,6 +965,20 @@
     window.testUberConnection = async function() {
         var resultEl = document.getElementById('uberTestResult');
         resultEl.innerHTML = '<span style="color:#888;font-size:.88rem">Testando conexao...</span>';
+
+        // Aguarda restauracao da sessao Firebase Auth antes de chamar Cloud Function
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+            var user = firebase.auth().currentUser;
+            if (!user) {
+                await new Promise(function(resolve) {
+                    var unsub = firebase.auth().onAuthStateChanged(function(u) {
+                        unsub();
+                        resolve(u);
+                    });
+                });
+            }
+        }
+
         var result = await CloudFunctions.call('uberDirect_testConnection', { franchiseId: franchiseId });
         var d = (result && result.data) || {};
         if (result && result.success && d.ok) {

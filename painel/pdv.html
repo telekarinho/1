@@ -483,36 +483,111 @@
         }
 
         @media(max-width:480px) {
-            .pdv-cart { height: 68vh; }
-            .pdv-products { height: calc(32vh - 44px); padding: 6px; }
-            .pgrid { grid-template-columns: repeat(3, 1fr) !important; gap: 4px !important; }
-            .pitem { padding: 6px 3px !important; }
-            .pitem .pe { font-size: 18px !important; }
-            .pitem .pn { font-size: 9px !important; }
-            .pitem .pp { font-size: 10px !important; }
+            /* Cart drawer: 55vh (menos que 68vh) para deixar mais espaço ao catálogo */
+            .pdv-cart { height: 55vh; }
+            .pdv-products { height: calc(45vh - 44px); padding: 6px; }
+            /* 3 colunas mas com tamanho mínimo maior — toque mais fácil */
+            .pgrid { grid-template-columns: repeat(3, 1fr) !important; gap: 5px !important; }
+            .pitem { padding: 8px 4px !important; min-height: 72px !important; }
+            .pitem .pe { font-size: 20px !important; }
+            .pitem .pn { font-size: 10px !important; }
+            .pitem .pp { font-size: 11px !important; }
             .cart-head h2 { font-size: 13px }
             .ct-btn { font-size: 9px; padding: 5px 3px; }
             .cart-acts {
                 grid-template-columns: 1fr 1fr;
                 gap: 5px;
             }
-            .cart-acts .btn { font-size: 12px; padding: 11px 4px; }
-            .pdv-cat-pill { font-size: 11px; padding: 5px 10px; }
-            .pdv-search input { padding: 8px 10px 8px 32px; font-size: 13px; }
+            .cart-acts .btn { font-size: 12px; padding: 12px 4px; }
+            /* Category pills maiores para toque */
+            .pdv-cat-pill { font-size: 12px; padding: 7px 12px; min-height: 36px; }
+            .pdv-search input { padding: 10px 10px 10px 34px; font-size: 14px; }
+            /* Qty buttons: touch target mínimo 36px */
+            .ci-qty button { width: 32px; height: 32px; font-size: 15px; }
             .buffet-fab {
-                bottom: calc(68vh + 8px) !important;
+                bottom: calc(55vh + 8px) !important;
                 width: 56px; height: 56px;
                 font-size: 20px;
                 left: 12px;
             }
             .redeem-fab {
-                bottom: calc(68vh + 8px) !important;
+                bottom: calc(55vh + 8px) !important;
                 left: 78px;
                 width: 50px; height: 50px;
             }
             /* Header compacto no celular */
             .pdv-header { padding: 8px 10px; }
             .pdv-header h1 { font-size: 13px; }
+        }
+
+        /* ===== MOBILE PEQUENO — 360-430px (Android comum / iPhone SE) =====
+           2 colunas de produto para alvos de toque adequados (≥44px).
+           Mantém catálogo visível com ~48vh e cart em 52vh.            */
+        @media(max-width:430px) {
+            /* 2 colunas — cada card fica ~50% da largura, toque fácil */
+            .pgrid { grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
+            .pitem {
+                padding: 10px 6px !important;
+                min-height: 80px !important;
+            }
+            .pitem .pe { font-size: 24px !important; }
+            .pitem .pn { font-size: 11px !important; line-height: 1.2 !important; }
+            .pitem .pp { font-size: 12px !important; font-weight: 900 !important; }
+            /* Cart 52vh — catálogo fica com 48vh, espaço para navegar itens */
+            .pdv-cart { height: 52vh !important; }
+            .pdv-products { height: calc(48vh - 44px) !important; }
+            /* FAB ajustados para nova altura de cart */
+            .buffet-fab {
+                bottom: calc(52vh + 8px) !important;
+                width: 60px; height: 60px;
+                font-size: 22px;
+                left: 10px;
+            }
+            .redeem-fab {
+                bottom: calc(52vh + 8px) !important;
+                left: 80px;
+                width: 52px; height: 52px;
+            }
+            /* Qty buttons: 36px mínimo para toque seguro */
+            .ci-qty button { width: 36px; height: 36px; font-size: 16px; }
+            .ci-qty span { font-size: 14px; }
+            /* Cart item name legível */
+            .ci-name { font-size: 12px !important; }
+            .ci-price { font-size: 12px !important; }
+            /* Cart actions: dois botões por linha, altura generosa */
+            .cart-acts .btn { padding: 14px 6px !important; font-size: 13px !important; }
+            /* Category pills: altura mínima 40px para toque */
+            .pdv-cat-pill {
+                font-size: 12px;
+                padding: 8px 14px;
+                min-height: 40px;
+                display: flex;
+                align-items: center;
+            }
+            /* Barra de busca confortável */
+            .pdv-search input { font-size: 14px; padding: 11px 12px 11px 36px; }
+            /* FAB de ação (fechar/conta) na parte inferior, largura total */
+            .pdv-action-fab { left: 8px; right: 8px; justify-content: stretch; gap: 6px; }
+            .pdv-action-fab button { flex: 1; justify-content: center; font-size: 14px; padding: 14px 8px; }
+        }
+
+        /* ===== LANDSCAPE em telas pequenas =====
+           Em paisagem com altura < 500px: cart vira coluna lateral estreita
+           para não esconder o catálogo de produtos.                       */
+        @media(max-height:500px) and (orientation:landscape) {
+            body { overflow: hidden; }
+            .pdv-layout { grid-template-columns: 1fr 260px !important; height: calc(100vh - 44px) !important; }
+            .pdv-cart {
+                position: static !important;
+                height: 100% !important;
+                border-top: none !important;
+                border-left: 1px solid #e0e0e0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+            .pdv-products { height: calc(100vh - 44px - 44px) !important; }
+            .buffet-fab { bottom: 12px !important; left: 12px; }
+            .redeem-fab { bottom: 12px !important; }
         }
     </style>
 </head>
