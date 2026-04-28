@@ -136,6 +136,43 @@
                             <h3>Operacao</h3>
                         </div>
                         <div class="card-body">
+                            <!-- ============================================================
+                                 CONTROLES DE OPERACAO ONLINE — 3 toggles independentes
+                                 ============================================================ -->
+
+                            <!-- Toggle master: loja aberta/fechada -->
+                            <div id="storeOpenBanner" class="form-group" style="background:#E8F5E9;border:2px solid #66BB6A;border-radius:12px;padding:14px;margin-bottom:10px">
+                                <label style="display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:0">
+                                    <input type="checkbox" id="storeOnlineOpen" style="width:22px;height:22px;cursor:pointer;accent-color:#2E7D32" onchange="updateStoreOpenBanner()">
+                                    <div style="flex:1">
+                                        <strong id="storeOpenLabel" style="display:block;font-size:1.05rem">🟢 Loja online ABERTA</strong>
+                                        <small style="color:#4E6045;font-size:0.82rem">Desligar: bloqueia <strong>todos</strong> os pedidos online (delivery E retirada). Use pra manutencao ou fora do horario.</small>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Toggle: aceitar pedidos delivery -->
+                            <div class="form-group" style="background:#FFF8F0;border:2px solid #FFE0B2;border-radius:12px;padding:14px;margin-bottom:10px">
+                                <label style="display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:0">
+                                    <input type="checkbox" id="storeDeliveryEnabled" style="width:20px;height:20px;cursor:pointer;accent-color:#FF9800">
+                                    <div style="flex:1">
+                                        <strong style="display:block;color:#E65100;font-size:1rem">🛵 Aceitar pedidos delivery</strong>
+                                        <small style="color:#8D6E63;font-size:0.82rem">Quando desligado: cardapio online so aceita retirada na loja</small>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Toggle: aceitar retirada -->
+                            <div class="form-group" style="background:#E3F2FD;border:2px solid #90CAF9;border-radius:12px;padding:14px;margin-bottom:14px">
+                                <label style="display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:0">
+                                    <input type="checkbox" id="storePickupEnabled" style="width:20px;height:20px;cursor:pointer;accent-color:#1565C0">
+                                    <div style="flex:1">
+                                        <strong style="display:block;color:#0D47A1;font-size:1rem">🏪 Aceitar retirada na loja</strong>
+                                        <small style="color:#455A64;font-size:0.82rem">Quando desligado: cardapio online so aceita delivery (se delivery tambem off → loja fechada)</small>
+                                    </div>
+                                </label>
+                            </div>
+
                             <div class="form-group">
                                 <label>Horario de funcionamento</label>
                                 <input type="text" id="storeHours" class="form-control" placeholder="10:00 - 22:00">
@@ -418,9 +455,35 @@
         document.getElementById('storeWhatsapp').value = franchise.whatsapp || '';
     }
 
+    // Atualiza aparencia do banner "Loja aberta/fechada"
+    function updateStoreOpenBanner() {
+        var open = document.getElementById('storeOnlineOpen').checked;
+        var banner = document.getElementById('storeOpenBanner');
+        var label = document.getElementById('storeOpenLabel');
+        if (open) {
+            banner.style.background = '#E8F5E9';
+            banner.style.borderColor = '#66BB6A';
+            label.textContent = '🟢 Loja online ABERTA';
+            label.style.color = '#1B5E20';
+        } else {
+            banner.style.background = '#FFEBEE';
+            banner.style.borderColor = '#EF9A9A';
+            label.textContent = '🔴 Loja online FECHADA — nenhum pedido aceito';
+            label.style.color = '#B71C1C';
+        }
+    }
+
     // Load operation data into form
     function loadOperationData() {
         if (!franchise) return;
+        // Defaults = true (compativel com lojas existentes sem os flags)
+        var onlineOpen = franchise.storeOnlineOpen !== false;
+        var deliveryEnabled = franchise.deliveryEnabled !== false;
+        var pickupEnabled = franchise.pickupEnabled !== false;
+        document.getElementById('storeOnlineOpen').checked = onlineOpen;
+        document.getElementById('storeDeliveryEnabled').checked = deliveryEnabled;
+        document.getElementById('storePickupEnabled').checked = pickupEnabled;
+        updateStoreOpenBanner();
         document.getElementById('storeHours').value = franchise.hours || '';
         document.getElementById('storeDeliveryFee').value = franchise.deliveryFee || '';
         document.getElementById('storeDeliveryTime').value = franchise.deliveryTime || '';
@@ -549,13 +612,29 @@
         var idx = allFranchises.findIndex(function(f) { return f.id === franchiseId; });
         if (idx === -1) return alert('Franquia nao encontrada.');
 
+        var onlineOpen = document.getElementById('storeOnlineOpen').checked;
+        var deliveryEnabled = document.getElementById('storeDeliveryEnabled').checked;
+        var pickupEnabled = document.getElementById('storePickupEnabled').checked;
+
+        allFranchises[idx].storeOnlineOpen = onlineOpen;
+        allFranchises[idx].deliveryEnabled = deliveryEnabled;
+        allFranchises[idx].pickupEnabled = pickupEnabled;
         allFranchises[idx].hours = document.getElementById('storeHours').value.trim();
         allFranchises[idx].deliveryFee = parseFloat(document.getElementById('storeDeliveryFee').value) || 0;
         allFranchises[idx].deliveryTime = document.getElementById('storeDeliveryTime').value.trim();
         allFranchises[idx].deliveryRadius = parseInt(document.getElementById('storeDeliveryRadius').value) || 0;
 
         DataStore.set('franchises', allFranchises);
-        alert('Dados de operacao salvos com sucesso!');
+
+        var lines = [];
+        if (!onlineOpen) {
+            lines.push('🔴 Loja online FECHADA — nenhum pedido aceito');
+        } else {
+            lines.push('🟢 Loja online ABERTA');
+            lines.push(deliveryEnabled ? '✅ Delivery ATIVO' : '🚫 Delivery DESATIVADO');
+            lines.push(pickupEnabled ? '✅ Retirada ATIVA' : '🚫 Retirada DESATIVADA');
+        }
+        alert('Operacao salva!\n\n' + lines.join('\n'));
     }
 
     // Change password
@@ -748,8 +827,14 @@
             document.getElementById('uberActive').checked = !!s.enabled;
             syncUberActiveSlider();
             if (s.updatedAt) {
+                // Firestore Timestamp pode vir como {_seconds,_nanoseconds} ou {seconds,nanoseconds} ou ISO string
+                var tsMs = s.updatedAt._seconds ? s.updatedAt._seconds * 1000
+                         : s.updatedAt.seconds  ? s.updatedAt.seconds  * 1000
+                         : typeof s.updatedAt === 'string' ? new Date(s.updatedAt).getTime()
+                         : s.updatedAt;
+                var tsDate = new Date(tsMs);
                 document.getElementById('uberLastValidation').textContent =
-                    'Ultima atualizacao: ' + new Date(s.updatedAt.seconds ? s.updatedAt.seconds * 1000 : s.updatedAt).toLocaleString('pt-BR');
+                    !isNaN(tsDate.getTime()) ? 'Ultima atualizacao: ' + tsDate.toLocaleString('pt-BR') : '';
             }
         } catch (e) {
             console.warn('loadUberSettings error:', e);
