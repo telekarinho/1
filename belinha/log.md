@@ -1,5 +1,35 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #57 — 2026-04-28
+
+**Área:** Conversão — Script WhatsApp resgate fidelidade matura (10 carimbos → Mini grátis)
+
+**O que analisou:**
+- Log ciclo #56 + estratégia em `belinha/estrategia.md` (ciclos 55–59)
+- Templates existentes: `whatsapp-funil.md`, `whatsapp-indicacao.md`, `whatsapp-reativacao.md` — para manter consistência de tom (🐑, linguagem calorosa, sem pressão)
+- `cartao-fidelidade.html` — mecânica: 10 carimbos = 1 Mini grátis, `?stamps=N` suporta links personalizados
+- Contexto: primeiros clientes de abril–julho chegando ao 10º carimbo em agosto → janela de ativação real
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-fidelidade-resgate.md` | CRIADO — 4 templates WA completos + playbook operador: Template A (notificação 10 carimbos), Template B (confirmação presencial), Template C (pós-resgate + novo cartão com `?stamps=1`), Template D (aquecimento 8–9 carimbos "quase lá") + dicas de controle, tom, frequência e métricas de sucesso |
+
+**Commit:** `7b4df10`
+
+**Destaques:**
+- Template D ativa visita motivada quando faltam 1–2 carimbos — converte antes do resgate
+- Template C abre novo ciclo imediatamente com link `?stamps=1` — ancoragem para retenção pós-resgate
+- Playbook operacional sem sistema/app: caderninho + lista WhatsApp "Resgate pendente"
+- Métricas de sucesso definidas: ≥60% taxa resgate em 30 dias, ≥40% recomeço de cartão
+
+**Próximo passo sugerido:**
+- Ciclo #58: `aggregateRating` Schema.org se operador confirmar ≥3 reviews; senão Core Web Vitals sweep `index.html` mobile (LCP/CLS via análise manual)
+- Ciclo #59: Auto-aprimoramento ciclos 54–58 + `estrategia.md` setembro 2026
+
+---
+
 ## Ciclo #56 — 2026-04-28
 
 **Área:** Conteúdo — Semana 14 pós-inauguração (19–25/07/2026) — Aniversário 3 Meses
