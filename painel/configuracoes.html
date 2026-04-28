@@ -862,7 +862,17 @@
 
     async function loadUberSettings() {
         try {
-            var result = await CloudFunctions.call('uberDirect_getSettings', { franchiseId: franchiseId });
+            var result;
+            try {
+                result = await CloudFunctions.call('uberDirect_getSettings', { franchiseId: franchiseId });
+            } catch (e) { result = null; }
+            if (!result || result.error === 'Functions nao disponivel' || result.error === 'Function not found') {
+                try {
+                    var fn = firebase.app().functions('southamerica-east1').httpsCallable('uberDirect_getSettings');
+                    var fbResult = await fn({ franchiseId: franchiseId });
+                    result = fbResult && fbResult.data ? fbResult.data : null;
+                } catch (e) { result = null; }
+            }
             if (!result || !result.success) return;
             var s = result.data || {};
             document.getElementById('uberEnvironment').value = s.environment || 'sandbox';
@@ -954,7 +964,22 @@
             });
         }
 
-        var result = await CloudFunctions.call('uberDirect_saveSettings', payload);
+        // Fallback defensivo: se CloudFunctions cached estiver sem a rota uberDirect_*,
+        // chama Firebase Functions direto (bypass total do CloudFunctions module)
+        var result;
+        try {
+            result = await CloudFunctions.call('uberDirect_saveSettings', payload);
+        } catch (e) { result = null; }
+        if (!result || result.error === 'Functions nao disponivel' || result.error === 'Function not found') {
+            console.warn('[UberDirect] CloudFunctions cache antigo, usando Firebase direto');
+            try {
+                var fn = firebase.app().functions('southamerica-east1').httpsCallable('uberDirect_saveSettings');
+                var fbResult = await fn(payload);
+                result = fbResult && fbResult.data ? fbResult.data : { success: true };
+            } catch (e) {
+                result = { success: false, error: e.message || 'Erro Firebase: ' + e.code };
+            }
+        }
         if (result && result.success) {
             alert('Credenciais Uber Direct salvas com sucesso!');
         } else {
@@ -979,7 +1004,17 @@
             }
         }
 
-        var result = await CloudFunctions.call('uberDirect_testConnection', { franchiseId: franchiseId });
+        var result;
+        try {
+            result = await CloudFunctions.call('uberDirect_testConnection', { franchiseId: franchiseId });
+        } catch (e) { result = null; }
+        if (!result || result.error === 'Functions nao disponivel' || result.error === 'Function not found') {
+            try {
+                var fn = firebase.app().functions('southamerica-east1').httpsCallable('uberDirect_testConnection');
+                var fbResult = await fn({ franchiseId: franchiseId });
+                result = fbResult && fbResult.data ? fbResult.data : { success: false, error: 'sem resposta' };
+            } catch (e) { result = { success: false, error: e.message || 'Erro Firebase' }; }
+        }
         var d = (result && result.data) || {};
         if (result && result.success && d.ok) {
             resultEl.innerHTML = '<div style="padding:10px 14px;background:#E8F5E9;color:#1B5E20;border-radius:8px;font-size:.88rem">' +
