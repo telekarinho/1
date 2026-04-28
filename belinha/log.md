@@ -2064,3 +2064,44 @@ Análise dos 5 ciclos:
 - Ciclo #36: `belinha/content/pos-inauguracao-semana5.md` — conteúdo 17–23/05/2026 ("mês de MilkyPot", fidelização, social proof)
 - Ciclo #37: Performance mobile `index.html` — verificar LCP e CLS via PageSpeed Insights
 - Quando operador confirmar ≥3 reviews Google: ativar `aggregateRating` em `index.html`
+
+---
+
+## Ciclo #60 — 2026-04-28
+
+**Área:** Concorrentes — MilkyMoo Londrina (refetch + melhoria derivada)
+
+**Contexto:** Ciclo prescrito pelo roadmap de ciclos #60–64. MilkyMoo estava com dados de 22/04 (ciclo #10). Necessário refetch completo + 1 ação concreta derivada.
+
+**O que pesquisou/analisou:**
+- WebSearch: MilkyMoo franquia 2026, novidades, Instagram, Londrina
+- **Dado crítico:** MilkyMoo tem 2 unidades em Londrina — Shopping Catuaí (em frente ao cinema) + Boulevard Shopping. Instagram local: @milkymoo_londrina
+- Preços Londrina confirmados: 300ml R$18 / 500ml R$22 / alcoólicos R$25–R$35 / Nutty Bavarian R$27–R$32
+- 2026 novidades: collab O Boticário "Carameluda" (até maio/2026), ovos Páscoa Pandora + Malhada, estratégia cross-category com celebridade (Desirée), 600+ unidades
+- Franquia: 600+ lojas, expansão EUA + Paraguai, meta global declarada pelo CEO
+- Estratégia: "produto feito para ser fotografado e comentado" — foco Geração Z
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/competitors/milkymoo.md` | Refetch completo: seção de presença em Londrina (NOVO), preços Londrina atualizados, novidades 2026 (collab Boticário/Páscoa/Milky Moo Day), forças ampliadas, táticas de marketing com aprendizados para MilkyPot, checklist de próximos passos atualizado |
+| `index.html` | benefits-bar: "Preço Fixo / Sem surpresa na balança" → "A partir de R$ 10 / Potinho personalizado do seu jeito" — âncora de preço direto contra MilkyMoo que começa em R$18 |
+
+**Commit:** `85fa705`
+
+**Racional da melhoria derivada:**
+- MilkyMoo Londrina vende milkshake a partir de R$18 (300ml) — sem personalização de toppings
+- MilkyPot Mini = R$10 — **44% mais barato** + 100% personalizável
+- A benefits-bar era a primeira zona de leitura após o hero — "Preço Fixo" era genérico demais
+- "A partir de R$ 10 / Potinho personalizado" ancora o preço E o diferencial simultaneamente
+
+**Aprendizados para estratégia futura:**
+1. MilkyMoo Londrina tem programa forte de UGC local (TikToker @marceladegusta) → MilkyPot deve identificar e nutrir criador de conteúdo local similar
+2. Collabs locais são viáveis mesmo sem escala nacional → propor ao operador parceria com academia ou cafeteria de Londrina
+3. Promoção "Terça de Potinho" (seg–qui com desconto) = playbook direto do MilkyMoo para dias fracos
+
+**Próximo passo sugerido:**
+- Ciclo #61: Conteúdo semanas 16+17 (02–15/08/2026) — "agosto rotina: sua pausa favorita do dia" + "inverno de saída: comfort food + Linha Zero"
+- Ciclo #62: CLS sweep batch — cardapio.html, acai-self-service-londrina.html, cartao-fidelidade.html
+- Ciclo #64 (auto-aprimoramento): reler log #59–#63, ajustar estratégia outubro 2026
