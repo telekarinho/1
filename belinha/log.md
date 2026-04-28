@@ -1,5 +1,38 @@
 # Belinha — Log de Ciclos
 
+## Ciclo #61 — 2026-04-28
+
+**Área:** Conteúdo — Semanas 16 + 17 (02–15/08/2026)
+
+**Contexto:** Ciclo prescrito pelo roadmap #60–64. Semanas 16 e 17 têm temática contínua (agosto rotina + inverno de saída) — criadas juntas em um ciclo conforme padrão v7 de conteúdo adjacente.
+
+**O que analisou:**
+- Estratégia de agosto definida no ciclo #59: semana 16 = rotina diária, semana 17 = comfort food + Linha Zero fitness
+- Padrão de semanas anteriores (semana 15) para manter consistência de formato
+- Calendário editorial completo (Dom–Sab) com formatos variados: Reel, Carrossel, Stories, Feed, Templates WA
+- Insight do ciclo #60: MilkyMoo não tem Linha Zero — oportunidade clara de diferenciação com público fitness
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana16.md` | CRIADO — Semana 16 (02–08/08): tema "sua pausa favorita do dia". 7 posts dia-a-dia (Reel x2, Carrossel, Stories, Feed, UGC, Story+Feed). Mecânica "Sexta do Potinho" (R$2 OFF via WA com código "SEXTA") como ritual semanal fixo. Template WA de convite rotina. Checklist operador + métricas. |
+| `belinha/content/pos-inauguracao-semana17.md` | CRIADO — Semana 17 (09–15/08): tema "inverno de saída". Foco duplo: comfort food (Ninho) + Linha Zero fitness (pós-treino). Carrossel educativo Linha Zero (6 slides). Reel "frio lá fora, potinho na mão". Post ovelhinha com halteres para segmento academia. Sexta do Potinho #2 (consolidação do hábito). Carrossel retrospectiva 15 dias + teaser setembro. 2 templates WA (reativação + segmento fitness). Calendário editorial completo ambas semanas. |
+
+**Commit:** `0fe936f`
+
+**Destaques das semanas:**
+- **"Sexta do Potinho"**: mecânica de fidelização semanal (R$2 OFF via WA c/ código "SEXTA") — baixo custo, alto hábito. Executada nas sextas 07/08 e 14/08.
+- **Linha Zero + fitness**: posts direcionados a academia/pós-treino usando `#AcademiaLondrina` para capturar público local não-seguidor
+- **Tabela calendário editorial consolidada** na semana 17 com todas as 14 datas — operador pode usar como checklist
+
+**Próximo passo sugerido:**
+- Ciclo #62: CLS sweep batch — `cardapio.html`, `acai-self-service-londrina.html`, `cartao-fidelidade.html` — ajustar width/height para dimensões CSS reais
+- Ciclo #63: Semana 18 (16–22/08) — teaser produto sazonal setembro (morango/primavera) + template WA de lançamento
+- Ciclo #64: Auto-aprimoramento — reler log #59–#63, ajustar estratégia outubro 2026
+
+---
+
 ## Ciclo #59 — 2026-04-28
 
 **Área:** Auto-aprimoramento (ciclos #54–58) + Conteúdo semana 15 pós-aniversário
