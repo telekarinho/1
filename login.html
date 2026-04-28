@@ -81,6 +81,41 @@
     <script src="js/core/auth.js"></script>
     <script src="js/core/audit.js"></script>
     <script>
+        // Auto-login com token de teste (gerado pelo generateTestToken)
+        (function() {
+            var p = new URLSearchParams(window.location.search);
+            var tok = p.get('testToken');
+            var fid = p.get('fid');
+            if (tok && typeof firebase !== 'undefined') {
+                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Nunito,sans-serif;flex-direction:column;gap:12px"><span style="font-size:2rem">🧪</span><strong style="font-size:1.1rem">Abrindo sessao de teste...</strong><small style="color:#6b7280">Validando token...</small></div>';
+                firebase.auth().signInWithCustomToken(tok)
+                    .then(function(cred) {
+                        // Obtem claims do token
+                        return cred.user.getIdTokenResult().then(function(result) {
+                            var claims = result.claims;
+                            var session = {
+                                userId:     cred.user.uid,
+                                email:      cred.user.email || (cred.user.uid + '@test.milkypot.internal'),
+                                name:       cred.user.displayName || 'Agente de Teste',
+                                role:       claims.role || 'franchisee',
+                                franchiseId: claims.franchiseId || fid || 'muffato-quintino',
+                                firebaseUid: cred.user.uid,
+                                isTestSession: true,
+                                token:      Math.random().toString(36).slice(2),
+                                loginAt:    new Date().toISOString(),
+                                expiresAt:  new Date(Date.now() + 3600000).toISOString()
+                            };
+                            localStorage.setItem('mp_session', JSON.stringify(session));
+                            window.location.href = '/painel/test-checklist.html';
+                        });
+                    })
+                    .catch(function() {
+                        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Nunito,sans-serif;flex-direction:column;gap:16px;color:#dc2626"><span style="font-size:2.5rem">❌</span><strong>Token invalido ou expirado</strong><small style="color:#6b7280">Peca um novo link ao administrador</small><a href="/login.html" style="color:#7C3AED;font-weight:700">Voltar ao login</a></div>';
+                    });
+                return;
+            }
+        })();
+
         // Check if already logged in
         const session = Auth.getSession();
         if (session) {

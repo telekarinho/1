@@ -794,3 +794,9 @@ exports.cancelFiscalNote = onCall({
 // ============================================================
 const uberDirect = require("./uber-direct");
 Object.assign(exports, uberDirect);
+
+// ============================================================
+// Test Mode & Production Mode
+// ============================================================
+const testMode = require("./test-mode");
+Object.assign(exports, testMode);
