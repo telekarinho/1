@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v94';
-const CACHE_NAME = 'milkypot-v94';
+const CACHE_VERSION = 'mp-v95-auth-fix';
+const CACHE_NAME = 'milkypot-v95';
 
 // Critical local assets that must be available offline
 const PRECACHE_URLS = [
@@ -114,7 +114,15 @@ self.addEventListener('fetch', event => {
     const url = new URL(request.url);
 
     // Skip non-GET requests — queue failed writes for offline
+    // CRITICAL: Firebase Auth/Firestore/Functions têm seu próprio retry/offline.
+    // Se SW retornar 202 {queued:true} pra esses POSTs, Firebase interpreta como
+    // resposta inválida e dispara `auth/internal-error` ou similar.
+    // Por isso esses domínios passam direto pelo fetch nativo sem interceptação.
     if (request.method !== 'GET') {
+        if (isApiRequest(url)) {
+            // Firebase/Functions/API: não interceptar — Firebase SDK gerencia offline próprio
+            return; // deixa o navegador fazer o fetch normal
+        }
         event.respondWith(
             fetch(request).catch(() => {
                 return enqueueOfflineRequest(request).then(() => {
