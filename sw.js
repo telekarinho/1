@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v96';
-const CACHE_NAME = 'milkypot-v96';
+const CACHE_VERSION = 'mp-v97';
+const CACHE_NAME = 'milkypot-v97';
 
 // Critical local assets that must be available offline
 const PRECACHE_URLS = [
@@ -23,6 +23,7 @@ const PRECACHE_URLS = [
     '/painel/despesas.html',
     '/painel/configuracoes.html',
     '/painel/uber-entregas.html',
+    '/painel/test-checklist.html',
 
 
     '/painel/finance-os.html',
@@ -47,6 +48,7 @@ const PRECACHE_URLS = [
     '/js/core/auth.js',
     '/js/core/audit.js',
     '/js/core/uber-direct.js',
+    '/js/core/test-mode.js',
     '/js/core/notifications.js',
     // Feature JS
     '/js/cardapio.js',

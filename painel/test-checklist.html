@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot — Checklist de Validação</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#7C3AED">
+    <style>
+        /* ---- reset / vars extra ---- */
+        :root {
+            --cl-purple: #7C3AED;
+            --cl-pink:   #DB2777;
+            --cl-green:  #16a34a;
+            --cl-yellow: #d97706;
+            --cl-red:    #dc2626;
+            --cl-bg:     #F5F3FF;
+        }
+
+        body { background: var(--cl-bg); }
+
+        /* ---- hero banner ---- */
+        .cl-hero {
+            background: linear-gradient(135deg, var(--cl-purple), var(--cl-pink));
+            color: #fff;
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .cl-hero h2 { margin: 0 0 4px; font-size: 1.5rem; font-family: 'Baloo 2', sans-serif; }
+        .cl-hero p  { margin: 0; opacity: .85; font-size: .9rem; }
+        .cl-hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        /* ---- progress bar ---- */
+        .cl-progress-wrap {
+            background: #fff;
+            border-radius: 14px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.06);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .cl-progress-bar-bg {
+            flex: 1;
+            min-width: 200px;
+            height: 14px;
+            background: #e5e7eb;
+            border-radius: 9px;
+            overflow: hidden;
+        }
+        .cl-progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--cl-purple), var(--cl-green));
+            border-radius: 9px;
+            transition: width .5s ease;
+        }
+        .cl-progress-text { font-weight: 800; font-size: 1.1rem; color: var(--cl-purple); white-space: nowrap; }
+        .cl-stat { text-align: center; }
+        .cl-stat-num { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+        .cl-stat-label { font-size: 11px; color: #6b7280; font-weight: 600; text-transform: uppercase; margin-top: 2px; }
+
+        /* ---- mode switcher ---- */
+        .cl-mode-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .cl-mode-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: .85rem;
+            font-weight: 700;
+        }
+        .cl-mode-badge.test { background: #F3E8FF; color: var(--cl-purple); border: 2px solid #C4B5FD; }
+        .cl-mode-badge.prod { background: #DCFCE7; color: var(--cl-green); border: 2px solid #86EFAC; }
+
+        /* ---- category ---- */
+        .cl-category {
+            background: #fff;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.05);
+            overflow: hidden;
+        }
+        .cl-category-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid #f3f4f6;
+            background: #fafafa;
+        }
+        .cl-category-header h3 { margin: 0; font-size: 1rem; font-family: 'Nunito', sans-serif; flex: 1; }
+        .cl-category-progress {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: #F3F4F6;
+            color: #6B7280;
+        }
+        .cl-category-progress.done { background: #DCFCE7; color: var(--cl-green); }
+        .cl-category-chevron { font-size: 14px; color: #9CA3AF; transition: transform .2s; }
+        .cl-category-header.open .cl-category-chevron { transform: rotate(180deg); }
+
+        /* ---- item ---- */
+        .cl-items { padding: 6px 0; }
+        .cl-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            border-bottom: 1px solid #f9fafb;
+            transition: background .15s;
+            cursor: pointer;
+        }
+        .cl-item:last-child { border-bottom: none; }
+        .cl-item:hover { background: #F9F8FF; }
+
+        .cl-check {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid #D1D5DB;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 13px;
+            transition: all .2s;
+        }
+        .cl-check.pass  { background: var(--cl-green); border-color: var(--cl-green); color: #fff; }
+        .cl-check.fail  { background: var(--cl-red);   border-color: var(--cl-red);   color: #fff; }
+        .cl-check.pending { background: #fff; }
+
+        .cl-item-text { flex: 1; font-size: .9rem; color: #374151; }
+        .cl-item-text.pass  { color: #15803d; text-decoration: line-through; opacity: .7; }
+        .cl-item-text.fail  { color: var(--cl-red); }
+        .cl-item-desc { font-size: 11px; color: #9CA3AF; margin-top: 2px; }
+
+        .cl-item-actions { display: flex; gap: 6px; opacity: 0; transition: opacity .15s; }
+        .cl-item:hover .cl-item-actions { opacity: 1; }
+
+        .cl-btn-sm {
+            padding: 4px 10px;
+            border: 1px solid;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            background: #fff;
+            transition: all .15s;
+        }
+        .cl-btn-pass { border-color: var(--cl-green); color: var(--cl-green); }
+        .cl-btn-pass:hover { background: var(--cl-green); color: #fff; }
+        .cl-btn-fail { border-color: var(--cl-red); color: var(--cl-red); }
+        .cl-btn-fail:hover { background: var(--cl-red); color: #fff; }
+        .cl-btn-reset { border-color: #D1D5DB; color: #6B7280; }
+        .cl-btn-reset:hover { background: #F3F4F6; }
+        .cl-btn-open { border-color: var(--cl-purple); color: var(--cl-purple); }
+        .cl-btn-open:hover { background: var(--cl-purple); color: #fff; }
+
+        /* ---- go-live card ---- */
+        .cl-golive {
+            background: linear-gradient(135deg, #166534, #15803d);
+            color: #fff;
+            border-radius: 14px;
+            padding: 24px 28px;
+            margin-top: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .cl-golive h3 { margin: 0 0 4px; font-size: 1.2rem; }
+        .cl-golive p { margin: 0; opacity: .85; font-size: .88rem; }
+        .cl-golive.locked { background: linear-gradient(135deg, #374151, #6B7280); }
+
+        /* ---- token card ---- */
+        .cl-token-card {
+            background: #1E1B4B;
+            color: #E9D5FF;
+            border-radius: 14px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            font-family: 'Nunito', sans-serif;
+        }
+        .cl-token-card h4 { margin: 0 0 8px; color: #fff; }
+        .cl-token-url {
+            background: #312E81;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+            font-family: monospace;
+            word-break: break-all;
+            color: #C4B5FD;
+            margin: 10px 0;
+            border: 1px solid #4C1D95;
+        }
+
+        /* ---- buttons ---- */
+        .btn-purple {
+            background: linear-gradient(135deg, var(--cl-purple), var(--cl-pink));
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 700;
+            font-size: .9rem;
+            cursor: pointer;
+            transition: opacity .15s;
+            font-family: 'Nunito', sans-serif;
+        }
+        .btn-purple:hover { opacity: .9; }
+        .btn-purple:disabled { opacity: .5; cursor: not-allowed; }
+
+        .btn-green {
+            background: var(--cl-green);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 24px;
+            font-weight: 700;
+            font-size: .9rem;
+            cursor: pointer;
+            transition: opacity .15s;
+            font-family: 'Nunito', sans-serif;
+        }
+        .btn-green:disabled { opacity: .5; cursor: not-allowed; }
+
+        .btn-outline-white {
+            background: rgba(255,255,255,.15);
+            color: #fff;
+            border: 2px solid rgba(255,255,255,.4);
+            border-radius: 10px;
+            padding: 9px 20px;
+            font-weight: 700;
+            font-size: .9rem;
+            cursor: pointer;
+            transition: background .15s;
+            font-family: 'Nunito', sans-serif;
+        }
+        .btn-outline-white:hover { background: rgba(255,255,255,.25); }
+
+        /* ---- responsive ---- */
+        @media(max-width:600px) {
+            .cl-hero { padding: 20px; }
+            .cl-item-actions { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+<div class="panel-layout">
+    <!-- Sidebar -->
+    <aside class="panel-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+            <h2>MilkyPot<small id="sidebarStoreName">Franquia</small></h2>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-group">Principal</div>
+            <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+            <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+            <div class="sidebar-nav-group">Gestao</div>
+            <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+            <a href="despesas.html" class="sidebar-link"><span class="icon">💰</span> Despesas</a>
+            <a href="fiscal.html" class="sidebar-link"><span class="icon">🧾</span> Fiscal</a>
+            <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+            <a href="entregas.html" class="sidebar-link"><span class="icon">🛵</span> Entregas</a>
+            <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
+            <a href="fidelidade.html" class="sidebar-link"><span class="icon">🎁</span> Fidelidade</a>
+            <a href="ifood.html" class="sidebar-link"><span class="icon">🛵</span> iFood</a>
+            <a href="uber-entregas.html" class="sidebar-link"><span class="icon">🚗</span> Uber Direct</a>
+            <div class="sidebar-nav-group">Midia da Loja</div>
+            <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
+            <a href="radio-indoor.html" class="sidebar-link"><span class="icon">📻</span> Radio Indoor</a>
+            <div class="sidebar-nav-group">Loja Online</div>
+            <a href="#" class="sidebar-link" id="linkSiteFranquia"><span class="icon">🌐</span> Meu Site</a>
+            <a href="marketing.html" class="sidebar-link"><span class="icon">📢</span> Marketing</a>
+            <div class="sidebar-nav-group">Config</div>
+            <a href="configuracoes.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
+            <a href="test-checklist.html" class="sidebar-link active"><span class="icon">🧪</span> Checklist</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">🏪</div>
+                <div class="sidebar-user-info">
+                    <strong id="sidebarUserName">Franqueado</strong>
+                    <small id="sidebarUserRole">Franqueado</small>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="panel-main">
+        <header class="panel-header">
+            <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+            <h1>🧪 Checklist de Validacao</h1>
+            <div class="header-actions">
+                <button class="btn btn-outline" onclick="Auth.logout()">Sair</button>
+            </div>
+        </header>
+
+        <div class="panel-content">
+
+            <!-- Hero -->
+            <div class="cl-hero">
+                <div>
+                    <h2>Validacao do Sistema</h2>
+                    <p>Teste cada funcao, marque como ✅ aprovada ou ❌ com problema. Quando tudo estiver validado, ative o modo Producao.</p>
+                </div>
+                <div class="cl-hero-actions">
+                    <button class="btn-outline-white" onclick="generateTestToken()">🔑 Gerar Link de Acesso (Claude)</button>
+                    <button class="btn-outline-white" onclick="window.location.reload()">🔄 Atualizar</button>
+                </div>
+            </div>
+
+            <!-- Modo atual -->
+            <div class="cl-mode-card">
+                <div>
+                    <div style="font-size:.8rem;color:#6b7280;font-weight:600;text-transform:uppercase;margin-bottom:4px">Modo atual do sistema</div>
+                    <div id="modeDisplay" class="cl-mode-badge test">🧪 Modo Teste</div>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <button class="cl-btn-sm cl-btn-pass" onclick="setMode('test')">Ativar Modo Teste</button>
+                    <button class="cl-btn-sm cl-btn-open" onclick="setMode('production')">🚀 Ativar Producao</button>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="cl-progress-wrap">
+                <div class="cl-stat">
+                    <div class="cl-stat-num" id="statPass" style="color:var(--cl-green)">0</div>
+                    <div class="cl-stat-label">Aprovados</div>
+                </div>
+                <div class="cl-progress-bar-bg" style="flex:1">
+                    <div class="cl-progress-bar-fill" id="progressBar" style="width:0%"></div>
+                </div>
+                <div class="cl-progress-text" id="progressText">0 / 0</div>
+                <div class="cl-stat">
+                    <div class="cl-stat-num" id="statFail" style="color:var(--cl-red)">0</div>
+                    <div class="cl-stat-label">Com problema</div>
+                </div>
+                <div class="cl-stat">
+                    <div class="cl-stat-num" id="statPending" style="color:#6b7280">0</div>
+                    <div class="cl-stat-label">Pendentes</div>
+                </div>
+            </div>
+
+            <!-- Token card (oculto por default) -->
+            <div class="cl-token-card" id="tokenCard" style="display:none">
+                <h4>🔑 Link de Acesso para o Claude</h4>
+                <p style="font-size:.85rem;margin:0 0 6px;color:#C4B5FD">Copie o link abaixo e cole no chat com o Claude. Ele vai abrir automaticamente uma sessao logada para testar tudo.</p>
+                <div class="cl-token-url" id="tokenUrl">Gerando...</div>
+                <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+                    <button class="btn-purple" onclick="copyToken()">📋 Copiar Link</button>
+                    <button class="btn-outline-white" style="font-size:.8rem" onclick="document.getElementById('tokenCard').style.display='none'">Fechar</button>
+                </div>
+                <p style="font-size:11px;margin:8px 0 0;color:#7C3AED;background:rgba(124,58,237,.15);border-radius:6px;padding:6px 10px;">⏰ Token expira em 1 hora — gere um novo se precisar</p>
+            </div>
+
+            <!-- Checklist categorias -->
+            <div id="checklistContainer">
+                <!-- Renderizado pelo JS -->
+            </div>
+
+            <!-- Go Live -->
+            <div class="cl-golive locked" id="goLiveCard">
+                <div>
+                    <h3 id="goLiveTitle">🔒 Producao bloqueada</h3>
+                    <p id="goLiveDesc">Complete o checklist para desbloquear o modo Producao.</p>
+                </div>
+                <button class="btn-green" id="goLiveBtn" disabled onclick="activateProduction()">🚀 Ativar Producao</button>
+            </div>
+
+        </div><!-- /panel-content -->
+    </main>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/i18n.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/cloud-functions.js"></script>
+<script src="../js/core/auth.js"></script>
+<script src="../js/core/test-mode.js"></script>
+<script>
+    // ============================================
+    // Auth Guard
+    // ============================================
+    if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+    const session     = Auth.getSession();
+    const franchiseId = session.franchiseId;
+    const isSuperAdmin = session.role === 'super_admin' || session.email === 'jocimarrodrigo@gmail.com';
+
+    document.getElementById('sidebarUserName').textContent = session.name || 'Franqueado';
+    document.getElementById('sidebarUserRole').textContent = session.role || 'Franqueado';
+
+    const franchises = DataStore.getAllFranchises();
+    const franchise  = franchises.find(f => f.id === franchiseId);
+    document.getElementById('sidebarStoreName').textContent = franchise
+        ? franchise.name.replace('MilkyPot ', '') : 'Franquia';
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    // ============================================
+    // CHECKLIST DEFINITION
+    // ============================================
+    const CHECKLIST = [
+        {
+            id:    'auth',
+            icon:  '🔐',
+            title: 'Autenticacao e Acesso',
+            items: [
+                { id: 'auth_login',     text: 'Login com email e senha funciona',              url: '/login.html',                       desc: 'Entrar com credenciais corretas e incorretas' },
+                { id: 'auth_session',   text: 'Sessao persiste apos fechar e reabrir browser', url: '/painel/index.html',                desc: 'Fechar o browser e abrir novamente — deve continuar logado' },
+                { id: 'auth_logout',    text: 'Logout encerra sessao corretamente',             url: '/painel/index.html',                desc: 'Clicar em Sair e tentar acessar pagina protegida' }
+            ]
+        },
+        {
+            id:    'dashboard',
+            icon:  '📊',
+            title: 'Dashboard',
+            items: [
+                { id: 'dash_kpis',      text: 'KPIs carregam (vendas, pedidos pendentes)',     url: '/painel/index.html',                desc: 'Verificar que os numeros aparecem sem erro' },
+                { id: 'dash_simulator', text: 'Simulador de ganhos funciona',                  url: '/painel/index.html',                desc: 'Arrastar slider e calcular faturamento/lucro' },
+                { id: 'dash_alerts',    text: 'Alertas de estoque exibem corretamente',        url: '/painel/index.html',                desc: 'Card "Estoque Baixo" mostra produtos com quantidade baixa' }
+            ]
+        },
+        {
+            id:    'pdv',
+            icon:  '🛒',
+            title: 'PDV — Ponto de Venda',
+            items: [
+                { id: 'pdv_load',       text: 'Produtos carregam no catalogo do PDV',          url: '/painel/pdv.html',                  desc: 'Todos os produtos e categorias aparecem na grade' },
+                { id: 'pdv_cart',       text: 'Adicionar produto ao carrinho',                 url: '/painel/pdv.html',                  desc: 'Clicar no produto e verificar que aparece no carrinho com preco correto' },
+                { id: 'pdv_discount',   text: 'Aplicar desconto no pedido',                   url: '/painel/pdv.html',                  desc: 'Botao de desconto, digitar valor e verificar desconto no total' },
+                { id: 'pdv_close',      text: 'Fechar pedido (Dinheiro / Pix / Cartao)',       url: '/painel/pdv.html',                  desc: 'Testar cada forma de pagamento e confirmar que o pedido e salvo' },
+                { id: 'pdv_print',      text: 'Imprimir cupom do pedido',                     url: '/painel/pdv.html',                  desc: 'Botao imprimir abre janela de impressao com cupom formatado' },
+                { id: 'pdv_tab',        text: 'Conta aberta — salvar e reabrir',               url: '/painel/pdv.html',                  desc: 'Salvar como conta aberta e reabrir para continuar' },
+                { id: 'pdv_scratch',    text: 'Raspinha da Sorte aparece apos pedido',         url: '/painel/pdv.html',                  desc: 'Apos fechar pedido, verificar se raspinha e exibida para o cliente' }
+            ]
+        },
+        {
+            id:    'pedidos',
+            icon:  '📋',
+            title: 'Pedidos (Kanban)',
+            items: [
+                { id: 'ord_kanban',     text: 'Kanban exibe pedidos do dia em tempo real',     url: '/painel/pedidos.html',              desc: 'Fazer pedido no PDV e verificar que aparece no kanban imediatamente' },
+                { id: 'ord_status',     text: 'Mudar status Novo → Preparando → Entregue',     url: '/painel/pedidos.html',              desc: 'Arrastar ou clicar para mover card entre colunas' },
+                { id: 'ord_filter',     text: 'Filtro por data funciona',                      url: '/painel/pedidos.html',              desc: 'Selecionar data anterior e verificar que so aparece pedidos dessa data' }
+            ]
+        },
+        {
+            id:    'cardapio',
+            icon:  '🌐',
+            title: 'Cardapio Online (Publico)',
+            items: [
+                { id: 'menu_load',      text: 'Cardapio carrega publicamente (sem login)',     url: '/cardapio.html',                    desc: 'Abrir em aba anonima e verificar que produtos aparecem' },
+                { id: 'menu_prices',    text: 'Precos e fotos corretos em todos produtos',     url: '/cardapio.html',                    desc: 'Conferir preco, descricao e imagem de pelo menos 3 produtos' },
+                { id: 'menu_cart',      text: 'Adicionar ao carrinho e ver total',             url: '/cardapio.html',                    desc: 'Adicionar produto, verificar preco e quantidade no carrinho' }
+            ]
+        },
+        {
+            id:    'checkout',
+            icon:  '💳',
+            title: 'Checkout e Pagamento',
+            items: [
+                { id: 'chk_delivery',   text: 'Checkout delivery — preencher endereco',       url: '/cardapio.html',                    desc: 'Ir ate checkout, selecionar delivery e preencher endereco' },
+                { id: 'chk_pickup',     text: 'Checkout retirada — confirmar pedido',         url: '/cardapio.html',                    desc: 'Selecionar retirada na loja e finalizar pedido' },
+                { id: 'chk_pix',        text: 'Gerar QR Pix — codigo aparece corretamente',   url: '/cardapio.html',                    desc: 'Selecionar Pix como pagamento e verificar QR code gerado' },
+                { id: 'chk_order',      text: 'Pedido criado aparece no painel (kanban)',      url: '/painel/pedidos.html',              desc: 'Apos finalizar no cardapio, conferir que pedido aparece em "Novos"' }
+            ]
+        },
+        {
+            id:    'uber',
+            icon:  '🚗',
+            title: 'Uber Direct',
+            items: [
+                { id: 'uber_creds',     text: 'Credenciais salvas em ambiente Producao',      url: '/painel/configuracoes.html',        desc: 'Verificar que ambiente esta em "Producao" (nao Sandbox)' },
+                { id: 'uber_test',      text: 'Testar Conexao retorna OK',                    url: '/painel/configuracoes.html',        desc: 'Botao "Testar Conexao" exibe marcador verde e tempo de resposta' },
+                { id: 'uber_webhook',   text: 'Webhook registrado e ativo',                   url: '/painel/uber-entregas.html',        desc: 'Verificar na pagina Uber Entregas que webhook esta configurado' }
+            ]
+        },
+        {
+            id:    'financeiro',
+            icon:  '💰',
+            title: 'Financeiro',
+            items: [
+                { id: 'fin_dash',       text: 'Dashboard financeiro carrega dados do dia',    url: '/painel/financeiro.html',           desc: 'Verificar KPIs de vendas, ticket medio e lucro estimado' },
+                { id: 'fin_report',     text: 'Relatorio por periodo funciona',               url: '/painel/financeiro.html',           desc: 'Selecionar intervalo de datas e verificar tabela de resultados' }
+            ]
+        },
+        {
+            id:    'config',
+            icon:  '⚙️',
+            title: 'Configuracoes',
+            items: [
+                { id: 'cfg_toggles',    text: 'Toggles loja online (Aberta/Delivery/Retirada)', url: '/painel/configuracoes.html',     desc: 'Testar cada toggle e verificar que cardapio reflete a mudanca' },
+                { id: 'cfg_save',       text: 'Salvar dados da loja funciona',                 url: '/painel/configuracoes.html',      desc: 'Alterar telefone e salvar — confirmar que dado persiste apos reload' },
+                { id: 'cfg_notif',      text: 'Notificacoes push funcionam',                   url: '/painel/configuracoes.html',      desc: 'Fazer pedido de teste e verificar notificacao no painel' }
+            ]
+        },
+        {
+            id:    'marketing',
+            icon:  '🎯',
+            title: 'Marketing e Fidelidade',
+            items: [
+                { id: 'mkt_scratch',    text: 'Raspinha ativa e premios configurados',         url: '/painel/configuracoes.html',       desc: 'Verificar que Raspinha esta ligada e tem premios ativos' },
+                { id: 'mkt_fidelidade', text: 'Programa de fidelidade funciona',               url: '/painel/fidelidade.html',          desc: 'Verificar que MilkyCoins sao contabilizados apos pedido' }
+            ]
+        }
+    ];
+
+    // ============================================
+    // STATE
+    // ============================================
+    var checklistState = {}; // { itemId: 'pass'|'fail'|'pending' }
+    var currentMode = 'test';
+
+    // ============================================
+    // RENDER
+    // ============================================
+    function renderChecklist() {
+        var container = document.getElementById('checklistContainer');
+        container.innerHTML = '';
+
+        CHECKLIST.forEach(function (cat) {
+            var total = cat.items.length;
+            var passed = cat.items.filter(function (i) { return checklistState[i.id] === 'pass'; }).length;
+            var isDone = passed === total;
+
+            var catEl = document.createElement('div');
+            catEl.className = 'cl-category';
+            catEl.dataset.catId = cat.id;
+
+            var headerEl = document.createElement('div');
+            headerEl.className = 'cl-category-header open';
+            headerEl.innerHTML = [
+                '<span style="font-size:20px">' + cat.icon + '</span>',
+                '<h3>' + cat.title + '</h3>',
+                '<span class="cl-category-progress' + (isDone ? ' done' : '') + '">' + passed + '/' + total + '</span>',
+                '<span class="cl-category-chevron">▼</span>'
+            ].join('');
+            headerEl.addEventListener('click', function () {
+                var itemsEl = catEl.querySelector('.cl-items');
+                var isOpen = headerEl.classList.contains('open');
+                headerEl.classList.toggle('open', !isOpen);
+                itemsEl.style.display = isOpen ? 'none' : 'block';
+            });
+
+            var itemsEl = document.createElement('div');
+            itemsEl.className = 'cl-items';
+
+            cat.items.forEach(function (item) {
+                var status = checklistState[item.id] || 'pending';
+                var itemEl = document.createElement('div');
+                itemEl.className = 'cl-item';
+                itemEl.dataset.itemId = item.id;
+
+                itemEl.innerHTML = [
+                    '<div class="cl-check ' + status + '">' + (status === 'pass' ? '✓' : status === 'fail' ? '✗' : '') + '</div>',
+                    '<div style="flex:1">',
+                    '  <div class="cl-item-text ' + status + '">' + item.text + '</div>',
+                    '  <div class="cl-item-desc">' + item.desc + '</div>',
+                    '</div>',
+                    '<div class="cl-item-actions">',
+                    '  <button class="cl-btn-sm cl-btn-pass" onclick="markItem(\'' + item.id + '\',\'pass\');event.stopPropagation()">✓ OK</button>',
+                    '  <button class="cl-btn-sm cl-btn-fail" onclick="markItem(\'' + item.id + '\',\'fail\');event.stopPropagation()">✗ Problema</button>',
+                    '  <button class="cl-btn-sm cl-btn-reset" onclick="markItem(\'' + item.id + '\',\'pending\');event.stopPropagation()">↺</button>',
+                    '  <a class="cl-btn-sm cl-btn-open" href="' + item.url + '" target="_blank" onclick="event.stopPropagation()">↗ Abrir</a>',
+                    '</div>'
+                ].join('');
+
+                itemsEl.appendChild(itemEl);
+            });
+
+            catEl.appendChild(headerEl);
+            catEl.appendChild(itemsEl);
+            container.appendChild(catEl);
+        });
+
+        updateProgress();
+    }
+
+    // ============================================
+    // markItem
+    // ============================================
+    function markItem(itemId, status) {
+        checklistState[itemId] = status;
+
+        // Atualiza visual do item
+        var itemEl = document.querySelector('[data-item-id="' + itemId + '"]');
+        if (itemEl) {
+            var checkEl  = itemEl.querySelector('.cl-check');
+            var textEl   = itemEl.querySelector('.cl-item-text');
+            checkEl.className = 'cl-check ' + status;
+            checkEl.textContent = status === 'pass' ? '✓' : status === 'fail' ? '✗' : '';
+            textEl.className = 'cl-item-text ' + status;
+        }
+
+        // Salva no Firestore
+        saveItemToFirestore(itemId, status);
+
+        // Atualiza progresso
+        updateProgress();
+
+        // Atualiza header da categoria
+        updateCategoryHeader(itemId);
+
+        // Salva localmente como backup
+        localStorage.setItem('mp_checklist_' + franchiseId, JSON.stringify(checklistState));
+    }
+
+    // ============================================
+    // updateProgress
+    // ============================================
+    function updateProgress() {
+        var allItems = [].concat.apply([], CHECKLIST.map(function (c) { return c.items; }));
+        var total   = allItems.length;
+        var passed  = allItems.filter(function (i) { return checklistState[i.id] === 'pass'; }).length;
+        var failed  = allItems.filter(function (i) { return checklistState[i.id] === 'fail'; }).length;
+        var pending = total - passed - failed;
+        var pct     = total > 0 ? Math.round((passed / total) * 100) : 0;
+
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('progressText').textContent = passed + ' / ' + total;
+        document.getElementById('statPass').textContent    = passed;
+        document.getElementById('statFail').textContent    = failed;
+        document.getElementById('statPending').textContent = pending;
+
+        // Go-live unlock
+        var goLive = document.getElementById('goLiveCard');
+        var goBtn  = document.getElementById('goLiveBtn');
+        var goTitle = document.getElementById('goLiveTitle');
+        var goDesc  = document.getElementById('goLiveDesc');
+
+        if (failed > 0) {
+            goLive.className = 'cl-golive locked';
+            goBtn.disabled = true;
+            goTitle.textContent = '⚠️ Ha ' + failed + ' item(s) com problema';
+            goDesc.textContent = 'Resolva os problemas identificados antes de ativar a producao.';
+        } else if (passed === total && total > 0) {
+            goLive.className = 'cl-golive';
+            goBtn.disabled = false;
+            goTitle.textContent = '🎉 Tudo validado! Pronto para producao.';
+            goDesc.textContent = 'Todos os ' + total + ' itens foram aprovados. Ative o modo Producao para ir ao ar.';
+        } else {
+            goLive.className = 'cl-golive locked';
+            goBtn.disabled = true;
+            goTitle.textContent = '🔒 Producao bloqueada';
+            goDesc.textContent = 'Faltam ' + pending + ' itens para validar. Complete o checklist antes de ativar.';
+        }
+    }
+
+    function updateCategoryHeader(itemId) {
+        var cat = CHECKLIST.find(function (c) {
+            return c.items.some(function (i) { return i.id === itemId; });
+        });
+        if (!cat) return;
+        var total  = cat.items.length;
+        var passed = cat.items.filter(function (i) { return checklistState[i.id] === 'pass'; }).length;
+        var isDone = passed === total;
+        var catEl  = document.querySelector('[data-cat-id="' + cat.id + '"]');
+        if (!catEl) return;
+        var progEl = catEl.querySelector('.cl-category-progress');
+        progEl.textContent = passed + '/' + total;
+        progEl.className = 'cl-category-progress' + (isDone ? ' done' : '');
+    }
+
+    // ============================================
+    // Firestore sync
+    // ============================================
+    function saveItemToFirestore(itemId, status) {
+        if (typeof firebase === 'undefined' || !firebase.auth().currentUser) return;
+        CloudFunctions.call('saveChecklistItem', {
+            franchiseId,
+            itemId,
+            status,
+            notes: ''
+        }).catch(function (e) {
+            console.warn('saveChecklistItem error:', e);
+        });
+    }
+
+    function loadChecklistFromFirestore() {
+        // Fallback local primeiro
+        var local = localStorage.getItem('mp_checklist_' + franchiseId);
+        if (local) {
+            try { checklistState = JSON.parse(local); } catch (e) {}
+        }
+
+        // Depois sincroniza com Firestore
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
+        firebase.firestore()
+            .collection('test_checklist')
+            .doc(franchiseId)
+            .get()
+            .then(function (doc) {
+                if (!doc.exists) return;
+                var data = doc.data();
+                var items = data.items || {};
+                Object.keys(items).forEach(function (id) {
+                    checklistState[id] = items[id].status || 'pending';
+                });
+                renderChecklist();
+            })
+            .catch(function () {});
+    }
+
+    // ============================================
+    // loadMode
+    // ============================================
+    function loadMode() {
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
+        firebase.firestore()
+            .collection('system_config')
+            .doc(franchiseId)
+            .get()
+            .then(function (doc) {
+                if (!doc.exists) return;
+                var d = doc.data();
+                currentMode = d.mode || 'test';
+                updateModeDisplay();
+            })
+            .catch(function () {});
+    }
+
+    function updateModeDisplay() {
+        var el = document.getElementById('modeDisplay');
+        if (currentMode === 'production') {
+            el.className = 'cl-mode-badge prod';
+            el.textContent = '✅ Modo Producao';
+        } else {
+            el.className = 'cl-mode-badge test';
+            el.textContent = '🧪 Modo Teste';
+        }
+    }
+
+    // ============================================
+    // setMode
+    // ============================================
+    async function setMode(mode) {
+        if (!confirm('Confirma ativar o modo "' + mode + '" para a franquia ' + franchiseId + '?')) return;
+        var result = await CloudFunctions.call('setSystemMode', { mode, franchiseId });
+        if (result && result.success) {
+            currentMode = mode;
+            updateModeDisplay();
+            Utils.showToast('Modo ' + mode + ' ativado!', 'success');
+        } else {
+            alert('Erro: ' + (result && result.error ? result.error : 'sem resposta'));
+        }
+    }
+
+    // ============================================
+    // generateTestToken — para Claude
+    // ============================================
+    async function generateTestToken() {
+        if (!isSuperAdmin) {
+            return alert('Apenas o administrador pode gerar tokens de teste.');
+        }
+        document.getElementById('tokenCard').style.display = 'block';
+        document.getElementById('tokenUrl').textContent = '⏳ Gerando...';
+
+        var result = await CloudFunctions.call('generateTestToken', { franchiseId });
+        if (result && result.success) {
+            document.getElementById('tokenUrl').textContent = result.loginUrl;
+        } else {
+            document.getElementById('tokenUrl').textContent = 'Erro: ' + ((result && result.error) || 'sem resposta');
+        }
+    }
+
+    function copyToken() {
+        var url = document.getElementById('tokenUrl').textContent;
+        navigator.clipboard.writeText(url)
+            .then(function () { Utils.showToast('Link copiado!', 'success'); })
+            .catch(function () {
+                var ta = document.createElement('textarea');
+                ta.value = url;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                Utils.showToast('Link copiado!', 'success');
+            });
+    }
+
+    // ============================================
+    // activateProduction
+    // ============================================
+    async function activateProduction() {
+        if (!confirm('🚀 Ativar MODO PRODUCAO?\n\nIsso indica que o sistema esta pronto e validado para operar com clientes reais.\n\nConfirma?')) return;
+        await setMode('production');
+    }
+
+    // ============================================
+    // INIT
+    // ============================================
+    firebase.auth().onAuthStateChanged(function (user) {
+        loadMode();
+        loadChecklistFromFirestore();
+    });
+
+    renderChecklist();
+    loadMode();
+
+    // Carrega checklist local imediatamente
+    var local = localStorage.getItem('mp_checklist_' + franchiseId);
+    if (local) {
+        try {
+            checklistState = JSON.parse(local);
+            renderChecklist();
+        } catch (e) {}
+    }
+</script>
+</body>
+</html>
