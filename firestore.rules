@@ -56,8 +56,9 @@ service cloud.firestore {
       // Franchises: somente super_admin pode escrever
       // iFood: extensao escreve sem auth (aceito temporariamente)
       // tv_remote_*: comandos da remote podem ser escritos sem auth (app controla)
-      // orders_* / caixa_* / pdv_tabs_* / finances_*: write publico temporario
-      // para PCs de PDV com Firebase Auth quebrado conseguirem publicar sync.
+      // orders_/caixa_/pdv_tabs_/finances_: writes publicos (sync entre PCs sem
+      // Firebase Auth — operador pode estar com mp_session válido mas sem token
+      // Firebase). Trade-off de seguranca aceito durante inauguracao; tightening pos.
       // Outros: usuarios autenticados (franqueados) escrevem seus proprios dados
       allow write: if document.matches('ifood_.*') ||
                       document.matches('tvremote_.*') ||

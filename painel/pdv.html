@@ -75,18 +75,44 @@
         }
 
         /* Products area */
-        .pdv-products { padding: 12px; overflow-y: auto; height: 100%; }
+        .pdv-products { padding: 0 12px 12px; overflow-y: auto; height: 100%; }
+        .pdv-filter-bar { position: sticky; top: 0; z-index: 5; background: #f0f2f5; padding: 10px 0 8px; margin: 0 -12px; padding-left: 12px; padding-right: 12px; border-bottom: 1px solid #e0e0e0; }
+        .pdv-search { position: relative; margin-bottom: 8px; }
+        .pdv-search input { width: 100%; padding: 10px 12px 10px 36px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; font-family: inherit; background: #fff; outline: none; transition: border-color 0.15s; }
+        .pdv-search input:focus { border-color: #6C63FF; }
+        .pdv-search::before { content: '🔍'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; pointer-events: none; }
+        .pdv-search .clear-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #e0e0e0; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 12px; color: #666; display: none; }
+        .pdv-search input:not(:placeholder-shown) ~ .clear-btn { display: block; }
+        .pdv-cat-pills { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
+        .pdv-cat-pills::-webkit-scrollbar { height: 4px; }
+        .pdv-cat-pills::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+        .pdv-cat-pill { flex-shrink: 0; padding: 6px 12px; border: 1px solid #e0e0e0; border-radius: 20px; background: #fff; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; color: #555; transition: all 0.12s; user-select: none; }
+        .pdv-cat-pill:hover { border-color: #6C63FF; color: #6C63FF; }
+        .pdv-cat-pill.active { background: #6C63FF; color: #fff; border-color: #6C63FF; }
+        .pdv-cat-pill .count { opacity: 0.7; margin-left: 4px; font-weight: 600; font-size: 10px; }
+        .pdv-no-results { text-align: center; padding: 40px 20px; color: #999; }
+        .pdv-no-results .nr-emoji { font-size: 36px; margin-bottom: 8px; }
+        .pdv-no-results .nr-msg { font-size: 14px; font-weight: 700; color: #666; }
+        .pdv-no-results .nr-hint { font-size: 12px; margin-top: 4px; }
         .sec-title { font-family: 'Baloo 2', cursive; font-size: 13px; font-weight: 700; color: #555; margin: 12px 0 6px; padding-bottom: 3px; border-bottom: 2px solid #e0e0e0; }
         .sec-title:first-child { margin-top: 0; }
         .sec-title.pop { color: #6C63FF; border-color: #6C63FF; }
         .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; margin-bottom: 6px; }
-        .pitem { background: #fff; border-radius: 10px; padding: 10px 6px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.12s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); user-select: none; }
+        .pitem { position: relative; background: #fff; border-radius: 10px; padding: 10px 6px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.12s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); user-select: none; min-height: 78px; }
         .pitem:hover { border-color: #6C63FF; transform: translateY(-1px); }
         .pitem:active { transform: scale(0.95); }
         .pitem .pe { font-size: 22px; }
         .pitem .pn { font-size: 10px; font-weight: 700; color: #333; line-height: 1.1; margin: 2px 0; }
         .pitem .pp { font-size: 11px; font-weight: 800; color: #6C63FF; }
         .pitem.pop { border-color: #D1C4E9; background: #f8f5ff; }
+        .pitem.esgotado { opacity: 0.55; cursor: not-allowed; background: #FAFAFA; border-color: #FECACA; }
+        .pitem.esgotado:hover { border-color: #FECACA; transform: none; }
+        .pitem.esgotado .pp { color: #9CA3AF; text-decoration: line-through; }
+        .pitem.baixoestoque { border-color: #FCD34D; }
+        .pitem.baixoestoque:hover { border-color: #F59E0B; }
+        .pbadge { position: absolute; top: 4px; right: 4px; padding: 2px 6px; border-radius: 8px; font-size: 9px; font-weight: 800; line-height: 1.2; z-index: 1; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .pbadge.bd-out { background: #DC2626; color: #fff; }
+        .pbadge.bd-low { background: #FBBF24; color: #78350F; }
 
         /* Cart sidebar — GRID layout: head/tabs/cust auto, items 1fr, foot auto.
            Garante que cart-foot SEMPRE caiba (foot tem prioridade sobre items). */
@@ -333,6 +359,54 @@
         .toast.show { display: block; animation: fiu 0.3s; }
         @keyframes fiu { from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)} }
 
+        /* ================ Faturamento + chips ================ */
+        .pdv-fat-chip { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.18); border-radius: 12px; padding: 4px 10px; font-size: 12px; font-weight: 700; color: #fff; }
+        .pdv-fat-chip .fat-sep { opacity: 0.5; padding: 0 4px; }
+        .pdv-fat-chip .fat-num { font-weight: 800; }
+
+        /* ================ Desconto com PIN ================ */
+        .cart-discount-row-pin { display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 4px 0; color: #DC2626; font-weight: 700; }
+        .cart-discount-row-pin .dc-rm { background: none; border: none; color: #DC2626; cursor: pointer; font-size: 14px; padding: 0 4px; }
+        .cart-subtotal-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 2px 0; color: #555; }
+        .btn-discount-pin { width: 100%; padding: 8px; background: #FFF3E0; color: #E65100; border: 1px dashed #FB923C; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; margin-bottom: 6px; }
+        .btn-discount-pin:hover { background: #FFE0B2; }
+        .btn-discount-pin.applied { background: #ECFDF5; color: #059669; border-color: #10B981; border-style: solid; }
+        .discount-modal-body { padding: 18px 20px; }
+        .pin-input-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+        .pin-digit { padding: 16px 0; text-align: center; font-size: 24px; font-weight: 800; border: 2px solid #e0e0e0; border-radius: 10px; outline: none; font-family: monospace; }
+        .pin-digit:focus { border-color: #6C63FF; }
+        .discount-type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .discount-type-btn { padding: 10px; border: 2px solid #e0e0e0; border-radius: 10px; background: #fff; cursor: pointer; font-weight: 700; font-size: 13px; color: #555; }
+        .discount-type-btn.active { border-color: #FB923C; background: #FFF3E0; color: #E65100; }
+        .discount-error { background: #FEE2E2; color: #B91C1C; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; margin-top: 10px; display: none; }
+        .discount-error.show { display: block; }
+
+        /* ================ Status do pedido ================ */
+        .orders-modal-body { padding: 12px 18px; max-height: 70vh; overflow-y: auto; }
+        .order-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+        .order-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .order-name { font-weight: 800; font-size: 14px; color: #333; }
+        .order-meta { font-size: 11px; color: #888; }
+        .order-status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; }
+        .ost-confirmado { background: #FEF3C7; color: #92400E; }
+        .ost-em_preparo { background: #DBEAFE; color: #1E40AF; }
+        .ost-pronto { background: #D1FAE5; color: #065F46; }
+        .ost-entregue { background: #E0E7FF; color: #3730A3; }
+        .ost-pago { background: #ECFDF5; color: #059669; }
+        .order-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+        .order-action-btn { flex: 1; min-width: 72px; padding: 8px; border: none; border-radius: 8px; font-weight: 700; font-size: 11px; cursor: pointer; color: #fff; }
+        .oa-prep { background: #3B82F6; }
+        .oa-ready { background: #10B981; }
+        .oa-deliver { background: #6366F1; }
+        .oa-prep:hover { background: #2563EB; }
+        .oa-ready:hover { background: #059669; }
+        .oa-deliver:hover { background: #4F46E5; }
+        .order-items-mini { font-size: 11px; color: #666; margin-top: 4px; line-height: 1.4; }
+        .orders-empty { text-align: center; padding: 30px 10px; color: #999; font-size: 13px; }
+        .pdv-orders-btn { background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; }
+        .pdv-orders-btn:hover { background: rgba(255,255,255,0.3); }
+        .pdv-orders-btn .pending-dot { display: inline-block; width: 8px; height: 8px; background: #F59E0B; border-radius: 50%; margin-left: 4px; animation: pulse 1.5s infinite; }
+
         /* === RESPONSIVIDADE PDV ===
            Tablet (≤1100px): cart sidebar mais estreita
            Mobile (≤768px):  cart vira gaveta inferior 60vh, FAB reposicionado
@@ -394,6 +468,7 @@
             .cart-acts .bf {
                 padding: 14px 8px; font-size: 13px;
             }
+            .pdv-fat-chip { font-size: 10px; padding: 3px 7px; }
             /* Buffet FAB e Resgatar FAB sobem pra evitar a gaveta de cart */
             .buffet-fab {
                 bottom: calc(62vh + 12px) !important;
@@ -408,34 +483,111 @@
         }
 
         @media(max-width:480px) {
-            .pdv-cart { height: 68vh; }
-            .pdv-products { height: calc(32vh - 44px); padding: 6px; }
-            .pgrid { grid-template-columns: repeat(3, 1fr) !important; gap: 4px !important; }
-            .pitem { padding: 6px 3px !important; }
-            .pitem .pe { font-size: 18px !important; }
-            .pitem .pn { font-size: 9px !important; }
-            .pitem .pp { font-size: 10px !important; }
+            /* Cart drawer: 55vh (menos que 68vh) para deixar mais espaço ao catálogo */
+            .pdv-cart { height: 55vh; }
+            .pdv-products { height: calc(45vh - 44px); padding: 6px; }
+            /* 3 colunas mas com tamanho mínimo maior — toque mais fácil */
+            .pgrid { grid-template-columns: repeat(3, 1fr) !important; gap: 5px !important; }
+            .pitem { padding: 8px 4px !important; min-height: 72px !important; }
+            .pitem .pe { font-size: 20px !important; }
+            .pitem .pn { font-size: 10px !important; }
+            .pitem .pp { font-size: 11px !important; }
             .cart-head h2 { font-size: 13px }
             .ct-btn { font-size: 9px; padding: 5px 3px; }
             .cart-acts {
                 grid-template-columns: 1fr 1fr;
                 gap: 5px;
             }
-            .cart-acts .btn { font-size: 12px; padding: 11px 4px; }
+            .cart-acts .btn { font-size: 12px; padding: 12px 4px; }
+            /* Category pills maiores para toque */
+            .pdv-cat-pill { font-size: 12px; padding: 7px 12px; min-height: 36px; }
+            .pdv-search input { padding: 10px 10px 10px 34px; font-size: 14px; }
+            /* Qty buttons: touch target mínimo 36px */
+            .ci-qty button { width: 32px; height: 32px; font-size: 15px; }
             .buffet-fab {
-                bottom: calc(68vh + 8px) !important;
+                bottom: calc(55vh + 8px) !important;
                 width: 56px; height: 56px;
                 font-size: 20px;
                 left: 12px;
             }
             .redeem-fab {
-                bottom: calc(68vh + 8px) !important;
+                bottom: calc(55vh + 8px) !important;
                 left: 78px;
                 width: 50px; height: 50px;
             }
             /* Header compacto no celular */
             .pdv-header { padding: 8px 10px; }
             .pdv-header h1 { font-size: 13px; }
+        }
+
+        /* ===== MOBILE PEQUENO — 360-430px (Android comum / iPhone SE) =====
+           2 colunas de produto para alvos de toque adequados (≥44px).
+           Mantém catálogo visível com ~48vh e cart em 52vh.            */
+        @media(max-width:430px) {
+            /* 2 colunas — cada card fica ~50% da largura, toque fácil */
+            .pgrid { grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
+            .pitem {
+                padding: 10px 6px !important;
+                min-height: 80px !important;
+            }
+            .pitem .pe { font-size: 24px !important; }
+            .pitem .pn { font-size: 11px !important; line-height: 1.2 !important; }
+            .pitem .pp { font-size: 12px !important; font-weight: 900 !important; }
+            /* Cart 52vh — catálogo fica com 48vh, espaço para navegar itens */
+            .pdv-cart { height: 52vh !important; }
+            .pdv-products { height: calc(48vh - 44px) !important; }
+            /* FAB ajustados para nova altura de cart */
+            .buffet-fab {
+                bottom: calc(52vh + 8px) !important;
+                width: 60px; height: 60px;
+                font-size: 22px;
+                left: 10px;
+            }
+            .redeem-fab {
+                bottom: calc(52vh + 8px) !important;
+                left: 80px;
+                width: 52px; height: 52px;
+            }
+            /* Qty buttons: 36px mínimo para toque seguro */
+            .ci-qty button { width: 36px; height: 36px; font-size: 16px; }
+            .ci-qty span { font-size: 14px; }
+            /* Cart item name legível */
+            .ci-name { font-size: 12px !important; }
+            .ci-price { font-size: 12px !important; }
+            /* Cart actions: dois botões por linha, altura generosa */
+            .cart-acts .btn { padding: 14px 6px !important; font-size: 13px !important; }
+            /* Category pills: altura mínima 40px para toque */
+            .pdv-cat-pill {
+                font-size: 12px;
+                padding: 8px 14px;
+                min-height: 40px;
+                display: flex;
+                align-items: center;
+            }
+            /* Barra de busca confortável */
+            .pdv-search input { font-size: 14px; padding: 11px 12px 11px 36px; }
+            /* FAB de ação (fechar/conta) na parte inferior, largura total */
+            .pdv-action-fab { left: 8px; right: 8px; justify-content: stretch; gap: 6px; }
+            .pdv-action-fab button { flex: 1; justify-content: center; font-size: 14px; padding: 14px 8px; }
+        }
+
+        /* ===== LANDSCAPE em telas pequenas =====
+           Em paisagem com altura < 500px: cart vira coluna lateral estreita
+           para não esconder o catálogo de produtos.                       */
+        @media(max-height:500px) and (orientation:landscape) {
+            body { overflow: hidden; }
+            .pdv-layout { grid-template-columns: 1fr 260px !important; height: calc(100vh - 44px) !important; }
+            .pdv-cart {
+                position: static !important;
+                height: 100% !important;
+                border-top: none !important;
+                border-left: 1px solid #e0e0e0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+            .pdv-products { height: calc(100vh - 44px - 44px) !important; }
+            .buffet-fab { bottom: 12px !important; left: 12px; }
+            .redeem-fab { bottom: 12px !important; }
         }
     </style>
 </head>
@@ -447,6 +599,9 @@
     </div>
     <!-- ATALHOS DE TECLADO — sempre visíveis no header (operador encontra rápido) -->
     <div class="pdv-shortcuts" id="pdvShortcuts" aria-label="Atalhos de teclado">
+        <span class="ks ks-vendas" onclick="if(typeof showVendasDoDia==='function')showVendasDoDia()" title="Vendas do dia (relatório completo)" style="background:rgba(106,27,154,0.32);border-color:rgba(106,27,154,0.55)">
+            <kbd style="color:#4A148C">F1</kbd><span class="ks-label">Vendas</span>
+        </span>
         <span class="ks ks-print" onclick="if(typeof printOrder==='function')printOrder()" title="Imprimir pedido">
             <kbd>F2</kbd><span class="ks-label">Imprimir</span>
         </span>
@@ -459,17 +614,12 @@
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end" id="pdvStatusRow">
         <!-- Status compacto do caixa + meta + checklist (preenchido por JS) -->
+        <div id="pdvFaturamentoChip" style="display:none"></div>
         <div id="pdvChecklistChip" style="display:none"></div>
         <div id="pdvComissaoChip" style="display:none"></div>
         <div id="pdvMetaChip" style="display:none"></div>
         <div id="pdvCaixaChip" style="display:none"></div>
-        
-        <!-- Widget de Sincronia (Cloud Sync) -->
-        <div id="pdvSyncWidget" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);padding:4px 8px;border-radius:12px;cursor:pointer" onclick="forcePdvSync()" title="Status de Sincronia (Clique para forçar)">
-            <span id="pdvSyncIcon">☁️</span>
-            <span id="pdvSyncLabel" style="font-size:11px;font-weight:700">Conectando...</span>
-        </div>
-
+        <button class="pdv-orders-btn" id="pdvOrdersBtn" onclick="openOrdersModal()" title="Pedidos de hoje (status)">📋 Pedidos<span id="pdvOrdersBtnCount"></span></button>
         <div style="font-size:12px;opacity:0.8;" id="clk"></div>
         <button class="btn-back" onclick="openPrinterSettings()" title="Configurações de Impressão">⚙️</button>
         <button class="btn-back" onclick="toggleFullscreen()" title="Tela cheia (F11)">⛶</button>
@@ -478,7 +628,16 @@
 <!-- Mensagem motivacional compacta (preenchida por JS) -->
 <div id="pdvMotivBanner"></div>
 <div class="pdv-layout">
-    <div class="pdv-products" id="allProds"></div>
+    <div class="pdv-products">
+        <div class="pdv-filter-bar">
+            <div class="pdv-search">
+                <input type="text" id="pdvSearch" placeholder="Buscar produto por nome..." autocomplete="off" oninput="PDV_Dynamics.onSearchInput(this.value)">
+                <button type="button" class="clear-btn" onclick="PDV_Dynamics.clearSearch()" title="Limpar busca">×</button>
+            </div>
+            <div class="pdv-cat-pills" id="pdvCatPills"></div>
+        </div>
+        <div id="allProds"></div>
+    </div>
 
     <!-- Floating Buffet Button (integrado com CatalogV2 — preço vem do produto cadastrado em /painel/produtos.html) -->
     <button class="buffet-fab" onclick="PDV_Dynamics.openBuffetFab()" title="Vender por peso / Buffet (edite em Produtos)">
@@ -655,8 +814,9 @@
                 <button class="buffet-btn" onclick="closeRedeemModal()">Cancelar</button>
                 <button class="buffet-btn primary" id="btnConfirmRedeem" onclick="confirmRedeem()" style="background:linear-gradient(135deg,#EC407A,#AD1457);border-color:#AD1457">✅ Validar Codigo</button>
             </div>
-
-            <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">💡 Codigo curto tem 6 letras (XXX-XXX). Ja impresso no recibo.</p>
+            <button onclick="adminForceRedeem()" style="width:100%;margin-top:8px;background:#fff;color:#7F1D1D;border:2px solid #DC2626;padding:10px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">🔧 Resgatar Manualmente (admin) — código órfão</button>
+            <p style="font-size:11px;color:#999;text-align:center;margin-top:8px">💡 Codigo curto tem 6 letras (XXX-XXX). Ja impresso no recibo.</p>
+            <p style="font-size:10px;color:#aaa;text-align:center;margin-top:4px">Use o botão Manual se o cliente tem o recibo mas o código não foi sincronizado.</p>
         </div>
     </div>
 </div>
@@ -726,22 +886,32 @@
     </div>
 </div>
 
-<!-- Modal de Desconto -->
+<!-- Modal de Desconto (com PIN + motivo + limite + AuditLog) -->
 <div class="modal-bg" id="discountModal" style="z-index:1900" onclick="if(event.target===this)closeDiscountModal()">
-    <div style="background:#fff;border-radius:16px;padding:22px 24px;max-width:380px;width:92%;box-shadow:0 12px 40px rgba(0,0,0,0.25);font-family:'Nunito',sans-serif">
+    <div style="background:#fff;border-radius:16px;padding:22px 24px;max-width:420px;width:92%;box-shadow:0 12px 40px rgba(0,0,0,0.25);font-family:'Nunito',sans-serif">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
             <h3 style="margin:0;font-family:'Baloo 2',cursive;font-size:18px;color:#92400E">🏷️ Desconto</h3>
             <button onclick="closeDiscountModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#666">✕</button>
         </div>
-        <div style="font-size:12px;color:#666;margin-bottom:10px">Subtotal atual: <strong id="discountSubtotal" style="color:#333">R$ 0,00</strong></div>
+        <p style="font-size:12px;color:#666;margin:0 0 6px;font-weight:700">PIN do gerente (4 dígitos)</p>
+        <div class="pin-input-grid">
+            <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" data-pin="0" autocomplete="off">
+            <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" data-pin="1" autocomplete="off">
+            <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" data-pin="2" autocomplete="off">
+            <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" data-pin="3" autocomplete="off">
+        </div>
+        <div style="font-size:12px;color:#666;margin:6px 0 10px">Subtotal atual: <strong id="discountSubtotal" style="color:#333">R$ 0,00</strong></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
             <button id="discountTypeReais" onclick="setDiscountType('reais')" style="padding:10px;border:2px solid #F59E0B;background:#F59E0B;color:#fff;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit">R$ Reais</button>
             <button id="discountTypePerc" onclick="setDiscountType('perc')" style="padding:10px;border:2px solid #F59E0B;background:#fff;color:#F59E0B;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit">% Percentual</button>
         </div>
         <label style="display:block;font-size:11px;color:#666;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px" id="discountInputLabel">Valor (R$)</label>
         <input type="number" id="discountValue" step="0.01" min="0" placeholder="0,00" style="width:100%;padding:12px 14px;border:2px solid #ddd;border-radius:8px;font-size:18px;font-weight:800;font-family:inherit;color:#92400E;text-align:center" oninput="previewDiscount()">
+        <label style="display:block;font-size:11px;color:#666;font-weight:700;margin-top:10px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Motivo (obrigatório)</label>
+        <input type="text" id="discountReason" placeholder="Ex: cliente fiel, promoção interna..." style="width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;font-weight:600">
         <div style="margin-top:10px;padding:10px;background:#FFF8E1;border-radius:8px;font-size:13px;color:#92400E;font-weight:700" id="discountPreview">Total final: R$ 0,00</div>
         <div id="discountError" style="display:none;margin-top:8px;padding:8px;background:#FEE2E2;border-radius:8px;font-size:12px;color:#991B1B;font-weight:700"></div>
+        <p style="font-size:10px;color:#999;margin:8px 0 0;text-align:center">Limite: <span id="discountMaxPctHint">30</span>% · toda aplicação é registrada no log de auditoria</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
             <button onclick="closeDiscountModal()" style="padding:11px;border:2px solid #ddd;background:#fff;color:#666;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit">Cancelar</button>
             <button onclick="applyDiscount()" style="padding:11px;border:none;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit">✅ Aplicar</button>
@@ -877,6 +1047,21 @@
     </div>
 </div>
 
+<!-- (modal de desconto duplicado removido — usar #discountModal acima) -->
+
+<!-- Orders Status Modal (Fase 4) -->
+<div class="modal-bg" id="ordersModalBg" onclick="if(event.target===this)closeOrdersModal()" style="z-index:1500">
+    <div class="buffet-modal" style="max-width:600px">
+        <div class="buffet-head" style="background:linear-gradient(135deg,#3B82F6,#1E40AF)">
+            <h3>📋 Pedidos de Hoje</h3>
+            <button class="modal-close" onclick="closeOrdersModal()">×</button>
+        </div>
+        <div class="orders-modal-body" id="ordersModalBody">
+            <div class="orders-empty">Carregando...</div>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="tst"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -890,22 +1075,22 @@
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v63"></script>
-<script src="../js/core/motivacional.js?v=mp-v63"></script>
-<script src="../js/core/caixa.js?v=mp-v63"></script>
-<script src="../js/core/financas.js?v=mp-v63"></script>
-<script src="../js/core/onboarding.js?v=mp-v63"></script>
-<script src="../js/core/units.js?v=mp-v63"></script>
-<script src="../js/core/error-tracking.js?v=mp-v63"></script>
-<script src="../js/core/recipes.js?v=mp-v63"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v63"></script>
-<script src="../js/core/offline-queue.js?v=mp-v63"></script>
-<script src="../js/core/pix.js?v=mp-v63"></script>
-<script src="../js/core/nfce.js?v=mp-v63"></script>
-<script src="../js/core/printer.js?v=mp-v63"></script>
+<script src="../js/core/adminconfig.js?v=mp-v92"></script>
+<script src="../js/core/motivacional.js?v=mp-v92"></script>
+<script src="../js/core/caixa.js?v=mp-v92"></script>
+<script src="../js/core/financas.js?v=mp-v92"></script>
+<script src="../js/core/onboarding.js?v=mp-v92-selfheal"></script>
+<script src="../js/core/units.js?v=mp-v92"></script>
+<script src="../js/core/error-tracking.js?v=mp-v92"></script>
+<script src="../js/core/recipes.js?v=mp-v92"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v92"></script>
+<script src="../js/core/offline-queue.js?v=mp-v92"></script>
+<script src="../js/core/pix.js?v=mp-v92"></script>
+<script src="../js/core/nfce.js?v=mp-v92"></script>
+<script src="../js/core/printer.js?v=mp-v92"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v63"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v63"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v91"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v91"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -922,6 +1107,9 @@
         catalog: null,
         currentWeightItem: null,
         weightInput: "",
+        _searchQuery: '',
+        _activeCategory: 'all',
+        _searchDebounce: null,
 
         init() {
             // ============================================================
@@ -1008,17 +1196,9 @@
             });
         },
 
-        renderProducts() {
-            const container = document.getElementById('allProds');
-            if (!container) return;
-            container.innerHTML = '';
-
-            // ============================================================
-            // Defense-in-depth: se CatalogV2 local tem produtos, ELE é
-            // a fonte de verdade. Ignora QUALQUER categoria legada sobrando
-            // em catalog_config (bases/classicos/especiais/adulto/zero_fit)
-            // mesmo se a cloud enviou dados sujos. Filtro cliente-side.
-            // ============================================================
+        // Coleta as seções que seriam renderizadas (sem aplicar busca/cat) — usado por pills + render
+        _collectSections() {
+            const sections = [];
             let v2ValidKeys = null;
             try {
                 const sess = typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession();
@@ -1033,30 +1213,142 @@
                         );
                     }
                 }
-            } catch(e) {}
+            } catch (e) {}
 
-            // 1. Bases Populares: só aparece se não há CatalogV2 ativo
             if (this.catalog.bases && Array.isArray(this.catalog.bases)
                 && !this.catalog._fromV2 && !v2ValidKeys) {
-                this._renderSection(container, '🔥 Bases Populares', 'pop', this.catalog.bases.filter(b => b.available));
+                const items = this.catalog.bases.filter(b => b.available);
+                if (items.length) sections.push({ key: 'bases', title: '🔥 Bases Populares', className: 'pop', items });
             }
 
-            // 2. Sabores por Categoria
             Object.entries(this.catalog.sabores || {}).forEach(([key, group]) => {
                 if (!group || !Array.isArray(group.items)) return;
-                // Se v2 ativo e key NÃO é de uma categoria v2, ignora (é lixo legado)
                 if (v2ValidKeys && !v2ValidKeys.has(key)) return;
                 const items = group.items.filter(i => i.available && i.canalVenda !== 'delivery');
                 if (items.length > 0) {
                     const title = (group.icon ? group.icon + ' ' : '') + (group.name || key);
-                    this._renderSection(container, title, '', items);
+                    sections.push({ key, title, className: '', items });
                 }
             });
 
-            // 3. Bebidas
             if (this.catalog.bebidas) {
-                this._renderSection(container, '🥤 Bebidas', '', this.catalog.bebidas.filter(b => b.available));
+                const items = this.catalog.bebidas.filter(b => b.available);
+                if (items.length) sections.push({ key: 'bebidas', title: '🥤 Bebidas', className: '', items });
             }
+            return sections;
+        },
+
+        _matchesSearch(item) {
+            const q = (this._searchQuery || '').trim().toLowerCase();
+            if (!q) return true;
+            const name = (item.name || '').toLowerCase();
+            return name.indexOf(q) !== -1;
+        },
+
+        renderCategoryPills(sections) {
+            const pillsEl = document.getElementById('pdvCatPills');
+            if (!pillsEl) return;
+            const totalCount = sections.reduce((s, sec) => s + sec.items.length, 0);
+            const pills = [{ key: 'all', title: '✨ Todos', count: totalCount }]
+                .concat(sections.map(s => ({ key: s.key, title: s.title, count: s.items.length })));
+            pillsEl.innerHTML = pills.map(p =>
+                `<button type="button" class="pdv-cat-pill ${this._activeCategory === p.key ? 'active' : ''}" onclick="PDV_Dynamics.setCategory('${p.key}')">${p.title}<span class="count">${p.count}</span></button>`
+            ).join('');
+        },
+
+        setCategory(key) {
+            this._activeCategory = key;
+            this.renderProducts();
+        },
+
+        onSearchInput(value) {
+            // Debounce simples — operador digita rápido em loja cheia
+            clearTimeout(this._searchDebounce);
+            this._searchDebounce = setTimeout(() => {
+                this._searchQuery = value || '';
+                this.renderProducts();
+            }, 120);
+        },
+
+        clearSearch() {
+            const inp = document.getElementById('pdvSearch');
+            if (inp) inp.value = '';
+            this._searchQuery = '';
+            this.renderProducts();
+        },
+
+        _loadInventory() {
+            try {
+                const sess = typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession();
+                const fid = sess && sess.franchiseId;
+                if (!fid) return [];
+                return DataStore.getCollection('inventory', fid) || [];
+            } catch (e) { return []; }
+        },
+
+        // Calcula quantas unidades do item ainda dá pra produzir com o inventory atual.
+        // Retorna { units: number|Infinity, hasRecipe: boolean, missing: boolean }
+        _stockState(item, inventory) {
+            if (!item || !item.receita || !item.receita.length) {
+                return { units: Infinity, hasRecipe: false, missing: false };
+            }
+            if (typeof Recipes === 'undefined' || !Recipes.availability) {
+                return { units: Infinity, hasRecipe: true, missing: false };
+            }
+            // Status binário (sem estoque pra 1 unidade) via Recipes
+            const av = Recipes.availability(item, inventory || []);
+            if (av.status === 'indisponivel') {
+                return { units: 0, hasRecipe: true, missing: false };
+            }
+            // Conta quantas unidades dá pra fazer (heurística: usa o ingrediente mais escasso)
+            let minUnits = Infinity;
+            const byId = {};
+            (inventory || []).forEach(i => { if (i && i.id) byId[i.id] = i; });
+            for (const r of item.receita) {
+                const ins = byId[r.insumoId];
+                if (!ins) continue;
+                let need = Number(r.qty || 0);
+                if (need <= 0) continue;
+                // Conversão de unidades quando possível
+                if (typeof Units !== 'undefined' && Units.convert && Units.sameGroup) {
+                    if (Units.sameGroup(r.unit, ins.unit)) {
+                        const conv = Units.convert(need, r.unit, ins.unit);
+                        if (conv && conv.ok) need = conv.qty;
+                    }
+                }
+                const have = Number(ins.quantity || 0);
+                const units = need > 0 ? Math.floor(have / need) : Infinity;
+                if (units < minUnits) minUnits = units;
+            }
+            return { units: minUnits === Infinity ? Infinity : minUnits, hasRecipe: true, missing: false };
+        },
+
+        renderProducts() {
+            const container = document.getElementById('allProds');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const sections = this._collectSections();
+            this.renderCategoryPills(sections);
+
+            const visibleSections = (this._activeCategory === 'all'
+                ? sections
+                : sections.filter(s => s.key === this._activeCategory)
+            ).map(s => ({ ...s, items: s.items.filter(i => this._matchesSearch(i)) }))
+             .filter(s => s.items.length > 0);
+
+            if (!visibleSections.length) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'pdv-no-results';
+                const q = (this._searchQuery || '').trim();
+                emptyDiv.innerHTML = q
+                    ? `<div class="nr-emoji">🔍</div><div class="nr-msg">Nenhum produto com "${q}"</div><div class="nr-hint">Tente outro termo ou troque a categoria</div>`
+                    : `<div class="nr-emoji">📦</div><div class="nr-msg">Nenhum produto nessa categoria</div><div class="nr-hint">Cadastre em Painel → Produtos</div>`;
+                container.appendChild(emptyDiv);
+                return;
+            }
+
+            visibleSections.forEach(s => this._renderSection(container, s.title, s.className, s.items));
         },
 
         _renderSection(container, title, className, items) {
@@ -1068,15 +1360,31 @@
             // Ordena por order (campo de _v2 syncToLegacy) — premium fica no fim
             const sorted = items.slice().sort((a, b) => (a.order || 999) - (b.order || 999));
 
+            const inventory = this._loadInventory();
+            const lowStockThreshold = 5; // ≤ 5 unidades produzíveis = baixo estoque
+
             const grid = document.createElement('div');
             grid.className = 'pgrid';
             sorted.forEach(it => {
+                const stock = this._stockState(it, inventory);
+                const isOut = stock.hasRecipe && stock.units === 0;
+                const isLow = stock.hasRecipe && stock.units > 0 && stock.units <= lowStockThreshold && stock.units !== Infinity;
+
                 const div = document.createElement('div');
-                div.className = 'pitem ' + (it.isHighlight ? 'pop' : '');
-                // Badge premium / promo
-                const badgeHtml = it.badge
-                    ? `<div style="position:absolute;top:6px;right:6px;background:linear-gradient(135deg,#FFB300,#FF6F00);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;letter-spacing:.3px">${it.badge}</div>`
+                div.className = 'pitem ' + (it.isHighlight ? 'pop ' : '') + (isOut ? 'esgotado ' : '') + (isLow ? 'baixoestoque' : '');
+
+                // Badge premium/promo (ex: it.badge="PREMIUM") — top-left pra não conflitar com Esgotado/Restam
+                const promoBadge = it.badge
+                    ? `<div style="position:absolute;top:6px;left:6px;background:linear-gradient(135deg,#FFB300,#FF6F00);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;letter-spacing:.3px">${it.badge}</div>`
                     : '';
+
+                let stockBadge = '';
+                if (isOut) {
+                    stockBadge = '<div class="pbadge bd-out">❌ Esgotado</div>';
+                } else if (isLow) {
+                    stockBadge = `<div class="pbadge bd-low">⚠️ Restam ${stock.units}</div>`;
+                }
+
                 // Preço: "a partir de" se tem variantes
                 const priceLabel = it.tipoVenda === 'por_peso'
                     ? 'R$ ' + it.price.toFixed(2) + '/kg'
@@ -1084,14 +1392,23 @@
                         ? (it.aPartirDe ? '<span style="font-size:9px;color:#999;font-weight:600;display:block;line-height:1">a partir de</span>R$ ' + it.price.toFixed(2)
                                         : 'R$ ' + it.price.toFixed(2))
                         : 'Ajustar');
-                div.style.position = 'relative';
+
                 div.innerHTML = `
-                    ${badgeHtml}
+                    ${promoBadge}
+                    ${stockBadge}
                     <div class="pe">${it.emoji || '🍨'}</div>
                     <div class="pn">${it.name}</div>
                     <div class="pp">${priceLabel}</div>
                 `;
-                div.onclick = () => this.handleProductClick(it);
+                if (isOut) {
+                    div.onclick = () => {
+                        if (typeof Utils !== 'undefined' && Utils.showToast) {
+                            Utils.showToast('❌ ' + it.name + ' está esgotado. Reabasteça em Painel → Produtos.', 'error');
+                        }
+                    };
+                } else {
+                    div.onclick = () => this.handleProductClick(it);
+                }
                 grid.appendChild(div);
             });
             container.appendChild(grid);
@@ -2070,10 +2387,12 @@
             '<div class="pp">a partir R$ '+p.minPrice.toFixed(0)+'</div></div>';
     }
 
-    // Só renderiza catálogo legado (CARDAPIO_CONFIG) se CatalogV2 NÃO tem produtos.
-    // Se v2 tem produtos, PDV_Dynamics.renderProducts() já renderizou — não sobrescreve.
+    // Só renderiza catálogo legado (CARDAPIO_CONFIG) se CatalogV2 NÃO tem produtos
+    // E o PDV_Dynamics ainda não conseguiu carregar catalog_config.
+    // Se v2 ativo, PDV_Dynamics.renderProducts() já cuida (com busca/filtro).
     (function() {
         try {
+            if (PDV_Dynamics && PDV_Dynamics.catalog) return;  // PDV_Dynamics ja renderizou
             var legacy = DataStore.get('catalog_config');
             if (legacy && legacy._fromV2) return;  // v2 ativo, deixa PDV_Dynamics
             var sess = typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession();
@@ -2238,7 +2557,7 @@
                 '<button class="ci-rm" onclick="cRm('+i+')">×</button></div>';
         }).join('');
         el.innerHTML=html;
-        // Aplica desconto se houver
+        // Aplica desconto se houver (window._cartDiscount = {type, value, reason, by, at})
         var discAmount = (typeof calcDiscountAmount === 'function') ? calcDiscountAmount(total) : 0;
         var finalTotal = Math.max(0, Math.round((total - discAmount) * 100) / 100);
         var totalTxt = 'R$ '+finalTotal.toFixed(2).replace('.',',');
@@ -2248,7 +2567,8 @@
                 var d = window._cartDiscount;
                 var lbl = 'Subtotal R$ ' + total.toFixed(2).replace('.', ',')
                     + ' · Desconto ' + (d.type === 'perc' ? d.value + '%' : '')
-                    + ' -R$ ' + discAmount.toFixed(2).replace('.', ',');
+                    + ' -R$ ' + discAmount.toFixed(2).replace('.', ',')
+                    + (d.reason ? ' · ' + d.reason : '');
                 document.getElementById('cartDiscountLabel').textContent = lbl;
                 discRow.style.display = 'flex';
             } else {
@@ -2300,11 +2620,19 @@
 
     window.clearCart=function(){if(!cart.length)return;cart=[];window._cartDiscount=null;renderCart();toast('Pedido limpo')};
 
-    // ========== DESCONTO NO PEDIDO ==========
-    // Estado armazenado em window._cartDiscount = { type:'reais'|'perc', value:N } | null
-    // Aplicado em renderCart pra exibir Subtotal/Desconto/Total e em finishOrder pro
-    // total final. Resetado no clearCart e após finalizar venda.
+    // ========== DESCONTO NO PEDIDO (com PIN + limite + AuditLog) ==========
+    // Estado: window._cartDiscount = { type:'reais'|'perc', value, reason, by, at }
+    // Configuracao: franchise.descontoPin (default '1234'), franchise.descontoMaxPct (default 30)
     var _discountType = 'reais';
+    function getDiscountConfig(){
+        var franchises = DataStore.get('franchises') || [];
+        var f = franchises.find(function(x){return x.id===fid}) || {};
+        return {
+            pin: (f.descontoPin || '1234'),
+            maxPct: Number(f.descontoMaxPct || 30),
+            isDefault: !f.descontoPin
+        };
+    }
     function getCartSubtotal() {
         return Math.round(cart.reduce(function (s, c) { return s + (c.unitPrice || 0) * (c.qty || 1); }, 0) * 100) / 100;
     }
@@ -2321,6 +2649,7 @@
     window.openDiscountModal = function () {
         if (!cart.length) { toast('Adicione itens ao carrinho antes do desconto.'); return; }
         var modal = document.getElementById('discountModal');
+        var cfg = getDiscountConfig();
         var current = window._cartDiscount;
         _discountType = current ? current.type : 'reais';
         document.getElementById('discountTypeReais').style.background = _discountType === 'reais' ? '#F59E0B' : '#fff';
@@ -2331,9 +2660,19 @@
         document.getElementById('discountValue').value = current ? current.value : '';
         document.getElementById('discountSubtotal').textContent = 'R$ ' + getCartSubtotal().toFixed(2).replace('.', ',');
         document.getElementById('discountError').style.display = 'none';
+        // Reset PIN + reason fields se existirem (adicionados via JS abaixo)
+        var pinInputs = document.querySelectorAll('#discountModal .pin-digit');
+        pinInputs.forEach(function(i){i.value=''});
+        var reasonEl = document.getElementById('discountReason');
+        if (reasonEl) reasonEl.value = '';
+        var maxPctEl = document.getElementById('discountMaxPctHint');
+        if (maxPctEl) maxPctEl.textContent = cfg.maxPct;
         previewDiscount();
         modal.classList.add('open');
-        setTimeout(function () { document.getElementById('discountValue').focus(); }, 100);
+        setTimeout(function () {
+            var firstPin = document.querySelector('#discountModal .pin-digit[data-pin="0"]');
+            if (firstPin) firstPin.focus(); else document.getElementById('discountValue').focus();
+        }, 100);
     };
     window.closeDiscountModal = function () {
         document.getElementById('discountModal').classList.remove('open');
@@ -2372,24 +2711,215 @@
         var finalTotal = Math.max(0, Math.round((subtotal - amount) * 100) / 100);
         document.getElementById('discountPreview').textContent = 'Total final: R$ ' + finalTotal.toFixed(2).replace('.', ',') + ' (-R$ ' + amount.toFixed(2).replace('.', ',') + ')';
     };
+    function _showDiscountError(msg){
+        var el = document.getElementById('discountError');
+        el.textContent = msg;
+        el.style.display = 'block';
+    }
     window.applyDiscount = function () {
         var v = Number(document.getElementById('discountValue').value) || 0;
-        if (v <= 0) {
-            document.getElementById('discountError').textContent = 'Informe um valor maior que zero.';
-            document.getElementById('discountError').style.display = 'block';
+        if (v <= 0) { _showDiscountError('Informe um valor maior que zero.'); return; }
+
+        var cfg = getDiscountConfig();
+        var subtotal = getCartSubtotal();
+
+        // Valida PIN do gerente
+        var pinInputs = document.querySelectorAll('#discountModal .pin-digit');
+        if (pinInputs.length === 4) {
+            var pin = Array.from(pinInputs).map(function(i){return i.value}).join('');
+            if (pin.length !== 4) { _showDiscountError('Digite o PIN de 4 dígitos do gerente.'); return; }
+            if (pin !== cfg.pin) { _showDiscountError('PIN incorreto. Procure o gerente.'); return; }
+        }
+
+        // Valida motivo (se campo existir)
+        var reasonEl = document.getElementById('discountReason');
+        var reason = reasonEl ? (reasonEl.value || '').trim() : '';
+        if (reasonEl && !reason) { _showDiscountError('Informe o motivo do desconto.'); return; }
+
+        // Valida limite
+        var pct;
+        if (_discountType === 'perc') {
+            if (v > 100) v = 100;
+            pct = v;
+        } else {
+            pct = subtotal > 0 ? (Math.min(v, subtotal) / subtotal) * 100 : 0;
+        }
+        if (pct > cfg.maxPct) {
+            _showDiscountError('Desconto equivale a ' + pct.toFixed(1) + '% — limite da loja é ' + cfg.maxPct + '%.');
             return;
         }
-        if (_discountType === 'perc' && v > 100) v = 100;
-        window._cartDiscount = { type: _discountType, value: v };
+
+        var session = (typeof Auth !== 'undefined' && Auth.getSession) ? (Auth.getSession() || {}) : {};
+        var by = session.email || session.name || 'desconhecido';
+        window._cartDiscount = {
+            type: _discountType,
+            value: v,
+            reason: reason,
+            by: by,
+            byName: session.name || '',
+            at: new Date().toISOString(),
+            usedDefaultPin: cfg.isDefault
+        };
+
+        // AuditLog
+        try {
+            if (typeof AuditLog !== 'undefined' && AuditLog.log) {
+                AuditLog.log('discount_applied', {
+                    type: _discountType, value: v, pct: Math.round(pct*10)/10,
+                    subtotal: subtotal, reason: reason, by: by,
+                    usedDefaultPin: cfg.isDefault, cartItems: cart.length
+                }, fid);
+            }
+        } catch(e){ console.warn('AuditLog discount:', e); }
+
         closeDiscountModal();
         renderCart();
-        toast('🏷️ Desconto aplicado.');
+        toast(cfg.isDefault ? '⚠️ Desconto OK — configure PIN próprio em Configurações' : '🏷️ Desconto aplicado.');
     };
     window.clearDiscount = function () {
+        if (window._cartDiscount) {
+            try {
+                if (typeof AuditLog !== 'undefined' && AuditLog.log) {
+                    AuditLog.log('discount_removed', { previous: window._cartDiscount }, fid);
+                }
+            } catch(e){}
+        }
         window._cartDiscount = null;
         renderCart();
         toast('Desconto removido.');
     };
+
+    // PIN auto-advance e backspace (se modal de desconto tiver pin-digit fields)
+    document.addEventListener('keyup', function(ev){
+        var t = ev.target;
+        if(!t || !t.classList || !t.classList.contains('pin-digit'))return;
+        var idx = Number(t.dataset.pin);
+        if(ev.key === 'Backspace' && !t.value && idx > 0){
+            var prev = document.querySelector('#discountModal .pin-digit[data-pin="'+(idx-1)+'"]');
+            if(prev){prev.focus(); prev.value=''}
+            return;
+        }
+        if(/^\d$/.test(t.value) && idx < 3){
+            var next = document.querySelector('#discountModal .pin-digit[data-pin="'+(idx+1)+'"]');
+            if(next)next.focus();
+        }
+    });
+
+    // ============================================
+    // STATUS DO PEDIDO (Em preparo / Pronto / Entregue)
+    // ============================================
+    function todayLocalKey(){
+        var now = new Date();
+        var off = now.getTimezoneOffset() * 60000;
+        return new Date(now.getTime() - off).toISOString().slice(0,10);
+    }
+
+    function loadTodayOrders(){
+        var all = DataStore.getCollection('orders', fid) || [];
+        var key = todayLocalKey();
+        return all.filter(function(o){
+            if(!o || !o.createdAt) return false;
+            var d = new Date(o.createdAt);
+            if(isNaN(d.getTime())) return false;
+            var off = d.getTimezoneOffset() * 60000;
+            var localKey = new Date(d.getTime() - off).toISOString().slice(0,10);
+            return localKey === key;
+        }).sort(function(a,b){return (b.createdAt||'').localeCompare(a.createdAt||'')});
+    }
+
+    function statusLabel(s){
+        var map = {confirmado:'🟡 Confirmado', em_preparo:'🔵 Em preparo', pronto:'🟢 Pronto', entregue:'🟣 Entregue', pago:'💚 Pago', cancelado:'❌ Cancelado'};
+        return map[s] || s || '—';
+    }
+
+    function nextStatusButtons(o){
+        var st = o.status || 'confirmado';
+        var btns = '';
+        if(st === 'confirmado'){
+            btns += '<button class="order-action-btn oa-prep" onclick="setOrderStatus(\''+o.id+'\',\'em_preparo\')">▶ Em preparo</button>';
+        } else if(st === 'em_preparo'){
+            btns += '<button class="order-action-btn oa-ready" onclick="setOrderStatus(\''+o.id+'\',\'pronto\')">✓ Pronto</button>';
+        } else if(st === 'pronto'){
+            btns += '<button class="order-action-btn oa-deliver" onclick="setOrderStatus(\''+o.id+'\',\'entregue\')">📦 Entregue</button>';
+        }
+        return btns;
+    }
+
+    window.openOrdersModal = function(){
+        renderOrdersModal();
+        document.getElementById('ordersModalBg').classList.add('open');
+    };
+
+    window.closeOrdersModal = function(){
+        document.getElementById('ordersModalBg').classList.remove('open');
+    };
+
+    function renderOrdersModal(){
+        var body = document.getElementById('ordersModalBody');
+        if(!body)return;
+        var orders = loadTodayOrders();
+        if(!orders.length){
+            body.innerHTML = '<div class="orders-empty">Nenhum pedido hoje ainda. 🌱<br><span style="font-size:11px">Novos pedidos aparecem aqui automaticamente.</span></div>';
+            return;
+        }
+        body.innerHTML = orders.map(function(o){
+            var st = o.status || 'confirmado';
+            var time = o.createdAt ? new Date(o.createdAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
+            var name = (o.customer && o.customer.name) || 'Sem nome';
+            var itemsTxt = (o.items||[]).map(function(i){return i.qty+'× '+i.name}).slice(0,3).join(' · ');
+            if((o.items||[]).length > 3) itemsTxt += ' · +'+((o.items||[]).length-3)+' mais';
+            return '<div class="order-card">'+
+                '<div class="order-card-head">'+
+                    '<div><div class="order-name">'+Utils.escapeHtml(name)+'</div>'+
+                    '<div class="order-meta">'+time+' · R$ '+Number(o.total||0).toFixed(2).replace('.',',')+' · '+(o.payment||'?')+'</div></div>'+
+                    '<span class="order-status-badge ost-'+st+'">'+statusLabel(st)+'</span>'+
+                '</div>'+
+                '<div class="order-items-mini">'+Utils.escapeHtml(itemsTxt||'—')+'</div>'+
+                '<div class="order-actions">'+nextStatusButtons(o)+'</div>'+
+            '</div>';
+        }).join('');
+    }
+
+    window.setOrderStatus = function(orderId, newStatus){
+        try {
+            DataStore.updateInCollection('orders', fid, orderId, { status: newStatus, statusUpdatedAt: new Date().toISOString() });
+            if(typeof AuditLog !== 'undefined' && AuditLog.log){
+                AuditLog.log('order_status_change', { orderId: orderId, to: newStatus }, fid);
+            }
+            toast('Status: '+statusLabel(newStatus));
+            renderOrdersModal();
+            renderOrdersBadge();
+        } catch(e){ console.warn('setOrderStatus:', e); toast('Erro ao atualizar status') }
+    };
+
+    function renderOrdersBadge(){
+        var orders = loadTodayOrders();
+        var pending = orders.filter(function(o){return o.status==='confirmado'||o.status==='em_preparo'}).length;
+        var btn = document.getElementById('pdvOrdersBtnCount');
+        if(!btn)return;
+        btn.innerHTML = pending > 0 ? ' <span class="pending-dot" title="'+pending+' pedidos abertos"></span>' : '';
+    }
+
+    // ============================================
+    // FATURAMENTO PROEMINENTE (chip no header)
+    // ============================================
+    function renderFaturamentoChip(){
+        try {
+            var orders = loadTodayOrders();
+            var validas = orders.filter(function(o){return o.status !== 'cancelado'});
+            var total = validas.reduce(function(s,o){return s + Number(o.total||0)},0);
+            var n = validas.length;
+            var ticket = n > 0 ? total/n : 0;
+            var chip = document.getElementById('pdvFaturamentoChip');
+            if(!chip)return;
+            chip.innerHTML = '<div class="pdv-fat-chip" title="Faturamento de hoje">💰 <span class="fat-num">R$ '+total.toFixed(2).replace('.',',')+'</span><span class="fat-sep">·</span>🛒 <span class="fat-num">'+n+'</span><span class="fat-sep">·</span>🎯 R$ <span class="fat-num">'+ticket.toFixed(2).replace('.',',')+'</span></div>';
+            chip.style.display = '';
+        } catch(e){ console.warn('Faturamento chip:', e) }
+    }
+
+    // Refresh chips a cada 30s + bootstrap após 800ms
+    setInterval(function(){ renderFaturamentoChip(); renderOrdersBadge(); }, 30000);
+    setTimeout(function(){ renderFaturamentoChip(); renderOrdersBadge(); }, 800);
 
     // ============================================
     // OPEN TABS (Conta Aberta)
@@ -2461,7 +2991,7 @@
             toast('📋 '+tabName+' — conta aberta! Cliente pode consumir mais.');
         }
         saveOpenTabs();
-        cart=[];renderCart();
+        cart=[];cartDiscount=null;renderCart();
         document.getElementById('orderName').value='';
     };
 
@@ -2678,12 +3208,17 @@
         if(!cart.length){toast('Adicione itens');return}
         // Round to 2 decimals to avoid float precision issues (ex: 0.5*59.99 = 29.995)
         var subtotal=Math.round(cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0)*100)/100;
-        // Aplica desconto se houver (window._cartDiscount = {type, value})
+        // Aplica desconto se houver (window._cartDiscount = {type, value, reason, by, at})
         var discountAmount = (typeof calcDiscountAmount === 'function') ? calcDiscountAmount(subtotal) : 0;
         var discountInfo = window._cartDiscount ? {
             type: window._cartDiscount.type,
             value: Number(window._cartDiscount.value) || 0,
-            amount: discountAmount
+            amount: discountAmount,
+            reason: window._cartDiscount.reason || '',
+            by: window._cartDiscount.by || '',
+            byName: window._cartDiscount.byName || '',
+            at: window._cartDiscount.at || null,
+            usedDefaultPin: !!window._cartDiscount.usedDefaultPin
         } : null;
         var total = Math.max(0, Math.round((subtotal - discountAmount) * 100) / 100);
         var oName=document.getElementById('orderName').value||(orderType==='balcao'?'Balcao':'');
@@ -2754,7 +3289,8 @@
             return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
         })();
         var _allOrders = DataStore.getCollection('orders', fid) || [];
-        var _todayOrders = _allOrders.filter(function(o){ return o.createdAt && o.createdAt.slice(0,10) === _todayKeyLocal; });
+        // Ignora tombstones (deleted) na contagem da numeração diária
+        var _todayOrders = _allOrders.filter(function(o){ return !o.deleted && o.createdAt && o.createdAt.slice(0,10) === _todayKeyLocal; });
         var _seqNum = _todayOrders.length + 1;
 
         var order={
@@ -2780,7 +3316,7 @@
                 };
             }),
             subtotal:subtotal,
-            discount:discountInfo,             // {type, value, amount} | null
+            discount:discountInfo,             // {type, value, amount, reason, by, byName, at, usedDefaultPin} | null
             total:total,
             customer:{name:oName,phone:document.getElementById('cPhone').value||''},
             address:orderType==='delivery'?document.getElementById('cAddr').value:'',
@@ -2789,6 +3325,28 @@
             voucherCode: voucherDisplay,       // Desafio 10 Segundos code
             challengeAttempts: attemptsPerPurchase
         };
+
+        // === AUTO-PRONTO ===
+        // Pedido só com itens grab-and-go (buffet/picolé/água/sorvete-kg/bebida)
+        // pula direto pra "pronto" — não passa por Confirmar/Preparar.
+        // Se tiver pelo menos UM milkshake/sundae/açaí, segue fluxo normal (status='confirmado').
+        try {
+            var _hasKitchenItem = (order.items || []).some(function(it){
+                if (typeof Printer === 'undefined' || !Printer.isKitchenItem) return true; // fail-safe: assume cozinha
+                // isKitchenItem espera {id, name, type}; order item usa productId
+                return Printer.isKitchenItem({
+                    id: it.productId || it.id || null,
+                    name: it.name || '',
+                    type: it.type || 'unitario'
+                });
+            });
+            if (!_hasKitchenItem) {
+                order.status = 'pronto';
+                order.autoReady = true;
+                order.autoReadyAt = new Date().toISOString();
+            }
+        } catch(_e) { console.warn('[finishOrder] auto-pronto check falhou:', _e); }
+
         // OfflineQueue: grava SEMPRE (online ou offline) — PDV sobrevive sem internet
         if (typeof OfflineQueue !== 'undefined' && OfflineQueue.enqueueOrder) {
             try {
@@ -3022,6 +3580,8 @@
         cart=[];window._cartDiscount=null;renderCart();
         document.getElementById('orderName').value='';document.getElementById('cPhone').value='';document.getElementById('cAddr').value='';
         document.getElementById('nfCk').checked=false;document.getElementById('nfCpf').style.display='none';
+        // Refresh status row counters após gravar pedido
+        try { renderFaturamentoChip(); renderOrdersBadge(); } catch(e){}
     };
 
     // Cleanup balança on unload
@@ -3048,19 +3608,25 @@
     };
 
     function findScratchAnywhere(code){
-        // Accepts short code (XXX-XXX) OR full code (MKP-XXXX-YYYYMMDD-XXXXXXXX) OR full URL
+        // Aceita short code (XXX-XXX), full code (MKP-XXXX-YYYYMMDD-XXXXXXXX), URL ou variações (sem dash, com espaços)
         return new Promise(function(resolve){
-            // Extract code from URL if scanned (might be full raspinha URL)
-            var codeUp = code.toUpperCase();
+            var codeUp = (code || '').toUpperCase().trim();
             var urlMatch = codeUp.match(/[?&]C=([A-Z0-9-]+)/);
             if(urlMatch) codeUp = urlMatch[1];
             else {
-                // Try plain query param format
                 var qMatch = codeUp.match(/CODE=([A-Z0-9-]+)/);
                 if(qMatch) codeUp = qMatch[1];
             }
+            // Normaliza variações: sem dash → adiciona ("TXPAJW" → "TXP-AJW")
+            // Com espaço → vira dash ("TXP AJW" → "TXP-AJW")
+            var withoutDash = codeUp.replace(/[-\s]/g, '');
+            var candidates = [codeUp];
+            if (withoutDash.length === 6) {
+                candidates.push(withoutDash.slice(0, 3) + '-' + withoutDash.slice(3));
+            }
+            if (codeUp !== withoutDash) candidates.push(withoutDash);
 
-            var isShort = codeUp.length <= 8; // Short codes are 7 chars (XXX-XXX)
+            var isShort = codeUp.length <= 8;
 
             // Check localStorage first (fast)
             var keys = Object.keys(localStorage);
@@ -3069,33 +3635,102 @@
                     try {
                         var arr = JSON.parse(localStorage.getItem(keys[i]));
                         var found = arr.find(function(s){
-                            var fullMatch = (s.code||'').toUpperCase() === codeUp;
-                            var shortMatch = (s.shortCode||'').toUpperCase() === codeUp;
-                            return fullMatch || shortMatch;
+                            var sc = (s.code||'').toUpperCase();
+                            var ss = (s.shortCode||'').toUpperCase();
+                            return candidates.some(function(c){ return sc === c || ss === c; });
                         });
                         if(found) return resolve(found);
                     } catch(e){}
                 }
             }
-            // Fallback Firestore - full code query
+            // Fallback Firestore — tenta cada candidato
             if(typeof firebase !== 'undefined' && firebase.firestore){
-                if(isShort){
-                    // Firestore query by shortCode
-                    firebase.firestore().collection('scratches').where('shortCode','==',codeUp).limit(1).get().then(function(snap){
-                        if(!snap.empty) resolve(snap.docs[0].data());
-                        else resolve(null);
-                    }).catch(function(){ resolve(null); });
+                var queries = [];
+                if (isShort) {
+                    candidates.forEach(function(c){
+                        queries.push(firebase.firestore().collection('scratches').where('shortCode','==',c).limit(1).get());
+                    });
                 } else {
-                    firebase.firestore().collection('scratches').doc(codeUp).get().then(function(doc){
-                        if(doc.exists) resolve(doc.data());
-                        else resolve(null);
-                    }).catch(function(){ resolve(null); });
+                    queries.push(firebase.firestore().collection('scratches').doc(codeUp).get());
                 }
+                Promise.all(queries.map(function(p){ return p.catch(function(){ return null; }); })).then(function(results){
+                    for (var i = 0; i < results.length; i++) {
+                        var r = results[i];
+                        if (!r) continue;
+                        if (r.exists && r.data) return resolve(r.data());
+                        if (r.docs && r.docs.length) return resolve(r.docs[0].data());
+                    }
+                    resolve(null);
+                });
             } else {
                 resolve(null);
             }
         });
     }
+
+    // Override admin: aceita código órfão (não sincronizado) e cria scratch fictício
+    // pra resgatar manualmente. Operador valida o recibo impresso visualmente.
+    // Loga em audit pra rastreabilidade.
+    window.adminForceRedeem = function(){
+        var code = document.getElementById('redeemCode').value.trim().toUpperCase();
+        if (!code || code.length < 6) { alert('Digite o código primeiro.'); return; }
+        var session = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+        var role = session ? session.role : null;
+        if (role !== 'super_admin' && role !== 'franchisee' && role !== 'manager') {
+            alert('Apenas gerente/franqueado pode forçar resgate de código órfão.');
+            return;
+        }
+        // Pergunta o tipo de prêmio pra registrar — operador escolhe
+        var prizeOptions = '\n1 = Topping Grátis\n2 = Upgrade de Tamanho\n3 = R$ 5 OFF\n4 = Picolés 2 por 1\n5 = Outro (descreva)';
+        var choice = prompt('Forçar resgate do código ' + code + '?\n\nQual prêmio o cliente ganhou? (digite o número):' + prizeOptions);
+        if (!choice) return;
+        var prizeMap = {
+            '1': { name: '1 Topping Grátis', tier: 'small' },
+            '2': { name: 'Upgrade de Tamanho', tier: 'small' },
+            '3': { name: 'R$ 5 OFF', tier: 'medium' },
+            '4': { name: 'Picolés 2 por 1', tier: 'medium' }
+        };
+        var prize = prizeMap[choice.trim()];
+        if (!prize) {
+            var custom = prompt('Descreva o prêmio (ex: "Milkshake P Grátis"):');
+            if (!custom) return;
+            prize = { name: custom, tier: 'small' };
+        }
+        var motivo = prompt('Motivo do override (será logado em auditoria):') || 'Código órfão (não sincronizado)';
+        // Cria scratch retroativo
+        var fakeScratch = {
+            code: 'OVERRIDE-' + code + '-' + Date.now(),
+            shortCode: code,
+            franchiseId: fid,
+            storeName: fr ? fr.name : 'MilkyPot',
+            prizeName: prize.name,
+            prizeDesc: prize.name + ' — resgate manual',
+            prizeTier: prize.tier,
+            prizeScope: 'mesma_loja',
+            minOrder: 0,
+            customerName: '',
+            status: 'redeemed',
+            createdAt: new Date().toISOString(),
+            redeemedAt: new Date().toISOString(),
+            redeemedStoreId: fid,
+            redeemedBy: session ? session.name : 'admin',
+            generatedBy: 'override',
+            overrideReason: motivo
+        };
+        try {
+            saveScratch(fakeScratch);
+            if (typeof AuditLog !== 'undefined' && AuditLog.log) {
+                AuditLog.log('SCRATCH_FORCE_REDEEM', { code: code, prize: prize.name, motivo: motivo }, fid);
+            }
+            // Aplica o prêmio no cart
+            applyScratchPrize(fakeScratch);
+            closeRedeemModal();
+            toast('✅ Resgate forçado: ' + prize.name);
+        } catch (e) {
+            console.error('adminForceRedeem:', e);
+            alert('Erro: ' + e.message);
+        }
+    };
 
     // QR Code Scanner usando jsQR + getUserMedia
     var qrStream = null;
@@ -3180,11 +3815,14 @@
         var statusEl = document.getElementById('redeemStatus');
         var btn = document.getElementById('btnConfirmRedeem');
 
-        if(!code || code.length < 10){
+        // Aceita short code (XXX-XXX = 7 chars) OU full code (MKP-XXXX-YYYYMMDD-XXXXXXXX = 28 chars).
+        // ANTES exigia >= 10 chars — bloqueava TODOS os shortcodes (TXP-AJW etc).
+        // Mínimo: 6 (XXXXXX sem dash) — permite tolerância ao usuário.
+        if(!code || code.length < 6){
             statusEl.style.display = 'block';
             statusEl.style.background = '#FFEBEE';
             statusEl.style.color = '#C62828';
-            statusEl.innerHTML = '<strong>⚠️ Codigo invalido</strong><br><span style="font-size:12px">Digite um codigo com pelo menos 10 caracteres</span>';
+            statusEl.innerHTML = '<strong>⚠️ Codigo invalido</strong><br><span style="font-size:12px">Digite o codigo do recibo (ex: TXP-AJW)</span>';
             return;
         }
 
@@ -3466,6 +4104,223 @@
         // Demais perfis (balcao/cliente): receipt térmico tradicional
         var t = buildReceipt(name, tl[order.type]||order.type.toUpperCase(), now, order.items, order.total, customerName, addr, order.payment, voucherCode, order.id, scratchData, profileId, order.discount || null);
         openPrintWindow(t, scratchData, profileId);
+    };
+
+    /* ============================================
+       F1 — VENDAS DO DIA (relatório de bolso pro operador)
+       ============================================
+       Mostra: total, qtd pedidos, ticket médio, breakdown por forma
+       de pagamento, top 5 produtos, lista de pedidos do dia.
+       Fonte: orders_<fid> filtrado por createdAt local hoje.
+       ============================================ */
+    window.showVendasDoDia = function() {
+        try {
+            var today = (function(){
+                var dt = new Date();
+                return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
+            })();
+            var allOrders = (DataStore.getCollection('orders', fid) || []).filter(function(o){
+                return !o.deleted && o.createdAt && o.createdAt.slice(0,10) === today;
+            });
+
+            // Considera só pedidos finalizados pra faturamento real
+            var finalizados = allOrders.filter(function(o){
+                return o.status === 'entregue' || o.status === 'pronto' || o.status === 'em_entrega';
+            });
+            var cancelados = allOrders.filter(function(o){ return o.status === 'cancelado'; });
+            var emAndamento = allOrders.filter(function(o){
+                return ['novo','confirmado','preparando'].indexOf(o.status) !== -1;
+            });
+
+            var totalDia = finalizados.reduce(function(s, o){ return s + (Number(o.total) || 0); }, 0);
+            var qtdPedidos = finalizados.length;
+            var ticketMedio = qtdPedidos > 0 ? (totalDia / qtdPedidos) : 0;
+
+            // Breakdown por forma de pagamento
+            var porPagto = {};
+            finalizados.forEach(function(o){
+                var p = (o.payment || 'Não informado').toLowerCase().trim();
+                var key = p;
+                if (p.indexOf('pix') !== -1) key = 'pix';
+                else if (p.indexOf('din') !== -1) key = 'dinheiro';
+                else if (p.indexOf('debit') !== -1 || p.indexOf('débit') !== -1) key = 'cartao_debito';
+                else if (p.indexOf('credit') !== -1 || p.indexOf('crédit') !== -1) key = 'cartao_credito';
+                else if (p.indexOf('vale') !== -1 || p.indexOf('vr') !== -1 || p.indexOf('va') !== -1) key = 'vale';
+                else if (p.indexOf('voucher') !== -1 || p.indexOf('cortesia') !== -1) key = 'cortesia';
+                porPagto[key] = (porPagto[key] || 0) + (Number(o.total) || 0);
+            });
+            var pagtoLabel = {
+                pix: '💸 PIX', dinheiro: '💵 Dinheiro',
+                cartao_debito: '💳 Débito', cartao_credito: '💳 Crédito',
+                vale: '🍴 Vale', cortesia: '🎁 Cortesia',
+                'não informado': '❓ Não informado'
+            };
+
+            // Top produtos por qtd
+            var prodCount = {};
+            finalizados.forEach(function(o){
+                (o.items || []).forEach(function(it){
+                    var name = it.name || '?';
+                    prodCount[name] = (prodCount[name] || 0) + (Number(it.qty) || 1);
+                });
+            });
+            var topProdutos = Object.keys(prodCount)
+                .map(function(n){ return { name: n, qty: prodCount[n] }; })
+                .sort(function(a,b){ return b.qty - a.qty; })
+                .slice(0, 5);
+
+            function brl(v) {
+                return 'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+
+            // HTML do modal
+            var pagtoHtml = Object.keys(porPagto).length === 0
+                ? '<div style="color:#999;padding:8px">Nenhuma venda registrada hoje.</div>'
+                : Object.keys(porPagto).sort(function(a,b){ return porPagto[b] - porPagto[a]; }).map(function(k){
+                    var pct = totalDia > 0 ? (porPagto[k] / totalDia * 100).toFixed(0) : 0;
+                    return '<div style="display:flex;justify-content:space-between;padding:10px 14px;background:#fafafa;border-radius:8px;margin-bottom:6px;align-items:center">' +
+                        '<span style="font-weight:600">' + (pagtoLabel[k] || k) + '</span>' +
+                        '<span><strong style="color:#2E7D32;font-size:1.1rem">' + brl(porPagto[k]) + '</strong> <small style="color:#999">(' + pct + '%)</small></span>' +
+                    '</div>';
+                }).join('');
+
+            var topProdHtml = topProdutos.length === 0
+                ? '<div style="color:#999;padding:8px">—</div>'
+                : topProdutos.map(function(p, i){
+                    var medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+                    return '<div style="display:flex;justify-content:space-between;padding:8px 14px;background:#fafafa;border-radius:6px;margin-bottom:4px">' +
+                        '<span>' + medals[i] + ' ' + p.name + '</span>' +
+                        '<strong>' + p.qty + 'x</strong>' +
+                    '</div>';
+                }).join('');
+
+            var listaPedidosHtml = finalizados.length === 0
+                ? '<div style="color:#999;padding:8px;text-align:center">Nenhum pedido finalizado hoje ainda.</div>'
+                : finalizados.slice().reverse().slice(0, 30).map(function(o){
+                    var seq = o.dailySeq ? '#' + o.dailySeq : '#' + o.id.slice(-6);
+                    var hh = o.createdAt ? new Date(o.createdAt).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit'}) : '—';
+                    var customer = (o.customer && o.customer.name) || 'Balcão';
+                    return '<tr>' +
+                        '<td style="padding:6px 8px;font-weight:700">' + seq + '</td>' +
+                        '<td style="padding:6px 8px;color:#666">' + hh + '</td>' +
+                        '<td style="padding:6px 8px">' + customer + '</td>' +
+                        '<td style="padding:6px 8px;text-align:right;font-weight:700;color:#2E7D32">' + brl(o.total) + '</td>' +
+                    '</tr>';
+                }).join('');
+
+            var html =
+                '<div id="vendasDiaOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:inherit;padding:16px;overflow:auto">' +
+                '  <div style="background:#fff;border-radius:18px;max-width:880px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,0.4)">' +
+                '    <div style="background:linear-gradient(135deg,#6A1B9A,#AB47BC);color:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1">' +
+                '      <h2 style="margin:0;font-family:Baloo 2,cursive;font-size:1.5rem">📊 Vendas do Dia · ' + new Date().toLocaleDateString('pt-BR') + '</h2>' +
+                '      <button id="vendasDiaClose" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1.2rem;font-weight:700">✕</button>' +
+                '    </div>' +
+                '    <div style="padding:24px">' +
+                       // KPIs grandes
+                '      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">' +
+                '        <div style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-radius:12px;padding:18px;text-align:center">' +
+                '          <div style="font-size:0.75rem;color:#558B2F;font-weight:700;text-transform:uppercase">Total Vendido</div>' +
+                '          <div style="font-size:1.6rem;font-weight:800;color:#1B5E20;margin-top:4px">' + brl(totalDia) + '</div>' +
+                '        </div>' +
+                '        <div style="background:linear-gradient(135deg,#E3F2FD,#BBDEFB);border-radius:12px;padding:18px;text-align:center">' +
+                '          <div style="font-size:0.75rem;color:#1565C0;font-weight:700;text-transform:uppercase">Pedidos</div>' +
+                '          <div style="font-size:1.6rem;font-weight:800;color:#0D47A1;margin-top:4px">' + qtdPedidos + '</div>' +
+                '        </div>' +
+                '        <div style="background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border-radius:12px;padding:18px;text-align:center">' +
+                '          <div style="font-size:0.75rem;color:#E65100;font-weight:700;text-transform:uppercase">Ticket Médio</div>' +
+                '          <div style="font-size:1.6rem;font-weight:800;color:#BF360C;margin-top:4px">' + brl(ticketMedio) + '</div>' +
+                '        </div>' +
+                '      </div>' +
+
+                       // Status secundário
+                '      <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap">' +
+                '        <div style="font-size:0.9rem"><strong style="color:#FB8C00">⏳ Em andamento:</strong> ' + emAndamento.length + '</div>' +
+                '        <div style="font-size:0.9rem"><strong style="color:#D32F2F">❌ Cancelados:</strong> ' + cancelados.length + '</div>' +
+                '      </div>' +
+
+                       // Breakdown por forma de pagamento
+                '      <h3 style="margin:0 0 12px;color:#4A148C;font-family:Baloo 2,cursive">💳 Por Forma de Pagamento</h3>' +
+                '      <div style="margin-bottom:24px">' + pagtoHtml + '</div>' +
+
+                       // Top produtos
+                '      <h3 style="margin:0 0 12px;color:#4A148C;font-family:Baloo 2,cursive">🏆 Top 5 Produtos</h3>' +
+                '      <div style="margin-bottom:24px">' + topProdHtml + '</div>' +
+
+                       // Lista de pedidos
+                '      <h3 style="margin:0 0 12px;color:#4A148C;font-family:Baloo 2,cursive">📋 Histórico (últimos 30)</h3>' +
+                '      <div style="overflow-x:auto;margin-bottom:16px">' +
+                '        <table style="width:100%;border-collapse:collapse;font-size:0.9rem">' +
+                '          <thead><tr style="background:#F3E5F5;color:#4A148C">' +
+                '            <th style="padding:10px 8px;text-align:left">Pedido</th>' +
+                '            <th style="padding:10px 8px;text-align:left">Hora</th>' +
+                '            <th style="padding:10px 8px;text-align:left">Cliente</th>' +
+                '            <th style="padding:10px 8px;text-align:right">Total</th>' +
+                '          </tr></thead>' +
+                '          <tbody>' + listaPedidosHtml + '</tbody>' +
+                '        </table>' +
+                '      </div>' +
+
+                '      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">' +
+                '        <button id="vendasDiaPrint" style="padding:10px 20px;background:#1565C0;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">🖨️ Imprimir</button>' +
+                '        <button id="vendasDiaCloseBtn" style="padding:10px 20px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">Fechar (Esc)</button>' +
+                '      </div>' +
+                '    </div>' +
+                '  </div>' +
+                '</div>';
+
+            // Remove modal anterior se houver
+            var prev = document.getElementById('vendasDiaOverlay');
+            if (prev) prev.remove();
+
+            var div = document.createElement('div');
+            div.innerHTML = html;
+            document.body.appendChild(div.firstChild);
+
+            var overlay = document.getElementById('vendasDiaOverlay');
+            function closeModal() { if (overlay) overlay.remove(); document.removeEventListener('keydown', escListener); }
+            function escListener(ev) { if (ev.key === 'Escape') { ev.preventDefault(); closeModal(); } }
+            document.getElementById('vendasDiaClose').onclick = closeModal;
+            document.getElementById('vendasDiaCloseBtn').onclick = closeModal;
+            overlay.onclick = function(e) { if (e.target === overlay) closeModal(); };
+            document.addEventListener('keydown', escListener);
+
+            // Imprimir versão simplificada
+            document.getElementById('vendasDiaPrint').onclick = function() {
+                var w = window.open('', '_blank', 'width=400,height=700');
+                if (!w) { alert('Habilite popups pra imprimir.'); return; }
+                var fr = (DataStore.getAllFranchises() || []).find(function(x){return x.id === fid;});
+                var fname = (fr && fr.name) || 'MilkyPot';
+                w.document.write(
+                    '<html><head><title>Vendas do Dia</title><style>' +
+                    'body{font-family:monospace;font-size:13px;padding:12px;width:280px}' +
+                    'h2{text-align:center;font-size:14px;margin:8px 0}' +
+                    'hr{border:none;border-top:1px dashed #000;margin:8px 0}' +
+                    '.row{display:flex;justify-content:space-between;padding:2px 0}' +
+                    '</style></head><body>' +
+                    '<h2>' + fname + '</h2>' +
+                    '<h2>VENDAS DO DIA</h2>' +
+                    '<div style="text-align:center;font-size:11px">' + new Date().toLocaleString('pt-BR') + '</div>' +
+                    '<hr>' +
+                    '<div class="row"><span>Total:</span><strong>' + brl(totalDia) + '</strong></div>' +
+                    '<div class="row"><span>Pedidos:</span><strong>' + qtdPedidos + '</strong></div>' +
+                    '<div class="row"><span>Ticket medio:</span><strong>' + brl(ticketMedio) + '</strong></div>' +
+                    '<hr><strong>Por pagamento:</strong>' +
+                    Object.keys(porPagto).map(function(k){
+                        return '<div class="row"><span>' + (pagtoLabel[k] || k).replace(/[^\w\s]/g,'') + ':</span><strong>' + brl(porPagto[k]) + '</strong></div>';
+                    }).join('') +
+                    '<hr><strong>Em andamento:</strong> ' + emAndamento.length + '<br>' +
+                    '<strong>Cancelados:</strong> ' + cancelados.length +
+                    '<hr style="border-top:2px solid #000">' +
+                    '<div style="text-align:center;font-size:11px">Relatório operacional</div>' +
+                    '<script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},700)},300)}<' + '/script>' +
+                    '</body></html>'
+                );
+                w.document.close();
+            };
+        } catch(e) {
+            console.error('[Vendas do Dia] erro:', e);
+            alert('Erro ao abrir vendas do dia: ' + e.message);
+        }
     };
 
     window.printOrder=function(){
@@ -3875,9 +4730,10 @@
         // Não interfere quando user tá digitando em input/textarea/select
         var tag = (e.target && e.target.tagName) || '';
         var isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
-        if (isTyping && e.key !== 'F11' && !e.key.match(/^F[2-4]$/)) return;
+        if (isTyping && e.key !== 'F11' && !e.key.match(/^F[1-4]$/)) return;
 
         if(e.key==='F11'){ e.preventDefault(); toggleFullscreen(); return; }
+        if(e.key==='F1'){  e.preventDefault(); if(typeof showVendasDoDia==='function') showVendasDoDia(); return; }
         if(e.key==='F2'){  e.preventDefault(); if(typeof printOrder==='function') printOrder(); return; }
         if(e.key==='F3'){  e.preventDefault(); if(typeof openTab==='function') openTab(); return; }
         if(e.key==='F4'){  e.preventDefault(); if(typeof finishOrder==='function') finishOrder(); return; }
@@ -4189,70 +5045,6 @@
 </div>
 <script>
 (function(){
-    // === PDV Sync UI Controller ===
-    window.forcePdvSync = async function() {
-        if (typeof DataStore === 'undefined' || !DataStore.forceSync) return;
-        var label = document.getElementById('pdvSyncLabel');
-        var icon = document.getElementById('pdvSyncIcon');
-        if (label) label.textContent = 'Sincronizando...';
-        if (icon) icon.style.animation = 'spin 1s linear infinite';
-        
-        try {
-            await DataStore.forceSync();
-            toast('✅ Sincronia completa!');
-        } catch(e) {
-            toast('❌ Erro na sincronia');
-        } finally {
-            if (icon) icon.style.animation = '';
-            updateSyncUI();
-        }
-    };
-
-    function updateSyncUI() {
-        if (typeof DataStore === 'undefined' || !DataStore.getStatus) return;
-        var st = DataStore.getStatus();
-        var label = document.getElementById('pdvSyncLabel');
-        var icon = document.getElementById('pdvSyncIcon');
-        var widget = document.getElementById('pdvSyncWidget');
-        if (!label || !icon) return;
-
-        if (!st.online) {
-            icon.textContent = '❌';
-            label.textContent = 'Offline';
-            widget.style.background = 'rgba(239, 68, 68, 0.2)';
-        } else if (st.pending > 0) {
-            icon.textContent = '🔄';
-            label.textContent = st.pending + ' pendente(s)';
-            widget.style.background = 'rgba(245, 158, 11, 0.2)';
-            icon.style.animation = 'spin 2s linear infinite';
-        } else if (st.status === 'syncing') {
-            icon.textContent = '🔄';
-            label.textContent = 'Sync...';
-            widget.style.background = 'rgba(59, 130, 246, 0.2)';
-        } else {
-            icon.textContent = '✅';
-            label.textContent = 'Sincronizado';
-            widget.style.background = 'rgba(16, 185, 129, 0.2)';
-            icon.style.animation = '';
-        }
-        
-        // Tooltip com detalhes
-        var last = st.lastSync ? new Date(st.lastSync).toLocaleTimeString('pt-BR') : 'nunca';
-        widget.title = 'Status: ' + st.status + '\nÚltima sync: ' + last + '\nPendentes: ' + st.pending + '\nClique para forçar.';
-    }
-    
-    // Keyframes pro icone rodar
-    if (!document.getElementById('syncSpinCss')) {
-        var s = document.createElement('style');
-        s.id = 'syncSpinCss';
-        s.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
-        document.head.appendChild(s);
-    }
-
-    // Update UI every 5s
-    setInterval(updateSyncUI, 5000);
-    window.addEventListener('mp_synced', updateSyncUI);
-
     if('serviceWorker' in navigator){
         navigator.serviceWorker.register('/sw.js').then(function(reg){
             console.log('[PDV] SW registered:', reg.scope);

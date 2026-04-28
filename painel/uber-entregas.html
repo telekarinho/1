@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Uber Direct Entregas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#42A5F5">
+    <style>
+        /* ---- Tabs ---- */
+        .uber-tabs {
+            display: flex;
+            gap: 4px;
+            border-bottom: 2px solid var(--mp-border);
+            margin-bottom: 24px;
+        }
+        .uber-tab-btn {
+            padding: 10px 22px;
+            border: none;
+            background: none;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--mp-text-light);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: color .2s, border-color .2s;
+        }
+        .uber-tab-btn.active {
+            color: var(--mp-dark);
+            border-bottom-color: #7C3AED;
+        }
+        .uber-tab-panel { display: none; }
+        .uber-tab-panel.active { display: block; }
+
+        /* ---- KPI cards ---- */
+        .uber-kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .uber-kpi {
+            background: var(--mp-card);
+            border-radius: var(--mp-radius);
+            padding: 18px 16px;
+            box-shadow: var(--mp-shadow);
+            text-align: center;
+        }
+        .uber-kpi-val {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: var(--mp-dark);
+            line-height: 1;
+        }
+        .uber-kpi-lbl {
+            font-size: 0.78rem;
+            color: var(--mp-text-light);
+            margin-top: 5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+        .uber-kpi.green .uber-kpi-val { color: #2E7D32; }
+        .uber-kpi.red .uber-kpi-val { color: #C62828; }
+        .uber-kpi.blue .uber-kpi-val { color: #1565C0; }
+        .uber-kpi.purple .uber-kpi-val { color: #6A1B9A; }
+
+        /* ---- Table ---- */
+        .uber-table-wrap { overflow-x: auto; }
+        .uber-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.88rem;
+        }
+        .uber-table th {
+            background: var(--mp-dark);
+            color: #fff;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            white-space: nowrap;
+        }
+        .uber-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--mp-border);
+            vertical-align: middle;
+            color: var(--mp-text);
+        }
+        .uber-table tr:hover td { background: #FAF8FF; }
+        .uber-table .action-btns { display: flex; gap: 6px; }
+        .uber-table .action-btns button {
+            padding: 5px 9px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: opacity .2s;
+        }
+        .uber-table .action-btns button:hover { opacity: .8; }
+        .btn-view { background: #EDE7F6; color: #4527A0; }
+        .btn-refresh { background: #E3F2FD; color: #0D47A1; }
+        .btn-create { background: #E8F5E9; color: #1B5E20; }
+        .btn-cancel { background: #FFEBEE; color: #B71C1C; }
+
+        /* ---- Status badges ---- */
+        .uber-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: .4px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .uber-badge-aguardando_pagamento { background: #F5F5F5; color: #616161; }
+        .uber-badge-cotado { background: #E3F2FD; color: #0D47A1; }
+        .uber-badge-criando_entrega { background: #FFFDE7; color: #F57F17; }
+        .uber-badge-entregador_a_caminho_da_loja { background: #FFF3E0; color: #E65100; }
+        .uber-badge-pedido_retirado { background: #E8EAF6; color: #283593; }
+        .uber-badge-saiu_para_entrega { background: #EDE7F6; color: #4527A0; }
+        .uber-badge-entregue { background: #E8F5E9; color: #1B5E20; }
+        .uber-badge-falha { background: #FFEBEE; color: #B71C1C; }
+        .uber-badge-cancelado { background: #FFEBEE; color: #B71C1C; }
+
+        /* ---- Modal ---- */
+        .uber-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .uber-modal-overlay.active { display: flex; }
+        .uber-modal {
+            background: #fff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 680px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--mp-shadow-lg);
+        }
+        .uber-modal-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--mp-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .uber-modal-header h3 {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.2rem;
+            color: var(--mp-dark);
+        }
+        .uber-modal-close {
+            width: 32px; height: 32px;
+            border: none; background: var(--mp-border);
+            border-radius: 50%; cursor: pointer;
+            font-size: 16px; line-height: 32px; text-align: center;
+        }
+        .uber-modal-body { padding: 20px 24px; }
+
+        /* ---- Timeline ---- */
+        .uber-timeline { list-style: none; padding: 0; margin: 0 0 16px; }
+        .uber-timeline li {
+            display: flex;
+            gap: 12px;
+            padding-bottom: 14px;
+            position: relative;
+            font-size: 0.88rem;
+        }
+        .uber-timeline li:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 22px;
+            bottom: 0;
+            width: 2px;
+            background: var(--mp-border);
+        }
+        .uber-tl-dot {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: var(--mp-border);
+            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px;
+        }
+        .uber-tl-dot.done { background: #E8F5E9; color: #2E7D32; }
+        .uber-tl-dot.active { background: #EDE7F6; color: #6A1B9A; }
+        .uber-tl-dot.error { background: #FFEBEE; color: #B71C1C; }
+        .uber-tl-text { color: var(--mp-text); }
+        .uber-tl-time { color: var(--mp-text-light); font-size: 0.75rem; margin-top: 2px; }
+
+        /* ---- Accordion raw JSON ---- */
+        .uber-accordion-btn {
+            width: 100%; background: none; border: 1px solid var(--mp-border);
+            border-radius: 8px; padding: 8px 14px; cursor: pointer;
+            font-family: 'Nunito', sans-serif; font-size: 0.85rem; font-weight: 600;
+            color: var(--mp-text-light); text-align: left;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .uber-accordion-body {
+            display: none; padding: 10px; background: #FAFAFA;
+            border: 1px solid var(--mp-border); border-top: none;
+            border-radius: 0 0 8px 8px;
+            font-size: 0.75rem; font-family: monospace;
+            white-space: pre-wrap; word-break: break-all;
+            max-height: 200px; overflow-y: auto;
+        }
+        .uber-accordion-body.open { display: block; }
+
+        /* ---- Settings form ---- */
+        .uber-settings-section { margin-bottom: 28px; }
+        .uber-settings-section h4 {
+            font-family: 'Baloo 2', cursive; font-size: 1rem;
+            color: var(--mp-dark); margin-bottom: 14px;
+            padding-bottom: 8px; border-bottom: 1px solid var(--mp-border);
+        }
+        .uber-form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .own-table-row {
+            display: flex; gap: 8px; align-items: center; margin-bottom: 6px;
+        }
+        .own-table-row input {
+            width: 90px;
+        }
+        .own-table-row .btn-rm-row {
+            background: #FFEBEE; color: #B71C1C; border: none;
+            border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 13px;
+        }
+        .charge-fields { margin-top: 12px; }
+        .field-group-label {
+            font-size: 0.8rem; font-weight: 700; color: var(--mp-text-light);
+            text-transform: uppercase; letter-spacing: .4px; margin-bottom: 6px;
+        }
+        .hidden { display: none !important; }
+        .test-result {
+            margin-top: 10px; padding: 10px 14px;
+            border-radius: 8px; font-size: 0.88rem;
+            font-family: 'Nunito', sans-serif;
+        }
+        .test-result.ok { background: #E8F5E9; color: #1B5E20; }
+        .test-result.err { background: #FFEBEE; color: #B71C1C; }
+
+        @media (max-width: 768px) {
+            .uber-kpi-row { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+<div class="panel-layout">
+
+    <!-- Sidebar -->
+    <aside class="panel-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+            <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-group">Principal</div>
+            <a href="index.html" class="sidebar-link"><span class="icon">&#128202;</span> Dashboard</a>
+            <a href="pedidos.html" class="sidebar-link"><span class="icon">&#128203;</span> Pedidos</a>
+            <div class="sidebar-nav-group">Gestao</div>
+            <a href="financeiro.html" class="sidebar-link"><span class="icon">&#128176;</span> Financeiro</a>
+            <a href="despesas.html" class="sidebar-link"><span class="icon">&#128176;</span> Despesas</a>
+            <a href="fiscal.html" class="sidebar-link"><span class="icon">&#129534;</span> Fiscal</a>
+            <a href="produtos.html" class="sidebar-link"><span class="icon">&#127840;</span> Produtos</a>
+            <a href="entregas.html" class="sidebar-link"><span class="icon">&#128757;</span> Entregas</a>
+            <a href="uber-entregas.html" class="sidebar-link active"><span class="icon">&#128663;</span> Uber Direct</a>
+            <a href="equipe.html" class="sidebar-link"><span class="icon">&#128101;</span> Equipe</a>
+            <a href="fidelidade.html" class="sidebar-link"><span class="icon">&#127873;</span> Fidelidade</a>
+            <a href="ifood.html" class="sidebar-link"><span class="icon">&#128757;</span> iFood</a>
+            <div class="sidebar-nav-group">Midia da Loja</div>
+            <a href="tv-indoor.html" class="sidebar-link"><span class="icon">&#128250;</span> TV Indoor</a>
+            <a href="radio-indoor.html" class="sidebar-link"><span class="icon">&#128251;</span> Radio Indoor</a>
+            <div class="sidebar-nav-group">Loja Online</div>
+            <a href="#" class="sidebar-link" id="linkSiteFranquia"><span class="icon">&#127760;</span> Meu Site</a>
+            <a href="marketing.html" class="sidebar-link"><span class="icon">&#128226;</span> Marketing</a>
+            <div class="sidebar-nav-group">Config</div>
+            <a href="configuracoes.html" class="sidebar-link"><span class="icon">&#9881;</span> Configuracoes</a>
+                <a href="test-checklist.html" class="sidebar-link"><span class="icon">🧪</span> Checklist</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">&#127978;</div>
+                <div class="sidebar-user-info">
+                    <strong id="sidebarUserName">Franqueado</strong>
+                    <small>Franqueado</small>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="panel-main">
+        <header class="panel-header">
+            <button class="sidebar-toggle" onclick="toggleSidebar()">&#9776;</button>
+            <h1>Uber Direct</h1>
+            <div class="header-actions">
+                <button class="btn btn-outline" onclick="Auth.logout()">Sair</button>
+            </div>
+        </header>
+
+        <div class="panel-content">
+
+            <!-- Tabs -->
+            <div class="uber-tabs">
+                <button class="uber-tab-btn active" onclick="switchTab('entregas')">Entregas</button>
+                <button class="uber-tab-btn" onclick="switchTab('precificacao')">Precificacao</button>
+                <button class="uber-tab-btn" onclick="switchTab('webhook')" id="tabBtnWebhook">🔗 Webhook</button>
+            </div>
+
+            <!-- ======================== TAB: ENTREGAS ======================== -->
+            <div class="uber-tab-panel active" id="tab-entregas">
+
+                <!-- KPIs -->
+                <div class="uber-kpi-row">
+                    <div class="uber-kpi blue">
+                        <div class="uber-kpi-val" id="kpiTotal">0</div>
+                        <div class="uber-kpi-lbl">Entregas (mes)</div>
+                    </div>
+                    <div class="uber-kpi red">
+                        <div class="uber-kpi-val" id="kpiCustoUber">R$ 0</div>
+                        <div class="uber-kpi-lbl">Custo Uber (mes)</div>
+                    </div>
+                    <div class="uber-kpi green">
+                        <div class="uber-kpi-val" id="kpiCobrado">R$ 0</div>
+                        <div class="uber-kpi-lbl">Cobrado Clientes</div>
+                    </div>
+                    <div class="uber-kpi purple">
+                        <div class="uber-kpi-val" id="kpiFrete">0</div>
+                        <div class="uber-kpi-lbl">Frete Gratis (mes)</div>
+                    </div>
+                    <div class="uber-kpi">
+                        <div class="uber-kpi-val" id="kpiMargem">R$ 0</div>
+                        <div class="uber-kpi-lbl">Margem Entrega</div>
+                    </div>
+                </div>
+
+                <!-- Tabela -->
+                <div class="panel-card">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                        <h3>Historico de Entregas</h3>
+                        <button class="btn btn-primary" onclick="loadDeliveries()" style="padding:6px 14px;font-size:.85rem">Atualizar</button>
+                    </div>
+                    <div class="card-body" style="padding:0">
+                        <div class="uber-table-wrap">
+                            <table class="uber-table" id="uberTable">
+                                <thead>
+                                    <tr>
+                                        <th>#Pedido</th>
+                                        <th>Cliente</th>
+                                        <th>Endereco</th>
+                                        <th>Produtos</th>
+                                        <th>Valor Uber</th>
+                                        <th>Cobrado</th>
+                                        <th>Gratis</th>
+                                        <th>Lucro/Prejuizo</th>
+                                        <th>Status</th>
+                                        <th>Acoes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="uberTableBody">
+                                    <tr>
+                                        <td colspan="10" style="text-align:center;padding:32px;color:var(--mp-text-light)">
+                                            Carregando...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /tab-entregas -->
+
+            <!-- ======================== TAB: PRECIFICACAO ======================== -->
+            <div class="uber-tab-panel" id="tab-precificacao">
+                <div class="panel-card" style="grid-column:1/-1">
+                    <div class="card-header">
+                        <h3>Regras de Precificacao Uber Direct</h3>
+                    </div>
+                    <div class="card-body">
+
+                        <!-- Master toggle -->
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#F3F0FF;border-radius:10px;margin-bottom:20px">
+                            <div>
+                                <strong>Uber Direct ativo</strong>
+                                <p style="margin:2px 0 0;font-size:12px;color:#666">Desativando, todas as entregas usarao o sistema proprio</p>
+                            </div>
+                            <label style="position:relative;display:inline-block;width:54px;height:30px">
+                                <input type="checkbox" id="rulesActive" onchange="syncActiveSlider()">
+                                <span id="activeSlider" style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:30px;transition:.3s">
+                                    <span id="activeSliderThumb" style="position:absolute;height:24px;width:24px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;display:block"></span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <!-- Frete gratis -->
+                        <div class="uber-settings-section">
+                            <h4>Frete Gratis</h4>
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--mp-border);margin-bottom:10px">
+                                <span>Ativar frete gratis automatico</span>
+                                <input type="checkbox" id="freeEnabled" onchange="toggleFreeFields()">
+                            </div>
+                            <div id="freeFields">
+                                <div class="uber-form-row">
+                                    <div class="form-group">
+                                        <label>Pedido minimo (R$)</label>
+                                        <input type="number" id="freeMinOrder" class="form-control" step="1" min="0" placeholder="50">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Distancia maxima (km)</label>
+                                        <input type="number" id="freeMaxKm" class="form-control" step="0.5" min="0" placeholder="5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Custo absorvido por</label>
+                                        <select id="freeAbsorvedBy" class="form-control">
+                                            <option value="franchise">Franquia</option>
+                                            <option value="milkypot">MilkyPot</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modo de cobranca -->
+                        <div class="uber-settings-section">
+                            <h4>Modo de Cobranca</h4>
+                            <div class="form-group">
+                                <label>Modo</label>
+                                <select id="chargeMode" class="form-control" onchange="toggleChargeFields()">
+                                    <option value="uber_price">Preco Uber (repassa integral)</option>
+                                    <option value="uber_plus_margin">Uber + Margem</option>
+                                    <option value="own_table">Tabela Propria por KM</option>
+                                    <option value="fixed_fee">Taxa Fixa</option>
+                                    <option value="free_always">Sempre Gratis (absorvido)</option>
+                                </select>
+                            </div>
+
+                            <!-- uber_plus_margin -->
+                            <div class="charge-fields hidden" id="field-uber_plus_margin">
+                                <p class="field-group-label">Margem sobre o preco Uber</p>
+                                <div class="uber-form-row">
+                                    <div class="form-group">
+                                        <label>Tipo</label>
+                                        <select id="markupType" class="form-control">
+                                            <option value="fixed">Fixo (R$)</option>
+                                            <option value="percent">Percentual (%)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Valor</label>
+                                        <input type="number" id="markupValue" class="form-control" step="0.01" min="0" placeholder="0">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- own_table -->
+                            <div class="charge-fields hidden" id="field-own_table">
+                                <p class="field-group-label">Faixas de KM (ate X km = R$ Y)</p>
+                                <div id="ownTableRows"></div>
+                                <button type="button" class="btn btn-outline" onclick="addOwnTableRow()" style="margin-top:8px;font-size:.85rem;padding:5px 12px">+ Adicionar faixa</button>
+                            </div>
+
+                            <!-- fixed_fee -->
+                            <div class="charge-fields hidden" id="field-fixed_fee">
+                                <p class="field-group-label">Taxa fixa cobrada do cliente</p>
+                                <div class="form-group" style="max-width:200px">
+                                    <label>Valor (R$)</label>
+                                    <input type="number" id="fixedFeeValue" class="form-control" step="0.01" min="0" placeholder="7.00">
+                                </div>
+                            </div>
+
+                            <!-- Limites gerais -->
+                            <div class="uber-form-row" style="margin-top:12px">
+                                <div class="form-group">
+                                    <label>Taxa minima cobrada (R$)</label>
+                                    <input type="number" id="minDeliveryFee" class="form-control" step="0.01" min="0" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Taxa maxima cobrada (R$)</label>
+                                    <input type="number" id="maxDeliveryFee" class="form-control" step="0.01" min="0" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Preco por km (modo distancia)</label>
+                                    <input type="number" id="pricePerKm" class="form-control" step="0.01" min="0" placeholder="2.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;gap:12px;flex-wrap:wrap">
+                            <button class="btn btn-primary" onclick="savePricingRules()">Salvar Regras</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div><!-- /tab-precificacao -->
+
+            <!-- ======================== TAB: WEBHOOK ======================== -->
+            <div class="uber-tab-panel" id="tab-webhook">
+                <div class="panel-card" style="grid-column:1/-1">
+                    <div class="card-header">
+                        <h3>🔗 Webhook Uber Direct</h3>
+                    </div>
+                    <div class="card-body">
+
+                        <!-- Status do webhook -->
+                        <div id="webhookStatusBanner" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;margin-bottom:20px;background:#FFF9C4;border:1px solid #F9A825;">
+                            <span style="font-size:20px">⚠️</span>
+                            <div>
+                                <div style="font-weight:700;font-size:.9rem;color:#F57F17">Webhook nao verificado</div>
+                                <div style="font-size:.8rem;color:#795548;margin-top:2px">Clique em <strong>Verificar Status</strong> para confirmar que o webhook esta ativo.</div>
+                            </div>
+                            <button class="btn btn-outline" onclick="checkWebhookStatus()" style="margin-left:auto;padding:6px 14px;font-size:.82rem;white-space:nowrap">Verificar Status</button>
+                        </div>
+
+                        <!-- URL do endpoint -->
+                        <div style="margin-bottom:20px">
+                            <label style="display:block;font-weight:700;font-size:.85rem;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Endpoint URL do Webhook</label>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <input id="webhookUrlInput" type="text" readonly
+                                    value="https://southamerica-east1-milkypot-ad945.cloudfunctions.net/uberDirect_webhook"
+                                    style="flex:1;padding:10px 12px;border:2px solid #e0e0e0;border-radius:8px;font-family:monospace;font-size:.82rem;background:#F9F9F9;color:#333;outline:none">
+                                <button class="btn btn-primary" onclick="copyWebhookUrl()" id="copyWebhookBtn" style="padding:10px 18px;white-space:nowrap">📋 Copiar</button>
+                            </div>
+                            <div style="font-size:.78rem;color:#888;margin-top:6px">Esta e a URL que deve ser registrada no painel Uber Direct (Developer Dashboard → Webhooks).</div>
+                        </div>
+
+                        <!-- Instrucoes de registro -->
+                        <div style="background:#F3E5F5;border-radius:10px;padding:16px 18px;margin-bottom:20px">
+                            <div style="font-weight:800;font-size:.88rem;color:#6A1B9A;margin-bottom:10px">📋 Como registrar o webhook na Uber</div>
+                            <ol style="margin:0;padding-left:18px;font-size:.84rem;color:#4A148C;line-height:1.8">
+                                <li>Acesse o <a href="https://developer.uber.com/dashboard" target="_blank" rel="noopener" style="color:#7B1FA2;font-weight:700">Uber Developer Dashboard</a></li>
+                                <li>Va em <strong>Apps → sua app → Webhooks</strong></li>
+                                <li>Clique em <strong>Add Endpoint</strong></li>
+                                <li>Cole a URL acima no campo <em>Endpoint URL</em></li>
+                                <li>Selecione os eventos: <code style="background:#E1BEE7;padding:1px 5px;border-radius:4px">delivery.status.changed</code></li>
+                                <li>Clique em <strong>Save</strong> e anote o <em>Signing Secret</em></li>
+                                <li>Salve o Signing Secret nas <a href="configuracoes.html" style="color:#7B1FA2;font-weight:700">Configuracoes → Uber Direct</a></li>
+                            </ol>
+                        </div>
+
+                        <!-- Ultimos eventos recebidos -->
+                        <div style="margin-bottom:8px">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                                <div style="font-weight:700;font-size:.88rem;color:#555;text-transform:uppercase;letter-spacing:.4px">Ultimos Eventos Recebidos</div>
+                                <button class="btn btn-outline" onclick="loadWebhookEvents()" style="padding:4px 12px;font-size:.8rem">Atualizar</button>
+                            </div>
+                            <div id="webhookEventsList" style="font-size:.84rem;color:#888;text-align:center;padding:20px">
+                                Clique em Atualizar para carregar eventos recentes.
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div><!-- /tab-webhook -->
+
+        </div><!-- /panel-content -->
+    </main>
+</div>
+
+<!-- Modal de Detalhes -->
+<div class="uber-modal-overlay" id="detailsModal">
+    <div class="uber-modal">
+        <div class="uber-modal-header">
+            <h3 id="modalTitle">Detalhes da Entrega</h3>
+            <button class="uber-modal-close" onclick="closeModal()">&#x2715;</button>
+        </div>
+        <div class="uber-modal-body" id="modalBody">
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/i18n.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/cloud-functions.js"></script>
+<script src="../js/core/auth.js"></script>
+<script src="../js/core/audit.js"></script>
+<script src="../js/core/uber-direct.js"></script>
+
+<script>
+// Auth guard
+if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+const session = Auth.getSession();
+const franchiseId = session.franchiseId;
+const franchises = DataStore.getAllFranchises();
+const franchise = franchises.find(function(f) { return f.id === franchiseId; });
+document.getElementById('sidebarUserName').textContent = session.name;
+document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia';
+
+if (franchise && franchise.slug) {
+    document.getElementById('linkSiteFranquia').href = '../loja/' + franchise.slug + '/';
+    document.getElementById('linkSiteFranquia').target = '_blank';
+}
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ============================================
+// TABS
+// ============================================
+function switchTab(tab) {
+    document.querySelectorAll('.uber-tab-btn').forEach(function(b, i) {
+        var tabs = ['entregas', 'precificacao', 'webhook'];
+        b.classList.toggle('active', tabs[i] === tab);
+    });
+    document.querySelectorAll('.uber-tab-panel').forEach(function(p) {
+        p.classList.remove('active');
+    });
+    var panel = document.getElementById('tab-' + tab);
+    if (panel) panel.classList.add('active');
+
+    if (tab === 'precificacao') {
+        loadPricingRules();
+    }
+    if (tab === 'webhook') {
+        checkWebhookStatus();
+    }
+}
+
+// ============================================
+// FORMATTERS
+// ============================================
+function fmtCurrency(val) {
+    var n = parseFloat(val) || 0;
+    return 'R$ ' + n.toFixed(2).replace('.', ',');
+}
+
+function fmtDate(iso) {
+    if (!iso) return '-';
+    var d = new Date(iso);
+    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ============================================
+// STATUS BADGE
+// ============================================
+var STATUS_LABELS = {
+    aguardando_pagamento: 'Aguard. Pagamento',
+    cotado: 'Cotado',
+    criando_entrega: 'Criando',
+    entregador_a_caminho_da_loja: 'A caminho da loja',
+    pedido_retirado: 'Pedido Retirado',
+    saiu_para_entrega: 'Saiu p/ Entrega',
+    entregue: 'Entregue',
+    falha: 'Falha',
+    cancelado: 'Cancelado'
+};
+
+function statusBadge(status) {
+    var label = STATUS_LABELS[status] || status || '-';
+    var cls = 'uber-badge-' + (status || 'cotado');
+    return '<span class="uber-status ' + cls + '">' + label + '</span>';
+}
+
+// ============================================
+// KPIs
+// ============================================
+function computeKpis(records) {
+    var now = new Date();
+    var firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    var monthly = records.filter(function(r) {
+        return r.createdAt && new Date(r.createdAt) >= firstDayOfMonth;
+    });
+
+    var custoUber = monthly.reduce(function(s, r) { return s + (r.uberFee || 0); }, 0);
+    var cobrado = monthly.reduce(function(s, r) { return s + (r.customerFee || 0); }, 0);
+    var freteGratis = monthly.filter(function(r) { return !!r.isFree; }).length;
+    var margem = cobrado - custoUber;
+
+    document.getElementById('kpiTotal').textContent = monthly.length;
+    document.getElementById('kpiCustoUber').textContent = fmtCurrency(custoUber);
+    document.getElementById('kpiCobrado').textContent = fmtCurrency(cobrado);
+    document.getElementById('kpiFrete').textContent = freteGratis;
+    var margemEl = document.getElementById('kpiMargem');
+    margemEl.textContent = fmtCurrency(margem);
+    margemEl.style.color = margem >= 0 ? '#2E7D32' : '#C62828';
+}
+
+// ============================================
+// LOAD DELIVERIES
+// ============================================
+function loadDeliveries() {
+    var records = DataStore.getCollection('uber_deliveries', franchiseId) || [];
+    computeKpis(records);
+    renderTable(records);
+}
+
+function renderTable(records) {
+    var tbody = document.getElementById('uberTableBody');
+    if (!records.length) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--mp-text-light)">Nenhuma entrega Uber Direct encontrada.</td></tr>';
+        return;
+    }
+
+    var html = '';
+    records.slice().reverse().forEach(function(r) {
+        var lucro = (r.customerFee || 0) - (r.uberFee || 0);
+        var lucroStyle = lucro >= 0 ? 'color:#2E7D32;font-weight:700' : 'color:#C62828;font-weight:700';
+        var canCreate = r.status === 'cotado' || r.status === 'aguardando_pagamento';
+        html += '<tr>';
+        html += '<td style="font-weight:700;font-family:\'Baloo 2\',cursive">' + (r.orderNumber || r.id || '-') + '</td>';
+        html += '<td>' + Utils.escapeHtml(r.customerName || '-') + '</td>';
+        html += '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + Utils.escapeHtml(r.dropoffAddress || '') + '">' + Utils.escapeHtml((r.dropoffAddress || '-').substring(0, 30)) + (r.dropoffAddress && r.dropoffAddress.length > 30 ? '...' : '') + '</td>';
+        html += '<td>' + fmtCurrency(r.subtotal || 0) + '</td>';
+        html += '<td>' + fmtCurrency(r.uberFee || 0) + '</td>';
+        html += '<td>' + fmtCurrency(r.customerFee || 0) + '</td>';
+        html += '<td style="text-align:center">' + (r.isFree ? '&#10003;' : '-') + '</td>';
+        html += '<td><span style="' + lucroStyle + '">' + fmtCurrency(lucro) + '</span></td>';
+        html += '<td>' + statusBadge(r.status) + '</td>';
+        html += '<td><div class="action-btns">';
+        html += '<button class="btn-view" title="Ver detalhes" onclick="openDetails(\'' + (r.id || '') + '\')">&#128065;</button>';
+        html += '<button class="btn-refresh" title="Atualizar status" onclick="refreshStatus(\'' + (r.id || '') + '\', \'' + (r.deliveryId || '') + '\')">&#8635;</button>';
+        if (canCreate && r.deliveryId) {
+            html += '<button class="btn-create" title="Criar entrega" onclick="createEntrega(\'' + (r.id || '') + '\', \'' + (r.quoteId || '') + '\')">&#128666;</button>';
+        }
+        html += '<button class="btn-cancel" title="Cancelar" onclick="cancelEntrega(\'' + (r.id || '') + '\')">&#10007;</button>';
+        html += '</div></td>';
+        html += '</tr>';
+    });
+    tbody.innerHTML = html;
+}
+
+// ============================================
+// ACTIONS
+// ============================================
+window.openDetails = function(id) {
+    var records = DataStore.getCollection('uber_deliveries', franchiseId) || [];
+    var r = records.find(function(x) { return x.id === id; });
+    if (!r) return;
+
+    document.getElementById('modalTitle').textContent = 'Entrega ' + (r.orderNumber || id);
+
+    var timelineSteps = [
+        { key: 'aguardando_pagamento', label: 'Aguardando Pagamento', icon: '&#9201;', ts: r.createdAt },
+        { key: 'cotado', label: 'Cotado', icon: '&#128203;', ts: r.quotedAt },
+        { key: 'criando_entrega', label: 'Criando Entrega', icon: '&#9881;', ts: r.creatingAt },
+        { key: 'entregador_a_caminho_da_loja', label: 'Entregador a Caminho', icon: '&#128663;', ts: r.courierAssignedAt },
+        { key: 'pedido_retirado', label: 'Pedido Retirado', icon: '&#128230;', ts: r.pickedUpAt },
+        { key: 'saiu_para_entrega', label: 'Saiu p/ Entrega', icon: '&#128666;', ts: r.inTransitAt },
+        { key: 'entregue', label: 'Entregue', icon: '&#9989;', ts: r.deliveredAt }
+    ];
+    var statusOrder = timelineSteps.map(function(s) { return s.key; });
+    var currentIdx = statusOrder.indexOf(r.status);
+
+    var tlHtml = '<ul class="uber-timeline">';
+    timelineSteps.forEach(function(step, idx) {
+        var dotClass = idx < currentIdx ? 'done' : (idx === currentIdx ? 'active' : '');
+        if (r.status === 'falha' || r.status === 'cancelado') dotClass = idx === currentIdx ? 'error' : dotClass;
+        tlHtml += '<li>';
+        tlHtml += '<div class="uber-tl-dot ' + dotClass + '">' + step.icon + '</div>';
+        tlHtml += '<div><div class="uber-tl-text">' + step.label + '</div>';
+        if (step.ts) tlHtml += '<div class="uber-tl-time">' + fmtDate(step.ts) + '</div>';
+        tlHtml += '</div></li>';
+    });
+    tlHtml += '</ul>';
+
+    var html = tlHtml;
+
+    html += '<hr style="margin:12px 0;border:none;border-top:1px solid var(--mp-border)">';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:.88rem;margin-bottom:12px">';
+    html += '<div><strong>Quote ID:</strong><br><span style="color:var(--mp-text-light);font-size:.78rem">' + (r.quoteId || '-') + '</span></div>';
+    html += '<div><strong>Delivery ID:</strong><br><span style="color:var(--mp-text-light);font-size:.78rem">' + (r.deliveryId || '-') + '</span></div>';
+    html += '<div><strong>Valor Uber:</strong><br>' + fmtCurrency(r.uberFee || 0) + '</div>';
+    html += '<div><strong>Cobrado Cliente:</strong><br>' + fmtCurrency(r.customerFee || 0) + '</div>';
+    html += '<div><strong>Distancia:</strong><br>' + (r.distanceKm ? r.distanceKm.toFixed(1) + ' km' : '-') + '</div>';
+    html += '<div><strong>Frete Gratis:</strong><br>' + (r.isFree ? 'Sim — ' + (r.absorbedBy || '') : 'Nao') + '</div>';
+    if (r.courierName) {
+        html += '<div><strong>Entregador:</strong><br>' + Utils.escapeHtml(r.courierName) + '</div>';
+        html += '<div><strong>Tel Entregador:</strong><br>' + Utils.escapeHtml(r.courierPhone || '-') + '</div>';
+    }
+    html += '</div>';
+
+    if (r.trackingUrl) {
+        html += '<a href="' + Utils.escapeHtml(r.trackingUrl) + '" target="_blank" rel="noopener" class="btn btn-primary" style="display:inline-block;margin-bottom:14px;font-size:.88rem;padding:7px 16px">Rastrear Entrega &#8599;</a>';
+    }
+
+    // Raw JSON accordion
+    html += '<button class="uber-accordion-btn" onclick="toggleAccordion(this)">JSON bruto <span>&#9660;</span></button>';
+    html += '<div class="uber-accordion-body">' + JSON.stringify(r, null, 2) + '</div>';
+
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('detailsModal').classList.add('active');
+};
+
+window.closeModal = function() {
+    document.getElementById('detailsModal').classList.remove('active');
+};
+
+window.toggleAccordion = function(btn) {
+    var body = btn.nextElementSibling;
+    if (body) body.classList.toggle('open');
+};
+
+window.refreshStatus = async function(recordId, deliveryId) {
+    if (!deliveryId) {
+        alert('Esta entrega ainda nao tem ID Uber. Crie a entrega primeiro.');
+        return;
+    }
+    var btn = event && event.target;
+    if (btn) btn.textContent = '...';
+
+    var result = await UberDirect.getDelivery(franchiseId, deliveryId, recordId);
+    if (result && result.success) {
+        var records = DataStore.getCollection('uber_deliveries', franchiseId) || [];
+        var idx = records.findIndex(function(r) { return r.id === recordId; });
+        if (idx !== -1) {
+            records[idx].status = result.status || records[idx].status;
+            if (result.tracking_url) records[idx].trackingUrl = result.tracking_url;
+            if (result.courier_name) records[idx].courierName = result.courier_name;
+            if (result.courier_phone) records[idx].courierPhone = result.courier_phone;
+            DataStore.saveCollection('uber_deliveries', franchiseId, records);
+        }
+        loadDeliveries();
+    } else {
+        alert('Erro ao atualizar: ' + ((result && result.error) || 'sem resposta'));
+    }
+    if (btn) btn.textContent = '蘵';
+};
+
+window.createEntrega = async function(recordId, quoteId) {
+    if (!quoteId) { alert('Quote ID nao encontrado.'); return; }
+    if (!confirm('Criar entrega via Uber Direct agora?')) return;
+
+    var result = await UberDirect.createDelivery(franchiseId, recordId, quoteId);
+    if (result && result.success) {
+        var records = DataStore.getCollection('uber_deliveries', franchiseId) || [];
+        var idx = records.findIndex(function(r) { return r.id === recordId; });
+        if (idx !== -1) {
+            records[idx].deliveryId = result.delivery_id;
+            records[idx].trackingUrl = result.tracking_url;
+            records[idx].status = result.status || 'criando_entrega';
+            records[idx].creatingAt = new Date().toISOString();
+            DataStore.saveCollection('uber_deliveries', franchiseId, records);
+        }
+        loadDeliveries();
+        alert('Entrega criada! ID: ' + result.delivery_id);
+    } else {
+        alert('Erro: ' + ((result && result.error) || 'sem resposta'));
+    }
+};
+
+window.cancelEntrega = function(recordId) {
+    alert('Cancelamento via API Uber Direct tem restricoes (entregador pode ja estar a caminho). ' +
+          'Para cancelar, entre em contato diretamente com o suporte Uber Direct ou pelo painel deles. ' +
+          'O registro sera marcado como cancelado localmente.');
+
+    if (!confirm('Marcar como cancelado localmente?')) return;
+    var records = DataStore.getCollection('uber_deliveries', franchiseId) || [];
+    var idx = records.findIndex(function(r) { return r.id === recordId; });
+    if (idx !== -1) {
+        records[idx].status = 'cancelado';
+        records[idx].cancelledAt = new Date().toISOString();
+        DataStore.saveCollection('uber_deliveries', franchiseId, records);
+    }
+    loadDeliveries();
+};
+
+// Fechar modal clicando fora
+document.getElementById('detailsModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+// ============================================
+// PRECIFICACAO
+// ============================================
+function toggleFreeFields() {
+    var enabled = document.getElementById('freeEnabled').checked;
+    document.getElementById('freeFields').style.display = enabled ? 'block' : 'none';
+}
+
+function toggleChargeFields() {
+    var mode = document.getElementById('chargeMode').value;
+    var modes = ['uber_plus_margin', 'own_table', 'fixed_fee'];
+    modes.forEach(function(m) {
+        var el = document.getElementById('field-' + m);
+        if (el) el.classList.toggle('hidden', m !== mode);
+    });
+}
+
+function syncActiveSlider() {
+    var checked = document.getElementById('rulesActive').checked;
+    var slider = document.getElementById('activeSlider');
+    var thumb = document.getElementById('activeSliderThumb');
+    slider.style.background = checked ? '#7C3AED' : '#ccc';
+    thumb.style.left = checked ? '27px' : '3px';
+}
+
+window.addOwnTableRow = function(maxKm, fee) {
+    var container = document.getElementById('ownTableRows');
+    var div = document.createElement('div');
+    div.className = 'own-table-row';
+    div.innerHTML =
+        '<span style="font-size:.82rem;color:var(--mp-text-light)">Ate</span>' +
+        '<input type="number" class="form-control own-km" step="0.5" min="0" placeholder="km" value="' + (maxKm || '') + '">' +
+        '<span style="font-size:.82rem;color:var(--mp-text-light)">km =</span>' +
+        '<input type="number" class="form-control own-fee" step="0.01" min="0" placeholder="R$" value="' + (fee || '') + '">' +
+        '<button class="btn-rm-row" onclick="this.parentNode.remove()">&#10007;</button>';
+    container.appendChild(div);
+};
+
+function getOwnTableRows() {
+    var rows = [];
+    document.querySelectorAll('#ownTableRows .own-table-row').forEach(function(row) {
+        var km = parseFloat(row.querySelector('.own-km').value) || 0;
+        var fee = parseFloat(row.querySelector('.own-fee').value) || 0;
+        if (km > 0) rows.push({ max_km: km, fee: fee });
+    });
+    return rows;
+}
+
+async function loadPricingRules() {
+    var result = await CloudFunctions.call('uberDirect_getPricingRules', { franchiseId: franchiseId });
+    if (!result || !result.success) return;
+    var r = result.rules || {};
+
+    document.getElementById('rulesActive').checked = !!r.active;
+    syncActiveSlider();
+    document.getElementById('freeEnabled').checked = !!r.free_delivery_enabled;
+    toggleFreeFields();
+    document.getElementById('freeMinOrder').value = r.free_delivery_min_order_value || '';
+    document.getElementById('freeMaxKm').value = r.free_delivery_max_km || '';
+    document.getElementById('freeAbsorvedBy').value = r.free_delivery_absorbed_by || 'franchise';
+    document.getElementById('chargeMode').value = r.charge_mode || 'uber_price';
+    toggleChargeFields();
+    document.getElementById('markupType').value = r.markup_type || 'fixed';
+    document.getElementById('markupValue').value = r.markup_value || '';
+    document.getElementById('fixedFeeValue').value = r.fixed_delivery_fee || '';
+    document.getElementById('minDeliveryFee').value = r.minimum_delivery_fee || '';
+    document.getElementById('maxDeliveryFee').value = r.maximum_delivery_fee || '';
+    document.getElementById('pricePerKm').value = r.price_per_km || '';
+
+    // Own table
+    document.getElementById('ownTableRows').innerHTML = '';
+    if (r.own_table_rules && r.own_table_rules.length) {
+        r.own_table_rules.forEach(function(row) {
+            addOwnTableRow(row.max_km, row.fee);
+        });
+    }
+}
+
+window.savePricingRules = async function() {
+    var rules = {
+        active: document.getElementById('rulesActive').checked,
+        free_delivery_enabled: document.getElementById('freeEnabled').checked,
+        free_delivery_min_order_value: parseFloat(document.getElementById('freeMinOrder').value) || 0,
+        free_delivery_max_km: parseFloat(document.getElementById('freeMaxKm').value) || 0,
+        free_delivery_absorbed_by: document.getElementById('freeAbsorvedBy').value,
+        charge_mode: document.getElementById('chargeMode').value,
+        markup_type: document.getElementById('markupType').value,
+        markup_value: parseFloat(document.getElementById('markupValue').value) || 0,
+        fixed_delivery_fee: parseFloat(document.getElementById('fixedFeeValue').value) || 0,
+        minimum_delivery_fee: parseFloat(document.getElementById('minDeliveryFee').value) || 0,
+        maximum_delivery_fee: parseFloat(document.getElementById('maxDeliveryFee').value) || 0,
+        price_per_km: parseFloat(document.getElementById('pricePerKm').value) || 0,
+        own_table_rules: getOwnTableRows()
+    };
+
+    var result = await CloudFunctions.call('uberDirect_savePricingRules', { franchiseId: franchiseId, rules: rules });
+    if (result && result.success) {
+        Utils.showToast('Regras de precificacao salvas!', 'success');
+    } else {
+        alert('Erro ao salvar: ' + ((result && result.error) || 'sem resposta'));
+    }
+};
+
+// ============================================
+// WEBHOOK TAB
+// ============================================
+var WEBHOOK_URL = 'https://southamerica-east1-milkypot-ad945.cloudfunctions.net/uberDirect_webhook';
+
+window.copyWebhookUrl = function() {
+    var input = document.getElementById('webhookUrlInput');
+    if (!input) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(input.value).then(function() {
+            Utils.showToast('URL copiada!', 'success');
+        }).catch(function() {
+            input.select();
+            document.execCommand('copy');
+            Utils.showToast('URL copiada!', 'success');
+        });
+    } else {
+        input.select();
+        document.execCommand('copy');
+        Utils.showToast('URL copiada!', 'success');
+    }
+};
+
+window.checkWebhookStatus = async function() {
+    var banner = document.getElementById('webhookStatusBanner');
+    var btnEl = document.getElementById('btnCheckWebhook');
+    if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Verificando...'; }
+
+    try {
+        var resp = await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-uber-signature': 'health_check' },
+            body: JSON.stringify({ event_type: 'health_check' })
+        });
+        // Endpoint exists if it returns any HTTP response (even 400/401 — it's reachable)
+        var reachable = resp.status !== 0 && resp.status < 500;
+        if (banner) {
+            banner.style.background = reachable ? '#E8F5E9' : '#FFF3E0';
+            banner.style.borderLeft = reachable ? '4px solid #2E7D32' : '4px solid #E65100';
+            banner.style.color = reachable ? '#2E7D32' : '#E65100';
+            banner.textContent = reachable
+                ? '✅ Endpoint ativo e acessivel (HTTP ' + resp.status + ')'
+                : '⚠️ Endpoint retornou HTTP ' + resp.status + ' — verifique as configuracoes';
+        }
+    } catch (e) {
+        if (banner) {
+            banner.style.background = '#FFEBEE';
+            banner.style.borderLeft = '4px solid #C62828';
+            banner.style.color = '#C62828';
+            banner.textContent = '❌ Endpoint inalcancavel — Cloud Function pode estar offline ou CORS bloqueando';
+        }
+    }
+
+    if (btnEl) { btnEl.disabled = false; btnEl.textContent = 'Verificar Status'; }
+};
+
+window.loadWebhookEvents = async function() {
+    var list = document.getElementById('webhookEventsList');
+    if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:#888">Carregando...</div>';
+
+    try {
+        var result = await CloudFunctions.call('uberDirect_getWebhookEvents', { franchiseId: franchiseId, limit: 10 });
+        if (result && result.success && result.events && result.events.length) {
+            var html = '<table style="width:100%;border-collapse:collapse;font-size:.84rem">';
+            html += '<thead><tr style="background:#f5f5f5">';
+            html += '<th style="padding:6px 10px;text-align:left;font-weight:700;color:#555">Data/Hora</th>';
+            html += '<th style="padding:6px 10px;text-align:left;font-weight:700;color:#555">Evento</th>';
+            html += '<th style="padding:6px 10px;text-align:left;font-weight:700;color:#555">Entrega ID</th>';
+            html += '<th style="padding:6px 10px;text-align:left;font-weight:700;color:#555">Status</th>';
+            html += '</tr></thead><tbody>';
+            result.events.forEach(function(ev) {
+                html += '<tr style="border-bottom:1px solid #f0f0f0">';
+                html += '<td style="padding:6px 10px;color:#666">' + fmtDate(ev.receivedAt || ev.timestamp) + '</td>';
+                html += '<td style="padding:6px 10px;font-family:monospace;font-size:.8rem">' + Utils.escapeHtml(ev.event_type || '-') + '</td>';
+                html += '<td style="padding:6px 10px;font-size:.78rem;color:#888">' + Utils.escapeHtml((ev.delivery_id || '-').substring(0, 20)) + '</td>';
+                html += '<td style="padding:6px 10px"><span class="uber-status uber-badge-' + Utils.escapeHtml(ev.status || 'cotado') + '">' + Utils.escapeHtml(ev.status || '-') + '</span></td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            if (list) list.innerHTML = html;
+        } else if (result && result.success) {
+            if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:#888">Nenhum evento registrado ainda.</div>';
+        } else {
+            var msg = (result && result.error) ? result.error : 'Funcao nao disponivel';
+            if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:#C62828">Erro: ' + Utils.escapeHtml(msg) + '</div>';
+        }
+    } catch (e) {
+        if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:#C62828">Erro ao carregar eventos.</div>';
+    }
+};
+
+// ============================================
+// INIT
+// ============================================
+loadDeliveries();
+</script>
+
+<script src="../js/core/copilot-transport.js" defer></script>
+<script src="../js/pages/lilo-scanner.js" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
+</body>
+</html>

@@ -267,6 +267,19 @@ const Auth = {
             const data = localStorage.getItem(this.SESSION_KEY);
             if (!data) return null;
             const session = JSON.parse(data);
+
+            // Valida estrutura minima — sessao corrompida nao deve ser usada
+            if (!session || !session.role) {
+                localStorage.removeItem(this.SESSION_KEY);
+                return null;
+            }
+            // Valida role contra lista conhecida
+            const VALID_ROLES = ['super_admin', 'franchisee', 'manager', 'staff'];
+            if (VALID_ROLES.indexOf(session.role) === -1) {
+                localStorage.removeItem(this.SESSION_KEY);
+                return null;
+            }
+
             if (new Date(session.expiresAt) < new Date()) {
                 // Nao chame logout() aqui. getSession() e usado por sync/background;
                 // logout() faz firebaseAuth.signOut() + redirect e derruba o PDV.
@@ -278,6 +291,8 @@ const Auth = {
             }
             return session;
         } catch (e) {
+            // JSON corrompido ou erro inesperado — limpa pra nao reincidir
+            try { localStorage.removeItem(this.SESSION_KEY); } catch(_) {}
             return null;
         }
     },
@@ -348,7 +363,10 @@ const Auth = {
 
         const session = this.getSession();
         if (!session) {
-            window.location.href = '/login.html';
+            // Sem sessao: ja esta no /login.html? Nao redireciona (evita loop).
+            if (window.location.pathname.indexOf('/login') === -1) {
+                window.location.href = '/login.html';
+            }
             return false;
         }
         if (requiredRole && session.role !== requiredRole) {
@@ -356,7 +374,19 @@ const Auth = {
             if (session.role === MP.ROLES.SUPER_ADMIN) {
                 return true;
             }
-            window.location.href = '/painel/';
+            // Sessao com role invalido pra esta pagina — LIMPA antes de redirecionar
+            // pra evitar que o login.html veja a sessao bagunçada e devolva pra ca (loop).
+            try {
+                localStorage.removeItem(this.SESSION_KEY);
+                localStorage.removeItem('mp_admin_session_backup');
+                localStorage.removeItem('mp_quick_login');
+            } catch (e) {}
+            try {
+                if (typeof firebaseAuth !== 'undefined' && firebaseAuth) {
+                    firebaseAuth.signOut().catch(function(){});
+                }
+            } catch (e) {}
+            window.location.href = '/login.html?reason=role_mismatch';
             return false;
         }
         return true;

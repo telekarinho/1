@@ -53,6 +53,12 @@ const CloudFunctions = {
     // Chamada principal - detecta Vercel ou Firebase
     // ============================================
     async call(name, data = {}) {
+        // uberDirect_* e fiscal* functions sempre vao direto ao Firebase Functions
+        // (nao estao no backend PHP/Vercel)
+        if (name.startsWith('uberDirect_') || name.startsWith('getFiscal') || name.startsWith('saveFiscal') || name.startsWith('emitFiscal') || name.startsWith('cancelFiscal') || name.startsWith('uploadFiscal') || name.startsWith('listFiscal') || name === 'getFiscalHealth') {
+            return this._callFirebaseDirect(name, data);
+        }
+
         // Se usando Vercel API
         if (this._apiUrl) {
             return this._callVercel(name, data);
@@ -65,6 +71,22 @@ const CloudFunctions = {
 
         console.warn('CloudFunctions.call: nao inicializado');
         return { success: false, error: 'Functions nao disponivel' };
+    },
+
+    // Chama Firebase Functions diretamente (para funcoes que nao estao no backend PHP)
+    async _callFirebaseDirect(name, data) {
+        try {
+            if (typeof firebase === 'undefined' || !firebase.functions) {
+                return { success: false, error: 'Firebase Functions SDK nao carregado' };
+            }
+            const functions = firebase.app().functions('southamerica-east1');
+            const fn = functions.httpsCallable(name);
+            const result = await fn(data);
+            return result.data;
+        } catch (error) {
+            console.error('CloudFunctions._callFirebaseDirect(' + name + ') error:', error);
+            return { success: false, error: error.message || 'Erro ao chamar Firebase Function' };
+        }
     },
 
     // Chama API Vercel

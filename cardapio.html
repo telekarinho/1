@@ -422,6 +422,38 @@
                     }
                 } catch(err) {}
             });
+
+            // Pós-sync: stores-data.js re-mergeia deliveryEnabled do Firestore e dispara
+            // mp_stores_updated. Recarrega CHECKOUT_STORES e, se loja já selecionada,
+            // atualiza a opção de delivery na tela imediatamente.
+            window.addEventListener('mp_stores_updated', () => {
+                try {
+                    if (Array.isArray(window.MILKYPOT_STORES)) {
+                        // Atualiza array de lojas do checkout com os valores frescos do Firestore
+                        window.MILKYPOT_STORES.forEach(function(fresh) {
+                            var idx = CHECKOUT_STORES.findIndex(function(c) { return c.id === fresh.id; });
+                            if (idx !== -1) {
+                                CHECKOUT_STORES[idx].deliveryEnabled = fresh.deliveryEnabled;
+                                CHECKOUT_STORES[idx].deliveryFee = fresh.deliveryFee;
+                                CHECKOUT_STORES[idx].deliveryTime = fresh.deliveryTime;
+                                CHECKOUT_STORES[idx].hours = fresh.hours;
+                            }
+                        });
+                    }
+                    // Se o cliente já selecionou uma loja, re-aplica a lógica de delivery/retirada
+                    if (window.selectedStore && window.selectedStore.id) {
+                        var updated = CHECKOUT_STORES.find(function(c) { return c.id === window.selectedStore.id; });
+                        if (updated) {
+                            window.selectedStore = updated;
+                            // Re-chama selectCheckoutStore para re-aplicar toda a lógica
+                            // de delivery/retirada/loja fechada com os dados atualizados
+                            if (typeof window.selectCheckoutStore === 'function') {
+                                window.selectCheckoutStore(updated.id);
+                            }
+                        }
+                    }
+                } catch(e) {}
+            });
         }
 
         // Gera/atualiza as tabs de categoria dinamicamente a partir do catálogo atual.
@@ -914,32 +946,62 @@
         btn.disabled = false;
         btn.textContent = 'Continuar →';
 
-        // Toggle delivery: se a loja desativou delivery, esconde a opção
+        // ── Modo de entrega: controle por 3 flags do admin ──────────────
         var deliveryEnabled = selectedStore.deliveryEnabled !== false;
-        var deliveryRadio = document.querySelector('input[name="delivery"][value="delivery"]');
-        var deliveryLabel = deliveryRadio ? deliveryRadio.closest('.delivery-option') : null;
-        if (deliveryLabel) {
-            deliveryLabel.style.display = deliveryEnabled ? '' : 'none';
-        }
-        if (!deliveryEnabled) {
-            // Força modo retirada
-            var pickupRadio = document.querySelector('input[name="delivery"][value="pickup"]');
-            if (pickupRadio) {
-                pickupRadio.checked = true;
-                pickupRadio.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            // Avisa o cliente
-            var deliverySection = document.querySelector('#checkoutStep3 .delivery-options');
-            if (deliverySection && !document.getElementById('deliveryOffNotice')) {
-                var notice = document.createElement('div');
-                notice.id = 'deliveryOffNotice';
-                notice.style.cssText = 'background:#FFF3E0;border:1px solid #FFB74D;border-radius:10px;padding:10px 14px;margin-top:10px;color:#E65100;font-size:0.85rem;font-weight:600';
-                notice.innerHTML = '🛵 Esta loja está aceitando apenas <strong>retirada</strong> no momento.';
-                deliverySection.appendChild(notice);
+        var pickupEnabled   = selectedStore.pickupEnabled !== false;
+
+        // Se NENHUMA modalidade disponível → bloqueia checkout
+        if (!deliveryEnabled && !pickupEnabled) {
+            var btn2 = document.getElementById('btnToDelivery');
+            if (btn2) { btn2.disabled = true; btn2.textContent = 'Loja não aceita pedidos online agora'; }
+            var deliverySection0 = document.querySelector('#checkoutStep3 .delivery-options');
+            if (deliverySection0 && !document.getElementById('storeClosedNotice')) {
+                var noticeC = document.createElement('div');
+                noticeC.id = 'storeClosedNotice';
+                noticeC.style.cssText = 'background:#FFEBEE;border:2px solid #EF9A9A;border-radius:10px;padding:12px 16px;margin-top:10px;color:#B71C1C;font-size:0.9rem;font-weight:700;text-align:center';
+                noticeC.innerHTML = '🔴 Esta loja não está aceitando pedidos online no momento.<br><small style="font-weight:400">Tente novamente mais tarde ou ligue para a loja.</small>';
+                deliverySection0.insertBefore(noticeC, deliverySection0.firstChild);
             }
         } else {
-            var existingNotice = document.getElementById('deliveryOffNotice');
-            if (existingNotice) existingNotice.remove();
+            var existingClosed = document.getElementById('storeClosedNotice');
+            if (existingClosed) existingClosed.remove();
+        }
+
+        // Delivery
+        var deliveryRadio = document.querySelector('input[name="delivery"][value="delivery"]');
+        var deliveryLabel = deliveryRadio ? deliveryRadio.closest('.delivery-option') : null;
+        if (deliveryLabel) deliveryLabel.style.display = deliveryEnabled ? '' : 'none';
+
+        // Retirada
+        var pickupRadio = document.querySelector('input[name="delivery"][value="pickup"]');
+        var pickupLabel = pickupRadio ? pickupRadio.closest('.delivery-option') : null;
+        if (pickupLabel) pickupLabel.style.display = pickupEnabled ? '' : 'none';
+
+        // Aviso de modo único
+        var deliverySection = document.querySelector('#checkoutStep3 .delivery-options');
+        var existingNotice = document.getElementById('deliveryOffNotice');
+        if (existingNotice) existingNotice.remove();
+
+        if (!deliveryEnabled && pickupEnabled) {
+            // Só retirada — força selecionar retirada
+            if (pickupRadio) { pickupRadio.checked = true; pickupRadio.dispatchEvent(new Event('change', { bubbles: true })); }
+            if (deliverySection) {
+                var n1 = document.createElement('div');
+                n1.id = 'deliveryOffNotice';
+                n1.style.cssText = 'background:#FFF3E0;border:1px solid #FFB74D;border-radius:10px;padding:10px 14px;margin-top:10px;color:#E65100;font-size:0.85rem;font-weight:600';
+                n1.innerHTML = '🛵 Esta loja está aceitando apenas <strong>retirada na loja</strong> no momento.';
+                deliverySection.appendChild(n1);
+            }
+        } else if (deliveryEnabled && !pickupEnabled) {
+            // Só delivery — força selecionar delivery
+            if (deliveryRadio) { deliveryRadio.checked = true; deliveryRadio.dispatchEvent(new Event('change', { bubbles: true })); }
+            if (deliverySection) {
+                var n2 = document.createElement('div');
+                n2.id = 'deliveryOffNotice';
+                n2.style.cssText = 'background:#E3F2FD;border:1px solid #90CAF9;border-radius:10px;padding:10px 14px;margin-top:10px;color:#0D47A1;font-size:0.85rem;font-weight:600';
+                n2.innerHTML = '🏪 Esta loja está aceitando apenas <strong>delivery</strong> no momento. Retirada indisponível.';
+                deliverySection.appendChild(n2);
+            }
         }
 
         var feeText = document.getElementById('deliveryFeeText');
@@ -949,6 +1011,7 @@
         window._selectedStoreTime = selectedStore.deliveryTime;
         window._selectedStoreDeliveryFee = selectedStore.deliveryFee;
         window._selectedStoreDeliveryEnabled = deliveryEnabled;
+        window._selectedStorePickupEnabled = pickupEnabled;
         window._selectedStoreId = selectedStore.id;
         renderCheckoutStores(CHECKOUT_STORES);
         if ('vibrate' in navigator) navigator.vibrate(30);
