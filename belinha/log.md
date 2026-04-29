@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #71 — 2026-04-29
+
+**Área:** Conteúdo — Semanas 29 + 30 (01–14/11/2026)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #70. Semana 29 = pós-Halloween: showcase UGC, resultado em números, abertura novembro, teaser de novidades. Semana 30 = Linha Zero retomada (comportamento pós-Halloween: culpa + calor novembro = pico de demanda fit) + teaser do produto sazonal de verão (dezembro). Sexta do Potinho #14 e #15 continuam a série — #15 é marco celebrativo de 15 semanas.
+
+**O que analisou:**
+- Leu semanas 27 e 28 completas para manter continuidade de mecânicas (lista VIP, countdown)
+- Identificou transição natural Halloween → Linha Zero (dado comportamental de novembro)
+- Semana 30: enquete verão (quarta 11/11) alimenta estratégia de produto sazonal dezembro — dado real, não suposição
+- Template WA de reativação incluído na sexta 13/11 para clientes inativos 3+ semanas
+- Padrão v9 mantido: A/B nos posts de UGC showcase (com/sem foto real de cliente)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana29.md` | CRIADO — Carrossel agradecimento 01/11 + WA base completa, infográfico resultados 02/11, showcase UGC 03/11, reel bastidores equipe 04/11, teaser novidades 05/11 + enquete, Sexta #14 06/11, plant sábado, checklist, métricas, tabela editorial |
+| `belinha/content/pos-inauguracao-semana30.md` | CRIADO — Abertura fit 08/11, carrossel educativo Linha Zero 09/11, prova social 10/11, teaser verão + enquete sabor 11/11, reel lifestyle 12/11, Sexta #15 🏆 13/11 + WA reativação inativos, sábado fit 14/11, checklist, métricas, tabela editorial |
+
+**Commit:** `050b400`
+
+**Destaques de conteúdo:**
+1. **Carrossel agradecimento 01/11 (mosaico UGC):** Pico de engajamento pós-evento — audiência quente + clientes com FOMO. WA para base completa no mesmo dia converte o momento emocional em ação.
+2. **Infográfico resultados reais 02/11:** Transparência com números cria credibilidade. Mesmo sem dado exato de vendas, métricas de engajamento já funcionam como prova social.
+3. **Enquete verão 11/11:** Dado real de preferência (frutas tropicais vs. refrescante) alimenta a escolha do produto sazonal de verão — decisão baseada em audiência, não suposição.
+4. **Sexta do Potinho #15 = marco comemorativo:** 15 semanas sem falhar é dado concreto de consistência. "Natal a 6 semanas" no caption planta antecipação sem revelar campanhas.
+5. **Template WA de reativação (sexta 13/11):** Segmento de inativos 3+ semanas precisa de abordagem diferenciada — Linha Zero como gancho fit é ângulo de baixo atrito para reengajar.
+
+**Próximo passo sugerido:**
+- Ciclo #72: Conteúdo — Semanas 31+32 (15–28/11): Black Friday 27/11 (mecânica valor extra, não desconto), aquecimento Natal, produto sazonal verão (baseado em resultado enquete 11/11)
+- Ciclo #73: Concorrentes — TheBest (1º fetch ever) + refetch MilkyMoo (desatualizado desde ciclo #60)
+- Ciclo #74 (múltiplo de 5 a partir de #54 = ciclo #74): Auto-aprimoramento — reler log #69–#73, calibrar estratégia dezembro/Natal
+- Operador: verificar resultado enquete "Novembro" (quinta 05/11) e "Verão" (quarta 11/11) antes de iniciar produção de artes da semana 30 e 31
+
+---
+
 ## Ciclo #70 — 2026-04-29
 
 **Área:** Conteúdo — Semanas 27 + 28 (18–24/10 countdown final Halloween + 25–31/10 Aniversário 6 meses + Dia H)
