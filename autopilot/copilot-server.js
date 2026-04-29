@@ -441,7 +441,20 @@ async function runClaudeCli(combinedPrompt) {
 
     const { exitCode, stdout, stderr } = await collectProcess(proc);
     if (exitCode !== 0) {
-        throw new Error('claude_cli_exit_' + exitCode + ': ' + (stderr || stdout).slice(0, 300));
+        const errText = stderr || stdout;
+        // Detecta erro de autenticação — abre login automaticamente
+        if (errText.includes('authentication_error') ||
+            errText.includes('Invalid authentication') ||
+            errText.includes('401')) {
+            console.log('\n[auth] ⚠️  Sessão Claude expirada — abrindo login automático...');
+            try {
+                spawn('cmd', ['/c', 'start', 'cmd', '/k',
+                    'echo. && echo  Sessao Claude expirada. Fazendo login... && echo. && claude login && echo. && echo  Login OK! Feche esta janela e tente novamente no copilot. && pause'
+                ], { shell: false, detached: true, stdio: 'ignore' }).unref();
+            } catch (le) { console.error('[auth] falha ao abrir janela de login:', le.message); }
+            throw new Error('🔐 Sessão Claude expirada!\n\nUma janela de login foi aberta automaticamente.\n\n→ Faça o login com sua conta Claude.ai na janela que abriu.\n→ Depois tente novamente aqui.');
+        }
+        throw new Error('claude_cli_exit_' + exitCode + ': ' + errText.slice(0, 400));
     }
 
     let reply = '';
