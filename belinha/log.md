@@ -2240,3 +2240,39 @@ Análise dos 5 ciclos:
 - Ciclo #61: Conteúdo semanas 16+17 (02–15/08/2026) — "agosto rotina: sua pausa favorita do dia" + "inverno de saída: comfort food + Linha Zero"
 - Ciclo #62: CLS sweep batch — cardapio.html, acai-self-service-londrina.html, cartao-fidelidade.html
 - Ciclo #64 (auto-aprimoramento): reler log #59–#63, ajustar estratégia outubro 2026
+
+
+---
+
+## Ciclo #65 — 2026-04-29
+
+**Área:** Conteúdo — Semanas 20 + 21 (30/08–12/09/2026)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #64 (padrão v8: temáticas adjacentes no mesmo ciclo). Semana 20 = Dia D do lançamento do produto sazonal de setembro + ativação de UGC. Semana 21 = sustentação do produto + primavera como estilo de vida + feriado 07/09 (Independência) + Sexta do Potinho #6 + template WA de 2º ciclo de fidelidade.
+
+**O que analisou:**
+- Leu semanas 17, 18 e 19 como referência de formato (padrão v8: calendário Dom–Sab, templates WA, checklist, métricas)
+- Bloqueador ativo: produto sazonal setembro sem nome/ingredientes confirmados pela franquia → incluídas Versão A (confirmado) e Versão B (genérico) no dia do lançamento
+- Oportunidade identificada: feriado 07/09 = tráfego alto no Muffato → post específico de comunicado de funcionamento
+- Template WA de 2º ciclo de fidelidade entregue na semana 21 (conforme roadmap ciclo #66 adiantado)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana20.md` | CRIADO — Lançamento produto sazonal (Versão A/B), ativação UGC, carrossel educativo "o que tem no potinho", Sexta do Potinho #5, checklist, métricas, tabela editorial |
+| `belinha/content/pos-inauguracao-semana21.md` | CRIADO — Feriado 07/09, rotina de primavera, carrossel "5 motivos", Sexta do Potinho #6, Linha Zero fitness, template WA 2º ciclo fidelidade, checklist, métricas, tabela editorial |
+
+**Commit:** `1a25717`
+
+**Destaques de conteúdo:**
+1. **Versão A/B no lançamento (01/09):** Bloqueador do produto sazonal mitigado — operador escolhe a versão sem precisar esperar novo ciclo
+2. **Feriado 07/09 planejado:** Post + 2x Stories de comunicado de funcionamento — alta circulação no Muffato = oportunidade de venda presencial
+3. **Template WA 2º ciclo de fidelidade adiantado:** Ciclo #66 prescrevia esse entregável; incluído na semana 21 por coerência temática (setembro = clientes completando 2º ciclo)
+4. **Sextas do Potinho #5 e #6:** Continuidade do hábito — mencionar "6 semanas sem falhar" como prova de consistência da marca
+
+**Próximo passo sugerido:**
+- Ciclo #66: Semana 22 (13–19/09) — Linha Zero fitness peak (virada de estação + pico de academia) — já há Linha Zero no sábado 12/09 como gancho
+- Ciclo #67: Semanas 23 + 24 juntas (aniversário de primavera 22/09 + abertura de outubro)
+- Ciclo #68: SEO local — verificar aggregateRating (≥3 reviews Google Maps)
+- Operador: confirmar produto sazonal setembro com a franquia para usar Versão A em 01/09
