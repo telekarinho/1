@@ -57,180 +57,247 @@ try {
 }
 
 // ──────────────────────────────────────────────────────
+// DataStore wrapper helpers — todos os docs em datastore/
+// têm shape { value: <JSON-string>, updatedAt: timestamp }
+// e o catalogo (v2) tem categorias aninhadas:
+//   { sabores: { milkshake: { name, icon, items: [...] }, acai: {...} }, bebidas: [...] }
+// ──────────────────────────────────────────────────────
+async function readDS(docId, fallback) {
+    const doc = await db.collection('datastore').doc(docId).get();
+    if (!doc.exists) return fallback;
+    const raw = doc.data();
+    if (typeof raw.value === 'string') {
+        try { return JSON.parse(raw.value); } catch (e) { return fallback; }
+    }
+    return raw; // formato legacy não-wrapper
+}
+async function writeDS(docId, data) {
+    await db.collection('datastore').doc(docId).set({
+        value: JSON.stringify(data),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        _updatedBy: 'copilot'
+    });
+}
+
+// Itera TODOS os items do catálogo retornando { section, category, item }
+// Section pode ser array direto (bebidas) ou object com categorias contendo items[]
+function* iterCatalogItems(cat) {
+    if (!cat) return;
+    for (const sectionKey of Object.keys(cat)) {
+        const section = cat[sectionKey];
+        if (Array.isArray(section)) {
+            for (const item of section) yield { sectionKey, categoryKey: null, item };
+        } else if (section && typeof section === 'object') {
+            for (const catKey of Object.keys(section)) {
+                const cat2 = section[catKey];
+                if (cat2 && Array.isArray(cat2.items)) {
+                    for (const item of cat2.items) yield { sectionKey, categoryKey: catKey, item };
+                }
+            }
+        }
+    }
+}
+function findItemById(cat, itemId) {
+    for (const ref of iterCatalogItems(cat)) {
+        if (ref.item.id === itemId) return ref;
+    }
+    return null;
+}
+
+// ──────────────────────────────────────────────────────
 // Tool implementations — escrevem direto no Firestore
 // ──────────────────────────────────────────────────────
 const TOOLS_IMPL = {
     async read_catalog() {
-        const doc = await db.collection('datastore').doc('catalog_config').get();
-        if (!doc.exists) return { error: 'catalog_config não existe ainda' };
-        return doc.data();
+        const cat = await readDS('catalog_config', null);
+        if (!cat) return { error: 'catalog_config não existe' };
+        return cat;
     },
 
     async list_catalog_sections() {
-        const doc = await db.collection('datastore').doc('catalog_config').get();
-        if (!doc.exists) return { sections: [] };
-        const data = doc.data();
-        const sections = {};
-        Object.keys(data).forEach(k => {
-            if (Array.isArray(data[k])) {
-                sections[k] = {
-                    count: data[k].length,
-                    items: data[k].map(i => ({ id: i.id, name: i.name, available: i.available !== false }))
+        const cat = await readDS('catalog_config', null);
+        if (!cat) return { error: 'catalog vazio' };
+        const summary = {};
+        for (const sectionKey of Object.keys(cat)) {
+            if (sectionKey.startsWith('_')) continue;
+            const section = cat[sectionKey];
+            if (Array.isArray(section)) {
+                summary[sectionKey] = {
+                    type: 'array',
+                    count: section.length,
+                    items: section.map(i => ({ id: i.id, name: i.name, price: i.price, available: i.available !== false }))
                 };
+            } else if (section && typeof section === 'object') {
+                const cats = {};
+                let total = 0;
+                for (const catKey of Object.keys(section)) {
+                    const c = section[catKey];
+                    if (c && Array.isArray(c.items)) {
+                        cats[catKey] = {
+                            name: c.name || catKey,
+                            count: c.items.length,
+                            items: c.items.map(i => ({ id: i.id, name: i.name, price: i.price, available: i.available !== false }))
+                        };
+                        total += c.items.length;
+                    }
+                }
+                summary[sectionKey] = { type: 'categorized', total_items: total, categories: cats };
             }
-        });
-        return sections;
+        }
+        return summary;
     },
 
-    async get_item({ section, itemId }) {
-        const doc = await db.collection('datastore').doc('catalog_config').get();
-        if (!doc.exists) return { error: 'catalog vazio' };
-        const data = doc.data();
-        if (!Array.isArray(data[section])) return { error: 'seção inválida: ' + section };
-        const item = data[section].find(i => i.id === itemId);
-        if (!item) return { error: 'item não encontrado: ' + itemId };
-        return item;
+    async get_item({ itemId, section }) {
+        const cat = await readDS('catalog_config', null);
+        if (!cat) return { error: 'catalog vazio' };
+        const ref = findItemById(cat, itemId);
+        if (!ref) return { error: 'item não encontrado: ' + itemId };
+        return { ...ref.item, _location: { section: ref.sectionKey, category: ref.categoryKey } };
     },
 
-    async update_item({ section, itemId, fields }) {
-        const ref = db.collection('datastore').doc('catalog_config');
-        const doc = await ref.get();
-        if (!doc.exists) return { error: 'catalog vazio' };
-        const data = doc.data();
-        if (!Array.isArray(data[section])) return { error: 'seção inválida: ' + section };
-        const idx = data[section].findIndex(i => i.id === itemId);
-        if (idx === -1) return { error: 'item não encontrado: ' + itemId };
-        data[section][idx] = Object.assign({}, data[section][idx], fields, {
+    async update_item({ itemId, fields, section }) {
+        const cat = await readDS('catalog_config', null);
+        if (!cat) return { error: 'catalog vazio' };
+        const ref = findItemById(cat, itemId);
+        if (!ref) return { error: 'item não encontrado: ' + itemId };
+        Object.assign(ref.item, fields, {
             updatedAt: new Date().toISOString(),
             updatedBy: 'copilot'
         });
-        await ref.set(data, { merge: false });
-        return { success: true, item: data[section][idx] };
+        await writeDS('catalog_config', cat);
+        return { success: true, item: ref.item, location: { section: ref.sectionKey, category: ref.categoryKey } };
     },
 
-    async create_item({ section, item }) {
-        const ref = db.collection('datastore').doc('catalog_config');
-        const doc = await ref.get();
-        const data = doc.exists ? doc.data() : {};
-        if (!Array.isArray(data[section])) data[section] = [];
-        if (!item.id) item.id = (item.name || 'item').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-        if (data[section].some(i => i.id === item.id)) return { error: 'id já existe: ' + item.id };
+    async create_item({ section, category, item }) {
+        if (!section) return { error: 'section obrigatório' };
+        const cat = await readDS('catalog_config', {});
+        if (!item.id) item.id = 'prod_' + Math.random().toString(36).slice(2, 12);
+        if (findItemById(cat, item.id)) return { error: 'id já existe: ' + item.id };
         item.available = item.available !== false;
         item.createdAt = new Date().toISOString();
         item.createdBy = 'copilot';
-        data[section].push(item);
-        await ref.set(data, { merge: false });
+
+        // Decide onde colocar
+        if (Array.isArray(cat[section])) {
+            cat[section].push(item);
+        } else if (cat[section] && typeof cat[section] === 'object') {
+            // Estrutura categorizada
+            if (!category) return { error: 'seção "' + section + '" tem categorias — passe `category` (ex: "milkshake", "acai")' };
+            if (!cat[section][category]) {
+                cat[section][category] = { name: category, items: [] };
+            }
+            if (!Array.isArray(cat[section][category].items)) cat[section][category].items = [];
+            cat[section][category].items.push(item);
+        } else {
+            cat[section] = [item]; // cria seção como array
+        }
+        await writeDS('catalog_config', cat);
         return { success: true, item };
     },
 
-    async delete_item({ section, itemId }) {
-        const ref = db.collection('datastore').doc('catalog_config');
-        const doc = await ref.get();
-        if (!doc.exists) return { error: 'catalog vazio' };
-        const data = doc.data();
-        if (!Array.isArray(data[section])) return { error: 'seção inválida' };
-        const before = data[section].length;
-        data[section] = data[section].filter(i => i.id !== itemId);
-        if (data[section].length === before) return { error: 'item não encontrado' };
-        await ref.set(data, { merge: false });
-        return { success: true, removed: itemId };
+    async delete_item({ itemId }) {
+        const cat = await readDS('catalog_config', null);
+        if (!cat) return { error: 'catalog vazio' };
+        const ref = findItemById(cat, itemId);
+        if (!ref) return { error: 'item não encontrado' };
+        if (ref.categoryKey) {
+            cat[ref.sectionKey][ref.categoryKey].items = cat[ref.sectionKey][ref.categoryKey].items.filter(i => i.id !== itemId);
+        } else {
+            cat[ref.sectionKey] = cat[ref.sectionKey].filter(i => i.id !== itemId);
+        }
+        await writeDS('catalog_config', cat);
+        return { success: true, removed: itemId, location: { section: ref.sectionKey, category: ref.categoryKey } };
     },
 
-    async toggle_item({ section, itemId, available }) {
-        return await this.update_item({ section, itemId, fields: { available: !!available } });
+    async toggle_item({ itemId, available }) {
+        return await this.update_item({ itemId, fields: { available: !!available } });
     },
 
     async bulk_price_adjustment({ section, percent, onlyAvailable }) {
-        const ref = db.collection('datastore').doc('catalog_config');
-        const doc = await ref.get();
-        if (!doc.exists) return { error: 'catalog vazio' };
-        const data = doc.data();
-        if (!Array.isArray(data[section])) return { error: 'seção inválida' };
+        const cat = await readDS('catalog_config', null);
+        if (!cat) return { error: 'catalog vazio' };
         const factor = 1 + (percent / 100);
         let touched = 0;
-        data[section].forEach(item => {
-            if (onlyAvailable && item.available === false) return;
-            if (typeof item.price === 'number') {
-                item.price = Math.round(item.price * factor * 100) / 100;
+        for (const ref of iterCatalogItems(cat)) {
+            if (section && ref.sectionKey !== section) continue;
+            if (onlyAvailable && ref.item.available === false) continue;
+            if (typeof ref.item.price === 'number') {
+                ref.item.price = Math.round(ref.item.price * factor * 100) / 100;
                 touched++;
             }
-            if (item.precos && typeof item.precos === 'object') {
-                Object.keys(item.precos).forEach(k => {
-                    if (typeof item.precos[k] === 'number') {
-                        item.precos[k] = Math.round(item.precos[k] * factor * 100) / 100;
+            if (ref.item.precos && typeof ref.item.precos === 'object') {
+                for (const k of Object.keys(ref.item.precos)) {
+                    if (typeof ref.item.precos[k] === 'number') {
+                        ref.item.precos[k] = Math.round(ref.item.precos[k] * factor * 100) / 100;
                     }
-                });
-                touched++;
+                }
             }
-        });
-        await ref.set(data, { merge: false });
-        return { success: true, touched, percent };
+        }
+        await writeDS('catalog_config', cat);
+        return { success: true, touched, percent, scope: section || 'all' };
     },
 
     async list_franchises() {
-        const doc = await db.collection('datastore').doc('franchises').get();
-        if (!doc.exists) return { franchises: [] };
-        return doc.data();
+        const data = await readDS('franchises', null);
+        if (!data) return { franchises: [] };
+        const list = Array.isArray(data) ? data : (Array.isArray(data.franchises) ? data.franchises : []);
+        return { count: list.length, franchises: list.map(f => ({ id: f.id, slug: f.slug, name: f.name, city: f.city, ownerEmail: f.access && f.access.ownerEmail })) };
     },
 
     async update_franchise({ franchiseId, fields }) {
-        const ref = db.collection('datastore').doc('franchises');
-        const doc = await ref.get();
-        const data = doc.exists ? doc.data() : { franchises: [] };
-        const list = Array.isArray(data.franchises) ? data.franchises : [];
+        const data = await readDS('franchises', []);
+        const list = Array.isArray(data) ? data : (Array.isArray(data.franchises) ? data.franchises : []);
         const idx = list.findIndex(f => f.id === franchiseId || f.slug === franchiseId);
         if (idx === -1) return { error: 'franquia não encontrada: ' + franchiseId };
         list[idx] = Object.assign({}, list[idx], fields, { updatedAt: new Date().toISOString() });
-        await ref.set({ franchises: list }, { merge: false });
+        await writeDS('franchises', list);
         return { success: true, franchise: list[idx] };
     },
 
     async read_orders_today({ franchiseId, limit }) {
         const today = new Date();
         const yyyyMmDd = today.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
-        const docId = 'orders_' + franchiseId;
-        const doc = await db.collection('datastore').doc(docId).get();
-        if (!doc.exists) return { orders: [], total: 0 };
-        const data = doc.data();
-        const all = Array.isArray(data.orders) ? data.orders : (Array.isArray(data) ? data : []);
+        const data = await readDS('orders_' + franchiseId, []);
+        const all = Array.isArray(data) ? data : (Array.isArray(data.orders) ? data.orders : []);
         const today_orders = all.filter(o => {
-            const d = (o.createdAt || o.created_at || '').slice(0, 10);
+            const d = (o.createdAt || o.created_at || o.timestamp || '').toString().slice(0, 10);
             return d === yyyyMmDd;
         });
-        const slim = today_orders.slice(0, limit || 50).map(o => ({
-            id: o.id, status: o.status, total: o.total, customer: o.customer, items: o.items
-        }));
         return {
+            date: yyyyMmDd,
             count: today_orders.length,
-            total_revenue: today_orders.reduce((s, o) => s + (o.total || 0), 0),
-            orders: slim
+            total_revenue: today_orders.reduce((s, o) => s + (Number(o.total) || 0), 0),
+            orders: today_orders.slice(0, limit || 30).map(o => ({
+                id: o.id, status: o.status, total: o.total,
+                customer: o.customer && (o.customer.name || o.customer),
+                items_count: Array.isArray(o.items) ? o.items.length : 0
+            }))
         };
     },
 
     async read_finances({ franchiseId, month }) {
-        const docId = 'finances_' + franchiseId;
-        const doc = await db.collection('datastore').doc(docId).get();
-        if (!doc.exists) return { entries: [] };
-        const data = doc.data();
-        const entries = Array.isArray(data.entries) ? data.entries : (Array.isArray(data) ? data : []);
-        const filtered = month
-            ? entries.filter(e => (e.date || '').slice(0, 7) === month)
-            : entries;
-        const receita = filtered.filter(e => e.type === 'receita').reduce((s, e) => s + (e.value || 0), 0);
-        const despesa = filtered.filter(e => e.type === 'despesa').reduce((s, e) => s + (e.value || 0), 0);
+        const data = await readDS('finances_' + franchiseId, []);
+        const entries = Array.isArray(data) ? data : (Array.isArray(data.entries) ? data.entries : []);
+        const filtered = month ? entries.filter(e => (e.date || '').slice(0, 7) === month) : entries;
+        const receita = filtered.filter(e => e.type === 'receita').reduce((s, e) => s + (Number(e.value) || 0), 0);
+        const despesa = filtered.filter(e => e.type === 'despesa').reduce((s, e) => s + (Number(e.value) || 0), 0);
         return {
             month: month || 'all',
             count: filtered.length,
-            receita,
-            despesa,
-            lucro: receita - despesa
+            receita: Math.round(receita * 100) / 100,
+            despesa: Math.round(despesa * 100) / 100,
+            lucro: Math.round((receita - despesa) * 100) / 100
         };
     },
 
     async raw_firestore_read({ collection, document }) {
         const doc = await db.collection(collection).doc(document).get();
         if (!doc.exists) return { exists: false };
-        return doc.data();
+        const raw = doc.data();
+        if (raw && typeof raw.value === 'string') {
+            try { return { _wrapped: true, data: JSON.parse(raw.value), updatedAt: raw.updatedAt }; } catch (e) {}
+        }
+        return raw;
     }
 };
 
@@ -238,43 +305,51 @@ const TOOLS_IMPL = {
 // Tool descriptions (texto pro Claude — não JSON schema)
 // ──────────────────────────────────────────────────────
 const TOOLS_DESC = `
-## Ferramentas disponíveis
+## ⚠️ INSTRUÇÃO CRÍTICA — leia 3x
 
-Você TEM ferramentas de verdade. Pra usar, escreva EXATAMENTE este formato (uma linha por tool, em qualquer ponto da sua resposta):
+Você está rodando dentro de um servidor wrapper. **NÃO TEM Bash, NÃO TEM Edit, NÃO TEM Read** — todas as ferramentas nativas estão desabilitadas. **Não tente** chamar curl, node, ou qualquer comando.
 
+Você só pode interagir com o sistema escrevendo este formato literal **dentro do texto da sua resposta**:
+
+\`\`\`
 <tool_use name="NOME_DA_TOOL">
 {"chave": "valor"}
 </tool_use>
+\`\`\`
 
-O servidor vai executar e responder com:
+Isso é texto markup, não é uma tool real. O servidor wrapper que recebe sua resposta procura por esse padrão de texto via regex, executa a função correspondente em Node.js, e te manda de volta uma nova mensagem do tipo USER contendo:
 
+\`\`\`
 <tool_result name="NOME_DA_TOOL">
 {...resultado JSON...}
 </tool_result>
+\`\`\`
 
-Aí você continua a conversa. Pode chamar várias tools em sequência.
+Aí você continua a conversa normalmente, lendo o resultado e respondendo. Pode emitir vários blocos \`<tool_use>\` por turno — o servidor executa todos antes de te chamar de novo.
+
+**Não peça permissão.** Não diga "preciso de aprovação". Não tente curl. Apenas escreva os blocos \`<tool_use>\` no meio da sua resposta.
 
 ### Lista de tools
 
-**read_catalog** — Lê o catálogo inteiro. Input: \`{}\`
+**read_catalog** — Lê o catálogo inteiro (todas as seções). Input: \`{}\`
 
-**list_catalog_sections** — Resumo das seções com IDs e nomes (mais rápido). Input: \`{}\`
+**list_catalog_sections** — Resumo: cada seção, suas categorias e items com IDs/preços. Input: \`{}\`. Use ESTA primeiro pra navegar e descobrir IDs.
 
-**get_item** — Detalhes de um item. Input: \`{"section": "sabores", "itemId": "morango"}\`
+**get_item** — Detalhes de um item por ID (busca em todas as seções). Input: \`{"itemId": "prod_xxx"}\`
 
-**update_item** — Atualiza campos. Input: \`{"section": "sabores", "itemId": "morango", "fields": {"price": 15}}\`
+**update_item** — Atualiza campos do item (precisa só do itemId, encontra a seção sozinho). Input: \`{"itemId": "prod_xxx", "fields": {"price": 15.5, "desc": "..."}}\`
 
-**create_item** — Cria item novo. Input: \`{"section": "sabores", "item": {"name": "Brigadeiro", "price": 14, "desc": "..."}}\`
+**create_item** — Cria item novo. Input: \`{"section": "sabores", "category": "milkshake", "item": {"name": "Brigadeiro", "price": 14}}\`. Em seções categorizadas (sabores, bases, etc) precisa de \`category\`.
 
-**delete_item** — Remove item (CUIDADO). Input: \`{"section": "sabores", "itemId": "x"}\`
+**delete_item** — Remove item. Input: \`{"itemId": "prod_xxx"}\`
 
-**toggle_item** — Ativa/desativa. Input: \`{"section": "sabores", "itemId": "morango", "available": false}\`
+**toggle_item** — Ativa/desativa. Input: \`{"itemId": "prod_xxx", "available": false}\`
 
-**bulk_price_adjustment** — % em todos os preços. Input: \`{"section": "sabores", "percent": 5, "onlyAvailable": true}\`
+**bulk_price_adjustment** — Reajuste % nos preços. Input: \`{"section": "sabores", "percent": 5, "onlyAvailable": true}\`. Omita section pra reajustar tudo.
 
 **list_franchises** — Lista franquias. Input: \`{}\`
 
-**update_franchise** — Atualiza dados da franquia. Input: \`{"franchiseId": "muffato-quintino", "fields": {"horario": "10h-22h"}}\`
+**update_franchise** — Atualiza dados. Input: \`{"franchiseId": "muffato-quintino", "fields": {"horario": "10h-22h"}}\`
 
 **read_orders_today** — Pedidos de hoje. Input: \`{"franchiseId": "muffato-quintino", "limit": 20}\`
 
@@ -282,8 +357,10 @@ Aí você continua a conversa. Pode chamar várias tools em sequência.
 
 **raw_firestore_read** — Escape hatch p/ qualquer doc. Input: \`{"collection": "datastore", "document": "..."}\`
 
-### Seções do catálogo
-\`bases\` · \`formatos\` · \`tamanhos\` · \`sabores\` · \`adicionais\` · \`bebidas\`
+### Estrutura do catálogo
+Seções: \`bases\`, \`formatos\`, \`tamanhos\`, \`sabores\`, \`adicionais\`, \`bebidas\`.
+A maioria é **categorizada** (object com sub-categorias contendo \`items[]\`). \`bebidas\` é array direto.
+Sempre rode \`list_catalog_sections\` primeiro pra ver IDs reais (formato \`prod_xxxxx\`).
 `.trim();
 
 const SYSTEM_PROMPT = `Você é o **Copiloto MilkyPot** — assistente de configuração com poder real de escrever no sistema.
@@ -351,8 +428,14 @@ async function runClaudeCli(combinedPrompt) {
         ...(sessionToken ? { CLAUDE_CODE_OAUTH_TOKEN: sessionToken } : {})
     };
 
-    // -p = print mode (one-shot), JSON output. Tudo via stdin (sem 8191 limit).
-    const proc = spawn('claude', ['-p', '--output-format', 'json'], { shell: true, env });
+    // -p = print mode (one-shot), JSON output.
+    // --disallowedTools bloqueia as ferramentas nativas do Claude CLI
+    // (Bash, Edit, Read, etc) — nosso protocolo é XML via texto, não tool calls reais.
+    const proc = spawn(
+        'claude',
+        ['-p', '--output-format', 'json', '--disallowedTools', 'Bash Edit Write Read Glob Grep WebFetch WebSearch Task TodoWrite NotebookEdit'],
+        { shell: true, env }
+    );
     proc.stdin.write(combinedPrompt, 'utf8');
     proc.stdin.end();
 
