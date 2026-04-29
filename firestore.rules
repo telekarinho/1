@@ -31,6 +31,19 @@ service cloud.firestore {
     }
 
     // ============================================
+    // Test Tokens (validacao via login.html sem auth previa)
+    // ============================================
+    // Tokens sao UUIDs longos (32 bytes) gerados por Cloud Function
+    // generateTestToken. Login.html precisa LER pra validar o token
+    // antes de criar sessao local. Escrita so pelo backend (Cloud Function
+    // bypass rules via admin SDK).
+    match /test_tokens/{tokenId} {
+      allow read: if true;       // login.html valida o token
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used','usedAt']);
+      allow create, delete: if false;  // so backend cria/deleta
+    }
+
+    // ============================================
     // DataStore Collection (legado - fase de migracao)
     // ============================================
     match /datastore/{document} {
