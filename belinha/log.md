@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #70 — 2026-04-29
+
+**Área:** Conteúdo — Semanas 27 + 28 (18–24/10 countdown final Halloween + 25–31/10 Aniversário 6 meses + Dia H)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #69 (semanas 27+28 = clímax da campanha Halloween). Semana 27 = countdown urgência 13→7 dias, Sexta do Potinho #12. Semana 28 = DUPLA âncora: aniversário 6 meses (25/10) + Dia H Halloween (31/10) — semana de maior volume de vendas esperado desde a inauguração.
+
+**O que analisou:**
+- Leu semanas 25 e 26 completas para manter continuidade de mecânicas (lista VIP, "CONFIRMO", countdown)
+- Identificou aniversário 6 meses no domingo 25/10 (mesma semana do Halloween) = rara confluência emocional + comercial
+- Semana 27: 7 peças + Reel + Sexta #12 + bridge para aniversário no sábado 24/10
+- Semana 28: ponto máximo com cobertura Stories ao vivo no 31/10 + WA pós-evento + plant de transição para novembro
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana27.md` | CRIADO — Countdown 13→7 dias, carrossel "Guia Halloween", enquete fantasia, prova social + WA lista VIP, Reel 15s ovelhinha ansiosa, Sexta #12, bridge 6 meses, 7 peças dia-a-dia, métricas, tabela editorial |
+| `belinha/content/pos-inauguracao-semana28.md` | CRIADO — Aniversário 6 meses (domingo 25/10 ⭐⭐⭐), countdown 6→0 dias, carrossel guia final, Reel câmera lenta (quarta 28/10), urgência encerramento reservas (quinta 29/10), Sexta #13 EVE, Dia H cobertura ao vivo Stories (31/10 ⭐⭐⭐⭐⭐), WA pós-evento, transição novembro, checklists completos, métricas |
+
+**Commit:** `dae9672`
+
+**Destaques de conteúdo:**
+1. **Aniversário 6 meses (25/10) + Halloween na mesma semana:** Confluência única — post de retrospectiva emocional + WA para toda a base = reativação orgânica + sell-in Halloween simultâneos. Arte com foto real inauguração 25/04 é o ativo crítico.
+2. **Encerramento lista VIP (quinta 29/10):** Prazo explícito de corte para reservas cria urgência real, não performática — depois: ordem de chegada. Elimina ambiguidade operacional.
+3. **Cobertura Stories ao vivo 31/10 (14h–22h):** Roteiro hora-a-hora com 9 checkpoints — FOMO para quem não foi + material de UGC showcase = engajamento post-evento elevado.
+4. **WA pós-evento (23h 31/10):** Agradecimento + "novembro tem novidades" = zero gap de engajamento na transição Halloween → novembro. Audiência não se sente abandonada pós-evento.
+5. **Sexta do Potinho #13 (30/10) como EVE do Halloween:** 13 semanas de série = dado concreto de consistência + eve do maior evento = pico natural de hype. Arte toda preta com ovelhinha vampira completa = maior diferenciação visual da série.
+
+**Alerta para operador:**
+- Arte do aniversário 6 meses (25/10) exige foto real da inauguração 25/04 — preparar com antecedência (artes genéricas perdem impacto emocional)
+- Estoque do Potinho Assombrado: confirmar quantidades com franquia para suportar ≥60 vendas + margem walk-in (sem reserva)
+- Treinamento da equipe antes do 31/10: fluxo VIP no balcão + montagem do produto + abordagem para fotos com clientes
+- Decoração da loja: preparar na quinta 29 ou sexta 30 (bastidores viram conteúdo Stories de alto impacto)
+
+**Próximo passo sugerido:**
+- Ciclo #71: Conteúdo — Semanas 29+30 (01–14/11): pós-Halloween showcase UGC, resultado em números, abertura de novembro, teaser verão, Linha Zero retomada
+- Ciclo #72: Conteúdo — Semanas 31+32 (15–28/11): Black Friday 27/11, mecânica valor extra (não desconto), aquecimento Natal
+- Ciclo #73: Concorrentes — TheBest (1º fetch) + refetch MilkyMoo (desatualizado desde ciclo #60)
+- Ciclo #74 (múltiplo de 5): Auto-aprimoramento — reler log #69–#73, calibrar estratégia dezembro (Natal + verão + produto sazonal)
+
+---
+
 ## Ciclo #69 — 2026-04-29
 
 **Área:** Auto-aprimoramento (ciclo #69 = múltiplo de 5 a partir de #54) + Conteúdo Halloween (semanas 25+26 antecipadas)
