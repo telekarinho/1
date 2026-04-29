@@ -130,6 +130,12 @@
                 <button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
                 <h1>📺 TV Indoor</h1>
                 <div class="header-actions">
+                    <div id="franchiseSwitcherBox" style="display:none;align-items:center;gap:6px">
+                        <label style="font-size:12px;color:#666;white-space:nowrap;font-weight:600">🏪 Franquia:</label>
+                        <select id="franchiseSelect" style="padding:5px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;min-width:150px;font-family:inherit" onchange="switchFranchise(this.value)">
+                            <option value="">Selecionar...</option>
+                        </select>
+                    </div>
                     <button class="btn btn-primary" onclick="openAddTvModal()">+ Nova TV</button>
                     <button class="btn btn-outline" onclick="Auth.logout()">Sair</button>
                 </div>
@@ -722,6 +728,35 @@
     if(!Auth.requireAuth()) return;
     var fid = Auth.getFranchiseId();
 
+    // Super-admin pode gerenciar qualquer franquia via ?fid= na URL
+    (function() {
+        var urlFid = new URLSearchParams(location.search).get('fid');
+        if (urlFid && Auth.getRole() === 'super_admin') fid = urlFid;
+    })();
+
+    window.switchFranchise = function(newFid) {
+        if (!newFid) return;
+        var url = new URL(location.href);
+        url.searchParams.set('fid', newFid);
+        location.href = url.toString();
+    };
+
+    function initFranchiseSwitcher() {
+        if (Auth.getRole() !== 'super_admin') return;
+        var box = document.getElementById('franchiseSwitcherBox');
+        if (box) box.style.display = 'flex';
+        var franchises = DataStore.get('franchises') || [];
+        var sel = document.getElementById('franchiseSelect');
+        if (!sel) return;
+        franchises.forEach(function(f) {
+            var opt = document.createElement('option');
+            opt.value = f.id;
+            opt.textContent = f.name || f.id;
+            if (f.id === fid) opt.selected = true;
+            sel.appendChild(opt);
+        });
+    }
+
     // Promessa que resolve com o usuário Firebase assim que o auth state for
     // determinado (restaurado do IndexedDB) E o token tiver os custom claims
     // atualizados. As regras de storage.rules exigem request.auth.token.franchiseId
@@ -744,7 +779,12 @@
                 .catch(function(){ resolve(null); });
         });
     });
-    document.getElementById('sidebarStoreName').textContent = fid || 'Franqueado';
+    (function(){
+        var franchises = DataStore.get('franchises') || [];
+        var matched = franchises.find(function(f){ return f.id === fid; });
+        var label = (matched && matched.name) ? matched.name : (fid || 'Franqueado');
+        document.getElementById('sidebarStoreName').textContent = label;
+    })();
     document.getElementById('sidebarUserName').textContent = Auth.getUserName();
 
     /* --- Data Keys --- */
@@ -2217,6 +2257,7 @@
     }
 
     /* === Initial render === */
+    initFranchiseSwitcher();
     renderTvs();
     renderMedia();
     renderPlaylist();
