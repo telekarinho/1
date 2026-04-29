@@ -82,35 +82,48 @@
     <script src="js/core/audit.js"></script>
     <script>
         // Auto-login com token de teste (gerado pelo generateTestToken)
+        // Mudou de Firebase Custom Token (signBlob IAM) pra UUID + Firestore lookup —
+        // evita "Erro INTERNAL" por falta de permission.
         (function() {
             var p = new URLSearchParams(window.location.search);
             var tok = p.get('testToken');
             var fid = p.get('fid');
             if (tok && typeof firebase !== 'undefined') {
                 document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Nunito,sans-serif;flex-direction:column;gap:12px"><span style="font-size:2rem">🧪</span><strong style="font-size:1.1rem">Abrindo sessao de teste...</strong><small style="color:#6b7280">Validando token...</small></div>';
-                firebase.auth().signInWithCustomToken(tok)
-                    .then(function(cred) {
-                        // Obtem claims do token
-                        return cred.user.getIdTokenResult().then(function(result) {
-                            var claims = result.claims;
-                            var session = {
-                                userId:     cred.user.uid,
-                                email:      cred.user.email || (cred.user.uid + '@test.milkypot.internal'),
-                                name:       cred.user.displayName || 'Agente de Teste',
-                                role:       claims.role || 'franchisee',
-                                franchiseId: claims.franchiseId || fid || 'muffato-quintino',
-                                firebaseUid: cred.user.uid,
-                                isTestSession: true,
-                                token:      Math.random().toString(36).slice(2),
-                                loginAt:    new Date().toISOString(),
-                                expiresAt:  new Date(Date.now() + 3600000).toISOString()
-                            };
-                            localStorage.setItem('mp_session', JSON.stringify(session));
-                            window.location.href = '/painel/test-checklist.html';
-                        });
+
+                // Valida token via Firestore lookup (sem Firebase Auth dependency)
+                firebase.firestore().collection('test_tokens').doc(tok).get()
+                    .then(function(doc) {
+                        if (!doc.exists) throw new Error('not-found');
+                        var data = doc.data();
+                        if (data.expiresAt && Date.now() > data.expiresAt) throw new Error('expired');
+
+                        // Cria sessao local sem precisar do Firebase Auth (test session)
+                        var session = {
+                            userId:        data.testUid,
+                            email:         data.email || (data.testUid + '@test.milkypot.internal'),
+                            name:          data.name || 'Agente de Teste',
+                            role:          data.role || 'franchisee',
+                            franchiseId:   data.franchiseId || fid,
+                            firebaseUid:   data.testUid,
+                            isTestSession: true,
+                            token:         tok,
+                            loginAt:       new Date().toISOString(),
+                            expiresAt:     new Date(data.expiresAt || (Date.now() + 3600000)).toISOString()
+                        };
+                        localStorage.setItem('mp_session', JSON.stringify(session));
+
+                        // Marca como used (audit trail)
+                        firebase.firestore().collection('test_tokens').doc(tok).update({
+                            used: true,
+                            usedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }).catch(function(){});
+
+                        window.location.href = '/painel/test-checklist.html';
                     })
-                    .catch(function() {
-                        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Nunito,sans-serif;flex-direction:column;gap:16px;color:#dc2626"><span style="font-size:2.5rem">❌</span><strong>Token invalido ou expirado</strong><small style="color:#6b7280">Peca um novo link ao administrador</small><a href="/login.html" style="color:#7C3AED;font-weight:700">Voltar ao login</a></div>';
+                    .catch(function(err) {
+                        var msg = err.message === 'expired' ? 'Token expirado (1h)' : 'Token invalido';
+                        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Nunito,sans-serif;flex-direction:column;gap:16px;color:#dc2626"><span style="font-size:2.5rem">❌</span><strong>' + msg + '</strong><small style="color:#6b7280">Peca um novo link ao administrador</small><a href="/login.html" style="color:#7C3AED;font-weight:700">Voltar ao login</a></div>';
                     });
                 return;
             }

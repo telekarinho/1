@@ -35,6 +35,11 @@ async function resolveTestAdmin(request) {
 // O token e valido por 1 hora e pode ser usado em:
 //   https://milkypot.com/login?testToken=<TOKEN>&fid=<franchiseId>
 // ============================================
+// Gera token de validacao usando UUID + Firestore lookup (sem IAM signBlob).
+// Login.html valida o token batendo no doc test_tokens/<token> em vez de
+// firebaseAuth.signInWithCustomToken — evita dependencia de
+// roles/iam.serviceAccountTokenCreator que falhava com "INTERNAL".
+const crypto = require("crypto");
 exports.generateTestToken = onCall({ region: "southamerica-east1" }, async (request) => {
     const caller = await resolveTestAdmin(request);
     const { franchiseId } = request.data;
@@ -43,37 +48,26 @@ exports.generateTestToken = onCall({ region: "southamerica-east1" }, async (requ
     const safeId  = franchiseId.replace(/[^a-zA-Z0-9]/g, "_");
     const testUid = `test_agent_${safeId}`;
 
-    // Garante que o usuario de teste existe no Firebase Auth
-    try {
-        await getAuth().updateUser(testUid, { displayName: `Test Agent (${franchiseId})`, disabled: false });
-    } catch (e) {
-        if (e.code === "auth/user-not-found") {
-            await getAuth().createUser({
-                uid:         testUid,
-                email:       `${testUid}@test.milkypot.internal`,
-                displayName: `Test Agent (${franchiseId})`,
-                disabled:    false
-            });
-        } else {
-            throw e;
-        }
-    }
+    // Token aleatorio de 32 bytes (URL-safe)
+    const token = crypto.randomBytes(32).toString("base64url");
+    const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hora
 
-    // Seta custom claims
-    await getAuth().setCustomUserClaims(testUid, {
-        role:          "franchisee",
+    // Salva token em Firestore — login.html valida via lookup
+    await getDb().collection("test_tokens").doc(token).set({
+        token,
+        testUid,
         franchiseId,
-        isTestSession: true
+        role:        "franchisee",
+        isTestSession: true,
+        name:        `Test Agent (${franchiseId})`,
+        email:       `${testUid}@test.milkypot.internal`,
+        expiresAt:   expiresAt,
+        used:        false,
+        generatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        generatedBy: caller.email
     });
 
-    // Gera o token (valido 1h)
-    const token = await getAuth().createCustomToken(testUid, {
-        role:          "franchisee",
-        franchiseId,
-        isTestSession: true
-    });
-
-    // Persiste sessao de teste ativa no Firestore
+    // Persiste sessao de teste ativa
     await getDb().collection("system_config").doc(franchiseId).set({
         testSession: {
             active:       true,
@@ -97,7 +91,7 @@ exports.generateTestToken = onCall({ region: "southamerica-east1" }, async (requ
         token,
         testUid,
         franchiseId,
-        loginUrl:   `https://milkypot.com/login?testToken=${encodeURIComponent(token)}&fid=${encodeURIComponent(franchiseId)}`,
+        loginUrl:   `https://milkypot.com/login.html?testToken=${encodeURIComponent(token)}&fid=${encodeURIComponent(franchiseId)}`,
         expiresIn:  "1 hora"
     };
 });
