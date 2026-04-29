@@ -563,10 +563,23 @@ const DataStore = {
                         } catch (e) {
                             console.warn('Realtime sync error:', docId, e);
                         }
-                    }, err => {
+                    }, async err => {
                         console.warn('Listener err', docId, err.code || err.message);
-                        // Re-attach: listener morreu (auth/network) — reseta flag e reagenda.
-                        // O próximo _setupListenersAndPoll vai criar todos os listeners de novo.
+                        // Se foi auth/permission, força refresh do token antes de reconectar.
+                        // Tokens Firebase Auth expiram em 1h; auto-refresh nem sempre roda
+                        // pra listeners passivos. Force getIdToken(true) renova na hora.
+                        if (err && (err.code === 'permission-denied' || err.code === 'unauthenticated')) {
+                            try {
+                                if (firebase && firebase.auth) {
+                                    var u = firebase.auth().currentUser;
+                                    if (u && u.getIdToken) {
+                                        await u.getIdToken(true);
+                                        console.log('🔑 Token Firebase refreshed (listener recovery)');
+                                    }
+                                }
+                            } catch (refErr) { console.warn('Token refresh falhou:', refErr.message); }
+                        }
+                        // Re-attach: listener morreu — reseta flag e reagenda.
                         self._realtimeListenerAttached = false;
                         setTimeout(function() {
                             try { self._setupListenersAndPoll(); } catch(e) {}
