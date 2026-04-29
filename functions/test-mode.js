@@ -97,6 +97,68 @@ exports.generateTestToken = onCall({ region: "southamerica-east1" }, async (requ
 });
 
 // ============================================
+// claimTestSession
+// ============================================
+// Cliente faz signInAnonymously() primeiro, depois chama essa funcao com o
+// testToken. Validamos o token contra Firestore e aplicamos custom claims
+// (role, franchiseId, isTestSession) no usuario anonimo. Isso da identidade
+// Firebase Auth real ao Test Agent — Cloud Functions com request.auth
+// passam a aceitar suas chamadas, sem precisar de IAM signBlob.
+// ============================================
+exports.claimTestSession = onCall({ region: "southamerica-east1" }, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Login anonimo necessario antes de claim");
+    }
+    const { testToken } = request.data;
+    if (!testToken) throw new HttpsError("invalid-argument", "testToken obrigatorio");
+
+    // Valida token contra Firestore
+    const tokenDoc = await getDb().collection("test_tokens").doc(testToken).get();
+    if (!tokenDoc.exists) throw new HttpsError("not-found", "Token invalido");
+
+    const tokenData = tokenDoc.data();
+    if (tokenData.expiresAt && Date.now() > tokenData.expiresAt) {
+        throw new HttpsError("deadline-exceeded", "Token expirado");
+    }
+
+    // Aplica claims no anon user
+    await getAuth().setCustomUserClaims(request.auth.uid, {
+        role:          tokenData.role,
+        franchiseId:   tokenData.franchiseId,
+        isTestSession: true,
+        testTokenId:   testToken
+    });
+
+    // Marca como reivindicado (audit trail)
+    await tokenDoc.ref.update({
+        claimed:    true,
+        claimedBy:  request.auth.uid,
+        claimedAt:  admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    await getDb().collection("audit_logs").add({
+        action:      "test_session_claimed",
+        franchiseId: tokenData.franchiseId,
+        anonUid:     request.auth.uid,
+        testUid:     tokenData.testUid,
+        createdAt:   admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return {
+        success: true,
+        claims: {
+            role:          tokenData.role,
+            franchiseId:   tokenData.franchiseId,
+            isTestSession: true
+        },
+        testUid: tokenData.testUid,
+        name:    tokenData.name,
+        email:   tokenData.email,
+        expiresAt: tokenData.expiresAt
+    };
+});
+
+// ============================================
 // setSystemMode
 // ============================================
 // mode: "test" | "production"
