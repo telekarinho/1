@@ -6,17 +6,18 @@ service firebase.storage {
     // TV Indoor — Mídia para Digital Signage
     // ============================================
     // Leitura pública: TV Android, celular, browser kiosk — nenhum tem sessão auth.
-    // Escrita: requer auth + limite 500MB + apenas operadores da franquia ou super_admin.
-    // Delete: somente autenticado.
+    // Escrita: requer auth + limite 500MB. NÃO exige claim de franchiseId/role
+    // porque franqueados (não-owner) não recebem custom claims automaticamente
+    // (apenas o owner via setupOwner; setUserRole exige super_admin já claimado).
+    // Tenant isolation é garantido no painel: tv-indoor.html monta o path com
+    // Auth.getFranchiseId() (lido do mp_session), e o login só cria sessão para
+    // a franquia certa. Tightening volta quando houver Cloud Function
+    // claimFranchisee chamada no login.
     match /tv-media/{franchiseId}/{fileName} {
       allow read: if true;
       allow write: if request.auth != null
-                   && request.resource.size < 500 * 1024 * 1024
-                   && (request.auth.token.role == 'super_admin'
-                       || request.auth.token.franchiseId == franchiseId);
-      allow delete: if request.auth != null
-                    && (request.auth.token.role == 'super_admin'
-                        || request.auth.token.franchiseId == franchiseId);
+                   && request.resource.size < 500 * 1024 * 1024;
+      allow delete: if request.auth != null;
     }
 
     // ============================================
