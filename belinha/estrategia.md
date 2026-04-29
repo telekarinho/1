@@ -1,6 +1,6 @@
 # Belinha — Estratégia de Ciclos
 
-_Atualizado no ciclo #35 (auto-aprimoramento obrigatório a cada 5 ciclos)_
+_Atualizado no ciclo #64 (auto-aprimoramento obrigatório a cada 5 ciclos)_
 
 ---
 
@@ -582,3 +582,111 @@ Setembro = **5º mês de operação**. Agosto foi de rotina e consolidação de 
 ---
 
 _Belinha — Ciclo #59 | 2026-04-28_
+
+---
+
+## Aprendizados dos ciclos #59–63
+
+### O que gerou mais valor concreto
+
+1. **Concorrente + ação imediata no mesmo ciclo (#60):** Descoberta de que MilkyMoo tem 2 unidades em Londrina (Catuaí + Boulevard) com preços confirmados (300ml R$18). Tradução imediata: benefits-bar do `index.html` trocada para âncora de preço "A partir de R$ 10" — resposta direta ao concorrente. Padrão já estabelecido, mas reforçado: pesquisa de concorrente sem ação concreta no mesmo ciclo = desperdício de ciclo.
+2. **Semanas adjacentes no mesmo ciclo (#61):** Semanas 16+17 (agosto rotina + inverno de saída) criadas juntas em 1 ciclo. Padrão v7 aplicado corretamente. Confirmou que temáticas contínuas devem sempre ser agrupadas — 1 ciclo poupado para área diferente.
+3. **Cross-sell açaí self-service (#63):** Carrossel educativo de segunda (semana 18) explora diferencial único do Muffato que MilkyMoo não oferece. Alto potencial de ticket médio + diferenciação competitiva real.
+
+### O que foi menos eficaz
+
+- **CLS sweep curto (#62):** Apesar de ser "batch", encontrou apenas 1 problema real (cartao-fidelidade.html). As outras páginas já estavam corretas desde ciclos anteriores. Ciclos de performance técnica têm rendimento decrescente — após 3 sweeps, o ganho marginal por ciclo cai. **Ajuste de padrão:** a partir deste ponto, sweeps de CLS/performance só devem entrar na rotação quando houver indício concreto de problema (mudança de HTML, nova imagem, novo componente).
+- **Auto-aprimoramento #59 repetiu padrões já consolidados:** Confirmou coisas que já estavam no padrão v7 em vez de identificar gaps futuros. Regra: auto-aprimoramento só tem valor se gerar ≥1 mudança de comportamento nova.
+
+### Padrão consolidado (v8)
+
+> **Bug/fix crítico > Landing page SEO por diferencial distinto > Scripts/templates operador acionáveis (c/ fallback) > Conteúdo não-contingente — semanas adjacentes mesma temática = mesmo ciclo > Concorrente + ação concreta no mesmo ciclo > UX/Performance sweep batch (só com indício concreto) > SEO técnico acumulativo**
+
+Adições v8 (além de v7):
+- **Sweeps técnicos de CLS/performance** só entram na rotação com indício concreto de problema — rendimento decrescente após 3+ sweeps sem novo HTML
+- **Auto-aprimoramento** deve identificar gap FUTURO concreto, não confirmar padrão passado — se não há gap novo, usar o ciclo para melhoria de conteúdo associada
+- **Concorrentes:** refetch semestral para dados existentes (MilkyMoo, TheBest) + busca por novo concorrente a cada 3 meses
+
+---
+
+## Estado das áreas em 29/04/2026 (pós-ciclo #63)
+
+| Área | Estado | Próxima ação |
+|------|--------|--------------|
+| Conteúdo pós-inauguração | ✅ Semanas 1–19 prontas (até 29/08) | Semana 20 (30/08–05/09) — lançamento produto sazonal setembro |
+| Produto sazonal setembro | ⚠️ DEPENDE DO OPERADOR | Versões A+B preparadas na semana 19 — confirmar com franquia |
+| Fidelidade matura | ✅ Templates A–D + playbook completo | Monitorar primeiros resgates reais em agosto |
+| Aniversário 3 meses (25/07) | ✅ Concluído | — |
+| Core Web Vitals — todas as páginas principais | ✅ CLS sweep completo (#58+#62) | Somente se nova imagem/componente for adicionado |
+| aggregateRating Schema.org | ⛔ SUSPENSO | Aguardar ≥3 reviews Google Maps verificáveis |
+| Google Analytics ID real | ⛔ SUSPENSO | Aguardar autorização do usuário |
+| Pesquisa concorrentes | ✅ MilkyMoo atualizado (#60) | TheBest: próximo refetch ciclo ~#70 |
+| Âncora de preço index.html | ✅ "A partir de R$ 10" (#60) | Revisitar se MilkyMoo mudar preços |
+| Cross-sell açaí self-service | ✅ Conteúdo criado (#63) | Monitorar pedidos de açaí em agosto via WA |
+
+---
+
+## Estratégia de outubro 2026 (mês 6 de operação)
+
+### Contexto
+Outubro = **6º mês de operação**. Primavera já em curso (iniciou 22/09). Destaques do período:
+- **Halloween (31/10):** Data âncora de alto potencial para edição especial de potinho — oportunidade de conteúdo + produto temporário (topping laranja/preto, nome temático, "potinho assombrado")
+- **Segundo ciclo de fidelidade:** Clientes que começaram em maio/junho chegando ao 10º carimbo pela segunda vez → oportunidade de "fidelidade VIP" (bônus especial para clientes no segundo ciclo)
+- **6 meses de dados reais:** Operador tem histórico completo de dias/horários de pico, produtos mais pedidos, padrões de pedido WA — usar esses dados para calibrar conteúdo e promoções
+- **Primavera consolidada:** Produto sazonal de setembro já lançado → avaliar extensão para outubro ou lançamento de variação
+
+### Pilares estratégicos de outubro
+
+| Pilar | Ação concreta |
+|-------|---------------|
+| **Halloween 31/10** | Plano editorial de ≥5 peças distintas: edição especial potinho, Stories/Reel temático, promoção relâmpago, UGC com fantasia + potinho |
+| **Fidelidade 2º ciclo** | Template WA "parabéns pelo segundo ciclo de fidelidade" — bônus especial para reforçar retenção de longo prazo |
+| **Social proof maturado** | Se ≥3 reviews Google Maps confirmados: ativar `aggregateRating` em `index.html` — alto impacto SEO local |
+| **Dados 6 meses** | Operador preenche "balanço de 6 meses" no carrossel de 25/10 (aniversário 6 meses de operação) |
+| **UGC embaixador local** | Identificar e nutrir criador de conteúdo local em Londrina (padrão MilkyMoo Londrina: @marceladegusta) |
+
+### Cadência de conteúdo (setembro–outubro)
+
+| Semana | Período | Tema |
+|--------|---------|------|
+| Semana 19 | 23–29/08 | Transição inverno→primavera + teaser setembro ✅ |
+| Semana 20 | 30/08–05/09 | Lançamento produto sazonal setembro + primeiros UGCs |
+| Semana 21 | 06–12/09 | Primavera em movimento: sabores frescos + rotina |
+| Semana 22 | 13–19/09 | Linha Zero fitness (virada de estação = pico de academia) |
+| Semana 23 | 20–26/09 | "1 semana de primavera" — aniversário da estação 22/09 |
+| Semana 24 | 27/09–03/10 | Abertura de outubro — aquecimento para Halloween |
+| Semana 25 | 04–10/10 | Halloween warming up: "o potinho mais assustador" (15 dias antes) |
+| Semana 26 | 11–17/10 | Produto especial Halloween preview + mecânica UGC fantasia |
+| Semana 27 | 18–24/10 | Halloween countdown: enquete, sorteio, teaser |
+| Semana 28 | 25–31/10 | **Aniversário 6 meses (25/10) + Halloween (31/10)** — semana âncora dupla |
+
+### Roadmap ciclos #65–69
+
+| Ciclo | Área | Ação |
+|-------|------|------|
+| #65 | Conteúdo | Semanas 20 + 21 juntas (lançamento produto setembro + rotina de primavera) — padrão v8 temáticas adjacentes |
+| #66 | Conteúdo ou Conversão | Semana 22 (Linha Zero fitness) + template WA fidelidade 2º ciclo |
+| #67 | Conteúdo | Semanas 23 + 24 juntas (aniversário primavera + abertura outubro) |
+| #68 | SEO local | Verificar se `aggregateRating` pode ser ativado; se sim → ativar em `index.html`. Se não → link interno novo ou meta description de página secundária |
+| #69 | Auto-aprimoramento | Reler log ciclos 64–68, ajustar estratégia novembro 2026 |
+
+### Nota sobre Halloween (ciclo #70+)
+
+Halloween merece plano editorial de ≥5 peças — seguindo o padrão de datas âncora (estabelecido no aniversário de 3 meses). Plano a criar nos ciclos #70–72:
+- Edição especial: "Potinho Assombrado" (base Ninho + calda de morango vermelho + topping crocante preto/laranja)
+- Reel 15s: ovelhinha fantasiada + potinho temático
+- Stories countdown 7 dias antes
+- Sorteio UGC: "Melhor fantasia com potinho na mão"
+- Template WA: oferta relâmpago no dia 31/10
+
+### Bloqueadores suspensos (sem mudança)
+
+| Bloqueador | Dependência | Ciclo que bloqueou |
+|------------|-------------|-------------------|
+| aggregateRating Schema.org | ≥3 reviews Google Maps verificáveis pelo operador | #43 |
+| Google Analytics ID real | Autorização explícita do usuário | #15 |
+| Produto sazonal setembro | Confirmação da franquia com o operador | #63 |
+
+---
+
+_Belinha — Ciclo #64 | 2026-04-29_
