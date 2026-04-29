@@ -789,26 +789,51 @@
     // ============================================
     // generateTestToken — para Claude
     // ============================================
+    // Resolve franchiseId: usa o da sessao OU pede pro super_admin escolher
+    function resolveFranchiseIdForToken() {
+        if (franchiseId) return franchiseId;
+        // Super admin sem franchiseId — escolhe da lista
+        var allFranchises = (DataStore.getAllFranchises && DataStore.getAllFranchises()) || [];
+        if (!allFranchises.length) {
+            alert('Nenhuma franquia cadastrada. Crie uma em /admin/franchises.html primeiro.');
+            return null;
+        }
+        if (allFranchises.length === 1) return allFranchises[0].id;
+        var msg = 'Qual franquia validar? Digite o numero:\n\n' +
+            allFranchises.map(function (f, i) { return (i + 1) + ') ' + f.name + ' (id: ' + f.id + ')'; }).join('\n');
+        var choice = window.prompt(msg, '1');
+        if (!choice) return null;
+        var idx = parseInt(choice, 10) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= allFranchises.length) {
+            alert('Opcao invalida.');
+            return null;
+        }
+        return allFranchises[idx].id;
+    }
+
     async function generateTestToken() {
         if (!isSuperAdmin) {
             return alert('Apenas o administrador pode gerar tokens de teste.');
         }
-        document.getElementById('tokenCard').style.display = 'block';
-        document.getElementById('tokenUrl').textContent = '⏳ Gerando...';
 
-        // Tenta via CloudFunctions (caminho normal)
+        var fid = resolveFranchiseIdForToken();
+        if (!fid) return;
+
+        document.getElementById('tokenCard').style.display = 'block';
+        document.getElementById('tokenUrl').textContent = '⏳ Gerando para ' + fid + '...';
+
+        // Tenta via CloudFunctions
         var result;
         try {
-            result = await CloudFunctions.call('generateTestToken', { franchiseId });
+            result = await CloudFunctions.call('generateTestToken', { franchiseId: fid });
         } catch (e) { result = null; }
 
-        // Fallback defensivo: se CloudFunctions cached estiver sem a rota,
-        // chama Firebase Functions direto (bypass total)
+        // Fallback: chama Firebase direto se CloudFunctions cached estiver sem a rota
         if (!result || result.error === 'Functions nao disponivel' || result.error === 'Function not found') {
             console.warn('[TestToken] CloudFunctions cache stale, chamando Firebase direto');
             try {
                 var fn = firebase.app().functions('southamerica-east1').httpsCallable('generateTestToken');
-                var fbResult = await fn({ franchiseId });
+                var fbResult = await fn({ franchiseId: fid });
                 result = fbResult && fbResult.data ? fbResult.data : { success: false, error: 'sem resposta' };
             } catch (e) {
                 result = { success: false, error: e.message || ('Erro Firebase: ' + e.code) };
