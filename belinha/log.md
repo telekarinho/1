@@ -2310,3 +2310,40 @@ Análise dos 5 ciclos:
 - Ciclo #67: Semanas 23 + 24 juntas (aniversário de primavera 22/09 + abertura de outubro)
 - Ciclo #68: SEO local — verificar aggregateRating (≥3 reviews Google Maps)
 - Operador: confirmar produto sazonal setembro com a franquia para usar Versão A em 01/09
+
+---
+
+## Ciclo #67 — 2026-04-29
+
+**Área:** Conteúdo — Semanas 23 + 24 (20/09–03/10/2026)
+
+**Contexto:** Prescrito pelo roadmap ciclo #64 (padrão v8: temáticas adjacentes no mesmo ciclo). Semana 23 tem data âncora forte: 22/09 = início oficial da primavera. Semana 24 é semana de transição mês setembro→outubro, encerrando com o primeiro teaser explícito de Halloween (Reel 15s + template WA de interesse).
+
+**O que analisou:**
+- Leu semanas 22, 21 e 19 para mapear ângulos já usados e evitar repetição
+- Semana 22: fitness/Linha Zero — não repetir ângulo saudável na semana 23
+- Aniversário de 3 meses (25/07, semana 13) foi referência de data âncora bem-sucedida → replicar estrutura para 22/09
+- Halloween (31/10) ainda a 4+ semanas → introduzir teaser misterioso gradual, não revelar tudo de uma vez
+- Enquete de preferências de outubro (28/09) cria dado real para calibrar semanas 25–28
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana23.md` | CRIADO — 7 peças (Dom–Sáb), countdown 2 dias, promo relâmpago DIA DA PRIMAVERA 22/09 (topping grátis), UGC #PotinhoDePrimavera, Sexta #8 Edição Primavera, template WA pós-promo, checklist, métricas, tabela editorial |
+| `belinha/content/pos-inauguracao-semana24.md` | CRIADO — 7 peças (Dom–Sáb), retrospectiva setembro, abertura outubro, Sexta #9, Reel 15s primeiro teaser Halloween explícito, template WA interesse "HALLOWEEN" → lista VIP 31/10, checklist, métricas, tabela editorial |
+
+**Commit:** `121ae98`
+
+**Destaques de conteúdo:**
+1. **Promo relâmpago 22/09 (aniversário primavera):** Topping extra grátis + comunicação em 3 atos (feed 9h, Stories 12h, encerramento 20h) — pico de tráfego esperado igual ao aniversário de 3 meses
+2. **#PotinhoDePrimavera como hashtag proprietária:** Ativa UGC orgânico com tag rastreável — padrão testado na inauguração (#MilkyPotLondrina) agora com tema sazonal
+3. **Reel 15s teaser Halloween (03/10):** Primeiro uso explícito de 🎃 — ovelhinha com chapéu de bruxa, tela preta, trilha misteriosa. Começa 28 dias antes do 31/10 = construção gradual de antecipação
+4. **Template WA "HALLOWEEN" lista VIP:** Clientes que responderem "HALLOWEEN" entram em lista prioritária para notificação de reserva 31/10 — converte interesse em lead qualificado pré-evento
+5. **Enquete 28/09 (o que você quer ver em outubro?):** Dados reais de preferência do público para calibrar semanas 25–28 do plano editorial
+
+**Próximo passo sugerido:**
+- Ciclo #68: SEO local — verificar se `aggregateRating` pode ser ativado em `index.html` (depende de ≥3 reviews Google Maps verificáveis pelo operador)
+- Ciclo #69: Auto-aprimoramento — reler log #64–#68, ajustar estratégia novembro 2026 (pós-Halloween)
+- Ciclo #70+: Plano editorial Halloween completo (≥5 peças, produto especial "Potinho Assombrado", sorteio UGC fantasia)
+- Operador: definir conceito do Potinho de Halloween com a franquia ANTES de 01/10 (semana 24 já anuncia publicamente)
