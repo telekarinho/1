@@ -283,7 +283,19 @@ const Auth = {
             if (new Date(session.expiresAt) < new Date()) {
                 // Nao chame logout() aqui. getSession() e usado por sync/background;
                 // logout() faz firebaseAuth.signOut() + redirect e derruba o PDV.
-                // Se Firebase Auth ainda esta vivo, renova a sessao local em silencio.
+
+                // OFFLINE GRACE: sem internet nao tem como re-autenticar — devolve a
+                // sessao extendida pra PDV/painel funcionar normalmente.
+                if (!navigator.onLine) {
+                    const grace = Object.assign({}, session, {
+                        expiresAt: new Date(Date.now() + MP.SESSION_DURATION_MS).toISOString(),
+                        _offlineGrace: true
+                    });
+                    this._saveSession(grace);
+                    return grace;
+                }
+
+                // Online: tenta renovar via Firebase Auth (token em IndexedDB)
                 const renewed = this._renewExpiredSession(session);
                 if (renewed) return renewed;
                 localStorage.removeItem(this.SESSION_KEY);
@@ -581,6 +593,41 @@ const Auth = {
             loginAt: new Date().toISOString(),
             expiresAt: new Date(Date.now() + MP.SESSION_DURATION_MS).toISOString()
         };
+    },
+
+    // ============================================
+    // Login Offline — restaura sessao anterior salva
+    // Usado quando Firebase nao esta acessivel.
+    // Nao valida senha: confia que quem tem a sessao
+    // em cache ja foi autenticado anteriormente.
+    // ============================================
+    loginOffline(email) {
+        try {
+            // Tenta sessao salva no localStorage
+            const raw = localStorage.getItem(this.SESSION_KEY);
+            if (raw) {
+                const session = JSON.parse(raw);
+                if (session && session.role) {
+                    // Se email bate (ou nao foi fornecido), restaura
+                    if (!email || !session.email || session.email.toLowerCase() === email.toLowerCase()) {
+                        const restored = Object.assign({}, session, {
+                            expiresAt: new Date(Date.now() + MP.SESSION_DURATION_MS).toISOString(),
+                            _offlineGrace: true
+                        });
+                        this._saveSession(restored);
+                        return { success: true, session: restored, offline: true };
+                    }
+                }
+            }
+            return { success: false, error: 'Nenhuma sessao anterior encontrada para este dispositivo.' };
+        } catch (e) {
+            return { success: false, error: 'Erro ao restaurar sessao offline.' };
+        }
+    },
+
+    // Alias mantido para compatibilidade com chamadas legadas em login.html
+    loginLegacy(email, password) {
+        return this.loginOffline(email);
     },
 
     _saveSession(session) {

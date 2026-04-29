@@ -93,7 +93,7 @@ const MP = {
     SUPPORT_WHATSAPP: '5543999999999',
 
     // Session config
-    SESSION_DURATION_MS: 24 * 60 * 60 * 1000, // 24 horas
+    SESSION_DURATION_MS: 7 * 24 * 60 * 60 * 1000, // 7 dias (PDV sobrevive fins de semana sem internet)
     SESSION_KEY: 'mp_session',
 
     // Vercel API URL (para Cloud Functions serverless)

@@ -6,13 +6,17 @@ service firebase.storage {
     // TV Indoor — Mídia para Digital Signage
     // ============================================
     // Leitura pública: TV Android, celular, browser kiosk — nenhum tem sessão auth.
-    // A URL já contém um token único gerado no upload (impossível adivinhar).
-    // Escrita: pública com limite de tamanho 500MB (o painel controla quem sobe).
-    // Delete: somente autenticado (protege contra remoção externa).
+    // Escrita: requer auth + limite 500MB + apenas operadores da franquia ou super_admin.
+    // Delete: somente autenticado.
     match /tv-media/{franchiseId}/{fileName} {
       allow read: if true;
-      allow write: if request.resource.size < 500 * 1024 * 1024;
-      allow delete: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 500 * 1024 * 1024
+                   && (request.auth.token.role == 'super_admin'
+                       || request.auth.token.franchiseId == franchiseId);
+      allow delete: if request.auth != null
+                    && (request.auth.token.role == 'super_admin'
+                        || request.auth.token.franchiseId == franchiseId);
     }
 
     // ============================================

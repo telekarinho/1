@@ -48,31 +48,52 @@ service cloud.firestore {
     // DataStore Collection (legado - fase de migracao)
     // ============================================
     match /datastore/{document} {
-      // Franchises list e publica (necessario para listagem de lojas)
+      // Franchises list e publica (necessario para listagem de lojas no cardapio)
       // iFood docs sao escritos pela extensao Chrome (sem auth - limitacao tecnica)
       // tv_* docs (media library, playlist, config) sao lidos por TVs Android,
       // celulares e browsers kiosk que nao tem sessao auth
       // tv_remote_* docs (comandos da TV Remote) tambem sao publicos p/ controlar TVs
-      // orders_* / caixa_* / pdv_tabs_* / finances_*: leitura publica pra sync entre
-      // PCs do PDV funcionar mesmo se Firebase Auth perdeu o token (IDB limpo, browser
-      // separado). Writes continuam restritos a auth — operadores PRECISAM logar pra
-      // criar/alterar pedidos. Inauguracao prioriza disponibilidade; tightening pos.
-      allow read: if document == 'franchises'
+      //
+      // SEGURANCA (tightening pos-inauguracao):
+      // orders_* / caixa_* / pdv_tabs_* / finances_*: requerem auth + franquia correta.
+      // Antes eram publicos (inauguracao); agora isolados por tenant para prevenir
+      // vazamento de dados entre franquias (PII de clientes, dados financeiros).
+      // 'users' doc: restrito a super_admin (contem nomes, emails, roles de staff).
+      //
+      // Nota: writes de orders_*/caixa_* continuam publicos para suportar sync offline
+      // entre PCs do PDV que possam perder token Firebase temporariamente.
+      allow read: if
+                    // Documentos publicos (clientes sem auth)
+                    document == 'franchises'
                     || document.matches('ifood_.*')
                     || document.matches('tv_.*')
                     || document.matches('tvremote_.*')
                     || document.matches('radio_.*')
-                    || document.matches('orders_.*')
-                    || document.matches('caixa_.*')
-                    || document.matches('pdv_tabs_.*')
-                    || document.matches('finances_.*')
-                    || isAuthenticated();
+                    // super_admin le tudo
+                    || isSuperAdmin()
+                    // Dados operacionais: exige auth + pertencer a mesma franquia
+                    || (isAuthenticated() && request.auth.token.franchiseId != null && (
+                        document == 'orders_' + request.auth.token.franchiseId
+                        || document == 'caixa_' + request.auth.token.franchiseId
+                        || document == 'pdv_tabs_' + request.auth.token.franchiseId
+                        || document == 'finances_' + request.auth.token.franchiseId
+                    ))
+                    // Outros documentos nao sensiveis (catalog, config, etc.):
+                    // qualquer usuario autenticado; 'users' e 'copilot_tunnel' ficam
+                    // restritos a super_admin acima (copilot_tunnel contem secret)
+                    || (isAuthenticated()
+                        && !document.matches('orders_.*')
+                        && !document.matches('caixa_.*')
+                        && !document.matches('pdv_tabs_.*')
+                        && !document.matches('finances_.*')
+                        && document != 'users'
+                        && document != 'copilot_tunnel'
+                    );
       // Franchises: somente super_admin pode escrever
       // iFood: extensao escreve sem auth (aceito temporariamente)
       // tv_remote_*: comandos da remote podem ser escritos sem auth (app controla)
-      // orders_/caixa_/pdv_tabs_/finances_: writes publicos (sync entre PCs sem
-      // Firebase Auth — operador pode estar com mp_session válido mas sem token
-      // Firebase). Trade-off de seguranca aceito durante inauguracao; tightening pos.
+      // orders_/caixa_/pdv_tabs_/finances_: writes mantidos sem auth para suportar
+      // sync entre PCs do PDV sem token Firebase (escrita so aceita em campo proprio).
       // Outros: usuarios autenticados (franqueados) escrevem seus proprios dados
       allow write: if document.matches('ifood_.*') ||
                       document.matches('tvremote_.*') ||
@@ -81,7 +102,7 @@ service cloud.firestore {
                       document.matches('pdv_tabs_.*') ||
                       document.matches('finances_.*') ||
                       (isSuperAdmin() && document == 'franchises') ||
-                      (isAuthenticated() && document != 'franchises');
+                      (isAuthenticated() && document != 'franchises' && document != 'users');
     }
 
     // ============================================
