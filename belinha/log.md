@@ -2,6 +2,49 @@
 
 ---
 
+## Ciclo #69 — 2026-04-29
+
+**Área:** Auto-aprimoramento (ciclo #69 = múltiplo de 5 a partir de #54) + Conteúdo Halloween (semanas 25+26 antecipadas)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #64 e confirmado no log #68. Auto-aprimoramento obrigatório + melhoria associada (padrão v9: auto-aprimoramento deve sempre incluir entregável concreto). Semanas 25+26 eram prescritas para ciclo #70 — antecipadas porque Halloween (31/10) exige lead time de 3+ semanas de produção de conteúdo.
+
+**O que analisou:**
+- Leu log completo de ciclos #64–#68 + `belinha/estrategia.md` (pós-ciclo #64)
+- Identificou: padrão v8 funcionou bem (semanas adjacentes, A/B para bloqueadores, FAQPage schema)
+- Gap principal: novembro 2026 sem cadência/estratégia definida; concorrentes desatualizando (MilkyMoo: último refetch ciclo #60)
+- Ajuste v9: mecânica WA com palavra-chave de ativação (HALLOWEEN) a replicar em datas futuras; estrutura de 4 semanas de campanha para produto especial documentada como padrão
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana25.md` | CRIADO — Semana 25 (04–10/10): Halloween warming up, Sexta #10 edição Halloween, enquete fantasias, Reel 15s ovelhinha misteriosa, template WA lista VIP, countdown 21 dias, 7 peças dia-a-dia, métricas, tabela editorial |
+| `belinha/content/pos-inauguracao-semana26.md` | CRIADO — Semana 26 (11–17/10): Dia das Crianças 12/10, reveal completo Potinho Assombrado (quarta 14/10), Reel 15s produto, mecânica UGC #PotinhoAssombrado, templates WA (Dia das Crianças + lista VIP reveal exclusivo + confirmação "CONFIRMO"), Sexta #11, 7 peças dia-a-dia, métricas, tabela editorial |
+| `belinha/estrategia.md` | ATUALIZADO — Seção "Aprendizados ciclos #64–68", Padrão v9, Estado das áreas pós-#68, Estratégia novembro 2026 completa (Black Friday, aquecimento Natal, produto sazonal verão, fidelidade trimestral), Cadência semanas 25–33, Roadmap ciclos #70–74 |
+
+**Destaques:**
+
+1. **Semana 26 — Reveal Potinho Assombrado (quarta 14/10):** Post principal da campanha — carrossel 6 slides com ingredientes reais + mecânica de reserva "CONFIRMO" para lista VIP. Ponto de maior engajamento esperado da campanha Halloween.
+2. **Dia das Crianças 12/10 oportunidade:** Data âncora de alto tráfego familiar no Muffato — post especial + WA para base completa + UGC. Diferencial: família com Mini Potinho + adulto com Linha Zero = "tem pra todo mundo" em um dia só.
+3. **Mecânica "CONFIRMO" no WA:** Clientes da lista VIP que respondem "CONFIRMO" ao reveal ganham prioridade garantida no dia 31/10. Converte interesse (HALLOWEEN) em comprometimento (CONFIRMO) — funil em 2 etapas.
+4. **Estratégia novembro:** Black Friday 27/11 com mecânica de valor extra (não desconto na base) + teaser natalino + produto sazonal verão (enquete novembro → produto dezembro). Cadência completa semanas 25–33.
+5. **Padrão v9:** Campanhas de produto especial = 4 semanas de antecedência + teaser gradual + reveal 2 semanas antes + countdown + dia H. Templates WA com palavra-chave de ativação como padrão para datas futuras.
+
+**Alerta para operador:**
+- Confirmar com franquia disponibilidade de topping "mini abóbora de chocolate" ANTES de 01/10 (semana 24 já anunciou Halloween, semana 26 revela ingredientes específicos)
+- Se não disponível: substituir por "granulado temático laranja/preto" (fallback simples)
+
+**Commit:** `a9717aa`
+
+**Próximo passo sugerido:**
+- Ciclo #70: Conteúdo — Semanas 27+28 (Halloween countdown 18–24/10 + aniversário 6 meses 25/10 + dia H 31/10)
+- Ciclo #71: Conteúdo — Semanas 29+30 (pós-Halloween + abertura novembro + verão chegando)
+- Ciclo #72: Conteúdo — Semanas 31+32 (Linha Zero verão + Black Friday 27/11)
+- Ciclo #73: Concorrentes — TheBest (1º fetch) + refetch MilkyMoo (desatualizando desde ciclo #60)
+- Operador: configurar resposta automática WA para "HALLOWEEN" ANTES de 04/10
+
+---
+
 ## Ciclo #68 — 2026-04-29
 
 **Área:** SEO Local — FAQPage schema nas landing pages
