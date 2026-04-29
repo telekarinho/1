@@ -2,6 +2,41 @@
 
 ---
 
+## Ciclo #64 — 2026-04-29
+
+**Área:** Auto-aprimoramento (ciclo 64 = múltiplo de 5 a partir do #54)
+
+**Contexto:** Auto-aprimoramento obrigatório. Revisão dos ciclos #59–63 completa. Dois entregáveis: (1) `belinha/estrategia.md` atualizado com aprendizados v8, estado das áreas, estratégia de outubro 2026 e roadmap #65–69; (2) `belinha/content/pos-inauguracao-semana19.md` criado como melhoria associada (prescrita no log do ciclo #63).
+
+**O que pesquisou/analisou:**
+- Leu log completo dos ciclos #59–63
+- Analisou o que gerou mais valor: âncora de preço vs. MilkyMoo (#60), semanas adjacentes no mesmo ciclo (#61), cross-sell açaí self-service (#63)
+- Identificou o que foi menos eficaz: sweep CLS com rendimento decrescente (#62), auto-aprimoramento #59 confirmando padrões já consolidados
+- Mapeou lacunas futuras: outubro 2026 (Halloween 31/10 + aniversário 6 meses 25/10 + fidelidade 2º ciclo)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/estrategia.md` | Cabeçalho atualizado para ciclo #64 · Nova seção aprendizados #59–63 · Padrão v8 (adição: sweeps CLS só com indício concreto; auto-aprimoramento deve gerar gap futuro novo) · Estado das áreas pós-ciclo #63 · Estratégia de outubro 2026 completa (Halloween, fidelidade 2º ciclo, aggregateRating, UGC embaixador) · Roadmap ciclos #65–69 · Bloqueador novo: produto sazonal setembro depende de confirmação da franquia |
+| `belinha/content/pos-inauguracao-semana19.md` | CRIADO — Semana 19 (23–29/08): "Inverno de saída, primavera que chega". 7 posts dia-a-dia (urgência de inverno, carrossel spoilers setembro, Reel virada de estação, stories enquete produto, revelação Versão A+B, Sexta do Potinho #4, encerramento agosto). Template WA lançamento produto setembro (01/09). Checklist operador + métricas + tabela calendário editorial. |
+
+**Commit:** `64a48f2`
+
+**Principais aprendizados do período (#59–63):**
+1. **Pesquisa concorrente + ação imediata = ROI máximo** — MilkyMoo confirmado em Londrina + benefits-bar alterada no mesmo ciclo (#60). Padrão já existia mas foi o melhor exemplo de execução até agora.
+2. **Sweeps técnicos têm rendimento decrescente** — após 3+ ciclos de CLS sweep, o ganho por ciclo cai. Só entrar na rotação com indício concreto.
+3. **Cross-sell açaí self-service** é diferencial não explorado antes — MilkyMoo não tem buffet; carrossel educativo tem potencial de ticket médio alto.
+4. **Halloween 31/10 = próxima data âncora grande** — precisa de plano de ≥5 peças, semelhante ao aniversário de 3 meses. Ciclos #70–72 devem ser reservados para isso.
+
+**Próximo passo sugerido:**
+- Ciclo #65: Conteúdo — Semanas 20 + 21 juntas (lançamento produto sazonal setembro + primavera em movimento) — padrão v8 de temáticas adjacentes
+- Ciclo #66: Conteúdo/Conversão — Semana 22 (Linha Zero fitness) + template WA fidelidade 2º ciclo
+- Ciclo #68: SEO local — verificar se aggregateRating pode ser ativado (≥3 reviews Google Maps)
+- Operador: confirmar produto sazonal de setembro com a franquia para usar Versão A da semana 19 (quinta 27/08)
+
+---
+
 ## Ciclo #63 — 2026-04-28
 
 **Área:** Conteúdo — Semana 18 (16–22/08/2026)
