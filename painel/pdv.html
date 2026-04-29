@@ -10,6 +10,10 @@
     <link rel="stylesheet" href="../css/shared-panel.css">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#42A5F5">
+    <link rel="icon" type="image/png" href="../images/logo-milkypot.png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; font-family: 'Nunito', sans-serif; background: #f0f2f5; overflow: hidden; }
@@ -610,6 +614,15 @@
         </span>
         <span class="ks ks-finish" onclick="if(typeof finishOrder==='function')finishOrder()" title="Fechar pedido">
             <kbd>F4</kbd><span class="ks-label">Fechar</span>
+        </span>
+        <span class="ks" onclick="document.getElementById('pdvOrdersBtn')&&document.getElementById('pdvOrdersBtn').click()" title="Painel de pedidos em tempo real (F9)" style="background:rgba(33,150,243,0.22);border-color:rgba(33,150,243,0.45)">
+            <kbd style="color:#0D47A1">F9</kbd><span class="ks-label">Pedidos</span>
+        </span>
+        <span class="ks" onclick="if(typeof fecharCaixa==='function')fecharCaixa();else{var b=document.querySelector('[onclick*=fecharCaixa]');if(b)b.click();}" title="Fechar caixa / encerrar dia (F10)" style="background:rgba(244,67,54,0.18);border-color:rgba(244,67,54,0.42)">
+            <kbd style="color:#B71C1C">F10</kbd><span class="ks-label">Fechar Caixa</span>
+        </span>
+        <span class="ks" style="opacity:.5;cursor:default;font-size:.7rem;padding:3px 6px" title="Dígitos 1-6 trocam categoria do catálogo">
+            <kbd>1–6</kbd><span class="ks-label">Categ.</span>
         </span>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end" id="pdvStatusRow">
@@ -4725,18 +4738,46 @@
             document.exitFullscreen().catch(function(){});
         }
     };
-    // Atalhos de teclado pro PDV — F2 imprimir · F3 conta aberta · F4 fechar · Esc limpar · F11 fullscreen
+    // Atalhos de teclado pro PDV
+    // F1 vendas · F2 imprimir · F3 conta aberta · F4 fechar pedido
+    // F9 painel de pedidos · F10 fechar caixa · F11 fullscreen
+    // Dígitos 1-6 (sem Ctrl/Alt) trocam a aba de categoria do catálogo
     document.addEventListener('keydown',function(e){
         // Não interfere quando user tá digitando em input/textarea/select
         var tag = (e.target && e.target.tagName) || '';
         var isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
-        if (isTyping && e.key !== 'F11' && !e.key.match(/^F[1-4]$/)) return;
+        var isFKey = /^F\d+$/.test(e.key);
+        if (isTyping && !isFKey) return;
 
         if(e.key==='F11'){ e.preventDefault(); toggleFullscreen(); return; }
         if(e.key==='F1'){  e.preventDefault(); if(typeof showVendasDoDia==='function') showVendasDoDia(); return; }
         if(e.key==='F2'){  e.preventDefault(); if(typeof printOrder==='function') printOrder(); return; }
         if(e.key==='F3'){  e.preventDefault(); if(typeof openTab==='function') openTab(); return; }
         if(e.key==='F4'){  e.preventDefault(); if(typeof finishOrder==='function') finishOrder(); return; }
+        // F9 — abre painel de pedidos em tempo real
+        if(e.key==='F9'){
+            e.preventDefault();
+            var btn = document.getElementById('pdvOrdersBtn');
+            if(btn) btn.click();
+            return;
+        }
+        // F10 — fechar caixa (caixa_close / fecharCaixa)
+        if(e.key==='F10'){
+            e.preventDefault();
+            if(typeof fecharCaixa==='function') { fecharCaixa(); return; }
+            // fallback: clica no botão de fechar caixa se existir
+            var fcBtn = document.querySelector('[onclick*="fecharCaixa"],[data-action="fechar-caixa"]');
+            if(fcBtn) { fcBtn.click(); return; }
+            // último fallback: abre modal do caixa se disponível
+            if(typeof openCaixaModal==='function') openCaixaModal();
+            return;
+        }
+        // Dígitos 1-6 (sem Ctrl/Alt/Shift) — troca aba de categoria do catálogo
+        if(!isTyping && !e.ctrlKey && !e.altKey && !e.metaKey && e.key >= '1' && e.key <= '6') {
+            var catPills = document.querySelectorAll('#catPillsRow .cat-pill, .pdv-cat-pill, [data-cat-idx]');
+            var idx = parseInt(e.key) - 1;
+            if(catPills[idx]) { catPills[idx].click(); return; }
+        }
         // Esc só limpa carrinho se não tem modal aberto e não tá digitando
         if(e.key==='Escape' && !isTyping) {
             var anyModalOpen = document.querySelector('.modal-bg.open');

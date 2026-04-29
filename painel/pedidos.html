@@ -15,6 +15,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MilkyPot">
     <link rel="apple-touch-icon" href="../images/logo-milkypot.png">
+    <link rel="icon" type="image/png" href="../images/logo-milkypot.png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <style>
         .kanban { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
         .kanban-column {
@@ -53,11 +57,39 @@
             box-shadow: 0 1px 4px rgba(0,0,0,0.06);
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid transparent;
         }
         .order-card:hover {
             transform: translateY(-2px);
             box-shadow: var(--mp-shadow);
         }
+        /* Wait-time color coding */
+        .order-card[data-wait="warn"] {
+            border-left-color: #FF9800;
+            background: linear-gradient(135deg, rgba(255,152,0,.06), var(--mp-card));
+        }
+        .order-card[data-wait="alert"] {
+            border-left-color: #F44336;
+            background: linear-gradient(135deg, rgba(244,67,54,.08), var(--mp-card));
+            animation: pulse-border 2s ease-in-out infinite;
+        }
+        @keyframes pulse-border {
+            0%, 100% { border-left-color: #F44336; }
+            50%       { border-left-color: #FF5722; box-shadow: -3px 0 12px rgba(244,67,54,.35); }
+        }
+        .order-wait-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 999px;
+            margin-left: 6px;
+        }
+        .order-wait-badge.ok   { background: rgba(76,175,80,.15); color: #2E7D32; }
+        .order-wait-badge.warn { background: rgba(255,152,0,.2);  color: #E65100; }
+        .order-wait-badge.late { background: rgba(244,67,54,.18); color: #B71C1C; }
         .order-card-header {
             display: flex;
             justify-content: space-between;
@@ -371,10 +403,26 @@
                     // Numeração sequencial diária preferida; fallback pro hash legado
                     const seqLabel = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
                     const seqTitle = o.dailySeq ? `Pedido nº ${o.dailySeq} do dia · ${o.id.slice(-6)}` : `Pedido ${o.id.slice(-6)}`;
+
+                    // Calcula tempo de espera para pedidos ainda não entregues
+                    let waitAttr = '';
+                    let waitBadgeHtml = '';
+                    if (status !== 'entregue' && status !== 'cancelado' && o.createdAt) {
+                        const ageMs = Date.now() - new Date(o.createdAt).getTime();
+                        const ageMins = Math.floor(ageMs / 60000);
+                        if (ageMins >= 0) {
+                            const waitClass = ageMins >= 30 ? 'late' : (ageMins >= 15 ? 'warn' : 'ok');
+                            const waitIcon = ageMins >= 30 ? '🔴' : (ageMins >= 15 ? '🟡' : '🟢');
+                            waitBadgeHtml = `<span class="order-wait-badge ${waitClass}" title="Aguardando há ${ageMins} min">${waitIcon} ${ageMins}min</span>`;
+                            if (ageMins >= 30) waitAttr = 'data-wait="alert"';
+                            else if (ageMins >= 15) waitAttr = 'data-wait="warn"';
+                        }
+                    }
+
                     return `
-                        <div class="order-card" onclick="showOrderDetail('${o.id}')">
+                        <div class="order-card" ${waitAttr} onclick="showOrderDetail('${o.id}')">
                             <div class="order-card-header">
-                                <span class="order-id" title="${seqTitle}">${seqLabel}</span>
+                                <span class="order-id" title="${seqTitle}">${seqLabel}${waitBadgeHtml}</span>
                                 <span class="order-time">${Utils.formatTime(o.createdAt)}</span>
                             </div>
                             <div class="order-customer">👤 ${Utils.escapeHtml(o.customer?.name || o.items?.[0]?.nomeCliente || 'Cliente')}</div>
@@ -1010,6 +1058,18 @@
             lastSeenIds = new Set(newOrders.map(o => o.id));
             lastOrderCount = newOrders.length;
         }, 3000);
+
+        // Atualiza badges de tempo de espera a cada 60s (sem recarregar tudo)
+        setInterval(function() {
+            document.querySelectorAll('.order-card').forEach(function(card) {
+                var badge = card.querySelector('.order-wait-badge');
+                if (!badge) return;
+                var seqEl = card.querySelector('.order-id');
+                if (!seqEl) return;
+                // Força re-render completo do kanban para atualizar as cores
+                renderKanban();
+            });
+        }, 60000);
 
         // Tenta sincronizar pedidos pendentes (offline queue) ao abrir a página
         try {
