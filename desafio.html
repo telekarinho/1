@@ -1185,7 +1185,7 @@ document.getElementById('voucherStatus').className='voucher-status error';
 document.getElementById('voucherStatus').textContent='Valide seu codigo primeiro!';
 return;
 }
-var remaining=activeVoucher.attempts-activeVoucher.attemptsUsed;
+var remaining=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
 if(remaining<=0){
 document.getElementById('voucherStatus').className='voucher-status error';
 document.getElementById('voucherStatus').textContent='Codigo ja utilizado. Compre outro MilkyPot!';
@@ -1341,7 +1341,7 @@ used:activeVoucher.attemptsUsed>=activeVoucher.attempts
 });
 }catch(e){console.warn('Voucher update error:',e)}
 /* Update remaining display */
-var rem=activeVoucher.attempts-activeVoucher.attemptsUsed;
+var rem=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
 var attInfo=document.getElementById('voucherAttemptsInfo');
 if(attInfo) attInfo.textContent='🎟️ '+Math.max(0,rem)+' tentativa'+(rem!==1?'s':'')+' restante'+(rem!==1?'s':'');
 }
@@ -1673,10 +1673,10 @@ instagramBonusUsed:true,
 used:false /* re-open since we added attempts */
 });
 }catch(e){console.warn('Instagram bonus update error:',e)}
-statusEl.style.display='';statusEl.textContent='+'+extraChances+' tentativas liberadas! Total agora: '+(activeVoucher.attempts-activeVoucher.attemptsUsed);
+statusEl.style.display='';statusEl.textContent='+'+extraChances+' tentativas liberadas! Total agora: '+(activeVoucher.attempts-(activeVoucher.attemptsUsed||0));
 btn.disabled=true;btn.style.opacity='0.5';btn.textContent='Bonus resgatado!';
 /* Update attempts badge */
-var rem=activeVoucher.attempts-activeVoucher.attemptsUsed;
+var rem=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
 var attInfo=document.getElementById('voucherAttemptsInfo');
 if(attInfo) attInfo.textContent='🎟️ '+rem+' tentativa'+(rem!==1?'s':'')+' restante'+(rem!==1?'s':'');
 };
@@ -1831,7 +1831,7 @@ document.getElementById('videoSaveBtn').style.display='none';
 recordedChunks=[];reactionVideoBlob=null;
 /* Check if voucher has remaining attempts */
 if(activeVoucher){
-var rem=activeVoucher.attempts-activeVoucher.attemptsUsed;
+var rem=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
 if(rem<=0){
 /* No more attempts, go back to voucher input */
 activeVoucher=null;activeVoucherCode=null;
