@@ -70,6 +70,27 @@ if errorlevel 1 (
 echo       Claude CLI OK
 
 REM ========================================
+REM [2.5/4] Verifica autenticacao Claude CLI
+REM ========================================
+echo [2.5/4] Verificando autenticacao Claude...
+if not exist "%USERPROFILE%\.claude\.credentials.json" (
+    echo.
+    echo  [!] Claude CLI nao esta autenticado.
+    echo      Abrindo login no browser ^(necessario uma vez^)...
+    echo.
+    claude login
+    if errorlevel 1 (
+        echo.
+        echo  [ERRO] Login cancelado ou falhou. Tente novamente.
+        pause
+        exit /b 1
+    )
+    echo.
+)
+echo       Autenticacao OK
+REM Nota: se o token expirar durante o uso, o servidor abre o login automaticamente.
+
+REM ========================================
 REM [3/4] Verifica/instala dependencias
 REM ========================================
 echo [3/4] Verificando dependencias...
