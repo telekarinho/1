@@ -320,7 +320,12 @@ async function resolveBackend() {
   const user = await new Promise(resolve => {
     const unsub = firebase.auth().onAuthStateChanged(u => { unsub(); resolve(u); });
   });
-  if (!user) throw new Error('Você precisa estar logado como super_admin no painel.');
+  if (!user) {
+    throw new Error('Você precisa estar logado primeiro. <a href="/login.html" style="color:#7C3AED;font-weight:700">Clique aqui para fazer login →</a>');
+  }
+
+  // Força refresh do token para garantir claims atualizados (role: super_admin)
+  try { await user.getIdToken(true); } catch(_) {}
 
   // Lê tunnel doc
   const doc = await firebase.firestore().collection('datastore').doc('copilot_tunnel').get();
@@ -353,7 +358,12 @@ async function resolveBackend() {
   } catch (e) {
     statusEl.classList.add('err');
     statusText.textContent = 'Servidor offline';
-    showError(e.message || 'O servidor local não está rodando. Execute <code>Copilot-Iniciar.bat</code> no PC.');
+    let msg = e.message || 'O servidor local não está rodando. Execute <code>Copilot-Iniciar.bat</code> no PC.';
+    // Mensagem amigável pra erro de permissão do Firestore
+    if (msg.includes('permission') || msg.includes('insufficient') || msg.includes('PERMISSION_DENIED')) {
+      msg = 'Sem permissão para ler as configurações do servidor. Você precisa estar logado como <strong>super_admin</strong>. <a href="/login.html" style="color:#991b1b;font-weight:700">Fazer login →</a>';
+    }
+    showError(msg);
   }
 })();
 
