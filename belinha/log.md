@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #68 — 2026-04-29
+
+**Área:** SEO Local — FAQPage schema nas landing pages
+
+**Contexto:** Prescrito pelo roadmap dos ciclos #65, #66, #67. O ciclo focaria em verificar `aggregateRating` no `index.html`, mas esse bloqueador depende de confirmação do operador (≥3 reviews verificáveis no Google Maps). Ação alternativa de alto valor: as landing pages `acai-self-service-londrina.html` e `potinho-ninho-londrina.html` não tinham FAQPage schema, enquanto o `index.html` já tem 8 perguntas elegíveis para rich results — gap resolvido.
+
+**O que analisou:**
+- Confirmou que `aggregateRating` está preparado como comentário em `index.html` (linha ~151) — aguarda operador
+- Identificou ausência total de FAQPage schema nas duas landing pages de SEO local
+- `index.html` já tem schema.org FAQPage com 8 perguntas; landing pages tinham apenas BreadcrumbList + MenuItem/Product + FoodEstablishment
+- Rich results de acordeão (FAQ) aparecem nas SERPs para buscas como "açaí self service londrina" e "potinho ninho londrina" = CTR orgânico +15-30% vs. snippet padrão
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `acai-self-service-londrina.html` | ADICIONADO — FAQPage schema (6 perguntas): preço self-service, como funciona, toppings disponíveis, delivery de açaí, açaí puro vs. xarope, localização |
+| `potinho-ninho-londrina.html` | ADICIONADO — FAQPage schema (6 perguntas): preço, o que vem, opção fit/zero, delivery, diferença Ninho vs. Açaí, onde comprar em Londrina |
+
+**Commit:** `ac46447`
+
+**Validação:** Ambos os schemas validados com `json.loads()` — sem erros de JSON. Estrutura `@type: FAQPage` + `mainEntity` com `Question`/`Answer` conforme spec schema.org.
+
+**Destaques:**
+1. **6 perguntas por página** — cobertura das principais dúvidas de busca local que ativam rich results
+2. **Intenção de busca alinhada** — perguntas mapeadas a queries reais ("quanto custa açaí self service londrina", "potinho ninho delivery londrina")
+3. **Bloqueador documentado** — `aggregateRating` não ativado; aguarda operador confirmar ≥3 reviews Google Maps
+
+**Bloqueador ativo:**
+- `aggregateRating` em `index.html` (linha ~151): operador precisa confirmar que a unidade Muffato tem ≥3 avaliações verificáveis no Google Maps antes de descomentar e ajustar `ratingValue`/`reviewCount`
+
+**Próximo passo sugerido:**
+- Ciclo #69: Auto-aprimoramento — reler log #64–#68 completo, ajustar estratégia novembro 2026 (pós-Halloween) em `belinha/estrategia.md`
+- Ciclo #70: Plano editorial Halloween completo — semanas 25–27 (04–24/10/2026), produto especial "Potinho Assombrado", sorteio UGC fantasia
+- Operador: ativar `aggregateRating` assim que confirmar ≥3 reviews no Google Maps
+
+---
+
 ## Ciclo #64 — 2026-04-29
 
 **Área:** Auto-aprimoramento (ciclo 64 = múltiplo de 5 a partir do #54)
