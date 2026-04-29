@@ -721,6 +721,29 @@
 (function(){
     if(!Auth.requireAuth()) return;
     var fid = Auth.getFranchiseId();
+
+    // Promessa que resolve com o usuário Firebase assim que o auth state for
+    // determinado (restaurado do IndexedDB) E o token tiver os custom claims
+    // atualizados. As regras de storage.rules exigem request.auth.token.franchiseId
+    // == franchiseId — sem refresh forçado, um token antigo (anterior ao
+    // _trySetupOwner) sem claims gera storage/unauthorized.
+    var _authReadyPromise = new Promise(function(resolve) {
+        var unsub = firebase.auth().onAuthStateChanged(function(user) {
+            unsub();
+            if (user) {
+                // Força refresh pra garantir que claims customizados (franchiseId,
+                // role) setados via Cloud Function estejam presentes no token.
+                user.getIdToken(true).catch(function(){}).then(function(){
+                    resolve(user);
+                });
+                return;
+            }
+            // Sem usuário Firebase mas tem sessão local → tenta anônimo como fallback
+            firebase.auth().signInAnonymously()
+                .then(function(r){ resolve(r && r.user); })
+                .catch(function(){ resolve(null); });
+        });
+    });
     document.getElementById('sidebarStoreName').textContent = fid || 'Franqueado';
     document.getElementById('sidebarUserName').textContent = Auth.getUserName();
 
@@ -1047,7 +1070,9 @@
     var STORAGE_BUCKET = 'milkypot-ad945.firebasestorage.app';
 
     function uploadToFirebaseStorage(blob, path, onProgress){
-        return new Promise(function(resolve, reject){
+        return _authReadyPromise.then(function(user){
+            if (!user) return Promise.reject(new Error('storage/unauthorized — sessão Firebase expirada. Faça logout e login novamente.'));
+            return new Promise(function(resolve, reject){
             try {
                 var storageRef = firebase.storage().ref(path);
                 var task = storageRef.put(blob, { contentType: blob.type || 'application/octet-stream' });
@@ -1069,7 +1094,8 @@
             } catch(e){
                 reject(new Error('Erro ao iniciar upload: ' + (e.message || e)));
             }
-        });
+            }); // inner Promise
+        }); // _authReadyPromise.then
     }
 
 
