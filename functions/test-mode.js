@@ -20,7 +20,7 @@ function getAuth() { return admin.auth(); }
 // ----------------------------------------
 async function resolveTestAdmin(request) {
     if (!request.auth) throw new HttpsError("unauthenticated", "Login necessario");
-    const email = request.auth.token.email || "";
+    const email = (request.auth.token.email || "").toLowerCase().trim();
     const role  = request.auth.token.role  || null;
     const OWNER = "jocimarrodrigo@gmail.com";
     const isSuperAdmin = role === "super_admin" || email === OWNER;

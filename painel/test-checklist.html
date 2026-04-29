@@ -423,7 +423,7 @@
     if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
     const session     = Auth.getSession();
     const franchiseId = session.franchiseId;
-    const isSuperAdmin = session.role === 'super_admin' || session.email === 'jocimarrodrigo@gmail.com';
+    const isSuperAdmin = session.role === 'super_admin' || (session.email || '').toLowerCase().trim() === 'jocimarrodrigo@gmail.com';
 
     document.getElementById('sidebarUserName').textContent = session.name || 'Franqueado';
     document.getElementById('sidebarUserRole').textContent = session.role || 'Franqueado';
@@ -796,7 +796,25 @@
         document.getElementById('tokenCard').style.display = 'block';
         document.getElementById('tokenUrl').textContent = '⏳ Gerando...';
 
-        var result = await CloudFunctions.call('generateTestToken', { franchiseId });
+        // Tenta via CloudFunctions (caminho normal)
+        var result;
+        try {
+            result = await CloudFunctions.call('generateTestToken', { franchiseId });
+        } catch (e) { result = null; }
+
+        // Fallback defensivo: se CloudFunctions cached estiver sem a rota,
+        // chama Firebase Functions direto (bypass total)
+        if (!result || result.error === 'Functions nao disponivel' || result.error === 'Function not found') {
+            console.warn('[TestToken] CloudFunctions cache stale, chamando Firebase direto');
+            try {
+                var fn = firebase.app().functions('southamerica-east1').httpsCallable('generateTestToken');
+                var fbResult = await fn({ franchiseId });
+                result = fbResult && fbResult.data ? fbResult.data : { success: false, error: 'sem resposta' };
+            } catch (e) {
+                result = { success: false, error: e.message || ('Erro Firebase: ' + e.code) };
+            }
+        }
+
         if (result && result.success) {
             document.getElementById('tokenUrl').textContent = result.loginUrl;
         } else {
