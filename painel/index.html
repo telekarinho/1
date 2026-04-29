@@ -363,7 +363,8 @@
             const todayRevenue = todayOrders.reduce((s, o) => s + o.total, 0);
             const pendingDelivery = orders.filter(o => o.delivery === 'delivery' && ['novo', 'preparando', 'pronto'].includes(o.status));
 
-            document.getElementById('kpiRevenueToday').textContent = Utils.formatCurrency(todayRevenue);
+            const elKpiRev = document.getElementById('kpiRevenueToday');
+            if (elKpiRev) elKpiRev.textContent = Utils.formatCurrency(todayRevenue);
             document.getElementById('kpiPendingDelivery').textContent = pendingDelivery.length;
 
             // --- Onda Comercial: Card Seu Negócio ---
