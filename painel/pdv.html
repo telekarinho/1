@@ -2105,6 +2105,16 @@
         if (k === 'caixa_' + fid) {
             try { renderPdvStatusChips(); } catch (_) {}
             try { if (typeof ensureCaixaAberto === 'function') ensureCaixaAberto(); } catch (_) {}
+            // Se outro PC acabou de abrir o caixa, fecha qualquer modal de
+            // checklist/abertura que esteja aberto neste PC (UX coerente entre devices)
+            try {
+                if (typeof Caixa !== 'undefined' && Caixa.getTurnoState) {
+                    var st = Caixa.getTurnoState(fid);
+                    if (st.status === 'aberto') {
+                        document.querySelectorAll('.caixa-modal-overlay').forEach(function(el) { el.remove(); });
+                    }
+                }
+            } catch (_) {}
         }
     });
 
@@ -2229,24 +2239,48 @@
             if (forceBtn) forceBtn.addEventListener('click', adminForceReopen);
         } catch (e) { console.warn('ensureCaixaAberto:', e); }
     }
-    // Roda 1x já + tenta abrir modal automaticamente após 800ms (dá tempo do DOM/Caixa carregar)
+    // Banner imediato com whatever está em localStorage (UX rápida)
     ensureCaixaAberto();
-    setTimeout(function () {
-        ensureCaixaAberto();
+
+    // Auto-abrir modal: ESPERA o sync com Firestore terminar antes de decidir.
+    // Senão, se outro PC já abriu o caixa, mostraríamos o checklist em cima
+    // do estado correto que ainda não chegou via _syncFromCloud.
+    function decideAutoOpenCaixa() {
         try {
-            if (typeof Caixa !== 'undefined' && Caixa.getTurnoState) {
-                var st = Caixa.getTurnoState(fid);
-                // Auto-modal SOMENTE se status é nao_aberto. Se é 'fechado', operador
-                // precisa decidir manualmente (peça reabertura OU admin força).
-                if (st.status === 'nao_aberto' && Caixa.showOpenModal) {
-                    Caixa.showOpenModal(fid, function () {
-                        removeBlocker();
-                        if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
-                    });
-                }
+            ensureCaixaAberto(); // re-renderiza banner com dados atualizados
+            if (typeof Caixa === 'undefined' || !Caixa.getTurnoState) return;
+            var st = Caixa.getTurnoState(fid);
+            // Se o sync trouxe um caixa aberto, fecha qualquer modal aberto
+            // (caso já tinha disparado antes do sync chegar)
+            if (st.status === 'aberto') {
+                document.querySelectorAll('.caixa-modal-overlay').forEach(function(el) { el.remove(); });
+                return;
+            }
+            // Auto-modal SOMENTE se status é nao_aberto. Se é 'fechado', operador
+            // precisa decidir manualmente (peça reabertura OU admin força).
+            if (st.status === 'nao_aberto' && Caixa.showOpenModal) {
+                // Evita duplicar modal se já tem um aberto
+                if (document.querySelector('.caixa-modal-overlay')) return;
+                Caixa.showOpenModal(fid, function () {
+                    removeBlocker();
+                    if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
+                });
             }
         } catch (e) { console.warn('auto-open caixa:', e); }
-    }, 800);
+    }
+
+    if (typeof DataStore !== 'undefined' && DataStore._syncDone) {
+        // Sync já terminou antes da gente registrar o handler
+        setTimeout(decideAutoOpenCaixa, 200);
+    } else {
+        // Espera o sync (até 5s); se não chegar, usa o que tem em localStorage
+        var syncFallback = setTimeout(decideAutoOpenCaixa, 5000);
+        window.addEventListener('mp_synced', function onSyncDone() {
+            clearTimeout(syncFallback);
+            window.removeEventListener('mp_synced', onSyncDone);
+            decideAutoOpenCaixa();
+        });
+    }
     // Re-checa a cada 30s (caso operador feche caixa em outra aba)
     setInterval(ensureCaixaAberto, 30000);
 
