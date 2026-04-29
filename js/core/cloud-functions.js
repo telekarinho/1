@@ -53,9 +53,20 @@ const CloudFunctions = {
     // Chamada principal - detecta Vercel ou Firebase
     // ============================================
     async call(name, data = {}) {
-        // uberDirect_* e fiscal* functions sempre vao direto ao Firebase Functions
+        // uberDirect_*, fiscal* e test-mode functions sempre vao direto ao Firebase
         // (nao estao no backend PHP/Vercel)
-        if (name.startsWith('uberDirect_') || name.startsWith('getFiscal') || name.startsWith('saveFiscal') || name.startsWith('emitFiscal') || name.startsWith('cancelFiscal') || name.startsWith('uploadFiscal') || name.startsWith('listFiscal') || name === 'getFiscalHealth') {
+        if (
+            name.startsWith('uberDirect_') ||
+            name.startsWith('getFiscal') || name.startsWith('saveFiscal') ||
+            name.startsWith('emitFiscal') || name.startsWith('cancelFiscal') ||
+            name.startsWith('uploadFiscal') || name.startsWith('listFiscal') ||
+            name === 'getFiscalHealth' ||
+            // test-mode functions (test-checklist.html)
+            name === 'generateTestToken' ||
+            name === 'setSystemMode' ||
+            name === 'getSystemMode' ||
+            name === 'saveChecklistItem'
+        ) {
             return this._callFirebaseDirect(name, data);
         }
 
