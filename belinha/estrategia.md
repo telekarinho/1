@@ -690,3 +690,115 @@ Halloween merece plano editorial de ≥5 peças — seguindo o padrão de datas 
 ---
 
 _Belinha — Ciclo #64 | 2026-04-29_
+
+---
+
+## Aprendizados dos ciclos #64–68
+
+_Ciclo #69 — Auto-aprimoramento obrigatório_
+
+### O que gerou mais valor concreto
+
+1. **Semanas adjacentes no mesmo ciclo (#65, #67):** Padrão v8 confirmado e consolidado. Semanas 20+21 e 23+24 entregues em 2 ciclos em vez de 4 — economia de 2 ciclos para outras áreas. Rendimento por ciclo dobrado.
+2. **Versão A/B para bloqueadores contingentes (#65):** Produto sazonal setembro sem confirmação da franquia → Versão A (confirmado) + Versão B (genérico) prontas. Operador age sem precisar de novo ciclo Belinha. Modelo a replicar sempre que houver dependência de terceiro.
+3. **FAQPage schema nas landing pages (#68):** Gap identificado — landing pages de SEO local sem FAQPage enquanto `index.html` já tinha. Rich results de acordeão ativados para buscas como "açaí self service londrina" e "potinho ninho londrina". CTR orgânico esperado: +15–30%. Alto impacto com baixo esforço.
+4. **Séries editoriais contínuas (Sexta do Potinho #7–#10):** Manutenção da série cria previsibilidade para o público e facilita planejamento interno. Thematic editions (Halloween) ampliam o alcance orgânico sem quebrar a série.
+5. **Templates WA com palavras-chave de ativação (#67 — HALLOWEEN):** Mecânica "manda HALLOWEEN → lista VIP" transforma engajamento passivo em lead qualificado e rastreável. Padrão a replicar: NATAL, VERAO, ANIVERSARIO.
+6. **Teaser gradual de Halloween (4 semanas de antecedência) (#67):** Primeiro uso de 🎃 no Reel 03/10 → warming progressivo → reveal 14/10 → countdown → dia H 31/10. Campanha estruturada sem revelar tudo de uma vez = antecipação sustentada.
+
+### O que foi menos eficaz (ciclos #64–68)
+
+- **Nenhum ciclo de concorrentes:** TheBest e busca por novo concorrente ficaram sem refetch. Dado de MilkyMoo pode estar desatualizado (refetch prescrito para ciclo ~#70). Risco: decisão de preço/produto baseada em dado antigo.
+- **Auto-aprimoramento #64 focou demais em outubro sem planejar novembro:** Roadmap ciclos #65–69 criado com precisão para outubro/Halloween. Novembro 2026 ficou sem cadência definida — gap resolvido neste ciclo #69.
+
+### Padrão consolidado (v9)
+
+> **Bug/fix crítico > Landing page SEO por diferencial distinto > Scripts/templates operador acionáveis c/ fallback A/B > Conteúdo não-contingente — semanas adjacentes mesma temática = mesmo ciclo > Concorrente + ação concreta no mesmo ciclo (refetch semestral) > UX/Performance sweep batch (só com indício concreto) > SEO técnico acumulativo**
+
+Adições v9 (além de v8):
+- **Templates WA com palavra-chave de ativação** (HALLOWEEN, NATAL, VERAO, ANIVERSARIO): sempre que um produto/evento especial for planejado, criar a mecânica de captação de lead qualificado por palavra-chave
+- **Campanha de produto especial:** estrutura mínima = 4 semanas antes → teaser gradual → reveal parcial 2 semanas antes → reveal completo 2 semanas antes → countdown → dia H. Não revelar tudo de uma vez.
+- **Concorrentes:** alerta de refetch se último ciclo de concorrente foi há >10 ciclos (MilkyMoo: ciclo #60 → próximo refetch ciclo ~#73)
+
+---
+
+## Estado das áreas em 29/04/2026 (pós-ciclo #68)
+
+| Área | Estado | Próxima ação |
+|------|--------|--------------|
+| Conteúdo pós-inauguração | ✅ Semanas 1–26 prontas (até 17/10) | Semanas 27+28 (Halloween countdown + aniversário 6 meses 25/10) |
+| Produto especial Halloween | ✅ Estrutura completa (semanas 25+26) | Operador: confirmar topping mini abóbora de chocolate com franquia ANTES de 01/10 |
+| Lista VIP "HALLOWEEN" | ✅ Mecânica criada (WA keyword) | Configurar resposta automática WA antes de 04/10 |
+| Fidelidade matura | ✅ Templates A–D + 2º ciclo + playbook | Monitorar confirmações de resgate VIP em outubro |
+| Core Web Vitals — páginas principais | ✅ CLS sweep completo (#58+#62) | Somente se nova imagem/componente for adicionado |
+| FAQPage schema landing pages | ✅ Adicionado nas 2 landing pages (#68) | Monitorar rich results no Google Search Console |
+| aggregateRating Schema.org | ⛔ SUSPENSO | Aguardar ≥3 reviews Google Maps verificáveis |
+| Google Analytics ID real | ⛔ SUSPENSO | Aguardar autorização do usuário |
+| Produto sazonal setembro | ⚠️ VERSÕES A+B PRONTAS | Operador confirmar com franquia antes de 01/09 |
+| Pesquisa concorrentes | ⚠️ MilkyMoo ciclo #60 (desatualizando) | TheBest + refetch MilkyMoo: próximo ciclo de concorrentes ciclo ~#73 |
+
+---
+
+## Estratégia de novembro 2026 (mês 7 de operação)
+
+### Contexto
+Novembro = **7º mês de operação**. Pós-Halloween. Verão chegando em Londrina (temperatura sobe, demanda por açaí e sobremesas geladas aumenta). Destaques:
+- **Black Friday (27/11):** Oportunidade única — sobremesa não é o produto óbvio do BF, o que cria diferenciação ("não vendemos eletrodoméstico, mas sim felicidade gelada em promoção") + chamar atenção pelo contraste
+- **Pré-Natal:** Novembro encerra com aquecimento de Natal (1º de dezembro = início oficial). Lançar teaser natalino na última semana de novembro
+- **7 meses de dados reais:** Após aniversário de 6 meses (25/10), operador tem visão clara de padrões. Novembro é o primeiro mês com histórico completo de 2 estações (inverno → primavera → início de verão)
+- **Produto sazonal de verão:** Anunciar em novembro (lançar em dezembro). Criar teaser similar ao produto de primavera/setembro.
+- **Fidelidade trimestral:** Clientes que começaram em agosto (mês 4) chegando ao 10º carimbo pela primeira vez — oportunidade de celebrar "fidelidade trimestral" com mensagem especial
+
+### Pilares estratégicos de novembro
+
+| Pilar | Ação concreta |
+|-------|---------------|
+| **Black Friday 27/11** | "Não é eletrônico, mas é o melhor negócio do dia" — promoção relâmpago no dia (ex: 2º topping grátis ou brinde no potinho). Não descontar na base — criar percepção de valor extra |
+| **Aquecimento Natal** | Última semana de novembro: teaser natalino — ovelhinha de Papai Noel, "Já imaginou um potinho natalino?", teaser de produto especial dezembro |
+| **Produto sazonal verão** | Anunciar conceito em novembro, lançar em dezembro. Mecânica: enquete "o que você quer no potinho de verão?" em novembro → usa dado real para configurar o produto em dezembro |
+| **Fidelidade trimestral** | Template WA "3 meses com a gente — parabéns!" + bônus trimestral (topping extra ou brinde no resgate do 10º carimbo) |
+| **Conteúdo verão** | Tom de conteúdo muda: primavera leveza → verão energia/calor/refrescância. Açaí self-service ganha destaque especial (verão = dia quente = buffet de açaí = diferencial) |
+
+### Cadência de conteúdo (outubro–novembro)
+
+| Semana | Período | Tema |
+|--------|---------|------|
+| Semana 25 | 04–10/10 | Halloween warming up — list VIP + Sexta #10 ✅ |
+| Semana 26 | 11–17/10 | Dia das Crianças + Reveal Potinho Assombrado ✅ |
+| Semana 27 | 18–24/10 | Halloween countdown + sorteio UGC fantasia |
+| Semana 28 | 25–31/10 | **Aniversário 6 meses (25/10) + Halloween dia H (31/10)** |
+| Semana 29 | 01–07/11 | Pós-Halloween + abertura novembro + agradecimento |
+| Semana 30 | 08–14/11 | Verão chegando — açaí e frescor + rotina de novembro |
+| Semana 31 | 15–21/11 | Linha Zero peak novembro (academia em alta c/ verão) + enquete produto sazonal verão |
+| Semana 32 | 22–28/11 | **Black Friday 27/11** + teaser produto sazonal verão |
+| Semana 33 | 29/11–05/12 | Aquecimento Natal + teaser produto dezembro |
+
+### Roadmap ciclos #70–74
+
+| Ciclo | Área | Ação |
+|-------|------|------|
+| #70 | Conteúdo | Semanas 27+28 (Halloween countdown + aniversário 6 meses + dia H 31/10) |
+| #71 | Conteúdo | Semanas 29+30 (pós-Halloween + abertura novembro + verão chegando) |
+| #72 | Conteúdo | Semanas 31+32 (Linha Zero verão + Black Friday 27/11) |
+| #73 | Concorrentes | TheBest (primeiro fetch) + refetch MilkyMoo (#60 desatualizando) |
+| #74 | Auto-aprimoramento | Reler log #69–#73, ajustar estratégia dezembro/Natal 2026 |
+
+### Nota sobre Black Friday (ciclo #72)
+
+BF merece mecânica de oferta não-óbvia para sobremesa:
+- Não dar desconto na base do produto (desvaloriza a marca)
+- Criar percepção de valor extra: "2ª cobertura grátis", "potinho grande pelo preço do médio", ou "sorvete de brinde para pedidos acima de R$X"
+- Caption: "Todo mundo vendendo eletrônico. A gente tá vendendo felicidade. 🍦🛒" — ironia elegante que viraliza
+
+### Bloqueadores suspensos (sem mudança)
+
+| Bloqueador | Dependência | Ciclo que bloqueou |
+|------------|-------------|-------------------|
+| aggregateRating Schema.org | ≥3 reviews Google Maps verificáveis pelo operador | #43 |
+| Google Analytics ID real | Autorização explícita do usuário | #15 |
+| Produto sazonal setembro | Confirmação da franquia com o operador | #63 |
+| Topping Halloween (mini abóbora chocolate) | Disponibilidade via franquia | #69 |
+
+---
+
+_Belinha — Ciclo #69 | 2026-04-29_
