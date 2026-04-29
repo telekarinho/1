@@ -63,6 +63,7 @@ const CloudFunctions = {
             name === 'getFiscalHealth' ||
             // test-mode functions (test-checklist.html)
             name === 'generateTestToken' ||
+            name === 'claimTestSession' ||
             name === 'setSystemMode' ||
             name === 'getSystemMode' ||
             name === 'saveChecklistItem'
