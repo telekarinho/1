@@ -286,8 +286,11 @@ footer button:disabled { opacity: .5; cursor: not-allowed; }
   <button id="sendBtn">Enviar</button>
 </footer>
 
+<!-- Firebase SDK pra ler tunnel URL+secret do Firestore quando estiver em milkypot.com -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
-const API = location.origin; // http://localhost:5858
 const main = document.getElementById('main');
 const input = document.getElementById('input');
 const sendBtn = document.getElementById('sendBtn');
@@ -295,20 +298,62 @@ const statusEl = document.getElementById('status');
 const statusText = document.getElementById('statusText');
 
 let conversation = [];
+let API_URL = location.origin; // default: localhost
+let API_SECRET = null;          // só usado quando vem via tunnel
 
-// Health check
+const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+// Quando em milkypot.com, busca tunnel URL+secret do Firestore
+async function resolveBackend() {
+  if (isLocal) return { url: location.origin, secret: null };
+
+  // Inicializa Firebase (mesmas credenciais do painel)
+  if (!firebase.apps.length) {
+    firebase.initializeApp({
+      apiKey: "AIzaSyAbQ1fe0pK4prhfzYJypod2ie4DyNsq6BA",
+      authDomain: "milkypot-ad945.firebaseapp.com",
+      projectId: "milkypot-ad945"
+    });
+  }
+
+  // Espera auth (super_admin já está logado no painel)
+  const user = await new Promise(resolve => {
+    const unsub = firebase.auth().onAuthStateChanged(u => { unsub(); resolve(u); });
+  });
+  if (!user) throw new Error('Você precisa estar logado como super_admin no painel.');
+
+  // Lê tunnel doc
+  const doc = await firebase.firestore().collection('datastore').doc('copilot_tunnel').get();
+  if (!doc.exists) throw new Error('Servidor local não está rodando. Inicie o <code>Copilot-Iniciar.bat</code> no PC.');
+  const data = doc.data();
+  if (!data.url || !data.secret) throw new Error('Tunnel mal configurado no Firestore.');
+
+  // Verifica se está vivo
+  try {
+    const ping = await fetch(data.url + '/health', { method: 'GET' });
+    if (!ping.ok) throw new Error();
+  } catch (e) {
+    throw new Error('Tunnel registrado mas não responde — verifique se o .bat está aberto no PC.');
+  }
+  return { url: data.url, secret: data.secret };
+}
+
 (async () => {
   try {
-    const r = await fetch(API + '/health');
-    if (r.ok) {
-      const d = await r.json();
-      statusEl.classList.add('ok');
-      statusText.textContent = d.tools.length + ' tools · ' + d.firebase_project;
-    } else throw new Error();
+    const cfg = await resolveBackend();
+    API_URL = cfg.url;
+    API_SECRET = cfg.secret;
+
+    const r = await fetch(API_URL + '/health');
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    statusEl.classList.add('ok');
+    const mode = isLocal ? 'local' : 'tunnel';
+    statusText.textContent = `${d.tools.length} tools · ${mode} · ${d.firebase_project}`;
   } catch (e) {
     statusEl.classList.add('err');
     statusText.textContent = 'Servidor offline';
-    showError('O servidor local não está rodando. Execute <code>Copilot-Iniciar.bat</code> no desktop e atualize esta página.');
+    showError(e.message || 'O servidor local não está rodando. Execute <code>Copilot-Iniciar.bat</code> no PC.');
   }
 })();
 
@@ -365,9 +410,11 @@ async function send(text) {
   const thinking = addThinking();
 
   try {
-    const r = await fetch(API + '/chat', {
+    const headers = { 'Content-Type': 'application/json' };
+    if (API_SECRET) headers['X-Copilot-Secret'] = API_SECRET;
+    const r = await fetch(API_URL + '/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ messages: conversation })
     });
     if (!r.ok) {

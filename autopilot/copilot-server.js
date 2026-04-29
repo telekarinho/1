@@ -24,6 +24,7 @@ const express = require('express');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const crypto = require('crypto');
 const { spawn } = require('child_process');
 
 // ──────────────────────────────────────────────────────
@@ -458,20 +459,36 @@ async function chatWithTools(userMessages) {
 const app = express();
 app.use(express.json({ limit: '4mb' }));
 
+// Secret aleatório por sessão — só quem tem este token pode chamar /chat via tunnel
+const COPILOT_SECRET = crypto.randomBytes(24).toString('base64url');
+
 app.use((req, res, next) => {
     const origin = req.headers.origin || '';
     const allowed = ['https://milkypot.com', 'https://www.milkypot.com', 'https://milkypot-ad945.web.app'];
-    if (allowed.includes(origin) || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+    if (allowed.includes(origin) || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:') || /\.trycloudflare\.com$/.test(origin)) {
         res.header('Access-Control-Allow-Origin', origin);
     } else if (!origin) {
         res.header('Access-Control-Allow-Origin', '*');
     }
     res.header('Vary', 'Origin');
     res.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, X-Copilot-Secret');
     if (req.method === 'OPTIONS') return res.sendStatus(200);
     next();
 });
+
+// Auth middleware: /chat requer secret quando vem de fora (tunnel)
+function requireSecret(req, res, next) {
+    const origin = req.headers.origin || '';
+    const isLocal = !origin || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
+    if (isLocal) return next();
+    // De fora (milkypot.com via tunnel): exige secret
+    const secret = req.headers['x-copilot-secret'] || '';
+    if (secret !== COPILOT_SECRET) {
+        return res.status(401).json({ error: 'unauthorized', hint: 'x-copilot-secret header obrigatório quando vem de fora' });
+    }
+    next();
+}
 
 const MP_ROOT = path.join(__dirname, '..');
 app.use(express.static(MP_ROOT, { index: false, extensions: ['html'] }));
@@ -480,16 +497,17 @@ app.get('/health', (req, res) => {
     res.json({
         ok: true,
         service: 'MilkyPot Copilot',
-        version: '1.1.0',
+        version: '1.2.0',
         backend: 'claude-cli (plano Claude Pro/Max — R$ 0)',
         tools: Object.keys(TOOLS_IMPL),
-        firebase_project: admin.app().options.projectId || 'milkypot-ad945'
+        firebase_project: admin.app().options.projectId || 'milkypot-ad945',
+        tunnel: TUNNEL_URL || null
     });
 });
 
 app.get('/', (req, res) => res.redirect('/painel/copilot.html'));
 
-app.post('/chat', async (req, res) => {
+app.post('/chat', requireSecret, async (req, res) => {
     const { messages = [] } = req.body || {};
     if (!messages.length) return res.status(400).json({ error: 'messages_empty' });
 
@@ -510,22 +528,97 @@ app.post('/chat', async (req, res) => {
     }
 });
 
+// ──────────────────────────────────────────────────────
+// CLOUDFLARE TUNNEL — expõe HTTPS público pra milkypot.com
+// ──────────────────────────────────────────────────────
+let TUNNEL_URL = null;
+let tunnelProc = null;
+
+async function registerTunnelInFirestore() {
+    if (!TUNNEL_URL) return;
+    try {
+        await db.collection('datastore').doc('copilot_tunnel').set({
+            url: TUNNEL_URL,
+            secret: COPILOT_SECRET,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            host: os.hostname(),
+            version: '1.2.0'
+        });
+        console.log('✅ Tunnel registrado no Firestore — milkypot.com já consegue chamar.');
+    } catch (e) {
+        console.error('⚠️ Falha ao registrar tunnel no Firestore:', e.message);
+    }
+}
+
+async function clearTunnelFromFirestore() {
+    try {
+        await db.collection('datastore').doc('copilot_tunnel').delete();
+        console.log('🧹 Tunnel removido do Firestore.');
+    } catch (e) {}
+}
+
+function startTunnel(port) {
+    console.log('');
+    console.log('🌐 Iniciando cloudflared tunnel...');
+    tunnelProc = spawn('cloudflared', ['tunnel', '--url', `http://localhost:${port}`], { shell: true });
+
+    const onData = (chunk) => {
+        const txt = chunk.toString();
+        const match = txt.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/i);
+        if (match && !TUNNEL_URL) {
+            TUNNEL_URL = match[0];
+            console.log('');
+            console.log('✨ URL pública HTTPS:', TUNNEL_URL);
+            console.log('   Health via tunnel:', TUNNEL_URL + '/health');
+            console.log('   UI online: https://milkypot.com/painel/copilot.html');
+            console.log('');
+            registerTunnelInFirestore();
+        }
+    };
+    tunnelProc.stdout.on('data', onData);
+    tunnelProc.stderr.on('data', onData);
+    tunnelProc.on('error', (e) => {
+        console.warn('⚠️ Cloudflared não encontrado ou erro:', e.message);
+        console.warn('   Instale com: winget install Cloudflare.cloudflared');
+        console.warn('   Ou: https://github.com/cloudflare/cloudflared/releases');
+    });
+    tunnelProc.on('close', (code) => {
+        console.warn('⚠️ Tunnel encerrou (exit ' + code + '). Reinicie o .bat pra restaurar acesso online.');
+        TUNNEL_URL = null;
+        clearTunnelFromFirestore();
+    });
+}
+
+// Limpa Firestore ao parar (Ctrl+C)
+process.on('SIGINT', async () => {
+    console.log('\n🛑 Parando servidor...');
+    await clearTunnelFromFirestore();
+    if (tunnelProc) try { tunnelProc.kill(); } catch (e) {}
+    process.exit(0);
+});
+process.on('SIGTERM', async () => {
+    await clearTunnelFromFirestore();
+    process.exit(0);
+});
+
 const PORT = process.env.MILKYPOT_COPILOT_PORT || 5858;
 const server = app.listen(PORT, () => {
     console.log('═══════════════════════════════════════════════');
-    console.log(' 🐑 MilkyPot Copilot — Servidor Local v1.1');
+    console.log(' 🐑 MilkyPot Copilot — Servidor Local v1.2');
     console.log('═══════════════════════════════════════════════');
     console.log('');
-    console.log('   Rodando em: http://localhost:' + PORT);
-    console.log('   UI:         http://localhost:' + PORT + '/painel/copilot.html');
-    console.log('   Health:     http://localhost:' + PORT + '/health');
+    console.log('   Local: http://localhost:' + PORT + '/painel/copilot.html');
     console.log('');
-    console.log('   ⚙️  Backend: Claude CLI (seu plano Pro/Max — R$ 0)');
+    console.log('   ⚙️  Backend: Claude CLI (plano Pro/Max — R$ 0)');
     console.log('   ✅ ' + Object.keys(TOOLS_IMPL).length + ' tools disponíveis');
     console.log('   ✅ Firebase Admin conectado');
+    console.log('   🔐 Secret de sessão gerado (válido enquanto este processo viver)');
     console.log('');
     console.log('   Ctrl+C pra parar.');
     console.log('═══════════════════════════════════════════════');
+
+    // Sobe o tunnel pra expor em milkypot.com (HTTPS)
+    startTunnel(PORT);
 });
 
 server.on('error', (err) => {

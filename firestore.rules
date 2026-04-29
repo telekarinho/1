@@ -79,13 +79,15 @@ service cloud.firestore {
                         || document == 'finances_' + request.auth.token.franchiseId
                     ))
                     // Outros documentos nao sensiveis (catalog, config, etc.):
-                    // qualquer usuario autenticado; 'users' fica restrito a super_admin acima
+                    // qualquer usuario autenticado; 'users' e 'copilot_tunnel' ficam
+                    // restritos a super_admin acima (copilot_tunnel contem secret)
                     || (isAuthenticated()
                         && !document.matches('orders_.*')
                         && !document.matches('caixa_.*')
                         && !document.matches('pdv_tabs_.*')
                         && !document.matches('finances_.*')
                         && document != 'users'
+                        && document != 'copilot_tunnel'
                     );
       // Franchises: somente super_admin pode escrever
       // iFood: extensao escreve sem auth (aceito temporariamente)
