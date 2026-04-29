@@ -932,21 +932,82 @@
             _renderOldOpenBanner();
         };
 
+        // === SIRENE ESCANDALOSA pra pedidos DELIVERY ===
+        // Police-style dual-tone siren via Web Audio API. Para com qualquer
+        // clique/tecla do operador. Som curto pra balcao/retirada.
+        let _sirenStop = null;
+        function playLoudDeliverySiren() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') ctx.resume();
+                const master = ctx.createGain();
+                master.gain.value = 0.85; // ~3x mais alto que antes
+                master.connect(ctx.destination);
+
+                const osc = ctx.createOscillator();
+                osc.type = 'sawtooth'; // mais agressivo que sine
+                osc.connect(master);
+
+                // Dupla frequencia alternando — efeito sirene policial
+                const now = ctx.currentTime;
+                const pulses = 6;       // 6 alternancias = ~3.5s total
+                const pulseDur = 0.3;
+                for (let i = 0; i < pulses; i++) {
+                    const t = now + i * pulseDur;
+                    osc.frequency.setValueAtTime(i % 2 === 0 ? 880 : 660, t);
+                }
+                osc.start(now);
+                osc.stop(now + pulses * pulseDur);
+
+                // Stops on click/key (operator dismiss)
+                const stop = () => { try { master.gain.setValueAtTime(master.gain.value, ctx.currentTime); master.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1); osc.stop(ctx.currentTime + 0.15); } catch(e){} };
+                _sirenStop = stop;
+                document.addEventListener('click', stop, { once: true });
+                document.addEventListener('keydown', stop, { once: true });
+            } catch (e) { console.warn('Sirene falhou:', e); }
+        }
+        function playSimpleBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') ctx.resume();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain).connect(ctx.destination);
+                osc.frequency.value = 800;
+                gain.gain.value = 0.3;
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                osc.stop(ctx.currentTime + 0.4);
+            } catch(e){}
+        }
+
         // Poll for new orders
         let lastOrderCount = 0;
+        let lastSeenIds = new Set();
         setInterval(() => {
             const orders = DataStore.getCollection('orders', franchiseId);
             const newOrders = orders.filter(o => o.status === 'novo');
-            if (newOrders.length > lastOrderCount && lastOrderCount > 0) {
+            const reallyNew = newOrders.filter(o => !lastSeenIds.has(o.id));
+            if (reallyNew.length > 0 && lastOrderCount > 0) {
                 document.getElementById('newOrderAlert').style.display = 'block';
                 setTimeout(() => document.getElementById('newOrderAlert').style.display = 'none', 5000);
-                // Play notification sound
-                try {
-                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2JkYyBd3N9ho6LgXdxe4WNjIF3cXyFjYyBd3F8hY2MgXdxfIWNjA==');
-                    audio.play().catch(() => {});
-                } catch(e) {}
+
+                // Detecta delivery (vai estar em order.type, order.orderType ou order.delivery)
+                const hasDelivery = reallyNew.some(o =>
+                    o.type === 'delivery' || o.orderType === 'delivery' ||
+                    o.delivery === 'delivery' || o.delivery === true ||
+                    !!o.address
+                );
+
+                if (hasDelivery) {
+                    playLoudDeliverySiren();
+                } else {
+                    playSimpleBeep();
+                }
                 renderKanban();
             }
+            // Atualiza set de ids vistos
+            lastSeenIds = new Set(newOrders.map(o => o.id));
             lastOrderCount = newOrders.length;
         }, 3000);
 
