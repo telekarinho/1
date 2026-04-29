@@ -492,12 +492,11 @@ const DataStore = {
                         const merged = this._mergeListDoc(docId, doc.data().value);
                         const cloudStr = merged.value;
                         localStorage.setItem(this.PREFIX + docId, cloudStr);
-                        // FIX LOOP: NÃO escreve de volta no cloud por iniciativa do listener.
-                        // Se merge produz resultado diferente do cloud, isso só significa que
-                        // local tinha algo a mais — esse algo será propagado no próximo
-                        // DataStore.set explícito do user (ordem nova, status, etc).
-                        // Auto-writeback aqui causava loop infinito entre PCs (4+ writes/s).
-                        // if (merged.changed) this._writeToCloud(docId, JSON.parse(cloudStr));
+                        // SYNC INICIAL: se local tinha itens que o cloud não tinha (e.g. caixa
+                        // aberto offline), escreve de volta. Seguro aqui porque roda 1x só
+                        // por carregamento de página. Não causa loop: onSnapshot vai disparar
+                        // com o mesmo conteúdo → merge produz igual → localStr===cloudStr → sem loop.
+                        if (merged.changed) this._writeToCloud(docId, JSON.parse(cloudStr));
                         synced++;
                     } else if (this._isMergeableListDoc(docId)) {
                         const localStr = localStorage.getItem(this.PREFIX + docId);
@@ -566,6 +565,12 @@ const DataStore = {
                         }
                     }, err => {
                         console.warn('Listener err', docId, err.code || err.message);
+                        // Re-attach: listener morreu (auth/network) — reseta flag e reagenda.
+                        // O próximo _setupListenersAndPoll vai criar todos os listeners de novo.
+                        self._realtimeListenerAttached = false;
+                        setTimeout(function() {
+                            try { self._setupListenersAndPoll(); } catch(e) {}
+                        }, 8000);
                     });
                 });
             }
@@ -604,7 +609,7 @@ const DataStore = {
                         } catch (e) { /* ignora — próximo poll tenta */ }
                     }
                     if (changes > 0) console.log('🔁 Poll: ' + changes + ' doc(s) atualizado(s)');
-                }, 30000); // 30s — alivia CPU/rede; realtime listener cobre delta em <1s
+                }, 10000); // 10s — fallback quando listener morrer/reconectar
             }
         } catch (e) {
             console.warn('_setupListenersAndPoll error:', e);
