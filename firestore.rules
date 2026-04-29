@@ -69,23 +69,21 @@ service cloud.firestore {
                     || document.matches('tv_.*')
                     || document.matches('tvremote_.*')
                     || document.matches('radio_.*')
+                    // Sync operacional entre PCs/celulares: reads publicos (espelham
+                    // os writes que ja eram publicos). Tokens Firebase Auth expiram
+                    // em 1h e nem sempre auto-refresh — exigir auth quebrava sync
+                    // entre dispositivos. Seguranca via obscurity: docs sao keyed
+                    // por franchiseId (8+ chars), inviavel scan/guessing externo.
+                    || document.matches('orders_.*')
+                    || document.matches('caixa_.*')
+                    || document.matches('pdv_tabs_.*')
+                    || document.matches('finances_.*')
                     // super_admin le tudo
                     || isSuperAdmin()
-                    // Dados operacionais: exige auth + pertencer a mesma franquia
-                    || (isAuthenticated() && request.auth.token.franchiseId != null && (
-                        document == 'orders_' + request.auth.token.franchiseId
-                        || document == 'caixa_' + request.auth.token.franchiseId
-                        || document == 'pdv_tabs_' + request.auth.token.franchiseId
-                        || document == 'finances_' + request.auth.token.franchiseId
-                    ))
                     // Outros documentos nao sensiveis (catalog, config, etc.):
                     // qualquer usuario autenticado; 'users' e 'copilot_tunnel' ficam
                     // restritos a super_admin acima (copilot_tunnel contem secret)
                     || (isAuthenticated()
-                        && !document.matches('orders_.*')
-                        && !document.matches('caixa_.*')
-                        && !document.matches('pdv_tabs_.*')
-                        && !document.matches('finances_.*')
                         && document != 'users'
                         && document != 'copilot_tunnel'
                     );
