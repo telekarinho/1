@@ -423,7 +423,7 @@
     if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
     const session     = Auth.getSession();
     const franchiseId = session.franchiseId;
-    const isSuperAdmin = session.role === 'super_admin' || session.email === 'jocimarrodrigo@gmail.com';
+    const isSuperAdmin = session.role === 'super_admin' || (session.email || '').toLowerCase().trim() === 'jocimarrodrigo@gmail.com';
 
     document.getElementById('sidebarUserName').textContent = session.name || 'Franqueado';
     document.getElementById('sidebarUserRole').textContent = session.role || 'Franqueado';
