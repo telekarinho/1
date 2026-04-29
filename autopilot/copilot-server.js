@@ -2,15 +2,19 @@
  * MilkyPot Copilot — Servidor Local com Tool Calls REAIS
  * ========================================================
  *
- * O que ele faz que a Belinha NÃO faz:
+ * MODO LOCAL: usa Claude CLI (seu plano Claude Pro/Max) — R$ 0 de API.
+ *
+ * O que faz:
  *   - Tool calls que escrevem no Firestore (produtos, preços, custos)
- *   - Anthropic API com tool_use (não é Claude CLI)
+ *   - Protocolo XML pra tool calls (Claude responde <tool_use>{...}</tool_use>)
+ *   - Loop até Claude parar de chamar tools (max 10 iter)
  *   - Firebase Admin SDK = bypass das regras = poder total
  *
- * Setup necessário (uma vez):
- *   1. autopilot/firebase-admin.json  ← service account JSON do Firebase
- *      (Firebase Console > Project Settings > Service accounts > Generate)
- *   2. autopilot/.env  ← com ANTHROPIC_API_KEY=sk-ant-...
+ * Setup:
+ *   1. autopilot/firebase-admin.json  ← service account JSON
+ *   2. Claude CLI instalado e autenticado: `claude login`
+ *
+ * Não precisa de ANTHROPIC_API_KEY — usa seu plano Claude.
  *
  * Roda em: http://localhost:5858
  * UI:      http://localhost:5858/painel/copilot.html
@@ -18,26 +22,9 @@
 
 const express = require('express');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
-
-// ──────────────────────────────────────────────────────
-// Carrega .env (sem dependência dotenv)
-// ──────────────────────────────────────────────────────
-(function loadEnv() {
-    try {
-        const envPath = path.join(__dirname, '.env');
-        if (!fs.existsSync(envPath)) return;
-        const lines = fs.readFileSync(envPath, 'utf8').split(/\r?\n/);
-        lines.forEach(line => {
-            const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.+?)\s*$/);
-            if (m && !process.env[m[1]]) {
-                process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '');
-            }
-        });
-    } catch (e) {
-        console.warn('[env] falha ao carregar .env:', e.message);
-    }
-})();
+const { spawn } = require('child_process');
 
 // ──────────────────────────────────────────────────────
 // Firebase Admin SDK
@@ -52,14 +39,11 @@ try {
         console.error('❌ ARQUIVO firebase-admin.json NÃO ENCONTRADO');
         console.error('═══════════════════════════════════════════════════════════');
         console.error('');
-        console.error('  Como obter:');
-        console.error('  1. Abra https://console.firebase.google.com/project/milkypot-ad945/settings/serviceaccounts/adminsdk');
-        console.error('  2. Clique em "Gerar nova chave privada"');
-        console.error('  3. Salve o JSON baixado como:');
-        console.error('     ' + saPath);
+        console.error('  1. https://console.firebase.google.com/project/milkypot-ad945/settings/serviceaccounts/adminsdk');
+        console.error('  2. "Gerar nova chave privada"');
+        console.error('  3. Salve em: ' + saPath);
         console.error('  4. Reinicie este servidor');
         console.error('');
-        console.error('═══════════════════════════════════════════════════════════');
         process.exit(1);
     }
     const sa = JSON.parse(fs.readFileSync(saPath, 'utf8'));
@@ -70,34 +54,6 @@ try {
     console.error('❌ Falha ao inicializar Firebase Admin:', e.message);
     process.exit(1);
 }
-
-// ──────────────────────────────────────────────────────
-// Anthropic SDK
-// ──────────────────────────────────────────────────────
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || process.env.BELINHA_API_KEY || '';
-if (!ANTHROPIC_KEY) {
-    console.error('');
-    console.error('═══════════════════════════════════════════════════════════');
-    console.error('❌ ANTHROPIC_API_KEY NÃO CONFIGURADA');
-    console.error('═══════════════════════════════════════════════════════════');
-    console.error('');
-    console.error('  Crie autopilot/.env com:');
-    console.error('     ANTHROPIC_API_KEY=sk-ant-api03-...');
-    console.error('');
-    console.error('  Pegue a chave em: https://console.anthropic.com/settings/keys');
-    console.error('');
-    console.error('═══════════════════════════════════════════════════════════');
-    process.exit(1);
-}
-
-let Anthropic;
-try {
-    Anthropic = require('@anthropic-ai/sdk');
-} catch (e) {
-    console.error('❌ @anthropic-ai/sdk não instalado. Rode: npm install @anthropic-ai/sdk');
-    process.exit(1);
-}
-const anthropic = new Anthropic.default({ apiKey: ANTHROPIC_KEY });
 
 // ──────────────────────────────────────────────────────
 // Tool implementations — escrevem direto no Firestore
@@ -278,185 +234,223 @@ const TOOLS_IMPL = {
 };
 
 // ──────────────────────────────────────────────────────
-// Tool definitions p/ Anthropic
+// Tool descriptions (texto pro Claude — não JSON schema)
 // ──────────────────────────────────────────────────────
-const TOOLS = [
-    {
-        name: 'read_catalog',
-        description: 'Lê o catálogo completo (bases, formatos, tamanhos, sabores, adicionais, bebidas). Use quando precisar ver o que existe.',
-        input_schema: { type: 'object', properties: {} }
-    },
-    {
-        name: 'list_catalog_sections',
-        description: 'Lista resumida das seções do catálogo com IDs e nomes (sem detalhes). Útil pra navegar rápido.',
-        input_schema: { type: 'object', properties: {} }
-    },
-    {
-        name: 'get_item',
-        description: 'Pega detalhes de um item específico do catálogo.',
-        input_schema: {
-            type: 'object',
-            properties: {
-                section: { type: 'string', description: 'bases, formatos, tamanhos, sabores, adicionais, bebidas' },
-                itemId: { type: 'string' }
-            },
-            required: ['section', 'itemId']
-        }
-    },
-    {
-        name: 'update_item',
-        description: 'Atualiza campos de um item existente (price, cost, name, desc, available, etc). Sobrescreve só os campos passados em `fields`.',
-        input_schema: {
-            type: 'object',
-            properties: {
-                section: { type: 'string' },
-                itemId: { type: 'string' },
-                fields: { type: 'object', description: 'Objeto com campos a alterar. Ex: {price: 14.5, cost: 4.2}' }
-            },
-            required: ['section', 'itemId', 'fields']
-        }
-    },
-    {
-        name: 'create_item',
-        description: 'Cria um novo item em uma seção. Se id não passar, gera do nome.',
-        input_schema: {
-            type: 'object',
-            properties: {
-                section: { type: 'string' },
-                item: { type: 'object', description: 'Objeto completo do item: {id?, name, desc?, price, cost?, available?, ...}' }
-            },
-            required: ['section', 'item']
-        }
-    },
-    {
-        name: 'delete_item',
-        description: 'Remove um item do catálogo. CUIDADO: irreversível.',
-        input_schema: {
-            type: 'object',
-            properties: {
-                section: { type: 'string' },
-                itemId: { type: 'string' }
-            },
-            required: ['section', 'itemId']
-        }
-    },
-    {
-        name: 'toggle_item',
-        description: 'Liga/desliga um item (available true/false) sem deletar.',
-        input_schema: {
-            type: 'object',
-            properties: {
-                section: { type: 'string' },
-                itemId: { type: 'string' },
-                available: { type: 'boolean' }
-            },
-            required: ['section', 'itemId', 'available']
-        }
-    },
-    {
-        name: 'bulk_price_adjustment',
-        description: 'Aplica reajuste percentual em todos os preços de uma seção (ex: percent=10 = +10%, percent=-5 = -5%).',
-        input_schema: {
-            type: 'object',
-            properties: {
-                section: { type: 'string' },
-                percent: { type: 'number', description: 'Ex: 10 pra +10%, -5 pra -5%' },
-                onlyAvailable: { type: 'boolean', description: 'Se true, só ajusta itens disponíveis' }
-            },
-            required: ['section', 'percent']
-        }
-    },
-    {
-        name: 'list_franchises',
-        description: 'Lista todas as franquias da rede.',
-        input_schema: { type: 'object', properties: {} }
-    },
-    {
-        name: 'update_franchise',
-        description: 'Atualiza campos de uma franquia (nome, endereço, horário, ownerEmail, etc).',
-        input_schema: {
-            type: 'object',
-            properties: {
-                franchiseId: { type: 'string' },
-                fields: { type: 'object' }
-            },
-            required: ['franchiseId', 'fields']
-        }
-    },
-    {
-        name: 'read_orders_today',
-        description: 'Lê pedidos de hoje da franquia (até `limit`, default 50).',
-        input_schema: {
-            type: 'object',
-            properties: {
-                franchiseId: { type: 'string' },
-                limit: { type: 'number' }
-            },
-            required: ['franchiseId']
-        }
-    },
-    {
-        name: 'read_finances',
-        description: 'Lê DRE da franquia (receita, despesa, lucro do mês). Mês formato YYYY-MM.',
-        input_schema: {
-            type: 'object',
-            properties: {
-                franchiseId: { type: 'string' },
-                month: { type: 'string', description: 'YYYY-MM ou omitido pra tudo' }
-            },
-            required: ['franchiseId']
-        }
-    },
-    {
-        name: 'raw_firestore_read',
-        description: 'Leitura direta de qualquer doc Firestore (escape hatch).',
-        input_schema: {
-            type: 'object',
-            properties: {
-                collection: { type: 'string' },
-                document: { type: 'string' }
-            },
-            required: ['collection', 'document']
-        }
-    }
-];
+const TOOLS_DESC = `
+## Ferramentas disponíveis
 
-// ──────────────────────────────────────────────────────
-// System prompt humanizado
-// ──────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `Você é o **Copiloto MilkyPot** — um assistente de configuração com poder real de escrever no sistema da franquia.
+Você TEM ferramentas de verdade. Pra usar, escreva EXATAMENTE este formato (uma linha por tool, em qualquer ponto da sua resposta):
+
+<tool_use name="NOME_DA_TOOL">
+{"chave": "valor"}
+</tool_use>
+
+O servidor vai executar e responder com:
+
+<tool_result name="NOME_DA_TOOL">
+{...resultado JSON...}
+</tool_result>
+
+Aí você continua a conversa. Pode chamar várias tools em sequência.
+
+### Lista de tools
+
+**read_catalog** — Lê o catálogo inteiro. Input: \`{}\`
+
+**list_catalog_sections** — Resumo das seções com IDs e nomes (mais rápido). Input: \`{}\`
+
+**get_item** — Detalhes de um item. Input: \`{"section": "sabores", "itemId": "morango"}\`
+
+**update_item** — Atualiza campos. Input: \`{"section": "sabores", "itemId": "morango", "fields": {"price": 15}}\`
+
+**create_item** — Cria item novo. Input: \`{"section": "sabores", "item": {"name": "Brigadeiro", "price": 14, "desc": "..."}}\`
+
+**delete_item** — Remove item (CUIDADO). Input: \`{"section": "sabores", "itemId": "x"}\`
+
+**toggle_item** — Ativa/desativa. Input: \`{"section": "sabores", "itemId": "morango", "available": false}\`
+
+**bulk_price_adjustment** — % em todos os preços. Input: \`{"section": "sabores", "percent": 5, "onlyAvailable": true}\`
+
+**list_franchises** — Lista franquias. Input: \`{}\`
+
+**update_franchise** — Atualiza dados da franquia. Input: \`{"franchiseId": "muffato-quintino", "fields": {"horario": "10h-22h"}}\`
+
+**read_orders_today** — Pedidos de hoje. Input: \`{"franchiseId": "muffato-quintino", "limit": 20}\`
+
+**read_finances** — DRE. Input: \`{"franchiseId": "muffato-quintino", "month": "2026-04"}\`
+
+**raw_firestore_read** — Escape hatch p/ qualquer doc. Input: \`{"collection": "datastore", "document": "..."}\`
+
+### Seções do catálogo
+\`bases\` · \`formatos\` · \`tamanhos\` · \`sabores\` · \`adicionais\` · \`bebidas\`
+`.trim();
+
+const SYSTEM_PROMPT = `Você é o **Copiloto MilkyPot** — assistente de configuração com poder real de escrever no sistema.
 
 ## Identidade
 - Voz: direta, brasileira, carinhosa mas executiva. Sem enrolação.
 - Owner: Jocimar Rodrigo (jocimarrodrigo@gmail.com), franquia Muffato Quintino em Londrina-PR.
-- Você está sendo executado LOCALMENTE no PC do dono via servidor Node + Firebase Admin SDK.
+- Você roda LOCALMENTE no PC do dono (Node + Firebase Admin SDK + Claude CLI).
 
-## O que você faz de diferente
-Você TEM TOOL CALLS reais. Quando o usuário diz "muda o preço do shake de Ninho pra R$ 15", você NÃO responde texto explicando como fazer — você chama \`update_item\` direto e confirma.
+## Diferencial vs Belinha
+A Belinha só responde texto. VOCÊ tem tool calls reais — chama \`update_item\` e o sistema MUDA na hora.
 
 ## Regras de execução
-1. **Confirme antes de mudar coisas críticas** (deletar item, reajuste em massa). Para mudanças simples (mudar 1 preço, ativar/desativar item), execute direto e mostre o resultado.
-2. **Sempre comece lendo** o catálogo (\`list_catalog_sections\` ou \`read_catalog\`) antes de propor mudanças — não invente IDs.
-3. **Mostre o que foi feito**: depois de cada tool call, confirme em 1-2 linhas o que mudou.
-4. **Erros**: se uma tool retornar \`error\`, explique o que faltou e ofereça alternativa.
-5. **Múltiplas mudanças**: pode fazer várias tool calls em sequência. Não pergunte a cada passo.
-
-## Seções do catálogo
-- \`bases\` — Ninho / Zero-Fit / Açaí
-- \`formatos\` — Shake / Sundae / Bowl
-- \`tamanhos\` — P / M / G (com preços por base)
-- \`sabores\` — Morango, Nutella, Oreo, etc
-- \`adicionais\` — toppings extra
-- \`bebidas\` — água, refrigerante
+1. Sempre comece com \`list_catalog_sections\` se for mexer no catálogo (não invente IDs).
+2. Mudanças simples (1 preço, ativar/desativar): execute direto.
+3. Mudanças críticas (delete, reajuste em massa em produção): confirme antes.
+4. Múltiplas tools em sequência: pode chamar uma após a outra sem pedir confirmação a cada passo.
+5. Erros em tool_result: explique o problema e ofereça alternativa.
+6. Sempre confirme em 1-2 linhas o que foi feito DEPOIS de uma tool call bem-sucedida.
 
 ## Formato de resposta
 - TL;DR em 1 linha quando termina uma tarefa
 - Use emojis com moderação (✅ 🔥 ⚠️ 📊)
-- Mostre números reais quando o usuário perguntar de pedidos/financeiro
+- Sem "como uma IA, eu..." (proibido)
+- Sem disclaimers genéricos
 
-Se o usuário pergunta algo sem dar contexto (ex: "muda o preço"), pergunte: "qual seção e qual item? Posso listar pra você ver".
+${TOOLS_DESC}
 
-Se o usuário cumprimentar ou conversar fora de configuração, responda natural e ofereça: "posso te ajudar a mexer no catálogo, preços, custos, ou ver pedidos do dia. O que precisa?"`;
+Se cumprimento ou conversa fora de configuração: responda natural e ofereça "posso mexer em catálogo, preços, custos, franquia, ou ver pedidos/financeiro. O que precisa?"`;
+
+// ──────────────────────────────────────────────────────
+// Claude CLI runner (mesmo padrão da Belinha)
+// ──────────────────────────────────────────────────────
+function collectProcess(proc) {
+    return new Promise((resolve, reject) => {
+        let stdout = '';
+        let stderr = '';
+        proc.stdout.on('data', c => { stdout += c.toString(); });
+        proc.stderr.on('data', c => { stderr += c.toString(); });
+        proc.on('close', code => resolve({ exitCode: code, stdout, stderr }));
+        proc.on('error', reject);
+    });
+}
+
+async function runClaudeCli(combinedPrompt) {
+    // Carrega token OAuth do Claude Pro/Max
+    let sessionToken = process.env.CLAUDE_CODE_OAUTH_TOKEN || '';
+    if (!sessionToken) {
+        try {
+            const bridgeFile = path.join(os.homedir(), '.claude', '.milkypot-token');
+            if (fs.existsSync(bridgeFile)) sessionToken = fs.readFileSync(bridgeFile, 'utf8').trim();
+        } catch (e) {}
+    }
+    if (!sessionToken) {
+        try {
+            const credFile = path.join(os.homedir(), '.claude', '.credentials.json');
+            const creds = JSON.parse(fs.readFileSync(credFile, 'utf8'));
+            sessionToken = (creds.claudeAiOauth && creds.claudeAiOauth.accessToken) || '';
+        } catch (e) {}
+    }
+
+    const env = {
+        ...process.env,
+        HOME: process.env.HOME || process.env.USERPROFILE || os.homedir(),
+        ...(sessionToken ? { CLAUDE_CODE_OAUTH_TOKEN: sessionToken } : {})
+    };
+
+    // -p = print mode (one-shot), JSON output. Tudo via stdin (sem 8191 limit).
+    const proc = spawn('claude', ['-p', '--output-format', 'json'], { shell: true, env });
+    proc.stdin.write(combinedPrompt, 'utf8');
+    proc.stdin.end();
+
+    const { exitCode, stdout, stderr } = await collectProcess(proc);
+    if (exitCode !== 0) {
+        throw new Error('claude_cli_exit_' + exitCode + ': ' + (stderr || stdout).slice(0, 300));
+    }
+
+    let reply = '';
+    try {
+        const parsed = JSON.parse(stdout);
+        reply = parsed.result || parsed.content || parsed.text || '';
+    } catch (e) {
+        reply = stdout.trim();
+    }
+    return reply;
+}
+
+// ──────────────────────────────────────────────────────
+// Parser de <tool_use name="..."> blocks
+// ──────────────────────────────────────────────────────
+function parseToolUses(text) {
+    const re = /<tool_use\s+name=["']([\w_]+)["']\s*>([\s\S]*?)<\/tool_use>/gi;
+    const calls = [];
+    let m;
+    while ((m = re.exec(text)) !== null) {
+        const name = m[1];
+        let input;
+        try {
+            input = JSON.parse(m[2].trim());
+        } catch (e) {
+            input = { _parse_error: e.message, _raw: m[2].trim() };
+        }
+        calls.push({ name, input });
+    }
+    return calls;
+}
+
+function stripToolUses(text) {
+    return text.replace(/<tool_use\s+name=["'][\w_]+["']\s*>[\s\S]*?<\/tool_use>/gi, '').trim();
+}
+
+// ──────────────────────────────────────────────────────
+// Runner com tool loop
+// ──────────────────────────────────────────────────────
+async function chatWithTools(userMessages) {
+    // Histórico textual: cada turno como "USER:" / "ASSISTANT:"
+    const history = userMessages.map(m => {
+        const role = m.role === 'user' ? 'USER' : 'ASSISTANT';
+        return role + ':\n' + (typeof m.content === 'string' ? m.content : JSON.stringify(m.content));
+    }).join('\n\n');
+
+    let conversation = history;
+    const traces = [];
+    let finalReply = '';
+
+    for (let iter = 0; iter < 10; iter++) {
+        const fullPrompt =
+            '<system_instructions>\n' + SYSTEM_PROMPT + '\n</system_instructions>\n\n' +
+            conversation +
+            '\n\nASSISTANT:';
+
+        const reply = await runClaudeCli(fullPrompt);
+        const toolCalls = parseToolUses(reply);
+
+        // Acumula texto limpo (sem tool_use blocks) na resposta final
+        const cleanText = stripToolUses(reply);
+        if (cleanText) {
+            finalReply += (finalReply ? '\n\n' : '') + cleanText;
+        }
+
+        if (toolCalls.length === 0) {
+            break;
+        }
+
+        // Executa todas as tool calls
+        const resultBlocks = [];
+        for (const call of toolCalls) {
+            const fn = TOOLS_IMPL[call.name];
+            let result;
+            if (!fn) {
+                result = { error: 'tool não implementada: ' + call.name };
+            } else {
+                try {
+                    result = await fn.call(TOOLS_IMPL, call.input || {});
+                } catch (e) {
+                    result = { error: e.message };
+                }
+            }
+            traces.push({ tool: call.name, input: call.input, output: result });
+            resultBlocks.push(`<tool_result name="${call.name}">\n${JSON.stringify(result, null, 2)}\n</tool_result>`);
+        }
+
+        // Adiciona ao histórico: turno ASSISTANT (com tool_use ainda lá) e turno USER (com results)
+        conversation += '\n\nASSISTANT:\n' + reply + '\n\nUSER:\n' + resultBlocks.join('\n\n');
+    }
+
+    return { reply: finalReply || '(sem resposta de texto)', traces };
+}
 
 // ──────────────────────────────────────────────────────
 // HTTP server
@@ -464,7 +458,6 @@ Se o usuário cumprimentar ou conversar fora de configuração, responda natural
 const app = express();
 app.use(express.json({ limit: '4mb' }));
 
-// CORS
 app.use((req, res, next) => {
     const origin = req.headers.origin || '';
     const allowed = ['https://milkypot.com', 'https://www.milkypot.com', 'https://milkypot-ad945.web.app'];
@@ -480,89 +473,36 @@ app.use((req, res, next) => {
     next();
 });
 
-// Static files (serve milkypot frontend)
 const MP_ROOT = path.join(__dirname, '..');
 app.use(express.static(MP_ROOT, { index: false, extensions: ['html'] }));
 
-// Health
 app.get('/health', (req, res) => {
     res.json({
         ok: true,
         service: 'MilkyPot Copilot',
-        version: '1.0.0',
-        tools: TOOLS.map(t => t.name),
+        version: '1.1.0',
+        backend: 'claude-cli (plano Claude Pro/Max — R$ 0)',
+        tools: Object.keys(TOOLS_IMPL),
         firebase_project: admin.app().options.projectId || 'milkypot-ad945'
     });
 });
 
-// Root → UI
 app.get('/', (req, res) => res.redirect('/painel/copilot.html'));
 
-// ── /chat — endpoint principal ─────────────────────────
 app.post('/chat', async (req, res) => {
-    const { messages = [], model = 'claude-sonnet-4-5' } = req.body || {};
+    const { messages = [] } = req.body || {};
     if (!messages.length) return res.status(400).json({ error: 'messages_empty' });
 
     try {
-        // Loop de tool calls (até 10 iterações)
-        let conversation = messages.slice();
-        const traces = [];
-        let finalText = '';
-
-        for (let iter = 0; iter < 10; iter++) {
-            const response = await anthropic.messages.create({
-                model,
-                max_tokens: 4096,
-                system: SYSTEM_PROMPT,
-                tools: TOOLS,
-                messages: conversation
-            });
-
-            // Anexa resposta do assistente na conversa
-            conversation.push({ role: 'assistant', content: response.content });
-
-            // Processa tool_use blocks
-            const toolUses = response.content.filter(c => c.type === 'tool_use');
-            const textBlocks = response.content.filter(c => c.type === 'text');
-            const stopReason = response.stop_reason;
-
-            // Acumula texto desta iteração
-            textBlocks.forEach(tb => {
-                if (tb.text) finalText += (finalText ? '\n\n' : '') + tb.text;
-            });
-
-            if (!toolUses.length || stopReason === 'end_turn') {
-                break;
-            }
-
-            // Executa todas as tool calls
-            const toolResults = [];
-            for (const tu of toolUses) {
-                const fn = TOOLS_IMPL[tu.name];
-                let result;
-                if (!fn) {
-                    result = { error: 'tool não implementada: ' + tu.name };
-                } else {
-                    try {
-                        result = await fn.call(TOOLS_IMPL, tu.input || {});
-                    } catch (e) {
-                        result = { error: e.message };
-                    }
-                }
-                traces.push({ tool: tu.name, input: tu.input, output: result });
-                toolResults.push({
-                    type: 'tool_result',
-                    tool_use_id: tu.id,
-                    content: JSON.stringify(result)
-                });
-            }
-            conversation.push({ role: 'user', content: toolResults });
-        }
-
+        const t0 = Date.now();
+        const result = await chatWithTools(messages);
+        const elapsed = Date.now() - t0;
+        console.log(`[chat] ${result.traces.length} tools · ${elapsed}ms · ${result.reply.length} chars`);
         return res.json({
-            reply: finalText || '(sem resposta de texto)',
-            traces,
-            model
+            reply: result.reply,
+            traces: result.traces,
+            elapsedMs: elapsed,
+            backend: 'claude-cli'
         });
     } catch (e) {
         console.error('[chat] erro:', e);
@@ -570,20 +510,19 @@ app.post('/chat', async (req, res) => {
     }
 });
 
-// ── INIT ──────────────────────────────────────────────
 const PORT = process.env.MILKYPOT_COPILOT_PORT || 5858;
 const server = app.listen(PORT, () => {
     console.log('═══════════════════════════════════════════════');
-    console.log(' 🐑 MilkyPot Copilot — Servidor Local');
+    console.log(' 🐑 MilkyPot Copilot — Servidor Local v1.1');
     console.log('═══════════════════════════════════════════════');
     console.log('');
     console.log('   Rodando em: http://localhost:' + PORT);
     console.log('   UI:         http://localhost:' + PORT + '/painel/copilot.html');
     console.log('   Health:     http://localhost:' + PORT + '/health');
     console.log('');
-    console.log('   ✅ ' + TOOLS.length + ' tools disponíveis');
-    console.log('   ✅ Firebase Admin conectado (escreve no Firestore)');
-    console.log('   ✅ Anthropic API com tool_use');
+    console.log('   ⚙️  Backend: Claude CLI (seu plano Pro/Max — R$ 0)');
+    console.log('   ✅ ' + Object.keys(TOOLS_IMPL).length + ' tools disponíveis');
+    console.log('   ✅ Firebase Admin conectado');
     console.log('');
     console.log('   Ctrl+C pra parar.');
     console.log('═══════════════════════════════════════════════');
@@ -591,7 +530,7 @@ const server = app.listen(PORT, () => {
 
 server.on('error', (err) => {
     if (err && err.code === 'EADDRINUSE') {
-        console.error('⚠️  Porta ' + PORT + ' já em uso — feche a janela anterior do Copiloto e tente de novo.');
+        console.error('⚠️  Porta ' + PORT + ' já em uso.');
         process.exit(1);
     }
     console.error('[server] erro:', err);
