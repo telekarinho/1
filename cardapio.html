@@ -190,8 +190,15 @@
         </div>
     </div>
 
+    <!-- Stories Carousel — categorias no estilo Instagram -->
+    <div class="stories-strip" id="storiesStrip" style="display:none">
+        <div class="stories-scroller" id="storiesScroller">
+            <!-- gerado por JS após initCatalog() -->
+        </div>
+    </div>
+
     <!-- Products Catalog -->
-    <section class="products-section" id="produtos" style="padding-top:24px;">
+    <section class="products-section" id="produtos" style="padding-top:12px;">
         <div class="container">
             <h2 style="text-align:center;font-family:'Baloo 2',cursive;color:#5A4570;margin-bottom:4px;font-size:1.4rem;">Escolha o creme do seu Milkypot 🍨</h2>
             <p style="text-align:center;color:#9484A8;font-size:0.9rem;margin-bottom:16px;">Toque no sabor para montar do seu jeito!</p>
@@ -919,6 +926,69 @@
                 html += `</div></div>`;
             }
 
+            // Recomendações "Combina com..." — itens da mesma categoria ou complementares
+            const COMBINA_MAP = {
+                'ninho':   ['acai', 'fit', 'bebida'],
+                'acai':    ['ninho', 'bebida'],
+                'picole':  ['ninho', 'bebida'],
+                'sorvete': ['bebida', 'fit'],
+                'buffet':  ['bebida', 'ninho'],
+                'fit':     ['bebida', 'acai'],
+                'bebida':  ['ninho', 'acai', 'fit']
+            };
+            // Descobre categoria do item atual
+            let itemCat = 'ninho';
+            try {
+                if (catalog.sabores) {
+                    Object.keys(catalog.sabores).forEach(function(gk) {
+                        const grp = catalog.sabores[gk];
+                        if (grp && grp.items && grp.items.some(x => x.id === item.id)) {
+                            const catMeta = {
+                                milkshake:'ninho', potinho:'ninho', sundae:'ninho',
+                                classicos:'ninho', tradicionais:'ninho', especiais:'ninho',
+                                acai:'acai', picole:'picole', sorvete_kg:'sorvete',
+                                buffet:'buffet', zero_fit:'fit', edicao_limitada:'ninho'
+                            };
+                            itemCat = catMeta[gk] || 'ninho';
+                        }
+                    });
+                }
+            } catch(_) {}
+
+            // Pega até 3 itens de categorias relacionadas
+            const suggestCats = COMBINA_MAP[itemCat] || ['ninho'];
+            let suggestions = [];
+            const allGroups = catalog.sabores ? Object.values(catalog.sabores) : [];
+            allGroups.forEach(function(grp) {
+                if (grp && grp.items) {
+                    grp.items.forEach(function(si) {
+                        if (si.id !== item.id && si.available !== false && suggestions.length < 4) {
+                            suggestions.push(si);
+                        }
+                    });
+                }
+            });
+            // Prioriza itens destacados
+            suggestions.sort(function(a, b) {
+                return (b.isHighlight || b.highlight ? 1 : 0) - (a.isHighlight || a.highlight ? 1 : 0);
+            });
+            suggestions = suggestions.slice(0, 3);
+
+            if (suggestions.length > 0) {
+                html += `<div class="sheet-section">
+                    <h4 class="sheet-section-title">🔗 Combina com</h4>
+                    <div class="sheet-combina">`;
+                suggestions.forEach(function(s) {
+                    const sPrice = typeof s.price === 'number' ? 'R$ ' + s.price.toFixed(2).replace('.',',') : '';
+                    html += `<div class="combina-chip" onclick="closeProductSheet();setTimeout(()=>openProductSheet('${s.id}'),180)">
+                        <span class="combina-emoji">${s.emoji || '🍦'}</span>
+                        <span class="combina-name">${s.name}</span>
+                        ${sPrice ? '<span class="combina-price">' + sPrice + '</span>' : ''}
+                    </div>`;
+                });
+                html += `</div></div>`;
+            }
+
             html += `
                 <div class="sheet-footer">
                     <div class="sheet-qty">
@@ -1022,6 +1092,81 @@
 
         // Initialize dynamic catalog
         initCatalog();
+
+        // Stories carousel: gera bolhas de categoria no estilo Instagram
+        (function initStories() {
+            var STORY_DEF = [
+                { key: 'ninho',   emoji: '🍨', label: 'MilkyPot' },
+                { key: 'acai',    emoji: '🫐', label: 'Açaí' },
+                { key: 'picole',  emoji: '🍡', label: 'Picolé' },
+                { key: 'sorvete', emoji: '⚖️', label: 'Sorvete Kg' },
+                { key: 'buffet',  emoji: '🍽️', label: 'Buffet' },
+                { key: 'fit',     emoji: '💪', label: 'Zero/Fit' },
+                { key: 'bebida',  emoji: '🥤', label: 'Bebidas' }
+            ];
+            var seen = {};
+            try { seen = JSON.parse(localStorage.getItem('mp_stories_seen') || '{}'); } catch(_){}
+
+            function buildStories() {
+                var tabs = document.querySelectorAll('#categoryTabs .cat-tab');
+                var activeKeys = new Set();
+                tabs.forEach(function(t) { activeKeys.add(t.dataset.category); });
+                if (activeKeys.size === 0) return;
+
+                var scroller = document.getElementById('storiesScroller');
+                var strip = document.getElementById('storiesStrip');
+                if (!scroller || !strip) return;
+
+                var html = '';
+                STORY_DEF.forEach(function(s) {
+                    if (!activeKeys.has(s.key)) return;
+                    var isActive = document.querySelector('.cat-tab.active[data-category="' + s.key + '"]') !== null;
+                    html += '<div class="story-bubble' + (isActive ? ' active' : '') + '" data-story-key="' + s.key + '">' +
+                        '<div class="story-ring' + (seen[s.key] ? ' seen' : '') + '">' +
+                            '<div class="story-inner">' + s.emoji + '</div>' +
+                        '</div>' +
+                        '<span class="story-label">' + s.label + '</span>' +
+                    '</div>';
+                });
+                scroller.innerHTML = html;
+                strip.style.display = '';
+
+                // Click handler
+                scroller.querySelectorAll('.story-bubble').forEach(function(el) {
+                    el.addEventListener('click', function() {
+                        var key = el.dataset.storyKey;
+                        // Marca como visto
+                        seen[key] = 1;
+                        try { localStorage.setItem('mp_stories_seen', JSON.stringify(seen)); } catch(_){}
+                        el.querySelector('.story-ring').classList.add('seen');
+                        // Ativa tab correspondente
+                        var tab = document.querySelector('.cat-tab[data-category="' + key + '"]');
+                        if (tab) tab.click();
+                        // Scroll para produtos
+                        var grid = document.getElementById('productGrid') || document.getElementById('produtos');
+                        if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // Atualiza estado ativo nas bolhas
+                        document.querySelectorAll('.story-bubble').forEach(function(b) { b.classList.remove('active'); });
+                        el.classList.add('active');
+                    });
+                });
+            }
+
+            // Tenta após initCatalog configurar as tabs (aguarda tabs existirem)
+            var attempts = 0;
+            var tryBuild = setInterval(function() {
+                var tabs = document.querySelectorAll('#categoryTabs .cat-tab');
+                if (tabs.length > 0 || ++attempts > 20) {
+                    clearInterval(tryBuild);
+                    buildStories();
+                }
+            }, 200);
+
+            // Re-constrói quando tabs mudam (CatalogV2 sync)
+            window.addEventListener('mp_catalog_updated', function() {
+                setTimeout(buildStories, 100);
+            });
+        })();
 
         // Trust bar: mostra contagem de pedidos do dia (estimativa baseada em DataStore)
         (function initTrustBar() {

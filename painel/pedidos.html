@@ -63,6 +63,20 @@
             transform: translateY(-2px);
             box-shadow: var(--mp-shadow);
         }
+        /* Drag & Drop */
+        .order-card[draggable="true"] { cursor: grab; }
+        .order-card[draggable="true"]:active { cursor: grabbing; }
+        .order-card.dragging { opacity: .35; transform: scale(.97); box-shadow: none; }
+        .kanban-column.drag-over {
+            background: rgba(66,165,245,.12);
+            outline: 2.5px dashed #42A5F5;
+            outline-offset: -4px;
+            border-radius: 10px;
+        }
+        .kanban-column.drag-over .kanban-header {
+            color: #1565C0;
+        }
+
         /* Wait-time color coding */
         .order-card[data-wait="warn"] {
             border-left-color: #FF9800;
@@ -198,6 +212,7 @@
                 <div class="panel-header-right">
                     <button class="btn btn-sm" id="btnForceSync" style="background:#10B981;color:#fff;font-weight:700" onclick="forceSyncNow(this)" title="Buscar pedidos de outro PC agora">🔄 Sincronizar</button>
                     <button class="btn btn-sm" id="btnEncerrarDia" style="background:#7B1FA2;color:#fff;font-weight:700" onclick="encerrarDia()" title="Finaliza pedidos abertos do dia + fecha caixa">🌙 Encerrar Dia</button>
+                    <button class="btn btn-sm" id="btnCleanTest" style="background:#F44336;color:#fff;font-weight:700;display:none" onclick="cleanTestOrders()" title="Remove pedidos gerados em sessão de teste">🧹 Limpar Teste</button>
                     <select class="form-control" style="width:auto" id="filterDate" onchange="renderKanban()">
                         <option value="today" selected data-i18n="orders.filter_today">Hoje</option>
                         <option value="week" data-i18n="orders.filter_week">Esta Semana</option>
@@ -420,7 +435,7 @@
                     }
 
                     return `
-                        <div class="order-card" ${waitAttr} onclick="showOrderDetail('${o.id}')">
+                        <div class="order-card" ${waitAttr} draggable="true" data-order-id="${o.id}" data-status="${status}" onclick="showOrderDetail('${o.id}')">
                             <div class="order-card-header">
                                 <span class="order-id" title="${seqTitle}">${seqLabel}${waitBadgeHtml}</span>
                                 <span class="order-time">${Utils.formatTime(o.createdAt)}</span>
@@ -1217,6 +1232,116 @@
                 if (btn) { btn.disabled = false; btn.innerHTML = orig || '🔄 Sincronizar'; }
             }
         };
+        // ===== LIMPEZA DE PEDIDOS DE TESTE =====
+        (function checkTestOrders() {
+            const TEST_PATTERNS = [
+                /test[_\s]?agent/i, /test[_\s]?session/i, /\btest\b.*milkypot\.internal/i
+            ];
+            function isTestOrder(o) {
+                if (o.isTestSession || o.testSession) return true;
+                const uid = o.userId || o.operatorId || '';
+                if (/^test_agent_/i.test(uid)) return true;
+                const email = (o.operatorEmail || o.createdByEmail || '').toLowerCase();
+                if (TEST_PATTERNS.some(p => p.test(email))) return true;
+                const name = (o.customer && o.customer.name) || '';
+                if (/^(test|teste)\b/i.test(name)) return true;
+                return false;
+            }
+
+            function getTestOrders() {
+                const orders = DataStore.getCollection('orders', franchiseId);
+                return orders.filter(isTestOrder);
+            }
+
+            // Mostra botão se há pedidos de teste
+            function checkBtn() {
+                const btn = document.getElementById('btnCleanTest');
+                if (!btn) return;
+                const testOrd = getTestOrders();
+                btn.style.display = testOrd.length > 0 ? '' : 'none';
+                btn.title = testOrd.length + ' pedido(s) de teste encontrado(s). Clique para remover.';
+            }
+            checkBtn();
+
+            window.cleanTestOrders = function() {
+                const testOrd = getTestOrders();
+                if (!testOrd.length) { alert('Nenhum pedido de teste encontrado.'); return; }
+                const msg = testOrd.length + ' pedido(s) de teste serão excluídos permanentemente:\n' +
+                    testOrd.slice(0, 5).map(o => '• #' + (o.dailySeq || o.id.slice(-6)) + ' — ' + (o.customer && o.customer.name || '(sem nome)')).join('\n') +
+                    (testOrd.length > 5 ? '\n... e mais ' + (testOrd.length - 5) : '');
+                if (!confirm(msg + '\n\nConfirmar exclusão?')) return;
+                const orders = DataStore.getCollection('orders', franchiseId);
+                const cleaned = orders.filter(o => !isTestOrder(o));
+                DataStore.set('orders_' + franchiseId, cleaned);
+                renderKanban();
+                checkBtn();
+                alert('✅ ' + (orders.length - cleaned.length) + ' pedido(s) de teste removido(s).');
+            };
+
+            // Re-checa após renderKanban
+            const _origRk = window._origRenderKanban || renderKanban;
+            window.addEventListener('mp_synced', checkBtn);
+            window.addEventListener('mp_catalog_updated', checkBtn);
+        })();
+
+        // ===== DRAG & DROP KANBAN =====
+        // Event delegation no container .kanban — sobrevive a cada renderKanban()
+        (function initKanbanDragDrop() {
+            const COL_STATUS = {
+                colNovo: 'novo', colConfirmado: 'confirmado', colPreparando: 'preparando',
+                colPronto: 'pronto', colEm_entrega: 'em_entrega', colEntregue: 'entregue'
+            };
+            let dragId = null, dragFromStatus = null;
+
+            document.addEventListener('dragstart', function(e) {
+                const card = e.target.closest('.order-card[draggable="true"]');
+                if (!card) return;
+                dragId = card.dataset.orderId;
+                dragFromStatus = card.dataset.status;
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', dragId);
+            });
+
+            document.addEventListener('dragend', function(e) {
+                const card = e.target.closest('.order-card');
+                if (card) card.classList.remove('dragging');
+                document.querySelectorAll('.kanban-column').forEach(c => c.classList.remove('drag-over'));
+            });
+
+            document.addEventListener('dragover', function(e) {
+                const col = e.target.closest('.kanban-column');
+                if (!col || !dragId) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                document.querySelectorAll('.kanban-column').forEach(c => c.classList.remove('drag-over'));
+                col.classList.add('drag-over');
+            });
+
+            document.addEventListener('dragleave', function(e) {
+                const col = e.target.closest('.kanban-column');
+                if (col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+            });
+
+            document.addEventListener('drop', function(e) {
+                const col = e.target.closest('.kanban-column');
+                if (!col || !dragId) return;
+                e.preventDefault();
+                col.classList.remove('drag-over');
+
+                const newStatus = COL_STATUS[col.id];
+                if (!newStatus || newStatus === dragFromStatus) { dragId = null; return; }
+
+                // Usa moveOrder diretamente para permitir qualquer transição via drag
+                try {
+                    moveOrder(dragId, newStatus);
+                } catch(err) {
+                    console.error('Drag drop moveOrder error:', err);
+                }
+                dragId = null; dragFromStatus = null;
+            });
+        })();
+
         // Banner mp_auth_orphan REMOVIDO em v62 — rules públicas cobrem reads de sync,
         // banner só causava deslogins desnecessários. Mantém cobertura via rules.
 

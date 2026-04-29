@@ -4477,6 +4477,76 @@ input, select, textarea {
 }
 
 /* ============================================
+   CARDÁPIO — STORIES CAROUSEL
+   ============================================ */
+.stories-strip {
+    padding: 12px 0 10px;
+    background: #fff;
+    border-bottom: 1px solid rgba(144,202,249,.2);
+    overflow: hidden;
+}
+.stories-scroller {
+    display: flex;
+    gap: 14px;
+    padding: 0 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.stories-scroller::-webkit-scrollbar { display: none; }
+.story-bubble {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    transition: transform .15s;
+}
+.story-bubble:active { transform: scale(.93); }
+.story-ring {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    padding: 3px;
+    background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+    transition: opacity .2s;
+}
+.story-ring.seen {
+    background: linear-gradient(135deg, #ccc, #aaa);
+}
+.story-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    border: 2.5px solid #fff;
+}
+.story-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #5A4570;
+    max-width: 64px;
+    text-align: center;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.story-bubble.active .story-ring {
+    outline: 3px solid #42A5F5;
+    outline-offset: 2px;
+}
+
+/* ============================================
    CARDÁPIO — SOCIAL PROOF CHIP ON CARDS
    ============================================ */
 .card-sp-chip {
@@ -4512,6 +4582,38 @@ input, select, textarea {
     justify-content: center;
     min-width: 72px;
 }
+
+/* ============================================
+   CARDÁPIO — RECOMENDAÇÕES "COMBINA COM"
+   ============================================ */
+.sheet-combina {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.combina-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 10px;
+    background: rgba(212,165,255,.15);
+    border: 1.5px solid rgba(212,165,255,.45);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform .15s, background .15s;
+    flex: 1;
+    min-width: 72px;
+    max-width: 100px;
+    text-align: center;
+}
+.combina-chip:hover, .combina-chip:active {
+    background: rgba(212,165,255,.3);
+    transform: translateY(-2px);
+}
+.combina-emoji { font-size: 1.4rem; }
+.combina-name { font-size: 0.72rem; font-weight: 700; color: #5A4570; line-height: 1.2; }
+.combina-price { font-size: 0.68rem; color: #9484A8; }
 
 /* ============================================
    CARDÁPIO — WAIT TIME COLOR (pedidos kanban)
