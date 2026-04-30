@@ -118,7 +118,20 @@ const Caixa = (function () {
     }
 
     function byDate(moves, dateKey) {
-        return moves.filter(m => m.dateKey === dateKey);
+        return moves.filter(m => {
+            if (m.dateKey !== dateKey) return false;
+            // DEFESA: alguns lançamentos legados foram salvos com dateKey errado
+            // (UTC em vez de Brasília) antes do fix de timezone. O createdAt em ISO
+            // é sempre confiável — se o local-date dele não bate com o dateKey
+            // declarado, filtra fora pra não confundir o caixa do dia.
+            if (m.createdAt && typeof Utils !== 'undefined' && Utils && Utils.localDateOf) {
+                try {
+                    var realLocalDate = Utils.localDateOf(m.createdAt);
+                    if (realLocalDate && realLocalDate !== dateKey) return false;
+                } catch (e) { /* sem Utils -> confia no dateKey */ }
+            }
+            return true;
+        });
     }
 
     function getTurnoState(franchiseId, dateKey) {
@@ -326,11 +339,14 @@ const Caixa = (function () {
         }
 
         // REGRA DE SEGURANÇA: Bloquear se houver comandas/contas abertas
-        const openTabs = DataStore.get('open_tabs_' + franchiseId) || [];
+        // Le do pdv_tabs_FID (chave real usada pelo PDV) — filtra tombstones
+        // (deleted: true). open_tabs_FID era chave legada, ficava sempre vazia.
+        const openTabsAll = DataStore.get('pdv_tabs_' + franchiseId) || [];
+        const openTabs = openTabsAll.filter(function(t){ return t && !t.deleted; });
         if (openTabs.length > 0) {
-            return { 
-                success: false, 
-                error: `⚠️ Existem ${openTabs.length} conta(s) aberta(s). Feche todas antes de encerrar o turno.` 
+            return {
+                success: false,
+                error: `⚠️ Existem ${openTabs.length} conta(s) aberta(s). Feche todas antes de encerrar o turno.`
             };
         }
 
