@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #74 — 2026-04-30
+
+**Área:** Auto-aprimoramento — análise ciclos #69–73 + estratégia dezembro/Natal 2026 + Q1 2027
+
+**Contexto:** Ciclo múltiplo de 5 obrigatório (prescrito desde estrategia.md ciclo #69). Cobertura de conteúdo vai até semana 32 (28/11). Alerta competitivo ativo: TheBest quiosque Shopping Aurora Londrina (#73). SEO sem atenção há 6 ciclos (desde #68). UX/Performance sem atenção há 12 ciclos (desde #62).
+
+**O que analisou:**
+- Releu log completo ciclos #69–#73 (conteúdo semanas 25–32 + concorrentes)
+- Releu estrategia.md seção "novembro 2026" e padrão v9
+- Avaliou equilíbrio da rotação: 3 ciclos consecutivos de conteúdo = desequilíbrio identificado → corrigido no roadmap v10
+- Avaliou eficácia das mecânicas: copy Black Friday viralizável (#72), ALERTA TheBest (#73), mecânica WA word-chave (#70) = alto valor
+- Identificou: templates WA "NATAL" e "VERAO" prescritos no v9 mas nunca executados → explicitados no roadmap #75
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/estrategia.md` | ATUALIZADO: bloco "Aprendizados #69–73", padrão v10, estado das áreas pós-#73, estratégia dezembro 2026 / Q1 2027, cadência semanas 33–42, roadmap #75–79, tabela diferenciação anti-TheBest, bloqueadores atualizados |
+
+**Padrão v10 — principais adições:**
+1. **Resposta imediata a ALERTA competitivo:** ALERTA → próximo ciclo de conteúdo inclui ≥1 peça de diferenciação implícita (nunca citar concorrente pelo nome)
+2. **SEO técnico obrigatório:** A cada 5 ciclos de conteúdo consecutivos, intercalar 1 ciclo SEO (prescrito ciclo #78)
+3. **Palavra-chave WA para cada campanha sazonal:** HALLOWEEN ✅ · NATAL → prescrito ciclo #75 · VERAO → prescrito ciclo #75
+
+**Estratégia dezembro / Q1 2027 — destaques:**
+- Semanas 33–36: verão + Natal em 4 atos (teaser → reveal → countdown → dia H 25/12)
+- Semanas 37–38: Virada Ano Novo + Linha Zero pós-festas (resolução de Ano Novo = pico fit)
+- Semanas 39–41: açaí hero verão + aniversário 9 meses (25/01)
+- Semana 42: aquecimento Carnaval
+
+**Próximo passo sugerido:**
+- Ciclo #75: Conteúdo — Semanas 33+34 (29/11–12/12): lançamento produto verão + reveal produto natalino + template WA "NATAL" lista VIP + 1 peça diferenciação implícita (experiência vs quiosque)
+- Ciclo #76: Conteúdo — Semanas 35+36 (Natal countdown + dia H 25/12)
+- Ciclo #78: SEO/UX — gap técnico (6+ ciclos sem atenção)
+- Operador: confirmar produto natalino com franquia ANTES de 01/12 · confirmar produto verão baseado na enquete de 11/11
+
+---
+
 ## Ciclo #73 — 2026-04-30
 
 **Área:** Pesquisa de Concorrentes — MilkyMoo (refetch) + The Best Açaí (refetch + ALERTA CRÍTICO)

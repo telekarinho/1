@@ -802,3 +802,132 @@ BF merece mecânica de oferta não-óbvia para sobremesa:
 ---
 
 _Belinha — Ciclo #69 | 2026-04-29_
+
+---
+
+## Aprendizados dos ciclos #69–73
+
+_Ciclo #74 — Auto-aprimoramento obrigatório_
+
+### O que gerou mais valor concreto
+
+1. **ALERTA CRÍTICO TheBest (#73):** Quiosque no Shopping Aurora Londrina (jun/2025) — primeiro concorrente de açaí com presença física em shopping de Londrina identificado. Dado de inteligência competitiva de alto valor que muda a estratégia de posicionamento local.
+2. **Copy Black Friday (#72 semana 32):** "Todo mundo vendendo eletrônico. A gente tá vendendo felicidade. 🍦🛒" — ironia de categoria viralizável. Posicionamento de marca por contraste sem desconto na base. Melhor copy single-line gerado até agora.
+3. **Mecânica word-chave WA "HALLOWEEN" (#70):** Lista VIP 31/10 via palavra-chave no WhatsApp. Converte engajamento passivo em lead qualificado rastreável. Padrão a replicar para NATAL, VERAO, ANIVERSARIO — prescrito mas ainda não executado para Natal.
+4. **Carrossel "6 meses de história" (#70 semana 28):** Prova social de longevidade + linha do tempo da marca. Formato reutilizável para aniversários futuros (9 meses, 1 ano).
+5. **Teaser duplo Natal + verão (#72 semana 32 sábado):** Dois ganchos paralelos em uma peça = cobertura ampla de audiências distintas. Eficiente.
+
+### O que foi menos eficaz (ciclos #69–73)
+
+- **Rotação desequilibrada:** Ciclos #70, #71 e #72 foram todos conteúdo sem variação de área. SEO ficou sem atenção por 6 ciclos (desde #68). UX/Performance sem atenção por 12 ciclos (desde #62). **Risco: dívida técnica acumulando sem visibilidade.**
+- **Sem resposta operacional ao ALERTA TheBest (#73):** Identificado o risco competitivo, mas ciclo #74 (auto-aprimoramento) é analítico, não executa conteúdo de diferenciação. O gap de resposta será preenchido nos ciclos #75–76.
+- **Templates WA com palavra-chave NATAL nunca criados:** Prescritos desde o ciclo #69 (v9) mas nunca executados. Corrigi neste ciclo: prescrito explicitamente para ciclo #75.
+
+### Padrão consolidado (v10)
+
+> **Bug/fix crítico > ALERTA competitivo → diferenciação implícita no próximo ciclo de conteúdo > Landing page SEO por diferencial distinto > Scripts/templates operador acionáveis c/ fallback A/B > Conteúdo não-contingente — semanas adjacentes mesma temática = mesmo ciclo > SEO técnico a cada 5 ciclos de conteúdo > Concorrente + ação concreta no mesmo ciclo (refetch semestral) > UX/Performance sweep batch (só com indício concreto)**
+
+Adições v10 (além de v9):
+- **Resposta imediata a ALERTA competitivo:** Quando ALERTA CRÍTICO de concorrente for detectado, o próximo ciclo de conteúdo deve incluir ≥1 peça de **diferenciação implícita** — não citar o concorrente pelo nome, mas mostrar o diferencial visualmente (ex: TheBest quiosque → MilkyPot ambiente candy land, proteína, personalização = Experience gap)
+- **SEO técnico obrigatório:** A cada 5 ciclos de conteúdo consecutivos, intercalar 1 ciclo de SEO técnico (verificação de índice, sitemap, schema, rich results). Contador zera no ciclo #75.
+- **Palavra-chave WA de ativação para cada campanha sazonal:** HALLOWEEN ✅ executado. NATAL, VERAO, ANIVERSARIO — obrigatório nos ciclos de conteúdo correspondentes.
+- **Concorrente refetch:** alerta se último ciclo foi há >10 ciclos. MilkyMoo: ciclo #73 → próximo refetch ~ciclo #83. TheBest: ciclo #73 → próximo refetch ~ciclo #83.
+
+---
+
+## Estado das áreas em 30/04/2026 (pós-ciclo #73)
+
+| Área | Estado | Próxima ação |
+|------|--------|--------------|
+| Conteúdo pós-inauguração | ✅ Semanas 1–32 prontas (até 28/11) | Semanas 33+34 (29/11–12/12): lançamento produto verão + Natal mid-point |
+| Produto especial Natal | ⚠️ PLANEJADO (teaser iniciado semana 32) | Operador confirmar produto natalino com franquia ANTES de 01/12 |
+| Lista VIP "NATAL" | ❌ PENDENTE | Criar mecânica WA "manda NATAL → reserva/notificação dia H 25/12" — ciclo #75 |
+| Produto sazonal verão | ⚠️ Versão A+B teaser prontos | Operador confirmar nome/ingredientes com franquia. Lançar semana 33 (01/12) |
+| TheBest quiosque Aurora Londrina | 🚨 ALERTA ATIVO | Diferenciação implícita nos próximos ciclos de conteúdo. Monitorar expansão para Muffato |
+| Core Web Vitals / UX | ⚠️ 12 ciclos sem atenção (desde #62) | Sweep básico previsto ciclo #78 |
+| SEO técnico | ⚠️ 6 ciclos sem atenção (desde #68) | Verificação de índice + sitemap + schema prevista ciclo #78 |
+| FAQPage schema landing pages | ✅ Adicionado (#68) | Monitorar rich results no Google Search Console |
+| aggregateRating Schema.org | ⛔ SUSPENSO | Aguardar ≥3 reviews Google Maps verificáveis |
+| Google Analytics ID real | ⛔ SUSPENSO | Aguardar autorização do usuário |
+| Fidelidade dupla (15º carimbo) | ⚠️ PLANEJADO | Template WA "parabéns pelo 15º carimbo" — ciclo #77 |
+| Pesquisa concorrentes | ✅ MilkyMoo + TheBest atualizados (#73) | Próximo refetch ~ciclo #83 |
+
+---
+
+## Estratégia de dezembro 2026 / Q1 2027 (meses 8–10 de operação)
+
+### Contexto
+
+**Dezembro = 8º mês de operação.** Duas datas-âncora de altíssimo volume emocional: Natal (25/12) e Virada de Ano (31/12). Verão em Londrina começa oficialmente (temperatura média 28–34°C). Demanda por sobremesas geladas, açaí e picolés no pico do ano. Diferencial MilkyPot = açaí buffet self-service + personalização + Linha Zero proteína.
+
+**Risco competitivo ativo:** TheBest Aurora (quiosque Shopping Aurora, Londrina, desde jun/2025). Modelo de quiosque sem a experiência completa da loja — use a diferença como narrativa visual, nunca cite o concorrente diretamente.
+
+**Janeiro–Fevereiro 2027:** Verão pleno + pós-festas (resoluções de Ano Novo = pico de interesse em opções fit/Linha Zero). Carnaval fevereiro = oportunidade temática. Aniversário de 9 meses (25/01) = marco.
+
+### Pilares estratégicos de dezembro
+
+| Pilar | Ação concreta |
+|-------|---------------|
+| **Lançamento produto verão** | Baseado no resultado da enquete 11/11. Semana 33 (01/12) = lançamento oficial. Mecânica igual ao produto de setembro: reveal + UGC + Sexta temática + template WA "VERAO" lista VIP |
+| **Natal em 4 atos** | Teaser 05/12 (ovelhinha gorrinho Noel) → reveal produto natalino 12/12 → countdown 5 dias (20/12) → dia H 25/12 → pós-Natal gratidão 26/12 |
+| **Palavra-chave WA "NATAL"** | Clientes que mandarem "NATAL" → lista VIP notificação 25/12 + possível produto natalino reservado. Criar na semana 33 |
+| **Virada Ano Novo** | "Começa 2027 com o Potinho Mais Feliz do Mundo" — ação 31/12 (ex: brinde de Ano Novo + stories ao vivo 23h) |
+| **Diferenciação anti-TheBest (implícita)** | Post experiência: mostrar ambiente candy land, família sentada, personalização ao vivo — o que quiosque de shopping não oferece. Nunca citar concorrente pelo nome |
+| **Linha Zero pós-Ano Novo** | Primeira semana de janeiro: "Nova meta, novo potinho" — resolução de ano novo = pico de interesse Linha Zero. Proteína como diferencial vs açaí puro |
+| **Açaí hero de verão** | Dezembro–fevereiro: açaí buffet como protagonista visual. Temperatura + diferencial único do Muffato. Conteúdo com pratos montados, sorrisos, calor |
+
+### Cadência de conteúdo (dezembro 2026–fevereiro 2027)
+
+| Semana | Período | Tema principal |
+|--------|---------|----------------|
+| Semana 33 | 29/11–05/12 | **Lançamento produto sazonal verão** + abertura dezembro + teaser Natal inicial + WA "NATAL" lista VIP |
+| Semana 34 | 06–12/12 | Produto verão showcase + carrossel "o que tem no potinho de verão?" + **reveal produto natalino** + Sexta #18 |
+| Semana 35 | 13–19/12 | Natal countdown 5 dias (sábado 20/12) + UGC "meu potinho natalino" + recap 8 meses |
+| Semana 36 | 20–26/12 | **Natal dia H 25/12** (countdown + WA manhã + stories ao longo do dia) + pós-Natal 26/12 |
+| Semana 37 | 27/12–02/01 | **Virada Ano Novo 31/12** + Boas Vindas 2027 + retrospectiva 8 meses em números |
+| Semana 38 | 03–09/01 | "Nova meta, novo potinho" — Linha Zero pós-Ano Novo + açaí verão pleno + reabertura normal |
+| Semana 39 | 10–16/01 | Açaí hero verão (calor + diferencial buffet) + UGC verão + Sexta #21 |
+| Semana 40 | 17–23/01 | Aniversário 9 meses MilkyPot (25/01) preparação + fidelidade matura |
+| Semana 41 | 24–30/01 | **Aniversário 9 meses dia H 25/01** + Linha Zero pós-festas pico + abertura fevereiro |
+| Semana 42 | 31/01–06/02 | Carnaval warming up + Sexta #23 + produto temático? (opcional — confirmar com franquia) |
+
+### Roadmap ciclos #75–79
+
+| Ciclo | Área | Ação |
+|-------|------|------|
+| #75 | Conteúdo | Semanas 33+34 (29/11–12/12): lançamento produto verão + reveal produto natalino + WA "NATAL" lista VIP |
+| #76 | Conteúdo | Semanas 35+36 (13–26/12): Natal countdown + dia H 25/12 + diferenciação implícita (experiência vs quiosque) |
+| #77 | Conteúdo | Semanas 37+38 (27/12–09/01): Virada Ano Novo + "Nova meta, novo potinho" Linha Zero pós-festas |
+| #78 | SEO/UX | Gap técnico: verificar indexação landing pages, atualizar sitemap.xml, schema de pessoa/produto, Core Web Vitals básico. Contador: 5 ciclos de conteúdo sem SEO = obrigatório |
+| #79 | Auto-aprimoramento | Reler log #74–#78, ajustar estratégia fevereiro/Carnaval 2027 + Q2 2027 |
+
+### Notas de produto (Natal e Verão)
+
+**Produto natalino:** Sem nome/ingredientes definidos — criar Versão A (confirmado pela franquia) + Versão B (potinho natalino genérico) conforme padrão v9. Sugestão: "Potinho Noel" — base Ninho + calda de morango + granulado colorido + marshmallow. Operador confirma antes de 01/12.
+
+**Produto de verão:** Nome provisório "Potinho Tropical" (Versão A) ou "Potinho Refrescante" (Versão B). Ingredientes sugeridos: base Ninho + abacaxi + coco ralado + calda de maracujá (A) / base açaí + mango + granola + mel (B). Decisão baseada no resultado da enquete de 11/11.
+
+### Ameaça competitiva — resposta estratégica (TheBest Aurora Londrina)
+
+| Diferencial MilkyPot | TheBest Aurora (quiosque) | Narrativa de conteúdo |
+|----------------------|--------------------------|----------------------|
+| Personalização total (montagem ao vivo) | Produto padronizado de açaí | Mostrar o potinho sendo montado, escolhas ao vivo |
+| Linha Zero c/ proteína | Sorbet 100% fruta (sem proteína) | Post "proteína no potinho" — Linha Zero é academia, TheBest é fruta |
+| Ambiente candy land / experiência | Quiosque de corredor de shopping | Fotos do espaço, família sentada, momento especial |
+| Milkshakes, picolés, casquinhas | Apenas açaí e derivados | Cardápio completo como diferencial visual |
+| Fidelidade 1pt/R$1 | Sem programa de fidelidade confirmado | "Cada potinho vira ponto" — reforço do programa |
+
+### Bloqueadores suspensos (atualização #74)
+
+| Bloqueador | Dependência | Ciclo que bloqueou |
+|------------|-------------|-------------------|
+| aggregateRating Schema.org | ≥3 reviews Google Maps verificáveis pelo operador | #43 |
+| Google Analytics ID real | Autorização explícita do usuário | #15 |
+| Produto sazonal setembro | Confirmação da franquia com o operador | #63 |
+| Topping Halloween (mini abóbora chocolate) | Disponibilidade via franquia | #69 |
+| Produto sazonal verão (nome/ingredientes) | Resultado enquete 11/11 + confirmação franquia | #72 |
+| Produto natalino (nome/ingredientes) | Confirmação da franquia ANTES de 01/12 | #74 |
+
+---
+
+_Belinha — Ciclo #74 | 2026-04-30_
