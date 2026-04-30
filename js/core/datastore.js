@@ -901,11 +901,7 @@ const DataStore = {
         if (this.get('_seeded')) return;
         const host = (typeof window !== 'undefined' && window.location) ? window.location.hostname : '';
         const isLocalHost = !host || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0';
-        if (!isLocalHost) {
-            localStorage.setItem(this.PREFIX + '_seeded', JSON.stringify(true));
-            console.log('DataStore seed demo skipped on production host');
-            return;
-        }
+        const skipDemoSeed = !isLocalHost;
 
         // ---- Usuarios (SEM senhas - autenticacao via Firebase Auth) ----
         const users = [
@@ -964,6 +960,11 @@ const DataStore = {
             }
         });
         this.set('franchises', franchises);
+        if (skipDemoSeed) {
+            localStorage.setItem(this.PREFIX + '_seeded', JSON.stringify(true));
+            console.log('DataStore seed demo skipped on production host');
+            return;
+        }
 
         // ---- Pedidos demo para cada franquia ----
         const sabores = ['Ninho', 'Morango', 'Ninho com Morango', 'Nutella', 'Oreo', 'Acai + Granola', 'Banana + Whey'];
