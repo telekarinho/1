@@ -2988,6 +2988,13 @@
         renderOpenTabs();
     }
 
+    // Tombstone-aware: filtra contas deletadas (deleted=true). Sem isso, o
+    // merge anti-colisao do DataStore (union by id) traz a comanda de volta
+    // do cloud apos delete local — porque cloud ainda tem o item nao-deletado.
+    function _liveTabs() {
+        return (openTabs || []).filter(function(t){ return t && !t.deleted; });
+    }
+
     // Reage a contas abertas atualizadas em outro PC (realtime listener do DataStore)
     window.addEventListener('mp_remote_update', function (ev) {
         if (!ev.detail || ev.detail.key !== 'pdv_tabs_' + fid) return;
@@ -3000,9 +3007,10 @@
     function renderOpenTabs(){
         var el=document.getElementById('openTabs');
         var list=document.getElementById('openTabsList');
-        if(!openTabs.length){el.style.display='none';return}
+        var live=_liveTabs(); // ignora tombstones
+        if(!live.length){el.style.display='none';return}
         el.style.display='block';
-        list.innerHTML=openTabs.map(function(tab){
+        list.innerHTML=live.map(function(tab){
             var total=tab.items.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
             return '<div class="tab-chip" onclick="loadTab(\''+tab.id+'\')">'+
                 '<span>📋</span><span class="tc-name">'+Utils.escapeHtml(tab.name)+'</span>'+
@@ -3014,11 +3022,12 @@
 
     window.openTab=function(){
         if(!cart.length){toast('Adicione itens primeiro');return}
-        var tabName=document.getElementById('orderName').value||'Comanda '+(openTabs.length+1);
+        // Conta apenas tabs vivas pra numerar — ignora tombstones
+        var tabName=document.getElementById('orderName').value||'Comanda '+(_liveTabs().length+1);
 
         if(editingTabId){
-            // Update existing tab
-            var tab=openTabs.find(function(t){return t.id===editingTabId});
+            // Update existing tab — só edita tab viva
+            var tab=openTabs.find(function(t){return t && !t.deleted && t.id===editingTabId});
             if(tab){
                 tab.items=cart.slice();
                 tab.name=tabName;
@@ -3033,7 +3042,8 @@
                 name:tabName,
                 items:cart.slice(),
                 type:orderType,
-                createdAt:new Date().toISOString()
+                createdAt:new Date().toISOString(),
+                updatedAt:new Date().toISOString()
             });
             toast('📋 '+tabName+' — conta aberta! Cliente pode consumir mais.');
         }
@@ -3043,7 +3053,8 @@
     };
 
     window.loadTab=function(tabId){
-        var tab=openTabs.find(function(t){return t.id===tabId});
+        // Nao carrega tab deletada (tombstone) — defesa contra resurreicao
+        var tab=openTabs.find(function(t){return t && !t.deleted && t.id===tabId});
         if(!tab)return;
         // Load tab items into cart
         cart=tab.items.slice();
@@ -3055,7 +3066,18 @@
     };
 
     window.removeTab=function(tabId){
-        openTabs=openTabs.filter(function(t){return t.id!==tabId});
+        // Tombstone (deleted: true) em vez de remover — o anti-collision merge
+        // do DataStore (union by id) traria a comanda de volta do cloud se a
+        // gente so removesse local. Com tombstone + updatedAt mais recente, o
+        // pickNewest do merge mantém o estado deletado.
+        var idx = openTabs.findIndex(function(t){ return t && t.id === tabId; });
+        if (idx === -1) { toast('Conta nao encontrada'); return; }
+        var now = new Date().toISOString();
+        openTabs[idx] = Object.assign({}, openTabs[idx], {
+            deleted: true,
+            deletedAt: now,
+            updatedAt: now
+        });
         if(editingTabId===tabId)editingTabId=null;
         saveOpenTabs();
         toast('Conta removida');
@@ -3607,9 +3629,18 @@
             }, 1500);
         }
 
-        // Remove from open tabs if was editing
+        // Remove from open tabs if was editing — usa tombstone (deleted+updatedAt)
+        // pra anti-collision merge nao reaver. Mesmo principio do removeTab.
         if(editingTabId){
-            openTabs=openTabs.filter(function(t){return t.id!==editingTabId});
+            var _idxFinish = openTabs.findIndex(function(t){ return t && t.id === editingTabId; });
+            if (_idxFinish !== -1) {
+                var _now = new Date().toISOString();
+                openTabs[_idxFinish] = Object.assign({}, openTabs[_idxFinish], {
+                    deleted: true,
+                    deletedAt: _now,
+                    updatedAt: _now
+                });
+            }
             editingTabId=null;
             saveOpenTabs();
         }
