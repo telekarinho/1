@@ -1,7 +1,7 @@
 # Milky Moo — Análise Competitiva
 
-**Última atualização:** 2026-04-28 (Ciclo #60 — refetch + dados Londrina)
-**Fontes:** franquiadesorvete.com, portaldofranchising, pricelisto.com/br, gkpb.com.br, TikTok @marceladegusta, portalg.com.br, lagosul.com.br, meioemensagem.com.br, sopacultural.com
+**Última atualização:** 2026-04-30 (Ciclo #73 — refetch dados expansão + estratégia 2026)
+**Fontes:** franquiadesorvete.com, portaldofranchising, pricelisto.com/br, gkpb.com.br, TikTok @marceladegusta, portalg.com.br, lagosul.com.br, meioemensagem.com.br, sopacultural.com, franquias360.com.br, timesbrasil.com.br, exame.com, empreenderemgoias.com.br, adital.com.br, foodbizbrasil.com
 
 ---
 
@@ -9,9 +9,10 @@
 
 - **Segmento:** Milkshakes premium (produto único — sem potinho)
 - **Posicionamento:** "O milkshake da vaquinha" — mascote vaca, foco em bebida gelada
-- **Unidades:** 600+ em todos os estados brasileiros (crescendo ~18/mês)
-- **Entrega:** iFood + Rappi (SEM funil próprio — paga 12–30% de comissão)
-- **Expansão 2026:** unidades na Flórida/EUA + contratos no Paraguai — meta global declarada pelo CEO
+- **Unidades:** 800+ (crescimento de 600→800 ao longo de 2025; meta +50% unidades em 2026)
+- **Faturamento:** R$ 542M realizados em 2024 → projeção R$ 600M em 2025 → meta +50% em 2026
+- **Entrega:** iFood + Rappi + nova estratégia "dark stores" delivery onde loja física não chega
+- **Expansão 2026:** consolidação EUA (Flórida — 2 lojas próprias já abertas) + Paraguai; foco nacional em Minas Gerais (6 novas lojas 2025)
 - **Instagram:** @milkymoo (663k seguidores) | Londrina: @milkymoo_londrina
 - **Prêmio:** LicensingCon 2025 — Empresa Destaque
 
@@ -62,10 +63,15 @@
 
 | Item | Valor |
 |---|---|
-| Investimento mínimo | R$ 190.000 |
-| ROI estimado | 18–24 meses |
-| Modelos | Quiosque, loja de rua, shopping |
-| Entrega | iFood + Rappi (comissão) |
+| Investimento mínimo (quiosque) | R$ 190.000 (antes 265k) |
+| Investimento loja de rua/shopping | R$ 360.000 – R$ 390.000 |
+| Taxa de franquia | R$ 50.000 – R$ 70.000 (inclusa no total) |
+| Royalties | 4% sobre faturamento |
+| Fundo de propaganda | 2% sobre faturamento |
+| Faturamento médio/mês/unidade | ~R$ 100.000 |
+| ROI estimado | 14–24 meses |
+| Modelos | Quiosque (9–12m²), loja de rua/shopping (20–40m²) |
+| Entrega | iFood + Rappi + dark stores (novo canal 2025) |
 
 **vs MilkyPot Kit Entrada:** R$ 3.499 — barreira de entrada 54× menor.
 
@@ -99,7 +105,13 @@
 
 ---
 
-## Táticas de Marketing Observadas (atualizado ciclo #60)
+## Estratégia "Onde a Loja Não Chega" (novidade 2025–2026)
+
+A MilkyMoo lançou um canal de dark stores/delivery para atender cidades e regiões sem loja física — franqueados operam apenas com produção e entrega, sem ponto de venda. Isso amplia cobertura geográfica sem custo de aluguel. Impacto: aumenta competição delivery em Londrina mesmo sem novas unidades físicas.
+
+---
+
+## Táticas de Marketing Observadas (atualizado ciclo #73)
 
 - Personagem animal central (vaca) — mesma lógica da ovelhinha MilkyPot
 - Promoções seg–qui em unidades específicas (R$14,90 vs R$18) para aumentar fluxo dias fracos
@@ -133,4 +145,12 @@
 
 ---
 
-_Última atualização: ciclo #60 — 2026-04-28_
+## Alertas Estratégicos (Ciclo #73)
+
+1. **Dark stores delivery:** MilkyMoo pode aumentar cobertura em Londrina sem abrir nova loja física — monitorar iFood por novos estabelecimentos "MilkyMoo" em bairros ainda não cobertos.
+2. **Expansão agressiva:** 800 → meta +50% unidades em 2026. Se abrirem unidade no Muffato ou Shopping Catuaí (já presente), pressão de visibilidade aumenta. Porém produto (milkshake) é diferente de potinho — overlap moderado.
+3. **Dark stores não têm experiência de loja:** diferencial de presença física MilkyPot no Muffato vs dark store é forte — cliente que passa pelo corredor compra por impulso.
+
+---
+
+_Última atualização: ciclo #73 — 2026-04-30_
