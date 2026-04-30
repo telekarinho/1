@@ -134,6 +134,7 @@ class PlayerActivity : AppCompatActivity() {
         main.postDelayed(autoRestartTick, 60_000)
         main.post(clockTick)
         main.postDelayed(configRefreshTick, 2 * 60_000)
+        main.postDelayed(playlistRefreshTick, 30_000)
         main.post(challengeLivePoll)
     }
 
@@ -186,6 +187,16 @@ class PlayerActivity : AppCompatActivity() {
     }
     private val configRefreshTick = object : Runnable {
         override fun run() { reloadConfigOnly(); main.postDelayed(this, 2 * 60_000) }
+    }
+    // Atualiza biblioteca + playlist a cada 30s (igual ao tv.html web). Garante
+    // que mídias novas adicionadas no painel apareçam quase instantâneo, sem
+    // esperar o auto-restart de 1h. Não interrompe a mídia tocando agora — só
+    // troca a lista pra próxima rodada.
+    private val playlistRefreshTick = object : Runnable {
+        override fun run() {
+            if (franchiseId != null) loadPlaylist()
+            main.postDelayed(this, 30_000)
+        }
     }
 
     /**
@@ -355,14 +366,43 @@ class PlayerActivity : AppCompatActivity() {
                 val id = m.optString("id"); if (id.isNotBlank()) byId[id] = m
             }
 
+            // Mídia GLOBAL: admin sobe uma vez e aparece em todas as franquias.
+            val globalMediaRaw = CachedRepo.fetch(this, "tv_media_global") ?: "[]"
+            val globalMediaArr = parseArr(globalMediaRaw)
+            for (i in 0 until globalMediaArr.length()) {
+                val m = globalMediaArr.optJSONObject(i) ?: continue
+                val id = m.optString("id")
+                if (id.isNotBlank() && !byId.containsKey(id)) byId[id] = m
+            }
+
             var playlistArr = parseArr(playlistRaw)
-            if (playlistArr.length() == 0 && mediaArr.length() > 0) {
+            if (playlistArr.length() == 0 && byId.isNotEmpty()) {
                 val arr = JSONArray()
                 for (i in 0 until mediaArr.length()) {
                     val m = mediaArr.optJSONObject(i) ?: continue
                     arr.put(JSONObject().put("mediaId", m.optString("id")).put("duration", m.optInt("duration", 10)))
                 }
                 playlistArr = arr
+            }
+            // Sempre adiciona itens globais à playlist (no fim) se ainda não estão lá.
+            run {
+                val playlistIds = HashSet<String>()
+                for (i in 0 until playlistArr.length()) {
+                    val entry = playlistArr.opt(i)
+                    val mid = when (entry) {
+                        is String -> entry
+                        is JSONObject -> entry.optString("mediaId")
+                        else -> ""
+                    }
+                    if (mid.isNotBlank()) playlistIds.add(mid)
+                }
+                for (i in 0 until globalMediaArr.length()) {
+                    val m = globalMediaArr.optJSONObject(i) ?: continue
+                    val id = m.optString("id")
+                    if (id.isNotBlank() && !playlistIds.contains(id)) {
+                        playlistArr.put(JSONObject().put("mediaId", id).put("duration", m.optInt("duration", 10)))
+                    }
+                }
             }
 
             val nowMs = System.currentTimeMillis()
@@ -618,6 +658,7 @@ class PlayerActivity : AppCompatActivity() {
         main.removeCallbacks(autoRestartTick)
         main.removeCallbacks(clockTick)
         main.removeCallbacks(configRefreshTick)
+        main.removeCallbacks(playlistRefreshTick)
         main.removeCallbacks(challengeLivePoll)
         challengeTickRunnable?.let { main.removeCallbacks(it) }
         nextSlideTick?.let { main.removeCallbacks(it) }

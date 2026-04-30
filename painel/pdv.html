@@ -4718,46 +4718,80 @@
 
         var qrHtml = '';
         if(scratchData && scratchData.shortCode){
-            // Encoda o payload da raspinha INLINE no QR — funciona mesmo se Firestore
-            // estiver indisponível / sem internet / código sumido na sync.
-            // raspinha.html prioriza o payload inline (?d=...) e cai pra lookup
-            // Firestore só pra estado mutável (raspada/resgatada).
-            var inline = {
-                code: scratchData.code,
-                shortCode: scratchData.shortCode,
-                franchiseId: scratchData.franchiseId,
-                storeName: scratchData.storeName,
-                prizeCode: scratchData.prizeCode,
-                prizeName: scratchData.prizeName,
-                prizeDesc: scratchData.prizeDesc,
-                prizeTier: scratchData.prizeTier,
-                prizeScope: scratchData.prizeScope,
-                prizeCategoria: scratchData.prizeCategoria || null,
-                minOrder: scratchData.minOrder,
-                expiresAt: scratchData.expiresAt,
-                validityDays: scratchData.validityDays,
-                createdAt: scratchData.createdAt
-            };
-            var encodedInline = '';
-            try {
-                // base64url-safe (sem +/= que quebram em URL)
-                encodedInline = btoa(unescape(encodeURIComponent(JSON.stringify(inline))))
-                    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-            } catch (e) { console.warn('[Raspinha] inline encode falhou:', e); }
-            var raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratchData.shortCode)
-                + (encodedInline ? '&d=' + encodedInline : '');
-            qrHtml = '<div style="text-align:center;margin:4mm 0"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' +
-                encodeURIComponent(raspUrl) + '&ecc=L&margin=0" alt="QR Raspinha" style="width:36mm;height:36mm"></div>';
+            // QR da raspinha — URL CURTA (so shortCode) pra QR ficar com poucos
+            // modulos e ser legivel em impressora termica 203 DPI. raspinha.html
+            // ja faz lookup por shortCode no Firestore (rules publicas pos PR #295).
+            // Cliente normal tem 4G — nao precisamos de payload inline no QR.
+            //
+            // Mudancas vs. versao anterior:
+            // - Removido &d=base64(JSON): URL era gigante, QR ilegivel
+            // - ecc=H (era L): 30% correcao de erro (vs. 7%) — sobrevive a manchas
+            //   e desbote do papel termico
+            // - margin=4 (era 0): quiet zone obrigatoria do padrao QR; sem ela,
+            //   leitores nao detectam os cantos do codigo
+            // - size=400 (era 180): origem com mais resolucao
+            // - Tamanho impresso 40mm (era 36mm): margem maior pra leitor enquadrar
+            // - Fallback qrcode-generator local (cdnjs) se api.qrserver.com falhar
+            var raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratchData.shortCode);
+            var qrApiSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&ecc=H&margin=4&data=' +
+                encodeURIComponent(raspUrl);
+            // Guarda a URL no data-url do img (HTML-escaped); fallback handler
+            // (script no head do recibo) le isso e gera QR local se a API falhar.
+            // Evita inline-JS escape hell com aspas.
+            var raspUrlHtmlSafe = String(raspUrl)
+                .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
+                .replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            qrHtml = '<div style="text-align:center;margin:4mm 0">' +
+                '<img class="rcp-qr" data-url="' + raspUrlHtmlSafe + '" src="' + qrApiSrc + '" ' +
+                'alt="QR Raspinha" style="width:40mm;height:40mm;background:#fff;padding:2mm">' +
+                '<div style="font-family:monospace;font-size:9px;text-align:center;margin-top:1mm">' +
+                  scratchData.shortCode +
+                '</div>' +
+                '</div>';
         }
 
         var parts = text.split('[QR_CODE_PLACEHOLDER]');
         var fontSize = cfg.width === '58mm' ? '10px' : '11px';
+        // Fallback offline: se a API qrserver falhar, gera QR local com
+        // qrcode-generator (CDN). Espera a img dar erro, baixa a lib, e
+        // substitui o <img> por uma <table> com o QR rasterizado.
+        var qrFallbackScript =
+            '<' + 'script>(function(){' +
+              'function tryFallback(img){' +
+                'var url=img.getAttribute("data-url");if(!url)return;' +
+                'function build(){' +
+                  'try{' +
+                    'var qr=qrcode(0,"H");qr.addData(url);qr.make();' +
+                    'var html=qr.createImgTag(8,16);' +
+                    'var w=document.createElement("span");w.innerHTML=html;' +
+                    'var newImg=w.firstChild;' +
+                    'newImg.style.cssText="width:40mm;height:40mm;background:#fff";' +
+                    'img.parentNode.replaceChild(newImg,img);' +
+                  '}catch(e){console.warn("QR local fail",e);}' +
+                '}' +
+                'if(typeof qrcode!=="undefined"){build();return;}' +
+                'var s=document.createElement("script");' +
+                's.src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js";' +
+                's.onload=build;' +
+                's.onerror=function(){console.warn("QR lib CDN unreachable");};' +
+                'document.head.appendChild(s);' +
+              '}' +
+              'document.addEventListener("DOMContentLoaded",function(){' +
+                'var imgs=document.querySelectorAll("img.rcp-qr");' +
+                'imgs.forEach(function(img){' +
+                  'img.addEventListener("error",function(){tryFallback(img);});' +
+                  // Tambem: se a img ja deu erro antes do listener (race), checa naturalWidth
+                  'if(img.complete && img.naturalWidth===0){tryFallback(img);}' +
+                '});' +
+              '});' +
+            '})();<\/script>';
         var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Recibo MilkyPot - ' + (profileId || 'Geral') + '</title>' +
             '<style>@page{margin:2mm}body{margin:0;padding:2mm;font-family:"Courier New",monospace}pre{font-size:' + fontSize + ';white-space:pre-wrap;line-height:1.2;margin:0}</style>' +
+            qrFallbackScript +
             '</head><body>' +
             '<pre>' + parts[0].replace(/</g,'&lt;') + '</pre>' +
             (parts.length > 1 ? qrHtml + '<pre>' + parts.slice(1).join('').replace(/</g,'&lt;') + '</pre>' : '') +
-            '<' + 'script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},600)},500)}<\/script>' +
+            '<' + 'script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},800)},700)}<\/script>' +
             '</body></html>';
 
         w.document.write(html);

@@ -362,6 +362,21 @@ body:not(.idle){cursor:default}
         var playlistData = (await fetchFromCloud('tv_playlist_' + fid)) || DataStore.get('tv_playlist_' + fid) || [];
         var mediaData = (await fetchFromCloud('tv_media_' + fid)) || DataStore.get('tv_media_' + fid) || [];
 
+        // Mídia GLOBAL: editada pelo admin, aparece automaticamente em TODAS as
+        // franquias. Faz merge com a biblioteca da franquia (sem duplicar IDs).
+        if (fid !== 'global') {
+            var globalMedia = (await fetchFromCloud('tv_media_global')) || DataStore.get('tv_media_global') || [];
+            var existingIds = {};
+            mediaData.forEach(function(m){ if (m && m.id) existingIds[m.id] = true; });
+            globalMedia.forEach(function(g){
+                if (g && g.id && !existingIds[g.id]) {
+                    mediaData.push(g);
+                    // Adiciona à playlist no fim pra garantir que toca em qualquer franquia
+                    playlistData = playlistData.concat([{ mediaId: g.id, duration: Math.max(5, g.duration || 10) }]);
+                }
+            });
+        }
+
         // Grava localmente o que veio do servidor (pra recovery offline)
         try {
             localStorage.setItem('mp_tv_playlist_' + fid, JSON.stringify(playlistData));

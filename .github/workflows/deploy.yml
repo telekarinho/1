@@ -133,10 +133,14 @@ jobs:
           printf '%s' "$SA_JSON" > "$RUNNER_TEMP/sa.json"
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
 
-      - name: Deploy hosting + storage rules + firestore rules
+      - name: Deploy firestore rules
+        # Hosting vai via GitHub Pages (job deploy-pages acima); storage rules
+        # nao mudam frequente e o SA pode nao ter permissao Storage Admin.
+        # Aqui deployamos APENAS firestore:rules — critico pra sync funcionar
+        # entre PCs (caixa_/orders_/pdv_tabs_/finances_ precisam de read publico).
         run: |
           firebase deploy \
-            --only hosting,storage,firestore:rules \
+            --only firestore:rules \
             --project milkypot-ad945 \
             --non-interactive \
             --force
