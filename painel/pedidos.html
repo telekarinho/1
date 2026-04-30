@@ -415,7 +415,49 @@
             }
         }
 
+        let _cleanupSeedDemoRunning = false;
+        function isSeedDemoOrder(order) {
+            const id = order && order.id ? String(order.id) : '';
+            const prefix = 'ord_' + franchiseId + '_';
+            return id.startsWith(prefix) && /^\d+$/.test(id.slice(prefix.length));
+        }
+
+        function cleanupSeedDemoOrders() {
+            if (_cleanupSeedDemoRunning || !franchiseId) return 0;
+            _cleanupSeedDemoRunning = true;
+            try {
+                const allOrders = DataStore.getCollection('orders', franchiseId);
+                if (!Array.isArray(allOrders) || !allOrders.length) return 0;
+                const nowIso = new Date().toISOString();
+                let changed = 0;
+
+                allOrders.forEach(function(order, index) {
+                    if (!order || order.deleted) return;
+                    if (!isSeedDemoOrder(order)) return;
+                    allOrders[index].deleted = true;
+                    allOrders[index].status = 'excluido';
+                    allOrders[index].deletedAt = nowIso;
+                    allOrders[index].updatedAt = nowIso;
+                    allOrders[index].deletedReason = 'seed_demo_cleanup';
+                    allOrders[index].deletedByAutoCleanup = true;
+                    changed++;
+                });
+
+                if (changed > 0) {
+                    DataStore.setCollection('orders', franchiseId, allOrders);
+                    console.info('[Pedidos] seed cleanup: ' + changed + ' pedido(s) demo removidos do kanban');
+                }
+                return changed;
+            } catch (e) {
+                console.warn('seed cleanup pedidos demo:', e);
+                return 0;
+            } finally {
+                _cleanupSeedDemoRunning = false;
+            }
+        }
+
         function renderKanban() {
+            cleanupSeedDemoOrders();
             cleanupOldOpenOrders();
             const orders = getFilteredOrders();
             const allOrders = DataStore.getCollection('orders', franchiseId).filter(o => o && !o.deleted);
@@ -1288,7 +1330,7 @@
                 orders[idx].deletedAt = new Date().toISOString();
                 orders[idx].status = 'excluido';
                 orders[idx].updatedAt = new Date().toISOString();
-                DataStore.set('orders_' + franchiseId, orders);
+                DataStore.setCollection('orders', franchiseId, orders);
                 try { AuditLog.logOrder('order_deleted', orderId, { seq: seq, total: o.total || 0 }, franchiseId); } catch(_){}
                 cleanup();
                 renderKanban();
@@ -1331,6 +1373,7 @@
                 /test[_\s]?agent/i, /test[_\s]?session/i, /\btest\b.*milkypot\.internal/i
             ];
             function isTestOrder(o) {
+                if (isSeedDemoOrder(o)) return true;
                 if (o.isTestSession || o.testSession) return true;
                 const uid = o.userId || o.operatorId || '';
                 if (/^test_agent_/i.test(uid)) return true;
@@ -1364,11 +1407,21 @@
                     (testOrd.length > 5 ? '\n... e mais ' + (testOrd.length - 5) : '');
                 if (!confirm(msg + '\n\nConfirmar exclusão?')) return;
                 const orders = DataStore.getCollection('orders', franchiseId);
-                const cleaned = orders.filter(o => !isTestOrder(o));
-                DataStore.set('orders_' + franchiseId, cleaned);
+                const nowIso = new Date().toISOString();
+                let removed = 0;
+                orders.forEach(function(order) {
+                    if (!isTestOrder(order) || order.deleted) return;
+                    order.deleted = true;
+                    order.status = 'excluido';
+                    order.deletedAt = nowIso;
+                    order.updatedAt = nowIso;
+                    order.deletedReason = isSeedDemoOrder(order) ? 'seed_demo_cleanup' : 'test_order_cleanup';
+                    removed++;
+                });
+                DataStore.setCollection('orders', franchiseId, orders);
                 renderKanban();
                 checkBtn();
-                alert('✅ ' + (orders.length - cleaned.length) + ' pedido(s) de teste removido(s).');
+                alert('✅ ' + removed + ' pedido(s) de teste removido(s).');
             };
 
             // Re-checa após renderKanban

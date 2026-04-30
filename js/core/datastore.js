@@ -297,19 +297,58 @@ const DataStore = {
     },
     // Merge inteligente: une dois arrays por id, prefere o mais recente
     // (updatedAt > createdAt). Idempotente — pode rodar várias vezes sem efeito ruim.
+    _itemMutationTime(item) {
+        if (!item) return 0;
+        function t(value) {
+            const ms = value ? new Date(value).getTime() : 0;
+            return Number.isFinite(ms) ? ms : 0;
+        }
+        return Math.max(
+            t(item.updatedAt),
+            t(item.deletedAt),
+            t(item.cancelledAt),
+            t(item.finalizedAt)
+        );
+    },
+
+    _itemVersionTime(item) {
+        if (!item) return 0;
+        const created = item.createdAt ? new Date(item.createdAt).getTime() : 0;
+        return Math.max(
+            this._itemMutationTime(item),
+            Number.isFinite(created) ? created : 0
+        );
+    },
+
+    _pickNewestItem(a, b) {
+        if (!a) return b;
+        if (!b) return a;
+
+        const aMutation = this._itemMutationTime(a);
+        const bMutation = this._itemMutationTime(b);
+        const aDeleted = !!a.deleted;
+        const bDeleted = !!b.deleted;
+        if (aDeleted !== bDeleted) {
+            if (aDeleted && aMutation >= bMutation) return a;
+            if (bDeleted && bMutation >= aMutation) return b;
+        }
+
+        if (aMutation || bMutation) {
+            return aMutation >= bMutation ? a : b;
+        }
+
+        return this._itemVersionTime(a) >= this._itemVersionTime(b) ? a : b;
+    },
+
     _mergeArrays(localArr, cloudArr) {
         if (!Array.isArray(localArr)) localArr = [];
         if (!Array.isArray(cloudArr)) cloudArr = [];
         var byId = {};
-        function pickNewest(a, b) {
-            var ta = (a && (a.updatedAt || a.createdAt)) || '';
-            var tb = (b && (b.updatedAt || b.createdAt)) || '';
-            return ta >= tb ? a : b;
-        }
+        var self = this;
         cloudArr.forEach(function (it) { if (it && it.id) byId[it.id] = it; });
         localArr.forEach(function (it) {
             if (!it || !it.id) return;
-            byId[it.id] = byId[it.id] ? pickNewest(byId[it.id], it) : it;
+            byId[it.id] = byId[it.id] ? self._pickNewestItem(byId[it.id], it) : it;
         });
         return Object.keys(byId).map(function (k) { return byId[k]; });
     },
@@ -399,12 +438,11 @@ const DataStore = {
                 return { value: cloudStr, changed: false };
             }
             const byId = {};
+            const self = this;
             cloudItems.concat(localItems).forEach(item => {
                 if (!item || !item.id) return;
                 const prev = byId[item.id];
-                const itemTs = new Date(item.updatedAt || item.createdAt || 0).getTime();
-                const prevTs = prev ? new Date(prev.updatedAt || prev.createdAt || 0).getTime() : -1;
-                if (!prev || itemTs >= prevTs) byId[item.id] = item;
+                byId[item.id] = prev ? self._pickNewestItem(prev, item) : item;
             });
             const merged = Object.values(byId).sort((a, b) => {
                 return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
@@ -861,6 +899,13 @@ const DataStore = {
     // ============================================
     seed() {
         if (this.get('_seeded')) return;
+        const host = (typeof window !== 'undefined' && window.location) ? window.location.hostname : '';
+        const isLocalHost = !host || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0';
+        if (!isLocalHost) {
+            localStorage.setItem(this.PREFIX + '_seeded', JSON.stringify(true));
+            console.log('DataStore seed demo skipped on production host');
+            return;
+        }
 
         // ---- Usuarios (SEM senhas - autenticacao via Firebase Auth) ----
         const users = [
