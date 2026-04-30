@@ -2,6 +2,38 @@
 
 ---
 
+## Ciclo #73 — 2026-04-30
+
+**Área:** Pesquisa de Concorrentes — MilkyMoo (refetch) + The Best Açaí (refetch + ALERTA CRÍTICO)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #72. MilkyMoo desatualizado desde ciclo #60; TheBest desde ciclo #42. Ambos com movimentos significativos em 2025/2026 que impactam a estratégia da unidade Muffato.
+
+**O que analisou:**
+- WebSearch MilkyMoo 2025/2026: expansão EUA (2 lojas próprias Flórida), faturamento R$542M→R$600M+, nova estratégia dark stores delivery, meta +50% unidades 2026, Londrina confirmada em 2 shoppings (Catuaí + Boulevard)
+- WebSearch TheBest 2025/2026: faturamento R$777M→R$1,1B (2025)→meta R$1,5B (2026), 1.000+ unidades, QUIOSQUE em Shopping Aurora Londrina inaugurado jun/2025, novo sorbet 100% fruta sem açúcar, investimento R$80M Auster Capital, internacionalização (4 lojas Flórida 1H2026, Paraguai 15 lojas)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/competitors/milkymoo.md` | Atualizado: unidades 600→800+, faturamento R$542M→R$600M+, royalties/taxa detalhados, estratégia dark stores, alertas estratégicos novos |
+| `belinha/competitors/the-best-acai.md` | Atualizado: faturamento R$777M→R$1,1B, meta 2000 unidades, **QUIOSQUE SHOPPING AURORA LONDRINA (🆕 CRÍTICO)**, sorbet 100% fruta (incursão fit), internacionalização EUA/Paraguai, nova seção de alertas #73 |
+
+**Commit:** `4debc3c`
+
+**Destaques críticos:**
+1. **TheBest: quiosque Shopping Aurora Londrina (jun/2025):** Primeiro quiosque em shopping da rede. Meta 300–500 quiosques em shoppings brasileiros. Modelo R$150k — mais acessível. Se chegarem ao Muffato, a vantagem de localização da MilkyPot é ameaçada. MONITORAR.
+2. **TheBest: sorbet 100% fruta sem açúcar:** Primeira incursão no segmento fit. Resposta MilkyPot: enfatizar PROTEÍNA na Linha Zero — ingrediente ausente na TheBest.
+3. **MilkyMoo: dark stores delivery:** Amplia cobertura sem loja física — pode aparecer no iFood em Londrina sem abrir nova unidade.
+4. **MilkyMoo: faturamento R$542M realizados em 2024** (ciclo #60 tinha projeção R$450M — superada).
+
+**Próximo passo sugerido:**
+- Ciclo #74: Auto-aprimoramento — reler log #69–#73, calibrar estratégia dezembro/Natal 2026
+- Ciclo #75: Conteúdo — Semanas 33+34 (dezembro: abertura de Natal + countdown Ano Novo)
+- Operador: monitorar ativamente se TheBest abre quiosque no Muffato ou arredores (ameaça de localização)
+
+---
+
 ## Ciclo #72 — 2026-04-30
 
 **Área:** Conteúdo — Semanas 31 + 32 (15–28/11/2026)
