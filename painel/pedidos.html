@@ -572,11 +572,15 @@
             document.getElementById('kpiNew').textContent = orders.filter(o => o.status === 'novo' || o.status === 'confirmado').length;
             document.getElementById('kpiPreparing').textContent = orders.filter(o => o.status === 'preparando').length;
             document.getElementById('kpiReady').textContent = orders.filter(o => o.status === 'pronto' || o.status === 'em_entrega').length;
-            // Faturamento SEMPRE do dia (nao acumulado), independente do filtro.
-            // Operador quer saber quanto vendeu HOJE pra bater com o caixa, nao
-            // o historico total de 181 entregas que confunde tudo.
+            // Faturamento SEMPRE do dia. Soma TODOS os pedidos vendidos hoje
+            // (nao apenas os finalizados como 'entregue'). Cancelados/excluidos
+            // ficam fora. Isto reflete a receita REAL do dia — operador vendeu
+            // 60 pedidos mas marcou so 1 como 'entregue' nao significa que
+            // faturou apenas R$ X — todos foram pagos no PDV no momento da venda.
             document.getElementById('kpiRevenue').textContent = Utils.formatCurrency(
-                todayOrders.filter(o => o.status === 'entregue').reduce((s, o) => s + (o.total || 0), 0)
+                todayOrders
+                    .filter(o => o.status !== 'cancelado' && o.status !== 'excluido' && !o.deleted)
+                    .reduce((s, o) => s + (o.total || 0), 0)
             );
             // Atualiza label do KPI pra deixar claro que e do dia
             var kpiRevLabel = document.querySelector('.kpi-card .kpi-info .kpi-label[data-i18n="finances.revenue"]');
