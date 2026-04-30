@@ -3320,8 +3320,92 @@
     // Roda 2s após carregar (dá tempo de DataStore + Auth iniciarem)
     setTimeout(function(){ try { backfillScratchesToFirestore(); } catch(e){ console.warn('[Raspinha] backfill init:', e); } }, 2000);
 
+    // Modal obrigatorio de selecao de forma de pagamento.
+    // Operador clica "Fechar" -> abre este modal -> escolhe forma -> finishOrder
+    // segue. Sem default. Evita pedido gravado com forma errada por reflexo.
+    function _showPaymentSelectModal(totalValue, onConfirm) {
+        // Remove modal anterior se houver
+        var existing = document.getElementById('mpPaymentSelectModal');
+        if (existing) existing.remove();
+        var overlay = document.createElement('div');
+        overlay.id = 'mpPaymentSelectModal';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(45,27,78,.65);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Nunito",sans-serif;animation:mpFadeIn .15s ease-out';
+        var totalLabel = 'R$ ' + (Number(totalValue)||0).toFixed(2).replace('.',',');
+        overlay.innerHTML =
+          '<div style="background:#fff;border-radius:18px;max-width:460px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;animation:mpSlideUp .2s ease-out">' +
+            '<div style="padding:18px 22px;background:linear-gradient(135deg,#6C63FF,#42A5F5);color:#fff;display:flex;justify-content:space-between;align-items:center">' +
+              '<div>' +
+                '<h3 style="margin:0;font-family:\'Baloo 2\',cursive;font-size:1.15rem;font-weight:700">💰 Forma de pagamento</h3>' +
+                '<div style="font-size:.78rem;opacity:.92;margin-top:2px">Selecione pra finalizar a venda</div>' +
+              '</div>' +
+              '<button id="mpPaySelectClose" style="background:rgba(255,255,255,.22);color:#fff;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:700">×</button>' +
+            '</div>' +
+            '<div style="padding:22px">' +
+              '<div style="background:#F7F4FF;border-radius:12px;padding:14px 18px;text-align:center;margin-bottom:18px">' +
+                '<div style="font-size:.78rem;color:#7d6e92;font-weight:600;letter-spacing:.5px;text-transform:uppercase">Total a receber</div>' +
+                '<div style="font-family:\'Baloo 2\',cursive;font-size:2rem;font-weight:800;color:#6C63FF;margin-top:2px">' + totalLabel + '</div>' +
+              '</div>' +
+              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+                '<button data-pay="Dinheiro"  class="mp-pay-btn" style="padding:18px 12px;background:#fff;border:2px solid #10B981;color:#065F46;border-radius:14px;font-family:\'Baloo 2\',cursive;font-size:1.02rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s ease">' +
+                  '<span style="font-size:1.6rem">💵</span><span>Dinheiro</span>' +
+                '</button>' +
+                '<button data-pay="Pix"       class="mp-pay-btn" style="padding:18px 12px;background:#fff;border:2px solid #06B6D4;color:#0E7490;border-radius:14px;font-family:\'Baloo 2\',cursive;font-size:1.02rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s ease">' +
+                  '<span style="font-size:1.6rem">📲</span><span>PIX</span>' +
+                '</button>' +
+                '<button data-pay="Débito"    class="mp-pay-btn" style="padding:18px 12px;background:#fff;border:2px solid #3B82F6;color:#1E40AF;border-radius:14px;font-family:\'Baloo 2\',cursive;font-size:1.02rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s ease">' +
+                  '<span style="font-size:1.6rem">💳</span><span>Débito</span>' +
+                '</button>' +
+                '<button data-pay="Crédito"   class="mp-pay-btn" style="padding:18px 12px;background:#fff;border:2px solid #8B5CF6;color:#5B21B6;border-radius:14px;font-family:\'Baloo 2\',cursive;font-size:1.02rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s ease">' +
+                  '<span style="font-size:1.6rem">💳</span><span>Crédito</span>' +
+                '</button>' +
+              '</div>' +
+              '<div style="text-align:center;margin-top:14px;font-size:.72rem;color:#9CA3AF">Esc fecha sem finalizar</div>' +
+            '</div>' +
+          '</div>';
+        document.body.appendChild(overlay);
+        function close(){ if (overlay.parentNode) overlay.remove(); document.removeEventListener('keydown', onKey); }
+        function onKey(e){ if (e.key === 'Escape') { e.preventDefault(); close(); } }
+        document.addEventListener('keydown', onKey);
+        overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+        overlay.querySelector('#mpPaySelectClose').addEventListener('click', close);
+        overlay.querySelectorAll('.mp-pay-btn').forEach(function(btn){
+            btn.addEventListener('mouseenter', function(){ btn.style.transform = 'translateY(-2px)'; btn.style.boxShadow = '0 8px 22px rgba(108,99,255,.18)'; });
+            btn.addEventListener('mouseleave', function(){ btn.style.transform = ''; btn.style.boxShadow = ''; });
+            btn.addEventListener('click', function(){
+                var method = btn.getAttribute('data-pay');
+                close();
+                if (typeof onConfirm === 'function') onConfirm(method);
+            });
+        });
+        // Adiciona keyframes uma vez
+        if (!document.getElementById('mpPaymentSelectStyles')) {
+            var st = document.createElement('style');
+            st.id = 'mpPaymentSelectStyles';
+            st.textContent = '@keyframes mpFadeIn{from{opacity:0}to{opacity:1}}@keyframes mpSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}';
+            document.head.appendChild(st);
+        }
+    }
+
     window.finishOrder=function(){
         if(!cart.length){toast('Adicione itens');return}
+        // ETAPA 1: SELECAO OBRIGATORIA DE FORMA DE PAGAMENTO
+        // Operador clica Fechar -> modal aparece com Total + 4 botoes grandes.
+        // Sem default; obriga selecao consciente. Apos click, re-chama finishOrder
+        // com flag setada pra pular este check.
+        if (!window._paymentConfirmedThisOrder) {
+            // Calcula total preliminar pro modal exibir
+            var _stPrelim = Math.round(cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0)*100)/100;
+            var _discPrelim = (typeof calcDiscountAmount === 'function') ? calcDiscountAmount(_stPrelim) : 0;
+            var _totPrelim = Math.max(0, Math.round((_stPrelim - _discPrelim) * 100) / 100);
+            _showPaymentSelectModal(_totPrelim, function(method){
+                var sel = document.getElementById('paymentMethod');
+                if (sel) sel.value = method;
+                window._paymentConfirmedThisOrder = true;
+                try { window.finishOrder(); }
+                finally { window._paymentConfirmedThisOrder = false; }
+            });
+            return;
+        }
         // Round to 2 decimals to avoid float precision issues (ex: 0.5*59.99 = 29.995)
         var subtotal=Math.round(cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0)*100)/100;
         // Aplica desconto se houver (window._cartDiscount = {type, value, reason, by, at})
@@ -3444,14 +3528,16 @@
             challengeAttempts: attemptsPerPurchase
         };
 
-        // === AUTO-PRONTO ===
-        // Pedido só com itens grab-and-go (buffet/picolé/água/sorvete-kg/bebida)
-        // pula direto pra "pronto" — não passa por Confirmar/Preparar.
-        // Se tiver pelo menos UM milkshake/sundae/açaí, segue fluxo normal (status='confirmado').
+        // === AUTO-PRONTO / AUTO-ENTREGUE ===
+        // Sem kitchen item (buffet/picolé/água/sorvete-kg/bebida):
+        //  - type='balcao'  → JÁ FOI CONSUMIDO/LEVADO (cliente se serviu, pesou,
+        //    pagou e saiu). Vai DIRETO pra 'entregue' — nao polui Pronto.
+        //  - type='retirada' ou 'delivery' → fica 'pronto' aguardando cliente
+        //    retirar / motoboy enviar.
+        // Com kitchen item (milkshake/sundae/açaí) → segue fluxo confirmado normal.
         try {
             var _hasKitchenItem = (order.items || []).some(function(it){
                 if (typeof Printer === 'undefined' || !Printer.isKitchenItem) return true; // fail-safe: assume cozinha
-                // isKitchenItem espera {id, name, type}; order item usa productId
                 return Printer.isKitchenItem({
                     id: it.productId || it.id || null,
                     name: it.name || '',
@@ -3459,11 +3545,19 @@
                 });
             });
             if (!_hasKitchenItem) {
-                order.status = 'pronto';
-                order.autoReady = true;
-                order.autoReadyAt = new Date().toISOString();
+                if (order.type === 'balcao') {
+                    // Buffet/picole/etc consumido no balcao → ja saiu da loja
+                    order.status = 'entregue';
+                    order.autoDelivered = true;
+                    order.autoDeliveredAt = new Date().toISOString();
+                } else {
+                    // Retirada/delivery sem kitchen → pronto, aguardando cliente/motoboy
+                    order.status = 'pronto';
+                    order.autoReady = true;
+                    order.autoReadyAt = new Date().toISOString();
+                }
             }
-        } catch(_e) { console.warn('[finishOrder] auto-pronto check falhou:', _e); }
+        } catch(_e) { console.warn('[finishOrder] auto-status check falhou:', _e); }
 
         // OfflineQueue: grava SEMPRE (online ou offline) — PDV sobrevive sem internet
         if (typeof OfflineQueue !== 'undefined' && OfflineQueue.enqueueOrder) {
