@@ -22,10 +22,25 @@
         body { height: 100%; }
         .pdv-layout { display: grid; grid-template-columns: 1fr 380px; height: calc(100vh - 44px); }
 
-        /* Header */
+        /* Header — layout original preservado. Adicionado APENAS nowrap+
+           ellipsis no h1 e flex-shrink no botao back: garante que o titulo
+           nao quebra em multiplas linhas (causa raiz do "topo sumiu"). */
         .pdv-header { background: linear-gradient(135deg, #6C63FF, #5A52E0); color: #fff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        .pdv-header h1 { margin: 0; font-size: 15px; font-family: 'Baloo 2', cursive; }
-        .pdv-header .btn-back { background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+        .pdv-header h1 {
+            margin: 0;
+            font-size: 15px;
+            font-family: 'Baloo 2', cursive;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+        .pdv-header .btn-back { background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+        /* Em viewport medio/apertado, esconde o prefix "🏪 PDV —" e mantem
+           so o nome da franquia. Layout do header NAO MUDA — so encolhe texto. */
+        @media (max-width: 1100px) {
+            .pdv-header h1 .pdv-prefix { display: none; }
+        }
 
         /* ATALHOS DE TECLADO no header — destaque visual + clicáveis (também funcionam como botão) */
         .pdv-shortcuts {
@@ -599,7 +614,7 @@
 <div class="pdv-header">
     <div style="display:flex;align-items:center;gap:10px;">
         <button class="btn-back" onclick="window.location.href='pedidos.html'">← Voltar</button>
-        <h1>🏪 PDV — <span id="pdvStore">MilkyPot</span></h1>
+        <h1><span class="pdv-prefix">🏪 PDV — </span><span id="pdvStore">MilkyPot</span></h1>
     </div>
     <!-- ATALHOS DE TECLADO — sempre visíveis no header (operador encontra rápido) -->
     <div class="pdv-shortcuts" id="pdvShortcuts" aria-label="Atalhos de teclado">
@@ -2203,24 +2218,26 @@
 
             var blocker = document.createElement('div');
             blocker.id = 'pdvCaixaBlocker';
-            blocker.style.cssText = 'position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;padding:14px 20px;z-index:9000;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 4px 18px rgba(0,0,0,.25);font-family:"Nunito",sans-serif;flex-wrap:wrap';
+            // Compacto: padding reduzido + nowrap evita banner gigante (era 197px
+            // com flex-wrap em viewport apertado, comendo o topo da pagina).
+            blocker.style.cssText = 'position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;padding:8px 14px;z-index:9000;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,.2);font-family:"Nunito",sans-serif;font-size:13px;line-height:1.25';
 
             var label, btnHtml;
             if (st.status === 'fechado') {
                 if (isAdmin) {
-                    label = '🔒 <strong>Caixa travado em "fechado"</strong> · Use o botão pra forçar nova abertura';
-                    btnHtml = '<button id="pdvCaixaForceBtn" style="background:#fff;color:#7F1D1D;border:none;padding:10px 22px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);font-family:inherit">🔧 Forçar Reabertura</button>';
+                    label = '🔒 <strong>Caixa fechado hoje</strong> · clique pra forçar reabertura';
+                    btnHtml = '<button id="pdvCaixaForceBtn" style="background:#fff;color:#7F1D1D;border:none;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">🔧 Reabrir</button>';
                 } else {
-                    label = '🔒 <strong>Caixa de hoje já foi fechado</strong> · Peça ao gerente pra reabrir';
+                    label = '🔒 <strong>Caixa fechado hoje</strong> · peça pro gerente reabrir';
                     btnHtml = '';
                 }
             } else {
-                label = '⚠️ <strong>Caixa fechado</strong> · Antes de vender, abra o caixa com o valor de troco inicial';
-                btnHtml = '<button id="pdvCaixaBlockerBtn" style="background:#fff;color:#D97706;border:none;padding:10px 22px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);font-family:inherit">🟢 Abrir Caixa Agora</button>';
+                label = '⚠️ <strong>Caixa fechado</strong> · abra antes de vender';
+                btnHtml = '<button id="pdvCaixaBlockerBtn" style="background:#fff;color:#D97706;border:none;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">🟢 Abrir Caixa</button>';
             }
 
             blocker.innerHTML =
-                '<div style="font-size:14px;line-height:1.3;flex:1;min-width:200px">' + label + '</div>' +
+                '<div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + label + '</div>' +
                 btnHtml;
             document.body.insertBefore(blocker, document.body.firstChild);
             document.body.style.paddingTop = (blocker.offsetHeight) + 'px';
@@ -2988,6 +3005,34 @@
         renderOpenTabs();
     }
 
+    // Tombstone-aware + day-scoped: comandas só aparecem se forem de HOJE
+    // E nao estiverem deletadas. Comandas antigas (de outro dia) ficam no
+    // storage como historico mas nao poluem o PDV operacional do dia atual.
+    // O merge anti-colisao do DataStore (union by id) tambem precisa do
+    // tombstone pra nao reaver delete via sync entre PCs.
+    function _todayLocal() {
+        var d = new Date();
+        return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+            .toISOString().slice(0, 10);
+    }
+    function _liveTabs() {
+        var today = _todayLocal();
+        return (openTabs || []).filter(function(t){
+            if (!t || t.deleted) return false;
+            // Comanda sem createdAt: legado, escondida (poluicao de outro dia)
+            if (!t.createdAt) return false;
+            // Comanda com createdAt: mostra so se for de HOJE.
+            // Operador ve a data/hora no chip — se for outro dia, fica oculta.
+            try {
+                var dLocal = new Date(t.createdAt);
+                if (isNaN(dLocal.getTime())) return false;
+                var localDate = new Date(dLocal.getTime() - dLocal.getTimezoneOffset()*60000)
+                    .toISOString().slice(0,10);
+                return localDate === today;
+            } catch(e) { return false; }
+        });
+    }
+
     // Reage a contas abertas atualizadas em outro PC (realtime listener do DataStore)
     window.addEventListener('mp_remote_update', function (ev) {
         if (!ev.detail || ev.detail.key !== 'pdv_tabs_' + fid) return;
@@ -3000,12 +3045,29 @@
     function renderOpenTabs(){
         var el=document.getElementById('openTabs');
         var list=document.getElementById('openTabsList');
-        if(!openTabs.length){el.style.display='none';return}
+        var live=_liveTabs(); // ignora tombstones
+        if(!live.length){el.style.display='none';return}
         el.style.display='block';
-        list.innerHTML=openTabs.map(function(tab){
+        // Formata data/hora local (Brasilia) — operador precisa ver QUANDO
+        // a comanda foi aberta pra nao confundir entre dias.
+        function _fmtTabTime(iso) {
+            if (!iso) return '';
+            try {
+                var d = new Date(iso);
+                if (isNaN(d.getTime())) return '';
+                var dd = String(d.getDate()).padStart(2,'0');
+                var mm = String(d.getMonth()+1).padStart(2,'0');
+                var hh = String(d.getHours()).padStart(2,'0');
+                var mi = String(d.getMinutes()).padStart(2,'0');
+                return dd+'/'+mm+' '+hh+':'+mi;
+            } catch(e) { return ''; }
+        }
+        list.innerHTML=live.map(function(tab){
             var total=tab.items.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
+            var when = _fmtTabTime(tab.createdAt);
             return '<div class="tab-chip" onclick="loadTab(\''+tab.id+'\')">'+
                 '<span>📋</span><span class="tc-name">'+Utils.escapeHtml(tab.name)+'</span>'+
+                (when ? '<span style="font-size:10px;color:#666;font-family:monospace;background:#F0F0F0;padding:2px 6px;border-radius:8px">🕐 '+when+'</span>' : '')+
                 '<span class="tc-total">R$ '+total.toFixed(2).replace('.',',')+'</span>'+
                 '<span style="font-size:10px;color:#999;">'+tab.items.length+' itens</span>'+
                 '<button class="tc-close" onclick="event.stopPropagation();removeTab(\''+tab.id+'\')">×</button></div>';
@@ -3014,11 +3076,12 @@
 
     window.openTab=function(){
         if(!cart.length){toast('Adicione itens primeiro');return}
-        var tabName=document.getElementById('orderName').value||'Comanda '+(openTabs.length+1);
+        // Conta apenas tabs vivas pra numerar — ignora tombstones
+        var tabName=document.getElementById('orderName').value||'Comanda '+(_liveTabs().length+1);
 
         if(editingTabId){
-            // Update existing tab
-            var tab=openTabs.find(function(t){return t.id===editingTabId});
+            // Update existing tab — só edita tab viva
+            var tab=openTabs.find(function(t){return t && !t.deleted && t.id===editingTabId});
             if(tab){
                 tab.items=cart.slice();
                 tab.name=tabName;
@@ -3033,7 +3096,8 @@
                 name:tabName,
                 items:cart.slice(),
                 type:orderType,
-                createdAt:new Date().toISOString()
+                createdAt:new Date().toISOString(),
+                updatedAt:new Date().toISOString()
             });
             toast('📋 '+tabName+' — conta aberta! Cliente pode consumir mais.');
         }
@@ -3043,7 +3107,8 @@
     };
 
     window.loadTab=function(tabId){
-        var tab=openTabs.find(function(t){return t.id===tabId});
+        // Nao carrega tab deletada (tombstone) — defesa contra resurreicao
+        var tab=openTabs.find(function(t){return t && !t.deleted && t.id===tabId});
         if(!tab)return;
         // Load tab items into cart
         cart=tab.items.slice();
@@ -3055,7 +3120,18 @@
     };
 
     window.removeTab=function(tabId){
-        openTabs=openTabs.filter(function(t){return t.id!==tabId});
+        // Tombstone (deleted: true) em vez de remover — o anti-collision merge
+        // do DataStore (union by id) traria a comanda de volta do cloud se a
+        // gente so removesse local. Com tombstone + updatedAt mais recente, o
+        // pickNewest do merge mantém o estado deletado.
+        var idx = openTabs.findIndex(function(t){ return t && t.id === tabId; });
+        if (idx === -1) { toast('Conta nao encontrada'); return; }
+        var now = new Date().toISOString();
+        openTabs[idx] = Object.assign({}, openTabs[idx], {
+            deleted: true,
+            deletedAt: now,
+            updatedAt: now
+        });
         if(editingTabId===tabId)editingTabId=null;
         saveOpenTabs();
         toast('Conta removida');
@@ -3607,9 +3683,18 @@
             }, 1500);
         }
 
-        // Remove from open tabs if was editing
+        // Remove from open tabs if was editing — usa tombstone (deleted+updatedAt)
+        // pra anti-collision merge nao reaver. Mesmo principio do removeTab.
         if(editingTabId){
-            openTabs=openTabs.filter(function(t){return t.id!==editingTabId});
+            var _idxFinish = openTabs.findIndex(function(t){ return t && t.id === editingTabId; });
+            if (_idxFinish !== -1) {
+                var _now = new Date().toISOString();
+                openTabs[_idxFinish] = Object.assign({}, openTabs[_idxFinish], {
+                    deleted: true,
+                    deletedAt: _now,
+                    updatedAt: _now
+                });
+            }
             editingTabId=null;
             saveOpenTabs();
         }
