@@ -679,46 +679,22 @@
         // Uso: pedidos de teste, duplicados ou erro grave de digitação.
         // ============================================
         window.deleteOrder = function(orderId) {
-            const orders = DataStore.getCollection('orders', franchiseId);
-            const idx = orders.findIndex(x => x.id === orderId);
-            if (idx === -1) { alert('Pedido não encontrado.'); return; }
-            const o = orders[idx];
-            const seq = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
-            const totalLabel = (typeof Utils !== 'undefined' && Utils.formatCurrency) ? Utils.formatCurrency(o.total || 0) : ('R$ ' + (o.total || 0));
-
-            const confirm1 = confirm(
-                `EXCLUIR PERMANENTEMENTE o pedido ${seq} (${totalLabel})?\n\n` +
-                `Diferente de "Cancelar", essa ação remove o pedido da base inteira.\n` +
-                `NÃO PODE SER DESFEITO.\n\n` +
-                `Use "Cancelar" se quiser manter o histórico.`
-            );
-            if (!confirm1) return;
-
-            const confirm2 = prompt('Pra confirmar, digite EXCLUIR (em maiúsculas):');
-            if (confirm2 !== 'EXCLUIR') {
-                alert('Exclusão cancelada — texto não confere.');
-                return;
-            }
-
-            // TOMBSTONE — marca como excluído mas mantém no array.
-            // Razão: sync mergeia por id; se removêssemos do array, o outro PC
-            // (que ainda tem o pedido) faria merge e RE-CRIARIA o pedido.
-            // Filtro renderKanban() esconde os deleted. AuditLog preserva o quê.
-            orders[idx].deleted = true;
-            orders[idx].deletedAt = new Date().toISOString();
-            orders[idx].status = 'excluido'; // sai de todas as colunas do kanban
-            orders[idx].updatedAt = new Date().toISOString();
-            const total = orders[idx].total || 0;
-            const itemsCount = (orders[idx].items || []).length;
-            DataStore.set('orders_' + franchiseId, orders);
+            // Redireciona pro deleteOrderFlow que usa modal INLINE (sem
+            // confirm/prompt nativos — browsers Brave/Chrome bloqueiam esses
+            // popups como spam, fazendo o "Excluir" do modal de detalhe falhar
+            // silenciosamente. O modal inline tem botoes Cancelar/EXCLUIR
+            // proprios, persiste o tombstone normalmente.
             try {
-                AuditLog.logOrder('order_deleted', orderId,
-                    { seq: seq, total: total, items: itemsCount }, franchiseId);
+                // Fecha modal de detalhe primeiro pra nao ficar empilhado
+                var dm = document.getElementById('orderModal');
+                if (dm) dm.classList.remove('active');
             } catch(_e){}
-
-            document.getElementById('orderModal').classList.remove('active');
-            renderKanban();
-            if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast(`🗑️ Pedido ${seq} excluído.`, 'success', 2500);
+            // Delega pro fluxo seguro (linha 1187)
+            try { deleteOrderFlow(orderId); }
+            catch(e) {
+                console.error('deleteOrder fallback error:', e);
+                alert('Erro ao abrir confirmacao: ' + e.message);
+            }
         };
 
         // ============================================
