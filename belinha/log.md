@@ -2,6 +2,45 @@
 
 ---
 
+## Ciclo #72 — 2026-04-30
+
+**Área:** Conteúdo — Semanas 31 + 32 (15–28/11/2026)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #71. Semana 31 = Black Friday approach — construção de FOMO sem revelar a mecânica ainda + Linha Zero verão sustentado + estreia do teaser Natal (leve, ovelhinha com gorrinho em Stories). Semana 32 = execução Black Friday 27/11 + contagem regressiva 5 dias + reveal parcial da mecânica na terça + dia H com comunicação ao longo do dia + pós-BF na sexta. Padrão v9 mantido.
+
+**O que analisou:**
+- Leu semanas 29, 30 e estrategia.md para mapear tom, mecânicas e continuidade
+- Confirmou Sexta do Potinho: semana 31 = #16, semana 32 = #17 (série contínua de 30)
+- Estratégia BF da estrategia.md: não dar desconto na base — criar valor extra (3 opções para o operador escolher)
+- Identificou oportunidade: enquete de preferência BF nos Stories (segunda 23/11) como validação/decisão da mecânica real
+- Teaser produto sazonal verão na quarta 25/11 em Versão A (tropicais) / Versão B (refrescância) baseado no resultado da enquete de 11/11
+- Template WA fidelidade trimestral incluído na semana 31 para clientes com 8–10 carimbos (clientes desde agosto)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana31.md` | CRIADO — Abertura misteriosa (sem citar BF), educativo açaí self-service, prova social, tease "algo chegando" (fundo preto, diferente), teaser Natal primeira aparição (quinta 19/11), Sexta #16 + WA fidelidade trimestral, plant final revelando "Black Friday MilkyPot 27.11" no sábado 21/11, checklist, métricas, tabela editorial |
+| `belinha/content/pos-inauguracao-semana32.md` | CRIADO — Countdown 5 dias (domingo 22/11 com sticker regressivo nativo), carrossel humor "não é televisão" (segunda), reveal mecânica BF (terça — aguarda confirmação do operador), amplificação + teaser verão A/B (quarta), dia H completo com WA manhã + Stories ao longo do dia (quinta 27/11), Sexta #17 pós-BF + WA agradecimento, sábado teaser duplo Natal+verão, checklist, métricas, tabela editorial |
+
+**Commit:** `bb5a92f`
+
+**Destaques de conteúdo:**
+1. **Copy "Todo mundo vendendo eletrônico. A gente tá vendendo felicidade." (27/11):** Ironia de categoria que viraliza — posiciona sobremesa como item de desejo superior, não de commodity
+2. **Reveal com placeholder `[INSERIR MECÂNICA]` (terça 24/11):** Operador preenche com a promo real antes de postar — 3 opções sugeridas (2ª cobertura grátis / potinho grande pelo preço do médio / brinde acima de R$30)
+3. **Tease fundo preto (quarta 18/11 — semana 31):** Quebra de padrão visual pastel chama atenção no feed = aumento de alcance orgânico esperado
+4. **Sticker contagem regressiva nativo Instagram (domingo 22/11):** Cria notificação automática para quem fixar — comportamento nativo do app como ferramenta de FOMO
+5. **WA fidelidade trimestral (sexta 20/11 — semana 31):** Clientes com 8–10 carimbos = conversão de alto valor — topping extra no resgate do 10º carimbo como celebração de 3 meses
+6. **Teaser verão Versão A/B (quarta 25/11 — semana 32):** Depende do resultado da enquete de 11/11 — sistema de decisão baseado em dado real, não suposição
+
+**Próximo passo sugerido:**
+- Ciclo #73: Concorrentes — TheBest (1º fetch ever) + refetch MilkyMoo (desatualizado desde ciclo #60)
+- Ciclo #74: Auto-aprimoramento — reler log #69–#73, calibrar estratégia dezembro/Natal
+- Operador: **confirmar mecânica BF antes de terça 24/11** (reveal depende disso) — Opção A: 2ª cobertura grátis | Opção B: G pelo preço do M | Opção C: brinde acima de R$30
+- Operador: verificar resultado enquete verão (11/11) para aplicar Versão A ou B no teaser de quarta 25/11
+
+---
+
 ## Ciclo #71 — 2026-04-29
 
 **Área:** Conteúdo — Semanas 29 + 30 (01–14/11/2026)
