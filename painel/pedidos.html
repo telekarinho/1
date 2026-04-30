@@ -423,7 +423,11 @@
 
             // Aviso quando há pedidos NO STORAGE mas o filtro atual esconde — evita
             // operador achar que sumiu (pedido feito ontem, filtro Hoje vazio)
-            const hidden = allOrders.length - orders.length;
+            const visibleIds = new Set(orders.map(o => o.id));
+            const openStatusesForBanner = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'em_rota'];
+            const hiddenOpen = allOrders.filter(o =>
+                o && !visibleIds.has(o.id) && openStatusesForBanner.includes(o.status)
+            ).length;
             let bannerEl = document.getElementById('ordersHiddenBanner');
             if (!bannerEl) {
                 const panel = document.querySelector('.panel-content');
@@ -439,8 +443,8 @@
                 }
             }
             if (bannerEl) {
-                if (hidden > 0) {
-                    bannerEl.innerHTML = '⚠️ <span>Tem ' + hidden + ' pedido' + (hidden>1?'s':'') + ' fora do filtro atual</span> · <strong style="text-decoration:underline">Clique pra ver TODOS</strong>';
+                if (hiddenOpen > 0) {
+                    bannerEl.innerHTML = '&#9888; <span>Tem ' + hiddenOpen + ' pedido' + (hiddenOpen>1?'s':'') + ' aberto' + (hiddenOpen>1?'s':'') + ' fora do filtro atual</span> &middot; <strong style="text-decoration:underline">Clique pra ver TODOS</strong>';
                     bannerEl.style.display = 'flex';
                 } else {
                     bannerEl.style.display = 'none';
