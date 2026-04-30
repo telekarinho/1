@@ -319,16 +319,54 @@ const Caixa = (function () {
             });
         }
 
-        // REGRA DE SEGURANÇA: Bloquear se houver pedidos pendentes (Fase 2)
-        // Considera SOMENTE pedidos do dia atual em estados ativos do kanban.
-        // 'aguardando_pagamento' (delivery legado) não bloqueia — cliente não pagou.
-        // Pedidos antigos (>24h) também não bloqueiam — provavelmente abandonados.
+        // AUTO-FINALIZAR pedidos de DIAS ANTERIORES — quando opera-
+        // dor fecha o caixa, tudo que ficou aberto de outros dias eh
+        // marcado como 'entregue' silenciosamente. Operador pediu:
+        // "ja era passou ao finalizar caixa devem sumir, ficar so no
+        // historico". Pedidos de HOJE seguem bloqueando (precisa
+        // finalizar manual ou via "Encerrar Dia").
         const orders = DataStore.getCollection('orders', franchiseId) || [];
-        const today = new Date().toISOString().slice(0,10);
+        const today = new Date(Date.now() - new Date().getTimezoneOffset()*60000)
+            .toISOString().slice(0,10);
+        function _localDateOf(iso) {
+            if (!iso) return '';
+            try {
+                var d = new Date(iso);
+                if (isNaN(d.getTime())) return '';
+                return new Date(d.getTime() - d.getTimezoneOffset()*60000)
+                    .toISOString().slice(0,10);
+            } catch(e) { return ''; }
+        }
+        const openStatuses = ['novo','confirmado','preparando','pronto','em_entrega'];
+        let autoFinalizedCount = 0;
+        const tsAutoFinalize = new Date().toISOString();
+        orders.forEach(function(o, idx) {
+            if (!o || o.deleted) return;
+            if (!openStatuses.includes(o.status)) return;
+            var localCreated = _localDateOf(o.createdAt);
+            // So finaliza pedidos de DIAS ANTERIORES (createdAt < hoje)
+            if (!localCreated || localCreated >= today) return;
+            orders[idx].status = 'entregue';
+            orders[idx].updatedAt = tsAutoFinalize;
+            orders[idx].finalizedByCaixaClose = true;
+            orders[idx].finalizedAt = tsAutoFinalize;
+            autoFinalizedCount++;
+        });
+        if (autoFinalizedCount > 0) {
+            DataStore.set('orders_' + franchiseId, orders);
+            try { audit('ORDERS_AUTO_FINALIZED_ON_CLOSE', franchiseId, {
+                count: autoFinalizedCount, today: today
+            }); } catch(e){}
+        }
+
+        // REGRA DE SEGURANÇA: Bloquear se houver pedidos pendentes de HOJE
+        // (operador deve finalizar manualmente ou via "Encerrar Dia").
+        // Pedidos de DIAS ANTERIORES ja foram auto-finalizados acima.
         const pendingOrders = orders.filter(o => {
             if (o.status === 'entregue' || o.status === 'cancelado') return false;
             if (o.status === 'aguardando_pagamento') return false;
-            if (o.createdAt && o.createdAt.slice(0,10) !== today) return false;
+            var lc = _localDateOf(o.createdAt);
+            if (lc && lc !== today) return false;
             return true;
         });
         if (pendingOrders.length > 0) {
