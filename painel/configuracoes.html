@@ -400,8 +400,15 @@
                             <div id="scratchPrizesList"></div>
 
                             <div style="margin-top:14px;padding:12px;background:#FFF8E1;border-radius:10px;font-size:12px;color:#825500">
-                                💡 <strong>Dica:</strong> O premio MEGA (R$ 150) tem probabilidade de 0.5% - pode ser desativado se a franquia nao tem margem. Pequenos premios como Topping Gratis mantem a recompra alta.
+                                💡 <strong>Estratégia de recompra 7 dias:</strong> todos os prêmios valem 7 dias e somente na próxima compra. Buffet 100g (R$15+) tem 30% de chance — é o motor da recompra. Combos e especiais entregam alto valor percebido com baixo custo.
                             </div>
+
+                            <!-- ROI por tipo de prêmio -->
+                            <div style="margin-top:18px">
+                                <h4 style="font-family:'Baloo 2',cursive;font-size:14px;color:#333;margin-bottom:10px">📊 ROI por tipo</h4>
+                                <div id="scratchRoiByType" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px"></div>
+                            </div>
+                            <div id="scratchTopPrize" style="margin-top:14px;padding:10px 12px;background:#E8F5E9;border-radius:10px;font-size:12px;color:#1B5E20;display:none"></div>
                         </div>
                     </div>
 
@@ -716,17 +723,23 @@
     // ============================================
     // RASPINHA DA SORTE - Admin
     // ============================================
+    // Estratégia de recompra em até 7 dias — todos os prêmios:
+    //   • validade fixa 7 dias
+    //   • uso somente na próxima compra (scope:'same' = mesma loja)
+    //   • valor mínimo automático no caixa (minOrder)
+    //   • cumulativo:false (1 prêmio por compra, não acumula com outros)
     const DEFAULT_SCRATCH_PRIZES = [
-        {code:'RSP_TRY_AGAIN',   name:'Quase! Tente no proximo pedido', desc:'Hoje nao foi! Volta amanha.', prob:30, cost:0,   validity:0,  scope:'any',   minOrder:0,  tier:'none', emoji:'🔁'},
-        {code:'RSP_TOPPING_FREE',name:'1 Topping Gratis',               desc:'1 topping gratis no proximo pedido', prob:22, cost:4,   validity:7,  scope:'same',  minOrder:15, tier:'small', emoji:'🍒'},
-        {code:'RSP_UPSIZE',      name:'Upgrade de Tamanho',             desc:'Pediu M? Leva G. Pediu G? Leva GG.', prob:15, cost:5,   validity:10, scope:'same',  minOrder:15, tier:'small', emoji:'📈'},
-        {code:'RSP_DISC_5',      name:'R$ 5 OFF',                       desc:'R$ 5 de desconto no proximo pedido', prob:12, cost:5,   validity:15, scope:'any',   minOrder:20, tier:'medium', emoji:'💸'},
-        {code:'RSP_2BY1_TOPPING',name:'Toppings 2 x 1',                 desc:'Leve 2 toppings pagando 1',          prob:8,  cost:4,   validity:10, scope:'same',  minOrder:15, tier:'medium', emoji:'✌️'},
-        {code:'RSP_BUFFET_100G', name:'+100g Buffet',                   desc:'100g gratis no buffet de acai',      prob:5,  cost:6,   validity:15, scope:'same',  minOrder:0,  tier:'medium', emoji:'⚖️'},
-        {code:'RSP_COMBO_15',    name:'Combo 15% OFF',                  desc:'15% OFF em qualquer combo',          prob:4,  cost:7.5, validity:15, scope:'any',   minOrder:30, tier:'medium', emoji:'🎯'},
-        {code:'RSP_SHAKE_FREE',  name:'Shake M Gratis',                 desc:'SHAKE M GRATIS no proximo pedido',   prob:2.5,cost:16,  validity:20, scope:'same',  minOrder:15, tier:'big', emoji:'🥤'},
-        {code:'RSP_ACAI_500G',   name:'Acai 500g + 3 toppings',         desc:'Acai 500g com 3 toppings gratis',    prob:1,  cost:30,  validity:20, scope:'same',  minOrder:15, tier:'big', emoji:'🍇'},
-        {code:'RSP_MEGA_150',    name:'MEGA R$ 150 em creditos',        desc:'R$150 MilkyPot! Use em 30 dias.',    prob:0.5,cost:150, validity:30, scope:'any',   minOrder:0,  tier:'mega', emoji:'💎'}
+        {code:'RSP_BUFFET_100_15',   name:'100g Buffet (acima R$15)',        tipo:'buffet',   desc:'Ganhe 100g de buffet na próxima compra acima de R$15',     prob:30, cost:6,   validity:7, scope:'same', minOrder:15, cumulativo:false, tier:'small',  emoji:'⚖️'},
+        {code:'RSP_BUFFET_100_20',   name:'100g Buffet (acima R$20)',        tipo:'buffet',   desc:'Ganhe 100g de buffet na próxima compra acima de R$20',     prob:20, cost:6,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  emoji:'⚖️'},
+        {code:'RSP_BUFFET_150_25',   name:'150g Buffet (acima R$25)',        tipo:'buffet',   desc:'Ganhe 150g de buffet na compra acima de R$25',             prob:15, cost:9,   validity:7, scope:'same', minOrder:25, cumulativo:false, tier:'medium', emoji:'⚖️'},
+        {code:'RSP_BUFFET_200_35',   name:'200g Buffet (acima R$35)',        tipo:'buffet',   desc:'Ganhe 200g de buffet na compra acima de R$35',             prob:5,  cost:12,  validity:7, scope:'same', minOrder:35, cumulativo:false, tier:'medium', emoji:'⚖️'},
+        {code:'RSP_PICOLE_15',       name:'1 Picolé Grátis',                 tipo:'brinde',   desc:'Ganhe 1 picolé na próxima compra acima de R$15',           prob:10, cost:3,   validity:7, scope:'same', minOrder:15, cumulativo:false, tier:'small',  emoji:'🍦'},
+        {code:'RSP_CASQUINHA',       name:'1 Casquinha Grátis',              tipo:'brinde',   desc:'Ganhe 1 casquinha na próxima compra',                       prob:5,  cost:2,   validity:7, scope:'same', minOrder:10, cumulativo:false, tier:'small',  emoji:'🍨'},
+        {code:'RSP_COPINHO_20',      name:'1 Copinho de Sorvete',            tipo:'produto',  desc:'Ganhe 1 copinho de sorvete na compra acima de R$20',       prob:5,  cost:5,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  emoji:'🍧'},
+        {code:'RSP_SUNDAE_P_30',     name:'1 Sundae P Grátis',               tipo:'produto',  desc:'Ganhe 1 sundae P na compra acima de R$30',                 prob:4,  cost:8,   validity:7, scope:'same', minOrder:30, cumulativo:false, tier:'medium', emoji:'🍦'},
+        {code:'RSP_SHAKE_UPGRADE',   name:'Upgrade de Milk Shake',           tipo:'produto',  desc:'Ganhe upgrade de Milk Shake (P para M ou M para G)',       prob:3,  cost:5,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  emoji:'⬆️'},
+        {code:'RSP_COMBO_BUFFET_PIC',name:'Combo Buffet + Picolé',           tipo:'combo',    desc:'Ganhe 100g de buffet + 1 picolé na compra acima de R$25', prob:2,  cost:9,   validity:7, scope:'same', minOrder:25, cumulativo:false, tier:'medium', emoji:'🎁'},
+        {code:'RSP_AMIGO_100G',      name:'Volte com um Amigo',              tipo:'especial', desc:'Volte com um amigo e ganhem 100g de buffet cada',          prob:1,  cost:12,  validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'big',    emoji:'👯'}
     ];
 
     function getScratchConfig() {
@@ -783,7 +796,10 @@
         container.innerHTML = prizes.map(function(p) {
             var isActive = !p.disabled;
             var effectiveProb = isActive && totalActiveProb > 0 ? (p.prob / totalActiveProb * 100).toFixed(1) : '0';
-            var tierColor = {none:'#9E9E9E',small:'#4CAF50',medium:'#2196F3',big:'#FF9800',mega:'#E91E63'}[p.tier] || '#666';
+            // Cor por tipo (categoria estrategica) com fallback no tier antigo
+            var typeColors = {buffet:'#FF9800', brinde:'#4CAF50', produto:'#2196F3', combo:'#9C27B0', especial:'#E91E63'};
+            var tierColor = typeColors[p.tipo] || {none:'#9E9E9E',small:'#4CAF50',medium:'#2196F3',big:'#FF9800',mega:'#E91E63'}[p.tier] || '#666';
+            var typeLabel = p.tipo || p.tier || '';
             var costLabel = p.cost > 0 ? 'R$ ' + p.cost.toFixed(2).replace('.', ',') + ' custo' : 'Sem custo';
             var validityLabel = p.validity > 0 ? p.validity + ' dias validade' : 'Sem validade';
             var scopeLabel = p.scope === 'same' ? 'Mesma loja' : 'Qualquer loja';
@@ -794,7 +810,7 @@
                 '<div style="flex:1;min-width:0">' +
                     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
                         '<strong style="font-size:14px;color:#333">' + p.name + '</strong>' +
-                        '<span style="background:' + tierColor + ';color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;text-transform:uppercase">' + p.tier + '</span>' +
+                        '<span style="background:' + tierColor + ';color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;text-transform:uppercase">' + typeLabel + '</span>' +
                     '</div>' +
                     '<div style="font-size:12px;color:#888;margin-bottom:4px">' + p.desc + '</div>' +
                     '<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:#666">' +
@@ -828,10 +844,10 @@
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         var recent = scratches.filter(function(s) { return new Date(s.createdAt) >= thirtyDaysAgo; });
         var scratched = recent.filter(function(s) { return s.status === 'scratched' || s.status === 'redeemed'; }).length;
-        var redeemed = recent.filter(function(s) { return s.status === 'redeemed'; }).length;
-        // Cost is sum of prize cost for redeemed only
+        var redeemedItems = recent.filter(function(s) { return s.status === 'redeemed'; });
+        var redeemed = redeemedItems.length;
         var prizes = getScratchPrizes();
-        var totalCost = recent.filter(function(s) { return s.status === 'redeemed'; }).reduce(function(sum, s) {
+        var totalCost = redeemedItems.reduce(function(sum, s) {
             var prize = prizes.find(function(p) { return p.code === s.prizeCode; });
             return sum + (prize ? (prize.cost || 0) : 0);
         }, 0);
@@ -840,6 +856,67 @@
         document.getElementById('scratchStatScratched').textContent = scratched;
         document.getElementById('scratchStatRedeemed').textContent = redeemed;
         document.getElementById('scratchStatCost').textContent = 'R$ ' + totalCost.toFixed(2).replace('.', ',');
+
+        // ============================================
+        // ROI por tipo de prêmio
+        // taxa_retorno = redeemed / emitted (cliente voltou)
+        // ticket_medio = soma(orderTotal redeemed) / redeemed
+        // ROI = (faturamento - custo) / custo
+        // ============================================
+        var byType = {};
+        recent.forEach(function(s) {
+            var prize = prizes.find(function(p) { return p.code === s.prizeCode; });
+            if (!prize) return;
+            var t = prize.tipo || prize.tier || 'outros';
+            if (!byType[t]) byType[t] = { emit:0, redeemed:0, cost:0, revenue:0, prizeCount:{} };
+            byType[t].emit++;
+            byType[t].prizeCount[prize.code] = (byType[t].prizeCount[prize.code] || 0) + 1;
+            if (s.status === 'redeemed') {
+                byType[t].redeemed++;
+                byType[t].cost += (prize.cost || 0);
+                byType[t].revenue += (s.orderTotal || s.redemptionTotal || 0);
+            }
+        });
+
+        var typeColors = {buffet:'#FF9800', brinde:'#4CAF50', produto:'#2196F3', combo:'#9C27B0', especial:'#E91E63'};
+        var roiBox = document.getElementById('scratchRoiByType');
+        if (roiBox) {
+            var entries = Object.keys(byType);
+            roiBox.innerHTML = entries.length === 0
+                ? '<div style="grid-column:1/-1;font-size:12px;color:#999;text-align:center;padding:8px">Sem dados nos últimos 30 dias.</div>'
+                : entries.map(function(t) {
+                    var d = byType[t];
+                    var ret = d.emit > 0 ? (d.redeemed / d.emit * 100).toFixed(0) : '0';
+                    var ticket = d.redeemed > 0 ? (d.revenue / d.redeemed) : 0;
+                    var roi = d.cost > 0 ? ((d.revenue - d.cost) / d.cost * 100).toFixed(0) : (d.revenue > 0 ? '∞' : '0');
+                    var color = typeColors[t] || '#666';
+                    return '<div style="background:#fff;border:1px solid ' + color + '40;border-left:4px solid ' + color + ';border-radius:8px;padding:10px">' +
+                        '<div style="font-size:11px;font-weight:700;color:' + color + ';text-transform:uppercase;margin-bottom:4px">' + t + '</div>' +
+                        '<div style="font-size:11px;color:#666;line-height:1.6">' +
+                            '<div>Retorno: <strong style="color:#333">' + ret + '%</strong></div>' +
+                            '<div>Ticket médio: <strong style="color:#333">R$ ' + ticket.toFixed(2).replace('.', ',') + '</strong></div>' +
+                            '<div>ROI: <strong style="color:' + (parseFloat(roi) >= 100 ? '#2E7D32' : '#666') + '">' + roi + '%</strong></div>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+        }
+
+        // Prêmio mais usado
+        var topBox = document.getElementById('scratchTopPrize');
+        if (topBox) {
+            var counts = {};
+            redeemedItems.forEach(function(s) { counts[s.prizeCode] = (counts[s.prizeCode] || 0) + 1; });
+            var topCode = Object.keys(counts).sort(function(a,b){ return counts[b] - counts[a]; })[0];
+            if (topCode) {
+                var topPrize = prizes.find(function(p) { return p.code === topCode; });
+                if (topPrize) {
+                    topBox.style.display = 'block';
+                    topBox.innerHTML = '🏆 <strong>Prêmio mais usado (30d):</strong> ' + topPrize.emoji + ' ' + topPrize.name + ' — ' + counts[topCode] + 'x resgatado';
+                }
+            } else {
+                topBox.style.display = 'none';
+            }
+        }
     }
 
     window.saveScratchConfig = saveScratchConfig;
