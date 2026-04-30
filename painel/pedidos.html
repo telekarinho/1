@@ -371,14 +371,105 @@
                 .filter(o => !o.deleted && Utils.localDateOf(o.createdAt) === today);
         }
 
+        // Defesa permanente: roda antes de cada render do kanban. Isso cobre
+        // carregamento inicial, sincronizacao manual, listener remoto e merges
+        // tardios do Firestore/localStorage que chegam depois do primeiro load.
+        let _cleanupOldOrdersRunning = false;
+        function cleanupOldOpenOrders() {
+            if (_cleanupOldOrdersRunning || !franchiseId) return 0;
+            _cleanupOldOrdersRunning = true;
+            try {
+                const allOrders = DataStore.getCollection('orders', franchiseId);
+                if (!Array.isArray(allOrders) || !allOrders.length) return 0;
+
+                const today = Utils.today();
+                const openStatuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'em_rota'];
+                const nowIso = new Date().toISOString();
+                let changed = 0;
+
+                allOrders.forEach(function(order, index) {
+                    if (!order || order.deleted) return;
+                    if (!openStatuses.includes(order.status)) return;
+
+                    const orderDate = Utils.localDateOf(order.createdAt || order.updatedAt || order.date || order.timestamp);
+                    if (!orderDate || orderDate >= today) return;
+
+                    allOrders[index].status = 'entregue';
+                    allOrders[index].updatedAt = nowIso;
+                    allOrders[index].finalizedByAutoCleanup = true;
+                    allOrders[index].finalizedAt = allOrders[index].finalizedAt || nowIso;
+                    changed++;
+                });
+
+                if (changed > 0) {
+                    DataStore.set('orders_' + franchiseId, allOrders);
+                    console.info('[Pedidos] auto-cleanup render: ' + changed + ' pedido(s) antigo(s) finalizados como entregue');
+                    try { AuditLog.log('ORDERS_AUTO_CLEANUP', { count: changed, today: today, source: 'render' }, franchiseId); } catch(e) {}
+                }
+                return changed;
+            } catch (e) {
+                console.warn('auto-cleanup pedidos antigos:', e);
+                return 0;
+            } finally {
+                _cleanupOldOrdersRunning = false;
+            }
+        }
+
+        let _cleanupSeedDemoRunning = false;
+        function isSeedDemoOrder(order) {
+            const id = order && order.id ? String(order.id) : '';
+            const prefix = 'ord_' + franchiseId + '_';
+            return id.startsWith(prefix) && /^\d+$/.test(id.slice(prefix.length));
+        }
+
+        function cleanupSeedDemoOrders() {
+            if (_cleanupSeedDemoRunning || !franchiseId) return 0;
+            _cleanupSeedDemoRunning = true;
+            try {
+                const allOrders = DataStore.getCollection('orders', franchiseId);
+                if (!Array.isArray(allOrders) || !allOrders.length) return 0;
+                const nowIso = new Date().toISOString();
+                let changed = 0;
+
+                allOrders.forEach(function(order, index) {
+                    if (!order || order.deleted) return;
+                    if (!isSeedDemoOrder(order)) return;
+                    allOrders[index].deleted = true;
+                    allOrders[index].status = 'excluido';
+                    allOrders[index].deletedAt = nowIso;
+                    allOrders[index].updatedAt = nowIso;
+                    allOrders[index].deletedReason = 'seed_demo_cleanup';
+                    allOrders[index].deletedByAutoCleanup = true;
+                    changed++;
+                });
+
+                if (changed > 0) {
+                    DataStore.setCollection('orders', franchiseId, allOrders);
+                    console.info('[Pedidos] seed cleanup: ' + changed + ' pedido(s) demo removidos do kanban');
+                }
+                return changed;
+            } catch (e) {
+                console.warn('seed cleanup pedidos demo:', e);
+                return 0;
+            } finally {
+                _cleanupSeedDemoRunning = false;
+            }
+        }
+
         function renderKanban() {
+            cleanupSeedDemoOrders();
+            cleanupOldOpenOrders();
             const orders = getFilteredOrders();
-            const allOrders = DataStore.getCollection('orders', franchiseId);
+            const allOrders = DataStore.getCollection('orders', franchiseId).filter(o => o && !o.deleted);
             const statuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'entregue'];
 
             // Aviso quando há pedidos NO STORAGE mas o filtro atual esconde — evita
             // operador achar que sumiu (pedido feito ontem, filtro Hoje vazio)
-            const hidden = allOrders.length - orders.length;
+            const visibleIds = new Set(orders.map(o => o.id));
+            const openStatusesForBanner = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'em_rota'];
+            const hiddenOpen = allOrders.filter(o =>
+                o && !visibleIds.has(o.id) && openStatusesForBanner.includes(o.status)
+            ).length;
             let bannerEl = document.getElementById('ordersHiddenBanner');
             if (!bannerEl) {
                 const panel = document.querySelector('.panel-content');
@@ -394,8 +485,8 @@
                 }
             }
             if (bannerEl) {
-                if (hidden > 0) {
-                    bannerEl.innerHTML = '⚠️ <span>Tem ' + hidden + ' pedido' + (hidden>1?'s':'') + ' fora do filtro atual</span> · <strong style="text-decoration:underline">Clique pra ver TODOS</strong>';
+                if (hiddenOpen > 0) {
+                    bannerEl.innerHTML = '&#9888; <span>Tem ' + hiddenOpen + ' pedido' + (hiddenOpen>1?'s':'') + ' aberto' + (hiddenOpen>1?'s':'') + ' fora do filtro atual</span> &middot; <strong style="text-decoration:underline">Clique pra ver TODOS</strong>';
                     bannerEl.style.display = 'flex';
                 } else {
                     bannerEl.style.display = 'none';
@@ -679,46 +770,22 @@
         // Uso: pedidos de teste, duplicados ou erro grave de digitação.
         // ============================================
         window.deleteOrder = function(orderId) {
-            const orders = DataStore.getCollection('orders', franchiseId);
-            const idx = orders.findIndex(x => x.id === orderId);
-            if (idx === -1) { alert('Pedido não encontrado.'); return; }
-            const o = orders[idx];
-            const seq = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
-            const totalLabel = (typeof Utils !== 'undefined' && Utils.formatCurrency) ? Utils.formatCurrency(o.total || 0) : ('R$ ' + (o.total || 0));
-
-            const confirm1 = confirm(
-                `EXCLUIR PERMANENTEMENTE o pedido ${seq} (${totalLabel})?\n\n` +
-                `Diferente de "Cancelar", essa ação remove o pedido da base inteira.\n` +
-                `NÃO PODE SER DESFEITO.\n\n` +
-                `Use "Cancelar" se quiser manter o histórico.`
-            );
-            if (!confirm1) return;
-
-            const confirm2 = prompt('Pra confirmar, digite EXCLUIR (em maiúsculas):');
-            if (confirm2 !== 'EXCLUIR') {
-                alert('Exclusão cancelada — texto não confere.');
-                return;
-            }
-
-            // TOMBSTONE — marca como excluído mas mantém no array.
-            // Razão: sync mergeia por id; se removêssemos do array, o outro PC
-            // (que ainda tem o pedido) faria merge e RE-CRIARIA o pedido.
-            // Filtro renderKanban() esconde os deleted. AuditLog preserva o quê.
-            orders[idx].deleted = true;
-            orders[idx].deletedAt = new Date().toISOString();
-            orders[idx].status = 'excluido'; // sai de todas as colunas do kanban
-            orders[idx].updatedAt = new Date().toISOString();
-            const total = orders[idx].total || 0;
-            const itemsCount = (orders[idx].items || []).length;
-            DataStore.set('orders_' + franchiseId, orders);
+            // Redireciona pro deleteOrderFlow que usa modal INLINE (sem
+            // confirm/prompt nativos — browsers Brave/Chrome bloqueiam esses
+            // popups como spam, fazendo o "Excluir" do modal de detalhe falhar
+            // silenciosamente. O modal inline tem botoes Cancelar/EXCLUIR
+            // proprios, persiste o tombstone normalmente.
             try {
-                AuditLog.logOrder('order_deleted', orderId,
-                    { seq: seq, total: total, items: itemsCount }, franchiseId);
+                // Fecha modal de detalhe primeiro pra nao ficar empilhado
+                var dm = document.getElementById('orderModal');
+                if (dm) dm.classList.remove('active');
             } catch(_e){}
-
-            document.getElementById('orderModal').classList.remove('active');
-            renderKanban();
-            if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast(`🗑️ Pedido ${seq} excluído.`, 'success', 2500);
+            // Delega pro fluxo seguro (linha 1187)
+            try { deleteOrderFlow(orderId); }
+            catch(e) {
+                console.error('deleteOrder fallback error:', e);
+                alert('Erro ao abrir confirmacao: ' + e.message);
+            }
         };
 
         // ============================================
@@ -1263,7 +1330,7 @@
                 orders[idx].deletedAt = new Date().toISOString();
                 orders[idx].status = 'excluido';
                 orders[idx].updatedAt = new Date().toISOString();
-                DataStore.set('orders_' + franchiseId, orders);
+                DataStore.setCollection('orders', franchiseId, orders);
                 try { AuditLog.logOrder('order_deleted', orderId, { seq: seq, total: o.total || 0 }, franchiseId); } catch(_){}
                 cleanup();
                 renderKanban();
@@ -1306,6 +1373,7 @@
                 /test[_\s]?agent/i, /test[_\s]?session/i, /\btest\b.*milkypot\.internal/i
             ];
             function isTestOrder(o) {
+                if (isSeedDemoOrder(o)) return true;
                 if (o.isTestSession || o.testSession) return true;
                 const uid = o.userId || o.operatorId || '';
                 if (/^test_agent_/i.test(uid)) return true;
@@ -1339,11 +1407,21 @@
                     (testOrd.length > 5 ? '\n... e mais ' + (testOrd.length - 5) : '');
                 if (!confirm(msg + '\n\nConfirmar exclusão?')) return;
                 const orders = DataStore.getCollection('orders', franchiseId);
-                const cleaned = orders.filter(o => !isTestOrder(o));
-                DataStore.set('orders_' + franchiseId, cleaned);
+                const nowIso = new Date().toISOString();
+                let removed = 0;
+                orders.forEach(function(order) {
+                    if (!isTestOrder(order) || order.deleted) return;
+                    order.deleted = true;
+                    order.status = 'excluido';
+                    order.deletedAt = nowIso;
+                    order.updatedAt = nowIso;
+                    order.deletedReason = isSeedDemoOrder(order) ? 'seed_demo_cleanup' : 'test_order_cleanup';
+                    removed++;
+                });
+                DataStore.setCollection('orders', franchiseId, orders);
                 renderKanban();
                 checkBtn();
-                alert('✅ ' + (orders.length - cleaned.length) + ' pedido(s) de teste removido(s).');
+                alert('✅ ' + removed + ' pedido(s) de teste removido(s).');
             };
 
             // Re-checa após renderKanban
