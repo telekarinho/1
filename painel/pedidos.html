@@ -1119,6 +1119,53 @@
             }
         } catch(e) { console.warn('OfflineQueue.syncPending error:', e); }
 
+        // AUTO-CLEANUP: ao abrir a pagina, qualquer pedido em status aberto
+        // (novo/confirmado/preparando/pronto/em_entrega) com createdAt de DIAS
+        // ANTERIORES e silenciosamente marcado como 'entregue'. Operador pediu:
+        // "ao finalizar caixa hoje os de hoje so ficam no historico do dia,
+        // nunca aparecem no caixa de outro dia". Isto garante que mesmo se
+        // operador esquecer de fechar caixa, no proximo dia o kanban abre limpo.
+        // 100% additive — pedidos viram historico (status=entregue), nao sao
+        // deletados; ficam acessiveis no filtro "Todos".
+        (function _autoCleanupPedidosAntigos() {
+            try {
+                if (!franchiseId) return;
+                var allOrders = DataStore.getCollection('orders', franchiseId);
+                if (!Array.isArray(allOrders) || !allOrders.length) return;
+                var today = (function(){
+                    var d = new Date();
+                    return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+                })();
+                function _localDate(iso) {
+                    if (!iso) return '';
+                    try {
+                        var d = new Date(iso);
+                        if (isNaN(d.getTime())) return '';
+                        return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+                    } catch(e) { return ''; }
+                }
+                var openStatuses = ['novo','confirmado','preparando','pronto','em_entrega'];
+                var changed = 0;
+                var ts = new Date().toISOString();
+                allOrders.forEach(function(o, idx) {
+                    if (!o || o.deleted) return;
+                    if (!openStatuses.includes(o.status)) return;
+                    var lc = _localDate(o.createdAt);
+                    if (!lc || lc >= today) return; // so dia anterior
+                    allOrders[idx].status = 'entregue';
+                    allOrders[idx].updatedAt = ts;
+                    allOrders[idx].finalizedByAutoCleanup = true;
+                    allOrders[idx].finalizedAt = ts;
+                    changed++;
+                });
+                if (changed > 0) {
+                    DataStore.set('orders_' + franchiseId, allOrders);
+                    console.info('[Pedidos] auto-cleanup: ' + changed + ' pedido(s) de dia anterior finalizados como entregue');
+                    try { AuditLog.log('ORDERS_AUTO_CLEANUP', { count: changed, today: today }, franchiseId); } catch(e){}
+                }
+            } catch(e) { console.warn('auto-cleanup pedidos antigos:', e); }
+        })();
+
         renderKanban();
         i18n.translatePage();
 
