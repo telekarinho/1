@@ -733,19 +733,14 @@ body:not(.idle){cursor:default}
             timer = setTimeout(playNext, item.duration);
         }
         else if(m.type === 'html'){
-            // Auto-Cardapio-Slides: aponta pra outra URL (geralmente tv.html?f=global)
-            // que renderiza marketing/menu sem media local. Usa iframe pra embedar.
-            if(!mediaSrc){
-                playFallback('Conteudo HTML indisponivel.');
-                return;
-            }
-            var iframe = document.createElement('iframe');
-            iframe.src = mediaSrc;
-            iframe.style.cssText = 'width:100%;height:100%;border:0;background:#000';
-            iframe.setAttribute('allow', 'autoplay; fullscreen');
-            player.appendChild(iframe);
-            startProgress(item.duration);
-            timer = setTimeout(playNext, item.duration);
+            // Auto-Cardapio-Slides aponta pra propria tv.html → iframe recursivo
+            // = tela preta. Os slides de marketing (promos, milkshake cards, menu
+            // grid) ja sao injetados automaticamente neste mesmo tv.html mais
+            // abaixo, entao esse item html e redundante. Pula imediatamente.
+            // Se for um URL externo legitimo (nao a propria tv.html), tambem
+            // pulamos por seguranca — iframe pode quebrar autoplay/CORS.
+            console.info('[TV] skipping type=html item:', m.name);
+            timer = setTimeout(playNext, 50);
         }
         else {
             playFallback('Tipo de midia nao suportado: ' + m.type);
