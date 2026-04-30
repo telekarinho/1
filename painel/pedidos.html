@@ -371,9 +371,54 @@
                 .filter(o => !o.deleted && Utils.localDateOf(o.createdAt) === today);
         }
 
+        // Defesa permanente: roda antes de cada render do kanban. Isso cobre
+        // carregamento inicial, sincronizacao manual, listener remoto e merges
+        // tardios do Firestore/localStorage que chegam depois do primeiro load.
+        let _cleanupOldOrdersRunning = false;
+        function cleanupOldOpenOrders() {
+            if (_cleanupOldOrdersRunning || !franchiseId) return 0;
+            _cleanupOldOrdersRunning = true;
+            try {
+                const allOrders = DataStore.getCollection('orders', franchiseId);
+                if (!Array.isArray(allOrders) || !allOrders.length) return 0;
+
+                const today = Utils.today();
+                const openStatuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'em_rota'];
+                const nowIso = new Date().toISOString();
+                let changed = 0;
+
+                allOrders.forEach(function(order, index) {
+                    if (!order || order.deleted) return;
+                    if (!openStatuses.includes(order.status)) return;
+
+                    const orderDate = Utils.localDateOf(order.createdAt || order.updatedAt || order.date || order.timestamp);
+                    if (!orderDate || orderDate >= today) return;
+
+                    allOrders[index].status = 'entregue';
+                    allOrders[index].updatedAt = nowIso;
+                    allOrders[index].finalizedByAutoCleanup = true;
+                    allOrders[index].finalizedAt = allOrders[index].finalizedAt || nowIso;
+                    changed++;
+                });
+
+                if (changed > 0) {
+                    DataStore.set('orders_' + franchiseId, allOrders);
+                    console.info('[Pedidos] auto-cleanup render: ' + changed + ' pedido(s) antigo(s) finalizados como entregue');
+                    try { AuditLog.log('ORDERS_AUTO_CLEANUP', { count: changed, today: today, source: 'render' }, franchiseId); } catch(e) {}
+                }
+                return changed;
+            } catch (e) {
+                console.warn('auto-cleanup pedidos antigos:', e);
+                return 0;
+            } finally {
+                _cleanupOldOrdersRunning = false;
+            }
+        }
+
         function renderKanban() {
+            cleanupOldOpenOrders();
             const orders = getFilteredOrders();
-            const allOrders = DataStore.getCollection('orders', franchiseId);
+            const allOrders = DataStore.getCollection('orders', franchiseId).filter(o => o && !o.deleted);
             const statuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'entregue'];
 
             // Aviso quando há pedidos NO STORAGE mas o filtro atual esconde — evita
