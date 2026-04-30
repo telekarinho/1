@@ -134,6 +134,7 @@ class PlayerActivity : AppCompatActivity() {
         main.postDelayed(autoRestartTick, 60_000)
         main.post(clockTick)
         main.postDelayed(configRefreshTick, 2 * 60_000)
+        main.postDelayed(playlistRefreshTick, 30_000)
         main.post(challengeLivePoll)
     }
 
@@ -186,6 +187,16 @@ class PlayerActivity : AppCompatActivity() {
     }
     private val configRefreshTick = object : Runnable {
         override fun run() { reloadConfigOnly(); main.postDelayed(this, 2 * 60_000) }
+    }
+    // Atualiza biblioteca + playlist a cada 30s (igual ao tv.html web). Garante
+    // que mídias novas adicionadas no painel apareçam quase instantâneo, sem
+    // esperar o auto-restart de 1h. Não interrompe a mídia tocando agora — só
+    // troca a lista pra próxima rodada.
+    private val playlistRefreshTick = object : Runnable {
+        override fun run() {
+            if (franchiseId != null) loadPlaylist()
+            main.postDelayed(this, 30_000)
+        }
     }
 
     /**
@@ -618,6 +629,7 @@ class PlayerActivity : AppCompatActivity() {
         main.removeCallbacks(autoRestartTick)
         main.removeCallbacks(clockTick)
         main.removeCallbacks(configRefreshTick)
+        main.removeCallbacks(playlistRefreshTick)
         main.removeCallbacks(challengeLivePoll)
         challengeTickRunnable?.let { main.removeCallbacks(it) }
         nextSlideTick?.let { main.removeCallbacks(it) }
