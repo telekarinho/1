@@ -622,8 +622,10 @@ body:not(.idle){cursor:default}
             return;
         }
 
+        // Compat: uploads novos usam m.url (Firebase Storage), legados m.dataUrl (base64 inline)
+        var mediaSrc = m.url || m.dataUrl;
         if(m.type === 'image'){
-            if(!m.dataUrl){
+            if(!mediaSrc){
                 playFallback('Imagem indisponivel.');
                 return;
             }
@@ -634,7 +636,7 @@ body:not(.idle){cursor:default}
                 imgHandled = true;
                 playFallback('Imagem demorou para carregar.');
             }, 4000);
-            img.src = m.dataUrl;
+            img.src = mediaSrc;
             img.alt = m.name;
             img.style.objectFit = fit;
             img.onload = function(){
@@ -653,7 +655,7 @@ body:not(.idle){cursor:default}
             player.appendChild(img);
         }
         else if(m.type === 'video'){
-            if(!m.dataUrl){
+            if(!mediaSrc){
                 playFallback('Video indisponivel.');
                 return;
             }
@@ -664,7 +666,7 @@ body:not(.idle){cursor:default}
                 videoHandled = true;
                 playFallback('Video demorou para carregar.');
             }, 5000);
-            video.src = m.dataUrl;
+            video.src = mediaSrc;
             video.muted = false;
             video.autoplay = true;
             video.playsInline = true;
@@ -730,8 +732,23 @@ body:not(.idle){cursor:default}
             startProgress(item.duration);
             timer = setTimeout(playNext, item.duration);
         }
+        else if(m.type === 'html'){
+            // Auto-Cardapio-Slides: aponta pra outra URL (geralmente tv.html?f=global)
+            // que renderiza marketing/menu sem media local. Usa iframe pra embedar.
+            if(!mediaSrc){
+                playFallback('Conteudo HTML indisponivel.');
+                return;
+            }
+            var iframe = document.createElement('iframe');
+            iframe.src = mediaSrc;
+            iframe.style.cssText = 'width:100%;height:100%;border:0;background:#000';
+            iframe.setAttribute('allow', 'autoplay; fullscreen');
+            player.appendChild(iframe);
+            startProgress(item.duration);
+            timer = setTimeout(playNext, item.duration);
+        }
         else {
-            playFallback('Tipo de midia nao suportado.');
+            playFallback('Tipo de midia nao suportado: ' + m.type);
         }
     }
 
