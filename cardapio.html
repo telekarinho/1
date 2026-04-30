@@ -764,7 +764,11 @@
                     spHtml = '<span class="card-sp-chip">🔥 ' + spCount + ' pediram hoje</span>';
                 }
 
-                html += '<div class="product-card-mobile" onclick="openProductSheet(\'' + it.id + '\')">' +
+                // Premium: item explicitamente marcado OU preço >= R$ 20 (visual destaque dourado)
+                var isPremium = !!(it.premium || it.isPremium || (it._v2 && it._v2.premium) || (typeof displayPrice === 'number' && displayPrice >= 20));
+                var premiumAttr = isPremium ? ' data-premium="true"' : '';
+
+                html += '<div class="product-card-mobile"' + premiumAttr + ' onclick="openProductSheet(\'' + it.id + '\')">' +
                     '<div class="card-emoji-wrap">' +
                         imgHtml +
                         badgeHtml +
@@ -774,7 +778,7 @@
                         '<p class="card-desc">' + (it.desc || 'Monte do seu jeito!') + '</p>' +
                         spHtml +
                         '<div class="card-footer">' +
-                            '<span class="card-price">' + priceLabel + '<strong>R$ ' + displayPrice.toFixed(2).replace('.',',') + '</strong></span>' +
+                            '<span class="card-price">' + (priceLabel ? '<small>' + priceLabel + '</small>' : '') + '<strong>R$ ' + displayPrice.toFixed(2).replace('.',',') + '</strong></span>' +
                             '<button class="card-add-btn">Pedir</button>' +
                         '</div>' +
                     '</div>' +
