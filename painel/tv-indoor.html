@@ -748,6 +748,12 @@
         var franchises = DataStore.get('franchises') || [];
         var sel = document.getElementById('franchiseSelect');
         if (!sel) return;
+        // Opção GLOBAL: conteúdo aparece em TODAS as franquias automaticamente
+        var globalOpt = document.createElement('option');
+        globalOpt.value = 'global';
+        globalOpt.textContent = '🌐 Global (todas franquias)';
+        if (fid === 'global') globalOpt.selected = true;
+        sel.appendChild(globalOpt);
         franchises.forEach(function(f) {
             var opt = document.createElement('option');
             opt.value = f.id;
@@ -755,6 +761,12 @@
             if (f.id === fid) opt.selected = true;
             sel.appendChild(opt);
         });
+        if (fid === 'global') {
+            var hdr = document.querySelector('.panel-header h1');
+            if (hdr) hdr.innerHTML = '🌐 TV Indoor — <span style="color:#7B1FA2">Global</span>';
+            var sb = document.getElementById('sidebarStoreName');
+            if (sb) sb.textContent = '🌐 Mídia Global';
+        }
     }
 
     // Promessa que resolve com o usuário Firebase assim que o auth state for
