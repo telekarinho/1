@@ -4718,32 +4718,56 @@
 
         var qrHtml = '';
         if(scratchData && scratchData.shortCode){
-            // QR da raspinha — URL CURTA (so shortCode) pra QR ficar com poucos
-            // modulos e ser legivel em impressora termica 203 DPI. raspinha.html
-            // ja faz lookup por shortCode no Firestore (rules publicas pos PR #295).
-            // Cliente normal tem 4G — nao precisamos de payload inline no QR.
+            // QR da raspinha — payload INLINE pra funcionar offline + tamanho
+            // grande na impressao pra qualquer celular ler.
             //
-            // Mudancas vs. versao anterior:
-            // - Removido &d=base64(JSON): URL era gigante, QR ilegivel
-            // - ecc=H (era L): 30% correcao de erro (vs. 7%) — sobrevive a manchas
+            // Mudancas vs. versao original (que iPhone 15 Pro Max nao lia):
+            // - ecc=H (era L): 30% correcao de erro vs. 7% — sobrevive a manchas
             //   e desbote do papel termico
             // - margin=4 (era 0): quiet zone obrigatoria do padrao QR; sem ela,
             //   leitores nao detectam os cantos do codigo
-            // - size=400 (era 180): origem com mais resolucao
-            // - Tamanho impresso 40mm (era 36mm): margem maior pra leitor enquadrar
+            // - size=800 origem (era 180): muito mais resolucao
+            // - Tamanho impresso adaptativo: 50mm em 58mm paper, 56mm em 80mm
+            //   (era 36mm fixo). Modulos com folga = celular le mesmo com URL longa.
+            // - Payload inline enxuto: dropei campos nao usados pelo raspinha.html
+            //   (createdAt, validityDays, prizeCategoria null) pra reduzir tamanho
+            //   da URL em ~15-20% sem perder funcionalidade offline.
             // - Fallback qrcode-generator local (cdnjs) se api.qrserver.com falhar
-            var raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratchData.shortCode);
-            var qrApiSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&ecc=H&margin=4&data=' +
+            var inline = {
+                code: scratchData.code,
+                shortCode: scratchData.shortCode,
+                franchiseId: scratchData.franchiseId,
+                storeName: scratchData.storeName,
+                prizeCode: scratchData.prizeCode,
+                prizeName: scratchData.prizeName,
+                prizeDesc: scratchData.prizeDesc,
+                prizeTier: scratchData.prizeTier,
+                prizeScope: scratchData.prizeScope,
+                minOrder: scratchData.minOrder,
+                expiresAt: scratchData.expiresAt
+            };
+            // Drop chaves vazias/null pra deixar o payload menor
+            Object.keys(inline).forEach(function(k){
+                if (inline[k] == null || inline[k] === '' || inline[k] === 0) delete inline[k];
+            });
+            var encodedInline = '';
+            try {
+                encodedInline = btoa(unescape(encodeURIComponent(JSON.stringify(inline))))
+                    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            } catch (e) { console.warn('[Raspinha] inline encode falhou:', e); }
+            var raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratchData.shortCode)
+                + (encodedInline ? '&d=' + encodedInline : '');
+            // Tamanho do QR adaptativo ao papel termico
+            var qrSizeMm = (cfg.width === '58mm') ? 50 : 56;
+            var qrApiSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=800x800&ecc=H&margin=4&data=' +
                 encodeURIComponent(raspUrl);
-            // Guarda a URL no data-url do img (HTML-escaped); fallback handler
-            // (script no head do recibo) le isso e gera QR local se a API falhar.
-            // Evita inline-JS escape hell com aspas.
             var raspUrlHtmlSafe = String(raspUrl)
                 .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
                 .replace(/</g,'&lt;').replace(/>/g,'&gt;');
             qrHtml = '<div style="text-align:center;margin:4mm 0">' +
                 '<img class="rcp-qr" data-url="' + raspUrlHtmlSafe + '" src="' + qrApiSrc + '" ' +
-                'alt="QR Raspinha" style="width:40mm;height:40mm;background:#fff;padding:2mm">' +
+                'alt="QR Raspinha" style="width:' + qrSizeMm + 'mm;height:' + qrSizeMm + 'mm;' +
+                'background:#fff;padding:2mm;display:block;margin:0 auto">' +
                 '<div style="font-family:monospace;font-size:9px;text-align:center;margin-top:1mm">' +
                   scratchData.shortCode +
                 '</div>' +
@@ -4765,7 +4789,8 @@
                     'var html=qr.createImgTag(8,16);' +
                     'var w=document.createElement("span");w.innerHTML=html;' +
                     'var newImg=w.firstChild;' +
-                    'newImg.style.cssText="width:40mm;height:40mm;background:#fff";' +
+                    'var sz=img.style.width||"50mm";' +
+                    'newImg.style.cssText="width:"+sz+";height:"+sz+";background:#fff";' +
                     'img.parentNode.replaceChild(newImg,img);' +
                   '}catch(e){console.warn("QR local fail",e);}' +
                 '}' +
