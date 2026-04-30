@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit
 object AutoUpdater {
     private const val TAG = "MilkyPotAutoUpdater"
     private const val APK_URL = "https://milkypot.com/tv.apk"
-    private const val CHECK_INTERVAL_HOURS = 6L
+    private const val CHECK_INTERVAL_HOURS = 1L
 
     private val io = Executors.newSingleThreadScheduledExecutor()
     private val http = OkHttpClient.Builder()
