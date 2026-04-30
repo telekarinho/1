@@ -290,7 +290,7 @@
                     </div>
                     <div class="kanban-column" id="colEntregue">
                         <div class="kanban-header">
-                            <div class="kanban-title">✅ <span data-i18n="orders.status_delivered">Entregue</span> <span class="kanban-count" id="countEntregue">0</span></div>
+                            <div class="kanban-title">✅ <span data-i18n="orders.status_delivered">Entregue hoje</span> <span class="kanban-count" id="countEntregue">0</span></div>
                         </div>
                         <div id="listEntregue"></div>
                     </div>
@@ -362,6 +362,15 @@
             return orders;
         }
 
+        // Pedidos do dia (SEMPRE — independente do filtro do select).
+        // Usado pra Receita do dia e coluna "Entregue" no kanban — operador
+        // nao quer ver historico acumulado de 181 entregas anteriores.
+        function getTodayOrders() {
+            const today = Utils.today();
+            return DataStore.getCollection('orders', franchiseId)
+                .filter(o => !o.deleted && Utils.localDateOf(o.createdAt) === today);
+        }
+
         function renderKanban() {
             const orders = getFilteredOrders();
             const allOrders = DataStore.getCollection('orders', franchiseId);
@@ -393,8 +402,14 @@
                 }
             }
 
+            // Coluna "Entregue" SEMPRE mostra so pedidos de hoje — historico
+            // de entregas antigas vai pra outro lugar (relatorios), nao polui
+            // o kanban operacional. Outras colunas respeitam o filtro do select.
+            const todayOrders = getTodayOrders();
+
             statuses.forEach(status => {
-                const statusOrders = orders
+                const sourceList = (status === 'entregue') ? todayOrders : orders;
+                const statusOrders = sourceList
                     .filter(o => o.status === status)
                     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -466,9 +481,15 @@
             document.getElementById('kpiNew').textContent = orders.filter(o => o.status === 'novo' || o.status === 'confirmado').length;
             document.getElementById('kpiPreparing').textContent = orders.filter(o => o.status === 'preparando').length;
             document.getElementById('kpiReady').textContent = orders.filter(o => o.status === 'pronto' || o.status === 'em_entrega').length;
+            // Faturamento SEMPRE do dia (nao acumulado), independente do filtro.
+            // Operador quer saber quanto vendeu HOJE pra bater com o caixa, nao
+            // o historico total de 181 entregas que confunde tudo.
             document.getElementById('kpiRevenue').textContent = Utils.formatCurrency(
-                orders.filter(o => o.status === 'entregue').reduce((s, o) => s + o.total, 0)
+                todayOrders.filter(o => o.status === 'entregue').reduce((s, o) => s + (o.total || 0), 0)
             );
+            // Atualiza label do KPI pra deixar claro que e do dia
+            var kpiRevLabel = document.querySelector('.kpi-card .kpi-info .kpi-label[data-i18n="finances.revenue"]');
+            if (kpiRevLabel) kpiRevLabel.textContent = 'Faturamento do dia';
         }
 
         // Pedido tem item de cozinha (milkshake/sundae/açaí/potinho)?

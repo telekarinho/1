@@ -534,8 +534,14 @@ const Caixa = (function () {
                 const data = {};
                 overlay.querySelectorAll('[data-name]').forEach(el => {
                     const name = el.dataset.name;
-                    let v = el.value;
-                    if (el.dataset.caixaBrl !== undefined) v = parseBRL(v);
+                    let v;
+                    // Checkbox e radio: usa .checked (booleano), nao .value (sempre 'on')
+                    if (el.type === 'checkbox' || el.type === 'radio') {
+                        v = !!el.checked;
+                    } else {
+                        v = el.value;
+                        if (el.dataset.caixaBrl !== undefined) v = parseBRL(v);
+                    }
                     data[name] = v;
                 });
                 const res = onConfirm && onConfirm(data);
@@ -690,6 +696,52 @@ const Caixa = (function () {
         });
     }
 
+    // Labels amigaveis pros metodos de pagamento (chaves vindas do PDV)
+    function _metodoLabel(k) {
+        const map = {
+            dinheiro: '💵 Dinheiro',
+            pix: '📱 PIX',
+            cartao_credito: '💳 Cartão Crédito',
+            credito: '💳 Cartão Crédito',
+            cartao_debito: '💳 Cartão Débito',
+            debito: '💳 Cartão Débito',
+            cartao: '💳 Cartão',
+            voucher: '🎟️ Voucher',
+            cortesia: '🎁 Cortesia',
+            ifood: '🛵 iFood',
+            nao_informado: '❓ Não informado'
+        };
+        return map[k] || ('💼 ' + k);
+    }
+
+    // Renderiza HTML com breakdown de vendas por metodo de pagamento.
+    // Usado tanto no modal inicial quanto na confirmacao dupla.
+    function _renderPagamentosBreakdown(st) {
+        const metodos = Object.keys(st.porMetodo || {});
+        if (!metodos.length) {
+            return '<div style="padding:10px;color:#999;text-align:center;font-style:italic">Nenhuma venda registrada hoje</div>';
+        }
+        // Ordena: dinheiro primeiro, depois decrescente por valor
+        metodos.sort((a, b) => {
+            if (a === 'dinheiro') return -1;
+            if (b === 'dinheiro') return 1;
+            return (st.porMetodo[b] || 0) - (st.porMetodo[a] || 0);
+        });
+        const rows = metodos.map(k => {
+            const v = st.porMetodo[k] || 0;
+            return '<div style="display:flex;justify-content:space-between;padding:6px 10px;border-bottom:1px solid #f0f0f0;font-size:14px">' +
+                '<span>' + _metodoLabel(k) + '</span>' +
+                '<strong style="color:#2E7D32">' + formatBRL(v) + '</strong>' +
+                '</div>';
+        }).join('');
+        return '<div style="border:1px solid #e0e0e0;border-radius:8px;background:#fafafa;margin:8px 0">' +
+            rows +
+            '<div style="display:flex;justify-content:space-between;padding:10px;background:#E8F5E9;border-top:2px solid #4CAF50;font-weight:700;font-size:15px">' +
+              '<span>TOTAL FATURADO</span>' +
+              '<span style="color:#1B5E20">' + formatBRL(st.faturamentoBruto) + '</span>' +
+            '</div></div>';
+    }
+
     function showCloseModal(franchiseId, cb) {
         // Checklist de fechamento antes do modal de valor
         if (shouldShowChecklist('fechamento', franchiseId)) {
@@ -710,6 +762,8 @@ const Caixa = (function () {
             <textarea data-name="motivoForaHorario" placeholder="Ex: shopping fechou cedo, problema técnico, sem movimento..." rows="2" style="width:100%;padding:10px;border:2px solid #FB8C00;border-radius:8px;font-family:inherit;font-size:14px"></textarea>
         ` : '';
 
+        const breakdownHtml = _renderPagamentosBreakdown(st);
+
         const html = `
             <div class="caixa-modal" role="dialog" aria-label="Fechar caixa">
               <div class="caixa-modal-header" style="background:linear-gradient(135deg,#DC2626,#F59E0B)">
@@ -717,13 +771,15 @@ const Caixa = (function () {
                 <button class="caixa-modal-close" data-caixa-close aria-label="Fechar">✕</button>
               </div>
               <div class="caixa-modal-body">
-                <div class="caixa-info">
+                <div style="font-weight:700;margin-bottom:6px;color:#333">💰 Vendas por forma de pagamento</div>
+                ${breakdownHtml}
+                <div class="caixa-info" style="margin-top:10px">
                   Abertura: <strong>${formatBRL(st.valorAbertura)}</strong><br>
-                  Vendas em dinheiro: <strong>${formatBRL(st.vendasDinheiro)}</strong><br>
-                  Reforços: <strong>${formatBRL(st.totalReforco)}</strong><br>
-                  Sangrias: <strong>-${formatBRL(st.totalSangria)}</strong><br>
+                  + Vendas em dinheiro: <strong>${formatBRL(st.vendasDinheiro)}</strong><br>
+                  + Reforços: <strong>${formatBRL(st.totalReforco)}</strong><br>
+                  − Sangrias: <strong>${formatBRL(st.totalSangria)}</strong><br>
                   <hr style="border:none;border-top:1px solid #ddd;margin:6px 0">
-                  Saldo esperado em dinheiro: <strong style="color:#2E7D32">${formatBRL(st.saldoEsperadoDinheiro)}</strong>
+                  <span style="font-size:15px">Saldo esperado em dinheiro:</span> <strong style="color:#2E7D32;font-size:16px">${formatBRL(st.saldoEsperadoDinheiro)}</strong>
                 </div>
                 <label>Valor real contado no caixa</label>
                 <input type="text" class="caixa-brl" data-caixa-brl data-name="valor" inputmode="numeric" placeholder="R$ 0,00">
@@ -734,7 +790,7 @@ const Caixa = (function () {
               </div>
               <div class="caixa-modal-footer">
                 <button class="caixa-btn-secondary" data-caixa-close>Cancelar</button>
-                <button class="caixa-btn-danger" data-caixa-confirm>Fechar caixa</button>
+                <button class="caixa-btn-danger" data-caixa-confirm>Revisar e fechar →</button>
               </div>
             </div>`;
         const modal = openModal(html, (data) => {
@@ -749,7 +805,82 @@ const Caixa = (function () {
                     return false;
                 }
             }
-            var r = closeShift(franchiseId, data.valor, data.motivo, motivoH);
+            // Validacao basica: valor preenchido
+            var valorContado = parseBRL(data.valor);
+            if (!valorContado && valorContado !== 0) {
+                const err = modal.overlay.querySelector('[data-caixa-error]');
+                err.textContent = '⚠️ Informe o valor real contado no caixa.';
+                err.style.display = 'block';
+                return false;
+            }
+            // ETAPA 2: confirmacao dupla — mostra resumo e exige clique consciente
+            // antes de aplicar. Evita fechamento errado por reflexo do operador.
+            modal.overlay.remove();
+            _showCloseConfirmModal(franchiseId, st, {
+                valorContado: valorContado,
+                valorContadoRaw: data.valor,
+                motivo: data.motivo || '',
+                motivoForaHorario: motivoH,
+                hourCheckClose: hourCheckClose
+            }, cb);
+            return false; // ja gerenciamos o fechamento manualmente
+        });
+    }
+
+    // Modal de confirmacao (etapa 2) — mostra um resumo final claro
+    // do fechamento e exige checkbox + clique consciente. Se cancelar,
+    // reabre o modal de fechamento com os valores preservados.
+    function _showCloseConfirmModal(franchiseId, st, params, cb) {
+        const breakdownHtml = _renderPagamentosBreakdown(st);
+        const diff = params.valorContado - st.saldoEsperadoDinheiro;
+        const absDiff = Math.abs(diff);
+        const diffColor = absDiff < 0.01 ? '#10B981' : (absDiff <= 5 ? '#F59E0B' : '#DC2626');
+        const diffLabel = diff > 0 ? 'SOBRA' : (diff < 0 ? 'FALTA' : 'EXATO');
+        const diffBox = '<div style="background:' + diffColor + '15;border:2px solid ' + diffColor + ';border-radius:10px;padding:12px;margin:10px 0">' +
+            '<div style="display:flex;justify-content:space-between;font-size:14px">' +
+              '<span>Esperado em dinheiro</span><strong>' + formatBRL(st.saldoEsperadoDinheiro) + '</strong>' +
+            '</div>' +
+            '<div style="display:flex;justify-content:space-between;font-size:14px">' +
+              '<span>Contado no caixa</span><strong>' + formatBRL(params.valorContado) + '</strong>' +
+            '</div>' +
+            '<hr style="border:none;border-top:1px dashed ' + diffColor + ';margin:8px 0">' +
+            '<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:' + diffColor + '">' +
+              '<span>' + diffLabel + '</span><span>' + formatBRL(absDiff) + '</span>' +
+            '</div></div>';
+
+        const html = `
+            <div class="caixa-modal" role="dialog" aria-label="Confirmar fechamento" style="max-width:480px">
+              <div class="caixa-modal-header" style="background:linear-gradient(135deg,#7B1FA2,#DC2626)">
+                <h3>⚠️ Confirme o fechamento</h3>
+                <button class="caixa-modal-close" data-caixa-close aria-label="Fechar">✕</button>
+              </div>
+              <div class="caixa-modal-body">
+                <div style="background:#FFF3E0;border-left:4px solid #FB8C00;padding:10px 12px;border-radius:6px;margin-bottom:12px;font-size:13px;color:#E65100">
+                  <strong>Confira tudo antes de confirmar.</strong><br>
+                  Depois de fechar, o caixa do dia fica <strong>imutável</strong> — só admin reabre.
+                </div>
+                <div style="font-weight:700;margin-bottom:6px;color:#333">💰 Vendas registradas hoje</div>
+                ${breakdownHtml}
+                ${diffBox}
+                <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin-top:8px;font-size:14px;line-height:1.4">
+                  <input type="checkbox" data-name="confirmou" style="margin-top:3px;width:18px;height:18px;cursor:pointer">
+                  <span>Confirmo que <strong>conferi os valores acima</strong> e que correspondem ao realmente faturado hoje.</span>
+                </label>
+                <div class="caixa-danger" data-caixa-error style="display:none;margin-top:8px"></div>
+              </div>
+              <div class="caixa-modal-footer">
+                <button class="caixa-btn-secondary" data-caixa-back>← Voltar</button>
+                <button class="caixa-btn-danger" data-caixa-confirm>✅ Confirmar e fechar caixa</button>
+              </div>
+            </div>`;
+        const modal = openModal(html, (data) => {
+            if (!data.confirmou) {
+                const err = modal.overlay.querySelector('[data-caixa-error]');
+                err.textContent = '⚠️ Marque o checkbox confirmando que conferiu os valores.';
+                err.style.display = 'block';
+                return false;
+            }
+            var r = closeShift(franchiseId, params.valorContadoRaw, params.motivo, params.motivoForaHorario);
             if (!r.success) {
                 const err = modal.overlay.querySelector('[data-caixa-error]');
                 err.textContent = r.error + (r.esperado !== undefined ? ' (esperado ' + formatBRL(r.esperado) + ', diferença ' + formatBRL(r.diff) + ')' : '');
@@ -758,6 +889,24 @@ const Caixa = (function () {
             }
             if (cb) cb(r);
         });
+        // Botao "Voltar" reabre o modal anterior preservando os valores digitados
+        const backBtn = modal.overlay.querySelector('[data-caixa-back]');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                modal.overlay.remove();
+                // Reabre showCloseModal e prefill
+                showCloseModal(franchiseId, cb);
+                // Tenta repreencher os campos (depois do modal abrir)
+                setTimeout(() => {
+                    var valEl = document.querySelector('.caixa-modal [data-name="valor"]');
+                    if (valEl && params.valorContadoRaw) valEl.value = params.valorContadoRaw;
+                    var motEl = document.querySelector('.caixa-modal [data-name="motivo"]');
+                    if (motEl && params.motivo) motEl.value = params.motivo;
+                    var motHEl = document.querySelector('.caixa-modal [data-name="motivoForaHorario"]');
+                    if (motHEl && params.motivoForaHorario) motHEl.value = params.motivoForaHorario;
+                }, 60);
+            });
+        }
     }
 
     function showSangriaModal(franchiseId, cb) {
