@@ -124,6 +124,41 @@ color:rgba(90,69,112,0.4);margin-top:8px;text-align:center;
 }
 .counter-target span{color:#42A5F5}
 
+.tv-release-status{
+margin:10px 0 12px;
+padding:10px 16px;
+border-radius:18px;
+background:rgba(66,165,245,0.12);
+color:#5A4570;
+font-size:clamp(13px,1.7vw,18px);
+font-weight:800;
+text-align:center;
+max-width:560px;
+}
+.wheel-card{
+display:none;
+background:linear-gradient(135deg,rgba(255,255,255,0.95),rgba(245,240,255,0.95));
+border:2px solid rgba(255,0,64,0.18);
+border-radius:20px;
+padding:16px 20px;
+margin:8px 0 12px;
+text-align:center;
+max-width:430px;
+width:100%;
+box-shadow:0 10px 32px rgba(90,69,112,0.12);
+}
+.wheel-title{font-family:'Baloo 2',cursive;font-size:clamp(20px,3vw,30px);font-weight:800;color:#FF0040;line-height:1}
+.wheel-spin{
+width:120px;height:120px;border-radius:50%;margin:12px auto;
+display:flex;align-items:center;justify-content:center;
+font-size:44px;background:conic-gradient(#FFE082 0 25%,#FF8A80 0 45%,#B39DDB 0 70%,#90CAF9 0 100%);
+border:8px solid #fff;box-shadow:0 8px 24px rgba(90,69,112,0.18);
+}
+.wheel-spin.spinning{animation:wheelSpin 1.3s cubic-bezier(.15,.8,.2,1)}
+@keyframes wheelSpin{from{transform:rotate(0deg) scale(.92)}to{transform:rotate(1080deg) scale(1)}}
+.wheel-prize{font-size:clamp(17px,2.5vw,24px);font-weight:900;color:#5A4570}
+.wheel-note{font-size:12px;color:rgba(90,69,112,0.55);margin-top:4px}
+
 /* Player name display */
 .player-name-display{
 font-size:clamp(16px,2.5vw,28px);font-weight:800;
@@ -747,7 +782,7 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 </div>
 </div>
 <div class="attract-feed" id="attractFeed"></div>
-<div class="attract-cta" id="attractCta">&#128073; Toque na tela para jogar!</div>
+<div class="attract-cta" id="attractCta">&#128073; Toque na tela quando o atendente liberar!</div>
 <!-- Hidden containers for JS -->
 <div id="tournamentSection" style="display:none"><div id="tournamentCountdown"></div><div id="tournamentList"></div></div>
 <div id="attractGlobalRanking" style="display:none"><div id="attractGlobalList"></div></div>
@@ -759,6 +794,7 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 <img src="images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
 <h1 class="main-title" id="mainTitle">Desafio 10 MilkyPot</h1>
 <p class="main-sub" id="mainSub">Pare o cronometro em <strong style="color:#FF0040">exatamente 5, 10 ou 30 segundos</strong> e ganhe premio!</p>
+<div class="tv-release-status" id="tvReleaseStatus">Aguardando liberacao do PDV...</div>
 
 <!-- Free Mode Banner (mostrado quando admin libera acesso sem codigo) -->
 <div id="freeModeBanner" style="display:none;max-width:520px;width:100%;background:linear-gradient(135deg,#FFF5E8 0%,#FFE8D1 100%);border:2px dashed #FF9F43;border-radius:16px;padding:16px 20px;margin:8px 0 16px;text-align:center;box-shadow:0 4px 16px rgba(255,159,67,0.15)">
@@ -873,6 +909,12 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 <div class="result-diff-badge" id="resultDiffBadge"></div>
 <div class="result-msg" id="resultMsg"></div>
 <div class="result-sub" id="resultSub"></div>
+<div class="wheel-card" id="wheelCard">
+<div class="wheel-title">Roda da Ovelhinha</div>
+<div class="wheel-spin" id="wheelSpin">&#127873;</div>
+<div class="wheel-prize" id="wheelPrizeText"></div>
+<div class="wheel-note" id="wheelPrizeNote">Mostre para o atendente validar o premio.</div>
+</div>
 <!-- Prize won display -->
 <div id="prizeWonDisplay" style="display:none;background:rgba(255,255,255,0.9);border:2px solid rgba(200,162,232,0.3);border-radius:16px;padding:14px 20px;margin:8px 0 12px;text-align:center;max-width:400px;width:100%">
 <div style="font-size:11px;font-weight:800;color:#9B59B6;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">&#127873; Voce Ganhou</div>
@@ -965,6 +1007,19 @@ var reactionVideoBlob=null;
 var notifOptedIn=false;
 var db=null;
 var storage=null;
+var tvAutoStart=false;
+var lastWheelPrize=null;
+var audioCtx=null;
+var tensionTimer=null;
+var catalogPrizeContext=null;
+var tvVoucherUnsub=null;
+var tvClaimingVoucher=false;
+var urlParams=new URLSearchParams(window.location.search||'');
+/* TV mode opt-in EXPLICITO via ?tv=1 (ou ?kiosk=1).
+   Detectar por largura de tela quebrava clientes em desktop em casa. */
+var isStoreTvMode=(urlParams.has('tv')||urlParams.has('kiosk'))
+   &&!urlParams.has('manual')&&!urlParams.has('delivery')&&!urlParams.has('gratis');
+var tvFranchiseId=urlParams.get('franchise')||urlParams.get('fid')||'';
 
 document.getElementById('attCount').textContent=attempts;
 
@@ -983,6 +1038,15 @@ btns.forEach(function(b){var d=b.dataset.diff;if(DIFF[d]){var lbl=b.querySelecto
 /* ========== FIREBASE INIT ========== */
 var prizeConfig={exact:'1 MilkyPot Gratis!',close50:'10% de desconto no proximo pedido!',close200:'5% de desconto no proximo pedido!',enabled:true,instagramBonus:true,instagramHandle:'@milkypot',instagramExtraChances:3,attemptsPerPurchase:1,requireVoucher:true,freeMaxPerDay:1,freeConditionNote:'Premio valido APENAS com a compra de hoje na loja',freeBannerText:'🎁 Promocao: jogue gratis! Se ganhar, traga sua compra hoje pra resgatar.',freeExact:'',freeClose50:'',freeClose200:''};
 var isFreeMode=false;
+var wheelPrizes=[
+{tier:'baixo',weight:45,name:'Copinho de sorvete na proxima compra acima de R$ 20',note:'Baixo custo, puxa retorno rapido',rule:{type:'bonus_item',category:'sorvete',minOrder:20}},
+{tier:'baixo',weight:25,name:'Compre 2 picoles e ganhe +1',note:'Aumenta ticket e mantem margem',rule:{type:'buy_x_get_y',category:'picole',buyQty:2,freeQty:1,minOrder:20}},
+{tier:'medio',weight:10,name:'100g de buffet na proxima compra acima de R$ 30',note:'Premio medio com compra obrigatoria',rule:{type:'buffet_grams',grams:100,minOrder:30}},
+{tier:'medio',weight:10,name:'Compre um Milkshake G e ganhe um P',note:'Cliente compra o maior para ganhar o menor',rule:{type:'variant_bonus',category:'milkshake',paidVariant:'G',freeVariant:'P',minOrder:30}},
+{tier:'alto',weight:4,name:'150g de buffet na proxima compra acima de R$ 35',note:'Premio raro, com ticket minimo',rule:{type:'buffet_grams',grams:150,minOrder:35}},
+{tier:'alto',weight:3,name:'30% OFF na proxima compra acima de R$ 40',note:'Raro, desconto limitado para proteger margem',rule:{type:'percent_discount',percent:30,minOrder:40,maxDiscount:10}},
+{tier:'alto',weight:3,name:'Compra em dobro: compre 1 item e leve outro de menor valor',note:'Raro, valido para item de menor valor ate R$ 10',rule:{type:'double_purchase',minOrder:35,maxFreeValue:10}}
+];
 
 if(typeof firebase!=='undefined'){
 if(firebase.firestore) db=firebase.firestore();
@@ -1088,6 +1152,18 @@ var bannerText=document.getElementById('freeModeBannerText');
 var bannerNote=document.getElementById('freeModeBannerNote');
 var attInfo=document.getElementById('voucherAttemptsInfo');
 
+if(isStoreTvMode){
+if(voucherWrap) voucherWrap.style.display='none';
+if(voucherStatus) voucherStatus.style.display='';
+if(voucherHelper) voucherHelper.style.display='none';
+if(btnValidate) btnValidate.style.display='none';
+if(btnGoToPhoto) btnGoToPhoto.style.display='none';
+if(playerInfo) playerInfo.style.display='none';
+if(banner) banner.style.display='none';
+setTvReleaseStatus('Aguardando liberacao do PDV...');
+return;
+}
+
 if(isFreeMode){
 /* Esconde voucher input, status, helper e botao validar */
 if(voucherWrap) voucherWrap.style.display='none';
@@ -1117,6 +1193,163 @@ if(banner) banner.style.display='none';
 }
 
 loadGameConfig();
+
+/* ========== EMOTIONAL AUDIO (no external files) ========== */
+function ensureAudio(){
+try{
+if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+if(audioCtx.state==='suspended') audioCtx.resume();
+}catch(e){}
+}
+function tone(freq,dur,type,gain,delay){
+if(!audioCtx) return;
+var t0=audioCtx.currentTime+(delay||0);
+var osc=audioCtx.createOscillator();
+var g=audioCtx.createGain();
+osc.type=type||'sine';
+osc.frequency.setValueAtTime(freq,t0);
+g.gain.setValueAtTime(0.0001,t0);
+g.gain.exponentialRampToValueAtTime(gain||0.08,t0+0.02);
+g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+osc.connect(g);g.connect(audioCtx.destination);
+osc.start(t0);osc.stop(t0+dur+0.03);
+}
+function playStartSound(){ensureAudio();tone(392,0.08,'triangle',0.08,0);tone(523,0.1,'triangle',0.08,0.09)}
+function playStopSound(){tone(220,0.08,'square',0.05,0);tone(330,0.12,'triangle',0.06,0.08)}
+function playNearSound(){tone(660,0.08,'triangle',0.08,0);tone(740,0.08,'triangle',0.08,0.1);tone(880,0.12,'triangle',0.08,0.2)}
+function playWinSound(){ensureAudio();[523,659,784,1046].forEach(function(f,i){tone(f,0.18,'triangle',0.1,i*0.1)});tone(1318,0.28,'sine',0.08,0.45)}
+function startTensionSound(){
+stopTensionSound();
+tensionTimer=setInterval(function(){
+var remaining=Math.max(0,gameTarget-elapsed);
+var ratio=1-(remaining/gameTarget);
+var freq=360+Math.min(520,ratio*520);
+tone(freq,0.045,'square',0.025);
+if(remaining<1200) tone(freq*1.5,0.04,'triangle',0.035,0.05);
+},520);
+}
+function stopTensionSound(){if(tensionTimer){clearInterval(tensionTimer);tensionTimer=null}}
+
+function formatMoneyBR(v){return 'R$ '+Number(v||0).toFixed(2).replace('.',',')}
+function cleanProductName(name){return String(name||'').replace(/^\d+\.\s*/,'').trim()}
+function productPrice(p){
+var prices=[];
+if(p&&p.precos&&p.precos.loja) prices.push(Number(p.precos.loja.real||p.precos.loja.recomendado||0));
+(p&&p.variantes||[]).forEach(function(v){prices.push(Number(v.precoLoja||0))});
+(p&&p.kits||[]).forEach(function(k){prices.push(Number(k.precoLoja||0))});
+prices=prices.filter(function(n){return n>0});
+return prices.length?Math.min.apply(null,prices):0;
+}
+function readDataStoreDocValue(doc){
+if(!doc||!doc.exists) return null;
+var d=doc.data()||{};
+if(typeof d.value==='string'){
+try{return JSON.parse(d.value)}catch(e){return null}
+}
+return d;
+}
+function buildCatalogPrizeContext(catalog){
+var products=((catalog&&catalog.produtos)||[]).filter(function(p){return p&&p.active!==false});
+var byCat=function(cat){return products.filter(function(p){return p.categoriaId===cat})};
+var milkshakes=byCat('cat_milkshake');
+var picoles=byCat('cat_picole');
+var buffet=byCat('cat_buffet').filter(function(p){return p.buffet&&p.buffet.ativo});
+var milkG=milkshakes.find(function(p){return (p.variantes||[]).some(function(v){return /\bG\b|500|600/i.test(v.name||'')})})||milkshakes[0]||null;
+var milkP=milkshakes.find(function(p){return (p.variantes||[]).some(function(v){return /\bP\b|250/i.test(v.name||'')})})||milkG;
+var picole=picoles[0]||null;
+var buffetProduct=buffet[0]||null;
+return {
+milkshakeName: cleanProductName(milkG&&milkG.name)||'Milkshake',
+milkshakeSmallName: cleanProductName(milkP&&milkP.name)||'Milkshake P',
+picoleName: cleanProductName(picole&&picole.name)||'picole',
+buffetName: cleanProductName(buffetProduct&&buffetProduct.name)||'buffet',
+picolePrice: productPrice(picole)||3,
+hasBuffet: !!buffetProduct,
+hasPicole: !!picole,
+hasMilkshake: !!milkG
+};
+}
+function applyCatalogToPrize(p){
+var ctx=catalogPrizeContext||{};
+var prize=Object.assign({},p,{rule:Object.assign({},p.rule||{})});
+if(prize.rule.category==='picole'){
+prize.name=prize.name.replace(/picoles/ig,ctx.picoleName?ctx.picoleName+'s':'picoles').replace(/picole/ig,ctx.picoleName||'picole');
+}
+if(prize.rule.category==='milkshake'){
+prize.name='Compre um '+(ctx.milkshakeName||'Milkshake')+' G e ganhe um P';
+}
+if(prize.rule.type==='buffet_grams' && ctx.buffetName){
+prize.name=prize.rule.grams+'g de '+ctx.buffetName+' na proxima compra acima de '+formatMoneyBR(prize.rule.minOrder);
+}
+if(prize.rule.type==='percent_discount'){
+prize.name=prize.rule.percent+'% OFF na proxima compra acima de '+formatMoneyBR(prize.rule.minOrder);
+prize.note='Desconto limitado a '+formatMoneyBR(prize.rule.maxDiscount)+' para proteger margem';
+}
+if(prize.rule.type==='double_purchase'){
+prize.name='Compra em dobro: compre 1 item e leve outro de menor valor';
+prize.note='Valido para item de menor valor ate '+formatMoneyBR(prize.rule.maxFreeValue);
+}
+return prize;
+}
+function getWheelPrizes(){
+return wheelPrizes.map(applyCatalogToPrize);
+}
+function loadCatalogPrizeContext(franchiseId){
+catalogPrizeContext=null;
+if(!db||!franchiseId) return Promise.resolve(null);
+return db.collection('datastore').doc('catalog_v2_'+franchiseId).get()
+.then(function(doc){
+var catalog=readDataStoreDocValue(doc);
+if(catalog&&catalog.produtos&&catalog.produtos.length){
+catalogPrizeContext=buildCatalogPrizeContext(catalog);
+return catalogPrizeContext;
+}
+return db.collection('datastore').doc('catalog_config').get().then(function(doc2){
+var legacy=readDataStoreDocValue(doc2);
+var products=[];
+if(legacy&&legacy.sabores){
+Object.keys(legacy.sabores).forEach(function(k){
+((legacy.sabores[k]&&legacy.sabores[k].items)||[]).forEach(function(item){
+products.push({name:item.name,categoriaId:k.indexOf('milk')!==-1?'cat_milkshake':k.indexOf('picole')!==-1?'cat_picole':k.indexOf('buffet')!==-1?'cat_buffet':'cat_'+k,active:item.active!==false,precos:{loja:{real:item.price||item.preco||0}},buffet:{ativo:k.indexOf('buffet')!==-1}});
+});
+});
+}
+catalogPrizeContext=buildCatalogPrizeContext({produtos:products});
+return catalogPrizeContext;
+});
+}).catch(function(e){
+console.warn('Catalog prize context unavailable:',e);
+return null;
+});
+}
+function rollWheelPrize(){
+var prizes=getWheelPrizes();
+var total=prizes.reduce(function(s,p){return s+p.weight},0);
+var r=Math.random()*total;
+for(var i=0;i<prizes.length;i++){
+r-=prizes[i].weight;
+if(r<=0) return prizes[i];
+}
+return prizes[0];
+}
+function showWheelPrize(prize){
+lastWheelPrize=prize;
+var card=document.getElementById('wheelCard');
+var spin=document.getElementById('wheelSpin');
+var text=document.getElementById('wheelPrizeText');
+var note=document.getElementById('wheelPrizeNote');
+if(!card||!spin||!text)return;
+card.style.display='';
+spin.classList.remove('spinning');void spin.offsetWidth;spin.classList.add('spinning');
+text.textContent='Girando...';
+note.textContent='Todo mundo sai com alguma coisa.';
+setTimeout(function(){
+spin.classList.remove('spinning');
+text.textContent=prize.name;
+note.textContent=prize.note||'Mostre para o atendente validar o premio.';
+if(prize.tier==='alto') playWinSound(); else playNearSound();
+},1250);
+}
 
 /* ========== PHONE MASK ========== */
 document.getElementById('playerPhone').addEventListener('input',function(e){
@@ -1207,7 +1440,8 @@ status.textContent='Erro ao validar. Tente novamente.';
 });
 };
 
-function processVoucherResult(data,docId){
+function processVoucherResult(data,docId,opts){
+opts=opts||{};
 var input=document.getElementById('voucherInput');
 var status=document.getElementById('voucherStatus');
 var check=document.getElementById('voucherCheck');
@@ -1247,11 +1481,27 @@ document.getElementById('playerPhone').value=formatted;
 }
 }
 /* Show player info and switch buttons */
+if(isStoreTvMode){
+document.getElementById('voucherPlayerInfo').style.display='none';
+document.getElementById('btnValidateVoucher').style.display='none';
+document.getElementById('btnGoToPhoto').style.display='none';
+setTvReleaseStatus('Liberado para '+(data.customerName||'cliente')+'!');
+if(opts.autoStart){
+tvAutoStart=true;
+startValidatedChallenge(true);
+}
+return;
+}
 document.getElementById('voucherPlayerInfo').style.display='';
 document.getElementById('voucherAttemptsInfo').textContent='🎟️ '+remaining+' tentativa'+(remaining>1?'s':'')+' restante'+(remaining>1?'s':'');
 document.getElementById('btnValidateVoucher').style.display='none';
 document.getElementById('btnGoToPhoto').style.display='';
+if(opts.autoStart){
+tvAutoStart=true;
+startValidatedChallenge(true);
+} else {
 document.getElementById('playerName').focus();
+}
 }
 
 /* ========== NAV ========== */
@@ -1263,8 +1513,7 @@ if(n==='Attract') el=document.getElementById('stepAttract');
 if(el) el.classList.add('active');
 }
 
-/* ========== STEP 0 -> 1: Photo ========== */
-window.goToPhoto=function(){
+function startValidatedChallenge(skipMediaStep){
 /* Em modo gratis, pula a validacao de voucher mas exige nome/telefone + checa limite diario */
 if(isFreeMode){
 playerN=document.getElementById('playerName').value.trim()||'Jogador';
@@ -1292,28 +1541,33 @@ document.getElementById('playerName').value=playerN;
 showReturningWelcome(existing);
 }
 if(gameConfig.streak) loadStreak();
+if(skipMediaStep){
+localStorage.setItem('mp_skip_media','true');
+goToDifficulty();
+return true;
+}
 showStep(1);
 startCamera('photoVideo');
-return;
+return true;
 }
 /* Modo voucher (padrao) */
 if(!activeVoucher||!activeVoucherCode){
 document.getElementById('voucherStatus').className='voucher-status error';
 document.getElementById('voucherStatus').textContent='Valide seu codigo primeiro!';
-return;
+return false;
 }
 var remaining=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
 if(remaining<=0){
 document.getElementById('voucherStatus').className='voucher-status error';
 document.getElementById('voucherStatus').textContent='Codigo ja utilizado. Compre outro MilkyPot!';
-return;
+return false;
 }
 playerN=document.getElementById('playerName').value.trim()||'Jogador';
 playerPhone=document.getElementById('playerPhone').value.replace(/\D/g,'');
 if(playerPhone.length<10){
 document.getElementById('playerPhone').style.borderColor='#FF0040';
 document.getElementById('playerPhone').setAttribute('placeholder','WhatsApp obrigatorio!');
-return;
+return false;
 }
 playerProduct=document.getElementById('productSelect').value||'';
 var existing=best.filter(function(b){return b.phone===playerPhone});
@@ -1327,9 +1581,20 @@ showReturningWelcome(existing);
 if(gameConfig.stampCard) updateStampCard();
 /* Update streak (feature 3) */
 if(gameConfig.streak) loadStreak();
+if(skipMediaStep){
+localStorage.setItem('mp_skip_media','true');
+goToDifficulty();
+return true;
+}
 localStorage.removeItem('mp_skip_media');
 showStep(1);
 startCamera('photoVideo');
+return true;
+}
+
+/* ========== STEP 0 -> 1: Photo ========== */
+window.goToPhoto=function(){
+startValidatedChallenge(false);
 };
 
 /* ========== CAMERA ========== */
@@ -1420,6 +1685,8 @@ window.handleGame=function(){
 var screen=document.getElementById('screen');
 var btn=document.getElementById('gameBtn');
 if(gameState==='idle'){
+ensureAudio();
+playStartSound();
 gameState='running';
 screen.classList.add('running');
 startT=Date.now();elapsed=0;
@@ -1434,11 +1701,14 @@ el.textContent=runMsgs[msgI];
 el.style.animation='none';void el.offsetWidth;el.style.animation='fadeInUp 0.3s';
 },1800);
 tick();
+startTensionSound();
 if(navigator.vibrate) navigator.vibrate(30);
 /* Feature 7: start recording reaction video */
 if(gameConfig.reactionVideo&&webcamStream) startReactionRecording();
 } else if(gameState==='running'){
 cancelAnimationFrame(timer);clearInterval(msgTimer);
+stopTensionSound();
+playStopSound();
 gameState='done';
 document.getElementById('screen').classList.remove('running');
 if(navigator.vibrate) navigator.vibrate([50,30,80]);
@@ -1472,6 +1742,7 @@ if(attInfo) attInfo.textContent='🎟️ '+Math.max(0,rem)+' tentativa'+(rem!==1
 
 var diff=elapsed-gameTarget;
 var abs=Math.abs(diff);
+var wheelPrize=rollWheelPrize();
 
 /* Feature 4: check personal record before saving */
 var prevBest=getPersonalBest();
@@ -1489,11 +1760,21 @@ localStorage.setItem('mp_d_rank',JSON.stringify(best));
 if(db){
 try{
 var fbEntry={name:playerN,phone:playerPhone,elapsed:elapsed,target:gameTarget,difficulty:gameDifficulty,
-diff:Math.abs(gameTarget-elapsed),won:abs===0,attempts:attempts,date:new Date().toISOString()};
+diff:Math.abs(gameTarget-elapsed),won:abs===0,attempts:attempts,date:new Date().toISOString(),
+prizeName:wheelPrize.name,prizeTier:wheelPrize.tier,prizeSource:'roda_ovelinha'};
+if(wheelPrize.rule) fbEntry.prizeRule=wheelPrize.rule;
 if(playerProduct) fbEntry.product=playerProduct;
 if(notifOptedIn) fbEntry.notifyOnBeat=true;
 if(isFreeMode){fbEntry.freeMode=true;fbEntry.prizeConditional=true}
 db.collection('desafio_10000').add(fbEntry);
+if(activeVoucherCode){
+db.collection('desafio_vouchers').doc(activeVoucherCode).update({
+lastPrizeName:wheelPrize.name,
+lastPrizeTier:wheelPrize.tier,
+lastPrizeRule:wheelPrize.rule||null,
+lastPrizeAt:new Date().toISOString()
+});
+}
 }catch(e){}
 }
 
@@ -1548,24 +1829,11 @@ if(gameConfig.reactionVideo&&recordedChunks.length>0) document.getElementById('v
 if(gameConfig.notifications) document.getElementById('notifOptin').style.display='';
 
 /* === PRIZE DISPLAY === */
+/* Premio agora vem da Roda da Ovelhinha (todo mundo ganha algo).
+   prizeWonDisplay (premio fixo por proximidade) fica oculto — substituido pela roda. */
+showWheelPrize(wheelPrize);
 var prizeDisplay=document.getElementById('prizeWonDisplay');
-var prizeText=document.getElementById('prizeWonText');
 prizeDisplay.style.display='none';
-/* Em modo gratis, prefere prizeConfig.freeXxx (se preenchido) — isso forca textos condicionais a compra */
-var prizeExact=(isFreeMode && prizeConfig.freeExact)?prizeConfig.freeExact:prizeConfig.exact;
-var prizeC50=(isFreeMode && prizeConfig.freeClose50)?prizeConfig.freeClose50:prizeConfig.close50;
-var prizeC200=(isFreeMode && prizeConfig.freeClose200)?prizeConfig.freeClose200:prizeConfig.close200;
-if(abs===0 && prizeExact){
-prizeDisplay.style.display='';
-prizeText.textContent=prizeExact;
-prizeDisplay.style.borderColor='rgba(255,215,0,0.4)';
-} else if(abs<=50 && prizeC50){
-prizeDisplay.style.display='';
-prizeText.textContent=prizeC50;
-} else if(abs<=200 && prizeC200){
-prizeDisplay.style.display='';
-prizeText.textContent=prizeC200;
-}
 /* Nota de condicao (so aparece em modo gratis com premio) */
 var prizeNote=document.getElementById('prizeWonNote');
 if(prizeNote){
@@ -1833,6 +2101,7 @@ document.getElementById('winOverlay').classList.add('show');
 var ws=document.getElementById('winSub');
 if(ws) ws.textContent='Parou exatamente em '+fmt(gameTarget)+'!';
 launchConfetti();
+playWinSound();
 if(navigator.vibrate) navigator.vibrate([100,50,200,50,300]);
 }
 window.closeWin=function(){document.getElementById('winOverlay').classList.remove('show')};
@@ -1968,12 +2237,14 @@ renderRankingWithData(globalItems, 'globalRankingList', true);
 
 /* ========== RESTART ========== */
 window.restart=function(){
+stopTensionSound();
 gameState='idle';
 document.getElementById('counter').textContent='00:00.000';
 document.getElementById('gameBtn').className='btn btn-start';
 document.getElementById('gameBtn').innerHTML='Iniciar Desafio &#9889;';
 document.getElementById('statusMsg').textContent='Preparado? Toque para iniciar!';
 document.getElementById('videoSaveBtn').style.display='none';
+var wc=document.getElementById('wheelCard');if(wc)wc.style.display='none';
 recordedChunks=[];reactionVideoBlob=null;
 /* Modo gratis: checa limite diario antes de permitir nova tentativa */
 if(isFreeMode){
@@ -1994,8 +2265,15 @@ return;
 if(activeVoucher){
 var rem=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
 if(rem<=0){
-/* No more attempts, go back to voucher input */
+/* No more attempts */
 activeVoucher=null;activeVoucherCode=null;
+/* TV mode: marca voucher como usado e volta pra attract pra proxima liberacao do PDV */
+if(isStoreTvMode){
+showStep('Attract');
+startAttract();
+setTvReleaseStatus('Aguardando liberacao do PDV...');
+return;
+}
 document.getElementById('voucherInput').value='';
 document.getElementById('voucherInput').classList.remove('valid');
 document.getElementById('voucherCheck').classList.remove('show');
@@ -2148,7 +2426,7 @@ mediaHtml+
 '<div class="attract-card-val '+(c.cls||'')+'">'+c.val+'</div>'+
 '<div style="font-size:clamp(11px,1.5vw,14px);color:rgba(90,69,112,0.4);margin-top:6px">'+c.copy+'</div>'+
 '</div>';
-var ctas=['Toque na tela para jogar!','Voce consegue acertar?','Desafie seus amigos!','Quem sera o proximo?','Toque aqui e tente!'];
+var ctas=['Toque quando o atendente liberar!','Desafio liberado pelo PDV','Sem teclado na TV: so toque!','Quem sera o proximo?','Peca sua liberacao no caixa!'];
 document.getElementById('attractCta').textContent=ctas[attractIdx%ctas.length];
 }
 
@@ -2329,13 +2607,79 @@ if(attractTimer){clearInterval(attractTimer);attractTimer=null}
 stopDemoCounter();
 }
 
+function setTvReleaseStatus(msg,isError){
+var el=document.getElementById('tvReleaseStatus');
+if(!el)return;
+el.textContent=msg;
+el.style.background=isError?'rgba(255,0,64,0.10)':'rgba(66,165,245,0.12)';
+el.style.color=isError?'#FF0040':'#5A4570';
+}
+
+function claimNextTvVoucher(){
+ensureAudio();
+if(!db){
+showStep(0);
+setTvReleaseStatus('Sem conexao com o PDV. Aguardando sincronizar...',true);
+return;
+}
+if(tvClaimingVoucher) return;
+tvClaimingVoucher=true;
+showStep(0);
+setTvReleaseStatus('Procurando liberacao do PDV...');
+db.collection('desafio_vouchers').orderBy('createdAt','desc').limit(20).get().then(function(snap){
+var picked=null,pickedId=null;
+snap.forEach(function(doc){
+if(picked)return;
+var d=doc.data();
+var remaining=(d.attempts||0)-(d.attemptsUsed||0);
+/* Multi-tenancy: so aceita vouchers da propria franquia da TV */
+if(tvFranchiseId && d.franchiseId && d.franchiseId!==tvFranchiseId) return;
+if(d.tvReady===true && d.status==='ready' && !d.used && remaining>0){
+picked=d;pickedId=doc.id;
+}
+});
+if(!picked){
+setTvReleaseStatus('Aguardando liberacao do PDV...');
+tvClaimingVoucher=false;
+return;
+}
+setTvReleaseStatus('Liberado para '+(picked.customerName||'cliente')+'!');
+try{
+db.collection('desafio_vouchers').doc(pickedId).update({status:'in_progress',tvAcceptedAt:new Date().toISOString()});
+picked.status='in_progress';
+}catch(e){}
+loadCatalogPrizeContext(picked.franchiseId).then(function(){
+processVoucherResult(picked,pickedId,{autoStart:true});
+tvClaimingVoucher=false;
+});
+}).catch(function(err){
+console.error('TV voucher lookup error:',err);
+setTvReleaseStatus('Nao consegui buscar a liberacao. Aguardando PDV...',true);
+tvClaimingVoucher=false;
+});
+}
+
+function watchTvVoucherRelease(){
+if(!isStoreTvMode||!db||tvVoucherUnsub) return;
+try{
+tvVoucherUnsub=db.collection('desafio_vouchers').orderBy('createdAt','desc').limit(10).onSnapshot(function(){
+if(activeVoucher||gameState==='running'||gameState==='done') return;
+claimNextTvVoucher();
+},function(err){console.warn('TV voucher watch:',err)});
+setTvReleaseStatus('Aguardando liberacao do PDV...');
+}catch(e){console.warn('watchTvVoucherRelease:',e)}
+}
+
 /* Touch to start */
 document.getElementById('stepAttract').addEventListener('click',function(){
-stopAttract();showStep(0);document.getElementById('playerName').focus();
+stopAttract();
+if(isStoreTvMode){showStep(0);setTvReleaseStatus('Aguardando liberacao do PDV...');watchTvVoucherRelease();return}
+showStep(0);document.getElementById('playerName').focus();
 });
 
 /* Start attract mode */
 startAttract();
+watchTvVoucherRelease();
 
 /* Auto-return to attract after 60s inactivity */
 var idleTimer;

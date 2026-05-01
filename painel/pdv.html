@@ -275,6 +275,9 @@
         .redeem-fab { position: fixed; bottom: 18px; left: 110px; width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, #EC407A, #AD1457); color: #fff; border: none; box-shadow: 0 6px 20px rgba(236,64,122,0.45); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; transition: transform 0.15s; }
         .redeem-fab:hover { transform: scale(1.08); box-shadow: 0 10px 28px rgba(236,64,122,0.55); }
         .redeem-fab:active { transform: scale(0.95); }
+        .challenge-fab { position: fixed; bottom: 18px; left: 190px; width: 76px; height: 70px; border-radius: 18px; background: linear-gradient(135deg, #6C63FF, #42A5F5); color: #fff; border: none; box-shadow: 0 6px 20px rgba(66,165,245,0.42); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; transition: transform 0.15s; }
+        .challenge-fab:hover { transform: scale(1.06); box-shadow: 0 10px 28px rgba(66,165,245,0.55); }
+        .challenge-fab:active { transform: scale(0.95); }
 
         /* Buffet / Weight Modal */
         .buffet-modal { background: #fff; border-radius: 20px; width: 520px; max-width: 95vw; max-height: 92vh; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.25); display: flex; flex-direction: column; }
@@ -499,6 +502,12 @@
                 left: 92px;
                 width: 56px; height: 56px;
             }
+            .challenge-fab {
+                bottom: calc(62vh + 12px) !important;
+                left: 154px;
+                width: 60px; height: 56px;
+                border-radius: 14px;
+            }
         }
 
         @media(max-width:480px) {
@@ -533,6 +542,12 @@
                 bottom: calc(55vh + 8px) !important;
                 left: 78px;
                 width: 50px; height: 50px;
+            }
+            .challenge-fab {
+                bottom: calc(55vh + 8px) !important;
+                left: 134px;
+                width: 56px; height: 50px;
+                border-radius: 12px;
             }
             /* Header compacto no celular */
             .pdv-header { padding: 8px 10px; }
@@ -607,6 +622,7 @@
             .pdv-products { height: calc(100vh - 44px - 44px) !important; }
             .buffet-fab { bottom: 12px !important; left: 12px; }
             .redeem-fab { bottom: 12px !important; }
+            .challenge-fab { bottom: 12px !important; }
         }
     </style>
 </head>
@@ -681,6 +697,12 @@
 
     <!-- FAB FLUTUANTE: Conta Aberta + Fechar SEMPRE visíveis quando carrinho tem itens.
          Independe do tamanho do PDV — não some em viewport pequeno. -->
+    <!-- Floating Free Challenge Release Button -->
+    <button class="challenge-fab" onclick="openFreeChallengeModal()" title="Liberar desafio gratis na TV">
+        <span style="font-size:24px">⚡</span>
+        <span style="font-size:10px;font-weight:800;display:block">DESAFIO</span>
+    </button>
+
     <div class="pdv-action-fab" id="pdvActionFab" role="toolbar" aria-label="Ações do pedido">
         <span class="fab-total" id="pdvFabTotal">R$ 0,00</span>
         <button class="fab-tab" onclick="if(typeof openTab==='function') openTab()" title="Salvar pedido como conta aberta">📋 Conta Aberta</button>
@@ -947,14 +969,34 @@
     </div>
 </div>
 
+<!-- Free Challenge Release Modal -->
+<div class="modal-bg" id="freeChallengeModal" style="z-index:1980" onclick="if(event.target===this)closeFreeChallengeModal()">
+    <div style="background:#fff;border-radius:18px;padding:24px 24px;max-width:430px;width:92%;box-shadow:0 12px 40px rgba(0,0,0,0.25);font-family:'Nunito',sans-serif">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <h3 style="margin:0;font-family:'Baloo 2',cursive;font-size:20px;color:#5A4570">⚡ Liberar desafio grátis</h3>
+            <button onclick="closeFreeChallengeModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#666">×</button>
+        </div>
+        <p style="font-size:13px;color:#666;margin:0 0 14px;line-height:1.4">Preencha no PDV. A TV da loja não pede dados do cliente.</p>
+        <label style="display:block;font-size:11px;color:#666;font-weight:800;margin-bottom:4px;text-transform:uppercase">Nome do cliente</label>
+        <input type="text" id="freeChallengeName" placeholder="Nome do cliente" maxlength="32" style="width:100%;padding:12px 14px;border:2px solid #ddd;border-radius:10px;font-size:16px;font-weight:800;font-family:inherit;margin-bottom:10px">
+        <label style="display:block;font-size:11px;color:#666;font-weight:800;margin-bottom:4px;text-transform:uppercase">WhatsApp</label>
+        <input type="tel" id="freeChallengePhone" placeholder="(43) 99999-9999" maxlength="16" style="width:100%;padding:12px 14px;border:2px solid #ddd;border-radius:10px;font-size:16px;font-weight:800;font-family:inherit;margin-bottom:12px">
+        <div id="freeChallengeStatus" style="display:none;border-radius:10px;padding:10px;margin-bottom:12px;font-size:13px;font-weight:800"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button onclick="closeFreeChallengeModal()" style="padding:12px;border:2px solid #ddd;background:#fff;color:#666;border-radius:10px;font-weight:800;cursor:pointer;font-family:inherit">Cancelar</button>
+            <button onclick="releaseFreeChallenge()" style="padding:12px;border:none;background:linear-gradient(135deg,#6C63FF,#42A5F5);color:#fff;border-radius:10px;font-weight:900;cursor:pointer;font-family:inherit">Liberar na TV</button>
+        </div>
+    </div>
+</div>
+
 <!-- Voucher Modal -->
 <div class="modal-bg" id="voucherModal" style="z-index:2000">
     <div style="background:#fff;border-radius:20px;padding:32px 28px;text-align:center;max-width:420px;width:90%;box-shadow:0 12px 48px rgba(0,0,0,0.25);animation:winIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275)">
         <div style="font-size:48px;margin-bottom:8px">🎟️</div>
-        <div style="font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;color:#6C63FF;margin-bottom:4px">Desafio 10 Segundos!</div>
-        <div style="font-size:13px;color:#888;margin-bottom:16px">Informe este codigo ao cliente para jogar o Desafio 10 Segundos!</div>
+        <div style="font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;color:#6C63FF;margin-bottom:4px">Desafio liberado na TV!</div>
+        <div style="font-size:13px;color:#888;margin-bottom:16px">Nome e WhatsApp foram enviados. Na TV, toque na tela para iniciar sem teclado.</div>
         <div id="voucherCodeDisplay" style="font-family:'Orbitron',monospace,'Courier New',monospace;font-size:clamp(32px,6vw,48px);font-weight:900;color:#FF0040;letter-spacing:4px;padding:16px 24px;background:linear-gradient(135deg,#FFF5F7,#F5F0FF);border:3px dashed #FF0040;border-radius:16px;margin-bottom:16px;user-select:all"></div>
-        <div style="font-size:12px;color:#aaa;margin-bottom:16px">O cliente digita este codigo em milkypot.com/desafio.html</div>
+        <div style="font-size:12px;color:#aaa;margin-bottom:16px">Codigo mantido apenas como reserva, caso precise validar manualmente.</div>
         <button onclick="closeVoucherModal()" style="background:linear-gradient(135deg,#6C63FF,#5A52E0);color:#fff;border:none;padding:12px 40px;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">OK</button>
     </div>
 </div>
@@ -2356,8 +2398,17 @@
     if(typeof firebase!=='undefined'&&firebase.firestore){
         try{
             firebase.firestore().collection('config').doc('desafio_premios').get().then(function(doc){
-                if(doc.exists&&doc.data().attemptsPerPurchase){
-                    localStorage.setItem('mp_desafio_attempts_per_purchase',doc.data().attemptsPerPurchase.toString());
+                if(doc.exists){
+                    var d=doc.data()||{};
+                    if(d.attemptsPerPurchase){
+                        localStorage.setItem('mp_desafio_attempts_per_purchase',d.attemptsPerPurchase.toString());
+                    }
+                    if(typeof d.requireVoucher!=='undefined'){
+                        localStorage.setItem('mp_desafio_require_voucher',d.requireVoucher?'true':'false');
+                    }
+                    if(d.freeMaxPerDay){
+                        localStorage.setItem('mp_desafio_free_max_per_day',d.freeMaxPerDay.toString());
+                    }
                 }
             });
         }catch(e){}
@@ -3421,7 +3472,13 @@
             usedDefaultPin: !!window._cartDiscount.usedDefaultPin
         } : null;
         var total = Math.max(0, Math.round((subtotal - discountAmount) * 100) / 100);
-        var oName=document.getElementById('orderName').value||(orderType==='balcao'?'Balcao':'');
+        // Nome do pedido: fallback para 'Balcao' quando vazio em pedido balcao (NAO bloqueia
+        // o fluxo do operador). A liberacao do desafio na TV e feita SEPARADAMENTE pelo
+        // botao "DESAFIO" (FAB), que tem seu proprio modal exigindo nome+WhatsApp.
+        var oName=(document.getElementById('orderName').value||'').trim()||(orderType==='balcao'?'Balcao':'');
+        var customerPhoneEl = document.getElementById('cPhone');
+        var customerPhone = customerPhoneEl ? customerPhoneEl.value : '';
+        var customerPhoneDigits = customerPhone.replace(/\D/g,'');
 
         // === DESAFIO VOUCHER GENERATION (generate FIRST so we can save with order) ===
         var voucherCode = 'MP' + Date.now().toString(36).toUpperCase().slice(-4) + Math.random().toString(36).toUpperCase().slice(2,4);
@@ -3429,7 +3486,6 @@
         var attemptsPerPurchase = parseInt(localStorage.getItem('mp_desafio_attempts_per_purchase') || '1');
 
         // === RASPINHA DA SORTE V2 — anti-prejuízo + anti-fraude ===
-        var customerPhone = document.getElementById('cPhone') ? document.getElementById('cPhone').value : '';
         var customerKey = (customerPhone || oName || '').replace(/\D/g, '').slice(-11) || null;
         var scratchData = null;
         var scratchCheck = shouldEmitScratch(total, customerKey);
@@ -3713,16 +3769,21 @@
         if (typeof renderPdvStatusChips === 'function') { try { renderPdvStatusChips(); } catch (e) {} }
 
         // Save voucher to Firestore
+        // Voucher do pedido: NAO auto-libera na TV. Cliente pega o codigo no recibo
+        // e digita em milkypot.com/desafio.html. Pra liberar na TV da loja, o atendente
+        // usa o botao "DESAFIO" (FAB) que cria voucher separado com tvReady=true.
         var voucher = {
             code: voucherDisplay,
             orderId: order.id,
             orderSource: 'pdv',
             customerName: oName || '',
             customerPhone: order.customer.phone || '',
+            customerPhoneDigits: customerPhoneDigits,
             franchiseId: fid,
             attempts: attemptsPerPurchase,
             attemptsUsed: 0,
             instagramBonusUsed: false,
+            tvReady: false,
             createdAt: new Date().toISOString(),
             lastUsedAt: null,
             used: false
@@ -5061,6 +5122,89 @@
     };
     window.closeVoucherModal=function(){
         document.getElementById('voucherModal').classList.remove('open');
+    };
+
+    function maskFreeChallengePhone(v){
+        var d=String(v||'').replace(/\D/g,'').slice(0,11);
+        if(d.length>7) return '('+d.slice(0,2)+') '+d.slice(2,7)+'-'+d.slice(7);
+        if(d.length>2) return '('+d.slice(0,2)+') '+d.slice(2);
+        return d.length?'('+d:'';
+    }
+    function setFreeChallengeStatus(msg,type){
+        var el=document.getElementById('freeChallengeStatus');
+        if(!el)return;
+        el.style.display='';
+        el.textContent=msg;
+        el.style.background=type==='error'?'#FEE2E2':(type==='success'?'#DCFCE7':'#EEF2FF');
+        el.style.color=type==='error'?'#991B1B':(type==='success'?'#166534':'#4338CA');
+    }
+    window.openFreeChallengeModal=function(){
+        var freeMode = localStorage.getItem('mp_desafio_require_voucher') === 'false';
+        if(!freeMode){
+            toast('Modo grátis não está ativo no admin do desafio.');
+            return;
+        }
+        var n=document.getElementById('freeChallengeName');
+        var p=document.getElementById('freeChallengePhone');
+        if(n) n.value=(document.getElementById('orderName').value||'').trim();
+        if(p) p.value=maskFreeChallengePhone(document.getElementById('cPhone').value||'');
+        var st=document.getElementById('freeChallengeStatus');
+        if(st) st.style.display='none';
+        document.getElementById('freeChallengeModal').classList.add('open');
+        setTimeout(function(){if(n)n.focus()},80);
+    };
+    window.closeFreeChallengeModal=function(){
+        document.getElementById('freeChallengeModal').classList.remove('open');
+    };
+    var freePhoneInput=document.getElementById('freeChallengePhone');
+    if(freePhoneInput){
+        freePhoneInput.addEventListener('input',function(e){e.target.value=maskFreeChallengePhone(e.target.value)});
+    }
+    window.releaseFreeChallenge=function(){
+        var freeMode = localStorage.getItem('mp_desafio_require_voucher') === 'false';
+        if(!freeMode){setFreeChallengeStatus('Modo grátis não está ativo no admin.','error');return}
+        var name=(document.getElementById('freeChallengeName').value||'').trim();
+        var phone=(document.getElementById('freeChallengePhone').value||'');
+        var digits=phone.replace(/\D/g,'');
+        if(!name){setFreeChallengeStatus('Informe o nome do cliente.','error');document.getElementById('freeChallengeName').focus();return}
+        if(digits.length<10){setFreeChallengeStatus('Informe o WhatsApp do cliente.','error');document.getElementById('freeChallengePhone').focus();return}
+        if(typeof firebase==='undefined'||!firebase.firestore){setFreeChallengeStatus('Sem conexão com Firebase.','error');return}
+        var attempts=parseInt(localStorage.getItem('mp_desafio_free_max_per_day')||'1',10)||1;
+        var voucherCode='MP'+Date.now().toString(36).toUpperCase().slice(-4)+Math.random().toString(36).toUpperCase().slice(2,4);
+        var voucherDisplay='MP-'+voucherCode.slice(2);
+        var now=new Date().toISOString();
+        var voucher={
+            code:voucherDisplay,
+            orderId:null,
+            orderSource:'pdv_free',
+            customerName:name,
+            customerPhone:phone,
+            customerPhoneDigits:digits,
+            franchiseId:fid,
+            attempts:attempts,
+            attemptsUsed:0,
+            instagramBonusUsed:false,
+            status:'ready',
+            tvReady:true,
+            freeMode:true,
+            releasedBy:(typeof currentUser!=='undefined'&&currentUser&&currentUser.id)?currentUser.id:null,
+            releasedAt:now,
+            createdAt:now,
+            lastUsedAt:null,
+            used:false
+        };
+        setFreeChallengeStatus('Liberando na TV...','info');
+        firebase.firestore().collection('desafio_vouchers').doc(voucherCode).set(voucher).then(function(){
+            document.getElementById('orderName').value=name;
+            document.getElementById('cPhone').value=phone;
+            setFreeChallengeStatus('Desafio grátis liberado na TV para '+name+'!','success');
+            window._lastVoucherCode=voucherDisplay;
+            showVoucherModal(voucherDisplay);
+            setTimeout(closeFreeChallengeModal,900);
+        }).catch(function(e){
+            console.warn('Free challenge release error:',e);
+            setFreeChallengeStatus('Erro ao liberar. Tente novamente.','error');
+        });
     };
 
     function toast(m){var e=document.getElementById('tst');e.textContent=m;e.classList.add('show');setTimeout(function(){e.classList.remove('show')},2500)}
