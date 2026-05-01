@@ -2,6 +2,51 @@
 
 ---
 
+## Ciclo #77 — 2026-05-01
+
+**Área:** Conteúdo — Semanas 37 + 38 (27/12/2026–09/01/2027)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #74 e confirmado pela transição da semana 36. Semana 37 = Virada Ano Novo 31/12 (pico de pedidos final de ano) + Sexta #21 em 01/01/2027 "Primeiro Potinho de 2027" (Linha Zero como gancho de resolução de Ano Novo) + carrossel retrospectiva "8 meses em números" em 28/12. Semana 38 = campanha "Nova Meta, Novo Potinho" aprofundada: Linha Zero educativo + açaí herói visual de verão (buffet self-service diferencial exclusivo da unidade Muffato) + Sexta #22 em 08/01 com duplo protagonismo fit/verão.
+
+**O que analisou:**
+- Leu semanas 35, 36 e transição para 37 como referência de formato (padrão v10: Dom–Sab, WA templates, checklist, métricas, tabela editorial)
+- Confirmou na estratégia.md (#74) o roadmap: ciclo #77 = semanas 37+38, ciclo #78 = SEO/UX gap técnico obrigatório (6+ ciclos sem SEO)
+- Calculou Sexta #21 = 01/01/2027 e Sexta #22 = 08/01/2027 (confirmado via transição da semana 36)
+- Identificou a narrativa de dupla audiência para janeiro: público "fit/resolução/proteína" (Linha Zero) + público "calor/verão/refrescante" (Açaí buffet)
+- Diferenciação implícita TheBest (semana 38, quinta 07/01): tutorial de montagem ao vivo vs. produto padronizado de quiosque — sem citar concorrente
+- Alerta: ciclo #78 é SEO/UX obrigatório (6 ciclos de conteúdo consecutivos desde #72)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana37.md` | CRIADO — 7 peças (Dom–Sab): pós-Natal teaser Virada (27/12), carrossel retrospectiva 8 meses Versão A/B (28/12), post emocional "o que você leva de 2026?" (29/12), WA+feed anúncio plano Virada (30/12), **VIRADA 31/12** (WA 10h + feed 12h + stories ao longo do dia + stories meia-noite opcional), **Sexta #21** "Primeiro Potinho de 2027" com Linha Zero (01/01), retomada normal + teaser "Nova Meta" (02/01), Reel 15s "De 2026 para 2027", checklist, métricas, tabela editorial |
+| `belinha/content/pos-inauguracao-semana38.md` | CRIADO — 7 peças (Dom–Sab): âncora campanha "Nova Meta, Novo Potinho" (03/01), carrossel educativo "O que é a Linha Zero?" (04/01), açaí herói verão / buffet self-service (05/01), WA broadcast + depoimento/UGC Linha Zero (06/01), tutorial "Como montar o Potinho Fit" + diferenciação implícita TheBest (07/01), **Sexta #22** duplo protagonismo Linha Zero + Açaí Verão (08/01), recap + teaser semana 39 (09/01), Reel 15s "Janeiro Fit", checklist, métricas, tabela editorial |
+
+**Commit:** `03585f0`
+
+**Destaques de conteúdo:**
+1. **Sexta #21 = 01/01/2027 como gancho máximo de conversão Linha Zero:** Primeiro dia do ano + resolução de Ano Novo + Sexta do Potinho = três contextos convergindo. Copy: "Primeira meta de 2027 feita." Não "dieta" — "potinho que vai junto com você"
+2. **Virada 31/12 com stories de meia-noite (opcional):** Ponto de diferenciação forte — loja que celebra a Virada com os clientes ao vivo, algo que quiosque de shopping não faz. Requer decisão do operador (equipe até meia-noite)
+3. **Açaí buffet self-service como diferencial exclusivo da unidade Muffato (semana 38):** Narrativa "o buffet que só tem aqui" — diferenciação de produto dentro da própria rede + vs. concorrentes. Posicionado como herói visual de verão
+4. **Diferenciação implícita TheBest — quinta 07/01 (semana 38):** Tutorial de montagem ao vivo ("você decide, a ovelhinha monta") contrasta com produto padronizado de quiosque. Sem citar concorrente
+5. **Duas versões de retrospectiva (28/12):** Versão A com dados reais do operador; Versão B qualitativa/emocional para caso os números não estejam disponíveis — mesmo padrão de mitigação de bloqueadores de ciclos anteriores
+6. **Bloqueador novo identificado:** Preço da Linha Zero não está nos arquivos de conteúdo anteriores — operador deve confirmar valor para incluir no carrossel educativo de segunda 04/01
+
+**Próximo passo sugerido:**
+- **Ciclo #78 — SEO/UX OBRIGATÓRIO** (6 ciclos de conteúdo consecutivos sem SEO/UX): sitemap.xml verificado/atualizado, schema.org LocalBusiness, Open Graph tags, Core Web Vitals básico. Prioridade máxima
+- Ciclo #79: Auto-aprimoramento #79 — reler log #74–#78, ajustar estratégia para semanas 39–42 (açaí verão herói + aniversário 9 meses 25/01/2027 + Carnaval fev/2027)
+- Ciclo #80: Conteúdo — Semanas 39+40 (10–23/01): Açaí herói verão + UGC verão + Sexta #23 + teaser aniversário 9 meses
+- Operador: confirmar preço Linha Zero para carrossel 04/01
+- Operador: definir ação especial 31/12 (topping bônus / brinde / pontos em dobro) antes de 30/12
+- Operador: confirmar horário de funcionamento 31/12 e 01/01/2027
+- Operador: coletar depoimento real de cliente Linha Zero antes de 06/01
+- Operador: foto profissional do Potinho Fit montado + vídeo do buffet de açaí (luz natural) para semana 38
+
+_Belinha — Ciclo #77 | 2026-05-01_
+
+---
+
 ## Ciclo #74 — 2026-04-30
 
 **Área:** Auto-aprimoramento — análise ciclos #69–73 + estratégia dezembro/Natal 2026 + Q1 2027
