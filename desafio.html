@@ -1015,7 +1015,11 @@ var catalogPrizeContext=null;
 var tvVoucherUnsub=null;
 var tvClaimingVoucher=false;
 var urlParams=new URLSearchParams(window.location.search||'');
-var isStoreTvMode=(window.innerWidth>=900)&&!urlParams.has('manual')&&!urlParams.has('delivery')&&!urlParams.has('gratis');
+/* TV mode opt-in EXPLICITO via ?tv=1 (ou ?kiosk=1).
+   Detectar por largura de tela quebrava clientes em desktop em casa. */
+var isStoreTvMode=(urlParams.has('tv')||urlParams.has('kiosk'))
+   &&!urlParams.has('manual')&&!urlParams.has('delivery')&&!urlParams.has('gratis');
+var tvFranchiseId=urlParams.get('franchise')||urlParams.get('fid')||'';
 
 document.getElementById('attCount').textContent=attempts;
 
@@ -1825,25 +1829,11 @@ if(gameConfig.reactionVideo&&recordedChunks.length>0) document.getElementById('v
 if(gameConfig.notifications) document.getElementById('notifOptin').style.display='';
 
 /* === PRIZE DISPLAY === */
+/* Premio agora vem da Roda da Ovelhinha (todo mundo ganha algo).
+   prizeWonDisplay (premio fixo por proximidade) fica oculto — substituido pela roda. */
 showWheelPrize(wheelPrize);
 var prizeDisplay=document.getElementById('prizeWonDisplay');
-var prizeText=document.getElementById('prizeWonText');
 prizeDisplay.style.display='none';
-/* Em modo gratis, prefere prizeConfig.freeXxx (se preenchido) — isso forca textos condicionais a compra */
-var prizeExact=(isFreeMode && prizeConfig.freeExact)?prizeConfig.freeExact:prizeConfig.exact;
-var prizeC50=(isFreeMode && prizeConfig.freeClose50)?prizeConfig.freeClose50:prizeConfig.close50;
-var prizeC200=(isFreeMode && prizeConfig.freeClose200)?prizeConfig.freeClose200:prizeConfig.close200;
-if(false && abs===0 && prizeExact){
-prizeDisplay.style.display='';
-prizeText.textContent=prizeExact;
-prizeDisplay.style.borderColor='rgba(255,215,0,0.4)';
-} else if(false && abs<=50 && prizeC50){
-prizeDisplay.style.display='';
-prizeText.textContent=prizeC50;
-} else if(false && abs<=200 && prizeC200){
-prizeDisplay.style.display='';
-prizeText.textContent=prizeC200;
-}
 /* Nota de condicao (so aparece em modo gratis com premio) */
 var prizeNote=document.getElementById('prizeWonNote');
 if(prizeNote){
@@ -2275,8 +2265,15 @@ return;
 if(activeVoucher){
 var rem=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
 if(rem<=0){
-/* No more attempts, go back to voucher input */
+/* No more attempts */
 activeVoucher=null;activeVoucherCode=null;
+/* TV mode: marca voucher como usado e volta pra attract pra proxima liberacao do PDV */
+if(isStoreTvMode){
+showStep('Attract');
+startAttract();
+setTvReleaseStatus('Aguardando liberacao do PDV...');
+return;
+}
 document.getElementById('voucherInput').value='';
 document.getElementById('voucherInput').classList.remove('valid');
 document.getElementById('voucherCheck').classList.remove('show');
@@ -2635,6 +2632,8 @@ snap.forEach(function(doc){
 if(picked)return;
 var d=doc.data();
 var remaining=(d.attempts||0)-(d.attemptsUsed||0);
+/* Multi-tenancy: so aceita vouchers da propria franquia da TV */
+if(tvFranchiseId && d.franchiseId && d.franchiseId!==tvFranchiseId) return;
 if(d.tvReady===true && d.status==='ready' && !d.used && remaining>0){
 picked=d;pickedId=doc.id;
 }

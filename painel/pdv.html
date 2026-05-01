@@ -699,7 +699,7 @@
          Independe do tamanho do PDV — não some em viewport pequeno. -->
     <!-- Floating Free Challenge Release Button -->
     <button class="challenge-fab" onclick="openFreeChallengeModal()" title="Liberar desafio gratis na TV">
-        <span style="font-size:24px">âš¡</span>
+        <span style="font-size:24px">⚡</span>
         <span style="font-size:10px;font-weight:800;display:block">DESAFIO</span>
     </button>
 
@@ -711,7 +711,7 @@
     <div class="pdv-cart">
         <div class="cart-head">
             <h2>🛒 Pedido</h2>
-            <input type="text" id="orderName" placeholder="👤 Nome do cliente para liberar o desafio" style="width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:8px;font-size:12px;margin-top:6px;font-weight:600;">
+            <input type="text" id="orderName" placeholder="👤 Nome do pedido (ex: Mesa 3, João, Comanda 5...)" style="width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:8px;font-size:12px;margin-top:6px;font-weight:600;">
             <div class="cart-type" style="margin-top:6px;">
                 <button class="ct-btn active" data-type="balcao" onclick="setType('balcao')">🏪 Balcao</button>
                 <button class="ct-btn" data-type="retirada" onclick="setType('retirada')">📦 Retirada</button>
@@ -719,7 +719,7 @@
             </div>
         </div>
         <div class="cart-cust" id="custF">
-            <input type="tel" id="cPhone" placeholder="WhatsApp do desafio">
+            <input type="tel" id="cPhone" placeholder="WhatsApp (opcional)">
             <input type="text" id="cAddr" placeholder="Endereco completo">
         </div>
 
@@ -3472,20 +3472,13 @@
             usedDefaultPin: !!window._cartDiscount.usedDefaultPin
         } : null;
         var total = Math.max(0, Math.round((subtotal - discountAmount) * 100) / 100);
-        var oName=(document.getElementById('orderName').value||'').trim();
+        // Nome do pedido: fallback para 'Balcao' quando vazio em pedido balcao (NAO bloqueia
+        // o fluxo do operador). A liberacao do desafio na TV e feita SEPARADAMENTE pelo
+        // botao "DESAFIO" (FAB), que tem seu proprio modal exigindo nome+WhatsApp.
+        var oName=(document.getElementById('orderName').value||'').trim()||(orderType==='balcao'?'Balcao':'');
         var customerPhoneEl = document.getElementById('cPhone');
         var customerPhone = customerPhoneEl ? customerPhoneEl.value : '';
         var customerPhoneDigits = customerPhone.replace(/\D/g,'');
-        if(!oName){
-            toast('Informe o nome do cliente para liberar o desafio na TV.');
-            document.getElementById('orderName').focus();
-            return;
-        }
-        if(customerPhoneDigits.length < 10){
-            toast('Informe o WhatsApp do cliente para liberar o desafio.');
-            if(customerPhoneEl) customerPhoneEl.focus();
-            return;
-        }
 
         // === DESAFIO VOUCHER GENERATION (generate FIRST so we can save with order) ===
         var voucherCode = 'MP' + Date.now().toString(36).toUpperCase().slice(-4) + Math.random().toString(36).toUpperCase().slice(2,4);
@@ -3776,6 +3769,9 @@
         if (typeof renderPdvStatusChips === 'function') { try { renderPdvStatusChips(); } catch (e) {} }
 
         // Save voucher to Firestore
+        // Voucher do pedido: NAO auto-libera na TV. Cliente pega o codigo no recibo
+        // e digita em milkypot.com/desafio.html. Pra liberar na TV da loja, o atendente
+        // usa o botao "DESAFIO" (FAB) que cria voucher separado com tvReady=true.
         var voucher = {
             code: voucherDisplay,
             orderId: order.id,
@@ -3787,10 +3783,7 @@
             attempts: attemptsPerPurchase,
             attemptsUsed: 0,
             instagramBonusUsed: false,
-            status: 'ready',
-            tvReady: true,
-            releasedBy: (typeof currentUser !== 'undefined' && currentUser && currentUser.id) ? currentUser.id : null,
-            releasedAt: new Date().toISOString(),
+            tvReady: false,
             createdAt: new Date().toISOString(),
             lastUsedAt: null,
             used: false
