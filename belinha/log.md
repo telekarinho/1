@@ -2,6 +2,51 @@
 
 ---
 
+## Ciclo #83 — 2026-05-01
+
+**Área:** Conteúdo — Semanas 43 + 44 (07/02–20/02/2027)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #82 (e #81). Semana 43 = Carnaval build-up máximo (21 dias) + reveal público do produto temático + Sexta #27 (12/02) como maior conversão de fevereiro. Semana 44 = última semana "normal" antes da reta final de Carnaval + Dia de São Valentim/Dia do Amor (14/02) + WA VIP com programação completa de Carnaval + Sexta #28 (19/02) + countdown "8 dias" de encerramento.
+
+**O que analisou:**
+- Leu semanas 41 e 42 como referência de formato (padrão v11: Dom–Sab, Versão A/B, templates WA, checklist, métricas, tabela editorial)
+- Confirmou cadência na estratégia.md (#79): semanas 43/44 = Carnaval build-up máximo; semana 44 inclui 14/02 (Dia do Amor — menos celebrado no Brasil que 12/06, mas aproveitável como Dia de São Valentim / "potinho pra presentear")
+- Mapeou Sexta #27 = 12/02 (semana 43) e Sexta #28 = 19/02 (semana 44) em sequência correta
+- Identificou que a lista VIP "CARNAVAL" (ativada em 01/02, semana 42) precisa de: update exclusivo na segunda 08/02, programação completa na terça 16/02
+- Produto temático de Carnaval: mantido em Versão A/B em todos os posts (prazo duro de confirmação com franquia = 14/02)
+- Carnaval 28/02–02/03: confirmado pelo contexto dos ciclos anteriores (28/02 = sábado de Carnaval, 01/03 = domingo, 02/03 = segunda de Carnaval, 03/03 = terça/Quarta de Cinzas)
+- Countdowns: 07/02 = "21 dias"; 13/02 = "15 dias"; 14/02 = "14 dias"; 20/02 = "8 dias"
+- Carrossel "Como o MilkyPot funciona no Carnaval" (terça 09/02) e "Guia completo do potinho no Carnaval" (segunda 15/02) = conteúdo de salvamento alto, serve como referência pré-Carnaval
+- Diferenciação implícita TheBest: post de quarta 17/02 ("O que é o MilkyPot durante o Carnaval") — experiência vs. quiosque, sem nomear concorrentes
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana43.md` | CRIADO — 7 peças (Dom–Sab): countdown "21 dias" 07/02, WA VIP update + post leve seg 08/02, carrossel "Como o MilkyPot funciona no Carnaval" ter 09/02, reveal público produto temático (Versão A/B) qua 10/02, UGC showcase qui 11/02, Sexta #27 "Maior Sexta antes do Carnaval" sex 12/02 (5 touchpoints WA+feed+stories), countdown "15 dias" + UGC showcase sáb 13/02; Reel 15s "Produto de Carnaval — A Revelação"; checklist; métricas; tabela editorial; transição semana 44 |
+| `belinha/content/pos-inauguracao-semana44.md` | CRIADO — 7 peças (Dom–Sab): Dia do Amor dom 14/02 (Versão com oferta/sem oferta), carrossel "Guia completo potinho no Carnaval" 7 slides seg 15/02, WA VIP programação completa Carnaval + post público ter 16/02, post experiência "O que é o MilkyPot durante o Carnaval" qua 17/02, UGC showcase + hype Sexta #28 qui 18/02, Sexta #28 "Última Grande Sexta antes do Carnaval" sex 19/02 (4 touchpoints WA+feed+stories), countdown "8 dias" + UGC Sexta #28 + sticker countdown reforço sáb 20/02; Reel 15s "O que te espera no Carnaval MilkyPot"; checklist; métricas; tabela editorial; transição semana 45 |
+
+**Commit:** `9630977`
+
+**Destaques de conteúdo:**
+1. **Sexta #27 (12/02) = 5 touchpoints sequenciais:** WA VIP 9h → Feed 11h → WA geral 12h → Stories ao longo do dia (14h/16h/18h/21h). Maior mobilização de uma Sexta até o momento no arco de Carnaval.
+2. **Carrossel "Como o MilkyPot funciona no Carnaval" (09/02):** Conteúdo educativo-prático de alta taxa de salvamento — antecipa dúvidas ("abre no feriado?", "delivery funciona?") e transforma ansiedade em antecipação positiva.
+3. **WA VIP Programação Completa de Carnaval (terça 16/02):** Maior entrega de valor da lista VIP "CARNAVAL" — operador envia horários, produto, oferta VIP exclusiva. Meta: ≥80% de abertura. Converte VIPs em clientes garantidos para 28/02–02/03.
+4. **14/02 Dia do Amor:** Tom afetivo e inclusivo (casais + amigos + amor próprio) — potinho como presente. Dois modos simultâneos: afetivo na segunda-feira, carnavalesco a partir de terça. Versão com oferta e sem oferta para o operador escolher.
+5. **Semana 44 encerra com "8 dias" e hype máximo para semana 45 (reta final):** Sticker countdown 28/02 reforçado (segunda chamada para seguidores que não adicionaram na semana 42). Meta cumulativa de VIPs: ≥70 ao fim da semana 44.
+
+**Próximo passo sugerido:**
+- Ciclo #84: **Concorrentes — OBRIGATÓRIO** (padrão v11: após 5 ciclos de conteúdo consecutivos, gap de concorrentes). Refetch TheBest + MilkyMoo + novos entrantes Londrina. Planejamento inicial campanha épica aniversário 1 ano (25/04/2027 = 3 meses à frente).
+- Ciclo #85: Conteúdo — Semanas 45+46 (21/02–06/03): reta final Carnaval + Sexta #29 véspera (26/02, maior Sexta do arco) + dias do Carnaval ao vivo (28/02–02/03) + pós-Carnaval (03–06/03)
+- Operador: confirmar produto temático de Carnaval com a franquia até **14/02 (prazo DURO)**
+- Operador: definir oferta especial 14/02 (Dia do Amor) antes de 12/02
+- Operador: definir programação completa de Carnaval (horários, delivery, equipe) para envio VIP na terça 16/02 — confirmar até 14/02
+- Operador: definir oferta VIP exclusiva de Carnaval (ponto em dobro? brinde? topping bônus?) antes de 16/02
+
+_Belinha — Ciclo #83 | 2026-05-01_
+
+---
+
 ## Ciclo #82 — 2026-05-01
 
 **Área:** UX/Performance — Core Web Vitals (CLS/LCP) em `cardapio.html`
