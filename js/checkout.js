@@ -177,33 +177,45 @@ function placeOrder() {
 
     // ============================================
     // CAPTURE ORDER (save to localStorage)
+    // Formato compatível com painel/pedidos.html (campos: sabor/tamanho/formato)
+    // e painel/entregas.html (delivery como string + customerName/Phone flat)
     // ============================================
+    var orderId = (typeof Utils !== 'undefined' && Utils.generateId) ? Utils.generateId() : ('site_'+Date.now());
+
     var order = {
+        id: orderId,
         orderNumber: orderNumber,
-        status: 'aguardando_pagamento',
+        status: 'novo',
         createdAt: new Date().toISOString(),
-        customer: {
-            name: customerName,
-            phone: customerPhone,
-            cpf: customerCpf
-        },
-        store: {
-            name: storeName,
-            whatsapp: storeWhatsapp,
-            deliveryTime: storeTime
-        },
-        delivery: {
-            type: deliveryType,
-            address: deliveryAddress,
-            fee: deliveryFee
-        },
+        source: 'site',
+
+        // Customer — flat aliases para painel/entregas.html
+        customer: { name: customerName, phone: customerPhone, cpf: customerCpf },
+        customerName: customerName,
+        customerPhone: customerPhone,
+
+        // Store
+        store: { name: storeName, whatsapp: storeWhatsapp, deliveryTime: storeTime },
+
+        // Delivery — STRING type para painel/entregas.html (filtro o.delivery==='delivery')
+        delivery: deliveryType,
+        deliveryAddress: deliveryAddress,
+        deliveryFee: deliveryFee,
+
         payment: {
             method: paymentType,
             label: paymentLabels[paymentType] || paymentType,
             status: 'pendente'
         },
+
         items: cart.map(function(item) {
+            var sizeLabel = item.sizeName || item.size || '';
             return {
+                // Aliases que o painel/pedidos.html espera renderizar
+                sabor: item.name || 'Produto',
+                tamanho: sizeLabel,
+                formato: item.formatoName || '',
+                // Campos originais preservados para integridade
                 name: item.name || 'Produto',
                 emoji: item.emoji || '🍨',
                 baseId: item.baseId,
@@ -211,7 +223,7 @@ function placeOrder() {
                 formatoId: item.formatoId,
                 formatoName: item.formatoName,
                 saborId: item.saborId,
-                size: item.sizeName || item.size || '',
+                size: sizeLabel,
                 sizeMl: item.sizeMl || 0,
                 sizePrice: item.sizePrice || 0,
                 extras: item.extras || [],
@@ -221,8 +233,8 @@ function placeOrder() {
                 total: item.total || calcItemTotal(item)
             };
         }),
+
         subtotal: subtotal,
-        deliveryFee: deliveryFee,
         total: total
     };
 
@@ -238,20 +250,8 @@ function placeOrder() {
     if (typeof DataStore !== 'undefined' && typeof Utils !== 'undefined' && storeId) {
         try {
             // Save order to DataStore for franchise tracking
-            DataStore.addToCollection('orders', storeId, {
-                id: Utils.generateId(),
-                orderNumber: orderNumber,
-                status: 'aguardando_pagamento',
-                createdAt: new Date().toISOString(),
-                customer: { name: customerName, phone: customerPhone },
-                delivery: { type: deliveryType, address: deliveryAddress, fee: deliveryFee },
-                payment: { method: paymentType, label: paymentLabels[paymentType] || paymentType },
-                items: order.items,
-                subtotal: subtotal,
-                deliveryFee: deliveryFee,
-                total: total,
-                source: 'site'
-            });
+            // Reusa o objeto `order` já formatado para o painel (status='novo', delivery flat, items com sabor/tamanho/formato)
+            DataStore.addToCollection('orders', storeId, order);
 
             // Auto-create financial entry from site order
             DataStore.addToCollection('finances', storeId, {
