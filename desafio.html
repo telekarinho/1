@@ -1160,7 +1160,7 @@ if(btnValidate) btnValidate.style.display='none';
 if(btnGoToPhoto) btnGoToPhoto.style.display='none';
 if(playerInfo) playerInfo.style.display='none';
 if(banner) banner.style.display='none';
-setTvReleaseStatus('Aguardando liberacao do PDV...');
+setTvReleaseStatus('Aguardando liberacao do atendente...');
 return;
 }
 
@@ -2271,7 +2271,7 @@ activeVoucher=null;activeVoucherCode=null;
 if(isStoreTvMode){
 showStep('Attract');
 startAttract();
-setTvReleaseStatus('Aguardando liberacao do PDV...');
+var tvEl=document.getElementById('tvReleaseStatus');if(tvEl)tvEl.style.display='none';
 return;
 }
 document.getElementById('voucherInput').value='';
@@ -2427,7 +2427,7 @@ mediaHtml+
 '<div style="font-size:clamp(11px,1.5vw,14px);color:rgba(90,69,112,0.4);margin-top:6px">'+c.copy+'</div>'+
 '</div>';
 var ctas=isStoreTvMode
-?['Toque quando o atendente liberar!','Desafio liberado pelo PDV','Sem teclado na TV: so toque!','Quem sera o proximo?','Peca sua liberacao no caixa!']
+?['Quer tentar? Toque na tela!','Desafio 10 MilkyPot!','Quem sera o proximo?','Pare no segundo exato e ganhe!','Toque pra participar!']
 :['Toque na tela para jogar!','Voce consegue acertar?','Desafie seus amigos!','Quem sera o proximo?','Toque aqui e tente!'];
 document.getElementById('attractCta').textContent=ctas[attractIdx%ctas.length];
 }
@@ -2676,13 +2676,13 @@ setTvReleaseStatus('Aguardando liberacao do PDV...');
 /* Touch to start */
 document.getElementById('stepAttract').addEventListener('click',function(){
 stopAttract();
-if(isStoreTvMode){showStep(0);setTvReleaseStatus('Aguardando liberacao do PDV...');watchTvVoucherRelease();return}
+if(isStoreTvMode){showStep(0);setTvReleaseStatus('Aguardando liberacao do atendente...');watchTvVoucherRelease();return}
 showStep(0);document.getElementById('playerName').focus();
 });
 
 /* Start attract mode */
 startAttract();
-watchTvVoucherRelease();
+if(!isStoreTvMode) watchTvVoucherRelease();
 
 /* Auto-return to attract after 60s inactivity */
 var idleTimer;
