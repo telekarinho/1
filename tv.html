@@ -493,8 +493,18 @@ body:not(.idle){cursor:default}
             startProgress(item.duration);
             timer = setTimeout(playNext, item.duration);
         }
+        else if(m.type === 'html'){
+            // Auto-Cardapio-Slides aponta pra propria tv.html -> iframe recursivo
+            // = tela preta. Os slides de marketing (promos, cards, menu) ja sao
+            // injetados automaticamente neste mesmo tv.html, entao esse item html
+            // e redundante. Pula imediatamente sem fallback.
+            timer = setTimeout(playNext, 50);
+        }
         else {
-            playFallback('Tipo de midia nao suportado.');
+            // Tipo desconhecido: pula silenciosamente em vez de mostrar
+            // "Conteudo em atualizacao" em loop. Loga apenas pra debug.
+            try { console.info('[TV] skipping unknown type:', m && m.type); } catch(_){}
+            timer = setTimeout(playNext, 50);
         }
     }
 
