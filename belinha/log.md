@@ -2,6 +2,42 @@
 
 ---
 
+## Ciclo #82 — 2026-05-01
+
+**Área:** UX/Performance — Core Web Vitals (CLS/LCP) em `cardapio.html`
+
+**Contexto:** Prescrito pelo padrão v11 e ciclo #81 como "UX/Performance sweep obrigatório — 17+ ciclos sem atenção". Foco em cardapio.html, a página de conversão primária.
+
+**O que analisou:**
+- Comparou atributos `<img>` entre `index.html` e `cardapio.html`
+- Detectou que `index.html` usa dimensões de exibição corretas com `loading` e `decoding` explícitos (ex: nav logo `width="128" height="72" loading="eager" decoding="sync"`)
+- `cardapio.html` tinha ambos os logos com `width="1900" height="1070"` (dimensões brutas do arquivo PNG) sem nenhum atributo `loading` ou `decoding`
+- Logo do hero já tinha `fetchpriority="high"` mas faltava `loading="eager" decoding="sync"` para completar o padrão LCP
+- Sem `loading="eager"`, o browser pode tratar a imagem como candidato a lazy-load em alguns contextos; sem `decoding="sync"`, o paint pode ser atrasado
+
+**O que mudou:**
+
+| Arquivo | Linha | Mudança |
+|---------|-------|---------|
+| `cardapio.html` | 131 | nav logo: `width="1900" height="1070"` → `width="128" height="72" loading="eager" decoding="sync"` |
+| `cardapio.html` | 154 | hero logo: `width="1900" height="1070" fetchpriority="high"` → `width="280" height="158" fetchpriority="high" loading="eager" decoding="sync"` |
+
+**Commit:** `75d16cc`
+
+**Impacto esperado:**
+- Redução de CLS: o browser agora recebe hints de aspect-ratio corretos (128:72 ≈ 16:9, igual à proporção real do PNG)
+- Melhora de LCP: `decoding="sync"` prioriza o decode do logo hero no main thread, eliminando possível delay de pintura
+- Alinhamento com o padrão já estabelecido em `index.html`
+
+**Próximo passo sugerido:**
+- Ciclo #83: Conteúdo — Semanas 43+44 (07–20/02/2027): build-up máximo Carnaval + produto temático (se confirmado) + Sexta #27 (12/02) + véspera Carnaval (27/02)
+- Ciclo #84: Concorrentes — refetch TheBest + MilkyMoo + novos entrantes Londrina + planejamento campanha épica aniversário 1 ano
+- UX continuação: verificar se `acai-self-service-londrina.html` e `potinho-ninho-londrina.html` têm o mesmo problema de dimensões de imagem
+
+_Belinha — Ciclo #82 | 2026-05-01_
+
+---
+
 ## Ciclo #81 — 2026-05-01
 
 **Área:** Conteúdo — Semanas 41 + 42 (24/01–06/02/2027)
