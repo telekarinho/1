@@ -2619,6 +2619,46 @@ Análise dos 5 ciclos:
 
 ---
 
+## Ciclo #76 — 2026-05-01
+
+**Área:** Conteúdo — Semanas 35 + 36 (13–26/12/2026)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #74. Semana 35 = Natal countdown early + UGC natalino + recap 8 meses + Sexta #20 Pré-Natal. Semana 36 = countdown 5 dias (dom–qui) + Véspera (24/12) pico de pedidos + Dia H Natal 25/12 + Pós-Natal 26/12. Insight crítico descoberto neste ciclo: o aniversário de 8 meses do MilkyPot Londrina (desde 25/04) cai **exatamente no dia 25/12 (Natal)** — narrativa dupla de altíssimo apelo emocional explorada em toda a semana 36.
+
+**O que analisou:**
+- Leu semanas 33 e 34 como referência de formato (padrão v10: Dom–Sab, templates WA, checklist, métricas)
+- Calculou que 25/04/2026 + 8 meses = 25/12/2026 = Natal → descoberta de narrativa orgânica de máximo impacto
+- Mapeou a Sexta #20 como a última Sexta do Potinho antes do Natal (18/12) — posicionar como "pré-Natal" para máxima conversão
+- Diferenciação implícita TheBest/quiosque: conteúdo de ambiente, família, momento especial vs. produto de corredor — 3 peças na semana 35 usam esse ângulo
+- Countdown diário de 5 dias (dom 20/12 → qui 24/12) com escalada de urgência, surpresa VIP e Reel 15s
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana35.md` | CRIADO — 7 peças (Dom–Sab): UGC showcase #PotinhoNoel, carrossel recap 8 meses (com Versão A/B para dados reais vs. qualitativos), diferenciação implícita "momento especial", tutorial "como pedir potinho de Natal", WA broadcast VIP+geral quinta, Sexta #20 Pré-Natal (com Versão A/B), countdown "6 dias" sábado 19/12 com narrativa aniversário 8 meses |
+| `belinha/content/pos-inauguracao-semana36.md` | CRIADO — 7 peças (Dom–Sab): countdown 5–1 dia (Dom–Qui), WA VIP e geral por dia, Véspera (24/12) com 6 touchpoints ao longo do dia, Dia H 25/12 (Natal + 8 meses — post mais importante de 2026, Versão A emocional e Versão B produto), pós-Natal 26/12 com gratidão + teaser Virada 31/12, Reel 15s "8 meses em 15 segundos" |
+
+**Commit:** `21a5c09`
+
+**Destaques de conteúdo:**
+1. **"25/04 = nascimento → 25/12 = Natal" — arco narrativo máximo:** Nenhuma concorrente tem isso. Natal + aniversário de 8 meses é um acontecimento único e orgânico. Explora-se com semana 35 construindo o suspense e semana 36 revelando a celebração
+2. **Véspera 24/12 como maior dia operacional do ano:** 6 touchpoints ao longo do dia (WA VIP 10h, WA geral 11h, feed 12h, stories 10h/13h/16h/19h/22h, Reel 15s opcional 15h). Equipe extra recomendada
+3. **Surpresa VIP 25/12 como culminação do arco "NATAL":** Lista VIP criada em 03/12 (semana 33), ativada em 08/12 (semana 34), aquecida em 17/12 (semana 35), revelada em 24/12 e resgatada em 25/12 — fidelização em 5 semanas
+4. **Diferenciação implícita TheBest — terça 15/12:** Post de ambiente/família "Aqui é um momento especial" contrasta com quiosque de corredor de shopping sem nomear nenhum concorrente
+5. **Sexta #20 Pré-Natal (18/12):** Última Sexta do Potinho antes do Natal posicionada como evento — Versão A (combo produto natalino) e Versão B (topping bônus)
+
+**Próximo passo sugerido:**
+- Ciclo #77: Conteúdo — Semanas 37+38 (27/12–09/01/2027): Virada Ano Novo 31/12 + "Nova meta, novo potinho" Linha Zero pós-festas + Sexta #21 "Primeiro Potinho de 2027"
+- Ciclo #78: SEO/UX — gap técnico obrigatório (5 ciclos de conteúdo sem SEO): sitemap.xml, schema.org LocalBusiness, Core Web Vitals
+- Operador: confirmar horário de funcionamento 24/12 e 25/12 antes de quarta-feira 23/12
+- Operador: definir surpresa VIP 25/12 (ex: topping bônus, pontos em dobro, brinde especial) antes de quinta 24/12
+- Operador: levantar números reais de operação (potinhos vendidos, clientes fidelidade) para o carrossel de 8 meses (semana 35)
+
+_Belinha — Ciclo #76 | 2026-05-01_
+
+---
+
 ## Ciclo #75 — 2026-05-01
 
 **Área:** Conteúdo — Semanas 33 + 34 (29/11–12/12/2026)
