@@ -3,6 +3,13 @@ name: Deploy MilkyPot
 on:
   push:
     branches: ["main"]
+  # Permite disparar manualmente pela aba Actions (qualquer branch)
+  workflow_dispatch:
+    inputs:
+      deploy_firebase:
+        description: "Deploy Firebase (hosting + rules)"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -83,3 +90,57 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # ============================================
+  # 3. Deploy to Firebase (hosting + storage + firestore rules)
+  # ============================================
+  # Requer secret FIREBASE_SERVICE_ACCOUNT_MILKYPOT_AD945 contendo o JSON
+  # da service account com role "Firebase Hosting Admin" + "Cloud Datastore
+  # Owner" + "Storage Admin" no projeto milkypot-ad945.
+  # Como gerar:
+  #   gcloud iam service-accounts create gh-deploy --project=milkypot-ad945
+  #   gcloud projects add-iam-policy-binding milkypot-ad945 \
+  #     --member="serviceAccount:gh-deploy@milkypot-ad945.iam.gserviceaccount.com" \
+  #     --role="roles/firebasehosting.admin"
+  #   gcloud iam service-accounts keys create key.json \
+  #     --iam-account=gh-deploy@milkypot-ad945.iam.gserviceaccount.com
+  #   # cole o conteudo de key.json em Settings → Secrets → Actions
+  deploy-firebase:
+    needs: [validate]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy_firebase) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Write service account
+        env:
+          SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MILKYPOT_AD945 }}
+        run: |
+          if [ -z "$SA_JSON" ]; then
+            echo "❌ Secret FIREBASE_SERVICE_ACCOUNT_MILKYPOT_AD945 não configurada."
+            echo "    Crie em Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          printf '%s' "$SA_JSON" > "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+
+      - name: Deploy firestore rules
+        # Hosting vai via GitHub Pages (job deploy-pages acima); storage rules
+        # nao mudam frequente e o SA pode nao ter permissao Storage Admin.
+        # Aqui deployamos APENAS firestore:rules — critico pra sync funcionar
+        # entre PCs (caixa_/orders_/pdv_tabs_/finances_ precisam de read publico).
+        run: |
+          firebase deploy \
+            --only firestore:rules \
+            --project milkypot-ad945 \
+            --non-interactive \
+            --force

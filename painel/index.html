@@ -15,6 +15,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MilkyPot">
     <link rel="apple-touch-icon" href="../images/logo-milkypot.png">
+    <link rel="icon" type="image/png" href="../images/logo-milkypot.png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -33,6 +37,9 @@
                 <a href="pedidos.html" class="sidebar-link">
                     <span class="icon">📋</span> <span data-i18n="nav.orders">Pedidos</span>
                     <span class="badge-count" id="newOrdersCount">0</span>
+                </a>
+                <a href="copilot-belinha.html" class="sidebar-link" style="background:linear-gradient(135deg,rgba(255,79,138,.15),rgba(126,87,194,.15));border-left:3px solid #FF4F8A">
+                    <span class="icon">🐑</span> Belinha IA
                 </a>
 
                 <div class="sidebar-nav-group">Gestao</div>
@@ -60,6 +67,9 @@
                 <a href="ifood.html" class="sidebar-link">
                     <span class="icon">🛵</span> iFood
                 </a>
+                <a href="operacional.html" class="sidebar-link">
+                    <span class="icon">🎯</span> Operacional
+                </a>
 
                 <div class="sidebar-nav-group">Midia da Loja</div>
                 <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
@@ -73,6 +83,9 @@
                 </a>
 
                 <div class="sidebar-nav-group">Config</div>
+                <a href="test-checklist.html" class="sidebar-link">
+                    <span class="icon">🧪</span> Checklist
+                </a>
                 <a href="configuracoes.html" class="sidebar-link">
                     <span class="icon">⚙️</span> <span data-i18n="nav.settings">Configuracoes</span>
                 </a>
@@ -103,36 +116,80 @@
             </header>
 
             <div class="panel-content">
-                <!-- Welcome -->
-                <div style="background:linear-gradient(135deg,#4CAF50,#2E7D32);border-radius:var(--mp-radius);padding:24px 32px;color:#fff;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
-                    <div>
-                        <h2 style="font-family:'Baloo 2',cursive;font-size:1.3rem;margin-bottom:4px" id="welcomeMsg">Bom dia!</h2>
-                        <p style="opacity:0.9;font-size:0.85rem" id="storeInfo">Carregando...</p>
-                    </div>
-                    <div style="display:flex;gap:12px;flex-wrap:wrap">
-                        <button class="btn" style="background:rgba(255,255,255,0.2);color:#fff" onclick="newWalkInOrder()">+ Novo Pedido</button>
-                        <a href="pedidos.html" class="btn" style="background:rgba(255,255,255,0.2);color:#fff">📋 Ver Pedidos</a>
-                    </div>
-                </div>
+                <!-- Boas-vindas (primeiro acesso) -->
+                <div id="welcomeBoxMount"></div>
 
-                <!-- KPI Cards -->
+                <!-- Seu Negócio MilkyPot (investimento + projeção + dias ativo) -->
+                <div id="seuNegocioMount"></div>
+
+                <!-- Mensagem motivacional (injetado por Motivacional.initPanel) -->
+                <div id="motivationMount"></div>
+
+                <!-- Controle de Caixa (injetado por Caixa.initPanel) -->
+                <div id="caixaMount"></div>
+
+                <!-- Meta mensal (injetado pelo loadDashboard) -->
+                <div id="metaMount"></div>
+
+                    <!-- Card Seu Negócio (Comercial Align) -->
+                    <div class="mp-biz-card">
+                        <div class="mp-biz-header">
+                            <div class="mp-biz-title">🚀 Seu Negócio Milkypot</div>
+                            <div class="mp-biz-badge" id="bizBadge">Iniciando Jornada</div>
+                        </div>
+                        <div class="mp-biz-stats">
+                            <div class="mp-stat-item">
+                                <div class="label">Investimento Real</div>
+                                <div class="value" id="bizInvestValue">R$ 0</div>
+                            </div>
+                            <div class="mp-stat-item">
+                                <div class="label">Vendas Hoje</div>
+                                <div class="value" id="bizSalesToday">R$ 0</div>
+                            </div>
+                            <div class="mp-stat-item">
+                                <div class="label">Payback Est.</div>
+                                <div class="value" id="bizPaybackEst">...</div>
+                            </div>
+                        </div>
+                        <div class="mp-goal-container">
+                            <div class="mp-goal-header">
+                                <span>Progresso Meta / Faturamento</span>
+                                <span id="bizGoalPerc">0%</span>
+                            </div>
+                            <div class="mp-goal-bar-bg">
+                                <div class="mp-goal-bar-fill" id="bizGoalBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Simulador Visual (Comercial Align) -->
+                    <div class="mp-sim-card">
+                        <div class="mp-sim-title">💰 Simulador de Ganhos</div>
+                        <div class="mp-sim-slider-box">
+                            <div style="font-size: 0.9rem; color: #64748B; margin-bottom: 10px;">
+                                Se você vender <strong id="simQtyText" style="color: #7E57C2; font-size: 1.2rem;">20</strong> pedidos por dia...
+                            </div>
+                            <input type="range" min="5" max="100" value="20" class="mp-sim-slider" id="simSlider" oninput="updateSim()">
+                        </div>
+                        <div class="mp-sim-projection">
+                            <div class="mp-proj-item revenue">
+                                <div class="label">Faturamento Mensal</div>
+                                <div class="value" id="simMonthlyRevenue">R$ 0</div>
+                            </div>
+                            <div class="mp-proj-item profit">
+                                <div class="label">Lucro Estimado (35%)</div>
+                                <div class="value" id="simMonthlyProfit">R$ 0</div>
+                            </div>
+                        </div>
+                        <p style="margin-top: 15px; font-size: 0.8rem; color: #94A3B8; text-align: center;">
+                            *Isso é possível seguindo o <strong>Padrão Milkypot</strong>.
+                        </p>
+                    </div>
+
+                <!-- KPI Cards (Opcional - mantendo secundários para clareza técnica) -->
                 <div class="kpi-grid">
                     <div class="kpi-card">
-                        <div class="kpi-icon green">💰</div>
-                        <div class="kpi-info">
-                            <div class="kpi-label" data-i18n="dashboard.today_revenue">Faturamento Hoje</div>
-                            <div class="kpi-value" id="kpiRevenueToday">R$ 0</div>
-                        </div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-icon blue">📋</div>
-                        <div class="kpi-info">
-                            <div class="kpi-label" data-i18n="dashboard.today_orders">Pedidos Hoje</div>
-                            <div class="kpi-value" id="kpiOrdersToday">0</div>
-                        </div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-icon yellow">🛵</div>
+                        <div class="kpi-icon pink">🛵</div>
                         <div class="kpi-info">
                             <div class="kpi-label" data-i18n="dashboard.pending_deliveries">Entregas Pendentes</div>
                             <div class="kpi-value" id="kpiPendingDelivery">0</div>
@@ -262,6 +319,11 @@
     <script src="../js/core/notifications.js"></script>
     <script src="../js/core/whatsapp.js"></script>
     <script src="../js/core/reports.js"></script>
+    <script src="../js/core/adminconfig.js?v=mp-v14"></script>
+    <script src="../js/core/motivacional.js?v=mp-v14"></script>
+    <script src="../js/core/caixa.js?v=mp-v91"></script>
+    <script src="../js/core/financas.js?v=mp-v14"></script>
+    <script src="../js/core/onboarding.js?v=mp-v15-selfheal"></script>
     <script>
         // Auth Guard
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
@@ -301,9 +363,44 @@
             const todayRevenue = todayOrders.reduce((s, o) => s + o.total, 0);
             const pendingDelivery = orders.filter(o => o.delivery === 'delivery' && ['novo', 'preparando', 'pronto'].includes(o.status));
 
-            document.getElementById('kpiRevenueToday').textContent = Utils.formatCurrency(todayRevenue);
-            document.getElementById('kpiOrdersToday').textContent = todayOrders.length;
+            const elKpiRev = document.getElementById('kpiRevenueToday');
+            if (elKpiRev) elKpiRev.textContent = Utils.formatCurrency(todayRevenue);
             document.getElementById('kpiPendingDelivery').textContent = pendingDelivery.length;
+
+            // --- Onda Comercial: Card Seu Negócio ---
+            const age = DataStore.getFranchiseAge(franchiseId);
+            const investBase = franchise?.investimentoBase || 3499.99;
+            const investEst = franchise?.investimentoEstrutura || 2000.00;
+            const totalInvest = investBase + investEst;
+
+            document.getElementById('bizInvestValue').textContent = Utils.formatCurrency(totalInvest);
+            document.getElementById('bizSalesToday').textContent = Utils.formatCurrency(todayRevenue);
+            
+            // Meta Mensal
+            let metaValor = 12000; // Nova meta padrâo de R$ 12k/mês
+            if (typeof AdminConfig !== 'undefined') {
+                const metaObj = AdminConfig.getMetaProgress(franchiseId, Financas.currentPeriodKey());
+                if (metaObj) metaValor = metaObj.valor;
+            }
+            
+            const monthOrders = orders.filter(o => o.createdAt.startsWith(today.slice(0, 7)));
+            const monthRevenue = monthOrders.reduce((s, o) => s + o.total, 0);
+            const goalPct = Math.min(100, Math.round((monthRevenue / metaValor) * 100));
+            
+            document.getElementById('bizGoalPerc').textContent = goalPct + '%';
+            document.getElementById('bizGoalBar').style.width = goalPct + '%';
+            
+            // Payback Est.
+            const avgProfitMonth = 4000; // Média estimada
+            const paybackMonths = Math.max(1, Math.ceil(totalInvest / avgProfitMonth));
+            document.getElementById('bizPaybackEst').textContent = paybackMonths + ' meses';
+
+            // Badge
+            if (age > 30 && goalPct >= 100) document.getElementById('bizBadge').textContent = 'Franqueado Elite';
+            else if (age > 0) document.getElementById('bizBadge').textContent = 'Franqueado Ativo';
+
+            // --- Onda 1: Simulador ROI ---
+            updateSim();
 
             // New orders badge
             const newOrders = orders.filter(o => o.status === 'novo');
@@ -421,6 +518,20 @@
             });
         }
 
+        // --- Onda 1: Motor do Simulador ---
+        function updateSim() {
+            const slider = document.getElementById('simSlider');
+            const qty = parseInt(slider.value);
+            const ticketMedio = franchise?.ticketMedioBase || 20; // Ticket base R$ 20.00
+            
+            const monthlyRevenue = qty * ticketMedio * 30;
+            const monthlyProfit = monthlyRevenue * 0.35; // Margem 35% conforme proposta comercial
+            
+            document.getElementById('simQtyText').textContent = qty;
+            document.getElementById('simMonthlyRevenue').textContent = Utils.formatCurrency(monthlyRevenue);
+            document.getElementById('simMonthlyProfit').textContent = Utils.formatCurrency(monthlyProfit);
+        }
+
         // Poll for new orders every 5 seconds
         setInterval(() => {
             const orders = DataStore.getCollection('orders', franchiseId);
@@ -434,10 +545,144 @@
         loadDashboard();
         i18n.translatePage();
 
+        // Banner motivacional + toasts periodicos
+        if (typeof Motivacional !== 'undefined') {
+            try {
+                Motivacional.initPanel({
+                    subtitle: franchise ? (franchise.name + ' · ' + franchise.address) : '',
+                    intervalMs: 25 * 60 * 1000
+                });
+            } catch (e) { console.warn('Motivacional init:', e); }
+        }
+        // Widget de caixa (PDV auditavel)
+        if (typeof Caixa !== 'undefined') {
+            try { Caixa.initPanel(); } catch (e) { console.warn('Caixa init:', e); }
+        }
+
+        // === Boas-vindas (primeiro acesso) ===
+        (function renderWelcome(){
+            const key = 'mp_onboarding_seen_' + franchiseId;
+            if (localStorage.getItem(key)) return;
+            const mount = document.getElementById('welcomeBoxMount');
+            if (!mount) return;
+            const first = (session.name || 'Franqueado').split(' ')[0];
+            const invest = (franchise && franchise.investimentoTotalEstimado) || 5499;
+            const bruta = 8 * 25 * 22; // 8 pedidos/dia × R$25 × 22 dias conservador ~ R$4400
+            const brl = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            mount.innerHTML = `
+                <div style="background:linear-gradient(135deg,#E91E63,#D4A5FF);color:#fff;border-radius:16px;padding:28px;margin-bottom:20px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(233,30,99,.22)">
+                  <button onclick="(function(){localStorage.setItem('${key}','1');document.getElementById('welcomeBoxMount').style.display='none'})()" style="position:absolute;top:10px;right:14px;background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:14px" aria-label="Fechar">✕</button>
+                  <div style="font-size:13px;opacity:.85;letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">🎉 Ativação concluída</div>
+                  <h1 style="font-family:'Baloo 2',cursive;font-size:1.8rem;margin:0 0 8px;font-weight:800">Parabéns, ${first}! Você acaba de ativar sua <span style="white-space:nowrap">Mini Franquia MilkyPot</span></h1>
+                  <p style="opacity:.92;font-size:.95rem;margin:0 0 18px;max-width:620px">Tá tudo pronto: cardápio carregado, PDV funcionando, TV Indoor, controle de caixa auditável, metas e saúde financeira. Veja o que esperar e os primeiros passos pra começar a vender hoje mesmo.</p>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin-bottom:18px">
+                    <div style="background:rgba(255,255,255,.18);padding:14px 16px;border-radius:12px;backdrop-filter:blur(8px)">
+                      <div style="font-size:.72rem;opacity:.8;letter-spacing:.5px;text-transform:uppercase">Investimento estimado</div>
+                      <div style="font-size:1.35rem;font-weight:800">${brl(invest)}</div>
+                      <div style="font-size:.72rem;opacity:.7">kit + sistema + estrutura</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,.18);padding:14px 16px;border-radius:12px;backdrop-filter:blur(8px)">
+                      <div style="font-size:.72rem;opacity:.8;letter-spacing:.5px;text-transform:uppercase">Potencial mensal</div>
+                      <div style="font-size:1.35rem;font-weight:800">${brl(bruta)}+</div>
+                      <div style="font-size:.72rem;opacity:.7">8 pedidos/dia × R$25</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,.18);padding:14px 16px;border-radius:12px;backdrop-filter:blur(8px)">
+                      <div style="font-size:.72rem;opacity:.8;letter-spacing:.5px;text-transform:uppercase">Próximos passos</div>
+                      <div style="font-size:.9rem;font-weight:700;line-height:1.4">1. Abra o caixa<br>2. Cadastre uma meta<br>3. Teste uma venda</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <a href="simulador.html" style="background:#fff;color:#E91E63;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:800;font-size:.9rem">📊 Ver simulador</a>
+                    <a href="operacional.html" style="background:rgba(255,255,255,.25);color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:.9rem;border:1px solid rgba(255,255,255,.4)">🎯 Definir minhas metas</a>
+                  </div>
+                </div>`;
+        })();
+
+        // === Card "Seu Negócio MilkyPot" ===
+        (function renderSeuNegocio(){
+            const mount = document.getElementById('seuNegocioMount');
+            if (!mount) return;
+            try {
+                const createdAt = franchise && franchise.createdAt ? new Date(franchise.createdAt) : null;
+                const diasAtivo = createdAt ? Math.max(1, Math.floor((Date.now() - createdAt.getTime()) / 86400000)) : '—';
+                const invest = (franchise && (franchise.investimentoTotalEstimado || franchise.investimentoBase)) || null;
+
+                const todayIso = new Date().toISOString().slice(0,10);
+                const vendasHoje = orders.filter(o => o.createdAt && o.createdAt.startsWith(todayIso) && o.status === 'entregue');
+                const receitaHoje = vendasHoje.reduce((s,o) => s + (Number(o.total) || 0), 0);
+                const ticketMedioHoje = vendasHoje.length > 0 ? receitaHoje / vendasHoje.length : 0;
+
+                let metaInfo = null;
+                if (typeof AdminConfig !== 'undefined' && typeof Financas !== 'undefined') {
+                    try {
+                        metaInfo = AdminConfig.getMetaProgress(franchiseId, Financas.currentPeriodKey());
+                    } catch(e){}
+                }
+
+                const brl = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const brl0 = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                const pct = metaInfo ? Math.round(metaInfo.pct * 100) : 0;
+                const metaColor = pct >= 100 ? '#10B981' : pct >= 70 ? '#F59E0B' : '#E91E63';
+
+                mount.innerHTML = `
+                    <div class="panel-card" style="margin-bottom:20px;background:linear-gradient(135deg,#1F2937,#374151);color:#fff;border:none">
+                      <div class="panel-card-header" style="border-bottom:1px solid rgba(255,255,255,.1)">
+                        <h3 style="color:#fff">🏪 Seu Negócio MilkyPot</h3>
+                        <span style="font-size:.8rem;opacity:.7">${franchise ? franchise.name : ''}</span>
+                      </div>
+                      <div class="panel-card-body">
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:14px">
+                          <div>
+                            <div style="font-size:.72rem;opacity:.6;letter-spacing:.5px;text-transform:uppercase">Dias em operação</div>
+                            <div style="font-size:1.7rem;font-weight:800;font-family:'Baloo 2',cursive">${diasAtivo}</div>
+                          </div>
+                          <div>
+                            <div style="font-size:.72rem;opacity:.6;letter-spacing:.5px;text-transform:uppercase">Vendas hoje</div>
+                            <div style="font-size:1.7rem;font-weight:800;color:#10B981">${vendasHoje.length}</div>
+                            <div style="font-size:.72rem;opacity:.6">${brl(receitaHoje)}</div>
+                          </div>
+                          <div>
+                            <div style="font-size:.72rem;opacity:.6;letter-spacing:.5px;text-transform:uppercase">Ticket médio hoje</div>
+                            <div style="font-size:1.25rem;font-weight:800;color:#FBBF24">${ticketMedioHoje > 0 ? brl(ticketMedioHoje) : '—'}</div>
+                          </div>
+                          ${invest ? `
+                          <div>
+                            <div style="font-size:.72rem;opacity:.6;letter-spacing:.5px;text-transform:uppercase">Investimento</div>
+                            <div style="font-size:1.25rem;font-weight:800">${brl0(invest)}</div>
+                          </div>` : ''}
+                          ${metaInfo ? `
+                          <div style="grid-column:span 2">
+                            <div style="display:flex;justify-content:space-between;font-size:.72rem;opacity:.7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">
+                              <span>Meta do mês</span>
+                              <span style="color:${metaColor}">${pct}%</span>
+                            </div>
+                            <div style="font-size:.92rem;margin-bottom:4px">${brl(metaInfo.realizado)} <span style="opacity:.5">de</span> ${brl(metaInfo.valor)}</div>
+                            <div style="background:rgba(255,255,255,.15);height:10px;border-radius:5px;overflow:hidden">
+                              <div style="height:100%;width:${Math.min(100,pct)}%;background:${metaColor};border-radius:5px;transition:width .3s"></div>
+                            </div>
+                          </div>` : ''}
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+                          <a href="simulador.html" style="background:rgba(255,255,255,.15);color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:700;font-size:.85rem">📊 Simulador</a>
+                          <a href="operacional.html" style="background:rgba(255,255,255,.15);color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:700;font-size:.85rem">🎯 Metas</a>
+                          <a href="financeiro.html" style="background:rgba(255,255,255,.15);color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:700;font-size:.85rem">💰 Saúde financeira</a>
+                        </div>
+                      </div>
+                    </div>`;
+            } catch(e){ console.warn('Seu Negocio:', e); }
+        })();
+
         // Check for scheduled reports (runs once per page load)
         if (typeof Reports !== 'undefined') {
             Reports.checkScheduledReports();
         }
     </script>
+    <!-- Lulú Assistant IA (role-aware, auth-required) -->
+    <script src="../js/admin-assistant.js" defer></script>
+<script src="../js/core/copilot-transport.js" defer></script>
+<script src="../js/pages/lilo-scanner.js" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
+<script src="../js/core/register-sw.js?v=mp-v91"></script>
 </body>
 </html>

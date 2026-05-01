@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -32,6 +32,7 @@
                 <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
                 <a href="fidelidade.html" class="sidebar-link"><span class="icon">🎁</span> Fidelidade</a>
                 <a href="ifood.html" class="sidebar-link"><span class="icon">🛵</span> iFood</a>
+                <a href="uber-entregas.html" class="sidebar-link"><span class="icon">🚗</span> Uber Direct</a>
                 <div class="sidebar-nav-group">Midia da Loja</div>
                 <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
                 <a href="radio-indoor.html" class="sidebar-link"><span class="icon">📻</span> Radio Indoor</a>
@@ -40,6 +41,7 @@
                 <a href="marketing.html" class="sidebar-link"><span class="icon">📢</span> Marketing</a>
                 <div class="sidebar-nav-group">Config</div>
                 <a href="configuracoes.html" class="sidebar-link active"><span class="icon">⚙️</span> Configuracoes</a>
+                <a href="test-checklist.html" class="sidebar-link"><span class="icon">🧪</span> Checklist</a>
             </nav>
             <div class="sidebar-footer">
                 <div class="sidebar-user">
@@ -135,6 +137,43 @@
                             <h3>Operacao</h3>
                         </div>
                         <div class="card-body">
+                            <!-- ============================================================
+                                 CONTROLES DE OPERACAO ONLINE — 3 toggles independentes
+                                 ============================================================ -->
+
+                            <!-- Toggle master: loja aberta/fechada -->
+                            <div id="storeOpenBanner" class="form-group" style="background:#E8F5E9;border:2px solid #66BB6A;border-radius:12px;padding:14px;margin-bottom:10px">
+                                <label style="display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:0">
+                                    <input type="checkbox" id="storeOnlineOpen" style="width:22px;height:22px;cursor:pointer;accent-color:#2E7D32" onchange="updateStoreOpenBanner()">
+                                    <div style="flex:1">
+                                        <strong id="storeOpenLabel" style="display:block;font-size:1.05rem">🟢 Loja online ABERTA</strong>
+                                        <small style="color:#4E6045;font-size:0.82rem">Desligar: bloqueia <strong>todos</strong> os pedidos online (delivery E retirada). Use pra manutencao ou fora do horario.</small>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Toggle: aceitar pedidos delivery -->
+                            <div class="form-group" style="background:#FFF8F0;border:2px solid #FFE0B2;border-radius:12px;padding:14px;margin-bottom:10px">
+                                <label style="display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:0">
+                                    <input type="checkbox" id="storeDeliveryEnabled" style="width:20px;height:20px;cursor:pointer;accent-color:#FF9800">
+                                    <div style="flex:1">
+                                        <strong style="display:block;color:#E65100;font-size:1rem">🛵 Aceitar pedidos delivery</strong>
+                                        <small style="color:#8D6E63;font-size:0.82rem">Quando desligado: cardapio online so aceita retirada na loja</small>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Toggle: aceitar retirada -->
+                            <div class="form-group" style="background:#E3F2FD;border:2px solid #90CAF9;border-radius:12px;padding:14px;margin-bottom:14px">
+                                <label style="display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:0">
+                                    <input type="checkbox" id="storePickupEnabled" style="width:20px;height:20px;cursor:pointer;accent-color:#1565C0">
+                                    <div style="flex:1">
+                                        <strong style="display:block;color:#0D47A1;font-size:1rem">🏪 Aceitar retirada na loja</strong>
+                                        <small style="color:#455A64;font-size:0.82rem">Quando desligado: cardapio online so aceita delivery (se delivery tambem off → loja fechada)</small>
+                                    </div>
+                                </label>
+                            </div>
+
                             <div class="form-group">
                                 <label>Horario de funcionamento</label>
                                 <input type="text" id="storeHours" class="form-control" placeholder="10:00 - 22:00">
@@ -163,7 +202,8 @@
                         <div class="card-body">
                             <div class="form-group">
                                 <label>Nome do usuario</label>
-                                <input type="text" id="accountName" class="form-control" readonly style="background:#f5f5f5;cursor:not-allowed">
+                                <input type="text" id="accountName" class="form-control" placeholder="Seu nome">
+                                <button class="btn btn-primary" onclick="saveAccountName()" style="width:100%;margin-top:8px">Salvar Nome</button>
                             </div>
                             <div class="form-group">
                                 <label>Email</label>
@@ -239,6 +279,95 @@
                         </div>
                     </div>
 
+                    <!-- Card: Uber Direct Credenciais -->
+                    <div class="panel-card" style="grid-column:1/-1">
+                        <div class="card-header" style="background:linear-gradient(135deg,#1a1a1a,#333);color:#fff">
+                            <h3 style="color:#fff">&#128663; Uber Direct — Credenciais</h3>
+                            <p style="margin:4px 0 0;font-size:12px;opacity:.85">Integre com a API Uber Direct para entregas dinamicas com rastreamento em tempo real</p>
+                        </div>
+                        <div class="card-body">
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:16px">
+                                <!-- Ambiente -->
+                                <div class="form-group">
+                                    <label>Ambiente</label>
+                                    <select id="uberEnvironment" class="form-control">
+                                        <option value="sandbox">Teste (Sandbox)</option>
+                                        <option value="production">Producao</option>
+                                    </select>
+                                </div>
+                                <!-- Customer ID -->
+                                <div class="form-group">
+                                    <label>Customer ID</label>
+                                    <input type="text" id="uberCustomerId" class="form-control" placeholder="customer_XXXXXXXX">
+                                </div>
+                                <!-- Client ID -->
+                                <div class="form-group">
+                                    <label>Client ID</label>
+                                    <input type="text" id="uberClientId" class="form-control" placeholder="client_XXXXXXXX">
+                                </div>
+                                <!-- Client Secret -->
+                                <div class="form-group" style="position:relative">
+                                    <label>Client Secret</label>
+                                    <div style="display:flex;gap:6px">
+                                        <input type="password" id="uberClientSecret" class="form-control" placeholder="***masked***" style="flex:1">
+                                        <button type="button" onclick="toggleSecretVisibility()" style="padding:0 10px;border:1px solid #ddd;background:#f5f5f5;border-radius:8px;cursor:pointer;font-size:13px" title="Mostrar/ocultar">&#128065;</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr style="margin:4px 0 16px;border:none;border-top:1px solid #eee">
+                            <h4 style="margin-bottom:12px;color:#333;font-size:.95rem">Ponto de Retirada</h4>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px">
+                                <div class="form-group">
+                                    <label>Nome do ponto</label>
+                                    <input type="text" id="uberPickupName" class="form-control" placeholder="MilkyPot Loja Centro">
+                                </div>
+                                <div class="form-group">
+                                    <label>Telefone</label>
+                                    <input type="text" id="uberPickupPhone" class="form-control" placeholder="+5511999999999">
+                                </div>
+                                <div class="form-group" style="grid-column:1/-1">
+                                    <label>Endereco completo (para Uber)</label>
+                                    <input type="text" id="uberPickupAddress" class="form-control" placeholder="Rua Exemplo, 123, Centro, Sao Paulo - SP">
+                                </div>
+                                <div class="form-group">
+                                    <label>Latitude</label>
+                                    <input type="number" id="uberPickupLat" class="form-control" step="any" placeholder="-23.5505">
+                                </div>
+                                <div class="form-group">
+                                    <label>Longitude</label>
+                                    <input type="number" id="uberPickupLng" class="form-control" step="any" placeholder="-46.6333">
+                                </div>
+                                <div class="form-group">
+                                    <label>Tempo de preparo (min)</label>
+                                    <input type="number" id="uberPrepTime" class="form-control" step="1" min="0" max="120" placeholder="15">
+                                </div>
+                            </div>
+
+                            <!-- Ativar integracao -->
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#F3F0FF;border-radius:10px;margin-bottom:16px">
+                                <div>
+                                    <strong>Ativar integracao Uber Direct</strong>
+                                    <p style="margin:2px 0 0;font-size:12px;color:#666">Quando ativo, o checkout oferece entrega via Uber automaticamente</p>
+                                </div>
+                                <label style="position:relative;display:inline-block;width:54px;height:30px">
+                                    <input type="checkbox" id="uberActive" onchange="syncUberActiveSlider()" style="opacity:0;width:0;height:0">
+                                    <span id="uberActiveSlider" style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:30px;transition:.3s">
+                                        <span id="uberActiveThumb" style="position:absolute;height:24px;width:24px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;display:block"></span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Botoes e resultado do teste -->
+                            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+                                <button class="btn btn-primary" onclick="saveUberSettings()">&#128190; Salvar Credenciais</button>
+                                <button class="btn btn-outline" onclick="testUberConnection()">&#128279; Testar Conexao</button>
+                                <span id="uberLastValidation" style="font-size:12px;color:#888"></span>
+                            </div>
+                            <div id="uberTestResult" style="margin-top:10px"></div>
+                        </div>
+                    </div>
+
                     <!-- Card: Raspinha da Sorte -->
                     <div class="panel-card" style="grid-column:1/-1">
                         <div class="card-header" style="background:linear-gradient(135deg,#FF9800,#F57C00);color:#fff">
@@ -271,8 +400,15 @@
                             <div id="scratchPrizesList"></div>
 
                             <div style="margin-top:14px;padding:12px;background:#FFF8E1;border-radius:10px;font-size:12px;color:#825500">
-                                💡 <strong>Dica:</strong> O premio MEGA (R$ 150) tem probabilidade de 0.5% - pode ser desativado se a franquia nao tem margem. Pequenos premios como Topping Gratis mantem a recompra alta.
+                                💡 <strong>Estratégia de recompra 7 dias:</strong> todos os prêmios valem 7 dias e somente na próxima compra. Buffet 100g (R$15+) tem 30% de chance — é o motor da recompra. Combos e especiais entregam alto valor percebido com baixo custo.
                             </div>
+
+                            <!-- ROI por tipo de prêmio -->
+                            <div style="margin-top:18px">
+                                <h4 style="font-family:'Baloo 2',cursive;font-size:14px;color:#333;margin-bottom:10px">📊 ROI por tipo</h4>
+                                <div id="scratchRoiByType" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px"></div>
+                            </div>
+                            <div id="scratchTopPrize" style="margin-top:14px;padding:10px 12px;background:#E8F5E9;border-radius:10px;font-size:12px;color:#1B5E20;display:none"></div>
                         </div>
                     </div>
 
@@ -294,6 +430,7 @@
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/audit.js"></script>
     <script src="../js/core/notifications.js"></script>
+    <script src="../js/core/uber-direct.js"></script>
 
     <script>
     // Auth guard
@@ -327,9 +464,35 @@
         document.getElementById('storeWhatsapp').value = franchise.whatsapp || '';
     }
 
+    // Atualiza aparencia do banner "Loja aberta/fechada"
+    function updateStoreOpenBanner() {
+        var open = document.getElementById('storeOnlineOpen').checked;
+        var banner = document.getElementById('storeOpenBanner');
+        var label = document.getElementById('storeOpenLabel');
+        if (open) {
+            banner.style.background = '#E8F5E9';
+            banner.style.borderColor = '#66BB6A';
+            label.textContent = '🟢 Loja online ABERTA';
+            label.style.color = '#1B5E20';
+        } else {
+            banner.style.background = '#FFEBEE';
+            banner.style.borderColor = '#EF9A9A';
+            label.textContent = '🔴 Loja online FECHADA — nenhum pedido aceito';
+            label.style.color = '#B71C1C';
+        }
+    }
+
     // Load operation data into form
     function loadOperationData() {
         if (!franchise) return;
+        // Defaults = true (compativel com lojas existentes sem os flags)
+        var onlineOpen = franchise.storeOnlineOpen !== false;
+        var deliveryEnabled = franchise.deliveryEnabled !== false;
+        var pickupEnabled = franchise.pickupEnabled !== false;
+        document.getElementById('storeOnlineOpen').checked = onlineOpen;
+        document.getElementById('storeDeliveryEnabled').checked = deliveryEnabled;
+        document.getElementById('storePickupEnabled').checked = pickupEnabled;
+        updateStoreOpenBanner();
         document.getElementById('storeHours').value = franchise.hours || '';
         document.getElementById('storeDeliveryFee').value = franchise.deliveryFee || '';
         document.getElementById('storeDeliveryTime').value = franchise.deliveryTime || '';
@@ -458,13 +621,78 @@
         var idx = allFranchises.findIndex(function(f) { return f.id === franchiseId; });
         if (idx === -1) return alert('Franquia nao encontrada.');
 
+        var onlineOpen = document.getElementById('storeOnlineOpen').checked;
+        var deliveryEnabled = document.getElementById('storeDeliveryEnabled').checked;
+        var pickupEnabled = document.getElementById('storePickupEnabled').checked;
+
+        allFranchises[idx].storeOnlineOpen = onlineOpen;
+        allFranchises[idx].deliveryEnabled = deliveryEnabled;
+        allFranchises[idx].pickupEnabled = pickupEnabled;
         allFranchises[idx].hours = document.getElementById('storeHours').value.trim();
         allFranchises[idx].deliveryFee = parseFloat(document.getElementById('storeDeliveryFee').value) || 0;
         allFranchises[idx].deliveryTime = document.getElementById('storeDeliveryTime').value.trim();
         allFranchises[idx].deliveryRadius = parseInt(document.getElementById('storeDeliveryRadius').value) || 0;
 
         DataStore.set('franchises', allFranchises);
-        alert('Dados de operacao salvos com sucesso!');
+
+        var lines = [];
+        if (!onlineOpen) {
+            lines.push('🔴 Loja online FECHADA — nenhum pedido aceito');
+        } else {
+            lines.push('🟢 Loja online ABERTA');
+            lines.push(deliveryEnabled ? '✅ Delivery ATIVO' : '🚫 Delivery DESATIVADO');
+            lines.push(pickupEnabled ? '✅ Retirada ATIVA' : '🚫 Retirada DESATIVADA');
+        }
+        alert('Operacao salva!\n\n' + lines.join('\n'));
+    }
+
+    // Salva nome do usuário (atualiza users collection + sessão + sidebar)
+    function saveAccountName() {
+        var input = document.getElementById('accountName');
+        var newName = (input.value || '').trim();
+        if (!newName) {
+            alert('Digite seu nome.');
+            input.focus();
+            return;
+        }
+        if (newName.length < 2) {
+            alert('Nome muito curto (mínimo 2 caracteres).');
+            return;
+        }
+        try {
+            // 1) Atualiza users collection (Firestore + localStorage via DataStore.set)
+            var users = DataStore.get('users') || [];
+            var idx = users.findIndex(function(u){ return u.id === session.userId; });
+            if (idx === -1) { alert('Usuário não encontrado.'); return; }
+            users[idx].name = newName;
+            users[idx].updatedAt = new Date().toISOString();
+            DataStore.set('users', users);
+
+            // 2) Atualiza sessão local (mp_session) pra refletir imediato
+            var sessionRaw = Auth.getSessionRaw ? Auth.getSessionRaw() : null;
+            var sessionObj = sessionRaw || JSON.parse(localStorage.getItem(Auth.SESSION_KEY) || 'null');
+            if (sessionObj) {
+                sessionObj.name = newName;
+                localStorage.setItem(Auth.SESSION_KEY, JSON.stringify(sessionObj));
+            }
+            session.name = newName;
+
+            // 3) Atualiza sidebar imediatamente (sem precisar reload)
+            var sidebarEl = document.getElementById('sidebarUserName');
+            if (sidebarEl) sidebarEl.textContent = newName;
+
+            // 4) Audit log (se existe)
+            try {
+                if (typeof AuditLog !== 'undefined' && AuditLog.log) {
+                    AuditLog.log('user_name_changed', { from: users[idx].name, to: newName, by: session.email });
+                }
+            } catch(e){}
+
+            alert('✅ Nome atualizado!');
+        } catch(e) {
+            console.error('saveAccountName error:', e);
+            alert('Erro ao salvar nome. Tente novamente.');
+        }
     }
 
     // Change password
@@ -495,17 +723,23 @@
     // ============================================
     // RASPINHA DA SORTE - Admin
     // ============================================
+    // Estratégia de recompra em até 7 dias — todos os prêmios:
+    //   • validade fixa 7 dias
+    //   • uso somente na próxima compra (scope:'same' = mesma loja)
+    //   • valor mínimo automático no caixa (minOrder)
+    //   • cumulativo:false (1 prêmio por compra, não acumula com outros)
     const DEFAULT_SCRATCH_PRIZES = [
-        {code:'RSP_TRY_AGAIN',   name:'Quase! Tente no proximo pedido', desc:'Hoje nao foi! Volta amanha.', prob:30, cost:0,   validity:0,  scope:'any',   minOrder:0,  tier:'none', emoji:'🔁'},
-        {code:'RSP_TOPPING_FREE',name:'1 Topping Gratis',               desc:'1 topping gratis no proximo pedido', prob:22, cost:4,   validity:7,  scope:'same',  minOrder:15, tier:'small', emoji:'🍒'},
-        {code:'RSP_UPSIZE',      name:'Upgrade de Tamanho',             desc:'Pediu M? Leva G. Pediu G? Leva GG.', prob:15, cost:5,   validity:10, scope:'same',  minOrder:15, tier:'small', emoji:'📈'},
-        {code:'RSP_DISC_5',      name:'R$ 5 OFF',                       desc:'R$ 5 de desconto no proximo pedido', prob:12, cost:5,   validity:15, scope:'any',   minOrder:20, tier:'medium', emoji:'💸'},
-        {code:'RSP_2BY1_TOPPING',name:'Toppings 2 x 1',                 desc:'Leve 2 toppings pagando 1',          prob:8,  cost:4,   validity:10, scope:'same',  minOrder:15, tier:'medium', emoji:'✌️'},
-        {code:'RSP_BUFFET_100G', name:'+100g Buffet',                   desc:'100g gratis no buffet de acai',      prob:5,  cost:6,   validity:15, scope:'same',  minOrder:0,  tier:'medium', emoji:'⚖️'},
-        {code:'RSP_COMBO_15',    name:'Combo 15% OFF',                  desc:'15% OFF em qualquer combo',          prob:4,  cost:7.5, validity:15, scope:'any',   minOrder:30, tier:'medium', emoji:'🎯'},
-        {code:'RSP_SHAKE_FREE',  name:'Shake M Gratis',                 desc:'SHAKE M GRATIS no proximo pedido',   prob:2.5,cost:16,  validity:20, scope:'same',  minOrder:15, tier:'big', emoji:'🥤'},
-        {code:'RSP_ACAI_500G',   name:'Acai 500g + 3 toppings',         desc:'Acai 500g com 3 toppings gratis',    prob:1,  cost:30,  validity:20, scope:'same',  minOrder:15, tier:'big', emoji:'🍇'},
-        {code:'RSP_MEGA_150',    name:'MEGA R$ 150 em creditos',        desc:'R$150 MilkyPot! Use em 30 dias.',    prob:0.5,cost:150, validity:30, scope:'any',   minOrder:0,  tier:'mega', emoji:'💎'}
+        {code:'RSP_BUFFET_100_15',   name:'100g Buffet (acima R$15)',        tipo:'buffet',   desc:'Ganhe 100g de buffet na próxima compra acima de R$15',     prob:30, cost:6,   validity:7, scope:'same', minOrder:15, cumulativo:false, tier:'small',  emoji:'⚖️'},
+        {code:'RSP_BUFFET_100_20',   name:'100g Buffet (acima R$20)',        tipo:'buffet',   desc:'Ganhe 100g de buffet na próxima compra acima de R$20',     prob:20, cost:6,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  emoji:'⚖️'},
+        {code:'RSP_BUFFET_150_25',   name:'150g Buffet (acima R$25)',        tipo:'buffet',   desc:'Ganhe 150g de buffet na compra acima de R$25',             prob:15, cost:9,   validity:7, scope:'same', minOrder:25, cumulativo:false, tier:'medium', emoji:'⚖️'},
+        {code:'RSP_BUFFET_200_35',   name:'200g Buffet (acima R$35)',        tipo:'buffet',   desc:'Ganhe 200g de buffet na compra acima de R$35',             prob:5,  cost:12,  validity:7, scope:'same', minOrder:35, cumulativo:false, tier:'medium', emoji:'⚖️'},
+        {code:'RSP_PICOLE_15',       name:'1 Picolé Grátis',                 tipo:'brinde',   desc:'Ganhe 1 picolé na próxima compra acima de R$15',           prob:10, cost:3,   validity:7, scope:'same', minOrder:15, cumulativo:false, tier:'small',  emoji:'🍦'},
+        {code:'RSP_CASQUINHA',       name:'1 Casquinha Grátis',              tipo:'brinde',   desc:'Ganhe 1 casquinha na próxima compra',                       prob:5,  cost:2,   validity:7, scope:'same', minOrder:10, cumulativo:false, tier:'small',  emoji:'🍨'},
+        {code:'RSP_COPINHO_20',      name:'1 Copinho de Sorvete',            tipo:'produto',  desc:'Ganhe 1 copinho de sorvete na compra acima de R$20',       prob:5,  cost:5,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  emoji:'🍧'},
+        {code:'RSP_SUNDAE_P_30',     name:'1 Sundae P Grátis',               tipo:'produto',  desc:'Ganhe 1 sundae P na compra acima de R$30',                 prob:4,  cost:8,   validity:7, scope:'same', minOrder:30, cumulativo:false, tier:'medium', emoji:'🍦'},
+        {code:'RSP_SHAKE_UPGRADE',   name:'Upgrade de Milk Shake',           tipo:'produto',  desc:'Ganhe upgrade de Milk Shake (P para M ou M para G)',       prob:3,  cost:5,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  emoji:'⬆️'},
+        {code:'RSP_COMBO_BUFFET_PIC',name:'Combo Buffet + Picolé',           tipo:'combo',    desc:'Ganhe 100g de buffet + 1 picolé na compra acima de R$25', prob:2,  cost:9,   validity:7, scope:'same', minOrder:25, cumulativo:false, tier:'medium', emoji:'🎁'},
+        {code:'RSP_AMIGO_100G',      name:'Volte com um Amigo',              tipo:'especial', desc:'Volte com um amigo e ganhem 100g de buffet cada',          prob:1,  cost:12,  validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'big',    emoji:'👯'}
     ];
 
     function getScratchConfig() {
@@ -562,7 +796,10 @@
         container.innerHTML = prizes.map(function(p) {
             var isActive = !p.disabled;
             var effectiveProb = isActive && totalActiveProb > 0 ? (p.prob / totalActiveProb * 100).toFixed(1) : '0';
-            var tierColor = {none:'#9E9E9E',small:'#4CAF50',medium:'#2196F3',big:'#FF9800',mega:'#E91E63'}[p.tier] || '#666';
+            // Cor por tipo (categoria estrategica) com fallback no tier antigo
+            var typeColors = {buffet:'#FF9800', brinde:'#4CAF50', produto:'#2196F3', combo:'#9C27B0', especial:'#E91E63'};
+            var tierColor = typeColors[p.tipo] || {none:'#9E9E9E',small:'#4CAF50',medium:'#2196F3',big:'#FF9800',mega:'#E91E63'}[p.tier] || '#666';
+            var typeLabel = p.tipo || p.tier || '';
             var costLabel = p.cost > 0 ? 'R$ ' + p.cost.toFixed(2).replace('.', ',') + ' custo' : 'Sem custo';
             var validityLabel = p.validity > 0 ? p.validity + ' dias validade' : 'Sem validade';
             var scopeLabel = p.scope === 'same' ? 'Mesma loja' : 'Qualquer loja';
@@ -573,7 +810,7 @@
                 '<div style="flex:1;min-width:0">' +
                     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
                         '<strong style="font-size:14px;color:#333">' + p.name + '</strong>' +
-                        '<span style="background:' + tierColor + ';color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;text-transform:uppercase">' + p.tier + '</span>' +
+                        '<span style="background:' + tierColor + ';color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;text-transform:uppercase">' + typeLabel + '</span>' +
                     '</div>' +
                     '<div style="font-size:12px;color:#888;margin-bottom:4px">' + p.desc + '</div>' +
                     '<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:#666">' +
@@ -607,10 +844,10 @@
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         var recent = scratches.filter(function(s) { return new Date(s.createdAt) >= thirtyDaysAgo; });
         var scratched = recent.filter(function(s) { return s.status === 'scratched' || s.status === 'redeemed'; }).length;
-        var redeemed = recent.filter(function(s) { return s.status === 'redeemed'; }).length;
-        // Cost is sum of prize cost for redeemed only
+        var redeemedItems = recent.filter(function(s) { return s.status === 'redeemed'; });
+        var redeemed = redeemedItems.length;
         var prizes = getScratchPrizes();
-        var totalCost = recent.filter(function(s) { return s.status === 'redeemed'; }).reduce(function(sum, s) {
+        var totalCost = redeemedItems.reduce(function(sum, s) {
             var prize = prizes.find(function(p) { return p.code === s.prizeCode; });
             return sum + (prize ? (prize.cost || 0) : 0);
         }, 0);
@@ -619,9 +856,256 @@
         document.getElementById('scratchStatScratched').textContent = scratched;
         document.getElementById('scratchStatRedeemed').textContent = redeemed;
         document.getElementById('scratchStatCost').textContent = 'R$ ' + totalCost.toFixed(2).replace('.', ',');
+
+        // ============================================
+        // ROI por tipo de prêmio
+        // taxa_retorno = redeemed / emitted (cliente voltou)
+        // ticket_medio = soma(orderTotal redeemed) / redeemed
+        // ROI = (faturamento - custo) / custo
+        // ============================================
+        var byType = {};
+        recent.forEach(function(s) {
+            var prize = prizes.find(function(p) { return p.code === s.prizeCode; });
+            if (!prize) return;
+            var t = prize.tipo || prize.tier || 'outros';
+            if (!byType[t]) byType[t] = { emit:0, redeemed:0, cost:0, revenue:0, prizeCount:{} };
+            byType[t].emit++;
+            byType[t].prizeCount[prize.code] = (byType[t].prizeCount[prize.code] || 0) + 1;
+            if (s.status === 'redeemed') {
+                byType[t].redeemed++;
+                byType[t].cost += (prize.cost || 0);
+                byType[t].revenue += (s.orderTotal || s.redemptionTotal || 0);
+            }
+        });
+
+        var typeColors = {buffet:'#FF9800', brinde:'#4CAF50', produto:'#2196F3', combo:'#9C27B0', especial:'#E91E63'};
+        var roiBox = document.getElementById('scratchRoiByType');
+        if (roiBox) {
+            var entries = Object.keys(byType);
+            roiBox.innerHTML = entries.length === 0
+                ? '<div style="grid-column:1/-1;font-size:12px;color:#999;text-align:center;padding:8px">Sem dados nos últimos 30 dias.</div>'
+                : entries.map(function(t) {
+                    var d = byType[t];
+                    var ret = d.emit > 0 ? (d.redeemed / d.emit * 100).toFixed(0) : '0';
+                    var ticket = d.redeemed > 0 ? (d.revenue / d.redeemed) : 0;
+                    var roi = d.cost > 0 ? ((d.revenue - d.cost) / d.cost * 100).toFixed(0) : (d.revenue > 0 ? '∞' : '0');
+                    var color = typeColors[t] || '#666';
+                    return '<div style="background:#fff;border:1px solid ' + color + '40;border-left:4px solid ' + color + ';border-radius:8px;padding:10px">' +
+                        '<div style="font-size:11px;font-weight:700;color:' + color + ';text-transform:uppercase;margin-bottom:4px">' + t + '</div>' +
+                        '<div style="font-size:11px;color:#666;line-height:1.6">' +
+                            '<div>Retorno: <strong style="color:#333">' + ret + '%</strong></div>' +
+                            '<div>Ticket médio: <strong style="color:#333">R$ ' + ticket.toFixed(2).replace('.', ',') + '</strong></div>' +
+                            '<div>ROI: <strong style="color:' + (parseFloat(roi) >= 100 ? '#2E7D32' : '#666') + '">' + roi + '%</strong></div>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+        }
+
+        // Prêmio mais usado
+        var topBox = document.getElementById('scratchTopPrize');
+        if (topBox) {
+            var counts = {};
+            redeemedItems.forEach(function(s) { counts[s.prizeCode] = (counts[s.prizeCode] || 0) + 1; });
+            var topCode = Object.keys(counts).sort(function(a,b){ return counts[b] - counts[a]; })[0];
+            if (topCode) {
+                var topPrize = prizes.find(function(p) { return p.code === topCode; });
+                if (topPrize) {
+                    topBox.style.display = 'block';
+                    topBox.innerHTML = '🏆 <strong>Prêmio mais usado (30d):</strong> ' + topPrize.emoji + ' ' + topPrize.name + ' — ' + counts[topCode] + 'x resgatado';
+                }
+            } else {
+                topBox.style.display = 'none';
+            }
+        }
     }
 
     window.saveScratchConfig = saveScratchConfig;
+
+    // ============================================
+    // UBER DIRECT — Credenciais
+    // ============================================
+    function syncUberActiveSlider() {
+        var checked = document.getElementById('uberActive').checked;
+        var slider = document.getElementById('uberActiveSlider');
+        var thumb = document.getElementById('uberActiveThumb');
+        slider.style.background = checked ? '#7C3AED' : '#ccc';
+        thumb.style.left = checked ? '27px' : '3px';
+    }
+
+    function toggleSecretVisibility() {
+        var inp = document.getElementById('uberClientSecret');
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    async function loadUberSettings() {
+        try {
+            var result;
+            try {
+                result = await CloudFunctions.call('uberDirect_getSettings', { franchiseId: franchiseId });
+            } catch (e) { result = null; }
+            if (!result || result.error === 'Functions nao disponivel' || result.error === 'Function not found') {
+                try {
+                    var fn = firebase.app().functions('southamerica-east1').httpsCallable('uberDirect_getSettings');
+                    var fbResult = await fn({ franchiseId: franchiseId });
+                    result = fbResult && fbResult.data ? fbResult.data : null;
+                } catch (e) { result = null; }
+            }
+            if (!result || !result.success) return;
+            var s = result.data || {};
+            document.getElementById('uberEnvironment').value = s.environment || 'sandbox';
+            document.getElementById('uberCustomerId').value = s.customer_id || '';
+            document.getElementById('uberClientId').value = s.client_id || '';
+            document.getElementById('uberClientSecret').value = s.client_secret || '';
+            document.getElementById('uberPickupName').value = s.pickup_name || '';
+            document.getElementById('uberPickupPhone').value = s.pickup_phone || '';
+            document.getElementById('uberPickupAddress').value = s.pickup_address || '';
+            document.getElementById('uberPickupLat').value = s.pickup_latitude || '';
+            document.getElementById('uberPickupLng').value = s.pickup_longitude || '';
+            document.getElementById('uberPrepTime').value = s.prep_time_minutes || '';
+            document.getElementById('uberActive').checked = !!s.enabled;
+            syncUberActiveSlider();
+            if (s.updatedAt) {
+                // Firestore Timestamp pode vir como {_seconds,_nanoseconds} ou {seconds,nanoseconds} ou ISO string
+                var tsMs = s.updatedAt._seconds ? s.updatedAt._seconds * 1000
+                         : s.updatedAt.seconds  ? s.updatedAt.seconds  * 1000
+                         : typeof s.updatedAt === 'string' ? new Date(s.updatedAt).getTime()
+                         : s.updatedAt;
+                var tsDate = new Date(tsMs);
+                document.getElementById('uberLastValidation').textContent =
+                    !isNaN(tsDate.getTime()) ? 'Ultima atualizacao: ' + tsDate.toLocaleString('pt-BR') : '';
+            }
+        } catch (e) {
+            console.warn('loadUberSettings error:', e);
+        }
+    }
+
+    window.saveUberSettings = async function() {
+        var customerId = document.getElementById('uberCustomerId').value.trim();
+        var clientId   = document.getElementById('uberClientId').value.trim();
+        var secretVal  = document.getElementById('uberClientSecret').value.trim();
+        var pickupName = document.getElementById('uberPickupName').value.trim();
+        var pickupPhone= document.getElementById('uberPickupPhone').value.trim();
+        var pickupAddr = document.getElementById('uberPickupAddress').value.trim();
+        var env        = document.getElementById('uberEnvironment').value;
+
+        // Validacao de campos obrigatorios
+        var missing = [];
+        if (!customerId)                        missing.push('Customer ID');
+        if (!clientId)                          missing.push('Client ID');
+        if (!secretVal)                         missing.push('Client Secret');
+        if (!pickupName)                        missing.push('Nome do ponto de coleta');
+        if (!pickupPhone)                       missing.push('Telefone do ponto de coleta');
+        if (!pickupAddr)                        missing.push('Endereco do ponto de coleta');
+
+        if (missing.length) {
+            alert('Preencha os campos obrigatorios antes de salvar:\n\n• ' + missing.join('\n• '));
+            return;
+        }
+
+        // Aviso de ambiente sandbox
+        if (env === 'sandbox') {
+            var confirmSandbox = confirm(
+                'ATENCAO: Voce esta salvando em modo SANDBOX.\n\n' +
+                'Entregas Uber Direct NAO serao reais.\n' +
+                'Para ativar entregas reais, altere o ambiente para "Producao".\n\n' +
+                'Deseja salvar mesmo assim?'
+            );
+            if (!confirmSandbox) return;
+        }
+
+        var payload = {
+            franchiseId: franchiseId,
+            environment: env,
+            customer_id: customerId,
+            client_id: clientId,
+            pickup_name: pickupName,
+            pickup_phone: pickupPhone,
+            pickup_address: pickupAddr,
+            pickup_latitude: parseFloat(document.getElementById('uberPickupLat').value) || 0,
+            pickup_longitude: parseFloat(document.getElementById('uberPickupLng').value) || 0,
+            prep_time_minutes: parseInt(document.getElementById('uberPrepTime').value) || 0,
+            enabled: document.getElementById('uberActive').checked
+        };
+        // Nao enviar o secret se ainda esta mascarado (backend preserva o existente)
+        if (secretVal && secretVal !== '***masked***') {
+            payload.client_secret = secretVal;
+        }
+
+        // Aguarda auth antes de chamar Cloud Function
+        if (typeof firebase !== 'undefined' && firebase.auth && !firebase.auth().currentUser) {
+            await new Promise(function(resolve) {
+                var unsub = firebase.auth().onAuthStateChanged(function(u) {
+                    unsub();
+                    resolve(u);
+                });
+            });
+        }
+
+        // Fallback defensivo: se CloudFunctions cached estiver sem a rota uberDirect_*,
+        // chama Firebase Functions direto (bypass total do CloudFunctions module)
+        var result;
+        try {
+            result = await CloudFunctions.call('uberDirect_saveSettings', payload);
+        } catch (e) { result = null; }
+        if (!result || result.error === 'Functions nao disponivel' || result.error === 'Function not found') {
+            console.warn('[UberDirect] CloudFunctions cache antigo, usando Firebase direto');
+            try {
+                var fn = firebase.app().functions('southamerica-east1').httpsCallable('uberDirect_saveSettings');
+                var fbResult = await fn(payload);
+                result = fbResult && fbResult.data ? fbResult.data : { success: true };
+            } catch (e) {
+                result = { success: false, error: e.message || 'Erro Firebase: ' + e.code };
+            }
+        }
+        if (result && result.success) {
+            alert('Credenciais Uber Direct salvas com sucesso!');
+        } else {
+            alert('Erro ao salvar: ' + ((result && result.error) || 'sem resposta'));
+        }
+    };
+
+    window.testUberConnection = async function() {
+        var resultEl = document.getElementById('uberTestResult');
+        resultEl.innerHTML = '<span style="color:#888;font-size:.88rem">Testando conexao...</span>';
+
+        // Aguarda restauracao da sessao Firebase Auth antes de chamar Cloud Function
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+            var user = firebase.auth().currentUser;
+            if (!user) {
+                await new Promise(function(resolve) {
+                    var unsub = firebase.auth().onAuthStateChanged(function(u) {
+                        unsub();
+                        resolve(u);
+                    });
+                });
+            }
+        }
+
+        var result;
+        try {
+            result = await CloudFunctions.call('uberDirect_testConnection', { franchiseId: franchiseId });
+        } catch (e) { result = null; }
+        if (!result || result.error === 'Functions nao disponivel' || result.error === 'Function not found') {
+            try {
+                var fn = firebase.app().functions('southamerica-east1').httpsCallable('uberDirect_testConnection');
+                var fbResult = await fn({ franchiseId: franchiseId });
+                result = fbResult && fbResult.data ? fbResult.data : { success: false, error: 'sem resposta' };
+            } catch (e) { result = { success: false, error: e.message || 'Erro Firebase' }; }
+        }
+        var d = (result && result.data) || {};
+        if (result && result.success && d.ok) {
+            resultEl.innerHTML = '<div style="padding:10px 14px;background:#E8F5E9;color:#1B5E20;border-radius:8px;font-size:.88rem">' +
+                '&#9989; Conexao OK &mdash; ' + (d.durationMs || 0) + ' ms' +
+                (d.message ? ' &mdash; ' + d.message : '') +
+                '</div>';
+            document.getElementById('uberLastValidation').textContent =
+                'Ultima validacao: ' + new Date().toLocaleString('pt-BR');
+        } else {
+            resultEl.innerHTML = '<div style="padding:10px 14px;background:#FFEBEE;color:#B71C1C;border-radius:8px;font-size:.88rem">' +
+                '&#10060; Falha na conexao: ' + (d.error || (result && result.error) || 'sem resposta') +
+                '</div>';
+        }
+    };
 
     // Init
     loadStoreData();
@@ -630,6 +1114,14 @@
     loadFranchiseInfo();
     loadNotifSettings();
     loadScratchConfig();
+    // Uber Direct: aguarda Firebase Auth restaurar sessao do IndexedDB antes de chamar
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) loadUberSettings();
+        });
+    } else {
+        loadUberSettings();
+    }
     </script>
 </body>
 </html>

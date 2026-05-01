@@ -435,7 +435,8 @@ function showToast(message) {
 }
 
 function formatCurrency(value) {
-    return `R$ ${value.toFixed(2).replace('.', ',')}`;
+    if (typeof value !== 'number' || isNaN(value)) value = 0;
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 }
 
 function createConfetti() {
@@ -547,29 +548,64 @@ function initFaqTabs() {
 // ============================================
 function calculateROI() {
     const model = document.getElementById('roiModel')?.value;
-    const location = document.getElementById('roiLocation')?.value;
+    const demand = document.getElementById('roiDemand')?.value;
     const experience = document.getElementById('roiExperience')?.value;
     if (!model) return;
 
+    /*
+     * PREMISSAS DE MERCADO (validadas pela operação real)
+     * - Ticket médio: R$ 22 (combos + casamento de itens)
+     * - 26 dias operacionais/mês
+     *
+     * Kit Delivery em Casa (3.499,99) — 1 mixer, treinamento online:
+     *   - Pedidos/dia: 10 (conserv), 15 (médio), 22 (ótimo)
+     *   - Faturamento base: 15 × 22 × 26 = 8.580 (arredondado 8.500)
+     *   - Margem LÍQUIDA: 30%
+     *
+     * Kit Pro Dark Kitchen (4.997) — 2 mixers, treinamento PRESENCIAL na loja modelo:
+     *   - Pedidos/dia: 20 (conserv), 25 (médio), 35 (ótimo)
+     *   - Faturamento base: 25 × 22 × 26 = 14.300 (arredondado 14.000)
+     *   - Margem LÍQUIDA: 30% (mesma operação; dobro de capacidade + melhor curva
+     *     de aprendizado pelo treinamento presencial na loja modelo)
+     *
+     * Kit Loja / Quiosque (25.000) — operação física completa:
+     *   - Pedidos/dia: 60 (conserv), 80 (médio), 100 (ótimo)
+     *   - Faturamento base: 80 × 22 × 26 = 45.760 (arredondado 42.000 p/ conservadorismo)
+     *   - Margem LÍQUIDA: 22% (já descontado insumo, aluguel, funcionários, utilities)
+     */
     const models = {
-        express:  { investment: 89000,  revenueBase: 45000, marginPct: 0.20 },
-        store:    { investment: 169000, revenueBase: 95000, marginPct: 0.20 },
-        mega:     { investment: 289000, revenueBase: 160000, marginPct: 0.22 }
+        delivery: { investment: 3499.99,  revenueBase: 8500,  marginPct: 0.30 },
+        pro:      { investment: 4997.00,  revenueBase: 14000, marginPct: 0.30 },
+        loja:     { investment: 25000.00, revenueBase: 42000, marginPct: 0.22 }
     };
 
-    const locationMult = { shopping: 1.15, rua: 1.0, galeria: 0.9 };
-    const expMult = { none: 0.9, some: 1.0, food: 1.1 };
+    // Fator de demanda (local, divulgação, sazonalidade)
+    const demandMult = { conservador: 0.7, medio: 1.0, otimo: 1.35 };
+    // Experiência prévia do operador
+    const expMult = { none: 0.85, some: 1.0, food: 1.15 };
 
-    const data = models[model];
-    const locMul = locationMult[location] || 1;
-    const expMul = expMult[experience] || 1;
+    const data = models[model] || models.delivery;
+    const dMul = demandMult[demand] || 1;
+    const eMul = expMult[experience] || 1;
 
-    const revenue = Math.round(data.revenueBase * locMul * expMul);
-    const profit = Math.round(revenue * data.marginPct * locMul * expMul);
-    const payback = Math.ceil(data.investment / profit);
+    const revenue = Math.round(data.revenueBase * dMul * eMul);
+    const profit = Math.round(revenue * data.marginPct);
+    const paybackMonths = data.investment / (profit || 1);
+    let paybackText;
+    if (paybackMonths < 1) {
+        paybackText = `${Math.max(1, Math.round(paybackMonths * 30))} dias`;
+    } else if (paybackMonths < 2) {
+        paybackText = `${paybackMonths.toFixed(1).replace('.', ',')} meses`;
+    } else {
+        paybackText = `${Math.round(paybackMonths)} meses`;
+    }
 
-    document.getElementById('roiInvestment').textContent = formatCurrency(data.investment);
-    document.getElementById('roiRevenue').textContent = formatCurrency(revenue);
-    document.getElementById('roiProfit').textContent = formatCurrency(profit);
-    document.getElementById('roiPayback').textContent = `${payback} meses`;
+    const invEl = document.getElementById('roiInvestment');
+    const revEl = document.getElementById('roiRevenue');
+    const profitEl = document.getElementById('roiProfit');
+    const paybackEl = document.getElementById('roiPayback');
+    if (invEl) invEl.textContent = formatCurrency(data.investment);
+    if (revEl) revEl.textContent = formatCurrency(revenue);
+    if (profitEl) profitEl.textContent = formatCurrency(profit);
+    if (paybackEl) paybackEl.textContent = paybackText;
 }

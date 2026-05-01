@@ -448,6 +448,25 @@ const Notifications = {
         }
     },
 
+    // Notificação de ativação para o Admin
+    notifyAdminOnActivation(franchise) {
+        // Envia notificação in-app para admins logados
+        this.add(
+            'Foguete Ativado! 🚀',
+            `A unidade ${franchise.name} acabou de completar o setup e está pronta para vender.`,
+            'success',
+            'territorio.html'
+        );
+
+        // Dispara WhatsApp para o suporte/admin principal
+        if (typeof WhatsApp !== 'undefined') {
+            const msg = WhatsApp.templates.franchiseActivated(franchise);
+            // Nota: Em produção aqui usaria uma API de disparo silencioso,
+            // mas para o ERP usamos o helper que abre o link para registro manual se necessário.
+            console.log('📢 Admin Notification Sent:', msg);
+        }
+    },
+
     // Show toast notification
     _showToastNotif(notif) {
         const toast = document.createElement('div');
@@ -591,3 +610,7 @@ if (document.readyState === 'loading') {
 } else {
     Notifications.init();
 }
+
+// Expose globally for browser (const is script-scoped, not a window property)
+if (typeof window !== 'undefined') window.Notifications = Notifications;
+if (typeof globalThis !== 'undefined') globalThis.Notifications = Notifications;

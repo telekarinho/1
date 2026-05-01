@@ -124,6 +124,11 @@ function updateOrderSummary() {
     var deliveryFee = deliveryType === 'delivery' ? storeFee : 0;
 
     if (summarySubtotal) summarySubtotal.textContent = formatCurrency(subtotal);
+    // Se Uber Direct ativo com quote calculado, usa o valor do cliente
+    if (deliveryType === 'delivery' && window._uberQuoteId && window._uberCustomerFee !== undefined) {
+        deliveryFee = window._uberCustomerFee;
+    }
+
     if (summaryDelivery) summaryDelivery.textContent = deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Grátis';
     if (summaryTotal) summaryTotal.textContent = formatCurrency(subtotal + deliveryFee);
 }
@@ -158,6 +163,11 @@ function placeOrder() {
     var deliveryRadio = document.querySelector('input[name="delivery"]:checked');
     var deliveryType = deliveryRadio ? deliveryRadio.value : 'pickup';
     var deliveryFee = deliveryType === 'delivery' ? storeFee : 0;
+
+    // Se delivery + Uber Direct ativo: usar quote ja calculado
+    if (deliveryType === 'delivery' && window._uberQuoteId && window._uberCustomerFee !== undefined) {
+        deliveryFee = window._uberCustomerFee;
+    }
     var deliveryAddress = '';
     if (deliveryType === 'delivery') {
         var addr = (document.getElementById('checkoutAddress') || {}).value || '';
@@ -223,7 +233,10 @@ function placeOrder() {
         }),
         subtotal: subtotal,
         deliveryFee: deliveryFee,
-        total: total
+        total: total,
+        // Uber Direct quote data (preenchido se cotacao foi feita)
+        uberQuoteId: (deliveryType === 'delivery' && window._uberQuoteId) ? window._uberQuoteId : null,
+        uberEnabled: !!(deliveryType === 'delivery' && window._uberQuoteId)
     };
 
     // Save order to orders list
@@ -238,10 +251,15 @@ function placeOrder() {
     if (typeof DataStore !== 'undefined' && typeof Utils !== 'undefined' && storeId) {
         try {
             // Save order to DataStore for franchise tracking
+            // status='novo' (não aguardando_pagamento) — kanban renderiza só
+            // ['novo','confirmado','preparando','pronto','em_entrega','entregue']
+            // pedido do site precisa cair em 'novo' pra operador ver e ir confirmando
             DataStore.addToCollection('orders', storeId, {
                 id: Utils.generateId(),
                 orderNumber: orderNumber,
-                status: 'aguardando_pagamento',
+                franchiseId: storeId,
+                status: 'novo',
+                source: 'delivery',
                 createdAt: new Date().toISOString(),
                 customer: { name: customerName, phone: customerPhone },
                 delivery: { type: deliveryType, address: deliveryAddress, fee: deliveryFee },
@@ -297,6 +315,28 @@ function placeOrder() {
     }
 
     // ============================================
+    // RASPINHA DA SORTE — geração no checkout (delivery)
+    // Gera junto com o pagamento (regra: sempre na hora da finalização)
+    // ============================================
+    var scratchData = null;
+    if (typeof RaspinhaEngine !== 'undefined' && RaspinhaEngine.generate) {
+        try {
+            var raspResult = RaspinhaEngine.generate({
+                franchiseId: storeId || 'muffato-quintino',
+                storeName: storeName,
+                customerName: customerName,
+                customerPhone: customerPhone,
+                orderTotal: total,
+                orderId: orderNumber,
+                orderSource: 'delivery',
+                generatedBy: 'order'
+            });
+            scratchData = raspResult.scratch;
+            if (!scratchData) console.info('[Raspinha checkout]', raspResult.reason);
+        } catch(e) { console.warn('Raspinha generate error:', e); }
+    }
+
+    // ============================================
     // SHOW SUCCESS
     // ============================================
     closeCheckout();
@@ -308,6 +348,20 @@ function placeOrder() {
     if (orderNumEl) orderNumEl.textContent = orderNumber;
 
     if (detailsEl) {
+        // Bloco da raspadinha (só se foi emitida)
+        var raspadinhaBlock = '';
+        if (scratchData) {
+            var raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratchData.shortCode);
+            var qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(raspUrl) + '&ecc=M&margin=0';
+            raspadinhaBlock =
+                '<div style="margin-top:12px;padding:16px;background:linear-gradient(135deg,#FFF8E7,#FFE8D6);border:2px dashed #FF9800;border-radius:14px;text-align:center">' +
+                    '<div style="font-size:13px;font-weight:800;color:#E65100;margin-bottom:6px;letter-spacing:.5px">🎰 RASPINHA DA SORTE</div>' +
+                    '<div style="font-family:monospace;font-size:32px;font-weight:900;color:#FF6F00;letter-spacing:4px;margin-bottom:8px">' + scratchData.shortCode + '</div>' +
+                    '<img src="' + qrSrc + '" alt="QR Raspinha" style="width:120px;height:120px;display:block;margin:8px auto;border-radius:6px;background:#fff;padding:6px">' +
+                    '<div style="font-size:12px;color:#8D6E63;font-weight:600">Raspe agora em <strong>milkypot.com/raspinha</strong></div>' +
+                    '<div style="font-size:11px;color:#A1887F;margin-top:4px">Resgate o prêmio pessoalmente na loja ou no próximo pedido pelo site</div>' +
+                '</div>';
+        }
         detailsEl.innerHTML =
             '<p><strong>Loja:</strong> ' + storeName + '</p>' +
             '<p><strong>Entrega:</strong> ' + (deliveryType === 'delivery' ? 'Delivery' : 'Retirada na loja') + '</p>' +
@@ -318,10 +372,11 @@ function placeOrder() {
                 '⏳ <strong>Status:</strong> Aguardando pagamento' +
             '</p>' +
             '<div style="margin-top:12px;padding:14px;background:linear-gradient(135deg,#FFF5F7,#F5F0FF);border:2px dashed #FF0040;border-radius:12px;text-align:center">' +
-                '<div style="font-size:12px;font-weight:700;color:#9B59B6;margin-bottom:4px">🎟️ Desafio 10.000 Milissegundos</div>' +
+                '<div style="font-size:12px;font-weight:700;color:#9B59B6;margin-bottom:4px">🎟️ Desafio 10 Segundos</div>' +
                 '<div style="font-family:monospace;font-size:28px;font-weight:900;color:#FF0040;letter-spacing:3px;margin-bottom:4px">' + voucherDisplay + '</div>' +
                 '<div style="font-size:11px;color:#888">Use este codigo em milkypot.com/desafio.html</div>' +
-            '</div>';
+            '</div>' +
+            raspadinhaBlock;
     }
 
     if (successModal) {
@@ -358,6 +413,43 @@ function closeSidebar() {
 }
 
 // ============================================
+// UBER DIRECT — dispara cotacao quando endereco e confirmado
+// ============================================
+function triggerUberQuote() {
+    if (typeof UberDirect === 'undefined' || !UberDirect.isActive()) return;
+    if (!document.getElementById('uberDeliveryBlock')) return;
+
+    var addressInput = document.getElementById('checkoutAddress');
+    var address = addressInput ? addressInput.value.trim() : '';
+    if (!address) return;
+
+    var storeId = window._selectedStoreId || null;
+    if (!storeId) return;
+
+    reloadCart();
+    var manifest = cart.map(function(item) {
+        return {
+            name: item.name || 'Produto',
+            quantity: item.qty || 1,
+            price: Math.round((item.total || 0) * 100) // centavos
+        };
+    });
+
+    var dropoff = {
+        address: address,
+        lat: window._uberDropoffLat || 0,
+        lng: window._uberDropoffLng || 0,
+        name: (document.getElementById('checkoutName') || {}).value || 'Cliente',
+        phone: (document.getElementById('checkoutPhone') || {}).value || ''
+    };
+
+    var orderId = 'quote_' + Date.now();
+    var orderTotal = getCartTotal();
+
+    UberDirect.renderDeliveryBlock('uberDeliveryBlock', storeId, orderId, dropoff, manifest, orderTotal);
+}
+
+// ============================================
 // DELIVERY TOGGLE & PAYMENT OPTIONS
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -371,8 +463,25 @@ document.addEventListener('DOMContentLoaded', function() {
             if (addressDiv) {
                 addressDiv.style.display = radio && radio.value === 'delivery' ? 'block' : 'none';
             }
+            // Reset quote quando troca para retirada
+            if (radio && radio.value !== 'delivery') {
+                window._uberQuoteId = null;
+                window._uberCustomerFee = undefined;
+            }
         });
     });
+
+    // Disparar cotacao ao perder foco no campo de endereco
+    var addressInput = document.getElementById('checkoutAddress');
+    if (addressInput) {
+        addressInput.addEventListener('blur', triggerUberQuote);
+    }
+
+    // Disparar cotacao ao clicar no botao de avancar para pagamento (step 3 -> 4)
+    var btnToPayment = document.getElementById('btnToPayment');
+    if (btnToPayment) {
+        btnToPayment.addEventListener('click', triggerUberQuote);
+    }
 
     document.querySelectorAll('.payment-option').forEach(function(opt) {
         opt.addEventListener('click', function() {

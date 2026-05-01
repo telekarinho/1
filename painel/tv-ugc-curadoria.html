@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MilkyPot — UGC Live Wall</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link rel="stylesheet" href="../css/ios-premium.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/auth.js"></script>
+<style>
+  .ugc-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px; margin-top:16px; }
+  .ugc-item { background:#fff; border-radius:14px; overflow:hidden; border:1px solid #E5E7EB; transition:all .2s; }
+  .ugc-item:hover { transform:translateY(-2px); box-shadow:0 10px 20px rgba(0,0,0,.08); }
+  .ugc-item img { width:100%; aspect-ratio:1; object-fit:cover; display:block; }
+  .ugc-item .ugc-meta { padding:10px 12px; }
+  .ugc-item .ugc-user { font-size:13px; font-weight:700; color:#1F2937; }
+  .ugc-item .ugc-date { font-size:11px; color:#888; margin-top:2px; }
+  .ugc-item .ugc-actions { display:flex; gap:6px; padding:0 10px 10px; }
+  .ugc-item.approved { border-color:#16a34a; background:#F0FDF4; }
+  .empty { text-align:center; padding:60px; color:#999; }
+  .empty-icon { font-size:60px; opacity:.5; }
+  .upload-zone { background:#F9FAFB; border:2px dashed #CBD5E1; border-radius:16px; padding:40px; text-align:center; cursor:pointer; transition:all .2s; }
+  .upload-zone:hover { border-color:#FF4F8A; background:#FFF0F6; }
+  .upload-zone.drag { border-color:#16a34a; background:#F0FDF4; }
+  #fileInput { display:none; }
+</style>
+</head>
+<body>
+<div class="panel-layout">
+<aside class="panel-sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <img src="../images/logo-milkypot.png" alt="" class="logo-img">
+    <h2>MilkyPot<small>Franqueado</small></h2>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-nav-group">Midia da Loja</div>
+    <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
+    <a href="tv-slides-generator.html" class="sidebar-link"><span class="icon">🎨</span> Gerador de Slides</a>
+    <a href="tv-ugc-curadoria.html" class="sidebar-link active"><span class="icon">📸</span> UGC Curadoria</a>
+    <a href="radio-indoor.html" class="sidebar-link"><span class="icon">📻</span> Radio Indoor</a>
+  </nav>
+</aside>
+
+<main class="panel-main">
+  <header class="panel-header">
+    <div class="panel-header-left">
+      <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <h1>📸 UGC Live Wall</h1>
+    </div>
+  </header>
+
+  <div class="panel-content">
+    <div class="ios-card" style="margin-bottom:16px">
+      <h2 style="font-family:'Baloo 2',cursive;font-size:22px;margin:0 0 8px">Fotos de clientes que viram na TV 3</h2>
+      <p style="color:#666;font-size:14px;margin:0 0 16px">
+        Suba fotos de stories/reels de clientes que marcaram <b>@milkypot</b>. As aprovadas rodam em loop na TV de espera.
+      </p>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div style="font-size:48px;margin-bottom:8px">📤</div>
+        <div style="font-weight:700;font-size:16px">Arraste fotos aqui ou clique pra escolher</div>
+        <div style="font-size:13px;color:#888;margin-top:6px">JPG, PNG — até 10 fotos por vez</div>
+      </div>
+      <input type="file" id="fileInput" multiple accept="image/*" onchange="onPick(event)">
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
+        <label class="ios-toggle">
+          <input type="checkbox" id="liveToggle">
+          <span class="ios-toggle-track"></span>
+          <span class="ios-toggle-thumb"></span>
+        </label>
+        <span style="font-size:14px;color:#1F2937"><b>Ativar UGC na TV 3</b> — fotos aprovadas entram no loop automaticamente</span>
+      </div>
+    </div>
+
+    <h3 style="font-family:'Baloo 2',cursive;font-size:20px;margin:24px 0 8px">Fotos pendentes de aprovação</h3>
+    <div class="ugc-grid" id="gridPending"></div>
+
+    <h3 style="font-family:'Baloo 2',cursive;font-size:20px;margin:24px 0 8px">No ar na TV</h3>
+    <div class="ugc-grid" id="gridApproved"></div>
+  </div>
+</main>
+</div>
+
+<script>
+(function(){
+  if (!Auth.requireAuth('franchisee')) return;
+  DataStore.init();
+  const session = Auth.getSession();
+  const fid = session.franchiseId;
+  const UGC_KEY = 'ugc_feed_' + fid;
+
+  const gridPending = document.getElementById('gridPending');
+  const gridApproved = document.getElementById('gridApproved');
+  const liveToggle = document.getElementById('liveToggle');
+
+  function getFeed() { return DataStore.get(UGC_KEY) || []; }
+  function setFeed(feed) { DataStore.set(UGC_KEY, feed); render(); syncToTvMedia(); }
+
+  function render() {
+    const feed = getFeed();
+    const pending = feed.filter(i => !i.approved);
+    const approved = feed.filter(i => i.approved);
+    renderGrid(gridPending, pending, false);
+    renderGrid(gridApproved, approved, true);
+  }
+
+  function renderGrid(el, items, approved) {
+    if (!items.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">📷</div><div style="margin-top:10px">' +
+        (approved ? 'Nenhuma foto aprovada ainda' : 'Nenhuma pendente — suba algumas!') + '</div></div>';
+      return;
+    }
+    el.innerHTML = items.map(it => '' +
+      '<div class="ugc-item ' + (approved ? 'approved' : '') + '">' +
+        '<img src="' + escapeAttr(it.dataUrl) + '" alt="">' +
+        '<div class="ugc-meta">' +
+          '<div class="ugc-user">@' + escapeHtml(it.username || 'cliente') + '</div>' +
+          '<div class="ugc-date">' + new Date(it.addedAt).toLocaleString('pt-BR') + '</div>' +
+        '</div>' +
+        '<div class="ugc-actions">' +
+          (approved
+            ? '<button class="ios-btn ios-btn-sm ios-btn-secondary" onclick="reject(\'' + it.id + '\')" style="flex:1">🚫 Tirar do ar</button>'
+            : '<button class="ios-btn ios-btn-sm" style="background:#16a34a;color:#fff;flex:1" onclick="approve(\'' + it.id + '\')">✓ Aprovar</button>' +
+              '<button class="ios-btn ios-btn-sm ios-btn-secondary" onclick="reject(\'' + it.id + '\')">✕</button>'
+          ) +
+        '</div>' +
+      '</div>'
+    ).join('');
+  }
+
+  window.approve = function(id) {
+    const feed = getFeed();
+    const i = feed.find(x => x.id === id);
+    if (i) { i.approved = true; i.approvedAt = new Date().toISOString(); }
+    setFeed(feed);
+  };
+  window.reject = function(id) {
+    const feed = getFeed();
+    const idx = feed.findIndex(x => x.id === id);
+    if (idx >= 0) feed.splice(idx, 1);
+    setFeed(feed);
+  };
+
+  function syncToTvMedia() {
+    if (!liveToggle.checked) return;
+    const approved = getFeed().filter(i => i.approved);
+    if (!approved.length) return;
+    const mediaKey = 'tv_media_' + fid;
+    let media = DataStore.get(mediaKey) || [];
+    // Remove entradas UGC antigas
+    media = media.filter(m => !m.id || !m.id.startsWith('ugc_'));
+    // Adiciona os aprovados
+    approved.forEach(it => {
+      media.push({
+        id: 'ugc_' + it.id,
+        name: 'UGC @' + (it.username || 'cliente'),
+        type: 'image',
+        dataUrl: it.dataUrl,
+        duration: 6,
+        weight: 1,
+        createdAt: it.addedAt
+      });
+    });
+    DataStore.set(mediaKey, media);
+
+    // Garante que estao na playlist
+    const playlistKey = 'tv_playlist_' + fid;
+    let pl = DataStore.get(playlistKey) || [];
+    approved.forEach(it => {
+      const mid = 'ugc_' + it.id;
+      if (!pl.some(p => (typeof p === 'string' ? p : p.mediaId) === mid)) {
+        pl.push({ mediaId: mid, duration: 6 });
+      }
+    });
+    DataStore.set(playlistKey, pl);
+  }
+
+  window.onPick = function(ev) {
+    const files = Array.from(ev.target.files || []);
+    Promise.all(files.map(f => new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve({ dataUrl: r.result, name: f.name });
+      r.onerror = reject;
+      r.readAsDataURL(f);
+    }))).then(results => {
+      const feed = getFeed();
+      results.forEach(r => {
+        const username = prompt('@ do cliente pra ' + r.name + ' (ou deixa vazio):', '') || '';
+        feed.push({
+          id: 'u_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+          dataUrl: r.dataUrl,
+          username: username.replace(/^@/, ''),
+          addedAt: new Date().toISOString(),
+          approved: false
+        });
+      });
+      setFeed(feed);
+      ev.target.value = '';
+    });
+  };
+
+  liveToggle.addEventListener('change', () => {
+    const prefs = DataStore.get('ugc_prefs_' + fid) || {};
+    prefs.live = liveToggle.checked;
+    DataStore.set('ugc_prefs_' + fid, prefs);
+    if (liveToggle.checked) syncToTvMedia();
+  });
+
+  const prefs = DataStore.get('ugc_prefs_' + fid) || {};
+  liveToggle.checked = !!prefs.live;
+
+  // Drag-drop
+  const zone = document.getElementById('uploadZone');
+  ['dragenter','dragover'].forEach(e => zone.addEventListener(e, ev => { ev.preventDefault(); zone.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(e => zone.addEventListener(e, ev => { ev.preventDefault(); zone.classList.remove('drag'); }));
+  zone.addEventListener('drop', ev => {
+    const files = Array.from(ev.dataTransfer.files || []);
+    if (files.length) onPick({ target: { files, value: '' } });
+  });
+
+  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function escapeAttr(s) { return String(s).replace(/"/g, '&quot;'); }
+
+  render();
+})();
+</script>
+<script src="../js/core/copilot-transport.js" defer></script>
+<script src="../js/pages/lilo-scanner.js" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
+</body>
+</html>

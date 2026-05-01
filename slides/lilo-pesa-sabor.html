@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Lilo Pesa-Sabor</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; background:linear-gradient(180deg, #FFF0F6 0%, #E0F7FA 100%); font-family:'Baloo 2', sans-serif; }
+
+.stage { width:100vw; height:100vh; position:relative; display:flex; align-items:center; justify-content:center; }
+
+.balanca {
+  position:relative; width:40vmin; height:40vmin;
+  border-radius:50%; background:radial-gradient(circle at 30% 30%, #fff, #F3D6E8);
+  box-shadow: 0 10px 40px rgba(255, 79, 138, .3), inset 0 0 30px rgba(255,79,138,.1);
+  display:flex; align-items:center; justify-content:center;
+}
+.balanca::before {
+  content:''; position:absolute; inset:8%; border-radius:50%;
+  background:#fff; box-shadow: inset 0 -5px 20px rgba(0,0,0,.08);
+}
+.ponteiro {
+  position:absolute; top:50%; left:50%;
+  width:2vmin; height:18vmin;
+  background: linear-gradient(180deg, #FF4F8A, #C2185B);
+  border-radius:1vmin;
+  transform-origin: 50% 100%;
+  transform: translate(-50%, -100%) rotate(-90deg);
+  animation: ponteiro 6s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+  box-shadow: 0 4px 10px rgba(194,24,91,.4);
+}
+@keyframes ponteiro {
+  0%   { transform: translate(-50%, -100%) rotate(-90deg); }
+  35%  { transform: translate(-50%, -100%) rotate(180deg); }  /* supera 300g */
+  50%  { transform: translate(-50%, -100%) rotate(180deg); }
+  70%  { transform: translate(-50%, -100%) rotate(0deg); }    /* estabiliza em 300g */
+  100% { transform: translate(-50%, -100%) rotate(0deg); }
+}
+.peso-txt {
+  position:absolute; top:62%; left:50%; transform:translate(-50%, 0);
+  font-size:6vmin; font-weight:800; color:#FF4F8A; letter-spacing:-.1vmin;
+  animation: pesoChange 6s steps(1, end) infinite;
+}
+@keyframes pesoChange {
+  0%, 15% { content: "0g"; }
+  30%    { content: "430g"; }
+  45%    { content: "380g"; }
+  60%    { content: "320g"; }
+  70%, 100% { content: "300g"; color:#16a34a; }
+}
+
+.ovelhinha {
+  position:absolute; bottom:10%; right:10%;
+  font-size:30vmin; line-height:1; animation: bounce 1.5s ease-in-out infinite;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-2vmin) rotate(3deg); }
+}
+
+.title {
+  position:absolute; top:8%; left:50%; transform:translateX(-50%);
+  font-size:7vmin; font-weight:800; color:#1F2937; text-align:center;
+}
+.subtitle {
+  position:absolute; bottom:6%; left:50%; transform:translateX(-50%);
+  font-size:4vmin; font-weight:700; color:#C2185B; text-align:center;
+  background:rgba(255,255,255,.85); padding:2vmin 5vmin; border-radius:100vmin;
+  animation: pulseCta 2s ease-in-out infinite;
+}
+@keyframes pulseCta { 0%,100% { transform:translateX(-50%) scale(1);} 50%{transform:translateX(-50%) scale(1.05);}}
+
+.sparkle {
+  position:absolute; font-size:5vmin; opacity:0;
+  animation: sparkle 6s ease-in-out infinite;
+}
+.sparkle:nth-child(1) { top: 20%; left: 25%; animation-delay: 3.5s; }
+.sparkle:nth-child(2) { top: 35%; left: 15%; animation-delay: 3.7s; }
+.sparkle:nth-child(3) { top: 60%; left: 70%; animation-delay: 3.9s; }
+@keyframes sparkle {
+  0%, 70% { opacity: 0; transform: scale(0); }
+  75% { opacity: 1; transform: scale(1.3); }
+  90% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; }
+}
+</style>
+</head>
+<body>
+<div class="stage">
+  <h1 class="title">🐑 A Lilo pesou seu potinho...</h1>
+
+  <div class="balanca">
+    <div class="ponteiro"></div>
+    <div class="peso-txt" id="pesoTxt">0g</div>
+  </div>
+
+  <div class="ovelhinha">🐑</div>
+  <div class="sparkle">✨</div>
+  <div class="sparkle">⭐</div>
+  <div class="sparkle">💫</div>
+
+  <div class="subtitle">Acertou 300g? <b>POTINHO GRÁTIS!</b></div>
+</div>
+
+<script>
+// Sincroniza o texto do peso com a animação
+const pesos = [
+  { t: 0, v: '0g', cor: '#FF4F8A' },
+  { t: 1.5, v: '180g', cor: '#FF4F8A' },
+  { t: 2.1, v: '430g', cor: '#dc2626' },
+  { t: 2.7, v: '380g', cor: '#F59E0B' },
+  { t: 3.6, v: '320g', cor: '#F59E0B' },
+  { t: 4.2, v: '300g', cor: '#16a34a' },
+];
+const el = document.getElementById('pesoTxt');
+const start = performance.now();
+function tick() {
+  const t = ((performance.now() - start) / 1000) % 6;
+  const atual = pesos.slice().reverse().find(p => t >= p.t) || pesos[0];
+  el.textContent = atual.v;
+  el.style.color = atual.cor;
+  requestAnimationFrame(tick);
+}
+tick();
+</script>
+</body>
+</html>

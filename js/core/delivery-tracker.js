@@ -327,3 +327,7 @@ const DeliveryTracker = {
         }
     }
 };
+
+// Expose globally for browser (const is script-scoped, not a window property)
+if (typeof window !== 'undefined') window.DeliveryTracker = DeliveryTracker;
+if (typeof globalThis !== 'undefined') globalThis.DeliveryTracker = DeliveryTracker;

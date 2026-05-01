@@ -145,6 +145,8 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         <div style="font-size:48px;margin:12px 0" id="revealEmoji">🎁</div>
         <div class="reveal-prize" id="revealPrize">PREMIO AQUI</div>
         <div class="reveal-desc" id="revealDesc"></div>
+        <!-- Endcard MilkyPot — copy por tier (calibrado pelo agente Behavioral) -->
+        <div id="revealEndcard" style="font-size:13px;color:#5A4570;margin:14px 0 18px;line-height:1.45;padding:12px;background:#F0F7FF;border-radius:10px;border:1px dashed #B8D8F8"></div>
         <div class="reveal-actions">
             <button class="btn gold" onclick="closeReveal()">Entendi, quero usar!</button>
             <button class="btn secondary" onclick="shareInstagram()">📱 Postar no Instagram</button>
@@ -162,7 +164,8 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
 
     // URL code check moved to bottom of script (after function definitions)
 
-    // Prize emoji mapping by tier
+    // Emoji por tipo (estratégico) com fallback no tier antigo
+    var TYPE_EMOJI = { buffet:'⚖️', brinde:'🎁', produto:'🍦', combo:'🎁', especial:'🌟' };
     var TIER_EMOJI = {
         none:'💭',
         small:'🎁',
@@ -170,13 +173,43 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         big:'🎊',
         mega:'💎'
     };
+    // Títulos por tipo — todos celebram na medida certa do prêmio
+    var TYPE_TITLES = {
+        buffet:   '🎉 Você ganhou!',
+        brinde:   '🐑 Você ganhou!',
+        produto:  '🤩 Boa! Você ganhou!',
+        combo:    '🎊 UAU! Você ganhou!',
+        especial: '🚨 PERAÍ! Você ganhou ESPECIAL! 🚨'
+    };
     var TIER_TITLES = {
         none:'Quase!',
-        small:'Voce ganhou!',
-        medium:'Boa! Voce ganhou!',
-        big:'UAU! Voce ganhou!',
-        mega:'🚨 SUPER PREMIO! 🚨'
+        small:'🐑 Você ganhou!',
+        medium:'🎉 Boa! Você ganhou!',
+        big:'🤩 UAU! Você ganhou!',
+        mega:'🚨 PERAÍ! Você ganhou um MEGA! 🚨'
     };
+
+    // Endcards (frase final pós-raspar) — todos enfatizam: usar em até 7 dias, na próxima compra
+    var TYPE_ENDCARDS = {
+        buffet:   'Use em até <strong>{DIAS} dias</strong>. Válido na <strong>próxima compra</strong> — a ovelhinha 🐑 te espera no buffet.',
+        brinde:   'Use em até <strong>{DIAS} dias</strong>. Válido na <strong>próxima compra</strong>. Cola aqui que tem brinde te esperando 🍦',
+        produto:  'Use em até <strong>{DIAS} dias</strong>. Válido na <strong>próxima compra</strong>. Bem-vindo ao #TimeMilkyPot 🥛',
+        combo:    'Use em até <strong>{DIAS} dias</strong>. Válido na <strong>próxima compra</strong>. AAAAH! Print + @milkypot nos stories 📸',
+        especial: 'Use em até <strong>{DIAS} dias</strong>. Vem com o amigo e leva os 2 prêmios juntos 👯 — print + @milkypot nos stories!'
+    };
+    var TIER_ENDCARDS = {
+        none:   'A ovelhinha 🐑 já tá mexendo as patinhas pra te dar algo bom no próximo pedido.',
+        small:  'Use em até <strong>{DIAS} dias</strong>. Válido na <strong>próxima compra</strong>.',
+        medium: 'Use em até <strong>{DIAS} dias</strong>. Válido na <strong>próxima compra</strong>.',
+        big:    'Use em até <strong>{DIAS} dias</strong>. Válido na <strong>próxima compra</strong>. Print + @milkypot nos stories 📸',
+        mega:   'Use em até <strong>{DIAS} dias</strong>. Print, posta nos stories @milkypot e vem buscar — a galera não vai acreditar.'
+    };
+
+    function buildEndcard(tier, validityDays, tipo){
+        var template = (tipo && TYPE_ENDCARDS[tipo]) ? TYPE_ENDCARDS[tipo]
+                     : (TIER_ENDCARDS[tier] || TIER_ENDCARDS.small);
+        return template.replace('{DIAS}', validityDays || 7);
+    }
 
     function findInLocalStorage(code){
         // Accepts full code or short code (XXX-XXX)
@@ -198,7 +231,11 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
     }
 
     function processScratch(scratch, code){
-        scratch.code = code;
+        // Preserve the original full Firestore doc ID (scratch.code from data()).
+        // Only set scratch.code from the URL param when the data has no code field
+        // (avoids overwriting the full code with a shortCode param).
+        if(!scratch.code) scratch.code = code;
+        scratch._inputCode = code; // keep the param as typed by user
         currentScratch = scratch;
         if(scratch.expiresAt && new Date(scratch.expiresAt) < new Date()){
             showExpired(scratch); return;
@@ -214,7 +251,7 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         var err = document.getElementById('errorMsg');
         err.classList.remove('show');
 
-        if(!code || code.length < 6){
+        if(!code || code.length < 4){
             err.textContent = 'Digite um codigo valido';
             err.classList.add('show');
             return;
@@ -262,7 +299,8 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         document.getElementById('scratchStage').classList.add('active');
 
         var tier = scratch.prizeTier || 'small';
-        document.getElementById('prizeEmoji').textContent = TIER_EMOJI[tier];
+        var tipo = scratch.prizeTipo;
+        document.getElementById('prizeEmoji').textContent = (tipo && TYPE_EMOJI[tipo]) || TIER_EMOJI[tier] || '🎁';
         document.getElementById('prizeName').textContent = scratch.prizeName;
         document.getElementById('prizeDesc').textContent = scratch.prizeDesc || '';
 
@@ -415,10 +453,18 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
 
     function showRevealOverlay(){
         var tier = currentScratch.prizeTier || 'small';
-        document.getElementById('revealTitle').textContent = TIER_TITLES[tier];
-        document.getElementById('revealEmoji').textContent = TIER_EMOJI[tier];
+        var tipo = currentScratch.prizeTipo;
+        document.getElementById('revealTitle').textContent =
+            (tipo && TYPE_TITLES[tipo]) || TIER_TITLES[tier] || '🎉 Você ganhou!';
+        document.getElementById('revealEmoji').textContent =
+            (tipo && TYPE_EMOJI[tipo]) || TIER_EMOJI[tier] || '🎁';
         document.getElementById('revealPrize').textContent = currentScratch.prizeName;
         document.getElementById('revealDesc').textContent = currentScratch.prizeDesc;
+        // Endcard motivacional por tipo (com fallback no tier)
+        var endcardEl = document.getElementById('revealEndcard');
+        if (endcardEl) {
+            endcardEl.innerHTML = buildEndcard(tier, currentScratch.validityDays, tipo);
+        }
         // Confetti
         var confetti = document.getElementById('confetti');
         confetti.innerHTML = '';
@@ -475,6 +521,51 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
     // Auto-check code from URL if present (accepts ?c=SHORT or ?code=FULL)
     var urlParams = new URLSearchParams(location.search);
     var urlCode = urlParams.get('c') || urlParams.get('code') || location.hash.replace('#','');
+
+    // ?d=base64url(JSON da raspinha) — payload INLINE no QR.
+    // Funciona mesmo se Firestore estiver indisponível ou doc sumido.
+    var urlData = urlParams.get('d');
+    if (urlData) {
+        try {
+            // base64url -> base64
+            var b64 = urlData.replace(/-/g, '+').replace(/_/g, '/');
+            while (b64.length % 4) b64 += '=';
+            var decoded = decodeURIComponent(escape(atob(b64)));
+            var inlineScratch = JSON.parse(decoded);
+            // Sanity: precisa ter pelo menos shortCode e prizeName
+            if (inlineScratch && inlineScratch.shortCode && inlineScratch.prizeName) {
+                // Tenta buscar status atualizado no Firestore (pode estar raspada/resgatada).
+                // Se Firestore falhar/timeout, usa o payload inline direto.
+                var lookupTimeout = setTimeout(function () {
+                    if (currentScratch) return; // já processou
+                    console.info('[Raspinha] Firestore lento — usando payload inline');
+                    processScratch(inlineScratch, inlineScratch.shortCode);
+                }, 1500);
+
+                if (db) {
+                    db.collection('scratches').doc(inlineScratch.code).get().then(function (doc) {
+                        clearTimeout(lookupTimeout);
+                        if (currentScratch) return;
+                        // Merge: dados imutáveis do inline + estado atual do Firestore (status)
+                        var merged = doc.exists ? Object.assign({}, inlineScratch, doc.data()) : inlineScratch;
+                        processScratch(merged, inlineScratch.shortCode);
+                    }).catch(function (e) {
+                        clearTimeout(lookupTimeout);
+                        if (currentScratch) return;
+                        console.warn('[Raspinha] Firestore erro, usando inline:', e);
+                        processScratch(inlineScratch, inlineScratch.shortCode);
+                    });
+                } else {
+                    clearTimeout(lookupTimeout);
+                    processScratch(inlineScratch, inlineScratch.shortCode);
+                }
+                return; // não tenta o flow tradicional
+            }
+        } catch (e) {
+            console.warn('[Raspinha] Falha ao decodar ?d=, caindo pro lookup tradicional:', e);
+        }
+    }
+
     if(urlCode){
         document.getElementById('codeInput').value = urlCode.toUpperCase();
         setTimeout(window.checkCode, 400);

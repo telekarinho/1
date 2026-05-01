@@ -27,7 +27,11 @@
                 <a href="orders.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
                 <a href="products.html" class="sidebar-link"><span class="icon">🍨</span> Cardapio</a>
                 <a href="users.html" class="sidebar-link active"><span class="icon">👥</span> Usuarios</a>
-                <div class="sidebar-nav-group">Marketing</div>
+                <div class="sidebar-nav-group">Midia da Loja</div>
+            <a href="/painel/tv-indoor.html?fid=global" class="sidebar-link">
+                <span class="icon">📺</span> TV Indoor
+            </a>
+            <div class="sidebar-nav-group">Marketing</div>
                 <a href="campaigns.html" class="sidebar-link"><span class="icon">📢</span> Campanhas</a>
                 <a href="seo.html" class="sidebar-link"><span class="icon">🔍</span> SEO & Delivery</a>
                 <a href="ifood.html" class="sidebar-link"><span class="icon">🛵</span> iFood</a>
@@ -437,23 +441,61 @@
             openModal('resetPasswordModal');
         }
 
-        function confirmResetPassword() {
+        // Reset direto: gera senha temporária na hora (bypassa email)
+        async function confirmResetPassword() {
             if (!resetUserEmail) return;
 
-            Auth.sendPasswordReset(resetUserEmail).then(function(result) {
-                if (result.success) {
-                    document.getElementById('resetPasswordResult').style.display = 'block';
-                    document.getElementById('resetConfirmBtn').style.display = 'none';
-                    document.getElementById('resetPasswordMsg').textContent = 'E-mail de recuperacao enviado com sucesso!';
-                    if (document.getElementById('newGeneratedPassword')) {
-                        document.getElementById('newGeneratedPassword').textContent = 'Link enviado para ' + resetUserEmail;
-                    }
-                } else {
-                    alert('Erro ao enviar e-mail: ' + result.error);
-                }
-            }).catch(function(err) {
-                alert('Erro ao enviar e-mail de recuperacao');
-            });
+            const btn = document.getElementById('resetConfirmBtn');
+            btn.disabled = true;
+            btn.textContent = 'Gerando...';
+            document.getElementById('resetPasswordMsg').textContent = 'Aguarde, gerando senha temporária...';
+
+            try {
+                // Pega ID token do admin logado
+                const currentUser = firebase.auth().currentUser;
+                if (!currentUser) throw new Error('Faça login como super admin');
+                const idToken = await currentUser.getIdToken();
+
+                // Resolve URL do endpoint (Vercel absoluto se em GitHub Pages / Firebase Hosting)
+                var host = location.hostname;
+                var apiBase = (host.endsWith('.vercel.app') || host === 'localhost' || host === '127.0.0.1')
+                    ? ''
+                    : 'https://milkypot.vercel.app';
+                var endpoint = apiBase + '/api/admin-reset-password';
+
+                const resp = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + idToken
+                    },
+                    body: JSON.stringify({ email: resetUserEmail })
+                });
+                const data = await resp.json();
+                if (!resp.ok || !data.success) throw new Error(data.error || 'Erro ao resetar');
+
+                // Mostra a senha temporária na tela pra admin copiar
+                document.getElementById('resetPasswordResult').style.display = 'block';
+                document.getElementById('resetConfirmBtn').style.display = 'none';
+                document.getElementById('resetPasswordMsg').innerHTML =
+                    '✅ Senha gerada pra <strong>' + Utils.escapeHtml(resetUserEmail) + '</strong>.<br>' +
+                    'Copie e envie ao usuário (WhatsApp recomendado). Peça para trocar no primeiro login.';
+                const pwEl = document.getElementById('newGeneratedPassword');
+                pwEl.textContent = data.password;
+                pwEl.style.cursor = 'pointer';
+                pwEl.title = 'Clique pra copiar';
+                pwEl.onclick = function() {
+                    navigator.clipboard.writeText(data.password).then(function() {
+                        const orig = pwEl.textContent;
+                        pwEl.textContent = '✅ Copiada!';
+                        setTimeout(function() { pwEl.textContent = orig; }, 1500);
+                    });
+                };
+            } catch (err) {
+                btn.disabled = false;
+                btn.textContent = 'Confirmar Reset';
+                document.getElementById('resetPasswordMsg').textContent = '❌ ' + (err.message || 'Erro ao resetar senha');
+            }
 
             resetUserId = null;
             resetUserEmail = null;
@@ -480,5 +522,9 @@
 
         init();
     </script>
+<script src="../js/core/copilot-transport.js" defer></script>
+<script src="../js/pages/lilo-scanner.js" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
 </body>
 </html>

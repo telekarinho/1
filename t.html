@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>MilkyPot TV — Atalho</title>
+  <script>
+    // TV nao pode manter cache. Desregistra SW antigo e limpa caches na primeira carga.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+      }).catch(()=>{});
+    }
+    if (window.caches) {
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(()=>{});
+    }
+  </script>
+  <style>
+    html, body { height:100%; margin:0; background:#000; color:#fff; font-family:'Segoe UI',Tahoma,sans-serif; }
+    .box { height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; padding:20px; text-align:center; }
+    h1 { font-size:22px; font-weight:700; margin:0; }
+    p { opacity:.85; margin:0; font-size:14px; max-width:560px; line-height:1.5; }
+    .spinner { width:48px; height:48px; border:4px solid rgba(255,255,255,.15); border-top-color:#42A5F5; border-radius:50%; animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .err { color:#EF4444; }
+    .step { font-size:12px; opacity:.5; text-transform:uppercase; letter-spacing:1px; }
+    select, button { padding:12px 14px; font-size:15px; border-radius:10px; border:none; font-family:inherit; }
+    select { background:#1F2937; color:#fff; width:100%; max-width:340px; }
+    button { background:#42A5F5; color:#fff; font-weight:700; cursor:pointer; }
+    button:hover { background:#2196F3; }
+  </style>
+</head>
+<body>
+  <div class="box" id="box">
+    <div class="spinner"></div>
+    <h1 id="msg">Carregando TV...</h1>
+    <p id="sub" class="step">Resolvendo código</p>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="/js/core/constants.js"></script>
+  <script src="/js/core/utils.js"></script>
+  <script src="/js/core/datastore.js"></script>
+  <script src="/js/core/firebase-config.js"></script>
+  <script src="/js/core/adminconfig.js?v=mp-v14"></script>
+  <script>
+    (async function () {
+      function show(html) { document.getElementById('box').innerHTML = html; }
+      function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+      // Código da URL
+      let code = null;
+      const rawQs = location.search.substring(1);
+      if (rawQs) {
+        const params = new URLSearchParams(location.search);
+        code = params.get('c');
+        if (!code) {
+          const first = rawQs.split('&')[0];
+          if (first && !first.includes('=')) code = first;
+        }
+      }
+      if (!code && location.hash) code = location.hash.replace('#', '');
+      if (!code) {
+        show('<h1 class="err">❌ Código ausente</h1><p>Use: <strong>milkypot.com/t?tv1</strong></p>');
+        return;
+      }
+      code = String(code).toLowerCase().trim();
+
+      const params = new URLSearchParams(location.search);
+      let forcedFid = params.get('f') || null;
+
+      // === Resolução sem IP-lock e sem auth (TVs/celulares abrem anonimos) ===
+      // Evita collection().get() (falha se houver qualquer doc sem read publico
+      // na collection). Busca franquias e depois cada tv_shortcodes_{fid} individualmente.
+      let candidates = [];
+      try {
+        if (typeof DataStore !== 'undefined' && DataStore.init) DataStore.init();
+        const db = firebase.firestore();
+        // 1. Lista de franquias (doc publico)
+        const fdoc = await db.collection('datastore').doc('franchises').get();
+        const franchises = fdoc.exists ? JSON.parse(fdoc.data().value || '[]') : [];
+        if (fdoc.exists) localStorage.setItem('mp_franchises', fdoc.data().value || '[]');
+        // 2. Para cada franquia, le o doc de shortcodes (falha individual nao quebra o resto)
+        const lookups = franchises.map(async f => {
+          try {
+            const d = await db.collection('datastore').doc('tv_shortcodes_' + f.id).get();
+            if (!d.exists) return null;
+            const map = JSON.parse(d.data().value || '{}');
+            if (map[code] && map[code].tvId) {
+              return { fid: f.id, tvId: map[code].tvId };
+            }
+          } catch (e) { console.warn('shortcodes lookup for', f.id, e); }
+          return null;
+        });
+        const results = await Promise.all(lookups);
+        candidates = results.filter(Boolean);
+      } catch (e) { console.warn('lookup:', e); }
+
+      const franchises = JSON.parse(localStorage.getItem('mp_franchises') || '[]');
+      function labelFor(id) {
+        const f = franchises.find(x => x.id === id);
+        return f ? (f.name || id) : id;
+      }
+
+      // Fid explícito via ?f= tem prioridade absoluta
+      if (forcedFid) {
+        const pick = candidates.find(c => c.fid === forcedFid);
+        if (pick) {
+          localStorage.setItem('mp_tv_last_fid_' + code, pick.fid);
+          location.replace('/tv.html?f=' + encodeURIComponent(pick.fid) + '&tv=' + encodeURIComponent(pick.tvId));
+          return;
+        }
+      }
+
+      // Memória da TV (última vez que abriu esse atalho)
+      const memFid = localStorage.getItem('mp_tv_last_fid_' + code);
+      if (memFid) {
+        const pick = candidates.find(c => c.fid === memFid);
+        if (pick) {
+          location.replace('/tv.html?f=' + encodeURIComponent(pick.fid) + '&tv=' + encodeURIComponent(pick.tvId));
+          return;
+        }
+      }
+
+      // Uma única franquia → usa
+      if (candidates.length === 1) {
+        localStorage.setItem('mp_tv_last_fid_' + code, candidates[0].fid);
+        location.replace('/tv.html?f=' + encodeURIComponent(candidates[0].fid) + '&tv=' + encodeURIComponent(candidates[0].tvId));
+        return;
+      }
+
+      // Múltiplas franquias → pede escolha (1x, memoriza)
+      if (candidates.length > 1) {
+        const opts = candidates.map(c => '<option value="' + esc(c.fid) + '">' + esc(labelFor(c.fid)) + '</option>').join('');
+        show(
+          '<div style="font-size:48px">📺</div>' +
+          '<h1>Escolha a franquia</h1>' +
+          '<p>O código <strong>' + esc(code) + '</strong> existe em mais de uma franquia. Selecione uma vez — a TV lembra pra próximas vezes.</p>' +
+          '<select id="fpicker">' + opts + '</select>' +
+          '<button onclick="window.__pickFid()">Continuar</button>'
+        );
+        window.__pickFid = function() {
+          const picked = document.getElementById('fpicker').value;
+          const c = candidates.find(x => x.fid === picked);
+          if (!c) return;
+          localStorage.setItem('mp_tv_last_fid_' + code, c.fid);
+          location.replace('/tv.html?f=' + encodeURIComponent(c.fid) + '&tv=' + encodeURIComponent(c.tvId));
+        };
+        return;
+      }
+
+      // Nenhuma franquia tem esse código
+      show(
+        '<h1 class="err">❌ Código "' + esc(code) + '" não existe</h1>' +
+        '<p>Peça pro franqueado abrir <strong>milkypot.com/painel/tv-indoor.html</strong> e criar este atalho.</p>'
+      );
+    })();
+  </script>
+</body>
+</html>

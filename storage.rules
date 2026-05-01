@@ -1,0 +1,56 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ============================================
+    // TV Indoor — Mídia para Digital Signage
+    // ============================================
+    // Leitura pública: TV Android, celular, browser kiosk — nenhum tem sessão auth.
+    // Escrita: requer auth + limite 500MB. NÃO exige claim de franchiseId/role
+    // porque franqueados (não-owner) não recebem custom claims automaticamente
+    // (apenas o owner via setupOwner; setUserRole exige super_admin já claimado).
+    // Tenant isolation é garantido no painel: tv-indoor.html monta o path com
+    // Auth.getFranchiseId() (lido do mp_session), e o login só cria sessão para
+    // a franquia certa. Tightening volta quando houver Cloud Function
+    // claimFranchisee chamada no login.
+    match /tv-media/{franchiseId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.resource.size < 500 * 1024 * 1024;
+      allow delete: if request.auth != null;
+    }
+
+    // ============================================
+    // Áudio — Radio Indoor
+    // ============================================
+    match /radio-audio/{franchiseId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    // ============================================
+    // Imagens de Produtos / Cardápio
+    // ============================================
+    match /products/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // ============================================
+    // Assets do sistema (logos, banners, etc.)
+    // ============================================
+    match /assets/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+                      request.auth.token.role == 'super_admin';
+    }
+
+    // ============================================
+    // Bloqueia tudo que não foi definido explicitamente
+    // ============================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

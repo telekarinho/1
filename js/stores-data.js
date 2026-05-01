@@ -1,88 +1,69 @@
 /**
  * MilkyPot - Centralized Store Data
  *
- * Single source of truth for all store/franchise information.
- * Import this file before any script that needs store data.
+ * IMPORTANTE: Este arquivo é FALLBACK offline.
+ * A fonte de verdade é o Firestore (coleção `franchises`) — editada via painel admin.
+ * Landing/cardápio devem ler do Firestore primeiro e cair neste fallback só em erro.
+ *
+ * Hoje existe APENAS a unidade Muffato Quintino (Londrina - PR).
+ * Novas unidades devem ser criadas no painel admin; nunca hardcoded aqui.
  */
 
-// Replace placeholder WhatsApp numbers below with real numbers before going to production.
 var MILKYPOT_STORES = [
     {
-        id: 'ibirapuera',
-        name: 'MilkyPot Shopping Ibirapuera',
-        address: 'Av. Ibirapuera, 3103 - Moema, São Paulo - SP',
-        rating: 4.9,
-        deliveryTime: '20-35 min',
+        id: 'muffato-quintino',
+        slug: 'muffato-quintino',
+        name: 'MilkyPot Muffato Quintino',
+        address: 'Quintino, Londrina - PR',
+        city: 'Londrina',
+        state: 'PR',
+        rating: 5,
+        deliveryTime: '25-40 min',
         deliveryFee: 5.90,
+        deliveryEnabled: true,  // toggle controlado em painel/configuracoes.html
         hours: '10:00 - 22:00',
         open: true,
-        whatsapp: '5511999990001', // TODO: substituir pelo número real
-        lat: -23.6092,
-        lng: -46.6654
-    },
-    {
-        id: 'morumbi',
-        name: 'MilkyPot Shopping Morumbi',
-        address: 'Av. Roque Petroni Jr, 1089 - Morumbi, São Paulo - SP',
-        rating: 4.8,
-        deliveryTime: '25-40 min',
-        deliveryFee: 6.90,
-        hours: '10:00 - 22:00',
-        open: true,
-        whatsapp: '5511999990002', // TODO: substituir pelo número real
-        lat: -23.6233,
-        lng: -46.6984
-    },
-    {
-        id: 'jardins',
-        name: 'MilkyPot Jardins',
-        address: 'Rua Oscar Freire, 725 - Jardins, São Paulo - SP',
-        rating: 4.9,
-        deliveryTime: '15-25 min',
-        deliveryFee: 4.90,
-        hours: '09:00 - 23:00',
-        open: true,
-        whatsapp: '5511999990003', // TODO: substituir pelo número real
-        lat: -23.5631,
-        lng: -46.6699
-    },
-    {
-        id: 'barra',
-        name: 'MilkyPot Barra Shopping',
-        address: 'Av. das Américas, 4666 - Barra, Rio de Janeiro - RJ',
-        rating: 4.7,
-        deliveryTime: '25-40 min',
-        deliveryFee: 7.90,
-        hours: '10:00 - 22:00',
-        open: true,
-        whatsapp: '5521999990004', // TODO: substituir pelo número real
-        lat: -22.9994,
-        lng: -43.3632
-    },
-    {
-        id: 'curitiba',
-        name: 'MilkyPot Curitiba - Batel',
-        address: 'Av. do Batel, 1868 - Batel, Curitiba - PR',
-        rating: 4.8,
-        deliveryTime: '20-30 min',
-        deliveryFee: 5.50,
-        hours: '10:00 - 21:00',
-        open: false,
-        whatsapp: '5541999990005', // TODO: substituir pelo número real
-        lat: -25.4369,
-        lng: -49.2889
-    },
-    {
-        id: 'recife',
-        name: 'MilkyPot Shopping Recife',
-        address: 'R. Padre Carapuceiro, 777 - Boa Viagem, Recife - PE',
-        rating: 4.9,
-        deliveryTime: '20-35 min',
-        deliveryFee: 5.00,
-        hours: '10:00 - 22:00',
-        open: true,
-        whatsapp: '5581999990006', // TODO: substituir pelo número real
-        lat: -8.1184,
-        lng: -34.9046
+        whatsapp: '5543998042424',
+        email: 'milkypot.com@gmail.com',
+        lat: -23.3265,
+        lng: -51.1664
     }
 ];
+
+// Mescla com franchises do DataStore (fonte de verdade no painel)
+// para que o cardápio respeite o toggle deliveryEnabled em tempo real.
+function mergeFranchiseFlags() {
+    try {
+        if (typeof DataStore === 'undefined' || !DataStore.getAllFranchises) return;
+        var dsFranchises = DataStore.getAllFranchises() || [];
+        MILKYPOT_STORES.forEach(function(s) {
+            var f = dsFranchises.find(function(d) { return d.id === s.id; });
+            if (f) {
+                // Loja aberta/fechada (master toggle — bloqueia tudo quando false)
+                if (typeof f.storeOnlineOpen === 'boolean') s.open = f.storeOnlineOpen;
+                // Delivery e retirada independentes
+                if (typeof f.deliveryEnabled === 'boolean') s.deliveryEnabled = f.deliveryEnabled;
+                if (typeof f.pickupEnabled === 'boolean') s.pickupEnabled = f.pickupEnabled;
+                // Dados operacionais
+                if (typeof f.deliveryFee === 'number') s.deliveryFee = f.deliveryFee;
+                if (f.hours) s.hours = f.hours;
+                if (f.deliveryTime) s.deliveryTime = f.deliveryTime;
+            }
+        });
+    } catch(e) {}
+}
+
+// Roda imediatamente (localStorage já carregado)
+mergeFranchiseFlags();
+
+// Re-roda após o Firestore sincronizar — garante que o toggle do admin
+// (deliveryEnabled salvo no Firestore) seja respeitado em tempo real,
+// mesmo que o sync termine depois que stores-data.js já rodou.
+if (typeof window !== 'undefined') {
+    window.addEventListener('mp_synced', function() {
+        mergeFranchiseFlags();
+        // Notifica o cardápio para re-verificar a opção de delivery
+        // caso o cliente já tenha selecionado uma loja.
+        window.dispatchEvent(new CustomEvent('mp_stores_updated'));
+    });
+}

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot Admin - MilkyClube</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="stylesheet" href="../css/mobile-app.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#42A5F5">
+    <style>
+        .club-section { margin-bottom: 28px; }
+        .club-section h3 {
+            font-family: 'Baloo 2', cursive;
+            color: var(--mp-primary);
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+        .tier-config-row {
+            display: grid;
+            grid-template-columns: 140px 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .tier-config-row label { font-weight: 700; }
+        .club-kpi-big {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .club-kpi-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 18px;
+            border: 2px solid var(--mp-border);
+            text-align: center;
+        }
+        .club-kpi-card .kv {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--mp-primary);
+        }
+        .club-kpi-card .kl {
+            font-size: 0.85rem;
+            color: var(--mp-text-light);
+            margin-top: 4px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .audit-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--mp-border);
+            font-size: 0.85rem;
+        }
+        .audit-row small { color: var(--mp-text-light); }
+        .club-tier-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .club-tier-leite     { background: #E3F2FD; color: #1565C0; }
+        .club-tier-nata      { background: #FFF8E1; color: #7a5a00; }
+        .club-tier-chantilly { background: #FCE4EC; color: #AD1457; }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <!-- Sidebar -->
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small>Central Admin</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="franchises.html" class="sidebar-link"><span class="icon">🏪</span> Franquias</a>
+                <a href="finances.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="orders.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <a href="products.html" class="sidebar-link"><span class="icon">🍨</span> Cardapio</a>
+                <a href="users.html" class="sidebar-link"><span class="icon">👥</span> Usuarios</a>
+
+                <div class="sidebar-nav-group">Midia da Loja</div>
+            <a href="/painel/tv-indoor.html?fid=global" class="sidebar-link">
+                <span class="icon">📺</span> TV Indoor
+            </a>
+            <div class="sidebar-nav-group">Marketing</div>
+                <a href="campaigns.html" class="sidebar-link"><span class="icon">📢</span> Campanhas</a>
+                <a href="seo.html" class="sidebar-link"><span class="icon">🔍</span> SEO &amp; Delivery</a>
+                <a href="ifood.html" class="sidebar-link"><span class="icon">🛵</span> iFood</a>
+                <a href="desafio.html" class="sidebar-link"><span class="icon">🎮</span> Desafio</a>
+                <a href="clube.html" class="sidebar-link active"><span class="icon">🎁</span> MilkyClube</a>
+
+                <div class="sidebar-nav-group">Sistema</div>
+                <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
+                <a href="#" class="sidebar-link" onclick="DataStore.downloadBackup()"><span class="icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">👑</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Admin</strong>
+                        <small>Super Admin</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+                    <h1>🎁 MilkyClube - Gestao Global</h1>
+                </div>
+                <div class="panel-header-right">
+                    <button class="header-btn" title="Atualizar" onclick="loadAll()">🔄</button>
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+
+                <!-- KPIs Gerais -->
+                <section class="club-section">
+                    <h3>📊 Visao geral</h3>
+                    <div class="club-kpi-big">
+                        <div class="club-kpi-card"><div class="kv" id="kpiMembers">0</div><div class="kl">Total de Members</div></div>
+                        <div class="club-kpi-card"><div class="kv" id="kpiCoinsLive">0</div><div class="kl">MilkyCoins em Circulacao</div></div>
+                        <div class="club-kpi-card"><div class="kv" id="kpiEarned">0</div><div class="kl">Total Concedido (historico)</div></div>
+                        <div class="club-kpi-card"><div class="kv" id="kpiRedeemed">0</div><div class="kl">Total Resgatado (historico)</div></div>
+                        <div class="club-kpi-card"><div class="kv" id="kpiRedeemRate">0%</div><div class="kl">Taxa de Resgate</div></div>
+                    </div>
+                </section>
+
+                <!-- Configuracao Global -->
+                <section class="club-section panel-card">
+                    <div class="panel-card-header"><h3>⚙️ Configuracao Global (club_config/global)</h3></div>
+                    <div class="panel-card-body">
+                        <h4 style="margin-bottom:10px;font-family:'Baloo 2',cursive;color:var(--mp-text);">Tiers</h4>
+
+                        <div class="tier-config-row">
+                            <label>🥛 Leite</label>
+                            <input type="number" id="tier_leite_minSpent" placeholder="minSpent (R$)" step="0.01">
+                            <input type="number" id="tier_leite_cashbackRate" placeholder="cashbackRate (ex: 0.03)" step="0.001">
+                        </div>
+                        <div class="tier-config-row">
+                            <label>✨ Nata</label>
+                            <input type="number" id="tier_nata_minSpent" step="0.01">
+                            <input type="number" id="tier_nata_cashbackRate" step="0.001">
+                        </div>
+                        <div class="tier-config-row">
+                            <label>👑 Chantilly</label>
+                            <input type="number" id="tier_chantilly_minSpent" step="0.01">
+                            <input type="number" id="tier_chantilly_cashbackRate" step="0.001">
+                        </div>
+
+                        <h4 style="margin:18px 0 10px;font-family:'Baloo 2',cursive;color:var(--mp-text);">Expiracao</h4>
+                        <div class="form-row">
+                            <input type="number" id="cfg_expiryDays" placeholder="expiryDays (dias)" min="1">
+                            <div></div>
+                        </div>
+
+                        <h4 style="margin:18px 0 10px;font-family:'Baloo 2',cursive;color:var(--mp-text);">Bonus (MilkyCoins)</h4>
+                        <div class="form-row">
+                            <input type="number" id="b_signup" placeholder="signup" min="0">
+                            <input type="number" id="b_firstOrder" placeholder="firstOrder" min="0">
+                        </div>
+                        <div class="form-row">
+                            <input type="number" id="b_birthday" placeholder="birthday" min="0">
+                            <input type="number" id="b_referrer" placeholder="referrer" min="0">
+                        </div>
+                        <div class="form-row">
+                            <input type="number" id="b_referred" placeholder="referred" min="0">
+                            <input type="number" id="b_gameDesafio10" placeholder="gameDesafio10" min="0">
+                        </div>
+                        <div class="form-row">
+                            <input type="number" id="b_scratchMin" placeholder="scratchMin" min="0">
+                            <input type="number" id="b_scratchMax" placeholder="scratchMax" min="0">
+                        </div>
+
+                        <h4 style="margin:18px 0 10px;font-family:'Baloo 2',cursive;color:var(--mp-text);">App Links</h4>
+                        <div class="form-row">
+                            <input type="url" id="app_playStore" placeholder="https://play.google.com/...">
+                            <input type="url" id="app_appStore"  placeholder="https://apps.apple.com/...">
+                        </div>
+
+                        <h4 style="margin:18px 0 10px;font-family:'Baloo 2',cursive;color:var(--mp-text);">Feature Flags</h4>
+                        <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px;">
+                            <label><input type="checkbox" id="ff_enabled"> Programa ativo</label>
+                            <label><input type="checkbox" id="ff_whatsappNotify"> Notificar via WhatsApp</label>
+                            <label><input type="checkbox" id="ff_pushEnabled"> Push notifications</label>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="saveClubConfig()">💾 Salvar configuracao</button>
+                        <span id="cfgStatus" style="margin-left:12px;font-size:0.85rem;"></span>
+                    </div>
+                </section>
+
+                <!-- Broadcast Push -->
+                <section class="club-section panel-card">
+                    <div class="panel-card-header"><h3>📢 Broadcast Push</h3></div>
+                    <div class="panel-card-body">
+                        <div class="form-row">
+                            <input type="text" id="push_title" placeholder="Titulo (max 50 chars)" maxlength="50">
+                            <input type="text" id="push_url"   placeholder="URL de destino (ex: /clube.html)" value="/clube.html">
+                        </div>
+                        <textarea id="push_body" placeholder="Mensagem (max 180 chars)" rows="2" maxlength="180" style="width:100%;margin-bottom:8px;padding:10px;border:1px solid var(--mp-border);border-radius:8px;"></textarea>
+                        <div class="form-row">
+                            <select id="push_filter">
+                                <option value="all">Para todos</option>
+                                <option value="tier:leite">Apenas tier Leite</option>
+                                <option value="tier:nata">Apenas tier Nata</option>
+                                <option value="tier:chantilly">Apenas tier Chantilly</option>
+                                <option value="franchise">Por franquia</option>
+                            </select>
+                            <select id="push_franchise" style="display:none;">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="sendBroadcast()">🚀 Enviar broadcast</button>
+                        <span id="pushStatus" style="margin-left:12px;font-size:0.85rem;"></span>
+                    </div>
+                </section>
+
+                <!-- Members -->
+                <section class="club-section panel-card">
+                    <div class="panel-card-header">
+                        <h3>👥 Members (top 200 por total gasto)</h3>
+                        <input type="text" id="searchMembers" placeholder="Buscar por nome/telefone/CPF..." style="min-width:220px;padding:8px;border:1px solid var(--mp-border);border-radius:8px;" onkeyup="if(event.key==='Enter') filterMembers()">
+                    </div>
+                    <div class="panel-card-body" style="overflow-x:auto">
+                        <table class="panel-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th><th>Telefone</th><th>CPF</th><th>Tier</th>
+                                    <th class="text-right">Coins</th>
+                                    <th class="text-right">Total Gasto</th>
+                                    <th class="text-center">Pedidos</th>
+                                </tr>
+                            </thead>
+                            <tbody id="membersBody"><tr><td colspan="7" style="text-align:center;padding:30px;color:var(--mp-text-light)">Carregando...</td></tr></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Auditoria -->
+                <section class="club-section panel-card">
+                    <div class="panel-card-header"><h3>🔍 Auditoria - eventos club.*</h3></div>
+                    <div class="panel-card-body">
+                        <div id="auditList" style="font-size:0.88rem;">Carregando...</div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/i18n.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/cloud-functions.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+    <script>
+        if(!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+        var session = Auth.getSession();
+        document.getElementById('sidebarUserName').textContent = session.name || session.email || 'Admin';
+
+        var membersCache = [];
+
+        function cpfMask(cpf){
+            if(!cpf) return '-';
+            var c = String(cpf).replace(/\D/g,'');
+            if(c.length !== 11) return cpf;
+            return c.slice(0,3)+'.***.***-'+c.slice(9,11);
+        }
+        function tierBadgeHTML(tier){
+            var cls='club-tier-leite', label='🥛 Leite';
+            if(tier==='nata'){ cls='club-tier-nata'; label='✨ Nata'; }
+            if(tier==='chantilly'){ cls='club-tier-chantilly'; label='👑 Chantilly'; }
+            return '<span class="club-tier-badge '+cls+'">'+label+'</span>';
+        }
+
+        function loadAll(){
+            loadConfig();
+            loadMembers();
+            loadAudit();
+            loadFranchises();
+        }
+
+        function loadFranchises(){
+            try {
+                var fs = DataStore.getAllFranchises() || [];
+                var sel = document.getElementById('push_franchise');
+                sel.innerHTML = '<option value="">Selecione...</option>' + fs.map(function(f){
+                    return '<option value="'+Utils.escapeHtml(f.id)+'">'+Utils.escapeHtml(f.name||f.id)+'</option>';
+                }).join('');
+            } catch(e){}
+            document.getElementById('push_filter').addEventListener('change', function(e){
+                document.getElementById('push_franchise').style.display = e.target.value==='franchise' ? 'block' : 'none';
+            });
+        }
+
+        function loadConfig(){
+            if(typeof firebase==='undefined'||!firebase.firestore) return;
+            firebase.firestore().collection('club_config').doc('global').get().then(function(doc){
+                if(!doc.exists){
+                    document.getElementById('cfgStatus').textContent = 'Documento inexistente - sera criado ao salvar.';
+                    return;
+                }
+                var c = doc.data() || {};
+                var t = c.tiers || {};
+                ['leite','nata','chantilly'].forEach(function(k){
+                    var tv = t[k] || {};
+                    document.getElementById('tier_'+k+'_minSpent').value = tv.minSpent!=null?tv.minSpent:'';
+                    document.getElementById('tier_'+k+'_cashbackRate').value = tv.cashbackRate!=null?tv.cashbackRate:'';
+                });
+                document.getElementById('cfg_expiryDays').value = c.expiryDays||'';
+                var b = c.bonuses || {};
+                ['signup','firstOrder','birthday','referrer','referred','gameDesafio10','scratchMin','scratchMax'].forEach(function(k){
+                    var el = document.getElementById('b_'+k); if(el) el.value = b[k]!=null?b[k]:'';
+                });
+                var a = c.appLinks || {};
+                document.getElementById('app_playStore').value = a.playStore||'';
+                document.getElementById('app_appStore').value  = a.appStore ||'';
+                var ff = c.featureFlags || {};
+                document.getElementById('ff_enabled').checked        = !!ff.enabled;
+                document.getElementById('ff_whatsappNotify').checked = !!ff.whatsappNotify;
+                document.getElementById('ff_pushEnabled').checked    = !!ff.pushEnabled;
+            }).catch(function(e){ console.warn('cfg err', e); });
+        }
+
+        window.saveClubConfig = function(){
+            if(typeof firebase==='undefined'||!firebase.firestore){ return; }
+            var num = function(id){ var v = parseFloat(document.getElementById(id).value); return isNaN(v)?null:v; };
+            var intN = function(id){ var v = parseInt(document.getElementById(id).value,10); return isNaN(v)?null:v; };
+            var payload = {
+                version: 1,
+                tiers: {
+                    leite:     { label:'Leite',     minSpent: num('tier_leite_minSpent')||0,     cashbackRate: num('tier_leite_cashbackRate')||0.03,     color:'#B3E5FC', emoji:'🥛' },
+                    nata:      { label:'Nata',      minSpent: num('tier_nata_minSpent')||500,    cashbackRate: num('tier_nata_cashbackRate')||0.05,      color:'#FFD54F', emoji:'✨' },
+                    chantilly: { label:'Chantilly', minSpent: num('tier_chantilly_minSpent')||2000, cashbackRate: num('tier_chantilly_cashbackRate')||0.07, color:'#F06292', emoji:'👑' }
+                },
+                expiryDays: intN('cfg_expiryDays') || 30,
+                bonuses: {
+                    signup:         intN('b_signup')||0,
+                    firstOrder:     intN('b_firstOrder')||0,
+                    birthday:       intN('b_birthday')||0,
+                    referrer:       intN('b_referrer')||0,
+                    referred:       intN('b_referred')||0,
+                    gameDesafio10:  intN('b_gameDesafio10')||0,
+                    scratchMin:     intN('b_scratchMin')||0,
+                    scratchMax:     intN('b_scratchMax')||0
+                },
+                appLinks: {
+                    playStore: document.getElementById('app_playStore').value||'',
+                    appStore:  document.getElementById('app_appStore').value||'',
+                    pwa: '/clube.html'
+                },
+                featureFlags: {
+                    enabled:        document.getElementById('ff_enabled').checked,
+                    whatsappNotify: document.getElementById('ff_whatsappNotify').checked,
+                    pushEnabled:    document.getElementById('ff_pushEnabled').checked
+                },
+                updatedAt: new Date().toISOString(),
+                updatedBy: session.uid || session.email || 'admin'
+            };
+            var st = document.getElementById('cfgStatus');
+            st.textContent = 'Salvando...';
+            firebase.firestore().collection('club_config').doc('global').set(payload, { merge:true })
+                .then(function(){
+                    st.style.color = '#2E7D32'; st.textContent = '✅ Configuracao salva!';
+                    try { if(typeof Audit!=='undefined') Audit.log('club.config.update', payload); } catch(e){}
+                    setTimeout(function(){ st.textContent=''; }, 4000);
+                })
+                .catch(function(err){ st.style.color='#C62828'; st.textContent='Erro: '+(err.message||err); });
+        };
+
+        function loadMembers(){
+            if(typeof firebase==='undefined'||!firebase.firestore) return;
+            firebase.firestore().collection('club_members').orderBy('totalSpent','desc').limit(200).get()
+                .then(function(snap){
+                    membersCache = [];
+                    var totalMembers=0, coinsLive=0, totalEarned=0, totalRedeemed=0;
+                    snap.forEach(function(d){
+                        var m = Object.assign({id:d.id}, d.data());
+                        membersCache.push(m);
+                        totalMembers++;
+                        coinsLive     += (m.coins|0);
+                        totalEarned   += (m.totalEarned|0);
+                        totalRedeemed += (m.totalRedeemed|0);
+                    });
+                    renderMembers(membersCache);
+                    document.getElementById('kpiMembers').textContent  = totalMembers;
+                    document.getElementById('kpiCoinsLive').textContent = coinsLive.toLocaleString('pt-BR');
+                    document.getElementById('kpiEarned').textContent   = totalEarned.toLocaleString('pt-BR');
+                    document.getElementById('kpiRedeemed').textContent = totalRedeemed.toLocaleString('pt-BR');
+                    var rate = totalEarned > 0 ? Math.round((totalRedeemed/totalEarned)*1000)/10 : 0;
+                    document.getElementById('kpiRedeemRate').textContent = rate+'%';
+                })
+                .catch(function(err){
+                    document.getElementById('membersBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#c62828">Erro: '+Utils.escapeHtml(err.message||'')+'</td></tr>';
+                });
+        }
+
+        function renderMembers(list){
+            var tbody = document.getElementById('membersBody');
+            if(!list.length){ tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--mp-text-light)">Sem membros.</td></tr>'; return; }
+            tbody.innerHTML = list.map(function(m){
+                return '<tr>'+
+                    '<td><strong>'+Utils.escapeHtml(m.name||'-')+'</strong></td>'+
+                    '<td>'+Utils.escapeHtml(m.phone||'-')+'</td>'+
+                    '<td style="font-family:monospace">'+Utils.escapeHtml(cpfMask(m.cpf))+'</td>'+
+                    '<td>'+tierBadgeHTML(m.tier)+'</td>'+
+                    '<td class="text-right">'+(m.coins|0)+'</td>'+
+                    '<td class="text-right">'+Utils.formatCurrency(m.totalSpent||0)+'</td>'+
+                    '<td class="text-center">'+(m.ordersCount||0)+'</td>'+
+                '</tr>';
+            }).join('');
+        }
+
+        window.filterMembers = function(){
+            var q = (document.getElementById('searchMembers').value||'').toLowerCase().trim();
+            if(!q){ renderMembers(membersCache); return; }
+            var digits = q.replace(/\D/g,'');
+            renderMembers(membersCache.filter(function(m){
+                return (m.name||'').toLowerCase().indexOf(q)!==-1 ||
+                       (digits && ((m.phone||'').replace(/\D/g,'').indexOf(digits)!==-1 ||
+                                   (m.cpf||'').replace(/\D/g,'').indexOf(digits)!==-1));
+            }));
+        };
+
+        window.sendBroadcast = function(){
+            var title = document.getElementById('push_title').value.trim();
+            var body  = document.getElementById('push_body').value.trim();
+            var url   = document.getElementById('push_url').value.trim()||'/clube.html';
+            if(!title || !body){ Utils.showToast('Preencha titulo e mensagem','error'); return; }
+            var filter = document.getElementById('push_filter').value;
+            var payload = { title: title, body: body, url: url };
+            if(filter==='all'){ payload.all = true; }
+            else if(filter.indexOf('tier:')===0){ payload.tier = filter.slice(5); }
+            else if(filter==='franchise'){
+                var fr = document.getElementById('push_franchise').value;
+                if(!fr){ Utils.showToast('Selecione uma franquia','error'); return; }
+                payload.franchise = fr;
+            }
+            if(!confirm('Enviar broadcast para '+filter+'?\nTitulo: '+title)) return;
+            var st = document.getElementById('pushStatus');
+            st.textContent = 'Enviando...';
+            if(typeof firebase==='undefined'||!firebase.functions){ st.textContent='Firebase indisponivel'; return; }
+            var fns = firebase.app().functions('southamerica-east1');
+            fns.httpsCallable('clubSendPush')(payload)
+                .then(function(res){
+                    st.style.color='#2E7D32';
+                    st.textContent = '✅ Enviado!' + (res && res.data && res.data.sent ? ' ('+res.data.sent+' destinatarios)' : '');
+                    try { if(typeof Audit!=='undefined') Audit.log('club.push.broadcast', payload); } catch(e){}
+                })
+                .catch(function(err){ st.style.color='#C62828'; st.textContent = 'Erro: '+(err.message||err); });
+        };
+
+        function loadAudit(){
+            var el = document.getElementById('auditList');
+            if(typeof firebase==='undefined'||!firebase.firestore){ el.innerHTML='Firebase indisponivel.'; return; }
+            firebase.firestore().collection('audit_log')
+                .orderBy('at','desc').limit(100).get()
+                .then(function(snap){
+                    var rows = [];
+                    snap.forEach(function(d){
+                        var a = d.data();
+                        var action = a.action || a.type || '';
+                        if(String(action).indexOf('club.') !== 0) return;
+                        rows.push('<div class="audit-row">'+
+                            '<span><strong>'+Utils.escapeHtml(action)+'</strong><br><small>'+Utils.escapeHtml(a.actor||a.user||'system')+' - '+Utils.escapeHtml(a.at ? Utils.formatDateTime(a.at) : '')+'</small></span>'+
+                            '<code style="font-size:11px;color:var(--mp-text-light);max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+Utils.escapeHtml(JSON.stringify(a.payload||a.data||{}).slice(0,140))+'</code>'+
+                        '</div>');
+                    });
+                    el.innerHTML = rows.length ? rows.join('') : '<p style="color:var(--mp-text-light);">Sem eventos club.* no log.</p>';
+                })
+                .catch(function(err){ el.innerHTML = '<p style="color:#c62828">Erro: '+Utils.escapeHtml(err.message||'')+'</p>'; });
+        }
+
+        // Init
+        loadAll();
+    </script>
+</body>
+</html>

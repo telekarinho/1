@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot Admin - Templates Instagram</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <meta name="theme-color" content="#42A5F5">
+    <style>
+        /* --- Paleta e tipografia das artes --- */
+        :root {
+            --mkp-blue: #42A5F5;
+            --mkp-blue-dark: #1976D2;
+            --mkp-pink: #EC407A;
+            --mkp-pink-dark: #AD1457;
+            --mkp-yellow: #FFB74D;
+            --mkp-cream: #FFF9C4;
+            --mkp-sky: #E3F2FD;
+        }
+        body { background: linear-gradient(135deg, #F8F4FC 0%, #E8F4FD 100%); }
+
+        .studio-layout { display:flex; min-height:100vh; }
+        .studio-main { flex:1; padding: 20px 28px 60px; max-width: 100%; overflow-x: hidden; }
+        @media (min-width: 1024px) { .studio-main { margin-left: var(--mp-sidebar-w); } }
+
+        /* Thumbs navigation */
+        .tpl-thumbs { display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px; margin-bottom:22px; }
+        .tpl-thumb { background:#fff; border:2px solid transparent; border-radius:12px; padding:10px; cursor:pointer; text-align:center; transition:all 0.2s; box-shadow:0 2px 10px rgba(45,27,78,0.06); }
+        .tpl-thumb:hover { transform: translateY(-3px); }
+        .tpl-thumb.active { border-color: var(--mkp-pink); background: #FFF1F6; }
+        .tpl-thumb .ic { font-size: 1.8rem; display:block; margin-bottom: 4px; }
+        .tpl-thumb .nm { font-family: 'Baloo 2',cursive; font-size: 0.88rem; color:#2D1B4E; }
+        .tpl-thumb .fm { font-family: Nunito, sans-serif; font-size: 0.7rem; color:#888; }
+
+        /* Editor panel */
+        .editor-panel { background:#fff; border-radius:16px; padding:20px; box-shadow: var(--mp-shadow); margin-bottom: 20px; }
+        .editor-panel h3 { font-family: 'Baloo 2',cursive; margin:0 0 12px; color:var(--mkp-blue-dark); font-size:1.1rem; }
+        .field-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-bottom: 10px; }
+        .field-row label { display:flex; flex-direction:column; gap:4px; font-family: Nunito,sans-serif; font-size:0.82rem; color:#555; font-weight:700; }
+        .field-row input, .field-row select, .field-row textarea {
+            padding: 8px 12px; border: 1.5px solid #E3F2FD; border-radius: 8px;
+            font-family: Nunito,sans-serif; font-size: 0.9rem; background:#fff;
+        }
+        .field-row input:focus, .field-row textarea:focus { outline:none; border-color: var(--mkp-blue); }
+
+        /* Canvas preview */
+        .canvas-wrap {
+            background: repeating-linear-gradient(45deg, #F1F3F5, #F1F3F5 14px, #FAFBFC 14px, #FAFBFC 28px);
+            border-radius: 16px; padding: 28px; display:flex; justify-content:center; align-items:flex-start;
+            min-height: 560px; overflow:auto;
+        }
+        .canvas-scale { transform-origin: top center; }
+
+        /* Export buttons */
+        .export-bar { display:flex; gap:10px; flex-wrap:wrap; margin-top: 16px; }
+        .export-bar button {
+            padding: 11px 20px; border: none; border-radius: 10px; font-family: Nunito,sans-serif; font-weight: 700;
+            cursor:pointer; font-size:0.92rem;
+        }
+        .btn-dl { background: linear-gradient(135deg, var(--mkp-blue), var(--mkp-pink)); color:#fff; }
+        .btn-cp { background:#fff; color: var(--mkp-pink); border:2px solid var(--mkp-pink) !important; }
+
+        /* =========== CANVAS MilkyPot ============ */
+        .mkp-canvas {
+            position: relative; overflow: hidden; background:#fff;
+            font-family: 'Nunito', sans-serif; color:#2D1B4E;
+            box-shadow: 0 24px 80px rgba(45,27,78,0.18);
+            border-radius: 16px;
+        }
+        .mkp-square  { width: 540px; height: 540px; }   /* 1080x1080 reduced 50% */
+        .mkp-story   { width: 540px; height: 960px; }   /* 1080x1920 */
+        .mkp-vert    { width: 540px; height: 675px; }   /* 1080x1350 */
+
+        /* Fundos em gradiente suave */
+        .bg-sky { background: linear-gradient(135deg, #E3F2FD 0%, #F8F4FC 50%, #FFF1F6 100%); }
+        .bg-pink { background: linear-gradient(140deg, #FFF1F6 0%, #FCE4EC 60%, #F8BBD0 100%); }
+        .bg-cream { background: linear-gradient(160deg, #FFF9C4 0%, #FFF3E0 50%, #FFE0B2 100%); }
+        .bg-blue { background: linear-gradient(150deg, #42A5F5 0%, #1976D2 60%, #0D47A1 100%); color:#fff; }
+        .bg-duo { background: linear-gradient(135deg, #42A5F5 0%, #7C4DFF 45%, #EC407A 100%); color:#fff; }
+
+        /* Decor shapes */
+        .blob { position: absolute; border-radius: 50%; filter: blur(2px); pointer-events:none; }
+        .sparkle::before {
+            content: '✨'; position:absolute; font-size: 1.8rem; opacity: 0.6;
+        }
+
+        /* Mascot container */
+        .sheep { width: 120px; height: 120px; display:block; }
+        .sheep-sm { width: 64px; height: 64px; }
+        .sheep-lg { width: 180px; height: 180px; }
+
+        /* Typography helpers */
+        .h-baloo { font-family: 'Baloo 2', cursive; line-height: 1.05; }
+        .uppercase-tag { text-transform: uppercase; letter-spacing: 1px; font-size: 0.72rem; font-weight: 800; }
+
+        /* Buttons / chips inside canvas */
+        .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius: 999px; font-weight: 700; font-size: 0.8rem; }
+        .pill-blue { background: rgba(66,165,245,0.15); color: #1976D2; }
+        .pill-pink { background: rgba(236,64,122,0.15); color: #AD1457; }
+        .pill-white { background: rgba(255,255,255,0.25); color: #fff; backdrop-filter: blur(4px); }
+
+        .btn-cta { display:inline-block; padding: 14px 28px; border-radius: 999px; font-family: 'Baloo 2',cursive; font-weight: 700; font-size: 1.15rem; }
+        .btn-cta-pink { background:#EC407A; color:#fff; box-shadow: 0 8px 24px rgba(236,64,122,0.4); }
+        .btn-cta-white { background:#fff; color:#1976D2; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+
+        /* Phase tag */
+        .phase-tag { display:inline-block; background:#fff; color: var(--mkp-pink); padding: 4px 12px; border-radius: 999px; font-weight: 800; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Countdown number */
+        .count-num { font-family: 'Baloo 2', cursive; font-size: 9rem; font-weight: 800; line-height: 0.9; text-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+
+        /* Tier cards */
+        .tier-card { background:#fff; border-radius: 20px; padding: 18px; text-align:center; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .tier-emoji { font-size: 2.6rem; }
+        .tier-rate { font-family: 'Baloo 2', cursive; font-size: 2.4rem; color: var(--mkp-pink); }
+
+        /* Carousel slides wrapper */
+        .carousel-slides { display:flex; gap:14px; flex-wrap: wrap; }
+        .slide-label { font-family: Nunito,sans-serif; font-size:0.75rem; color:#666; text-align:center; margin-top:6px; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <div class="panel-layout studio-layout">
+        <!-- Sidebar (padrao admin) -->
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small>Central Admin</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="franchises.html" class="sidebar-link"><span class="icon">🏪</span> Franquias</a>
+                <a href="finances.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <div class="sidebar-nav-group">Marketing</div>
+                <a href="campaigns.html" class="sidebar-link"><span class="icon">📢</span> Campanhas</a>
+                <a href="ig-templates.html" class="sidebar-link active"><span class="icon">🎨</span> Templates IG</a>
+                <a href="seo.html" class="sidebar-link"><span class="icon">🔍</span> SEO & Delivery</a>
+                <a href="desafio.html" class="sidebar-link"><span class="icon">🎮</span> Desafio</a>
+                <div class="sidebar-nav-group">Sistema</div>
+                <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">👑</div>
+                    <div class="sidebar-user-info">
+                        <strong>Admin</strong>
+                        <small>Super Admin</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="studio-main">
+            <header class="panel-header" style="position:sticky; top:0; z-index:50;">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>🎨 Estudio de Templates IG</h1>
+                </div>
+            </header>
+
+            <!-- Banner -->
+            <div style="background: linear-gradient(135deg, #42A5F5 0%, #EC407A 100%); color:#fff; padding: 20px 24px; border-radius: 16px; margin: 20px 0;">
+                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width: 260px;">
+                        <h2 style="margin:0; font-family:'Baloo 2', cursive; font-size: 1.5rem;">Templates Instagram-ready MilkyClube</h2>
+                        <p style="margin:4px 0 0; opacity:0.95; font-size:0.95rem;">10 templates prontos para postagem. Edite os textos, baixe em PNG 1080p, cole no Instagram.</p>
+                    </div>
+                    <div style="font-size: 3.4rem;">🥛</div>
+                </div>
+            </div>
+
+            <!-- Thumbnails -->
+            <div id="thumbs" class="tpl-thumbs"></div>
+
+            <!-- Editor fields -->
+            <div class="editor-panel">
+                <h3 id="editorTitle">✏️ Editar texto do template</h3>
+                <div id="editorFields"></div>
+                <div class="export-bar">
+                    <button class="btn-dl" onclick="downloadPng()">⬇️ Download PNG</button>
+                    <button class="btn-cp" onclick="copyPng()">📋 Copiar como imagem</button>
+                    <button class="btn-cp" onclick="resetFields()">↺ Restaurar padrao</button>
+                </div>
+                <small id="exportStatus" style="display:block; margin-top:8px; color:#4CAF50; font-weight:700;"></small>
+            </div>
+
+            <!-- Preview -->
+            <div class="canvas-wrap">
+                <div class="canvas-scale" id="canvasScale">
+                    <div id="canvasHost"></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Mascot SVG definicao reutilizavel (ovelhinha MilkyPot) -->
+    <svg width="0" height="0" style="position:absolute;">
+        <defs>
+            <symbol id="milky-sheep" viewBox="0 0 200 200">
+                <!-- Tufos laterais -->
+                <circle cx="45" cy="80" r="22" fill="#FFFFFF" stroke="#E0E7FF" stroke-width="2"/>
+                <circle cx="155" cy="80" r="22" fill="#FFFFFF" stroke="#E0E7FF" stroke-width="2"/>
+                <circle cx="55" cy="115" r="20" fill="#FFFFFF" stroke="#E0E7FF" stroke-width="2"/>
+                <circle cx="145" cy="115" r="20" fill="#FFFFFF" stroke="#E0E7FF" stroke-width="2"/>
+                <!-- Tufos topo -->
+                <circle cx="70" cy="52" r="20" fill="#FFFFFF" stroke="#E0E7FF" stroke-width="2"/>
+                <circle cx="100" cy="40" r="22" fill="#FFFFFF" stroke="#E0E7FF" stroke-width="2"/>
+                <circle cx="130" cy="52" r="20" fill="#FFFFFF" stroke="#E0E7FF" stroke-width="2"/>
+                <!-- Orelhas -->
+                <ellipse cx="60" cy="90" rx="10" ry="16" fill="#F8C8D0" transform="rotate(-25 60 90)"/>
+                <ellipse cx="140" cy="90" rx="10" ry="16" fill="#F8C8D0" transform="rotate(25 140 90)"/>
+                <!-- Cabeca -->
+                <ellipse cx="100" cy="110" rx="42" ry="40" fill="#FDEEF2"/>
+                <!-- Bochechas rosinhas -->
+                <circle cx="75" cy="118" r="7" fill="#F8C8D0" opacity="0.7"/>
+                <circle cx="125" cy="118" r="7" fill="#F8C8D0" opacity="0.7"/>
+                <!-- Olhos -->
+                <circle cx="85" cy="103" r="4.5" fill="#2D1B4E"/>
+                <circle cx="115" cy="103" r="4.5" fill="#2D1B4E"/>
+                <circle cx="86" cy="101" r="1.4" fill="#FFFFFF"/>
+                <circle cx="116" cy="101" r="1.4" fill="#FFFFFF"/>
+                <!-- Focinho -->
+                <ellipse cx="100" cy="120" rx="9" ry="6" fill="#F8C8D0"/>
+                <path d="M100 123 Q95 130 92 128 M100 123 Q105 130 108 128" stroke="#AD1457" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <!-- Franja tufinho -->
+                <circle cx="88" cy="75" r="12" fill="#FFFFFF" stroke="#E0E7FF" stroke-width="2"/>
+                <circle cx="112" cy="75" r="12" fill="#FFFFFF" stroke="#E0E7FF" stroke-width="2"/>
+            </symbol>
+        </defs>
+    </svg>
+
+    <script src="../js/core/ig-export.js"></script>
+    <script>
+    function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); }
+
+    // Mascote reutilizavel
+    function sheepSvg(size){
+        size = size || 120;
+        return '<svg class="sheep" width="' + size + '" height="' + size + '" viewBox="0 0 200 200"><use href="#milky-sheep"/></svg>';
+    }
+
+    // Definicoes dos 10 templates
+    var TEMPLATES = {
+        heroLaunch: {
+            name:'Hero Launch', format:'1080x1080', canvasClass:'mkp-square bg-sky',
+            phase:'Lancamento', icon:'🚀',
+            fields:[
+                { key:'preTitle', label:'Selo superior',   default:'MilkyClube Londrina', type:'text' },
+                { key:'title',    label:'Titulo principal', default:'MilkyClube chegou em Londrina', type:'textarea' },
+                { key:'sub',      label:'Subtitulo',       default:'Ganhe ate 7% de cashback em MilkyCoins a cada potinho.', type:'textarea' },
+                { key:'cta',      label:'CTA',             default:'Entre agora', type:'text' }
+            ],
+            render: function(f){ return (
+                '<div class="mkp-canvas mkp-square bg-sky" id="tplRoot">' +
+                    '<div class="blob" style="width:220px; height:220px; background:rgba(236,64,122,0.18); top:-60px; right:-40px;"></div>' +
+                    '<div class="blob" style="width:160px; height:160px; background:rgba(66,165,245,0.25); bottom:-40px; left:-30px;"></div>' +
+                    '<div style="position:absolute; top:34px; left:34px;"><span class="phase-tag">' + esc(f.preTitle) + '</span></div>' +
+                    '<div style="position:absolute; top:36px; right:36px;">' + sheepSvg(100) + '</div>' +
+                    '<div style="position:absolute; top:50%; left:34px; right:34px; transform:translateY(-46%);">' +
+                        '<h1 class="h-baloo" style="font-size: 3.2rem; color:#1976D2; margin:0 0 14px;">' + esc(f.title) + '</h1>' +
+                        '<p style="font-size: 1.15rem; color:#546E7A; line-height:1.4; max-width: 92%;">' + esc(f.sub) + '</p>' +
+                    '</div>' +
+                    '<div style="position:absolute; bottom:38px; left:34px; right:34px; display:flex; align-items:center; justify-content:space-between;">' +
+                        '<span class="btn-cta btn-cta-pink">' + esc(f.cta) + ' →</span>' +
+                        '<span style="font-family:Baloo 2,cursive; font-weight:800; color:#1976D2;">🥛 MilkyPot</span>' +
+                    '</div>' +
+                '</div>'
+            ); }
+        },
+
+        countdownTeaser: {
+            name:'Countdown Teaser', format:'1080x1920', canvasClass:'mkp-story bg-pink',
+            phase:'Teaser', icon:'⏳',
+            fields:[
+                { key:'days',  label:'Numero grande', default:'1',   type:'text' },
+                { key:'unit',  label:'Unidade',       default:'DIA PRO CLUBE', type:'text' },
+                { key:'title', label:'Frase', default:'Algo fofinho chegando em Londrina', type:'textarea' },
+                { key:'cta',   label:'CTA',   default:'Arrasta para cima quando o sino tocar', type:'text' }
+            ],
+            render: function(f){ return (
+                '<div class="mkp-canvas mkp-story bg-pink" id="tplRoot">' +
+                    '<div class="blob" style="width:320px; height:320px; background:rgba(66,165,245,0.35); top:-120px; right:-120px;"></div>' +
+                    '<div class="blob" style="width:260px; height:260px; background:rgba(255,183,77,0.4); bottom:-80px; left:-80px;"></div>' +
+                    '<div style="position:absolute; top:60px; left:0; right:0; text-align:center;">' +
+                        '<span class="phase-tag" style="background:#fff; color:#EC407A;">✨ Contagem regressiva</span>' +
+                    '</div>' +
+                    '<div style="position:absolute; top:20%; left:0; right:0; text-align:center;">' +
+                        '<div class="count-num" style="color:#EC407A;">' + esc(f.days) + '</div>' +
+                        '<div style="font-family:Baloo 2,cursive; font-size:1.8rem; color:#AD1457; font-weight:700; letter-spacing:2px;">' + esc(f.unit) + '</div>' +
+                    '</div>' +
+                    '<div style="position:absolute; top:55%; left:0; right:0; text-align:center;">' +
+                        sheepSvg(180) +
+                    '</div>' +
+                    '<div style="position:absolute; bottom:180px; left:40px; right:40px; text-align:center;">' +
+                        '<h2 class="h-baloo" style="font-size:2rem; color:#1976D2; margin:0;">' + esc(f.title) + '</h2>' +
+                    '</div>' +
+                    '<div style="position:absolute; bottom:60px; left:40px; right:40px; text-align:center;">' +
+                        '<span style="font-size:0.92rem; color:#6A4A5C; font-weight:700;">' + esc(f.cta) + '</span>' +
+                    '</div>' +
+                '</div>'
+            ); }
+        },
+
+        carrosselTiers: {
+            name:'Carrossel Tiers (5)', format:'1080x1350', canvasClass:'mkp-vert bg-cream',
+            phase:'Engajamento', icon:'👑',
+            fields:[
+                { key:'title', label:'Titulo da capa', default:'Conheca os 3 Tiers', type:'text' },
+                { key:'sub',   label:'Subtitulo capa', default:'Quanto mais voce gela, mais ganha', type:'text' }
+            ],
+            render: function(f){
+                function tierCard(emoji, name, rate, min, color){
+                    return (
+                        '<div class="mkp-canvas mkp-vert" style="background:linear-gradient(160deg,#FFFFFF 0%,#FFF9F4 100%);">' +
+                            '<div style="padding:38px; display:flex; flex-direction:column; height:100%;">' +
+                                '<span class="phase-tag" style="background:' + color + '22; color:' + color + '; align-self:flex-start;">Tier ' + name + '</span>' +
+                                '<div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">' +
+                                    '<div class="tier-emoji" style="font-size:4rem;">' + emoji + '</div>' +
+                                    '<div class="h-baloo" style="font-size:3rem; color:' + color + '; margin-top:8px;">' + name + '</div>' +
+                                    '<div class="h-baloo" style="font-size:3.6rem; color:#2D1B4E; margin-top:14px;">' + rate + '</div>' +
+                                    '<div style="font-size:0.95rem; color:#666; margin-top:4px;">de cashback em MilkyCoins</div>' +
+                                    '<div style="margin-top:24px; background:' + color + '15; padding:10px 18px; border-radius:999px; font-weight:700; color:' + color + '; font-size:0.85rem;">A partir de R$ ' + min + ' gastos</div>' +
+                                '</div>' +
+                                '<div style="text-align:center; font-family:Baloo 2,cursive; color:#1976D2; font-weight:800;">🥛 MilkyClube</div>' +
+                            '</div>' +
+                        '</div>'
+                    );
+                }
+                return (
+                    '<div id="tplRoot">' +
+                        '<div class="carousel-slides">' +
+                            // Slide 1 capa
+                            '<div>' +
+                            '<div class="mkp-canvas mkp-vert bg-duo">' +
+                                '<div class="blob" style="width:260px; height:260px; background:rgba(255,249,196,0.3); top:-80px; right:-80px;"></div>' +
+                                '<div style="position:absolute; top:40px; left:40px;"><span class="pill pill-white">✨ Carrossel</span></div>' +
+                                '<div style="position:absolute; top:46%; left:40px; right:40px; transform:translateY(-50%);">' +
+                                    '<h1 class="h-baloo" style="font-size:3rem; margin:0 0 10px;">' + esc(f.title) + '</h1>' +
+                                    '<p style="font-size:1.1rem; opacity:0.95;">' + esc(f.sub) + '</p>' +
+                                '</div>' +
+                                '<div style="position:absolute; bottom:40px; right:40px;">' + sheepSvg(140) + '</div>' +
+                                '<div style="position:absolute; bottom:40px; left:40px; font-family:Baloo 2,cursive; font-weight:800;">Arrasta →</div>' +
+                            '</div>' +
+                            '<div class="slide-label">Slide 1: Capa</div>' +
+                            '</div>' +
+                            '<div>' + tierCard('🥛','Leite','3%','0','#42A5F5') + '<div class="slide-label">Slide 2: Tier Leite</div></div>' +
+                            '<div>' + tierCard('✨','Nata','5%','500','#FFB74D') + '<div class="slide-label">Slide 3: Tier Nata</div></div>' +
+                            '<div>' + tierCard('👑','Chantilly','7%','2.000','#EC407A') + '<div class="slide-label">Slide 4: Tier Chantilly</div></div>' +
+                            // Slide 5 CTA
+                            '<div>' +
+                            '<div class="mkp-canvas mkp-vert bg-sky">' +
+                                '<div style="padding:40px; display:flex; flex-direction:column; height:100%; text-align:center; justify-content:center;">' +
+                                    sheepSvg(140) +
+                                    '<h2 class="h-baloo" style="font-size:2.4rem; color:#1976D2; margin:16px 0 8px;">Entra pro clube</h2>' +
+                                    '<p style="color:#546E7A; font-size:1.05rem; margin:0 0 22px;">G$20 de bonus no cadastro + cashback desde o primeiro potinho.</p>' +
+                                    '<span class="btn-cta btn-cta-pink" style="align-self:center;">Cadastrar agora →</span>' +
+                                    '<div style="margin-top:24px; font-family:Baloo 2,cursive; font-weight:800; color:#1976D2;">clube.milkypot</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="slide-label">Slide 5: CTA</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<p style="margin-top:18px; text-align:center; color:#888; font-size:0.85rem;">Carrossel completo. Para baixar, use o botao PNG em cada slide ou alterne campos.</p>' +
+                    '</div>'
+                );
+            },
+            exportSelector: '.carousel-slides > div > .mkp-canvas' // primeiro slide
+        },
+
+        infograficoGanhar: {
+            name:'Infografico Como Ganhar', format:'1080x1350', canvasClass:'mkp-vert bg-sky',
+            phase:'Engajamento', icon:'📊',
+            fields:[
+                { key:'title', label:'Titulo', default:'5 formas de ganhar MilkyCoins', type:'text' },
+                { key:'item1', label:'Item 1', default:'Comprando: ate 7% cashback', type:'text' },
+                { key:'item2', label:'Item 2', default:'Aniversario: G$100 bonus', type:'text' },
+                { key:'item3', label:'Item 3', default:'Desafio 10 MilkyPot: +G$10', type:'text' },
+                { key:'item4', label:'Item 4', default:'Raspinha da sorte: ate G$50', type:'text' },
+                { key:'item5', label:'Item 5', default:'Indique amigos: G$100 por pessoa', type:'text' }
+            ],
+            render: function(f){
+                var icons = ['🛒','🎂','🎯','🎟️','🤝'];
+                var colors = ['#42A5F5','#EC407A','#FFB74D','#26A69A','#7E57C2'];
+                function row(i){
+                    return (
+                        '<div style="display:flex; align-items:center; gap:14px; background:#fff; padding:14px 16px; border-radius:14px; box-shadow:0 2px 8px rgba(45,27,78,0.06); border-left:4px solid ' + colors[i] + ';">' +
+                            '<div style="width:46px; height:46px; border-radius:50%; background:' + colors[i] + '22; display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0;">' + icons[i] + '</div>' +
+                            '<div style="font-weight:700; color:#2D1B4E; font-size:0.95rem;">' + esc(f['item' + (i+1)]) + '</div>' +
+                        '</div>'
+                    );
+                }
+                return (
+                    '<div class="mkp-canvas mkp-vert bg-sky" id="tplRoot">' +
+                        '<div class="blob" style="width:200px; height:200px; background:rgba(236,64,122,0.18); top:-60px; right:-60px;"></div>' +
+                        '<div style="padding:34px; display:flex; flex-direction:column; height:100%;">' +
+                            '<div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">' + sheepSvg(70) + '<span class="phase-tag">Infografico MilkyClube</span></div>' +
+                            '<h1 class="h-baloo" style="font-size:2.4rem; color:#1976D2; margin:0 0 18px;">' + esc(f.title) + '</h1>' +
+                            '<div style="display:flex; flex-direction:column; gap:10px;">' +
+                                row(0) + row(1) + row(2) + row(3) + row(4) +
+                            '</div>' +
+                            '<div style="margin-top:auto; padding-top:18px; text-align:center;">' +
+                                '<span class="btn-cta btn-cta-pink" style="font-size:1rem; padding:12px 22px;">Salva esse post →</span>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>'
+                );
+            }
+        },
+
+        depoimentoCliente: {
+            name:'Depoimento Cliente', format:'1080x1080', canvasClass:'mkp-square bg-cream',
+            phase:'Social Proof', icon:'⭐',
+            fields:[
+                { key:'quote', label:'Frase do cliente', default:'Paguei so R$ 4 num potao gigante... vcs sao doidos! 🥰', type:'textarea' },
+                { key:'name',  label:'Nome',  default:'Marina, Londrina - PR', type:'text' },
+                { key:'tier',  label:'Tier',  default:'Nata', type:'text' }
+            ],
+            render: function(f){ return (
+                '<div class="mkp-canvas mkp-square bg-cream" id="tplRoot">' +
+                    '<div class="blob" style="width:240px; height:240px; background:rgba(236,64,122,0.2); top:-80px; left:-60px;"></div>' +
+                    '<div style="position:absolute; top:32px; right:36px;"><span class="phase-tag">Depoimento real</span></div>' +
+                    '<div style="position:absolute; top:26px; left:36px;"><span style="font-size:5rem; color:#EC407A; line-height:0.6; font-family:Baloo 2,cursive; font-weight:800;">&ldquo;</span></div>' +
+                    '<div style="position:absolute; top:42%; left:44px; right:44px; transform:translateY(-50%); text-align:center;">' +
+                        '<p style="font-family:Baloo 2,cursive; font-size:1.7rem; color:#2D1B4E; line-height:1.25; margin:0;">' + esc(f.quote) + '</p>' +
+                    '</div>' +
+                    '<div style="position:absolute; bottom:36px; left:36px; right:36px; display:flex; align-items:center; gap:14px; justify-content:center;">' +
+                        sheepSvg(70) +
+                        '<div>' +
+                            '<div style="font-family:Baloo 2,cursive; font-size:1.15rem; color:#1976D2; font-weight:800;">' + esc(f.name) + '</div>' +
+                            '<div style="font-size:0.9rem; color:#EC407A; font-weight:700;">✨ Tier ' + esc(f.tier) + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            ); }
+        },
+
+        flashPromo: {
+            name:'Flash Promo', format:'1080x1080', canvasClass:'mkp-square bg-duo',
+            phase:'Lancamento', icon:'⚡',
+            fields:[
+                { key:'flag',  label:'Selo',  default:'FLASH DE HOJE', type:'text' },
+                { key:'title', label:'Titulo', default:'Cadastre-se hoje e ganhe G$20', type:'textarea' },
+                { key:'sub',   label:'Subtitulo', default:'So ate 23h59. Bonus de boas-vindas no app.', type:'textarea' },
+                { key:'cta',   label:'CTA',   default:'Quero meus G$20', type:'text' }
+            ],
+            render: function(f){ return (
+                '<div class="mkp-canvas mkp-square bg-duo" id="tplRoot">' +
+                    '<div class="blob" style="width:260px; height:260px; background:rgba(255,183,77,0.35); top:-100px; right:-80px;"></div>' +
+                    '<div class="blob" style="width:160px; height:160px; background:rgba(255,249,196,0.3); bottom:-40px; left:-40px;"></div>' +
+                    '<div style="position:absolute; top:34px; left:36px;"><span class="pill pill-white">⚡ ' + esc(f.flag) + '</span></div>' +
+                    '<div style="position:absolute; top:36px; right:34px;">' + sheepSvg(96) + '</div>' +
+                    '<div style="position:absolute; top:50%; left:38px; right:38px; transform:translateY(-52%);">' +
+                        '<h1 class="h-baloo" style="font-size:2.7rem; margin:0 0 10px; line-height:1.05;">' + esc(f.title) + '</h1>' +
+                        '<p style="font-size:1.05rem; opacity:0.95; max-width:88%;">' + esc(f.sub) + '</p>' +
+                    '</div>' +
+                    '<div style="position:absolute; bottom:36px; left:38px; right:38px; display:flex; align-items:center; justify-content:space-between; gap:10px;">' +
+                        '<span class="btn-cta btn-cta-white">' + esc(f.cta) + ' →</span>' +
+                        '<span style="font-family:Baloo 2,cursive; font-weight:800; font-size:1rem; opacity:0.95;">🥛 MilkyClube</span>' +
+                    '</div>' +
+                '</div>'
+            ); }
+        },
+
+        bastidores: {
+            name:'Bastidores', format:'1080x1920', canvasClass:'mkp-story bg-sky',
+            phase:'Engajamento', icon:'🎬',
+            fields:[
+                { key:'title', label:'Titulo', default:'Bastidores MilkyPot', type:'text' },
+                { key:'sub',   label:'Legenda', default:'Um dia na loja, contado por quem vive dela.', type:'textarea' },
+                { key:'cta',   label:'CTA', default:'Marca quem tem que conhecer', type:'text' }
+            ],
+            render: function(f){ return (
+                '<div class="mkp-canvas mkp-story bg-sky" id="tplRoot">' +
+                    // Moldura foto (placeholder)
+                    '<div style="position:absolute; top:80px; left:40px; right:40px; height:640px; border-radius:28px; background: linear-gradient(135deg,#B3E5FC,#F8BBD0,#FFF9C4); overflow:hidden; box-shadow: 0 20px 40px rgba(45,27,78,0.15);">' +
+                        '<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column; color:#1976D2; opacity:0.55;">' +
+                            '<div style="font-size:4rem;">📸</div>' +
+                            '<div style="font-family:Baloo 2,cursive; font-size:1.2rem; margin-top:8px;">Cole sua foto aqui</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div style="position:absolute; top:40px; left:40px;"><span class="phase-tag">🎬 Bastidores</span></div>' +
+                    '<div style="position:absolute; top:40px; right:40px;">' + sheepSvg(80) + '</div>' +
+                    '<div style="position:absolute; bottom:180px; left:40px; right:40px;">' +
+                        '<h1 class="h-baloo" style="font-size:2.4rem; color:#1976D2; margin:0 0 10px;">' + esc(f.title) + '</h1>' +
+                        '<p style="font-size:1.05rem; color:#455A64; margin:0;">' + esc(f.sub) + '</p>' +
+                    '</div>' +
+                    '<div style="position:absolute; bottom:60px; left:40px; right:40px; text-align:center;">' +
+                        '<span class="btn-cta btn-cta-pink" style="font-size:1rem; padding:12px 26px;">' + esc(f.cta) + ' →</span>' +
+                    '</div>' +
+                '</div>'
+            ); }
+        },
+
+        indiqueEGanhe: {
+            name:'Indique e Ganhe', format:'1080x1350', canvasClass:'mkp-vert bg-pink',
+            phase:'Engajamento', icon:'🤝',
+            fields:[
+                { key:'title', label:'Titulo', default:'Indique e Ganhe', type:'text' },
+                { key:'forYou', label:'Beneficio pra voce', default:'Voce ganha G$100', type:'text' },
+                { key:'forFriend', label:'Beneficio pro amigo', default:'Seu amigo ganha G$50', type:'text' },
+                { key:'code',  label:'Codigo referral (exemplo)', default:'MILKY2X4K', type:'text' },
+                { key:'cta',   label:'CTA', default:'Pega seu codigo no app', type:'text' }
+            ],
+            render: function(f){ return (
+                '<div class="mkp-canvas mkp-vert bg-pink" id="tplRoot">' +
+                    '<div class="blob" style="width:260px; height:260px; background:rgba(66,165,245,0.3); top:-80px; right:-80px;"></div>' +
+                    '<div style="padding:38px; display:flex; flex-direction:column; height:100%;">' +
+                        '<span class="phase-tag">🤝 Indicacao</span>' +
+                        '<h1 class="h-baloo" style="font-size:3rem; color:#AD1457; margin:12px 0 20px;">' + esc(f.title) + '</h1>' +
+                        '<div style="display:flex; align-items:center; justify-content:center; gap:20px; margin:10px 0 28px;">' +
+                            '<div style="text-align:center;">' + sheepSvg(110) + '<div style="font-weight:700; color:#AD1457; margin-top:6px;">Voce</div></div>' +
+                            '<div style="font-size:2.4rem; color:#EC407A;">↔️</div>' +
+                            '<div style="text-align:center;">' + sheepSvg(110) + '<div style="font-weight:700; color:#AD1457; margin-top:6px;">Amigo</div></div>' +
+                        '</div>' +
+                        '<div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">' +
+                            '<div style="background:#fff; padding:18px; border-radius:16px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.06);">' +
+                                '<div style="font-size:0.85rem; color:#888; font-weight:700;">VOCE</div>' +
+                                '<div class="h-baloo" style="font-size:1.8rem; color:#EC407A;">' + esc(f.forYou) + '</div>' +
+                            '</div>' +
+                            '<div style="background:#fff; padding:18px; border-radius:16px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.06);">' +
+                                '<div style="font-size:0.85rem; color:#888; font-weight:700;">AMIGO</div>' +
+                                '<div class="h-baloo" style="font-size:1.8rem; color:#1976D2;">' + esc(f.forFriend) + '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div style="margin-top:22px; background:#2D1B4E; color:#fff; padding:14px 20px; border-radius:14px; text-align:center; font-family:Baloo 2,cursive; letter-spacing:3px; font-size:1.4rem;">' + esc(f.code) + '</div>' +
+                        '<div style="margin-top:auto; padding-top:18px; text-align:center;">' +
+                            '<span class="btn-cta btn-cta-pink" style="font-size:1rem; padding:12px 20px;">' + esc(f.cta) + ' →</span>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            ); }
+        },
+
+        aniversarioMes: {
+            name:'Aniversario do Mes', format:'1080x1080', canvasClass:'mkp-square bg-cream',
+            phase:'Social Proof', icon:'🎂',
+            fields:[
+                { key:'title', label:'Titulo', default:'Feliz aniversario!', type:'text' },
+                { key:'sub',   label:'Subtitulo', default:'Seus G$100 bonus estao no app esperando.', type:'textarea' },
+                { key:'month', label:'Mes', default:'Aniversariantes de Maio', type:'text' },
+                { key:'cta',   label:'CTA', default:'Atualizar data no app', type:'text' }
+            ],
+            render: function(f){ return (
+                '<div class="mkp-canvas mkp-square bg-cream" id="tplRoot">' +
+                    '<div class="blob" style="width:200px; height:200px; background:rgba(236,64,122,0.22); top:-60px; left:-50px;"></div>' +
+                    '<div class="blob" style="width:160px; height:160px; background:rgba(66,165,245,0.22); bottom:-50px; right:-40px;"></div>' +
+                    '<div style="position:absolute; top:30px; left:36px;"><span class="phase-tag">🎂 ' + esc(f.month) + '</span></div>' +
+                    '<div style="position:absolute; top:40px; right:40px; font-size:3rem;">🎉</div>' +
+                    // Moldura foto circular
+                    '<div style="position:absolute; top:100px; left:50%; transform:translateX(-50%); width:200px; height:200px; border-radius:50%; background:#fff; border:6px solid #EC407A; box-shadow:0 12px 24px rgba(0,0,0,0.12); display:flex; align-items:center; justify-content:center; overflow:hidden;">' +
+                        sheepSvg(150) +
+                    '</div>' +
+                    '<div style="position:absolute; top:54%; left:36px; right:36px; text-align:center;">' +
+                        '<h1 class="h-baloo" style="font-size:2.6rem; color:#AD1457; margin:0 0 8px;">' + esc(f.title) + '</h1>' +
+                        '<p style="font-size:1.05rem; color:#546E7A;">' + esc(f.sub) + '</p>' +
+                    '</div>' +
+                    '<div style="position:absolute; bottom:34px; left:36px; right:36px; text-align:center;">' +
+                        '<span class="btn-cta btn-cta-pink" style="font-size:1rem; padding:12px 22px;">' + esc(f.cta) + ' →</span>' +
+                    '</div>' +
+                '</div>'
+            ); }
+        },
+
+        qrDownloadApp: {
+            name:'QR Download App', format:'1080x1080', canvasClass:'mkp-square bg-blue',
+            phase:'Lancamento', icon:'📲',
+            fields:[
+                { key:'title', label:'Titulo', default:'Baixe o app MilkyClube', type:'text' },
+                { key:'sub',   label:'Subtitulo', default:'Aponte a camera e instale em 10 segundos.', type:'textarea' },
+                { key:'url',   label:'URL do app', default:'clube.milkypot', type:'text' }
+            ],
+            render: function(f){
+                // QR estilizado (grade visual)
+                var qr = '';
+                for (var i = 0; i < 11; i++) {
+                    var row = '';
+                    for (var j = 0; j < 11; j++) {
+                        var on = ((i*j + i + j) % 3 === 0) || (i === 0) || (j === 0) || (i === 10) || (j === 10) || (i <= 2 && j <= 2) || (i <= 2 && j >= 8) || (i >= 8 && j <= 2);
+                        row += '<div style="background:' + (on ? '#2D1B4E' : 'transparent') + '; border-radius:2px;"></div>';
+                    }
+                    qr += row;
+                }
+                return (
+                    '<div class="mkp-canvas mkp-square bg-blue" id="tplRoot">' +
+                        '<div class="blob" style="width:240px; height:240px; background:rgba(236,64,122,0.35); top:-80px; right:-80px;"></div>' +
+                        '<div style="position:absolute; top:34px; left:36px;"><span class="pill pill-white">📲 Baixe agora</span></div>' +
+                        '<div style="position:absolute; top:40px; right:40px;">' + sheepSvg(80) + '</div>' +
+                        '<div style="position:absolute; top:46%; left:0; right:0; transform:translateY(-50%); display:flex; flex-direction:column; align-items:center; gap:18px;">' +
+                            '<div style="background:#fff; padding:18px; border-radius:20px; box-shadow:0 12px 30px rgba(0,0,0,0.25);">' +
+                                '<div style="display:grid; grid-template-columns:repeat(11, 16px); gap:2px; width:198px; height:198px;">' + qr + '</div>' +
+                            '</div>' +
+                            '<div style="text-align:center;">' +
+                                '<h1 class="h-baloo" style="font-size:2rem; margin:0 0 4px;">' + esc(f.title) + '</h1>' +
+                                '<p style="font-size:0.95rem; opacity:0.9; margin:0;">' + esc(f.sub) + '</p>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div style="position:absolute; bottom:30px; left:0; right:0; text-align:center;">' +
+                            '<div style="display:inline-block; background:rgba(255,255,255,0.2); padding:8px 20px; border-radius:999px; font-family:Baloo 2,cursive; font-weight:800; letter-spacing:1px;">🔗 ' + esc(f.url) + '</div>' +
+                        '</div>' +
+                    '</div>'
+                );
+            }
+        }
+    };
+
+    function esc(s){
+        return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // State
+    var state = { current: null, values: {} };
+
+    // Render thumbs
+    function renderThumbs(){
+        var container = document.getElementById('thumbs');
+        var html = '';
+        Object.keys(TEMPLATES).forEach(function(k){
+            var t = TEMPLATES[k];
+            var active = (state.current === k) ? ' active' : '';
+            html += '<div class="tpl-thumb' + active + '" onclick="selectTemplate(\'' + k + '\')">' +
+                '<span class="ic">' + t.icon + '</span>' +
+                '<span class="nm">' + t.name + '</span>' +
+                '<span class="fm">' + t.format + ' · ' + t.phase + '</span>' +
+            '</div>';
+        });
+        container.innerHTML = html;
+    }
+
+    function selectTemplate(key){
+        var t = TEMPLATES[key];
+        if (!t) return;
+        state.current = key;
+        // reset values from defaults
+        state.values = {};
+        t.fields.forEach(function(f){ state.values[f.key] = f.default; });
+        // override via querystring (headline)
+        var qs = new URLSearchParams(window.location.search);
+        if (qs.get('headline') && state.values.title !== undefined) state.values.title = qs.get('headline');
+        if (qs.get('headline') && state.values.title === undefined && state.values.hook !== undefined) state.values.hook = qs.get('headline');
+
+        document.getElementById('editorTitle').textContent = '✏️ ' + t.name + ' · ' + t.format;
+        renderEditor();
+        renderCanvas();
+        renderThumbs();
+
+        // autodownload vindo da agenda
+        if (qs.get('autodownload') === '1') {
+            setTimeout(function(){ downloadPng(); }, 600);
+        }
+    }
+    window.selectTemplate = selectTemplate;
+
+    function renderEditor(){
+        var t = TEMPLATES[state.current];
+        var html = '<div class="field-row">';
+        t.fields.forEach(function(f){
+            var input;
+            var val = esc(state.values[f.key] || '');
+            if (f.type === 'textarea') {
+                input = '<textarea data-key="' + f.key + '" rows="2" oninput="onFieldChange(event)">' + val + '</textarea>';
+            } else {
+                input = '<input type="text" data-key="' + f.key + '" value="' + val + '" oninput="onFieldChange(event)">';
+            }
+            html += '<label>' + f.label + input + '</label>';
+        });
+        html += '</div>';
+        document.getElementById('editorFields').innerHTML = html;
+    }
+
+    function onFieldChange(e){
+        var key = e.target.getAttribute('data-key');
+        state.values[key] = e.target.value;
+        renderCanvas();
+    }
+    window.onFieldChange = onFieldChange;
+
+    function renderCanvas(){
+        var t = TEMPLATES[state.current];
+        document.getElementById('canvasHost').innerHTML = t.render(state.values);
+    }
+
+    function getExportTarget(){
+        var t = TEMPLATES[state.current];
+        if (t.exportSelector) {
+            var el = document.querySelector(t.exportSelector);
+            if (el) return el;
+        }
+        return document.querySelector('#canvasHost #tplRoot .mkp-canvas') || document.querySelector('#canvasHost .mkp-canvas') || document.querySelector('#canvasHost > *');
+    }
+
+    function downloadPng(){
+        var target = getExportTarget();
+        if (!target) { alert('Nada para exportar.'); return; }
+        var t = TEMPLATES[state.current];
+        var filename = 'milkypot_' + state.current + '_' + t.format + '.png';
+        var dims = t.format.split('x').map(function(n){ return parseInt(n,10); });
+        var rect = target.getBoundingClientRect();
+        var scale = dims[0] / rect.width;
+        var st = document.getElementById('exportStatus');
+        st.textContent = 'Gerando PNG...';
+        st.style.color = '#FFB74D';
+        IGExport.download(target, { filename: filename, scale: scale }).then(function(){
+            st.textContent = '✅ PNG baixado: ' + filename;
+            st.style.color = '#4CAF50';
+        }).catch(function(err){
+            st.textContent = 'Erro ao exportar: ' + (err && err.message);
+            st.style.color = '#F44336';
+        });
+    }
+    window.downloadPng = downloadPng;
+
+    function copyPng(){
+        var target = getExportTarget();
+        if (!target) return;
+        var t = TEMPLATES[state.current];
+        var dims = t.format.split('x').map(function(n){ return parseInt(n,10); });
+        var rect = target.getBoundingClientRect();
+        var scale = dims[0] / rect.width;
+        var st = document.getElementById('exportStatus');
+        st.textContent = 'Copiando...';
+        st.style.color = '#FFB74D';
+        IGExport.toClipboard(target, { scale: scale }).then(function(){
+            st.textContent = '✅ Imagem copiada para area de transferencia.';
+            st.style.color = '#4CAF50';
+        }).catch(function(){
+            st.textContent = 'Navegador nao suporta copiar imagem. Use Download PNG.';
+            st.style.color = '#F44336';
+        });
+    }
+    window.copyPng = copyPng;
+
+    function resetFields(){
+        var t = TEMPLATES[state.current];
+        t.fields.forEach(function(f){ state.values[f.key] = f.default; });
+        renderEditor();
+        renderCanvas();
+    }
+    window.resetFields = resetFields;
+
+    // Init
+    (function init(){
+        var qs = new URLSearchParams(window.location.search);
+        var initial = qs.get('template') || 'heroLaunch';
+        if (!TEMPLATES[initial]) initial = 'heroLaunch';
+        selectTemplate(initial);
+    })();
+    </script>
+</body>
+</html>

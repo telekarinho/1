@@ -2,6 +2,9 @@
   "firestore": {
     "rules": "firestore.rules"
   },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "functions": [
     {
       "source": "functions",
@@ -20,6 +23,7 @@
     "ignore": [
       "firebase.json",
       "firestore.rules",
+      "storage.rules",
       "vercel.json",
       "package.json",
       "package-lock.json",
@@ -34,7 +38,45 @@
       ".claude/**",
       "*.md"
     ],
+    "headers": [
+      {
+        "source": "/tv.html",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+          { "key": "Pragma",        "value": "no-cache" },
+          { "key": "Expires",       "value": "0" }
+        ]
+      },
+      {
+        "source": "/tv@(1|2|3).html",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+          { "key": "Pragma",        "value": "no-cache" },
+          { "key": "Expires",       "value": "0" }
+        ]
+      },
+      {
+        "source": "/tv-app.html",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+          { "key": "Pragma",        "value": "no-cache" },
+          { "key": "Expires",       "value": "0" }
+        ]
+      }
+    ],
     "rewrites": [
+      {
+        "source": "/clube",
+        "destination": "/clube/"
+      },
+      {
+        "source": "/clube/app",
+        "destination": "/clube.html"
+      },
+      {
+        "source": "/clube/regulamento",
+        "destination": "/regulamento-milkyclube.html"
+      },
       {
         "source": "/f/**",
         "destination": "/f/index.html"

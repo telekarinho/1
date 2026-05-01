@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>MilkyClube - Fidelidade MilkyPot</title>
+<meta name="description" content="Acumule MilkyCoins, ganhe bônus e suba de tier no MilkyClube.">
+
+<link rel="manifest" href="/manifest-clube.json">
+<meta name="theme-color" content="#42A5F5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MilkyClube">
+<link rel="apple-touch-icon" href="/images/logo-milkypot.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================
+   MilkyClube - Estilos inline (PWA fullscreen)
+   Paleta: azul #42A5F5 primário, rosa #EC407A accent.
+   ============================================ */
+:root {
+    --mc-primary: #42A5F5;
+    --mc-primary-dark: #1E88E5;
+    --mc-accent: #EC407A;
+    --mc-accent-dark: #C2185B;
+    --mc-bg: #F0F7FF;
+    --mc-bg-2: #E8F4FD;
+    --mc-surface: #FFFFFF;
+    --mc-text: #2D3E52;
+    --mc-text-soft: #6B7A8C;
+    --mc-border: #E3ECF5;
+    --mc-success: #4CAF50;
+    --mc-warn: #FF9800;
+    --mc-danger: #F44336;
+    --mc-radius: 16px;
+    --mc-radius-lg: 24px;
+    --mc-shadow: 0 4px 20px rgba(66,165,245,0.12);
+    --mc-shadow-lg: 0 12px 40px rgba(66,165,245,0.18);
+    --mc-nav-h: 68px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    height: 100%;
+    background: linear-gradient(180deg, var(--mc-bg) 0%, var(--mc-bg-2) 100%);
+    font-family: 'Nunito', 'Segoe UI', sans-serif;
+    color: var(--mc-text);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: calc(var(--mc-nav-h) + env(safe-area-inset-bottom, 0));
+}
+
+button, input, select { font-family: inherit; font-size: 1rem; color: inherit; }
+
+h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height: 1.1; }
+
+/* Container centraliza no desktop (mobile-first) */
+.mc-shell {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    padding-top: max(16px, env(safe-area-inset-top, 0));
+}
+
+/* ---- Header ---- */
+.mc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 4px 16px;
+}
+.mc-header .mc-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.mc-header .mc-brand img {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    box-shadow: var(--mc-shadow);
+}
+.mc-header .mc-brand strong {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.15rem;
+    color: var(--mc-primary-dark);
+}
+.mc-header .mc-sub {
+    font-size: 0.78rem;
+    color: var(--mc-text-soft);
+}
+
+.mc-greet {
+    padding: 4px 4px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.mc-greet .mc-avatar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--mc-primary), var(--mc-accent));
+    display: grid; place-items: center;
+    font-size: 2rem;
+    color: #fff;
+    box-shadow: var(--mc-shadow);
+}
+.mc-greet .mc-welcome-text h1 {
+    font-size: 1.25rem;
+    color: var(--mc-text);
+    margin-bottom: 2px;
+}
+.mc-greet .mc-welcome-text span {
+    font-size: 0.85rem;
+    color: var(--mc-text-soft);
+}
+
+/* ---- Cards ---- */
+.mc-card {
+    background: var(--mc-surface);
+    border-radius: var(--mc-radius);
+    padding: 20px;
+    box-shadow: var(--mc-shadow);
+    border: 1px solid var(--mc-border);
+    margin-bottom: 16px;
+}
+.mc-card.mc-hero {
+    background: linear-gradient(135deg, var(--mc-primary) 0%, #64B5F6 60%, var(--mc-accent) 120%);
+    color: #fff;
+    border: none;
+    box-shadow: var(--mc-shadow-lg);
+    padding: 24px;
+}
+.mc-hero .mc-tier-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.22);
+    backdrop-filter: blur(4px);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+}
+.mc-hero .mc-coins {
+    font-family: 'Baloo 2', cursive;
+    font-size: 2.8rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.mc-hero .mc-coins-brl {
+    opacity: 0.92;
+    font-size: 1rem;
+    margin-bottom: 18px;
+}
+.mc-progress {
+    background: rgba(255,255,255,0.25);
+    border-radius: 999px;
+    height: 10px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+.mc-progress > span {
+    display: block; height: 100%;
+    background: linear-gradient(90deg, #fff, #FFE082);
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+.mc-progress-label {
+    font-size: 0.8rem;
+    opacity: 0.88;
+}
+
+/* ---- Botões ---- */
+.mc-btn {
+    appearance: none;
+    border: none;
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    text-decoration: none;
+    width: 100%;
+}
+.mc-btn-primary {
+    background: linear-gradient(135deg, var(--mc-primary), var(--mc-primary-dark));
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(66,165,245,0.32);
+}
+.mc-btn-primary:hover { box-shadow: 0 8px 22px rgba(66,165,245,0.42); }
+.mc-btn-primary:active { transform: translateY(1px); }
+.mc-btn-accent {
+    background: linear-gradient(135deg, var(--mc-accent), var(--mc-accent-dark));
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(236,64,122,0.32);
+}
+.mc-btn-ghost {
+    background: #fff;
+    color: var(--mc-primary-dark);
+    border: 1.5px solid var(--mc-border);
+}
+.mc-btn-outline-light {
+    background: rgba(255,255,255,0.14);
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.5);
+}
+.mc-btn-danger {
+    background: #fff; color: var(--mc-danger);
+    border: 1.5px solid #F4433622;
+}
+.mc-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+.mc-btn-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;
+}
+.mc-btn-row > * { width: 100%; }
+
+/* ---- Atalhos cards ---- */
+.mc-shortcuts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+.mc-shortcut {
+    background: #fff;
+    border: 1px solid var(--mc-border);
+    border-radius: 14px;
+    padding: 14px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: var(--mc-text);
+    font-weight: 700;
+    font-size: 0.82rem;
+    text-align: center;
+    transition: transform 0.15s, box-shadow 0.2s;
+    cursor: pointer;
+}
+.mc-shortcut:hover { box-shadow: var(--mc-shadow); }
+.mc-shortcut .ic { font-size: 1.6rem; }
+
+/* ---- Tela boas-vindas (fora do SPA logado) ---- */
+.mc-welcome {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 18px;
+    padding: 24px 12px;
+}
+.mc-welcome .mc-logo-big {
+    width: 140px; height: 140px;
+    border-radius: 30px;
+    box-shadow: var(--mc-shadow-lg);
+    background: #fff;
+    padding: 14px;
+    object-fit: contain;
+}
+.mc-welcome h1 {
+    font-size: 2rem;
+    background: linear-gradient(135deg, var(--mc-primary-dark), var(--mc-accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.mc-welcome p { color: var(--mc-text-soft); max-width: 32ch; line-height: 1.55; }
+.mc-welcome ul.mc-benefits {
+    list-style: none; padding: 0;
+    display: grid; gap: 10px;
+    width: 100%; max-width: 340px; margin: 4px 0;
+    text-align: left;
+}
+.mc-welcome ul.mc-benefits li {
+    background: #fff;
+    border: 1px solid var(--mc-border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 600; font-size: 0.92rem;
+}
+
+/* ---- Modal ---- */
+.mc-modal {
+    position: fixed; inset: 0;
+    background: rgba(20,30,48,0.55);
+    backdrop-filter: blur(3px);
+    display: flex; align-items: flex-end;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+    padding: 0 12px 12px;
+}
+.mc-modal.show { opacity: 1; pointer-events: auto; }
+.mc-modal-card {
+    background: #fff;
+    border-radius: var(--mc-radius-lg) var(--mc-radius-lg) 18px 18px;
+    padding: 24px 20px calc(24px + env(safe-area-inset-bottom, 0));
+    width: 100%;
+    max-width: 480px;
+    max-height: 92vh;
+    overflow-y: auto;
+    transform: translateY(40px);
+    transition: transform 0.25s cubic-bezier(.2,.8,.2,1);
+    box-shadow: var(--mc-shadow-lg);
+}
+.mc-modal.show .mc-modal-card { transform: translateY(0); }
+.mc-modal h2 { font-size: 1.35rem; margin-bottom: 6px; color: var(--mc-text); }
+.mc-modal p.mc-hint { color: var(--mc-text-soft); margin-bottom: 16px; font-size: 0.9rem; }
+.mc-modal-close {
+    position: absolute; top: 12px; right: 12px;
+    width: 36px; height: 36px; border-radius: 50%;
+    border: none; background: #F2F5F9; cursor: pointer;
+    font-size: 1.1rem; color: var(--mc-text-soft);
+}
+
+/* ---- Forms ---- */
+.mc-field { margin-bottom: 14px; }
+.mc-field label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--mc-text-soft);
+    margin-bottom: 6px;
+}
+.mc-field input, .mc-field select {
+    width: 100%;
+    padding: 14px 14px;
+    border: 1.5px solid var(--mc-border);
+    border-radius: 12px;
+    background: #F8FBFF;
+    transition: border 0.15s, background 0.15s;
+    font-size: 1rem;
+}
+.mc-field input:focus, .mc-field select:focus {
+    outline: none;
+    border-color: var(--mc-primary);
+    background: #fff;
+}
+.mc-field.mc-err input, .mc-field.mc-err select { border-color: var(--mc-danger); }
+.mc-field .mc-hint { font-size: 0.78rem; color: var(--mc-text-soft); margin-top: 6px; }
+.mc-checkbox {
+    display: flex; align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    line-height: 1.4;
+    color: var(--mc-text);
+}
+.mc-checkbox input { width: 20px; height: 20px; accent-color: var(--mc-primary); margin-top: 2px; flex-shrink: 0; }
+.mc-checkbox a { color: var(--mc-primary-dark); text-decoration: underline; }
+
+/* ---- QR card ---- */
+.mc-qr-wrap {
+    background: #fff;
+    border-radius: var(--mc-radius);
+    padding: 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    border: 1px solid var(--mc-border);
+}
+.mc-qr-wrap .mc-qr-code {
+    background: #fff;
+    padding: 8px;
+    border-radius: 8px;
+}
+.mc-qr-wrap small { color: var(--mc-text-soft); font-size: 0.78rem; }
+
+/* ---- Histórico ---- */
+.mc-tx-list { display: flex; flex-direction: column; gap: 10px; }
+.mc-tx {
+    display: flex; align-items: center; gap: 12px;
+    background: #fff;
+    border: 1px solid var(--mc-border);
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+.mc-tx .mc-tx-ic { font-size: 1.5rem; width: 40px; text-align: center; }
+.mc-tx .mc-tx-body { flex: 1; min-width: 0; }
+.mc-tx .mc-tx-body strong { display: block; font-size: 0.95rem; color: var(--mc-text); }
+.mc-tx .mc-tx-body small { color: var(--mc-text-soft); font-size: 0.78rem; }
+.mc-tx .mc-tx-amount {
+    font-weight: 800; font-size: 1rem;
+    font-family: 'Baloo 2', cursive;
+}
+.mc-tx-amount.pos { color: var(--mc-success); }
+.mc-tx-amount.neg { color: var(--mc-danger); }
+
+/* ---- Benefícios ---- */
+.mc-tier-list { display: grid; gap: 12px; }
+.mc-tier-card {
+    background: #fff;
+    border: 1px solid var(--mc-border);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex; align-items: center; gap: 14px;
+}
+.mc-tier-card.active { border: 2px solid var(--mc-primary); box-shadow: var(--mc-shadow); }
+.mc-tier-card .mc-tier-emoji {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: grid; place-items: center;
+    font-size: 1.5rem;
+}
+.mc-tier-card h3 { font-size: 1.05rem; margin-bottom: 2px; }
+.mc-tier-card small { color: var(--mc-text-soft); font-size: 0.8rem; }
+
+/* ---- Bottom nav ---- */
+.mc-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--mc-border);
+    display: none;
+    grid-template-columns: repeat(5, 1fr);
+    padding: 6px 4px env(safe-area-inset-bottom, 6px);
+    z-index: 50;
+    height: calc(var(--mc-nav-h) + env(safe-area-inset-bottom, 0));
+}
+.mc-nav.show { display: grid; }
+.mc-nav button {
+    background: none; border: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px;
+    padding: 6px 2px;
+    color: var(--mc-text-soft);
+    font-size: 0.68rem; font-weight: 700;
+    cursor: pointer;
+    border-radius: 10px;
+}
+.mc-nav button .ic { font-size: 1.35rem; line-height: 1; }
+.mc-nav button.active { color: var(--mc-primary-dark); }
+.mc-nav button.active .ic { transform: scale(1.15); }
+
+/* ---- Floating WA button ---- */
+.mc-wa-fab {
+    position: fixed;
+    right: 16px;
+    bottom: calc(var(--mc-nav-h) + env(safe-area-inset-bottom, 0) + 12px);
+    width: 52px; height: 52px; border-radius: 50%;
+    background: #25D366;
+    display: grid; place-items: center;
+    box-shadow: 0 6px 20px rgba(37,211,102,0.35);
+    text-decoration: none;
+    z-index: 60;
+}
+
+/* ---- Toast (reutiliza Utils.showToast) ---- */
+.mp-toast {
+    position: fixed; left: 50%; bottom: calc(var(--mc-nav-h) + 80px);
+    transform: translate(-50%, 20px);
+    background: #1E293B; color: #fff;
+    padding: 12px 18px; border-radius: 999px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+    font-weight: 600; font-size: 0.9rem;
+    display: flex; align-items: center; gap: 8px;
+    opacity: 0; transition: all 0.25s;
+    z-index: 2000; max-width: 90vw;
+}
+.mp-toast.show { opacity: 1; transform: translate(-50%, 0); }
+.mp-toast.mp-toast-error { background: #B23A48; }
+.mp-toast.mp-toast-warning { background: #B8700E; }
+.mp-toast.mp-toast-info { background: #1E88E5; }
+
+/* ---- QR fullscreen ---- */
+.mc-qr-full {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, var(--mc-primary), var(--mc-accent));
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 1500;
+    padding: 24px;
+    gap: 16px;
+}
+.mc-qr-full.show { display: flex; }
+.mc-qr-full .mc-qr-box {
+    background: #fff; padding: 18px; border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+}
+.mc-qr-full h2 { color: #fff; font-size: 1.4rem; }
+.mc-qr-full p { color: rgba(255,255,255,0.92); text-align: center; max-width: 30ch; }
+.mc-qr-full .mc-qr-close {
+    position: absolute; top: 18px; right: 18px;
+    width: 44px; height: 44px; border-radius: 50%;
+    border: none; background: rgba(255,255,255,0.25);
+    color: #fff; font-size: 1.4rem; cursor: pointer;
+}
+
+/* ---- Section title ---- */
+.mc-section-title {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.15rem;
+    color: var(--mc-primary-dark);
+    margin: 6px 4px 10px;
+}
+
+.mc-empty {
+    text-align: center;
+    color: var(--mc-text-soft);
+    padding: 32px 16px;
+    font-size: 0.95rem;
+}
+
+.mc-loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--mc-text-soft);
+}
+.mc-spin {
+    width: 32px; height: 32px;
+    border: 3px solid var(--mc-border);
+    border-top-color: var(--mc-primary);
+    border-radius: 50%;
+    animation: mcspin 0.8s linear infinite;
+    margin: 0 auto 12px;
+}
+@keyframes mcspin { to { transform: rotate(360deg); } }
+
+/* ---- Referral card ---- */
+.mc-ref-card {
+    background: linear-gradient(135deg, #FFF5FB, #FCE4EC);
+    border: 1px solid #F8BBD0;
+    border-radius: 14px;
+    padding: 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+}
+.mc-ref-card .code {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.35rem;
+    color: var(--mc-accent-dark);
+    letter-spacing: 2px;
+}
+
+/* ---- Responsive (desktop) ---- */
+@media (min-width: 700px) {
+    body { padding-bottom: 32px; }
+    .mc-nav {
+        position: sticky;
+        bottom: 16px;
+        max-width: 480px;
+        margin: 0 auto;
+        border-radius: 20px;
+        box-shadow: var(--mc-shadow-lg);
+        left: auto; right: auto;
+    }
+    .mc-wa-fab { right: calc(50% - 240px + 16px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}
+
+/* hide .route unless active */
+.mc-route { display: none; }
+.mc-route.active { display: block; animation: mcfade 0.25s ease; }
+@keyframes mcfade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+
+<div class="mc-shell">
+
+    <!-- ================================
+         Rota: boas-vindas (não logado)
+         ================================ -->
+    <section id="route-welcome" class="mc-route" aria-labelledby="welcome-h">
+        <div class="mc-welcome">
+            <img src="/images/logo-milkypot.png" alt="Logo MilkyPot" class="mc-logo-big">
+            <h1 id="welcome-h">MilkyClube</h1>
+            <p>O programa de fidelidade MilkyPot. Acumule <strong>MilkyCoins</strong>, suba de tier e ganhe recompensas a cada compra em qualquer loja.</p>
+
+            <ul class="mc-benefits" aria-label="Benefícios">
+                <li>🥛 Cashback em todas as compras</li>
+                <li>🎁 Bônus de aniversário</li>
+                <li>👥 Ganhe ao indicar amigos</li>
+                <li>🎮 Prêmios nos jogos MilkyPot</li>
+            </ul>
+
+            <button id="btn-welcome-enter" class="mc-btn mc-btn-primary" aria-label="Entrar ou criar conta">Entrar / Cadastrar</button>
+            <button id="btn-welcome-privacy" class="mc-btn mc-btn-ghost" onclick="window.location.href='/regulamento-milkyclube.html'">Ver regulamento</button>
+        </div>
+    </section>
+
+    <!-- ================================
+         Logged shell (header + rotas)
+         ================================ -->
+    <div id="logged-shell" style="display:none;">
+
+        <header class="mc-header">
+            <div class="mc-brand">
+                <img src="/images/logo-milkypot.png" alt="MilkyPot">
+                <div>
+                    <strong>MilkyClube</strong>
+                    <div class="mc-sub">Fidelidade MilkyPot</div>
+                </div>
+            </div>
+            <button id="btn-signout-quick" class="mc-btn mc-btn-ghost" style="width:auto;padding:8px 12px;min-height:36px;font-size:0.8rem;" aria-label="Sair">Sair</button>
+        </header>
+
+        <!-- ============== Saldo ============== -->
+        <section id="route-saldo" class="mc-route" aria-labelledby="saldo-h">
+            <div class="mc-greet">
+                <div class="mc-avatar" aria-hidden="true">🐑</div>
+                <div class="mc-welcome-text">
+                    <h1 id="saldo-h">Oi, <span id="member-name">amigo</span>!</h1>
+                    <span>Seu saldo MilkyClube</span>
+                </div>
+            </div>
+
+            <article class="mc-card mc-hero" aria-label="Saldo de MilkyCoins">
+                <div class="mc-tier-badge">
+                    <span id="tier-emoji" aria-hidden="true">🥛</span>
+                    <span id="tier-label">Leite</span>
+                </div>
+                <div class="mc-coins" id="coins-value">G$ 0</div>
+                <div class="mc-coins-brl" id="coins-brl">R$ 0,00 em MilkyCoins</div>
+                <div class="mc-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Progresso para próximo tier">
+                    <span id="tier-progress-bar" style="width:0%"></span>
+                </div>
+                <div class="mc-progress-label" id="tier-progress-label">&nbsp;</div>
+                <div class="mc-btn-row">
+                    <button class="mc-btn mc-btn-outline-light" id="btn-open-qr">
+                        <span aria-hidden="true">📱</span> Apresentar no caixa
+                    </button>
+                    <button class="mc-btn mc-btn-outline-light" id="btn-claim-bday">
+                        <span aria-hidden="true">🎂</span> Aniversário
+                    </button>
+                </div>
+            </article>
+
+            <h2 class="mc-section-title">Jogue e ganhe</h2>
+            <div class="mc-shortcuts">
+                <a class="mc-shortcut" href="/desafio.html">
+                    <span class="ic" aria-hidden="true">⏱️</span>
+                    Desafio 10
+                </a>
+                <a class="mc-shortcut" href="/raspinha.html">
+                    <span class="ic" aria-hidden="true">🍀</span>
+                    Raspinha
+                </a>
+                <a class="mc-shortcut" href="/cardapio.html">
+                    <span class="ic" aria-hidden="true">🍦</span>
+                    Cardápio
+                </a>
+            </div>
+
+            <h2 class="mc-section-title">Instale o app</h2>
+            <div class="mc-card" id="install-card">
+                <p style="color:var(--mc-text-soft);font-size:0.9rem;margin-bottom:12px;">Tenha o MilkyClube sempre à mão. Receba promoções e acumule mais rápido.</p>
+                <button class="mc-btn mc-btn-primary" id="btn-install" style="display:none;">📲 Instalar app</button>
+                <div id="install-hint-ios" style="display:none;background:#F0F7FF;border:1px dashed var(--mc-primary);border-radius:12px;padding:12px;font-size:0.85rem;color:var(--mc-text);">
+                    <strong>No iPhone:</strong> toque em <strong>Compartilhar</strong> (ícone quadrado com seta pra cima) e depois em <strong>Adicionar à Tela de Início</strong>.
+                </div>
+                <div class="mc-btn-row" id="store-links" style="display:none;">
+                    <a class="mc-btn mc-btn-ghost" id="lnk-play" href="#" target="_blank" rel="noopener">Google Play</a>
+                    <a class="mc-btn mc-btn-ghost" id="lnk-app" href="#" target="_blank" rel="noopener">App Store</a>
+                </div>
+                <button class="mc-btn mc-btn-ghost" id="btn-push" style="margin-top:10px;">
+                    <span aria-hidden="true">🔔</span> Ativar notificações
+                </button>
+            </div>
+        </section>
+
+        <!-- ============== Histórico ============== -->
+        <section id="route-historico" class="mc-route" aria-labelledby="hist-h">
+            <h2 id="hist-h" class="mc-section-title">Histórico</h2>
+            <div class="mc-card" style="padding:14px;">
+                <div id="tx-list" class="mc-tx-list" aria-live="polite">
+                    <div class="mc-loading"><div class="mc-spin" aria-hidden="true"></div>Carregando histórico...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== Benefícios ============== -->
+        <section id="route-beneficios" class="mc-route" aria-labelledby="ben-h">
+            <h2 id="ben-h" class="mc-section-title">Como ganhar MilkyCoins</h2>
+            <div class="mc-card">
+                <p style="color:var(--mc-text-soft);font-size:0.92rem;line-height:1.6;margin-bottom:10px;">
+                    1 MilkyCoin = R$ 0,01. Quanto mais você compra, mais sobe de tier e ganha cashback maior.
+                </p>
+                <ul style="list-style:none;padding:0;display:grid;gap:8px;font-size:0.92rem;">
+                    <li>🛒 <strong>Cashback em compras</strong> — % conforme tier</li>
+                    <li>🎁 <strong>Primeira compra</strong> — bônus de boas-vindas</li>
+                    <li>🎂 <strong>Aniversário</strong> — bônus no seu dia</li>
+                    <li>👥 <strong>Indicação de amigos</strong> — ganha você e o amigo</li>
+                    <li>🎮 <strong>Jogos</strong> — Desafio 10 e Raspinha</li>
+                </ul>
+            </div>
+
+            <h2 class="mc-section-title">Seus tiers</h2>
+            <div id="tier-list" class="mc-tier-list"></div>
+        </section>
+
+        <!-- ============== Indicar ============== -->
+        <section id="route-indicar" class="mc-route" aria-labelledby="ref-h">
+            <h2 id="ref-h" class="mc-section-title">Indique amigos</h2>
+            <div class="mc-card">
+                <p style="color:var(--mc-text-soft);font-size:0.92rem;line-height:1.6;margin-bottom:12px;">
+                    Compartilhe seu código. Quando um amigo se cadastrar, vocês dois ganham MilkyCoins!
+                </p>
+                <div class="mc-ref-card">
+                    <div>
+                        <small style="color:var(--mc-text-soft);display:block;margin-bottom:2px;">Seu código</small>
+                        <strong class="code" id="ref-code">------</strong>
+                    </div>
+                    <button class="mc-btn mc-btn-primary" id="btn-copy-code" style="width:auto;padding:10px 14px;min-height:40px;font-size:0.85rem;">Copiar</button>
+                </div>
+                <p style="margin-top:12px;font-size:0.85rem;color:var(--mc-text-soft);">
+                    Já indicou: <strong id="ref-count">0</strong> amigo(s)
+                </p>
+                <div class="mc-btn-row" style="margin-top:14px;">
+                    <button class="mc-btn mc-btn-accent" id="btn-share-wa">💚 Compartilhar</button>
+                    <button class="mc-btn mc-btn-ghost" id="btn-copy-link">🔗 Copiar link</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== Conta ============== -->
+        <section id="route-conta" class="mc-route" aria-labelledby="acc-h">
+            <h2 id="acc-h" class="mc-section-title">Minha conta</h2>
+            <form id="form-profile" class="mc-card">
+                <div class="mc-field">
+                    <label for="f-phone">Telefone</label>
+                    <input type="tel" id="f-phone" disabled>
+                    <div class="mc-hint">Seu telefone é usado como login e não pode ser alterado aqui.</div>
+                </div>
+                <div class="mc-field">
+                    <label for="f-name">Nome completo</label>
+                    <input type="text" id="f-name" autocomplete="name" required minlength="2">
+                </div>
+                <div class="mc-field">
+                    <label for="f-email">E-mail (opcional)</label>
+                    <input type="email" id="f-email" autocomplete="email">
+                </div>
+                <div class="mc-field">
+                    <label for="f-bday">Data de nascimento (opcional)</label>
+                    <input type="date" id="f-bday">
+                </div>
+
+                <label class="mc-checkbox">
+                    <input type="checkbox" id="f-cons-marketing">
+                    <span>Aceito receber ofertas e novidades por e-mail.</span>
+                </label>
+                <label class="mc-checkbox">
+                    <input type="checkbox" id="f-cons-whatsapp">
+                    <span>Aceito receber notificações pelo WhatsApp.</span>
+                </label>
+
+                <button type="submit" class="mc-btn mc-btn-primary" style="margin-top:10px;">Salvar alterações</button>
+            </form>
+
+            <div class="mc-card" style="background:#FFF8E1;border-color:#FFE082;">
+                <h3 style="color:#B26A00;margin-bottom:8px;">Zona de risco</h3>
+                <p style="font-size:0.85rem;color:#7A5400;margin-bottom:12px;line-height:1.5;">
+                    Excluir sua conta removerá todos os seus dados do MilkyClube (LGPD). Esta ação é irreversível.
+                </p>
+                <button class="mc-btn mc-btn-danger" id="btn-delete-acc">Excluir minha conta e dados</button>
+            </div>
+
+            <button class="mc-btn mc-btn-ghost" id="btn-signout" style="margin-top:14px;">Sair</button>
+        </section>
+
+    </div>
+
+</div>
+
+<!-- Bottom nav -->
+<nav id="mc-nav" class="mc-nav" role="tablist" aria-label="Navegação principal">
+    <button data-route="saldo" class="active" role="tab" aria-selected="true" aria-label="Saldo">
+        <span class="ic" aria-hidden="true">🎁</span><span>Saldo</span>
+    </button>
+    <button data-route="historico" role="tab" aria-selected="false" aria-label="Histórico">
+        <span class="ic" aria-hidden="true">📋</span><span>Histórico</span>
+    </button>
+    <button data-route="beneficios" role="tab" aria-selected="false" aria-label="Benefícios">
+        <span class="ic" aria-hidden="true">✨</span><span>Benefícios</span>
+    </button>
+    <button data-route="indicar" role="tab" aria-selected="false" aria-label="Indicar">
+        <span class="ic" aria-hidden="true">👥</span><span>Indicar</span>
+    </button>
+    <button data-route="conta" role="tab" aria-selected="false" aria-label="Conta">
+        <span class="ic" aria-hidden="true">👤</span><span>Conta</span>
+    </button>
+</nav>
+
+<!-- WhatsApp FAB -->
+<a id="mc-wa-fab" class="mc-wa-fab" href="https://wa.me/5543999999999?text=Olá!%20Quero%20saber%20mais%20do%20MilkyClube" target="_blank" rel="noopener" style="display:none;" aria-label="Abrir WhatsApp">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<!-- ==========================================
+     Modal: Login por telefone
+     ========================================== -->
+<div id="modal-login" class="mc-modal" role="dialog" aria-modal="true" aria-labelledby="modal-login-h">
+    <div class="mc-modal-card" style="position:relative;">
+        <button type="button" class="mc-modal-close" data-close>✕</button>
+
+        <!-- Step 1: número -->
+        <div id="login-step-phone">
+            <h2 id="modal-login-h">Entrar / Cadastrar</h2>
+            <p class="mc-hint">Vamos enviar um código por SMS para confirmar seu número.</p>
+            <form id="form-phone">
+                <div class="mc-field">
+                    <label for="phone-input">Seu telefone</label>
+                    <input type="tel" id="phone-input" placeholder="(43) 99999-9999" autocomplete="tel-national" inputmode="tel" required>
+                    <div class="mc-hint">Formato brasileiro. Não cobramos nada pelo SMS.</div>
+                </div>
+                <button type="submit" class="mc-btn mc-btn-primary" id="btn-send-otp">Enviar código</button>
+            </form>
+        </div>
+
+        <!-- Step 2: OTP -->
+        <div id="login-step-otp" style="display:none;">
+            <h2>Código recebido?</h2>
+            <p class="mc-hint">Digite o código de 6 dígitos que enviamos para <strong id="otp-phone-display"></strong>.</p>
+            <form id="form-otp">
+                <div class="mc-field">
+                    <label for="otp-input">Código SMS</label>
+                    <input type="text" id="otp-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" required placeholder="000000" autocomplete="one-time-code">
+                </div>
+                <button type="submit" class="mc-btn mc-btn-primary">Confirmar</button>
+                <button type="button" class="mc-btn mc-btn-ghost" style="margin-top:8px;" id="btn-resend-otp">Reenviar código</button>
+            </form>
+        </div>
+
+        <!-- Step 3: cadastro (primeiro login) -->
+        <div id="login-step-enroll" style="display:none;">
+            <h2>Quase lá!</h2>
+            <p class="mc-hint">Seu cadastro no MilkyClube em segundos.</p>
+            <form id="form-enroll">
+                <div class="mc-field">
+                    <label for="enr-name">Nome completo</label>
+                    <input type="text" id="enr-name" required autocomplete="name" minlength="2">
+                </div>
+                <div class="mc-field">
+                    <label for="enr-cpf">CPF</label>
+                    <input type="text" id="enr-cpf" inputmode="numeric" required placeholder="000.000.000-00" maxlength="14">
+                    <div class="mc-hint">Seu CPF identifica sua conta no caixa.</div>
+                </div>
+                <div class="mc-field">
+                    <label for="enr-email">E-mail (opcional)</label>
+                    <input type="email" id="enr-email" autocomplete="email">
+                </div>
+                <div class="mc-field">
+                    <label for="enr-bday">Data de nascimento (opcional)</label>
+                    <input type="date" id="enr-bday">
+                    <div class="mc-hint">Ganhe MilkyCoins no seu aniversário 🎂</div>
+                </div>
+                <div class="mc-field" id="enr-ref-wrap" style="display:none;">
+                    <label for="enr-ref">Código de indicação</label>
+                    <input type="text" id="enr-ref" placeholder="Ex.: ANA2X4K" style="text-transform:uppercase;">
+                </div>
+
+                <label class="mc-checkbox">
+                    <input type="checkbox" id="enr-lgpd" required>
+                    <span>Li e aceito o <a href="/regulamento-milkyclube.html" target="_blank" rel="noopener">regulamento do MilkyClube</a> e a <a href="/privacidade.html" target="_blank" rel="noopener">política de privacidade</a> (obrigatório).</span>
+                </label>
+                <label class="mc-checkbox">
+                    <input type="checkbox" id="enr-marketing" checked>
+                    <span>Quero receber promoções e novidades por e-mail.</span>
+                </label>
+                <label class="mc-checkbox">
+                    <input type="checkbox" id="enr-whatsapp" checked>
+                    <span>Quero receber notificações pelo WhatsApp.</span>
+                </label>
+
+                <button type="submit" class="mc-btn mc-btn-primary">Criar minha conta</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- QR fullscreen overlay -->
+<div id="qr-full" class="mc-qr-full" role="dialog" aria-modal="true" aria-label="Meu QR code">
+    <button class="mc-qr-close" id="btn-qr-close" aria-label="Fechar">✕</button>
+    <div class="mc-qr-box" id="qr-full-box"></div>
+    <h2>Apresente no caixa</h2>
+    <p>O atendente vai escanear este código pra identificar sua conta e aplicar seus MilkyCoins.</p>
+</div>
+
+<!-- ============================================
+     Firebase + libs
+     ============================================ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<!-- App core -->
+<script src="/js/core/utils.js"></script>
+<script src="/js/core/firebase-config.js"></script>
+<script src="/js/core/cloud-functions.js"></script>
+<script src="/js/core/milkyclub.js"></script>
+<script src="/js/core/milkyclub-push.js"></script>
+
+<!-- VAPID key — Firebase Console > Project Settings > Cloud Messaging > Web Push certificates -->
+<script>window.MILKYPOT_VAPID_KEY = 'BAjJDEh3BZsxBDRlLXhLOZomMpCpv-FHsApsPGCvRcj3GjE3kF3Lfok4JgRs8Rdmpx3pq530i5ceVIsnngyyyBE';</script>
+
+<script>
+/* ============================================
+   MilkyClube - SPA boot (vanilla)
+   ============================================ */
+(function() {
+    'use strict';
+
+    // ----- Helpers locais -----
+    var $ = function(s, r) { return (r || document).querySelector(s); };
+    var $$ = function(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+    function toast(msg, type) {
+        if (typeof Utils !== 'undefined' && Utils.showToast) return Utils.showToast(msg, type || 'info');
+        console.log('[toast]', type || 'info', msg);
+    }
+
+    // Máscara de CPF enquanto digita
+    function maskCPFInput(val) {
+        var d = (val || '').replace(/\D/g, '').slice(0, 11);
+        if (d.length > 9)  return d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);
+        if (d.length > 6)  return d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6);
+        if (d.length > 3)  return d.slice(0,3)+'.'+d.slice(3);
+        return d;
+    }
+
+    // Máscara de telefone
+    function maskPhoneInput(val) {
+        var d = (val || '').replace(/\D/g, '').slice(0, 11);
+        if (d.length > 10) return '('+d.slice(0,2)+') '+d.slice(2,7)+'-'+d.slice(7);
+        if (d.length > 6)  return '('+d.slice(0,2)+') '+d.slice(2,6)+'-'+d.slice(6);
+        if (d.length > 2)  return '('+d.slice(0,2)+') '+d.slice(2);
+        return d;
+    }
+
+    // ----- Router (hash) -----
+    var ROUTES = ['saldo', 'historico', 'beneficios', 'indicar', 'conta'];
+    var DEFAULT_ROUTE = 'saldo';
+
+    function currentRoute() {
+        var h = (window.location.hash || '').replace(/^#\//, '').replace(/^#/, '');
+        if (!h || ROUTES.indexOf(h) === -1) return DEFAULT_ROUTE;
+        return h;
+    }
+
+    function navigate(route) {
+        if (ROUTES.indexOf(route) === -1) route = DEFAULT_ROUTE;
+        window.location.hash = '#/' + route;
+    }
+
+    function applyRoute() {
+        var route = currentRoute();
+        $$('.mc-route').forEach(function(el) { el.classList.remove('active'); });
+        var target = $('#route-' + route);
+        if (target) target.classList.add('active');
+        $$('#mc-nav button').forEach(function(b) {
+            var active = b.getAttribute('data-route') === route;
+            b.classList.toggle('active', active);
+            b.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        // Carga lazy por rota
+        if (route === 'historico') loadHistory();
+        if (route === 'beneficios') renderTiers();
+        if (route === 'indicar') renderReferral();
+        if (route === 'conta') fillProfileForm();
+        // Scroll to top da rota
+        window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+    }
+
+    // ----- Modal helpers -----
+    function openModal(id) {
+        var m = document.getElementById(id);
+        if (!m) return;
+        m.classList.add('show');
+        m.setAttribute('aria-hidden', 'false');
+        // Foca primeiro input
+        var firstInput = m.querySelector('input:not([disabled]):not([type=hidden])');
+        if (firstInput) setTimeout(function(){ try { firstInput.focus(); } catch(e){} }, 50);
+    }
+    function closeModal(id) {
+        var m = document.getElementById(id);
+        if (!m) return;
+        m.classList.remove('show');
+        m.setAttribute('aria-hidden', 'true');
+    }
+
+    // Passo atual do modal login
+    function setLoginStep(step) {
+        $('#login-step-phone').style.display   = step === 'phone'   ? '' : 'none';
+        $('#login-step-otp').style.display     = step === 'otp'     ? '' : 'none';
+        $('#login-step-enroll').style.display  = step === 'enroll'  ? '' : 'none';
+    }
+
+    // ----- Estado local -----
+    var state = {
+        currentPhone: null,
+        verificationId: null,
+        pendingReferral: null,
+        installPrompt: null,
+        qrInstance: null,
+        qrFullInstance: null,
+        showLoggedShell: false
+    };
+
+    // ============================================
+    // Render: saldo / tier
+    // ============================================
+    function renderMember(member) {
+        var loggedIn = !!(member && member.uid);
+        state.showLoggedShell = loggedIn;
+        $('#route-welcome').classList.toggle('active', !loggedIn);
+        $('#logged-shell').style.display = loggedIn ? '' : 'none';
+        $('#mc-nav').classList.toggle('show', loggedIn);
+        $('#mc-wa-fab').style.display = loggedIn ? '' : 'none';
+
+        if (!loggedIn) return;
+
+        // Header / saudação
+        $('#member-name').textContent = (member.name || '').split(' ')[0] || 'amigo';
+
+        // Saldo
+        var coins = Number(member.coins || 0);
+        $('#coins-value').textContent = MilkyClube.formatCoins(coins);
+        $('#coins-brl').textContent = MilkyClube.formatCoinsBRL(coins) + ' em MilkyCoins';
+
+        // Tier
+        var t = MilkyClube.tierLabel(member.tier || 'leite');
+        $('#tier-label').textContent = t.label;
+        $('#tier-emoji').textContent = t.emoji;
+
+        // Progresso
+        MilkyClube.getConfig().then(function(cfg) {
+            var prog = MilkyClube.getTierProgress(member, cfg);
+            var pct = Math.round(prog.progress * 100);
+            var bar = $('#tier-progress-bar');
+            if (bar) bar.style.width = pct + '%';
+            var progressBar = document.querySelector('[role="progressbar"]');
+            if (progressBar) progressBar.setAttribute('aria-valuenow', String(pct));
+            var lbl = $('#tier-progress-label');
+            if (lbl) {
+                if (prog.next) {
+                    lbl.textContent = 'Faltam R$ ' + prog.remaining.toFixed(2).replace('.', ',') + ' em compras para chegar no ' + prog.nextLabel + '.';
+                } else {
+                    lbl.textContent = 'Você é Chantilly! Aproveite o cashback máximo 👑';
+                }
+            }
+            applyAppLinks(cfg);
+        }).catch(function(){});
+
+        // QR (gera só uma vez)
+        if (!state.qrInstance) {
+            var box = $('#qr-full-box');
+            state.qrFullInstance = new QRCode(box, {
+                text: 'MILKYCLUBE:' + member.uid,
+                width: 260, height: 260,
+                correctLevel: QRCode.CorrectLevel.M
+            });
+            state.qrInstance = true;
+        }
+    }
+
+    function applyAppLinks(cfg) {
+        var links = (cfg && cfg.appLinks) || {};
+        var play = $('#lnk-play'), app = $('#lnk-app'), wrap = $('#store-links');
+        var has = false;
+        if (links.playStore) {
+            play.href = links.playStore; play.style.display = ''; has = true;
+        } else { play.style.display = 'none'; }
+        if (links.appStore) {
+            app.href = links.appStore; app.style.display = ''; has = true;
+        } else { app.style.display = 'none'; }
+        wrap.style.display = has ? '' : 'none';
+    }
+
+    // ============================================
+    // Render: histórico
+    // ============================================
+    async function loadHistory() {
+        var list = $('#tx-list');
+        list.innerHTML = '<div class="mc-loading"><div class="mc-spin" aria-hidden="true"></div>Carregando histórico...</div>';
+        try {
+            var res = await MilkyClube.getBalance();
+            var txs = (res && res.transactions) || [];
+            if (!txs.length) {
+                list.innerHTML = '<div class="mc-empty">Sem transações ainda.<br>Faça sua primeira compra para começar a ganhar!</div>';
+                return;
+            }
+            list.innerHTML = '';
+            txs.forEach(function(tx) {
+                var meta = txMeta(tx.type);
+                var sign = (meta.dir > 0) ? '+' : (meta.dir < 0 ? '-' : '');
+                var cls = meta.dir > 0 ? 'pos' : meta.dir < 0 ? 'neg' : '';
+                var dt = tx.createdAt ? Utils.formatDateTime(tx.createdAt) : '';
+                var row = document.createElement('div');
+                row.className = 'mc-tx';
+                row.innerHTML =
+                    '<div class="mc-tx-ic" aria-hidden="true">' + meta.emoji + '</div>' +
+                    '<div class="mc-tx-body">' +
+                        '<strong>' + Utils.escapeHtml(tx.description || meta.label) + '</strong>' +
+                        '<small>' + dt + '</small>' +
+                    '</div>' +
+                    '<div class="mc-tx-amount ' + cls + '">' +
+                        sign + MilkyClube.formatCoins(Math.abs(Number(tx.amount || 0))) +
+                    '</div>';
+                list.appendChild(row);
+            });
+        } catch(e) {
+            list.innerHTML = '<div class="mc-empty">Não foi possível carregar o histórico.</div>';
+            toast(e.message || 'Erro ao carregar.', 'error');
+        }
+    }
+
+    function txMeta(type) {
+        var m = {
+            'earn':            { emoji: '💰', label: 'Cashback',           dir: +1 },
+            'redeem':          { emoji: '🛍️', label: 'Resgate',            dir: -1 },
+            'expire':          { emoji: '⌛', label: 'Expiração',          dir: -1 },
+            'bonus_signup':    { emoji: '🎉', label: 'Boas-vindas',        dir: +1 },
+            'bonus_birthday':  { emoji: '🎂', label: 'Bônus aniversário',  dir: +1 },
+            'bonus_referrer':  { emoji: '🤝', label: 'Você indicou',       dir: +1 },
+            'bonus_referred':  { emoji: '👋', label: 'Bônus de indicação', dir: +1 },
+            'bonus_firstorder':{ emoji: '⭐', label: 'Primeira compra',    dir: +1 },
+            'game_desafio':    { emoji: '⏱️', label: 'Desafio 10',         dir: +1 },
+            'game_scratch':    { emoji: '🍀', label: 'Raspinha',           dir: +1 },
+            'manual_admin':    { emoji: '🛠️', label: 'Ajuste manual',      dir:  0 }
+        };
+        return m[type] || { emoji: '🔹', label: type || 'Movimentação', dir: 0 };
+    }
+
+    // ============================================
+    // Render: benefícios / tiers
+    // ============================================
+    async function renderTiers() {
+        var wrap = $('#tier-list');
+        wrap.innerHTML = '<div class="mc-loading"><div class="mc-spin" aria-hidden="true"></div>Carregando...</div>';
+        try {
+            var cfg = await MilkyClube.getConfig();
+            var tiers = (cfg && cfg.tiers) || {};
+            var current = (MilkyClube.getCurrentMember() || {}).tier || 'leite';
+            wrap.innerHTML = '';
+            ['leite', 'nata', 'chantilly'].forEach(function(k) {
+                var t = tiers[k] || {};
+                var card = document.createElement('div');
+                card.className = 'mc-tier-card' + (k === current ? ' active' : '');
+                card.innerHTML =
+                    '<div class="mc-tier-emoji" style="background:' + (t.color || '#F0F7FF') + ';">' + (t.emoji || '') + '</div>' +
+                    '<div>' +
+                        '<h3>' + Utils.escapeHtml(t.label || k) + '</h3>' +
+                        '<small>' +
+                            'A partir de R$ ' + Number(t.minSpent || 0).toFixed(2).replace('.', ',') +
+                            ' em compras · ' + Math.round((t.cashbackRate || 0) * 100) + '% de cashback' +
+                        '</small>' +
+                    '</div>';
+                wrap.appendChild(card);
+            });
+        } catch(e) {
+            wrap.innerHTML = '<div class="mc-empty">Não foi possível carregar os tiers.</div>';
+        }
+    }
+
+    // ============================================
+    // Render: indicar
+    // ============================================
+    function renderReferral() {
+        var m = MilkyClube.getCurrentMember() || {};
+        $('#ref-code').textContent = m.referralCode || '------';
+        $('#ref-count').textContent = String(m.referralCount || 0);
+    }
+
+    // ============================================
+    // Render: conta
+    // ============================================
+    function fillProfileForm() {
+        var m = MilkyClube.getCurrentMember() || {};
+        $('#f-phone').value = m.phone || (MilkyClube.getCurrentUser() && MilkyClube.getCurrentUser().phoneNumber) || '';
+        $('#f-name').value = m.name || '';
+        $('#f-email').value = m.email || '';
+        $('#f-bday').value = m.birthDate || '';
+        $('#f-cons-marketing').checked = !!(m.consents && m.consents.marketing);
+        $('#f-cons-whatsapp').checked  = !!(m.consents && m.consents.whatsapp);
+    }
+
+    // ============================================
+    // Binds — Router / Nav
+    // ============================================
+    $$('#mc-nav button').forEach(function(btn) {
+        btn.addEventListener('click', function() { navigate(btn.getAttribute('data-route')); });
+    });
+    window.addEventListener('hashchange', applyRoute);
+
+    // Welcome → login
+    $('#btn-welcome-enter').addEventListener('click', function() {
+        setLoginStep('phone');
+        openModal('modal-login');
+    });
+
+    // Modal close
+    $$('[data-close]').forEach(function(el) {
+        el.addEventListener('click', function() { closeModal('modal-login'); });
+    });
+    $('#modal-login').addEventListener('click', function(e) {
+        if (e.target === this) closeModal('modal-login');
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeModal('modal-login');
+            if ($('#qr-full').classList.contains('show')) closeQrFull();
+        }
+    });
+
+    // ============================================
+    // Binds — Phone auth
+    // ============================================
+    var phoneInput = $('#phone-input');
+    phoneInput.addEventListener('input', function() {
+        var caret = phoneInput.selectionStart;
+        phoneInput.value = maskPhoneInput(phoneInput.value);
+        try { phoneInput.setSelectionRange(caret + 1, caret + 1); } catch(e){}
+    });
+
+    $('#form-phone').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var btn = $('#btn-send-otp');
+        btn.disabled = true; btn.textContent = 'Enviando...';
+        try {
+            var raw = phoneInput.value;
+            var res = await MilkyClube.sendPhoneOTP(raw);
+            state.currentPhone = MilkyClube.normalizeBRPhone(raw);
+            state.verificationId = res.verificationId;
+            $('#otp-phone-display').textContent = state.currentPhone;
+            setLoginStep('otp');
+            toast('Código enviado!', 'success');
+        } catch(err) {
+            toast(err.message || 'Não foi possível enviar.', 'error');
+        } finally {
+            btn.disabled = false; btn.textContent = 'Enviar código';
+        }
+    });
+
+    $('#btn-resend-otp').addEventListener('click', async function() {
+        if (!state.currentPhone) return;
+        var btn = this; btn.disabled = true; btn.textContent = 'Reenviando...';
+        try {
+            var r = await MilkyClube.sendPhoneOTP(state.currentPhone);
+            state.verificationId = r.verificationId;
+            toast('Código reenviado.', 'success');
+        } catch(err) {
+            toast(err.message || 'Falha no reenvio.', 'error');
+        } finally {
+            btn.disabled = false; btn.textContent = 'Reenviar código';
+        }
+    });
+
+    $('#form-otp').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var code = $('#otp-input').value.trim();
+        try {
+            var r = await MilkyClube.verifyOTP(state.verificationId, code);
+            if (r.isNewMember) {
+                // Preenche referral da URL se houver
+                var ref = state.pendingReferral || MilkyClube.getReferralFromURL();
+                if (ref) {
+                    $('#enr-ref-wrap').style.display = '';
+                    $('#enr-ref').value = ref;
+                }
+                setLoginStep('enroll');
+            } else {
+                closeModal('modal-login');
+                toast('Bem-vindo de volta! 🐑', 'success');
+            }
+        } catch(err) {
+            toast(err.message || 'Código inválido.', 'error');
+        }
+    });
+
+    // ============================================
+    // Binds — Enroll
+    // ============================================
+    var cpfInput = $('#enr-cpf');
+    cpfInput.addEventListener('input', function() {
+        cpfInput.value = maskCPFInput(cpfInput.value);
+    });
+
+    $('#form-enroll').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var payload = {
+            name: $('#enr-name').value,
+            cpf: $('#enr-cpf').value,
+            email: $('#enr-email').value || null,
+            birthDate: $('#enr-bday').value || null,
+            referralCode: $('#enr-ref').value || null,
+            consents: {
+                lgpd: $('#enr-lgpd').checked,
+                marketing: $('#enr-marketing').checked,
+                whatsapp: $('#enr-whatsapp').checked
+            }
+        };
+        var btn = this.querySelector('button[type=submit]');
+        btn.disabled = true; btn.textContent = 'Criando sua conta...';
+        try {
+            await MilkyClube.enroll(payload);
+            closeModal('modal-login');
+            toast('Conta criada! 🎉 Bônus de boas-vindas creditado.', 'success');
+        } catch(err) {
+            toast(err.message || 'Erro ao cadastrar.', 'error');
+        } finally {
+            btn.disabled = false; btn.textContent = 'Criar minha conta';
+        }
+    });
+
+    // ============================================
+    // Binds — QR fullscreen
+    // ============================================
+    function openQrFull() { $('#qr-full').classList.add('show'); }
+    function closeQrFull() { $('#qr-full').classList.remove('show'); }
+    $('#btn-open-qr').addEventListener('click', openQrFull);
+    $('#btn-qr-close').addEventListener('click', closeQrFull);
+
+    // ============================================
+    // Binds — Saldo actions
+    // ============================================
+    $('#btn-claim-bday').addEventListener('click', async function() {
+        var btn = this; btn.disabled = true;
+        try {
+            var r = await MilkyClube.claimBirthday();
+            if (r && r.granted) {
+                toast('Bônus de aniversário: ' + MilkyClube.formatCoins(r.coinsEarned || 0) + ' 🎂', 'success');
+            } else {
+                toast('Bônus de aniversário já resgatado ou fora do período.', 'info');
+            }
+        } catch(err) {
+            toast(err.message || 'Ainda não é o seu aniversário.', 'warning');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // PWA install
+    window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        state.installPrompt = e;
+        $('#btn-install').style.display = '';
+    });
+    $('#btn-install').addEventListener('click', async function() {
+        var p = state.installPrompt;
+        if (!p) { toast('Seu navegador não suporta instalação direta.', 'info'); return; }
+        p.prompt();
+        try {
+            var choice = await p.userChoice;
+            if (choice && choice.outcome === 'accepted') toast('App instalado! 🎉', 'success');
+        } catch(e){}
+        state.installPrompt = null;
+        $('#btn-install').style.display = 'none';
+    });
+
+    // iOS hint
+    (function showIosHintIfNeeded() {
+        var ua = navigator.userAgent || '';
+        var isIOS = /iphone|ipad|ipod/i.test(ua);
+        var standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+        if (isIOS && !standalone) {
+            $('#install-hint-ios').style.display = '';
+        }
+    })();
+
+    // Push
+    $('#btn-push').addEventListener('click', async function() {
+        var btn = this; btn.disabled = true;
+        try {
+            var r = await MilkyClube.registerPush();
+            toast('Notificações ativadas 🔔', 'success');
+            btn.textContent = '✓ Notificações ativas';
+        } catch(err) {
+            toast(err.message || 'Não foi possível ativar.', 'warning');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // ============================================
+    // Binds — Referral
+    // ============================================
+    function copyToClipboard(text) {
+        try {
+            if (navigator.clipboard) return navigator.clipboard.writeText(text);
+        } catch(e){}
+        return new Promise(function(resolve) {
+            var ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); } catch(e){}
+            ta.remove(); resolve();
+        });
+    }
+    $('#btn-copy-code').addEventListener('click', async function() {
+        var m = MilkyClube.getCurrentMember() || {};
+        if (!m.referralCode) return;
+        await copyToClipboard(m.referralCode);
+        toast('Código copiado!', 'success');
+    });
+    $('#btn-copy-link').addEventListener('click', async function() {
+        await copyToClipboard(MilkyClube.getReferralLink());
+        toast('Link copiado!', 'success');
+    });
+    $('#btn-share-wa').addEventListener('click', function() {
+        var m = MilkyClube.getCurrentMember() || {};
+        var link = MilkyClube.getReferralLink();
+        var msg = '🍦 Oi! Entra no MilkyClube da MilkyPot comigo e a gente ganha MilkyCoins. Usa meu código *' + (m.referralCode || '') + '* ou acessa: ' + link;
+        window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+    });
+
+    // ============================================
+    // Binds — Conta
+    // ============================================
+    $('#form-profile').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var updates = {
+            name: $('#f-name').value,
+            email: $('#f-email').value || '',
+            birthDate: $('#f-bday').value || null,
+            consents: {
+                marketing: $('#f-cons-marketing').checked,
+                whatsapp: $('#f-cons-whatsapp').checked
+            }
+        };
+        try {
+            await MilkyClube.updateProfile(updates);
+            toast('Dados atualizados!', 'success');
+        } catch(err) {
+            toast(err.message || 'Erro ao atualizar.', 'error');
+        }
+    });
+
+    $('#btn-delete-acc').addEventListener('click', async function() {
+        if (!window.confirm('Excluir sua conta MilkyClube? Esta ação é irreversível e apaga todos os seus dados (LGPD).')) return;
+        var btn = this; btn.disabled = true;
+        try {
+            await MilkyClube.deleteAccount();
+            toast('Conta excluída. Até logo!', 'info');
+            navigate(DEFAULT_ROUTE);
+        } catch(err) {
+            toast(err.message || 'Falha ao excluir.', 'error');
+            btn.disabled = false;
+        }
+    });
+
+    $('#btn-signout').addEventListener('click', async function() {
+        await MilkyClube.signOut();
+        toast('Até logo!', 'info');
+    });
+    $('#btn-signout-quick').addEventListener('click', async function() {
+        await MilkyClube.signOut();
+    });
+
+    // ============================================
+    // Boot
+    // ============================================
+    (async function boot() {
+        // Captura ?ref=CODE da URL antes do login
+        state.pendingReferral = MilkyClube.getReferralFromURL();
+
+        await MilkyClube.init();
+        try { await MilkyClubePush.init(); } catch(e){}
+
+        // Listener de member
+        MilkyClube.onMemberChange(function(member) {
+            renderMember(member);
+            // Atualiza rota visível depois do shell mudar
+            applyRoute();
+        });
+
+        // Render inicial
+        renderMember(MilkyClube.getCurrentMember());
+        applyRoute();
+
+        // Se estiver logado mas sem member (ex.: Auth pronto, enroll incompleto),
+        // reabre modal no passo enroll
+        var user = MilkyClube.getCurrentUser();
+        if (user && !MilkyClube.getCurrentMember()) {
+            setTimeout(function() {
+                if (!MilkyClube.getCurrentMember()) {
+                    setLoginStep('enroll');
+                    openModal('modal-login');
+                }
+            }, 1200);
+        }
+    })();
+
+})();
+</script>
+
+</body>
+</html>

@@ -15,6 +15,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MilkyPot">
     <link rel="apple-touch-icon" href="images/logo-milkypot.png">
+    <link rel="icon" type="image/png" href="images/logo-milkypot.png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -62,6 +66,14 @@
         <p style="margin-top:24px;font-size:0.75rem;color:var(--mp-text-light)">
             <a href="index.html" data-i18n="auth.back_to_site">Voltar ao site</a>
         </p>
+
+        <!-- MilkyClube (cliente final) -->
+        <div style="margin-top:20px;padding:16px;background:linear-gradient(135deg,#F3E5F5,#E3F2FD);border-radius:12px;text-align:center;">
+            <div style="font-size:1.4rem;margin-bottom:4px;">🥛✨</div>
+            <strong style="font-family:'Baloo 2',cursive;color:#5A4570;font-size:.95rem;display:block;margin-bottom:4px;">Sou cliente - MilkyClube</strong>
+            <p style="font-size:.75rem;color:#6a5a80;margin:0 0 10px;line-height:1.4;">Clientes finais acessam o MilkyClube pelo app/site do clube, nao por este painel.</p>
+            <a href="/clube/" style="display:inline-block;background:linear-gradient(135deg,#42A5F5,#EC407A);color:#fff;text-decoration:none;padding:8px 18px;border-radius:999px;font-size:.8rem;font-weight:700;">Conhecer o MilkyClube &rarr;</a>
+        </div>
     </div>
 
     <script src="js/core/constants.js"></script>
@@ -73,21 +85,150 @@
     <script src="js/core/auth.js"></script>
     <script src="js/core/audit.js"></script>
     <script>
-        // Check if already logged in
+        // Auto-login com token de teste (gerado pelo generateTestToken).
+        // Fluxo: signInAnonymously -> claimTestSession (Cloud Function) -> session.
+        // Anonimo da identidade Firebase Auth real (sem IAM signBlob).
+        // Custom claims aplicados via Admin SDK fazem request.auth.token ter
+        // role/franchiseId/isTestSession — Cloud Functions aceitam normalmente.
+        (function() {
+            var p = new URLSearchParams(window.location.search);
+            var tok = p.get('testToken');
+            var fid = p.get('fid');
+            if (tok && typeof firebase !== 'undefined') {
+                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Nunito,sans-serif;flex-direction:column;gap:12px"><span style="font-size:2rem">🧪</span><strong style="font-size:1.1rem">Abrindo sessao de teste...</strong><small style="color:#6b7280" id="ts_step">Autenticando...</small></div>';
+
+                var stepEl = function(t){ var el = document.getElementById('ts_step'); if(el) el.textContent = t; };
+
+                // 1) Login anonimo (Firebase Auth real)
+                firebase.auth().signInAnonymously()
+                    .then(function(cred){
+                        stepEl('Validando token...');
+                        // 2) Claim test session via Cloud Function
+                        var fn = firebase.app().functions('southamerica-east1').httpsCallable('claimTestSession');
+                        return fn({ testToken: tok }).then(function(r){ return { cred: cred, result: r.data || {} }; });
+                    })
+                    .then(function(ctx){
+                        if (!ctx.result.success) throw new Error(ctx.result.error || 'claim falhou');
+                        stepEl('Carregando perfil...');
+                        // 3) Force token refresh pra pegar custom claims novos
+                        return ctx.cred.user.getIdToken(true).then(function(){ return ctx; });
+                    })
+                    .then(function(ctx){
+                        var data = ctx.result;
+                        // 4) Salva session local
+                        var session = {
+                            userId:        data.testUid,
+                            email:         data.email || (data.testUid + '@test.milkypot.internal'),
+                            name:          data.name || 'Agente de Teste',
+                            role:          (data.claims && data.claims.role) || 'franchisee',
+                            franchiseId:   (data.claims && data.claims.franchiseId) || fid,
+                            firebaseUid:   ctx.cred.user.uid,
+                            anonUid:       ctx.cred.user.uid,
+                            isTestSession: true,
+                            token:         tok,
+                            loginAt:       new Date().toISOString(),
+                            expiresAt:     new Date(data.expiresAt || (Date.now() + 3600000)).toISOString()
+                        };
+                        localStorage.setItem('mp_session', JSON.stringify(session));
+                        window.location.href = '/painel/test-checklist.html';
+                    })
+                    .catch(function(err) {
+                        console.error('[TestSession]', err);
+                        var msg = (err && err.message && err.message.includes('expired')) ? 'Token expirado'
+                               : (err && err.message && err.message.includes('not found')) ? 'Token invalido'
+                               : (err && err.message) ? err.message
+                               : 'Erro ao abrir sessao de teste';
+                        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Nunito,sans-serif;flex-direction:column;gap:16px;color:#dc2626"><span style="font-size:2.5rem">❌</span><strong>' + msg + '</strong><small style="color:#6b7280">Peca um novo link ao administrador</small><a href="/login.html" style="color:#7C3AED;font-weight:700">Voltar ao login</a></div>';
+                    });
+                return;
+            }
+        })();
+
+        // ── Detecção offline ──────────────────────────────────────
+        var _isOffline = !navigator.onLine;
+        function updateOfflineBanner() {
+            _isOffline = !navigator.onLine;
+            var banner = document.getElementById('offlineBanner');
+            if (!banner) return;
+            banner.style.display = _isOffline ? 'block' : 'none';
+        }
+        window.addEventListener('online',  updateOfflineBanner);
+        window.addEventListener('offline', updateOfflineBanner);
+
+        // ── Injeta banner offline no topo do card ─────────────────
+        (function() {
+            var card = document.querySelector('.login-card');
+            if (!card) return;
+            var b = document.createElement('div');
+            b.id = 'offlineBanner';
+            b.style.cssText = 'display:none;background:#FFF3CD;color:#856404;border:1px solid #FFEEBA;border-radius:8px;padding:10px 14px;font-size:.85rem;margin-bottom:14px;text-align:center;line-height:1.4';
+            b.innerHTML = '📡 <strong>Sem conexão</strong> — pressione <strong>Entrar</strong> para abrir com a sessão salva neste dispositivo.';
+            card.insertBefore(b, card.firstChild);
+            updateOfflineBanner();
+        })();
+
+        // ── Check se já está logado (síncrono) ───────────────────
+        // IMPORTANTE: nao redireciona se chegou aqui por role_mismatch (evita loop)
+        var qsParams = new URLSearchParams(window.location.search);
+        var redirectReason = qsParams.get('reason');
         const session = Auth.getSession();
-        if (session) {
+        if (session && redirectReason !== 'role_mismatch') {
             redirectByRole(session.role);
+        } else if (redirectReason === 'role_mismatch') {
+            // Limpa qualquer estado residual e mostra mensagem
+            try { localStorage.removeItem('mp_session'); } catch(e) {}
+            try { localStorage.removeItem('mp_admin_session_backup'); } catch(e) {}
+            try { localStorage.removeItem('mp_quick_login'); } catch(e) {}
+            try { if (typeof firebaseAuth !== 'undefined' && firebaseAuth) firebaseAuth.signOut().catch(function(){}); } catch(e) {}
+            setTimeout(function() {
+                showError('Sessao invalida ou perfil sem acesso a este painel. Faça login novamente.');
+            }, 50);
+        }
+
+        // ── onAuthStateChanged: Firebase restaura sessão do IndexedDB ───
+        // currentUser é null no carregamento síncrono mas fica pronto em ~1s.
+        // Se o usuário estava logado antes da queda de internet, este listener
+        // detecta e redireciona sem precisar digitar nada.
+        if (typeof firebaseAuth !== 'undefined' && firebaseAuth && redirectReason !== 'role_mismatch') {
+            var _authListenerFired = false;
+            var _authUnsubscribe = firebaseAuth.onAuthStateChanged(function(user) {
+                if (_authListenerFired) return;
+                _authListenerFired = true;
+                if (typeof _authUnsubscribe === 'function') _authUnsubscribe();
+
+                if (user) {
+                    // Firebase tem sessão ativa → verifica/cria mp_session local
+                    var existing = Auth.getSession();
+                    if (existing) {
+                        redirectByRole(existing.role);
+                        return;
+                    }
+                    // Sem mp_session local mas Firebase logado: busca perfil e reconstrói
+                    var profile = (typeof Auth._findUserProfile === 'function') ? Auth._findUserProfile(user.email) : null;
+                    if (profile) {
+                        var rebuilt = Auth._buildSession(user, profile);
+                        Auth._saveSession(rebuilt);
+                        redirectByRole(rebuilt.role);
+                    }
+                }
+                // user === null → Firebase também não tem sessão; mostra form normalmente
+            });
         }
 
         function redirectByRole(role) {
             if (role === MP.ROLES.SUPER_ADMIN) {
                 window.location.href = 'admin/';
-            } else {
+            } else if (role === MP.ROLES.FRANCHISEE) {
                 window.location.href = 'painel/';
+            } else {
+                // Role desconhecido (manager, staff, undefined) — limpa sessao e mostra erro
+                try { localStorage.removeItem('mp_session'); } catch(e) {}
+                try { if (typeof firebaseAuth !== 'undefined' && firebaseAuth) firebaseAuth.signOut().catch(function(){}); } catch(e) {}
+                showError('Seu perfil (' + (role || 'sem role') + ') nao tem acesso a este painel. Contate o administrador.');
             }
         }
 
-        // Email/Password login (Firebase Auth com fallback legado)
+        // ── Login com Email/Senha ─────────────────────────────────
         async function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('email').value.trim();
@@ -104,31 +245,37 @@
             hideError();
 
             try {
-                // Tenta Firebase Auth primeiro
+                // ── OFFLINE: usa sessão anterior salva ────────────
+                if (!navigator.onLine) {
+                    const offResult = Auth.loginOffline(email);
+                    if (offResult.success) {
+                        showInfo('📡 Sem conexão — abrindo com sessão salva neste dispositivo.');
+                        setTimeout(() => redirectByRole(offResult.session.role), 900);
+                        return;
+                    }
+                    showError('Sem conexão e nenhuma sessão anterior encontrada. Conecte à internet para o primeiro acesso.');
+                    return;
+                }
+
+                // ── ONLINE: Firebase Auth normal ──────────────────
                 const result = await Auth.login(email, password);
                 if (result.success) {
                     redirectByRole(result.session.role);
                     return;
                 }
 
-                // Se Firebase Auth falhou, tenta login legado (migracao)
-                const legacyResult = Auth.loginLegacy(email, password);
-                if (legacyResult.success) {
-                    showInfo('Sua conta foi migrada para autenticacao segura.');
-                    setTimeout(() => redirectByRole(legacyResult.session.role), 1500);
-                    return;
-                }
-
+                // Firebase retornou erro (credenciais erradas, etc.)
                 showError(result.error || 'E-mail ou senha incorretos');
             } catch (error) {
                 console.error('Login error:', error);
-                // Ultimo fallback: login legado offline
-                const legacyResult = Auth.loginLegacy(email, password);
-                if (legacyResult.success) {
-                    redirectByRole(legacyResult.session.role);
+                // Erro de rede durante tentativa online → tenta sessao offline
+                const offResult = Auth.loginOffline(email);
+                if (offResult.success) {
+                    showInfo('📡 Conexão instável — abrindo com sessão salva.');
+                    setTimeout(() => redirectByRole(offResult.session.role), 900);
                     return;
                 }
-                showError('Erro ao conectar. Verifique sua internet.');
+                showError('Erro de conexão. Verifique sua internet e tente novamente.');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Entrar';

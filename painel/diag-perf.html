@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MilkyPot — Diagnóstico Performance</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', sans-serif; }
+body { background: #f4f4f9; padding: 16px; max-width: 900px; margin: 0 auto; }
+h1 { font-size: 22px; color: #5A52E0; margin-bottom: 4px; }
+.sub { color: #666; font-size: 13px; margin-bottom: 16px; }
+.btn { background: #10B981; color: #fff; border: none; padding: 12px 18px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 14px; margin-right: 8px; margin-bottom: 8px; }
+.btn-light { background: #fff; color: #333; border: 1px solid #ddd; }
+.btn-warn { background: #F59E0B; color: #fff; }
+
+.section { background: #fff; border-radius: 10px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+h2 { font-size: 16px; color: #444; margin-bottom: 10px; }
+.row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+.row:last-child { border-bottom: 0; }
+.row .k { color: #666; }
+.row .v { font-family: monospace; font-weight: 700; color: #222; }
+.row .v.warn { color: #DC2626; }
+.row .v.ok { color: #10B981; }
+
+pre.errs { background: #FEE2E2; color: #991B1B; padding: 10px; border-radius: 8px; font-size: 11px; max-height: 240px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; font-family: monospace; }
+pre.warns { background: #FEF3C7; color: #92400E; padding: 10px; border-radius: 8px; font-size: 11px; max-height: 180px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; font-family: monospace; }
+pre.empty { background: #D1FAE5; color: #065F46; padding: 14px; text-align: center; font-weight: 700; }
+
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+table th, table td { padding: 5px 6px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+table th { background: #f9fafb; color: #555; font-weight: 700; }
+.slow { color: #DC2626; font-weight: 700; }
+.medium { color: #F59E0B; font-weight: 700; }
+.fast { color: #10B981; }
+</style>
+</head>
+<body>
+<h1>⚡ Diagnóstico de Performance</h1>
+<div class="sub">Captura erros + tempos + memória + estado do SW. Roda quando o site tá pesado/dando erro pra eu ver o que é.</div>
+
+<div>
+    <button class="btn" onclick="copyAll()">📋 Copiar tudo (manda no chat)</button>
+    <button class="btn btn-warn" onclick="forceTestPDV()">🧪 Testar carregar /painel/pdv.html</button>
+    <button class="btn btn-light" onclick="location.reload()">🔄 Recarregar</button>
+</div>
+
+<div class="section">
+    <h2>🚨 Erros JS capturados</h2>
+    <pre class="errs" id="errors">capturando…</pre>
+</div>
+
+<div class="section">
+    <h2>⚠️ Warnings/Console.warn</h2>
+    <pre class="warns" id="warnings">capturando…</pre>
+</div>
+
+<div class="section">
+    <h2>📊 Métricas da Página</h2>
+    <div id="metrics"></div>
+</div>
+
+<div class="section">
+    <h2>💾 Memória + Storage</h2>
+    <div id="storage"></div>
+    <h3 style="font-size:14px;margin:12px 0 6px;color:#444">Top 20 chaves do localStorage por tamanho</h3>
+    <table id="lsTable"><thead><tr><th>Chave</th><th>Tamanho</th><th>Items (se array)</th></tr></thead><tbody></tbody></table>
+    <h3 style="font-size:14px;margin:12px 0 6px;color:#444">Distribuição por prefixo (qual módulo está enchendo)</h3>
+    <table id="lsPrefixTable"><thead><tr><th>Prefixo</th><th>Qtd chaves</th><th>Tamanho</th></tr></thead><tbody></tbody></table>
+    <button class="btn btn-warn" style="margin-top:10px" onclick="cleanupLS()">🧹 Limpar entries de log/audit antigas (mantém vendas/caixa)</button>
+</div>
+
+<div class="section">
+    <h2>🌐 Service Worker</h2>
+    <div id="sw"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" style="background:#5A52E0" onclick="forceSWNow()">⚡ Forçar Ativação SW + Reload</button>
+        <button class="btn btn-warn" onclick="unregisterAndReload()">🗑️ Desregistrar SW e tentar limpo</button>
+    </div>
+</div>
+
+<div class="section">
+    <h2>📦 Recursos carregados (top 15 mais lentos)</h2>
+    <table id="resources"><thead><tr><th>Recurso</th><th>Tipo</th><th>Tempo</th><th>Tamanho</th></tr></thead><tbody></tbody></table>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    var errors = [];
+    var warns = [];
+
+    // Captura erros JS globais
+    window.addEventListener('error', function (e) {
+        var msg = (e.error && e.error.stack) || (e.message + ' @ ' + e.filename + ':' + e.lineno + ':' + e.colno);
+        errors.push(new Date().toLocaleTimeString('pt-BR') + ' — ' + msg);
+        renderErrors();
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+        errors.push(new Date().toLocaleTimeString('pt-BR') + ' — Unhandled Promise: ' + (e.reason && (e.reason.stack || e.reason.message) || e.reason));
+        renderErrors();
+    });
+
+    // Hook console.warn pra mostrar warns
+    var origWarn = console.warn;
+    console.warn = function () {
+        try { warns.push(new Date().toLocaleTimeString('pt-BR') + ' — ' + Array.from(arguments).map(function (a) { try { return typeof a === 'object' ? JSON.stringify(a) : String(a); } catch (e) { return String(a); } }).join(' ')); } catch (e) {}
+        renderWarns();
+        return origWarn.apply(console, arguments);
+    };
+
+    // Hook console.error
+    var origErr = console.error;
+    console.error = function () {
+        try { errors.push(new Date().toLocaleTimeString('pt-BR') + ' — [error] ' + Array.from(arguments).map(function (a) { try { return typeof a === 'object' ? JSON.stringify(a) : String(a); } catch (e) { return String(a); } }).join(' ')); } catch (e) {}
+        renderErrors();
+        return origErr.apply(console, arguments);
+    };
+
+    function renderErrors() {
+        var el = document.getElementById('errors');
+        if (errors.length === 0) { el.className = 'empty'; el.textContent = '✅ Nenhum erro capturado'; return; }
+        el.className = 'errs';
+        el.textContent = errors.slice(-30).join('\n\n');
+    }
+    function renderWarns() {
+        var el = document.getElementById('warnings');
+        if (warns.length === 0) { el.className = 'empty'; el.textContent = '✅ Nenhum warning'; return; }
+        el.className = 'warns';
+        el.textContent = warns.slice(-20).join('\n');
+    }
+    renderErrors();
+    renderWarns();
+
+    function row(parent, k, v, status) {
+        var d = document.createElement('div');
+        d.className = 'row';
+        d.innerHTML = '<span class="k">' + k + '</span><span class="v ' + (status || '') + '">' + v + '</span>';
+        parent.appendChild(d);
+    }
+    function fmt(ms) { return Math.round(ms) + ' ms'; }
+    function bytes(b) { if (b == null) return '?'; if (b < 1024) return b + ' B'; if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB'; return (b/1024/1024).toFixed(2) + ' MB'; }
+
+    // === Métricas da página ===
+    var perf = performance.getEntriesByType('navigation')[0];
+    var m = document.getElementById('metrics');
+    if (perf) {
+        row(m, 'DNS', fmt(perf.domainLookupEnd - perf.domainLookupStart));
+        row(m, 'TCP + TLS', fmt(perf.connectEnd - perf.connectStart));
+        row(m, 'TTFB (primeira resposta)', fmt(perf.responseStart - perf.requestStart),
+            (perf.responseStart - perf.requestStart) > 1000 ? 'warn' : 'ok');
+        row(m, 'Download HTML', fmt(perf.responseEnd - perf.responseStart));
+        row(m, 'DOMContentLoaded', fmt(perf.domContentLoadedEventEnd - perf.startTime),
+            (perf.domContentLoadedEventEnd - perf.startTime) > 3000 ? 'warn' : 'ok');
+        row(m, 'Página carregou (loadEvent)', fmt(perf.loadEventEnd - perf.startTime),
+            (perf.loadEventEnd - perf.startTime) > 5000 ? 'warn' : 'ok');
+    } else {
+        row(m, 'performance.navigation', 'indisponível');
+    }
+
+    // === Storage ===
+    var s = document.getElementById('storage');
+    if (performance.memory) {
+        row(s, 'JS Heap usado', bytes(performance.memory.usedJSHeapSize), performance.memory.usedJSHeapSize > 100*1024*1024 ? 'warn' : 'ok');
+        row(s, 'JS Heap limite', bytes(performance.memory.jsHeapSizeLimit));
+    }
+    var lsKeys = Object.keys(localStorage);
+    var lsBytes = 0;
+    var keyDetails = [];
+    lsKeys.forEach(function (k) {
+        try {
+            var v = localStorage.getItem(k) || '';
+            var sz = k.length + v.length;
+            lsBytes += sz;
+            var items = null;
+            if (v.length > 1 && (v[0] === '[' || v[0] === '{')) {
+                try { var p = JSON.parse(v); if (Array.isArray(p)) items = p.length; } catch (e) {}
+            }
+            keyDetails.push({ key: k, size: sz * 2, items: items });
+        } catch (e) {}
+    });
+    row(s, 'localStorage entries', lsKeys.length, lsKeys.length > 200 ? 'warn' : 'ok');
+    row(s, 'localStorage tamanho', bytes(lsBytes * 2), lsBytes * 2 > 5*1024*1024 ? 'warn' : 'ok');
+
+    // Top 20 chaves
+    keyDetails.sort(function (a, b) { return b.size - a.size; });
+    var lsBody = document.querySelector('#lsTable tbody');
+    keyDetails.slice(0, 20).forEach(function (d) {
+        var tr = document.createElement('tr');
+        var cls = d.size > 500*1024 ? 'slow' : (d.size > 50*1024 ? 'medium' : 'fast');
+        tr.innerHTML = '<td style="word-break:break-all;font-family:monospace;font-size:11px">' + d.key + '</td>' +
+                       '<td class="' + cls + '">' + bytes(d.size) + '</td>' +
+                       '<td>' + (d.items != null ? d.items + ' items' : '-') + '</td>';
+        lsBody.appendChild(tr);
+    });
+
+    // Distribuição por prefixo
+    var byPrefix = {};
+    keyDetails.forEach(function (d) {
+        var prefix = d.key.split('_').slice(0, 2).join('_'); // ex: mp_scratches, mp_audit, etc
+        if (!byPrefix[prefix]) byPrefix[prefix] = { count: 0, size: 0 };
+        byPrefix[prefix].count++;
+        byPrefix[prefix].size += d.size;
+    });
+    var prefixArr = Object.keys(byPrefix).map(function (p) { return { prefix: p, count: byPrefix[p].count, size: byPrefix[p].size }; });
+    prefixArr.sort(function (a, b) { return b.count - a.count; });
+    var pBody = document.querySelector('#lsPrefixTable tbody');
+    prefixArr.slice(0, 15).forEach(function (d) {
+        var tr = document.createElement('tr');
+        var cls = d.count > 1000 ? 'slow' : (d.count > 100 ? 'medium' : 'fast');
+        tr.innerHTML = '<td style="font-family:monospace;font-size:11px">' + d.prefix + '_*</td>' +
+                       '<td class="' + cls + '">' + d.count + ' chaves</td>' +
+                       '<td>' + bytes(d.size) + '</td>';
+        pBody.appendChild(tr);
+    });
+
+    window.cleanupLS = function () {
+        if (!confirm('🧹 Vai apagar entries antigas que NÃO sejam:\n\n• vendas (orders, scratches, caixa)\n• catalog/produtos\n• sessão (mp_session)\n\nInclui as 2210 chaves firestore_* (mutations/targets) que estão poluindo o storage.\n\nContinuar?')) return;
+        var KEEP_PREFIXES = ['mp_orders', 'mp_scratches', 'mp_caixa', 'mp_pdv_tabs', 'mp_finances', 'mp_inventory', 'mp_session', 'mp_franchises', 'mp_catalog', 'mp_users', 'mp_staff', 'mp_recipes', 'mp_despesas', 'mp_payments', 'mp_notifications', 'mp_tv'];
+        var removed = 0, firestoreCount = 0;
+        var keys = Object.keys(localStorage).slice();
+        keys.forEach(function (k) {
+            // Sempre apaga firestore_* (mutations/targets/clients/zombie spam)
+            if (k.indexOf('firestore_') === 0) {
+                localStorage.removeItem(k);
+                firestoreCount++;
+                removed++;
+                return;
+            }
+            var keep = KEEP_PREFIXES.some(function (p) { return k === p || k.indexOf(p + '_') === 0 || k.indexOf(p) === 0; });
+            if (!keep) {
+                localStorage.removeItem(k);
+                removed++;
+            }
+        });
+        alert('✅ Removidas ' + removed + ' entries (' + firestoreCount + ' do Firestore antigo). Recarregando...');
+        setTimeout(function () { location.reload(); }, 500);
+    };
+
+    // === Service Worker ===
+    var sw = document.getElementById('sw');
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        row(sw, 'SW ativo', '✅ controlando esta página', 'ok');
+        row(sw, 'controller.scriptURL', navigator.serviceWorker.controller.scriptURL.split('/').pop());
+    } else {
+        row(sw, 'SW ativo', '❌ não controlando — clica "Forçar Ativação" abaixo', 'warn');
+    }
+    if (navigator.serviceWorker) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+            row(sw, 'Registrations encontradas', regs.length, regs.length ? 'ok' : 'warn');
+            regs.forEach(function (r, i) {
+                row(sw, 'Reg #' + (i + 1) + ' scope', r.scope);
+                if (r.active) {
+                    row(sw, 'Reg #' + (i + 1) + ' active.state', r.active.state, r.active.state === 'activated' ? 'ok' : 'warn');
+                    row(sw, 'Reg #' + (i + 1) + ' active.script', r.active.scriptURL.split('/').pop());
+                } else {
+                    row(sw, 'Reg #' + (i + 1) + ' active', 'NULO', 'warn');
+                }
+                if (r.installing) row(sw, 'Reg #' + (i + 1) + ' installing', r.installing.state, 'warn');
+                if (r.waiting) row(sw, 'Reg #' + (i + 1) + ' waiting', r.waiting.state + ' (precisa skipWaiting)', 'warn');
+            });
+            // Tenta atualizar registrations
+            regs.forEach(function (r) { try { r.update(); } catch (e) {} });
+        });
+    } else {
+        row(sw, 'navigator.serviceWorker', 'INDISPONÍVEL — browser sem suporte ou contexto inseguro', 'err');
+    }
+    row(sw, 'navigator.onLine', navigator.onLine ? '✅ online' : '❌ offline', navigator.onLine ? 'ok' : 'warn');
+    row(sw, 'connection.effectiveType', (navigator.connection && navigator.connection.effectiveType) || '?');
+
+    // === Botões de força bruta SW ===
+    window.forceSWNow = async function () {
+        if (!navigator.serviceWorker) return alert('Browser sem suporte a Service Worker');
+        try {
+            // 1. Re-registra (caso não esteja)
+            var reg = await navigator.serviceWorker.register('/sw.js');
+            console.log('Reg ok:', reg.scope);
+            // 2. Manda skipWaiting pro waiting (se houver)
+            if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            // 3. Update + claim
+            await reg.update();
+            // 4. Aguarda 1s e recarrega
+            alert('SW forçado a ativar. Vou recarregar em 1s...');
+            setTimeout(function () { location.reload(); }, 1000);
+        } catch (e) {
+            alert('Erro: ' + e.message);
+        }
+    };
+    window.unregisterAndReload = async function () {
+        if (!confirm('🗑️ Vai desregistrar TODOS os Service Workers deste site e recarregar.\n\nIsso força um install limpo. Não perde dados (localStorage fica). Continuar?')) return;
+        try {
+            var regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(function (r) { return r.unregister(); }));
+            alert('✅ ' + regs.length + ' SW(s) desregistrado(s). Recarregando...');
+            setTimeout(function () { location.reload(); }, 800);
+        } catch (e) {
+            alert('Erro: ' + e.message);
+        }
+    };
+
+    // === Recursos lentos ===
+    var resources = performance.getEntriesByType('resource').slice();
+    resources.sort(function (a, b) { return b.duration - a.duration; });
+    var tbody = document.querySelector('#resources tbody');
+    resources.slice(0, 15).forEach(function (r) {
+        var tr = document.createElement('tr');
+        var name = r.name.split('?')[0].split('/').slice(-2).join('/');
+        var cls = r.duration > 1000 ? 'slow' : (r.duration > 300 ? 'medium' : 'fast');
+        tr.innerHTML = '<td>' + name + '</td><td>' + r.initiatorType + '</td><td class="' + cls + '">' + fmt(r.duration) + '</td><td>' + bytes(r.transferSize) + '</td>';
+        tbody.appendChild(tr);
+    });
+
+    window.copyAll = function () {
+        var dump = {
+            url: location.href,
+            ts: new Date().toISOString(),
+            ua: navigator.userAgent,
+            online: navigator.onLine,
+            connection: navigator.connection ? { type: navigator.connection.effectiveType, downlink: navigator.connection.downlink, rtt: navigator.connection.rtt } : null,
+            memory: performance.memory ? {
+                used: performance.memory.usedJSHeapSize,
+                limit: performance.memory.jsHeapSizeLimit
+            } : null,
+            navigation: perf ? {
+                ttfb: perf.responseStart - perf.requestStart,
+                domContentLoaded: perf.domContentLoadedEventEnd - perf.startTime,
+                load: perf.loadEventEnd - perf.startTime
+            } : null,
+            sw: { controlled: !!(navigator.serviceWorker && navigator.serviceWorker.controller) },
+            localStorage: { entries: lsKeys.length, bytes: lsBytes * 2 },
+            errors: errors.slice(-30),
+            warnings: warns.slice(-20),
+            slowResources: resources.slice(0, 15).map(function (r) { return { name: r.name.split('/').slice(-2).join('/'), duration: Math.round(r.duration), size: r.transferSize }; })
+        };
+        var txt = JSON.stringify(dump, null, 2);
+        try {
+            navigator.clipboard.writeText(txt).then(function () { alert('✅ Copiado. Cola no chat de suporte.'); });
+        } catch (e) { prompt('Copia manual (Ctrl+A, Ctrl+C):', txt); }
+    };
+
+    window.forceTestPDV = async function () {
+        var t0 = performance.now();
+        try {
+            var r = await fetch('/painel/pdv.html?cb=' + Date.now(), { cache: 'no-store' });
+            var sz = (await r.text()).length;
+            var t = Math.round(performance.now() - t0);
+            alert('✅ PDV carregou em ' + t + 'ms (' + Math.round(sz/1024) + ' KB)');
+        } catch (e) {
+            alert('❌ Falha: ' + e.message);
+        }
+    };
+})();
+</script>
+<script src="../js/core/register-sw.js?v=mp-v91"></script>
+</body>
+</html>

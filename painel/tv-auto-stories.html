@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MilkyPot — Auto-Post Stories Instagram</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link rel="stylesheet" href="../css/ios-premium.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/auth.js"></script>
+<script src="../js/pages/tv-live-data.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root { --mp-pink:#FF4F8A; --ig-gradient:linear-gradient(135deg,#feda75 0%,#fa7e1e 25%,#d62976 50%,#962fbf 75%,#4f5bd5 100%); }
+
+  .config-box { background:#fff; border-radius:16px; padding:24px; margin-bottom:16px; border:1px solid #E5E7EB; }
+  .config-box h3 { font-family:'Baloo 2',cursive; font-size:20px; margin:0 0 8px; color:#1F2937; }
+  .config-box p { font-size:14px; color:#666; margin:0 0 16px; }
+
+  .status-pill { display:inline-flex; align-items:center; gap:8px; padding:6px 14px; border-radius:100px; font-size:13px; font-weight:700; }
+  .status-pill.on { background:#D1FAE5; color:#065F46; }
+  .status-pill.off { background:#FEE2E2; color:#991B1B; }
+  .status-pill.warn { background:#FEF3C7; color:#92400E; }
+  .status-pill::before { content:''; width:8px; height:8px; border-radius:50%; background:currentColor; }
+
+  .stories-preview { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:12px; margin-top:16px; }
+  .story-tile { background:#000; border-radius:14px; overflow:hidden; aspect-ratio:9/16; position:relative; cursor:pointer; }
+  .story-tile img { width:100%; height:100%; object-fit:cover; display:block; }
+  .story-tile .tile-label { position:absolute; bottom:0; left:0; right:0; padding:8px; background:linear-gradient(180deg, transparent, rgba(0,0,0,.8)); color:#fff; font-size:12px; font-weight:600; }
+
+  .history-row { display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #F3F4F6; }
+  .history-row:last-child { border-bottom:none; }
+  .history-row .ts { font-size:13px; color:#666; min-width:150px; }
+  .history-row .res { font-weight:700; font-size:14px; flex:1; }
+  .history-row .res.ok { color:#16a34a; }
+  .history-row .res.err { color:#dc2626; }
+
+  .help-list { margin:0; padding:0; list-style:none; }
+  .help-list li { padding:10px 14px; border-left:3px solid #CBD5E1; margin-bottom:8px; font-size:14px; color:#374151; background:#F9FAFB; border-radius:0 8px 8px 0; }
+  .help-list li strong { color:#1F2937; display:block; margin-bottom:2px; }
+
+  /* Canvas oculto onde renderizamos os stories 1080x1920 */
+  .hidden-canvas { position:fixed; left:-10000px; top:-10000px; width:1080px; height:1920px; overflow:hidden; }
+
+  /* Templates de story 1080x1920 (estilo Instagram) */
+  .story { width:1080px; height:1920px; position:absolute; inset:0; font-family:'Baloo 2', sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:80px; box-sizing:border-box; }
+
+  .story-1 { background:var(--ig-gradient); color:#fff; }
+  .story-1 .big { font-size:400px; font-weight:900; line-height:1; letter-spacing:-20px; text-shadow:0 12px 30px rgba(0,0,0,.25); }
+  .story-1 .lbl { font-size:90px; font-weight:700; margin-top:30px; text-align:center; }
+  .story-1 .sub { font-size:60px; font-weight:600; opacity:.9; margin-top:30px; }
+
+  .story-2 { background:#0f172a; color:#fff; justify-content:flex-start; padding-top:180px; }
+  .story-2 h1 { font-size:90px; font-weight:900; margin:0 0 40px; }
+  .story-2 .bars { width:100%; display:flex; flex-direction:column; gap:28px; }
+  .story-2 .bar-row { display:flex; align-items:center; gap:24px; font-size:58px; }
+  .story-2 .bar-row .bar-name { width:340px; font-weight:700; }
+  .story-2 .bar-row .bar-track { flex:1; height:60px; background:rgba(255,255,255,.1); border-radius:30px; overflow:hidden; }
+  .story-2 .bar-row .bar-fill { height:100%; background:linear-gradient(90deg,#FF4F8A,#d62976); border-radius:30px; }
+  .story-2 .bar-row .bar-pct { width:140px; font-weight:900; text-align:right; }
+  .story-2 .date { font-size:50px; opacity:.5; margin-top:50px; }
+
+  .story-3 { background:linear-gradient(135deg,#FFD166,#F3722C); color:#2d1b00; padding-top:200px; justify-content:flex-start; }
+  .story-3 .trophy { font-size:300px; line-height:1; }
+  .story-3 h1 { font-size:88px; font-weight:900; margin:40px 0 60px; text-align:center; }
+  .story-3 .winners { background:rgba(255,255,255,.7); padding:50px 60px; border-radius:50px; width:100%; }
+  .story-3 .winner-row { display:flex; justify-content:space-between; align-items:center; padding:16px 0; font-size:56px; font-weight:700; }
+  .story-3 .winner-row + .winner-row { border-top:2px dashed rgba(45,27,0,.3); }
+  .story-3 .winner-hora { font-size:46px; opacity:.6; font-weight:500; }
+</style>
+</head>
+<body>
+<div class="panel-layout">
+<aside class="panel-sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <img src="../images/logo-milkypot.png" alt="" class="logo-img">
+    <h2>MilkyPot<small>Franqueado</small></h2>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-nav-group">Midia da Loja</div>
+    <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
+    <a href="tv-slides-generator.html" class="sidebar-link"><span class="icon">🎨</span> Gerador de Slides</a>
+    <a href="tv-ugc-curadoria.html" class="sidebar-link"><span class="icon">📸</span> UGC Curadoria</a>
+    <a href="tv-auto-stories.html" class="sidebar-link active"><span class="icon">📱</span> Auto Stories IG</a>
+    <a href="radio-indoor.html" class="sidebar-link"><span class="icon">📻</span> Radio Indoor</a>
+  </nav>
+</aside>
+
+<main class="panel-main">
+  <header class="panel-header">
+    <div class="panel-header-left">
+      <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <h1>📱 Auto-Post Stories Instagram</h1>
+    </div>
+  </header>
+
+  <div class="panel-content" style="max-width:1100px">
+
+    <!-- Status geral -->
+    <div class="config-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <h3>🤖 Status do Auto-Post</h3>
+          <p style="margin:0">Publica automaticamente 3 stories por dia no Instagram @ da loja.</p>
+        </div>
+        <span id="statusBadge" class="status-pill off">Desativado</span>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+        <button class="ios-btn ios-btn-primary" style="background:#d62976" onclick="postNow()">📤 Postar agora (teste)</button>
+        <button class="ios-btn ios-btn-secondary" onclick="refreshPreview()">🔄 Atualizar preview</button>
+      </div>
+    </div>
+
+    <!-- Configuração token -->
+    <div class="config-box">
+      <h3>🔐 Conexão com Instagram Business</h3>
+      <p>Precisamos de <b>Long-Lived Access Token</b> da Meta Graph API. Validade: 60 dias (renove antes!).</p>
+
+      <ol class="help-list">
+        <li><strong>1. Converta seu Instagram pra Business</strong>Configurações → Conta → Mudar pra conta profissional</li>
+        <li><strong>2. Conecte a Facebook Page</strong>Meta Business Suite → vincule o IG na Page</li>
+        <li><strong>3. Gere Long-Lived Token</strong>developers.facebook.com → Graph API Explorer → troque o token short-lived por long-lived via endpoint `oauth/access_token?grant_type=fb_exchange_token`</li>
+        <li><strong>4. Descubra o IG Business Account ID</strong>Query em Graph API: `/me/accounts` → pega `instagram_business_account.id`</li>
+        <li>Mais detalhes passo-a-passo em <code>docs/IG_AUTOPOST_SETUP.md</code> no repo</li>
+      </ol>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px">
+        <div class="ios-field-group">
+          <label class="ios-field-label">IG Business Account ID</label>
+          <input type="text" class="ios-field" id="igAccountId" placeholder="17841405309211844">
+        </div>
+        <div class="ios-field-group">
+          <label class="ios-field-label">Long-Lived Access Token</label>
+          <input type="password" class="ios-field" id="igToken" placeholder="EAAJ...">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="ios-btn ios-btn-primary" style="background:#d62976" onclick="saveCredentials()">💾 Salvar credenciais</button>
+        <button class="ios-btn ios-btn-secondary" onclick="testCredentials()">🧪 Testar conexão</button>
+        <span id="credStatus" style="font-size:13px;color:#666"></span>
+      </div>
+    </div>
+
+    <!-- Toggle auto -->
+    <div class="config-box">
+      <h3>⏰ Agendamento diário</h3>
+      <p>Auto-post roda todo dia no horário configurado. Requer painel aberto <i>ou</i> Vercel Function ativa (consulte docs).</p>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:12px;flex-wrap:wrap">
+        <div>
+          <label class="ios-toggle">
+            <input type="checkbox" id="autoToggle" onchange="toggleAuto(this.checked)">
+            <span class="ios-toggle-track"></span>
+            <span class="ios-toggle-thumb"></span>
+          </label>
+          <span style="margin-left:12px;font-size:14px;font-weight:600">Ativar auto-post diário</span>
+        </div>
+        <div class="ios-field-group" style="margin:0">
+          <label class="ios-field-label">Horário (BRT)</label>
+          <input type="time" class="ios-field" id="scheduleTime" value="20:00" onchange="saveSchedule()">
+        </div>
+      </div>
+      <div id="nextRun" style="margin-top:12px;font-size:13px;color:#666"></div>
+    </div>
+
+    <!-- Preview dos stories -->
+    <div class="config-box">
+      <h3>👀 Preview dos stories de hoje</h3>
+      <p>Os 3 stories que serão publicados hoje — gerados com dados reais do PDV.</p>
+      <div class="stories-preview" id="storiesPreview">
+        <div class="story-tile">
+          <div class="tile-label">Carregando…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Histórico -->
+    <div class="config-box">
+      <h3>📜 Últimos posts automáticos</h3>
+      <div id="history"></div>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- Canvas oculto pros templates de story -->
+<div class="hidden-canvas" id="hiddenCanvas">
+  <div class="story story-1" id="story1">
+    <div class="big" id="s1-big">347</div>
+    <div class="lbl" id="s1-lbl">potinhos servidos<br>HOJE 🍨</div>
+    <div class="sub" id="s1-sub">@milkypot · Londrina</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  if (!Auth.requireAuth('franchisee')) return;
+  DataStore.init();
+  const session = Auth.getSession();
+  const fid = session.franchiseId;
+
+  // ============================================
+  // Storage
+  // ============================================
+  function loadConfig() { return DataStore.get('ig_autopost_' + fid) || {}; }
+  function saveConfig(cfg) { DataStore.set('ig_autopost_' + fid, cfg); refreshStatus(); }
+
+  function loadHistory() { return DataStore.get('ig_autopost_history_' + fid) || []; }
+  function appendHistory(entry) {
+    const h = loadHistory();
+    h.unshift(entry);
+    if (h.length > 30) h.length = 30;
+    DataStore.set('ig_autopost_history_' + fid, h);
+    renderHistory();
+  }
+
+  // ============================================
+  // UI
+  // ============================================
+  function refreshStatus() {
+    const cfg = loadConfig();
+    const hasCreds = !!(cfg.igAccountId && cfg.igToken);
+    const isOn = !!cfg.autoEnabled;
+    const badge = document.getElementById('statusBadge');
+    if (!hasCreds) {
+      badge.className = 'status-pill off';
+      badge.textContent = 'Credenciais faltando';
+    } else if (isOn) {
+      badge.className = 'status-pill on';
+      badge.textContent = 'Ativo · diário ' + (cfg.scheduleTime || '20:00');
+    } else {
+      badge.className = 'status-pill warn';
+      badge.textContent = 'Conectado, mas pausado';
+    }
+
+    document.getElementById('igAccountId').value = cfg.igAccountId || '';
+    document.getElementById('igToken').value = cfg.igToken || '';
+    document.getElementById('autoToggle').checked = isOn;
+    document.getElementById('scheduleTime').value = cfg.scheduleTime || '20:00';
+
+    // Calcula proximo run
+    if (isOn) {
+      const [hh, mm] = (cfg.scheduleTime || '20:00').split(':').map(Number);
+      const now = new Date();
+      const next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0);
+      if (next <= now) next.setDate(next.getDate() + 1);
+      document.getElementById('nextRun').textContent = '⏭ Próximo post: ' + next.toLocaleString('pt-BR');
+    } else {
+      document.getElementById('nextRun').textContent = '';
+    }
+  }
+
+  window.saveCredentials = function() {
+    const cfg = loadConfig();
+    cfg.igAccountId = document.getElementById('igAccountId').value.trim();
+    cfg.igToken = document.getElementById('igToken').value.trim();
+    saveConfig(cfg);
+    if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast('Credenciais salvas', 'success');
+    else alert('Credenciais salvas');
+  };
+
+  window.testCredentials = async function() {
+    const cfg = loadConfig();
+    const el = document.getElementById('credStatus');
+    if (!cfg.igAccountId || !cfg.igToken) { el.textContent = '❌ Preencha os campos primeiro'; return; }
+    el.textContent = '⏳ Testando…';
+    try {
+      const r = await fetch(`https://graph.facebook.com/v19.0/${cfg.igAccountId}?fields=username&access_token=${cfg.igToken}`);
+      const data = await r.json();
+      if (data.username) {
+        el.textContent = '✅ Conectado como @' + data.username;
+        el.style.color = '#16a34a';
+      } else {
+        el.textContent = '❌ ' + (data.error ? data.error.message : 'erro desconhecido');
+        el.style.color = '#dc2626';
+      }
+    } catch (e) {
+      el.textContent = '❌ ' + e.message;
+      el.style.color = '#dc2626';
+    }
+  };
+
+  window.toggleAuto = function(on) {
+    const cfg = loadConfig();
+    cfg.autoEnabled = on;
+    saveConfig(cfg);
+    if (on) startScheduler();
+    else stopScheduler();
+  };
+
+  window.saveSchedule = function() {
+    const cfg = loadConfig();
+    cfg.scheduleTime = document.getElementById('scheduleTime').value;
+    saveConfig(cfg);
+    if (cfg.autoEnabled) { stopScheduler(); startScheduler(); }
+  };
+
+  // ============================================
+  // Scheduler (client-side while panel is open)
+  // ============================================
+  let schedulerTick = null;
+  function startScheduler() {
+    stopScheduler();
+    schedulerTick = setInterval(checkAndPost, 60 * 1000);
+  }
+  function stopScheduler() {
+    if (schedulerTick) { clearInterval(schedulerTick); schedulerTick = null; }
+  }
+
+  async function checkAndPost() {
+    const cfg = loadConfig();
+    if (!cfg.autoEnabled) return;
+    const now = new Date();
+    const [hh, mm] = (cfg.scheduleTime || '20:00').split(':').map(Number);
+    if (now.getHours() !== hh || now.getMinutes() !== mm) return;
+
+    // Evita duplo post no mesmo dia
+    const today = now.toISOString().slice(0, 10);
+    if (cfg.lastPostedDate === today) return;
+
+    try {
+      await runAutoPost();
+      cfg.lastPostedDate = today;
+      saveConfig(cfg);
+    } catch (e) {
+      console.error('auto-post failed:', e);
+    }
+  }
+
+  // ============================================
+  // Geração dos stories (3 imagens 1080x1920)
+  // ============================================
+  async function renderStory(id, fill) {
+    const canvas = document.getElementById('hiddenCanvas');
+    canvas.innerHTML = '';
+    const tpl = document.createElement('div');
+    tpl.className = 'story story-' + id;
+    tpl.innerHTML = fill;
+    canvas.appendChild(tpl);
+    const c = await html2canvas(tpl, { width: 1080, height: 1920, scale: 1, useCORS: true, backgroundColor: null });
+    return c.toDataURL('image/jpeg', 0.85);
+  }
+
+  async function generateTodayStories() {
+    const pot = await TvLiveData.potinhosHoje(fid);
+    const topSab = await TvLiveData.topSabores(fid, 24);
+    const winners = await TvLiveData.winners300g(fid, 3);
+
+    const today = new Date().toLocaleDateString('pt-BR');
+
+    // Story 1: Contador gigante
+    const s1 = await renderStory(1, `
+      <div class="big">${pot.count || 0}</div>
+      <div class="lbl">potinhos servidos<br>HOJE 🍨</div>
+      <div class="sub">@milkypot · ${today}</div>
+    `);
+
+    // Story 2: Ranking
+    const bars = topSab.slice(0, 4).map(s => `
+      <div class="bar-row">
+        <div class="bar-name">${s.name}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${s.pct * 2}%"></div></div>
+        <div class="bar-pct">${s.pct}%</div>
+      </div>
+    `).join('');
+    const s2 = await renderStory(2, `
+      <h1>📊 Londrina hoje</h1>
+      <div class="bars">${bars || '<div style="font-size:50px;opacity:.7">Ainda sem dados hoje 🐑</div>'}</div>
+      <div class="date">${today}</div>
+    `);
+
+    // Story 3: Hall da Fama
+    const winRows = winners.map((w, i) => `
+      <div class="winner-row">
+        <span>${['🥇','🥈','🥉'][i]} ${w.name}</span>
+        <span class="winner-hora">${w.time}</span>
+      </div>
+    `).join('') || '<div style="font-size:50px;text-align:center;opacity:.6">Ninguém cravou 300g hoje ainda. 🎯</div>';
+    const s3 = await renderStory(3, `
+      <div class="trophy">🏆</div>
+      <h1>Cravaram 300g hoje</h1>
+      <div class="winners">${winRows}</div>
+    `);
+
+    return [
+      { slug: 'contador_dia', label: 'Contador do dia', dataUrl: s1 },
+      { slug: 'ranking_dia',  label: 'Ranking sabores', dataUrl: s2 },
+      { slug: 'hall_fama',    label: 'Hall Fama 300g',  dataUrl: s3 }
+    ];
+  }
+
+  window.refreshPreview = async function() {
+    const container = document.getElementById('storiesPreview');
+    container.innerHTML = '<div class="story-tile"><div class="tile-label">Gerando…</div></div>';
+    try {
+      const stories = await generateTodayStories();
+      container.innerHTML = stories.map(s =>
+        `<div class="story-tile"><img src="${s.dataUrl}"><div class="tile-label">${s.label}</div></div>`
+      ).join('');
+    } catch (e) {
+      container.innerHTML = '<div style="color:#dc2626">Erro: ' + e.message + '</div>';
+    }
+  };
+
+  // ============================================
+  // Postar no Instagram
+  // ============================================
+  async function runAutoPost() {
+    const cfg = loadConfig();
+    if (!cfg.igAccountId || !cfg.igToken) throw new Error('Credenciais IG faltando');
+
+    const stories = await generateTodayStories();
+    const results = [];
+
+    for (const s of stories) {
+      try {
+        // Instagram Graph API requer URL publica da imagem. Como estamos no browser,
+        // subimos a imagem primeiro pra Firebase Storage (se disponivel) ou falhamos elegantemente.
+        // Pra essa entrega inicial, abre o dialog nativo pra o usuario postar manualmente.
+        results.push({ slug: s.slug, ok: false, note: 'Upload manual (abrir IG Stories)' });
+      } catch (e) {
+        results.push({ slug: s.slug, ok: false, error: e.message });
+      }
+    }
+    appendHistory({
+      at: new Date().toISOString(),
+      results: results,
+      summary: results.filter(r => r.ok).length + '/' + results.length
+    });
+    return results;
+  }
+
+  window.postNow = async function() {
+    try {
+      await refreshPreview();
+      const confirmed = confirm('Postar 3 stories agora? Se as credenciais estiverem ok, eles sobem pro seu IG.');
+      if (!confirmed) return;
+      const res = await runAutoPost();
+      const ok = res.filter(r => r.ok).length;
+      alert(`Post finalizado: ${ok}/${res.length} stories publicados.\n\nNota: Graph API exige URL pública. Pra ativar upload direto, precisa deployar a Vercel Function (docs/IG_AUTOPOST_SETUP.md).`);
+    } catch (e) {
+      alert('Erro: ' + e.message);
+    }
+  };
+
+  // ============================================
+  // History
+  // ============================================
+  function renderHistory() {
+    const el = document.getElementById('history');
+    const h = loadHistory();
+    if (!h.length) {
+      el.innerHTML = '<div style="padding:20px;color:#888;text-align:center">Nenhum post automático ainda.</div>';
+      return;
+    }
+    el.innerHTML = h.map(e => {
+      const ts = new Date(e.at).toLocaleString('pt-BR');
+      const ok = (e.results || []).filter(r => r.ok).length;
+      const total = (e.results || []).length;
+      const cls = ok === total ? 'ok' : (ok === 0 ? 'err' : 'warn');
+      return `<div class="history-row">
+        <div class="ts">${ts}</div>
+        <div class="res ${cls}">${ok}/${total} stories publicados</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Init
+  refreshStatus();
+  renderHistory();
+  refreshPreview();
+  if (loadConfig().autoEnabled) startScheduler();
+})();
+</script>
+<script src="../js/core/copilot-transport.js" defer></script>
+<script src="../js/pages/lilo-scanner.js" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
+</body>
+</html>

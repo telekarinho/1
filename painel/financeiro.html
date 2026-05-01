@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/shared-panel.css">
     <link rel="stylesheet" href="../css/mobile-app.css">
+    <link rel="stylesheet" href="../css/ios-premium.css">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#42A5F5">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -33,9 +34,19 @@
                 <a href="pedidos.html" class="sidebar-link">
                     <span class="icon">📋</span> <span data-i18n="nav.orders">Pedidos</span>
                 </a>
+                <a href="simulador.html" class="sidebar-link"><span class="icon">📈</span> Simulador</a>
                 <div class="sidebar-nav-group">Gestão</div>
                 <a href="financeiro.html" class="sidebar-link active">
                     <span class="icon">💰</span> <span data-i18n="nav.finances">Financeiro</span>
+                </a>
+                <a href="fluxo-caixa.html" class="sidebar-link">
+                    <span class="icon">📈</span> Fluxo de Caixa
+                </a>
+                <a href="analytics.html" class="sidebar-link">
+                    <span class="icon">📊</span> Analytics
+                </a>
+                <a href="conciliacao.html" class="sidebar-link">
+                    <span class="icon">🏦</span> Conciliação
                 </a>
                 <a href="despesas.html" class="sidebar-link">
                     <span class="icon">💰</span> Despesas
@@ -58,6 +69,9 @@
                 <a href="ifood.html" class="sidebar-link">
                     <span class="icon">🛵</span> iFood
                 </a>
+                <a href="operacional.html" class="sidebar-link">
+                    <span class="icon">🎯</span> Operacional
+                </a>
                 <div class="sidebar-nav-group">Midia da Loja</div>
                 <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
                 <a href="radio-indoor.html" class="sidebar-link"><span class="icon">📻</span> Radio Indoor</a>
@@ -70,6 +84,7 @@
                 </a>
                 <div class="sidebar-nav-group">Config</div>
                 <a href="configuracoes.html" class="sidebar-link">
+                <a href="test-checklist.html" class="sidebar-link"><span class="icon">🧪</span> Checklist</a>
                     <span class="icon">⚙️</span> <span data-i18n="nav.settings">Configurações</span>
                 </a>
             </nav>
@@ -101,17 +116,100 @@
             </header>
 
             <div class="panel-content">
-                <!-- FILTROS -->
-                <div class="panel-card">
-                    <div class="panel-card-body" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                        <strong data-i18n="common.period">Periodo:</strong>
-                        <button class="btn btn-sm btn-outline filter-btn" data-period="today" onclick="setPeriod('today')" data-i18n="common.today">Hoje</button>
-                        <button class="btn btn-sm btn-outline filter-btn" data-period="week" onclick="setPeriod('week')" data-i18n="common.this_week">Esta Semana</button>
-                        <button class="btn btn-sm btn-primary filter-btn" data-period="month" onclick="setPeriod('month')" data-i18n="common.this_month">Este Mês</button>
-                        <button class="btn btn-sm btn-outline filter-btn" data-period="30days" onclick="setPeriod('30days')" data-i18n="common.last_30_days">Últimos 30 Dias</button>
-                        <div style="flex:1"></div>
-                        <button class="btn btn-sm btn-primary" onclick="openModal()">+ <span data-i18n="common.new_transaction">Nova Transação</span></button>
+                <!-- ============ FINANCE OS - Saude financeira por competencia ============ -->
+                <div id="financeOSMount"></div>
+
+                <!-- ============ PARAMETROS DE CUSTEIO & SAUDE ============ -->
+                <details class="ios-card" id="custeioParams" style="margin-bottom:20px;padding:0;overflow:hidden;border:2px solid #FCD34D">
+                    <summary style="cursor:pointer;padding:18px 22px;background:linear-gradient(135deg,#FFFBEB,#FEF3C7);display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px;color:#92400E;list-style:none">
+                        <span style="font-size:22px">🩺</span>
+                        <div style="flex:1">
+                            <div>Parâmetros de Custeio & Saúde Financeira</div>
+                            <div style="font-size:12px;font-weight:500;color:#9A3412;margin-top:2px">kWh · salário/hora · encargos CLT · DAS · pró-labore · depreciação · perdas — alimenta lucro REAL de cada produto</div>
+                        </div>
+                        <span style="font-size:12px;color:#92400E">▼ clique pra expandir</span>
+                    </summary>
+                    <div style="padding:20px 22px;background:#fff">
+                        <h4 style="margin:0 0 10px;color:#92400E;font-size:14px">Custo direto (mão-de-obra + energia)</h4>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px">
+                            <div>
+                                <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase">⚡ Custo kWh (R$)</label>
+                                <input type="number" id="prodKwh" step="0.01" value="0.85" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                            </div>
+                            <div>
+                                <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase">Potência média (kW)</label>
+                                <input type="number" id="prodPotencia" step="0.1" value="1.5" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                            </div>
+                            <div>
+                                <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase">Salário/hora "na mão" (R$)</label>
+                                <input type="number" id="prodCustoHora" step="0.01" value="8.50" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                            </div>
+                            <div>
+                                <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase">Encargos CLT (%)</label>
+                                <input type="number" id="prodEncargos" step="1" value="33" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                            </div>
+                        </div>
+
+                        <h4 style="margin:16px 0 10px;color:#92400E;font-size:14px">Custo indireto (estrutura mensal)</h4>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:10px">
+                            <div>
+                                <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase">🧾 DAS Simples (%)</label>
+                                <input type="number" id="prodDasPct" step="0.1" value="4" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                            </div>
+                            <div>
+                                <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase">👔 Pró-labore + INSS (R$/mês)</label>
+                                <input type="number" id="prodProLabore" step="1" value="1685" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                                <label style="font-size:11px;color:#666;display:flex;gap:6px;margin-top:4px;align-items:center"><input type="checkbox" id="prodProLaboreEmFixos"> já está lançado nas Despesas (não somar de novo)</label>
+                            </div>
+                            <div>
+                                <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase">📉 Depreciação (R$/mês)</label>
+                                <input type="number" id="prodDepreciacao" step="1" value="500" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                                <label style="font-size:11px;color:#666;display:flex;gap:6px;margin-top:4px;align-items:center"><input type="checkbox" id="prodDepreciacaoEmFixos"> já está lançada nas Despesas</label>
+                            </div>
+                            <div>
+                                <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase">🗑 Perdas/quebra (%)</label>
+                                <input type="number" id="prodPerdasPct" step="0.5" value="4" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                            </div>
+                        </div>
+
+                        <h4 style="margin:16px 0 10px;color:#92400E;font-size:14px">Meta ramp-up (loja nova, &lt;200 pedidos/mês)</h4>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px">
+                            <div>
+                                <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase">💰 Meta vendas mês (R$)</label>
+                                <input type="number" id="prodMetaVendas" step="500" value="45000" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                            </div>
+                            <div>
+                                <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase">📦 Meta unidades mês</label>
+                                <input type="number" id="prodMetaProdutos" step="50" value="2000" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                            </div>
+                            <div>
+                                <label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase">🎯 Mín pedidos p/ sair ramp-up</label>
+                                <input type="number" id="prodMinReal" step="10" value="200" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px">
+                            </div>
+                        </div>
+
+                        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                            <button onclick="salvarProducao()" style="padding:10px 20px;background:#F59E0B;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">💾 Salvar parâmetros</button>
+                            <span id="prodStatus" style="font-size:13px;color:#6B7280"></span>
+                        </div>
+                        <div style="margin-top:12px;padding:12px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;font-size:13px;color:#78350F">
+                            💡 Esses parâmetros alimentam o cálculo de <b>custo real por produto</b> e <b>lucro líquido</b>. Alterar aqui e clicar em <a href="produtos.html" style="color:#7E57C2;font-weight:700">Produtos → Recalcular preços</a> atualiza todos.
+                        </div>
                     </div>
+                </details>
+
+                <!-- FILTROS — iOS segmented + primary CTA -->
+                <div class="ios-card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+                    <div class="ios-segmented" id="periodSeg">
+                        <button type="button" data-period="today" onclick="setPeriod('today')" data-i18n="common.today">Hoje</button>
+                        <button type="button" data-period="week" onclick="setPeriod('week')" data-i18n="common.this_week">Esta Semana</button>
+                        <button type="button" class="active" data-period="month" onclick="setPeriod('month')" data-i18n="common.this_month">Este Mês</button>
+                        <button type="button" data-period="30days" onclick="setPeriod('30days')" data-i18n="common.last_30_days">30 Dias</button>
+                    </div>
+                    <div style="flex:1"></div>
+                    <button class="ios-btn ios-btn-pill" style="background:#007AFF;color:#fff" onclick="openModal()">
+                        + <span data-i18n="common.new_transaction">Nova Transação</span>
+                    </button>
                 </div>
 
                 <!-- KPIs -->
@@ -195,6 +293,19 @@
                                 <tr><td colspan="6" style="text-align:center;">Carregando...</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- RANKING DE FRANQUIAS (Network Power) -->
+                <div class="panel-card" id="rankingCard" style="border: 2px solid var(--primary);">
+                    <div class="panel-card-header" style="background: linear-gradient(90deg, var(--secondary), var(--primary)); color:#fff; border-radius: 12px 12px 0 0;">
+                        <h3 style="margin:0; color:#fff;">🏆 Ranking de Performance da Rede</h3>
+                        <p style="margin:0; font-size:0.85rem; opacity:0.8;">Benchmark baseado nas vendas e precisão operacional deste mês.</p>
+                    </div>
+                    <div class="panel-card-body">
+                        <div id="rankingContent">
+                            <p style="text-align:center;">Processando ranking da rede...</p>
+                        </div>
                     </div>
                 </div>
 
@@ -293,6 +404,14 @@
     <script src="../js/core/audit.js"></script>
     <script src="../js/core/notifications.js"></script>
     <script src="../js/core/reports.js"></script>
+    <script src="../js/core/adminconfig.js?v=mp-v14"></script>
+    <script src="../js/core/caixa.js?v=mp-v91"></script>
+    <script src="../js/core/financas.js?v=mp-v14"></script>
+    <script src="../js/core/catalog-v2.js?v=mp-v14"></script>
+    <script src="../js/core/cost-calculator.js?v=mp-v14"></script>
+    <script src="../js/core/finance-realtime.js?v=mp-v14"></script>
+    <script src="../js/core/producao-calc.js"></script>
+    <script src="../js/pages/finance-os-ui.js?v=mp-v14"></script>
 
     <script>
         // ========== REPORT EXPORTS ==========
@@ -346,14 +465,19 @@
         // ========== PERIOD FILTER ==========
         function setPeriod(period) {
             currentPeriod = period;
+            // Novo: segmented control iOS (#periodSeg) com .active
+            document.querySelectorAll('#periodSeg button').forEach(function(btn) {
+                btn.classList.toggle('active', btn.getAttribute('data-period') === period);
+            });
+            // Compat: mantém logica antiga caso algum lugar ainda use .filter-btn
             document.querySelectorAll('.filter-btn').forEach(function(btn) {
                 btn.classList.remove('btn-primary');
                 btn.classList.add('btn-outline');
             });
-            var activeBtn = document.querySelector('.filter-btn[data-period="' + period + '"]');
-            if (activeBtn) {
-                activeBtn.classList.remove('btn-outline');
-                activeBtn.classList.add('btn-primary');
+            var legacyActive = document.querySelector('.filter-btn[data-period="' + period + '"]');
+            if (legacyActive) {
+                legacyActive.classList.remove('btn-outline');
+                legacyActive.classList.add('btn-primary');
             }
             loadData();
         }
@@ -424,6 +548,33 @@
 
             // DRE
             renderDRE();
+
+            // Ranking
+            renderRanking();
+        }
+
+        function renderRanking() {
+            if (typeof Financas === 'undefined' || !Financas.getFranchiseRanking) return;
+            var rank = Financas.getFranchiseRanking();
+            var container = document.getElementById('rankingContent');
+            
+            if (!rank || rank.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999;">Dados insuficientes para gerar ranking.</p>';
+                return;
+            }
+
+            var html = '<table class="panel-table"><thead><tr><th>Posicao</th><th>Franquia</th><th>Cidade</th><th style="text-align:right;">Receita</th></tr></thead><tbody>';
+            rank.forEach(function(item, idx) {
+                var medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : (idx + 1) + 'º'));
+                html += '<tr>';
+                html += '<td style="font-weight:800; font-size:1.1rem;">' + medal + '</td>';
+                html += '<td><strong>' + Utils.escapeHtml(item.name) + '</strong></td>';
+                html += '<td>' + Utils.escapeHtml(item.city) + '</td>';
+                html += '<td style="text-align:right; font-weight:700; color:var(--primary);">' + Utils.formatCurrency(item.revenue) + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
         }
 
         function updateKpiChanges(allFinances, allOrders, range, currentIncome, currentExpenses, currentProfit, currentTicket) {
@@ -631,12 +782,22 @@
             var income = monthFinances.filter(function(f) { return f.type === 'income'; });
             var expenses = monthFinances.filter(function(f) { return f.type === 'expense'; });
 
-            // Categorize income
-            var vendasTotal = income.filter(function(f) { return f.category === 'vendas'; })
-                .reduce(function(s, f) { return s + (f.amount || 0); }, 0);
-            var outrasReceitas = income.filter(function(f) { return f.category !== 'vendas'; })
-                .reduce(function(s, f) { return s + (f.amount || 0); }, 0);
+            // Categorize income — 'vendas' inclui vendas_pdv (source:pdv) e lançamentos manuais
+            var vendasTotal = income.filter(function(f) {
+                return f.category === 'vendas' || f.category === 'vendas_pdv';
+            }).reduce(function(s, f) { return s + (f.amount || 0); }, 0);
+            var outrasReceitas = income.filter(function(f) {
+                return f.category !== 'vendas' && f.category !== 'vendas_pdv';
+            }).reduce(function(s, f) { return s + (f.amount || 0); }, 0);
             var receitaBruta = vendasTotal + outrasReceitas;
+
+            // CMV (Custo da Mercadoria Vendida) — calculado automaticamente pelo PDV
+            // com base nos custos cadastrados em Produtos. Zero se o custo não foi rastreado.
+            var cmv = income.filter(function(f) {
+                return (f.category === 'vendas' || f.category === 'vendas_pdv') && f.custo > 0;
+            }).reduce(function(s, f) { return s + (f.custo || 0); }, 0);
+            var margemBrutaVendas = vendasTotal > 0 && cmv > 0
+                ? Math.round((1 - cmv / vendasTotal) * 1000) / 10 : null;
 
             // Deductions
             var impostos = receitaBruta * 0.06;
@@ -696,6 +857,18 @@
                 html += '<tr class="dre-row"><td class="dre-indent">(+) Outras Receitas</td><td class="dre-value dre-positive">' + fmtVal(outrasReceitas) + '</td></tr>';
             }
             html += '<tr class="dre-subtotal"><td>Total Receita Bruta</td><td class="dre-value ' + totalClass(receitaBruta) + '">' + fmtVal(receitaBruta) + '</td></tr>';
+
+            // CMV — só aparece se houver dados rastreados pelo PDV
+            if (cmv > 0) {
+                html += '<tr class="dre-section-header"><td colspan="2">CMV — CUSTO DA MERCADORIA VENDIDA</td></tr>';
+                html += '<tr class="dre-row"><td class="dre-indent">(-) CMV apurado pelo PDV</td><td class="dre-value dre-negative">' + fmtVal(cmv) + '</td></tr>';
+                html += '<tr class="dre-margin" title="Percentual que sobra da receita de vendas após descontar o custo dos produtos">';
+                html +=   '<td class="dre-indent">📊 Margem Bruta das Vendas</td>';
+                html +=   '<td class="dre-value ' + (margemBrutaVendas >= 30 ? 'dre-positive' : 'dre-negative') + '">';
+                html +=     margemBrutaVendas !== null ? margemBrutaVendas.toFixed(1) + '%' : '—';
+                html +=   '</td>';
+                html += '</tr>';
+            }
 
             // DEDUCOES
             html += '<tr class="dre-section-header"><td colspan="2">DEDUCOES</td></tr>';
@@ -878,6 +1051,63 @@
                 initDRESelectors();
                 loadData();
                 i18n.translatePage();
+
+                // Finance OS - saude da franquia por competencia (auditavel)
+                if (typeof FinanceOSUI !== 'undefined') {
+                    try { FinanceOSUI.init({ franchiseId: franchiseId }); }
+                    catch (e) { console.warn('FinanceOSUI init:', e); }
+                }
+
+                // ============================================
+                // PARAMETROS DE CUSTEIO (hub financeiro unico)
+                // ============================================
+                window.loadProducao = function() {
+                    if (typeof ProducaoCalc === 'undefined') return;
+                    var cfg = ProducaoCalc.getConfig(franchiseId);
+                    var set = function(id, v) { var el = document.getElementById(id); if (el) el.value = v; };
+                    set('prodKwh', cfg.custoKwh);
+                    set('prodPotencia', cfg.potenciaMediaKw);
+                    set('prodCustoHora', cfg.custoHora);
+                    set('prodEncargos', Math.round((cfg.encargosPct || 0.33) * 100));
+                    set('prodDasPct', Math.round((cfg.dasPct || 0.04) * 1000) / 10);
+                    set('prodProLabore', cfg.proLabore);
+                    set('prodDepreciacao', cfg.depreciacaoMensal);
+                    set('prodPerdasPct', Math.round((cfg.perdasPct || 0.04) * 1000) / 10);
+                    set('prodMetaVendas', cfg.metaVendasMes);
+                    set('prodMetaProdutos', cfg.metaProdutosMes);
+                    set('prodMinReal', cfg.minPedidosReal);
+                    var f1 = document.getElementById('prodProLaboreEmFixos'); if (f1) f1.checked = !!cfg.proLaboreEmFixos;
+                    var f2 = document.getElementById('prodDepreciacaoEmFixos'); if (f2) f2.checked = !!cfg.depreciacaoEmFixos;
+                };
+
+                window.salvarProducao = function() {
+                    if (typeof ProducaoCalc === 'undefined') { alert('Módulo ProducaoCalc não carregou.'); return; }
+                    var get = function(id, fb) { var el = document.getElementById(id); return el ? (parseFloat(el.value) || fb) : fb; };
+                    var cfg = {
+                        custoKwh: get('prodKwh', 0.85),
+                        potenciaMediaKw: get('prodPotencia', 1.5),
+                        custoHora: get('prodCustoHora', 8.50),
+                        encargosPct: get('prodEncargos', 33) / 100,
+                        dasPct: get('prodDasPct', 4) / 100,
+                        proLabore: get('prodProLabore', 1685),
+                        depreciacaoMensal: get('prodDepreciacao', 500),
+                        perdasPct: get('prodPerdasPct', 4) / 100,
+                        metaVendasMes: get('prodMetaVendas', 45000),
+                        metaProdutosMes: get('prodMetaProdutos', 2000),
+                        minPedidosReal: get('prodMinReal', 200),
+                        proLaboreEmFixos: !!document.getElementById('prodProLaboreEmFixos')?.checked,
+                        depreciacaoEmFixos: !!document.getElementById('prodDepreciacaoEmFixos')?.checked
+                    };
+                    ProducaoCalc.setConfig(franchiseId, cfg);
+                    var st = document.getElementById('prodStatus');
+                    if (st) {
+                        st.innerHTML = '<span style="color:#10B981">✓ Salvo. Os produtos vão recalcular custos automaticamente.</span>';
+                        setTimeout(function() { st.innerHTML = ''; }, 4500);
+                    }
+                    try { AuditLog && AuditLog.log && AuditLog.log('producao.config.update', cfg); } catch(e){}
+                };
+
+                try { loadProducao(); } catch(e) { console.warn('loadProducao:', e); }
             } catch (err) {
                 console.error('Erro ao inicializar financeiro:', err);
             }
@@ -1015,5 +1245,6 @@
             }
         }
     </style>
+<script src="../js/core/register-sw.js?v=mp-v91"></script>
 </body>
 </html>
