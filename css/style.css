@@ -2854,28 +2854,116 @@ input, select, textarea {
     30% { transform: translateY(-6px); }
 }
 
-/* WhatsApp Float */
+/* Chat Lulú AI - Typing indicator (três pontinhos pulsantes) */
+.chat-typing .chat-bubble {
+    padding: 12px 16px;
+    min-width: 48px;
+}
+.typing-dots {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+}
+.typing-dots span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--purple, #D4A5FF);
+    display: inline-block;
+    animation: luluTypingBounce 1.2s infinite ease-in-out;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.30s; }
+@keyframes luluTypingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.55; }
+    30% { transform: translateY(-5px); opacity: 1; }
+}
+.chat-ai-reply .chat-bubble a {
+    color: #25D366;
+    text-decoration: underline;
+    font-weight: 700;
+    word-break: break-word;
+}
+.chat-ai-reply .chat-bubble a:hover { color: #128C7E; }
+
+/* WhatsApp Float - Premium, Mobile-First */
 .whatsapp-float {
     position: fixed;
-    bottom: 24px;
-    right: 24px;
+    /* safe-area-inset garante que não fique embaixo da barra de gestos do iPhone */
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    right: 20px;
     z-index: 1400;
-    background: #25D366;
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
     color: white;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    display: flex;
+    min-width: 60px;
+    height: 60px;
+    padding: 0 18px;
+    border-radius: 999px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
-    transition: var(--transition);
+    gap: 10px;
+    text-decoration: none;
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45), 0 2px 6px rgba(0, 0, 0, 0.12);
+    transition: transform 0.25s cubic-bezier(.2,.9,.3,1.4), box-shadow 0.25s ease;
+    animation: whatsappPulse 2.8s ease-in-out infinite;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.whatsapp-float:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+.whatsapp-float svg {
+    flex-shrink: 0;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
+}
+
+.whatsapp-float-label {
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+}
+
+.whatsapp-float:hover,
+.whatsapp-float:focus-visible {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 12px 32px rgba(37, 211, 102, 0.55), 0 2px 8px rgba(0, 0, 0, 0.18);
+    animation-play-state: paused;
+}
+
+.whatsapp-float:active {
+    transform: scale(0.97);
+}
+
+@keyframes whatsappPulse {
+    0%, 100% {
+        box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45), 0 2px 6px rgba(0, 0, 0, 0.12),
+                    0 0 0 0 rgba(37, 211, 102, 0.5);
+    }
+    50% {
+        box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45), 0 2px 6px rgba(0, 0, 0, 0.12),
+                    0 0 0 14px rgba(37, 211, 102, 0);
+    }
+}
+
+/* Mobile: hide label on very small screens, show only icon (tap target 56×56 mínimo) */
+@media (max-width: 420px) {
+    .whatsapp-float {
+        padding: 0;
+        width: 58px;
+        min-width: 58px;
+        height: 58px;
+        gap: 0;
+    }
+    .whatsapp-float-label {
+        display: none;
+    }
+}
+
+/* Reduced motion: sem pulso */
+@media (prefers-reduced-motion: reduce) {
+    .whatsapp-float {
+        animation: none;
+    }
 }
 
 /* ============================================
@@ -3719,6 +3807,33 @@ input, select, textarea {
     color: #42A5F5;
 }
 
+/* Promo badge / preço riscado nos tamanhos (P/M/G) */
+.size-promo-badge {
+    display: inline-block;
+    background: #FF4F8A;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 6px;
+    margin-left: 6px;
+    letter-spacing: 0.3px;
+    vertical-align: middle;
+}
+
+.size-price-original {
+    display: block;
+    font-size: 0.7rem;
+    color: #999;
+    text-decoration: line-through;
+    margin-bottom: 1px;
+}
+
+.size-price-promo {
+    color: #FF4F8A !important;
+    font-size: 0.95rem !important;
+}
+
 .size-popular-tag {
     position: absolute;
     top: -8px;
@@ -4259,4 +4374,601 @@ input, select, textarea {
     .cs-meta {
         font-size: 0.72rem;
     }
+}
+
+/* ============================================
+   CARDÁPIO — TRUST BAR (social proof inline)
+   ============================================ */
+.cardapio-trust-bar {
+    background: linear-gradient(90deg, #e8f5e9, #f3e5f5, #e3f2fd);
+    border-bottom: 1px solid rgba(144,202,249,.35);
+    padding: 8px 16px;
+    overflow: hidden;
+}
+.trust-items {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 0.82rem;
+    color: #5A4570;
+    font-weight: 600;
+}
+.trust-sep {
+    opacity: .4;
+}
+
+/* ============================================
+   CARDÁPIO — COMPACT FOOTER
+   ============================================ */
+.cardapio-footer {
+    background: linear-gradient(180deg, #F3E5F5, #E3F2FD);
+    border-top: 2px solid rgba(144,202,249,.4);
+    padding: 28px 16px 80px; /* 80px bottom for sticky cart + fab */
+    text-align: center;
+    font-size: 0.85rem;
+    color: #6B5A87;
+}
+.cardapio-footer .cf-logo {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    border-radius: 16px;
+    margin-bottom: 10px;
+}
+.cardapio-footer h4 {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.1rem;
+    color: #5A4570;
+    margin: 0 0 4px;
+}
+.cardapio-footer .cf-address {
+    font-size: 0.82rem;
+    opacity: .85;
+    margin-bottom: 10px;
+}
+.cardapio-footer .cf-hours {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    background: rgba(255,255,255,.65);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    margin-bottom: 14px;
+}
+.cf-socials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+.cf-social-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: opacity .2s, transform .15s;
+}
+.cf-social-link:hover { opacity: .85; transform: translateY(-2px); }
+.cf-social-link.ig {
+    background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+    color: #fff;
+}
+.cf-social-link.wa {
+    background: #25D366;
+    color: #fff;
+}
+.cf-social-link.tk {
+    background: #000;
+    color: #fff;
+}
+.cardapio-footer .cf-copy {
+    font-size: 0.75rem;
+    opacity: .6;
+    margin-top: 6px;
+}
+
+/* ============================================
+   CARDÁPIO — STORIES CAROUSEL
+   ============================================ */
+.stories-strip {
+    padding: 12px 0 10px;
+    background: #fff;
+    border-bottom: 1px solid rgba(144,202,249,.2);
+    overflow: hidden;
+}
+.stories-scroller {
+    display: flex;
+    gap: 14px;
+    padding: 0 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.stories-scroller::-webkit-scrollbar { display: none; }
+.story-bubble {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    transition: transform .15s;
+}
+.story-bubble:active { transform: scale(.93); }
+.story-ring {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    padding: 3px;
+    background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+    transition: opacity .2s;
+}
+.story-ring.seen {
+    background: linear-gradient(135deg, #ccc, #aaa);
+}
+.story-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    border: 2.5px solid #fff;
+}
+.story-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #5A4570;
+    max-width: 64px;
+    text-align: center;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.story-bubble.active .story-ring {
+    outline: 3px solid #42A5F5;
+    outline-offset: 2px;
+}
+
+/* ============================================
+   CARDÁPIO — SOCIAL PROOF CHIP ON CARDS
+   ============================================ */
+.card-sp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255,87,34,.1);
+    color: #BF360C;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-bottom: 4px;
+}
+
+/* ============================================
+   CARDÁPIO — PRODUCT CARD IMAGE SUPPORT
+   ============================================ */
+.card-img {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-bottom: 4px;
+    border: 2px solid rgba(212,165,255,.4);
+    flex-shrink: 0;
+}
+.card-emoji-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+}
+
+/* ============================================
+   CARDÁPIO — RECOMENDAÇÕES "COMBINA COM"
+   ============================================ */
+.sheet-combina {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.combina-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 10px;
+    background: rgba(212,165,255,.15);
+    border: 1.5px solid rgba(212,165,255,.45);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform .15s, background .15s;
+    flex: 1;
+    min-width: 72px;
+    max-width: 100px;
+    text-align: center;
+}
+.combina-chip:hover, .combina-chip:active {
+    background: rgba(212,165,255,.3);
+    transform: translateY(-2px);
+}
+.combina-emoji { font-size: 1.4rem; }
+.combina-name { font-size: 0.72rem; font-weight: 700; color: #5A4570; line-height: 1.2; }
+.combina-price { font-size: 0.68rem; color: #9484A8; }
+
+/* ============================================
+   CARDÁPIO — WAIT TIME COLOR (pedidos kanban)
+   ============================================ */
+.order-card[data-wait="warn"] {
+    border-left: 4px solid #FF9800;
+}
+.order-card[data-wait="alert"] {
+    border-left: 4px solid #F44336;
+    animation: pulse-red 2s infinite;
+}
+@keyframes pulse-red {
+    0%, 100% { box-shadow: 0 2px 8px rgba(244,67,54,.2); }
+    50%       { box-shadow: 0 4px 16px rgba(244,67,54,.45); }
+}
+
+/* ============================================
+   CARDÁPIO — PREMIUM UPGRADE (visual only)
+   Sobrescreve estilos anteriores SEM mexer no JS.
+   ============================================ */
+
+/* Grid: 2 colunas em telas >= 600px, 1 coluna no mobile estreito */
+.products-grid-mobile {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 16px 0 24px;
+}
+@media (min-width: 600px) {
+    .products-grid-mobile { grid-template-columns: 1fr 1fr; gap: 16px; }
+}
+@media (min-width: 1100px) {
+    .products-grid-mobile { grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+}
+
+/* Card refinado: borda gradient sutil, sombra com cor de marca, animação no hover */
+.product-card-mobile {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    gap: 14px;
+    background: #ffffff;
+    border-radius: 22px;
+    padding: 16px 16px 16px 14px;
+    box-shadow: 0 4px 18px rgba(108, 99, 255, 0.07), 0 1px 3px rgba(0,0,0,0.04);
+    cursor: pointer;
+    transition: transform .22s cubic-bezier(.34,1.56,.64,1),
+                box-shadow .22s ease,
+                border-color .22s ease;
+    border: 1.5px solid rgba(212, 165, 255, 0.18);
+    overflow: hidden;
+    isolation: isolate;
+}
+/* Glow gradiente atras do card no hover */
+.product-card-mobile::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 22px;
+    padding: 1.5px;
+    background: linear-gradient(135deg, rgba(108,99,255,.0), rgba(212,165,255,.0));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    transition: background .25s ease;
+    z-index: 1;
+}
+.product-card-mobile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(108, 99, 255, 0.14), 0 2px 8px rgba(0,0,0,0.05);
+    border-color: rgba(212, 165, 255, 0.45);
+}
+.product-card-mobile:hover::before {
+    background: linear-gradient(135deg, rgba(108,99,255,.55), rgba(255,107,107,.55) 60%, rgba(255,213,79,.55));
+}
+.product-card-mobile:active {
+    transform: translateY(-1px) scale(0.985);
+    transition-duration: .12s;
+}
+
+/* Emoji wrap mais vibrante com gradient da marca + brilho sutil */
+.card-emoji-wrap {
+    position: relative;
+    width: 84px;
+    min-width: 84px;
+    height: 84px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #FFE0EC 0%, #E0F0FF 50%, #FFF5D1 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.6),
+                0 4px 12px rgba(108,99,255,.10);
+    overflow: hidden;
+}
+.card-emoji-wrap::after {
+    content: '';
+    position: absolute;
+    top: -40%;
+    left: -40%;
+    width: 80%;
+    height: 80%;
+    background: radial-gradient(circle, rgba(255,255,255,.7) 0%, rgba(255,255,255,0) 70%);
+    pointer-events: none;
+}
+.product-card-mobile:hover .card-emoji-wrap {
+    transform: rotate(-3deg) scale(1.04);
+    transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+}
+
+.card-emoji {
+    font-size: 2.6rem;
+    line-height: 1;
+    filter: drop-shadow(0 2px 6px rgba(108,99,255,.18));
+    transition: transform .3s ease;
+}
+
+/* Imagem do produto: mantém formato circular consistente com emoji wrap */
+.card-img {
+    width: 84px;
+    height: 84px;
+    border-radius: 20px;
+    object-fit: cover;
+    margin: 0;
+    border: 2px solid rgba(255,255,255,.85);
+    box-shadow: 0 4px 12px rgba(108,99,255,.18);
+    flex-shrink: 0;
+    transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+}
+.product-card-mobile:hover .card-img {
+    transform: scale(1.06);
+}
+
+/* Badge popular: pill premium dourado/rosa */
+.card-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    font-size: 0.62rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: .3px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(0,0,0,.2);
+    z-index: 3;
+}
+.badge-popular {
+    background: linear-gradient(135deg, #FF6B6B 0%, #FFB347 100%);
+}
+.badge-adulto {
+    background: linear-gradient(135deg, #C62828 0%, #FF5252 100%);
+}
+
+/* Info column (texto) */
+.card-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 4px;
+}
+
+.card-name {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #2d1b4e;
+    margin: 0;
+    line-height: 1.15;
+    letter-spacing: -.2px;
+    /* Trunca em 1 linha pra alinhar grid */
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-desc {
+    font-size: 0.78rem;
+    color: #7d6e92;
+    margin: 0;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    /* Sombra sutil pra dar fade no fim do texto cortado */
+    mask-image: linear-gradient(180deg, #000 80%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, #000 80%, transparent 100%);
+}
+
+/* Social proof chip (🔥 X pediram hoje) */
+.card-sp-chip {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 4px;
+    padding: 3px 9px;
+    background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+    color: #BF360C;
+    font-size: 0.68rem;
+    font-weight: 800;
+    border-radius: 16px;
+    margin: 4px 0 2px;
+    border: 1px solid rgba(255,152,0,.25);
+    letter-spacing: .2px;
+    animation: sp-fade-in .4s ease both;
+}
+@keyframes sp-fade-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+    gap: 8px;
+}
+
+.card-price {
+    font-size: 0.72rem;
+    color: #8b7b9b;
+    line-height: 1.1;
+    display: flex;
+    flex-direction: column;
+}
+.card-price strong {
+    color: #6C63FF;
+    font-size: 1.1rem;
+    font-family: 'Baloo 2', cursive;
+    font-weight: 800;
+    letter-spacing: -.3px;
+}
+
+/* Botão Pedir: gradient marca, shine animado no hover */
+.card-add-btn {
+    position: relative;
+    background: linear-gradient(135deg, #6C63FF 0%, #42A5F5 100%);
+    color: #fff;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 22px;
+    font-weight: 800;
+    font-size: 0.82rem;
+    font-family: 'Baloo 2', cursive;
+    cursor: pointer;
+    min-height: 38px;
+    letter-spacing: .3px;
+    box-shadow: 0 4px 12px rgba(108,99,255,.32);
+    transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+    overflow: hidden;
+}
+.card-add-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(120deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,.45) 50%,
+        rgba(255,255,255,0) 100%);
+    transform: skewX(-20deg);
+    transition: left .55s ease;
+}
+.product-card-mobile:hover .card-add-btn {
+    box-shadow: 0 6px 18px rgba(108,99,255,.45);
+    filter: brightness(1.05);
+}
+.product-card-mobile:hover .card-add-btn::after {
+    left: 130%;
+}
+.card-add-btn:active {
+    transform: scale(.96);
+    filter: brightness(.95);
+}
+
+/* Premium item (#18 Capitão Açaí etc.) — destaque dourado */
+.product-card-mobile[data-premium="true"],
+.product-card-mobile.premium {
+    background: linear-gradient(135deg, #FFF8E1 0%, #FFFFFF 60%);
+    border: 1.5px solid rgba(255, 179, 0, .4);
+    box-shadow: 0 6px 22px rgba(255, 152, 0, .14), 0 1px 4px rgba(0,0,0,.04);
+}
+.product-card-mobile[data-premium="true"] .card-emoji-wrap,
+.product-card-mobile.premium .card-emoji-wrap {
+    background: linear-gradient(135deg, #FFE082 0%, #FFB74D 60%, #FF8A65 100%);
+}
+.product-card-mobile[data-premium="true"] .card-add-btn,
+.product-card-mobile.premium .card-add-btn {
+    background: linear-gradient(135deg, #FF8A00 0%, #E65100 100%);
+    box-shadow: 0 4px 12px rgba(230, 81, 0, .35);
+}
+.product-card-mobile[data-premium="true"]::before,
+.product-card-mobile.premium::before {
+    background: linear-gradient(135deg, rgba(255,179,0,.0), rgba(255,87,34,.0));
+}
+.product-card-mobile[data-premium="true"]:hover::before,
+.product-card-mobile.premium:hover::before {
+    background: linear-gradient(135deg, rgba(255,179,0,.7), rgba(255,87,34,.7));
+}
+
+/* Categoria divider (Milkshakes / Sundaes / etc) */
+.catalog-cat-divider {
+    grid-column: 1 / -1;
+    padding: 24px 4px 8px;
+    position: relative;
+}
+.catalog-cat-divider::before {
+    content: '';
+    position: absolute;
+    bottom: 6px;
+    left: 4px;
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(90deg, #6C63FF, #FF6B6B);
+    border-radius: 2px;
+}
+.catalog-cat-divider-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+.catalog-cat-divider-desc {
+    font-size: 0.85rem;
+    margin-top: 4px;
+}
+
+/* Tabs de categoria do topo: pill com active estado mais marcante */
+.cat-tab {
+    transition: all .2s ease;
+}
+.cat-tab.active {
+    background: linear-gradient(135deg, #6C63FF, #42A5F5);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(108,99,255,.35);
+    transform: translateY(-1px);
+}
+
+/* Mobile: ajusta tamanhos pra caber bem na tela estreita */
+@media (max-width: 420px) {
+    .product-card-mobile { padding: 12px; gap: 12px; border-radius: 18px; }
+    .card-emoji-wrap { width: 72px; min-width: 72px; height: 72px; border-radius: 18px; }
+    .card-img { width: 72px; height: 72px; border-radius: 18px; }
+    .card-emoji { font-size: 2.2rem; }
+    .card-name { font-size: 0.98rem; }
+    .card-desc { font-size: 0.74rem; }
+    .card-add-btn { padding: 8px 14px; font-size: 0.78rem; }
+    .card-price strong { font-size: 1rem; }
 }

@@ -123,12 +123,20 @@ h1{font-size:28px;font-weight:800;margin-bottom:4px}
             var hash = location.hash.replace('#','');
             if(hash) franchiseId = decodeURIComponent(hash);
         }
+        if(!franchiseId){
+            try {
+                var franchises = DataStore.get('franchises') || [];
+                if(franchises.length === 1 && franchises[0].id){
+                    franchiseId = franchises[0].id;
+                }
+            } catch (e) {}
+        }
     }
 
     /* === Load data === */
     function loadData(){
         if(!franchiseId){
-            loadingMsg.textContent = 'Franquia nao encontrada. Verifique a URL.';
+            loadingMsg.textContent = 'Use o link da franquia ou informe ?f=ID_DA_FRANQUIA.';
             return;
         }
 
@@ -148,6 +156,13 @@ h1{font-size:28px;font-weight:800;margin-bottom:4px}
 
         if(!playlist.length){
             loadingMsg.textContent = 'Playlist vazia. Adicione musicas no painel da franquia.';
+            document.getElementById('storeName').textContent = config.storeName || franchiseId;
+            document.getElementById('nowTitle').textContent = 'Nenhuma faixa configurada';
+            document.getElementById('timeElapsed').textContent = '0:00';
+            document.getElementById('timeDuration').textContent = '0:00';
+            loadingScreen.classList.add('hidden');
+            appDiv.style.display = 'flex';
+            document.getElementById('statusBar').textContent = 'Sem playlist ativa';
             return;
         }
 
@@ -165,6 +180,7 @@ h1{font-size:28px;font-weight:800;margin-bottom:4px}
         generateShuffleOrder();
         renderPlaylist();
 
+        document.getElementById('storeName').textContent = config.storeName || franchiseId;
         loadingScreen.classList.add('hidden');
         appDiv.style.display = 'flex';
 

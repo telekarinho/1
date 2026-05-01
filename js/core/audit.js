@@ -52,6 +52,9 @@ const AuditLog = {
         PRODUCT_CREATED: 'product.created',
         PRODUCT_UPDATED: 'product.updated',
         PRODUCT_TOGGLED: 'product.toggled',
+        
+        // Gamification / Marketing
+        CHALLENGE_REWARD: 'marketing.challenge_reward',
 
         // Settings
         SETTINGS_CHANGED: 'settings.changed',
@@ -279,6 +282,7 @@ const AuditLog = {
             'product.created': 'Produto criado',
             'product.updated': 'Produto atualizado',
             'product.toggled': 'Produto ativado/desativado',
+            'marketing.challenge_reward': 'Prêmio de Desafio Concedido',
             'settings.changed': 'Configuracoes alteradas',
             'system.backup': 'Backup criado',
             'system.restore': 'Backup restaurado'
@@ -313,3 +317,7 @@ const AuditLog = {
 
 // Auto-inicializa
 AuditLog.init();
+
+// Expose globally for browser (const is script-scoped, not a window property)
+if (typeof window !== 'undefined') window.AuditLog = AuditLog;
+if (typeof globalThis !== 'undefined') globalThis.AuditLog = AuditLog;

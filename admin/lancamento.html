@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot Admin - Lançamento Viral</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#E63F7E">
+    <style>
+        .launch-hero {
+            background: linear-gradient(135deg, #E63F7E 0%, #D4B8FF 50%, #B8F0D4 100%);
+            border-radius: var(--mp-radius);
+            padding: 28px 32px;
+            color: #fff;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .launch-hero h2 {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.8rem;
+            margin: 0 0 8px 0;
+        }
+        .launch-hero-countdown {
+            font-size: 3rem;
+            font-weight: 800;
+            font-family: 'Baloo 2', cursive;
+            line-height: 1;
+            margin: 12px 0;
+        }
+        .launch-hero-subtitle {
+            opacity: 0.95;
+            font-size: 0.95rem;
+        }
+        .launch-progress-bar {
+            background: rgba(255,255,255,0.25);
+            border-radius: 100px;
+            height: 10px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+        .launch-progress-fill {
+            background: #fff;
+            height: 100%;
+            border-radius: 100px;
+            transition: width 0.6s;
+        }
+
+        .launch-tabs {
+            display: flex;
+            gap: 4px;
+            background: #fff;
+            border-radius: 14px;
+            padding: 6px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .launch-tab {
+            padding: 10px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #666;
+            white-space: nowrap;
+            border: none;
+            background: transparent;
+            transition: all 0.2s;
+        }
+        .launch-tab:hover { background: #FFF0F6; color: #E63F7E; }
+        .launch-tab.active {
+            background: linear-gradient(135deg, #E63F7E, #D4B8FF);
+            color: #fff;
+        }
+
+        .launch-day-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            border-left: 5px solid #E63F7E;
+        }
+        .launch-day-card.is-today { border-left-color: #00C853; background: linear-gradient(180deg, #F0FFF4 0%, #fff 60%); }
+        .launch-day-card.is-past { opacity: 0.55; }
+        .launch-day-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .launch-day-date {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.4rem;
+            color: #333;
+        }
+        .launch-day-date small { display: block; font-size: 0.75rem; color: #999; font-weight: 500; margin-top: 2px; font-family: 'Nunito', sans-serif; }
+        .launch-day-theme {
+            background: #FFF0F6;
+            color: #E63F7E;
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+        .launch-day-today-badge {
+            background: #00C853;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .launch-item {
+            background: #FAFAFA;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            border-left: 3px solid #D4B8FF;
+            transition: all 0.2s;
+        }
+        .launch-item.published {
+            background: #E8F5E9;
+            border-left-color: #00C853;
+        }
+        .launch-item-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            cursor: pointer;
+        }
+        .launch-item-title {
+            flex: 1;
+            font-weight: 700;
+            font-size: 0.95rem;
+            min-width: 200px;
+        }
+        .launch-item-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .launch-badge {
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-weight: 600;
+            background: #EEE;
+            color: #555;
+        }
+        .launch-badge.hi { background: #FFE0E6; color: #E63F7E; }
+        .launch-badge.critical { background: #FF1744; color: #fff; }
+        .launch-badge.reel { background: #FFE5F1; color: #C2185B; }
+        .launch-badge.carrossel { background: #E3F2FD; color: #1565C0; }
+        .launch-badge.estático { background: #FFF8E1; color: #F57F17; }
+        .launch-badge.stories { background: #F3E5F5; color: #7B1FA2; }
+        .launch-badge.live { background: #FFEBEE; color: #C62828; }
+        .launch-badge.tiktok { background: #000; color: #fff; }
+        .launch-badge.outbound { background: #E0F2F1; color: #00695C; }
+        .launch-badge.imprensa { background: #FFF3E0; color: #E65100; }
+        .launch-badge.setup, .launch-badge.ops { background: #ECEFF1; color: #455A64; }
+        .launch-badge.ativacao, .launch-badge.seeding { background: #FFF9C4; color: #827717; }
+
+        .launch-item-body {
+            display: none;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed #DDD;
+        }
+        .launch-item.open .launch-item-body { display: block; }
+
+        .launch-content-block {
+            background: #fff;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            border: 1px solid #EEE;
+        }
+        .launch-content-block-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+        .launch-content-block-title strong {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .launch-content-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.9rem;
+            color: #333;
+            line-height: 1.5;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .btn-copy {
+            background: linear-gradient(135deg, #E63F7E, #D4B8FF);
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .btn-copy:hover { transform: scale(1.05); }
+        .btn-copy:active { transform: scale(0.98); }
+        .btn-copy.copied { background: #00C853; }
+
+        .launch-item-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+            align-items: center;
+        }
+        .check-published {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+            border: 2px solid #DDD;
+            border-radius: 100px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .check-published:hover { border-color: #00C853; }
+        .check-published input { width: 16px; height: 16px; cursor: pointer; }
+        .launch-item.published .check-published { border-color: #00C853; color: #00C853; }
+
+        .slide-card {
+            background: #fff;
+            border: 2px solid #F0F0F0;
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 14px;
+        }
+        .slide-card-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .slide-num {
+            background: linear-gradient(135deg, #E63F7E, #D4B8FF);
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-family: 'Baloo 2', cursive;
+        }
+        .slide-role {
+            font-weight: 700;
+            color: #333;
+            flex: 1;
+        }
+
+        .lana-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-bottom: 12px;
+            border-left: 4px solid #D4B8FF;
+        }
+        .lana-tier-badge {
+            background: linear-gradient(135deg, #FFD700, #FFA000);
+            color: #fff;
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        .lana-tier-badge.t2 { background: linear-gradient(135deg, #C0C0C0, #757575); }
+        .lana-tier-badge.t3 { background: linear-gradient(135deg, #CD7F32, #8B4513); }
+
+        .whatsapp-msg {
+            background: #DCF8C6;
+            border-radius: 12px 12px 12px 2px;
+            padding: 14px 18px;
+            margin: 10px 0;
+            max-width: 600px;
+            font-family: 'Nunito', sans-serif;
+            position: relative;
+        }
+        .whatsapp-msg-trigger {
+            background: #075E54;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 100px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .ads-copy-block {
+            background: #fff;
+            border: 2px solid #F0F0F0;
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-bottom: 12px;
+        }
+        .ads-headline {
+            font-weight: 800;
+            color: #E63F7E;
+            font-size: 1rem;
+            margin-bottom: 6px;
+        }
+
+        .toast-copy {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #00C853;
+            color: #fff;
+            padding: 14px 24px;
+            border-radius: 100px;
+            font-weight: 700;
+            z-index: 9999;
+            box-shadow: 0 6px 24px rgba(0,200,83,0.3);
+            animation: toastIn 0.3s;
+        }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translate(-50%, 20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        .launch-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .launch-stat {
+            background: #fff;
+            border-radius: 14px;
+            padding: 18px 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        }
+        .launch-stat-value {
+            font-family: 'Baloo 2', cursive;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #E63F7E;
+            line-height: 1;
+        }
+        .launch-stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        .store-idea-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            border-left: 4px solid #B8F0D4;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .store-idea-cost {
+            background: #FFF8E1;
+            color: #E65100;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+            height: fit-content;
+        }
+
+        .heygen-script {
+            background: #fff;
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin-bottom: 14px;
+            border-left: 4px solid #00BCD4;
+        }
+        .heygen-script-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .heygen-duration {
+            background: #E0F7FA;
+            color: #006064;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .info-banner {
+            background: #FFF9C4;
+            border-left: 4px solid #F9A825;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #5D4037;
+        }
+
+        .press-veiculo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: #FAFAFA;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* ===== RITUAL DIÁRIO ===== */
+        .daily-ritual {
+            background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+            border: 2px solid #FFB300;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+        }
+        .daily-ritual h3 {
+            font-family: 'Baloo 2', cursive;
+            color: #E65100;
+            margin: 0 0 6px 0;
+            font-size: 1.2rem;
+        }
+        .daily-ritual-subtitle {
+            font-size: 0.85rem;
+            color: #795548;
+            margin-bottom: 14px;
+        }
+        .ritual-item {
+            background: #fff;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid #FFB300;
+        }
+        .ritual-item.critical { border-left-color: #E63F7E; }
+        .ritual-time {
+            background: #FFE0B2;
+            color: #E65100;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        .ritual-item.critical .ritual-time { background: #FFE0E6; color: #E63F7E; }
+        .ritual-task { flex: 1; }
+        .ritual-task strong { display: block; font-size: 0.92rem; color: #333; }
+        .ritual-task small { font-size: 0.78rem; color: #888; }
+        .ritual-duration {
+            background: #F5F5F5;
+            color: #666;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* ===== PRÓXIMO PASSO (grande, claro) ===== */
+        .next-action {
+            background: linear-gradient(135deg, #E63F7E 0%, #9C27B0 100%);
+            border-radius: 20px;
+            padding: 28px 32px;
+            color: #fff;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(230,63,126,0.25);
+        }
+        .next-action-label {
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            font-weight: 800;
+            opacity: 0.95;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .next-action-title {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.8rem;
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+        .next-action-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .next-action-meta span {
+            background: rgba(255,255,255,0.22);
+            padding: 5px 12px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            backdrop-filter: blur(10px);
+        }
+        .next-action-why {
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .next-action-why strong { display: block; margin-bottom: 4px; font-size: 0.78rem; letter-spacing: 1px; opacity: 0.9; }
+        .next-action-how {
+            background: #fff;
+            color: #333;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+        .next-action-how-title {
+            font-weight: 800;
+            color: #E63F7E;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .next-action-how ol {
+            margin: 0;
+            padding-left: 22px;
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+        .next-action-how ol li { margin-bottom: 6px; }
+        .next-action-content-box {
+            background: #fff;
+            color: #333;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+        }
+        .next-action-content-box-title {
+            font-weight: 800;
+            color: #E63F7E;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            align-items: center;
+        }
+        .next-action-content-box pre {
+            white-space: pre-wrap;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.9rem;
+            margin: 0;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+        .next-action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+        .btn-done-big {
+            background: #fff;
+            color: #00C853;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 100px;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .btn-done-big:hover { transform: scale(1.03); }
+        .btn-copy-big {
+            background: #fff;
+            color: #E63F7E;
+            border: 2px solid transparent;
+            padding: 14px 24px;
+            border-radius: 100px;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        /* ===== PASSOS NUMERADOS ===== */
+        .step-row {
+            background: #fff;
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border: 2px solid #F0F0F0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .step-row:hover { border-color: #D4B8FF; transform: translateX(2px); }
+        .step-row.published { background: #E8F5E9; border-color: #00C853; opacity: 0.7; }
+        .step-num {
+            background: linear-gradient(135deg, #E63F7E, #D4B8FF);
+            color: #fff;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Baloo 2', cursive;
+            font-weight: 800;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .step-row.published .step-num { background: #00C853; }
+        .step-content { flex: 1; min-width: 0; }
+        .step-content strong { display: block; font-size: 0.95rem; color: #333; margin-bottom: 4px; }
+        .step-content small { font-size: 0.8rem; color: #888; }
+        .step-chevron { color: #999; font-size: 1.2rem; }
+
+        /* ===== ROTINA 90 DIAS ===== */
+        .rotina-section {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        }
+        .rotina-section h2 {
+            font-family: 'Baloo 2', cursive;
+            color: #E63F7E;
+            margin: 0 0 16px 0;
+            font-size: 1.4rem;
+        }
+        .weekly-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        .weekly-day {
+            background: #FAFAFA;
+            border-radius: 12px;
+            padding: 14px 16px;
+            border-top: 4px solid #D4B8FF;
+        }
+        .weekly-day strong {
+            font-family: 'Baloo 2', cursive;
+            color: #333;
+            display: block;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        .weekly-day .wd-emoji { font-size: 1.5rem; display: block; margin-bottom: 6px; }
+        .weekly-day small { color: #666; font-size: 0.8rem; line-height: 1.4; display: block; margin-top: 4px; }
+        .weekly-day .wd-horario {
+            background: #FFF0F6;
+            color: #E63F7E;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 6px;
+        }
+
+        .month-card {
+            background: linear-gradient(135deg, rgba(230,63,126,0.05), rgba(212,184,255,0.05));
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin-bottom: 16px;
+            border-left: 6px solid #E63F7E;
+        }
+        .month-card.m2 { border-left-color: #9C27B0; }
+        .month-card.m3 { border-left-color: #00BCD4; }
+        .month-label {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .month-period {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 12px;
+        }
+        .month-theme {
+            font-size: 1rem;
+            color: #555;
+            font-style: italic;
+            margin-bottom: 14px;
+        }
+        .month-objetivos {
+            background: #fff;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+        }
+        .month-objetivos strong { font-size: 0.85rem; color: #E63F7E; display: block; margin-bottom: 8px; }
+        .month-objetivos ul { margin: 0; padding-left: 18px; font-size: 0.9rem; line-height: 1.7; }
+        .semana-row {
+            background: #fff;
+            border-radius: 10px;
+            padding: 12px 18px;
+            margin-bottom: 8px;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+        .semana-num {
+            background: linear-gradient(135deg, #E63F7E, #D4B8FF);
+            color: #fff;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            flex-shrink: 0;
+            font-family: 'Baloo 2', cursive;
+        }
+        .semana-body { flex: 1; }
+        .semana-body strong { font-size: 0.95rem; color: #333; display: block; margin-bottom: 4px; }
+        .semana-body small { font-size: 0.85rem; color: #666; line-height: 1.5; }
+
+        .banco-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 18px 22px;
+            margin-bottom: 14px;
+            border-left: 4px solid #E63F7E;
+        }
+        .banco-card.p2 { border-left-color: #9C27B0; }
+        .banco-card.p3 { border-left-color: #00C853; }
+        .banco-card.p4 { border-left-color: #1976D2; }
+        .banco-card.p5 { border-left-color: #FF9800; }
+        .banco-card.p6 { border-left-color: #795548; }
+        .banco-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+        .banco-header strong { font-size: 1.05rem; color: #333; }
+        .banco-pct {
+            background: #F0F0F0;
+            color: #555;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .banco-descricao {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 12px;
+        }
+        .banco-ideias {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 6px;
+        }
+        .banco-ideia {
+            background: #FAFAFA;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            color: #444;
+            border-left: 2px solid #DDD;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small>Central Admin</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="franchises.html" class="sidebar-link"><span class="icon">🏪</span> Franquias</a>
+                <a href="finances.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <div class="sidebar-nav-group">Gestão</div>
+                <a href="orders.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <a href="products.html" class="sidebar-link"><span class="icon">🍨</span> Cardápio</a>
+                <a href="users.html" class="sidebar-link"><span class="icon">👥</span> Usuários</a>
+                <div class="sidebar-nav-group">Marketing</div>
+                <a href="lancamento.html" class="sidebar-link active"><span class="icon">🚀</span> Lançamento</a>
+                <a href="campaigns.html" class="sidebar-link"><span class="icon">📢</span> Campanhas</a>
+                <a href="seo.html" class="sidebar-link"><span class="icon">🔍</span> SEO & Delivery</a>
+                <a href="ifood.html" class="sidebar-link"><span class="icon">🛵</span> iFood</a>
+                <a href="desafio.html" class="sidebar-link"><span class="icon">🎮</span> Desafio</a>
+                <div class="sidebar-nav-group">Sistema</div>
+                <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Configurações</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">👑</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Admin</strong>
+                        <small>Super Admin</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="panel-main">
+            <header class="panel-header">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+                    <h1>🚀 Lançamento Viral</h1>
+                </div>
+                <div class="panel-header-right">
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <!-- HERO COUNTDOWN -->
+                <div class="launch-hero">
+                    <h2 id="heroTitle">🐑 Rumo à inauguração</h2>
+                    <div class="launch-hero-countdown" id="heroCountdown">-</div>
+                    <div class="launch-hero-subtitle" id="heroSubtitle">-</div>
+                    <div class="launch-progress-bar">
+                        <div class="launch-progress-fill" id="heroProgress" style="width:0%"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-top:8px;opacity:0.9">
+                        <span id="progressLabel">0 de 0 tarefas publicadas</span>
+                        <span id="progressPct">0%</span>
+                    </div>
+                </div>
+
+                <!-- STATS -->
+                <div class="launch-stats-grid">
+                    <div class="launch-stat">
+                        <div class="launch-stat-value" id="statToday">0</div>
+                        <div class="launch-stat-label">Tarefas de hoje</div>
+                    </div>
+                    <div class="launch-stat">
+                        <div class="launch-stat-value" id="statTotal">0</div>
+                        <div class="launch-stat-label">Total de conteúdos</div>
+                    </div>
+                    <div class="launch-stat">
+                        <div class="launch-stat-value" id="statCarousels">3</div>
+                        <div class="launch-stat-label">Carrosséis prontos</div>
+                    </div>
+                    <div class="launch-stat">
+                        <div class="launch-stat-value" id="statLana">30</div>
+                        <div class="launch-stat-label">Ideias Lana</div>
+                    </div>
+                </div>
+
+                <!-- TABS -->
+                <div class="launch-tabs">
+                    <button class="launch-tab active" data-tab="hoje" title="O que fazer HOJE, passo a passo">✅ Hoje</button>
+                    <button class="launch-tab" data-tab="rotina" title="Rotina fixa dos próximos 90 dias">🌱 90 Dias</button>
+                    <button class="launch-tab" data-tab="calendario" title="Cronograma completo com todos os dias">📅 Calendário</button>
+                    <button class="launch-tab" data-tab="carrosseis" title="3 carrosséis prontos pra gerar no Whisk">🎨 Carrosséis</button>
+                    <button class="launch-tab" data-tab="lana" title="Personalidade da Lana + 30 ideias virais">🐑 Lana Lab</button>
+                    <button class="launch-tab" data-tab="heygen" title="10 scripts pra avatar HeyGen da Lana">🎬 HeyGen</button>
+                    <button class="launch-tab" data-tab="loja" title="10 ideias pra decorar a loja no Muffato">🏪 Loja Física</button>
+                    <button class="launch-tab" data-tab="ads" title="Campanhas + copies prontas">📱 Ads</button>
+                    <button class="launch-tab" data-tab="imprensa" title="Press release + 10 veículos locais">📰 Imprensa</button>
+                </div>
+
+                <!-- TAB CONTENTS -->
+                <div id="tabContent"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/lancamento-content.js"></script>
+    <script>
+        if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+        const session = Auth.getSession();
+        document.getElementById('sidebarUserName').textContent = session.name;
+
+        const LC = window.LancamentoContent;
+        const LAUNCH_DATE = new Date(LC.brand.launchDate + 'T14:00:00');
+        const STATUS_KEY = 'launch_status';
+
+        function getStatus() {
+            try { return JSON.parse(localStorage.getItem(STATUS_KEY)) || {}; } catch { return {}; }
+        }
+        function setStatus(id, published) {
+            const s = getStatus();
+            if (published) s[id] = true; else delete s[id];
+            localStorage.setItem(STATUS_KEY, JSON.stringify(s));
+            refreshStats();
+        }
+
+        function escHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+        }
+
+        function copyText(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                btn.classList.add('copied');
+                const original = btn.textContent;
+                btn.textContent = '✓ Copiado!';
+                showToast('Copiado pra área de transferência! 📋');
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.textContent = original;
+                }, 2000);
+            });
+        }
+        window.copyText = copyText;
+
+        function showToast(msg) {
+            const existing = document.querySelector('.toast-copy');
+            if (existing) existing.remove();
+            const t = document.createElement('div');
+            t.className = 'toast-copy';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        }
+
+        function calcDaysToLaunch() {
+            const now = new Date();
+            const diff = LAUNCH_DATE - now;
+            const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+            return days;
+        }
+
+        function todayISO() {
+            const d = new Date();
+            return d.toISOString().split('T')[0];
+        }
+
+        function refreshHero() {
+            const days = calcDaysToLaunch();
+            const titleEl = document.getElementById('heroTitle');
+            const countdownEl = document.getElementById('heroCountdown');
+            const subEl = document.getElementById('heroSubtitle');
+
+            if (days > 0) {
+                titleEl.textContent = '🐑 Rumo à inauguração';
+                countdownEl.textContent = days === 1 ? 'Falta 1 dia' : 'Faltam ' + days + ' dias';
+                subEl.textContent = 'Inauguração: ' + LC.brand.launchDateLabel + ' · ' + LC.brand.address;
+            } else if (days === 0) {
+                titleEl.textContent = '🎉 É HOJE!';
+                countdownEl.textContent = 'HOJE É O DIA';
+                subEl.textContent = 'Inauguração acontecendo AGORA. Bora postar TUDO.';
+            } else {
+                titleEl.textContent = '💗 Pós-inauguração';
+                countdownEl.textContent = Math.abs(days) + ' dias desde abertura';
+                subEl.textContent = 'Mantém o ritmo. Cada dia que mantém o hype dobra o LTV do cliente.';
+            }
+            refreshStats();
+        }
+
+        function refreshStats() {
+            const status = getStatus();
+            let total = 0, done = 0;
+            LC.calendar.forEach(day => {
+                day.items.forEach(it => {
+                    total++;
+                    if (status[it.id]) done++;
+                });
+            });
+            const pct = total ? Math.round((done / total) * 100) : 0;
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('progressLabel').textContent = done + ' de ' + total + ' tarefas publicadas';
+            document.getElementById('progressPct').textContent = pct + '%';
+            document.getElementById('heroProgress').style.width = pct + '%';
+
+            const today = todayISO();
+            const todayItems = (LC.calendar.find(d => d.dateISO === today) || { items: [] }).items;
+            const todayDone = todayItems.filter(it => status[it.id]).length;
+            document.getElementById('statToday').textContent = todayDone + '/' + todayItems.length;
+        }
+
+        // ========== RENDERERS ==========
+
+        function renderItem(item) {
+            const status = getStatus();
+            const isPublished = !!status[item.id];
+            const platformIcons = (item.platforms || []).map(p => {
+                const ic = { instagram: '📸', tiktok: '🎵', whatsapp: '💬', dm: '📩', facebook: 'f', email: '📧', físico: '🏪' };
+                return ic[p] || '•';
+            }).join(' ');
+
+            const blocks = [];
+            if (item.caption) blocks.push({ label: '📝 Legenda', text: item.caption });
+            if (item.hashtags) blocks.push({ label: '#️⃣ Hashtags', text: item.hashtags });
+            if (item.videoScript) blocks.push({ label: '🎬 Roteiro do vídeo', text: item.videoScript });
+            if (item.audio) blocks.push({ label: '🎵 Áudio sugerido', text: item.audio });
+            if (item.imagePrompt) blocks.push({ label: '🎨 Prompt de imagem', text: item.imagePrompt });
+            if (item.script) blocks.push({ label: '📜 Script/texto', text: item.script });
+            if (item.instructions) blocks.push({ label: '📋 Instruções', text: item.instructions });
+
+            const combinedCopy = [item.caption, item.hashtags].filter(Boolean).join('\n\n');
+
+            const blocksHtml = blocks.map((b, i) => `
+                <div class="launch-content-block">
+                    <div class="launch-content-block-title">
+                        <strong>${b.label}</strong>
+                        <button class="btn-copy" onclick="event.stopPropagation();copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(b.text)}">📋 Copiar</button>
+                    </div>
+                    <pre>${escHtml(b.text)}</pre>
+                </div>
+            `).join('');
+
+            return `
+                <div class="launch-item ${isPublished ? 'published' : ''}" id="item-${item.id}">
+                    <div class="launch-item-head" onclick="toggleItem('${item.id}')">
+                        <div class="launch-item-title">${escHtml(item.title)}</div>
+                        <div class="launch-item-badges">
+                            <span class="launch-badge">⏰ ${escHtml(item.time || '')}</span>
+                            ${platformIcons ? `<span class="launch-badge">${platformIcons}</span>` : ''}
+                            <span class="launch-badge ${item.type}">${escHtml(item.type)}</span>
+                            ${item.priority === 'high' ? '<span class="launch-badge hi">🔥 ALTA</span>' : ''}
+                            ${item.priority === 'critical' ? '<span class="launch-badge critical">⚡ CRÍTICA</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="launch-item-body">
+                        ${item.description ? `<p style="color:#666;font-size:0.9rem;margin-bottom:14px">${escHtml(item.description)}</p>` : ''}
+                        ${item.duration ? `<p style="font-size:0.85rem;color:#E63F7E;font-weight:700;margin-bottom:12px">⏱️ Duração: ${escHtml(item.duration)}</p>` : ''}
+                        ${blocksHtml}
+                        <div class="launch-item-actions">
+                            ${combinedCopy ? `<button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(combinedCopy)}" style="font-size:0.9rem;padding:10px 18px">📋 COPIAR TUDO (legenda + hashtags)</button>` : ''}
+                            <label class="check-published">
+                                <input type="checkbox" ${isPublished ? 'checked' : ''} onchange="togglePublished('${item.id}', this.checked)">
+                                ✓ Publicado
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDay(day, options = {}) {
+            const today = todayISO();
+            const isToday = day.dateISO === today;
+            const isPast = day.dateISO < today;
+            const onlyOpen = options.onlyOpen;
+            const status = getStatus();
+            const items = onlyOpen ? day.items.filter(it => !status[it.id]) : day.items;
+            if (onlyOpen && items.length === 0) return '';
+
+            return `
+                <div class="launch-day-card ${isToday ? 'is-today' : ''} ${isPast ? 'is-past' : ''}">
+                    <div class="launch-day-header">
+                        <div class="launch-day-date">
+                            ${escHtml(day.dayLabel)} · ${escHtml(day.dateLabel)}
+                            <small>${escHtml(day.dayName)}</small>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            ${isToday ? '<span class="launch-day-today-badge">🔴 HOJE</span>' : ''}
+                            <span class="launch-day-theme">${escHtml(day.mood)} · ${escHtml(day.theme)}</span>
+                        </div>
+                    </div>
+                    ${items.map(renderItem).join('')}
+                </div>
+            `;
+        }
+
+        // Helper: extrai passo-a-passo "como fazer" do item
+        function howToSteps(item) {
+            const steps = [];
+            if (item.type === 'carrossel') {
+                steps.push('Vai na aba <strong>🎨 Carrosséis</strong> e escolhe o carrossel correspondente');
+                steps.push('Copia o PROMPT de cada slide e cola no <strong>Whisk</strong> (ou Ideogram/Gemini) — gera 6 imagens');
+                steps.push('Abre o Instagram → Novo post → seleciona as 6 imagens na ordem');
+                steps.push('Cola a legenda (botão abaixo) e publica');
+            } else if (item.type === 'reel') {
+                steps.push('Le o <strong>roteiro do vídeo</strong> abaixo — cada cena com tempo exato');
+                steps.push('Grava com celular (vertical 9:16). Boa luz e áudio limpo.');
+                steps.push('Edita no <strong>CapCut</strong> (grátis) seguindo os cortes do roteiro');
+                steps.push('Adiciona o áudio sugerido (busca o trend no app)');
+                steps.push('Posta no Instagram como Reel e no TikTok. Cola a legenda + hashtags.');
+            } else if (item.type === 'tiktok') {
+                steps.push('Grava vertical com celular seguindo o roteiro');
+                steps.push('Edita no CapCut (rápido, cortes secos)');
+                steps.push('Sobe no TikTok com o áudio trend indicado');
+                steps.push('Cola legenda + hashtags');
+            } else if (item.type === 'estático') {
+                steps.push('Gera a imagem no <strong>Whisk</strong> com o prompt abaixo');
+                steps.push('Abre Instagram → Novo post → seleciona a imagem');
+                steps.push('Cola a legenda (botão abaixo) e publica');
+            } else if (item.type === 'stories') {
+                steps.push('Abre Instagram → Story');
+                steps.push('Segue a lista de ideias abaixo — posta ao longo do dia, não tudo de uma vez');
+                steps.push('Usa sticker de enquete/countdown onde indicado');
+                steps.push('No fim do dia, salva os melhores no destaque correspondente');
+            } else if (item.type === 'live') {
+                steps.push('Prepara o celular num tripé + iluminação frontal');
+                steps.push('Abre Instagram Live e TikTok Live ao mesmo tempo (se possível)');
+                steps.push('Segue o roteiro abaixo — duração indicada');
+                steps.push('Salva a live como Reel depois');
+            } else if (item.type === 'outbound' || item.type === 'seeding') {
+                steps.push('Copia o script pronto abaixo');
+                steps.push('Lista os perfis-alvo (Instagram busca por #londrina #londrinafood)');
+                steps.push('Envia DMs personalizadas (trocar [NOME] pelo nome real)');
+                steps.push('Registra quem respondeu pra fazer follow-up');
+            } else if (item.type === 'imprensa') {
+                steps.push('Vai na aba <strong>📰 Imprensa</strong>');
+                steps.push('Copia o press release completo');
+                steps.push('Envia por email/DM pra cada um dos 10 veículos listados');
+                steps.push('Segue por WhatsApp 24h depois se não responderem');
+            } else if (item.type === 'setup') {
+                steps.push('Siga exatamente o que está nas INSTRUÇÕES abaixo');
+                steps.push('Use os textos prontos (botão COPIAR BIO, etc)');
+                steps.push('Teste visualmente se ficou OK no perfil');
+            } else if (item.type === 'ops' || item.type === 'ativacao') {
+                steps.push('Leia o checklist nas instruções abaixo');
+                steps.push('Marca cada item à medida que for fazendo');
+                steps.push('Se faltar algum item crítico, avisa a equipe');
+            } else {
+                steps.push('Lê a descrição abaixo');
+                steps.push('Executa no horário indicado');
+                steps.push('Marca "Publicado" quando terminar');
+            }
+            return steps;
+        }
+
+        function renderDailyRitual() {
+            const r = LC.rotina ? LC.rotina.diario : [];
+            if (!r.length) return '';
+            return `
+                <div class="daily-ritual">
+                    <h3>🌟 RITUAL DIÁRIO · faça TODO dia, mesmo sem post de feed</h3>
+                    <div class="daily-ritual-subtitle">
+                        Essas 6 coisas mantêm seu perfil vivo pro algoritmo. Ignora e o alcance cai.
+                        Total: ~30 min distribuídos no dia.
+                    </div>
+                    ${r.map(item => `
+                        <div class="ritual-item ${item.critical ? 'critical' : ''}">
+                            <span class="ritual-time">${escHtml(item.time)}</span>
+                            <span style="font-size:1.4rem">${item.icon}</span>
+                            <div class="ritual-task">
+                                <strong>${escHtml(item.task)}</strong>
+                                <small>💡 ${escHtml(item.why)}</small>
+                            </div>
+                            <span class="ritual-duration">⏱ ${escHtml(item.duration)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderNextAction(item, stepNum, totalSteps) {
+            const platformIcons = (item.platforms || []).map(p => {
+                const ic = { instagram: '📸 Instagram', tiktok: '🎵 TikTok', whatsapp: '💬 WhatsApp', dm: '📩 DMs', facebook: '📘 Facebook', email: '📧 Email', físico: '🏪 Loja física' };
+                return ic[p] || p;
+            }).join(' · ');
+
+            const steps = howToSteps(item);
+            const stepsHtml = steps.map(s => `<li>${s}</li>`).join('');
+
+            const combinedCopy = [item.caption, item.hashtags].filter(Boolean).join('\n\n');
+            const boxes = [];
+            if (item.caption) boxes.push({ label: '📝 Legenda pronta (já com endereço, horário, CTA)', text: item.caption });
+            if (item.hashtags) boxes.push({ label: '#️⃣ Hashtags (20 selecionadas)', text: item.hashtags });
+            if (item.videoScript) boxes.push({ label: '🎬 Roteiro do vídeo (cena a cena)', text: item.videoScript });
+            if (item.audio) boxes.push({ label: '🎵 Áudio sugerido', text: item.audio });
+            if (item.imagePrompt) boxes.push({ label: '🎨 Prompt de imagem (pra Whisk/Ideogram)', text: item.imagePrompt });
+            if (item.script) boxes.push({ label: '📜 Script/texto pronto', text: item.script });
+            if (item.instructions) boxes.push({ label: '📋 Instruções detalhadas', text: item.instructions });
+
+            const boxesHtml = boxes.map(b => `
+                <div class="next-action-content-box">
+                    <div class="next-action-content-box-title">
+                        <span>${b.label}</span>
+                        <button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(b.text)}">📋 Copiar</button>
+                    </div>
+                    <pre>${escHtml(b.text)}</pre>
+                </div>
+            `).join('');
+
+            return `
+                <div class="next-action">
+                    <div class="next-action-label">🎯 Missão ${stepNum} de ${totalSteps} — FAÇA AGORA</div>
+                    <div class="next-action-title">${escHtml(item.title)}</div>
+                    <div class="next-action-meta">
+                        ${item.time ? `<span>⏰ ${escHtml(item.time)}</span>` : ''}
+                        ${platformIcons ? `<span>${platformIcons}</span>` : ''}
+                        ${item.duration ? `<span>🎞 ${escHtml(item.duration)}</span>` : ''}
+                        ${item.priority === 'critical' ? '<span style="background:#FF1744">⚡ CRÍTICA</span>' : ''}
+                        ${item.priority === 'high' ? '<span>🔥 ALTA</span>' : ''}
+                    </div>
+
+                    ${item.description ? `
+                        <div class="next-action-why">
+                            <strong>📌 O QUE É</strong>
+                            ${escHtml(item.description)}
+                        </div>
+                    ` : ''}
+
+                    <div class="next-action-how">
+                        <div class="next-action-how-title">📚 COMO FAZER (passo a passo)</div>
+                        <ol>${stepsHtml}</ol>
+                    </div>
+
+                    ${boxesHtml}
+
+                    <div class="next-action-buttons">
+                        ${combinedCopy ? `<button class="btn-copy-big" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(combinedCopy)}">📋 COPIAR LEGENDA + HASHTAGS</button>` : ''}
+                        <button class="btn-done-big" onclick="togglePublished('${item.id}', true)">✓ MARCAR COMO FEITO</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStepRow(item, stepNum) {
+            return `
+                <div class="step-row" onclick="scrollToItem('${item.id}')">
+                    <div class="step-num">${stepNum}</div>
+                    <div class="step-content">
+                        <strong>${escHtml(item.title)}</strong>
+                        <small>⏰ ${escHtml(item.time || '')} · ${escHtml(item.type)}</small>
+                    </div>
+                    <div class="step-chevron">→</div>
+                </div>
+            `;
+        }
+
+        function renderHoje() {
+            const today = todayISO();
+            const todayDay = LC.calendar.find(d => d.dateISO === today);
+            const status = getStatus();
+
+            let html = '';
+
+            // 1. Banner de boas-vindas simplão
+            const daysLeft = calcDaysToLaunch();
+            const phase = daysLeft > 0 ? `Faltam ${daysLeft} dia${daysLeft !== 1 ? 's' : ''} pra inauguração` : daysLeft === 0 ? 'É HOJE — inauguração!' : `Dia +${Math.abs(daysLeft)} após inauguração`;
+
+            html += `<div class="info-banner">
+                👋 <strong>Oi!</strong> Você tá na aba <strong>HOJE</strong>. Aqui você vê SÓ o que precisa fazer agora — nada mais.
+                ${phase}. Quando terminar uma missão, clica em <strong>"✓ MARCAR COMO FEITO"</strong> e a próxima aparece.
+            </div>`;
+
+            // 2. Ritual diário sempre visível
+            html += renderDailyRitual();
+
+            if (!todayDay) {
+                html += `<div class="info-banner">
+                    📅 Hoje não tem missão de lançamento específica. Foca no <strong>Ritual Diário</strong> acima
+                    e vai na aba <strong>📅 Calendário</strong> pra ver o que vem nos próximos dias.
+                </div>`;
+                return html;
+            }
+
+            const items = todayDay.items;
+            const pending = items.filter(it => !status[it.id]);
+            const done = items.filter(it => status[it.id]);
+
+            html += `<h2 style="font-family:Baloo 2,cursive;margin:20px 0 16px;color:#E63F7E;font-size:1.5rem">
+                📆 ${escHtml(todayDay.dayLabel)} · ${escHtml(todayDay.dayName)} ${escHtml(todayDay.dateLabel)}
+                <small style="display:block;font-size:0.9rem;color:#666;font-weight:500;margin-top:4px">
+                    ${escHtml(todayDay.mood)} · ${escHtml(todayDay.theme)} — ${pending.length} missão${pending.length !== 1 ? 'ões' : ''} restante${pending.length !== 1 ? 's' : ''}, ${done.length} concluída${done.length !== 1 ? 's' : ''}
+                </small>
+            </h2>`;
+
+            // 3. Próxima missão — grande e claro
+            if (pending.length > 0) {
+                html += renderNextAction(pending[0], done.length + 1, items.length);
+            } else {
+                html += `<div style="background:linear-gradient(135deg,#00C853,#4CAF50);border-radius:20px;padding:32px;text-align:center;color:#fff;margin-bottom:24px">
+                    <div style="font-size:3rem;margin-bottom:12px">🎉</div>
+                    <h2 style="font-family:Baloo 2,cursive;margin:0 0 8px">Todas as missões de hoje concluídas!</h2>
+                    <p style="opacity:0.95">Volta amanhã que tem mais. Enquanto isso, continua o Ritual Diário acima.</p>
+                </div>`;
+            }
+
+            // 4. Próximas missões (lista compacta)
+            if (pending.length > 1) {
+                html += `<h3 style="font-family:Baloo 2,cursive;margin:24px 0 12px;color:#666">⏭️ Depois dessa, você ainda tem:</h3>`;
+                html += pending.slice(1).map((it, idx) => renderStepRow(it, done.length + 2 + idx)).join('');
+            }
+
+            // 5. Concluídas (collapsible)
+            if (done.length > 0) {
+                html += `<details style="margin-top:24px">
+                    <summary style="cursor:pointer;font-weight:700;color:#00C853;padding:12px 16px;background:#E8F5E9;border-radius:10px">
+                        ✅ ${done.length} missão${done.length !== 1 ? 'ões' : ''} concluída${done.length !== 1 ? 's' : ''} hoje (clique para ver)
+                    </summary>
+                    <div style="padding-top:12px">
+                        ${done.map((it, idx) => renderStepRow(it, idx + 1).replace('step-row', 'step-row published')).join('')}
+                    </div>
+                </details>`;
+            }
+
+            return html;
+        }
+
+        // Clica num step-row leva pro detalhe completo no Calendário
+        window.scrollToItem = function(id) {
+            showTab('calendario');
+            setTimeout(() => {
+                const el = document.getElementById('item-' + id);
+                if (el) {
+                    el.classList.add('open');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    el.style.boxShadow = '0 0 0 3px #E63F7E';
+                    setTimeout(() => { el.style.boxShadow = ''; }, 2000);
+                }
+            }, 100);
+        };
+
+        function renderRotina() {
+            const r = LC.rotina;
+            if (!r) return '<div class="info-banner">Rotina não carregada.</div>';
+
+            let html = `<div class="info-banner">
+                🌱 <strong>Plano dos próximos 90 dias.</strong> Tudo que você precisa fazer pra crescer sem travar.
+                Essa é a sua bússola: ritual diário (nunca pular), ritmo semanal (qual tipo de post em cada dia) e 3 temas mensais.
+                No fim tem um banco de 90 ideias pra nunca ficar sem conteúdo.
+            </div>`;
+
+            // Ritual diário (destaque)
+            html += renderDailyRitual();
+
+            // Ritmo semanal
+            html += `<div class="rotina-section">
+                <h2>📅 Ritmo Semanal · o que postar em cada dia da semana</h2>
+                <p style="color:#666;margin-bottom:18px;font-size:0.92rem">
+                    Não invente todo dia. Segue esse ritmo fixo por 4 semanas e seu público se acostuma.
+                    Cada dia tem um FOCO e um FORMATO específico.
+                </p>
+                <div class="weekly-grid">
+                    ${r.semanal.map(d => `
+                        <div class="weekly-day">
+                            <span class="wd-emoji">${d.emoji}</span>
+                            <strong>${escHtml(d.dia)}</strong>
+                            <small><strong style="color:#E63F7E">${escHtml(d.foco)}</strong></small>
+                            <small>${escHtml(d.formato)}</small>
+                            <small style="margin-top:8px;font-style:italic">Ex: ${escHtml(d.exemplo)}</small>
+                            <span class="wd-horario">⏰ ${escHtml(d.horario)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`;
+
+            // Temas mensais
+            html += `<div class="rotina-section">
+                <h2>🗓️ 3 Temas Mensais · pra onde a marca caminha</h2>
+                <p style="color:#666;margin-bottom:18px;font-size:0.92rem">
+                    Cada mês tem um objetivo claro. Mês 1 consolida, Mês 2 engaja, Mês 3 vira autoridade.
+                </p>
+                ${r.mensal.map(m => `
+                    <div class="month-card m${m.mes}">
+                        <div class="month-label">${escHtml(m.label)}</div>
+                        <div class="month-period">📆 ${escHtml(m.periodo)}</div>
+                        <div class="month-theme">"${escHtml(m.theme)}"</div>
+                        <div class="month-objetivos">
+                            <strong>🎯 OBJETIVOS DO MÊS</strong>
+                            <ul>${m.objetivos.map(o => `<li>${escHtml(o)}</li>`).join('')}</ul>
+                        </div>
+                        <strong style="font-size:0.85rem;color:#555;display:block;margin-bottom:8px">📌 SPRINTS SEMANAIS</strong>
+                        ${m.semanas.map(s => `
+                            <div class="semana-row">
+                                <div class="semana-num">${s.num}</div>
+                                <div class="semana-body">
+                                    <strong>Semana ${s.num} · ${escHtml(s.foco)}</strong>
+                                    <small>${escHtml(s.tarefas)}</small>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `).join('')}
+            </div>`;
+
+            // Banco de 90 ideias
+            html += `<div class="rotina-section">
+                <h2>💡 Banco de 90 Ideias · quando acabar inspiração</h2>
+                <p style="color:#666;margin-bottom:18px;font-size:0.92rem">
+                    Organizado por pilar. Sugestão de mix: 30% Produto + 25% Lana + 20% Cliente + 15% Educativo + 10% Local.
+                </p>
+                ${r.banco.map((p, idx) => `
+                    <div class="banco-card p${idx + 1}">
+                        <div class="banco-header">
+                            <strong>${escHtml(p.pilar)}</strong>
+                        </div>
+                        <div class="banco-descricao">${escHtml(p.descricao)}</div>
+                        <div class="banco-ideias">
+                            ${p.ideias.map(i => `<div class="banco-ideia">${escHtml(i)}</div>`).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>`;
+
+            return html;
+        }
+
+        function renderCalendario() {
+            return '<div class="info-banner">📅 Calendário completo de conteúdo, D-3 até D+3. Cada item pode ser expandido para ver legenda, hashtags, roteiro e prompt.</div>' +
+                   LC.calendar.map(d => renderDay(d)).join('');
+        }
+
+        function renderCarrosseis() {
+            return `<div class="info-banner">🎨 <strong>3 carrosséis prontos para gerar no Whisk/Ideogram/Gemini.</strong> Cada slide tem copy + prompt em inglês. Gere o slide 1 primeiro e use como referência visual ("Style") para manter consistência nos outros 5.</div>` +
+                   LC.carousels.map(c => `
+                <div class="launch-day-card">
+                    <div class="launch-day-header">
+                        <div class="launch-day-date">🎨 ${escHtml(c.title)}<small>${escHtml(c.purpose)}</small></div>
+                        <span class="launch-day-theme">📆 ${escHtml(c.bestDay)}</span>
+                    </div>
+                    <div class="launch-content-block">
+                        <div class="launch-content-block-title">
+                            <strong>📝 Legenda Instagram</strong>
+                            <button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(c.caption + '\n\n' + c.hashtags)}">📋 Copiar legenda + hashtags</button>
+                        </div>
+                        <pre>${escHtml(c.caption)}</pre>
+                    </div>
+                    <h4 style="margin:20px 0 12px;color:#333">6 Slides:</h4>
+                    ${c.slides.map(s => `
+                        <div class="slide-card">
+                            <div class="slide-card-head">
+                                <div class="slide-num">${s.num}</div>
+                                <div class="slide-role">${escHtml(s.role)}</div>
+                            </div>
+                            <div class="launch-content-block">
+                                <div class="launch-content-block-title">
+                                    <strong>Copy sobre a imagem</strong>
+                                    <button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(s.copy)}">📋 Copiar</button>
+                                </div>
+                                <pre>${escHtml(s.copy)}</pre>
+                            </div>
+                            <div class="launch-content-block">
+                                <div class="launch-content-block-title">
+                                    <strong>🎨 Prompt Whisk/Gemini (inglês)</strong>
+                                    <button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(s.prompt)}">📋 Copiar prompt</button>
+                                </div>
+                                <pre>${escHtml(s.prompt)}</pre>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+
+        function renderLana() {
+            const p = LC.lanaPlaybook;
+            return `
+                <div class="info-banner">🐑 <strong>A Lana é a versão Duolingo da MilkyPot.</strong> Ela é obsessiva, dramática, derrete literalmente. Veja a bíblia de personagem primeiro, depois use as ideias como banco de conteúdo viral.</div>
+
+                <div class="launch-day-card">
+                    <div class="launch-day-header">
+                        <div class="launch-day-date">📖 Bíblia da Lana<small>Personalidade oficial da mascote</small></div>
+                        <button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(p.bible)}">📋 Copiar bíblia</button>
+                    </div>
+                    <div class="launch-content-block"><pre>${escHtml(p.bible)}</pre></div>
+                </div>
+
+                <div class="launch-day-card">
+                    <div class="launch-day-header">
+                        <div class="launch-day-date">💬 Mensagens Automáticas WhatsApp</div>
+                    </div>
+                    ${p.whatsappMessages.map(m => `
+                        <div class="whatsapp-msg">
+                            <div class="whatsapp-msg-trigger">${escHtml(m.trigger)}</div>
+                            <pre style="white-space:pre-wrap;font-family:Nunito,sans-serif;margin:0">${escHtml(m.text)}</pre>
+                            <div style="margin-top:10px"><button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(m.text)}">📋 Copiar mensagem</button></div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <h2 style="font-family:Baloo 2,cursive;margin:28px 0 16px;color:#E63F7E">🎬 30 Ideias de Conteúdo (por tier)</h2>
+                ${[1,2,3].map(tier => `
+                    <div class="launch-day-card">
+                        <div class="launch-day-header">
+                            <div class="launch-day-date">
+                                ${tier === 1 ? '🔥 TIER 1 · Viral Potencial' : tier === 2 ? '📱 TIER 2 · Texto/Post' : '🎪 TIER 3 · Ativação Física'}
+                                <small>${tier === 1 ? 'Prioridade máxima' : tier === 2 ? 'Fácil execução' : 'Marketing no Muffato'}</small>
+                            </div>
+                        </div>
+                        ${p.ideas.filter(i => i.tier === tier).map(i => `
+                            <div class="lana-card">
+                                <span class="lana-tier-badge ${tier === 1 ? '' : 't' + tier}">TIER ${tier}</span>
+                                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+                                    <strong style="flex:1;font-size:0.95rem">${escHtml(i.title)}</strong>
+                                    <span class="launch-badge">${escHtml(i.format)}</span>
+                                </div>
+                                ${i.description ? `<p style="color:#666;font-size:0.88rem;margin-bottom:10px">${escHtml(i.description)}</p>` : ''}
+                                ${i.caption ? `
+                                    <div class="launch-content-block">
+                                        <div class="launch-content-block-title">
+                                            <strong>Texto/Caption</strong>
+                                            <button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(i.caption)}">📋 Copiar</button>
+                                        </div>
+                                        <pre>${escHtml(i.caption)}</pre>
+                                    </div>
+                                ` : ''}
+                                ${i.audio ? `<p style="font-size:0.82rem;color:#888;margin-top:8px">🎵 ${escHtml(i.audio)}</p>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function renderHeygen() {
+            const h = LC.heygenScripts;
+            return `
+                <div class="info-banner">🎬 <strong>Scripts prontos para o HeyGen.</strong> Crie o avatar da Lana uma vez, cole cada script pra gerar vídeos dela falando em ~3 minutos.</div>
+
+                <div class="launch-day-card">
+                    <div class="launch-day-header">
+                        <div class="launch-day-date">📚 Como usar (passo a passo)</div>
+                        <button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(h.howTo)}">📋 Copiar guia</button>
+                    </div>
+                    <div class="launch-content-block"><pre>${escHtml(h.howTo)}</pre></div>
+                </div>
+
+                <h2 style="font-family:Baloo 2,cursive;margin:24px 0 16px;color:#00BCD4">🎤 Scripts Prontos para Dublagem</h2>
+                ${h.scripts.map(s => `
+                    <div class="heygen-script">
+                        <div class="heygen-script-meta">
+                            <strong style="font-size:1rem;color:#333">${escHtml(s.title)}</strong>
+                            <span class="heygen-duration">⏱️ ${escHtml(s.duration)}</span>
+                        </div>
+                        <div class="launch-content-block">
+                            <div class="launch-content-block-title">
+                                <strong>Texto para colar no HeyGen</strong>
+                                <button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(s.script)}">📋 Copiar script</button>
+                            </div>
+                            <pre>${escHtml(s.script)}</pre>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function renderLoja() {
+            return `
+                <div class="info-banner">🏪 <strong>10 ativações pra povoar a loja física no Muffato.</strong> Ordenadas do essencial ao extra. Custos aproximados.</div>
+                ${LC.storeIdeas.map((s, idx) => `
+                    <div class="store-idea-card">
+                        <div style="flex:1;min-width:250px">
+                            <strong style="font-size:1rem;color:#333">${idx + 1}. ${escHtml(s.title)}</strong>
+                            <p style="color:#666;font-size:0.9rem;margin-top:6px">${escHtml(s.description)}</p>
+                        </div>
+                        <div class="store-idea-cost">💰 ${escHtml(s.cost)}</div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function renderAds() {
+            return `
+                <div class="info-banner">📱 <strong>5 campanhas Meta Ads estruturadas + copies prontas.</strong> Copiar direto pro Gerenciador de Anúncios.</div>
+
+                <h2 style="font-family:Baloo 2,cursive;margin-bottom:14px;color:#E63F7E">🎯 Campanhas</h2>
+                ${LC.adsCampaigns.map(c => `
+                    <div class="launch-day-card">
+                        <div class="launch-day-header">
+                            <div class="launch-day-date">${escHtml(c.name)}<small>${escHtml(c.objective)}</small></div>
+                            <span class="launch-day-theme">${escHtml(c.budget)}</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;font-size:0.88rem">
+                            <div><strong>📍 Geo:</strong> ${escHtml(c.geo)}</div>
+                            ${c.age ? `<div><strong>👤 Idade:</strong> ${escHtml(c.age)}</div>` : ''}
+                            ${c.interests ? `<div><strong>💡 Interesses:</strong> ${escHtml(c.interests)}</div>` : ''}
+                            ${c.audiences ? `<div><strong>👥 Públicos:</strong> ${escHtml(c.audiences)}</div>` : ''}
+                            <div><strong>🎨 Formato:</strong> ${escHtml(c.format)}</div>
+                            <div><strong>🎯 CTA:</strong> ${escHtml(c.cta)}</div>
+                        </div>
+                    </div>
+                `).join('')}
+
+                <h2 style="font-family:Baloo 2,cursive;margin:28px 0 14px;color:#E63F7E">✍️ Copies de Inauguração</h2>
+                ${LC.adsCopies.inauguracao.map(c => `
+                    <div class="ads-copy-block">
+                        <div class="ads-headline">${escHtml(c.headline)}</div>
+                        <pre style="white-space:pre-wrap;font-family:Nunito,sans-serif;margin:10px 0;color:#444">${escHtml(c.body)}</pre>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap">
+                            <span class="launch-badge">CTA: ${escHtml(c.cta)}</span>
+                            <button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(c.headline + '\n\n' + c.body)}">📋 Copiar copy</button>
+                        </div>
+                    </div>
+                `).join('')}
+
+                <h2 style="font-family:Baloo 2,cursive;margin:28px 0 14px;color:#E63F7E">🎁 Cupons</h2>
+                ${LC.adsCopies.cupons.map(c => `
+                    <div class="ads-copy-block">
+                        <div class="ads-headline">${escHtml(c.headline)}</div>
+                        <div style="margin:8px 0"><span class="launch-badge hi">CÓDIGO: ${escHtml(c.code)}</span> <span class="launch-badge">⏳ ${escHtml(c.validity)}</span></div>
+                        <pre style="white-space:pre-wrap;font-family:Nunito,sans-serif;margin:10px 0;color:#444">${escHtml(c.body)}</pre>
+                        <button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(c.headline + '\nCupom: ' + c.code + '\nValidade: ' + c.validity + '\n\n' + c.body)}">📋 Copiar copy + código</button>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function renderImprensa() {
+            const p = LC.pressRelease;
+            return `
+                <div class="info-banner">📰 <strong>Press release pronto + 10 veículos de Londrina pra disparar.</strong> Enviar hoje segunda até quarta de manhã.</div>
+
+                <div class="launch-day-card">
+                    <div class="launch-day-header">
+                        <div class="launch-day-date">📄 Release Completo<small>${escHtml(p.subject)}</small></div>
+                        <button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(p.subject + '\n\n' + p.title + '\n\n' + p.subtitle + '\n\n' + p.body)}">📋 Copiar release completo</button>
+                    </div>
+                    <h3 style="font-family:Baloo 2,cursive;color:#E63F7E;margin-bottom:10px">${escHtml(p.title)}</h3>
+                    <p style="font-style:italic;color:#666;margin-bottom:16px">${escHtml(p.subtitle)}</p>
+                    <div class="launch-content-block"><pre>${escHtml(p.body)}</pre></div>
+                </div>
+
+                <div class="launch-day-card">
+                    <div class="launch-day-header">
+                        <div class="launch-day-date">📬 Veículos para disparar<small>10 opções — priorizar Bonde + Folha + Tarobá</small></div>
+                    </div>
+                    ${p.veiculos.map(v => `
+                        <div class="press-veiculo">
+                            <div>
+                                <strong>${escHtml(v.nome)}</strong>
+                                <small style="display:block;color:#888">${escHtml(v.tipo)}</small>
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <span style="font-size:0.85rem;color:#666">${escHtml(v.contato)}</span>
+                                <button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(v.contato)}">📋</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // ========== TAB SWITCHING ==========
+        function showTab(tab) {
+            document.querySelectorAll('.launch-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            const content = document.getElementById('tabContent');
+            const renderers = {
+                hoje: renderHoje,
+                rotina: renderRotina,
+                calendario: renderCalendario,
+                carrosseis: renderCarrosseis,
+                lana: renderLana,
+                heygen: renderHeygen,
+                loja: renderLoja,
+                ads: renderAds,
+                imprensa: renderImprensa
+            };
+            content.innerHTML = renderers[tab]();
+        }
+
+        window.toggleItem = function(id) {
+            const el = document.getElementById('item-' + id);
+            if (el) el.classList.toggle('open');
+        };
+        window.togglePublished = function(id, checked) {
+            setStatus(id, checked);
+            const el = document.getElementById('item-' + id);
+            if (el) el.classList.toggle('published', checked);
+            // Se tá na aba Hoje, re-renderiza pra sumir o item
+            const activeTab = document.querySelector('.launch-tab.active');
+            if (activeTab && activeTab.dataset.tab === 'hoje') {
+                setTimeout(() => showTab('hoje'), 400);
+            }
+        };
+
+        // ========== INIT ==========
+        document.querySelectorAll('.launch-tab').forEach(t => {
+            t.addEventListener('click', () => showTab(t.dataset.tab));
+        });
+
+        refreshHero();
+        showTab('hoje');
+        setInterval(refreshHero, 60000); // atualiza countdown a cada minuto
+    </script>
+<script src="../js/core/copilot-transport.js" defer></script>
+<script src="../js/pages/lilo-scanner.js" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>MilkyPot TV — Selecione</title>
+<link rel="manifest" href="/manifest-tv.json">
+<link rel="icon" href="/images/logo-milkypot.png">
+<style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;width:100%;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,sans-serif;overflow:hidden}
+    .wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4vh 4vw;gap:3vh}
+    .logo{width:min(140px,18vw);height:auto;margin-bottom:1vh;filter:drop-shadow(0 8px 24px rgba(0,0,0,.4))}
+    h1{font-size:clamp(28px,4vw,56px);font-weight:800;letter-spacing:-.02em;text-align:center}
+    p.sub{font-size:clamp(14px,1.6vw,22px);opacity:.75;text-align:center;max-width:800px;line-height:1.5}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,2vw,28px);width:100%;max-width:960px;margin-top:2vh}
+    .btn{aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border:2px solid rgba(255,255,255,.15);border-radius:clamp(16px,2.5vw,32px);cursor:pointer;transition:transform .15s,background .15s,border-color .15s;padding:clamp(12px,2vw,24px);user-select:none;color:#fff}
+    .btn:hover,.btn:focus{background:rgba(66,165,245,.35);border-color:#42A5F5;transform:translateY(-4px);outline:none}
+    .btn:active{transform:scale(.96)}
+    .btn .ic{font-size:clamp(36px,6vw,80px);line-height:1}
+    .btn .lbl{font-size:clamp(20px,3vw,42px);font-weight:800}
+    .btn.add{background:rgba(255,255,255,.04);border-style:dashed}
+    .btn.add .ic{opacity:.6}
+    .custom-form{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:2vh}
+    .custom-form input{padding:14px 20px;font-size:20px;border-radius:12px;border:2px solid rgba(255,255,255,.2);background:rgba(0,0,0,.3);color:#fff;min-width:220px;font-family:inherit;letter-spacing:.5px;text-align:center;text-transform:lowercase}
+    .custom-form input:focus{outline:none;border-color:#42A5F5}
+    .custom-form button{padding:14px 28px;font-size:20px;font-weight:700;border-radius:12px;border:none;background:#42A5F5;color:#fff;cursor:pointer;font-family:inherit}
+    .custom-form button:hover{background:#2196F3}
+    .reset-btn{position:fixed;top:10px;right:10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit}
+    .reset-btn:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+    .version{position:fixed;bottom:10px;left:10px;font-size:10px;opacity:.3}
+    @media (max-width:600px){
+        .grid{grid-template-columns:repeat(2,1fr)}
+    }
+</style>
+</head>
+<body>
+
+<div id="loadingState" class="wrap" style="display:none">
+    <div style="width:56px;height:56px;border:4px solid rgba(255,255,255,.15);border-top-color:#42A5F5;border-radius:50%;animation:spin 1s linear infinite"></div>
+    <p class="sub" id="loadingMsg">Abrindo TV...</p>
+</div>
+
+<div id="selectState" class="wrap">
+    <img class="logo" src="/images/logo-milkypot.png" alt="MilkyPot" onerror="this.style.display='none'">
+    <h1>Qual TV é essa?</h1>
+    <p class="sub">Selecione abaixo a TV que este aparelho vai reproduzir.<br>Ele vai lembrar da escolha nas próximas vezes.</p>
+
+    <div class="grid" id="tvGrid">
+        <button class="btn" data-code="tv1">
+            <span class="ic">📺</span>
+            <span class="lbl">TV 1</span>
+        </button>
+        <button class="btn" data-code="tv2">
+            <span class="ic">📺</span>
+            <span class="lbl">TV 2</span>
+        </button>
+        <button class="btn" data-code="tv3">
+            <span class="ic">📺</span>
+            <span class="lbl">TV 3</span>
+        </button>
+        <button class="btn add" id="moreBtn" title="Usar outro código">
+            <span class="ic">➕</span>
+            <span class="lbl" style="font-size:clamp(14px,1.8vw,22px);opacity:.8">Outro código</span>
+        </button>
+    </div>
+
+    <form class="custom-form" id="customForm" style="display:none" onsubmit="return false">
+        <input type="text" id="customCode" placeholder="ex: mq1, tv-porta, ..." autocomplete="off" inputmode="latin" autocapitalize="off" spellcheck="false">
+        <button type="submit" id="customGo">Usar este código</button>
+    </form>
+</div>
+
+<button class="reset-btn" id="resetBtn" title="Trocar TV" style="display:none">↻ Trocar TV</button>
+<div class="version" id="versionTag">MilkyPot TV • v1</div>
+
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<script>
+(function(){
+    var TARGET_KEY = 'mp_tv_target_code';
+    var $ = function(id){ return document.getElementById(id); };
+    var selectState = $('selectState');
+    var loadingState = $('loadingState');
+    var loadingMsg = $('loadingMsg');
+    var resetBtn = $('resetBtn');
+
+    function goToTv(code){
+        try { localStorage.setItem(TARGET_KEY, code); } catch(e){}
+        selectState.style.display = 'none';
+        loadingState.style.display = 'flex';
+        loadingMsg.textContent = 'Abrindo ' + code.toUpperCase() + '...';
+        // Redireciona para o atalho /t?<code> — ele resolve via Firestore + IP da franquia
+        var url = '/t?' + encodeURIComponent(code) + '&_=' + Date.now();
+        setTimeout(function(){ location.replace(url); }, 150);
+    }
+
+    function clearTarget(){
+        try { localStorage.removeItem(TARGET_KEY); } catch(e){}
+        location.reload();
+    }
+
+    // Auto-open se ja tem escolha gravada
+    try {
+        var params = new URLSearchParams(location.search);
+        var forceSelect = params.has('select') || params.has('reset');
+        var saved = localStorage.getItem(TARGET_KEY);
+        if (saved && !forceSelect) {
+            goToTv(saved);
+            return;
+        }
+        // Mostra o botao de reset se ja tinha uma TV configurada
+        if (saved) resetBtn.style.display = 'block';
+    } catch(e) {}
+
+    // Bind dos botoes
+    document.querySelectorAll('.btn[data-code]').forEach(function(b){
+        b.addEventListener('click', function(){ goToTv(b.getAttribute('data-code')); });
+    });
+
+    $('moreBtn').addEventListener('click', function(){
+        $('customForm').style.display = 'flex';
+        $('customCode').focus();
+    });
+    $('customGo').addEventListener('click', function(){
+        var v = ($('customCode').value || '').trim().toLowerCase();
+        if (v) goToTv(v);
+    });
+    $('customCode').addEventListener('keydown', function(e){
+        if (e.key === 'Enter') $('customGo').click();
+    });
+    resetBtn.addEventListener('click', clearTarget);
+
+    // Desregistra Service Worker e limpa caches (TV nao pode manter cache)
+    try {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs){
+                regs.forEach(function(r){ r.unregister().catch(function(){}); });
+            }).catch(function(){});
+        }
+        if (window.caches) {
+            caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k).catch(function(){}); }); }).catch(function(){});
+        }
+    } catch(e){}
+
+    // Tentativa de fullscreen ao primeiro toque (requisito do browser)
+    document.addEventListener('click', function once(){
+        try {
+            var el = document.documentElement;
+            if (el.requestFullscreen) el.requestFullscreen().catch(function(){});
+        } catch(e){}
+        document.removeEventListener('click', once);
+    }, { once: true });
+})();
+</script>
+</body>
+</html>

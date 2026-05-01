@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Lilo Sabor do Dia</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  width:100%; height:100%; overflow:hidden;
+  background:#CCC;
+  font-family:'Baloo 2', sans-serif;
+  transition: background 1s cubic-bezier(.42,0,.1,1);
+}
+body.colorido { background: var(--flavor); }
+
+.stage { width:100vw; height:100vh; position:relative; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+
+.ovelhinha {
+  font-size:40vmin; line-height:1;
+  animation: bocejo 3s ease-in-out infinite;
+}
+@keyframes bocejo {
+  0%, 40% { transform: scale(1) rotate(0deg); filter:grayscale(.8); }
+  50% { filter:grayscale(.8); }
+  60% { filter:grayscale(0); transform: scale(1.1) rotate(5deg); }
+  75% { transform: scale(1.05) rotate(-5deg) translateY(-3vmin); }
+  100% { transform: scale(1) rotate(0deg); filter:grayscale(0); }
+}
+
+.bola {
+  position:absolute; top:50%; left:-20%;
+  width:18vmin; height:18vmin; border-radius:50%;
+  background: radial-gradient(circle at 30% 30%, #ffb1d1, #FF4F8A);
+  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+  animation: rola 4s ease-out infinite;
+}
+@keyframes rola {
+  0%, 30% { left: -20%; transform: rotate(0deg) scale(1); }
+  60% { left: 42%; transform: rotate(720deg) scale(1); }
+  100% { left: 42%; transform: rotate(720deg) scale(1.3); }
+}
+
+.heart {
+  position:absolute; top:28%; font-size:6vmin; opacity:0;
+  animation: heart 3s ease-out infinite 1.8s;
+}
+.heart:nth-child(1) { left: 40%; animation-delay: 1.5s; }
+.heart:nth-child(2) { left: 55%; animation-delay: 1.7s; }
+.heart:nth-child(3) { left: 48%; animation-delay: 1.9s; }
+@keyframes heart {
+  0% { opacity: 0; transform: translateY(0) scale(0); }
+  30% { opacity: 1; transform: translateY(-5vmin) scale(1.3); }
+  100% { opacity: 0; transform: translateY(-15vmin) scale(.8); }
+}
+
+.title {
+  position:absolute; bottom:12%; left:50%; transform:translateX(-50%);
+  font-size:8vmin; font-weight:800; color:#fff;
+  opacity:0; animation: aparece 4s ease-out infinite;
+  text-shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+.title small {
+  display:block; font-size:4vmin; opacity:.9; font-weight:600;
+}
+@keyframes aparece {
+  0%, 65% { opacity: 0; transform: translateX(-50%) translateY(2vmin); }
+  75%, 100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="ovelhinha">🐑</div>
+  <div class="bola"></div>
+  <div class="heart">💖</div>
+  <div class="heart">💖</div>
+  <div class="heart">💖</div>
+  <h1 class="title">NINHO COM MORANGO<small>o sabor de hoje</small></h1>
+</div>
+<script>
+// Troque aqui por outro sabor/cor/emoji configurando via URL: ?c=nutella
+const SABORES = {
+  morango:    { color:'#FF4F8A', label:'NINHO COM MORANGO', emoji:'🍓', bolaColor:'linear-gradient(135deg,#ffb1d1,#FF4F8A)' },
+  ninho:      { color:'#F3D6B5', label:'LEITE NINHO',        emoji:'🥛', bolaColor:'linear-gradient(135deg,#fff3dd,#F3D6B5)' },
+  nutella:    { color:'#6B3410', label:'NUTELLA',            emoji:'🍫', bolaColor:'linear-gradient(135deg,#8a5a3a,#6B3410)' },
+  oreo:       { color:'#1F2937', label:'OREO',               emoji:'🍪', bolaColor:'linear-gradient(135deg,#4b5563,#1F2937)' },
+  capuccino:  { color:'#7B4B2F', label:'CAPUCCINO',          emoji:'☕', bolaColor:'linear-gradient(135deg,#a87958,#7B4B2F)' },
+};
+const params = new URLSearchParams(location.search);
+const key = (params.get('c') || 'morango').toLowerCase();
+const s = SABORES[key] || SABORES.morango;
+document.body.style.setProperty('--flavor', s.color);
+document.querySelector('.title').firstChild.textContent = s.label;
+document.querySelector('.bola').style.background = s.bolaColor;
+setTimeout(() => document.body.classList.add('colorido'), 1800);
+</script>
+</body>
+</html>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Desafio 10 MilkyPot Milissegundos | MilkyPot</title>
 <meta name="theme-color" content="#F0F7FF">
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="/manifest-desafio.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;700;800;900&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
@@ -821,6 +821,7 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 <img id="photoImg" style="width:clamp(200px,40vw,360px);border-radius:16px;margin-bottom:16px">
 </div>
 <button class="btn btn-pink" id="photoBtn" onclick="takePhoto()">&#128248; Tirar Foto</button>
+<button class="btn btn-outline" id="photoSkip" onclick="skipMedia()" style="margin-top:12px;">Não quero filmar/foto &#128584;</button>
 <button class="btn btn-outline" id="photoNext" onclick="goToDifficulty()" style="display:none">Bora pro Desafio! &#128293;</button>
 </div>
 
@@ -1219,7 +1220,7 @@ check.classList.remove('show');
 activeVoucher=null;activeVoucherCode=null;
 return;
 }
-var remaining=data.attempts-data.attemptsUsed;
+var remaining=data.attempts-(data.attemptsUsed||0);
 if(remaining<=0){
 status.className='voucher-status error';
 status.textContent='Codigo ja utilizado. Compre outro MilkyPot!';
@@ -1301,7 +1302,7 @@ document.getElementById('voucherStatus').className='voucher-status error';
 document.getElementById('voucherStatus').textContent='Valide seu codigo primeiro!';
 return;
 }
-var remaining=activeVoucher.attempts-activeVoucher.attemptsUsed;
+var remaining=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
 if(remaining<=0){
 document.getElementById('voucherStatus').className='voucher-status error';
 document.getElementById('voucherStatus').textContent='Codigo ja utilizado. Compre outro MilkyPot!';
@@ -1326,6 +1327,7 @@ showReturningWelcome(existing);
 if(gameConfig.stampCard) updateStampCard();
 /* Update streak (feature 3) */
 if(gameConfig.streak) loadStreak();
+localStorage.removeItem('mp_skip_media');
 showStep(1);
 startCamera('photoVideo');
 };
@@ -1387,7 +1389,15 @@ startWebcam();
 };
 
 /* ========== WEBCAM PIP ========== */
+window.skipMedia=function(){
+playerPhotoData=null;
+localStorage.setItem('mp_skip_media','true');
+if(photoStream) photoStream.getTracks().forEach(function(t){t.stop()});
+goToDifficulty();
+};
+
 function startWebcam(){
+if(localStorage.getItem('mp_skip_media')==='true') return;
 var pip=document.getElementById('webcamPip');
 var v=document.getElementById('webcamVid');
 navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:320}},audio:false})
@@ -1455,7 +1465,7 @@ used:activeVoucher.attemptsUsed>=activeVoucher.attempts
 });
 }catch(e){console.warn('Voucher update error:',e)}
 /* Update remaining display */
-var rem=activeVoucher.attempts-activeVoucher.attemptsUsed;
+var rem=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
 var attInfo=document.getElementById('voucherAttemptsInfo');
 if(attInfo) attInfo.textContent='🎟️ '+Math.max(0,rem)+' tentativa'+(rem!==1?'s':'')+' restante'+(rem!==1?'s':'');
 }
@@ -1809,10 +1819,10 @@ instagramBonusUsed:true,
 used:false /* re-open since we added attempts */
 });
 }catch(e){console.warn('Instagram bonus update error:',e)}
-statusEl.style.display='';statusEl.textContent='+'+extraChances+' tentativas liberadas! Total agora: '+(activeVoucher.attempts-activeVoucher.attemptsUsed);
+statusEl.style.display='';statusEl.textContent='+'+extraChances+' tentativas liberadas! Total agora: '+(activeVoucher.attempts-(activeVoucher.attemptsUsed||0));
 btn.disabled=true;btn.style.opacity='0.5';btn.textContent='Bonus resgatado!';
 /* Update attempts badge */
-var rem=activeVoucher.attempts-activeVoucher.attemptsUsed;
+var rem=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
 var attInfo=document.getElementById('voucherAttemptsInfo');
 if(attInfo) attInfo.textContent='🎟️ '+rem+' tentativa'+(rem!==1?'s':'')+' restante'+(rem!==1?'s':'');
 };
@@ -1982,7 +1992,7 @@ return;
 }
 /* Modo voucher: checa tentativas restantes do voucher */
 if(activeVoucher){
-var rem=activeVoucher.attempts-activeVoucher.attemptsUsed;
+var rem=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
 if(rem<=0){
 /* No more attempts, go back to voucher input */
 activeVoucher=null;activeVoucherCode=null;
@@ -2093,6 +2103,8 @@ var attractIdx=0;
 
 function buildAttractCards(){
 var cards=[];
+cards.push({emoji:'&#127873;',name:'ACERTOU GANHOU',msg:'Acerte 300g no peso e NAO PAGUE!',val:'PROMO',cls:'gold',copy:'Pese 300 gramas exatos e o MilkyPot e na faixa!'});
+
 best.forEach(function(b){
 var d=Math.abs((b.target||10000)-b.val);
 var card={name:b.name,val:fmt(b.val),cls:'',photo:b.photo||null,video:b.reactionVideo||null};
@@ -2102,8 +2114,9 @@ else if(d<=500){card.emoji='&#128170;';card.msg='Chegou perto!';card.copy='Fez '
 else{card.emoji='&#129321;';card.msg='Tentou o desafio!';card.copy='Bora superar?'}
 cards.push(card);
 });
-if(cards.length===0){
+if(cards.length===1){
 cards=[
+{emoji:'&#127873;',name:'ACERTOU GANHOU',msg:'Acerte 300g no peso e NAO PAGUE!',val:'PROMO',cls:'gold',copy:'Mostre que voce tem olho clinico!'},
 {emoji:'&#9201;',name:'10 segundos',msg:'Voce consegue acertar?',val:'10.000ms',cls:'',copy:'Parece facil, mas nao e!'},
 {emoji:'&#128170;',name:'Desafio',msg:'Toque na tela e tente!',val:'JOGAR',cls:'gold',copy:'Sera que voce tem o timing?'},
 {emoji:'&#128293;',name:'Ranking',msg:'Ninguem jogou ainda!',val:'1o lugar',cls:'',copy:'Seja o primeiro do ranking!'},

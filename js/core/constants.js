@@ -90,9 +90,10 @@ const MP = {
 
     // Owner email (para auto-registro como super_admin)
     OWNER_EMAIL: 'jocimarrodrigo@gmail.com',
+    SUPPORT_WHATSAPP: '5543999999999',
 
     // Session config
-    SESSION_DURATION_MS: 24 * 60 * 60 * 1000, // 24 horas
+    SESSION_DURATION_MS: 7 * 24 * 60 * 60 * 1000, // 7 dias (PDV sobrevive fins de semana sem internet)
     SESSION_KEY: 'mp_session',
 
     // Vercel API URL (para Cloud Functions serverless)
@@ -101,3 +102,7 @@ const MP = {
 
 // Configura URL da API Vercel globalmente
 window.MP_VERCEL_API_URL = MP.VERCEL_API_URL;
+
+// Expose globally for browser (const is script-scoped, not a window property)
+if (typeof window !== 'undefined') window.MP = MP;
+if (typeof globalThis !== 'undefined') globalThis.MP = MP;

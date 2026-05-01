@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MilkyPot - Resgate de Sync</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f6f2fb;
+      color: #24143f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    main {
+      width: min(760px, 100%);
+      background: #fff;
+      border: 1px solid #e5dff0;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(36, 20, 63, .12);
+    }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    p { margin: 8px 0; line-height: 1.45; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 18px 0; }
+    .box { background: #f8f6fc; border: 1px solid #ece5f5; border-radius: 8px; padding: 14px; }
+    .label { color: #6a5a80; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+    .value { font-size: 28px; font-weight: 900; margin-top: 4px; }
+    button {
+      border: 0;
+      border-radius: 8px;
+      background: #10b981;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 800;
+      padding: 14px 18px;
+      width: 100%;
+    }
+    button:disabled { opacity: .55; cursor: wait; }
+    pre {
+      background: #180f28;
+      border-radius: 8px;
+      color: #ecfdf5;
+      font-size: 12px;
+      line-height: 1.45;
+      max-height: 260px;
+      overflow: auto;
+      padding: 14px;
+      white-space: pre-wrap;
+    }
+    .danger { color: #b91c1c; font-weight: 800; }
+    .ok { color: #047857; font-weight: 800; }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Resgate de Sincronizacao</h1>
+    <p>Use esta tela somente no PC que tem a lista completa de pedidos. Ela publica os dados locais deste navegador para a nuvem.</p>
+    <p class="danger">Nao limpe cache e nao saia da conta antes de publicar.</p>
+
+    <div class="grid">
+      <div class="box">
+        <div class="label">Pedidos neste PC</div>
+        <div class="value" id="localOrders">...</div>
+      </div>
+      <div class="box">
+        <div class="label">Pedidos na nuvem</div>
+        <div class="value" id="cloudOrders">...</div>
+      </div>
+    </div>
+
+    <button id="publishBtn" onclick="publishAll()">Publicar dados deste PC na nuvem</button>
+    <pre id="log"></pre>
+  </main>
+
+  <script>
+    const FID = 'muffato-quintino';
+    const BASE = 'https://firestore.googleapis.com/v1/projects/milkypot-ad945/databases/(default)/documents/datastore/';
+    const DOCS = [
+      { key: 'orders_' + FID, label: 'pedidos' },
+      { key: 'pdv_tabs_' + FID, label: 'contas abertas' },
+      { key: 'caixa_' + FID, label: 'caixa' },
+      { key: 'finances_' + FID, label: 'financeiro' }
+    ];
+
+    function log(msg) {
+      const el = document.getElementById('log');
+      el.textContent += '[' + new Date().toLocaleTimeString('pt-BR') + '] ' + msg + '\n';
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function readLocal(key) {
+      try {
+        const raw = localStorage.getItem('mp_' + key);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        log('ERRO lendo local ' + key + ': ' + e.message);
+        return [];
+      }
+    }
+
+    async function readCloud(key) {
+      const res = await fetch(BASE + encodeURIComponent(key), { cache: 'no-store' });
+      if (res.status === 404) return [];
+      if (!res.ok) throw new Error('GET ' + key + ': ' + await res.text());
+      const doc = await res.json();
+      const raw = doc && doc.fields && doc.fields.value && doc.fields.value.stringValue;
+      return raw ? JSON.parse(raw) : [];
+    }
+
+    function mergeById(localItems, cloudItems) {
+      if (!Array.isArray(localItems)) localItems = [];
+      if (!Array.isArray(cloudItems)) cloudItems = [];
+      const byId = {};
+      cloudItems.concat(localItems).forEach(item => {
+        if (!item || !item.id) return;
+        const prev = byId[item.id];
+        const itemTs = new Date(item.updatedAt || item.createdAt || 0).getTime();
+        const prevTs = prev ? new Date(prev.updatedAt || prev.createdAt || 0).getTime() : -1;
+        if (!prev || itemTs >= prevTs) byId[item.id] = item;
+      });
+      return Object.values(byId).sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+    }
+
+    async function writeCloud(key, value) {
+      const body = {
+        fields: {
+          value: { stringValue: JSON.stringify(value) },
+          updatedAt: { timestampValue: new Date().toISOString() }
+        }
+      };
+      const res = await fetch(BASE + encodeURIComponent(key), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error('PATCH ' + key + ': ' + await res.text());
+    }
+
+    async function refreshCounts() {
+      const local = readLocal('orders_' + FID);
+      document.getElementById('localOrders').textContent = local.length;
+      try {
+        const cloud = await readCloud('orders_' + FID);
+        document.getElementById('cloudOrders').textContent = cloud.length;
+        log('Conferencia: local=' + local.length + ' nuvem=' + cloud.length);
+      } catch (e) {
+        document.getElementById('cloudOrders').textContent = 'erro';
+        log('ERRO conferindo nuvem: ' + e.message);
+      }
+    }
+
+    async function publishAll() {
+      const btn = document.getElementById('publishBtn');
+      btn.disabled = true;
+      try {
+        const localOrders = readLocal('orders_' + FID);
+        if (!localOrders.length) {
+          alert('Este navegador nao tem pedidos locais. Abra esta URL no PC que mostra 54 pedidos.');
+          return;
+        }
+        if (!confirm('Publicar dados deste PC na nuvem agora?\n\nPedidos locais: ' + localOrders.length)) return;
+
+        for (const doc of DOCS) {
+          const local = readLocal(doc.key);
+          const cloud = await readCloud(doc.key).catch(() => []);
+          const merged = mergeById(local, cloud);
+          await writeCloud(doc.key, merged);
+          log('OK ' + doc.label + ': local=' + local.length + ' nuvem=' + cloud.length + ' publicado=' + merged.length);
+        }
+
+        await refreshCounts();
+        document.getElementById('log').innerHTML += '\n<span class="ok">PUBLICADO. Agora sincronize o outro PC.</span>\n';
+        alert('Publicado. Agora va no outro PC, de Ctrl+Shift+R e clique Sincronizar.');
+      } catch (e) {
+        log('ERRO: ' + e.message);
+        alert('Erro ao publicar: ' + e.message);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    refreshCounts();
+  </script>
+</body>
+</html>

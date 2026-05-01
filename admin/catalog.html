@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>MilkyPot Admin - Catálogo Único</title>
+<link rel="stylesheet" href="../css/shared-panel.css">
+<style>
+    body{background:#0f0c29;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,sans-serif;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .wrap{max-width:720px;width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:40px;text-align:center;backdrop-filter:blur(12px)}
+    h1{font-size:28px;margin:0 0 8px;font-weight:800}
+    p{opacity:.8;line-height:1.6;margin:0 0 20px;font-size:15px}
+    .spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,.15);border-top-color:#42A5F5;border-radius:50%;animation:spin 1s linear infinite;margin:12px auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .stack{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+    a.btn{display:inline-block;padding:14px 24px;background:#42A5F5;color:#fff;text-decoration:none;border-radius:12px;font-weight:700;transition:background .15s}
+    a.btn:hover{background:#2196F3}
+    a.btn.alt{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2)}
+    .note{font-size:12px;color:rgba(255,255,255,.5);margin-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div style="font-size:48px;margin-bottom:8px">📋</div>
+    <h1>Catálogo Único MilkyPot</h1>
+    <p>A gestão de produtos foi <b>unificada</b>. Um único editor controla o cardápio público, o PDV, o painel do franqueado e a API de pedidos — com custos, comissões e auditoria.</p>
+    <div class="spinner"></div>
+    <p id="sub" style="font-size:13px;opacity:.7">Abrindo editor...</p>
+    <div class="stack" id="links" style="display:none">
+        <a class="btn" href="/painel/catalogo.html">Abrir Editor de Catálogo</a>
+        <a class="btn alt" href="/cardapio.html" target="_blank">Ver cardápio público</a>
+        <a class="btn alt" href="/admin/index.html">← Voltar ao painel admin</a>
+    </div>
+    <div class="note">Fonte de verdade: <code>catalog_config</code> (Firestore + localStorage)</div>
+</div>
+
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/auth.js"></script>
+<script>
+(function(){
+    if (!Auth.requireAuth('super_admin')) return;
+    // Mostra links e redireciona em 800ms (caso redirect JS seja bloqueado, usuario tem opcoes)
+    setTimeout(function(){
+        document.getElementById('links').style.display = 'flex';
+        document.getElementById('sub').textContent = 'Redirecionando... Se nao abrir automaticamente, clique abaixo.';
+    }, 400);
+    setTimeout(function(){
+        location.replace('/painel/catalogo.html');
+    }, 800);
+})();
+</script>
+<script src="../js/core/copilot-transport.js" defer></script>
+<script src="../js/pages/lilo-scanner.js" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
+</body>
+</html>

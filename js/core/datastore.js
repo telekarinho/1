@@ -11,6 +11,10 @@ const DataStore = {
     _db: null,
     _ready: false,
     _pendingWrites: [],
+    // Flag: true apos _syncFromCloud() completar. Paginas verificam
+    // esta flag para nao perder o evento mp_synced quando sync termina
+    // antes do listener ser registrado.
+    _syncDone: false,
 
     // ============================================
     // Inicializacao Firestore
@@ -25,11 +29,55 @@ const DataStore = {
                 this._flushPendingWrites();
                 // Load cloud data to local cache
                 this._syncFromCloud();
+                // Watcher de Firebase Auth — detecta mp_session ÓRFÃ (sem user no Firebase)
+                this._setupAuthWatcher();
             } else {
                 console.warn('⚠️ DataStore: Firestore nao disponivel, usando localStorage apenas');
             }
         } catch (e) {
             console.error('DataStore.init error:', e);
+        }
+    },
+
+    // Auth watcher — apenas tenta self-heal silencioso quando Firebase Auth some.
+    // NÃO mostra banner pro user: rules de orders_/caixa_/pdv_tabs_/finances_ são
+    // públicas (allow read: true), então sync de leitura funciona SEM auth.
+    // Self-heal anonymous = bonus pra writes funcionarem em PCs sem login completo.
+    _setupAuthWatcher() {
+        try {
+            if (!firebase || !firebase.auth) return;
+            var self = this;
+            firebase.auth().onAuthStateChanged(async function (user) {
+                self._firebaseUser = user;
+                var hasMpSession = !!localStorage.getItem('mp_session');
+                if (hasMpSession && !user) {
+                    // Tenta anon auth silencioso pra liberar writes. Se falhar,
+                    // não mostra banner — reads públicos cobrem o caso de sync.
+                    await self._attemptAnonymousAuth();
+                } else if (user) {
+                    self._flushPendingWrites();
+                    self._syncFromCloud();
+                }
+            });
+        } catch (e) {
+            console.warn('_setupAuthWatcher error:', e);
+        }
+    },
+
+    // Self-heal: signInAnonymously cria user Firebase válido SEM credenciais.
+    // Anon user satisfaz isAuthenticated() nas rules → sync passa a funcionar.
+    // Não cobre rules que checam .uid específico, mas pra collection 'datastore' rola.
+    async _attemptAnonymousAuth() {
+        if (!firebase || !firebase.auth) return false;
+        // Evita loop: tenta no máximo 1 vez por sessão
+        if (this._anonAuthAttempted) return false;
+        this._anonAuthAttempted = true;
+        try {
+            const result = await firebase.auth().signInAnonymously();
+            return !!(result && result.user);
+        } catch (e) {
+            console.warn('signInAnonymously falhou:', e.code, e.message);
+            return false;
         }
     },
 
@@ -140,11 +188,91 @@ const DataStore = {
         const franchises = this.getAllFranchises();
         let allOrders = [];
         franchises.forEach(f => {
-            const orders = this.getCollection('orders', f.id);
+            const orders = (this.getCollection('orders', f.id) || []);
             orders.forEach(o => { o._franchiseId = f.id; o._franchiseName = f.name; });
             allOrders = allOrders.concat(orders);
         });
         return filterFn ? allOrders.filter(filterFn) : allOrders;
+    },
+
+    // ============================================
+    // Onboarding & Setup (Scale-Ready)
+    // ============================================
+    initStore(franchiseId, config = {}) {
+        const franchises = this.getAllFranchises() || [];
+        const idx = franchises.findIndex(f => f.id === franchiseId);
+        if (idx === -1) return { success: false, error: 'Franchise not found' };
+
+        // 1. Update basic metadata (Comercial Align)
+        franchises[idx].tipoOperacao = config.tipoOperacao || 'delivery';
+        franchises[idx].setupCompleto = false;
+        franchises[idx].setupStatus = 'pending'; 
+        
+        // Investment Breakdown
+        franchises[idx].investimentoBase = config.investimentoBase || 3499.99;
+        franchises[idx].investimentoEstrutura = config.investimentoEstrutura || 2000.00;
+        franchises[idx].investimentoTotalEstimado = franchises[idx].investimentoBase + franchises[idx].investimentoEstrutura;
+        
+        franchises[idx].ticketMedioBase = config.ticketMedio || 20.00;
+        franchises[idx].treinamentoTipo = config.treinamentoTipo || 'online'; // online | presencial | hibrido
+
+        franchises[idx].territorio = {
+            cidade: config.cidade || '',
+            bairro: config.bairro || '',
+            raioEntrega: config.raioEntrega || 3,
+            status: config.status || 'reservado',
+            dataReserva: new Date().toISOString()
+        };
+        this.set('franchises', franchises);
+
+        // 2. Seed Default Catalog if empty
+        const currentCat = this.get('catalog_config');
+        if (!currentCat) {
+            // Se nao tem catalogo global, usa o seed do cardapio-data
+            if (window.CARDAPIO_CONFIG) {
+                this.set('catalog_config', window.CARDAPIO_CONFIG);
+            }
+        }
+
+        // 3. Set Initial Onboarding Checklist (Foco em Clareza Comercial)
+        const setupChecklist = [
+            { id: 'menu', text: 'Entender cardápio e precificação', done: false, required: true },
+            { id: 'stock', text: 'Configurar estoque inicial', done: false, required: true },
+            { id: 'test_sale', text: 'Realizar uma venda de teste no PDV', done: false, required: true }
+        ];
+        this.setCollection('checklist_onboarding', franchiseId, setupChecklist);
+
+        return { success: true, franchise: franchises[idx] };
+    },
+
+    markSetupComplete(franchiseId) {
+        const franchises = this.getAllFranchises() || [];
+        const idx = franchises.findIndex(f => f.id === franchiseId);
+        if (idx === -1) return false;
+
+        franchises[idx].setupCompleto = true;
+        franchises[idx].setupStatus = 'pronto';
+        franchises[idx].activatedAt = new Date().toISOString();
+        this.set('franchises', franchises);
+
+        // Trigger notification (to be implemented in notifications.js)
+        if (typeof Notifications !== 'undefined' && Notifications.notifyAdminOnActivation) {
+            Notifications.notifyAdminOnActivation(franchises[idx]);
+        }
+
+        return true;
+    },
+
+    getFranchiseAge(franchiseId) {
+        const franchises = this.getAllFranchises() || [];
+        const f = franchises.find(f => f.id === franchiseId);
+        if (!f || !f.createdAt) return 0;
+
+        const start = new Date(f.createdAt);
+        const now = new Date();
+        const diffTime = Math.abs(now - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays || 1;
     },
 
     getFinancesAllFranchises(filterFn) {
@@ -161,19 +289,111 @@ const DataStore = {
     // ============================================
     // Firestore Sync (background)
     // ============================================
-    _writeToCloud(key, data) {
+    // Keys que precisam de merge (arrays compartilhadas entre PCs).
+    // Sem merge: cada PC sobrescreve o array INTEIRO → race condition fatal,
+    // PC com menos itens locais apaga itens do outro PC do cloud.
+    _isMergeable(key) {
+        return /^(orders_|caixa_|pdv_tabs_|finances_)/.test(key || '');
+    },
+    // Merge inteligente: une dois arrays por id, prefere o mais recente
+    // (updatedAt > createdAt). Idempotente — pode rodar várias vezes sem efeito ruim.
+    _itemMutationTime(item) {
+        if (!item) return 0;
+        function t(value) {
+            const ms = value ? new Date(value).getTime() : 0;
+            return Number.isFinite(ms) ? ms : 0;
+        }
+        return Math.max(
+            t(item.updatedAt),
+            t(item.deletedAt),
+            t(item.cancelledAt),
+            t(item.finalizedAt)
+        );
+    },
+
+    _itemVersionTime(item) {
+        if (!item) return 0;
+        const created = item.createdAt ? new Date(item.createdAt).getTime() : 0;
+        return Math.max(
+            this._itemMutationTime(item),
+            Number.isFinite(created) ? created : 0
+        );
+    },
+
+    _pickNewestItem(a, b) {
+        if (!a) return b;
+        if (!b) return a;
+
+        const aMutation = this._itemMutationTime(a);
+        const bMutation = this._itemMutationTime(b);
+        const aDeleted = !!a.deleted;
+        const bDeleted = !!b.deleted;
+        if (aDeleted !== bDeleted) {
+            if (aDeleted && aMutation >= bMutation) return a;
+            if (bDeleted && bMutation >= aMutation) return b;
+        }
+
+        if (aMutation || bMutation) {
+            return aMutation >= bMutation ? a : b;
+        }
+
+        return this._itemVersionTime(a) >= this._itemVersionTime(b) ? a : b;
+    },
+
+    _mergeArrays(localArr, cloudArr) {
+        if (!Array.isArray(localArr)) localArr = [];
+        if (!Array.isArray(cloudArr)) cloudArr = [];
+        var byId = {};
+        var self = this;
+        cloudArr.forEach(function (it) { if (it && it.id) byId[it.id] = it; });
+        localArr.forEach(function (it) {
+            if (!it || !it.id) return;
+            byId[it.id] = byId[it.id] ? self._pickNewestItem(byId[it.id], it) : it;
+        });
+        return Object.keys(byId).map(function (k) { return byId[k]; });
+    },
+    async _writeToCloud(key, data) {
         if (!this._ready || !this._db) {
             this._pendingWrites.push({ action: 'set', key, data });
             return;
         }
         try {
+            // Para keys mergeable (orders_, caixa_, finances_, pdv_tabs_) — lê cloud
+            // primeiro, mescla com local pelo id, e escreve a união. Evita perda de
+            // dados quando 2+ PCs escrevem em paralelo. Não-mergeables: write direto.
+            var finalData = data;
+            if (this._isMergeable(key) && Array.isArray(data)) {
+                try {
+                    var snap = await this._db.collection('datastore').doc(key).get();
+                    if (snap.exists) {
+                        var cloudArr = JSON.parse(snap.data().value || '[]');
+                        finalData = this._mergeArrays(data, cloudArr);
+                        // Atualiza localStorage com a versão mesclada (não dispara
+                        // _writeToCloud de novo pra evitar loop — set direto)
+                        try { localStorage.setItem(this.PREFIX + key, JSON.stringify(finalData)); } catch (e) {}
+                        if (finalData.length !== data.length) {
+                            console.log('🔀 Merge ' + key + ': local=' + data.length + ' + cloud=' + cloudArr.length + ' = ' + finalData.length);
+                        }
+                    }
+                } catch (mergeErr) {
+                    console.warn('Merge falhou (escrevendo local):', key, mergeErr.message);
+                }
+            }
             // Store as a document in 'datastore' collection
             this._db.collection('datastore').doc(key).set({
-                value: JSON.stringify(data),
+                value: JSON.stringify(finalData),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(err => console.warn('Firestore write error:', key, err));
+            }).catch(async err => {
+                console.warn('Firestore write error:', key, err.code || err.message);
+                this._pendingWrites.push({ action: 'set', key, data });
+                if (err && (err.code === 'permission-denied' || err.code === 'unauthenticated')) {
+                    const healed = await this._attemptAnonymousAuth();
+                    if (healed) this._flushPendingWrites();
+                }
+            });
         } catch (e) {
             console.warn('_writeToCloud error:', e);
+            this._pendingWrites.push({ action: 'set', key, data });
         }
     },
 
@@ -197,6 +417,44 @@ const DataStore = {
         });
     },
 
+    _isMergeableListDoc(docId) {
+        // Arrays compartilhadas entre PCs — sem merge dá race condition fatal.
+        // PCs com listas locais diferentes sobrescrevem o array do outro.
+        return !!docId && (
+            docId.startsWith('orders_') ||
+            docId.startsWith('pdv_tabs_') ||
+            docId.startsWith('caixa_') ||
+            docId.startsWith('finances_')
+        );
+    },
+
+    _mergeListDoc(docId, cloudStr) {
+        if (!this._isMergeableListDoc(docId)) return { value: cloudStr, changed: false };
+        try {
+            const localStr = localStorage.getItem(this.PREFIX + docId);
+            const cloudItems = cloudStr ? JSON.parse(cloudStr) : [];
+            const localItems = localStr ? JSON.parse(localStr) : [];
+            if (!Array.isArray(cloudItems) || !Array.isArray(localItems)) {
+                return { value: cloudStr, changed: false };
+            }
+            const byId = {};
+            const self = this;
+            cloudItems.concat(localItems).forEach(item => {
+                if (!item || !item.id) return;
+                const prev = byId[item.id];
+                byId[item.id] = prev ? self._pickNewestItem(prev, item) : item;
+            });
+            const merged = Object.values(byId).sort((a, b) => {
+                return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+            });
+            const mergedStr = JSON.stringify(merged);
+            return { value: mergedStr, changed: mergedStr !== cloudStr };
+        } catch (e) {
+            console.warn('merge ' + docId + ' ignorado:', e.message || e);
+            return { value: cloudStr, changed: false };
+        }
+    },
+
     // Fetch only the franchises doc (public, no auth needed)
     async fetchPublicFranchises() {
         if (!this._ready || !this._db) return null;
@@ -213,30 +471,254 @@ const DataStore = {
         return null;
     },
 
+    // Lista de docs públicos por franquia — sync funciona SEM auth via per-doc gets
+    // (collection.get() exige rule de LIST que não temos pra unauth).
+    _publicSyncDocs() {
+        // Nao use Auth.getSession() aqui: se a sessao local estiver expirada,
+        // getSession pode redirecionar a tela. Sync publico precisa ser
+        // side-effect-free para nao derrubar o operador no PDV.
+        var fid = null;
+        try {
+            if (typeof Auth !== 'undefined' && Auth.getSessionRaw) {
+                fid = (Auth.getSessionRaw() || {}).franchiseId;
+            } else {
+                var raw = localStorage.getItem('mp_session');
+                fid = raw ? (JSON.parse(raw) || {}).franchiseId : null;
+            }
+        } catch (_) {}
+        if (!fid) return [];
+        return [
+            'orders_' + fid,
+            'caixa_' + fid,
+            'pdv_tabs_' + fid,
+            'finances_' + fid
+        ];
+    },
+
     async _syncFromCloud() {
         if (!this._ready || !this._db) return;
+
+        // CRÍTICO: anexa listeners e poll ANTES dos awaits do sync inicial.
+        // Se um await travar (rede lenta, Firestore offline, etc), os listeners
+        // ainda assim ficam ativos e o sync acontece via realtime/poll quando
+        // a rede normalizar. Isolation total das duas fases.
+        this._setupListenersAndPoll();
+
         try {
-            const snapshot = await this._db.collection('datastore').get();
-            if (snapshot.empty) {
-                // First time: push local data to cloud
-                console.log('☁️ Firestore vazio, enviando dados locais...');
-                this._pushAllToCloud();
-            } else {
-                // Cloud has data: update local cache
-                console.log('☁️ Sincronizando dados do Firestore...');
-                snapshot.forEach(doc => {
-                    const key = doc.id;
-                    try {
-                        const cloudData = JSON.parse(doc.data().value);
-                        localStorage.setItem(this.PREFIX + key, JSON.stringify(cloudData));
-                    } catch (e) {
-                        console.warn('Sync parse error for:', key, e);
-                    }
-                });
-                console.log(`✅ ${snapshot.size} registros sincronizados do Firestore`);
+            // Priority 1: Check for catalog_config specifically for seeding (timeout 5s)
+            try {
+                const catalogDoc = await Promise.race([
+                    this._db.collection('datastore').doc('catalog_config').get(),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 5s')), 5000))
+                ]);
+                if (!catalogDoc.exists && typeof CARDAPIO_CONFIG !== 'undefined') {
+                    console.log('🌱 Seed: Enviando configuração inicial do cardápio para o Firestore...');
+                    this.set('catalog_config', CARDAPIO_CONFIG);
+                }
+            } catch (e) {
+                console.warn('catalog_config sync ignorado:', e.code || e.message);
             }
+
+            // PER-DOC reads — funciona sem auth pq cada doc tem allow read individual
+            // pelas patterns orders_*, caixa_*, etc. Collection.get() exigia LIST permission.
+            const docsToSync = this._publicSyncDocs();
+            let synced = 0;
+            for (const docId of docsToSync) {
+                try {
+                    const doc = await this._db.collection('datastore').doc(docId).get();
+                    if (doc.exists) {
+                        const merged = this._mergeListDoc(docId, doc.data().value);
+                        const cloudStr = merged.value;
+                        localStorage.setItem(this.PREFIX + docId, cloudStr);
+                        // SYNC INICIAL: se local tinha itens que o cloud não tinha (e.g. caixa
+                        // aberto offline), escreve de volta. Seguro aqui porque roda 1x só
+                        // por carregamento de página. Não causa loop: onSnapshot vai disparar
+                        // com o mesmo conteúdo → merge produz igual → localStr===cloudStr → sem loop.
+                        if (merged.changed) this._writeToCloud(docId, JSON.parse(cloudStr));
+                        synced++;
+                    } else if (this._isMergeableListDoc(docId)) {
+                        const localStr = localStorage.getItem(this.PREFIX + docId);
+                        if (localStr) this._writeToCloud(docId, JSON.parse(localStr));
+                    }
+                } catch (e) {
+                    console.warn('per-doc sync error', docId, e.message);
+                }
+            }
+            console.log(`☁️ Per-doc sync: ${synced}/${docsToSync.length} docs`);
+
+            this._syncDone = true;
+            window.dispatchEvent(new CustomEvent('mp_synced'));
+
         } catch (e) {
             console.warn('_syncFromCloud error:', e);
+        }
+    },
+
+    // Setup listeners + poll. Idempotente. Chamado pelo _syncFromCloud BEFORE awaits
+    // pra garantir que mesmo se o sync inicial travar, realtime/poll ficam ativos.
+    _setupListenersAndPoll() {
+        if (!this._ready || !this._db) return;
+        try {
+            // catalog_config listener (background)
+            if (!this._catalogListenerAttached) {
+                this._catalogListenerAttached = true;
+                this._db.collection('datastore').doc('catalog_config').onSnapshot(doc => {
+                    if (doc.exists) {
+                        const newData = JSON.parse(doc.data().value);
+                        localStorage.setItem(this.PREFIX + 'catalog_config', doc.data().value);
+                        console.log('🔄 Catálogo atualizado via Firebase (Background)');
+                        window.dispatchEvent(new CustomEvent('mp_catalog_updated', { detail: newData }));
+                    }
+                }, err => {
+                    console.warn('catalog_config listener ignorado:', err.code || err.message);
+                    this._catalogListenerAttached = false;
+                });
+            }
+
+            // Per-doc realtime listeners (orders/caixa/pdv_tabs/finances)
+            if (!this._realtimeListenerAttached) {
+                this._realtimeListenerAttached = true;
+                const self = this;
+                const docsToSync = this._publicSyncDocs();
+                docsToSync.forEach(docId => {
+                    self._db.collection('datastore').doc(docId).onSnapshot(doc => {
+                        if (!doc.exists) return;
+                        try {
+                            const merged = self._mergeListDoc(docId, doc.data().value);
+                            const cloudStr = merged.value;
+                            const localStr = localStorage.getItem(self.PREFIX + docId);
+                            if (localStr !== cloudStr) {
+                                localStorage.setItem(self.PREFIX + docId, cloudStr);
+                                // FIX LOOP: NÃO auto-writeback (causa loop infinito multi-PC)
+                                // if (merged.changed) self._writeToCloud(docId, JSON.parse(cloudStr));
+                                let parsed = null;
+                                try { parsed = JSON.parse(cloudStr); } catch(_) {}
+                                window.dispatchEvent(new CustomEvent('mp_remote_update', {
+                                    detail: { key: docId, data: parsed }
+                                }));
+                                console.log('🔄 Sync remoto:', docId);
+                            }
+                        } catch (e) {
+                            console.warn('Realtime sync error:', docId, e);
+                        }
+                    }, async err => {
+                        console.warn('Listener err', docId, err.code || err.message);
+                        // Se foi auth/permission, força refresh do token antes de reconectar.
+                        // Tokens Firebase Auth expiram em 1h; auto-refresh nem sempre roda
+                        // pra listeners passivos. Force getIdToken(true) renova na hora.
+                        if (err && (err.code === 'permission-denied' || err.code === 'unauthenticated')) {
+                            try {
+                                if (firebase && firebase.auth) {
+                                    var u = firebase.auth().currentUser;
+                                    if (u && u.getIdToken) {
+                                        await u.getIdToken(true);
+                                        console.log('🔑 Token Firebase refreshed (listener recovery)');
+                                    }
+                                }
+                            } catch (refErr) { console.warn('Token refresh falhou:', refErr.message); }
+                        }
+                        // Re-attach: listener morreu — reseta flag e reagenda.
+                        self._realtimeListenerAttached = false;
+                        setTimeout(function() {
+                            try { self._setupListenersAndPoll(); } catch(e) {}
+                        }, 8000);
+                    });
+                });
+            }
+
+            // Polling fallback (per-doc, 5s) — belt+suspenders
+            if (!this._pollFallbackId) {
+                const self = this;
+                this._pollFallbackId = setInterval(async () => {
+                    if (!self._ready || !self._db) return;
+                    const docs = self._publicSyncDocs();
+                    let changes = 0;
+                    for (const docId of docs) {
+                        try {
+                            const doc = await self._db.collection('datastore').doc(docId).get();
+                            if (!doc.exists) {
+                                if (self._isMergeableListDoc(docId)) {
+                                    const localStr = localStorage.getItem(self.PREFIX + docId);
+                                    if (localStr) self._writeToCloud(docId, JSON.parse(localStr));
+                                }
+                                continue;
+                            }
+                            const merged = self._mergeListDoc(docId, doc.data().value);
+                            const cloudStr = merged.value;
+                            const localStr = localStorage.getItem(self.PREFIX + docId);
+                            if (localStr !== cloudStr) {
+                                localStorage.setItem(self.PREFIX + docId, cloudStr);
+                                // FIX LOOP: NÃO auto-writeback (causa loop infinito multi-PC)
+                                // if (merged.changed) self._writeToCloud(docId, JSON.parse(cloudStr));
+                                let parsed = null;
+                                try { parsed = JSON.parse(cloudStr); } catch (_) {}
+                                window.dispatchEvent(new CustomEvent('mp_remote_update', {
+                                    detail: { key: docId, data: parsed, source: 'poll' }
+                                }));
+                                changes++;
+                            }
+                        } catch (e) { /* ignora — próximo poll tenta */ }
+                    }
+                    if (changes > 0) console.log('🔁 Poll: ' + changes + ' doc(s) atualizado(s)');
+                }, 10000); // 10s — fallback quando listener morrer/reconectar
+            }
+        } catch (e) {
+            console.warn('_setupListenersAndPoll error:', e);
+        }
+    },
+
+    // Manual force sync — botão "Sincronizar Agora" no UI
+    // PER-DOC gets pra não depender de LIST permission da collection.
+    async forceSync() {
+        if (!this._ready || !this._db) {
+            console.warn('forceSync: Firestore não conectado');
+            return { success: false, error: 'Firestore offline', code: 'no_db' };
+        }
+        try {
+            const docsToSync = this._publicSyncDocs();
+            let changes = 0;
+            let total = 0;
+            for (const docId of docsToSync) {
+                try {
+                    const doc = await this._db.collection('datastore').doc(docId).get();
+                    total++;
+                    if (!doc.exists) {
+                        if (this._isMergeableListDoc(docId)) {
+                            const localStr = localStorage.getItem(this.PREFIX + docId);
+                            if (localStr) this._writeToCloud(docId, JSON.parse(localStr));
+                        }
+                        continue;
+                    }
+                    const merged = this._mergeListDoc(docId, doc.data().value);
+                    const cloudStr = merged.value;
+                    const localStr = localStorage.getItem(this.PREFIX + docId);
+                    if (localStr !== cloudStr) {
+                        localStorage.setItem(this.PREFIX + docId, cloudStr);
+                        // FIX LOOP: NÃO escreve de volta no cloud por iniciativa do listener.
+                        // Se merge produz resultado diferente do cloud, isso só significa que
+                        // local tinha algo a mais — esse algo será propagado no próximo
+                        // DataStore.set explícito do user (ordem nova, status, etc).
+                        // Auto-writeback aqui causava loop infinito entre PCs (4+ writes/s).
+                        // if (merged.changed) this._writeToCloud(docId, JSON.parse(cloudStr));
+                        let parsed = null;
+                        try { parsed = JSON.parse(cloudStr); } catch(_) {}
+                        window.dispatchEvent(new CustomEvent('mp_remote_update', {
+                            detail: { key: docId, data: parsed, source: 'force' }
+                        }));
+                        changes++;
+                    }
+                } catch (e) {
+                    console.warn('forceSync per-doc:', docId, e.code || e.message);
+                }
+            }
+            // Para compat com código existente que itera snap.forEach
+            const snap = { size: total };
+            console.log('🔄 ForceSync: ' + changes + ' doc(s) atualizado(s)');
+            return { success: true, changes: changes, total: snap.size };
+        } catch (e) {
+            console.error('forceSync error:', e);
+            // Per-doc gets protegem contra permission-denied — mensagem genérica
+            return { success: false, error: e.message || 'Erro ao sincronizar', code: 'unknown' };
         }
     },
 
@@ -417,6 +899,9 @@ const DataStore = {
     // ============================================
     seed() {
         if (this.get('_seeded')) return;
+        const host = (typeof window !== 'undefined' && window.location) ? window.location.hostname : '';
+        const isLocalHost = !host || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0';
+        const skipDemoSeed = !isLocalHost;
 
         // ---- Usuarios (SEM senhas - autenticacao via Firebase Auth) ----
         const users = [
@@ -430,149 +915,56 @@ const DataStore = {
             },
             {
                 id: 'franq1',
-                email: 'catuai@milkypot.com',
+                email: 'milkypot.com@gmail.com',
                 role: 'franchisee',
-                name: 'Joao Silva',
-                franchiseId: 'catuai',
+                name: 'JOCIMAR RODRIGO MAGALHAES SERRA',
+                franchiseId: 'muffato-quintino',
                 createdAt: '2024-06-01T00:00:00Z'
-            },
-            {
-                id: 'franq2',
-                email: 'morumbi@milkypot.com',
-                role: 'franchisee',
-                name: 'Maria Santos',
-                franchiseId: 'morumbi',
-                createdAt: '2024-03-15T00:00:00Z'
-            },
-            {
-                id: 'franq3',
-                email: 'jardins@milkypot.com',
-                role: 'franchisee',
-                name: 'Pedro Oliveira',
-                franchiseId: 'jardins',
-                createdAt: '2024-02-01T00:00:00Z'
             }
         ];
         this.set('users', users);
 
-        // ---- Franquias ----
+        // ---- Franquias (apenas unidades reais; fonte de verdade: Firestore via admin) ----
         const franchises = [
             {
-                id: 'ibirapuera',
-                slug: 'ibirapuera',
-                name: 'MilkyPot Shopping Ibirapuera',
-                address: 'Av. Ibirapuera, 3103 - Moema, Sao Paulo - SP',
-                city: 'Sao Paulo',
-                state: 'SP',
-                phone: '(11) 3456-7890',
-                whatsapp: '5511934567890',
-                rating: 4.9,
-                deliveryTime: '20-35 min',
+                id: 'muffato-quintino',
+                slug: 'muffato-quintino',
+                name: 'MilkyPot Muffato Quintino',
+                address: 'Quintino, Londrina - PR',
+                city: 'Londrina',
+                state: 'PR',
+                owner: 'JOCIMAR RODRIGO MAGALHAES SERRA',
+                email: 'milkypot.com@gmail.com',
+                phone: '(43) 99804-2424',
+                whatsapp: '5543998042424',
+                rating: 5,
+                deliveryTime: '25-40 min',
                 deliveryFee: 5.90,
                 hours: '10:00 - 22:00',
                 type: 'store',
                 status: 'ativo',
-                monthlyFee: 5000,
-                createdAt: '2023-01-15T00:00:00Z',
-                lat: -23.6100, lng: -46.6658
-            },
-            {
-                id: 'morumbi',
-                slug: 'morumbi',
-                name: 'MilkyPot Shopping Morumbi',
-                address: 'Av. Roque Petroni Jr, 1089 - Morumbi, Sao Paulo - SP',
-                city: 'Sao Paulo',
-                state: 'SP',
-                phone: '(11) 3456-7891',
-                whatsapp: '5511934567891',
-                rating: 4.8,
-                deliveryTime: '25-40 min',
-                deliveryFee: 6.90,
-                hours: '10:00 - 22:00',
-                type: 'store',
-                status: 'ativo',
-                monthlyFee: 5000,
-                createdAt: '2023-03-01T00:00:00Z',
-                lat: -23.6233, lng: -46.6975
-            },
-            {
-                id: 'jardins',
-                slug: 'jardins',
-                name: 'MilkyPot Jardins',
-                address: 'Rua Oscar Freire, 725 - Jardins, Sao Paulo - SP',
-                city: 'Sao Paulo',
-                state: 'SP',
-                phone: '(11) 3456-7892',
-                whatsapp: '5511934567892',
-                rating: 4.9,
-                deliveryTime: '15-25 min',
-                deliveryFee: 4.90,
-                hours: '09:00 - 23:00',
-                type: 'mega',
-                status: 'ativo',
-                monthlyFee: 8000,
-                createdAt: '2023-02-01T00:00:00Z',
-                lat: -23.5618, lng: -46.6698
-            },
-            {
-                id: 'barra',
-                slug: 'barra',
-                name: 'MilkyPot Barra Shopping',
-                address: 'Av. das Americas, 4666 - Barra, Rio de Janeiro - RJ',
-                city: 'Rio de Janeiro',
-                state: 'RJ',
-                phone: '(21) 3456-7893',
-                whatsapp: '5521934567893',
-                rating: 4.7,
-                deliveryTime: '25-40 min',
-                deliveryFee: 7.90,
-                hours: '10:00 - 22:00',
-                type: 'store',
-                status: 'ativo',
-                monthlyFee: 5000,
-                createdAt: '2023-06-01T00:00:00Z',
-                lat: -22.9998, lng: -43.3652
-            },
-            {
-                id: 'catuai',
-                slug: 'catuai',
-                name: 'MilkyPot Catuai Londrina',
-                address: 'Rod. Celso Garcia Cid, 5600 - Londrina - PR',
-                city: 'Londrina',
-                state: 'PR',
-                phone: '(43) 3456-7894',
-                whatsapp: '5543934567894',
-                rating: 4.8,
-                deliveryTime: '20-30 min',
-                deliveryFee: 5.50,
-                hours: '10:00 - 22:00',
-                type: 'store',
-                status: 'ativo',
-                monthlyFee: 4500,
+                tipoOperacao: 'loja',
+                setupCompleto: true,
+                territorio: { cidade: 'Londrina', bairro: 'Quintino', raioEntrega: 5, status: 'ativo' },
+                monthlyFee: 100,
                 createdAt: '2024-06-01T00:00:00Z',
-                lat: -23.3045, lng: -51.1696
-            },
-            {
-                id: 'recife',
-                slug: 'recife',
-                name: 'MilkyPot Shopping Recife',
-                address: 'R. Padre Carapuceiro, 777 - Boa Viagem, Recife - PE',
-                city: 'Recife',
-                state: 'PE',
-                phone: '(81) 3456-7895',
-                whatsapp: '5581934567895',
-                rating: 4.9,
-                deliveryTime: '20-35 min',
-                deliveryFee: 5.00,
-                hours: '10:00 - 22:00',
-                type: 'express',
-                status: 'ativo',
-                monthlyFee: 3500,
-                createdAt: '2024-01-01T00:00:00Z',
-                lat: -8.1186, lng: -34.9056
+                lat: -23.3265, lng: -51.1664
             }
         ];
+        // Add metadata to existing ones
+        franchises.forEach(f => {
+            if (!f.tipoOperacao) f.tipoOperacao = 'loja';
+            if (f.setupCompleto === undefined) f.setupCompleto = true;
+            if (!f.territorio) {
+                f.territorio = { cidade: f.city || '', bairro: '', raioEntrega: 3, status: 'ativo' };
+            }
+        });
         this.set('franchises', franchises);
+        if (skipDemoSeed) {
+            localStorage.setItem(this.PREFIX + '_seeded', JSON.stringify(true));
+            console.log('DataStore seed demo skipped on production host');
+            return;
+        }
 
         // ---- Pedidos demo para cada franquia ----
         const sabores = ['Ninho', 'Morango', 'Ninho com Morango', 'Nutella', 'Oreo', 'Acai + Granola', 'Banana + Whey'];
@@ -717,3 +1109,8 @@ const DataStore = {
 
 // Auto-seed on load
 DataStore.seed();
+
+// Garante acesso global (IIFE-less const é escopo de script em browser;
+// publicar como window.DataStore evita "undefined" em testes e módulos externos)
+if (typeof window !== 'undefined') window.DataStore = DataStore;
+if (typeof globalThis !== 'undefined') globalThis.DataStore = DataStore;

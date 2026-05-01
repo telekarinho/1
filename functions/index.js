@@ -9,8 +9,11 @@
 
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
+
+const UBER_ENCRYPTION_KEY = defineSecret("UBER_ENCRYPTION_KEY");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -785,3 +788,15 @@ exports.cancelFiscalNote = onCall({
 
     return { success: true, canceled: true };
 });
+
+// ============================================================
+// Uber Direct Integration
+// ============================================================
+const uberDirect = require("./uber-direct");
+Object.assign(exports, uberDirect);
+
+// ============================================================
+// Test Mode & Production Mode
+// ============================================================
+const testMode = require("./test-mode");
+Object.assign(exports, testMode);

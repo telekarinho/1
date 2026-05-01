@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MilkyPot — Gerador de Slides pra TV</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link rel="stylesheet" href="../css/ios-premium.css">
+<!-- Firebase compat pra DataStore funcionar off-painel -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/auth.js"></script>
+<script src="../js/pages/tv-live-data.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --mp-pink: #FF4F8A;
+    --mp-blue: #42A5F5;
+    --mp-purple: #7E57C2;
+    --mp-cream: #FFF3E0;
+    --mp-sheep: #FFE4F0;
+  }
+  body { background:#F2F2F7; }
+  .generator-wrap { max-width:1400px; margin:0 auto; padding:24px; }
+  .tpl-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:16px; margin-bottom:32px; }
+  .tpl-card {
+    background:#fff; border-radius:16px; padding:16px; cursor:pointer;
+    border:2px solid transparent; transition: all .2s;
+  }
+  .tpl-card:hover { border-color:var(--mp-blue); transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,.08); }
+  .tpl-card.active { border-color:var(--mp-pink); background:#FFF0F6; }
+  .tpl-card h3 { font-size:15px; margin:4px 0; color:#1F2937; }
+  .tpl-card p { font-size:12px; color:#666; margin:0; line-height:1.4; }
+  .tpl-card .tpl-emoji { font-size:32px; margin-bottom:6px; }
+
+  /* Canvas de render: TV tipica 1920x1080, mas renderizamos 1280x720 pra performance
+     html2canvas captura na proporcao que estiver */
+  .slide-stage {
+    width: 100%; aspect-ratio: 16 / 9; position:relative;
+    background:#000; border-radius:20px; overflow:hidden;
+    margin:16px 0; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  }
+  /* O slide real esta aqui, 1920x1080 em tamanho logico, dai escala */
+  .slide-canvas {
+    position:absolute; top:0; left:0;
+    width:1920px; height:1080px;
+    transform-origin: top left;
+    font-family:'Baloo 2', 'Inter', sans-serif;
+  }
+
+  .generator-controls {
+    background:#fff; border-radius:16px; padding:20px;
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:16px;
+  }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:12px; font-weight:700; color:#6B7280; text-transform:uppercase; letter-spacing:.5px; }
+  .field input, .field textarea, .field select {
+    padding:10px 12px; border:1.5px solid #E5E7EB; border-radius:10px; font-size:14px; font-family:inherit;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    outline:none; border-color:var(--mp-blue); box-shadow:0 0 0 3px rgba(66,165,245,.15);
+  }
+  .download-bar { display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; }
+
+  /* ======================================================
+     TEMPLATES DE SLIDE (cada um ocupa 1920x1080)
+     ====================================================== */
+  .tpl-base { width:1920px; height:1080px; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+
+  /* --- A1: ESCASSEZ DO DIA --- */
+  .tpl-a1 {
+    background: linear-gradient(135deg, #FF4F8A 0%, #7E57C2 100%);
+    color:#fff; padding:80px; flex-direction:column;
+  }
+  .tpl-a1 h1 { font-size:110px; margin:0 0 40px; font-weight:800; letter-spacing:-2px; text-align:center; }
+  .tpl-a1 .a1-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:40px; width:100%; max-width:1600px; }
+  .tpl-a1 .a1-item { background:rgba(255,255,255,.2); border-radius:32px; padding:40px; backdrop-filter:blur(20px); }
+  .tpl-a1 .a1-item .flavor { font-size:44px; font-weight:700; margin-bottom:12px; }
+  .tpl-a1 .a1-item .qty { font-size:120px; font-weight:900; line-height:1; }
+  .tpl-a1 .a1-item .qty small { font-size:36px; opacity:.7; font-weight:600; }
+  .tpl-a1 .a1-item.low { background:rgba(255,255,255,.95); color:#C2185B; }
+  .tpl-a1 footer { font-size:42px; font-weight:700; margin-top:40px; opacity:.95; text-align:center; }
+
+  /* --- A2: HALL DA FAMA 300g --- */
+  .tpl-a2 {
+    background: radial-gradient(circle at 70% 30%, #FFD166 0%, #F3722C 70%);
+    flex-direction:column; padding:60px; color:#2d1b00;
+  }
+  .tpl-a2 h1 { font-size:96px; margin:0; font-weight:800; }
+  .tpl-a2 h2 { font-size:40px; margin:12px 0 50px; font-weight:600; opacity:.8; }
+  .tpl-a2 .a2-list { display:flex; flex-direction:column; gap:20px; width:100%; max-width:1400px; background:rgba(255,255,255,.6); border-radius:40px; padding:40px; }
+  .tpl-a2 .a2-row { display:flex; align-items:center; gap:30px; font-size:46px; padding:12px 24px; }
+  .tpl-a2 .a2-row .crown { font-size:60px; }
+  .tpl-a2 .a2-row .nome { flex:1; font-weight:700; }
+  .tpl-a2 .a2-row .peso { font-size:52px; font-weight:900; color:#16a34a; }
+  .tpl-a2 .a2-row .hora { font-size:36px; opacity:.6; font-weight:500; }
+  .tpl-a2 .a2-cta { font-size:52px; font-weight:800; margin-top:30px; background:#2d1b00; color:#FFD166; padding:24px 60px; border-radius:100px; }
+
+  /* --- A3: TERMÔMETRO DA CIDADE --- */
+  .tpl-a3 { background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); color:#fff; padding:70px; flex-direction:column; align-items:stretch; }
+  .tpl-a3 .a3-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:40px; }
+  .tpl-a3 h1 { font-size:96px; font-weight:800; margin:0; }
+  .tpl-a3 .a3-date { font-size:36px; opacity:.6; font-weight:600; }
+  .tpl-a3 .a3-bars { display:flex; flex-direction:column; gap:22px; }
+  .tpl-a3 .a3-bar { display:grid; grid-template-columns:360px 1fr 140px; align-items:center; gap:24px; font-size:42px; }
+  .tpl-a3 .a3-bar .bar-name { font-weight:700; }
+  .tpl-a3 .a3-bar .bar-track { background:rgba(255,255,255,.1); height:56px; border-radius:28px; overflow:hidden; position:relative; }
+  .tpl-a3 .a3-bar .bar-fill { height:100%; border-radius:28px; background:linear-gradient(90deg,#FF4F8A,#7E57C2); }
+  .tpl-a3 .a3-bar .bar-pct { font-weight:800; text-align:right; }
+  .tpl-a3 footer { font-size:40px; margin-top:40px; opacity:.85; font-weight:600; text-align:center; }
+
+  /* --- A4: COMBO DA OVELHINHA --- */
+  .tpl-a4 { background: linear-gradient(135deg,#FFE4F0 0%,#E0F7FA 100%); padding:80px; flex-direction:column; color:#1F2937; }
+  .tpl-a4 .sheep-big { font-size:260px; line-height:1; }
+  .tpl-a4 .bubble { background:#fff; border-radius:40px; padding:40px 60px; position:relative; max-width:1400px; box-shadow:0 20px 50px rgba(0,0,0,.1); margin-top:-80px; z-index:2; }
+  .tpl-a4 .bubble::before { content:''; position:absolute; top:-20px; left:180px; width:0; height:0; border-left:30px solid transparent; border-right:30px solid transparent; border-bottom:30px solid #fff; }
+  .tpl-a4 .bubble-title { font-size:40px; font-weight:700; color:#FF4F8A; margin:0 0 16px; }
+  .tpl-a4 .bubble-combo { font-size:88px; font-weight:900; line-height:1.1; color:#1F2937; margin:0; }
+  .tpl-a4 .bubble-sub { font-size:36px; color:#666; margin-top:20px; }
+  .tpl-a4 .cta-tag { margin-top:30px; display:inline-block; background:#FF4F8A; color:#fff; padding:20px 50px; border-radius:100px; font-size:44px; font-weight:800; }
+
+  /* --- A5: ANCORAGEM DE PREÇO --- */
+  .tpl-a5 { background:#fafafa; padding:60px; flex-direction:column; color:#1F2937; }
+  .tpl-a5 h1 { font-size:88px; font-weight:800; margin:0 0 50px; color:#1F2937; }
+  .tpl-a5 .sizes { display:grid; grid-template-columns:repeat(3, 1fr); gap:40px; width:100%; max-width:1500px; }
+  .tpl-a5 .size-card { background:#fff; border-radius:32px; padding:40px; text-align:center; border:3px solid #E5E7EB; }
+  .tpl-a5 .size-card.best { border-color:#FF4F8A; background:linear-gradient(135deg,#FFF0F6,#fff); transform:scale(1.08); box-shadow:0 20px 50px rgba(255,79,138,.3); }
+  .tpl-a5 .size-card .badge { display:inline-block; background:#FF4F8A; color:#fff; padding:6px 20px; border-radius:100px; font-size:24px; font-weight:800; margin-bottom:16px; text-transform:uppercase; letter-spacing:1px; }
+  .tpl-a5 .size-card .sz { font-size:100px; font-weight:900; margin:0; color:#1F2937; line-height:1; }
+  .tpl-a5 .size-card .px { font-size:60px; font-weight:800; color:#FF4F8A; margin:20px 0 10px; }
+  .tpl-a5 .size-card .per-g { font-size:26px; color:#666; margin:0; }
+
+  /* --- A6: CONTADOR POTINHOS HOJE --- */
+  .tpl-a6 { background:linear-gradient(135deg,#0f172a,#312e81); color:#fff; flex-direction:column; padding:80px; }
+  .tpl-a6 .big-number { font-size:420px; font-weight:900; line-height:1; background:linear-gradient(135deg,#FF4F8A,#FFB84F); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:-10px; }
+  .tpl-a6 .label { font-size:64px; font-weight:700; margin-top:20px; }
+  .tpl-a6 .subtitle { font-size:36px; opacity:.65; margin-top:16px; }
+  .tpl-a6 .live-dot { display:inline-block; width:20px; height:20px; background:#22c55e; border-radius:50%; margin-right:12px; vertical-align:middle; }
+
+  /* --- A7: PAREDE DOS ARREPENDIDOS --- */
+  .tpl-a7 { background:#1F2937; color:#fff; padding:80px; flex-direction:column; }
+  .tpl-a7 h1 { font-size:80px; font-weight:800; margin:0 0 50px; color:#FFB84F; }
+  .tpl-a7 .quote { background:rgba(255,255,255,.05); border-left:8px solid #FF4F8A; padding:40px 60px; border-radius:16px; width:100%; max-width:1500px; }
+  .tpl-a7 .quote-text { font-size:60px; font-style:italic; line-height:1.3; margin:0; }
+  .tpl-a7 .quote-by { font-size:36px; opacity:.7; margin-top:20px; }
+  .tpl-a7 .cta { font-size:48px; font-weight:800; margin-top:60px; text-align:center; color:#FFB84F; }
+
+  /* --- A8: PRÓXIMO EPISÓDIO DA LILO --- */
+  .tpl-a8 { background:linear-gradient(135deg,#FFE4F0,#FFF3E0); padding:60px; flex-direction:column; color:#1F2937; }
+  .tpl-a8 .ep-tag { background:#FF4F8A; color:#fff; padding:12px 32px; border-radius:100px; font-size:32px; font-weight:800; margin-bottom:30px; letter-spacing:2px; text-transform:uppercase; }
+  .tpl-a8 .sheep-container { display:flex; align-items:center; gap:40px; }
+  .tpl-a8 .sheep-big { font-size:280px; }
+  .tpl-a8 .ep-content { flex:1; }
+  .tpl-a8 .ep-number { font-size:48px; color:#7E57C2; font-weight:700; margin:0 0 12px; }
+  .tpl-a8 .ep-title { font-size:88px; font-weight:900; line-height:1.1; margin:0 0 20px; color:#1F2937; }
+  .tpl-a8 .ep-date { font-size:40px; color:#666; font-weight:600; margin:0; }
+</style>
+</head>
+<body>
+<div class="panel-layout">
+<!-- SIDEBAR -->
+<aside class="panel-sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+    <h2>MilkyPot<small>Franqueado</small></h2>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-nav-group">Midia da Loja</div>
+    <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
+    <a href="tv-slides-generator.html" class="sidebar-link active"><span class="icon">🎨</span> Gerador de Slides</a>
+    <a href="radio-indoor.html" class="sidebar-link"><span class="icon">📻</span> Radio Indoor</a>
+  </nav>
+</aside>
+
+<main class="panel-main">
+  <header class="panel-header">
+    <div class="panel-header-left">
+      <button class="btn-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <h1>🎨 Gerador de Slides pra TV</h1>
+    </div>
+  </header>
+
+  <div class="panel-content">
+    <div class="generator-wrap">
+      <div class="ios-card" style="margin-bottom:20px">
+        <h2 style="font-family:'Baloo 2',cursive;font-size:24px;margin:0 0 8px">1. Escolha um template</h2>
+        <p style="color:#666;font-size:14px;margin:0">Cada um tem um gatilho psicológico diferente. Combine vários no loop pra aumentar conversão.</p>
+      </div>
+
+      <div class="tpl-grid" id="tplGrid">
+        <div class="tpl-card active" data-tpl="a1">
+          <div class="tpl-emoji">🔥</div>
+          <h3>Escassez do Dia</h3>
+          <p>Contador ao vivo de quantos sabores restam. Ativa aversão à perda + FOMO.</p>
+        </div>
+        <div class="tpl-card" data-tpl="a2">
+          <div class="tpl-emoji">🏆</div>
+          <h3>Hall da Fama 300g</h3>
+          <p>Últimos 5 ganhadores do desafio. Prova social hiperlocal.</p>
+        </div>
+        <div class="tpl-card" data-tpl="a3">
+          <div class="tpl-emoji">📊</div>
+          <h3>Termômetro da Cidade</h3>
+          <p>% de sabores pedidos hoje em Londrina. Efeito manada.</p>
+        </div>
+        <div class="tpl-card" data-tpl="a4">
+          <div class="tpl-emoji">🐑</div>
+          <h3>Combo da Ovelhinha</h3>
+          <p>Sugestão do dia da Belinha. Reduz paralisia de decisão.</p>
+        </div>
+        <div class="tpl-card" data-tpl="a5">
+          <div class="tpl-emoji">💰</div>
+          <h3>Ancoragem de Preço</h3>
+          <p>3 tamanhos com destaque no "melhor custo-benefício".</p>
+        </div>
+        <div class="tpl-card" data-tpl="a6">
+          <div class="tpl-emoji">🎯</div>
+          <h3>Contador Potinhos Hoje</h3>
+          <p>Número gigante. Consenso numérico + prova social.</p>
+        </div>
+        <div class="tpl-card" data-tpl="a7">
+          <div class="tpl-emoji">😭</div>
+          <h3>Parede dos Arrependidos</h3>
+          <p>Depoimento de quem pediu só 1 sabor. Upsell via aversão.</p>
+        </div>
+        <div class="tpl-card" data-tpl="a8">
+          <div class="tpl-emoji">🎬</div>
+          <h3>Episódio da Belinha</h3>
+          <p>Próximo capítulo da ovelhinha. Fideliza retorno.</p>
+        </div>
+      </div>
+
+      <div class="ios-card" style="margin-bottom:20px">
+        <h2 style="font-family:'Baloo 2',cursive;font-size:24px;margin:0 0 8px">2. Preencha os campos</h2>
+        <p style="color:#666;font-size:14px;margin:0 0 16px">Mudanças aparecem em tempo real no preview abaixo.</p>
+        <div class="generator-controls" id="controls"></div>
+      </div>
+
+      <div class="ios-card">
+        <h2 style="font-family:'Baloo 2',cursive;font-size:24px;margin:0 0 8px">3. Preview</h2>
+        <p style="color:#666;font-size:14px;margin:0 0 16px">Esta é a aparência na TV 1920x1080. Clique em <b>Baixar PNG</b> e suba na sua playlist.</p>
+
+        <div class="slide-stage" id="slideStage">
+          <div class="slide-canvas" id="slideCanvas">
+            <!-- template renderiza aqui -->
+          </div>
+        </div>
+
+        <div class="download-bar">
+          <button class="ios-btn ios-btn-secondary" id="btnLiveData" onclick="fillWithLiveData()">⚡ Usar dados reais do PDV</button>
+          <button class="ios-btn ios-btn-primary" style="background:#FF4F8A" onclick="downloadPNG()">📥 Baixar PNG</button>
+          <button class="ios-btn ios-btn-primary" style="background:#7E57C2" onclick="publishToTV()">🚀 Publicar direto na TV</button>
+          <button class="ios-btn ios-btn-secondary" onclick="openTvIndoor()">📺 Ir pra TV Indoor</button>
+        </div>
+
+        <div id="autoPublishBar" style="margin-top:16px;padding:14px 18px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <div>
+            <strong style="color:#0284c7">🔄 Modo automático</strong>
+            <p style="margin:4px 0 0;font-size:13px;color:#666">Este slide se atualiza com os dados reais a cada 15 min e publica automaticamente na TV.</p>
+          </div>
+          <label class="ios-toggle">
+            <input type="checkbox" id="autoPublishToggle" onchange="toggleAutoPublish(this.checked)">
+            <span class="ios-toggle-track"></span>
+            <span class="ios-toggle-thumb"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+
+<script>
+// ============================================
+// Templates engine
+// ============================================
+const TEMPLATES = {
+  a1: {
+    name: 'Escassez do Dia',
+    fields: [
+      { k:'title', label:'Título', value:'HOJE TÁ ACABANDO!', type:'text' },
+      { k:'f1_name', label:'Sabor 1', value:'NINHO', type:'text' },
+      { k:'f1_qty', label:'Restam', value:'47', type:'number' },
+      { k:'f2_name', label:'Sabor 2', value:'NUTELLA', type:'text' },
+      { k:'f2_qty', label:'Restam', value:'23', type:'number' },
+      { k:'f3_name', label:'Sabor 3', value:'OREO', type:'text' },
+      { k:'f3_qty', label:'Restam', value:'8', type:'number' },
+      { k:'cta', label:'Frase CTA', value:'Garante o seu antes que some', type:'text' }
+    ],
+    render: (d) => `
+      <div class="tpl-base tpl-a1">
+        <h1>${d.title}</h1>
+        <div class="a1-grid">
+          <div class="a1-item${d.f1_qty <= 10 ? ' low':''}">
+            <div class="flavor">${d.f1_name}</div>
+            <div class="qty">${d.f1_qty}<small> restantes</small></div>
+          </div>
+          <div class="a1-item${d.f2_qty <= 10 ? ' low':''}">
+            <div class="flavor">${d.f2_name}</div>
+            <div class="qty">${d.f2_qty}<small> restantes</small></div>
+          </div>
+          <div class="a1-item${d.f3_qty <= 10 ? ' low':''}">
+            <div class="flavor">${d.f3_name}</div>
+            <div class="qty">${d.f3_qty}<small> restantes</small></div>
+          </div>
+        </div>
+        <footer>${d.cta}</footer>
+      </div>`
+  },
+  a2: {
+    name: 'Hall da Fama 300g',
+    fields: [
+      { k:'title', label:'Título', value:'CRAVARAM 300g HOJE', type:'text' },
+      { k:'sub', label:'Subtítulo', value:'quem acerta leva o potinho grátis', type:'text' },
+      { k:'n1', label:'1º nome', value:'Marina', type:'text' },
+      { k:'h1', label:'1º hora', value:'14:23', type:'text' },
+      { k:'n2', label:'2º nome', value:'Pedro', type:'text' },
+      { k:'h2', label:'2º hora', value:'13:12', type:'text' },
+      { k:'n3', label:'3º nome', value:'Jéssica', type:'text' },
+      { k:'h3', label:'3º hora', value:'11:45', type:'text' },
+      { k:'cta', label:'CTA', value:'VOCÊ É O PRÓXIMO?', type:'text' }
+    ],
+    render: (d) => `
+      <div class="tpl-base tpl-a2">
+        <h1>🏆 ${d.title}</h1>
+        <h2>${d.sub}</h2>
+        <div class="a2-list">
+          <div class="a2-row"><span class="crown">👑</span><span class="nome">${d.n1}</span><span class="peso">300.0g</span><span class="hora">${d.h1}</span></div>
+          <div class="a2-row"><span class="crown">🥈</span><span class="nome">${d.n2}</span><span class="peso">300.0g</span><span class="hora">${d.h2}</span></div>
+          <div class="a2-row"><span class="crown">🥉</span><span class="nome">${d.n3}</span><span class="peso">300.0g</span><span class="hora">${d.h3}</span></div>
+        </div>
+        <div class="a2-cta">${d.cta}</div>
+      </div>`
+  },
+  a3: {
+    name: 'Termômetro da Cidade',
+    fields: [
+      { k:'title', label:'Título', value:'LONDRINA HOJE', type:'text' },
+      { k:'date', label:'Data', value:new Date().toLocaleDateString('pt-BR'), type:'text' },
+      { k:'n1', label:'1º sabor', value:'Morango', type:'text' },
+      { k:'p1', label:'1º %', value:'34', type:'number' },
+      { k:'n2', label:'2º sabor', value:'Nutella', type:'text' },
+      { k:'p2', label:'2º %', value:'28', type:'number' },
+      { k:'n3', label:'3º sabor', value:'Ninho', type:'text' },
+      { k:'p3', label:'3º %', value:'18', type:'number' },
+      { k:'n4', label:'4º sabor', value:'Oreo', type:'text' },
+      { k:'p4', label:'4º %', value:'12', type:'number' },
+      { k:'cta', label:'CTA', value:'Entra pra estatística — peça o seu', type:'text' }
+    ],
+    render: (d) => {
+      const bar = (n,p) => `<div class="a3-bar"><div class="bar-name">${n}</div><div class="bar-track"><div class="bar-fill" style="width:${p*2}%"></div></div><div class="bar-pct">${p}%</div></div>`;
+      return `
+      <div class="tpl-base tpl-a3">
+        <div class="a3-header">
+          <h1>📊 ${d.title}</h1>
+          <div class="a3-date">${d.date}</div>
+        </div>
+        <div class="a3-bars">
+          ${bar(d.n1,d.p1)}${bar(d.n2,d.p2)}${bar(d.n3,d.p3)}${bar(d.n4,d.p4)}
+        </div>
+        <footer>${d.cta}</footer>
+      </div>`
+    }
+  },
+  a4: {
+    name: 'Combo da Ovelhinha',
+    fields: [
+      { k:'title', label:'Título da bubble', value:'A RECEITA DA LILO HOJE', type:'text' },
+      { k:'combo', label:'Combinação (ex: Ninho + Morango + raspas de Oreo)', value:'Ninho + Morango + raspas de Oreo', type:'textarea' },
+      { k:'sub', label:'Subtítulo', value:'o favorito dela essa semana', type:'text' },
+      { k:'cta', label:'CTA tag', value:'PEDE "POTE DA LILO"', type:'text' }
+    ],
+    render: (d) => `
+      <div class="tpl-base tpl-a4">
+        <div class="sheep-big">🐑</div>
+        <div class="bubble">
+          <p class="bubble-title">${d.title}</p>
+          <h1 class="bubble-combo">${d.combo}</h1>
+          <p class="bubble-sub">${d.sub}</p>
+          <div class="cta-tag">${d.cta}</div>
+        </div>
+      </div>`
+  },
+  a5: {
+    name: 'Ancoragem de Preço',
+    fields: [
+      { k:'title', label:'Título', value:'QUAL O SEU TAMANHO?', type:'text' },
+      { k:'sz_p', label:'P — tamanho (g)', value:'150', type:'text' },
+      { k:'px_p', label:'P — preço', value:'12,90', type:'text' },
+      { k:'sz_m', label:'M — tamanho (g)', value:'250', type:'text' },
+      { k:'px_m', label:'M — preço', value:'18,90', type:'text' },
+      { k:'sz_g', label:'G — tamanho (g)', value:'400', type:'text' },
+      { k:'px_g', label:'G — preço', value:'25,90', type:'text' },
+      { k:'best', label:'Melhor (p/m/g)', value:'g', type:'select', options:[['p','P'],['m','M'],['g','G']] }
+    ],
+    render: (d) => {
+      const ppG = (preco, gramas) => {
+        const p = parseFloat(String(preco).replace(',','.'));
+        const g = parseFloat(gramas);
+        return isFinite(p) && isFinite(g) && g > 0 ? 'R$ ' + (p/g * 100).toFixed(2).replace('.',',') + '/100g' : '';
+      };
+      const card = (sz, k) => {
+        const best = d.best === k;
+        return `
+          <div class="size-card${best ? ' best':''}">
+            ${best ? '<div class="badge">MELHOR ESCOLHA</div>' : ''}
+            <p class="sz">${sz === 'p' ? 'P' : sz === 'm' ? 'M' : 'G'}</p>
+            <p class="px">R$ ${d['px_'+k]}</p>
+            <p class="per-g">${d['sz_'+k]}g &middot; ${ppG(d['px_'+k], d['sz_'+k])}</p>
+          </div>`;
+      };
+      return `
+      <div class="tpl-base tpl-a5">
+        <h1>💰 ${d.title}</h1>
+        <div class="sizes">
+          ${card('p','p')}
+          ${card('m','m')}
+          ${card('g','g')}
+        </div>
+      </div>`;
+    }
+  },
+  a6: {
+    name: 'Contador Potinhos Hoje',
+    fields: [
+      { k:'num', label:'Número', value:'347', type:'number' },
+      { k:'label', label:'Label', value:'potinhos servidos HOJE', type:'text' },
+      { k:'sub', label:'Subtítulo', value:'atualizado em tempo real', type:'text' }
+    ],
+    render: (d) => `
+      <div class="tpl-base tpl-a6">
+        <div class="big-number">${d.num}</div>
+        <div class="label">${d.label}</div>
+        <div class="subtitle"><span class="live-dot"></span>${d.sub}</div>
+      </div>`
+  },
+  a7: {
+    name: 'Parede dos Arrependidos',
+    fields: [
+      { k:'title', label:'Título', value:'NÃO SEJA ESSA PESSOA', type:'text' },
+      { k:'quote', label:'Depoimento (entre aspas)', value:'Pedi só Nutella. Voltei 10 min depois pra pegar Oreo.', type:'textarea' },
+      { k:'by', label:'Autor', value:'Pedro, 19 anos', type:'text' },
+      { k:'cta', label:'CTA', value:'Mistura 2 ou 3. Depois não reclama.', type:'text' }
+    ],
+    render: (d) => `
+      <div class="tpl-base tpl-a7">
+        <h1>${d.title}</h1>
+        <div class="quote">
+          <p class="quote-text">"${d.quote}"</p>
+          <div class="quote-by">— ${d.by}</div>
+        </div>
+        <div class="cta">${d.cta}</div>
+      </div>`
+  },
+  a8: {
+    name: 'Episódio da Belinha',
+    fields: [
+      { k:'ep_tag', label:'Tag (ex: LILO TV · EPISÓDIO 14)', value:'LILO TV · EPISÓDIO 14', type:'text' },
+      { k:'number', label:'Número do episódio', value:'Esta semana', type:'text' },
+      { k:'title', label:'Título do episódio', value:'A LILO TENTOU PÔR SAL NO NINHO', type:'text' },
+      { k:'date', label:'Data/rodapé', value:'Vem ver o resultado. Toda semana um novo.', type:'text' }
+    ],
+    render: (d) => `
+      <div class="tpl-base tpl-a8">
+        <div class="ep-tag">${d.ep_tag}</div>
+        <div class="sheep-container">
+          <div class="sheep-big">🐑</div>
+          <div class="ep-content">
+            <p class="ep-number">${d.number}</p>
+            <h1 class="ep-title">${d.title}</h1>
+            <p class="ep-date">${d.date}</p>
+          </div>
+        </div>
+      </div>`
+  }
+};
+
+let currentTpl = 'a1';
+let currentData = {};
+
+function initTemplate(id) {
+  currentTpl = id;
+  currentData = {};
+  TEMPLATES[id].fields.forEach(f => currentData[f.k] = f.value);
+  renderControls();
+  renderSlide();
+}
+
+function renderControls() {
+  const wrap = document.getElementById('controls');
+  const tpl = TEMPLATES[currentTpl];
+  wrap.innerHTML = tpl.fields.map(f => {
+    const val = currentData[f.k] ?? f.value;
+    if (f.type === 'textarea') {
+      return `<div class="field" style="grid-column:span 2"><label>${f.label}</label><textarea rows="2" data-key="${f.k}">${val}</textarea></div>`;
+    }
+    if (f.type === 'select') {
+      const opts = f.options.map(([v, lbl]) => `<option value="${v}" ${v===val?'selected':''}>${lbl}</option>`).join('');
+      return `<div class="field"><label>${f.label}</label><select data-key="${f.k}">${opts}</select></div>`;
+    }
+    return `<div class="field"><label>${f.label}</label><input type="${f.type}" data-key="${f.k}" value="${val}"></div>`;
+  }).join('');
+  wrap.querySelectorAll('[data-key]').forEach(el => {
+    el.addEventListener('input', e => {
+      currentData[el.dataset.key] = el.value;
+      renderSlide();
+    });
+  });
+}
+
+function renderSlide() {
+  const canvas = document.getElementById('slideCanvas');
+  canvas.innerHTML = TEMPLATES[currentTpl].render(currentData);
+  fitPreview();
+}
+
+function fitPreview() {
+  const stage = document.getElementById('slideStage');
+  const canvas = document.getElementById('slideCanvas');
+  const scale = stage.clientWidth / 1920;
+  canvas.style.transform = 'scale(' + scale + ')';
+}
+
+function downloadPNG() {
+  const canvas = document.getElementById('slideCanvas');
+  const prevTransform = canvas.style.transform;
+  canvas.style.transform = 'none';  // captura em tamanho real
+  html2canvas(canvas, {
+    width: 1920, height: 1080, scale: 1, useCORS: true, backgroundColor: null
+  }).then(c => {
+    canvas.style.transform = prevTransform;
+    const link = document.createElement('a');
+    link.download = 'milkypot_slide_' + currentTpl + '_' + Date.now() + '.png';
+    link.href = c.toDataURL('image/png');
+    link.click();
+  }).catch(err => {
+    canvas.style.transform = prevTransform;
+    alert('Erro ao gerar PNG: ' + err.message);
+  });
+}
+
+function openTvIndoor() { window.location.href = 'tv-indoor.html'; }
+
+// Template grid clicks
+document.querySelectorAll('[data-tpl]').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.tpl-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    initTemplate(card.dataset.tpl);
+  });
+});
+
+window.addEventListener('resize', fitPreview);
+
+// ============================================
+// Fase B — Live data + publish
+// ============================================
+function getFranchiseId() {
+    try {
+        const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+        if (s && s.franchiseId) return s.franchiseId;
+    } catch (e) {}
+    return null;
+}
+
+async function fillWithLiveData() {
+    const fid = getFranchiseId();
+    if (!fid) { alert('Sessão não encontrada. Faça login de novo.'); return; }
+    if (typeof TvLiveData === 'undefined') { alert('Helper indisponível'); return; }
+
+    const btn = document.getElementById('btnLiveData');
+    btn.textContent = '⏳ Buscando…';
+    btn.disabled = true;
+    try {
+        const filled = await TvLiveData.fillTemplate(currentTpl, fid, currentData);
+        currentData = filled;
+        // Atualiza campos do form
+        document.querySelectorAll('#controls [data-key]').forEach(el => {
+            if (filled[el.dataset.key] != null) el.value = filled[el.dataset.key];
+        });
+        renderSlide();
+        btn.textContent = '✅ Atualizado';
+        setTimeout(() => { btn.textContent = '⚡ Usar dados reais do PDV'; btn.disabled = false; }, 1500);
+    } catch (e) {
+        btn.textContent = '❌ Erro';
+        setTimeout(() => { btn.textContent = '⚡ Usar dados reais do PDV'; btn.disabled = false; }, 2000);
+        console.error(e);
+    }
+}
+
+async function publishToTV() {
+    const fid = getFranchiseId();
+    if (!fid) { alert('Sessão não encontrada'); return; }
+
+    const canvas = document.getElementById('slideCanvas');
+    const prev = canvas.style.transform;
+    canvas.style.transform = 'none';
+
+    try {
+        const c = await html2canvas(canvas, { width: 1920, height: 1080, scale: 1, useCORS: true });
+        const dataUrl = c.toDataURL('image/jpeg', 0.85);
+        canvas.style.transform = prev;
+        const slug = 'mp_slide_' + currentTpl;
+        const ok = await TvLiveData.publishToPlaylist(fid, slug, dataUrl, 10);
+        if (ok) {
+            alert('✅ Slide publicado na playlist das TVs.\nAparece em até 2 min.');
+        } else {
+            alert('❌ Falha ao publicar.');
+        }
+    } catch (e) {
+        canvas.style.transform = prev;
+        alert('Erro: ' + e.message);
+    }
+}
+
+let autoPublishTimer = null;
+function toggleAutoPublish(on) {
+    if (autoPublishTimer) { clearInterval(autoPublishTimer); autoPublishTimer = null; }
+    if (!on) return;
+    const tick = async () => {
+        try {
+            await fillWithLiveData();
+            await publishToTV();
+        } catch (e) { console.warn(e); }
+    };
+    tick(); // primeira vez imediatamente
+    autoPublishTimer = setInterval(tick, 15 * 60 * 1000); // 15 min
+}
+
+// Init
+initTemplate('a1');
+</script>
+<script src="../js/core/copilot-transport.js" defer></script>
+<script src="../js/pages/lilo-scanner.js" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
+</body>
+</html>

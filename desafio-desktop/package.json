@@ -1,0 +1,69 @@
+{
+  "name": "milkypot-desafio-desktop",
+  "version": "1.0.0",
+  "description": "MilkyPot Desafio 10s — App Windows offline (wrapper Electron)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64",
+    "dist-portable": "electron-builder --win portable --x64"
+  },
+  "author": "MilkyPot",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.milkypot.desafio",
+    "productName": "MilkyPot Desafio",
+    "copyright": "Copyright (c) 2026 MilkyPot",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../",
+        "to": "app-root",
+        "filter": [
+          "desafio.html",
+          "desafio-tv.html",
+          "manifest.json",
+          "sw.js",
+          "images/**/*",
+          "js/**/*",
+          "css/**/*",
+          "!**/node_modules",
+          "!**/.git",
+          "!**/desafio-desktop",
+          "!**/autopilot",
+          "!**/painel/**",
+          "!**/admin/**",
+          "!**/.claude/**"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MilkyPot Desafio"
+    }
+  }
+}

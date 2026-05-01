@@ -8,7 +8,7 @@
 
 const WhatsApp = {
     // Número padrão do suporte MilkyPot (com código do país)
-    SUPPORT_NUMBER: '5500000000000',
+    SUPPORT_NUMBER: (typeof MP !== 'undefined' && MP.SUPPORT_WHATSAPP) ? MP.SUPPORT_WHATSAPP : '5543999999999',
 
     // ============================================
     // Gerar link WhatsApp (wa.me)
@@ -124,6 +124,18 @@ const WhatsApp = {
                     ? `\n🎁 Você tem pontos suficientes para resgatar uma recompensa!\n`
                     : `\n📈 Faltam *${100 - (totalPoints % 100)} pontos* para a próxima recompensa.\n`) +
                 `\nObrigado pela preferência! 💖`;
+        },
+
+        // Ativação de franqueado (notificação para admin)
+        franchiseActivated(franchise) {
+            const timeDiff = new Date() - new Date(franchise.createdAt);
+            const hours = Math.round(timeDiff / (1000 * 60 * 60));
+            return `🚀 *Novo Franqueado Ativado!*\n\n` +
+                `🏪 Unidade: *${Utils.escapeHtml(franchise.name)}*\n` +
+                `📍 Local: *${franchise.territorio?.cidade || '-'} / ${franchise.territorio?.bairro || '-'}*\n` +
+                `📅 Ativado em: *${Utils.today()}*\n` +
+                `⏱️ Tempo de setup: *${hours} horas*\n\n` +
+                `👉 *Pronto para operar!*`;
         }
     },
 

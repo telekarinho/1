@@ -53,6 +53,24 @@ const CloudFunctions = {
     // Chamada principal - detecta Vercel ou Firebase
     // ============================================
     async call(name, data = {}) {
+        // uberDirect_*, fiscal* e test-mode functions sempre vao direto ao Firebase
+        // (nao estao no backend PHP/Vercel)
+        if (
+            name.startsWith('uberDirect_') ||
+            name.startsWith('getFiscal') || name.startsWith('saveFiscal') ||
+            name.startsWith('emitFiscal') || name.startsWith('cancelFiscal') ||
+            name.startsWith('uploadFiscal') || name.startsWith('listFiscal') ||
+            name === 'getFiscalHealth' ||
+            // test-mode functions (test-checklist.html)
+            name === 'generateTestToken' ||
+            name === 'claimTestSession' ||
+            name === 'setSystemMode' ||
+            name === 'getSystemMode' ||
+            name === 'saveChecklistItem'
+        ) {
+            return this._callFirebaseDirect(name, data);
+        }
+
         // Se usando Vercel API
         if (this._apiUrl) {
             return this._callVercel(name, data);
@@ -65,6 +83,22 @@ const CloudFunctions = {
 
         console.warn('CloudFunctions.call: nao inicializado');
         return { success: false, error: 'Functions nao disponivel' };
+    },
+
+    // Chama Firebase Functions diretamente (para funcoes que nao estao no backend PHP)
+    async _callFirebaseDirect(name, data) {
+        try {
+            if (typeof firebase === 'undefined' || !firebase.functions) {
+                return { success: false, error: 'Firebase Functions SDK nao carregado' };
+            }
+            const functions = firebase.app().functions('southamerica-east1');
+            const fn = functions.httpsCallable(name);
+            const result = await fn(data);
+            return result.data;
+        } catch (error) {
+            console.error('CloudFunctions._callFirebaseDirect(' + name + ') error:', error);
+            return { success: false, error: error.message || 'Erro ao chamar Firebase Function' };
+        }
     },
 
     // Chama API Vercel
@@ -181,5 +215,39 @@ const CloudFunctions = {
 
     async cancelFiscalNote(noteId, reason, franchiseId) {
         return this.call('cancelFiscalNote', { noteId, reason, franchiseId });
+    },
+
+    // ============================================
+    // Automations (Reports & Alerts)
+    // ============================================
+
+    // Envia relatorio do fechamento + auditoria cega
+    async sendClosingReport(franchiseId, reportData) {
+        const managers = ['milkypot.com@gmail.com', 'jocimarrodrigo@gmail.com', 'joseanemse@gmail.com'];
+        // Regra: operador so recebe se a config estiver ativada
+        const config = (typeof AdminConfig !== 'undefined') ? AdminConfig.getConfig(franchiseId) : {};
+        const sendToOperator = config.enviarComprovanteOperador === true;
+        
+        return this.call('sendClosingReport', {
+            franchiseId,
+            managers,
+            sendToOperator,
+            operatorEmail: reportData.operatorEmail, // Only if sendToOperator is true it will be used
+            data: reportData
+        });
+    },
+
+    // Notifica gestor sobre estoque critico
+    async sendLowStockAlert(franchiseId, items) {
+        const managers = ['milkypot.com@gmail.com', 'jocimarrodrigo@gmail.com', 'joseanemse@gmail.com'];
+        return this.call('sendLowStockAlert', {
+            franchiseId,
+            managers,
+            items: items
+        });
     }
 };
+
+// Expose globally for browser (const is script-scoped, not a window property)
+if (typeof window !== 'undefined') window.CloudFunctions = CloudFunctions;
+if (typeof globalThis !== 'undefined') globalThis.CloudFunctions = CloudFunctions;

@@ -89,6 +89,7 @@
                 <div class="sidebar-nav-group">Principal</div>
                 <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
                 <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <a href="simulador.html" class="sidebar-link"><span class="icon">📈</span> Simulador</a>
                 <div class="sidebar-nav-group">Gestao</div>
                 <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
                 <a href="despesas.html" class="sidebar-link"><span class="icon">💰</span> Despesas</a>
@@ -100,12 +101,18 @@
                 <a href="ifood.html" class="sidebar-link"><span class="icon">🛵</span> iFood</a>
                 <div class="sidebar-nav-group">Midia da Loja</div>
                 <a href="tv-indoor.html" class="sidebar-link active"><span class="icon">📺</span> TV Indoor</a>
+                <a href="tv-slides-generator.html" class="sidebar-link"><span class="icon">🎨</span> Gerador de Slides</a>
+                <a href="tv-ugc-curadoria.html" class="sidebar-link"><span class="icon">📸</span> UGC Curadoria</a>
+                <a href="tv-auto-stories.html" class="sidebar-link"><span class="icon">📱</span> Auto Stories IG</a>
+                <a href="challenge-studio.html" class="sidebar-link"><span class="icon">🎯</span> Studio dos Desafios</a>
+                <a href="promocoes-oficiais.html" class="sidebar-link"><span class="icon">⚡</span> Promocoes Oficiais</a>
                 <a href="radio-indoor.html" class="sidebar-link"><span class="icon">📻</span> Radio Indoor</a>
                 <div class="sidebar-nav-group">Loja Online</div>
                 <a href="#" class="sidebar-link" id="linkSiteFranquia"><span class="icon">🌐</span> Meu Site</a>
                 <a href="marketing.html" class="sidebar-link"><span class="icon">📢</span> Marketing</a>
                 <div class="sidebar-nav-group">Config</div>
                 <a href="configuracoes.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
+                <a href="test-checklist.html" class="sidebar-link"><span class="icon">🧪</span> Checklist</a>
             </nav>
             <div class="sidebar-footer">
                 <div class="sidebar-user">
@@ -123,12 +130,33 @@
                 <button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
                 <h1>📺 TV Indoor</h1>
                 <div class="header-actions">
+                    <div id="franchiseSwitcherBox" style="display:none;align-items:center;gap:6px">
+                        <label style="font-size:12px;color:#666;white-space:nowrap;font-weight:600">🏪 Franquia:</label>
+                        <select id="franchiseSelect" style="padding:5px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;min-width:150px;font-family:inherit" onchange="switchFranchise(this.value)">
+                            <option value="">Selecionar...</option>
+                        </select>
+                    </div>
                     <button class="btn btn-primary" onclick="openAddTvModal()">+ Nova TV</button>
                     <button class="btn btn-outline" onclick="Auth.logout()">Sair</button>
                 </div>
             </header>
 
             <div class="panel-content">
+                <!-- Rede autorizada (IPs da franquia) -->
+                <div id="networkBox" style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:20px;box-shadow:0 2px 6px rgba(0,0,0,.05)">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+                    <div>
+                      <h3 style="margin:0;font-family:'Baloo 2',cursive;font-size:16px">🌐 Rede autorizada</h3>
+                      <p style="margin:4px 0 0;color:#666;font-size:13px">As TVs só funcionam via atalho (<code>/t?tv1</code>) na internet desta loja. Registre o IP público da sua rede aqui.</p>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center">
+                      <span id="myIpLabel" style="font-family:monospace;font-size:14px;background:#F3F4F6;padding:6px 12px;border-radius:8px;color:#1F2937">Detectando IP...</span>
+                      <button class="btn btn-primary btn-sm" onclick="registerCurrentIp()" id="regIpBtn" disabled>+ Registrar este IP</button>
+                    </div>
+                  </div>
+                  <div id="ipList" style="margin-top:10px"></div>
+                </div>
+
                 <!-- TVs registered -->
                 <h3 style="font-family:'Baloo 2',cursive;margin-bottom:12px">Suas TVs</h3>
                 <div class="tv-grid" id="tvGrid"></div>
@@ -146,7 +174,7 @@
                     <div class="drop-zone" id="dropZone">
                         <div style="font-size:36px;margin-bottom:8px">📤</div>
                         <strong>Arraste imagens ou videos aqui</strong>
-                        <p style="margin:4px 0 0;font-size:13px">ou clique para selecionar &bull; JPG, PNG, MP4, WEBM &bull; max 50MB</p>
+                        <p style="margin:4px 0 0;font-size:13px">ou clique para selecionar &bull; JPG, PNG, MP4, WEBM &bull; max 300MB</p>
                         <input type="file" id="fileInput" multiple accept="image/*,video/*">
                     </div>
                     <div class="media-grid" id="mediaGrid"></div>
@@ -359,9 +387,9 @@
                         </div>
                         <div class="form-group">
                             <select class="form-control" id="cfgFit" onchange="saveConfig()">
-                                <option value="contain">Conter (sem cortar)</option>
-                                <option value="cover">Preencher (pode cortar bordas)</option>
-                                <option value="fill">Esticar</option>
+                                <option value="cover" selected>Preencher tela cheia (recomendado)</option>
+                                <option value="contain">Conter (sem cortar — pode ter barras pretas)</option>
+                                <option value="fill">Esticar (distorce)</option>
                             </select>
                         </div>
                     </div>
@@ -444,6 +472,136 @@
                         <p style="font-size:11px;color:#999;margin:0">Sem o R$ o cerebro decide sobre a compra em vez de pensar em dinheiro. Ideal para TV de loja.</p>
                     </div>
 
+                    <!-- Horário de funcionamento -->
+                    <div class="tv-card" style="padding:16px">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                            <span style="font-size:24px">🕘</span>
+                            <div><strong>Horário de funcionamento</strong><br><small style="color:#888">Fora disso aparece "Loja fechada"</small></div>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-bottom:8px">
+                            <div style="flex:1">
+                                <label style="font-size:11px;color:#888">Abertura</label>
+                                <input type="number" class="form-control" id="cfgOpenHour" min="0" max="23" placeholder="8" onchange="saveConfig()">
+                            </div>
+                            <div style="flex:1">
+                                <label style="font-size:11px;color:#888">Fechamento</label>
+                                <input type="number" class="form-control" id="cfgCloseHour" min="0" max="23" placeholder="22" onchange="saveConfig()">
+                            </div>
+                        </div>
+                        <p style="font-size:11px;color:#999;margin:0">Deixe vazio pra tocar 24h. Janela pode virar madrugada (ex: 18 → 02).</p>
+                    </div>
+
+                    <!-- Pause remoto -->
+                    <div class="tv-card" style="padding:16px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <span style="font-size:24px">⏸</span>
+                                <div><strong>Pausar TVs agora</strong><br><small style="color:#888">Todas as TVs entram em modo pausa</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgPauseRemote" onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <p style="font-size:11px;color:#999;margin:0">Útil pra manutenção ou silenciar rapidinho. Desligue pra voltar ao loop.</p>
+                    </div>
+
+                    <!-- Promoções Oficiais Banner -->
+                    <div class="tv-card" style="padding:16px;border:2px solid #ef4444;background:linear-gradient(135deg,#fff1f1 0%,#fff8f0 100%)">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <span style="font-size:24px">⚡</span>
+                                <div><strong style="color:#dc2626">Promoções Oficiais</strong><br><small style="color:#888">Banner rotativo: Desafio 10s + Acertou Ganhou 300g</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgPromosOficiais" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <p style="font-size:11px;color:#a16207;margin:0 0 8px">Exibe 12 versões rotativas das promos nas TVs desta franquia (rodapé da tela).</p>
+                        <a href="promocoes-oficiais.html" class="btn btn-sm btn-outline" style="border-color:#dc2626;color:#dc2626;font-size:12px">⚡ Configurar + ver estatísticas →</a>
+                    </div>
+
+                    <!-- Cards MilkyPot — Sabores, Buffet, Premium -->
+                    <div class="tv-card" style="padding:16px;border:2px solid #FF4F8A;background:linear-gradient(135deg,#FCE4EC 0%,#F3E5F5 50%,#E1F5FE 100%)">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                            <span style="font-size:24px">🐑</span>
+                            <div><strong style="color:#FF4F8A">Cards MilkyPot</strong><br><small style="color:#888">Cards profissionais com a ovelhinha — sabores, buffet e premium</small></div>
+                        </div>
+                        <p style="font-size:11px;color:#7E57C2;margin:0 0 10px;font-weight:600">Cards rotativos com cores MilkyPot, ovelhinha 🐑 mascote, storytelling viral. Mesclam 1:1 com mídia da franquia.</p>
+
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #F3E5F5">
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <span style="font-size:18px">🥤</span>
+                                <div><strong style="font-size:13px">Sabores rotativos (17)</strong><br><small style="color:#888;font-size:10px">Amora, Blue Ice, Morango, Açaí, Caramelo... cada card 8s</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgTvCardsFlavors" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #F3E5F5">
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <span style="font-size:18px">👑</span>
+                                <div><strong style="font-size:13px">Capitão Açaí Premium</strong><br><small style="color:#888;font-size:10px">600ml R$24,99 — flagship do cardápio</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgTvCardsPremium" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #F3E5F5">
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <span style="font-size:18px">🍽️</span>
+                                <div><strong style="font-size:13px">Buffet a Granel</strong><br><small style="color:#888;font-size:10px">R$5,99 por 100g — 22 toppings reais</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgTvCardsBuffet" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #F3E5F5">
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <span style="font-size:18px">🍦</span>
+                                <div><strong style="font-size:13px">Sundaes Gourmet (17)</strong><br><small style="color:#888;font-size:10px">Mesmos sabores em taça — copy adaptada · 8s cada</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgTvCardsSundae" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #F3E5F5">
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <span style="font-size:18px">🏆</span>
+                                <div><strong style="font-size:13px">Capitão Açaí Sundae</strong><br><small style="color:#888;font-size:10px">600ml R$24,99 — premium em taça</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgTvCardsSundaePremium" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+                    </div>
+
+                    <!-- Mensagem de emergência -->
+                    <div class="tv-card" style="padding:16px">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                            <span style="font-size:24px">🚨</span>
+                            <div><strong>Mensagem de emergência</strong><br><small style="color:#888">Banner vermelho no topo das TVs</small></div>
+                        </div>
+                        <textarea class="form-control" id="cfgEmergency" rows="2" placeholder="Ex: Promoção relâmpago — últimas 2h!" onchange="saveConfig()"></textarea>
+                        <p style="font-size:11px;color:#999;margin:6px 0 0">Deixe vazio pra remover o banner.</p>
+                    </div>
+
+                    <!-- QR code overlay -->
+                    <div class="tv-card" style="padding:16px">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                            <span style="font-size:24px">📱</span>
+                            <div><strong>QR code no canto</strong><br><small style="color:#888">Cliente escaneia e vai pro cardápio</small></div>
+                        </div>
+                        <input type="url" class="form-control" id="cfgQrUrl" placeholder="https://milkypot.com/cardapio.html" onchange="saveConfig()">
+                        <p style="font-size:11px;color:#999;margin:6px 0 0">Deixe vazio pra ocultar. Adicione UTM pra rastrear conversão.</p>
+                    </div>
+                </div>
+
+                <!-- Wall Mode (Fase E) -->
+                <h3 style="font-family:'Baloo 2',cursive;margin:24px 0 12px">🎬 Wall Mode — vídeo sincronizado nas 3 TVs</h3>
+                <p style="font-size:13px;color:#888;margin-bottom:12px">
+                    Defina qual posição cada TV ocupa na "parede". Depois cadastre uma mídia com <code>wallParts</code>
+                    (3 URLs: left/center/right) e todas as 3 vão tocar sincronizadas. Documentação:
+                    <a href="https://github.com/telekarinho/1/blob/main/docs/WALL_MODE_SETUP.md" target="_blank">WALL_MODE_SETUP.md</a>
+                </p>
+                <div id="wallRolesList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:16px"></div>
+
+                <!-- Status Heartbeat -->
+                <h3 style="font-family:'Baloo 2',cursive;margin:24px 0 12px">📡 Status das TVs</h3>
+                <p style="font-size:13px;color:#888;margin-bottom:12px">Cada TV reporta status a cada 5 min. <span style="color:#10B981">🟢 online</span> · <span style="color:#dc2626">🔴 offline há mais de 10 min</span></p>
+                <div id="tvStatusList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px"></div>
+
+                <div style="margin-top:24px"><!-- segue com outros cards abaixo -->
+
                     <!-- Instagram -->
                     <div class="tv-card" style="padding:16px">
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -454,6 +612,44 @@
                         </div>
                         <p style="font-size:12px;color:#999;margin-bottom:8px">Salve a imagem do post do Instagram e arraste na biblioteca de midias (aba acima). Aparecerao automaticamente na playlist.</p>
                         <input type="text" class="form-control" id="cfgInstaUser" placeholder="@milkypotoficial (so referencia)" onchange="saveConfig()">
+                    </div>
+
+                    <!-- MilkyClube (QR + auto-promo) -->
+                    <div class="tv-card" style="padding:16px;border:2px solid #42A5F5;background:linear-gradient(135deg,#E3F2FD 0%,#FCE4EC 100%)">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <span style="font-size:24px">🎁</span>
+                                <div><strong>MilkyClube (cashback)</strong><br><small style="color:#555">QR de cadastro + slide promocional automatico</small></div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgClubeQr" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <p style="font-size:12px;color:#555;margin-bottom:10px">QR fixo no canto da TV aponta para /clube/. Cliente escaneia, conhece o programa e ja ganha G$20 ao se cadastrar.</p>
+
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid rgba(66,165,245,.2)">
+                            <div>
+                                <strong style="font-size:13px">Auto slide promocional</strong>
+                                <br><small style="color:#777">Slide MilkyClube fullscreen a cada N midias</small>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="cfgAutoClubePromo" checked onchange="saveConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+
+                        <div style="display:flex;gap:8px;margin-top:8px">
+                            <div style="flex:1">
+                                <small style="color:#777">A cada</small>
+                                <input type="number" min="3" max="20" class="form-control" id="cfgClubePromoEvery" value="5" onchange="saveConfig()" style="text-align:center;font-weight:700">
+                            </div>
+                            <div style="flex:1">
+                                <small style="color:#777">Duracao (ms)</small>
+                                <input type="number" min="5000" max="30000" step="1000" class="form-control" id="cfgClubePromoDuration" value="12000" onchange="saveConfig()" style="text-align:center;font-weight:700">
+                            </div>
+                        </div>
+
+                        <div style="margin-top:10px">
+                            <small style="color:#777">URL do clube (opcional, padrao /clube/)</small>
+                            <input type="url" class="form-control" id="cfgClubeUrl" placeholder="https://milkypot.com/clube/" onchange="saveConfig()">
+                        </div>
+
+                        <button type="button" class="btn btn-primary" style="width:100%;margin-top:10px" onclick="addClubeSlide()">+ Adicionar slide MilkyClube manual</button>
                     </div>
                 </div>
 
@@ -522,6 +718,8 @@
     <script src="../js/core/firebase-config.js"></script>
     <script src="../js/core/cloud-functions.js"></script>
     <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+    <script src="../js/core/adminconfig.js?v=mp-v14"></script>
 <script>
 /* ============================================
    TV Indoor — Management Page
@@ -529,7 +727,76 @@
 (function(){
     if(!Auth.requireAuth()) return;
     var fid = Auth.getFranchiseId();
-    document.getElementById('sidebarStoreName').textContent = fid || 'Franqueado';
+
+    // Super-admin pode gerenciar qualquer franquia via ?fid= na URL
+    (function() {
+        var urlFid = new URLSearchParams(location.search).get('fid');
+        if (urlFid && Auth.getRole() === 'super_admin') fid = urlFid;
+    })();
+
+    window.switchFranchise = function(newFid) {
+        if (!newFid) return;
+        var url = new URL(location.href);
+        url.searchParams.set('fid', newFid);
+        location.href = url.toString();
+    };
+
+    function initFranchiseSwitcher() {
+        if (Auth.getRole() !== 'super_admin') return;
+        var box = document.getElementById('franchiseSwitcherBox');
+        if (box) box.style.display = 'flex';
+        var franchises = DataStore.get('franchises') || [];
+        var sel = document.getElementById('franchiseSelect');
+        if (!sel) return;
+        // Opção GLOBAL: conteúdo aparece em TODAS as franquias automaticamente
+        var globalOpt = document.createElement('option');
+        globalOpt.value = 'global';
+        globalOpt.textContent = '🌐 Global (todas franquias)';
+        if (fid === 'global') globalOpt.selected = true;
+        sel.appendChild(globalOpt);
+        franchises.forEach(function(f) {
+            var opt = document.createElement('option');
+            opt.value = f.id;
+            opt.textContent = f.name || f.id;
+            if (f.id === fid) opt.selected = true;
+            sel.appendChild(opt);
+        });
+        if (fid === 'global') {
+            var hdr = document.querySelector('.panel-header h1');
+            if (hdr) hdr.innerHTML = '🌐 TV Indoor — <span style="color:#7B1FA2">Global</span>';
+            var sb = document.getElementById('sidebarStoreName');
+            if (sb) sb.textContent = '🌐 Mídia Global';
+        }
+    }
+
+    // Promessa que resolve com o usuário Firebase assim que o auth state for
+    // determinado (restaurado do IndexedDB) E o token tiver os custom claims
+    // atualizados. As regras de storage.rules exigem request.auth.token.franchiseId
+    // == franchiseId — sem refresh forçado, um token antigo (anterior ao
+    // _trySetupOwner) sem claims gera storage/unauthorized.
+    var _authReadyPromise = new Promise(function(resolve) {
+        var unsub = firebase.auth().onAuthStateChanged(function(user) {
+            unsub();
+            if (user) {
+                // Força refresh pra garantir que claims customizados (franchiseId,
+                // role) setados via Cloud Function estejam presentes no token.
+                user.getIdToken(true).catch(function(){}).then(function(){
+                    resolve(user);
+                });
+                return;
+            }
+            // Sem usuário Firebase mas tem sessão local → tenta anônimo como fallback
+            firebase.auth().signInAnonymously()
+                .then(function(r){ resolve(r && r.user); })
+                .catch(function(){ resolve(null); });
+        });
+    });
+    (function(){
+        var franchises = DataStore.get('franchises') || [];
+        var matched = franchises.find(function(f){ return f.id === fid; });
+        var label = (matched && matched.name) ? matched.name : (fid || 'Franqueado');
+        document.getElementById('sidebarStoreName').textContent = label;
+    })();
     document.getElementById('sidebarUserName').textContent = Auth.getUserName();
 
     /* --- Data Keys --- */
@@ -577,11 +844,27 @@
                 wallPosition: wallPosition,
                 createdAt: new Date().toISOString()
             });
+            // Auto-gera atalho tv1/tv2/tv3 automaticamente (proximo numero livre).
+            try {
+                if (typeof AdminConfig !== 'undefined' && AdminConfig.setTvShortcode && AdminConfig.listTvShortcodesForFranchise) {
+                    var codesUsadas = AdminConfig.listTvShortcodesForFranchise(fid).map(function(sc){
+                        var m = String(sc.code).match(/^tv(\d+)$/);
+                        return m ? parseInt(m[1], 10) : 0;
+                    }).filter(function(n){ return n > 0; });
+                    var proximo = 1;
+                    while (codesUsadas.indexOf(proximo) !== -1) proximo++;
+                    var novoCode = 'tv' + proximo;
+                    AdminConfig.setTvShortcode(fid, novoCode, id);
+                    setTimeout(function(){
+                        if (Utils.showToast) Utils.showToast('📺 Atalho criado: milkypot.com/t?' + novoCode, 'success');
+                    }, 800);
+                }
+            } catch (e) { console.warn('Auto-shortcode:', e); }
         }
         saveTvs(tvs);
         closeTvModal();
         renderTvs();
-        Utils.showToast(editId ? 'TV atualizada!' : 'TV criada! Copie a URL e abra na TV.', 'success');
+        Utils.showToast(editId ? 'TV atualizada!' : 'TV criada! Atalho curto gerado automaticamente.', 'success');
     };
     window.editTv = function(id){
         var tvs = getTvs();
@@ -610,6 +893,120 @@
         });
     };
 
+    function shortcodesForTv(tvId) {
+        if (typeof AdminConfig === 'undefined' || !AdminConfig.listTvShortcodesForFranchise) return [];
+        return AdminConfig.listTvShortcodesForFranchise(fid).filter(function(sc){ return sc.tvId === tvId; });
+    }
+
+    /* ====== Gestão de IPs autorizados ====== */
+    var detectedIp = null;
+
+    async function detectAndRenderIp() {
+        var label = document.getElementById('myIpLabel');
+        var btn = document.getElementById('regIpBtn');
+        try {
+            var r = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+            if (r.ok) { detectedIp = (await r.json()).ip; }
+        } catch (e) {}
+        if (!detectedIp) {
+            try {
+                var r2 = await fetch('https://ipapi.co/json/', { cache: 'no-store' });
+                if (r2.ok) { detectedIp = (await r2.json()).ip; }
+            } catch (e) {}
+        }
+        if (detectedIp) {
+            label.textContent = 'IP desta rede: ' + detectedIp;
+            if (btn) btn.disabled = false;
+
+            // Auto-registra IP se ainda não está cadastrado pra esta franquia.
+            // Processo 100% automatico: basta o franqueado abrir a pagina da rede da loja uma vez.
+            try {
+                if (typeof AdminConfig !== 'undefined' && AdminConfig.listFranchiseIps && AdminConfig.addFranchiseIp && fid) {
+                    var existing = AdminConfig.listFranchiseIps(fid);
+                    if (existing.indexOf(detectedIp) === -1) {
+                        var res = AdminConfig.addFranchiseIp(fid, detectedIp);
+                        if (res && res.success) {
+                            if (Utils.showToast) Utils.showToast('✅ Rede (' + detectedIp + ') cadastrada automaticamente. As TVs desta loja ja funcionam via /t?tv1', 'success');
+                            renderIpList();
+                        } else if (res && res.error && !/ja registrado/.test(res.error)) {
+                            console.warn('Auto IP register:', res.error);
+                        }
+                    }
+                }
+            } catch (e) { console.warn('Auto IP register err:', e); }
+        } else {
+            label.textContent = 'Não foi possível detectar o IP';
+        }
+        renderIpList();
+    }
+
+    function renderIpList() {
+        if (typeof AdminConfig === 'undefined' || !AdminConfig.listFranchiseIps) return;
+        var ips = AdminConfig.listFranchiseIps(fid);
+        var el = document.getElementById('ipList');
+        if (!el) return;
+        if (ips.length === 0) {
+            el.innerHTML = '<p style="color:#c00;font-size:13px;margin:8px 0 0"><strong>⚠️ Nenhum IP registrado</strong> — os atalhos /t? não vão funcionar até você registrar pelo menos um IP da rede da loja.</p>';
+            return;
+        }
+        el.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">' + ips.map(function(ip){
+            var isCurrent = ip === detectedIp;
+            return '<span style="display:inline-flex;align-items:center;gap:6px;background:' + (isCurrent ? '#D1FAE5' : '#F3F4F6') + ';padding:4px 10px;border-radius:16px;font-family:monospace;font-size:12px;color:#1F2937">' +
+                (isCurrent ? '✅ ' : '') + esc(ip) +
+                '<button class="btn-icon" onclick="removeRegisteredIp(\'' + esc(ip) + '\')" title="Remover" style="background:transparent;border:none;cursor:pointer;padding:0;font-size:12px;color:#EF4444">✕</button>' +
+            '</span>';
+        }).join('') + '</div>';
+    }
+
+    window.registerCurrentIp = function () {
+        if (!detectedIp) { Utils.showToast('IP ainda não detectado', 'error'); return; }
+        var r = AdminConfig.addFranchiseIp(fid, detectedIp);
+        if (!r.success) { Utils.showToast(r.error, 'error'); return; }
+        Utils.showToast('IP ' + detectedIp + ' registrado! As TVs desta rede agora funcionam via /t?', 'success');
+        renderIpList();
+    };
+
+    window.removeRegisteredIp = function (ip) {
+        if (!confirm('Remover IP ' + ip + '? TVs nesta rede param de funcionar via /t?.')) return;
+        var r = AdminConfig.removeFranchiseIp(fid, ip);
+        if (!r.success) { Utils.showToast(r.error, 'error'); return; }
+        Utils.showToast('IP removido', 'success');
+        renderIpList();
+    };
+
+    // Dispara detecção no load
+    detectAndRenderIp();
+
+    window.saveTvShortcode = function(tvId) {
+        var input = document.getElementById('sc_' + tvId);
+        if (!input) return;
+        var code = (input.value || '').trim();
+        if (!code) { Utils.showToast('Digite um código curto', 'error'); return; }
+        if (typeof AdminConfig === 'undefined') { Utils.showToast('Módulo indisponível', 'error'); return; }
+        var r = AdminConfig.setTvShortcode(fid, code, tvId);
+        if (!r.success) { Utils.showToast(r.error, 'error'); return; }
+        Utils.showToast('Atalho /t?' + r.code + ' criado!', 'success');
+        renderTvs();
+    };
+
+    window.removeTvShortcode = function(code) {
+        if (!confirm('Remover o atalho /t?' + code + '?')) return;
+        var r = AdminConfig.removeTvShortcode(fid, code);
+        if (!r.success) { Utils.showToast(r.error, 'error'); return; }
+        Utils.showToast('Atalho removido', 'success');
+        renderTvs();
+    };
+
+    window.copyShortUrl = function(code) {
+        var base = location.origin || 'https://milkypot.com';
+        var short = base + '/t?' + code;
+        navigator.clipboard.writeText(short).then(function(){
+            Utils.showToast('Atalho copiado: ' + short, 'success');
+        }).catch(function(){
+            prompt('Copie o atalho:', short);
+        });
+    };
+
     function renderTvs(){
         var tvs = getTvs();
         var base = location.origin || 'https://milkypot.com';
@@ -617,12 +1014,33 @@
         document.getElementById('tvGrid').innerHTML = tvs.length ? tvs.map(function(t){
             var url = base + '/tv.html?f=' + encodeURIComponent(fid) + '&tv=' + encodeURIComponent(t.id);
             var wallBadge = (t.wallTotal && t.wallTotal > 1) ? '<span style="background:#6C63FF;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px">Wall ' + t.wallPosition + '/' + t.wallTotal + '</span>' : '';
+            var codes = shortcodesForTv(t.id);
+            var shortBlock = '';
+            if (codes.length > 0) {
+                shortBlock = '<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 10px;margin-top:8px">' +
+                    '<div style="font-size:11px;color:#065F46;font-weight:700;margin-bottom:4px">✨ Atalhos curtos:</div>' +
+                    codes.map(function(sc){
+                        var shortUrl = base + '/t?' + sc.code;
+                        return '<div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">' +
+                            '<code style="flex:1;background:#fff;padding:4px 8px;border-radius:4px;font-size:12px;color:#065F46;font-weight:700">' + esc(shortUrl) + '</code>' +
+                            '<button class="btn btn-sm" style="padding:4px 8px;background:#10B981;color:#fff" onclick="copyShortUrl(\'' + esc(sc.code) + '\')" title="Copiar">📋</button>' +
+                            '<button class="btn btn-sm" style="padding:4px 8px;background:#EF4444;color:#fff" onclick="removeTvShortcode(\'' + esc(sc.code) + '\')" title="Remover atalho">🗑️</button>' +
+                        '</div>';
+                    }).join('') + '</div>';
+            }
+            var newShortcodeBox = '<div style="display:flex;gap:4px;margin-top:8px">' +
+                '<input id="sc_' + esc(t.id) + '" placeholder="Ex: mq1" maxlength="8" style="flex:1;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:monospace" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,\'\')">' +
+                '<button class="btn btn-sm btn-primary" onclick="saveTvShortcode(\'' + esc(t.id) + '\')" title="Criar atalho curto /t?codigo">✨ Atalho</button>' +
+            '</div>';
+
             return '<div class="tv-card"><div class="tv-thumb">📺' + (t.wallTotal > 1 ? '<div style="position:absolute;bottom:4px;right:4px;background:rgba(108,99,255,.9);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px">'+t.wallPosition+'/'+t.wallTotal+'</div>' : '') + '</div><div class="tv-info">' +
                 '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="tv-name">' + esc(t.name) + '</div>' + wallBadge + '</div>' +
                 (t.location ? '<div class="tv-meta">📍 ' + esc(t.location) + '</div>' : '') +
                 '<div class="tv-meta">' + playlist.length + ' midia(s) na playlist</div>' +
-                '<div class="tv-url-box"><input readonly value="' + esc(url) + '"><button class="btn btn-sm btn-primary" onclick="copyTvUrl(\'' + esc(t.id) + '\')">📋 Copiar</button></div>' +
-                '<div class="tv-actions">' +
+                '<div class="tv-url-box"><input readonly value="' + esc(url) + '"><button class="btn btn-sm btn-primary" onclick="copyTvUrl(\'' + esc(t.id) + '\')">📋 Copiar URL longa</button></div>' +
+                shortBlock +
+                newShortcodeBox +
+                '<div class="tv-actions" style="margin-top:10px">' +
                 '<a href="' + esc(url) + '" target="_blank" class="btn btn-sm btn-outline">👁 Visualizar</a>' +
                 '<button class="btn btn-sm btn-outline" onclick="editTv(\'' + esc(t.id) + '\')">✏️</button>' +
                 '<button class="btn btn-sm btn-outline" onclick="deleteTv(\'' + esc(t.id) + '\')" style="color:#e53935;border-color:#e53935">🗑️</button>' +
@@ -632,7 +1050,34 @@
 
     /* === Media Library === */
     function getMedia(){ return DataStore.get(MEDIA_KEY) || []; }
-    function saveMedia(list){ DataStore.set(MEDIA_KEY, list); }
+    function saveMedia(list){
+        DataStore.set(MEDIA_KEY, list);
+        // Auto-sync com playlist: todo item da biblioteca que ainda nao esta na
+        // playlist e adicionado automaticamente. Assim basta criar uma mídia
+        // ou promo e ela ja aparece na TV sem passar pela aba Playlist.
+        try {
+            var playlist = DataStore.get(PLAYLIST_KEY) || [];
+            // Normaliza: playlist pode vir como strings antigas ou objetos
+            playlist = playlist.map(function(p){
+                if (typeof p === 'string') return { mediaId: p, duration: 10 };
+                return p;
+            }).filter(function(p){ return p && p.mediaId; });
+            var existing = {};
+            playlist.forEach(function(p){ existing[p.mediaId] = true; });
+            var added = 0;
+            list.forEach(function(m){
+                if (m && m.id && !existing[m.id]) {
+                    playlist.push({ mediaId: m.id, duration: Math.max(5, m.duration || 10) });
+                    added++;
+                }
+            });
+            // Remove da playlist itens que nao existem mais na biblioteca
+            var mediaIds = {};
+            list.forEach(function(m){ if (m && m.id) mediaIds[m.id] = true; });
+            playlist = playlist.filter(function(p){ return mediaIds[p.mediaId]; });
+            DataStore.set(PLAYLIST_KEY, playlist);
+        } catch (e) { console.warn('auto-sync playlist:', e); }
+    }
 
     var dropZone = document.getElementById('dropZone');
     var fileInput = document.getElementById('fileInput');
@@ -643,53 +1088,305 @@
     dropZone.addEventListener('drop', function(e){ e.preventDefault(); dropZone.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
     fileInput.addEventListener('change', function(){ handleFiles(this.files); this.value=''; });
 
+    /* --- Comprime imagem via canvas antes do upload (max 1920×1080, JPEG q=0.92) ---
+       Para TV, isso dá qualidade visual perfeita com ~300-800KB por imagem.
+       Vídeos não são comprimidos — Storage serve via CDN sem limite de tamanho. */
+    function compressImageFile(file, callback){
+        var img = new Image();
+        var objUrl = URL.createObjectURL(file);
+        img.onload = function(){
+            var w = img.naturalWidth, h = img.naturalHeight;
+            var MAX_W = 1920, MAX_H = 1080;
+            if(w > MAX_W || h > MAX_H){
+                var r = Math.min(MAX_W / w, MAX_H / h);
+                w = Math.round(w * r); h = Math.round(h * r);
+            }
+            var canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            URL.revokeObjectURL(objUrl);
+            canvas.toBlob(function(blob){ callback(blob || file); }, 'image/jpeg', 0.92);
+        };
+        img.onerror = function(){ URL.revokeObjectURL(objUrl); callback(file); };
+        img.src = objUrl;
+    }
+
+    /* ----------------------------------------------------------------
+       Upload para Firebase Storage via SDK (resumable)
+       Caminho: tv-media/{franchiseId}/{id}.jpg|mp4
+
+       O SDK faz resumable upload automaticamente para arquivos > 5MB,
+       suportando qualquer tamanho com retry/backoff nativo.
+       Requer CORS configurado no bucket (ver cors.json no repo).
+    ---------------------------------------------------------------- */
+    var STORAGE_BUCKET = 'milkypot-ad945.firebasestorage.app';
+
+    function uploadToFirebaseStorage(blob, path, onProgress){
+        return _authReadyPromise.then(function(user){
+            if (!user) return Promise.reject(new Error('storage/unauthorized — sessão Firebase expirada. Faça logout e login novamente.'));
+            return new Promise(function(resolve, reject){
+            try {
+                var storageRef = firebase.storage().ref(path);
+                var task = storageRef.put(blob, { contentType: blob.type || 'application/octet-stream' });
+
+                task.on('state_changed', function(snap){
+                    if(onProgress && snap.totalBytes){
+                        onProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100));
+                    }
+                }, function(err){
+                    var msg = err && err.code ? err.code : (err && err.message ? err.message : String(err));
+                    reject(new Error('Upload falhou: ' + msg));
+                }, function(){
+                    task.snapshot.ref.getDownloadURL().then(function(url){
+                        resolve({ url: url, path: path });
+                    }).catch(function(e){
+                        reject(new Error('Upload OK mas falhou ao obter URL: ' + (e.message || e)));
+                    });
+                });
+            } catch(e){
+                reject(new Error('Erro ao iniciar upload: ' + (e.message || e)));
+            }
+            }); // inner Promise
+        }); // _authReadyPromise.then
+    }
+
+
+    // Barra de progresso persistente (canto inferior direito)
+    function showUploadProgress(taskId, name, pct, errMsg){
+        var c = document.getElementById('uploadProgress');
+        if(!c){
+            c = document.createElement('div');
+            c.id = 'uploadProgress';
+            c.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:360px;font-family:Nunito,sans-serif';
+            document.body.appendChild(c);
+        }
+        var row = document.getElementById('up_'+taskId);
+        if(!row){
+            row = document.createElement('div');
+            row.id = 'up_'+taskId;
+            row.style.cssText = 'background:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.15);font-size:13px;border-left:4px solid #6C63FF';
+            c.appendChild(row);
+        }
+        if(errMsg){
+            row.style.borderLeftColor = '#e53935';
+            row.innerHTML = '<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-weight:600;color:#c62828">❌ ' + name + '</span></div>' +
+                            '<div style="font-size:11px;color:#c62828;margin-top:4px;word-break:break-word">' + errMsg + '</div>';
+            setTimeout(function(){ var r=document.getElementById('up_'+taskId); if(r) r.remove(); }, 10000);
+        } else {
+            row.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>⬆️ ' + name + '</span><strong>' + pct + '%</strong></div>' +
+                            '<div style="background:#eee;height:6px;border-radius:3px;overflow:hidden"><div style="background:#6C63FF;height:100%;width:' + pct + '%;transition:width .2s"></div></div>';
+        }
+    }
+    function hideUploadProgress(taskId){
+        var row = document.getElementById('up_'+taskId);
+        if(row) row.remove();
+        var c = document.getElementById('uploadProgress');
+        if(c && !c.children.length) c.remove();
+    }
+
     function handleFiles(files){
-        var media = getMedia();
-        var count = 0;
         Array.from(files).forEach(function(file){
-            if(file.size > 50*1024*1024){ Utils.showToast(file.name + ' muito grande (max 50MB)','error'); return; }
+            if(file.size > 300*1024*1024){ Utils.showToast(file.name + ' muito grande (max 300MB)','error'); return; }
             var isVideo = file.type.startsWith('video/');
             var isImage = file.type.startsWith('image/');
-            if(!isVideo && !isImage){ Utils.showToast(file.name + ' formato invalido','error'); return; }
+            if(!isVideo && !isImage){ Utils.showToast(file.name + ' formato inválido','error'); return; }
 
-            var reader = new FileReader();
-            reader.onload = function(ev){
-                var item = {
-                    id: 'm_' + Date.now().toString(36) + Math.random().toString(36).substr(2,4),
-                    name: file.name,
-                    type: isVideo ? 'video' : 'image',
-                    dataUrl: ev.target.result,
-                    size: file.size,
-                    duration: isImage ? 8 : 0, // images default 8s; video = natural duration
-                    addedAt: new Date().toISOString()
-                };
-                // For videos, get natural duration
-                if(isVideo){
-                    var v = document.createElement('video');
-                    v.preload='metadata';
-                    v.onloadedmetadata = function(){
-                        item.duration = Math.ceil(v.duration);
-                        media.push(item);
-                        saveMedia(media);
-                        renderMedia();
-                        count++;
+            var id = 'm_' + Date.now().toString(36) + Math.random().toString(36).substr(2,4);
+            showUploadProgress(id, file.name, 0);
+
+            function doUpload(blob){
+                var ext      = isVideo ? (file.name.split('.').pop().toLowerCase() || 'mp4') : 'jpg';
+                var filename = id + '.' + ext;
+                var path     = 'tv-media/' + fid + '/' + filename;
+
+                uploadToFirebaseStorage(blob, path, function(pct){
+                    showUploadProgress(id, file.name, pct);
+                })
+                .then(function(result){
+                    hideUploadProgress(id);
+                    var item = {
+                        id: id,
+                        name: file.name,
+                        type: isVideo ? 'video' : 'image',
+                        url: result.url,
+                        storagePath: result.path,
+                        size: blob.size || file.size,
+                        duration: isImage ? 8 : 0,
+                        addedAt: new Date().toISOString()
                     };
-                    v.src = ev.target.result;
-                } else {
-                    media.push(item);
-                    saveMedia(media);
-                    renderMedia();
-                    count++;
-                }
-            };
-            reader.readAsDataURL(file);
+                    if(isVideo){
+                        var v = document.createElement('video');
+                        v.preload = 'metadata';
+                        v.onloadedmetadata = function(){
+                            item.duration = Math.ceil(v.duration) || 15;
+                            var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
+                            Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
+                        };
+                        v.onerror = function(){
+                            item.duration = 15;
+                            var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
+                            Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
+                        };
+                        v.src = result.url;
+                    } else {
+                        var cur = getMedia(); cur.push(item); saveMedia(cur); renderMedia();
+                        Utils.showToast('✅ ' + file.name + ' adicionado!', 'success');
+                    }
+                })
+                .catch(function(err){
+                    console.error('[TV Upload] erro:', err);
+                    showUploadProgress(id, file.name, 0, err.message || 'Falha no upload');
+                });
+            }
+
+            if(isImage){
+                compressImageFile(file, doUpload);
+            } else {
+                transcodeForTV(file, id, function(blob){
+                    doUpload(blob);
+                });
+            }
         });
-        setTimeout(function(){ if(count) Utils.showToast(count + ' midia(s) adicionada(s)', 'success'); }, 500);
+    }
+
+    // Re-codifica video para H.264 Baseline (compativel com 100% dos Android TV)
+    function transcodeForTV(file, taskId, callback){
+        // Detecta melhor formato suportado pelo MediaRecorder
+        var tvMime = null;
+        var tryMimes = [
+            'video/mp4;codecs=avc1.42E01E',
+            'video/mp4;codecs=avc1',
+            'video/mp4',
+            'video/webm;codecs=h264',
+            'video/webm;codecs=vp8'
+        ];
+        for(var i=0; i<tryMimes.length; i++){
+            if(typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(tryMimes[i])){
+                tvMime = tryMimes[i]; break;
+            }
+        }
+        if(!tvMime){
+            showUploadProgress(taskId, file.name, 0, 'Navegador nao suporta conversao. Envie MP4 H.264.');
+            callback(file);
+            return;
+        }
+
+        showUploadProgress(taskId, '🔄 Convertendo ' + file.name + '…', 0);
+
+        var video = document.createElement('video');
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        var objUrl = URL.createObjectURL(file);
+        video.src = objUrl;
+
+        var abortTimer = setTimeout(function(){
+            cleanup();
+            Utils.showToast('Conversao demorou demais, enviando original','warning');
+            callback(file);
+        }, 300000);
+
+        function cleanup(){
+            clearTimeout(abortTimer);
+            try { URL.revokeObjectURL(objUrl); } catch(e){}
+            try { video.pause(); video.removeAttribute('src'); } catch(e){}
+        }
+
+        video.onerror = function(){
+            cleanup();
+            Utils.showToast('Erro ao decodificar video, enviando original','warning');
+            callback(file);
+        };
+
+        video.onloadedmetadata = function(){
+            var ow = video.videoWidth, oh = video.videoHeight;
+            if(!ow || !oh){ cleanup(); callback(file); return; }
+
+            // Cap em 1080p mantendo aspect ratio
+            var scale = Math.min(1, 1920/ow, 1080/oh);
+            var w = Math.round(ow * scale); w -= w%2;
+            var h = Math.round(oh * scale); h -= h%2;
+
+            var canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            var ctx = canvas.getContext('2d');
+
+            var canvasStream = canvas.captureStream(30);
+            var tracks = canvasStream.getVideoTracks().slice();
+
+            // Captura audio
+            try {
+                var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                var src = audioCtx.createMediaElementSource(video);
+                var dest = audioCtx.createMediaStreamDestination();
+                src.connect(dest);
+                dest.stream.getAudioTracks().forEach(function(t){ tracks.push(t); });
+            } catch(e){}
+
+            var combined = new MediaStream(tracks);
+            var recorder = new MediaRecorder(combined, {
+                mimeType: tvMime,
+                videoBitsPerSecond: 4000000
+            });
+            var chunks = [];
+
+            recorder.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+            recorder.onstop = function(){
+                cleanup();
+                try { if(typeof audioCtx !== 'undefined') audioCtx.close(); } catch(e){}
+                var ext = tvMime.indexOf('mp4') >= 0 ? 'video/mp4' : 'video/webm';
+                var blob = new Blob(chunks, { type: ext });
+                showUploadProgress(taskId, file.name, 100);
+                Utils.showToast('✅ Video convertido para TV!','success');
+                callback(blob);
+            };
+
+            var totalDur = video.duration || 1;
+
+            function drawLoop(){
+                if(video.ended || video.paused){
+                    try { setTimeout(function(){ recorder.stop(); }, 300); } catch(e){}
+                    return;
+                }
+                ctx.drawImage(video, 0, 0, w, h);
+                showUploadProgress(taskId, '🔄 Convertendo ' + file.name, Math.round((video.currentTime/totalDur)*90));
+                requestAnimationFrame(drawLoop);
+            }
+
+            recorder.start(500);
+            video.muted = false;
+            video.volume = 0;
+            video.play().then(function(){
+                drawLoop();
+            }).catch(function(){
+                cleanup();
+                Utils.showToast('Nao foi possivel converter, enviando original','warning');
+                callback(file);
+            });
+
+            video.onended = function(){
+                setTimeout(function(){
+                    try { recorder.stop(); } catch(e){}
+                }, 500);
+            };
+        };
     }
 
     window.deleteMedia = function(id){
+        var item = getMedia().find(function(m){ return m.id === id; });
+        if(item && item._auto){ Utils.showToast('Este item é gerenciado automaticamente e não pode ser excluído.','error'); return; }
+        // Remove do Firebase Storage via REST API (silencioso se não existir)
+        if(item && item.storagePath){
+            try {
+                firebase.auth().currentUser.getIdToken().then(function(idToken){
+                    fetch('https://firebasestorage.googleapis.com/v0/b/' + STORAGE_BUCKET + '/o/' + encodeURIComponent(item.storagePath), {
+                        method: 'DELETE',
+                        headers: { 'Authorization': 'Firebase ' + idToken }
+                    }).catch(function(){});
+                }).catch(function(){});
+            } catch(e){}
+        }
         saveMedia(getMedia().filter(function(m){return m.id!==id}));
-        // Also remove from playlist
         var pl = getPlaylist().filter(function(p){return p.mediaId!==id});
         savePlaylist(pl);
         renderMedia();
@@ -711,24 +1408,127 @@
         var media = getMedia();
         document.getElementById('mediaGrid').innerHTML = media.length ? media.map(function(m){
             var thumbHtml = '';
-            if(m.type === 'image') thumbHtml = '<img src="' + m.dataUrl + '">';
-            else if(m.type === 'video') thumbHtml = '<video src="' + m.dataUrl + '" muted></video>';
+            if(m.type === 'image') thumbHtml = '<img src="' + (m.url || m.dataUrl || '') + '">';
+            else if(m.type === 'video') thumbHtml = '<video src="' + (m.url || m.dataUrl || '') + '" muted></video>';
             else if(m.type === 'text') thumbHtml = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:' + (m.bg||'#6C63FF') + ';color:#fff;padding:6px;font-size:10px;font-weight:700;text-align:center;line-height:1.2">' + esc(m.title||'') + '</div>';
             else if(m.type === 'product') thumbHtml = m.productImage ? '<img src="' + m.productImage + '">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1040,#0D0B1A);display:flex;align-items:center;justify-content:center;color:#FFD54F;font-size:10px;font-weight:700">🌟 ' + esc((m.productName||'').substring(0,15)) + '</div>';
             else if(m.type === 'promo') thumbHtml = m.promoImage ? '<img src="' + m.promoImage + '">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#E53935,#FF6D00);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700">⚡ Promo</div>';
             else if(m.type === 'combo') thumbHtml = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#6C63FF,#42A5F5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700">🤝 Combo</div>';
             else if(m.type === 'menu') thumbHtml = '<div style="width:100%;height:100%;background:#1A1535;display:flex;align-items:center;justify-content:center;color:#FFD54F;font-size:10px;font-weight:700">📋 Cardapio</div>';
             else if(m.type === 'story') thumbHtml = m.storyImage ? '<img src="' + m.storyImage + '">' : '<div style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700">📸 Story</div>';
+            else if(m.type === 'html') thumbHtml = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#0D47A1,#1565C0);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:4px"><span style="font-size:24px">📺</span><span style="font-size:9px;opacity:.8;text-align:center;padding:0 4px;word-break:break-all">' + esc((m.url||'').replace(/^https?:\/\//,'').substring(0,30)) + '</span></div>';
             else thumbHtml = '📄';
-            var typeIcons = {image:'🖼️',video:'🎬',text:'✏️',product:'🌟',promo:'⚡',combo:'🤝',menu:'📋',story:'📸'};
-            return '<div class="media-item" onclick="addToPlaylist(\'' + esc(m.id) + '\')">' +
-                '<button class="media-delete" onclick="event.stopPropagation();deleteMedia(\'' + esc(m.id) + '\')">&times;</button>' +
+            var typeIcons = {image:'🖼️',video:'🎬',text:'✏️',product:'🌟',promo:'⚡',combo:'🤝',menu:'📋',story:'📸',html:'🌐'};
+            var deleteBtn = m._auto
+                ? '<span style="position:absolute;top:6px;left:6px;background:rgba(0,120,0,.75);color:#fff;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:700">🔒 Auto</span>'
+                : '<button class="media-delete" onclick="event.stopPropagation();deleteMedia(\'' + esc(m.id) + '\')" title="Remover">&times;</button>';
+            var editHint = m._auto ? '' : '<div style="position:absolute;bottom:2px;right:4px;font-size:10px;color:#666;background:rgba(255,255,255,.85);padding:1px 5px;border-radius:4px">✏️ editar</div>';
+            return '<div class="media-item" onclick="' + (m._auto ? '' : 'editMedia(\'' + esc(m.id) + '\')') + '" title="' + (m._auto ? 'Slide auto-gerenciado' : 'Clique para editar') + '">' +
+                deleteBtn +
                 '<div class="thumb">' + thumbHtml + '</div>' +
                 '<span class="media-type">' + (typeIcons[m.type] || '📄') + '</span>' +
                 (m.duration ? '<span class="media-dur">' + m.duration + 's</span>' : '') +
-                '<div class="media-label" title="' + esc(m.name) + '">' + esc(m.name) + '</div></div>';
+                '<div class="media-label" title="' + esc(m.name) + '">' + esc(m.name) + '</div>' +
+                editHint +
+            '</div>';
         }).join('') : '<p style="color:#999;font-size:14px;grid-column:1/-1">Arraste arquivos para a area acima ou crie slides de texto.</p>';
     }
+
+    /* === Edição de mídia existente === */
+    var EDIT_FIELDS = {
+        promo: [
+            { k:'name', label:'Nome interno', type:'text', placeholder:'Hora do Acai' },
+            { k:'promoHeadline', label:'Título da promo *', type:'text' },
+            { k:'promoSubtext', label:'Subtexto', type:'text' },
+            { k:'promoUrgency', label:'Urgência', type:'text', placeholder:'SO HOJE, ATE 18H' },
+            { k:'promoPrice', label:'Preço promocional *', type:'text', placeholder:'14,90' },
+            { k:'promoOldPrice', label:'Preço original (riscado)', type:'text', placeholder:'22,90' },
+            { k:'promoSavings', label:'Economia (-35%)', type:'text' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:5, max:60 }
+        ],
+        text: [
+            { k:'title', label:'Título *', type:'text' },
+            { k:'subtitle', label:'Subtítulo', type:'text' },
+            { k:'bg', label:'Cor fundo (hex)', type:'text', placeholder:'#6C63FF' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:3, max:60 }
+        ],
+        image: [
+            { k:'name', label:'Nome', type:'text' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:3, max:60 }
+        ],
+        video: [
+            { k:'name', label:'Nome', type:'text' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:3, max:120 }
+        ],
+        story: [
+            { k:'storyHeadline', label:'Título', type:'text' },
+            { k:'storyBottomText', label:'Texto rodapé', type:'text' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:5, max:30 }
+        ],
+        product: [
+            { k:'productName', label:'Nome do produto', type:'text' },
+            { k:'productTagline', label:'Tagline', type:'text' },
+            { k:'productPrice', label:'Preço', type:'text' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:5, max:30 }
+        ],
+        combo: [
+            { k:'name', label:'Nome', type:'text' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:5, max:30 }
+        ],
+        menu: [
+            { k:'name', label:'Nome', type:'text' },
+            { k:'duration', label:'Duração (seg)', type:'number', min:5, max:60 }
+        ]
+    };
+
+    window.editMedia = function(id) {
+        var media = getMedia();
+        var m = media.find(function(x){ return x.id === id; });
+        if (!m) return;
+        var fields = EDIT_FIELDS[m.type] || EDIT_FIELDS.image;
+        var formHtml = fields.map(function(f){
+            var v = m[f.k] == null ? '' : String(m[f.k]);
+            var attrs = 'id="edit_' + f.k + '"';
+            if (f.placeholder) attrs += ' placeholder="' + esc(f.placeholder) + '"';
+            if (f.min) attrs += ' min="' + f.min + '"';
+            if (f.max) attrs += ' max="' + f.max + '"';
+            return '<div style="margin-bottom:10px"><label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">' + esc(f.label) + '</label>' +
+                '<input type="' + f.type + '" ' + attrs + ' value="' + esc(v) + '" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;box-sizing:border-box"></div>';
+        }).join('');
+        var icons = {promo:'⚡',text:'✏️',image:'🖼️',video:'🎬',story:'📸',product:'🌟',combo:'🤝',menu:'📋'};
+        var overlay = document.createElement('div');
+        overlay.className = 'edit-media-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .15s ease-out';
+        overlay.innerHTML =
+            '<div style="background:#fff;border-radius:14px;max-width:460px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;display:flex;flex-direction:column">' +
+                '<div style="background:linear-gradient(135deg,#6C63FF,#5A52E0);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center">' +
+                    '<h3 style="margin:0;font-size:16px;font-family:\'Baloo 2\',cursive">' + (icons[m.type]||'📄') + ' Editar ' + esc(m.type) + '</h3>' +
+                    '<button onclick="this.closest(\'.edit-media-overlay\').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px">✕</button>' +
+                '</div>' +
+                '<div style="padding:16px 20px;overflow-y:auto">' + formHtml + '</div>' +
+                '<div style="padding:12px 20px;border-top:1px solid #eee;display:flex;gap:8px;justify-content:flex-end;background:#fafafa">' +
+                    '<button onclick="this.closest(\'.edit-media-overlay\').remove()" style="padding:10px 18px;border:1px solid #ddd;background:#fff;border-radius:8px;cursor:pointer;font-weight:600">Cancelar</button>' +
+                    '<button id="saveMediaEditBtn" style="padding:10px 18px;background:#6C63FF;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">💾 Salvar</button>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', function(e){ if (e.target === overlay) overlay.remove(); });
+        document.getElementById('saveMediaEditBtn').addEventListener('click', function(){
+            var updates = {};
+            fields.forEach(function(f){
+                var el = document.getElementById('edit_' + f.k);
+                if (!el) return;
+                var val = el.value;
+                if (f.type === 'number') val = parseInt(val, 10) || m[f.k] || 8;
+                updates[f.k] = val;
+            });
+            Object.assign(m, updates);
+            saveMedia(media);
+            renderMedia();
+            overlay.remove();
+            Utils.showToast('Alterações salvas · TV atualiza em até 30s', 'success');
+        });
+    };
 
     /* === Text Slides === */
     window.updateTextPreview = function(){
@@ -811,7 +1611,7 @@
             if(!m) return;
             totalSec += p.duration || m.duration || 8;
             var thumbHtml = '';
-            if(m.type==='image') thumbHtml = '<img src="'+m.dataUrl+'">';
+            if(m.type==='image') thumbHtml = '<img src="'+(m.url||m.dataUrl||'')+'">';
             else if(m.type==='video') thumbHtml = '🎬';
             else if(m.type==='text') thumbHtml = '<div style="background:'+(m.bg||'#6C63FF')+';color:#fff;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700">'+esc((m.title||'').substring(0,15))+'</div>';
             else if(m.type==='product') thumbHtml = '<div style="background:linear-gradient(135deg,#1a1040,#0D0B1A);color:#FFD54F;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;padding:2px">🌟 '+esc((m.productName||'').substring(0,12))+'</div>';
@@ -1260,6 +2060,8 @@
     function setConfig(c){ DataStore.set(CONFIG_KEY, c); }
 
     window.saveConfig = function(){
+        var openH = parseInt(document.getElementById('cfgOpenHour').value, 10);
+        var closeH = parseInt(document.getElementById('cfgCloseHour').value, 10);
         var c = {
             layout: document.getElementById('cfgLayout').value,
             objectFit: document.getElementById('cfgFit').value,
@@ -1272,12 +2074,55 @@
             weatherCity: document.getElementById('cfgWeatherCity').value.trim() || 'Sao Paulo',
             showNews: document.getElementById('cfgNews').checked,
             newsTicker: document.getElementById('cfgNewsTxt').value.trim(),
+            // Tambem salva como `ticker` (nome novo usado pelo APK nativo)
+            ticker: document.getElementById('cfgNewsTxt').value.trim(),
             instagramUser: document.getElementById('cfgInstaUser').value.trim(),
             hidePriceSymbol: document.getElementById('cfgHidePriceSymbol').checked,
+            // ==== Novos campos v1.2 (APK nativo) ====
+            openHour:  isFinite(openH)  ? openH  : null,
+            closeHour: isFinite(closeH) ? closeH : null,
+            pauseRemote: document.getElementById('cfgPauseRemote').checked,
+            emergencyMessage: document.getElementById('cfgEmergency').value.trim(),
+            qrUrl: document.getElementById('cfgQrUrl').value.trim(),
+
+            // ==== MilkyClube ====
+            showClubeQr: document.getElementById('cfgClubeQr') ? document.getElementById('cfgClubeQr').checked : true,
+            autoClubePromo: document.getElementById('cfgAutoClubePromo') ? document.getElementById('cfgAutoClubePromo').checked : true,
+            clubePromoEvery: parseInt((document.getElementById('cfgClubePromoEvery')||{}).value || 5, 10) || 5,
+            clubePromoDuration: parseInt((document.getElementById('cfgClubePromoDuration')||{}).value || 12000, 10) || 12000,
+            clubeUrl: (document.getElementById('cfgClubeUrl')||{}).value ? document.getElementById('cfgClubeUrl').value.trim() : '',
+            // ==== Promoções Oficiais ====
+            showPromosOficiais: document.getElementById('cfgPromosOficiais') ? document.getElementById('cfgPromosOficiais').checked : true,
+            // ==== Cards MilkyPot (sabores/premium/buffet/sundae) ====
+            showTvCardsFlavors:        document.getElementById('cfgTvCardsFlavors') ? document.getElementById('cfgTvCardsFlavors').checked : true,
+            showTvCardsPremium:        document.getElementById('cfgTvCardsPremium') ? document.getElementById('cfgTvCardsPremium').checked : true,
+            showTvCardsBuffet:         document.getElementById('cfgTvCardsBuffet')  ? document.getElementById('cfgTvCardsBuffet').checked  : true,
+            showTvCardsSundae:         document.getElementById('cfgTvCardsSundae')  ? document.getElementById('cfgTvCardsSundae').checked  : true,
+            showTvCardsSundaePremium:  document.getElementById('cfgTvCardsSundaePremium') ? document.getElementById('cfgTvCardsSundaePremium').checked : true,
             updatedAt: new Date().toISOString()
         };
         setConfig(c);
         Utils.showToast('Configuracao salva! TVs atualizam automaticamente.', 'success');
+    };
+
+    /* --- MilkyClube: adiciona slide manual na biblioteca --- */
+    window.addClubeSlide = function(){
+        var media = getMedia();
+        media.push({
+            id: genId(), type: 'clube',
+            name: 'MilkyClube - Cashback',
+            headline: 'Entre no MilkyClube',
+            subtitle: 'Cashback em MilkyCoins a cada sorvete',
+            tag: 'Baixe o app gratis',
+            footer: 'Aponte a camera no QR Code',
+            clubeUrl: (document.getElementById('cfgClubeUrl')||{}).value || '',
+            duration: Math.round((parseInt((document.getElementById('cfgClubePromoDuration')||{}).value || 12000, 10) || 12000) / 1000),
+            wallMode: (typeof getWallSpan === 'function' ? getWallSpan() : null),
+            addedAt: new Date().toISOString()
+        });
+        saveMedia(media);
+        renderMedia();
+        Utils.showToast('Slide MilkyClube adicionado na biblioteca!', 'success');
     };
 
     window.uploadLogo = function(input){
@@ -1305,7 +2150,7 @@
     function loadConfig(){
         var c = getConfig();
         document.getElementById('cfgLayout').value = c.layout || 'landscape';
-        document.getElementById('cfgFit').value = c.objectFit || 'contain';
+        document.getElementById('cfgFit').value = c.objectFit || 'cover';
         document.getElementById('cfgClock').checked = c.showClock !== false;
         document.getElementById('cfgClockPos').value = c.clockPosition || 'bottom-right';
         document.getElementById('cfgLogo').checked = c.showLogo !== false;
@@ -1313,13 +2158,149 @@
         document.getElementById('cfgWeather').checked = !!c.showWeather;
         document.getElementById('cfgWeatherCity').value = c.weatherCity || 'Sao Paulo';
         document.getElementById('cfgNews').checked = !!c.showNews;
-        document.getElementById('cfgNewsTxt').value = c.newsTicker || '';
+        document.getElementById('cfgNewsTxt').value = c.newsTicker || c.ticker || '';
         document.getElementById('cfgInstaUser').value = c.instagramUser || '';
         document.getElementById('cfgHidePriceSymbol').checked = !!c.hidePriceSymbol;
+        // Novos v1.2
+        document.getElementById('cfgOpenHour').value = (c.openHour != null ? c.openHour : '');
+        document.getElementById('cfgCloseHour').value = (c.closeHour != null ? c.closeHour : '');
+        document.getElementById('cfgPauseRemote').checked = !!c.pauseRemote;
+        document.getElementById('cfgEmergency').value = c.emergencyMessage || '';
+        document.getElementById('cfgQrUrl').value = c.qrUrl || '';
+
+        // Promoções Oficiais
+        var po = document.getElementById('cfgPromosOficiais'); if(po) po.checked = c.showPromosOficiais !== false;
+        // Cards MilkyPot (sabores/premium/buffet/sundae)
+        var cf = document.getElementById('cfgTvCardsFlavors'); if(cf) cf.checked = c.showTvCardsFlavors !== false;
+        var cp = document.getElementById('cfgTvCardsPremium'); if(cp) cp.checked = c.showTvCardsPremium !== false;
+        var cb = document.getElementById('cfgTvCardsBuffet');  if(cb) cb.checked = c.showTvCardsBuffet  !== false;
+        var cs  = document.getElementById('cfgTvCardsSundae');         if(cs)  cs.checked  = c.showTvCardsSundae  !== false;
+        var csp = document.getElementById('cfgTvCardsSundaePremium');  if(csp) csp.checked = c.showTvCardsSundaePremium !== false;
+
+        // MilkyClube
+        var qr = document.getElementById('cfgClubeQr'); if(qr) qr.checked = c.showClubeQr !== false;
+        var auto = document.getElementById('cfgAutoClubePromo'); if(auto) auto.checked = c.autoClubePromo !== false;
+        var every = document.getElementById('cfgClubePromoEvery'); if(every) every.value = c.clubePromoEvery || 5;
+        var dur = document.getElementById('cfgClubePromoDuration'); if(dur) dur.value = c.clubePromoDuration || 12000;
+        var curl = document.getElementById('cfgClubeUrl'); if(curl) curl.value = c.clubeUrl || '';
         if(c.customLogo) document.getElementById('cfgLogoPreview').src = c.customLogo;
+        // Status heartbeat (atualiza 1x ao carregar, e a cada 60s)
+        renderTvStatus();
+        if (!window._heartbeatPoll) window._heartbeatPoll = setInterval(renderTvStatus, 60000);
+        // Wall roles por TV (Fase E)
+        renderWallRoles();
+    }
+
+    // ============ FASE E: Wall Mode por TV ============
+    function renderWallRoles() {
+        var el = document.getElementById('wallRolesList');
+        if (!el) return;
+        var tvs = getTvs();
+        var cfg = getConfig();
+        var roles = cfg.wallRoles || {};
+        if (!tvs.length) {
+            el.innerHTML = '<div style="padding:14px;color:#888;font-size:13px">Cadastre ao menos 1 TV acima pra configurar Wall Mode.</div>';
+            return;
+        }
+        el.innerHTML = tvs.map(function(t){
+            var cur = roles[t.id] || 'none';
+            function opt(v, lbl){ return '<option value="'+v+'"'+(cur===v?' selected':'')+'>'+lbl+'</option>'; }
+            return '<div class="tv-card" style="padding:14px">' +
+              '<div style="font-weight:700;margin-bottom:8px">' + esc(t.name || t.id) + '</div>' +
+              '<select class="form-control" onchange="setWallRole(\''+t.id+'\', this.value)">' +
+                opt('none','— Sem Wall Mode —') +
+                opt('left','⬅ Esquerda') +
+                opt('center','⬛ Centro') +
+                opt('right','➡ Direita') +
+              '</select>' +
+              (cur !== 'none' ? '<div style="margin-top:8px;font-size:12px;color:#7E57C2;font-weight:700">🎬 ' + cur.toUpperCase() + '</div>' : '') +
+            '</div>';
+        }).join('');
+    }
+
+    window.setWallRole = function(tvId, role){
+        var cfg = getConfig();
+        cfg.wallRoles = cfg.wallRoles || {};
+        if (role === 'none') delete cfg.wallRoles[tvId];
+        else cfg.wallRoles[tvId] = role;
+        setConfig(cfg);
+        renderWallRoles();
+        Utils.showToast('Wall role atualizado pra ' + role, 'success');
+    };
+
+    function renderTvStatus(){
+        var list = document.getElementById('tvStatusList');
+        if (!list) return;
+        var tvs = getTvs();
+        if (!tvs.length) { list.innerHTML = '<div style="color:#888;font-size:13px">Nenhuma TV cadastrada ainda</div>'; return; }
+        if (typeof firebase === 'undefined' || !firebase.firestore) {
+            list.innerHTML = '<div style="color:#888;font-size:13px">Firestore indisponível</div>'; return;
+        }
+        var db = firebase.firestore();
+        list.innerHTML = tvs.map(function(t){
+            return '<div class="tv-card" id="status_' + t.id + '" style="padding:14px"><strong>' + esc(t.name || t.id) + '</strong><br><small style="color:#888">Consultando…</small></div>';
+        }).join('');
+        tvs.forEach(function(t){
+            db.collection('datastore').doc('tv_heartbeat_' + fid + '_' + t.id).get().then(function(doc){
+                var card = document.getElementById('status_' + t.id);
+                if (!card) return;
+                if (!doc.exists) {
+                    card.innerHTML = '<strong>' + esc(t.name || t.id) + '</strong><br><span style="color:#999">⚪ Nunca conectou</span>';
+                    return;
+                }
+                try {
+                    var hb = JSON.parse(doc.data().value || '{}');
+                    var lastSeen = hb.lastSeen ? new Date(hb.lastSeen) : null;
+                    var age = lastSeen ? (Date.now() - lastSeen.getTime()) / 60000 : 9999;
+                    var online = age < 10;
+                    var ageTxt = age < 1 ? 'agora' : (age < 60 ? Math.round(age) + ' min atrás' : Math.round(age/60) + ' h atrás');
+                    card.innerHTML =
+                        '<strong>' + esc(t.name || t.id) + '</strong>' +
+                        '<div style="margin-top:4px;font-size:13px">' +
+                            '<span style="color:' + (online ? '#10B981' : '#dc2626') + '">' +
+                                (online ? '🟢 online' : '🔴 offline') + ' · ' + ageTxt +
+                            '</span>' +
+                        '</div>' +
+                        '<div style="font-size:11px;color:#888;margin-top:6px">' +
+                            esc((hb.device || '—') + ' · v' + (hb.version || '?')) + ' · cache ' + (hb.cacheMB || '0') + 'MB' +
+                        '</div>';
+                } catch (e) {
+                    card.innerHTML = '<strong>' + esc(t.name || t.id) + '</strong><br><span style="color:#dc2626">erro lendo status</span>';
+                }
+            }).catch(function(){
+                var card = document.getElementById('status_' + t.id);
+                if (card) card.innerHTML = '<strong>' + esc(t.name || t.id) + '</strong><br><span style="color:#dc2626">sem conexão</span>';
+            });
+        });
+    }
+
+    /* === Auto-slides: garante que o slide de cardápio está na biblioteca ===
+       Adiciona um item type:"html" apontando para tv.html?f=FID. O app Android
+       carrega esta URL em um WebView por 5 minutos mostrando todos os slides
+       de cardápio (milkshake cards, sundaes, promos, buffet) automaticamente.
+       O item tem _auto:true — não aparece com botão de excluir no painel. */
+    function ensureAutoCardapioSlide() {
+        var existing = getMedia().find(function(m){ return m.id === 'auto-cardapio-slides'; });
+        if (existing) return;
+        var base = location.origin.replace(/^http:\/\/localhost.*/,'https://milkypot.com') || 'https://milkypot.com';
+        var slideUrl = base + '/tv.html?f=' + encodeURIComponent(fid);
+        var item = {
+            id: 'auto-cardapio-slides',
+            name: '📋 Slides Cardápio (Auto)',
+            type: 'html',
+            url: slideUrl,
+            duration: 300,
+            _auto: true,
+            addedAt: new Date().toISOString()
+        };
+        var cur = getMedia();
+        cur.unshift(item);
+        saveMedia(cur);
     }
 
     /* === Initial render === */
+    initFranchiseSwitcher();
+    ensureAutoCardapioSlide();
     renderTvs();
     renderMedia();
     renderPlaylist();
@@ -1334,5 +2315,9 @@
     }
 })();
 </script>
+<script src="../js/core/copilot-transport.js" defer></script>
+<script src="../js/pages/lilo-scanner.js" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
 </body>
 </html>

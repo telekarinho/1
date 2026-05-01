@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot Admin - Rede · Truth Mode</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#E91E63">
+    <style>
+        .rede-hero { background: linear-gradient(135deg, #1F2937, #374151); color: #fff; border-radius: 14px; padding: 22px 28px; margin-bottom: 20px; }
+        .rede-hero-title { font-size: .75rem; letter-spacing: 1.2px; opacity: .72; text-transform: uppercase; margin-bottom: 6px; }
+        .rede-hero-h { font-size: 1.7rem; font-family: 'Baloo 2', cursive; margin: 0 0 10px; }
+        .rede-hero-sub { opacity: .82; font-size: .92rem; }
+        .rede-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .rede-kpi { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+        .rede-kpi-label { font-size: .72rem; color: #777; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+        .rede-kpi-value { font-size: 1.5rem; font-weight: 800; color: #1F2937; }
+        .rede-kpi-hint { font-size: .72rem; color: #888; margin-top: 2px; }
+        .rede-unit-row { display: grid; grid-template-columns: 60px 1fr 120px 120px 120px 110px 140px; gap: 12px; align-items: center; padding: 12px 14px; border-bottom: 1px solid #f3f4f6; cursor: pointer; transition: background .15s; }
+        .rede-unit-row:hover { background: #FAFAFA; }
+        .rede-score-chip { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: .95rem; }
+        .rede-dist-bar { display: flex; gap: 2px; height: 22px; border-radius: 4px; overflow: hidden; margin: 10px 0; }
+        .rede-dist-seg { height: 100%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: .7rem; font-weight: 700; }
+        .rede-audit-row { display: grid; grid-template-columns: 140px 200px 180px 1fr; gap: 10px; align-items: start; padding: 8px 12px; border-bottom: 1px solid #f3f4f6; font-size: .82rem; }
+        .rede-audit-row:hover { background: #FAFAFA; }
+        .rede-audit-event { font-family: monospace; font-size: .78rem; color: #1F2937; background: #F3F4F6; padding: 2px 6px; border-radius: 4px; }
+        .rede-filter { padding: 6px 10px; border-radius: 8px; border: 1px solid #ddd; font-size: .88rem; }
+        .rede-export-banner { background: linear-gradient(135deg, #E91E63, #D4A5FF); color: #fff; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .rede-export-banner .btn { background: rgba(255,255,255,.2); color: #fff; border: 1px solid rgba(255,255,255,.35); }
+        @media print {
+            aside, .panel-header, .no-print { display: none !important; }
+            .panel-main { padding: 0 !important; }
+            body { background: #fff !important; }
+            .panel-card { box-shadow: none !important; border: 1px solid #ddd !important; page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo.png" alt="MilkyPot">
+                <h2>MilkyPot<small>Central Admin</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="franchises.html" class="sidebar-link"><span class="icon">🏪</span> Franquias</a>
+                <a href="finances.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <a href="rede.html" class="sidebar-link active"><span class="icon">🌐</span> Rede · Truth Mode</a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="orders.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <a href="products.html" class="sidebar-link"><span class="icon">🍨</span> Cardapio</a>
+                <a href="users.html" class="sidebar-link"><span class="icon">👥</span> Usuarios</a>
+                <a href="operacional.html" class="sidebar-link"><span class="icon">🎯</span> Operacional</a>
+                <div class="sidebar-nav-group">Midia da Loja</div>
+            <a href="/painel/tv-indoor.html?fid=global" class="sidebar-link">
+                <span class="icon">📺</span> TV Indoor
+            </a>
+            <div class="sidebar-nav-group">Marketing</div>
+                <a href="campaigns.html" class="sidebar-link"><span class="icon">📢</span> Campanhas</a>
+                <a href="seo.html" class="sidebar-link"><span class="icon">🔍</span> SEO & Delivery</a>
+                <div class="sidebar-nav-group">Sistema</div>
+                <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">👑</div>
+                    <div class="sidebar-user-info"><strong id="sidebarUserName">Admin</strong><small>Super Admin</small></div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="panel-main">
+            <header class="panel-header no-print">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>🌐 Rede · Truth Mode</h1>
+                </div>
+                <div class="panel-header-right">
+                    <select id="periodSel" class="rede-filter" onchange="render()"></select>
+                    <button class="header-btn" title="Exportar relatório" onclick="window.print()">🖨️</button>
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+                <div class="rede-hero">
+                    <div class="rede-hero-title">MilkyPot · Rede Consolidada</div>
+                    <h2 class="rede-hero-h" id="heroPeriod">Carregando…</h2>
+                    <div class="rede-hero-sub">Visão da rede inteira — sem esconder as unidades piores. Dados auditáveis, derivados de lançamentos reais, snapshots imutáveis e trilha de auditoria completa.</div>
+                </div>
+
+                <div class="rede-export-banner no-print">
+                    <div>
+                        <strong>📄 Relatório público</strong>
+                        <div style="font-size:.82rem;opacity:.85">Exporte esta visão em PDF para franqueados, investidores ou auditoria externa.</div>
+                    </div>
+                    <button class="btn btn-sm" onclick="window.print()">Exportar PDF</button>
+                </div>
+
+                <div id="kpiMount" class="rede-kpi-grid"></div>
+
+                <div class="panel-card">
+                    <div class="panel-card-header"><h3>📊 DRE Consolidado da Rede</h3></div>
+                    <div class="panel-card-body" id="dreConsMount"></div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-card-header"><h3>🏆 Ranking de Unidades por Score</h3><span style="font-size:.8rem;color:#666">ordenado do melhor ao pior — sem filtro</span></div>
+                    <div class="panel-card-body" id="rankingMount" style="padding:0"></div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-card-header"><h3>📈 Evolução da Rede · 6 meses</h3></div>
+                    <div class="panel-card-body" id="historyMount"></div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-card-header" style="display:flex;gap:10px;flex-wrap:wrap">
+                        <h3>🔍 Trilha de Auditoria</h3>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-left:auto">
+                            <select id="auditFranchiseSel" class="rede-filter" onchange="renderAudit()"><option value="">Todas franquias</option></select>
+                            <select id="auditEventSel" class="rede-filter" onchange="renderAudit()"><option value="">Todos eventos</option></select>
+                            <select id="auditUserSel" class="rede-filter" onchange="renderAudit()"><option value="">Todos usuários</option></select>
+                        </div>
+                    </div>
+                    <div class="panel-card-body" id="auditMount" style="padding:0;max-height:500px;overflow:auto"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/cloud-functions.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+    <script src="../js/core/caixa.js"></script>
+    <script src="../js/core/adminconfig.js"></script>
+    <script src="../js/core/financas.js"></script>
+    <script src="../js/core/rede.js"></script>
+    <script>
+        if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+        const session = Auth.getSession();
+        document.getElementById('sidebarUserName').textContent = session.name;
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+        function fmt(v) { return Financas.formatBRL(v); }
+        function pct(v) { return Financas.formatPct(v); }
+        function esc(s) { return Utils.escapeHtml(s || ''); }
+
+        function populatePeriodSelect() {
+            const sel = document.getElementById('periodSel');
+            const now = new Date();
+            const opts = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const pk = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                opts.push({ pk, label: Financas.formatPeriodLabel(pk) });
+            }
+            const current = Financas.currentPeriodKey();
+            sel.innerHTML = opts.map(o => `<option value="${o.pk}"${o.pk === current ? ' selected' : ''}>${o.label}</option>`).join('');
+        }
+
+        function render() {
+            const pk = document.getElementById('periodSel').value || Financas.currentPeriodKey();
+            const cons = Rede.getConsolidated(pk);
+            document.getElementById('heroPeriod').textContent = 'Competência: ' + cons.periodLabel;
+            renderKPIs(cons);
+            renderDREConsolidado(cons);
+            renderRanking(cons);
+            renderHistory();
+            renderAuditFilters(cons);
+            renderAudit();
+        }
+
+        function renderKPIs(c) {
+            const t = c.totals, a = c.aggregates;
+            const avgColor = a.avgScore >= 75 ? '#10B981' : a.avgScore >= 60 ? '#F59E0B' : a.avgScore >= 40 ? '#DC2626' : '#7F1D1D';
+            const resColor = t.resultadoOperacional >= 0 ? '#10B981' : '#DC2626';
+
+            const kpis = [
+                { label: 'Unidades ativas', value: c.unitsCount, hint: c.unitsWithData + ' com dados · ' + c.closedCount + ' fechadas' },
+                { label: 'Receita da rede', value: fmt(t.receitaBruta), hint: t.salesCount + ' vendas' },
+                { label: 'Resultado operacional', value: fmt(t.resultadoOperacional), hint: t.receitaLiquida > 0 ? 'margem ' + (t.resultadoOperacional / t.receitaLiquida * 100).toFixed(1) + '%' : '—', color: resColor },
+                { label: 'Score médio', value: a.avgScore + '/100', hint: 'confiabilidade ' + a.avgReliability + '%', color: avgColor },
+                { label: 'Meta vs realizado', value: t.metaPct != null ? Math.round(t.metaPct * 100) + '%' : '—', hint: t.meta > 0 ? fmt(t.meta) : 'sem meta' },
+                { label: 'Pendências', value: t.pendencias, hint: 'obrigatórios faltantes' }
+            ];
+
+            document.getElementById('kpiMount').innerHTML = kpis.map(k => `
+                <div class="rede-kpi">
+                  <div class="rede-kpi-label">${esc(k.label)}</div>
+                  <div class="rede-kpi-value"${k.color ? ' style="color:' + k.color + '"' : ''}>${k.value}</div>
+                  <div class="rede-kpi-hint">${esc(k.hint)}</div>
+                </div>
+            `).join('') + renderDistribution(a, c.unitsCount);
+        }
+
+        function renderDistribution(a, total) {
+            if (total === 0) return '';
+            const segs = [
+                { label: 'Fortes', count: a.healthyUnits, color: '#10B981' },
+                { label: 'Moderadas', count: a.moderateUnits, color: '#F59E0B' },
+                { label: 'Em risco', count: a.atRiskUnits, color: '#DC2626' },
+                { label: 'Críticas', count: a.criticalUnits, color: '#7F1D1D' }
+            ];
+            const barHtml = segs.map(s => {
+                const w = total > 0 ? (s.count / total * 100) : 0;
+                return w > 0 ? `<div class="rede-dist-seg" style="width:${w}%;background:${s.color}">${s.count}</div>` : '';
+            }).join('');
+            return `
+                <div class="rede-kpi" style="grid-column:1/-1">
+                  <div class="rede-kpi-label">Distribuição da saúde · ${total} unidade(s)</div>
+                  <div class="rede-dist-bar">${barHtml}</div>
+                  <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:#555">
+                    ${segs.map(s => `<span><span style="display:inline-block;width:8px;height:8px;background:${s.color};border-radius:50%;margin-right:4px"></span>${s.label}: <strong>${s.count}</strong></span>`).join('')}
+                  </div>
+                </div>
+            `;
+        }
+
+        function renderDREConsolidado(c) {
+            const t = c.totals;
+            const resColor = t.resultadoOperacional >= 0 ? '#10B981' : '#DC2626';
+            document.getElementById('dreConsMount').innerHTML = `
+                <div style="background:#FAFAFA;border-radius:12px;padding:14px 18px">
+                  ${dreLine('Receita bruta', t.receitaBruta)}
+                  ${dreLine('(−) Impostos', -t.impostos, 'sub')}
+                  ${dreLine('Receita líquida', t.receitaLiquida, 'total')}
+                  ${dreLine('(−) CMV', -t.cmv, 'sub')}
+                  ${dreLine('Lucro bruto', t.lucroBruto, 'total')}
+                  ${dreLine('(−) Variáveis (ex-impostos)', -t.variaveisSemImpostos, 'sub')}
+                  ${dreLine('Margem de contribuição', t.margemContribuicao, 'total', t.receitaLiquida > 0 ? 'MC% ' + pct(t.mcPercent) : '')}
+                  ${dreLine('(−) Custos fixos', -t.totalFixed, 'sub')}
+                  ${dreLine('Resultado operacional', t.resultadoOperacional, 'result', '', resColor)}
+                </div>
+            `;
+        }
+
+        function dreLine(label, valor, variant, hint, color) {
+            const weights = { sub: { c: '#B91C1C' }, total: { t: '1px solid #eee', pt: '10px', w: '700' }, result: { t: '2px solid #333', pt: '12px', w: '800', s: '1.05rem' } };
+            const st = weights[variant] || {};
+            const style = (color ? 'color:' + color + ';' : (st.c ? 'color:' + st.c + ';' : '')) +
+                (st.t ? 'border-top:' + st.t + ';padding-top:' + st.pt + ';margin-top:6px;' : '') +
+                (st.w ? 'font-weight:' + st.w + ';' : '') +
+                (st.s ? 'font-size:' + st.s + ';' : '');
+            return `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:.92rem;${style}">
+              <span>${esc(label)}${hint ? ' <small style="opacity:.6;margin-left:6px">' + esc(hint) + '</small>' : ''}</span>
+              <span>${fmt(valor)}</span>
+            </div>`;
+        }
+
+        function renderRanking(c) {
+            const units = c.rankings.byScore;
+            if (units.length === 0) {
+                document.getElementById('rankingMount').innerHTML = '<p style="text-align:center;padding:30px;color:#888">Nenhuma franquia cadastrada.</p>';
+                return;
+            }
+            const header = `
+                <div class="rede-unit-row" style="background:#F9FAFB;font-weight:700;font-size:.78rem;color:#666;text-transform:uppercase;letter-spacing:.5px;cursor:default">
+                  <div>Pos.</div><div>Unidade</div><div>Score</div><div>Receita</div><div>Resultado</div><div>Meta</div><div>Status</div>
+                </div>
+            `;
+            const rows = units.map((u, i) => {
+                const color = Financas.scoreColor(u.score);
+                const resColor = u.resultado >= 0 ? '#10B981' : '#DC2626';
+                const metaColor = u.metaPct == null ? '#888' : u.metaPct >= 1 ? '#10B981' : u.metaPct >= 0.7 ? '#F59E0B' : '#DC2626';
+                const metaText = u.metaPct == null ? '—' : Math.round(u.metaPct * 100) + '%';
+                const statusBadge = u.closed ? '<span style="background:#DBEAFE;color:#1E40AF;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700">🔒 Fechada</span>'
+                                             : u.pendencias > 0 ? '<span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700">⚠️ ' + u.pendencias + ' pend.</span>'
+                                             : '<span style="background:#D1FAE5;color:#065F46;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700">✅ OK</span>';
+                return `
+                    <div class="rede-unit-row" onclick="location.href='franchise-detail.html?id=${u.franchiseId}'" title="Clique para ver detalhes">
+                      <div style="font-weight:800;font-size:1.1rem;color:#1F2937">#${i + 1}</div>
+                      <div>
+                        <strong>${esc(u.name)}</strong><br>
+                        <small style="color:#888">${esc(u.address)} · confiab ${u.reliability}%</small>
+                      </div>
+                      <div><div class="rede-score-chip" style="background:${color}">${u.score}</div></div>
+                      <div>${fmt(u.receita)}</div>
+                      <div style="color:${resColor};font-weight:700">${fmt(u.resultado)}</div>
+                      <div style="color:${metaColor};font-weight:700">${metaText}</div>
+                      <div>${statusBadge}</div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('rankingMount').innerHTML = header + rows;
+        }
+
+        function renderHistory() {
+            const hist = Rede.getHistory(6);
+            const max = Math.max(1, ...hist.map(h => Math.abs(h.resultado)));
+            const maxReceita = Math.max(1, ...hist.map(h => h.receita));
+            const el = document.getElementById('historyMount');
+            el.innerHTML = `
+                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px">
+                  ${hist.map(h => {
+                    const color = Financas.scoreColor(h.avgScore);
+                    const resColor = h.resultado >= 0 ? '#10B981' : '#DC2626';
+                    const recBar = (h.receita / maxReceita * 100).toFixed(1);
+                    return `
+                      <div style="padding:12px;background:#FAFAFA;border:1px solid #eee;border-radius:10px">
+                        <div style="font-size:.78rem;color:#777;text-transform:capitalize;margin-bottom:6px">${esc(h.label.split(' de ')[0])}</div>
+                        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
+                          <span style="background:${color};color:#fff;padding:2px 8px;border-radius:6px;font-weight:800;font-size:.82rem">${h.avgScore}</span>
+                          <span style="font-size:.75rem;color:#888">${h.unitsWithData} un.</span>
+                        </div>
+                        <div style="font-size:.82rem;color:#555;margin-bottom:4px">Receita ${fmt(h.receita)}</div>
+                        <div style="background:#E5E7EB;height:6px;border-radius:3px;overflow:hidden;margin-bottom:6px">
+                          <div style="height:100%;width:${recBar}%;background:#8B5CF6"></div>
+                        </div>
+                        <div style="font-size:.78rem;color:${resColor};font-weight:700">${fmt(h.resultado)}</div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+            `;
+        }
+
+        function renderAuditFilters(c) {
+            const fSel = document.getElementById('auditFranchiseSel');
+            fSel.innerHTML = '<option value="">Todas franquias</option>' + c.units.map(u => `<option value="${u.franchiseId}">${esc(u.name)}</option>`).join('');
+            const eSel = document.getElementById('auditEventSel');
+            const events = Rede.getEventTypes();
+            eSel.innerHTML = '<option value="">Todos eventos</option>' + events.map(e => `<option value="${e}">${e}</option>`).join('');
+            const uSel = document.getElementById('auditUserSel');
+            const users = Rede.getUsers();
+            uSel.innerHTML = '<option value="">Todos usuários</option>' + users.map(u => `<option value="${u.id}">${esc(u.name || u.email || u.id)}</option>`).join('');
+        }
+
+        function renderAudit() {
+            const filters = {
+                franchiseId: document.getElementById('auditFranchiseSel').value || null,
+                eventPrefix: document.getElementById('auditEventSel').value || null,
+                userId: document.getElementById('auditUserSel').value || null,
+                limit: 200
+            };
+            const logs = Rede.getAuditTrail(filters);
+            const el = document.getElementById('auditMount');
+            if (logs.length === 0) {
+                el.innerHTML = '<p style="text-align:center;padding:30px;color:#888">Nenhum evento para os filtros atuais.</p>';
+                return;
+            }
+            const header = `<div class="rede-audit-row" style="background:#F9FAFB;font-weight:700;font-size:.72rem;color:#666;text-transform:uppercase;letter-spacing:.4px"><div>Data</div><div>Evento</div><div>Usuário</div><div>Detalhes</div></div>`;
+            const rows = logs.map(l => {
+                const date = new Date(l.timestamp);
+                const dateStr = date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const details = JSON.stringify(l.details || {}).slice(0, 120);
+                return `
+                    <div class="rede-audit-row">
+                      <div style="color:#888">${dateStr}</div>
+                      <div><span class="rede-audit-event">${esc(l.event)}</span>${l.franchiseId ? '<br><small style="color:#888">fid ' + esc(l.franchiseId.slice(0, 12)) + '…</small>' : ''}</div>
+                      <div><strong>${esc(l.userName || '—')}</strong><br><small style="color:#888">${esc(l.userRole || '—')}</small></div>
+                      <div><code style="font-size:.72rem;color:#555">${esc(details)}</code></div>
+                    </div>
+                `;
+            }).join('');
+            el.innerHTML = header + rows;
+        }
+
+        populatePeriodSelect();
+        render();
+    </script>
+<script src="../js/core/copilot-transport.js" defer></script>
+<script src="../js/pages/lilo-scanner.js" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
+</body>
+</html>
