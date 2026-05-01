@@ -252,19 +252,19 @@
             <div class="checkout-panel active" id="checkoutStep1">
                 <h3>Seus Dados</h3>
                 <div class="form-group">
-                    <label>Nome Completo</label>
-                    <input type="text" id="checkoutName" placeholder="Seu nome" required>
+                    <label>Nome <small style="color:#999;font-weight:400">(como te chamamos?)</small></label>
+                    <input type="text" id="checkoutName" placeholder="Ex: João" required autocomplete="given-name">
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Telefone</label>
-                        <input type="tel" id="checkoutPhone" placeholder="(11) 99999-9999" required>
-                    </div>
-                    <div class="form-group">
-                        <label>CPF</label>
-                        <input type="text" id="checkoutCpf" placeholder="000.000.000-00">
-                    </div>
+                <div class="form-group">
+                    <label>WhatsApp <small style="color:#999;font-weight:400">(pra te avisar)</small></label>
+                    <input type="tel" id="checkoutPhone" placeholder="(43) 99999-9999" required autocomplete="tel" inputmode="numeric">
                 </div>
+                <details style="margin:10px 0 16px">
+                    <summary style="cursor:pointer;color:#9484A8;font-size:0.85rem;padding:6px 0">CPF na nota? <small>(opcional, pra quem precisa)</small></summary>
+                    <div class="form-group" style="margin-top:8px">
+                        <input type="text" id="checkoutCpf" placeholder="000.000.000-00" inputmode="numeric" autocomplete="off">
+                    </div>
+                </details>
                 <button class="btn-primary btn-full" onclick="nextCheckoutStep(2)">Continuar →</button>
             </div>
 
@@ -1497,28 +1497,124 @@
     }
 })();
 
-// Bug G — Máscara e validação do campo CEP no checkout
+// Máscaras (telefone, CPF, CEP) + ViaCEP autocomplete + WhatsApp fallback no sucesso
 (function() {
-    function initCepMask() {
-        var cepField = document.getElementById('checkoutCep') ||
-                       document.querySelector('[placeholder*="CEP"],[placeholder*="cep"]');
-        if (cepField) {
-            cepField.addEventListener('input', function() {
-                var v = this.value.replace(/\D/g,'');
-                if (v.length > 5) v = v.substring(0,5) + '-' + v.substring(5,8);
-                this.value = v;
+    function maskCep(v){ v=v.replace(/\D/g,''); if(v.length>5) v=v.substring(0,5)+'-'+v.substring(5,8); return v; }
+    function maskPhone(v){
+        v=v.replace(/\D/g,'').slice(0,11);
+        if(v.length<=2) return v.length?'('+v:'';
+        if(v.length<=6) return '('+v.slice(0,2)+') '+v.slice(2);
+        if(v.length<=10) return '('+v.slice(0,2)+') '+v.slice(2,6)+'-'+v.slice(6);
+        return '('+v.slice(0,2)+') '+v.slice(2,7)+'-'+v.slice(7);
+    }
+    function maskCpf(v){
+        v=v.replace(/\D/g,'').slice(0,11);
+        return v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+    }
+
+    function fetchViaCep(cep){
+        cep=cep.replace(/\D/g,'');
+        if(cep.length!==8) return;
+        var addr=document.getElementById('checkoutAddress');
+        var bairro=document.getElementById('checkoutNeighborhood');
+        if(addr) addr.placeholder='Buscando...';
+        fetch('https://viacep.com.br/ws/'+cep+'/json/')
+            .then(function(r){return r.json();})
+            .then(function(d){
+                if(d.erro){ if(addr) addr.placeholder='CEP não encontrado'; return; }
+                if(addr){ addr.value=d.logradouro||''; addr.placeholder='Rua, número'; }
+                if(bairro) bairro.value=d.bairro||'';
+                var comp=document.getElementById('checkoutComplement');
+                if(comp) comp.focus();
+            })
+            .catch(function(){ if(addr) addr.placeholder='Rua, número'; });
+    }
+
+    function bindMasks() {
+        var cep=document.getElementById('checkoutCep');
+        if(cep && !cep._masked){
+            cep._masked=true;
+            cep.setAttribute('maxlength','9');
+            cep.setAttribute('inputmode','numeric');
+            cep.addEventListener('input',function(){
+                this.value=maskCep(this.value);
+                if(this.value.replace(/\D/g,'').length===8) fetchViaCep(this.value);
             });
-            cepField.setAttribute('maxlength', '9');
+        }
+        var phone=document.getElementById('checkoutPhone');
+        if(phone && !phone._masked){
+            phone._masked=true;
+            phone.setAttribute('maxlength','15');
+            phone.addEventListener('input',function(){ this.value=maskPhone(this.value); });
+        }
+        var cpf=document.getElementById('checkoutCpf');
+        if(cpf && !cpf._masked){
+            cpf._masked=true;
+            cpf.setAttribute('maxlength','14');
+            cpf.addEventListener('input',function(){ this.value=maskCpf(this.value); });
         }
     }
-    // Tentar imediatamente e também após abertura do modal de checkout
-    document.addEventListener('DOMContentLoaded', initCepMask);
-    // Garantir que funciona mesmo se o modal for aberto depois
+
+    document.addEventListener('DOMContentLoaded', bindMasks);
     document.addEventListener('click', function(e) {
         if (e.target && (e.target.id === 'cartBtn' || e.target.closest('.btn-cart'))) {
-            setTimeout(initCepMask, 300);
+            setTimeout(bindMasks, 300);
         }
     });
+})();
+
+// Botão WhatsApp no modal sucesso com mensagem completa do pedido
+(function(){
+    var origPlace = window.placeOrder;
+    if (typeof origPlace !== 'function') return;
+    window.placeOrder = function(){
+        origPlace();
+        try{
+            var orders = JSON.parse(localStorage.getItem('milkypot_orders')||'[]');
+            var last = orders[0];
+            if(!last) return;
+            var phone = (last.store && last.store.whatsapp) || '5543998042424';
+            var lines = [];
+            lines.push('🍨 *Pedido MilkyPot* '+(last.orderNumber||last.id||''));
+            lines.push('');
+            lines.push('👤 '+((last.customer && last.customer.name)||last.customerName||''));
+            lines.push('📞 '+((last.customer && last.customer.phone)||last.customerPhone||''));
+            lines.push('');
+            lines.push('🛒 *Itens:*');
+            (last.items||[]).forEach(function(it){
+                var nm = it.sabor || it.name || 'Item';
+                var sz = it.tamanho || it.size || '';
+                var t = (it.total!=null?it.total:0).toFixed(2).replace('.',',');
+                lines.push('• '+(it.qty||1)+'x '+nm+(sz?' ('+sz+')':'')+' — R$ '+t);
+            });
+            lines.push('');
+            var dType = (last.delivery && last.delivery.type) || last.delivery;
+            if(dType==='delivery'){
+                var addr = last.deliveryAddress || (last.delivery && last.delivery.address) || '';
+                var fee = last.deliveryFee != null ? last.deliveryFee : (last.delivery && last.delivery.fee) || 0;
+                lines.push('🛵 *Delivery:* '+addr);
+                lines.push('Taxa: R$ '+Number(fee).toFixed(2).replace('.',','));
+            } else {
+                lines.push('🏪 *Retirada na loja*');
+            }
+            lines.push('💳 Pagamento: '+((last.payment && last.payment.label)||'PIX'));
+            lines.push('');
+            lines.push('💰 *Total: R$ '+Number(last.total||0).toFixed(2).replace('.',',')+'*');
+            var waUrl = 'https://wa.me/'+phone+'?text='+encodeURIComponent(lines.join('\n'));
+
+            var details = document.getElementById('successDetails');
+            if(details && !document.getElementById('btnWhatsConfirm')){
+                var btn = document.createElement('a');
+                btn.id='btnWhatsConfirm';
+                btn.href = waUrl;
+                btn.target = '_blank';
+                btn.rel = 'noopener';
+                btn.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;background:#25D366;border:none;margin-top:14px;text-decoration:none;color:#fff;padding:14px;border-radius:12px;font-weight:700';
+                btn.innerHTML = '💬 Avisar a loja no WhatsApp';
+                details.appendChild(btn);
+            }
+        }catch(e){ console.warn('WA fallback err:',e); }
+    };
 })();
 </script>
 
