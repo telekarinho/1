@@ -391,7 +391,7 @@ body:not(.idle){cursor:default}
         }
 
         if(m.type === 'image'){
-            if(!m.dataUrl){
+            if(!m.url && !m.dataUrl){
                 playFallback('Imagem indisponivel.');
                 return;
             }
@@ -402,7 +402,7 @@ body:not(.idle){cursor:default}
                 imgHandled = true;
                 playFallback('Imagem demorou para carregar.');
             }, 4000);
-            img.src = m.dataUrl;
+            img.src = m.url || m.dataUrl;
             img.alt = m.name;
             img.style.objectFit = fit;
             img.onload = function(){
@@ -421,7 +421,7 @@ body:not(.idle){cursor:default}
             player.appendChild(img);
         }
         else if(m.type === 'video'){
-            if(!m.dataUrl){
+            if(!m.url && !m.dataUrl){
                 playFallback('Video indisponivel.');
                 return;
             }
@@ -432,7 +432,7 @@ body:not(.idle){cursor:default}
                 videoHandled = true;
                 playFallback('Video demorou para carregar.');
             }, 5000);
-            video.src = m.dataUrl;
+            video.src = m.url || m.dataUrl;
             video.muted = false;
             video.autoplay = true;
             video.playsInline = true;
