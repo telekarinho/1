@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #79 — 2026-05-01
+
+**Área:** Auto-aprimoramento — análise ciclos #74–78 + estratégia Q1-Q2 2027 (jan–abr) + padrão v11
+
+**Contexto:** Ciclo múltiplo de 5 obrigatório (prescrito pelo roadmap do ciclo #74). Cobertura de conteúdo vai até semana 38 (09/01/2027). Aniversário de 1 ano (25/04/2027) está a ~12 semanas — urgência crítica para planejamento. UX/Performance sem atenção há 16 ciclos (desde #62) = dívida acumulada.
+
+**O que analisou:**
+- Releu log completo ciclos #74–#78 (estratégia dezembro/Natal #74, conteúdo semanas 33–38 #75–#77, SEO técnico #78)
+- Releu `belinha/estrategia.md` seções "padrão v10" e "Estratégia dezembro 2026/Q1 2027"
+- Avaliou eficácia: arco narrativo Natal 8 meses (#76) = melhor conteúdo até agora; Twitter Card cardápio.html (#78) = maior impacto técnico imediato no canal principal (WA)
+- Identificou gap crítico: aniversário 1 ano (25/04/2027) ainda sem campanha planejada — precisa de aquecimento 6 semanas (a partir da semana 47, 14/03)
+- Identificou dívida crítica: UX/Performance sem atenção há 16 ciclos — prescrito como obrigatório ciclo #82
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/estrategia.md` | ATUALIZADO: header versão #79, bloco "Aprendizados #74–78", padrão v11 (UX a cada 10 ciclos + campanha aniversário 1 ano + WA "ANIVERSARIO" + checklist A/B), estado das áreas pós-#78, estratégia Q1-Q2 2027 (jan–abr: meses 9–12), cadência semanas 39–54, roadmap #80–84, bloqueadores atualizados |
+
+**Commit:** _(ver abaixo)_
+
+**Destaques do auto-aprimoramento:**
+1. **Aniversário 1 ano (25/04/2027) = campanha épica obrigatória:** 12 semanas de distância. Aquecimento inicia semana 47 (14/03). 6 semanas de build-up: teaser → memória → carrossel 12 meses → produto aniversário reveal → WA "ANIVERSARIO" → dia H. Prescrito ciclos #84–#89.
+2. **Padrão v11 — UX/Performance sweep obrigatório a cada 10 ciclos:** Ciclo #82 obrigatório (17 ciclos sem atenção é crítico). Foco: mobile first, CLS/LCP, WebP, bundle size.
+3. **Carnaval 2027 (28/02–04/03) sinalizado:** Semana 42 tem aquecimento. Produto temático opcional — operador confirma até 14/02. Novo bloqueador registrado.
+4. **Checklist de decisão A/B:** Adicionado ao padrão v11 — todo arquivo com Versão A/B deve ter data limite de confirmação em negrito para o operador.
+5. **Cadência semanas 39–54 mapeada:** Janeiro (9 meses) → fevereiro (Carnaval) → março/abril (aquecimento 1 ano) → 25/04/2027 (🎂 dia H). Roadmap mais longo já criado pela Belinha.
+
+**Próximo passo sugerido:**
+- Ciclo #80: Conteúdo — Semanas 39+40 (10–23/01): açaí hero verão + aniversário 9 meses teaser + Sexta #23 + Linha Zero showcase pós-Ano Novo
+- Ciclo #81: Conteúdo — Semanas 41+42 (24/01–06/02): aniversário 9 meses dia H (25/01) + Carnaval aquecimento + Sexta #24
+- Ciclo #82: UX/Performance — sweep obrigatório v11 (17 ciclos sem atenção): mobile, CLS/LCP, imagens WebP, bundle size, cardápio.html perf
+- Ciclo #83: Concorrentes — refetch TheBest + MilkyMoo + pesquisar novos entrantes Londrina
+- Operador: confirmar produto sazonal verão (Versão A ou B) ANTES de 28/11/2026
+- Operador: confirmar produto natalino (Versão A ou B) ANTES de 20/12/2026
+- Operador: verificar se mecânica WA "VERAO" foi publicada (prescrita ciclo #75)
+
+_Belinha — Ciclo #79 | 2026-05-01_
+
+---
+
 ## Ciclo #78 — 2026-05-01
 
 **Área:** SEO local — Twitter Card + meta description + sitemap.xml

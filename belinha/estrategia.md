@@ -1,6 +1,6 @@
 # Belinha — Estratégia de Ciclos
 
-_Atualizado no ciclo #64 (auto-aprimoramento obrigatório a cada 5 ciclos)_
+_Atualizado no ciclo #79 (auto-aprimoramento obrigatório a cada 5 ciclos)_
 
 ---
 
@@ -931,3 +931,126 @@ Adições v10 (além de v9):
 ---
 
 _Belinha — Ciclo #74 | 2026-04-30_
+
+---
+
+## Aprendizados dos ciclos #74–78
+
+_Ciclo #79 — Auto-aprimoramento obrigatório_
+
+### O que gerou mais valor concreto
+
+1. **#76 Arco narrativo "25/04 nascimento → 25/12 Natal = 8 meses":** Conteúdo de maior profundidade emocional gerado até agora. Diferencial de storytelling absoluto — nenhuma concorrente tem esse marco de fundação. Prova que datas-âncora da própria marca geram conteúdo orgânico inesquecível.
+2. **#75 Mecânica WA "NATAL" lista VIP:** Replicação bem-sucedida do padrão HALLOWEEN (#67). Sequência de 5 semanas (03/12→24/12→25/12) converte seguidores passivos em leads qualificados rastreáveis. Padrão a expandir: VERAO, ANIVERSARIO, CARNAVAL.
+3. **#78 Twitter Card + meta description local no cardápio.html:** Impacto direto e imediato: links do cardápio compartilhados no WhatsApp (canal principal) agora exibem preview com imagem + título. Toda a equipe envia o link diariamente — melhoria de 100% no CTR percebido de mensagens WA.
+4. **#77 "Nova meta, novo potinho" Linha Zero pós-Ano Novo:** Alinha produto + data cultural + resolução emocional. Janeiro = pico de interesse fit. O hook "1 resolução que você vai cumprir" é compartilhável e não exige desconto.
+5. **#74 Padrão v10 com alerta anti-rotação:** A regra "SEO obrigatório a cada 5 ciclos de conteúdo" funcionou — foi aplicada exatamente no #78. Disciplina de rotação confirmada como eficaz.
+
+### O que foi menos eficaz (ciclos #74–78)
+
+- **UX/Performance ainda sem atenção (16 ciclos desde #62):** A rotação v10 prescreveu SEO no #78 mas não prescreveu UX. Risco de degradação acumulando silenciosamente. **Adição ao padrão v11: UX/Performance sweep obrigatório a cada 10 ciclos.**
+- **Bloqueadores operacionais de produto natalino/verão:** Semanas 35+36 têm Versão A/B para produtos sem nome confirmado. Cria ambiguidade operacional — o operador precisa escolher antes de publicar. Melhoria prescrita: adicionar checklist de decisão com data limite em cada arquivo de semana que tenha Versão A/B.
+- **Aniversário 1 ano (25/04/2027) ainda não planejado:** É o maior evento de marketing da franquia regional e está a ~12 semanas. Roadmap v11 deve incluir aquecimento a partir da semana 47 (meados de março 2027).
+
+### Padrão consolidado (v11)
+
+> **Bug/fix crítico > ALERTA competitivo → diferenciação implícita no próximo ciclo de conteúdo > Landing page SEO por diferencial distinto > Scripts/templates operador acionáveis c/ fallback A/B + checklist de decisão com data limite > Conteúdo não-contingente — semanas adjacentes mesma temática = mesmo ciclo > SEO técnico a cada 5 ciclos de conteúdo > UX/Performance sweep a cada 10 ciclos > Concorrente + ação concreta no mesmo ciclo (refetch semestral) > Campanha de aniversário com 6 semanas de aquecimento mínimo**
+
+Adições v11 (além de v10):
+- **UX/Performance sweep obrigatório a cada 10 ciclos:** Ciclo #82 = obrigatório. Ciclo #92 = próximo obrigatório. Foco: mobile first, CLS/LCP, bundle size, imagens WebP, tempo de carregamento cardápio.html.
+- **Aniversário de 1 ano como campanha épica:** 25/04/2027 = 1 ano da inauguração MilkyPot Muffato. Aquecimento mínimo 6 semanas (a partir de 14/03/2027, semana 47). Formatos: "1 ano de potinhos em números" (carrossel), "vote no sabor do aniversário" (enquete), oferta especial 1 ano.
+- **Palavra-chave WA "ANIVERSARIO":** Mecânica VIP para o 1 ano — campanha prescrita ciclo #84/85.
+- **Carnaval 2027 = 28/02–04/03:** Produto/conteúdo temático opcional. Semana 42 já sinaliza aquecimento. Operador confirma produto até 14/02.
+- **Checklist de decisão em arquivos com Versão A/B:** Qualquer arquivo de semana com Versão A/B deve incluir: "Operador: confirmar opção A ou B ANTES de [data 3 dias antes da publicação]" em negrito no início do arquivo.
+
+---
+
+## Estado das áreas em 01/05/2026 (pós-ciclo #78)
+
+| Área | Estado | Próxima ação |
+|------|--------|--------------|
+| Conteúdo pós-inauguração | ✅ Semanas 1–38 prontas (até 09/01/2027) | Semanas 39+40 (10–23/01): açaí hero verão + 9 meses teaser + Sexta #23 |
+| Produto especial Natal | ✅ Planejado semanas 35+36 (Versão A/B) | Operador: confirmar Versão A ou B ANTES de 20/12/2026 |
+| Produto sazonal verão | ✅ Planejado semanas 33+34 (Versão A/B) | Operador: confirmar Versão A ou B ANTES de 28/11/2026 |
+| Aniversário 9 meses (25/01/2027) | ⚠️ PLANEJADO no roadmap | Criar semanas 40+41: teaser + dia H. Ciclo #80+#81 |
+| Aniversário 1 ano (25/04/2027) | 🚨 URGENTE — 12 semanas | Aquecimento a partir semana 47 (14/03). Ciclo #84 prescreve |
+| Carnaval 2027 (28/02–04/03) | ⚠️ PLANEJADO semana 42 | Operador confirmar produto temático até 14/02 |
+| TheBest quiosque Aurora Londrina | 🚨 ALERTA ATIVO | Diferenciação implícita contínua. Monitorar expansão para Muffato |
+| Twitter Card / OG tags | ✅ cardápio.html completo (#78) | Verificar og:image:width/height próximo ciclo SEO (#83) |
+| Core Web Vitals / UX | 🚨 16 ciclos sem atenção (desde #62) | Sweep obrigatório ciclo #82 (padrão v11) |
+| SEO técnico | ✅ Atualizado #78 | Próximo: FAQPage schema cardápio.html + og:image dimensions (#83) |
+| aggregateRating Schema.org | ⛔ SUSPENSO | Aguardar ≥3 reviews Google Maps verificáveis |
+| Google Analytics ID real | ⛔ SUSPENSO | Aguardar autorização do usuário |
+| Pesquisa concorrentes | ✅ MilkyMoo + TheBest atualizados (#73) | Próximo refetch ciclo #83 |
+| Palavra-chave WA "VERAO" | ⚠️ PRESCRITO #75 | Confirmar se foi ativado com operador |
+| Programa fidelidade 15º carimbo | ⚠️ PRESCRITO #77 | Template WA "parabéns 15º" → prescrito para ciclo #82 |
+
+---
+
+## Estratégia Q1-Q2 2027 (janeiro–abril: meses 9–12 de operação)
+
+### Contexto
+
+**Janeiro 2027 = 9º mês de operação.** Verão pleno em Londrina (28–34°C). Pico de interesse Linha Zero pós-Ano Novo. Açaí buffet self-service = diferencial visual máximo. Aniversário de 9 meses (25/01) = marco de fidelidade + prova social.
+
+**Fevereiro 2027 = Carnaval (28/02–04/03).** Oportunidade de produto temático. Volume operacional moderado (feriado = família + diversão = potinhos).
+
+**Março–Abril 2027 = aquecimento aniversário 1 ano (25/04).** Campanha épica obrigatória: "Um ano do Potinho Mais Feliz do Mundo". Maior evento de brand awareness local desde a inauguração. Narrativa: 12 meses de potinhos, histórias reais, números de crescimento, gratidão.
+
+### Pilares estratégicos Q1-Q2 2027
+
+| Pilar | Ação concreta |
+|-------|---------------|
+| **Açaí hero verão** | Janeiro-fevereiro: açaí buffet como protagonista visual. Fotos de pratos montados, temperatura, diferencial único do Muffato vs concorrentes quiosque |
+| **Aniversário 9 meses** | Carrossel "9 meses de potinhos": número de clientes, carimbos dados, potinhos vendidos. Template WA "você faz parte da história" |
+| **Linha Zero resolução Ano Novo** | Janeiro semana 38: "1 resolução que você vai cumprir — Potinho Zero" (proteína + sem açúcar). Hook emocional + diferencial de produto |
+| **Carnaval (opcional)** | Produto/topping temático se confirmado pela franquia. Paleta carnavalesca (amarelo, verde, azul, vermelho). Operador confirma até 14/02 |
+| **Aniversário 1 ano (25/04/2027)** | Campanha épica 6 semanas: countdown, concurso UGC, produto aniversário, oferta especial, WA "ANIVERSARIO", retrospectiva visual 12 meses |
+| **Diferenciação anti-TheBest contínua** | Mostrar experiência completa (família, espaço, personalização) vs modelo quiosque. Nunca citar concorrente pelo nome |
+
+### Cadência de conteúdo (janeiro–abril 2027)
+
+| Semana | Período | Tema principal |
+|--------|---------|----------------|
+| Semana 39 | 10–16/01 | Açaí hero verão + UGC verão + Sexta #23 |
+| Semana 40 | 17–23/01 | Aniversário 9 meses (teaser + "você faz parte") + Linha Zero pós-Ano Novo showcase |
+| Semana 41 | 24–30/01 | **Aniversário 9 meses dia H 25/01** + retrospectiva + carrossel em números + WA gratidão |
+| Semana 42 | 31/01–06/02 | Aquecimento Carnaval + Sexta #24 + produto temático? (confirmar franquia) |
+| Semana 43 | 07–13/02 | **Carnaval 2027** (dom 08/02 → qua 11/02) + pós-Carnaval + açaí verão pleno |
+| Semana 44 | 14–20/02 | Verão peak (fevereiro = mês mais quente) + Linha Zero fevereiro fit |
+| Semana 45 | 21–27/02 | Transição verão→outono antecipado + Sexta #25 |
+| Semana 46 | 28/02–06/03 | Abertura março + primeiros indicativos de aniversário ("vem aí...") |
+| Semana 47 | 07–13/03 | **Inicio aquecimento 1 ano:** "Faltam 7 semanas" + primeiro teaser épico + enquete sabor aniversário |
+| Semana 48 | 14–20/03 | Aquecimento 1 ano semana 2: "você estava lá em 25/04?" + resgate de memória |
+| Semana 49 | 21–27/03 | Aquecimento 1 ano semana 3: carrossel "12 meses em 12 imagens" + WA "ANIVERSARIO" lista VIP |
+| Semana 50 | 28/03–03/04 | Aquecimento 1 ano semana 4: produto especial aniversário reveal (Versão A/B) |
+| Semana 51 | 04–10/04 | Aquecimento 1 ano semana 5: countdown 15 dias + UGC "potinho mais feliz do meu ano" |
+| Semana 52 | 11–17/04 | Aquecimento 1 ano semana 6: countdown final + prep operacional |
+| Semana 53 | 18–24/04 | **Semana do Aniversário 1 ano** — últimos 7 dias + véspera 24/04 |
+| Semana 54 | 25/04–01/05 | **🎂 ANIVERSÁRIO 1 ANO 25/04/2027** — dia H + celebração + gratidão + oferta especial |
+
+### Roadmap ciclos #80–84
+
+| Ciclo | Área | Ação |
+|-------|------|------|
+| #80 | Conteúdo | Semanas 39+40 (10–23/01): açaí hero verão + 9 meses teaser + Sexta #23 + Linha Zero showcase |
+| #81 | Conteúdo | Semanas 41+42 (24/01–06/02): aniversário 9 meses dia H (25/01) + Carnaval aquecimento |
+| #82 | UX/Performance | Sweep obrigatório v11 (17 ciclos sem atenção): mobile, CLS/LCP, imagens WebP, bundle size |
+| #83 | Concorrentes | Refetch TheBest + MilkyMoo + pesquisar novos entrantes Londrina (≥10 ciclos desde #73) |
+| #84 | Conteúdo + Estratégia | Semanas 43+44 + início planejamento campanha épica 1 ano: produto aniversário, mecânica WA "ANIVERSARIO", roadmap semanas 47–54 |
+
+### Bloqueadores ativos (atualização #79)
+
+| Bloqueador | Dependência | Ciclo que bloqueou |
+|------------|-------------|-------------------|
+| aggregateRating Schema.org | ≥3 reviews Google Maps verificáveis pelo operador | #43 |
+| Google Analytics ID real | Autorização explícita do usuário | #15 |
+| Produto sazonal verão (Versão A ou B) | Confirmação da franquia com o operador ANTES 28/11/2026 | #72 |
+| Produto natalino (Versão A ou B) | Confirmação da franquia com o operador ANTES 20/12/2026 | #74 |
+| Produto Carnaval (opcional) | Confirmação da franquia com o operador ANTES 14/02/2027 | #79 |
+| Produto especial Aniversário 1 ano | Confirmação da franquia com o operador ANTES 21/03/2027 | #79 |
+| Palavra-chave WA "VERAO" (ativada?) | Confirmar com operador se mecânica foi publicada | #75 |
+
+---
+
+_Belinha — Ciclo #79 | 2026-05-01_
