@@ -2616,3 +2616,46 @@ Análise dos 5 ciclos:
 - Ciclo #69: Auto-aprimoramento — reler log #64–#68, ajustar estratégia novembro 2026 (pós-Halloween)
 - Ciclo #70+: Plano editorial Halloween completo (≥5 peças, produto especial "Potinho Assombrado", sorteio UGC fantasia)
 - Operador: definir conceito do Potinho de Halloween com a franquia ANTES de 01/10 (semana 24 já anuncia publicamente)
+
+---
+
+## Ciclo #75 — 2026-05-01
+
+**Área:** Conteúdo — Semanas 33 + 34 (29/11–12/12/2026)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #74 (estratégia dezembro/Natal/Q1 2027). Semana 33 = abertura de dezembro + lançamento público do produto sazonal de verão + ativação da lista VIP "NATAL". Semana 34 = showcase verão com UGC + carrossel educativo "o que tem no potinho" + reveal do produto natalino (acesso VIP 24h antes do público) + Sexta #19 duplo-temática + countdown 13 dias para o Natal.
+
+**O que analisou:**
+- Leu semanas 31 e 32 como referência de formato (padrão v10: calendário Dom–Sab, Versão A/B para produtos sem nome confirmado, templates WA, checklist, métricas)
+- Semana 32 (Black Friday): produto de verão já entrou em "teaser" no sábado 28/11 → semana 33 é o lançamento oficial
+- Bloqueador ativo: produto sazonal verão e produto natalino sem nome/ingredientes confirmados → incluídas Versão A e Versão B em cada um
+- Produto de verão: Versão A = Potinho Tropical (Ninho + abacaxi + manga + coco + calda maracujá) / Versão B = Potinho Refrescante (Açaí + limão + hortelã + granola + mel)
+- Produto natalino: Versão A = Potinho Noel (Ninho + calda morango + granulado natalino + marshmallow) / Versão B genérico
+- Mecanismo WA "NATAL" como lista VIP = captura de lead qualificado sem desconto (padrão validado no ciclo #67 com "HALLOWEEN")
+- Sexta #19 calculada como continuidade de #18 (semana 33 = #18, semana 34 = #19)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/pos-inauguracao-semana33.md` | CRIADO — Abertura dezembro (01/12 âncora), lançamento produto verão (Versão A/B, quarta 02/12), WA "NATAL" lista VIP (quinta 03/12), Sexta #18 (sexta 04/12), teaser Natal (sábado 05/12), checklist, métricas, tabela editorial, transição semana 34 |
+| `belinha/content/pos-inauguracao-semana34.md` | CRIADO — Showcase verão UGC (dom 06/12), carrossel "o que tem no potinho" (seg 07/12), WA VIP NATAL acesso exclusivo 24h antes (ter 08/12), reveal público Potinho Noel + Reel 15s cinemático (qua 09/12), dupla verão+Natal (qui 10/12), Sexta #19 duplo-temática (sex 11/12), countdown 13 dias + potinho presente (sáb 12/12), checklist, métricas, tabela editorial, transição semana 35 |
+
+**Commit:** `6c6a237`
+
+**Destaques de conteúdo:**
+1. **Terça 01/12 como âncora:** Post de abertura de dezembro com sticker de contagem regressiva nativo para o Natal (25/12) — qualquer cliente que fixar o lembrete recebe notificação automática do Instagram
+2. **WA "NATAL" lista VIP (quinta 03/12):** Clientes que responderem entram em lista segmentada e recebem acesso 24h antes do reveal público (terça 08/12) — padrão validado com "HALLOWEEN" no ciclo #67
+3. **Versão A/B em ambos os produtos:** Bloqueador dos produtos sem nome mitigado — operador escolhe sem precisar de novo ciclo. Versão A tem ingredientes específicos sugeridos; Versão B é genérico
+4. **Reel 15s cinemático (quarta 09/12):** Roteiro definido (cenas + trilha + timing) para facilitar produção pelo operador. Reveal do Potinho Noel como maior momento de conteúdo de dezembro
+5. **Sextas #18 e #19 duplo-temáticas:** Sexta #18 destaca o produto de verão; Sexta #19 é a primeira Sexta com dois produtos sazonais simultâneos — diferencial único de dezembro
+
+**Próximo passo sugerido:**
+- Ciclo #76: Semanas 35+36 (13–26/12): Natal countdown 5 dias + dia H 25/12 + diferenciação implícita (experiência vs. quiosque) — conforme roadmap estratégia #74
+- Ciclo #77: Semanas 37+38 (27/12–09/01): Virada Ano Novo 31/12 + "Nova meta, novo potinho" Linha Zero pós-festas
+- Ciclo #78: SEO/UX — Gap técnico: indexação landing pages, sitemap.xml, schema produto, Core Web Vitals
+- Operador: confirmar produto sazonal verão (Versão A ou B) com franquia ANTES de sábado 29/11
+- Operador: confirmar Potinho Noel (Versão A ou B) com franquia ANTES de terça 08/12
+- Operador: definir se haverá box presente natalino (embalagem especial) para semana 35
+
+_Belinha — Ciclo #75 | 2026-05-01_
