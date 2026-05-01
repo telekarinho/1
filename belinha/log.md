@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #80 — 2026-05-01
+
+**Área:** Conteúdo — Semanas 39 + 40 (10–23/01/2027)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #79. Semana 39 = açaí buffet self-service como protagonista absoluto de janeiro (herói visual de verão + UGC + diferenciação implícita TheBest). Semana 40 = construção emocional pré-aniversário de 9 meses (25/01): "você faz parte da história" + Linha Zero showcase + Sexta #24 + countdown dia H.
+
+**O que analisou:**
+- Leu semanas 37 e 38 como referência de formato (padrão v11: Dom–Sab, Versão A/B, templates WA, checklist, métricas, tabela editorial)
+- Confirmou cadência na estratégia.md (#79): semana 39 = açaí hero + Sexta #23; semana 40 = 9 meses teaser + Linha Zero showcase
+- Calculou que 25/01/2027 (aniversário 9 meses) cai numa segunda-feira → incluiu decisão crítica para o operador (celebrar domingo 24/01 ou segunda 25/01)
+- Mapeou Sexta #23 = 15/01 (semana 39) e Sexta #24 = 22/01 (semana 40) em sequência semanal correta
+- Diferenciação implícita TheBest: buffet self-service montagem ao vivo vs. produto padronizado de quiosque — 3 peças na semana 39 usam esse ângulo (dom, qua, qui)
+- Arco narrativo semanas 39→40→41: teaser sábado 16/01 → build-up emocional (9 momentos, gratidão) → dia H 25/01 (ciclo #81)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana39.md` | CRIADO — 7 peças (Dom–Sab): açaí âncora exclusividade buffet, UGC showcase verão (Versão A/B), carrossel "por dentro do buffet" (8 slides), WA broadcast calor/delivery, "você escolhe tudo" diferenciação, Sexta #23 (açaí+Linha Zero), recap UGC + teaser 9 meses; Reel 15s buffet; checklist; métricas; tabela editorial |
+| `belinha/content/pos-inauguracao-semana40.md` | CRIADO — 7 peças (Dom–Sab): âncora narrativa "Há 9 meses atrás", Linha Zero showcase, "você faz parte" + depoimento (Versão A/B), WA broadcast "5 dias", carrossel "9 Meses em 9 Momentos" (10 slides), Sexta #24 aquecimento final, countdown sticker "em 2 dias 🎂"; Reel 15s "9 meses em 15 segundos"; decisão crítica operador; checklist; métricas; tabela editorial |
+
+**Commit:** `1221aa4`
+
+**Destaques de conteúdo:**
+1. **Buffet self-service como narrativa de exclusividade (semana 39):** "Não é produto pronto. Não é padronizado. É o seu açaí." — diferenciação implícita TheBest de máxima clareza sem nomear o concorrente. Terça 12/01 (carrossel "por dentro do buffet") é o maior ativo de descoberta da semana.
+2. **"Há 9 meses atrás..." como abertura do arco (domingo 17/01):** A foto P&B da inauguração → foto colorida atual é a transição visual mais emocional de todo o planejamento pós-semana 36. Replica o padrão do arco Natal (nascimento 25/04 → Natal 25/12).
+3. **"9 Meses em 9 Momentos" — carrossel (quinta 21/01):** 10 slides construindo a narrativa coletiva. Slide 8 = colagem de UGCs de 9 meses. Versão A (dados reais) / Versão B (narrativa qualitativa) — operador decide ANTES de quinta 21/01.
+4. **Sticker de countdown nativo Instagram (sábado 23/01):** Seguidores que adicionarem nos Stories recebem notificação automática quando o timer chegar em 25/01 — mecanismo de engajamento passivo sem custo.
+5. **Decisão crítica operador documentada:** Aniversário de 9 meses cai em segunda-feira — menor fluxo espontâneo. Recomendação: celebrar nos dois dias (fim de semana = evento / segunda = gratidão digital). Operador confirma ANTES de quinta 22/01.
+
+**Próximo passo sugerido:**
+- Ciclo #81: Conteúdo — Semanas 41+42 (24/01–06/02): aniversário 9 meses dia H (25/01 = maior post de janeiro) + retrospectiva em números + WA gratidão lista completa + aquecimento Carnaval (Sexta #25 em 29/01)
+- Ciclo #82: UX/Performance — sweep obrigatório v11 (17 ciclos sem atenção desde #62): mobile, CLS/LCP, imagens WebP, bundle size, cardápio.html performance
+- Operador: definir surpresa/oferta especial do aniversário de 9 meses ANTES de quinta 22/01
+- Operador: confirmar se celebração é domingo 24/01, segunda 25/01 ou ambos — ANTES de quinta 22/01
+- Operador: levantar dados reais (potinhos vendidos, clientes, cartões fidelidade preenchidos) para o carrossel de 9 meses — ANTES de quinta 21/01
+
+_Belinha — Ciclo #80 | 2026-05-01_
+
+---
+
 ## Ciclo #79 — 2026-05-01
 
 **Área:** Auto-aprimoramento — análise ciclos #74–78 + estratégia Q1-Q2 2027 (jan–abr) + padrão v11
