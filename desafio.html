@@ -1011,6 +1011,11 @@ var tvAutoStart=false;
 var lastWheelPrize=null;
 var audioCtx=null;
 var tensionTimer=null;
+var catalogPrizeContext=null;
+var tvVoucherUnsub=null;
+var tvClaimingVoucher=false;
+var urlParams=new URLSearchParams(window.location.search||'');
+var isStoreTvMode=(window.innerWidth>=900)&&!urlParams.has('manual')&&!urlParams.has('delivery')&&!urlParams.has('gratis');
 
 document.getElementById('attCount').textContent=attempts;
 
@@ -1030,12 +1035,13 @@ btns.forEach(function(b){var d=b.dataset.diff;if(DIFF[d]){var lbl=b.querySelecto
 var prizeConfig={exact:'1 MilkyPot Gratis!',close50:'10% de desconto no proximo pedido!',close200:'5% de desconto no proximo pedido!',enabled:true,instagramBonus:true,instagramHandle:'@milkypot',instagramExtraChances:3,attemptsPerPurchase:1,requireVoucher:true,freeMaxPerDay:1,freeConditionNote:'Premio valido APENAS com a compra de hoje na loja',freeBannerText:'🎁 Promocao: jogue gratis! Se ganhar, traga sua compra hoje pra resgatar.',freeExact:'',freeClose50:'',freeClose200:''};
 var isFreeMode=false;
 var wheelPrizes=[
-{tier:'baixo',weight:70,name:'Copinho de sorvete',note:'Premio garantido da Roda da Ovelhinha'},
-{tier:'medio',weight:10,name:'Picole',note:'Premio medio liberado'},
-{tier:'medio',weight:10,name:'100g de buffet',note:'Premio medio liberado'},
-{tier:'alto',weight:4,name:'150g de buffet',note:'Premio raro da rodada'},
-{tier:'alto',weight:3,name:'Milk pequeno',note:'Premio raro da rodada'},
-{tier:'alto',weight:3,name:'Desconto surpresa maior',note:'Premio raro da rodada'}
+{tier:'baixo',weight:45,name:'Copinho de sorvete na proxima compra acima de R$ 20',note:'Baixo custo, puxa retorno rapido',rule:{type:'bonus_item',category:'sorvete',minOrder:20}},
+{tier:'baixo',weight:25,name:'Compre 2 picoles e ganhe +1',note:'Aumenta ticket e mantem margem',rule:{type:'buy_x_get_y',category:'picole',buyQty:2,freeQty:1,minOrder:20}},
+{tier:'medio',weight:10,name:'100g de buffet na proxima compra acima de R$ 30',note:'Premio medio com compra obrigatoria',rule:{type:'buffet_grams',grams:100,minOrder:30}},
+{tier:'medio',weight:10,name:'Compre um Milkshake G e ganhe um P',note:'Cliente compra o maior para ganhar o menor',rule:{type:'variant_bonus',category:'milkshake',paidVariant:'G',freeVariant:'P',minOrder:30}},
+{tier:'alto',weight:4,name:'150g de buffet na proxima compra acima de R$ 35',note:'Premio raro, com ticket minimo',rule:{type:'buffet_grams',grams:150,minOrder:35}},
+{tier:'alto',weight:3,name:'30% OFF na proxima compra acima de R$ 40',note:'Raro, desconto limitado para proteger margem',rule:{type:'percent_discount',percent:30,minOrder:40,maxDiscount:10}},
+{tier:'alto',weight:3,name:'Compra em dobro: compre 1 item e leve outro de menor valor',note:'Raro, valido para item de menor valor ate R$ 10',rule:{type:'double_purchase',minOrder:35,maxFreeValue:10}}
 ];
 
 if(typeof firebase!=='undefined'){
@@ -1142,6 +1148,18 @@ var bannerText=document.getElementById('freeModeBannerText');
 var bannerNote=document.getElementById('freeModeBannerNote');
 var attInfo=document.getElementById('voucherAttemptsInfo');
 
+if(isStoreTvMode){
+if(voucherWrap) voucherWrap.style.display='none';
+if(voucherStatus) voucherStatus.style.display='';
+if(voucherHelper) voucherHelper.style.display='none';
+if(btnValidate) btnValidate.style.display='none';
+if(btnGoToPhoto) btnGoToPhoto.style.display='none';
+if(playerInfo) playerInfo.style.display='none';
+if(banner) banner.style.display='none';
+setTvReleaseStatus('Aguardando liberacao do PDV...');
+return;
+}
+
 if(isFreeMode){
 /* Esconde voucher input, status, helper e botao validar */
 if(voucherWrap) voucherWrap.style.display='none';
@@ -1208,14 +1226,107 @@ if(remaining<1200) tone(freq*1.5,0.04,'triangle',0.035,0.05);
 }
 function stopTensionSound(){if(tensionTimer){clearInterval(tensionTimer);tensionTimer=null}}
 
-function rollWheelPrize(){
-var total=wheelPrizes.reduce(function(s,p){return s+p.weight},0);
-var r=Math.random()*total;
-for(var i=0;i<wheelPrizes.length;i++){
-r-=wheelPrizes[i].weight;
-if(r<=0) return wheelPrizes[i];
+function formatMoneyBR(v){return 'R$ '+Number(v||0).toFixed(2).replace('.',',')}
+function cleanProductName(name){return String(name||'').replace(/^\d+\.\s*/,'').trim()}
+function productPrice(p){
+var prices=[];
+if(p&&p.precos&&p.precos.loja) prices.push(Number(p.precos.loja.real||p.precos.loja.recomendado||0));
+(p&&p.variantes||[]).forEach(function(v){prices.push(Number(v.precoLoja||0))});
+(p&&p.kits||[]).forEach(function(k){prices.push(Number(k.precoLoja||0))});
+prices=prices.filter(function(n){return n>0});
+return prices.length?Math.min.apply(null,prices):0;
 }
-return wheelPrizes[0];
+function readDataStoreDocValue(doc){
+if(!doc||!doc.exists) return null;
+var d=doc.data()||{};
+if(typeof d.value==='string'){
+try{return JSON.parse(d.value)}catch(e){return null}
+}
+return d;
+}
+function buildCatalogPrizeContext(catalog){
+var products=((catalog&&catalog.produtos)||[]).filter(function(p){return p&&p.active!==false});
+var byCat=function(cat){return products.filter(function(p){return p.categoriaId===cat})};
+var milkshakes=byCat('cat_milkshake');
+var picoles=byCat('cat_picole');
+var buffet=byCat('cat_buffet').filter(function(p){return p.buffet&&p.buffet.ativo});
+var milkG=milkshakes.find(function(p){return (p.variantes||[]).some(function(v){return /\bG\b|500|600/i.test(v.name||'')})})||milkshakes[0]||null;
+var milkP=milkshakes.find(function(p){return (p.variantes||[]).some(function(v){return /\bP\b|250/i.test(v.name||'')})})||milkG;
+var picole=picoles[0]||null;
+var buffetProduct=buffet[0]||null;
+return {
+milkshakeName: cleanProductName(milkG&&milkG.name)||'Milkshake',
+milkshakeSmallName: cleanProductName(milkP&&milkP.name)||'Milkshake P',
+picoleName: cleanProductName(picole&&picole.name)||'picole',
+buffetName: cleanProductName(buffetProduct&&buffetProduct.name)||'buffet',
+picolePrice: productPrice(picole)||3,
+hasBuffet: !!buffetProduct,
+hasPicole: !!picole,
+hasMilkshake: !!milkG
+};
+}
+function applyCatalogToPrize(p){
+var ctx=catalogPrizeContext||{};
+var prize=Object.assign({},p,{rule:Object.assign({},p.rule||{})});
+if(prize.rule.category==='picole'){
+prize.name=prize.name.replace(/picoles/ig,ctx.picoleName?ctx.picoleName+'s':'picoles').replace(/picole/ig,ctx.picoleName||'picole');
+}
+if(prize.rule.category==='milkshake'){
+prize.name='Compre um '+(ctx.milkshakeName||'Milkshake')+' G e ganhe um P';
+}
+if(prize.rule.type==='buffet_grams' && ctx.buffetName){
+prize.name=prize.rule.grams+'g de '+ctx.buffetName+' na proxima compra acima de '+formatMoneyBR(prize.rule.minOrder);
+}
+if(prize.rule.type==='percent_discount'){
+prize.name=prize.rule.percent+'% OFF na proxima compra acima de '+formatMoneyBR(prize.rule.minOrder);
+prize.note='Desconto limitado a '+formatMoneyBR(prize.rule.maxDiscount)+' para proteger margem';
+}
+if(prize.rule.type==='double_purchase'){
+prize.name='Compra em dobro: compre 1 item e leve outro de menor valor';
+prize.note='Valido para item de menor valor ate '+formatMoneyBR(prize.rule.maxFreeValue);
+}
+return prize;
+}
+function getWheelPrizes(){
+return wheelPrizes.map(applyCatalogToPrize);
+}
+function loadCatalogPrizeContext(franchiseId){
+catalogPrizeContext=null;
+if(!db||!franchiseId) return Promise.resolve(null);
+return db.collection('datastore').doc('catalog_v2_'+franchiseId).get()
+.then(function(doc){
+var catalog=readDataStoreDocValue(doc);
+if(catalog&&catalog.produtos&&catalog.produtos.length){
+catalogPrizeContext=buildCatalogPrizeContext(catalog);
+return catalogPrizeContext;
+}
+return db.collection('datastore').doc('catalog_config').get().then(function(doc2){
+var legacy=readDataStoreDocValue(doc2);
+var products=[];
+if(legacy&&legacy.sabores){
+Object.keys(legacy.sabores).forEach(function(k){
+((legacy.sabores[k]&&legacy.sabores[k].items)||[]).forEach(function(item){
+products.push({name:item.name,categoriaId:k.indexOf('milk')!==-1?'cat_milkshake':k.indexOf('picole')!==-1?'cat_picole':k.indexOf('buffet')!==-1?'cat_buffet':'cat_'+k,active:item.active!==false,precos:{loja:{real:item.price||item.preco||0}},buffet:{ativo:k.indexOf('buffet')!==-1}});
+});
+});
+}
+catalogPrizeContext=buildCatalogPrizeContext({produtos:products});
+return catalogPrizeContext;
+});
+}).catch(function(e){
+console.warn('Catalog prize context unavailable:',e);
+return null;
+});
+}
+function rollWheelPrize(){
+var prizes=getWheelPrizes();
+var total=prizes.reduce(function(s,p){return s+p.weight},0);
+var r=Math.random()*total;
+for(var i=0;i<prizes.length;i++){
+r-=prizes[i].weight;
+if(r<=0) return prizes[i];
+}
+return prizes[0];
 }
 function showWheelPrize(prize){
 lastWheelPrize=prize;
@@ -1366,6 +1477,17 @@ document.getElementById('playerPhone').value=formatted;
 }
 }
 /* Show player info and switch buttons */
+if(isStoreTvMode){
+document.getElementById('voucherPlayerInfo').style.display='none';
+document.getElementById('btnValidateVoucher').style.display='none';
+document.getElementById('btnGoToPhoto').style.display='none';
+setTvReleaseStatus('Liberado para '+(data.customerName||'cliente')+'!');
+if(opts.autoStart){
+tvAutoStart=true;
+startValidatedChallenge(true);
+}
+return;
+}
 document.getElementById('voucherPlayerInfo').style.display='';
 document.getElementById('voucherAttemptsInfo').textContent='🎟️ '+remaining+' tentativa'+(remaining>1?'s':'')+' restante'+(remaining>1?'s':'');
 document.getElementById('btnValidateVoucher').style.display='none';
@@ -1636,6 +1758,7 @@ try{
 var fbEntry={name:playerN,phone:playerPhone,elapsed:elapsed,target:gameTarget,difficulty:gameDifficulty,
 diff:Math.abs(gameTarget-elapsed),won:abs===0,attempts:attempts,date:new Date().toISOString(),
 prizeName:wheelPrize.name,prizeTier:wheelPrize.tier,prizeSource:'roda_ovelinha'};
+if(wheelPrize.rule) fbEntry.prizeRule=wheelPrize.rule;
 if(playerProduct) fbEntry.product=playerProduct;
 if(notifOptedIn) fbEntry.notifyOnBeat=true;
 if(isFreeMode){fbEntry.freeMode=true;fbEntry.prizeConditional=true}
@@ -1644,6 +1767,7 @@ if(activeVoucherCode){
 db.collection('desafio_vouchers').doc(activeVoucherCode).update({
 lastPrizeName:wheelPrize.name,
 lastPrizeTier:wheelPrize.tier,
+lastPrizeRule:wheelPrize.rule||null,
 lastPrizeAt:new Date().toISOString()
 });
 }
@@ -2496,16 +2620,13 @@ el.style.color=isError?'#FF0040':'#5A4570';
 
 function claimNextTvVoucher(){
 ensureAudio();
-if(isFreeMode){
-showStep(0);
-document.getElementById('playerName').focus();
-return;
-}
 if(!db){
 showStep(0);
-setTvReleaseStatus('Sem conexao com o PDV. Use o codigo manual como reserva.',true);
+setTvReleaseStatus('Sem conexao com o PDV. Aguardando sincronizar...',true);
 return;
 }
+if(tvClaimingVoucher) return;
+tvClaimingVoucher=true;
 showStep(0);
 setTvReleaseStatus('Procurando liberacao do PDV...');
 db.collection('desafio_vouchers').orderBy('createdAt','desc').limit(20).get().then(function(snap){
@@ -2519,7 +2640,8 @@ picked=d;pickedId=doc.id;
 }
 });
 if(!picked){
-setTvReleaseStatus('Nenhum desafio liberado ainda. Peca para o atendente liberar no PDV.',true);
+setTvReleaseStatus('Aguardando liberacao do PDV...');
+tvClaimingVoucher=false;
 return;
 }
 setTvReleaseStatus('Liberado para '+(picked.customerName||'cliente')+'!');
@@ -2527,20 +2649,38 @@ try{
 db.collection('desafio_vouchers').doc(pickedId).update({status:'in_progress',tvAcceptedAt:new Date().toISOString()});
 picked.status='in_progress';
 }catch(e){}
+loadCatalogPrizeContext(picked.franchiseId).then(function(){
 processVoucherResult(picked,pickedId,{autoStart:true});
+tvClaimingVoucher=false;
+});
 }).catch(function(err){
 console.error('TV voucher lookup error:',err);
-setTvReleaseStatus('Nao consegui buscar a liberacao. Use o codigo manual como reserva.',true);
+setTvReleaseStatus('Nao consegui buscar a liberacao. Aguardando PDV...',true);
+tvClaimingVoucher=false;
 });
+}
+
+function watchTvVoucherRelease(){
+if(!isStoreTvMode||!db||tvVoucherUnsub) return;
+try{
+tvVoucherUnsub=db.collection('desafio_vouchers').orderBy('createdAt','desc').limit(10).onSnapshot(function(){
+if(activeVoucher||gameState==='running'||gameState==='done') return;
+claimNextTvVoucher();
+},function(err){console.warn('TV voucher watch:',err)});
+setTvReleaseStatus('Aguardando liberacao do PDV...');
+}catch(e){console.warn('watchTvVoucherRelease:',e)}
 }
 
 /* Touch to start */
 document.getElementById('stepAttract').addEventListener('click',function(){
-stopAttract();claimNextTvVoucher();
+stopAttract();
+if(isStoreTvMode){showStep(0);setTvReleaseStatus('Aguardando liberacao do PDV...');watchTvVoucherRelease();return}
+showStep(0);document.getElementById('playerName').focus();
 });
 
 /* Start attract mode */
 startAttract();
+watchTvVoucherRelease();
 
 /* Auto-return to attract after 60s inactivity */
 var idleTimer;
