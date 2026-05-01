@@ -2,6 +2,50 @@
 
 ---
 
+## Ciclo #81 — 2026-05-01
+
+**Área:** Conteúdo — Semanas 41 + 42 (24/01–06/02/2027)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #80. Semana 41 = aniversário de 9 meses dia H (25/01 = segunda-feira) + retrospectiva "9 meses em números" + WA gratidão lista completa + Sexta #25 (29/01) + primeiro teaser Carnaval. Semana 42 = abertura de fevereiro + mecânica WA "CARNAVAL" lista VIP + carrossel "Tipos de Carnavaleiro" + balanço janeiro + teaser/reveal produto temático + Sexta #26 (05/02) + countdown 22 dias Carnaval.
+
+**O que analisou:**
+- Leu semanas 39 e 40 como referência de formato (padrão v11: Dom–Sab, Versão A/B, templates WA, checklist, métricas, tabela editorial)
+- Confirmou cadência na estratégia.md (#79): semana 41 = 9 meses dia H + gratidão + Carnaval teaser; semana 42 = WA "CARNAVAL" + build-up + Sexta #26
+- Mapeou Sexta #25 = 29/01 (semana 41) e Sexta #26 = 05/02 (semana 42) em sequência correta
+- Identificou mecânica WA "CARNAVAL" como padrão validado (igual "HALLOWEEN" ciclo #67 e "NATAL" ciclo #74) — captura de lead qualificado sem desconto
+- Aniversário 9 meses em segunda-feira → decisão crítica operador já prescrita na semana 40 (confirmar até quinta 22/01)
+- Carnaval 28/02: 27 dias da semana 42 → tempo suficiente para build-up em 3 semanas (42, 43, 44)
+- Diferenciação implícita TheBest: semana 41 foca em celebração/comunidade; semana 42 foca em personalização ("seu bloco particular" no açaí)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana41.md` | CRIADO — 7 peças (Dom–Sab): véspera 24/01 (evento fim de semana), dia H 25/01 (post âncora + WA VIP 9h + WA geral 10h + oferta especial + Reel ao vivo), retrospectiva carrossel "9 meses em números" 26/01 (10 slides, Versão A dados reais / Versão B qualitativo), WA gratidão pós-dia H 27/01, teaser Carnaval 28/01, Sexta #25 "Primeira pós-aniversário" 29/01, teaser Carnaval leve "Fevereiro chegando" 30/01; Reel 15s dia H; checklist; métricas; tabela editorial |
+| `belinha/content/pos-inauguracao-semana42.md` | CRIADO — 7 peças (Dom–Sab): balanço janeiro/abertura fevereiro 31/01, lançamento WA "CARNAVAL" lista VIP + resposta automática 01/02, carrossel "Tipos de Carnavaleiro" 6 slides 02/02, showcase UGC janeiro + Linha Zero encerramento 03/02, teaser/reveal produto Carnaval (Versão A confirmado / Versão B genérico) + WA VIP exclusivo 04/02, Sexta #26 "Carnaval no horizonte" 05/02, countdown "22 dias" + sticker countdown nativo 28/02 06/02; Reel 15s "Bloco do MilkyPot"; checklist; métricas; tabela editorial |
+
+**Commit:** `e0ea395`
+
+**Destaques de conteúdo:**
+1. **Dia H 25/01 = maior post de janeiro:** 3 camadas de WA (VIP 9h, geral 10h, feed 11h) + Stories ao longo do dia + oferta especial. O slide do carrossel de terça com dados reais (Versão A) é a maior peça de prova social desde a inauguração.
+2. **Carrossel "9 Meses em Números" (26/01):** 10 slides com Versão A (dados reais: potinhos, clientes, cartões) e Versão B (qualitativo). Slide 10 planta a semente do 1 ano (25/04/2027) — "3 meses. Algo épico vindo."
+3. **Mecânica WA "CARNAVAL" (01/02):** Padrão idêntico ao "HALLOWEEN" e "NATAL" — clientes mandam palavra-chave, entram em lista segmentada, recebem acesso antecipado. Meta: ≥30 VIPs até sexta 05/02.
+4. **Carrossel "Tipos de Carnavaleiro" (02/02):** 6 slides de identificação/humor — alta probabilidade de compartilhamento orgânico entre amigos (expansão de alcance sem custo). Cada tipo tem um potinho correspondente.
+5. **Sticker countdown nativo 28/02 (06/02):** Seguidores que adicionarem recebem notificação automática no dia do Carnaval — mecanismo passivo de engajamento de alto retorno.
+
+**Próximo passo sugerido:**
+- Ciclo #82: **UX/Performance sweep obrigatório** (prescrito padrão v11 — 17+ ciclos sem atenção desde #62): mobile first, CLS/LCP, imagens WebP, bundle size, cardápio.html performance. NÃO pode ser adiado.
+- Ciclo #83: Conteúdo — Semanas 43+44 (07–20/02): build-up máximo Carnaval + produto temático (se confirmado) + Sexta #27 (12/02) + véspera Carnaval (27/02)
+- Ciclo #84: Concorrentes — refetch TheBest + MilkyMoo + novos entrantes Londrina + planejamento campanha épica aniversário 1 ano
+- Operador: definir oferta especial do aniversário de 9 meses ANTES de quinta 22/01
+- Operador: confirmar celebração domingo 24/01 ou segunda 25/01 (ou ambos) ANTES de quinta 22/01
+- Operador: levantar dados reais (potinhos, clientes, cartões) para carrossel terça 26/01 — ANTES de segunda 25/01
+- Operador: confirmar produto/topping temático Carnaval com a franquia ANTES de 14/02 (prazo duro)
+
+_Belinha — Ciclo #81 | 2026-05-01_
+
+---
+
 ## Ciclo #80 — 2026-05-01
 
 **Área:** Conteúdo — Semanas 39 + 40 (10–23/01/2027)
