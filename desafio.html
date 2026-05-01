@@ -782,7 +782,7 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 </div>
 </div>
 <div class="attract-feed" id="attractFeed"></div>
-<div class="attract-cta" id="attractCta">&#128073; Toque na tela quando o atendente liberar!</div>
+<div class="attract-cta" id="attractCta">&#128073; Toque na tela para jogar!</div>
 <!-- Hidden containers for JS -->
 <div id="tournamentSection" style="display:none"><div id="tournamentCountdown"></div><div id="tournamentList"></div></div>
 <div id="attractGlobalRanking" style="display:none"><div id="attractGlobalList"></div></div>
@@ -794,7 +794,7 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 <img src="images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
 <h1 class="main-title" id="mainTitle">Desafio 10 MilkyPot</h1>
 <p class="main-sub" id="mainSub">Pare o cronometro em <strong style="color:#FF0040">exatamente 5, 10 ou 30 segundos</strong> e ganhe premio!</p>
-<div class="tv-release-status" id="tvReleaseStatus">Aguardando liberacao do PDV...</div>
+<div class="tv-release-status" id="tvReleaseStatus" style="display:none">Aguardando liberacao do PDV...</div>
 
 <!-- Free Mode Banner (mostrado quando admin libera acesso sem codigo) -->
 <div id="freeModeBanner" style="display:none;max-width:520px;width:100%;background:linear-gradient(135deg,#FFF5E8 0%,#FFE8D1 100%);border:2px dashed #FF9F43;border-radius:16px;padding:16px 20px;margin:8px 0 16px;text-align:center;box-shadow:0 4px 16px rgba(255,159,67,0.15)">
@@ -873,17 +873,17 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 <div class="difficulty-wrap" id="diffWrap">
 <button class="diff-btn" data-diff="easy" onclick="selectDifficulty('easy')">
 <div class="diff-icon">&#128994;</div>
-<div>Facil</div>
+<div>Molezinha</div>
 <div class="diff-label">5 segundos</div>
 </button>
 <button class="diff-btn active" data-diff="medium" onclick="selectDifficulty('medium')">
 <div class="diff-icon">&#128993;</div>
-<div>Medio</div>
+<div>Suadinho</div>
 <div class="diff-label">10 segundos</div>
 </button>
 <button class="diff-btn" data-diff="hard" onclick="selectDifficulty('hard')">
 <div class="diff-icon">&#128308;</div>
-<div>Impossivel</div>
+<div>Modo Lenda</div>
 <div class="diff-label">30 segundos</div>
 </button>
 </div>
@@ -1015,7 +1015,11 @@ var catalogPrizeContext=null;
 var tvVoucherUnsub=null;
 var tvClaimingVoucher=false;
 var urlParams=new URLSearchParams(window.location.search||'');
-var isStoreTvMode=(window.innerWidth>=900)&&!urlParams.has('manual')&&!urlParams.has('delivery')&&!urlParams.has('gratis');
+/* TV mode opt-in EXPLICITO via ?tv=1 (ou ?kiosk=1).
+   Detectar por largura de tela quebrava clientes em desktop em casa. */
+var isStoreTvMode=(urlParams.has('tv')||urlParams.has('kiosk'))
+   &&!urlParams.has('manual')&&!urlParams.has('delivery')&&!urlParams.has('gratis');
+var tvFranchiseId=urlParams.get('franchise')||urlParams.get('fid')||'';
 
 document.getElementById('attCount').textContent=attempts;
 
@@ -1825,25 +1829,11 @@ if(gameConfig.reactionVideo&&recordedChunks.length>0) document.getElementById('v
 if(gameConfig.notifications) document.getElementById('notifOptin').style.display='';
 
 /* === PRIZE DISPLAY === */
+/* Premio agora vem da Roda da Ovelhinha (todo mundo ganha algo).
+   prizeWonDisplay (premio fixo por proximidade) fica oculto — substituido pela roda. */
 showWheelPrize(wheelPrize);
 var prizeDisplay=document.getElementById('prizeWonDisplay');
-var prizeText=document.getElementById('prizeWonText');
 prizeDisplay.style.display='none';
-/* Em modo gratis, prefere prizeConfig.freeXxx (se preenchido) — isso forca textos condicionais a compra */
-var prizeExact=(isFreeMode && prizeConfig.freeExact)?prizeConfig.freeExact:prizeConfig.exact;
-var prizeC50=(isFreeMode && prizeConfig.freeClose50)?prizeConfig.freeClose50:prizeConfig.close50;
-var prizeC200=(isFreeMode && prizeConfig.freeClose200)?prizeConfig.freeClose200:prizeConfig.close200;
-if(false && abs===0 && prizeExact){
-prizeDisplay.style.display='';
-prizeText.textContent=prizeExact;
-prizeDisplay.style.borderColor='rgba(255,215,0,0.4)';
-} else if(false && abs<=50 && prizeC50){
-prizeDisplay.style.display='';
-prizeText.textContent=prizeC50;
-} else if(false && abs<=200 && prizeC200){
-prizeDisplay.style.display='';
-prizeText.textContent=prizeC200;
-}
 /* Nota de condicao (so aparece em modo gratis com premio) */
 var prizeNote=document.getElementById('prizeWonNote');
 if(prizeNote){
@@ -2047,7 +2037,7 @@ ctx.font='bold 20px Nunito,sans-serif';ctx.fillStyle='rgba(255,255,255,0.6)';
 ctx.fillText(playerN,300,250);
 /* Difficulty */
 ctx.font='bold 14px Nunito,sans-serif';ctx.fillStyle='rgba(255,255,255,0.3)';
-ctx.fillText('Alvo: '+fmt(gameTarget)+'ms | Dificuldade: '+(gameDifficulty==='easy'?'Facil':gameDifficulty==='hard'?'Impossivel':'Medio'),300,290);
+ctx.fillText('Alvo: '+fmt(gameTarget)+'ms | Dificuldade: '+(gameDifficulty==='easy'?'Molezinha':gameDifficulty==='hard'?'Modo Lenda':'Suadinho'),300,290);
 /* Footer */
 ctx.font='bold 12px Nunito,sans-serif';ctx.fillStyle='rgba(255,255,255,0.2)';
 ctx.fillText('milkypot.com/desafio.html',300,370);
@@ -2275,8 +2265,15 @@ return;
 if(activeVoucher){
 var rem=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
 if(rem<=0){
-/* No more attempts, go back to voucher input */
+/* No more attempts */
 activeVoucher=null;activeVoucherCode=null;
+/* TV mode: marca voucher como usado e volta pra attract pra proxima liberacao do PDV */
+if(isStoreTvMode){
+showStep('Attract');
+startAttract();
+setTvReleaseStatus('Aguardando liberacao do PDV...');
+return;
+}
 document.getElementById('voucherInput').value='';
 document.getElementById('voucherInput').classList.remove('valid');
 document.getElementById('voucherCheck').classList.remove('show');
@@ -2429,7 +2426,9 @@ mediaHtml+
 '<div class="attract-card-val '+(c.cls||'')+'">'+c.val+'</div>'+
 '<div style="font-size:clamp(11px,1.5vw,14px);color:rgba(90,69,112,0.4);margin-top:6px">'+c.copy+'</div>'+
 '</div>';
-var ctas=['Toque quando o atendente liberar!','Desafio liberado pelo PDV','Sem teclado na TV: so toque!','Quem sera o proximo?','Peca sua liberacao no caixa!'];
+var ctas=isStoreTvMode
+?['Toque quando o atendente liberar!','Desafio liberado pelo PDV','Sem teclado na TV: so toque!','Quem sera o proximo?','Peca sua liberacao no caixa!']
+:['Toque na tela para jogar!','Voce consegue acertar?','Desafie seus amigos!','Quem sera o proximo?','Toque aqui e tente!'];
 document.getElementById('attractCta').textContent=ctas[attractIdx%ctas.length];
 }
 
@@ -2613,6 +2612,7 @@ stopDemoCounter();
 function setTvReleaseStatus(msg,isError){
 var el=document.getElementById('tvReleaseStatus');
 if(!el)return;
+el.style.display='';
 el.textContent=msg;
 el.style.background=isError?'rgba(255,0,64,0.10)':'rgba(66,165,245,0.12)';
 el.style.color=isError?'#FF0040':'#5A4570';
@@ -2635,6 +2635,8 @@ snap.forEach(function(doc){
 if(picked)return;
 var d=doc.data();
 var remaining=(d.attempts||0)-(d.attemptsUsed||0);
+/* Multi-tenancy: so aceita vouchers da propria franquia da TV */
+if(tvFranchiseId && d.franchiseId && d.franchiseId!==tvFranchiseId) return;
 if(d.tvReady===true && d.status==='ready' && !d.used && remaining>0){
 picked=d;pickedId=doc.id;
 }

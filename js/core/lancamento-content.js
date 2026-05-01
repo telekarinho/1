@@ -20,8 +20,8 @@ const LancamentoContent = {
         whatsappLink: 'https://wa.me/5543998042424',
         site: 'milkypot.com',
         horario: '14h às 23h',
-        launchDate: '2026-04-25',
-        launchDateLabel: '25/04/2026 (sábado)',
+        launchDate: '2026-04-23',
+        launchDateLabel: '23/04/2026 (quinta)',
         instagram: '@milkypotbr',
         produtos: [
             'Potinho personalizado (base Ninho / Açaí / Zero-Fit)',
@@ -60,10 +60,10 @@ milkypot.com`,
     // ========================================
     calendar: [
         {
-            dateISO: '2026-04-22',
+            dateISO: '2026-04-20',
             dayLabel: 'D-3',
-            dayName: 'Quarta-feira',
-            dateLabel: '22/04',
+            dayName: 'Segunda-feira',
+            dateLabel: '20/04',
             theme: 'SETUP + PRIMEIROS POSTS',
             mood: '🚀 Começar agora',
             items: [
@@ -106,7 +106,7 @@ Arrasta pro lado e descobre tudo que a gente trouxe:
 🧁 Milkshakes cremosos
 🍫 Cacau
 
-📅 Inauguração: SÁBADO 25/04 às 14h
+📅 Inauguração: QUINTA 23/04 às 14h
 📍 Av. Quintino Bocaiuva, 1045 — dentro do Muffato
 📲 (43) 99804-2424 · milkypot.com
 
@@ -129,11 +129,11 @@ Qual desses você quer provar primeiro? Comenta 👇`,
 5-10s: Ovelha "andando" por pontos de Londrina (Calçadão, Catedral) em montagem rápida
 10-14s: Ovelha chega na fachada da MilkyPot no Muffato
 14-17s: Corte para potinho sendo montado
-Final: "25/04 · Muffato Quintino Bocaiuva"`,
+Final: "23/04 · Muffato Quintino Bocaiuva"`,
                     audio: 'Trend BR de "apresentação misteriosa" / "algo chegando" (buscar em áudios em alta no Reels)',
                     caption: `Londrina, prepara o coração 🐑💗
 
-A coisa mais fofa que já vimos tá chegando sábado (25/04) dentro do Muffato da Quintino Bocaiuva.
+A coisa mais fofa que já vimos tá chegando quinta (23/04) dentro do Muffato da Quintino Bocaiuva.
 
 Salva esse post. Quem tá ansioso bate palma 👇`,
                     hashtags: '#milkypot #londrina #londrinapr #sobremesalondrina #acailondrina #curtalondrina #londrinafood #euamolondrina #londrinacity #gastronomialondrina #doceriadelondrina #muffato #novidadeslondrina #milkypotlondrina #potinhomaisfelizdomundo'
@@ -175,11 +175,11 @@ Salva esse post. Quem tá ansioso bate palma 👇`,
                     description: 'Script pronto para abordar 30 microinfluencers de Londrina (foodies, mães, universitários).',
                     script: `Oi [NOME], tudo bem?
 
-Aqui é da MilkyPot, uma nova sorveteria/açaiteria que inaugura sábado (25/04) dentro do Muffato da Quintino Bocaiuva, aqui em Londrina.
+Aqui é da MilkyPot, uma nova sorveteria/açaiteria que inaugura quinta (23/04) dentro do Muffato da Quintino Bocaiuva, aqui em Londrina.
 
 Acompanho seu conteúdo e acho que a vibe combina muito com a nossa — ovelhinha mascote, potinho montado do zero, estética fofa.
 
-Queria te mandar um kit degustação quinta (23/04) pra você experimentar ANTES da abertura. Sem compromisso de post — mas se curtir de verdade, adoraria um story marcando @milkypotbr.
+Queria te mandar um kit degustação terça (21/04) pra você experimentar ANTES da abertura. Sem compromisso de post — mas se curtir de verdade, adoraria um story marcando @milkypotbr.
 
 Também vou te incluir como VIP na inauguração (furar fila + potinho cortesia no dia).
 
@@ -202,10 +202,10 @@ Topa? Me passa um endereço que a ovelhinha entrega aí 🐑
             ]
         },
         {
-            dateISO: '2026-04-23',
+            dateISO: '2026-04-21',
             dayLabel: 'D-2',
-            dayName: 'Quinta-feira',
-            dateLabel: '23/04',
+            dayName: 'Terça-feira',
+            dateLabel: '21/04',
             theme: 'SEEDING + HYPE',
             mood: '🔥 Ativar tração',
             items: [
@@ -228,7 +228,7 @@ Topa? Me passa um endereço que a ovelhinha entrega aí 🐑
                     audio: 'ASMR natural do produto (sem música) OU trend de "oddly satisfying"',
                     caption: `AVISO: esse vídeo pode causar fome extrema 🚨🍓
 
-É isso que te espera quando a MilkyPot abrir as portas sábado (25/04) no Muffato da Quintino Bocaiuva 👀
+É isso que te espera quando a MilkyPot abrir as portas quinta-feira (23/04) no Muffato da Quintino Bocaiuva 👀
 
 Calda escorrendo, biscoito quebradinho, fruta fresquinha, chocolate derretendo... tudo MONTADO POR VOCÊ do jeito que sua vontade mandar 💗
 
@@ -256,7 +256,7 @@ descobre arrastando pro lado — e comenta o emoji da tua tribo pra ovelhinha de
 
 (spoiler: aqui tu pode ser de várias no mesmo dia)
 
-📅 SÁBADO 25/04 · 14h
+📅 QUINTA 23/04 · 14h
 📍 Muffato — Av. Quintino Bocaiuva, 1045 · Londrina
 📲 (43) 99804-2424 · milkypot.com
 
@@ -312,13 +312,13 @@ Custo unitário: R$35-50. Total 25 kits: ~R$1.100.`
                     title: '📢 Invadir 10 grupos locais de WhatsApp/Facebook',
                     priority: 'high',
                     description: 'Presença em grupos de bairros do Gleba Palhano, UEL, condomínios, mães.',
-                    script: `Galera, eu sou [NOME] e nessa sábado (25/04) vou abrir uma sorveteria/açaiteria chamada MilkyPot dentro do Muffato da Quintino Bocaiuva.
+                    script: `Galera, eu sou [NOME] e nessa quinta (23/04) vou abrir uma sorveteria/açaiteria chamada MilkyPot dentro do Muffato da Quintino Bocaiuva.
 
 A gente trabalha com potinhos personalizados (você monta do zero: ninho, açaí, milkshake + toppings livres), açaí buffet, picolé artesanal, sorvete, casquinha e milkshake.
 
 Vou deixar 10 cupons de TOPPING GRÁTIS pros primeiros que responderem "EU QUERO" no meu privado.
 
-Inauguração sábado 14h. Se puderem dar uma força compartilhando, já ajuda demais 💗`,
+Inauguração quinta 14h. Se puderem dar uma força compartilhando, já ajuda demais 💗`,
                     instructions: 'Regra dos 4 Ps: Presença prévia (entrar 24-48h antes), Pessoalidade (1ª pessoa), Pedido de ajuda (londrinense adora ajudar), Presente (cupom antes de pedir algo). Não fazer spam do mesmo texto em vários grupos simultaneamente — dar pelo menos 2h de intervalo.'
                 },
                 {
@@ -340,17 +340,17 @@ Inauguração sábado 14h. Se puderem dar uma força compartilhando, já ajuda d
 • Praças de alimentação
 
 Texto do cartão:
-"Scaneia, segue e ganha topping grátis na inauguração dia 25/04 no Muffato da Quintino Bocaiuva. A Lana te espera 🐑"
+"Scaneia, segue e ganha topping grátis na inauguração dia 23/04 no Muffato da Quintino Bocaiuva. A Lana te espera 🐑"
 
 Custo: ~R$75 (500 cartões A6)`
                 }
             ]
         },
         {
-            dateISO: '2026-04-24',
+            dateISO: '2026-04-22',
             dayLabel: 'D-1',
-            dayName: 'Sexta-feira',
-            dateLabel: '24/04',
+            dayName: 'Quarta-feira',
+            dateLabel: '22/04',
             theme: 'VÉSPERA — FECHAR O HYPE',
             mood: '⚡ Última chamada',
             items: [
@@ -385,12 +385,12 @@ quem vai tá aqui no dia da inauguração? deixa um 🐑 nos comentários pra La
                     title: '📸 Carrossel: "TUDO sobre a inauguração"',
                     priority: 'high',
                     description: 'Carrossel final com todas as informações práticas + urgência.',
-                    caption: `É SÁBADO, LONDRINA 🎉🐑
+                    caption: `É QUINTA, LONDRINA 🎉🐑
 
 a MilkyPot finalmente abre no Muffato da Quintino Bocaiuva e a ovelhinha não tá sabendo o que fazer da ansiedade 🙈💗
 
 arrasta pra ver TUDO:
-📅 sábado 25/04 · 14h
+📅 quinta 23/04 · 14h
 📍 Av. Quintino Bocaiuva, 1045 — dentro do Muffato
 🎁 100 primeiros ganham brinde + pulseira numerada + chance do POTE DOURADO
 🍡 potinho personalizado · 🍇 açaí buffet · 🍭 picolé · 🍦 sorvete · 🧁 milkshake · 🍫 cacau
@@ -470,10 +470,10 @@ Digital:
             ]
         },
         {
-            dateISO: '2026-04-25',
+            dateISO: '2026-04-23',
             dayLabel: 'DIA-D',
-            dayName: 'Sábado',
-            dateLabel: '25/04',
+            dayName: 'Quinta-feira',
+            dateLabel: '23/04',
             theme: '🎉 INAUGURAÇÃO OFICIAL',
             mood: '🚀 É AGORA',
             items: [
@@ -598,10 +598,10 @@ boa noite, Londrina 🌙`,
             ]
         },
         {
-            dateISO: '2026-04-26',
+            dateISO: '2026-04-24',
             dayLabel: 'D+1',
-            dayName: 'Domingo',
-            dateLabel: '26/04',
+            dayName: 'Sexta-feira',
+            dateLabel: '24/04',
             theme: 'CONSOLIDAÇÃO + UGC',
             mood: '💪 Manter o ritmo',
             items: [
@@ -656,10 +656,10 @@ Chama o crush, a mãe, a melhor amiga... Londrina, a Lana quer ver vocês em dup
             ]
         },
         {
-            dateISO: '2026-04-27',
+            dateISO: '2026-04-25',
             dayLabel: 'D+2',
-            dayName: 'Segunda-feira',
-            dateLabel: '27/04',
+            dayName: 'Sábado',
+            dateLabel: '25/04',
             theme: 'PICO DE MOVIMENTO',
             mood: '☀️ Bombar no final de semana',
             items: [
@@ -691,10 +691,10 @@ vem viver o seu POV de sábado aqui também. a Lana tá esperando 💗
             ]
         },
         {
-            dateISO: '2026-04-28',
+            dateISO: '2026-04-26',
             dayLabel: 'D+3',
-            dayName: 'Terça-feira',
-            dateLabel: '28/04',
+            dayName: 'Domingo',
+            dateLabel: '26/04',
             theme: 'FECHAR SEMANA 1',
             mood: '💗 Agradecer',
             items: [
@@ -732,7 +732,7 @@ obrigada, Londrina. isso é só o começo 💗
             id: 'conheca',
             title: 'Conheça a MilkyPot',
             purpose: 'Apresentar o mix completo de produtos (topo de funil)',
-            bestDay: 'Quarta 22/04 - 12h30',
+            bestDay: 'Segunda 20/04 - 12h30',
             caption: `Londrina, deixa a gente se apresentar 🐑✨
 
 A MilkyPot chegou no Muffato da Quintino Bocaiuva com O Potinho Mais Feliz do Mundo — e muito mais que isso.
@@ -745,7 +745,7 @@ Arrasta pro lado e descobre tudo que a gente trouxe:
 🧁 Milkshakes cremosos
 🍫 Cacau
 
-📅 Inauguração: SÁBADO 25/04 às 14h
+📅 Inauguração: QUINTA 23/04 às 14h
 📍 Av. Quintino Bocaiuva, 1045 — dentro do Muffato
 📲 (43) 99804-2424 · milkypot.com
 
@@ -785,8 +785,8 @@ Qual desses você quer provar primeiro? Comenta 👇`,
                 {
                     num: 6,
                     role: 'CTA final',
-                    copy: 'CHEGA DIA 25/04 👇 · 📍 Muffato Quintino Bocaiuva 1045 · 🕑 14h-23h · 📲 (43) 99804-2424',
-                    prompt: `Same reference DNA. 1080x1350 Instagram 4:5. Hero scene: the cloud-sheep mascot center-stage, arms wide open in welcome, holding a tiny wooden signboard that says "25/04" in cute hand-painted letters. A soft glowing downward arrow made of floating sparkles points below the mascot. Pastel confetti rain (pink, lilac, mint, butter, peach) falls gently around. Warm inviting atmosphere. Top bold rounded text: "CHEGA DIA 25/04" in raspberry pink #E63F7E. Info block bottom third: "📍 Muffato — Quintino Bocaiuva, 1045" / "🕑 14h às 23h · todos os dias" / "📲 (43) 99804-2424 · milkypot.com". Keep absolute bottom 20% text-free.`
+                    copy: 'CHEGA DIA 23/04 👇 · 📍 Muffato Quintino Bocaiuva 1045 · 🕑 14h-23h · 📲 (43) 99804-2424',
+                    prompt: `Same reference DNA. 1080x1350 Instagram 4:5. Hero scene: the cloud-sheep mascot center-stage, arms wide open in welcome, holding a tiny wooden signboard that says "23/04" in cute hand-painted letters. A soft glowing downward arrow made of floating sparkles points below the mascot. Pastel confetti rain (pink, lilac, mint, butter, peach) falls gently around. Warm inviting atmosphere. Top bold rounded text: "CHEGA DIA 23/04" in raspberry pink #E63F7E. Info block bottom third: "📍 Muffato — Quintino Bocaiuva, 1045" / "🕑 14h às 23h · todos os dias" / "📲 (43) 99804-2424 · milkypot.com". Keep absolute bottom 20% text-free.`
                 }
             ]
         },
@@ -794,7 +794,7 @@ Qual desses você quer provar primeiro? Comenta 👇`,
             id: 'tribo',
             title: 'Qual Tribo MilkyPot é a sua?',
             purpose: 'Quiz de engajamento (alto volume de comentários)',
-            bestDay: 'Quinta 23/04 - 19h30',
+            bestDay: 'Terça 21/04 - 19h30',
             caption: `diz qual é, Londrina: qual tribo MilkyPot combina com VOCÊ? 🐑✨
 
 descobre arrastando pro lado — e comenta o emoji da tua tribo pra ovelhinha descobrir quem é quem por aqui 👀💗
@@ -807,7 +807,7 @@ descobre arrastando pro lado — e comenta o emoji da tua tribo pra ovelhinha de
 
 (spoiler: aqui tu pode ser de várias no mesmo dia)
 
-📅 SÁBADO 25/04 · 14h
+📅 QUINTA 23/04 · 14h
 📍 Muffato — Av. Quintino Bocaiuva, 1045 · Londrina
 📲 (43) 99804-2424 · milkypot.com
 
@@ -847,8 +847,8 @@ comenta sua tribo 👇`,
                 {
                     num: 6,
                     role: 'Time Zero/Fit + CTA',
-                    copy: 'E TEM MAIS: TIME ZERO/FIT 💪 · pro foco que não abre mão do doce · comenta tua tribo 👇 · 25/04 Muffato',
-                    prompt: 'Same DNA. DOMINANT COLOR: peach #FFCBA4. Cloud-sheep doing mini workout pose lifting pastel dumbbell while holding zero-sugar dessert pot with clean creamy layers, fruit and protein granola. Peach sweatband on head. Energetic sparkles. Top "E TEM MAIS:" small then "TIME ZERO/FIT 💪" bold large. Bottom "comenta tua tribo 👇 · 25/04 · Muffato Quintino Bocaiuva".'
+                    copy: 'E TEM MAIS: TIME ZERO/FIT 💪 · pro foco que não abre mão do doce · comenta tua tribo 👇 · 23/04 Muffato',
+                    prompt: 'Same DNA. DOMINANT COLOR: peach #FFCBA4. Cloud-sheep doing mini workout pose lifting pastel dumbbell while holding zero-sugar dessert pot with clean creamy layers, fruit and protein granola. Peach sweatband on head. Energetic sparkles. Top "E TEM MAIS:" small then "TIME ZERO/FIT 💪" bold large. Bottom "comenta tua tribo 👇 · 23/04 · Muffato Quintino Bocaiuva".'
                 }
             ]
         },
@@ -856,13 +856,13 @@ comenta sua tribo 👇`,
             id: 'tudo',
             title: 'TUDO sobre a inauguração',
             purpose: 'Conversão máxima com todas as informações práticas',
-            bestDay: 'Sexta 24/04 - 19h30',
-            caption: `É SÁBADO, LONDRINA 🎉🐑
+            bestDay: 'Quarta 22/04 - 19h30',
+            caption: `É QUINTA, LONDRINA 🎉🐑
 
 a MilkyPot finalmente abre no Muffato da Quintino Bocaiuva e a ovelhinha não tá sabendo o que fazer da ansiedade 🙈💗
 
 arrasta pra ver TUDO:
-📅 sábado 25/04 · 14h
+📅 quinta 23/04 · 14h
 📍 Av. Quintino Bocaiuva, 1045 — dentro do Muffato
 🎁 100 primeiros ganham brinde + pulseira numerada + chance do POTE DOURADO
 🍡 potinho personalizado · 🍇 açaí buffet · 🍭 picolé · 🍦 sorvete · 🧁 milkshake · 🍫 cacau
@@ -871,9 +871,9 @@ arrasta pra ver TUDO:
 salva esse post, ativa o sininho, chama a galera — a Lana te espera 🐑💕`,
             hashtags: '#milkypot #londrina #londrinapr #inauguracao #sobremesalondrina #acailondrina #sorveterialondrina #curtalondrina #londrinafood #comidalondrina #novidadeslondrina #potinhomaisfelizdomundo #milkypotlondrina #muffato #gastronomialondrina #pracomerlondrina #doceriaLondrina #picolelondrina #milkshakelondrina #londrinense',
             slides: [
-                { num: 1, role: 'CAPA', copy: 'LONDRINA, É SÁBADO! · 25/04 · 14h · abertura oficial', prompt: '3D claymation 1080x1350. Cloud-sheep mascot arms raised celebrating, confetti explosion in full pastel palette (pink/lilac/mint/butter/peach), cream-to-pink gradient, floating ice cream cones. Top "LONDRINA, É SÁBADO!" raspberry pink, "25/04 · 14h" in lilac, tag "abertura oficial" in mint.' },
+                { num: 1, role: 'CAPA', copy: 'LONDRINA, É QUINTA! · 23/04 · 14h · abertura oficial', prompt: '3D claymation 1080x1350. Cloud-sheep mascot arms raised celebrating, confetti explosion in full pastel palette (pink/lilac/mint/butter/peach), cream-to-pink gradient, floating ice cream cones. Top "LONDRINA, É QUINTA!" raspberry pink, "23/04 · 14h" in lilac, tag "abertura oficial" in mint.' },
                 { num: 2, role: 'ONDE', copy: '📍 Av. Quintino Bocaiuva, 1045 · dentro do Muffato — Londrina/PR', prompt: 'Same DNA. Giant 3D candy-pink map pin glossy clay, cute supermarket building at base labeled "MUFFATO" on mint awning, cloud-sheep pointing at pin happily. Top "ONDE?" raspberry pink.' },
-                { num: 3, role: 'QUANDO', copy: '🗓️ SÁBADO 25/04 a partir das 14h · todo dia 14h às 23h', prompt: 'Same DNA. Oversized cute 3D wall clock in glossy lilac with pink face, hour hand at 2PM, kawaii face on clock. Cloud-sheep next to it holding calendar page "25/04". Top "QUANDO?" raspberry pink.' },
+                { num: 3, role: 'QUANDO', copy: '🗓️ QUINTA 23/04 a partir das 14h · todo dia 14h às 23h', prompt: 'Same DNA. Oversized cute 3D wall clock in glossy lilac with pink face, hour hand at 2PM, kawaii face on clock. Cloud-sheep next to it holding calendar page "23/04". Top "QUANDO?" raspberry pink.' },
                 { num: 4, role: 'PROMO (hero)', copy: 'OS 100 PRIMEIROS GANHAM: 🎁 topping surpresa · 🎀 pulseira numerada · 🏆 chance de achar o POTE DOURADO', prompt: 'Same DNA with GOLDEN accent added. Shiny metallic GOLDEN ice-cream pot glowing center with warm light rays, pastel pink wristband tag "007" one side, gift box with lilac ribbon exploding toppings other side, cloud-sheep peeking excited. Extra dreamy/magical feel. Top "OS 100 PRIMEIROS GANHAM:" raspberry pink.' },
                 { num: 5, role: 'CARDÁPIO', copy: '🍡 potinho · 🍇 açaí buffet · 🍭 picolé · 🍦 sorvete · 🧁 milkshake · 🍫 cacau', prompt: 'Same DNA. Soft 3x2 grid of six clay product illustrations in pastel circles (alternating pink/lilac/mint/butter/peach/cream): 1) custom dessert pot 2) açaí bowl with toppings 3) rainbow popsicle 4) two-scoop cone 5) milkshake glass 6) cacao bar with pod. Tiny cloud-sheep waving from top-left corner. Top "O QUE VAI TER:" raspberry pink.' },
                 { num: 6, role: 'CTA', copy: 'SALVA ESSE POST E VEM COM A GENTE 👇 · 🌐 milkypot.com · 💬 (43) 99804-2424', prompt: 'Same DNA. Cloud-sheep center waving at viewer with big warm smile, holding tiny smartphone showing heart and bookmark icon, soft confetti, faint glowing downward arrow. Top "SALVA ESSE POST E VEM COM A GENTE" raspberry pink. Contact info in lilac/mint above safe zone.' }
@@ -913,7 +913,7 @@ LORE: Lana era uma ovelha-nuvem que vivia num campo de algodão-doce no céu. Ca
             { tier: 1, id: 'l3', title: 'Cobrança de cliente que prometeu', format: 'estático', description: 'Print fake de WhatsApp com Lana mandando 47 mensagens não respondidas. Última: "ok". só "ok".', caption: 'ele disse que vinha terça. hoje é sexta. eu sou uma ovelha pequena.' },
             { tier: 1, id: 'l4', title: 'Lana fazendo scroll no TikTok do cliente', format: 'reel', description: 'Cena da ovelha com mini celular fazendo scroll obsessivo. Plot twist: ela tá assistindo cliente comer açaí em outra loja.', caption: 'eu vi o seu story. eu vi o topping.' },
             { tier: 1, id: 'l5', title: 'Ovelhinha invade corredor do Muffato', format: 'reel', description: 'Pessoa fantasiada de Lana aparecendo atrás de cliente real no supermercado. "Você esqueceu alguma coisa??" enquanto câmera foca no potinho.', caption: '5-10 versões com reações diferentes (autorizar cada cliente)' },
-            { tier: 1, id: 'l6', title: 'Carta de amor da Lana pro cliente #1', format: 'reel', description: 'Voz AI lendo carta dramática sobre "como foi conhecer você em 25/04".', caption: 'não estou surtada. você que não entende.' },
+            { tier: 1, id: 'l6', title: 'Carta de amor da Lana pro cliente #1', format: 'reel', description: 'Voz AI lendo carta dramática sobre "como foi conhecer você em 23/04".', caption: 'não estou surtada. você que não entende.' },
             { tier: 1, id: 'l7', title: 'Cenas que não vão pro story oficial', format: 'reel', description: 'Lana caótica: cheirando pote vazio, chorando na geladeira, dançando funk às 3h, surtando com topping faltando. Compilation 30s.', caption: 'bastidores que não passaram pela comunicação' },
             { tier: 1, id: 'l8', title: 'Clientes que a Lana "perdoou"', format: 'reel', description: 'Cliente fala "eu fui na [concorrente] uma vez e..." + corte pra Lana balançando cabeça dolorida. Final: cliente volta, Lana chora.', caption: 'fecha com influencer' },
             { tier: 1, id: 'l9', title: 'Tipos de cliente pela ótica da Lana', format: 'reel', description: 'Ela rankeia: "o fiel" (sorrisão), "o indeciso" (suspiro), "o que pede pouco topping" (olhar traição), "o que vai na concorrente" (tela preta).', caption: 'qual tipo você é? comenta' },
@@ -1009,7 +1009,7 @@ e decidi ficar.
 
 agora eu moro aqui. faço sobremesa. espero você chegar.
 
-a gente abre sábado, vinte e cinco de abril, às duas da tarde. se você não aparecer... eu vou ficar bem. provavelmente.
+a gente abre quinta, vinte e três de abril, às duas da tarde. se você não aparecer... eu vou ficar bem. provavelmente.
 
 mas vem. por favor.
 
@@ -1018,7 +1018,7 @@ mas vem. por favor.
 
 eu contei. três vezes. só pra ter certeza.
 
-sábado, vinte e cinco de abril, às duas da tarde, no Muffato da Quintino Bocaiuva.
+quinta, vinte e três de abril, às duas da tarde, no Muffato da Quintino Bocaiuva.
 
 se você esquecer, tudo bem. eu lembro por você.
 
@@ -1027,7 +1027,7 @@ eu lembro de TUDO.` },
 
 tudo bem? tá ocupado? eu também. muito. super. absurdamente ocupada.
 
-só queria lembrar que eu abri uma sorveteria na sábado e você ainda não confirmou se vai.
+só queria lembrar que eu abri uma sorveteria na quinta-feira e você ainda não confirmou se vai.
 
 mas não precisa se preocupar comigo. eu tô derretendo aqui. mas tudo bem.
 
@@ -1176,12 +1176,12 @@ te espero 🎂🐑` }
     ],
     adsCopies: {
         inauguracao: [
-            { headline: 'Londrina, chegou sua vez de personalizar o doce dos sonhos', body: `Faltam poucos dias. A MilkyPot abre na sábado (25/04) dentro do Muffato da Quintino Bocaiuva.\n\nVocê monta do zero: base ninho, açaí ou milkshake + toppings à vontade.\n\nMarque quem você vai levar 👇`, cta: 'Saiba Mais' },
-            { headline: 'A ovelhinha mais fofa de Londrina te espera', body: `SPOILER: uma sorveteria de potinhos personalizados acabou de pousar em Londrina.\n\nCreme ninho, açaí, milkshake. Morango, nutella, paçoca, ovomaltine, brigadeiro, kitkat, leite ninho em pó.\n\nVocê escolhe TUDO. A gente só serve com amor.\n\nInauguração sábado (25/04) no Muffato.`, cta: 'Como Chegar' },
-            { headline: 'Você vai ser um dos primeiros a provar', body: `Londrina, presta atenção.\n\nOs primeiros 100 clientes da inauguração vão ter:\n🎁 topping surpresa\n🎀 pulseira numerada\n🏆 chance de achar o POTE DOURADO\n\nData: sábado 25/04, 14h. Muffato Quintino Bocaiuva.`, cta: 'Saiba Mais' }
+            { headline: 'Londrina, chegou sua vez de personalizar o doce dos sonhos', body: `Faltam poucos dias. A MilkyPot abre na quinta-feira (23/04) dentro do Muffato da Quintino Bocaiuva.\n\nVocê monta do zero: base ninho, açaí ou milkshake + toppings à vontade.\n\nMarque quem você vai levar 👇`, cta: 'Saiba Mais' },
+            { headline: 'A ovelhinha mais fofa de Londrina te espera', body: `SPOILER: uma sorveteria de potinhos personalizados acabou de pousar em Londrina.\n\nCreme ninho, açaí, milkshake. Morango, nutella, paçoca, ovomaltine, brigadeiro, kitkat, leite ninho em pó.\n\nVocê escolhe TUDO. A gente só serve com amor.\n\nInauguração quinta (23/04) no Muffato.`, cta: 'Como Chegar' },
+            { headline: 'Você vai ser um dos primeiros a provar', body: `Londrina, presta atenção.\n\nOs primeiros 100 clientes da inauguração vão ter:\n🎁 topping surpresa\n🎀 pulseira numerada\n🏆 chance de achar o POTE DOURADO\n\nData: quinta 23/04, 14h. Muffato Quintino Bocaiuva.`, cta: 'Saiba Mais' }
         ],
         cupons: [
-            { headline: '20% OFF no seu primeiro potinho', code: 'INAUGURA20', validity: 'Até domingo (28/04)', body: `Cupom de boas-vindas ativo.\n\nValido só para os primeiros clientes da MilkyPot em Londrina.\n\nEscolha a base, escolha os toppings, manda no WhatsApp ou no milkypot.com com o cupom.` },
+            { headline: '20% OFF no seu primeiro potinho', code: 'INAUGURA20', validity: 'Até domingo (26/04)', body: `Cupom de boas-vindas ativo.\n\nValido só para os primeiros clientes da MilkyPot em Londrina.\n\nEscolha a base, escolha os toppings, manda no WhatsApp ou no milkypot.com com o cupom.` },
             { headline: 'Topping grátis na inauguração', code: 'OVELHINHA', validity: 'Semana de inauguração', body: `1 topping premium grátis no seu primeiro pote (Nutella, Kitkat ou Leite Ninho).\n\nSó falar o código no WhatsApp ou na loja. Até domingo.` },
             { headline: 'Combo Casal 2x1', code: 'CASAL2x1', validity: 'Sex/Sáb/Dom', body: `2 potinhos médios pelo preço de 1.\n\nChama o crush, a mãe, a melhor amiga.\n\nSó vale de sexta a domingo.` }
         ]
@@ -1191,10 +1191,10 @@ te espero 🎂🐑` }
     // IMPRENSA
     // ========================================
     pressRelease: {
-        subject: 'PARA DIVULGAÇÃO IMEDIATA — 22/04/2026',
-        title: 'Londrina ganha primeira sorveteria de potinho 100% personalizado no Muffato: MilkyPot inaugura sábado (25/04)',
+        subject: 'PARA DIVULGAÇÃO IMEDIATA — 20/04/2026',
+        title: 'Londrina ganha primeira sorveteria de potinho 100% personalizado no Muffato: MilkyPot inaugura quinta-feira (23/04)',
         subtitle: 'Franquia nacional aposta em tendência de sobremesas montadas na hora, gera empregos diretos e estreia com mascote própria — uma ovelhinha que já virou personagem nas redes sociais.',
-        body: `LONDRINA, 22/04/2026 — Londrina passa a contar, a partir desta sábado (25/04), com uma nova unidade da MilkyPot, rede nacional especializada em potinhos personalizados. A loja inaugura no Av. Quintino Bocaiuva, 1045, dentro do supermercado Muffato, trazendo um conceito que vem movimentando grandes capitais brasileiras: o cliente monta sua própria sobremesa escolhendo entre três bases (creme de leite ninho, açaí e linha Zero/Fit) e uma carta com mais de 20 toppings.
+        body: `LONDRINA, 20/04/2026 — Londrina passa a contar, a partir desta quinta-feira (23/04), com uma nova unidade da MilkyPot, rede nacional especializada em potinhos personalizados. A loja inaugura no Av. Quintino Bocaiuva, 1045, dentro do supermercado Muffato, trazendo um conceito que vem movimentando grandes capitais brasileiras: o cliente monta sua própria sobremesa escolhendo entre três bases (creme de leite ninho, açaí e linha Zero/Fit) e uma carta com mais de 20 toppings.
 
 Além dos potinhos, a unidade de Londrina oferece açaí buffet self-service, picolés artesanais, sorvetes, casquinhas, milkshakes e linha de produtos com cacau.
 
@@ -1204,7 +1204,7 @@ A MilkyPot também estará disponível para delivery em toda Londrina via WhatsA
 
 SERVIÇO
 • O quê: Inauguração MilkyPot — Sorveteria e Açaiteria com Potinho Personalizado
-• Quando: Sábado, 25/04/2026, a partir das 14h
+• Quando: Quinta-feira, 23/04/2026, a partir das 14h
 • Onde: Av. Quintino Bocaiuva, 1045 — dentro do Muffato — Londrina-PR
 • Pedidos: WhatsApp (43) 99804-2424 ou milkypot.com
 • Instagram: @milkypotbr
@@ -1256,7 +1256,7 @@ LancamentoContent.rotina = {
         {
             mes: 1,
             label: 'MÊS 1 · CONSOLIDAÇÃO',
-            periodo: '25/04 a 22/05',
+            periodo: '23/04 a 22/05',
             theme: 'Transformar curiosos em clientes recorrentes',
             cor: '#E63F7E',
             objetivos: [
