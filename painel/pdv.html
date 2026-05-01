@@ -689,7 +689,7 @@
     <div class="pdv-cart">
         <div class="cart-head">
             <h2>🛒 Pedido</h2>
-            <input type="text" id="orderName" placeholder="👤 Nome do pedido (ex: Mesa 3, João, Comanda 5...)" style="width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:8px;font-size:12px;margin-top:6px;font-weight:600;">
+            <input type="text" id="orderName" placeholder="👤 Nome do cliente para liberar o desafio" style="width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:8px;font-size:12px;margin-top:6px;font-weight:600;">
             <div class="cart-type" style="margin-top:6px;">
                 <button class="ct-btn active" data-type="balcao" onclick="setType('balcao')">🏪 Balcao</button>
                 <button class="ct-btn" data-type="retirada" onclick="setType('retirada')">📦 Retirada</button>
@@ -697,7 +697,7 @@
             </div>
         </div>
         <div class="cart-cust" id="custF">
-            <input type="tel" id="cPhone" placeholder="WhatsApp (opcional)">
+            <input type="tel" id="cPhone" placeholder="WhatsApp do desafio">
             <input type="text" id="cAddr" placeholder="Endereco completo">
         </div>
 
@@ -951,10 +951,10 @@
 <div class="modal-bg" id="voucherModal" style="z-index:2000">
     <div style="background:#fff;border-radius:20px;padding:32px 28px;text-align:center;max-width:420px;width:90%;box-shadow:0 12px 48px rgba(0,0,0,0.25);animation:winIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275)">
         <div style="font-size:48px;margin-bottom:8px">🎟️</div>
-        <div style="font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;color:#6C63FF;margin-bottom:4px">Desafio 10 Segundos!</div>
-        <div style="font-size:13px;color:#888;margin-bottom:16px">Informe este codigo ao cliente para jogar o Desafio 10 Segundos!</div>
+        <div style="font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;color:#6C63FF;margin-bottom:4px">Desafio liberado na TV!</div>
+        <div style="font-size:13px;color:#888;margin-bottom:16px">Nome e WhatsApp foram enviados. Na TV, toque na tela para iniciar sem teclado.</div>
         <div id="voucherCodeDisplay" style="font-family:'Orbitron',monospace,'Courier New',monospace;font-size:clamp(32px,6vw,48px);font-weight:900;color:#FF0040;letter-spacing:4px;padding:16px 24px;background:linear-gradient(135deg,#FFF5F7,#F5F0FF);border:3px dashed #FF0040;border-radius:16px;margin-bottom:16px;user-select:all"></div>
-        <div style="font-size:12px;color:#aaa;margin-bottom:16px">O cliente digita este codigo em milkypot.com/desafio.html</div>
+        <div style="font-size:12px;color:#aaa;margin-bottom:16px">Codigo mantido apenas como reserva, caso precise validar manualmente.</div>
         <button onclick="closeVoucherModal()" style="background:linear-gradient(135deg,#6C63FF,#5A52E0);color:#fff;border:none;padding:12px 40px;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">OK</button>
     </div>
 </div>
@@ -3337,7 +3337,20 @@
             usedDefaultPin: !!window._cartDiscount.usedDefaultPin
         } : null;
         var total = Math.max(0, Math.round((subtotal - discountAmount) * 100) / 100);
-        var oName=document.getElementById('orderName').value||(orderType==='balcao'?'Balcao':'');
+        var oName=(document.getElementById('orderName').value||'').trim();
+        var customerPhoneEl = document.getElementById('cPhone');
+        var customerPhone = customerPhoneEl ? customerPhoneEl.value : '';
+        var customerPhoneDigits = customerPhone.replace(/\D/g,'');
+        if(!oName){
+            toast('Informe o nome do cliente para liberar o desafio na TV.');
+            document.getElementById('orderName').focus();
+            return;
+        }
+        if(customerPhoneDigits.length < 10){
+            toast('Informe o WhatsApp do cliente para liberar o desafio.');
+            if(customerPhoneEl) customerPhoneEl.focus();
+            return;
+        }
 
         // === DESAFIO VOUCHER GENERATION (generate FIRST so we can save with order) ===
         var voucherCode = 'MP' + Date.now().toString(36).toUpperCase().slice(-4) + Math.random().toString(36).toUpperCase().slice(2,4);
@@ -3345,7 +3358,6 @@
         var attemptsPerPurchase = parseInt(localStorage.getItem('mp_desafio_attempts_per_purchase') || '1');
 
         // === RASPINHA DA SORTE V2 — anti-prejuízo + anti-fraude ===
-        var customerPhone = document.getElementById('cPhone') ? document.getElementById('cPhone').value : '';
         var customerKey = (customerPhone || oName || '').replace(/\D/g, '').slice(-11) || null;
         var scratchData = null;
         var scratchCheck = shouldEmitScratch(total, customerKey);
@@ -3625,10 +3637,15 @@
             orderSource: 'pdv',
             customerName: oName || '',
             customerPhone: order.customer.phone || '',
+            customerPhoneDigits: customerPhoneDigits,
             franchiseId: fid,
             attempts: attemptsPerPurchase,
             attemptsUsed: 0,
             instagramBonusUsed: false,
+            status: 'ready',
+            tvReady: true,
+            releasedBy: (typeof currentUser !== 'undefined' && currentUser && currentUser.id) ? currentUser.id : null,
+            releasedAt: new Date().toISOString(),
             createdAt: new Date().toISOString(),
             lastUsedAt: null,
             used: false

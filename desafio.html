@@ -124,6 +124,41 @@ color:rgba(90,69,112,0.4);margin-top:8px;text-align:center;
 }
 .counter-target span{color:#42A5F5}
 
+.tv-release-status{
+margin:10px 0 12px;
+padding:10px 16px;
+border-radius:18px;
+background:rgba(66,165,245,0.12);
+color:#5A4570;
+font-size:clamp(13px,1.7vw,18px);
+font-weight:800;
+text-align:center;
+max-width:560px;
+}
+.wheel-card{
+display:none;
+background:linear-gradient(135deg,rgba(255,255,255,0.95),rgba(245,240,255,0.95));
+border:2px solid rgba(255,0,64,0.18);
+border-radius:20px;
+padding:16px 20px;
+margin:8px 0 12px;
+text-align:center;
+max-width:430px;
+width:100%;
+box-shadow:0 10px 32px rgba(90,69,112,0.12);
+}
+.wheel-title{font-family:'Baloo 2',cursive;font-size:clamp(20px,3vw,30px);font-weight:800;color:#FF0040;line-height:1}
+.wheel-spin{
+width:120px;height:120px;border-radius:50%;margin:12px auto;
+display:flex;align-items:center;justify-content:center;
+font-size:44px;background:conic-gradient(#FFE082 0 25%,#FF8A80 0 45%,#B39DDB 0 70%,#90CAF9 0 100%);
+border:8px solid #fff;box-shadow:0 8px 24px rgba(90,69,112,0.18);
+}
+.wheel-spin.spinning{animation:wheelSpin 1.3s cubic-bezier(.15,.8,.2,1)}
+@keyframes wheelSpin{from{transform:rotate(0deg) scale(.92)}to{transform:rotate(1080deg) scale(1)}}
+.wheel-prize{font-size:clamp(17px,2.5vw,24px);font-weight:900;color:#5A4570}
+.wheel-note{font-size:12px;color:rgba(90,69,112,0.55);margin-top:4px}
+
 /* Player name display */
 .player-name-display{
 font-size:clamp(16px,2.5vw,28px);font-weight:800;
@@ -747,7 +782,7 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 </div>
 </div>
 <div class="attract-feed" id="attractFeed"></div>
-<div class="attract-cta" id="attractCta">&#128073; Toque na tela para jogar!</div>
+<div class="attract-cta" id="attractCta">&#128073; Toque na tela quando o atendente liberar!</div>
 <!-- Hidden containers for JS -->
 <div id="tournamentSection" style="display:none"><div id="tournamentCountdown"></div><div id="tournamentList"></div></div>
 <div id="attractGlobalRanking" style="display:none"><div id="attractGlobalList"></div></div>
@@ -759,6 +794,7 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 <img src="images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
 <h1 class="main-title" id="mainTitle">Desafio 10 MilkyPot</h1>
 <p class="main-sub" id="mainSub">Pare o cronometro em <strong style="color:#FF0040">exatamente 5, 10 ou 30 segundos</strong> e ganhe premio!</p>
+<div class="tv-release-status" id="tvReleaseStatus">Aguardando liberacao do PDV...</div>
 
 <!-- Voucher code input -->
 <div class="voucher-input-wrap">
@@ -867,6 +903,12 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 <div class="result-diff-badge" id="resultDiffBadge"></div>
 <div class="result-msg" id="resultMsg"></div>
 <div class="result-sub" id="resultSub"></div>
+<div class="wheel-card" id="wheelCard">
+<div class="wheel-title">Roda da Ovelhinha</div>
+<div class="wheel-spin" id="wheelSpin">&#127873;</div>
+<div class="wheel-prize" id="wheelPrizeText"></div>
+<div class="wheel-note" id="wheelPrizeNote">Mostre para o atendente validar o premio.</div>
+</div>
 <!-- Prize won display -->
 <div id="prizeWonDisplay" style="display:none;background:rgba(255,255,255,0.9);border:2px solid rgba(200,162,232,0.3);border-radius:16px;padding:14px 20px;margin:8px 0 12px;text-align:center;max-width:400px;width:100%">
 <div style="font-size:11px;font-weight:800;color:#9B59B6;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">&#127873; Voce Ganhou</div>
@@ -959,6 +1001,10 @@ var reactionVideoBlob=null;
 var notifOptedIn=false;
 var db=null;
 var storage=null;
+var tvAutoStart=false;
+var lastWheelPrize=null;
+var audioCtx=null;
+var tensionTimer=null;
 
 document.getElementById('attCount').textContent=attempts;
 
@@ -976,6 +1022,14 @@ btns.forEach(function(b){var d=b.dataset.diff;if(DIFF[d]){var lbl=b.querySelecto
 
 /* ========== FIREBASE INIT ========== */
 var prizeConfig={exact:'1 MilkyPot Gratis!',close50:'10% de desconto no proximo pedido!',close200:'5% de desconto no proximo pedido!',enabled:true,instagramBonus:true,instagramHandle:'@milkypot',instagramExtraChances:3,attemptsPerPurchase:1};
+var wheelPrizes=[
+{tier:'baixo',weight:70,name:'Copinho de sorvete',note:'Premio garantido da Roda da Ovelhinha'},
+{tier:'medio',weight:10,name:'Picole',note:'Premio medio liberado'},
+{tier:'medio',weight:10,name:'100g de buffet',note:'Premio medio liberado'},
+{tier:'alto',weight:4,name:'150g de buffet',note:'Premio raro da rodada'},
+{tier:'alto',weight:3,name:'Milk pequeno',note:'Premio raro da rodada'},
+{tier:'alto',weight:3,name:'Desconto surpresa maior',note:'Premio raro da rodada'}
+];
 
 if(typeof firebase!=='undefined'){
 if(firebase.firestore) db=firebase.firestore();
@@ -1031,6 +1085,70 @@ function toggleEl(id,show){var e=document.getElementById(id);if(e) e.style.displ
 function fmtTarget(ms){return (ms/1000).toFixed(3).replace(/\.?0+$/,'')+'.'+String(ms%1000).padStart(3,'0')}
 
 loadGameConfig();
+
+/* ========== EMOTIONAL AUDIO (no external files) ========== */
+function ensureAudio(){
+try{
+if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+if(audioCtx.state==='suspended') audioCtx.resume();
+}catch(e){}
+}
+function tone(freq,dur,type,gain,delay){
+if(!audioCtx) return;
+var t0=audioCtx.currentTime+(delay||0);
+var osc=audioCtx.createOscillator();
+var g=audioCtx.createGain();
+osc.type=type||'sine';
+osc.frequency.setValueAtTime(freq,t0);
+g.gain.setValueAtTime(0.0001,t0);
+g.gain.exponentialRampToValueAtTime(gain||0.08,t0+0.02);
+g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+osc.connect(g);g.connect(audioCtx.destination);
+osc.start(t0);osc.stop(t0+dur+0.03);
+}
+function playStartSound(){ensureAudio();tone(392,0.08,'triangle',0.08,0);tone(523,0.1,'triangle',0.08,0.09)}
+function playStopSound(){tone(220,0.08,'square',0.05,0);tone(330,0.12,'triangle',0.06,0.08)}
+function playNearSound(){tone(660,0.08,'triangle',0.08,0);tone(740,0.08,'triangle',0.08,0.1);tone(880,0.12,'triangle',0.08,0.2)}
+function playWinSound(){ensureAudio();[523,659,784,1046].forEach(function(f,i){tone(f,0.18,'triangle',0.1,i*0.1)});tone(1318,0.28,'sine',0.08,0.45)}
+function startTensionSound(){
+stopTensionSound();
+tensionTimer=setInterval(function(){
+var remaining=Math.max(0,gameTarget-elapsed);
+var ratio=1-(remaining/gameTarget);
+var freq=360+Math.min(520,ratio*520);
+tone(freq,0.045,'square',0.025);
+if(remaining<1200) tone(freq*1.5,0.04,'triangle',0.035,0.05);
+},520);
+}
+function stopTensionSound(){if(tensionTimer){clearInterval(tensionTimer);tensionTimer=null}}
+
+function rollWheelPrize(){
+var total=wheelPrizes.reduce(function(s,p){return s+p.weight},0);
+var r=Math.random()*total;
+for(var i=0;i<wheelPrizes.length;i++){
+r-=wheelPrizes[i].weight;
+if(r<=0) return wheelPrizes[i];
+}
+return wheelPrizes[0];
+}
+function showWheelPrize(prize){
+lastWheelPrize=prize;
+var card=document.getElementById('wheelCard');
+var spin=document.getElementById('wheelSpin');
+var text=document.getElementById('wheelPrizeText');
+var note=document.getElementById('wheelPrizeNote');
+if(!card||!spin||!text)return;
+card.style.display='';
+spin.classList.remove('spinning');void spin.offsetWidth;spin.classList.add('spinning');
+text.textContent='Girando...';
+note.textContent='Todo mundo sai com alguma coisa.';
+setTimeout(function(){
+spin.classList.remove('spinning');
+text.textContent=prize.name;
+note.textContent=prize.note||'Mostre para o atendente validar o premio.';
+if(prize.tier==='alto') playWinSound(); else playNearSound();
+},1250);
+}
 
 /* ========== PHONE MASK ========== */
 document.getElementById('playerPhone').addEventListener('input',function(e){
@@ -1121,7 +1239,8 @@ status.textContent='Erro ao validar. Tente novamente.';
 });
 };
 
-function processVoucherResult(data,docId){
+function processVoucherResult(data,docId,opts){
+opts=opts||{};
 var input=document.getElementById('voucherInput');
 var status=document.getElementById('voucherStatus');
 var check=document.getElementById('voucherCheck');
@@ -1165,7 +1284,12 @@ document.getElementById('voucherPlayerInfo').style.display='';
 document.getElementById('voucherAttemptsInfo').textContent='🎟️ '+remaining+' tentativa'+(remaining>1?'s':'')+' restante'+(remaining>1?'s':'');
 document.getElementById('btnValidateVoucher').style.display='none';
 document.getElementById('btnGoToPhoto').style.display='';
+if(opts.autoStart){
+tvAutoStart=true;
+startValidatedChallenge(true);
+} else {
 document.getElementById('playerName').focus();
+}
 }
 
 /* ========== NAV ========== */
@@ -1177,26 +1301,25 @@ if(n==='Attract') el=document.getElementById('stepAttract');
 if(el) el.classList.add('active');
 }
 
-/* ========== STEP 0 -> 1: Photo ========== */
-window.goToPhoto=function(){
+function startValidatedChallenge(skipMediaStep){
 /* Require validated voucher */
 if(!activeVoucher||!activeVoucherCode){
 document.getElementById('voucherStatus').className='voucher-status error';
 document.getElementById('voucherStatus').textContent='Valide seu codigo primeiro!';
-return;
+return false;
 }
 var remaining=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
 if(remaining<=0){
 document.getElementById('voucherStatus').className='voucher-status error';
 document.getElementById('voucherStatus').textContent='Codigo ja utilizado. Compre outro MilkyPot!';
-return;
+return false;
 }
 playerN=document.getElementById('playerName').value.trim()||'Jogador';
 playerPhone=document.getElementById('playerPhone').value.replace(/\D/g,'');
 if(playerPhone.length<10){
 document.getElementById('playerPhone').style.borderColor='#FF0040';
 document.getElementById('playerPhone').setAttribute('placeholder','WhatsApp obrigatorio!');
-return;
+return false;
 }
 playerProduct=document.getElementById('productSelect').value||'';
 var existing=best.filter(function(b){return b.phone===playerPhone});
@@ -1210,9 +1333,20 @@ showReturningWelcome(existing);
 if(gameConfig.stampCard) updateStampCard();
 /* Update streak (feature 3) */
 if(gameConfig.streak) loadStreak();
+if(skipMediaStep){
+localStorage.setItem('mp_skip_media','true');
+goToDifficulty();
+return true;
+}
 localStorage.removeItem('mp_skip_media');
 showStep(1);
 startCamera('photoVideo');
+return true;
+}
+
+/* ========== STEP 0 -> 1: Photo ========== */
+window.goToPhoto=function(){
+startValidatedChallenge(false);
 };
 
 /* ========== CAMERA ========== */
@@ -1303,6 +1437,8 @@ window.handleGame=function(){
 var screen=document.getElementById('screen');
 var btn=document.getElementById('gameBtn');
 if(gameState==='idle'){
+ensureAudio();
+playStartSound();
 gameState='running';
 screen.classList.add('running');
 startT=Date.now();elapsed=0;
@@ -1317,11 +1453,14 @@ el.textContent=runMsgs[msgI];
 el.style.animation='none';void el.offsetWidth;el.style.animation='fadeInUp 0.3s';
 },1800);
 tick();
+startTensionSound();
 if(navigator.vibrate) navigator.vibrate(30);
 /* Feature 7: start recording reaction video */
 if(gameConfig.reactionVideo&&webcamStream) startReactionRecording();
 } else if(gameState==='running'){
 cancelAnimationFrame(timer);clearInterval(msgTimer);
+stopTensionSound();
+playStopSound();
 gameState='done';
 document.getElementById('screen').classList.remove('running');
 if(navigator.vibrate) navigator.vibrate([50,30,80]);
@@ -1348,6 +1487,7 @@ if(attInfo) attInfo.textContent='🎟️ '+Math.max(0,rem)+' tentativa'+(rem!==1
 
 var diff=elapsed-gameTarget;
 var abs=Math.abs(diff);
+var wheelPrize=rollWheelPrize();
 
 /* Feature 4: check personal record before saving */
 var prevBest=getPersonalBest();
@@ -1365,10 +1505,18 @@ localStorage.setItem('mp_d_rank',JSON.stringify(best));
 if(db){
 try{
 var fbEntry={name:playerN,phone:playerPhone,elapsed:elapsed,target:gameTarget,difficulty:gameDifficulty,
-diff:Math.abs(gameTarget-elapsed),won:abs===0,attempts:attempts,date:new Date().toISOString()};
+diff:Math.abs(gameTarget-elapsed),won:abs===0,attempts:attempts,date:new Date().toISOString(),
+prizeName:wheelPrize.name,prizeTier:wheelPrize.tier,prizeSource:'roda_ovelinha'};
 if(playerProduct) fbEntry.product=playerProduct;
 if(notifOptedIn) fbEntry.notifyOnBeat=true;
 db.collection('desafio_10000').add(fbEntry);
+if(activeVoucherCode){
+db.collection('desafio_vouchers').doc(activeVoucherCode).update({
+lastPrizeName:wheelPrize.name,
+lastPrizeTier:wheelPrize.tier,
+lastPrizeAt:new Date().toISOString()
+});
+}
 }catch(e){}
 }
 
@@ -1423,9 +1571,11 @@ if(gameConfig.reactionVideo&&recordedChunks.length>0) document.getElementById('v
 if(gameConfig.notifications) document.getElementById('notifOptin').style.display='';
 
 /* === PRIZE DISPLAY === */
+showWheelPrize(wheelPrize);
 var prizeDisplay=document.getElementById('prizeWonDisplay');
 var prizeText=document.getElementById('prizeWonText');
 prizeDisplay.style.display='none';
+if(false){
 if(abs===0 && prizeConfig.exact){
 prizeDisplay.style.display='';
 prizeText.textContent=prizeConfig.exact;
@@ -1436,6 +1586,7 @@ prizeText.textContent=prizeConfig.close50;
 } else if(abs<=200 && prizeConfig.close200){
 prizeDisplay.style.display='';
 prizeText.textContent=prizeConfig.close200;
+}
 }
 
 /* === INSTAGRAM BONUS (show when NOT exact win) === */
@@ -1687,6 +1838,7 @@ document.getElementById('winOverlay').classList.add('show');
 var ws=document.getElementById('winSub');
 if(ws) ws.textContent='Parou exatamente em '+fmt(gameTarget)+'!';
 launchConfetti();
+playWinSound();
 if(navigator.vibrate) navigator.vibrate([100,50,200,50,300]);
 }
 window.closeWin=function(){document.getElementById('winOverlay').classList.remove('show')};
@@ -1822,12 +1974,14 @@ renderRankingWithData(globalItems, 'globalRankingList', true);
 
 /* ========== RESTART ========== */
 window.restart=function(){
+stopTensionSound();
 gameState='idle';
 document.getElementById('counter').textContent='00:00.000';
 document.getElementById('gameBtn').className='btn btn-start';
 document.getElementById('gameBtn').innerHTML='Iniciar Desafio &#9889;';
 document.getElementById('statusMsg').textContent='Preparado? Toque para iniciar!';
 document.getElementById('videoSaveBtn').style.display='none';
+var wc=document.getElementById('wheelCard');if(wc)wc.style.display='none';
 recordedChunks=[];reactionVideoBlob=null;
 /* Check if voucher has remaining attempts */
 if(activeVoucher){
@@ -2168,9 +2322,52 @@ if(attractTimer){clearInterval(attractTimer);attractTimer=null}
 stopDemoCounter();
 }
 
+function setTvReleaseStatus(msg,isError){
+var el=document.getElementById('tvReleaseStatus');
+if(!el)return;
+el.textContent=msg;
+el.style.background=isError?'rgba(255,0,64,0.10)':'rgba(66,165,245,0.12)';
+el.style.color=isError?'#FF0040':'#5A4570';
+}
+
+function claimNextTvVoucher(){
+ensureAudio();
+if(!db){
+showStep(0);
+setTvReleaseStatus('Sem conexao com o PDV. Use o codigo manual como reserva.',true);
+return;
+}
+showStep(0);
+setTvReleaseStatus('Procurando liberacao do PDV...');
+db.collection('desafio_vouchers').orderBy('createdAt','desc').limit(20).get().then(function(snap){
+var picked=null,pickedId=null;
+snap.forEach(function(doc){
+if(picked)return;
+var d=doc.data();
+var remaining=(d.attempts||0)-(d.attemptsUsed||0);
+if(d.tvReady===true && d.status==='ready' && !d.used && remaining>0){
+picked=d;pickedId=doc.id;
+}
+});
+if(!picked){
+setTvReleaseStatus('Nenhum desafio liberado ainda. Peca para o atendente liberar no PDV.',true);
+return;
+}
+setTvReleaseStatus('Liberado para '+(picked.customerName||'cliente')+'!');
+try{
+db.collection('desafio_vouchers').doc(pickedId).update({status:'in_progress',tvAcceptedAt:new Date().toISOString()});
+picked.status='in_progress';
+}catch(e){}
+processVoucherResult(picked,pickedId,{autoStart:true});
+}).catch(function(err){
+console.error('TV voucher lookup error:',err);
+setTvReleaseStatus('Nao consegui buscar a liberacao. Use o codigo manual como reserva.',true);
+});
+}
+
 /* Touch to start */
 document.getElementById('stepAttract').addEventListener('click',function(){
-stopAttract();showStep(0);document.getElementById('playerName').focus();
+stopAttract();claimNextTvVoucher();
 });
 
 /* Start attract mode */
