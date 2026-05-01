@@ -4,10 +4,11 @@
 
 | Concorrente | Arquivo | Última atualização | Status |
 |---|---|---|---|
-| Milky Moo | `milkymoo.md` | 2026-04-22 | ✅ Ciclo #1 |
+| Milky Moo | `milkymoo.md` | 2026-05-01 (ciclo #84) | ✅ Atualizado |
 | JohnnyJoy | `johnnyjoy.md` | 2026-04-22 | ✅ Ciclo #1 |
-| The Best Açaí | `the-best-acai.md` | 2026-04-22 | ✅ Ciclo #1 |
-| Jhoy | `jhoy.md` | — | ⏳ Pendente |
+| The Best Açaí | `the-best-acai.md` | 2026-05-01 (ciclo #84) | ✅ Atualizado |
+| Jhoy | `jhoy.md` | — | ⚠️ Não confirmado em Londrina |
+| Green Açaí | `green-acai.md` | 2026-05-01 (ciclo #84) | 🆕 Novo entrante local |
 
 ## Foco estratégico
 

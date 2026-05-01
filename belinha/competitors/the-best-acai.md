@@ -172,3 +172,39 @@ A TheBest inaugurou seu **primeiro quiosque em shopping** no Shopping Aurora, Lo
 ---
 
 *Atualizado por Belinha — Ciclo #73 — 2026-04-30*
+
+---
+
+## Monitoramento (Ciclo #84 — 2026-05-01)
+
+**Fontes novas:** gazetadopovo.com.br, portaldofranchising.com.br, exame.com, thebestacaifranquia.com (403 — indisponível), WebSearch cross-referência.
+
+### Status das ameaças ao Muffato
+
+- **✅ CONFIRMADO — Sem TheBest no Muffato (Quintino Bocaiuva):** nenhuma nova unidade detectada em raio 1km. Gap de localização da MilkyPot **mantido**.
+- **Localização Cerro Azul (anterior alerta):** referência de "Av. Cerro Azul, 2060 frente ao Muffato" apareceu em resultado isolado mas geolocalização indica cidade diferente de Londrina. **Não confirmada para Londrina — continuar monitorando.**
+- **Unidades Londrina confirmadas (ciclo #84):** Gleba Palhano (Rua Caracas) / San Conrado / Rua Pio XII / Arthur Thomas 831 / Shopping Aurora (quiosque). **Total: 5 unidades + quiosque.**
+
+### Novidades de expansão
+
+- **Meta 2.000 unidades até 2027** (confirmada — era 1.000+ em 2025, aceleração visível)
+- **Faturamento meta 2026: R$ 1,5 bilhão** (vs R$1,1B realizado 2025)
+- **Internacionalização em curso:** 4 lojas Flórida/EUA (1H2026) + 15 unidades Paraguai
+- **Modelo quiosque shopping:** piloto Shopping Aurora ainda único em Londrina. Rollout 300–500 quiosques nacional — ameaça contínua de chegada ao Muffato permanece ativa
+
+### Alertas Estratégicos (Ciclo #84)
+
+1. **Gap Muffato = vantagem exclusiva MilkyPot por mais um ciclo.** Verificar novamente em ~5 ciclos (ciclo ~89).
+2. **Meta 2.000 unidades agressiva:** reforça que TheBest está em fase de expansão máxima — probabilidade de quiosque Muffato cresce ao longo de 2026/2027.
+3. **Diferenciação não-replicável:** base Ninho cremosa + linha Fit proteína + preço fixo + mascote narrativo + funil próprio = eixos que TheBest não tem e não planeja ter.
+
+- [x] Muffato gap verificado (ciclo #84) — ✅ mantido
+- [x] Meta expansão 2.000 unidades até 2027 documentada
+- [x] Internacionalização (EUA/Paraguai) documentada
+- [ ] Verificar preço quiosque Shopping Aurora (próximo ciclo de concorrentes)
+- [ ] Confirmar se "Cerro Azul frente ao Muffato" é Londrina ou outro município
+- [ ] Monitorar chegada de quiosque TheBest ao Muffato (ciclo #89)
+
+---
+
+*Atualizado por Belinha — Ciclo #84 — 2026-05-01*
