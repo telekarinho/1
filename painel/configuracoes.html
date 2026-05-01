@@ -368,6 +368,38 @@
                         </div>
                     </div>
 
+                    <!-- Card: Regras de Frete -->
+                    <div class="panel-card" style="grid-column:1/-1">
+                        <div class="card-header" style="background:linear-gradient(135deg,#26A69A,#00897B);color:#fff">
+                            <h3 style="color:#fff">🛵 Regras de Frete</h3>
+                            <p style="margin:4px 0 0;font-size:12px;opacity:.9">Por padrão o cliente paga o valor exato cotado pelo Uber Direct. Aqui você define exceções (frete grátis, teto, fixo) que se aplicam ao checkout do site.</p>
+                        </div>
+                        <div class="card-body">
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+                                <div class="form-group">
+                                    <label>Frete grátis acima de R$</label>
+                                    <input type="number" id="freightFreeThreshold" class="form-control" step="0.01" min="0" placeholder="80.00">
+                                    <small style="color:#888;font-size:11px">Cliente não paga frete se subtotal ≥ este valor. Deixe vazio/0 para desativar.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Frete máximo cobrado (teto) R$</label>
+                                    <input type="number" id="freightCap" class="form-control" step="0.01" min="0" placeholder="15.00">
+                                    <small style="color:#888;font-size:11px">Se Uber cobrar mais que isso, loja absorve a diferença. Vazio = sem teto.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Frete fixo override R$</label>
+                                    <input type="number" id="freightFlat" class="form-control" step="0.01" min="0" placeholder="">
+                                    <small style="color:#888;font-size:11px">Se preenchido, ignora cotação Uber e cobra este valor sempre. Vazio = usa Uber.</small>
+                                </div>
+                            </div>
+                            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px">
+                                <button class="btn btn-primary" onclick="saveFreightRules()">💾 Salvar Regras</button>
+                                <span id="freightRulesStatus" style="font-size:12px;color:#888"></span>
+                            </div>
+                            <div id="freightRulesPreview" style="margin-top:14px;padding:12px;background:#E0F2F1;border-radius:8px;font-size:13px;color:#004D40;display:none"></div>
+                        </div>
+                    </div>
+
                     <!-- Card: Raspinha da Sorte -->
                     <div class="panel-card" style="grid-column:1/-1">
                         <div class="card-header" style="background:linear-gradient(135deg,#FF9800,#F57C00);color:#fff">
@@ -1107,6 +1139,71 @@
         }
     };
 
+    // ============================================
+    // Regras de Frete (frete grátis acima de X, teto, fixo)
+    // ============================================
+    function freightRulesKey() {
+        return 'freight_rules_' + (franchiseId || 'default');
+    }
+
+    function loadFreightRules() {
+        try {
+            var raw = localStorage.getItem(freightRulesKey());
+            var rules = raw ? JSON.parse(raw) : {};
+            if (rules.freeShippingThreshold != null) document.getElementById('freightFreeThreshold').value = rules.freeShippingThreshold;
+            if (rules.cap != null) document.getElementById('freightCap').value = rules.cap;
+            if (rules.flat != null) document.getElementById('freightFlat').value = rules.flat;
+            renderFreightPreview(rules);
+        } catch (e) { console.warn('loadFreightRules', e); }
+    }
+
+    function renderFreightPreview(rules) {
+        var preview = document.getElementById('freightRulesPreview');
+        if (!preview) return;
+        var lines = [];
+        if (rules.flat != null && rules.flat !== '' && Number(rules.flat) > 0) {
+            lines.push('💰 Cliente paga sempre R$ ' + Number(rules.flat).toFixed(2).replace('.', ',') + ' (fixo)');
+        } else {
+            lines.push('💰 Cliente paga o que o Uber cotar');
+            if (rules.cap != null && rules.cap !== '' && Number(rules.cap) > 0) {
+                lines.push('🚧 Mas no máximo R$ ' + Number(rules.cap).toFixed(2).replace('.', ',') + ' (loja absorve a diferença)');
+            }
+            if (rules.freeShippingThreshold != null && rules.freeShippingThreshold !== '' && Number(rules.freeShippingThreshold) > 0) {
+                lines.push('🎁 Frete grátis se subtotal ≥ R$ ' + Number(rules.freeShippingThreshold).toFixed(2).replace('.', ','));
+            }
+        }
+        preview.innerHTML = '<strong>O que o cliente vai ver:</strong><br>' + lines.join('<br>');
+        preview.style.display = lines.length ? 'block' : 'none';
+    }
+
+    window.saveFreightRules = function() {
+        var raw = {
+            freeShippingThreshold: document.getElementById('freightFreeThreshold').value.trim(),
+            cap: document.getElementById('freightCap').value.trim(),
+            flat: document.getElementById('freightFlat').value.trim()
+        };
+        var rules = {};
+        ['freeShippingThreshold', 'cap', 'flat'].forEach(function(k) {
+            if (raw[k] !== '' && !isNaN(parseFloat(raw[k]))) rules[k] = parseFloat(raw[k]);
+        });
+        rules.updatedAt = new Date().toISOString();
+        try {
+            localStorage.setItem(freightRulesKey(), JSON.stringify(rules));
+            // Mirror em Firestore (se logado) para o checkout do site ler
+            if (typeof firebase !== 'undefined' && firebase.firestore && franchiseId) {
+                firebase.firestore().collection('franchises').doc(franchiseId)
+                    .set({ freightRules: rules }, { merge: true })
+                    .catch(function(e){ console.warn('mirror freight rules err', e); });
+            }
+            document.getElementById('freightRulesStatus').textContent = '✅ Salvo agora ' + new Date().toLocaleTimeString('pt-BR');
+            document.getElementById('freightRulesStatus').style.color = '#26A69A';
+            renderFreightPreview(rules);
+        } catch (e) {
+            document.getElementById('freightRulesStatus').textContent = '❌ Erro: ' + e.message;
+            document.getElementById('freightRulesStatus').style.color = '#E53935';
+        }
+    };
+
     // Init
     loadStoreData();
     loadOperationData();
@@ -1114,6 +1211,7 @@
     loadFranchiseInfo();
     loadNotifSettings();
     loadScratchConfig();
+    loadFreightRules();
     // Uber Direct: aguarda Firebase Auth restaurar sessao do IndexedDB antes de chamar
     if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().onAuthStateChanged(function(user) {

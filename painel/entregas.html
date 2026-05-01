@@ -340,7 +340,13 @@
 
     function getDeliveryOrders() {
         var orders = DataStore.getCollection('orders', franchiseId) || [];
-        return orders.filter(function(o) { return (o.delivery || o.type) === 'delivery'; });
+        return orders.filter(function(o) {
+            // delivery pode vir como string ('delivery'/'pickup') ou objeto {type,address,fee}
+            var d = o.delivery;
+            if (typeof d === 'string') return d === 'delivery';
+            if (d && typeof d === 'object') return d.type === 'delivery';
+            return o.type === 'delivery';
+        });
     }
 
     function getEntregadores() {

@@ -6,6 +6,41 @@ var currentCheckoutStep = 1;
 var orderCounter = parseInt(localStorage.getItem('milkypot_order_counter') || '1000');
 
 // ============================================
+// REGRAS DE FRETE (admin → painel/configuracoes.html → card "Regras de Frete")
+//   - flat: cobra valor fixo, ignora Uber
+//   - cap: teto de cobrança (loja absorve diferença do Uber)
+//   - freeShippingThreshold: zera frete se subtotal ≥ valor
+// Aplicadas em updateOrderSummary() e placeOrder() via applyFreightRules()
+// ============================================
+function getFreightRules() {
+    try {
+        var fid = window._selectedStoreId || (typeof Auth !== 'undefined' && Auth.getFranchiseId && Auth.getFranchiseId()) || 'default';
+        var raw = localStorage.getItem('freight_rules_' + fid);
+        if (!raw) raw = localStorage.getItem('freight_rules_default');
+        return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+}
+
+function applyFreightRules(deliveryType, baseFee, subtotal) {
+    if (deliveryType !== 'delivery') return 0;
+    var rules = getFreightRules();
+    var fee = baseFee;
+    // 1. Frete fixo override: ignora Uber e qualquer outra regra de cap
+    if (rules.flat != null && Number(rules.flat) >= 0) {
+        fee = Number(rules.flat);
+    } else if (rules.cap != null && Number(rules.cap) > 0 && fee > Number(rules.cap)) {
+        // 2. Teto: loja absorve a diferença
+        fee = Number(rules.cap);
+    }
+    // 3. Frete grátis acima de X (aplica DEPOIS dos outros para sempre prevalecer quando atingido)
+    if (rules.freeShippingThreshold != null && Number(rules.freeShippingThreshold) > 0
+        && Number(subtotal) >= Number(rules.freeShippingThreshold)) {
+        fee = 0;
+    }
+    return fee;
+}
+
+// ============================================
 // CHECKOUT MODAL
 // ============================================
 function openCheckout() {
@@ -128,6 +163,8 @@ function updateOrderSummary() {
     if (deliveryType === 'delivery' && window._uberQuoteId && window._uberCustomerFee !== undefined) {
         deliveryFee = window._uberCustomerFee;
     }
+    // Aplica regras de frete do admin (flat/cap/free shipping threshold)
+    deliveryFee = applyFreightRules(deliveryType, deliveryFee, subtotal);
 
     if (summaryDelivery) summaryDelivery.textContent = deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Grátis';
     if (summaryTotal) summaryTotal.textContent = formatCurrency(subtotal + deliveryFee);
@@ -168,6 +205,10 @@ function placeOrder() {
     if (deliveryType === 'delivery' && window._uberQuoteId && window._uberCustomerFee !== undefined) {
         deliveryFee = window._uberCustomerFee;
     }
+    // Aplica regras de frete do admin (flat/cap/free shipping threshold)
+    var subtotalForRules = getCartTotal();
+    deliveryFee = applyFreightRules(deliveryType, deliveryFee, subtotalForRules);
+
     var deliveryAddress = '';
     if (deliveryType === 'delivery') {
         var addr = (document.getElementById('checkoutAddress') || {}).value || '';
