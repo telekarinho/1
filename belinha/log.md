@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #78 — 2026-05-01
+
+**Área:** SEO local — Twitter Card + meta description + sitemap.xml
+
+**Contexto:** Ciclo SEO obrigatório prescrito pelo padrão v10 (6 ciclos consecutivos de conteúdo desde #72 sem atenção ao SEO técnico). Prioridade: resolver gaps de preview de compartilhamento na página de maior conversão (`cardapio.html`) e sinalizar ao Google a data de modificação atualizada.
+
+**O que analisou:**
+- Auditou meta tags de todas as páginas públicas indexadas: `index.html`, `cardapio.html`, `potinho-ninho-londrina.html`, `acai-self-service-londrina.html`
+- Encontrou gap crítico: `cardapio.html` (página de maior conversão, `priority: 0.9` no sitemap, `changefreq: daily`) estava **completamente sem Twitter Card meta tags** — afeta preview de links compartilhados no WhatsApp, Telegram, Twitter e qualquer crawler de link preview
+- Encontrou gap SEO local: `meta name="description"` do `cardapio.html` não continha a palavra "Londrina" — perda de relevância em buscas locais ("cardápio milkypot londrina", etc.)
+- `sitemap.xml`: `lastmod` de `cardapio.html` desatualizado (`2026-04-22` → `2026-05-01`)
+- Demais páginas: `potinho-ninho-londrina.html` e `acai-self-service-londrina.html` já têm Twitter Card; `index.html` também completo
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `cardapio.html` | ADICIONADO: `twitter:card summary_large_image`, `twitter:title`, `twitter:description`, `twitter:image` (4 tags) |
+| `cardapio.html` | MELHORADO: `meta name="description"` agora inclui "Londrina", "Ninho e Açaí", "Linha Zero/Fit", "buffet self-service" e "Muffato Londrina" — keywords locais completas (antes: genérico sem localidade) |
+| `sitemap.xml` | `lastmod` de `cardapio.html` atualizado de `2026-04-22` para `2026-05-01` |
+
+**Commit:** `9a226e9`
+
+**Impacto esperado:**
+- Link do cardápio compartilhado no WhatsApp agora mostrará imagem + título + descrição em preview — aumento de CTR nas mensagens de WA (canal principal da MilkyPot)
+- Meta description com "Londrina" aumenta relevância em buscas locais como "cardápio potinho londrina" e "milkypot londrina o que tem"
+- Google recrawl do `cardapio.html` com `lastmod: 2026-05-01` sinaliza conteúdo atualizado
+
+**Próximo passo sugerido:**
+- Ciclo #79: Auto-aprimoramento obrigatório (reler log #74–#78) + ajustar estratégia para semanas 39–42 (açaí verão herói + aniversário 9 meses 25/01/2027 + aquecimento Carnaval)
+- Ciclo #80: Conteúdo — Semanas 39+40 (10–23/01): Açaí herói verão + UGC verão + Sexta #23 + teaser aniversário 9 meses
+- SEO próximo ciclo técnico (#83 aprox.): verificar og:image:width/height em todas as páginas + schema FAQPage em cardapio.html + revisar GeoCoordinates do LocalBusiness (lat/lng atual: -23.3045, -51.1696 — confirmar precisão com Maps)
+- Operador: confirmar preço Linha Zero para carrossel 04/01 (bloqueador ativo desde ciclo #77)
+
+_Belinha — Ciclo #78 | 2026-05-01_
+
+---
+
 ## Ciclo #77 — 2026-05-01
 
 **Área:** Conteúdo — Semanas 37 + 38 (27/12/2026–09/01/2027)
