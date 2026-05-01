@@ -2,6 +2,54 @@
 
 ---
 
+## Ciclo #84 — 2026-05-01
+
+**Área:** Concorrentes — Refetch TheBest + MilkyMoo + novo entrante Green Açaí + briefing aniversário 1 ano
+
+**Contexto:** Ciclo de concorrentes obrigatório prescrito pelo ciclo #83 (padrão v11: após 5 ciclos de conteúdo consecutivos, gap de concorrentes). Última atualização de concorrentes foi no ciclo #73 (2026-04-30) — 10 ciclos atrás. Paralelamente: planejamento inicial da campanha épica aniversário 1 ano (25/04/2027).
+
+**O que analisou:**
+- WebSearch: TheBest Açaí Londrina 2026 — expansão, quiosques, localização Muffato
+- WebSearch: MilkyMoo Londrina 2026 — novidades, preços, cardápio
+- WebSearch: Johnny/Jhoy Londrina — sem resultados confirmados para Londrina
+- WebSearch: Green Açaí @greenlondrina — novo entrante local identificado (38K seguidores)
+- Referência cruzada com arquivos de concorrentes ciclo #73
+
+**Principais descobertas:**
+
+| Concorrente | Descoberta |
+|---|---|
+| TheBest | ✅ Muffato gap mantido — sem nova unidade em Quintino Bocaiuva. Meta 2.000 unidades até 2027 confirmada. 5 unidades + quiosque Shopping Aurora em Londrina. |
+| MilkyMoo | 🆕 Day Part 180ml lançado 30/04/2026 a R$12,90 até 13h59. Páscoa 2026: ovos Pandora e Malhada. Preços confirmados: 300ml R$18 / 500ml R$22. |
+| Jhoy | ⚠️ Não confirmado em Londrina — pesquisa não retornou resultados. Manter na lista mas baixa prioridade. |
+| Green Açaí | 🆕 NOVO ENTRANTE LOCAL — @greenlondrina, 38K seguidores, tagline "O MELHOR AÇAÍ DE LONDRINA", Jardim do Lago, iFood, ticket R$20–40. Concorrente parcial (açaí, não potinho). |
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/competitors/the-best-acai.md` | Seção "Monitoramento Ciclo #84" adicionada — status gap Muffato, meta 2.000 unidades, alertas estratégicos |
+| `belinha/competitors/milkymoo.md` | Seção "Atualização Ciclo #84" adicionada — Day Part 180ml, Páscoa 2026, preços atualizados, alertas estratégicos |
+| `belinha/competitors/green-acai.md` | CRIADO — análise inicial do novo entrante local Green Açaí |
+| `belinha/competitors/README.md` | Adicionado Green Açaí + datas de atualização corrigidas |
+| `belinha/content/aniversario-1-ano-briefing.md` | CRIADO — briefing inicial campanha épica 25/04/2027 (4 fases, métricas-alvo, roadmap de ciclos para elaboração) |
+
+**Commit:** `24710d2`
+
+**Alertas para o operador:**
+- MilkyMoo Day Part 180ml até 13h59: avaliar se há fluxo Muffato no horário pós-almoço para criar promoção equivalente
+- Green Açaí tagline "O MELHOR AÇAÍ DE LONDRINA": reforçar diferenciação MilkyPot em SEO local como "potinho personalizado Londrina"
+- Aniversário 1 ano (25/04/2027): começar a pensar no produto comemorativo exclusivo — detalhes devem ser definidos até ciclo ~93
+
+**Próximo passo sugerido:**
+- Ciclo #85: **Conteúdo — Semanas 45+46 (21/02–06/03/2027)**: reta final Carnaval (semana 45) + dias ao vivo de Carnaval (28/02 sábado, 01/03 domingo, 02/03 segunda) + Quarta de Cinzas (05/03) + pós-Carnaval (06/03). Sexta #29 (26/02) = maior Sexta do arco Carnaval.
+- Ciclo #86: Conteúdo — Semanas 47+48 (07–20/03): recuperação pós-Carnaval + retorno da rotina + Linha Zero "promessa de março" + Sexta #30/#31
+- Ciclo #89: Próximo refetch de concorrentes (TheBest quiosque Muffato? Green Açaí crescimento?)
+
+_Belinha — Ciclo #84 | 2026-05-01_
+
+---
+
 ## Ciclo #83 — 2026-05-01
 
 **Área:** Conteúdo — Semanas 43 + 44 (07/02–20/02/2027)
