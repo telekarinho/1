@@ -643,6 +643,87 @@
                     </div>
                 </div>
 
+                <!-- Acesso Livre / Promo Pre-Compra -->
+                <div class="section-block">
+                    <h3 class="section-title">🎁 Modo de Acesso ao Desafio</h3>
+                    <p class="section-subtitle">Libere o desafio sem codigo (gera fluxo) — premio so vale na compra do dia (voce nao perde dinheiro)</p>
+
+                    <div class="config-card" style="border:2px dashed #FFB347;background:linear-gradient(135deg,#FFF9F0 0%,#FFF5E8 100%)">
+                        <div class="config-form-group">
+                            <label>🔓 Acesso Livre (sem codigo)</label>
+                            <p style="font-size:0.8rem;color:#9484A8;margin-bottom:6px">
+                                Quando ATIVO: qualquer pessoa pode tentar o desafio sem comprar antes. Otimo para iniciar — gera fluxo na loja.<br>
+                                Quando INATIVO (padrao): so joga quem tem codigo do cupom de compra.
+                            </p>
+                            <div class="toggle-wrapper">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="cfgFreeAccess">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span class="toggle-label" id="freeAccessStatusText">Inativo (precisa de codigo)</span>
+                            </div>
+                        </div>
+
+                        <div id="freeAccessOptions" style="display:none">
+                            <hr style="border:none;border-top:1px solid #FFB347;margin:16px 0;opacity:0.4">
+
+                            <div class="config-form-group">
+                                <label>🎫 Tentativas Gratis por Cliente / Dia</label>
+                                <p style="font-size:0.8rem;color:#9484A8;margin-bottom:6px">Limita por numero de WhatsApp para evitar abuso. Padrao: 1.</p>
+                                <input type="number" id="cfgFreeMaxPerDay" value="1" min="1" max="5" style="width:80px;padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem">
+                                <span style="font-size:0.8rem;color:#9484A8">tentativa(s) por dia</span>
+                            </div>
+
+                            <div class="config-form-group">
+                                <label>⚠️ Condicao do Premio (Modo Gratis)</label>
+                                <p style="font-size:0.8rem;color:#9484A8;margin-bottom:6px">Texto que aparece junto do premio para garantir que so vale com compra. Cliente ve isso no fim da tentativa.</p>
+                                <input type="text" id="cfgFreeConditionNote" value="Premio valido APENAS com a compra de hoje na loja" placeholder="Ex: Valido na compra minima de R$25" style="width:100%;padding:10px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.9rem">
+                            </div>
+
+                            <div class="config-form-group">
+                                <label>📢 Banner do Modo Gratis</label>
+                                <p style="font-size:0.8rem;color:#9484A8;margin-bottom:6px">Texto-chamada na tela inicial do desafio (incentiva a tentativa).</p>
+                                <input type="text" id="cfgFreeBannerText" value="🎁 Promocao: jogue gratis! Se ganhar, traga sua compra hoje pra resgatar." placeholder="Texto da chamada" style="width:100%;padding:10px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.9rem">
+                            </div>
+
+                            <hr style="border:none;border-top:1px solid #FFB347;margin:16px 0;opacity:0.4">
+
+                            <div class="config-form-group">
+                                <label style="color:#FF6B35">🛡️ Premios Especiais Modo Gratis (opcional)</label>
+                                <p style="font-size:0.8rem;color:#9484A8;margin-bottom:10px">
+                                    Use textos diferentes para o modo gratis (forca a compra para resgate).<br>
+                                    Deixe em branco para usar os premios normais ja configurados acima.
+                                </p>
+
+                                <div style="margin-bottom:10px">
+                                    <div style="font-size:0.8rem;font-weight:700;color:#FFD700;margin-bottom:4px">🏆 Acerto Exato</div>
+                                    <input type="text" id="cfgFreeExact" placeholder="Ex: 1 MilkyPot na compra de outro hoje (BOGO)" style="width:100%;padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem">
+                                </div>
+
+                                <div style="margin-bottom:10px">
+                                    <div style="font-size:0.8rem;font-weight:700;color:#FF6B9D;margin-bottom:4px">🔥 Quase Acertou (50ms)</div>
+                                    <input type="text" id="cfgFreeClose50" placeholder="Ex: 15% off na compra minima de R$25 hoje" style="width:100%;padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem">
+                                </div>
+
+                                <div style="margin-bottom:10px">
+                                    <div style="font-size:0.8rem;font-weight:700;color:#E8A0BF;margin-bottom:4px">✅ Chegou Perto (200ms)</div>
+                                    <input type="text" id="cfgFreeClose200" placeholder="Ex: Topping extra gratis na sua compra hoje" style="width:100%;padding:8px;border:1px solid #e0d6eb;border-radius:8px;font-size:0.85rem">
+                                </div>
+                            </div>
+
+                            <div style="background:rgba(255,179,71,0.15);border-left:4px solid #FFB347;padding:12px 16px;border-radius:8px;margin-top:12px">
+                                <div style="font-size:0.85rem;font-weight:700;color:#B8651F;margin-bottom:4px">💡 Dica de seguranca</div>
+                                <p style="font-size:0.8rem;color:#7A4F1F;margin:0;line-height:1.5">
+                                    Premios em modo gratis devem SEMPRE exigir uma compra para serem resgatados (BOGO, % off na compra, topping gratis na compra).<br>
+                                    Assim o desafio gera fluxo sem nunca dar produto totalmente de graca.
+                                </p>
+                            </div>
+                        </div>
+
+                        <button class="btn-save" onclick="saveAccessMode()" style="margin-top:14px">💾 Salvar Modo de Acesso</button>
+                    </div>
+                </div>
+
                 <!-- Gamification Mechanics Config -->
                 <div class="section-block">
                     <h3 class="section-title">⚙️ Mecanicas de Gamificacao</h3>
@@ -933,6 +1014,37 @@
             document.getElementById('toggleStatusText').textContent = this.checked ? 'Ativo' : 'Inativo';
         });
 
+        // Toggle do modo gratis: mostra/esconde opcoes
+        document.getElementById('cfgFreeAccess').addEventListener('change', function() {
+            document.getElementById('freeAccessOptions').style.display = this.checked ? '' : 'none';
+            document.getElementById('freeAccessStatusText').textContent = this.checked
+                ? 'ATIVO — Qualquer um pode jogar (premio so vale na compra)'
+                : 'Inativo (precisa de codigo)';
+        });
+
+        // ============================================
+        // Save / Load Modo de Acesso
+        // ============================================
+        async function saveAccessMode() {
+            const config = {
+                requireVoucher: !document.getElementById('cfgFreeAccess').checked,
+                freeMaxPerDay: parseInt(document.getElementById('cfgFreeMaxPerDay').value) || 1,
+                freeConditionNote: document.getElementById('cfgFreeConditionNote').value.trim(),
+                freeBannerText: document.getElementById('cfgFreeBannerText').value.trim(),
+                freeExact: document.getElementById('cfgFreeExact').value.trim(),
+                freeClose50: document.getElementById('cfgFreeClose50').value.trim(),
+                freeClose200: document.getElementById('cfgFreeClose200').value.trim(),
+                accessUpdatedAt: new Date().toISOString()
+            };
+            try {
+                await db.collection('config').doc('desafio_premios').set(config, { merge: true });
+                Utils.showToast('Modo de acesso salvo!', 'success');
+            } catch (err) {
+                console.error('Erro ao salvar modo de acesso:', err);
+                Utils.showToast('Erro ao salvar modo de acesso', 'error');
+            }
+        }
+
         // ============================================
         // Load Config from Firebase
         // ============================================
@@ -956,6 +1068,19 @@
                     if (d.instagramHandle) document.getElementById('cfgInstagramHandle').value = d.instagramHandle;
                     if (d.instagramExtraChances) document.getElementById('cfgInstagramExtraChances').value = d.instagramExtraChances;
                     if (d.attemptsPerPurchase) document.getElementById('cfgAttemptsPerPurchase').value = d.attemptsPerPurchase;
+                    // Modo de acesso (free play)
+                    var freeOn = (d.requireVoucher === false);
+                    document.getElementById('cfgFreeAccess').checked = freeOn;
+                    document.getElementById('freeAccessOptions').style.display = freeOn ? '' : 'none';
+                    document.getElementById('freeAccessStatusText').textContent = freeOn
+                        ? 'ATIVO — Qualquer um pode jogar (premio so vale na compra)'
+                        : 'Inativo (precisa de codigo)';
+                    if (d.freeMaxPerDay) document.getElementById('cfgFreeMaxPerDay').value = d.freeMaxPerDay;
+                    if (d.freeConditionNote) document.getElementById('cfgFreeConditionNote').value = d.freeConditionNote;
+                    if (d.freeBannerText) document.getElementById('cfgFreeBannerText').value = d.freeBannerText;
+                    if (d.freeExact) document.getElementById('cfgFreeExact').value = d.freeExact;
+                    if (d.freeClose50) document.getElementById('cfgFreeClose50').value = d.freeClose50;
+                    if (d.freeClose200) document.getElementById('cfgFreeClose200').value = d.freeClose200;
                     // Show/hide value fields based on type
                     updatePrizeValueFields();
                 }
