@@ -148,10 +148,10 @@ function placeOrder() {
     var customerPhone = (document.getElementById('checkoutPhone') || {}).value || '';
     var customerCpf = (document.getElementById('checkoutCpf') || {}).value || '';
 
-    // Store data
-    var storeName = window._selectedStoreName || 'MilkyPot';
-    var storeWhatsapp = window._selectedStoreWhatsApp || '5511999999999';
-    var storeTime = window._selectedStoreTime || '20-35 min';
+    // Store data (fallback: Muffato Quintino - Londrina-PR)
+    var storeName = window._selectedStoreName || 'MilkyPot Muffato Quintino';
+    var storeWhatsapp = window._selectedStoreWhatsApp || '554399804343';
+    var storeTime = window._selectedStoreTime || '15-30 min';
     var storeFee = window._selectedStoreDeliveryFee || 0;
 
     // Delivery data
