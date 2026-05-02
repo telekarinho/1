@@ -1087,23 +1087,39 @@
                     </label>
                 </div>
                 <div class="delivery-address" id="deliveryAddress" style="display:none">
+                    <button type="button" onclick="window._useMyLocation && window._useMyLocation()"
+                            style="width:100%;padding:14px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;box-shadow:0 4px 12px rgba(16,185,129,.3)">
+                        <span style="font-size:18px">📍</span>
+                        <span>Usar minha localização</span>
+                    </button>
+                    <div style="text-align:center;font-size:12px;color:#9ca3af;margin:6px 0 12px">— ou preencha manualmente —</div>
                     <div class="form-group">
-                        <label>CEP</label>
-                        <input type="text" id="checkoutCep" placeholder="00000-000">
+                        <label>CEP <small style="color:#10B981;font-weight:600">(digite e preenchemos o resto)</small></label>
+                        <input type="text" id="checkoutCep" placeholder="00000-000" maxlength="9" inputmode="numeric"
+                               oninput="window._maskCepInput && window._maskCepInput(this); window._cepLookupOnInput && window._cepLookupOnInput(this)">
                     </div>
-                    <div class="form-group">
-                        <label>Endereço</label>
-                        <input type="text" id="checkoutAddress" placeholder="Rua, número">
+                    <div class="form-row">
+                        <div class="form-group" style="flex:2">
+                            <label>Endereço</label>
+                            <input type="text" id="checkoutAddress" placeholder="Rua / Avenida" oninput="window._scheduleUberQuote && window._scheduleUberQuote()">
+                        </div>
+                        <div class="form-group" style="flex:1">
+                            <label>Número</label>
+                            <input type="text" id="checkoutNumber" placeholder="123" inputmode="numeric" oninput="window._scheduleUberQuote && window._scheduleUberQuote()">
+                        </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Complemento</label>
+                            <label>Complemento <small style="color:#9ca3af;font-weight:500">(opcional)</small></label>
                             <input type="text" id="checkoutComplement" placeholder="Apto, bloco...">
                         </div>
                         <div class="form-group">
                             <label>Bairro</label>
-                            <input type="text" id="checkoutNeighborhood" placeholder="Bairro">
+                            <input type="text" id="checkoutNeighborhood" placeholder="Bairro" oninput="window._scheduleUberQuote && window._scheduleUberQuote()">
                         </div>
+                    </div>
+                    <div id="uberQuoteStatus" style="margin-top:8px;padding:10px 12px;border-radius:8px;background:#F3F4F6;color:#6b7280;font-size:13px;display:none">
+                        <span id="uberQuoteStatusText">Calculando frete…</span>
                     </div>
                 </div>
                 <div class="checkout-nav">
@@ -1929,6 +1945,177 @@
             if (d.length > 9)  f = d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6,9) + '-' + d.slice(9);
             input.value = f;
         };
+        window._maskCepInput = function(input) {
+            var d = (input.value || '').replace(/\D/g, '').slice(0, 8);
+            input.value = d.length > 5 ? d.slice(0,5) + '-' + d.slice(5) : d;
+        };
+        // ViaCEP auto-preenche rua/bairro quando CEP completar 8 digitos
+        window._cepLookupOnInput = function(input) {
+            var d = (input.value || '').replace(/\D/g, '');
+            if (d.length !== 8) return;
+            // Indicador visual
+            var status = document.getElementById('uberQuoteStatus');
+            var statusText = document.getElementById('uberQuoteStatusText');
+            if (status && statusText) {
+                statusText.textContent = '🔍 Buscando endereço…';
+                status.style.display = 'block';
+                status.style.background = '#EEF2FF';
+                status.style.color = '#3730A3';
+            }
+            fetch('https://viacep.com.br/ws/' + d + '/json/')
+                .then(function(r){ return r.json(); })
+                .then(function(j){
+                    if (j && !j.erro) {
+                        var addr = document.getElementById('checkoutAddress');
+                        var nbh  = document.getElementById('checkoutNeighborhood');
+                        if (addr && j.logradouro) addr.value = j.logradouro;
+                        if (nbh  && j.bairro)     nbh.value  = j.bairro;
+                        // Foca no Numero pra o cliente continuar
+                        var num = document.getElementById('checkoutNumber');
+                        if (num) num.focus();
+                        if (statusText) {
+                            statusText.textContent = '✓ Endereço encontrado: ' + (j.logradouro || '') + ', ' + (j.bairro || '');
+                            if (status) { status.style.background = '#ECFDF5'; status.style.color = '#065F46'; }
+                        }
+                        // Tenta cotacao Uber em seguida
+                        window._scheduleUberQuote();
+                    } else {
+                        if (statusText) {
+                            statusText.textContent = '⚠ CEP não encontrado — preencha manualmente';
+                            if (status) { status.style.background = '#FFF7ED'; status.style.color = '#9A3412'; }
+                        }
+                    }
+                })
+                .catch(function(){
+                    if (statusText) {
+                        statusText.textContent = '⚠ Sem conexão pra buscar CEP — preencha manualmente';
+                        if (status) { status.style.background = '#FEE2E2'; status.style.color = '#991B1B'; }
+                    }
+                });
+        };
+        // Geolocalizacao "Usar minha localizacao" — estilo iFood
+        // Pede GPS do browser, faz reverse geocode via Nominatim (grátis),
+        // preenche os campos e dispara cotação Uber.
+        window._useMyLocation = function() {
+            var status = document.getElementById('uberQuoteStatus');
+            var statusText = document.getElementById('uberQuoteStatusText');
+            function setStatus(msg, color, bg) {
+                if (status && statusText) {
+                    statusText.innerHTML = msg;
+                    status.style.display = 'block';
+                    status.style.color = color || '#3730A3';
+                    status.style.background = bg || '#EEF2FF';
+                }
+            }
+            if (!navigator.geolocation) {
+                setStatus('⚠ Seu navegador não suporta geolocalização', '#991B1B', '#FEE2E2');
+                return;
+            }
+            setStatus('📍 Buscando sua localização (permita o acesso)…', '#3730A3', '#EEF2FF');
+            navigator.geolocation.getCurrentPosition(function(pos){
+                var lat = pos.coords.latitude;
+                var lng = pos.coords.longitude;
+                setStatus('🔍 Identificando endereço da localização…', '#3730A3', '#EEF2FF');
+                // Nominatim reverse geocode (gratis, sem API key)
+                fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&accept-language=pt-BR&zoom=18')
+                    .then(function(r){ return r.json(); })
+                    .then(function(j){
+                        var addr = j.address || {};
+                        var rua  = addr.road || addr.pedestrian || '';
+                        var num  = addr.house_number || '';
+                        var nbh  = addr.suburb || addr.neighbourhood || addr.city_district || '';
+                        var cep  = (addr.postcode || '').replace(/\D/g,'');
+                        var addrEl = document.getElementById('checkoutAddress');
+                        var numEl  = document.getElementById('checkoutNumber');
+                        var nbhEl  = document.getElementById('checkoutNeighborhood');
+                        var cepEl  = document.getElementById('checkoutCep');
+                        if (addrEl && rua) addrEl.value = rua;
+                        if (numEl  && num) numEl.value  = num;
+                        if (nbhEl  && nbh) nbhEl.value  = nbh;
+                        if (cepEl  && cep.length === 8) cepEl.value = cep.slice(0,5) + '-' + cep.slice(5);
+                        setStatus('✓ Endereço identificado: <strong>' + rua + (num ? ', ' + num : '') + '</strong>' + (num ? '' : ' (preencha o número)'), '#065F46', '#ECFDF5');
+                        if (!num && numEl) numEl.focus();
+                        window._scheduleUberQuote();
+                    })
+                    .catch(function(e){
+                        setStatus('⚠ Não conseguimos identificar o endereço — preencha manualmente', '#9A3412', '#FFF7ED');
+                    });
+            }, function(err) {
+                var msg = err.code === 1 ? 'Você bloqueou o acesso à localização. Permita nas configurações do navegador.' :
+                          err.code === 2 ? 'Localização indisponível — preencha manualmente' :
+                                            'Tempo esgotado — preencha manualmente';
+                setStatus('⚠ ' + msg, '#991B1B', '#FEE2E2');
+            }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+        };
+
+        // Debounce + cotacao Uber em real-time
+        var _uberQuoteTimeout = null;
+        window._scheduleUberQuote = function() {
+            if (_uberQuoteTimeout) clearTimeout(_uberQuoteTimeout);
+            _uberQuoteTimeout = setTimeout(window._fetchUberQuote, 700);
+        };
+        window._fetchUberQuote = function() {
+            try {
+                var addr = (document.getElementById('checkoutAddress') || {}).value || '';
+                var num  = (document.getElementById('checkoutNumber')  || {}).value || '';
+                var nbh  = (document.getElementById('checkoutNeighborhood') || {}).value || '';
+                var cep  = ((document.getElementById('checkoutCep') || {}).value || '').replace(/\D/g, '');
+                var name = (document.getElementById('checkoutName') || {}).value || 'Cliente';
+                var phone = (document.getElementById('checkoutPhone') || {}).value || '';
+                if (!addr || !num || !nbh || cep.length !== 8) return;
+
+                var fid = (window._selectedStore && window._selectedStore.id) ||
+                          (window.selectedStore && window.selectedStore.id) || null;
+                // Tenta achar via CHECKOUT_STORES selectedStore (escopo do IIFE)
+                if (!fid) {
+                    var sel = document.querySelector('.checkout-store-card.store-selected');
+                    if (sel) fid = sel.getAttribute('data-store-id');
+                }
+                if (!fid) return; // sem franquia selecionada nao da pra cotar
+
+                var status = document.getElementById('uberQuoteStatus');
+                var statusText = document.getElementById('uberQuoteStatusText');
+                if (status && statusText) {
+                    statusText.textContent = '🛵 Calculando frete via Uber…';
+                    status.style.display = 'block';
+                    status.style.background = '#EEF2FF';
+                    status.style.color = '#3730A3';
+                }
+
+                var dropAddr = addr + ', ' + num + ' - ' + nbh + ' - Londrina, PR ' + cep;
+                var fns = (firebase.app && firebase.app().functions) ? firebase.app().functions('southamerica-east1') : null;
+                if (!fns) return;
+                fns.httpsCallable('uberDirect_getQuote')({
+                    franchiseId: fid,
+                    dropoff_address: dropAddr,
+                    dropoff_name: name,
+                    dropoff_phone_number: phone.replace(/\D/g,'') ? '+55' + phone.replace(/\D/g,'') : '+5543000000000',
+                    manifest_items: [{ name: 'Pedido MilkyPot', quantity: 1, size: 'small' }]
+                }).then(function(r){
+                    var data = (r && r.data) || {};
+                    var feeCents = data.customer_fee_cents != null ? data.customer_fee_cents : data.uber_fee_cents;
+                    if (feeCents == null) {
+                        statusText.textContent = '⚠ Não foi possível calcular o frete — usaremos o valor padrão da loja';
+                        if (status) { status.style.background = '#FFF7ED'; status.style.color = '#9A3412'; }
+                        return;
+                    }
+                    var feeBRL = Number(feeCents) / 100;
+                    window._uberQuoteFee = feeBRL;
+                    window._uberQuoteId = data.quote_id;
+                    var feeTxt = 'R$ ' + feeBRL.toFixed(2).replace('.', ',');
+                    statusText.innerHTML = '✓ <strong>Frete: ' + feeTxt + '</strong> · entrega via Uber';
+                    if (status) { status.style.background = '#ECFDF5'; status.style.color = '#065F46'; }
+                    var dft = document.getElementById('deliveryFeeText');
+                    if (dft) dft.textContent = 'Taxa: ' + feeTxt;
+                }).catch(function(e){
+                    console.warn('uberDirect_getQuote:', e && e.message);
+                    if (statusText) {
+                        statusText.textContent = '⚠ Uber Direct não disponível pra esse endereço';
+                        if (status) { status.style.background = '#FFF7ED'; status.style.color = '#9A3412'; }
+                    }
+                });
+            } catch(e) { console.warn('_fetchUberQuote:', e); }
+        };
 
         // Init
         initCatalog();
@@ -1973,7 +2160,7 @@
             var statusText = store.open ? '🟢 Aberto agora' : '🔴 Fechado';
             var isSelected = selectedStore && selectedStore.id === store.id;
 
-            html += '<div class="checkout-store-card ' + statusClass + (isSelected ? ' store-selected' : '') + (store.open ? '' : ' store-disabled') + '" ' +
+            html += '<div class="checkout-store-card ' + statusClass + (isSelected ? ' store-selected' : '') + (store.open ? '' : ' store-disabled') + '" data-store-id="' + store.id + '" ' +
                 (store.open ? 'onclick="selectCheckoutStore(\'' + store.id + '\')"' : '') + '>' +
                 '<div class="cs-card-main">' +
                     '<div class="cs-card-info">' +
