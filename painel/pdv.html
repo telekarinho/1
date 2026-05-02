@@ -3673,76 +3673,130 @@
             } catch(e) { console.warn('NFCe.emit:', e); }
         }
 
-        // Auto-create financial entry from PDV sale
-        // Inclui CMV (custo da mercadoria vendida) para rastreio de margem no Financeiro
+        // ============================================
+        // CMV SNAPSHOT — calculado AGORA, salvo no pedido (imutavel)
+        // ============================================
+        // FONTE PRIMARIA: CatalogV2 (produto.custos.custoTotal)
+        // FONTE FALLBACK: catalog_config legado (campo cost no item)
+        // SOURCE TRACKING: cada item registra de onde veio o custo
+        // _pendingCMV: marca pedido se algum item ficou sem custo (admin
+        // precisa cadastrar composicao do produto)
         var _catalogCfg = DataStore.get('catalog_config') || {};
-        var _totalCusto = 0;
-        var _itemsWithCost = order.items.map(function(item) {
-            // 1) Custo pré-calculado (buffet/por_peso já traz custo proporcional)
-            var preCusto = Number(item.cost) || 0;
-            if (preCusto > 0) {
-                _totalCusto += preCusto;
-                return {
-                    name: item.name, qty: item.qty, unitPrice: item.unitPrice,
-                    productId: item.productId || null,
-                    type: item.type || 'unitario',
-                    weightG: item.weightG || null,
-                    unitCost: item.type === 'por_peso' && item.weightG
-                        ? Math.round((preCusto / (item.weightG/1000)) * 100) / 100  // custo/kg
-                        : preCusto,
-                    custo: Math.round(preCusto * 100) / 100
-                };
-            }
-
-            // 2) Lookup por productId (fonte mais confiável) ou nome no catálogo
-            var unitCost = 0;
+        var _v2Cache = null; // lazy-load CatalogV2 produtos
+        function _v2Lookup(productId) {
+            if (!productId) return null;
+            if (typeof CatalogV2 === 'undefined' || !CatalogV2.getProduto) return null;
+            try {
+                var p = CatalogV2.getProduto(fid, productId);
+                if (p && p.custos) {
+                    return Number(p.custos.custoTotal) || Number(p.custos.custoInsumos) || 0;
+                }
+            } catch(_e) {}
+            return null;
+        }
+        function _legacyLookup(item) {
+            // Lookup legado (catalog_config) por productId ou nome
             if (item.productId && _catalogCfg.sabores) {
-                Object.values(_catalogCfg.sabores).some(function(grupo) {
-                    if (!grupo || !grupo.items) return false;
-                    var found = grupo.items.find(function(ci) { return ci.id === item.productId; });
-                    if (found) { unitCost = Number(found.cost) || 0; return true; }
+                var hit = null;
+                Object.values(_catalogCfg.sabores).some(function(g) {
+                    if (!g || !g.items) return false;
+                    var f = g.items.find(function(ci) { return ci.id === item.productId; });
+                    if (f) { hit = f; return true; }
                     return false;
                 });
+                if (hit) return Number(hit.cost) || 0;
             }
-            if (!unitCost && _catalogCfg.sabores) {
-                Object.values(_catalogCfg.sabores).some(function(grupo) {
-                    if (!grupo || !grupo.items) return false;
-                    var found = grupo.items.find(function(ci) {
+            if (_catalogCfg.sabores) {
+                var hit2 = null;
+                Object.values(_catalogCfg.sabores).some(function(g) {
+                    if (!g || !g.items) return false;
+                    var f = g.items.find(function(ci) {
                         return ci.name === item.name || item.name.indexOf(ci.name) === 0;
                     });
-                    if (found) { unitCost = Number(found.cost) || 0; return true; }
+                    if (f) { hit2 = f; return true; }
                     return false;
                 });
+                if (hit2) return Number(hit2.cost) || 0;
             }
-            // Bebidas (por productId ou nome)
-            if (!unitCost && _catalogCfg.bebidas) {
+            if (_catalogCfg.bebidas) {
                 var bev = _catalogCfg.bebidas.find(function(b) {
                     return (item.productId && b.id === item.productId) || b.name === item.name;
                 });
-                if (bev) unitCost = Number(bev.cost) || 0;
+                if (bev) return Number(bev.cost) || 0;
             }
-            // Custo dos extras/toppings
+            return 0;
+        }
+
+        var _totalCusto = 0;
+        var _hasPendingCMV = false;
+        var _itemsWithCost = order.items.map(function(item) {
+            var qty = item.qty || 1;
+            var cmvSource = 'none';
+            var unitCost = 0;
             var extrasCost = 0;
-            if (item.extras && _catalogCfg.adicionais) {
-                item.extras.forEach(function(ex) {
-                    Object.values(_catalogCfg.adicionais).forEach(function(ag) {
-                        if (ag && ag.items) {
-                            var ai = ag.items.find(function(a) { return a.name === ex.name; });
-                            if (ai) extrasCost += Number(ai.cost) || 0;
-                        }
+
+            // 1) Custo pré-calculado (buffet/por_peso ja vem com custo proporcional)
+            var preCusto = Number(item.cost) || 0;
+            if (preCusto > 0) {
+                cmvSource = 'precalculated';
+                unitCost = item.type === 'por_peso' && item.weightG
+                    ? Math.round((preCusto / (item.weightG/1000)) * 100) / 100
+                    : preCusto;
+                _totalCusto += preCusto;
+            } else {
+                // 2) Lookup CatalogV2 PRIMARIO
+                var v2Cost = _v2Lookup(item.productId);
+                if (v2Cost && v2Cost > 0) {
+                    unitCost = v2Cost;
+                    cmvSource = 'v2';
+                } else {
+                    // 3) FALLBACK: catalog_config legado
+                    var legCost = _legacyLookup(item);
+                    if (legCost > 0) {
+                        unitCost = legCost;
+                        cmvSource = 'legacy';
+                    } else {
+                        cmvSource = 'none';
+                        _hasPendingCMV = true;
+                    }
+                }
+                // Custo dos extras/toppings (do legado — sem v2 equivalent ainda)
+                if (item.extras && _catalogCfg.adicionais) {
+                    item.extras.forEach(function(ex) {
+                        Object.values(_catalogCfg.adicionais).forEach(function(ag) {
+                            if (ag && ag.items) {
+                                var ai = ag.items.find(function(a) { return a.name === ex.name; });
+                                if (ai) extrasCost += Number(ai.cost) || 0;
+                            }
+                        });
                     });
-                });
+                }
+                var itemTotal = (unitCost + extrasCost) * qty;
+                _totalCusto += itemTotal;
             }
-            var itemCusto = (unitCost + extrasCost) * (item.qty || 1);
-            _totalCusto += itemCusto;
+
+            // CMV snapshot por item (imutavel, gravado no pedido)
+            var cmvSnapshot = preCusto > 0 ? preCusto : ((unitCost + extrasCost) * qty);
+            // Tambem grava DENTRO de order.items pra o pedido carregar consigo
+            item.productId = item.productId || null;
+            item.cmvSnapshot = Math.round(cmvSnapshot * 100) / 100;
+            item.cmvSource = cmvSource;
+            item.unitCostSnapshot = Math.round(unitCost * 100) / 100;
+
             return {
-                name: item.name, qty: item.qty, unitPrice: item.unitPrice,
+                name: item.name, qty: qty, unitPrice: item.unitPrice,
                 productId: item.productId || null,
                 type: item.type || 'unitario',
+                weightG: item.weightG || null,
                 unitCost: unitCost,
-                custo: Math.round(itemCusto * 100) / 100
+                custo: Math.round(cmvSnapshot * 100) / 100,
+                cmvSource: cmvSource
             };
         });
+        // CMV total e margem no pedido (alem do financeEntry)
+        order.cmvTotal = Math.round(_totalCusto * 100) / 100;
+        order.lucroBruto = Math.round((total - _totalCusto) * 100) / 100;
+        if (_hasPendingCMV) order._pendingCMV = true;
         var _margem = total > 0 ? Math.round((1 - _totalCusto / total) * 1000) / 10 : null;
 
         var financeEntry = {
@@ -3751,27 +3805,52 @@
             category: 'vendas',
             source: 'pdv',
             amount: total,
-            custo: Math.round(_totalCusto * 100) / 100,
+            custo: Math.round(_totalCusto * 100) / 100,           // CMV
+            cmvSnapshot: Math.round(_totalCusto * 100) / 100,     // alias explicito
+            lucroBruto: Math.round((total - _totalCusto) * 100) / 100,
             margem: _margem,
             items: _itemsWithCost,
             description: 'PDV ' + order.id + ' - ' + (oName || 'Balcao'),
             orderId: order.id,
             date: new Date().toISOString().split('T')[0],
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            // Audit trail: indicacao de qualidade do CMV pra DRE
+            _pendingCMV: !!_hasPendingCMV,
+            _cmvSourceMix: _itemsWithCost.reduce(function(acc,it){
+                acc[it.cmvSource] = (acc[it.cmvSource]||0) + 1; return acc;
+            }, {})
         };
         DataStore.addToCollection('finances', fid, financeEntry);
 
-        // Consome estoque da receita uma vez por venda.
+        // Consome estoque da receita uma vez por venda. Recipes.deductFromInventory
+        // agora faz dual-read (CatalogV2 primeiro, legado fallback).
         if (typeof Recipes !== 'undefined' && Recipes.deductFromInventory) {
             try {
                 var deducted = Recipes.deductFromInventory(fid, order);
-                if (deducted) {
+                // Compat: pode ser bool (legado) ou {ok, deducted, warnings, sources}
+                var didDeduct = deducted === true || (deducted && deducted.deducted);
+                var stockWarnings = (deducted && deducted.warnings) || [];
+                var stockSources = (deducted && deducted.sources) || {};
+                if (didDeduct) {
                     order.inventoryDeducted = true;
                     order.inventoryDeductedAt = new Date().toISOString();
-                    DataStore.updateInCollection('orders', fid, order.id, {
-                        inventoryDeducted: true,
-                        inventoryDeductedAt: order.inventoryDeductedAt
-                    });
+                }
+                if (stockWarnings.length || Object.keys(stockSources).length) {
+                    order._stockWarnings = stockWarnings;
+                    order._stockSources = stockSources;
+                }
+                DataStore.updateInCollection('orders', fid, order.id, {
+                    inventoryDeducted: !!didDeduct,
+                    inventoryDeductedAt: order.inventoryDeductedAt || null,
+                    _stockWarnings: stockWarnings.length ? stockWarnings : null,
+                    _stockSources: Object.keys(stockSources).length ? stockSources : null,
+                    cmvTotal: order.cmvTotal,
+                    lucroBruto: order.lucroBruto,
+                    _pendingCMV: !!order._pendingCMV
+                });
+                // Toast pro operador se algum item ficou sem baixa de estoque
+                if (stockWarnings.length && typeof Utils !== 'undefined' && Utils.showToast) {
+                    Utils.showToast('⚠ Venda OK mas: ' + stockWarnings[0], 'warning');
                 }
             } catch (e) {
                 console.warn('Recipes.deductFromInventory:', e);
