@@ -2,6 +2,49 @@
 
 ---
 
+## Ciclo #85 — 2026-05-02
+
+**Área:** Conteúdo — Semanas 45 + 46 (21/02–06/03/2027)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #84. Semana 45 = reta final do Carnaval (7 dias countdown, Dom 21/02 a Sáb 27/02) com **Sexta #29 (26/02) = Véspera de Carnaval = maior Sexta do ano inteiro**. Semana 46 = **Carnaval ao vivo** (Dom 28/02, Seg 01/03, Ter 02/03 = Terça Gordo) + Quarta de Cinzas (03/03, tom de transição) + UGC showcase (04/03) + **Sexta #30 "Sexta da Ressaca Boa"** (05/03) + encerramento do arco Carnaval com teaser aniversário 1 ano (06/03).
+
+**O que analisou:**
+- Leu semanas 43 e 44 como referência de formato (padrão v11: Dom–Sab, Versão A/B, templates WA, checklist, métricas, tabela editorial)
+- Confirmou estrutura semanal Dom–Sáb: 14/02 = domingo (semana 44) → 28/02 = domingo (semana 46 começa no primeiro domingo de Carnaval)
+- Mapeou Sexta #29 = 26/02 (véspera informal de Carnaval) como maior Sexta do arco; Sexta #30 = 05/03 como "Sexta da Ressaca Boa"
+- Dias de Carnaval ao vivo: Dom 28/02, Seg 01/03, Ter 02/03 (Terça Gordo), Qua 03/03 (Quarta de Cinzas)
+- Identificou necessidade de dois registros emocionais distintos: frenesi (semana 45 + 28/02–02/03) e acolhimento (03–06/03)
+- Estruturou semana 46 com conteúdo "ao vivo" para os 3 dias de Carnaval — stories em tempo real como diferencial crítico
+- Sábado 06/03 = encerramento do arco + primeiro teaser velado do aniversário 1 ano (25/04/2027)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana45.md` | CRIADO — 7 peças (Dom–Sab): countdown "7 dias" Dom 21/02 + WA VIP abertura, carrossel cardápio Carnaval Seg 22/02, bastidores loja preparação Ter 23/02, WA VIP detalhes Sexta #29 + horários confirmados Qua 24/02, UGC showcase + anúncio Sexta #29 Qui 25/02, **Sexta #29 "A Maior Sexta do Ano" com 6 touchpoints** Sex 26/02, "AMANHÃ É CARNAVAL!" + UGC Sexta #29 + WA confirmação Sáb 27/02; Reel 15s "countdown final"; checklist; métricas; tabela editorial; transição semana 46 |
+| `belinha/content/pos-inauguracao-semana46.md` | CRIADO — **DIA 1 Carnaval ao vivo Dom 28/02** (feed 13h + WA VIP 11h + WA geral 12h + 10 touchpoints stories), **DIA 2 Seg 01/03** (açaí hero + energia, 8 touchpoints), **DIA 3 = Terça Gordo 02/03** (urgência máxima + ponto em dobro, 9 touchpoints), Quarta de Cinzas 03/03 (tom acolhedor, transição), UGC showcase Qui 04/03, **Sexta #30 "Sexta da Ressaca Boa"** Sex 05/03 (Linha Zero + Açaí hero), encerramento arco + teaser aniversário 1 ano Sáb 06/03; Reel 15s "resumo épico"; checklist; métricas; tabela editorial; transição semana 47 |
+
+**Commit:** `1dc6c39`
+
+**Destaques de conteúdo:**
+1. **Sexta #29 (26/02) — 6 touchpoints sequenciais:** WA VIP 9h → Feed 11h → WA geral 12h → Abertura ao vivo 14h → UGC 17h → Urgência encerramento 20h. Maior mobilização de uma única Sexta em todo o histórico do MilkyPot Londrina.
+2. **Dias de Carnaval com stories em tempo real:** Cada dia tem roteiro de stories ao vivo (8–10 touchpoints por dia). Diferencial crítico vs. concorrentes: presença em tempo real mostra fila, primeiro potinho, equipe de fantasia — conteúdo espontâneo que gera FOMO e UGC orgânico.
+3. **Quarta de Cinzas como virada emocional:** Tom muda radicalmente de eufórico para acolhedor. Linha Zero posicionada como "ressaca saborosa" — aproveitando o contexto de pós-folia para converter a narrativa de saúde/leveza.
+4. **Encerramento arco (sábado 06/03) com teaser misterioso:** "A ovelhinha tem algo especial guardado... Em breve no @milkypotbr" — primeiro gancho do aquecimento do aniversário 1 ano (25/04/2027) sem revelar ainda o que é.
+5. **Versão A/B mantida para produto temático + ofertas VIP:** Todos os bloqueadores ativos (produto Carnaval, oferta VIP, ponto em dobro) incluídos como variações — operador escolhe sem precisar de novo ciclo.
+
+**Próximo passo sugerido:**
+- Ciclo #86: Conteúdo — Semanas 47+48 (07–20/03/2027): **Início aquecimento aniversário 1 ano** — "Faltam 7 semanas para 25/04" (semana 47, tom misterioso/teaser) + ativação lista WA "ANIVERSARIO" + carrossel educativo "como o MilkyPot surgiu" + Sexta #31 (12/03) + carrossel "você estava lá em 25/04?" (semana 48)
+- Ciclo #87: Conteúdo — Semanas 49+50 (21/03–03/04): aquecimento 1 ano semana 3/4 — "12 meses em 12 imagens" + reveal produto aniversário (Versão A/B)
+- Ciclo #88: SEO/UX — gap técnico obrigatório (≥6 ciclos de conteúdo consecutivos desde #82): indexação landing pages, schema produto, sitemap.xml, Core Web Vitals
+- **Operador — CRÍTICO (prazo 21/03/2027):** Confirmar produto especial de aniversário com a franquia — Belinha precisa de: nome, ingredientes principais, preço sugerido, visual (cor dominante), nome do "kit" especial. Sem isso, os ciclos #86–87 usarão Versão A/B.
+- **Operador — CRÍTICO (prazo 14/02/2027 — já passou):** Confirmar produto temático de Carnaval para substituir "Versão B" nas semanas 45–46.
+- **Operador:** Levantar métricas reais dos 3 dias de Carnaval (pedidos, clientes, faturamento) para o post de encerramento de sábado 06/03.
+
+_Belinha — Ciclo #85 | 2026-05-02_
+
+---
+
 ## Ciclo #84 — 2026-05-01
 
 **Área:** Concorrentes — Refetch TheBest + MilkyMoo + novo entrante Green Açaí + briefing aniversário 1 ano
