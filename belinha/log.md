@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #91 — 2026-05-02
+
+**Área:** Conteúdo — Dia H (25/04/2027) + Semana 54 pós-aniversário
+
+**Contexto:** Obrigatório conforme prescrição do ciclo #90. O ciclo #91 cobre o roteiro completo do dia mais importante da história da loja: o aniversário de 1 ANO (25/04/2027). Inclui também o conteúdo da semana 54 (26/04–02/05) de gratidão e retrospectiva, além do template de post-mortem operacional.
+
+**O que analisou:**
+- Leu semana 53 completa (ciclo #90) como referência de tom, formato e continuidade narrativa
+- Identificou a estrutura de horários do dia H a partir do padrão histórico da inauguração (14h–23h) com abertura VIP 1h antes (13h)
+- Mapeou 20+ touchpoints ao longo do dia H (WA ANIVER, WA geral, feed, reel, stories ao vivo, mid-event, última hora, encerramento)
+- Incluiu guia de crise com 10 cenários específicos do dia H (esgotamento, fila, delivery atrasado, influencer que cancela, Instagram fora do ar, queda de energia, equipe ausente, reclamação pública, mau tempo, PDV travado)
+- Estruturou template de post-mortem com 12 métricas quantitativas + avaliação operacional qualitativa + seção "aprendizados para o 2º aniversário"
+- Criou semana 54 completa (dom–sáb 27/04–03/05): gratidão "dia depois", carrossel retrospectiva 10 slides, reconhecimento equipe, retomada Linha Zero/Fit, Dia do Trabalho fidelidade, Sexta #37 pós-aniversário, teaser Dia das Mães
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-dia-h.md` | CRIADO — ~600 linhas: roteiro hora a hora do dia H (07h→pós-fechamento), scripts WA completos (ANIVER + geral) para cada momento, post feed + reel 15s de abertura e encerramento, guia de crise 10 cenários com copy pronto, template post-mortem com 12 métricas, semana 54 completa (7 peças dom–sáb), checklist operacional 25 itens, tabela editorial hora a hora, transição para semana 55 / Dia das Mães |
+
+**Commit:** _(ver abaixo)_
+
+**Destaques de conteúdo:**
+1. **Abertura VIP ANIVER (13h):** 1h de exclusividade antes da abertura geral. Script WA de notificação + story ao vivo da porta abrindo = prova social imediata e recompensa máxima para o VIP
+2. **20+ touchpoints no dia H:** Nenhum momento do dia fica sem comunicação. Da montagem às 07h até o story de encerramento da equipe — tudo documentado com copy pronto
+3. **Guia de crise 10 cenários com copy pronto:** Operador não precisa improvisar texto em momento de pressão. "Produto esgotou", "fila enorme", "Instagram fora do ar" — cada cenário tem resposta definida
+4. **Template post-mortem obrigatório em 24h:** 12 métricas quantitativas + avaliação qualitativa + seção específica "aprendizados para o 2º aniversário" (25/04/2028). Fecha o ciclo de melhoria contínua
+5. **Semana 54 como transição narrativa:** Da "era do 1 ANO" para a "era do crescimento" — culmina no teaser do Dia das Mães (11/05/2027) no sábado 03/05, mantendo o engajamento alto após o pico do evento
+
+**Próximo passo sugerido:**
+- **Ciclo #92 (auto-aprimoramento obrigatório a cada 5 ciclos):** Releitura do log completo + revisão `belinha/estrategia.md` — identificar o que gerou mais valor nos últimos 5 ciclos (#87–#91) e ajustar prioridades
+- **Ciclo #93:** Conteúdo — Semanas 55+56 (03–16/05/2027): aquecimento Dia das Mães + Sextas #38/#39
+- **Ciclo #94:** SEO/UX — gap técnico: `desafio.html` (schema BreadcrumbList + WebPage), `AggregateRating` quando houver reviews
+- **Operador — CRÍTICO (26/04, dia após evento):** Preencher post-mortem (métricas + aprendizados) enquanto os detalhes estão frescos
+- **Operador — CRÍTICO (até 25/04 às 08h):** Confirmar horário VIP ANIVER, horário abertura geral, nome do produto especial e brinde — preencher os campos `⬜` no arquivo do Dia H
+- **Operador (até 30/04):** Confirmar oferta Sexta #37 (02/05) e definir ação para Dia das Mães (11/05)
+
+_Belinha — Ciclo #91 | 2026-05-02_
+
+---
+
 ## Ciclo #90 — 2026-05-02
 
 **Área:** Conteúdo — Semana 53 (18–24/04/2027) — Semana do Aniversário 1 Ano
