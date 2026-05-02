@@ -950,6 +950,26 @@ exports.setupTestFranchise = onCall({ region: "southamerica-east1" }, async () =
         });
     }
 
+    // Diagnostico do estado Uber (sem expor secrets)
+    const uberMuffato = await db.collection("uber_settings").doc("muffato-quintino").get();
+    const uberTeste = await db.collection("uber_settings").doc(TEST_FID).get();
+    const muffatoStatus = uberMuffato.exists ? {
+        exists: true,
+        enabled: uberMuffato.data().enabled === true,
+        has_client_id: !!uberMuffato.data().client_id,
+        has_customer_id: !!uberMuffato.data().customer_id,
+        has_secret: !!uberMuffato.data().client_secret_encrypted,
+        pickup_address: uberMuffato.data().pickup_address || null,
+    } : { exists: false };
+    const testeStatus = uberTeste.exists ? {
+        exists: true,
+        enabled: uberTeste.data().enabled === true,
+        has_client_id: !!uberTeste.data().client_id,
+        has_customer_id: !!uberTeste.data().customer_id,
+        has_secret: !!uberTeste.data().client_secret_encrypted,
+        pickup_address: uberTeste.data().pickup_address || null,
+    } : { exists: false };
+
     return {
         success: true,
         message: "Franquia teste configurada (auth + franquia + user profile)",
@@ -958,6 +978,147 @@ exports.setupTestFranchise = onCall({ region: "southamerica-east1" }, async () =
         franchiseId: TEST_FID,
         password: "Teste@123",
         userProfileCreated: true,
+        uberStatus: {
+            muffato: muffatoStatus,
+            teste: testeStatus,
+        },
+    };
+});
+
+// ============================================================
+// SEED REAL CATALOG — popula Firestore com os 17 milkshakes + 17
+// sundaes + buffet OFICIAIS. Idempotente — pode rodar quantas vezes.
+// SO sobrescreve o catalog_config se ele tiver < 5 produtos OU se
+// for o seed default (apenas Ninho com Morango / Nutella / Buffet).
+// ============================================================
+exports.seedRealCatalog = onCall({ region: "southamerica-east1" }, async (request) => {
+    const MILKSHAKES = [
+        { id:'amora-apaixonada', name:'Amora Apaixonada', emoji:'💜', desc:'Roxa, doce e teimosa — que nem aquele crush que sua mente não desliga.' },
+        { id:'blue-ice', name:'Blue Ice — Crush Gelado', emoji:'🧊', desc:'Azul que nem o céu de Londrina ao entardecer. Sabor surpresa, frescor de praia.' },
+        { id:'morango-romantico', name:'Morango Romântico', emoji:'🍓', desc:'O clássico que sempre volta — porque amor verdadeiro não envelhece.' },
+        { id:'acai-liberdade', name:'Açaí Liberdade', emoji:'🟣', desc:'Bowl de açaí virou líquido. Energia da Amazônia.' },
+        { id:'caramelo-derretido', name:'Caramelo Derretido', emoji:'🍯', desc:'Caramelo que escorre devagar — igual beijo demorado.' },
+        { id:'limao-refresca', name:'Limão Refresca-Tudo', emoji:'🍋', desc:'Azedinho na medida, gelado no ponto.' },
+        { id:'chocolate-apaixonante', name:'Chocolate Apaixonante', emoji:'🍫', desc:'Bombom líquido. Abraço quente do chocolate.' },
+        { id:'uva-vovo', name:'Uva da Vovó', emoji:'🍇', desc:'Aquela uva roxinha do quintal da vovó, mas crescida.' },
+        { id:'maracuja-calmaria', name:'Maracujá Calmaria', emoji:'💛', desc:'Tropical, levemente azedinho, totalmente relaxante.' },
+        { id:'dentadura-doidinha', name:'Dentadura Doidinha', emoji:'😬', desc:'Milkshake colorido que deixa sua boca igual desenho animado.' },
+        { id:'cookies-snow', name:'Cookies Snow', emoji:'🤍', desc:'Branquinho, cremoso, com pedaços de cookie crocante.' },
+        { id:'ninho-vovo', name:'Ninho da Vovó', emoji:'🥛', desc:'Cremosidade de berço. Aquele cheirinho que lembra colo.' },
+        { id:'pistache-esmeralda', name:'Pistache Esmeralda', emoji:'🟢', desc:'Verdinho gourmet, sofisticado, crocante.' },
+        { id:'peanut-heaven', name:'Peanut Heaven', emoji:'🥜', desc:'Cremoso, salgadinho, viciante. Peanut butter virou milkshake.' },
+        { id:'cereja-beijada', name:'Cereja Beijada', emoji:'🍒', desc:'Vermelhinha, brincalhona, top de bolo.' },
+        { id:'ameixa-roxinha', name:'Ameixa Roxinha', emoji:'🍑', desc:'Roxa, polpuda, exótica.' },
+        { id:'banana-caramelizada', name:'Banana Caramelizada', emoji:'🍌', desc:'Banana douradinha, beijada pelo caramelo.' },
+    ];
+
+    const TAMANHOS = [
+        { id: 'p',     name: 'P (250ml)',    ml: 250, price: 9.99,  available: true },
+        { id: 'm',     name: 'M (400ml)',    ml: 400, price: 19.99, available: true },
+        { id: 'g',     name: 'G (500ml)',    ml: 500, price: 22.99, available: true },
+    ];
+
+    function makeItem(prefix, formato, m, idx) {
+        return {
+            id: prefix + '-' + m.id,
+            name: (idx+1) + '. ' + formato + ' ' + m.name,
+            emoji: m.emoji,
+            desc: m.desc,
+            price: 9.99,
+            highlight: idx < 3,
+            available: true,
+            modoMontagem: 'simples',
+            tipoVenda: 'unidade',
+        };
+    }
+
+    const milkshakeItems = MILKSHAKES.map((m, idx) => makeItem('milkshake', 'Milkshake', m, idx));
+    const sundaeItems = MILKSHAKES.map((m, idx) => makeItem('sundae', 'Sundae', m, idx));
+    sundaeItems.push({
+        id: 'sundae-capitao-acai-premium', name: '18. Sundae Capitão Açaí Premium', emoji: '👑',
+        desc: 'Premium sundae com açaí da Amazônia, granola e raspas de chocolate.',
+        price: 24.99, highlight: true, available: true, isPremium: true,
+        modoMontagem: 'simples', tipoVenda: 'unidade',
+    });
+    milkshakeItems.push({
+        id: 'milkshake-capitao-acai-premium', name: '18. Milkshake Capitão Açaí Premium', emoji: '👑',
+        desc: 'Premium milkshake — açaí amazônico, granola, banana caramelizada.',
+        price: 24.99, highlight: true, available: true, isPremium: true,
+        modoMontagem: 'simples', tipoVenda: 'unidade',
+    });
+
+    const newCatalog = {
+        bases: [
+            { id: 'ninho', name: 'Ninho', emoji: '🥛', available: true },
+            { id: 'baunilha', name: 'Baunilha', emoji: '🍦', available: true },
+        ],
+        tamanhos: TAMANHOS,
+        formatos: [
+            { id: 'milkshake', name: 'Milkshake', emoji: '🥤' },
+            { id: 'sundae', name: 'Sundae', emoji: '🍨' },
+        ],
+        sabores: {
+            milkshake: { label: 'Milkshake', icon: '🥤', items: milkshakeItems },
+            sundae:    { label: 'Sundae',    icon: '🍨', items: sundaeItems    },
+            buffet:    { label: 'Buffet Self-Service', icon: '🍽️', items: [
+                { id: 'buffet-100g', name: 'Buffet por peso', emoji: '⚖️',
+                  desc: 'Monte do seu jeito — 22 toppings + 12 sabores + caldas. R\$ 5,99/100g',
+                  price: 5.99, highlight: true, available: true,
+                  modoMontagem: 'simples', tipoVenda: 'por_peso',
+                  porcoes: [
+                      { label: '200g', peso: 200 },
+                      { label: '300g', peso: 300 },
+                      { label: '400g', peso: 400 },
+                      { label: '500g', peso: 500 },
+                  ],
+                },
+            ]},
+        },
+        adicionais: {
+            coberturas: { label: 'Caldas e Toppings', items: [
+                { id: 'leitinho-morango', name: 'Leitinho Morango', emoji: '✨', price: 2.00, available: true },
+                { id: 'calda-avela', name: 'Calda Avelã', emoji: '✨', price: 2.00, available: true },
+                { id: 'maracuja-calda', name: 'Maracujá Calda', emoji: '✨', price: 2.00, available: true },
+                { id: 'pistache', name: 'Pistache', emoji: '✨', price: 3.50, available: true },
+                { id: 'banana-caramelizada-add', name: 'Banana Caramelizada', emoji: '✨', price: 2.50, available: true },
+                { id: 'morango-add', name: 'Morango', emoji: '🍓', price: 2.00, available: true },
+                { id: 'nutella-add', name: 'Nutella', emoji: '🍫', price: 4.00, available: true },
+            ]},
+        },
+        bebidas: [
+            { id: 'agua-500', name: 'Água Mineral 500ml', emoji: '💧', price: 4.00, available: true, type: 'bebida', tipoVenda: 'unidade' },
+            { id: 'coca-lata', name: 'Coca-Cola Lata 350ml', emoji: '🥤', price: 6.00, available: true, type: 'bebida', tipoVenda: 'unidade' },
+            { id: 'guarana-lata', name: 'Guaraná Antarctica Lata', emoji: '🥤', price: 6.00, available: true, type: 'bebida', tipoVenda: 'unidade' },
+        ],
+        _seedSource: 'production_real',
+        _seededAt: new Date().toISOString(),
+    };
+
+    // Salva em catalog_config (key global usada pelo PDV/cardapio/landing)
+    await db.collection("datastore").doc("catalog_config").set({
+        value: JSON.stringify(newCatalog),
+        updatedAt: new Date().toISOString(),
+    });
+
+    // Tambem salva em catalog_config_<fid> pra ambas franquias
+    const fids = ["muffato-quintino", "franquia-teste"];
+    for (const fid of fids) {
+        await db.collection("datastore").doc("catalog_config_" + fid).set({
+            value: JSON.stringify(newCatalog),
+            updatedAt: new Date().toISOString(),
+        });
+    }
+
+    return {
+        success: true,
+        message: "Catálogo real seedado em catalog_config + 2 franquias",
+        produtos: {
+            milkshakes: milkshakeItems.length,
+            sundaes: sundaeItems.length,
+            buffet: 1,
+            bebidas: newCatalog.bebidas.length,
+        },
+        franquias: fids,
     };
 });
 

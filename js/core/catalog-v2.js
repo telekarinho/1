@@ -228,6 +228,28 @@
     function seedMilkyPot(fid) {
         const d = load(fid);
         if (d.produtos.length) return { skipped: true, reason: 'já tem produtos' };
+        // GUARD CRITICO: NUNCA seed se ja tem catalog_config no DataStore
+        // (seedRealCatalog Cloud Function ja populou os 18 milkshakes +
+        // 18 sundaes + buffet REAIS). Sem esse guard, qualquer load do
+        // CatalogV2 num browser sem cache local sobrescreve o catalogo
+        // real com 3 produtos placeholder (Ninho com Morango, Nutella,
+        // Buffet) — bug reportado pelo cliente N vezes.
+        try {
+            const existing = (typeof DataStore !== 'undefined' && DataStore.get)
+                ? DataStore.get('catalog_config') : null;
+            if (existing && existing._seedSource === 'production_real') {
+                return { skipped: true, reason: 'catalog_config production_real ja existe' };
+            }
+            // Tambem skipa se tem >5 produtos numa estrutura sabores/items
+            if (existing && existing.sabores) {
+                const totalItems = Object.values(existing.sabores).reduce(function(s, g){
+                    return s + ((g && g.items) ? g.items.length : 0);
+                }, 0);
+                if (totalItems > 5) {
+                    return { skipped: true, reason: 'catalog_config ja tem ' + totalItems + ' items reais' };
+                }
+            }
+        } catch(_) {}
 
         // Toppings base — cardápio oficial MilkyPot
         const topSeed = [
@@ -375,6 +397,26 @@
         if (!global.DataStore) return;
         const d = load(fid);
         const cats = d.categorias.filter(c => c.active !== false);
+        // GUARD CRITICO: NUNCA sobrescreve catalog_config se ele eh
+        // production_real (Cloud Function seedRealCatalog ja populou
+        // os 17+1 milkshakes/sundaes corretos). syncToLegacy roda
+        // automaticamente em qualquer load do CatalogV2 (ate sem produtos)
+        // e estava revertendo o catalogo real pra placeholder.
+        try {
+            const existing = global.DataStore.get('catalog_config');
+            if (existing && existing._seedSource === 'production_real') {
+                // Conta items totais — se >5 produtos reais, nao toca
+                if (existing.sabores) {
+                    const totalItems = Object.values(existing.sabores).reduce(function(s, g){
+                        return s + ((g && g.items) ? g.items.length : 0);
+                    }, 0);
+                    if (totalItems > 5 && d.produtos.length === 0) {
+                        // CatalogV2 vazio + production_real real -> nao sync
+                        return;
+                    }
+                }
+            }
+        } catch(_) {}
 
         // Quando CatalogV2 tem produtos cadastrados, ELE é a fonte de verdade.
         // Partimos de um objeto limpo — sem carregar o catalog_config antigo —
