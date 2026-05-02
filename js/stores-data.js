@@ -29,23 +29,26 @@ var MILKYPOT_STORES = [
         lng: -51.1664
     },
     {
-        // Franquia TESTE — pra simular pedidos no site sem afetar a unidade
-        // real. Login no painel: teste@teste.com / Teste@123
+        // Franquia TESTE — espelha dados REAIS da Muffato Quintino
+        // (mesmo endereco, mesmo telefone, mesma cobertura) pra
+        // simular pedidos reais. So muda o id/slug -> pedidos vao pra
+        // orders_franquia-teste (separado) sem misturar com producao.
+        // Login no painel: teste@teste.com / Teste@123
         id: 'franquia-teste',
         slug: 'franquia-teste',
         name: 'MilkyPot TESTE (Demo)',
-        address: 'Rua de Teste, 1000 — Bairro Teste',
+        address: 'Rua Quintino Bocaiúva, 1045',
         city: 'Londrina',
         state: 'PR',
         rating: 5,
         deliveryTime: '20-35 min',
-        deliveryFee: 0,
+        deliveryFee: 5.90,
         deliveryEnabled: true,
         pickupEnabled: true,
         storeOnlineOpen: true,
         hours: '00:00 - 23:59',
         open: true,
-        whatsapp: '5543000000000',
+        whatsapp: '5543998042424',
         email: 'teste@teste.com',
         isTestFranchise: true,
         lat: -23.3265,
