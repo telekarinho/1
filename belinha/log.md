@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #94 — 2026-05-02
+
+**Área:** Concorrentes — TheBest Açaí (alerta ativo) + MilkyMoo refetch + novos entrantes
+
+**Contexto:** Prescrito pelo roadmap rebalanceado do ciclo #92. Último ciclo de concorrentes foi o #84 (10 ciclos atrás). TheBest com alerta ativo de expansão quiosques para shoppings (possível Muffato). Necessário checar escala real, confirmação/descarte do gap Muffato e novidades de cada rede.
+
+**O que pesquisou/analisou:**
+- WebSearch multi-query: TheBest Açaí expansão 2026 + meta quiosques + Londrina/Muffato; MilkyMoo expansão 2026 + novo modelo; novos entrantes sobremesas Londrina Muffato 2026
+- WebFetch: portaldofranchising.com.br, foodbizbrasil.com, mercadoeconsumo.com.br, exame.com (403 — bloqueados por paywall/auth)
+- Dados coletados via WebSearch cross-referência: exame.com, portaldofranchising.com.br, onortao.com.br, portalg.com.br, mapadasfranquias.com.br, sopacultural.com
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/competitors/the-best-acai.md` | ATUALIZADO — Monitoramento Ciclo #94: escala 1.100+ unidades, meta 1.500 até dez/2026, segunda fábrica, capital PE confirmado, gap Muffato verificado e mantido, alertas atualizados |
+| `belinha/competitors/milkymoo.md` | ATUALIZADO — Atualização Ciclo #94: Milky Moo Festa (unidade móvel, R$200k, 1.352 cidades mapeadas), Milky Moo Day aniversário, meta 1.500+1.500, gap Muffato mantido, alertas estratégicos |
+
+**Principais achados:**
+
+1. **TheBest — gap Muffato MANTIDO:** Nenhuma nova unidade TheBest no Muffato Quintino Bocaiuva detectada. Alerta "Cerro Azul frente ao Muffato" (ciclos anteriores) descartado para Londrina. Vantagem de localização MilkyPot preservada.
+2. **TheBest — escala acelerada:** 1.100+ unidades (vs 1.012 do ciclo #84). Meta 1.500 até dez/2026. Segunda fábrica com R$35M. Capital privado R$80M. Rollout 300–500 quiosques nacional = probabilidade crescente de chegada ao Muffato em 2026–2027.
+3. **MilkyMoo — Milky Moo Festa:** novo formato de unidade móvel para eventos (R$200k, 1.352 cidades mapeadas). Não compete no ponto físico, mas abre risco indireto no segmento de eventos. MilkyPot deve criar oferta de "potinho para festas" antes da chegada deles a Londrina.
+4. **MilkyMoo — Milky Moo Day benchmark:** promoção aniversário (500ml + 300ml grátis) gerou tráfego massivo. Benchmark direto para aniversário 1 ano MilkyPot (25/04/2027).
+5. **Novos entrantes Londrina:** nenhum novo concorrente direto (potinho/açaí Ninho) detectado no Muffato ou raio 1km. Cenário competitivo local estável.
+
+**Commit:** _(ver hash abaixo após push)_
+
+**Próximo passo sugerido (roadmap #92 → ciclo #95):**
+- Ciclo #95: UX/Performance — sweep obrigatório (11 ciclos sem atenção): CLS, LCP, imagens WebP, bundle size, mobile. Verificar Core Web Vitals das páginas principais.
+- Operador: criar serviço "potinho para festas" ou pacote evento antes que Milky Moo Festa chegue a Londrina
+- Operador: definir promoção aniversário 1 ano (25/04/2027) com antecedência de pelo menos 4 semanas — benchmark Milky Moo Day é referência
+
+_Belinha — Ciclo #94 | 2026-05-02_
+
+---
+
 ## Ciclo #93 — 2026-05-02
 
 **Área:** SEO — BreadcrumbList+WebPage em `desafio.html` + og:image:width/height em 5 páginas
