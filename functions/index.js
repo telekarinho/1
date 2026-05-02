@@ -807,6 +807,86 @@ const testMode = require("./test-mode");
 Object.assign(exports, testMode);
 
 // ============================================================
+// SETUP TEST USER — uma vez, garante claims + franquia teste
+// ============================================================
+// Function publica (sem auth) que SO atua no email teste@teste.com.
+// Seta custom claims (role franchisee, franchiseId franquia-teste) e
+// garante que a franquia-teste existe no doc datastore/franchises.
+// Apos o user logar uma vez, podemos remover essa function.
+exports.setupTestFranchise = onCall({ region: "southamerica-east1" }, async () => {
+    const TEST_EMAIL = "teste@teste.com";
+    const TEST_FID = "franquia-teste";
+
+    // 1. Setar claims no usuario teste
+    let user;
+    try {
+        user = await auth.getUserByEmail(TEST_EMAIL);
+    } catch (e) {
+        throw new HttpsError("not-found", "Usuario teste@teste.com nao existe");
+    }
+    await auth.setCustomUserClaims(user.uid, {
+        role: "franchisee",
+        franchiseId: TEST_FID,
+    });
+
+    // 2. Garantir franquia-teste no doc franchises
+    const ref = db.collection("datastore").doc("franchises");
+    const snap = await ref.get();
+    let arr = [];
+    if (snap.exists) {
+        try {
+            arr = JSON.parse(snap.data().value || "[]");
+        } catch (e) { arr = []; }
+    }
+    if (!arr.find((f) => f.id === TEST_FID)) {
+        arr.push({
+            id: TEST_FID,
+            slug: TEST_FID,
+            name: "MilkyPot TESTE (Demo)",
+            address: "Rua de Teste, 1000 — Bairro Teste",
+            city: "Londrina",
+            state: "PR",
+            phone: "43000000000",
+            whatsapp: "43000000000",
+            type: "store",
+            monthlyFee: 0,
+            hours: "00:00 - 23:59",
+            deliveryFee: 0,
+            rating: 5,
+            deliveryTime: "20-35 min",
+            status: "ativo",
+            storeOnlineOpen: true,
+            deliveryEnabled: true,
+            pickupEnabled: true,
+            isTestFranchise: true,
+            createdAt: new Date().toISOString(),
+            access: {
+                ownerName: "Franquia TESTE",
+                ownerEmail: TEST_EMAIL,
+                ownerPhone: "43000000000",
+                ownerPassword: "Teste@123",
+                loginUrl: "https://milkypot.com/login.html",
+                panelUrl: "https://milkypot.com/painel/index.html",
+                notes: "Franquia de teste — sem efeito em producao",
+            },
+        });
+    }
+    await ref.set({
+        value: JSON.stringify(arr),
+        updatedAt: new Date().toISOString(),
+    });
+
+    return {
+        success: true,
+        message: "Franquia teste configurada",
+        uid: user.uid,
+        email: TEST_EMAIL,
+        franchiseId: TEST_FID,
+        password: "Teste@123",
+    };
+});
+
+// ============================================================
 // SEND CLOSING REPORT — fechamento de caixa por email
 // ============================================================
 // Chamada pelo PDV (caixa.js) quando o operador fecha o caixa do dia.

@@ -27,6 +27,29 @@ var MILKYPOT_STORES = [
         email: 'milkypot.com@gmail.com',
         lat: -23.3265,
         lng: -51.1664
+    },
+    {
+        // Franquia TESTE — pra simular pedidos no site sem afetar a unidade
+        // real. Login no painel: teste@teste.com / Teste@123
+        id: 'franquia-teste',
+        slug: 'franquia-teste',
+        name: 'MilkyPot TESTE (Demo)',
+        address: 'Rua de Teste, 1000 — Bairro Teste',
+        city: 'Londrina',
+        state: 'PR',
+        rating: 5,
+        deliveryTime: '20-35 min',
+        deliveryFee: 0,
+        deliveryEnabled: true,
+        pickupEnabled: true,
+        storeOnlineOpen: true,
+        hours: '00:00 - 23:59',
+        open: true,
+        whatsapp: '5543000000000',
+        email: 'teste@teste.com',
+        isTestFranchise: true,
+        lat: -23.3265,
+        lng: -51.1664
     }
 ];
 
