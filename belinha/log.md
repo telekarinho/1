@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #88 — 2026-05-02
+
+**Área:** SEO/UX — gap técnico obrigatório (7 ciclos de conteúdo desde #82)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #87. Auditoria revelou dois problemas concretos: (1) `cartao-fidelidade.html` tem `<meta name="robots" content="noindex">` mas estava listada no sitemap.xml — inconsistência que envia sinal contraditório ao Google; (2) `cardapio.html` (página de maior conversão, prioridade 0.9 no sitemap) tinha apenas 1 bloco schema.org (`FoodEstablishment` + `Menu`) sem `BreadcrumbList` nem `WebPage`, impedindo rich results de navegação nas SERPs.
+
+**O que analisou:**
+- Auditou `index.html`: schema já completo (FoodEstablishment, FAQPage, BreadcrumbList, OG, Twitter)
+- Auditou `cardapio.html`: 1 schema, sem BreadcrumbList/WebPage — gap para rich results
+- Auditou `cartao-fidelidade.html`: noindex mas na sitemap — inconsistência SEO
+- Verificou `desafio.html`: 0 schemas, mas prioridade 0.5 (menos urgente)
+- Confirmou `potinho-ninho-londrina.html` e `acai-self-service-londrina.html`: 2 schemas cada (ok)
+- Detectou `lastmod` homepage defasado: 2026-04-22 → corrigido para 2026-05-02
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `cardapio.html` | ADICIONADO — 2º bloco schema.org: `BreadcrumbList` (Início → Cardápio) + `WebPage` com `@id`, `isPartOf` e breadcrumb inline. Rich results de navegação agora elegíveis no Google. |
+| `sitemap.xml` | REMOVIDA `cartao-fidelidade.html` (noindex — inconsistência corrigida); ATUALIZADO `lastmod` homepage → 2026-05-02 e cardapio → 2026-05-02; reordenado por prioridade decrescente (1.0 → 0.9 → 0.8 → 0.5 → 0.3) |
+
+**Commit:** `12bdc7f`
+
+**Impacto SEO esperado:**
+1. `BreadcrumbList` em `cardapio.html`: Google pode exibir "milkypot.com > Cardápio" nas SERPs — melhora CTR em buscas como "cardápio potinho ninho londrina"
+2. Sitemap limpo sem página noindex: crawlers param de visitar URLs contraditórias e concentram budget em páginas indexáveis
+3. `lastmod` atualizado: Googlebot prioriza recrawl de páginas com data recente
+
+**Próximo passo sugerido:**
+- Ciclo #89: Conteúdo — Semanas 51+52 (04–17/04/2027): programação dia H 25/04, influencers Londrina, Sextas #35/#36
+- Ciclo #90: SEO — `desafio.html` (schema BreadcrumbList + WebPage + `SoftwareApplication`) + `potinho-ninho-londrina.html` (verificar schema AggregateRating quando tiver reviews)
+- Ciclo #92 (auto-aprimoramento): Releitura completa do log, revisão da estratégia.md
+- **Operador — CRÍTICO (prazo seg 29/03):** Confirmar produto especial aniversário (nome, ingredientes, preço, foto) para semana 49 e 50
+- **Operador — CRÍTICO (prazo sáb 27/03):** Horário Muffato no Domingo de Páscoa
+- **Operador — CRÍTICO (prazo qua 24/03):** Horário Muffato na Sexta-Feira Santa
+
+_Belinha — Ciclo #88 | 2026-05-02_
+
+---
+
 ## Ciclo #87 — 2026-05-02
 
 **Área:** Conteúdo — Semanas 49 + 50 (21/03–03/04/2027)
