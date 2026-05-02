@@ -829,48 +829,62 @@ exports.setupTestFranchise = onCall({ region: "southamerica-east1" }, async () =
         franchiseId: TEST_FID,
     });
 
-    // 2. Garantir franquia-teste no doc franchises
+    // 2. Garantir franquia-teste no doc franchises com DADOS REAIS
+    //    da Muffato Quintino (cliente pediu: dados reais pra testar
+    //    pedidos reais, mas separados em outro fid/orders).
     const ref = db.collection("datastore").doc("franchises");
     const snap = await ref.get();
     let arr = [];
     if (snap.exists) {
-        try {
-            arr = JSON.parse(snap.data().value || "[]");
-        } catch (e) { arr = []; }
+        try { arr = JSON.parse(snap.data().value || "[]"); } catch (e) { arr = []; }
     }
-    if (!arr.find((f) => f.id === TEST_FID)) {
-        arr.push({
-            id: TEST_FID,
-            slug: TEST_FID,
-            name: "MilkyPot TESTE (Demo)",
-            address: "Rua de Teste, 1000 — Bairro Teste",
-            city: "Londrina",
-            state: "PR",
-            phone: "43000000000",
-            whatsapp: "43000000000",
-            type: "store",
-            monthlyFee: 0,
-            hours: "00:00 - 23:59",
-            deliveryFee: 0,
-            rating: 5,
-            deliveryTime: "20-35 min",
-            status: "ativo",
-            storeOnlineOpen: true,
-            deliveryEnabled: true,
-            pickupEnabled: true,
-            isTestFranchise: true,
-            createdAt: new Date().toISOString(),
-            access: {
-                ownerName: "Franquia TESTE",
-                ownerEmail: TEST_EMAIL,
-                ownerPhone: "43000000000",
-                ownerPassword: "Teste@123",
-                loginUrl: "https://milkypot.com/login.html",
-                panelUrl: "https://milkypot.com/painel/index.html",
-                notes: "Franquia de teste — sem efeito em producao",
-            },
-        });
-    }
+    const muffato = arr.find((f) => f.id === "muffato-quintino");
+    // Dados reais da loja real (com fallback se Muffato nao existir)
+    const realData = muffato ? {
+        address: muffato.address,
+        city: muffato.city,
+        state: muffato.state,
+        phone: muffato.phone,
+        whatsapp: muffato.whatsapp,
+        deliveryFee: muffato.deliveryFee,
+        deliveryTime: muffato.deliveryTime,
+        rating: muffato.rating,
+        hours: muffato.hours,
+    } : {
+        address: "Rua Quintino Bocaiúva, 1045",
+        city: "Londrina", state: "PR",
+        phone: "43998042424", whatsapp: "43998042424",
+        deliveryFee: 5.9, deliveryTime: "20-35 min", rating: 5,
+        hours: "00:00 - 23:59",
+    };
+    const testFranchiseObj = {
+        id: TEST_FID,
+        slug: TEST_FID,
+        name: "MilkyPot TESTE (Demo)",
+        ...realData,
+        type: "store",
+        monthlyFee: 0,
+        status: "ativo",
+        storeOnlineOpen: true,
+        deliveryEnabled: true,
+        pickupEnabled: true,
+        isTestFranchise: true,
+        // Override hours pra sempre aberta no teste
+        hours: "00:00 - 23:59",
+        createdAt: new Date().toISOString(),
+        access: {
+            ownerName: "Franquia TESTE",
+            ownerEmail: TEST_EMAIL,
+            ownerPhone: realData.phone,
+            ownerPassword: "Teste@123",
+            loginUrl: "https://milkypot.com/login.html",
+            panelUrl: "https://milkypot.com/painel/index.html",
+            notes: "Franquia de teste — dados de endereco/contato espelhados da Muffato Quintino. Pedidos salvos em orders_franquia-teste (separado).",
+        },
+    };
+    const idx = arr.findIndex((f) => f.id === TEST_FID);
+    if (idx === -1) arr.push(testFranchiseObj);
+    else arr[idx] = testFranchiseObj; // SEMPRE re-sincroniza dados reais
     await ref.set({
         value: JSON.stringify(arr),
         updatedAt: new Date().toISOString(),
