@@ -1067,7 +1067,7 @@ const Caixa = (function () {
                     <input type="text" class="caixa-brl cv2-edit-input" data-caixa-brl data-name="conf_dinheiro" data-card-field="dinheiro" inputmode="numeric" placeholder="R$ 0,00"
                            style="width:100%;padding:10px 12px;border:2px solid #F59E0B;border-radius:8px;font-weight:800;text-align:right;font-size:18px;background:#fff">
                     <div class="cv2-dinheiro-extra">
-                      <label>Quanto vai sair de troco pro próximo turno? (opcional)</label>
+                      <label>Quanto desse total fica de troco pro próximo turno? (só anotação — não afeta o caixa)</label>
                       <input type="text" class="caixa-brl" data-caixa-brl data-name="dinheiro_troco" inputmode="numeric" placeholder="R$ 0,00">
                     </div>
                     <div class="cv2-diff-msg" data-diff-msg="dinheiro" style="display:none"></div>
@@ -1118,9 +1118,16 @@ const Caixa = (function () {
 
             const valCartao = cardState.cartao.value;
             const valPix    = cardState.pix.value;
+            // BUG-FIX: Cliente reportou — "TROCO É UMA COISA VENDA E OUTRA"
+            // O troco do proximo turno nao deve subtrair do valor contado.
+            // O esperado em dinheiro (saldoEsperadoDinheiro) ja eh:
+            //   abertura + vendas dinheiro + reforcos − sangrias
+            // O valor contado eh o TOTAL na gaveta — incluindo o troco que
+            // vai ficar pra amanha (porque ainda nao saiu).
+            // Troco vai como informacao auxiliar pro relatorio, nao no calculo.
             const valDinheiroTotal = cardState.dinheiro.value;
             const dinTroco = Number(parseBRL(data.dinheiro_troco) || 0);
-            const valorContado = +(valDinheiroTotal - dinTroco).toFixed(2);
+            const valorContado = +valDinheiroTotal.toFixed(2);
 
             // Justificativa de horario
             let motivoH = '';
@@ -1132,7 +1139,7 @@ const Caixa = (function () {
             }
 
             const totalConferido = valCartao + valPix + valorContado;
-            const totalEsperado  = espCartao + espPix + espDinheiro;
+            const totalEsperado  = espCartao + espPix + espDinheiro + Number(st.valorAbertura||0);
             const diffTotal      = +(totalConferido - totalEsperado).toFixed(2);
             const diffDinheiro   = +(valorContado - saldoEsperadoDinheiro).toFixed(2);
 
@@ -1147,8 +1154,8 @@ const Caixa = (function () {
                     cartao: valCartao,
                     pix_total: valPix,
                     dinheiro_total_gaveta: valDinheiroTotal,
-                    dinheiro_troco: dinTroco,
-                    dinheiro_liquido_dia: valorContado
+                    dinheiro_troco: dinTroco,  // info pro proximo turno (nao no calculo)
+                    dinheiro_liquido_dia: valorContado  // = total contado (sem subtrair troco)
                 },
                 esperado: {
                     cartao: espCartao,
@@ -1205,11 +1212,13 @@ const Caixa = (function () {
 
             // Atualiza justificativa
             if (allOk) {
-                const total = modal.__cardState.cartao.value + modal.__cardState.pix.value +
-                              (modal.__cardState.dinheiro.value - (parseBRL((overlay.querySelector('[data-name="dinheiro_troco"]')||{}).value || '')||0));
-                const totalEsp = espCartao + espPix + espDinheiro;
-                const diff = +(total - totalEsp).toFixed(2);
-                const dinDiff = +(modal.__cardState.dinheiro.value - (parseBRL((overlay.querySelector('[data-name="dinheiro_troco"]')||{}).value || '')||0) - saldoEsperadoDinheiro).toFixed(2);
+                // Troco NAO entra no calculo (eh dinheiro fisico que fica
+                // pra abrir o proximo turno, nao eh venda).
+                const dinContado = modal.__cardState.dinheiro.value;
+                const total      = modal.__cardState.cartao.value + modal.__cardState.pix.value + dinContado;
+                const totalEsp   = espCartao + espPix + espDinheiro + Number(st.valorAbertura||0);
+                const diff       = +(total - totalEsp).toFixed(2);
+                const dinDiff    = +(dinContado - saldoEsperadoDinheiro).toFixed(2);
                 const wrap = overlay.querySelector('[data-justify-wrap]');
                 if (wrap) wrap.style.display = (Math.abs(diff) > 5 || Math.abs(dinDiff) > 5) ? 'block' : 'none';
             }
@@ -1345,12 +1354,19 @@ const Caixa = (function () {
     }
 
     /* ============================================
-       Persistencia + envio do relatorio (3 caminhos):
-       1. Salva sempre em caixa_reports_<fid> (audit imutavel no Firestore)
-       2. Tenta CloudFunctions.sendClosingReport (silent fail se nao deployada)
-       3. Fallback: abre mailto: com tudo pre-preenchido pra o cliente de
-          email do operador. Operador clica "Enviar" e os 3 destinatarios
-          recebem.
+       Envio AUTOMATICO do relatorio — 3 camadas (todas servidor, sem
+       abrir cliente de email do operador):
+
+       1. Persiste em caixa_reports_<fid> (audit imutavel no Firestore)
+       2. Escreve documento na coleção `mail` no formato da Firebase
+          Extension "Trigger Email from Firestore" — quando a extension
+          esta instalada (uma vez no console Firebase), ela detecta
+          documentos novos em `mail` e envia via SMTP automaticamente.
+          Doc: https://extensions.dev/extensions/firebase/firestore-send-email
+       3. Tenta CloudFunctions.sendClosingReport (silent fail se nao
+          deployada — quando o backend Function for criado, funciona)
+
+       NUNCA abre mailto/cliente de email externo.
        ============================================ */
     function _persistAndDispatchReport(franchiseId, st, valorContado, motivo, motivoH, extras, r) {
         const session = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
@@ -1358,6 +1374,7 @@ const Caixa = (function () {
         const operatorEmail = session ? (session.email || '') : '';
         const fechamentoDate = new Date();
         const reportId = 'rep_' + (typeof Utils !== 'undefined' ? Utils.generateId() : Date.now().toString(36));
+        const RECIPIENTS = ['milkypot.com@gmail.com','jocimarrodrigo@gmail.com','joseanemse@gmail.com'];
 
         const report = {
             id: reportId,
@@ -1377,35 +1394,108 @@ const Caixa = (function () {
             faturamentoBruto: st.faturamentoBruto,
             porMetodo: st.porMetodo,
             createdAt: fechamentoDate.toISOString(),
-            recipients: ['milkypot.com@gmail.com','jocimarrodrigo@gmail.com','joseanemse@gmail.com'],
-            sent: false  // marcado true se a CloudFunction confirmar
+            recipients: RECIPIENTS,
+            sent: false
         };
 
-        // 1. Persiste no Firestore (audit) — funciona offline tambem
+        // 1. Persiste audit no Firestore (sempre — funciona offline tambem)
         try {
             if (typeof DataStore !== 'undefined' && DataStore.addToCollection) {
                 DataStore.addToCollection('caixa_reports', franchiseId, report);
             }
         } catch (e) { console.warn('persist report:', e); }
 
-        // 3. Fallback mailto: abre email do operador pre-preenchido (sempre).
-        //    O operador so precisa clicar "Enviar" no cliente de email.
+        // 2. CAMINHO PRINCIPAL: escreve em /mail (Firebase Trigger Email Extension)
+        //    Formato esperado pela extension:
+        //    { to: [...], message: { subject, text, html } }
         try {
-            const subj = 'Fechamento de Caixa — ' + st.dateKey + ' — MilkyPot';
-            const body = _buildEmailBody(report);
-            const to = report.recipients.join(',');
-            const mailto = 'mailto:' + encodeURIComponent(to) +
-                '?subject=' + encodeURIComponent(subj) +
-                '&body=' + encodeURIComponent(body);
-            // Abre numa janela invisivel pra disparar o cliente de email
-            // sem roubar foco do PDV (alguns OS abrem em background).
-            const w = window.open(mailto, '_blank');
-            if (!w) {
-                // Popup blocker bloqueou — guarda o link no objeto pra o
-                // operador clicar manualmente se quiser (futuramente UI mostra)
-                report.mailtoFallback = mailto;
+            const subject = 'Fechamento de Caixa ' + st.dateKey + ' — MilkyPot ' + franchiseId;
+            const text = _buildEmailBody(report);
+            const html = _buildEmailHtml(report);
+            const mailDoc = {
+                to: RECIPIENTS,
+                from: 'MilkyPot PDV <noreply@milkypot.com>',
+                replyTo: operatorEmail || 'milkypot.com@gmail.com',
+                message: { subject: subject, text: text, html: html },
+                // Metadata pra audit
+                _reportId: reportId,
+                _franchiseId: franchiseId,
+                _operator: operatorName,
+                _createdAt: fechamentoDate.toISOString()
+            };
+            // Tenta gravar via DataStore (que ja sincroniza Firestore)
+            if (typeof DataStore !== 'undefined' && DataStore.addToCollection) {
+                // collection 'mail' (raiz, nao por franquia) — eh onde a
+                // Firebase Trigger Email Extension escuta por default
+                DataStore.addToCollection('mail', '_global', mailDoc);
             }
-        } catch (e) { console.warn('mailto fallback:', e); }
+            // Direto no Firestore (caminho explicito, prioritario)
+            // — caso DataStore tenha namespacing por franquia, garante
+            // que o doc apareca em /mail/{auto-id}
+            try {
+                if (typeof firebase !== 'undefined' && firebase.firestore) {
+                    firebase.firestore().collection('mail').add(mailDoc).catch(e => {
+                        console.warn('mail collection add failed:', e && e.message);
+                    });
+                }
+            } catch(_) {}
+        } catch (e) { console.warn('mail dispatch:', e); }
+
+        // 3. Tambem chama CloudFunctions.sendClosingReport caso o backend
+        //    tenha implementacao alternativa (ex: nodemailer custom)
+        try {
+            if (typeof CloudFunctions !== 'undefined' && CloudFunctions.sendClosingReport) {
+                CloudFunctions.sendClosingReport(franchiseId, {
+                    operatorName: operatorName,
+                    operatorEmail: operatorEmail,
+                    valorContado: valorContado,
+                    saldoEsperado: st.saldoEsperadoDinheiro,
+                    diferenca: extras.conferido && extras.conferido.diffTotal,
+                    motivo: motivo,
+                    fechamentoDate: fechamentoDate.toISOString(),
+                    breakdownConferido: extras
+                }).catch(e => console.warn('sendClosingReport CF:', e && e.message));
+            }
+        } catch (e) { console.warn('CF dispatch:', e); }
+    }
+
+    // HTML version do email — mais bonito que texto puro
+    function _buildEmailHtml(rep) {
+        const esp = rep.esperado || {};
+        const con = rep.conferido || {};
+        const br  = rep.breakdown || {};
+        const dt = new Date(rep.fechamentoDate).toLocaleString('pt-BR');
+        const fmt = (v) => 'R$ ' + Number(v||0).toFixed(2).replace('.', ',');
+        const diffColor = Math.abs(con.diffTotal||0) < 0.01 ? '#10B981' :
+                          (Math.abs(con.diffTotal||0) <= 5 ? '#F59E0B' : '#DC2626');
+        return ''+
+        '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">'+
+          '<div style="background:linear-gradient(135deg,#7B1FA2,#DC2626);color:#fff;padding:18px;border-radius:10px 10px 0 0">'+
+            '<h2 style="margin:0;font-size:18px">🔒 Fechamento de Caixa</h2>'+
+            '<div style="opacity:.9;font-size:13px;margin-top:4px">'+rep.franchiseId+' · '+dt+'</div>'+
+          '</div>'+
+          '<div style="background:#fff;padding:16px;border:1px solid #e5e7eb;border-top:0">'+
+            '<p style="margin:0 0 12px;font-size:13px;color:#6b7280">Operador: <strong style="color:#111">'+(rep.operator&&rep.operator.name)+'</strong> &lt;'+(rep.operator&&rep.operator.email)+'&gt;</p>'+
+            '<table style="width:100%;border-collapse:collapse;font-size:13px">'+
+              '<tr style="background:#F3F4F6"><th style="padding:8px;text-align:left">Método</th><th style="padding:8px;text-align:right">Sistema</th><th style="padding:8px;text-align:right">Conferido</th></tr>'+
+              '<tr><td style="padding:6px 8px;border-top:1px solid #e5e7eb">💳 Cartão (Bandeiras)</td><td style="padding:6px 8px;border-top:1px solid #e5e7eb;text-align:right">'+fmt(esp.cartao||((esp.credito||0)+(esp.debito||0)))+'</td><td style="padding:6px 8px;border-top:1px solid #e5e7eb;text-align:right;font-weight:700">'+fmt(br.cartao||0)+'</td></tr>'+
+              '<tr><td style="padding:6px 8px;border-top:1px solid #e5e7eb">⚡ PIX</td><td style="padding:6px 8px;border-top:1px solid #e5e7eb;text-align:right">'+fmt(esp.pix)+'</td><td style="padding:6px 8px;border-top:1px solid #e5e7eb;text-align:right;font-weight:700">'+fmt(br.pix_total||0)+'</td></tr>'+
+              '<tr><td style="padding:6px 8px;border-top:1px solid #e5e7eb">💵 Dinheiro líquido</td><td style="padding:6px 8px;border-top:1px solid #e5e7eb;text-align:right">'+fmt(esp.saldoEsperadoDinheiro)+'</td><td style="padding:6px 8px;border-top:1px solid #e5e7eb;text-align:right;font-weight:700">'+fmt(br.dinheiro_liquido_dia||0)+'</td></tr>'+
+              '<tr style="background:#F9FAFB;font-weight:800"><td style="padding:8px">TOTAL</td><td style="padding:8px;text-align:right">'+fmt(esp.totalEsperado)+'</td><td style="padding:8px;text-align:right;color:'+diffColor+'">'+fmt(con.totalConferido)+'</td></tr>'+
+            '</table>'+
+            '<div style="margin-top:14px;padding:12px;background:'+diffColor+'15;border-radius:8px;border-left:4px solid '+diffColor+'">'+
+              '<div style="font-size:13px;color:'+diffColor+';font-weight:800">Diferença total: '+(con.diffTotal>0?'+':'')+fmt(con.diffTotal)+'</div>'+
+              '<div style="font-size:12px;color:#6b7280;margin-top:2px">Diferença em dinheiro: '+(con.diffDinheiro>0?'+':'')+fmt(con.diffDinheiro)+'</div>'+
+              (rep.motivoQuebra ? '<div style="font-size:12px;margin-top:6px;color:#374151"><strong>Justificativa:</strong> '+rep.motivoQuebra+'</div>' : '')+
+            '</div>'+
+            '<details style="margin-top:14px;font-size:12px;color:#6b7280"><summary style="cursor:pointer">Ver detalhes (M1/M2/banco)</summary>'+
+              '<pre style="background:#F9FAFB;padding:10px;border-radius:6px;overflow:auto;font-size:11px;font-family:Consolas,monospace">'+
+                _buildEmailBody(rep).replace(/&/g,'&amp;').replace(/</g,'&lt;')+
+              '</pre>'+
+            '</details>'+
+          '</div>'+
+          '<div style="text-align:center;color:#9ca3af;font-size:11px;margin-top:10px">Relatório automático MilkyPot PDV · ID '+rep.id+'</div>'+
+        '</div>';
     }
 
     function _buildEmailBody(rep) {
