@@ -2,6 +2,50 @@
 
 ---
 
+## Ciclo #87 — 2026-05-02
+
+**Área:** Conteúdo — Semanas 49 + 50 (21/03–03/04/2027)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #86. Semana 49 = terceira semana do aquecimento aniversário 1 ano, com dois marcos: (1) carrossel "12 meses em 12 imagens" e (2) primeiro teaser visual do produto especial de aniversário. Bonus: Semana Santa cai inteira na semana 49 → **Sexta #33 = Sexta-Feira Santa (feriado nacional)**, possivelmente a Sexta de maior tráfego de toda a história do MilkyPot Londrina. Semana 50 começa com **Domingo de Páscoa (28/03)**, depois **reveal completo do produto especial** (qua 31/03) e **Sexta #34 (02/04, 23 dias para o aniversário)**.
+
+**O que analisou:**
+- Leu semanas 47 e 48 como referência de formato (padrão v11)
+- Calculou datas: Sexta #33 = 26/03 (Sexta-Feira Santa, feriado), Sexta #34 = 02/04
+- Identificou Domingo de Ramos = 21/03, Quinta-Feira Santa = 25/03, Sexta-Feira Santa = 26/03, Domingo de Páscoa = 28/03
+- Countdowns: 21/03 → 25/04 = 35 dias; 28/03 → 25/04 = 28 dias (4 semanas exatas); 03/04 → 25/04 = 22 dias
+- Identificou ovelha como personagem orgânico de Páscoa — explorado humoristicamente no Domingo de Páscoa
+- Manteve bloqueador: produto especial aniversário depende de confirmação da franquia (Versão A/B)
+- Segunda pós-Páscoa = gancho natural Linha Zero/Fit (inserido 29/03)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana49.md` | CRIADO — 7 peças: Domingo de Ramos + countdown, nutrição ANIVER, **carrossel "12 meses em 12 imagens" 12 slides**, **teaser produto especial (A/B)**, Quinta-Feira Santa + pré-Sexta, **Sexta #33 Sexta-Feira Santa 7+ touchpoints**, recap + 29 dias |
+| `belinha/content/pos-inauguracao-semana50.md` | CRIADO — 7 peças: **Domingo de Páscoa (ovelhinha = animal de Páscoa)**, **Linha Zero pós-Páscoa**, urgência "revelação essa semana", **REVEAL COMPLETO produto especial + Reel 15s roteirizado (A/B)**, nutrição + humor 01/04, **Sexta #34 — 23 dias**, "modo aniversário ativado 22 dias" |
+
+**Commit:** `25751ef`
+
+**Destaques de conteúdo:**
+1. **Sexta #33 = Sexta-Feira Santa:** Tráfego de feriado + 33ª Sexta consecutiva. Meta: ≥ 150% da média de pedidos.
+2. **Reveal do produto especial (qua 31/03):** Post de maior impacto da campanha após o dia H. WA lista ANIVER 1h antes do público + Reel 15s cinemático com roteiro completo.
+3. **Domingo de Páscoa — ovelhinha como animal de Páscoa:** "A ovelhinha não é um coelho... mas faz potinhos muito melhores 😄" — angle orgânico e único.
+4. **Linha Zero pós-Páscoa:** Conteúdo de saúde no momento de maior propensão ao recomeço pós-feriado.
+5. **Meta crítica lista "ANIVER":** ≥ 100 inscritos ao final da semana 50.
+
+**Próximo passo sugerido:**
+- Ciclo #88: **SEO/UX — gap técnico OBRIGATÓRIO** (7 ciclos de conteúdo desde #82): sitemap.xml, schema.org LocalBusiness, Open Graph, Core Web Vitals
+- Ciclo #89: Conteúdo — Semanas 51+52 (04–17/04/2027): programação dia H, influencers Londrina, Sextas #35/#36
+- **Operador — CRÍTICO (prazo seg 29/03):** Confirmar produto especial com franquia (nome, ingredientes, preço, foto)
+- **Operador — CRÍTICO (prazo sáb 27/03):** Horário Muffato no Domingo de Páscoa
+- **Operador — CRÍTICO (prazo qua 24/03):** Horário Muffato na Sexta-Feira Santa
+- **Operador:** Definir programação especial 25/04/2027 (evento, brindes, influencers) — prazo semana 51
+- **Operador:** Fotos/dados do primeiro ano para carrossel "12 meses em 12 imagens" (prazo seg 22/03)
+
+_Belinha — Ciclo #87 | 2026-05-02_
+
+---
+
 ## Ciclo #86 — 2026-05-02
 
 **Área:** Conteúdo — Semanas 47 + 48 (07/03–20/03/2027)
