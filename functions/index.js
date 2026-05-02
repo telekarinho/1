@@ -820,7 +820,8 @@ const RECIPIENTS = [
     "jocimarrodrigo@gmail.com",
     "joseanemse@gmail.com",
 ];
-const SMTP_USER = "milkypot.com@gmail.com";
+// Conta usada como remetente (gerou a app password):
+const SMTP_USER = "jocimarrodrigo@gmail.com";
 
 function _fmtBRL(v) {
     return "R$ " + (Number(v || 0).toFixed(2)).replace(".", ",");
