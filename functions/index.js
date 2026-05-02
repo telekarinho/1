@@ -12,8 +12,13 @@ const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
 const UBER_ENCRYPTION_KEY = defineSecret("UBER_ENCRYPTION_KEY");
+// Senha de app do Gmail (16 chars). Configurada via:
+//   firebase functions:secrets:set GMAIL_APP_PASSWORD
+// Conta usada como remetente: milkypot.com@gmail.com
+const GMAIL_APP_PASSWORD = defineSecret("GMAIL_APP_PASSWORD");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -800,3 +805,152 @@ Object.assign(exports, uberDirect);
 // ============================================================
 const testMode = require("./test-mode");
 Object.assign(exports, testMode);
+
+// ============================================================
+// SEND CLOSING REPORT — fechamento de caixa por email
+// ============================================================
+// Chamada pelo PDV (caixa.js) quando o operador fecha o caixa do dia.
+// Envia relatorio HTML pra 3 emails fixos da gestao via Gmail SMTP.
+// Pre-requisito: secret GMAIL_APP_PASSWORD setado:
+//   firebase functions:secrets:set GMAIL_APP_PASSWORD
+// (gerado em https://myaccount.google.com/apppasswords usando a conta
+//  milkypot.com@gmail.com com 2FA ativo)
+const RECIPIENTS = [
+    "milkypot.com@gmail.com",
+    "jocimarrodrigo@gmail.com",
+    "joseanemse@gmail.com",
+];
+const SMTP_USER = "milkypot.com@gmail.com";
+
+function _fmtBRL(v) {
+    return "R$ " + (Number(v || 0).toFixed(2)).replace(".", ",");
+}
+
+function _buildClosingHtml(data) {
+    const esp = data.esperado || {};
+    const con = data.conferido || (data.breakdownConferido && data.breakdownConferido.conferido) || {};
+    const br = data.breakdown || (data.breakdownConferido && data.breakdownConferido.breakdown) || {};
+    const dt = new Date(data.fechamentoDate || Date.now()).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+    const diff = Number(con.diffTotal || data.diferenca || 0);
+    const diffColor = Math.abs(diff) < 0.01 ? "#10B981" : (Math.abs(diff) <= 5 ? "#F59E0B" : "#DC2626");
+    const diffLabel = Math.abs(diff) < 0.01 ? "Bateu certinho" : (diff > 0 ? "Sobrou" : "Faltou");
+    const totalEsperado = Number(esp.totalEsperado || data.saldoEsperado || 0);
+    const totalConferido = Number(con.totalConferido || data.valorContado || 0);
+    return `
+<div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;padding:16px;background:#f9fafb">
+  <div style="background:linear-gradient(135deg,#7B1FA2,#DC2626);color:#fff;padding:18px 22px;border-radius:12px 12px 0 0">
+    <h2 style="margin:0;font-size:20px">🔒 Fechamento de Caixa — MilkyPot</h2>
+    <div style="opacity:.92;font-size:13px;margin-top:6px">${data.franchiseId || ""} · ${dt}</div>
+  </div>
+  <div style="background:#fff;padding:18px;border:1px solid #e5e7eb;border-top:0">
+    <p style="margin:0 0 14px;font-size:13px;color:#6b7280">Operador: <strong style="color:#111">${data.operatorName || "?"}</strong> &lt;${data.operatorEmail || ""}&gt;</p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">
+      <tr style="background:#F3F4F6"><th style="padding:9px 8px;text-align:left">Método</th><th style="padding:9px 8px;text-align:right">Sistema</th><th style="padding:9px 8px;text-align:right">Conferido</th></tr>
+      <tr><td style="padding:7px 8px;border-top:1px solid #e5e7eb">💳 Cartão (Bandeiras)</td><td style="padding:7px 8px;border-top:1px solid #e5e7eb;text-align:right">${_fmtBRL(esp.cartao || ((esp.credito || 0) + (esp.debito || 0)))}</td><td style="padding:7px 8px;border-top:1px solid #e5e7eb;text-align:right;font-weight:700">${_fmtBRL(br.cartao || 0)}</td></tr>
+      <tr><td style="padding:7px 8px;border-top:1px solid #e5e7eb">⚡ PIX</td><td style="padding:7px 8px;border-top:1px solid #e5e7eb;text-align:right">${_fmtBRL(esp.pix)}</td><td style="padding:7px 8px;border-top:1px solid #e5e7eb;text-align:right;font-weight:700">${_fmtBRL(br.pix_total || 0)}</td></tr>
+      <tr><td style="padding:7px 8px;border-top:1px solid #e5e7eb">💵 Dinheiro físico</td><td style="padding:7px 8px;border-top:1px solid #e5e7eb;text-align:right">${_fmtBRL(esp.saldoEsperadoDinheiro)}</td><td style="padding:7px 8px;border-top:1px solid #e5e7eb;text-align:right;font-weight:700">${_fmtBRL(br.dinheiro_liquido_dia || br.dinheiro_total_gaveta || 0)}</td></tr>
+      <tr style="background:#F9FAFB;font-weight:800"><td style="padding:9px 8px;border-top:2px solid #e5e7eb">TOTAL</td><td style="padding:9px 8px;border-top:2px solid #e5e7eb;text-align:right">${_fmtBRL(totalEsperado)}</td><td style="padding:9px 8px;border-top:2px solid #e5e7eb;text-align:right">${_fmtBRL(totalConferido)}</td></tr>
+    </table>
+    <div style="padding:14px;background:${diffColor}15;border-radius:8px;border-left:5px solid ${diffColor}">
+      <div style="font-size:14px;color:${diffColor};font-weight:800">${diffLabel}: ${_fmtBRL(Math.abs(diff))}</div>
+      ${data.motivo ? '<div style="font-size:12px;margin-top:8px;color:#374151"><strong>Justificativa:</strong> ' + String(data.motivo).replace(/</g, "&lt;") + '</div>' : ''}
+    </div>
+    ${br.dinheiro_troco ? `<div style="margin-top:12px;font-size:12px;color:#6b7280">💰 Troco que fica pro próximo turno: <strong>${_fmtBRL(br.dinheiro_troco)}</strong></div>` : ""}
+  </div>
+  <div style="text-align:center;color:#9ca3af;font-size:11px;margin-top:12px">Relatório automático MilkyPot PDV</div>
+</div>`;
+}
+
+function _buildClosingText(data) {
+    const esp = data.esperado || {};
+    const con = data.conferido || (data.breakdownConferido && data.breakdownConferido.conferido) || {};
+    const br = data.breakdown || (data.breakdownConferido && data.breakdownConferido.breakdown) || {};
+    const dt = new Date(data.fechamentoDate || Date.now()).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+    let body = "";
+    body += "FECHAMENTO DE CAIXA — MilkyPot\n";
+    body += "====================================\n";
+    body += "Franquia:   " + (data.franchiseId || "?") + "\n";
+    body += "Data:       " + dt + "\n";
+    body += "Operador:   " + (data.operatorName || "?") + " <" + (data.operatorEmail || "") + ">\n\n";
+    body += "Cartão (Bandeiras):  " + _fmtBRL(br.cartao || 0) + " (esperado " + _fmtBRL(esp.cartao || 0) + ")\n";
+    body += "PIX:                 " + _fmtBRL(br.pix_total || 0) + " (esperado " + _fmtBRL(esp.pix || 0) + ")\n";
+    body += "Dinheiro físico:     " + _fmtBRL(br.dinheiro_liquido_dia || br.dinheiro_total_gaveta || 0) + " (esperado " + _fmtBRL(esp.saldoEsperadoDinheiro || 0) + ")\n";
+    body += "TOTAL CONFERIDO:     " + _fmtBRL(con.totalConferido || data.valorContado || 0) + "\n";
+    body += "Diferença total:     " + _fmtBRL(con.diffTotal || data.diferenca || 0) + "\n";
+    if (data.motivo) body += "Justificativa:       " + data.motivo + "\n";
+    if (br.dinheiro_troco) body += "Troco próx. turno:   " + _fmtBRL(br.dinheiro_troco) + "\n";
+    return body;
+}
+
+exports.sendClosingReport = onCall({
+    region: "southamerica-east1",
+    secrets: [GMAIL_APP_PASSWORD],
+    timeoutSeconds: 60,
+    memory: "256MiB",
+}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Autenticacao necessaria");
+    }
+    const { franchiseId, data, managers } = request.data || {};
+    const recipients = Array.isArray(managers) && managers.length ? managers : RECIPIENTS;
+    const reportData = data || {};
+
+    const password = GMAIL_APP_PASSWORD.value();
+    if (!password) {
+        // Secret nao configurado — salva no Firestore mesmo assim e retorna erro graceful
+        await db.collection("mail").add({
+            to: recipients,
+            from: "MilkyPot PDV <" + SMTP_USER + ">",
+            replyTo: reportData.operatorEmail || SMTP_USER,
+            message: {
+                subject: "Fechamento de Caixa — " + (franchiseId || "?") + " — " + new Date().toISOString().slice(0, 10),
+                text: _buildClosingText({ ...reportData, franchiseId }),
+                html: _buildClosingHtml({ ...reportData, franchiseId }),
+            },
+            _pendingSmtp: true,
+            _createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        return { success: false, queued: true, reason: "GMAIL_APP_PASSWORD nao configurado — relatorio salvo em /mail" };
+    }
+
+    const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: { user: SMTP_USER, pass: password },
+    });
+
+    try {
+        await transporter.sendMail({
+            from: '"MilkyPot PDV" <' + SMTP_USER + '>',
+            to: recipients.join(", "),
+            replyTo: reportData.operatorEmail || SMTP_USER,
+            subject: "🔒 Fechamento de Caixa — " + (franchiseId || "?") + " — " + new Date().toISOString().slice(0, 10),
+            text: _buildClosingText({ ...reportData, franchiseId }),
+            html: _buildClosingHtml({ ...reportData, franchiseId }),
+        });
+        // Marca como enviado pra audit
+        await db.collection("caixa_reports_sent").add({
+            franchiseId,
+            recipients,
+            sentAt: admin.firestore.FieldValue.serverTimestamp(),
+            data: reportData,
+        });
+        return { success: true, sent: recipients.length };
+    } catch (e) {
+        console.error("sendClosingReport SMTP error:", e);
+        // Salva no Firestore como fallback pra retry futuro
+        await db.collection("mail").add({
+            to: recipients,
+            from: "MilkyPot PDV <" + SMTP_USER + ">",
+            message: {
+                subject: "Fechamento de Caixa — " + (franchiseId || "?"),
+                text: _buildClosingText({ ...reportData, franchiseId }),
+                html: _buildClosingHtml({ ...reportData, franchiseId }),
+            },
+            _smtpError: String(e && e.message || e),
+            _createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        throw new HttpsError("internal", "SMTP falhou: " + (e.message || "?"));
+    }
+});
