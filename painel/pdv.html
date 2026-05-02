@@ -278,6 +278,9 @@
         .challenge-fab { position: fixed; bottom: 18px; left: 190px; width: 76px; height: 70px; border-radius: 18px; background: linear-gradient(135deg, #6C63FF, #42A5F5); color: #fff; border: none; box-shadow: 0 6px 20px rgba(66,165,245,0.42); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; transition: transform 0.15s; }
         .challenge-fab:hover { transform: scale(1.06); box-shadow: 0 10px 28px rgba(66,165,245,0.55); }
         .challenge-fab:active { transform: scale(0.95); }
+        .tv-fab { position: fixed; bottom: 18px; left: 274px; width: 52px; height: 70px; border-radius: 18px; background: linear-gradient(135deg, #00C853, #00897B); color: #fff; border: none; box-shadow: 0 6px 20px rgba(0,200,83,0.42); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; transition: transform 0.15s; }
+        .tv-fab:hover { transform: scale(1.06); box-shadow: 0 10px 28px rgba(0,200,83,0.55); }
+        .tv-fab:active { transform: scale(0.95); }
 
         /* Buffet / Weight Modal */
         .buffet-modal { background: #fff; border-radius: 20px; width: 520px; max-width: 95vw; max-height: 92vh; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.25); display: flex; flex-direction: column; }
@@ -508,6 +511,12 @@
                 width: 60px; height: 56px;
                 border-radius: 14px;
             }
+            .tv-fab {
+                bottom: calc(62vh + 12px) !important;
+                left: 220px;
+                width: 46px; height: 56px;
+                border-radius: 14px;
+            }
         }
 
         @media(max-width:480px) {
@@ -547,6 +556,12 @@
                 bottom: calc(55vh + 8px) !important;
                 left: 134px;
                 width: 56px; height: 50px;
+                border-radius: 12px;
+            }
+            .tv-fab {
+                bottom: calc(55vh + 8px) !important;
+                left: 196px;
+                width: 42px; height: 50px;
                 border-radius: 12px;
             }
             /* Header compacto no celular */
@@ -623,6 +638,7 @@
             .buffet-fab { bottom: 12px !important; left: 12px; }
             .redeem-fab { bottom: 12px !important; }
             .challenge-fab { bottom: 12px !important; }
+            .tv-fab { bottom: 12px !important; }
         }
     </style>
 </head>
@@ -701,6 +717,10 @@
     <button class="challenge-fab" onclick="openFreeChallengeModal()" title="Liberar desafio gratis na TV">
         <span style="font-size:24px">⚡</span>
         <span style="font-size:10px;font-weight:800;display:block">DESAFIO</span>
+    </button>
+    <button class="tv-fab" onclick="window.open('/tvd.html','_blank')" title="Abrir TV Desafio em nova janela">
+        <span style="font-size:22px">📺</span>
+        <span style="font-size:9px;font-weight:800;display:block">TV</span>
     </button>
 
     <div class="pdv-action-fab" id="pdvActionFab" role="toolbar" aria-label="Ações do pedido">
@@ -4419,9 +4439,21 @@
             var ticketMedio = qtdPedidos > 0 ? (totalDia / qtdPedidos) : 0;
 
             // Breakdown por forma de pagamento
+            // Defensivo: payment pode vir como string, number, ou {method:...}
+            // (legado de versoes diferentes do PDV/cardapio). Normaliza tudo
+            // pra string antes de chamar toLowerCase, senao quebra com TypeError.
+            function _normPay(raw){
+                if (raw == null) return 'não informado';
+                if (typeof raw === 'string') return raw.toLowerCase().trim();
+                if (typeof raw === 'object') {
+                    var s = raw.method || raw.type || raw.label || raw.name || '';
+                    return String(s).toLowerCase().trim() || 'não informado';
+                }
+                return String(raw).toLowerCase().trim();
+            }
             var porPagto = {};
             finalizados.forEach(function(o){
-                var p = (o.payment || 'Não informado').toLowerCase().trim();
+                var p = _normPay(o.payment);
                 var key = p;
                 if (p.indexOf('pix') !== -1) key = 'pix';
                 else if (p.indexOf('din') !== -1) key = 'dinheiro';
