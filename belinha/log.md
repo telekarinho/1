@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #95 — 2026-05-02
+
+**Área:** UX/Performance — sweep Firebase CDN preconnect (CWV: TTI/FCP mobile)
+
+**Contexto:** Prescrito pelo roadmap #92. 10+ ciclos sem atenção a UX/Performance. Sweep mobile obrigatório com foco em CLS, LCP, WebP, bundle.
+
+**O que analisou:**
+- Auditou todas as páginas que carregam Firebase SDK (`www.gstatic.com`)
+- Confirmou que `index.html`, `raspinha.html` e `login.html` carregam Firebase SDK (~330–440KB) sem `preconnect` para o domínio CDN, pagando DNS+TCP+TLS em cada primeira visita
+- Inspecionou `animations.css` (CLS risk: `opacity:0` como estado inicial — não pode ser deferido sem FOUT visual)
+- Confirmou imagens LCP com `width`/`height` explícitos ✅ e `fetchpriority="high"` ✅
+- Identificou `login.html` como crítico: 4 SDKs Firebase em `<head>` bloqueando render completamente; preconnect é ganho imediato sem risco
+- `cardapio.css` (30KB) existe mas não é referenciado em nenhuma página — documentado para backlog
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | `preconnect` para `www.gstatic.com` + `dns-prefetch` para `firestore.googleapis.com` |
+| `raspinha.html` | Idem (carrega firebase-app + firebase-firestore) |
+| `login.html` | `preconnect` para `www.gstatic.com` + `dns-prefetch` para `identitytoolkit.googleapis.com` e `firestore.googleapis.com` (4 SDKs Firebase no head) |
+
+**Impacto estimado:** −150 a −300ms TTI em dispositivos móveis 4G em primeira visita (eliminação de DNS lookup + TCP handshake + TLS negotiation para Firebase CDN).
+
+**Commit:** `1895193`
+
+**Próximo passo sugerido:**
+- Ciclo #96: Conteúdo — Semanas 55+56 (03–16/05/2027): Dia das Mães (11/05) + Sextas #38/#39
+- Backlog UX/Performance (para ciclo #98 ou próxima rodada):
+  - `login.html`: mover 4 Firebase SDKs do `<head>` para fim do `<body>` com `defer` (reduz bloqueio de render ~100-400ms — requer testes funcionais)
+  - `cardapio.css` (30KB): verificar se é para integrar em `cardapio.html` ou remover
+  - `animations.css`: avaliar critical CSS inline para eliminar como render-blocking
+
+_Belinha — Ciclo #95 | 2026-05-02_
+
+---
+
 ## Ciclo #94 — 2026-05-02
 
 **Área:** Concorrentes — TheBest Açaí (alerta ativo) + MilkyMoo refetch + novos entrantes
