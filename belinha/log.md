@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #93 — 2026-05-02
+
+**Área:** SEO — BreadcrumbList+WebPage em `desafio.html` + og:image:width/height em 5 páginas
+
+**Contexto:** Prescrito pelo roadmap do ciclo #92 como próximo passo obrigatório do ciclo #93. `desafio.html` era a única página HTML sem schema.org estruturado. Adicionalmente, nenhuma página tinha `og:image:width/height` explícito — o Facebook/WhatsApp faz download para inferir dimensões, adicionando latência desnecessária no preview social.
+
+**O que analisou:**
+- Verificou schema.org de `cardapio.html` (ciclo #88) como template de referência para BreadcrumbList + WebPage
+- Confirmou que `desafio.html` tinha apenas og:image básico sem width/height e nenhum schema.org
+- Verificou dimensões reais de `images/logo-milkypot.png` via inspect binário PNG: **1900×1070px**
+- Identificou 4 outras páginas também sem og:image:width/height: `index.html`, `cardapio.html`, `potinho-ninho-londrina.html`, `acai-self-service-londrina.html`
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `desafio.html` | ADICIONADO: og:image:width=1900 + og:image:height=1070 + og:image:alt + schema.org BreadcrumbList (Início → Desafio 10 Milissegundos) + WebPage com isPartOf, inLanguage, breadcrumb inline |
+| `index.html` | ADICIONADO: og:image:width=1900 + og:image:height=1070 |
+| `cardapio.html` | ADICIONADO: og:image:width=1900 + og:image:height=1070 + og:image:alt (estava faltando) |
+| `potinho-ninho-londrina.html` | ADICIONADO: og:image:width=1900 + og:image:height=1070 + og:image:alt |
+| `acai-self-service-londrina.html` | ADICIONADO: og:image:width=1900 + og:image:height=1070 + og:image:alt |
+
+**Commit:** `570e77f`
+
+**Impacto técnico:**
+1. **Rich Results Google:** `desafio.html` agora elegível para breadcrumb rico nos resultados de busca
+2. **Open Graph compliant:** og:image:width/height evita que scrapers do WhatsApp/Facebook façam HEAD request para descobrir dimensões — melhora velocidade do preview
+3. **Cobertura schema.org:** todas as páginas públicas do site agora têm schema.org estruturado
+
+**Próximo passo sugerido (roadmap #92):**
+- Ciclo #94: Concorrentes — TheBest (alerta ativo, possível expansão Muffato) + MilkyMoo refetch + novos entrantes Londrina
+- Ciclo #95: UX/Performance — sweep obrigatório: CLS, LCP, imagens WebP, bundle size, mobile (10+ ciclos sem atenção)
+- Ciclo #96: Conteúdo — Semanas 55+56 (03–16/05/2027): Dia das Mães (11/05) + Sextas #38/#39
+
+_Belinha — Ciclo #93 | 2026-05-02_
+
+---
+
 ## Ciclo #92 — 2026-05-02
 
 **Área:** Auto-aprimoramento obrigatório — revisão estratégia + rebalanceamento de rotação
