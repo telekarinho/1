@@ -335,9 +335,12 @@
                                oninput="window._maskCepInput && window._maskCepInput(this); window._cepLookupOnInput && window._cepLookupOnInput(this)">
                     </div>
                     <div class="form-row">
-                        <div class="form-group" style="flex:2">
-                            <label>Endereço</label>
-                            <input type="text" id="checkoutAddress" placeholder="Rua / Avenida" oninput="window._scheduleUberQuote && window._scheduleUberQuote()">
+                        <div class="form-group" style="flex:2;position:relative">
+                            <label>Endereço <small style="color:#10B981;font-weight:600">(digite 3 letras pra sugestões)</small></label>
+                            <input type="text" id="checkoutAddress" placeholder="Rua / Avenida" autocomplete="off"
+                                   oninput="window._streetAutocomplete && window._streetAutocomplete(this); window._scheduleUberQuote && window._scheduleUberQuote()"
+                                   onblur="setTimeout(function(){var b=document.getElementById('streetSuggestions');if(b)b.style.display='none'},250)">
+                            <div id="streetSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:240px;overflow-y:auto;z-index:50;margin-top:4px"></div>
                         </div>
                         <div class="form-group" style="flex:1">
                             <label>Número</label>
@@ -1466,6 +1469,52 @@
                 } else { setS('⚠ CEP não encontrado', '#9A3412', '#FFF7ED'); }
             }).catch(function(){ setS('⚠ Sem conexão pra buscar CEP', '#991B1B', '#FEE2E2'); });
         };
+        // Autocomplete de rua: ViaCEP busca por logradouro em Londrina/PR
+        var _streetAcTimeout = null;
+        window._streetAutocomplete = function(input) {
+            var q = (input.value || '').trim();
+            var box = document.getElementById('streetSuggestions');
+            if (!box) return;
+            if (q.length < 3) { box.style.display = 'none'; return; }
+            if (_streetAcTimeout) clearTimeout(_streetAcTimeout);
+            _streetAcTimeout = setTimeout(function() {
+                var uf = 'PR'; var cidade = 'Londrina';
+                fetch('https://viacep.com.br/ws/' + uf + '/' + encodeURIComponent(cidade) + '/' + encodeURIComponent(q) + '/json/')
+                    .then(function(r){ return r.json(); })
+                    .then(function(arr){
+                        if (!Array.isArray(arr) || arr.length === 0) { box.style.display = 'none'; return; }
+                        var seen = {}; var unique = [];
+                        for (var i = 0; i < arr.length && unique.length < 6; i++) {
+                            var key = (arr[i].logradouro || '') + '|' + (arr[i].bairro || '');
+                            if (!seen[key]) { seen[key] = true; unique.push(arr[i]); }
+                        }
+                        var html = unique.map(function(item, idx) {
+                            return '<div class="street-sugg-item" data-idx="' + idx + '" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6;display:flex;align-items:flex-start;gap:8px"'+
+                                ' onmouseover="this.style.background=\'#F3F4F6\'" onmouseout="this.style.background=\'\'">'+
+                                '<span style="font-size:16px">📍</span><div style="flex:1;min-width:0">'+
+                                '<div style="font-weight:700;font-size:13px;color:#111;line-height:1.3">' + (item.logradouro || '(sem nome)') + '</div>'+
+                                '<div style="font-size:11px;color:#6b7280;margin-top:2px">' + (item.bairro || '') + ' · ' + (item.localidade || '') + '/' + (item.uf || '') + ' · CEP ' + (item.cep || '') + '</div>'+
+                                '</div></div>';
+                        }).join('');
+                        box.innerHTML = html;
+                        box.style.display = 'block';
+                        Array.prototype.forEach.call(box.querySelectorAll('.street-sugg-item'), function(el){
+                            el.addEventListener('mousedown', function(ev) {
+                                ev.preventDefault();
+                                var item = unique[parseInt(el.getAttribute('data-idx'))];
+                                if (!item) return;
+                                input.value = item.logradouro || '';
+                                var nbh = document.getElementById('checkoutNeighborhood'); if (nbh && item.bairro) nbh.value = item.bairro;
+                                var cep = document.getElementById('checkoutCep'); if (cep && item.cep) cep.value = item.cep;
+                                box.style.display = 'none';
+                                var num = document.getElementById('checkoutNumber'); if (num) num.focus();
+                                window._scheduleUberQuote();
+                            });
+                        });
+                    }).catch(function(){ box.style.display = 'none'; });
+            }, 350);
+        };
+
         // Geolocalização
         window._useMyLocation = function() {
             var status = document.getElementById('uberQuoteStatus');
