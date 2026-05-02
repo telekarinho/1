@@ -948,6 +948,32 @@ exports.setupTestFranchise = onCall({ region: "southamerica-east1" }, async () =
 });
 
 // ============================================================
+// GET MY PROFILE — auth.js usa pra buscar perfil quando cache vazio
+// ============================================================
+// Retorna o perfil do usuario autenticado. Seguro: usa request.auth
+// (token verificado pelo Firebase) — ninguem consegue pegar perfil
+// de outro usuario.
+exports.getMyProfile = onCall({ region: "southamerica-east1" }, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Login necessario");
+    }
+    const email = request.auth.token.email;
+    if (!email) {
+        throw new HttpsError("invalid-argument", "Token sem email");
+    }
+    try {
+        const snap = await db.collection("datastore").doc("users").get();
+        if (!snap.exists) return { success: false, profile: null };
+        const arr = JSON.parse((snap.data() || {}).value || "[]");
+        const profile = arr.find((u) => u && u.email === email) || null;
+        return { success: true, profile };
+    } catch (e) {
+        console.error("getMyProfile error:", e);
+        throw new HttpsError("internal", e.message || "Erro");
+    }
+});
+
+// ============================================================
 // SEND CLOSING REPORT — fechamento de caixa por email
 // ============================================================
 // Chamada pelo PDV (caixa.js) quando o operador fecha o caixa do dia.

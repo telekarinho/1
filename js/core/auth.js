@@ -29,30 +29,28 @@ const Auth = {
             // Busca dados do perfil no DataStore (localStorage cache)
             let profile = this._findUserProfile(user.email);
 
-            // FALLBACK: se nao acha localmente, busca direto no Firestore
+            // FALLBACK: se nao acha localmente, busca via Cloud Function
             // (primeira vez logando neste browser — cache local vazio).
+            // Direct Firestore.get() falha com permission-denied; a CF
+            // getMyProfile usa Admin SDK e valida o token do user pra
+            // retornar SO o profile dele.
             if (!profile) {
                 try {
-                    const fbDb = (typeof firebase !== 'undefined' && firebase.firestore)
-                        ? firebase.firestore() : null;
-                    if (fbDb) {
-                        const snap = await fbDb.collection('datastore').doc('users').get();
-                        if (snap.exists) {
-                            const v = (snap.data() || {}).value || '[]';
-                            const remoteUsers = JSON.parse(v);
-                            const remoteProfile = remoteUsers.find(u => u && u.email === user.email);
-                            if (remoteProfile) {
-                                // Persiste no DataStore local pra proximas sessoes
-                                const localUsers = DataStore.get('users') || [];
-                                if (!localUsers.find(u => u.email === remoteProfile.email)) {
-                                    localUsers.push(remoteProfile);
-                                    DataStore.set('users', localUsers);
-                                }
-                                profile = remoteProfile;
+                    const fns = (typeof firebase !== 'undefined' && firebase.app && firebase.app().functions)
+                        ? firebase.app().functions('southamerica-east1') : null;
+                    if (fns && fns.httpsCallable) {
+                        const r = await fns.httpsCallable('getMyProfile')({});
+                        const remoteProfile = r && r.data && r.data.profile;
+                        if (remoteProfile) {
+                            const localUsers = DataStore.get('users') || [];
+                            if (!localUsers.find(u => u.email === remoteProfile.email)) {
+                                localUsers.push(remoteProfile);
+                                DataStore.set('users', localUsers);
                             }
+                            profile = remoteProfile;
                         }
                     }
-                } catch (e) { console.warn('Firestore profile fallback:', e); }
+                } catch (e) { console.warn('getMyProfile fallback:', e); }
             }
 
             if (!profile) {
