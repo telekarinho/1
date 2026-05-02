@@ -1208,8 +1208,119 @@
             });
         }
 
+        // === Carrinho — funcoes que nao existiam (bug: clicar Adicionar
+        //     dava ReferenceError closeProductSheet is not defined) ===
+
+        window.closeProductSheet = function() {
+            var sheet = document.getElementById('productSheet');
+            var bd    = document.getElementById('productSheetBackdrop');
+            if (sheet) sheet.style.display = 'none';
+            if (bd)    bd.style.display    = 'none';
+            document.body.style.overflow = '';
+        };
+
+        function _readCart() {
+            try { return JSON.parse(localStorage.getItem('milkypot_cart') || '[]'); }
+            catch(_) { return []; }
+        }
+        function _cartTotal(items) {
+            return items.reduce(function(s,i){ return s + Number(i.total||i.price||0); }, 0);
+        }
+        function _fmtBRL(v) { return 'R$ ' + Number(v||0).toFixed(2).replace('.', ','); }
+
+        window.updateCartUI = function() {
+            var items = _readCart();
+            var total = _cartTotal(items);
+            // Sticky cart bar (rodape mobile)
+            var sticky = document.getElementById('stickyCart');
+            var stTxt  = document.getElementById('stickyCartText');
+            var stTot  = document.getElementById('stickyCartTotal');
+            if (sticky) {
+                if (items.length > 0) {
+                    sticky.style.display = 'flex';
+                    if (stTxt) stTxt.textContent = items.length + ' ite' + (items.length>1?'ns':'m');
+                    if (stTot) stTot.textContent = _fmtBRL(total);
+                } else {
+                    sticky.style.display = 'none';
+                }
+            }
+            // Badge no nav (carrinho icon, se existir)
+            var badge = document.querySelector('.cart-badge, [data-cart-count]');
+            if (badge) badge.textContent = items.length || '';
+            // Se carrinho aberto, re-renderiza itens
+            var sb = document.getElementById('cartSidebar');
+            if (sb && sb.classList.contains('open')) renderCartItems();
+        };
+
+        function renderCartItems() {
+            var items = _readCart();
+            var box   = document.getElementById('cartItems');
+            var foot  = document.getElementById('cartFooter');
+            var totEl = document.getElementById('cartTotal');
+            if (!box) return;
+            if (!items.length) {
+                box.innerHTML = '<div class="cart-empty"><span class="cart-empty-icon">🛒</span>' +
+                                '<p>Seu carrinho está vazio</p><small>Adicione produtos deliciosos!</small></div>';
+                if (foot) foot.style.display = 'none';
+                return;
+            }
+            var html = '';
+            items.forEach(function(it, idx) {
+                var sub = it.sabor ? (' <small style="color:#888">'+it.sabor+'</small>') : '';
+                var sz  = it.size  ? (' <small style="color:#666">'+it.size+'</small>')  : '';
+                var ext = (it.extras && it.extras.length) ? '<div style="font-size:11px;color:#888;margin-top:2px">+ ' + it.extras.map(function(e){return e.name||e}).join(', ') + '</div>' : '';
+                html += '<div class="cart-item" style="padding:10px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">' +
+                          '<div style="flex:1;min-width:0">' +
+                            '<div style="font-weight:700;font-size:14px">'+(it.emoji||'')+' '+(it.name||'Produto')+sz+'</div>' +
+                            sub + ext +
+                            '<div style="font-size:11px;color:#999;margin-top:2px">qtd: '+(it.qty||1)+' · '+_fmtBRL(it.unitPrice||(it.total/(it.qty||1)))+' un</div>' +
+                          '</div>' +
+                          '<div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">' +
+                            '<strong style="color:#7B1FA2">'+_fmtBRL(it.total||it.price)+'</strong>' +
+                            '<button onclick="removeCartItem('+idx+')" style="background:none;border:none;color:#DC2626;cursor:pointer;font-size:16px;padding:2px 6px" title="Remover">✕</button>' +
+                          '</div>' +
+                        '</div>';
+            });
+            box.innerHTML = html;
+            if (totEl) totEl.textContent = _fmtBRL(_cartTotal(items));
+            if (foot) foot.style.display = 'block';
+        }
+
+        window.removeCartItem = function(idx) {
+            var items = _readCart();
+            items.splice(idx, 1);
+            localStorage.setItem('milkypot_cart', JSON.stringify(items));
+            window.cart = items;
+            updateCartUI();
+            renderCartItems();
+        };
+
+        window.openCartSidebar = function() {
+            var sb = document.getElementById('cartSidebar');
+            var ov = document.getElementById('cartOverlay');
+            if (!sb) return;
+            renderCartItems();
+            sb.classList.add('open');
+            if (ov) ov.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        };
+        window.closeCartSidebar = function() {
+            var sb = document.getElementById('cartSidebar');
+            var ov = document.getElementById('cartOverlay');
+            if (sb) sb.classList.remove('open');
+            if (ov) ov.classList.remove('open');
+            document.body.style.overflow = '';
+        };
+        // Wiring close button + overlay click
+        (function wireCart(){
+            var btn = document.getElementById('cartClose');
+            if (btn) btn.addEventListener('click', closeCartSidebar);
+            var ov = document.getElementById('cartOverlay');
+            if (ov) ov.addEventListener('click', closeCartSidebar);
+        })();
+
         window.openCart = function() {
-            if (typeof openCartSidebar === 'function') openCartSidebar();
+            window.openCartSidebar();
         };
 
         function showToast(msg) {
