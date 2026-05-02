@@ -26,8 +26,35 @@ const Auth = {
             const result = await firebaseAuth.signInWithEmailAndPassword(email, password);
             const user = result.user;
 
-            // Busca dados do perfil no DataStore
-            const profile = this._findUserProfile(user.email);
+            // Busca dados do perfil no DataStore (localStorage cache)
+            let profile = this._findUserProfile(user.email);
+
+            // FALLBACK: se nao acha localmente, busca direto no Firestore
+            // (primeira vez logando neste browser — cache local vazio).
+            if (!profile) {
+                try {
+                    const fbDb = (typeof firebase !== 'undefined' && firebase.firestore)
+                        ? firebase.firestore() : null;
+                    if (fbDb) {
+                        const snap = await fbDb.collection('datastore').doc('users').get();
+                        if (snap.exists) {
+                            const v = (snap.data() || {}).value || '[]';
+                            const remoteUsers = JSON.parse(v);
+                            const remoteProfile = remoteUsers.find(u => u && u.email === user.email);
+                            if (remoteProfile) {
+                                // Persiste no DataStore local pra proximas sessoes
+                                const localUsers = DataStore.get('users') || [];
+                                if (!localUsers.find(u => u.email === remoteProfile.email)) {
+                                    localUsers.push(remoteProfile);
+                                    DataStore.set('users', localUsers);
+                                }
+                                profile = remoteProfile;
+                            }
+                        }
+                    }
+                } catch (e) { console.warn('Firestore profile fallback:', e); }
+            }
+
             if (!profile) {
                 await firebaseAuth.signOut();
                 return { success: false, error: 'Usuario nao cadastrado no sistema. Solicite acesso ao administrador.' };

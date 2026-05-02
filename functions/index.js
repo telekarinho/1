@@ -876,6 +876,42 @@ exports.setupTestFranchise = onCall({ region: "southamerica-east1" }, async () =
         updatedAt: new Date().toISOString(),
     });
 
+    // 2.1 Cria docs vazios pro APK Android nao receber 404 quando itera
+    //     sobre franchises buscando tv_shortcodes_<fid>. Sem isso, a
+    //     adicao da franquia-teste no array franchises causa 404 no APK
+    //     pra essas chaves -> APK pode mostrar 'codigo tv3 nao encontrado'
+    //     se o cache da muffato-quintino tambem falhar momentaneamente.
+    const tvDocs = [
+        "tv_shortcodes_" + TEST_FID,
+        "tv_media_" + TEST_FID,
+        "tv_playlist_" + TEST_FID,
+        "tv_config_" + TEST_FID,
+    ];
+    for (const docId of tvDocs) {
+        try {
+            const dRef = db.collection("datastore").doc(docId);
+            const dSnap = await dRef.get();
+            if (!dSnap.exists) {
+                const emptyVal = docId.includes("media") || docId.includes("playlist") ? "[]" : "{}";
+                await dRef.set({ value: emptyVal, updatedAt: new Date().toISOString() });
+            }
+        } catch (e) { console.warn("init tv doc " + docId + ":", e.message); }
+    }
+
+    // 2.2 Copia credenciais Uber Direct da Muffato Quintino pra franquia-teste
+    //     (cliente disse: "ja ta ativa e cadastrada no sistema pode usar a mesma").
+    //     Usa a mesma conta Uber, so muda o franchiseId interno.
+    try {
+        const muffatoUber = await db.collection("uber_settings").doc("muffato-quintino").get();
+        if (muffatoUber.exists) {
+            const testUber = await db.collection("uber_settings").doc(TEST_FID).get();
+            if (!testUber.exists) {
+                await db.collection("uber_settings").doc(TEST_FID).set(muffatoUber.data());
+                console.log("uber settings copiadas de muffato-quintino pra " + TEST_FID);
+            }
+        }
+    } catch (e) { console.warn("copy uber settings:", e.message); }
+
     // 3. Garantir user profile no datastore/users (auth.js usa esse perfil
     //    pra autorizar login — sem ele cai em 'Usuario nao cadastrado').
     const usersRef = db.collection("datastore").doc("users");
