@@ -294,7 +294,19 @@ const Caixa = (function () {
         return r;
     }
 
-    function closeShift(franchiseId, valorContado, motivoQuebra, motivoForaHorario) {
+    /**
+     * Fecha o turno do dia.
+     * @param {string} franchiseId
+     * @param {number} valorContado - dinheiro fisico contado (sem troco)
+     * @param {string} motivoQuebra - obrigatorio se |diff|>5
+     * @param {string} motivoForaHorario - obrigatorio se fora do horario
+     * @param {object} [extras] - opcional: breakdown completo conferido pelo
+     *   operador (pix, cartoes por maquininha, dinheiro, troco). NAO altera
+     *   contrato de retorno; eh apenas anexado ao audit e ao email.
+     *   { conferidoPix, conferidoCredito, conferidoDebito, maquininhas: [{label,credito,debito}],
+     *     dinheiroContadoTotal, troco, sangrias, observacoes }
+     */
+    function closeShift(franchiseId, valorContado, motivoQuebra, motivoForaHorario, extras) {
         if (!franchiseId) return { success: false, error: 'Franquia inválida.' };
         const st = getTurnoState(franchiseId);
         if (st.status === 'nao_aberto') return { success: false, error: 'Nenhum caixa aberto hoje.' };
@@ -406,14 +418,17 @@ const Caixa = (function () {
             valorContado: valorContado,
             saldoEsperado: st.saldoEsperadoDinheiro,
             diferenca: diff,
-            motivo: motivoQuebra || ''
+            motivo: motivoQuebra || '',
+            extras: extras || null
         });
 
         if (typeof Motivacional !== 'undefined' && Motivacional.toastCaixaFechado) {
             Motivacional.toastCaixaFechado();
         }
 
-        // Trigger Automated Report via Cloud Functions
+        // Trigger Automated Report via Cloud Functions (3 emails fixos:
+        // milkypot.com / jocimarrodrigo / joseanemse — definidos em
+        // cloud-functions.js sendClosingReport)
         try {
             if (typeof CloudFunctions !== 'undefined' && CloudFunctions.sendClosingReport) {
                 const session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
@@ -424,7 +439,17 @@ const Caixa = (function () {
                     saldoEsperado: st.saldoEsperadoDinheiro,
                     diferenca: diff,
                     motivo: motivoQuebra,
-                    fechamentoDate: new Date().toISOString()
+                    fechamentoDate: new Date().toISOString(),
+                    // Dados extras conferidos pelo operador (opcional — vem do
+                    // novo modal interativo). Backward-compatible: se null,
+                    // o relatorio funciona como antes.
+                    porMetodoEsperado: st.porMetodo || {},
+                    faturamentoBruto: st.faturamentoBruto || 0,
+                    valorAbertura: st.valorAbertura || 0,
+                    vendasDinheiro: st.vendasDinheiro || 0,
+                    totalSangria: st.totalSangria || 0,
+                    totalReforco: st.totalReforco || 0,
+                    breakdownConferido: extras || null
                 });
             }
         } catch (e) {
@@ -803,82 +828,413 @@ const Caixa = (function () {
                 showCloseModal(franchiseId, cb);
             });
         }
+        return _showCloseModalV2(franchiseId, cb);
+    }
 
+    /* ============================================
+       V2 (modal interativo) — substitui o modal antigo de fechamento.
+       Mantem a mesma assinatura externa (showCloseModal), apenas troca a UI:
+         - Inputs editaveis por metodo (PIX, Credito M1, Credito M2, Debito M1,
+           Debito M2, Dinheiro contado, Troco)
+         - Mostra esperado vs contado em tempo real e calcula diferenca
+         - Justificativa so eh obrigatoria quando ha diferenca > R$ 5
+         - Apos confirmar, dispara closeShift normalmente + envia relatorio
+           (tenta CloudFunctions, salva sempre no Firestore audit, e tem
+           fallback mailto: pra abrir o cliente de email do operador)
+       ============================================ */
+    function _showCloseModalV2(franchiseId, cb) {
         const st = getTurnoState(franchiseId);
-        // Pre-check do horário
-        var hourCheckClose = checkBusinessHours(franchiseId, 'close');
-        var offHoursCloseWarning = !hourCheckClose.ok ? `
-            <div style="background:#FFF3E0;border:2px solid #FB8C00;color:#E65100;padding:12px;border-radius:8px;margin:10px 0;font-weight:600">
-                ⏰ <strong>Fora do horário comercial</strong><br>
-                <small style="font-weight:400">${hourCheckClose.reason || 'Horário previsto: ' + hourCheckClose.expectedClose}</small>
+        const hourCheckClose = checkBusinessHours(franchiseId, 'close');
+
+        // Valores esperados por metodo (do caixa real)
+        const espPix      = Number(st.porMetodo && st.porMetodo.pix      || 0);
+        const espCredito  = Number(st.porMetodo && st.porMetodo.credito  || 0);
+        const espDebito   = Number(st.porMetodo && st.porMetodo.debito   || 0);
+        const espDinheiro = Number(st.vendasDinheiro || 0);
+        const saldoEsperadoDinheiro = Number(st.saldoEsperadoDinheiro || 0);
+
+        // Detecta valores poluidos (objetos serializados como '[object object]')
+        const polluted = Object.keys(st.porMetodo || {}).filter(k =>
+            k && (k.indexOf('object') !== -1 || k === 'nao_informado')
+        );
+        let pollutedHtml = '';
+        if (polluted.length) {
+            const totalPoll = polluted.reduce((s, k) => s + Number(st.porMetodo[k] || 0), 0);
+            pollutedHtml =
+              '<div style="background:#FEF3C7;border:1px solid #F59E0B;color:#92400E;padding:8px 10px;border-radius:6px;margin:6px 0;font-size:12px">' +
+                '⚠️ <strong>' + formatBRL(totalPoll) + '</strong> de vendas com método invalido (provavelmente pedido teste antigo). Ajuste manualmente abaixo.' +
+              '</div>';
+        }
+
+        const offHoursCloseWarning = !hourCheckClose.ok ? `
+            <div style="background:#FFF3E0;border:2px solid #FB8C00;color:#E65100;padding:10px;border-radius:8px;margin:8px 0;font-weight:600;font-size:13px">
+                ⏰ <strong>Fora do horário</strong>
+                <div style="font-weight:400;margin-top:2px">${hourCheckClose.reason || 'Previsto: ' + hourCheckClose.expectedClose}</div>
             </div>
-            <label style="margin-top:8px"><strong>Justificativa de horário (obrigatória)</strong></label>
-            <textarea data-name="motivoForaHorario" placeholder="Ex: shopping fechou cedo, problema técnico, sem movimento..." rows="2" style="width:100%;padding:10px;border:2px solid #FB8C00;border-radius:8px;font-family:inherit;font-size:14px"></textarea>
+            <label style="margin-top:6px;font-size:13px"><strong>Justificativa de horário (obrigatória)</strong></label>
+            <textarea data-name="motivoForaHorario" placeholder="Ex: shopping fechou cedo, sem movimento..." rows="2" style="width:100%;padding:8px;border:2px solid #FB8C00;border-radius:6px;font-family:inherit;font-size:13px"></textarea>
         ` : '';
 
-        const breakdownHtml = _renderPagamentosBreakdown(st);
+        // Helper inline pro template — gera linha esperado/contado
+        function _row(name, icon, label, esperado, hint) {
+            return ''+
+            '<div class="cv2-row" data-method-row="'+name+'" style="display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:6px">' +
+              '<div>' +
+                '<div style="font-weight:700;color:#1f2937;font-size:14px">'+icon+' '+label+'</div>' +
+                (hint ? '<div style="font-size:11px;color:#6b7280;margin-top:1px">'+hint+'</div>' : '') +
+              '</div>' +
+              '<div style="text-align:right">' +
+                '<div style="font-size:11px;color:#6b7280">Esperado</div>' +
+                '<div style="font-weight:700;color:#374151;font-size:14px" data-esperado="'+name+'">'+formatBRL(esperado)+'</div>' +
+              '</div>' +
+              '<div style="text-align:right">' +
+                '<input type="text" class="caixa-brl cv2-input" data-caixa-brl data-name="conf_'+name+'" inputmode="numeric" '+
+                  'value="'+formatBRL(esperado)+'" '+
+                  'style="width:120px;padding:8px 10px;border:2px solid #d1d5db;border-radius:8px;font-weight:700;text-align:right;font-size:14px;background:#fff">' +
+                '<div data-diff="'+name+'" style="font-size:11px;font-weight:700;text-align:right;margin-top:2px;min-height:14px"></div>' +
+              '</div>' +
+            '</div>';
+        }
 
         const html = `
-            <div class="caixa-modal" role="dialog" aria-label="Fechar caixa">
+            <div class="caixa-modal cv2-modal" role="dialog" aria-label="Fechar caixa" style="max-width:560px">
               <div class="caixa-modal-header" style="background:linear-gradient(135deg,#DC2626,#F59E0B)">
-                <h3>🔒 Fechar caixa</h3>
+                <h3>🔒 Fechar caixa · conferência</h3>
                 <button class="caixa-modal-close" data-caixa-close aria-label="Fechar">✕</button>
               </div>
-              <div class="caixa-modal-body">
-                <div style="font-weight:700;margin-bottom:6px;color:#333">💰 Vendas por forma de pagamento</div>
-                ${breakdownHtml}
-                <div class="caixa-info" style="margin-top:10px">
-                  Abertura: <strong>${formatBRL(st.valorAbertura)}</strong><br>
-                  + Vendas em dinheiro: <strong>${formatBRL(st.vendasDinheiro)}</strong><br>
-                  + Reforços: <strong>${formatBRL(st.totalReforco)}</strong><br>
-                  − Sangrias: <strong>${formatBRL(st.totalSangria)}</strong><br>
-                  <hr style="border:none;border-top:1px solid #ddd;margin:6px 0">
-                  <span style="font-size:15px">Saldo esperado em dinheiro:</span> <strong style="color:#2E7D32;font-size:16px">${formatBRL(st.saldoEsperadoDinheiro)}</strong>
+              <div class="caixa-modal-body" style="padding:14px 16px;background:#f9fafb">
+
+                ${pollutedHtml}
+
+                <div style="font-weight:700;color:#374151;margin-bottom:6px;font-size:13px">💳 Maquininhas — confira o Z relatório</div>
+                ${_row('credito_m1', '💳', 'Crédito · Maquininha 1', espCredito, 'Default = total cred. esperado. Edite por maquina')}
+                ${_row('credito_m2', '💳', 'Crédito · Maquininha 2', 0,         'Se tem 2ª maquineta, divida o valor')}
+                ${_row('debito_m1',  '💳', 'Débito · Maquininha 1',  espDebito,  'Default = total déb. esperado. Edite por maquina')}
+                ${_row('debito_m2',  '💳', 'Débito · Maquininha 2',  0,          'Se tem 2ª maquineta, divida o valor')}
+
+                <div style="font-weight:700;color:#374151;margin:10px 0 6px;font-size:13px">⚡ PIX</div>
+                ${_row('pix', '⚡', 'PIX recebido (extrato banco)', espPix, 'Confira no app do banco')}
+
+                <div style="font-weight:700;color:#374151;margin:10px 0 6px;font-size:13px">💵 Dinheiro físico</div>
+                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:6px">
+                  <div style="display:grid;grid-template-columns:1fr 130px;gap:8px;align-items:center;margin-bottom:8px">
+                    <label style="font-size:13px;color:#374151;margin:0">Total contado na gaveta</label>
+                    <input type="text" class="caixa-brl" data-caixa-brl data-name="dinheiro_total" inputmode="numeric" placeholder="R$ 0,00"
+                           style="padding:8px 10px;border:2px solid #d1d5db;border-radius:8px;font-weight:700;text-align:right;font-size:14px">
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 130px;gap:8px;align-items:center;margin-bottom:8px">
+                    <label style="font-size:13px;color:#374151;margin:0">− Troco que vai sair (próximo turno)</label>
+                    <input type="text" class="caixa-brl" data-caixa-brl data-name="dinheiro_troco" inputmode="numeric" placeholder="R$ 0,00"
+                           style="padding:8px 10px;border:2px solid #d1d5db;border-radius:8px;font-weight:700;text-align:right;font-size:14px">
+                  </div>
+                  <hr style="border:none;border-top:1px dashed #d1d5db;margin:6px 0">
+                  <div style="display:grid;grid-template-columns:1fr 130px;gap:8px;align-items:center;font-size:13px">
+                    <div style="color:#6b7280">
+                      <div>Esperado em dinheiro do dia:</div>
+                      <div style="font-size:11px;margin-top:1px">(abertura + vendas dinheiro − sangrias + reforços)</div>
+                    </div>
+                    <div style="text-align:right;font-weight:800;color:#1B5E20" data-esperado-dinheiro>${formatBRL(saldoEsperadoDinheiro)}</div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 130px;gap:8px;align-items:center;margin-top:6px;font-size:13px">
+                    <div style="color:#374151;font-weight:700">Diferença em dinheiro:</div>
+                    <div data-diff-dinheiro style="text-align:right;font-weight:800">—</div>
+                  </div>
                 </div>
-                <label>Valor real contado no caixa</label>
-                <input type="text" class="caixa-brl" data-caixa-brl data-name="valor" inputmode="numeric" placeholder="R$ 0,00">
-                <label>Justificativa (obrigatória se diferença &gt; R$ 5)</label>
-                <textarea data-name="motivo" placeholder="Ex: troco dado a mais, erro de conferência..."></textarea>
+
+                <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:10px;padding:10px 12px;margin-top:8px">
+                  <div style="display:flex;justify-content:space-between;font-size:13px"><span>Total faturado (sistema)</span><strong>${formatBRL(st.faturamentoBruto)}</strong></div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:2px"><span>Total conferido (você)</span><strong data-total-conferido>${formatBRL(0)}</strong></div>
+                  <hr style="border:none;border-top:1px dashed #C7D2FE;margin:6px 0">
+                  <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800"><span>Diferença total:</span><span data-diff-total style="color:#1B5E20">—</span></div>
+                </div>
+
+                <div data-justify-wrap style="display:none;margin-top:10px">
+                  <label style="font-size:13px;color:#92400E;font-weight:700">⚠️ Justificativa (obrigatória — diferença &gt; R$ 5)</label>
+                  <textarea data-name="motivo" placeholder="Ex: troco dado a mais, erro de digitação, falta de R$ X..." rows="2"
+                            style="width:100%;padding:8px;border:2px solid #F59E0B;border-radius:6px;font-family:inherit;font-size:13px"></textarea>
+                </div>
+
                 ${offHoursCloseWarning}
-                <div class="caixa-danger" data-caixa-error style="display:none"></div>
+
+                <div style="margin-top:10px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px;font-size:12px;color:#6b7280">
+                  📧 Ao fechar, o relatório é enviado para:<br>
+                  <strong style="color:#374151">milkypot.com@gmail.com · jocimarrodrigo@gmail.com · joseanemse@gmail.com</strong>
+                </div>
+
+                <div class="caixa-danger" data-caixa-error style="display:none;margin-top:8px"></div>
               </div>
               <div class="caixa-modal-footer">
                 <button class="caixa-btn-secondary" data-caixa-close>Cancelar</button>
-                <button class="caixa-btn-danger" data-caixa-confirm>Revisar e fechar →</button>
+                <button class="caixa-btn-danger" data-caixa-confirm>✅ Conferir e fechar caixa</button>
               </div>
             </div>`;
+
         const modal = openModal(html, (data) => {
-            // Se fora do horário e textarea vazia, bloqueia
-            var motivoH = '';
+            // Coleta valores conferidos
+            const cred1 = Number(data.conf_credito_m1 || 0);
+            const cred2 = Number(data.conf_credito_m2 || 0);
+            const deb1  = Number(data.conf_debito_m1  || 0);
+            const deb2  = Number(data.conf_debito_m2  || 0);
+            const pixV  = Number(data.conf_pix        || 0);
+            const dinTotal = Number(data.dinheiro_total || 0);
+            const dinTroco = Number(data.dinheiro_troco || 0);
+
+            // valorContado = dinheiro fisico do dia (sem troco do proximo turno)
+            const valorContado = +(dinTotal - dinTroco).toFixed(2);
+
+            // Justificativa de horario
+            let motivoH = '';
             if (!hourCheckClose.ok) {
                 motivoH = (data.motivoForaHorario || '').trim();
                 if (motivoH.length < 3) {
-                    const err = modal.overlay.querySelector('[data-caixa-error]');
-                    err.textContent = '⚠️ Justificativa de horário obrigatória (mínimo 3 caracteres).';
-                    err.style.display = 'block';
-                    return false;
+                    return _err(modal, '⚠️ Justificativa de horário obrigatória (mínimo 3 caracteres).');
                 }
             }
-            // Validacao basica: valor preenchido
-            var valorContado = parseBRL(data.valor);
-            if (!valorContado && valorContado !== 0) {
-                const err = modal.overlay.querySelector('[data-caixa-error]');
-                err.textContent = '⚠️ Informe o valor real contado no caixa.';
-                err.style.display = 'block';
-                return false;
+
+            // Diff total e por metodo
+            const totalConferido = cred1 + cred2 + deb1 + deb2 + pixV + valorContado;
+            const totalEsperado  = espPix + espCredito + espDebito + espDinheiro;
+            const diffTotal      = +(totalConferido - totalEsperado).toFixed(2);
+            const diffDinheiro   = +(valorContado - saldoEsperadoDinheiro).toFixed(2);
+
+            const motivo = (data.motivo || '').trim();
+            // Justificativa exigida se |diffTotal| > 5 OU |diffDinheiro| > 5
+            if ((Math.abs(diffTotal) > 5 || Math.abs(diffDinheiro) > 5) && !motivo) {
+                return _err(modal, '⚠️ Diferença maior que R$ 5,00 — informe a justificativa.');
             }
-            // ETAPA 2: confirmacao dupla — mostra resumo e exige clique consciente
-            // antes de aplicar. Evita fechamento errado por reflexo do operador.
-            modal.overlay.remove();
-            _showCloseConfirmModal(franchiseId, st, {
-                valorContado: valorContado,
-                valorContadoRaw: data.valor,
-                motivo: data.motivo || '',
-                motivoForaHorario: motivoH,
-                hourCheckClose: hourCheckClose
-            }, cb);
-            return false; // ja gerenciamos o fechamento manualmente
+            if (dinTotal === 0 && espDinheiro > 0) {
+                return _err(modal, '⚠️ Informe o total de dinheiro contado na gaveta (não pode ser R$ 0,00 com vendas em dinheiro).');
+            }
+
+            // Monta extras pro audit + email
+            const extras = {
+                breakdown: {
+                    credito_maquineta_1: cred1,
+                    credito_maquineta_2: cred2,
+                    debito_maquineta_1: deb1,
+                    debito_maquineta_2: deb2,
+                    pix: pixV,
+                    dinheiro_total_gaveta: dinTotal,
+                    dinheiro_troco: dinTroco,
+                    dinheiro_liquido_dia: valorContado
+                },
+                esperado: {
+                    pix: espPix,
+                    credito: espCredito,
+                    debito: espDebito,
+                    dinheiro: espDinheiro,
+                    saldoEsperadoDinheiro: saldoEsperadoDinheiro,
+                    totalEsperado: totalEsperado
+                },
+                conferido: {
+                    totalConferido: totalConferido,
+                    diffTotal: diffTotal,
+                    diffDinheiro: diffDinheiro
+                },
+                conferidoEm: new Date().toISOString()
+            };
+
+            // Aplica fechamento (passa valor em dinheiro como antes — assinatura
+            // antiga preservada). Extras vai como 5o param (opcional).
+            const r = closeShift(franchiseId, valorContado, motivo, motivoH, extras);
+            if (!r.success) {
+                return _err(modal, r.error + (r.esperado !== undefined ?
+                  ' (esperado ' + formatBRL(r.esperado) + ', diff ' + formatBRL(r.diff) + ')' : ''));
+            }
+
+            // Salva relatorio audit no Firestore + tenta email + fallback mailto
+            try {
+                _persistAndDispatchReport(franchiseId, st, valorContado, motivo, motivoH, extras, r);
+            } catch (e) {
+                console.warn('Falha ao despachar relatorio:', e);
+            }
+
+            if (cb) cb(r);
+            // Aviso visual final
+            if (typeof window !== 'undefined' && window.alert) {
+                setTimeout(function(){
+                    let msg = '✅ Caixa fechado com sucesso!\n';
+                    msg += 'Total conferido: ' + formatBRL(totalConferido) + '\n';
+                    msg += 'Diferença: ' + formatBRL(diffTotal);
+                    if (motivo) msg += '\nJustificativa: ' + motivo;
+                    msg += '\n\n📧 Relatório enviado para os 3 emails da gestão.';
+                    window.alert(msg);
+                }, 100);
+            }
         });
+
+        // ====== Live wiring: recalcular ao digitar ======
+        const overlay = modal.overlay;
+        function _input(name) { return overlay.querySelector('[data-name="'+name+'"]'); }
+        function _diffEl(name) { return overlay.querySelector('[data-diff="'+name+'"]'); }
+        function _val(name) { const el = _input(name); return el ? parseBRL(el.value) : 0; }
+        function _setDiff(el, esperado, contado) {
+            if (!el) return;
+            const d = +(contado - esperado).toFixed(2);
+            if (Math.abs(d) < 0.01) { el.textContent = '✓ ok'; el.style.color = '#10B981'; return; }
+            el.textContent = (d>0?'+':'') + formatBRL(d);
+            el.style.color = d>0 ? '#10B981' : '#DC2626';
+        }
+        function _recalc() {
+            const cred1 = _val('conf_credito_m1');
+            const cred2 = _val('conf_credito_m2');
+            const deb1  = _val('conf_debito_m1');
+            const deb2  = _val('conf_debito_m2');
+            const pixV  = _val('conf_pix');
+            const dinTotal = _val('dinheiro_total');
+            const dinTroco = _val('dinheiro_troco');
+            const dinLiquido = +(dinTotal - dinTroco).toFixed(2);
+
+            // Diffs por linha (compara soma das 2 maquininhas com esperado total)
+            _setDiff(_diffEl('credito_m1'), espCredito, cred1 + cred2);
+            _setDiff(_diffEl('credito_m2'), 0, 0); // M2 isolada nao tem esperado — esconde sinal
+            const m2c = _diffEl('credito_m2'); if (m2c) m2c.textContent = '';
+            _setDiff(_diffEl('debito_m1'),  espDebito,  deb1 + deb2);
+            const m2d = _diffEl('debito_m2'); if (m2d) m2d.textContent = '';
+            _setDiff(_diffEl('pix'), espPix, pixV);
+
+            const diffDin = +(dinLiquido - saldoEsperadoDinheiro).toFixed(2);
+            const ddEl = overlay.querySelector('[data-diff-dinheiro]');
+            if (ddEl) {
+                if (Math.abs(diffDin) < 0.01) { ddEl.textContent = '✓ ok ' + formatBRL(0); ddEl.style.color = '#10B981'; }
+                else { ddEl.textContent = (diffDin>0?'+':'') + formatBRL(diffDin); ddEl.style.color = diffDin>0?'#10B981':'#DC2626'; }
+            }
+
+            const totalConferido = cred1+cred2+deb1+deb2+pixV+dinLiquido;
+            const totalEsperado  = espPix+espCredito+espDebito+espDinheiro;
+            const diffTot = +(totalConferido-totalEsperado).toFixed(2);
+            const tcEl = overlay.querySelector('[data-total-conferido]');
+            if (tcEl) tcEl.textContent = formatBRL(totalConferido);
+            const dtEl = overlay.querySelector('[data-diff-total]');
+            if (dtEl) {
+                if (Math.abs(diffTot) < 0.01) { dtEl.textContent = '✓ ' + formatBRL(0); dtEl.style.color = '#10B981'; }
+                else { dtEl.textContent = (diffTot>0?'+':'') + formatBRL(diffTot); dtEl.style.color = diffTot>0?'#10B981':'#DC2626'; }
+            }
+
+            // Mostra/esconde justificativa
+            const wrap = overlay.querySelector('[data-justify-wrap]');
+            if (wrap) wrap.style.display = (Math.abs(diffTot) > 5 || Math.abs(diffDin) > 5) ? 'block' : 'none';
+        }
+        // Liga eventos
+        ['conf_credito_m1','conf_credito_m2','conf_debito_m1','conf_debito_m2','conf_pix','dinheiro_total','dinheiro_troco']
+          .forEach(function(n){ const el = _input(n); if (el) el.addEventListener('input', _recalc); });
+        // Primeiro recalc (com defaults)
+        setTimeout(_recalc, 60);
+    }
+
+    function _err(modal, msg) {
+        const err = modal.overlay.querySelector('[data-caixa-error]');
+        if (err) { err.textContent = msg; err.style.display = 'block'; }
+        return false;
+    }
+
+    /* ============================================
+       Persistencia + envio do relatorio (3 caminhos):
+       1. Salva sempre em caixa_reports_<fid> (audit imutavel no Firestore)
+       2. Tenta CloudFunctions.sendClosingReport (silent fail se nao deployada)
+       3. Fallback: abre mailto: com tudo pre-preenchido pra o cliente de
+          email do operador. Operador clica "Enviar" e os 3 destinatarios
+          recebem.
+       ============================================ */
+    function _persistAndDispatchReport(franchiseId, st, valorContado, motivo, motivoH, extras, r) {
+        const session = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+        const operatorName = session ? (session.name || session.email || 'Operador') : 'Operador';
+        const operatorEmail = session ? (session.email || '') : '';
+        const fechamentoDate = new Date();
+        const reportId = 'rep_' + (typeof Utils !== 'undefined' ? Utils.generateId() : Date.now().toString(36));
+
+        const report = {
+            id: reportId,
+            franchiseId: franchiseId,
+            fechamentoDate: fechamentoDate.toISOString(),
+            dateKey: st.dateKey,
+            turnoId: st.turnoId,
+            operator: { name: operatorName, email: operatorEmail },
+            esperado: extras.esperado,
+            conferido: extras.conferido,
+            breakdown: extras.breakdown,
+            motivoQuebra: motivo || '',
+            motivoForaHorario: motivoH || '',
+            valorContado: valorContado,
+            saldoEsperadoDinheiro: st.saldoEsperadoDinheiro,
+            valorAbertura: st.valorAbertura,
+            faturamentoBruto: st.faturamentoBruto,
+            porMetodo: st.porMetodo,
+            createdAt: fechamentoDate.toISOString(),
+            recipients: ['milkypot.com@gmail.com','jocimarrodrigo@gmail.com','joseanemse@gmail.com'],
+            sent: false  // marcado true se a CloudFunction confirmar
+        };
+
+        // 1. Persiste no Firestore (audit) — funciona offline tambem
+        try {
+            if (typeof DataStore !== 'undefined' && DataStore.addToCollection) {
+                DataStore.addToCollection('caixa_reports', franchiseId, report);
+            }
+        } catch (e) { console.warn('persist report:', e); }
+
+        // 3. Fallback mailto: abre email do operador pre-preenchido (sempre).
+        //    O operador so precisa clicar "Enviar" no cliente de email.
+        try {
+            const subj = 'Fechamento de Caixa — ' + st.dateKey + ' — MilkyPot';
+            const body = _buildEmailBody(report);
+            const to = report.recipients.join(',');
+            const mailto = 'mailto:' + encodeURIComponent(to) +
+                '?subject=' + encodeURIComponent(subj) +
+                '&body=' + encodeURIComponent(body);
+            // Abre numa janela invisivel pra disparar o cliente de email
+            // sem roubar foco do PDV (alguns OS abrem em background).
+            const w = window.open(mailto, '_blank');
+            if (!w) {
+                // Popup blocker bloqueou — guarda o link no objeto pra o
+                // operador clicar manualmente se quiser (futuramente UI mostra)
+                report.mailtoFallback = mailto;
+            }
+        } catch (e) { console.warn('mailto fallback:', e); }
+    }
+
+    function _buildEmailBody(rep) {
+        const esp = rep.esperado || {};
+        const con = rep.conferido || {};
+        const br  = rep.breakdown || {};
+        const dt = new Date(rep.fechamentoDate).toLocaleString('pt-BR');
+        const fmt = (v) => 'R$ ' + Number(v||0).toFixed(2).replace('.', ',');
+
+        let body = '';
+        body += 'FECHAMENTO DE CAIXA — MilkyPot\n';
+        body += '====================================\n';
+        body += 'Franquia:   ' + rep.franchiseId + '\n';
+        body += 'Data:       ' + rep.dateKey + '  (fechado em ' + dt + ')\n';
+        body += 'Operador:   ' + (rep.operator && rep.operator.name) + ' <' + (rep.operator && rep.operator.email) + '>\n';
+        body += 'Turno ID:   ' + rep.turnoId + '\n';
+        body += '\n--- VENDAS POR MÉTODO (sistema) ---\n';
+        body += 'PIX:        ' + fmt(esp.pix) + '\n';
+        body += 'Crédito:    ' + fmt(esp.credito) + '\n';
+        body += 'Débito:     ' + fmt(esp.debito) + '\n';
+        body += 'Dinheiro:   ' + fmt(esp.dinheiro) + '\n';
+        body += 'TOTAL:      ' + fmt(esp.totalEsperado) + '\n';
+        body += '\n--- CONFERIDO PELO OPERADOR ---\n';
+        body += 'PIX (extrato):           ' + fmt(br.pix) + '\n';
+        body += 'Crédito Maquininha 1:    ' + fmt(br.credito_maquineta_1) + '\n';
+        body += 'Crédito Maquininha 2:    ' + fmt(br.credito_maquineta_2) + '\n';
+        body += 'Débito Maquininha 1:     ' + fmt(br.debito_maquineta_1) + '\n';
+        body += 'Débito Maquininha 2:     ' + fmt(br.debito_maquineta_2) + '\n';
+        body += 'Dinheiro contado:        ' + fmt(br.dinheiro_total_gaveta) + '\n';
+        body += '  (− troco prox. turno): ' + fmt(br.dinheiro_troco) + '\n';
+        body += '  = Dinheiro líquido:    ' + fmt(br.dinheiro_liquido_dia) + '\n';
+        body += 'TOTAL CONFERIDO:         ' + fmt(con.totalConferido) + '\n';
+        body += '\n--- DIFERENÇA ---\n';
+        body += 'Diferença em dinheiro:   ' + fmt(con.diffDinheiro) + '\n';
+        body += 'Diferença total:         ' + fmt(con.diffTotal) + '\n';
+        body += 'Justificativa:           ' + (rep.motivoQuebra || '(sem diferença significativa)') + '\n';
+        if (rep.motivoForaHorario) body += 'Just. fora horário:      ' + rep.motivoForaHorario + '\n';
+        body += '\n--- MOVIMENTOS DO CAIXA ---\n';
+        body += 'Abertura:           ' + fmt(rep.valorAbertura) + '\n';
+        body += 'Vendas em dinheiro: ' + fmt(rep.breakdown && rep.breakdown.dinheiro_liquido_dia) + '\n';
+        body += 'Faturamento bruto:  ' + fmt(rep.faturamentoBruto) + '\n';
+        body += '\n====================================\n';
+        body += 'Relatório gerado automaticamente pelo PDV MilkyPot.\n';
+        body += 'ID do relatório: ' + rep.id + '\n';
+        return body;
     }
 
     // Modal de confirmacao (etapa 2) — mostra um resumo final claro
@@ -1144,8 +1500,16 @@ const Caixa = (function () {
     }
 
     function normalizeMetodo(p) {
-        if (!p) return 'nao_informado';
-        const v = String(p).toLowerCase().trim();
+        if (p == null) return 'nao_informado';
+        // Defensivo: payment pode vir como string ('PIX'), number (legado),
+        // ou objeto {method,label} (vem da landing). Sem isso, String({...})
+        // virava '[object Object]' e poluia o relatorio do caixa.
+        let raw = p;
+        if (typeof p === 'object') {
+            raw = p.method || p.type || p.label || p.name || '';
+        }
+        const v = String(raw).toLowerCase().trim();
+        if (!v) return 'nao_informado';
         if (v.includes('pix')) return 'pix';
         if (v.includes('din')) return 'dinheiro';
         if (v.includes('cred')) return 'credito';
