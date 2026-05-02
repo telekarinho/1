@@ -945,7 +945,22 @@ const Caixa = (function () {
           '</style>';
 
         // Helper: gera card (Cartão / PIX / Dinheiro)
-        function _card(key, icon, name, esperado, hint) {
+        // Helper: gera card com campos editaveis customizaveis quando "Não bate"
+        // fields = array de { name, label, default } — quando expandido vai
+        // gerar 1 input por campo, e a SOMA deles vira o valor conferido.
+        // Pra cartao: 2 maquininhas. Pra PIX: 2 maquininhas + banco direto.
+        // Pra dinheiro: 1 input (total contado) - depois trata troco separado.
+        function _card(key, icon, name, esperado, hint, fields) {
+            // Default: 1 campo unico (compatibilidade)
+            const flds = fields || [{ name: 'conf_'+key, label: 'Quanto realmente entrou?', default: esperado }];
+            const inputsHtml = flds.map(f => ''+
+                '<div style="margin-bottom:6px">' +
+                  '<label style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px;font-weight:600">'+f.label+'</label>' +
+                  '<input type="text" class="caixa-brl cv2-edit-input" data-caixa-brl data-name="'+f.name+'" data-card-field="'+key+'" inputmode="numeric" '+
+                    'value="'+formatBRL(f.default || 0)+'" '+
+                    'style="width:100%;padding:8px 10px;border:2px solid #F59E0B;border-radius:6px;font-weight:800;text-align:right;font-size:15px;background:#fff">' +
+                '</div>'
+            ).join('');
             return ''+
             '<div class="cv2-card" data-card="'+key+'" data-esperado-num="'+esperado+'">' +
               '<div class="cv2-card-head">' +
@@ -966,8 +981,7 @@ const Caixa = (function () {
                 '<button type="button" class="cv2-btn cv2-btn-naobate" data-action="naobate" data-card-btn="'+key+'">✏️ Não bate</button>' +
               '</div>' +
               '<div class="cv2-edit-area" data-edit-area="'+key+'" style="display:none">' +
-                '<label style="font-size:12px;color:#374151;display:block;margin-bottom:4px;font-weight:700">Quanto realmente entrou?</label>' +
-                '<input type="text" class="caixa-brl" data-caixa-brl data-name="conf_'+key+'" inputmode="numeric" placeholder="R$ 0,00">' +
+                inputsHtml +
                 '<div class="cv2-diff-msg" data-diff-msg="'+key+'" style="display:none"></div>' +
               '</div>' +
             '</div>';
@@ -998,8 +1012,15 @@ const Caixa = (function () {
                   <div class="cv2-progress-dot" data-prog="dinheiro"></div>
                 </div>
 
-                ${_card('cartao',   '💳', 'Cartão (Bandeiras)', espCartao, 'do Z da maquineta')}
-                ${_card('pix',      '⚡', 'PIX',                espPix,    'banco + maquineta')}
+                ${_card('cartao', '💳', 'Cartão (Bandeiras)', espCartao, 'do Z da maquineta', [
+                  { name:'conf_cartao_m1', label:'💳 Maquineta 1 — total Bandeiras', default: espCartao },
+                  { name:'conf_cartao_m2', label:'💳 Maquineta 2 — total Bandeiras (se tiver)', default: 0 }
+                ])}
+                ${_card('pix', '⚡', 'PIX', espPix, 'banco + maquineta', [
+                  { name:'conf_pix_m1',     label:'⚡ PIX Maquineta 1', default: espPix },
+                  { name:'conf_pix_m2',     label:'⚡ PIX Maquineta 2 (se tiver)', default: 0 },
+                  { name:'conf_pix_direto', label:'⚡ PIX direto na conta (banco)', default: 0 }
+                ])}
 
                 <!-- Card Dinheiro tem extras (troco) -->
                 <div class="cv2-card" data-card="dinheiro" data-esperado-num="${saldoEsperadoDinheiro}">
@@ -1024,8 +1045,9 @@ const Caixa = (function () {
                     <button type="button" class="cv2-btn cv2-btn-naobate" data-action="naobate" data-card-btn="dinheiro">✏️ Não bate</button>
                   </div>
                   <div class="cv2-edit-area" data-edit-area="dinheiro" style="display:none">
-                    <label style="font-size:12px;color:#374151;display:block;margin-bottom:4px;font-weight:700">Quanto contou na gaveta?</label>
-                    <input type="text" class="caixa-brl" data-caixa-brl data-name="conf_dinheiro" inputmode="numeric" placeholder="R$ 0,00">
+                    <label style="font-size:12px;color:#374151;display:block;margin-bottom:4px;font-weight:700">💵 Quanto contou na gaveta?</label>
+                    <input type="text" class="caixa-brl cv2-edit-input" data-caixa-brl data-name="conf_dinheiro" data-card-field="dinheiro" inputmode="numeric" placeholder="R$ 0,00"
+                           style="width:100%;padding:10px 12px;border:2px solid #F59E0B;border-radius:8px;font-weight:800;text-align:right;font-size:18px;background:#fff">
                     <div class="cv2-dinheiro-extra">
                       <label>Quanto vai sair de troco pro próximo turno? (opcional)</label>
                       <input type="text" class="caixa-brl" data-caixa-brl data-name="dinheiro_troco" inputmode="numeric" placeholder="R$ 0,00">
@@ -1188,16 +1210,18 @@ const Caixa = (function () {
                 card.classList.add('editing');
                 if (editArea) {
                     editArea.style.display = 'block';
-                    // Pre-preenche com esperado se vazio
-                    const inp = editArea.querySelector('input[data-name="conf_'+key+'"]');
-                    if (inp && (!inp.value || inp.value === formatBRL(0))) {
-                        inp.value = formatBRL(_esp(key));
-                        inp.focus(); inp.select();
-                    }
+                    // Foca no primeiro campo do edit area
+                    const firstInp = editArea.querySelector('input.cv2-edit-input, input[data-name^="conf_"]');
+                    if (firstInp) { firstInp.focus(); firstInp.select(); }
                 }
-                // value sera atualizado quando digitar
-                if (typeof value === 'number') {
+                // Inicializa value com soma dos campos atuais (defaults)
+                if (typeof _sumCardFields === 'function') {
+                    const v = _sumCardFields(key);
+                    modal.__cardState[key] = { ok: true, mode: 'editing', value: v };
+                } else if (typeof value === 'number') {
                     modal.__cardState[key] = { ok: true, mode: 'editing', value: value };
+                } else {
+                    modal.__cardState[key] = { ok: true, mode: 'editing', value: _esp(key) };
                 }
             }
             _setProgress();
@@ -1220,14 +1244,41 @@ const Caixa = (function () {
             }
         });
 
-        // Listener do input de valor "não bate"
-        ['cartao','pix','dinheiro'].forEach(function(key){
+        // Listener do input de valor "não bate" — soma TODOS os campos do mesmo card
+        // (cartao tem M1+M2; PIX tem M1+M2+banco; dinheiro tem so 1 input)
+        function _sumCardFields(key) {
+            const inputs = overlay.querySelectorAll('[data-card-field="'+key+'"]');
+            let sum = 0;
+            inputs.forEach(i => { sum += parseBRL(i.value) || 0; });
+            return +sum.toFixed(2);
+        }
+        function _onCardFieldInput(key) {
+            const v = _sumCardFields(key);
+            modal.__cardState[key] = { ok: true, mode: 'editing', value: v };
+            const esp = _esp(key);
+            const d = +(v - esp).toFixed(2);
+            const msgEl = overlay.querySelector('[data-diff-msg="'+key+'"]');
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.classList.remove('cv2-diff-ok','cv2-diff-faltou','cv2-diff-sobrou');
+                if (Math.abs(d) < 0.01) { msgEl.textContent = '✓ Bateu certinho ('+formatBRL(v)+')'; msgEl.classList.add('cv2-diff-ok'); }
+                else if (d < 0) { msgEl.textContent = '⚠ Faltou ' + formatBRL(Math.abs(d)) + ' (total ' + formatBRL(v) + ')'; msgEl.classList.add('cv2-diff-faltou'); }
+                else { msgEl.textContent = '+ Sobrou ' + formatBRL(d) + ' (total ' + formatBRL(v) + ')'; msgEl.classList.add('cv2-diff-sobrou'); }
+            }
+            _setProgress();
+        }
+        // Liga TODOS os inputs de campos do edit area
+        overlay.querySelectorAll('[data-card-field]').forEach(function(inp){
+            const key = inp.getAttribute('data-card-field');
+            inp.addEventListener('input', function(){ _onCardFieldInput(key); });
+        });
+        // Mantem o listener antigo dos campos antigos (compat) — vazio agora
+        ['x_unused'].forEach(function(key){
             const inp = overlay.querySelector('input[data-name="conf_'+key+'"]');
             if (!inp) return;
             inp.addEventListener('input', function(){
                 const v = parseBRL(inp.value);
                 modal.__cardState[key] = { ok: true, mode: 'editing', value: v };
-                // Atualiza msg de diff
                 const esp = _esp(key);
                 const d = +(v - esp).toFixed(2);
                 const msgEl = overlay.querySelector('[data-diff-msg="'+key+'"]');
@@ -1639,8 +1690,13 @@ const Caixa = (function () {
         if (typeof p === 'object') {
             raw = p.method || p.type || p.label || p.name || '';
         }
-        const v = String(raw).toLowerCase().trim();
+        let v = String(raw).toLowerCase().trim();
         if (!v) return 'nao_informado';
+        // BUG-FIX: 'crédito'.includes('cred') === false ('é' nao bate com 'e')
+        // Remove acentos antes de comparar pra detectar credito/debito que
+        // foram salvos com acento ('crédito','débito').
+        try { v = v.normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+        catch(_) {}
         if (v.includes('pix')) return 'pix';
         if (v.includes('din')) return 'dinheiro';
         if (v.includes('cred')) return 'credito';
