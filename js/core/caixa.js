@@ -912,8 +912,10 @@ const Caixa = (function () {
                 ${_row('debito_m1',  '💳', 'Débito · Maquininha 1',  espDebito,  'Default = total déb. esperado. Edite por maquina')}
                 ${_row('debito_m2',  '💳', 'Débito · Maquininha 2',  0,          'Se tem 2ª maquineta, divida o valor')}
 
-                <div style="font-weight:700;color:#374151;margin:10px 0 6px;font-size:13px">⚡ PIX</div>
-                ${_row('pix', '⚡', 'PIX recebido (extrato banco)', espPix, 'Confira no app do banco')}
+                <div style="font-weight:700;color:#374151;margin:10px 0 6px;font-size:13px">⚡ PIX <small style="color:#6b7280;font-weight:400">(divida entre as 3 fontes — soma deve bater com o esperado)</small></div>
+                ${_row('pix_m1',     '⚡', 'PIX · Maquininha 1',          espPix, 'Pode vir junto da maquineta de cartão')}
+                ${_row('pix_m2',     '⚡', 'PIX · Maquininha 2',          0,      'Se a 2ª maquineta também processa PIX')}
+                ${_row('pix_direto', '⚡', 'PIX direto (extrato banco)',  0,      'PIX recebido na conta sem maquininha')}
 
                 <div style="font-weight:700;color:#374151;margin:10px 0 6px;font-size:13px">💵 Dinheiro físico</div>
                 <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:6px">
@@ -975,7 +977,12 @@ const Caixa = (function () {
             const cred2 = Number(data.conf_credito_m2 || 0);
             const deb1  = Number(data.conf_debito_m1  || 0);
             const deb2  = Number(data.conf_debito_m2  || 0);
-            const pixV  = Number(data.conf_pix        || 0);
+            // PIX agora dividido em 3 fontes (operador recebe pix tambem
+            // pelas maquininhas, nao so direto na conta)
+            const pixM1     = Number(data.conf_pix_m1     || 0);
+            const pixM2     = Number(data.conf_pix_m2     || 0);
+            const pixDireto = Number(data.conf_pix_direto || 0);
+            const pixV      = pixM1 + pixM2 + pixDireto;
             const dinTotal = Number(data.dinheiro_total || 0);
             const dinTroco = Number(data.dinheiro_troco || 0);
 
@@ -1013,7 +1020,10 @@ const Caixa = (function () {
                     credito_maquineta_2: cred2,
                     debito_maquineta_1: deb1,
                     debito_maquineta_2: deb2,
-                    pix: pixV,
+                    pix_maquineta_1: pixM1,
+                    pix_maquineta_2: pixM2,
+                    pix_direto_banco: pixDireto,
+                    pix_total: pixV,
                     dinheiro_total_gaveta: dinTotal,
                     dinheiro_troco: dinTroco,
                     dinheiro_liquido_dia: valorContado
@@ -1080,18 +1090,24 @@ const Caixa = (function () {
             const cred2 = _val('conf_credito_m2');
             const deb1  = _val('conf_debito_m1');
             const deb2  = _val('conf_debito_m2');
-            const pixV  = _val('conf_pix');
+            // PIX vem de 3 fontes (M1, M2, direto banco) — soma confere com esperado
+            const pixM1     = _val('conf_pix_m1');
+            const pixM2     = _val('conf_pix_m2');
+            const pixDireto = _val('conf_pix_direto');
+            const pixV      = pixM1 + pixM2 + pixDireto;
             const dinTotal = _val('dinheiro_total');
             const dinTroco = _val('dinheiro_troco');
             const dinLiquido = +(dinTotal - dinTroco).toFixed(2);
 
-            // Diffs por linha (compara soma das 2 maquininhas com esperado total)
+            // Diffs por linha (compara SOMA das 2 maquininhas com esperado total)
             _setDiff(_diffEl('credito_m1'), espCredito, cred1 + cred2);
-            _setDiff(_diffEl('credito_m2'), 0, 0); // M2 isolada nao tem esperado — esconde sinal
-            const m2c = _diffEl('credito_m2'); if (m2c) m2c.textContent = '';
+            const m2c = _diffEl('credito_m2'); if (m2c) m2c.textContent = ''; // sem esperado isolado
             _setDiff(_diffEl('debito_m1'),  espDebito,  deb1 + deb2);
             const m2d = _diffEl('debito_m2'); if (m2d) m2d.textContent = '';
-            _setDiff(_diffEl('pix'), espPix, pixV);
+            // PIX: a soma das 3 deve bater com espPix — mostra so na primeira linha
+            _setDiff(_diffEl('pix_m1'), espPix, pixV);
+            const pm2  = _diffEl('pix_m2');     if (pm2)  pm2.textContent  = '';
+            const pdir = _diffEl('pix_direto'); if (pdir) pdir.textContent = '';
 
             const diffDin = +(dinLiquido - saldoEsperadoDinheiro).toFixed(2);
             const ddEl = overlay.querySelector('[data-diff-dinheiro]');
@@ -1115,8 +1131,10 @@ const Caixa = (function () {
             const wrap = overlay.querySelector('[data-justify-wrap]');
             if (wrap) wrap.style.display = (Math.abs(diffTot) > 5 || Math.abs(diffDin) > 5) ? 'block' : 'none';
         }
-        // Liga eventos
-        ['conf_credito_m1','conf_credito_m2','conf_debito_m1','conf_debito_m2','conf_pix','dinheiro_total','dinheiro_troco']
+        // Liga eventos (todos os 9 inputs editaveis)
+        ['conf_credito_m1','conf_credito_m2','conf_debito_m1','conf_debito_m2',
+         'conf_pix_m1','conf_pix_m2','conf_pix_direto',
+         'dinheiro_total','dinheiro_troco']
           .forEach(function(n){ const el = _input(n); if (el) el.addEventListener('input', _recalc); });
         // Primeiro recalc (com defaults)
         setTimeout(_recalc, 60);
@@ -1213,11 +1231,14 @@ const Caixa = (function () {
         body += 'Dinheiro:   ' + fmt(esp.dinheiro) + '\n';
         body += 'TOTAL:      ' + fmt(esp.totalEsperado) + '\n';
         body += '\n--- CONFERIDO PELO OPERADOR ---\n';
-        body += 'PIX (extrato):           ' + fmt(br.pix) + '\n';
         body += 'Crédito Maquininha 1:    ' + fmt(br.credito_maquineta_1) + '\n';
         body += 'Crédito Maquininha 2:    ' + fmt(br.credito_maquineta_2) + '\n';
         body += 'Débito Maquininha 1:     ' + fmt(br.debito_maquineta_1) + '\n';
         body += 'Débito Maquininha 2:     ' + fmt(br.debito_maquineta_2) + '\n';
+        body += 'PIX Maquininha 1:        ' + fmt(br.pix_maquineta_1) + '\n';
+        body += 'PIX Maquininha 2:        ' + fmt(br.pix_maquineta_2) + '\n';
+        body += 'PIX direto banco:        ' + fmt(br.pix_direto_banco) + '\n';
+        body += '  = PIX total:           ' + fmt(br.pix_total) + '\n';
         body += 'Dinheiro contado:        ' + fmt(br.dinheiro_total_gaveta) + '\n';
         body += '  (− troco prox. turno): ' + fmt(br.dinheiro_troco) + '\n';
         body += '  = Dinheiro líquido:    ' + fmt(br.dinheiro_liquido_dia) + '\n';
