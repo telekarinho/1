@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #92 — 2026-05-02
+
+**Área:** Auto-aprimoramento obrigatório — revisão estratégia + rebalanceamento de rotação
+
+**Contexto:** A cada 5 ciclos, a Belinha relê o log completo, identifica o que gerou mais valor e ajusta `belinha/estrategia.md`. Último auto-aprimoramento foi no ciclo #87 (na verdade #79 foi o último documentado). Ciclo #92 é o marco obrigatório após os ciclos #87–#91.
+
+**O que analisou:**
+- Leu os ciclos #87–#91 completos no log
+- Contabilizou o estado do conteúdo: **54 semanas criadas**, cobrindo de 26/04/2026 a 02/05/2027 — exatamente 1 ano de conteúdo já planejado
+- Identificou ratio desequilibrado: 4 Conteúdo / 1 SEO / 0 Concorrentes / 0 UX nos últimos 5 ciclos
+- Mapeou débito técnico acumulado: UX/Performance sem atenção há 10 ciclos, Concorrentes há 19 ciclos
+- Diagnosticou retorno marginal decrescente do conteúdo semanal além de 6 semanas à frente
+- Criou nova regra: **conteúdo semanal só avança quando horizonte < 6 semanas** ou evento especial urgente
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/estrategia.md` | ATUALIZADO — bloco "Auto-aprimoramento #87–#91": tabela de débito técnico, diagnóstico de conteúdo excessivo, nova regra de pausa, rotação rebalanceada, roadmap #93–#97, bloqueadores atualizados |
+
+**Commit:** _(ver abaixo)_
+
+**Destaques do auto-aprimoramento:**
+1. **Conteúdo pausado (nova regra):** Com 54 semanas criadas, criar a semana 55 hoje tem ROI marginal. Bloqueio formal até horizonte < 6 semanas ou evento urgente — libera ciclos para débito técnico.
+2. **Urgência UX/Performance:** 10 ciclos sem sweep (CLS, LCP, WebP, bundle size). Escalonado para ciclo #95 com prioridade máxima.
+3. **Concorrentes crítico:** TheBest em alerta ativo há 19 ciclos — possível expansão para o Muffato sem detecção. Escalonado para ciclo #94.
+4. **SEO próximo:** `desafio.html` sem BreadcrumbList+WebPage (prescrito desde #91), og:image dimensions pendentes. Ciclo #93.
+5. **Roadmap #93–#97 definido:** SEO → Concorrentes → UX/Performance → Conteúdo (Dia das Mães) → Conversão. Padrão mais balanceado.
+
+**Próximo passo sugerido:**
+- **Ciclo #93:** SEO — `desafio.html` BreadcrumbList+WebPage + og:image:width/height fix
+- **Ciclo #94:** Concorrentes — TheBest (possível expansão Muffato) + MilkyMoo + novos entrantes
+- **Ciclo #95:** UX/Performance — sweep CLS/LCP/WebP/bundle (10 ciclos sem atenção)
+- **Ciclo #96:** Conteúdo — Semanas 55+56 (Dia das Mães 11/05/2027)
+- **Operador:** Confirmar se WA "VERAO" foi ativado (bloqueador desde #75)
+- **Operador:** Confirmar produtos Versão A ou B para dezembro 2026 ANTES de 28/11
+
+_Belinha — Ciclo #92 | 2026-05-02_
+
+---
+
 ## Ciclo #91 — 2026-05-02
 
 **Área:** Conteúdo — Dia H (25/04/2027) + Semana 54 pós-aniversário

@@ -1054,3 +1054,104 @@ Adições v11 (além de v10):
 ---
 
 _Belinha — Ciclo #79 | 2026-05-01_
+
+---
+
+## Auto-aprimoramento: Ciclos #87–#91 (revisão do ciclo #92)
+
+_Atualizado no ciclo #92 (2026-05-02) — obrigatório a cada 5 ciclos_
+
+---
+
+### Resumo dos ciclos #87–#91
+
+| Ciclo | Área | Resumo |
+|-------|------|--------|
+| #87 | Conteúdo | Semanas 49+50 — Semana Santa, Páscoa, reveal produto aniversário, Sextas #33/#34 |
+| #88 | SEO | `cardapio.html` BreadcrumbList+WebPage + fix sitemap (noindex inconsistente) |
+| #89 | Conteúdo | Semanas 51+52 — Reta final aniversário, influencers, countdown single digit, Sextas #35/#36 |
+| #90 | Conteúdo | Semana 53 — Últimos 7 dias antes do aniversário 1 ano, countdown diário, carta da ovelhinha |
+| #91 | Conteúdo | Dia H (25/04/2027) + semana 54 — roteiro hora a hora, guia de crise, post-mortem template |
+
+**Ratio dos últimos 5 ciclos: 4 Conteúdo / 1 SEO / 0 Concorrentes / 0 UX/Performance**
+
+---
+
+### O que gerou mais valor concreto (#87–#91)
+
+1. **Ciclo #88 (SEO fix crítico):** Detectou inconsistência grave — `cartao-fidelidade.html` estava com `noindex` mas listada no sitemap, enviando sinal contraditório ao Google. Correção de alto impacto, zero custo.
+2. **Ciclo #91 (Guia de crise Dia H):** Scripts prontos para 10 cenários de crise operacional (esgotamento, fila, queda de energia, etc.). Operador não improvisa sob pressão. Alto valor prático.
+3. **Ciclo #90 (Carta da ovelhinha):** Post emocional mais importante da campanha de 1 ano. Bem planejado, com briefing claro para o operador.
+
+### O que gerou menos valor concreto (#87–#91)
+
+1. **Volume excessivo de conteúdo futuro:** Em 2026-05-02, o conteúdo já cobre **até a semana 54 (02/05/2027)** — exatamente 1 ano à frente. Problemas crescentes:
+   - Produtos sazonais de dezembro 2026 e verão 2027 ainda têm Versão A/B sem nome confirmado — o operador não pode usar os scripts
+   - Conteúdo de tendência (redes sociais) tem meia-vida curta — scripts de 10 meses à frente correm risco de ficar desatualizados
+   - **ROI marginal**: criar semana 55 hoje tem retorno muito menor do que um sweep de SEO técnico ou análise de concorrente novo
+2. **Ratio desequilibrado:** 4 ciclos de conteúdo para cada 1 ciclo técnico (SEO/UX/Performance). Técnico fica sempre postergado.
+3. **Pesquisa de concorrentes ausente há 19 ciclos (#73):** TheBest está em "alerta ativo" — possível expansão para o Muffato não seria detectada.
+
+---
+
+### Diagnóstico de débito técnico acumulado
+
+| Área | Última vez | Ciclos sem atenção | Status |
+|------|-----------|-------------------|--------|
+| SEO técnico | #88 | 4 | ⚠️ Pendente: `desafio.html` schema, og:image dimensions |
+| UX/Performance | #82 | 10 | 🚨 CRÍTICO — sweep obrigatório (CLS, LCP, WebP, bundle) |
+| Pesquisa concorrentes | #73 | 19 | 🚨 CRÍTICO — TheBest alerta ativo, novos entrantes |
+| Conversão/Fidelidade | #77 (template WA 15º) | 15 | ⚠️ WA "VERAO" ativo? Upsell PDV? |
+| Conteúdo semanal | #91 | 0 | ✅ Coberto até semana 54 (Maio 2027) |
+
+---
+
+### Decisão estratégica: pausa no conteúdo semanal de longo prazo
+
+**Problema:** 54 semanas de conteúdo já existem. Criar semana 55, 56, 57… hoje tem retorno marginal decrescente enquanto débitos técnicos se acumulam.
+
+**Nova regra (vigente a partir do ciclo #93):**
+> Conteúdo semanal futuro só avança quando o horizonte coberto for **< 6 semanas** ou quando houver evento especial urgente (ex: Dia das Mães, Dia dos Namorados em sprint de 4 semanas). Caso contrário, o slot de conteúdo é substituído por SEO, concorrentes ou UX/Performance.
+
+**Exceção mantida:** conteúdo estratégico não-semanal (playbooks, guias de crise, templates de reativação) continua válido quando não há substituto técnico urgente.
+
+---
+
+### Nova rotação rebalanceada (vigente a partir do ciclo #93)
+
+| A cada N ciclos | Área | Gatilho |
+|----------------|------|---------|
+| Toda vez que horizonte < 6 sem. | Conteúdo | Semanas imediatas apenas (2-4 semanas à frente) |
+| A cada 3 ciclos | SEO/UX | Pendências do backlog: `desafio.html`, og:image, FAQPage, AggregateRating |
+| A cada 4 ciclos | Concorrentes | Refetch TheBest + MilkyMoo + novos entrantes Londrina |
+| A cada 5 ciclos | UX/Performance | Sweep mobile, CLS/LCP, WebP, bundle size |
+| A cada 5 ciclos | Conversão | Fidelidade, WA reativação, upsell PDV, raspinha |
+
+---
+
+### Roadmap rebalanceado ciclos #93–#97
+
+| Ciclo | Área | Ação |
+|-------|------|------|
+| #93 | SEO | `desafio.html` BreadcrumbList+WebPage + og:image:width/height fix (pendente #78/#91) |
+| #94 | Concorrentes | TheBest (alerta ativo, possível expansão Muffato) + MilkyMoo refetch + novos entrantes |
+| #95 | UX/Performance | Sweep obrigatório: CLS, LCP, imagens WebP, bundle size, mobile (10 ciclos sem atenção) |
+| #96 | Conteúdo | Semanas 55+56 (03–16/05/2027): Dia das Mães (11/05) + Sextas #38/#39 |
+| #97 | Conversão | WA "VERAO" status check + upsell PDV + template WA 15º carimbo (pendente #77) |
+
+### Bloqueadores ativos (atualização #92)
+
+| Bloqueador | Dependência | Ciclo |
+|------------|-------------|-------|
+| aggregateRating Schema.org | ≥3 reviews Google Maps verificáveis | #43 |
+| Google Analytics ID real | Autorização explícita do usuário | #15 |
+| Produto sazonal verão (Versão A ou B) | Confirmação da franquia com operador ANTES 28/11/2026 | #72 |
+| Produto natalino (Versão A ou B) | Confirmação da franquia com operador ANTES 20/12/2026 | #74 |
+| Produto Carnaval (opcional) | Confirmação da franquia com operador ANTES 14/02/2027 | #79 |
+| Produto especial Aniversário 1 ano | Confirmação da franquia com operador ANTES 21/03/2027 | #79 |
+| Palavra-chave WA "VERAO" (ativada?) | Confirmar com operador se mecânica foi publicada | #75 |
+| Semanas 55+ conteúdo | Horizonte atual ≥ 6 semanas — pausado por nova regra #92 | #92 |
+
+---
+
+_Belinha — Ciclo #92 | 2026-05-02_
