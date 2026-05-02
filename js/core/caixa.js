@@ -846,23 +846,39 @@ const Caixa = (function () {
         const st = getTurnoState(franchiseId);
         const hourCheckClose = checkBusinessHours(franchiseId, 'close');
 
-        // Valores esperados por metodo (do caixa real)
-        const espPix      = Number(st.porMetodo && st.porMetodo.pix      || 0);
-        const espCredito  = Number(st.porMetodo && st.porMetodo.credito  || 0);
-        const espDebito   = Number(st.porMetodo && st.porMetodo.debito   || 0);
-        const espDinheiro = Number(st.vendasDinheiro || 0);
+        // Agrega valores esperados normalizando TODAS as chaves de porMetodo.
+        // Antes: chaves com acento ('crédito') nao batiam com lookup ('credito')
+        // -> esperado aparecia R$ 0,00 e operador nao confiava.
+        function _aggExpected(porMetodo) {
+            const agg = { cartao: 0, pix: 0, dinheiro: 0, _outros: 0 };
+            Object.keys(porMetodo || {}).forEach(k => {
+                const v = Number(porMetodo[k] || 0);
+                const norm = normalizeMetodo(k);
+                if (norm === 'pix') agg.pix += v;
+                else if (norm === 'dinheiro') agg.dinheiro += v;
+                else if (norm === 'credito' || norm === 'debito') agg.cartao += v;
+                else agg._outros += v; // [object object], nao_informado, etc
+            });
+            return agg;
+        }
+        const exp = _aggExpected(st.porMetodo);
+        // O Z-relatorio das maquininhas ja vem com cartao somado (cred+deb),
+        // entao operador nao precisa separar. Mantem compatibilidade:
+        const espCartao   = exp.cartao;
+        const espPix      = exp.pix;
+        const espDinheiro = exp.dinheiro || Number(st.vendasDinheiro || 0);
         const saldoEsperadoDinheiro = Number(st.saldoEsperadoDinheiro || 0);
 
-        // Detecta valores poluidos (objetos serializados como '[object object]')
+        // Aviso de vendas com metodo invalido (geralmente pedido teste antigo)
         const polluted = Object.keys(st.porMetodo || {}).filter(k =>
-            k && (k.indexOf('object') !== -1 || k === 'nao_informado')
+            k && (k.indexOf('object') !== -1 || normalizeMetodo(k) === 'nao_informado')
         );
         let pollutedHtml = '';
         if (polluted.length) {
             const totalPoll = polluted.reduce((s, k) => s + Number(st.porMetodo[k] || 0), 0);
             pollutedHtml =
-              '<div style="background:#FEF3C7;border:1px solid #F59E0B;color:#92400E;padding:8px 10px;border-radius:6px;margin:6px 0;font-size:12px">' +
-                '⚠️ <strong>' + formatBRL(totalPoll) + '</strong> de vendas com método invalido (provavelmente pedido teste antigo). Ajuste manualmente abaixo.' +
+              '<div style="background:#FEF3C7;border:1px solid #F59E0B;color:#92400E;padding:6px 10px;border-radius:6px;margin:0 0 8px;font-size:11px">' +
+                '⚠️ ' + formatBRL(totalPoll) + ' de vendas teste antigas — ignore' +
               '</div>';
         }
 
@@ -875,181 +891,228 @@ const Caixa = (function () {
             <textarea data-name="motivoForaHorario" placeholder="Ex: shopping fechou cedo, sem movimento..." rows="2" style="width:100%;padding:8px;border:2px solid #FB8C00;border-radius:6px;font-family:inherit;font-size:13px"></textarea>
         ` : '';
 
-        // Helper compacto — row densa de 1 linha (label + esperado inline + input)
-        // tooltip nativo do browser via title (sem ocupar linha vertical)
-        function _row(name, icon, label, esperado, hint) {
-            const espStr = formatBRL(esperado);
-            const tipAttr = hint ? ' title="'+hint.replace(/"/g,'&quot;')+'"' : '';
+        // === MODO SIMPLES (default): 3 cards (Cartão, PIX, Dinheiro). ===
+        // Cada card tem 2 botoes GRANDES: "✓ Tá certo" (verde) ou
+        // "✏️ Não bate" (laranja). Confere = aceita o esperado.
+        // Não bate = expande input pra digitar valor real e mostra diff.
+        // Botão FECHAR fica DESABILITADO ate todos resolvidos.
+
+        const cv2Style = ''+
+          '<style>' +
+            '.cv2-modal{max-width:560px!important;max-height:92vh;display:flex;flex-direction:column;border-radius:16px;overflow:hidden}' +
+            '.cv2-modal .caixa-modal-body{padding:14px 16px!important;background:#f9fafb;overflow-y:auto;flex:1;min-height:0}' +
+            '.cv2-modal .caixa-modal-header{padding:12px 16px!important}' +
+            '.cv2-modal .caixa-modal-header h3{font-size:17px!important;margin:0!important}' +
+            '.cv2-modal .caixa-modal-footer{padding:10px 14px!important;flex-shrink:0;display:flex;gap:8px;background:#fff;border-top:1px solid #e5e7eb}' +
+            '.cv2-card{background:#fff;border:2px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:10px;transition:all .15s}' +
+            '.cv2-card.ok{border-color:#10B981;background:#ECFDF5}' +
+            '.cv2-card.editing{border-color:#F59E0B;background:#FFFBEB}' +
+            '.cv2-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}' +
+            '.cv2-card-icon{font-size:24px;line-height:1}' +
+            '.cv2-card-name{font-size:15px;font-weight:800;color:#111827}' +
+            '.cv2-card-esperado{font-size:22px;font-weight:900;color:#111827;letter-spacing:-.5px;line-height:1}' +
+            '.cv2-card-esp-label{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px}' +
+            '.cv2-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}' +
+            '.cv2-btn{padding:11px 8px;border-radius:8px;font-weight:800;cursor:pointer;border:2px solid;font-size:13px;transition:all .12s;text-align:center}' +
+            '.cv2-btn-ok{background:#10B981;color:#fff;border-color:#10B981}' +
+            '.cv2-btn-ok:hover{background:#059669;border-color:#059669}' +
+            '.cv2-btn-naobate{background:#fff;color:#92400E;border-color:#F59E0B}' +
+            '.cv2-btn-naobate:hover{background:#FFFBEB}' +
+            '.cv2-card.ok .cv2-btn-ok{background:#10B981;color:#fff}' +
+            '.cv2-card.ok .cv2-btn-naobate{background:#fff;color:#92400E;border-color:#F59E0B;opacity:.6}' +
+            '.cv2-card.editing .cv2-btn-naobate{background:#F59E0B;color:#fff}' +
+            '.cv2-card.editing .cv2-btn-ok{background:#fff;color:#10B981;opacity:.6}' +
+            '.cv2-edit-area{margin-top:10px;padding-top:10px;border-top:1px dashed #F59E0B}' +
+            '.cv2-edit-area input{width:100%;padding:10px 12px;border:2px solid #F59E0B;border-radius:8px;font-weight:800;text-align:right;font-size:18px;background:#fff}' +
+            '.cv2-diff-msg{margin-top:6px;font-size:13px;font-weight:700;text-align:center;padding:6px;border-radius:6px}' +
+            '.cv2-diff-ok{background:#ECFDF5;color:#065F46}' +
+            '.cv2-diff-faltou{background:#FEE2E2;color:#991B1B}' +
+            '.cv2-diff-sobrou{background:#DBEAFE;color:#1E40AF}' +
+            '.cv2-card.ok .cv2-card-status::before{content:"✓ confere";font-size:11px;font-weight:800;color:#065F46;background:#A7F3D0;padding:3px 8px;border-radius:99px}' +
+            '.cv2-card.editing .cv2-card-status::before{content:"✏️ ajustando";font-size:11px;font-weight:800;color:#92400E;background:#FDE68A;padding:3px 8px;border-radius:99px}' +
+            '.cv2-card .cv2-card-status::before{content:"⚠ confira";font-size:11px;font-weight:800;color:#92400E;background:#FEF3C7;padding:3px 8px;border-radius:99px}' +
+            '.cv2-btn-final{flex:1;padding:14px;font-size:16px;font-weight:900;border-radius:10px;border:none;cursor:pointer;transition:all .15s}' +
+            '.cv2-btn-final:disabled{background:#d1d5db!important;color:#6b7280!important;cursor:not-allowed}' +
+            '.cv2-btn-final-ok{background:#10B981;color:#fff}' +
+            '.cv2-btn-final-ok:hover:not(:disabled){background:#059669}' +
+            '.cv2-btn-cancel{background:#fff;color:#6b7280;border:2px solid #d1d5db;padding:14px 18px;font-weight:700;border-radius:10px;cursor:pointer}' +
+            '.cv2-progress{display:flex;gap:4px;margin-bottom:12px}' +
+            '.cv2-progress-dot{flex:1;height:6px;border-radius:3px;background:#e5e7eb;transition:background .2s}' +
+            '.cv2-progress-dot.done{background:#10B981}' +
+            '.cv2-dinheiro-extra{margin-top:8px;padding-top:8px;border-top:1px dashed #d1d5db}' +
+            '.cv2-dinheiro-extra label{font-size:12px;color:#6b7280;display:block;margin-bottom:3px}' +
+            '.cv2-dinheiro-extra input{width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:6px;font-weight:700;text-align:right;font-size:14px}' +
+          '</style>';
+
+        // Helper: gera card (Cartão / PIX / Dinheiro)
+        function _card(key, icon, name, esperado, hint) {
             return ''+
-            '<div class="cv2-row" data-method-row="'+name+'"'+tipAttr+' style="display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center;padding:5px 10px;background:#fff;border:1px solid #e5e7eb;border-radius:7px;margin-bottom:4px">' +
-              '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px;min-width:0">' +
-                '<span style="font-weight:700;color:#1f2937;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+icon+' '+label+'</span>' +
-                '<span style="font-size:11px;color:#6b7280;white-space:nowrap" data-esperado="'+name+'">esp '+espStr+'</span>' +
+            '<div class="cv2-card" data-card="'+key+'" data-esperado-num="'+esperado+'">' +
+              '<div class="cv2-card-head">' +
+                '<div style="display:flex;align-items:center;gap:10px">' +
+                  '<span class="cv2-card-icon">'+icon+'</span>' +
+                  '<div>' +
+                    '<div class="cv2-card-name">'+name+'</div>' +
+                    '<div class="cv2-card-status" style="margin-top:3px"></div>' +
+                  '</div>' +
+                '</div>' +
+                '<div style="text-align:right">' +
+                  '<div class="cv2-card-esp-label">'+(hint||'esperado')+'</div>' +
+                  '<div class="cv2-card-esperado">'+formatBRL(esperado)+'</div>' +
+                '</div>' +
               '</div>' +
-              '<div style="position:relative">' +
-                '<input type="text" class="caixa-brl cv2-input" data-caixa-brl data-name="conf_'+name+'" inputmode="numeric" '+
-                  'value="'+espStr+'" '+
-                  'style="width:100%;padding:5px 8px;border:1.5px solid #d1d5db;border-radius:6px;font-weight:700;text-align:right;font-size:13px;background:#fff">' +
-                '<span data-diff="'+name+'" style="position:absolute;right:8px;top:100%;font-size:10px;font-weight:700;line-height:1;margin-top:1px;white-space:nowrap"></span>' +
+              '<div class="cv2-btns">' +
+                '<button type="button" class="cv2-btn cv2-btn-ok"      data-action="ok"      data-card-btn="'+key+'">✓ Tá certo</button>' +
+                '<button type="button" class="cv2-btn cv2-btn-naobate" data-action="naobate" data-card-btn="'+key+'">✏️ Não bate</button>' +
+              '</div>' +
+              '<div class="cv2-edit-area" data-edit-area="'+key+'" style="display:none">' +
+                '<label style="font-size:12px;color:#374151;display:block;margin-bottom:4px;font-weight:700">Quanto realmente entrou?</label>' +
+                '<input type="text" class="caixa-brl" data-caixa-brl data-name="conf_'+key+'" inputmode="numeric" placeholder="R$ 0,00">' +
+                '<div class="cv2-diff-msg" data-diff-msg="'+key+'" style="display:none"></div>' +
               '</div>' +
             '</div>';
         }
 
-        // === Estilos pra max-height + scroll garantidos ===
-        // Modal preenche no maximo 92vh; body interno scrolla.
-        // Em telas >= 720px: 2 colunas (cartoes/PIX | dinheiro/totais)
-        const cv2Style = ''+
-          '<style>' +
-            '.cv2-modal{max-width:760px!important;max-height:92vh;display:flex;flex-direction:column}' +
-            '.cv2-modal .caixa-modal-body{padding:10px 12px!important;background:#f9fafb;overflow-y:auto;flex:1;min-height:0}' +
-            '.cv2-modal .caixa-modal-header{padding:8px 14px!important}' +
-            '.cv2-modal .caixa-modal-header h3{font-size:15px!important;margin:0!important}' +
-            '.cv2-modal .caixa-modal-footer{padding:8px 12px!important;flex-shrink:0}' +
-            '.cv2-modal .cv2-section-title{font-weight:700;color:#374151;margin:6px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.4px}' +
-            '.cv2-modal .cv2-grid{display:grid;grid-template-columns:1fr;gap:10px}' +
-            '@media(min-width:720px){.cv2-modal .cv2-grid{grid-template-columns:1fr 1fr;gap:12px}}' +
-          '</style>';
-
         const html = `${cv2Style}
             <div class="caixa-modal cv2-modal" role="dialog" aria-label="Fechar caixa">
-              <div class="caixa-modal-header" style="background:linear-gradient(135deg,#DC2626,#F59E0B)">
-                <h3>🔒 Fechar caixa · conferência</h3>
+              <div class="caixa-modal-header" style="background:linear-gradient(135deg,#7B1FA2,#DC2626)">
+                <h3>🔒 Fechar caixa do dia</h3>
                 <button class="caixa-modal-close" data-caixa-close aria-label="Fechar">✕</button>
               </div>
               <div class="caixa-modal-body">
 
                 ${pollutedHtml}
 
-                <div class="cv2-grid">
-                  <!-- COLUNA 1: maquininhas + PIX -->
-                  <div>
-                    <div class="cv2-section-title">💳 Maquininhas (Z relatório)</div>
-                    ${_row('credito_m1', '💳', 'Crédito M1', espCredito, 'Maquineta 1 - default = total esperado de credito')}
-                    ${_row('credito_m2', '💳', 'Crédito M2', 0,         'Se tem 2 maquinetas, divida o valor de credito')}
-                    ${_row('debito_m1',  '💳', 'Débito M1',  espDebito,  'Maquineta 1 - default = total esperado de debito')}
-                    ${_row('debito_m2',  '💳', 'Débito M2',  0,          'Se tem 2 maquinetas, divida o valor de debito')}
+                <div style="background:#EEF2FF;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#3730A3;line-height:1.5">
+                  💡 <strong>Como conferir:</strong><br>
+                  • <strong>Cartão</strong>: pegue o <strong>Z relatório</strong> da maquineta → linha <strong>"Totais Bandeiras"</strong><br>
+                  • <strong>PIX</strong>: linha <strong>"Pix"</strong> do Z relatório (e/ou extrato do banco)<br>
+                  • <strong>Dinheiro</strong>: conte a gaveta<br>
+                  Se bater, clica <strong>✓ Tá certo</strong>. Se não, <strong>✏️ Não bate</strong> e digita o real.
+                </div>
 
-                    <div class="cv2-section-title" style="margin-top:8px">⚡ PIX (soma das 3 = esperado)</div>
-                    ${_row('pix_m1',     '⚡', 'PIX M1',     espPix, 'PIX recebido pela maquineta 1')}
-                    ${_row('pix_m2',     '⚡', 'PIX M2',     0,      'PIX recebido pela maquineta 2')}
-                    ${_row('pix_direto', '⚡', 'PIX banco',  0,      'PIX direto na conta sem passar pela maquineta')}
+                <!-- Barra de progresso (3 dots) -->
+                <div class="cv2-progress">
+                  <div class="cv2-progress-dot" data-prog="cartao"></div>
+                  <div class="cv2-progress-dot" data-prog="pix"></div>
+                  <div class="cv2-progress-dot" data-prog="dinheiro"></div>
+                </div>
+
+                ${_card('cartao',   '💳', 'Cartão (Bandeiras)', espCartao, 'do Z da maquineta')}
+                ${_card('pix',      '⚡', 'PIX',                espPix,    'banco + maquineta')}
+
+                <!-- Card Dinheiro tem extras (troco) -->
+                <div class="cv2-card" data-card="dinheiro" data-esperado-num="${saldoEsperadoDinheiro}">
+                  <div class="cv2-card-head">
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <span class="cv2-card-icon">💵</span>
+                      <div>
+                        <div class="cv2-card-name">Dinheiro físico</div>
+                        <div class="cv2-card-status" style="margin-top:3px"></div>
+                      </div>
+                    </div>
+                    <div style="text-align:right">
+                      <div class="cv2-card-esp-label">deve ter na gaveta</div>
+                      <div class="cv2-card-esperado">${formatBRL(saldoEsperadoDinheiro)}</div>
+                    </div>
                   </div>
-
-                  <!-- COLUNA 2: dinheiro + totais -->
-                  <div>
-                    <div class="cv2-section-title">💵 Dinheiro físico</div>
-                    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:7px;padding:8px 10px;margin-bottom:6px">
-                      <div style="display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center;margin-bottom:5px">
-                        <label style="font-size:12px;color:#374151;margin:0">Total contado</label>
-                        <input type="text" class="caixa-brl" data-caixa-brl data-name="dinheiro_total" inputmode="numeric" placeholder="R$ 0,00"
-                               style="padding:5px 8px;border:1.5px solid #d1d5db;border-radius:6px;font-weight:700;text-align:right;font-size:13px">
-                      </div>
-                      <div style="display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center">
-                        <label style="font-size:12px;color:#374151;margin:0" title="Troco para começar o próximo turno">− Troco próx. turno</label>
-                        <input type="text" class="caixa-brl" data-caixa-brl data-name="dinheiro_troco" inputmode="numeric" placeholder="R$ 0,00"
-                               style="padding:5px 8px;border:1.5px solid #d1d5db;border-radius:6px;font-weight:700;text-align:right;font-size:13px">
-                      </div>
-                      <hr style="border:none;border-top:1px dashed #d1d5db;margin:5px 0">
-                      <div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280">
-                        <span title="Abertura + vendas em dinheiro − sangrias + reforços">Esperado dinheiro:</span>
-                        <strong style="color:#1B5E20" data-esperado-dinheiro>${formatBRL(saldoEsperadoDinheiro)}</strong>
-                      </div>
-                      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-top:3px">
-                        <span>Diferença:</span>
-                        <span data-diff-dinheiro>—</span>
-                      </div>
+                  <div style="font-size:11px;color:#6b7280;margin-bottom:8px;text-align:right">
+                    abertura ${formatBRL(st.valorAbertura)} + vendas dinheiro ${formatBRL(st.vendasDinheiro)}${st.totalReforco?' + reforço '+formatBRL(st.totalReforco):''}${st.totalSangria?' − sangria '+formatBRL(st.totalSangria):''}
+                  </div>
+                  <div class="cv2-btns">
+                    <button type="button" class="cv2-btn cv2-btn-ok"      data-action="ok"      data-card-btn="dinheiro">✓ Tá certo</button>
+                    <button type="button" class="cv2-btn cv2-btn-naobate" data-action="naobate" data-card-btn="dinheiro">✏️ Não bate</button>
+                  </div>
+                  <div class="cv2-edit-area" data-edit-area="dinheiro" style="display:none">
+                    <label style="font-size:12px;color:#374151;display:block;margin-bottom:4px;font-weight:700">Quanto contou na gaveta?</label>
+                    <input type="text" class="caixa-brl" data-caixa-brl data-name="conf_dinheiro" inputmode="numeric" placeholder="R$ 0,00">
+                    <div class="cv2-dinheiro-extra">
+                      <label>Quanto vai sair de troco pro próximo turno? (opcional)</label>
+                      <input type="text" class="caixa-brl" data-caixa-brl data-name="dinheiro_troco" inputmode="numeric" placeholder="R$ 0,00">
                     </div>
-
-                    <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:7px;padding:8px 10px;margin-bottom:6px">
-                      <div style="display:flex;justify-content:space-between;font-size:12px"><span>Faturado (sistema)</span><strong>${formatBRL(st.faturamentoBruto)}</strong></div>
-                      <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:2px"><span>Conferido (você)</span><strong data-total-conferido>${formatBRL(0)}</strong></div>
-                      <hr style="border:none;border-top:1px dashed #C7D2FE;margin:4px 0">
-                      <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:800"><span>Diferença total:</span><span data-diff-total style="color:#1B5E20">—</span></div>
-                    </div>
-
-                    <div data-justify-wrap style="display:none">
-                      <label style="font-size:12px;color:#92400E;font-weight:700;display:block;margin-bottom:3px">⚠️ Justificativa (diff &gt; R$ 5)</label>
-                      <textarea data-name="motivo" placeholder="Ex: troco a mais, erro digitação..." rows="2"
-                                style="width:100%;padding:6px;border:1.5px solid #F59E0B;border-radius:6px;font-family:inherit;font-size:12px;resize:vertical"></textarea>
-                    </div>
-
-                    ${offHoursCloseWarning}
-
-                    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:7px;padding:6px 8px;font-size:11px;color:#6b7280;margin-top:6px" title="Email enviado para: milkypot.com@gmail.com, jocimarrodrigo@gmail.com, joseanemse@gmail.com">
-                      📧 Ao fechar: relatório → 3 emails da gestão
-                    </div>
+                    <div class="cv2-diff-msg" data-diff-msg="dinheiro" style="display:none"></div>
                   </div>
                 </div>
 
-                <div class="caixa-danger" data-caixa-error style="display:none;margin-top:6px;font-size:12px"></div>
+                <!-- Justificativa só aparece quando há diff > R$ 5 -->
+                <div data-justify-wrap style="display:none;margin-top:6px">
+                  <div style="background:#FEF3C7;border-radius:8px;padding:10px 12px;font-size:13px;color:#92400E;font-weight:700;margin-bottom:6px">
+                    ⚠️ Tem diferença de mais de R$ 5,00 — explique o motivo:
+                  </div>
+                  <textarea data-name="motivo" placeholder="Ex: troco a mais, erro digitação, falta R$ X..." rows="2"
+                            style="width:100%;padding:8px;border:2px solid #F59E0B;border-radius:8px;font-family:inherit;font-size:13px;resize:vertical"></textarea>
+                </div>
+
+                ${offHoursCloseWarning}
+
+                <div style="margin-top:10px;font-size:11px;color:#6b7280;text-align:center" title="Email enviado para: milkypot.com@gmail.com, jocimarrodrigo@gmail.com, joseanemse@gmail.com">
+                  📧 Ao fechar, relatório vai automaticamente para os 3 emails da gestão
+                </div>
+
+                <!-- Detalhes avançados (opcional) -->
+                <details style="margin-top:10px">
+                  <summary style="cursor:pointer;font-size:11px;color:#6b7280;text-align:center;padding:4px">📊 Ver detalhes (M1/M2 separados)</summary>
+                  <div style="background:#fff;border-radius:8px;padding:10px;margin-top:6px;font-size:11px;color:#6b7280;line-height:1.6">
+                    Por padrão somamos tudo (M1 + M2 + PIX banco). Se você precisa registrar separado, edite os valores acima clicando "Não bate" e digite a soma das suas maquinetas.
+                  </div>
+                </details>
+
+                <div class="caixa-danger" data-caixa-error style="display:none;margin-top:8px;padding:8px 10px;background:#FEE2E2;color:#991B1B;border-radius:6px;font-size:13px;font-weight:700"></div>
               </div>
               <div class="caixa-modal-footer">
-                <button class="caixa-btn-secondary" data-caixa-close>Cancelar</button>
-                <button class="caixa-btn-danger" data-caixa-confirm>✅ Conferir e fechar caixa</button>
+                <button type="button" class="cv2-btn-cancel" data-caixa-close>Cancelar</button>
+                <button type="button" class="cv2-btn-final cv2-btn-final-ok" data-caixa-confirm disabled>✅ Fechar Caixa</button>
               </div>
             </div>`;
 
         const modal = openModal(html, (data) => {
-            // Coleta valores conferidos
-            const cred1 = Number(data.conf_credito_m1 || 0);
-            const cred2 = Number(data.conf_credito_m2 || 0);
-            const deb1  = Number(data.conf_debito_m1  || 0);
-            const deb2  = Number(data.conf_debito_m2  || 0);
-            // PIX agora dividido em 3 fontes (operador recebe pix tambem
-            // pelas maquininhas, nao so direto na conta)
-            const pixM1     = Number(data.conf_pix_m1     || 0);
-            const pixM2     = Number(data.conf_pix_m2     || 0);
-            const pixDireto = Number(data.conf_pix_direto || 0);
-            const pixV      = pixM1 + pixM2 + pixDireto;
-            const dinTotal = Number(data.dinheiro_total || 0);
-            const dinTroco = Number(data.dinheiro_troco || 0);
+            // Estado dos cards (preenchido pelos clicks)
+            const cardState = modal.__cardState || {};
 
-            // valorContado = dinheiro fisico do dia (sem troco do proximo turno)
-            const valorContado = +(dinTotal - dinTroco).toFixed(2);
+            // Validar todos resolvidos
+            const required = ['cartao','pix','dinheiro'];
+            const pending = required.filter(k => !cardState[k]);
+            if (pending.length) {
+                return _err(modal, '⚠️ Confira: ' + pending.join(', ') + ' ainda não foi marcado.');
+            }
+
+            const valCartao = cardState.cartao.value;
+            const valPix    = cardState.pix.value;
+            const valDinheiroTotal = cardState.dinheiro.value;
+            const dinTroco = Number(parseBRL(data.dinheiro_troco) || 0);
+            const valorContado = +(valDinheiroTotal - dinTroco).toFixed(2);
 
             // Justificativa de horario
             let motivoH = '';
             if (!hourCheckClose.ok) {
                 motivoH = (data.motivoForaHorario || '').trim();
                 if (motivoH.length < 3) {
-                    return _err(modal, '⚠️ Justificativa de horário obrigatória (mínimo 3 caracteres).');
+                    return _err(modal, '⚠️ Justificativa de horário obrigatória.');
                 }
             }
 
-            // Diff total e por metodo
-            const totalConferido = cred1 + cred2 + deb1 + deb2 + pixV + valorContado;
-            const totalEsperado  = espPix + espCredito + espDebito + espDinheiro;
+            const totalConferido = valCartao + valPix + valorContado;
+            const totalEsperado  = espCartao + espPix + espDinheiro;
             const diffTotal      = +(totalConferido - totalEsperado).toFixed(2);
             const diffDinheiro   = +(valorContado - saldoEsperadoDinheiro).toFixed(2);
 
             const motivo = (data.motivo || '').trim();
-            // Justificativa exigida se |diffTotal| > 5 OU |diffDinheiro| > 5
             if ((Math.abs(diffTotal) > 5 || Math.abs(diffDinheiro) > 5) && !motivo) {
-                return _err(modal, '⚠️ Diferença maior que R$ 5,00 — informe a justificativa.');
-            }
-            if (dinTotal === 0 && espDinheiro > 0) {
-                return _err(modal, '⚠️ Informe o total de dinheiro contado na gaveta (não pode ser R$ 0,00 com vendas em dinheiro).');
+                return _err(modal, '⚠️ Diferença maior que R$ 5,00 — explique o motivo no campo amarelo.');
             }
 
-            // Monta extras pro audit + email
             const extras = {
+                modo: 'simples',
                 breakdown: {
-                    credito_maquineta_1: cred1,
-                    credito_maquineta_2: cred2,
-                    debito_maquineta_1: deb1,
-                    debito_maquineta_2: deb2,
-                    pix_maquineta_1: pixM1,
-                    pix_maquineta_2: pixM2,
-                    pix_direto_banco: pixDireto,
-                    pix_total: pixV,
-                    dinheiro_total_gaveta: dinTotal,
+                    cartao: valCartao,
+                    pix_total: valPix,
+                    dinheiro_total_gaveta: valDinheiroTotal,
                     dinheiro_troco: dinTroco,
                     dinheiro_liquido_dia: valorContado
                 },
                 esperado: {
+                    cartao: espCartao,
                     pix: espPix,
-                    credito: espCredito,
-                    debito: espDebito,
                     dinheiro: espDinheiro,
                     saldoEsperadoDinheiro: saldoEsperadoDinheiro,
                     totalEsperado: totalEsperado
@@ -1062,100 +1125,129 @@ const Caixa = (function () {
                 conferidoEm: new Date().toISOString()
             };
 
-            // Aplica fechamento (passa valor em dinheiro como antes — assinatura
-            // antiga preservada). Extras vai como 5o param (opcional).
             const r = closeShift(franchiseId, valorContado, motivo, motivoH, extras);
             if (!r.success) {
-                return _err(modal, r.error + (r.esperado !== undefined ?
-                  ' (esperado ' + formatBRL(r.esperado) + ', diff ' + formatBRL(r.diff) + ')' : ''));
+                return _err(modal, r.error);
             }
 
-            // Salva relatorio audit no Firestore + tenta email + fallback mailto
             try {
                 _persistAndDispatchReport(franchiseId, st, valorContado, motivo, motivoH, extras, r);
-            } catch (e) {
-                console.warn('Falha ao despachar relatorio:', e);
-            }
+            } catch (e) { console.warn('Falha ao despachar relatorio:', e); }
 
             if (cb) cb(r);
-            // Aviso visual final
-            if (typeof window !== 'undefined' && window.alert) {
-                setTimeout(function(){
-                    let msg = '✅ Caixa fechado com sucesso!\n';
-                    msg += 'Total conferido: ' + formatBRL(totalConferido) + '\n';
-                    msg += 'Diferença: ' + formatBRL(diffTotal);
-                    if (motivo) msg += '\nJustificativa: ' + motivo;
-                    msg += '\n\n📧 Relatório enviado para os 3 emails da gestão.';
-                    window.alert(msg);
-                }, 100);
+            setTimeout(function(){
+                let msg = '✅ Caixa fechado!\n\n';
+                msg += 'Total: ' + formatBRL(totalConferido) + '\n';
+                if (Math.abs(diffTotal) >= 0.01) msg += 'Diferença: ' + (diffTotal>0?'+':'') + formatBRL(diffTotal) + '\n';
+                else msg += 'Bateu certinho!\n';
+                msg += '\n📧 Relatório enviado pra gestão.';
+                window.alert(msg);
+            }, 100);
+        });
+
+        // ====== Wiring dos botões e estado ======
+        const overlay = modal.overlay;
+        modal.__cardState = {}; // { cartao: {ok:true, value:N}, pix: {...}, dinheiro: {...} }
+
+        function _esp(key) {
+            const card = overlay.querySelector('[data-card="'+key+'"]');
+            return Number(card ? card.getAttribute('data-esperado-num') : 0);
+        }
+        function _setProgress() {
+            ['cartao','pix','dinheiro'].forEach(k => {
+                const dot = overlay.querySelector('[data-prog="'+k+'"]');
+                if (dot) dot.classList.toggle('done', !!modal.__cardState[k]);
+            });
+            // Habilita botão final só quando os 3 resolvidos
+            const allOk = ['cartao','pix','dinheiro'].every(k => modal.__cardState[k]);
+            const fechBtn = overlay.querySelector('[data-caixa-confirm]');
+            if (fechBtn) fechBtn.disabled = !allOk;
+
+            // Atualiza justificativa
+            if (allOk) {
+                const total = modal.__cardState.cartao.value + modal.__cardState.pix.value +
+                              (modal.__cardState.dinheiro.value - (parseBRL((overlay.querySelector('[data-name="dinheiro_troco"]')||{}).value || '')||0));
+                const totalEsp = espCartao + espPix + espDinheiro;
+                const diff = +(total - totalEsp).toFixed(2);
+                const dinDiff = +(modal.__cardState.dinheiro.value - (parseBRL((overlay.querySelector('[data-name="dinheiro_troco"]')||{}).value || '')||0) - saldoEsperadoDinheiro).toFixed(2);
+                const wrap = overlay.querySelector('[data-justify-wrap]');
+                if (wrap) wrap.style.display = (Math.abs(diff) > 5 || Math.abs(dinDiff) > 5) ? 'block' : 'none';
+            }
+        }
+
+        function _markCard(key, mode, value) {
+            const card = overlay.querySelector('[data-card="'+key+'"]');
+            const editArea = overlay.querySelector('[data-edit-area="'+key+'"]');
+            if (!card) return;
+            card.classList.remove('ok','editing');
+            if (mode === 'ok') {
+                card.classList.add('ok');
+                if (editArea) editArea.style.display = 'none';
+                modal.__cardState[key] = { ok: true, mode: 'ok', value: _esp(key) };
+            } else if (mode === 'editing') {
+                card.classList.add('editing');
+                if (editArea) {
+                    editArea.style.display = 'block';
+                    // Pre-preenche com esperado se vazio
+                    const inp = editArea.querySelector('input[data-name="conf_'+key+'"]');
+                    if (inp && (!inp.value || inp.value === formatBRL(0))) {
+                        inp.value = formatBRL(_esp(key));
+                        inp.focus(); inp.select();
+                    }
+                }
+                // value sera atualizado quando digitar
+                if (typeof value === 'number') {
+                    modal.__cardState[key] = { ok: true, mode: 'editing', value: value };
+                }
+            }
+            _setProgress();
+        }
+
+        // Click handlers nos botões dos cards
+        overlay.addEventListener('click', function(ev){
+            const btn = ev.target.closest('[data-card-btn]');
+            if (!btn) return;
+            ev.preventDefault();
+            const key = btn.getAttribute('data-card-btn');
+            const action = btn.getAttribute('data-action');
+            if (action === 'ok') _markCard(key, 'ok');
+            else if (action === 'naobate') {
+                _markCard(key, 'editing');
+                // Sem value ainda — sera registrado ao digitar
+                if (modal.__cardState[key] && modal.__cardState[key].mode === 'editing' && !modal.__cardState[key].value) {
+                    modal.__cardState[key].value = _esp(key);
+                }
             }
         });
 
-        // ====== Live wiring: recalcular ao digitar ======
-        const overlay = modal.overlay;
-        function _input(name) { return overlay.querySelector('[data-name="'+name+'"]'); }
-        function _diffEl(name) { return overlay.querySelector('[data-diff="'+name+'"]'); }
-        function _val(name) { const el = _input(name); return el ? parseBRL(el.value) : 0; }
-        function _setDiff(el, esperado, contado) {
-            if (!el) return;
-            const d = +(contado - esperado).toFixed(2);
-            if (Math.abs(d) < 0.01) { el.textContent = '✓ ok'; el.style.color = '#10B981'; return; }
-            el.textContent = (d>0?'+':'') + formatBRL(d);
-            el.style.color = d>0 ? '#10B981' : '#DC2626';
-        }
-        function _recalc() {
-            const cred1 = _val('conf_credito_m1');
-            const cred2 = _val('conf_credito_m2');
-            const deb1  = _val('conf_debito_m1');
-            const deb2  = _val('conf_debito_m2');
-            // PIX vem de 3 fontes (M1, M2, direto banco) — soma confere com esperado
-            const pixM1     = _val('conf_pix_m1');
-            const pixM2     = _val('conf_pix_m2');
-            const pixDireto = _val('conf_pix_direto');
-            const pixV      = pixM1 + pixM2 + pixDireto;
-            const dinTotal = _val('dinheiro_total');
-            const dinTroco = _val('dinheiro_troco');
-            const dinLiquido = +(dinTotal - dinTroco).toFixed(2);
+        // Listener do input de valor "não bate"
+        ['cartao','pix','dinheiro'].forEach(function(key){
+            const inp = overlay.querySelector('input[data-name="conf_'+key+'"]');
+            if (!inp) return;
+            inp.addEventListener('input', function(){
+                const v = parseBRL(inp.value);
+                modal.__cardState[key] = { ok: true, mode: 'editing', value: v };
+                // Atualiza msg de diff
+                const esp = _esp(key);
+                const d = +(v - esp).toFixed(2);
+                const msgEl = overlay.querySelector('[data-diff-msg="'+key+'"]');
+                if (msgEl) {
+                    msgEl.style.display = 'block';
+                    msgEl.classList.remove('cv2-diff-ok','cv2-diff-faltou','cv2-diff-sobrou');
+                    if (Math.abs(d) < 0.01) { msgEl.textContent = '✓ Bateu certinho'; msgEl.classList.add('cv2-diff-ok'); }
+                    else if (d < 0) { msgEl.textContent = '⚠ Faltou ' + formatBRL(Math.abs(d)); msgEl.classList.add('cv2-diff-faltou'); }
+                    else { msgEl.textContent = '+ Sobrou ' + formatBRL(d); msgEl.classList.add('cv2-diff-sobrou'); }
+                }
+                _setProgress();
+            });
+        });
 
-            // Diffs por linha (compara SOMA das 2 maquininhas com esperado total)
-            _setDiff(_diffEl('credito_m1'), espCredito, cred1 + cred2);
-            const m2c = _diffEl('credito_m2'); if (m2c) m2c.textContent = ''; // sem esperado isolado
-            _setDiff(_diffEl('debito_m1'),  espDebito,  deb1 + deb2);
-            const m2d = _diffEl('debito_m2'); if (m2d) m2d.textContent = '';
-            // PIX: a soma das 3 deve bater com espPix — mostra so na primeira linha
-            _setDiff(_diffEl('pix_m1'), espPix, pixV);
-            const pm2  = _diffEl('pix_m2');     if (pm2)  pm2.textContent  = '';
-            const pdir = _diffEl('pix_direto'); if (pdir) pdir.textContent = '';
+        // Listener do troco
+        const trocoInput = overlay.querySelector('[data-name="dinheiro_troco"]');
+        if (trocoInput) trocoInput.addEventListener('input', _setProgress);
 
-            const diffDin = +(dinLiquido - saldoEsperadoDinheiro).toFixed(2);
-            const ddEl = overlay.querySelector('[data-diff-dinheiro]');
-            if (ddEl) {
-                if (Math.abs(diffDin) < 0.01) { ddEl.textContent = '✓ ok ' + formatBRL(0); ddEl.style.color = '#10B981'; }
-                else { ddEl.textContent = (diffDin>0?'+':'') + formatBRL(diffDin); ddEl.style.color = diffDin>0?'#10B981':'#DC2626'; }
-            }
-
-            const totalConferido = cred1+cred2+deb1+deb2+pixV+dinLiquido;
-            const totalEsperado  = espPix+espCredito+espDebito+espDinheiro;
-            const diffTot = +(totalConferido-totalEsperado).toFixed(2);
-            const tcEl = overlay.querySelector('[data-total-conferido]');
-            if (tcEl) tcEl.textContent = formatBRL(totalConferido);
-            const dtEl = overlay.querySelector('[data-diff-total]');
-            if (dtEl) {
-                if (Math.abs(diffTot) < 0.01) { dtEl.textContent = '✓ ' + formatBRL(0); dtEl.style.color = '#10B981'; }
-                else { dtEl.textContent = (diffTot>0?'+':'') + formatBRL(diffTot); dtEl.style.color = diffTot>0?'#10B981':'#DC2626'; }
-            }
-
-            // Mostra/esconde justificativa
-            const wrap = overlay.querySelector('[data-justify-wrap]');
-            if (wrap) wrap.style.display = (Math.abs(diffTot) > 5 || Math.abs(diffDin) > 5) ? 'block' : 'none';
-        }
-        // Liga eventos (todos os 9 inputs editaveis)
-        ['conf_credito_m1','conf_credito_m2','conf_debito_m1','conf_debito_m2',
-         'conf_pix_m1','conf_pix_m2','conf_pix_direto',
-         'dinheiro_total','dinheiro_troco']
-          .forEach(function(n){ const el = _input(n); if (el) el.addEventListener('input', _recalc); });
-        // Primeiro recalc (com defaults)
-        setTimeout(_recalc, 60);
+        // Estado inicial: barras vazias, botão final desabilitado
+        _setProgress();
     }
 
     function _err(modal, msg) {
