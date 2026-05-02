@@ -1379,12 +1379,20 @@
             function isTestOrder(o) {
                 if (isSeedDemoOrder(o)) return true;
                 if (o.isTestSession || o.testSession) return true;
+                // ID-based: pedidos gerados por scripts live-test (ex.: live_test_<ts>)
+                const id = o && o.id ? String(o.id) : '';
+                if (/^live_test_/i.test(id)) return true;
+                // orderNumber explicito de teste
+                const orderNum = String(o.orderNumber || '');
+                if (/MP_TEST|^#?TEST/i.test(orderNum)) return true;
                 const uid = o.userId || o.operatorId || '';
                 if (/^test_agent_/i.test(uid)) return true;
                 const email = (o.operatorEmail || o.createdByEmail || '').toLowerCase();
                 if (TEST_PATTERNS.some(p => p.test(email))) return true;
                 const name = (o.customer && o.customer.name) || '';
+                // Pega "test", "teste" (sozinho ou com prefixo) e tambem "Cliente Teste"
                 if (/^(test|teste)\b/i.test(name)) return true;
+                if (/cliente\s+teste/i.test(name)) return true;
                 return false;
             }
 
