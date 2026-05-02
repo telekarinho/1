@@ -19,6 +19,38 @@
     <meta name="robots" content="noindex, nofollow">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <!-- AUTO CACHE-BUSTER: SW antigo (mp-v101) cacheava auth.js sem
+         o fallback CF -> login do teste@teste.com falhava. Esse script
+         INLINE (nunca cacheado) detecta SW antigo, deleta caches +
+         unregister + reload UMA VEZ. Apos rodar, marca flag pra nao
+         rodar de novo. -->
+    <script>
+    (function(){
+        var FORCE_VERSION = 'mp-v102';
+        try {
+            if ('serviceWorker' in navigator && !sessionStorage.getItem('mp_sw_force_done_' + FORCE_VERSION)) {
+                navigator.serviceWorker.getRegistrations().then(function(regs){
+                    return Promise.all([
+                        caches.keys().then(function(keys){
+                            // Detecta cache antigo (qualquer key que nao tenha v102)
+                            var stale = keys.filter(function(k){ return k.indexOf(FORCE_VERSION) < 0; });
+                            if (!stale.length) return false;
+                            return Promise.all(stale.map(function(k){ return caches.delete(k); })).then(function(){ return true; });
+                        }),
+                        regs.length ? regs[0].update() : null
+                    ]).then(function(results){
+                        if (results[0]) {
+                            // Habia cache antigo -> unregister + hard reload UMA VEZ
+                            sessionStorage.setItem('mp_sw_force_done_' + FORCE_VERSION, '1');
+                            return Promise.all(regs.map(function(r){ return r.unregister(); }))
+                                .then(function(){ location.reload(true); });
+                        }
+                    });
+                }).catch(function(){});
+            }
+        } catch(_) {}
+    })();
+    </script>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
