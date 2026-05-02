@@ -5102,6 +5102,49 @@
             document.exitFullscreen().catch(function(){});
         }
     };
+
+    // F10 — Fechar caixa do dia.
+    // ANTES: window.fecharCaixa nao existia; F10 e o botao "Fechar Caixa"
+    // referenciavam a funcao mas ela nunca era definida -> tecla nao fazia
+    // nada. Agora wrapper que valida estado do caixa e abre o modal correto.
+    window.fecharCaixa = function(){
+        try {
+            if (typeof Caixa === 'undefined' || !Caixa.showCloseModal) {
+                alert('⚠️ Modulo de caixa ainda carregando. Tente novamente em 3 segundos.');
+                return;
+            }
+            // Pega franquia da sessao (fid global do PDV ja deve estar setado)
+            var franchId = (typeof fid !== 'undefined' && fid) ? fid :
+                           (typeof Auth !== 'undefined' && Auth.getSession ? (Auth.getSession()||{}).franchiseId : null);
+            if (!franchId) {
+                alert('⚠️ Sessao sem franquia. Faça login novamente.');
+                return;
+            }
+            // Checa estado do caixa antes de abrir o modal
+            var st = Caixa.getTurnoState(franchId);
+            if (st.status === 'nao_aberto') {
+                if (confirm('Nenhum caixa aberto hoje. Quer ABRIR o caixa primeiro?')) {
+                    Caixa.showOpenModal(franchId, function(){
+                        if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
+                    });
+                }
+                return;
+            }
+            if (st.status === 'fechado') {
+                alert('✅ O caixa de hoje já foi fechado.\n\nPara reabrir, peça ao gerente.');
+                return;
+            }
+            // Caixa aberto: abre o modal interativo
+            Caixa.showCloseModal(franchId, function(r){
+                if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
+                if (typeof renderFaturamentoChip === 'function') renderFaturamentoChip();
+            });
+        } catch(e) {
+            console.error('[fecharCaixa] erro:', e);
+            alert('Erro ao abrir fechamento do caixa: ' + e.message);
+        }
+    };
+
     // Atalhos de teclado pro PDV
     // F1 vendas · F2 imprimir · F3 conta aberta · F4 fechar pedido
     // F9 painel de pedidos · F10 fechar caixa · F11 fullscreen
