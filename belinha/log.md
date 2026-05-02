@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #86 — 2026-05-02
+
+**Área:** Conteúdo — Semanas 47 + 48 (07/03–20/03/2027)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #85. Semana 47 = abertura do aquecimento do aniversário 1 ano com tom enigmático ("a ovelhinha guarda um segredo") + Dia Internacional da Mulher (08/03) + lançamento público da mecânica WA "ANIVER" (sábado 13/03) + enquete sabor aniversário nos stories + Sexta #31 (12/03). Semana 48 = aquecimento semana 2, tom nostálgico ("você estava lá em 25/04/2026?") + carrossel "como tudo começou" + post interativo inaugural + WA exclusivo lista ANIVER + Sexta #32 (19/03) + carrossel "melhores momentos do primeiro ano".
+
+**O que analisou:**
+- Leu semanas 45 e 46 como referência de formato (padrão v11: Dom–Sab, Versão A/B, templates WA, checklist, métricas, tabela editorial)
+- Confirmou datas: 07/03 a 25/04 = 49 dias = 7 semanas exatas → âncora do aquecimento
+- Mapeou Sexta #31 = 12/03 e Sexta #32 = 19/03
+- Integrou Dia Internacional da Mulher (08/03) e São Patrício (17/03) como ganchos de calendário
+- Revisou briefing `aniversario-1-ano-briefing.md` para alinhar tom e mecânica "ANIVER" com estratégia macro
+- Identificou 07/03 como o ponto de "transição Carnaval → aniversário" — virada de arco narrativo
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana47.md` | CRIADO — 7 peças (Dom–Sab): abertura enigmática pós-Carnaval + sticker countdown 25/04 Dom 07/03, Dia da Mulher Seg 08/03 (alta prioridade), açaí hero rotina Ter 09/03, teaser velado "ovelhinha com segredo" + stories número 7 Qua 10/03, WA VIP lista existente aviso antecipado Qui 11/03, **Sexta #31 com 6 touchpoints + Easter egg aniversário** Sex 12/03, **lançamento mecânica WA "ANIVER"** + enquete sabor aniversário Sáb 13/03; template resposta ANIVER; checklist; métricas; tabela editorial; transição semana 48 |
+| `belinha/content/pos-inauguracao-semana48.md` | CRIADO — 7 peças (Dom–Sab): **carrossel "Como tudo começou"** (12 slides com estrutura detalhada) + WA ANIVER exclusivo Dom 14/03, UGC histórico Seg 15/03, post interativo **"Você estava lá em 25/04/2026?"** Ter 16/03, produto simples / São Patrício opcional Qua 17/03, WA duplo (geral + ANIVER exclusivo com teaser produto) Qui 18/03, **Sexta #32 com countdown integrado "6 semanas"** Sex 19/03, carrossel **"Melhores Momentos Ano 1"** + teaser próximas semanas Sáb 20/03; checklist; métricas; tabela editorial; transição semana 49 |
+
+**Commit:** `326e873`
+
+**Destaques de conteúdo:**
+1. **Mecânica WA "ANIVER" (sáb 13/03):** Template completo de resposta para inscritos + copy feed + WA broadcast geral. Meta: ≥ 20 inscritos no primeiro dia, ≥ 50 acumulados ao final da semana 48. Espelha mecânicas validadas de HALLOWEEN, NATAL e CARNAVAL.
+2. **Carrossel "Como tudo começou" (dom 14/03):** 12 slides com estrutura completa — desde a inauguração 25/04/2026 até CTA "ANIVER". Maior post emocional do aquecimento. Alto potencial de salvamentos + compartilhamentos.
+3. **Post interativo "Você estava lá?" (ter 16/03):** Gera comentários orgânicos, identifica clientes da primeira hora para reconhecimento especial no dia H 25/04/2027. Copy inclui gancho "reconhecimento especial em 25/04/2027 😉".
+4. **Sextas #31 e #32 com Easter eggs de aniversário:** Sexta #31 planta sutil (PS enigmático), Sexta #32 integra countdown explicitamente ("32 Sextas consecutivas desde 25/04/2026 — em 5 semanas é o aniversário").
+5. **Tom duplo mantido:** Rotina de produto (açaí, cardápio, qualidade) em paralelo à thread narrativa de aniversário — nenhum dia fica apenas como "teaser sem produto".
+
+**Próximo passo sugerido:**
+- Ciclo #87: Conteúdo — Semanas 49+50 (21/03–03/04/2027): "12 meses em 12 imagens" (carrossel numérico) + WA "ANIVER" intensificação + **reveal produto especial aniversário** (Versão A/B) + Sextas #33/#34 + countdown 35 dias
+- Ciclo #88: SEO/UX — gap técnico obrigatório (6 ciclos de conteúdo consecutivos desde #82): indexação landing pages, schema produto, sitemap.xml, Core Web Vitals
+- **Operador — CRÍTICO (prazo 21/03/2027):** Confirmar produto especial de aniversário com a franquia (nome, ingredientes, preço, visual). Bloqueador ativo para reveal na semana 50.
+- **Operador:** Reunir fotos da inauguração 25/04/2026 para o carrossel "Como tudo começou" (prazo: 13/03/2027 à noite).
+- **Operador:** Confirmar oferta Sexta #31 até 10/03/2027 e Sexta #32 até 17/03/2027.
+- **Operador:** Confirmar disponibilidade de dados reais (potinhos vendidos, clientes fidelidade) para carrossel "Melhores Momentos Ano 1".
+
+_Belinha — Ciclo #86 | 2026-05-02_
+
+---
+
 ## Ciclo #85 — 2026-05-02
 
 **Área:** Conteúdo — Semanas 45 + 46 (21/02–06/03/2027)
