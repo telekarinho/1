@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #90 — 2026-05-02
+
+**Área:** Conteúdo — Semana 53 (18–24/04/2027) — Semana do Aniversário 1 Ano
+
+**Contexto:** Prescrito pelo roadmap do ciclo #89. Semana 53 = os 7 dias finais antes do aniversário de 1 ANO (25/04/2027). Cada dia tem um post dedicado ao countdown decrescente (7→1). Sábado 24/04 = véspera do dia H. A lista ANIVER foi fechada no sábado anterior (17/04). O foco da semana muda de captação para confirmação de presença, preparação emocional da comunidade e logística da equipe.
+
+**O que analisou:**
+- Leu semana 52 completa como referência de formato (padrão v11)
+- Confirmou datas: 18/04 = 7 dias; 21/04 = 4 dias (feriado Tiradentes = oportunidade reveal produto); 24/04 = 1 dia (véspera)
+- Identificou a carta da ovelhinha (sáb 24/04) como o post de maior potencial emocional da história do perfil
+- Mapeou feriado Tiradentes (21/04) como melhor data para reveal do produto especial (mais gente em casa consumindo conteúdo)
+- Estruturou guia de crise com 8 cenários realistas para semana 53 + dia H
+- Adicionou roteiro completo de equipe com distribuição de tarefas e KPIs operacionais
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana53.md` | CRIADO — 735 linhas, padrão v11: 7 dias Dom–Sáb com post feed + WA ANIVER + WA geral + roteiro stories por dia; Reel 15s para dom (abertura) e sáb (emocional véspera); briefing VIP completo (qui 22/04); reveal produto especial (qua 21/04); guia de crise 8 cenários; roteiro equipe + distribuição tarefas; checklist 15 itens; métricas; tabela editorial |
+
+**Commit:** `aeace85`
+
+**Destaques de conteúdo:**
+1. **Carta da ovelhinha (sáb 24/04):** Post em formato de carta pessoal, sem produto/preço, puro storytelling emocional — "Obrigada por cada vez que você escolheu o MilkyPot Londrina." Maior potencial de compartilhamento orgânico de toda a campanha.
+2. **Reveal produto especial no feriado (qua 21/04):** Tiradentes = feriado nacional = público em casa consumindo conteúdo. WA lista ANIVER tem acesso 24h antes do reveal público — escassez exclusiva para VIPs.
+3. **Briefing VIP completo (qui 22/04):** Mensagem de WA com horário de chegada, benefícios, o que dizer na entrada — elimina atrito e encanta o VIP antes mesmo de chegar.
+4. **Guia de crise 8 cenários:** Material pronto para que o operador saiba exatamente o que fazer se influencer cancelar, produto acabar, Instagram sair do ar, fila grande etc.
+5. **Reel 15s emocional (sáb 24/04):** Compilado de clipes do ano (inauguração → momentos → decoração atual) com trilha suave — o reels mais emocionante da história do perfil.
+
+**Próximo passo sugerido:**
+- **Ciclo #91 (OBRIGATÓRIO antes de 18/04):** Criar `belinha/content/pos-inauguracao-dia-h.md` — roteiro completo do dia 25/04/2027 por horário, scripts WA, post encerramento "Obrigada pelo 1 ANO", post-mortem template, guia de crise dia H, semana 54 pós-aniversário
+- Ciclo #92 (auto-aprimoramento): Releitura do log completo + revisão estratégia.md (padrão a cada 5 ciclos)
+- **Operador — CRÍTICO (prazo sáb 17/04):** Material gráfico "1 ANO" + artes countdown 7→1 prontas
+- **Operador — CRÍTICO (prazo sáb 17/04):** Lista ANIVER finalizada com número de confirmados
+- **Operador — CRÍTICO (prazo qua 16/04):** Produto especial: nome + ingredientes 100% definidos
+- **Operador — CRÍTICO (prazo seg 14/04):** Equipe extra confirmada
+- **Operador (prazo qui 15/04):** Briefing enviado a influencers confirmados
+
+_Belinha — Ciclo #90 | 2026-05-02_
+
+---
+
 ## Ciclo #89 — 2026-05-02
 
 **Área:** Conteúdo — Semanas 51 + 52 (04–17/04/2027)
