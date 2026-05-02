@@ -876,13 +876,38 @@ exports.setupTestFranchise = onCall({ region: "southamerica-east1" }, async () =
         updatedAt: new Date().toISOString(),
     });
 
+    // 3. Garantir user profile no datastore/users (auth.js usa esse perfil
+    //    pra autorizar login — sem ele cai em 'Usuario nao cadastrado').
+    const usersRef = db.collection("datastore").doc("users");
+    const usersSnap = await usersRef.get();
+    let usersArr = [];
+    if (usersSnap.exists) {
+        try { usersArr = JSON.parse(usersSnap.data().value || "[]"); } catch (e) { usersArr = []; }
+    }
+    if (!usersArr.find((u) => u.email === TEST_EMAIL)) {
+        usersArr.push({
+            id: "user_" + user.uid,
+            email: TEST_EMAIL,
+            name: "Franquia TESTE",
+            role: "franchisee",
+            franchiseId: TEST_FID,
+            firebaseUid: user.uid,
+            createdAt: new Date().toISOString(),
+        });
+        await usersRef.set({
+            value: JSON.stringify(usersArr),
+            updatedAt: new Date().toISOString(),
+        });
+    }
+
     return {
         success: true,
-        message: "Franquia teste configurada",
+        message: "Franquia teste configurada (auth + franquia + user profile)",
         uid: user.uid,
         email: TEST_EMAIL,
         franchiseId: TEST_FID,
         password: "Teste@123",
+        userProfileCreated: true,
     };
 });
 
