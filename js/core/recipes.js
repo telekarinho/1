@@ -129,37 +129,81 @@
         return { label: 'Receita OK', color: '#16a34a', icon: '✅', tone: 'ok' };
     }
 
+    // ============================================================
+    // DUAL-READ: tenta CatalogV2 primeiro, fallback catalog_config.
+    // Pra um produtoId, retorna objeto compativel com hasRecipe()/deduct():
+    //   { id, name, receita: [{insumoId, qty, unit}], _source: 'v2'|'legacy' }
+    // CatalogV2 guarda em produto.custos.insumos com mesma estrutura.
+    // ============================================================
+    function _resolveProduct(productId, name, fid, legacyById) {
+        // 1) CatalogV2 primario
+        if (productId && global.CatalogV2 && global.CatalogV2.getProduto) {
+            try {
+                var p = global.CatalogV2.getProduto(fid, productId);
+                if (p && p.custos && Array.isArray(p.custos.insumos) && p.custos.insumos.length) {
+                    // mapeia pro shape esperado por deduct()
+                    return {
+                        id: p.id, name: p.name,
+                        receita: p.custos.insumos.map(function(i){
+                            return { insumoId: i.insumoId, qty: Number(i.qty)||0, unit: i.unit };
+                        }).filter(function(i){ return i.insumoId && i.qty > 0 && i.unit; }),
+                        _source: 'v2'
+                    };
+                }
+            } catch(_e) {}
+        }
+        // 2) Fallback legado
+        if (productId && legacyById[productId]) {
+            var leg = legacyById[productId];
+            leg._source = leg._source || 'legacy';
+            return leg;
+        }
+        // 3) Lookup por nome no legado (ultimo recurso)
+        if (name) {
+            var byName = Object.values(legacyById).find(function(it){
+                return it.name === name || (name.indexOf(it.name||'') === 0 && it.name);
+            });
+            if (byName) { byName._source = 'legacy-name'; return byName; }
+        }
+        return null;
+    }
+
     // Wrapper de alto nível usado pelo PDV:
     // deduz insumos do inventory da franquia baseado nos items do order.
-    // Retorna true se houve alguma deducao, false em erro.
+    // Retorna { ok, deducted, warnings, sources }
     function deductFromInventory(franchiseId, order) {
         if (!franchiseId || !order || !order.items) return false;
         if (!global.DataStore) return false;
-        var catalog = DataStore.get('catalog_config');
-        if (!catalog) return false;
+        var catalog = DataStore.get('catalog_config') || {};
 
         var inventory = DataStore.getCollection('inventory', franchiseId) || [];
-        if (!inventory.length) return false;
+        if (!inventory.length) {
+            return { ok: true, deducted: false, warnings: ['Inventario vazio — nada a deduzir'], sources: {} };
+        }
 
-        // Indexa todos os items do catalogo por id, pra achar receitas
-        var itemsById = {};
-        function addGroup(g){ if(g && g.items) g.items.forEach(function(i){ itemsById[i.id] = i; }); }
+        // Indexa todos os items do catalogo legado por id, pra fallback
+        var legacyById = {};
+        function addGroup(g){ if(g && g.items) g.items.forEach(function(i){ legacyById[i.id] = i; }); }
         Object.keys(catalog.sabores || {}).forEach(function(k){ addGroup(catalog.sabores[k]); });
         Object.keys(catalog.adicionais || {}).forEach(function(k){ addGroup(catalog.adicionais[k]); });
-        (catalog.bebidas || []).forEach(function(i){ itemsById[i.id] = i; });
+        (catalog.bebidas || []).forEach(function(i){ legacyById[i.id] = i; });
 
         var workingInventory = inventory;
         var anyDeducted = false;
-        var warnings = [];  // itens que NÃO deduziram — UI pode alertar operador
+        var warnings = [];
+        var sources = { v2: 0, legacy: 0, 'legacy-name': 0, missing: 0 };
+
         (order.items || []).forEach(function(line){
-            var produto = itemsById[line.productId || line.id];
+            var produto = _resolveProduct(line.productId || line.id, line.name, franchiseId, legacyById);
             if (!produto) {
-                // Item buffet/por_peso/legado sem productId reconhecido
+                sources.missing++;
                 if (line.name) warnings.push('Item "' + line.name + '" sem produto vinculado — estoque NÃO deduzido');
                 return;
             }
+            sources[produto._source || 'legacy']++;
+
             if (!hasRecipe(produto)) {
-                warnings.push('"' + (produto.name || produto.id) + '" sem receita configurada — estoque NÃO deduzido');
+                warnings.push('"' + (produto.name || produto.id) + '" sem receita (' + (produto._source||'?') + ') — estoque NÃO deduzido');
                 return;
             }
             var qtd = Number(line.quantity || line.qty || 1);
@@ -168,7 +212,7 @@
                 workingInventory = result.inventoryAtualizado;
                 anyDeducted = true;
             } else if (result && !result.ok) {
-                warnings.push('Falha ao deduzir "' + (produto.name || produto.id) + '": ' + (result.error || 'erro desconhecido'));
+                warnings.push('Falha ao deduzir "' + (produto.name || produto.id) + '": ' + (result.error || 'erro'));
                 console.warn('[Recipes] deduct falhou para', produto.id, result.error);
             }
         });
@@ -177,9 +221,7 @@
             DataStore.setCollection('inventory', franchiseId, workingInventory);
         }
 
-        // Retorna warnings pra caller (PDV / pedidos.html) poder mostrar toast
-        return { ok: true, deducted: anyDeducted, warnings: warnings };
-        return anyDeducted;
+        return { ok: true, deducted: anyDeducted, warnings: warnings, sources: sources };
     }
 
     global.Recipes = {
