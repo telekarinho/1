@@ -875,95 +875,113 @@ const Caixa = (function () {
             <textarea data-name="motivoForaHorario" placeholder="Ex: shopping fechou cedo, sem movimento..." rows="2" style="width:100%;padding:8px;border:2px solid #FB8C00;border-radius:6px;font-family:inherit;font-size:13px"></textarea>
         ` : '';
 
-        // Helper inline pro template — gera linha esperado/contado
+        // Helper compacto — row densa de 1 linha (label + esperado inline + input)
+        // tooltip nativo do browser via title (sem ocupar linha vertical)
         function _row(name, icon, label, esperado, hint) {
+            const espStr = formatBRL(esperado);
+            const tipAttr = hint ? ' title="'+hint.replace(/"/g,'&quot;')+'"' : '';
             return ''+
-            '<div class="cv2-row" data-method-row="'+name+'" style="display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:6px">' +
-              '<div>' +
-                '<div style="font-weight:700;color:#1f2937;font-size:14px">'+icon+' '+label+'</div>' +
-                (hint ? '<div style="font-size:11px;color:#6b7280;margin-top:1px">'+hint+'</div>' : '') +
+            '<div class="cv2-row" data-method-row="'+name+'"'+tipAttr+' style="display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center;padding:5px 10px;background:#fff;border:1px solid #e5e7eb;border-radius:7px;margin-bottom:4px">' +
+              '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px;min-width:0">' +
+                '<span style="font-weight:700;color:#1f2937;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+icon+' '+label+'</span>' +
+                '<span style="font-size:11px;color:#6b7280;white-space:nowrap" data-esperado="'+name+'">esp '+espStr+'</span>' +
               '</div>' +
-              '<div style="text-align:right">' +
-                '<div style="font-size:11px;color:#6b7280">Esperado</div>' +
-                '<div style="font-weight:700;color:#374151;font-size:14px" data-esperado="'+name+'">'+formatBRL(esperado)+'</div>' +
-              '</div>' +
-              '<div style="text-align:right">' +
+              '<div style="position:relative">' +
                 '<input type="text" class="caixa-brl cv2-input" data-caixa-brl data-name="conf_'+name+'" inputmode="numeric" '+
-                  'value="'+formatBRL(esperado)+'" '+
-                  'style="width:120px;padding:8px 10px;border:2px solid #d1d5db;border-radius:8px;font-weight:700;text-align:right;font-size:14px;background:#fff">' +
-                '<div data-diff="'+name+'" style="font-size:11px;font-weight:700;text-align:right;margin-top:2px;min-height:14px"></div>' +
+                  'value="'+espStr+'" '+
+                  'style="width:100%;padding:5px 8px;border:1.5px solid #d1d5db;border-radius:6px;font-weight:700;text-align:right;font-size:13px;background:#fff">' +
+                '<span data-diff="'+name+'" style="position:absolute;right:8px;top:100%;font-size:10px;font-weight:700;line-height:1;margin-top:1px;white-space:nowrap"></span>' +
               '</div>' +
             '</div>';
         }
 
-        const html = `
-            <div class="caixa-modal cv2-modal" role="dialog" aria-label="Fechar caixa" style="max-width:560px">
+        // === Estilos pra max-height + scroll garantidos ===
+        // Modal preenche no maximo 92vh; body interno scrolla.
+        // Em telas >= 720px: 2 colunas (cartoes/PIX | dinheiro/totais)
+        const cv2Style = ''+
+          '<style>' +
+            '.cv2-modal{max-width:760px!important;max-height:92vh;display:flex;flex-direction:column}' +
+            '.cv2-modal .caixa-modal-body{padding:10px 12px!important;background:#f9fafb;overflow-y:auto;flex:1;min-height:0}' +
+            '.cv2-modal .caixa-modal-header{padding:8px 14px!important}' +
+            '.cv2-modal .caixa-modal-header h3{font-size:15px!important;margin:0!important}' +
+            '.cv2-modal .caixa-modal-footer{padding:8px 12px!important;flex-shrink:0}' +
+            '.cv2-modal .cv2-section-title{font-weight:700;color:#374151;margin:6px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.4px}' +
+            '.cv2-modal .cv2-grid{display:grid;grid-template-columns:1fr;gap:10px}' +
+            '@media(min-width:720px){.cv2-modal .cv2-grid{grid-template-columns:1fr 1fr;gap:12px}}' +
+          '</style>';
+
+        const html = `${cv2Style}
+            <div class="caixa-modal cv2-modal" role="dialog" aria-label="Fechar caixa">
               <div class="caixa-modal-header" style="background:linear-gradient(135deg,#DC2626,#F59E0B)">
                 <h3>🔒 Fechar caixa · conferência</h3>
                 <button class="caixa-modal-close" data-caixa-close aria-label="Fechar">✕</button>
               </div>
-              <div class="caixa-modal-body" style="padding:14px 16px;background:#f9fafb">
+              <div class="caixa-modal-body">
 
                 ${pollutedHtml}
 
-                <div style="font-weight:700;color:#374151;margin-bottom:6px;font-size:13px">💳 Maquininhas — confira o Z relatório</div>
-                ${_row('credito_m1', '💳', 'Crédito · Maquininha 1', espCredito, 'Default = total cred. esperado. Edite por maquina')}
-                ${_row('credito_m2', '💳', 'Crédito · Maquininha 2', 0,         'Se tem 2ª maquineta, divida o valor')}
-                ${_row('debito_m1',  '💳', 'Débito · Maquininha 1',  espDebito,  'Default = total déb. esperado. Edite por maquina')}
-                ${_row('debito_m2',  '💳', 'Débito · Maquininha 2',  0,          'Se tem 2ª maquineta, divida o valor')}
+                <div class="cv2-grid">
+                  <!-- COLUNA 1: maquininhas + PIX -->
+                  <div>
+                    <div class="cv2-section-title">💳 Maquininhas (Z relatório)</div>
+                    ${_row('credito_m1', '💳', 'Crédito M1', espCredito, 'Maquineta 1 - default = total esperado de credito')}
+                    ${_row('credito_m2', '💳', 'Crédito M2', 0,         'Se tem 2 maquinetas, divida o valor de credito')}
+                    ${_row('debito_m1',  '💳', 'Débito M1',  espDebito,  'Maquineta 1 - default = total esperado de debito')}
+                    ${_row('debito_m2',  '💳', 'Débito M2',  0,          'Se tem 2 maquinetas, divida o valor de debito')}
 
-                <div style="font-weight:700;color:#374151;margin:10px 0 6px;font-size:13px">⚡ PIX <small style="color:#6b7280;font-weight:400">(divida entre as 3 fontes — soma deve bater com o esperado)</small></div>
-                ${_row('pix_m1',     '⚡', 'PIX · Maquininha 1',          espPix, 'Pode vir junto da maquineta de cartão')}
-                ${_row('pix_m2',     '⚡', 'PIX · Maquininha 2',          0,      'Se a 2ª maquineta também processa PIX')}
-                ${_row('pix_direto', '⚡', 'PIX direto (extrato banco)',  0,      'PIX recebido na conta sem maquininha')}
+                    <div class="cv2-section-title" style="margin-top:8px">⚡ PIX (soma das 3 = esperado)</div>
+                    ${_row('pix_m1',     '⚡', 'PIX M1',     espPix, 'PIX recebido pela maquineta 1')}
+                    ${_row('pix_m2',     '⚡', 'PIX M2',     0,      'PIX recebido pela maquineta 2')}
+                    ${_row('pix_direto', '⚡', 'PIX banco',  0,      'PIX direto na conta sem passar pela maquineta')}
+                  </div>
 
-                <div style="font-weight:700;color:#374151;margin:10px 0 6px;font-size:13px">💵 Dinheiro físico</div>
-                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:6px">
-                  <div style="display:grid;grid-template-columns:1fr 130px;gap:8px;align-items:center;margin-bottom:8px">
-                    <label style="font-size:13px;color:#374151;margin:0">Total contado na gaveta</label>
-                    <input type="text" class="caixa-brl" data-caixa-brl data-name="dinheiro_total" inputmode="numeric" placeholder="R$ 0,00"
-                           style="padding:8px 10px;border:2px solid #d1d5db;border-radius:8px;font-weight:700;text-align:right;font-size:14px">
-                  </div>
-                  <div style="display:grid;grid-template-columns:1fr 130px;gap:8px;align-items:center;margin-bottom:8px">
-                    <label style="font-size:13px;color:#374151;margin:0">− Troco que vai sair (próximo turno)</label>
-                    <input type="text" class="caixa-brl" data-caixa-brl data-name="dinheiro_troco" inputmode="numeric" placeholder="R$ 0,00"
-                           style="padding:8px 10px;border:2px solid #d1d5db;border-radius:8px;font-weight:700;text-align:right;font-size:14px">
-                  </div>
-                  <hr style="border:none;border-top:1px dashed #d1d5db;margin:6px 0">
-                  <div style="display:grid;grid-template-columns:1fr 130px;gap:8px;align-items:center;font-size:13px">
-                    <div style="color:#6b7280">
-                      <div>Esperado em dinheiro do dia:</div>
-                      <div style="font-size:11px;margin-top:1px">(abertura + vendas dinheiro − sangrias + reforços)</div>
+                  <!-- COLUNA 2: dinheiro + totais -->
+                  <div>
+                    <div class="cv2-section-title">💵 Dinheiro físico</div>
+                    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:7px;padding:8px 10px;margin-bottom:6px">
+                      <div style="display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center;margin-bottom:5px">
+                        <label style="font-size:12px;color:#374151;margin:0">Total contado</label>
+                        <input type="text" class="caixa-brl" data-caixa-brl data-name="dinheiro_total" inputmode="numeric" placeholder="R$ 0,00"
+                               style="padding:5px 8px;border:1.5px solid #d1d5db;border-radius:6px;font-weight:700;text-align:right;font-size:13px">
+                      </div>
+                      <div style="display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center">
+                        <label style="font-size:12px;color:#374151;margin:0" title="Troco para começar o próximo turno">− Troco próx. turno</label>
+                        <input type="text" class="caixa-brl" data-caixa-brl data-name="dinheiro_troco" inputmode="numeric" placeholder="R$ 0,00"
+                               style="padding:5px 8px;border:1.5px solid #d1d5db;border-radius:6px;font-weight:700;text-align:right;font-size:13px">
+                      </div>
+                      <hr style="border:none;border-top:1px dashed #d1d5db;margin:5px 0">
+                      <div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280">
+                        <span title="Abertura + vendas em dinheiro − sangrias + reforços">Esperado dinheiro:</span>
+                        <strong style="color:#1B5E20" data-esperado-dinheiro>${formatBRL(saldoEsperadoDinheiro)}</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-top:3px">
+                        <span>Diferença:</span>
+                        <span data-diff-dinheiro>—</span>
+                      </div>
                     </div>
-                    <div style="text-align:right;font-weight:800;color:#1B5E20" data-esperado-dinheiro>${formatBRL(saldoEsperadoDinheiro)}</div>
+
+                    <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:7px;padding:8px 10px;margin-bottom:6px">
+                      <div style="display:flex;justify-content:space-between;font-size:12px"><span>Faturado (sistema)</span><strong>${formatBRL(st.faturamentoBruto)}</strong></div>
+                      <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:2px"><span>Conferido (você)</span><strong data-total-conferido>${formatBRL(0)}</strong></div>
+                      <hr style="border:none;border-top:1px dashed #C7D2FE;margin:4px 0">
+                      <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:800"><span>Diferença total:</span><span data-diff-total style="color:#1B5E20">—</span></div>
+                    </div>
+
+                    <div data-justify-wrap style="display:none">
+                      <label style="font-size:12px;color:#92400E;font-weight:700;display:block;margin-bottom:3px">⚠️ Justificativa (diff &gt; R$ 5)</label>
+                      <textarea data-name="motivo" placeholder="Ex: troco a mais, erro digitação..." rows="2"
+                                style="width:100%;padding:6px;border:1.5px solid #F59E0B;border-radius:6px;font-family:inherit;font-size:12px;resize:vertical"></textarea>
+                    </div>
+
+                    ${offHoursCloseWarning}
+
+                    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:7px;padding:6px 8px;font-size:11px;color:#6b7280;margin-top:6px" title="Email enviado para: milkypot.com@gmail.com, jocimarrodrigo@gmail.com, joseanemse@gmail.com">
+                      📧 Ao fechar: relatório → 3 emails da gestão
+                    </div>
                   </div>
-                  <div style="display:grid;grid-template-columns:1fr 130px;gap:8px;align-items:center;margin-top:6px;font-size:13px">
-                    <div style="color:#374151;font-weight:700">Diferença em dinheiro:</div>
-                    <div data-diff-dinheiro style="text-align:right;font-weight:800">—</div>
-                  </div>
                 </div>
 
-                <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:10px;padding:10px 12px;margin-top:8px">
-                  <div style="display:flex;justify-content:space-between;font-size:13px"><span>Total faturado (sistema)</span><strong>${formatBRL(st.faturamentoBruto)}</strong></div>
-                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:2px"><span>Total conferido (você)</span><strong data-total-conferido>${formatBRL(0)}</strong></div>
-                  <hr style="border:none;border-top:1px dashed #C7D2FE;margin:6px 0">
-                  <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800"><span>Diferença total:</span><span data-diff-total style="color:#1B5E20">—</span></div>
-                </div>
-
-                <div data-justify-wrap style="display:none;margin-top:10px">
-                  <label style="font-size:13px;color:#92400E;font-weight:700">⚠️ Justificativa (obrigatória — diferença &gt; R$ 5)</label>
-                  <textarea data-name="motivo" placeholder="Ex: troco dado a mais, erro de digitação, falta de R$ X..." rows="2"
-                            style="width:100%;padding:8px;border:2px solid #F59E0B;border-radius:6px;font-family:inherit;font-size:13px"></textarea>
-                </div>
-
-                ${offHoursCloseWarning}
-
-                <div style="margin-top:10px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px;font-size:12px;color:#6b7280">
-                  📧 Ao fechar, o relatório é enviado para:<br>
-                  <strong style="color:#374151">milkypot.com@gmail.com · jocimarrodrigo@gmail.com · joseanemse@gmail.com</strong>
-                </div>
-
-                <div class="caixa-danger" data-caixa-error style="display:none;margin-top:8px"></div>
+                <div class="caixa-danger" data-caixa-error style="display:none;margin-top:6px;font-size:12px"></div>
               </div>
               <div class="caixa-modal-footer">
                 <button class="caixa-btn-secondary" data-caixa-close>Cancelar</button>
