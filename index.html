@@ -921,7 +921,41 @@
         </div>
     </footer>
 
-    <!-- Cart Sidebar -->
+    <!-- Cart Sidebar — CSS mobile-first sincronizado com cardapio.html -->
+    <style>
+      /* Sticky cart bar (rodape mobile / floating desktop) */
+      .sticky-cart-bar{position:fixed;left:0;right:0;bottom:0;z-index:990;background:#fff;border-top:1px solid #e5e7eb;box-shadow:0 -10px 30px -10px rgba(0,0,0,.18);padding:10px 14px;display:flex;align-items:center;gap:10px;animation:scbSlideUp .3s ease}
+      @keyframes scbSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+      .sticky-cart-info{display:flex;align-items:center;gap:8px;color:#374151;font-weight:600;font-size:13px;flex-shrink:0}
+      .sticky-cart-icon{font-size:22px}
+      .sticky-cart-btn{flex:1;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:14px 16px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(16,185,129,.35);transition:transform .12s}
+      .sticky-cart-btn:active{transform:scale(.97)}
+      .sticky-cart-btn strong{font-size:16px}
+      @media (min-width:768px){.sticky-cart-bar{max-width:480px;left:auto;right:16px;bottom:16px;border-radius:16px;border-top:0;padding:12px 14px}}
+      body.has-cart-bar{padding-bottom:80px}
+
+      /* Esconder sticky bar quando carrinho aberto */
+      body.cart-open .sticky-cart-bar{display:none!important}
+
+      /* CART SIDEBAR — full-screen mobile, 480px floating desktop */
+      .cart-sidebar{position:fixed;top:0;right:0;bottom:0;width:100%;max-width:480px;background:#fff;z-index:1100;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(0,0,0,.15)}
+      .cart-sidebar.open{transform:translateX(0)}
+      .cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1099;opacity:0;pointer-events:none;transition:opacity .25s}
+      .cart-overlay.open{opacity:1;pointer-events:auto}
+      .cart-header{padding:16px 18px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:linear-gradient(135deg,#7B1FA2,#E91E63);color:#fff}
+      .cart-header h3{margin:0;font-size:18px;font-weight:800}
+      .cart-close{background:rgba(255,255,255,.25);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:22px;line-height:1;display:flex;align-items:center;justify-content:center;font-weight:700}
+      .cart-close:hover{background:rgba(255,255,255,.4)}
+      .cart-items{flex:1;overflow-y:auto;padding:8px 12px;background:#f9fafb}
+      .cart-empty{text-align:center;padding:60px 20px;color:#9ca3af}
+      .cart-empty-icon{font-size:60px;display:block;margin-bottom:12px;opacity:.5}
+      .cart-footer{flex-shrink:0;padding:14px 16px;background:#fff;border-top:2px solid #e5e7eb;box-shadow:0 -8px 20px -8px rgba(0,0,0,.1)}
+      .cart-total{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:#374151;margin-bottom:10px}
+      .cart-total-value{font-size:22px;font-weight:900;color:#7B1FA2;letter-spacing:-.5px}
+      .btn-primary.btn-full{width:100%;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:16px;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,.35);transition:transform .12s}
+      .btn-primary.btn-full:hover{transform:translateY(-1px)}
+      .btn-primary.btn-full:active{transform:scale(.98)}
+    </style>
     <div class="cart-overlay" id="cartOverlay"></div>
     <div class="cart-sidebar" id="cartSidebar">
         <div class="cart-header">
@@ -1252,7 +1286,8 @@
             <span id="stickyCartText">0 itens</span>
         </div>
         <button class="sticky-cart-btn" onclick="openCart()">
-            Ver Carrinho — <strong id="stickyCartTotal">R$ 0,00</strong>
+            <span>🚀 Ver Carrinho</span>
+            <strong id="stickyCartTotal">R$ 0,00</strong>
         </button>
     </div>
 
@@ -1588,14 +1623,36 @@
                     '<strong>R$ ' + (typeof item.price === 'number' ? item.price.toFixed(2).replace('.', ',') : '—') + '</strong></div></div>';
             }
 
-            html += '<div class="sheet-footer">' +
-                '<div class="sheet-qty">' +
-                    '<button class="qty-btn" onclick="changeQty(-1)">−</button>' +
-                    '<span class="qty-value" id="sheetQty">1</span>' +
-                    '<button class="qty-btn" onclick="changeQty(1)">+</button>' +
+            // Adicionais escondidos por default em accordion (UX cardapio.html)
+            if (item.modoMontagem !== 'simples' && catalog.adicionais && catalog.adicionais.coberturas && catalog.adicionais.coberturas.items && catalog.adicionais.coberturas.items.length) {
+                var toppings = catalog.adicionais.coberturas.items;
+                html += '<details class="sheet-section" style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:0;margin-bottom:10px">' +
+                    '<summary style="padding:14px 16px;cursor:pointer;font-weight:700;font-size:14px;color:#374151;display:flex;align-items:center;justify-content:space-between;list-style:none">' +
+                      '<span>✨ Quer adicionar toppings?</span>' +
+                      '<span style="font-size:11px;color:#9ca3af;font-weight:500">' + toppings.length + ' opções • opcional</span>' +
+                    '</summary>' +
+                    '<div style="padding:0 16px 14px">';
+                toppings.slice(0, 5).forEach(function(ex) {
+                    html += '<label class="sheet-extra-item" onclick="toggleExtra(this)">' +
+                        '<span class="extra-emoji">' + (ex.emoji||'✨') + '</span>' +
+                        '<span class="extra-name">' + ex.name + '</span>' +
+                        '<span class="extra-price">+R$ ' + Number(ex.price||0).toFixed(2) + '</span>' +
+                        '<input type="checkbox" class="extra-check" data-id="' + ex.id + '" data-price="' + ex.price + '" data-name="' + ex.name + '" hidden>' +
+                        '<span class="extra-toggle"></span>' +
+                    '</label>';
+                });
+                html += '</div></details>';
+            }
+
+            html += '<div class="sheet-footer" style="position:sticky;bottom:0;background:#fff;padding:14px 16px;border-top:1px solid #e5e7eb;display:flex;gap:10px;align-items:center;box-shadow:0 -8px 16px -8px rgba(0,0,0,.08);z-index:10">' +
+                '<div class="sheet-qty" style="display:flex;align-items:center;gap:6px;background:#f3f4f6;border-radius:10px;padding:4px">' +
+                    '<button class="qty-btn" onclick="changeQty(-1)" style="width:32px;height:32px;border-radius:8px;border:none;background:#fff;font-size:18px;font-weight:700;cursor:pointer;color:#374151">−</button>' +
+                    '<span class="qty-value" id="sheetQty" style="min-width:24px;text-align:center;font-weight:700;font-size:15px">1</span>' +
+                    '<button class="qty-btn" onclick="changeQty(1)" style="width:32px;height:32px;border-radius:8px;border:none;background:#fff;font-size:18px;font-weight:700;cursor:pointer;color:#374151">+</button>' +
                 '</div>' +
-                '<button class="sheet-add-btn" id="sheetAddBtn" onclick="addToCart()">' +
-                    'Adicionar — <strong id="sheetTotal">R$ 0,00</strong>' +
+                '<button class="sheet-add-btn" id="sheetAddBtn" onclick="addToCart()" style="flex:1;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:14px 16px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,.3);display:flex;align-items:center;justify-content:center;gap:8px">' +
+                    '<span>✓ Adicionar</span>' +
+                    '<strong id="sheetTotal" style="font-size:16px">R$ 0,00</strong>' +
                 '</button>' +
                 '</div>';
 
@@ -1724,6 +1781,7 @@
 
             if (cart.length === 0) {
                 bar.style.display = 'none';
+                document.body.classList.remove('has-cart-bar');
                 return;
             }
 
@@ -1733,10 +1791,98 @@
             document.getElementById('stickyCartText').textContent = totalItems + (totalItems === 1 ? ' item' : ' itens');
             document.getElementById('stickyCartTotal').textContent = 'R$ ' + totalPrice.toFixed(2).replace('.', ',');
             bar.style.display = 'flex';
+            document.body.classList.add('has-cart-bar');
+            // Se sidebar do carrinho aberto, refresh items
+            var sb = document.getElementById('cartSidebar');
+            if (sb && sb.classList.contains('open') && typeof renderCartItems === 'function') {
+                renderCartItems();
+            }
         }
 
+        // === Sidebar do carrinho — funcoes que estavam faltando ===
+        // Mesmas funcoes que cardapio.html agora tem (mantem sincronizado).
+        function _readCartLocal() {
+            try { return JSON.parse(localStorage.getItem('milkypot_cart') || '[]'); }
+            catch(_) { return []; }
+        }
+        function _cartTotalLocal(items) {
+            return items.reduce(function(s,i){ return s + Number(i.total||i.price||0); }, 0);
+        }
+        function _fmtBRLLocal(v) { return 'R$ ' + Number(v||0).toFixed(2).replace('.', ','); }
+
+        function renderCartItems() {
+            var items = _readCartLocal();
+            var box   = document.getElementById('cartItems');
+            var foot  = document.getElementById('cartFooter');
+            var totEl = document.getElementById('cartTotal');
+            if (!box) return;
+            if (!items.length) {
+                box.innerHTML = '<div class="cart-empty"><span class="cart-empty-icon">🛒</span>' +
+                                '<p>Seu carrinho está vazio</p><small>Adicione produtos deliciosos!</small></div>';
+                if (foot) foot.style.display = 'none';
+                return;
+            }
+            var html = '';
+            items.forEach(function(it, idx) {
+                var sz  = it.size  ? (' <small style="color:#666">'+it.size+'</small>')  : '';
+                var sub = it.sabor ? ('<div style="font-size:12px;color:#666;margin-top:2px">'+it.sabor+'</div>') : '';
+                var ext = (it.extras && it.extras.length) ? '<div style="font-size:11px;color:#888;margin-top:2px">+ ' + it.extras.map(function(e){return e.name||e}).join(', ') + '</div>' : '';
+                html += '<div style="background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border:1px solid #e5e7eb">' +
+                          '<div style="flex:1;min-width:0">' +
+                            '<div style="font-weight:700;font-size:14px;color:#111">'+(it.emoji||'')+' '+(it.name||'Produto')+sz+'</div>' +
+                            sub + ext +
+                            '<div style="font-size:11px;color:#999;margin-top:3px">qtd '+(it.qty||1)+' · '+_fmtBRLLocal(it.unitPrice||(it.total/(it.qty||1)))+' un</div>' +
+                          '</div>' +
+                          '<div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">' +
+                            '<strong style="color:#7B1FA2">'+_fmtBRLLocal(it.total||it.price)+'</strong>' +
+                            '<button onclick="removeCartItem('+idx+')" style="background:none;border:none;color:#DC2626;cursor:pointer;font-size:16px;padding:2px 6px" title="Remover">✕</button>' +
+                          '</div>' +
+                        '</div>';
+            });
+            box.innerHTML = html;
+            if (totEl) totEl.textContent = _fmtBRLLocal(_cartTotalLocal(items));
+            if (foot) foot.style.display = 'block';
+        }
+
+        window.removeCartItem = function(idx) {
+            var items = _readCartLocal();
+            items.splice(idx, 1);
+            localStorage.setItem('milkypot_cart', JSON.stringify(items));
+            window.cart = items;
+            if (typeof updateStickyCart === 'function') updateStickyCart();
+            if (typeof updateCartBadge === 'function') updateCartBadge();
+            renderCartItems();
+        };
+
+        window.openCartSidebar = function() {
+            var sb = document.getElementById('cartSidebar');
+            var ov = document.getElementById('cartOverlay');
+            if (!sb) return;
+            renderCartItems();
+            sb.classList.add('open');
+            if (ov) ov.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            // CRITICAL: esconde sticky cart bar quando carrinho abre
+            document.body.classList.add('cart-open');
+        };
+        window.closeCartSidebar = function() {
+            var sb = document.getElementById('cartSidebar');
+            var ov = document.getElementById('cartOverlay');
+            if (sb) sb.classList.remove('open');
+            if (ov) ov.classList.remove('open');
+            document.body.style.overflow = '';
+            document.body.classList.remove('cart-open');
+        };
+        // Wire close button + overlay click (uma unica vez)
+        (function wireCart(){
+            var btn = document.getElementById('cartClose');
+            if (btn && !btn.__wired) { btn.addEventListener('click', closeCartSidebar); btn.__wired = true; }
+            var ov = document.getElementById('cartOverlay');
+            if (ov && !ov.__wired) { ov.addEventListener('click', closeCartSidebar); ov.__wired = true; }
+        })();
+
         window.openCart = function() {
-            if (typeof openCartSidebar === 'function') openCartSidebar();
+            window.openCartSidebar();
         };
 
         function showToast(msg) {
