@@ -1601,6 +1601,14 @@
                 var btn = document.getElementById('btnToDelivery');
                 btn.disabled = false;
                 btn.textContent = 'Continuar →';
+            } else {
+                // Auto-select se ha SO 1 loja aberta — UX cliente
+                var openStores = (CHECKOUT_STORES || []).filter(function(s){ return s.open !== false; });
+                if (openStores.length === 1) {
+                    setTimeout(function(){
+                        if (typeof window.selectCheckoutStore === 'function') window.selectCheckoutStore(openStores[0].id);
+                    }, 60);
+                }
             }
         }
         if (step === 4) {
@@ -1636,7 +1644,21 @@
             if (btn) { btn.disabled = true; btn.textContent = 'Escolha uma loja'; }
             document.getElementById('checkoutSelectedStore').style.display = 'none';
         }
+        // Esconde sticky-cart-bar enquanto checkout aberto + fecha sidebar
+        document.body.classList.add('cart-open');
+        if (typeof window.closeCartSidebar === 'function') window.closeCartSidebar();
+        setTimeout(function(){ document.body.classList.add('cart-open'); }, 10);
         if (typeof originalOpenCheckout === 'function') originalOpenCheckout();
+    };
+    var originalCloseCheckout = window.closeCheckout;
+    window.closeCheckout = function() {
+        document.body.classList.remove('cart-open');
+        if (typeof originalCloseCheckout === 'function') {
+            originalCloseCheckout();
+        } else {
+            var m = document.getElementById('checkoutModal');
+            if (m) m.classList.remove('active');
+        }
     };
 })();
 </script>

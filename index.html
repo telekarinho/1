@@ -2064,6 +2064,19 @@
                 var btn = document.getElementById('btnToDelivery');
                 btn.disabled = false;
                 btn.textContent = 'Continuar →';
+            } else {
+                // UX FIX (cliente: 'na segunda etapa esconde o botao e nao
+                // continua'): se SO TEM 1 loja aberta, auto-seleciona ela
+                // pra o botao 'Continuar' ja ficar habilitado. Multi-loja
+                // continua exigindo click manual.
+                var openStores = (CHECKOUT_STORES || []).filter(function(s){ return s.open !== false; });
+                if (openStores.length === 1) {
+                    setTimeout(function(){
+                        if (typeof window.selectCheckoutStore === 'function') {
+                            window.selectCheckoutStore(openStores[0].id);
+                        }
+                    }, 60);
+                }
             }
         }
 
@@ -2126,8 +2139,27 @@
             }
             document.getElementById('checkoutSelectedStore').style.display = 'none';
         }
+        // Esconde sticky-cart-bar enquanto checkout esta aberto pra
+        // nao cobrir o botao 'Continuar' nas etapas (cliente reportou
+        // 'na segunda etapa esconde o botao').
+        document.body.classList.add('cart-open');
+        // Tambem fecha o sidebar do carrinho se estiver aberto
+        if (typeof window.closeCartSidebar === 'function') window.closeCartSidebar();
+        // re-adiciona cart-open depois de closeCartSidebar (que remove)
+        setTimeout(function(){ document.body.classList.add('cart-open'); }, 10);
         if (typeof originalOpenCheckout === 'function') {
             originalOpenCheckout();
+        }
+    };
+    // Quando checkout fecha, remove a class
+    var originalCloseCheckout = window.closeCheckout;
+    window.closeCheckout = function() {
+        document.body.classList.remove('cart-open');
+        if (typeof originalCloseCheckout === 'function') {
+            originalCloseCheckout();
+        } else {
+            var m = document.getElementById('checkoutModal');
+            if (m) m.classList.remove('active');
         }
     };
 })();
