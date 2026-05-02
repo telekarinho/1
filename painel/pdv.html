@@ -2954,6 +2954,10 @@
         var key = todayLocalKey();
         return all.filter(function(o){
             if(!o || !o.createdAt) return false;
+            // Pedidos deletados/excluidos NAO contam no faturamento do dia.
+            // Sem esse filtro, pedido seed_demo apagado hoje vazava pro chip
+            // de faturamento e o operador via valores que nao batiam com o caixa.
+            if (o.deleted || o.status === 'excluido') return false;
             var d = new Date(o.createdAt);
             if(isNaN(d.getTime())) return false;
             var off = d.getTimezoneOffset() * 60000;
