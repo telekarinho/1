@@ -208,3 +208,50 @@ A TheBest inaugurou seu **primeiro quiosque em shopping** no Shopping Aurora, Lo
 ---
 
 *Atualizado por Belinha — Ciclo #84 — 2026-05-01*
+
+---
+
+## Monitoramento (Ciclo #94 — 2026-05-02)
+
+**Fontes:** exame.com, portaldofranchising.com.br, mercadoeconsumo.com.br, onortao.com.br, braziljournal.com, WebSearch cross-referência.
+
+### Status das ameaças ao Muffato
+
+- **✅ CONFIRMADO — Sem TheBest no Muffato (Quintino Bocaiuva):** nenhuma nova unidade detectada no raio 1km. Alerta "Cerro Azul frente ao Muffato" de ciclos anteriores **não confirmada** em Londrina — provavelmente outra cidade. **Gap de localização MilkyPot mantido.**
+- **Unidades Londrina mantidas (ciclo #94):** Gleba Palhano / San Conrado / Rua Pio XII / Arthur Thomas 831 / Shopping Aurora (quiosque). Total: 5 + 1 quiosque. Sem nova unidade em Londrina detectada.
+
+### Novidades de escala nacional
+
+| Indicador | Ciclo #84 | Ciclo #94 (atualizado) |
+|-----------|-----------|------------------------|
+| Unidades ativas | ~1.012 | **1.100+** |
+| Meta 2026 | 2.000 até 2027 | **1.500 até dez/2026** (ajustada + quiosques adicionais) |
+| Faturamento 2025 realizado | R$1,1 bilhão | **~R$2 bilhões (acumulado últimos anos); meta 2026: R$1,5B** |
+| Quiosques shoppings | piloto Shopping Aurora | **300–500 em rollout nacional** |
+| EUA | 4 lojas Flórida previstas 1H2026 | **4 lojas FL confirmadas — 2 próprias + 2 franqueados brasileiros** |
+
+### Novidades estratégicas (ciclo #94)
+
+- **Segunda fábrica em construção:** R$35M investidos pela Auster Capital para nova planta Amadelli. Objetivo: suportar ritmo de 1.500 unidades ativas + internacionalização.
+- **Investimento PE:** R$80M da Auster Capital (confirmado) — primeiro aporte externo da rede. Sinaliza profissionalização e aceleração.
+- **Meta quiosque explícita 2026:** pelo menos um quiosque em cada grande shopping do país. Risco de chegada ao Muffato (Londrina) aumenta com rollout 300–500 unidades de quiosque.
+- **Investimento franquia convencional:** ~R$350k (vs R$150k quiosque) — payback 16–18 meses.
+
+### Alertas Estratégicos (Ciclo #94)
+
+1. **Meta 1.500 até dez/2026 + 300–500 quiosques = ameaça crescente ao Muffato.** Com rollout de quiosques acelerado pela segunda fábrica e capital PE, a probabilidade de ocupação do Muffato é mais alta do que em ciclos anteriores.
+2. **Gap Muffato mantido por ora, mas janela de exclusividade MilkyPot é finita.** MilkyPot deve consolidar base de clientes fidelidade e memória de marca ANTES da chegada de um quiosque TheBest no mesmo prédio.
+3. **Táticas recomendadas (comunicação MilkyPot):** reforçar "aqui é sua sobremesa personalizada" vs "lá é self-service no quilo" — sem nomear TheBest. Campanha "Potinho não tem balança" é diferenciação direta ao modelo self-service.
+4. **Novo factory = preços estáveis TheBest:** segunda fábrica reduz custo por kg de açaí. Nenhuma guerra de preços esperada, mas TheBest pode subsidiar entrada em novos formatos.
+
+- [x] Muffato gap verificado (ciclo #94) — ✅ mantido
+- [x] Escala 1.100+ unidades documentada
+- [x] Meta 1.500 até dez/2026 documentada
+- [x] Segunda fábrica e capital PE registrados
+- [x] EUA confirmado (4 lojas FL 2026)
+- [ ] Verificar preço quiosque Shopping Aurora (pendente desde ciclo #84)
+- [ ] Monitorar chegada de quiosque TheBest ao Muffato (rever em ciclo ~99)
+
+---
+
+*Atualizado por Belinha — Ciclo #94 — 2026-05-02*

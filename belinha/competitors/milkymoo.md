@@ -208,3 +208,66 @@ A MilkyMoo lançou dois ovos de Páscoa para 2026:
 ---
 
 _Última atualização: ciclo #84 — 2026-05-01_
+
+---
+
+## Atualização Ciclo #94 — 2026-05-02
+
+**Fontes:** exame.com, portaldofranchising.com.br, foodbizbrasil.com, portalg.com.br, mapadasfranquias.com.br, sopacultural.com, WebSearch cross-referência.
+
+### 🆕 Novo Formato — Milky Moo Festa (unidade móvel 2026)
+
+A MilkyMoo lançou em 2026 o **Milky Moo Festa**, modelo de operação móvel para eventos e celebrações.
+
+| Característica | Detalhe |
+|---|---|
+| Formato | Estrutura compacta, transporte fácil, produção no local |
+| Investimento inicial | A partir de R$ 200.000 |
+| Público-alvo | Aniversários, casamentos, corporativos, eventos temporários, ativações de marca |
+| Cidades mapeadas | 1.352 com potencial para o formato |
+| Oportunidades mapeadas | 1.745 operações identificadas no Brasil |
+| Meta 2026 | 1.500 unidades tradicionais + 1.500 franquias Festa |
+
+**Análise estratégica:**
+- Milky Moo Festa não compete diretamente com MilkyPot no ponto físico do Muffato — é formato de evento.
+- **Risco indireto:** franqueados de Londrina com unidade móvel podem atender eventos locais que MilkyPot poderia capturar (aniversários, formaturas, eventos corporativos no polo Muffato).
+- **Oportunidade MilkyPot:** criar pacote de "Potinho para Eventos" (quiosque temporário ou entrega em lote para aniversários) como resposta ao posicionamento Festa da MilkyMoo.
+
+### 🆕 Milky Moo Day — Aniversário de 4 Anos
+
+- Promoção: compre 1 milkshake 500ml e ganhe 1 de 300ml grátis (válido em todas as unidades)
+- Restrições: não válido para alcoólicos, premium, nem delivery em apps
+- Impacto: gera fila e buzz em lojas físicas — benchmark para o aniversário de 1 ano MilkyPot (25/04/2027)
+
+### Status Londrina (ciclo #94)
+
+- **Unidades Londrina:** Catuaí + Boulevard — sem nova unidade detectada
+- **Dark stores iFood:** presença no iFood mantida — sem nova dark store confirmada em Londrina
+- **Milky Moo Festa Londrina:** nenhuma unidade móvel detectada ainda em Londrina — possível futuro
+- **Gap Muffato:** MilkyMoo **não tem** unidade no Muffato (Quintino Bocaiuva) — mantido
+
+### Escala Nacional (atualizado ciclo #94)
+
+| Indicador | Ciclo #73/#84 | Ciclo #94 |
+|---|---|---|
+| Faturamento | R$542M (2024) | **Em projeção: +50% → ~R$813M (2025/2026)** |
+| Unidades | 800+ | **Crescimento acelerado; meta 1.500 trad. + 1.500 Festa** |
+| Modelo novo | Dark stores | **Dark stores + Milky Moo Festa (móvel)** |
+
+### Alertas Estratégicos (Ciclo #94)
+
+1. **Milky Moo Festa = modelo event-first:** se chegarem a Londrina, MilkyPot perde oportunidades de eventos informais. Resposta: criar serviço de "potinho para festa" antes do modelo Festa chegar.
+2. **Aniversário benchmark:** Milky Moo Day (500ml + 300ml grátis) gerou tráfego de loja em todo o Brasil. MilkyPot deve planejar promoção de alto impacto para aniversário 1 ano (25/04/2027) já no próximo ciclo de conteúdo relevante.
+3. **Nenhuma nova pressão física em Londrina:** sem nova loja Catuaí/Boulevard/Muffato detectada. Status quo mantido — oportunidade de consolidar memória de marca antes da chegada deles.
+
+- [x] Milky Moo Festa documentado
+- [x] Milky Moo Day (aniversário) documentado
+- [x] Escala nacional atualizada
+- [x] Status Londrina verificado — gap Muffato mantido
+- [ ] Monitorar se Milky Moo Festa inicia operações em Londrina
+- [ ] Analisar ads Meta Ads Library @milkymoo_londrina (pendente desde ciclo #84)
+- [ ] Verificar se MilkyMoo lança linha sazonal inverno/junina 2026
+
+---
+
+_Última atualização: ciclo #94 — 2026-05-02_
