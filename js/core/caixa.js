@@ -375,16 +375,33 @@ const Caixa = (function () {
         // (operador deve finalizar manualmente ou via "Encerrar Dia").
         // Pedidos de DIAS ANTERIORES ja foram auto-finalizados acima.
         const pendingOrders = orders.filter(o => {
+            if (!o) return false;
+            if (o.deleted) return false;
             if (o.status === 'entregue' || o.status === 'cancelado') return false;
             if (o.status === 'aguardando_pagamento') return false;
             var lc = _localDateOf(o.createdAt);
-            if (lc && lc !== today) return false;
+            // BUG-FIX: pedidos sem createdAt (lc='') eram contados como
+            // pendentes — geralmente sao seeds antigos / lixo no localStorage.
+            // Agora ignoramos: se nao tem data, nao bloqueia o fechamento.
+            if (!lc) return false;
+            if (lc !== today) return false;
             return true;
         });
         if (pendingOrders.length > 0) {
+            // Lista os pedidos pendentes pra o operador identificar (ate 5)
+            const lista = pendingOrders.slice(0, 5).map(o => {
+                const seq = o.dailySeq ? '#' + o.dailySeq : '#' + String(o.id || '').slice(-6);
+                const cliente = (o.customer && o.customer.name) || 'Balcao';
+                const status = o.status || '?';
+                const valor = formatBRL(o.total || 0);
+                return '  • ' + seq + ' (' + status + ') · ' + cliente + ' · ' + valor;
+            }).join('\n');
+            const extra = pendingOrders.length > 5 ? '\n  ...e mais ' + (pendingOrders.length - 5) : '';
             return {
                 success: false,
-                error: `⚠️ Não é possível fechar o caixa. Existem ${pendingOrders.length} pedido(s) ativo(s) HOJE. Finalize ou cancele antes.`
+                error: '⚠️ ' + pendingOrders.length + ' pedido(s) pendente(s) HOJE bloqueando o fechamento:\n' + lista + extra +
+                       '\n\nVá em Pedidos (F9) e marque como Entregue ou Cancelado, depois feche o caixa.',
+                pendingOrders: pendingOrders.map(o => ({ id: o.id, dailySeq: o.dailySeq, status: o.status, total: o.total, customer: (o.customer || {}).name }))
             };
         }
 
@@ -924,10 +941,11 @@ const Caixa = (function () {
             '.cv2-card.editing .cv2-btn-ok{background:#fff;color:#10B981;opacity:.6}' +
             '.cv2-edit-area{margin-top:10px;padding-top:10px;border-top:1px dashed #F59E0B}' +
             '.cv2-edit-area input{width:100%;padding:10px 12px;border:2px solid #F59E0B;border-radius:8px;font-weight:800;text-align:right;font-size:18px;background:#fff}' +
-            '.cv2-diff-msg{margin-top:6px;font-size:13px;font-weight:700;text-align:center;padding:6px;border-radius:6px}' +
-            '.cv2-diff-ok{background:#ECFDF5;color:#065F46}' +
-            '.cv2-diff-faltou{background:#FEE2E2;color:#991B1B}' +
-            '.cv2-diff-sobrou{background:#DBEAFE;color:#1E40AF}' +
+            '.cv2-diff-msg{margin-top:8px;font-size:13px;font-weight:600;text-align:center;padding:8px 10px;border-radius:6px;line-height:1.4}' +
+            '.cv2-diff-ok{background:#ECFDF5;color:#065F46;border:1px solid #6EE7B7}' +
+            '.cv2-diff-pequena{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0}' +
+            '.cv2-diff-faltou{background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5}' +
+            '.cv2-diff-sobrou{background:#FFEDD5;color:#9A3412;border:1px solid #FDBA74}' +
             '.cv2-card.ok .cv2-card-status::before{content:"✓ confere";font-size:11px;font-weight:800;color:#065F46;background:#A7F3D0;padding:3px 8px;border-radius:99px}' +
             '.cv2-card.editing .cv2-card-status::before{content:"✏️ ajustando";font-size:11px;font-weight:800;color:#92400E;background:#FDE68A;padding:3px 8px;border-radius:99px}' +
             '.cv2-card .cv2-card-status::before{content:"⚠ confira";font-size:11px;font-weight:800;color:#92400E;background:#FEF3C7;padding:3px 8px;border-radius:99px}' +
@@ -1260,10 +1278,22 @@ const Caixa = (function () {
             const msgEl = overlay.querySelector('[data-diff-msg="'+key+'"]');
             if (msgEl) {
                 msgEl.style.display = 'block';
-                msgEl.classList.remove('cv2-diff-ok','cv2-diff-faltou','cv2-diff-sobrou');
-                if (Math.abs(d) < 0.01) { msgEl.textContent = '✓ Bateu certinho ('+formatBRL(v)+')'; msgEl.classList.add('cv2-diff-ok'); }
-                else if (d < 0) { msgEl.textContent = '⚠ Faltou ' + formatBRL(Math.abs(d)) + ' (total ' + formatBRL(v) + ')'; msgEl.classList.add('cv2-diff-faltou'); }
-                else { msgEl.textContent = '+ Sobrou ' + formatBRL(d) + ' (total ' + formatBRL(v) + ')'; msgEl.classList.add('cv2-diff-sobrou'); }
+                msgEl.classList.remove('cv2-diff-ok','cv2-diff-faltou','cv2-diff-sobrou','cv2-diff-pequena');
+                const absD = Math.abs(d);
+                if (absD < 0.01) {
+                    msgEl.innerHTML = '✓ <strong>Bateu certinho</strong> — pode fechar caixa';
+                    msgEl.classList.add('cv2-diff-ok');
+                } else if (absD <= 5) {
+                    // Diff pequena (até R$5): aceitavel sem justificativa, fecha normal
+                    const lbl = d > 0 ? 'Sobrou' : 'Faltou';
+                    msgEl.innerHTML = '<strong>' + lbl + ' ' + formatBRL(absD) + '</strong> — diferença pequena, ok pode fechar (sistema lança como ajuste)';
+                    msgEl.classList.add('cv2-diff-pequena');
+                } else {
+                    // Diff grande (>R$5): obrigatorio justificar
+                    const lbl = d > 0 ? 'Sobrou' : 'Faltou';
+                    msgEl.innerHTML = '⚠️ <strong>' + lbl + ' ' + formatBRL(absD) + '</strong> — explique o motivo no campo amarelo abaixo pra poder fechar';
+                    msgEl.classList.add(d < 0 ? 'cv2-diff-faltou' : 'cv2-diff-sobrou');
+                }
             }
             _setProgress();
         }
@@ -1303,7 +1333,14 @@ const Caixa = (function () {
 
     function _err(modal, msg) {
         const err = modal.overlay.querySelector('[data-caixa-error]');
-        if (err) { err.textContent = msg; err.style.display = 'block'; }
+        if (err) {
+            // Preserva quebras de linha (\n) na mensagem usando <br>
+            err.innerHTML = String(msg).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
+            err.style.display = 'block';
+            err.style.whiteSpace = 'pre-wrap';
+            // Scroll pro erro pra o operador ver
+            try { err.scrollIntoView({behavior:'smooth', block:'center'}); } catch(_){}
+        }
         return false;
     }
 
