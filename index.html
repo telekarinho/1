@@ -1014,12 +1014,12 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Telefone</label>
-                        <input type="tel" id="checkoutPhone" placeholder="(11) 99999-9999" required>
+                        <label>WhatsApp <small style="color:#10B981;font-weight:600">(obrigatório)</small></label>
+                        <input type="tel" id="checkoutPhone" placeholder="(43) 99999-9999" maxlength="15" inputmode="numeric" required oninput="window._maskPhoneInput && window._maskPhoneInput(this)">
                     </div>
                     <div class="form-group">
-                        <label>CPF</label>
-                        <input type="text" id="checkoutCpf" placeholder="000.000.000-00">
+                        <label>CPF <small style="color:#9ca3af;font-weight:500">(opcional — pra nota fiscal)</small></label>
+                        <input type="text" id="checkoutCpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" oninput="window._maskCpfInput && window._maskCpfInput(this)">
                     </div>
                 </div>
                 <button class="btn-primary btn-full" onclick="nextCheckoutStep(2)">Continuar →</button>
@@ -1901,6 +1901,34 @@
                 setTimeout(function() { toast.remove(); }, 300);
             }, 2000);
         }
+
+        // === Mascaras dos inputs do checkout — UX 'crianca de 5 anos' ===
+        // Telefone: (XX) XXXXX-XXXX (celular brasileiro 11 digitos) ou
+        //           (XX) XXXX-XXXX (fixo 10 digitos)
+        // CPF:      XXX.XXX.XXX-XX
+        window._maskPhoneInput = function(input) {
+            var d = (input.value || '').replace(/\D/g, '').slice(0, 11);
+            var f = '';
+            if (d.length > 0) f = '(' + d.slice(0, 2);
+            if (d.length >= 2) f = '(' + d.slice(0, 2) + ')';
+            if (d.length > 2) f += ' ' + d.slice(2, 7);
+            // Hifen na posicao certa: 5 digitos pos-DDD = celular (-)4
+            //                         4 digitos pos-DDD = fixo (-)4
+            if (d.length > 6 && d.length <= 10) {
+                f = '(' + d.slice(0,2) + ') ' + d.slice(2,6) + '-' + d.slice(6,10);
+            } else if (d.length > 7) {
+                f = '(' + d.slice(0,2) + ') ' + d.slice(2,7) + '-' + d.slice(7,11);
+            }
+            input.value = f;
+        };
+        window._maskCpfInput = function(input) {
+            var d = (input.value || '').replace(/\D/g, '').slice(0, 11);
+            var f = d;
+            if (d.length > 3)  f = d.slice(0,3) + '.' + d.slice(3);
+            if (d.length > 6)  f = d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6);
+            if (d.length > 9)  f = d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6,9) + '-' + d.slice(9);
+            input.value = f;
+        };
 
         // Init
         initCatalog();
