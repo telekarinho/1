@@ -2,6 +2,49 @@
 
 ---
 
+## Ciclo #89 — 2026-05-02
+
+**Área:** Conteúdo — Semanas 51 + 52 (04–17/04/2027)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #88. Semana 51 = "3 semanas exatas" (04/04) + mecânica de revelação progressiva "um detalhe do dia H por dia" (5 detalhes ao longo da semana) + lançamento de convite a influencers de Londrina + campanha UGC #MeuPotinhoFavorito + Sexta #35 (09/04, 16 dias). Semana 52 = "2 semanas exatas" (11/04) + revelação do programa completo 25/04 + carrossel nostálgico "Você estava lá?" + urgência lista ANIVER + **Sexta #36 (16/04) = SINGLE DIGIT COUNTDOWN (9 dias)** + fechamento das inscrições lista ANIVER + transição para a semana do aniversário.
+
+**O que analisou:**
+- Leu semana 50 completa como referência de formato (padrão v11: Dom–Sab, Versão A/B, templates WA, checklist, métricas, tabela editorial)
+- Confirmou datas: 04/04 = 21 dias = 3 semanas exatas; 11/04 = 14 dias = 2 semanas exatas
+- Sexta #35 = 09/04 (16 dias antes); Sexta #36 = 16/04 (9 dias = primeiro single digit countdown de toda a campanha)
+- Calculou que 17/04 = 8 dias = último sábado antes da semana do aniversário — ideal para fechar lista ANIVER
+- Mapeou mecânica de "detalhe por dia" (5 detalhes na semana 51) como estrutura de antecipação programada e razão para seguir diariamente
+- Identificou carrossel nostálgico "Você estava lá?" (ter 13/04) como post de maior engajamento emocional da semana 52
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana51.md` | CRIADO — 7 peças: marco "3 semanas/21 dias" (dom), detalhe #1 horário (seg), detalhe #2 surpresa primeiros clientes + convite influencers Londrina (ter), detalhe #3 decoração + campanha UGC #MeuPotinhoFavorito (qua), detalhe #4 programa VIP lista ANIVER (qui), Sexta #35 "16 dias" com 5+ touchpoints (sex), detalhe #5 convidados especiais "15 dias" (sáb) |
+| `belinha/content/pos-inauguracao-semana52.md` | CRIADO — 7 peças: revelação programa completo "2 semanas/14 dias" (dom), mobilização "traga sua turma" (seg), carrossel nostálgico "Você estava lá?" 8 slides (ter), urgência final lista ANIVER (qua), pré-Sexta #36 "amanhã single digit" (qui), **Sexta #36 "9 DIAS — SINGLE DIGIT COUNTDOWN"** com 8+ touchpoints (sex), fechamento lista ANIVER + "semana do aniversário começa amanhã" (sáb) |
+
+**Commit:** (ver abaixo)
+
+**Destaques de conteúdo:**
+1. **Mecânica "detalhe por dia" (semana 51):** 5 detalhes do dia H revelados progressivamente (dom–sáb). Cria razão para seguir o perfil diariamente e gera FOMO em quem não acompanha. Cada detalhe tem WA exclusivo para lista ANIVER 1h antes.
+2. **Convite a influencers (ter 06/04):** Post público + DM segmentada para criadores de Londrina. Sem cachê — experiência VIP como valor. Respostas processadas ao longo da semana 51/52.
+3. **Campanha UGC #MeuPotinhoFavorito:** Lançada na quarta da semana 51, mantida ativa até o dia H. Os melhores posts ganham destaque no 25/04 — fidelização + prova social.
+4. **Sexta #36 — Single Digit Countdown (16/04):** Primeiro dia da campanha com countdown em dígito único (9 dias). Evento narrativo tratado com cerimônia máxima. Maior potencial de engajamento de todas as Sextas pós-inauguração.
+5. **Fechamento lista ANIVER (sáb 17/04):** Urgência de escassez genuína + transição narrativa para a semana do aniversário. KPI: ≥ 200 inscritos acumulados ao final da semana 52.
+
+**Próximo passo sugerido:**
+- Ciclo #90: Conteúdo — Semana 53 (18–24/04/2027): SEMANA DO ANIVERSÁRIO — countdown diário 7→1, programação ao vivo, crise/contingência, roteiro equipe
+- Ciclo #91: Conteúdo — Dia H (25/04/2027): roteiro completo do dia com todos os touchpoints, horários, guia de crise, post-mortem template
+- Ciclo #92 (auto-aprimoramento): releitura do log completo e revisão da estrategia.md
+- **Operador — CRÍTICO (prazo seg 12/04):** Confirmação FINAL de TODA a programação do dia 25/04 (horário, decoração, brindes, influencers, produto especial, logística)
+- **Operador — CRÍTICO (prazo qua 14/04):** Equipe extra confirmada + estoque verificado com franquia para 25/04
+- **Operador — CRÍTICO (prazo qui 15/04):** Material gráfico "1 ANO" pronto para a semana do aniversário
+- **Operador:** Confirmar oferta Sexta #35 (prazo: qua 07/04) e Sexta #36 (prazo: qua 14/04)
+
+_Belinha — Ciclo #89 | 2026-05-02_
+
+---
+
 ## Ciclo #88 — 2026-05-02
 
 **Área:** SEO/UX — gap técnico obrigatório (7 ciclos de conteúdo desde #82)
