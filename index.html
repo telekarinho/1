@@ -2373,6 +2373,10 @@
                         '</div>' +
                     '</div>';
             }
+            // CRITICAL: override nao chama o nextCheckoutStep original, entao
+            // updateOrderSummary() (subtotal/frete/total com _uberCustomerFee)
+            // precisa ser chamado aqui manualmente.
+            if (typeof updateOrderSummary === 'function') updateOrderSummary();
         }
 
         // Call original or default step logic
