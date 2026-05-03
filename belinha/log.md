@@ -2,6 +2,45 @@
 
 ---
 
+## Ciclo #103 — 2026-05-03
+
+**Área:** UX/Performance — `cardapio.js` bundle audit
+
+**Contexto:** Prescrito pelo roadmap do ciclo #100 (posição #1 da rotação). Audit completo do JS principal do fluxo de pedido online: console.logs, variáveis não usadas, declarações `let` que deveriam ser `const`, funções mortas.
+
+**O que analisou:**
+- Leu o arquivo completo (`js/cardapio.js`, 1052 linhas, 46.979 bytes)
+- Verificou todos os `console.*` — encontrou **1** console.log de debug em produção: linha 999 `console.log('Order captured:', order)` dentro de `finishOrder()`
+- Auditou todas as declarações `let` — identificou **6** que nunca são reatribuídas (candidatas a `const`):
+  - `addToMenuCart()`: `let extrasTotal`, `let bebidasTotal`, `let total` (linhas 715-717)
+  - `updateMenuCartQty()`: `let extrasTotal`, `let bebidasTotal` (linhas 761-762)
+  - `renderCheckoutSummary()`: `let details` (linha 883)
+- Verificou funções mortas: **nenhuma** — todas as funções do objeto são chamadas (via onclick inline, eventos bindados, ou pelo `goBack()` dispatch array)
+- `let item = null` (linha 464) em `changeAdicional()` — reatribuída dentro do for-loop, `let` correto
+- `let formatLabel`, `let productName`, `let msg` em `addToMenuCart()`/`finishOrder()` — todos reatribuídos com `+=` ou if/else, `let` correto
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `js/cardapio.js` | Remove `console.log('Order captured:', order)` linha 999 — dado sensível (pedido completo) exposto no DevTools em produção |
+| `js/cardapio.js` | 6× `let` → `const`: `extrasTotal`/`bebidasTotal`/`total` em `addToMenuCart()` + `extrasTotal`/`bebidasTotal` em `updateMenuCartQty()` + `details` em `renderCheckoutSummary()` |
+
+**Métricas:**
+- Antes: 1052 linhas / 46.979 bytes
+- Depois: 1050 linhas / 46.943 bytes → **−2 linhas, −36 bytes**
+- `console.log` em produção: 1 → **0**
+
+**Commit:** `0b4d030`
+
+**Próximo passo sugerido:**
+- Ciclo #104: Conversão — `raspinha.html` e `functions/` — está funcional? Documentar status técnico + template WA de ativação para operador (conforme roadmap #100)
+- Ciclo #105: Auto-aprimoramento — reler log #100–#104, ajustar estratégia Q3 2026
+
+_Belinha — Ciclo #103 | 2026-05-03_
+
+---
+
 ## Ciclo #102 — 2026-05-03
 
 **Área:** SEO — `acai-self-service-londrina.html` audit
