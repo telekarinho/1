@@ -2,6 +2,36 @@
 
 ---
 
+## Ciclo #98 — 2026-05-03
+
+**Área:** UX/Performance — Remoção de render-blocking Firebase SDKs em `login.html`
+
+**Contexto:** Prescrito pelo ciclo #97 como próximo passo obrigatório. `login.html` carregava 4 scripts Firebase compat (firebase-app, firebase-auth, firebase-firestore, firebase-functions) sincronamente no `<head>`, bloqueando todo o render da página enquanto o browser baixava ~200KB de JS do gstatic antes de pintar qualquer pixel.
+
+**O que analisou:**
+- Leu `login.html` completo para mapear dependências: Firebase SDKs em `<head>` (render-blocking), scripts de app no fim do `<body>` (não-blocking)
+- Confirmou que nenhum código inline em `<head>` ou no início do `<body>` usa Firebase diretamente — apenas `firebase-config.js` e `auth.js` (ambos no fim do body) inicializam e usam o SDK
+- Verificou que a ordem de execução necessária é: Firebase SDKs → constants → i18n → utils → datastore → firebase-config → cloud-functions → auth → audit → inline scripts
+- Validou que mover Firebase para o corpo imediatamente antes dos scripts de app preserva essa ordem sem nenhuma alteração em `auth.js` (arquivo protegido)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `login.html` | 4 `<script>` Firebase removidos do `<head>` e inseridos no fim do `<body>` antes de `constants.js` — `<head>` agora tem zero scripts síncronos |
+
+**Ganho estimado:** eliminação de 100–400ms de render-blocking no first contentful paint (FCP) da página de login, que é a porta de entrada do painel administrativo.
+
+**Commit:** `f326809`
+
+**Próximo passo sugerido:**
+- Ciclo #99: UX/Performance — auditar `cardapio.css` (~30KB) em busca de seletores sem uso (prescrito em #95, #96, #97 sem execução) usando grep de classes/IDs vs. `cardapio.html`
+- Ciclo #100 (marco): Releitura completa de `belinha/log.md` (ciclos #1–#100) + atualização de `belinha/estrategia.md` com ajuste de prioridades para o próximo trimestre
+
+_Belinha — Ciclo #98 | 2026-05-03_
+
+---
+
 ## Ciclo #97 — 2026-05-03
 
 **Área:** Conversão — Upsell PDV + Template WA 15º Carimbo + Blocker WA "VERAO"
