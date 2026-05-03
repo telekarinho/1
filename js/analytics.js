@@ -147,8 +147,9 @@ var MilkyPotAnalytics = (function () {
             'gap:16px',
             'font-family:inherit',
             'font-size:14px',
-            'z-index:999999',
-            'box-shadow:0 -2px 12px rgba(0,0,0,0.3)'
+            'z-index:900',
+            'box-shadow:0 -2px 12px rgba(0,0,0,0.3)',
+            'pointer-events:none'
         ].join(';');
 
         var text = document.createElement('span');
@@ -167,7 +168,8 @@ var MilkyPotAnalytics = (function () {
             'font-size:14px',
             'font-weight:600',
             'white-space:nowrap',
-            'flex-shrink:0'
+            'flex-shrink:0',
+            'pointer-events:auto'
         ].join(';');
 
         btn.addEventListener('click', function () {
