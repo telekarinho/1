@@ -442,17 +442,49 @@ async function runClaudeCli(combinedPrompt) {
     const { exitCode, stdout, stderr } = await collectProcess(proc);
     if (exitCode !== 0) {
         const errText = stderr || stdout;
-        // Detecta erro de autenticação — abre login automaticamente
+        // Detecta erro de autenticação — abre Claude Code com instrução clara
         if (errText.includes('authentication_error') ||
             errText.includes('Invalid authentication') ||
             errText.includes('401')) {
-            console.log('\n[auth] ⚠️  Sessão Claude expirada — abrindo login automático...');
+            console.log('\n[auth] ⚠️  Sessão Claude expirada — abrindo Claude Code automaticamente...');
             try {
-                spawn('cmd', ['/c', 'start', 'cmd', '/k',
-                    'echo. && echo  Sessao Claude expirada. Fazendo login... && echo. && claude login && echo. && echo  Login OK! Feche esta janela e tente novamente no copilot. && pause'
+                // Versões novas do Claude Code CLI (>=2.x) NÃO têm `claude login`.
+                // O login é interno via /login dentro do REPL. Abrimos o Claude Code
+                // com instruções bem claras na mesma janela.
+                spawn('cmd', ['/c', 'start', '"MilkyPot - Login Claude"', 'cmd', '/k',
+                    'echo. && ' +
+                    'echo  ============================================== && ' +
+                    'echo   SESSAO CLAUDE EXPIRADA - LOGIN NECESSARIO && ' +
+                    'echo  ============================================== && ' +
+                    'echo. && ' +
+                    'echo  PASSOS: && ' +
+                    'echo. && ' +
+                    'echo   1. O Claude Code vai abrir abaixo. && ' +
+                    'echo   2. Digite EXATAMENTE este comando ^(com a barra^): && ' +
+                    'echo. && ' +
+                    'echo        /login && ' +
+                    'echo. && ' +
+                    'echo   3. Vai abrir o navegador pra autenticar com sua && ' +
+                    'echo      conta Claude.ai. && ' +
+                    'echo   4. Apos confirmar no navegador, FECHE esta janela. && ' +
+                    'echo   5. Volte no Copiloto e tente de novo. && ' +
+                    'echo. && ' +
+                    'echo  ATENCAO: digite /login com a barra. NAO digite "login" sozinho. && ' +
+                    'echo. && ' +
+                    'echo  ============================================== && ' +
+                    'echo. && ' +
+                    'claude'
                 ], { shell: false, detached: true, stdio: 'ignore' }).unref();
             } catch (le) { console.error('[auth] falha ao abrir janela de login:', le.message); }
-            throw new Error('🔐 Sessão Claude expirada!\n\nUma janela de login foi aberta automaticamente.\n\n→ Faça o login com sua conta Claude.ai na janela que abriu.\n→ Depois tente novamente aqui.');
+            throw new Error(
+                '🔐 Sessão Claude expirada!\n\n' +
+                'Uma janela do Claude Code foi aberta automaticamente.\n\n' +
+                'Na janela que abriu:\n' +
+                '  → Digite /login (COM a barra)\n' +
+                '  → Confirme no navegador\n' +
+                '  → Feche a janela e tente de novo aqui\n\n' +
+                '⚠️  Não digite "login" sem a barra — vai dar erro 401 igual antes.'
+            );
         }
         throw new Error('claude_cli_exit_' + exitCode + ': ' + errText.slice(0, 400));
     }
