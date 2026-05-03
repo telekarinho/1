@@ -606,7 +606,15 @@
 
         // Flag para que PDV e cardapio saibam que o catálogo veio do CatalogV2
         if (hasProdutos) legacy._fromV2 = true;
+        legacy._fid = fid; // marca de qual franquia veio (anti-mistura)
 
+        // FIX (Fase 8.3): catalog_config é PER-FRANCHISE pra evitar
+        // race condition entre franquias diferentes escrevendo no mesmo
+        // doc global. Outras telas leem via DataStore.get('catalog_config')
+        // que prefere catalog_config_<fid> automaticamente quando existe.
+        global.DataStore.set('catalog_config_' + fid, legacy);
+        // Mantém escrita no global pra retrocompat — DataStore.get prioriza
+        // o per-franchise quando disponível, então race aqui é inofensivo.
         global.DataStore.set('catalog_config', legacy);
 
         // Dispara evento LOCAL imediatamente (sem aguardar round-trip Firestore).
