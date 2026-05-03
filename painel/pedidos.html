@@ -527,13 +527,7 @@
                         ? '<span style="display:inline-block;margin-left:6px;padding:3px 7px;border-radius:999px;background:#E8F5E9;color:#128C7E;font-size:11px;font-weight:800">WhatsApp pendente</span>'
                         : '';
                     const nextLabel = { novo: '✔️ Confirmar', confirmado: '▶️ Preparar', preparando: '✅ Pronto', pronto: '🛵 Enviar', em_entrega: '📦 Entregue' };
-                    if (o.status === 'aguardando_whatsapp' && o.customer) {
-                        const currentName = o.customer.name || 'Cliente WhatsApp';
-                        if (!/WhatsApp pendente/i.test(currentName)) o.customer.name = currentName + ' - WhatsApp pendente';
-                    }
-                    if (typeKey === 'delivery' || typeKey === 'delivery_whatsapp') {
-                        o.delivery = 'delivery';
-                    }
+                    const isDeliveryCard = typeKey === 'delivery' || typeKey === 'delivery_whatsapp' || !!o.address || !!(o.delivery && o.delivery.address);
 
                     // Numeração sequencial diária preferida; fallback pro hash legado
                     const seqLabel = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
@@ -560,11 +554,11 @@
                                 <span class="order-id" title="${seqTitle}">${seqLabel}${waitBadgeHtml}</span>
                                 <span class="order-time">${Utils.formatTime(o.createdAt)}</span>
                             </div>
-                            <div class="order-customer">👤 ${Utils.escapeHtml(o.customer?.name || o.items?.[0]?.nomeCliente || 'Cliente')}</div>
+                            <div class="order-customer">👤 ${Utils.escapeHtml(o.customer?.name || o.items?.[0]?.nomeCliente || 'Cliente')}${whatsappBadge}</div>
                             <div class="order-items">${itemsSummary}</div>
                             <div class="order-card-footer">
                                 <span class="order-total">${Utils.formatCurrency(o.total)}</span>
-                                <span class="order-type-badge order-type-${(o.delivery || o.type)}">${(o.delivery || o.type) === 'delivery' ? '🛵 Delivery' : '🏪 Retirada'}</span>
+                                <span class="order-type-badge order-type-${isDeliveryCard ? 'delivery' : 'retirada'}">${isDeliveryCard ? '🛵 Delivery' : '🏪 Retirada'}</span>
                             </div>
                             ${status !== 'entregue' ? `
                                 <div class="order-actions" data-noprop="1" style="position:relative;z-index:50;pointer-events:auto">
@@ -692,28 +686,60 @@
             const o = orders.find(x => x.id === orderId);
             if (!o) return;
 
+            const deliveryType = o.type || o.orderType || (o.delivery && o.delivery.type) || o.delivery;
+            const isDeliveryOrder = deliveryType === 'delivery' || deliveryType === 'delivery_whatsapp' || !!o.address || !!(o.delivery && o.delivery.address);
+            const typeBadgeClass = isDeliveryOrder ? 'delivery' : 'retirada';
+            const typeBadgeLabel = isDeliveryOrder ? '🛵 Delivery' : '🏪 Retirada';
+            const customer = o.customer || {};
+            const deliveryObj = (o.delivery && typeof o.delivery === 'object') ? o.delivery : {};
+            const addressParts = deliveryObj.addressParts || {};
+            const addressLines = [];
+            const line1 = (addressParts.rua || addressParts.street || deliveryObj.street || '');
+            const number = addressParts.numero || addressParts.number || deliveryObj.number || '';
+            if (line1 || number) addressLines.push((line1 + (number ? ', ' + number : '')).trim());
+            const complement = addressParts.complemento || addressParts.complement || deliveryObj.complement || '';
+            if (complement) addressLines.push(complement);
+            const neighborhood = addressParts.bairro || addressParts.neighborhood || deliveryObj.neighborhood || customer.neighborhood || '';
+            if (neighborhood) addressLines.push('Bairro ' + neighborhood);
+            const cepRaw = addressParts.cep || deliveryObj.cep || customer.cep || '';
+            if (cepRaw) {
+                const cep = String(cepRaw).replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2');
+                addressLines.push('CEP ' + cep);
+            }
+            const addressText = addressLines.length ? addressLines.join('<br>') : Utils.escapeHtml(o.address || deliveryObj.address || customer.address || '-');
+            const obsText = o.observacao || o.observation || '';
+            const paymentLabel = o.payment || (o.status === 'aguardando_whatsapp' ? 'A combinar no WhatsApp' : 'N/A');
             const _modalSeq = o.dailySeq ? `Pedido #${o.dailySeq}` : `Pedido #${o.id.slice(-6)}`;
             document.getElementById('orderModalTitle').textContent = _modalSeq + (o.dailySeq ? ` · ${o.id.slice(-6)}` : '');
             document.getElementById('orderModalBody').innerHTML = `
                 <div style="margin-bottom:16px">
                     ${Utils.statusBadge(o.status)}
-                    <span class="order-type-badge order-type-${(o.delivery || o.type)}" style="margin-left:8px">${(o.delivery || o.type) === 'delivery' ? '🛵 Delivery' : '🏪 Retirada'}</span>
+                    <span class="order-type-badge order-type-${typeBadgeClass}" style="margin-left:8px">${typeBadgeLabel}</span>
                 </div>
                 <p style="font-size:0.85rem;color:var(--mp-text-light);margin-bottom:16px">
-                    📅 ${Utils.formatDateTime(o.createdAt)} | 💳 ${o.payment || 'N/A'}
+                    📅 ${Utils.formatDateTime(o.createdAt)} | 💳 ${Utils.escapeHtml(paymentLabel)}
                 </p>
                 <h4 style="margin-bottom:12px">👤 Cliente</h4>
-                <p style="margin-bottom:16px">${Utils.escapeHtml(o.customer?.name || '-')} | ${Utils.escapeHtml(o.customer?.phone || '-')}</p>
+                <p style="margin-bottom:16px">${Utils.escapeHtml(customer.name || '-')} | ${Utils.escapeHtml(customer.phone || '-')}</p>
+                ${customer.cpf ? `<p style="margin-top:-10px;margin-bottom:16px;font-size:0.9rem;color:var(--mp-text-light)">CPF: ${Utils.escapeHtml(customer.cpf)}</p>` : ''}
+                ${isDeliveryOrder ? `
+                    <h4 style="margin-bottom:12px">📍 Endereço de entrega</h4>
+                    <p style="margin-bottom:16px;line-height:1.45">${addressText}</p>
+                ` : ''}
+                ${obsText ? `
+                    <h4 style="margin-bottom:12px">📝 Observação</h4>
+                    <p style="margin-bottom:16px">${Utils.escapeHtml(obsText)}</p>
+                ` : ''}
                 <h4 style="margin-bottom:12px">🍨 Itens</h4>
                 <table class="panel-table" style="margin-bottom:16px">
-                    <thead><tr><th>Item</th><th>Potinho</th><th>Detalhe</th><th class="text-right">Preco</th></tr></thead>
+                    <thead><tr><th>Item</th><th>Qtd</th><th>Detalhe</th><th class="text-right">Preço</th></tr></thead>
                     <tbody>
                         ${(o.items || []).map(i => `
                             <tr>
                                 <td><strong>${Utils.escapeHtml(i.sabor || i.name || '?')}</strong></td>
-                                <td>${Utils.escapeHtml(i.nomeCliente || '-')}</td>
-                                <td>${Utils.escapeHtml(i.tamanho || '')} ${Utils.escapeHtml(i.formato || '')}</td>
-                                <td class="text-right">${Utils.formatCurrency(i.price)}</td>
+                                <td>${Utils.escapeHtml(String(i.qty || 1))}</td>
+                                <td>${Utils.escapeHtml([i.tamanho || '', i.formato || '', (i.extras || []).map(ex => ex.name).join(', ')].filter(Boolean).join(' · ') || '-')}</td>
+                                <td class="text-right">${Utils.formatCurrency(i.total || i.subtotal || ((i.price || i.unitPrice || 0) * (i.qty || 1)))}</td>
                             </tr>
                         `).join('')}
                     </tbody>

@@ -1777,6 +1777,13 @@
                     var deliveryCalc = typeof getCurrentDeliveryCalc === 'function' ? getCurrentDeliveryCalc() : null;
                     var customerName = ((document.getElementById('checkoutName') || {}).value || '').trim();
                     var customerPhone = ((document.getElementById('checkoutPhone') || {}).value || '').trim();
+                    var customerCpf = ((document.getElementById('checkoutCpf') || {}).value || '').trim();
+                    var fullAddress = [
+                        addressParts.rua + (addressParts.numero ? ', ' + addressParts.numero : ''),
+                        addressParts.complemento,
+                        addressParts.bairro,
+                        addressParts.cep ? 'CEP ' + addressParts.cep.replace(/^(\d{5})(\d{3})$/, '$1-$2') : ''
+                    ].filter(Boolean).join(', ');
                     var order = {
                         id: (typeof Utils !== 'undefined' && Utils.generateId) ? Utils.generateId() : ('wa_' + Date.now().toString(36)),
                         orderNumber: orderNumber,
@@ -1788,16 +1795,24 @@
                         origem: 'site',
                         type: 'delivery_whatsapp',
                         orderType: 'delivery_whatsapp',
-                        customer: { name: customerName || 'Cliente WhatsApp', phone: customerPhone },
+                        customer: {
+                            name: customerName || 'Cliente WhatsApp',
+                            phone: customerPhone,
+                            cpf: customerCpf,
+                            address: fullAddress,
+                            cep: addressParts.cep,
+                            neighborhood: addressParts.bairro
+                        },
+                        address: fullAddress,
                         delivery: {
                             type: 'delivery_whatsapp',
-                            address: [
-                                addressParts.rua + (addressParts.numero ? ', ' + addressParts.numero : ''),
-                                addressParts.complemento,
-                                addressParts.bairro,
-                                addressParts.cep ? 'CEP ' + addressParts.cep.replace(/^(\d{5})(\d{3})$/, '$1-$2') : ''
-                            ].filter(Boolean).join(', '),
+                            address: fullAddress,
                             addressParts: addressParts,
+                            cep: addressParts.cep,
+                            street: addressParts.rua,
+                            number: addressParts.numero,
+                            complement: addressParts.complemento,
+                            neighborhood: addressParts.bairro,
                             fee: 0,
                             outOfAutomaticArea: true
                         },
@@ -1807,7 +1822,10 @@
                                 emoji: item.emoji || '',
                                 qty: item.qty || 1,
                                 unitPrice: item.unitPrice || item.price || 0,
+                                price: item.unitPrice || item.price || 0,
+                                pdvUnitPrice: item.pdvUnitPrice || 0,
                                 total: item.total || 0,
+                                subtotal: item.total || 0,
                                 extras: item.extras || []
                             };
                         }),
