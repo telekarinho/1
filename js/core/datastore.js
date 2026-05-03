@@ -97,6 +97,11 @@ const DataStore = {
     set(key, data) {
         try {
             localStorage.setItem(this.PREFIX + key, JSON.stringify(data));
+            // Stamp local timestamp para keys que usam last-writer-wins (ex: inventory_)
+            // Permite que sync subsequente respeite versão local recém-escrita.
+            if (this._isLocalTimestampedKey(key)) {
+                localStorage.setItem(this.PREFIX + key + '__local_ts', String(Date.now()));
+            }
             // Sync to Firestore in background
             this._writeToCloud(key, data);
             return true;
@@ -293,7 +298,35 @@ const DataStore = {
     // Sem merge: cada PC sobrescreve o array INTEIRO → race condition fatal,
     // PC com menos itens locais apaga itens do outro PC do cloud.
     _isMergeable(key) {
-        return /^(orders_|caixa_|pdv_tabs_|finances_|recurring_expenses_|inventory_)/.test(key || '');
+        // inventory_ NÃO é mergeable: cada deduct é state replacement.
+        // Merge por id+timestamp falhava porque deduct mantém createdAt original
+        // → cloud sempre vencia local recém-deduzido. Resultado: estoque revertia.
+        // Last-writer-wins via _localFresherThanCloud() abaixo.
+        return /^(orders_|caixa_|pdv_tabs_|finances_|recurring_expenses_)/.test(key || '');
+    },
+
+    /**
+     * Checa se a versão local de uma key tem timestamp mais novo que a cloud.
+     * Usado por inventory_ pra evitar que sync sobrescreva venda recém-feita.
+     * Retorna true se local deve ser PRESERVADO (e empurrado pra cloud).
+     */
+    _localFresherThanCloud(key, cloudDoc) {
+        try {
+            const localTsStr = localStorage.getItem(this.PREFIX + key + '__local_ts');
+            if (!localTsStr) return false;
+            const localTs = parseInt(localTsStr, 10);
+            if (!Number.isFinite(localTs)) return false;
+            if (!cloudDoc || !cloudDoc.exists) return true; // local existe, cloud não → local wins
+            const cloudUpdatedAt = cloudDoc.data().updatedAt;
+            const cloudMs = (cloudUpdatedAt && cloudUpdatedAt.toMillis)
+                ? cloudUpdatedAt.toMillis() : 0;
+            return localTs > cloudMs;
+        } catch (e) { return false; }
+    },
+
+    /** Keys que usam protocolo last-writer-wins com timestamp local */
+    _isLocalTimestampedKey(key) {
+        return /^inventory_/.test(key || '');
     },
     // Merge inteligente: une dois arrays por id, prefere o mais recente
     // (updatedAt > createdAt). Idempotente — pode rodar várias vezes sem efeito ruim.
@@ -420,13 +453,15 @@ const DataStore = {
     _isMergeableListDoc(docId) {
         // Arrays compartilhadas entre PCs — sem merge dá race condition fatal.
         // PCs com listas locais diferentes sobrescrevem o array do outro.
+        // inventory_ EXCEPTION: usa last-writer-wins via _localFresherThanCloud
+        // (deduct não atualiza createdAt → merge sempre escolhia cloud antigo).
         return !!docId && (
             docId.startsWith('orders_') ||
             docId.startsWith('pdv_tabs_') ||
             docId.startsWith('caixa_') ||
             docId.startsWith('finances_') ||
-            docId.startsWith('recurring_expenses_') ||
-            docId.startsWith('inventory_')
+            docId.startsWith('recurring_expenses_')
+            // inventory_ removido: tratado via last-writer-wins
         );
     },
 
@@ -530,6 +565,17 @@ const DataStore = {
             for (const docId of docsToSync) {
                 try {
                     const doc = await this._db.collection('datastore').doc(docId).get();
+                    // last-writer-wins: pra inventory_ etc, se local tem timestamp
+                    // mais novo que cloud, NÃO sobrescreve — ao contrário, push pra cloud.
+                    if (this._isLocalTimestampedKey(docId) && this._localFresherThanCloud(docId, doc)) {
+                        const localStr = localStorage.getItem(this.PREFIX + docId);
+                        if (localStr) {
+                            this._writeToCloud(docId, JSON.parse(localStr));
+                            console.log('🔼 Local mais novo que cloud, push:', docId);
+                        }
+                        synced++;
+                        continue;
+                    }
                     if (doc.exists) {
                         const merged = this._mergeListDoc(docId, doc.data().value);
                         const cloudStr = merged.value;
@@ -540,7 +586,7 @@ const DataStore = {
                         // com o mesmo conteúdo → merge produz igual → localStr===cloudStr → sem loop.
                         if (merged.changed) this._writeToCloud(docId, JSON.parse(cloudStr));
                         synced++;
-                    } else if (this._isMergeableListDoc(docId)) {
+                    } else if (this._isMergeableListDoc(docId) || this._isLocalTimestampedKey(docId)) {
                         const localStr = localStorage.getItem(this.PREFIX + docId);
                         if (localStr) this._writeToCloud(docId, JSON.parse(localStr));
                     }
@@ -588,6 +634,10 @@ const DataStore = {
                     self._db.collection('datastore').doc(docId).onSnapshot(doc => {
                         if (!doc.exists) return;
                         try {
+                            // last-writer-wins: ignora updates do cloud se local é mais novo
+                            if (self._isLocalTimestampedKey(docId) && self._localFresherThanCloud(docId, doc)) {
+                                return; // local é fresher — não sobrescreve
+                            }
                             const merged = self._mergeListDoc(docId, doc.data().value);
                             const cloudStr = merged.value;
                             const localStr = localStorage.getItem(self.PREFIX + docId);
@@ -641,10 +691,16 @@ const DataStore = {
                         try {
                             const doc = await self._db.collection('datastore').doc(docId).get();
                             if (!doc.exists) {
-                                if (self._isMergeableListDoc(docId)) {
+                                if (self._isMergeableListDoc(docId) || self._isLocalTimestampedKey(docId)) {
                                     const localStr = localStorage.getItem(self.PREFIX + docId);
                                     if (localStr) self._writeToCloud(docId, JSON.parse(localStr));
                                 }
+                                continue;
+                            }
+                            // last-writer-wins pra inventory_: poll não sobrescreve local fresher
+                            if (self._isLocalTimestampedKey(docId) && self._localFresherThanCloud(docId, doc)) {
+                                const localStr = localStorage.getItem(self.PREFIX + docId);
+                                if (localStr) self._writeToCloud(docId, JSON.parse(localStr));
                                 continue;
                             }
                             const merged = self._mergeListDoc(docId, doc.data().value);
@@ -687,10 +743,16 @@ const DataStore = {
                     const doc = await this._db.collection('datastore').doc(docId).get();
                     total++;
                     if (!doc.exists) {
-                        if (this._isMergeableListDoc(docId)) {
+                        if (this._isMergeableListDoc(docId) || this._isLocalTimestampedKey(docId)) {
                             const localStr = localStorage.getItem(this.PREFIX + docId);
                             if (localStr) this._writeToCloud(docId, JSON.parse(localStr));
                         }
+                        continue;
+                    }
+                    // forceSync respeita local mais fresher pra last-writer-wins keys
+                    if (this._isLocalTimestampedKey(docId) && this._localFresherThanCloud(docId, doc)) {
+                        const localStr = localStorage.getItem(this.PREFIX + docId);
+                        if (localStr) this._writeToCloud(docId, JSON.parse(localStr));
                         continue;
                     }
                     const merged = this._mergeListDoc(docId, doc.data().value);

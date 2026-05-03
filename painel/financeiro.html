@@ -45,6 +45,9 @@
                 <a href="analytics.html" class="sidebar-link">
                     <span class="icon">📊</span> Analytics
                 </a>
+                <a href="analise.html" class="sidebar-link">
+                    <span class="icon">🧠</span> Inteligência
+                </a>
                 <a href="conciliacao.html" class="sidebar-link">
                     <span class="icon">🏦</span> Conciliação
                 </a>
@@ -490,7 +493,7 @@
     <script src="../js/core/reports.js"></script>
     <script src="../js/core/adminconfig.js?v=mp-v14"></script>
     <script src="../js/core/caixa.js?v=mp-v91"></script>
-    <script src="../js/core/financas.js?v=mp-v14"></script>
+    <script src="../js/core/financas.js?v=mp-v15"></script>
     <script src="../js/core/recurring-expenses.js?v=mp-v14"></script>
     <script src="../js/core/catalog-v2.js?v=mp-v105"></script>
     <script src="../js/core/cost-calculator.js?v=mp-v14"></script>
@@ -526,19 +529,48 @@
             vendas: 'Vendas',
             ingredientes: 'Ingredientes',
             aluguel: 'Aluguel',
-            salarios: 'Salarios',
-            manutencao: 'Manutencao',
+            condominio: 'Condomínio',
+            energia: 'Energia',
+            agua: 'Água',
+            internet: 'Internet',
+            contador: 'Contador',
+            software: 'Software',
+            folha: 'Folha de Pagamento',
+            prolabore: 'Pró-labore',
+            royalties: 'Royalties',
             marketing: 'Marketing',
+            manutencao: 'Manutenção',
+            seguros: 'Seguros',
+            juros: 'Juros/Financiamentos',
+            ingredientes: 'Ingredientes',
+            embalagens: 'Embalagens',
+            impostos: 'Impostos',
+            comissao: 'Comissão',
+            taxa_cartao: 'Taxa Cartão',
             outros: 'Outros'
         };
 
         const categoryColors = {
             vendas: '#4CAF50',
             ingredientes: '#FF9800',
+            embalagens: '#FFC107',
             aluguel: '#2196F3',
-            salarios: '#9C27B0',
+            condominio: '#1565C0',
+            energia: '#FF5722',
+            agua: '#03A9F4',
+            internet: '#00BCD4',
+            contador: '#7B1FA2',
+            software: '#9C27B0',
+            folha: '#673AB7',
+            prolabore: '#3F51B5',
+            royalties: '#E91E63',
+            marketing: '#009688',
             manutencao: '#F44336',
-            marketing: '#00BCD4',
+            seguros: '#795548',
+            juros: '#FF5252',
+            impostos: '#8BC34A',
+            comissao: '#CDDC39',
+            taxa_cartao: '#4CAF50',
             outros: '#607D8B'
         };
 
@@ -913,11 +945,13 @@
             // 4) Receita BRUTA total (todas as vendas + outras)
             var receitaBruta = receitaComCMV + receitaSemCMV + outrasReceitas;
 
-            // 5) DESPESAS — categorizadas em FIXAS vs VARIAVEIS (decisao cliente)
-            var FIXAS_CATS = ['aluguel','salarios','energia','agua','internet','utilidades',
-                              'franquia','taxa_franquia','contabilidade','seguro','manutencao_fixa'];
-            var VARIAVEIS_CATS = ['ingredientes','embalagens','marketing','impostos','comissao',
-                                  'taxa_cartao','manutencao'];
+            // 5) DESPESAS — categorizadas em FIXAS vs VARIAVEIS
+            // IMPORTANTE: estas categorias devem bater exatamente com os def.key do despesas.html
+            var FIXAS_CATS = ['aluguel','condominio','energia','agua','internet',
+                              'contador','software','folha','prolabore','royalties',
+                              'seguros','juros'];
+            var VARIAVEIS_CATS = ['ingredientes','embalagens','marketing','impostos',
+                                  'comissao','taxa_cartao','manutencao'];
 
             var despesasFixas = expenses.filter(function(f){ return FIXAS_CATS.indexOf(f.category) >= 0; })
                 .reduce(function(s,f){ return s + (f.amount || 0); }, 0);
@@ -1188,11 +1222,12 @@
         }
 
         var CAT_LABEL = {
-            aluguel:'Aluguel', salarios:'Salários', energia:'Energia',
-            agua:'Água', internet:'Internet', utilidades:'Utilidades',
-            franquia:'Royalties', taxa_franquia:'Taxa franquia',
-            contabilidade:'Contabilidade', seguro:'Seguro',
-            manutencao_fixa:'Manutenção fixa'
+            aluguel:'Aluguel', condominio:'Condomínio', energia:'Energia',
+            agua:'Água', internet:'Internet', contador:'Contador',
+            software:'Software', folha:'Folha de Pagamento',
+            prolabore:'Pró-labore', royalties:'Royalties',
+            marketing:'Marketing', manutencao:'Manutenção',
+            seguros:'Seguros', juros:'Juros/Financiamentos'
         };
 
         function renderRecurringList() {

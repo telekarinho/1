@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot — Inteligência de Negócio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="stylesheet" href="../css/mobile-app.css">
+    <link rel="stylesheet" href="../css/ios-premium.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#7E57C2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MilkyPot">
+    <link rel="apple-touch-icon" href="../images/logo-milkypot.png">
+
+    <style>
+    /* =====================================================
+       Inteligência de Negócio — Estilos específicos
+    ===================================================== */
+    .intel-header-grad {
+        background: linear-gradient(135deg, #5E35B1, #7E57C2, #9575CD);
+    }
+    /* Period selector */
+    .period-bar {
+        display: flex; gap: 8px; flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    .period-btn {
+        padding: 8px 20px; border-radius: 20px; border: 2px solid #E5E7EB;
+        background: #fff; font-family: 'Nunito', sans-serif; font-weight: 700;
+        font-size: 13px; color: #6B7280; cursor: pointer; transition: all .15s;
+    }
+    .period-btn.active {
+        background: linear-gradient(135deg, #5E35B1, #7E57C2);
+        border-color: transparent; color: #fff;
+        box-shadow: 0 3px 10px rgba(94,53,177,.35);
+    }
+    .period-btn:hover:not(.active) { border-color: #7E57C2; color: #5E35B1; }
+
+    /* KPI cards row */
+    .kpi-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 14px; margin-bottom: 24px;
+    }
+    .kpi-card {
+        background: #fff; border-radius: 16px; padding: 18px 20px;
+        border: 1.5px solid #E5E7EB; position: relative; overflow: hidden;
+        transition: box-shadow .2s;
+    }
+    .kpi-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.09); }
+    .kpi-card .kpi-icon {
+        font-size: 30px; margin-bottom: 8px; display: block;
+    }
+    .kpi-card .kpi-label {
+        font-size: 11px; font-weight: 700; text-transform: uppercase;
+        color: #9CA3AF; letter-spacing: .5px; margin-bottom: 4px;
+    }
+    .kpi-card .kpi-value {
+        font-size: 28px; font-weight: 900; color: #1F2937;
+        font-family: 'Baloo 2', cursive; line-height: 1.1;
+    }
+    .kpi-card .kpi-sub {
+        font-size: 12px; color: #6B7280; margin-top: 4px;
+    }
+    .kpi-card.danger  { border-color: #FCA5A5; background: #FFF5F5; }
+    .kpi-card.warn    { border-color: #FCD34D; background: #FFFBEB; }
+    .kpi-card.good    { border-color: #6EE7B7; background: #F0FDF4; }
+    .kpi-card.purple  { border-color: #C4B5FD; background: #F5F3FF; }
+
+    /* Module cards */
+    .intel-module {
+        background: #fff; border-radius: 18px; border: 1.5px solid #E5E7EB;
+        margin-bottom: 24px; overflow: hidden;
+    }
+    .intel-module-header {
+        padding: 18px 22px; border-bottom: 1.5px solid #F3F4F6;
+        display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 10px;
+    }
+    .intel-module-title {
+        font-size: 16px; font-weight: 800; color: #1F2937; margin: 0;
+        font-family: 'Baloo 2', cursive;
+    }
+    .intel-module-body { padding: 18px 22px; }
+
+    /* Tab bar inside module */
+    .m-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .m-tab {
+        padding: 7px 16px; border-radius: 10px; border: none;
+        background: #F3F4F6; font-family: 'Nunito', sans-serif;
+        font-weight: 700; font-size: 13px; color: #6B7280; cursor: pointer;
+        transition: all .15s;
+    }
+    .m-tab.active {
+        background: linear-gradient(135deg, #5E35B1, #9575CD);
+        color: #fff;
+    }
+    .m-tab:hover:not(.active) { background: #E5E7EB; }
+
+    /* Table style */
+    .intel-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .intel-table th {
+        background: #F9FAFB; padding: 10px 12px; text-align: left;
+        font-size: 11px; text-transform: uppercase; font-weight: 700;
+        color: #9CA3AF; letter-spacing: .5px; white-space: nowrap;
+    }
+    .intel-table td {
+        padding: 11px 12px; border-bottom: 1px solid #F3F4F6;
+        vertical-align: middle;
+    }
+    .intel-table tr:last-child td { border-bottom: none; }
+    .intel-table tr:hover td { background: #FAFAFA; }
+    .intel-table .rank {
+        font-size: 15px; font-weight: 900; color: #D1D5DB;
+        width: 32px; text-align: center;
+    }
+    .intel-table .rank.top1 { color: #F59E0B; }
+    .intel-table .rank.top2 { color: #9CA3AF; }
+    .intel-table .rank.top3 { color: #CD7F32; }
+    .product-name { font-weight: 700; color: #1F2937; }
+    .product-name small { display: block; font-weight: 500; color: #9CA3AF; font-size: 11px; }
+    .money { font-weight: 800; font-family: 'Baloo 2', cursive; }
+    .money.positive { color: #16A34A; }
+    .money.negative { color: #DC2626; }
+
+    /* Margem badge */
+    .margem-badge {
+        display: inline-block; padding: 3px 10px; border-radius: 100px;
+        font-size: 12px; font-weight: 800; white-space: nowrap;
+    }
+    .margem-badge.ok      { background: #D1FAE5; color: #065F46; }
+    .margem-badge.baixa   { background: #FEF3C7; color: #92400E; }
+    .margem-badge.prejuizo{ background: #FEE2E2; color: #991B1B; }
+
+    /* Stock days badge */
+    .dias-badge {
+        display: inline-block; padding: 3px 10px; border-radius: 100px;
+        font-size: 12px; font-weight: 800;
+    }
+    .dias-badge.critico { background: #FEE2E2; color: #991B1B; }
+    .dias-badge.atencao { background: #FEF3C7; color: #92400E; }
+    .dias-badge.ok      { background: #D1FAE5; color: #065F46; }
+    .dias-badge.sem-dado{ background: #F3F4F6; color: #9CA3AF; }
+
+    /* Alert items */
+    .alert-list { display: flex; flex-direction: column; gap: 10px; }
+    .alert-item {
+        display: flex; gap: 14px; align-items: flex-start;
+        padding: 14px 16px; border-radius: 12px; border: 1.5px solid;
+    }
+    .alert-item.critico { background: #FFF5F5; border-color: #FCA5A5; }
+    .alert-item.aviso   { background: #FFFBEB; border-color: #FCD34D; }
+    .alert-item.info    { background: #EFF6FF; border-color: #BFDBFE; }
+    .alert-icon { font-size: 24px; flex-shrink: 0; line-height: 1.2; }
+    .alert-body .alert-title {
+        font-weight: 800; font-size: 14px; color: #1F2937; margin: 0 0 3px;
+    }
+    .alert-body .alert-msg { font-size: 13px; color: #4B5563; margin: 0; }
+    .alert-empty {
+        text-align: center; padding: 40px 20px; color: #9CA3AF;
+        font-size: 15px;
+    }
+    .alert-empty span { display: block; font-size: 40px; margin-bottom: 8px; }
+
+    /* Summary row inside module header */
+    .intel-summary-chips {
+        display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .summary-chip {
+        font-size: 12px; font-weight: 700; padding: 4px 12px;
+        border-radius: 100px; background: #F3F4F6; color: #4B5563;
+        white-space: nowrap;
+    }
+    .summary-chip.green  { background: #D1FAE5; color: #065F46; }
+    .summary-chip.yellow { background: #FEF3C7; color: #92400E; }
+    .summary-chip.red    { background: #FEE2E2; color: #991B1B; }
+    .summary-chip.purple { background: #EDE9FE; color: #5B21B6; }
+
+    /* Progress bar for consumption */
+    .prog-bar-bg {
+        background: #F3F4F6; height: 6px; border-radius: 3px;
+        overflow: hidden; min-width: 60px;
+    }
+    .prog-bar-fill {
+        height: 100%; border-radius: 3px;
+        background: linear-gradient(90deg, #5E35B1, #9575CD);
+    }
+
+    /* Loading state */
+    .loading-msg {
+        text-align: center; padding: 40px 20px;
+        color: #9CA3AF; font-size: 14px;
+    }
+    .loading-msg .spin {
+        display: inline-block; animation: spin 1s linear infinite;
+        font-size: 30px; margin-bottom: 10px; display: block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Empty table state */
+    .empty-msg {
+        text-align: center; padding: 40px 20px;
+        color: #9CA3AF; font-size: 14px;
+    }
+    .empty-msg span { display: block; font-size: 36px; margin-bottom: 8px; }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .kpi-row { grid-template-columns: repeat(2, 1fr); }
+        .intel-table { font-size: 12px; }
+        .intel-table th, .intel-table td { padding: 8px 8px; }
+        .intel-module-body { padding: 12px 14px; }
+    }
+    @media (max-width: 480px) {
+        .kpi-row { grid-template-columns: 1fr 1fr; }
+        .intel-table .hide-mobile { display: none; }
+    }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <!-- =============================== SIDEBAR =============================== -->
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="pedidos.html" class="sidebar-link">
+                    <span class="icon">📋</span> Pedidos
+                </a>
+                <a href="simulador.html" class="sidebar-link">
+                    <span class="icon">📈</span> Simulador
+                </a>
+                <div class="sidebar-nav-group">Gestão</div>
+                <a href="financeiro.html" class="sidebar-link">
+                    <span class="icon">💰</span> Financeiro
+                </a>
+                <a href="fluxo-caixa.html" class="sidebar-link">
+                    <span class="icon">📈</span> Fluxo de Caixa
+                </a>
+                <a href="analytics.html" class="sidebar-link">
+                    <span class="icon">📊</span> Analytics
+                </a>
+                <a href="analise.html" class="sidebar-link active">
+                    <span class="icon">🧠</span> Inteligência
+                </a>
+                <a href="conciliacao.html" class="sidebar-link">
+                    <span class="icon">🏦</span> Conciliação
+                </a>
+                <a href="despesas.html" class="sidebar-link">
+                    <span class="icon">💰</span> Despesas
+                </a>
+                <a href="fiscal.html" class="sidebar-link">
+                    <span class="icon">🧾</span> Fiscal
+                </a>
+                <a href="produtos.html" class="sidebar-link">
+                    <span class="icon">🍨</span> Produtos
+                </a>
+                <a href="entregas.html" class="sidebar-link">
+                    <span class="icon">🛵</span> Entregas
+                </a>
+                <a href="equipe.html" class="sidebar-link">
+                    <span class="icon">👥</span> Equipe
+                </a>
+                <a href="fidelidade.html" class="sidebar-link">
+                    <span class="icon">🎁</span> Fidelidade
+                </a>
+                <a href="ifood.html" class="sidebar-link">
+                    <span class="icon">🛵</span> iFood
+                </a>
+                <a href="operacional.html" class="sidebar-link">
+                    <span class="icon">🎯</span> Operacional
+                </a>
+                <div class="sidebar-nav-group">Mídia da Loja</div>
+                <a href="tv-indoor.html" class="sidebar-link">
+                    <span class="icon">📺</span> TV Indoor
+                </a>
+                <a href="radio-indoor.html" class="sidebar-link">
+                    <span class="icon">📻</span> Rádio Indoor
+                </a>
+                <div class="sidebar-nav-group">Loja Online</div>
+                <a href="#" class="sidebar-link" id="linkSiteFranquia">
+                    <span class="icon">🌐</span> Meu Site
+                </a>
+                <a href="marketing.html" class="sidebar-link">
+                    <span class="icon">📢</span> Marketing
+                </a>
+                <div class="sidebar-nav-group">Config</div>
+                <a href="configuracoes.html" class="sidebar-link">
+                    <span class="icon">⚙️</span> Configurações
+                </a>
+                <a href="test-checklist.html" class="sidebar-link">
+                    <span class="icon">🧪</span> Checklist
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">🏪</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarUserName">Franqueado</strong>
+                        <small>Franqueado</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- =============================== MAIN =============================== -->
+        <main class="panel-main">
+            <header class="panel-header intel-header-grad">
+                <div class="panel-header-left">
+                    <button class="btn-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1 style="color:#fff">🧠 Inteligência de Negócio</h1>
+                </div>
+                <div class="panel-header-right">
+                    <button class="btn btn-sm" onclick="refresh()" style="background:rgba(255,255,255,.2);color:#fff;border-color:transparent">
+                        🔄 Atualizar
+                    </button>
+                    <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+                </div>
+            </header>
+
+            <div class="panel-content">
+
+                <!-- ========== PERIOD SELECTOR ========== -->
+                <div class="period-bar" id="periodBar">
+                    <button class="period-btn" onclick="setPeriod(1)"  id="p1">Hoje</button>
+                    <button class="period-btn active" onclick="setPeriod(7)"  id="p7">7 dias</button>
+                    <button class="period-btn" onclick="setPeriod(30)" id="p30">30 dias</button>
+                    <button class="period-btn" onclick="setPeriod(90)" id="p90">90 dias</button>
+                    <button class="period-btn" onclick="setPeriod(0)"  id="p0">Tudo</button>
+                </div>
+
+                <!-- ========== KPI CARDS ========== -->
+                <div class="kpi-row" id="kpiRow">
+                    <div class="kpi-card purple">
+                        <span class="kpi-icon">💰</span>
+                        <div class="kpi-label">Lucro Bruto</div>
+                        <div class="kpi-value" id="kpiLucro">—</div>
+                        <div class="kpi-sub" id="kpiReceita">Carregando…</div>
+                    </div>
+                    <div class="kpi-card" id="kpiMargemCard">
+                        <span class="kpi-icon">📈</span>
+                        <div class="kpi-label">Margem Média</div>
+                        <div class="kpi-value" id="kpiMargem">—</div>
+                        <div class="kpi-sub" id="kpiOrdens">— pedidos analisados</div>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-icon">🏆</span>
+                        <div class="kpi-label">Produto + Lucrativo</div>
+                        <div class="kpi-value" id="kpiTopProd" style="font-size:16px;line-height:1.3">—</div>
+                        <div class="kpi-sub" id="kpiTopProdMargem"></div>
+                    </div>
+                    <div class="kpi-card" id="kpiAlertasCard">
+                        <span class="kpi-icon">🚨</span>
+                        <div class="kpi-label">Alertas Ativos</div>
+                        <div class="kpi-value" id="kpiAlertas">—</div>
+                        <div class="kpi-sub" id="kpiAlertasSub">Verificando…</div>
+                    </div>
+                </div>
+
+                <!-- ========== MÓDULO 1: MARGEM POR PRODUTO ========== -->
+                <div class="intel-module">
+                    <div class="intel-module-header">
+                        <div>
+                            <h3 class="intel-module-title">📊 Módulo 1 — Margem por Produto</h3>
+                            <div style="font-size:12px;color:#6B7280;margin-top:2px">
+                                Somente pedidos com CMV registrado (cmvSnapshot &gt; 0)
+                            </div>
+                        </div>
+                        <div class="intel-summary-chips" id="margemChips"></div>
+                    </div>
+                    <div style="padding:14px 22px 0;border-bottom:1.5px solid #F3F4F6">
+                        <div class="m-tabs">
+                            <button class="m-tab active" id="tabLucr" onclick="switchMargemTab('lucr')">
+                                🟢 Top 10 Lucrativos
+                            </button>
+                            <button class="m-tab" id="tabMarg" onclick="switchMargemTab('marg')">
+                                🔴 Menor Margem
+                            </button>
+                            <button class="m-tab" id="tabAll" onclick="switchMargemTab('all')">
+                                Todos os Produtos
+                            </button>
+                        </div>
+                    </div>
+                    <div class="intel-module-body" style="padding-top:16px;overflow-x:auto">
+                        <div id="margemBody">
+                            <div class="loading-msg">
+                                <span class="spin">⏳</span>Carregando dados de margem…
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== MÓDULO 2: CONSUMO DE INSUMOS ========== -->
+                <div class="intel-module">
+                    <div class="intel-module-header">
+                        <div>
+                            <h3 class="intel-module-title">🧪 Módulo 2 — Consumo de Insumos</h3>
+                            <div style="font-size:12px;color:#6B7280;margin-top:2px">
+                                Ranking de consumo + dias restantes de estoque
+                            </div>
+                        </div>
+                        <div class="intel-summary-chips" id="insumosChips"></div>
+                    </div>
+                    <div class="intel-module-body" style="overflow-x:auto">
+                        <div id="insumosBody">
+                            <div class="loading-msg">
+                                <span class="spin">⏳</span>Calculando consumo de insumos…
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== MÓDULO 3: ALERTAS ========== -->
+                <div class="intel-module">
+                    <div class="intel-module-header">
+                        <div>
+                            <h3 class="intel-module-title">🚨 Módulo 3 — Alertas Operacionais</h3>
+                            <div style="font-size:12px;color:#6B7280;margin-top:2px">
+                                Inconsistências detectadas automaticamente nos dados
+                            </div>
+                        </div>
+                        <div class="intel-summary-chips" id="alertasChips"></div>
+                    </div>
+                    <div class="intel-module-body">
+                        <div class="alert-list" id="alertasBody">
+                            <div class="loading-msg">
+                                <span class="spin">⏳</span>Verificando alertas…
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /panel-content -->
+        </main>
+    </div><!-- /panel-layout -->
+
+    <!-- =============================== SCRIPTS =============================== -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/units.js"></script>
+    <script src="../js/core/catalog-v2.js?v=mp-v106"></script>
+    <script src="../js/core/margin-intelligence.js?v=mp-v106"></script>
+
+    <script>
+    /* =====================================================
+       Inteligência de Negócio — Controller
+    ===================================================== */
+    var _fid    = null;
+    var _period = 7;      // dias selecionados
+    var _data   = null;   // cache do último getDashboardSummary
+    var _margemTab = 'lucr'; // aba ativa do módulo 1
+
+    /* ---- formatadores ---- */
+    function fmtBRL(n) {
+        return 'R$ ' + Number(n || 0).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2, maximumFractionDigits: 2
+        });
+    }
+    function fmtPct(n) { return Number(n || 0).toFixed(1) + '%'; }
+    function fmtQty(n, unit) {
+        return Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 })
+               + (unit ? ' ' + unit : '');
+    }
+
+    /* ---- seletor de período ---- */
+    function setPeriod(days) {
+        _period = days;
+        ['p1','p7','p30','p90','p0'].forEach(function(id) {
+            document.getElementById(id).classList.remove('active');
+        });
+        var idMap = {1:'p1', 7:'p7', 30:'p30', 90:'p90', 0:'p0'};
+        if (idMap[days]) document.getElementById(idMap[days]).classList.add('active');
+        runAnalysis();
+    }
+
+    /* ---- aba de margem ---- */
+    function switchMargemTab(tab) {
+        _margemTab = tab;
+        ['tabLucr','tabMarg','tabAll'].forEach(function(id) {
+            document.getElementById(id).classList.remove('active');
+        });
+        var idMap = { lucr: 'tabLucr', marg: 'tabMarg', all: 'tabAll' };
+        if (idMap[tab]) document.getElementById(idMap[tab]).classList.add('active');
+        if (_data) renderMargem(_data.margem);
+    }
+
+    /* ---- análise principal ---- */
+    function runAnalysis() {
+        if (!_fid) return;
+
+        // Mostra loading
+        setLoading(true);
+
+        try {
+            _data = MarginIntelligence.getDashboardSummary(_fid, _period);
+        } catch(e) {
+            console.error('[Analise] getDashboardSummary:', e);
+            setLoading(false);
+            return;
+        }
+
+        renderKPIs(_data);
+        renderMargem(_data.margem);
+        renderInsumos(_data.insumos);
+        renderAlertas(_data.alertas);
+        setLoading(false);
+    }
+
+    function setLoading(yes) {
+        var modules = ['margemBody','insumosBody','alertasBody'];
+        if (yes) {
+            modules.forEach(function(id) {
+                document.getElementById(id).innerHTML =
+                    '<div class="loading-msg"><span class="spin">⏳</span>Calculando…</div>';
+            });
+        }
+    }
+
+    function refresh() { runAnalysis(); }
+
+    /* =====================================================
+       RENDER: KPI CARDS
+    ===================================================== */
+    function renderKPIs(summary) {
+        // Lucro
+        document.getElementById('kpiLucro').textContent = fmtBRL(summary.lucroTotal);
+        document.getElementById('kpiReceita').textContent =
+            'Receita: ' + fmtBRL(summary.receitaTotal);
+
+        // Margem
+        var margem = summary.margemGeral;
+        document.getElementById('kpiMargem').textContent = fmtPct(margem);
+        document.getElementById('kpiOrdens').textContent =
+            summary.ordensAnalisadas + ' pedido(s) analisado(s)';
+        var margemCard = document.getElementById('kpiMargemCard');
+        margemCard.className = 'kpi-card ' + (margem < 0 ? 'danger' : margem < 30 ? 'warn' : 'good');
+
+        // Produto mais lucrativo
+        if (summary.produtoMaisLucrativo) {
+            var p = summary.produtoMaisLucrativo;
+            document.getElementById('kpiTopProd').textContent = p.name;
+            document.getElementById('kpiTopProdMargem').textContent =
+                fmtBRL(p.lucroTotal) + ' · ' + fmtPct(p.margemMedia);
+        } else {
+            document.getElementById('kpiTopProd').textContent = '—';
+            document.getElementById('kpiTopProdMargem').textContent = 'Sem dados ainda';
+        }
+
+        // Alertas
+        var tot = summary.totalAlertas;
+        var crit = summary.criticos;
+        document.getElementById('kpiAlertas').textContent = tot;
+        document.getElementById('kpiAlertasSub').textContent =
+            crit + ' crítico(s), ' + (tot - crit) + ' aviso(s)';
+        var alertCard = document.getElementById('kpiAlertasCard');
+        alertCard.className = 'kpi-card ' + (crit > 0 ? 'danger' : tot > 0 ? 'warn' : 'good');
+    }
+
+    /* =====================================================
+       RENDER: MÓDULO 1 — MARGEM POR PRODUTO
+    ===================================================== */
+    function renderMargem(m) {
+        var div = document.getElementById('margemBody');
+        var chips = document.getElementById('margemChips');
+
+        // Chips de resumo
+        chips.innerHTML =
+            '<span class="summary-chip purple">Receita: ' + fmtBRL(m.totalReceita) + '</span>' +
+            '<span class="summary-chip">CMV: ' + fmtBRL(m.totalCMV) + '</span>' +
+            '<span class="summary-chip ' + (m.totalLucro >= 0 ? 'green' : 'red') + '">Lucro: ' + fmtBRL(m.totalLucro) + '</span>' +
+            '<span class="summary-chip ' + (m.margemGeral >= 30 ? 'green' : m.margemGeral < 0 ? 'red' : 'yellow') + '">Margem: ' + fmtPct(m.margemGeral) + '</span>';
+
+        var lista;
+        if (_margemTab === 'lucr') lista = m.topLucrativos;
+        else if (_margemTab === 'marg') lista = m.menorMargem;
+        else lista = m.produtos;
+
+        if (!lista || lista.length === 0) {
+            div.innerHTML = '<div class="empty-msg"><span>📭</span>Nenhum produto com CMV registrado no período.<br>' +
+                '<small style="font-size:12px">Faça vendas no PDV para gerar dados de margem.</small></div>';
+            return;
+        }
+
+        var maxLucro = Math.max.apply(null, lista.map(function(p) { return p.lucroTotal; })) || 1;
+
+        var rows = lista.map(function(p, i) {
+            var rank = i + 1;
+            var rankClass = rank === 1 ? 'top1' : rank === 2 ? 'top2' : rank === 3 ? 'top3' : '';
+            var rankMedal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+            var lucroClass = p.lucroTotal >= 0 ? 'positive' : 'negative';
+            var barW = Math.max(0, Math.min(100, (p.lucroTotal / maxLucro * 100)));
+            var badgeClass = p.alerta === 'ok' ? 'ok' : p.alerta === 'baixa' ? 'baixa' : 'prejuizo';
+            var badgeText = fmtPct(p.margemMedia) + ' ' + p.alertaIcon;
+            return '<tr>' +
+                '<td class="rank ' + rankClass + '">' + rankMedal + '</td>' +
+                '<td class="product-name">' + escH(p.name) +
+                    '<small>' + p.totalVendido + ' unid. vendidas</small>' +
+                '</td>' +
+                '<td class="money hide-mobile">' + fmtBRL(p.receitaTotal) + '</td>' +
+                '<td class="money hide-mobile" style="color:#6B7280">' + fmtBRL(p.cmvTotal) + '</td>' +
+                '<td class="money ' + lucroClass + '">' + fmtBRL(p.lucroTotal) + '</td>' +
+                '<td>' +
+                    '<span class="margem-badge ' + badgeClass + '">' + badgeText + '</span>' +
+                    '<div class="prog-bar-bg" style="margin-top:5px"><div class="prog-bar-fill" style="width:' + barW.toFixed(1) + '%"></div></div>' +
+                '</td>' +
+            '</tr>';
+        }).join('');
+
+        div.innerHTML =
+            '<table class="intel-table">' +
+            '<thead><tr>' +
+                '<th>#</th>' +
+                '<th>Produto</th>' +
+                '<th class="hide-mobile">Receita</th>' +
+                '<th class="hide-mobile">CMV</th>' +
+                '<th>Lucro Bruto</th>' +
+                '<th>Margem</th>' +
+            '</tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+            '</table>';
+    }
+
+    /* =====================================================
+       RENDER: MÓDULO 2 — CONSUMO DE INSUMOS
+    ===================================================== */
+    function renderInsumos(d) {
+        var div    = document.getElementById('insumosBody');
+        var chips  = document.getElementById('insumosChips');
+        var alertEs = d.alertasEstoque || [];
+        var crit   = alertEs.filter(function(i) { return i.status === 'critico'; }).length;
+        var aten   = alertEs.filter(function(i) { return i.status === 'atencao'; }).length;
+
+        chips.innerHTML =
+            '<span class="summary-chip">' + d.totalInsumos + ' insumo(s) rastreados</span>' +
+            (crit > 0 ? '<span class="summary-chip red">🔴 ' + crit + ' crítico(s)</span>' : '') +
+            (aten > 0 ? '<span class="summary-chip yellow">🟡 ' + aten + ' atenção</span>' : '') +
+            (crit === 0 && aten === 0 && d.totalInsumos > 0 ? '<span class="summary-chip green">✅ Estoque OK</span>' : '');
+
+        if (!d.insumos || d.insumos.length === 0) {
+            div.innerHTML = '<div class="empty-msg"><span>🧪</span>Nenhum consumo de insumo detectado no período.<br>' +
+                '<small style="font-size:12px">Cadastre receitas nos produtos para rastrear consumo.</small></div>';
+            return;
+        }
+
+        var maxConsumo = Math.max.apply(null, d.insumos.map(function(i) { return i.consumoPeriodo; })) || 1;
+
+        var rows = d.insumos.map(function(ins, i) {
+            var diasText = ins.diasRestantes !== null
+                ? ins.diasRestantes.toFixed(1) + ' dias'
+                : '—';
+            var diasClass = ins.status;
+            var barW = Math.max(0, Math.min(100, (ins.consumoPeriodo / maxConsumo * 100)));
+            return '<tr>' +
+                '<td class="rank ' + (i < 3 ? 'top' + (i+1) : '') + '">' + (i+1) + '</td>' +
+                '<td class="product-name">' + escH(ins.nome) + '<small>' + ins.unit + '</small></td>' +
+                '<td>' + fmtQty(ins.consumoHoje, ins.unit) + '</td>' +
+                '<td class="hide-mobile">' + fmtQty(ins.consumoSemana, ins.unit) + '</td>' +
+                '<td>' +
+                    fmtQty(ins.consumoPeriodo, ins.unit) +
+                    '<div class="prog-bar-bg" style="margin-top:5px"><div class="prog-bar-fill" style="width:' + barW.toFixed(1) + '%"></div></div>' +
+                '</td>' +
+                '<td class="hide-mobile">' + fmtQty(ins.estoqueAtual, ins.unit) + '</td>' +
+                '<td>' +
+                    '<span class="dias-badge ' + diasClass + '">' +
+                    ins.statusIcon + ' ' + diasText +
+                    '</span>' +
+                '</td>' +
+            '</tr>';
+        }).join('');
+
+        div.innerHTML =
+            '<table class="intel-table">' +
+            '<thead><tr>' +
+                '<th>#</th>' +
+                '<th>Insumo</th>' +
+                '<th>Hoje</th>' +
+                '<th class="hide-mobile">Semana</th>' +
+                '<th>Período</th>' +
+                '<th class="hide-mobile">Estoque</th>' +
+                '<th>Dias Restantes</th>' +
+            '</tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+            '</table>';
+    }
+
+    /* =====================================================
+       RENDER: MÓDULO 3 — ALERTAS OPERACIONAIS
+    ===================================================== */
+    function renderAlertas(d) {
+        var div   = document.getElementById('alertasBody');
+        var chips = document.getElementById('alertasChips');
+
+        chips.innerHTML =
+            (d.criticos > 0
+                ? '<span class="summary-chip red">🚨 ' + d.criticos + ' crítico(s)</span>'
+                : '') +
+            (d.avisos > 0
+                ? '<span class="summary-chip yellow">⚠️ ' + d.avisos + ' aviso(s)</span>'
+                : '') +
+            (d.totalAlertas === 0
+                ? '<span class="summary-chip green">✅ Sem alertas</span>'
+                : '');
+
+        if (!d.alertas || d.alertas.length === 0) {
+            div.innerHTML =
+                '<div class="alert-empty"><span>✅</span>' +
+                'Nenhuma inconsistência detectada. Sistema íntegro!</div>';
+            return;
+        }
+
+        div.innerHTML = d.alertas.map(function(a) {
+            return '<div class="alert-item ' + escH(a.nivel) + '">' +
+                '<div class="alert-icon">' + a.icon + '</div>' +
+                '<div class="alert-body">' +
+                    '<p class="alert-title">' + escH(a.titulo) + '</p>' +
+                    '<p class="alert-msg">' + escH(a.mensagem) + '</p>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    /* ---- escapa HTML para segurança ---- */
+    function escH(str) {
+        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    /* =====================================================
+       INICIALIZAÇÃO
+    ===================================================== */
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auth
+        var authCheck = setInterval(function() {
+            if (typeof Auth === 'undefined') return;
+            clearInterval(authCheck);
+            Auth.requireLogin(function(user) {
+                _fid = user.franchiseId || user.uid || 'franquia-teste';
+                if (document.getElementById('sidebarUserName')) {
+                    document.getElementById('sidebarUserName').textContent = user.name || user.email || 'Franqueado';
+                }
+                if (document.getElementById('sidebarStoreName')) {
+                    document.getElementById('sidebarStoreName').textContent = user.storeName || '';
+                }
+
+                // Aguarda DataStore sync completo ou usa dados locais após 1.5s
+                if (DataStore._syncDone) {
+                    runAnalysis();
+                } else {
+                    var syncListener = function(e) {
+                        window.removeEventListener('mp_synced', syncListener);
+                        runAnalysis();
+                    };
+                    window.addEventListener('mp_synced', syncListener);
+                    // Fallback: se sync demorar mais que 1.5s, usa localStorage
+                    setTimeout(function() {
+                        window.removeEventListener('mp_synced', syncListener);
+                        if (!_data) runAnalysis();
+                    }, 1500);
+                }
+            });
+        }, 100);
+
+        // Sidebar toggle
+        if (typeof toggleSidebar === 'undefined') {
+            window.toggleSidebar = function() {
+                document.getElementById('sidebar').classList.toggle('open');
+            };
+        }
+    });
+    </script>
+</body>
+</html>
