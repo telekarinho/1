@@ -2,6 +2,41 @@
 
 ---
 
+## Ciclo #101 — 2026-05-03
+
+**Área:** UX/Performance — Segunda rodada CSS purge `cardapio.css`
+
+**Contexto:** Prescrito pelo roadmap do ciclo #100 (posição #1 da nova rotação). Ciclo #99 removeu 171 linhas e listou 21 classes `cp-` pendentes como não verificadas naquele ciclo. Ciclo #101 retoma e finaliza essa varredura.
+
+**O que analisou:**
+- Extraiu lista completa de classes `cp-` no `cardapio.css` (119 classes únicas)
+- Cruzou cada classe contra todos os `*.html` e `js/*.js` do projeto
+- Identificou exatamente 21 classes com 0 referências externas
+- Verificou falsos positivos: `cp-cart-empty`, `cp-cart-item*`, `cp-qty-btn-sm`, `cp-checkout-item`, `cp-checkout-total` são geradas dinamicamente em `js/cardapio.js` → mantidas
+- Confirmou que os contêineres removidos (`cp-cart-overlay`, `cp-cart-sidebar`, etc.) são selecionados por ID no JS (`menuCartSidebar`, `menuCartOverlay`) e esses IDs não existem no HTML — confirma que o bloco do cart `cp-` era de uma implementação alternativa nunca finalizada
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `css/cardapio.css` | −279 linhas: removidos blocos de 21 classes mortas + suas variantes pseudo-class/descendentes/responsive |
+
+**Classes removidas:**
+`cp-step-bar`, `cp-step-dot`, `cp-back-btn` (+hover +responsive), `cp-types-section`, `cp-cart-overlay` (+.active), `cp-cart-sidebar` (+.active +responsive), `cp-cart-header` (+h3), `cp-cart-close`, `cp-cart-items`, `cp-cart-footer`, `cp-cart-total`, `cp-cart-total-value`, `cp-modal-overlay` (+.active), `cp-modal` (+h2), `cp-modal-close`, `cp-form-group` (+label +input/select +focus), `cp-delivery-options`, `cp-delivery-opt` (+has:checked +input), `cp-success-modal` (+h2 +p), `cp-success-emoji`, `cp-step-mini-icon`
+
+**Resultado:** 1380 → 1101 linhas (−20,2%). CSS classes `cp-` reduzidas de 119 para 98 únicas.
+
+**Commit:** `e720b71`
+
+**Próximo passo sugerido:**
+- Ciclo #102: SEO — `acai-self-service-londrina.html` audit completo: BreadcrumbList, WebPage schema, meta description, og:image dimensions, link interno de `index.html` e `cardapio.html`
+- Ciclo #103: UX/Performance — `cardapio.js` bundle audit: console.logs, variáveis mortas, dead functions
+- Operador: os IDs `menuCartSidebar`, `menuCartOverlay`, `menuCartClose`, `menuCartItems`, `menuCartFooter`, `menuCartTotal` existem em `js/cardapio.js` mas não têm elementos correspondentes no HTML → funcionalidade de carrinho alternativa está incompleta. Confirmar se deve ser removida do JS ou implementada no HTML
+
+_Belinha — Ciclo #101 | 2026-05-03_
+
+---
+
 ## Ciclo #100 — 2026-05-03
 
 **Área:** Estratégia — Revisão completa dos 100 ciclos + atualização de `belinha/estrategia.md`
