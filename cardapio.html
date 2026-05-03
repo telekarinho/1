@@ -43,8 +43,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/mobile-app.css">
+    <link rel="stylesheet" href="css/style.css?v=mp-v114">
+    <link rel="stylesheet" href="css/mobile-app.css?v=mp-v114">
 
     <!-- Favicon + PWA -->
     <link rel="icon" type="image/png" href="images/logo-milkypot.png">
@@ -561,11 +561,11 @@
         if (typeof DataStore !== 'undefined' && DataStore.init) DataStore.init();
     </script>
     <script src="js/stores-data.js"></script>
-    <script src="js/analytics.js"></script>
+    <script src="js/analytics.js?v=mp-v114"></script>
     <script src="js/cardapio-data.js"></script>
     <script src="js/core/cost-calculator.js?v=mp-v14"></script>
     <script src="js/core/catalog-v2.js?v=mp-v105"></script>
-    <script src="js/cart.js"></script>
+    <script src="js/cart.js?v=mp-v114"></script>
     <script src="js/core/raspinha-engine.js"></script>
     <script src="js/checkout.js?v=mp-v113"></script>
     <script src="js/chat-ai.js" defer></script>
@@ -896,7 +896,8 @@
                 var isPremium = !!(it.premium || it.isPremium || (it._v2 && it._v2.premium) || (typeof displayPrice === 'number' && displayPrice >= 20));
                 var premiumAttr = isPremium ? ' data-premium="true"' : '';
 
-                html += '<div class="product-card-mobile"' + premiumAttr + ' onclick="openProductSheet(\'' + it.id + '\')">' +
+                var openSheetCall = "openProductSheet('" + it.id + "')";
+                html += '<div class="product-card-mobile"' + premiumAttr + ' role="button" tabindex="0" onclick="' + openSheetCall + '">' +
                     '<div class="card-emoji-wrap">' +
                         imgHtml +
                         badgeHtml +
@@ -907,7 +908,7 @@
                         spHtml +
                         '<div class="card-footer">' +
                             '<span class="card-price">' + (priceLabel ? '<small>' + priceLabel + '</small>' : '') + '<strong>R$ ' + displayPrice.toFixed(2).replace('.',',') + '</strong></span>' +
-                            '<button class="card-add-btn">Pedir</button>' +
+                            '<button type="button" class="card-add-btn" onclick="event.stopPropagation();' + openSheetCall + '">Pedir</button>' +
                         '</div>' +
                     '</div>' +
                 '</div>';
@@ -1128,15 +1129,22 @@
                 </div>
             `;
 
-            document.getElementById('sheetContent').innerHTML = html;
-            document.getElementById('productSheetBackdrop').style.display = 'block';
+            var sheetContent = document.getElementById('sheetContent');
+            var backdrop = document.getElementById('productSheetBackdrop');
             var sheet = document.getElementById('productSheet');
+            if (!sheetContent || !backdrop || !sheet) return;
+
+            sheetContent.innerHTML = html;
+            backdrop.style.display = 'block';
             sheet.style.display = 'block';
-            setTimeout(() => {
+            sheet.classList.remove('sheet-open');
+            // Forca reflow para o bottom sheet animar sempre, inclusive apos cache/voltar do navegador.
+            void sheet.offsetHeight;
+            requestAnimationFrame(() => {
                 sheet.classList.add('sheet-open');
                 document.body.style.overflow = 'hidden';
                 updateSheetTotalDelivery();
-            }, 10);
+            });
         };
 
         window.selectPortion = function(btn, peso, price) {
@@ -1348,7 +1356,10 @@
         window.closeProductSheet = function() {
             var sheet = document.getElementById('productSheet');
             var bd    = document.getElementById('productSheetBackdrop');
-            if (sheet) sheet.style.display = 'none';
+            if (sheet) {
+                sheet.classList.remove('sheet-open');
+                sheet.style.display = 'none';
+            }
             if (bd)    bd.style.display    = 'none';
             document.body.style.overflow = '';
         };
@@ -1381,11 +1392,13 @@
                 }
             }
             // Badge no nav (carrinho icon, se existir)
+            var navCount = document.getElementById('cartCount');
+            if (navCount) navCount.textContent = items.length;
             var badge = document.querySelector('.cart-badge, [data-cart-count]');
             if (badge) badge.textContent = items.length || '';
             // Se carrinho aberto, re-renderiza itens
             var sb = document.getElementById('cartSidebar');
-            if (sb && sb.classList.contains('open')) renderCartItems();
+            if (sb && (sb.classList.contains('open') || sb.classList.contains('active'))) renderCartItems();
         };
 
         function renderCartItems() {
@@ -1436,8 +1449,8 @@
             var ov = document.getElementById('cartOverlay');
             if (!sb) return;
             renderCartItems();
-            sb.classList.add('open');
-            if (ov) ov.classList.add('open');
+            sb.classList.add('open', 'active');
+            if (ov) ov.classList.add('open', 'active');
             document.body.style.overflow = 'hidden';
             // CRITICAL: esconde sticky cart bar quando o carrinho abre,
             // senao o botao verde gigante cobre o 'Finalizar Pedido'
@@ -1446,8 +1459,8 @@
         window.closeCartSidebar = function() {
             var sb = document.getElementById('cartSidebar');
             var ov = document.getElementById('cartOverlay');
-            if (sb) sb.classList.remove('open');
-            if (ov) ov.classList.remove('open');
+            if (sb) sb.classList.remove('open', 'active');
+            if (ov) ov.classList.remove('open', 'active');
             document.body.style.overflow = '';
             document.body.classList.remove('cart-open');
         };

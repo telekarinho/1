@@ -253,15 +253,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function openCartSidebar() {
         updateCartUI();
-        if (sidebar) sidebar.classList.add('active');
-        if (cartOverlay) cartOverlay.classList.add('active');
+        if (sidebar) sidebar.classList.add('active', 'open');
+        if (cartOverlay) cartOverlay.classList.add('active', 'open');
         document.body.style.overflow = 'hidden';
+        document.body.classList.add('cart-open');
+        updateCartUI();
     }
 
     function closeCartSidebar() {
-        if (sidebar) sidebar.classList.remove('active');
-        if (cartOverlay) cartOverlay.classList.remove('active');
+        if (sidebar) sidebar.classList.remove('active', 'open');
+        if (cartOverlay) cartOverlay.classList.remove('active', 'open');
         document.body.style.overflow = '';
+        document.body.classList.remove('cart-open');
     }
 
     if (cartBtn) cartBtn.addEventListener('click', openCartSidebar);
@@ -271,6 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Expose for external use
     window.openCartSidebar = openCartSidebar;
     window.closeCartSidebar = closeCartSidebar;
+    window.openCart = openCartSidebar;
 
     // Initial UI update
     updateCartUI();
