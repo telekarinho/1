@@ -1686,3 +1686,99 @@ exports.runOrphanCleanupNow = onCall({
     });
     return { ok: true, mode: "all-franchises", summary };
 });
+
+// ============================================================
+// FASE 8.2 — Catalog Auto-Sync (server-side)
+// ============================================================
+// Triggers Firestore: quando catalog_v2_<fid> ou inventory_<fid> muda,
+// servidor reconstrói catalog_config + recalcula custoTotal automaticamente.
+// Elimina race condition entre PCs (servidor é fonte única de verdade).
+const CatalogSync = require("./catalog-sync");
+
+/**
+ * Trigger: datastore/catalog_v2_{fid} mudou → reconstrói catalog_config.
+ * Importante: não dispara loop porque o catalog_config NÃO matcha o pattern.
+ */
+exports.onCatalogV2Write = onDocumentUpdated({
+    region: "southamerica-east1",
+    document: "datastore/{docId}",
+    timeoutSeconds: 60,
+    memory: "256MiB",
+}, async (event) => {
+    const docId = event.params.docId || "";
+    // Só responde a catalog_v2_<fid> e inventory_<fid>
+    const isCatalogV2 = docId.startsWith("catalog_v2_") && docId !== "catalog_v2_franquia"; // tem fid
+    const isInventory = docId.startsWith("inventory_");
+    if (!isCatalogV2 && !isInventory) return;
+
+    // Extrai fid
+    let fid = null;
+    if (isCatalogV2) fid = docId.replace("catalog_v2_", "");
+    else if (isInventory) fid = docId.replace("inventory_", "");
+    if (!fid) return;
+
+    // Anti-loop: se o write veio do próprio sync (audit tag), não dispara de novo
+    try {
+        const after = event.data.after.data();
+        if (after && after._updatedBy && /^catalog-sync-/.test(after._updatedBy)) {
+            return; // próprio sync escreveu — ignora
+        }
+    } catch (e) { /* dados podem ter mudado */ }
+
+    console.log(`[catalog-sync] trigger por ${docId} → sincronizando franquia ${fid}`);
+    try {
+        const r = await CatalogSync.syncCatalogConfigForFranchise(db, fid);
+        console.log(`[catalog-sync] resultado:`, JSON.stringify(r));
+    } catch (e) {
+        console.error(`[catalog-sync] erro pra ${fid}:`, e.message);
+    }
+});
+
+/** Também responde a catalog_v2 created (1ª vez) */
+exports.onCatalogV2Create = onDocumentCreated({
+    region: "southamerica-east1",
+    document: "datastore/{docId}",
+    timeoutSeconds: 60,
+    memory: "256MiB",
+}, async (event) => {
+    const docId = event.params.docId || "";
+    if (!docId.startsWith("catalog_v2_") && !docId.startsWith("inventory_")) return;
+    let fid = null;
+    if (docId.startsWith("catalog_v2_")) fid = docId.replace("catalog_v2_", "");
+    else fid = docId.replace("inventory_", "");
+    if (!fid) return;
+    try {
+        const after = event.data.data();
+        if (after && after._updatedBy && /^catalog-sync-/.test(after._updatedBy)) return;
+    } catch (e) {}
+    console.log(`[catalog-sync] create-trigger por ${docId} → sincronizando franquia ${fid}`);
+    try {
+        await CatalogSync.syncCatalogConfigForFranchise(db, fid);
+    } catch (e) { console.error(`[catalog-sync] erro:`, e.message); }
+});
+
+/** Manual trigger — admin (todas) ou franchisee (própria). Útil pra catch-up inicial. */
+exports.runCatalogSyncNow = onCall({
+    region: "southamerica-east1",
+    timeoutSeconds: 120,
+    memory: "256MiB",
+}, async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Autenticacao necessaria");
+    const role = request.auth.token.role || "";
+    if (!["super_admin", "admin", "franchisee"].includes(role)) {
+        throw new HttpsError("permission-denied", "Apenas admin/franqueado");
+    }
+    const { franchiseId } = request.data || {};
+    if (franchiseId) {
+        if (role === "franchisee" && request.auth.token.franchiseId !== franchiseId) {
+            throw new HttpsError("permission-denied", "Franqueado só pode rodar pra própria franquia");
+        }
+        const r = await CatalogSync.syncCatalogConfigForFranchise(db, franchiseId);
+        return { ok: true, mode: "single-franchise", result: r };
+    }
+    if (role !== "super_admin" && role !== "admin") {
+        throw new HttpsError("permission-denied", "Apenas admin pode rodar pra todas");
+    }
+    const summary = await CatalogSync.syncAllFranchises(db);
+    return { ok: true, mode: "all-franchises", summary };
+});
