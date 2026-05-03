@@ -1615,7 +1615,20 @@
                     var feeTxt = 'R$ ' + feeBRL.toFixed(2).replace('.', ',');
                     setS('✓ <strong>Frete: ' + feeTxt + '</strong> · entrega via Uber', '#065F46', '#ECFDF5');
                     var dft = document.getElementById('deliveryFeeText'); if (dft) dft.textContent = 'Taxa: ' + feeTxt;
-                }).catch(function(e){ setS('⚠ Uber Direct não disponível pra esse endereço', '#9A3412', '#FFF7ED'); });
+                }).catch(function(e){
+                    // Mensagem mais útil: distingue endereço fora de cobertura vs erro de config/auth
+                    var msg = (e && e.message) || '';
+                    var friendly;
+                    if (/not.found|invalid.*address|geocod|out.of|coverage|range|distance/i.test(msg)) {
+                        friendly = '⚠ Esse endereço está fora da área de entrega da Uber. Tente outro CEP ou retire na loja.';
+                    } else if (/unavailable|not.enabled|disabled|configura/i.test(msg)) {
+                        friendly = '⚠ Entrega Uber temporariamente indisponível pra esta loja. <small style="opacity:.7">' + msg.slice(0,80) + '</small>';
+                    } else {
+                        friendly = '⚠ Não consegui calcular o frete agora. <small style="opacity:.7">' + msg.slice(0,80) + '</small>';
+                    }
+                    setS(friendly, '#9A3412', '#FFF7ED');
+                    console.warn('[uber-quote-error]', e);
+                });
             } catch(e) { console.warn('uber quote:', e); }
         };
 
@@ -1759,7 +1772,23 @@
         }
 
         var feeText = document.getElementById('deliveryFeeText');
-        if (feeText) feeText.textContent = 'Taxa: R$ ' + selectedStore.deliveryFee.toFixed(2).replace('.', ',');
+        if (feeText) {
+            // FIX: se loja tem Uber Direct ativo, NÃO mostra preço fixo —
+            // o frete real será calculado quando o user inserir endereço.
+            // Só mostra preço fixo se:
+            //  - Uber NÃO está ativo
+            //  - E loja tem deliveryFee > 0 configurada explicitamente
+            var uberAtivo = selectedStore.uberDirectEnabled
+                         || selectedStore.uberEnabled
+                         || (selectedStore.delivery && selectedStore.delivery.uberDirect);
+            if (uberAtivo) {
+                feeText.textContent = 'Calculado pela Uber ao informar endereço';
+            } else if (selectedStore.deliveryFee > 0) {
+                feeText.textContent = 'Taxa: R$ ' + selectedStore.deliveryFee.toFixed(2).replace('.', ',');
+            } else {
+                feeText.textContent = 'Calcular ao confirmar';
+            }
+        }
         window._selectedStoreWhatsApp = selectedStore.whatsapp;
         window._selectedStoreName = selectedStore.name;
         window._selectedStoreTime = selectedStore.deliveryTime;
