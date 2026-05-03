@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #97 — 2026-05-03
+
+**Área:** Conversão — Upsell PDV + Template WA 15º Carimbo + Blocker WA "VERAO"
+
+**Contexto:** Prescrito pelo roadmap #92 como ciclo dedicado à conversão. Três pendências consolidadas: (1) upsell PDV nunca documentado com scripts concretos para o atendente; (2) template WA 15º carimbo prescrito desde ciclo #77 e nunca executado — ponto de inflexão crítico do segundo ciclo de fidelidade; (3) status do WA keyword "VERAO" desconhecido — bloqueador ativo sem documentação formal.
+
+**O que analisou:**
+- Leu `whatsapp-fidelidade-resgate.md` (10 carimbos) para entender o padrão de templates e a estrutura da progressão de fidelidade
+- Confirmou que nenhum script de upsell PDV presencial existia — gap operacional desde a inauguração
+- Identificou que o 15º carimbo = 5º carimbo do segundo cartão = ponto de abandono de segundo ciclo mais provável (o cliente "zerou" e perdeu o impulso do início)
+- Verificou que "VERAO" nunca foi documentado como blocker formal — apenas como referência em conteúdo e estratégia
+- Definiu benefício sugerido para 15º carimbo: topping bônus (custo controlado, impacto emocional alto — surprise & delight)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/conversao-upsell-pdv-15carimbos.md` | CRIADO — 6 scripts de upsell PDV (A–F: tamanho, topping premium, açaí buffet, milkshake, Linha Zero, combo fidelidade) + boas práticas + metas de conversão + Template WA 15º carimbo versão A (surprise & delight) e B (curta) + tabela progressão completa do programa fidelidade + métricas mid-loyalty |
+| `belinha/blockers.md` | ATUALIZADO — Blocker #5 adicionado: WA "VERAO" keyword status check com checklist para operador confirmar |
+
+**Commit:** `dcdc737`
+
+**Destaques:**
+1. **Script C (Açaí Buffet):** diferencial exclusivo da unidade Muffato — único upsell que NENHUM concorrente pode replicar no mesmo ponto. Deve ser tentado com clientes indecisos que olham o cardápio por mais de 10 segundos.
+2. **Template WA 15º carimbo:** primeiro script de reconhecimento mid-loyalty do projeto. O 15º carimbo é o ponto de maior risco de abandono do segundo ciclo — a surpresa reativa o cliente sem custo de desconto.
+3. **Progressão fidelidade documentada:** pela primeira vez o programa completo (10 → 15 → 20 carimbos) está mapeado em uma tabela com links cruzados entre arquivos.
+4. **Blocker VERAO formalizado:** até agora era referência informal em conteúdo; agora tem checklist claro para o operador confirmar o status e definir próximo passo.
+
+**Próximo passo sugerido:**
+- Ciclo #98: UX/Performance — `login.html` defer Firebase SDKs (4 scripts no head bloqueando render ~100–400ms) + auditoria `cardapio.css` 30KB sem uso (prescrito #95 e #96)
+- Operador: confirmar WA "VERAO" ativo ou não (checklist em `belinha/blockers.md` item #5)
+- Operador: definir benefício exato do 15º carimbo (topping bônus sugerido — confirmar se operacionalmente viável)
+- Operador: testar scripts de upsell PDV por 1 semana e anotar conversão (meta: ≥30% dos upsells tentados)
+
+_Belinha — Ciclo #97 | 2026-05-03_
+
+---
+
 ## Ciclo #96 — 2026-05-03
 
 **Área:** Conteúdo — Semanas 55+56 (02–15/05/2027): Dia das Mães (09/05) + Sextas #38/#39
