@@ -3846,7 +3846,13 @@
                     _stockSources: Object.keys(stockSources).length ? stockSources : null,
                     cmvTotal: order.cmvTotal,
                     lucroBruto: order.lucroBruto,
-                    _pendingCMV: !!order._pendingCMV
+                    _pendingCMV: !!order._pendingCMV,
+                    // CRITICAL: items foram modificados in-place no calculo do CMV
+                    // (cmvSnapshot, cmvSource, unitCostSnapshot adicionados em
+                    // cada item). Sem persistir aqui, ficavam apenas em memoria
+                    // -> firestore mantinha items "limpos" sem CMV.
+                    items: order.items,
+                    _cmvSourceMix: financeEntry._cmvSourceMix || null
                 });
                 // Toast pro operador se algum item ficou sem baixa de estoque
                 if (stockWarnings.length && typeof Utils !== 'undefined' && Utils.showToast) {
