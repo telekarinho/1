@@ -293,7 +293,7 @@ const DataStore = {
     // Sem merge: cada PC sobrescreve o array INTEIRO → race condition fatal,
     // PC com menos itens locais apaga itens do outro PC do cloud.
     _isMergeable(key) {
-        return /^(orders_|caixa_|pdv_tabs_|finances_|recurring_expenses_)/.test(key || '');
+        return /^(orders_|caixa_|pdv_tabs_|finances_|recurring_expenses_|inventory_)/.test(key || '');
     },
     // Merge inteligente: une dois arrays por id, prefere o mais recente
     // (updatedAt > createdAt). Idempotente — pode rodar várias vezes sem efeito ruim.
@@ -425,7 +425,8 @@ const DataStore = {
             docId.startsWith('pdv_tabs_') ||
             docId.startsWith('caixa_') ||
             docId.startsWith('finances_') ||
-            docId.startsWith('recurring_expenses_')
+            docId.startsWith('recurring_expenses_') ||
+            docId.startsWith('inventory_')
         );
     },
 
@@ -493,7 +494,8 @@ const DataStore = {
             'caixa_' + fid,
             'pdv_tabs_' + fid,
             'finances_' + fid,
-            'recurring_expenses_' + fid
+            'recurring_expenses_' + fid,
+            'inventory_' + fid
         ];
     },
 

@@ -129,9 +129,13 @@
         .pitem.esgotado .pp { color: #9CA3AF; text-decoration: line-through; }
         .pitem.baixoestoque { border-color: #FCD34D; }
         .pitem.baixoestoque:hover { border-color: #F59E0B; }
+        /* FASE 1F: produto sem receita — borda laranja-amarelado discreta, nao bloqueia venda */
+        .pitem.semreceita { border-color: #FDBA74; background: #FFF7ED; }
+        .pitem.semreceita:hover { border-color: #FB923C; }
         .pbadge { position: absolute; top: 4px; right: 4px; padding: 2px 6px; border-radius: 8px; font-size: 9px; font-weight: 800; line-height: 1.2; z-index: 1; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .pbadge.bd-out { background: #DC2626; color: #fff; }
         .pbadge.bd-low { background: #FBBF24; color: #78350F; }
+        .pbadge.bd-norecipe { background: #FB923C; color: #fff; }
 
         /* Cart sidebar — GRID layout: head/tabs/cust auto, items 1fr, foot auto.
            Garante que cart-foot SEMPRE caiba (foot tem prioridade sobre items). */
@@ -1459,9 +1463,12 @@
                 const stock = this._stockState(it, inventory);
                 const isOut = stock.hasRecipe && stock.units === 0;
                 const isLow = stock.hasRecipe && stock.units > 0 && stock.units <= lowStockThreshold && stock.units !== Infinity;
+                // FASE 1F: produto sem composicao = nao baixa estoque + nao calcula CMV
+                // Operador precisa SABER (badge laranja) pra cobrar do gestor cadastrar receita
+                const noRecipe = !stock.hasRecipe;
 
                 const div = document.createElement('div');
-                div.className = 'pitem ' + (it.isHighlight ? 'pop ' : '') + (isOut ? 'esgotado ' : '') + (isLow ? 'baixoestoque' : '');
+                div.className = 'pitem ' + (it.isHighlight ? 'pop ' : '') + (isOut ? 'esgotado ' : '') + (isLow ? 'baixoestoque' : '') + (noRecipe ? ' semreceita' : '');
 
                 // Badge premium/promo (ex: it.badge="PREMIUM") — top-left pra não conflitar com Esgotado/Restam
                 const promoBadge = it.badge
@@ -1473,6 +1480,9 @@
                     stockBadge = '<div class="pbadge bd-out">❌ Esgotado</div>';
                 } else if (isLow) {
                     stockBadge = `<div class="pbadge bd-low">⚠️ Restam ${stock.units}</div>`;
+                } else if (noRecipe) {
+                    // FASE 1F: produto sem receita — vende, mas nao baixa estoque nem grava CMV
+                    stockBadge = '<div class="pbadge bd-norecipe" title="Produto sem composição cadastrada — venda funciona mas estoque NÃO baixa e CMV NÃO grava. Vai em Painel → Produtos → Receita.">📋 Receita pendente</div>';
                 }
 
                 // Preço: "a partir de" se tem variantes
