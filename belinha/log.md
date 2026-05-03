@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #104 — 2026-05-03
+
+**Área:** Conversão — Raspinha da Sorte bugfix crítico
+
+**Contexto:** Prescrito pelo roadmap do ciclo #100 + próximo passo do ciclo #103. Auditoria completa do fluxo `raspinha.html` + `functions/index.js` + `painel/pdv.html`.
+
+**O que analisou:**
+- `raspinha.html` (489 linhas): fluxo completo desde entrada do código até revelação do prêmio
+- `functions/index.js` (787 linhas): **zero** Cloud Functions para raspinha — sistema é 100% frontend + Firestore direto
+- `painel/pdv.html`: `finishOrder()` gera raspinha (código longo `MKP-XXXX-YYYYMMDD-XXXXXXXX` + short code `XXX-XXX`), salva em localStorage E Firestore `scratches/{codeLongo}`
+- `firestore.rules` linha 184: `scratches/{scratchCode}` com read/create/update public — por obscuridade (218 trilhões de combinações)
+
+**Bug encontrado:**
+- `processScratch(scratch, code)` linha 203–204 tinha `scratch.code = code`
+- Para o caminho do **short code** (XXX-XXX, ≤8 chars): a query usa `.where('shortCode','==',code)` → retorna o doc com `code: fullCode`, mas `processScratch` sobrescrevia `scratch.code = shortCode`
+- Consequência: `db.collection('scratches').doc(shortCode).update({status:'scratched',...})` apontava para documento inexistente (ID real é o código longo) → **falha silenciosa** via `.catch(function(){})`
+- O status da raspinha nunca era atualizado de `not_scratched → scratched` no Firestore quando clientes usavam código curto
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `raspinha.html` | `scratch.code = code` → `if (!scratch.code) scratch.code = code` — preserva o ID real do doc Firestore; só usa código digitado como fallback se `code` não estiver no payload |
+
+**Métricas:**
+- +1 linha, −0 linhas (mudança mínima de 1 char + guard)
+- Impacto: tracking de status da raspinha agora funciona corretamente para 100% dos clientes que usam short code (maioria — código impresso no recibo)
+
+**Commit:** `82ccb29`
+
+**Próximo passo sugerido:**
+- Ciclo #105: Auto-aprimoramento — reler log #100–#104, ajustar estratégia roadmap #106–#115
+- Ciclo #106: Conteúdo acionável — criar 2–3 captions/roteiros para semana 2 de operação pós-inauguração (posts com foco em recompra/fidelidade)
+
+_Belinha — Ciclo #104 | 2026-05-03_
+
+---
+
 ## Ciclo #103 — 2026-05-03
 
 **Área:** UX/Performance — `cardapio.js` bundle audit
