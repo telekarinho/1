@@ -422,22 +422,57 @@
         if (!global.DataStore) return;
         const d = load(fid);
         const cats = d.categorias.filter(c => c.active !== false);
-        // GUARD CRITICO: NUNCA sobrescreve catalog_config se ele eh
-        // production_real (Cloud Function seedRealCatalog ja populou
-        // os 17+1 milkshakes/sundaes corretos). syncToLegacy roda
-        // automaticamente em qualquer load do CatalogV2 (ate sem produtos)
-        // e estava revertendo o catalogo real pra placeholder.
+
+        // GUARD CRITICO #1: production_real ja populou — nao toca
         try {
             const existing = global.DataStore.get('catalog_config');
             if (existing && existing._seedSource === 'production_real') {
-                // Conta items totais — se >5 produtos reais, nao toca
                 if (existing.sabores) {
                     const totalItems = Object.values(existing.sabores).reduce(function(s, g){
                         return s + ((g && g.items) ? g.items.length : 0);
                     }, 0);
                     if (totalItems > 5 && d.produtos.length === 0) {
-                        // CatalogV2 vazio + production_real real -> nao sync
                         return;
+                    }
+                }
+            }
+        } catch(_) {}
+
+        // GUARD CRITICO #2 (Fase 8.4): NUNCA sobrescreve catalog_config se a
+        // versão local do v2 tem produtos MAS sem receitas (cache desatualizado),
+        // E a versão remota do catalog_config tem receitas. Senão geramos um
+        // catalog_config "ruim" que sobrescreve o "bom" do servidor.
+        // Causa do loop "Receita pendente volta": outro PC com cache antigo
+        // rodava syncToLegacy e revertia o catalog_config recém-corrigido.
+        try {
+            if (d.produtos.length > 0) {
+                const localComReceita = d.produtos.filter(function(p) {
+                    return p.custos && Array.isArray(p.custos.insumos) && p.custos.insumos.length > 0;
+                }).length;
+                const localPercComReceita = (localComReceita / d.produtos.length) * 100;
+
+                if (localPercComReceita < 50) {
+                    // Local tem <50% de produtos com receita — provavelmente cache ruim.
+                    // Verifica se Firestore tem versão melhor antes de sobrescrever.
+                    var existingPerFid = global.DataStore.get('catalog_config_' + fid)
+                                        || global.DataStore.get('catalog_config');
+                    if (existingPerFid && existingPerFid.sabores) {
+                        var remoteItemsTotal = 0, remoteComReceita = 0;
+                        Object.values(existingPerFid.sabores).forEach(function(g){
+                            if (g && g.items) g.items.forEach(function(it){
+                                remoteItemsTotal++;
+                                if (it.receita && it.receita.length) remoteComReceita++;
+                            });
+                        });
+                        var remotePerc = remoteItemsTotal > 0 ? (remoteComReceita / remoteItemsTotal) * 100 : 0;
+                        if (remotePerc > localPercComReceita + 30) {
+                            console.warn('[catalog-v2] syncToLegacy ABORTADO — cache local desatualizado (' +
+                                localComReceita + '/' + d.produtos.length + ' com receita) vs remoto melhor (' +
+                                remoteComReceita + '/' + remoteItemsTotal + '). Forçando refresh do Firestore...');
+                            // Trigger re-sync do Firestore pra atualizar o cache local
+                            try { if (global.DataStore._syncFromCloud) global.DataStore._syncFromCloud(); } catch(_) {}
+                            return null; // ABORTA — não escreve catalog_config ruim
+                        }
                     }
                 }
             }
