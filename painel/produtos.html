@@ -13,11 +13,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <script src="../js/core/firebase-config.js"></script>
 <script src="../js/core/constants.js"></script>
-<script src="../js/core/datastore.js?v=mp-v107"></script>
+<script src="../js/core/datastore.js?v=mp-v108"></script>
 <script src="../js/core/utils.js"></script>
 <script src="../js/core/auth.js"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v105"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v108"></script>
 <script src="../js/core/cost-calculator.js"></script>
+<script src="../js/core/price-intelligence.js?v=mp-v108"></script>
 <style>
   body { background: #F2F2F7; }
   .ct-wrap { max-width: 1400px; margin: 0 auto; padding: 20px; }
@@ -265,13 +266,96 @@
         <div id="buffetConfig" class="form-section"></div>
       </div>
 
-      <!-- ANÁLISE -->
+      <!-- ANÁLISE — Sugestão de Preço + Margem (Fase 6) -->
       <div class="ct-panel" id="panel-analise">
         <div class="bar-top">
-          <h2>Análise de Margem por Produto</h2>
+          <h2>💰 Sugestão de Preço & Análise de Margem</h2>
         </div>
+
+        <div class="pi-config">
+          <div class="pi-config-row">
+            <label class="pi-label">
+              <span>🎯 Margem alvo</span>
+              <div class="pi-margin-input">
+                <input type="range" id="piMargemAlvo" min="20" max="80" step="5" value="50" oninput="onMargemAlvoChange()">
+                <span id="piMargemAlvoLabel">50%</span>
+              </div>
+              <small style="color:#6B7280">Preço sugerido = custo ÷ (1 − margem alvo)</small>
+            </label>
+            <label class="pi-label">
+              <span>🛒 Canal</span>
+              <select id="piCanal" onchange="renderPriceIntelligence()">
+                <option value="loja">🏪 Loja</option>
+                <option value="delivery">🛵 Delivery</option>
+                <option value="ifood">📱 iFood</option>
+              </select>
+            </label>
+            <label class="pi-label">
+              <span>🔍 Filtro</span>
+              <select id="piFiltro" onchange="renderPriceIntelligence()">
+                <option value="todos">Todos os produtos</option>
+                <option value="alertas">Só com alerta (margem &lt;30% ou abaixo do sugerido)</option>
+                <option value="prejuizo">🚨 Só prejuízo (margem &lt;0%)</option>
+                <option value="baixa">⚠️ Margem baixa (&lt;30%)</option>
+                <option value="revisar">📈 Abaixo do sugerido</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="pi-summary" id="piSummary"></div>
         <div id="analiseOut"></div>
+
+        <div id="piHistoricoModal" class="modal-bg">
+          <div class="modal-box" style="max-width:700px">
+            <div class="modal-head">
+              <h3 id="piHistoricoTitle">📜 Histórico de Preços</h3>
+              <button onclick="closePriceHistory()">✕</button>
+            </div>
+            <div id="piHistoricoBody" style="padding:20px"></div>
+          </div>
+        </div>
       </div>
+
+      <style>
+      .pi-config { background:#fff;border:1.5px solid #E5E7EB;border-radius:14px;padding:18px 20px;margin-bottom:18px; }
+      .pi-config-row { display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;align-items:start; }
+      .pi-label { display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#374151; }
+      .pi-margin-input { display:flex;align-items:center;gap:10px; }
+      .pi-margin-input input[type=range] { flex:1;accent-color:#7E57C2; }
+      .pi-margin-input span { min-width:48px;font-size:18px;font-weight:900;color:#5E35B1;font-family:'Baloo 2',cursive; }
+      .pi-label select { padding:8px 10px;border:1.5px solid #E5E7EB;border-radius:8px;font-family:inherit;font-weight:600;font-size:13px;color:#1F2937; }
+      .pi-summary { display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px; }
+      .pi-stat { background:#fff;border:1.5px solid #E5E7EB;border-radius:12px;padding:12px 14px; }
+      .pi-stat .lbl { font-size:11px;text-transform:uppercase;font-weight:700;color:#9CA3AF;letter-spacing:.4px; }
+      .pi-stat .val { font-size:22px;font-weight:900;font-family:'Baloo 2',cursive;color:#1F2937;line-height:1.1;margin-top:2px; }
+      .pi-stat.danger { border-color:#FCA5A5;background:#FFF5F5; } .pi-stat.danger .val { color:#991B1B; }
+      .pi-stat.warn { border-color:#FCD34D;background:#FFFBEB; } .pi-stat.warn .val { color:#92400E; }
+      .pi-stat.ok { border-color:#6EE7B7;background:#F0FDF4; } .pi-stat.ok .val { color:#065F46; }
+      .pi-table { background:#fff;border:1.5px solid #E5E7EB;border-radius:14px;overflow:hidden;overflow-x:auto; }
+      .pi-row { display:grid;grid-template-columns:36px 2.2fr 100px 120px 90px 130px 130px 110px 130px;gap:8px;padding:11px 14px;border-bottom:1px solid #F3F4F6;align-items:center;font-size:13px; }
+      .pi-row.head { background:#F9FAFB;font-size:11px;text-transform:uppercase;font-weight:700;color:#9CA3AF;letter-spacing:.4px; }
+      .pi-row:last-child { border-bottom:none; }
+      .pi-row:not(.head):hover { background:#FAFAFA; }
+      .pi-row .pi-pname { font-weight:700;color:#1F2937;line-height:1.2; }
+      .pi-row .pi-pname small { display:block;color:#9CA3AF;font-weight:500;font-size:11px;margin-top:2px; }
+      .pi-money { font-weight:800;font-family:'Baloo 2',cursive; }
+      .pi-money.positive { color:#16A34A; } .pi-money.negative { color:#DC2626; } .pi-money.muted { color:#6B7280; }
+      .pi-margem-badge { display:inline-block;padding:3px 10px;border-radius:100px;font-size:12px;font-weight:800;white-space:nowrap; }
+      .pi-margem-badge.ok { background:#D1FAE5;color:#065F46; }
+      .pi-margem-badge.baixa { background:#FEF3C7;color:#92400E; }
+      .pi-margem-badge.prejuizo { background:#FEE2E2;color:#991B1B; }
+      .pi-margem-badge.revisar { background:#DBEAFE;color:#1E40AF; }
+      .pi-margem-badge.muted { background:#F3F4F6;color:#6B7280; }
+      .pi-apply-btn { padding:6px 11px;border-radius:8px;border:none;background:linear-gradient(135deg,#5E35B1,#7E57C2);color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap; }
+      .pi-apply-btn:hover { box-shadow:0 4px 12px rgba(94,53,177,.35); }
+      .pi-apply-btn:disabled { opacity:.45;cursor:not-allowed;background:#9CA3AF; }
+      .pi-hist-btn { padding:6px 9px;border-radius:8px;border:1.5px solid #E5E7EB;background:#fff;color:#6B7280;font-size:14px;cursor:pointer;font-family:inherit; }
+      .pi-hist-btn:hover { border-color:#7E57C2;color:#5E35B1; }
+      .pi-empty { padding:50px 20px;text-align:center;color:#9CA3AF;font-size:14px; }
+      .pi-empty span { display:block;font-size:38px;margin-bottom:8px; }
+      @media (max-width: 900px) { .pi-row { grid-template-columns:36px 1.5fr 80px 100px 100px 110px 110px;font-size:12px; } .pi-row .pi-hide-mobile { display:none; } }
+      </style>
 
     </div>
   </div>
@@ -2240,36 +2324,165 @@
     }, 100);
   };
 
-  // ========== ANÁLISE ==========
-  function renderAnalise() {
-    const prods = CatalogV2.listProdutos(fid);
-    const el = document.getElementById('analiseOut');
-    if (!prods.length) {
-      el.innerHTML = '<div class="empty-state"><div class="e-icon">📊</div><h3>Sem produtos pra analisar</h3></div>';
+  // ========== ANÁLISE — Sugestão de Preço (Fase 6 — usa PriceIntelligence) ==========
+  function fmtBRL(n) {
+    if (n === null || n === undefined || !Number.isFinite(Number(n))) return '—';
+    return 'R$ ' + Number(n).toFixed(2).replace('.',',');
+  }
+  function fmtPct(n) {
+    if (n === null || n === undefined || !Number.isFinite(Number(n))) return '—';
+    return Number(n).toFixed(1).replace('.',',') + '%';
+  }
+
+  window.onMargemAlvoChange = function() {
+    const v = document.getElementById('piMargemAlvo').value;
+    document.getElementById('piMargemAlvoLabel').textContent = v + '%';
+    renderPriceIntelligence();
+  };
+
+  window.renderPriceIntelligence = function() {
+    if (typeof PriceIntelligence === 'undefined') {
+      document.getElementById('analiseOut').innerHTML = '<div class="pi-empty"><span>⚠️</span>PriceIntelligence módulo não carregado.</div>';
       return;
     }
-    const rows = prods.map(p => {
-      const c = CostCalculator.computeCustoTotal(p);
-      const vL = CostCalculator.validatePrice(c, p.precos.loja?.real, 'loja');
-      const vD = CostCalculator.validatePrice(c, p.precos.delivery?.real, 'delivery');
-      const vI = CostCalculator.validatePrice(c, p.precos.ifood?.real, 'ifood');
-      const color = s => s.status==='prejuizo'?'#DC2626':(s.status==='abaixo'?'#F59E0B':(s.status==='ideal'?'#16a34a':'#6B7280'));
-      return `
-        <div class="prod-row" style="grid-template-columns:40px 1fr 100px 120px 120px 120px">
-          <div class="prod-emoji">${p.midia?.emoji||'📦'}</div>
-          <div class="prod-name">${esc(p.name)}</div>
-          <div>R$ ${c.toFixed(2)}</div>
-          <div style="color:${color(vL)}">${vL.margemPct||'-'}% ${vL.status}</div>
-          <div style="color:${color(vD)}">${vD.margemPct||'-'}% ${vD.status}</div>
-          <div style="color:${color(vI)}">${vI.margemPct||'-'}% ${vI.status}</div>
-        </div>
-      `;
-    }).join('');
-    el.innerHTML = `<div class="prod-table">
-      <div class="prod-row head" style="grid-template-columns:40px 1fr 100px 120px 120px 120px"><div></div><div>Produto</div><div>Custo</div><div>🏪 Loja</div><div>🛵 Delivery</div><div>📱 iFood</div></div>
-      ${rows}
-    </div>`;
-  }
+    const margemAlvo = parseInt(document.getElementById('piMargemAlvo').value, 10) || 50;
+    const canal = document.getElementById('piCanal').value || 'loja';
+    const filtro = document.getElementById('piFiltro').value || 'todos';
+
+    const all = PriceIntelligence.listAnalise(fid, { margemAlvoPct: margemAlvo, canal: canal });
+    const cats = CatalogV2.listCategorias(fid);
+    const catMap = {}; cats.forEach(c => catMap[c.id] = c);
+    const prodsById = {};
+    CatalogV2.listProdutos(fid).forEach(p => prodsById[p.id] = p);
+
+    const counts = {
+      total: all.length,
+      ok: all.filter(a => a.alerta === 'ok').length,
+      revisar: all.filter(a => a.alerta === 'revisar').length,
+      baixa: all.filter(a => a.alerta === 'baixa').length,
+      prejuizo: all.filter(a => a.alerta === 'prejuizo').length,
+      semCusto: all.filter(a => a.alerta === 'sem-custo' || a.alerta === 'sem-preco').length
+    };
+    document.getElementById('piSummary').innerHTML =
+      `<div class="pi-stat"><div class="lbl">Total</div><div class="val">${counts.total}</div></div>` +
+      `<div class="pi-stat ok"><div class="lbl">🟢 Margem OK</div><div class="val">${counts.ok}</div></div>` +
+      `<div class="pi-stat warn"><div class="lbl">📈 Revisar</div><div class="val">${counts.revisar}</div></div>` +
+      `<div class="pi-stat warn"><div class="lbl">⚠️ Margem &lt;30%</div><div class="val">${counts.baixa}</div></div>` +
+      `<div class="pi-stat danger"><div class="lbl">🚨 Prejuízo</div><div class="val">${counts.prejuizo}</div></div>` +
+      (counts.semCusto > 0 ? `<div class="pi-stat"><div class="lbl">⚪ Sem dado</div><div class="val">${counts.semCusto}</div></div>` : '');
+
+    let lista = all;
+    if (filtro === 'alertas')   lista = all.filter(a => ['baixa','prejuizo','revisar'].includes(a.alerta));
+    if (filtro === 'prejuizo')  lista = all.filter(a => a.alerta === 'prejuizo');
+    if (filtro === 'baixa')     lista = all.filter(a => a.alerta === 'baixa');
+    if (filtro === 'revisar')   lista = all.filter(a => a.alerta === 'revisar');
+
+    const order = { prejuizo:0, baixa:1, revisar:2, ok:3, 'sem-custo':4, 'sem-preco':5 };
+    lista.sort((a,b) => (order[a.alerta]||9) - (order[b.alerta]||9));
+
+    const el = document.getElementById('analiseOut');
+    if (!lista.length) {
+      el.innerHTML = '<div class="pi-empty"><span>📊</span>Nenhum produto se encaixa no filtro selecionado.</div>';
+      return;
+    }
+
+    const rows = ['<div class="pi-table">',
+      '<div class="pi-row head"><div></div><div>Produto</div><div>Custo</div><div>Preço atual</div><div>Margem</div><div>Preço sugerido</div><div>Diferença</div><div>Status</div><div>Ação</div></div>'
+    ];
+
+    lista.forEach(a => {
+      const prod = prodsById[a.productId];
+      const cat = (prod && catMap[prod.categoriaId]) || { icon:'📦', name:'sem cat' };
+      const emoji = (prod && prod.midia && prod.midia.emoji) || cat.icon || '📦';
+      const margBadge = (a.margemAtual === null)
+        ? '<span class="pi-margem-badge muted">—</span>'
+        : `<span class="pi-margem-badge ${a.alerta === 'sem-custo' || a.alerta === 'sem-preco' ? 'muted' : a.alerta}">${fmtPct(a.margemAtual)}</span>`;
+      const sugStr = a.precoSugerido !== null
+        ? `<span class="pi-money">${fmtBRL(a.precoSugerido)}</span>`
+        : '<span class="pi-money muted">—</span>';
+      const difColor = (a.diferenca === null) ? 'muted' : (a.diferenca > 0 ? 'positive' : (a.diferenca < 0 ? 'negative' : 'muted'));
+      const difStr = (a.diferenca === null)
+        ? '<span class="pi-money muted">—</span>'
+        : `<span class="pi-money ${difColor}">${a.diferenca >= 0 ? '+' : ''}${fmtBRL(a.diferenca)}</span><br><small style="color:#9CA3AF">${a.diferencaPct >= 0 ? '+' : ''}${fmtPct(a.diferencaPct)}</small>`;
+      const canApply = a.precoSugerido !== null && a.precoSugerido !== a.precoAtual;
+      const applyBtn = canApply
+        ? `<button class="pi-apply-btn" onclick="aplicarPrecoSugerido('${a.productId}', ${a.precoSugerido}, '${canal}')">✓ Aplicar</button>`
+        : '<button class="pi-apply-btn" disabled title="Preço já está no sugerido">— OK —</button>';
+      const histBtn = `<button class="pi-hist-btn" onclick="openPriceHistory('${a.productId}')" title="Ver histórico de mudanças">📜</button>`;
+
+      rows.push(`<div class="pi-row">
+        <div style="font-size:22px">${emoji}</div>
+        <div class="pi-pname">${esc(a.name)}<small>${cat.icon||''} ${esc(cat.name||'sem cat')} · canal ${canal}</small></div>
+        <div class="pi-money muted">${fmtBRL(a.custoTotal)}</div>
+        <div class="pi-money">${fmtBRL(a.precoAtual)}</div>
+        <div>${margBadge}</div>
+        <div>${sugStr}</div>
+        <div>${difStr}</div>
+        <div>${a.alertaIcon} <small style="color:#6B7280">${esc(a.alertaLabel)}</small></div>
+        <div style="display:flex;gap:6px">${applyBtn}${histBtn}</div>
+      </div>`);
+    });
+    rows.push('</div>');
+    el.innerHTML = rows.join('');
+  };
+
+  function renderAnalise() { renderPriceIntelligence(); }
+
+  window.aplicarPrecoSugerido = function(productId, novoPreco, canal) {
+    const prod = CatalogV2.getProduto(fid, productId);
+    if (!prod) { alert('Produto não encontrado.'); return; }
+    const precoAtual = (prod.precos && prod.precos[canal] && prod.precos[canal].real) || 0;
+    const custoAtual = (prod.custos && prod.custos.custoTotal) || 0;
+    const margemAtual = PriceIntelligence.calcMargemAtual(custoAtual, precoAtual);
+    const margemNova = PriceIntelligence.calcMargemAtual(custoAtual, novoPreco);
+
+    const msg = `Aplicar novo preço em "${prod.name}" (${canal})?\n\n` +
+                `Preço atual:    ${fmtBRL(precoAtual)}\n` +
+                `Preço novo:     ${fmtBRL(novoPreco)}\n` +
+                `Diferença:      ${(novoPreco-precoAtual >= 0 ? '+' : '')}${fmtBRL(novoPreco - precoAtual)}\n\n` +
+                `Margem antes:   ${fmtPct(margemAtual)}\n` +
+                `Margem depois:  ${fmtPct(margemNova)}\n\n` +
+                `Histórico desta mudança será gravado.`;
+    if (!confirm(msg)) return;
+
+    const motivo = prompt('Motivo da mudança (opcional):', 'aplicação de preço sugerido') || 'aplicação manual';
+    const r = PriceIntelligence.aplicarPreco(fid, productId, novoPreco, { canal: canal, motivo: motivo });
+    if (!r.ok) { alert('❌ Falha: ' + (r.error || 'erro desconhecido')); return; }
+
+    try { AuditLog && AuditLog.log && AuditLog.log('produtos.preco-aplicado', { productId, canal, precoAnterior: r.precoAnterior, precoNovo: r.precoNovo, margemNova: r.margemNova }); } catch(e){}
+
+    renderPriceIntelligence();
+    renderProdutos();
+    alert(`✅ Preço atualizado!\n${prod.name}\nDe ${fmtBRL(r.precoAnterior)} → ${fmtBRL(r.precoNovo)}\nMargem agora: ${fmtPct(r.margemNova)}`);
+  };
+
+  window.openPriceHistory = function(productId) {
+    const prod = CatalogV2.getProduto(fid, productId);
+    const hist = PriceIntelligence.getHistorico(fid, { productId: productId });
+    document.getElementById('piHistoricoTitle').textContent = '📜 Histórico — ' + (prod ? prod.name : productId);
+    const body = document.getElementById('piHistoricoBody');
+    if (!hist.length) {
+      body.innerHTML = '<div style="text-align:center;padding:30px 20px;color:#9CA3AF">Nenhuma mudança de preço registrada ainda pra este produto.</div>';
+    } else {
+      body.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px">' +
+        hist.map(h => {
+          const dt = new Date(h.createdAt).toLocaleString('pt-BR');
+          const difColor = h.diferenca >= 0 ? '#16A34A' : '#DC2626';
+          return `<div style="border:1.5px solid #E5E7EB;border-radius:10px;padding:12px 14px;background:#FAFAFA">
+            <div style="display:flex;justify-content:space-between;align-items:start;gap:10px">
+              <div>
+                <div style="font-weight:700;color:#1F2937">${fmtBRL(h.precoAnterior)} → ${fmtBRL(h.precoNovo)} <span style="color:${difColor};font-weight:800">(${h.diferenca >= 0 ? '+' : ''}${fmtBRL(h.diferenca)})</span></div>
+                <div style="font-size:12px;color:#6B7280;margin-top:3px">Margem: ${fmtPct(h.margemAnterior)} → ${fmtPct(h.margemNova)} · Custo: ${fmtBRL(h.custoAtual)} · Canal: ${h.canal}</div>
+                <div style="font-size:11px;color:#9CA3AF;margin-top:3px">${esc(h.motivo || '')}</div>
+              </div>
+              <div style="font-size:11px;color:#9CA3AF;text-align:right;flex-shrink:0">${dt}<br><small>${esc(h.userId || 'anônimo')}</small></div>
+            </div>
+          </div>`;
+        }).join('') + '</div>';
+    }
+    document.getElementById('piHistoricoModal').classList.add('open');
+  };
+  window.closePriceHistory = function() { document.getElementById('piHistoricoModal').classList.remove('open'); };
 
   // ========== RECALCULAR PRECOS ==========
   // Re-aplica CostCalculator em TODOS os produtos existentes (util apos
