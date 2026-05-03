@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #99 — 2026-05-03
+
+**Área:** UX/Performance — Purge de seletores CSS mortos em `cardapio.css`
+
+**Contexto:** Prescrito pelo ciclo #98 como próximo passo obrigatório. `cardapio.css` (~30KB) acumulava blocos inteiros de seletores `cp-` que nunca foram referenciados em nenhum arquivo HTML ou JS do projeto. Auditoria completa identificou 38 classes ociosas; ciclo removeu as 3 mais seguras e impactantes.
+
+**O que analisou:**
+- Extraiu todos os seletores `cp-` da CSS (145 seletores válidos) e cruzou com: (a) atributos `class=` em todos os HTML; (b) template literals em `cardapio.js`; (c) `classList.add/remove`; (d) `querySelector(All)` — chegando a 38 classes nunca usadas
+- Confirmou que `cardapio.js` usa **IDs** (`menuCartSidebar`, `menuCartOverlay`, `menuCheckoutModal`, `menuSuccessModal`) para os elementos estruturais, não as classes `cp-cart-sidebar`, `cp-modal-overlay` etc. — portanto o CSS desses wrappers não tem efeito prático
+- Identificou 3 grupos de remoção segura: (1) `cp-page`/`cp-container` — layout root nunca instanciado; (2) `cp-navbar`/`cp-nav-*` — nav do app nunca renderizada; (3) `cp-combine-*` — feature abandonada sem lógica JS
+- Manteve classes potencialmente úteis para a futura integração do app (`cp-cart-sidebar`, `cp-modal`, `cp-form-group`, `cp-success-modal`, `cp-step-bar`, `cp-back-btn`)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `css/cardapio.css` | 171 linhas removidas (−11,3%): blocos `cp-page`/`cp-container` (linhas 6–28), `cp-navbar` + todos `cp-nav-*` (linhas 30–120), `cp-combine-section`/`cp-combine-*` (linhas 1296–1343) + 2 entradas responsivas órfãs |
+
+**Métricas:**
+- Antes: 1551 linhas / 30 227 bytes
+- Depois: 1380 linhas / 26 803 bytes
+- **Ganho: −171 linhas (−11%) / −3 424 bytes (−11,3%)**
+
+**Commit:** `a8688f5`
+
+**Classes ainda ociosas (deixadas para futura avaliação):**
+`cp-cart-sidebar`, `cp-cart-overlay`, `cp-cart-header`, `cp-cart-close`, `cp-cart-items`, `cp-cart-footer`, `cp-cart-total`, `cp-cart-total-value`, `cp-modal-overlay`, `cp-modal`, `cp-modal-close`, `cp-form-group`, `cp-delivery-options`, `cp-delivery-opt`, `cp-success-modal`, `cp-success-emoji`, `cp-step-bar`, `cp-step-dot`, `cp-back-btn`, `cp-step-mini-icon`, `cp-types-section` — 21 classes / ~240 linhas de CSS que poderão ser removidas se a integração do `cardapio.js` confirmar uso de IDs (não classes) para esses wrappers.
+
+**Próximo passo sugerido:**
+- Ciclo #100 (marco): Releitura completa de `belinha/log.md` (ciclos #1–#100) + atualização de `belinha/estrategia.md` com ajuste de prioridades para o próximo trimestre
+- Ciclo #101: Segunda rodada de purge CSS — remover as 21 classes ociosas restantes após confirmar que não há HTML planejado para o app com esses class names (verificar com operador)
+- Operador: confirmar se existe plano de criar uma página standalone (`/montar-seu-potinho`) que use `cardapio.js` com HTML estático + esses seletores `cp-` — se sim, manter; se não, remover no ciclo #101
+
+_Belinha — Ciclo #99 | 2026-05-03_
+
+---
+
 ## Ciclo #98 — 2026-05-03
 
 **Área:** UX/Performance — Remoção de render-blocking Firebase SDKs em `login.html`
