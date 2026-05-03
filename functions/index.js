@@ -1332,6 +1332,21 @@ exports.sendClosingReport = onCall({
         });
     } catch (e) { console.warn("audit caixa_reports_sent falhou:", e.message); }
 
+    // Fallback log estruturado (FASE 8.1)
+    if (typeof _logMailFallback === "function") {
+        await _logMailFallback({
+            franchiseId,
+            type: "closing_report",
+            enviado: !!r.ok,
+            falhou: !r.ok && !r.queued,
+            fallback: !!r.queued,
+            destinatarios: recipients,
+            quantidadeAlertas: 1,
+            motivo: r.error || r.reason || null,
+            timestampBRT: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
+        });
+    }
+
     if (r.ok) return { success: true, sent: r.sentTo };
     if (r.queued) return { success: false, queued: true, reason: r.reason || r.error || "queued" };
     throw new HttpsError("internal", "SMTP falhou: " + (r.error || "?"));
@@ -1730,22 +1745,14 @@ exports.runOrphanCleanupNow = onCall({
 // ============================================================
 const StockAlerts = require("./stock-alerts");
 
-/** Recipients pra alertas de estoque (mesmos do fechamento + permite override por franquia) */
-async function _getStockAlertRecipients(franchiseId) {
-    // Default: usa RECIPIENTS globais
-    let recipients = RECIPIENTS.slice();
-    // Override por franquia se houver no doc franchises
+/** Persiste log estruturado de envio de email em mail_fallback_log (FASE 8.1) */
+async function _logMailFallback(entry) {
     try {
-        const fSnap = await db.collection("datastore").doc("franchises").get();
-        if (fSnap.exists) {
-            const fs = JSON.parse(fSnap.data().value || "[]");
-            const f = (fs || []).find(x => x && x.id === franchiseId);
-            if (f && Array.isArray(f.alertEmails) && f.alertEmails.length) {
-                recipients = f.alertEmails;
-            }
-        }
-    } catch (e) { /* fallback aos defaults */ }
-    return recipients;
+        await db.collection("mail_fallback_log").add({
+            ...entry,
+            _createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+    } catch (e) { console.warn("mail_fallback_log write falhou:", e.message); }
 }
 
 /** Cron diário 08:00 BRT — varre todas franquias e envia alertas */
@@ -1780,13 +1787,13 @@ exports.checkStockAlerts = onSchedule({
     for (const f of franchises) {
         if (!f || !f.id) continue;
         try {
-            const recipients = await _getStockAlertRecipients(f.id);
             const r = await StockAlerts.runStockAlertCheckForFranchise(db, f.id, {
                 sendEmail: sendEmailFn,
-                recipients,
+                defaultRecipients: RECIPIENTS,
+                logFallback: _logMailFallback,
             });
             results.push(r);
-            totalEnviados += r.alertasEnviados || 0;
+            if (r.enviado) totalEnviados++;
         } catch (e) {
             console.error("[stock-alerts] erro pra " + f.id + ":", e.message);
             results.push({ fid: f.id, error: e.message });
@@ -1831,10 +1838,10 @@ exports.runStockAlertCheckNow = onCall({
         if (role === "franchisee" && request.auth.token.franchiseId !== franchiseId) {
             throw new HttpsError("permission-denied", "Franqueado só pode rodar pra própria franquia");
         }
-        const recipients = await _getStockAlertRecipients(franchiseId);
         const r = await StockAlerts.runStockAlertCheckForFranchise(db, franchiseId, {
             sendEmail: sendEmailFn,
-            recipients,
+            defaultRecipients: RECIPIENTS,
+            logFallback: _logMailFallback,
             force: !!force,
         });
         await db.collection("stock_alerts_runs").add({
@@ -1853,7 +1860,8 @@ exports.runStockAlertCheckNow = onCall({
     }
     const summary = await StockAlerts.runStockAlertCheckAll(db, {
         sendEmail: sendEmailFn,
-        recipients: RECIPIENTS,
+        defaultRecipients: RECIPIENTS,
+        logFallback: _logMailFallback,
         force: !!force,
     });
     await db.collection("stock_alerts_runs").add({
