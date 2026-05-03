@@ -539,6 +539,15 @@
           <div class="form-field"><label>Estoque mínimo</label><input type="number" step="0.01" id="ingMinStock" min="0" value="1"></div>
           <div class="form-field"><label>Custo unitário (R$)</label><input type="number" step="0.01" id="ingCusto" min="0" value="0" placeholder="custo por 1 unidade"></div>
           <div class="form-field"><label>Fornecedor (opcional)</label><input type="text" id="ingFornecedor"></div>
+          <div class="form-field" style="grid-column:1/-1">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600">
+              <input type="checkbox" id="ingAlertasDesativados" style="width:16px;height:16px;cursor:pointer">
+              <span>🔕 Desativar alertas automáticos de estoque pra este insumo</span>
+            </label>
+            <small style="color:#6B7280;margin-top:4px;display:block;font-size:11px">
+              Por padrão, o sistema envia email diário (08h BRT) quando o insumo fica abaixo de 7 dias de cobertura. Marque pra silenciar.
+            </small>
+          </div>
         </div>
       </div>
     </div>
@@ -685,6 +694,7 @@
     document.getElementById('ingMinStock').value = currentIng?.minStock || 1;
     document.getElementById('ingCusto').value = currentIng?.costUnit || 0;
     document.getElementById('ingFornecedor').value = currentIng?.fornecedor || '';
+    document.getElementById('ingAlertasDesativados').checked = !!(currentIng && currentIng.alertasDesativados);
     document.getElementById('ingDeleteBtn').style.display = id ? 'inline-flex' : 'none';
     document.getElementById('modalIng').classList.add('open');
   };
@@ -703,6 +713,7 @@
       minStock: Number(document.getElementById('ingMinStock').value) || 0,
       costUnit: Number(document.getElementById('ingCusto').value) || 0,
       fornecedor: document.getElementById('ingFornecedor').value.trim(),
+      alertasDesativados: !!document.getElementById('ingAlertasDesativados').checked,
       updatedAt: new Date().toISOString(),
       createdAt: currentIng?.createdAt || new Date().toISOString()
     };
