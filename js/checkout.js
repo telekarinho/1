@@ -125,7 +125,9 @@ function updateOrderSummary() {
 
     if (summarySubtotal) summarySubtotal.textContent = formatCurrency(subtotal);
     // Se Uber Direct ativo com quote calculado, usa o valor do cliente
-    if (deliveryType === 'delivery' && window._uberQuoteId && window._uberCustomerFee !== undefined) {
+    // Uber response as vezes nao traz quote_id (sem cobertura ou versao diferente da API),
+    // entao usar _uberCustomerFee sozinho ja eh sinal de que a quote rodou.
+    if (deliveryType === 'delivery' && typeof window._uberCustomerFee === 'number') {
         deliveryFee = window._uberCustomerFee;
     }
 
@@ -165,7 +167,9 @@ function placeOrder() {
     var deliveryFee = deliveryType === 'delivery' ? storeFee : 0;
 
     // Se delivery + Uber Direct ativo: usar quote ja calculado
-    if (deliveryType === 'delivery' && window._uberQuoteId && window._uberCustomerFee !== undefined) {
+    // Uber response as vezes nao traz quote_id (sem cobertura ou versao diferente da API),
+    // entao usar _uberCustomerFee sozinho ja eh sinal de que a quote rodou.
+    if (deliveryType === 'delivery' && typeof window._uberCustomerFee === 'number') {
         deliveryFee = window._uberCustomerFee;
     }
     var deliveryAddress = '';
