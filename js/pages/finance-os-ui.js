@@ -286,27 +286,24 @@ const FinanceOSUI = (function () {
     }
 
     function renderDRE(dre) {
+        // FASE 2 (PR #373): a DRE oficial agora vive em #dreContent (financeiro.html)
+        // e usa cmvSnapshot por venda. O bloco antigo aqui MISTURAVA formula
+        // (CMV vinha de despesas['ingredientes'], nao da venda) e contradizia
+        // a DRE oficial logo abaixo. Mantemos so KPIs uteis + CMV Real
+        // (que ja usava cmvSnapshot) e um aviso explicito.
         const fmt = Financas.formatBRL;
         const pct = Financas.formatPct;
-        const resultColor = dre.resultadoOperacional >= 0 ? '#10B981' : '#DC2626';
 
         return `
             <div class="panel-card">
               <div class="panel-card-header">
-                <h3>📊 DRE · ${esc(dre.periodLabel)}</h3>
+                <h3>📊 Indicadores operacionais · ${esc(dre.periodLabel)}</h3>
                 <span style="font-size:.8rem;color:#666">${dre.salesCount} venda(s) · ${dre.itensSemCusto} item(ns) sem custo</span>
               </div>
               <div class="panel-card-body">
-                <div class="fos-dre">
-                  ${dreRow('Receita bruta', dre.receitaBruta, 'sum', '')}
-                  ${dreRow('(−) Impostos', -dre.impostos, 'sub', '')}
-                  ${dreRow('Receita líquida', dre.receitaLiquida, 'total', '')}
-                  ${dreRow('(−) CMV (custo da mercadoria)', -dre.cmv, 'sub', 'cobertura ' + pct(dre.cmvCobertura))}
-                  ${dreRow('Lucro bruto', dre.lucroBruto, 'total', '')}
-                  ${dreRow('(−) Despesas variáveis (ex-impostos)', -dre.variaveisSemImpostos, 'sub', '')}
-                  ${dreRow('Margem de contribuição', dre.margemContribuicao, 'total', dre.receitaLiquida > 0 ? 'MC% ' + pct(dre.mcPercent) : '')}
-                  ${dreRow('(−) Custos fixos', -dre.totalFixed, 'sub', '')}
-                  ${dreRow('Resultado operacional', dre.resultadoOperacional, 'result', '', resultColor)}
+                <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.88rem;color:#78350F">
+                  ℹ️ <strong>DRE oficial</strong> agora fica logo abaixo (usa <code>cmvSnapshot</code> por venda — PR #373).
+                  Aqui ficam só os KPIs operacionais e o CMV real auditável.
                 </div>
 
                 <div class="fos-kpi-row">
