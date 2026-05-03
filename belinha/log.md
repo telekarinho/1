@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #96 — 2026-05-03
+
+**Área:** Conteúdo — Semanas 55+56 (02–15/05/2027): Dia das Mães (09/05) + Sextas #38/#39
+
+**Contexto:** Prescrito pelo roadmap #92. Horizonte de conteúdo estava em 54 semanas (última semana coberta = semana 54, dia H aniversário 1 ano). Nova janela: semanas 55+56 cobrindo o segundo Dia das Mães do MilkyPot Londrina com plenitude operacional e lista de clientes consolidada.
+
+**O que analisou:**
+- Verificou logs #92–#95 e estrategia.md para confirmar prescrição do ciclo #96
+- Calculou datas corretas: April 25, 2027 = domingo → semana 55 = 02–08/05/2027 | semana 56 = 09–15/05/2027
+- Confirmou Dia das Mães 2027 = 2ª domingo de maio = 09/05/2027 (domingo = primeiro dia da semana 56)
+- Identificou Sexta #36 = 16/04/2027 (semana 52) → Sexta #37 = 30/04, #38 = 07/05, #39 = 14/05
+- Leu semanas 51–53 para alinhar formato padrão v10 (Dom–Sab, WA templates, checklist, métricas)
+- Identificou diferencial narrativo: 2º Dia das Mães com 1 ano de loja consolidada vs. 1º Dia das Mães (10/05/2026, 2 semanas após inauguração recém-aberta)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana55.md` | CRIADO — 7 peças (Dom 02–Sáb 08/05): recap aniversário + retomada, teaser Dia das Mães (ter), tutorial presente carrossel (qua), urgência 48h + pré-Sexta (qui), Sexta #38 double-feature (sex), véspera urgência WA duplo (sáb). Mecanismo "MÃE" WA keyword → lista VIP. Reel 15s ovelhinha presenteando mãe |
+| `belinha/content/pos-inauguracao-semana56.md` | CRIADO — 7 peças (Dom 09–Sáb 15/05): Dia H Dia das Mães completo (WA VIP MÃE 8h30, WA geral 9h, post emocional 9h30, Reel 15s 11h, stories hora-a-hora), recap+UGC (seg), Linha Zero retomada (ter), carrossel personalização (qua), pré-Sexta (qui), Sexta #39 (sex), encerramento semanal (sáb) |
+
+**Commit:** `472af11`
+
+**Destaques de conteúdo:**
+1. **Surpresa VIP MÃE (dom 09/05, 8h30):** Padrão validado com HALLOWEEN (#67) e NATAL (#75) — lista segmentada recebe benefício exclusivo antes do público geral. Aumenta fidelização sem desconto público.
+2. **Sexta #38 como double feature (sex 07/05, véspera):** "Última Sexta antes do Dia das Mães" potencializa conversão com dois ângulos simultâneos — oferta semanal + urgência mães.
+3. **Diferenciação implícita:** Potinho artesanal personalizado + mensagem escrita à mão vs. caixa de chocolate genérico — mencionado na terça de abertura da campanha sem nomear concorrentes.
+4. **Reel 15s emocional (dom 09/05):** Ovelhinha filha entregando potinho para ovelhinha mãe — cena mais emocional criada até o momento, alinhada com a estética mascote da marca.
+5. **Linha Zero pós-festas (ter 11/05):** Janela de oportunidade pós-Mães para converter clientes fitness que retomam rotina — sem mudar cardápio, reposiciona produto existente.
+
+**Próximo passo sugerido:**
+- Ciclo #97: Conversão — WA "VERAO" status check + upsell PDV + template WA 15º carimbo (pendente #77) [prescrito #92]
+- Ciclo #98: UX/Performance — login.html defer Firebase SDKs (4 scripts bloqueando render) + cardapio.css 30KB sem uso
+- Operador: confirmar produto especial Dia das Mães (nome/ingredientes) com franquia ANTES de ter 04/05
+- Operador: definir surpresa VIP MÃE (topping bônus, pontos em dobro, brinde) ANTES de sex 07/05
+- Operador: configurar automação WA keyword "MÃE" ANTES de ter 04/05 (quando campanha vai ao ar)
+- Operador: escalar equipe extra para domingo 09/05 (projetar 2–3× volume médio de domingo)
+
+_Belinha — Ciclo #96 | 2026-05-03_
+
+---
+
 ## Ciclo #95 — 2026-05-02
 
 **Área:** UX/Performance — sweep Firebase CDN preconnect (CWV: TTI/FCP mobile)
