@@ -712,9 +712,9 @@ const CardapioApp = {
         }));
 
         // Calculate totals
-        let extrasTotal = extras.reduce((s, e) => s + e.price * (e.qty || 1), 0);
-        let bebidasTotal = bebidas.reduce((s, b) => s + b.price * (b.qty || 1), 0);
-        let total = ((this.selectedTamanho.price + extrasTotal + bebidasTotal) * this.quantity);
+        const extrasTotal = extras.reduce((s, e) => s + e.price * (e.qty || 1), 0);
+        const bebidasTotal = bebidas.reduce((s, b) => s + b.price * (b.qty || 1), 0);
+        const total = ((this.selectedTamanho.price + extrasTotal + bebidasTotal) * this.quantity);
 
         // UNIFIED CART FORMAT - same as index.html bottom sheet
         const item = {
@@ -758,8 +758,8 @@ const CardapioApp = {
         item.qty = (item.qty || 1) + delta;
         if (item.qty <= 0) { this.removeFromMenuCart(id); return; }
         // Recalculate total
-        let extrasTotal = (item.extras || []).reduce((s, e) => s + e.price * (e.qty || 1), 0);
-        let bebidasTotal = (item.bebidas || []).reduce((s, b) => s + b.price * (b.qty || 1), 0);
+        const extrasTotal = (item.extras || []).reduce((s, e) => s + e.price * (e.qty || 1), 0);
+        const bebidasTotal = (item.bebidas || []).reduce((s, b) => s + b.price * (b.qty || 1), 0);
         item.total = (item.sizePrice + extrasTotal + bebidasTotal) * item.qty;
         this.saveCart();
         this.updateCartCount();
@@ -880,7 +880,7 @@ const CardapioApp = {
             const nomeCliente = item.nomeCliente || '';
             const qty = item.qty || 1;
             const total = item.total || 0;
-            let details = [formatoName, sizeName, nomeCliente ? '🏷️ ' + nomeCliente : ''].filter(Boolean).join(' · ');
+            const details = [formatoName, sizeName, nomeCliente ? '🏷️ ' + nomeCliente : ''].filter(Boolean).join(' · ');
 
             return `
             <div class="cp-checkout-item">
@@ -995,8 +995,6 @@ const CardapioApp = {
 
         const waNumber = window._selectedStoreWhatsApp || '5543998042424';
         window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
-
-        console.log('Order captured:', order);
 
         this.cart = [];
         this.saveCart();
