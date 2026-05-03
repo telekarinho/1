@@ -1301,3 +1301,102 @@ _Atualizado no ciclo #100 (2026-05-03) — revisão obrigatória de marco_
 ---
 
 _Belinha — Ciclo #100 | 2026-05-03_
+
+---
+
+## Ciclo #105 — Auto-aprimoramento: Revisão #100–#104 + Roadmap Q3 2026 (#106–#115)
+
+### Síntese do bloco #100–#104
+
+| Ciclo | Área | Resultado | Valor |
+|-------|------|-----------|-------|
+| #100 | Estratégia | Revisão 100 ciclos — nova rotação v12, roadmap #101–#110 | Alto |
+| #101 | UX/Performance | CSS purge rodada 2: −279 linhas (−20.2% cardapio.css) | Alto |
+| #102 | SEO | `acai-self-service-londrina.html`: +WebPage schema + og:image:type | Médio |
+| #103 | UX/Performance | `cardapio.js`: −1 console.log (dado sensível), 6 let→const | Médio |
+| #104 | Conversão | Raspinha: bugfix crítico short code → Firestore update nunca acontecia | Altíssimo |
+
+**Padrão positivo confirmado:** Rotação UX/Performance > SEO > Conversão funcionou — 5/5 ciclos executados na sequência prescrita sem desvio.
+
+**Achado mais valioso do bloco:** Bug silencioso na raspinha da sorte (#104). O status `not_scratched → scratched` nunca era gravado no Firestore para clientes usando short code (maioria, pois é o código impresso no recibo). Sem auditoria ativa de código de conversão, esse bug ficaria indefinidamente ativo.
+
+**Lição reforçada:** Código de conversão (raspinha, fidelidade, checkout) deve ser auditado a cada ~15 ciclos, não apenas quando há sintoma visível.
+
+---
+
+### Estado do projeto em D+8 (2026-05-03)
+
+| Dimensão | Status |
+|----------|--------|
+| Conteúdo coberto | Semanas 1–56 (exceto semana 54) — cobertura até ~15/05/2027 |
+| Bloqueadores LGPD (CNPJ/DPO) | ⚠️ Ainda pendentes — D+8 sem resolução |
+| Raspinha da sorte | ✅ Funcional pós-#104 |
+| CSS `cardapio.css` | ✅ Purge completo: 1380 → 1101 linhas |
+| `acai-self-service-londrina.html` | ✅ @graph com 4 entidades SEO |
+| `cardapio.js` | ✅ Zero console.log em produção |
+| `index.html` WebP | ❌ Sem WebP, sem preconnect — LCP pendente |
+| `cardapio.html` WebPage schema | ❌ Tem FoodEstablishment + MenuItem, mas sem entidade WebPage no @graph |
+| Carrinho alternativo (JS sem HTML) | ❌ `menuCartSidebar`/`menuCartOverlay` — IDs em JS sem elementos HTML — aguarda decisão operador |
+| `aggregateRating` Schema.org | ⛔ Bloqueado — aguarda ≥3 reviews Google Maps |
+
+---
+
+### Contexto Q3 2026 (semanas 10–22, julho–setembro)
+
+A inauguração foi em 25/04/2026. Q3 de operação cobre:
+
+| Período | Semanas operacionais | Evento-chave |
+|---------|---------------------|--------------|
+| Julho 2026 | Semanas 10–14 | Férias escolares (tráfego Muffato elevado) |
+| 25/07/2026 | Semana 13/14 | **3 meses de operação** — marco de fidelidade |
+| 09/08/2026 | Semana 16 | **Dia dos Pais** — potinho presente |
+| Agosto 2026 | Semanas 15–18 | Volta às aulas (família) |
+| Setembro 2026 | Semanas 19–22 | Pré-Black Friday, consolidação de fidelidade |
+
+**Conteúdo Q3 já coberto?** Sim — semanas 10–22 estão escritas nos arquivos `pos-inauguracao-semana10.md` a `pos-inauguracao-semana22.md`. Não é necessário criar novos arquivos; o foco é garantir que o operador tem clareza para executar.
+
+**Gap identificado:** Não existe template de WA para D+30 (reativação de clientes silenciosos). O primeiro ciclo de reativação ocorre na semana 4 (D+28 ≈ 23/05/2026) — urgência moderada.
+
+---
+
+### Roadmap atualizado #106–#115
+
+| Ciclo | Área | Ação | Urgência |
+|-------|------|------|----------|
+| #106 | SEO | FAQPage schema em `acai-self-service-londrina.html` — 3–5 perguntas sobre açaí self-service + preço por peso | Alta |
+| #107 | Concorrentes | MilkyMoo + TheBest + rastrear novos entrantes Londrina (15+ ciclos sem refetch) | Média |
+| #108 | Conversão | Template WA reativação D+30 (cliente que não voltou em 30 dias) + template D+60 "saudades" | Alta |
+| #109 | UX/Performance | `index.html` LCP: hero image em WebP? preconnect CDN? headers cache? Medir tamanho atual | Média |
+| #110 | SEO | `cardapio.html`: adicionar entidade WebPage no @graph (tem FoodEstablishment mas sem WebPage/OrderAction) | Média |
+| #111 | Conversão | Programa fidelidade: auditar `js/fidelidade.js` (se existir) + template WA para clientes que atingem milestones (10pts, 50pts, 100pts) | Média |
+| #112 | UX/Performance | Dead code decision: `menuCartSidebar`/`menuCartOverlay`/`menuCartClose`/`menuCartItems`/`menuCartFooter`/`menuCartTotal` — IDs em `cardapio.js` sem HTML. Se operador não confirmar plano → remover do JS (reduz bundle ~120 linhas) | Baixa* |
+| #113 | SEO | `sitemap.xml` audit: todas as páginas incluídas? (`acai-self-service-londrina.html`, `termos.html`, `privacidade.html`, `raspinha.html`?) | Baixa |
+| #114 | Concorrentes | Refetch pré-Q4: MilkyMoo + TheBest atualização de preços/promos para informar campanha Black Friday | Baixa |
+| #115 | Auto-aprimoramento | Reler log #110–#115, ajustar roadmap Q4 2026 (outubro–dezembro) | — |
+
+*#112 depende de confirmação do operador sobre o carrinho alternativo. Se não houver confirmação em ~10 ciclos, remover.
+
+---
+
+### Alertas para o operador (D+8)
+
+| Alerta | Urgência | Ação |
+|--------|----------|------|
+| CNPJ + DPO pendentes | 🔴 Crítico | Site ao ar com placeholder LGPD — risco legal crescente |
+| WA "VERAO" keyword | ❓ Confirmar | Foi configurada no WhatsApp Business? |
+| Carrinho alternativo | ⚠️ Decidir | IDs JS sem HTML: implementar ou remover? |
+| Template WA D+30 | ⏰ Urgente | Primeira rodada de reativação ocorre ~23/05/2026 |
+
+---
+
+### Regras mantidas da v12
+
+1. Pausa de conteúdo ativa enquanto horizonte > 6 semanas (atual: 56 semanas)
+2. `aggregateRating` → checar apenas quando houver sinal do operador sobre reviews Google
+3. Ciclos de concorrentes só valem com output imediato (não salvar análise sem mudança no mesmo ciclo)
+4. Rotação v12: UX/Performance > SEO > Conversão > Concorrentes > Conteúdo
+5. Auto-aprimoramento a cada 5 ciclos (próximo: #110 ou #115)
+
+---
+
+_Belinha — Ciclo #105 | 2026-05-03_
