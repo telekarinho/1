@@ -1608,11 +1608,15 @@
                     dropoff_phone_number: phone.replace(/\D/g,'') ? '+55' + phone.replace(/\D/g,'') : '+5543000000000',
                     manifest_items: [{ name: 'Pedido MilkyPot', quantity: 1, size: 'small' }]
                 }).then(function(r){
-                    var data = (r && r.data) || {};
+                    // Callable retorna {success, data:{...}} envelopado em r.data
+                    // entao a payload util fica em r.data.data
+                    var raw = (r && r.data) || {};
+                    var data = raw.data || raw;
                     var feeCents = data.customer_fee_cents != null ? data.customer_fee_cents : data.uber_fee_cents;
                     if (feeCents == null) { setS('⚠ Frete indisponível — usando taxa padrão', '#9A3412', '#FFF7ED'); return; }
                     var feeBRL = Number(feeCents) / 100;
                     window._uberQuoteFee = feeBRL;
+                    window._uberCustomerFee = feeBRL;
                     window._uberQuoteId = data.quote_id;
                     var feeTxt = 'R$ ' + feeBRL.toFixed(2).replace('.', ',');
                     setS('✓ <strong>Frete: ' + feeTxt + '</strong> · entrega via Uber', '#065F46', '#ECFDF5');
