@@ -2,6 +2,36 @@
 
 ---
 
+## Ciclo #106 — 2026-05-03
+
+**Área:** Conversão — Playbook Reativação WA D+30 e D+60
+
+**Contexto:** Roadmap prescrevia FAQPage schema (#106), mas já foi criado em ciclo anterior (`ac46447`). Pivotou para #108 (próxima urgência Alta): template WA D+30/D+60. Inauguração foi 25/04/2026 — primeira onda D+30 chega ~25/05/2026 (≈22 dias), sem playbook tático completo. O `whatsapp-reativacao.md` existente tinha apenas um Template 4 de uma linha para D+30 e zero para D+60.
+
+**O que analisou:**
+- Leu `whatsapp-reativacao.md` completo (8 templates, criado no ciclo #32)
+- Identificou lacunas: D+30 era "última tentativa" genérica sem segmentação, D+60 inexistente
+- Calculou urgência: D+30 para clientes da inauguração = 25/05/2026 (operador precisa preparar lista)
+- Definiu 3 versões de copy para D+30 (produto/novidade, fidelidade, urgência suave) + 2 versões para D+60 (emocional, feedback)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-reativacao-d30-d60.md` | CRIADO — Playbook completo: fluxo D+28→D+30→D+35 (3 versões de copy segmentadas), fluxo D+60 (2 versões), checklist operacional onda 25/05, métricas (taxa de resposta ≥25%, conversão ≥10%), erros comuns a evitar |
+
+**Commit:** `26db800`
+
+**Próximo passo sugerido:**
+- Ciclo #107: Concorrentes — Refetch MilkyMoo + TheBest (15+ ciclos sem atualização)
+- Ciclo #108: UX/Performance — index.html LCP: hero image WebP? preconnect CDN?
+- Operador: preparar lista `#inativos-30d` antes de 22/05 para envio na janela D+28
+- Operador: definir novidade real para mencionar no template D+30 Versão 1 (produto, topping, evento)
+
+_Belinha — Ciclo #106 | 2026-05-03_
+
+---
+
 ## Ciclo #105 — 2026-05-03
 
 **Área:** Auto-aprimoramento — Revisão #100–#104 + Estratégia Q3 2026
