@@ -189,6 +189,31 @@
         p.toppingsIds = Array.isArray(p.toppingsIds) ? p.toppingsIds : [];
         p.buffet = p.buffet || { ativo: false, precoPorKg: 0, toppingsInclusos: [] };
         p.canal = p.canal || 'ambos';
+        // FASE 4A: flags por canal (PDV/Delivery/Cardapio/TV) — granularidade que
+        // o campo `canal` legado nao tinha. Default permissivo: produto sem flag
+        // continua aparecendo em tudo (nao quebra producao).
+        // Se ja tem `canal` mas nao tem `disponibilidade`, deriva pra retrocompat:
+        if (!p.disponibilidade || typeof p.disponibilidade !== 'object') {
+            // Migration suave: deriva flags do `canal` existente
+            // - 'loja'     => so PDV+TV (estoque fisico)
+            // - 'delivery' => so Delivery+Cardapio+TV
+            // - 'ambos'    => tudo
+            // TV sempre true porque ainda nao consome catalogo (FASE 5)
+            if (p.canal === 'loja') {
+                p.disponibilidade = { pdv: true, delivery: false, cardapio: false, tv: true };
+            } else if (p.canal === 'delivery') {
+                p.disponibilidade = { pdv: false, delivery: true, cardapio: true, tv: true };
+            } else {
+                // 'ambos' ou indefinido => permissivo
+                p.disponibilidade = { pdv: true, delivery: true, cardapio: true, tv: true };
+            }
+        } else {
+            // Tem objeto mas garante todos os 4 campos (default permissivo se faltar)
+            p.disponibilidade.pdv = (p.disponibilidade.pdv !== false);
+            p.disponibilidade.delivery = (p.disponibilidade.delivery !== false);
+            p.disponibilidade.cardapio = (p.disponibilidade.cardapio !== false);
+            p.disponibilidade.tv = (p.disponibilidade.tv !== false);
+        }
         if (p.active == null) p.active = true;
         return p;
     }
@@ -519,6 +544,8 @@
                     tipoVenda,
                     porcoes: porcoes,  // exposto pro cardápio mobile por peso
                     canalVenda: p.canal || 'ambos',
+                    // FASE 4A: flags granulares por canal — PDV/cardapio leem isso
+                    disponibilidade: p.disponibilidade || { pdv: true, delivery: true, cardapio: true, tv: true },
                     modoMontagem: 'montado',
                     commissionRate: 5,
                     badge: p.badge || '',           // ex: 'PREMIUM' no Capitão Açaí
@@ -553,7 +580,8 @@
                 priceDelivery: Number(p.precos?.delivery?.real || p.precos?.delivery?.recomendado || 0),
                 cost: Number(p.custos?.custoTotal || 0),
                 available: p.active !== false,
-                canalVenda: p.canal || 'ambos'
+                canalVenda: p.canal || 'ambos',
+                disponibilidade: p.disponibilidade || { pdv: true, delivery: true, cardapio: true, tv: true }
             }));
         }
 

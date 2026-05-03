@@ -1315,10 +1315,19 @@
                 if (items.length) sections.push({ key: 'bases', title: '🔥 Bases Populares', className: 'pop', items });
             }
 
+            // FASE 4C: filtro PDV usa disponibilidade.pdv com fallback no canalVenda legado
+            // Default permissivo: produto sem flag continua aparecendo (nao quebra producao)
+            const isPDV = (item) => {
+                if (item && item.disponibilidade && item.disponibilidade.pdv === false) return false;
+                // Se nao tem flag nova, cai no comportamento antigo (canalVenda)
+                if (!item || !item.disponibilidade) return item.canalVenda !== 'delivery';
+                return true;
+            };
+
             Object.entries(this.catalog.sabores || {}).forEach(([key, group]) => {
                 if (!group || !Array.isArray(group.items)) return;
                 if (v2ValidKeys && !v2ValidKeys.has(key)) return;
-                const items = group.items.filter(i => i.available && i.canalVenda !== 'delivery');
+                const items = group.items.filter(i => i.available && isPDV(i));
                 if (items.length > 0) {
                     const title = (group.icon ? group.icon + ' ' : '') + (group.name || key);
                     sections.push({ key, title, className: '', items });
@@ -1326,7 +1335,7 @@
             });
 
             if (this.catalog.bebidas) {
-                const items = this.catalog.bebidas.filter(b => b.available);
+                const items = this.catalog.bebidas.filter(b => b.available && isPDV(b));
                 if (items.length) sections.push({ key: 'bebidas', title: '🥤 Bebidas', className: '', items });
             }
             return sections;

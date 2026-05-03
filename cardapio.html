@@ -784,11 +784,17 @@
                 }
             });
 
-            // Filtro canal: delivery ou ambos (omitido = legacy sem restrição)
-            return items.filter(i =>
-                i.available !== false &&
-                (!i.canalVenda || i.canalVenda === 'delivery' || i.canalVenda === 'ambos')
-            );
+            // FASE 4C: filtro Cardapio usa disponibilidade.cardapio com fallback no canalVenda legado
+            // Default permissivo: produto sem flag continua aparecendo (nao quebra producao)
+            return items.filter(i => {
+                if (i.available === false) return false;
+                if (i.disponibilidade && i.disponibilidade.cardapio === false) return false;
+                // Sem flag nova => comportamento legado (canalVenda)
+                if (!i.disponibilidade) {
+                    return (!i.canalVenda || i.canalVenda === 'delivery' || i.canalVenda === 'ambos');
+                }
+                return true;
+            });
         }
 
         function renderProducts(filter) {
