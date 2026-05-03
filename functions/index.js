@@ -1706,15 +1706,28 @@ exports.onCatalogV2Write = onDocumentUpdated({
     memory: "256MiB",
 }, async (event) => {
     const docId = event.params.docId || "";
-    // Só responde a catalog_v2_<fid> e inventory_<fid>
-    const isCatalogV2 = docId.startsWith("catalog_v2_") && docId !== "catalog_v2_franquia"; // tem fid
+    // Responde a catalog_v2_<fid>, inventory_<fid> e catalog_config[_<fid>]
+    const isCatalogV2 = docId.startsWith("catalog_v2_") && docId !== "catalog_v2_franquia";
     const isInventory = docId.startsWith("inventory_");
-    if (!isCatalogV2 && !isInventory) return;
+    const isCatalogConfig = docId === "catalog_config" || docId.startsWith("catalog_config_");
+    if (!isCatalogV2 && !isInventory && !isCatalogConfig) return;
 
     // Extrai fid
     let fid = null;
     if (isCatalogV2) fid = docId.replace("catalog_v2_", "");
     else if (isInventory) fid = docId.replace("inventory_", "");
+    else if (isCatalogConfig) {
+        if (docId === "catalog_config") {
+            // catalog_config global: tenta extrair fid via _fid no payload
+            try {
+                const after = event.data.after.data();
+                const parsed = JSON.parse(after.value || "{}");
+                fid = parsed._fid || null;
+            } catch (e) {}
+        } else {
+            fid = docId.replace("catalog_config_", "");
+        }
+    }
     if (!fid) return;
 
     // Anti-loop: se o write veio do próprio sync (audit tag), não dispara de novo
@@ -1723,7 +1736,47 @@ exports.onCatalogV2Write = onDocumentUpdated({
         if (after && after._updatedBy && /^catalog-sync-/.test(after._updatedBy)) {
             return; // próprio sync escreveu — ignora
         }
-    } catch (e) { /* dados podem ter mudado */ }
+    } catch (e) {}
+
+    // FIX (Fase 8.5) — DEFESA SERVER-SIDE contra clients legados:
+    // Se for write em catalog_config[_<fid>] vindo de browser (sem tag),
+    // VALIDA que tem receitas. Se não tiver MAS catalog_v2 da franquia tem,
+    // RESTAURA imediatamente. Isso bloqueia o loop de "Receita pendente volta"
+    // mesmo quando outro cliente tá com cache antigo (sem o guard v8.4).
+    if (isCatalogConfig) {
+        try {
+            const after = event.data.after.data();
+            const parsed = JSON.parse(after.value || "{}");
+            // Conta receitas escritas
+            let totalItems = 0, comReceita = 0;
+            Object.values(parsed.sabores || {}).forEach((g) => {
+                if (g && g.items) g.items.forEach((it) => {
+                    totalItems++;
+                    if (it.receita && it.receita.length) comReceita++;
+                });
+            });
+            const percComReceita = totalItems > 0 ? (comReceita / totalItems) * 100 : 100;
+
+            // Lê catalog_v2 do FS pra comparar
+            const v2Snap = await db.collection("datastore").doc("catalog_v2_" + fid).get();
+            if (v2Snap.exists) {
+                const v2 = JSON.parse(v2Snap.data().value || "{}");
+                const v2Prods = (v2.produtos || []).filter(p => p && p.active !== false);
+                const v2ComReceita = v2Prods.filter(p => p.custos && p.custos.insumos && p.custos.insumos.length).length;
+                const v2Perc = v2Prods.length > 0 ? (v2ComReceita / v2Prods.length) * 100 : 0;
+
+                if (percComReceita < 50 && v2Perc > 50) {
+                    console.warn(`[catalog-config-guard] BLOCKED stale write em ${docId} ` +
+                        `(${comReceita}/${totalItems} com receita) — v2 tem ${v2ComReceita}/${v2Prods.length}. RESTAURANDO.`);
+                    // Re-roda sync server-side pra restaurar a versão correta
+                    await CatalogSync.syncCatalogConfigForFranchise(db, fid);
+                    return;
+                }
+            }
+        } catch (e) { console.warn("[catalog-config-guard] check falhou:", e.message); }
+        // Se passou no guard, não precisa re-sync (o write é válido OU não é catalog_config)
+        return;
+    }
 
     console.log(`[catalog-sync] trigger por ${docId} → sincronizando franquia ${fid}`);
     try {
