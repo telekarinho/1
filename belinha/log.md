@@ -2,6 +2,45 @@
 
 ---
 
+## Ciclo #105 — 2026-05-03
+
+**Área:** Auto-aprimoramento — Revisão #100–#104 + Estratégia Q3 2026
+
+**Contexto:** Marco prescrito pelo roadmap do ciclo #100 (auto-aprimoramento a cada 5 ciclos) e confirmado pelo próximo passo do ciclo #104. Ciclo de reflexão: sem mudanças em código de produção — apenas revisão estratégica e atualização de documentação.
+
+**O que analisou:**
+- Leu logs dos ciclos #100–#104 integralmente (padrão de execução, bugs encontrados, métricas)
+- Leu `belinha/estrategia.md` seção #100 (última atualização) para identificar lacunas
+- Leu `belinha/blockers.md` — 5 blockers ativos; CNPJ/DPO em D+8 ainda sem resolução
+- Verificou schema.org de `cardapio.html` — tem FoodEstablishment + MenuItem, mas sem entidade WebPage no @graph
+- Confirmou que `index.html` não usa WebP (0 referências) e não tem preconnect — LCP audit nunca realizado
+- Confirmou 55 arquivos de conteúdo (semana1–semana56 excl. semana54) — pausa de conteúdo mantida
+- Mapeou semanas Q3: semanas 10–22 de operação = julho–setembro 2026 (já escritas — sem lacuna de conteúdo)
+- Calculou urgência de template WA D+30: primeira rodada de reativação ocorre ~23/05/2026 (D+28)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/estrategia.md` | Nova seção "Ciclo #105": síntese do bloco #100–#104 com tabela de valor por ciclo, estado do projeto em D+8, contexto Q3 2026 com calendário semanas 10–22, roadmap detalhado #106–#115, alertas para o operador, regras v12 mantidas |
+
+**Principais decisões estratégicas:**
+1. **Rotação v12 mantida** — funcionou 100% nos ciclos #101–#104 sem desvio
+2. **Template WA D+30 (ciclo #108) reclassificado como urgente** — primeira rodada ocorre ~23/05 (20 dias)
+3. **FAQPage em `acai-self-service-londrina.html` (#106) prioridade alta** — única landing page sem FAQ schema
+4. **`cardapio.html` WebPage schema (#110)** — tem FoodEstablishment mas sem WebPage + OrderAction no @graph
+5. **Dead code carrinho (#112)** — aguardar ~10 ciclos por decisão do operador; se silêncio, remover
+
+**Commit:** (a confirmar após push)
+
+**Próximo passo sugerido:**
+- Ciclo #106: SEO — FAQPage schema em `acai-self-service-londrina.html`: 3–5 perguntas sobre açaí self-service (preço por peso, horário, toppings, diferenças do potinho, delivery)
+- Operador: Template WA D+30 — em ~20 dias clientes de D+1 ficam silenciosos. Ciclo #108 prepara o template, mas operador precisa confirmar tom: proativo (oferta) ou leve (lembrança)?
+
+_Belinha — Ciclo #105 | 2026-05-03_
+
+---
+
 ## Ciclo #104 — 2026-05-03
 
 **Área:** Conversão — Raspinha da Sorte bugfix crítico
