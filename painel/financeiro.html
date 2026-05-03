@@ -309,6 +309,25 @@
                     </div>
                 </div>
 
+                <!-- ============ DESPESAS RECORRENTES (FASE 3) ============ -->
+                <!-- Custos fixos automaticos: cadastra uma vez, gera lancamento todo mes -->
+                <div class="panel-card" id="recurringSection" style="border:2px solid #C7D2FE">
+                    <div class="panel-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; background:linear-gradient(135deg,#EEF2FF,#E0E7FF)">
+                        <div>
+                            <h3 style="margin:0">🔁 Despesas Recorrentes</h3>
+                            <div style="font-size:12px;color:#4338CA;margin-top:2px">aluguel · salários · energia · internet — cadastra 1x e gera todo mês automaticamente</div>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap">
+                            <button class="btn btn-sm btn-outline" onclick="gerarRecorrentesAtual()" title="Gera lançamentos pro mês selecionado na DRE">⚡ Gerar mês selecionado</button>
+                            <button class="btn btn-sm btn-primary" onclick="abrirRecorrenteModal()">+ Nova recorrente</button>
+                        </div>
+                    </div>
+                    <div class="panel-card-body">
+                        <div id="recurringList"><p style="text-align:center;color:#6B7280">Carregando...</p></div>
+                        <div id="recurringStatus" style="margin-top:14px"></div>
+                    </div>
+                </div>
+
                 <!-- DRE - DEMONSTRATIVO DE RESULTADO -->
                 <div class="panel-card" id="dreSection">
                     <div class="panel-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
@@ -389,6 +408,71 @@
         </div>
     </div>
 
+    <!-- ============ MODAL DESPESA RECORRENTE (FASE 3) ============ -->
+    <div class="modal-overlay" id="recurringModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9999; align-items:center; justify-content:center;">
+        <div class="modal" style="background:#fff; border-radius:16px; padding:28px; max-width:520px; width:92%; position:relative; max-height:90vh; overflow-y:auto;">
+            <button class="modal-close" onclick="fecharRecorrenteModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;">&times;</button>
+            <h2 style="margin:0 0 6px" id="recModalTitle">🔁 Nova despesa recorrente</h2>
+            <p style="margin:0 0 18px; font-size:13px; color:#6B7280">Cadastrada uma vez, gerada automaticamente todo mês.</p>
+            <form id="formRecorrente" onsubmit="salvarRecorrente(event)">
+                <input type="hidden" id="recId" value="">
+                <div style="margin-bottom:14px">
+                    <label style="display:block;margin-bottom:4px;font-weight:600">Descrição</label>
+                    <input type="text" id="recDescricao" required placeholder="Ex: Aluguel da loja" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px">
+                    <div>
+                        <label style="display:block;margin-bottom:4px;font-weight:600">Categoria</label>
+                        <select id="recCategoria" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
+                            <option value="aluguel">Aluguel</option>
+                            <option value="salarios">Salários</option>
+                            <option value="energia">Energia elétrica</option>
+                            <option value="agua">Água</option>
+                            <option value="internet">Internet / Telefonia</option>
+                            <option value="utilidades">Utilidades (gás, etc)</option>
+                            <option value="franquia">Royalties / Franquia</option>
+                            <option value="taxa_franquia">Taxa de franquia</option>
+                            <option value="contabilidade">Contabilidade</option>
+                            <option value="seguro">Seguro</option>
+                            <option value="manutencao_fixa">Manutenção fixa</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:4px;font-weight:600">Valor (R$)</label>
+                        <input type="number" id="recValor" step="0.01" min="0.01" required placeholder="0,00" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:14px">
+                    <div>
+                        <label style="display:block;margin-bottom:4px;font-weight:600">Dia vencimento</label>
+                        <input type="number" id="recDia" min="1" max="28" required value="5" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
+                        <small style="color:#6B7280">1 a 28</small>
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:4px;font-weight:600">Início</label>
+                        <input type="date" id="recDataInicio" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:4px;font-weight:600">Fim (opcional)</label>
+                        <input type="date" id="recDataFim" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
+                    </div>
+                </div>
+                <div style="margin-bottom:18px; padding:10px 14px; background:#FEF3C7; border:1px solid #FDE68A; border-radius:10px; font-size:13px; color:#78350F">
+                    💡 Editar uma recorrente <strong>não altera lançamentos passados</strong>. O valor novo só vale a partir do próximo mês.
+                </div>
+                <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap">
+                    <label id="recAtivoBox" style="display:flex; gap:6px; align-items:center; font-size:13px; color:#374151">
+                        <input type="checkbox" id="recAtivo" checked> Ativa
+                    </label>
+                    <div style="display:flex; gap:8px">
+                        <button type="button" class="btn btn-outline" onclick="fecharRecorrenteModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- SCRIPTS -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -407,6 +491,7 @@
     <script src="../js/core/adminconfig.js?v=mp-v14"></script>
     <script src="../js/core/caixa.js?v=mp-v91"></script>
     <script src="../js/core/financas.js?v=mp-v14"></script>
+    <script src="../js/core/recurring-expenses.js?v=mp-v14"></script>
     <script src="../js/core/catalog-v2.js?v=mp-v14"></script>
     <script src="../js/core/cost-calculator.js?v=mp-v14"></script>
     <script src="../js/core/finance-realtime.js?v=mp-v14"></script>
@@ -548,6 +633,9 @@
 
             // DRE
             renderDRE();
+
+            // Despesas recorrentes (FASE 3)
+            try { renderRecurringList(); } catch (e) { console.warn('renderRecurringList:', e); }
 
             // Ranking
             renderRanking();
@@ -771,6 +859,8 @@
             var mes = parseInt(document.getElementById('dreMes').value, 10);
             var ano = parseInt(document.getElementById('dreAno').value, 10);
             var finances = DataStore.getCollection('finances', franchiseId) || [];
+            // Atualiza tambem a lista de recorrentes (status "gerado/pendente" depende do mes)
+            try { renderRecurringList(); } catch (e) {}
 
             // Filter finances for the selected month/year
             var monthFinances = finances.filter(function(f) {
@@ -1087,6 +1177,166 @@
             Utils.showToast('Transacao removida.', 'success');
             loadData();
         }
+
+        // ============================================================
+        // DESPESAS RECORRENTES (FASE 3)
+        // ============================================================
+        function _competenciaSelecionadaDRE() {
+            var mes = parseInt(document.getElementById('dreMes').value, 10);
+            var ano = parseInt(document.getElementById('dreAno').value, 10);
+            return ano + '-' + String(mes + 1).padStart(2, '0');
+        }
+
+        var CAT_LABEL = {
+            aluguel:'Aluguel', salarios:'Salários', energia:'Energia',
+            agua:'Água', internet:'Internet', utilidades:'Utilidades',
+            franquia:'Royalties', taxa_franquia:'Taxa franquia',
+            contabilidade:'Contabilidade', seguro:'Seguro',
+            manutencao_fixa:'Manutenção fixa'
+        };
+
+        function renderRecurringList() {
+            var mount = document.getElementById('recurringList');
+            if (!mount || typeof RecurringExpenses === 'undefined') return;
+            var recs = RecurringExpenses.list(franchiseId) || [];
+            var competencia = _competenciaSelecionadaDRE();
+
+            if (recs.length === 0) {
+                mount.innerHTML = '<div style="text-align:center; padding:24px; color:#6B7280">' +
+                    '<div style="font-size:32px; margin-bottom:6px">📭</div>' +
+                    '<div style="font-weight:600">Nenhuma despesa recorrente cadastrada</div>' +
+                    '<div style="font-size:13px; margin-top:4px">Cadastra aluguel, salários, energia — uma vez só.</div>' +
+                    '</div>';
+                return;
+            }
+
+            var html = '<table class="panel-table" style="width:100%">' +
+                '<thead><tr>' +
+                '<th>Descrição</th><th>Categoria</th><th>Dia</th><th>Valor</th>' +
+                '<th>Status</th><th>' + competencia + '</th><th>Ações</th>' +
+                '</tr></thead><tbody>';
+
+            recs.forEach(function (r) {
+                var gerado = RecurringExpenses.findGenerated(franchiseId, r.id, competencia);
+                var statusGerado = gerado.length > 0
+                    ? '<span style="color:#10B981; font-weight:600">✅ Gerado</span>'
+                    : '<span style="color:#9CA3AF">⏳ Pendente</span>';
+                var ativoBadge = (r.ativo === false)
+                    ? '<span style="background:#FEE2E2; color:#991B1B; padding:2px 8px; border-radius:6px; font-size:11px">Inativa</span>'
+                    : '<span style="background:#D1FAE5; color:#065F46; padding:2px 8px; border-radius:6px; font-size:11px">Ativa</span>';
+                html += '<tr>' +
+                    '<td><strong>' + (r.descricao || '') + '</strong></td>' +
+                    '<td>' + (CAT_LABEL[r.categoria] || r.categoria) + '</td>' +
+                    '<td style="text-align:center">' + r.diaVencimento + '</td>' +
+                    '<td>' + Utils.formatCurrency(r.valor) + '</td>' +
+                    '<td>' + ativoBadge + '</td>' +
+                    '<td>' + statusGerado + '</td>' +
+                    '<td>' +
+                    '<button class="btn btn-sm btn-outline" onclick="editarRecorrente(\'' + r.id + '\')">✏</button> ' +
+                    '<button class="btn btn-sm btn-outline" onclick="toggleRecorrente(\'' + r.id + '\')">' +
+                    (r.ativo === false ? '▶' : '⏸') + '</button>' +
+                    '</td>' +
+                    '</tr>';
+            });
+
+            html += '</tbody></table>';
+            mount.innerHTML = html;
+        }
+
+        function abrirRecorrenteModal(rec) {
+            var ov = document.getElementById('recurringModalOverlay');
+            ov.style.display = 'flex';
+            document.getElementById('formRecorrente').reset();
+            document.getElementById('recId').value = '';
+            document.getElementById('recAtivo').checked = true;
+            document.getElementById('recDataInicio').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('recModalTitle').textContent = '🔁 Nova despesa recorrente';
+
+            if (rec) {
+                document.getElementById('recId').value = rec.id;
+                document.getElementById('recDescricao').value = rec.descricao || '';
+                document.getElementById('recCategoria').value = rec.categoria || 'aluguel';
+                document.getElementById('recValor').value = rec.valor || '';
+                document.getElementById('recDia').value = rec.diaVencimento || 5;
+                document.getElementById('recDataInicio').value = rec.dataInicio || '';
+                document.getElementById('recDataFim').value = rec.dataFim || '';
+                document.getElementById('recAtivo').checked = rec.ativo !== false;
+                document.getElementById('recModalTitle').textContent = '✏ Editar recorrente';
+            }
+        }
+
+        function fecharRecorrenteModal() {
+            document.getElementById('recurringModalOverlay').style.display = 'none';
+        }
+
+        function editarRecorrente(id) {
+            var r = RecurringExpenses.getById(franchiseId, id);
+            if (!r) return Utils.showToast('Recorrente nao encontrada', 'error');
+            abrirRecorrenteModal(r);
+        }
+
+        function toggleRecorrente(id) {
+            var r = RecurringExpenses.getById(franchiseId, id);
+            if (!r) return;
+            if (r.ativo === false) RecurringExpenses.activate(franchiseId, id);
+            else RecurringExpenses.deactivate(franchiseId, id);
+            Utils.showToast('Status atualizado', 'success');
+            renderRecurringList();
+        }
+
+        function salvarRecorrente(e) {
+            e.preventDefault();
+            var payload = {
+                id: document.getElementById('recId').value || null,
+                descricao: document.getElementById('recDescricao').value.trim(),
+                categoria: document.getElementById('recCategoria').value,
+                valor: parseFloat(document.getElementById('recValor').value),
+                diaVencimento: parseInt(document.getElementById('recDia').value, 10),
+                dataInicio: document.getElementById('recDataInicio').value,
+                dataFim: document.getElementById('recDataFim').value || null,
+                ativo: document.getElementById('recAtivo').checked
+            };
+            var res = RecurringExpenses.save(franchiseId, payload);
+            if (!res.ok) {
+                Utils.showToast('Erro: ' + res.error, 'error');
+                return;
+            }
+            Utils.showToast(res.action === 'created' ? 'Recorrente criada!' : 'Recorrente atualizada!', 'success');
+            fecharRecorrenteModal();
+            renderRecurringList();
+        }
+
+        function gerarRecorrentesAtual() {
+            if (typeof RecurringExpenses === 'undefined') return;
+            var competencia = _competenciaSelecionadaDRE();
+            var res = RecurringExpenses.generateForMonth(franchiseId, competencia);
+            if (!res.ok) {
+                Utils.showToast('Erro: ' + res.error, 'error');
+                return;
+            }
+            var msg = competencia + ': ' +
+                res.summary.criados + ' criado(s), ' +
+                res.summary.pulados + ' pulado(s) (já existiam), ' +
+                res.summary.naoAplicaveis + ' não aplicável(eis).';
+            Utils.showToast(msg, res.summary.criados > 0 ? 'success' : 'info');
+
+            var statusEl = document.getElementById('recurringStatus');
+            if (statusEl) {
+                statusEl.innerHTML =
+                    '<div style="background:#F0FDF4; border:1px solid #86EFAC; border-radius:10px; padding:12px 14px; font-size:13px; color:#14532D">' +
+                    '<strong>Geração ' + competencia + ':</strong> ' +
+                    res.summary.criados + ' criados · ' +
+                    res.summary.pulados + ' já existiam · ' +
+                    res.summary.naoAplicaveis + ' fora do período' +
+                    '</div>';
+            }
+
+            renderRecurringList();
+            renderDRE(); // re-renderiza a DRE pra mostrar os lancamentos novos
+            loadData();
+        }
+
+        // ============================================================
 
         // ========== EXPORT CSV ==========
         function exportCSV() {

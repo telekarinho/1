@@ -9,6 +9,7 @@
 
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
@@ -1296,4 +1297,240 @@ exports.sendClosingReport = onCall({
         });
         throw new HttpsError("internal", "SMTP falhou: " + (e.message || "?"));
     }
+});
+
+// ============================================================
+// FASE 3 — DESPESAS RECORRENTES (cron mensal + callable)
+// ============================================================
+// Gera lancamentos automaticos de custos fixos (aluguel, salarios, energia)
+// no dia 1 de cada mes, pra TODAS as franquias ativas.
+//
+// Idempotencia: usa (recurringExpenseId, competencia) como chave logica.
+// Se ja existe lancamento na collection 'finances' com esse par, pula.
+//
+// Storage layout (DataStore JSON-blob por doc):
+//   datastore/recurring_expenses_<fid>  → { value: JSON.stringify([recs...]) }
+//   datastore/finances_<fid>            → { value: JSON.stringify([entries...]) }
+// ============================================================
+function _competenciaAtual() {
+    const dt = new Date();
+    return dt.getUTCFullYear() + "-" + String(dt.getUTCMonth() + 1).padStart(2, "0");
+}
+
+function _dateForCompetencia(competencia, dia) {
+    const parts = (competencia || "").split("-");
+    if (parts.length !== 2) return null;
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    if (!y || !m) return null;
+    const lastDay = new Date(y, m, 0).getDate();
+    const d = Math.min(Math.max(parseInt(dia, 10) || 1, 1), lastDay);
+    return y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+}
+
+function _genId() {
+    return "rec_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function _competenciaFromDate(d) {
+    const dt = (d instanceof Date) ? d : new Date(d);
+    if (isNaN(dt)) return null;
+    return dt.getUTCFullYear() + "-" + String(dt.getUTCMonth() + 1).padStart(2, "0");
+}
+
+function _isApplicable(rec, competencia) {
+    if (!rec || rec.ativo === false) return false;
+    const inicioComp = _competenciaFromDate(rec.dataInicio);
+    if (inicioComp && competencia < inicioComp) return false;
+    if (rec.dataFim) {
+        const fimComp = _competenciaFromDate(rec.dataFim);
+        if (fimComp && competencia > fimComp) return false;
+    }
+    return true;
+}
+
+async function _readDoc(docId) {
+    try {
+        const snap = await db.collection("datastore").doc(docId).get();
+        if (!snap.exists) return [];
+        const raw = snap.data().value;
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        console.warn("readDoc " + docId + " err:", e.message);
+        return [];
+    }
+}
+
+async function _writeDoc(docId, arr) {
+    await db.collection("datastore").doc(docId).set({
+        value: JSON.stringify(arr),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedBy: "scheduled_recurring_expenses",
+    }, { merge: true });
+}
+
+async function _generateForFranchise(franchiseId, competencia) {
+    const recs = await _readDoc("recurring_expenses_" + franchiseId);
+    if (!Array.isArray(recs) || recs.length === 0) {
+        return { franchiseId, criados: 0, pulados: 0, semRecorrencias: true };
+    }
+
+    const finances = await _readDoc("finances_" + franchiseId);
+    const finArr = Array.isArray(finances) ? finances.slice() : [];
+
+    let criados = 0;
+    let pulados = 0;
+    let inaplicaveis = 0;
+    const detalhes = [];
+
+    for (const r of recs) {
+        if (!_isApplicable(r, competencia)) {
+            inaplicaveis++;
+            continue;
+        }
+        const jaExiste = finArr.some(f =>
+            f && f._origem === "recorrente"
+            && f._recurringExpenseId === r.id
+            && f._competencia === competencia
+        );
+        if (jaExiste) {
+            pulados++;
+            continue;
+        }
+        const entry = {
+            id: _genId(),
+            type: "expense",
+            category: r.categoria,
+            amount: Number(r.valor) || 0,
+            description: (r.descricao || "Recorrente") + " (recorrente)",
+            date: _dateForCompetencia(competencia, r.diaVencimento),
+            _origem: "recorrente",
+            _recurringExpenseId: r.id,
+            _competencia: competencia,
+            _diaVencimento: r.diaVencimento,
+            _snapshotValor: Number(r.valor) || 0,
+            _generatedBy: "cloud_function_scheduled",
+            createdAt: new Date().toISOString(),
+        };
+        finArr.push(entry);
+        criados++;
+        detalhes.push({ recurringId: r.id, descricao: r.descricao, valor: entry.amount });
+    }
+
+    if (criados > 0) {
+        await _writeDoc("finances_" + franchiseId, finArr);
+    }
+
+    return {
+        franchiseId,
+        competencia,
+        criados,
+        pulados,
+        inaplicaveis,
+        detalhes,
+    };
+}
+
+async function _runForAllFranchises(competencia) {
+    // Le a lista de franquias do datastore/franchises
+    const franchisesDoc = await _readDoc("franchises");
+    if (!Array.isArray(franchisesDoc) || franchisesDoc.length === 0) {
+        console.warn("[recurring] nenhuma franquia encontrada em datastore/franchises");
+        return { totalFranquias: 0, processadas: 0, criados: 0, resultados: [] };
+    }
+    const resultados = [];
+    let totalCriados = 0;
+    for (const f of franchisesDoc) {
+        if (!f || !f.id) continue;
+        try {
+            const res = await _generateForFranchise(f.id, competencia);
+            resultados.push(res);
+            totalCriados += res.criados;
+        } catch (e) {
+            console.error("[recurring] falha em " + f.id + ":", e.message);
+            resultados.push({ franchiseId: f.id, error: e.message });
+        }
+    }
+    return {
+        totalFranquias: franchisesDoc.length,
+        processadas: resultados.length,
+        criados: totalCriados,
+        resultados,
+    };
+}
+
+// CRON: dia 1 de cada mes, 03:00 UTC (00:00 Brasilia)
+exports.generateMonthlyRecurringExpenses = onSchedule({
+    region: "southamerica-east1",
+    schedule: "0 3 1 * *",
+    timeZone: "America/Sao_Paulo",
+    timeoutSeconds: 540,
+    memory: "256MiB",
+}, async (event) => {
+    const competencia = _competenciaAtual();
+    console.log("[scheduled-recurring] iniciando geracao", competencia);
+    const summary = await _runForAllFranchises(competencia);
+    console.log("[scheduled-recurring] resumo:", JSON.stringify(summary));
+
+    // Audit log
+    try {
+        await db.collection("recurring_expenses_runs").add({
+            triggeredBy: "schedule",
+            competencia,
+            ranAt: admin.firestore.FieldValue.serverTimestamp(),
+            summary,
+        });
+    } catch (e) {
+        console.warn("audit log falhou:", e.message);
+    }
+});
+
+// Callable manual — admin pode forcar geracao retroativa pra qualquer mes/franquia
+exports.runRecurringExpensesNow = onCall({
+    region: "southamerica-east1",
+    timeoutSeconds: 120,
+    memory: "256MiB",
+}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Autenticacao necessaria");
+    }
+    const role = request.auth.token.role || "";
+    if (!["super_admin", "admin", "franchisee"].includes(role)) {
+        throw new HttpsError("permission-denied", "Apenas admin/franqueado");
+    }
+
+    const { franchiseId, competencia } = request.data || {};
+    const comp = competencia || _competenciaAtual();
+    if (!/^\d{4}-\d{2}$/.test(comp)) {
+        throw new HttpsError("invalid-argument", "competencia deve ser YYYY-MM");
+    }
+
+    if (franchiseId) {
+        // franqueado so pode rodar pra propria franquia
+        if (role === "franchisee" && request.auth.token.franchiseId !== franchiseId) {
+            throw new HttpsError("permission-denied", "Franqueado so pode rodar pra propria franquia");
+        }
+        const res = await _generateForFranchise(franchiseId, comp);
+        await db.collection("recurring_expenses_runs").add({
+            triggeredBy: "manual:" + (request.auth.uid || "?"),
+            competencia: comp,
+            franchiseId,
+            ranAt: admin.firestore.FieldValue.serverTimestamp(),
+            result: res,
+        });
+        return { ok: true, mode: "single-franchise", result: res };
+    }
+
+    // sem franchiseId → apenas super_admin pode rodar pra todas
+    if (role !== "super_admin" && role !== "admin") {
+        throw new HttpsError("permission-denied", "Apenas admin pode rodar pra todas franquias");
+    }
+    const summary = await _runForAllFranchises(comp);
+    await db.collection("recurring_expenses_runs").add({
+        triggeredBy: "manual-all:" + (request.auth.uid || "?"),
+        competencia: comp,
+        ranAt: admin.firestore.FieldValue.serverTimestamp(),
+        summary,
+    });
+    return { ok: true, mode: "all-franchises", summary };
 });
