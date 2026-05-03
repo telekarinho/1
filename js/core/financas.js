@@ -438,10 +438,78 @@ const Financas = (function () {
     /* ============================================
        Pendências (obrigatórios faltantes + confiabilidade)
        ============================================ */
+
+    /**
+     * Mapeamento de aliases: chaves usadas pelo despesas.html (finances collection)
+     * para as chaves canônicas do Finance OS (finance_costs collection).
+     * Permite que os lançamentos feitos em despesas.html sejam reconhecidos aqui.
+     */
+    const FINANCES_KEY_ALIASES = {
+        // fixed aliases
+        'prolabore': 'pro_labore',
+        'pro-labore': 'pro_labore',
+        'folha': 'salarios',      // despesas usa 'folha', financas.js usa 'salarios' — ambos aceitam
+        'salarios': 'folha',
+        'condominio': 'condominio',
+        'energia': 'energia',
+        'agua': 'agua',
+        'internet': 'internet',
+        'aluguel': 'aluguel',
+        'contador': 'contador',
+        'contabilidade': 'contador',
+        'royalties': 'royalties',
+        'taxa_franquia': 'royalties',
+        'franquia': 'royalties',
+        'software': 'software',
+        'seguros': 'seguros',
+        'seguro': 'seguros',
+        'manutencao': 'manutencao',
+        'juros': 'juros',
+        // variable aliases
+        'ingredientes': 'insumos',
+        'insumos': 'insumos',
+        'embalagens': 'embalagens',
+        'taxa_cartao': 'taxas_cartao',
+        'taxas_cartao': 'taxas_cartao',
+        'comissao': 'apps_delivery',
+        'apps_delivery': 'apps_delivery',
+        'impostos': 'impostos',
+        'marketing': 'marketing_local'
+    };
+
     function computePendencies(franchiseId, periodKey, ctx) {
         const pends = [];
         const fixedLançados = new Set((ctx.fixedCosts || []).map(c => c.categoria));
         const varLançados = new Set((ctx.variableCosts || []).map(c => c.categoria));
+
+        // Também verifica lançamentos na coleção 'finances' (despesas.html)
+        // para evitar falsos alertas de "sem lançamento" quando o usuário
+        // lançou pelo módulo despesas em vez do Finance OS.
+        try {
+            if (typeof DataStore !== 'undefined' && DataStore.getCollection && periodKey) {
+                const allFinances = DataStore.getCollection('finances', franchiseId) || [];
+                const periodPrefix = periodKey; // YYYY-MM
+                const expensesThisMonth = allFinances.filter(function(f) {
+                    return f.date && f.date.startsWith(periodPrefix) && f.type === 'expense';
+                });
+                expensesThisMonth.forEach(function(f) {
+                    const rawKey = (f.category || '').toLowerCase();
+                    const canonical = FINANCES_KEY_ALIASES[rawKey] || rawKey;
+                    const FIXED_KEYS = ['aluguel','condominio','energia','agua','internet',
+                                        'folha','pro_labore','prolabore','contador','contabilidade',
+                                        'royalties','taxa_franquia','franquia','software',
+                                        'seguros','seguro','manutencao','juros'];
+                    const isFixed = FIXED_KEYS.indexOf(rawKey) >= 0 || FIXED_KEYS.indexOf(canonical) >= 0;
+                    if (isFixed) {
+                        fixedLançados.add(rawKey);
+                        fixedLançados.add(canonical);
+                    } else {
+                        varLançados.add(rawKey);
+                        varLançados.add(canonical);
+                    }
+                });
+            }
+        } catch(e) { /* silencia erro para não quebrar o fluxo */ }
 
         mandatoryCategories('fixed').forEach(c => {
             if (!fixedLançados.has(c.key)) {
