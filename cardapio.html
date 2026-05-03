@@ -1863,6 +1863,10 @@
             if (summaryStore && selectedStore) {
                 summaryStore.innerHTML = '<div class="summary-store-card"><span class="summary-store-icon">🏪</span><div><strong>' + selectedStore.name + '</strong><small>' + selectedStore.deliveryTime + '</small></div></div>';
             }
+            // CRITICAL: override nao chama o nextCheckoutStep original, entao
+            // updateOrderSummary() (que recalcula subtotal/frete/total com
+            // _uberCustomerFee) precisa ser chamado aqui manualmente.
+            if (typeof updateOrderSummary === 'function') updateOrderSummary();
         }
         document.querySelectorAll('.checkout-step').forEach(function(s) {
             var sNum = parseInt(s.dataset.step);
