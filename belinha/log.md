@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #100 — 2026-05-03
+
+**Área:** Estratégia — Revisão completa dos 100 ciclos + atualização de `belinha/estrategia.md`
+
+**Contexto:** Marco obrigatório prescrito pelo ciclo #99. 100 ciclos completados desde o setup inicial. A regra de auto-aprimoramento a cada 5 ciclos exige releitura completa e atualização estratégica nos marcos redondos.
+
+**O que analisou:**
+- Releu `belinha/log.md` inteiro (3.634 linhas / 100 ciclos) com foco em padrões de valor, desperdícios e pendências acumuladas
+- Releu `belinha/estrategia.md` completo (13 seções de auto-aprimoramento: ciclos #5, #20–24, #26–29, #30–34, #35–39, #39–43, #44–48, #49–53, #54–58, #59–63, #64–68, #69–73, #74–78, #92)
+- Releu `belinha/blockers.md` — 5 blockers ativos, 3 suspensos
+- Identificou ratio histórico: 52% conteúdo / 18% UX+Performance / 12% SEO / 10% conversão / 5% concorrentes / 3% estratégia
+- Mapeou débito técnico acumulado pós-#99: CSS purge rodada 2, `acai-self-service-londrina.html` nunca auditada, `cardapio.js` bundle nunca auditado, raspinha da sorte status desconhecido
+- Confirmou que regra de pausa de conteúdo (#92) se mantém: 56 semanas cobertas (até 15/05/2027)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/estrategia.md` | Nova seção "Ciclo #100 — Marco: Revisão Estratégica Completa (1–100)": síntese de 100 ciclos por área, hierarquia definitiva de valor (Tier 1–4), estado completo do projeto em D+8, tabela de débito técnico atualizada, rotação rebalanceada v12, roadmap #101–#110 detalhado, 6 lições consolidadas |
+
+**Decisões estratégicas do ciclo #100:**
+1. **Pausa de conteúdo mantida** — 56 semanas cobertas, regra #92 inalterada
+2. **Rotação rebalanceada v12:** UX/Performance > SEO > Conversão > Concorrentes > Conteúdo
+3. **Rodada 2 de CSS purge como ciclo #101** (0 ciclos de intervalo — máxima urgência técnica)
+4. **`acai-self-service-londrina.html` como ciclo #102** — única página de destino com SEO crítico nunca auditada em detalhe
+5. **`cardapio.js` bundle como ciclo #103** — nunca foi inspecionado por dead code / console.logs
+
+**Commit:** (a confirmar após push)
+
+**Próximo passo sugerido:**
+- **Ciclo #101:** UX/Performance — Segunda rodada CSS purge `cardapio.css`: remover as 21 classes `cp-` ociosas restantes, condicionado à confirmação do operador sobre plano de uso em HTML standalone; se não houver plano, remover e documentar ganho de bytes
+- Operador: confirmar se existe plano de criar página com `cardapio.js` + HTML estático usando seletores `cp-cart-sidebar`, `cp-modal`, etc. — decisão define se ciclo #101 remove 21 classes (−~240 linhas) ou as arquiva como "reservadas para app"
+
+_Belinha — Ciclo #100 | 2026-05-03_
+
+---
+
 ## Ciclo #99 — 2026-05-03
 
 **Área:** UX/Performance — Purge de seletores CSS mortos em `cardapio.css`

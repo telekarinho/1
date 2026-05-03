@@ -1155,3 +1155,149 @@ _Atualizado no ciclo #92 (2026-05-02) — obrigatório a cada 5 ciclos_
 ---
 
 _Belinha — Ciclo #92 | 2026-05-02_
+
+---
+
+## Ciclo #100 — Marco: Revisão Estratégica Completa (1–100)
+
+_Atualizado no ciclo #100 (2026-05-03) — revisão obrigatória de marco_
+
+---
+
+### Síntese dos 100 ciclos
+
+| Período | Ciclos | Foco predominante |
+|---------|--------|-------------------|
+| Pré-inauguração | #1–#24 | Bug fixes, SEO técnico, UX, dados corretos |
+| Semana da inauguração | #25–#30 | Reviews Google, cartão fidelidade, conteúdo D+0 |
+| Mês 1 (abril/maio 2026) | #31–#54 | Performance, conteúdo semanas 1–12, conversão |
+| Mês 2–3 (maio/junho) | #55–#79 | Conteúdo até semana 28, sweep técnico, concorrentes |
+| Mês 3–12 (planejamento) | #80–#99 | Conteúdo semanas 29–56, UX sweep, CSS purge |
+| Marco | #100 | Revisão estratégica + roadmap Q2–Q3 2026 |
+
+**Ratio de 100 ciclos por área:**
+- Conteúdo: ~52 ciclos (52%)
+- UX/Performance: ~18 ciclos (18%)
+- SEO técnico: ~12 ciclos (12%)
+- Conversão/Fidelidade: ~10 ciclos (10%)
+- Pesquisa concorrentes: ~5 ciclos (5%)
+- Estratégia/Auto-aprimoramento: ~3 ciclos (3%)
+
+---
+
+### O que os 100 ciclos provaram: hierarquia definitiva de valor
+
+**Tier 1 — ROI máximo (sempre priorizar):**
+1. **Bug/fix crítico** — ciclo #20 (WA placeholder) sozinho valeu mais que 20 ciclos de conteúdo
+2. **UX/Performance sweep batch** — ciclos #37–#40 (Fonts), #93–#99 (Firebase defer + CSS purge): impacto cumulativo em LCP, menor bounce
+3. **Conteúdo acionável com templates prontos** — scripts de WA que o operador usa sem retrabalho (ciclos #32, #41, #97)
+
+**Tier 2 — ROI alto:**
+4. **Conversão direta** — cartão fidelidade (#23), upsell PDV (#97), indica & ganha (#41)
+5. **SEO técnico sem bloqueador** — Schema.org, sitemap, BreadcrumbList, og:image (impacto cumulativo de longo prazo)
+6. **Landing pages SEO local** — `potinho-ninho-londrina.html` (#27), `acai-self-service-londrina.html`
+
+**Tier 3 — ROI médio:**
+7. **Conteúdo editorial** — posts/semanas (meia-vida curta, mas necessário para cadência)
+8. **Pesquisa concorrentes com follow-up imediato** — só vale quando gera mudança no site no mesmo ciclo
+
+**Tier 4 — ROI baixo ou bloqueado:**
+9. Documentação pura sem entregável acionável
+10. Conteúdo >8 semanas à frente (alto risco de obsolescência)
+11. Pesquisa de concorrentes sem follow-up imediato
+
+---
+
+### Estado do projeto em 2026-05-03 (D+8 pós-inauguração)
+
+| Área | Estado | Última ação |
+|------|--------|-------------|
+| Conteúdo semanal | ✅ Coberto até semana 56 (15/05/2027) | Ciclo #96 |
+| CSS `cardapio.css` | ✅ −171 linhas purged; 21 classes pendentes | Ciclo #99 |
+| Firebase defer `login.html` | ✅ 4 scripts FCP-blocking removidos | Ciclo #98 |
+| Upsell PDV + WA 15º carimbo | ✅ 6 scripts + template WA prontos | Ciclo #97 |
+| SEO `desafio.html` | ✅ BreadcrumbList + WebPage | Ciclo #93 |
+| Concorrentes (TheBest + MilkyMoo) | ✅ Refetch ciclo #94 | Ciclo #94 |
+| CLS sweep (index, cardapio, açaí) | ✅ img width/height explícitos | Ciclo #95 |
+| aggregateRating Schema.org | ⛔ SUSPENSO — aguarda ≥3 reviews | Ciclo #43 |
+| Google Analytics ID real | ⛔ SUSPENSO — aguarda autorização | Ciclo #15 |
+| CNPJ / DPO (termos + privacidade) | ⛔ SUSPENSO — aguarda operador | Ciclo #12 |
+| WA "VERAO" keyword ativa? | ❓ PENDENTE — confirmação operador | Ciclo #97 |
+| `acai-self-service-londrina.html` SEO | ⚠️ Nunca auditada em detalhe | — |
+| `cardapio.js` dead code / console.log | ⚠️ Nunca auditado | — |
+| Raspinha da sorte (status técnico) | ⚠️ Nunca verificada pós-inauguração | — |
+| Horizonte conteúdo < 6 semanas | 🔒 PAUSADO — 56 semanas cobertas | Regra #92 |
+
+---
+
+### Diagnóstico de débito técnico pós-ciclo #99
+
+| Área | Ciclos sem atenção | Prioridade |
+|------|--------------------|-----------|
+| CSS purge (rodada 2 — 21 classes) | 0 (prescrito #99) | Alta |
+| `acai-self-service-londrina.html` SEO | ∞ (nunca auditado em detalhe) | Alta |
+| `cardapio.js` dead code / bundle | ∞ (nunca auditado) | Média |
+| Raspinha da sorte (status) | ∞ (nunca verificada pós-inauguração) | Média |
+| Concorrentes (novos entrantes) | 6 (desde #94) | Baixa |
+| `index.html` hero WebP + cache | ~20 ciclos | Baixa |
+
+---
+
+### Nova rotação rebalanceada (vigente a partir do ciclo #101)
+
+**Gatilho de pausa de conteúdo (mantida da regra #92):**
+> Conteúdo semanal futuro só avança quando horizonte coberto for **< 6 semanas** ou evento especial urgente. Hoje: 56 semanas cobertas → pausa mantida.
+
+| Prioridade | Área | Critério |
+|-----------|------|----------|
+| 1 | UX/Performance | CSS purge, bundle audit, WebP, dead code |
+| 2 | SEO técnico | Páginas sem schema, og:image, link interno |
+| 3 | Conversão | Fidelidade, WA reativação, raspinha, upsell |
+| 4 | Concorrentes | Refetch a cada 10 ciclos ou quando alerta ativo |
+| 5 | Conteúdo | Apenas se horizonte < 6 semanas ou evento urgente |
+
+---
+
+### Roadmap #101–#110
+
+| Ciclo | Área | Ação |
+|-------|------|------|
+| #101 | UX/Performance | Segunda rodada CSS purge `cardapio.css` — remover 21 classes `cp-` ociosas (verificar HTML planejado com operador; se não há plano de uso → remover) |
+| #102 | SEO | `acai-self-service-londrina.html` — audit completo: BreadcrumbList, WebPage schema, meta description, og:image dimensions, link interno de `index.html` e `cardapio.html` |
+| #103 | UX/Performance | `cardapio.js` bundle audit — remover console.logs, variáveis não usadas, dead functions; medir redução em bytes |
+| #104 | Conversão | Raspinha da sorte: verificar `raspinha.html` e `functions/` — está funcional? Documentar status técnico + template WA de ativação para operador |
+| #105 | Auto-aprimoramento | Reler log #100–#104, ajustar estratégia Q3 2026 (meses 3–5 de operação: julho–setembro) |
+| #106 | SEO | Se `aggregateRating` desbloqueado (operador confirmou reviews): ativar em `index.html`; senão: FAQPage schema em `acai-self-service-londrina.html` |
+| #107 | Concorrentes | MilkyMoo + TheBest + novos entrantes Londrina (13 ciclos desde #94) — focar em mudanças de preço, promoções ativas, UGC recente |
+| #108 | Conversão | Template WA reativação D+30 para clientes silenciosos (baseado no playbook #32 mas com variação de copy pós-mês-1) + follow-up indica & ganha |
+| #109 | UX/Performance | `index.html` LCP audit: hero image em WebP? Tamanho correto? Headers de cache? preconnect para CDN de imagens? |
+| #110 | Conteúdo | Se horizonte < 6 semanas: criar semanas imediatas. Senão: playbook "aniversário de 6 meses" (outubro 2026) — briefing antecipado para operador |
+
+---
+
+### Bloqueadores ativos (sem mudança desde ciclo #92)
+
+| Bloqueador | Dependência | Desde |
+|------------|-------------|-------|
+| aggregateRating Schema.org | ≥3 reviews Google Maps verificáveis | #43 |
+| Google Analytics ID real | Autorização explícita do usuário | #15 |
+| CNPJ + Razão Social | Confirmação do franqueado | #12 |
+| DPO (LGPD) | Confirmação do franqueado | #12 |
+| Produto sazonal verão Versão A/B | Confirmação da franquia ANTES 28/11/2026 | #72 |
+| Produto natalino Versão A/B | Confirmação da franquia ANTES 20/12/2026 | #74 |
+| WA "VERAO" keyword ativa? | Confirmar com operador | #75 |
+
+---
+
+### Lições consolidadas em 100 ciclos
+
+1. **Validar sempre antes de criar** — bug de WA placeholder (#20) passou por 19 ciclos de trabalho sem ser detectado. Todo ciclo deve começar com verificação de dados críticos.
+2. **Sweep batch é melhor que iteração gradual** — resolver um problema sistêmico em 1 ciclo é 4x mais eficiente do que 4 ciclos de "mais uma página".
+3. **Conteúdo acionável > conteúdo planejado** — posts para daqui a 6 meses têm valor, mas scripts que o operador usa amanhã têm valor imediato.
+4. **Bloqueadores suspensos não ocupam slot** — `aggregateRating` bloqueado há 57 ciclos. Não listar no roadmap ativo; checar apenas quando houver sinal do operador.
+5. **Pausa de conteúdo é obrigatória além de 6 semanas** — mais de 52% dos ciclos foram conteúdo. Reequilíbrio técnico é obrigatório para o projeto evoluir estruturalmente.
+6. **Pesquisa de concorrentes só com follow-up imediato** — análise que não gera mudança no mesmo ciclo tem ROI próximo de zero.
+
+---
+
+_Belinha — Ciclo #100 | 2026-05-03_
