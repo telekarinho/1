@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #102 — 2026-05-03
+
+**Área:** SEO — `acai-self-service-londrina.html` audit
+
+**Contexto:** Prescrito pelo roadmap do ciclo #100 (posição #2 da nova rotação). Página de açaí self-service auditada pela primeira vez para schema.org e Open Graph.
+
+**O que analisou:**
+- Verificou BreadcrumbList: ✅ já existia no `@graph`
+- Verificou meta description: ✅ presente, 155 chars, contém keywords locais
+- Verificou og:image dimensions: ✅ declaradas 1900×1070 — confirmado via `file` que PNG real tem exatamente 1900×1070px
+- Verificou links internos: ✅ `index.html` linha 472 e `cardapio.html` linha 213 já linkam para esta página
+- Identificou dois gaps: (1) sem entidade `WebPage` no `@graph`; (2) sem `og:image:type`
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `acai-self-service-londrina.html` | +1 `WebPage` entity no `@graph` com `@id`, `url`, `name`, `description`, `inLanguage`, `isPartOf`, `breadcrumb` (referência ao `@id` do BreadcrumbList), `potentialAction` (OrderAction → WhatsApp), `dateModified` |
+| `acai-self-service-londrina.html` | +`og:image:type: image/png` (declaração de MIME type do og:image) |
+| `acai-self-service-londrina.html` | BreadcrumbList recebeu `@id` para ser referenciável pelo WebPage |
+
+**Detalhes técnicos:**
+- `@graph` agora tem 4 entidades: `WebPage`, `BreadcrumbList`, `MenuItem`, `FoodEstablishment`
+- `WebPage.isPartOf` aponta para `https://milkypot.com/#website` (conecta ao site principal no grafo)
+- `WebPage.potentialAction` com `OrderAction` é o sinal mais forte de intenção de compra que o schema.org suporta para landing pages de food
+- JSON validado via `python3 json.loads()` — sem erros de sintaxe
+
+**Commit:** `04c9cb9`
+
+**Próximo passo sugerido:**
+- Ciclo #103: UX/Performance — `cardapio.js` bundle audit — remover console.logs, variáveis não usadas, dead functions; medir redução em bytes
+- Ciclo #104: Conversão — `raspinha.html` e `functions/` status técnico da raspinha da sorte
+- Operador: IDs de carrinho em `cardapio.js` (`menuCartSidebar`, `menuCartOverlay`, etc.) sem elementos HTML correspondentes — confirmar se implementar ou remover (blocker documentado ciclo #101)
+
+_Belinha — Ciclo #102 | 2026-05-03_
+
+---
+
 ## Ciclo #101 — 2026-05-03
 
 **Área:** UX/Performance — Segunda rodada CSS purge `cardapio.css`
