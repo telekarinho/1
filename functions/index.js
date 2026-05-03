@@ -1166,6 +1166,75 @@ const RECIPIENTS = [
 // Conta usada como remetente (gerou a app password):
 const SMTP_USER = "jocimarrodrigo@gmail.com";
 
+/**
+ * Helper genérico de envio de email via Gmail SMTP.
+ * Sempre persiste fallback em /mail collection se falhar.
+ * Reusado por sendClosingReport + checkStockAlerts.
+ *
+ * @param {object} opts - { to, subject, html, text, replyTo, from, _audit }
+ * @returns {object} { ok, sentTo, queued?, error? }
+ */
+async function _sendEmailViaSmtp(opts) {
+    const recipients = Array.isArray(opts.to) ? opts.to.filter(Boolean) : (opts.to ? [opts.to] : []);
+    if (!recipients.length) return { ok: false, error: "no recipients" };
+    const subject = opts.subject || "MilkyPot — notificação";
+    const html = opts.html || opts.text || "";
+    const text = opts.text || "";
+    const fromName = opts.fromName || "MilkyPot";
+    const from = opts.from || ('"' + fromName + '" <' + SMTP_USER + ">");
+
+    const password = GMAIL_APP_PASSWORD.value();
+    if (!password) {
+        // Sem secret — só persiste em /mail e retorna queued
+        try {
+            await db.collection("mail").add({
+                to: recipients,
+                from,
+                replyTo: opts.replyTo || SMTP_USER,
+                message: { subject, text, html },
+                _pendingSmtp: true,
+                _reason: "GMAIL_APP_PASSWORD não configurado",
+                _audit: opts._audit || null,
+                _createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        } catch (qe) { console.warn("fallback /mail write falhou:", qe.message); }
+        return { ok: false, queued: true, reason: "GMAIL_APP_PASSWORD não configurado" };
+    }
+
+    const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: { user: SMTP_USER, pass: password },
+    });
+    try {
+        await transporter.sendMail({
+            from,
+            to: recipients.join(", "),
+            replyTo: opts.replyTo || SMTP_USER,
+            subject,
+            text,
+            html,
+        });
+        return { ok: true, sentTo: recipients.length };
+    } catch (e) {
+        console.error("_sendEmailViaSmtp ERROR:", e.message, "to:", recipients);
+        // Fallback /mail pra retry futuro (Firebase Extensions Trigger Email pode pegar)
+        try {
+            await db.collection("mail").add({
+                to: recipients,
+                from,
+                replyTo: opts.replyTo || SMTP_USER,
+                message: { subject, text, html },
+                _smtpError: String(e.message || e),
+                _audit: opts._audit || null,
+                _createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        } catch (qe) { console.warn("fallback /mail write falhou:", qe.message); }
+        return { ok: false, error: e.message, queued: true };
+    }
+}
+
 function _fmtBRL(v) {
     return "R$ " + (Number(v || 0).toFixed(2)).replace(".", ",");
 }
@@ -1238,65 +1307,34 @@ exports.sendClosingReport = onCall({
     const { franchiseId, data, managers } = request.data || {};
     const recipients = Array.isArray(managers) && managers.length ? managers : RECIPIENTS;
     const reportData = data || {};
+    const subject = "🔒 Fechamento de Caixa — " + (franchiseId || "?") + " — " + new Date().toISOString().slice(0, 10);
+    const html = _buildClosingHtml({ ...reportData, franchiseId });
+    const text = _buildClosingText({ ...reportData, franchiseId });
 
-    const password = GMAIL_APP_PASSWORD.value();
-    if (!password) {
-        // Secret nao configurado — salva no Firestore mesmo assim e retorna erro graceful
-        await db.collection("mail").add({
-            to: recipients,
-            from: "MilkyPot PDV <" + SMTP_USER + ">",
-            replyTo: reportData.operatorEmail || SMTP_USER,
-            message: {
-                subject: "Fechamento de Caixa — " + (franchiseId || "?") + " — " + new Date().toISOString().slice(0, 10),
-                text: _buildClosingText({ ...reportData, franchiseId }),
-                html: _buildClosingHtml({ ...reportData, franchiseId }),
-            },
-            _pendingSmtp: true,
-            _createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        return { success: false, queued: true, reason: "GMAIL_APP_PASSWORD nao configurado — relatorio salvo em /mail" };
-    }
-
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        auth: { user: SMTP_USER, pass: password },
+    const r = await _sendEmailViaSmtp({
+        to: recipients,
+        subject,
+        html,
+        text,
+        replyTo: reportData.operatorEmail || SMTP_USER,
+        fromName: "MilkyPot PDV",
+        _audit: { source: "sendClosingReport", franchiseId, operator: reportData.operatorEmail || null },
     });
 
+    // Audit (sempre grava — sucesso ou falha)
     try {
-        await transporter.sendMail({
-            from: '"MilkyPot PDV" <' + SMTP_USER + '>',
-            to: recipients.join(", "),
-            replyTo: reportData.operatorEmail || SMTP_USER,
-            subject: "🔒 Fechamento de Caixa — " + (franchiseId || "?") + " — " + new Date().toISOString().slice(0, 10),
-            text: _buildClosingText({ ...reportData, franchiseId }),
-            html: _buildClosingHtml({ ...reportData, franchiseId }),
-        });
-        // Marca como enviado pra audit
         await db.collection("caixa_reports_sent").add({
             franchiseId,
             recipients,
             sentAt: admin.firestore.FieldValue.serverTimestamp(),
             data: reportData,
+            result: r,
         });
-        return { success: true, sent: recipients.length };
-    } catch (e) {
-        console.error("sendClosingReport SMTP error:", e);
-        // Salva no Firestore como fallback pra retry futuro
-        await db.collection("mail").add({
-            to: recipients,
-            from: "MilkyPot PDV <" + SMTP_USER + ">",
-            message: {
-                subject: "Fechamento de Caixa — " + (franchiseId || "?"),
-                text: _buildClosingText({ ...reportData, franchiseId }),
-                html: _buildClosingHtml({ ...reportData, franchiseId }),
-            },
-            _smtpError: String(e && e.message || e),
-            _createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        throw new HttpsError("internal", "SMTP falhou: " + (e.message || "?"));
-    }
+    } catch (e) { console.warn("audit caixa_reports_sent falhou:", e.message); }
+
+    if (r.ok) return { success: true, sent: r.sentTo };
+    if (r.queued) return { success: false, queued: true, reason: r.reason || r.error || "queued" };
+    throw new HttpsError("internal", "SMTP falhou: " + (r.error || "?"));
 });
 
 // ============================================================
@@ -1686,3 +1724,164 @@ exports.runOrphanCleanupNow = onCall({
     });
     return { ok: true, mode: "all-franchises", summary };
 });
+
+// ============================================================
+// FASE 8 — Stock Alerts (alerta automático de insumo crítico)
+// ============================================================
+const StockAlerts = require("./stock-alerts");
+
+/** Recipients pra alertas de estoque (mesmos do fechamento + permite override por franquia) */
+async function _getStockAlertRecipients(franchiseId) {
+    // Default: usa RECIPIENTS globais
+    let recipients = RECIPIENTS.slice();
+    // Override por franquia se houver no doc franchises
+    try {
+        const fSnap = await db.collection("datastore").doc("franchises").get();
+        if (fSnap.exists) {
+            const fs = JSON.parse(fSnap.data().value || "[]");
+            const f = (fs || []).find(x => x && x.id === franchiseId);
+            if (f && Array.isArray(f.alertEmails) && f.alertEmails.length) {
+                recipients = f.alertEmails;
+            }
+        }
+    } catch (e) { /* fallback aos defaults */ }
+    return recipients;
+}
+
+/** Cron diário 08:00 BRT — varre todas franquias e envia alertas */
+exports.checkStockAlerts = onSchedule({
+    region: "southamerica-east1",
+    schedule: "0 8 * * *",
+    timeZone: "America/Sao_Paulo",
+    timeoutSeconds: 540,
+    memory: "256MiB",
+    secrets: [GMAIL_APP_PASSWORD],
+}, async () => {
+    console.log("[stock-alerts] iniciando varredura diária");
+    const sendEmailFn = async (mailOpts) => {
+        return _sendEmailViaSmtp({
+            ...mailOpts,
+            fromName: "MilkyPot Alertas",
+            _audit: { source: "checkStockAlerts" },
+        });
+    };
+    // Varre franquias
+    const franchisesSnap = await db.collection("datastore").doc("franchises").get();
+    if (!franchisesSnap.exists) {
+        console.log("[stock-alerts] sem franquias — saindo");
+        return;
+    }
+    let franchises = [];
+    try { franchises = JSON.parse(franchisesSnap.data().value || "[]"); }
+    catch (e) { console.error("parse franchises falhou:", e); return; }
+
+    const results = [];
+    let totalEnviados = 0;
+    for (const f of franchises) {
+        if (!f || !f.id) continue;
+        try {
+            const recipients = await _getStockAlertRecipients(f.id);
+            const r = await StockAlerts.runStockAlertCheckForFranchise(db, f.id, {
+                sendEmail: sendEmailFn,
+                recipients,
+            });
+            results.push(r);
+            totalEnviados += r.alertasEnviados || 0;
+        } catch (e) {
+            console.error("[stock-alerts] erro pra " + f.id + ":", e.message);
+            results.push({ fid: f.id, error: e.message });
+        }
+    }
+    console.log("[stock-alerts] resumo:", JSON.stringify({ franquias: franchises.length, totalEnviados, results }));
+    try {
+        await db.collection("stock_alerts_runs").add({
+            triggeredBy: "schedule",
+            ranAt: admin.firestore.FieldValue.serverTimestamp(),
+            franquiasScanned: franchises.length,
+            totalEnviados,
+            results,
+        });
+    } catch (e) { console.warn("audit log falhou:", e.message); }
+});
+
+/** Manual trigger — admin (todas) ou franchisee (própria), opcional force=true ignora dedup */
+exports.runStockAlertCheckNow = onCall({
+    region: "southamerica-east1",
+    timeoutSeconds: 120,
+    memory: "256MiB",
+    secrets: [GMAIL_APP_PASSWORD],
+}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Autenticacao necessaria");
+    }
+    const role = request.auth.token.role || "";
+    if (!["super_admin", "admin", "franchisee"].includes(role)) {
+        throw new HttpsError("permission-denied", "Apenas admin/franqueado");
+    }
+    const { franchiseId, force, dryRun } = request.data || {};
+    const sendEmailFn = dryRun
+        ? null  // dry-run não envia email
+        : async (mailOpts) => _sendEmailViaSmtp({
+            ...mailOpts,
+            fromName: "MilkyPot Alertas",
+            _audit: { source: "runStockAlertCheckNow:" + (request.auth.uid || "?") },
+        });
+
+    if (franchiseId) {
+        if (role === "franchisee" && request.auth.token.franchiseId !== franchiseId) {
+            throw new HttpsError("permission-denied", "Franqueado só pode rodar pra própria franquia");
+        }
+        const recipients = await _getStockAlertRecipients(franchiseId);
+        const r = await StockAlerts.runStockAlertCheckForFranchise(db, franchiseId, {
+            sendEmail: sendEmailFn,
+            recipients,
+            force: !!force,
+        });
+        await db.collection("stock_alerts_runs").add({
+            triggeredBy: "manual:" + (request.auth.uid || "?"),
+            franchiseId,
+            dryRun: !!dryRun,
+            force: !!force,
+            ranAt: admin.firestore.FieldValue.serverTimestamp(),
+            result: r,
+        });
+        return { ok: true, mode: "single-franchise", result: r };
+    }
+    // sem franchiseId → admin only
+    if (role !== "super_admin" && role !== "admin") {
+        throw new HttpsError("permission-denied", "Apenas admin pode rodar pra todas franquias");
+    }
+    const summary = await StockAlerts.runStockAlertCheckAll(db, {
+        sendEmail: sendEmailFn,
+        recipients: RECIPIENTS,
+        force: !!force,
+    });
+    await db.collection("stock_alerts_runs").add({
+        triggeredBy: "manual-all:" + (request.auth.uid || "?"),
+        dryRun: !!dryRun,
+        force: !!force,
+        ranAt: admin.firestore.FieldValue.serverTimestamp(),
+        summary,
+    });
+    return { ok: true, mode: "all-franchises", summary };
+});
+
+// ============================================================
+// FASE 8 stub — WhatsApp (preparação, não envia ainda)
+// ============================================================
+// TODO: integrar com Twilio ou WhatsApp Business API.
+// Por ora, persiste em /whatsapp_queue pra Codex implementar depois.
+async function _sendWhatsApp(opts) {
+    try {
+        await db.collection("whatsapp_queue").add({
+            to: opts.to,
+            text: opts.text,
+            franchiseId: opts.franchiseId || null,
+            _pending: true,
+            _createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        return { ok: true, queued: true, channel: "whatsapp" };
+    } catch (e) {
+        return { ok: false, error: e.message };
+    }
+}
