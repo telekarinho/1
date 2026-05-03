@@ -1,28 +1,33 @@
 /* ============================================================
-   MilkyPot — Stock Alerts (FASE 8)
+   MilkyPot — Stock Alerts (FASE 8.1)
    ============================================================
-   Cloud Function que detecta insumos críticos e envia alerta
-   via email + (futuramente) WhatsApp.
+   Cloud Function que detecta insumos críticos e envia alerta.
+
+   Canais:
+     ✅ Email   — canal PRINCIPAL (sempre que houver alerta)
+     🟡 WhatsApp — APENAS persiste em fila (whatsapp_queue),
+                   não envia até Codex integrar provider real
 
    Lógica portada do browser (MarginIntelligence + PurchaseIntelligence)
    pra rodar em Node sem dependência de window/DOM.
 
-   Critério:
-     diasRestantes = estoqueAtual / consumoMedioDiario
-     diasRestantes < 3 → 🚨 CRÍTICO
-     diasRestantes < 7 → ⚠️ ATENÇÃO
-     ≥ 7 → 🟢 OK (não envia)
-
-   Dedup: 1x por dia por insumo (collection alert_dedup_<fid>).
-   Permite desativar via insumo.alertasDesativados = true.
+   Dedup: 1x por dia POR FRANQUIA (agrupa todos insumos no mesmo email).
+   Permite desativar por insumo via insumo.alertasDesativados = true.
+   Permite desativar por franquia via stockAlertConfig.emailEnabled = false.
    ============================================================ */
 
 const admin = require("firebase-admin");
 
 const VALID_STATUSES = ["confirmado", "entregue", "pago"];
+const PAINEL_COMPRAS_URL = "https://milkypot.com/painel/produtos.html#compras";
 
 function _r3(n) { return Math.round(Number(n) * 1000) / 1000; }
 function _r1(n) { return Math.round(Number(n) * 10) / 10; }
+
+/** YYYY-MM-DD em fuso Brasília (UTC-3), timezone-safe. */
+function _todayBSB() {
+    return new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+}
 
 /** Lê doc do Firestore datastore e parse JSON value */
 async function _readDatastoreDoc(db, docId) {
@@ -32,7 +37,6 @@ async function _readDatastoreDoc(db, docId) {
     catch (e) { return null; }
 }
 
-/** Converte qty entre unidades — fallback simples */
 function _convertUnit(qty, fromUnit, toUnit) {
     if (fromUnit === toUnit) return qty;
     if (fromUnit === "kg" && toUnit === "g") return qty * 1000;
@@ -42,17 +46,14 @@ function _convertUnit(qty, fromUnit, toUnit) {
     return null;
 }
 
-/** Constrói recipe map: productId → { name, receita[] } */
 function _buildRecipeMap(catalogV2List, catalogConfig) {
     const map = {};
-    // CatalogV2 primeiro (autoritativo)
     (catalogV2List || []).forEach(p => {
         if (!p || !p.id) return;
         const ins = (p.custos && Array.isArray(p.custos.insumos)) ? p.custos.insumos : [];
         const valid = ins.filter(r => r && r.insumoId && Number(r.qty) > 0 && r.unit);
         if (valid.length) map[p.id] = { name: p.name, receita: valid };
     });
-    // catalog_config legado (fallback)
     if (catalogConfig) {
         const addLeg = (g) => {
             if (!g || !g.items) return;
@@ -77,22 +78,16 @@ function _buildRecipeMap(catalogV2List, catalogConfig) {
     return map;
 }
 
-/**
- * Calcula consumo de insumos pra UMA franquia, baseado nos pedidos.
- * Análoga a MarginIntelligence.getConsumoInsumos() do browser.
- */
 async function getConsumoInsumosForFranchise(db, franchiseId, days) {
     days = days || 30;
     const orders = (await _readDatastoreDoc(db, "orders_" + franchiseId)) || [];
     const inventory = (await _readDatastoreDoc(db, "inventory_" + franchiseId)) || [];
-    // CatalogV2 dos produtos
     const catalogV2Doc = await db.collection("catalogo_v2").doc(franchiseId).get();
     let catalogV2List = [];
     if (catalogV2Doc.exists) {
         const d = catalogV2Doc.data();
         catalogV2List = Array.isArray(d.produtos) ? d.produtos : [];
     }
-    // Fallback: catalog_config global
     let catalogConfig = null;
     try {
         const cc = await _readDatastoreDoc(db, "catalog_config");
@@ -146,7 +141,6 @@ async function getConsumoInsumosForFranchise(db, franchiseId, days) {
         });
     });
 
-    // Adiciona insumos do inventory que não foram consumidos no período
     inventory.forEach(ins => {
         if (!ins || !ins.id || consumo[ins.id]) return;
         consumo[ins.id] = {
@@ -181,23 +175,39 @@ async function getConsumoInsumosForFranchise(db, franchiseId, days) {
     return insumos;
 }
 
-/** Calcula sugestão de compra (cobertura padrão 7d) */
 function calcSugestao(consumoMedioDiario, estoqueAtual, diasCobertura) {
     diasCobertura = diasCobertura || 7;
     if (consumoMedioDiario <= 0) return 0;
     return _r3(Math.max(0, consumoMedioDiario * diasCobertura - estoqueAtual));
 }
 
-/** Constrói HTML do alerta */
-function _buildAlertHtml(franchiseId, insumosAlertas) {
+/** Constrói subject conforme spec FASE 8.1 */
+function _buildSubject(franchiseDisplay, criticos, atencoes) {
+    if (criticos > 0) {
+        const plural = criticos === 1 ? "item" : "itens";
+        return `🚨 Estoque Crítico — Milkypot ${franchiseDisplay} — ${criticos} ${plural} ${criticos === 1 ? "precisa" : "precisam"} de compra`;
+    }
+    if (atencoes > 0) {
+        const plural = atencoes === 1 ? "item" : "itens";
+        return `⚠️ Estoque Atenção — Milkypot ${franchiseDisplay} — ${atencoes} ${plural} abaixo de 7 dias`;
+    }
+    return `📦 Estoque — Milkypot ${franchiseDisplay}`;
+}
+
+/** Constrói HTML do email — formato FASE 8.1 */
+function _buildAlertHtml(franchiseDisplay, franchiseId, insumosAlertas) {
     const dt = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
     const fmtQty = (n, unit) => `${Number(n).toLocaleString("pt-BR", { maximumFractionDigits: 3 })} ${unit}`;
-    const rows = insumosAlertas.map(ins => {
+    const criticos = insumosAlertas.filter(i => i.status === "critico");
+    const atencoes = insumosAlertas.filter(i => i.status === "atencao");
+
+    const renderRow = (ins) => {
         const sugestao = calcSugestao(ins.consumoMedioDiario, ins.estoqueAtual, 7);
         const dias = ins.diasRestantes !== null ? ins.diasRestantes.toFixed(1).replace(".", ",") + " dias" : "—";
-        const bg = ins.status === "critico" ? "#FEE2E2" : "#FEF3C7";
-        const color = ins.status === "critico" ? "#991B1B" : "#92400E";
-        const labelStatus = ins.status === "critico" ? "🚨 CRÍTICO" : "⚠️ ATENÇÃO";
+        const isCrit = ins.status === "critico";
+        const bg = isCrit ? "#FEE2E2" : "#FEF3C7";
+        const color = isCrit ? "#991B1B" : "#92400E";
+        const labelStatus = isCrit ? "🚨 CRÍTICO" : "⚠️ ATENÇÃO";
         return `
         <tr style="background:${bg}">
           <td style="padding:10px;font-weight:700;color:${color}">${ins.nome}</td>
@@ -207,163 +217,309 @@ function _buildAlertHtml(franchiseId, insumosAlertas) {
           <td style="padding:10px;text-align:right;color:#16A34A;font-weight:700">${sugestao > 0 ? "+" + fmtQty(sugestao, ins.unit) : "—"}</td>
           <td style="padding:10px;text-align:center;font-size:11px;font-weight:800;color:${color}">${labelStatus}</td>
         </tr>`;
-    }).join("");
+    };
+
     return `
 <div style="font-family:Arial,sans-serif;max-width:680px;margin:0 auto;padding:16px;background:#f9fafb">
-  <div style="background:linear-gradient(135deg,#DC2626,#F59E0B);color:#fff;padding:18px 22px;border-radius:12px 12px 0 0">
-    <h2 style="margin:0;font-size:20px">📦 Alerta de Estoque — Milkypot</h2>
-    <div style="opacity:.92;font-size:13px;margin-top:6px">${franchiseId} · ${dt}</div>
+  <div style="background:linear-gradient(135deg,#DC2626,#F59E0B);color:#fff;padding:20px 24px;border-radius:12px 12px 0 0">
+    <h2 style="margin:0;font-size:22px">📦 Alerta de Estoque — Milkypot</h2>
+    <div style="opacity:.92;font-size:13px;margin-top:6px">${franchiseDisplay} · ${dt}</div>
   </div>
-  <div style="background:#fff;padding:18px;border:1px solid #e5e7eb;border-top:0">
-    <p style="margin:0 0 12px;font-size:14px;color:#374151">
-      <strong>${insumosAlertas.length} insumo(s)</strong> precisam de atenção. Sugestões abaixo (cobertura 7 dias):
-    </p>
-    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">
-      <tr style="background:#F3F4F6">
-        <th style="padding:9px 8px;text-align:left">Insumo</th>
-        <th style="padding:9px 8px;text-align:right">Estoque</th>
-        <th style="padding:9px 8px;text-align:right">Consumo médio</th>
-        <th style="padding:9px 8px;text-align:right">Dias restantes</th>
-        <th style="padding:9px 8px;text-align:right">Sugestão compra</th>
-        <th style="padding:9px 8px;text-align:center">Status</th>
-      </tr>
-      ${rows}
-    </table>
-    <div style="margin-top:18px;padding:12px;background:#EFF6FF;border-left:4px solid #3B82F6;border-radius:6px">
-      <p style="margin:0;font-size:13px;color:#1E3A8A">
-        🛒 <strong>Acesse o painel para registrar a compra:</strong><br>
-        <a href="https://milkypot.com/painel/produtos.html?tab=compras" style="color:#1D4ED8;text-decoration:none;font-weight:700">milkypot.com/painel/produtos.html → aba 📦 Compras</a>
-      </p>
+  <div style="background:#fff;padding:18px 22px;border:1px solid #e5e7eb;border-top:0">
+    <div style="background:#F9FAFB;border-radius:10px;padding:14px 16px;margin-bottom:18px;border-left:4px solid #7E57C2">
+      <h3 style="margin:0 0 8px;font-size:15px;color:#1F2937">📋 Resumo</h3>
+      <table style="font-size:13px;color:#374151;border-spacing:0 4px">
+        <tr><td style="padding:2px 12px 2px 0;color:#6B7280">Franquia:</td><td style="font-weight:700">${franchiseDisplay}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#6B7280">Data:</td><td style="font-weight:700">${dt}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#6B7280">Itens críticos:</td><td style="font-weight:800;color:#991B1B">🚨 ${criticos.length}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#6B7280">Itens em atenção:</td><td style="font-weight:800;color:#92400E">⚠️ ${atencoes.length}</td></tr>
+      </table>
     </div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:18px">
+      <tr style="background:#F3F4F6">
+        <th style="padding:10px 8px;text-align:left;font-weight:700;color:#374151">Insumo</th>
+        <th style="padding:10px 8px;text-align:right;font-weight:700;color:#374151">Estoque</th>
+        <th style="padding:10px 8px;text-align:right;font-weight:700;color:#374151">Consumo médio/dia</th>
+        <th style="padding:10px 8px;text-align:right;font-weight:700;color:#374151">Dias restantes</th>
+        <th style="padding:10px 8px;text-align:right;font-weight:700;color:#374151">Sugestão compra</th>
+        <th style="padding:10px 8px;text-align:center;font-weight:700;color:#374151">Status</th>
+      </tr>
+      ${[...criticos, ...atencoes].map(renderRow).join("")}
+    </table>
+
+    <div style="text-align:center;margin:22px 0 8px">
+      <a href="${PAINEL_COMPRAS_URL}" style="display:inline-block;background:linear-gradient(135deg,#5E35B1,#7E57C2);color:#fff;text-decoration:none;font-weight:800;padding:14px 30px;border-radius:10px;font-size:14px;box-shadow:0 4px 12px rgba(94,53,177,.35)">
+        🛒 Abrir painel de compras
+      </a>
+    </div>
+    <p style="text-align:center;font-size:11px;color:#9CA3AF;margin:6px 0 0">
+      ${PAINEL_COMPRAS_URL}
+    </p>
   </div>
-  <div style="text-align:center;color:#9ca3af;font-size:11px;margin-top:12px">
-    Alerta automático MilkyPot · 1x por dia · pra desativar alertas de um insumo específico, marque "alertasDesativados" no inventário
+  <div style="text-align:center;color:#9ca3af;font-size:11px;margin-top:14px">
+    Alerta automático MilkyPot · enviado 1x por dia por franquia<br>
+    Pra desativar alertas de um insumo específico: aba Ingredientes → marcar 🔕 "Desativar alertas"
   </div>
 </div>`;
 }
 
-/** Constrói plain text do alerta */
-function _buildAlertText(franchiseId, insumosAlertas) {
+function _buildAlertText(franchiseDisplay, franchiseId, insumosAlertas) {
     const dt = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+    const criticos = insumosAlertas.filter(i => i.status === "critico");
+    const atencoes = insumosAlertas.filter(i => i.status === "atencao");
+
     let body = "📦 ALERTA DE ESTOQUE — Milkypot\n";
-    body += "==================================\n";
-    body += `Franquia: ${franchiseId}\n`;
-    body += `Data: ${dt}\n\n`;
-    body += `${insumosAlertas.length} insumo(s) precisam de atenção:\n\n`;
-    insumosAlertas.forEach(ins => {
+    body += "==================================\n\n";
+    body += "RESUMO:\n";
+    body += `  Franquia:           ${franchiseDisplay}\n`;
+    body += `  Data:               ${dt}\n`;
+    body += `  Itens críticos:     🚨 ${criticos.length}\n`;
+    body += `  Itens em atenção:   ⚠️ ${atencoes.length}\n\n`;
+
+    [...criticos, ...atencoes].forEach(ins => {
         const sugestao = calcSugestao(ins.consumoMedioDiario, ins.estoqueAtual, 7);
         const labelStatus = ins.status === "critico" ? "🚨 CRÍTICO" : "⚠️ ATENÇÃO";
         body += `${labelStatus} — ${ins.nome}\n`;
-        body += `  Estoque atual:   ${ins.estoqueAtual} ${ins.unit}\n`;
-        body += `  Consumo médio:   ${ins.consumoMedioDiario} ${ins.unit}/dia\n`;
-        body += `  Dias restantes:  ${ins.diasRestantes !== null ? ins.diasRestantes + " dias" : "—"}\n`;
-        body += `  Sugestão:        ${sugestao > 0 ? "+" + sugestao + " " + ins.unit : "—"}\n\n`;
+        body += `  Estoque atual:        ${ins.estoqueAtual} ${ins.unit}\n`;
+        body += `  Consumo médio diário: ${ins.consumoMedioDiario} ${ins.unit}/dia\n`;
+        body += `  Dias restantes:       ${ins.diasRestantes !== null ? ins.diasRestantes + " dias" : "—"}\n`;
+        body += `  Quantidade sugerida:  ${sugestao > 0 ? "+" + sugestao + " " + ins.unit : "—"}\n`;
+        body += `  Status:               ${labelStatus}\n\n`;
     });
-    body += "🛒 Acesse: https://milkypot.com/painel/produtos.html → aba 📦 Compras\n";
+
+    body += "Abrir painel de compras:\n";
+    body += `${PAINEL_COMPRAS_URL}\n`;
     return body;
 }
 
+/** Mensagem WhatsApp formato FASE 8.1 (texto puro, multilinhas) */
+function _buildWhatsAppMessage(franchiseDisplay, insumosAlertas) {
+    const criticos = insumosAlertas.filter(i => i.status === "critico");
+    const atencoes = insumosAlertas.filter(i => i.status === "atencao");
+    let msg = "🚨 ALERTA DE ESTOQUE — Milkypot\n\n";
+    msg += `Franquia: ${franchiseDisplay}\n\n`;
+    if (criticos.length > 0) {
+        msg += `${criticos.length} ${criticos.length === 1 ? "item crítico" : "itens críticos"}:\n\n`;
+        criticos.forEach(ins => {
+            const sugestao = calcSugestao(ins.consumoMedioDiario, ins.estoqueAtual, 7);
+            msg += `• ${ins.nome}\n`;
+            msg += `  Estoque: ${ins.estoqueAtual} ${ins.unit}\n`;
+            msg += `  Consumo médio: ${ins.consumoMedioDiario} ${ins.unit}/dia\n`;
+            msg += `  Dias restantes: ${ins.diasRestantes !== null ? ins.diasRestantes : "—"}\n`;
+            msg += `  Sugestão de compra: ${sugestao > 0 ? sugestao + " " + ins.unit : "—"}\n\n`;
+        });
+    }
+    if (atencoes.length > 0) {
+        msg += `${atencoes.length} ${atencoes.length === 1 ? "item em atenção" : "itens em atenção"}:\n\n`;
+        atencoes.forEach(ins => {
+            const sugestao = calcSugestao(ins.consumoMedioDiario, ins.estoqueAtual, 7);
+            msg += `• ${ins.nome}\n`;
+            msg += `  Estoque: ${ins.estoqueAtual} ${ins.unit}\n`;
+            msg += `  Dias restantes: ${ins.diasRestantes !== null ? ins.diasRestantes : "—"}\n`;
+            msg += `  Sugestão: ${sugestao > 0 ? sugestao + " " + ins.unit : "—"}\n\n`;
+        });
+    }
+    msg += `Acesse:\n${PAINEL_COMPRAS_URL}`;
+    return msg;
+}
+
+/** Default config se franquia não definir */
+function _defaultStockAlertConfig() {
+    return {
+        emailEnabled: true,
+        whatsappEnabled: false,         // não envia WhatsApp ainda
+        whatsappQueueOnly: true,         // mas persiste em fila pra Codex consumir
+        alertEmails: [],                  // vazio = usa RECIPIENTS globais
+        alertPhones: [],
+        dailyHour: 8,
+    };
+}
+
+/** Lê config da franquia + merge com defaults */
+async function _getStockAlertConfig(db, franchiseId) {
+    const defaults = _defaultStockAlertConfig();
+    try {
+        const fSnap = await db.collection("datastore").doc("franchises").get();
+        if (fSnap.exists) {
+            const fs = JSON.parse(fSnap.data().value || "[]");
+            const f = (fs || []).find(x => x && x.id === franchiseId);
+            if (f) {
+                const cfg = f.stockAlertConfig || {};
+                return {
+                    emailEnabled: cfg.emailEnabled !== false,
+                    whatsappEnabled: !!cfg.whatsappEnabled,
+                    whatsappQueueOnly: cfg.whatsappQueueOnly !== false,
+                    alertEmails: Array.isArray(cfg.alertEmails) ? cfg.alertEmails : [],
+                    alertPhones: Array.isArray(cfg.alertPhones) ? cfg.alertPhones : [],
+                    dailyHour: Number(cfg.dailyHour) || 8,
+                    franchiseDisplay: f.name || f.id || franchiseId,
+                };
+            }
+        }
+    } catch (e) { /* fallback aos defaults */ }
+    return Object.assign(defaults, { franchiseDisplay: franchiseId });
+}
+
 /**
- * Roda análise de uma franquia + envia alerta SE há insumos críticos/atenção
- * que ainda não foram alertados hoje.
+ * Roda análise de uma franquia + envia alerta SE há insumos críticos/atenção.
+ * Dedup: 1x por dia POR FRANQUIA (agrupa todos insumos no mesmo email).
  *
- * @param {object} db - Firestore admin
+ * @param {object} db
  * @param {string} franchiseId
- * @param {object} opts - { sendEmail (fn), recipients (array), force (bool ignora dedup) }
- * @returns {object} { fid, alertasEnviados, dedupSkipped, errors }
+ * @param {object} opts - { sendEmail (fn), defaultRecipients, force, logFallback (fn) }
+ * @returns {object} { fid, scanned, alertaveis, enviado, dedupSkipped, channels }
  */
 async function runStockAlertCheckForFranchise(db, franchiseId, opts) {
     opts = opts || {};
+    const config = await _getStockAlertConfig(db, franchiseId);
     const insumos = await getConsumoInsumosForFranchise(db, franchiseId, 30);
     const alertaveis = insumos.filter(i => {
         if (i.alertasDesativados) return false;
         return i.status === "critico" || i.status === "atencao";
     });
     if (!alertaveis.length) {
-        return { fid: franchiseId, scanned: insumos.length, alertaveis: 0, alertasEnviados: 0 };
-    }
-
-    // Dedup: 1x por dia por insumo (chave: YYYY-MM-DD + insumoId)
-    const today = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10); // BRT
-    const dedupRef = db.collection("alert_dedup").doc("stock_" + franchiseId + "_" + today);
-    let alreadyAlerted = {};
-    if (!opts.force) {
-        const snap = await dedupRef.get();
-        if (snap.exists) alreadyAlerted = snap.data().insumos || {};
-    }
-    const novosAlertas = alertaveis.filter(i => !alreadyAlerted[i.insumoId]);
-    if (!novosAlertas.length) {
         return {
             fid: franchiseId, scanned: insumos.length,
-            alertaveis: alertaveis.length, alertasEnviados: 0,
-            dedupSkipped: alertaveis.length
+            alertaveis: 0, enviado: false,
+            reason: "sem-alertas",
+            config: { emailEnabled: config.emailEnabled, whatsappQueueOnly: config.whatsappQueueOnly },
         };
     }
 
-    // Envia email se sendEmail provided
-    let emailResult = null;
-    if (typeof opts.sendEmail === "function") {
-        try {
-            const html = _buildAlertHtml(franchiseId, novosAlertas);
-            const text = _buildAlertText(franchiseId, novosAlertas);
-            const subject = `📦 Alerta de Estoque ${franchiseId} — ${novosAlertas.filter(i => i.status === "critico").length} crítico(s) · ${novosAlertas.filter(i => i.status === "atencao").length} atenção`;
-            emailResult = await opts.sendEmail({
-                to: opts.recipients || [],
-                subject,
-                html,
-                text,
-            });
-        } catch (e) {
-            emailResult = { ok: false, error: e.message };
-        }
-    }
-
-    // Atualiza dedup
+    // Dedup POR FRANQUIA (não por insumo)
+    const today = _todayBSB();
+    const dedupRef = db.collection("alert_dedup").doc("stock_franquia_" + franchiseId + "_" + today);
     if (!opts.force) {
-        const updates = {};
-        novosAlertas.forEach(i => { updates["insumos." + i.insumoId] = true; });
-        updates.lastUpdate = admin.firestore.FieldValue.serverTimestamp();
-        updates.fid = franchiseId;
-        try { await dedupRef.set({ insumos: alreadyAlerted, fid: franchiseId, lastUpdate: admin.firestore.FieldValue.serverTimestamp() }, { merge: true }); } catch(_){}
-        try {
-            const newDedup = Object.assign({}, alreadyAlerted);
-            novosAlertas.forEach(i => { newDedup[i.insumoId] = { sentAt: new Date().toISOString(), status: i.status }; });
-            await dedupRef.set({ insumos: newDedup, fid: franchiseId, lastUpdate: admin.firestore.FieldValue.serverTimestamp() }, { merge: false });
-        } catch (e) {
-            console.warn("dedup update falhou", e.message);
+        const snap = await dedupRef.get();
+        if (snap.exists) {
+            return {
+                fid: franchiseId, scanned: insumos.length,
+                alertaveis: alertaveis.length,
+                enviado: false, dedupSkipped: true,
+                reason: "ja-enviado-hoje",
+                lastSentAt: snap.data().sentAt || null,
+            };
         }
     }
 
-    // Audit log
+    const recipients = (config.alertEmails && config.alertEmails.length)
+        ? config.alertEmails
+        : (opts.defaultRecipients || []);
+
+    const channels = { email: null, whatsapp_queued: 0 };
+    const subject = _buildSubject(config.franchiseDisplay, alertaveis.filter(i => i.status === "critico").length, alertaveis.filter(i => i.status === "atencao").length);
+    const html = _buildAlertHtml(config.franchiseDisplay, franchiseId, alertaveis);
+    const text = _buildAlertText(config.franchiseDisplay, franchiseId, alertaveis);
+
+    // === CANAL 1: EMAIL ===
+    if (config.emailEnabled && typeof opts.sendEmail === "function" && recipients.length > 0) {
+        try {
+            const emailRes = await opts.sendEmail({ to: recipients, subject, html, text });
+            channels.email = {
+                ok: !!emailRes.ok,
+                queued: !!emailRes.queued,
+                sentTo: emailRes.sentTo || (emailRes.ok ? recipients.length : 0),
+                recipients,
+                error: emailRes.error || null,
+            };
+            // mail_fallback_log
+            if (typeof opts.logFallback === "function") {
+                await opts.logFallback({
+                    franchiseId,
+                    type: "stock_alert",
+                    enviado: !!emailRes.ok,
+                    falhou: !emailRes.ok && !emailRes.queued,
+                    fallback: !!emailRes.queued,
+                    destinatarios: recipients,
+                    quantidadeAlertas: alertaveis.length,
+                    motivo: emailRes.error || emailRes.reason || null,
+                    timestampBRT: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
+                });
+            }
+        } catch (e) {
+            channels.email = { ok: false, error: e.message, recipients };
+        }
+    } else {
+        channels.email = { ok: false, skipped: true, reason: !config.emailEnabled ? "emailDisabled" : "no-recipients" };
+    }
+
+    // === CANAL 2: WHATSAPP (queue only — Codex consome depois) ===
+    if (config.whatsappQueueOnly || config.whatsappEnabled) {
+        const message = _buildWhatsAppMessage(config.franchiseDisplay, alertaveis);
+        const phones = config.alertPhones.length > 0 ? config.alertPhones : [null]; // null = queue genérico
+        for (const phone of phones) {
+            try {
+                await db.collection("whatsapp_queue").add({
+                    franchiseId,
+                    franchiseDisplay: config.franchiseDisplay,
+                    tipo: "stock_alert",
+                    phone: phone || null,
+                    message,
+                    status: "pending",
+                    provider: "codex_whatsapp_pending",
+                    payload: {
+                        alertasCount: alertaveis.length,
+                        criticos: alertaveis.filter(i => i.status === "critico").length,
+                        atencoes: alertaveis.filter(i => i.status === "atencao").length,
+                        insumos: alertaveis.map(i => ({
+                            insumoId: i.insumoId, nome: i.nome, status: i.status,
+                            estoqueAtual: i.estoqueAtual, diasRestantes: i.diasRestantes,
+                            sugestao: calcSugestao(i.consumoMedioDiario, i.estoqueAtual, 7),
+                        })),
+                    },
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                channels.whatsapp_queued++;
+            } catch (e) {
+                console.warn("whatsapp_queue add falhou:", e.message);
+            }
+        }
+    }
+
+    // === Dedup: marca enviado HOJE ===
+    if (!opts.force) {
+        try {
+            await dedupRef.set({
+                franchiseId,
+                sentAt: new Date().toISOString(),
+                serverTimestamp: admin.firestore.FieldValue.serverTimestamp(),
+                alertasCount: alertaveis.length,
+                channels,
+            });
+        } catch (e) { console.warn("dedup write falhou:", e.message); }
+    }
+
+    // === stock_alerts_log (per-insumo detalhado) ===
     try {
         await db.collection("stock_alerts_log").add({
             franchiseId,
             ranAt: admin.firestore.FieldValue.serverTimestamp(),
+            ranAtBRT: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
             scanned: insumos.length,
             alertaveis: alertaveis.length,
-            enviados: novosAlertas.length,
-            insumos: novosAlertas.map(i => ({
-                insumoId: i.insumoId,
-                nome: i.nome,
-                status: i.status,
-                diasRestantes: i.diasRestantes,
-                estoqueAtual: i.estoqueAtual,
+            insumos: alertaveis.map(i => ({
+                insumoId: i.insumoId, nome: i.nome, status: i.status,
+                diasRestantes: i.diasRestantes, estoqueAtual: i.estoqueAtual,
                 consumoMedioDiario: i.consumoMedioDiario,
+                sugestao: calcSugestao(i.consumoMedioDiario, i.estoqueAtual, 7),
             })),
-            emailResult: emailResult || null,
+            channels,
         });
-    } catch (e) { console.warn("audit log falhou", e.message); }
+    } catch (e) { console.warn("audit stock_alerts_log falhou:", e.message); }
 
     return {
         fid: franchiseId,
+        franchiseDisplay: config.franchiseDisplay,
         scanned: insumos.length,
         alertaveis: alertaveis.length,
-        alertasEnviados: novosAlertas.length,
-        emailResult,
+        enviado: !!(channels.email && channels.email.ok),
+        dedupSkipped: false,
+        channels,
+        config: { emailEnabled: config.emailEnabled, whatsappQueueOnly: config.whatsappQueueOnly },
     };
 }
 
-/** Roda pra todas franquias */
 async function runStockAlertCheckAll(db, opts) {
     const franchisesData = await _readDatastoreDoc(db, "franchises");
     if (!Array.isArray(franchisesData)) {
@@ -376,7 +532,7 @@ async function runStockAlertCheckAll(db, opts) {
         try {
             const r = await runStockAlertCheckForFranchise(db, f.id, opts);
             results.push(r);
-            totalEnviados += r.alertasEnviados || 0;
+            if (r.enviado) totalEnviados++;
         } catch (e) {
             results.push({ fid: f.id, error: e.message });
         }
@@ -391,4 +547,8 @@ module.exports = {
     runStockAlertCheckAll,
     _buildAlertHtml,
     _buildAlertText,
+    _buildWhatsAppMessage,
+    _buildSubject,
+    _getStockAlertConfig,
+    _defaultStockAlertConfig,
 };
