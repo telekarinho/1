@@ -190,6 +190,9 @@
         <div class="container">
             <h2 style="text-align:center;font-family:'Baloo 2',cursive;color:#5A4570;margin-bottom:4px;font-size:1.4rem;">Escolha o creme do seu Milkypot 🍨</h2>
             <p style="text-align:center;color:#9484A8;font-size:0.9rem;margin-bottom:16px;">Toque no sabor para montar do seu jeito!</p>
+            <div id="deliveryPromoNotice" style="max-width:720px;margin:0 auto 14px;padding:10px 14px;border-radius:12px;background:#ECFDF5;color:#065F46;font-size:.9rem;font-weight:800;text-align:center">
+                🚚 Frete grátis em pedidos a partir de R$ 30,00, conforme região de entrega.
+            </div>
             <div class="category-tabs sticky-tabs" id="categoryTabs">
                 <button class="cat-tab active" data-category="ninho" onclick="filterProducts(event, 'ninho')">☁️ Ninho</button>
                 <button class="cat-tab" data-category="acai" onclick="filterProducts(event, 'acai')">🫐 Açaí</button>
@@ -323,6 +326,8 @@
                         </span>
                     </label>
                 </div>
+                <div id="deliveryFreightNotice" style="display:none;margin:10px 0;padding:10px 14px;border-radius:10px;background:#ECFDF5;color:#065F46;font-size:.86rem;font-weight:700"></div>
+                <div id="deliveryMinimumNotice" style="display:none;margin:10px 0;padding:10px 14px;border-radius:10px;background:#FFF7ED;color:#9A3412;font-size:.86rem;font-weight:700"></div>
                 <div class="delivery-address" id="deliveryAddress" style="display:none">
                     <button type="button" onclick="window._useMyLocation && window._useMyLocation()"
                             style="width:100%;padding:14px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;box-shadow:0 4px 12px rgba(16,185,129,.3)">
@@ -565,9 +570,10 @@
     <script src="js/cardapio-data.js"></script>
     <script src="js/core/cost-calculator.js?v=mp-v14"></script>
     <script src="js/core/catalog-v2.js?v=mp-v105"></script>
+    <script src="js/core/delivery-rules.js?v=mp-v115"></script>
     <script src="js/cart.js?v=mp-v114"></script>
     <script src="js/core/raspinha-engine.js"></script>
-    <script src="js/checkout.js?v=mp-v113"></script>
+    <script src="js/checkout.js?v=mp-v115"></script>
     <script src="js/chat-ai.js" defer></script>
     <script>
     /* ============================================
@@ -575,6 +581,53 @@
        ============================================ */
     (function() {
         var catalog = null;
+
+        function getCardapioFranchiseId() {
+            try {
+                if (window.selectedStore && window.selectedStore.id) return window.selectedStore.id;
+                const sess = typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession();
+                if (sess && sess.franchiseId) return sess.franchiseId;
+            } catch(_) {}
+            return 'muffato-quintino';
+        }
+
+        function getDeliveryConfig() {
+            return window.DeliveryRules
+                ? DeliveryRules.getConfig(getCardapioFranchiseId())
+                : { percentual_acrescimo_delivery: 30, pedido_minimo_delivery: 30, taxa_uber_referencia: 10.50, modo_frete_delivery: 'FRETE_GRATIS_TOTAL' };
+        }
+
+        function updateDeliveryPromoNotice() {
+            var el = document.getElementById('deliveryPromoNotice');
+            if (!el) return;
+            var cfg = getDeliveryConfig();
+            var min = window.DeliveryRules ? DeliveryRules.brl(cfg.pedido_minimo_delivery) : ('R$ ' + Number(cfg.pedido_minimo_delivery || 30).toFixed(2).replace('.', ','));
+            if (cfg.modo_frete_delivery === 'COBRAR_DIFERENCA') {
+                el.textContent = '🚚 Parte do frete já está inclusa no pedido. Você paga apenas a diferença da entrega.';
+            } else if (cfg.modo_frete_delivery === 'FRETE_NORMAL') {
+                el.textContent = '🚚 Entrega calculada conforme a região.';
+            } else {
+                el.textContent = '🚚 Frete grátis em pedidos a partir de ' + min + ', conforme região de entrega.';
+            }
+        }
+
+        function getSimpleDeliveryPricing(item) {
+            return window.DeliveryRules
+                ? DeliveryRules.priceForSimpleItem(item, getDeliveryConfig())
+                : { pdvUnitPrice: Number(item && item.price) || 0, deliveryUnitPrice: Number(item && item.price) || 0 };
+        }
+
+        function getVariantDeliveryPricing(variant) {
+            return window.DeliveryRules
+                ? DeliveryRules.priceForVariant(variant, getDeliveryConfig())
+                : { pdvUnitPrice: Number(variant && variant.precoLoja) || 0, deliveryUnitPrice: Number(variant && (variant.precoDelivery || variant.precoLoja)) || 0 };
+        }
+
+        function getPortionDeliveryPricing(item, peso) {
+            return window.DeliveryRules
+                ? DeliveryRules.priceForPortion(item, peso, getDeliveryConfig())
+                : { pdvUnitPrice: (Number(item && item.price) || 0) * peso / 1000, deliveryUnitPrice: (Number(item && item.price) || 0) * peso / 1000 };
+        }
 
         // Labels e emojis para grupos de categoria (legado + CatalogV2)
         const SABORES_GROUP_META = {
@@ -620,6 +673,7 @@
 
             catalog = DataStore.get('catalog_config');
             if (catalog) {
+                updateDeliveryPromoNotice();
                 _renderCatalogTabs();
                 renderProducts('ninho');
             } else {
@@ -717,6 +771,7 @@
                             }
                         }
                     }
+                    updateDeliveryPromoNotice();
                 } catch(e) {}
             });
         }
@@ -858,13 +913,19 @@
                 // 2. Se tipoVenda = por_peso, calcula da porcao minima
                 // 3. Senao, usa o menor preco dos tamanhos do catalogo (fallback)
                 var displayPrice, priceLabel;
-                if (typeof it.price === 'number') {
-                    displayPrice = it.price;
+                if (it._v2 && it._v2.variantes && it._v2.variantes.length) {
+                    var vPrices = it._v2.variantes
+                        .map(function(v){ return getVariantDeliveryPricing(v).deliveryUnitPrice; })
+                        .filter(function(p){ return p > 0; });
+                    displayPrice = vPrices.length ? Math.min.apply(null, vPrices) : 0;
+                    priceLabel = 'a partir de ';
+                } else if (typeof it.price === 'number') {
                     if (it.tipoVenda === 'por_peso') {
                         var minPortion = (it.porcoes && it.porcoes.length > 0) ? it.porcoes[0] : null;
-                        displayPrice = minPortion ? (it.price * minPortion.peso / 1000) : it.price;
+                        displayPrice = minPortion ? getPortionDeliveryPricing(it, minPortion.peso).deliveryUnitPrice : getSimpleDeliveryPricing(it).deliveryUnitPrice;
                         priceLabel = 'a partir de ';
                     } else {
+                        displayPrice = getSimpleDeliveryPricing(it).deliveryUnitPrice;
                         priceLabel = '';
                     }
                 } else {
@@ -967,48 +1028,42 @@
                         <div class="sheet-sizes">
                 `;
                 (item.porcoes || [{label: 'Padrão', peso: 500}]).forEach((p, idx) => {
-                    const portionPrice = (item.price * p.peso / 1000);
+                    const pricing = getPortionDeliveryPricing(item, p.peso);
+                    const portionPrice = pricing.deliveryUnitPrice;
                     html += `
                         <button class="sheet-size-btn ${idx === 0 ? 'selected' : ''}" 
-                            onclick="selectPortion(this, ${p.peso}, ${portionPrice})">
+                            onclick="selectPortion(this, ${p.peso}, ${portionPrice}, ${pricing.pdvUnitPrice})">
                             <span class="size-ml">${p.peso}g</span>
                             <span class="size-name">${p.label}</span>
                             <span class="size-price">R$ ${portionPrice.toFixed(2).replace('.',',')}</span>
                         </button>
                     `;
-                    if (idx === 0) window._sheetPortion = { ...p, price: portionPrice };
+                    if (idx === 0) window._sheetPortion = { ...p, price: portionPrice, pdvPrice: pricing.pdvUnitPrice };
                 });
                 html += `</div></div>`;
             } else if (item._v2 && item._v2.variantes && item._v2.variantes.length) {
                 // Case 2a: Unit items COM variantes (P/M/G — milkshakes etc.)
-                // Pega preço por canal: delivery por padrão no cardápio online
-                const priceKey = 'precoDelivery';
                 html += `
                     <div class="sheet-section">
                         <h4 class="sheet-section-title">Escolha o tamanho</h4>
                         <div class="sheet-sizes">
                 `;
                 item._v2.variantes.forEach((v, idx) => {
-                    const price = Number(v[priceKey]) || Number(v.precoLoja) || 0;
+                    const pricing = getVariantDeliveryPricing(v);
+                    const price = pricing.deliveryUnitPrice;
                     if (!price) return;
-                    const isPromo = v.promoAtivo && Number(v.precoLojaOriginal) > Number(v.precoLoja);
-                    const promoBadge = isPromo
-                        ? `<span class="size-promo-badge">${(v.promoLabel || 'PROMO').toUpperCase()}</span>`
-                        : '';
-                    const priceLine = isPromo
-                        ? `<span class="size-price-original">R$ ${Number(v.precoLojaOriginal).toFixed(2).replace('.',',')}</span><span class="size-price size-price-promo">R$ ${price.toFixed(2).replace('.',',')}</span>`
-                        : `<span class="size-price">R$ ${price.toFixed(2).replace('.',',')}</span>`;
+                    const priceLine = `<span class="size-price">R$ ${price.toFixed(2).replace('.',',')}</span>`;
                     const ml = v.gramas ? `<span class="size-ml">${v.gramas}ml</span>` : '';
                     html += `
                         <button class="sheet-size-btn ${idx === 0 ? 'selected' : ''}"
                             onclick="selectVariante(this, ${idx})">
                             ${ml}
-                            <span class="size-name">${v.name}${promoBadge}</span>
+                            <span class="size-name">${v.name}</span>
                             ${priceLine}
                         </button>
                     `;
                     if (idx === 0) {
-                        window._sheetVariante = { idx, price, name: v.name };
+                        window._sheetVariante = { idx, price, name: v.name, gramas: v.gramas, pdvPrice: pricing.pdvUnitPrice };
                     }
                 });
                 html += `</div></div>`;
@@ -1018,7 +1073,7 @@
                     <div class="sheet-section">
                         <div class="sheet-price-row">
                             <span>Preço unitário:</span>
-                            <strong>R$ ${item.price.toFixed(2).replace('.',',')}</strong>
+                            <strong>R$ ${getSimpleDeliveryPricing(item).deliveryUnitPrice.toFixed(2).replace('.',',')}</strong>
                         </div>
                     </div>
                 `;
@@ -1038,12 +1093,13 @@
                           <div class="sheet-extras" style="padding:0 16px 14px">
                     `;
                     toppings.slice(0, 5).forEach(ex => {
+                        const exPricing = getSimpleDeliveryPricing(ex);
                         html += `
                             <label class="sheet-extra-item" onclick="toggleExtraDelivery(this)">
                                 <span class="extra-emoji">${ex.emoji}</span>
                                 <span class="extra-name">${ex.name}</span>
-                                <span class="extra-price">+R$ ${ex.price.toFixed(2)}</span>
-                                <input type="checkbox" class="extra-check" data-id="${ex.id}" data-price="${ex.price}" data-name="${ex.name}" hidden>
+                                <span class="extra-price">+R$ ${exPricing.deliveryUnitPrice.toFixed(2).replace('.', ',')}</span>
+                                <input type="checkbox" class="extra-check" data-id="${ex.id}" data-price="${exPricing.deliveryUnitPrice}" data-pdv-price="${exPricing.pdvUnitPrice}" data-name="${ex.name}" hidden>
                                 <span class="extra-toggle"></span>
                             </label>
                         `;
@@ -1105,7 +1161,8 @@
                     <div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:600">Pode gostar também</div>
                     <div class="sheet-combina" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px">`;
                 suggestions.forEach(function(s) {
-                    const sPrice = typeof s.price === 'number' ? 'R$ ' + s.price.toFixed(2).replace('.',',') : '';
+                    const sPricing = getSimpleDeliveryPricing(s);
+                    const sPrice = sPricing.deliveryUnitPrice > 0 ? 'R$ ' + sPricing.deliveryUnitPrice.toFixed(2).replace('.',',') : '';
                     html += `<div class="combina-chip" onclick="closeProductSheet();setTimeout(()=>openProductSheet('${s.id}'),180)" style="flex-shrink:0;min-width:90px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:8px;text-align:center;cursor:pointer;font-size:11px">
                         <div style="font-size:24px;line-height:1">${s.emoji || '🍦'}</div>
                         <div style="margin-top:4px;font-weight:600;color:#374151;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px">${(s.name||'').replace(/^\d+\.\s*/,'').split(' ').slice(0,2).join(' ')}</div>
@@ -1147,10 +1204,10 @@
             });
         };
 
-        window.selectPortion = function(btn, peso, price) {
+        window.selectPortion = function(btn, peso, price, pdvPrice) {
             document.querySelectorAll('.sheet-size-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
-            window._sheetPortion = { peso, price };
+            window._sheetPortion = { peso, price, pdvPrice };
             updateSheetTotalDelivery();
         };
 
@@ -1159,8 +1216,9 @@
             btn.classList.add('selected');
             const item = window._sheetProduct;
             const v = item._v2.variantes[idx];
-            const price = Number(v.precoDelivery) || Number(v.precoLoja) || 0;
-            window._sheetVariante = { idx, price, name: v.name, gramas: v.gramas };
+            const pricing = getVariantDeliveryPricing(v);
+            const price = pricing.deliveryUnitPrice;
+            window._sheetVariante = { idx, price, name: v.name, gramas: v.gramas, pdvPrice: pricing.pdvUnitPrice };
             updateSheetTotalDelivery();
         };
 
@@ -1178,6 +1236,8 @@
                 basePrice = window._sheetPortion.price;
             } else if (window._sheetVariante) {
                 basePrice = window._sheetVariante.price;
+            } else {
+                basePrice = getSimpleDeliveryPricing(item).deliveryUnitPrice;
             }
 
             let extrasTotal = 0;
@@ -1197,19 +1257,24 @@
 
             const extras = [];
             document.querySelectorAll('.extra-check:checked').forEach(cb => {
-                extras.push({ name: cb.dataset.name, price: parseFloat(cb.dataset.price) });
+                extras.push({ name: cb.dataset.name, price: parseFloat(cb.dataset.price), pdvPrice: parseFloat(cb.dataset.pdvPrice || cb.dataset.price) });
             });
 
-            const unitPrice = portion ? portion.price : (variante ? variante.price : item.price);
+            const simplePricing = getSimpleDeliveryPricing(item);
+            const unitPrice = portion ? portion.price : (variante ? variante.price : simplePricing.deliveryUnitPrice);
+            const pdvUnitPrice = portion ? portion.pdvPrice : (variante ? variante.pdvPrice : simplePricing.pdvUnitPrice);
             const sizeSuffix = portion ? ' (' + portion.peso + 'g)' : (variante ? ' · ' + variante.name : '');
             const cartItem = {
                 id: Utils.generateId(),
                 name: item.name + sizeSuffix,
                 emoji: item.emoji,
                 unitPrice: unitPrice,
+                pdvUnitPrice: pdvUnitPrice,
+                deliveryMarkupUnit: Number((unitPrice - pdvUnitPrice).toFixed(2)),
                 qty: qty,
                 extras: extras,
                 total: (unitPrice + extras.reduce((s, e) => s + e.price, 0)) * qty,
+                pdvTotal: (pdvUnitPrice + extras.reduce((s, e) => s + (e.pdvPrice || e.price || 0), 0)) * qty,
                 type: item.tipoVenda,
                 peso: portion ? portion.peso : (variante ? variante.gramas : null)
             };
@@ -1637,9 +1702,13 @@
                     window._uberQuoteFee = feeBRL;
                     window._uberCustomerFee = feeBRL;
                     window._uberQuoteId = data.quote_id;
+                    var calc = (typeof getCurrentDeliveryCalc === 'function') ? getCurrentDeliveryCalc() : null;
+                    var clientFee = calc ? Number(calc.fretePagoCliente || 0) : feeBRL;
                     var feeTxt = 'R$ ' + feeBRL.toFixed(2).replace('.', ',');
-                    setS('✓ <strong>Frete: ' + feeTxt + '</strong> · entrega via Uber', '#065F46', '#ECFDF5');
-                    var dft = document.getElementById('deliveryFeeText'); if (dft) dft.textContent = 'Taxa: ' + feeTxt;
+                    var clientTxt = clientFee > 0 ? 'Você paga R$ ' + clientFee.toFixed(2).replace('.', ',') : 'Frete grátis';
+                    setS('✓ <strong>' + clientTxt + '</strong> · Uber ' + feeTxt, '#065F46', '#ECFDF5');
+                    var dft = document.getElementById('deliveryFeeText'); if (dft) dft.textContent = clientFee > 0 ? 'Diferença: R$ ' + clientFee.toFixed(2).replace('.', ',') : 'Frete grátis';
+                    if (typeof updateOrderSummary === 'function') updateOrderSummary();
                 }).catch(function(e){
                     // Mensagem mais útil: distingue endereço fora de cobertura vs erro de config/auth
                     var msg = (e && e.message) || '';
@@ -1728,6 +1797,7 @@
     window.selectCheckoutStore = function(storeId) {
         selectedStore = CHECKOUT_STORES.find(function(s) { return s.id === storeId; });
         if (!selectedStore || !selectedStore.open) return;
+        window.selectedStore = selectedStore;
         document.getElementById('selectedStoreName').textContent = selectedStore.name;
         document.getElementById('selectedStoreAddress').textContent = selectedStore.address;
         document.getElementById('selectedStoreTime').textContent = '⏱️ ' + selectedStore.deliveryTime;
@@ -1832,6 +1902,7 @@
         btn.disabled = true;
         btn.textContent = 'Escolha uma loja';
         selectedStore = null;
+        window.selectedStore = null;
         renderCheckoutStores(CHECKOUT_STORES);
     };
 
@@ -1860,6 +1931,12 @@
     // Override nextCheckoutStep to populate stores
     var originalNextStep = window.nextCheckoutStep;
     window.nextCheckoutStep = function(step) {
+        if (typeof currentCheckoutStep !== 'undefined' && step > currentCheckoutStep &&
+            typeof validateCheckoutStep === 'function' && !validateCheckoutStep(currentCheckoutStep)) {
+            if (typeof updateOrderSummary === 'function') updateOrderSummary();
+            return;
+        }
+        if (typeof currentCheckoutStep !== 'undefined') currentCheckoutStep = step;
         if (step === 2) {
             renderCheckoutStores(CHECKOUT_STORES);
             if (selectedStore) {
