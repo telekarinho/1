@@ -5,6 +5,63 @@
 var currentCheckoutStep = 1;
 var orderCounter = parseInt(localStorage.getItem('milkypot_order_counter') || '1000');
 
+function getDeliveryRuleConfig() {
+    var storeId = window._selectedStoreId || 'muffato-quintino';
+    if (typeof DeliveryRules !== 'undefined') return DeliveryRules.getConfig(storeId);
+    return { percentual_acrescimo_delivery: 30, pedido_minimo_delivery: 30, taxa_uber_referencia: 10.50, modo_frete_delivery: 'FRETE_GRATIS_TOTAL' };
+}
+
+function getCurrentDeliveryType() {
+    var deliveryRadio = document.querySelector('input[name="delivery"]:checked');
+    return deliveryRadio ? deliveryRadio.value : 'pickup';
+}
+
+function getCurrentUberFee(deliveryType) {
+    if (deliveryType !== 'delivery') return 0;
+    if (typeof window._uberCustomerFee === 'number') return window._uberCustomerFee;
+    if (typeof window._uberQuoteFee === 'number') return window._uberQuoteFee;
+    var cfg = getDeliveryRuleConfig();
+    return (window._selectedStoreDeliveryFee || cfg.taxa_uber_referencia || 0);
+}
+
+function getCurrentDeliveryCalc() {
+    reloadCart();
+    var deliveryType = getCurrentDeliveryType();
+    var uberFee = getCurrentUberFee(deliveryType);
+    if (typeof DeliveryRules !== 'undefined') {
+        return DeliveryRules.calculateFreight(cart, uberFee, deliveryType, getDeliveryRuleConfig());
+    }
+    return {
+        subtotalPDV: getCartTotal(),
+        subtotalDelivery: getCartTotal(),
+        valorAcrescimoDelivery: 0,
+        taxaUber: uberFee,
+        fretePagoCliente: deliveryType === 'delivery' ? uberFee : 0,
+        freteBancadoLoja: 0,
+        saldoFrete: 0,
+        modoFreteDelivery: 'FRETE_NORMAL',
+        pedidoMinimoDelivery: 30,
+        pedidoMinimoOk: true
+    };
+}
+
+function validateDeliveryMinimum() {
+    var deliveryType = getCurrentDeliveryType();
+    if (deliveryType !== 'delivery') return true;
+    var calc = getCurrentDeliveryCalc();
+    if (calc.pedidoMinimoOk) return true;
+    var msg = (typeof DeliveryRules !== 'undefined')
+        ? DeliveryRules.minimumMessage(calc)
+        : 'Pedido mínimo para delivery não atingido.';
+    showToast(msg);
+    var minBox = document.getElementById('deliveryMinimumNotice');
+    if (minBox) {
+        minBox.textContent = msg;
+        minBox.style.display = 'block';
+    }
+    return false;
+}
+
 // ============================================
 // CHECKOUT MODAL
 // ============================================
@@ -62,6 +119,7 @@ function validateCheckoutStep(step) {
     if (step === 3) {
         var deliveryRadio = document.querySelector('input[name="delivery"]:checked');
         if (deliveryRadio && deliveryRadio.value === 'delivery') {
+            if (!validateDeliveryMinimum()) return false;
             var cep = document.getElementById('checkoutCep');
             var address = document.getElementById('checkoutAddress');
             if (!cep || !cep.value.trim() || !address || !address.value.trim()) {
@@ -117,22 +175,40 @@ function updateOrderSummary() {
         }).join('');
     }
 
-    var subtotal = getCartTotal();
-    var deliveryRadio = document.querySelector('input[name="delivery"]:checked');
-    var deliveryType = deliveryRadio ? deliveryRadio.value : 'pickup';
-    var storeFee = window._selectedStoreDeliveryFee || 0;
-    var deliveryFee = deliveryType === 'delivery' ? storeFee : 0;
+    var calc = getCurrentDeliveryCalc();
+    var subtotal = calc.subtotalDelivery;
+    var deliveryType = getCurrentDeliveryType();
+    var deliveryFee = calc.fretePagoCliente;
 
     if (summarySubtotal) summarySubtotal.textContent = formatCurrency(subtotal);
-    // Se Uber Direct ativo com quote calculado, usa o valor do cliente
-    // Uber response as vezes nao traz quote_id (sem cobertura ou versao diferente da API),
-    // entao usar _uberCustomerFee sozinho ja eh sinal de que a quote rodou.
-    if (deliveryType === 'delivery' && typeof window._uberCustomerFee === 'number') {
-        deliveryFee = window._uberCustomerFee;
-    }
-
     if (summaryDelivery) summaryDelivery.textContent = deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Grátis';
     if (summaryTotal) summaryTotal.textContent = formatCurrency(subtotal + deliveryFee);
+
+    var minBox = document.getElementById('deliveryMinimumNotice');
+    if (minBox) {
+        if (deliveryType === 'delivery' && !calc.pedidoMinimoOk) {
+            minBox.textContent = (typeof DeliveryRules !== 'undefined')
+                ? DeliveryRules.minimumMessage(calc)
+                : 'Pedido mínimo para delivery não atingido.';
+            minBox.style.display = 'block';
+        } else {
+            minBox.style.display = 'none';
+        }
+    }
+    var freightBox = document.getElementById('deliveryFreightNotice');
+    if (freightBox && deliveryType === 'delivery') {
+        var cfg = getDeliveryRuleConfig();
+        if (cfg.modo_frete_delivery === 'COBRAR_DIFERENCA') {
+            freightBox.textContent = 'Parte do frete já está inclusa no pedido. Você paga apenas a diferença da entrega.';
+        } else if (cfg.modo_frete_delivery === 'FRETE_GRATIS_TOTAL') {
+            freightBox.textContent = '🚚 Frete grátis em pedidos a partir de ' + formatCurrency(cfg.pedido_minimo_delivery) + ', conforme região de entrega.';
+        } else {
+            freightBox.textContent = 'Frete calculado conforme a taxa da entrega.';
+        }
+        freightBox.style.display = 'block';
+    } else if (freightBox) {
+        freightBox.style.display = 'none';
+    }
 }
 
 // ============================================
@@ -144,6 +220,7 @@ function placeOrder() {
         showToast('Carrinho vazio!');
         return;
     }
+    if (!validateDeliveryMinimum()) return;
 
     // BUG D — orderCounter com sufixo de timestamp para garantir unicidade
     var counter = parseInt(localStorage.getItem('mp_order_counter') || '0') + 1;
@@ -159,19 +236,11 @@ function placeOrder() {
     var storeName = window._selectedStoreName || 'MilkyPot';
     var storeWhatsapp = window._selectedStoreWhatsApp || '5511999999999';
     var storeTime = window._selectedStoreTime || '20-35 min';
-    var storeFee = window._selectedStoreDeliveryFee || 0;
 
     // Delivery data
-    var deliveryRadio = document.querySelector('input[name="delivery"]:checked');
-    var deliveryType = deliveryRadio ? deliveryRadio.value : 'pickup';
-    var deliveryFee = deliveryType === 'delivery' ? storeFee : 0;
-
-    // Se delivery + Uber Direct ativo: usar quote ja calculado
-    // Uber response as vezes nao traz quote_id (sem cobertura ou versao diferente da API),
-    // entao usar _uberCustomerFee sozinho ja eh sinal de que a quote rodou.
-    if (deliveryType === 'delivery' && typeof window._uberCustomerFee === 'number') {
-        deliveryFee = window._uberCustomerFee;
-    }
+    var deliveryType = getCurrentDeliveryType();
+    var deliveryCalc = getCurrentDeliveryCalc();
+    var deliveryFee = deliveryCalc.fretePagoCliente;
     var deliveryAddress = '';
     if (deliveryType === 'delivery') {
         var addr = (document.getElementById('checkoutAddress') || {}).value || '';
@@ -186,7 +255,7 @@ function placeOrder() {
     var paymentType = paymentRadio ? paymentRadio.value : 'pix';
     var paymentLabels = { pix: 'PIX', credit: 'Cartão de Crédito', debit: 'Cartão de Débito', cash: 'Dinheiro' };
 
-    var subtotal = getCartTotal();
+    var subtotal = deliveryCalc.subtotalDelivery;
     var total = subtotal + deliveryFee;
 
     // ============================================
@@ -209,7 +278,9 @@ function placeOrder() {
         delivery: {
             type: deliveryType,
             address: deliveryAddress,
-            fee: deliveryFee
+            fee: deliveryFee,
+            taxaUber: deliveryCalc.taxaUber,
+            freteBancadoLoja: deliveryCalc.freteBancadoLoja
         },
         payment: {
             method: paymentType,
@@ -232,11 +303,15 @@ function placeOrder() {
                 bebidas: item.bebidas || [],
                 nomeCliente: item.nomeCliente || '',
                 qty: item.qty || 1,
+                unitPrice: item.unitPrice || item.price || 0,
+                pdvUnitPrice: item.pdvUnitPrice || 0,
+                pdvTotal: item.pdvTotal || 0,
                 total: item.total || calcItemTotal(item)
             };
         }),
         subtotal: subtotal,
         deliveryFee: deliveryFee,
+        deliveryPricing: deliveryCalc,
         total: total,
         // Uber Direct quote data (preenchido se cotacao foi feita)
         uberQuoteId: (deliveryType === 'delivery' && window._uberQuoteId) ? window._uberQuoteId : null,
@@ -266,11 +341,12 @@ function placeOrder() {
                 source: 'delivery',
                 createdAt: new Date().toISOString(),
                 customer: { name: customerName, phone: customerPhone },
-                delivery: { type: deliveryType, address: deliveryAddress, fee: deliveryFee },
+                delivery: { type: deliveryType, address: deliveryAddress, fee: deliveryFee, taxaUber: deliveryCalc.taxaUber, freteBancadoLoja: deliveryCalc.freteBancadoLoja },
                 payment: { method: paymentType, label: paymentLabels[paymentType] || paymentType },
                 items: order.items,
                 subtotal: subtotal,
                 deliveryFee: deliveryFee,
+                deliveryPricing: deliveryCalc,
                 total: total,
                 source: 'site'
             });
@@ -472,6 +548,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 window._uberQuoteId = null;
                 window._uberCustomerFee = undefined;
             }
+            updateOrderSummary();
         });
     });
 

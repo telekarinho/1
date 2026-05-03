@@ -20,6 +20,12 @@ var MILKYPOT_STORES = [
         rating: 5,
         deliveryTime: '25-40 min',
         deliveryFee: 5.90,
+        deliveryFreeConfig: {
+            percentual_acrescimo_delivery: 30,
+            pedido_minimo_delivery: 30,
+            taxa_uber_referencia: 10.50,
+            modo_frete_delivery: 'FRETE_GRATIS_TOTAL'
+        },
         deliveryEnabled: true,  // toggle controlado em painel/configuracoes.html
         hours: '10:00 - 22:00',
         open: true,
@@ -47,6 +53,12 @@ var MILKYPOT_STORES = [
         rating: 5,
         deliveryTime: '20-35 min',
         deliveryFee: 5.90,
+        deliveryFreeConfig: {
+            percentual_acrescimo_delivery: 30,
+            pedido_minimo_delivery: 30,
+            taxa_uber_referencia: 10.50,
+            modo_frete_delivery: 'FRETE_GRATIS_TOTAL'
+        },
         deliveryEnabled: true,
         pickupEnabled: true,
         storeOnlineOpen: true,
@@ -77,6 +89,7 @@ function mergeFranchiseFlags() {
                 if (typeof f.pickupEnabled === 'boolean') s.pickupEnabled = f.pickupEnabled;
                 // Dados operacionais
                 if (typeof f.deliveryFee === 'number') s.deliveryFee = f.deliveryFee;
+                if (f.deliveryFreeConfig && typeof f.deliveryFreeConfig === 'object') s.deliveryFreeConfig = f.deliveryFreeConfig;
                 if (f.hours) s.hours = f.hours;
                 if (f.deliveryTime) s.deliveryTime = f.deliveryTime;
                 // FIX (Fase 8.6): propaga flag de Uber se franchise tiver

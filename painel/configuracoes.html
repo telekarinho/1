@@ -194,6 +194,95 @@
                         </div>
                     </div>
 
+                    <!-- Card: Delivery / Frete Gratis -->
+                    <div class="panel-card" style="grid-column:1/-1">
+                        <div class="card-header" style="background:linear-gradient(135deg,#10B981,#2563EB);color:#fff">
+                            <h3 style="color:#fff">🚚 Delivery / Frete Grátis</h3>
+                            <p style="margin:4px 0 0;font-size:12px;opacity:.9">Controla preço do cardápio online, pedido mínimo e como a taxa Uber é bancada</p>
+                        </div>
+                        <div class="card-body">
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:14px">
+                                <div class="form-group">
+                                    <label>Acréscimo delivery (%)</label>
+                                    <input type="number" id="deliveryMarkupPct" class="form-control" step="1" min="0" placeholder="30">
+                                </div>
+                                <div class="form-group">
+                                    <label>Pedido mínimo delivery (R$)</label>
+                                    <input type="number" id="deliveryMinOrder" class="form-control" step="0.01" min="0" placeholder="30.00">
+                                </div>
+                                <div class="form-group">
+                                    <label>Taxa Uber referência (R$)</label>
+                                    <input type="number" id="deliveryUberReference" class="form-control" step="0.01" min="0" placeholder="10.50">
+                                </div>
+                                <div class="form-group">
+                                    <label>Modo de frete</label>
+                                    <select id="deliveryFreightMode" class="form-control">
+                                        <option value="FRETE_GRATIS_TOTAL">Frete grátis total</option>
+                                        <option value="COBRAR_DIFERENCA">Cobrar diferença</option>
+                                        <option value="FRETE_NORMAL">Frete normal</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+                                <button class="btn btn-primary" onclick="saveDeliveryFreeConfig()">Salvar Delivery / Frete</button>
+                                <button class="btn btn-outline" onclick="renderDeliveryFreeReport()">Atualizar relatório</button>
+                            </div>
+
+                            <div style="padding:12px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:10px;color:#065F46;font-size:13px;margin-bottom:14px">
+                                No cardápio externo o cliente não vê o preço do PDV. O sistema calcula o preço online a partir do preço loja e registra o saldo do frete em cada pedido.
+                            </div>
+
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px">
+                                <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px"><small>Pedidos delivery</small><strong id="dfKpiOrders" style="display:block;font-size:20px;color:#111827">0</strong></div>
+                                <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px"><small>Preço PDV</small><strong id="dfKpiPdv" style="display:block;font-size:20px;color:#111827">R$ 0,00</strong></div>
+                                <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px"><small>Preço delivery</small><strong id="dfKpiDelivery" style="display:block;font-size:20px;color:#111827">R$ 0,00</strong></div>
+                                <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px"><small>Gerado pelo acréscimo</small><strong id="dfKpiMarkup" style="display:block;font-size:20px;color:#111827">R$ 0,00</strong></div>
+                                <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px"><small>Uber total</small><strong id="dfKpiUber" style="display:block;font-size:20px;color:#111827">R$ 0,00</strong></div>
+                                <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px"><small>Pago pelo cliente</small><strong id="dfKpiCustomer" style="display:block;font-size:20px;color:#111827">R$ 0,00</strong></div>
+                                <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px"><small>Bancado pela loja</small><strong id="dfKpiStore" style="display:block;font-size:20px;color:#111827">R$ 0,00</strong></div>
+                                <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px"><small>Saldo final frete</small><strong id="dfKpiBalance" style="display:block;font-size:20px;color:#111827">R$ 0,00</strong></div>
+                            </div>
+
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px">
+                                <div class="form-group">
+                                    <label>De</label>
+                                    <input type="date" id="dfFromDate" class="form-control" onchange="renderDeliveryFreeReport()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Até</label>
+                                    <input type="date" id="dfToDate" class="form-control" onchange="renderDeliveryFreeReport()">
+                                </div>
+                                <div style="padding:10px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;color:#9A3412;font-size:13px">
+                                    <strong id="dfKpiLossPct">0%</strong> dos pedidos deram prejuízo no frete.<br>
+                                    <strong id="dfKpiCoveredPct">0%</strong> tiveram acréscimo suficiente.
+                                </div>
+                            </div>
+
+                            <div style="overflow-x:auto;border:1px solid #E5E7EB;border-radius:10px">
+                                <table style="width:100%;border-collapse:collapse;font-size:12px">
+                                    <thead style="background:#F3F4F6">
+                                        <tr>
+                                            <th style="text-align:left;padding:8px">Pedido</th>
+                                            <th style="text-align:left;padding:8px">Data</th>
+                                            <th style="text-align:right;padding:8px">PDV</th>
+                                            <th style="text-align:right;padding:8px">Delivery</th>
+                                            <th style="text-align:right;padding:8px">Acréscimo</th>
+                                            <th style="text-align:right;padding:8px">Uber</th>
+                                            <th style="text-align:right;padding:8px">Cliente</th>
+                                            <th style="text-align:right;padding:8px">Loja</th>
+                                            <th style="text-align:right;padding:8px">Saldo</th>
+                                            <th style="text-align:left;padding:8px">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="deliveryFreeReportBody">
+                                        <tr><td colspan="10" style="padding:18px;text-align:center;color:#9CA3AF">Nenhum pedido com métrica de frete ainda.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Card 3: Minha Conta -->
                     <div class="panel-card">
                         <div class="card-header">
@@ -431,6 +520,7 @@
     <script src="../js/core/audit.js"></script>
     <script src="../js/core/notifications.js"></script>
     <script src="../js/core/uber-direct.js"></script>
+    <script src="../js/core/delivery-rules.js?v=mp-v115"></script>
 
     <script>
     // Auth guard
@@ -498,6 +588,99 @@
         document.getElementById('storeDeliveryTime').value = franchise.deliveryTime || '';
         document.getElementById('storeDeliveryRadius').value = franchise.deliveryRadius || '';
     }
+
+    function loadDeliveryFreeConfig() {
+        var cfg = (typeof DeliveryRules !== 'undefined')
+            ? DeliveryRules.getConfig(franchiseId)
+            : (franchise && franchise.deliveryFreeConfig) || {};
+        document.getElementById('deliveryMarkupPct').value = cfg.percentual_acrescimo_delivery || 30;
+        document.getElementById('deliveryMinOrder').value = Number(cfg.pedido_minimo_delivery || 30).toFixed(2);
+        document.getElementById('deliveryUberReference').value = Number(cfg.taxa_uber_referencia || 10.50).toFixed(2);
+        document.getElementById('deliveryFreightMode').value = cfg.modo_frete_delivery || 'FRETE_GRATIS_TOTAL';
+
+        var now = new Date();
+        var first = new Date(now.getFullYear(), now.getMonth(), 1);
+        var from = document.getElementById('dfFromDate');
+        var to = document.getElementById('dfToDate');
+        if (from && !from.value) from.value = first.toISOString().slice(0,10);
+        if (to && !to.value) to.value = now.toISOString().slice(0,10);
+        renderDeliveryFreeReport();
+    }
+
+    function saveDeliveryFreeConfig() {
+        if (!franchise) return alert('Franquia nao encontrada.');
+
+        var allFranchises = DataStore.getAllFranchises();
+        var idx = allFranchises.findIndex(function(f) { return f.id === franchiseId; });
+        if (idx === -1) return alert('Franquia nao encontrada.');
+
+        var cfg = {
+            percentual_acrescimo_delivery: parseFloat(document.getElementById('deliveryMarkupPct').value) || 30,
+            pedido_minimo_delivery: parseFloat(document.getElementById('deliveryMinOrder').value) || 30,
+            taxa_uber_referencia: parseFloat(document.getElementById('deliveryUberReference').value) || 10.50,
+            modo_frete_delivery: document.getElementById('deliveryFreightMode').value || 'FRETE_GRATIS_TOTAL',
+            updatedAt: new Date().toISOString(),
+            updatedBy: session.email || session.name || 'admin'
+        };
+        allFranchises[idx].deliveryFreeConfig = cfg;
+        DataStore.set('franchises', allFranchises);
+        alert('Configuração Delivery / Frete Grátis salva com sucesso!');
+        renderDeliveryFreeReport();
+    }
+
+    function fmtMoney(v) {
+        if (typeof DeliveryRules !== 'undefined') return DeliveryRules.brl(v || 0);
+        return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
+    }
+
+    function renderDeliveryFreeReport() {
+        var orders = DataStore.getCollection('orders', franchiseId) || [];
+        var from = (document.getElementById('dfFromDate') || {}).value || '';
+        var to = (document.getElementById('dfToDate') || {}).value || '';
+        var data = (typeof DeliveryRules !== 'undefined')
+            ? DeliveryRules.summarizeOrders(orders, from, to)
+            : { summary: {}, orders: [] };
+        var s = data.summary || {};
+
+        document.getElementById('dfKpiOrders').textContent = s.totalPedidosDelivery || 0;
+        document.getElementById('dfKpiPdv').textContent = fmtMoney(s.totalVendidoPDV);
+        document.getElementById('dfKpiDelivery').textContent = fmtMoney(s.totalVendidoDelivery);
+        document.getElementById('dfKpiMarkup').textContent = fmtMoney(s.totalGeradoAcrescimo);
+        document.getElementById('dfKpiUber').textContent = fmtMoney(s.totalPagoUber);
+        document.getElementById('dfKpiCustomer').textContent = fmtMoney(s.totalPagoClienteFrete);
+        document.getElementById('dfKpiStore').textContent = fmtMoney(s.totalBancadoLoja);
+        var balanceEl = document.getElementById('dfKpiBalance');
+        balanceEl.textContent = fmtMoney(s.saldoFinalFrete);
+        balanceEl.style.color = Number(s.saldoFinalFrete || 0) >= 0 ? '#047857' : '#B91C1C';
+        document.getElementById('dfKpiLossPct').textContent = Number(s.percentualPedidosFretePrejuizo || 0).toFixed(1).replace('.', ',') + '%';
+        document.getElementById('dfKpiCoveredPct').textContent = Number(s.percentualPedidosFreteCoberto || 0).toFixed(1).replace('.', ',') + '%';
+
+        var tbody = document.getElementById('deliveryFreeReportBody');
+        var rows = (data.orders || []).slice().reverse().slice(0, 80);
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="10" style="padding:18px;text-align:center;color:#9CA3AF">Nenhum pedido com métrica de frete ainda.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = rows.map(function(o) {
+            var m = o.deliveryPricing || o.deliveryMetrics || {};
+            var saldo = Number(m.saldoFrete || 0);
+            var dt = o.createdAt ? new Date(o.createdAt).toLocaleString('pt-BR') : '-';
+            return '<tr style="border-top:1px solid #E5E7EB">' +
+                '<td style="padding:8px">' + (o.orderNumber || o.id || '-') + '</td>' +
+                '<td style="padding:8px;white-space:nowrap">' + dt + '</td>' +
+                '<td style="padding:8px;text-align:right">' + fmtMoney(m.subtotalPDV) + '</td>' +
+                '<td style="padding:8px;text-align:right">' + fmtMoney(m.subtotalDelivery) + '</td>' +
+                '<td style="padding:8px;text-align:right">' + fmtMoney(m.valorAcrescimoDelivery) + '</td>' +
+                '<td style="padding:8px;text-align:right">' + fmtMoney(m.taxaUber) + '</td>' +
+                '<td style="padding:8px;text-align:right">' + fmtMoney(m.fretePagoCliente) + '</td>' +
+                '<td style="padding:8px;text-align:right">' + fmtMoney(m.freteBancadoLoja) + '</td>' +
+                '<td style="padding:8px;text-align:right;color:' + (saldo >= 0 ? '#047857' : '#B91C1C') + ';font-weight:800">' + fmtMoney(saldo) + '</td>' +
+                '<td style="padding:8px">' + (o.status || '-') + '</td>' +
+            '</tr>';
+        }).join('');
+    }
+    window.saveDeliveryFreeConfig = saveDeliveryFreeConfig;
+    window.renderDeliveryFreeReport = renderDeliveryFreeReport;
 
     // Load account info
     function loadAccountData() {
@@ -1110,6 +1293,7 @@
     // Init
     loadStoreData();
     loadOperationData();
+    loadDeliveryFreeConfig();
     loadAccountData();
     loadFranchiseInfo();
     loadNotifSettings();
