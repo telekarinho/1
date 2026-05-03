@@ -161,7 +161,7 @@
 
         if (isDelivery) {
             if (cfg.modo_frete_delivery === 'FRETE_GRATIS_TOTAL') {
-                fretePagoCliente = 0;
+                fretePagoCliente = base.subtotalDelivery >= cfg.pedido_minimo_delivery ? 0 : taxaUber;
             } else if (cfg.modo_frete_delivery === 'COBRAR_DIFERENCA') {
                 fretePagoCliente = Math.max(0, taxaUber - base.valorAcrescimoDelivery);
             } else {
@@ -189,7 +189,8 @@
 
     function minimumMessage(calc) {
         const faltam = Math.max(0, num(calc && calc.pedidoMinimoDelivery) - num(calc && calc.subtotalDelivery));
-        return 'Pedido mínimo para delivery: ' + brl(calc.pedidoMinimoDelivery) + '. Faltam ' + brl(faltam) + ' para finalizar seu pedido.';
+        const frete = brl(calc && calc.fretePagoCliente);
+        return 'Você pode ganhar frete grátis a partir de ' + brl(calc.pedidoMinimoDelivery) + ' em compras. Faltam ' + brl(faltam) + '. Se preferir, pode finalizar agora pagando o frete de ' + frete + '.';
     }
 
     function summarizeOrders(orders, fromDate, toDate) {

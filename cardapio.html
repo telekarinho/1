@@ -575,10 +575,10 @@
     <script src="js/cardapio-data.js"></script>
     <script src="js/core/cost-calculator.js?v=mp-v14"></script>
     <script src="js/core/catalog-v2.js?v=mp-v105"></script>
-    <script src="js/core/delivery-rules.js?v=mp-v115"></script>
+    <script src="js/core/delivery-rules.js?v=mp-v118"></script>
     <script src="js/cart.js?v=mp-v114"></script>
     <script src="js/core/raspinha-engine.js"></script>
-    <script src="js/checkout.js?v=mp-v115"></script>
+    <script src="js/checkout.js?v=mp-v118"></script>
     <script src="js/chat-ai.js" defer></script>
     <script>
     /* ============================================
@@ -1927,9 +1927,13 @@
                     var calc = (typeof getCurrentDeliveryCalc === 'function') ? getCurrentDeliveryCalc() : null;
                     var clientFee = calc ? Number(calc.fretePagoCliente || 0) : feeBRL;
                     var feeTxt = 'R$ ' + feeBRL.toFixed(2).replace('.', ',');
-                    var clientTxt = clientFee > 0 ? 'Você paga R$ ' + clientFee.toFixed(2).replace('.', ',') : 'Frete grátis';
-                    setS('✓ <strong>' + clientTxt + '</strong> · Uber ' + feeTxt, '#065F46', '#ECFDF5');
-                    var dft = document.getElementById('deliveryFeeText'); if (dft) dft.textContent = clientFee > 0 ? 'Diferença: R$ ' + clientFee.toFixed(2).replace('.', ',') : 'Frete grátis';
+                    var clientTxt = clientFee > 0 ? 'Frete: R$ ' + clientFee.toFixed(2).replace('.', ',') : 'Frete grátis';
+                    var quoteMsg = '✓ <strong>' + clientTxt + '</strong>';
+                    if (calc && calc.pedidoMinimoOk === false && typeof DeliveryRules !== 'undefined') {
+                        quoteMsg += '<br><small>' + DeliveryRules.minimumMessage(calc) + '</small>';
+                    }
+                    setS(quoteMsg, '#065F46', '#ECFDF5');
+                    var dft = document.getElementById('deliveryFeeText'); if (dft) dft.textContent = clientFee > 0 ? 'Frete: R$ ' + clientFee.toFixed(2).replace('.', ',') : 'Frete grátis';
                     if (typeof updateOrderSummary === 'function') updateOrderSummary();
                 }).catch(function(e){
                     // Mensagem mais útil: distingue endereço fora de cobertura vs erro de config/auth
