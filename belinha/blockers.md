@@ -73,6 +73,28 @@ Google Analytics 4 Property ID: G-__________
 
 ---
 
+---
+
+## 🟡 OPERACIONAL — confirmação do operador (pós-inauguração)
+
+### 5. WA "VERAO" — keyword foi publicada?
+
+**Contexto:** A mecânica de lista VIP via keyword "VERAO" foi planejada na semana 33 (01/12/2026) e prescrita nos ciclos #74–#75. O cliente deveria enviar a palavra "VERAO" para o WhatsApp da loja para entrar na lista VIP do produto sazonal de verão.
+
+**Bloqueador:** A Belinha não consegue verificar o WhatsApp Business — não há acesso ao painel de automações.
+
+**O que o operador precisa confirmar:**
+- [ ] A keyword "VERAO" foi configurada como resposta automática no WA Business?
+- [ ] A lista VIP "VERAO" foi criada e tem membros?
+- [ ] O produto sazonal de verão (Versão A ou B) foi lançado em 02/12/2026 conforme semana 33?
+- [ ] Quantos clientes entraram na lista VIP "VERAO" até agora?
+
+**Ação após confirmação:** Se a mecânica está ativa e funcionando → fechar este blocker. Se não foi publicada → avaliar se ainda faz sentido ativar (produto verão ainda em cardápio?) ou arquivar como aprendizado para próxima campanha sazonal.
+
+**Impacto estratégico:** Lista VIP "VERAO" é input para o conteúdo de semana 55+ (pode incluir broadcast de encerramento da temporada verão + transição para campanha outono/inverno).
+
+---
+
 ## Status
 
 | Blocker | Prioridade | Resolvido? |
@@ -81,8 +103,9 @@ Google Analytics 4 Property ID: G-__________
 | DPO (encarregado LGPD) | 🔴 Crítico | ❌ Aguardando |
 | Google Analytics ID | 🟡 Secundário | ❌ Aguardando |
 | Domínio correto (termos.html + privacidade.html) | 🟡 Secundário | ✅ Resolvido (Ciclo #13) |
+| WA "VERAO" keyword ativa? | 🟡 Operacional | ❓ Confirmar com operador |
 
 ---
 
 *Criado por Belinha — Ciclo #12 — 2026-04-23*
-*Atualizado — Ciclo #13 — 2026-04-23*
+*Atualizado — Ciclo #97 — 2026-05-03*
