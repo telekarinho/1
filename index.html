@@ -2146,7 +2146,8 @@
                 var dropAddr = addr + ', ' + num + ' - ' + nbh + ' - Londrina, PR ' + cep;
                 var fns = (firebase.app && firebase.app().functions) ? firebase.app().functions('southamerica-east1') : null;
                 if (!fns) return;
-                fns.httpsCallable('uberDirect_getQuote')({
+                // ENDPOINT PUBLICO — cardapio aberto sem login
+                fns.httpsCallable('uberDirect_getQuotePublic')({
                     franchiseId: fid,
                     dropoff_address: dropAddr,
                     dropoff_name: name,
@@ -2169,7 +2170,7 @@
                     var dft = document.getElementById('deliveryFeeText');
                     if (dft) dft.textContent = 'Taxa: ' + feeTxt;
                 }).catch(function(e){
-                    console.warn('uberDirect_getQuote:', e && e.message);
+                    console.warn('uberDirect_getQuotePublic:', e && e.message);
                     if (statusText) {
                         statusText.textContent = '⚠ Uber Direct não disponível pra esse endereço';
                         if (status) { status.style.background = '#FFF7ED'; status.style.color = '#9A3412'; }
