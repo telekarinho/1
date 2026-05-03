@@ -851,12 +851,37 @@
               ${cats.map(c => `<option value="${c.id}" ${p.categoriaId===c.id?'selected':''}>${c.icon||''} ${esc(c.name)}</option>`).join('')}
             </select>
           </div>
-          <div class="form-field"><label>Canal</label>
+          <div class="form-field" style="display:none">
+            <!-- Mantido oculto: campo legado pra retrocompat. As 4 toggles abaixo
+                 sao a fonte de verdade. canal eh recalculado no save. -->
+            <label>Canal (legado)</label>
             <select id="pCanal">
               <option value="ambos" ${p.canal==='ambos'?'selected':''}>Loja + Delivery</option>
               <option value="loja" ${p.canal==='loja'?'selected':''}>Só loja</option>
               <option value="delivery" ${p.canal==='delivery'?'selected':''}>Só delivery</option>
             </select>
+          </div>
+          <div class="form-field col-2">
+            <label>📡 Disponibilidade por canal <small style="color:#6B7280;font-weight:400">(default: aparece em tudo)</small></label>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px">
+              <label style="display:flex;gap:6px;align-items:center;padding:8px 10px;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;cursor:pointer;font-size:13px" title="Aparece no PDV (balcao da loja)">
+                <input type="checkbox" id="pDispPDV" ${(p.disponibilidade?.pdv !== false) ? 'checked' : ''} style="width:16px;height:16px">
+                💻 PDV
+              </label>
+              <label style="display:flex;gap:6px;align-items:center;padding:8px 10px;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;cursor:pointer;font-size:13px" title="Aparece no cardapio publico / site / delivery online">
+                <input type="checkbox" id="pDispDelivery" ${(p.disponibilidade?.delivery !== false) ? 'checked' : ''} style="width:16px;height:16px">
+                🛵 Delivery
+              </label>
+              <label style="display:flex;gap:6px;align-items:center;padding:8px 10px;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;cursor:pointer;font-size:13px" title="Aparece no cardapio digital (mesmo q delivery hoje)">
+                <input type="checkbox" id="pDispCardapio" ${(p.disponibilidade?.cardapio !== false) ? 'checked' : ''} style="width:16px;height:16px">
+                📋 Cardápio
+              </label>
+              <label style="display:flex;gap:6px;align-items:center;padding:8px 10px;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;cursor:pointer;font-size:13px" title="Aparece na TV (FASE 5 — ainda nao consome)">
+                <input type="checkbox" id="pDispTV" ${(p.disponibilidade?.tv !== false) ? 'checked' : ''} style="width:16px;height:16px">
+                📺 TV
+              </label>
+            </div>
+            <small style="color:#6B7280;font-size:11px;display:block;margin-top:6px">Marca/desmarca pra controlar onde o produto aparece. Salvar atualiza PDV e cardápio em tempo real.</small>
           </div>
           <div class="form-field col-2"><label>Descrição</label><textarea id="pDesc" rows="2" placeholder="Um cremoso com raspas de Oreo e calda morango…">${esc(p.desc||'')}</textarea></div>
           <div class="form-field"><label>Emoji</label><input type="text" id="pEmoji" value="${esc(p.midia?.emoji||'')}" maxlength="2"></div>
@@ -1938,11 +1963,22 @@
     const receita = (typeof _collectReceitaFromUI === 'function') ? _collectReceitaFromUI() : { insumos: currentProduto?.custos?.insumos || [], embalagemIds: currentProduto?.custos?.embalagemIds || [] };
     const tempoPreparoMin = parseFloat(document.getElementById('pTempoPreparo')?.value) || 0;
 
+    // FASE 4B: 4 toggles sao a fonte de verdade. canal eh derivado pra retrocompat.
+    const dispPDV = document.getElementById('pDispPDV')?.checked !== false;
+    const dispDelivery = document.getElementById('pDispDelivery')?.checked !== false;
+    const dispCardapio = document.getElementById('pDispCardapio')?.checked !== false;
+    const dispTV = document.getElementById('pDispTV')?.checked !== false;
+    // Deriva canal legado: pdv-only=loja, delivery-only=delivery, qualquer mix=ambos
+    let canalDerivado = 'ambos';
+    if (dispPDV && !dispDelivery && !dispCardapio) canalDerivado = 'loja';
+    else if (!dispPDV && (dispDelivery || dispCardapio)) canalDerivado = 'delivery';
+
     const p = Object.assign({}, currentProduto || {}, {
       name: document.getElementById('pName').value.trim(),
       desc: document.getElementById('pDesc').value.trim(),
       categoriaId: document.getElementById('pCategoria').value,
-      canal: document.getElementById('pCanal').value,
+      canal: canalDerivado,
+      disponibilidade: { pdv: dispPDV, delivery: dispDelivery, cardapio: dispCardapio, tv: dispTV },
       tempoPreparoMin: tempoPreparoMin,
       midia: {
         emoji: document.getElementById('pEmoji').value,
