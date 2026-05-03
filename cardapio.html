@@ -1599,7 +1599,9 @@
                 var dropAddr = addr + ', ' + num + ' - ' + nbh + ' - Londrina, PR ' + cep;
                 var fns = (firebase.app && firebase.app().functions) ? firebase.app().functions('southamerica-east1') : null;
                 if (!fns) return;
-                fns.httpsCallable('uberDirect_getQuote')({
+                // ENDPOINT PUBLICO — cliente nao precisa estar logado
+                // (uberDirect_getQuote exige role admin/franchisee/manager)
+                fns.httpsCallable('uberDirect_getQuotePublic')({
                     franchiseId: fid,
                     dropoff_address: dropAddr,
                     dropoff_name: name,
