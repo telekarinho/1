@@ -79,6 +79,202 @@ async function writeDS(docId, data) {
     });
 }
 
+function normalizeItemFields(fields) {
+    const out = Object.assign({}, fields || {});
+
+    // O PDV/estoque le `receita`. Alguns modelos tendem a enviar `recipe`.
+    // Se vier como lista de insumos, salva no campo operacional correto.
+    if (Array.isArray(out.recipe) && !Array.isArray(out.receita)) {
+        out.receita = out.recipe;
+        delete out.recipe;
+    }
+
+    return out;
+}
+
+function normalizeText(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase();
+}
+
+function titleFromKey(key) {
+    return String(key || '')
+        .replace(/^cat_/, '')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function findItemByName(cat, section, category, name) {
+    const wanted = normalizeText(name);
+    if (!wanted) return null;
+
+    for (const ref of iterCatalogItems(cat)) {
+        if (section && ref.sectionKey !== section) continue;
+        if (category && ref.categoryKey !== category) continue;
+        if (normalizeText(ref.item && ref.item.name) === wanted) return ref;
+    }
+    return null;
+}
+
+async function updateCatalogV2Product(itemId, fields) {
+    const docs = await db.collection('datastore').listDocuments();
+    const catalogV2Docs = docs.filter(doc => doc.id.startsWith('catalog_v2_'));
+    const touched = [];
+
+    for (const docRef of catalogV2Docs) {
+        const data = await readDS(docRef.id, null);
+        if (!data || !Array.isArray(data.produtos)) continue;
+
+        const product = data.produtos.find(p => p && p.id === itemId);
+        if (!product) continue;
+
+        if (fields.name !== undefined) product.name = fields.name;
+        if (fields.desc !== undefined) product.desc = fields.desc;
+        if (fields.available !== undefined) product.active = fields.available !== false;
+        if (fields.active !== undefined) product.active = fields.active !== false;
+        if (fields.badge !== undefined) product.badge = fields.badge;
+        if (fields.order !== undefined) product.order = fields.order;
+        if (fields.price !== undefined) {
+            product.precos = product.precos || {};
+            product.precos.loja = product.precos.loja || {};
+            product.precos.loja.real = Number(fields.price) || 0;
+        }
+        if (Array.isArray(fields.receita)) {
+            product.custos = product.custos || {};
+            product.custos.insumos = fields.receita
+                .filter(r => r && r.insumoId && Number(r.qty) > 0)
+                .map(r => ({
+                    insumoId: r.insumoId,
+                    qty: Number(r.qty),
+                    unit: r.unit || 'unid'
+                }));
+        }
+
+        product.updatedAt = new Date().toISOString();
+        product.updatedBy = 'copilot';
+        await writeDS(docRef.id, data);
+        touched.push(docRef.id);
+    }
+
+    return touched;
+}
+
+async function createOrUpdateCatalogV2Product(section, category, item) {
+    const docs = await db.collection('datastore').listDocuments();
+    const catalogV2Docs = docs.filter(doc => doc.id.startsWith('catalog_v2_'));
+    const touched = [];
+
+    for (const docRef of catalogV2Docs) {
+        const data = await readDS(docRef.id, null);
+        if (!data || !Array.isArray(data.produtos)) continue;
+        if (!Array.isArray(data.categorias)) data.categorias = [];
+
+        const categoriaId = section === 'bebidas'
+            ? 'cat_bebida'
+            : section === 'adicionais'
+                ? 'cat_topping'
+                : 'cat_' + (category || section);
+
+        if (!data.categorias.some(c => c && c.id === categoriaId)) {
+            data.categorias.push({
+                id: categoriaId,
+                name: titleFromKey(category || section),
+                icon: item.emoji || '',
+                color: '',
+                order: data.categorias.length + 1,
+                active: true
+            });
+        }
+
+        let product = data.produtos.find(p => p && p.id === item.id);
+        if (!product) {
+            product = data.produtos.find(p =>
+                p &&
+                p.categoriaId === categoriaId &&
+                normalizeText(p.name) === normalizeText(item.name)
+            );
+        }
+
+        const now = new Date().toISOString();
+        if (!product) {
+            product = {
+                id: item.id,
+                categoriaId,
+                name: item.name || '',
+                desc: item.desc || '',
+                midia: { fotos: [], video: '', emoji: item.emoji || '' },
+                custos: {
+                    insumos: Array.isArray(item.receita) ? item.receita : [],
+                    custoInsumos: Number(item.cost) || 0,
+                    custoAdicional: { embalagem: 0, energia: 0, mao_obra: 0, outros: 0 },
+                    custoTotal: Number(item.cost) || 0
+                },
+                precos: {
+                    loja: { recomendado: 0, real: Number(item.price) || 0 },
+                    delivery: { recomendado: 0, real: Number(item.priceDelivery || item.price) || 0 },
+                    ifood: { recomendado: 0, real: Number(item.priceDelivery || item.price) || 0 }
+                },
+                kits: [],
+                variantes: [],
+                toppingsIds: [],
+                buffet: { ativo: false, precoPorKg: 0, toppingsInclusos: [] },
+                canal: item.canalVenda || 'ambos',
+                active: item.available !== false,
+                createdAt: item.createdAt || now
+            };
+            data.produtos.push(product);
+        } else {
+            product.id = product.id || item.id;
+            product.categoriaId = product.categoriaId || categoriaId;
+            product.name = item.name || product.name;
+            product.desc = item.desc !== undefined ? item.desc : (product.desc || '');
+            product.midia = product.midia || { fotos: [], video: '', emoji: '' };
+            product.midia.emoji = item.emoji || product.midia.emoji || '';
+            product.precos = product.precos || {};
+            ['loja', 'delivery', 'ifood'].forEach(ch => {
+                product.precos[ch] = product.precos[ch] || { recomendado: 0, real: 0 };
+            });
+            product.precos.loja.real = Number(item.price) || 0;
+            product.precos.delivery.real = Number(item.priceDelivery || item.price) || 0;
+            product.precos.ifood.real = Number(item.priceDelivery || item.price) || 0;
+            product.active = item.available !== false;
+            product.canal = item.canalVenda || product.canal || 'ambos';
+            if (Array.isArray(item.receita)) {
+                product.custos = product.custos || {};
+                product.custos.insumos = item.receita;
+            }
+        }
+
+        product.updatedAt = now;
+        product.updatedBy = 'copilot';
+        await writeDS(docRef.id, data);
+        touched.push(docRef.id);
+    }
+
+    return touched;
+}
+
+async function deleteCatalogV2Product(itemId) {
+    const docs = await db.collection('datastore').listDocuments();
+    const catalogV2Docs = docs.filter(doc => doc.id.startsWith('catalog_v2_'));
+    const touched = [];
+
+    for (const docRef of catalogV2Docs) {
+        const data = await readDS(docRef.id, null);
+        if (!data || !Array.isArray(data.produtos)) continue;
+        const before = data.produtos.length;
+        data.produtos = data.produtos.filter(p => p && p.id !== itemId);
+        if (data.produtos.length === before) continue;
+        await writeDS(docRef.id, data);
+        touched.push(docRef.id);
+    }
+
+    return touched;
+}
+
 // Itera TODOS os items do catálogo retornando { section, category, item }
 // Section pode ser array direto (bebidas) ou object com categorias contendo items[]
 function* iterCatalogItems(cat) {
@@ -156,6 +352,7 @@ const TOOLS_IMPL = {
     },
 
     async update_item({ itemId, fields, section }) {
+        fields = normalizeItemFields(fields);
         const cat = await readDS('catalog_config', null);
         if (!cat) return { error: 'catalog vazio' };
         const ref = findItemById(cat, itemId);
@@ -165,12 +362,32 @@ const TOOLS_IMPL = {
             updatedBy: 'copilot'
         });
         await writeDS('catalog_config', cat);
-        return { success: true, item: ref.item, location: { section: ref.sectionKey, category: ref.categoryKey } };
+        const catalogV2Updated = await updateCatalogV2Product(itemId, fields);
+        return { success: true, item: ref.item, catalogV2Updated, location: { section: ref.sectionKey, category: ref.categoryKey } };
     },
 
     async create_item({ section, category, item }) {
         if (!section) return { error: 'section obrigatório' };
+        item = normalizeItemFields(item || {});
         const cat = await readDS('catalog_config', {});
+        const existing = findItemByName(cat, section, category, item.name);
+        if (existing) {
+            Object.assign(existing.item, item, {
+                updatedAt: new Date().toISOString(),
+                updatedBy: 'copilot'
+            });
+            await writeDS('catalog_config', cat);
+            const catalogV2Updated = await createOrUpdateCatalogV2Product(section, category, existing.item);
+            return {
+                success: true,
+                created: false,
+                deduped: true,
+                itemId: existing.item.id,
+                item: existing.item,
+                catalogV2Updated,
+                location: { section: existing.sectionKey, category: existing.categoryKey }
+            };
+        }
         if (!item.id) item.id = 'prod_' + Math.random().toString(36).slice(2, 12);
         if (findItemById(cat, item.id)) return { error: 'id já existe: ' + item.id };
         item.available = item.available !== false;
@@ -184,7 +401,7 @@ const TOOLS_IMPL = {
             // Estrutura categorizada
             if (!category) return { error: 'seção "' + section + '" tem categorias — passe `category` (ex: "milkshake", "acai")' };
             if (!cat[section][category]) {
-                cat[section][category] = { name: category, items: [] };
+                cat[section][category] = { name: titleFromKey(category), items: [] };
             }
             if (!Array.isArray(cat[section][category].items)) cat[section][category].items = [];
             cat[section][category].items.push(item);
@@ -192,7 +409,8 @@ const TOOLS_IMPL = {
             cat[section] = [item]; // cria seção como array
         }
         await writeDS('catalog_config', cat);
-        return { success: true, item };
+        const catalogV2Updated = await createOrUpdateCatalogV2Product(section, category, item);
+        return { success: true, created: true, itemId: item.id, item, catalogV2Updated, location: { section, category: category || null } };
     },
 
     async delete_item({ itemId }) {
@@ -206,7 +424,8 @@ const TOOLS_IMPL = {
             cat[ref.sectionKey] = cat[ref.sectionKey].filter(i => i.id !== itemId);
         }
         await writeDS('catalog_config', cat);
-        return { success: true, removed: itemId, location: { section: ref.sectionKey, category: ref.categoryKey } };
+        const catalogV2Updated = await deleteCatalogV2Product(itemId);
+        return { success: true, removed: itemId, catalogV2Updated, location: { section: ref.sectionKey, category: ref.categoryKey } };
     },
 
     async toggle_item({ itemId, available }) {
@@ -338,6 +557,10 @@ Aí você continua a conversa normalmente, lendo o resultado e respondendo. Pode
 **get_item** — Detalhes de um item por ID (busca em todas as seções). Input: \`{"itemId": "prod_xxx"}\`
 
 **update_item** — Atualiza campos do item (precisa só do itemId, encontra a seção sozinho). Input: \`{"itemId": "prod_xxx", "fields": {"price": 15.5, "desc": "..."}}\`
+
+Para receitas de estoque, use SEMPRE o campo operacional \`receita\`, não \`recipe\`.
+Formato: \`{"itemId":"prod_xxx","fields":{"receita":[{"insumoId":"ins_xxx","qty":120,"unit":"ml"}]}}\`.
+Unidades aceitas: \`g\`, \`kg\`, \`ml\`, \`L\`, \`unid\`.
 
 **create_item** — Cria item novo. Input: \`{"section": "sabores", "category": "milkshake", "item": {"name": "Brigadeiro", "price": 14}}\`. Em seções categorizadas (sabores, bases, etc) precisa de \`category\`.
 

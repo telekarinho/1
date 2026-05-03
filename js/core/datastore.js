@@ -544,6 +544,9 @@ const DataStore = {
         } catch (_) {}
         if (!fid) return [];
         return [
+            'catalog_config',
+            'catalog_config_' + fid,
+            'catalog_v2_' + fid,
             'orders_' + fid,
             'caixa_' + fid,
             'pdv_tabs_' + fid,
@@ -569,7 +572,15 @@ const DataStore = {
                     this._db.collection('datastore').doc('catalog_config').get(),
                     new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 5s')), 5000))
                 ]);
-                if (!catalogDoc.exists && typeof CARDAPIO_CONFIG !== 'undefined') {
+                if (catalogDoc.exists) {
+                    const value = catalogDoc.data().value;
+                    if (typeof value === 'string') {
+                        localStorage.setItem(this.PREFIX + 'catalog_config', value);
+                        try {
+                            window.dispatchEvent(new CustomEvent('mp_catalog_updated', { detail: JSON.parse(value) }));
+                        } catch (_) {}
+                    }
+                } else if (typeof CARDAPIO_CONFIG !== 'undefined') {
                     console.log('🌱 Seed: Enviando configuração inicial do cardápio para o Firestore...');
                     this.set('catalog_config', CARDAPIO_CONFIG);
                 }
@@ -631,17 +642,39 @@ const DataStore = {
             // catalog_config listener (background)
             if (!this._catalogListenerAttached) {
                 this._catalogListenerAttached = true;
-                this._db.collection('datastore').doc('catalog_config').onSnapshot(doc => {
-                    if (doc.exists) {
-                        const newData = JSON.parse(doc.data().value);
-                        localStorage.setItem(this.PREFIX + 'catalog_config', doc.data().value);
-                        console.log('🔄 Catálogo atualizado via Firebase (Background)');
-                        window.dispatchEvent(new CustomEvent('mp_catalog_updated', { detail: newData }));
+                const self = this;
+                const attachCatalogListener = function(docId, storageKey) {
+                    self._db.collection('datastore').doc(docId).onSnapshot(doc => {
+                        if (doc.exists) {
+                            const value = doc.data().value;
+                            if (typeof value !== 'string') return;
+                            const newData = JSON.parse(value);
+                            localStorage.setItem(self.PREFIX + storageKey, value);
+                            console.log('🔄 Catálogo atualizado via Firebase (Background):', docId);
+                            if (storageKey === 'catalog_config' || (newData && newData._fromV2)) {
+                                window.dispatchEvent(new CustomEvent('mp_catalog_updated', { detail: newData }));
+                            }
+                        }
+                    }, err => {
+                        console.warn(docId + ' listener ignorado:', err.code || err.message);
+                        self._catalogListenerAttached = false;
+                    });
+                };
+
+                attachCatalogListener('catalog_config', 'catalog_config');
+                try {
+                    let fid = null;
+                    if (typeof Auth !== 'undefined' && Auth.getSessionRaw) {
+                        fid = (Auth.getSessionRaw() || {}).franchiseId;
+                    } else {
+                        const raw = localStorage.getItem('mp_session');
+                        fid = raw ? (JSON.parse(raw) || {}).franchiseId : null;
                     }
-                }, err => {
-                    console.warn('catalog_config listener ignorado:', err.code || err.message);
-                    this._catalogListenerAttached = false;
-                });
+                    if (fid) {
+                        attachCatalogListener('catalog_config_' + fid, 'catalog_config_' + fid);
+                        attachCatalogListener('catalog_v2_' + fid, 'catalog_v2_' + fid);
+                    }
+                } catch (_) {}
             }
 
             // Per-doc realtime listeners (orders/caixa/pdv_tabs/finances)
