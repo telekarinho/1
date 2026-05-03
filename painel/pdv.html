@@ -1164,7 +1164,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <script src="../js/core/constants.js"></script>
 <script src="../js/core/utils.js"></script>
-<script src="../js/core/datastore.js?v=mp-v107"></script>
+<script src="../js/core/datastore.js?v=mp-v109"></script>
 <script src="../js/core/firebase-config.js"></script>
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
@@ -1389,12 +1389,39 @@
             } catch (e) { return []; }
         },
 
+        // Resolve receita do item via dual-read: catalog_config primeiro,
+        // depois CatalogV2 se vazio. Defesa contra catalog_config legado
+        // sobrescrito por sync de outro PC (a receita sempre vive no v2).
+        _resolveReceita(item) {
+            if (item && item.receita && item.receita.length) return item.receita;
+            // Fallback CatalogV2 (autoritativo)
+            try {
+                if (typeof CatalogV2 === 'undefined' || !CatalogV2.getProduto) return null;
+                const session = typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession();
+                const fid = session && session.franchiseId;
+                if (!fid || !item || !item.id) return null;
+                const p = CatalogV2.getProduto(fid, item.id);
+                if (p && p.custos && Array.isArray(p.custos.insumos) && p.custos.insumos.length) {
+                    const valid = p.custos.insumos.filter(r => r && r.insumoId && Number(r.qty) > 0 && r.unit);
+                    if (valid.length) {
+                        // Hidrata o item in-place pra próximas chamadas + render usar
+                        item.receita = valid;
+                        return valid;
+                    }
+                }
+            } catch (e) {}
+            return null;
+        },
+
         // Calcula quantas unidades do item ainda dá pra produzir com o inventory atual.
         // Retorna { units: number|Infinity, hasRecipe: boolean, missing: boolean }
         _stockState(item, inventory) {
-            if (!item || !item.receita || !item.receita.length) {
+            const receita = this._resolveReceita(item);
+            if (!receita || !receita.length) {
                 return { units: Infinity, hasRecipe: false, missing: false };
             }
+            // Garante que `item.receita` tem o valor resolvido pra Recipes.availability usar
+            if (!item.receita || !item.receita.length) item.receita = receita;
             if (typeof Recipes === 'undefined' || !Recipes.availability) {
                 return { units: Infinity, hasRecipe: true, missing: false };
             }
