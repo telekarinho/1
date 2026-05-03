@@ -13,12 +13,14 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <script src="../js/core/firebase-config.js"></script>
 <script src="../js/core/constants.js"></script>
-<script src="../js/core/datastore.js?v=mp-v108"></script>
+<script src="../js/core/datastore.js?v=mp-v109"></script>
 <script src="../js/core/utils.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/catalog-v2.js?v=mp-v108"></script>
 <script src="../js/core/cost-calculator.js"></script>
-<script src="../js/core/price-intelligence.js?v=mp-v108"></script>
+<script src="../js/core/margin-intelligence.js?v=mp-v109"></script>
+<script src="../js/core/price-intelligence.js?v=mp-v109"></script>
+<script src="../js/core/purchase-intelligence.js?v=mp-v109"></script>
 <style>
   body { background: #F2F2F7; }
   .ct-wrap { max-width: 1400px; margin: 0 auto; padding: 20px; }
@@ -208,6 +210,7 @@
         <button class="ct-tab" data-tab="toppings">✨ Toppings</button>
         <button class="ct-tab" data-tab="buffet">🍽️ Buffet / Self-Service</button>
         <button class="ct-tab" data-tab="analise">📊 Análise de Margem</button>
+        <button class="ct-tab" data-tab="compras">📦 Compras</button>
       </div>
 
       <!-- PRODUTOS -->
@@ -355,6 +358,107 @@
       .pi-empty { padding:50px 20px;text-align:center;color:#9CA3AF;font-size:14px; }
       .pi-empty span { display:block;font-size:38px;margin-bottom:8px; }
       @media (max-width: 900px) { .pi-row { grid-template-columns:36px 1.5fr 80px 100px 100px 110px 110px;font-size:12px; } .pi-row .pi-hide-mobile { display:none; } }
+      </style>
+
+      <!-- COMPRAS — Sugestão Automática de Insumo (Fase 7) -->
+      <div class="ct-panel" id="panel-compras">
+        <div class="bar-top">
+          <h2>📦 Sugestão de Compra de Insumos</h2>
+        </div>
+
+        <div class="pi-config">
+          <div class="pi-config-row">
+            <label class="pi-label">
+              <span>📅 Cobertura desejada (dias)</span>
+              <div class="pi-margin-input">
+                <input type="range" id="puCoberturaDias" min="3" max="30" step="1" value="7" oninput="onCoberturaChange()">
+                <span id="puCoberturaLabel">7 dias</span>
+              </div>
+              <small style="color:#6B7280">Quantidade sugerida = consumo médio diário × cobertura − estoque atual</small>
+            </label>
+            <label class="pi-label">
+              <span>🔍 Filtro</span>
+              <select id="puFiltro" onchange="renderPurchaseIntelligence()">
+                <option value="todos">Todos os insumos</option>
+                <option value="alertas">🔴🟡 Só alertas (crítico + atenção)</option>
+                <option value="critico">🔴 Só crítico (&lt;3 dias)</option>
+                <option value="atencao">🟡 Só atenção (&lt;7 dias)</option>
+                <option value="ok">🟢 Só OK (≥7 dias)</option>
+                <option value="sem-dado">⚪ Sem consumo registrado</option>
+              </select>
+            </label>
+            <button class="btn-add" style="height:fit-content;align-self:end" onclick="openPurchaseHistory()">📜 Histórico de compras</button>
+          </div>
+        </div>
+
+        <div class="pi-summary" id="puSummary"></div>
+        <div id="purchaseOut"></div>
+
+        <!-- Modal "Marcar como comprado" -->
+        <div id="puBuyModal" class="modal-bg">
+          <div class="modal-box" style="max-width:500px">
+            <div class="modal-head">
+              <h3 id="puBuyTitle">📦 Marcar compra</h3>
+              <button onclick="closePurchaseBuy()">✕</button>
+            </div>
+            <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+              <div id="puBuyContext" style="background:#F9FAFB;border-radius:10px;padding:12px 14px;border:1.5px solid #E5E7EB;font-size:13px"></div>
+              <label class="pi-label">
+                <span>Quantidade comprada *</span>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <input type="number" id="puBuyQty" step="0.001" min="0" style="flex:1;padding:9px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit">
+                  <span id="puBuyUnit" style="font-weight:700;color:#6B7280;min-width:40px"></span>
+                </div>
+              </label>
+              <label class="pi-label">
+                <span>Custo unitário (opcional — atualiza preço do insumo)</span>
+                <input type="number" id="puBuyCustoUnit" step="0.01" min="0" placeholder="ex: 14.55" style="padding:9px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit">
+              </label>
+              <label class="pi-label">
+                <span>Fornecedor (opcional)</span>
+                <input type="text" id="puBuyFornecedor" placeholder="ex: Distribuidora XYZ" style="padding:9px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit">
+              </label>
+              <label class="pi-label">
+                <span>Observação (opcional)</span>
+                <input type="text" id="puBuyMotivo" placeholder="ex: NF 1234, urgência" style="padding:9px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit">
+              </label>
+              <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px">
+                <button class="btn-add" style="background:#F3F4F6;color:#1F2937" onclick="closePurchaseBuy()">Cancelar</button>
+                <button class="btn-add" onclick="confirmPurchaseBuy()">✓ Confirmar compra</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal histórico -->
+        <div id="puHistoricoModal" class="modal-bg">
+          <div class="modal-box" style="max-width:760px">
+            <div class="modal-head">
+              <h3 id="puHistoricoTitle">📜 Histórico de Compras</h3>
+              <button onclick="closePurchaseHistory()">✕</button>
+            </div>
+            <div id="puHistoricoBody" style="padding:20px;max-height:60vh;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+
+      <style>
+      .pu-row { display:grid;grid-template-columns:36px 2fr 110px 130px 110px 130px 110px 130px;gap:8px;padding:11px 14px;border-bottom:1px solid #F3F4F6;align-items:center;font-size:13px; }
+      .pu-row.head { background:#F9FAFB;font-size:11px;text-transform:uppercase;font-weight:700;color:#9CA3AF;letter-spacing:.4px; }
+      .pu-row:last-child { border-bottom:none; }
+      .pu-row:not(.head):hover { background:#FAFAFA; }
+      .pu-status-badge { display:inline-block;padding:3px 10px;border-radius:100px;font-size:12px;font-weight:800;white-space:nowrap; }
+      .pu-status-badge.critico { background:#FEE2E2;color:#991B1B; }
+      .pu-status-badge.atencao { background:#FEF3C7;color:#92400E; }
+      .pu-status-badge.ok { background:#D1FAE5;color:#065F46; }
+      .pu-status-badge.sem-dado { background:#F3F4F6;color:#6B7280; }
+      .pu-buy-btn { padding:6px 11px;border-radius:8px;border:none;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap; }
+      .pu-buy-btn:hover { box-shadow:0 4px 12px rgba(22,163,74,.35); }
+      .pu-buy-btn:disabled { opacity:.45;cursor:not-allowed;background:#9CA3AF; }
+      .pu-buy-btn.urgent { background:linear-gradient(135deg,#DC2626,#EF4444); }
+      .pu-hist-btn { padding:6px 9px;border-radius:8px;border:1.5px solid #E5E7EB;background:#fff;color:#6B7280;font-size:14px;cursor:pointer;font-family:inherit; }
+      .pu-hist-btn:hover { border-color:#7E57C2;color:#5E35B1; }
+      @media (max-width: 900px) { .pu-row { grid-template-columns:36px 1.5fr 80px 100px 90px 100px 90px 100px;font-size:12px; } }
       </style>
 
     </div>
@@ -507,6 +611,7 @@
       if (btn.dataset.tab === 'analise') renderAnalise();
       if (btn.dataset.tab === 'buffet') renderBuffet();
       if (btn.dataset.tab === 'ingredientes') renderIngredientes();
+      if (btn.dataset.tab === 'compras') renderPurchaseIntelligence();
     });
   });
 
@@ -2483,6 +2588,168 @@
     document.getElementById('piHistoricoModal').classList.add('open');
   };
   window.closePriceHistory = function() { document.getElementById('piHistoricoModal').classList.remove('open'); };
+
+  // ========== COMPRAS — Sugestão de Insumo (Fase 7 — usa PurchaseIntelligence) ==========
+  let _puActiveInsumo = null; // contexto do modal "marcar comprado"
+
+  window.onCoberturaChange = function() {
+    const v = document.getElementById('puCoberturaDias').value;
+    document.getElementById('puCoberturaLabel').textContent = v + ' dia' + (v == 1 ? '' : 's');
+    renderPurchaseIntelligence();
+  };
+
+  window.renderPurchaseIntelligence = function() {
+    if (typeof PurchaseIntelligence === 'undefined') {
+      document.getElementById('purchaseOut').innerHTML = '<div class="pi-empty"><span>⚠️</span>PurchaseIntelligence não carregado.</div>';
+      return;
+    }
+    const cobertura = parseInt(document.getElementById('puCoberturaDias').value, 10) || 7;
+    const filtro = document.getElementById('puFiltro').value || 'todos';
+
+    const filtroOpts = { diasCoberturaDesejados: cobertura };
+    if (filtro === 'alertas') filtroOpts.onlyAlertas = true;
+    else if (['critico','atencao','ok','sem-dado'].includes(filtro)) filtroOpts.filtroStatus = filtro;
+
+    const data = PurchaseIntelligence.listSugestoes(fid, filtroOpts);
+    const sugestoes = data.sugestoes;
+    const summary = data.summary;
+
+    document.getElementById('puSummary').innerHTML =
+      `<div class="pi-stat"><div class="lbl">Total</div><div class="val">${summary.total}</div></div>` +
+      `<div class="pi-stat danger"><div class="lbl">🔴 Crítico (&lt;3d)</div><div class="val">${summary.critico}</div></div>` +
+      `<div class="pi-stat warn"><div class="lbl">🟡 Atenção (&lt;7d)</div><div class="val">${summary.atencao}</div></div>` +
+      `<div class="pi-stat ok"><div class="lbl">🟢 OK (≥7d)</div><div class="val">${summary.ok}</div></div>` +
+      (summary.semDado > 0 ? `<div class="pi-stat"><div class="lbl">⚪ Sem consumo</div><div class="val">${summary.semDado}</div></div>` : '');
+
+    const el = document.getElementById('purchaseOut');
+    if (!sugestoes.length) {
+      el.innerHTML = '<div class="pi-empty"><span>📦</span>Nenhum insumo no filtro selecionado.</div>';
+      return;
+    }
+
+    const fmtQty = (n, unit) => (n === null || n === undefined) ? '—' : (Number(n).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) + ' ' + (unit || ''));
+    const fmtDias = n => (n === null || !Number.isFinite(Number(n))) ? '—' : Number(n).toFixed(1).replace('.',',') + ' dias';
+
+    const rows = ['<div class="pi-table">',
+      '<div class="pu-row head">' +
+        '<div></div>' +
+        '<div>Insumo</div>' +
+        '<div>Estoque atual</div>' +
+        '<div>Consumo médio/dia</div>' +
+        '<div>Dias restantes</div>' +
+        '<div>Sugestão de compra</div>' +
+        '<div>Status</div>' +
+        '<div>Ação</div>' +
+      '</div>'
+    ];
+
+    sugestoes.forEach(s => {
+      const icon = s.statusIcon || '⚪';
+      const statusBadge = `<span class="pu-status-badge ${s.status}">${icon} ${s.status === 'critico' ? 'Crítico' : s.status === 'atencao' ? 'Atenção' : s.status === 'ok' ? 'OK' : 'Sem dado'}</span>`;
+      const sugestaoStr = s.quantidadeSugerida > 0
+        ? `<span class="pi-money positive">${fmtQty(s.quantidadeSugerida, s.unit)}</span><br><small style="color:#9CA3AF">cobertura ${s.diasCoberturaDesejados}d</small>`
+        : '<span class="pi-money muted">— suficiente —</span>';
+      const buyClass = s.status === 'critico' ? 'pu-buy-btn urgent' : 'pu-buy-btn';
+      const buyBtn = s.quantidadeSugerida > 0
+        ? `<button class="${buyClass}" onclick="openPurchaseBuy('${s.insumoId}', ${s.quantidadeSugerida})">📦 Comprar</button>`
+        : `<button class="pu-buy-btn" onclick="openPurchaseBuy('${s.insumoId}', 0)">+ Comprar avulso</button>`;
+      const histBtn = `<button class="pu-hist-btn" onclick="openPurchaseHistory('${s.insumoId}')" title="Histórico deste insumo">📜</button>`;
+
+      rows.push(`<div class="pu-row">
+        <div style="font-size:22px">${icon}</div>
+        <div class="pi-pname">${esc(s.nome)}<small>${esc(s.insumoId)} · unidade ${s.unit}</small></div>
+        <div class="pi-money muted">${fmtQty(s.estoqueAtual, s.unit)}</div>
+        <div>${fmtQty(s.consumoMedioDiario, s.unit)}<br><small style="color:#9CA3AF">semana: ${fmtQty(s.consumoSemana, s.unit)}</small></div>
+        <div>${fmtDias(s.diasRestantes)}</div>
+        <div>${sugestaoStr}</div>
+        <div>${statusBadge}</div>
+        <div style="display:flex;gap:6px">${buyBtn}${histBtn}</div>
+      </div>`);
+    });
+    rows.push('</div>');
+    el.innerHTML = rows.join('');
+  };
+
+  // Modal "Marcar como comprado"
+  window.openPurchaseBuy = function(insumoId, qtdSugerida) {
+    const inv = DataStore.getCollection('inventory', fid) || [];
+    const ins = inv.find(i => i.id === insumoId);
+    if (!ins) { alert('Insumo não encontrado'); return; }
+    _puActiveInsumo = ins;
+
+    document.getElementById('puBuyTitle').textContent = '📦 Comprar — ' + ins.name;
+    document.getElementById('puBuyContext').innerHTML =
+      `<b>${esc(ins.name)}</b><br>` +
+      `<span style="color:#6B7280">Estoque atual: <b>${Number(ins.quantity||0).toLocaleString('pt-BR',{maximumFractionDigits:3})} ${ins.unit}</b></span><br>` +
+      `<span style="color:#6B7280">Custo unitário registrado: <b>R$ ${Number(ins.cost||0).toFixed(2)}</b></span>` +
+      (qtdSugerida > 0 ? `<br><span style="color:#16A34A;font-weight:700">💡 Sugerido: ${qtdSugerida} ${ins.unit}</span>` : '');
+    document.getElementById('puBuyQty').value = qtdSugerida > 0 ? qtdSugerida : '';
+    document.getElementById('puBuyUnit').textContent = ins.unit || '';
+    document.getElementById('puBuyCustoUnit').value = '';
+    document.getElementById('puBuyCustoUnit').placeholder = 'ex: ' + Number(ins.cost||0).toFixed(2);
+    document.getElementById('puBuyFornecedor').value = '';
+    document.getElementById('puBuyMotivo').value = '';
+    document.getElementById('puBuyModal').classList.add('open');
+  };
+  window.closePurchaseBuy = function() {
+    document.getElementById('puBuyModal').classList.remove('open');
+    _puActiveInsumo = null;
+  };
+  window.confirmPurchaseBuy = function() {
+    if (!_puActiveInsumo) return;
+    const qty = parseFloat(document.getElementById('puBuyQty').value);
+    if (!Number.isFinite(qty) || qty <= 0) { alert('Quantidade inválida'); return; }
+    const custoUnitInput = document.getElementById('puBuyCustoUnit').value.trim();
+    const custoUnit = custoUnitInput ? parseFloat(custoUnitInput) : null;
+    const fornecedor = document.getElementById('puBuyFornecedor').value.trim() || null;
+    const motivo = document.getElementById('puBuyMotivo').value.trim() || 'compra registrada manualmente';
+
+    const r = PurchaseIntelligence.marcarComoComprado(fid, _puActiveInsumo.id, qty, {
+      custoUnit: custoUnit,
+      fornecedor: fornecedor,
+      motivo: motivo,
+      sugerido: true,
+      quantidadeSugerida: parseFloat(document.getElementById('puBuyQty').value) || null
+    });
+    if (!r.ok) { alert('❌ ' + (r.error || 'erro')); return; }
+    try { AuditLog && AuditLog.log && AuditLog.log('compras.marcado-comprado', { insumoId: _puActiveInsumo.id, quantidade: qty, fornecedor: fornecedor }); } catch(e){}
+    closePurchaseBuy();
+    renderPurchaseIntelligence();
+    renderIngredientes();
+    alert(`✅ Compra registrada!\n${_puActiveInsumo.name}\n+${qty} ${_puActiveInsumo.unit}\nEstoque: ${r.estoqueAnterior} → ${r.estoqueNovo}` +
+          (r.custoAtualizado ? `\nCusto unitário atualizado: R$ ${r.custoNovo}` : ''));
+  };
+
+  // Histórico modal
+  window.openPurchaseHistory = function(insumoId) {
+    const opts = insumoId ? { insumoId: insumoId } : {};
+    const hist = PurchaseIntelligence.getHistorico(fid, opts);
+    const inv = DataStore.getCollection('inventory', fid) || [];
+    const ins = insumoId ? inv.find(i => i.id === insumoId) : null;
+    document.getElementById('puHistoricoTitle').textContent = ins ? '📜 Histórico — ' + ins.name : '📜 Histórico de Compras (todos insumos)';
+    const body = document.getElementById('puHistoricoBody');
+    if (!hist.length) {
+      body.innerHTML = '<div style="text-align:center;padding:30px 20px;color:#9CA3AF">Nenhuma compra registrada ainda' + (ins ? ' pra este insumo.' : '.') + '</div>';
+    } else {
+      body.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px">' +
+        hist.map(h => {
+          const dt = new Date(h.createdAt).toLocaleString('pt-BR');
+          return `<div style="border:1.5px solid #E5E7EB;border-radius:10px;padding:12px 14px;background:#FAFAFA">
+            <div style="display:flex;justify-content:space-between;align-items:start;gap:10px">
+              <div>
+                <div style="font-weight:700;color:#1F2937">${esc(h.insumoNome)} · <span style="color:#16A34A">+${h.quantidade} ${h.unit}</span></div>
+                <div style="font-size:12px;color:#6B7280;margin-top:3px">Estoque: ${h.estoqueAnterior} → <b>${h.estoqueNovo}</b> ${h.unit}${h.custoTotal ? ' · Custo total: R$ ' + Number(h.custoTotal).toFixed(2) : ''}${h.fornecedor ? ' · Fornecedor: ' + esc(h.fornecedor) : ''}</div>
+                ${h.custoAtualizado ? `<div style="font-size:11px;color:#7E57C2;margin-top:3px">💰 Custo unitário atualizado: R$ ${Number(h.custoAnterior).toFixed(2)} → R$ ${Number(h.custoNovo).toFixed(2)}</div>` : ''}
+                <div style="font-size:11px;color:#9CA3AF;margin-top:3px">${esc(h.motivo || '')}</div>
+              </div>
+              <div style="font-size:11px;color:#9CA3AF;text-align:right;flex-shrink:0">${dt}<br><small>${esc(h.userId || 'anônimo')}</small></div>
+            </div>
+          </div>`;
+        }).join('') + '</div>';
+    }
+    document.getElementById('puHistoricoModal').classList.add('open');
+  };
+  window.closePurchaseHistory = function() { document.getElementById('puHistoricoModal').classList.remove('open'); };
 
   // ========== RECALCULAR PRECOS ==========
   // Re-aplica CostCalculator em TODOS os produtos existentes (util apos
