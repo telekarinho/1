@@ -383,7 +383,7 @@
                 if (!Array.isArray(allOrders) || !allOrders.length) return 0;
 
                 const today = Utils.today();
-                const openStatuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'em_rota'];
+                const openStatuses = ['aguardando_whatsapp', 'novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'em_rota'];
                 const nowIso = new Date().toISOString();
                 let changed = 0;
 
@@ -462,11 +462,12 @@
             const orders = getFilteredOrders();
             const allOrders = DataStore.getCollection('orders', franchiseId).filter(o => o && !o.deleted);
             const statuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'entregue'];
+            const kanbanStatus = (order) => order && order.status === 'aguardando_whatsapp' ? 'novo' : order.status;
 
             // Aviso quando há pedidos NO STORAGE mas o filtro atual esconde — evita
             // operador achar que sumiu (pedido feito ontem, filtro Hoje vazio)
             const visibleIds = new Set(orders.map(o => o.id));
-            const openStatusesForBanner = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'em_rota'];
+            const openStatusesForBanner = ['aguardando_whatsapp', 'novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'em_rota'];
             const hiddenOpen = allOrders.filter(o =>
                 o && !visibleIds.has(o.id) && openStatusesForBanner.includes(o.status)
             ).length;
@@ -501,7 +502,7 @@
             statuses.forEach(status => {
                 const sourceList = (status === 'entregue') ? todayOrders : orders;
                 const statusOrders = sourceList
-                    .filter(o => o.status === status)
+                    .filter(o => kanbanStatus(o) === status)
                     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
                 const listId = 'list' + status.charAt(0).toUpperCase() + status.slice(1);
@@ -518,8 +519,21 @@
                         return `<span class="item-name">${itemQty}${Utils.escapeHtml(itemName)}</span>${Utils.escapeHtml(sizeLabel)}`;
                     }).join('<br>') : '-';
 
-                    const nextStatus = { novo: 'confirmado', confirmado: 'preparando', preparando: 'pronto', pronto: 'em_entrega', em_entrega: 'entregue' };
+                    const nextStatus = { aguardando_whatsapp: 'confirmado', novo: 'confirmado', confirmado: 'preparando', preparando: 'pronto', pronto: 'em_entrega', em_entrega: 'entregue' };
+                    const actionStatus = o.status === 'aguardando_whatsapp' ? 'aguardando_whatsapp' : status;
+                    const typeKey = o.type || o.orderType || (o.delivery && o.delivery.type) || o.delivery;
+                    const typeLabel = typeKey === 'delivery' || typeKey === 'delivery_whatsapp' ? 'Delivery' : 'Retirada';
+                    const whatsappBadge = o.status === 'aguardando_whatsapp'
+                        ? '<span style="display:inline-block;margin-left:6px;padding:3px 7px;border-radius:999px;background:#E8F5E9;color:#128C7E;font-size:11px;font-weight:800">WhatsApp pendente</span>'
+                        : '';
                     const nextLabel = { novo: '✔️ Confirmar', confirmado: '▶️ Preparar', preparando: '✅ Pronto', pronto: '🛵 Enviar', em_entrega: '📦 Entregue' };
+                    if (o.status === 'aguardando_whatsapp' && o.customer) {
+                        const currentName = o.customer.name || 'Cliente WhatsApp';
+                        if (!/WhatsApp pendente/i.test(currentName)) o.customer.name = currentName + ' - WhatsApp pendente';
+                    }
+                    if (typeKey === 'delivery' || typeKey === 'delivery_whatsapp') {
+                        o.delivery = 'delivery';
+                    }
 
                     // Numeração sequencial diária preferida; fallback pro hash legado
                     const seqLabel = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
@@ -569,7 +583,7 @@
             });
 
             // KPIs
-            document.getElementById('kpiNew').textContent = orders.filter(o => o.status === 'novo' || o.status === 'confirmado').length;
+            document.getElementById('kpiNew').textContent = orders.filter(o => o.status === 'aguardando_whatsapp' || o.status === 'novo' || o.status === 'confirmado').length;
             document.getElementById('kpiPreparing').textContent = orders.filter(o => o.status === 'preparando').length;
             document.getElementById('kpiReady').textContent = orders.filter(o => o.status === 'pronto' || o.status === 'em_entrega').length;
             // Faturamento SEMPRE do dia. Soma TODOS os pedidos vendidos hoje
@@ -709,7 +723,7 @@
                 </div>
             `;
 
-            const nextStatus = { novo: 'confirmado', confirmado: 'preparando', preparando: 'pronto', pronto: 'em_entrega', em_entrega: 'entregue' };
+            const nextStatus = { aguardando_whatsapp: 'confirmado', novo: 'confirmado', confirmado: 'preparando', preparando: 'pronto', pronto: 'em_entrega', em_entrega: 'entregue' };
             const nextLabel = { novo: '✔️ Confirmar', confirmado: '▶️ Preparar', preparando: '✅ Pronto', pronto: '🛵 Enviar', em_entrega: '📦 Entregue' };
 
             const reprintBtn = `<button class="btn btn-sm" style="background:#1565C0;color:#fff" onclick="reprintOrder('${o.id}')" title="Imprimir novamente o recibo deste pedido">🖨️ Reimprimir</button>`;
@@ -720,7 +734,7 @@
             document.getElementById('orderModalFooter').innerHTML = !isFinal
                 ? `${reprintBtn} ${editBtn} ${deleteBtn}
                    <button class="btn btn-danger btn-sm" onclick="moveOrder('${o.id}','cancelado');document.getElementById('orderModal').classList.remove('active')">Cancelar</button>
-                   <button class="btn btn-primary" onclick="moveOrder('${o.id}','${nextStatus[o.status]}');document.getElementById('orderModal').classList.remove('active')">${nextLabel[o.status]}</button>`
+                   <button class="btn btn-primary" onclick="moveOrder('${o.id}','${nextStatus[o.status]}');document.getElementById('orderModal').classList.remove('active')">${nextLabel[o.status] || 'Confirmar'}</button>`
                 : `${reprintBtn} ${deleteBtn}`;
 
             document.getElementById('orderModal').classList.add('active');
@@ -986,7 +1000,7 @@
                 return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
             })();
             const allOrders = DataStore.getCollection('orders', franchiseId);
-            const openStatuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega'];
+            const openStatuses = ['aguardando_whatsapp', 'novo', 'confirmado', 'preparando', 'pronto', 'em_entrega'];
             const todayOpen = allOrders.filter(o =>
                 !o.deleted &&
                 openStatuses.includes(o.status) &&
@@ -1059,7 +1073,7 @@
                     return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
                 })();
                 const allOrders = DataStore.getCollection('orders', franchiseId);
-                const openStatuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega'];
+                const openStatuses = ['aguardando_whatsapp', 'novo', 'confirmado', 'preparando', 'pronto', 'em_entrega'];
                 const oldOpen = allOrders.filter(o =>
                     !o.deleted &&
                     openStatuses.includes(o.status) &&
@@ -1141,7 +1155,7 @@
         let lastSeenIds = new Set();
         setInterval(() => {
             const orders = DataStore.getCollection('orders', franchiseId);
-            const newOrders = orders.filter(o => o.status === 'novo');
+            const newOrders = orders.filter(o => o.status === 'aguardando_whatsapp' || o.status === 'novo');
             const reallyNew = newOrders.filter(o => !lastSeenIds.has(o.id));
             if (reallyNew.length > 0 && lastOrderCount > 0) {
                 document.getElementById('newOrderAlert').style.display = 'block';
@@ -1149,8 +1163,11 @@
 
                 // Detecta delivery (vai estar em order.type, order.orderType ou order.delivery)
                 const hasDelivery = reallyNew.some(o =>
-                    o.type === 'delivery' || o.orderType === 'delivery' ||
-                    o.delivery === 'delivery' || o.delivery === true ||
+                    o.type === 'delivery' || o.type === 'delivery_whatsapp' ||
+                    o.orderType === 'delivery' || o.orderType === 'delivery_whatsapp' ||
+                    o.delivery === 'delivery' || o.delivery === 'delivery_whatsapp' ||
+                    (o.delivery && o.delivery.type === 'delivery_whatsapp') ||
+                    o.delivery === true ||
                     !!o.address
                 );
 
@@ -1215,7 +1232,7 @@
                         return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
                     } catch(e) { return ''; }
                 }
-                var openStatuses = ['novo','confirmado','preparando','pronto','em_entrega'];
+                var openStatuses = ['aguardando_whatsapp','novo','confirmado','preparando','pronto','em_entrega'];
                 var changed = 0;
                 var ts = new Date().toISOString();
                 allOrders.forEach(function(o, idx) {
