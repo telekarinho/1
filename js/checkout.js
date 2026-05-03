@@ -59,7 +59,7 @@ function validateDeliveryMinimum() {
         minBox.textContent = msg;
         minBox.style.display = 'block';
     }
-    return false;
+    return true;
 }
 
 // ============================================
@@ -189,7 +189,7 @@ function updateOrderSummary() {
         if (deliveryType === 'delivery' && !calc.pedidoMinimoOk) {
             minBox.textContent = (typeof DeliveryRules !== 'undefined')
                 ? DeliveryRules.minimumMessage(calc)
-                : 'Pedido mínimo para delivery não atingido.';
+                : 'Você pode adicionar mais produtos para ganhar frete grátis ou finalizar pagando o frete calculado.';
             minBox.style.display = 'block';
         } else {
             minBox.style.display = 'none';
