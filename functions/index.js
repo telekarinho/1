@@ -1534,3 +1534,155 @@ exports.runRecurringExpensesNow = onCall({
     });
     return { ok: true, mode: "all-franchises", summary };
 });
+
+// ============================================================
+// FASE 5++ — Limpeza automática de finance órfãos
+// ============================================================
+// Roda toda madrugada e tombstona income entries que:
+//   - type === 'income'
+//   - !deleted (ainda ativos)
+//   - !orderId OU orderId não existe na collection orders_<fid>
+// Tombstone = deleted:true, amount:0, cmvSnapshot:0, _voided_reason
+// NUNCA apaga físico — preserva auditoria.
+// ============================================================
+async function _cleanupOrphansForFranchise(fid) {
+    const financesRef = db.collection("datastore").doc("finances_" + fid);
+    const ordersRef = db.collection("datastore").doc("orders_" + fid);
+    const [finSnap, ordSnap] = await Promise.all([financesRef.get(), ordersRef.get()]);
+    if (!finSnap.exists) {
+        return { fid, skipped: "no-finances", tombstoned: 0 };
+    }
+    let finances;
+    try {
+        finances = JSON.parse(finSnap.data().value || "[]");
+    } catch (e) {
+        return { fid, error: "parse-finances: " + e.message, tombstoned: 0 };
+    }
+    if (!Array.isArray(finances)) {
+        return { fid, error: "finances-not-array", tombstoned: 0 };
+    }
+    let validOrderIds = new Set();
+    if (ordSnap.exists) {
+        try {
+            const orders = JSON.parse(ordSnap.data().value || "[]");
+            if (Array.isArray(orders)) orders.forEach((o) => o && o.id && validOrderIds.add(o.id));
+        } catch (e) { /* ignora — assume nenhum order válido */ }
+    }
+    const nowIso = new Date().toISOString();
+    const tombstoned = [];
+    finances.forEach((f) => {
+        if (!f || f.type !== "income" || f.deleted) return;
+        const isOrphan = !f.orderId || !validOrderIds.has(f.orderId);
+        if (!isOrphan) return;
+        tombstoned.push({
+            id: f.id,
+            orderId: f.orderId || null,
+            amountWas: Number(f.amount || 0),
+            cmvSnapshotWas: Number(f.cmvSnapshot || f.custo || 0),
+        });
+        f.amount = 0;
+        f.cmvSnapshot = 0;
+        f.custo = 0;
+        f.lucroBruto = 0;
+        f.margem = null;
+        f.deleted = true;
+        f.deletedAt = nowIso;
+        f.updatedAt = nowIso;
+        f._voided_reason = "órfão automático (income sem orderId válido)";
+        f.description = "[VOID-orphan-auto] " + (f.description || f.id);
+    });
+    if (tombstoned.length === 0) {
+        return { fid, tombstoned: 0, scanned: finances.length };
+    }
+    await financesRef.set({
+        value: JSON.stringify(finances),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return { fid, tombstoned: tombstoned.length, scanned: finances.length, ids: tombstoned };
+}
+
+async function _runOrphanCleanupAllFranchises() {
+    const fSnap = await db.collection("datastore").doc("franchises").get();
+    if (!fSnap.exists) return { franchises: 0, totalTombstoned: 0, results: [] };
+    let franchises;
+    try {
+        franchises = JSON.parse(fSnap.data().value || "[]");
+    } catch (e) {
+        return { error: "parse-franchises: " + e.message };
+    }
+    if (!Array.isArray(franchises)) return { error: "franchises-not-array" };
+    const results = [];
+    let totalTombstoned = 0;
+    for (const f of franchises) {
+        if (!f || !f.id) continue;
+        try {
+            const r = await _cleanupOrphansForFranchise(f.id);
+            results.push(r);
+            totalTombstoned += r.tombstoned || 0;
+        } catch (e) {
+            results.push({ fid: f.id, error: e.message });
+        }
+    }
+    return { franchises: franchises.length, totalTombstoned, results };
+}
+
+// Cron diário 3h da manhã Brasília — roda pra todas as franquias
+exports.cleanupOrphanFinances = onSchedule({
+    region: "southamerica-east1",
+    schedule: "0 3 * * *",
+    timeZone: "America/Sao_Paulo",
+    timeoutSeconds: 540,
+    memory: "256MiB",
+}, async () => {
+    console.log("[orphan-cleanup] iniciando");
+    const summary = await _runOrphanCleanupAllFranchises();
+    console.log("[orphan-cleanup] resumo:", JSON.stringify(summary));
+    try {
+        await db.collection("orphan_cleanup_runs").add({
+            triggeredBy: "schedule",
+            ranAt: admin.firestore.FieldValue.serverTimestamp(),
+            summary,
+        });
+    } catch (e) {
+        console.warn("audit log falhou:", e.message);
+    }
+});
+
+// Manual trigger — admin / franchisee pra própria franquia
+exports.runOrphanCleanupNow = onCall({
+    region: "southamerica-east1",
+    timeoutSeconds: 120,
+    memory: "256MiB",
+}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Autenticacao necessaria");
+    }
+    const role = request.auth.token.role || "";
+    if (!["super_admin", "admin", "franchisee"].includes(role)) {
+        throw new HttpsError("permission-denied", "Apenas admin/franqueado");
+    }
+    const { franchiseId } = request.data || {};
+    if (franchiseId) {
+        if (role === "franchisee" && request.auth.token.franchiseId !== franchiseId) {
+            throw new HttpsError("permission-denied", "Franqueado so pode rodar pra propria franquia");
+        }
+        const result = await _cleanupOrphansForFranchise(franchiseId);
+        await db.collection("orphan_cleanup_runs").add({
+            triggeredBy: "manual:" + (request.auth.uid || "?"),
+            franchiseId,
+            ranAt: admin.firestore.FieldValue.serverTimestamp(),
+            result,
+        });
+        return { ok: true, mode: "single-franchise", result };
+    }
+    if (role !== "super_admin" && role !== "admin") {
+        throw new HttpsError("permission-denied", "Apenas admin pode rodar pra todas");
+    }
+    const summary = await _runOrphanCleanupAllFranchises();
+    await db.collection("orphan_cleanup_runs").add({
+        triggeredBy: "manual-all:" + (request.auth.uid || "?"),
+        ranAt: admin.firestore.FieldValue.serverTimestamp(),
+        summary,
+    });
+    return { ok: true, mode: "all-franchises", summary };
+});
