@@ -26,7 +26,11 @@ var MILKYPOT_STORES = [
         whatsapp: '5543998042424',
         email: 'milkypot.com@gmail.com',
         lat: -23.3265,
-        lng: -51.1664
+        lng: -51.1664,
+        // FIX (Fase 8.6): flag pro cardápio saber que essa loja calcula frete
+        // dinamicamente via Uber Direct. Quando true, modal "Entrega" mostra
+        // 'Calculado pela Uber ao informar endereço' em vez do fee fixo.
+        uberDirectEnabled: true
     },
     {
         // Franquia TESTE — espelha dados REAIS da Muffato Quintino
@@ -52,7 +56,8 @@ var MILKYPOT_STORES = [
         email: 'teste@teste.com',
         isTestFranchise: true,
         lat: -23.3265,
-        lng: -51.1664
+        lng: -51.1664,
+        uberDirectEnabled: true
     }
 ];
 
@@ -74,6 +79,8 @@ function mergeFranchiseFlags() {
                 if (typeof f.deliveryFee === 'number') s.deliveryFee = f.deliveryFee;
                 if (f.hours) s.hours = f.hours;
                 if (f.deliveryTime) s.deliveryTime = f.deliveryTime;
+                // FIX (Fase 8.6): propaga flag de Uber se franchise tiver
+                if (typeof f.uberDirectEnabled === 'boolean') s.uberDirectEnabled = f.uberDirectEnabled;
             }
         });
     } catch(e) {}
