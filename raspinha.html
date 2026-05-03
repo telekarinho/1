@@ -201,7 +201,8 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
     }
 
     function processScratch(scratch, code){
-        scratch.code = code;
+        // Preserve full Firestore doc-ID code; only fallback to user input if data lacks it
+        if (!scratch.code) scratch.code = code;
         currentScratch = scratch;
         if(scratch.expiresAt && new Date(scratch.expiresAt) < new Date()){
             showExpired(scratch); return;
