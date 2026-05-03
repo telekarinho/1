@@ -620,6 +620,23 @@
                 setTimeout(initCatalog, 500);
             }
 
+            // FASE 4D: cardapio publico nao tem auth Firestore -> usa storage event
+            // pra detectar quando admin de OUTRA aba do mesmo browser atualiza catalog.
+            // Multi-PC ainda depende do DataStore poll (intervalo definido em datastore.js).
+            window.addEventListener('storage', (ev) => {
+                if (ev.key === 'mp_catalog_config' && ev.newValue) {
+                    try {
+                        const updated = JSON.parse(ev.newValue);
+                        catalog = updated;
+                        _renderCatalogTabs();
+                        const activeTab = document.querySelector('.cat-tab.active');
+                        const cat = activeTab ? activeTab.dataset.category : 'ninho';
+                        renderProducts(cat);
+                        console.log('🔄 Cardapio: atualizado via storage event (admin em outra aba)');
+                    } catch (e) { console.warn('storage event parse:', e); }
+                }
+            });
+
             // Sync listener: atualiza tabs + produtos em tempo real quando produtos.html salva
             let _reassertInFlight = false;
             window.addEventListener('mp_catalog_updated', (e) => {
