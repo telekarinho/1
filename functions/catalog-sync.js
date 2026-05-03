@@ -240,8 +240,15 @@ async function syncCatalogConfigForFranchise(db, franchiseId) {
         await _writeDS(db, "catalog_v2_" + franchiseId, v2, "catalog-sync-recompute");
     }
 
-    // Gera + grava legacy a partir do v2 atualizado
+    // Gera legacy
     const legacy = buildCatalogConfigFromV2(v2);
+    legacy._fid = franchiseId;
+    legacy._serverSyncedAt = new Date().toISOString();
+
+    // FIX (Fase 8.3): grava em catalog_config_<fid> (per-franchise — sem race
+    // entre franquias). Mantém escrita no global pra retrocompat — DataStore
+    // do client prefere o per-franchise quando ambos existem.
+    await _writeDS(db, "catalog_config_" + franchiseId, legacy, "catalog-sync-from-v2:" + franchiseId);
     await _writeDS(db, "catalog_config", legacy, "catalog-sync-from-v2:" + franchiseId);
 
     return {
@@ -249,6 +256,7 @@ async function syncCatalogConfigForFranchise(db, franchiseId) {
         produtos: v2.produtos.length,
         produtosCustoRecalculado: produtosUpdated,
         sync_ok: true,
+        wroteTo: ["catalog_config_" + franchiseId, "catalog_config"],
     };
 }
 

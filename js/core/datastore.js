@@ -86,6 +86,23 @@ const DataStore = {
     // ============================================
     get(key) {
         try {
+            // FIX (Fase 8.3): catalog_config tem versão per-franchise pra
+            // evitar race condition entre franquias. Prefere catalog_config_<fid>
+            // quando existe e marcado _fromV2 (autoritativo). Fallback global.
+            if (key === 'catalog_config') {
+                try {
+                    let fid = null;
+                    const raw = localStorage.getItem('mp_session');
+                    if (raw) fid = (JSON.parse(raw) || {}).franchiseId;
+                    if (fid) {
+                        const perFidRaw = localStorage.getItem(this.PREFIX + 'catalog_config_' + fid);
+                        if (perFidRaw) {
+                            const perFid = JSON.parse(perFidRaw);
+                            if (perFid && perFid._fromV2 && perFid.sabores) return perFid;
+                        }
+                    }
+                } catch (_) { /* fallback abaixo */ }
+            }
             const data = localStorage.getItem(this.PREFIX + key);
             return data ? JSON.parse(data) : null;
         } catch (e) {
