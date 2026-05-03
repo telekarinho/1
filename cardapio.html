@@ -365,10 +365,15 @@
                     <div id="uberQuoteStatus" style="margin-top:8px;padding:10px 12px;border-radius:8px;background:#F3F4F6;color:#6b7280;font-size:13px;display:none">
                         <span id="uberQuoteStatusText">Calculando frete…</span>
                     </div>
+                    <div id="whatsappFallbackBox" style="display:none;margin-top:10px;padding:14px;border-radius:12px;background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412">
+                        <strong style="display:block;margin-bottom:6px">Ops! Esse endereço está fora da nossa área automática 😕</strong>
+                        <span style="display:block;font-size:.9rem;line-height:1.35;margin-bottom:12px">Mas já deixamos seu pedido pronto — é só enviar no WhatsApp que a gente resolve pra você.</span>
+                        <button type="button" id="whatsappFallbackBtn" onclick="sendWhatsAppFallbackOrder()" style="width:100%;padding:14px;border:0;border-radius:10px;background:#25D366;color:#fff;font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(37,211,102,.3)">Enviar pedido no WhatsApp</button>
+                    </div>
                 </div>
                 <div class="checkout-nav">
                     <button class="btn-secondary" onclick="nextCheckoutStep(2)">← Voltar</button>
-                    <button class="btn-primary" onclick="nextCheckoutStep(4)">Continuar →</button>
+                    <button class="btn-primary" id="btnToPayment" onclick="nextCheckoutStep(4)">Continuar →</button>
                 </div>
             </div>
 
@@ -1662,7 +1667,205 @@
         var _uberQuoteTimeout = null;
         window._scheduleUberQuote = function() {
             if (_uberQuoteTimeout) clearTimeout(_uberQuoteTimeout);
+            window._setWhatsappFallbackMode && window._setWhatsappFallbackMode(false);
             _uberQuoteTimeout = setTimeout(window._fetchUberQuote, 700);
+        };
+        window._getCheckoutAddressParts = function() {
+            return {
+                rua: ((document.getElementById('checkoutAddress') || {}).value || '').trim(),
+                numero: ((document.getElementById('checkoutNumber') || {}).value || '').trim(),
+                complemento: ((document.getElementById('checkoutComplement') || {}).value || '').trim(),
+                bairro: ((document.getElementById('checkoutNeighborhood') || {}).value || '').trim(),
+                cep: (((document.getElementById('checkoutCep') || {}).value || '').replace(/\D/g,'')).trim()
+            };
+        };
+        function _fmtMoney(v) {
+            if (typeof formatCurrency === 'function') return formatCurrency(Number(v) || 0);
+            return 'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',');
+        }
+        function _cartForWhatsapp() {
+            try { return JSON.parse(localStorage.getItem('milkypot_cart') || '[]') || []; }
+            catch(_) { return []; }
+        }
+        function _whatsappFallbackFingerprint(storeId) {
+            var a = window._getCheckoutAddressParts();
+            var cartTxt = JSON.stringify(_cartForWhatsapp().map(function(i){ return { n:i.name, q:i.qty, t:i.total, u:i.unitPrice }; }));
+            return btoa(unescape(encodeURIComponent([storeId || '', a.rua, a.numero, a.bairro, a.cep, cartTxt].join('|')))).slice(0, 80);
+        }
+        function _buildWhatsappFallbackMessage(order, addressParts) {
+            var lines = [];
+            lines.push('Olá! Fiz um pedido pelo site, mas meu endereço ficou fora da área automática.');
+            lines.push('');
+            lines.push('🧾 Pedido Nº ' + order.orderNumber);
+            (order.items || []).forEach(function(item) {
+                lines.push('- ' + (item.qty || 1) + 'x ' + (item.name || 'Produto') + ' (' + _fmtMoney(item.total || 0) + ')');
+            });
+            lines.push('');
+            lines.push('💰 Subtotal: ' + _fmtMoney(order.subtotal || order.total || 0));
+            lines.push('');
+            lines.push('📍 Endereço:');
+            lines.push((addressParts.rua || '') + (addressParts.numero ? ', ' + addressParts.numero : ''));
+            if (addressParts.complemento) lines.push(addressParts.complemento);
+            lines.push('Bairro ' + (addressParts.bairro || ''));
+            if (addressParts.cep) lines.push('CEP: ' + addressParts.cep.replace(/^(\d{5})(\d{3})$/, '$1-$2'));
+            lines.push('');
+            lines.push('Pode verificar uma forma de entrega para mim?');
+            return lines.join('\n');
+        }
+        function _persistWhatsappFallbackOrders(storeId, orders) {
+            if (typeof DataStore === 'undefined' || !DataStore._db || typeof firebase === 'undefined') {
+                return Promise.resolve();
+            }
+            var key = 'orders_' + storeId;
+            return DataStore._db.collection('datastore').doc(key).get().then(function(snap) {
+                var finalOrders = orders;
+                if (snap.exists) {
+                    try {
+                        var cloudOrders = JSON.parse((snap.data() || {}).value || '[]');
+                        if (DataStore._mergeArrays) finalOrders = DataStore._mergeArrays(orders, cloudOrders);
+                    } catch(_) {}
+                }
+                localStorage.setItem('mp_' + key, JSON.stringify(finalOrders));
+                return DataStore._db.collection('datastore').doc(key).set({
+                    value: JSON.stringify(finalOrders),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            });
+        }
+        window._ensureWhatsappFallbackOrder = function(markSent) {
+            if (window._whatsappFallbackSaving) return window._whatsappFallbackSaving;
+            window._whatsappFallbackSaving = new Promise(function(resolve) {
+                try {
+                    if (typeof reloadCart === 'function') reloadCart();
+                    var items = _cartForWhatsapp();
+                    if (!items.length) { resolve(null); return; }
+                    var storeId = window._selectedStoreId || 'muffato-quintino';
+                    var addressParts = window._getCheckoutAddressParts();
+                    var fingerprint = _whatsappFallbackFingerprint(storeId);
+                    var savedRaw = localStorage.getItem('mp_whatsapp_fallback_order_' + fingerprint);
+                    var all = (typeof DataStore !== 'undefined' && DataStore.getCollection) ? DataStore.getCollection('orders', storeId) : [];
+                    var existing = null;
+                    if (savedRaw) {
+                        try {
+                            var saved = JSON.parse(savedRaw);
+                            existing = all.find(function(o){ return o.id === saved.id || o.orderNumber === saved.orderNumber; }) || saved;
+                        } catch(_) {}
+                    }
+                    if (existing) {
+                        if (markSent && existing.pedido_enviado_whatsapp !== true && typeof DataStore !== 'undefined') {
+                            var idx = all.findIndex(function(o){ return o.id === existing.id || o.orderNumber === existing.orderNumber; });
+                            if (idx !== -1) {
+                                all[idx].pedido_enviado_whatsapp = true;
+                                all[idx].whatsappSentAt = new Date().toISOString();
+                                all[idx].updatedAt = new Date().toISOString();
+                                DataStore.setCollection('orders', storeId, all);
+                                existing = all[idx];
+                                _persistWhatsappFallbackOrders(storeId, all).finally(function() {
+                                    resolve({ order: existing, addressParts: addressParts, message: _buildWhatsappFallbackMessage(existing, addressParts) });
+                                });
+                                return;
+                            }
+                        }
+                        resolve({ order: existing, addressParts: addressParts, message: _buildWhatsappFallbackMessage(existing, addressParts) });
+                        return;
+                    }
+
+                    var counter = parseInt(localStorage.getItem('mp_order_counter') || '0') + 1;
+                    localStorage.setItem('mp_order_counter', counter);
+                    var orderNumber = '#MP' + counter + '_' + Date.now().toString(36).toUpperCase().slice(-4);
+                    var subtotal = typeof getCartTotal === 'function' ? getCartTotal() : items.reduce(function(s, i){ return s + (Number(i.total) || 0); }, 0);
+                    var deliveryCalc = typeof getCurrentDeliveryCalc === 'function' ? getCurrentDeliveryCalc() : null;
+                    var customerName = ((document.getElementById('checkoutName') || {}).value || '').trim();
+                    var customerPhone = ((document.getElementById('checkoutPhone') || {}).value || '').trim();
+                    var order = {
+                        id: (typeof Utils !== 'undefined' && Utils.generateId) ? Utils.generateId() : ('wa_' + Date.now().toString(36)),
+                        orderNumber: orderNumber,
+                        franchiseId: storeId,
+                        status: 'aguardando_whatsapp',
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        source: 'site',
+                        origem: 'site',
+                        type: 'delivery_whatsapp',
+                        orderType: 'delivery_whatsapp',
+                        customer: { name: customerName || 'Cliente WhatsApp', phone: customerPhone },
+                        delivery: {
+                            type: 'delivery_whatsapp',
+                            address: [
+                                addressParts.rua + (addressParts.numero ? ', ' + addressParts.numero : ''),
+                                addressParts.complemento,
+                                addressParts.bairro,
+                                addressParts.cep ? 'CEP ' + addressParts.cep.replace(/^(\d{5})(\d{3})$/, '$1-$2') : ''
+                            ].filter(Boolean).join(', '),
+                            addressParts: addressParts,
+                            fee: 0,
+                            outOfAutomaticArea: true
+                        },
+                        items: items.map(function(item) {
+                            return {
+                                name: item.name || 'Produto',
+                                emoji: item.emoji || '',
+                                qty: item.qty || 1,
+                                unitPrice: item.unitPrice || item.price || 0,
+                                total: item.total || 0,
+                                extras: item.extras || []
+                            };
+                        }),
+                        subtotal: subtotal,
+                        total: subtotal,
+                        totalDelivery: subtotal,
+                        deliveryFee: 0,
+                        deliveryPricing: deliveryCalc,
+                        observation: 'Pedido iniciado no site e enviado para WhatsApp',
+                        observacao: 'Pedido iniciado no site e enviado para WhatsApp',
+                        pedido_enviado_whatsapp: !!markSent,
+                        whatsappFallback: true,
+                        whatsappSentAt: markSent ? new Date().toISOString() : null,
+                        whatsappFingerprint: fingerprint
+                    };
+                    if (typeof DataStore !== 'undefined' && DataStore.addToCollection) {
+                        DataStore.addToCollection('orders', storeId, order);
+                    }
+                    localStorage.setItem('mp_whatsapp_fallback_order_' + fingerprint, JSON.stringify({ id: order.id, orderNumber: order.orderNumber }));
+                    var savedOrders = (typeof DataStore !== 'undefined' && DataStore.getCollection) ? DataStore.getCollection('orders', storeId) : [order];
+                    _persistWhatsappFallbackOrders(storeId, savedOrders).finally(function() {
+                        resolve({ order: order, addressParts: addressParts, message: _buildWhatsappFallbackMessage(order, addressParts) });
+                    });
+                } catch(e) {
+                    console.warn('whatsapp fallback order:', e);
+                    resolve(null);
+                } finally {
+                    setTimeout(function(){ window._whatsappFallbackSaving = null; }, 300);
+                }
+            });
+            return window._whatsappFallbackSaving;
+        };
+        window._setWhatsappFallbackMode = function(active) {
+            var box = document.getElementById('whatsappFallbackBox');
+            var freight = document.getElementById('deliveryFreightNotice');
+            var minimum = document.getElementById('deliveryMinimumNotice');
+            var btn = document.getElementById('btnToPayment');
+            if (box) box.style.display = active ? 'block' : 'none';
+            if (freight) freight.style.display = active ? 'none' : freight.style.display;
+            if (minimum) minimum.style.display = active ? 'none' : minimum.style.display;
+            if (btn) btn.style.display = active ? 'none' : '';
+            window._outsideAutomaticDeliveryArea = !!active;
+        };
+        window.sendWhatsAppFallbackOrder = async function() {
+            var btn = document.getElementById('whatsappFallbackBtn');
+            if (btn && btn.dataset.busy === '1') return;
+            if (btn) { btn.dataset.busy = '1'; btn.textContent = 'Preparando pedido...'; }
+            var result = await window._ensureWhatsappFallbackOrder(true);
+            if (!result || !result.order) {
+                if (btn) { btn.dataset.busy = '0'; btn.textContent = 'Enviar pedido no WhatsApp'; }
+                showToast('Não consegui preparar o pedido. Tente novamente.');
+                return;
+            }
+            var phone = window._selectedStoreWhatsApp || '5543998042424';
+            var url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(result.message);
+            if (btn) { btn.textContent = 'Abrindo WhatsApp...'; }
+            window.open(url, '_blank', 'noopener');
+            setTimeout(function(){ if (btn) { btn.dataset.busy = '0'; btn.textContent = 'Enviar pedido no WhatsApp'; } }, 1200);
         };
         window._fetchUberQuote = function() {
             try {
@@ -1692,6 +1895,7 @@
                     dropoff_phone_number: phone.replace(/\D/g,'') ? '+55' + phone.replace(/\D/g,'') : '+5543000000000',
                     manifest_items: [{ name: 'Pedido MilkyPot', quantity: 1, size: 'small' }]
                 }).then(function(r){
+                    window._setWhatsappFallbackMode(false);
                     // Callable retorna {success, data:{...}} envelopado em r.data
                     // entao a payload util fica em r.data.data
                     var raw = (r && r.data) || {};
@@ -1714,7 +1918,9 @@
                     var msg = (e && e.message) || '';
                     var friendly;
                     if (/not.found|invalid.*address|geocod|out.of|coverage|range|distance/i.test(msg)) {
-                        friendly = '⚠ Esse endereço está fora da área de entrega da Uber. Tente outro CEP ou retire na loja.';
+                        friendly = 'Esse endereço está fora da nossa área automática. Já deixamos seu pedido pronto para enviar no WhatsApp.';
+                        window._setWhatsappFallbackMode(true);
+                        window._ensureWhatsappFallbackOrder(false);
                     } else if (/unavailable|not.enabled|disabled|configura/i.test(msg)) {
                         friendly = '⚠ Entrega Uber temporariamente indisponível pra esta loja. <small style="opacity:.7">' + msg.slice(0,80) + '</small>';
                     } else {
@@ -1931,6 +2137,11 @@
     // Override nextCheckoutStep to populate stores
     var originalNextStep = window.nextCheckoutStep;
     window.nextCheckoutStep = function(step) {
+        if (step === 4 && window._outsideAutomaticDeliveryArea) {
+            if (typeof window._setWhatsappFallbackMode === 'function') window._setWhatsappFallbackMode(true);
+            if (typeof showToast === 'function') showToast('Esse endereco vai pelo WhatsApp. O pedido ja esta pronto para enviar.');
+            return;
+        }
         if (typeof currentCheckoutStep !== 'undefined' && step > currentCheckoutStep &&
             typeof validateCheckoutStep === 'function' && !validateCheckoutStep(currentCheckoutStep)) {
             if (typeof updateOrderSummary === 'function') updateOrderSummary();
