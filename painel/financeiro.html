@@ -782,58 +782,106 @@
             var income = monthFinances.filter(function(f) { return f.type === 'income'; });
             var expenses = monthFinances.filter(function(f) { return f.type === 'expense'; });
 
-            // Categorize income — 'vendas' inclui vendas_pdv (source:pdv) e lançamentos manuais
-            var vendasTotal = income.filter(function(f) {
-                return f.category === 'vendas' || f.category === 'vendas_pdv';
-            }).reduce(function(s, f) { return s + (f.amount || 0); }, 0);
+            // ============================================================
+            // DRE UNIFICADO — Fase 2 (decisao do cliente)
+            //
+            // REGRA: usar SOMENTE cmvSnapshot/cmvTotal das vendas NOVAS.
+            // Pedidos antigos sem CMV ficam SEPARADOS como
+            // "Receita sem CMV historico" — nao entram na margem real.
+            // NAO misturar metodo de estoque (estoqueInicial+compras-estoqueFinal).
+            // ============================================================
+
+            // 1) Vendas com CMV calculado (PDV pos-PR #371) — margem confiavel
+            var vendasComCMV = income.filter(function(f) {
+                if (f.category !== 'vendas' && f.category !== 'vendas_pdv') return false;
+                // Tem cmvSnapshot (novo) OU custo>0 (legado-mas-rastreado)
+                return (typeof f.cmvSnapshot === 'number' && f.cmvSnapshot > 0) ||
+                       (typeof f.custo === 'number' && f.custo > 0);
+            });
+            var receitaComCMV = vendasComCMV.reduce(function(s,f){ return s + (f.amount || 0); }, 0);
+            var cmvReal = vendasComCMV.reduce(function(s,f){
+                return s + (Number(f.cmvSnapshot || f.custo) || 0);
+            }, 0);
+            var lucroBrutoVendas = receitaComCMV - cmvReal;
+            var margemBrutaPct = receitaComCMV > 0
+                ? Math.round((lucroBrutoVendas / receitaComCMV) * 1000) / 10 : null;
+
+            // 2) Vendas SEM CMV historico (pedidos antigos pre-PR #371)
+            var vendasSemCMV = income.filter(function(f) {
+                if (f.category !== 'vendas' && f.category !== 'vendas_pdv') return false;
+                if (typeof f.cmvSnapshot === 'number' && f.cmvSnapshot > 0) return false;
+                if (typeof f.custo === 'number' && f.custo > 0) return false;
+                return true;
+            });
+            var receitaSemCMV = vendasSemCMV.reduce(function(s,f){ return s + (f.amount || 0); }, 0);
+
+            // 3) Outras receitas (nao-vendas)
             var outrasReceitas = income.filter(function(f) {
                 return f.category !== 'vendas' && f.category !== 'vendas_pdv';
-            }).reduce(function(s, f) { return s + (f.amount || 0); }, 0);
-            var receitaBruta = vendasTotal + outrasReceitas;
+            }).reduce(function(s,f){ return s + (f.amount || 0); }, 0);
 
-            // CMV (Custo da Mercadoria Vendida) — calculado automaticamente pelo PDV
-            // com base nos custos cadastrados em Produtos. Zero se o custo não foi rastreado.
-            var cmv = income.filter(function(f) {
-                return (f.category === 'vendas' || f.category === 'vendas_pdv') && f.custo > 0;
-            }).reduce(function(s, f) { return s + (f.custo || 0); }, 0);
-            var margemBrutaVendas = vendasTotal > 0 && cmv > 0
-                ? Math.round((1 - cmv / vendasTotal) * 1000) / 10 : null;
+            // 4) Receita BRUTA total (todas as vendas + outras)
+            var receitaBruta = receitaComCMV + receitaSemCMV + outrasReceitas;
 
-            // Deductions
-            var impostos = receitaBruta * 0.06;
-            var taxaFranquia = expenses.filter(function(f) { return f.category === 'franquia' || f.category === 'taxa_franquia'; })
-                .reduce(function(s, f) { return s + (f.amount || 0); }, 0);
-            var receitaLiquida = receitaBruta - impostos - taxaFranquia;
+            // 5) DESPESAS — categorizadas em FIXAS vs VARIAVEIS (decisao cliente)
+            var FIXAS_CATS = ['aluguel','salarios','energia','agua','internet','utilidades',
+                              'franquia','taxa_franquia','contabilidade','seguro','manutencao_fixa'];
+            var VARIAVEIS_CATS = ['ingredientes','embalagens','marketing','impostos','comissao',
+                                  'taxa_cartao','manutencao'];
 
-            // Operational costs
-            var ingredientes = expenses.filter(function(f) { return f.category === 'ingredientes'; })
-                .reduce(function(s, f) { return s + (f.amount || 0); }, 0);
-            var embalagens = expenses.filter(function(f) { return f.category === 'embalagens'; })
-                .reduce(function(s, f) { return s + (f.amount || 0); }, 0);
-            var lucroBruto = receitaLiquida - ingredientes - embalagens;
+            var despesasFixas = expenses.filter(function(f){ return FIXAS_CATS.indexOf(f.category) >= 0; })
+                .reduce(function(s,f){ return s + (f.amount || 0); }, 0);
+            var despesasVariaveis = expenses.filter(function(f){ return VARIAVEIS_CATS.indexOf(f.category) >= 0; })
+                .reduce(function(s,f){ return s + (f.amount || 0); }, 0);
+            var despesasOutras = expenses.filter(function(f){
+                return FIXAS_CATS.indexOf(f.category) < 0 && VARIAVEIS_CATS.indexOf(f.category) < 0;
+            }).reduce(function(s,f){ return s + (f.amount || 0); }, 0);
+            var totalDespesas = despesasFixas + despesasVariaveis + despesasOutras;
 
-            // Operating expenses
-            var salarios = expenses.filter(function(f) { return f.category === 'salarios'; })
-                .reduce(function(s, f) { return s + (f.amount || 0); }, 0);
-            var aluguel = expenses.filter(function(f) { return f.category === 'aluguel'; })
-                .reduce(function(s, f) { return s + (f.amount || 0); }, 0);
-            var marketing = expenses.filter(function(f) { return f.category === 'marketing'; })
-                .reduce(function(s, f) { return s + (f.amount || 0); }, 0);
-            var manutencao = expenses.filter(function(f) { return f.category === 'manutencao'; })
-                .reduce(function(s, f) { return s + (f.amount || 0); }, 0);
-            var utilidades = expenses.filter(function(f) {
-                return f.category === 'utilidades' || f.category === 'energia' || f.category === 'agua' || f.category === 'internet';
-            }).reduce(function(s, f) { return s + (f.amount || 0); }, 0);
+            // 6) RESULTADO
+            // Lucro Bruto = Receita com CMV − CMV   (so faz sentido pra vendas com CMV real)
+            // Lucro Operacional = Receita Bruta − CMV − Despesas Totais
+            var lucroOperacional = receitaBruta - cmvReal - totalDespesas;
+            var margemLiquidaPct = receitaBruta > 0
+                ? Math.round((lucroOperacional / receitaBruta) * 1000) / 10 : null;
+            // Ponto de Equilibrio = despesas fixas / margem bruta (fracao)
+            var pontoEquilibrio = (margemBrutaPct && margemBrutaPct > 0 && despesasFixas > 0)
+                ? Math.round((despesasFixas / (margemBrutaPct/100)) * 100) / 100 : null;
 
-            var knownExpenseCats = ['ingredientes', 'embalagens', 'salarios', 'aluguel', 'marketing',
-                'manutencao', 'utilidades', 'energia', 'agua', 'internet', 'franquia', 'taxa_franquia'];
-            var outros = expenses.filter(function(f) {
-                return knownExpenseCats.indexOf(f.category) === -1;
-            }).reduce(function(s, f) { return s + (f.amount || 0); }, 0);
-
-            var totalDespesasOp = salarios + aluguel + marketing + manutencao + utilidades + outros;
-            var resultadoOperacional = lucroBruto - totalDespesasOp;
-            var margemOperacional = receitaBruta > 0 ? (resultadoOperacional / receitaBruta) * 100 : 0;
+            // 7) ALERTAS (decisao cliente)
+            var alertas = [];
+            // Vendas com cmvSnapshot=0 explicito (produto sem custo)
+            var vendasCmvZerado = vendasComCMV.filter(function(f){
+                return (Number(f.cmvSnapshot || f.custo) || 0) === 0;
+            });
+            if (vendasSemCMV.length > 0) {
+                alertas.push({
+                    tipo: 'warn',
+                    msg: vendasSemCMV.length + ' venda(s) <strong>sem CMV historico</strong> ('+
+                         Utils.formatCurrency(receitaSemCMV)+') — pedido(s) antigo(s) pre-rastreio CMV. <em>Nao entram na margem real.</em>'
+                });
+            }
+            if (vendasCmvZerado.length > 0) {
+                alertas.push({
+                    tipo: 'danger',
+                    msg: vendasCmvZerado.length + ' venda(s) com <strong>CMV zerado</strong> — produto sem custo cadastrado.'
+                });
+            }
+            if (margemBrutaPct !== null && margemBrutaPct < 0) {
+                alertas.push({ tipo: 'danger',
+                    msg: '🚨 <strong>Margem bruta NEGATIVA</strong> ('+margemBrutaPct.toFixed(1)+'%) — vendendo abaixo do custo.' });
+            } else if (margemBrutaPct !== null && margemBrutaPct < 30) {
+                alertas.push({ tipo: 'warn',
+                    msg: 'Margem bruta baixa ('+margemBrutaPct.toFixed(1)+'%) — meta sugerida 30% ou mais.' });
+            }
+            if (despesasFixas === 0 && receitaBruta > 0) {
+                alertas.push({ tipo: 'warn',
+                    msg: 'Nenhuma <strong>despesa fixa</strong> lancada neste mes. Aluguel, salarios, energia? Cadastre em Despesas.' });
+            }
+            if (vendasComCMV.length === 0 && receitaBruta > 0) {
+                alertas.push({ tipo: 'info',
+                    msg: 'DRE rodando sem nenhuma venda com CMV calculado. CMV/lucro bruto nao podem ser apurados.' });
+            }
 
             var meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
@@ -843,63 +891,105 @@
 
             var html = '';
             html += '<div class="dre-header-info">';
-            html += '<strong>Periodo:</strong> ' + Utils.escapeHtml(meses[mes]) + ' / ' + ano;
+            html += '<strong>Período:</strong> ' + Utils.escapeHtml(meses[mes]) + ' / ' + ano;
+            html += ' &nbsp;·&nbsp; <small style="color:#666">DRE oficial — usa CMV snapshot por venda (PR #371)</small>';
             html += '</div>';
 
+            // ========== ALERTAS (topo da DRE) ==========
+            if (alertas.length > 0) {
+                html += '<div class="dre-alerts" style="margin:10px 0 14px;display:flex;flex-direction:column;gap:6px">';
+                alertas.forEach(function(a){
+                    var bg = a.tipo==='danger'?'#fee2e2':a.tipo==='warn'?'#fef3c7':'#dbeafe';
+                    var bd = a.tipo==='danger'?'#fca5a5':a.tipo==='warn'?'#fcd34d':'#93c5fd';
+                    var fg = a.tipo==='danger'?'#991b1b':a.tipo==='warn'?'#92400e':'#1e40af';
+                    var ic = a.tipo==='danger'?'⚠️':a.tipo==='warn'?'🟡':'ℹ️';
+                    html += '<div style="background:'+bg+';border:1px solid '+bd+';color:'+fg+';padding:8px 12px;border-radius:8px;font-size:13px">'+ic+' '+a.msg+'</div>';
+                });
+                html += '</div>';
+            }
+
             html += '<table class="dre-table">';
-            html += '<thead><tr><th>Descricao</th><th style="text-align:right;">Valor</th></tr></thead>';
+            html += '<thead><tr><th>Descrição</th><th style="text-align:right;">Valor</th></tr></thead>';
             html += '<tbody>';
 
-            // RECEITA BRUTA
+            // ========== RECEITA BRUTA ==========
             html += '<tr class="dre-section-header"><td colspan="2">RECEITA BRUTA</td></tr>';
-            html += '<tr class="dre-row"><td class="dre-indent">(+) Vendas de Produtos</td><td class="dre-value dre-positive">' + fmtVal(vendasTotal) + '</td></tr>';
+            if (receitaComCMV > 0) {
+                html += '<tr class="dre-row"><td class="dre-indent">(+) Vendas com CMV calculado</td><td class="dre-value dre-positive">' + fmtVal(receitaComCMV) + '</td></tr>';
+            }
+            if (receitaSemCMV > 0) {
+                html += '<tr class="dre-row" title="Pedidos antigos pre-rastreio de CMV — nao entram na margem real">';
+                html += '<td class="dre-indent" style="color:#92400e">(+) Receita sem CMV histórico <small>(' + vendasSemCMV.length + ' venda(s) antigas)</small></td>';
+                html += '<td class="dre-value" style="color:#92400e">' + fmtVal(receitaSemCMV) + '</td></tr>';
+            }
             if (outrasReceitas > 0) {
                 html += '<tr class="dre-row"><td class="dre-indent">(+) Outras Receitas</td><td class="dre-value dre-positive">' + fmtVal(outrasReceitas) + '</td></tr>';
             }
             html += '<tr class="dre-subtotal"><td>Total Receita Bruta</td><td class="dre-value ' + totalClass(receitaBruta) + '">' + fmtVal(receitaBruta) + '</td></tr>';
 
-            // CMV — só aparece se houver dados rastreados pelo PDV
-            if (cmv > 0) {
-                html += '<tr class="dre-section-header"><td colspan="2">CMV — CUSTO DA MERCADORIA VENDIDA</td></tr>';
-                html += '<tr class="dre-row"><td class="dre-indent">(-) CMV apurado pelo PDV</td><td class="dre-value dre-negative">' + fmtVal(cmv) + '</td></tr>';
-                html += '<tr class="dre-margin" title="Percentual que sobra da receita de vendas após descontar o custo dos produtos">';
-                html +=   '<td class="dre-indent">📊 Margem Bruta das Vendas</td>';
-                html +=   '<td class="dre-value ' + (margemBrutaVendas >= 30 ? 'dre-positive' : 'dre-negative') + '">';
-                html +=     margemBrutaVendas !== null ? margemBrutaVendas.toFixed(1) + '%' : '—';
-                html +=   '</td>';
-                html += '</tr>';
+            // ========== CMV (apenas vendas com CMV) ==========
+            html += '<tr class="dre-section-header"><td colspan="2">CMV — Custo da Mercadoria Vendida</td></tr>';
+            if (cmvReal > 0) {
+                html += '<tr class="dre-row"><td class="dre-indent">(-) CMV (snapshot da venda)</td><td class="dre-value dre-negative">' + fmtVal(cmvReal) + '</td></tr>';
+            } else {
+                html += '<tr class="dre-row"><td class="dre-indent" style="color:#92400e">(-) CMV indisponível — vendas sem custo rastreado</td><td class="dre-value">—</td></tr>';
             }
 
-            // DEDUCOES
-            html += '<tr class="dre-section-header"><td colspan="2">DEDUCOES</td></tr>';
-            html += '<tr class="dre-row"><td class="dre-indent">(-) Impostos (estimado 6%)</td><td class="dre-value dre-negative">' + fmtVal(impostos) + '</td></tr>';
-            html += '<tr class="dre-row"><td class="dre-indent">(-) Taxa Franquia</td><td class="dre-value dre-negative">' + fmtVal(taxaFranquia) + '</td></tr>';
+            // ========== LUCRO BRUTO ==========
+            html += '<tr class="dre-total"><td>LUCRO BRUTO <small style="color:#666">(receita com CMV − CMV)</small></td>';
+            html += '<td class="dre-value ' + totalClass(lucroBrutoVendas) + '">' + fmtVal(lucroBrutoVendas) + '</td></tr>';
+            html += '<tr class="dre-margin"><td class="dre-indent">📊 Margem Bruta</td>';
+            html += '<td class="dre-value ' + (margemBrutaPct === null ? '' : (margemBrutaPct >= 30 ? 'dre-positive' : 'dre-negative')) + '">';
+            html += margemBrutaPct !== null ? margemBrutaPct.toFixed(1) + '%' : '— sem CMV';
+            html += '</td></tr>';
 
-            // RECEITA LIQUIDA
-            html += '<tr class="dre-total"><td>RECEITA LIQUIDA</td><td class="dre-value ' + totalClass(receitaLiquida) + '">' + fmtVal(receitaLiquida) + '</td></tr>';
+            // ========== DESPESAS FIXAS ==========
+            html += '<tr class="dre-section-header"><td colspan="2">DESPESAS FIXAS</td></tr>';
+            if (despesasFixas > 0) {
+                html += '<tr class="dre-row"><td class="dre-indent">(-) Aluguel, salários, energia, internet, etc</td>';
+                html += '<td class="dre-value dre-negative">' + fmtVal(despesasFixas) + '</td></tr>';
+            } else {
+                html += '<tr class="dre-row"><td class="dre-indent" style="color:#92400e">⚠ Nenhuma despesa fixa este mês</td><td class="dre-value">—</td></tr>';
+            }
 
-            // CUSTOS OPERACIONAIS
-            html += '<tr class="dre-section-header"><td colspan="2">CUSTOS OPERACIONAIS</td></tr>';
-            html += '<tr class="dre-row"><td class="dre-indent">(-) Ingredientes</td><td class="dre-value dre-negative">' + fmtVal(ingredientes) + '</td></tr>';
-            html += '<tr class="dre-row"><td class="dre-indent">(-) Embalagens</td><td class="dre-value dre-negative">' + fmtVal(embalagens) + '</td></tr>';
+            // ========== DESPESAS VARIÁVEIS ==========
+            html += '<tr class="dre-section-header"><td colspan="2">DESPESAS VARIÁVEIS</td></tr>';
+            if (despesasVariaveis > 0) {
+                html += '<tr class="dre-row"><td class="dre-indent">(-) Marketing, taxa cartão, impostos extras</td>';
+                html += '<td class="dre-value dre-negative">' + fmtVal(despesasVariaveis) + '</td></tr>';
+            } else {
+                html += '<tr class="dre-row"><td class="dre-indent" style="color:#999">Nenhuma despesa variável</td><td class="dre-value">—</td></tr>';
+            }
+            if (despesasOutras > 0) {
+                html += '<tr class="dre-row"><td class="dre-indent">(-) Outras despesas</td>';
+                html += '<td class="dre-value dre-negative">' + fmtVal(despesasOutras) + '</td></tr>';
+            }
 
-            // LUCRO BRUTO
-            html += '<tr class="dre-total"><td>LUCRO BRUTO</td><td class="dre-value ' + totalClass(lucroBruto) + '">' + fmtVal(lucroBruto) + '</td></tr>';
+            // ========== LUCRO OPERACIONAL ==========
+            html += '<tr class="dre-total dre-final"><td>LUCRO OPERACIONAL <small style="color:#666">(receita − CMV − despesas)</small></td>';
+            html += '<td class="dre-value ' + totalClass(lucroOperacional) + '">' + (lucroOperacional >= 0 ? '' : '- ') + fmtVal(lucroOperacional) + '</td></tr>';
+            html += '<tr class="dre-margin"><td class="dre-indent">📈 Margem Líquida</td>';
+            html += '<td class="dre-value ' + (margemLiquidaPct === null ? '' : (margemLiquidaPct >= 0 ? 'dre-positive' : 'dre-negative')) + '">';
+            html += margemLiquidaPct !== null ? margemLiquidaPct.toFixed(1) + '%' : '—';
+            html += '</td></tr>';
 
-            // DESPESAS OPERACIONAIS
-            html += '<tr class="dre-section-header"><td colspan="2">DESPESAS OPERACIONAIS</td></tr>';
-            html += '<tr class="dre-row"><td class="dre-indent">(-) Salarios</td><td class="dre-value dre-negative">' + fmtVal(salarios) + '</td></tr>';
-            html += '<tr class="dre-row"><td class="dre-indent">(-) Aluguel</td><td class="dre-value dre-negative">' + fmtVal(aluguel) + '</td></tr>';
-            html += '<tr class="dre-row"><td class="dre-indent">(-) Marketing</td><td class="dre-value dre-negative">' + fmtVal(marketing) + '</td></tr>';
-            html += '<tr class="dre-row"><td class="dre-indent">(-) Manutencao</td><td class="dre-value dre-negative">' + fmtVal(manutencao) + '</td></tr>';
-            html += '<tr class="dre-row"><td class="dre-indent">(-) Energia/Agua/Internet</td><td class="dre-value dre-negative">' + fmtVal(utilidades) + '</td></tr>';
-            html += '<tr class="dre-row"><td class="dre-indent">(-) Outros</td><td class="dre-value dre-negative">' + fmtVal(outros) + '</td></tr>';
-
-            // RESULTADO OPERACIONAL
-            html += '<tr class="dre-total dre-final"><td>RESULTADO OPERACIONAL</td><td class="dre-value ' + totalClass(resultadoOperacional) + '">' + (resultadoOperacional >= 0 ? '' : '- ') + fmtVal(resultadoOperacional) + '</td></tr>';
-            html += '<tr class="dre-margin"><td class="dre-indent">Margem Operacional</td><td class="dre-value ' + (margemOperacional >= 0 ? 'dre-positive' : 'dre-negative') + '">' + margemOperacional.toFixed(1) + '%</td></tr>';
+            // ========== PONTO DE EQUILÍBRIO ==========
+            if (pontoEquilibrio !== null) {
+                html += '<tr class="dre-row" title="Faturamento mínimo pra cobrir despesas fixas">';
+                html += '<td class="dre-indent">⚖️ Ponto de equilíbrio (faturamento mínimo)</td>';
+                html += '<td class="dre-value">' + Utils.formatCurrency(pontoEquilibrio) + '/mês</td></tr>';
+            }
 
             html += '</tbody></table>';
+
+            // Footer informativo
+            html += '<div style="margin-top:14px;padding:10px 12px;background:#f9fafb;border-radius:8px;font-size:11px;color:#666;line-height:1.5">';
+            html += '<strong>Como esta DRE é calculada:</strong> '+
+                    '<br>• CMV vem do <code>cmvSnapshot</code> de cada venda (registrado no momento exato da venda — não muda mais).'+
+                    '<br>• Lucro Bruto = Receita com CMV − CMV. Pedidos antigos sem CMV ficam separados pra não distorcer a margem.'+
+                    '<br>• Despesas Fixas: '+ FIXAS_CATS.slice(0,6).join(', ') + '...'+
+                    '<br>• Despesas Variáveis: '+ VARIAVEIS_CATS.slice(0,5).join(', ') + '...';
+            html += '</div>';
 
             document.getElementById('dreContent').innerHTML = html;
         }
