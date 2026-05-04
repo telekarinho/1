@@ -1,7 +1,36 @@
 # The Best Açaí — Análise Competitiva
 
-**Última atualização:** 2026-04-30 (Ciclo #73 — refetch expansão 2025–2026 + quiosque Londrina)
-**Fontes:** ifood.com.br, gazetadopovo.com.br, temlondrina.com.br, tiktok @marceladegusta, portaldofranchising.com.br, foodbizbrasil.com, suafranquia.com, franquiadeacai.com, jornaluniao.com.br, exame.com, braziljournal.com, portaltela.com, mercadoeconsumo.com.br, aurorashopping.com.br, portaldofranchising.com.br (quiosque)
+**Última atualização:** 2026-05-04 (Ciclo #116 — refetch Black Friday + novidades 2026)
+**Fontes anteriores:** ifood.com.br, gazetadopovo.com.br, temlondrina.com.br, tiktok @marceladegusta, portaldofranchising.com.br, foodbizbrasil.com, suafranquia.com, franquiadeacai.com, jornaluniao.com.br, exame.com, braziljournal.com, portaltela.com, mercadoeconsumo.com.br, aurorashopping.com.br
+**Fontes ciclo #116:** gazetadasemana.com.br, thebestacai.com.br/thebestday (bloqueado), cidadeoferta.com.br, ubereats.com/br, portaltela.com, TikTok @marceladegusta
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #116 — 2026-05-04
+
+### Black Friday 2026 — "The Best Friday"
+- **Mecânica padrão anual confirmada:** "The Best Friday" = açaí + sorvete a **R$ 3,99/100g** (vs. regular R$ 6,29/100g = **37% de desconto**)
+- **Alcance:** 530+ lojas participantes nacionalmente (histórico 2024 — tendência mantida)
+- **Validade:** 1 dia apenas (Black Friday, 27/11/2026)
+- **Importância para MilkyPot:** Preço promocional TheBest (R$3,99/100g) ainda é variável — um pote médio de 300g sai ~R$12 em promoção. MilkyPot pode comunicar "preço fixo, sem surpresa, sem balança" como diferencial estrutural
+- **Alerta:** Semana 27/11 = concorrente vai gerar alto volume de UGC e awareness. MilkyPot precisa de contraprogramação ativa (ver semana 33 do conteúdo)
+
+### Novidades de Produto 2026
+- **The Best Donuts:** Self-service de donuts em 580+ lojas (lançado jan/2025, expansão acelerada). Primeiro self-service de donuts do Brasil. Diversifica além do açaí e disputa o segmento "snack doce premium" — competindo indiretamente com potinhos MilkyPot
+- **Sorbet 100% fruta:** Sem açúcar, sem conservantes — primeira incursão no território "sem culpa/fit". Sinal de que TheBest está reconhecendo a força do segmento. A Linha Zero/Fit com PROTEÍNA do MilkyPot ainda é superior e diferenciada — comunicar isso
+- **Novo produto saudável:** Expansão da linha fit confirma tendência que MilkyPot já ocupa com antecedência
+
+### Muffato Londrina — Status
+- **Não confirmado:** TheBest não identificada como loja no Muffato Quintino (av. onde está o MilkyPot). Há "Mix Açaí" no Muffato Duque (outra unidade) — mas não é TheBest. Risco de entrada futuro deve ser monitorado
+
+### Dados de Preço Londrina (confirmados, sem alteração)
+| Situação | Preço/100g |
+|---|---|
+| Preço regular (Gleba Palhano — maior loja) | **R$ 6,29 / 100g** |
+| "The Best Friday" Black Friday (padrão histórico) | **R$ 3,99 / 100g** |
+| Promoção reinauguração (referência histórica) | R$ 3,99 / 100g |
+
+**Benchmark vs. MilkyPot:** Um potinho de 250g de Ninho na TheBest (self-service) sairia ~R$15,73 regular / ~R$9,98 em promoção Black Friday — MilkyPot deve posicionar valor percebido: personalização, embalagem, Linha Zero/Fit, sem balança.
 
 ---
 

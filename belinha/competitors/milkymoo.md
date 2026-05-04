@@ -1,7 +1,43 @@
 # Milky Moo — Análise Competitiva
 
-**Última atualização:** 2026-04-30 (Ciclo #73 — refetch dados expansão + estratégia 2026)
-**Fontes:** franquiadesorvete.com, portaldofranchising, pricelisto.com/br, gkpb.com.br, TikTok @marceladegusta, portalg.com.br, lagosul.com.br, meioemensagem.com.br, sopacultural.com, franquias360.com.br, timesbrasil.com.br, exame.com, empreenderemgoias.com.br, adital.com.br, foodbizbrasil.com
+**Última atualização:** 2026-05-04 (Ciclo #116 — refetch Black Friday + novos sabores + promoções 2026)
+**Fontes anteriores:** franquiadesorvete.com, portaldofranchising, pricelisto.com/br, gkpb.com.br, TikTok @marceladegusta, portalg.com.br, lagosul.com.br, meioemensagem.com.br, sopacultural.com, franquias360.com.br, timesbrasil.com.br, exame.com, empreenderemgoias.com.br, adital.com.br, foodbizbrasil.com
+**Fontes ciclo #116:** portalg.com.br, cadastrarnapromocao.com.br, clubeamostrasgratis.com, publicitarioscriativos.com, gkpb.com.br, revistamenu.com.br, superhiper.com.br, TikTok @marceladegusta, TikTok @sofiasporai, nuttybavarian blog
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #116 — 2026-05-04
+
+### Black Friday 2026 — "Milkshakes em Dobro"
+- **Mecânica padrão anual:** Compre milkshake 500ml → ganhe milkshake 300ml grátis (dobro)
+- **Plataforma:** Exclusivo via iFood (requer cadastro, comissão ao app)
+- **Sabores históricos participantes:** Pintadinha, Pandora (varia por edição)
+- **Importância para MilkyPot:** Promoção MilkyMoo é canal iFood — MilkyPot pode contraprogramar com oferta direta WhatsApp sem comissão. "Na MilkyPot, a promoção vai direta pra você, sem aplicativo no meio"
+
+### Promoções Recorrentes 2026 Identificadas
+| Promoção | Mecânica | Plataforma | Data/Período |
+|---|---|---|---|
+| Black Friday "Milkshakes em Dobro" | 500ml + 300ml grátis | iFood | novembro 2026 |
+| "Milky Moo Day" (aniversário) | 500ml + 300ml grátis | Loja/app | março 2026 |
+| 2x1 iFood (Pandora + Pintadinha) | 2 milkshakes pelo preço de 1 | iFood | fevereiro 2026 |
+| Promo Seg–Qui (local) | 2x 300ml por R$29,90 / 3x 500ml por R$54,90 | Loja | recorrente |
+
+### Novos Sabores e Collabs 2026
+| Collab | Sabor | Ingredientes | Preço |
+|---|---|---|---|
+| Nutty Bavarian (natal) | Estrela (pistache) | Sorvete baunilha + nozes glaceadas + calda pistache | 300ml R$27 / 500ml R$32 |
+| Nutty Bavarian (natal) | Pérola (macadâmia) | Sorvete baunilha + macadâmia glaceada + calda macadâmia | 300ml R$27 / 500ml R$32 |
+| Nestlé Sensação | Penélope | Sorvete baunilha + brigadeiro + recheio Moça + topping morango + Sensação | disponível desde fev 2025 |
+| Nestlé (inverno) | Smoor's | Sorvete baunilha + brigadeiro + Chocobiscuit + marshmallow tostado | lançado "Mood do Inverno" |
+| Nestlé Alpino | Rainha | Sorvete baunilha + trufa Alpino (Dia das Mães) | sazonal |
+| Nestlé Caribe | Caribenha | Inspirado no bombom Caribe (Páscoa 2024) | sazonal |
+
+**Padrão de estratégia:** MilkyMoo lança 4–6 collabs anuais com marcas premium (Nestlé, Nutty Bavarian) → buzz de mídia + justificativa de preço premium (R$27–32 vs. R$18–22 regular). MilkyPot pode explorar a contra-narrativa: "nossos toppings são FRESCOS, sem parceiro de indústria"
+
+### App Próprio
+- **URL:** milkymoo.com.br/aplicativo
+- **Status:** Ativo — pedidos dentro do app + promoções exclusivas
+- **Impacto para MilkyPot:** MilkyMoo está construindo canal próprio (além do iFood). MilkyPot já tem WhatsApp como canal direto — vantagem: sem fricção de instalação de app
 
 ---
 
