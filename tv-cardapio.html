@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>MilkyPot — Cardápio TV</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800;900&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;font-family:'Inter',-apple-system,sans-serif;background:#0D0B1A;color:#fff}
+  body{
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,79,138,.25), transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(126,87,194,.25), transparent 40%),
+      linear-gradient(135deg, #1A0A2E 0%, #0D0B1A 50%, #2A0E3F 100%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:4vh 4vw;gap:3vh
+  }
+  .head{display:flex;flex-direction:column;align-items:center;gap:.5vh;text-align:center}
+  .logo{font-family:'Baloo 2',cursive;font-size:5vh;font-weight:900;
+    background:linear-gradient(135deg,#FFD54F 0%,#FFB300 50%,#FF6F00 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    letter-spacing:-1px}
+  .logo .em{font-family:'Inter';font-size:.55em;-webkit-text-fill-color:#fff;
+    background:none;font-weight:700;letter-spacing:2px;opacity:.8}
+  .title{font-family:'Baloo 2',cursive;font-size:7vh;font-weight:900;
+    background:linear-gradient(135deg,#FF4F8A,#7E57C2,#42A5F5);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    line-height:1;margin-top:1vh}
+  .sub{font-size:2.5vh;color:rgba(255,255,255,.7);font-weight:600;letter-spacing:1px;text-transform:uppercase}
+
+  .sizes{display:grid;gap:2.2vw;width:100%;max-width:92vw;flex:1;align-items:center;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .size{
+    background:linear-gradient(160deg,rgba(255,255,255,.08) 0%,rgba(255,255,255,.02) 100%);
+    border:2px solid rgba(255,255,255,.15);
+    border-radius:3vh;padding:3.5vh 1.8vw;
+    display:flex;flex-direction:column;align-items:center;gap:1.5vh;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    position:relative;overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.1)
+  }
+  .size::before{content:'';position:absolute;inset:0;
+    background:radial-gradient(circle at 50% 0%,rgba(255,213,79,.12),transparent 60%);
+    pointer-events:none}
+  .size .cup{font-size:7vh;line-height:1;filter:drop-shadow(0 6px 18px rgba(0,0,0,.5));margin-bottom:.4vh}
+  .size .label{font-family:'Baloo 2',cursive;font-size:9vh;font-weight:900;line-height:.85;
+    background:linear-gradient(135deg,#FFD54F 0%,#FF6F00 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .size .ml{font-size:2.5vh;font-weight:700;color:#fff;letter-spacing:1px;
+    background:rgba(255,255,255,.1);padding:.5vh 1.6vw;border-radius:2vh;border:1px solid rgba(255,255,255,.2)}
+  .size .price{font-family:'Baloo 2',cursive;font-size:5vh;font-weight:800;color:#FF4F8A;margin-top:.3vh;
+    text-shadow:0 0 20px rgba(255,79,138,.4);text-align:center;line-height:1}
+  .size .price small{font-size:.45em;color:rgba(255,255,255,.6);font-weight:600;margin-right:.3em;display:block;margin-bottom:.1em}
+  .size .price-original{font-size:2.2vh;color:rgba(255,255,255,.5);text-decoration:line-through;font-family:'Inter';font-weight:600;margin-bottom:.4vh}
+  .size .promo-badge{position:absolute;top:1.2vh;right:1.2vh;background:#FF4F8A;color:#fff;padding:.5vh 1.2vw;border-radius:2vh;font-size:1.4vh;font-weight:800;letter-spacing:.5px;box-shadow:0 4px 12px rgba(255,79,138,.4)}
+
+  .foot{display:flex;align-items:center;justify-content:center;gap:1.5vw;
+    font-size:2.2vh;color:rgba(255,255,255,.6);font-weight:600;text-align:center}
+  .foot strong{color:#FFD54F}
+  .foot .dot{width:.8vh;height:.8vh;border-radius:50%;background:rgba(255,255,255,.4)}
+
+  .empty,.loading{text-align:center;font-size:2.6vh;color:rgba(255,255,255,.6);padding:6vh 2vw;
+    background:rgba(255,255,255,.05);border-radius:3vh;border:1px dashed rgba(255,255,255,.15);max-width:80vw;margin:0 auto}
+  .loading{display:flex;flex-direction:column;gap:2vh;align-items:center}
+  .loading .spinner{width:8vh;height:8vh;border:.8vh solid rgba(255,255,255,.15);border-top-color:#42A5F5;border-radius:50%;animation:spin 1s linear infinite}
+  .empty code{background:rgba(0,0,0,.4);padding:.3vh 1vw;border-radius:.8vh;font-size:.9em}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+  .size{animation:fadeIn .5s ease-out backwards}
+  .size:nth-child(1){animation-delay:.05s}
+  .size:nth-child(2){animation-delay:.15s}
+  .size:nth-child(3){animation-delay:.25s}
+  .size:nth-child(4){animation-delay:.35s}
+  @media (max-aspect-ratio:1/1){
+    .sizes{grid-template-columns:repeat(2,1fr)}
+    .size .label{font-size:7vh}
+    .title{font-size:5vh}
+  }
+</style>
+</head>
+<body>
+  <header class="head">
+    <div class="logo">🐑 MilkyPot <span class="em">CARDÁPIO</span></div>
+    <div id="productTitle" class="title">Nossos Tamanhos</div>
+    <div id="productSub" class="sub">Carregando do PDV…</div>
+  </header>
+
+  <section id="sizes" class="sizes">
+    <div class="loading"><div class="spinner"></div><div>Carregando do Firestore…</div></div>
+  </section>
+
+  <footer class="foot">
+    <span>🍦 <strong>Monte do seu jeito</strong></span>
+    <span class="dot"></span>
+    <span id="franchiseTag">milkypot.com</span>
+  </footer>
+
+  <script>
+  /**
+   * MilkyPot TV — Cardápio (Tamanhos)
+   *
+   * Lê DIRETO do Firestore REST API o documento que o PDV grava:
+   *   datastore/catalog_v2_<fid>
+   *
+   * Por que REST direto e não Firebase SDK + DataStore?
+   * - DataStore._publicSyncDocs() só sincroniza orders/caixa/pdv_tabs/finances —
+   *   NÃO inclui catalog_v2_*. Então sem login admin, DataStore.get retorna null.
+   * - As Firestore rules permitem leitura pública de docs que matcham
+   *   `catalog_v2_.*` (ver firestore.rules), então REST sem auth funciona.
+   * - Menos dependências = menos pontos de falha em WebView Android.
+   *
+   * Fonte de verdade: o PDV (painel/produtos.html) escreve via
+   *   CatalogV2.saveProduto(fid, p) → DataStore.set('catalog_v2_'+fid, ...)
+   *     → Firestore.doc('datastore/catalog_v2_'+fid).set({value:JSON.stringify(...)})
+   *
+   * Aqui só lemos. Nada de inventar valores, defaults ou seeds.
+   */
+  (function(){
+    'use strict';
+
+    var FB_PROJECT = 'milkypot-ad945';
+    var FB_API_KEY = 'AIzaSyAbQ1fe0pK4prhfzYJypod2ie4DyNsq6BA';
+
+    var grid = document.getElementById('sizes');
+    var titleEl = document.getElementById('productTitle');
+    var subEl = document.getElementById('productSub');
+    var franchiseTag = document.getElementById('franchiseTag');
+
+    var urlParams = new URLSearchParams(location.search);
+    var fid = (urlParams.get('f') || urlParams.get('fid') || '').trim();
+    // O sistema usa fid com hífen (ex: 'muffato-quintino'). Se vier sem hífen, mantém.
+    if (fid) franchiseTag.textContent = 'milkypot.com/' + fid;
+
+    function esc(s){
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+      });
+    }
+    function fmtPrice(p){
+      var n = Number(p);
+      if(!isFinite(n) || n <= 0) return null;
+      return n.toFixed(2).replace('.', ',');
+    }
+    function cupFor(volume){
+      var v = Number(volume) || 0;
+      if(v <= 300) return '🥛';
+      if(v <= 470) return '🥤';
+      if(v <= 600) return '🧃';
+      return '🍹';
+    }
+
+    function showError(msg, hint){
+      grid.innerHTML = '<div class="empty">' + esc(msg) +
+        (hint ? '<div style="margin-top:1.5vh;font-size:.85em;opacity:.75">' + hint + '</div>' : '') +
+        '</div>';
+    }
+
+    /**
+     * Busca catalog_v2_<fid> do Firestore via REST.
+     * Retorna o objeto JS já parseado, ou null se 404/erro.
+     */
+    function fetchCatalog(fid){
+      var url = 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT +
+                '/databases/(default)/documents/datastore/catalog_v2_' + encodeURIComponent(fid) +
+                '?key=' + FB_API_KEY +
+                '&_=' + Date.now(); // cache buster
+      return fetch(url, { method: 'GET', cache: 'no-store' })
+        .then(function(r){
+          if(r.status === 404) return { _notFound: true };
+          if(!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function(j){
+          if(!j || j._notFound) return { _notFound: true };
+          var raw = j && j.fields && j.fields.value && j.fields.value.stringValue;
+          if(!raw) throw new Error('Documento sem campo "value"');
+          return JSON.parse(raw);
+        });
+    }
+
+    /**
+     * Extrai os tamanhos do catalog. Pega o primeiro produto ativo da
+     * categoria 'cat_milkshake' que tenha variantes — esse é o template
+     * de tamanhos do MilkyPot (mesmo set se aplica a todos os shakes).
+     */
+    function extractSizes(catalog){
+      if(!catalog || !Array.isArray(catalog.produtos)) return null;
+      var milks = catalog.produtos.filter(function(p){
+        return p && p.categoriaId === 'cat_milkshake' && p.active !== false &&
+               Array.isArray(p.variantes) && p.variantes.length > 0;
+      });
+      if(!milks.length) return null;
+      var produto = milks[0];
+      var variantes = produto.variantes
+        .filter(function(v){ return v && (Number(v.precoLoja) > 0 || Number(v.precoLojaOriginal) > 0); })
+        .map(function(v){
+          // name vem do PDV ex: "P (275ml)" — separa label e ml
+          var fullName = String(v.name || '').trim();
+          var match = fullName.match(/^([^(]+?)\s*(?:\(\s*(\d+)\s*([a-zA-Z]*)\s*\))?$/);
+          var label = (match && match[1] ? match[1].trim() : fullName) || '?';
+          var mlFromName = (match && match[2]) ? parseInt(match[2], 10) : 0;
+          var ml = mlFromName || Number(v.gramas) || 0;
+          var unit = (match && match[3]) ? match[3].toUpperCase() : 'ML';
+          return {
+            label: label,
+            ml: ml,
+            unit: unit || 'ML',
+            preco: Number(v.precoLoja) || 0,
+            precoOriginal: Number(v.precoLojaOriginal) || 0,
+            promoAtivo: !!v.promoAtivo,
+            promoLabel: v.promoLabel || ''
+          };
+        });
+      return {
+        produto: produto.name || 'Milkshake',
+        items: variantes
+      };
+    }
+
+    function renderCards(data){
+      titleEl.textContent = 'Nossos Tamanhos';
+      subEl.textContent = 'Direto do PDV';
+
+      grid.innerHTML = data.items.map(function(it){
+        var precoStr = fmtPrice(it.preco);
+        var precoOriginalStr = it.promoAtivo && it.precoOriginal > it.preco ? fmtPrice(it.precoOriginal) : null;
+        var promoBadge = it.promoAtivo && it.promoLabel
+          ? '<div class="promo-badge">' + esc(it.promoLabel) + '</div>'
+          : '';
+        var priceBlock = precoStr
+          ? '<div class="price">'
+              + (precoOriginalStr ? '<div class="price-original">R$ ' + precoOriginalStr + '</div>' : '')
+              + '<small>R$</small>' + precoStr
+            + '</div>'
+          : '';
+        return '<div class="size">'
+            + promoBadge
+            + '<div class="cup">' + cupFor(it.ml) + '</div>'
+            + '<div class="label">' + esc(it.label) + '</div>'
+            + (it.ml ? '<div class="ml">' + esc(it.ml) + ' ' + esc(it.unit) + '</div>' : '')
+            + priceBlock
+          + '</div>';
+      }).join('');
+    }
+
+    function loadAndRender(){
+      if(!fid){
+        titleEl.textContent = 'Nossos Tamanhos';
+        subEl.textContent = 'Selecione uma franquia';
+        showError('Abra o slide com ?f=NOMEDAFRANQUIA na URL.',
+                  'Ex: <code>tv-cardapio.html?f=muffato-quintino</code>');
+        return;
+      }
+
+      fetchCatalog(fid)
+        .then(function(catalog){
+          if(catalog && catalog._notFound){
+            showError('Nenhum produto cadastrado pra esta franquia.',
+                      'Abra o PDV → Painel → Produtos e cadastre milkshakes com variantes (P/M/G/GG).');
+            return;
+          }
+          var data = extractSizes(catalog);
+          if(!data || !data.items.length){
+            showError('Nenhum milkshake ativo com variantes encontrado.',
+                      'Verifique no PDV → Produtos se há milkshakes ativos com tamanhos cadastrados.');
+            return;
+          }
+          renderCards(data);
+        })
+        .catch(function(err){
+          console.error('Erro ao carregar catálogo:', err);
+          showError('Não foi possível conectar ao servidor.',
+                    'Detalhe: ' + (err && err.message ? esc(err.message) : 'erro desconhecido') +
+                    '<br>Tentando novamente em 30s…');
+          setTimeout(loadAndRender, 30000);
+        });
+    }
+
+    // 1) Carrega imediatamente
+    loadAndRender();
+    // 2) Auto-refresh a cada 5min — pega edições do admin sem F5
+    setInterval(loadAndRender, 5 * 60 * 1000);
+  })();
+  </script>
+</body>
+</html>
