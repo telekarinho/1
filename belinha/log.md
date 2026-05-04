@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #117 — 2026-05-04
+
+**Área:** UX/Performance — `checkout` audit (primeira auditoria técnica)
+
+**Contexto:** Prescrito pelos ciclos #115 e #116 como próxima prioridade obrigatória. O fluxo de checkout (modal de 4 passos em `cardapio.html` + lógica em `js/checkout.js`) nunca havia sido auditado tecnicamente.
+
+**O que analisou:**
+- Leu `js/checkout.js` (786 linhas): fluxo de 4 etapas (dados → loja → entrega → pagamento), `placeOrder()`, `updateOrderSummary()`, chat Lulú Bot
+- Leu markup do checkout modal em `cardapio.html` (linhas 298–474): 7 inputs de formulário, step indicators, opções de entrega e pagamento
+- **Gap 1 — Zero atributos `autocomplete`/`inputmode`:** Nenhum input tinha `autocomplete` ou `inputmode`. No mobile: teclado genérico abre para CEP e telefone; browser não consegue autofill de nome/endereço. Causa abandono em mobile (estimativa ~30% mais friccão)
+- **Gap 2 — `summaryStore` nunca populado:** `<div id="summaryStore">` existe no HTML do step 4 (resumo final) mas `updateOrderSummary()` não o preenchia — o cliente chega no resumo sem ver qual loja selecionou. Potencial gerador de desconfiança e pedido cancelado
+- Verificou: sem quebra em outros arquivos, ambas as mudanças são puramente aditivas
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `cardapio.html` | 7 inputs do checkout agora têm `autocomplete` + `inputmode` corretos: `name`, `tel`+`inputmode="tel"`, `off`+`inputmode="numeric"` (CPF), `postal-code`+`inputmode="numeric"` (CEP), `street-address`, `address-line2`, `address-level3` |
+| `js/checkout.js` | `updateOrderSummary()` agora popula `#summaryStore` com nome da loja e tempo estimado (de `window._selectedStoreName` e `window._selectedStoreTime`) ao chegar no step 4 |
+
+**Commit:** `dd638e1`
+
+**Destaques técnicos:**
+1. **`inputmode="numeric"` em CEP e CPF:** Abre teclado numérico nativo no iOS/Android sem mudar `type="text"` (que quebraria formatação de máscara)
+2. **`inputmode="tel"` + `autocomplete="tel"`:** Abre teclado de discagem; Chrome/Safari oferecem sugestão de número salvo → zero digitação para cliente recorrente
+3. **`summaryStore` fix:** Primeiro vez que o cliente vê "📍 MilkyPot Muffato Londrina — ⏱️ 20-35 min" antes de confirmar → reduz cancelamentos por insegurança sobre destino do pedido
+4. **Risco zero:** Todas as mudanças são atributos HTML adicionais + código JS puramente aditivo — nenhum comportamento existente alterado
+
+**Próximo passo sugerido:**
+- Ciclo #118: SEO — `index.html` BreadcrumbList audit (verificar se existe; cardápio ✅, açaí ✅ — confirmar index)
+- Ciclo #119: Conversão — Template WA marco 6 meses (25/10) + reativação D+60 + status WA "VERAO"
+- Ciclo #120: Auto-aprimoramento — reler #115–#119, ajustar roadmap Q4 2026
+- Operador: monitorar taxa de abandono do checkout após esta mudança (comparar % que chega ao step 4 antes/depois)
+
+_Belinha — Ciclo #117 | 2026-05-04_
+
+---
+
 ## Ciclo #116 — 2026-05-04
 
 **Área:** Concorrentes (CRÍTICO) — refetch TheBest + MilkyMoo + FAQ competitivo no site
