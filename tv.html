@@ -487,37 +487,34 @@ body:not(.idle){cursor:default}
             footer: '🍦 600ml · ingredientes premium · feito na hora'
         };
 
+        // Copy fixa AIDA — explica o produto sem ser chato, cria desejo,
+        // diferencia milkshake de sundae visualmente e na cabeça do cliente
+        var COPY_MILKSHAKE = 'Batido na hora, cremoso de verdade,\nfeito com sorvete soft e sabor intenso.\nNão é ralo. Não é artificial. É outro nível.';
+        var COPY_SUNDAE    = 'Camadas cremosas com calda e textura,\nmontado na hora pra cada colher ser perfeita.\nSimples… mas viciante.';
+
         // Cria slides pra cada milkshake (8s cada)
         var milkshakeSlides = MILKSHAKE_CARDS.map(function(m){
             return { media: {
                 type: 'milkshake-card', mode: 'flavor',
                 emoji: m.emoji, gradient: m.gradient,
-                tag: '🥤 SABOR OFICIAL MILKYPOT',
                 title: m.name,
-                subtitle: m.copy,
+                subtitle: COPY_MILKSHAKE,
                 priceLabel: 'R$ 9,99',
-                priceUnit: '/ P 275ml — Promoção Inauguração',
+                priceUnit: '· P 275ml',
                 footer: '🥛 P 275ml · M 440ml · G 550ml · GG 770ml'
             }, duration: 8000 };
         });
 
-        // Cria slides pros sundaes (mesma vibe, copy adaptada)
+        // Cria slides pros sundaes (mesmos sabores, copy fixa de sundae)
         var sundaeSlides = MILKSHAKE_CARDS.map(function(m){
-            // Adapta copy: troca "milkshake" por "sundae" quando aparecer
-            // (mantém referências de "copo" — usamos o MESMO copo do milkshake)
-            var sundaeCopy = m.copy
-                .replace(/milkshake/gi, 'sundae')
-                .replace(/primeiro gole/gi, 'primeira colher')
-                .replace(/um gole/gi, 'uma colher');
             return { media: {
                 type: 'milkshake-card', mode: 'sundae',
                 emoji: m.emoji, gradient: m.gradient,
-                tag: '🍦 SUNDAE GOURMET MILKYPOT',
                 title: m.name,
-                subtitle: sundaeCopy,
+                subtitle: COPY_SUNDAE,
                 priceLabel: 'R$ 9,99',
-                priceUnit: '/ P 275ml — Promoção Inauguração',
-                footer: '🥛 P 275ml · M 440ml · G 550ml · GG 770ml'
+                priceUnit: '· P 275ml',
+                footer: '🍨 P 275ml · M 440ml · G 550ml · GG 770ml'
             }, duration: 8000 };
         });
 
@@ -880,8 +877,8 @@ body:not(.idle){cursor:default}
             : (m.mode === 'buffet'
                 ? { color:'#D84315', name:'SELF-SERVICE' }
                 : (m.mode === 'sundae'
-                    ? { color:'#7B1FA2', name:'SUNDAE GOURMET' }
-                    : { color:'#FF4F8A', name:'MILKSHAKE' }));
+                    ? { color:'#7B1FA2', name:'SUNDAE GOURMET MILKYPOT' }
+                    : { color:'#FF4F8A', name:'MILKSHAKE CREMOSO MILKYPOT' }));
 
         // Container raiz: fundo creme premium com fina linha de acento no topo
         return ''+
@@ -930,8 +927,8 @@ body:not(.idle){cursor:default}
                         esc(m.title)+
                     '</h1>'+
 
-                    /* Storytelling — Nunito leve, espaçoso, charcoal médio */
-                    '<p style="font-size:clamp(17px,1.6vw,26px);color:#444;line-height:1.55;margin:0 0 clamp(28px,3.5vh,48px);max-width:48ch;font-family:\'Nunito\',sans-serif;font-weight:500;animation:mpFadeUp 1s ease-out .55s both">'+
+                    /* Storytelling — Nunito leve, espaçoso, charcoal médio. white-space:pre-line preserva quebras de linha do subtitle (cada \n vira <br>) */
+                    '<p style="font-size:clamp(17px,1.6vw,26px);color:#444;line-height:1.55;margin:0 0 clamp(28px,3.5vh,48px);max-width:48ch;font-family:\'Nunito\',sans-serif;font-weight:500;white-space:pre-line;animation:mpFadeUp 1s ease-out .55s both">'+
                         esc(m.subtitle)+
                     '</p>'+
 
