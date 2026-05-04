@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #109 — 2026-05-04
+
+**Área:** Conteúdo — Diferenciação implícita TheBest "Potinho sem balança"
+
+**Contexto:** Prescrito pelo ciclo #107 (inteligência concorrente): quiosque TheBest Shopping Aurora Londrina operando, vende açaí por peso (R$6,29/100g), usa totem de autoatendimento. MilkyPot deve reforçar o oposto — personalização humanizada, preço fixo, experiência com a ovelhinha — sem nomear o concorrente.
+
+**O que analisou:**
+- Leu ciclos #107 e #108 para entender contexto estratégico e próximo passo
+- Revisou formatos de captions/reels existentes (inauguracao-25abr-captions.md, semana5) para manter padrão de voz
+- Mapeou ângulo central: balança = ansiedade/frieza vs. potinho = liberdade/carinho — contraste implícito, nunca confrontacional
+- Definiu 3 formatos complementares (carrossel, Reel, Stories) com tabela de uso situacional
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/diferenciacao-potinho-sem-balanca.md` | CRIADO — Feed carrossel 5 frames + Caption completa; Reel 15s com roteiro cena a cena + trilha sugerida; Stories 3 frames com stickers nativos; tabela de uso situacional; alerta de compliance (nunca nomear concorrente) |
+
+**Commit:** `54fd5be`
+
+**Destaques da peça:**
+1. **Frame 1 do carrossel como gancho:** "Aqui você escolhe. Não pesa." — captura atenção sem ainda revelar a diferença, induz o swipe
+2. **Reel 15s com contraste sonoro:** Beep de balança nos primeiros 2s → campainha alegre na entrada da ovelhinha. Transição emocional clara sem narração expositiva
+3. **Stories com enquete nativa:** "Já ficou ansioso na balança? SIM / NÃO" — gera dado de audiência + alcance orgânico por engajamento de stories
+4. **Tabela de uso situacional:** Operador sabe exatamente quando soltar cada peça (abertura de novo quiosque, evergreen, resposta a DM, Black Friday)
+5. **Evergreen + ativável:** Peça não expira — pode ser usada a qualquer semana como posicionamento de marca ou reativada quando TheBest for mencionado por clientes
+
+**Próximo passo sugerido:**
+- Ciclo #110: UX/Performance — verificar imagens pesadas em `cardapio.html` (product images PNG/JPG) e converter para WebP (prescrito ciclo #108)
+- Ciclo #111: SEO — `og:image` apontar para WebP full-res + manter PNG fallback (prescrito ciclo #108)
+- Ciclo #112: Conteúdo — Semanas 37+38 (27/12–09/01/2027): Virada Ano Novo 31/12 + "Nova meta, novo potinho" Linha Zero pós-festas (prescrito ciclo #77 do roadmap)
+- Operador: definir quando publicar esta peça (sugestão: próxima vez que cliente mencionar quiosque de açaí por peso nas DMs/comentários — resposta orgânica natural)
+- Operador: gravar o Reel com referência ao script — o roteiro está pronto, basta adaptar ao estoque visual disponível
+
+_Belinha — Ciclo #109 | 2026-05-04_
+
+---
+
 ## Ciclo #108 — 2026-05-04
 
 **Área:** UX/Performance — Hero logo WebP + preload responsivo (LCP `index.html`)
