@@ -2,6 +2,32 @@
 
 ---
 
+## Ciclo #118 — 2026-05-04
+
+**Área:** SEO — `index.html` WebSite + WebPage schema (BreadcrumbList + Sitelinks SearchAction)
+
+**O que analisou:**
+- Verificou `index.html`: tinha `FoodEstablishment` + `FAQPage`, mas **nenhum** `WebSite`, `WebPage` ou `BreadcrumbList`
+- Comparou com `cardapio.html` (ciclo #88): este já tinha `BreadcrumbList` + `WebPage` no padrão `@graph`
+- Identificou dois gaps de Rich Results na homepage: (1) sem `WebSite` → Google não consegue ativar Sitelinks Searchbox; (2) sem `WebPage` → hierarquia do site invisível para crawlers
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | Adicionado bloco `@graph` com `WebSite` (id `#website`, `SearchAction` apontando para `cardapio.html?q=`) + `WebPage` (homepage, `isPartOf: #website`, `breadcrumb` com 1 ListItem "Início") — inserido entre o bloco `aggregateRating` comentado e o `preload` LCP |
+
+**Impacto esperado:**
+- `WebSite` com `potentialAction: SearchAction` habilita o Google Sitelinks Searchbox quando a homepage tiver autoridade suficiente
+- `WebPage.breadcrumb` alinha a homepage com `cardapio.html`, `londrina/acai-self-service-londrina.html`, etc. — hierarquia completa para Rich Results de breadcrumb nas SERPs
+
+**Commit:** `c556933`
+
+**Próximo passo sugerido (roadmap #119):**
+- Conversão — Template WA marco 6 meses (25/10/2026) + verificar status WA keyword "VERAO" + template reativação D+60 de clientes inativos
+
+---
+
 ## Ciclo #117 — 2026-05-04
 
 **Área:** UX/Performance — `checkout` audit (primeira auditoria técnica)
