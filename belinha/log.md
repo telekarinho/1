@@ -2,6 +2,39 @@
 
 ---
 
+## Ciclo #114 — 2026-05-04
+
+**Área:** SEO — `robots.txt` consistência com sitemap + noindex
+
+**Contexto:** Prescrito pelo ciclo #113. O ciclo anterior adicionou `raspinha.html` ao `sitemap.xml` com intenção de indexação, mas o `robots.txt` ainda continha `Disallow: /raspinha.html` — bloqueando o Googlebot e contradizendo o sitemap. Gap adicional: `cartao-fidelidade.html` tem `meta name="robots" content="noindex"` mas não tinha `Disallow` correspondente, desperdiçando crawl budget.
+
+**O que analisou:**
+- `raspinha.html`: tem `meta description` (adicionada ciclo #113), SEM `noindex` — intenção é indexar. Sitemap a inclui com priority 0.4. Mas `Disallow: /raspinha.html` em robots.txt bloqueava Googlebot completamente. **Inconsistência crítica.**
+- `cartao-fidelidade.html`: tem `<meta name="robots" content="noindex">` confirmado, sem `Disallow` correspondente. Bots crawlam sem indexar — crawl budget perdido
+- Regra Google: quando robots.txt bloqueia (`Disallow`) uma URL que está no sitemap, o Google ignora o sitemap entry e não indexa. A dupla inconsistência anulava o trabalho do ciclo #113
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `robots.txt` | `Allow: /raspinha.html` adicionado + `Disallow: /raspinha.html` removido; `Disallow: /cartao-fidelidade.html` adicionado |
+
+**Commit:** `2be02cf`
+
+**Impacto:**
+- Googlebot agora pode crawlar e indexar `raspinha.html` — potencial rankeamento para "raspinha da sorte Londrina", "raspe e ganhe sobremesa"
+- `cartao-fidelidade.html` bloqueada de crawl → crawl budget preservado para páginas de conversão
+- Consistência total entre sitemap.xml ↔ robots.txt ↔ meta noindex (três camadas alinhadas)
+
+**Próximo passo sugerido:**
+- Ciclo #115: Auto-aprimoramento — reler log #110–#115, ajustar roadmap Q4 2026 (outubro–dezembro) conforme prescrito em `estrategia.md`
+- Ciclo #116: Concorrentes — Refetch pré-Q4: MilkyMoo + TheBest atualização de preços/promos para informar campanha Black Friday (postergado do #114 original)
+- Ciclo #117: Conteúdo — Semanas 37+38 (27/12–09/01/2027): Virada Ano Novo 31/12 + Linha Zero pós-festas
+
+_Belinha — Ciclo #114 | 2026-05-04_
+
+---
+
 ## Ciclo #113 — 2026-05-04
 
 **Área:** SEO — `sitemap.xml` audit + `noindex` em páginas internas
