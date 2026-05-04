@@ -2,6 +2,40 @@
 
 ---
 
+## Ciclo #110 — 2026-05-04
+
+**Área:** UX/Performance — `cardapio.html` logo WebP `<picture>` + preload responsivo
+
+**Contexto:** Prescrito pelo ciclo #109 e #108. O ciclo #108 converteu as logos para WebP e atualizou `index.html`, mas `cardapio.html` ficou fora — ainda carregava `logo-milkypot.png` (1.4 MB) como LCP element sem nenhuma otimização. Todos os arquivos WebP já existiam no disco.
+
+**O que analisou:**
+- Verificou que `cardapio.html` tinha `<link rel="preload" as="image" href="images/logo-milkypot.png" fetchpriority="high">` — sem `imagesrcset`/`imagesizes`, apontando para PNG de 1.4 MB
+- Verificou que navbar logo (`class="logo-img"`, 128px) e hero logo (`class="hero-logo-small"`, 280px) ainda eram `<img>` simples sem `<picture>`
+- Consultou padrão correto em `index.html` (ciclo #108) para manter consistência entre páginas
+- Confirmou que `og:image` e `apple-touch-icon` devem manter PNG (plataformas externas com suporte variável a WebP)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `cardapio.html` | Preload → WebP `imagesrcset`/`imagesizes`; navbar logo → `<picture>` WebP+PNG; hero logo → `<picture>` WebP+PNG (3 alterações em 1 arquivo) |
+
+**Commit:** `e44a69c`
+
+**Impacto estimado:**
+- LCP de `cardapio.html` em mobile 3G: logo era ~14s de download (1.4 MB PNG) → agora ~0.1s (10.6 KB WebP 1x) — redução de 98%+
+- `cardapio.html` agora tem paridade de performance com `index.html` — ambas as páginas principais otimizadas
+- Browser moderno: WebP via `<source type="image/webp">`; IE11/Opera Mini: fallback PNG automático
+
+**Próximo passo sugerido:**
+- Ciclo #111: SEO — atualizar `og:image` de `cardapio.html` para apontar para WebP full-res (`logo-milkypot.webp`, 100 KB vs 1.4 MB PNG) — verificar suporte WebP nos principais scrapers sociais (WhatsApp, Telegram, Twitter já suportam; Facebook parcial)
+- Ciclo #112: Conteúdo — Semanas 37+38 (27/12–09/01/2027): Virada Ano Novo 31/12 + "Nova meta, novo potinho" Linha Zero pós-festas (prescrito ciclo #77 do roadmap)
+- Ciclo #113: Verificar se `checkout.html` (se existir) ou outras páginas têm o mesmo problema de logo PNG não otimizado
+
+_Belinha — Ciclo #110 | 2026-05-04_
+
+---
+
 ## Ciclo #109 — 2026-05-04
 
 **Área:** Conteúdo — Diferenciação implícita TheBest "Potinho sem balança"
