@@ -47,7 +47,6 @@ const PRECACHE_URLS = [
     '/js/core/audit.js',
     '/js/core/notifications.js',
     // Feature JS
-    '/js/cardapio.js',
     '/js/cardapio-data.js',
     // Assets
     '/images/logo-milkypot.png',

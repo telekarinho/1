@@ -104,8 +104,31 @@ Google Analytics 4 Property ID: G-__________
 | Google Analytics ID | 🟡 Secundário | ❌ Aguardando |
 | Domínio correto (termos.html + privacidade.html) | 🟡 Secundário | ✅ Resolvido (Ciclo #13) |
 | WA "VERAO" keyword ativa? | 🟡 Operacional | ❓ Confirmar com operador |
+| `js/cardapio.js` dead code — remover arquivo? | 🟡 Técnico | ❓ Confirmar com operador |
+
+---
+
+## 🟡 TÉCNICO — decisão de código (pós-inauguração)
+
+### 6. `js/cardapio.js` — arquivo órfão (1050 linhas) aguarda decisão
+
+**Descoberta (Ciclo #112):**
+- `js/cardapio.js` é um app de pedido multi-step completo (`CardapioApp`, fluxo: base → formato → tamanho → sabor → adicionais → bebidas → resumo)
+- **Nenhuma página HTML carrega este arquivo** (`index.html` e `cardapio.html` não têm `<script src="js/cardapio.js">`)
+- `cardapio.html` usa `cart.js` + `checkout.js` como sistema real de pedidos
+- O arquivo referencia IDs `menuCart*` (ex: `menuCartSidebar`) que não existem no HTML (HTML usa `cartSidebar` etc.)
+- Estava apenas em `sw.js` PRECACHE_URLS — **removido no ciclo #112** (evita ~42 KB de precache desnecessário)
+
+**Hipótese:** `cardapio.js` é uma versão alternativa/WIP do fluxo de pedido que nunca chegou a ser integrada ao HTML. Pode ter sido substituída por `checkout.js` (786 linhas) sem remoção do arquivo.
+
+**Decisão necessária (operador/dev):**
+- **Opção A — Deletar `js/cardapio.js`:** Se o arquivo foi definitivamente abandonado, remove 1050 linhas mortas do repositório e simplifica a base de código. Belinha pode executar após autorização explícita.
+- **Opção B — Integrar `js/cardapio.js` ao `cardapio.html`:** Se existe plano de usar o `CardapioApp` como fluxo principal de pedido (substituindo ou complementando `checkout.js`), o operador/dev precisa alinhar IDs HTML (`menuCart*`) e adicionar `<script src="js/cardapio.js">` ao `cardapio.html`.
+- **Opção C — Manter como está:** Arquivo versionado no repo mas sem efeito em produção (após remoção do sw.js).
+
+**Impacto da inação:** Nenhum impacto em produção (arquivo já removido do precache). Apenas dívida técnica no repositório.
 
 ---
 
 *Criado por Belinha — Ciclo #12 — 2026-04-23*
-*Atualizado — Ciclo #97 — 2026-05-03*
+*Atualizado — Ciclo #112 — 2026-05-04*
