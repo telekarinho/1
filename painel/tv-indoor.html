@@ -33,8 +33,11 @@
         .media-item .media-label{padding:6px 8px;font-size:11px;font-weight:600;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .media-item .media-type{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px;border-radius:8px}
         .media-item .media-dur{position:absolute;bottom:30px;right:6px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px;border-radius:8px}
-        .media-delete{position:absolute;top:6px;left:6px;background:rgba(229,57,53,.85);color:#fff;border:0;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;display:none;align-items:center;justify-content:center}
-        .media-item:hover .media-delete{display:flex}
+        /* Botão excluir — SEMPRE visível (antes ficava só no hover, invisível em mobile) */
+        .media-delete{position:absolute;top:6px;left:6px;background:#e53935;color:#fff;border:2px solid #fff;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.35);z-index:5;padding:0;line-height:1;transition:transform .15s,background .15s}
+        .media-delete:hover{background:#c62828;transform:scale(1.12)}
+        .media-delete:active{transform:scale(.92)}
+        .media-delete:focus-visible{outline:3px solid #FFD54F;outline-offset:2px}
 
         /* Drop zone */
         .drop-zone{border:2px dashed #bbb;border-radius:16px;padding:32px;text-align:center;color:#999;cursor:pointer;transition:all .2s;margin-bottom:16px}
@@ -1375,6 +1378,10 @@
     window.deleteMedia = function(id){
         var item = getMedia().find(function(m){ return m.id === id; });
         if(item && item._auto){ Utils.showToast('Este item é gerenciado automaticamente e não pode ser excluído.','error'); return; }
+        var nome = item && item.name ? item.name : 'este item';
+        if(!confirm('Excluir "' + nome + '" da biblioteca?\n\nIsso também remove o item de todas as playlists. A ação não pode ser desfeita.')){
+            return;
+        }
         // Remove do Firebase Storage via REST API (silencioso se não existir)
         if(item && item.storagePath){
             try {
@@ -1421,7 +1428,7 @@
             var typeIcons = {image:'🖼️',video:'🎬',text:'✏️',product:'🌟',promo:'⚡',combo:'🤝',menu:'📋',story:'📸',html:'🌐'};
             var deleteBtn = m._auto
                 ? '<span style="position:absolute;top:6px;left:6px;background:rgba(0,120,0,.75);color:#fff;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:700">🔒 Auto</span>'
-                : '<button class="media-delete" onclick="event.stopPropagation();deleteMedia(\'' + esc(m.id) + '\')" title="Remover">&times;</button>';
+                : '<button type="button" class="media-delete" onclick="event.stopPropagation();deleteMedia(\'' + esc(m.id) + '\')" aria-label="Excluir ' + esc(m.name||'item') + '" title="Excluir">🗑️</button>';
             var editHint = m._auto ? '' : '<div style="position:absolute;bottom:2px;right:4px;font-size:10px;color:#666;background:rgba(255,255,255,.85);padding:1px 5px;border-radius:4px">✏️ editar</div>';
             return '<div class="media-item" onclick="' + (m._auto ? '' : 'editMedia(\'' + esc(m.id) + '\')') + '" title="' + (m._auto ? 'Slide auto-gerenciado' : 'Clique para editar') + '">' +
                 deleteBtn +
@@ -2275,15 +2282,27 @@
     }
 
     /* === Auto-slides: garante que o slide de cardápio está na biblioteca ===
-       Adiciona um item type:"html" apontando para tv.html?f=FID. O app Android
-       carrega esta URL em um WebView por 5 minutos mostrando todos os slides
-       de cardápio (milkshake cards, sundaes, promos, buffet) automaticamente.
-       O item tem _auto:true — não aparece com botão de excluir no painel. */
+       Adiciona um item type:"html" apontando pra /tv-cardapio.html?f=FID.
+       Esse arquivo renderiza os tamanhos do cardápio (P/M/G/GG) em tempo real,
+       lendo de js/cardapio-data.js. Atualizando o cardapio-data.js, o slide
+       reflete automaticamente.
+       O item tem _auto:true — não aparece com botão de excluir no painel.
+       Se um item legacy apontando pra /tv.html?f= existir, atualiza a URL
+       (migration silenciosa, sem perder posição na biblioteca). */
     function ensureAutoCardapioSlide() {
-        var existing = getMedia().find(function(m){ return m.id === 'auto-cardapio-slides'; });
-        if (existing) return;
         var base = location.origin.replace(/^http:\/\/localhost.*/,'https://milkypot.com') || 'https://milkypot.com';
-        var slideUrl = base + '/tv.html?f=' + encodeURIComponent(fid);
+        var slideUrl = base + '/tv-cardapio.html?f=' + encodeURIComponent(fid);
+        var media = getMedia();
+        var existing = media.find(function(m){ return m.id === 'auto-cardapio-slides'; });
+        if (existing) {
+            // Migra URL antiga (tv.html) pra nova (tv-cardapio.html) sem mexer em mais nada
+            if (existing.url !== slideUrl) {
+                existing.url = slideUrl;
+                existing.name = '📋 Slides Cardápio (Auto)';
+                saveMedia(media);
+            }
+            return;
+        }
         var item = {
             id: 'auto-cardapio-slides',
             name: '📋 Slides Cardápio (Auto)',
@@ -2293,9 +2312,8 @@
             _auto: true,
             addedAt: new Date().toISOString()
         };
-        var cur = getMedia();
-        cur.unshift(item);
-        saveMedia(cur);
+        media.unshift(item);
+        saveMedia(media);
     }
 
     /* === Initial render === */
