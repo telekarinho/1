@@ -56,10 +56,38 @@ function validateDeliveryMinimum() {
     showToast(msg);
     var minBox = document.getElementById('deliveryMinimumNotice');
     if (minBox) {
-        minBox.textContent = msg;
+        renderDeliveryMinimumChoice(minBox, calc, msg);
         minBox.style.display = 'block';
     }
     return true;
+}
+
+function renderDeliveryMinimumChoice(minBox, calc, msg) {
+    if (!minBox) return;
+    var frete = formatCurrency((calc && calc.fretePagoCliente) || 0);
+    minBox.innerHTML = `
+        <div style="line-height:1.45;margin-bottom:10px">${msg}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button type="button" onclick="addMoreForFreeDelivery()" style="border:1px solid #FDBA74;background:#fff;color:#9A3412;border-radius:10px;padding:11px 10px;font-weight:900;cursor:pointer">
+                Adicionar mais produto
+            </button>
+            <button type="button" onclick="continueWithDeliveryFee()" style="border:0;background:linear-gradient(135deg,#2563EB,#8B5CF6);color:#fff;border-radius:10px;padding:11px 10px;font-weight:900;cursor:pointer">
+                Finalizar com frete ${frete}
+            </button>
+        </div>
+    `;
+}
+
+function addMoreForFreeDelivery() {
+    if (typeof closeCheckout === 'function') closeCheckout();
+    setTimeout(function() {
+        var target = document.getElementById('productsGrid') || document.getElementById('categoryTabs') || document.body;
+        if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+}
+
+function continueWithDeliveryFee() {
+    if (typeof nextCheckoutStep === 'function') nextCheckoutStep(4);
 }
 
 // ============================================
@@ -187,9 +215,10 @@ function updateOrderSummary() {
     var minBox = document.getElementById('deliveryMinimumNotice');
     if (minBox) {
         if (deliveryType === 'delivery' && !calc.pedidoMinimoOk) {
-            minBox.textContent = (typeof DeliveryRules !== 'undefined')
+            var minMsg = (typeof DeliveryRules !== 'undefined')
                 ? DeliveryRules.minimumMessage(calc)
                 : 'Você pode adicionar mais produtos para ganhar frete grátis ou finalizar pagando o frete calculado.';
+            renderDeliveryMinimumChoice(minBox, calc, minMsg);
             minBox.style.display = 'block';
         } else {
             minBox.style.display = 'none';
