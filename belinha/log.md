@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #113 — 2026-05-04
+
+**Área:** SEO — `sitemap.xml` audit + `noindex` em páginas internas
+
+**Contexto:** Prescrito pelos ciclos #111 e #112. Tarefa: verificar se `acai-self-service-londrina.html`, `termos.html`, `privacidade.html` e `raspinha.html` estavam no sitemap, e corrigir quaisquer gaps de indexação.
+
+**O que analisou:**
+- `sitemap.xml` já continha corretamente: `/`, `cardapio.html`, `potinho-ninho-londrina.html`, `acai-self-service-londrina.html`, `desafio.html`, `privacidade.html`, `termos.html`
+- **Gap 1:** `raspinha.html` ausente do sitemap e sem `meta description` — página pública acessada via QR code no PDV, não deveria estar invisível para o Google
+- **Gap 2:** 7 páginas internas sem `noindex` — `login.html`, `tv.html`, `tv1.html`, `tv2.html`, `tv3.html`, `radio.html`, `cronometro-milkypot.html` — todas potencialmente indexáveis pelo Googlebot, diluindo autoridade de domínio
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `sitemap.xml` | Adicionada entrada `raspinha.html` (priority 0.4); comentário documenta todas as páginas excluídas com noindex |
+| `raspinha.html` | `<meta name="description">` adicionada (ausente) |
+| `login.html` | `<meta name="robots" content="noindex, nofollow">` adicionada |
+| `tv.html` | `<meta name="robots" content="noindex, nofollow">` adicionada |
+| `tv1.html` | `<meta name="robots" content="noindex, nofollow">` adicionada |
+| `tv2.html` | `<meta name="robots" content="noindex, nofollow">` adicionada |
+| `tv3.html` | `<meta name="robots" content="noindex, nofollow">` adicionada |
+| `radio.html` | `<meta name="robots" content="noindex, nofollow">` adicionada |
+| `cronometro-milkypot.html` | `<meta name="robots" content="noindex, nofollow">` adicionada |
+
+**Commit:** `6708e0c`
+
+**Impacto:**
+- Googlebot descobre `raspinha.html` via sitemap (potencial rankeamento para "raspinha da sorte sobremesa Londrina")
+- 7 páginas internas deixam de diluir crawl budget e autoridade de domínio
+- Sitemap agora tem comentário de auditoria documentando as exclusões — manutenção futura facilitada
+
+**Próximo passo sugerido:**
+- Ciclo #114: Conteúdo — Semanas 37+38 (27/12–09/01/2027): Virada Ano Novo 31/12 + "Nova meta, novo potinho" Linha Zero pós-festas + Sexta #21 "Primeiro Potinho de 2027" (prescrito ciclos #77, #110, #112)
+- Ciclo #115: SEO avançado — verificar se `robots.txt` bloqueia as páginas internas corretamente (Disallow para tv*.html, login.html, etc.) para consistência com os noindex adicionados
+- Ciclo #116: UX/Performance — Core Web Vitals audit: verificar LCP em `cardapio.html` pós-mudança de imagem (ciclo #110)
+
+_Belinha — Ciclo #113 | 2026-05-04_
+
+---
+
 ## Ciclo #112 — 2026-05-04
 
 **Área:** UX/Performance — `sw.js` dead asset cleanup + análise `cardapio.js` órfão
