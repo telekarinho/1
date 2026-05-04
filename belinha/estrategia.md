@@ -1400,3 +1400,121 @@ A inauguração foi em 25/04/2026. Q3 de operação cobre:
 ---
 
 _Belinha — Ciclo #105 | 2026-05-03_
+
+---
+
+## Auto-aprimoramento: Ciclos #110–#114 (revisão do ciclo #115)
+
+_Atualizado no ciclo #115 (2026-05-04) — obrigatório a cada 5 ciclos_
+
+### Resumo do bloco #110–#114
+
+| Ciclo | Área | Resumo | ROI |
+|-------|------|--------|-----|
+| #110 | UX/Performance | `cardapio.html` logo WebP `<picture>` + preload responsivo (LCP −98%) | Alto |
+| #111 | Conversão | `loyalty.js` milestones 10/50pts + 3 templates WA fidelidade | Alto |
+| #112 | UX/Performance | `sw.js` dead asset cleanup: `cardapio.js` removido do precache (−42 KB) | Médio |
+| #113 | SEO | `sitemap.xml`: `raspinha.html` adicionada + noindex em 7 páginas internas | Alto |
+| #114 | SEO | `robots.txt` fix crítico: `raspinha.html` desbloqueada + `cartao-fidelidade.html` Disallowed | Altíssimo |
+
+**Ratio #110–#114:** UX/Performance: 2 · Conversão: 1 · SEO: 2 · Concorrentes: 0
+
+---
+
+### O que gerou mais valor concreto (#110–#114)
+
+1. **#114 robots.txt (fix crítico):** `raspinha.html` estava bloqueada pelo `Disallow` apesar de constar no sitemap — o ciclo #113 inteiro teria sido anulado. Detecção de inconsistência pós-ciclo anterior: padrão de "auditoria encadeada" que deve ser mantido.
+2. **#110 WebP cardapio.html:** LCP de ~14s para ~0.1s no mobile 3G (PNG 1.4 MB → WebP 10.6 KB). Maior impacto técnico do bloco. Confirma regra: UX/Performance com ganho mensurável tem ROI máximo.
+3. **#113 noindex sweep batch:** 7 páginas internas protegidas em 1 ciclo — crawl budget concentrado nas páginas de conversão. Sweep batch superior a 7 ciclos graduais.
+4. **#111 loyalty.js milestones:** API não-breaking, 3 novos gatilhos operacionais (10/50/100pts). Templates WA prontos — operador age sem código adicional.
+5. **#112 sw.js cleanup:** Menor ROI do bloco, mas correto — ativo morto de 42 KB eliminado. Blocker documentado com 3 opções claras para o operador.
+
+### O que gerou menos valor concreto (#110–#114)
+
+1. **Concorrentes ausente há 21 ciclos (desde #94):** #114 era prescrito como refetch de concorrentes para Black Friday — substituído por robots.txt (urgência maior). Correto adaptar, mas o intervalo de 21 ciclos é inaceitável. Black Friday 2026 = 27/11 — sem dados de preço/promo do TheBest e MilkyMoo, a diferenciação no conteúdo de semana 31 é genérica. **Prioridade #1 no ciclo #116.**
+2. **Diagnóstico falso-positivo no roadmap #105:** `cardapio.html` foi listado como "sem WebPage schema", mas o ciclo #88 já havia feito. Custo: 1 ciclo prescrito para tarefa já feita. **Nova regra: antes de listar gap técnico, `git log --oneline | grep <arquivo>` confirma.**
+3. **Ratio 2 SEO consecutivos (#113+#114):** Resultado excelente mas risco de padrão. Foi correto porque #114 era follow-up obrigatório de #113. Encadeamento de correção = válido; evitar 3+ ciclos na mesma área sem necessidade técnica.
+
+---
+
+### Diagnóstico de débito técnico real (D+9, pós-#114)
+
+| Área | Última vez | Ciclos | Status |
+|------|-----------|--------|--------|
+| Concorrentes | #94 | 21 | 🔴 CRÍTICO — Black Friday intel pendente |
+| UX/Performance | #112 | 3 | ✅ Recente |
+| SEO técnico | #114 | 0 | ✅ Atual |
+| Conversão | #111 | 4 | ✅ Recente |
+| Conteúdo semanal | #91 | 24 | 🔒 Pausado (56 semanas cobertas) |
+
+---
+
+### Estado real do projeto em D+9 (2026-05-04)
+
+| Dimensão | Status |
+|----------|--------|
+| Conteúdo semanal | ✅ Semanas 1–56 cobertas (~15/05/2027) |
+| `cardapio.html` WebPage+BreadcrumbList | ✅ Feito no ciclo #88 (diagnóstico #105 era incorreto) |
+| `cardapio.html` WebP logo | ✅ Feito no ciclo #110 |
+| `index.html` WebP + preconnect | ✅ Feito no ciclo #108 |
+| FAQPage (index, acai, ninho) | ✅ Ciclos #26, #46, #68 |
+| `robots.txt` + sitemap consistentes | ✅ Ciclo #114 |
+| Raspinha da sorte | ✅ Funcional pós-bugfix #104 |
+| `loyalty.js` milestones 10/50pts | ✅ Ciclo #111 |
+| `checkout.html` audit | ❌ Nunca auditado — próxima UX/Performance sweep |
+| WA "VERAO" keyword ativa? | ❓ Não confirmado pelo operador |
+| `cardapio.js` dead code (menuCart*) | ⚠️ Blocker #6 — aguarda decisão operador |
+| `aggregateRating` Schema.org | ⛔ Suspenso — aguarda ≥3 reviews Google Maps |
+| Google Analytics ID real | ⛔ Suspenso — aguarda autorização usuário |
+| LGPD (CNPJ/DPO) | ⛔ D+9 sem resolução — risco legal |
+
+---
+
+### Contexto Q4 2026 (outubro–dezembro, meses 6–8 de operação)
+
+| Marco | Data | Conteúdo | Gap |
+|-------|------|----------|-----|
+| 6 meses de operação | 25/10/2026 (sem. 26) | ✅ Semana 26 escrita | — |
+| Black Friday | 27/11/2026 (sem. 31) | ✅ Semana 31 (Versão A/B) | Intel concorrentes ausente |
+| Lançamento produto verão | 01/12/2026 (sem. 33) | ✅ Semana 33 (Versão A/B) | Confirmação franquia |
+| Reveal Potinho Noel | 09/12/2026 (sem. 34) | ✅ Semana 34 (Versão A/B) | Confirmação franquia |
+| 8 meses narrativo | 25/12/2026 (sem. 36) | ✅ Semana 36 escrita | — |
+
+**Alerta Q4:** Black Friday sem intel de preços concorrentes = diferenciação genérica. Resolver no ciclo #116.
+
+---
+
+### Roadmap rebalanceado #116–#125
+
+| Ciclo | Área | Ação | Urgência |
+|-------|------|------|----------|
+| #116 | Concorrentes | TheBest + MilkyMoo refetch (21 ciclos sem dados): preços BF 2026, promos, UGC, novos entrantes Londrina. Output: atualizar arquivo `.md` + 1 mudança concreta no site | 🔴 CRÍTICO |
+| #117 | UX/Performance | `checkout.html` audit: LCP, formulário mobile, campos desnecessários, performance | Alta |
+| #118 | SEO | `index.html` BreadcrumbList: verificar se existe (cardápio ✅, açaí ✅ — confirmar index) | Média |
+| #119 | Conversão | Template WA marco 6 meses (25/10) + check status WA "VERAO" + reativação D+60 | Alta |
+| #120 | Auto-aprimoramento | Reler log #115–#119, ajustar roadmap outubro–dezembro 2026 | — |
+| #121 | UX/Performance | CSS purge em páginas não-auditadas: `acai-self-service-londrina.html`, `potinho-ninho-londrina.html` | Média |
+| #122 | SEO | LocalBusiness schema: horários de funcionamento atualizados + Black Friday (27/11) | Média |
+| #123 | Conversão | Black Friday WA playbook: scripts Sexta #31 do Potinho + mecânica "BLACKPOT" (informado por #116) | Alta |
+| #124 | SEO | FAQPage em `cardapio.html`: perguntas sobre personalização, entrega, fidelidade | Baixa |
+| #125 | Auto-aprimoramento | Reler log #120–#124, roadmap dezembro 2026 (Natal + 8 meses narrativo) | — |
+
+---
+
+### Nova regra v13 (adicionada neste ciclo)
+
+> **Concorrentes: máximo 15 ciclos entre refetches** — acima deste limite, concorrentes sobe automaticamente para prioridade #1 independente da rotação. Datas de pico (Black Friday, Carnaval, aniversários) exigem intel mínimo 4 semanas antes do evento.
+
+> **Verificar antes de prescrever** — antes de listar gap técnico no roadmap, confirmar via `git log --oneline | grep <arquivo>` se já foi feito em ciclos anteriores.
+
+### Regras mantidas (v12)
+
+1. Pausa de conteúdo ativa enquanto horizonte > 6 semanas (atual: 56 semanas cobertas)
+2. `aggregateRating` → checar apenas quando operador confirmar ≥3 reviews Google Maps
+3. Ciclos de concorrentes obrigatoriamente geram mudança no site no mesmo ciclo
+4. Rotação v12: UX/Performance > SEO > Conversão > Concorrentes > Conteúdo
+5. Auto-aprimoramento a cada 5 ciclos (próximo: #120)
+
+---
+
+_Belinha — Ciclo #115 | 2026-05-04_

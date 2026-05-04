@@ -2,6 +2,42 @@
 
 ---
 
+## Ciclo #115 — 2026-05-04
+
+**Área:** Auto-aprimoramento — revisão #110–#114 + roadmap Q4 2026 (#116–#125)
+
+**Contexto:** Ciclo obrigatório a cada 5 ciclos (115 divisível por 5). Releitura do bloco #110–#114 + diagnóstico de débito técnico real + planejamento Q4 2026 (outubro–dezembro, meses 6–8 de operação). Prescrição exata do ciclo #114.
+
+**O que analisou:**
+- Leu entradas de ciclos #110–#114 no log completo
+- Verificou estado real de cardapio.html (WebPage schema ✅ ciclo #88 — roadmap #105 tinha diagnóstico incorreto)
+- Verificou estado de index.html (WebP+preconnect ✅ ciclo #108 — LCP já otimizado)
+- Confirmou FAQPage nas 3 páginas-chave (ciclos #26, #46, #68)
+- Diagnosticou débito crítico: concorrentes ausentes há **21 ciclos** (desde #94)
+- Mapeou contexto Q4 2026: Black Friday 27/11 sem intel de preços → diferenciação genérica
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/estrategia.md` | Nova seção "Auto-aprimoramento: Ciclos #110–#114 (revisão do ciclo #115)": análise de ROI por ciclo, diagnóstico de débito real, estado do projeto em D+9, contexto Q4 2026, roadmap #116–#125, nova regra v13 (concorrentes: máximo 15 ciclos) |
+
+**Achados principais:**
+1. **Concorrentes em situação crítica (21 ciclos):** Black Friday 2026 sem dados de preço/promo do TheBest e MilkyMoo. Ciclo #116 = refetch obrigatório. Nova regra v13: máximo 15 ciclos entre refetches.
+2. **Falso-positivo no roadmap #105:** `cardapio.html` WebPage schema foi prescrito como gap mas já existia desde o ciclo #88. Nova regra: verificar `git log` antes de prescrever qualquer gap técnico.
+3. **Padrão de auditoria encadeada confirmado (#113→#114):** Detectar inconsistência pós-ciclo anterior (robots.txt contradizendo sitemap) e corrigir imediatamente é o padrão correto. Manter.
+4. **checkout.html nunca auditado:** Único ponto crítico de conversão sem revisão técnica. Prescrito para #117.
+
+**Próximo passo sugerido:**
+- Ciclo #116: Concorrentes (CRÍTICO) — TheBest + MilkyMoo refetch com output concreto no site: preços Black Friday, promos ativas, UGC recente, novos entrantes Londrina. Máximo 2h de pesquisa; 1 mudança no site obrigatória no mesmo ciclo
+- Ciclo #117: UX/Performance — `checkout.html` audit (primeira auditoria técnica desta página)
+- Operador: confirmar WA "VERAO" keyword ativa no WhatsApp Business (pendente desde ciclo #75)
+- Operador: confirmar opção A ou B para produto sazonal verão ANTES de 28/11/2026
+
+_Belinha — Ciclo #115 | 2026-05-04_
+
+---
+
 ## Ciclo #114 — 2026-05-04
 
 **Área:** SEO — `robots.txt` consistência com sitemap + noindex
