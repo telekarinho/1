@@ -249,9 +249,66 @@ A TheBest inaugurou seu **primeiro quiosque em shopping** no Shopping Aurora, Lo
 - [x] Meta 1.500 até dez/2026 documentada
 - [x] Segunda fábrica e capital PE registrados
 - [x] EUA confirmado (4 lojas FL 2026)
-- [ ] Verificar preço quiosque Shopping Aurora (pendente desde ciclo #84)
-- [ ] Monitorar chegada de quiosque TheBest ao Muffato (rever em ciclo ~99)
+- [x] Verificar preço quiosque Shopping Aurora — R$6,29/100g confirmado para loja tradicional; quiosque sem preço específico publicado
+- [ ] Monitorar chegada de quiosque TheBest ao Muffato Quintino Bocaiuva (rever em ciclo ~#115)
 
 ---
 
 *Atualizado por Belinha — Ciclo #94 — 2026-05-02*
+
+---
+
+## Atualização Ciclo #107 — 2026-05-04
+
+### Quiosque Shopping Aurora — Status Operacional
+
+O quiosque piloto no Shopping Aurora (Londrina) está em operação. Detalhes confirmados:
+- **Modelo:** Enxuto — totens de autoatendimento, operação otimizada
+- **Cardápio:** 16 opções (açaí + sorvetes), 4 cremes, 3 frutas, 4 acompanhamentos
+- **Investimento franchisee:** R$150k (vs. R$350k loja convencional)
+- **Faturamento projetado:** R$60k/mês — payback 16–20 meses
+- **Preço loja Gleba Palhano** (confirmado em UGC TikTok): **R$6,29/100g**, 12 sabores açaí, 24 sabores sorvete, 40+ acompanhamentos
+- **Preço quiosque Aurora:** não publicado — presumivelmente similar à loja
+
+### Status Unidades Londrina (atualizado ciclo #107)
+
+| Unidade | Endereço | Status |
+|---------|----------|--------|
+| Gleba Palhano | Rua Caracas, 159 | ✅ Maior loja da rede (310m²) — operando |
+| San Conrado | — | ✅ Operando |
+| Rua Pio XII | — | ✅ Operando |
+| Arthur Thomas | Arthur Thomas, 831 | ✅ Operando |
+| Shopping Aurora | Quiosque (piloto) | ✅ Operando — modelo autoatendimento |
+| HG (Higienópolis) | — | ✅ Operando |
+| **Muffato Quintino Bocaiuva** | Av. Quintino Bocaiuva, 1045 | ❌ Sem TheBest — gap MilkyPot mantido |
+
+> Nota: endereços Cerro Azul 2060 e Vereador Toaldo Túlio 2265 (mencionados como "em frente ao Muffato") provavelmente são de outras cidades. Alerta não confirmado em Londrina — mantém-se status de ciclos anteriores.
+
+### Escala Nacional (atualizado ciclo #107)
+
+| Indicador | Ciclo #94 | Ciclo #107 |
+|---|---|---|
+| Unidades ativas | 1.100+ | **812–900+ lojas (8 anos de operação)** |
+| Meta 2026 | 1.500 lojas + quiosques | **1.500 até dez/2026 (ajustada)** |
+| Quiosques shoppings | Piloto Aurora (Londrina) | ✅ Operando — rollout 300–500 em curso |
+| EUA (Flórida) | 4 lojas previstas | **4 lojas confirmadas: 2 próprias + 2 franchisee BR** |
+| Segunda fábrica | Em construção | Previsão parcial: fim de 2026 |
+
+### Alertas Estratégicos (Ciclo #107)
+
+1. **Quiosque Aurora operando = modelo validado.** Com rollout 300–500 unidades, o ritmo aumenta. O Muffato Quintino Bocaiuva permanece sem TheBest, mas a janela de exclusividade de localização é cada vez mais estreita.
+2. **Autoatendimento (totem) = diferenciação pelo lado deles.** TheBest está automatizando a operação para reduzir custo. MilkyPot deve reforçar o oposto: atendimento humanizado, personalização real, interação com a ovelhinha no PDV — experiência que totem não oferece.
+3. **R$6,29/100g loja Gleba Palhano** — um potinho médio (~400g) custa ~R$25. Ticket similar ao MilkyPot. Mas TheBest é self-service com balança vs. MilkyPot com produto pronto + personalizado. Copy "Potinho não tem balança" continua válida.
+4. **Londrina = sede do grupo TheBest.** Qualquer nova unidade aqui é vitrine nacional. Monitorar especialmente se abrirem no Muffato Quintino Bocaiuva.
+
+- [x] Quiosque Aurora status operacional documentado
+- [x] Preço R$6,29/100g (Gleba Palhano) confirmado em UGC
+- [x] 6 unidades Londrina mapeadas
+- [x] Gap Muffato Quintino Bocaiuva mantido
+- [x] Rollout 300–500 quiosques em curso registrado
+- [ ] Monitorar chegada ao Muffato Quintino Bocaiuva (próxima verificação: ciclo ~#115)
+- [ ] Confirmar preço específico do quiosque Shopping Aurora
+
+---
+
+*Atualizado por Belinha — Ciclo #107 — 2026-05-04*

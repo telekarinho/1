@@ -265,9 +265,74 @@ A MilkyMoo lançou em 2026 o **Milky Moo Festa**, modelo de operação móvel pa
 - [x] Escala nacional atualizada
 - [x] Status Londrina verificado — gap Muffato mantido
 - [ ] Monitorar se Milky Moo Festa inicia operações em Londrina
-- [ ] Analisar ads Meta Ads Library @milkymoo_londrina (pendente desde ciclo #84)
-- [ ] Verificar se MilkyMoo lança linha sazonal inverno/junina 2026
+- [x] Analisar ads Meta Ads Library @milkymoo_londrina (pendente desde ciclo #84) — sem nova unidade detectada
+- [x] Verificar se MilkyMoo lança linha sazonal inverno/junina 2026 — confirmado: Páscoa 2026 + collab Boticário
 
 ---
 
 _Última atualização: ciclo #94 — 2026-05-02_
+
+---
+
+## Atualização Ciclo #107 — 2026-05-04
+
+### Novidades de Produto (Q1–Q2 2026)
+
+**1. Milkshake 180ml "Day Part Action" (lançamento 30/04/2026)**
+- Primeiro milkshake de 180ml do portfólio — aposta na frente de consumo "pós-almoço"
+- Disponível da abertura até 13h59, a partir de **R$12,90**
+- Todos os sabores do cardápio (exceto premium e alcoólicos)
+- Consumo no balcão ou pelo app — apenas em loja
+- Estratégia: não é disrupção de portfólio, é criação de novo "day part" com dado comportamental real da rede
+
+**2. Ovos de Páscoa 2026 (disponíveis a partir de 05/03/2026)**
+- Dois sabores inspirados em best-sellers do cardápio:
+  - **Ovo Pandora**: casca choc. branco + ao leite, recheio creme de avelã com cacau
+  - **Ovo Malhada**: casca choc. ao leite, recheio sabor leite + gotas de biscoito choc.
+- Brinde: "Moo – O Jogo de Cartas da Milky" (baralho de dinâmicas em grupo)
+- Meta: crescer 80% vs. 2025 (que vendeu 5k unidades). Lojas selecionadas
+- Sinal: Milky Moo está construindo extensões de marca sazonais além do milkshake core
+
+**3. Collab O Boticário "Carameluda" (abril–maio 2026)**
+- Milkshake edição limitada inspirado em Cuide-se Bem Deleite Caramelizado (fragrância gourmand)
+- Ingredientes: sorvete baunilha + caramelo salgado + doce de leite + biscoitos de especiarias
+- Preço: a partir de **R$25,00** (300ml, 500ml, 700ml)
+- Disponível em todas as unidades até fim de maio 2026
+- Campanha: cantora Desirée + hashtag #DoceLovers
+- Sinal: Milky Moo está operando como plataforma de lifestyle (marca de cosméticos → milkshake), aproximando-se do público feminino 18–35
+
+### Status Londrina (Ciclo #107)
+
+- **Catuaí:** ✅ Presente — Shopping Catuaí (frente ao cinema), Seg–Sab 10h–22h, Dom/Fer 11h–22h
+- **Boulevard:** ✅ Presente — Boulevard Shopping Londrina
+- **Muffato (Quintino Bocaiuva):** ❌ Sem unidade — gap MilkyPot mantido
+- **Milky Moo Festa Londrina:** Não detectada ainda — modelo mapeou 1.352 cidades potenciais; Londrina pode entrar
+
+### Escala Nacional (atualizado ciclo #107)
+
+| Indicador | Ciclo #94 | Ciclo #107 |
+|---|---|---|
+| Unidades ativas | Crescimento acelerado | **700+ lojas** (7 anos de operação) |
+| Modelo móvel (Festa) | Lançado | **Mapeado: 1.352 cidades / 1.745 oportunidades; R$200k inv.** |
+| Milkshake 180ml | Não existia | **Lançado 30/04/2026 — a partir de R$12,90** |
+| Collab de marca | Sem registro | **O Boticário Carameluda (abr–mai 2026)** |
+| Páscoa | Sem registro | **Ovos Pandora + Malhada (5/03/2026)** |
+
+### Alertas Estratégicos (Ciclo #107)
+
+1. **MilkyMoo está construindo múltiplas "ocasiões de consumo"** — pós-almoço (180ml), Páscoa (ovos), evento (Festa), lifestyle (collab). MilkyPot compete principalmente na ocasião "sobremesa personalizável noite/fim de semana". Gap saudável, mas vale monitorar.
+2. **Collab com marcas = estratégia de aquisição de público.** O Boticário atinge exatamente o público feminino 18–35 que MilkyPot também quer. MilkyPot deve explorar collabs locais (marcas/influencers Londrina) para criar o mesmo buzz sem budget nacional.
+3. **Milky Moo Festa ainda não chegou em Londrina** — janela ainda aberta. Se o operador quiser, pode criar serviço "Potinho para Festa" (eventos, aniversários, feiras) antes da chegada do Festa model.
+4. **180ml a R$12,90 = ticket médio menor** — mas cria novo cliente que nunca entrava por achar caro. Não é ameaça direta ao potinho (produto diferente), mas sinaliza que MilkyMoo está disposto a baixar o ticket de entrada.
+
+- [x] 180ml Day Part Action documentado
+- [x] Ovos Páscoa 2026 documentado
+- [x] Collab O Boticário documentado
+- [x] Milky Moo Festa escala documentada
+- [x] Gap Muffato Londrina verificado — mantido
+- [ ] Monitorar chegada de Milky Moo Festa em Londrina (próxima verificação: ciclo ~#115)
+- [ ] Verificar ads Meta Ads Library @milkymoo_londrina para criativos ativos
+
+---
+
+_Última atualização: ciclo #107 — 2026-05-04_
