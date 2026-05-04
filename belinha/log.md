@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #108 — 2026-05-04
+
+**Área:** UX/Performance — Hero logo WebP + preload responsivo (LCP `index.html`)
+
+**O que analisou:**
+- Hero LCP element: `<img class="hero-logo-small">` renderiza a 280px mas carregava `logo-milkypot.png` (1900×1070px, **1.4 MB**)
+- Preload existente apontava para o PNG — correto em direção, mas sem ganho de tamanho
+- Python 3.11 + Pillow disponíveis → conversão WebP possível no servidor
+- CSS: `.hero-logo-small { width: 280px }` (sem breakpoint diferente) → 280w e 560w (2x retina) cobrem todos os casos
+- Firebase CDN preconnect e Google Fonts non-render-blocking já estavam em ordem (ciclos anteriores)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `images/logo-milkypot-280w.webp` | CRIADO — 280×158px, **10.6 KB** (-99% vs PNG original) |
+| `images/logo-milkypot-560w.webp` | CRIADO — 560×315px, **27.6 KB** (@2x retina, -98% vs PNG) |
+| `images/logo-milkypot.webp` | CRIADO — 1900×1070px, **99.7 KB** (full-res para futuros usos) |
+| `index.html` | Preload → `imagesrcset`/`imagesizes` WebP; hero `<img>` → `<picture>` WebP+PNG; navbar logo → `<picture>`; footer logo → `<picture>` |
+
+**Commit:** `f7e1ee1`
+
+**Impacto estimado no LCP:**
+- Mobile 3G: logo era ~14s de download (1.4 MB) → agora ~0.1s (10.6 KB) — redução de 98%+
+- Browser moderno (Chrome/Safari/Firefox): servirá WebP automaticamente via `<picture>`
+- Fallback PNG mantido para IE11/Opera Mini (< 1% do tráfego)
+- `fetchpriority="high"` preservado no preload WebP
+
+**Próximo passo sugerido:**
+- Ciclo #109: Conteúdo — caption/reel "Potinho vs. balança" diferenciação implícita TheBest quiosque Aurora (prescrito ciclo #107)
+- Ciclo #110: UX/Performance — verificar outras imagens pesadas em `cardapio.html` (product images PNG/JPG)
+- Ciclo #111: SEO — `og:image` pode ser atualizado para apontar para o WebP do full-res (mas manter PNG como fallback para plataformas que não suportam WebP)
+- Operador: considerar gerar WebP de outras imagens de produto (potinhos) com o mesmo script Python — ganho adicional de 60–90% em tamanho
+
+_Belinha — Ciclo #108 | 2026-05-04_
+
+---
+
 ## Ciclo #107 — 2026-05-04
 
 **Área:** Concorrentes — Refetch MilkyMoo + TheBest (13 ciclos desde #94)
