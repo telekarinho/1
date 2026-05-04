@@ -95,6 +95,18 @@ function updateOrderSummary() {
     var summaryDelivery = document.getElementById('summaryDelivery');
     var summaryTotal = document.getElementById('summaryTotal');
 
+    var summaryStore = document.getElementById('summaryStore');
+    if (summaryStore) {
+        var storeName = window._selectedStoreName || '';
+        var storeTime = window._selectedStoreTime || '';
+        summaryStore.innerHTML = storeName
+            ? '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F0E8FF;margin-bottom:8px">' +
+              '<span style="font-weight:600;color:#6B3FA0">📍 ' + storeName + '</span>' +
+              (storeTime ? '<span style="font-size:0.8rem;color:#9484A8">⏱️ ' + storeTime + '</span>' : '') +
+              '</div>'
+            : '';
+    }
+
     if (summaryItems) {
         summaryItems.innerHTML = cart.map(function(item) {
             var emoji = item.emoji || '🍨';
