@@ -487,31 +487,36 @@ body:not(.idle){cursor:default}
             footer: '🍦 600ml · ingredientes premium · feito na hora'
         };
 
-        // Copy fixa AIDA — explica o produto sem ser chato, cria desejo,
-        // diferencia milkshake de sundae visualmente e na cabeça do cliente
-        var COPY_MILKSHAKE = 'Batido na hora, cremoso de verdade,\nfeito com sorvete soft e sabor intenso.\nNão é ralo. Não é artificial. É outro nível.';
-        var COPY_SUNDAE    = 'Camadas cremosas com calda e textura,\nmontado na hora pra cada colher ser perfeita.\nSimples… mas viciante.';
-
-        // Cria slides pra cada milkshake (8s cada)
+        // Cria slides pra cada milkshake (8s cada).
+        // subtitle = m.copy (específico do sabor — viral, AIDA por sabor).
+        // Diferenciação milkshake vs sundae fica no eyebrow tag (MILKSHAKE/SUNDAE
+        // GOURMET MILKYPOT) e no emoji do footer (🥛 vs 🍨).
         var milkshakeSlides = MILKSHAKE_CARDS.map(function(m){
             return { media: {
                 type: 'milkshake-card', mode: 'flavor',
                 emoji: m.emoji, gradient: m.gradient,
                 title: m.name,
-                subtitle: COPY_MILKSHAKE,
+                subtitle: m.copy,
                 priceLabel: 'R$ 9,99',
                 priceUnit: '· P 275ml',
                 footer: '🥛 P 275ml · M 440ml · G 550ml · GG 770ml'
             }, duration: 8000 };
         });
 
-        // Cria slides pros sundaes (mesmos sabores, copy fixa de sundae)
+        // Cria slides pros sundaes — copy adaptada do sabor (troca termos
+        // específicos de milkshake por sundae, mantém personalidade do sabor)
         var sundaeSlides = MILKSHAKE_CARDS.map(function(m){
+            var sundaeCopy = m.copy
+                .replace(/milkshake/gi, 'sundae')
+                .replace(/primeiro gole/gi, 'primeira colher')
+                .replace(/um gole/gi, 'uma colher')
+                .replace(/canudinho/gi, 'colher')
+                .replace(/copo gelado/gi, 'taça gelada');
             return { media: {
                 type: 'milkshake-card', mode: 'sundae',
                 emoji: m.emoji, gradient: m.gradient,
                 title: m.name,
-                subtitle: COPY_SUNDAE,
+                subtitle: sundaeCopy,
                 priceLabel: 'R$ 9,99',
                 priceUnit: '· P 275ml',
                 footer: '🍨 P 275ml · M 440ml · G 550ml · GG 770ml'
