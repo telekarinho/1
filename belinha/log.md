@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #116 — 2026-05-04
+
+**Área:** Concorrentes (CRÍTICO) — refetch TheBest + MilkyMoo + FAQ competitivo no site
+
+**Contexto:** Prescrito pelo ciclo #115 como urgência máxima: 21 ciclos sem refetch de concorrentes, Black Friday 2026 (27/11) sem intel de preço/promo. Nova regra v13: máximo 15 ciclos entre refetches.
+
+**O que pesquisou/analisou:**
+- WebSearch: "The Best Açaí Londrina 2026 promoções preços novidades" → confirmou preço regular R$6,29/100g (sem alteração), nova loja maior em Londrina (Gleba Palhano)
+- WebSearch: "The Best Açaí Black Friday 2026" → confirmou padrão "The Best Friday": R$3,99/100g (37% desconto) em 530+ lojas por 1 dia (27/11)
+- WebSearch: "MilkyMoo Black Friday 2026" → confirmou mecânica "Milkshakes em Dobro" (500ml + 300ml grátis) exclusivo iFood
+- WebSearch: "MilkyMoo Nutty Bavarian pistache macadâmia" → collabs sazonais (Estrela/pistache + Pérola/macadâmia) a R$27/R$32 (premium vs. R$18/R$22 regular) — estratégia de buzz com marcas
+- WebSearch: "MilkyMoo Nestlé 2026" → 5+ collabs identificadas: Sensação, Smoor's, Alpino, Caribe, Carmela. Padrão: 4–6 collabs/ano = cobertura de mídia garantida
+- Promoções MilkyMoo 2026 identificadas: 2x1 Pandora/Pintadinha iFood (fev), Milky Moo Day (mar), Seg–Qui desconto recorrente em lojas
+- App próprio MilkyMoo ativo (milkymoo.com.br/aplicativo) — canal beyond iFood em construção
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | Novo FAQ schema (JSON-LD FAQPage): "Qual a diferença do MilkyPot para uma açaiteria de self-service?" — posiciona preço fixo vs. R$6–7/100g sem nomear concorrente. Novo FAQ visível HTML (clientes): mesma pergunta com formatação rich text |
+| `belinha/competitors/the-best-acai.md` | Seção "⚡ ATUALIZAÇÃO CICLO #116": Black Friday padrão (R$3,99/100g histórico), The Best Donuts (580+ lojas), Sorbet fit (novo segmento disputando Linha Zero), status Muffato Londrina (não confirmado), tabela de preços atualizada, benchmark vs. MilkyPot |
+| `belinha/competitors/milkymoo.md` | Seção "⚡ ATUALIZAÇÃO CICLO #116": tabela de promoções recorrentes 2026, tabela de collabs com preços (Nutty Bavarian + Nestlé), app próprio, análise de estratégia de collabs, implicação para MilkyPot |
+
+**Commit:** `7b01549`
+
+**Achados principais:**
+1. **FAQ "self-service vs. potinho"** é gap semântico real: quem busca "açaí Londrina preço" pode chegar no MilkyPot pela resposta — e a resposta reposiciona a proposta de valor (preço fixo, sem balança)
+2. **TheBest Black Friday = R$3,99/100g:** Preço promocional (R$12 para pote ~300g) ainda é menos previsível que MilkyPot. Comunicar "preço fixo, sem surpresa" como diferencial estrutural nas semanas 33–34 (novembro)
+3. **MilkyMoo usa iFood em TODAS as promoções:** Vantagem estrutural MilkyPot = canal WhatsApp próprio sem comissão. Narrativa "a promoção vai direto pra você" é válida e verificável
+4. **MilkyMoo collabs (4–6/ano):** Geram buzz sem paralelo para franquia do tamanho deles (800+ unidades). MilkyPot contraposição: "ingredientes frescos, sem parceiro de indústria" + personalização real
+5. **Regra v13 validada:** Refetch revelou novidades concretas (Sorbet TheBest, app MilkyMoo, tabela de promoções) que não estavam documentadas
+
+**Próximo passo sugerido:**
+- Ciclo #117: UX/Performance — `checkout.html` audit (primeira auditoria técnica desta página — prescrito há 2 ciclos)
+- Operador: Planejar contraprogramação para Black Friday (27/11/2026) — TheBest com R$3,99/100g e MilkyMoo com milkshakes em dobro são alto risco de distração do público. MilkyPot precisa de oferta própria via WhatsApp na mesma data
+- Operador: Avaliar estratégia de collab local (ex: confeitaria local de Londrina) como resposta às collabs Nestlé do MilkyMoo — escala menor, mas autenticidade local maior
+
+_Belinha — Ciclo #116 | 2026-05-04_
+
+---
+
 ## Ciclo #115 — 2026-05-04
 
 **Área:** Auto-aprimoramento — revisão #110–#114 + roadmap Q4 2026 (#116–#125)
