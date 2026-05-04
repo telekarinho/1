@@ -2,6 +2,39 @@
 
 ---
 
+## Ciclo #107 — 2026-05-04
+
+**Área:** Concorrentes — Refetch MilkyMoo + TheBest (13 ciclos desde #94)
+
+**O que analisou:**
+- MilkyMoo: WebSearch em novidades 2026 — encontrou 3 lançamentos significativos (180ml Day Part Action, Ovos Páscoa 2026, collab O Boticário "Carameluda") + atualização Milky Moo Festa
+- TheBest: WebSearch em Londrina 2026 — confirmou quiosque Shopping Aurora operando, preço R$6,29/100g (Gleba Palhano via UGC TikTok), 6 unidades Londrina mapeadas, rollout 300–500 quiosques em curso
+- Novos entrantes Londrina: nada relevante detectado além de concorrentes já mapeados
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/milkymoo.md` | Nova seção "Atualização Ciclo #107": 180ml Day Part Action (R$12,90, lançado 30/04/2026), Ovos Páscoa Pandora+Malhada (+80% meta vs. 2025), collab O Boticário "Carameluda" (R$25+, abr–mai), tabela escala nacional, 4 alertas estratégicos |
+| `belinha/competitors/the-best-acai.md` | Nova seção "Atualização Ciclo #107": quiosque Aurora operando (totem, R$150k), preço R$6,29/100g confirmado UGC, tabela 6 unidades Londrina, gap Muffato mantido, 4 alertas estratégicos |
+
+**Commit:** `a1f94a9`
+
+**Destaques de inteligência:**
+1. **MilkyMoo está construindo múltiplas ocasiões de consumo** — pós-almoço (180ml), sazonal (Páscoa), lifestyle (collab Boticário), evento (Festa). MilkyPot compete principalmente na ocasião "sobremesa personalizável noite/fim de semana". Gap saudável.
+2. **Collab Boticário = captura do público feminino 18–35** — mesmo público-alvo MilkyPot. Resposta: collabs locais em Londrina (influencers, marcas regionais) para criar o mesmo buzz sem budget nacional.
+3. **TheBest quiosque Aurora com totem de autoatendimento** — diferenciação pelo lado deles é automação. MilkyPot deve reforçar o oposto: atendimento humanizado, personalização, experiência com a ovelhinha. Copy "Potinho não tem balança" mantida.
+4. **Gap Muffato Quintino Bocaiuva mantido em ambos os concorrentes** — janela ainda aberta, mas rollout de quiosques TheBest (300–500) torna a chegada mais provável nos próximos 6–12 meses.
+
+**Próximo passo sugerido:**
+- Ciclo #108: UX/Performance — `index.html` LCP: hero image em WebP? preconnect CDN? headers cache? (prescrito no roadmap)
+- Ciclo #109: Conteúdo — criar caption/reel para "Potinho vs. balança" diferenciação implícita ao TheBest quiosque (aproveitar abertura do Aurora para reposicionar sem nomear)
+- Operador: considerar criar serviço "Potinho para Festa" (eventos, aniversários) antes que Milky Moo Festa chegue em Londrina — janela de 6–12 meses estimada
+
+_Belinha — Ciclo #107 | 2026-05-04_
+
+---
+
 ## Ciclo #106 — 2026-05-03
 
 **Área:** Conversão — Playbook Reativação WA D+30 e D+60
