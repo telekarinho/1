@@ -11,6 +11,8 @@ const Loyalty = {
     REWARD_THRESHOLD: 100,
     REWARD_DESCRIPTION: 'Sorvete gratis (tamanho Mini)',
     REWARD_VALUE: 10.00,
+    // Engagement milestones below the reward threshold (triggers WA notification)
+    MILESTONES: [10, 50],
 
     // Busca cliente por telefone
     getCustomer(phone, franchiseId) {
@@ -42,6 +44,12 @@ const Loyalty = {
         return customer;
     },
 
+    // Returns the highest MILESTONES value crossed in [prevPts+1 .. newPts], or null
+    _getMilestoneCrossed(prevPts, newPts) {
+        const crossed = this.MILESTONES.filter(m => prevPts < m && m <= newPts);
+        return crossed.length ? crossed[crossed.length - 1] : null;
+    },
+
     // Adiciona pontos apos pedido entregue
     addPointsFromOrder(order, franchiseId) {
         if (!order.customer?.phone) return null;
@@ -53,10 +61,14 @@ const Loyalty = {
         );
 
         const points = Math.floor(order.total * this.POINTS_PER_REAL);
+        const prevPoints = customer.points;
         customer.points += points;
         customer.totalSpent += order.total;
         customer.ordersCount++;
         customer.lastOrderAt = new Date().toISOString();
+
+        // Milestone check before reward loop (points are at their peak here)
+        const milestoneCrossed = this._getMilestoneCrossed(prevPoints, prevPoints + points);
 
         // Verifica se atingiu recompensa
         let rewardEarned = false;
@@ -78,7 +90,7 @@ const Loyalty = {
         if (idx !== -1) customers[idx] = customer;
         DataStore.set(LOYALTY_KEY(franchiseId), customers);
 
-        return { customer, pointsAdded: points, rewardEarned };
+        return { customer, pointsAdded: points, rewardEarned, milestoneCrossed };
     },
 
     // Resgata recompensa
