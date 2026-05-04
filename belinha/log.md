@@ -2,6 +2,42 @@
 
 ---
 
+## Ciclo #112 — 2026-05-04
+
+**Área:** UX/Performance — `sw.js` dead asset cleanup + análise `cardapio.js` órfão
+
+**Contexto:** Prescrito pelo ciclo #111 (investigar dead code `menuCart*` em `cardapio.js`). Análise revelou que o problema é mais amplo: `cardapio.js` (1050 linhas) não é carregado por nenhuma página HTML — apenas listado no PRECACHE_URLS do service worker, causando download desnecessário de ~42 KB a cada reinstalação do SW.
+
+**O que analisou:**
+- `js/cardapio.js` referencia `menuCartSidebar`, `menuCartOverlay`, `menuCartClose`, `menuCartItems`, `menuCartFooter`, `menuCartTotal` via `document.getElementById('menuCart*')` — IDs que não existem em nenhum HTML
+- `cardapio.html` (e `index.html`) não têm `<script src="js/cardapio.js">` — arquivo nunca é executado em produção
+- O HTML de `cardapio.html` usa `cart.js` + `checkout.js` como sistema real de pedidos (IDs: `cartSidebar`, `cartOverlay` etc., sem prefixo "menu")
+- Único lugar que referenciava o arquivo: `sw.js` linha 50 (`'/js/cardapio.js'` em PRECACHE_URLS) — causando precache de ativo morto
+- Decisão sobre deletar o arquivo inteiro requer autorização do operador → documentado em `blockers.md`
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `sw.js` | Removida linha `'/js/cardapio.js'` de PRECACHE_URLS — elimina ~42 KB de precache desnecessário |
+| `belinha/blockers.md` | Adicionado blocker #6 com análise completa + 3 opções de decisão para operador |
+
+**Commit:** (ver hash abaixo)
+
+**Impacto:**
+- Service worker deixa de pré-cachear 1050 linhas de JS que nenhuma página usa (~42 KB economizados a cada nova instalação do SW)
+- Nenhum risco de regressão: arquivo não era carregado por nenhuma página, apenas estava no precache
+- Blocker documentado com opções claras para o operador: deletar / integrar / manter-como-está
+
+**Próximo passo sugerido:**
+- Ciclo #113: SEO — `sitemap.xml` audit: verificar se `acai-self-service-londrina.html`, `termos.html`, `privacidade.html`, `raspinha.html` estão incluídos (prescrito ciclo #111)
+- Ciclo #114: Conteúdo — Semanas 37+38 (27/12–09/01/2027): Virada Ano Novo 31/12 + "Nova meta, novo potinho" Linha Zero pós-festas + Sexta #21 "Primeiro Potinho de 2027" (prescrito ciclos #77 e #110)
+- Operador: confirmar Opção A/B/C para `js/cardapio.js` (ver `belinha/blockers.md` blocker #6)
+
+_Belinha — Ciclo #112 | 2026-05-04_
+
+---
+
 ## Ciclo #111 — 2026-05-04
 
 **Área:** Conversão — `js/core/loyalty.js` milestones + templates WA fidelidade
