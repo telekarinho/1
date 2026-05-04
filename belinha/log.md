@@ -2,6 +2,41 @@
 
 ---
 
+## Ciclo #111 — 2026-05-04
+
+**Área:** Conversão — `js/core/loyalty.js` milestones + templates WA fidelidade
+
+**Contexto:** Prescrito pelo roadmap do ciclo #105 (entrada #111). Auditoria revelou que `addPointsFromOrder` retornava apenas `rewardEarned` (ao atingir 100pts), sem nenhum sinal para os marcos intermediários de engajamento (10pts e 50pts). Sem esse sinal, o operador não tem como enviar mensagens de incentivo no momento certo via WhatsApp.
+
+**O que analisou:**
+- Leu `js/core/loyalty.js` completo: estrutura clara, `POINTS_PER_REAL: 1`, `REWARD_THRESHOLD: 100`, `REWARD_DESCRIPTION: 'Sorvete gratis (tamanho Mini)'`
+- Confirmou que `addPointsFromOrder` já funcionava bem para o fluxo de recompensa, mas não expunha dados de milestone intermediário
+- Identificou ponto correto de detecção: antes do `while` de reward deduction (pontos no pico máximo), usando `prevPoints` capturado antes do `+=`
+- Confirmou que `rewardEarned` deve ter prioridade sobre `milestoneCrossed` (cliente que cruzar 50 e 100 no mesmo pedido só recebe template de recompensa)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `js/core/loyalty.js` | +`MILESTONES: [10, 50]`; +`_getMilestoneCrossed(prevPts, newPts)`; `addPointsFromOrder` captura `prevPoints` e retorna `milestoneCrossed` |
+| `belinha/content/fidelidade-milestones-wa.md` | CRIADO — 3 templates WA prontos (10pts, 50pts, 100pts) + guia de implementação com exemplo de código |
+
+**Commit:** `417ecd6`
+
+**Impacto:**
+- `addPointsFromOrder` agora retorna `{ customer, pointsAdded, rewardEarned, milestoneCrossed }` — API não-breaking (novo campo, sem remoções)
+- Operador/desenvolvedor pode usar `milestoneCrossed` (null | 10 | 50) para disparar WA contextual imediatamente após pedido entregue
+- Templates prontos para copiar-colar no WA Business manual ou integrar via API WA Business no futuro
+
+**Próximo passo sugerido:**
+- Ciclo #112: UX/Performance — Dead code decision: `menuCartSidebar`/`menuCartOverlay`/`menuCartClose`/`menuCartItems`/`menuCartFooter`/`menuCartTotal` em `cardapio.js` sem correspondência no HTML. Se operador não confirmar plano do carrinho alternativo em ~10 ciclos → remover do JS (reduz bundle ~120 linhas)
+- Ciclo #113: SEO — `sitemap.xml` audit: verificar se `acai-self-service-londrina.html`, `termos.html`, `privacidade.html`, `raspinha.html` estão incluídos
+- Operador: integrar `milestoneCrossed` no fluxo de confirmação de pedido entregue (app.js / painel) para ativar os templates WA
+
+_Belinha — Ciclo #111 | 2026-05-04_
+
+---
+
 ## Ciclo #110 — 2026-05-04
 
 **Área:** UX/Performance — `cardapio.html` logo WebP `<picture>` + preload responsivo
