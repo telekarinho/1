@@ -2274,38 +2274,18 @@
         });
     }
 
-    /* === Auto-slides: garante que o slide de cardápio está na biblioteca ===
-       Adiciona um item type:"html" apontando para tv.html?f=FID. O app Android
-       carrega esta URL em um WebView por 5 minutos mostrando todos os slides
-       de cardápio (milkshake cards, sundaes, promos, buffet) automaticamente.
-       O item tem _auto:true — não aparece com botão de excluir no painel.
-
-       Self-healing: se o item já existir mas com URL inválida (ex: aponta pra
-       /tv-cardapio.html de um experimento que foi revertido), corrige pra
-       /tv.html?f=FID. Idempotente — se URL já está OK, não escreve no Firestore. */
+    /* === Cleanup do auto-slide-cardapio (legacy, redundante) ===
+       Esse item type:"html" foi um experimento que ficou apontando pra
+       URL inválida (/tv-cardapio.html, 404). O tv.html já injeta TODOS
+       os slides automáticos diretamente (renderMilkshakeCard, renderMenuGrid,
+       renderPromoFlash, etc.) — esse item html é redundante e causa 404
+       intermitente em alguns Android TV. Removemos da biblioteca quando admin
+       abrir o painel. Idempotente: se item já não existe, no-op. */
     function ensureAutoCardapioSlide() {
-        var base = location.origin.replace(/^http:\/\/localhost.*/,'https://milkypot.com') || 'https://milkypot.com';
-        var slideUrl = base + '/tv.html?f=' + encodeURIComponent(fid);
         var media = getMedia();
-        var existing = media.find(function(m){ return m.id === 'auto-cardapio-slides'; });
-        if (existing) {
-            if (existing.url !== slideUrl) {
-                existing.url = slideUrl;
-                existing.name = '📋 Slides Cardápio (Auto)';
-                saveMedia(media);
-            }
-            return;
-        }
-        var item = {
-            id: 'auto-cardapio-slides',
-            name: '📋 Slides Cardápio (Auto)',
-            type: 'html',
-            url: slideUrl,
-            duration: 300,
-            _auto: true,
-            addedAt: new Date().toISOString()
-        };
-        media.unshift(item);
+        var idx = media.findIndex(function(m){ return m.id === 'auto-cardapio-slides'; });
+        if (idx === -1) return; // já removido, nada a fazer
+        media.splice(idx, 1);
         saveMedia(media);
     }
 
