@@ -365,10 +365,86 @@ _Última atualização: ciclo #94 — 2026-05-02_
 - [x] Ovos Páscoa 2026 documentado
 - [x] Collab O Boticário documentado
 - [x] Milky Moo Festa escala documentada
-- [x] Gap Muffato Londrina verificado — mantido
-- [ ] Monitorar chegada de Milky Moo Festa em Londrina (próxima verificação: ciclo ~#115)
+- [x] Gap Muffato Londrina verificado — mantido (ciclo #107)
+- [ ] Monitorar chegada de Milky Moo Festa em Londrina (próxima verificação: ciclo ~#136)
 - [ ] Verificar ads Meta Ads Library @milkymoo_londrina para criativos ativos
 
 ---
 
 _Última atualização: ciclo #107 — 2026-05-04_
+
+---
+
+## Atualização Ciclo #126 — 2026-05-05
+
+### Black Friday MilkyMoo 2026
+
+Confirmado via WebSearch (Portal G + Clube Amostras Grátis):
+
+- **Mecânica:** Compre 1 milkshake 500ml → ganhe 1 de 300ml **grátis**
+- **Flavors participantes confirmados:** Pintadinha, Lolita (e outros — lista completa não publicada com antecedência)
+- **Canal:** App Milky Moo + iFood (via delivery app; não exclusivo ao canal próprio)
+- **Posicionamento:** "Ganhe mais" sem desconto de preço — mantém ticket base intacto
+
+### Quarta da Moo — Ação Semanal Permanente
+
+- **Mecânica:** 50% OFF em 13 sabores selecionados **toda quarta-feira**
+- **Canal:** Exclusivo via app Milky Moo
+- **Sabores confirmados:** Bisa, Branca, Cacau, Pintadinha, Diva (e outros 8)
+- **Objetivo:** Criar hábito semanal de consumo + reter usuários no app
+
+### Clube Moo — Programa de Fidelidade
+
+- **Acúmulo:** Pontos por compra
+- **Resgate:** A cada 10 compras → sorvete pequeno grátis
+- **Bônus cadastro:** 50 pontos ao criar conta no app
+- **Diferenciação vs. MilkyPot:** App nativo com mecânica automática. MilkyPot usa pontos manuais (1pt/R$1) sem app — vantagem de simplicidade, desvantagem de automação
+
+### Novos Produtos 2026 (pós-ciclo #107)
+
+| Produto | Período | Detalhe |
+|---------|---------|---------|
+| **aBISoluta** (collab Bis) | Verão (jan–mar) | Milkshake 300ml/500ml; R$25–35; exclusividade Bis — posicionamento premium |
+| **Smoor's** | Outono (nacional) | Baunilha + brigadeiro + Chocobiscuit + marshmallow maçaricado na hora |
+| **Bebidas Quentinhas da Moo** | Inverno (lojas selecionadas) | Estrela (pistache), Pandora (avelã + brigadeiro Ninho), Tempestade (brigadeiro + brownie), Preciosa (avelã); 100–180ml; affogatos incluindo versões alcoólicas |
+| **Milkshake 180ml** | Desde 30/04/2026 | R$12,90; frente de consumo pós-almoço; faixa de entrada |
+| **Sorbet Manga + Maracujá** | Verão | Opção sazonal plant-based |
+
+### Escala Nacional (atualizado ciclo #126)
+
+| Indicador | Ciclo #107 | Ciclo #126 |
+|-----------|-----------|-----------|
+| Faturamento | R$542mi (2024) | R$542mi+ (crescimento contínuo) |
+| Unidades | 700+ lojas | 700+ lojas (sem dado novo) |
+| App usuários | N/D | Ativo com Clube Moo operando |
+| iFood | Presente (delivery) | Mantido — diferença vs. MilkyPot (canal próprio) |
+
+### Estado Londrina (ciclo #126)
+
+| Unidade | Status |
+|---------|--------|
+| Shopping Catuaí | ✅ Operando (Seg–Sab 10h–22h, Dom/Fer 11h–22h) |
+| Boulevard Shopping | ✅ Operando |
+| **Muffato Quintino Bocaiuva** | ❌ **Gap MilkyPot mantido** |
+| Milky Moo Festa em Londrina | ❌ Não detectada ainda |
+
+### Alertas Estratégicos (Ciclo #126)
+
+1. **"Quarta da Moo" 50% OFF semanal = hábito estrutural.** Toda quarta a MilkyMoo lembra o cliente de abrir o app. MilkyPot deve criar um equivalente: ex. "Quarta do Potinho" com oferta WA Business, sem app, aproveitando a lista de broadcast.
+2. **aBISoluta (Bis) = collab de nível nacional.** Collab com marcas conhecidas é estratégia de aquisição de público sem paid ads. Para MilkyPot Londrina: collabs locais (sorveteria, cafeteria, influencer) replicam esse efeito em escala local — custo zero de mídia.
+3. **Bebidas Quentinhas de inverno = expansão de ocasião.** MilkyMoo migrou para produto quente no inverno, evitando queda sazonal. MilkyPot tem Açaí buffet self-service e Linha Zero que podem ser reforçados no inverno como "sobremesa em qualquer tempo".
+4. **iFood como canal de distribuição:** MilkyMoo usa iFood (comissão ~27–30%), MilkyPot não. Isso significa que no Black Friday o cliente de MilkyMoo pode pedir sem sair de casa. MilkyPot deve compensar com delivery próprio via WA (15-40min, embalagem térmica) e comunicar ativamente essa vantagem.
+5. **Smoor's (marshmallow maçaricado):** Produto com "momento de preparo espetacular" = conteúdo viral orgânico. MilkyPot tem oportunidade de criar produto com topping "espetacular" (ex. brulee, farofa na hora) para gerar vídeo de preparo no PDV.
+
+- [x] Black Friday MilkyMoo mecânica confirmada (compre 1 ganhe 1)
+- [x] Quarta da Moo documentada (50% OFF, toda quarta, app)
+- [x] Clube Moo detalhado (10 compras = sorvete grátis)
+- [x] Novos produtos 2026 (aBISoluta, Smoor's, Bebidas Quentinhas, 180ml) documentados
+- [x] Gap Muffato Londrina mantido (ciclo #126)
+- [ ] Monitorar chegada de Milky Moo Festa em Londrina (próxima verificação: ciclo ~#136)
+- [ ] Verificar ads Meta Ads Library @milkymoo_londrina para criativos ativos
+- [ ] Confirmar se "Quarta da Moo" opera em Londrina (Catuaí/Boulevard) ou só capitais
+
+---
+
+_Última atualização: ciclo #126 — 2026-05-05_

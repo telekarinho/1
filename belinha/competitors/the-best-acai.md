@@ -335,9 +335,77 @@ O quiosque piloto no Shopping Aurora (Londrina) está em operação. Detalhes co
 - [x] 6 unidades Londrina mapeadas
 - [x] Gap Muffato Quintino Bocaiuva mantido
 - [x] Rollout 300–500 quiosques em curso registrado
-- [ ] Monitorar chegada ao Muffato Quintino Bocaiuva (próxima verificação: ciclo ~#115)
+- [x] Quiosque Aurora status operacional documentado
+- [x] Preço R$6,29/100g (Gleba Palhano) confirmado em UGC
+- [x] 6 unidades Londrina mapeadas
+- [x] Gap Muffato Quintino Bocaiuva mantido (ciclo #107)
+- [ ] Monitorar chegada ao Muffato Quintino Bocaiuva (próxima verificação: ciclo ~#136)
 - [ ] Confirmar preço específico do quiosque Shopping Aurora
 
 ---
 
 *Atualizado por Belinha — Ciclo #107 — 2026-05-04*
+
+---
+
+## Atualização Ciclo #126 — 2026-05-05
+
+### The Best Friday 2026 — Black Friday (27/11/2026)
+
+Confirmado via WebSearch (Gazeta da Semana + thebestacai.com.br):
+
+- **Data:** 27/11/2026 (sexta-feira = Black Friday)
+- **Mecânica:** Açaí + sorvete a **R$3,99/100g** — consumo ilimitado, sem trava de porção
+- **Canal:** Exclusivo via app **Clube The Best** (coupon resgatado no app, apresentado na loja)
+- **Abrangência:** 530+ lojas participantes em todo o Brasil
+- **Regra:** Único dia de desconto no ano inteiro — posicionado como "evento nacional" pela marca
+- **App Clube The Best:** 100k+ usuários cadastrados; cupons, histórico de compras, notificações de promoções
+- **Impacto preço:** R$3,99/100g vs. preço padrão R$6,29/100g = desconto de ~37%
+
+### The Best Experience 2ª Edição — Londrina (11/11/2026)
+
+- **Evento:** Convenção nacional de franqueados **em Londrina** (sede do grupo)
+- **Data:** 11/11/2026
+- **Palestrantes:** Bruno Perini, João Branco, Carlos Busch, Thais Pegoraro
+- **Pauta:** Novos produtos, metas 2027, estratégia de marketing/vendas
+- **Ingressos:** Acesso a palestras, café de abertura, almoço, coquetel (dia 1) + café de encerramento (dia 2)
+- **Relevância MilkyPot:** novos produtos anunciados aqui entram no mercado em 2027 — monitorar pós-evento
+
+### Meia Maratona The Best Açaí Londrina 2026
+
+- **Data:** 08/11/2026
+- **Local:** Lago Igapó, Londrina
+- **Percursos:** 5km, 10km e 21km
+- **Relevância:** Ação de branding/lifestyle para associar a marca a saúde/esporte. Cria buzz local na semana antes da Black Friday (27/11)
+
+### Estado Londrina (ciclo #126)
+
+| Unidade | Status |
+|---------|--------|
+| Gleba Palhano (maior da rede, 310m²) | ✅ Operando |
+| San Conrado | ✅ Operando |
+| Rua Pio XII | ✅ Operando |
+| Arthur Thomas, 831 | ✅ Operando |
+| Shopping Aurora (quiosque autoatendimento) | ✅ Operando |
+| HG (Higienópolis) | ✅ Operando |
+| **Muffato Quintino Bocaiuva** | ❌ **Gap MilkyPot mantido** |
+
+### Alertas Estratégicos (Ciclo #126)
+
+1. **The Best Friday (27/11) = mesmo dia da Black Friday MilkyPot (BLACKPOT).** Semana 32 tem os dois eventos simultâneos. TheBest vai drenar tráfego com R$3,99/100g — MilkyPot precisa que o BLACKPOT (ciclo #124) esteja configurado ANTES: etiqueta, automação WA Business, mecânica escolhida.
+2. **Clube The Best como arma de retenção:** App com 100k usuários cria hábito de verificar cupom toda semana. MilkyPot não tem app — o WA Business com etiquetas e broadcasts é o equivalente. Reforçar etiquetas VIP antes de 22/11.
+3. **The Best Experience em Londrina (11/11):** Convenção de franqueados local pode gerar buzz e mídia espontânea. Monitorar redes sociais na semana de 09–14/11 para captar possíveis anúncios de novas unidades.
+4. **Maratona Lago Igapó (08/11) = branding saúde:** TheBest se posiciona como marca "saudável + esportiva". MilkyPot deve reforçar Linha Zero/Fit nas semanas de novembro como contrapeso (ver semana 32 `pos-inauguracao-semana32.md`).
+5. **Preço R$3,99/100g no dia = isca para novos clientes TheBest.** Estratégia: bombardear o mesmo dia com BLACKPOT para reter clientes MilkyPot ativos antes que eles vejam a oferta TheBest.
+
+- [x] The Best Friday 2026 mecânica confirmada
+- [x] The Best Experience Londrina 2ª ed. documentada
+- [x] Meia Maratona Londrina 08/11/2026 documentada
+- [x] Gap Muffato Quintino Bocaiuva mantido (ciclo #126)
+- [ ] Monitorar anúncios pós-The Best Experience (09–16/11/2026) — novos produtos 2027
+- [ ] Verificar chegada ao Muffato Quintino Bocaiuva (próxima verificação: ciclo ~#136)
+- [ ] Confirmar preço quiosque Shopping Aurora
+
+---
+
+*Atualizado por Belinha — Ciclo #126 — 2026-05-05*
