@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #122 — 2026-05-05
+
+**Área:** UX/Performance — landing pages locais (`acai-self-service-londrina.html` + `potinho-ninho-londrina.html`)
+
+**Contexto:** Prescrito como ciclo obrigatório pelo roadmap #120. Foco: CSS/audit das duas landing pages SEO de Londrina (maior tráfego orgânico esperado).
+
+**O que analisou:**
+- Leu ambas as páginas integralmente (459 e 393 linhas)
+- Identificou 4 problemas acionáveis:
+  1. `og:type="restaurant.menu"` no açaí — tipo Open Graph **inválido** (não é tipo oficial OG spec); causa falha de parsing em crawlers e previews
+  2. Logo above-the-fold sem `fetchpriority="high"` nem `<link rel="preload" as="image">` — LCP penalizado desnecessariamente
+  3. `.btn-wa` e `.btn-menu` sem `:hover` state — zero feedback visual no desktop (só `:active`), prejudica conversão desktop
+  4. `og:image:type` presente no açaí mas ausente no ninho — assimetria de metadados OG
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `acai-self-service-londrina.html` | `og:type` → `website` (bug fix); `<link rel="preload" as="image">` adicionado; `fetchpriority="high"` no logo `<img>`; `:hover` em `.btn-wa` (`translateY(-2px)` + shadow) e `.btn-menu` (bg `#F0EEFF` + border escurecido) |
+| `potinho-ninho-londrina.html` | `<link rel="preload" as="image">` adicionado; `fetchpriority="high"` no logo `<img>`; `:hover` em `.btn-wa` e `.btn-menu` (bg `#F9F0FF` + border `#9B59B6`); `og:image:type` adicionado (paridade) |
+
+**Commit:** `03086a7`
+
+**Impacto esperado:**
+1. **LCP (Core Web Vitals):** Preload + fetchpriority eliminam latência de descoberta do logo. Chrome priorizará o recurso na fila de fetch antes de processar o parser HTML inteiro
+2. **SEO/OG:** `og:type=website` resolve erro silencioso de parsing — WhatsApp, Telegram e Facebook lêem o tipo corretamente agora
+3. **Conversão desktop:** `:hover` nos CTAs dá feedback imediato; usuário de desktop sabe que o botão é clicável antes de clicar
+4. **Paridade técnica:** ambas as páginas agora têm conjunto idêntico de metadados OG
+
+**Próximo passo sugerido:**
+- Ciclo #123: SEO — `openingHoursSpecification` com dias separados em vez de array único (melhor compatibilidade com Google My Business sync)
+- Ciclo #124: Conversão — Black Friday WA playbook "BLACKPOT" (Sexta #31, conforme roadmap #120)
+- Ciclo #125: Auto-aprimoramento (revisão ciclos #120–#124)
+
+_Belinha — Ciclo #122 | 2026-05-05_
+
+---
+
 ## Ciclo #121 — 2026-05-05
 
 **Área:** Conteúdo — Semana 54 (GAP CRÍTICO: 25/04–01/05/2027)
