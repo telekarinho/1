@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #126 — 2026-05-05
+
+**Área:** Concorrentes — Refetch TheBest + MilkyMoo pré-Black Friday (27/11/2026)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #125 (v15c: antecipar refetch antes do evento Black Friday 27/11). Último refetch foi ciclo #107 — 19 ciclos atrás. Objetivo: mapear campanhas de Black Friday de ambos os concorrentes, novos produtos 2026, estratégias de app/fidelidade e alertas táticos para a semana 32 (BLACKPOT).
+
+**O que analisou:**
+- WebSearch "The Best Friday 2026" → confirmou R$3,99/100g no dia 27/11 (Black Friday), via app Clube The Best, 530+ lojas, consumo ilimitado — único desconto do ano
+- WebSearch "The Best Experience Londrina 2026" → convenção de franqueados **em Londrina** no dia 11/11; palestrantes nacionais; novidades 2027 serão anunciadas
+- WebSearch "Meia Maratona The Best Açaí Londrina 2026" → 08/11, Lago Igapó; branding saúde/esporte na semana antes da Black Friday
+- WebSearch "Milky Moo Black Friday 2026" → mecânica: compre 500ml ganhe 300ml grátis; canais: app + iFood
+- WebSearch "Quarta da Moo" → ação semanal permanente: 50% OFF em 13 sabores toda quarta, exclusivo app
+- WebSearch "Milky Moo verão/inverno 2026 lançamentos" → aBISoluta (collab Bis), Smoor's (marshmallow maçaricado), Bebidas Quentinhas (inverno), Sorbet Manga+Maracujá
+- Verificou: gap Muffato Quintino Bocaiuva mantido em ambos os concorrentes
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/the-best-acai.md` | Nova seção "Atualização Ciclo #126": The Best Friday 27/11 (R$3,99/100g, app Clube, 530+ lojas), The Best Experience Londrina 11/11, Meia Maratona 08/11, tabela de unidades Londrina atualizada, 5 alertas estratégicos |
+| `belinha/competitors/milkymoo.md` | Nova seção "Atualização Ciclo #126": Black Friday (compre 1 ganhe 1), Quarta da Moo permanente, Clube Moo detalhado, tabela de 5 novos produtos 2026, tabela Londrina, 5 alertas estratégicos |
+
+**Commit:** _(ver abaixo)_
+
+**Destaques da pesquisa:**
+1. **The Best Friday (27/11) = mesmo dia do BLACKPOT MilkyPot.** TheBest vai drenar tráfego com R$3,99/100g — o playbook BLACKPOT (ciclo #124) precisa estar totalmente configurado até 22/11. Urgência operacional real
+2. **"Quarta da Moo" 50% OFF toda semana:** Cria hábito estrutural de consumo via app. MilkyPot pode criar equivalente via WA broadcast semanal sem precisar de app
+3. **aBISoluta (collab Bis) e Smoor's (marshmallow maçaricado):** MilkyMoo gera conteúdo viral via produto-espetáculo e collab de marca. Oportunidade para MilkyPot criar topping "espetacular" no PDV (brulee, farofa na hora) com vídeo de preparo
+4. **The Best Experience Londrina 11/11:** Anúncios de novos produtos 2027 → monitorar redes sociais pós-evento (semana 09–16/11)
+5. **MilkyMoo usa iFood; MilkyPot não.** No Black Friday o cliente MilkyMoo pode pedir sem sair de casa. MilkyPot deve comunicar ativamente o delivery próprio via WA (sem comissão, 15-40min, embalagem térmica) como diferencial
+
+**Próximo passo sugerido:**
+- Ciclo #127: SEO — FAQPage em `cardapio.html`: 5–7 perguntas (personalização, entrega, fidelidade, Linha Zero, açaí self-service) — prescrito desde ciclo #125
+- Operador: configurar BLACKPOT no WA Business ANTES de 22/11/2026 (etiqueta + automação keyword + mecânica A/B/C escolhida)
+- Operador: monitorar redes sociais após The Best Experience Londrina (11/11/2026) para captar anúncios de novas unidades
+- Operador: avaliar "Quarta do Potinho" — ação WA semanal inspirada na "Quarta da Moo" (sem app, via broadcast)
+
+_Belinha — Ciclo #126 | 2026-05-05_
+
+---
+
 ## Ciclo #125 — 2026-05-05
 
 **Área:** Auto-aprimoramento — revisão #120–#124 + roadmap #126–#135 + regras v15
