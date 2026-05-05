@@ -2,6 +2,40 @@
 
 ---
 
+## Ciclo #128 — 2026-05-05
+
+**Área:** UX/Performance — `index.html` INP audit (Interaction to Next Paint)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #125 e confirmado no ciclo #127. INP (Interaction to Next Paint) é a métrica Core Web Vitals que mede o tempo entre a interação do usuário e o próximo frame pintado pelo browser. Meta Google: ≤200ms. Dois padrões problemáticos identificados e corrigidos.
+
+**O que analisou:**
+- Mapeou todos os 72 event handlers em `index.html` via grep (addEventListener, onclick, oninput, onchange, setInterval, setTimeout)
+- Identificou `filterCheckoutStores` chamado via `oninput` sem debounce — a cada keystroke no campo de busca da loja, `renderCheckoutStores()` reconstruía todo o DOM da lista, bloqueando o browser de pintar o cursor (input latency visível no mobile)
+- Identificou `setTimeout(10)` em `openProductSheet` e `showToast` para iniciar transições CSS — padrão problemático: a tarefa do setTimeout compete com o frame em andamento, podendo ser atrasada; double rAF garante que o browser pintou o estado inicial antes de adicionar a classe de transição
+- Funções de maior impacto INP no critical path de compra: abertura do product sheet (frequente no mobile) e busca de loja no checkout (antes de finalizar pedido)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | **filterCheckoutStores:** adicionado debounce 200ms via `_storeFilterTimer` — `renderCheckoutStores` só executa 200ms após o usuário parar de digitar; **openProductSheet:** `setTimeout(10)` → double `requestAnimationFrame` para iniciar transição `sheet-open`; **showToast:** mesmo padrão rAF aplicado à animação `toast-show` |
+
+**Commit:** `1b6ddf2`
+
+**Destaques técnicos:**
+1. **Debounce `filterCheckoutStores`:** Padrão claro de INP — sem debounce, cada keystroke (evento `input`) enfileira uma tarefa longa (DOM rebuild da lista de lojas). Com debounce 200ms, cada keystroke tem custo ~zero (apenas `clearTimeout + setTimeout`), liberando o browser para pintar o cursor imediatamente. Melhoria direta no INP do checkout step 2
+2. **Double rAF vs `setTimeout(10)`:** `setTimeout(10)` não é confiável — o browser pode não ter pintado o frame ainda quando o callback executa, causando transição CSS sem estado inicial visível (flash). Double rAF garante: 1° rAF = browser preparou o frame inicial; 2° rAF = browser está pronto para a transição. Padrão recomendado pela spec do FLIP animation
+3. **3 pontos corrigidos num ciclo:** `openProductSheet` + `showToast` + `filterCheckoutStores` — todos dentro do critical path mobile (product sheet é o primeiro toque em "Pedir", toast confirma adição ao carrinho, busca de loja é pré-checkout)
+
+**Próximo passo sugerido:**
+- Ciclo #129: Conteúdo — Dia das Mães WA playbook (09/05/2027): keyword "MAE27", segmentação VIP, upsell "potinho pra mãe", posts semana 54 (03–09/05/2027) — prescrito desde ciclo #127
+- Ciclo #130: Auto-aprimoramento — reler log #125–#129, roadmap mai–ago 2027 (Festa Junina, Dia dos Namorados, 14 meses de loja)
+- Técnico futuro: auditar `renderProducts` (chamado no `filterProducts`) — mesma questão de innerHTML rebuild; candidato para lazy/virtual scroll se catálogo crescer acima de 20 itens
+
+_Belinha — Ciclo #128 | 2026-05-05_
+
+---
+
 ## Ciclo #127 — 2026-05-05
 
 **Área:** SEO — FAQPage schema em `cardapio.html`
