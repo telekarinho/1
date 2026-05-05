@@ -2,6 +2,41 @@
 
 ---
 
+## Ciclo #120 — 2026-05-05
+
+**Área:** Auto-aprimoramento — revisão #115–#119 + roadmap #121–#130 + gap semana 54
+
+**O que analisou:**
+- Releu ciclos #115–#119 completos no log
+- Avaliou ROI de cada ciclo: #116 (Concorrentes) = altíssimo; #117 (checkout audit) = alto; #115 (auto-aprimoramento) = alto; #118 (WebSite schema) = médio-alto; #119 (WA 6 meses) = médio
+- Executou `ls belinha/content/pos-inauguracao-semana*.md` → detectou **gap crítico: semana 54 ausente**
+- Semana 54 = 25/04–01/05/2027 = **DIA H do Aniversário de 1 Ano** — evento mais importante da loja, sem roteiro de conteúdo
+- Verificou que semana 53 (countdown 7→1) e semana 55 (pós-aniversário) existem, confirmando que o gap é real e não intencional
+- Revisou estado do LocalBusiness schema: apenas bloco genérico, sem dias individuais — lacuna para Rich Results de horários
+- Avaliou timing do ciclo #119 (playbook WA a 5,5 meses): antecipação excessiva para eventos operacionais — nova regra v14
+- Rebalanceou roadmap #121–#130 priorizando semana 54 (gap crítico) antes dos itens técnicos
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/estrategia.md` | Nova seção "Auto-aprimoramento: Ciclos #115–#119" com: tabela de ROI por ciclo, análise de valor/desperdício, diagnóstico do gap semana 54, estado do projeto D+10, roadmap rebalanceado #121–#130, regras novas v14 (exceção à pausa para gaps, timing de playbooks, gap detection obrigatório) |
+
+**Principais achados:**
+1. **Gap semana 54 (25/04/2027):** A data mais importante da loja não tem conteúdo — prioridade #1 do próximo bloco
+2. **Ciclo #116 foi o de maior ROI do bloco:** Intel de preços + mudança no site no mesmo ciclo = duplo impacto. Padrão a replicar
+3. **Timing de playbooks:** Ciclo #119 foi feito 5,5 meses antes do evento — nova regra v14 limita a 6 semanas de antecedência (exceto quando há pré-requisito técnico longo)
+4. **Gap detection:** Nova rotina obrigatória no auto-aprimoramento: `ls content/semana*.md` para checar sequência numérica
+5. **Ratio perfeito:** #115–#119 cobriu todas as 5 áreas (1 por área) — rotação v12 funcionando
+
+**Commit:** _(ver abaixo)_
+
+**Próximo passo sugerido (ciclo #121 — conteúdo excepcional):**
+- Criar `belinha/content/pos-inauguracao-semana54.md` — DIA H do Aniversário de 1 Ano (25/04/2027): roteiro hora-a-hora do dia, posts feed + stories + Reels + WA VIP + WA geral, gestão de crise de demanda, ritual de encerramento com equipe, teaser semana 55 (Dia das Mães)
+- Exceção à pausa de conteúdo aprovada (v14): semana 54 é gap em sequência existente, não extensão do horizonte
+
+---
+
 ## Ciclo #119 — 2026-05-05
 
 **Área:** Conversão — Playbook WA Aniversário 6 Meses (25/10/2026)

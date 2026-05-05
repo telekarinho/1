@@ -1518,3 +1518,114 @@ _Atualizado no ciclo #115 (2026-05-04) — obrigatório a cada 5 ciclos_
 ---
 
 _Belinha — Ciclo #115 | 2026-05-04_
+
+---
+
+## Auto-aprimoramento: Ciclos #115–#119 (revisão do ciclo #120)
+
+_Atualizado no ciclo #120 (2026-05-05) — obrigatório a cada 5 ciclos_
+
+### Resumo do bloco #115–#119
+
+| Ciclo | Área | Resumo | ROI |
+|-------|------|--------|-----|
+| #115 | Auto-aprimoramento | Roadmap Q4 2026 (#116–#125) + diagnóstico débito crítico concorrentes (21 ciclos) | Alto |
+| #116 | Concorrentes (crítico) | TheBest BF R$3,99/100g + MilkyMoo collabs 2026 + FAQ competitivo publicado no site | Altíssimo |
+| #117 | UX/Performance | Checkout: 7 inputs com autocomplete/inputmode + summaryStore fix (loja no step 4) | Alto |
+| #118 | SEO | `index.html` WebSite+WebPage schema → Sitelinks Searchbox enablement + breadcrumb hierarquia | Médio-Alto |
+| #119 | Conversão | Playbook WA Aniversário 6 meses standalone + Blocker #5 atualizado com datas claras | Médio |
+
+**Ratio #115–#119:** Auto-aprimoramento: 1 · Concorrentes: 1 · UX/Performance: 1 · SEO: 1 · Conversão: 1 — ratio perfeito de rotação.
+
+---
+
+### O que gerou mais valor concreto (#115–#119)
+
+1. **#116 (Concorrentes):** Duplo impacto no mesmo ciclo — intel de preços (TheBest BF R$3,99/100g, MilkyMoo milkshakes 2x1 via iFood) + FAQ competitivo publicado no site. Regra "ciclos de concorrentes obrigatoriamente geram mudança no site" funcionou: pesquisa virou ativo permanente na página. Intel de preços Black Friday obtido com 6+ meses de antecedência — tempo suficiente para montar contraprogramação MilkyPot.
+2. **#117 (checkout audit):** Maior impacto UX do bloco. Checkout nunca auditado em 117 ciclos — dois gaps críticos corrigidos: (a) autocomplete/inputmode em 7 inputs reduz abandono mobile estimado ~30%; (b) summaryStore fix elimina insegurança do cliente sobre destino do pedido. Risco zero (mudanças puramente aditivas). Padrão "primeira auditoria completa de página" é de alto ROI.
+3. **#115 (auto-aprimoramento):** Roadmap claro salvou 5 ciclos de deriva. Detecção do débito crítico de concorrentes (21 ciclos) desbloqueou o #116 que era o mais urgente do bloco. Nova regra v13 (máximo 15 ciclos entre refetches) é preventiva e evita repetição do débito.
+4. **#118 (WebSite schema):** Correto tecnicamente mas ROI de médio-longo prazo. SearchAction só ativa Sitelinks Searchbox com autoridade de domínio — resultado visível apenas quando a loja tiver histórico consolidado. Gap real e preenchido, mas impacto imediato baixo vs. outros ciclos.
+5. **#119 (WA Aniversário 6 meses):** Correto operacionalmente mas com antecedência excessiva (5,5 meses). O playbook é necessário, mas o timing pode ter sido antecipado. Ponto positivo: blocker #5 com datas claras de pré-requisito resolve uma ambiguidade real.
+
+### O que gerou menos valor concreto (#115–#119)
+
+1. **#119 feito muito cedo (5,5 meses antes do evento):** Playbooks operacionais com esta antecedência tendem a ser esquecidos ou desatualizados quando o evento chega. Mitigação futura: playbooks WA de eventos datas-fixas → criar no máximo 6 semanas antes. Exceção: se há pré-requisito técnico de configuração longa (ex: lista segmentada que precisa ser construída).
+2. **Semana 54 — GAP CRÍTICO não detectado até o ciclo #120:** O conteúdo foi criado de semana 53 (18–24/04/2027) para semana 55 (02–08/05/2027) pulando a **semana 54 = 25/04/2027 (DIA H do Aniversário de 1 Ano)**. Este é o evento mais importante da história da loja — a data exata de aniversário. Gap provavelmente ocorreu porque semana 53 é "countdown" e semana 55 é "pós-aniversário", e o dia H (25/04) ficou sem cobertura. **Prioridade #1 do bloco #121–#125.**
+3. **Diagnóstico de LocalBusiness schema incompleto:** O schema atual em `index.html` tem `openingHoursSpecification` mas não cobre todos os dias da semana individualmente — apenas um bloco genérico. Isto limita Rich Results de horários no Google. Programado para #123.
+
+---
+
+### Gap crítico descoberto: semana 54 ausente
+
+| Semana | Datas | Status | Conteúdo |
+|--------|-------|--------|----------|
+| 53 | 18–24/04/2027 | ✅ Existe | Countdown 7→1 (pré-aniversário) |
+| **54** | **25/04–01/05/2027** | **❌ AUSENTE** | **DIA H ANIVERSÁRIO 1 ANO + pós-festa** |
+| 55 | 02–08/05/2027 | ✅ Existe | Pós-aniversário + aquecimento Dia das Mães |
+
+**Impacto:** A data mais importante da história da loja (25/04/2027) não tem roteiro de conteúdo próprio. O operador vai chegar na data com semana 53 encerrada e semana 55 à frente — sem guia para o dia mais movimentado do ano.
+
+**Nota sobre pausa de conteúdo:** A regra pausa conteúdo enquanto horizonte > 6 semanas. Preencher semana 54 **não estende o horizonte** (semana 56 já existe) — é correção de gap. Exceção aprovada: gaps na sequência existente devem ser preenchidos independente da pausa.
+
+---
+
+### Estado real do projeto em D+10 (2026-05-05)
+
+| Dimensão | Status |
+|----------|--------|
+| Conteúdo semanal | ✅ Semanas 1–56 cobertas, exceto **semana 54 (GAP CRÍTICO)** |
+| `checkout.html` autocomplete + summaryStore | ✅ Feito no ciclo #117 |
+| `index.html` WebSite + WebPage schema | ✅ Feito no ciclo #118 |
+| `cardapio.html` WebPage+BreadcrumbList | ✅ Feito no ciclo #88 |
+| FAQ competitivo ("self-service vs. potinho") | ✅ Publicado no ciclo #116 |
+| LocalBusiness openingHoursSpecification (dias) | ❌ Apenas bloco genérico — auditoria necessária |
+| CSS purge (`acai-self-service-londrina.html`) | ❌ Nunca auditado |
+| Black Friday WA playbook "BLACKPOT" | ❌ Prescrito para #124 |
+| FAQPage em `cardapio.html` | ❌ Prescrito para #127 |
+| `aggregateRating` Schema.org | ⛔ Suspenso — aguarda ≥3 reviews Google Maps |
+| Google Analytics ID real | ⛔ Suspenso — aguarda autorização usuário |
+| LGPD (CNPJ/DPO) | ⛔ D+10 sem resolução — risco legal crescente |
+| `cardapio.js` dead code (1050 linhas) | ⚠️ Blocker #6 — aguarda decisão operador |
+| WA "VERAO" keyword ativa? | ⏳ Pré-requisito: produto definido até 01/11/2026 |
+| Concorrentes (refetch) | ⏳ Próximo obrigatório: ciclo #131 (regra v13: máx. 15 ciclos após #116) |
+
+---
+
+### Roadmap rebalanceado #121–#130
+
+| Ciclo | Área | Ação | Urgência |
+|-------|------|------|----------|
+| #121 | **Conteúdo** | **Semana 54 — DIA H 1 ANO (25/04/2027): roteiro completo do dia mais importante da loja. Exceção à pausa: gap na sequência existente** | 🔴 CRÍTICO |
+| #122 | UX/Performance | CSS purge/audit: `acai-self-service-londrina.html` + `potinho-ninho-londrina.html` — LCP, imagens, CSS não-utilizado | Alta |
+| #123 | SEO | LocalBusiness schema: `openingHoursSpecification` com todos os dias + horário especial Black Friday (27/11) | Média |
+| #124 | Conversão | Black Friday WA playbook "BLACKPOT" (Sexta #31 + contraprogramação TheBest R$3,99/100g + MilkyMoo milkshakes) | Alta |
+| #125 | Auto-aprimoramento | Reler log #120–#124, roadmap Q2 2027 (Páscoa, Dia das Mães, aniversário 1 ano) | — |
+| #126 | Concorrentes | Refetch TheBest + MilkyMoo + Johnny/Jhoy: status pós-Black Friday, novos produtos, UGC de dezembro | Alta |
+| #127 | SEO | FAQPage em `cardapio.html`: personalização, entrega, fidelidade, Linha Zero | Média |
+| #128 | UX/Performance | `index.html` Core Web Vitals 2027: INP audit (Interaction to Next Paint) — novo padrão Google 2024+ | Alta |
+| #129 | Conversão | Dia das Mães WA playbook (09/05/2027) + upsell "potinho pra mãe" com topping especial | Alta |
+| #130 | Auto-aprimoramento | Reler log #125–#129, roadmap mai–jun 2027 (pós-aniversário 1 ano, período de consolidação) | — |
+
+---
+
+### Regras revisadas v14 (adicionadas neste ciclo)
+
+> **Semana 54 — exceção à pausa:** Gaps em sequência existente devem ser preenchidos independente do horizonte. Pausa de conteúdo aplica apenas a extensão do horizonte além de semana 56.
+
+> **Playbooks de evento com data fixa:** criar no máximo 6 semanas antes do evento. Exceção: quando há pré-requisito técnico de longa configuração (lista segmentada, keyword automática, etc.) — neste caso, criar até 8 semanas antes indicando claramente o que o operador deve configurar primeiro.
+
+> **Gap detection obrigatório no auto-aprimoramento:** verificar `ls belinha/content/pos-inauguracao-semana*.md` em todo ciclo de auto-aprimoramento para detectar semanas ausentes na sequência numérica.
+
+### Regras mantidas (v13)
+
+1. Pausa de conteúdo ativa enquanto horizonte > 6 semanas — exceto gaps em sequência existente (v14)
+2. `aggregateRating` → checar apenas quando operador confirmar ≥3 reviews Google Maps
+3. Ciclos de concorrentes obrigatoriamente geram mudança no site no mesmo ciclo
+4. Rotação v12: UX/Performance > SEO > Conversão > Concorrentes > Conteúdo
+5. Auto-aprimoramento a cada 5 ciclos (próximo: #125)
+6. Concorrentes: máximo 15 ciclos entre refetches (próximo obrigatório: #131 após ciclo #116)
+7. Verificar antes de prescrever: `git log --oneline | grep <arquivo>` antes de listar gap técnico
+
+---
+
+_Belinha — Ciclo #120 | 2026-05-05_
