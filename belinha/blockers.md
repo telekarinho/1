@@ -83,15 +83,23 @@ Google Analytics 4 Property ID: G-__________
 
 **Bloqueador:** A Belinha não consegue verificar o WhatsApp Business — não há acesso ao painel de automações.
 
-**O que o operador precisa confirmar:**
-- [ ] A keyword "VERAO" foi configurada como resposta automática no WA Business?
-- [ ] A lista VIP "VERAO" foi criada e tem membros?
-- [ ] O produto sazonal de verão (Versão A ou B) foi lançado em 02/12/2026 conforme semana 33?
-- [ ] Quantos clientes entraram na lista VIP "VERAO" até agora?
+**Timeline crítica:**
+- **Hoje (05/05/2026):** Loja aberta há 10 dias. Produto verão não foi lançado ainda — a mecânica "VERAO" é para dezembro/2026.
+- **Pré-requisito #1 (antes de 11/11/2026):** Definir produto sazonal de verão (Versão A ou B da enquete — ver semana 32) com a franquia.
+- **Pré-requisito #2 (até 01/12/2026):** Configurar resposta automática "VERAO" no WA Business antes do lançamento da semana 33.
+- **Ativação:** Semana 33, quinta 03/12/2026 — lançamento oficial do produto verão + broadcast "manda VERAO" para a base.
+
+**O que o operador precisa confirmar (quando chegar a data):**
+- [ ] Produto sazonal verão definido (Versão A ou B) — confirmar com franquia até 01/11/2026
+- [ ] Keyword "VERAO" configurada como resposta automática no WA Business — fazer até 30/11/2026
+- [ ] Lista VIP "VERAO" criada no WA Business — fazer até 30/11/2026
+- [ ] Broadcast "manda VERAO" enviado para base — semana 33 (03/12/2026)
 
 **Ação após confirmação:** Se a mecânica está ativa e funcionando → fechar este blocker. Se não foi publicada → avaliar se ainda faz sentido ativar (produto verão ainda em cardápio?) ou arquivar como aprendizado para próxima campanha sazonal.
 
 **Impacto estratégico:** Lista VIP "VERAO" é input para o conteúdo de semana 55+ (pode incluir broadcast de encerramento da temporada verão + transição para campanha outono/inverno).
+
+**Verificado no ciclo #119 (05/05/2026):** Não há ação possível agora — mecânica é para dezembro/2026. Relembrar no ciclo #97 (roadmap) ou em outubro/novembro quando o operador precisar configurar o WA Business.
 
 ---
 
