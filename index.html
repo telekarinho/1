@@ -1874,10 +1874,14 @@
             document.getElementById('productSheetBackdrop').style.display = 'block';
             var sheet = document.getElementById('productSheet');
             sheet.style.display = 'block';
-            setTimeout(function() {
-                sheet.classList.add('sheet-open');
-                document.body.style.overflow = 'hidden';
-            }, 10);
+            // Double rAF: first frame paints the initial state, second triggers the CSS transition.
+            // Avoids forcing a synchronous style recalculation (INP improvement vs setTimeout 10ms).
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    sheet.classList.add('sheet-open');
+                    document.body.style.overflow = 'hidden';
+                });
+            });
 
             updateSheetTotal();
         };
@@ -2041,7 +2045,7 @@
             toast.className = 'add-toast';
             toast.textContent = msg;
             document.body.appendChild(toast);
-            setTimeout(function() { toast.classList.add('toast-show'); }, 10);
+            requestAnimationFrame(function() { requestAnimationFrame(function() { toast.classList.add('toast-show'); }); });
             setTimeout(function() {
                 toast.classList.remove('toast-show');
                 setTimeout(function() { toast.remove(); }, 300);
@@ -2213,18 +2217,22 @@
         renderCheckoutStores(CHECKOUT_STORES);
     };
 
-    // Filter stores by search
+    // Filter stores by search — debounced 200ms to avoid DOM rebuild on every keystroke (INP).
+    var _storeFilterTimer;
     window.filterCheckoutStores = function(query) {
-        if (!query || query.length < 2) {
-            renderCheckoutStores(CHECKOUT_STORES);
-            return;
-        }
-        query = query.toLowerCase();
-        var filtered = CHECKOUT_STORES.filter(function(s) {
-            return s.name.toLowerCase().indexOf(query) !== -1 ||
-                   s.address.toLowerCase().indexOf(query) !== -1;
-        });
-        renderCheckoutStores(filtered);
+        clearTimeout(_storeFilterTimer);
+        _storeFilterTimer = setTimeout(function() {
+            if (!query || query.length < 2) {
+                renderCheckoutStores(CHECKOUT_STORES);
+                return;
+            }
+            query = query.toLowerCase();
+            var filtered = CHECKOUT_STORES.filter(function(s) {
+                return s.name.toLowerCase().indexOf(query) !== -1 ||
+                       s.address.toLowerCase().indexOf(query) !== -1;
+            });
+            renderCheckoutStores(filtered);
+        }, 200);
     };
 
     // Geolocation for checkout
