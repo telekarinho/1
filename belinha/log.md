@@ -2,6 +2,38 @@
 
 ---
 
+## Ciclo #127 — 2026-05-05
+
+**Área:** SEO — FAQPage schema em `cardapio.html`
+
+**Contexto:** Prescrito pelo roadmap do ciclo #125. `cardapio.html` já tinha `FoodEstablishment` + `BreadcrumbList` + `WebPage`, mas sem `FAQPage`. Schema de FAQ aumenta elegibilidade para rich results em buscas do tipo pergunta ("tem delivery?", "tem opção fit?", "como funciona fidelidade?").
+
+**O que analisou:**
+- Verificou schemas existentes em `cardapio.html` (linhas 48–158): `FoodEstablishment`+`Menu` e `BreadcrumbList`+`WebPage` — nenhum `FAQPage`
+- Identificou 6 perguntas de alta intenção de compra: personalização, delivery Londrina, fidelidade, Linha Zero/Fit, açaí buffet Muffato, formas de pagamento
+- Validou os 3 blocos JSON-LD resultantes com Node.js — todos OK
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `cardapio.html` | +59 linhas: novo `<script type="application/ld+json">` com `FAQPage` de 6 Q&A antes do `</head>` |
+
+**Commit:** `732c68e`
+
+**Destaques:**
+1. **6 perguntas estratégicas:** cobre dúvidas do funil de decisão (personalização, entrega, pagamento) e diferenciais MilkyPot (Linha Zero, buffet açaí, fidelidade)
+2. **Diferencial Muffato explícito:** pergunta 5 responde sobre o açaí buffet self-service exclusivo da unidade Londrina — não encontrado em concorrentes
+3. **Sem iFood/Uber Eats:** resposta da pergunta de delivery reforça o canal próprio WhatsApp e a ausência de taxa de plataforma
+
+**Próximo passo sugerido:**
+- Ciclo #128: `index.html` INP audit (Interaction to Next Paint) — novo padrão Core Web Vitals Google 2024+; identificar event handlers lentos
+- Ciclo #129: Dia das Mães WA playbook (09/05/2027): keyword "MAE27", segmentação VIP, upsell "potinho pra mãe"
+
+_Belinha — Ciclo #127 | 2026-05-05_
+
+---
+
 ## Ciclo #126 — 2026-05-05
 
 **Área:** Concorrentes — Refetch TheBest + MilkyMoo pré-Black Friday (27/11/2026)
