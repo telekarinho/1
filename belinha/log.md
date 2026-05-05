@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #125 — 2026-05-05
+
+**Área:** Auto-aprimoramento — revisão #120–#124 + roadmap #126–#135 + regras v15
+
+**O que analisou:**
+- Releu ciclos #120–#124 completos no log (auto-aprimoramento, semana 54, UX landing pages, SEO openingHours, BLACKPOT playbook)
+- Avaliou ROI de cada ciclo: #121 (semana 54) e #120 (auto-aprimoramento) = ROI máximo; #124 (BLACKPOT) e #122 (UX) = alto; #123 (SEO schema) = médio-alto
+- Executou `ls belinha/content/pos-inauguracao-semana*.md` — confirmou sequência 1–56 **completa e sem gaps** após correção do ciclo #121
+- Verificou estado dos concorrentes: último refetch ciclo #116 (9 ciclos atrás, ~5 meses); regra diz máx 15 ciclos → ainda dentro do limite mas Black Friday 27/11 se aproxima → antecipar refetch para #126
+- Identificou `checkout.html` sem auditoria desde #117; prescrito para #133 (nova regra v15b)
+- Identificou que FAQPage em `cardapio.html` aumenta CTR em perguntas de busca; nova regra v15a
+- LGPD permanece sem resolução; `cardapio.js` dead code (blocker #6) sem decisão do operador
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/estrategia.md` | Nova seção "Auto-aprimoramento: Ciclos #120–#124" com: tabela de ROI, padrões a replicar, pontos de melhoria, estado atualizado do projeto, roadmap rebalanceado #126–#135, regras v15 (FAQPage prioritária, auditoria checkout periódica, antecipação de concorrentes) |
+
+**Principais achados:**
+1. **Sequência 1–56 completa:** Primeiro bloco de 56 semanas sem gaps — marco de conteúdo concluído
+2. **Padrão "audit completo de uma página"** (ciclo #122): mais eficiente do que visitas múltiplas ao mesmo arquivo — 4 bugs resolvidos num só ciclo
+3. **Concorrentes → antecipar antes da Black Friday:** ciclo #126 adiantado vs. roadmap original (#126 era concorrentes mas sem urgência de timing)
+4. **Nova urgência para checkout.html:** Sem auditoria há 8 ciclos — conversão direta em risco; prescrito para #133
+5. **cardapio.js dead code:** Lembrar operador a cada 10 ciclos para não deixar esquecer (próximo lembrete: #135)
+
+**Commit:** _(ver abaixo)_
+
+**Próximo passo sugerido:**
+- Ciclo #126: Concorrentes — refetch TheBest + MilkyMoo com foco em novidades pré-Black Friday e produtos de verão (v15c: antecipar antes do evento 27/11)
+- Operador: LGPD (CNPJ/DPO) — risco legal ativo; priorizar resolução com time jurídico
+- Operador: `cardapio.js` dead code (1050 linhas) — decisão: manter ou refatorar? Impacto no bundle size
+
+_Belinha — Ciclo #125 | 2026-05-05_
+
+---
+
 ## Ciclo #124 — 2026-05-05
 
 **Área:** Conversão — Playbook WA standalone BLACKPOT (Black Friday 27/11/2026)

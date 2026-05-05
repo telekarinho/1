@@ -1629,3 +1629,99 @@ _Atualizado no ciclo #120 (2026-05-05) — obrigatório a cada 5 ciclos_
 ---
 
 _Belinha — Ciclo #120 | 2026-05-05_
+
+---
+
+## Auto-aprimoramento: Ciclos #120–#124
+
+### Tabela de ROI por ciclo
+
+| Ciclo | Área | ROI | Justificativa |
+|-------|------|-----|---------------|
+| #120 | Auto-aprimoramento | ⭐⭐⭐⭐⭐ | Gap detection identificou semana 54 (data mais importante da loja) + nova regra v14 com impacto duradouro |
+| #121 | Conteúdo (semana 54) | ⭐⭐⭐⭐⭐ | Eliminou gap crítico; corrigiu erro de datas sistemático no dia-h.md; sequência 1–56 agora contínua |
+| #122 | UX/Performance | ⭐⭐⭐⭐ | Bug fix real (og:type inválido), LCP melhorado via preload + fetchpriority, hover states = conversão desktop |
+| #123 | SEO | ⭐⭐⭐ | Schema canônico 7 entradas; impacto em Rich Results e compatibilidade GMB; manutenibilidade futura |
+| #124 | Conversão | ⭐⭐⭐⭐ | Primeiro playbook WA standalone para Black Friday; mecânicas sem desconto; contraprogramação TheBest implícita |
+
+### O que gerou mais valor (padrões a replicar)
+
+1. **Gap detection no auto-aprimoramento → fill imediato:** `ls content/semana*.md` identificou semana 54 ausente → ciclo seguinte preencheu. Custo zero de pesquisa, impacto máximo. Repetir em todo ciclo de auto-aprimoramento.
+2. **Bug fix + melhoria técnica no mesmo ciclo:** Ciclo #122 encontrou 4 problemas no mesmo arquivo e resolveu todos. Auditar uma página por inteiro é mais eficiente do que fazer 4 visitas separadas.
+3. **Playbook standalone vs. calendário editorial:** BLACKPOT (ciclo #124) complementou a semana 32 sem duplicar. Separar "calendário editorial" de "playbook operacional WA" é a estrutura certa — facilita consulta da equipe.
+4. **Ciclo #120 como multiplicador:** Um bom auto-aprimoramento define 5 ciclos de alta qualidade à frente. ROI de planejamento é sempre alto.
+
+### O que pode melhorar
+
+1. **Concorrentes há 9 ciclos sem refetch:** Regra diz máximo 15 — estamos a 60% do limite. Próximo obrigatório #131, mas dados do ciclo #116 já estão datados (5 meses). Antecipar se surgir evento relevante.
+2. **LGPD permanece aberta há 10+ dias:** Risco jurídico crescente. Documentada em blockers.md mas sem resolução. A Belinha não pode agir sem CNPJ/DPO — operador precisa priorizar.
+3. **cardapio.js dead code (1050 linhas):** Blocker #6 há vários ciclos. Sem decisão do operador, bundle size permanece inflado. Mencionar na resposta a cada 10 ciclos para não deixar esquecer.
+4. **checkout.html sem auditoria:** Nenhuma visita técnica desde ciclo #117 (autocomplete). Dado o impacto direto em conversão, prescrito para #133.
+
+---
+
+### Estado real do projeto em D+10 (2026-05-05) — Atualizado ciclo #125
+
+| Dimensão | Status |
+|----------|--------|
+| Conteúdo semanal | ✅ Semanas 1–56 completas, sequência contínua sem gaps |
+| `openingHoursSpecification` dias individuais | ✅ Ciclo #123 — 3 páginas |
+| Landing pages OG bug fix + LCP + hover | ✅ Ciclo #122 |
+| Black Friday BLACKPOT playbook WA | ✅ Ciclo #124 |
+| `checkout.html` autocomplete + summaryStore | ✅ Ciclo #117 |
+| `index.html` WebSite + WebPage schema | ✅ Ciclo #118 |
+| WA 6 meses playbook | ✅ Ciclo #119 |
+| FAQPage em `cardapio.html` | ❌ Prescrito para #127 |
+| `index.html` INP audit (Core Web Vitals 2027) | ❌ Prescrito para #128 |
+| Dia das Mães WA playbook (09/05/2027) | ❌ Prescrito para #129 |
+| sitemap.xml audit completo | ❌ Prescrito para #132 |
+| `checkout.html` auditoria completa | ❌ Prescrito para #133 |
+| Festa Junina WA playbook (jun/2027) | ❌ Prescrito para #134 |
+| `aggregateRating` Schema.org | ⛔ Suspenso — aguarda ≥3 reviews Google Maps |
+| Google Analytics ID real | ⛔ Suspenso — aguarda autorização usuário |
+| LGPD (CNPJ/DPO) | ⛔ D+10+ sem resolução — risco legal crescente (lembrar operador!) |
+| `cardapio.js` dead code (1050 linhas) | ⚠️ Blocker #6 — aguarda decisão operador (mencionar a cada 10 ciclos) |
+| Concorrentes refetch | ⏳ Próximo obrigatório: ciclo #131 (máx 15 ciclos após #116) |
+
+---
+
+### Roadmap rebalanceado #126–#135
+
+| Ciclo | Área | Ação | Urgência |
+|-------|------|------|----------|
+| #126 | **Concorrentes** | Refetch TheBest + MilkyMoo: novos produtos de verão, ações pré-Black Friday, UGC recente — antecipação estratégica antes do evento 27/11 | Alta |
+| #127 | SEO | FAQPage em `cardapio.html`: 5–7 perguntas (personalização, entrega, fidelidade, Linha Zero, açaí self-service) | Média |
+| #128 | UX/Performance | `index.html` INP audit (Interaction to Next Paint): novo padrão Core Web Vitals Google 2024+; identificar handlers lentos | Alta |
+| #129 | Conversão | Dia das Mães WA playbook (09/05/2027): keyword "MAE27", segmentação VIP, upsell "potinho pra mãe", topping especial | Alta |
+| #130 | Auto-aprimoramento | Reler log #125–#129; roadmap mai–ago 2027 (Festa Junina, Dia dos Namorados, 14 meses de loja) | — |
+| #131 | **Concorrentes** | Refetch obrigatório (regra máx 15 ciclos após #116): Johnny/Jhoy + Green Açaí + status TheBest/MilkyMoo pós-Black Friday | Alta |
+| #132 | SEO | sitemap.xml audit: verificar cobertura de landing pages + checkout; robots.txt; índice de crawl | Média |
+| #133 | UX | `checkout.html` auditoria completa: fluxo mobile, campos, erros de validação, feedback visual, CLS | Alta |
+| #134 | Conversão | Festa Junina WA playbook (jun/2027): keyword "ARRAIA", potinho temático, mecânica sem desconto — padrão HALLOWEEN/NATAL | Média |
+| #135 | Auto-aprimoramento | Reler log #130–#134; roadmap ago–out 2027 (100 semanas, Dia das Crianças, Outubro Rosa) | — |
+
+---
+
+### Regras atualizadas v15
+
+> **v15a — FAQPage prioritária:** Quando página tem `LocalBusiness` schema sem `FAQPage`, adicionar FAQPage aumenta CTR em buscas por perguntas ("tem entrega?", "tem opção fit?"). Priorizar antes de outros schemas secundários.
+
+> **v15b — Auditoria checkout periódica:** `checkout.html` deve ser auditado a cada 20 ciclos. Próximo: #133.
+
+> **v15c — Antecipação de concorrentes:** Se evento do concorrente de alto impacto se aproxima (ex: "The Best Friday"), antecipar refetch para 4–6 semanas antes, sem aguardar o limite de 15 ciclos.
+
+### Regras mantidas (v14)
+
+1. Pausa de conteúdo ativa enquanto horizonte > 6 semanas — exceto gaps em sequência existente (v14)
+2. `aggregateRating` → checar apenas quando operador confirmar ≥3 reviews Google Maps
+3. Ciclos de concorrentes obrigatoriamente geram mudança no site no mesmo ciclo
+4. Rotação v12: UX/Performance > SEO > Conversão > Concorrentes > Conteúdo
+5. Auto-aprimoramento a cada 5 ciclos (próximo: #130)
+6. Concorrentes: máximo 15 ciclos entre refetches (próximo obrigatório: #131 após ciclo #116)
+7. Verificar antes de prescrever: `git log --oneline | grep <arquivo>` antes de listar gap técnico
+8. Gap detection obrigatório no auto-aprimoramento: `ls belinha/content/pos-inauguracao-semana*.md` para checar sequência numérica
+9. Playbooks de evento com data fixa: criar no máximo 6 semanas antes (exceto pré-requisito técnico longo: até 8 semanas)
+
+---
+
+_Belinha — Ciclo #125 | 2026-05-05_
