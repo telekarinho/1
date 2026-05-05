@@ -2,6 +2,45 @@
 
 ---
 
+## Ciclo #124 — 2026-05-05
+
+**Área:** Conversão — Playbook WA standalone BLACKPOT (Black Friday 27/11/2026)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #120 (tabela #124: "Black Friday WA playbook BLACKPOT, Sexta #31, contraprogramação TheBest R$3,99/100g + MilkyMoo milkshakes"). O arquivo `pos-inauguracao-semana32.md` já cobre o calendário editorial de feed/stories da semana — este playbook é complementar, focado exclusivamente nas operações WhatsApp do evento.
+
+**O que analisou:**
+- Verificou `pos-inauguracao-semana32.md`: tem calendário editorial completo (dom 22/11 → sáb 28/11), copy de feed/stories/reels; mas sem detalhamento operacional de WA (segmentação, automação, copy pós-evento)
+- Tomou `whatsapp-aniversario-6meses.md` como template de formato: segmentação por etiquetas, cronograma horário a horário, copy pronto para copiar, checklist operador, métricas
+- Black Friday 2026 = último sexta de novembro = 27/11/2026 = Sexta #31 (contagem a partir de Sexta #1 = 01/05/2026)
+- Mecânica: 3 versões (A: topping extra grátis / B: pontos em dobro / C: brinde 50 primeiros) — operador escolhe antes de quarta 25/11
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-blackpot.md` | CRIADO — Playbook standalone: estratégia BLACKPOT, keyword automação WA, cronograma 22–28/11, 9 templates de mensagem prontos (M1→M6 + M-PRÉ + M3A + M3B), 3 versões por mecânica, contraprogramação implícita TheBest/MilkyMoo, checklist operador, métricas de sucesso |
+
+**Commit:** `31584a3`
+
+**Destaques do playbook:**
+1. **Keyword BLACKPOT com automação WA Business:** Clientes que enviarem "BLACKPOT" entram automaticamente na lista VIP e recebem acesso à mecânica 48h antes do público — padrão validado com "HALLOWEEN" (ciclo #67) e "NATAL" (ciclo #75)
+2. **3 mecânicas sem desconto na base:** Versão A (topping extra), Versão B (pontos dobrados), Versão C (brinde 50 primeiros) — operador decide sem precisar de novo ciclo. Nenhuma reduz o preço do potinho
+3. **Cronograma de 7 dias (22–28/11):** 8 touchpoints WA distribuídos estrategicamente; M4 "últimas horas" é o único que tem instrução condicional (só disparar se a loja não estiver lotada)
+4. **Contraprogramação TheBest:** copy "potinho personalizado vs. pesado e medido como feira" sem nomear o concorrente — diferenciação de experiência implícita
+5. **M6 reativação sábado 28/11:** Alcança inativos que não foram no dia H; tom gentil, sem gatilho de culpa, gancho para dezembro
+
+**Próximo passo sugerido:**
+- Ciclo #125: Auto-aprimoramento (releitura ciclos #120–#124 + ajuste de estratégia + roadmap Q2 2027)
+- Ciclo #126: Concorrentes — refetch TheBest + MilkyMoo + Johnny/Jhoy: status pós-Black Friday, novos produtos, UGC de dezembro
+- Operador: definir mecânica BLACKPOT (Versão A/B/C) com franquia ANTES de quarta 25/11/2026
+- Operador: configurar resposta automática keyword `BLACKPOT` no WA Business antes de domingo 22/11/2026
+- Operador: criar etiqueta `#blackpot-2026` no WA Business antes de domingo 22/11/2026
+
+_Belinha — Ciclo #124 | 2026-05-05_
+
+---
+
+
 ## Ciclo #123 — 2026-05-05
 
 **Área:** SEO — `openingHoursSpecification` com dias individuais (3 páginas)
