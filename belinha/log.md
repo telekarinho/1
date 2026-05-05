@@ -2,6 +2,35 @@
 
 ---
 
+## Ciclo #119 — 2026-05-05
+
+**Área:** Conversão — Playbook WA Aniversário 6 Meses (25/10/2026)
+
+**O que analisou:**
+- Verificou que o template WA do 6-meses estava enterrado dentro de `pos-inauguracao-semana28.md` (linha ~46), sem arquivo operacional próprio e com tom misturado ao Halloween
+- Confirmou que `whatsapp-reativacao-d30-d60.md` (D+30/D+60) já existe desde ciclo #106 — não precisa recriar
+- Verificou WA "VERAO": blocker #5 em `blockers.md` — mecânica é para dezembro/2026, sem ação possível agora. Adicionado timeline crítica com datas claras de pré-requisito para o operador
+- Verificou que não existe arquivo standalone `whatsapp-aniversario-6meses.md` — gap real, pois o operador precisará de um documento isolado para o dia 25/10
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-aniversario-6meses.md` | CRIADO — Playbook operacional completo: 3 segmentos (M1 base completa 10h, M2 VIP fidelidade ≥50 pts 11h, M3 reativação inativos 18h), cronograma minuto-a-minuto do dia 25/10, checklist pré-dia, integração com semana de Halloween 26–31/10, métricas e erros comuns |
+| `belinha/blockers.md` | Blocker #5 (WA "VERAO") atualizado com timeline crítica: pré-requisitos com datas (produto definido até 01/11, keyword configurada até 30/11, broadcast em 03/12). Nota de verificação ciclo #119 adicionada |
+
+**Impacto esperado:**
+- Operador tem um documento de referência único para o 25/10 — abre o arquivo, segue o cronograma, não precisa vasculhar semana28
+- M3 (reativação inativos via aniversário) complementa o fluxo D+60 com um gancho emocional de data — maior taxa de resposta esperada vs. reativação genérica
+- WA "VERAO" agora tem datas claras de ação futura, não fica como blocker aberto sem contexto
+
+**Commit:** `13f44cf`
+
+**Próximo passo sugerido (ciclo #120 — auto-aprimoramento):**
+- Auto-aprimoramento prescrito no roadmap: reler log #115–#119, identificar o que gerou mais valor, ajustar roadmap outubro–dezembro 2026 em `belinha/estrategia.md`
+
+---
+
 ## Ciclo #118 — 2026-05-04
 
 **Área:** SEO — `index.html` WebSite + WebPage schema (BreadcrumbList + Sitelinks SearchAction)
