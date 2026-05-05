@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #129 — 2026-05-05
+
+**Área:** Conversão / Conteúdo — EMERGÊNCIA Dia das Mães 2026 (10/05/2026)
+
+**Contexto:** Ciclo prescristo como "Dia das Mães WA playbook (09/05/2027)" pelo roadmap #125, mas ao calcular a data real o ciclo identificou que **o Dia das Mães de 2026 é em 5 dias (10/05/2026)** e nenhum conteúdo havia sido criado para o evento. Semana 3 (`pos-inauguracao-semana3.md`, criada no ciclo #30) cobre 03–09/05 sem mencionar Dia das Mães. Semana 4 (`pos-inauguracao-semana4.md`, ciclo #34) cobre 10–16/05 com post genérico "Domingo virou MilkyPot" para 10/05 — ignorando completamente a data comemorativa. Gap crítico corrigido com playbook de emergência.
+
+**O que analisou:**
+- Calculou que 2º domingo de maio 2026 = **10/05/2026** (5 dias a partir de hoje 05/05)
+- Verificou todos os arquivos de conteúdo existentes: nenhum menciona Dia das Mães 2026
+- Identificou que semana 4 (10-16/05) tem post genérico para 10/05 sem temática do evento
+- Observou narrativa de máximo apelo: primeiro Dia das Mães do MilkyPot Londrina (inauguração 25/04, apenas 15 dias antes)
+- Mapeou cronograma com 5 dias restantes: terça (teaser + MAE26), quarta (stories toppings), quinta (broadcast + carrossel), sexta (urgência delivery), sábado (lembrete VIP), domingo (Dia H)
+- Roadmap original apontava para 2027 — erro de planejamento corrigido aqui
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/dia-das-maes-2026-playbook.md` | CRIADO — Playbook completo: estratégia posicionamento (potinho como presente personalizado), mecânica keyword `MAE26`, cronograma 5 dias (05–10/05) com horários, 6 templates WA (M1–M6), 4 posts feed com captions completas, roteiro Reels 15s, checklist de execução diária, tabela de métricas, nota operacional urgente sobre substituição do post genérico de semana 4 |
+
+**Narrativa-âncora explorada:**  
+"Primeira vez que a ovelhinha celebra o Dia das Mães em Londrina" — evento ocorre apenas 15 dias após a inauguração (25/04). Ângulo genuíno e orgânico de máximo apelo emocional, sem forçar.
+
+**Destaques do playbook:**
+1. **Ação imediata hoje (05/05):** Configurar keyword `MAE26` no WA Business + publicar stories às 15h + feed às 17h — tempo não pode ser desperdiçado
+2. **Substituir post semana 4 (10/05):** O post genérico do `pos-inauguracao-semana4.md` para domingo 10/05 deve ser trocado pelo Post 4 do playbook (Dia das Mães)
+3. **6 templates WA prontos:** M1 (broadcast qui), M2 (VIP lista MAE26 sáb), M3 (broadcast geral sáb), M4 (VIP dom manhã), M5 (broadcast geral dom 13h), M6 (pós-evento seg)
+4. **Mecânica sem desconto:** 3 opções de valor extra (topping grátis / pontos em dobro / bilhetinho surpresa) — padrão validado HALLOWEEN/NATAL/BLACKPOT
+5. **Roteiro Reels 15s** com trilha sugerida pronto para produção
+
+**Commit:** (a preencher após commit)
+
+**Próximo passo sugerido:**
+- **OPERADOR URGENTE:** Executar checklist terça 05/05 HOJE — keyword MAE26, stories 15h, feed 17h
+- **OPERADOR:** Definir mecânica (Versão A/B/C) antes de quinta 07/05
+- Ciclo #130: Auto-aprimoramento — reler log #125–#129; roadmap mai–ago 2026 (ajustar linha temporal para 2026 em vez de 2027 onde aplicável); verificar se outros eventos de 2026 foram esquecidos ou planejados errado
+- Prioridade ciclo #130: **auditar todos os eventos de 2026 restantes** no roadmap e corrigir datas incorretas (o gap do Dia das Mães sugere que outros podem estar errados)
+
+_Belinha — Ciclo #129 | 2026-05-05_
+
+---
+
 ## Ciclo #128 — 2026-05-05
 
 **Área:** UX/Performance — `index.html` INP audit (Interaction to Next Paint)
