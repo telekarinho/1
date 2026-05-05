@@ -2,6 +2,42 @@
 
 ---
 
+## Ciclo #123 — 2026-05-05
+
+**Área:** SEO — `openingHoursSpecification` com dias individuais (3 páginas)
+
+**Contexto:** Prescrito pelo roadmap do ciclo #122. O bloco anterior usava um único objeto com `"dayOfWeek": [array de 7 dias]` — formato tecnicamente válido mas subótimo: o Google Rich Results validator e o parser do Google My Business têm melhor compatibilidade com entradas individuais por dia (permite futura diferenciação de horário por dia sem refatoração, e evita erros silenciosos em crawlers que não processam o array corretamente).
+
+**O que analisou:**
+- Verificou o schema atual nos 3 arquivos: todos com array-único de dias
+- Confirmou que `index.html` já tinha `validFrom: 2026-04-25` mas as duas landing pages não tinham — adicionado também
+- Estrutura nova: 7 entradas `{"@type":"OpeningHoursSpecification","dayOfWeek":"Monday",...}` (string singular, não array) — formato explícito preferido pelo Google
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | `openingHoursSpecification` expandido de 1→7 entradas (uma por dia da semana, string singular, `validFrom` mantido) |
+| `potinho-ninho-londrina.html` | Idem + `validFrom: 2026-04-25` adicionado (paridade com `index.html`) |
+| `acai-self-service-londrina.html` | Idem + `validFrom: 2026-04-25` adicionado |
+
+**Commit:** `d0bf6d9`
+
+**Impacto esperado:**
+1. **Google Rich Results validator:** Entradas individuais por dia são o formato canônico nos exemplos oficiais da Google — elimina potencial warning de "array de dias"
+2. **Google My Business sync:** Ferramenta de importação de schema do GMB lê melhor entradas individuais para detectar horários diferentes por dia (ex: horário reduzido feriados no futuro)
+3. **Manutenibilidade:** Para alterar o horário de domingo ou sábado isoladamente (ex: Natal, abertura extra), basta editar a linha correspondente sem refatorar o bloco inteiro
+4. **Paridade técnica:** `validFrom` agora presente nos 3 arquivos, informando aos crawlers que os horários são válidos a partir da inauguração
+
+**Próximo passo sugerido:**
+- Ciclo #124: Conversão — Black Friday WA playbook "BLACKPOT" (Sexta #31, novembro 2026), conforme roadmap #120
+- Ciclo #125: Auto-aprimoramento (revisão ciclos #120–#124)
+- Ciclo #126: Conteúdo — Semanas 37+38 (27/12–09/01/2027): Virada Ano Novo + "Nova meta, novo potinho" Linha Zero
+
+_Belinha — Ciclo #123 | 2026-05-05_
+
+---
+
 ## Ciclo #122 — 2026-05-05
 
 **Área:** UX/Performance — landing pages locais (`acai-self-service-londrina.html` + `potinho-ninho-londrina.html`)
