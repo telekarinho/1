@@ -168,7 +168,25 @@ Conta pra gente nos comentários — e não esquece de indicar um amigo pra desc
 
 ---
 
-### Sexta-feira 12/06 — STORIES (bastidores + contador de indicações) 🏅
+### Sexta-feira 12/06 — ⚠️ SUBSTITUÍDO PELO DIA DOS NAMORADOS
+
+> **⚠️ NOTA DE SUBSTITUIÇÃO (Belinha — Ciclo #131):** A sexta-feira 12/06 é Dia dos Namorados.
+> O conteúdo original desta seção (bastidores + contador de indicações) foi **substituído**.
+> Executar o playbook completo em: `belinha/content/dia-dos-namorados-2026-playbook.md`
+>
+> **Resumo das ações do dia (12/06):**
+> - 09h: WA lista NAMORADOS26 — template N3 (VIP abertura Dia H)
+> - 12h: Post feed principal Dia dos Namorados (Post 2 do playbook) OU Reel 15s
+> - 13h: Broadcast geral — template N4
+> - 14h: Stories ao vivo — abertura, montagem de potinhos
+> - 17h: Story mid-day urgência — "ainda dá tempo, delivery até 22h30"
+> - 21h: Story encerramento + UGC de casais
+>
+> O contador de indicações da semana move para o **sábado 13/06** (stories de encerramento).
+
+---
+
+### Sexta-feira 12/06 — CONTEÚDO ORIGINAL (ARQUIVADO) — STORIES (bastidores + contador de indicações) 🏅
 **Sequência de 3 stories:**
 1. Bastidor da loja: montagem de potinhos ou açaí no balcão — "sexta é dia de potinho! 🐑"
 2. Tela gamificada: "Semana do Indica & Ganha: já temos [N] novos amigos na família! 🎉"
