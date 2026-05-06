@@ -2,6 +2,41 @@
 
 ---
 
+## Ciclo #138 — 2026-05-06
+
+**Área:** Conteúdo — Bridge pós-Dia dos Pais em `semana18.md`
+
+**Contexto:** Prescrito pelo roadmap do ciclo #135 e confirmado em #137. `semana18.md` (16–22/08) foi criada no ciclo #63, antes do playbook do Dia dos Pais existir (criado no ciclo #136). O arquivo não tinha nenhuma conexão com o evento de 09/08 — o operador teria publicado conteúdo genérico de família na semana seguinte ao maior evento de agosto, desperdiçando o momentum.
+
+**O que analisou:**
+- Leu `semana18.md` completo: domingo 16/08 com post genérico "Domingo de família começa aqui", sem callback ao Dia dos Pais
+- Leu `dia-dos-pais-2026-playbook.md` (ciclo #136): P6 (pós-evento, seg 10/08) era o último touchpoint — sem D+7 para semana 18
+- Leu `semana19.md`: conteúdo de transição inverno→primavera sem conexão com Dia dos Pais (OK, é 14 dias depois — gap aceitável)
+- Identificou três gaps cirúrgicos: abertura de domingo sem UGC do evento, ausência de reativação D+7 para lista `#pai-2026`, checklist sem instrução de bridge
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pos-inauguracao-semana18.md` | Nota de contexto pós-Dia dos Pais no topo; domingo 16/08 remodelado com Versão A (UGC showcase + abertura família) e Versão B (fallback genérico); template WA reativação D+7 adicionado na segunda 17/08 para lista `#pai-2026`; checklist expandido com bloco "Ações pós-Dia dos Pais" destacado antes das ações regulares; tabela editorial atualizada; métricas de reativação adicionadas |
+
+**Commit:** `3c28842`
+
+**Destaques:**
+1. **UGC showcase no domingo 16/08 (Versão A):** Primeiro post da semana reusa o melhor conteúdo gerado por clientes no Dia dos Pais — transição natural para o tema "família" da semana 18, com custo zero de produção
+2. **WA reativação D+7 (segunda 17/08):** Clientes da lista `#pai-2026` recebem mensagem de segunda que conecta o evento passado à próxima visita, com menção ao saldo de pontos — padrão de e-commerce validado (D+7 após evento tem taxa de abertura 2–3x maior que broadcast genérico)
+3. **Versão A/B no domingo:** Operador não depende de ter UGC aprovado — se não houver foto autorizada, usa Versão B sem perder o ritmo da semana
+
+**Próximo passo sugerido:**
+- Ciclo #139: Pesquisa concorrentes (prescrita há 15+ ciclos desde #124): TheBest, MilkyMoo, Johnny/Jhoy — mecânicas de agosto, campanhas Dia dos Pais, produtos de inverno final. Gerar contraprogramação no mesmo ciclo
+- Ciclo #140: Auto-aprimoramento (roadmap set–nov 2026: Halloween, BLACKPOT, 6 meses de loja 25/10)
+- Operador: garantir que a resposta automática `PAPAI26` está configurada até 03/08 (conforme checklist do playbook)
+- Operador: colher UGC do Dia dos Pais durante o evento — pedir permissão via DM na hora para ter material disponível em 16/08
+
+_Belinha — Ciclo #138 | 2026-05-06_
+
+---
+
 ## Ciclo #137 — 2026-05-06
 
 **Área:** UX — `checkout.js` auditoria completa (bloqueador v17b, 3x postergado)
