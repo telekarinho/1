@@ -328,11 +328,14 @@
     <script src="../js/core/financas.js?v=mp-v14"></script>
     <script src="../js/core/onboarding.js?v=mp-v15-selfheal"></script>
     <script>
-        // Auth Guard
-        if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+        // Auth Guard — super_admin pode acessar o painel de qualquer franquia via ?fid=
+        const _isSuperAdmin = Auth.getSession && (Auth.getSession().role === 'super_admin');
+        if (!_isSuperAdmin && !Auth.requireAuth('franchisee')) throw new Error('Not authorized');
 
         const session = Auth.getSession();
-        const franchiseId = session.franchiseId;
+        // Franchisee usa session.franchiseId; super_admin usa ?fid= da URL
+        const franchiseId = session.franchiseId || new URLSearchParams(location.search).get('fid') || null;
+        if (!franchiseId) { alert('Franquia não encontrada. Adicione ?fid=ID na URL.'); throw new Error('franchiseId missing'); }
 
         // Get franchise info
         const franchises = DataStore.getAllFranchises();
@@ -545,6 +548,27 @@
         }, 5000);
 
         // Init
+        // Se fid veio da URL (super_admin sem franchiseId na sessão), força sync do Firestore
+        // O DataStore já iniciou sem saber o fid; precisamos sincronizar os docs agora.
+        if (!session.franchiseId && franchiseId) {
+            const _db = firebase.firestore ? firebase.firestore() : null;
+            if (_db) {
+                const docs2sync = ['orders_','caixa_','inventory_','staff_','finances_','recurring_expenses_'].map(p => p + franchiseId);
+                Promise.all(docs2sync.map(docId =>
+                    _db.collection('datastore').doc(docId).get()
+                        .then(snap => {
+                            if (!snap.exists) return;
+                            const val = snap.data().value;
+                            if (val) localStorage.setItem('mp_' + docId, val);
+                        })
+                        .catch(() => {})
+                )).then(() => {
+                    console.log('✅ Painel: sync forçado concluído para fid=' + franchiseId);
+                    loadDashboard(); // re-render com dados reais
+                });
+            }
+        }
+
         loadDashboard();
         i18n.translatePage();
 

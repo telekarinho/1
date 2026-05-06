@@ -542,6 +542,10 @@ const DataStore = {
                 fid = raw ? (JSON.parse(raw) || {}).franchiseId : null;
             }
         } catch (_) {}
+        // Fallback: super_admin acessando painel via ?fid= (não tem franchiseId na sessão)
+        if (!fid) {
+            try { fid = new URLSearchParams(location.search).get('fid'); } catch (_) {}
+        }
         if (!fid) return [];
         return [
             'catalog_config',
@@ -552,7 +556,8 @@ const DataStore = {
             'pdv_tabs_' + fid,
             'finances_' + fid,
             'recurring_expenses_' + fid,
-            'inventory_' + fid
+            'inventory_' + fid,
+            'staff_' + fid
         ];
     },
 
