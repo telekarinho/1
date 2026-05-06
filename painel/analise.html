@@ -509,10 +509,13 @@
         setLoading(true);
 
         try {
+            if (typeof MarginIntelligence === 'undefined' || !MarginIntelligence.getDashboardSummary) {
+                throw new Error('Motor de inteligencia nao carregou.');
+            }
             _data = MarginIntelligence.getDashboardSummary(_fid, _period);
         } catch(e) {
             console.error('[Analise] getDashboardSummary:', e);
-            setLoading(false);
+            showAnalysisError(e);
             return;
         }
 
@@ -531,6 +534,19 @@
                     '<div class="loading-msg"><span class="spin">⏳</span>Calculando…</div>';
             });
         }
+    }
+
+    function showAnalysisError(err) {
+        var msg = escH((err && err.message) || 'Nao foi possivel carregar a analise.');
+        document.getElementById('margemBody').innerHTML =
+            '<div class="empty-msg"><span>⚠️</span>Analise indisponivel no momento.<br><small style="font-size:12px">' + msg + '</small></div>';
+        document.getElementById('insumosBody').innerHTML =
+            '<div class="empty-msg"><span>⚠️</span>Consumo de insumos indisponivel.<br><small style="font-size:12px">' + msg + '</small></div>';
+        document.getElementById('alertasBody').innerHTML =
+            '<div class="alert-empty"><span>⚠️</span>Nao foi possivel verificar alertas.<br><small style="font-size:12px">' + msg + '</small></div>';
+        document.getElementById('kpiReceita').textContent = 'Erro ao carregar';
+        document.getElementById('kpiOrdens').textContent = 'Tente atualizar';
+        document.getElementById('kpiAlertasSub').textContent = 'Analise indisponivel';
     }
 
     function refresh() { runAnalysis(); }
@@ -749,7 +765,16 @@
         var authCheck = setInterval(function() {
             if (typeof Auth === 'undefined') return;
             clearInterval(authCheck);
-            Auth.requireLogin(function(user) {
+            if (!Auth.requireAuth('franchisee')) return;
+
+            try {
+                if (typeof DataStore !== 'undefined' && DataStore.init) DataStore.init();
+            } catch(e) {
+                console.warn('[Analise] DataStore.init:', e);
+            }
+
+            var user = Auth.getSession() || {};
+            try {
                 _fid = user.franchiseId || user.uid || 'franquia-teste';
                 if (document.getElementById('sidebarUserName')) {
                     document.getElementById('sidebarUserName').textContent = user.name || user.email || 'Franqueado';
@@ -773,7 +798,10 @@
                         if (!_data) runAnalysis();
                     }, 1500);
                 }
-            });
+            } catch(e) {
+                console.error('[Analise] init:', e);
+                showAnalysisError(e);
+            }
         }, 100);
 
         // Sidebar toggle
