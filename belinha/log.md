@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #135 — 2026-05-06
+
+**Área:** Auto-aprimoramento — Roadmap #136–#145 + Auditoria calendário jul–out 2026
+
+**Contexto:** Ciclo prescrito pelo roadmap #130. A cada 5 ciclos, revisão completa dos ciclos anteriores, identificação de padrões de valor/desperdício, auditoria de calendário comemorativo nas próximas 12 semanas e reescrita do roadmap.
+
+**O que analisou:**
+- Leu entradas de ciclos #130–#134 em `belinha/log.md` e commits no histórico git
+- Auditou semanas 11–25 (jul–out 2026) verificando headers e contagem de referências a datas comemorativas
+- **Gap crítico encontrado:** `semana17.md` (09–15/08) tem tema "Inverno de Saída" mas começa em Dia dos Pais (09/08) — zero menção ao evento. Único gap no horizonte auditado; semana21.md tem Independência coberta (25 refs), semana26.md tem Dia das Crianças coberto (24 refs)
+- Identificou padrão Research→Action (#132 TheBest → #134 contraprogramação) como o mais valioso dos últimos 5 ciclos
+- Identificou `checkout.html` auditoria como item bloqueado 3x seguidas — risco de acúmulo de dívida técnica
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/estrategia.md` | ATUALIZADO — Seção "Auto-aprimoramento ciclos #130–134": análise de valor/desperdício, tabela de auditoria calendário semanas 11–25, checklist de pendências atualizado, roadmap #136–#145, regras v17 (v17a: Research→Action obrigatório; v17b: checkout.html janela jul-ago; v17c: semana17.md flag crítico), regras mantidas com próximas datas corrigidas (próximo auto-aprimoramento: #140, próximo concorrentes: #139, checkout: #137) |
+
+**Commit:** `5fb34e1`
+
+**Destaques estratégicos:**
+1. **Único gap calendário jul–out:** semana17.md ignora Dia dos Pais — impacto comercial alto (agosto = maior mês para presentes + confraternização familiar). Ciclo #136 é EMERGÊNCIA.
+2. **checkout.html 3x postergado:** Nova regra v17b torna janela jul–ago inegociável para auditoria técnica, sob pena de risco de regressão no Q4 (Halloween + BLACKPOT + Natal).
+3. **Padrão Research→Action codificado em v17a:** Valida que o ciclo #132→#134 foi o mais eficiente dos últimos 5. Regra evita que inteligência competitiva fique sem ação.
+4. **Roadmap #136–#145 cobre todos os eventos críticos de ago–nov 2026:** Dia dos Pais (#136), UX obrigatório (#137), concorrentes pré-Dia dos Pais (#139), Halloween update (#144), BLACKPOT/Natal planejados no auto-aprimoramento #145.
+
+**Próximo passo sugerido:**
+- **Ciclo #136 — EMERGÊNCIA: Dia dos Pais 09/08/2026 playbook**
+  - Criar `belinha/content/dia-dos-pais-2026-playbook.md` (keyword `PAPAI26`, sequência WA P1–P5, Reel 15s, posts feed, mecânica sem desconto)
+  - Inserir bloco "⚠️ ATUALIZAÇÃO CICLO #136" no topo de `semana17.md` substituindo tema genérico por Dia dos Pais
+  - Padrão: `dia-das-maes-2026-playbook.md` + `dia-dos-namorados-2026-playbook.md`
+
+_Belinha — Ciclo #135 | 2026-05-06_
+
+---
+
 ## Ciclo #134 — 2026-05-06
 
 **Área:** Conteúdo — Potinho Junino 2026 + Contraprogramação TheBest Festival Junino
