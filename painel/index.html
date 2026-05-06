@@ -570,25 +570,27 @@
             }
         }, 3000);
 
-        // Se fid veio da URL (super_admin sem franchiseId na sessão):
-        // força fetch manual porque o DataStore não setou listeners para este fid
-        if (!session.franchiseId && franchiseId) {
-            const _db = firebase.firestore ? firebase.firestore() : null;
-            if (_db) {
-                const docs2sync = ['orders_','caixa_','inventory_','staff_','finances_','recurring_expenses_'].map(p => p + franchiseId);
-                Promise.all(docs2sync.map(docId =>
-                    _db.collection('datastore').doc(docId).get()
-                        .then(snap => {
-                            if (!snap.exists) return;
-                            const val = snap.data().value;
-                            if (val) localStorage.setItem('mp_' + docId, val);
-                        })
-                        .catch(() => {})
-                )).then(() => {
-                    console.log('✅ Painel: sync forçado fid=' + franchiseId);
-                    loadDashboard();
-                });
-            }
+        // SEMPRE força fetch direto do Firestore — não depende de DataStore listener async
+        // Garante que o painel mostre dados reais mesmo se DataStore sync falhar/atrasar
+        if (franchiseId && firebase && firebase.firestore) {
+            const _db = firebase.firestore();
+            const docs2sync = ['orders_','caixa_','inventory_','staff_','finances_','recurring_expenses_'].map(p => p + franchiseId);
+            Promise.all(docs2sync.map(docId =>
+                _db.collection('datastore').doc(docId).get()
+                    .then(snap => {
+                        if (!snap.exists) return 0;
+                        const val = snap.data().value;
+                        if (typeof val === 'string') {
+                            localStorage.setItem('mp_' + docId, val);
+                            try { return JSON.parse(val).length || 0; } catch(_){ return 1; }
+                        }
+                        return 0;
+                    })
+                    .catch(() => 0)
+            )).then(counts => {
+                console.log('✅ Painel: fetch direto fid=' + franchiseId, 'counts:', counts);
+                loadDashboard();
+            }).catch(err => console.warn('Direct fetch failed:', err));
         }
 
         loadDashboard();
