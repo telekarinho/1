@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #139 — 2026-05-06
+
+**Área:** Concorrentes — TheBest, MilkyMoo, JohnnyJoy (inverno/Dia dos Pais/agosto 2026)
+
+**Contexto:** Prescrita desde ciclo #124 e repetida em #135, #136, #137 e #138. Janela ideal: após ciclo de UX (#137) e antes do auto-aprimoramento (#140). Objetivo: mapear mecânicas de agosto, campanhas de Dia dos Pais e produtos de inverno das três concorrentes.
+
+**O que pesquisou/analisou:**
+- WebSearch: TheBest Londrina ago 2026 Dia dos Pais; TheBest Ovo em Pétala/Fatias viral; TheBest inverno 2026 produto; Milky Moo Londrina ago 2026; JohnnyJoy 10 anos 2026; JohnnyJoy Dia dos Pais; Milky Moo Dia dos Pais
+- Fontes: GKPB, Publicitários Criativos, Exame, amostrasgratis.shop, vipzinho.com.br, gastronominho.com.br, Mapa das Franquias
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/the-best-acai.md` | Seção ciclo #139: "Ovo em Pétala" (200M views, 300k un, ~R$10, Páscoa); Waffles "My Waffle, My Rules" inverno (15/mai–15/ago); Dia dos Pais "traga seu herói" (in-store); gap Muffato mantido; checklist atualizado |
+| `belinha/competitors/milkymoo.md` | Seção ciclo #139: iFood flash fev/26; Milky Moo Day 11/mar; Dia do Milkshake 12/set; **GAP CONFIRMADO: sem campanha Dia dos Pais**; dependência iFood documentada |
+| `belinha/competitors/johnnyjoy.md` | Seção ciclo #139: 10 anos 10/abr (R$10); campanha vestir azul/rosa; Joy Fidelidade confirmada; **GAP CONFIRMADO: sem campanha Dia dos Pais** |
+| `belinha/content/contraprogramacao-inverno-agosto-2026.md` | CRIADO — quadro competitivo, 5 ângulos acionáveis, calendário agosto com datas de ação, alertas para o operador |
+
+**Commit:** `94656f2`
+
+**Destaques da inteligência competitiva:**
+1. **MilkyPot é a única marca com playbook estruturado para 09/08 (Dia dos Pais)** — TheBest tem ação in-store genérica; MilkyMoo e JohnnyJoy não têm nenhuma campanha documentada
+2. **"Ovo em Pétala" TheBest = fórmula viral: produto visual + self-service + briefing UGC implícito.** MilkyPot pode replicar com Reel de montagem do potinho no PDV
+3. **Waffles TheBest terminam 15/ago** — 6 dias após o Dia dos Pais, potencial fadiga de audiência. MilkyPot ocupa o espaço "sobremesa afetiva" enquanto TheBest ainda está no modo waffle/experiência
+4. **TheBest "traga seu herói" = barreira física.** MilkyPot oferece delivery — o contraponto natural é "manda o potinho pro seu pai sem ele sair do sofá"
+5. **MilkyMoo e JohnnyJoy dependem 100% de iFood para promoções.** Transparência WA Business (sem comissão) é diferencial de confiança do MilkyPot
+
+**Próximo passo sugerido:**
+- Ciclo #140: Auto-aprimoramento prescrito (a cada 5 ciclos) — roadmap set–nov 2026: Halloween (31/10), BLACKPOT (27/11 Black Friday), aniversário 6 meses da loja (25/10), primavera (+1 semana produto sazonal)
+- Operador: configurar PAPAI26 no WA Business até 03/08
+- Operador: gravar Reel de montagem do potinho no PDV antes de 31/07 para usar na semana do Dia dos Pais
+- Operador: preparar tags "Para o melhor pai do mundo" para personalização no PDV em 09/08
+
+_Belinha — Ciclo #139 | 2026-05-06_
+
+---
+
 ## Ciclo #138 — 2026-05-06
 
 **Área:** Conteúdo — Bridge pós-Dia dos Pais em `semana18.md`
