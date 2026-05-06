@@ -298,11 +298,17 @@
                 <select id="filterFranchise" class="btn btn-sm btn-outline" onchange="loadFinances()">
                     <option value="all">Todas as Franquias</option>
                 </select>
-                <button class="btn btn-sm btn-primary" onclick="exportCSV()">⬇ Exportar CSV</button>
+                <button id="btnSyncCaixa" class="btn btn-sm btn-primary" onclick="syncFromCaixa(false)"
+                    style="background:linear-gradient(135deg,#7c3aed,#3b82f6);"
+                    title="Importar vendas do PDV">🔄 Sync PDV</button>
+                <button class="btn btn-sm btn-primary" onclick="exportCSV()">⬇ CSV</button>
             </div>
         </header>
 
         <div class="panel-content">
+
+            <!-- Sync banner -->
+            <div id="syncBanner" style="display:none;padding:12px 18px;border-radius:12px;font-size:.9rem;font-weight:700;margin-bottom:16px;transition:all .3s;"></div>
 
             <!-- Period tabs -->
             <div class="period-tabs">
@@ -624,57 +630,113 @@
         salarios:'#8b5cf6', manutencao:'#ef4444', marketing:'#06b6d4', outros:'#78716c'
     };
 
-    /* ── Seed fix: generate finances if missing ───────────── */
-    (function ensureFinancesSeeded() {
+    /* ── Sync banner ──────────────────────────────────────── */
+    var syncStatus = { running: false, lastSync: localStorage.getItem('mp_caixa_sync_at') || null };
+
+    function showSyncBanner(msg, type) {
+        var b = document.getElementById('syncBanner');
+        if (!b) return;
+        b.textContent = msg;
+        b.style.display = 'block';
+        b.style.background = type === 'ok' ? '#dcfce7' : type === 'err' ? '#fee2e2' : '#eff6ff';
+        b.style.color      = type === 'ok' ? '#16a34a' : type === 'err' ? '#dc2626' : '#1d4ed8';
+        b.style.border     = '1.5px solid ' + (type === 'ok' ? '#bbf7d0' : type === 'err' ? '#fecaca' : '#bfdbfe');
+        if (type === 'ok') setTimeout(function(){ b.style.display = 'none'; }, 5000);
+    }
+
+    /* ── SYNC CAIXA → FINANCES (dados reais do PDV) ──────── */
+    window.syncFromCaixa = function (silent) {
+        if (syncStatus.running) return;
+        syncStatus.running = true;
+        var btn = document.getElementById('btnSyncCaixa');
+        if (btn) btn.disabled = true;
+        if (!silent) showSyncBanner('🔄 Importando vendas do caixa...', 'info');
+
+        var db         = firebase.firestore();
         var franchises = DataStore.getAllFranchises();
+        var pending    = franchises.length;
+        var totalDays  = 0;
+        if (!pending) { syncStatus.running = false; return; }
+
         franchises.forEach(function (f) {
-            var key = 'finances_' + f.id;
-            if (!DataStore.get(key) || DataStore.get(key).length === 0) {
-                var finances = [];
-                for (var d = 89; d >= 0; d--) {
-                    var date = new Date();
-                    date.setDate(date.getDate() - d);
-                    var ds = date.toISOString().split('T')[0];
-                    // income every day
-                    var rev = 1200 + Math.random() * 2800;
-                    finances.push({ id: Utils.generateId(), type: 'income', category: 'vendas',
-                        amount: parseFloat(rev.toFixed(2)),
-                        description: 'Vendas do dia', date: ds, createdAt: date.toISOString() });
-                    // expense ~40% chance
-                    if (Math.random() > 0.6) {
-                        var cats = ['ingredientes','aluguel','salarios','manutencao','marketing','outros'];
-                        var cat  = cats[Math.floor(Math.random() * cats.length)];
-                        var amts = { ingredientes:650, aluguel:4200, salarios:2800, manutencao:420, marketing:800, outros:280 };
-                        finances.push({ id: Utils.generateId(), type: 'expense', category: cat,
-                            amount: parseFloat((amts[cat] * (0.6 + Math.random() * 0.8)).toFixed(2)),
-                            description: CAT_LABELS[cat] || cat, date: ds, createdAt: date.toISOString() });
-                    }
-                }
-                DataStore.set(key, finances);
-            }
+            db.collection('datastore').doc('caixa_' + f.id).get()
+                .then(function (snap) {
+                    if (!snap.exists) { done(f, 0); return; }
+
+                    // DataStore stores [serverTimestamp, jsonString] in Firestore
+                    var vals    = Object.values(snap.data());
+                    var jsonStr = vals.find(function (v) { return typeof v === 'string' && v.startsWith('['); });
+                    if (!jsonStr) { done(f, 0); return; }
+
+                    var entries = JSON.parse(jsonStr);
+
+                    // Group vendas by dateKey
+                    var perDay = {};
+                    entries.forEach(function (e) {
+                        if (e.type !== 'venda' || !e.dateKey || !(e.valor > 0)) return;
+                        if (!perDay[e.dateKey]) perDay[e.dateKey] = { total: 0, count: 0, metodos: {} };
+                        perDay[e.dateKey].total += (e.valor || 0);
+                        perDay[e.dateKey].count += 1;
+                        var m = (e.metodo || 'outros').toLowerCase()
+                                    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+                        perDay[e.dateKey].metodos[m] = (perDay[e.dateKey].metodos[m] || 0) + 1;
+                    });
+
+                    // Keep only NON-caixa entries (manual expenses, etc.)
+                    var key      = 'finances_' + f.id;
+                    var existing = (DataStore.get(key) || []).filter(function (tx) {
+                        return tx.source !== 'caixa';
+                    });
+
+                    // Insert one income entry per day
+                    Object.keys(perDay).sort().forEach(function (dk) {
+                        var d      = perDay[dk];
+                        var topMet = Object.keys(d.metodos).sort(function (a, b) { return d.metodos[b] - d.metodos[a]; });
+                        existing.push({
+                            id: 'caixa_' + dk + '_' + f.id,
+                            type: 'income',
+                            category: 'vendas',
+                            amount: parseFloat(d.total.toFixed(2)),
+                            description: 'Vendas PDV — ' + d.count + ' transações (' + topMet.slice(0, 3).join(', ') + ')',
+                            date: dk,
+                            source: 'caixa',
+                            createdAt: dk + 'T23:59:00.000Z'
+                        });
+                    });
+
+                    DataStore.set(key, existing);
+                    totalDays += Object.keys(perDay).length;
+                    done(f, Object.keys(perDay).length);
+                })
+                .catch(function (e) {
+                    console.warn('[syncFromCaixa] error', f.id, e.message);
+                    done(f, -1);
+                });
         });
 
-        // Payments
-        if (!DataStore.get('payments') || DataStore.get('payments').length === 0) {
-            var payments = [];
-            franchises.forEach(function (f) {
-                for (var m = 0; m < 6; m++) {
-                    var due = new Date();
-                    due.setMonth(due.getMonth() - m); due.setDate(10);
-                    var isPaid = m > 0 || Math.random() > 0.3;
-                    payments.push({
-                        id: Utils.generateId(), franchiseId: f.id, franchiseName: f.name,
-                        amount: f.monthlyFee || 1500,
-                        dueDate: due.toISOString().split('T')[0],
-                        paidDate: isPaid ? new Date(due.getTime() + Math.random() * 5 * 86400000).toISOString().split('T')[0] : null,
-                        status: isPaid ? 'pago' : (m === 0 ? 'pendente' : 'atrasado'),
-                        createdAt: due.toISOString()
-                    });
-                }
-            });
-            DataStore.set('payments', payments);
+        function done(f, days) {
+            pending--;
+            if (pending > 0) return;
+            syncStatus.running = false;
+            if (btn) btn.disabled = false;
+            var now = new Date().toLocaleTimeString('pt-BR');
+            localStorage.setItem('mp_caixa_sync_at', now);
+            syncStatus.lastSync = now;
+            updateSyncBtn();
+            if (days >= 0) {
+                if (!silent) showSyncBanner('✅ Sincronizado! ' + totalDays + ' dia(s) importados do PDV.', 'ok');
+                loadFinances();
+            } else {
+                showSyncBanner('⚠️ Erro ao ler o Firestore. Verifique a conexão.', 'err');
+            }
         }
-    })();
+    };
+
+    function updateSyncBtn() {
+        var btn = document.getElementById('btnSyncCaixa');
+        if (!btn) return;
+        btn.title = syncStatus.lastSync ? 'Última sync: ' + syncStatus.lastSync : 'Importar vendas do PDV';
+    }
 
     /* ── Populate dropdowns ───────────────────────────────── */
     function populateFranchiseSelects() {
@@ -1113,7 +1175,8 @@
             id: Utils.generateId(), type: currentTxType, category: cat,
             amount: parseFloat(amount.toFixed(2)),
             description: desc || (CAT_LABELS[cat]||cat),
-            date: date, createdAt: new Date().toISOString()
+            date: date, source: 'manual',
+            createdAt: new Date().toISOString()
         });
         DataStore.set(key, list);
         Utils.showToast('Transação salva com sucesso!', 'success');
@@ -1184,7 +1247,24 @@
 
     /* ── Init ─────────────────────────────────────────────── */
     populateFranchiseSelects();
-    loadFinances();
+    updateSyncBtn();
+
+    // Limpa dados de seed falso (source=undefined + type=income gerados aleatoriamente)
+    // mantém apenas entradas manuais reais (despesas lançadas pelo usuário)
+    (function clearFakeSeeds() {
+        DataStore.getAllFranchises().forEach(function (f) {
+            var key  = 'finances_' + f.id;
+            var list = DataStore.get(key) || [];
+            // Se só tem dados de seed (sem source='caixa' e sem source='manual'), limpa tudo
+            var hasReal = list.some(function (tx) { return tx.source === 'caixa' || tx.source === 'manual'; });
+            if (!hasReal && list.length > 0) {
+                DataStore.set(key, []); // remove seed falso
+            }
+        });
+    })();
+
+    // Sync automático ao abrir (silencioso)
+    syncFromCaixa(true);
 
 })();
 </script>
