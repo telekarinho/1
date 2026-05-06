@@ -468,11 +468,47 @@ Confirmado via WebSearch (Portal G + Clube Amostras Grátis):
 - [x] Quarta da Moo documentada (50% OFF, toda quarta, app)
 - [x] Clube Moo detalhado (10 compras = sorvete grátis)
 - [x] Novos produtos 2026 (aBISoluta, Smoor's, Bebidas Quentinhas, 180ml) documentados
-- [x] Gap Muffato Londrina mantido (ciclo #126)
-- [ ] Monitorar chegada de Milky Moo Festa em Londrina (próxima verificação: ciclo ~#136)
+- [x] Gap Muffato Londrina mantido (ciclo #126 e #139)
+- [x] Milky Moo Day (aniversário março) confirmado — ciclo #139
+- [x] Dia do Milkshake (setembro) confirmado — ciclo #139
+- [ ] Monitorar chegada de Milky Moo Festa em Londrina
 - [ ] Verificar ads Meta Ads Library @milkymoo_londrina para criativos ativos
-- [ ] Confirmar se "Quarta da Moo" opera em Londrina (Catuaí/Boulevard) ou só capitais
+- [ ] Confirmar se "Quarta da Moo" opera em Londrina ou só capitais
 
 ---
 
 _Última atualização: ciclo #126 — 2026-05-05_
+
+---
+
+## Atualização Ciclo #139 — 2026-05-06
+
+### Campanhas Sazonais 2026 Confirmadas
+
+| Campanha | Data | Mecânica | Canal |
+|----------|------|----------|-------|
+| iFood Flash (fevereiro) | 11/02/2026 | Milkshake em dobro (selecionados) — 1 dia | iFood exclusivo |
+| Milky Moo Day (aniversário) | 11/03/2026 | Compre 500ml ganhe 300ml do mesmo sabor | iFood + loja |
+| Dia do Milkshake | 12/09/2026 | R$10 de desconto em todo cardápio + pontos Clube Moo | App + loja |
+| **Dia dos Pais (09/08/2026)** | — | **Nenhuma campanha documentada** | — |
+
+**GAP CRÍTICO CONFIRMADO:** MilkyMoo não tem campanha de Dia dos Pais mapeada. O calendário de promoções da marca pula de aniversário (março) direto para Dia do Milkshake (setembro). MilkyPot tem presença exclusiva na data via `dia-dos-pais-2026-playbook.md` (ciclo #136).
+
+### Estrutura de Fidelidade
+
+- **Clube Moo:** App próprio, 10 compras = sorvete grátis, cupom semanal ("Quarta da Moo" 50% OFF)
+- **iFood dependência:** Todas as promoções flash rodam no iFood — comissão ~27–30%
+- **Sem WA Business estruturado:** Nenhuma campanha de broadcast direto identificada
+
+**Insight para MilkyPot:** A Milky Moo está 100% dependente de plataforma para promoções. O WA Business próprio (sem comissão) é a maior vantagem operacional do MilkyPot para datas como Dia dos Pais.
+
+### Gap Londrina — Status Ciclo #139
+
+| Unidade | Status |
+|---------|--------|
+| Shopping Catuaí | ✅ Operando |
+| Boulevard Shopping | ✅ Operando |
+| **Muffato Quintino Bocaiuva** | ❌ **Gap MilkyPot mantido** |
+| Milky Moo Festa em Londrina | ❌ Não detectada |
+
+*Atualizado por Belinha — Ciclo #139 — 2026-05-06*

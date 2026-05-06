@@ -39,7 +39,40 @@
 
 ## Próximos passos de pesquisa
 
-- [ ] Verificar preços no iFood/Rappi de unidade próxima a Londrina
-- [ ] Analisar Instagram e UGC
-- [ ] Checar programa de fidelidade
-- [ ] Verificar se tem unidade em Londrina-PR (concorrência local direta)
+- [x] Confirmar programa de fidelidade — ciclo #139
+- [x] Campanhas 2026 levantadas — ciclo #139
+- [ ] Verificar preços no iFood de unidade próxima a Londrina
+- [ ] Confirmar se tem unidade em Londrina-PR (concorrência local direta)
+- [ ] Analisar UGC e Instagram @johnnyjoy.br para criativos de inverno/agosto
+
+---
+
+## Atualização Ciclo #139 — 2026-05-06
+
+### Campanhas 2026 Confirmadas
+
+| Campanha | Data | Mecânica | Canal |
+|----------|------|----------|-------|
+| **10 Anos JohnnyJoy** | **10/04/2026** | Milkshakes clássicos por R$10 (só no dia 10) + combos iFood com frete grátis | Loja física + iFood |
+| Dia do Milkshake — azul/rosa | A confirmar | Milkshake em dobro para quem vestir azul ou rosa (campanha nacional) | Loja física |
+| **Dia dos Pais (09/08/2026)** | — | **Nenhuma campanha documentada** | — |
+
+### Programa de Fidelidade
+
+- **Joy Fidelidade** confirmado em johnnyjoy.com.br
+- Detalhes de mecânica (pontos/compras) não acessíveis — site bloqueou WebFetch
+
+### Instagram
+
+- Perfil ativo: @johnnyjoy.br (confirmado como conta oficial 10 anos)
+- UGC não auditado (próxima verificação)
+
+### Análise 10 Anos vs MilkyPot
+
+- JohnnyJoy usa aniversário da marca como âncora promocional simbólica (9 anos = R$9,99; 10 anos = R$10) — fácil de replicar por qualquer marca com data de fundação
+- MilkyPot tem inauguração 25/04 — "mensiversário" (mês a mês) e aniversário de 1 ano (25/04/2027) podem usar mecânica similar
+- JohnnyJoy distribui em iFood → comissão. MilkyPot não usa iFood = margem maior por pedido promocional
+
+**GAP CONFIRMADO — Dia dos Pais:** Assim como MilkyMoo, o JohnnyJoy não tem campanha de Dia dos Pais mapeada para agosto 2026. MilkyPot tem playbook completo (ciclo #136) enquanto ambas as concorrentes de potinho/milkshake ficam em branco na data.
+
+*Atualizado por Belinha — Ciclo #139 — 2026-05-06*

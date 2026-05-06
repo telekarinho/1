@@ -436,10 +436,67 @@ Confirmado via WebSearch (Gazeta da Semana + thebestacai.com.br):
 - [x] The Best Experience Londrina 2ª ed. documentada
 - [x] Meia Maratona Londrina 08/11/2026 documentada
 - [x] Gap Muffato Quintino Bocaiuva mantido (ciclo #126)
-- [ ] Monitorar anúncios pós-The Best Experience (09–16/11/2026) — novos produtos 2027
-- [ ] Verificar chegada ao Muffato Quintino Bocaiuva (próxima verificação: ciclo ~#136)
+- [x] Monitorar anúncios pós-The Best Experience — atualizado ciclo #139
+- [x] Verificar chegada ao Muffato Quintino Bocaiuva — gap ainda mantido (ciclo #139)
 - [ ] Confirmar preço quiosque Shopping Aurora
+- [ ] Monitorar término campanha Waffles (15/08) — possível novo produto lançado em setembro
 
 ---
 
 *Atualizado por Belinha — Ciclo #126 — 2026-05-05*
+
+---
+
+## Atualização Ciclo #139 — 2026-05-06
+
+### Campanha Viral Páscoa 2026 — "Ovo em Pétala" (março–abril)
+
+| Item | Detalhe |
+|------|---------|
+| Produto | Fatia/pétala de casca de ovo de chocolate premium usada como base no buffet self-service |
+| Preço | ~R$10 (opção individual) |
+| Disponível desde | 05/03/2026 em todas as lojas |
+| Views nas redes | **+200 milhões** (TikTok + Instagram) |
+| Unidades vendidas | ~300.000 — **4× a projeção inicial** |
+| Mecânica | Cliente escolhe pétalas de ovo, monta combinações com açaí (12 sabores), sorvete (24 sabores), 40+ toppings |
+| Estratégia por trás | Transformar queda sazonal de março (consumidor troca açaí por chocolate na Páscoa) em produto que une os dois |
+
+**Insight estratégico:** O "Ovo em Pétala" é o melhor exemplo recente de como o TheBest converte sazonalidade adversa em produto viral. A fórmula: produto visualmente impressionante + self-service personalizável + preço acessível + briefing de UGC implícito (quem monta, filma).
+
+### Campanha Inverno 2026 — Waffles "My Waffle, My Rules" (mai–ago)
+
+| Item | Detalhe |
+|------|---------|
+| Período | 15/05/2026 a 15/08/2026 |
+| Produto | Waffle belga fresco na hora, formato "bites" (pedaços), servido quente |
+| Combinações | Buffet self-service: 40+ toppings, 12 açaís, 24 sorvetes, frutas, caldas |
+| Canal | Ativações de influencers (receitas de waffle, challenges de combinação, visitas à loja) |
+| Objetivo | Combater queda de vendas no inverno com produto quente + experiência de montagem |
+| Encerramento | **15/08/2026 — termina 25 dias ANTES da Black Friday e 6 dias APÓS o Dia dos Pais** |
+
+**Insight estratégico:** A campanha de inverno termina exatamente quando a demanda volta a crescer (primavera). O Dia dos Pais (09/08) cai DENTRO do período de waffles — mas já no fim da campanha, com possível fadiga criativa da audiência. MilkyPot pode ocupar o espaço de "sobremesa emocional" (potinho = presente afetivo) enquanto o TheBest ainda está no modo "waffle/experiência".
+
+### Dia dos Pais 2026 — Mecânica TheBest
+
+| Item | Detalhe |
+|------|---------|
+| Mecânica detectada | "Promoção Especial de Dia dos Pais — traga seu herói" |
+| Lógica | Leva pai à loja → consumo conjunto in-store |
+| Canal | Redes sociais (Instagram/Facebook) |
+| Limitação | Requer presença física do pai — não contempla situações em que filho quer mandar presente delivery |
+
+**Contraprogramação direta:** O ângulo TheBest é "venha junto" (ação in-store). MilkyPot pode se posicionar como "manda pro seu pai" — presente delivery, surpresa, sem que o pai precise sair. Ângulos complementares no `dia-dos-pais-2026-playbook.md`.
+
+### Gap Londrina — Status Ciclo #139
+
+| Unidade | Status |
+|---------|--------|
+| Gleba Palhano | ✅ Operando |
+| San Conrado | ✅ Operando |
+| Rua Pio XII | ✅ Operando |
+| Arthur Thomas, 831 | ✅ Operando |
+| Shopping Aurora (quiosque) | ✅ Operando |
+| HG (Higienópolis) | ✅ Operando |
+| **Muffato Quintino Bocaiuva** | ❌ **Gap MilkyPot mantido — ciclo #139** |
+
+*Atualizado por Belinha — Ciclo #139 — 2026-05-06*
