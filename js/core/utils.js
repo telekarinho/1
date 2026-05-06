@@ -55,10 +55,15 @@ const Utils = {
         return yyyy + '-' + mm + '-' + dd;
     },
 
-    // Início do mês atual
+    // Início do mês atual — retorna YYYY-MM-DD (sem hora) para comparar com dateKey
     startOfMonth() {
         const d = new Date();
-        return new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
+        // Usar data local (não UTC) para evitar bug de fuso: Brasília UTC-3 faz
+        // new Date(ano, mes, 1).toISOString() retornar "...T03:00:00Z" que é
+        // lexicograficamente maior que "YYYY-MM-01" e exclui o dia 1 do filtro.
+        const yyyy = d.getFullYear();
+        const mm   = String(d.getMonth() + 1).padStart(2, '0');
+        return yyyy + '-' + mm + '-01';
     },
 
     // Toast notification
