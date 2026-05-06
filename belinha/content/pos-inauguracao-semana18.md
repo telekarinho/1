@@ -3,12 +3,43 @@
 **Tema:** "Fim de semana em família — todo mundo aqui" + cross-sell açaí self-service
 **Contexto:** Terceira semana de agosto. Temperaturas começam a subir levemente em Londrina — primavera se aproxima, mas inverno ainda presente. Fins de semana concentram tráfego familiar no Muffato (shopping com hipermercado, padaria, praça de alimentação). Oportunidade: (1) reforçar que MilkyPot é programa para família inteira — criança, jovem, adulto, todos têm opção; (2) apresentar açaí self-service como complemento ao potinho — cross-sell interno que aumenta ticket médio; (3) plantar teaser de setembro (primavera, morango, produto sazonal). Mecânica "Sexta do Potinho" entra na terceira semana — consolidação do hábito.
 
+> **⚠️ NOTA PÓS-DIA DOS PAIS (adicionada ciclo #138):** Esta semana começa 7 dias após o Dia dos Pais (09/08). O playbook completo do evento está em `belinha/content/dia-dos-pais-2026-playbook.md`. Três ajustes obrigatórios nesta semana: (1) domingo 16/08 deve abrir com UGC/recap do Dia dos Pais antes de entrar no tema família — ver versão atualizada abaixo; (2) enviar template WA de reativação D+7 na segunda 17/08 (lista de clientes do Dia dos Pais); (3) ver itens adicionados no checklist do operador.
+
 ---
 
-## Domingo 16/08 — Abertura: "Domingo de família começa aqui"
+## Domingo 16/08 — Abertura: Recap Dia dos Pais + "Todo domingo é de família"
 
-**Formato:** Post feed (imagem)
+**Formato:** Post feed (carrossel 2 slides) — ou imagem única se não houver UGC suficiente
 **Horário:** 10h
+
+> **Nota operador:** Este domingo abre na semana seguinte ao Dia dos Pais (09/08). Use o melhor UGC (foto de pai + filho/filha com potinho) do evento anterior como slide 1. Se não houver UGC aprovado, use a Versão B (imagem única de família genérica).
+
+### Versão A — Com UGC do Dia dos Pais (preferida)
+
+**Visual Slide 1:** Repost UGC com moldura pastel + texto sobreposto: "Obrigada, Londrina! O Dia dos Pais foi incrível 🐑💛" — pedir permissão via DM antes de publicar
+**Visual Slide 2:** Mesa com 3 potinhos lado a lado — um pequeno (Mini, para criança), um médio (Tradicional), um grande (família). Fundo com tons pastel aquecidos. Texto sobreposto: "E todo domingo é de família aqui 🐑🌈"
+
+**Caption:**
+```
+Que Dia dos Pais mais especial foi esse! 🐑💛
+
+Ver tantos potinhos viajando pra casa de pais londrinenses encheu o coração da ovelhinha de alegria 🥹
+
+E sabe o que é mais bonito? O programa de domingo não acaba não.
+
+Para a criança: potinho Mini cheio de topping colorido.
+Para você: o clássico Ninho que você já ama.
+Para quem é fitness: Linha Zero sem culpa.
+
+Todo mundo no mesmo lugar. Todo mundo feliz.
+
+📍 MilkyPot — Muffato | Av. Quintino Bocaiuva, 1045
+📲 wa.me/5543998042424
+
+#MilkyPot #DiaDasPais #PósEvento #DomingoDeFamília #Londrina #PotinhoParaTodos
+```
+
+### Versão B — Sem UGC (usar se não houver foto aprovada do Dia dos Pais)
 
 **Visual:** Mesa com 3 potinhos lado a lado — um pequeno (Mini, para criança), um médio (Tradicional), um grande (família). Fundo com tons pastel aquecidos. Texto sobreposto: "Cada um com o seu. Todo mundo feliz. 🐑🌈"
 
@@ -30,7 +61,33 @@ Todo mundo no mesmo lugar. Todo mundo feliz.
 
 ---
 
-## Segunda 17/08 — Carrossel: "Você sabia que temos açaí self-service?"
+## Segunda 17/08 — WA Reativação D+7 Dia dos Pais + Carrossel açaí self-service
+
+> **Nota operador:** Antes do post de açaí, envie o template WA de reativação D+7 abaixo para os clientes que compraram no Dia dos Pais (09/08). Esta é a segunda interação pós-evento (a primeira foi P6 na segunda 10/08).
+
+### Template WhatsApp — Reativação D+7 Dia dos Pais (enviar seg 17/08 às 10h)
+
+```
+Oi [Nome]! 🐑💛
+
+Faz uma semana que você trouxe o potinho pro seu pai — e a ovelhinha ainda está sorrindo de tanto carinho que a gente viu por aqui 🥹
+
+Que tal repetir a dose? O fim de semana chegou, e desta vez o programa pode ser da família inteira:
+
+🍨 Potinho clássico Ninho para os adultos
+🍇 Açaí self-service para quem quer algo refrescante
+🌈 Mini potinho colorido para as crianças
+
+Seus [X] pontos de fidelidade estão esperando por você!
+
+📍 Muffato Londrina · Av. Quintino Bocaiuva, 1045
+📲 wa.me/5543998042424
+🕑 14h–23h
+
+🐑 Equipe MilkyPot
+```
+
+### Carrossel: "Você sabia que temos açaí self-service?"
 
 **Formato:** Carrossel educativo (5 slides)
 **Horário:** 12h
@@ -240,7 +297,14 @@ Vem trazer a família no Muffato? A gente adora ver todo mundo aqui 🥹
 
 ## Checklist do operador — Semana 18
 
-- [ ] Fotografar mesa com 3 potinhos (Mini / Tradicional / Grande) para o post de domingo — use topping colorido no mini para atrair crianças visualmente
+**Ações pós-Dia dos Pais (fazer ANTES de domingo 16/08):**
+- [ ] Selecionar melhor UGC do Dia dos Pais (09/08): foto de pai + filho/filha com potinho. Pedir permissão via DM para repostar no domingo 16/08
+- [ ] Segmentar no WA Business a lista de clientes que compraram em 09/08 (etiqueta `#pai-2026`) para o template de reativação D+7 de segunda 17/08
+- [ ] Verificar quantos clientes entraram na lista `PAPAI26` — documentar para a métrica de sucesso
+- [ ] Decidir: usar Versão A (com UGC) ou Versão B (sem UGC) no post de domingo
+
+**Ações regulares da semana:**
+- [ ] Fotografar mesa com 3 potinhos (Mini / Tradicional / Grande) para o post de domingo versão B — use topping colorido no mini para atrair crianças visualmente
 - [ ] Confirmar com a franquia se haverá produto sazonal de setembro — para acertar o teaser de quinta/sábado
 - [ ] Filmar família real no PDV se possível (com permissão) para o Reel de terça — ou criar versão com equipe simulando
 - [ ] Fotografar buffet de açaí self-service completo para o carrossel de segunda
@@ -254,6 +318,8 @@ Vem trazer a família no Muffato? A gente adora ver todo mundo aqui 🥹
 
 | Métrica | Meta |
 |---------|------|
+| Taxa de resposta WA reativação D+7 (clientes Dia dos Pais) | ≥ 20% |
+| Pedidos originados de clientes Dia dos Pais na semana 18 | ≥ 10% da lista `#pai-2026` |
 | Pedidos via WA no fim de semana (sáb 16 + dom 22) | ≥ 30% do total semanal |
 | Pedidos de açaí self-service mencionados no WA | ≥ 5 novos clientes |
 | Pedidos "SEXTA" — semana 3 | ≥ 15 (crescimento vs. semana 2) |
@@ -266,8 +332,8 @@ Vem trazer a família no Muffato? A gente adora ver todo mundo aqui 🥹
 
 | Data | Formato | Tema | Horário |
 |------|---------|------|---------|
-| Dom 16/08 | Feed | Família — "cada um com o seu" | 10h |
-| Seg 17/08 | Carrossel | Açaí self-service — cross-sell | 12h |
+| Dom 16/08 | Feed/Carrossel | Recap Dia dos Pais (UGC) + abertura semana família | 10h |
+| Seg 17/08 | WA D+7 + Carrossel | Reativação clientes Dia dos Pais + açaí self-service | 10h/12h |
 | Ter 18/08 | Reel 15s | Família montando potinhos | 18h |
 | Qua 19/08 | Stories | Enquete família + combo açaí | 12h |
 | Qui 20/08 | Feed | Teaser setembro / primavera | 12h |
