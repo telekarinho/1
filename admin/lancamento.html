@@ -997,9 +997,16 @@
                 countdownEl.textContent = 'HOJE É O DIA';
                 subEl.textContent = 'Inauguração acontecendo AGORA. Bora postar TUDO.';
             } else {
-                titleEl.textContent = '💗 Pós-inauguração';
-                countdownEl.textContent = Math.abs(days) + ' dias desde abertura';
-                subEl.textContent = 'Mantém o ritmo. Cada dia que mantém o hype dobra o LTV do cliente.';
+                const d = Math.abs(days);
+                titleEl.textContent = d <= 7 ? '🔥 Primeira semana!' : '💗 Em operação';
+                countdownEl.textContent = 'Dia +' + d + ' de operação';
+                const msgs = [
+                    'Aba HOJE mostra a próxima missão. Marca como feito quando terminar.',
+                    'Cada post publicado treina o algoritmo pra te mostrar pra mais gente.',
+                    'Consistência agora vale mais que conteúdo perfeito daqui a 2 semanas.',
+                    'Clique em HOJE → execute a 1ª missão → repete amanhã.'
+                ];
+                subEl.textContent = msgs[d % msgs.length];
             }
             refreshStats();
         }
@@ -1026,6 +1033,19 @@
         }
 
         // ========== RENDERERS ==========
+
+        function renderLinks(links) {
+            if (!links || !links.length) return '';
+            return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+                ${links.map(l => `<a href="${escHtml(l.url)}" target="_blank" rel="noopener"
+                    style="display:inline-flex;align-items:center;gap:6px;
+                           background:linear-gradient(135deg,#E63F7E,#D4B8FF);color:#fff;
+                           padding:8px 14px;border-radius:100px;font-size:0.82rem;font-weight:700;
+                           text-decoration:none;transition:transform 0.15s"
+                    onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform=''"
+                >${escHtml(l.label)}</a>`).join('')}
+            </div>`;
+        }
 
         function renderItem(item) {
             const status = getStatus();
@@ -1072,6 +1092,7 @@
                         ${item.description ? `<p style="color:#666;font-size:0.9rem;margin-bottom:14px">${escHtml(item.description)}</p>` : ''}
                         ${item.duration ? `<p style="font-size:0.85rem;color:#E63F7E;font-weight:700;margin-bottom:12px">⏱️ Duração: ${escHtml(item.duration)}</p>` : ''}
                         ${blocksHtml}
+                        ${renderLinks(item.links)}
                         <div class="launch-item-actions">
                             ${combinedCopy ? `<button class="btn-copy" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(combinedCopy)}" style="font-size:0.9rem;padding:10px 18px">📋 COPIAR TUDO (legenda + hashtags)</button>` : ''}
                             <label class="check-published">
@@ -1249,6 +1270,20 @@
 
                     ${boxesHtml}
 
+                    ${item.links && item.links.length ? `
+                    <div style="margin-bottom:16px">
+                        <div style="font-size:0.75rem;letter-spacing:1.5px;text-transform:uppercase;font-weight:800;opacity:.9;margin-bottom:8px">🔗 ABRIR DIRETO</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            ${item.links.map(l => `<a href="${escHtml(l.url)}" target="_blank" rel="noopener"
+                                style="display:inline-flex;align-items:center;gap:6px;
+                                       background:#fff;color:#E63F7E;
+                                       padding:10px 18px;border-radius:100px;font-size:0.88rem;font-weight:800;
+                                       text-decoration:none;transition:transform 0.15s"
+                                onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform=''"
+                            >${escHtml(l.label)}</a>`).join('')}
+                        </div>
+                    </div>` : ''}
+
                     <div class="next-action-buttons">
                         ${combinedCopy ? `<button class="btn-copy-big" onclick="copyText(this.getAttribute('data-text'), this)" data-text="${escHtml(combinedCopy)}">📋 COPIAR LEGENDA + HASHTAGS</button>` : ''}
                         <button class="btn-done-big" onclick="togglePublished('${item.id}', true)">✓ MARCAR COMO FEITO</button>
@@ -1281,10 +1316,53 @@
             const daysLeft = calcDaysToLaunch();
             const phase = daysLeft > 0 ? `Faltam ${daysLeft} dia${daysLeft !== 1 ? 's' : ''} pra inauguração` : daysLeft === 0 ? 'É HOJE — inauguração!' : `Dia +${Math.abs(daysLeft)} após inauguração`;
 
-            html += `<div class="info-banner">
-                👋 <strong>Oi!</strong> Você tá na aba <strong>HOJE</strong>. Aqui você vê SÓ o que precisa fazer agora — nada mais.
-                ${phase}. Quando terminar uma missão, clica em <strong>"✓ MARCAR COMO FEITO"</strong> e a próxima aparece.
-            </div>`;
+            const daysPostLaunch = -daysLeft;
+            if (daysPostLaunch > 7) {
+                html += `<div style="background:linear-gradient(135deg,#E63F7E 0%,#9C27B0 100%);color:#fff;border-radius:16px;padding:20px 24px;margin-bottom:20px">
+                    <div style="font-size:0.72rem;letter-spacing:2px;font-weight:800;opacity:.9;text-transform:uppercase;margin-bottom:6px">📍 VOCÊ ESTÁ AQUI · Dia +${daysPostLaunch}</div>
+                    <div style="font-family:Baloo 2,cursive;font-size:1.3rem;font-weight:900;margin-bottom:8px">
+                        ${daysPostLaunch <= 14 ? '💪 Semana 2 — retomada sem culpa' :
+                          daysPostLaunch <= 21 ? '📈 Semana 3 — ritmo se forma agora' :
+                          '🚀 Mês 1 — quem manteve, ganhou'}
+                    </div>
+                    <div style="opacity:.95;font-size:0.92rem;margin-bottom:14px">
+                        O algoritmo não se lembra do que não foi postado. <strong>Só importa o que você faz hoje.</strong>
+                        Execute a missão abaixo, marca como feito, e volta amanhã.
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <a href="https://www.instagram.com/milkypotbr" target="_blank" rel="noopener"
+                           style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.22);
+                                  color:#fff;padding:8px 14px;border-radius:100px;font-size:0.82rem;font-weight:700;text-decoration:none">
+                           📸 Instagram
+                        </a>
+                        <a href="https://milkypot.com/clube" target="_blank" rel="noopener"
+                           style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.22);
+                                  color:#fff;padding:8px 14px;border-radius:100px;font-size:0.82rem;font-weight:700;text-decoration:none">
+                           🎁 MilkyClube
+                        </a>
+                        <a href="https://www.tiktok.com" target="_blank" rel="noopener"
+                           style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.22);
+                                  color:#fff;padding:8px 14px;border-radius:100px;font-size:0.82rem;font-weight:700;text-decoration:none">
+                           🎵 TikTok
+                        </a>
+                        <a href="https://canva.com" target="_blank" rel="noopener"
+                           style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.22);
+                                  color:#fff;padding:8px 14px;border-radius:100px;font-size:0.82rem;font-weight:700;text-decoration:none">
+                           🎨 Canva
+                        </a>
+                        <a href="https://www.capcut.com" target="_blank" rel="noopener"
+                           style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.22);
+                                  color:#fff;padding:8px 14px;border-radius:100px;font-size:0.82rem;font-weight:700;text-decoration:none">
+                           🎬 CapCut
+                        </a>
+                    </div>
+                </div>`;
+            } else {
+                html += `<div class="info-banner">
+                    👋 <strong>Oi!</strong> Você tá na aba <strong>HOJE</strong>. Aqui você vê SÓ o que precisa fazer agora — nada mais.
+                    ${phase}. Quando terminar uma missão, clica em <strong>"✓ MARCAR COMO FEITO"</strong> e a próxima aparece.
+                </div>`;
+            }
 
             // 2. Ritual diário sempre visível
             html += renderDailyRitual();
