@@ -5095,3 +5095,41 @@ _Belinha — Ciclo #76 | 2026-05-01_
 - Operador: definir se haverá box presente natalino (embalagem especial) para semana 35
 
 _Belinha — Ciclo #75 | 2026-05-01_
+
+---
+
+## Ciclo #140 — 2026-05-06
+
+**Área:** Auto-aprimoramento — Roadmap #141–#150 + Halloween WA Playbook
+
+**Contexto:** Auto-aprimoramento prescrito a cada 5 ciclos. Executado após ciclo #139 (intel concorrentes pré-Dia dos Pais). Mandato: reler log #135–#139, identificar o que gerou mais valor, ajustar rotação/prioridades, planejar roadmap set–nov 2026.
+
+**O que pesquisou/analisou:**
+- Leu log ciclos #135–#139: Dia dos Pais playbook (#136), checkout.html auditoria (#137 — 3x postergado), semana18 bridge pós-Dia dos Pais (#138), intel concorrentes ago/inverno (#139)
+- Auditou cobertura de conteúdo set–nov 2026: todas as semanas (23–34) cobertas ✅
+- Identificou gap crítico: sem standalone `whatsapp-halloween-2026.md` — templates WA fragmentados em semanas 24–28 (operador precisaria vasculhar 5 arquivos para configurar WA Business)
+- Verificou `belinha/blockers.md`: CNPJ/DPO ainda abertos (D+11 sem resolução), cardapio.js decisão pendente
+- Verificou `belinha/estrategia.md`: roadmap #136–#145 executado corretamente; v17b (checkout) cumprida no #137
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/estrategia.md` | Auto-aprimoramento #140 adicionado: análise #135–#139, auditoria set–nov 2026, checklist atualizado, roadmap #141–#150, regras v18a/v18b/v18c |
+| `belinha/content/whatsapp-halloween-2026.md` | CRIADO — playbook WA standalone consolidado: estratégia, segmentos, configuração WA Business, templates H0–H8 (abertura 03/10 → pós-evento 01/11), checklist operacional, métricas, nota de contraprogramação |
+
+**Destaques:**
+1. **Nova regra v18c:** Qualquer evento com campanha WA >1 semana DEVE ter `whatsapp-<evento>.md` standalone. Retroativamente, o gap do Halloween fechado neste ciclo.
+2. **Roadmap #141–#150 define:** #141 = `renderProducts` lazy scroll (4x postergado = prioridade máxima via v18b); #143 = concorrentes pré-Halloween; #144 = update do playbook com intel; #145 = auto-aprimoramento nov–jan 2027.
+3. **Contraprogramação agosto:** Intel #139 confirmou MilkyMoo e JohnnyJoy sem campanha Halloween — MilkyPot é a ÚNICA com produto temático + mecânica VIP estruturada. Documentado no whatsapp-halloween-2026.md.
+4. **Ingredientes Potinho Assombrado:** Marcados como `[confirmar com franquia]` — operador deve confirmar antes de 30/09/2026 para preencher templates H2 e H-AUTO.
+
+**Próximo passo sugerido:**
+- **Ciclo #141 — OBRIGATÓRIO:** `renderProducts` lazy scroll/virtual scroll em `cardapio.html` — 4x postergado, regra v18b ativa. Janela set/out = menor pressão de conteúdo sazonal. Sem exceção.
+- **Operador:** Confirmar ingredientes Potinho Assombrado com franquia antes de 30/09/2026
+- **Operador:** CNPJ + DPO ainda não fornecidos — risco legal LGPD. Fornecer dados para Belinha aplicar nos footers e termos.
+- **Operador:** Confirmar cardapio.js (Opção A=deletar / B=integrar / C=manter) para fechar blocker técnico
+
+_Belinha — Ciclo #140 | 2026-05-06_
+
+---
