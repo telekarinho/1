@@ -2,6 +2,49 @@
 
 ---
 
+## Ciclo #134 — 2026-05-06
+
+**Área:** Conteúdo — Potinho Junino 2026 + Contraprogramação TheBest Festival Junino
+
+**Contexto:** Prescrito pelo ciclo #133. Semanas 9 e 10 (14–27/06) já existiam (criadas nos ciclos #47/#49), mas foram redigidas antes dos achados do ciclo #132: TheBest Açaí ativou Festival Junino 2026 com 4 novos sabores (canjica, pamonha, cocada, paçoca + açaí de milho) em 6 unidades em Londrina, posicionando como "memória afetiva" (self-service por balança). Gap crítico: zero contraprogramação nos arquivos existentes.
+
+**O que analisou:**
+- Leu semana9.md completa: Potinho Junino original (paçoca + calda amendoim + granulado tricolor) — bom, mas sem diferenciação explícita vs. TheBest
+- Leu semana10.md completa: foco em São João 24/06 e encerramento do Potinho Junino — também sem menção à pressão competitiva do TheBest
+- Confirmou: nem semana9 nem semana10 tinham qualquer referência a concorrentes ou contraprogramação
+- Mapeou diferencial estrutural: TheBest = self-service por balança (preço variável, produto igual para todos); MilkyPot = potinho personalizado (preço fixo, combinação única)
+- Identificou 3 versões possíveis: A (paçoca+amendoim, original), B (cocada+mel, nova), C Fit (açaí+paçoca zero+mel, Linha Zero)
+- Linha Zero como diferencial competitivo adicional: TheBest não tem versão fit no Festival Junino
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/potinho-junino-2026-contraprogramacao.md` | CRIADO — Playbook completo: análise competitiva TheBest vs MilkyPot (tabela), produto oficial v2 (Versões A/B/C Fit), 3 variações de copy de contraprogramação (sem nomear concorrente), sequência de 3 stories de diferenciação (qui 18/06), templates WA broadcast JUNINO26 (lançamento + São João), tabela de pontos de injeção em semanas 9 e 10, checklist operador pré-13/06, métricas de rastreamento |
+| `belinha/content/pos-inauguracao-semana9.md` | ATUALIZADO — Bloco de aviso "⚠️ ATUALIZAÇÃO CICLO #134" no início: resume ameaça TheBest, ações de injeção por dia (qua/qui/sex), produto expandido B/C, keyword JUNINO26 |
+| `belinha/content/pos-inauguracao-semana10.md` | ATUALIZADO — Bloco de aviso "⚠️ ATUALIZAÇÃO CICLO #134": São João + broadcast JUNINO26, lançamento Potinho Junino Fit (seg/ter 22-23/06), copy encerramento sáb 27/06 |
+
+**Commit:** `c8b3bef`
+
+**Destaques estratégicos:**
+1. **Copy-âncora sem nomear concorrente:** "Aqui o arraiá é do jeito que VOCÊ gosta. Não tem fila de balança, não tem preço surpresa." — diferencia implicitamente sem parecer agressivo
+2. **Versão B (cocada+mel):** usa exatamente os mesmos ingredientes do TheBest Festival Junino (cocada, mel), mas no potinho personalizado — transforma a força do concorrente em argumento para MilkyPot
+3. **Versão C Fit (Linha Zero):** TheBest não tem versão fit no Festival Junino — janela de diferenciação direta para clientes que se restringem nas festas
+4. **Keyword JUNINO26:** broadcast WA com templates prontos para 17/06 (lançamento) e 24/06 (São João) — captura de leads qualificados antes do pico do evento
+5. **Sticker de São João na embalagem (24/06):** detalhe físico que nenhum self-service pode replicar — operador deve confirmar viabilidade com a franquia
+
+**Próximo passo sugerido:**
+- **Ciclo #135 — Conversão:** ativar `aggregateRating` no schema FoodEstablishment (comentado linha 161 do index.html) — loja tem 11 dias de operação, verificar se há avaliações Google Maps para ativar rich result de estrelas
+- **Ciclo #136 — SEO/Landing:** auditar canonical URLs + indexação das landing pages (`potinho-ninho-londrina.html`, `acai-self-service-londrina.html`)
+- **Operador URGENTE:** Confirmar disponibilidade de cocada e mel no estoque Muffato antes de 13/06 (Versões B e C)
+- **Operador:** Ativar keyword `JUNINO26` no WA Business até 03/06 (10 dias úteis antes do lançamento)
+- **Operador:** Verificar viabilidade de sticker de São João para embalagens (impacto alto, custo baixo)
+- **Operador:** Escolher Versão A, B ou C como Potinho Junino principal (pode oferecer as três)
+
+_Belinha — Ciclo #134 | 2026-05-06_
+
+---
+
 ## Ciclo #133 — 2026-05-06
 
 **Área:** SEO — FAQ Festa Junina + sitemap.xml lastmod
