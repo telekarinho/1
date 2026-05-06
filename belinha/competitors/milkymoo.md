@@ -1,8 +1,36 @@
 # Milky Moo — Análise Competitiva
 
-**Última atualização:** 2026-05-04 (Ciclo #116 — refetch Black Friday + novos sabores + promoções 2026)
+**Última atualização:** 2026-05-06 (Ciclo #132 — Dia dos Namorados 2026 ativo + Festa Junina radar)
 **Fontes anteriores:** franquiadesorvete.com, portaldofranchising, pricelisto.com/br, gkpb.com.br, TikTok @marceladegusta, portalg.com.br, lagosul.com.br, meioemensagem.com.br, sopacultural.com, franquias360.com.br, timesbrasil.com.br, exame.com, empreenderemgoias.com.br, adital.com.br, foodbizbrasil.com
 **Fontes ciclo #116:** portalg.com.br, cadastrarnapromocao.com.br, clubeamostrasgratis.com, publicitarioscriativos.com, gkpb.com.br, revistamenu.com.br, superhiper.com.br, TikTok @marceladegusta, TikTok @sofiasporai, nuttybavarian blog
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #132 — 2026-05-06
+
+### Dia dos Namorados 2026 — ATIVO e Espalhado na Rede
+
+**Fonte:** Instagram @milkymoo (Brasil) + unidades Guarapari, Ituiutaba, Teixeira de Freitas
+
+**Confirmado:** Multiple franqueados da MilkyMoo estão rodando campanhas de Dia dos Namorados 2026 (posts com 💘 "Promoção especial de Dia dos Namorados"). A marca nacional (@milkymoo) também publicou conteúdo de Namorados ("a gente te...").
+
+**Mecânica específica:** Não acessível (Instagram bloqueado). Com base no padrão histórico MilkyMoo ("milkshake em dobro", "Quarta da Moo 50% OFF"), provavelmente segue o formato **"compre 1 milkshake, ganhe 1 de brinde"** ou **milkshake especial por tempo limitado** com temática romântica.
+
+**Implicações para MilkyPot — Dia dos Namorados 12/06:**
+
+| Vantagem MilkyPot | vs. MilkyMoo |
+|---|---|
+| Personalização "Duo MilkyPot" (potinho com sabores dela + dele) | Milkshake é produto único, sem personalização por pessoa |
+| Preço: potinho R$18–R$25 estimado | Milkshake 500ml ~R$27–R$32 (premium) |
+| Sem iFood — funil próprio WA, base de dados own | iFood (~27% comissão) — dados não são da franqueada |
+| Potinho pode ter mensagem/nome escrito | Milkshake não tem elemento personalizado visual |
+| Linha Zero/Fit como opção de casal "sem culpa" | Linha fit ausente / limitada |
+
+**Alerta:** MilkyMoo vai gerar UGC orgânico de casais com milkshake em 12/06. MilkyPot deve antecipar conteúdo de UGC: solicitar fotos de casais com potinho desde o WA broadcast de 07/06 (N1 do playbook Namorados).
+
+### Festa Junina 2026 — Radar MilkyMoo
+- Nenhuma campanha de Festa Junina identificada para MilkyMoo em 2026. A categoria "milkshake" não tem forte apelo junino — a ameaça competitiva junina vem do The Best Açaí (ver the-best-acai.md).
+- Oportunidade: MilkyPot pode ser a única marca na Av. Quintino com posicionamento junino ativo (Potinho Junino oficial).
 
 ---
 

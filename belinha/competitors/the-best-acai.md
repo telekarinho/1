@@ -1,8 +1,42 @@
 # The Best Açaí — Análise Competitiva
 
-**Última atualização:** 2026-05-04 (Ciclo #116 — refetch Black Friday + novidades 2026)
+**Última atualização:** 2026-05-06 (Ciclo #132 — Festa Junina 2026 + Dia dos Namorados radar)
 **Fontes anteriores:** ifood.com.br, gazetadopovo.com.br, temlondrina.com.br, tiktok @marceladegusta, portaldofranchising.com.br, foodbizbrasil.com, suafranquia.com, franquiadeacai.com, jornaluniao.com.br, exame.com, braziljournal.com, portaltela.com, mercadoeconsumo.com.br, aurorashopping.com.br
 **Fontes ciclo #116:** gazetadasemana.com.br, thebestacai.com.br/thebestday (bloqueado), cidadeoferta.com.br, ubereats.com/br, portaltela.com, TikTok @marceladegusta
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #132 — 2026-05-06
+
+### Festival Junino The Best Açaí 2026 — ALERTA SEMANAS 9–10
+
+**Fonte:** abcdacomunicacao.com.br + Instagram @thebestacaiofficial (post DMbA-tqxDW5)
+
+**Campanha confirmada:** The Best Açaí entra no clima junino com **4 sabores sazonais de sorvete self-service**, edição limitada por unidade:
+
+| Produto | Categoria | Disponibilidade |
+|---------|-----------|-----------------|
+| Sorvete de Canjica | Sazonal Festa Junina | Limitado/unidade |
+| Sorvete de Pamonha | Sazonal Festa Junina | Limitado/unidade |
+| Sorvete de Cocada | Sazonal Festa Junina | Limitado/unidade |
+| Sorvete de Paçoca | Sazonal Festa Junina | Limitado/unidade |
+| Açaí de Milho | Sazonal Festa Junina | Instagram confirmado |
+
+**Copy/posicionamento (CEO Sérgio Kendy):** _"O Festival Junino busca trazer esse clima para dentro das nossas lojas com produtos que despertam memória afetiva e reforçam a conexão emocional com nossos clientes."_
+
+**Estratégia declarada:** Memória afetiva → 700+ unidades participantes → "sazonal e exclusivo" = urgência de compra
+
+**Alcance Londrina:** As 6 unidades de Londrina (Gleba Palhano, San Conrado, Pio XII, Arthur Thomas, Shopping Aurora, HG) participam da campanha. A unidade do **Muffato Quintino (onde está o MilkyPot) permanece sem The Best** — gap mantido.
+
+#### Implicações para MilkyPot — Semanas 9 e 10 (Festa Junina)
+
+1. **O TheBest vai dominar "memória afetiva junina" com sorvete.** MilkyPot precisa de um ângulo diferente: **"potinho junino personalizado"** — não é sorvete genérico de balança, é um potinho com o seu sabor favorito de Festa Junina (toppings juninos: paçoca triturada, cocada, mel, granola)
+2. **Toppings juninos no potinho = diferencial imediato:** Paçoca e cocada já são toppings acessíveis. Criar um "Potinho Junino" oficial (Ninho + calda doce de leite + paçoca + cocada) que compete diretamente sem precisar ter estoque sazonal de sorvete
+3. **"Nosso é personalizado, o deles é balança":** Copy de Festa Junina deve reforçar que cada potinho MilkyPot é montado para você (nome, sabor, topping), não porcionado em self-service de balança
+4. **Reel 15s sugerido (semana 9):** "Arraiá do Potinho" — balançar o potinho no ritmo de forró, revelar toppings juninos um a um, encerrar com ovelhinha fantasiada de caipira
+
+#### Dia dos Namorados TheBest 2026 — Radar
+- Nenhuma campanha específica de Dia dos Namorados identificada para TheBest nacional (tema não é forte para a categoria "açaí buffet"). Ameaça competitiva de Namorados vem principalmente do MilkyMoo (ver arquivo milkymoo.md).
 
 ---
 
