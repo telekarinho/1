@@ -442,6 +442,25 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // CEP auto-fill via ViaCEP — reduz digitação manual e erros de endereço no delivery
+    var cepInput = document.getElementById('checkoutCep');
+    if (cepInput) {
+        cepInput.addEventListener('blur', function() {
+            var cep = this.value.replace(/\D/g, '');
+            if (cep.length !== 8) return;
+            fetch('https://viacep.com.br/ws/' + cep + '/json/')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.erro) return;
+                    var addr = document.getElementById('checkoutAddress');
+                    var neigh = document.getElementById('checkoutNeighborhood');
+                    if (addr && !addr.value) addr.value = data.logradouro || '';
+                    if (neigh && !neigh.value) neigh.value = data.bairro || '';
+                })
+                .catch(function() {});
+        });
+    }
+
     // Close modals on overlay click
     document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
         overlay.addEventListener('click', function(e) {
