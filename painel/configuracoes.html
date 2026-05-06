@@ -912,17 +912,17 @@
     //   • valor mínimo automático no caixa (minOrder)
     //   • cumulativo:false (1 prêmio por compra, não acumula com outros)
     const DEFAULT_SCRATCH_PRIZES = [
-        {code:'RSP_BUFFET_100_15',   name:'100g Buffet (acima R$15)',        tipo:'buffet',   desc:'Ganhe 100g de buffet na próxima compra acima de R$15',     prob:30, cost:6,   validity:7, scope:'same', minOrder:15, cumulativo:false, tier:'small',  emoji:'⚖️'},
-        {code:'RSP_BUFFET_100_20',   name:'100g Buffet (acima R$20)',        tipo:'buffet',   desc:'Ganhe 100g de buffet na próxima compra acima de R$20',     prob:20, cost:6,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  emoji:'⚖️'},
-        {code:'RSP_BUFFET_150_25',   name:'150g Buffet (acima R$25)',        tipo:'buffet',   desc:'Ganhe 150g de buffet na compra acima de R$25',             prob:15, cost:9,   validity:7, scope:'same', minOrder:25, cumulativo:false, tier:'medium', emoji:'⚖️'},
-        {code:'RSP_BUFFET_200_35',   name:'200g Buffet (acima R$35)',        tipo:'buffet',   desc:'Ganhe 200g de buffet na compra acima de R$35',             prob:5,  cost:12,  validity:7, scope:'same', minOrder:35, cumulativo:false, tier:'medium', emoji:'⚖️'},
-        {code:'RSP_PICOLE_15',       name:'1 Picolé Grátis',                 tipo:'brinde',   desc:'Ganhe 1 picolé na próxima compra acima de R$15',           prob:10, cost:3,   validity:7, scope:'same', minOrder:15, cumulativo:false, tier:'small',  emoji:'🍦'},
-        {code:'RSP_CASQUINHA',       name:'1 Casquinha Grátis',              tipo:'brinde',   desc:'Ganhe 1 casquinha na próxima compra mínima de R$10',         prob:5,  cost:2,   validity:7, scope:'same', minOrder:10, cumulativo:false, tier:'small',  emoji:'🍨'},
-        {code:'RSP_COPINHO_20',      name:'1 Copinho de Sorvete',            tipo:'produto',  desc:'Ganhe 1 copinho de sorvete na compra acima de R$20',       prob:5,  cost:5,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  emoji:'🍧'},
-        {code:'RSP_SUNDAE_P_30',     name:'1 Sundae P Grátis',               tipo:'produto',  desc:'Ganhe 1 sundae P na compra acima de R$30',                 prob:4,  cost:8,   validity:7, scope:'same', minOrder:30, cumulativo:false, tier:'medium', emoji:'🍦'},
-        {code:'RSP_SHAKE_UPGRADE',   name:'Upgrade de Milk Shake',           tipo:'produto',  desc:'Ganhe upgrade de Milk Shake (P para M ou M para G)',       prob:3,  cost:5,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  emoji:'⬆️'},
-        {code:'RSP_COMBO_BUFFET_PIC',name:'Combo Buffet + Picolé',           tipo:'combo',    desc:'Ganhe 100g de buffet + 1 picolé na compra acima de R$25', prob:2,  cost:9,   validity:7, scope:'same', minOrder:25, cumulativo:false, tier:'medium', emoji:'🎁'},
-        {code:'RSP_AMIGO_100G',      name:'Volte com um Amigo',              tipo:'especial', desc:'Volte com um amigo e ganhem 100g de buffet cada',          prob:1,  cost:12,  validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'big',    emoji:'👯'}
+        {code:'RSP_BUFFET_100_15',   name:'+100g no Buffet',           tipo:'buffet',   desc:'Na compra de buffet a partir de R$15, ganha +100g de buffet.',              prob:30, cost:6,   validity:7, scope:'same', minOrder:15, cumulativo:false, tier:'small',  categoria:'cat_buffet', emoji:'⚖️'},
+        {code:'RSP_BUFFET_100_20',   name:'+100g no Buffet',           tipo:'buffet',   desc:'Na compra de buffet a partir de R$20, ganha +100g de buffet.',              prob:20, cost:6,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  categoria:'cat_buffet', emoji:'⚖️'},
+        {code:'RSP_BUFFET_150_25',   name:'+150g no Buffet',           tipo:'buffet',   desc:'Na compra de buffet a partir de R$25, ganha +150g de buffet.',              prob:15, cost:9,   validity:7, scope:'same', minOrder:25, cumulativo:false, tier:'medium', categoria:'cat_buffet', emoji:'⚖️'},
+        {code:'RSP_BUFFET_200_35',   name:'+200g no Buffet',           tipo:'buffet',   desc:'Na compra de buffet a partir de R$35, ganha +200g de buffet.',              prob:5,  cost:12,  validity:7, scope:'same', minOrder:35, cumulativo:false, tier:'medium', categoria:'cat_buffet', emoji:'⚖️'},
+        {code:'RSP_PICOLE_15',       name:'Picolé em Dobro',           tipo:'brinde',   desc:'Na compra de 1 picolé e pedido mínimo de R$15, leva 2 picolés.',            prob:10, cost:3,   validity:7, scope:'same', minOrder:15, cumulativo:false, tier:'small',  categoria:'cat_picole', emoji:'🍦'},
+        {code:'RSP_CASQUINHA',       name:'Casquinha de Volta',        tipo:'brinde',   desc:'Na compra mínima de R$10, ganha 1 casquinha grátis.',                      prob:5,  cost:2,   validity:7, scope:'same', minOrder:10, cumulativo:false, tier:'small',  categoria:null, emoji:'🍨'},
+        {code:'RSP_COPINHO_20',      name:'Copinho de Volta',          tipo:'produto',  desc:'Na compra mínima de R$20, ganha 1 copinho de sorvete.',                    prob:5,  cost:5,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  categoria:null, emoji:'🍧'},
+        {code:'RSP_SUNDAE_P_30',     name:'Sundae P de Presente',      tipo:'produto',  desc:'Na compra de sundae a partir de R$30, ganha 1 sundae P.',                   prob:4,  cost:8,   validity:7, scope:'same', minOrder:30, cumulativo:false, tier:'medium', categoria:'cat_sundae', emoji:'🍦'},
+        {code:'RSP_SHAKE_UPGRADE',   name:'Milk Shake Maior',          tipo:'produto',  desc:'Na compra de milk shake M ou G, ganha upgrade de tamanho.',                 prob:3,  cost:5,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  categoria:'cat_milkshake', emoji:'⬆️'},
+        {code:'RSP_COMBO_BUFFET_PIC',name:'Buffet + Picolé',           tipo:'combo',    desc:'Na compra de buffet a partir de R$25, ganha +100g e 1 picolé.',             prob:2,  cost:9,   validity:7, scope:'same', minOrder:25, cumulativo:false, tier:'medium', categoria:'cat_buffet', emoji:'🎁'},
+        {code:'RSP_AMIGO_100G',      name:'Volte com um Amigo',        tipo:'especial', desc:'Voltando com um amigo, na compra de buffet a partir de R$20, os dois ganham +100g.', prob:1, cost:12, validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'big', categoria:'cat_buffet', emoji:'👯'}
     ];
 
     function getScratchConfig() {
@@ -933,8 +933,20 @@
         if (!prize || prize.tier === 'none') return prize;
         var minByCode = {
             RSP_CASQUINHA: 10,
+            RSP_BUFFET_100_15: 15,
+            RSP_BUFFET_100_20: 20,
+            RSP_BUFFET_150_25: 25,
+            RSP_BUFFET_200_35: 35,
+            RSP_PICOLE_15: 15,
+            RSP_COPINHO_20: 20,
+            RSP_SUNDAE_P_30: 30,
+            RSP_SHAKE_UPGRADE: 20,
+            RSP_COMBO_BUFFET_PIC: 25,
+            RSP_AMIGO_100G: 20,
             RSP_BUFFET_100G: 15,
             RSP_PICOLE_2BY1: 15,
+            RSP_SHAKE_P_FREE: 25,
+            RSP_SUNDAE_P_FREE: 25,
             RSP_CAPITAO_50: 25,
             RSP_MEGA_50: 50
         };
