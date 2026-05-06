@@ -4,6 +4,20 @@ _Celebrar o impacto da semana de indicação, revelar o primeiro Embaixador Milk
 
 ---
 
+> **⚠️ ATUALIZAÇÃO CICLO #134 (2026-05-06) — CONTRAPROGRAMAÇÃO THEBEST**
+>
+> O TheBest Açaí ativou **Festival Junino 2026** com 4 novos sabores (canjica, pamonha, cocada, paçoca + açaí de milho) em **6 unidades em Londrina**. Posicionamento: "memória afetiva" (self-service por balança).
+>
+> **Ação:** Injetar copy de diferenciação em qua 17/06 (Reel), qui 18/06 (stories) e sex 19/06 (feed) — sem nomear concorrente, destacando **personalização + preço fixo**.
+>
+> **Produto expandido:** além da Versão A original (paçoca + calda amendoim + granulado tricolor), adicionar opção **Versão B** (cocada + mel + paçoca) e **Versão C Fit** (açaí + paçoca zero + mel + granola).
+>
+> **Broadcast WA:** ativar keyword `JUNINO26` junto com o lançamento (qua 17/06, 12h).
+>
+> Ver playbook completo em: `belinha/content/potinho-junino-2026-contraprogramacao.md`
+
+---
+
 ## Contexto da semana
 - **14/06 (Dom)** = Abertura: revelar resultados do Indica & Ganha da semana 8
 - **17/06 (Qua)** = Pico: lançar o "Potinho Junino" — edição limitada com topping de paçoca + calda de amendoim + granulado tricolor

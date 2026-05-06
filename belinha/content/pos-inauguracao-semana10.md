@@ -5,6 +5,19 @@ _Criado por Belinha — Ciclo #49 | 2026-04-27_
 
 ---
 
+> **⚠️ ATUALIZAÇÃO CICLO #134 (2026-05-06) — SÃO JOÃO + CONTRAPROGRAMAÇÃO THEBEST**
+>
+> TheBest Açaí terá Festival Junino ativo em 6 unidades de Londrina durante toda a semana 10. São João (24/06, qua) é o pico competitivo — aproveitar para broadcast `JUNINO26` (template em `belinha/content/potinho-junino-2026-contraprogramacao.md`).
+>
+> **Ações adicionais para semana 10:**
+> - **Seg/Ter 22-23/06:** lançar **Potinho Junino Fit** (açaí + paçoca zero + mel + granola) — diferencial que TheBest não tem no Festival Junino
+> - **Qua 24/06:** Broadcast São João às 11h via `JUNINO26` + sticker de São João na embalagem (se disponível)
+> - **Sáb 27/06:** encerramento com copy "última semana do Potinho Junino — do jeito que só aqui tem 🐑"
+>
+> Ver playbook completo: `belinha/content/potinho-junino-2026-contraprogramacao.md`
+
+---
+
 ## Contexto da semana
 
 **Semana 10** é a virada de junho para julho — o mês mais quente da temporada junina coincide com o encerramento do Potinho Junino. O grande evento da semana é o **Dia de São João (24/06, quarta-feira)**, pico máximo de engajamento com temas de festa junina no Brasil.
