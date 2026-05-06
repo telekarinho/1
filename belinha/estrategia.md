@@ -1834,15 +1834,98 @@ _Atualizado ciclo #130 | 2026-05-06_
 2. `aggregateRating` → checar apenas quando operador confirmar ≥3 reviews Google Maps
 3. Ciclos de concorrentes obrigatoriamente geram mudança no site no mesmo ciclo
 4. Rotação: UX/Performance > SEO > Conversão > Concorrentes > Conteúdo (v12)
-5. Auto-aprimoramento a cada 5 ciclos (próximo: #135)
-6. Concorrentes: máximo 15 ciclos entre refetches (próximo obrigatório: #132)
+5. Auto-aprimoramento a cada 5 ciclos (próximo: #140)
+6. Concorrentes: máximo 15 ciclos entre refetches (próximo obrigatório: #139)
 7. Verificar antes de prescrever: `git log --oneline | grep <arquivo>` antes de listar gap técnico
 8. Gap detection obrigatório no auto-aprimoramento: `ls belinha/content/pos-inauguracao-semana*.md`
 9. Playbooks de evento com data fixa: criar no máximo 6 semanas antes (exceto pré-requisito técnico longo: até 8 semanas)
 10. FAQPage prioritária quando LocalBusiness sem FAQ (v15a)
-11. `checkout.html` auditoria periódica a cada 20 ciclos — próxima: #134 (v15b)
+11. `checkout.html` auditoria periódica a cada 20 ciclos — próxima: #137 (v15b, pulada no #134)
 12. Antecipação de concorrentes se evento de alto impacto se aproxima (v15c)
 
 ---
 
 _Belinha — Ciclo #130 | 2026-05-06_
+
+---
+
+## Auto-aprimoramento ciclos #130–#134
+
+_Belinha — Ciclo #135 | 2026-05-06_
+
+### O que gerou mais valor concreto
+
+1. **Pesquisa → Ação no ciclo seguinte (ciclos #132 → #134):** TheBest Festival Junino detectado no #132 → contraprogramação criada no #134. Este é o padrão de maior ROI: inteligência competitiva transformada em conteúdo acionável em 1 ciclo. O copy-âncora "Aqui o arraiá é do jeito que VOCÊ gosta" sem nomear concorrente é altamente reaproveitável.
+2. **Namorados 37 dias antes (#131):** Playbook standalone com keyword NAMORADOS26, sequência WA N1–N5 e nota de substituição no semana8.md. Padrão correto de antecipação: suficientemente cedo para operador preparar produto + suficientemente específico para usar sem retrabalho.
+3. **FAQ Festa Junina + sitemap (#133):** SEO tático de oportunidade sazonal. Perguntas sazonais são candidatos a featured snippet. `lastmod` no sitemap.xml comunica atividade ao Googlebot.
+4. **Roadmap de calendário (#130):** Auto-aprimoramento que detectou lacunas de conteúdo meses à frente. Alta densidade de valor por ciclo.
+
+### O que foi menos eficaz / desperdiçado
+
+- **`checkout.html` auditoria (#134 prescrita, não realizada):** Quarta vez que UX/checkout é postergado por urgência de conteúdo. Padrão recorrente que precisa ser interrompido no ciclo #137 (janela entre Namorados 12/06 e Dia dos Pais 09/08 = momento de menor pressão de conteúdo sazonal).
+- **FAQ de Festa Junina sem teste de snippet:** Criadas 6 Q&A mas sem verificação de quais queries já têm featured snippets na SERP de Londrina. Oportunidade de gap de keyword não explorada.
+
+### Auditoria calendário semanas 11–25 (jul–out 2026)
+
+| Semana | Período | Evento | Status |
+|--------|---------|--------|--------|
+| 11 | 05–11/07 | Recesso escolar inverno | ✅ Semana temática criada |
+| 12 | 12–18/07 | Inverno/comfort | ✅ Semana criada |
+| 13 | 19–25/07 | Férias/família | ✅ Semana criada |
+| 14 | 26/07–01/08 | Transição inverno | ✅ Semana criada |
+| 15 | 02–08/08 | Agosto rotina | ✅ Semana criada (tema genérico OK) |
+| **16** | **02–08/08** | — | ✅ Semana 16 = 02/08 (pré-Dia dos Pais) |
+| **17** | **09–15/08** | **Dia dos Pais 09/08 (domingo)** | **❌ CRÍTICO — semana17.md tem tema "Inverno de Saída", zero menção ao Dia dos Pais. Ciclo #136 obrigatório: playbook + update semana17.md** |
+| 18 | 16–22/08 | Pós-Dia dos Pais | ✅ Semana criada |
+| 19 | 23–29/08 | Pré-Primavera | ✅ Semana criada |
+| 20 | 30/08–05/09 | Lançamento produto setembro | ✅ Semana criada |
+| 21 | 06–12/09 | **Independência 07/09** | ✅ Coberta — 25 refs ao feriado em semana21.md |
+| 22 | 13–19/09 | Primavera | ✅ Semana criada |
+| 23 | 20–26/09 | Primavera plena | ✅ Semana criada |
+| 24 | 27/09–03/10 | Outubro preview | ✅ Semana criada |
+| 25 | 04–10/10 | Halloween warming up | ✅ Semana criada |
+| 26 | 11–17/10 | **Dia das Crianças 12/10** | ✅ Coberta — dupla âncora Halloween+Crianças em semana26.md |
+
+**Conclusão da auditoria:** Único gap crítico = semana17.md ignora Dia dos Pais (09/08). Todos os outros eventos têm cobertura adequada.
+
+### Checklist de itens pendentes (atualizado)
+
+| Item | Status |
+|------|--------|
+| Dia dos Pais playbook (09/08/2026) | ❌ → ciclo #136 |
+| `checkout.html` auditoria | ❌ → ciclo #137 (3x postergado) |
+| Concorrentes refetch pré-Dia dos Pais | ❌ → ciclo #139 |
+| `aggregateRating` Schema.org | ⛔ Aguarda ≥3 reviews |
+| Google Analytics ID real | ⛔ Aguarda autorização |
+| LGPD (CNPJ/DPO) | ⛔ D+11 sem resolução — risco legal (lembrar operador!) |
+| `cardapio.js` dead code | ⚠️ Próxima menção: #140 |
+| `renderProducts` lazy scroll | ⚠️ → ciclo #138 ou #141 |
+
+---
+
+### Roadmap rebalanceado #136–#145
+
+| Ciclo | Área | Ação | Urgência |
+|-------|------|------|----------|
+| **#136** | **Conversão — EMERGÊNCIA** | **Dia dos Pais 09/08/2026:** criar `belinha/content/dia-dos-pais-2026-playbook.md` com keyword `PAPAI26`, cronograma 5 dias (04–09/08), templates WA P1–P5, posts feed, Reel 15s. Inserir nota de substituição em `semana17.md` (domingo 09/08 = Dia dos Pais, substituir abertura genérica por narrativa pai). Mecânica sem desconto, padrão Dia das Mães + Namorados | ⚡ URGENTE |
+| **#137** | **UX — OBRIGATÓRIO** | **`checkout.html` auditoria completa:** fluxo mobile, validação campos, CLS, feedback visual, tempo de carregamento. Bloqueado 3x (#128, #130, #134). Esta é a última janela de baixa pressão sazonal antes do Q3/Q4 | 🔴 Alta |
+| #138 | Conteúdo | Semanas 18–19 (16–29/08): pós-Dia dos Pais + transição primavera — verificar se alinhadas com contexto pós-evento; ajustar se necessário | Média |
+| #139 | Concorrentes | Refetch obrigatório pré-Dia dos Pais (>15 ciclos desde #124 aprox): TheBest, MilkyMoo, Johnny/Jhoy — mecânicas de agosto 2026; produtos de inverno final; campanhas Dia dos Pais; gerar mudança no site no mesmo ciclo | Alta |
+| **#140** | **Auto-aprimoramento** | Reler log #135–#139; roadmap set–nov 2026: Halloween (#27–28), BLACKPOT nov, 6 meses de loja 25/10; Dia das Crianças playbook se não coberto; lembrar operador sobre `cardapio.js` dead code (v15b) | — |
+| #141 | UX/Performance | `renderProducts` virtual/lazy scroll — candidato prescrito ciclo #128; bundle size crescente se catálogo > 20 itens | Média |
+| #142 | SEO | Schema `aggregateRating` se operador confirmar ≥3 reviews; caso contrário Schema `Product` em cardápio (structured data para itens individuais) | Condicional |
+| #143 | Concorrentes | Refetch pré-Halloween: TheBest, MilkyMoo — mecânicas de outubro; produtos sazonais outono/primavera-verão; edições limitadas 31/10 | Média |
+| #144 | Conteúdo | Halloween standalone playbook (`belinha/content/halloween-2026-update.md`) — verificar se semanas 25-28 precisam de atualização com achados do ciclo #143 | Alta |
+| **#145** | **Auto-aprimoramento** | Reler log #140–#144; roadmap nov–jan 2027 (BLACKPOT, Natal, Aniversário 8 meses, Virada); auditoria semanas 28–42 | — |
+
+---
+
+### Regras atualizadas v17
+
+> **v17a — Padrão Research → Action em 1 ciclo (OBRIGATÓRIO):** Quando pesquisa de concorrentes detecta campanha ativa de alto impacto, o ciclo seguinte DEVE produzir contraprogramação. Não deixar inteligência competitiva sem ação por mais de 1 ciclo.
+
+> **v17b — checkout.html prioridade absoluta na janela jul–ago 2026:** Entre Namorados (12/06) e Dia dos Pais (09/08) não há data-âncora de alta conversão. Esta é a janela para UX técnico sem competir com urgência de conteúdo. Se ciclo #137 não concluir a auditoria, documentar em blockers.md e notificar operador.
+
+> **v17c — semana17.md flag crítico:** O arquivo `belinha/content/pos-inauguracao-semana17.md` tem tema "Inverno de Saída" mas começa no Dia dos Pais (09/08/2026). Ciclo #136 DEVE inserir nota de substituição no topo do arquivo (padrão ciclo #134). Sem isso, o operador publicará conteúdo genérico no maior dia comercial de agosto.
+
+_Belinha — Ciclo #135 | 2026-05-06_
