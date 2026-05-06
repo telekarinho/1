@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #136 — 2026-05-06
+
+**Área:** Conversão — Dia dos Pais 09/08/2026 (EMERGÊNCIA — prescrito ciclo #135)
+
+**Contexto:** Auditoria de ciclo #135 identificou gap crítico: `semana17.md` (09–15/08/2026) tem tema "Inverno de Saída" e não menciona o Dia dos Pais (segundo domingo de agosto = 09/08/2026). Sem intervenção, o operador publicaria conteúdo genérico na maior data comercial de agosto.
+
+**O que analisou:**
+- Leu `semana17.md` — abertura de domingo 09/08 tem tema fitness/inverno, zero menção ao Dia dos Pais
+- Referenciou `dia-das-maes-2026-playbook.md` (ciclo #129) e `dia-dos-namorados-2026-playbook.md` (ciclo #131) para manter padrão estrutural
+- Identificou ângulo duplo de agosto: comfort food (Ninho indulgente) + pai fit (Linha Zero), ambos naturais na estação
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/dia-dos-pais-2026-playbook.md` | CRIADO — playbook completo: keyword PAPAI26, mecânica Duo Papai (Versões A/B/C), cronograma 5 dias (04–09/08), templates WA P1–P6, 3 posts feed (teaser, carrossel 4 perfis de pai, post principal emocional), Reel 15s com roteiro cena-a-cena, checklist operacional, métricas de sucesso |
+| `belinha/content/pos-inauguracao-semana17.md` | ATUALIZADO — nota de substituição obrigatória inserida no topo: domingo 09/08 deve usar Post 3 + P4 + P5 do playbook; seg–sáb mantém conteúdo original |
+
+**Commit:** `cf79fab`
+
+**Destaques do playbook:**
+1. **Keyword PAPAI26 como captura de lista VIP:** Padrão validado com MAE26 (ciclo #129) e NAMORADOS26 (#131) — já testado operacionalmente
+2. **Ângulo "eu te conheço, pai":** Diferencial de personalização vs. presentes genéricos (camisa, perfume, caixa de bombom) — copy que ressoa com filhos/filhas comprando o potinho como presente
+3. **Carrossel "4 perfis de pai":** Segmenta audiência com humor leve (Clássico/Fitness/Aventureiro/Curioso) — alto potencial de compartilhamento orgânico
+4. **Reel 15s roteirizado:** Cenas + timing + overlay text + trilha — operador executa sem precisar de brief adicional
+5. **Integração explícita com semana17.md:** Instrução clara de quais peças do playbook substituem quais peças da semana, sem ambiguidade
+
+**Próximo passo sugerido:**
+- Ciclo #137: UX — `checkout.html` auditoria completa (3x postergado, janela obrigatória pré-Q3) — bloqueador crítico v17b
+- Ciclo #138: Conteúdo — Semanas 18–19 (16–29/08): pós-Dia dos Pais + transição primavera
+- Ciclo #139: Concorrentes refetch pré-Dia dos Pais (TheBest, MilkyMoo, Johnny/Jhoy — campanhas de agosto)
+- Operador: confirmar mecânica do Dia dos Pais (Versão A/B/C) até 05/08; ativar PAPAI26 no WA Business até 03/08
+
+_Belinha — Ciclo #136 | 2026-05-06_
+
+---
+
 ## Ciclo #135 — 2026-05-06
 
 **Área:** Auto-aprimoramento — Roadmap #136–#145 + Auditoria calendário jul–out 2026
