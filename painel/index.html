@@ -328,6 +328,10 @@
     <script src="../js/core/financas.js?v=mp-v14"></script>
     <script src="../js/core/onboarding.js?v=mp-v15-selfheal"></script>
     <script>
+        if (window.DataStore && typeof DataStore.init === 'function' && !DataStore._ready) {
+            DataStore.init();
+        }
+
         // Auth Guard — super_admin pode acessar o painel de qualquer franquia via ?fid=
         const _isSuperAdmin = Auth.getSession && (Auth.getSession().role === 'super_admin');
         if (!_isSuperAdmin && !Auth.requireAuth('franchisee')) throw new Error('Not authorized');
@@ -338,8 +342,8 @@
         if (!franchiseId) { alert('Franquia não encontrada. Adicione ?fid=ID na URL.'); throw new Error('franchiseId missing'); }
 
         // Get franchise info
-        const franchises = DataStore.getAllFranchises();
-        const franchise = franchises.find(f => f.id === franchiseId);
+        let franchises = DataStore.getAllFranchises();
+        let franchise = franchises.find(f => f.id === franchiseId);
 
         document.getElementById('sidebarUserName').textContent = session.name;
         document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia';
@@ -360,13 +364,37 @@
             window.location.href = '../painel/pdv.html';
         }
 
+        function todayKeyBR() {
+            return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+        }
+
+        function monthKeyBR() {
+            return todayKeyBR().slice(0, 7);
+        }
+
+        function isValidOrder(order) {
+            if (!order || order.deleted || order.cancelled) return false;
+            return !['excluido', 'cancelado', 'cancelled'].includes(order.status);
+        }
+
+        function isRevenueOrder(order) {
+            return isValidOrder(order) && ['confirmado', 'entregue', 'pago', 'pronto'].includes(order.status);
+        }
+
+        function orderDateKey(order) {
+            if (!order || !order.createdAt) return '';
+            const d = new Date(order.createdAt);
+            if (Number.isNaN(d.getTime())) return String(order.createdAt).slice(0, 10);
+            return d.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+        }
+
         function loadDashboard() {
-            const today = Utils.today();
-            const orders = DataStore.getCollection('orders', franchiseId);
+            const today = todayKeyBR();
+            const orders = (DataStore.getCollection('orders', franchiseId) || []).filter(isValidOrder);
 
             // KPIs
-            const todayOrders = orders.filter(o => o.createdAt.startsWith(today));
-            const todayRevenue = todayOrders.reduce((s, o) => s + o.total, 0);
+            const todayOrders = orders.filter(o => orderDateKey(o) === today && isRevenueOrder(o));
+            const todayRevenue = todayOrders.reduce((s, o) => s + Number(o.total || 0), 0);
             const pendingDelivery = orders.filter(o => o.delivery === 'delivery' && ['novo', 'preparando', 'pronto'].includes(o.status));
 
             const elKpiRev = document.getElementById('kpiRevenueToday');
@@ -389,8 +417,8 @@
                 if (metaObj) metaValor = metaObj.valor;
             }
             
-            const monthOrders = orders.filter(o => o.createdAt.startsWith(today.slice(0, 7)));
-            const monthRevenue = monthOrders.reduce((s, o) => s + o.total, 0);
+            const monthOrders = orders.filter(o => orderDateKey(o).startsWith(monthKeyBR()) && isRevenueOrder(o));
+            const monthRevenue = monthOrders.reduce((s, o) => s + Number(o.total || 0), 0);
             const goalPct = Math.min(100, Math.round((monthRevenue / metaValor) * 100));
             
             document.getElementById('bizGoalPerc').textContent = goalPct + '%';
@@ -414,8 +442,8 @@
             document.getElementById('newOrdersCount').style.display = newOrders.length > 0 ? '' : 'none';
 
             // Low stock
-            const inventory = DataStore.getCollection('inventory', franchiseId);
-            const lowStock = inventory.filter(item => item.quantity <= item.minStock);
+            const inventory = DataStore.getCollection('inventory', franchiseId) || [];
+            const lowStock = inventory.filter(item => Number(item.minStock || 0) > 0 && Number(item.quantity || 0) <= Number(item.minStock || 0));
             document.getElementById('kpiLowStock').textContent = lowStock.length;
 
             document.getElementById('lowStockBody').innerHTML = lowStock.length > 0
@@ -433,27 +461,27 @@
 
             // Recent Orders
             const recentOrders = orders
-                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
                 .slice(0, 8);
 
             document.getElementById('recentOrdersBody').innerHTML = recentOrders.map(o => `
                 <tr>
-                    <td><strong>#${o.id.slice(-6)}</strong><br><small style="color:var(--mp-text-light)">${Utils.formatTime(o.createdAt)}</small></td>
+                    <td><strong>#${String(o.id || '').slice(-6)}</strong><br><small style="color:var(--mp-text-light)">${o.createdAt ? Utils.formatTime(o.createdAt) : '-'}</small></td>
                     <td>${Utils.escapeHtml(o.customer?.name || o.items?.[0]?.nomeCliente || '-')}</td>
-                    <td><strong>${Utils.formatCurrency(o.total)}</strong></td>
+                    <td><strong>${Utils.formatCurrency(Number(o.total || 0))}</strong></td>
                     <td>${Utils.statusBadge(o.status)}</td>
                 </tr>
-            `).join('');
+            `).join('') || '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--mp-text-light)">Nenhum pedido encontrado</td></tr>';
 
             // Team
-            const staff = DataStore.getCollection('staff', franchiseId);
+            const staff = DataStore.getCollection('staff', franchiseId) || [];
             document.getElementById('teamBody').innerHTML = staff.map(s => `
                 <tr>
                     <td><strong>${Utils.escapeHtml(s.name)}</strong></td>
                     <td>${Utils.escapeHtml(s.role)}</td>
                     <td>${Utils.statusBadge(s.active ? 'ativo' : 'inativo')}</td>
                 </tr>
-            `).join('');
+            `).join('') || '<tr><td colspan="3" style="text-align:center;padding:24px;color:var(--mp-text-light)">Nenhuma pessoa cadastrada</td></tr>';
 
             // Weekly Chart
             renderWeeklyChart(orders);
@@ -468,11 +496,11 @@
             for (let i = 6; i >= 0; i--) {
                 const d = new Date();
                 d.setDate(d.getDate() - i);
-                const dateStr = d.toISOString().split('T')[0];
+                const dateStr = d.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
                 labels.push(d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' }));
 
-                const dayOrders = orders.filter(o => o.createdAt.startsWith(dateStr));
-                revenues.push(dayOrders.reduce((s, o) => s + o.total, 0));
+                const dayOrders = orders.filter(o => orderDateKey(o) === dateStr && isRevenueOrder(o));
+                revenues.push(dayOrders.reduce((s, o) => s + Number(o.total || 0), 0));
                 counts.push(dayOrders.length);
             }
 
@@ -540,7 +568,7 @@
 
         // Poll for new orders every 5 seconds
         setInterval(() => {
-            const orders = DataStore.getCollection('orders', franchiseId);
+            const orders = (DataStore.getCollection('orders', franchiseId) || []).filter(isValidOrder);
             const newOrders = orders.filter(o => o.status === 'novo');
             const badge = document.getElementById('newOrdersCount');
             badge.textContent = newOrders.length;
@@ -647,80 +675,6 @@
                     <a href="operacional.html" style="background:rgba(255,255,255,.25);color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:.9rem;border:1px solid rgba(255,255,255,.4)">🎯 Definir minhas metas</a>
                   </div>
                 </div>`;
-        })();
-
-        // === Card "Seu Negócio MilkyPot" ===
-        (function renderSeuNegocio(){
-            const mount = document.getElementById('seuNegocioMount');
-            if (!mount) return;
-            try {
-                const createdAt = franchise && franchise.createdAt ? new Date(franchise.createdAt) : null;
-                const diasAtivo = createdAt ? Math.max(1, Math.floor((Date.now() - createdAt.getTime()) / 86400000)) : '—';
-                const invest = (franchise && (franchise.investimentoTotalEstimado || franchise.investimentoBase)) || null;
-
-                const todayIso = new Date().toISOString().slice(0,10);
-                const vendasHoje = orders.filter(o => o.createdAt && o.createdAt.startsWith(todayIso) && o.status === 'entregue');
-                const receitaHoje = vendasHoje.reduce((s,o) => s + (Number(o.total) || 0), 0);
-                const ticketMedioHoje = vendasHoje.length > 0 ? receitaHoje / vendasHoje.length : 0;
-
-                let metaInfo = null;
-                if (typeof AdminConfig !== 'undefined' && typeof Financas !== 'undefined') {
-                    try {
-                        metaInfo = AdminConfig.getMetaProgress(franchiseId, Financas.currentPeriodKey());
-                    } catch(e){}
-                }
-
-                const brl = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const brl0 = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-                const pct = metaInfo ? Math.round(metaInfo.pct * 100) : 0;
-                const metaColor = pct >= 100 ? '#10B981' : pct >= 70 ? '#F59E0B' : '#E91E63';
-
-                mount.innerHTML = `
-                    <div class="panel-card" style="margin-bottom:20px;background:linear-gradient(135deg,#1F2937,#374151);color:#fff;border:none">
-                      <div class="panel-card-header" style="border-bottom:1px solid rgba(255,255,255,.1)">
-                        <h3 style="color:#fff">🏪 Seu Negócio MilkyPot</h3>
-                        <span style="font-size:.8rem;opacity:.7">${franchise ? franchise.name : ''}</span>
-                      </div>
-                      <div class="panel-card-body">
-                        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:14px">
-                          <div>
-                            <div style="font-size:.72rem;opacity:.6;letter-spacing:.5px;text-transform:uppercase">Dias em operação</div>
-                            <div style="font-size:1.7rem;font-weight:800;font-family:'Baloo 2',cursive">${diasAtivo}</div>
-                          </div>
-                          <div>
-                            <div style="font-size:.72rem;opacity:.6;letter-spacing:.5px;text-transform:uppercase">Vendas hoje</div>
-                            <div style="font-size:1.7rem;font-weight:800;color:#10B981">${vendasHoje.length}</div>
-                            <div style="font-size:.72rem;opacity:.6">${brl(receitaHoje)}</div>
-                          </div>
-                          <div>
-                            <div style="font-size:.72rem;opacity:.6;letter-spacing:.5px;text-transform:uppercase">Ticket médio hoje</div>
-                            <div style="font-size:1.25rem;font-weight:800;color:#FBBF24">${ticketMedioHoje > 0 ? brl(ticketMedioHoje) : '—'}</div>
-                          </div>
-                          ${invest ? `
-                          <div>
-                            <div style="font-size:.72rem;opacity:.6;letter-spacing:.5px;text-transform:uppercase">Investimento</div>
-                            <div style="font-size:1.25rem;font-weight:800">${brl0(invest)}</div>
-                          </div>` : ''}
-                          ${metaInfo ? `
-                          <div style="grid-column:span 2">
-                            <div style="display:flex;justify-content:space-between;font-size:.72rem;opacity:.7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">
-                              <span>Meta do mês</span>
-                              <span style="color:${metaColor}">${pct}%</span>
-                            </div>
-                            <div style="font-size:.92rem;margin-bottom:4px">${brl(metaInfo.realizado)} <span style="opacity:.5">de</span> ${brl(metaInfo.valor)}</div>
-                            <div style="background:rgba(255,255,255,.15);height:10px;border-radius:5px;overflow:hidden">
-                              <div style="height:100%;width:${Math.min(100,pct)}%;background:${metaColor};border-radius:5px;transition:width .3s"></div>
-                            </div>
-                          </div>` : ''}
-                        </div>
-                        <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
-                          <a href="simulador.html" style="background:rgba(255,255,255,.15);color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:700;font-size:.85rem">📊 Simulador</a>
-                          <a href="operacional.html" style="background:rgba(255,255,255,.15);color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:700;font-size:.85rem">🎯 Metas</a>
-                          <a href="financeiro.html" style="background:rgba(255,255,255,.15);color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:700;font-size:.85rem">💰 Saúde financeira</a>
-                        </div>
-                      </div>
-                    </div>`;
-            } catch(e){ console.warn('Seu Negocio:', e); }
         })();
 
         // Check for scheduled reports (runs once per page load)
