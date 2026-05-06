@@ -293,6 +293,12 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
     }
 
+    // Eventos do MilkyPass - gravados por Cloud Functions e lidos no admin
+    match /club_pass_events/{eventId} {
+      allow read: if isAuthenticated() && (isSuperAdmin() || isFranchisee());
+      allow write: if false;
+    }
+
     // Transacoes de MilkyCoins - imutaveis, so Cloud Function escreve
     match /milkycoins_transactions/{txId} {
       allow read: if isAuthenticated() && (

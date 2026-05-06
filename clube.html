@@ -207,6 +207,15 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
     font-size: 0.8rem;
     opacity: 0.88;
 }
+.mc-pass-card { background: linear-gradient(135deg, #fff, #FFF7ED); border: 1px solid #FED7AA; }
+.mc-pass-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.mc-pass-head h2 { font-size: 1.2rem; color: var(--mc-text); }
+.mc-pass-badge { background: #FFEDD5; color: #9A3412; border-radius: 999px; padding: 5px 10px; font-size: 0.78rem; font-weight: 800; white-space: nowrap; }
+.mc-stamps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+.mc-stamp { aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 2px dashed #FDBA74; color: #FB923C; font-size: 1.25rem; font-weight: 900; }
+.mc-stamp.filled { border-style: solid; background: linear-gradient(135deg, #FB923C, #EC407A); color: #fff; box-shadow: 0 6px 18px rgba(251,146,60,.25); }
+.mc-pass-text { color: var(--mc-text-soft); font-size: 0.9rem; line-height: 1.45; }
+.mc-pass-reward { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: #ECFDF5; color: #065F46; font-weight: 800; font-size: 0.88rem; display: none; }
 
 /* ---- Botões ---- */
 .mc-btn {
@@ -676,6 +685,19 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
                 </div>
             </article>
 
+            <article class="mc-card mc-pass-card" id="milkypass-card" aria-label="MilkyPass de carimbos">
+                <div class="mc-pass-head">
+                    <div>
+                        <h2>MilkyPass</h2>
+                        <p class="mc-pass-text" id="milkypass-subtitle">Junte carimbos a cada compra.</p>
+                    </div>
+                    <span class="mc-pass-badge" id="milkypass-count">0/5</span>
+                </div>
+                <div class="mc-stamps" id="milkypass-stamps"></div>
+                <p class="mc-pass-text" id="milkypass-message">Faca compras identificadas no caixa para completar seu pass.</p>
+                <div class="mc-pass-reward" id="milkypass-reward">Voce tem recompensa pendente.</div>
+            </article>
+
             <h2 class="mc-section-title">Jogue e ganhe</h2>
             <div class="mc-shortcuts">
                 <a class="mc-shortcut" href="/desafio.html">
@@ -1118,6 +1140,7 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
                 }
             }
             applyAppLinks(cfg);
+            renderMilkyPass(member, cfg);
         }).catch(function(){});
 
         // QR (gera só uma vez)
@@ -1143,6 +1166,49 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
             app.href = links.appStore; app.style.display = ''; has = true;
         } else { app.style.display = 'none'; }
         wrap.style.display = has ? '' : 'none';
+    }
+
+    function renderMilkyPass(member, cfg) {
+        var passCfg = (cfg && cfg.milkyPass) || {};
+        var card = $('#milkypass-card');
+        if (!card) return;
+        if (passCfg.enabled === false) {
+            card.style.display = 'none';
+            return;
+        }
+        card.style.display = '';
+        var required = Math.max(1, parseInt(passCfg.stampsRequired || 5, 10) || 5);
+        var pass = member.milkyPass || {};
+        var current = Math.max(0, Math.min(required, parseInt(pass.current || 0, 10) || 0));
+        var rewardLabel = passCfg.rewardLabel || 'Raspinha bonus';
+        var stamps = $('#milkypass-stamps');
+        var count = $('#milkypass-count');
+        var subtitle = $('#milkypass-subtitle');
+        var msg = $('#milkypass-message');
+        var reward = $('#milkypass-reward');
+        if (count) count.textContent = current + '/' + required;
+        if (subtitle) subtitle.textContent = 'Complete ' + required + ' compras identificadas.';
+        if (stamps) {
+            stamps.style.gridTemplateColumns = 'repeat(' + Math.min(required, 6) + ', minmax(0, 1fr))';
+            stamps.innerHTML = '';
+            for (var i = 0; i < required; i++) {
+                var s = document.createElement('div');
+                s.className = 'mc-stamp' + (i < current ? ' filled' : '');
+                s.textContent = i < current ? '✓' : '•';
+                stamps.appendChild(s);
+            }
+        }
+        var pending = Array.isArray(member.pendingPassRewards) ? member.pendingPassRewards.filter(function(r){ return !r.redeemedAt; }) : [];
+        if (msg) {
+            var faltam = Math.max(0, required - current);
+            msg.textContent = faltam > 0
+                ? 'Faltam ' + faltam + ' carimbo' + (faltam === 1 ? '' : 's') + ' para desbloquear: ' + rewardLabel + '.'
+                : 'MilkyPass completo. Sua recompensa foi liberada!';
+        }
+        if (reward) {
+            reward.style.display = pending.length ? 'block' : 'none';
+            if (pending.length) reward.textContent = 'Recompensa pendente: ' + (pending[pending.length - 1].label || rewardLabel) + '. Peça para o atendente validar no caixa.';
+        }
     }
 
     // ============================================

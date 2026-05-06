@@ -148,6 +148,8 @@
                         <div class="club-kpi-card"><div class="kv" id="kpiEarned">0</div><div class="kl">Total Concedido (historico)</div></div>
                         <div class="club-kpi-card"><div class="kv" id="kpiRedeemed">0</div><div class="kl">Total Resgatado (historico)</div></div>
                         <div class="club-kpi-card"><div class="kv" id="kpiRedeemRate">0%</div><div class="kl">Taxa de Resgate</div></div>
+                        <div class="club-kpi-card"><div class="kv" id="kpiPassStamps">0</div><div class="kl">Carimbos MilkyPass</div></div>
+                        <div class="club-kpi-card"><div class="kv" id="kpiPassRewards">0</div><div class="kl">Recompensas MilkyPass</div></div>
                     </div>
                 </section>
 
@@ -195,6 +197,24 @@
                         <div class="form-row">
                             <input type="number" id="b_scratchMin" placeholder="scratchMin" min="0">
                             <input type="number" id="b_scratchMax" placeholder="scratchMax" min="0">
+                        </div>
+
+                        <h4 style="margin:18px 0 10px;font-family:'Baloo 2',cursive;color:var(--mp-text);">MilkyPass (carimbos)</h4>
+                        <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px;">
+                            <label><input type="checkbox" id="pass_enabled"> Ativar MilkyPass</label>
+                            <label><input type="checkbox" id="pass_resetOnComplete"> Zerar apos completar</label>
+                        </div>
+                        <div class="form-row">
+                            <input type="number" id="pass_stampsRequired" placeholder="Compras para completar" min="1">
+                            <input type="number" id="pass_minOrder" placeholder="Pedido minimo (R$)" min="0" step="0.01">
+                        </div>
+                        <div class="form-row">
+                            <select id="pass_rewardType">
+                                <option value="scratch_bonus">Raspinha bonus</option>
+                                <option value="coins_bonus">MilkyCoins bonus</option>
+                                <option value="manual_reward">Premio manual</option>
+                            </select>
+                            <input type="text" id="pass_rewardLabel" placeholder="Nome do premio">
                         </div>
 
                         <h4 style="margin:18px 0 10px;font-family:'Baloo 2',cursive;color:var(--mp-text);">App Links</h4>
@@ -255,9 +275,10 @@
                                     <th class="text-right">Coins</th>
                                     <th class="text-right">Total Gasto</th>
                                     <th class="text-center">Pedidos</th>
+                                    <th class="text-center">MilkyPass</th>
                                 </tr>
                             </thead>
-                            <tbody id="membersBody"><tr><td colspan="7" style="text-align:center;padding:30px;color:var(--mp-text-light)">Carregando...</td></tr></tbody>
+                            <tbody id="membersBody"><tr><td colspan="8" style="text-align:center;padding:30px;color:var(--mp-text-light)">Carregando...</td></tr></tbody>
                         </table>
                     </div>
                 </section>
@@ -331,6 +352,12 @@
             firebase.firestore().collection('club_config').doc('global').get().then(function(doc){
                 if(!doc.exists){
                     document.getElementById('cfgStatus').textContent = 'Documento inexistente - sera criado ao salvar.';
+                    document.getElementById('pass_enabled').checked = true;
+                    document.getElementById('pass_resetOnComplete').checked = true;
+                    document.getElementById('pass_stampsRequired').value = 5;
+                    document.getElementById('pass_minOrder').value = 0;
+                    document.getElementById('pass_rewardType').value = 'scratch_bonus';
+                    document.getElementById('pass_rewardLabel').value = 'Raspinha bonus';
                     return;
                 }
                 var c = doc.data() || {};
@@ -352,6 +379,13 @@
                 document.getElementById('ff_enabled').checked        = !!ff.enabled;
                 document.getElementById('ff_whatsappNotify').checked = !!ff.whatsappNotify;
                 document.getElementById('ff_pushEnabled').checked    = !!ff.pushEnabled;
+                var pass = c.milkyPass || {};
+                document.getElementById('pass_enabled').checked = pass.enabled !== false;
+                document.getElementById('pass_resetOnComplete').checked = pass.resetOnComplete !== false;
+                document.getElementById('pass_stampsRequired').value = pass.stampsRequired != null ? pass.stampsRequired : 5;
+                document.getElementById('pass_minOrder').value = pass.minOrder != null ? pass.minOrder : 0;
+                document.getElementById('pass_rewardType').value = pass.rewardType || 'scratch_bonus';
+                document.getElementById('pass_rewardLabel').value = pass.rewardLabel || 'Raspinha bonus';
             }).catch(function(e){ console.warn('cfg err', e); });
         }
 
@@ -387,6 +421,14 @@
                     whatsappNotify: document.getElementById('ff_whatsappNotify').checked,
                     pushEnabled:    document.getElementById('ff_pushEnabled').checked
                 },
+                milkyPass: {
+                    enabled: document.getElementById('pass_enabled').checked,
+                    stampsRequired: intN('pass_stampsRequired') || 5,
+                    minOrder: num('pass_minOrder') || 0,
+                    rewardType: document.getElementById('pass_rewardType').value || 'scratch_bonus',
+                    rewardLabel: document.getElementById('pass_rewardLabel').value || 'Raspinha bonus',
+                    resetOnComplete: document.getElementById('pass_resetOnComplete').checked
+                },
                 updatedAt: new Date().toISOString(),
                 updatedBy: session.uid || session.email || 'admin'
             };
@@ -406,7 +448,7 @@
             firebase.firestore().collection('club_members').orderBy('totalSpent','desc').limit(200).get()
                 .then(function(snap){
                     membersCache = [];
-                    var totalMembers=0, coinsLive=0, totalEarned=0, totalRedeemed=0;
+                    var totalMembers=0, coinsLive=0, totalEarned=0, totalRedeemed=0, passStamps=0, passRewards=0;
                     snap.forEach(function(d){
                         var m = Object.assign({id:d.id}, d.data());
                         membersCache.push(m);
@@ -414,24 +456,32 @@
                         coinsLive     += (m.coins|0);
                         totalEarned   += (m.totalEarned|0);
                         totalRedeemed += (m.totalRedeemed|0);
+                        passStamps    += ((m.milkyPass && m.milkyPass.totalStamps) || 0);
+                        passRewards   += ((m.milkyPass && m.milkyPass.totalCompleted) || 0);
                     });
                     renderMembers(membersCache);
                     document.getElementById('kpiMembers').textContent  = totalMembers;
                     document.getElementById('kpiCoinsLive').textContent = coinsLive.toLocaleString('pt-BR');
                     document.getElementById('kpiEarned').textContent   = totalEarned.toLocaleString('pt-BR');
                     document.getElementById('kpiRedeemed').textContent = totalRedeemed.toLocaleString('pt-BR');
+                    document.getElementById('kpiPassStamps').textContent = passStamps.toLocaleString('pt-BR');
+                    document.getElementById('kpiPassRewards').textContent = passRewards.toLocaleString('pt-BR');
                     var rate = totalEarned > 0 ? Math.round((totalRedeemed/totalEarned)*1000)/10 : 0;
                     document.getElementById('kpiRedeemRate').textContent = rate+'%';
                 })
                 .catch(function(err){
-                    document.getElementById('membersBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#c62828">Erro: '+Utils.escapeHtml(err.message||'')+'</td></tr>';
+                    document.getElementById('membersBody').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#c62828">Erro: '+Utils.escapeHtml(err.message||'')+'</td></tr>';
                 });
         }
 
         function renderMembers(list){
             var tbody = document.getElementById('membersBody');
-            if(!list.length){ tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--mp-text-light)">Sem membros.</td></tr>'; return; }
+            if(!list.length){ tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--mp-text-light)">Sem membros.</td></tr>'; return; }
             tbody.innerHTML = list.map(function(m){
+                var pass = m.milkyPass || {};
+                var required = pass.required || 5;
+                var pending = Array.isArray(m.pendingPassRewards) ? m.pendingPassRewards.filter(function(r){ return !r.redeemedAt; }).length : 0;
+                var passText = (pass.current || 0) + '/' + required + (pending ? ' +'+pending+' premio' : '');
                 return '<tr>'+
                     '<td><strong>'+Utils.escapeHtml(m.name||'-')+'</strong></td>'+
                     '<td>'+Utils.escapeHtml(m.phone||'-')+'</td>'+
@@ -440,6 +490,7 @@
                     '<td class="text-right">'+(m.coins|0)+'</td>'+
                     '<td class="text-right">'+Utils.formatCurrency(m.totalSpent||0)+'</td>'+
                     '<td class="text-center">'+(m.ordersCount||0)+'</td>'+
+                    '<td class="text-center">'+Utils.escapeHtml(passText)+'</td>'+
                 '</tr>';
             }).join('');
         }

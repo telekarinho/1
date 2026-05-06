@@ -636,6 +636,14 @@
                     referrer: 100, referred: 50,
                     gameDesafio10: 10, scratchMin: 1, scratchMax: 50
                 },
+                milkyPass: {
+                    enabled: true,
+                    stampsRequired: 5,
+                    minOrder: 0,
+                    rewardType: 'scratch_bonus',
+                    rewardLabel: 'Raspinha bonus',
+                    resetOnComplete: true
+                },
                 appLinks: { playStore: '', appStore: '', pwa: '/clube.html' },
                 featureFlags: { enabled: true, whatsappNotify: true, pushEnabled: true }
             };
