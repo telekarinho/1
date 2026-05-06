@@ -118,6 +118,7 @@
   <script src="../js/core/audit.js"></script>
   <script src="../js/core/weekly-audit.js"></script>
   <script>
+    if (window.DataStore && typeof DataStore.init === 'function' && !DataStore._ready) DataStore.init();
     if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
     const session = Auth.getSession();
     const franchiseId = session.franchiseId;
@@ -131,6 +132,11 @@
       el.textContent = st.label + ' · prazo ' + st.dueUntil;
     }
     function loadInventory(){
+      const localInventory = DataStore.getCollection('inventory', franchiseId) || [];
+      if (!DataStore._syncDone && !localInventory.length) {
+        document.getElementById('countingBody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:#6B7280">Sincronizando estoque do Firestore...</td></tr>';
+        return;
+      }
       setStatus();
       inventoryData = WeeklyAudit.listAuditRows(franchiseId);
       const tbody = document.getElementById('countingBody');
@@ -157,9 +163,11 @@
     }
     function finishCounting(){
       const inputs = Array.from(document.querySelectorAll('.count'));
-      const empty = inputs.some(i => i.value === '');
-      if (empty && !confirm('Tem item sem contagem. Eles serao considerados zero. Continuar?')) return;
-      const data = inputs.map(input => {
+      const filled = inputs.filter(i => i.value !== '');
+      if (!filled.length) { alert('Preencha pelo menos um item contado antes de gerar o relatorio.'); return; }
+      const empty = inputs.length - filled.length;
+      if (empty && !confirm('Tem ' + empty + ' item(ns) sem contagem. Eles ficarao sem alteracao. Continuar?')) return;
+      const data = filled.map(input => {
         const item = inventoryData.find(i => i.key === input.dataset.key);
         const counted = Number(input.value || 0);
         const expected = Number(item.expected || 0);
@@ -217,7 +225,17 @@
       if (!r.ok) alert(r.error || 'Nao foi possivel cadastrar.');
       loadInventory();
     }
-    document.addEventListener('DOMContentLoaded', loadInventory);
+    window.addEventListener('mp_synced', loadInventory);
+    window.addEventListener('mp_remote_update', function(ev){
+      if (ev && ev.detail && (ev.detail.key === 'inventory_' + franchiseId || ev.detail.key === 'catalog_v2_' + franchiseId || ev.detail.key === 'weekly_stock_audits_' + franchiseId)) {
+        loadInventory();
+      }
+    });
+    document.addEventListener('DOMContentLoaded', function(){
+      loadInventory();
+      setTimeout(loadInventory, 1200);
+      setTimeout(loadInventory, 3000);
+    });
   </script>
   <script src="../js/core/copilot-transport.js" defer></script>
   <script src="../js/pages/lilo-scanner.js" defer></script>

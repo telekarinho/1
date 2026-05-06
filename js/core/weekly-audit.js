@@ -68,7 +68,7 @@
             doneThisWeek: doneThisWeek,
             overdue: !doneThisWeek && !w.isOpen,
             label: doneThisWeek ? 'Auditoria da semana concluida'
-                 : w.isOpen ? 'Auditoria aberta ate terca'
+                 : w.isOpen ? 'Auditoria aberta ate terca-feira'
                  : 'Auditoria semanal atrasada',
             lastAuditAt: last ? last.createdAt : null
         });
@@ -92,9 +92,11 @@
 
         inventory.forEach(function(item) {
             if (!item || !item.id) return;
+            if (item.auditHidden || item.active === false) return;
             var variants = Array.isArray(item.auditVariants) ? item.auditVariants : [];
             if (variants.length) {
                 variants.forEach(function(v) {
+                    if (v && v.active === false) return;
                     rows.push({
                         key: 'variant:' + item.id + ':' + v.id,
                         source: 'inventoryVariant',

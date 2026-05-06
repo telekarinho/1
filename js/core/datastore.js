@@ -319,7 +319,7 @@ const DataStore = {
         // Merge por id+timestamp falhava porque deduct mantém createdAt original
         // → cloud sempre vencia local recém-deduzido. Resultado: estoque revertia.
         // Last-writer-wins via _localFresherThanCloud() abaixo.
-        return /^(orders_|caixa_|pdv_tabs_|finances_|recurring_expenses_|price_changes_log_|purchase_orders_log_)/.test(key || '');
+        return /^(orders_|caixa_|pdv_tabs_|finances_|recurring_expenses_|price_changes_log_|purchase_orders_log_|weekly_stock_audits_|picole_counts_)/.test(key || '');
     },
 
     /**
@@ -479,7 +479,9 @@ const DataStore = {
             docId.startsWith('finances_') ||
             docId.startsWith('recurring_expenses_') ||
             docId.startsWith('price_changes_log_') ||
-            docId.startsWith('purchase_orders_log_')
+            docId.startsWith('purchase_orders_log_') ||
+            docId.startsWith('weekly_stock_audits_') ||
+            docId.startsWith('picole_counts_')
             // inventory_ removido: tratado via last-writer-wins
         );
     },
@@ -557,7 +559,10 @@ const DataStore = {
             'finances_' + fid,
             'recurring_expenses_' + fid,
             'inventory_' + fid,
-            'staff_' + fid
+            'staff_' + fid,
+            'purchase_orders_log_' + fid,
+            'weekly_stock_audits_' + fid,
+            'picole_counts_' + fid
         ];
     },
 
