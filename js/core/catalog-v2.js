@@ -592,11 +592,13 @@
                         .map(r => ({ insumoId: r.insumoId, qty: r.qty, unit: r.unit || 'unid' })),
                     // Dados v2 completos para PDV avançado
                     _v2: {
+                        categoriaId: p.categoriaId,
                         precos: p.precos,
                         kits: p.kits,
                         variantes: p.variantes,
                         toppingsIds: p.toppingsIds,
-                        buffet: p.buffet
+                        buffet: p.buffet,
+                        picoleFlavors: p.picoleFlavors || []
                     }
                 };
             });

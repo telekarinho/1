@@ -1095,6 +1095,11 @@
                 <button class="kv-canal" data-c="delivery" onclick="PDV_Dynamics.kvSetCanal('delivery')">🛵 Delivery</button>
                 <button class="kv-canal" data-c="ifood" onclick="PDV_Dynamics.kvSetCanal('ifood')">🍔 iFood</button>
             </div>
+            <div id="kvPicoleFlavorBox" style="display:none;margin-bottom:14px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:12px;padding:12px">
+                <div style="font-weight:900;color:#9A3412;margin-bottom:6px">Sabor do picole <span style="font-size:11px;color:#9CA3AF;font-weight:700">opcional</span></div>
+                <div style="font-size:12px;color:#7C2D12;margin-bottom:8px">Escolha quando souber. Se estiver corrido, pode vender sem informar e acertar na contagem semanal.</div>
+                <div id="kvPicoleFlavors" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            </div>
             <div id="kvOptions" style="display:grid;gap:10px"></div>
         </div>
     </div>
@@ -1107,6 +1112,8 @@
     .kv-opt .kv-label{font-weight:800;color:#1F2937;font-size:15px}
     .kv-opt .kv-sub{font-size:12px;color:#6B7280;margin-top:2px}
     .kv-opt .kv-price{font-size:18px;font-weight:900;color:#16A34A}
+    .kv-flavor{border:1px solid #FED7AA;background:#fff;color:#9A3412;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800;cursor:pointer}
+    .kv-flavor.active{background:#F97316;color:#fff;border-color:#F97316}
 </style>
 
 <!-- MilkyClube Identification Modal -->
@@ -1590,6 +1597,7 @@
         // ===== Kit/Variante modal (_v2) =====
         kvCanal: 'loja',
         _kvCurrentItem: null,
+        _kvPicoleFlavor: null,
 
         _priceForCanal(it, canal) {
             if (!it._v2 || !it._v2.precos) return null;
@@ -1600,6 +1608,7 @@
 
         openKitVariantModal(it) {
             this._kvCurrentItem = it;
+            this._kvPicoleFlavor = null;
             document.getElementById('kvTitle').textContent = (it.emoji || '🎁') + ' ' + it.name;
             this.kvSetCanal(this.kvCanal);
             document.getElementById('kitVariantModal').classList.add('open');
@@ -1613,12 +1622,52 @@
             this._renderKvOptions();
         },
 
+        _isPicoleItem(it) {
+            if (!it) return false;
+            const n = String(it.name || '').toLowerCase();
+            const cat = it._v2 && it._v2.categoriaId ? String(it._v2.categoriaId).toLowerCase() : '';
+            return cat.indexOf('picole') >= 0 || cat.indexOf('picol') >= 0 || n.indexOf('picol') >= 0;
+        },
+
+        _picoleFlavors(it) {
+            const src = (it && it._v2 && Array.isArray(it._v2.picoleFlavors)) ? it._v2.picoleFlavors : [];
+            return src.filter(f => f && f.active !== false);
+        },
+
+        _renderPicoleFlavorPicker(it) {
+            const box = document.getElementById('kvPicoleFlavorBox');
+            const wrap = document.getElementById('kvPicoleFlavors');
+            if (!box || !wrap) return;
+            const flavors = this._isPicoleItem(it) ? this._picoleFlavors(it) : [];
+            if (!flavors.length) {
+                box.style.display = 'none';
+                wrap.innerHTML = '';
+                return;
+            }
+            box.style.display = 'block';
+            const selectedId = this._kvPicoleFlavor && this._kvPicoleFlavor.id;
+            const escAttr = value => String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            wrap.innerHTML = '<button class="kv-flavor ' + (!selectedId ? 'active' : '') + '" onclick="PDV_Dynamics.kvSelectPicoleFlavor(null)">Nao informar</button>' + flavors.map(f => {
+                const stock = Number(f.stock || 0);
+                const stockTxt = Number.isFinite(stock) && stock > 0 ? ' · ' + stock + ' un' : '';
+                return `<button class="kv-flavor ${selectedId === f.id ? 'active' : ''}" onclick="PDV_Dynamics.kvSelectPicoleFlavor('${escAttr(f.id)}')">${f.name || f.id}${stockTxt}</button>`;
+            }).join('');
+        },
+
+        kvSelectPicoleFlavor(flavorId) {
+            const it = this._kvCurrentItem;
+            const flavors = this._picoleFlavors(it);
+            this._kvPicoleFlavor = flavorId ? (flavors.find(f => f.id === flavorId) || null) : null;
+            this._renderPicoleFlavorPicker(it);
+        },
+
         _renderKvOptions() {
             const it = this._kvCurrentItem;
             if (!it) return;
             const canal = this.kvCanal;
             const container = document.getElementById('kvOptions');
             container.innerHTML = '';
+            this._renderPicoleFlavorPicker(it);
 
             const priceKey = canal === 'loja' ? 'precoLoja' : (canal === 'delivery' ? 'precoDelivery' : 'precoIfood');
             const brl = v => 'R$ ' + Number(v||0).toFixed(2).replace('.',',');
@@ -1686,15 +1735,19 @@
             const it = this._kvCurrentItem;
             if (!it) return;
             const qty = choice.kit ? choice.kit.qty : 1;
+            const flavor = this._kvPicoleFlavor;
+            const flavorLabel = flavor ? ' ? ' + flavor.name : '';
             this.addToCart({
                 id: it.id,
-                name: it.name + ' · ' + choice.label + ' · ' + this.kvCanal,
+                name: it.name + ' ?? ' + choice.label + flavorLabel + ' ?? ' + this.kvCanal,
                 price: choice.price,
                 emoji: it.emoji,
                 qty: 1, // linha única no carrinho, mas quantity do kit embutida no label
                 type: 'unitario',
                 kitQty: qty,
-                canal: this.kvCanal
+                canal: this.kvCanal,
+                picoleFlavorId: flavor ? flavor.id : null,
+                picoleFlavorName: flavor ? flavor.name : null
             });
             document.getElementById('kitVariantModal').classList.remove('open');
         },
@@ -2078,7 +2131,11 @@
         addToCart(item) {
             // Integração com o objeto global 'cart' do PDV legada
             if (item.type === 'unitario') {
-                const existing = cart.find(c => c.id === item.id && c.type === 'unitario' && !c.customItems);
+                const existing = cart.find(c => c.id === item.id && c.type === 'unitario' && !c.customItems
+                    && Number(c.unitPrice || 0) === Number(item.price || item.unitPrice || 0)
+                    && (c.picoleFlavorId || null) === (item.picoleFlavorId || null)
+                    && (c.kitQty || null) === (item.kitQty || null)
+                    && (c.canal || null) === (item.canal || null));
                 if (existing) {
                     existing.qty += (item.qty || 1);
                     existing.total = existing.qty * existing.unitPrice;
@@ -2103,6 +2160,10 @@
                 extras: item.extras || [],
                 type: item.type,
                 weightG: item.weightG || null,
+                kitQty: item.kitQty || null,
+                canal: item.canal || null,
+                picoleFlavorId: item.picoleFlavorId || null,
+                picoleFlavorName: item.picoleFlavorName || '',
                 cost: Number(item.cost) || 0,  // pré-calculado (ex: buffet proporcional ao peso) — flui para CMV
                 size: item.type === 'por_peso' && pricePerKgDisplay
                     ? `${item.weightG}g @ R$ ${pricePerKgDisplay.toFixed(2).replace('.',',')}/kg`
@@ -2732,6 +2793,7 @@
             var sub=it.unitPrice*it.qty;total+=sub;
             var detail=it.size;
             if(it.extras.length)detail+=(detail?' + ':'')+it.extras.map(function(e){return e.name}).join(', ');
+            if(it.picoleFlavorName)detail+=(detail?' · ':'')+'Sabor: '+it.picoleFlavorName;
             return '<div class="ci"><div class="ci-info"><div class="ci-name">'+(it.emoji||'🍦')+' '+it.name+'</div>'+
                 (detail?'<div class="ci-detail">'+detail+'</div>':'')+
                 '<div class="ci-price">R$ '+(sub).toFixed(2).replace('.',',')+'</div></div>'+
@@ -3011,6 +3073,30 @@
             var localKey = new Date(d.getTime() - off).toISOString().slice(0,10);
             return localKey === key;
         }).sort(function(a,b){return (b.createdAt||'').localeCompare(a.createdAt||'')});
+    }
+
+    function updatePicoleFlavorStock(order) {
+        if (!order || !order.items || typeof CatalogV2 === 'undefined') return;
+        var selected = order.items.filter(function(it){ return it && it.picoleFlavorId; });
+        if (!selected.length) return;
+        var catalog = CatalogV2.load(fid);
+        if (!catalog || !catalog.produtos) return;
+        var touched = 0;
+        selected.forEach(function(it) {
+            var product = catalog.produtos.find(function(p){ return p.id === it.productId; });
+            if (!product || !Array.isArray(product.picoleFlavors)) return;
+            var flavor = product.picoleFlavors.find(function(f){ return f.id === it.picoleFlavorId; });
+            if (!flavor) return;
+            var qty = Number(it.kitQty || it.qty || 1) || 1;
+            flavor.stock = Math.max(0, Math.round((Number(flavor.stock || 0) - qty) * 100) / 100);
+            flavor.soldSinceCount = Math.round((Number(flavor.soldSinceCount || 0) + qty) * 100) / 100;
+            flavor.lastSaleAt = order.createdAt || new Date().toISOString();
+            touched++;
+        });
+        if (touched) {
+            CatalogV2.save(fid, catalog);
+            CatalogV2.syncToLegacy(fid);
+        }
     }
 
     function statusLabel(s){
@@ -3640,6 +3726,10 @@
                     weightG:c.weightG||null,
                     weightKg:c.weightKg||(c.weightG?c.weightG/1000:null),
                     pricePerKg:c.pricePerKg,
+                    kitQty:c.kitQty||null,
+                    canal:c.canal||null,
+                    picoleFlavorId:c.picoleFlavorId||null,
+                    picoleFlavorName:c.picoleFlavorName||'',
                     cost:Math.round((Number(c.cost)||0)*100)/100,  // CMV pré-calculado (buffet etc)
                     emoji:c.emoji
                 };
@@ -3697,6 +3787,8 @@
         } else {
             DataStore.addToCollection('orders',fid,order);
         }
+
+        try { updatePicoleFlavorStock(order); } catch(e) { console.warn('[Picoles] baixa por sabor falhou:', e); }
 
         // NFC-e: tenta emitir (manual ou Bling)
         if (typeof NFCe !== 'undefined' && NFCe.emit && order.nf) {

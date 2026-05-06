@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MilkyPot - Controle de Picoles</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/shared-panel.css">
+  <style>
+    .picole-page{padding:22px;display:grid;gap:18px}
+    .hero{background:linear-gradient(135deg,#31204f,#7E57C2);color:#fff;border-radius:16px;padding:22px;display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+    .hero h2{margin:0 0 6px;font-family:'Baloo 2',cursive;font-size:26px}
+    .hero p{margin:0;color:rgba(255,255,255,.78);max-width:760px}
+    .badge-warn{background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;border-radius:999px;padding:8px 12px;font-weight:900;font-size:12px;white-space:nowrap}
+    .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+    .metric{background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:16px;box-shadow:0 8px 24px rgba(31,41,55,.06)}
+    .metric span{display:block;color:#6B7280;font-size:12px;text-transform:uppercase;font-weight:900;letter-spacing:.4px}
+    .metric b{display:block;color:#2D1747;font-size:25px;margin-top:5px}
+    .panel{background:#fff;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(31,41,55,.06)}
+    .panel-head{padding:16px 18px;border-bottom:1px solid #EEF2F7;display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .panel-head h3{margin:0;font-family:'Baloo 2',cursive;color:#2D1747}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer;font-family:inherit}
+    .btn.primary{background:linear-gradient(135deg,#FF4F8A,#7E57C2);color:#fff}
+    .btn.soft{background:#F3F4F6;color:#374151}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px 14px;border-bottom:1px solid #F3F4F6;text-align:left;font-size:14px}
+    th{font-size:11px;text-transform:uppercase;color:#6B7280;background:#F9FAFB;letter-spacing:.4px}
+    td input{width:86px;border:1px solid #E5E7EB;border-radius:8px;padding:8px 10px;font:inherit}
+    .need{color:#DC2626;font-weight:900}
+    .ok{color:#059669;font-weight:900}
+    .muted{color:#6B7280;font-size:12px}
+    @media(max-width:900px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{display:block}.badge-warn{display:inline-block;margin-top:12px}}
+  </style>
+</head>
+<body>
+  <div class="panel-layout">
+    <aside class="panel-sidebar">
+      <div class="sidebar-brand">
+        <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+        <h2>MilkyPot<small id="storeName">Controle</small></h2>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-group">Principal</div>
+        <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+        <a href="pdv.html" class="sidebar-link"><span class="icon">🛒</span> PDV</a>
+        <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+        <div class="sidebar-nav-group">Gestao</div>
+        <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+        <a href="picoles.html" class="sidebar-link active"><span class="icon">🍡</span> Picoles</a>
+        <a href="analise.html" class="sidebar-link"><span class="icon">🧠</span> Inteligencia</a>
+      </nav>
+    </aside>
+    <main class="panel-main">
+      <header class="panel-header">
+        <div class="panel-header-left"><h1>🍡 Controle de Picoles</h1></div>
+        <div class="panel-header-right"><button class="btn-logout" onclick="Auth.logout()">Sair</button></div>
+      </header>
+      <div class="picole-page">
+        <section class="hero">
+          <div>
+            <h2>Sabores vendidos, estoque e pedido de compra</h2>
+            <p>O PDV continua vendendo picole normalmente. Quando o atendente informar o sabor, essa tela mostra o que mais saiu. Uma vez por semana, lance a contagem real por sabor para saber exatamente o que pedir.</p>
+          </div>
+          <div class="badge-warn" id="countStatus">Verificando contagem...</div>
+        </section>
+
+        <section class="cards">
+          <div class="metric"><span>Estoque total contado</span><b id="mStock">0</b></div>
+          <div class="metric"><span>Vendido 7 dias</span><b id="mSold7">0</b></div>
+          <div class="metric"><span>Sabores ativos</span><b id="mFlavors">0</b></div>
+          <div class="metric"><span>Sugestao de compra</span><b id="mBuy">0</b></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Contagem semanal por sabor</h3>
+            <div class="actions">
+              <button class="btn soft" onclick="addFlavor()">+ Sabor</button>
+              <button class="btn primary" onclick="saveCounts()">Salvar contagem</button>
+            </div>
+          </div>
+          <div style="overflow:auto">
+            <table>
+              <thead><tr><th>Sabor</th><th>Estoque contado</th><th>Vendido 7d</th><th>Vendido 30d</th><th>Comprar sugerido</th><th>Meta</th><th>Status</th></tr></thead>
+              <tbody id="flavorRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="../js/core/constants.js"></script>
+  <script src="../js/core/utils.js"></script>
+  <script src="../js/core/datastore.js?v=mp-v112"></script>
+  <script src="../js/core/firebase-config.js"></script>
+  <script src="../js/core/auth.js"></script>
+  <script src="../js/core/catalog-v2.js?v=mp-v112"></script>
+  <script>
+    if (window.DataStore && !DataStore._ready) DataStore.init();
+    if (!Auth.requireAuth('franchisee')) throw new Error('not authorized');
+    const session = Auth.getSession();
+    const fid = session.franchiseId;
+    let catalog = null;
+    let product = null;
+    let rows = [];
+
+    function norm(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
+    function today(){ return new Date().toISOString().slice(0,10); }
+    function daysAgo(n){ return Date.now() - n*86400000; }
+    function isSold(o){ return o && !o.deleted && !o.cancelled && ['confirmado','entregue','pago','pronto'].includes(o.status); }
+    function loadProduct(){
+      catalog = CatalogV2.load(fid);
+      product = (catalog.produtos || []).find(p => p.active !== false && (p.categoriaId === 'cat_picole' || norm(p.name).includes('picole')));
+      if (!product) throw new Error('Produto de picole nao encontrado');
+      product.picoleFlavors = Array.isArray(product.picoleFlavors) ? product.picoleFlavors : [];
+      rows = product.picoleFlavors.map(f => ({...f}));
+    }
+    function salesByFlavor(){
+      const orders = DataStore.getCollection('orders', fid) || [];
+      const out = {};
+      orders.filter(isSold).forEach(o => {
+        const t = new Date(o.createdAt || 0).getTime();
+        (o.items || []).forEach(it => {
+          if (!it.picoleFlavorId && !it.picoleFlavorName) return;
+          const id = it.picoleFlavorId || norm(it.picoleFlavorName).replace(/[^a-z0-9]+/g,'_');
+          out[id] = out[id] || { d7:0, d30:0 };
+          const qty = Number(it.kitQty || it.qty || 1);
+          if (t >= daysAgo(7)) out[id].d7 += qty;
+          if (t >= daysAgo(30)) out[id].d30 += qty;
+        });
+      });
+      return out;
+    }
+    function render(){
+      const sales = salesByFlavor();
+      const last = rows.map(r => r.lastCountAt || '').sort().pop();
+      const stale = !last || new Date(last).getTime() < daysAgo(7);
+      document.getElementById('countStatus').textContent = stale ? 'Contagem semanal pendente' : 'Contagem semanal em dia';
+      document.getElementById('countStatus').style.background = stale ? '#FEF3C7' : '#DCFCE7';
+      document.getElementById('countStatus').style.color = stale ? '#92400E' : '#166534';
+      let totalStock=0, total7=0, totalBuy=0;
+      document.getElementById('flavorRows').innerHTML = rows.map((r, idx) => {
+        const s = sales[r.id] || {d7:0,d30:0};
+        const stock = Number(r.stock || 0);
+        const target = Number(r.targetStock || 30);
+        const buy = Math.max(0, Math.ceil(target - stock));
+        totalStock += stock; total7 += s.d7; totalBuy += buy;
+        return `<tr>
+          <td><input value="${Utils.escapeHtml(r.name||'')}" onchange="rows[${idx}].name=this.value" style="width:180px"></td>
+          <td><input type="number" min="0" step="1" value="${stock}" onchange="rows[${idx}].stock=Number(this.value)||0"></td>
+          <td><b>${s.d7}</b></td>
+          <td>${s.d30}</td>
+          <td class="${buy>0?'need':'ok'}">${buy}</td>
+          <td><input type="number" min="0" step="1" value="${target}" onchange="rows[${idx}].targetStock=Number(this.value)||0"></td>
+          <td><span class="${buy>0?'need':'ok'}">${buy>0?'Comprar':'OK'}</span><div class="muted">${r.lastCountAt ? 'contado em '+r.lastCountAt.slice(0,10) : 'sem contagem'}</div></td>
+        </tr>`;
+      }).join('');
+      document.getElementById('mStock').textContent = totalStock;
+      document.getElementById('mSold7').textContent = total7;
+      document.getElementById('mFlavors').textContent = rows.length;
+      document.getElementById('mBuy').textContent = totalBuy;
+    }
+    function addFlavor(){
+      const name = prompt('Nome do sabor:');
+      if (!name) return;
+      rows.push({ id:'pic_'+Date.now().toString(36), name, stock:0, targetStock:30, active:true, createdAt:new Date().toISOString() });
+      render();
+    }
+    function saveCounts(){
+      const now = new Date().toISOString();
+      rows = rows.filter(r => r.name).map(r => ({...r, stock:Number(r.stock||0), targetStock:Number(r.targetStock||30), active:r.active!==false, lastCountAt:now, updatedAt:now }));
+      product.picoleFlavors = rows;
+      CatalogV2.save(fid, catalog);
+      CatalogV2.syncToLegacy(fid);
+      DataStore.addToCollection('picole_counts', fid, { id:'pc_'+Date.now().toString(36), date:today(), createdAt:now, flavors:rows.map(r=>({id:r.id,name:r.name,stock:r.stock,targetStock:r.targetStock})) });
+      alert('Contagem de picoles salva.');
+      render();
+    }
+    window.addEventListener('mp_synced', () => { loadProduct(); render(); });
+    setTimeout(() => { loadProduct(); render(); }, 900);
+  </script>
+</body>
+</html>
