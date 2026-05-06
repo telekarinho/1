@@ -1929,3 +1929,83 @@ _Belinha — Ciclo #135 | 2026-05-06_
 > **v17c — semana17.md flag crítico:** O arquivo `belinha/content/pos-inauguracao-semana17.md` tem tema "Inverno de Saída" mas começa no Dia dos Pais (09/08/2026). Ciclo #136 DEVE inserir nota de substituição no topo do arquivo (padrão ciclo #134). Sem isso, o operador publicará conteúdo genérico no maior dia comercial de agosto.
 
 _Belinha — Ciclo #135 | 2026-05-06_
+
+---
+
+## Auto-aprimoramento ciclos #135–#139
+
+_Belinha — Ciclo #140 | 2026-05-06_
+
+### O que gerou mais valor concreto
+
+1. **Dia dos Pais playbook standalone (#136):** Padrão de alto ROI já validado com Dia das Mães e Namorados. Keyword `PAPAI26`, templates WA P1–P6, Reel 15s com roteiro cena-a-cena. O operador tem tudo em um arquivo. Produzido com 95 dias de antecedência — janela ideal.
+2. **checkout.html auditoria (#137):** 3x postergado e finalmente concluído. Janela jul-ago é a correta para UX técnico (menor pressão de conteúdo sazonal). Aprendizado: bloqueadores técnicos acumulam dívida — o padrão de postergação 3x se tornou a norma em Q2/2026. Regra v18 abaixo.
+3. **semana18.md bridge pós-Dia dos Pais (#138):** Gap cirúrgico detectado e corrigido. Sem este fix, o operador publicaria conteúdo de "domingo de família genérico" no D+7 após o maior evento de agosto — perdendo momentum de conversão. Padrão de "bridge D+7" é altamente reaproveitável.
+4. **Intel concorrentes pré-Dia dos Pais (#139):** "Ovo em Pétala" TheBest (200M views), MilkyMoo sem campanha Dia dos Pais, JohnnyJoy sem campanha Dia dos Pais — gaps confirmados. `contraprogramacao-inverno-agosto-2026.md` criada com 5 ângulos acionáveis.
+
+### O que foi menos eficaz / desperdício
+
+- **Contraprogramação agosto (#139) sem follow-up técnico no site:** O arquivo `contraprogramacao-inverno-agosto-2026.md` existe como guia operacional, mas nenhuma das 5 ações competitivas foi refletida em copy do site, FAQ, ou meta description. Intel sem ação = valor 50% desperdiçado. Corrigir via regra v18a.
+- **renderProducts lazy scroll (#141):** Quarta vez prescrito, quarta vez postergado. Cada ciclo de postergação é custo acumulado de UX para clientes com catálogo grande. Regra v18b.
+- **CNPJ/DPO LGPD:** 11+ dias de operação, blocker crítico ainda sem resolução. A Belinha não tem como resolver — depende do operador fornecer dados jurídicos. Adicionar lembrete a cada 10 ciclos.
+
+### Auditoria de cobertura set–nov 2026 (Halloween → BLACKPOT)
+
+| Semana | Período | Evento/Tema | Status |
+|--------|---------|-------------|--------|
+| 23 | 20–26/09 | Primavera plena | ✅ semana23.md |
+| 24 | 27/09–03/10 | Halloween warming + abertura lista VIP "HALLOWEEN" | ✅ semana24.md |
+| 25 | 04–10/10 | Aquecimento Halloween explicit | ✅ semana25.md |
+| **26** | **11–17/10** | **Dia das Crianças 12/10 + Reveal parcial Potinho Assombrado** | **✅ semana26.md** |
+| 27 | 18–24/10 | Halloween countdown 13→7 dias | ✅ semana27.md |
+| **28** | **25–31/10** | **Aniversário 6 meses (25/10) + DIA H Halloween (31/10)** | **✅ semana28.md** |
+| 29 | 01–07/11 | Pós-Halloween + showcase UGC | ✅ semana29.md |
+| 30 | 08–14/11 | Linha Zero retomada + teaser verão | ✅ semana30.md |
+| 31 | 15–21/11 | Bridge BF approach + Linha Zero verão | ✅ semana31.md |
+| **32** | **22–28/11** | **BLACKPOT 27/11 (Black Friday)** | **✅ semana32.md + whatsapp-blackpot.md** |
+| 33 | 29/11–05/12 | Pós-BF + abertura dezembro + produto verão | ✅ semana33.md |
+| 34 | 06–12/12 | Natal warming + showcase verão | ✅ semana34.md |
+
+**Conclusão:** Cobertura completa de set–nov 2026. **Gap identificado:** sem standalone `whatsapp-halloween-2026.md` — os templates WA de Halloween estão fragmentados em semanas 24–28. O operador precisaria vasculhar 5 arquivos para configurar o WA Business. Prioridade #140 extra: criar arquivo consolidado. ✅ FEITO
+
+### Checklist atualizado pós-#140
+
+| Item | Status |
+|------|--------|
+| Dia dos Pais playbook | ✅ Ciclo #136 |
+| `checkout.html` auditoria | ✅ Ciclo #137 |
+| `semana18.md` bridge pós-Dia dos Pais | ✅ Ciclo #138 |
+| Concorrentes refetch ago/Dia dos Pais | ✅ Ciclo #139 |
+| `whatsapp-halloween-2026.md` standalone | ✅ Ciclo #140 |
+| `renderProducts` lazy scroll | ❌ → ciclo #141 (4x postergado — regra v18b) |
+| `aggregateRating` Schema.org | ⛔ Aguarda ≥3 reviews |
+| Google Analytics ID real | ⛔ Aguarda autorização |
+| CNPJ/DPO LGPD | ⛔ Aguarda dados do operador (lembrar a cada 10 ciclos) |
+| `cardapio.js` dead code (1050 linhas) | ⛔ Aguarda decisão operador/dev |
+| Concorrentes refetch pré-Halloween | ❌ → ciclo #143 |
+| Intel contraprogramação ago (#139) no site | ❌ → avaliar em #141 ou #142 |
+
+### Roadmap rebalanceado #141–#150
+
+| Ciclo | Área | Ação | Urgência |
+|-------|------|------|----------|
+| **#141** | **UX/Performance — OBRIGATÓRIO** | `renderProducts` virtual/lazy scroll — bloqueado 4x; catálogo com 20+ itens sofre jank em mobile low-end; sem excusa de conteúdo sazonal na janela set/out | 🔴 Alta |
+| #142 | SEO | `aggregateRating` Schema.org se operador confirmou ≥3 Google reviews; caso contrário, adicionar Schema `Product` em `cardapio.html` para rich snippets de item individual | Condicional |
+| **#143** | **Concorrentes** | Refetch pré-Halloween: TheBest (produto outubro?), MilkyMoo, JohnnyJoy — mecânicas out 2026; produtos sazonais; campanhas 12/10 (Dia das Crianças) e 31/10. Gerar contraprogramação no mesmo ciclo | Alta |
+| #144 | Conteúdo | Halloween update: com intel do #143, verificar se semanas 25–28 e `whatsapp-halloween-2026.md` precisam de ajuste; se sim, atualizar | Média |
+| **#145** | **Auto-aprimoramento** | Reler log #140–#144; roadmap nov–jan 2027: BLACKPOT (27/11, semana 32 OK), Natal (semanas 33–36), Aniversário 8 meses (25/12), Virada Ano Novo (31/12), Carnaval 2027 (março) | — |
+| #146 | UX | Auditar mobile da `index.html` hero section + scroll performance (LCP); testar no viewport 375px | Média |
+| #147 | Conteúdo | Verificar semanas 35–38 (27/12–23/01): Natal, Virada, Recuo pós-festas, Linha Zero pós-Natal — alinhar com intel BLACKPOT/Natal coletado no #145 | Média |
+| #148 | SEO | `sitemap.xml` — atualizar `lastmod` para todas as páginas ativas + verificar se `cardapio.html` está indexada no Search Console (blocker de analytics limita visibilidade) | Média |
+| #149 | Conversão | Template WA milestone 50 carimbos (marco fidelidade ~6 meses de compras regulares); alinhado com aniversário 6 meses (25/10) — verificar se o arquivo `conversao-upsell-pdv-15carimbos.md` já cobre ou precisa de complemento | Baixa |
+| **#150** | **Auto-aprimoramento** | Reler log #145–#149; roadmap jan–mai 2027: Ano Novo, Carnaval (28/02–04/03), Páscoa (04/04/2027), 1 Ano de loja (25/04/2027) | — |
+
+### Regras atualizadas v18
+
+> **v18a — Intel competitiva → Ação em site no mesmo ciclo (OBRIGATÓRIO):** Quando pesquisa de concorrentes detecta gap ou campanha ativa, o mesmo ciclo DEVE produzir ≥1 mudança no site (copy, FAQ, meta, ou schema) que capitalize o gap. Não deixar intel sem ação técnica.
+
+> **v18b — Bloqueadores técnicos têm limite de 3 postergações:** Se um item técnico foi postergado 3+ vezes consecutivas (como `renderProducts`), no 4º ciclo ele torna-se prioridade máxima independente de pressão de conteúdo sazonal. Documentar em `blockers.md` se não executado.
+
+> **v18c — Playbook WA standalone obrigatório para eventos >1 semana de campanha:** Qualquer evento com campanha de WA Business spanning >1 semana (Halloween, BLACKPOT, Natal, etc.) deve ter `whatsapp-<evento>.md` standalone além das semanas. Operador não deve precisar vasculhar múltiplos arquivos para configurar automações.
+
+_Belinha — Ciclo #140 | 2026-05-06_
