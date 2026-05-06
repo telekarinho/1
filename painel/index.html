@@ -334,6 +334,16 @@
     <script src="../js/core/financas.js?v=mp-v14"></script>
     <script src="../js/core/onboarding.js?v=mp-v15-selfheal"></script>
     <script>
+        // Auto-reload quando service worker novo entra (mp-v120+)
+        // Sem isso, atendente fica preso em versão cacheada e precisa Ctrl+Shift+R.
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', function(e) {
+                if (e.data && (e.data.type === 'FORCE_RELOAD' || e.data.type === 'NEW_VERSION_AVAILABLE')) {
+                    console.log('🔄 SW: nova versão detectada, recarregando...');
+                    location.reload();
+                }
+            });
+        }
         if (window.DataStore && typeof DataStore.init === 'function' && !DataStore._ready) {
             DataStore.init();
         }
