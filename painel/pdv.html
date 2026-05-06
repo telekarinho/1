@@ -3600,6 +3600,7 @@
                   '<span style="font-size:1.6rem">💳</span><span>Crédito</span>' +
                 '</button>' +
               '</div>' +
+              '<button id="mpPayMixedBtn" style="width:100%;margin-top:10px;padding:13px 12px;background:#111827;color:#fff;border:none;border-radius:12px;font-family:\'Baloo 2\',cursive;font-size:.98rem;font-weight:800;cursor:pointer">Pagamento misto / 2 formas</button>' +
               '<div style="text-align:center;margin-top:14px;font-size:.72rem;color:#9CA3AF">Esc fecha sem finalizar</div>' +
             '</div>' +
           '</div>';
@@ -3609,13 +3610,32 @@
         document.addEventListener('keydown', onKey);
         overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
         overlay.querySelector('#mpPaySelectClose').addEventListener('click', close);
+        overlay.querySelector('#mpPayMixedBtn').addEventListener('click', function(){
+            var methods = ['Dinheiro','Pix','Débito','Crédito'];
+            var first = prompt('1ª forma de pagamento (Dinheiro, Pix, Débito ou Crédito):', 'Pix');
+            if (!first) return;
+            first = methods.find(function(m){ return m.toLowerCase() === String(first).toLowerCase().trim(); }) || first.trim();
+            var amountTxt = prompt('Valor em ' + first + ' (o restante fica na 2ª forma):', (Number(totalValue)||0).toFixed(2).replace('.', ','));
+            if (!amountTxt) return;
+            var amount = parseFloat(String(amountTxt).replace(/\./g,'').replace(',','.')) || 0;
+            amount = Math.max(0, Math.min(Number(totalValue)||0, Math.round(amount*100)/100));
+            var rest = Math.round(((Number(totalValue)||0) - amount) * 100) / 100;
+            var second = rest > 0 ? prompt('2ª forma de pagamento para R$ ' + rest.toFixed(2).replace('.', ',') + ':', first === 'Pix' ? 'Débito' : 'Pix') : '';
+            if (rest > 0 && !second) return;
+            second = second ? (methods.find(function(m){ return m.toLowerCase() === String(second).toLowerCase().trim(); }) || second.trim()) : '';
+            var lines = [];
+            if (amount > 0) lines.push({ method:first, type:'customer_payment', label:first, amount:amount });
+            if (rest > 0) lines.push({ method:second, type:'customer_payment', label:second, amount:rest });
+            close();
+            if (typeof onConfirm === 'function') onConfirm(lines.map(function(l){ return l.method; }).join(' + '), lines);
+        });
         overlay.querySelectorAll('.mp-pay-btn').forEach(function(btn){
             btn.addEventListener('mouseenter', function(){ btn.style.transform = 'translateY(-2px)'; btn.style.boxShadow = '0 8px 22px rgba(108,99,255,.18)'; });
             btn.addEventListener('mouseleave', function(){ btn.style.transform = ''; btn.style.boxShadow = ''; });
             btn.addEventListener('click', function(){
                 var method = btn.getAttribute('data-pay');
                 close();
-                if (typeof onConfirm === 'function') onConfirm(method);
+                if (typeof onConfirm === 'function') onConfirm(method, [{ method:method, type:'customer_payment', label:method, amount:Number(totalValue)||0 }]);
             });
         });
         // Adiciona keyframes uma vez
@@ -3637,13 +3657,15 @@
             // Calcula total preliminar pro modal exibir
             var _stPrelim = Math.round(cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0)*100)/100;
             var _discPrelim = (typeof calcDiscountAmount === 'function') ? calcDiscountAmount(_stPrelim) : 0;
-            var _totPrelim = Math.max(0, Math.round((_stPrelim - _discPrelim) * 100) / 100);
-            _showPaymentSelectModal(_totPrelim, function(method){
+            var _clubPrelim = (typeof clubRedeemAmount !== 'undefined') ? Math.max(0, (clubRedeemAmount|0) / 100) : 0;
+            var _totPrelim = Math.max(0, Math.round((_stPrelim - _discPrelim - _clubPrelim) * 100) / 100);
+            _showPaymentSelectModal(_totPrelim, function(method, paymentLines){
                 var sel = document.getElementById('paymentMethod');
                 if (sel) sel.value = method;
+                window._customerPaymentLinesThisOrder = paymentLines || [{ method:method, type:'customer_payment', label:method, amount:_totPrelim }];
                 window._paymentConfirmedThisOrder = true;
                 try { window.finishOrder(); }
-                finally { window._paymentConfirmedThisOrder = false; }
+                finally { window._paymentConfirmedThisOrder = false; window._customerPaymentLinesThisOrder = null; }
             });
             return;
         }
@@ -3661,7 +3683,9 @@
             at: window._cartDiscount.at || null,
             usedDefaultPin: !!window._cartDiscount.usedDefaultPin
         } : null;
-        var total = Math.max(0, Math.round((subtotal - discountAmount) * 100) / 100);
+        var clubRedeemBRL = (typeof clubRedeemAmount !== 'undefined') ? Math.max(0, Math.round((clubRedeemAmount|0)) / 100) : 0;
+        var totalBeforeClub = Math.max(0, Math.round((subtotal - discountAmount) * 100) / 100);
+        var total = Math.max(0, Math.round((totalBeforeClub - clubRedeemBRL) * 100) / 100);
         // Nome do pedido: fallback para 'Balcao' quando vazio em pedido balcao (NAO bloqueia
         // o fluxo do operador). A liberacao do desafio na TV e feita SEPARADAMENTE pelo
         // botao "DESAFIO" (FAB), que tem seu proprio modal exigindo nome+WhatsApp.
@@ -3706,6 +3730,7 @@
                 prizeTipo: scratchPrize.tipo || null,            // categoria estratégica (buffet/brinde/produto/combo/especial)
                 prizeScope: scratchPrize.scope,
                 prizeCategoria: scratchPrize.categoria || null,  // vínculo a produtos reais
+                prizeCost: Number(scratchPrize.cost) || 0,
                 minOrder: scratchPrize.minOrder,
                 cumulativo: scratchPrize.cumulativo === true,    // default false (não acumula)
                 customerName: oName || '',
@@ -3741,13 +3766,21 @@
         var _todayOrders = _allOrders.filter(function(o){ return !o.deleted && o.createdAt && o.createdAt.slice(0,10) === _todayKeyLocal; });
         var _seqNum = _todayOrders.length + 1;
 
+        var merchandiseSubtotal = Math.round(cart.reduce(function(s,c){
+            return s + (c.isPrize ? 0 : (Number(c.unitPrice) || 0) * (Number(c.qty) || 1));
+        },0)*100)/100;
+        var scratchPaymentTotal = Math.round(cart.reduce(function(s,c){
+            return s + (c.isPrize ? Math.abs((Number(c.unitPrice) || 0) * (Number(c.qty) || 1)) : 0);
+        },0)*100)/100;
+        var selectedPaymentMethod = document.getElementById('paymentMethod') ? document.getElementById('paymentMethod').value : 'Não informado';
+        var orderId = Utils.generateId();
         var order={
-            id:Utils.generateId(),createdAt:new Date().toISOString(),status:'confirmado',
+            id:orderId,createdAt:new Date().toISOString(),status:'confirmado',
             dailySeq:_seqNum,                  // numeração diária pra exibição no kanban
             dailyDate:_todayKeyLocal,
             type:orderType,source:'pdv',
             delivery:orderType==='delivery'?'delivery':null,
-            payment:document.getElementById('paymentMethod')?document.getElementById('paymentMethod').value:'Não informado',
+            payment:selectedPaymentMethod,
             items:cart.map(function(c){
                 return{
                     productId:c.id||null,  // referência ao catalog_v2 product ID (p/ CMV e finance-realtime)
@@ -3756,6 +3789,7 @@
                     total:Math.round(c.unitPrice*c.qty*100)/100,
                     byWeight:c.type==='por_peso'||c.byWeight||false,
                     type:c.type||'unitario',
+                    categoriaId:c.categoriaId||null,
                     weightG:c.weightG||null,
                     weightKg:c.weightKg||(c.weightG?c.weightG/1000:null),
                     pricePerKg:c.pricePerKg,
@@ -3763,13 +3797,22 @@
                     canal:c.canal||null,
                     picoleFlavorId:c.picoleFlavorId||null,
                     picoleFlavorName:c.picoleFlavorName||'',
+                    isPrize:!!c.isPrize,
+                    prizeCode:c.prizeCode||null,
+                    prizeCategoria:c.prizeCategoria||null,
+                    scratchCode:c.scratchCode||null,
+                    scratchShortCode:c.scratchShortCode||null,
                     cost:Math.round((Number(c.cost)||0)*100)/100,  // CMV pré-calculado (buffet etc)
                     emoji:c.emoji
                 };
             }),
             subtotal:subtotal,
+            grossSubtotal:merchandiseSubtotal,
+            scratchPromoTotal:scratchPaymentTotal,
+            milkyClubRedeemTotal:clubRedeemBRL,
             discount:discountInfo,             // {type, value, amount, reason, by, byName, at, usedDefaultPin} | null
             total:total,
+            totalPaid:total,
             customer:{name:oName,phone:document.getElementById('cPhone').value||''},
             address:orderType==='delivery'?document.getElementById('cAddr').value:'',
             nf:document.getElementById('nfCk').checked,cpf:document.getElementById('nfCpf').value||'',
@@ -3777,6 +3820,31 @@
             voucherCode: voucherDisplay,       // Desafio 10 Segundos code
             challengeAttempts: attemptsPerPurchase
         };
+        var scratchPaymentLines = buildScratchPaymentLines(order, cart, total, merchandiseSubtotal);
+        var paymentLines = (window._customerPaymentLinesThisOrder && window._customerPaymentLinesThisOrder.length)
+            ? window._customerPaymentLinesThisOrder.map(function(p){
+                return { method:p.method, type:'customer_payment', label:p.label || p.method, amount:Math.round((Number(p.amount)||0)*100)/100 };
+            })
+            : [{ method:selectedPaymentMethod, type:'customer_payment', label:selectedPaymentMethod, amount:total }];
+        if (discountAmount > 0 && discountInfo) {
+            paymentLines.push({ method:'desconto_manual', type:'manual_discount', label:'Desconto manual', amount:discountAmount, reason:discountInfo.reason || '' });
+        }
+        scratchPaymentLines.forEach(function(line){ paymentLines.push(line); });
+        if (clubRedeemBRL > 0) {
+            paymentLines.push({
+                method:'milkyclub',
+                type:'loyalty_redeem',
+                label:'MilkyClub',
+                amount:clubRedeemBRL,
+                memberId:(typeof clubMember !== 'undefined' && clubMember) ? (clubMember.id || clubMember.uid || null) : null
+            });
+        }
+        order.payments = paymentLines;
+        order.scratchRedemptions = scratchPaymentLines.map(function(line){ return line.scratchRedemption; });
+        if (!validateScratchPaymentsStillOpen(order.scratchRedemptions)) {
+            toast('🚫 Raspinha já usada ou inválida. Remova o resgate e valide novamente.');
+            return;
+        }
 
         // === AUTO-PRONTO / AUTO-ENTREGUE ===
         // Sem kitchen item (buffet/picolé/água/sorvete-kg/bebida):
@@ -3820,6 +3888,7 @@
         } else {
             DataStore.addToCollection('orders',fid,order);
         }
+        try { finalizeScratchRedemptions(order); } catch(e) { console.warn('[Raspinha] finalizar resgate:', e); }
 
         try { updatePicoleFlavorStock(order); } catch(e) { console.warn('[Picoles] baixa por sabor falhou:', e); }
 
@@ -3903,6 +3972,17 @@
         var _hasPendingCMV = false;
         var _itemsWithCost = order.items.map(function(item) {
             var qty = item.qty || 1;
+            if (item.isPrize) {
+                return {
+                    name: item.name, qty: qty, unitPrice: item.unitPrice,
+                    productId: null,
+                    type: 'promotion_redeem',
+                    weightG: null,
+                    unitCost: 0,
+                    custo: 0,
+                    cmvSource: 'promotion'
+                };
+            }
             var cmvSource = 'none';
             var unitCost = 0;
             var extrasCost = 0;
@@ -3966,10 +4046,14 @@
             };
         });
         // CMV total e margem no pedido (alem do financeEntry)
+        var _scratchPrizeCostTotal = (order.scratchRedemptions || []).reduce(function(s,r){ return s + (Number(r.prizeCost)||0); }, 0);
+        var _businessCostTotal = Math.round((_totalCusto + _scratchPrizeCostTotal) * 100) / 100;
         order.cmvTotal = Math.round(_totalCusto * 100) / 100;
-        order.lucroBruto = Math.round((total - _totalCusto) * 100) / 100;
+        order.promoCostTotal = Math.round(_scratchPrizeCostTotal * 100) / 100;
+        order.businessCostTotal = _businessCostTotal;
+        order.lucroBruto = Math.round((total - _businessCostTotal) * 100) / 100;
         if (_hasPendingCMV) order._pendingCMV = true;
-        var _margem = total > 0 ? Math.round((1 - _totalCusto / total) * 1000) / 10 : null;
+        var _margem = total > 0 ? Math.round((1 - _businessCostTotal / total) * 1000) / 10 : null;
 
         var financeEntry = {
             id: Utils.generateId(),
@@ -3977,9 +4061,16 @@
             category: 'vendas',
             source: 'pdv',
             amount: total,
+            grossAmount: merchandiseSubtotal,
+            paidAmount: total,
+            payments: order.payments,
+            scratchRedemptions: order.scratchRedemptions,
+            scratchPromoTotal: order.scratchPromoTotal,
+            scratchPrizeCostTotal: _scratchPrizeCostTotal,
             custo: Math.round(_totalCusto * 100) / 100,           // CMV
             cmvSnapshot: Math.round(_totalCusto * 100) / 100,     // alias explicito
-            lucroBruto: Math.round((total - _totalCusto) * 100) / 100,
+            businessCostTotal: _businessCostTotal,
+            lucroBruto: Math.round((total - _businessCostTotal) * 100) / 100,
             margem: _margem,
             items: _itemsWithCost,
             description: 'PDV ' + order.id + ' - ' + (oName || 'Balcao'),
@@ -4017,6 +4108,8 @@
                     _stockWarnings: stockWarnings.length ? stockWarnings : null,
                     _stockSources: Object.keys(stockSources).length ? stockSources : null,
                     cmvTotal: order.cmvTotal,
+                    promoCostTotal: order.promoCostTotal,
+                    businessCostTotal: order.businessCostTotal,
                     lucroBruto: order.lucroBruto,
                     _pendingCMV: !!order._pendingCMV,
                     // CRITICAL: items foram modificados in-place no calculo do CMV
@@ -4606,38 +4699,9 @@
             return;
         }
 
-        // Marca como resgatada (local + Firestore)
-        var key = 'scratches_' + scratch.franchiseId;
-        var arr = DataStore.get(key) || [];
-        var idx = arr.findIndex(function(s){ return s.code === scratch.code; });
-        var employeeId = (typeof Auth !== 'undefined' ? Auth.getSession().userId : 'unknown');
-        if(idx !== -1){
-            arr[idx].status = 'redeemed';
-            arr[idx].redeemedAt = new Date().toISOString();
-            arr[idx].redeemedStoreId = fid;
-            arr[idx].redeemedEmployeeId = employeeId;
-            DataStore.set(key, arr);
-        }
-        try {
-            if(typeof firebase !== 'undefined' && firebase.firestore){
-                await firebase.firestore().collection('scratches').doc(scratch.code).update({
-                    status: 'redeemed',
-                    redeemedAt: new Date().toISOString(),
-                    redeemedStoreId: fid,
-                    redeemedEmployeeId: employeeId
-                });
-            }
-        } catch(e){ console.warn('Firestore redeem update:', e); }
-
-        // LOOP ON REDEEM — gera nova raspadinha pro cliente (próxima visita)
-        var loopScratch = tryGenerateLoopScratch(scratch, cartTotal);
-        var loopMsg = loopScratch
-            ? ' 🎁 Cliente ganhou NOVA raspinha (' + loopScratch.shortCode + ') pra usar no próximo pedido!'
-            : '';
-
         pendingRedeemedScratch = null;
         closeRedeemModal();
-        toast('🎉 Raspinha resgatada! Prêmio aplicado.' + loopMsg);
+        toast('🎁 Raspinha adicionada ao pagamento. Ela será marcada como usada ao finalizar a venda.');
     }
 
     // Mapa: prizeCode → cálculo do desconto a aplicar (negativo = abate do total)
@@ -4671,8 +4735,115 @@
         }
     }
 
+    function getScratchPrizeCost(prizeCode){
+        try {
+            var prize = getScratchPrizes().find(function(p){ return p.code === prizeCode; });
+            return prize ? (Number(prize.cost) || 0) : 0;
+        } catch(e) {
+            return 0;
+        }
+    }
+
+    function buildScratchPaymentLines(order, cartItems, paidTotal, grossSubtotal){
+        return (cartItems || []).filter(function(item){ return item && item.isPrize && item.scratchCode; }).map(function(item){
+            var promoAmount = Math.abs(Math.round(((Number(item.unitPrice) || 0) * (Number(item.qty) || 1)) * 100) / 100);
+            var redemption = Object.assign({}, item.scratchRedemption || {}, {
+                scratchCode: item.scratchCode,
+                shortCode: item.scratchShortCode || null,
+                prizeCode: item.prizeCode || null,
+                prizeName: String(item.name || '').replace(/^🎁\s*/, ''),
+                prizeCategoria: item.prizeCategoria || null,
+                promoAmount: promoAmount,
+                prizeCost: Number(item.scratchPrizeCost) || getScratchPrizeCost(item.prizeCode),
+                redeemedOrderId: order.id,
+                redeemedAt: order.createdAt,
+                redeemedStoreId: fid,
+                redemptionPaidTotal: paidTotal,
+                redemptionGrossTotal: grossSubtotal,
+                status: 'redeemed'
+            });
+            return {
+                method: 'raspinha',
+                type: 'promotion_redeem',
+                label: 'Raspinha da Sorte',
+                amount: promoAmount,
+                cost: redemption.prizeCost,
+                scratchCode: redemption.scratchCode,
+                shortCode: redemption.shortCode,
+                prizeCode: redemption.prizeCode,
+                prizeName: redemption.prizeName,
+                scratchRedemption: redemption
+            };
+        });
+    }
+
+    function finalizeScratchRedemptions(order){
+        var redemptions = order && order.scratchRedemptions;
+        if (!redemptions || !redemptions.length) return;
+        var key = 'scratches_' + fid;
+        var arr = DataStore.get(key) || [];
+        var employeeId = (typeof Auth !== 'undefined' && Auth.getSession) ? ((Auth.getSession() || {}).userId || 'unknown') : 'unknown';
+        var now = new Date().toISOString();
+        redemptions.forEach(function(r){
+            var idx = arr.findIndex(function(s){ return s.code === r.scratchCode; });
+            var patch = {
+                status: 'redeemed',
+                redeemedAt: r.redeemedAt || now,
+                redeemedStoreId: fid,
+                redeemedEmployeeId: employeeId,
+                redeemedOrderId: order.id,
+                redemptionPaymentMethod: 'raspinha',
+                redemptionPaidTotal: r.redemptionPaidTotal,
+                redemptionGrossTotal: r.redemptionGrossTotal,
+                redemptionTotal: r.redemptionPaidTotal,
+                redemptionPromoAmount: r.promoAmount,
+                redemptionPrizeCost: r.prizeCost,
+                redemptionItems: (order.items || []).filter(function(it){ return !it.isPrize; }).map(function(it){
+                    return { name: it.name, qty: it.qty, total: it.total, category: it.categoriaId || it.type || null };
+                })
+            };
+            var originalScratch = idx !== -1 ? Object.assign({}, arr[idx]) : { code:r.scratchCode, prizeCode:r.prizeCode, customerName:(order.customer||{}).name, customerPhone:(order.customer||{}).phone };
+            if(idx !== -1){
+                arr[idx] = Object.assign({}, arr[idx], patch);
+            }
+            try {
+                if(typeof firebase !== 'undefined' && firebase.firestore){
+                    firebase.firestore().collection('scratches').doc(r.scratchCode).update(patch)
+                        .catch(function(e){ console.warn('Firestore scratch redeem update:', e); });
+                }
+            } catch(e){ console.warn('Firestore scratch redeem update:', e); }
+            try {
+                var loopScratch = tryGenerateLoopScratch(Object.assign({}, originalScratch, patch), order.total);
+                if (loopScratch) {
+                    window._lastRedeemLoopScratch = loopScratch;
+                }
+            } catch(e){ console.warn('[Raspinha] loop no resgate:', e); }
+        });
+        DataStore.set(key, arr);
+    }
+
+    function validateScratchPaymentsStillOpen(redemptions){
+        if (!redemptions || !redemptions.length) return true;
+        var arr = DataStore.get('scratches_' + fid) || [];
+        return redemptions.every(function(r){
+            var s = arr.find(function(x){ return x.code === r.scratchCode; });
+            if (!s) return true;
+            if (s.status === 'redeemed') return false;
+            if (s.expiresAt && new Date(s.expiresAt) < new Date()) return false;
+            return true;
+        });
+    }
+
     function applyPrizeToCart(scratch){
-        var cartTotal = cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
+        if (cart.some(function(c){ return c.isPrize && c.scratchCode === scratch.code; })) {
+            toast('Esta raspinha já está no pagamento desta venda.');
+            return false;
+        }
+        if (cart.some(function(c){ return c.isPrize; })) {
+            toast('Use apenas 1 raspinha por venda.');
+            return false;
+        }
+        var cartTotal = cart.reduce(function(s,c){return s+(c.isPrize ? 0 : c.unitPrice*c.qty)},0);
 
         // Validação minOrder — só aplica se carrinho atende mínimo
         var requiredMinOrder = effectiveScratchMinOrder(scratch);
@@ -4707,7 +4878,19 @@
             isPrize: true,
             prizeCode: scratch.prizeCode,
             prizeCategoria: scratch.prizeCategoria || null,
-            scratchCode: scratch.code
+            scratchCode: scratch.code,
+            scratchShortCode: scratch.shortCode || null,
+            scratchPrizeCost: Number(scratch.prizeCost) || getScratchPrizeCost(scratch.prizeCode),
+            scratchRedemption: {
+                scratchCode: scratch.code,
+                shortCode: scratch.shortCode || null,
+                prizeCode: scratch.prizeCode,
+                prizeName: scratch.prizeName,
+                prizeCategoria: scratch.prizeCategoria || null,
+                prizeCost: Number(scratch.prizeCost) || getScratchPrizeCost(scratch.prizeCode),
+                promoAmount: Math.abs(discount),
+                status: 'pending_payment'
+            }
         };
 
         cart.push(prizeItem);
@@ -4741,6 +4924,7 @@
             prizeTier: newPrize.tier,
             prizeScope: newPrize.scope,
             prizeCategoria: newPrize.categoria || null,
+            prizeCost: Number(newPrize.cost) || 0,
             minOrder: newPrize.minOrder,
             customerName: originalScratch.customerName || '',
             customerPhone: originalScratch.customerPhone || '',
