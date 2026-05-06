@@ -1,5 +1,23 @@
 # Semana 17 — Inverno de Saída | 09–15/08/2026
 
+> ⚠️ **SUBSTITUIÇÃO OBRIGATÓRIA — DOMINGO 09/08 = DIA DOS PAIS**
+> O conteúdo de abertura desta semana (domingo 09/08) foi criado com tema "Inverno de Saída" e **NÃO menciona o Dia dos Pais** — a maior data comercial de agosto.
+>
+> **Ação obrigatória:** Substituir o post de domingo 09/08 pelos materiais do playbook dedicado:
+> → `belinha/content/dia-dos-pais-2026-playbook.md` (criado no ciclo #136)
+>
+> **O que usar do playbook:**
+> - Post principal (emocional, 10h) → "Post 3 — Post Principal Dia H"
+> - WA às 08h → Template P4 (lista PAPAI26)
+> - WA às 13h → Template P5 (broadcast geral "abrimos às 14h")
+> - Stories ao vivo 14h, 19h e 22h
+>
+> **Segunda 10/08 → Sábado 15/08:** manter conteúdo abaixo (inverno/fitness é adequado para o restante da semana).
+>
+> _Nota inserida por Belinha — Ciclo #136 | 2026-05-06_
+
+---
+
 **Tema:** "Inverno de saída: comfort food + Linha Zero" — encerramento do inverno, foco fitness de fim de agosto
 **Contexto:** Segunda semana de agosto, metade do mês. Dias ainda frios em Londrina mas primavera está próxima — temperaturas começam a subir levemente. Academia de janeiro está virando resultado de agosto: pessoas mais ativas, mais atentas ao corpo. Dois segmentos para capturar simultaneamente: (1) quem quer comfort food de inverno — ainda faz frio! (2) quem está em fase de cutting de fim de inverno — Linha Zero é o produto certo. Ambos podem ser atendidos pelo mesmo cardápio, ângulo diferente.
 
