@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #133 — 2026-05-06
+
+**Área:** SEO — FAQ Festa Junina + sitemap.xml lastmod
+
+**Contexto:** Gap técnico obrigatório prescrito pelo ciclo #132 (6+ ciclos sem SEO puro). Foco: capturar buscas sazonais de Festa Junina antes que TheBest Açaí (Festival Junino 2026 com 4 novos sabores, 6 unidades em Londrina) apareça nas SERPs para "potinho junino londrina". Janela de oportunidade: ~40 dias até semana 9 (13/06).
+
+**O que analisou:**
+- Auditou todos os schemas de index.html (4 blocos JSON-LD): FoodEstablishment, FAQPage, aggregateRating (comentado), WebSite+WebPage — todos válidos
+- Contou 9 perguntas FAQPage existentes — nenhuma cobre Festa Junina ou sazonalidade
+- Verificou sitemap.xml: lastmod de index.html e cardapio.html estavam em 2026-05-02 (desatualizado)
+- Confirmou que potinho-ninho-londrina.html, acai-self-service-londrina.html, cardapio.html já têm FAQPage própria — gap estava apenas no index.html para a keyword junina
+- TheBest Festival Junino: "memória afetiva" como posicionamento (CEO Sérgio Kendy) → contraprogramação MilkyPot: "personalização com preço fixo" vs. "produto de massa"
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | Nova pergunta FAQPage (#10): "O MilkyPot tem Potinho Junino para a Festa Junina?" — resposta menciona paçoca, cocada, mel + WhatsApp + @milkypotbr |
+| `sitemap.xml` | `lastmod` de index.html e cardapio.html atualizados para 2026-05-06 |
+
+**Commit:** `a0adc51`
+
+**Raciocínio SEO:**
+- FAQPage gera rich result tipo "acordeão" nos SERPs do Google — 10ª pergunta sobre Festa Junina aparece em buscas sazonais sem custo adicional de crawl
+- Keyword alvo: "potinho junino londrina", "açaí junino londrina", "festa junina sobremesa londrina" — volume baixo agora, pico em jun/2026
+- Antecedência de 40 dias = 2–3 ciclos de recrawl do Googlebot (frequência ~15-20 dias para domínio ativo) antes do TheBest aparecer nas mesmas queries
+- `lastmod` atualizado sinaliza "conteúdo fresco" ao Googlebot, incentiva recrawl prioritário
+
+**Próximo passo sugerido:**
+- **Ciclo #134 — Conteúdo Semanas 9–10 (Festa Junina):** criar "Potinho Junino" oficial com nome, ingredientes, toppings (integrar achados ciclo #132: paçoca, cocada, mel vs. TheBest canjica/pamonha) + adaptar semanas 9 e 10 existentes com contraprogramação
+- **Ciclo #135 — Conversão:** ativar `aggregateRating` no schema FoodEstablishment (comentado linha 161) — store tem 11 dias de operação, verificar se há avaliações Google Maps para ativar o rich result de estrelas
+- **Operador:** Confirmar toppings juninos disponíveis (paçoca, cocada, mel) no estoque Muffato antes de 13/06
+
+_Belinha — Ciclo #133 | 2026-05-06_
+
+---
+
 ## Ciclo #132 — 2026-05-06
 
 **Área:** Concorrentes — refetch TheBest Açaí (Festa Junina 2026) + MilkyMoo (Dia dos Namorados 2026)
