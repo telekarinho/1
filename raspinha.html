@@ -42,6 +42,11 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
 .prize-desc{font-size:13px;color:#9484A8;padding:0 10px}
 .prize-validity{font-size:11px;color:#FF6B6B;font-weight:800;margin-top:10px;text-transform:uppercase;letter-spacing:1px}
 .prize-validity strong{font-size:14px;color:#E53935}
+.redeem-code-card{display:none;background:#fff;border:2px solid #FFD54F;border-radius:18px;padding:14px 16px;margin:-6px 0 16px;text-align:center;box-shadow:0 8px 22px rgba(255,213,79,.16)}
+.redeem-code-card .label{font-size:11px;color:#8D6E63;font-weight:900;text-transform:uppercase;letter-spacing:.6px}
+.redeem-code-card .code{font-family:monospace;font-size:30px;font-weight:900;letter-spacing:3px;color:#3D2A55;margin:6px 0}
+.redeem-code-card .condition{font-size:13px;color:#5A4570;font-weight:800;line-height:1.35}
+.redeem-code-card .attendant{font-size:12px;color:#C62828;font-weight:900;margin-top:6px}
 #scratchCanvas{position:absolute;inset:0;cursor:grab;touch-action:none}
 #scratchCanvas:active{cursor:grabbing}
 .scratch-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(255,255,255,.95);padding:8px 14px;border-radius:20px;font-size:12px;font-weight:700;color:#5A4570;pointer-events:none;animation:hintPulse 1.5s ease-in-out infinite}
@@ -111,6 +116,13 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
             </div>
             <canvas id="scratchCanvas"></canvas>
             <div class="scratch-hint" id="scratchHint">👆 Raspe aqui</div>
+        </div>
+
+        <div class="redeem-code-card" id="redeemCodeCard">
+            <div class="label">Mostre este codigo no caixa</div>
+            <div class="code" id="redeemShortCode">---</div>
+            <div class="condition" id="redeemCondition">Condicao do premio</div>
+            <div class="attendant">Atendente: digitar este codigo em PDV &gt; Resgatar</div>
         </div>
 
         <button class="btn gold" id="btnRevealAll" onclick="revealAll()" style="display:none">✨ Revelar tudo</button>
@@ -211,6 +223,50 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         return template.replace('{DIAS}', validityDays || 7);
     }
 
+    function displayCode(scratch){
+        return (scratch && (scratch.shortCode || scratch._inputCode || scratch.code || '')).toUpperCase();
+    }
+
+    function effectiveMinOrder(scratch){
+        var min = Number(scratch && scratch.minOrder || 0);
+        if (min > 0) return min;
+        var fallback = {
+            RSP_CASQUINHA: 10,
+            RSP_BUFFET_100G: 15,
+            RSP_PICOLE_2BY1: 15,
+            RSP_CAPITAO_50: 25,
+            RSP_MEGA_50: 50
+        };
+        return fallback[(scratch && scratch.prizeCode) || ''] || 10;
+    }
+
+    function prizeConditionText(scratch){
+        if (!scratch) return '';
+        var min = effectiveMinOrder(scratch);
+        return 'Voce ganhou este premio mediante compra minima de R$ ' + min.toFixed(2).replace('.', ',') + '.';
+    }
+
+    function clearPrizeDesc(scratch){
+        if (!scratch) return '';
+        if (scratch.prizeCode === 'RSP_CASQUINHA') {
+            var min = effectiveMinOrder(scratch);
+            return 'Na proxima compra, compre a partir de R$ ' + min.toFixed(2).replace('.', ',') + ' e leve 1 casquinha gratis.';
+        }
+        return scratch.prizeDesc || '';
+    }
+
+    function updateRedeemCodeCard(scratch, visible){
+        var card = document.getElementById('redeemCodeCard');
+        if (!card) return;
+        if (!visible) {
+            card.style.display = 'none';
+            return;
+        }
+        document.getElementById('redeemShortCode').textContent = displayCode(scratch);
+        document.getElementById('redeemCondition').textContent = prizeConditionText(scratch);
+        card.style.display = 'block';
+    }
+
     function findInLocalStorage(code){
         // Accepts full code or short code (XXX-XXX)
         var codeUp = (code || '').toUpperCase();
@@ -302,7 +358,8 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         var tipo = scratch.prizeTipo;
         document.getElementById('prizeEmoji').textContent = (tipo && TYPE_EMOJI[tipo]) || TIER_EMOJI[tier] || '🎁';
         document.getElementById('prizeName').textContent = scratch.prizeName;
-        document.getElementById('prizeDesc').textContent = scratch.prizeDesc || '';
+        document.getElementById('prizeDesc').textContent = clearPrizeDesc(scratch);
+        updateRedeemCodeCard(scratch, true);
 
         if(scratch.expiresAt){
             var exp = new Date(scratch.expiresAt);
@@ -330,6 +387,7 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         document.getElementById('prizeEmoji').textContent = '😢';
         document.getElementById('prizeName').textContent = 'Poxa, essa raspinha ja venceu';
         document.getElementById('prizeDesc').textContent = 'Venceu em ' + new Date(scratch.expiresAt).toLocaleDateString('pt-BR') + '. Sem drama - faz um novo pedido e vem raspinha novinha!';
+        updateRedeemCodeCard(scratch, false);
         document.getElementById('scratchCanvas').style.display = 'none';
         document.getElementById('scratchHint').style.display = 'none';
         document.getElementById('actionArea').style.display = 'block';
@@ -343,6 +401,7 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         document.getElementById('prizeName').textContent = 'Esse premio ja foi usado';
         var redeemedDate = scratch.redeemedAt ? new Date(scratch.redeemedAt).toLocaleDateString('pt-BR') : '';
         document.getElementById('prizeDesc').textContent = 'Usado em ' + redeemedDate + '. Bora ganhar outra?';
+        updateRedeemCodeCard(scratch, false);
         document.getElementById('scratchCanvas').style.display = 'none';
         document.getElementById('scratchHint').style.display = 'none';
         document.getElementById('actionArea').style.display = 'block';
@@ -459,7 +518,7 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         document.getElementById('revealEmoji').textContent =
             (tipo && TYPE_EMOJI[tipo]) || TIER_EMOJI[tier] || '🎁';
         document.getElementById('revealPrize').textContent = currentScratch.prizeName;
-        document.getElementById('revealDesc').textContent = currentScratch.prizeDesc;
+        document.getElementById('revealDesc').textContent = clearPrizeDesc(currentScratch) + ' Codigo para o atendente: ' + displayCode(currentScratch) + '.';
         // Endcard motivacional por tipo (com fallback no tier)
         var endcardEl = document.getElementById('revealEndcard');
         if (endcardEl) {

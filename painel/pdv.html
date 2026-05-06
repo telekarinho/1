@@ -3367,7 +3367,7 @@
         {code:'RSP_BUFFET_150_25',   name:'150g Buffet (acima R$25)',  tipo:'buffet',   desc:'Ganhe 150g de buffet na compra acima de R$25',             prob:15, cost:9,   validity:7, scope:'same', minOrder:25, cumulativo:false, tier:'medium', categoria:'cat_buffet', emoji:'⚖️'},
         {code:'RSP_BUFFET_200_35',   name:'200g Buffet (acima R$35)',  tipo:'buffet',   desc:'Ganhe 200g de buffet na compra acima de R$35',             prob:5,  cost:12,  validity:7, scope:'same', minOrder:35, cumulativo:false, tier:'medium', categoria:'cat_buffet', emoji:'⚖️'},
         {code:'RSP_PICOLE_15',       name:'1 Picolé Grátis',           tipo:'brinde',   desc:'Ganhe 1 picolé na próxima compra acima de R$15',           prob:10, cost:3,   validity:7, scope:'same', minOrder:15, cumulativo:false, tier:'small',  categoria:'cat_picole', emoji:'🍦'},
-        {code:'RSP_CASQUINHA',       name:'1 Casquinha Grátis',        tipo:'brinde',   desc:'Ganhe 1 casquinha na próxima compra',                       prob:5,  cost:2,   validity:7, scope:'same', minOrder:10, cumulativo:false, tier:'small',  categoria:null,         emoji:'🍨'},
+        {code:'RSP_CASQUINHA',       name:'1 Casquinha Grátis',        tipo:'brinde',   desc:'Ganhe 1 casquinha na próxima compra mínima de R$10',         prob:5,  cost:2,   validity:7, scope:'same', minOrder:10, cumulativo:false, tier:'small',  categoria:null,         emoji:'🍨'},
         {code:'RSP_COPINHO_20',      name:'1 Copinho de Sorvete',      tipo:'produto',  desc:'Ganhe 1 copinho de sorvete na compra acima de R$20',       prob:5,  cost:5,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  categoria:null,         emoji:'🍧'},
         {code:'RSP_SUNDAE_P_30',     name:'1 Sundae P Grátis',         tipo:'produto',  desc:'Ganhe 1 sundae P na compra acima de R$30',                 prob:4,  cost:8,   validity:7, scope:'same', minOrder:30, cumulativo:false, tier:'medium', categoria:'cat_sundae', emoji:'🍦'},
         {code:'RSP_SHAKE_UPGRADE',   name:'Upgrade de Milk Shake',     tipo:'produto',  desc:'Ganhe upgrade de Milk Shake (P para M ou M para G)',       prob:3,  cost:5,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  categoria:'cat_milkshake', emoji:'⬆️'},
@@ -3375,16 +3375,30 @@
         {code:'RSP_AMIGO_100G',      name:'Volte com um Amigo',        tipo:'especial', desc:'Volte com um amigo e ganhem 100g de buffet cada',          prob:1,  cost:12,  validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'big',    categoria:'cat_buffet', emoji:'👯'}
     ];
 
+    function enforceScratchPrizeSafety(prize){
+        if (!prize || prize.tier === 'none') return prize;
+        var minByCode = {
+            RSP_CASQUINHA: 10,
+            RSP_BUFFET_100G: 15,
+            RSP_PICOLE_2BY1: 15,
+            RSP_CAPITAO_50: 25,
+            RSP_MEGA_50: 50
+        };
+        var required = minByCode[prize.code] || 10;
+        prize.minOrder = Math.max(Number(prize.minOrder || 0), required);
+        return prize;
+    }
+
     function getScratchPrizes(){
         var custom = DataStore.get('scratch_prizes_'+fid);
         if(custom && custom.length){
             // Mescla com defaults (preserva customizações + adiciona prêmios novos)
             return DEFAULT_SCRATCH_PRIZES.map(function(def){
                 var found = custom.find(function(p){return p.code === def.code});
-                return Object.assign({}, def, found || {});
+                return enforceScratchPrizeSafety(Object.assign({}, def, found || {}));
             });
         }
-        return DEFAULT_SCRATCH_PRIZES.slice();
+        return DEFAULT_SCRATCH_PRIZES.map(function(p){ return enforceScratchPrizeSafety(Object.assign({}, p)); });
     }
 
     function getScratchConfig(){
@@ -4137,6 +4151,23 @@
         document.getElementById('redeemModalBg').classList.remove('open');
     };
 
+    function effectiveScratchMinOrder(scratch){
+        var min = Number(scratch && scratch.minOrder || 0);
+        if (min > 0) return min;
+        var fallback = {
+            RSP_BUFFET_100G: 15,
+            RSP_PICOLE_2BY1: 15,
+            RSP_CAPITAO_50: 25,
+            RSP_MEGA_50: 50
+        };
+        return fallback[(scratch && scratch.prizeCode) || ''] || 10;
+    }
+
+    function scratchRedeemConditionText(scratch){
+        var min = effectiveScratchMinOrder(scratch);
+        return 'Condição: cliente precisa comprar no mínimo R$ ' + min.toFixed(2).replace('.', ',') + ' neste pedido.';
+    }
+
     function findScratchAnywhere(code){
         // Aceita short code (XXX-XXX), full code (MKP-XXXX-YYYYMMDD-XXXXXXXX), URL ou variações (sem dash, com espaços)
         return new Promise(function(resolve){
@@ -4416,11 +4447,12 @@
 
         // Check minimum order
         var cartTotal = cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
-        if(scratch.minOrder > 0 && cartTotal < scratch.minOrder){
+        var requiredMinOrder = effectiveScratchMinOrder(scratch);
+        if(requiredMinOrder > 0 && cartTotal < requiredMinOrder){
             statusEl.style.display = 'block';
             statusEl.style.background = '#FFF3E0';
             statusEl.style.color = '#E65100';
-            statusEl.innerHTML = '<strong>⚠️ Pedido abaixo do minimo</strong><br><span style="font-size:12px">Este premio requer pedido de R$ ' + scratch.minOrder.toFixed(2).replace('.',',') + ' (atual: R$ ' + cartTotal.toFixed(2).replace('.',',') + ')</span>';
+            statusEl.innerHTML = '<strong>⚠️ Pedido abaixo do minimo</strong><br><span style="font-size:12px">Este premio requer compra minima de R$ ' + requiredMinOrder.toFixed(2).replace('.',',') + ' (atual: R$ ' + cartTotal.toFixed(2).replace('.',',') + ')</span>';
             btn.disabled = false;
             btn.textContent = '✅ Validar Codigo';
             return;
@@ -4440,6 +4472,8 @@
                     '<strong style="color:#333">' + scratch.prizeName + '</strong>' +
                 '</div>' +
                 '<p style="font-size:12px;color:#666;margin:6px 0 0">' + scratch.prizeDesc + '</p>' +
+                '<p style="font-size:12px;color:#C62828;margin:6px 0 0;font-weight:800">' + scratchRedeemConditionText(scratch) + '</p>' +
+                '<p style="font-family:monospace;font-size:18px;color:#333;margin:8px 0 0;font-weight:900;letter-spacing:2px">Código: ' + (scratch.shortCode || code) + '</p>' +
                 '<p style="font-size:11px;color:#888;margin:4px 0 0">Cliente: ' + (scratch.customerName || 'Sem nome') + '</p>' +
             '</div>';
 
@@ -4458,10 +4492,11 @@
 
         // Validação minOrder ANTES de marcar como resgatada
         var cartTotal = cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
-        if (scratch.minOrder && cartTotal < scratch.minOrder) {
+        var requiredMinOrder = effectiveScratchMinOrder(scratch);
+        if (requiredMinOrder && cartTotal < requiredMinOrder) {
             btn.disabled = false;
             btn.textContent = '✅ Validar Codigo';
-            toast('🚫 Pedido mínimo R$ ' + scratch.minOrder + ' pra resgatar este prêmio. Atual: R$ ' + cartTotal.toFixed(2));
+            toast('🚫 Pedido mínimo R$ ' + requiredMinOrder + ' pra resgatar este prêmio. Atual: R$ ' + cartTotal.toFixed(2));
             return;
         }
 
@@ -4531,8 +4566,9 @@
         var cartTotal = cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
 
         // Validação minOrder — só aplica se carrinho atende mínimo
-        if (scratch.minOrder && cartTotal < scratch.minOrder) {
-            toast('🚫 Pedido mínimo R$ ' + scratch.minOrder + ' pra usar este prêmio. Atual: R$ ' + cartTotal.toFixed(2));
+        var requiredMinOrder = effectiveScratchMinOrder(scratch);
+        if (requiredMinOrder && cartTotal < requiredMinOrder) {
+            toast('🚫 Pedido mínimo R$ ' + requiredMinOrder + ' pra usar este prêmio. Atual: R$ ' + cartTotal.toFixed(2));
             return false;
         }
 
