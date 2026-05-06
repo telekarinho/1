@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #132 — 2026-05-06
+
+**Área:** Concorrentes — refetch TheBest Açaí (Festa Junina 2026) + MilkyMoo (Dia dos Namorados 2026)
+
+**Contexto:** Prescrito como "refetch obrigatório" pelo ciclo #131 (>15 ciclos desde #116). Foco em: mecânicas de Namorados (validar ambiente competitivo do playbook criado no #131) e Festa Junina (semanas 9–10 já redigidas — verificar se TheBest apresenta diferencial sazonal que exige contraprogramação).
+
+**O que analisou:**
+- WebSearch em MilkyMoo + "Dia dos Namorados 2026": confirmou múltiplos posts de franqueados (Guarapari, Ituiutaba, Teixeira de Freitas) + @milkymoo nacional com 💘 campanhas ativas. Mecânica exata não acessível (Instagram bloqueado)
+- WebSearch em TheBest + "Festa Junina 2026": **ACHADO CRÍTICO** — "The Best Açaí entra no clima junino com novos sorvetes de canjica, pamonha, cocada e paçoca" (ABC da Comunicação). CEO Sérgio Kendy confirma posicionamento "memória afetiva". 700+ unidades com estoque limitado por sabor. Também confirmado "açaí de milho" no Instagram nacional
+- WebSearch em Johnny Joy: confirmado como "Johnny" da lista de concorrentes. 55+ lojas, 18 estados, milkshake 300ml ~R$17 / 500ml ~R$20. Sem presença confirmada em Londrina. Diferente do core MilkyPot (potinho vs. milkshake) — ameaça indireta baixa
+- "Jhoy" = file separado já existente (belinha/competitors/jhoy.md). Não identificado como nova marca — manter monitoramento
+- WebFetch em thebestacai.com.br e johnnyjoy.com.br: bloqueados (403)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/the-best-acai.md` | Nova seção ciclo #132: Festival Junino 2026 (4 sabores sazonal: canjica, pamonha, cocada, paçoca + açaí de milho), tabela de produtos, posicionamento CEO, 4 implicações estratégicas para semanas 9–10 MilkyPot (Potinho Junino personalizado vs. self-service de balança), sugestão Reel 15s "Arraiá do Potinho" |
+| `belinha/competitors/milkymoo.md` | Nova seção ciclo #132: Dia dos Namorados 2026 ativo (múltiplas unidades), tabela de vantagens MilkyPot vs MilkyMoo, alerta de UGC antecipação, radar Festa Junina (nenhuma ação identificada — oportunidade para MilkyPot) |
+
+**Commit:** `55fc6d9`
+
+**Achados críticos:**
+1. **TheBest Açaí tem Festival Junino 2026 com 4 NOVOS SABORES (canjica, pamonha, cocada, paçoca + açaí de milho)** — 6 unidades em Londrina vão ativar. Semanas 9–10 do MilkyPot precisam de um "Potinho Junino" diferenciado com toppings juninos (paçoca, cocada, mel) como resposta — personalizado, com nome, sem balança
+2. **MilkyMoo está ativo em Dia dos Namorados 2026** — confirma que o playbook do ciclo #131 está correto e no timing certo. MilkyPot deve antecipar solicitação de UGC de casais desde 07/06 (N1 broadcast)
+3. **TheBest NÃO tem ação de Namorados identificada** — a ameaça competitiva de Namorados é MilkyMoo, não TheBest. Posicionamento "momento especial" do potinho vs. milkshake se mantém
+4. **Muffato Quintino = único gap de TheBest em Londrina** — 6 unidades operando mas nenhuma no endereço do MilkyPot (Av. Quintino Bocaiuva 1045). Verificação periódica mantida (próxima: ~ciclo #136)
+
+**Próximo passo sugerido:**
+- **Ciclo #133 — SEO:** sitemap.xml audit + canonical URLs + indexação landing pages (gap técnico obrigatório — 6+ ciclos sem SEO puro)
+- **Ciclo #134 — Conteúdo Semanas 9–10 (Festa Junina):** integrar achados do TheBest Festival Junino → criar "Potinho Junino" oficial (nome, ingredientes, toppings, Versão A/B) + adaptar semanas 9 e 10 existentes com contraprogramação ao TheBest
+- **Operador:** Confirmar se é possível adicionar paçoca, cocada e mel como toppings juninos no estoque do Muffato antes de 13/06 (semana 9)
+- **Operador:** Verificar se @milkymoo_londrina (Catuaí/Boulevard) tem promoção específica de Namorados local — para calibrar intensidade da resposta MilkyPot
+
+_Belinha — Ciclo #132 | 2026-05-06_
+
+---
+
 ## Ciclo #131 — 2026-05-06
 
 **Área:** Conversão — EMERGÊNCIA Dia dos Namorados 2026 (12/06/2026)
