@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #131 — 2026-05-06
+
+**Área:** Conversão — EMERGÊNCIA Dia dos Namorados 2026 (12/06/2026)
+
+**Contexto:** Prescrito como EMERGÊNCIA pelo ciclo #130. Dia dos Namorados cai na sexta 12/06/2026 — 37 dias a partir de hoje. Semana 8 (`pos-inauguracao-semana8.md`, tema "Indica & Ganha") planeja a sexta 12/06 como "bastidores + contador de indicações", ignorando completamente o Dia dos Namorados. Gap crítico corrigido com playbook standalone e nota de substituição.
+
+**O que analisou:**
+- Leu semana8.md completa: confirmado que sexta 12/06 tem conteúdo genérico de Indica & Ganha sem nenhuma menção a Dia dos Namorados
+- Leu playbook Dia das Mães (ciclo #129) como referência de formato e padrão
+- Calculou que 12/06/2026 é sexta-feira, 37 dias a partir de hoje (dentro da janela de 6 semanas)
+- Identificou narrativa-âncora: "Primeiro Dia dos Namorados do MilkyPot Londrina" — inaugurado 25/04, apenas 48 dias antes
+- Definiu mecânica diferencial: "Duo MilkyPot" — dois potinhos personalizados, cada um com os sabores favoritos do outro
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/dia-dos-namorados-2026-playbook.md` | CRIADO — Playbook completo: estratégia posicionamento (potinho duplo personalizado como presente), keyword `NAMORADOS26`, cronograma 07–12/06 com horários, 5 templates WA (N1–N5), 2 posts feed com captions completas (véspera + Dia H), Reel 15s com roteiro completo, checklist operacional, tabela de KPIs, 3 versões de mecânica (A/B/C sem desconto) |
+| `belinha/content/pos-inauguracao-semana8.md` | ATUALIZADO — Seção sexta 12/06 recebe nota de substituição completa com resumo das ações do dia; conteúdo original arquivado abaixo da nota |
+
+**Commit:** `fd920c5`
+
+**Destaques do playbook:**
+1. **"Primeiro Dia dos Namorados" como narrativa orgânica:** 48 dias após a inauguração — genuíno e de alto apelo emocional, seguindo o padrão do Dia das Mães
+2. **Duo MilkyPot (mecânica diferencial):** Dois potinhos personalizados, um com os sabores dela, um com os dele — impossível de replicar por quiosque ou produto de prateleira
+3. **Keyword `NAMORADOS26` ativa até 03/06:** 10 dias de janela de captura antes do evento; VIP recebe acesso exclusivo na véspera (qui 11/06 às 19h)
+4. **Integração com Indica & Ganha:** Semana 8 não perde o tema — apenas sexta 12/06 é substituída; contador de indicações move para sábado 13/06
+5. **3 mecânicas sem desconto (A/B/C):** Versão A (topping extra no duo), B (bilhetinho da ovelhinha), C (pontos em dobro para os dois) — operador escolhe até 07/06
+
+**Próximo passo sugerido:**
+- **OPERADOR URGENTE:** Configurar keyword `NAMORADOS26` no WA Business até 03/06 (9 dias úteis)
+- **OPERADOR:** Decidir Versão A/B/C da mecânica até 07/06
+- **Ciclo #132 — Concorrentes:** Refetch obrigatório (>15 ciclos desde #116): Johnny/Jhoy + Green Açaí + TheBest/MilkyMoo — comparar mecânicas de Namorados e Festa Junina
+- **Ciclo #133 — SEO:** sitemap.xml audit + canonical + crawl index
+- Lembrar operador: LGPD (CNPJ/DPO) ainda sem resolução — D+11 (risco legal crescente)
+
+_Belinha — Ciclo #131 | 2026-05-06_
+
+---
+
 ## Ciclo #130 — 2026-05-06
 
 **Área:** Auto-aprimoramento — revisão #125–#129 + auditoria calendário 2026 + roadmap #131–#140
