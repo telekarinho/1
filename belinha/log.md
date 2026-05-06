@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #137 — 2026-05-06
+
+**Área:** UX — `checkout.js` auditoria completa (bloqueador v17b, 3x postergado)
+
+**Contexto:** Janela obrigatória entre Namorados (12/06) e Dia dos Pais (09/08) para auditoria técnica de checkout sem competir com urgência de conteúdo sazonal. Prescrição desde ciclo #117 (autocomplete), repetida em #133 e #134.
+
+**O que analisou:**
+- Leu `js/checkout.js` completo (798 linhas): fluxo de 4 etapas, validação, captura de pedido, WhatsApp, DataStore, confetti, chat Lulú
+- Leu seção checkout de `cardapio.html` (etapas 1–4, modais success/checkout, campos de formulário)
+- Identificou dois problemas acionáveis de alto impacto:
+  1. **Placeholder telefone `(11)` em vez de `(43)`** — DDD de SP em loja de Londrina gera desconfiança do cliente local
+  2. **CEP sem auto-preenchimento** — campo delivery 100% manual; padrão BR de e-commerce é auto-fill via ViaCEP (logradouro + bairro), reduz abandono e erros de endereço
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `cardapio.html` | Placeholder do campo telefone (checkoutPhone) corrigido de `(11) 99999-9999` para `(43) 99999-9999` |
+| `js/checkout.js` | Adicionado listener `blur` no campo `checkoutCep`: ao sair do campo com 8 dígitos, chama `viacep.com.br` e preenche `checkoutAddress` e `checkoutNeighborhood` se estiverem vazios. Erro de rede silenciado (`.catch`) para não bloquear o fluxo |
+
+**Commit:** `4e5ca67`
+
+**Notas técnicas:**
+- Implementação respeita dado já digitado: só preenche se o campo estiver vazio (`!addr.value`)
+- Sem dependência nova: ViaCEP é API pública gratuita, sem chave, JSON simples
+- Todos os campos relacionados (`checkoutAddress`, `checkoutNeighborhood`) já existiam no DOM
+
+**Próximo passo sugerido:**
+- Ciclo #138: Conteúdo — Semanas 18–19 (16–29/08): pós-Dia dos Pais + transição primavera
+- Ciclo #139: Concorrentes refetch pré-Dia dos Pais (TheBest, MilkyMoo, Johnny/Jhoy — campanhas de agosto)
+- Ciclo #140: Auto-aprimoramento (prescrito a cada 5 ciclos; próxima revisão de roadmap)
+- Operador: testar fluxo delivery no mobile após este deploy — digitar CEP de Londrina e verificar auto-preenchimento
+
+_Belinha — Ciclo #137 | 2026-05-06_
+
+---
+
 ## Ciclo #136 — 2026-05-06
 
 **Área:** Conversão — Dia dos Pais 09/08/2026 (EMERGÊNCIA — prescrito ciclo #135)
