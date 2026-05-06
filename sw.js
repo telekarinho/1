@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v119';
-const CACHE_NAME = 'milkypot-v119';
+const CACHE_VERSION = 'mp-v120';
+const CACHE_NAME = 'milkypot-v120';
 
 // VAPID public key — Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
 const VAPID_PUBLIC_KEY = 'BAjJDEh3BZsxBDRlLXhLOZomMpCpv-FHsApsPGCvRcj3GjE3kF3Lfok4JgRs8Rdmpx3pq530i5ceVIsnngyyyBE';
@@ -107,17 +107,54 @@ self.addEventListener('install', event => {
     );
 });
 
-// Activate: clean old caches
+// Activate: clean old caches + AUTO-RELOAD all open tabs
+// Resolve o problema de cache stale sem exigir hard-refresh manual.
+// Quando uma nova versão do sw.js sobe, o browser auto-baixa, o install
+// roda com skipWaiting, depois activate dispara, limpa caches antigos,
+// reclama os clientes e MANDA cada aba abrir a URL atual via client.navigate().
+// Isso força fetch novo do HTML (cache foi limpo) → user vê código novo
+// sem precisar apertar Ctrl+Shift+R nem ir no DevTools.
 self.addEventListener('activate', event => {
-    event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames
-                    .filter(name => name !== CACHE_NAME)
-                    .map(name => caches.delete(name))
-            );
-        }).then(() => self.clients.claim())
-    );
+    event.waitUntil((async () => {
+        // 1. Limpa caches de versões anteriores
+        const cacheNames = await caches.keys();
+        await Promise.all(
+            cacheNames
+                .filter(name => name !== CACHE_NAME)
+                .map(name => caches.delete(name))
+        );
+        // 2. Reclama todos os clientes (controla todas as abas abertas)
+        await self.clients.claim();
+        // 3. Auto-reload: força cada cliente a recarregar a URL atual
+        // Primeira vez que rodar, força ALL clients reload uma única vez.
+        // Próximos deploys vão fazer o mesmo automaticamente.
+        const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        for (const client of clientsList) {
+            try {
+                // Pula páginas onde reload prejudica fluxo (PDV no meio de venda, login OAuth)
+                const url = new URL(client.url);
+                const skip = (
+                    url.pathname.includes('/painel/pdv.html') ||
+                    url.pathname.includes('/login.html') ||
+                    url.pathname.includes('/oauth') ||
+                    url.search.includes('mode=signIn')
+                );
+                if (skip) {
+                    // Manda mensagem pro cliente decidir reload depois
+                    client.postMessage({ type: 'NEW_VERSION_AVAILABLE', version: '__VERSION__' });
+                } else {
+                    // Reload imediato pra páginas seguras (dashboard, lista, configurações)
+                    if (typeof client.navigate === 'function') {
+                        await client.navigate(client.url).catch(() => {
+                            client.postMessage({ type: 'FORCE_RELOAD' });
+                        });
+                    } else {
+                        client.postMessage({ type: 'FORCE_RELOAD' });
+                    }
+                }
+            } catch (_) { /* ignora erros por client */ }
+        }
+    })());
 });
 
 // Fetch: Cache First for static assets, Stale-While-Revalidate for CDN libs,
