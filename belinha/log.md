@@ -2,6 +2,40 @@
 
 ---
 
+## Ciclo #130 — 2026-05-06
+
+**Área:** Auto-aprimoramento — revisão #125–#129 + auditoria calendário 2026 + roadmap #131–#140
+
+**Contexto:** Ciclo de auto-aprimoramento obrigatório (a cada 5 ciclos). Ciclo #129 detectou o primeiro erro de data (Dia das Mães 2026 prescrito como 2027) e prescreveu que o ciclo #130 deveria auditar **todos os eventos de 2026 restantes** para corrigir gaps semelhantes.
+
+**O que analisou:**
+- Releu log ciclos #125–#129 e estrategia.md completa
+- Auditou calendário 2026 inteiro (maio–dezembro) contra os arquivos `pos-inauguracao-semanaX.md` existentes
+- Verificou semana8.md (07–13/06): tema "Indica & Ganha" sem **nenhuma** menção ao Dia dos Namorados na sexta 12/06 → GAP CRÍTICO confirmado (37 dias = dentro da janela de 6 semanas)
+- Verificou semana17.md (09–15/08): tema "Inverno de saída" sem nenhuma menção ao Dia dos Pais 09/08 → gap confirmado (95 dias = fora da janela de criação agora, mas semana17.md precisa atualização)
+- Confirmou que Festa Junina (semanas 9–10), Dia das Crianças (semana 26), Halloween (semana 28), Black Friday e Natal estão todos cobertos
+- Identificou que errors de ano (2027 em vez de 2026) se repetiram em #125, #128, #134 prescrito — raiz do erro: cópia do roadmap anterior sem verificar datas reais
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/estrategia.md` | Nova seção "Auto-aprimoramento #125–#129": tabela ROI, auditoria calendário 2026 completa (11 eventos mapeados), estado atualizado D+11, roadmap #131–#140 com Dia dos Namorados como EMERGÊNCIA no #131, 3 novas regras v16 (auditoria obrigatória de datas, verificação de ano, playbooks standalone) |
+
+**Achados críticos:**
+1. **❌ Dia dos Namorados 12/06/2026 (Semana 8):** semana8.md planeja sexta 12/06 como "bastidores + contador de indicações" — ignora completamente o Dia dos Namorados. 37 dias a partir de hoje = dentro da janela de 6 semanas. → ciclo #131 EMERGÊNCIA
+2. **⚠️ Dia dos Pais 09/08/2026 (Semana 17):** semana17.md abre domingo 09/08 com post genérico de "comfort food vs Linha Zero" sem menção ao Dia dos Pais. → ciclo #136
+
+**Commit:** (a preencher após commit)
+
+**Próximo passo sugerido:**
+- **Ciclo #131 — URGENTE:** criar `belinha/content/dia-dos-namorados-2026-playbook.md` (keyword `NAMORADOS26`, cronograma 07–12/06, templates WA N1–N5, posts feed, Reel 15s) + nota de substituição no semana8.md para sexta 12/06 — padrão Dia das Mães ciclo #129
+- **OPERADOR:** verificar se as ações do playbook de Dia das Mães (ciclo #129) foram executadas: keyword MAE26 configurada no WA Business? Post de hoje (06/05)?
+
+_Belinha — Ciclo #130 | 2026-05-06_
+
+---
+
 ## Ciclo #129 — 2026-05-05
 
 **Área:** Conversão / Conteúdo — EMERGÊNCIA Dia das Mães 2026 (10/05/2026)

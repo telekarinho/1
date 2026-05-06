@@ -1725,3 +1725,124 @@ _Belinha — Ciclo #120 | 2026-05-05_
 ---
 
 _Belinha — Ciclo #125 | 2026-05-05_
+
+---
+
+## Auto-aprimoramento: Ciclos #125–#129
+
+_Atualizado ciclo #130 | 2026-05-06_
+
+### Tabela de ROI por ciclo
+
+| Ciclo | Área | ROI | Justificativa |
+|-------|------|-----|---------------|
+| #125 | Auto-aprimoramento | ⭐⭐⭐⭐⭐ | Roadmap #126–#135 de alta qualidade; regras v15 consolidadas; detectou gap de concorrentes |
+| #126 | Concorrentes | ⭐⭐⭐⭐ | Refetch TheBest+MilkyMoo pré-Black Friday; alertas estratégicos acionáveis; detectou conflito BLACKPOT vs The Best Friday (mesmo dia 27/11) |
+| #127 | SEO | ⭐⭐⭐ | FAQPage 6 Q&A em `cardapio.html`; diferencial Muffato explícito; elegibilidade rich results |
+| #128 | UX/Performance | ⭐⭐⭐⭐ | INP audit: debounce 200ms no filterCheckoutStores + double rAF em openProductSheet + showToast; 3 pontos do critical path mobile corrigidos |
+| #129 | Conversão | ⭐⭐⭐⭐⭐ | EMERGÊNCIA Dia das Mães: detectou que o evento era 2026 (não 2027 como prescrito); playbook completo 37 dias antes com cronograma horário, 6 templates WA, Reel 15s |
+
+### O que gerou mais valor
+
+1. **Detecção de emergência temporal (ciclo #129):** O roadmap do ciclo #125 prescrevia "Dia das Mães 09/05/2027" mas o evento era 10/05/2026 — 37 dias a partir do ciclo. O mecanismo de auditoria detectou o erro e criou o playbook de emergência. Lição: **datas devem ser verificadas contra o calendário real, não copiadas do roadmap anterior.**
+2. **INP como métrica de conversão (ciclo #128):** Mapear todos os 72 event handlers de `index.html` e corrigir os 3 pontos do critical path mobile (input de busca, abertura de produto, toast) gerou melhoria direta no caminho "adicionar ao carrinho → checkout". Auditar a página inteira de uma vez foi mais eficiente do que visitas separadas.
+3. **Antecipação estratégica de concorrentes (ciclo #126):** Detectar que The Best Friday e BLACKPOT caem no mesmo dia (27/11) com 6 meses de antecedência permite ajustar o playbook de novembro sem urgência.
+4. **ROI de auto-aprimoramento:** Ciclos #120 e #125 continuam sendo os maiores multiplicadores de ROI — um bom planejamento define 5 ciclos de alta qualidade à frente.
+
+### O que pode melhorar
+
+1. **Erros sistemáticos de ano (2026 vs 2027) no roadmap:** Ciclos #125 e #128 prescreveram eventos com anos errados (Dia das Mães "2027", Festa Junina "jun/2027", Dia dos Namorados implicitamente 2027). Raiz do erro: ao copiar estrutura do roadmap, o ano 2027 foi arrastado sem verificar a data real. Regra v16b corrige isso.
+2. **Dia dos Namorados 12/06/2026 ignorado em semana8.md:** O arquivo cobre 07–13/06/2026 com tema "Indica & Ganha" sem **nenhuma** menção ao Dia dos Namorados na sexta 12/06. Gap crítico — 37 dias a partir de hoje, dentro da janela de 6 semanas. Prescrito como ciclo #131 EMERGÊNCIA.
+3. **Dia dos Pais 09/08/2026 ignorado em semana17.md:** O arquivo cobre 09–15/08/2026 com tema "Inverno de saída: comfort food + Linha Zero" sem nenhuma menção a Dia dos Pais. Prescrito playbook para ciclo #136 (ainda 95 dias — fora da janela de criação, mas semana17.md precisa de update quando chegar o momento).
+4. **Concorrentes refetch obrigatório em #132:** Ciclo #126 foi o último refetch TheBest+MilkyMoo. Johnny/Jhoy e Green Açaí estão sem update há mais de 15 ciclos.
+
+---
+
+### Auditoria completa do calendário 2026 (a partir de D+11, 06/05/2026)
+
+| Evento | Data | Semana # | Status |
+|--------|------|----------|--------|
+| Dia das Mães | 10/05/2026 (Dom) | Semana 4 | ✅ Playbook criado ciclo #129 (emergência) |
+| Corpus Christi | 04/06/2026 (Qui) | Semana 7 | ⚠️ Não mencionado em semana7.md — baixo impacto comercial; sem ação urgente |
+| **Dia dos Namorados** | **12/06/2026 (Sex)** | **Semana 8** | **❌ CRITICAL GAP — semana8.md ignora completamente → ciclo #131** |
+| Festa Junina / São João | Jun (peak 24/06) | Semanas 9–10 | ✅ Potinho Junino (semana9) + São João (semana10) |
+| **Dia dos Pais** | **09/08/2026 (Dom)** | **Semana 17** | **⚠️ GAP — semana17.md ignora → playbook ciclo #136** |
+| Independência do Brasil | 07/09/2026 (Seg) | Semana 21 | ℹ️ Verificar semana21.md no ciclo #135 |
+| Dia das Crianças | 12/10/2026 (Seg) | Semana 26 | ✅ Coberto com reveal Potinho Assombrado |
+| Halloween | 31/10/2026 (Sáb) | Semana 28 | ✅ Coberto + playbook ciclo #67 |
+| Black Friday | 27/11/2026 (Sex) | Semana 32 | ✅ BLACKPOT playbook ciclo #124 |
+| Natal | 25/12/2026 (Sex) | Semana 36 | ✅ Semanas 35–36 ciclos #75–76 |
+| Virada Ano Novo | 31/12/2026 (Qui) | Semana 37 | ✅ Semana 37 ciclo #77 |
+
+---
+
+### Estado real do projeto em D+11 (2026-05-06) — Atualizado ciclo #130
+
+| Dimensão | Status |
+|----------|--------|
+| Conteúdo semanal | ✅ Semanas 1–56 completas, sequência contínua sem gaps |
+| `openingHoursSpecification` dias individuais | ✅ Ciclo #123 — 3 páginas |
+| Landing pages OG bug fix + LCP + hover | ✅ Ciclo #122 |
+| Black Friday BLACKPOT playbook WA | ✅ Ciclo #124 |
+| `checkout.html` autocomplete + summaryStore | ✅ Ciclo #117 |
+| `index.html` WebSite + WebPage schema | ✅ Ciclo #118 |
+| WA 6 meses playbook | ✅ Ciclo #119 |
+| FAQPage em `cardapio.html` | ✅ Ciclo #127 — 6 Q&A |
+| `index.html` INP audit | ✅ Ciclo #128 — debounce + double rAF |
+| Dia das Mães 2026 playbook | ✅ Ciclo #129 — emergência 37 dias |
+| **Dia dos Namorados 12/06/2026 playbook** | **❌ CRÍTICO — 37 dias → ciclo #131** |
+| Concorrentes refetch (Johnny/Jhoy/Green) | ❌ Prescrito ciclo #132 |
+| sitemap.xml audit completo | ❌ Prescrito ciclo #133 |
+| `checkout.html` auditoria completa | ❌ Prescrito ciclo #134 |
+| **Dia dos Pais 09/08/2026 playbook** | **⚠️ 95 dias → ciclo #136** |
+| `aggregateRating` Schema.org | ⛔ Suspenso — aguarda ≥3 reviews Google Maps |
+| Google Analytics ID real | ⛔ Suspenso — aguarda autorização usuário |
+| LGPD (CNPJ/DPO) | ⛔ D+11 sem resolução — risco legal crescente (lembrar operador!) |
+| `cardapio.js` dead code (~1050 linhas) | ⚠️ Blocker #6 — aguarda decisão operador (lembrar a cada 10 ciclos — próxima menção: #140) |
+| Concorrentes refetch (obrigatório) | ⏳ Próximo obrigatório: ciclo #132 |
+
+---
+
+### Roadmap rebalanceado #131–#140
+
+| Ciclo | Área | Ação | Urgência |
+|-------|------|------|----------|
+| **#131** | **Conversão — EMERGÊNCIA** | **Dia dos Namorados 12/06/2026:** criar `belinha/content/dia-dos-namorados-2026-playbook.md` com keyword `NAMORADOS26`, cronograma 5 dias (07–12/06), templates WA N1–N5, posts feed, Reel 15s. Inserir nota de substituição no semana8.md (sexta 12/06 troca "bastidores indicação" por Namorados)** | ⚡ URGENTE |
+| #132 | Concorrentes | Refetch obrigatório (>15 ciclos após #116): Johnny/Jhoy + Green Açaí + TheBest/MilkyMoo — comparar mecânicas de Namorados e Festa Junina para calibrar próximas ações | Alta |
+| #133 | SEO | sitemap.xml audit: cobertura landing pages, canonical, crawl index, robots.txt | Média |
+| #134 | UX | `checkout.html` auditoria completa: fluxo mobile, validação, CLS, feedback visual | Alta |
+| #135 | Auto-aprimoramento | Reler log #130–#134; roadmap jun–set 2026; auditoria calendário semanas 11–25 (Independência 07/09, Dia dos Pais pré-playbook) | — |
+| #136 | Conversão | **Dia dos Pais 09/08/2026 playbook** — keyword `PAPAI26`; update semana17.md (substituir abertura genérica por narrativa Dia dos Pais); mecânica sem desconto, padrão Dia das Mães | Alta |
+| #137 | UX/Performance | `renderProducts` virtual/lazy scroll — candidato prescrito ciclo #128; bundle size crescente se catálogo > 20 itens | Média |
+| #138 | SEO | Schema `aggregateRating` se operador confirmar ≥3 reviews; caso contrário SEO alternativo (schema `Product` em cardápio) | Condicional |
+| #139 | Concorrentes | Refetch pré-Dia dos Pais: TheBest, MilkyMoo, Johnny — mecânicas de agosto; novos produtos inverno/primavera | Média |
+| #140 | Auto-aprimoramento | Reler log #135–#139; roadmap set–nov 2026 (Halloween, BLACKPOT, 6 meses de loja 25/10); lembrar operador sobre `cardapio.js` dead code | — |
+
+---
+
+### Regras atualizadas v16
+
+> **v16a — Auditoria de datas comemorativas no auto-aprimoramento (OBRIGATÓRIA):** A cada ciclo de auto-aprimoramento, abrir os arquivos `pos-inauguracao-semanaX.md` das próximas 12 semanas e verificar se as datas comemorativas do calendário brasileiro foram incorporadas. Padrão de erro detectado: semana planejada com tema genérico que ignora data importante no mesmo intervalo.
+
+> **v16b — Verificação de ano ao prescrever eventos:** Semanas 1–56 cobrem 25/04/2026 a ~17/04/2027. Ao prescrever playbook de evento, calcular: `(data_evento − 25/04/2026) / 7 = número da semana`. Se semana ≤ 52, é 2026. **Nunca copiar o ano do roadmap anterior sem verificar no calendário.**
+
+> **v16c — Playbooks standalone para datas-âncora:** Dia dos Namorados (12/06), Dia dos Pais (2° Dom/agosto), Dia das Crianças (12/10) exigem playbook standalone (padrão Dia das Mães + HALLOWEEN + BLACKPOT), não apenas update no arquivo de semana. Criar playbook + nota de substituição no arquivo de semana correspondente.
+
+### Regras mantidas (v15 + v14)
+
+1. Pausa de conteúdo ativa enquanto horizonte > 6 semanas — exceto gaps em sequência existente
+2. `aggregateRating` → checar apenas quando operador confirmar ≥3 reviews Google Maps
+3. Ciclos de concorrentes obrigatoriamente geram mudança no site no mesmo ciclo
+4. Rotação: UX/Performance > SEO > Conversão > Concorrentes > Conteúdo (v12)
+5. Auto-aprimoramento a cada 5 ciclos (próximo: #135)
+6. Concorrentes: máximo 15 ciclos entre refetches (próximo obrigatório: #132)
+7. Verificar antes de prescrever: `git log --oneline | grep <arquivo>` antes de listar gap técnico
+8. Gap detection obrigatório no auto-aprimoramento: `ls belinha/content/pos-inauguracao-semana*.md`
+9. Playbooks de evento com data fixa: criar no máximo 6 semanas antes (exceto pré-requisito técnico longo: até 8 semanas)
+10. FAQPage prioritária quando LocalBusiness sem FAQ (v15a)
+11. `checkout.html` auditoria periódica a cada 20 ciclos — próxima: #134 (v15b)
+12. Antecipação de concorrentes se evento de alto impacto se aproxima (v15c)
+
+---
+
+_Belinha — Ciclo #130 | 2026-05-06_
