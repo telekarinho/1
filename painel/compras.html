@@ -104,6 +104,7 @@
   <script src="../js/core/audit.js"></script>
   <script src="../js/core/weekly-audit.js"></script>
   <script>
+    if (window.DataStore && typeof DataStore.init === 'function' && !DataStore._ready) DataStore.init();
     if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
     const session = Auth.getSession();
     const franchiseId = session.franchiseId;
@@ -117,6 +118,11 @@
       return v.toLocaleString('pt-BR', { maximumFractionDigits: 3 }) + ' ' + (unit || '');
     }
     function loadSuggestions(){
+      const hasInventory = (DataStore.getCollection('inventory', franchiseId) || []).length > 0;
+      if (!DataStore._syncDone && !hasInventory) {
+        document.getElementById('comprasBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#6B7280">Sincronizando estoque e vendas do Firestore...</td></tr>';
+        return;
+      }
       const days = WeeklyAudit.salesCoverageDays();
       suggestions = WeeklyAudit.purchaseSuggestions(franchiseId, { daysToCover: days, analysisDays: 30 });
       const st = WeeklyAudit.getStatus(franchiseId);
@@ -186,7 +192,22 @@
       alert('Entrada registrada: ' + ok + ' item(ns)' + (fail ? '. Falhou: ' + fail : '') + '.');
       loadSuggestions();
     }
-    document.addEventListener('DOMContentLoaded', loadSuggestions);
+    window.addEventListener('mp_synced', loadSuggestions);
+    window.addEventListener('mp_remote_update', function(ev){
+      if (ev && ev.detail && (
+        ev.detail.key === 'inventory_' + franchiseId ||
+        ev.detail.key === 'orders_' + franchiseId ||
+        ev.detail.key === 'weekly_stock_audits_' + franchiseId ||
+        ev.detail.key === 'picole_counts_' + franchiseId
+      )) {
+        loadSuggestions();
+      }
+    });
+    document.addEventListener('DOMContentLoaded', function(){
+      loadSuggestions();
+      setTimeout(loadSuggestions, 1200);
+      setTimeout(loadSuggestions, 3000);
+    });
   </script>
   <script src="../js/core/copilot-transport.js" defer></script>
   <script src="../js/pages/lilo-scanner.js" defer></script>

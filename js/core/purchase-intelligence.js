@@ -97,6 +97,7 @@
         var seenIds = {};
         lista.forEach(function(i) { seenIds[i.insumoId] = true; });
         inventory.forEach(function(ins) {
+            if (ins && (ins.auditHidden || ins.active === false)) return;
             if (!ins || !ins.id || seenIds[ins.id]) return;
             lista.push({
                 insumoId: ins.id,
