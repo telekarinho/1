@@ -42,10 +42,10 @@
          prob:5, cost:1.50, validity:5, scope:'same', minOrder:15, tier:'medium', categoria:'cat_milkshake,cat_sundae,cat_potinho'},
         {code:'RSP_BUFFET_100G', name:'+100g de Buffet Grátis',
          desc:'No próximo buffet a granel, ganha 100g extras na pesagem.',
-         prob:3, cost:6, validity:5, scope:'same', minOrder:0, tier:'medium', categoria:'cat_buffet'},
+         prob:3, cost:6, validity:5, scope:'same', minOrder:15, tier:'medium', categoria:'cat_buffet'},
         {code:'RSP_PICOLE_2BY1', name:'Picolés 2 por 1',
          desc:'Pediu 1 picolé? Leva 2. Misture os 22 sabores que quiser.',
-         prob:2, cost:2.60, validity:5, scope:'same', minOrder:0, tier:'medium', categoria:'cat_picole'},
+         prob:2, cost:2.60, validity:5, scope:'same', minOrder:15, tier:'medium', categoria:'cat_picole'},
         {code:'RSP_SHAKE_P_FREE', name:'Milkshake P Grátis',
          desc:'Milkshake P 250ml de qualquer sabor da casa GRÁTIS.',
          prob:3.3, cost:9.99, validity:5, scope:'same', minOrder:15, tier:'big', categoria:'cat_milkshake'},
@@ -54,10 +54,10 @@
          prob:1, cost:9.99, validity:5, scope:'same', minOrder:15, tier:'big', categoria:'cat_sundae'},
         {code:'RSP_CAPITAO_50', name:'50% OFF no Capitão Açaí',
          desc:'O Premium 600ml por metade do preço (R$ 12,49).',
-         prob:0.5, cost:12.50, validity:5, scope:'same', minOrder:0, tier:'mega', categoria:'cat_milkshake,cat_sundae'},
+         prob:0.5, cost:12.50, validity:5, scope:'same', minOrder:25, tier:'mega', categoria:'cat_milkshake,cat_sundae'},
         {code:'RSP_MEGA_50', name:'MEGA R$ 50 em créditos',
          desc:'R$ 50 em créditos MilkyPot pra usar em até 7 dias.',
-         prob:0.2, cost:50, validity:7, scope:'any', minOrder:0, tier:'mega', categoria:null}
+         prob:0.2, cost:50, validity:7, scope:'any', minOrder:50, tier:'mega', categoria:null}
     ];
 
     var DEFAULT_CONFIG = {
@@ -67,6 +67,19 @@
         loopOnRedeem: true,
         defaultValidityDays: 5
     };
+
+    function enforcePrizeSafety(prize){
+        if (!prize || prize.tier === 'none') return prize;
+        var minByCode = {
+            RSP_BUFFET_100G: 15,
+            RSP_PICOLE_2BY1: 15,
+            RSP_CAPITAO_50: 25,
+            RSP_MEGA_50: 50
+        };
+        var required = minByCode[prize.code] || 10;
+        prize.minOrder = Math.max(Number(prize.minOrder || 0), required);
+        return prize;
+    }
 
     // ─────────────────────────────────────────────────
     function getStore(fid){
@@ -82,10 +95,10 @@
         if (custom && custom.length) {
             return DEFAULT_SCRATCH_PRIZES.map(function(def){
                 var found = custom.find(function(p){ return p.code === def.code; });
-                return Object.assign({}, def, found || {});
+                return enforcePrizeSafety(Object.assign({}, def, found || {}));
             });
         }
-        return DEFAULT_SCRATCH_PRIZES.slice();
+        return DEFAULT_SCRATCH_PRIZES.map(function(p){ return enforcePrizeSafety(Object.assign({}, p)); });
     }
 
     function getConfig(fid){
