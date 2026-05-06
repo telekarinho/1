@@ -68,6 +68,14 @@ const CLUB_DEFAULT_CONFIG = {
         scratchMin: 1,
         scratchMax: 50
     },
+    milkyPass: {
+        enabled: true,
+        stampsRequired: 5,
+        minOrder: 0,
+        rewardType: "scratch_bonus",
+        rewardLabel: "Raspinha bonus",
+        resetOnComplete: true
+    },
     appLinks: {
         playStore: "",
         appStore: "",

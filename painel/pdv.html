@@ -770,6 +770,7 @@
                     <span style="font-size:10px;color:#5A4570;font-weight:700;">Saldo:</span>
                     <strong id="clubBalance" style="font-size:13px;color:#5A4570;">G$ 0 = R$ 0,00</strong>
                 </div>
+                <div id="clubPassStatus" style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:6px 8px;margin-bottom:6px;font-size:10px;color:#9A3412;font-weight:800;">MilkyPass: 0/5</div>
                 <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#3a2e4a;cursor:pointer;margin-bottom:4px;">
                     <input type="checkbox" id="clubUseToggle" onchange="toggleClubRedeem()"> Usar MilkyCoins
                 </label>
@@ -5556,6 +5557,12 @@
         document.getElementById('clubAvatar').textContent = (m.name||'?').charAt(0).toUpperCase();
         var coins = (m.coins|0);
         document.getElementById('clubBalance').textContent = formatCoins(coins);
+        var pass = m.milkyPass || {};
+        var pendingPass = Array.isArray(m.pendingPassRewards) ? m.pendingPassRewards.filter(function(r){ return !r.redeemedAt; }).length : 0;
+        var passText = 'MilkyPass: ' + (pass.current || 0) + '/' + (pass.required || 5);
+        if(pendingPass) passText += ' - ' + pendingPass + ' premio pendente';
+        var passEl = document.getElementById('clubPassStatus');
+        if(passEl) passEl.textContent = passText;
         document.getElementById('clubUseToggle').checked = false;
         document.getElementById('clubUseRow').style.display = 'none';
         document.getElementById('clubRedeemHint').style.display = 'none';
@@ -5611,6 +5618,40 @@
         document.getElementById('clubRedeemHint').textContent = 'Desconto: R$ '+reais;
     };
 
+    function getMilkyPassConfig(){
+        var fallback = {
+            enabled: true,
+            stampsRequired: 5,
+            minOrder: 0,
+            rewardType: 'scratch_bonus',
+            rewardLabel: 'Raspinha bonus',
+            resetOnComplete: true
+        };
+        if(typeof firebase==='undefined' || !firebase.firestore) return Promise.resolve(fallback);
+        return firebase.firestore().collection('club_config').doc('global').get().then(function(doc){
+            var data = doc.exists ? (doc.data() || {}) : {};
+            return Object.assign({}, fallback, data.milkyPass || {});
+        }).catch(function(err){
+            console.warn('milkyPass config err', err);
+            return fallback;
+        });
+    }
+
+    function grantMilkyPassStamp(memberId, orderId, totalBRL){
+        if(!memberId || typeof firebase==='undefined' || !firebase.functions) return Promise.resolve(null);
+        var fns = firebase.app().functions('southamerica-east1');
+        return fns.httpsCallable('clubGrantMilkyPassStamp')({
+            memberId: memberId,
+            orderId: orderId,
+            franchiseId: fid,
+            total: totalBRL
+        }).then(function(res){
+            var data = (res && res.data) || {};
+            if(data.skipped) return null;
+            return data;
+        });
+    }
+
     // Expoe helpers para o finishOrder
     window.MilkyClubPDV = {
         getMember: function(){ return clubMember; },
@@ -5619,12 +5660,11 @@
         handleAfterOrder: function(orderId, totalBRL){
             if(!clubMember) return;
             var memberId = clubMember.id || clubMember.uid;
-            if(typeof firebase==='undefined' || !firebase.functions) return;
-            var fns = firebase.app().functions('southamerica-east1');
+            var fns = (typeof firebase!=='undefined' && firebase.functions) ? firebase.app().functions('southamerica-east1') : null;
 
             // 1) Se houver redeem solicitado, chama clubRedeem primeiro
             var chain = Promise.resolve();
-            if(clubRedeemAmount>0){
+            if(clubRedeemAmount>0 && fns){
                 chain = chain.then(function(){
                     return fns.httpsCallable('clubRedeem')({
                         memberId: memberId,
@@ -5635,7 +5675,8 @@
                 });
             }
             // 2) Concede cashback sobre o total pago apos o desconto
-            chain.then(function(){
+            if(fns){
+                chain = chain.then(function(){
                 return fns.httpsCallable('clubGrantCashback')({
                     orderId: orderId,
                     franchiseId: fid,
@@ -5649,6 +5690,19 @@
                 } catch(e){}
             }).catch(function(err){
                 console.warn('clubGrantCashback err', err);
+            });
+            }
+            chain.then(function(){
+                return grantMilkyPassStamp(memberId, orderId, totalBRL);
+            }).then(function(passResult){
+                if(!passResult) return;
+                if(passResult.completed && passResult.reward){
+                    clubToast('MilkyPass completo! Premio liberado: '+passResult.reward.label);
+                } else {
+                    clubToast('MilkyPass: +1 carimbo ('+passResult.current+'/'+passResult.required+')');
+                }
+            }).catch(function(err){
+                console.warn('milkyclub after-order err', err);
             });
 
             // Limpa o estado apos uso

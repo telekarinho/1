@@ -71,6 +71,112 @@ exports.setUserRole = onCall({
 });
 
 // ============================================
+// MILKYCLUBE: MilkyPass de carimbos
+// ============================================
+// Concede 1 carimbo ao cliente identificado no PDV apos uma venda real.
+exports.clubGrantMilkyPassStamp = onCall({
+    region: "southamerica-east1"
+}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Autenticacao necessaria");
+    }
+
+    const role = request.auth.token.role;
+    if (!["super_admin", "franchisee", "manager", "staff"].includes(role)) {
+        throw new HttpsError("permission-denied", "Sem permissao para conceder MilkyPass");
+    }
+
+    const { memberId, orderId, franchiseId, total } = request.data || {};
+    if (!memberId || !orderId) {
+        throw new HttpsError("invalid-argument", "memberId e orderId sao obrigatorios");
+    }
+
+    const totalBRL = Number(total || 0);
+    const nowIso = new Date().toISOString();
+    const cfgSnap = await db.collection("club_config").doc("global").get();
+    const cfg = cfgSnap.exists ? (cfgSnap.data() || {}) : {};
+    const passCfg = Object.assign({
+        enabled: true,
+        stampsRequired: 5,
+        minOrder: 0,
+        rewardType: "scratch_bonus",
+        rewardLabel: "Raspinha bonus",
+        resetOnComplete: true
+    }, cfg.milkyPass || {});
+
+    if (passCfg.enabled === false) {
+        return { success: true, skipped: true, reason: "disabled" };
+    }
+
+    const minOrder = Number(passCfg.minOrder || 0);
+    if (totalBRL < minOrder) {
+        return { success: true, skipped: true, reason: "below_min_order" };
+    }
+
+    const required = Math.max(1, parseInt(passCfg.stampsRequired || 5, 10) || 5);
+    const memberRef = db.collection("club_members").doc(memberId);
+
+    const result = await db.runTransaction(async (tx) => {
+        const memberSnap = await tx.get(memberRef);
+        if (!memberSnap.exists) {
+            throw new HttpsError("not-found", "Cliente MilkyClube nao encontrado");
+        }
+
+        const member = memberSnap.data() || {};
+        const pass = member.milkyPass || {};
+        const current = Math.max(0, parseInt(pass.current || 0, 10) || 0);
+        const next = current + 1;
+        const completed = next >= required;
+        const nextCurrent = completed && passCfg.resetOnComplete !== false ? 0 : Math.min(next, required);
+        let pending = Array.isArray(member.pendingPassRewards) ? member.pendingPassRewards.slice() : [];
+        let reward = null;
+
+        if (completed) {
+            reward = {
+                id: `pass_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`,
+                type: passCfg.rewardType || "scratch_bonus",
+                label: passCfg.rewardLabel || "Raspinha bonus",
+                orderId,
+                franchiseId: franchiseId || request.auth.token.franchiseId || null,
+                createdAt: nowIso,
+                redeemedAt: null
+            };
+            pending.push(reward);
+            pending = pending.slice(-20);
+        }
+
+        const update = {
+            milkyPass: {
+                current: nextCurrent,
+                required,
+                totalStamps: (pass.totalStamps || 0) + 1,
+                totalCompleted: (pass.totalCompleted || 0) + (completed ? 1 : 0),
+                lastStampAt: nowIso,
+                lastOrderId: orderId,
+                lastRewardAt: completed ? nowIso : (pass.lastRewardAt || null)
+            },
+            updatedAt: nowIso
+        };
+        if (completed) update.pendingPassRewards = pending;
+
+        tx.update(memberRef, update);
+        return { current: nextCurrent, required, completed, reward };
+    });
+
+    await db.collection("club_pass_events").add({
+        memberId,
+        orderId,
+        franchiseId: franchiseId || request.auth.token.franchiseId || null,
+        total: totalBRL,
+        result,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdBy: request.auth.uid
+    });
+
+    return { success: true, ...result };
+});
+
+// ============================================
 // 2. SETUP INICIAL DO OWNER
 // ============================================
 // Seta o primeiro admin (owner) como super_admin
