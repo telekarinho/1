@@ -2,6 +2,42 @@
 
 ---
 
+## Ciclo #141 — 2026-05-06
+
+**Área:** UX/Performance — `renderProducts` lazy scroll (IntersectionObserver)
+
+**Contexto:** Bloqueador 4x postergado (#137, #138, #139, #140). Regra v18b ativa: prioridade máxima independente de pressão sazonal. Aba "ninho" renderizava 16 cards em bloco (`grid.innerHTML = html`) causando jank em mobile low-end ao trocar de aba.
+
+**O que analisou:**
+- Leu `getAllProducts()` e `renderProducts()` em `cardapio.html` (linhas 580–670)
+- Contou produtos por categoria: ninho=16, acai=6, fit=6 (total 28)
+- Confirmou ausência de IntersectionObserver, virtual scroll ou qualquer forma de lazy rendering
+- Verificou que `sheetContent.innerHTML` (bottom sheet de produto) é independente e não afetado
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `cardapio.html` | Substituiu `renderProducts()` monolítico por progressive rendering: `buildCardHtml(p)` helper, `renderBatch()` com IntersectionObserver + sentinel `#lazy-sentinel`, fallback síncrono para browsers sem IO, `lazyObserver.disconnect()` na troca de aba (sem memory leak) |
+
+**Detalhes técnicos:**
+- `LAZY_BATCH = 6`: primeiros 6 cards ao carregar a aba (LCP fast)
+- `rootMargin: '300px'`: pré-carrega próximo batch 300px antes do sentinel aparecer (sem percepção de lag)
+- Ao trocar de aba: observer desconectado, sentinel removido, `grid.innerHTML = ''`, novo batch inicial
+- Fallback: browsers sem `IntersectionObserver` (IE11, WebView antigo) recebem todos os cards síncronos — comportamento idêntico ao anterior, sem regressão
+
+**Commit:** `aa13feb`
+
+**Próximo passo sugerido:**
+- **Ciclo #142:** Schema.org `Product` em `cardapio.html` para rich snippets (sem `aggregateRating` até ≥3 reviews confirmados)
+- **Ciclo #143:** Refetch concorrentes pré-Halloween (regra v18a: intel → ação no mesmo ciclo)
+- **Ciclo #144:** Atualizar semanas 25–28 e `whatsapp-halloween-2026.md` com intel do #143
+- **Ciclo #145:** Auto-aprimoramento nov–jan 2027
+
+_Belinha — Ciclo #141 | 2026-05-06_
+
+---
+
 ## Ciclo #139 — 2026-05-06
 
 **Área:** Concorrentes — TheBest, MilkyMoo, JohnnyJoy (inverno/Dia dos Pais/agosto 2026)
