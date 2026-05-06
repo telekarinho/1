@@ -614,27 +614,35 @@
             }
         }, 3000);
 
-        // SEMPRE força fetch direto do Firestore — não depende de DataStore listener async
-        // Garante que o painel mostre dados reais mesmo se DataStore sync falhar/atrasar
-        if (franchiseId && firebase && firebase.firestore) {
-            const _db = firebase.firestore();
-            const docs2sync = ['orders_','caixa_','inventory_','staff_','finances_','recurring_expenses_'].map(p => p + franchiseId);
+        // SEMPRE força fetch direto via REST API do Firestore — não depende de SDK nem auth.
+        // Os docs orders_/caixa_/finances_/inventory_/staff_ tem allow read: true nas rules,
+        // então fetch público sem token funciona. Mais robusto que SDK que pode falhar
+        // silenciosamente por race condition de Firebase Auth ou erro de inicialização.
+        if (franchiseId) {
+            const REST_URL = 'https://firestore.googleapis.com/v1/projects/milkypot-ad945/databases/(default)/documents/datastore/';
+            const docs2sync = ['orders_','caixa_','inventory_','staff_','finances_','recurring_expenses_','catalog_v2_','catalog_config_'].map(p => p + franchiseId);
+            console.log('🔄 Painel: iniciando fetch REST para fid=' + franchiseId);
             Promise.all(docs2sync.map(docId =>
-                _db.collection('datastore').doc(docId).get()
-                    .then(snap => {
-                        if (!snap.exists) return 0;
-                        const val = snap.data().value;
-                        if (typeof val === 'string') {
-                            localStorage.setItem('mp_' + docId, val);
-                            try { return JSON.parse(val).length || 0; } catch(_){ return 1; }
+                fetch(REST_URL + encodeURIComponent(docId), { method: 'GET', cache: 'no-store' })
+                    .then(r => r.ok ? r.json() : null)
+                    .then(json => {
+                        if (!json || !json.fields || !json.fields.value) return [docId, 0];
+                        const valStr = json.fields.value.stringValue;
+                        if (typeof valStr === 'string') {
+                            localStorage.setItem('mp_' + docId, valStr);
+                            let n = 0; try { n = JSON.parse(valStr).length || 0; } catch(_) { n = 1; }
+                            return [docId, n];
                         }
-                        return 0;
+                        return [docId, 0];
                     })
-                    .catch(() => 0)
-            )).then(counts => {
-                console.log('✅ Painel: fetch direto fid=' + franchiseId, 'counts:', counts);
-                loadDashboard();
-            }).catch(err => console.warn('Direct fetch failed:', err));
+                    .catch(e => [docId, 'ERR:' + (e.message || e)])
+            )).then(results => {
+                console.log('✅ Painel: REST fetch ok fid=' + franchiseId, Object.fromEntries(results));
+                // Re-render dashboard com dados frescos
+                if (typeof loadDashboard === 'function') loadDashboard();
+                // Dispara evento pra outros widgets reagirem
+                try { window.dispatchEvent(new CustomEvent('mp_painel_synced', { detail: { fid: franchiseId } })); } catch(_) {}
+            }).catch(err => console.warn('❌ REST fetch failed:', err));
         }
 
         loadDashboard();
