@@ -1,396 +1,227 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MilkyPot - Auditoria de Estoque</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/shared-panel.css">
-    <link rel="manifest" href="../manifest.json">
-    <meta name="theme-color" content="#42A5F5">
-    <style>
-        .audit-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        .audit-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-        .audit-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .audit-header h3 {
-            margin: 0;
-            font-family: 'Baloo 2', cursive;
-            color: #5A4570;
-            font-size: 1.4rem;
-        }
-        .audit-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .audit-table th {
-            text-align: left;
-            padding: 12px;
-            border-bottom: 2px solid #eee;
-            color: #666;
-            font-weight: 700;
-        }
-        .audit-table td {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-            vertical-align: middle;
-        }
-        .input-count {
-            width: 100px;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 1rem;
-            text-align: right;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .input-count:focus {
-            border-color: #9c27b0;
-        }
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            display: inline-block;
-        }
-        .status-normal { background: #E8F5E9; color: #2E7D32; }
-        .status-alert { background: #FFF3E0; color: #E65100; }
-        .status-critical { background: #FFEBEE; color: #C62828; }
-        .btn-large {
-            padding: 14px 24px;
-            font-size: 1.1rem;
-            border-radius: 10px;
-            background: #9c27b0;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-        .btn-large:hover { background: #7b1fa2; }
-        .hidden { display: none; }
-        .diff-val { font-weight: bold; }
-        .diff-neg { color: #C62828; }
-        .diff-pos { color: #2E7D32; }
-        .diff-zero { color: #757575; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MilkyPot - Auditoria Semanal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/shared-panel.css">
+  <style>
+    .audit-page{padding:22px;display:grid;gap:18px}
+    .hero{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:20px;display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+    .hero h2{margin:0 0 6px;font-family:'Baloo 2',cursive;color:#2D1747;font-size:26px}
+    .hero p{margin:0;color:#5B6472;max-width:820px}
+    .status{border-radius:10px;padding:10px 12px;font-weight:900;font-size:13px;white-space:nowrap}
+    .status.ok{background:#DCFCE7;color:#166534}.status.warn{background:#FEF3C7;color:#92400E}.status.bad{background:#FEE2E2;color:#991B1B}
+    .panel{background:#fff;border:1px solid #E5E7EB;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(31,41,55,.06)}
+    .panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid #EEF2F7}
+    .panel-head h3{margin:0;font-family:'Baloo 2',cursive;color:#2D1747}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{border:0;border-radius:8px;padding:10px 14px;font-weight:900;cursor:pointer;font-family:inherit}
+    .btn.primary{background:#7E57C2;color:#fff}.btn.soft{background:#F3F4F6;color:#374151}.btn.good{background:#16A34A;color:#fff}
+    table{width:100%;border-collapse:collapse}th,td{padding:12px 14px;border-bottom:1px solid #F3F4F6;text-align:left;font-size:14px}
+    th{font-size:11px;text-transform:uppercase;color:#6B7280;background:#F9FAFB;letter-spacing:.4px}
+    input.count{width:96px;border:1px solid #D1D5DB;border-radius:8px;padding:8px 10px;font:inherit;text-align:right}
+    .badge{border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900;display:inline-block}
+    .normal{background:#E8F5E9;color:#2E7D32}.alert{background:#FFF3E0;color:#E65100}.critical{background:#FFEBEE;color:#C62828}
+    .diff-pos{color:#2E7D32;font-weight:900}.diff-neg{color:#C62828;font-weight:900}.diff-zero{color:#6B7280;font-weight:900}
+    .muted{color:#6B7280;font-size:12px}
+    @media(max-width:900px){.hero{display:block}.status{display:inline-block;margin-top:12px}.panel-head{display:block}.actions{margin-top:10px}}
+  </style>
 </head>
 <body>
-    <div class="panel-layout">
-        <!-- Sidebar -->
-        <aside class="panel-sidebar" id="sidebar">
-            <div class="sidebar-brand">
-                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
-                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+  <div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+        <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-group">Principal</div>
+        <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+        <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+        <a href="pdv.html" class="sidebar-link"><span class="icon">💻</span> PDV</a>
+        <div class="sidebar-nav-group">Gestao</div>
+        <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+        <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+        <a href="auditoria.html" class="sidebar-link active"><span class="icon">🔍</span> Auditoria</a>
+        <a href="compras.html" class="sidebar-link"><span class="icon">🛒</span> Compras</a>
+        <a href="operacional.html" class="sidebar-link"><span class="icon">🎯</span> Operacional</a>
+      </nav>
+    </aside>
+
+    <main class="panel-main">
+      <header class="panel-header">
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        <h1>🔍 Auditoria Semanal de Estoque</h1>
+      </header>
+
+      <section class="audit-page">
+        <div class="hero">
+          <div>
+            <h2>Contagem oficial de segunda</h2>
+            <p>Toda segunda abre a conferencia da loja e ela pode ser finalizada ate terca. A contagem ajusta estoque geral, sabores de picole e sabores/variantes cadastrados para sorvete, acai, topping, calda, expresso, copos e embalagens.</p>
+          </div>
+          <div class="status warn" id="auditStatus">Verificando semana...</div>
+        </div>
+
+        <section class="panel" id="stepCounting">
+          <div class="panel-head">
+            <h3>1. Contagem fisica</h3>
+            <div class="actions">
+              <button class="btn soft" onclick="addAuditVariant()">+ Sabor/variante</button>
+              <button class="btn soft" onclick="loadInventory()">Recarregar</button>
+              <button class="btn primary" onclick="finishCounting()">Gerar relatorio</button>
             </div>
-            <nav class="sidebar-nav">
-                <div class="sidebar-nav-group">Principal</div>
-                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
-                <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
-                <a href="pdv.html" class="sidebar-link"><span class="icon">💻</span> PDV</a>
-                <div class="sidebar-nav-group">Gestao</div>
-                <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
-                <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
-                <a href="auditoria.html" class="sidebar-link active"><span class="icon">🔍</span> Auditoria Cega</a>
-                <a href="compras.html" class="sidebar-link"><span class="icon">🛒</span> Compras</a>
-                <a href="operacional.html" class="sidebar-link"><span class="icon">🎯</span> Operacional</a>
-            </nav>
-        </aside>
+          </div>
+          <div style="overflow:auto">
+            <table>
+              <thead><tr><th>Item</th><th>Grupo</th><th>Unidade</th><th style="text-align:right">Contagem real</th></tr></thead>
+              <tbody id="countingBody"><tr><td colspan="4">Carregando itens...</td></tr></tbody>
+            </table>
+          </div>
+        </section>
 
-        <!-- Main Content -->
-        <main class="panel-main">
-            <header class="panel-header">
-                <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
-                <h1>🔍 Auditoria Cega de Estoque</h1>
-            </header>
+        <section class="panel" id="stepReport" style="display:none">
+          <div class="panel-head">
+            <h3>2. Divergencias e ajuste</h3>
+            <div class="actions">
+              <button class="btn soft" onclick="backToCounting()">Voltar</button>
+              <button class="btn good" onclick="applyAuditAdjustment()">Aplicar auditoria</button>
+            </div>
+          </div>
+          <div style="padding:14px 18px;background:#FFF7ED;color:#9A3412;border-bottom:1px solid #FED7AA">
+            Normal ate 2,99% de perda. Alerta de 3% a 4,99%. Critico com 5% ou mais, ou perda estimada acima de R$ 50.
+          </div>
+          <div style="overflow:auto">
+            <table>
+              <thead><tr><th>Item</th><th>Contado</th><th>Esperado</th><th>Diferença</th><th>Status</th></tr></thead>
+              <tbody id="reportBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
 
-            <section class="panel-content">
-                <div class="audit-container">
-                    
-                    <!-- Passo 1: Contagem -->
-                    <div class="audit-card" id="stepCounting">
-                        <div class="audit-header">
-                            <h3>1. Contagem Física</h3>
-                            <button class="btn btn-outline" onclick="loadInventory()">Recarregar Itens</button>
-                        </div>
-                        <p style="color:#666; margin-bottom: 20px;">Informe a quantidade física exata encontrada na loja para cada item. A expectativa do sistema está oculta para evitar vícios de contagem.</p>
-                        
-                        <div style="overflow-x: auto;">
-                            <table class="audit-table">
-                                <thead>
-                                    <tr>
-                                        <th>Produto</th>
-                                        <th>Categoria</th>
-                                        <th>Unidade</th>
-                                        <th style="text-align: right;">Contagem Física (Real)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="countingBody">
-                                    <tr><td colspan="4">Carregando itens...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div style="margin-top: 24px; text-align: right;">
-                            <button class="btn-large" onclick="finishCounting()">Finalizar Contagem e Gerar Relatório</button>
-                        </div>
-                    </div>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="../js/core/constants.js"></script>
+  <script src="../js/core/utils.js"></script>
+  <script src="../js/core/datastore.js"></script>
+  <script src="../js/core/firebase-config.js"></script>
+  <script src="../js/core/auth.js"></script>
+  <script src="../js/core/catalog-v2.js"></script>
+  <script src="../js/core/audit.js"></script>
+  <script src="../js/core/weekly-audit.js"></script>
+  <script>
+    if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+    const session = Auth.getSession();
+    const franchiseId = session.franchiseId;
+    let inventoryData = [];
 
-                    <!-- Passo 2: Relatório de Divergências -->
-                    <div class="audit-card hidden" id="stepReport">
-                        <div class="audit-header">
-                            <h3>2. Relatório de Divergências</h3>
-                            <button class="btn btn-outline" onclick="backToCounting()">← Voltar para Correção</button>
-                        </div>
-                        <p style="color:#666; margin-bottom: 20px;">
-                            <strong>Regras de Criticidade:</strong><br>
-                            <span class="status-badge status-normal">Normal</span> Até 2,99% de perda<br>
-                            <span class="status-badge status-alert">Alerta</span> De 3% a 4,99% de perda<br>
-                            <span class="status-badge status-critical">Crítico</span> 5% ou mais, OU perda financeira estimada &gt;= R$ 50,00
-                        </p>
-                        
-                        <div style="overflow-x: auto;">
-                            <table class="audit-table">
-                                <thead>
-                                    <tr>
-                                        <th>Produto</th>
-                                        <th>Contado</th>
-                                        <th>Esperado (Sistema)</th>
-                                        <th>Diferença</th>
-                                        <th>Status Categoria</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="reportBody">
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div style="margin-top: 24px; padding: 20px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px;">
-                            <h4 style="margin:0 0 10px 0; color: #856404;">⚠️ Importante</h4>
-                            <p style="margin:0; color: #856404;">Ao aplicar este ajuste, o estoque do sistema será substituído pelo valor contado. Esta ação gerará um log imediato e não pode ser desfeita.</p>
-                        </div>
-
-                        <div style="margin-top: 24px; text-align: right;">
-                            <button class="btn-large" style="background:#2E7D32;" onclick="applyAuditAdjustment()">Aplicar Ajuste de Estoque</button>
-                        </div>
-                    </div>
-
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <script src="../js/core/constants.js"></script>
-    <script src="../js/core/utils.js"></script>
-    <script src="../js/core/datastore.js"></script>
-    <script src="../js/core/firebase-config.js"></script>
-    <script src="../js/core/auth.js"></script>
-    <script src="../js/core/audit.js"></script>
-
-    <script>
-        // Auth guard - requires management role
-        if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
-        const session = Auth.getSession();
-        const franchiseId = session.franchiseId;
-        
-        let inventoryData = [];
-
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-        }
-
-        function loadInventory() {
-            inventoryData = DataStore.getCollection('inventory', franchiseId) || [];
-            const tbody = document.getElementById('countingBody');
-            tbody.innerHTML = '';
-            
-            if (inventoryData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum produto cadastrado no estoque.</td></tr>';
-                return;
-            }
-
-            // Sort by category then name
-            inventoryData.sort((a,b) => {
-                if(a.category !== b.category) return a.category.localeCompare(b.category);
-                return a.name.localeCompare(b.name);
-            });
-
-            inventoryData.forEach(item => {
-                // Expected is hidden from UX, only the input is visible for blind audit
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${Utils.escapeHtml(item.name)}</strong></td>
-                    <td><span style="background:#eee;padding:4px 8px;border-radius:6px;font-size:0.85em;">${item.category}</span></td>
-                    <td>${item.unit}</td>
-                    <td style="text-align: right;">
-                        <input type="number" step="0.01" min="0" class="input-count" data-item-id="${item.id}" placeholder="Ex: 5" required>
-                        <span style="font-size:0.9em;color:#666;margin-left:5px;">${item.unit}</span>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function finishCounting() {
-            const inputs = document.querySelectorAll('.input-count');
-            let hasEmpty = false;
-            let reportData = [];
-
-            inputs.forEach(input => {
-                if (input.value === '') hasEmpty = true;
-                const id = input.dataset.itemId;
-                const counted = parseFloat(input.value) || 0;
-                
-                const item = inventoryData.find(i => i.id === id);
-                if (item) {
-                    const expected = parseFloat(item.quantity) || 0;
-                    const diff = counted - expected;
-                    const lossPerc = expected > 0 ? (Math.abs(diff) / expected) * 100 : 0;
-                    
-                    // Estimate generic cost per kg/unit just for the R$50 rule (simplified if no real cost exists)
-                    // You could expand this logic to query a real cost DB. For now, estimate $20/unit or kg.
-                    const estimatedCostPerUnit = item.cost || 20; 
-                    const financialLoss = Math.abs(diff) * estimatedCostPerUnit;
-                    
-                    let status = 'normal';
-                    let statusLabel = 'Normal';
-                    if (diff < 0) {
-                        // Perda
-                        if (lossPerc >= 5 || financialLoss >= 50) {
-                            status = 'critical';
-                            statusLabel = 'Crítico';
-                        } else if (lossPerc >= 3) {
-                            status = 'alert';
-                            statusLabel = 'Alerta';
-                        }
-                    } else if (diff > 0) {
-                        // Sobra
-                        status = 'alert';
-                        statusLabel = 'Sobra/Erro';
-                    }
-
-                    reportData.push({
-                        id: item.id,
-                        name: item.name,
-                        unit: item.unit,
-                        counted: counted,
-                        expected: expected,
-                        diff: diff,
-                        status: status,
-                        statusLabel: statusLabel
-                    });
-                }
-            });
-
-            if (hasEmpty) {
-                if (!confirm("Existem itens sem contagem preenchida (serão considerados como ZERO). Deseja continuar?")) {
-                    return;
-                }
-            }
-
-            renderReport(reportData);
-            document.getElementById('stepCounting').classList.add('hidden');
-            document.getElementById('stepReport').classList.remove('hidden');
-            
-            // Store report data temporarily
-            window._pendingAudit = reportData;
-        }
-
-        function renderReport(data) {
-            const tbody = document.getElementById('reportBody');
-            tbody.innerHTML = '';
-
-            data.forEach(item => {
-                let diffStyle = 'diff-zero';
-                let diffText = '0';
-                
-                if (item.diff > 0) {
-                    diffStyle = 'diff-pos';
-                    diffText = '+' + item.diff.toFixed(2);
-                } else if (item.diff < 0) {
-                    diffStyle = 'diff-neg';
-                    diffText = item.diff.toFixed(2);
-                }
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${item.name}</strong><br><small style="color:#666;">Unidade: ${item.unit}</small></td>
-                    <td>${item.counted.toFixed(2)}</td>
-                    <td>${item.expected.toFixed(2)}</td>
-                    <td class="diff-val ${diffStyle}">${diffText}</td>
-                    <td><span class="status-badge status-${item.status}">${item.statusLabel}</span></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function backToCounting() {
-            document.getElementById('stepReport').classList.add('hidden');
-            document.getElementById('stepCounting').classList.remove('hidden');
-        }
-
-        function applyAuditAdjustment() {
-            if (!window._pendingAudit) return;
-            
-            if (!confirm("Tem certeza que deseja sobrescrever o estoque atual do sistema com estes valores contados?")) {
-                return;
-            }
-
-            const data = window._pendingAudit;
-            let currentInv = DataStore.getCollection('inventory', franchiseId) || [];
-            
-            // Aplicar os novos valores e criar logs
-            data.forEach(auditItem => {
-                let invItem = currentInv.find(i => i.id === auditItem.id);
-                if (invItem && auditItem.diff !== 0) {
-                    // Log adjustment before update
-                    if (typeof AuditLog !== 'undefined') {
-                        AuditLog.log('INVENTORY_AUDIT_ADJUSTMENT', {
-                            itemId: auditItem.id,
-                            itemName: auditItem.name,
-                            expected: auditItem.expected,
-                            counted: auditItem.counted,
-                            diff: auditItem.diff,
-                            status: auditItem.status
-                        }, franchiseId);
-                    }
-                    invItem.quantity = auditItem.counted;
-                }
-            });
-
-            DataStore.setCollection('inventory', franchiseId, currentInv);
-            
-            alert("✅ Ajuste de estoque realizado com sucesso! Todos os logs de auditoria foram salvos.");
-            window.location.href = 'produtos.html';
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            loadInventory();
-        });
-    </script>
-<script src="../js/core/copilot-transport.js" defer></script>
-<script src="../js/pages/lilo-scanner.js" defer></script>
-<script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
-<script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
+    function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); }
+    function setStatus(){
+      const st = WeeklyAudit.getStatus(franchiseId);
+      const el = document.getElementById('auditStatus');
+      el.className = 'status ' + (st.doneThisWeek ? 'ok' : (st.overdue ? 'bad' : 'warn'));
+      el.textContent = st.label + ' · prazo ' + st.dueUntil;
+    }
+    function loadInventory(){
+      setStatus();
+      inventoryData = WeeklyAudit.listAuditRows(franchiseId);
+      const tbody = document.getElementById('countingBody');
+      if (!inventoryData.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Nenhum item cadastrado no estoque.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = inventoryData.map(item => `
+        <tr>
+          <td><strong>${WeeklyAudit.esc(item.name)}</strong><div class="muted">${WeeklyAudit.esc(item.key)}</div></td>
+          <td>${WeeklyAudit.esc(item.group)}</td>
+          <td>${WeeklyAudit.esc(item.unit)}</td>
+          <td style="text-align:right"><input class="count" type="number" min="0" step="0.01" data-key="${WeeklyAudit.esc(item.key)}" placeholder="0"> <span class="muted">${WeeklyAudit.esc(item.unit)}</span></td>
+        </tr>
+      `).join('');
+    }
+    function classify(diff, expected, cost){
+      const lossPerc = expected > 0 ? (Math.abs(diff) / expected) * 100 : 0;
+      const loss = Math.abs(diff) * (Number(cost) || 0);
+      if (diff < 0 && (lossPerc >= 5 || loss >= 50)) return ['critical', 'Critico'];
+      if (diff < 0 && lossPerc >= 3) return ['alert', 'Alerta'];
+      if (diff > 0) return ['alert', 'Sobra/erro'];
+      return ['normal', 'Normal'];
+    }
+    function finishCounting(){
+      const inputs = Array.from(document.querySelectorAll('.count'));
+      const empty = inputs.some(i => i.value === '');
+      if (empty && !confirm('Tem item sem contagem. Eles serao considerados zero. Continuar?')) return;
+      const data = inputs.map(input => {
+        const item = inventoryData.find(i => i.key === input.dataset.key);
+        const counted = Number(input.value || 0);
+        const expected = Number(item.expected || 0);
+        const diff = Math.round((counted - expected) * 1000) / 1000;
+        const st = classify(diff, expected, item.cost);
+        return Object.assign({}, item, { counted, expected, diff, status: st[0], statusLabel: st[1] });
+      });
+      window._pendingAudit = data;
+      renderReport(data);
+      document.getElementById('stepCounting').style.display = 'none';
+      document.getElementById('stepReport').style.display = 'block';
+    }
+    function renderReport(data){
+      document.getElementById('reportBody').innerHTML = data.map(item => {
+        const cls = item.diff > 0 ? 'diff-pos' : (item.diff < 0 ? 'diff-neg' : 'diff-zero');
+        const txt = item.diff > 0 ? '+' + item.diff.toFixed(2) : item.diff.toFixed(2);
+        return `<tr>
+          <td><strong>${WeeklyAudit.esc(item.name)}</strong><div class="muted">${WeeklyAudit.esc(item.group)}</div></td>
+          <td>${item.counted.toFixed(2)} ${WeeklyAudit.esc(item.unit)}</td>
+          <td>${item.expected.toFixed(2)} ${WeeklyAudit.esc(item.unit)}</td>
+          <td class="${cls}">${txt}</td>
+          <td><span class="badge ${item.status}">${item.statusLabel}</span></td>
+        </tr>`;
+      }).join('');
+    }
+    function backToCounting(){
+      document.getElementById('stepReport').style.display = 'none';
+      document.getElementById('stepCounting').style.display = 'block';
+    }
+    function applyAuditAdjustment(){
+      if (!window._pendingAudit) return;
+      if (!confirm('Aplicar a contagem e substituir o estoque esperado pelo estoque contado?')) return;
+      const audit = WeeklyAudit.applyCounts(franchiseId, window._pendingAudit, { userName: session.name });
+      try {
+        AuditLog.log('inventory.weekly_audit_applied', {
+          auditId: audit.id,
+          weekStart: audit.weekStart,
+          rows: audit.rows.length
+        }, franchiseId);
+      } catch(e) {}
+      alert('Auditoria semanal salva. Agora a compra inteligente pode montar o pedido ate domingo.');
+      window.location.href = 'compras.html';
+    }
+    function addAuditVariant(){
+      const inv = DataStore.getCollection('inventory', franchiseId) || [];
+      if (!inv.length) { alert('Cadastre primeiro o item geral no estoque.'); return; }
+      const label = inv.map((i, idx) => `${idx + 1}. ${i.name} (${i.unit})`).join('\n');
+      const idx = parseInt(prompt('Em qual item geral voce quer cadastrar sabor/variante?\n\n' + label), 10) - 1;
+      const parent = inv[idx];
+      if (!parent) return;
+      const name = prompt('Nome do sabor/variante para ' + parent.name + ':');
+      if (!name) return;
+      const target = Number(prompt('Meta ideal desse sabor/variante para a semana:', '0') || 0);
+      const r = WeeklyAudit.addVariant(franchiseId, parent.id, name, { targetStock: target });
+      if (!r.ok) alert(r.error || 'Nao foi possivel cadastrar.');
+      loadInventory();
+    }
+    document.addEventListener('DOMContentLoaded', loadInventory);
+  </script>
+  <script src="../js/core/copilot-transport.js" defer></script>
+  <script src="../js/pages/lilo-scanner.js" defer></script>
+  <script src="../js/core/belinha-page-scanners.js?v=mp-v1" defer></script>
+  <script src="../js/core/belinha-widget.js?v=mp-v1" defer></script>
 </body>
 </html>
