@@ -615,14 +615,14 @@
         }, 3000);
 
         // SEMPRE força fetch direto via REST API do Firestore — não depende de SDK nem auth.
-        // Os docs orders_/caixa_/finances_/inventory_/staff_ tem allow read: true nas rules,
-        // então fetch público sem token funciona. Mais robusto que SDK que pode falhar
-        // silenciosamente por race condition de Firebase Auth ou erro de inicialização.
+        // Lista limitada aos docs com allow read:true nas Firestore rules:
+        // orders_*, caixa_*, finances_*, catalog_v2_* (publicos por design para sync de PCs).
+        // inventory_/staff_/recurring_expenses_/catalog_config_* exigem auth → ficam pro DataStore SDK.
         if (franchiseId) {
             const REST_URL = 'https://firestore.googleapis.com/v1/projects/milkypot-ad945/databases/(default)/documents/datastore/';
-            const docs2sync = ['orders_','caixa_','inventory_','staff_','finances_','recurring_expenses_','catalog_v2_','catalog_config_'].map(p => p + franchiseId);
-            console.log('🔄 Painel: iniciando fetch REST para fid=' + franchiseId);
-            Promise.all(docs2sync.map(docId =>
+            const PUBLIC_DOCS = ['orders_','caixa_','finances_','catalog_v2_','pdv_tabs_'].map(p => p + franchiseId);
+            console.log('🔄 Painel: fetch REST publico fid=' + franchiseId);
+            Promise.all(PUBLIC_DOCS.map(docId =>
                 fetch(REST_URL + encodeURIComponent(docId), { method: 'GET', cache: 'no-store' })
                     .then(r => r.ok ? r.json() : null)
                     .then(json => {
@@ -635,14 +635,12 @@
                         }
                         return [docId, 0];
                     })
-                    .catch(e => [docId, 'ERR:' + (e.message || e)])
+                    .catch(() => [docId, 0])
             )).then(results => {
-                console.log('✅ Painel: REST fetch ok fid=' + franchiseId, Object.fromEntries(results));
-                // Re-render dashboard com dados frescos
+                console.log('✅ Painel: REST sync ok', Object.fromEntries(results));
                 if (typeof loadDashboard === 'function') loadDashboard();
-                // Dispara evento pra outros widgets reagirem
                 try { window.dispatchEvent(new CustomEvent('mp_painel_synced', { detail: { fid: franchiseId } })); } catch(_) {}
-            }).catch(err => console.warn('❌ REST fetch failed:', err));
+            }).catch(() => {});
         }
 
         loadDashboard();
