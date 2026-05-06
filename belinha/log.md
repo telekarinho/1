@@ -26,7 +26,7 @@
 1. **❌ Dia dos Namorados 12/06/2026 (Semana 8):** semana8.md planeja sexta 12/06 como "bastidores + contador de indicações" — ignora completamente o Dia dos Namorados. 37 dias a partir de hoje = dentro da janela de 6 semanas. → ciclo #131 EMERGÊNCIA
 2. **⚠️ Dia dos Pais 09/08/2026 (Semana 17):** semana17.md abre domingo 09/08 com post genérico de "comfort food vs Linha Zero" sem menção ao Dia dos Pais. → ciclo #136
 
-**Commit:** (a preencher após commit)
+**Commit:** `b354880`
 
 **Próximo passo sugerido:**
 - **Ciclo #131 — URGENTE:** criar `belinha/content/dia-dos-namorados-2026-playbook.md` (keyword `NAMORADOS26`, cronograma 07–12/06, templates WA N1–N5, posts feed, Reel 15s) + nota de substituição no semana8.md para sexta 12/06 — padrão Dia das Mães ciclo #129
