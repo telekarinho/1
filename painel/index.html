@@ -131,6 +131,11 @@
                 <!-- Seu Negócio MilkyPot (investimento + projeção + dias ativo) -->
                 <div id="seuNegocioMount"></div>
 
+                <!-- Status banner (sync de dados) -->
+                <div id="syncStatusBanner" style="display:block;padding:10px 16px;border-radius:10px;margin:0 0 14px;font-size:.88rem;font-weight:600;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">
+                    🔄 Carregando dados da loja...
+                </div>
+
                 <!-- Mensagem motivacional (injetado por Motivacional.initPanel) -->
                 <div id="motivationMount"></div>
 
@@ -614,36 +619,70 @@
             }
         }, 3000);
 
+        // Helper para atualizar banner de status visível
+        function setSyncBanner(msg, type) {
+            var b = document.getElementById('syncStatusBanner');
+            if (!b) return;
+            b.textContent = msg;
+            if (type === 'ok') {
+                b.style.background = '#dcfce7'; b.style.color = '#16a34a'; b.style.borderColor = '#bbf7d0';
+                setTimeout(function(){ b.style.display = 'none'; }, 4000);
+            } else if (type === 'err') {
+                b.style.background = '#fee2e2'; b.style.color = '#dc2626'; b.style.borderColor = '#fecaca';
+            } else {
+                b.style.background = '#eff6ff'; b.style.color = '#1d4ed8'; b.style.borderColor = '#bfdbfe';
+            }
+            b.style.display = 'block';
+        }
+
+        // Wrapper protegido para loadDashboard — se falhar, mostra erro visível em vez de tela em branco
+        function safeLoadDashboard(label) {
+            try { loadDashboard(); }
+            catch (e) {
+                console.error('loadDashboard threw:', e);
+                setSyncBanner('❌ Erro ao renderizar dashboard (' + (label||'') + '): ' + (e.message||e), 'err');
+            }
+        }
+
         // SEMPRE força fetch direto via REST API do Firestore — não depende de SDK nem auth.
         // Lista limitada aos docs com allow read:true nas Firestore rules:
-        // orders_*, caixa_*, finances_*, catalog_v2_* (publicos por design para sync de PCs).
-        // inventory_/staff_/recurring_expenses_/catalog_config_* exigem auth → ficam pro DataStore SDK.
+        // orders_*, caixa_*, finances_*, catalog_v2_*, pdv_tabs_* (publicos por design para sync de PCs).
         if (franchiseId) {
             const REST_URL = 'https://firestore.googleapis.com/v1/projects/milkypot-ad945/databases/(default)/documents/datastore/';
             const PUBLIC_DOCS = ['orders_','caixa_','finances_','catalog_v2_','pdv_tabs_'].map(p => p + franchiseId);
+            setSyncBanner('🔄 Sincronizando ' + PUBLIC_DOCS.length + ' coleções do Firestore...', 'info');
             console.log('🔄 Painel: fetch REST publico fid=' + franchiseId);
-            Promise.all(PUBLIC_DOCS.map(docId =>
-                fetch(REST_URL + encodeURIComponent(docId), { method: 'GET', cache: 'no-store' })
-                    .then(r => r.ok ? r.json() : null)
-                    .then(json => {
+            Promise.all(PUBLIC_DOCS.map(function(docId) {
+                return fetch(REST_URL + encodeURIComponent(docId), { method: 'GET', cache: 'no-store' })
+                    .then(function(r) { return r.ok ? r.json() : null; })
+                    .then(function(json) {
                         if (!json || !json.fields || !json.fields.value) return [docId, 0];
-                        const valStr = json.fields.value.stringValue;
+                        var valStr = json.fields.value.stringValue;
                         if (typeof valStr === 'string') {
                             localStorage.setItem('mp_' + docId, valStr);
-                            let n = 0; try { n = JSON.parse(valStr).length || 0; } catch(_) { n = 1; }
+                            var n = 0; try { n = JSON.parse(valStr).length || 0; } catch(_) { n = 1; }
                             return [docId, n];
                         }
                         return [docId, 0];
                     })
-                    .catch(() => [docId, 0])
-            )).then(results => {
+                    .catch(function(e) { return [docId, 'ERR:' + (e.message||e)]; });
+            })).then(function(results) {
                 console.log('✅ Painel: REST sync ok', Object.fromEntries(results));
-                if (typeof loadDashboard === 'function') loadDashboard();
+                var totals = {};
+                results.forEach(function(r) { totals[r[0].split('_')[0]] = r[1]; });
+                var summary = '✅ ' + (totals.orders||0) + ' pedidos · ' + (totals.caixa||0) + ' caixa · ' + (totals.finances||0) + ' financeiro';
+                setSyncBanner(summary, 'ok');
+                safeLoadDashboard('after-sync');
                 try { window.dispatchEvent(new CustomEvent('mp_painel_synced', { detail: { fid: franchiseId } })); } catch(_) {}
-            }).catch(() => {});
+            }).catch(function(err) {
+                console.error('REST fetch failed:', err);
+                setSyncBanner('❌ Falha de rede ao sincronizar: ' + (err.message||err), 'err');
+            });
+        } else {
+            setSyncBanner('❌ ID da franquia não encontrado na sessão nem na URL', 'err');
         }
 
-        loadDashboard();
+        safeLoadDashboard('initial');
         i18n.translatePage();
 
         // Banner motivacional + toasts periodicos
