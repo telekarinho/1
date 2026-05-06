@@ -636,37 +636,72 @@
 
         var allProducts = getAllProducts();
 
+        // Lazy rendering state
+        var LAZY_BATCH = 6;
+        var lazyFiltered = [];
+        var lazyOffset = 0;
+        var lazyObserver = null;
+
+        function buildCardHtml(p) {
+            var badgeHtml = '';
+            if (p.isAdulto) badgeHtml = '<span class="card-badge badge-adulto">+18</span>';
+            else if (p.highlight) badgeHtml = '<span class="card-badge badge-popular">⭐</span>';
+            var formatIcon = p.formatType === 'shake' ? '🥤' : (p.category === 'acai' && p.formatType !== 'shake' ? '🥣' : '🍨');
+            return '<div class="product-card-mobile" onclick="openProductSheet(\'' + p.baseId + '\',\'' + p.formatoId + '\',\'' + p.saborId + '\')">' +
+                '<div class="card-emoji-wrap">' +
+                    '<span class="card-emoji">' + p.emoji + '</span>' +
+                    '<span class="card-format-icon">' + formatIcon + '</span>' +
+                    badgeHtml +
+                '</div>' +
+                '<div class="card-info">' +
+                    '<h3 class="card-name">' + p.name + '</h3>' +
+                    '<p class="card-desc">' + p.desc + '</p>' +
+                    '<div class="card-footer">' +
+                        '<span class="card-price">a partir de <strong>R$ 10</strong></span>' +
+                        '<button class="card-add-btn">Pedir</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }
+
+        function renderBatch() {
+            var grid = document.getElementById('productGrid');
+            if (!grid) return;
+            var sentinel = document.getElementById('lazy-sentinel');
+            if (sentinel) sentinel.remove();
+            if (lazyObserver) { lazyObserver.disconnect(); lazyObserver = null; }
+
+            var batch = lazyFiltered.slice(lazyOffset, lazyOffset + LAZY_BATCH);
+            var html = '';
+            batch.forEach(function(p) { html += buildCardHtml(p); });
+            grid.insertAdjacentHTML('beforeend', html);
+            lazyOffset += batch.length;
+
+            if (lazyOffset < lazyFiltered.length && 'IntersectionObserver' in window) {
+                var newSentinel = document.createElement('div');
+                newSentinel.id = 'lazy-sentinel';
+                newSentinel.setAttribute('aria-hidden', 'true');
+                grid.appendChild(newSentinel);
+                lazyObserver = new IntersectionObserver(function(entries) {
+                    if (entries[0].isIntersecting) { renderBatch(); }
+                }, { rootMargin: '300px' });
+                lazyObserver.observe(newSentinel);
+            } else if (lazyOffset < lazyFiltered.length) {
+                // Fallback for browsers without IntersectionObserver
+                var fallbackBatch = lazyFiltered.slice(lazyOffset).map(buildCardHtml).join('');
+                grid.insertAdjacentHTML('beforeend', fallbackBatch);
+                lazyOffset = lazyFiltered.length;
+            }
+        }
+
         function renderProducts(filter) {
             var grid = document.getElementById('productGrid');
             if (!grid) return;
-            var filtered = allProducts.filter(function(p) { return p.category === filter; });
-            var html = '';
-
-            filtered.forEach(function(p) {
-                var badgeHtml = '';
-                if (p.isAdulto) badgeHtml = '<span class="card-badge badge-adulto">+18</span>';
-                else if (p.highlight) badgeHtml = '<span class="card-badge badge-popular">⭐</span>';
-
-                var formatIcon = p.formatType === 'shake' ? '🥤' : (p.category === 'acai' && p.formatType !== 'shake' ? '🥣' : '🍨');
-
-                html += '<div class="product-card-mobile" onclick="openProductSheet(\'' + p.baseId + '\',\'' + p.formatoId + '\',\'' + p.saborId + '\')">' +
-                    '<div class="card-emoji-wrap">' +
-                        '<span class="card-emoji">' + p.emoji + '</span>' +
-                        '<span class="card-format-icon">' + formatIcon + '</span>' +
-                        badgeHtml +
-                    '</div>' +
-                    '<div class="card-info">' +
-                        '<h3 class="card-name">' + p.name + '</h3>' +
-                        '<p class="card-desc">' + p.desc + '</p>' +
-                        '<div class="card-footer">' +
-                            '<span class="card-price">a partir de <strong>R$ 10</strong></span>' +
-                            '<button class="card-add-btn">Pedir</button>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>';
-            });
-
-            grid.innerHTML = html;
+            if (lazyObserver) { lazyObserver.disconnect(); lazyObserver = null; }
+            lazyFiltered = allProducts.filter(function(p) { return p.category === filter; });
+            lazyOffset = 0;
+            grid.innerHTML = '';
+            renderBatch();
         }
 
         window.filterProducts = function(event, cat) {
