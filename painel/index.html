@@ -547,9 +547,31 @@
             badge.style.display = newOrders.length > 0 ? '' : 'none';
         }, 5000);
 
-        // Init
-        // Se fid veio da URL (super_admin sem franchiseId na sessão), força sync do Firestore
-        // O DataStore já iniciou sem saber o fid; precisamos sincronizar os docs agora.
+        // ── Re-render quando dados chegam do Firestore (fix do timing async) ──────
+        // O DataStore carrega dados do Firestore de forma assíncrona (1-3s).
+        // loadDashboard() roda antes dos dados chegarem e mostra zeros.
+        // Esses listeners garantem re-render quando o sync completar.
+        let _dashboardRendered = false;
+        function _reloadDashboard() {
+            clearTimeout(_reloadDashboard._t);
+            _reloadDashboard._t = setTimeout(function() { loadDashboard(); }, 120);
+        }
+        window.addEventListener('mp_synced', _reloadDashboard);         // sync inicial
+        window.addEventListener('mp_remote_update', function(e) {       // realtime Firestore
+            const key = e.detail && e.detail.key ? e.detail.key : '';
+            if (key.includes(franchiseId)) _reloadDashboard();
+        });
+
+        // Também polling leve: se após 3s ainda mostrar R$0, força re-render
+        setTimeout(function() {
+            const kpiEl = document.getElementById('kpiRevenueToday');
+            if (kpiEl && (kpiEl.textContent === 'R$ 0' || kpiEl.textContent === 'R$ 0,00')) {
+                loadDashboard();
+            }
+        }, 3000);
+
+        // Se fid veio da URL (super_admin sem franchiseId na sessão):
+        // força fetch manual porque o DataStore não setou listeners para este fid
         if (!session.franchiseId && franchiseId) {
             const _db = firebase.firestore ? firebase.firestore() : null;
             if (_db) {
@@ -563,8 +585,8 @@
                         })
                         .catch(() => {})
                 )).then(() => {
-                    console.log('✅ Painel: sync forçado concluído para fid=' + franchiseId);
-                    loadDashboard(); // re-render com dados reais
+                    console.log('✅ Painel: sync forçado fid=' + franchiseId);
+                    loadDashboard();
                 });
             }
         }
