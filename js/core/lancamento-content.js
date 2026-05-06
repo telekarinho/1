@@ -20,8 +20,8 @@ const LancamentoContent = {
         whatsappLink: 'https://wa.me/5543998042424',
         site: 'milkypot.com',
         horario: '14h às 23h',
-        launchDate: '2026-04-23',
-        launchDateLabel: '23/04/2026 (quinta)',
+        launchDate: '2026-04-25',
+        launchDateLabel: '25/04/2026 (sábado)',
         instagram: '@milkypotbr',
         produtos: [
             'Potinho personalizado (base Ninho / Açaí / Zero-Fit)',
@@ -719,6 +719,796 @@ obrigada, Londrina. isso é só o começo 💗
 🕑 14h às 23h todos os dias
 📲 (43) 99804-2424 · milkypot.com`,
                     hashtags: '#milkypot #londrina #londrinapr #semana1 #obrigado #sobremesalondrina #acailondrina #muffato #milkypotlondrina #potinhomaisfelizdomundo'
+                }
+            ]
+        },
+
+        // ========================================
+        // SEMANA 2 — 28 ABR a 3 MAI
+        // ========================================
+        {
+            dateISO: '2026-04-28',
+            dayLabel: 'S2·Ter',
+            dayName: 'Terça-feira',
+            dateLabel: '28/04',
+            theme: 'SEMANA 2 — CONSOLIDAR PRESENÇA',
+            mood: '📱 Conteúdo simples que funciona',
+            items: [
+                {
+                    id: 's2-1',
+                    time: '12:00',
+                    type: 'estático',
+                    platforms: ['instagram'],
+                    title: '📷 Post: Cardápio visual da semana',
+                    priority: 'high',
+                    description: 'Foto limpa do potinho com os toppings mais pedidos. Pergunte qual combinação o cliente quer ver.',
+                    caption: `qual é o SEU potinho perfeito? 🐑✨
+
+ninho com morango? açaí com granola? zero-fit com nutella?
+
+comenta aqui a sua combinação dos sonhos 👇 que a gente pode fazer!
+
+📍 Av. Quintino Bocaiuva 1045 — Muffato
+🕑 14h às 23h todos os dias
+📲 (43) 99804-2424`,
+                    hashtags: '#milkypot #londrina #potinhodesobremesa #acailondrina #sobremesalondrina #londrinapr #muffato #milkypotbr',
+                    links: [
+                        { label: '📸 Abrir Instagram', url: 'https://www.instagram.com/milkypotbr' },
+                        { label: '🎨 Criar no Canva', url: 'https://canva.com' }
+                    ]
+                },
+                {
+                    id: 's2-2',
+                    time: '18:00',
+                    type: 'stories',
+                    platforms: ['instagram'],
+                    title: '📲 Stories: Enquete do sabor + sticker "vote"',
+                    priority: 'high',
+                    description: '3 stories rápidos: 1) foto do cardápio, 2) enquete "Ninho X Açaí", 3) contagem regressiva pro fim de semana.',
+                    instructions: `Story 1: Foto do cardápio com texto "qual vc escolhe hoje?"
+Story 2: Enquete — Ninho 🥛 VS Açaí 🍇 (usa o sticker de enquete)
+Story 3: Produto do dia com localização marcada (adiciona o endereço como sticker)
+Dica: responda TODOS os votos com um emoji — o algoritmo ama isso`,
+                    links: [
+                        { label: '📸 Abrir Stories', url: 'https://www.instagram.com/milkypotbr' }
+                    ]
+                }
+            ]
+        },
+        {
+            dateISO: '2026-04-30',
+            dayLabel: 'S2·Qui',
+            dayName: 'Quinta-feira',
+            dateLabel: '30/04',
+            theme: '1 SEMANA COMPLETA!',
+            mood: '🎉 Celebrar + agradecer',
+            items: [
+                {
+                    id: 's2-3',
+                    time: '12:00',
+                    type: 'reel',
+                    platforms: ['instagram', 'tiktok'],
+                    title: '🎬 Reel: "1 semana de MilkyPot em Londrina"',
+                    priority: 'critical',
+                    duration: '20s',
+                    description: 'Reel comemorativo rápido. Emoção = alcance. Grave um vídeo autêntico falando o que sentiu na primeira semana.',
+                    videoScript: `0-3s: "UMA semana atrás a gente abriu as portas pela primeira vez"
+3-8s: Mostrar o movimento da loja / fila / sorrisos (use fotos/vídeos que já tem)
+8-15s: "Cada potinho vendido foi um 'obrigada, Londrina' na prática"
+15-20s: Close da ovelhinha / logo com texto "mal posso esperar pela próxima semana 💗"
+Áudio: algo emocional trending no momento (busque "música de gratidão" no TikTok)`,
+                    caption: `1 semana. 🐑💗
+
+não imaginei que ia ser assim.
+londrina, vocês chegaram com tudo.
+
+obrigada por cada potinho, cada foto, cada mensagem.
+isso aqui tá só começando.
+
+📍 Av. Quintino Bocaiuva 1045 — Muffato
+🕑 14h–23h todos os dias`,
+                    hashtags: '#milkypot #londrina #1semana #obrigada #sobremesalondrina #acailondrina #londrinapr #muffato #milkypotbr #potinhomaisfelizdomundo',
+                    links: [
+                        { label: '🎬 Editar no CapCut', url: 'https://www.capcut.com' },
+                        { label: '📸 Postar no Instagram', url: 'https://www.instagram.com/milkypotbr' },
+                        { label: '🎵 Postar no TikTok', url: 'https://www.tiktok.com/@milkypotbr' }
+                    ]
+                }
+            ]
+        },
+        {
+            dateISO: '2026-05-01',
+            dayLabel: 'S2·Sex',
+            dayName: 'Sexta-feira · Dia do Trabalho',
+            dateLabel: '01/05',
+            theme: 'FERIADO — PROMO ESPECIAL',
+            mood: '🎉 Feriado = movimento',
+            items: [
+                {
+                    id: 's2-4',
+                    time: '10:00',
+                    type: 'estático',
+                    platforms: ['instagram', 'tiktok'],
+                    title: '📷 Post feriado: "Dia do Trabalhador merece potinho"',
+                    priority: 'critical',
+                    description: 'Feriado é pico de movimento. Post de manhã cedo capturando quem vai ao Muffato.',
+                    caption: `dia do trabalhador merece um mimo 🐑🎉
+
+você trabalhou demais essa semana. recompensa obrigatória.
+
+🍡 potinho personalizado do SEU jeito
+🍇 açaí buffet completo
+🍦 sorvetes e muito mais
+
+📍 Av. Quintino Bocaiuva 1045 — dentro do Muffato
+🕑 a partir das 14h · sem fila, sem estresse`,
+                    hashtags: '#diadotrabalhador #feriado #londrina #muffato #sobremesalondrina #acailondrina #milkypot #milkypotbr #londrinapr',
+                    links: [
+                        { label: '📸 Abrir Instagram', url: 'https://www.instagram.com/milkypotbr' }
+                    ]
+                }
+            ]
+        },
+
+        // ========================================
+        // SEMANA 3 — 5 A 9 MAI (SEMANA ATUAL)
+        // ========================================
+        {
+            dateISO: '2026-05-05',
+            dayLabel: '🔥 HOJE',
+            dayName: 'Terça-feira — Recomeço sem culpa',
+            dateLabel: '05/05',
+            theme: 'RETOMADA — O ALGORITMO NÃO LEMBRA DO PASSADO, VOCÊ SIM',
+            mood: '💪 Bora do começo, sem culpa',
+            items: [
+                {
+                    id: 'mai05-1',
+                    time: 'AGORA · 5min',
+                    type: 'stories',
+                    platforms: ['instagram'],
+                    title: '📲 Stories de retomada — 3 slides rápidos (5 min)',
+                    priority: 'critical',
+                    description: 'A forma mais rápida de reativar o perfil. Não precisa de edição. Grave com o celular agora mesmo da loja ou de casa.',
+                    instructions: `FAÇA AGORA — demora 5 minutos:
+
+Story 1 — Texto simples no fundo rosa:
+"oi londrina 🐑
+a gente não sumiu, a gente tava só... montando potinho ✨"
+
+Story 2 — Foto do produto (qualquer foto que tiver):
+Escreve: "cardápio completo 👇" e adiciona o link do site
+
+Story 3 — Enquete rápida:
+"qual potinho você quer ver no feed essa semana?"
+Opção A: 🍫 Ninho com Nutella
+Opção B: 🍇 Açaí com frutas
+
+Dica de ouro: responda todo mundo que votar com um emoji. Isso faz o algoritmo te dar mais alcance.`,
+                    links: [
+                        { label: '📸 Abrir Instagram (stories)', url: 'https://www.instagram.com/milkypotbr' }
+                    ]
+                },
+                {
+                    id: 'mai05-2',
+                    time: '12:00 – 13:00',
+                    type: 'estático',
+                    platforms: ['instagram'],
+                    title: '📷 Post: O potinho que mais vendeu essa semana',
+                    priority: 'high',
+                    description: 'Foto limpa do produto mais pedido. Caption simples. Pergunta no final = engajamento. Você pode gerar a imagem no Canva ou usar foto real do produto.',
+                    caption: `já sabe qual é o queridinho de londrina? 🐑👇
+
+esse aqui saiu mais vezes essa semana do que a gente contou.
+
+qual a combinação que você nunca enjoa?
+comenta aqui embaixo 💬 (a gente lê todos)
+
+📍 Av. Quintino Bocaiuva 1045 — Muffato
+🕑 14h às 23h todos os dias
+📲 (43) 99804-2424 · milkypot.com`,
+                    hashtags: '#milkypot #londrina #londrinapr #potinhodesobremesa #acailondrina #sobremesalondrina #muffato #milkypotbr #curtalondrina #londrinafood #sorveterialondrina',
+                    imagePrompt: 'Clean overhead product shot of a customized Brazilian açaí bowl/cup with white fluffy base (Ninho), fresh strawberries, granola, and drizzle of condensed milk. Soft natural light, white marble surface, pastel pink accents, professional food photography style.',
+                    links: [
+                        { label: '🎨 Gerar imagem no Canva', url: 'https://canva.com' },
+                        { label: '🖼️ Gerar no Whisk (IA)', url: 'https://whisk.com' },
+                        { label: '📸 Postar no Instagram', url: 'https://www.instagram.com/milkypotbr' }
+                    ]
+                },
+                {
+                    id: 'mai05-3',
+                    time: '19:00 – 20:00',
+                    type: 'outbound',
+                    platforms: ['instagram', 'dm'],
+                    title: '📩 Engajamento: curtir + comentar 20 posts de Londrina',
+                    priority: 'high',
+                    description: 'O segredo que ninguém conta: sair do perfil e interagir com o público certo faz o algoritmo te mostrar pra mais gente. Custa zero.',
+                    instructions: `PASSO A PASSO (20 minutos):
+
+1. Abre o Instagram e busca cada uma dessas hashtags:
+   #londrinafood
+   #londrinapr
+   #muffatolondrina
+   #sobremesalondrina
+
+2. Em CADA hashtag, curta os 5 posts mais recentes
+
+3. COMENTE algo genuíno em pelo menos 5 posts (não emoji sozinho):
+   Ex: "que lindo isso! 🥰 londrina tem cada coisa boa né?"
+   Ex: "adorei esse lugar! londrina arrasando 🍦"
+
+4. Siga 3-4 perfis locais de gastronomia/lifestyle
+
+5. Responde qualquer DM ou comentário que tiver pendente
+
+Resultado esperado: +50-150 visualizações orgânicas nas próximas 24h`,
+                    links: [
+                        { label: '🔍 Buscar #londrinafood', url: 'https://www.instagram.com/explore/tags/londrinafood/' },
+                        { label: '🔍 Buscar #sobremesalondrina', url: 'https://www.instagram.com/explore/tags/sobremesalondrina/' },
+                        { label: '🔍 Buscar #muffatolondrina', url: 'https://www.instagram.com/explore/tags/muffatolondrina/' }
+                    ]
+                }
+            ]
+        },
+        {
+            dateISO: '2026-05-06',
+            dayLabel: 'S3·Qua',
+            dayName: 'Quarta-feira',
+            dateLabel: '06/05',
+            theme: 'CONTEÚDO DE PRODUTO + BEHIND THE SCENES',
+            mood: '🎬 Mostrar como é feito',
+            items: [
+                {
+                    id: 'mai06-1',
+                    time: '12:00',
+                    type: 'reel',
+                    platforms: ['instagram', 'tiktok'],
+                    title: '🎬 Reel: "Como montar um potinho MilkyPot" (ASMR)',
+                    priority: 'critical',
+                    duration: '15-20s',
+                    description: 'Esse é o tipo de vídeo que mais viraliza pra sorveterias/açaí. Grave na loja, mostre o processo de montar um potinho do início ao fim. Sem falar nada — só o som e a música.',
+                    videoScript: `Câmera de cima (overhead) ou lateral próxima ao balcão.
+Sequência:
+0-3s: Copo/potinho vazio sendo pego
+3-7s: Base sendo colocada (ninho ou açaí) — devagar, câmera próxima
+7-12s: Toppings um a um (morango, granola, leite condensado...)
+12-17s: Potinho finalizado, close final
+17-20s: Logo MilkyPot + endereço em texto
+
+Áudio: busque "ASMR food" ou "satisfying food sounds" no TikTok/CapCut
+OU use uma música lo-fi/chill trending`,
+                    caption: `do zero ao perfeito em 20 segundos 🐑✨
+
+cada potinho é feito na hora, do jeito que você pede.
+
+📍 Av. Quintino Bocaiuva 1045 — Muffato · 14h às 23h`,
+                    hashtags: '#milkypot #londrina #potinhodesobremesa #asmr #satisfying #acailondrina #muffato #milkypotbr #sobremesalondrina #londrinapr',
+                    links: [
+                        { label: '🎬 Editar no CapCut', url: 'https://www.capcut.com' },
+                        { label: '📸 Postar no Instagram', url: 'https://www.instagram.com/milkypotbr' },
+                        { label: '🎵 Postar no TikTok', url: 'https://www.tiktok.com' }
+                    ]
+                },
+                {
+                    id: 'mai06-2',
+                    time: '19:00',
+                    type: 'stories',
+                    platforms: ['instagram'],
+                    title: '📲 Stories: Bastidores do dia',
+                    priority: 'high',
+                    instructions: `Grave 2-3 stories curtos do dia a dia da loja:
+- Preparação antes de abrir
+- Equipe no balcão
+- Produto sendo preparado
+- Fila ou movimento (se tiver)
+
+Adicione texto simples: "bastidores de hoje 🐑"
+Marque o local: Muffato Londrina`,
+                    links: [
+                        { label: '📸 Abrir Stories', url: 'https://www.instagram.com/milkypotbr' }
+                    ]
+                }
+            ]
+        },
+        {
+            dateISO: '2026-05-07',
+            dayLabel: 'S3·Qui',
+            dayName: 'Quinta-feira',
+            dateLabel: '07/05',
+            theme: 'PROVA SOCIAL + CLIENTE',
+            mood: '💬 Voz do cliente',
+            items: [
+                {
+                    id: 'mai07-1',
+                    time: '10:00',
+                    type: 'outbound',
+                    platforms: ['instagram', 'dm'],
+                    title: '🔍 Caçada de UGC: repostar clientes',
+                    priority: 'critical',
+                    description: 'Conteúdo de cliente é 10x mais confiável que conteúdo da marca. Busque posts marcando a loja e peça permissão pra repostar.',
+                    instructions: `PASSO A PASSO:
+
+1. Busca no Instagram: #milkypot #milkypotlondrina #milkypotbr
+2. Também vai em: @milkypotbr → ver marcações (ícone de pessoa)
+3. Para cada foto de cliente encontrada:
+   - Curte o post
+   - Comenta: "que lindo! 🐑💗 posso repostar nos stories?"
+   - Se confirmar, reposta no stories marcando o cliente
+
+4. Crie um Destaque "Amamos ⭐" e salve os melhores depoimentos lá
+
+DICA: Se não tiver UGC ainda, mande DM para 5 clientes que compraram essa semana:
+"Oi [nome]! Viu que saiu fotos lindas da loja? 📸 Se você vier essa semana e fizer foto, a gente reposta no stories 🐑💗"`,
+                    links: [
+                        { label: '🔍 Ver marcações do perfil', url: 'https://www.instagram.com/milkypotbr' },
+                        { label: '🔍 Buscar #milkypotlondrina', url: 'https://www.instagram.com/explore/tags/milkypotlondrina/' }
+                    ]
+                },
+                {
+                    id: 'mai07-2',
+                    time: '19:00',
+                    type: 'estático',
+                    platforms: ['instagram'],
+                    title: '📷 Post: "O que nossos clientes estão pedindo"',
+                    priority: 'high',
+                    caption: `o londrinense tem bom gosto. confirmado. 🐑✨
+
+essa semana os mais pedidos foram:
+🥇 potinho de ninho com morango
+🥈 açaí com granola e banana
+🥉 milkshake de chocolate
+
+e você? qual é o SEU favorito?
+comenta aqui que a gente decide o próximo especial da semana 👇`,
+                    hashtags: '#milkypot #londrina #potinhodesobremesa #acailondrina #sobremesalondrina #muffato #milkypotbr #londrinapr',
+                    links: [
+                        { label: '📸 Postar no Instagram', url: 'https://www.instagram.com/milkypotbr' }
+                    ]
+                }
+            ]
+        },
+        {
+            dateISO: '2026-05-08',
+            dayLabel: 'S3·Sex',
+            dayName: 'Sexta-feira',
+            dateLabel: '08/05',
+            theme: 'PROMO FIM DE SEMANA + VIRALIZAR',
+            mood: '🎉 Sextou = move',
+            items: [
+                {
+                    id: 'mai08-1',
+                    time: '10:00',
+                    type: 'estático',
+                    platforms: ['instagram', 'tiktok'],
+                    title: '📷 Post: Promoção fim de semana',
+                    priority: 'critical',
+                    caption: `SEXTOU, LONDRINA 🐑🎉
+
+promoção só pro fim de semana:
+🍡 2 potinhos médios = R$ [preço] (diga o valor!)
+válido sábado e domingo
+
+vem com a galera, a namorada, a família...
+a Lana tá esperando ✨
+
+📍 Av. Quintino Bocaiuva 1045 — Muffato
+🕑 14h às 23h`,
+                    hashtags: '#sextou #milkypot #londrina #promo #acailondrina #sobremesalondrina #muffato #milkypotbr #londrinapr #londrinafood',
+                    links: [
+                        { label: '📸 Postar no Instagram', url: 'https://www.instagram.com/milkypotbr' },
+                        { label: '🎵 Postar no TikTok', url: 'https://www.tiktok.com' }
+                    ]
+                },
+                {
+                    id: 'mai08-2',
+                    time: '18:00',
+                    type: 'reel',
+                    platforms: ['instagram', 'tiktok'],
+                    title: '🎬 Reel viral: "POV: sexta no Muffato"',
+                    priority: 'high',
+                    duration: '15s',
+                    description: 'POV (ponto de vista) é o formato que mais viraliza no momento. Simples de gravar, alta chance de alcance.',
+                    videoScript: `0-2s: Texto: "POV: você lembrou que tem MilkyPot no Muffato 🐑"
+2-6s: Plano da loja com movimento / vitrine
+6-10s: Produto sendo montado (can reuse from Wednesday reel)
+10-15s: Produto pronto + texto "te vejo aqui? 📍 Muffato Londrina"
+
+Áudio: use trend de POV do TikTok ou algo animado/divertido`,
+                    caption: `POV: sexta e você lembrou que tem MilkyPot no Muffato 🐑✨
+
+te vejo aqui? 📍 Av. Quintino Bocaiuva 1045`,
+                    hashtags: '#pov #milkypot #londrina #muffato #sextou #acailondrina #milkypotbr #londrinapr',
+                    links: [
+                        { label: '🎬 Editar no CapCut', url: 'https://www.capcut.com' },
+                        { label: '🎵 Trends no TikTok', url: 'https://www.tiktok.com/explore' }
+                    ]
+                }
+            ]
+        },
+
+        // ========================================
+        // SEMANA 4 — 11 A 15 MAI
+        // ========================================
+        {
+            dateISO: '2026-05-11',
+            dayLabel: 'S4·Seg',
+            dayName: 'Segunda-feira',
+            dateLabel: '11/05',
+            theme: 'SEMANA 4 — MÊS 1 COMPLETO',
+            mood: '🏆 Olhar pra trás e celebrar',
+            items: [
+                {
+                    id: 'mai11-1',
+                    time: '12:00',
+                    type: 'carrossel',
+                    platforms: ['instagram'],
+                    title: '📸 Carrossel: "Mês 1 de MilkyPot"',
+                    priority: 'critical',
+                    description: 'Todo mundo engaja com números e resultados. Mostre dados reais do primeiro mês (número de potinhos vendidos, clientes, reviews, etc.).',
+                    caption: `1 mês. 🐑💗
+
+a gente não imaginava que ia ser assim.
+mas foi melhor.
+
+[slide 1] o número que mais importa: você voltou
+[slide 2] X potinhos servidos (coloque o número real)
+[slide 3] X avaliações 5 estrelas (Google + Instagram)
+[slide 4] sabores mais pedidos do mês
+[slide 5] o que vem no mês 2 👀
+[slide 6] obrigada, Londrina
+
+📍 Av. Quintino Bocaiuva 1045 — Muffato`,
+                    hashtags: '#milkypot #londrina #mes1 #obrigada #sobremesalondrina #acailondrina #muffato #milkypotbr #londrinapr #potinhomaisfelizdomundo',
+                    links: [
+                        { label: '🎨 Criar carrossel no Canva', url: 'https://canva.com' },
+                        { label: '📊 Ver analytics Instagram', url: 'https://www.instagram.com/milkypotbr/insights/' }
+                    ]
+                }
+            ]
+        },
+        {
+            dateISO: '2026-05-12',
+            dayLabel: 'S4·Ter',
+            dayName: 'Terça-feira',
+            dateLabel: '12/05',
+            theme: 'DIA DAS MÃES — CONTEÚDO ESPECIAL',
+            mood: '💕 Dia das Mães = pico',
+            items: [
+                {
+                    id: 'mai12-1',
+                    time: '08:00',
+                    type: 'estático',
+                    platforms: ['instagram', 'tiktok'],
+                    title: '📷 Post: Feliz Dia das Mães + Promo especial',
+                    priority: 'critical',
+                    description: 'Dia das Mães é uma das datas de maior movimento no ano. Post emotivo + oferta especial.',
+                    caption: `feliz dia das mães, londrina 💕🐑
+
+hoje a sobremesa é por conta da Lana.
+
+traga sua mãe aqui e ganhe um MIMO ESPECIAL 🎁
+(pergunte no balcão!)
+
+porque mãe merece o potinho mais feliz do mundo 🥹
+
+📍 Av. Quintino Bocaiuva 1045 — Muffato
+🕑 a partir das 14h`,
+                    hashtags: '#diadasmaes #maes2026 #milkypot #londrina #sobremesalondrina #acailondrina #muffato #milkypotbr #presentedemae #londrinapr',
+                    links: [
+                        { label: '📸 Postar no Instagram', url: 'https://www.instagram.com/milkypotbr' }
+                    ]
+                },
+                {
+                    id: 'mai12-2',
+                    time: '19:00',
+                    type: 'stories',
+                    platforms: ['instagram'],
+                    title: '📲 Stories: fotos de mães com potinhos',
+                    priority: 'high',
+                    instructions: `Peça para clientes tirarem foto com a mãe + potinho na loja.
+Ofereça um desconto ou brinde para quem postar marcando @milkypotbr.
+Reposte todas as fotos nos stories ao longo do dia.
+Crie um destaque "Mães 💕" com as melhores fotos.`,
+                    links: [
+                        { label: '📸 Ver marcações', url: 'https://www.instagram.com/milkypotbr' }
+                    ]
+                }
+            ]
+        },
+        {
+            dateISO: '2026-05-13',
+            dayLabel: 'S4·Qua',
+            dayName: 'Quarta-feira',
+            dateLabel: '13/05',
+            theme: 'TENDÊNCIA + VIRAL',
+            mood: '📈 Usar trend do momento',
+            items: [
+                {
+                    id: 'mai13-1',
+                    time: '12:00',
+                    type: 'reel',
+                    platforms: ['instagram', 'tiktok'],
+                    title: '🎬 Reel: Use trend do momento (áudio trending)',
+                    priority: 'high',
+                    duration: '15s',
+                    description: 'Pegar uma trend do TikTok/Reels e adaptar para o produto é a forma mais rápida de viralizar. Você não precisa ser criativo — só adapte o formato.',
+                    instructions: `COMO USAR UMA TREND:
+1. Abra o TikTok e veja o que está viral hoje (ícone de busca → "trending")
+2. Escolha uma trend que dá pra adaptar pro produto (comida, surpresa, POV, etc.)
+3. Grave o mesmo esquema com o potinho/loja
+4. Use o MESMO ÁUDIO da trend original (isso é o segredo do alcance)
+
+Ideias de adaptação:
+- Trend de "expectativa vs. realidade": mostra o potinho no cardápio vs. o potinho real (ainda melhor)
+- Trend de "o que X quer" vs. "o que tem": público quer sorvete / MilkyPot entrega
+- POV de "ser cliente da MilkyPot pela primeira vez"`,
+                    links: [
+                        { label: '📈 Ver trending TikTok', url: 'https://www.tiktok.com/explore' },
+                        { label: '🎬 Editar no CapCut', url: 'https://www.capcut.com' },
+                        { label: '🔥 Ver trending Reels', url: 'https://www.instagram.com/reels/clips/trending/' }
+                    ]
+                }
+            ]
+        },
+        {
+            dateISO: '2026-05-14',
+            dayLabel: 'S4·Qui',
+            dayName: 'Quinta-feira',
+            dateLabel: '14/05',
+            theme: 'MILKYCLUBE + FIDELIDADE',
+            mood: '💰 Cashback que viraliza',
+            items: [
+                {
+                    id: 'mai14-1',
+                    time: '12:00',
+                    type: 'carrossel',
+                    platforms: ['instagram'],
+                    title: '📸 Carrossel: Apresentar o MilkyClube',
+                    priority: 'critical',
+                    description: 'O programa de fidelidade é um diferencial ENORME. Use isso como conteúdo. Explique os benefícios de forma simples.',
+                    caption: `enquanto você tá lendo isso, alguém tá ganhando cashback em sorvete 🐑💰
+
+apresenta: o MILKYCLUBE.
+
+✅ cashback de até 7% em toda compra
+✅ bônus de aniversário
+✅ indica amigos e ganha mais
+✅ grátis pra sempre
+
+como entrar: milkypot.com/clube (leva 10 segundos)
+
+ou manda mensagem pra gente te cadastrar na hora 📲`,
+                    hashtags: '#milkyclube #cashback #milkypot #londrina #fidelidade #sobremesalondrina #acailondrina #muffato #milkypotbr #londrinapr',
+                    links: [
+                        { label: '🎁 Abrir MilkyClube', url: 'https://milkypot.com/clube' },
+                        { label: '📸 Postar no Instagram', url: 'https://www.instagram.com/milkypotbr' }
+                    ]
+                }
+            ]
+        },
+        {
+            dateISO: '2026-05-15',
+            dayLabel: 'S4·Sex',
+            dayName: 'Sexta-feira',
+            dateLabel: '15/05',
+            theme: 'FIM DE SEMANA FORTE',
+            mood: '🔥 Promo + engajamento máximo',
+            items: [
+                {
+                    id: 'mai15-1',
+                    time: '09:00',
+                    type: 'estático',
+                    platforms: ['instagram', 'tiktok'],
+                    title: '📷 Promo: Desafio de marcação (viral barato)',
+                    priority: 'critical',
+                    description: 'Sorteios e desafios de marcação são o jeito mais barato de aumentar seguidores organicamente.',
+                    caption: `SORTEIO 🐑🎁
+
+pra ganhar 2 potinhos GRÁTIS:
+✅ segue @milkypotbr
+✅ curte esse post
+✅ marca 2 amigos que merecem sorvete
+
+resultado: domingo às 19h 🎉
+
+(compartilha nos stories = participa em dobro 🍀)`,
+                    hashtags: '#sorteio #milkypot #londrina #gratis #acailondrina #sobremesalondrina #muffato #milkypotbr #londrinapr #londrinafood #ganha',
+                    links: [
+                        { label: '📸 Postar no Instagram', url: 'https://www.instagram.com/milkypotbr' }
+                    ]
+                }
+            ]
+        },
+
+        // ========================================
+        // SEMANA 5 — 18 A 22 MAI
+        // ========================================
+        {
+            dateISO: '2026-05-18',
+            dayLabel: 'S5·Seg',
+            dayName: 'Segunda-feira',
+            dateLabel: '18/05',
+            theme: 'SEMANA 5 — CONSOLIDAÇÃO DE ROTINA',
+            mood: '📅 Consistência vence criatividade',
+            items: [
+                {
+                    id: 'mai18-1',
+                    time: '12:00',
+                    type: 'reel',
+                    platforms: ['instagram', 'tiktok'],
+                    title: '🎬 Reel: "Segunda merece um mimo"',
+                    priority: 'high',
+                    duration: '15s',
+                    caption: `segunda veio pesada, mas o potinho veio pesado também 🐑💪
+
+de segunda a domingo, 14h às 23h.
+📍 Muffato Londrina`,
+                    hashtags: '#segunda #milkypot #londrina #sobremesalondrina #acailondrina #muffato #milkypotbr',
+                    links: [
+                        { label: '🎬 Editar no CapCut', url: 'https://www.capcut.com' }
+                    ]
+                }
+            ]
+        },
+        {
+            dateISO: '2026-05-19',
+            dayLabel: 'S5·Ter',
+            dayName: 'Terça-feira',
+            dateLabel: '19/05',
+            theme: 'REVIEW GOOGLE + PROVA SOCIAL',
+            mood: '⭐ Reputação é ativo',
+            items: [
+                {
+                    id: 'mai19-1',
+                    time: '12:00',
+                    type: 'outbound',
+                    platforms: ['instagram', 'físico'],
+                    title: '⭐ Ação: pedir avaliação no Google + Instagram',
+                    priority: 'high',
+                    description: 'Reviews no Google aumentam descoberta local. 5 avaliações a mais pode dobrar o número de clientes novos via Google Maps.',
+                    instructions: `COMO PEDIR REVIEW (prático, sem ser chato):
+
+1. Cria um QR Code do seu perfil do Google Maps (use qr.io ou canva)
+2. Coloca na mesa/balcão com um cartão: "Adorou? Faz a gente sorrir no Google 🌟"
+3. No Instagram, posta um Story:
+   "você avaliou a gente no Google? 🙏 link no bio — leva 30 segundos e ajuda muito"
+
+4. Responde TODAS as avaliações que já tiver (isso melhora ranking)
+
+Para criar o link direto do Google Meu Negócio:
+- Busca "MilkyPot Muffato Londrina" no Google
+- Clica em "Escrever uma avaliação"
+- Copia o link e usa como QR Code`,
+                    links: [
+                        { label: '⭐ Abrir Google Meu Negócio', url: 'https://business.google.com' },
+                        { label: '🔲 Gerar QR Code grátis', url: 'https://qr.io' }
+                    ]
+                }
+            ]
+        },
+        {
+            dateISO: '2026-05-21',
+            dayLabel: 'S5·Qui',
+            dayName: 'Quinta-feira',
+            dateLabel: '21/05',
+            theme: 'CONTEÚDO EDUCATIVO — "SABIA QUE?"',
+            mood: '🧠 Educação = autoridade',
+            items: [
+                {
+                    id: 'mai21-1',
+                    time: '12:00',
+                    type: 'carrossel',
+                    platforms: ['instagram'],
+                    title: '📸 Carrossel: "5 coisas que você não sabia do potinho"',
+                    priority: 'high',
+                    description: 'Conteúdo educativo gera salvamentos — que é a métrica que o algoritmo mais valoriza.',
+                    caption: `você sabia que o potinho MilkyPot é feito do SEU jeito? 🐑
+
+arrasta pra ver 5 segredos que a galera não sabe 👉
+
+(salva esse post pra não esquecer quando vier 📌)
+
+📍 Av. Quintino Bocaiuva 1045 — Muffato · 14h às 23h`,
+                    hashtags: '#milkypot #londrina #potinhodesobremesa #dicasdesobremesa #acailondrina #sobremesalondrina #muffato #milkypotbr',
+                    links: [
+                        { label: '🎨 Criar no Canva', url: 'https://canva.com' }
+                    ]
+                }
+            ]
+        },
+        {
+            dateISO: '2026-05-22',
+            dayLabel: 'S5·Sex',
+            dayName: 'Sexta-feira',
+            dateDate: '22/05',
+            dateLabel: '22/05',
+            theme: 'FIM DE SEMANA + INDICAÇÃO',
+            mood: '👯 Indica e ganha',
+            items: [
+                {
+                    id: 'mai22-1',
+                    time: '12:00',
+                    type: 'estático',
+                    platforms: ['instagram'],
+                    title: '📷 Post: MilkyClube — Indica e ganha',
+                    priority: 'high',
+                    caption: `lembrete: você pode ganhar sorvete de graça indicando amigos 🐑💰
+
+é sério.
+
+cada amigo que você indica pro MilkyClube:
+→ você ganha G$ 100 (= R$ 1,00 de desconto)
+→ ele ganha G$ 50 de boas-vindas
+
+já indicou alguém hoje?
+entra em milkypot.com/clube e pega seu link de indicação 🎁`,
+                    hashtags: '#milkyclube #cashback #indica #milkypot #londrina #sobremesalondrina #muffato #milkypotbr #londrinapr',
+                    links: [
+                        { label: '🎁 MilkyClube — link de indicação', url: 'https://milkypot.com/clube' }
+                    ]
+                }
+            ]
+        },
+
+        // ========================================
+        // SEMANA 6 — 25 A 29 MAI (FIM DO MÊS)
+        // ========================================
+        {
+            dateISO: '2026-05-25',
+            dayLabel: 'S6·Seg',
+            dayName: 'Segunda-feira',
+            dateLabel: '25/05',
+            theme: 'SEMANA 6 — ENCERRAR MAIO COM TUDO',
+            mood: '🏁 Sprint final de maio',
+            items: [
+                {
+                    id: 'mai25-1',
+                    time: '12:00',
+                    type: 'reel',
+                    platforms: ['instagram', 'tiktok'],
+                    title: '🎬 Reel: "Maio foi assim na MilkyPot"',
+                    priority: 'high',
+                    duration: '20s',
+                    description: 'Recapitular o mês com compilado de fotos/vídeos do mês. Emocional + resultados.',
+                    caption: `maio, obrigada 🐑💗
+
+isso aqui é só um resuminho do mês...
+mas o melhor tá chegando.
+
+vem junto no junho? ✨
+
+📍 Muffato Londrina · 14h–23h`,
+                    hashtags: '#milkypot #londrina #maio2026 #sobremesalondrina #acailondrina #muffato #milkypotbr #londrinapr',
+                    links: [
+                        { label: '🎬 Editar no CapCut', url: 'https://www.capcut.com' }
+                    ]
+                }
+            ]
+        },
+        {
+            dateISO: '2026-05-28',
+            dayLabel: 'S6·Qui',
+            dayName: 'Quinta-feira',
+            dateLabel: '28/05',
+            theme: 'TEASER JUNHO — CRIAR ANTECIPAÇÃO',
+            mood: '🔮 Hype pro próximo mês',
+            items: [
+                {
+                    id: 'mai28-1',
+                    time: '19:00',
+                    type: 'stories',
+                    platforms: ['instagram'],
+                    title: '📲 Stories: Teaser do que vem em junho',
+                    priority: 'high',
+                    instructions: `Stories de antecipação funcionam muito:
+
+Story 1: Emoji de reticências com "o que a Lana tá preparando pra junho..."
+Story 2: Enquete: "Quer saber primeiro? Ativa as notificações 🔔"
+Story 3: "Em breve. 🐑✨"
+
+Objetivo: fazer o seguidor ativar as notificações do perfil = mais alcance pra todos os posts de junho`,
+                    links: [
+                        { label: '📸 Abrir Stories', url: 'https://www.instagram.com/milkypotbr' }
+                    ]
                 }
             ]
         }
