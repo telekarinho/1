@@ -793,8 +793,11 @@
 
         var inRange  = function (f) { return f.date >= range.start && f.date <= range.end; };
         var inPrev   = function (f) { return f.date >= prev.start  && f.date <= prev.end;  };
+        // Filtra apenas dados reais — exclui seed falso (source=none/undefined) e caixa-agregado (source=caixa)
+        var REAL_SOURCES = ['pdv', 'fixo', 'manual', 'site'];
+        var isReal = function (f) { return REAL_SOURCES.indexOf(f.source || 'none') >= 0; };
 
-        var all     = DataStore.getFinancesAllFranchises(function(){return true;});
+        var all     = DataStore.getFinancesAllFranchises(function(){return true;}).filter(isReal);
         var current = all.filter(inRange);
         var prevAll = all.filter(inPrev);
 
