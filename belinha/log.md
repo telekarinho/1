@@ -27,7 +27,7 @@
 4. **Nova regra v19b:** `whatsapp-1ano-2027.md` é prioridade máxima de conteúdo 2027 — não postergar por evento sazonal menor. Ciclo #154 inegociável.
 5. **Ciclo #153 (checkout revisão) retorna ao roadmap** como Alta urgência — postergado em #145, #148, #149 (3x = v18b threshold). Execução ciclo #153.
 
-**Commit:** (ver hash após push)
+**Commit:** `9ac7aac`
 
 **Próximo passo sugerido:**
 - **Ciclo #151 — Concorrentes:** Refetch pré-Carnaval 2027 — MilkyMoo, JohnnyJoy, TheBest: produtos temáticos fev/2027, mecânicas, preços. Intel → v18a: ação no site mesmo ciclo
