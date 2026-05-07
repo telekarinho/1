@@ -54,10 +54,13 @@ const Caixa = (function () {
         return (parseInt(p[0],10) || 0) * 60 + (parseInt(p[1],10) || 0);
     }
 
-    // Franquia de teste: nenhuma trava de horário, nenhum bloqueio de re-abertura.
-    // Permite QA/atendentes testarem o fluxo completo qualquer hora do dia.
+    // Franquia de teste — APENAS para QA. Allowlist EXPLÍCITA pra garantir
+    // que NENHUMA franquia de produção (muffato-quintino, morumbi, barra, ibirapuera,
+    // jardins, catuai, recife, curitiba) ative os bypass por engano.
+    // Se quiser adicionar nova franquia de teste, adicione AQUI explicitamente.
+    const TEST_FRANCHISE_IDS = ['franquia-teste'];
     function isTestFranchise(franchiseId) {
-        return franchiseId === 'franquia-teste' || franchiseId === 'teste' || /^test/i.test(franchiseId || '');
+        return TEST_FRANCHISE_IDS.indexOf(franchiseId) !== -1;
     }
 
     // Retorna { ok, reason, currentHHMM, expectedOpen, expectedClose }
