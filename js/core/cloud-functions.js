@@ -228,15 +228,19 @@ const CloudFunctions = {
     // Envia relatorio do fechamento + auditoria cega
     async sendClosingReport(franchiseId, reportData) {
         const managers = ['milkypot.com@gmail.com', 'jocimarrodrigo@gmail.com', 'joseanemse@gmail.com'];
-        // Regra: operador so recebe se a config estiver ativada
-        const config = (typeof AdminConfig !== 'undefined') ? AdminConfig.getConfig(franchiseId) : {};
-        const sendToOperator = config.enviarComprovanteOperador === true;
-        
+        // Flag opcional pra incluir o operador como destinatario.
+        // Default: false (so gerencia recebe). Pode ser ativado via
+        // localStorage.setItem('mp_email_send_to_operator_'+fid, '1')
+        let sendToOperator = false;
+        try {
+            sendToOperator = localStorage.getItem('mp_email_send_to_operator_' + franchiseId) === '1';
+        } catch(_) {}
+
         return this.call('sendClosingReport', {
             franchiseId,
             managers,
             sendToOperator,
-            operatorEmail: reportData.operatorEmail, // Only if sendToOperator is true it will be used
+            operatorEmail: reportData.operatorEmail,
             data: reportData
         });
     },
