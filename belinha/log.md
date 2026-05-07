@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #153 — 2026-05-07
+
+**Área:** Código/Performance — `js/checkout.js` auditoria + correções
+
+**Contexto:** Item 4× postergado (v18b threshold inegociável). Leitura completa das 817 linhas do arquivo. Identificados dois problemas de impacto real na conversão e segurança.
+
+**O que pesquisou/analisou:**
+- Leu `js/checkout.js` completo (linhas 1–817)
+- `validateCheckoutStep(1)`: validava apenas campo não-vazio — usuário podia submeter "9999" (4 dígitos), gerando WA message com telefone inválido → perda de contato
+- `addUserMessage`: texto do usuário injetado via `innerHTML` → XSS client-side (self-XSS). Baixo risco de exploração, mas má prática que deveria ser corrigida
+- Sem máscara de telefone: usuários digitam `43998042424` ou `998042424` sem DDD → formatos inconsistentes no WA message
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `js/checkout.js` | `applyPhoneMask()`: nova função que formata dígitos como `(XX) XXXXX-XXXX`; listener `input` em `checkoutPhone` aplica máscara em tempo real; `validateCheckoutStep(1)`: exige mínimo 10 dígitos com DDD (toast informativo com exemplo); `addUserMessage()`: `innerHTML` → `textContent` (elimina XSS) |
+
+**Commit:** `f8d9654`
+
+**Destaques:**
+1. **Máscara de telefone:** Usuário que digita `43998042424` vê `(43) 99804-2424` formatado em tempo real. WA message gerada no `placeOrder()` já usa o valor formatado → operador recebe número legível e com DDD.
+2. **Validação de DDD obrigatório:** Toast claro: *"Digite um telefone válido com DDD! Ex: (43) 99999-9999"*. Previne pedidos com telefone incompleto que bloqueiam o operador de retornar o contato.
+3. **Fix XSS `addUserMessage`:** `textContent` escapa qualquer HTML digitado pelo usuário no chat Lulú. Sem impacto visual para o usuário normal.
+4. **Testado via Node:** `applyPhoneMask('43998042424')` → `(43) 99804-2424` ✓; `applyPhoneMask('1133334444')` → `(11) 3333-4444` ✓; edge cases vazios e parciais ✓.
+
+**Próximo passo sugerido:**
+- **Ciclo #154 — INEGOCIÁVEL:** `whatsapp-1ano-2027.md` standalone — 25/04/2027 = maior evento de marketing da história da unidade (1 ano). Playbook WA completo com campanha de 30 dias.
+- **Ciclo #155 — Conteúdo:** `whatsapp-pascoa-2027.md` standalone (v19a ativa).
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente há +10 ciclos.
+- **Operador:** CNPJ + DPO — LGPD — em aberto há **+16 ciclos**. Risco legal crescente.
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (ação pendente desde ciclo #148).
+
+_Belinha — Ciclo #153 | 2026-05-07_
+
+---
+
 ## Ciclo #151 — 2026-05-07
 
 **Área:** Pesquisa de Concorrentes — Intel pré-Carnaval 2027 + Ação v18a no site
