@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MilkyPot Franqueado · Recompensas</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link rel="stylesheet" href="../css/mobile-app.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7c3aed">
+<style>
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:#fff;border-radius:14px;padding:14px 18px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.stat-num{font-family:'Baloo 2',cursive;font-size:1.6rem;font-weight:800;color:#7c3aed;line-height:1}
+.stat-lbl{font-size:.78rem;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-top:4px;font-weight:700}
+.claims-table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+.claims-table th{background:#f8f5ff;padding:10px 12px;text-align:left;font-size:.78rem;color:#666;text-transform:uppercase;letter-spacing:.5px}
+.claims-table td{padding:14px 12px;border-top:1px solid #f0f0f0;font-size:.92rem}
+.chip{display:inline-block;padding:3px 10px;border-radius:100px;font-size:.72rem;font-weight:700}
+.chip.pending{background:#fef3c7;color:#92400e}
+.chip.verified{background:#dcfce7;color:#16a34a}
+.chip.rejected{background:#fee2e2;color:#dc2626}
+.action-tag{display:inline-block;padding:2px 8px;border-radius:6px;background:#e0e7ff;color:#4338ca;font-size:.78rem;font-weight:700;font-family:monospace}
+.btn-sm{padding:6px 12px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;border:none;font-family:Nunito,sans-serif}
+.btn-approve{background:#16a34a;color:#fff;margin-right:6px}
+.btn-reject{background:#dc2626;color:#fff}
+.empty{text-align:center;padding:40px 20px;color:#aaa}
+.info-banner{background:#eff6ff;border-left:4px solid #3b82f6;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:.9rem;color:#1e40af}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(15,10,40,.6);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:18px;padding:24px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto}
+.modal pre{background:#f5f5f5;padding:12px;border-radius:8px;font-size:.78rem;overflow-x:auto;max-height:240px}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+</style>
+</head>
+<body>
+<div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+            <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-group">Principal</div>
+            <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+            <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+            <div class="sidebar-nav-group">Marketing</div>
+            <a href="marketing.html" class="sidebar-link"><span class="icon">📢</span> Marketing</a>
+            <a href="fidelidade.html" class="sidebar-link"><span class="icon">🎁</span> Fidelidade</a>
+            <a href="recompensas.html" class="sidebar-link active"><span class="icon">⭐</span> Recompensas</a>
+        </nav>
+    </aside>
+    <main class="panel-main">
+        <header class="panel-header">
+            <button class="btn btn-sm btn-outline" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+            <h1>⭐ Recompensas — sua franquia</h1>
+            <div style="margin-left:auto"><button class="btn btn-sm btn-outline" onclick="loadClaims()">🔄</button></div>
+        </header>
+        <div class="panel-content">
+            <div class="info-banner">
+                💡 Aqui você aprova manualmente claims que precisam de validação humana
+                (Story IG, TikTok, foto UGC). A configuração das recompensas é feita pelo Admin Geral.
+            </div>
+            <div class="stats" id="stats"></div>
+            <table class="claims-table">
+                <thead><tr><th>Quando</th><th>Membro</th><th>Ação</th><th>Recompensa</th><th>Status</th><th></th></tr></thead>
+                <tbody id="claimsBody"><tr><td colspan="6" class="empty">Carregando...</td></tr></tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<div class="modal-bg" id="rejectModal">
+    <div class="modal">
+        <h3>❌ Rejeitar claim</h3>
+        <p>Por que está rejeitando?</p>
+        <input type="text" id="rejectReason" placeholder="Ex: prova insuficiente"
+            style="width:100%;padding:10px;border:1.5px solid #e2e2e8;border-radius:8px;margin-top:8px;font-family:inherit">
+        <div class="modal-actions">
+            <button class="btn-sm" style="background:#f3f4f6" onclick="document.getElementById('rejectModal').classList.remove('open')">Cancelar</button>
+            <button class="btn-sm btn-reject" id="confirmRejectBtn">Confirmar rejeição</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-bg" id="payloadModal">
+    <div class="modal">
+        <h3>📦 Detalhes</h3>
+        <pre id="payloadContent"></pre>
+        <div class="modal-actions">
+            <button class="btn-sm" style="background:#f3f4f6" onclick="document.getElementById('payloadModal').classList.remove('open')">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/cloud-functions.js"></script>
+<script src="../js/core/auth.js"></script>
+<script>
+(function() {
+    const _isSuperAdmin = Auth.getSession && (Auth.getSession().role === 'super_admin');
+    if (!_isSuperAdmin && !Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+    const session = Auth.getSession();
+    const franchiseId = session.franchiseId || new URLSearchParams(location.search).get('fid') || null;
+    if (!franchiseId) { alert('Franquia não encontrada'); throw new Error('no fid'); }
+
+    const franchise = (DataStore.getAllFranchises() || []).find(f => f.id === franchiseId);
+    function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+    setText('sidebarStoreName', franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia');
+
+    const db = firebase.firestore();
+    let allClaims = [];
+    let pendingRejectClaimId = null;
+
+    const ACTION_LABELS = {
+        google_review: '⭐ Google Review',
+        instagram_story: '📸 Story Instagram',
+        tiktok_post: '🎵 TikTok',
+        whatsapp_optin: '💬 WhatsApp opt-in',
+        birthday_set: '🎂 Aniversário',
+        pwa_notif_optin: '🔔 Push opt-in',
+        referral_converted: '👯 Indicação',
+        ugc_photo: '📷 UGC Foto'
+    };
+    const REWARD_LABELS = {
+        raspinha_premium: '🎰 Raspinha PREMIUM',
+        milkycoins: '💰 MilkyCoins',
+        milkypass_stamp: '🏆 MilkyPass stamp',
+        cashback_multiplier: '✖️ Multiplicador'
+    };
+
+    window.loadClaims = async function() {
+        try {
+            // Filtra por franchiseId
+            const snap = await db.collection('action_claims')
+                .where('franchiseId', '==', franchiseId)
+                .orderBy('claimedAt', 'desc')
+                .limit(100).get();
+            allClaims = snap.docs.map(d => Object.assign({_id: d.id}, d.data()));
+            renderStats();
+            renderClaims();
+        } catch(e) {
+            // Pode ser que não tenha o índice composto — fallback para query simples
+            console.warn('query com filter+orderBy falhou, tentando sem orderBy', e.message);
+            try {
+                const snap = await db.collection('action_claims')
+                    .where('franchiseId', '==', franchiseId)
+                    .limit(100).get();
+                allClaims = snap.docs.map(d => Object.assign({_id: d.id}, d.data()));
+                allClaims.sort((a,b) => (b.claimedAt || '').localeCompare(a.claimedAt || ''));
+                renderStats();
+                renderClaims();
+            } catch(e2) {
+                document.getElementById('claimsBody').innerHTML = '<tr><td colspan="6" class="empty">❌ ' + (e2.message || e2) + '</td></tr>';
+            }
+        }
+    };
+
+    function renderStats() {
+        const pending = allClaims.filter(c => c.status === 'pending').length;
+        const verified = allClaims.filter(c => c.status === 'verified').length;
+        const rejected = allClaims.filter(c => c.status === 'rejected').length;
+        document.getElementById('stats').innerHTML =
+            '<div class="stat-card"><div class="stat-num">' + pending + '</div><div class="stat-lbl">Pendentes</div></div>' +
+            '<div class="stat-card"><div class="stat-num">' + verified + '</div><div class="stat-lbl">Aprovados</div></div>' +
+            '<div class="stat-card"><div class="stat-num">' + rejected + '</div><div class="stat-lbl">Rejeitados</div></div>';
+    }
+
+    function renderClaims() {
+        if (!allClaims.length) {
+            document.getElementById('claimsBody').innerHTML = '<tr><td colspan="6" class="empty">Nenhum claim ainda</td></tr>';
+            return;
+        }
+        document.getElementById('claimsBody').innerHTML = allClaims.map(c => {
+            const d = new Date(c.claimedAt);
+            const when = d.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+            const reward = (REWARD_LABELS[c.rewardType] || c.rewardType) + (c.rewardValue ? (' (' + c.rewardValue + ')') : '');
+            const actions = c.status === 'pending'
+                ? '<button class="btn-sm btn-approve" onclick="approveClaim(\'' + c._id + '\')">✓</button>' +
+                  '<button class="btn-sm btn-reject" onclick="askReject(\'' + c._id + '\')">✗</button>' +
+                  '<button class="btn-sm" style="background:#f3f4f6;margin-left:4px" onclick="showPayload(\'' + c._id + '\')">📦</button>'
+                : '<button class="btn-sm" style="background:#f3f4f6" onclick="showPayload(\'' + c._id + '\')">📦</button>';
+            return '<tr>' +
+                '<td>' + when + '</td>' +
+                '<td><code style="font-size:.78rem">' + (c.memberId || '').slice(0,12) + '...</code></td>' +
+                '<td><span class="action-tag">' + (ACTION_LABELS[c.action] || c.action) + '</span></td>' +
+                '<td>' + reward + '</td>' +
+                '<td><span class="chip ' + c.status + '">' + c.status + '</span></td>' +
+                '<td>' + actions + '</td>' +
+            '</tr>';
+        }).join('');
+    }
+
+    window.approveClaim = async function(claimId) {
+        if (!confirm('Aprovar claim?')) return;
+        try {
+            const r = await CloudFunctions.verifyClaim(claimId, true);
+            if (r && r.success) loadClaims();
+            else alert('Erro: ' + (r && r.error));
+        } catch(e) { alert('Erro: ' + e.message); }
+    };
+    window.askReject = function(claimId) {
+        pendingRejectClaimId = claimId;
+        document.getElementById('rejectReason').value = '';
+        document.getElementById('rejectModal').classList.add('open');
+    };
+    document.getElementById('confirmRejectBtn').addEventListener('click', async function() {
+        const reason = document.getElementById('rejectReason').value.trim();
+        document.getElementById('rejectModal').classList.remove('open');
+        try {
+            await CloudFunctions.verifyClaim(pendingRejectClaimId, false, reason);
+            loadClaims();
+        } catch(e) { alert('Erro: ' + e.message); }
+    });
+    window.showPayload = function(claimId) {
+        const c = allClaims.find(x => x._id === claimId);
+        if (!c) return;
+        document.getElementById('payloadContent').textContent = JSON.stringify(c, null, 2);
+        document.getElementById('payloadModal').classList.add('open');
+    };
+
+    loadClaims();
+})();
+</script>
+</body>
+</html>
