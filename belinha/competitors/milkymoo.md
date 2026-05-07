@@ -512,3 +512,54 @@ _Última atualização: ciclo #126 — 2026-05-05_
 | Milky Moo Festa em Londrina | ❌ Não detectada |
 
 *Atualizado por Belinha — Ciclo #139 — 2026-05-06*
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #143 — 2026-05-07
+
+### Halloween 2026 — Milky Boo: Produto + Mecânica Confirmados
+
+**Fontes:** gkpb.com.br, clubeag.com, amostrasgratis.shop, jornaldebarueri.com.br, threads.com/@amostrasgratisshop, auroracultural.com
+
+---
+
+#### Produto: Milky Boo (edição limitada Halloween)
+
+| Atributo | Detalhe |
+|---|---|
+| **Produto** | Milky Boo — milkshake edição Halloween |
+| **Tamanho** | 700ml ÚNICO (sem variação de tamanho) |
+| **Preço** | R$49,90 |
+| **Sabor** | Qualquer sabor do cardápio fixo da marca (>30 sabores) |
+| **Mecânica** | Blind box / "copo surpresa" — brinde colecionável FofoMoo oculto no copo |
+| **Personagens** | Moo Bruxinha, Moo Múmia, Moo Abóbora, Moo Frankenstein (4 versões) |
+| **Disponibilidade** | Todas as ~700 unidades nacionais (rede nacional) |
+| **Canal marketing** | Instagram @milkymoo + Threads + parceiros de mídia |
+| **Sem WhatsApp próprio** | Vendas via balcão/iFood (sem funil WA) |
+
+#### Novidade adicional (abril 2026): Formato 180ml pós-almoço
+- MilkyMoo lançou milkshake 180ml disponível da abertura até 13h59
+- Nova frente de consumo: snack pós-almoço/digestivo
+- Não é produto sazonal — expansão de portfólio permanente
+
+---
+
+#### Análise de Contraprogramação MilkyPot × MilkyMoo Milky Boo
+
+| Dimensão | MilkyMoo Milky Boo | MilkyPot Potinho Assombrado |
+|---|---|---|
+| **Preço** | R$49,90 (preço único) | A partir de R$10 (Mini) até R$22 (Gigante) |
+| **Personalização** | Zero — sabor fixo + tamanho único | 100% — base, toppings, decoração na hora |
+| **Linha Fit** | Não detectada | Linha Zero/Fit sem açúcar + proteína |
+| **Mecânica especial** | Blind box (surprise toy) | Potinho personalizado + decoração temática |
+| **Canal de venda** | Balcão físico + iFood (~27% comissão) | WhatsApp próprio (0% comissão) |
+| **Dados do cliente** | iFood retém dados | MilkyPot retém dados — base own |
+| **Público** | Teens/adultos fãs de colecionável | Famílias + Linha Fit = espectro mais amplo |
+
+**Gap principal:** Milky Boo é produto de apelo colecionável (blind box) mas preço excludente (R$49,90). MilkyPot pode capturar famílias e clientes Linha Fit que querem experiência Halloween com custo 5x menor e personalização total.
+
+**Ação executada neste ciclo (v18a):** FAQ "Tem produtos especiais de Halloween?" adicionado em `index.html` — visível + Schema FAQPage — capitalizando o gap de preço/personalização.
+
+**Alerta:** Verificar se MilkyMoo lança campanha Dia das Crianças (12/10) integrada ao Milky Boo (bundle infanto-adulto). Monitorar @milkymoo a partir de setembro/2026.
+
+_Belinha — Ciclo #143 | 2026-05-07_

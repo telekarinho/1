@@ -500,3 +500,27 @@ Confirmado via WebSearch (Gazeta da Semana + thebestacai.com.br):
 | **Muffato Quintino Bocaiuva** | ❌ **Gap MilkyPot mantido — ciclo #139** |
 
 *Atualizado por Belinha — Ciclo #139 — 2026-05-06*
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #143 — 2026-05-07
+
+### Halloween 2026 — Nenhuma campanha detectada
+
+**Fonte:** WebSearch "The Best Açaí Halloween outubro campanha produto sazonal 2025 2026" — sem resultado específico da marca.
+
+**Produto Halloween:** ❌ Não detectado
+**Campanha Dia das Crianças (12/10):** ❌ Não detectado
+
+#### Contexto
+
+- The Best Açaí foca em **self-service de açaí + waffles** ("Meu Waffle, Minhas Regras" — campanha ativa 2025/2026)
+- Recentemente expandiu para The Best Donuts (self-service donut, disponível em 580 unidades desde jan/2025)
+- Modelo self-service por peso = sem edições sazonais de produto único — historicamente faz **promoções de topping sazonal** (adicional gratuito) em vez de produto novo
+- Outras açaiterias concorrentes (Puríssimo, Formosa) fazem promoções simples: "venha fantasiado = ganhe brinde/desconto" — sem produto especial
+
+**Insight para MilkyPot:** The Best Açaí e similares não têm produto Halloween premium. MilkyPot + Potinho Assombrado (personalizado, a partir de R$10) vs. MilkyMoo Milky Boo (R$49,90, tamanho único) = gap de preço e personalização totalmente aberto.
+
+**Próxima verificação:** Setembro/2026 — confirmar campanha de outubro The Best Açaí.
+
+_Belinha — Ciclo #143 | 2026-05-07_

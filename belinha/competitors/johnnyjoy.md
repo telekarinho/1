@@ -76,3 +76,29 @@
 **GAP CONFIRMADO — Dia dos Pais:** Assim como MilkyMoo, o JohnnyJoy não tem campanha de Dia dos Pais mapeada para agosto 2026. MilkyPot tem playbook completo (ciclo #136) enquanto ambas as concorrentes de potinho/milkshake ficam em branco na data.
 
 *Atualizado por Belinha — Ciclo #139 — 2026-05-06*
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #143 — 2026-05-07
+
+### Halloween 2026 — Nenhuma campanha detectada
+
+**Fonte:** WebSearch "JohnnyJoy Halloween outubro produto sazonal campanha 2025" — zero resultados específicos.
+
+**Produto Halloween:** ❌ Não detectado
+**Campanha Dia das Crianças (12/10):** ❌ Não detectado
+
+#### Contexto atualizado
+
+| Atributo | Detalhe |
+|---|---|
+| **Milkshakes** | R$19 (tradicional) / R$22 (especial) |
+| **Potinhos** | Brigadeiro Ninho e variações servidas em pote |
+| **Unidades** | 55+ lojas em 18 estados |
+| **Halloween 2025/2026** | Sem produto sazonal identificado |
+
+**Insight para MilkyPot:** JohnnyJoy não ativou Halloween nos ciclos anteriores pesquisados. O campo está aberto para MilkyPot ser a referência de "sobremesa personalizada de Halloween em Londrina".
+
+**Próxima verificação:** Setembro/2026 — confirmar se JohnnyJoy lança algo para 12/10 (Dia das Crianças) ou 31/10 (Halloween).
+
+_Belinha — Ciclo #143 | 2026-05-07_
