@@ -70,7 +70,9 @@ const CloudFunctions = {
             // Email/notificacoes: o backend PHP nao implementa essas actions —
             // ir direto pro Firebase CF que tem Nodemailer + Gmail SMTP configurado
             name === 'sendClosingReport' ||
-            name === 'sendLowStockAlert'
+            name === 'sendLowStockAlert' ||
+            // MilkyClube — agregadores e operacoes só no Firebase CF
+            name === 'clubResolveCredits'
         ) {
             return this._callFirebaseDirect(name, data);
         }
@@ -224,6 +226,21 @@ const CloudFunctions = {
     // ============================================
     // Automations (Reports & Alerts)
     // ============================================
+
+    // ============================================
+    // MilkyClube — créditos unificados
+    // ============================================
+    // Retorna tudo que o membro tem disponível pra usar como
+    // pagamento parcial: MilkyCoins, MilkyPass premiado,
+    // Raspinhas válidas, Vouchers de Desafio.
+    // Apenas leitura — não consome nada.
+    async clubResolveCredits(memberId, franchiseId) {
+        if (!memberId) return { success: false, error: 'memberId obrigatorio' };
+        return this._callFirebaseDirect('clubResolveCredits', {
+            memberId,
+            franchiseId: franchiseId || null
+        });
+    },
 
     // Envia relatorio do fechamento + auditoria cega
     async sendClosingReport(franchiseId, reportData) {
