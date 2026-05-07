@@ -2,6 +2,45 @@
 
 ---
 
+## Ciclo #143 — 2026-05-07
+
+**Área:** Concorrentes — Intel pré-Halloween + Ação técnica v18a
+
+**Contexto:** Prescrito pelo roadmap #143: refetch concorrentes pré-Halloween (TheBest, MilkyMoo, JohnnyJoy), Dia das Crianças 12/10 e Halloween 31/10 out/2026. Regra v18a: intel → ação técnica no mesmo ciclo.
+
+**O que pesquisou/analisou:**
+- **MilkyMoo:** Lançou `Milky Boo` — edição Halloween. Milkshake 700ml ÚNICO, R$49,90, blind box com brinde colecionável FofoMoo (4 personagens: Moo Bruxinha, Moo Múmia, Moo Abóbora, Moo Frankenstein). Rede nacional ~700 unidades. Sem personalização, sem Linha Fit, sem WA próprio. Também lançou 180ml pós-almoço (frente permanente, não sazonal).
+- **JohnnyJoy:** Sem produto/campanha de Halloween detectado. Preços: milkshake R$19 (tradicional) / R$22 (especial). Gap aberto.
+- **TheBest Açaí:** Sem produto Halloween. Focado em waffles + donuts self-service. Modelo self-service por peso = sem edições sazonais premium.
+- **Outras açaiterias:** Promoções simples (fantasiado = desconto) — sem produto novo.
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/competitors/milkymoo.md` | Ciclo #143 adicionado: Milky Boo R$49,90 detalhe completo, tabela contraprogramação MilkyPot × MilkyMoo, alerta Dia das Crianças |
+| `belinha/competitors/johnnyjoy.md` | Ciclo #143 adicionado: sem Halloween detectado, preços atualizados |
+| `belinha/competitors/the-best-acai.md` | Ciclo #143 adicionado: sem Halloween detectado, contexto waffle/donut |
+| `index.html` | **v18a aplicada:** FAQ visível "Tem produtos especiais de Halloween?" + Schema FAQPage "O MilkyPot tem produtos temáticos de Halloween em outubro?" — destaca Potinho Assombrado a partir de R$10 vs. R$50 fixo concorrente |
+
+**Commit:** `66b691c`
+
+**Destaques:**
+1. **Gap de preço 5:1** — MilkyMoo cobra R$49,90 por produto único, MilkyPot parte de R$10 com personalização total. FAQ captura buscas "sobremesa Halloween Londrina" + diferenciação direta.
+2. **Gap de personalização** — Milky Boo = sabor fixo + tamanho único + blind box. MilkyPot = Mini ao Gigante + base + toppings à escolha + Linha Fit.
+3. **Campo aberto** — JohnnyJoy e TheBest sem produto Halloween = MilkyPot pode ser a ÚNICA com Potinho Assombrado personalizado em Londrina.
+4. **Schema FAQ indexável** — Pergunta "O MilkyPot tem produtos temáticos de Halloween em outubro?" agora no FAQPage schema.org → rich result nas SERPs do Google para buscas de outubro.
+
+**Próximo passo sugerido:**
+- **Ciclo #144:** Atualizar semanas 25–28 e `whatsapp-halloween-2026.md` com intel do #143 — verificar se templates WA e conteúdo semanal precisam citar o gap de preço vs. Milky Boo R$49,90
+- **Ciclo #145:** Auto-aprimoramento nov–jan 2027 (roadmap #145)
+- **Operador:** Confirmar ingredientes Potinho Assombrado com franquia ANTES de 30/09/2026
+- **Operador:** Monitorar @milkymoo em setembro/2026 para ver se integra Milky Boo com campanha Dia das Crianças 12/10
+
+_Belinha — Ciclo #143 | 2026-05-07_
+
+---
+
 ## Ciclo #142 — 2026-05-07
 
 **Área:** SEO — Schema.org `Product` com `AggregateOffer` em `cardapio.html`
