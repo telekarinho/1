@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #146 — 2026-05-07
+
+**Área:** UX — Hero mobile 375px: CTA above-the-fold + logo responsiva
+
+**Contexto:** Prescrito pelo roadmap ciclo #145. Objetivo: auditar hero section `index.html` em mobile 375px, identificar gaps de LCP e CTAs above-the-fold.
+
+**O que analisou:**
+- Hero compact: logo fixo 280px + h1 + subtitle — SEM nenhum CTA button
+- A 375px de viewport (20px padding cada lado = 335px de conteúdo), logo 280px = 83% do espaço. Em 320px causaria overflow
+- CSS: `.hero-logo-small { width: 280px }` — sem responsividade abaixo de 768px
+- Responsive.css: sem regra para `.hero-compact*` em 480px ou 375px
+- Maior gap: usuário mobile abre o site, vê logo + título + subtítulo, mas não tem botão de ação. CTA mais próximo é o "Pedir Agora" na navbar (pequeno, pouco visível) ou tem que rolar até produtos
+- LCP: preload do logo já existe; não há bloqueio de LCP
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `index.html` | Adicionado `<div class="hero-cta-bar">` com 2 CTAs: "Ver Cardápio" → `cardapio.html` e "WhatsApp" → wa.me link. Posição: dentro do `.hero-compact-content > div`, após o `<p>` subtitle |
+| `css/style.css` | Logo: `width: 280px` → `width: clamp(180px, 75%, 280px)` — responsivo em qualquer viewport. Novos seletores: `.hero-cta-bar` (flex, gap 10px, margin-top 18px), `.hero-cta-btn` (gradient-pink, min-height 44px, hover), `.hero-cta-wa` (verde suave, borda, min-height 44px, hover) |
+
+**Commit:** `fe10aac`
+
+**Impacto esperado:**
+1. **Above-the-fold CTA:** Usuário mobile 375px vê logo + título + 2 botões de ação sem precisar rolar
+2. **Tap target mínimo:** Ambos os botões com `min-height: 44px` (WCAG AA)
+3. **Logo segura:** `clamp(180px, 75%, 280px)` — sem overflow em 320px ou menor
+4. **Funil duplo:** "Ver Cardápio" = entrada no catálogo | "WhatsApp" = contato direto
+
+**Próximo passo sugerido:**
+- **Ciclo #147 — URGENTE:** Criar `whatsapp-virada-2026.md` standalone (templates 31/12 → 01/01 dispersos em semana37.md) — prescrito pelo roadmap v18c
+- Monitorar: se operador reportar CTA sobrepondo conteúdo em telas muito pequenas, ajustar `flex-direction: column` a partir de 360px
+
+_Belinha — Ciclo #146 | 2026-05-07_
+
+---
+
 ## Ciclo #145 — 2026-05-07
 
 **Área:** Auto-aprimoramento — Roadmap #146–#155 + whatsapp-natal-2026.md standalone
