@@ -2009,3 +2009,86 @@ _Belinha — Ciclo #140 | 2026-05-06_
 > **v18c — Playbook WA standalone obrigatório para eventos >1 semana de campanha:** Qualquer evento com campanha de WA Business spanning >1 semana (Halloween, BLACKPOT, Natal, etc.) deve ter `whatsapp-<evento>.md` standalone além das semanas. Operador não deve precisar vasculhar múltiplos arquivos para configurar automações.
 
 _Belinha — Ciclo #140 | 2026-05-06_
+
+---
+
+## Auto-aprimoramento ciclos #140–#144
+
+_Belinha — Ciclo #145 | 2026-05-07_
+
+### O que gerou mais valor concreto
+
+1. **`renderProducts` lazy scroll (#141):** Finalmente executado após 4 postergações. IntersectionObserver com sentinela evita renderizar 20+ itens de uma vez em mobile low-end. Impacto direto em LCP e jank. Padrão v18b funcionou — o limite de postergações forçou a prioridade.
+2. **Schema.org Product AggregateOffer em cardapio.html (#142):** Cada produto do cardápio agora tem markup estruturado (Product + Offer + AggregateOffer). Ganho estimado de +15–20% de CTR orgânico quando indexado. Ação de alto ROI com baixa complexidade.
+3. **Intel Milky Boo R$49,90 + FAQ Halloween (#143):** v18a em ação — mesma sessão que coletou intel competitivo produziu mudança concreta no site (FAQ schema FAQPage + texto visível). Gap de preço 5:1 (R$10 vs R$50) documentado e acionável.
+4. **Atualização whatsapp-halloween-2026.md com diferenciação implícita (#144):** Ângulos de personalização ("você escolhe") adicionados a H0/H2/H5 + slide 6 no reveal de semana26. Diferenciação sem citar concorrente por nome — best practice mantida.
+
+### O que foi menos eficaz / desperdício
+
+- **Gap crítico detectado neste ciclo:** `whatsapp-natal-2026.md` não existia. Os 14 templates WA de Natal estavam espalhados em semanas 33, 34, 35 e 36 — o operador precisaria vasculhar 4 arquivos para configurar o WA Business de Natal. Regra v18c estava ativa mas não tinha sido aplicada ao Natal. **Corrigido neste ciclo #145.**
+- **Cobertura nov–jan 2027 completa:** Semanas 33–42 todas existem. Natal (35–36), Virada (37), Linha Zero jan (38), Açaí verão (39) — todos cobertos. Sem gaps de calendário editorial.
+- **CNPJ/DPO:** Continua em aberto. Ciclo #145 = +10 ciclos desde o último lembrete. Ação: documentar no log para relembrar operador.
+
+### Auditoria de cobertura nov–jan 2027
+
+| Semana | Período | Evento/Tema | Status |
+|--------|---------|-------------|--------|
+| 32 | 22–28/11 | BLACKPOT 27/11 | ✅ semana32.md + whatsapp-blackpot.md |
+| 33 | 29/11–05/12 | Abertura dez + produto verão + WA "NATAL" | ✅ semana33.md |
+| 34 | 06–12/12 | Reveal produto natalino + Sexta #19 | ✅ semana34.md |
+| 35 | 13–19/12 | Countdown Natal + recap 8 meses + Sexta #20 | ✅ semana35.md |
+| **36** | **20–26/12** | **NATAL + ANIVERSÁRIO 8 MESES (25/12)** | **✅ semana36.md** |
+| 37 | 27/12–02/01 | Virada Ano Novo 31/12 + Sexta #21 | ✅ semana37.md |
+| 38 | 03–09/01 | Linha Zero "Nova meta" + Sexta #22 | ✅ semana38.md |
+| 39 | 10–16/01 | Açaí herói de verão + Sexta #23 | ✅ semana39.md |
+| 40+ | 17/01–... | Cobertura até semana 56 | ✅ Verificado |
+
+**WA Playbooks standalone existentes:**
+
+| Evento | Arquivo | Status |
+|--------|---------|--------|
+| Halloween | whatsapp-halloween-2026.md | ✅ Criado #140, atualizado #144 |
+| BLACKPOT | whatsapp-blackpot.md | ✅ Criado #124 |
+| Natal 2026 | whatsapp-natal-2026.md | ✅ **CRIADO NESTE CICLO #145** |
+| Virada/Ano Novo | — | ❌ Gap → ciclo #147 |
+| Carnaval 2027 | — | ⚠️ Semanas 42–45 têm conteúdo, verificar standalone |
+
+### Checklist atualizado pós-#145
+
+| Item | Status |
+|------|--------|
+| `renderProducts` lazy scroll | ✅ Ciclo #141 |
+| Schema.org Product AggregateOffer em cardapio.html | ✅ Ciclo #142 |
+| Concorrentes refetch pré-Halloween | ✅ Ciclo #143 |
+| Intel halloween → atualização playbook WA | ✅ Ciclo #144 |
+| `whatsapp-natal-2026.md` standalone | ✅ **Ciclo #145** |
+| `whatsapp-virada-2026.md` standalone | ❌ → ciclo #147 |
+| `aggregateRating` Schema.org | ⛔ Aguarda ≥3 reviews operador |
+| Google Analytics ID real | ⛔ Aguarda autorização |
+| CNPJ/DPO LGPD | ⛔ Aguarda dados do operador (**⚠️ LEMBRETE +10 ciclos em aberto**) |
+| `cardapio.js` dead code (1050 linhas) | ⛔ Aguarda decisão operador/dev |
+
+### Roadmap rebalanceado #146–#155
+
+| Ciclo | Área | Ação | Urgência |
+|-------|------|------|----------|
+| **#146** | **UX** | Auditar mobile `index.html` hero section + scroll LCP; testar viewport 375px | Média |
+| **#147** | **Conteúdo/WA** | Criar `whatsapp-virada-2026.md` standalone (31/12 → 01/01) — gap detectado em #145 | Alta |
+| #148 | SEO | `sitemap.xml` — atualizar `lastmod` + verificar indexação cardapio.html | Média |
+| **#149** | **Conversão** | Template WA milestone 50 carimbos; verificar se `conversao-upsell-pdv-15carimbos.md` precisa complemento | Baixa |
+| **#150** | **Auto-aprimoramento** | Reler log #145–#149; roadmap jan–mai 2027: Carnaval, Páscoa, 1 Ano de loja (25/04/2027) | — |
+| #151 | Concorrentes | Refetch pré-Carnaval 2027: MilkyMoo, JohnnyJoy, TheBest — mecânicas fev/2027 | Alta |
+| #152 | Conteúdo | Verificar semanas 42–46 (Carnaval build-up + dia H + pós-Carnaval) | Média |
+| #153 | UX/Performance | Revisar `checkout.html` fluxo mobile; bundle size pós-#141 | Baixa |
+| **#154** | **Conteúdo** | Playbook 1 Ano de loja (25/04/2027) — maior marco da operação | Alta |
+| **#155** | **Auto-aprimoramento** | Reler log #150–#154; roadmap mai–ago 2027: Dia das Mães, Namorados, Dia dos Pais 2027 | — |
+
+### Regras mantidas v18 (sem alteração neste ciclo)
+
+> **v18a — Intel competitiva → Ação em site no mesmo ciclo (OBRIGATÓRIO)**
+
+> **v18b — Bloqueadores técnicos têm limite de 3 postergações**
+
+> **v18c — Playbook WA standalone obrigatório para eventos >1 semana de campanha**
+
+_Belinha — Ciclo #145 | 2026-05-07_
