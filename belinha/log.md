@@ -2,6 +2,53 @@
 
 ---
 
+## Ciclo #151 — 2026-05-07
+
+**Área:** Pesquisa de Concorrentes — Intel pré-Carnaval 2027 + Ação v18a no site
+
+**Contexto:** Prescrito no roadmap ciclo #150. Mandato: refetch MilkyMoo, JohnnyJoy, TheBest pré-Carnaval 2027; extrair produtos temáticos fev/2027, mecânicas, preços; v18a = ação no site mesmo ciclo se gap competitivo identificado.
+
+**O que pesquisou/analisou:**
+- Carnaval 2027: 6–10 de fevereiro de 2027 (Quarta de Cinzas = 10/02)
+- MilkyMoo Carnaval 2026: 2×1 Pandora+Pintadinha 300ml, **exclusivo iFood**, 1 dia apenas (11/02/2026). Sem produto temático.
+- JohnnyJoy: Sem campanha de Carnaval 2026 ou 2027. Preços atualizados: Tradicional 300ml R$19,90/500ml R$22,90; Especial 300ml R$25,90/500ml R$28,90. Joy Fidelidade: 1 Joybit=R$1, 10 compras=1 grátis.
+- The Best Açaí: Sem campanha carnaval própria. Preço self-service confirmado: R$5,99/100g. Faturamento R$779M/2024, maior crescimento ABF. Padrão de stunts virais sazonais (donuts, ovos Páscoa) identificado como modelo replicável para MilkyPot Muffato.
+
+**Gap competitivo identificado (v18a):**
+- Nenhum dos 3 concorrentes tem produto temático de Carnaval
+- MilkyMoo é iFood-locked durante a folia — quem não tem app fica de fora
+- MilkyPot é o ÚNICO com canal direto WhatsApp + potencial de produto exclusivo (Potinho Foliã)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `index.html` | FAQ "O MilkyPot entrega no Carnaval?" adicionado — FAQPage schema (JSON-LD) + seção HTML visível. Posiciona contra iFood-dependency da MilkyMoo; teaser Potinho Foliã; captura SEO "açaí carnaval Londrina" |
+| `belinha/competitors/milkymoo.md` | Atualização ciclo #151: padrão Carnaval 2026 documentado, tabela de vantagens MilkyPot vs MilkyMoo no carnaval |
+| `belinha/competitors/johnnyjoy.md` | Atualização ciclo #151: sem campanha carnaval, preços 2026 atualizados, Joy Fidelidade detalhado, comparação com MilkyPass |
+| `belinha/competitors/the-best-acai.md` | Atualização ciclo #151: R$5,99/100g confirmado, stunts virais mapeados, lição para MilkyPot buffet Muffato |
+
+**Commit:** `482b0e3`
+
+**Destaques:**
+1. **MilkyMoo = ponto fraco no carnaval:** Promo é iFood-exclusiva, 1 dia só, sem produto temático. MilkyPot tem janela de 5 dias inteiros + WhatsApp direto + Potinho Foliã como diferencial.
+2. **JohnnyJoy e The Best Açaí ausentes:** Nenhum dos dois tem campanha carnaval — MilkyPot pode dominar o posicionamento de "sobremesa do Carnaval em Londrina" sem competição direta.
+3. **The Best Açaí stunt model:** O padrão de self-service inusitado (donuts, ovos) que gera UGC viral é replicável no buffet do Muffato. Oportunidade de baixo custo e alto impacto (ex: topping carnavalesco exclusivo no balcão).
+4. **FAQ SEO:** "O MilkyPot entrega no Carnaval?" captura busca de fevereiro e aparece no Google Featured Snippet (FAQPage schema). Zero custo, benefício anual recorrente.
+
+**Próximo passo sugerido:**
+- **Ciclo #152 — Conteúdo:** `whatsapp-carnaval-2027.md` standalone — WA playbook completo para fev/2027 (v18c ativo: 5 semanas sem playbook). Usar intel ciclo #151 para preencher segmentos e contraprogramação vs MilkyMoo.
+- **Ciclo #153 — Código/Performance:** `checkout.html` revisão — 4× postergado (v18b threshold). Executar obrigatoriamente.
+- **Ciclo #154 — INEGOCIÁVEL:** `whatsapp-1ano-2027.md` standalone — maior evento de marketing da unidade (25/04/2027).
+- **Operador:** CNPJ + DPO — LGPD — em aberto há **+14 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar Potinho Foliã (nome, ingredientes, preço) antes de jan/2027 para preencher FAQ e playbook.
+- **Operador:** Cardapio.js (A/B/C) — blocker técnico persistente.
+- **Operador:** Solicitar indexação do sitemap no Google Search Console (ação pendente ciclo #148).
+
+_Belinha — Ciclo #151 | 2026-05-07_
+
+---
+
 ## Ciclo #150 — 2026-05-07
 
 **Área:** Auto-aprimoramento — Roadmap #151–#160 + Auditoria jan–mai 2027
