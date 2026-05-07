@@ -59,7 +59,16 @@ const AuditLog = {
         // Settings
         SETTINGS_CHANGED: 'settings.changed',
         BACKUP_CREATED: 'system.backup',
-        BACKUP_RESTORED: 'system.restore'
+        BACKUP_RESTORED: 'system.restore',
+
+        // Caixa / PDV — usados em caixa.js, estavam undefined causando
+        // FirebaseError "Function WriteBatch.set() called with invalid data"
+        CAIXA_OPENED: 'caixa.opened',
+        CAIXA_CLOSED: 'caixa.closed',
+        CAIXA_SALE: 'caixa.sale',
+        CAIXA_ADJUST: 'caixa.adjust',
+        CAIXA_OPENED_OFF_HOURS: 'caixa.opened_off_hours',
+        CAIXA_CLOSED_OFF_HOURS: 'caixa.closed_off_hours'
     },
 
     // ============================================
@@ -74,6 +83,12 @@ const AuditLog = {
     // Log principal
     // ============================================
     log(event, details = {}, franchiseId = null) {
+        // Defesa: nunca aceitar event undefined/null — Firestore rejeita
+        // e quebra TODO o batch (perdendo eventos válidos junto)
+        if (!event || typeof event !== 'string') {
+            console.warn('AuditLog.log: event invalido, ignorando:', event, details);
+            return null;
+        }
         const session = this._getSession();
 
         const entry = {
