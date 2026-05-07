@@ -121,6 +121,23 @@
         return prizes[0];
     }
 
+    // Roleta PREMIUM — só tier medium/big. Liberada quando cliente fez review/ação.
+    // Garante que nunca cai no tier "none" (passou raspando) nem "small".
+    function rollPremiumPrize(fid){
+        var prizes = getPrizes(fid).filter(function(p){
+            return !p.disabled && (p.tier === 'medium' || p.tier === 'big');
+        });
+        if (!prizes.length) return rollPrize(fid); // fallback
+        var totalProb = prizes.reduce(function(s,p){ return s + p.prob; }, 0);
+        var r = Math.random() * totalProb;
+        var acc = 0;
+        for (var i=0; i<prizes.length; i++){
+            acc += prizes[i].prob;
+            if (r <= acc) return prizes[i];
+        }
+        return prizes[0];
+    }
+
     function pickNearMissCopy(prize){
         if (!prize || prize.tier !== 'none') return prize.desc;
         if (!Array.isArray(prize.copyVariants) || !prize.copyVariants.length) return prize.desc;
@@ -209,7 +226,10 @@
             }
         }
 
-        var prize = rollPrize(fid);
+        // PREMIUM: cliente fez ação (review Google, etc) e ganhou direito a prêmio elevado.
+        // opts.premium=true forçado pelo PDV quando member.pendingPremiumScratches > 0.
+        // Caso normal: roleta padrão.
+        var prize = opts.premium === true ? rollPremiumPrize(fid) : rollPrize(fid);
         var prizeDesc = pickNearMissCopy(prize) || prize.desc;
         var cfg = getConfig(fid);
         var validityDays = prize.validity > 0 ? prize.validity : (prize.tier === 'none' ? 0 : (cfg.defaultValidityDays || 5));
@@ -244,7 +264,10 @@
             redeemedStoreId: null, redeemedEmployeeId: null, redeemedOrderId: null,
             sharedOnInstagram: false, instagramBonusGranted: false,
             generatedBy: opts.generatedBy || 'order',
-            loopFromCode: opts.loopFromCode || null
+            loopFromCode: opts.loopFromCode || null,
+            isPremium: opts.premium === true,                 // marca raspinha PREMIUM
+            premiumSource: opts.premium ? (opts.premiumSource || 'unknown') : null,
+            memberId: opts.memberId || null                   // vincula ao MilkyClube
         };
 
         saveScratch(fid, scratch);

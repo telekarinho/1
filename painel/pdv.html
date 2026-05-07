@@ -3444,6 +3444,47 @@
         return prizes[0];
     }
 
+    // Roleta PREMIUM — só tier medium/big. Cliente que avaliou no Google ou
+    // realizou outra ação que beneficiou a marca recebe esse upgrade.
+    // Consumido via clubMember.pendingPremiumScratches.
+    function rollScratchPrizePremium(){
+        var prizes = getScratchPrizes().filter(function(p){
+            return !p.disabled && (p.tier === 'medium' || p.tier === 'big');
+        });
+        if (!prizes.length) return rollScratchPrize();
+        var totalProb = prizes.reduce(function(s,p){return s+p.prob},0);
+        var r = Math.random() * totalProb;
+        var acc = 0;
+        for(var i=0;i<prizes.length;i++){
+            acc += prizes[i].prob;
+            if(r <= acc) return prizes[i];
+        }
+        return prizes[0];
+    }
+
+    // Verifica se o membro identificado tem direito a raspinha PREMIUM agora.
+    // SYNC check (state local) — decrementa de forma assíncrona após emitir.
+    // Pequena janela de race em uso concorrente, aceita pelo UX.
+    function hasPendingPremiumScratch() {
+        if (typeof clubMember === 'undefined' || !clubMember) return false;
+        return Number(clubMember.pendingPremiumScratches || 0) > 0;
+    }
+    function asyncDecrementPremium() {
+        try {
+            if (typeof clubMember === 'undefined' || !clubMember) return;
+            var memberId = clubMember.id || clubMember.uid;
+            if (!memberId || typeof firebase === 'undefined' || !firebase.firestore) return;
+            var ref = firebase.firestore().collection('club_members').doc(memberId);
+            ref.update({
+                pendingPremiumScratches: firebase.firestore.FieldValue.increment(-1),
+                lastPremiumConsumedAt: new Date().toISOString()
+            }).then(function(){
+                // Decrementa também o cache local para consistência imediata
+                clubMember.pendingPremiumScratches = Math.max(0, Number(clubMember.pendingPremiumScratches || 0) - 1);
+            }).catch(function(e){ console.warn('[Premium] decrement err', e); });
+        } catch(e) { console.warn('[Premium] async dec', e); }
+    }
+
     // Cooldown anti-fraude — 1 raspinha por CPF/telefone a cada N minutos
     // (cliente farma de pedidos pequenos pra raspadinha = bloqueado)
     function isInCooldown(customerKey){
@@ -3705,7 +3746,12 @@
         var scratchData = null;
         var scratchCheck = shouldEmitScratch(total, customerKey);
         if (scratchCheck.ok) {
-            var scratchPrize = rollScratchPrize();
+            // Upgrade para PREMIUM se o cliente identificado tem créditos pendentes
+            // (review Google, story IG, etc — concedido pelo claimAction quando aprovado).
+            // Sync check para não tornar finishOrder async; decremento assincrono.
+            var isPremium = hasPendingPremiumScratch();
+            var scratchPrize = isPremium ? rollScratchPrizePremium() : rollScratchPrize();
+            if (isPremium) asyncDecrementPremium();
             // Rotaciona copy do "Quase!" se for tier none
             var scratchPrizeDesc = pickNearMissCopy(scratchPrize) || scratchPrize.desc;
             var scratchCfg = getScratchConfig();
@@ -3749,7 +3795,10 @@
                 redeemedOrderId: null,
                 sharedOnInstagram: false,
                 instagramBonusGranted: false,
-                generatedBy: 'order'  // 'order' ou 'redeem_loop' (futuro)
+                generatedBy: 'order',  // 'order' ou 'redeem_loop' (futuro)
+                isPremium: isPremium,
+                premiumSource: isPremium ? 'review_or_action' : null,
+                memberId: (typeof clubMember !== 'undefined' && clubMember) ? (clubMember.id || clubMember.uid || null) : null
             };
             saveScratch(scratchData);
         } else {
