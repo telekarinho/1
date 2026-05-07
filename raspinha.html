@@ -99,6 +99,24 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         <p style="text-align:center;font-size:11px;color:#9484A8;margin-top:14px">O codigo esta impresso no seu recibo</p>
     </div>
 
+    <!-- Stage 1.5: Premium Offer (review-gated) -->
+    <div id="premiumOffer" class="scratch-section" style="margin-bottom:18px">
+        <div style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff;padding:18px 20px;border-radius:18px;box-shadow:0 8px 24px rgba(255,165,0,.35);text-align:center">
+            <div style="font-size:36px;line-height:1">⭐</div>
+            <h3 style="font-family:'Baloo 2',cursive;font-size:1.3rem;font-weight:800;margin:8px 0 4px">QUER UM PRÊMIO MAIOR?</h3>
+            <p style="font-size:.92rem;line-height:1.4;opacity:.95;margin-bottom:14px">
+                Avalie a MilkyPot no Google e libere uma <strong>RASPINHA PREMIUM</strong> com prêmios <strong>3x melhores</strong> + <strong>50 MilkyCoins</strong> 🎁
+            </p>
+            <a href="/clube/avaliei.html?fid=muffato-quintino" id="goReviewBtn"
+               style="display:inline-block;padding:12px 24px;background:#fff;color:#FF6B00;font-family:'Baloo 2',cursive;font-weight:800;font-size:.98rem;border-radius:12px;text-decoration:none">
+                ⭐ Avaliar e ganhar premium
+            </a>
+        </div>
+        <div style="text-align:center;margin-top:8px;font-size:.78rem;color:#888">
+            Ou raspe a sua raspinha normal abaixo ↓
+        </div>
+    </div>
+
     <!-- Stage 2: Scratch Experience -->
     <div id="scratchStage" class="scratch-section">
         <div id="statusLabel" style="text-align:center;margin-bottom:8px"></div>
@@ -390,6 +408,20 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
     function showScratchStage(scratch){
         document.getElementById('codeStage').style.display = 'none';
         document.getElementById('scratchStage').classList.add('active');
+
+        // Mostra oferta de raspinha PREMIUM via review (se ainda não foi raspada)
+        if (scratch.status === 'not_scratched') {
+            var po = document.getElementById('premiumOffer');
+            if (po) {
+                po.classList.add('active');
+                var btn = document.getElementById('goReviewBtn');
+                if (btn) {
+                    var url = '/clube/avaliei.html?fid=' + (scratch.franchiseId || 'muffato-quintino');
+                    if (scratch.code || scratch.id) url += '&scratch=' + encodeURIComponent(scratch.code || scratch.id);
+                    btn.href = url;
+                }
+            }
+        }
 
         var tier = scratch.prizeTier || 'small';
         var tipo = scratch.prizeTipo;
