@@ -152,12 +152,43 @@ const Caixa = (function () {
         const all = loadMovements(franchiseId);
         const moves = byDate(all, dateKey).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 
-        const abertura = moves.find(m => m.type === 'abertura');
-        const fechamento = moves.find(m => m.type === 'fechamento');
-        const vendas = moves.filter(m => m.type === 'venda');
-        const sangrias = moves.filter(m => m.type === 'sangria');
-        const reforcos = moves.filter(m => m.type === 'reforco');
-        const ajustes = moves.filter(m => m.type === 'ajuste');
+        // FIX: pega LAST abertura/fechamento (não first) — se houve reabertura
+        // após fechamento, o turno atual é o ÚLTIMO abertura. Antes usava
+        // find() (primeiro match), o que ignorava reaberturas e deixava
+        // status="fechado" pra sempre.
+        let abertura = null, fechamento = null;
+        for (let i = moves.length - 1; i >= 0; i--) {
+            if (!fechamento && moves[i].type === 'fechamento') fechamento = moves[i];
+            if (!abertura && moves[i].type === 'abertura') abertura = moves[i];
+            if (abertura && fechamento) break;
+        }
+
+        // Determina status pela ORDEM cronológica do último evento de abertura vs fechamento.
+        // - Sem abertura: nao_aberto
+        // - Última abertura DEPOIS do último fechamento (ou sem fechamento): aberto
+        // - Último fechamento DEPOIS da última abertura: fechado
+        let status;
+        if (!abertura) {
+            status = 'nao_aberto';
+        } else if (!fechamento) {
+            status = 'aberto';
+        } else {
+            const aTs = abertura.createdAt || '';
+            const fTs = fechamento.createdAt || '';
+            status = (aTs > fTs) ? 'aberto' : 'fechado';
+        }
+
+        // CALCULOS FINANCEIROS: contabiliza apenas movimentos do TURNO ATUAL
+        // (depois da última abertura). Movimentos anteriores foram fechados
+        // num turno anterior do mesmo dia (caso de reabertura).
+        const turnoCutoff = abertura ? (abertura.createdAt || '') : '';
+        const turnoMoves = abertura
+            ? moves.filter(m => (m.createdAt || '') >= turnoCutoff)
+            : moves;
+        const vendas = turnoMoves.filter(m => m.type === 'venda');
+        const sangrias = turnoMoves.filter(m => m.type === 'sangria');
+        const reforcos = turnoMoves.filter(m => m.type === 'reforco');
+        const ajustes = turnoMoves.filter(m => m.type === 'ajuste');
 
         // Saldo em dinheiro esperado
         const valorAbertura = abertura ? Number(abertura.valor || 0) : 0;
@@ -177,11 +208,6 @@ const Caixa = (function () {
             acc[k] = (acc[k] || 0) + Number(m.valor || 0);
             return acc;
         }, {});
-
-        let status;
-        if (!abertura) status = 'nao_aberto';
-        else if (fechamento) status = 'fechado';
-        else status = 'aberto';
 
         return {
             dateKey: dateKey,
