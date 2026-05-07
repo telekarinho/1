@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Obrigada pela avaliação! · MilkyPot</title>
+<meta name="theme-color" content="#42A5F5">
+<link rel="icon" href="/images/logo-milkypot.png">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',system-ui,sans-serif;background:linear-gradient(135deg,#42A5F5,#EC407A);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;color:#1a2740}
+.card{background:#fff;border-radius:24px;padding:32px 28px;max-width:440px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.18);text-align:center}
+.icon{font-size:4rem;margin-bottom:12px;animation:bounce 1.6s infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+h1{font-family:'Baloo 2',cursive;font-size:1.8rem;line-height:1.1;margin-bottom:10px;color:#1a2740}
+.sub{color:#6B7A95;font-size:1rem;margin-bottom:22px;line-height:1.5}
+.steps{background:#F5FAFF;border-radius:16px;padding:18px;margin-bottom:20px;text-align:left}
+.step{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:.92rem}
+.step.done{color:#16a34a;font-weight:700}
+.step .num{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:#E3F2FD;color:#1976D2;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem}
+.step.done .num{background:#dcfce7;color:#16a34a}
+.btn-primary{display:block;width:100%;padding:16px;background:linear-gradient(135deg,#EC407A,#42A5F5);color:#fff;font-family:'Baloo 2',cursive;font-weight:800;font-size:1.05rem;border:none;border-radius:14px;cursor:pointer;text-decoration:none;margin-bottom:10px;transition:transform .15s,box-shadow .15s}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 12px 32px rgba(236,64,122,.4)}
+.btn-secondary{display:block;width:100%;padding:14px;background:#fff;color:#42A5F5;border:2px solid #42A5F5;font-weight:800;font-size:.95rem;border-radius:14px;cursor:pointer;text-decoration:none;margin-bottom:10px}
+.banner{display:none;padding:14px 16px;border-radius:12px;font-size:.92rem;font-weight:700;margin-bottom:16px;line-height:1.4}
+.banner.info{display:block;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.banner.ok{display:block;background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0}
+.banner.err{display:block;background:#fee2e2;color:#dc2626;border:1px solid #fecaca}
+.foot{margin-top:18px;font-size:.78rem;color:#9CA3AF}
+.foot a{color:#42A5F5;font-weight:700}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #1d4ed8;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+    <div class="icon" id="icon">⭐</div>
+    <h1 id="title">Avaliou no Google?</h1>
+    <p class="sub" id="subtitle">Confirma aqui pra liberar sua raspinha PREMIUM com prêmios maiores ✨</p>
+
+    <div id="banner" class="banner info"></div>
+
+    <div class="steps" id="steps">
+        <div class="step" id="s1">
+            <span class="num">1</span>
+            <span>Abra o Google e dê 5 ⭐ pra MilkyPot</span>
+        </div>
+        <div class="step" id="s2">
+            <span class="num">2</span>
+            <span>Volte aqui e clique no botão</span>
+        </div>
+        <div class="step" id="s3">
+            <span class="num">3</span>
+            <span>Sua raspinha PREMIUM fica liberada na próxima compra</span>
+        </div>
+    </div>
+
+    <a href="https://g.page/r/CXrthQS1rgPdEAE/review" target="_blank" rel="noopener" class="btn-primary" id="btnReview">
+        ⭐ Avaliar no Google agora
+    </a>
+
+    <button class="btn-secondary" id="btnAlready">Já avaliei — confirmar</button>
+
+    <p class="foot">
+        Ou volta pro <a href="/clube/">MilkyClube</a>
+    </p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+<script src="/js/core/firebase-config.js"></script>
+<script src="/js/core/cloud-functions.js"></script>
+<script src="/js/core/milkyclub.js"></script>
+<script>
+(function(){
+    const banner = document.getElementById('banner');
+    const btnAlready = document.getElementById('btnAlready');
+    const btnReview = document.getElementById('btnReview');
+    const params = new URLSearchParams(location.search);
+    const FRANCHISE = params.get('fid') || 'muffato-quintino';
+    const fromScratchCode = params.get('scratch') || null;
+
+    function setBanner(msg, type) {
+        banner.textContent = msg;
+        banner.className = 'banner ' + type;
+        banner.style.display = 'block';
+    }
+    function clearBanner() { banner.style.display = 'none'; }
+
+    // Marca quando user clicou no botão de Avaliar (pra calcular tempo até voltar)
+    btnReview.addEventListener('click', function() {
+        try { sessionStorage.setItem('mp_review_started_at', Date.now()); } catch(_) {}
+    });
+
+    // Quando volta do Google, esperamos pelo menos 30s desde o clique
+    function timeSinceReviewStart() {
+        try {
+            const t = parseInt(sessionStorage.getItem('mp_review_started_at') || '0', 10);
+            return t ? (Date.now() - t) : 0;
+        } catch(_) { return 0; }
+    }
+
+    btnAlready.addEventListener('click', async function() {
+        clearBanner();
+        btnAlready.disabled = true;
+        btnAlready.innerHTML = '<span class="spinner"></span> Validando...';
+
+        // 1) Garante que cliente está identificado no MilkyClube
+        if (typeof MilkyClube === 'undefined' || !MilkyClube.getCurrentMember) {
+            setBanner('⚠️ MilkyClube não carregado — recarregue a página', 'err');
+            btnAlready.disabled = false;
+            btnAlready.textContent = 'Já avaliei — confirmar';
+            return;
+        }
+
+        let member = null;
+        try {
+            await MilkyClube.init().catch(()=>{});
+            member = MilkyClube.getCurrentMember && MilkyClube.getCurrentMember();
+        } catch(e) {}
+
+        if (!member || !(member.uid || member.id)) {
+            setBanner('Você precisa estar logado no MilkyClube para resgatar a recompensa. Redirecionando...', 'info');
+            setTimeout(function() {
+                location.href = '/clube/?next=' + encodeURIComponent(location.href);
+            }, 2000);
+            return;
+        }
+
+        // 2) Verifica se o cliente clicou no botão de avaliar nessa sessão
+        const elapsedMs = timeSinceReviewStart();
+        if (elapsedMs > 0 && elapsedMs < 20000) {
+            setBanner('⏱ Você acabou de clicar em "Avaliar". Aguarde 20s e clique novamente.', 'err');
+            btnAlready.disabled = false;
+            btnAlready.textContent = 'Já avaliei — confirmar';
+            return;
+        }
+
+        // 3) Cria o claim
+        try {
+            const memberId = member.uid || member.id;
+            const res = await CloudFunctions.claimAction(memberId, 'google_review', {
+                scratchCode: fromScratchCode,
+                clickedReviewBtnAt: timeSinceReviewStart() ? new Date(Date.now() - elapsedMs).toISOString() : null,
+                userAgent: navigator.userAgent.substring(0, 200)
+            }, FRANCHISE);
+
+            if (res && res.duplicate) {
+                setBanner('Você já tem um claim ativo dessa avaliação 😊', 'info');
+                document.getElementById('s1').classList.add('done');
+                document.getElementById('s2').classList.add('done');
+                btnAlready.style.display = 'none';
+                btnReview.textContent = '⭐ Ver MilkyClube';
+                btnReview.href = '/clube/';
+                return;
+            }
+
+            if (res && res.success) {
+                document.getElementById('icon').textContent = '🎉';
+                document.getElementById('title').textContent = 'Aguardando confirmação';
+                document.getElementById('subtitle').textContent = 'Estamos validando sua avaliação. Você recebe uma notificação assim que for confirmada (até 48h).';
+                document.getElementById('s1').classList.add('done');
+                document.getElementById('s2').classList.add('done');
+                setBanner('✅ Claim registrado! Recompensa: 1 raspinha PREMIUM + 50 MilkyCoins ao validar.', 'ok');
+                btnAlready.style.display = 'none';
+                btnReview.textContent = '🐑 Voltar pro MilkyClube';
+                btnReview.href = '/clube/';
+                return;
+            }
+
+            setBanner('⚠️ Não foi possível registrar: ' + (res && res.error || 'erro desconhecido'), 'err');
+            btnAlready.disabled = false;
+            btnAlready.textContent = 'Já avaliei — confirmar';
+        } catch(e) {
+            setBanner('❌ Erro: ' + (e.message || e), 'err');
+            btnAlready.disabled = false;
+            btnAlready.textContent = 'Já avaliei — confirmar';
+        }
+    });
+})();
+</script>
+</body>
+</html>
