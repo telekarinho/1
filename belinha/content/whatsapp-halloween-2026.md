@@ -320,8 +320,57 @@ MilkyPot Londrina 🐑💛
 
 ---
 
+## DIFERENCIAÇÃO DE MERCADO — Intel Ciclo #143 (2026-05-07)
+
+> Use estes ângulos nos broadcasts e nas respostas WA quando clientes perguntarem sobre Halloween em Londrina. **NUNCA cite o concorrente por nome** no conteúdo público — a comparação implícita é mais eficaz e evita reação negativa.
+
+### Contexto de mercado (operador: leitura interna)
+
+| Concorrente | Produto Halloween | Preço | Personalização | WA Próprio |
+|-------------|-------------------|-------|----------------|------------|
+| MilkyMoo (rede ~700 un.) | "Milky Boo" — milkshake 700ml + blind box brinde colecionável | R$49,90 fixo | ❌ sabor único, tamanho único | ❌ |
+| JohnnyJoy | Sem produto/campanha Halloween detectados (out/2026) | — | — | — |
+| TheBest Açaí | Sem produto/campanha Halloween detectados (out/2026) | — | — | — |
+| **MilkyPot Londrina** | **Potinho Assombrado — edição limitada personalizada** | **Mini a Gigante (a confirmar)** | **✅ base + tamanho + toppings** | **✅** |
+
+### Gap de preço (5:1 vs. MilkyMoo)
+A principal rede nacional cobra **R$49,90** por produto único, sem escolha. O Potinho Assombrado MilkyPot oferece personalização completa partindo do tamanho Mini — acessível e do jeito do cliente.
+
+### Gap de personalização
+Concorrente: sabor fixo + tamanho único + brinde aleatório (blind box).
+MilkyPot: base Ninho ou Açaí + Mini ao Gigante + toppings extras à vontade + Linha Zero disponível.
+
+### Ângulos de mensagem para o operador (usar nos templates)
+
+**Em H0 — acrescentar antes do fechamento:**
+```
+Aqui o Halloween é sempre do seu jeito — você escolhe a base, o tamanho e os toppings.
+Só no Muffato, só no dia 31/10. 🎃🐑
+```
+
+**Em H2 (reveal) — após listar ingredientes, acrescentar:**
+```
+E o melhor: você ainda pode pedir toppings extras à escolha — o estilo MilkyPot de sempre.
+Mini, Pequeno, Médio ou Gigante. Qual o seu? 🎃
+```
+
+**Em H5 (EVE — última chance) — gancho final:**
+```
+Halloween do seu jeito, do tamanho que você quiser.
+Só existe em Londrina aqui. E só existe hoje à noite até as 23h. 🎃🐑
+```
+
+**Em respostas WA individuais (quando cliente perguntar "tem algo diferente pra Halloween?"):**
+```
+Tem sim! 🎃 O Potinho Assombrado — edição especial só no dia 31/10.
+Você escolhe o tamanho (Mini a Gigante) e pode pedir toppings extras.
+Quer garantir prioridade? Manda HALLOWEEN aqui que eu te coloco na lista VIP! 🐑
+```
+
+---
+
 > **Nota de planejamento:** Os ingredientes exatos do Potinho Assombrado são marcados como `[confirmar com franquia]`. O operador deve confirmar com a MilkyPot SP antes de 30/09/2026 para preencher os templates H2 e H-AUTO com as informações reais.
 >
-> **Contraprogramação:** Intel ciclo #139 confirma que MilkyMoo e JohnnyJoy não têm campanha de Halloween documentada. TheBest opera waffle "My Waffle, My Rules" até 15/08 — provável retorno ao cardápio normal em outubro. MilkyPot é a única com produto temático limitado e mecânica VIP estruturada.
+> **Contraprogramação (atualizado ciclo #143 — 2026-05-07):** MilkyMoo lançou "Milky Boo" — milkshake 700ml a R$49,90 com blind box de brinde colecionável (4 personagens FofoMoo). Produto único, sabor fixo, tamanho único, sem personalização, sem Linha Fit, sem WA próprio. JohnnyJoy e TheBest Açaí: sem produto/campanha Halloween detectados (out/2026). **MilkyPot é a única com Potinho Assombrado personalizado em Londrina — campo aberto.**
 
-_Belinha — Ciclo #140 | 2026-05-06_
+_Belinha — Ciclo #140 | 2026-05-06 | Atualizado Ciclo #144 | 2026-05-07_

@@ -150,7 +150,8 @@ Fique de olho no WhatsApp amanhã às 12h.
 3. **Slide 3 — Topping:** "Topping especial: crocante de chocolate preto + granulado laranja + mini abóbora de chocolate (ingrediente surpresa! 🎃)"
 4. **Slide 4 — Visual final:** Foto do produto completo, top-down. Cores: cream + vermelho + preto + laranja. Texto: "O Potinho Mais Assombrado do Mundo. 👻🐑"
 5. **Slide 5 — Como pedir:** "Disponível APENAS no dia 31/10 (Halloween). Estoque limitado. Lista VIP = prioridade. Como entrar: manda HALLOWEEN no WA 👇"
-6. **Slide 6 — UGC:** "Já está fazendo sua fantasia? Posta com #PotinhoAssombrado e pode aparecer aqui! 🎃📸"
+6. **Slide 6 — Personalização (diferencial):** "É edição especial — mas segue o estilo MilkyPot. 🎃🐑 Você escolhe: Mini, Pequeno, Médio ou Gigante. Pode pedir toppings extras. A base Assombrada, a gente garante. Aqui o Halloween sempre é do seu jeito."
+7. **Slide 7 — UGC:** "Já está fazendo sua fantasia? Posta com #PotinhoAssombrado e pode aparecer aqui! 🎃📸"
 
 **Caption:**
 ```
@@ -161,6 +162,8 @@ Potinho Assombrado — a edição mais especial da história da MilkyPot Londrin
 🍓 Base Ninho + calda de morango vermelho
 🖤 Crocante de chocolate preto
 🎃 Granulado laranja + mini abóbora de chocolate (sim, existe!)
+
+É edição especial — mas é MilkyPot. Você escolhe o tamanho (Mini ao Gigante) e pode pedir toppings extras. O visual Assombrado, a gente garante. 🎃
 
 Disponível APENAS no dia 31/10 (Sábado — Halloween!).
 Estoque limitado. Lista VIP = prioridade.
@@ -175,7 +178,7 @@ Estoque limitado. Lista VIP = prioridade.
 📍 Muffato | Av. Quintino Bocaiuva, 1045 — Londrina-PR
 📲 wa.me/5543998042424 | 🕑 14h–23h
 
-#PotinhoAssombrado #Halloween #MilkyPot #Londrina #Edição Limitada #OvelhinhaVampira
+#PotinhoAssombrado #Halloween #MilkyPot #Londrina #EdiçãoLimitada #OvelhinhaVampira
 ```
 
 **WA lista VIP (12h — exclusivo):**
