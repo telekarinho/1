@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #144 — 2026-05-07
+
+**Área:** Conversão — Intel Milky Boo R$49,90 → Playbook WA Halloween + Reveal Semana 26
+
+**Contexto:** Prescrito pelo roadmap #144: atualizar `whatsapp-halloween-2026.md` e conteúdo semanas 25–28 com intel do ciclo #143 (Milky Boo R$49,90 fixo, blind box, sem personalização). Foco em ângulo de diferenciação implícita para operador usar nos templates WA e no carrossel de reveal.
+
+**O que analisou:**
+- Leu `whatsapp-halloween-2026.md` completo: nota de contraprogramação ainda referenciava ciclo #139 (sem Milky Boo); templates H0/H2/H5 sem ângulo de personalização explícito
+- Verificou semanas 25–28: nenhuma referência ao gap de preço ou personalização vs. concorrente
+- Foco estratégico: semana 26 (reveal 14/10) = post de maior alcance da campanha → slide de personalização tem impacto máximo ali
+- Decisão: NÃO citar concorrente por nome em conteúdo público (best practice); usar diferenciação implícita ("você escolhe", "do seu jeito")
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/whatsapp-halloween-2026.md` | Nova seção "DIFERENCIAÇÃO DE MERCADO — Intel Ciclo #143": tabela comparativa (MilkyMoo/JohnnyJoy/TheBest vs. MilkyPot), gap de preço 5:1, gap de personalização, ângulos de mensagem para H0/H2/H5 e resposta WA individual. Nota de contraprogramação atualizada com intel completo do Milky Boo (R$49,90, FofoMoo, 700ml único) |
+| `belinha/content/pos-inauguracao-semana26.md` | Carrossel reveal 14/10: slide 6 "Personalização (diferencial)" adicionado ("você escolhe Mini ao Gigante, pode pedir toppings extras, a base Assombrada a gente garante"); caption do post atualizada com mesma mensagem de personalização |
+
+**Commit:** `e1af199`
+
+**Destaques:**
+1. **Diferenciação implícita:** A mensagem "você escolhe o tamanho e pode pedir toppings extras" posiciona MilkyPot sem citar Milky Boo (produto fixo) — funciona como gancho positivo independente do awareness do concorrente
+2. **Ângulos prontos para operador:** Seção DIFERENCIAÇÃO com copy para H0, H2, H5 e resposta individual — operador não precisa improvisar quando cliente perguntar sobre Halloween
+3. **Slide de personalização no reveal:** O post de maior alcance da campanha (carrossel 14/10) agora tem o diferencial como antepenúltimo slide — lido por quem vai até o final (cliente mais engajado)
+4. **Contraprogramação atualizada:** Nota final do playbook agora é fonte única de verdade sobre landscape out/2026 (Milky Boo + vazios de JohnnyJoy/TheBest)
+
+**Próximo passo sugerido:**
+- **Ciclo #145:** Auto-aprimoramento nov–jan 2027 — conforme roadmap #140. Reler ciclos #140–#144, auditar cobertura nov/dez/jan, ajustar rotação
+- **Ciclo #146:** Verificar semanas 35–36 (Natal countdown 5 dias + dia H 25/12) — conforme roadmap ciclo #75
+- **Operador:** Confirmar ingredientes Potinho Assombrado com franquia ANTES de 30/09/2026 para preencher [confirmar com franquia] em H2 e H-AUTO
+- **Operador:** Confirmar ≥3 reviews Google Meu Negócio para habilitar `aggregateRating` schema (+15–30% CTR estimado)
+- **Operador:** CNPJ + DPO ainda não fornecidos — risco LGPD. Ver `belinha/blockers.md`
+
+_Belinha — Ciclo #144 | 2026-05-07_
+
+---
+
 ## Ciclo #143 — 2026-05-07
 
 **Área:** Concorrentes — Intel pré-Halloween + Ação técnica v18a
