@@ -2,6 +2,45 @@
 
 ---
 
+## Ciclo #142 — 2026-05-07
+
+**Área:** SEO — Schema.org `Product` com `AggregateOffer` em `cardapio.html`
+
+**Contexto:** Prescrito pelo roadmap #141 como ciclo seguinte ao UX de lazy scroll. Sem `aggregateRating` (aguarda ≥3 Google reviews confirmadas pelo operador). O `FoodEstablishment` + `Menu/MenuItem` já existiam; gap era a ausência de `Product` schema com preço explícito para rich snippets de preço nas SERPs.
+
+**O que analisou:**
+- Verificou blocos ld+json existentes em `cardapio.html`: FoodEstablishment (hasMenu), BreadcrumbList+WebPage, FAQPage — sem nenhum `Product`
+- Confirmou estrutura `CARDAPIO_CONFIG`: 3 bases (ninho, zero-fit, acai) × 2 formatos cada × 4 tamanhos (R$10–R$22)
+- Verificou ausência de imagens de produto específicas → usou `logo-milkypot.png` como `image` (aceitável pelo Google Rich Results Test)
+- Padrão `AggregateOffer` (lowPrice + highPrice + offerCount) = correto para catálogos com variação de tamanho/preço
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `cardapio.html` | Novo bloco `@graph` com 3 `Product` schemas: Ninho, Açaí e Zero/Fit. Cada um com `AggregateOffer` lowPrice=10/highPrice=22 BRL, `availability: InStock`, `seller: LocalBusiness`. Inserido após o FAQPage, antes do `<style>`. |
+
+**Validação:** `python3` parseou os 4 blocos JSON-LD sem erros (FoodEstablishment, BreadcrumbList, FAQPage, Product).
+
+**Commit:** `a5a079e`
+
+**Destaques SEO:**
+1. **Rich snippets de preço:** Google pode exibir "A partir de R$ 10" nas SERPs para buscas como "potinho de ninho Londrina" ou "açaí delivery Londrina"
+2. **`AggregateOffer` com offerCount=4:** Sinaliza 4 variações (Mini/Pequeno/Médio/Gigante) sem criar itens redundantes
+3. **Cobertura completa das 3 linhas:** Ninho + Açaí + Zero/Fit = catálogo principal visível ao Googlebot mesmo sem JS
+4. **Sem `aggregateRating`:** Postura conservadora correta — schema inválido ou falso prejudica ranking. Adicionado quando operador confirmar ≥3 reviews no Google Meu Negócio
+
+**Próximo passo sugerido:**
+- **Ciclo #143:** Refetch concorrentes pré-Halloween (TheBest, MilkyMoo, JohnnyJoy) — mecânicas out/2026, Dia das Crianças 12/10 e 31/10. Regra v18a: intel → ação técnica no mesmo ciclo
+- **Ciclo #144:** Atualizar semanas 25–28 e `whatsapp-halloween-2026.md` com intel do #143 se necessário
+- **Ciclo #145:** Auto-aprimoramento nov–jan 2027 (roadmap)
+- **Operador:** Confirmar ≥3 reviews Google Meu Negócio para habilitar `aggregateRating` schema (boost de CTR estimado +15–30%)
+- **Operador:** Ingredientes Potinho Assombrado com franquia antes de 30/09/2026
+
+_Belinha — Ciclo #142 | 2026-05-07_
+
+---
+
 ## Ciclo #141 — 2026-05-06
 
 **Área:** UX/Performance — `renderProducts` lazy scroll (IntersectionObserver)
