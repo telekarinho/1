@@ -177,6 +177,133 @@ exports.clubGrantMilkyPassStamp = onCall({
 });
 
 // ============================================
+// 1.5. CLUB RESOLVE CREDITS
+// ============================================
+// Lê TODOS os créditos disponíveis pra um membro MilkyClube em uma chamada:
+// - Saldo MilkyCoins (cashback)
+// - Progresso MilkyPass + prêmios pendentes
+// - Raspinhas não resgatadas (com prêmio + validade)
+// - Vouchers de Desafio não usados
+// - Tier atual
+// Usado pelo PDV pra mostrar o que o cliente tem disponível pra abater no
+// pagamento. Apenas LEITURA — não muda nada. Idempotente.
+exports.clubResolveCredits = onCall({
+    region: "southamerica-east1"
+}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Autenticacao necessaria");
+    }
+    const role = request.auth.token.role;
+    if (!["super_admin", "franchisee", "manager", "staff"].includes(role)) {
+        throw new HttpsError("permission-denied", "Sem permissao para consultar créditos");
+    }
+
+    const { memberId, franchiseId } = request.data || {};
+    if (!memberId) {
+        throw new HttpsError("invalid-argument", "memberId obrigatorio");
+    }
+
+    // 1. Lê o doc do membro
+    const memberSnap = await db.collection("club_members").doc(memberId).get();
+    if (!memberSnap.exists) {
+        throw new HttpsError("not-found", "Membro MilkyClube nao encontrado");
+    }
+    const member = memberSnap.data() || {};
+    const phone = (member.phone || "").replace(/\D/g, "");
+
+    // 2. MilkyCoins + tier (direto do member doc)
+    const coins = Number(member.coins || 0);
+    const tier = member.tier || "leite";
+    const tierProgress = member.tierProgress || {};
+
+    // 3. MilkyPass: progress + prêmios pendentes
+    const milkyPass = member.milkyPass || { current: 0, required: 5 };
+    const pendingPassRewards = (member.pendingPassRewards || []).filter(r => !r.redeemedAt);
+
+    // 4. Raspinhas: query por customerKey (telefone normalizado)
+    let scratches = [];
+    if (phone) {
+        try {
+            const scratchSnap = await db.collection("scratches")
+                .where("customerKey", "==", phone)
+                .where("status", "in", ["scratched", "not_scratched"])
+                .limit(20).get();
+            const nowMs = Date.now();
+            scratches = scratchSnap.docs.map(d => {
+                const data = d.data() || {};
+                const expiresMs = data.expiresAt ? new Date(data.expiresAt).getTime() : 0;
+                return {
+                    code: d.id,
+                    status: data.status,
+                    prizeId: data.prizeId,
+                    prizeName: data.prizeName,
+                    prizeDesc: data.prizeDesc,
+                    prizeCategoria: data.prizeCategoria,
+                    minOrder: data.minOrder || 0,
+                    expiresAt: data.expiresAt,
+                    expired: expiresMs > 0 && expiresMs < nowMs,
+                    scratchedAt: data.scratchedAt
+                };
+            }).filter(s => !s.expired); // só raspinhas válidas
+        } catch (e) {
+            console.warn("scratches query failed:", e && e.message);
+        }
+    }
+
+    // 5. Vouchers de Desafio: por playerPhone
+    let desafioVouchers = [];
+    if (phone) {
+        try {
+            const voucherSnap = await db.collection("desafio_vouchers")
+                .where("playerPhone", "==", phone)
+                .where("used", "==", false)
+                .limit(10).get();
+            desafioVouchers = voucherSnap.docs.map(d => {
+                const data = d.data() || {};
+                return {
+                    code: d.id,
+                    prize: data.prize || null,
+                    prizeLabel: data.prizeLabel || data.prize || "",
+                    discountValue: Number(data.discountValue || 0),
+                    discountType: data.discountType || null, // 'fixed' | 'percent' | 'item'
+                    attemptsRemaining: Math.max(0, (data.attempts || 1) - (data.attemptsUsed || 0)),
+                    expiresAt: data.expiresAt || null
+                };
+            });
+        } catch (e) {
+            console.warn("desafio_vouchers query failed:", e && e.message);
+        }
+    }
+
+    return {
+        success: true,
+        memberId,
+        member: {
+            name: member.name || "",
+            phone: member.phone || "",
+            email: member.email || "",
+            coins,
+            tier,
+            tierProgress,
+            ordersCount: member.ordersCount || 0,
+            totalSpent: member.totalSpent || 0
+        },
+        credits: {
+            coins,
+            milkyPass: {
+                current: milkyPass.current || 0,
+                required: milkyPass.required || 5,
+                pendingRewards: pendingPassRewards
+            },
+            scratches,
+            desafioVouchers
+        },
+        franchiseId: franchiseId || null,
+        fetchedAt: new Date().toISOString()
+    };
+});
+
+// ============================================
 // 2. SETUP INICIAL DO OWNER
 // ============================================
 // Seta o primeiro admin (owner) como super_admin
