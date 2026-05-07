@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot Admin · Recompensas & Claims</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#7c3aed">
+    <style>
+    .tabs{display:flex;gap:6px;margin:0 0 18px;border-bottom:2px solid #eee}
+    .tab{padding:10px 18px;cursor:pointer;border:none;background:none;font-family:'Baloo 2',cursive;font-size:.95rem;font-weight:700;color:#888;border-bottom:3px solid transparent}
+    .tab.active{color:#7c3aed;border-bottom-color:#7c3aed}
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+    .stat-card{background:#fff;border-radius:14px;padding:14px 18px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+    .stat-num{font-family:'Baloo 2',cursive;font-size:1.6rem;font-weight:800;color:#7c3aed;line-height:1}
+    .stat-lbl{font-size:.78rem;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-top:4px;font-weight:700}
+    .claims-table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+    .claims-table th{background:#f8f5ff;padding:10px 12px;text-align:left;font-size:.78rem;color:#666;text-transform:uppercase;letter-spacing:.5px}
+    .claims-table td{padding:14px 12px;border-top:1px solid #f0f0f0;font-size:.92rem}
+    .claims-table tr:hover{background:#fafafa}
+    .chip{display:inline-block;padding:3px 10px;border-radius:100px;font-size:.72rem;font-weight:700}
+    .chip.pending{background:#fef3c7;color:#92400e}
+    .chip.verified{background:#dcfce7;color:#16a34a}
+    .chip.rejected{background:#fee2e2;color:#dc2626}
+    .chip.expired{background:#f3f4f6;color:#6b7280}
+    .action-tag{display:inline-block;padding:2px 8px;border-radius:6px;background:#e0e7ff;color:#4338ca;font-size:.78rem;font-weight:700;font-family:monospace}
+    .btn-sm{padding:6px 12px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;border:none;font-family:Nunito,sans-serif}
+    .btn-approve{background:#16a34a;color:#fff;margin-right:6px}
+    .btn-approve:hover{background:#15803d}
+    .btn-reject{background:#dc2626;color:#fff}
+    .btn-reject:hover{background:#b91c1c}
+    .btn-disabled{background:#e5e7eb;color:#9ca3af;cursor:not-allowed}
+    .filter-bar{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+    .filter-bar select{padding:8px 12px;border:1.5px solid #e2e2e8;border-radius:8px;font-family:inherit;font-size:.9rem}
+    .config-form{background:#fff;border-radius:14px;padding:20px 24px;box-shadow:0 2px 12px rgba(0,0,0,.05);max-width:840px}
+    .config-form h3{font-family:'Baloo 2',cursive;color:#7c3aed;font-size:1.15rem;margin-bottom:14px}
+    .config-grid{display:grid;grid-template-columns:1fr 120px 100px 100px;gap:8px 12px;align-items:center;margin-bottom:8px;padding:10px 0;border-bottom:1px dashed #eee}
+    .config-grid:first-of-type{font-weight:800;color:#666;font-size:.78rem;text-transform:uppercase;border-bottom:2px solid #ddd}
+    .config-grid input{padding:6px 10px;border:1.5px solid #e2e2e8;border-radius:6px;font-family:inherit;font-size:.85rem}
+    .config-actions{display:flex;gap:10px;margin-top:18px}
+    .btn-save-cfg{padding:12px 24px;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;border:none;border-radius:10px;font-weight:800;font-family:'Baloo 2',cursive;cursor:pointer}
+    .empty{text-align:center;padding:40px 20px;color:#aaa}
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,10,40,.6);z-index:1000;align-items:center;justify-content:center;padding:20px}
+    .modal-bg.open{display:flex}
+    .modal{background:#fff;border-radius:18px;padding:24px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto}
+    .modal h3{font-family:'Baloo 2',cursive;margin-bottom:14px}
+    .modal pre{background:#f5f5f5;padding:12px;border-radius:8px;font-size:.78rem;overflow-x:auto;max-height:240px}
+    .modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+    </style>
+</head>
+<body>
+<div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+            <h2>MilkyPot<small>Central Admin</small></h2>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-group">Principal</div>
+            <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+            <a href="franchises.html" class="sidebar-link"><span class="icon">🏪</span> Franquias</a>
+            <a href="finances.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+            <div class="sidebar-nav-group">Marketing</div>
+            <a href="lancamento.html" class="sidebar-link"><span class="icon">🚀</span> Lançamento</a>
+            <a href="clube.html" class="sidebar-link"><span class="icon">🐑</span> MilkyClube</a>
+            <a href="recompensas-claims.html" class="sidebar-link active"><span class="icon">🎁</span> Recompensas & Claims</a>
+            <a href="campaigns.html" class="sidebar-link"><span class="icon">📢</span> Campanhas</a>
+            <div class="sidebar-nav-group">Sistema</div>
+            <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Configurações</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">👑</div>
+                <div class="sidebar-user-info">
+                    <strong id="sidebarUserName">Admin</strong>
+                    <small>Super Admin</small>
+                </div>
+            </div>
+        </div>
+    </aside>
+    <main class="panel-main">
+        <header class="panel-header">
+            <button class="btn btn-sm btn-outline" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">☰</button>
+            <h1>🎁 Recompensas & Claims</h1>
+            <div style="margin-left:auto;display:flex;gap:8px">
+                <button class="btn btn-sm btn-outline" onclick="loadClaims()">🔄 Atualizar</button>
+            </div>
+        </header>
+        <div class="panel-content">
+            <div class="tabs">
+                <button class="tab active" data-tab="queue">Fila de aprovação</button>
+                <button class="tab" data-tab="all">Todos os claims</button>
+                <button class="tab" data-tab="config">Tabela de recompensas</button>
+            </div>
+
+            <div id="tab-queue" class="tab-content">
+                <div class="stats" id="stats"></div>
+                <div class="filter-bar">
+                    <select id="filterAction" onchange="renderClaims()">
+                        <option value="">Todas as ações</option>
+                        <option value="google_review">Google Review</option>
+                        <option value="instagram_story">Instagram Story</option>
+                        <option value="tiktok_post">TikTok</option>
+                        <option value="ugc_photo">UGC Foto</option>
+                        <option value="referral_converted">Indicação convertida</option>
+                    </select>
+                    <select id="filterFranchise" onchange="renderClaims()">
+                        <option value="">Todas as franquias</option>
+                    </select>
+                    <span style="margin-left:auto;color:#888;font-size:.85rem" id="claimCount"></span>
+                </div>
+                <table class="claims-table">
+                    <thead><tr>
+                        <th>Quando</th><th>Membro</th><th>Ação</th><th>Recompensa</th><th>Franquia</th><th>Status</th><th>Ações</th>
+                    </tr></thead>
+                    <tbody id="claimsBody">
+                        <tr><td colspan="7" class="empty">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="tab-all" class="tab-content" style="display:none">
+                <table class="claims-table">
+                    <thead><tr>
+                        <th>Quando</th><th>Membro</th><th>Ação</th><th>Recompensa</th><th>Status</th><th></th>
+                    </tr></thead>
+                    <tbody id="allClaimsBody">
+                        <tr><td colspan="6" class="empty">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="tab-config" class="tab-content" style="display:none">
+                <div class="config-form">
+                    <h3>📋 Tabela de Recompensas (configuração global)</h3>
+                    <p style="color:#666;font-size:.88rem;margin-bottom:16px">
+                        Define o que o cliente ganha ao realizar cada ação. Mudanças afetam claims criados a partir do save.
+                    </p>
+                    <div class="config-grid">
+                        <div>Ação</div><div>Tipo</div><div>Valor</div><div>+ Coins</div>
+                    </div>
+                    <div id="cfgRows"></div>
+                    <div class="config-actions">
+                        <button class="btn-save-cfg" onclick="saveConfig()">💾 Salvar configuração</button>
+                        <span id="cfgStatus" style="color:#16a34a;font-weight:700;align-self:center"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="modal-bg" id="rejectModal">
+    <div class="modal">
+        <h3>❌ Rejeitar claim</h3>
+        <p>Por que está rejeitando? (opcional)</p>
+        <input type="text" id="rejectReason" placeholder="Ex: prova insuficiente"
+            style="width:100%;padding:10px;border:1.5px solid #e2e2e8;border-radius:8px;margin-top:8px;font-family:inherit">
+        <div class="modal-actions">
+            <button class="btn-sm" style="background:#f3f4f6" onclick="document.getElementById('rejectModal').classList.remove('open')">Cancelar</button>
+            <button class="btn-sm btn-reject" id="confirmRejectBtn">Confirmar rejeição</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-bg" id="payloadModal">
+    <div class="modal">
+        <h3>📦 Detalhes do claim</h3>
+        <pre id="payloadContent"></pre>
+        <div class="modal-actions">
+            <button class="btn-sm" style="background:#f3f4f6" onclick="document.getElementById('payloadModal').classList.remove('open')">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/cloud-functions.js"></script>
+<script src="../js/core/auth.js"></script>
+<script>
+(function() {
+    if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+    document.getElementById('sidebarUserName').textContent = Auth.getUserName();
+
+    const db = firebase.firestore();
+    let allClaims = [];
+    let allFranchises = [];
+    let activeTab = 'queue';
+    let pendingRejectClaimId = null;
+
+    // Default config (mesmo que ACTION_REWARDS no functions/index.js)
+    const DEFAULT_CONFIG = {
+        google_review:    { type: 'raspinha_premium', value: 50,  coinsBonus: 50 },
+        instagram_story:  { type: 'raspinha_premium', value: 30,  coinsBonus: 30 },
+        tiktok_post:      { type: 'milkycoins',       value: 100, coinsBonus: 0 },
+        whatsapp_optin:   { type: 'milkycoins',       value: 50,  coinsBonus: 0 },
+        birthday_set:     { type: 'milkycoins',       value: 30,  coinsBonus: 0 },
+        pwa_notif_optin:  { type: 'milkycoins',       value: 25,  coinsBonus: 0 },
+        referral_converted:{type: 'milkypass_stamp',  value: 2,   coinsBonus: 100 },
+        ugc_photo:        { type: 'milkycoins',       value: 50,  coinsBonus: 0 }
+    };
+    const ACTION_LABELS = {
+        google_review: '⭐ Google Review',
+        instagram_story: '📸 Story Instagram',
+        tiktok_post: '🎵 TikTok',
+        whatsapp_optin: '💬 WhatsApp opt-in',
+        birthday_set: '🎂 Aniversário',
+        pwa_notif_optin: '🔔 Push opt-in',
+        referral_converted: '👯 Indicação',
+        ugc_photo: '📷 UGC Foto'
+    };
+    const REWARD_LABELS = {
+        raspinha_premium: '🎰 Raspinha PREMIUM',
+        milkycoins: '💰 MilkyCoins',
+        milkypass_stamp: '🏆 MilkyPass stamp',
+        cashback_multiplier: '✖️ Multiplicador cashback'
+    };
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(t => {
+        t.addEventListener('click', function() {
+            activeTab = t.dataset.tab;
+            document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t));
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.getElementById('tab-' + activeTab).style.display = 'block';
+            if (activeTab === 'config') renderConfig();
+        });
+    });
+
+    // Carrega franquias para filtro
+    async function loadFranchises() {
+        try {
+            const fs = DataStore.getAllFranchises();
+            allFranchises = fs;
+            const sel = document.getElementById('filterFranchise');
+            fs.forEach(f => {
+                const o = document.createElement('option');
+                o.value = f.id; o.textContent = f.name;
+                sel.appendChild(o);
+            });
+        } catch(e) { console.warn(e); }
+    }
+
+    // Carrega claims direto do Firestore
+    window.loadClaims = async function() {
+        try {
+            const snap = await db.collection('action_claims')
+                .orderBy('claimedAt', 'desc')
+                .limit(200).get();
+            allClaims = snap.docs.map(d => Object.assign({_id: d.id}, d.data()));
+            renderStats();
+            renderClaims();
+            renderAllClaims();
+        } catch(e) {
+            console.error('loadClaims err', e);
+            document.getElementById('claimsBody').innerHTML = '<tr><td colspan="7" class="empty">❌ Erro: ' + (e.message || e) + '</td></tr>';
+        }
+    };
+
+    function renderStats() {
+        const pending = allClaims.filter(c => c.status === 'pending').length;
+        const verified24h = allClaims.filter(c => c.status === 'verified' && (Date.now() - new Date(c.verifiedAt).getTime()) < 86400000).length;
+        const rejected = allClaims.filter(c => c.status === 'rejected').length;
+        const totalCoinsGranted = allClaims
+            .filter(c => c.status === 'verified' && c.appliedAt)
+            .reduce((s, c) => s + ((c.coinsBonus || 0) + (c.rewardType === 'milkycoins' ? (c.rewardValue || 0) : 0)), 0);
+
+        document.getElementById('stats').innerHTML =
+            statCard(pending, 'Aguardando aprovação') +
+            statCard(verified24h, 'Aprovados 24h') +
+            statCard(rejected, 'Rejeitados (total)') +
+            statCard('G$ ' + totalCoinsGranted, 'MilkyCoins concedidos');
+    }
+    function statCard(num, lbl) {
+        return '<div class="stat-card"><div class="stat-num">' + num + '</div><div class="stat-lbl">' + lbl + '</div></div>';
+    }
+
+    function renderClaims() {
+        const fAction = document.getElementById('filterAction').value;
+        const fFid = document.getElementById('filterFranchise').value;
+        let claims = allClaims.filter(c => {
+            if (c.status !== 'pending') return false;
+            if (fAction && c.action !== fAction) return false;
+            if (fFid && c.franchiseId !== fFid) return false;
+            return true;
+        });
+        document.getElementById('claimCount').textContent = claims.length + ' pendente(s)';
+        if (!claims.length) {
+            document.getElementById('claimsBody').innerHTML = '<tr><td colspan="7" class="empty">🎉 Nenhum claim pendente!</td></tr>';
+            return;
+        }
+        document.getElementById('claimsBody').innerHTML = claims.map(c => {
+            const d = new Date(c.claimedAt);
+            const when = d.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+            const reward = (REWARD_LABELS[c.rewardType] || c.rewardType) + (c.rewardValue ? (' (' + c.rewardValue + ')') : '') + (c.coinsBonus ? ' +' + c.coinsBonus + 'G$' : '');
+            return '<tr>' +
+                '<td>' + when + '</td>' +
+                '<td><code style="font-size:.78rem">' + (c.memberId || '').slice(0,12) + '...</code></td>' +
+                '<td><span class="action-tag">' + (ACTION_LABELS[c.action] || c.action) + '</span></td>' +
+                '<td>' + reward + '</td>' +
+                '<td>' + (c.franchiseId || '-') + '</td>' +
+                '<td><span class="chip pending">⏳ Pendente</span></td>' +
+                '<td>' +
+                    '<button class="btn-sm btn-approve" onclick="approveClaim(\'' + c._id + '\')">✓ Aprovar</button>' +
+                    '<button class="btn-sm btn-reject" onclick="askReject(\'' + c._id + '\')">✗ Rejeitar</button>' +
+                    '<button class="btn-sm" style="background:#f3f4f6;margin-left:6px" onclick="showPayload(\'' + c._id + '\')">📦</button>' +
+                '</td>' +
+            '</tr>';
+        }).join('');
+    }
+
+    function renderAllClaims() {
+        if (!allClaims.length) {
+            document.getElementById('allClaimsBody').innerHTML = '<tr><td colspan="6" class="empty">Nenhum claim</td></tr>';
+            return;
+        }
+        document.getElementById('allClaimsBody').innerHTML = allClaims.slice(0, 100).map(c => {
+            const d = new Date(c.claimedAt);
+            const when = d.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+            return '<tr>' +
+                '<td>' + when + '</td>' +
+                '<td><code>' + (c.memberId || '').slice(0,12) + '...</code></td>' +
+                '<td>' + (ACTION_LABELS[c.action] || c.action) + '</td>' +
+                '<td>' + (REWARD_LABELS[c.rewardType] || c.rewardType) + '</td>' +
+                '<td><span class="chip ' + c.status + '">' + c.status + '</span></td>' +
+                '<td><button class="btn-sm" style="background:#f3f4f6" onclick="showPayload(\'' + c._id + '\')">📦</button></td>' +
+            '</tr>';
+        }).join('');
+    }
+
+    window.approveClaim = async function(claimId) {
+        if (!confirm('Aprovar esse claim e liberar a recompensa?')) return;
+        try {
+            const r = await CloudFunctions.verifyClaim(claimId, true);
+            if (r && r.success) {
+                alert('✅ Aprovado! Recompensa aplicada.');
+                loadClaims();
+            } else {
+                alert('Erro: ' + (r && r.error || 'desconhecido'));
+            }
+        } catch(e) { alert('Erro: ' + e.message); }
+    };
+
+    window.askReject = function(claimId) {
+        pendingRejectClaimId = claimId;
+        document.getElementById('rejectReason').value = '';
+        document.getElementById('rejectModal').classList.add('open');
+    };
+
+    document.getElementById('confirmRejectBtn').addEventListener('click', async function() {
+        const reason = document.getElementById('rejectReason').value.trim();
+        document.getElementById('rejectModal').classList.remove('open');
+        try {
+            const r = await CloudFunctions.verifyClaim(pendingRejectClaimId, false, reason);
+            if (r && r.success) loadClaims();
+            else alert('Erro: ' + (r && r.error));
+        } catch(e) { alert('Erro: ' + e.message); }
+    });
+
+    window.showPayload = function(claimId) {
+        const c = allClaims.find(x => x._id === claimId);
+        if (!c) return;
+        document.getElementById('payloadContent').textContent = JSON.stringify(c, null, 2);
+        document.getElementById('payloadModal').classList.add('open');
+    };
+
+    function renderConfig() {
+        const rows = document.getElementById('cfgRows');
+        const cfg = DataStore.get('mp_action_rewards_config') || DEFAULT_CONFIG;
+        rows.innerHTML = Object.keys(DEFAULT_CONFIG).map(action => {
+            const c = cfg[action] || DEFAULT_CONFIG[action];
+            return '<div class="config-grid">' +
+                '<div>' + (ACTION_LABELS[action] || action) + '</div>' +
+                '<div><select data-cfg="' + action + '" data-field="type">' +
+                    Object.keys(REWARD_LABELS).map(t => '<option value="' + t + '"' + (c.type === t ? ' selected' : '') + '>' + REWARD_LABELS[t] + '</option>').join('') +
+                '</select></div>' +
+                '<div><input type="number" data-cfg="' + action + '" data-field="value" value="' + c.value + '" min="0"></div>' +
+                '<div><input type="number" data-cfg="' + action + '" data-field="coinsBonus" value="' + (c.coinsBonus || 0) + '" min="0"></div>' +
+            '</div>';
+        }).join('');
+    }
+
+    window.saveConfig = function() {
+        const cfg = {};
+        document.querySelectorAll('[data-cfg]').forEach(el => {
+            const action = el.dataset.cfg;
+            const field = el.dataset.field;
+            if (!cfg[action]) cfg[action] = {};
+            cfg[action][field] = el.type === 'number' ? Number(el.value) : el.value;
+        });
+        // Salva no Firestore para todos clientes verem (e CFs lerem futuramente)
+        db.collection('club_config').doc('action_rewards').set({
+            rewards: cfg,
+            updatedAt: new Date().toISOString(),
+            updatedBy: Auth.getSession().email
+        }, { merge: true }).then(() => {
+            DataStore.set('mp_action_rewards_config', cfg);
+            const s = document.getElementById('cfgStatus');
+            s.textContent = '✅ Salvo! Aplica em novos claims.';
+            setTimeout(() => s.textContent = '', 4000);
+        }).catch(e => alert('Erro ao salvar: ' + e.message));
+    };
+
+    // Init
+    loadFranchises().then(loadClaims);
+})();
+</script>
+</body>
+</html>
