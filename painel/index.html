@@ -366,16 +366,25 @@
         let franchises = DataStore.getAllFranchises();
         let franchise = franchises.find(f => f.id === franchiseId);
 
-        document.getElementById('sidebarUserName').textContent = session.name;
-        document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia';
-        document.getElementById('linkSiteFranquia').href = `../f/${franchiseId}/`;
+        // Helper safe-set: getElementById pode retornar null se elemento foi removido do HTML.
+        // Sem null-check, .textContent = ... lança TypeError e mata TODO o script abaixo.
+        function setText(id, text) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = text;
+        }
+        function setHref(id, href) {
+            var el = document.getElementById(id);
+            if (el) el.href = href;
+        }
+
+        setText('sidebarUserName', session.name);
+        setText('sidebarStoreName', franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia');
+        setHref('linkSiteFranquia', `../f/${franchiseId}/`);
 
         const hour = new Date().getHours();
         const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
-        document.getElementById('welcomeMsg').textContent = `${greeting}, ${session.name.split(' ')[0]}! 👋`;
-        document.getElementById('storeInfo').textContent = franchise
-            ? `${franchise.name} | ${franchise.address}`
-            : 'Franquia nao encontrada';
+        setText('welcomeMsg', `${greeting}, ${session.name.split(' ')[0]}! 👋`);
+        setText('storeInfo', franchise ? `${franchise.name} | ${franchise.address}` : 'Franquia nao encontrada');
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
