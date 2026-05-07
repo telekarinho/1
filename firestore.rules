@@ -334,6 +334,20 @@ service cloud.firestore {
     }
 
     // ============================================
+    // Action Claims — Earn-before-claim engine.
+    // Cliente reivindica recompensa via ação (review Google, story IG, etc).
+    // Apenas Cloud Functions criam/atualizam (via admin SDK). Cliente identificado
+    // pode ler seus próprios claims pra ver status. Admin lê tudo.
+    // ============================================
+    match /action_claims/{claimId} {
+      allow read: if isAuthenticated() && (
+        isSuperAdmin() || isFranchisee() ||
+        (resource.data.memberId == request.auth.uid)
+      );
+      allow create, update, delete: if false; // só Cloud Functions
+    }
+
+    // ============================================
     // Mail queue — Cloud Functions escrevem aqui pra fallback de SMTP.
     // Tambem podem ser lidas pela Trigger Email Extension (se instalada).
     // Apenas authenticated users criam (PDV ao fechar caixa); ler so super_admin.

@@ -304,6 +304,276 @@ exports.clubResolveCredits = onCall({
 });
 
 // ============================================
+// 1.6. ACTION CLAIMS (Earn-before-claim engine)
+// ============================================
+// Cliente realiza ação (review Google, story IG, opt-in WhatsApp, etc)
+// e reivindica recompensa. Sistema valida (auto/manual) e libera.
+//
+// Schema de /action_claims/{claimId}:
+//   memberId: string
+//   franchiseId: string?
+//   action: 'google_review' | 'instagram_story' | 'tiktok_post'
+//         | 'whatsapp_optin' | 'birthday_set' | 'referral_converted'
+//         | 'pwa_notif_optin' | 'ugc_photo'
+//   rewardType: 'raspinha_premium' | 'milkypass_stamp' | 'milkycoins'
+//             | 'cashback_multiplier' | 'free_item'
+//   rewardValue: number (coins, stamps, multiplicador)
+//   status: 'pending' | 'verified' | 'rejected' | 'expired'
+//   verificationMethod: 'auto_places_api' | 'manual_admin' | 'time_based' | 'instant'
+//   payload: { scratchCode?, igMediaUrl?, screenshotUrl?, referrerCode?, ... }
+//   claimedAt: ISO
+//   verifiedAt: ISO?
+//   appliedAt: ISO?
+//   appliedRewardRefs: { coinsTxId?, scratchCode?, stampEventId? }
+//   expiresAt: ISO (24-72h)
+// ============================================
+
+const ACTION_REWARDS = {
+    google_review:    { type: 'raspinha_premium', value: 50,  coinsBonus: 50,  verify: 'auto_places_api',  expiresInH: 48 },
+    instagram_story:  { type: 'raspinha_premium', value: 30,  coinsBonus: 30,  verify: 'manual_admin',     expiresInH: 24 },
+    tiktok_post:      { type: 'milkycoins',       value: 100,                  verify: 'manual_admin',     expiresInH: 72 },
+    whatsapp_optin:   { type: 'milkycoins',       value: 50,                   verify: 'instant',          expiresInH: 0 },
+    birthday_set:     { type: 'milkycoins',       value: 30,                   verify: 'instant',          expiresInH: 0 },
+    pwa_notif_optin:  { type: 'milkycoins',       value: 25,                   verify: 'instant',          expiresInH: 0 },
+    referral_converted:{ type: 'milkypass_stamp', value: 2,   coinsBonus: 100, verify: 'auto_order_link',  expiresInH: 0 },
+    ugc_photo:        { type: 'milkycoins',       value: 50,                   verify: 'manual_admin',     expiresInH: 48 }
+};
+
+function _genClaimId() {
+    return 'claim_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
+}
+
+// 1.6.1 — claimAction: cliente reivindica uma ação
+// Cliente identificado chama isso, sistema cria o claim com status 'pending'
+// (ou 'verified' direto se for instant). Helper applyClaimReward é chamado em
+// follow-up se o claim virou verified.
+exports.claimAction = onCall({
+    region: "southamerica-east1"
+}, async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Auth necessaria");
+
+    const { memberId, action, payload, franchiseId } = request.data || {};
+    if (!memberId || !action) {
+        throw new HttpsError("invalid-argument", "memberId e action obrigatorios");
+    }
+    const cfg = ACTION_REWARDS[action];
+    if (!cfg) throw new HttpsError("invalid-argument", "action desconhecida: " + action);
+
+    // Verifica se membro existe
+    const memberRef = db.collection("club_members").doc(memberId);
+    const memberSnap = await memberRef.get();
+    if (!memberSnap.exists) throw new HttpsError("not-found", "Membro nao encontrado");
+
+    // Anti-fraude: dedup de claims pendentes da mesma ação nas últimas 24h
+    const dedupSince = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const recentSnap = await db.collection("action_claims")
+        .where("memberId", "==", memberId)
+        .where("action", "==", action)
+        .where("claimedAt", ">=", dedupSince)
+        .where("status", "in", ["pending", "verified"])
+        .limit(1).get();
+    if (!recentSnap.empty) {
+        const existing = recentSnap.docs[0];
+        return {
+            success: true,
+            duplicate: true,
+            claimId: existing.id,
+            claim: existing.data(),
+            message: "Você já tem um claim ativo dessa ação nas últimas 24h"
+        };
+    }
+
+    const nowIso = new Date().toISOString();
+    const expiresInMs = (cfg.expiresInH || 24) * 3600 * 1000;
+    const claimId = _genClaimId();
+    const initialStatus = cfg.verify === 'instant' ? 'verified' : 'pending';
+
+    const claim = {
+        id: claimId,
+        memberId,
+        franchiseId: franchiseId || null,
+        action,
+        rewardType: cfg.type,
+        rewardValue: cfg.value,
+        coinsBonus: cfg.coinsBonus || 0,
+        status: initialStatus,
+        verificationMethod: cfg.verify,
+        payload: payload || {},
+        claimedAt: nowIso,
+        verifiedAt: initialStatus === 'verified' ? nowIso : null,
+        appliedAt: null,
+        appliedRewardRefs: {},
+        expiresAt: new Date(Date.now() + expiresInMs).toISOString(),
+        createdBy: request.auth.uid
+    };
+
+    await db.collection("action_claims").doc(claimId).set(claim);
+
+    // Se já verified (instant), aplica recompensa imediatamente
+    let applyResult = null;
+    if (initialStatus === 'verified') {
+        applyResult = await _applyClaimReward(claimId);
+    }
+
+    return {
+        success: true,
+        claimId,
+        claim,
+        applied: applyResult
+    };
+});
+
+// 1.6.2 — verifyClaim: aprovação manual (admin) ou trigger pós-verificação
+exports.verifyClaim = onCall({
+    region: "southamerica-east1"
+}, async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Auth necessaria");
+    const role = request.auth.token.role;
+    if (!["super_admin", "franchisee", "manager"].includes(role)) {
+        throw new HttpsError("permission-denied", "Sem permissao");
+    }
+
+    const { claimId, approved, rejectionReason } = request.data || {};
+    if (!claimId) throw new HttpsError("invalid-argument", "claimId obrigatorio");
+
+    const ref = db.collection("action_claims").doc(claimId);
+    const snap = await ref.get();
+    if (!snap.exists) throw new HttpsError("not-found", "Claim nao encontrado");
+    const claim = snap.data() || {};
+    if (claim.status !== 'pending') {
+        return { success: false, error: 'Claim ja processado: ' + claim.status };
+    }
+
+    if (approved === false) {
+        await ref.update({
+            status: 'rejected',
+            rejectedAt: new Date().toISOString(),
+            rejectionReason: rejectionReason || 'sem motivo informado',
+            verifiedBy: request.auth.uid
+        });
+        return { success: true, status: 'rejected' };
+    }
+
+    await ref.update({
+        status: 'verified',
+        verifiedAt: new Date().toISOString(),
+        verifiedBy: request.auth.uid
+    });
+
+    const applyResult = await _applyClaimReward(claimId);
+    return { success: true, status: 'verified', applied: applyResult };
+});
+
+// 1.6.3 — Helper interno: aplica a recompensa do claim no membro
+async function _applyClaimReward(claimId) {
+    const ref = db.collection("action_claims").doc(claimId);
+    const snap = await ref.get();
+    if (!snap.exists) return { error: 'claim nao existe' };
+    const c = snap.data() || {};
+    if (c.status !== 'verified') return { error: 'claim nao verified' };
+    if (c.appliedAt) return { error: 'ja aplicado', appliedAt: c.appliedAt };
+
+    const memberRef = db.collection("club_members").doc(c.memberId);
+    const refs = {};
+    const nowIso = new Date().toISOString();
+
+    // 1) MilkyCoins (coinsBonus + se rewardType == milkycoins, soma rewardValue)
+    let totalCoins = (c.coinsBonus || 0);
+    if (c.rewardType === 'milkycoins') totalCoins += (c.rewardValue || 0);
+    if (totalCoins > 0) {
+        await db.runTransaction(async tx => {
+            const m = await tx.get(memberRef);
+            if (!m.exists) throw new Error("member missing");
+            const cur = Number((m.data() || {}).coins || 0);
+            tx.update(memberRef, {
+                coins: cur + totalCoins,
+                totalEarned: ((m.data() || {}).totalEarned || 0) + totalCoins,
+                updatedAt: nowIso
+            });
+        });
+        const txDoc = {
+            memberId: c.memberId,
+            type: 'earn',
+            amount: totalCoins,
+            source: 'action_claim',
+            claimId,
+            action: c.action,
+            createdAt: nowIso
+        };
+        const txRef = await db.collection("milkycoins_transactions").add(txDoc);
+        refs.coinsTxId = txRef.id;
+    }
+
+    // 2) MilkyPass stamps (se rewardType == milkypass_stamp)
+    if (c.rewardType === 'milkypass_stamp' && c.rewardValue > 0) {
+        const stamps = parseInt(c.rewardValue, 10) || 1;
+        const stampEventIds = [];
+        for (let i = 0; i < stamps; i++) {
+            // Reusa lógica de clubGrantMilkyPassStamp via stamp manual
+            // Simplificado: incrementa direto. Cron periódico checa se completou.
+            const evt = await db.collection("club_pass_events").add({
+                memberId: c.memberId,
+                franchiseId: c.franchiseId,
+                source: 'action_claim',
+                claimId,
+                action: c.action,
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+            stampEventIds.push(evt.id);
+            // Incrementa current
+            await db.runTransaction(async tx => {
+                const m = await tx.get(memberRef);
+                if (!m.exists) return;
+                const data = m.data() || {};
+                const pass = data.milkyPass || { current: 0, required: 5 };
+                const next = (pass.current || 0) + 1;
+                const required = pass.required || 5;
+                const completed = next >= required;
+                let pending = Array.isArray(data.pendingPassRewards) ? data.pendingPassRewards.slice() : [];
+                if (completed) {
+                    pending.push({
+                        id: 'pass_' + Date.now().toString(36),
+                        type: 'scratch_bonus',
+                        label: 'MilkyPass via ação',
+                        action: c.action,
+                        createdAt: nowIso,
+                        redeemedAt: null
+                    });
+                }
+                tx.update(memberRef, {
+                    'milkyPass.current': completed ? 0 : next,
+                    'milkyPass.required': required,
+                    'milkyPass.totalStamps': (pass.totalStamps || 0) + 1,
+                    'milkyPass.totalCompleted': (pass.totalCompleted || 0) + (completed ? 1 : 0),
+                    'milkyPass.lastStampAt': nowIso,
+                    pendingPassRewards: pending,
+                    updatedAt: nowIso
+                });
+            });
+        }
+        refs.stampEventIds = stampEventIds;
+    }
+
+    // 3) Raspinha PREMIUM (se rewardType == raspinha_premium)
+    // Marca um upgrade flag no member — frontend cria scratch com tier elevado
+    // ao detectar pendingPremiumScratch > 0
+    if (c.rewardType === 'raspinha_premium') {
+        await memberRef.update({
+            pendingPremiumScratches: admin.firestore.FieldValue.increment(1),
+            lastPremiumGrantedAt: nowIso
+        });
+        refs.premiumScratchPending = true;
+    }
+
+    await ref.update({
+        appliedAt: nowIso,
+        appliedRewardRefs: refs
+    });
+
+    return { applied: true, refs, totalCoins };
+}
+
+// ============================================
 // 2. SETUP INICIAL DO OWNER
 // ============================================
 // Seta o primeiro admin (owner) como super_admin
