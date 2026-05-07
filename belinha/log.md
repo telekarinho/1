@@ -5567,3 +5567,45 @@ _Belinha — Ciclo #140 | 2026-05-06_
 _Belinha — Ciclo #148 | 2026-05-07_
 
 ---
+
+## Ciclo #152 — 2026-05-07
+
+**Área:** Conteúdo — `whatsapp-carnaval-2027.md` standalone
+
+**Contexto:** Prescrito no roadmap ciclo #150/#151. Gap v18c ativo: templates WA de Carnaval estavam dispersos em 5 semanas (semana42–46.md) sem playbook standalone. Operador precisaria vasculhar 5 arquivos para configurar o WA Business Business para um evento de 31 dias. Regra v18c (qualquer evento >1 semana com campanha WA deve ter playbook standalone) obrigava execução neste ciclo.
+
+**O que pesquisou/analisou:**
+- Leu semana42.md: mecânica "CARNAVAL" ativada em 01/02, teaser VIP 04/02, Sexta #27 (12/02)
+- Leu semana43.md: reveal público produto (10/02), Sexta #27 completa com VIP + geral
+- Leu semana44.md: programação completa VIP (16/02) — maior entrega da lista
+- Leu semana45.md: reta final 7 dias (21/02), horários confirmados VIP (24/02), Sexta #29 véspera (26/02)
+- Leu semana46.md: 3 dias de Carnaval ao vivo (28/02–02/03) + Quarta de Cinzas (03/03)
+- Confirmou intel ciclo #151: MilkyMoo iFood-exclusivo (1 dia) · JohnnyJoy sem campanha · TheBest sem campanha → MilkyPot com share of voice 100%
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-carnaval-2027.md` | CRIADO — Playbook WA standalone completo: estratégia de 4 estágios, 3 segmentos, configuração WA Business, template C-AUTO, broadcasts C0–C11 (16 touchpoints, 01/02→03/03), calendário resumido, checklist operacional com prazos, pendências do operador, contraprogramação competitiva, métricas, referência cruzada com outros playbooks |
+
+**Destaques:**
+1. **16 touchpoints** cobrindo 31 dias (01/02→03/03) vs. templates fragmentados em 5 arquivos de semana.
+2. **Contraprogramação integrada:** MilkyMoo iFood-locked, JohnnyJoy e TheBest ausentes → copy dos broadcasts C0 e C4 exploram o diferencial "canal direto WA, 3 dias, sem app".
+3. **Quarta de Cinzas (C11):** Tom completamente diferente dos demais broadcasts — suave, acolhedor. Nota de cautela para o operador incluída.
+4. **Pendências do operador com prazos claros:** Produto temático = 14/02 (duro), oferta VIP = 24/02, horários = 24/02. Sem estas informações, 10 dos 16 broadcasts ficam com placeholders.
+5. **Gap v18c fechado:** Junto com halloween, blackpot, natal e virada, agora os 5 maiores eventos do calendário 2026–2027 têm playbooks WA standalone completos. Falta apenas Páscoa (ciclo #155) e 1 Ano (ciclo #154).
+
+**Commit:** `363e2fa`
+
+**Próximo passo sugerido:**
+- **Ciclo #153 — Código/Performance (OBRIGATÓRIO — 4× postergado):** `checkout.html` revisão completa. Regra v18b: postergado 4× = prioridade máxima inegociável. Sem exceção.
+- **Ciclo #154 — INEGOCIÁVEL:** `whatsapp-1ano-2027.md` standalone — 25/04/2027 = maior evento de marketing da história da unidade.
+- **Ciclo #155 — Conteúdo:** `whatsapp-pascoa-2027.md` standalone (v19a ativa).
+- **Operador:** Confirmar nome + ingredientes do Potinho Foliã (produto temático Carnaval) com a franquia — prazo 14/02/2027. Sem isso, 10 broadcasts ficam genéricos.
+- **Operador:** CNPJ + DPO — LGPD — em aberto há **+15 ciclos**. Risco legal crescente.
+- **Operador:** Cardapio.js (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (ação pendente desde ciclo #148).
+
+_Belinha — Ciclo #152 | 2026-05-07_
+
+---
