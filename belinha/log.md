@@ -2,6 +2,54 @@
 
 ---
 
+## Ciclo #147 — 2026-05-07
+
+**Área:** Conteúdo/WA — `whatsapp-virada-2026.md` standalone
+
+**Contexto:** Prescrito pelo roadmap ciclo #145 (urgência Alta). Gap v18c ativo: templates WA da Virada Ano Novo estavam dispersos em `semana37.md` — operador precisaria vasculhar 1 arquivo para configurar o WA Business, mas sem a estrutura de playbook standalone (estratégia, segmentos, checklist operacional, métricas). Playbook WA standalone obrigatório para eventos >1 semana de campanha (regra v18c).
+
+**O que analisou:**
+- Leu `semana37.md` completo: 7 dias de conteúdo (27/12–02/01), 3 broadcasts WA embutidos (quarta 30/12, quinta 31/12, sexta 01/01)
+- Comparou com o padrão de `whatsapp-natal-2026.md` (14 broadcasts, 3 segmentos) e `whatsapp-halloween-2026.md` (9 broadcasts) para manter consistência de formato
+- Identificou que a semana37 tinha apenas 3 templates WA explícitos; playbook expandiu para 8 touchpoints completos (V0–V6 + V-AUTO) com contexto estratégico, segmentação e notas operacionais
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/whatsapp-virada-2026.md` | CRIADO — Playbook WA standalone completo: estratégia de 3 estágios, segmentos (base geral + lista fidelidade ≥10), configuração WA Business + V-AUTO, templates V0 (27/12 teaser) → V6 (02/01 encerramento) + versão especial V4-fidelidade, checklist operacional com prazos, métricas de sucesso, tabela de broadcasts com prioridades, pendências do operador, notas de contraprogramação |
+
+**Commit:** `f12424e`
+
+**Destaques:**
+1. **8 touchpoints** cobrindo 27/12→02/01 vs. 3 embutidos no semana37.md — operador tem playbook acionável sem precisar vasculhar outros arquivos
+2. **V4-fidelidade:** Versão personalizada do broadcast de Véspera para clientes com ≥10 carimbos — diferenciação sem custo adicional (fidelização de alto valor)
+3. **Pendências operador marcadas claramente:** Ação especial 31/12 como pré-requisito OBRIGATÓRIO antes de 25/12 — sem isso V3/V4 ficam incompletos
+4. **Contraprogramação documentada:** MilkyMoo, JohnnyJoy e TheBest sem campanha de Virada detectada — MilkyPot tem share of voice total na categoria
+5. **Gap v18c fechado:** Junto com whatsapp-halloween-2026.md (#140) e whatsapp-natal-2026.md (#145), os 3 maiores eventos do 2º semestre agora têm playbooks WA standalone completos
+
+**WA Playbooks standalone — status atualizado:**
+
+| Evento | Arquivo | Status |
+|--------|---------|--------|
+| Halloween | whatsapp-halloween-2026.md | ✅ |
+| BLACKPOT | whatsapp-blackpot.md | ✅ |
+| Natal 2026 | whatsapp-natal-2026.md | ✅ |
+| Virada/Ano Novo | whatsapp-virada-2026.md | ✅ **CRIADO CICLO #147** |
+| Carnaval 2027 | — | ⚠️ Verificar semanas 42–45 |
+
+**Próximo passo sugerido:**
+- **Ciclo #148 — SEO:** `sitemap.xml` — atualizar `lastmod` + verificar indexação cardapio.html (prescrito roadmap #145)
+- **Ciclo #149 — Conversão:** Template WA milestone 50 carimbos fidelidade
+- **Ciclo #150 — Auto-aprimoramento:** Reler log #145–#149; roadmap jan–mai 2027 (Carnaval, Páscoa, 1 Ano de loja 25/04/2027)
+- **Operador:** CNPJ/DPO — LGPD — em aberto há +11 ciclos. Risco legal ativo.
+- **Operador:** Definir ação especial Virada 31/12 ANTES de 25/12 (pré-requisito para templates V3/V4)
+- **Operador:** Confirmar cardapio.js (Opção A/B/C) — blocker técnico há muitos ciclos
+
+_Belinha — Ciclo #147 | 2026-05-07_
+
+---
+
 ## Ciclo #146 — 2026-05-07
 
 **Área:** UX — Hero mobile 375px: CTA above-the-fold + logo responsiva
