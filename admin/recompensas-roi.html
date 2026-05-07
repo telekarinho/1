@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot Admin · Recompensas ROI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#7c3aed">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+    .roi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px}
+    .roi-card{background:#fff;border-radius:16px;padding:18px 20px;box-shadow:0 2px 12px rgba(0,0,0,.05);position:relative;overflow:hidden}
+    .roi-card.invest{border-top:4px solid #ef4444}
+    .roi-card.harvest{border-top:4px solid #10b981}
+    .roi-card.neutral{border-top:4px solid #7c3aed}
+    .roi-num{font-family:'Baloo 2',cursive;font-size:1.8rem;font-weight:800;line-height:1.05}
+    .roi-num.invest{color:#dc2626}
+    .roi-num.harvest{color:#16a34a}
+    .roi-num.neutral{color:#7c3aed}
+    .roi-lbl{font-size:.78rem;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-top:4px;font-weight:700}
+    .roi-sub{font-size:.78rem;color:#888;margin-top:6px}
+    .section{background:#fff;border-radius:14px;padding:20px 24px;margin-bottom:18px;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+    .section h3{font-family:'Baloo 2',cursive;color:#7c3aed;font-size:1.15rem;margin-bottom:14px}
+    .breakdown{display:grid;grid-template-columns:1fr 100px 100px;gap:8px;font-size:.9rem;padding:8px 0;border-bottom:1px dashed #eee}
+    .breakdown.head{font-weight:800;color:#666;font-size:.78rem;text-transform:uppercase}
+    .filter-row{display:flex;gap:10px;margin-bottom:16px;align-items:center}
+    .filter-row select{padding:8px 12px;border:1.5px solid #e2e2e8;border-radius:8px;font-family:inherit}
+    .chart-container{position:relative;height:280px;margin-top:8px}
+    .empty{text-align:center;padding:40px 20px;color:#aaa}
+    .ratio-banner{padding:18px;border-radius:12px;text-align:center;margin-bottom:20px}
+    .ratio-banner.green{background:#dcfce7;color:#166534;border:2px solid #16a34a}
+    .ratio-banner.yellow{background:#fef3c7;color:#92400e;border:2px solid #f59e0b}
+    .ratio-banner.red{background:#fee2e2;color:#991b1b;border:2px solid #dc2626}
+    .ratio-banner h2{font-family:'Baloo 2',cursive;font-size:1.6rem;margin-bottom:6px}
+    </style>
+</head>
+<body>
+<div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+            <h2>MilkyPot<small>Central Admin</small></h2>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-group">Principal</div>
+            <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+            <a href="franchises.html" class="sidebar-link"><span class="icon">🏪</span> Franquias</a>
+            <a href="finances.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+            <div class="sidebar-nav-group">Marketing</div>
+            <a href="lancamento.html" class="sidebar-link"><span class="icon">🚀</span> Lançamento</a>
+            <a href="clube.html" class="sidebar-link"><span class="icon">🐑</span> MilkyClube</a>
+            <a href="recompensas-claims.html" class="sidebar-link"><span class="icon">🎁</span> Recompensas & Claims</a>
+            <a href="recompensas-roi.html" class="sidebar-link active"><span class="icon">📈</span> ROI Recompensas</a>
+            <a href="campaigns.html" class="sidebar-link"><span class="icon">📢</span> Campanhas</a>
+            <div class="sidebar-nav-group">Sistema</div>
+            <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Configurações</a>
+        </nav>
+    </aside>
+    <main class="panel-main">
+        <header class="panel-header">
+            <button class="btn btn-sm btn-outline" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">☰</button>
+            <h1>📈 ROI das Recompensas</h1>
+            <div style="margin-left:auto;display:flex;gap:8px">
+                <select id="periodFilter" onchange="loadData()">
+                    <option value="7">Últimos 7 dias</option>
+                    <option value="30" selected>Últimos 30 dias</option>
+                    <option value="90">Últimos 90 dias</option>
+                    <option value="all">Tudo</option>
+                </select>
+                <button class="btn btn-sm btn-outline" onclick="loadData()">🔄</button>
+            </div>
+        </header>
+        <div class="panel-content">
+            <div class="ratio-banner" id="ratioBanner" style="display:none"></div>
+
+            <div class="section">
+                <h3>💸 INVESTIDO — o que você deu</h3>
+                <div class="roi-grid">
+                    <div class="roi-card invest"><div class="roi-num invest" id="cInvCoins">G$ 0</div><div class="roi-lbl">MilkyCoins concedidos</div><div class="roi-sub" id="cInvCoinsBRL">≈ R$ 0,00</div></div>
+                    <div class="roi-card invest"><div class="roi-num invest" id="cInvScratchPremium">0</div><div class="roi-lbl">Raspinhas Premium dadas</div><div class="roi-sub" id="cInvScratchBRL">≈ R$ 0,00 estimado</div></div>
+                    <div class="roi-card invest"><div class="roi-num invest" id="cInvStamps">0</div><div class="roi-lbl">Carimbos MilkyPass bônus</div></div>
+                    <div class="roi-card invest"><div class="roi-num invest" id="cInvTotal">R$ 0,00</div><div class="roi-lbl">Total estimado em recompensas</div></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>🌱 COLHIDO — o que você ganhou</h3>
+                <div class="roi-grid">
+                    <div class="roi-card harvest"><div class="roi-num harvest" id="cHarReviews">0</div><div class="roi-lbl">⭐ Reviews Google validados</div></div>
+                    <div class="roi-card harvest"><div class="roi-num harvest" id="cHarStories">0</div><div class="roi-lbl">📸 Stories Instagram</div></div>
+                    <div class="roi-card harvest"><div class="roi-num harvest" id="cHarTiktok">0</div><div class="roi-lbl">🎵 TikToks</div></div>
+                    <div class="roi-card harvest"><div class="roi-num harvest" id="cHarUgc">0</div><div class="roi-lbl">📷 Fotos UGC</div></div>
+                    <div class="roi-card harvest"><div class="roi-num harvest" id="cHarReferrals">0</div><div class="roi-lbl">👯 Indicações convertidas</div></div>
+                    <div class="roi-card harvest"><div class="roi-num harvest" id="cHarOptins">0</div><div class="roi-lbl">💬 WhatsApp opt-ins</div></div>
+                    <div class="roi-card harvest"><div class="roi-num harvest" id="cHarBday">0</div><div class="roi-lbl">🎂 Aniversários cadastrados</div></div>
+                    <div class="roi-card harvest"><div class="roi-num harvest" id="cHarPush">0</div><div class="roi-lbl">🔔 Push opt-ins</div></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>📊 Detalhes por ação</h3>
+                <div class="breakdown head"><div>Ação</div><div>Pendentes</div><div>Aprovados</div></div>
+                <div id="actionBreakdown"></div>
+            </div>
+
+            <div class="section">
+                <h3>📈 Evolução temporal</h3>
+                <div class="chart-container"><canvas id="timelineChart"></canvas></div>
+            </div>
+
+            <div class="section">
+                <h3>💡 Insight de eficiência</h3>
+                <div id="insights"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/auth.js"></script>
+<script>
+(function() {
+    if (!Auth.requireAuth('super_admin')) throw new Error('Not authorized');
+    const db = firebase.firestore();
+    let chart = null;
+
+    const ACTION_LABELS = {
+        google_review: '⭐ Google Review',
+        instagram_story: '📸 Story Instagram',
+        tiktok_post: '🎵 TikTok',
+        whatsapp_optin: '💬 WhatsApp opt-in',
+        birthday_set: '🎂 Aniversário',
+        pwa_notif_optin: '🔔 Push opt-in',
+        referral_converted: '👯 Indicação',
+        ugc_photo: '📷 UGC Foto',
+        promo300g_won: '🎯 Promo 300g'
+    };
+
+    window.loadData = async function() {
+        const days = document.getElementById('periodFilter').value;
+        let sinceIso = null;
+        if (days !== 'all') {
+            const d = new Date();
+            d.setDate(d.getDate() - parseInt(days, 10));
+            sinceIso = d.toISOString();
+        }
+
+        let q = db.collection('action_claims').orderBy('claimedAt', 'desc').limit(500);
+        const snap = await q.get();
+        let claims = snap.docs.map(d => Object.assign({_id: d.id}, d.data()));
+        if (sinceIso) claims = claims.filter(c => c.claimedAt && c.claimedAt >= sinceIso);
+
+        renderInvest(claims);
+        renderHarvest(claims);
+        renderBreakdown(claims);
+        renderTimeline(claims);
+        renderInsights(claims);
+    };
+
+    function renderInvest(claims) {
+        const verified = claims.filter(c => c.status === 'verified');
+        let totalCoins = 0, premiumScratches = 0, stamps = 0;
+        verified.forEach(c => {
+            totalCoins += (c.coinsBonus || 0);
+            if (c.rewardType === 'milkycoins') totalCoins += (c.rewardValue || 0);
+            if (c.rewardType === 'raspinha_premium') premiumScratches++;
+            if (c.rewardType === 'milkypass_stamp') stamps += (c.rewardValue || 0);
+        });
+        const coinsBRL = totalCoins / 100; // 100 G$ = R$ 1
+        const premiumBRL = premiumScratches * 5; // estimado R$ 5/raspinha premium
+        const totalBRL = coinsBRL + premiumBRL;
+
+        document.getElementById('cInvCoins').textContent = 'G$ ' + totalCoins.toLocaleString('pt-BR');
+        document.getElementById('cInvCoinsBRL').textContent = '≈ R$ ' + coinsBRL.toFixed(2).replace('.', ',');
+        document.getElementById('cInvScratchPremium').textContent = premiumScratches;
+        document.getElementById('cInvScratchBRL').textContent = '≈ R$ ' + premiumBRL.toFixed(2).replace('.', ',') + ' estimado';
+        document.getElementById('cInvStamps').textContent = stamps;
+        document.getElementById('cInvTotal').textContent = 'R$ ' + totalBRL.toFixed(2).replace('.', ',');
+    }
+
+    function renderHarvest(claims) {
+        const verified = claims.filter(c => c.status === 'verified');
+        const cnt = action => verified.filter(c => c.action === action).length;
+        document.getElementById('cHarReviews').textContent = cnt('google_review');
+        document.getElementById('cHarStories').textContent = cnt('instagram_story');
+        document.getElementById('cHarTiktok').textContent = cnt('tiktok_post');
+        document.getElementById('cHarUgc').textContent = cnt('ugc_photo');
+        document.getElementById('cHarReferrals').textContent = cnt('referral_converted');
+        document.getElementById('cHarOptins').textContent = cnt('whatsapp_optin');
+        document.getElementById('cHarBday').textContent = cnt('birthday_set');
+        document.getElementById('cHarPush').textContent = cnt('pwa_notif_optin');
+
+        // Banner ratio
+        const total = verified.length;
+        const banner = document.getElementById('ratioBanner');
+        if (total > 0) {
+            banner.style.display = 'block';
+            banner.className = 'ratio-banner ' + (total > 50 ? 'green' : total > 10 ? 'yellow' : 'red');
+            banner.innerHTML = '<h2>' + total + ' missões cumpridas</h2><p>Cada uma com prova real de valor pra MilkyPot — review, story, indicação, etc.</p>';
+        } else {
+            banner.style.display = 'none';
+        }
+    }
+
+    function renderBreakdown(claims) {
+        const byAction = {};
+        claims.forEach(c => {
+            const a = c.action;
+            if (!byAction[a]) byAction[a] = { pending: 0, verified: 0, rejected: 0 };
+            if (byAction[a][c.status] != null) byAction[a][c.status]++;
+        });
+        const html = Object.keys(ACTION_LABELS).map(a => {
+            const stats = byAction[a] || { pending:0, verified:0, rejected:0 };
+            return '<div class="breakdown">' +
+                '<div>' + ACTION_LABELS[a] + '</div>' +
+                '<div style="text-align:center;color:#f59e0b;font-weight:700">' + stats.pending + '</div>' +
+                '<div style="text-align:center;color:#16a34a;font-weight:700">' + stats.verified + '</div>' +
+            '</div>';
+        }).join('');
+        document.getElementById('actionBreakdown').innerHTML = html || '<div class="empty">Sem dados no período</div>';
+    }
+
+    function renderTimeline(claims) {
+        const verified = claims.filter(c => c.status === 'verified' && c.verifiedAt);
+        const byDay = {};
+        verified.forEach(c => {
+            const d = c.verifiedAt.slice(0, 10);
+            byDay[d] = (byDay[d] || 0) + 1;
+        });
+        const days = Object.keys(byDay).sort();
+        const ctx = document.getElementById('timelineChart').getContext('2d');
+        if (chart) chart.destroy();
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: days.map(d => d.slice(5)),
+                datasets: [{
+                    label: 'Claims aprovados',
+                    data: days.map(d => byDay[d]),
+                    backgroundColor: 'rgba(124,58,237,.6)',
+                    borderColor: '#7c3aed',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+    }
+
+    function renderInsights(claims) {
+        const verified = claims.filter(c => c.status === 'verified');
+        const totalInvested = verified.reduce((s, c) => {
+            let v = (c.coinsBonus || 0);
+            if (c.rewardType === 'milkycoins') v += (c.rewardValue || 0);
+            if (c.rewardType === 'raspinha_premium') v += 500; // 5 BRL = 500 G$
+            return s + v;
+        }, 0) / 100; // BRL
+
+        const reviewsCount = verified.filter(c => c.action === 'google_review').length;
+        const referralsCount = verified.filter(c => c.action === 'referral_converted').length;
+        const igCount = verified.filter(c => c.action === 'instagram_story').length;
+
+        const reviewROI = reviewsCount > 0 ? (totalInvested / reviewsCount) : 0;
+        // Estimativa: cada review traz ~R$ 50 em vendas adicionais (LTV via SEO)
+        const estimatedReturn = reviewsCount * 50 + referralsCount * 80 + igCount * 30;
+
+        const insights = [];
+        if (reviewsCount > 0) {
+            insights.push('<div style="padding:12px;background:#dcfce7;border-left:4px solid #16a34a;border-radius:8px;margin-bottom:8px">' +
+                '<strong>⭐ ' + reviewsCount + ' reviews</strong> — investimento médio R$ ' + reviewROI.toFixed(2) + ' por review. Retorno estimado: <strong>R$ ' + (reviewsCount * 50).toFixed(2) + '</strong> em SEO local + conversão.</div>');
+        }
+        if (referralsCount > 0) {
+            insights.push('<div style="padding:12px;background:#dcfce7;border-left:4px solid #16a34a;border-radius:8px;margin-bottom:8px">' +
+                '<strong>👯 ' + referralsCount + ' indicações</strong> — clientes adquiridos sem custo de mídia. Retorno estimado: <strong>R$ ' + (referralsCount * 80).toFixed(2) + '</strong> em LTV.</div>');
+        }
+        if (igCount > 0) {
+            insights.push('<div style="padding:12px;background:#dcfce7;border-left:4px solid #16a34a;border-radius:8px;margin-bottom:8px">' +
+                '<strong>📸 ' + igCount + ' stories</strong> — alcance orgânico estimado. Retorno: <strong>R$ ' + (igCount * 30).toFixed(2) + '</strong>.</div>');
+        }
+        const ratio = totalInvested > 0 ? (estimatedReturn / totalInvested) : 0;
+        insights.push('<div style="padding:14px;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;border-radius:10px;margin-top:12px;text-align:center">' +
+            '<div style="font-size:.85rem;font-weight:700;opacity:.9">RAZÃO INVESTIDO/COLHIDO</div>' +
+            '<div style="font-family:Baloo 2,cursive;font-size:2rem;font-weight:800">1:' + ratio.toFixed(2) + '</div>' +
+            '<div style="font-size:.8rem;opacity:.95">Cada R$ 1 investido = R$ ' + ratio.toFixed(2) + ' estimados em retorno</div>' +
+        '</div>');
+        document.getElementById('insights').innerHTML = insights.join('');
+    }
+
+    loadData();
+})();
+</script>
+</body>
+</html>
