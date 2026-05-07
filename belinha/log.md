@@ -2,6 +2,41 @@
 
 ---
 
+## Ciclo #149 — 2026-05-07
+
+**Área:** Conversão — Template WA milestone 50 carimbos Superfã VIP
+
+**Contexto:** Prescrito pelo roadmap ciclo #148. Nenhum template WA existia para o marco de 50 carimbos (5 cartelas completas, ~6 meses de compras regulares). Verificados arquivos existentes: `fidelidade-milestones-wa.md` cobre 10/50/100 **pontos** (sistema de pontos digital, 1pt=R$1); `conversao-upsell-pdv-15carimbos.md` cobre até 30 carimbos com nota "A criar". Gap confirmado: milestone 50 carimbos sem template.
+
+**O que pesquisou/analisou:**
+- Leu `fidelidade-milestones-wa.md`: cobre pontos, não carimbos físicos — sistemas paralelos
+- Leu `conversao-upsell-pdv-15carimbos.md`: progressão do programa atualizada com gap em 30 e 50 carimbos
+- Identificou oportunidade de alinhamento: clientes desde a inauguração (25/04/2026) atingem 50 carimbos em outubro 2026, coincidindo com o aniversário de 6 meses da loja (25/10/2026) — Template C criado especificamente para essa janela
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/content/whatsapp-50carimbos-superfan.md` | CRIADO — 3 templates WA (A=celebração completa, B=direto, C=aniversário loja outubro), estratégia, guia operacional, progressão completa do programa fidelidade com referência cruzada, métricas |
+
+**Destaques:**
+1. **Template C (aniversário):** Clientes que atingem 50 carimbos entre 18/10 e 01/11/2026 recebem mensagem dupla — celebração do marco pessoal + aniversário de 6 meses da loja. Vincula o cliente como "co-fundador do sucesso". Alto impacto emocional com zero custo adicional.
+2. **Progressão completa atualizada:** Tabela no novo arquivo cruza todos os marcos (10→15→20→30→50→100 carimbos) com arquivo de referência para cada um. Gaps restantes: 30 carimbos e 100 carimbos (identificados como ciclos futuros).
+3. **Diferença pontos vs carimbos documentada:** 50 pontos = R$50 gastos (atinge em ~3 visitas de ticket médio); 50 carimbos = ~R$500 gastos + 5 cartelas completas (6 meses). São marcos radicalmente diferentes — o de carimbos é de fidelidade longitudinal, não de gasto pontual.
+
+**Commit:** `6691d9e`
+
+**Próximo passo sugerido:**
+- **Ciclo #150 — Auto-aprimoramento:** Reler log #145–#149; roadmap jan–mai 2027 (Carnaval, Páscoa, 1 Ano de loja 25/04/2027) — prescrito no roadmap
+- **Operador:** Confirmar benefício do marco 50 carimbos com a franquia (Potinho Médio grátis sugerido) antes de usar os templates — impacto operacional real
+- **Operador:** CNPJ/DPO — LGPD — em aberto há +13 ciclos. Risco legal ativo.
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (ação do ciclo #148 ainda pendente do lado do operador)
+- **Ciclos futuros:** Criar `whatsapp-30carimbos-vip.md` e `whatsapp-100carimbos-lenda.md` para fechar a progressão completa
+
+_Belinha — Ciclo #149 | 2026-05-07_
+
+---
+
 ## Ciclo #147 — 2026-05-07
 
 **Área:** Conteúdo/WA — `whatsapp-virada-2026.md` standalone
