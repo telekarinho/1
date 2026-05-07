@@ -72,7 +72,9 @@ const CloudFunctions = {
             name === 'sendClosingReport' ||
             name === 'sendLowStockAlert' ||
             // MilkyClube — agregadores e operacoes só no Firebase CF
-            name === 'clubResolveCredits'
+            name === 'clubResolveCredits' ||
+            name === 'claimAction' ||
+            name === 'verifyClaim'
         ) {
             return this._callFirebaseDirect(name, data);
         }
@@ -226,6 +228,26 @@ const CloudFunctions = {
     // ============================================
     // Automations (Reports & Alerts)
     // ============================================
+
+    // ============================================
+    // MilkyClube — Action Claims (earn-before-claim)
+    // ============================================
+    // Cliente reivindica recompensa via ação real (review Google, story IG, etc).
+    // Sistema cria claim pendente, valida (auto/manual) e libera prêmio.
+    async claimAction(memberId, action, payload, franchiseId) {
+        if (!memberId || !action) return { success: false, error: 'memberId e action obrigatorios' };
+        return this._callFirebaseDirect('claimAction', {
+            memberId, action, payload: payload || {}, franchiseId: franchiseId || null
+        });
+    },
+
+    // Aprova/rejeita claim manualmente (admin/gerente)
+    async verifyClaim(claimId, approved, rejectionReason) {
+        if (!claimId) return { success: false, error: 'claimId obrigatorio' };
+        return this._callFirebaseDirect('verifyClaim', {
+            claimId, approved: approved !== false, rejectionReason: rejectionReason || ''
+        });
+    },
 
     // ============================================
     // MilkyClube — créditos unificados
