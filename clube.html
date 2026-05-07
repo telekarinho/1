@@ -685,6 +685,9 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
                 </div>
             </article>
 
+            <!-- Club Actions Widgets (injetado por club-action-widgets.js) -->
+            <div id="clubActions" style="margin-bottom:18px"></div>
+
             <article class="mc-card mc-pass-card" id="milkypass-card" aria-label="MilkyPass de carimbos">
                 <div class="mc-pass-head">
                     <div>
@@ -996,6 +999,7 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
 <script src="/js/core/cloud-functions.js"></script>
 <script src="/js/core/milkyclub.js"></script>
 <script src="/js/core/milkyclub-push.js"></script>
+<script src="/js/core/club-action-widgets.js"></script>
 
 <!-- VAPID key — Firebase Console > Project Settings > Cloud Messaging > Web Push certificates -->
 <script>window.MILKYPOT_VAPID_KEY = 'BAjJDEh3BZsxBDRlLXhLOZomMpCpv-FHsApsPGCvRcj3GjE3kF3Lfok4JgRs8Rdmpx3pq530i5ceVIsnngyyyBE';</script>
@@ -1120,6 +1124,11 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
         $('#mc-wa-fab').style.display = loggedIn ? '' : 'none';
 
         if (!loggedIn) return;
+
+        // Renderiza widgets de ação (review/whatsapp/birthday/push)
+        if (typeof ClubActions !== 'undefined' && ClubActions.render) {
+            try { ClubActions.render('clubActions'); } catch(e) { console.warn('ClubActions render', e); }
+        }
 
         // Header / saudação
         $('#member-name').textContent = (member.name || '').split(' ')[0] || 'amigo';
