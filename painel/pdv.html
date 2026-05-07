@@ -6191,10 +6191,24 @@
     if('serviceWorker' in navigator){
         navigator.serviceWorker.register('/sw.js').then(function(reg){
             console.log('[PDV] SW registered:', reg.scope);
+            // Força checagem de update imediata (browser throttle pode atrasar 24h)
+            reg.update().catch(function(){});
             window.addEventListener('online', function(){
                 reg.active && reg.active.postMessage({type:'REPLAY_OFFLINE_QUEUE'});
+                // Também checa se tem versão nova quando volta online
+                reg.update().catch(function(){});
             });
         }).catch(function(e){ console.warn('[PDV] SW failed:', e); });
+
+        // Listener pra mensagens do SW (FORCE_RELOAD quando nova versão ativa).
+        // Sem isso, PDV fica preso em cache antigo enquanto resto do site atualiza.
+        navigator.serviceWorker.addEventListener('message', function(e) {
+            if (!e.data) return;
+            if (e.data.type === 'FORCE_RELOAD' || e.data.type === 'NEW_VERSION_AVAILABLE') {
+                console.log('[PDV] Nova versão SW detectada, recarregando...');
+                location.reload();
+            }
+        });
     }
     var bar=document.getElementById('mpOfflineBar');
     var msg=document.getElementById('mpOfflineMsg');

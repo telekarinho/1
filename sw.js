@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v126';
-const CACHE_NAME = 'milkypot-v126';
+const CACHE_VERSION = 'mp-v127';
+const CACHE_NAME = 'milkypot-v127';
 
 // VAPID public key — Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
 const VAPID_PUBLIC_KEY = 'BAjJDEh3BZsxBDRlLXhLOZomMpCpv-FHsApsPGCvRcj3GjE3kF3Lfok4JgRs8Rdmpx3pq530i5ceVIsnngyyyBE';
@@ -131,10 +131,11 @@ self.addEventListener('activate', event => {
         const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
         for (const client of clientsList) {
             try {
-                // Pula páginas onde reload prejudica fluxo (PDV no meio de venda, login OAuth)
+                // Pula páginas onde reload prejudica fluxo (login OAuth)
+                // PDV REMOVIDO do skip: estava deixando atendentes presos no cache antigo.
+                // O state do PDV é persistido em localStorage, então reload é seguro.
                 const url = new URL(client.url);
                 const skip = (
-                    url.pathname.includes('/painel/pdv.html') ||
                     url.pathname.includes('/login.html') ||
                     url.pathname.includes('/oauth') ||
                     url.search.includes('mode=signIn')
