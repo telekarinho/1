@@ -43,12 +43,24 @@ function nextCheckoutStep(step) {
     }
 }
 
+function applyPhoneMask(value) {
+    var d = value.replace(/\D/g, '').slice(0, 11);
+    if (d.length <= 2) return d.length ? '(' + d : '';
+    if (d.length <= 6) return '(' + d.slice(0,2) + ') ' + d.slice(2);
+    if (d.length <= 10) return '(' + d.slice(0,2) + ') ' + d.slice(2,6) + '-' + d.slice(6);
+    return '(' + d.slice(0,2) + ') ' + d.slice(2,7) + '-' + d.slice(7);
+}
+
 function validateCheckoutStep(step) {
     if (step === 1) {
         var name = document.getElementById('checkoutName');
         var phone = document.getElementById('checkoutPhone');
         if (!name || !name.value.trim() || !phone || !phone.value.trim()) {
             showToast('Preencha seu nome e telefone!');
+            return false;
+        }
+        if (phone.value.replace(/\D/g, '').length < 10) {
+            showToast('Digite um telefone válido com DDD! Ex: (43) 99999-9999');
             return false;
         }
     }
@@ -461,6 +473,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Phone mask — formata em tempo real como (XX) XXXXX-XXXX
+    var phoneInput = document.getElementById('checkoutPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            var start = this.selectionStart;
+            var prevLen = this.value.length;
+            this.value = applyPhoneMask(this.value);
+            var diff = this.value.length - prevLen;
+            this.setSelectionRange(start + diff, start + diff);
+        });
+    }
+
     // Close modals on overlay click
     document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
         overlay.addEventListener('click', function(e) {
@@ -759,7 +783,10 @@ function addUserMessage(text) {
     if (!messages) return;
     var msg = document.createElement('div');
     msg.className = 'chat-message user';
-    msg.innerHTML = '<div class="chat-bubble">' + text + '</div>';
+    var bubble = document.createElement('div');
+    bubble.className = 'chat-bubble';
+    bubble.textContent = text;
+    msg.appendChild(bubble);
     messages.appendChild(msg);
     messages.scrollTop = messages.scrollHeight;
 }
