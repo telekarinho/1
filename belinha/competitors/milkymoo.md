@@ -1,8 +1,40 @@
 # Milky Moo — Análise Competitiva
 
-**Última atualização:** 2026-05-06 (Ciclo #132 — Dia dos Namorados 2026 ativo + Festa Junina radar)
+**Última atualização:** 2026-05-07 (Ciclo #151 — Carnaval 2027 intel pré-temporada)
+**Fontes ciclo #151:** cadastrarnapromocao.com.br, clubeamostrasgratis.com, portalg.com.br, gkpb.com.br, TikTok @casaldasdicasrp, TikTok @dicasemmanauss
 **Fontes anteriores:** franquiadesorvete.com, portaldofranchising, pricelisto.com/br, gkpb.com.br, TikTok @marceladegusta, portalg.com.br, lagosul.com.br, meioemensagem.com.br, sopacultural.com, franquias360.com.br, timesbrasil.com.br, exame.com, empreenderemgoias.com.br, adital.com.br, foodbizbrasil.com
 **Fontes ciclo #116:** portalg.com.br, cadastrarnapromocao.com.br, clubeamostrasgratis.com, publicitarioscriativos.com, gkpb.com.br, revistamenu.com.br, superhiper.com.br, TikTok @marceladegusta, TikTok @sofiasporai, nuttybavarian blog
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #151 — 2026-05-07
+
+### Carnaval 2027 — Padrão Histórico e Projeção
+
+**Contexto:** Carnaval 2027 = 6–10 de fevereiro de 2027 (Quarta de Cinzas = 10/02). Nenhuma campanha específica de Carnaval 2027 anunciada ainda. Intel baseada no padrão Carnaval 2026.
+
+**MilkyMoo Carnaval 2026 — Padrão confirmado:**
+- **Data:** 11 de fevereiro de 2026 (quarta-feira de carnaval), ação de 1 dia
+- **Mecânica:** 2×1 (compre milkshake participante → ganhe outro igual grátis)
+- **Sabores:** Pandora e Pintadinha (300ml)
+- **Plataforma:** EXCLUSIVO via iFood — não válido para loja física nem outros apps
+- **Restrições:** Não cumulativo com outras promoções; sabores alcoólicos e premium fora
+- **Sem produto temático:** Nenhuma edição especial de carnaval — apenas desconto em sabores existentes via app
+
+**Collab relevante 2026:** Milkshake temático de *Como Treinar o Seu Dragão* (produto de licença, sazonal)
+**Aniversário MilkyMoo Day (março/2026):** 11/03 — 500ml comprado → 300ml grátis, todas as unidades
+
+**Implicações para MilkyPot — Carnaval 2027 (6–10/02):**
+
+| Vantagem MilkyPot | vs. MilkyMoo |
+|---|---|
+| Delivery via WhatsApp — sem app, sem taxa, sem fila digital | iFood-locked: quem não tem app instalado fica de fora |
+| Potinho Foliã (edição temática personalizada) — produto exclusivo | Sem produto carnaval; apenas desconto em sabores padrão |
+| Canal direto: base de dados é da loja, não do app | iFood detém dados do cliente (~27% comissão + dados) |
+| Promoção toda a semana de carnaval, não só na quarta | Ação de 1 dia apenas |
+| Açaí buffet self-service também disponível na folia | Produto único (milkshake), sem alternativa de categoria |
+
+**Ação aplicada ciclo #151:** FAQ "O MilkyPot entrega no Carnaval?" adicionado ao index.html — captura SEO + posiciona contra iFood-dependency da MilkyMoo
 
 ---
 

@@ -1,8 +1,43 @@
 # The Best Açaí — Análise Competitiva
 
-**Última atualização:** 2026-05-06 (Ciclo #132 — Festa Junina 2026 + Dia dos Namorados radar)
+**Última atualização:** 2026-05-07 (Ciclo #151 — Carnaval 2027 intel + stunt sazonais virais)
+**Fontes ciclo #151:** vipzinho.com.br, foodbizbrasil.com, suafranquia.com, odiariodemaringa.com.br, dezminutos.com.br
 **Fontes anteriores:** ifood.com.br, gazetadopovo.com.br, temlondrina.com.br, tiktok @marceladegusta, portaldofranchising.com.br, foodbizbrasil.com, suafranquia.com, franquiadeacai.com, jornaluniao.com.br, exame.com, braziljournal.com, portaltela.com, mercadoeconsumo.com.br, aurorashopping.com.br
 **Fontes ciclo #116:** gazetadasemana.com.br, thebestacai.com.br/thebestday (bloqueado), cidadeoferta.com.br, ubereats.com/br, portaltela.com, TikTok @marceladegusta
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #151 — 2026-05-07
+
+### Carnaval 2027 — Sem Campanha Temática Específica Detectada
+
+**Status:** The Best Açaí não lançou campanha de Carnaval própria para 2026/2027. A campanha carnavalesca detectada foi de **Açaí Nokilo** (concorrente diferente), não The Best Açaí.
+
+**Oportunidade para MilkyPot:** No segmento açaí self-service, nenhum player Londrina detectado com campanha de Carnaval — abertura para MilkyPot liderar.
+
+### Dados Financeiros e Escala 2024–2025
+
+| Métrica | Valor |
+|---|---|
+| Faturamento 2024 | R$779 milhões |
+| Crescimento | Maior franquia de crescimento ABF 2024 |
+| Número de unidades | +750 lojas no Brasil |
+| Preço buffet confirmado | R$5,99/100g |
+| Opções buffet | 12 sabores açaí + 24 sabores sorvete + 40+ toppings |
+
+**Atualização preço:** R$5,99/100g confirmado (anterior: estimado R$6–7/100g na FAQ MilkyPot — nota: corrigir para "a partir de R$5,99/100g" se necessário)
+
+### Stunts Sazonais Virais — Padrão Identificado
+
+A Best Açaí tem um padrão de "self-service inusitado" que gera UGC viral. Identificados:
+
+| Ação | Mecanismo | Período |
+|---|---|---|
+| Self-service de donuts | R$5,99 à vontade | Verão/jan–fev 2025 (+580 lojas) |
+| Self-service de ovos de Páscoa recheados | Ovos com sorvete e açaí | Páscoa 2025 (viral — 2ª edição em 2026) |
+| Cardápio de Festa Junina | 4 sabores sazonais de sorvete self-service | Jun 2026 |
+
+**Lição para MilkyPot:** O stunt de "produto surpresa self-service" gera TikTok/Reels orgânicos. MilkyPot Muffato (que também tem buffet self-service) poderia replicar a mecânica com adaptação: ex. "self-service de topping especial de carnaval" por tempo limitado — sem custo de produto extra, alto impacto de UGC.
 
 ---
 

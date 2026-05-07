@@ -1,7 +1,49 @@
 # JohnnyJoy — Análise Competitiva
 
-**Última atualização:** 2026-04-22 (Ciclo #1)
-**Fontes:** johnnyjoy.com.br, buscas orgânicas
+**Última atualização:** 2026-05-07 (Ciclo #151 — Carnaval 2027 intel + atualização preços e fidelidade)
+**Fontes ciclo #151:** johnnyjoy.com.br, buscacliente.com.br, gkpb.com.br, amostrasgratis.shop, TikTok @aproveiteacidade, overblur.com, Instagram @johnnyjoy.br
+**Fontes originais:** johnnyjoy.com.br, buscas orgânicas
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #151 — 2026-05-07
+
+### Carnaval 2027 — Sem Campanha Detectada
+
+**Status:** Nenhuma campanha de Carnaval 2026 ou 2027 identificada para JohnnyJoy. Sem produto temático de folia na rede.
+
+**Oportunidade para MilkyPot:** JohnnyJoy sem cobertura carnavalesca — espaço aberto para MilkyPot dominar o posicionamento de "sobremesa de folia em Londrina" com Potinho Foliã.
+
+### Preços Atualizados 2026
+
+| Tamanho | Tradicional | Especial |
+|---|---|---|
+| 300ml | R$19,90 | R$25,90 |
+| 500ml | R$22,90 | R$28,90 |
+
+*(Fonte: TikTok @aproveiteacidade — unidades Flamboyant/Goiânia Shopping/Passeio das Águas)*
+
+### Promoções Confirmadas 2026
+
+| Promoção | Mecânica | Data |
+|---|---|---|
+| 2ª edição Dia do Milkshake | Compre 500ml → ganhe 300ml grátis + vestir rosa ou azul | Setembro (12/09 histórico) |
+| Aniversário 9 anos | Milkshakes por R$9,99 o dia | 9 de abril |
+| Milkshake grátis | Vestir peças rosa ou azul + compra de 500ml | Edição avulsa |
+| Milkshakes grátis (28/ago) | Distribuição especial | 28/08 |
+
+### Joy Fidelidade — Detalhes 2026
+
+- **Moeda:** Joybits (1 Joybit = R$1 gasto)
+- **Resgate:** 10 compras = 1 milkshake grátis; tabela de troca por descontos, brindes, cupons
+- **Disponibilidade:** Pontos disponíveis após 24h da compra
+- **App:** Programa digital (nova mecânica com novo parceiro, balances antigos preservados)
+- **Aniversário:** Brinde de aniversário incluso
+
+**Comparação com MilkyPot fidelidade:**
+- JohnnyJoy: 1pt=R$1 (digital) → mais granular, exige app/conta
+- MilkyPot: 1 carimbo/R$10 compra → mais simples, via WhatsApp direto
+- MilkyPot diferencial: 10 carimbos = Mini grátis + Indica & Ganha (carimbo extra por indicação)
 
 ---
 
