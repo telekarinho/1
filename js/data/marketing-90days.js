@@ -220,7 +220,9 @@
             post: {
                 title: b.title,
                 hook: b.hook,
-                prompt: b.prompt,
+                prompt: b.prompt,                          // legacy
+                promptChatGPT: b.promptChatGPT || '',      // ChatGPT/DALL-E 3
+                promptGoogleFlow: b.promptGoogleFlow || '',// Google Flow/Veo 3
                 script: b.script,
                 caption: b.caption,
                 hashtags: b.hashtags,

@@ -1,41 +1,116 @@
 /* ============================================
-   BELINHA — 90 DIAS DE CONTEÚDO (12/05 → 09/08/2026)
+   BELINHA — 90 DIAS DE CONTEÚDO (07/05 → 04/08/2026)
    ============================================
-   Cliente: já operando há 12 dias. Conteúdo de retenção, viralização,
-   cobrindo datas reais brasileiras e sazonalidade.
-   Cada item: { d, date, dow, week, theme, title, hook, prompt, script, caption, hashtags, music, cta, format }
+   Cliente lançou em 25/04/2026; este plano começa HOJE (Day 1 = 07/05).
+   Cobre retenção, viralização, datas reais brasileiras e sazonalidade.
+
+   Cada item: { d, date, dow, week, theme, title, hook,
+     prompt           — legacy (prompt único)
+     promptChatGPT    — pronto pra colar no ChatGPT/DALL-E 3 (imagem)
+     promptGoogleFlow — pronto pra colar no Google Flow/Veo 3 (vídeo)
+     script, caption, hashtags, music, cta, format }
    ============================================ */
 
 (function (global) {
+    // ────────── DATA DE INÍCIO ──────────
+    // Day 1 = HOJE (07/05/2026, quinta). Computa data e dow a partir do d.
+    const START_DATE = '2026-05-07';
+    function dateFromDayNum(d) {
+        const start = new Date(START_DATE + 'T00:00:00');
+        start.setDate(start.getDate() + (d - 1));
+        const y = start.getFullYear();
+        const m = String(start.getMonth() + 1).padStart(2, '0');
+        const dd = String(start.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + dd;
+    }
+    function dowFromDate(iso) {
+        const d = new Date(iso + 'T00:00:00');
+        return ['DOM','SEG','TER','QUA','QUI','SEX','SAB'][d.getDay()];
+    }
+
     // Hashtags base reutilizáveis
     const TAGS_BASE = '#milkypot #belinha #milkypotlondrina #londrina #ovelhinhabelinha #muffato #potinhomaisfelizdomundo';
     const TAGS_FOOD = '#sobremesalondrina #acailondrina #sorveterialondrina #londrinafood #curtalondrina #foodporn';
     const TAGS_VIRAL = '#fyp #viral #relatable #tiktokbrasil';
     const T = function(extra){ return TAGS_BASE + ' ' + TAGS_FOOD + ' ' + (extra||'') + ' ' + TAGS_VIRAL; };
 
-    // Helper geração de prompt de imagem com base na Belinha
+    // ────────── BIBLIA VISUAL DA BELINHA (referência fixa) ──────────
+    const BELINHA_REF = 'Belinha — mascote ovelhinha branca, cabeça redonda pequena, lã super fofa e detalhada, bochechas rosadas bem proeminentes (blush forte), olhos pretos brilhantes grandes com pequenos pontos de luz brancos, focinho rosadinho. Estilo Pixar 3D, ultra fofa, expressões exageradas. Cores da marca MilkyPot: pastel rosa e azul.';
+
+    // ────────── PROMPT FORMATTERS ──────────
+    // ChatGPT/DALL-E 3 — instrução natural, em pt-BR, com referência fixa
+    function chatgptImagePrompt(visualDesc) {
+        return [
+            'Crie uma imagem vertical 9:16 (1080x1920) para Reels/TikTok do MilkyPot.',
+            '',
+            'CENA:',
+            visualDesc,
+            '',
+            'PERSONAGEM (siga à risca):',
+            BELINHA_REF,
+            '',
+            'ESTILO: iluminação cinematográfica em tons pastel (rosa e azul), profundidade de campo rasa, alto detalhamento, sensação brasileira acolhedora, 3D Pixar.',
+            '',
+            'IMPORTANTE: NÃO escreva texto na imagem (texto vai ser sobreposto depois). Não adicione logos. Só a cena visual.'
+        ].join('\n');
+    }
+
+    // Google Flow / Veo 3 — prompt cinematográfico estruturado
+    function googleFlowVideoPrompt(visualDesc, script, music, durSec) {
+        const dur = durSec || 8;
+        return [
+            '[Veo 3 / Google Flow — vídeo ' + dur + 's, 9:16 vertical, com áudio]',
+            '',
+            'CENA: ' + visualDesc,
+            '',
+            'PERSONAGEM: ' + BELINHA_REF,
+            '',
+            'AÇÃO (' + dur + ' segundos):',
+            script,
+            '',
+            'CÂMERA: cinematográfica. Inicia em plano médio mostrando contexto, fecha em close no rosto/expressão da Belinha entre 50-70% do clipe, finaliza em frame estático nos últimos 1.5s para sobreposição de texto.',
+            '',
+            'ILUMINAÇÃO: pastel rosa e azul brilhante, luz natural quente, sombras suaves, cores da marca MilkyPot.',
+            '',
+            'ÁUDIO (Veo 3 gera áudio nativo): ' + music + '. Soma de fundo: ambiente leve de sorveteria (conversa baixa, som de concha, papel sendo aberto). Sem voz humana falando.',
+            '',
+            'ESTILO: animação 3D Pixar-quality, ultra fofa, contexto brasileiro Londrina (sorveteria moderna).',
+            '',
+            'NEGATIVE: sem texto sobreposto, sem logos, sem rosto humano realista, sem deformidades na ovelhinha.'
+        ].join('\n');
+    }
+
+    // Helper geração de prompt de imagem com base na Belinha (LEGACY — mantém compat)
     function belinhaPromptBase() {
         return 'A fluffy white sheep mascot named "Belinha" with a small round head, pink rosy cheeks, big shiny black eyes with white highlights, pinkish snout, soft cuddly wool. Pixar-style 3D rendering, ultra cute, expressive face. ';
     }
     const PB = belinhaPromptBase();
 
-    // Estilo final padrão
+    // Estilo final padrão (LEGACY)
     const STYLE = ' Vertical 9:16 aspect ratio, bright pastel pink and blue lighting, MilkyPot brand colors. Highly detailed, charming, brazilian feel.';
 
     // CTA padrão
     const CTA_LOCAL = '\n\n📍 Av. Quintino Bocaiuva 1045 — dentro do Muffato Londrina\n🕑 14h às 23h, todos os dias';
 
     // ════════════════════════════════════════════
-    // DIAS 1-30 (12/05 a 10/06): MÊS DA RETENÇÃO
+    // DIAS 1-34 (07/05 a 09/06): MÊS DA RETENÇÃO
     // ════════════════════════════════════════════
     const days = [];
 
-    // Helpers pra criar entrada
-    function make(d, date, dow, week, theme, title, format, hook, prompt, script, captionCore, musicHint, cta, extraTags) {
+    // Helpers pra criar entrada — datas e dow são COMPUTADOS de d (ignora _date e _dow legados)
+    function make(d, _legacyDate, _legacyDow, week, theme, title, format, hook, visualDesc, script, captionCore, musicHint, cta, extraTags) {
+        const date = dateFromDayNum(d);
+        const dow = dowFromDate(date);
+        // Extrair duração do format (ex: 'reel-15s' → 15)
+        const durMatch = (format || '').match(/(\d+)s/);
+        const durSec = durMatch ? parseInt(durMatch[1], 10) : 8;
+        const veoDur = Math.min(durSec, 8); // Veo 3 max 8s
         days.push({
             d, date, dow, week, theme, title, format,
             hook,
-            prompt: PB + prompt + STYLE,
+            prompt: PB + visualDesc + STYLE,                                         // legacy
+            promptChatGPT: chatgptImagePrompt(visualDesc),                           // novo
+            promptGoogleFlow: googleFlowVideoPrompt(visualDesc, script, musicHint, veoDur), // novo
             script,
             caption: captionCore + CTA_LOCAL,
             hashtags: T(extraTags || ''),
@@ -321,19 +396,19 @@
         'Música chill / lofi',
         '');
 
-    // ─── SEMANAS 6-13 (15 jun - 9 ago) — geração padrão pra resto ───
-    // Para economizar espaço sem perder estrutura, vou gerar resto via templates
+    // ─── SEMANAS 6-13 (Day 35-90) — geração padrão pra resto ───
+    // baseDate é COMPUTADO de dateFromDayNum() — não hardcoded.
+    // Foco semanal mantido; ancora datas movem com START_DATE.
 
     const restWeeks = [
-        // Semana 6 (15-21 jun) — Festa junina ainda + meio do mês
-        { week: 6, baseDate: '2026-06-15', focus: 'Festa Junina pico — Santo Antonio (13), São João (24), São Pedro (29)' },
-        { week: 7, baseDate: '2026-06-22', focus: 'São João week + férias escolares começando' },
-        { week: 8, baseDate: '2026-06-29', focus: 'Fim festa junina + julho começa + 2 meses MilkyPot' },
-        { week: 9, baseDate: '2026-07-06', focus: 'Férias escolares — kids content, foco em criançada' },
-        { week: 10, baseDate: '2026-07-13', focus: 'Pico férias — promos kids, family time' },
-        { week: 11, baseDate: '2026-07-20', focus: 'Volta às aulas se aproxima — last week of break' },
-        { week: 12, baseDate: '2026-07-27', focus: 'Volta às aulas + Dia do Amigo (20/07)' },
-        { week: 13, baseDate: '2026-08-03', focus: 'Recap 90 dias + teaser próxima season + dia dos pais (10/08)' }
+        { week: 6,  focus: 'Festa Junina pico — Santo Antonio (13), São João (24), São Pedro (29)' },
+        { week: 7,  focus: 'São João week + férias escolares começando' },
+        { week: 8,  focus: 'Fim festa junina + julho começa + 2 meses MilkyPot' },
+        { week: 9,  focus: 'Férias escolares — kids content, foco em criançada' },
+        { week: 10, focus: 'Pico férias — promos kids, family time' },
+        { week: 11, focus: 'Volta às aulas se aproxima — last week of break' },
+        { week: 12, focus: 'Volta às aulas + Dia do Amigo (20/07)' },
+        { week: 13, focus: 'Recap 90 dias + teaser próxima season + dia dos pais (10/08)' }
     ];
 
     // Templates por dia da semana (rotativos)
@@ -420,15 +495,16 @@
         '2026-08-09': { theme: 'sazonal', title: 'Vésperas Dia dos Pais' }
     };
 
-    // Gera dias 35-90 com rotação
+    // Gera dias 35-90 com rotação. Datas computadas de dateFromDayNum.
     let dCounter = 35;
     let bankIdx = { rotina:0, novidade:0, asmr:0, humor:0, promo:0, viral:0, wholesome:0, sazonal:0, milestone:0, family:0 };
 
     for (let w = 6; w <= 13; w++) {
         const wInfo = restWeeks[w - 6];
         for (let i = 0; i < 7; i++) {
-            const date = nextDate(wInfo.baseDate, i);
-            const dow = dayName(date);
+            const dNum = dCounter++;
+            const date = dateFromDayNum(dNum);
+            const dow = dowFromDate(date);
             const tpl = dowTemplates[dow];
             const special = specialDates[date];
 
@@ -438,19 +514,25 @@
             bankIdx[theme] = (bankIdx[theme] || 0) + 1;
 
             const title = special ? special.title : idea[0];
-            const visual = idea[1];
+            const visual = idea[1] + ' MilkyPot brand context, ice cream parlor environment, expressive Belinha.';
+            const durMatch = tpl.format.match(/(\d+)s/);
+            const durSec = durMatch ? parseInt(durMatch[1], 10) : 12;
+            const veoDur = Math.min(durSec, 8);
+            const script = '0-3s: TEXTO "' + title + '"\n3-' + Math.floor(durSec*0.66) + 's: ' + idea[1] + '\n' + Math.floor(durSec*0.66) + '-' + durSec + 's: TEXTO de fechamento + CTA visual.\n\nDETALHES: roteirize com base no foco da semana — ' + wInfo.focus;
 
             days.push({
-                d: dCounter++,
+                d: dNum,
                 date: date,
                 dow: dow,
                 week: w,
                 theme: theme,
                 title: title,
                 format: tpl.format,
-                hook: visual,
-                prompt: PB + visual + ' MilkyPot brand context, ice cream parlor environment, expressive Belinha.' + STYLE,
-                script: '0-3s: TEXTO "' + title + '"\n3-10s: ' + visual + '\n10-' + (tpl.format.includes('15') ? '15' : tpl.format.includes('18') ? '18' : '12') + 's: TEXTO de fechamento + CTA visual.\n\nDETALHES: roteirize com base no foco da semana — ' + wInfo.focus,
+                hook: idea[1],
+                prompt: PB + visual + STYLE,
+                promptChatGPT: chatgptImagePrompt(visual),
+                promptGoogleFlow: googleFlowVideoPrompt(visual, script, tpl.tone + ' trending', veoDur),
+                script: script,
                 caption: title.toLowerCase() + ' ' + (theme === 'promo' ? '🎁' : theme === 'wholesome' ? '💗' : '🐑') + '\n\n[ajuste o texto pra refletir o que aconteceu na franquia hoje]\n\n' + (theme === 'sazonal' ? 'data especial — aproveita ✨' : 'que dia 👇') + CTA_LOCAL,
                 hashtags: T(theme === 'sazonal' ? '#sazonal' : ''),
                 music: tpl.tone + ' trending — pesquisa "' + title + '" no TikTok',
@@ -463,6 +545,7 @@
         days: days,
         totalDays: days.length,
         weeks: 13,
+        startDate: START_DATE,
         firstDate: days[0] ? days[0].date : null,
         lastDate: days[days.length-1] ? days[days.length-1].date : null,
         // Metadata útil
@@ -474,7 +557,13 @@
             milestone: '🏆 Milestone', family: '👨‍👩‍👧 Família',
             localcontent: '📍 Local', tutorial: '🎓 Tutorial',
             storytelling: '📖 Storytelling'
-        }
+        },
+        // Helpers expostos
+        dateFromDayNum,
+        dowFromDate,
+        chatgptImagePrompt,
+        googleFlowVideoPrompt,
+        belinhaRef: BELINHA_REF
     };
 
 })(typeof window !== 'undefined' ? window : this);

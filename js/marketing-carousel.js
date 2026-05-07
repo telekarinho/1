@@ -151,12 +151,19 @@
     const TAB_RENDERERS = {
         post: (d, idPrefix) => `
             <div class="mc-block mc-img-block">
-                <div class="mc-block-h"><strong>🎨 Prompt de imagem (IA)</strong>
-                    <button class="mc-copy-btn" data-copy="${idPrefix}_prompt">📋 Copiar</button></div>
-                <pre id="${idPrefix}_prompt">${escapeHtml(d.post.prompt)}</pre>
+                <div class="mc-block-h"><strong>🎨 IMAGEM — ChatGPT (DALL·E 3)</strong>
+                    <button class="mc-copy-btn" data-copy="${idPrefix}_promptC">📋 Copiar pro ChatGPT</button></div>
+                <pre id="${idPrefix}_promptC">${escapeHtml(d.post.promptChatGPT || d.post.prompt)}</pre>
+                <div style="margin-top:6px;font-size:.74rem;color:#9C6500"><a href="https://chat.openai.com/" target="_blank" style="color:#9C6500;font-weight:800">→ Abrir ChatGPT</a> · cole · pede pra gerar imagem 1080x1920</div>
             </div>
             <div class="mc-block mc-vid-block">
-                <div class="mc-block-h"><strong>🎬 Roteiro (cena por cena)</strong>
+                <div class="mc-block-h"><strong>🎬 VÍDEO — Google Flow (Veo 3, com áudio)</strong>
+                    <button class="mc-copy-btn" data-copy="${idPrefix}_promptV">📋 Copiar pro Flow</button></div>
+                <pre id="${idPrefix}_promptV">${escapeHtml(d.post.promptGoogleFlow || '')}</pre>
+                <div style="margin-top:6px;font-size:.74rem;color:#01579B"><a href="https://labs.google/flow" target="_blank" style="color:#01579B;font-weight:800">→ Abrir Google Flow</a> · New project · cole · Veo 3 gera 8s</div>
+            </div>
+            <div class="mc-block mc-vid-block" style="background:linear-gradient(135deg,#E1F5FE,#90CAF9)">
+                <div class="mc-block-h"><strong>📋 Roteiro (texto sobreposto cena-a-cena)</strong>
                     <button class="mc-copy-btn" data-copy="${idPrefix}_script">📋 Copiar</button></div>
                 <pre id="${idPrefix}_script">${escapeHtml(d.post.script)}</pre>
             </div>
