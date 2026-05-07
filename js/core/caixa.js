@@ -1506,10 +1506,26 @@ const Caixa = (function () {
             } catch(_) {}
         } catch (e) { console.warn('mail dispatch:', e); }
 
+        // Helper toast visivel pro operador (consoles ficam ocultos)
+        function _emailToast(msg, kind) {
+            try {
+                var existing = document.getElementById('mp-email-toast');
+                if (existing) existing.remove();
+                var color = kind === 'ok' ? '#10B981' : kind === 'err' ? '#DC2626' : '#F59E0B';
+                var t = document.createElement('div');
+                t.id = 'mp-email-toast';
+                t.style.cssText = 'position:fixed;top:24px;right:24px;background:'+color+';color:#fff;padding:14px 20px;border-radius:10px;font-size:.95rem;font-weight:700;z-index:99999;box-shadow:0 8px 28px rgba(0,0,0,.25);max-width:420px;line-height:1.4;font-family:Nunito,sans-serif;';
+                t.textContent = msg;
+                document.body.appendChild(t);
+                setTimeout(function(){ try{ t.remove(); }catch(_){} }, kind === 'err' ? 12000 : 7000);
+            } catch(_) {}
+        }
+
         // 3. CAMINHO PRIMARIO: chama CloudFunctions.sendClosingReport (Firebase CF)
         //    Tem Nodemailer + Gmail SMTP. Fallback automatico pra /mail se SMTP falhar.
         try {
             if (typeof CloudFunctions !== 'undefined' && CloudFunctions.sendClosingReport) {
+                _emailToast('📧 Enviando relatório por email...', 'info');
                 CloudFunctions.sendClosingReport(franchiseId, {
                     operatorName: operatorName,
                     operatorEmail: operatorEmail,
@@ -1521,17 +1537,27 @@ const Caixa = (function () {
                     breakdownConferido: extras
                 }).then(function(res) {
                     if (res && res.success) {
-                        console.log('✅ Relatorio enviado por email para', res.sent || RECIPIENTS.length, 'destinatarios');
+                        var n = res.sent || RECIPIENTS.length;
+                        console.log('✅ Relatorio enviado por email para', n, 'destinatarios');
+                        _emailToast('✅ Relatório enviado por email para ' + n + ' destinatário(s)', 'ok');
                     } else {
-                        console.warn('⚠️ Email nao enviado:', res && (res.error || res.reason || 'resposta desconhecida'));
+                        var reason = (res && (res.error || res.reason)) || 'resposta desconhecida';
+                        console.warn('⚠️ Email nao enviado:', reason);
+                        _emailToast('⚠️ Email não enviado: ' + reason, 'err');
                     }
                 }).catch(function(e) {
-                    console.error('❌ sendClosingReport falhou:', e && (e.message || e));
+                    var msg = (e && (e.message || e)) + '';
+                    console.error('❌ sendClosingReport falhou:', msg);
+                    _emailToast('❌ Erro no envio: ' + msg.substring(0, 200), 'err');
                 });
             } else {
                 console.warn('⚠️ CloudFunctions.sendClosingReport indisponivel — email nao enviado');
+                _emailToast('⚠️ CloudFunctions não inicializado — recarregue a página', 'err');
             }
-        } catch (e) { console.error('CF dispatch error:', e); }
+        } catch (e) {
+            console.error('CF dispatch error:', e);
+            _emailToast('❌ Erro disparando email: ' + (e.message || e), 'err');
+        }
     }
 
     // HTML version do email — mais bonito que texto puro
