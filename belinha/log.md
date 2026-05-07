@@ -5409,3 +5409,40 @@ _Belinha — Ciclo #75 | 2026-05-01_
 _Belinha — Ciclo #140 | 2026-05-06_
 
 ---
+
+## Ciclo #148 — 2026-05-07
+
+**Área:** SEO — `sitemap.xml` lastmod update + Google Image Sitemap
+
+**Contexto:** Prescrito pelo roadmap ciclo #147. Quatro páginas tinham datas `lastmod` desatualizadas (homepage e cardápio modificadas nos ciclos #141–#146 de 07/05; landing pages ciclo #123 de 05/05). Adicionada oportunidade: namespace `image:` do Google Image Sitemap (padrão para negócios de alimentação — Google Images é canal de descoberta orgânica de alto impacto para sobremesas).
+
+**O que analisou:**
+- `git log` por arquivo: homepage alterada ciclos #143 (FAQ Halloween) e #146 (hero CTA mobile) — ambos 07/05 → lastmod estava em `2026-05-06`
+- `cardapio.html` alterada ciclos #141 (lazy scroll) e #142 (AggregateOffer schema) — ambos 07/05 → lastmod estava em `2026-05-06`
+- Landing pages (`potinho-ninho-londrina.html`, `acai-self-service-londrina.html`) alteradas ciclo #123 em 05/05 → lastmod estava em datas de lançamento (25/04 e 27/04)
+- Namespace `image:` do Google Image Sitemap (v1.1): suportado nativamente pelo Google Search Console, sem custo ou risco, habilita rich results em Google Images com `title` e `caption` indexáveis por keywords locais
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `sitemap.xml` | `xmlns:image` adicionado ao `<urlset>`; `lastmod` corrigido em 4 URLs; `<image:image>` com `title`+`caption` incluídos nas 4 URLs de maior prioridade (homepage, cardápio, 2 landing pages) |
+
+**Commit:** `e7bfbf0`
+
+**Destaques:**
+1. **Google Image Sitemap:** Habilita indexação de imagens no Google Images via `<image:title>` e `<image:caption>` com keywords locais ("Londrina", "Muffato", "Potinho de Ninho", "açaí self-service"). Negócios de alimentação recebem tráfego relevante por busca visual — especialmente em mobile.
+2. **lastmod corrigidos:** 4 de 8 URLs tinham datas desatualizadas. Googlebot prioriza re-crawl baseado em `lastmod` — datas erradas atrasam indexação de melhorias (AggregateOffer, FAQPage, hero CTA) já commitadas mas ainda não refletidas na SERP.
+3. **Sem breaking change:** Namespace `image:` é ignorado por parsers sem suporte; `changefreq` e `priority` existentes mantidos intactos.
+
+**Próximo passo sugerido:**
+- **Ciclo #149 — Conversão:** Template WA milestone 50 carimbos fidelidade (prescrito roadmap #147)
+- **Ciclo #150 — Auto-aprimoramento:** Reler log #145–#149; roadmap jan–mai 2027 (Carnaval, Páscoa, 1 Ano de loja 25/04/2027)
+- **Google Search Console:** Operador deve fazer "Solicitar indexação" do sitemap.xml após este commit para acelerar re-crawl das 4 URLs corrigidas
+- **Operador:** CNPJ/DPO — LGPD — em aberto há +12 ciclos. Risco legal ativo.
+- **Operador:** Confirmar cardapio.js (Opção A/B/C) — blocker técnico persistente
+- **Imagens de produto:** Próximo passo natural para image sitemap = adicionar fotos reais dos potinhos (quando disponíveis). As atuais entradas usam o logo; fotos dos produtos têm CTR muito maior no Google Images para alimentos.
+
+_Belinha — Ciclo #148 | 2026-05-07_
+
+---
