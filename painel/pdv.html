@@ -3788,56 +3788,56 @@
         overlay.style.cssText = 'position:fixed;inset:0;background:rgba(45,27,78,.65);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Nunito",sans-serif;animation:mpFadeIn .15s ease-out';
         var totalLabel = 'R$ ' + (Number(totalValue)||0).toFixed(2).replace('.',',');
         overlay.innerHTML =
-          '<div style="background:#fff;border-radius:18px;max-width:460px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;animation:mpSlideUp .2s ease-out">' +
-            '<div style="padding:18px 22px;background:linear-gradient(135deg,#6C63FF,#42A5F5);color:#fff;display:flex;justify-content:space-between;align-items:center">' +
-              '<div>' +
-                '<h3 style="margin:0;font-family:\'Baloo 2\',cursive;font-size:1.15rem;font-weight:700">💰 Forma de pagamento</h3>' +
-                '<div style="font-size:.78rem;opacity:.92;margin-top:2px">Selecione pra finalizar a venda</div>' +
+          '<div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;animation:mpSlideUp .2s ease-out">' +
+            // Header sticky compacto com total embutido
+            '<div style="padding:12px 18px;background:linear-gradient(135deg,#6C63FF,#42A5F5);color:#fff;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-shrink:0">' +
+              '<div style="flex:1;min-width:0">' +
+                '<div style="font-size:.7rem;opacity:.85;font-weight:700;letter-spacing:.5px;text-transform:uppercase">Total a receber</div>' +
+                '<div style="font-family:\'Baloo 2\',cursive;font-size:1.6rem;font-weight:800;line-height:1.05">' + totalLabel + '</div>' +
               '</div>' +
-              '<button id="mpPaySelectClose" style="background:rgba(255,255,255,.22);color:#fff;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:700">×</button>' +
+              '<button id="mpPaySelectClose" style="background:rgba(255,255,255,.22);color:#fff;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;font-weight:700;flex-shrink:0">×</button>' +
             '</div>' +
-            '<div style="padding:22px">' +
-              '<div style="background:#F7F4FF;border-radius:12px;padding:14px 18px;text-align:center;margin-bottom:18px">' +
-                '<div style="font-size:.78rem;color:#7d6e92;font-weight:600;letter-spacing:.5px;text-transform:uppercase">Total a receber</div>' +
-                '<div style="font-family:\'Baloo 2\',cursive;font-size:2rem;font-weight:800;color:#6C63FF;margin-top:2px">' + totalLabel + '</div>' +
-              '</div>' +
-              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
-                '<button data-pay="Dinheiro"  class="mp-pay-btn" style="padding:18px 12px;background:#fff;border:2px solid #10B981;color:#065F46;border-radius:14px;font-family:\'Baloo 2\',cursive;font-size:1.02rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s ease">' +
-                  '<span style="font-size:1.6rem">💵</span><span>Dinheiro</span>' +
+            // Body com scroll
+            '<div style="padding:14px 16px;overflow-y:auto;flex:1;min-height:0">' +
+              // 4 botões tradicionais (compactos)
+              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+                '<button data-pay="Dinheiro" class="mp-pay-btn" style="padding:10px 8px;background:#fff;border:2px solid #10B981;color:#065F46;border-radius:11px;font-family:\'Baloo 2\',cursive;font-size:.92rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s ease">' +
+                  '<span style="font-size:1.1rem">💵</span><span>Dinheiro</span>' +
                 '</button>' +
-                '<button data-pay="Pix"       class="mp-pay-btn" style="padding:18px 12px;background:#fff;border:2px solid #06B6D4;color:#0E7490;border-radius:14px;font-family:\'Baloo 2\',cursive;font-size:1.02rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s ease">' +
-                  '<span style="font-size:1.6rem">📲</span><span>PIX</span>' +
+                '<button data-pay="Pix" class="mp-pay-btn" style="padding:10px 8px;background:#fff;border:2px solid #06B6D4;color:#0E7490;border-radius:11px;font-family:\'Baloo 2\',cursive;font-size:.92rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">' +
+                  '<span style="font-size:1.1rem">📲</span><span>PIX</span>' +
                 '</button>' +
-                '<button data-pay="Débito"    class="mp-pay-btn" style="padding:18px 12px;background:#fff;border:2px solid #3B82F6;color:#1E40AF;border-radius:14px;font-family:\'Baloo 2\',cursive;font-size:1.02rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s ease">' +
-                  '<span style="font-size:1.6rem">💳</span><span>Débito</span>' +
+                '<button data-pay="Débito" class="mp-pay-btn" style="padding:10px 8px;background:#fff;border:2px solid #3B82F6;color:#1E40AF;border-radius:11px;font-family:\'Baloo 2\',cursive;font-size:.92rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">' +
+                  '<span style="font-size:1.1rem">💳</span><span>Débito</span>' +
                 '</button>' +
-                '<button data-pay="Crédito"   class="mp-pay-btn" style="padding:18px 12px;background:#fff;border:2px solid #8B5CF6;color:#5B21B6;border-radius:14px;font-family:\'Baloo 2\',cursive;font-size:1.02rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s ease">' +
-                  '<span style="font-size:1.6rem">💳</span><span>Crédito</span>' +
+                '<button data-pay="Crédito" class="mp-pay-btn" style="padding:10px 8px;background:#fff;border:2px solid #8B5CF6;color:#5B21B6;border-radius:11px;font-family:\'Baloo 2\',cursive;font-size:.92rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">' +
+                  '<span style="font-size:1.1rem">💳</span><span>Crédito</span>' +
                 '</button>' +
               '</div>' +
-              '<div style="margin-top:18px;padding:14px;background:linear-gradient(135deg,#FFF3D6,#FFE0EC);border-radius:14px;border:1px dashed #EC407A">' +
-                '<div style="font-family:\'Baloo 2\',cursive;font-size:.92rem;font-weight:800;color:#7c3aed;text-align:center;margin-bottom:10px">🎁 Pagar com promocional</div>' +
-                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
-                  '<button data-promo="raspinha" class="mp-promo-btn" style="padding:14px 8px;background:#fff;border:2px solid #EC407A;color:#AD1457;border-radius:12px;font-family:\'Baloo 2\',cursive;font-size:.88rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px">' +
-                    '<span style="font-size:1.4rem">🎰</span><span>Raspinha</span>' +
+              // Promocional — bem mais compacto, 5 botões em grid 5 colunas (icon+label vertical pequeno)
+              '<div style="margin-top:12px;padding:10px;background:linear-gradient(135deg,#FFF3D6,#FFE0EC);border-radius:11px;border:1px dashed #EC407A">' +
+                '<div style="font-family:\'Baloo 2\',cursive;font-size:.78rem;font-weight:800;color:#7c3aed;text-align:center;margin-bottom:7px">🎁 Promocional</div>' +
+                '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">' +
+                  '<button data-promo="raspinha" class="mp-promo-btn" style="padding:7px 2px;background:#fff;border:1.5px solid #EC407A;color:#AD1457;border-radius:9px;font-family:Nunito,sans-serif;font-size:.66rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px">' +
+                    '<span style="font-size:1rem">🎰</span><span>Raspinha</span>' +
                   '</button>' +
-                  '<button data-promo="milkycoins" class="mp-promo-btn" id="mpPromoCoinsBtn" style="padding:14px 8px;background:#fff;border:2px solid #FFB300;color:#E65100;border-radius:12px;font-family:\'Baloo 2\',cursive;font-size:.88rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px">' +
-                    '<span style="font-size:1.4rem">💰</span><span>MilkyCoins</span>' +
+                  '<button data-promo="milkycoins" class="mp-promo-btn" id="mpPromoCoinsBtn" style="padding:7px 2px;background:#fff;border:1.5px solid #FFB300;color:#E65100;border-radius:9px;font-family:Nunito,sans-serif;font-size:.66rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px">' +
+                    '<span style="font-size:1rem">💰</span><span>Coins</span>' +
                   '</button>' +
-                  '<button data-promo="milkypass" class="mp-promo-btn" id="mpPromoPassBtn" style="padding:14px 8px;background:#fff;border:2px solid #00BCD4;color:#00838F;border-radius:12px;font-family:\'Baloo 2\',cursive;font-size:.88rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px">' +
-                    '<span style="font-size:1.4rem">🏆</span><span>MilkyPass</span>' +
+                  '<button data-promo="milkypass" class="mp-promo-btn" id="mpPromoPassBtn" style="padding:7px 2px;background:#fff;border:1.5px solid #00BCD4;color:#00838F;border-radius:9px;font-family:Nunito,sans-serif;font-size:.66rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px">' +
+                    '<span style="font-size:1rem">🏆</span><span>Pass</span>' +
                   '</button>' +
-                  '<button data-promo="desafio" class="mp-promo-btn" style="padding:14px 8px;background:#fff;border:2px solid #4CAF50;color:#2E7D32;border-radius:12px;font-family:\'Baloo 2\',cursive;font-size:.88rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px">' +
-                    '<span style="font-size:1.4rem">🎮</span><span>Desafio</span>' +
+                  '<button data-promo="desafio" class="mp-promo-btn" style="padding:7px 2px;background:#fff;border:1.5px solid #4CAF50;color:#2E7D32;border-radius:9px;font-family:Nunito,sans-serif;font-size:.66rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px">' +
+                    '<span style="font-size:1rem">🎮</span><span>Desafio</span>' +
                   '</button>' +
-                  '<button data-promo="promo300g" class="mp-promo-btn" style="padding:14px 8px;background:#fff;border:2px solid #9C27B0;color:#6A1B9A;border-radius:12px;font-family:\'Baloo 2\',cursive;font-size:.88rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;grid-column:span 2">' +
-                    '<span style="font-size:1.4rem">🎯</span><span>Acertou 300g — não paga!</span>' +
+                  '<button data-promo="promo300g" class="mp-promo-btn" style="padding:7px 2px;background:#fff;border:1.5px solid #9C27B0;color:#6A1B9A;border-radius:9px;font-family:Nunito,sans-serif;font-size:.66rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px">' +
+                    '<span style="font-size:1rem">🎯</span><span>300g</span>' +
                   '</button>' +
                 '</div>' +
-                '<div id="mpPromoInfo" style="margin-top:8px;font-size:.74rem;color:#6b7280;text-align:center"></div>' +
+                '<div id="mpPromoInfo" style="margin-top:6px;font-size:.7rem;color:#6b7280;text-align:center"></div>' +
               '</div>' +
-              '<button id="mpPayMixedBtn" style="width:100%;margin-top:10px;padding:13px 12px;background:#111827;color:#fff;border:none;border-radius:12px;font-family:\'Baloo 2\',cursive;font-size:.98rem;font-weight:800;cursor:pointer">Pagamento misto / 2 formas</button>' +
-              '<div style="text-align:center;margin-top:14px;font-size:.72rem;color:#9CA3AF">Esc fecha sem finalizar</div>' +
+              '<button id="mpPayMixedBtn" style="width:100%;margin-top:10px;padding:10px;background:#111827;color:#fff;border:none;border-radius:10px;font-family:\'Baloo 2\',cursive;font-size:.88rem;font-weight:800;cursor:pointer">💳 Pagamento misto (N formas)</button>' +
+              '<div style="text-align:center;margin-top:8px;font-size:.66rem;color:#9CA3AF">Esc fecha sem finalizar</div>' +
             '</div>' +
           '</div>';
         document.body.appendChild(overlay);
