@@ -590,7 +590,7 @@ async function _applyClaimReward(claimId) {
 // Sem GOOGLE_PLACES_API_KEY configurado, só expira velhas. Caminho manual continua via /admin/recompensas-claims.
 // ============================================
 
-const MILKYPOT_PLACE_ID = "ChIJxxxxx_REPLACE_WITH_REAL"; // Place ID do Google Maps — admin editar via club_config/google_places
+const MILKYPOT_PLACE_ID = "ChIJsfGiFihF65QReu2FBLWuA90"; // Place ID do Google Maps (extraído de g.page/r/CXrthQS1rgPdEAE/review). Admin pode sobrescrever em club_config/google_places.
 const PLACES_API_URL = "https://maps.googleapis.com/maps/api/place/details/json";
 
 function _normalizeName(name) {
