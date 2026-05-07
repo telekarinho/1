@@ -54,6 +54,12 @@ const Caixa = (function () {
         return (parseInt(p[0],10) || 0) * 60 + (parseInt(p[1],10) || 0);
     }
 
+    // Franquia de teste: nenhuma trava de horário, nenhum bloqueio de re-abertura.
+    // Permite QA/atendentes testarem o fluxo completo qualquer hora do dia.
+    function isTestFranchise(franchiseId) {
+        return franchiseId === 'franquia-teste' || franchiseId === 'teste' || /^test/i.test(franchiseId || '');
+    }
+
     // Retorna { ok, reason, currentHHMM, expectedOpen, expectedClose }
     // ok=true se está dentro da janela de tolerância.
     // Fora dela, modal pede justificativa (ver showOpenModal/showCloseModal).
@@ -62,6 +68,10 @@ const Caixa = (function () {
         var hours = getBusinessHours(franchiseId);
         var now = new Date();
         var hh = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+        // Franquia de teste: sempre liberada, qualquer horário
+        if (isTestFranchise(franchiseId)) {
+            return { ok: true, currentHHMM: hh, expectedOpen: hours.open, expectedClose: hours.close, testMode: true };
+        }
         // Permite desabilitar via flag (escape hatch pra emergência)
         try {
             var disabled = localStorage.getItem('mp_validate_business_hours_' + franchiseId) === '0';
@@ -256,7 +266,10 @@ const Caixa = (function () {
         if (!franchiseId) return { success: false, error: 'Franquia inválida.' };
         const st = getTurnoState(franchiseId);
         if (st.status === 'aberto') return { success: false, error: 'Já existe um caixa aberto hoje.' };
-        if (st.status === 'fechado') return { success: false, error: 'O caixa de hoje já foi fechado. Peça ao gerente para abrir um novo turno.' };
+        // Franquia de teste pode reabrir caixa fechado livremente — registra novo abertura sobre o fechamento
+        if (st.status === 'fechado' && !isTestFranchise(franchiseId)) {
+            return { success: false, error: 'O caixa de hoje já foi fechado. Peça ao gerente para abrir um novo turno.' };
+        }
         if (isNaN(valorAbertura) || valorAbertura < 0) return { success: false, error: 'Valor de abertura inválido.' };
 
         // === HORÁRIO COMERCIAL ===
