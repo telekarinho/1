@@ -3642,6 +3642,27 @@
                   '<span style="font-size:1.6rem">💳</span><span>Crédito</span>' +
                 '</button>' +
               '</div>' +
+              '<div style="margin-top:18px;padding:14px;background:linear-gradient(135deg,#FFF3D6,#FFE0EC);border-radius:14px;border:1px dashed #EC407A">' +
+                '<div style="font-family:\'Baloo 2\',cursive;font-size:.92rem;font-weight:800;color:#7c3aed;text-align:center;margin-bottom:10px">🎁 Pagar com promocional</div>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+                  '<button data-promo="raspinha" class="mp-promo-btn" style="padding:14px 8px;background:#fff;border:2px solid #EC407A;color:#AD1457;border-radius:12px;font-family:\'Baloo 2\',cursive;font-size:.88rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px">' +
+                    '<span style="font-size:1.4rem">🎰</span><span>Raspinha</span>' +
+                  '</button>' +
+                  '<button data-promo="milkycoins" class="mp-promo-btn" id="mpPromoCoinsBtn" style="padding:14px 8px;background:#fff;border:2px solid #FFB300;color:#E65100;border-radius:12px;font-family:\'Baloo 2\',cursive;font-size:.88rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px">' +
+                    '<span style="font-size:1.4rem">💰</span><span>MilkyCoins</span>' +
+                  '</button>' +
+                  '<button data-promo="milkypass" class="mp-promo-btn" id="mpPromoPassBtn" style="padding:14px 8px;background:#fff;border:2px solid #00BCD4;color:#00838F;border-radius:12px;font-family:\'Baloo 2\',cursive;font-size:.88rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px">' +
+                    '<span style="font-size:1.4rem">🏆</span><span>MilkyPass</span>' +
+                  '</button>' +
+                  '<button data-promo="desafio" class="mp-promo-btn" style="padding:14px 8px;background:#fff;border:2px solid #4CAF50;color:#2E7D32;border-radius:12px;font-family:\'Baloo 2\',cursive;font-size:.88rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px">' +
+                    '<span style="font-size:1.4rem">🎮</span><span>Desafio</span>' +
+                  '</button>' +
+                  '<button data-promo="promo300g" class="mp-promo-btn" style="padding:14px 8px;background:#fff;border:2px solid #9C27B0;color:#6A1B9A;border-radius:12px;font-family:\'Baloo 2\',cursive;font-size:.88rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;grid-column:span 2">' +
+                    '<span style="font-size:1.4rem">🎯</span><span>Acertou 300g — não paga!</span>' +
+                  '</button>' +
+                '</div>' +
+                '<div id="mpPromoInfo" style="margin-top:8px;font-size:.74rem;color:#6b7280;text-align:center"></div>' +
+              '</div>' +
               '<button id="mpPayMixedBtn" style="width:100%;margin-top:10px;padding:13px 12px;background:#111827;color:#fff;border:none;border-radius:12px;font-family:\'Baloo 2\',cursive;font-size:.98rem;font-weight:800;cursor:pointer">Pagamento misto / 2 formas</button>' +
               '<div style="text-align:center;margin-top:14px;font-size:.72rem;color:#9CA3AF">Esc fecha sem finalizar</div>' +
             '</div>' +
@@ -3678,6 +3699,179 @@
                 var method = btn.getAttribute('data-pay');
                 close();
                 if (typeof onConfirm === 'function') onConfirm(method, [{ method:method, type:'customer_payment', label:method, amount:Number(totalValue)||0 }]);
+            });
+        });
+
+        // === Handlers dos botões PROMOCIONAIS ===
+        // Cada um abre fluxo específico, valida e fecha o modal com lines
+        // contendo o desconto que será aplicado pelo finishOrder.
+
+        function showPromoInfo(msg, kind) {
+            var el = overlay.querySelector('#mpPromoInfo');
+            if (!el) return;
+            el.textContent = msg;
+            el.style.color = kind === 'err' ? '#dc2626' : kind === 'ok' ? '#16a34a' : '#6b7280';
+            el.style.fontWeight = kind ? '700' : '400';
+        }
+
+        function applyPromoLines(method, label, amount, payload) {
+            var rest = Math.max(0, Math.round(((Number(totalValue)||0) - amount) * 100) / 100);
+            var lines = [{ method: method, type: 'promo_credit', label: label, amount: amount, payload: payload || {} }];
+            if (rest > 0) {
+                // Resto precisa de pagamento real — pergunta a forma
+                var fallback = prompt('Resta R$ ' + rest.toFixed(2).replace('.', ',') + ' para fechar. Qual forma?\n(Dinheiro, Pix, Débito ou Crédito)', 'Pix');
+                if (!fallback) return;
+                var methods4 = ['Dinheiro','Pix','Débito','Crédito'];
+                var cleaned = methods4.find(function(m){ return m.toLowerCase() === String(fallback).toLowerCase().trim(); }) || fallback.trim();
+                lines.push({ method: cleaned, type: 'customer_payment', label: cleaned, amount: rest });
+            }
+            close();
+            if (typeof onConfirm === 'function') {
+                onConfirm(lines.map(function(l){ return l.method; }).join(' + '), lines);
+            }
+        }
+
+        // Auto-update botões com info do membro identificado
+        (function annotatePromoButtons(){
+            try {
+                if (typeof clubMember !== 'undefined' && clubMember) {
+                    var coins = Number(clubMember.coins || 0);
+                    var coinsBtn = overlay.querySelector('#mpPromoCoinsBtn');
+                    if (coinsBtn && coins > 0) {
+                        coinsBtn.innerHTML = '<span style="font-size:1.4rem">💰</span><span>MilkyCoins</span><span style="font-size:.7rem;font-weight:700;color:#E65100;margin-top:2px">G$ ' + coins + ' disponível</span>';
+                    }
+                    var pendingPass = (clubMember.pendingPassRewards || []).filter(function(r){ return !r.redeemedAt; }).length;
+                    var passBtn = overlay.querySelector('#mpPromoPassBtn');
+                    if (passBtn && pendingPass > 0) {
+                        passBtn.innerHTML = '<span style="font-size:1.4rem">🏆</span><span>MilkyPass (' + pendingPass + ')</span>';
+                        passBtn.style.background = '#dcfce7';
+                        passBtn.style.borderColor = '#16a34a';
+                    } else if (passBtn) {
+                        passBtn.style.opacity = '.5';
+                        passBtn.title = 'Cliente não tem MilkyPass completo';
+                    }
+                } else {
+                    showPromoInfo('💡 Identifique o cliente no MilkyClube pra usar Coins/Pass', '');
+                }
+            } catch(e) { console.warn('annotate promo', e); }
+        })();
+
+        overlay.querySelectorAll('.mp-promo-btn').forEach(function(btn){
+            btn.addEventListener('mouseenter', function(){ btn.style.transform = 'translateY(-2px)'; btn.style.boxShadow = '0 6px 18px rgba(0,0,0,.15)'; });
+            btn.addEventListener('mouseleave', function(){ btn.style.transform = ''; btn.style.boxShadow = ''; });
+            btn.addEventListener('click', function(){
+                var promo = btn.getAttribute('data-promo');
+
+                if (promo === 'raspinha') {
+                    var code = prompt('Cole o código da raspinha do cliente:');
+                    if (!code) return;
+                    code = String(code).toUpperCase().trim();
+                    // Procura no localStorage local primeiro
+                    var found = null;
+                    try {
+                        var key = 'mp_scratches_' + (typeof fid !== 'undefined' ? fid : 'muffato-quintino');
+                        var arr = JSON.parse(localStorage.getItem(key) || '[]');
+                        found = arr.find(function(s){
+                            return (s.code === code || s.shortCode === code || (s.shortCode||'').replace(/-/g,'') === code.replace(/-/g,''));
+                        });
+                    } catch(_) {}
+                    if (!found) { showPromoInfo('❌ Raspinha não encontrada. Verifique o código.', 'err'); return; }
+                    if (found.status === 'redeemed') { showPromoInfo('❌ Esta raspinha já foi resgatada.', 'err'); return; }
+                    if (found.expiresAt && new Date(found.expiresAt) < new Date()) { showPromoInfo('❌ Raspinha expirada.', 'err'); return; }
+                    if (found.prizeTier === 'none') { showPromoInfo('❌ Esta raspinha não dá prêmio (passou raspando).', 'err'); return; }
+                    if (found.minOrder && Number(totalValue) < Number(found.minOrder)) {
+                        showPromoInfo('❌ Pedido mínimo R$ ' + Number(found.minOrder).toFixed(2) + ' para usar essa raspinha.', 'err'); return;
+                    }
+                    var prizeValue = Number(found.prizeCost || found.prizeValue || 5);
+                    var discount = Math.min(prizeValue, Number(totalValue) || 0);
+                    if (!confirm('Aplicar raspinha "' + (found.prizeName || found.prizeCode) + '" — R$ ' + discount.toFixed(2) + ' de desconto?')) return;
+                    // Marca raspinha como resgatada (assíncrono)
+                    try {
+                        if (firebase && firebase.firestore) {
+                            firebase.firestore().collection('scratches').doc(found.code).update({
+                                status: 'redeemed', redeemedAt: new Date().toISOString()
+                            }).catch(function(){});
+                        }
+                    } catch(_) {}
+                    applyPromoLines('Raspinha', '🎰 Raspinha (' + (found.shortCode || found.code) + ')', discount, { scratchCode: found.code });
+                    return;
+                }
+
+                if (promo === 'milkycoins') {
+                    if (typeof clubMember === 'undefined' || !clubMember) {
+                        showPromoInfo('⚠️ Identifique o cliente no MilkyClube primeiro.', 'err'); return;
+                    }
+                    var available = Number(clubMember.coins || 0);
+                    if (available <= 0) { showPromoInfo('❌ Cliente sem MilkyCoins disponíveis.', 'err'); return; }
+                    var maxBRL = available * 0.01; // 100 coins = R$ 1
+                    var maxApply = Math.min(maxBRL, Number(totalValue) || 0);
+                    var ask = prompt('Cliente tem G$ ' + available + ' (= R$ ' + maxBRL.toFixed(2) + ').\nQuanto usar nesse pedido (R$)?', maxApply.toFixed(2).replace('.', ','));
+                    if (!ask) return;
+                    var applyBRL = parseFloat(String(ask).replace('.', '').replace(',', '.')) || 0;
+                    if (applyBRL <= 0) return;
+                    if (applyBRL > maxApply) { showPromoInfo('❌ Valor maior que o disponível ou que o total.', 'err'); return; }
+                    var coinsToUse = Math.round(applyBRL * 100); // R$ -> coins
+                    applyPromoLines('MilkyCoins', '💰 MilkyCoins (' + coinsToUse + ' G$)', applyBRL, { coinsToRedeem: coinsToUse });
+                    return;
+                }
+
+                if (promo === 'milkypass') {
+                    if (typeof clubMember === 'undefined' || !clubMember) {
+                        showPromoInfo('⚠️ Identifique o cliente no MilkyClube primeiro.', 'err'); return;
+                    }
+                    var pending = (clubMember.pendingPassRewards || []).filter(function(r){ return !r.redeemedAt; });
+                    if (!pending.length) { showPromoInfo('❌ Cliente não tem MilkyPass completo pendente.', 'err'); return; }
+                    var reward = pending[0];
+                    if (!confirm('Aplicar MilkyPass "' + (reward.label || 'Prêmio') + '"? Vale o item de menor valor do pedido.')) return;
+                    // Pega o item mais barato do carrinho como referência
+                    var cheapest = (typeof cart !== 'undefined' && cart.length)
+                        ? cart.reduce(function(min, c){ var p = (c.unitPrice || 0) * (c.qty || 1); return (!min || p < min.value) ? { item: c, value: p } : min; }, null)
+                        : null;
+                    var discount = cheapest ? cheapest.value : Math.min(15, Number(totalValue) || 0);
+                    applyPromoLines('MilkyPass', '🏆 MilkyPass — ' + (reward.label || 'Prêmio'), discount, { passRewardId: reward.id });
+                    return;
+                }
+
+                if (promo === 'desafio') {
+                    var dcode = prompt('Cole o código do voucher do Desafio:');
+                    if (!dcode) return;
+                    dcode = String(dcode).toUpperCase().trim();
+                    showPromoInfo('🔍 Validando voucher...', '');
+                    if (!firebase || !firebase.firestore) { showPromoInfo('❌ Firebase não disponível.', 'err'); return; }
+                    firebase.firestore().collection('desafio_vouchers').doc(dcode).get().then(function(d){
+                        if (!d.exists) { showPromoInfo('❌ Voucher não encontrado.', 'err'); return; }
+                        var v = d.data() || {};
+                        if (v.used) { showPromoInfo('❌ Voucher já utilizado.', 'err'); return; }
+                        var disc = Number(v.discountValue || 5);
+                        if (!confirm('Aplicar voucher "' + (v.prizeLabel || v.prize || 'Desafio') + '" — R$ ' + disc.toFixed(2) + '?')) return;
+                        firebase.firestore().collection('desafio_vouchers').doc(dcode).update({
+                            used: true, usedAt: new Date().toISOString()
+                        }).catch(function(){});
+                        applyPromoLines('Voucher Desafio', '🎮 Desafio — ' + (v.prizeLabel || dcode), Math.min(disc, Number(totalValue) || 0), { voucherCode: dcode });
+                    }).catch(function(e){ showPromoInfo('❌ Erro: ' + e.message, 'err'); });
+                    return;
+                }
+
+                if (promo === 'promo300g') {
+                    // Procura item de buffet no carrinho
+                    var buffetItem = (typeof cart !== 'undefined' && cart.length)
+                        ? cart.find(function(c){ return /buffet|self.?service/i.test(c.name || ''); })
+                        : null;
+                    if (!buffetItem) { showPromoInfo('❌ Não há item de buffet no pedido.', 'err'); return; }
+                    var weightTxt = prompt('Peso medido na balança (em gramas):');
+                    if (!weightTxt) return;
+                    var weight = parseInt(String(weightTxt).replace(/\D/g, ''), 10);
+                    if (isNaN(weight)) { showPromoInfo('❌ Peso inválido.', 'err'); return; }
+                    if (weight !== 300) {
+                        showPromoInfo('🎯 ' + weight + 'g — não bateu! 300g exato. Cliente paga normal.', 'err');
+                        return;
+                    }
+                    // Acertou! Buffet vira grátis
+                    var buffetValue = (Number(buffetItem.unitPrice) || 0) * (Number(buffetItem.qty) || 1);
+                    if (!confirm('🎉 ACERTOU 300g exato!\nDescontar R$ ' + buffetValue.toFixed(2) + ' (item de buffet por conta da casa)?')) return;
+                    applyPromoLines('Promo 300g', '🎯 Acertou 300g exato!', buffetValue, { weightG: weight, buffetItemId: buffetItem.id });
+                    return;
+                }
             });
         });
         // Adiciona keyframes uma vez
