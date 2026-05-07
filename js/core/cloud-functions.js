@@ -66,7 +66,11 @@ const CloudFunctions = {
             name === 'claimTestSession' ||
             name === 'setSystemMode' ||
             name === 'getSystemMode' ||
-            name === 'saveChecklistItem'
+            name === 'saveChecklistItem' ||
+            // Email/notificacoes: o backend PHP nao implementa essas actions —
+            // ir direto pro Firebase CF que tem Nodemailer + Gmail SMTP configurado
+            name === 'sendClosingReport' ||
+            name === 'sendLowStockAlert'
         ) {
             return this._callFirebaseDirect(name, data);
         }
