@@ -20,6 +20,10 @@ const UBER_ENCRYPTION_KEY = defineSecret("UBER_ENCRYPTION_KEY");
 //   firebase functions:secrets:set GMAIL_APP_PASSWORD
 // Conta usada como remetente: milkypot.com@gmail.com
 const GMAIL_APP_PASSWORD = defineSecret("GMAIL_APP_PASSWORD");
+// Google Places API key — usada pra validar reviews automaticamente.
+// Configurar via: firebase functions:secrets:set GOOGLE_PLACES_API_KEY
+// Sem ela, o sistema cai pro fluxo manual (admin aprova na fila).
+const GOOGLE_PLACES_API_KEY = defineSecret("GOOGLE_PLACES_API_KEY");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -572,6 +576,174 @@ async function _applyClaimReward(claimId) {
 
     return { applied: true, refs, totalCoins };
 }
+
+// ============================================
+// 1.6.4 — Cron de validação automática de reviews Google
+// ============================================
+// Roda a cada 6h. Pra cada claim google_review pending:
+// 1. Busca place details via Places API (Place ID hardcoded ou em config)
+// 2. Pega últimas reviews
+// 3. Tenta matching por nome do membro (fuzzy) + tempo (review depois do claim)
+// 4. Se match, chama _applyClaimReward
+// 5. Se claim mais antigo que 48h sem match, expira (status=expired)
+//
+// Sem GOOGLE_PLACES_API_KEY configurado, só expira velhas. Caminho manual continua via /admin/recompensas-claims.
+// ============================================
+
+const MILKYPOT_PLACE_ID = "ChIJxxxxx_REPLACE_WITH_REAL"; // Place ID do Google Maps — admin editar via club_config/google_places
+const PLACES_API_URL = "https://maps.googleapis.com/maps/api/place/details/json";
+
+function _normalizeName(name) {
+    return String(name || "")
+        .toLowerCase()
+        .normalize("NFD").replace(/[̀-ͯ]/g, "")
+        .replace(/[^a-z0-9 ]/g, "")
+        .trim();
+}
+
+function _nameMatches(memberName, reviewAuthorName) {
+    if (!memberName || !reviewAuthorName) return false;
+    var mNorm = _normalizeName(memberName);
+    var rNorm = _normalizeName(reviewAuthorName);
+    if (!mNorm || !rNorm) return false;
+    if (mNorm === rNorm) return true;
+    // Match parcial: primeiro+último nome do membro presentes na review
+    var memParts = mNorm.split(/\s+/).filter(Boolean);
+    if (memParts.length >= 2) {
+        var first = memParts[0];
+        var last = memParts[memParts.length - 1];
+        if (first.length >= 3 && last.length >= 3 && rNorm.includes(first) && rNorm.includes(last)) return true;
+    }
+    // Match por primeiro nome se tem 4+ chars
+    if (memParts[0] && memParts[0].length >= 4 && rNorm.startsWith(memParts[0])) return true;
+    return false;
+}
+
+async function _fetchGoogleReviews(apiKey, placeId) {
+    if (!apiKey) return null;
+    var url = PLACES_API_URL + "?place_id=" + encodeURIComponent(placeId)
+        + "&fields=reviews,name,user_ratings_total&key=" + encodeURIComponent(apiKey);
+    try {
+        var res = await fetch(url);
+        if (!res.ok) {
+            console.warn("Places API HTTP", res.status);
+            return null;
+        }
+        var json = await res.json();
+        if (json.status !== "OK") {
+            console.warn("Places API status:", json.status, json.error_message);
+            return null;
+        }
+        return (json.result && json.result.reviews) || [];
+    } catch (e) {
+        console.error("Places API fetch error:", e.message);
+        return null;
+    }
+}
+
+exports.verifyGoogleReviewsCron = onSchedule({
+    schedule: "every 6 hours",
+    region: "southamerica-east1",
+    secrets: [GOOGLE_PLACES_API_KEY],
+    timeoutSeconds: 300,
+    memory: "256MiB"
+}, async () => {
+    console.log("[verifyGoogleReviewsCron] start");
+
+    // Busca claims pending de google_review
+    var pendingSnap = await db.collection("action_claims")
+        .where("action", "==", "google_review")
+        .where("status", "==", "pending")
+        .limit(50).get();
+
+    if (pendingSnap.empty) {
+        console.log("[verifyGoogleReviewsCron] sem claims pendentes");
+        return;
+    }
+
+    // Tenta API key
+    var apiKey = null;
+    try { apiKey = GOOGLE_PLACES_API_KEY.value(); } catch (_) {}
+
+    // Place ID dinâmico (config global pode sobrescrever)
+    var placeId = MILKYPOT_PLACE_ID;
+    try {
+        var cfgSnap = await db.collection("club_config").doc("google_places").get();
+        if (cfgSnap.exists) {
+            var c = cfgSnap.data() || {};
+            if (c.placeId) placeId = c.placeId;
+        }
+    } catch (_) {}
+
+    var reviews = null;
+    if (apiKey && placeId && !placeId.includes("REPLACE_WITH_REAL")) {
+        reviews = await _fetchGoogleReviews(apiKey, placeId);
+        console.log("[verifyGoogleReviewsCron] fetched", reviews ? reviews.length : 0, "reviews");
+    } else {
+        console.log("[verifyGoogleReviewsCron] sem GOOGLE_PLACES_API_KEY ou placeId — só expira velhos");
+    }
+
+    var stats = { processed: 0, matched: 0, expired: 0, kept: 0 };
+    var nowMs = Date.now();
+
+    for (var i = 0; i < pendingSnap.docs.length; i++) {
+        var doc = pendingSnap.docs[i];
+        var c = doc.data() || {};
+        stats.processed++;
+
+        // Expira se passou de 48h sem validação
+        var claimedMs = c.claimedAt ? new Date(c.claimedAt).getTime() : nowMs;
+        var ageH = (nowMs - claimedMs) / 3600000;
+
+        if (reviews && reviews.length) {
+            // Tenta match
+            var memberSnap = await db.collection("club_members").doc(c.memberId).get();
+            var memberName = memberSnap.exists ? (memberSnap.data().name || "") : "";
+
+            var matched = null;
+            for (var r = 0; r < reviews.length; r++) {
+                var rev = reviews[r];
+                var revTime = (rev.time || 0) * 1000; // unix sec → ms
+                if (revTime > 0 && revTime < claimedMs - 24 * 3600000) continue; // review muito antiga
+                if (_nameMatches(memberName, rev.author_name)) {
+                    matched = rev;
+                    break;
+                }
+            }
+
+            if (matched) {
+                await doc.ref.update({
+                    status: "verified",
+                    verifiedAt: new Date().toISOString(),
+                    verificationMethod: "auto_places_api",
+                    payload: Object.assign({}, c.payload || {}, {
+                        matchedReviewAuthor: matched.author_name,
+                        matchedReviewRating: matched.rating,
+                        matchedReviewText: (matched.text || "").substring(0, 500),
+                        matchedReviewTime: new Date((matched.time || 0) * 1000).toISOString()
+                    })
+                });
+                await _applyClaimReward(doc.id);
+                stats.matched++;
+                console.log("[verifyGoogleReviewsCron] matched", c.memberId, "→", matched.author_name);
+                continue;
+            }
+        }
+
+        if (ageH > 48) {
+            await doc.ref.update({
+                status: "expired",
+                expiredAt: new Date().toISOString(),
+                expirationReason: reviews ? "no_match_in_48h" : "no_api_key_48h"
+            });
+            stats.expired++;
+        } else {
+            stats.kept++;
+        }
+    }
+
+    console.log("[verifyGoogleReviewsCron] done", stats);
+});
 
 // ============================================
 // 2. SETUP INICIAL DO OWNER

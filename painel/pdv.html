@@ -715,6 +715,14 @@
         <span style="font-size:10px;font-weight:800;display:block">RESGATAR</span>
     </button>
 
+    <!-- Floating "Acertou 300g" Button -->
+    <button class="redeem-fab" id="promo300gFab" onclick="openPromo300gModal()"
+        style="left:200px;background:linear-gradient(135deg,#9C27B0,#6A1B9A)"
+        title="Promoção: acertou 300g exato no buffet — não paga!">
+        <span style="font-size:24px">🎯</span>
+        <span style="font-size:10px;font-weight:800;display:block">300g</span>
+    </button>
+
     <!-- FAB FLUTUANTE: Conta Aberta + Fechar SEMPRE visíveis quando carrinho tem itens.
          Independe do tamanho do PDV — não some em viewport pequeno. -->
     <!-- Floating Free Challenge Release Button -->
@@ -3603,6 +3611,171 @@
     // Roda 2s após carregar (dá tempo de DataStore + Auth iniciarem)
     setTimeout(function(){ try { backfillScratchesToFirestore(); } catch(e){ console.warn('[Raspinha] backfill init:', e); } }, 2000);
 
+    // ============================================
+    // SPLIT PAYMENT VISUAL — substitui o prompt antigo de "2 formas"
+    // Aceita N pagamentos misturados, cada um com método e valor.
+    // Live-update do total/restante. Confirma só quando exato.
+    // ============================================
+    function _showSplitPaymentModal(totalValue, onConfirm) {
+        var existing = document.getElementById('mpSplitPayModal');
+        if (existing) existing.remove();
+
+        var total = Number(totalValue) || 0;
+        var lines = []; // { method, label, amount }
+
+        var overlay = document.createElement('div');
+        overlay.id = 'mpSplitPayModal';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(45,27,78,.7);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Nunito",sans-serif';
+
+        overlay.innerHTML =
+          '<div style="background:#fff;border-radius:18px;max-width:520px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;max-height:90vh;display:flex;flex-direction:column">' +
+            '<div style="padding:18px 22px;background:linear-gradient(135deg,#111827,#374151);color:#fff;display:flex;justify-content:space-between;align-items:center">' +
+              '<div>' +
+                '<h3 style="margin:0;font-family:\'Baloo 2\',cursive;font-size:1.15rem;font-weight:700">💳 Pagamento misto</h3>' +
+                '<div style="font-size:.78rem;opacity:.92;margin-top:2px">Combine quantas formas precisar</div>' +
+              '</div>' +
+              '<button id="mpSplitClose" style="background:rgba(255,255,255,.22);color:#fff;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:700">×</button>' +
+            '</div>' +
+
+            '<div style="padding:20px 22px;overflow-y:auto;flex:1">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center;background:#F7F4FF;border-radius:12px;padding:14px 16px;margin-bottom:16px">' +
+                '<div>' +
+                  '<div style="font-size:.74rem;color:#7d6e92;font-weight:700;text-transform:uppercase">Total</div>' +
+                  '<div style="font-family:\'Baloo 2\',cursive;font-size:1.4rem;font-weight:800;color:#6C63FF">R$ ' + total.toFixed(2).replace('.',',') + '</div>' +
+                '</div>' +
+                '<div style="text-align:right">' +
+                  '<div style="font-size:.74rem;color:#7d6e92;font-weight:700;text-transform:uppercase">Restante</div>' +
+                  '<div id="splitRemaining" style="font-family:\'Baloo 2\',cursive;font-size:1.4rem;font-weight:800;color:#dc2626">R$ ' + total.toFixed(2).replace('.',',') + '</div>' +
+                '</div>' +
+              '</div>' +
+
+              '<div id="splitLines" style="margin-bottom:16px;min-height:40px"></div>' +
+
+              '<div style="font-size:.82rem;font-weight:700;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Adicionar forma:</div>' +
+              '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">' +
+                '<button data-add="Dinheiro" class="mp-split-add" style="padding:12px 4px;background:#fff;border:2px solid #10B981;color:#065F46;border-radius:10px;font-family:Nunito;font-size:.78rem;font-weight:800;cursor:pointer">💵 Dinheiro</button>' +
+                '<button data-add="Pix" class="mp-split-add" style="padding:12px 4px;background:#fff;border:2px solid #06B6D4;color:#0E7490;border-radius:10px;font-family:Nunito;font-size:.78rem;font-weight:800;cursor:pointer">📲 PIX</button>' +
+                '<button data-add="Débito" class="mp-split-add" style="padding:12px 4px;background:#fff;border:2px solid #3B82F6;color:#1E40AF;border-radius:10px;font-family:Nunito;font-size:.78rem;font-weight:800;cursor:pointer">💳 Débito</button>' +
+                '<button data-add="Crédito" class="mp-split-add" style="padding:12px 4px;background:#fff;border:2px solid #8B5CF6;color:#5B21B6;border-radius:10px;font-family:Nunito;font-size:.78rem;font-weight:800;cursor:pointer">💳 Crédito</button>' +
+              '</div>' +
+
+              '<div id="splitFeedback" style="margin-top:8px;padding:10px;border-radius:8px;font-size:.85rem;font-weight:700;text-align:center;display:none"></div>' +
+            '</div>' +
+
+            '<div style="padding:14px 22px;background:#f9fafb;border-top:1px solid #e5e7eb;display:flex;gap:10px">' +
+              '<button id="splitCancelBtn" style="flex:1;padding:12px;background:#f3f4f6;border:none;border-radius:10px;font-family:Nunito;font-weight:700;cursor:pointer">Cancelar</button>' +
+              '<button id="splitConfirmBtn" style="flex:2;padding:12px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;border-radius:10px;font-family:\'Baloo 2\',cursive;font-weight:800;cursor:pointer;opacity:.5" disabled>✓ Confirmar pagamento</button>' +
+            '</div>' +
+          '</div>';
+
+        document.body.appendChild(overlay);
+
+        var $$ = function(s){ return overlay.querySelector(s); };
+
+        function close() {
+            if (overlay.parentNode) overlay.remove();
+            document.removeEventListener('keydown', onKey);
+        }
+        function onKey(e) { if (e.key === 'Escape') { e.preventDefault(); close(); } }
+        document.addEventListener('keydown', onKey);
+        $$('#mpSplitClose').addEventListener('click', close);
+        $$('#splitCancelBtn').addEventListener('click', close);
+        overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+
+        function getRemaining() {
+            var paid = lines.reduce(function(s,l){ return s + (Number(l.amount) || 0); }, 0);
+            return Math.round((total - paid) * 100) / 100;
+        }
+        function showFeedback(msg, kind) {
+            var fb = $$('#splitFeedback');
+            fb.textContent = msg;
+            fb.style.display = msg ? 'block' : 'none';
+            fb.style.background = kind === 'err' ? '#fee2e2' : kind === 'ok' ? '#dcfce7' : '#fef3c7';
+            fb.style.color = kind === 'err' ? '#991b1b' : kind === 'ok' ? '#166534' : '#92400e';
+        }
+        function methodIcon(m) {
+            return ({ Dinheiro:'💵', Pix:'📲', 'Débito':'💳', 'Crédito':'💳' })[m] || '💳';
+        }
+        function render() {
+            var rem = getRemaining();
+            $$('#splitRemaining').textContent = 'R$ ' + Math.abs(rem).toFixed(2).replace('.',',');
+            $$('#splitRemaining').style.color = Math.abs(rem) < 0.01 ? '#16a34a' : (rem < 0 ? '#dc2626' : '#dc2626');
+
+            var html = lines.map(function(l, idx) {
+                return '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;margin-bottom:6px">' +
+                    '<span style="font-size:1.4rem">' + methodIcon(l.method) + '</span>' +
+                    '<span style="flex:1;font-weight:700">' + l.label + '</span>' +
+                    '<input type="text" value="' + l.amount.toFixed(2).replace('.', ',') + '" data-idx="' + idx + '" class="split-amount" style="width:100px;padding:6px 10px;border:1.5px solid #e2e2e8;border-radius:8px;font-weight:700;text-align:right">' +
+                    '<button data-rm="' + idx + '" class="split-rm" style="background:#fee2e2;color:#dc2626;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-weight:800">×</button>' +
+                '</div>';
+            }).join('');
+            $$('#splitLines').innerHTML = html;
+
+            // Bind eventos das linhas
+            overlay.querySelectorAll('.split-amount').forEach(function(inp) {
+                inp.addEventListener('change', function() {
+                    var i = parseInt(inp.getAttribute('data-idx'), 10);
+                    var v = parseFloat(String(inp.value).replace(/\./g,'').replace(',','.')) || 0;
+                    lines[i].amount = Math.max(0, Math.round(v * 100) / 100);
+                    render();
+                });
+            });
+            overlay.querySelectorAll('.split-rm').forEach(function(b) {
+                b.addEventListener('click', function() {
+                    var i = parseInt(b.getAttribute('data-rm'), 10);
+                    lines.splice(i, 1);
+                    render();
+                });
+            });
+
+            // Feedback + botão confirma
+            var rem2 = getRemaining();
+            var btn = $$('#splitConfirmBtn');
+            if (Math.abs(rem2) < 0.01) {
+                showFeedback('✓ Total bateu! Confirme pra finalizar.', 'ok');
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            } else if (rem2 > 0) {
+                showFeedback('Faltam R$ ' + rem2.toFixed(2).replace('.', ',') + ' — adicione mais formas', '');
+                btn.disabled = true;
+                btn.style.opacity = '.5';
+            } else {
+                showFeedback('Pagou ' + Math.abs(rem2).toFixed(2).replace('.', ',') + ' a mais — ajuste os valores', 'err');
+                btn.disabled = true;
+                btn.style.opacity = '.5';
+            }
+        }
+
+        // Adicionar nova forma — auto-completa com restante
+        overlay.querySelectorAll('.mp-split-add').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var method = btn.getAttribute('data-add');
+                var rem = getRemaining();
+                var initialAmount = Math.max(0, rem); // sugere o restante
+                lines.push({
+                    method: method,
+                    label: method,
+                    amount: initialAmount,
+                    type: 'customer_payment'
+                });
+                render();
+            });
+        });
+
+        // Confirmar
+        $$('#splitConfirmBtn').addEventListener('click', function() {
+            if (Math.abs(getRemaining()) >= 0.01) return;
+            var validLines = lines.filter(function(l){ return l.amount > 0; });
+            if (!validLines.length) return;
+            close();
+            if (typeof onConfirm === 'function') {
+                onConfirm(validLines.map(function(l){ return l.method; }).join(' + '), validLines);
+            }
+        });
+
+        render();
+    }
+
     // Modal obrigatorio de selecao de forma de pagamento.
     // Operador clica "Fechar" -> abre este modal -> escolhe forma -> finishOrder
     // segue. Sem default. Evita pedido gravado com forma errada por reflexo.
@@ -3674,23 +3847,8 @@
         overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
         overlay.querySelector('#mpPaySelectClose').addEventListener('click', close);
         overlay.querySelector('#mpPayMixedBtn').addEventListener('click', function(){
-            var methods = ['Dinheiro','Pix','Débito','Crédito'];
-            var first = prompt('1ª forma de pagamento (Dinheiro, Pix, Débito ou Crédito):', 'Pix');
-            if (!first) return;
-            first = methods.find(function(m){ return m.toLowerCase() === String(first).toLowerCase().trim(); }) || first.trim();
-            var amountTxt = prompt('Valor em ' + first + ' (o restante fica na 2ª forma):', (Number(totalValue)||0).toFixed(2).replace('.', ','));
-            if (!amountTxt) return;
-            var amount = parseFloat(String(amountTxt).replace(/\./g,'').replace(',','.')) || 0;
-            amount = Math.max(0, Math.min(Number(totalValue)||0, Math.round(amount*100)/100));
-            var rest = Math.round(((Number(totalValue)||0) - amount) * 100) / 100;
-            var second = rest > 0 ? prompt('2ª forma de pagamento para R$ ' + rest.toFixed(2).replace('.', ',') + ':', first === 'Pix' ? 'Débito' : 'Pix') : '';
-            if (rest > 0 && !second) return;
-            second = second ? (methods.find(function(m){ return m.toLowerCase() === String(second).toLowerCase().trim(); }) || second.trim()) : '';
-            var lines = [];
-            if (amount > 0) lines.push({ method:first, type:'customer_payment', label:first, amount:amount });
-            if (rest > 0) lines.push({ method:second, type:'customer_payment', label:second, amount:rest });
             close();
-            if (typeof onConfirm === 'function') onConfirm(lines.map(function(l){ return l.method; }).join(' + '), lines);
+            _showSplitPaymentModal(totalValue, onConfirm);
         });
         overlay.querySelectorAll('.mp-pay-btn').forEach(function(btn){
             btn.addEventListener('mouseenter', function(){ btn.style.transform = 'translateY(-2px)'; btn.style.boxShadow = '0 8px 22px rgba(108,99,255,.18)'; });
@@ -4488,6 +4646,131 @@
     window.addEventListener('beforeunload', function(){
         if(PDV_Dynamics.scalePort) PDV_Dynamics.disconnectScale();
     });
+
+    // =============================================================
+    // PROMO 300g — "Acertou na balança" — buffet por conta da casa se exato
+    // =============================================================
+    window.openPromo300gModal = function(){
+        // Verifica se tem item de buffet no carrinho
+        var buffetItem = (typeof cart !== 'undefined' && cart.length)
+            ? cart.find(function(c){ return /buffet|self.?service/i.test(c.name || ''); })
+            : null;
+        if (!buffetItem) {
+            alert('🍦 Adicione um item de buffet no pedido antes de usar essa promoção.');
+            return;
+        }
+
+        // Modal simples com input de peso
+        var existing = document.getElementById('promo300gModal');
+        if (existing) existing.remove();
+
+        var modal = document.createElement('div');
+        modal.id = 'promo300gModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(45,27,78,.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Nunito",sans-serif';
+        modal.innerHTML =
+          '<div style="background:#fff;border-radius:18px;max-width:420px;width:100%;padding:0;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.3)">' +
+            '<div style="background:linear-gradient(135deg,#9C27B0,#6A1B9A);color:#fff;padding:20px 24px;text-align:center">' +
+              '<div style="font-size:48px;line-height:1">🎯</div>' +
+              '<h2 style="font-family:\'Baloo 2\',cursive;font-size:1.4rem;font-weight:800;margin:8px 0 4px">Promoção 300g exato</h2>' +
+              '<p style="font-size:.85rem;opacity:.95">Cliente acertou exato 300g na balança? Buffet por nossa conta!</p>' +
+            '</div>' +
+            '<div style="padding:24px">' +
+              '<label style="display:block;font-size:.82rem;font-weight:700;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Peso medido (gramas)</label>' +
+              '<input type="number" id="promo300gWeight" placeholder="300" min="1" max="9999"' +
+                ' style="width:100%;padding:14px 16px;border:2px solid #9C27B0;border-radius:10px;font-size:1.6rem;font-family:\'Baloo 2\',cursive;font-weight:800;text-align:center;color:#6A1B9A">' +
+              '<div id="promo300gFeedback" style="margin-top:12px;font-size:.85rem;text-align:center;min-height:20px;font-weight:700"></div>' +
+              '<div style="display:flex;gap:8px;margin-top:18px">' +
+                '<button onclick="document.getElementById(\'promo300gModal\').remove()" style="flex:1;padding:12px;background:#f3f4f6;border:none;border-radius:10px;font-weight:700;cursor:pointer">Cancelar</button>' +
+                '<button id="promo300gConfirm" style="flex:2;padding:12px;background:linear-gradient(135deg,#9C27B0,#6A1B9A);color:#fff;border:none;border-radius:10px;font-family:\'Baloo 2\',cursive;font-weight:800;cursor:pointer">Verificar</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        document.body.appendChild(modal);
+
+        var input = modal.querySelector('#promo300gWeight');
+        var feedback = modal.querySelector('#promo300gFeedback');
+        var confirmBtn = modal.querySelector('#promo300gConfirm');
+
+        setTimeout(function(){ input.focus(); }, 100);
+
+        // Live feedback enquanto digita
+        input.addEventListener('input', function(){
+            var w = parseInt(input.value, 10);
+            if (isNaN(w)) { feedback.textContent = ''; return; }
+            var diff = w - 300;
+            if (diff === 0) {
+                feedback.textContent = '🎉 ACERTOU EXATO! Buffet por nossa conta!';
+                feedback.style.color = '#16a34a';
+            } else if (Math.abs(diff) <= 2) {
+                feedback.textContent = '😱 Quase! ' + (diff > 0 ? '+' : '') + diff + 'g';
+                feedback.style.color = '#f59e0b';
+            } else {
+                feedback.textContent = (diff > 0 ? 'Passou ' + diff : 'Faltam ' + Math.abs(diff)) + 'g — paga normal';
+                feedback.style.color = '#dc2626';
+            }
+        });
+
+        function applyDiscount(weight) {
+            var buffetValue = (Number(buffetItem.unitPrice) || 0) * (Number(buffetItem.qty) || 1);
+            // Adiciona linha de desconto no carrinho
+            if (typeof cart !== 'undefined' && Array.isArray(cart)) {
+                cart.push({
+                    id: 'promo300g_' + Date.now(),
+                    name: '🎯 Promo 300g — Buffet grátis',
+                    unitPrice: -buffetValue,
+                    qty: 1,
+                    isPrize: true,
+                    promoType: 'promo300g',
+                    promoData: { weightG: weight, buffetItemId: buffetItem.id }
+                });
+                if (typeof renderCart === 'function') renderCart();
+                else if (typeof updateCart === 'function') updateCart();
+            }
+            // Registra ação para tracking (action_claims)
+            try {
+                if (typeof clubMember !== 'undefined' && clubMember && typeof CloudFunctions !== 'undefined' && CloudFunctions.claimAction) {
+                    var memberId = clubMember.id || clubMember.uid;
+                    if (memberId) {
+                        CloudFunctions.claimAction(memberId, 'promo300g_won', {
+                            weightG: weight,
+                            buffetValue: buffetValue,
+                            franchiseId: typeof fid !== 'undefined' ? fid : null
+                        }, typeof fid !== 'undefined' ? fid : null).catch(function(){});
+                    }
+                }
+            } catch(_) {}
+            modal.remove();
+            // Toast visual
+            try {
+                var t = document.createElement('div');
+                t.style.cssText = 'position:fixed;top:24px;right:24px;background:#10B981;color:#fff;padding:14px 20px;border-radius:12px;font-weight:800;z-index:100000;font-family:Nunito,sans-serif;box-shadow:0 10px 30px rgba(16,185,129,.4)';
+                t.textContent = '🎉 Acertou! R$ ' + buffetValue.toFixed(2).replace('.', ',') + ' descontados';
+                document.body.appendChild(t);
+                setTimeout(function(){ t.remove(); }, 4500);
+            } catch(_) {}
+        }
+
+        confirmBtn.addEventListener('click', function(){
+            var w = parseInt(input.value, 10);
+            if (isNaN(w) || w <= 0) {
+                feedback.textContent = '⚠️ Digite o peso medido';
+                feedback.style.color = '#dc2626';
+                return;
+            }
+            if (w !== 300) {
+                feedback.textContent = '🎯 ' + w + 'g — não bateu! Cliente paga normal.';
+                feedback.style.color = '#dc2626';
+                confirmBtn.textContent = 'Fechar';
+                confirmBtn.onclick = function(){ modal.remove(); };
+                return;
+            }
+            applyDiscount(w);
+        });
+
+        // Esc fecha
+        function onKey(e){ if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', onKey); } }
+        document.addEventListener('keydown', onKey);
+    };
 
     // =============================================================
     // RESGATAR RASPINHA - Funcionario valida codigo e aplica premio
