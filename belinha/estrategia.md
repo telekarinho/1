@@ -2092,3 +2092,103 @@ _Belinha — Ciclo #145 | 2026-05-07_
 > **v18c — Playbook WA standalone obrigatório para eventos >1 semana de campanha**
 
 _Belinha — Ciclo #145 | 2026-05-07_
+
+---
+
+## Auto-aprimoramento ciclos #145–#149
+
+_Belinha — Ciclo #150 | 2026-05-07_
+
+### O que gerou mais valor concreto
+
+1. **Hero mobile CTA above-the-fold (#146):** Impacto imediato e mensurável. Usuário mobile 375px agora vê 2 botões de ação (Cardápio + WhatsApp) sem precisar rolar. `min-height: 44px` = WCAG AA. Logo responsivo com `clamp()` elimina overflow em 320px. Esta é a melhoria de maior impacto em conversão mobile dos últimos 10 ciclos — zero custo técnico, alto ganho de UX.
+2. **`whatsapp-virada-2026.md` standalone (#147):** Gap v18c fechado para o 4º maior evento do ano. De 3 templates embutidos em semana37.md para 8 touchpoints (V0–V6 + V-AUTO) com estratégia, segmentos, checklist operacional e contraprogramação. Operador tem playbook acionável sem vasculhar outros arquivos.
+3. **SEO sitemap lastmod + Google Image Sitemap (#148):** Duplo impacto: (a) lastmod correto em 4 URLs acelera re-crawl das melhorias já commitadas (AggregateOffer, FAQPage, hero CTA); (b) namespace `image:` abre canal de descoberta visual em Google Images — canal de alta relevância para sobremesas mobile. ROI técnico alto com mudança pequena.
+4. **Template 50 carimbos — Template C (#149):** Template C é o mais criativo: vincula o marco pessoal do cliente (50 carimbos) com o aniversário de 6 meses da loja (25/10/2026). Cria co-protagonismo emocional com zero custo adicional.
+5. **`whatsapp-natal-2026.md` standalone (#145):** Gap v18c crítico fechado — 14 templates WA do Natal estavam dispersos em 4 arquivos. Narrativa dupla 25/12 (Natal + Aniversário 8 meses) = diferencial exclusivo desta unidade.
+
+### O que foi menos eficaz / áreas de atenção
+
+1. **Blockers persistentes continuam sem resolução:** CNPJ/DPO LGPD (+13 ciclos), cardapio.js decisão — nenhum depende da Belinha, mas o risco legal cresce. `belinha/blockers.md` está atualizado.
+2. **Templates A e B do ciclo #149 foram redundantes:** Para conteúdo de conversão estreito (milestone específico), ≤2 variações são suficientes. O Template C é o diferencial. Lição: reduzir variações em ciclos de conversão de nicho para liberar energia para UX técnico.
+3. **Gaps jan–mai 2027 detectados neste ciclo:** Três playbooks WA standalone necessários (Carnaval, Páscoa, 1 Ano) que as semanas individuais não substituem. Regra v18c ativa — fechar sistematicamente no roadmap #152–#155.
+
+### Auditoria de cobertura jan–mai 2027
+
+| Semana | Período | Evento/Tema | Conteúdo Semana | WA Standalone |
+|--------|---------|-------------|-----------------|---------------|
+| 42 | 31/01–06/02 | Aquecimento Carnaval | ✅ semana42.md | ❌ Gap |
+| 43 | 07–13/02 | Carnaval build-up máximo | ✅ semana43.md | ❌ Gap |
+| 44 | 14–20/02 | Dia do Amor + reta final | ✅ semana44.md | ❌ Gap |
+| 45 | 21–27/02 | Reta final Carnaval | ✅ semana45.md | ❌ Gap |
+| **46** | **28/02–06/03** | **CARNAVAL 28/02–04/03 + pós** | **✅ semana46.md** | **❌ Gap → ciclo #152** |
+| 47 | 07–13/03 | Aquecimento 1 Ano "Segredo" | ✅ semana47.md | — |
+| 48 | 14–20/03 | 1 Ano semana 2: "Você estava lá?" | ✅ semana48.md | — |
+| 49 | 21–27/03 | Semana Santa + reveal 1 Ano | ✅ semana49.md | ❌ Gap Páscoa |
+| **50** | **28/03–03/04** | **PÁSCOA 28/03 + 1 Ano semana 4** | **✅ semana50.md** | **❌ Gap → ciclo #155** |
+| 51 | 04–10/04 | 1 Ano semana 5: programação dia H | ✅ semana51.md | — |
+| 52 | 11–17/04 | 1 Ano semana 6: reta final | ✅ semana52.md | — |
+| **53** | **18–24/04** | **SEMANA DO ANIVERSÁRIO 1 ANO** | **✅ semana53.md** | **❌ Gap → ciclo #154** |
+
+**WA Playbooks standalone — status completo atualizado:**
+
+| Evento | Arquivo | Status |
+|--------|---------|--------|
+| Halloween 2026 | whatsapp-halloween-2026.md | ✅ Criado #140, atualizado #144 |
+| BLACKPOT | whatsapp-blackpot.md | ✅ |
+| Natal 2026 | whatsapp-natal-2026.md | ✅ Criado #145 |
+| Virada/Ano Novo | whatsapp-virada-2026.md | ✅ Criado #147 |
+| Carnaval 2027 | — | ❌ Gap → ciclo #152 |
+| Páscoa 2027 | — | ❌ Gap → ciclo #155 |
+| 1 Ano de loja (25/04/2027) | — | ❌ Gap → ciclo #154 (maior evento do ano) |
+
+### Checklist atualizado pós-#150
+
+| Item | Status |
+|------|--------|
+| `renderProducts` lazy scroll | ✅ Ciclo #141 |
+| Schema.org Product AggregateOffer cardapio.html | ✅ Ciclo #142 |
+| Concorrentes pré-Halloween 2026 | ✅ Ciclo #143 |
+| Intel halloween → playbook WA diferenciação | ✅ Ciclo #144 |
+| `whatsapp-natal-2026.md` standalone | ✅ Ciclo #145 |
+| Hero mobile CTA above-the-fold | ✅ Ciclo #146 |
+| `whatsapp-virada-2026.md` standalone | ✅ Ciclo #147 |
+| SEO sitemap lastmod + Google Image Sitemap | ✅ Ciclo #148 |
+| Template WA 50 carimbos Superfã VIP | ✅ Ciclo #149 |
+| `whatsapp-carnaval-2027.md` standalone | ❌ → ciclo #152 |
+| `whatsapp-1ano-2027.md` standalone | ❌ → ciclo #154 (inegociável) |
+| `whatsapp-pascoa-2027.md` standalone | ❌ → ciclo #155 |
+| checkout.html revisão mobile pós-#137 | ❌ → ciclo #153 |
+| `aggregateRating` Schema.org | ⛔ Aguarda ≥3 reviews operador |
+| Google Analytics ID real | ⛔ Aguarda autorização |
+| CNPJ/DPO LGPD | ⛔ Aguarda dados (**⚠️ +13 ciclos em aberto**) |
+| `cardapio.js` dead code | ⛔ Aguarda decisão operador/dev |
+
+### Roadmap rebalanceado #151–#160
+
+| Ciclo | Área | Ação | Urgência |
+|-------|------|------|----------|
+| **#151** | **Concorrentes** | Refetch pré-Carnaval 2027: MilkyMoo, JohnnyJoy, TheBest — produtos temáticos fev/2027, mecânicas, preços. Intel → v18a: ação no site mesmo ciclo | Alta |
+| **#152** | **Conteúdo/WA** | `whatsapp-carnaval-2027.md` standalone — v18c ativo: semanas 42–46 (5 semanas) sem playbook WA Business. Formato: C0–C8 + C-AUTO + 3 segmentos | Alta |
+| **#153** | **UX/Performance** | `checkout.html` revisão mobile pós-#137: CLS pós-lazy-scroll (#141), bundle size, validação campos 375px | Alta |
+| **#154** | **Conteúdo/WA** | `whatsapp-1ano-2027.md` standalone — playbook WA para o maior evento do ano (25/04/2027). Formato: A0–A12 + A-AUTO. **INEGOCIÁVEL — não postergar** | 🔴 Crítica |
+| **#155** | **Conteúdo/WA** | `whatsapp-pascoa-2027.md` standalone — Páscoa 04/04/2027 (semanas 49/50 existem; sem WA standalone). v19a ativo | Média |
+| **#156** | **Concorrentes** | Refetch pré-Páscoa 2027: Milky Boo, MilkyMoo, JohnnyJoy — produtos de Páscoa, ovos, casquinhas | Alta |
+| **#157** | **SEO** | Landing page `potinho-personalizado-londrina.html` — keyword de alta intenção de compra sem landing page dedicada | Alta |
+| **#158** | **UX** | Auditoria `index.html` pré-aniversário 1 ano: meta OG atualizado, schema LocalBusiness, countdown visual | Média |
+| **#159** | **Conteúdo** | Verificar semanas 53–56 (semana H aniversário + pós-aniversário): lacunas UGC, narrativa pós-evento, Linha Zero mai/2027 | Alta |
+| **#160** | **Auto-aprimoramento** | Reler log #155–#159; roadmap jun–set 2027: Dia dos Namorados (12/06), Festa Junina (Jun), Dia dos Pais (10/08), 16 meses de loja | — |
+
+### Regras atualizadas v19
+
+> **v18a — Intel competitiva → Ação em site no mesmo ciclo (OBRIGATÓRIO)**
+
+> **v18b — Bloqueadores técnicos têm limite de 3 postergações**
+
+> **v18c — Playbook WA standalone obrigatório para eventos >1 semana de campanha**
+
+> **v19a — Páscoa + Semana Santa = WA standalone obrigatório:** Semana Santa (~7 dias com feriados + pico de consumo de sobremesas) + Páscoa (segundo maior pico do ano) = janela de campanha de 10+ dias. Por extensão de v18c, `whatsapp-pascoa-YYYY.md` é obrigatório em todos os anos de operação. Aplicar: ciclo #155.
+
+> **v19b — `whatsapp-1ano-2027.md` é prioridade máxima de conteúdo de 2027:** O aniversário de 1 ano (25/04/2027) é o maior evento de marketing da história da unidade. Semanas 47–53 existem e são detalhadas, mas sem playbook WA Business acionável o operador não consegue configurar automações nem broadcasts segmentados. Ciclo #154 é inegociável — não pode ser postergado por qualquer evento sazonal menor.
+
+_Belinha — Ciclo #150 | 2026-05-07_

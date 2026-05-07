@@ -2,6 +2,45 @@
 
 ---
 
+## Ciclo #150 — 2026-05-07
+
+**Área:** Auto-aprimoramento — Roadmap #151–#160 + Auditoria jan–mai 2027
+
+**Contexto:** Auto-aprimoramento prescrito a cada 5 ciclos. Executado após ciclo #149 (template WA 50 carimbos Superfã VIP). Mandato: reler log #145–#149, auditar cobertura jan–mai 2027, identificar o que gerou mais valor, ajustar rotação/prioridades, planejar roadmap Carnaval → Páscoa → 1 Ano de loja.
+
+**O que pesquisou/analisou:**
+- Leu log ciclos #145–#149: whatsapp-natal-2026.md (#145), hero mobile CTA (#146), whatsapp-virada-2026.md (#147), sitemap lastmod + image (#148), 50 carimbos (#149)
+- Auditou cobertura jan–mai 2027: semanas 42–53 todas existem ✅ — mas 3 gaps críticos de WA standalone detectados (Carnaval, Páscoa, 1 Ano)
+- Verificou blockers: CNPJ/DPO +13 ciclos, cardapio.js ainda pendente
+- Auditou WA playbooks standalone: Halloween ✅, BLACKPOT ✅, Natal ✅, Virada ✅ — Carnaval ❌, Páscoa ❌, 1 Ano ❌
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---|---|
+| `belinha/estrategia.md` | Auto-aprimoramento #150 adicionado: análise #145–#149, auditoria tabular jan–mai 2027 (semanas 42–53), checklist atualizado, roadmap #151–#160, regras v19a e v19b |
+
+**Destaques:**
+1. **Maior valor dos últimos 5 ciclos:** Hero mobile CTA above-the-fold (#146) — impacto direto e mensurável em conversão mobile sem custo técnico elevado. Muda a experiência do usuário no primeiro acesso.
+2. **3 gaps WA standalone jan–mai 2027:** Carnaval (5 semanas de conteúdo sem playbook WA) → ciclo #152; 1 Ano de loja (maior evento do ano) → ciclo #154 INEGOCIÁVEL; Páscoa → ciclo #155.
+3. **Nova regra v19a:** Páscoa + Semana Santa = WA standalone obrigatório (extensão de v18c). Aplicar ciclo #155.
+4. **Nova regra v19b:** `whatsapp-1ano-2027.md` é prioridade máxima de conteúdo 2027 — não postergar por evento sazonal menor. Ciclo #154 inegociável.
+5. **Ciclo #153 (checkout revisão) retorna ao roadmap** como Alta urgência — postergado em #145, #148, #149 (3x = v18b threshold). Execução ciclo #153.
+
+**Commit:** (ver hash após push)
+
+**Próximo passo sugerido:**
+- **Ciclo #151 — Concorrentes:** Refetch pré-Carnaval 2027 — MilkyMoo, JohnnyJoy, TheBest: produtos temáticos fev/2027, mecânicas, preços. Intel → v18a: ação no site mesmo ciclo
+- **Ciclo #152 — Conteúdo:** `whatsapp-carnaval-2027.md` standalone (v18c ativo — 5 semanas sem WA playbook)
+- **Ciclo #154 — INEGOCIÁVEL:** `whatsapp-1ano-2027.md` standalone — o maior evento de marketing da história da unidade
+- **Operador:** CNPJ + DPO — LGPD — em aberto há **+13 ciclos**. Risco legal crescente. Fornecer dados para footer e termos de privacidade.
+- **Operador:** Confirmar decisão cardapio.js (A=deletar / B=integrar / C=manter) — blocker técnico persistente
+- **Operador:** Solicitar indexação no Google Search Console (ação pendente do ciclo #148)
+
+_Belinha — Ciclo #150 | 2026-05-07_
+
+---
+
 ## Ciclo #149 — 2026-05-07
 
 **Área:** Conversão — Template WA milestone 50 carimbos Superfã VIP
