@@ -1441,8 +1441,8 @@ const Caixa = (function () {
             } catch(_) {}
         } catch (e) { console.warn('mail dispatch:', e); }
 
-        // 3. Tambem chama CloudFunctions.sendClosingReport caso o backend
-        //    tenha implementacao alternativa (ex: nodemailer custom)
+        // 3. CAMINHO PRIMARIO: chama CloudFunctions.sendClosingReport (Firebase CF)
+        //    Tem Nodemailer + Gmail SMTP. Fallback automatico pra /mail se SMTP falhar.
         try {
             if (typeof CloudFunctions !== 'undefined' && CloudFunctions.sendClosingReport) {
                 CloudFunctions.sendClosingReport(franchiseId, {
@@ -1454,9 +1454,19 @@ const Caixa = (function () {
                     motivo: motivo,
                     fechamentoDate: fechamentoDate.toISOString(),
                     breakdownConferido: extras
-                }).catch(e => console.warn('sendClosingReport CF:', e && e.message));
+                }).then(function(res) {
+                    if (res && res.success) {
+                        console.log('✅ Relatorio enviado por email para', res.sent || RECIPIENTS.length, 'destinatarios');
+                    } else {
+                        console.warn('⚠️ Email nao enviado:', res && (res.error || res.reason || 'resposta desconhecida'));
+                    }
+                }).catch(function(e) {
+                    console.error('❌ sendClosingReport falhou:', e && (e.message || e));
+                });
+            } else {
+                console.warn('⚠️ CloudFunctions.sendClosingReport indisponivel — email nao enviado');
             }
-        } catch (e) { console.warn('CF dispatch:', e); }
+        } catch (e) { console.error('CF dispatch error:', e); }
     }
 
     // HTML version do email — mais bonito que texto puro

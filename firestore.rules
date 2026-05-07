@@ -334,6 +334,25 @@ service cloud.firestore {
     }
 
     // ============================================
+    // Mail queue — Cloud Functions escrevem aqui pra fallback de SMTP.
+    // Tambem podem ser lidas pela Trigger Email Extension (se instalada).
+    // Apenas authenticated users criam (PDV ao fechar caixa); ler so super_admin.
+    // ============================================
+    match /mail/{mailId} {
+      allow read: if isSuperAdmin();
+      allow create: if isAuthenticated();
+      allow update: if false;
+      allow delete: if isSuperAdmin();
+    }
+
+    // Audit de relatorios de caixa enviados — Cloud Function grava
+    match /caixa_reports_sent/{docId} {
+      allow read: if isSuperAdmin() || isFranchisee();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    // ============================================
     // Bloqueia tudo que nao foi definido explicitamente
     // ============================================
     match /{document=**} {
