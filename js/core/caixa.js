@@ -401,21 +401,37 @@ const Caixa = (function () {
             return true;
         });
         if (pendingOrders.length > 0) {
-            // Lista os pedidos pendentes pra o operador identificar (ate 5)
-            const lista = pendingOrders.slice(0, 5).map(o => {
-                const seq = o.dailySeq ? '#' + o.dailySeq : '#' + String(o.id || '').slice(-6);
-                const cliente = (o.customer && o.customer.name) || 'Balcao';
-                const status = o.status || '?';
-                const valor = formatBRL(o.total || 0);
-                return '  • ' + seq + ' (' + status + ') · ' + cliente + ' · ' + valor;
-            }).join('\n');
-            const extra = pendingOrders.length > 5 ? '\n  ...e mais ' + (pendingOrders.length - 5) : '';
-            return {
-                success: false,
-                error: '⚠️ ' + pendingOrders.length + ' pedido(s) pendente(s) HOJE bloqueando o fechamento:\n' + lista + extra +
-                       '\n\nVá em Pedidos (F9) e marque como Entregue ou Cancelado, depois feche o caixa.',
-                pendingOrders: pendingOrders.map(o => ({ id: o.id, dailySeq: o.dailySeq, status: o.status, total: o.total, customer: (o.customer || {}).name }))
-            };
+            if (isTestFranchise(franchiseId)) {
+                // Modo teste: auto-finaliza pedidos pendentes em vez de bloquear
+                const tsAutoTest = new Date().toISOString();
+                pendingOrders.forEach(po => {
+                    const idx = orders.findIndex(x => x && x.id === po.id);
+                    if (idx >= 0) {
+                        orders[idx].status = 'entregue';
+                        orders[idx].updatedAt = tsAutoTest;
+                        orders[idx].finalizedByCaixaClose = true;
+                        orders[idx].finalizedAt = tsAutoTest;
+                    }
+                });
+                DataStore.set('orders_' + franchiseId, orders);
+                console.log('[Caixa] Modo teste: ' + pendingOrders.length + ' pedido(s) pendente(s) auto-finalizado(s)');
+            } else {
+                // Lista os pedidos pendentes pra o operador identificar (ate 5)
+                const lista = pendingOrders.slice(0, 5).map(o => {
+                    const seq = o.dailySeq ? '#' + o.dailySeq : '#' + String(o.id || '').slice(-6);
+                    const cliente = (o.customer && o.customer.name) || 'Balcao';
+                    const status = o.status || '?';
+                    const valor = formatBRL(o.total || 0);
+                    return '  • ' + seq + ' (' + status + ') · ' + cliente + ' · ' + valor;
+                }).join('\n');
+                const extra = pendingOrders.length > 5 ? '\n  ...e mais ' + (pendingOrders.length - 5) : '';
+                return {
+                    success: false,
+                    error: '⚠️ ' + pendingOrders.length + ' pedido(s) pendente(s) HOJE bloqueando o fechamento:\n' + lista + extra +
+                           '\n\nVá em Pedidos (F9) e marque como Entregue ou Cancelado, depois feche o caixa.',
+                    pendingOrders: pendingOrders.map(o => ({ id: o.id, dailySeq: o.dailySeq, status: o.status, total: o.total, customer: (o.customer || {}).name }))
+                };
+            }
         }
 
         // REGRA DE SEGURANÇA: Bloquear se houver comandas/contas abertas
@@ -424,10 +440,17 @@ const Caixa = (function () {
         const openTabsAll = DataStore.get('pdv_tabs_' + franchiseId) || [];
         const openTabs = openTabsAll.filter(function(t){ return t && !t.deleted; });
         if (openTabs.length > 0) {
-            return {
-                success: false,
-                error: `⚠️ Existem ${openTabs.length} conta(s) aberta(s). Feche todas antes de encerrar o turno.`
-            };
+            if (isTestFranchise(franchiseId)) {
+                // Modo teste: marca todas comandas como deletadas em vez de bloquear
+                const cleared = openTabsAll.map(t => t && !t.deleted ? Object.assign({}, t, { deleted: true, _autoCleared: true }) : t);
+                DataStore.set('pdv_tabs_' + franchiseId, cleared);
+                console.log('[Caixa] Modo teste: ' + openTabs.length + ' comanda(s) auto-fechada(s)');
+            } else {
+                return {
+                    success: false,
+                    error: `⚠️ Existem ${openTabs.length} conta(s) aberta(s). Feche todas antes de encerrar o turno.`
+                };
+            }
         }
 
         if (isNaN(valorContado) || valorContado < 0) return { success: false, error: 'Valor contado inválido.' };
