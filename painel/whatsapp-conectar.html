@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>MilkyPot — Conectar WhatsApp Lulu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/shared-panel.css">
+  <style>
+    .conectar-page { padding: 24px; max-width: 980px; margin: 0 auto; }
+
+    .status-bar { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+    .status-card { background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:14px 18px; min-width: 200px; flex: 1; }
+    .status-card .lbl { font-size: 11px; font-weight: 800; color: #6B7280; letter-spacing: .5px; text-transform: uppercase; }
+    .status-card .val { font-family: 'Baloo 2', cursive; font-size: 20px; font-weight: 800; color: #2D1747; margin-top: 4px; }
+    .status-card.ok .val { color: #16A34A; }
+    .status-card.warn .val { color: #F59E0B; }
+    .status-card.err .val { color: #DC2626; }
+
+    .qr-section { background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; padding: 24px; text-align: center; }
+    .qr-title { font-family: 'Baloo 2', cursive; color: #2D1747; font-size: 22px; font-weight: 800; margin: 0 0 8px; }
+    .qr-sub { color: #6B7280; font-size: 14px; margin-bottom: 18px; }
+    .qr-wrap { display: inline-block; padding: 16px; background: #fff; border: 2px solid #E5E7EB; border-radius: 14px; }
+    .qr-wrap img { display: block; max-width: 320px; width: 100%; height: auto; }
+    .qr-instructions { margin-top: 22px; text-align: left; max-width: 400px; margin-left: auto; margin-right: auto; background: #FAF9FC; border-radius: 12px; padding: 16px 20px; font-size: 14px; line-height: 1.7; color: #4B5563; }
+    .qr-instructions ol { margin: 8px 0 0; padding-left: 22px; }
+    .qr-instructions li { margin-bottom: 6px; }
+    .qr-instructions strong { color: #2D1747; }
+
+    .connected-box { padding: 32px; text-align: center; }
+    .connected-box .check { font-size: 64px; margin-bottom: 10px; }
+    .connected-box .name { font-family: 'Baloo 2', cursive; font-size: 24px; font-weight: 800; color: #16A34A; margin-bottom: 6px; }
+    .connected-box .num { font-family: monospace; font-size: 16px; color: #6B7280; }
+
+    .actions { display: flex; gap: 10px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+    .btn { border: 0; border-radius: 10px; padding: 11px 18px; font-weight: 800; cursor: pointer; font-family: inherit; font-size: 14px; }
+    .btn.primary { background: #7E57C2; color: #fff; }
+    .btn.danger { background: #DC2626; color: #fff; }
+    .btn.soft { background: #F3F4F6; color: #374151; }
+    .btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .loading { padding: 40px; text-align: center; color: #9CA3AF; }
+    .err-msg { background: #FEE2E2; border: 1px solid #FCA5A5; color: #991B1B; padding: 14px 18px; border-radius: 10px; margin-bottom: 16px; font-size: 14px; }
+
+    .info-banner { background: linear-gradient(135deg, #DBEAFE, #EDE9FE); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; font-size: 14px; color: #1E40AF; }
+    .info-banner strong { color: #2D1747; }
+  </style>
+</head>
+<body>
+  <div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+        <h2>MilkyPot<small>Admin</small></h2>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-group">Principal</div>
+        <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+        <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+        <a href="pdv.html" class="sidebar-link"><span class="icon">💻</span> PDV</a>
+        <div class="sidebar-nav-group">WhatsApp Lulu</div>
+        <a href="whatsapp-conectar.html" class="sidebar-link active"><span class="icon">📱</span> Conectar WhatsApp</a>
+        <a href="whatsapp-conversas.html" class="sidebar-link"><span class="icon">💬</span> Conversas Lulu</a>
+        <div class="sidebar-nav-group">Franquias</div>
+        <a href="franquia-leads.html" class="sidebar-link"><span class="icon">🐑</span> Leads VIP</a>
+        <div class="sidebar-nav-group">Gestão</div>
+        <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+        <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+        <a href="auditoria.html" class="sidebar-link"><span class="icon">🔍</span> Auditoria</a>
+        <div class="sidebar-nav-group">Mídia</div>
+        <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
+        <a href="configuracoes.html" class="sidebar-link"><span class="icon">⚙️</span> Configurações</a>
+      </nav>
+    </aside>
+
+    <main class="panel-main">
+      <header class="panel-header">
+        <button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <h1>📱 Conectar WhatsApp da Lulu</h1>
+      </header>
+
+      <div class="conectar-page">
+        <div class="info-banner">
+          <strong>🐑 Atenção:</strong> esta página conecta o WhatsApp da MilkyPot (5543999919777) ao gateway da Lulu IA. Se desconectar aqui, a Lulu para de atender automaticamente.
+        </div>
+
+        <div id="errBox"></div>
+
+        <div class="status-bar">
+          <div class="status-card" id="cardState">
+            <div class="lbl">Estado do Gateway</div>
+            <div class="val">⏳ carregando...</div>
+          </div>
+          <div class="status-card" id="cardNumber">
+            <div class="lbl">Número conectado</div>
+            <div class="val">—</div>
+          </div>
+          <div class="status-card" id="cardUptime">
+            <div class="lbl">Uptime</div>
+            <div class="val">—</div>
+          </div>
+        </div>
+
+        <div class="qr-section" id="qrSection">
+          <div class="loading">⏳ Carregando estado do WhatsApp...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Firebase + Auth -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="../js/core/firebase-config.js"></script>
+  <script src="../js/core/utils.js"></script>
+  <script src="../js/core/datastore.js"></script>
+  <script src="../js/core/auth.js"></script>
+  <script>
+  /* ============================================
+     Painel Conectar WhatsApp — chama /api/whatsapp-admin
+     com Firebase ID token. Só super_admin/franchisee.
+     ============================================ */
+
+  if (typeof Auth !== 'undefined' && Auth.requireAuth) {
+    if (!Auth.requireAuth(['super_admin', 'franchisee'])) throw new Error('Não autorizado');
+  }
+
+  const API_BASE = '/api/whatsapp-admin';
+  let POLL_INTERVAL = null;
+  let CURRENT_STATE = null;
+
+  function showError(msg) {
+    document.getElementById('errBox').innerHTML = `<div class="err-msg">⚠️ ${esc(msg)}</div>`;
+  }
+  function clearError() {
+    document.getElementById('errBox').innerHTML = '';
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function getIdToken() {
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    return new Promise((resolve, reject) => {
+      const unsub = firebase.auth().onAuthStateChanged(async (u) => {
+        unsub();
+        if (!u) return reject(new Error('Não logado'));
+        try {
+          const t = await u.getIdToken();
+          resolve(t);
+        } catch (e) { reject(e); }
+      });
+    });
+  }
+
+  async function callApi(action, opts = {}) {
+    const token = await getIdToken();
+    const url = `${API_BASE}?action=${encodeURIComponent(action)}`;
+    const r = await fetch(url, {
+      method: opts.method || 'GET',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+    return j;
+  }
+
+  function fmtUptime(s) {
+    if (!s || s < 0) return '—';
+    if (s < 60) return Math.round(s) + 's';
+    if (s < 3600) return Math.round(s/60) + 'min';
+    return Math.round(s/3600) + 'h';
+  }
+
+  function renderState(st) {
+    CURRENT_STATE = st;
+    const cardState = document.getElementById('cardState');
+    const cardNumber = document.getElementById('cardNumber');
+    const cardUptime = document.getElementById('cardUptime');
+
+    let label, cssClass;
+    switch (st.state) {
+      case 'open': case 'connected':
+        label = '✅ Conectado'; cssClass = 'ok'; break;
+      case 'qr-pending':
+        label = '📱 Aguardando QR'; cssClass = 'warn'; break;
+      case 'connecting':
+        label = '🔄 Conectando...'; cssClass = 'warn'; break;
+      case 'disconnected': case 'closed':
+        label = '❌ Desconectado'; cssClass = 'err'; break;
+      default:
+        label = '? ' + (st.state || 'desconhecido'); cssClass = 'err';
+    }
+    cardState.className = 'status-card ' + cssClass;
+    cardState.querySelector('.val').textContent = label;
+    cardNumber.querySelector('.val').textContent = st.connectedNumber ? '+' + st.connectedNumber : '—';
+    cardUptime.querySelector('.val').textContent = fmtUptime(st.uptime);
+  }
+
+  async function renderConnected(st) {
+    const html = `
+      <div class="connected-box">
+        <div class="check">✅</div>
+        <div class="name">WhatsApp conectado!</div>
+        <div class="num">+${esc(st.connectedNumber || '')}</div>
+        <div class="actions">
+          <a href="whatsapp-conversas.html" class="btn primary">💬 Ver Conversas Lulu</a>
+          <button class="btn danger" onclick="doLogout()">🔌 Desconectar WhatsApp</button>
+          <button class="btn soft" onclick="loadStatus()">🔄 Atualizar</button>
+        </div>
+      </div>`;
+    document.getElementById('qrSection').innerHTML = html;
+  }
+
+  async function renderQrPending() {
+    document.getElementById('qrSection').innerHTML = '<div class="loading">📱 Buscando QR code...</div>';
+    try {
+      const j = await callApi('qr');
+      if (j.qr) {
+        const html = `
+          <h2 class="qr-title">Escaneia com o WhatsApp 📱</h2>
+          <div class="qr-sub">Use o número 5543999919777 (linha oficial MilkyPot)</div>
+          <div class="qr-wrap"><img src="${esc(j.qr)}" alt="QR Code WhatsApp" /></div>
+          <div class="qr-instructions">
+            <strong>Como conectar:</strong>
+            <ol>
+              <li>Abre o <strong>WhatsApp</strong> no celular</li>
+              <li>Toca em <strong>⋮</strong> (3 pontos no canto superior)</li>
+              <li>Vai em <strong>Aparelhos conectados</strong></li>
+              <li>Toca em <strong>Conectar um aparelho</strong></li>
+              <li>Aponta a câmera do celular pra esse QR aqui na tela</li>
+            </ol>
+          </div>
+          <div class="actions">
+            <button class="btn soft" onclick="loadStatus()">🔄 Atualizar</button>
+            <button class="btn danger" onclick="doRestart()">🔁 Gerar novo QR</button>
+          </div>`;
+        document.getElementById('qrSection').innerHTML = html;
+      } else {
+        document.getElementById('qrSection').innerHTML = `
+          <div class="loading">QR ainda não gerado. <button class="btn soft" onclick="doRestart()">Gerar agora</button></div>`;
+      }
+    } catch (e) {
+      showError('Erro pegando QR: ' + e.message);
+      document.getElementById('qrSection').innerHTML = `
+        <div class="loading">❌ ${esc(e.message)} <button class="btn soft" onclick="loadStatus()">Tentar de novo</button></div>`;
+    }
+  }
+
+  async function renderConnecting() {
+    document.getElementById('qrSection').innerHTML = `
+      <div class="loading">
+        🔄 Gateway iniciando... aguarde alguns segundos.
+        <div style="margin-top:12px"><button class="btn soft" onclick="loadStatus()">🔄 Atualizar agora</button></div>
+      </div>`;
+  }
+
+  async function renderDisconnected() {
+    document.getElementById('qrSection').innerHTML = `
+      <div class="connected-box">
+        <div class="check">⚠️</div>
+        <div class="name" style="color:#DC2626">WhatsApp desconectado</div>
+        <div class="num">A Lulu não está atendendo. Reinicie pra gerar novo QR.</div>
+        <div class="actions">
+          <button class="btn primary" onclick="doRestart()">🔁 Reconectar (gera QR)</button>
+        </div>
+      </div>`;
+  }
+
+  async function loadStatus() {
+    clearError();
+    try {
+      const st = await callApi('status');
+      renderState(st);
+      if (st.state === 'open' || st.state === 'connected') renderConnected(st);
+      else if (st.state === 'qr-pending') renderQrPending();
+      else if (st.state === 'connecting') renderConnecting();
+      else renderDisconnected();
+    } catch (e) {
+      console.error(e);
+      showError('Não consegui falar com o gateway: ' + e.message);
+      document.getElementById('qrSection').innerHTML = `
+        <div class="loading">❌ ${esc(e.message)} <button class="btn soft" onclick="loadStatus()">Tentar de novo</button></div>`;
+    }
+  }
+
+  async function doRestart() {
+    if (!confirm('Tem certeza? Isso vai gerar um novo QR e a Lulu fica fora do ar até reconectar.')) return;
+    clearError();
+    try {
+      await callApi('restart', { method: 'POST' });
+      document.getElementById('qrSection').innerHTML = '<div class="loading">🔄 Reiniciando... aguarde 10s</div>';
+      setTimeout(loadStatus, 10000);
+    } catch (e) {
+      showError('Erro reiniciando: ' + e.message);
+    }
+  }
+
+  async function doLogout() {
+    if (!confirm('Tem certeza que quer DESCONECTAR o WhatsApp? A Lulu para de atender até reconectar.')) return;
+    clearError();
+    try {
+      await callApi('logout', { method: 'POST' });
+      setTimeout(loadStatus, 5000);
+    } catch (e) {
+      showError('Erro desconectando: ' + e.message);
+    }
+  }
+
+  // Polling a cada 5s pra atualizar QR/state
+  function startPolling() {
+    if (POLL_INTERVAL) clearInterval(POLL_INTERVAL);
+    POLL_INTERVAL = setInterval(() => {
+      if (CURRENT_STATE && (CURRENT_STATE.state === 'qr-pending' || CURRENT_STATE.state === 'connecting')) {
+        loadStatus();
+      }
+    }, 5000);
+  }
+
+  // Bootstrap
+  if (typeof firebase !== 'undefined') {
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    firebase.auth().onAuthStateChanged(u => {
+      if (u) { loadStatus(); startPolling(); }
+    });
+  }
+  </script>
+</body>
+</html>
