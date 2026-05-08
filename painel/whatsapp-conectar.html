@@ -202,20 +202,41 @@
     if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
     const u = firebase.auth().currentUser;
     if (!u) return;
+    console.log('[wa-conectar] user logado:', u.email, 'uid:', u.uid);
+
     try {
       const doc = await firebase.firestore().collection('users').doc(u.uid).get();
       if (doc.exists) {
         const data = doc.data();
         USER_ROLE = data.role || null;
         USER_FRANCHISEES = data.franchiseeIds || (data.franchiseeId ? [data.franchiseeId] : []);
+        console.log('[wa-conectar] role:', USER_ROLE, 'franchiseeIds:', USER_FRANCHISEES);
+      } else {
+        console.warn('[wa-conectar] /users/' + u.uid + ' não existe');
       }
     } catch (e) {
-      console.warn('falha lendo role:', e);
+      console.error('[wa-conectar] falha lendo /users:', e.message);
     }
+
+    // Fallback: se sem role mas tem email do owner conhecido, trata como super_admin
+    if (!USER_ROLE && u.email === 'jocimarrodrigo@gmail.com') {
+      USER_ROLE = 'super_admin';
+      console.log('[wa-conectar] fallback: owner detectado → super_admin');
+    }
+
+    // Fallback: franchisee sem franquia → assume "matriz" (a primeira franquia)
+    // Se for o caso da Quintino e ainda não cadastrou no doc, deixa ver matriz
+    if (USER_ROLE === 'franchisee' && !USER_FRANCHISEES.length) {
+      USER_FRANCHISEES = ['matriz'];
+      console.warn('[wa-conectar] franchisee sem franchiseeIds — assumindo matriz por default');
+    }
+
     document.getElementById('userRoleHint').textContent =
       USER_ROLE === 'super_admin'
         ? 'Você é admin geral — pode gerenciar TODAS as franquias.'
-        : `Você gerencia: ${USER_FRANCHISEES.join(', ') || '(nenhuma franquia atribuída)'}.`;
+        : USER_ROLE === 'franchisee'
+          ? `Você gerencia: ${USER_FRANCHISEES.join(', ')}.`
+          : `Sua role é "${USER_ROLE || 'desconhecida'}". Sem permissão pra gerenciar WhatsApp.`;
 
     if (USER_ROLE === 'super_admin') {
       document.getElementById('newFranquiaCard').style.display = '';
@@ -251,20 +272,53 @@
 
   async function loadFranchises() {
     await bootstrapMatrizIfNeeded();
+
+    // 1. Lista accounts existentes no GATEWAY (fonte de verdade das sessões)
+    let gatewayAccounts = [];
+    try {
+      const j = await callApi('accounts');
+      gatewayAccounts = j.accounts || [];
+      console.log('[wa-conectar] gateway accounts:', gatewayAccounts);
+    } catch (e) {
+      console.error('[wa-conectar] falha listando accounts do gateway:', e.message);
+      showError('Não consegui listar as franquias do gateway: ' + e.message);
+    }
+
+    // 2. Lista metadados do Firestore /franchises (opcional, pra nome amigável)
+    let franchiseDocs = [];
     try {
       const j = await callApi('franchises');
-      AVAILABLE_FRANQUIAS = j.franchises || [];
+      franchiseDocs = j.franchises || [];
+      console.log('[wa-conectar] firestore franchises:', franchiseDocs);
     } catch (e) {
-      console.warn('Falha carregando /franchises do Firestore:', e.message);
+      console.warn('[wa-conectar] falha carregando /franchises do Firestore:', e.message);
     }
-    // Garante pelo menos a matriz no select (super_admin sempre vê)
-    if (USER_ROLE === 'super_admin' && !AVAILABLE_FRANQUIAS.find(f => f.accountId === 'matriz')) {
-      AVAILABLE_FRANQUIAS.unshift({ accountId: 'matriz', name: 'MilkyPot Matriz (Londrina)', whatsappNumber: '5543999919777' });
+
+    // 3. Combina: cada gateway account vira opção (com nome do Firestore se houver)
+    AVAILABLE_FRANQUIAS = gatewayAccounts.map(accountId => {
+      const meta = franchiseDocs.find(f => f.accountId === accountId);
+      return meta || {
+        accountId,
+        name: accountId === 'matriz' ? 'MilkyPot Matriz (Londrina)' : accountId,
+        whatsappNumber: accountId === 'matriz' ? '5543999919777' : null
+      };
+    });
+
+    // 4. Garante pelo menos matriz se gateway não retornou nada
+    if (!AVAILABLE_FRANQUIAS.length) {
+      AVAILABLE_FRANQUIAS = [{
+        accountId: 'matriz',
+        name: 'MilkyPot Matriz (Londrina)',
+        whatsappNumber: '5543999919777'
+      }];
     }
-    // Filtra pra franchisee
-    if (USER_ROLE === 'franchisee') {
+
+    // 5. Filtro por role (gateway accounts já vêm filtrados pro franchisee, mas reforçamos)
+    if (USER_ROLE === 'franchisee' && USER_FRANCHISEES.length) {
       AVAILABLE_FRANQUIAS = AVAILABLE_FRANQUIAS.filter(f => USER_FRANCHISEES.includes(f.accountId));
     }
+
+    console.log('[wa-conectar] AVAILABLE_FRANQUIAS final:', AVAILABLE_FRANQUIAS);
     renderSelect();
   }
 
@@ -477,13 +531,44 @@
   if (typeof firebase !== 'undefined') {
     if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
     firebase.auth().onAuthStateChanged(async (u) => {
-      if (!u) return;
-      await loadUserContext();
-      await loadFranchises();
-      if (CURRENT_ACCOUNT) loadStatus();
-      startPolling();
+      if (!u) {
+        document.getElementById('qrSection').innerHTML = '<div class="loading">⚠️ Você precisa estar logado.</div>';
+        return;
+      }
+      try {
+        await loadUserContext();
+        await loadFranchises();
+        if (CURRENT_ACCOUNT) loadStatus();
+        startPolling();
+      } catch (err) {
+        console.error('[wa-conectar] bootstrap falhou:', err);
+        showError('Erro carregando: ' + err.message);
+        document.getElementById('qrSection').innerHTML = `
+          <div class="loading">❌ ${esc(err.message)}<br>
+          <button class="btn soft" onclick="location.reload()" style="margin-top:12px">🔄 Recarregar</button></div>`;
+      }
     });
   }
+
+  // Safety: se passar 15s e ainda estiver "Carregando", mostra debug info
+  setTimeout(() => {
+    const sec = document.getElementById('qrSection');
+    if (sec && sec.textContent.includes('Carregando')) {
+      const u = firebase.auth().currentUser;
+      sec.innerHTML = `
+        <div class="loading">
+          ⚠️ Demorou demais pra carregar. Diagnóstico:<br>
+          <pre style="text-align:left;font-size:11px;background:#f3f4f6;padding:10px;border-radius:8px;margin:14px auto;max-width:400px">
+user: ${u?.email || '(não logado)'}
+uid: ${u?.uid || '?'}
+role: ${USER_ROLE || '(não carregada)'}
+franchiseeIds: ${JSON.stringify(USER_FRANCHISEES)}
+gateway accounts: ${JSON.stringify(AVAILABLE_FRANQUIAS.map(f => f.accountId))}
+          </pre>
+          <button class="btn soft" onclick="location.reload()">🔄 Recarregar</button>
+        </div>`;
+    }
+  }, 15000);
   </script>
 </body>
 </html>
