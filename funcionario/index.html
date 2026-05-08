@@ -316,6 +316,27 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
                     <div id="wallList" style="margin-top:10px"></div>
                 </div>
 
+                <!-- Catalogo de recompensas (so se ativada) -->
+                <div class="fn-card" id="gamRewardsCard" style="display:none">
+                    <h3>🎁 Resgatar com pontos</h3>
+                    <small style="display:block;color:#6B7280;margin-bottom:8px">Você tem <strong id="myPoints">0</strong> pontos disponíveis</small>
+                    <div id="rewardsList"></div>
+                </div>
+
+                <!-- Compartilhar conquista (so se ativada) -->
+                <div class="fn-card" id="gamShareCard" style="display:none;background:linear-gradient(135deg,#EC4899,#8B5CF6);color:#fff;border:none">
+                    <h3 style="color:#fff">📱 Compartilhe sua conquista</h3>
+                    <small style="opacity:.95;display:block;margin-bottom:10px">Mande pro WhatsApp/Instagram</small>
+                    <button class="fn-btn" onclick="fnGerarCardCompartilhar()" style="background:#fff;color:#EC4899">✨ Gerar Card</button>
+                </div>
+
+                <!-- Indique amigo (so se ativada) -->
+                <div class="fn-card" id="gamReferralCard" style="display:none;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff;border:none">
+                    <h3 style="color:#fff">🤝 Indique um amigo</h3>
+                    <small style="opacity:.95;display:block;margin-bottom:10px">Indique alguém que se daria bem aqui. Se contratado e ficar 3 meses, você ganha bônus.</small>
+                    <button class="fn-btn" onclick="fnIndicarAmigo()" style="background:#fff;color:#F59E0B">📲 Compartilhar link</button>
+                </div>
+
                 <div class="fn-card">
                     <h3>📍 Suas marcacoes de hoje</h3>
                     <div class="fn-marcacoes" id="todayMarks"></div>
@@ -1015,6 +1036,122 @@ function fnRenderGamification(session, staff) {
             document.getElementById('gamWallCard').style.display = 'block';
         }
     }
+
+    // 9. Catalogo de recompensas
+    if (Gamification.isFeatureEnabled(fid, 'rewardsCatalog')) {
+        var rewards = Gamification.getRewardsCatalog(fid);
+        var conduct = (typeof StaffConduct !== 'undefined') ? StaffConduct.computeScore(fid, sid, new Date().getFullYear(), new Date().getMonth() + 1) : { score: 0 };
+        document.getElementById('myPoints').textContent = conduct.score || 0;
+        if (rewards.length > 0) {
+            var html = rewards.map(function(r) {
+                var canRedeem = (conduct.score || 0) >= r.points;
+                var btnStyle = canRedeem ? 'background:#16A34A;color:#fff' : 'background:#E5E7EB;color:#6B7280;cursor:not-allowed';
+                return '<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px"><div><span style="font-size:1.4rem">' + (r.icon || '🎁') + '</span> <strong>' + Utils.escapeHtml(r.name) + '</strong><br><small style="color:#6B7280">' + r.points + ' pontos</small></div><button onclick="fnResgatar(\'' + r.id + '\')" ' + (canRedeem ? '' : 'disabled') + ' style="border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-family:inherit;font-size:.78rem;' + btnStyle + '">' + (canRedeem ? 'Resgatar' : 'Bloqueado') + '</button></div>';
+            }).join('');
+            document.getElementById('rewardsList').innerHTML = html;
+            document.getElementById('gamRewardsCard').style.display = 'block';
+        }
+    }
+
+    // 10. Social share
+    if (Gamification.isFeatureEnabled(fid, 'socialShare')) {
+        document.getElementById('gamShareCard').style.display = 'block';
+    }
+
+    // 11. Referral program
+    if (Gamification.isFeatureEnabled(fid, 'referralProgram')) {
+        document.getElementById('gamReferralCard').style.display = 'block';
+    }
+
+    // 12. Wellbeing reminders
+    if (Gamification.isFeatureEnabled(fid, 'wellbeingReminders')) {
+        fnAgendarLembretesBemEstar();
+    }
+}
+
+function fnResgatar(rewardId) {
+    var session = fnGetSession();
+    var conduct = StaffConduct.computeScore(session.franchiseId, session.staffId, new Date().getFullYear(), new Date().getMonth() + 1);
+    var r = Gamification.redeemReward(session.franchiseId, session.staffId, rewardId, conduct.score || 0);
+    if (r.success) {
+        alert('🎁 Resgate solicitado! Aguarde aprovação do gerente.');
+        fnRenderGamification(session, null);
+    } else {
+        alert(r.error);
+    }
+}
+
+function fnGerarCardCompartilhar() {
+    var session = fnGetSession();
+    var canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1350;
+    var ctx = canvas.getContext('2d');
+    // BG gradient
+    var grad = ctx.createLinearGradient(0, 0, 1080, 1350);
+    grad.addColorStop(0, '#7C3AED');
+    grad.addColorStop(1, '#EC4899');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 1080, 1350);
+    // Texto
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 80px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('💪 EU FAÇO PARTE', 540, 400);
+    ctx.font = 'bold 120px Baloo 2, cursive';
+    ctx.fillText('MILKYPOT', 540, 600);
+    ctx.font = '60px Nunito, sans-serif';
+    ctx.fillText(session.staffName, 540, 800);
+    ctx.font = '40px Nunito, sans-serif';
+    ctx.fillText(session.staffRole, 540, 870);
+    var streak = Gamification.computeStreak(session.franchiseId, session.staffId);
+    if (streak && streak.current > 0) {
+        ctx.font = 'bold 50px Nunito, sans-serif';
+        ctx.fillText('🔥 ' + streak.current + ' dias seguidos pontual', 540, 1000);
+    }
+    ctx.font = '30px Nunito, sans-serif';
+    ctx.fillText('milkypot.com', 540, 1280);
+
+    canvas.toBlob(function(blob) {
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'milkypot.png', { type: 'image/png' })] })) {
+            navigator.share({
+                files: [new File([blob], 'milkypot.png', { type: 'image/png' })],
+                title: 'MilkyPot — eu faço parte'
+            });
+        } else {
+            // Fallback: download
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'milkypot-conquista.png';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    });
+}
+
+function fnIndicarAmigo() {
+    var msg = 'Trabalho na MilkyPot e indico! Manda WhatsApp pro gerente da nossa loja se quiser uma chance.';
+    if (navigator.share) {
+        navigator.share({ title: 'MilkyPot — Indicação', text: msg });
+    } else {
+        // WhatsApp web
+        window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+    }
+}
+
+function fnAgendarLembretesBemEstar() {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (!navigator.serviceWorker?.controller) return;
+    // Lembrete de agua a cada 3h
+    [3, 6].forEach(function(h) {
+        navigator.serviceWorker.controller.postMessage({
+            type: 'SCHEDULE_REMINDER',
+            delayMs: h * 3600000,
+            body: '💧 Hora de tomar água! Cuide de você.',
+            tag: 'mp-water-reminder'
+        });
+    });
 }
 
 function fnRenderBeneficios(session) {
