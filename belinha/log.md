@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #159 — 2026-05-08
+
+**Área:** Conversão — `whatsapp-100carimbos-lenda.md` standalone
+
+**O que pesquisou/analisou:**
+- Leu `whatsapp-50carimbos-superfan.md` (ciclo #149): estrutura de referência, tabela progressão, nota explícita sobre gap do marco 100
+- Leu `whatsapp-30carimbos-vip.md` (ciclo #158): confirmou estrutura de 3 templates A/B/C, controle operacional, métricas
+- Identificou alinhamento calendário: cliente inauguração (25/04/2026) + 2 visitas/semana = 100 carimbos em ~abril/maio 2027 = janela do 1º aniversário da loja
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-100carimbos-lenda.md` | CRIADO — Template WA standalone: 3 variantes (A=cerimônia+convite embaixador, B=direto/impactante, C=1º aniversário da loja abr/mai 2027), benefício Lenda com 3 opções sugeridas à franquia, controle operacional com ritual de resgate presencial, tabela progressão completa (gap zero), métricas com foco em taxa de aceitação de embaixador, nota sobre tier futuro "Família MilkyPot" |
+
+**Destaques:**
+1. **Progressão fidelidade fechada:** Com este arquivo, todos os 6 marcos (10, 15, 20, 30, 50, 100 carimbos) têm templates WA standalone. Zero gap na jornada.
+2. **Template C estratégico:** Clientes da inauguração atingem 100 carimbos em ~abr/mai 2027 = janela do 1º aniversário. Reconhecê-los como "co-fundadores simbólicos" nesse momento é o ato de marketing mais autêntico e de maior ROI.
+3. **Convite de embaixador:** Integrado no Template A como pedido genuíno, não contrato — clientes que aceitam voluntariamente geram UGC de qualidade porque crêem na marca.
+4. **Benefício com 3 opções:** Kit exclusivo, crédito R$50, ou "Cria seu Potinho" (produto do dia com nome do cliente) — opção C tem alto valor de PR com custo marginal baixo.
+5. **Alerta ao operador:** Confirmar benefício com franquia ANTES de disparar — placeholder explícito `[BENEFÍCIO_LENDA]` impede envio sem aprovação.
+
+**Commit:** `(a confirmar)`
+
+**Próximo passo sugerido:**
+- **Ciclo #160 — Pesquisa concorrentes (OBRIGATÓRIO — última rodada foi ciclo #151, +9 ciclos atrás):** WebSearch MilkyMoo, Johnny, Jhoy, TheBest. Atualizar arquivos em `belinha/competitors/`.
+- **Ciclo #161 — Auto-aprimoramento (OBRIGATÓRIO — a cada 5 ciclos, último foi #155):** Reler log #155–#160; ajustar `belinha/estrategia.md` para jun–ago 2027.
+- **Operador:** Confirmar benefício disponível para 100 carimbos (Kit Lenda / crédito / Cria seu Potinho) — templates prontos, pendente apenas aprovação da franquia.
+- **Operador:** CNPJ + DPO — LGPD — em aberto há **+22 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente desde ciclo #148).
+- **Operador:** Definir programação 1º aniversário da loja (25/04/2027) — idealmente até fevereiro/2027 para usar placeholder no Template C.
+
+_Belinha — Ciclo #159 | 2026-05-08_
+
+---
+
 ## Ciclo #157 — 2026-05-08
 
 **Área:** SEO — `sitemap.xml` auditoria completa de `lastmod` (8 URLs)
