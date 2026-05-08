@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Controle de Ponto Eletronico (CLT)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#42A5F5">
+    <style>
+        body { background: #F2F2F7; }
+        .pt-wrap { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .pt-banner {
+            background: linear-gradient(135deg, #1E40AF, #3B82F6);
+            color: #fff;
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .pt-banner h2 { margin: 0 0 4px; font-family: 'Baloo 2', sans-serif; font-size: 1.3rem; }
+        .pt-banner p { margin: 0; opacity: .92; font-size: .82rem; }
+        .pt-legal {
+            background: #FFF7ED;
+            border-left: 4px solid #F59E0B;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-size: .82rem;
+            color: #92400E;
+        }
+        .pt-tabs {
+            display: flex;
+            gap: 4px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 6px;
+            margin-bottom: 18px;
+            border: 1px solid #E5E7EB;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+        }
+        .pt-tab {
+            padding: 9px 16px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            color: #6B7280;
+        }
+        .pt-tab.active { background: #3B82F6; color: #fff; }
+        .pt-panel { display: none; }
+        .pt-panel.active { display: block; }
+
+        .pt-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+            background: #fff;
+            border-radius: 10px;
+            padding: 12px 16px;
+            border: 1px solid #E5E7EB;
+        }
+        .pt-toolbar label { font-size: .82rem; color: #555; font-weight: 700; margin-right: 4px; }
+        .pt-toolbar select, .pt-toolbar input {
+            padding: 7px 12px;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: .85rem;
+            font-family: inherit;
+            min-width: 140px;
+        }
+        .btn-primary { background: #3B82F6; color: #fff; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: .85rem; }
+        .btn-primary:hover { background: #2563EB; }
+        .btn-outline { background: #fff; color: #3B82F6; border: 1px solid #3B82F6; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: .85rem; }
+        .btn-outline:hover { background: #EFF6FF; }
+        .btn-warn { background: #F59E0B; color: #fff; border: none; padding: 8px 14px; border-radius: 7px; font-weight: 700; font-size: .8rem; cursor: pointer; }
+
+        .pt-kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .pt-kpi {
+            background: #fff;
+            padding: 14px 16px;
+            border-radius: 11px;
+            border: 1px solid #E5E7EB;
+        }
+        .pt-kpi small { color: #6B7280; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+        .pt-kpi strong { display: block; font-size: 1.5rem; color: #111827; font-family: 'Baloo 2', sans-serif; margin-top: 4px; }
+        .pt-kpi.green strong { color: #16A34A; }
+        .pt-kpi.red strong { color: #DC2626; }
+        .pt-kpi.amber strong { color: #D97706; }
+
+        table.pt-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            font-size: .85rem;
+        }
+        table.pt-table thead { background: #F9FAFB; }
+        table.pt-table th, table.pt-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #F3F4F6;
+        }
+        table.pt-table th { font-weight: 700; color: #374151; font-size: .75rem; text-transform: uppercase; letter-spacing: .4px; }
+        table.pt-table tr:hover td { background: #FAFAFA; }
+        .pt-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: .72rem;
+            font-weight: 700;
+        }
+        .pt-tag.green { background: #DCFCE7; color: #166534; }
+        .pt-tag.red { background: #FEE2E2; color: #991B1B; }
+        .pt-tag.gray { background: #F3F4F6; color: #6B7280; }
+        .pt-tag.amber { background: #FEF3C7; color: #92400E; }
+        .pt-tag.blue { background: #DBEAFE; color: #1E40AF; }
+        .pt-tag.purple { background: #EDE9FE; color: #5B21B6; }
+
+        .pt-row-folga td { background: #F9FAFB !important; color: #9CA3AF; }
+        .pt-row-falta td { background: #FEF2F2 !important; }
+
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: #fff;
+            border-radius: 14px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+        }
+        .modal-header { padding: 18px 22px; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { margin: 0; font-family: 'Baloo 2', sans-serif; }
+        .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #9CA3AF; }
+        .modal-body { padding: 20px 22px; }
+        .modal-footer { padding: 14px 22px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 10px; }
+
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: .8rem; font-weight: 700; color: #374151; margin-bottom: 5px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: .9rem;
+            box-sizing: border-box;
+        }
+
+        @media print {
+            .pt-banner, .pt-tabs, .pt-toolbar, .panel-sidebar, .panel-header, .btn-primary, .btn-outline, .btn-warn { display: none !important; }
+            body { background: #fff; }
+            .pt-wrap { padding: 0; }
+            table.pt-table { font-size: .75rem; }
+        }
+
+        @media (max-width: 700px) {
+            .pt-kpis { grid-template-columns: repeat(2, 1fr); }
+            table.pt-table { font-size: .75rem; }
+            table.pt-table th, table.pt-table td { padding: 7px 8px; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="panel-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+            <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-group">Principal</div>
+            <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+            <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+            <div class="sidebar-nav-group">Gestao</div>
+            <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+            <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+            <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
+            <a href="ponto.html" class="sidebar-link active"><span class="icon">⏰</span> Ponto Eletronico</a>
+            <div class="sidebar-nav-group">Config</div>
+            <a href="configuracoes.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">🏪</div>
+                <div class="sidebar-user-info">
+                    <strong id="sidebarUserName">Franqueado</strong>
+                    <small>Franqueado</small>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="panel-main">
+        <header class="panel-header">
+            <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+            <h1>⏰ Ponto Eletronico</h1>
+            <div style="flex:1"></div>
+            <button class="btn-primary" onclick="openPunchModal()">🟢 Bater Ponto</button>
+        </header>
+
+        <div class="panel-content">
+            <div class="pt-wrap">
+
+                <!-- Banner legal -->
+                <div class="pt-banner">
+                    <div>
+                        <h2>Controle de Ponto Eletronico — Conformidade CLT</h2>
+                        <p>REP-P (Programa) conforme Portaria MTE 671/2021 • NSR sequencial • Hash SHA-256 • Marcacoes imutaveis</p>
+                    </div>
+                    <div style="text-align:right">
+                        <div style="font-size:.7rem;opacity:.85">NSR Atual</div>
+                        <strong id="ptCurrentNSR" style="font-size:1.4rem;font-family:'Baloo 2',sans-serif">--</strong>
+                    </div>
+                </div>
+
+                <!-- Aviso legal -->
+                <div class="pt-legal">
+                    <strong>📋 Lembrete legal:</strong> Toda marcacao e <strong>imutavel</strong>. Ajustes so podem ser feitos via justificativa
+                    (atraso, falta, abono). Funcionarios precisam ter <strong>PIS/PASEP cadastrado em Equipe</strong>. Espelho mensal deve ser
+                    entregue ao trabalhador para conferencia (CLT art. 74). Em caso de fiscalizacao, exporte o AFD na aba "Fiscalizacao".
+                </div>
+
+                <!-- Tabs -->
+                <div class="pt-tabs">
+                    <button class="pt-tab active" onclick="ptSwitchTab('hoje', this)">📅 Hoje</button>
+                    <button class="pt-tab" onclick="ptSwitchTab('espelho', this)">🗓️ Espelho Mensal</button>
+                    <button class="pt-tab" onclick="ptSwitchTab('justificativas', this)">📝 Justificativas</button>
+                    <button class="pt-tab" onclick="ptSwitchTab('escala', this)">📊 Escala</button>
+                    <button class="pt-tab" onclick="ptSwitchTab('fiscalizacao', this)">⚖️ Fiscalizacao (AFD)</button>
+                </div>
+
+                <!-- TAB HOJE -->
+                <div class="pt-panel active" id="pt-tab-hoje">
+                    <div class="pt-kpis">
+                        <div class="pt-kpi"><small>Funcionarios Ativos</small><strong id="ptKpiAtivos">0</strong></div>
+                        <div class="pt-kpi green"><small>Presentes Hoje</small><strong id="ptKpiPresentes">0</strong></div>
+                        <div class="pt-kpi amber"><small>Marcacoes do Dia</small><strong id="ptKpiMarcacoes">0</strong></div>
+                        <div class="pt-kpi red"><small>Faltas (sem justificativa)</small><strong id="ptKpiFaltas">0</strong></div>
+                    </div>
+
+                    <h3 style="font-family:'Baloo 2',sans-serif;color:#374151;margin:0 0 10px">Status da equipe agora</h3>
+                    <table class="pt-table">
+                        <thead>
+                            <tr>
+                                <th>Funcionario</th>
+                                <th>Cargo</th>
+                                <th>Entrada</th>
+                                <th>Saida Almoco</th>
+                                <th>Volta Almoco</th>
+                                <th>Saida</th>
+                                <th>Status</th>
+                                <th>Trabalhado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ptTodayBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- TAB ESPELHO -->
+                <div class="pt-panel" id="pt-tab-espelho">
+                    <div class="pt-toolbar">
+                        <label>Funcionario:</label>
+                        <select id="ptEspelhoStaff"></select>
+                        <label>Mes:</label>
+                        <select id="ptEspelhoMonth"></select>
+                        <label>Ano:</label>
+                        <select id="ptEspelhoYear"></select>
+                        <button class="btn-primary" onclick="ptLoadEspelho()">Carregar</button>
+                        <div style="flex:1"></div>
+                        <button class="btn-outline" onclick="ptPrintEspelho()">🖨️ Imprimir</button>
+                        <button class="btn-outline" onclick="ptExportEspelhoCSV()">📥 Exportar CSV</button>
+                    </div>
+
+                    <div id="ptEspelhoContent">
+                        <p style="text-align:center;padding:40px;color:#9CA3AF">Selecione funcionario e mes para carregar o espelho.</p>
+                    </div>
+                </div>
+
+                <!-- TAB JUSTIFICATIVAS -->
+                <div class="pt-panel" id="pt-tab-justificativas">
+                    <div class="pt-toolbar">
+                        <button class="btn-primary" onclick="openJustificationModal()">+ Nova Justificativa</button>
+                    </div>
+                    <table class="pt-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Funcionario</th>
+                                <th>Tipo</th>
+                                <th>Motivo</th>
+                                <th>Registrado por</th>
+                                <th>Quando</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ptJustBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- TAB ESCALA -->
+                <div class="pt-panel" id="pt-tab-escala">
+                    <div class="pt-legal">
+                        <strong>ℹ️ Como configurar a escala:</strong> Cadastre os horarios padrao (entrada, saida, almoco, folgas)
+                        de cada funcionario na pagina <a href="equipe.html" style="color:#1E40AF;font-weight:700">Equipe</a>. A escala
+                        abaixo mostra a configuracao atual de cada um.
+                    </div>
+                    <table class="pt-table">
+                        <thead>
+                            <tr>
+                                <th>Funcionario</th>
+                                <th>Cargo</th>
+                                <th>Tipo de Jornada</th>
+                                <th>Hora Entrada</th>
+                                <th>Hora Saida</th>
+                                <th>Almoco</th>
+                                <th>Carga Semanal</th>
+                                <th>Folgas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ptEscalaBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- TAB FISCALIZACAO -->
+                <div class="pt-panel" id="pt-tab-fiscalizacao">
+                    <div class="pt-legal">
+                        <strong>⚖️ AFD (Arquivo Fonte de Dados):</strong> Em caso de fiscalizacao do Ministerio do Trabalho,
+                        gere o AFD do periodo solicitado. O arquivo segue layout da Portaria MTE 671/2021. NSR sequencial,
+                        sem lacunas, com hash de integridade.
+                    </div>
+                    <div class="pt-toolbar">
+                        <label>Mes:</label>
+                        <select id="ptAfdMonth"></select>
+                        <label>Ano:</label>
+                        <select id="ptAfdYear"></select>
+                        <button class="btn-primary" onclick="ptDownloadAFD()">📥 Baixar AFD</button>
+                    </div>
+
+                    <h3 style="font-family:'Baloo 2',sans-serif;color:#374151;margin:20px 0 10px">Auditoria de operacoes</h3>
+                    <table class="pt-table">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Acao</th>
+                                <th>Usuario</th>
+                                <th>Detalhes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ptAuditBody"></tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL: Bater Ponto -->
+    <div class="modal-overlay" id="punchModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>🟢 Bater Ponto</h3>
+                <button class="modal-close" onclick="closePunchModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin:0 0 14px;color:#6B7280;font-size:.88rem">Digite o PIN de 4 digitos do funcionario:</p>
+                <div class="form-group">
+                    <input type="text" id="punchPin" inputmode="numeric" maxlength="4" pattern="\d{4}" autocomplete="off"
+                           placeholder="0000" style="font-size:2rem;text-align:center;letter-spacing:8px;font-family:'Baloo 2',sans-serif">
+                </div>
+                <div id="punchResult" style="margin-top:14px"></div>
+                <details style="margin-top:14px">
+                    <summary style="cursor:pointer;font-size:.85rem;color:#6B7280">Identificar por CPF ou PIS</summary>
+                    <div style="margin-top:10px">
+                        <input type="text" id="punchDoc" placeholder="CPF ou PIS (so numeros)" class="form-control" style="width:100%;padding:9px 12px;border:1px solid #D1D5DB;border-radius:8px">
+                        <button class="btn-outline" onclick="ptPunchByDoc()" style="margin-top:8px;width:100%">Bater por CPF/PIS</button>
+                    </div>
+                </details>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closePunchModal()">Cancelar</button>
+                <button class="btn-primary" onclick="ptPunchByPin()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Justificativa -->
+    <div class="modal-overlay" id="justModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>📝 Nova Justificativa</h3>
+                <button class="modal-close" onclick="closeJustModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Funcionario</label>
+                    <select id="justStaff"></select>
+                </div>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="justDate">
+                </div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="justType">
+                        <option value="atraso">Atraso justificado</option>
+                        <option value="falta">Falta justificada</option>
+                        <option value="abono">Abono medico</option>
+                        <option value="banco_horas">Compensacao banco de horas</option>
+                        <option value="ferias">Ferias</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Motivo / Detalhe</label>
+                    <textarea id="justReason" rows="3" placeholder="Descreva o motivo (sera registrado em audit log)"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closeJustModal()">Cancelar</button>
+                <button class="btn-primary" onclick="ptSaveJustification()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/i18n.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/audit.js"></script>
+    <script src="../js/core/time-clock.js"></script>
+
+    <script>
+        // Auth guard
+        if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
+        var session = Auth.getSession();
+        var franchiseId = session.franchiseId;
+        var franchises = DataStore.getAllFranchises();
+        var franchise = franchises.find(function(f) { return f.id === franchiseId; });
+        document.getElementById('sidebarUserName').textContent = session.name;
+        document.getElementById('sidebarStoreName').textContent = franchise ? franchise.name.replace('MilkyPot ', '') : 'Franquia';
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+        function escapeHtml(s) { return Utils.escapeHtml(String(s == null ? '' : s)); }
+
+        // ========== TABS ==========
+        function ptSwitchTab(name, btn) {
+            document.querySelectorAll('.pt-tab').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            document.querySelectorAll('.pt-panel').forEach(function(p) { p.classList.remove('active'); });
+            document.getElementById('pt-tab-' + name).classList.add('active');
+            if (name === 'hoje') ptLoadHoje();
+            if (name === 'espelho') ptInitEspelhoControls();
+            if (name === 'justificativas') ptLoadJustificativas();
+            if (name === 'escala') ptLoadEscala();
+            if (name === 'fiscalizacao') { ptInitAFDControls(); ptLoadAudit(); }
+        }
+
+        // ========== TAB HOJE ==========
+        function ptLoadHoje() {
+            var today = new Date().toISOString().slice(0, 10);
+            var staff = (DataStore.getCollection('staff', franchiseId) || []).filter(function(s) { return s.active; });
+            var totalMarcacoes = 0;
+            var presentes = 0;
+            var faltas = 0;
+
+            var html = '';
+            staff.forEach(function(s) {
+                var dia = TimeClock.computeDay(franchiseId, s.id, today);
+                totalMarcacoes += dia.records.length;
+                if (dia.entrada && !dia.saida) presentes++;
+
+                var status, statusClass;
+                if (dia.completo) { status = 'Encerrou expediente'; statusClass = 'gray'; }
+                else if (dia.almocoVolta) { status = 'No expediente (pos-almoco)'; statusClass = 'green'; }
+                else if (dia.almocoSaida) { status = 'Em horario de almoco'; statusClass = 'amber'; }
+                else if (dia.entrada) { status = 'No expediente'; statusClass = 'green'; }
+                else if (TimeClock.isFolga(s, new Date(today + 'T12:00:00').getDay())) { status = 'Folga'; statusClass = 'blue'; }
+                else { status = 'Nao marcou ainda'; statusClass = 'gray'; }
+
+                html += '<tr>';
+                html += '<td><strong>' + escapeHtml(s.name) + '</strong>' + (s.pis ? '' : '<br><span class="pt-tag red">SEM PIS</span>') + '</td>';
+                html += '<td>' + escapeHtml(s.role || '-') + '</td>';
+                html += '<td>' + (dia.entrada ? dia.entrada.timestamp.slice(11,16) : '-') + '</td>';
+                html += '<td>' + (dia.almocoSaida ? dia.almocoSaida.timestamp.slice(11,16) : '-') + '</td>';
+                html += '<td>' + (dia.almocoVolta ? dia.almocoVolta.timestamp.slice(11,16) : '-') + '</td>';
+                html += '<td>' + (dia.saida ? dia.saida.timestamp.slice(11,16) : '-') + '</td>';
+                html += '<td><span class="pt-tag ' + statusClass + '">' + status + '</span></td>';
+                html += '<td>' + (dia.completo ? dia.horasFormatado : '-') + '</td>';
+                html += '</tr>';
+            });
+
+            if (!staff.length) {
+                html = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#9CA3AF">Cadastre funcionarios em <a href="equipe.html" style="color:#3B82F6">Equipe</a> primeiro.</td></tr>';
+            }
+
+            document.getElementById('ptTodayBody').innerHTML = html;
+            document.getElementById('ptKpiAtivos').textContent = staff.length;
+            document.getElementById('ptKpiPresentes').textContent = presentes;
+            document.getElementById('ptKpiMarcacoes').textContent = totalMarcacoes;
+            document.getElementById('ptKpiFaltas').textContent = faltas;
+            document.getElementById('ptCurrentNSR').textContent = TimeClock.getCurrentNSR(franchiseId) || '0';
+        }
+
+        // ========== TAB ESPELHO ==========
+        function ptInitEspelhoControls() {
+            var staffSel = document.getElementById('ptEspelhoStaff');
+            var staff = (DataStore.getCollection('staff', franchiseId) || []).filter(function(s) { return s.active; });
+            staffSel.innerHTML = staff.map(function(s) { return '<option value="' + s.id + '">' + escapeHtml(s.name) + '</option>'; }).join('');
+
+            var monthSel = document.getElementById('ptEspelhoMonth');
+            var meses = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+            monthSel.innerHTML = meses.map(function(m, i) { return '<option value="' + (i+1) + '">' + m + '</option>'; }).join('');
+            monthSel.value = new Date().getMonth() + 1;
+
+            var yearSel = document.getElementById('ptEspelhoYear');
+            var currentYear = new Date().getFullYear();
+            var years = [];
+            for (var y = currentYear - 2; y <= currentYear + 1; y++) years.push(y);
+            yearSel.innerHTML = years.map(function(y) { return '<option value="' + y + '">' + y + '</option>'; }).join('');
+            yearSel.value = currentYear;
+        }
+
+        function ptLoadEspelho() {
+            var staffId = document.getElementById('ptEspelhoStaff').value;
+            var month = parseInt(document.getElementById('ptEspelhoMonth').value, 10);
+            var year = parseInt(document.getElementById('ptEspelhoYear').value, 10);
+            if (!staffId) return;
+
+            var espelho = TimeClock.computeMonth(franchiseId, staffId, year, month);
+            var s = espelho.staff;
+
+            var html = '';
+            html += '<div style="background:#fff;border-radius:10px;padding:16px 20px;border:1px solid #E5E7EB;margin-bottom:14px">';
+            html += '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:14px">';
+            html += '<div><strong style="font-size:1.1rem">' + escapeHtml(s ? s.name : '?') + '</strong>';
+            html += '<div style="font-size:.8rem;color:#6B7280">PIS: ' + escapeHtml(s && s.pis ? s.pis : 'NAO CADASTRADO') + ' • ' + escapeHtml(s && s.role || '-') + '</div></div>';
+            html += '<div style="text-align:right"><strong style="font-size:1.1rem;color:#3B82F6">' + espelho.monthLabel + '</strong>';
+            html += '<div style="font-size:.78rem;color:#6B7280">Carga semanal: ' + (s && s.carga_horaria_semanal || 44) + 'h</div></div>';
+            html += '</div>';
+
+            // Totais
+            html += '<div class="pt-kpis" style="margin-bottom:0">';
+            html += '<div class="pt-kpi"><small>Dias trabalhados</small><strong>' + espelho.totals.diasTrabalhados + '</strong></div>';
+            html += '<div class="pt-kpi green"><small>Total trabalhado</small><strong>' + espelho.totaisFormatado.trabalhado + '</strong></div>';
+            html += '<div class="pt-kpi amber"><small>Horas extras</small><strong>' + espelho.totaisFormatado.extras + '</strong></div>';
+            html += '<div class="pt-kpi red"><small>Atrasos</small><strong>' + espelho.totaisFormatado.atraso + '</strong></div>';
+            html += '<div class="pt-kpi"><small>Adicional noturno</small><strong>' + espelho.totaisFormatado.noturno + '</strong></div>';
+            html += '<div class="pt-kpi ' + (espelho.totals.bancoHorasMin >= 0 ? 'green' : 'red') + '"><small>Banco de horas</small><strong>' + espelho.totaisFormatado.bancoHoras + '</strong></div>';
+            html += '<div class="pt-kpi red"><small>Faltas s/ justific.</small><strong>' + espelho.totals.faltas + '</strong></div>';
+            html += '</div>';
+            html += '</div>';
+
+            // Tabela
+            html += '<table class="pt-table">';
+            html += '<thead><tr><th>Dia</th><th>Sem.</th><th>Entrada</th><th>Almoco</th><th>Volta</th><th>Saida</th><th>Trabalhado</th><th>Extras</th><th>Atraso</th><th>Aviso</th><th>Justific.</th></tr></thead><tbody>';
+            espelho.days.forEach(function(d) {
+                var rowClass = '';
+                if (d.isFolga) rowClass = 'pt-row-folga';
+                else if (d.isFalta) rowClass = 'pt-row-falta';
+                html += '<tr class="' + rowClass + '">';
+                html += '<td>' + d.date.slice(8) + '/' + d.date.slice(5,7) + '</td>';
+                html += '<td>' + d.dayOfWeek.slice(0,3) + '</td>';
+                if (d.isFolga && d.records.length === 0) {
+                    html += '<td colspan="6" style="text-align:center;font-style:italic">FOLGA</td>';
+                } else if (d.isFalta) {
+                    html += '<td colspan="6" style="text-align:center;color:#991B1B;font-weight:700">FALTA</td>';
+                } else {
+                    html += '<td>' + (d.entrada ? d.entrada.timestamp.slice(11,16) : '-') + '</td>';
+                    html += '<td>' + (d.almocoSaida ? d.almocoSaida.timestamp.slice(11,16) : '-') + '</td>';
+                    html += '<td>' + (d.almocoVolta ? d.almocoVolta.timestamp.slice(11,16) : '-') + '</td>';
+                    html += '<td>' + (d.saida ? d.saida.timestamp.slice(11,16) : '-') + '</td>';
+                    html += '<td>' + (d.completo ? d.horasFormatado : '-') + '</td>';
+                    html += '<td>' + (d.minutosExtras ? TimeClock.minutesToTime(d.minutosExtras) : '-') + '</td>';
+                }
+                html += '<td>' + (d.minutosAtraso ? TimeClock.minutesToTime(d.minutosAtraso) : '-') + '</td>';
+                html += '<td style="font-size:.7rem">' + escapeHtml(d.avisoIntervalo || '') + '</td>';
+                html += '<td>' + (d.justificativa ? '<span class="pt-tag blue" title="' + escapeHtml(d.justificativa.reason) + '">' + d.justificativa.type + '</span>' : '-') + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+
+            html += '<div class="pt-legal" style="margin-top:14px"><strong>Conferencia do trabalhador:</strong> Ao receber este espelho, o funcionario deve assinar a copia impressa atestando que conferiu as marcacoes (CLT art. 74 §2). Divergencias devem ser registradas como justificativa.</div>';
+
+            document.getElementById('ptEspelhoContent').innerHTML = html;
+        }
+
+        function ptPrintEspelho() { window.print(); }
+        function ptExportEspelhoCSV() {
+            var staffId = document.getElementById('ptEspelhoStaff').value;
+            var month = parseInt(document.getElementById('ptEspelhoMonth').value, 10);
+            var year = parseInt(document.getElementById('ptEspelhoYear').value, 10);
+            if (!staffId) { alert('Selecione um funcionario'); return; }
+            TimeClock.downloadEspelhoCSV(franchiseId, staffId, year, month);
+        }
+
+        // ========== TAB JUSTIFICATIVAS ==========
+        function ptLoadJustificativas() {
+            var justs = (DataStore.getCollection('time_clock_justifications', franchiseId) || [])
+                .sort(function(a, b) { return b.createdAt.localeCompare(a.createdAt); });
+            var staff = DataStore.getCollection('staff', franchiseId) || [];
+
+            var html = justs.map(function(j) {
+                var s = staff.find(function(x) { return x.id === j.staffId; });
+                return '<tr>'
+                    + '<td>' + j.date.slice(8) + '/' + j.date.slice(5,7) + '/' + j.date.slice(0,4) + '</td>'
+                    + '<td>' + escapeHtml(s ? s.name : j.staffId) + '</td>'
+                    + '<td><span class="pt-tag purple">' + escapeHtml(j.type) + '</span></td>'
+                    + '<td>' + escapeHtml(j.reason) + '</td>'
+                    + '<td>' + escapeHtml(j.createdBy) + '</td>'
+                    + '<td>' + new Date(j.createdAt).toLocaleString('pt-BR') + '</td>'
+                    + '</tr>';
+            }).join('');
+            if (!html) html = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#9CA3AF">Nenhuma justificativa cadastrada.</td></tr>';
+            document.getElementById('ptJustBody').innerHTML = html;
+
+            var sel = document.getElementById('justStaff');
+            sel.innerHTML = staff.filter(function(s) { return s.active; })
+                .map(function(s) { return '<option value="' + s.id + '">' + escapeHtml(s.name) + '</option>'; }).join('');
+            document.getElementById('justDate').value = new Date().toISOString().slice(0, 10);
+        }
+
+        function openJustificationModal() {
+            ptLoadJustificativas();
+            document.getElementById('justModal').classList.add('show');
+        }
+        function closeJustModal() { document.getElementById('justModal').classList.remove('show'); }
+        function ptSaveJustification() {
+            var staffId = document.getElementById('justStaff').value;
+            var date = document.getElementById('justDate').value;
+            var type = document.getElementById('justType').value;
+            var reason = document.getElementById('justReason').value.trim();
+            if (!staffId || !date || !reason) { alert('Preencha todos os campos'); return; }
+            var result = TimeClock.addJustification(franchiseId, staffId, date, type, reason);
+            if (result.success) {
+                Utils.showToast && Utils.showToast('Justificativa salva', 'success');
+                document.getElementById('justReason').value = '';
+                closeJustModal();
+                ptLoadJustificativas();
+            } else {
+                alert('Erro: ' + result.error);
+            }
+        }
+
+        // ========== TAB ESCALA ==========
+        function ptLoadEscala() {
+            var staff = (DataStore.getCollection('staff', franchiseId) || []).filter(function(s) { return s.active; });
+            var html = staff.map(function(s) {
+                var j = s.jornada || {};
+                var folgas = (j.folgas || ['domingo']).join(', ');
+                return '<tr>'
+                    + '<td><strong>' + escapeHtml(s.name) + '</strong></td>'
+                    + '<td>' + escapeHtml(s.role || '-') + '</td>'
+                    + '<td><span class="pt-tag blue">' + escapeHtml(j.tipo || '5x2') + '</span></td>'
+                    + '<td>' + escapeHtml(j.hora_entrada || '-') + '</td>'
+                    + '<td>' + escapeHtml(j.hora_saida || '-') + '</td>'
+                    + '<td>' + (j.intervalo_almoco_min || 60) + ' min</td>'
+                    + '<td>' + (s.carga_horaria_semanal || 44) + 'h</td>'
+                    + '<td>' + escapeHtml(folgas) + '</td>'
+                    + '</tr>';
+            }).join('');
+            if (!html) html = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#9CA3AF">Nenhum funcionario ativo.</td></tr>';
+            document.getElementById('ptEscalaBody').innerHTML = html;
+        }
+
+        // ========== TAB FISCALIZACAO ==========
+        function ptInitAFDControls() {
+            var monthSel = document.getElementById('ptAfdMonth');
+            var meses = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+            monthSel.innerHTML = meses.map(function(m, i) { return '<option value="' + (i+1) + '">' + m + '</option>'; }).join('');
+            monthSel.value = new Date().getMonth() + 1;
+
+            var yearSel = document.getElementById('ptAfdYear');
+            var currentYear = new Date().getFullYear();
+            var years = [];
+            for (var y = currentYear - 2; y <= currentYear + 1; y++) years.push(y);
+            yearSel.innerHTML = years.map(function(y) { return '<option value="' + y + '">' + y + '</option>'; }).join('');
+            yearSel.value = currentYear;
+        }
+
+        function ptDownloadAFD() {
+            var month = parseInt(document.getElementById('ptAfdMonth').value, 10);
+            var year = parseInt(document.getElementById('ptAfdYear').value, 10);
+            var afd = TimeClock.downloadAFD(franchiseId, year, month);
+            if (afd.totalRecords === 0) {
+                alert('Nenhuma marcacao no periodo selecionado.');
+            } else {
+                alert('AFD gerado com ' + afd.totalRecords + ' marcacoes.\nArquivo baixado: ' + afd.filename);
+            }
+        }
+
+        function ptLoadAudit() {
+            var audit = (DataStore.getCollection('time_clock_audit', franchiseId) || [])
+                .sort(function(a, b) { return b.timestamp.localeCompare(a.timestamp); })
+                .slice(0, 100);
+            var html = audit.map(function(a) {
+                return '<tr>'
+                    + '<td>' + new Date(a.timestamp).toLocaleString('pt-BR') + '</td>'
+                    + '<td><span class="pt-tag amber">' + escapeHtml(a.action) + '</span></td>'
+                    + '<td>' + escapeHtml(a.user) + '</td>'
+                    + '<td style="font-size:.75rem;color:#6B7280;font-family:monospace">' + escapeHtml(JSON.stringify(a.details)) + '</td>'
+                    + '</tr>';
+            }).join('');
+            if (!html) html = '<tr><td colspan="4" style="text-align:center;padding:30px;color:#9CA3AF">Sem registros de auditoria ainda.</td></tr>';
+            document.getElementById('ptAuditBody').innerHTML = html;
+        }
+
+        // ========== MODAL BATER PONTO ==========
+        function openPunchModal() {
+            document.getElementById('punchPin').value = '';
+            document.getElementById('punchDoc').value = '';
+            document.getElementById('punchResult').innerHTML = '';
+            document.getElementById('punchModal').classList.add('show');
+            setTimeout(function() { document.getElementById('punchPin').focus(); }, 100);
+        }
+        function closePunchModal() { document.getElementById('punchModal').classList.remove('show'); }
+
+        async function ptPunchByPin() {
+            var pin = document.getElementById('punchPin').value.trim();
+            if (!pin || pin.length !== 4) { alert('PIN deve ter 4 digitos'); return; }
+            var result = await TimeClock.recordPunch(franchiseId, pin, 'pin');
+            ptShowPunchResult(result);
+        }
+        async function ptPunchByDoc() {
+            var doc = document.getElementById('punchDoc').value.trim();
+            if (!doc) return;
+            var result = await TimeClock.recordPunch(franchiseId, doc, 'doc');
+            ptShowPunchResult(result);
+        }
+
+        function ptShowPunchResult(result) {
+            var el = document.getElementById('punchResult');
+            if (result.success) {
+                el.innerHTML = '<div style="background:#DCFCE7;border-left:4px solid #16A34A;padding:12px 14px;border-radius:8px">'
+                    + '<strong style="color:#166534;display:block;margin-bottom:4px">✓ Ponto registrado!</strong>'
+                    + '<div style="font-size:.85rem;color:#166534">'
+                    + '<strong>' + escapeHtml(result.staff.name) + '</strong> — ' + result.typeLabel + '<br>'
+                    + 'Hora: ' + new Date(result.timestamp).toLocaleTimeString('pt-BR') + ' • NSR ' + result.nsr
+                    + '</div></div>';
+                document.getElementById('punchPin').value = '';
+                document.getElementById('punchDoc').value = '';
+                setTimeout(function() {
+                    closePunchModal();
+                    ptLoadHoje();
+                }, 2200);
+            } else {
+                el.innerHTML = '<div style="background:#FEE2E2;border-left:4px solid #DC2626;padding:12px 14px;border-radius:8px;color:#991B1B;font-size:.85rem">'
+                    + '<strong>✗ Erro:</strong> ' + escapeHtml(result.error) + '</div>';
+            }
+        }
+
+        document.getElementById('punchPin').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') ptPunchByPin();
+        });
+
+        // INIT
+        ptLoadHoje();
+        document.getElementById('ptCurrentNSR').textContent = TimeClock.getCurrentNSR(franchiseId) || '0';
+    </script>
+</body>
+</html>
