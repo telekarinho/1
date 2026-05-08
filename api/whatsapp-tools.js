@@ -39,7 +39,7 @@ async function fsPatch(docPath, fields, mask) {
 }
 
 // ============================================
-// TOOL: listar_cardapio
+// TOOL: listar_cardapio (compacto pra evitar 429 rate limit)
 // ============================================
 async function listar_cardapio({ franchiseeId }) {
     if (!franchiseeId) return { error: "franchiseeId obrigatório" };
@@ -47,23 +47,15 @@ async function listar_cardapio({ franchiseeId }) {
     return {
         ok: true,
         source: cardapio.source,
-        resumo: Cardapio.summarizeForLulu(cardapio),
-        bases: (cardapio.bases || []).filter(b => b.available !== false).map(b => ({ id: b.id, name: b.name, emoji: b.emoji })),
-        formatos: (cardapio.formatos || []).filter(f => f.available !== false).map(f => ({ id: f.id, name: f.name, emoji: f.emoji, compatibleBases: f.compatibleBases })),
-        tamanhos: (cardapio.tamanhos || []).filter(t => t.available !== false).map(t => ({ id: t.id, name: t.name, ml: t.ml, price: t.price })),
-        sabores: cardapio.sabores
-            ? Object.entries(cardapio.sabores).map(([k, c]) => ({
-                categoria: c.name,
-                items: (c.items || []).filter(i => i.available !== false).map(i => ({ id: i.id, name: i.name }))
-            }))
-            : [],
-        adicionais: cardapio.adicionais
-            ? Object.entries(cardapio.adicionais).map(([k, c]) => ({
-                categoria: c.name,
-                items: (c.items || []).filter(i => i.available !== false).map(i => ({ id: i.id, name: i.name, price: i.price }))
-            }))
-            : [],
-        bebidas: (cardapio.bebidas || []).filter(b => b.available !== false).map(b => ({ id: b.id, name: b.name, price: b.price }))
+        totalProdutos: cardapio.produtos.length,
+        // Resumo super compacto pra IA: só nome + preço
+        produtos: cardapio.produtos.map(p => ({
+            name: p.name,
+            categoria: p.categoriaName || p.categoria,
+            preco: p.priceDelivery || p.price
+        })),
+        adicionais: cardapio.adicionais.map(a => ({ name: a.name, preco: a.price })),
+        bebidas: cardapio.bebidas.map(b => ({ name: b.name, preco: b.price }))
     };
 }
 
@@ -74,7 +66,7 @@ async function criar_pedido({
     franchiseeId,
     customerPhone,
     customerName,
-    items,           // [{ base, formato, tamanho, sabor, adicionais:[], qty }] OU [{ sabor, tamanho, qty }] simples
+    items,           // [{ sabor: 'amora', adicionais:[], qty, observacao }]
     tipo,            // 'delivery' | 'retirada'
     endereco,        // só se delivery
     pagamento,       // 'pix' | 'cartao' | 'dinheiro'
@@ -90,22 +82,20 @@ async function criar_pedido({
     const cardapio = await Cardapio.getCardapio(franchiseeId);
     const deliveryCfg = await Cardapio.getDeliveryConfig(franchiseeId);
 
-    // Resolve cada item contra o cardápio
+    // Resolve cada item contra o cardápio (busca fuzzy por nome)
     const resolvedItems = [];
     const errors = [];
     for (const raw of items) {
-        const r = Cardapio.resolveItem(raw, cardapio, "delivery");
-        if (r.errors?.length) {
-            errors.push(...r.errors);
+        const r = Cardapio.resolveItem(raw, cardapio);
+        if (r.errors?.length || !r.item) {
+            errors.push(...(r.errors || ["item não resolvido"]));
             continue;
         }
-        const qty = Math.max(1, parseInt(raw.qty) || 1);
         resolvedItems.push({
             id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
             ...r.item,
-            qty,
             price: r.item.unitPrice,
-            total: r.item.unitPrice * qty
+            total: r.item.unitPrice * r.item.qty
         });
     }
 
