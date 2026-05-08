@@ -2510,3 +2510,10 @@ exports.runCatalogSyncNow = onCall({
     const summary = await CatalogSync.syncAllFranchises(db);
     return { ok: true, mode: "all-franchises", summary };
 });
+
+// ============================================
+// Franchise Nurture — sequência automática de emails pra leads VIP
+// Roda 1x/dia (10:00 BR), envia emails em T+1d, T+7d, T+30d, T+90d
+// ============================================
+const franchiseNurture = require("./franchise-nurture");
+exports.franchiseNurtureCron = franchiseNurture.franchiseNurtureCron;
