@@ -365,9 +365,10 @@ service cloud.firestore {
     // Visitantes ANÔNIMOS na landing fazem signInAnonymously() antes de
     // gravar o lead. Validação: campos mínimos presentes, tamanhos
     // limitados, origem fixa pra evitar abuse via console.
-    // Read/update/delete: só super_admin (Jocimar via painel admin).
+    // Read/update/delete: super_admin OU franchisee (Jocimar acessa via
+    // /painel/franquia-leads.html — atualiza historico/status do lead).
     match /franchise_leads/{leadId} {
-      allow read: if isSuperAdmin();
+      allow read: if isSuperAdmin() || isFranchisee();
       allow create: if isAuthenticated()
                      && request.resource.data.keys().hasAll(['nome','whatsapp','email','cidade','uf','capital','formato','perfil','origem','criadoEm'])
                      && request.resource.data.nome is string
@@ -380,7 +381,8 @@ service cloud.firestore {
                      && request.resource.data.whatsapp.size() >= 10
                      && request.resource.data.whatsapp.size() <= 15
                      && request.resource.data.origem == 'landing#franquia';
-      allow update, delete: if isSuperAdmin();
+      allow update: if isSuperAdmin() || isFranchisee();
+      allow delete: if isSuperAdmin();
     }
 
     // Audit de relatorios de caixa enviados — Cloud Function grava
