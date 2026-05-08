@@ -224,8 +224,9 @@
       console.error('[wa-conectar] falha lendo /users:', e.message);
     }
 
-    // Fallback: se sem role mas tem email do owner conhecido, trata como super_admin
-    if (!USER_ROLE && u.email === 'jocimarrodrigo@gmail.com') {
+    // Fallback: emails de owner conhecidos sempre são super_admin
+    const OWNER_EMAILS = ['jocimarrodrigo@gmail.com', 'milkypot.com@gmail.com'];
+    if (OWNER_EMAILS.includes((u.email || '').toLowerCase())) {
       USER_ROLE = 'super_admin';
       console.log('[wa-conectar] fallback: owner detectado → super_admin');
     }

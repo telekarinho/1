@@ -38,6 +38,14 @@ const ADMIN_TOKEN = process.env.MP_API_KEY;
 
 const ALLOWED_ROLES = new Set(["super_admin", "franchisee"]);
 
+// Owner emails — sempre tratados como super_admin mesmo sem doc /users/{uid}.
+// Pode ser estendido via env var MP_OWNER_EMAILS (CSV).
+const OWNER_EMAILS = new Set([
+    "jocimarrodrigo@gmail.com",
+    "milkypot.com@gmail.com",
+    ...(process.env.MP_OWNER_EMAILS || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean)
+]);
+
 async function validateIdToken(idToken) {
     const url = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_KEY}`;
     const r = await fetch(url, {
@@ -145,9 +153,15 @@ module.exports = async (req, res) => {
     let franchiseeIds = userDoc?.franchiseeIds || [];
 
     // Fallback: owner email é super_admin mesmo sem doc /users
-    if (!role && user.email === "jocimarrodrigo@gmail.com") {
+    const emailLower = (user.email || "").toLowerCase();
+    if (!role && OWNER_EMAILS.has(emailLower)) {
         role = "super_admin";
-        console.log("[whatsapp-admin] fallback: owner email → super_admin");
+        console.log("[whatsapp-admin] fallback: owner email → super_admin", emailLower);
+    }
+    // Forço super_admin pra owners mesmo se doc tiver outra role (segurança contra
+    // alguém setar role errado no /users/{uid} de um owner)
+    if (OWNER_EMAILS.has(emailLower)) {
+        role = "super_admin";
     }
 
     if (!ALLOWED_ROLES.has(role)) {
