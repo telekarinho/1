@@ -5805,3 +5805,42 @@ _Belinha — Ciclo #148 | 2026-05-07_
 _Belinha — Ciclo #152 | 2026-05-07_
 
 ---
+
+## Ciclo #158 — 2026-05-08
+
+**Área:** Conversão — `whatsapp-30carimbos-vip.md` standalone
+
+**Contexto:** O ciclo #158 foi prescrito como "Template WA milestone 50 carimbos fidelidade (prescrito roadmap #147)". Ao iniciar o ciclo, verificou-se que `whatsapp-50carimbos-superfan.md` foi criado no ciclo #149 e está completo (3 templates A/B/C, controle operacional, métricas). A prescrição era stale. Nesse arquivo, há menção explícita a dois gaps: marco de **30 carimbos** ("A criar — ciclo futuro") e marco de **100 carimbos** ("A criar"). O de 30 carimbos é o mais urgente: ocorre na janela de 3 meses pós-inauguração, período crítico de churn silencioso.
+
+**O que pesquisou/analisou:**
+- Leu `whatsapp-50carimbos-superfan.md` (ciclo #149): progressão completa da fidelidade, gaps explícitos em 30 e 100 carimbos
+- Leu `conversao-upsell-pdv-15carimbos.md` (ciclo #97): referência de estrutura para templates de conversão
+- Leu `fidelidade-milestones-wa.md` (ciclo #111): sistema paralelo de pontos (10/50/100 pontos = R$ gastos); coexiste com sistema de carimbos físicos — sem conflito direto, usos distintos
+- Identificou o calendário: clientes da inauguração (25/04/2026) com frequência regular atingem 30 carimbos em jul–ago/2026, coincidindo com inverno e risco de queda sazonal
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-30carimbos-vip.md` | CRIADO — Template WA standalone: 3 variantes (A=celebração+próximo nível, B=direto, C=inverno jul–ago), benefício sugerido (topping premium grátis ou upgrade Mini→Médio), controle operacional, tabela progressão fidelidade atualizada, métricas (% resgate 15 dias, % chegam ao 50º, % aumentam frequência) |
+
+**Destaques:**
+1. **Churn prevention:** Marco de 30 carimbos é a janela de "fadiga da novidade" — sem reconhecimento aqui, clientes espaçam visitas silenciosamente. Template A revela a existência do próximo marco (50 carimbos) via spoiler, criando motivação renovada ("progress disclosure").
+2. **Template C sazonal:** Jul–ago 2026 = inverno Londrina = queda natural em sorveterias. Template C usa linguagem de conforto ("potinho quente no coração") e upgrade de tamanho para manter frequência durante a baixa estação.
+3. **"Sou VIP" como ritual PDV:** Frase de identificação no balcão gera marketing social passivo — outros clientes observam o reconhecimento.
+4. **Progressão fechada até 50:** Agora todos os marcos de 10, 15, 20, 30 e 50 carimbos têm templates. Gap restante: 100 carimbos ("Lenda MilkyPot").
+
+**Commit:** `c89e78d`
+
+**Próximo passo sugerido:**
+- **Ciclo #159 — Conversão:** `whatsapp-100carimbos-lenda.md` — último gap da progressão fidelidade. Cliente de 100 carimbos é evangelist ativo; template deve incluir benefício impactante (confirmar com franquia) + convite para ser "embaixador oficial".
+- **Ciclo #160 — Pesquisa concorrentes:** nova rodada inteligência competitiva (última: ciclo #151, +9 ciclos atrás). MilkyMoo, Johnny, Jhoy, TheBest.
+- **Ciclo #161 — Auto-aprimoramento:** Reler log #155–#160; ajustar estratégia para jun–ago 2027.
+- **Operador:** Confirmar benefício disponível para 30 carimbos (topping grátis vs upgrade Mini→Médio) — Templates A e B têm placeholder para ajuste.
+- **Operador:** CNPJ + DPO — LGPD — em aberto há **+21 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (ação pendente desde ciclo #148).
+
+_Belinha — Ciclo #158 | 2026-05-08_
+
+---
