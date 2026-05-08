@@ -28,6 +28,7 @@
 
 const crypto = require("crypto");
 const TOOLS = require("./whatsapp-tools.js");
+const Customers = require("./whatsapp-customers.js");
 
 // ============================================
 // Tool definitions (formato OpenAI/Groq)
@@ -64,10 +65,19 @@ const TOOL_DEFINITIONS = [
                         }
                     },
                     tipo: { type: "string", enum: ["delivery", "retirada"], description: "delivery (com taxa) ou retirada na loja (sem taxa)" },
-                    endereco: { type: "string", description: "Endereço completo (rua, número, bairro, complemento). Obrigatório se delivery." },
+                    endereco: { type: "string", description: "Endereço completo (rua, número, bairro, complemento). Obrigatório se delivery e cliente é NOVO ou pediu em outro endereço." },
+                    usar_endereco_anterior: { type: "boolean", description: "Use TRUE quando cliente CONHECIDO disser 'manda no endereço de sempre', 'no de antes', 'mesmo lugar'. Sistema puxa lastAddress do perfil." },
                     pagamento: { type: "string", enum: ["pix", "cartao", "dinheiro"] },
                     troco_para: { type: "number", description: "Troco pra qual valor (só se dinheiro)" },
-                    observacoes: { type: "string", description: "Observações gerais do pedido" }
+                    observacoes: { type: "string", description: "Observações gerais do pedido" },
+                    recipient: {
+                        type: "object",
+                        description: "Quem vai RECEBER/RETIRAR se for OUTRA pessoa (ex: 'minha amiga Maria vai buscar'). Omite se for o próprio cliente que pediu.",
+                        properties: {
+                            name: { type: "string", description: "Nome da pessoa que vai receber/retirar" },
+                            phone: { type: "string", description: "Telefone da pessoa (opcional)" }
+                        }
+                    }
                 },
                 required: ["items", "tipo", "pagamento"]
             }
@@ -358,8 +368,12 @@ async function generateLuluReply(history, currentText, customerName, accountId, 
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) throw new Error("GROQ_API_KEY missing");
 
-    // Carrega contexto específico da franquia
-    const franchise = await getFranchiseContext(accountId);
+    // Carrega contexto específico da franquia + perfil do cliente em paralelo
+    const [franchise, customer] = await Promise.all([
+        getFranchiseContext(accountId),
+        Customers.getCustomer(accountId, customerPhone)
+    ]);
+
     let contextSuffix = customerName ? `\n\nNome do cliente: ${customerName}` : "";
     if (franchise) {
         contextSuffix += `\n\n## FRANQUIA ATUAL: "${franchise.name || accountId}"`;
@@ -368,6 +382,19 @@ async function generateLuluReply(history, currentText, customerName, accountId, 
         if (franchise.deliveryFee) contextSuffix += `\n- Taxa entrega: R$ ${franchise.deliveryFee}`;
         if (franchise.deliveryTime) contextSuffix += `\n- Tempo entrega: ${franchise.deliveryTime}`;
         if (franchise.ownerName) contextSuffix += `\n- Dono(a): ${franchise.ownerName}`;
+    }
+
+    // PERFIL DO CLIENTE — Lulu tem memória de pedidos anteriores
+    if (customer) {
+        const summary = Customers.summarizeCustomer(customer);
+        if (summary) {
+            contextSuffix += `\n\n## 🐑 CLIENTE CONHECIDO (use essa info pra acelerar!):\n${summary}\n
+Se cliente quer pedir delivery e disse algo tipo "manda no de sempre", "no endereço de antes", "mesmo lugar", USE \`usar_endereco_anterior: true\` no criar_pedido.
+Pergunte CARINHOSAMENTE no início se tem dúvida: "Oi ${customer.name || 'querida(o)'}! 💜 Mando pra ${customer.lastAddress || 'sua casa'} de novo? Ou é em outro lugar hoje?"
+Se cliente sumiu há mais de 30 dias e voltou, dá um boas-vindas saudoso: "Quanto tempo querida(o)! 🥹💜"`;
+        }
+    } else if (customerPhone) {
+        contextSuffix += `\n\n## CLIENTE NOVO ✨\nÉ a primeira vez dessa pessoa. Cumprimenta com carinho extra e seja super atenciosa.`;
     }
     contextSuffix += `
 
@@ -401,18 +428,40 @@ Passo 2: Cliente escolhe sabor (ex: "Amora Apaixonada" / "blue ice" / "açaí")
    → Use o nome no campo 'sabor' do criar_pedido (sistema faz fuzzy match)
 Passo 3: Pergunta sobre adicionais UMA vez ("quer Pistache R$3,50 ou Granola por cima? 💜")
 Passo 4: Delivery ou retirada
-   → Se delivery, peça endereço completo. Se valor < R$ 30 ofereça retirada (sem taxa)
+   → SE cliente é CONHECIDO (tem perfil acima): pergunta carinhosamente "manda no de sempre? 💜" e use \`usar_endereco_anterior:true\` se confirmar
+   → SE novo: pede endereço completo
+   → Se valor < R$ 30 ofereça retirada (sem taxa)
 Passo 5: Pagamento (PIX / Cartão / Dinheiro com troco)
-Passo 6: CHAME criar_pedido com items=[{sabor:"nome", adicionais:["nome"], qty:N}]
-Passo 7: Confirme bonito:
+   → SE cliente é CONHECIDO: oferece o método de sempre ("PIX como da última vez? 💜")
+Passo 6: PERGUNTA SE OUTRA PESSOA VAI RECEBER/RETIRAR (importante!)
+   → Se cliente disser algo tipo "minha amiga Maria vai buscar", "manda pra minha mãe", "pra meu marido" → adiciona \`recipient:{name:"Maria"}\` no criar_pedido
+   → Se NÃO disser nada, deixa recipient null (assume que o próprio cliente recebe)
+Passo 7: CHAME criar_pedido. Items=[{sabor:"nome", adicionais:["nome"], qty:N}]
+Passo 8: Confirme bonito:
    "Aaaai pedido feito amorzinho! 🐑💜
    📦 #ABC123
    🍨 1x Milkshake Amora Apaixonada
    💰 Total R$ XX,XX
    ⏰ Chega em 30-50min ✨
+   👤 Quem retira: Maria   ← se recipient
    Tô passando pra cozinha JÁ!"
 
 Múltiplos itens: "2 amora + 1 blue ice + topping pistache" → items=[{sabor:"amora",qty:2},{sabor:"blue ice",adicionais:["pistache"]}]
+
+### MEMÓRIA DE CLIENTE (use o perfil acima!):
+- Nome → use ele pra cumprimentar pessoalmente
+- Sabores favoritos → sugira: "Que tal o Amora Apaixonada de sempre? 💜"
+- Último endereço → "manda pra rua X 100 de novo, Maria?"
+- Cliente recorrente (5+ pedidos) → trata com mais intimidade, "minha querida fiel 💜"
+- Cliente sumido (>30 dias) → "Saudades! Que bom te ver de volta 🥹💜"
+- NUNCA repita perguntas que cliente já respondeu em conversa anterior
+
+### PEDIDO PRA OUTRA PESSOA RETIRAR/RECEBER:
+- "Minha amiga Maria vai buscar" → recipient: {name: "Maria"}
+- "Manda pra minha mãe" → pergunta o nome da mãe e usa
+- "Pra meu marido João retirar" → recipient: {name: "João"}
+- Quando há recipient, AVISE na confirmação: "Vou avisar a equipe que a Maria vai retirar 💜"
+- Se for delivery pra outra pessoa, marca recipient + endereço dela
 
 ### VENDA INTELIGENTE (sem ser chata):
 - UMA sugestão por conversa (não bombardeia): "Que tal adicionar borda Nutella por R$ 4?"
