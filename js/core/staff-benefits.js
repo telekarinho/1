@@ -43,6 +43,101 @@
         return 'ben_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
     }
 
+    // ---------- Config por franquia ----------
+    var DEFAULT_CONFIG = {
+        enabled:                true,
+        sorvete_dia_enabled:    true,
+        max_value_per_item:     8.00,    // R$ 8,00 max por item
+        max_value_per_day:      8.00,    // R$ 8,00 max por dia
+        max_items_per_day:      1,       // 1 sorvete/refeicao por dia
+        allowed_types:          ['sorvete_dia', 'refeicao', 'lanche', 'bebida', 'outro'],
+        require_pin_employee:   true,    // exige PIN do funcionario (nao-transferivel)
+        require_acceptance:     true     // exige aceite do termo a cada lancamento
+    };
+
+    function getConfig(franchiseId) {
+        if (typeof DataStore === 'undefined') return DEFAULT_CONFIG;
+        var franchises = DataStore.getAllFranchises() || [];
+        var f = franchises.find(function (x) { return x.id === franchiseId; });
+        var saved = (f && f.benefitsConfig) ? f.benefitsConfig : {};
+        return Object.assign({}, DEFAULT_CONFIG, saved);
+    }
+
+    function saveConfig(franchiseId, config) {
+        if (typeof DataStore === 'undefined') return { success: false };
+        var franchises = DataStore.get('franchises') || [];
+        var idx = franchises.findIndex(function (x) { return x.id === franchiseId; });
+        if (idx === -1) return { success: false, error: 'Franquia nao encontrada' };
+        franchises[idx].benefitsConfig = Object.assign({}, DEFAULT_CONFIG, config || {});
+        franchises[idx].benefitsConfigUpdatedAt = nowIso();
+        DataStore.set('franchises', franchises);
+
+        try {
+            DataStore.addToCollection('staff_benefits_audit', franchiseId, {
+                id: 'cfg_' + Date.now(),
+                action: 'config_changed',
+                config: franchises[idx].benefitsConfig,
+                changedBy: (typeof Auth !== 'undefined' && Auth.getSession()) ? Auth.getSession().email : 'system',
+                timestamp: nowIso()
+            });
+        } catch (e) {}
+        return { success: true };
+    }
+
+    /**
+     * Valida ANTES do registro — retorna { ok:bool, error?, warning? }.
+     * Aqui ficam todas as regras legais/configuradas.
+     */
+    function validateBeforeRegister(franchiseId, params) {
+        if (!params || !params.staffId) return { ok: false, error: 'Funcionario nao informado' };
+        var cfg = getConfig(franchiseId);
+
+        if (!cfg.enabled) return { ok: false, error: 'Beneficios desativados pela administracao da franquia' };
+
+        if (params.tipo && cfg.allowed_types && cfg.allowed_types.indexOf(params.tipo) === -1) {
+            return { ok: false, error: 'Tipo de beneficio nao permitido nesta franquia: ' + params.tipo };
+        }
+
+        var value = parseFloat(params.value || 0);
+        if (cfg.max_value_per_item && value > cfg.max_value_per_item) {
+            return { ok: false, error: 'Valor R$ ' + value.toFixed(2) + ' excede o maximo permitido por item (R$ ' + cfg.max_value_per_item.toFixed(2) + '). Ajuste o pedido ou cobre a diferenca.' };
+        }
+
+        // Limite por dia (quantidade)
+        var today = dateOnly(nowIso());
+        var hojeDoFunc = list(franchiseId, { staffId: params.staffId, date: today });
+        if (cfg.max_items_per_day && hojeDoFunc.length >= cfg.max_items_per_day) {
+            return {
+                ok: false,
+                error: 'Funcionario JA recebeu ' + hojeDoFunc.length + ' beneficio(s) hoje (limite: ' +
+                       cfg.max_items_per_day + ' por dia conforme regra desta franquia). Bloqueado.',
+                blocked_by: 'daily_quantity_limit'
+            };
+        }
+
+        // Limite por dia (valor)
+        var totalHoje = hojeDoFunc.reduce(function (s, e) { return s + Number(e.value || 0); }, 0);
+        if (cfg.max_value_per_day && (totalHoje + value) > cfg.max_value_per_day) {
+            return {
+                ok: false,
+                error: 'Total do dia (R$ ' + (totalHoje + value).toFixed(2) + ') excederia o maximo permitido por dia (R$ ' + cfg.max_value_per_day.toFixed(2) + ').',
+                blocked_by: 'daily_value_limit'
+            };
+        }
+
+        // Aviso se eh 'sorvete_dia' e ja recebeu hoje
+        if (params.tipo === 'sorvete_dia' && alreadyReceivedToday(franchiseId, params.staffId, 'sorvete_dia')) {
+            return { ok: false, error: 'Sorvete do dia ja foi entregue para este funcionario hoje. Limite: 1 por dia.' };
+        }
+
+        // Aceite do termo no lancamento
+        if (cfg.require_acceptance && !params.acceptedTerms) {
+            return { ok: false, error: 'Funcionario precisa aceitar os termos do beneficio antes de receber.' };
+        }
+
+        return { ok: true };
+    }
+
     /**
      * Registra um beneficio.
      * @param {string} franchiseId
@@ -52,6 +147,10 @@
         if (!franchiseId) return { success: false, error: 'Franquia invalida' };
         if (!benefit || !benefit.staffId) return { success: false, error: 'Funcionario nao informado' };
         if (typeof DataStore === 'undefined') return { success: false, error: 'DataStore indisponivel' };
+
+        // Valida regras configuradas (limite, valor maximo, aceite)
+        var v = validateBeforeRegister(franchiseId, benefit);
+        if (!v.ok) return { success: false, error: v.error, blocked_by: v.blocked_by };
 
         var entry = {
             id:            generateId(),
@@ -71,7 +170,16 @@
             date:          dateOnly(nowIso()),
             month:         monthKey(nowIso()),
             transferable:  false,
-            cancelled:     false
+            cancelled:     false,
+            // Aceite legal — prova juridica
+            acceptedTerms:    !!benefit.acceptedTerms,
+            acceptedAt:       benefit.acceptedAt || nowIso(),
+            acceptedTermVersion: (typeof LegalTerms !== 'undefined' ? LegalTerms.TERM_VERSION : null),
+            // Validacoes legais
+            personalNonTransferable: true,
+            cancelableOnFraud:       true,
+            // Snapshot do device (audit)
+            deviceUserAgent: (navigator.userAgent || '').slice(0, 200)
         };
 
         DataStore.addToCollection(COLLECTION, franchiseId, entry);
@@ -204,6 +312,7 @@
     window.StaffBenefits = {
         TIPOS: TIPOS,
         TIPO_LABELS: TIPO_LABELS,
+        DEFAULT_CONFIG: DEFAULT_CONFIG,
 
         register: register,
         list: list,
@@ -211,7 +320,11 @@
         totalMonth: totalMonth,
         totalDay: totalDay,
         alreadyReceivedToday: alreadyReceivedToday,
-        exportCSV: exportCSV
+        exportCSV: exportCSV,
+
+        getConfig: getConfig,
+        saveConfig: saveConfig,
+        validateBeforeRegister: validateBeforeRegister
     };
 
 })();
