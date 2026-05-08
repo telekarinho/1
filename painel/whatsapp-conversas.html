@@ -231,14 +231,25 @@
     document.getElementById('statTotal').textContent = total;
     document.getElementById('statHoje').textContent = novosHoje;
     document.getElementById('statHumano').textContent = comHumano;
-    // Status gateway: faz fetch /status do zap.milkypot.com
-    fetch('https://zap.milkypot.com/status', { mode: 'cors' })
-      .then(r => r.ok ? r.json() : null)
-      .then(j => {
-        if (j) document.getElementById('statGateway').textContent = j.state === 'open' ? '✅' : '❌';
-        else document.getElementById('statGateway').textContent = '?';
-      })
-      .catch(() => document.getElementById('statGateway').textContent = '?');
+    // Status gateway: usa proxy autenticado (não pode chamar gateway direto)
+    fetchGatewayStatus().then(j => {
+      if (j && j.state) document.getElementById('statGateway').textContent = j.state === 'open' ? '✅' : '⏳';
+      else document.getElementById('statGateway').textContent = '?';
+    }).catch(() => document.getElementById('statGateway').textContent = '?');
+  }
+
+  async function fetchGatewayStatus() {
+    try {
+      if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+      const u = firebase.auth().currentUser;
+      if (!u) return null;
+      const token = await u.getIdToken();
+      const r = await fetch('/api/whatsapp-admin?action=status', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!r.ok) return null;
+      return await r.json();
+    } catch (e) { return null; }
   }
 
   function renderConvList() {
