@@ -2517,3 +2517,13 @@ exports.runCatalogSyncNow = onCall({
 // ============================================
 const franchiseNurture = require("./franchise-nurture");
 exports.franchiseNurtureCron = franchiseNurture.franchiseNurtureCron;
+
+// ============================================
+// Time Clock Reminders + Banco de Horas
+// cron a cada 5min envia push pros funcionarios 10min antes da escala
+// + funcoes pra solicitar/aprovar banco de horas via FCM
+// ============================================
+const timeClockReminders = require("./time-clock-reminders");
+exports.cron_remindPunch = timeClockReminders.cron_remindPunch;
+exports.bankHours_notifyDecision = timeClockReminders.bankHours_notifyDecision;
+exports.bankHours_request = timeClockReminders.bankHours_request;

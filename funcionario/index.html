@@ -280,6 +280,30 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
                 </div>
             </div>
 
+            <!-- HOLERITE -->
+            <div class="fn-section" id="sec-holerite">
+                <div class="fn-card">
+                    <h3>💵 Holerite simplificado</h3>
+                    <p style="font-size:.78rem;color:#6B7280;margin:0 0 10px">Documento informativo. Holerite oficial vem da contabilidade.</p>
+                    <div style="display:flex;gap:8px;margin-bottom:12px">
+                        <select id="holMes" style="flex:1;padding:9px;border:1px solid #D1D5DB;border-radius:8px;font-family:inherit"></select>
+                        <select id="holAno" style="flex:1;padding:9px;border:1px solid #D1D5DB;border-radius:8px;font-family:inherit"></select>
+                        <button class="fn-btn" onclick="fnCarregarHolerite()" style="flex:0 0 auto;padding:9px 16px">Ver</button>
+                    </div>
+                    <div id="holConteudo"></div>
+                </div>
+            </div>
+
+            <!-- BANCO DE HORAS -->
+            <div class="fn-section" id="sec-banco">
+                <div class="fn-card">
+                    <h3>🏦 Banco de horas</h3>
+                    <p style="font-size:.78rem;color:#6B7280;margin:0 0 10px">Solicite compensação ou folga acumulada de horas extras.</p>
+                    <button class="fn-btn" onclick="fnAbrirSolicitarBanco()">+ Nova Solicitação</button>
+                    <div id="bancoLista" style="margin-top:14px"></div>
+                </div>
+            </div>
+
             <!-- BENEFICIOS -->
             <div class="fn-section" id="sec-beneficios">
                 <div class="fn-card">
@@ -321,10 +345,12 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
             </div>
         </div>
 
-        <nav class="fn-tab-bar">
+        <nav class="fn-tab-bar" style="overflow-x:auto;flex-wrap:nowrap">
             <button class="fn-tab-btn active" data-tab="hoje" onclick="fnSwitchTab('hoje')"><span class="icon">⏰</span>Hoje</button>
             <button class="fn-tab-btn" data-tab="mes" onclick="fnSwitchTab('mes')"><span class="icon">🗓️</span>Mês</button>
-            <button class="fn-tab-btn" data-tab="beneficios" onclick="fnSwitchTab('beneficios')"><span class="icon">🎁</span>Benefícios</button>
+            <button class="fn-tab-btn" data-tab="holerite" onclick="fnSwitchTab('holerite')"><span class="icon">💵</span>Holerite</button>
+            <button class="fn-tab-btn" data-tab="banco" onclick="fnSwitchTab('banco')"><span class="icon">🏦</span>Banco</button>
+            <button class="fn-tab-btn" data-tab="beneficios" onclick="fnSwitchTab('beneficios')"><span class="icon">🎁</span>Benef.</button>
             <button class="fn-tab-btn" data-tab="info" onclick="fnSwitchTab('info')"><span class="icon">👤</span>Dados</button>
         </nav>
     </div>
@@ -374,6 +400,10 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
 <script src="../js/core/firebase-config.js"></script>
 <script src="../js/core/time-clock.js"></script>
 <script src="../js/core/staff-benefits.js"></script>
+<script src="../js/core/geofence.js"></script>
+<script src="../js/core/payroll.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+<script src="../js/core/push-funcionario.js"></script>
 
 <script>
 'use strict';
@@ -437,18 +467,132 @@ async function fnRequestNotifications() {
         statusEls.forEach(function(el) { el.textContent = '✗ Navegador sem suporte a notificacoes'; });
         return;
     }
-    if (Notification.permission === 'granted') {
-        statusEls.forEach(function(el) { el.textContent = '✓ Lembretes ativados'; el.style.color = '#16A34A'; });
-        fnScheduleReminders();
-        return;
+    var session = fnGetSession();
+    if (!session) return;
+
+    // FCM real (via Firebase) — push do servidor mesmo com app fechado
+    if (typeof PushFuncionario !== 'undefined') {
+        var fcmResult = await PushFuncionario.subscribe(session.franchiseId, session.staffId);
+        if (fcmResult.success) {
+            statusEls.forEach(function(el) {
+                el.textContent = fcmResult.mode === 'fcm'
+                    ? '✓ Push ativo (FCM) — receberá lembretes mesmo com app fechado'
+                    : '✓ Lembretes locais ativos';
+                el.style.color = '#16A34A';
+            });
+            try { new Notification('MilkyPot', { body: 'Lembretes ativados!', icon: '/images/logo-milkypot.png' }); } catch (e) {}
+            fnScheduleReminders();
+            return;
+        } else {
+            statusEls.forEach(function(el) { el.textContent = '✗ ' + fcmResult.error; el.style.color = '#DC2626'; });
+            return;
+        }
     }
+
+    // Fallback se Push module nao carregar
     var perm = await Notification.requestPermission();
     if (perm === 'granted') {
-        statusEls.forEach(function(el) { el.textContent = '✓ Lembretes ativados'; el.style.color = '#16A34A'; });
-        new Notification('MilkyPot', { body: 'Lembretes ativados. Vou avisar você de bater ponto!', icon: '/images/logo-milkypot.png' });
+        statusEls.forEach(function(el) { el.textContent = '✓ Lembretes locais ativos'; el.style.color = '#16A34A'; });
         fnScheduleReminders();
     } else {
-        statusEls.forEach(function(el) { el.textContent = '✗ Voce negou. Va em configuracoes do navegador.'; el.style.color = '#DC2626'; });
+        statusEls.forEach(function(el) { el.textContent = '✗ Voce negou.'; el.style.color = '#DC2626'; });
+    }
+}
+
+// ====== HOLERITE ======
+function fnInitHoleriteControls() {
+    var meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    var mesSel = document.getElementById('holMes');
+    var anoSel = document.getElementById('holAno');
+    if (mesSel && !mesSel.options.length) {
+        mesSel.innerHTML = meses.map(function(m, i) { return '<option value="' + (i+1) + '">' + m + '</option>'; }).join('');
+        mesSel.value = new Date().getMonth() + 1;
+    }
+    if (anoSel && !anoSel.options.length) {
+        var y = new Date().getFullYear();
+        var arr = []; for (var i = y - 2; i <= y; i++) arr.push(i);
+        anoSel.innerHTML = arr.map(function(a) { return '<option value="' + a + '">' + a + '</option>'; }).join('');
+        anoSel.value = y;
+    }
+}
+function fnCarregarHolerite() {
+    var session = fnGetSession();
+    if (!session || typeof Payroll === 'undefined') return;
+    var mes = parseInt(document.getElementById('holMes').value, 10);
+    var ano = parseInt(document.getElementById('holAno').value, 10);
+    var p = Payroll.computePayslip(session.franchiseId, session.staffId, ano, mes);
+    document.getElementById('holConteudo').innerHTML = Payroll.generatePayslipHTML(p);
+}
+
+// ====== BANCO DE HORAS ======
+function fnRenderBanco() {
+    var session = fnGetSession();
+    if (!session || typeof Payroll === 'undefined') return;
+    var lista = Payroll.listBankHoursRequests(session.franchiseId, { staffId: session.staffId });
+    if (!lista.length) {
+        document.getElementById('bancoLista').innerHTML = '<p style="text-align:center;color:#9CA3AF;padding:14px;font-size:.85rem">Nenhuma solicitação ainda.</p>';
+        return;
+    }
+    var html = lista.map(function(r) {
+        var statusClr = r.status === 'approved' ? '#16A34A' : (r.status === 'rejected' ? '#DC2626' : '#F59E0B');
+        var statusBg = r.status === 'approved' ? '#DCFCE7' : (r.status === 'rejected' ? '#FEE2E2' : '#FEF3C7');
+        var statusLbl = { pending: '⏳ Aguardando', approved: '✓ Aprovada', rejected: '✗ Rejeitada' }[r.status];
+        return '<div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:12px;margin-bottom:8px">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+            + '<strong style="font-size:.92rem">' + (r.type === 'compensar' ? '🔄 Compensar saldo' : '➕ Acumular') + '</strong>'
+            + '<span style="background:' + statusBg + ';color:' + statusClr + ';padding:2px 10px;border-radius:6px;font-size:.72rem;font-weight:700">' + statusLbl + '</span></div>'
+            + '<div style="font-size:.82rem;color:#374151"><strong>' + Math.floor(r.hoursMin/60) + 'h' + (r.hoursMin%60 ? (r.hoursMin%60 + 'min') : '') + '</strong>'
+            + (r.useDate ? ' • Para usar em ' + r.useDate.split('-').reverse().join('/') : '')
+            + '<br><small style="color:#6B7280">' + Utils.escapeHtml(r.reason || '') + '</small>'
+            + (r.approverObservation ? '<br><small style="color:#16A34A">Resposta: ' + Utils.escapeHtml(r.approverObservation) + '</small>' : '')
+            + (r.rejectReason ? '<br><small style="color:#DC2626">Motivo rejeição: ' + Utils.escapeHtml(r.rejectReason) + '</small>' : '')
+            + '</div></div>';
+    }).join('');
+    document.getElementById('bancoLista').innerHTML = html;
+}
+function fnAbrirSolicitarBanco() {
+    var html = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10005;display:flex;align-items:center;justify-content:center;padding:20px" id="bhModal">'
+        + '<div style="background:#fff;border-radius:14px;width:100%;max-width:380px;padding:0;overflow:hidden">'
+        + '<div style="padding:18px 22px;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff"><h3 style="margin:0">🏦 Solicitar banco de horas</h3></div>'
+        + '<div style="padding:20px 22px">'
+        + '<label style="display:block;font-size:.82rem;color:#374151;font-weight:700;margin-bottom:6px">Tipo</label>'
+        + '<select id="bhTipo" class="fn-input" style="margin-bottom:10px"><option value="compensar">Compensar (folga remunerada)</option><option value="acumular">Acumular saldo</option></select>'
+        + '<label style="display:block;font-size:.82rem;color:#374151;font-weight:700;margin-bottom:6px">Quantas horas?</label>'
+        + '<input id="bhHoras" type="number" class="fn-input" style="margin-bottom:10px" min="1" max="40" placeholder="Ex: 4">'
+        + '<label style="display:block;font-size:.82rem;color:#374151;font-weight:700;margin-bottom:6px">Data desejada (folga)</label>'
+        + '<input id="bhData" type="date" class="fn-input" style="margin-bottom:10px">'
+        + '<label style="display:block;font-size:.82rem;color:#374151;font-weight:700;margin-bottom:6px">Motivo</label>'
+        + '<textarea id="bhMotivo" class="fn-input" rows="3" placeholder="Ex: consulta médica, evento familiar"></textarea>'
+        + '</div><div style="padding:12px 22px;border-top:1px solid #E5E7EB;display:flex;gap:8px;justify-content:flex-end">'
+        + '<button onclick="document.getElementById(\'bhModal\').remove()" class="fn-btn fn-btn-secondary" style="flex:0 0 auto;padding:9px 16px">Cancelar</button>'
+        + '<button onclick="fnEnviarSolicitarBanco()" class="fn-btn" style="flex:0 0 auto;padding:9px 16px">Enviar</button>'
+        + '</div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+function fnEnviarSolicitarBanco() {
+    var session = fnGetSession();
+    if (!session) return;
+    var horas = parseInt(document.getElementById('bhHoras').value, 10);
+    var data = document.getElementById('bhData').value;
+    var motivo = document.getElementById('bhMotivo').value.trim();
+    var tipo = document.getElementById('bhTipo').value;
+    if (!horas || horas <= 0) { alert('Informe quantas horas'); return; }
+    if (!motivo) { alert('Informe o motivo'); return; }
+    var r = Payroll.requestBankHours(session.franchiseId, {
+        staffId: session.staffId,
+        staffName: session.staffName,
+        type: tipo,
+        hoursMin: horas * 60,
+        useDate: data || null,
+        reason: motivo,
+        createdBy: session.staffName
+    });
+    if (r.success) {
+        document.getElementById('bhModal').remove();
+        alert('Solicitação enviada. Você verá a resposta aqui mesmo.');
+        fnRenderBanco();
+    } else {
+        alert('Erro: ' + r.error);
     }
 }
 
@@ -682,24 +826,66 @@ async function fnBaterPonto() {
     btn.disabled = true;
     btn.innerHTML = '⏳ Capturando localizacao...<small>aguarde</small>';
 
+    // 1) Geolocalizacao
     var geoResult = await fnGetGeolocation();
     var geoBanner = document.getElementById('geoBanner');
-    if (geoResult.error) {
+
+    // 2) Validar geofence (proximidade da loja)
+    if (geoResult.coords && typeof Geofence !== 'undefined') {
+        var validation = Geofence.validate(session.franchiseId, geoResult.coords.lat, geoResult.coords.lng);
+        if (validation.blocked) {
+            btn.disabled = false;
+            btn.innerHTML = '⏰ Bater Ponto<small>Bloqueado: longe da loja</small>';
+            geoBanner.style.display = 'block';
+            geoBanner.style.background = '#FEE2E2';
+            geoBanner.style.borderLeftColor = '#DC2626';
+            geoBanner.style.color = '#991B1B';
+            geoBanner.innerHTML = '🚫 ' + validation.message + ' Ponto BLOQUEADO ate voce chegar na loja.';
+            return;
+        } else if (!validation.valid) {
+            geoBanner.style.display = 'block';
+            geoBanner.style.background = '#FEF3C7';
+            geoBanner.style.borderLeftColor = '#F59E0B';
+            geoBanner.style.color = '#92400E';
+            geoBanner.innerHTML = '⚠️ ' + validation.message + ' (registrado mesmo assim)';
+        } else {
+            geoBanner.style.display = 'block';
+            geoBanner.style.background = '#DCFCE7';
+            geoBanner.style.borderLeftColor = '#16A34A';
+            geoBanner.style.color = '#166534';
+            geoBanner.innerHTML = '✓ ' + validation.message;
+        }
+    } else if (geoResult.error) {
         geoBanner.style.display = 'block';
-        geoBanner.innerHTML = '⚠️ ' + geoResult.error + ' — ponto sera registrado sem localizacao.';
-    } else {
-        geoBanner.style.display = 'none';
+        geoBanner.style.background = '#FEF3C7';
+        geoBanner.style.borderLeftColor = '#F59E0B';
+        geoBanner.style.color = '#92400E';
+        geoBanner.innerHTML = '⚠️ ' + geoResult.error;
     }
 
+    // 3) Capturar selfie (anti-fraude)
+    btn.innerHTML = '📸 Capturando foto...<small>olhe pra camera</small>';
+    var selfie = await fnCaptureSelfie();
+    if (!selfie) {
+        if (!confirm('Nao foi possivel capturar selfie. Continuar registrando ponto sem foto?')) {
+            btn.disabled = false;
+            btn.innerHTML = '⏰ Bater Ponto<small>Cancelado</small>';
+            return;
+        }
+    }
+
+    // 4) Registrar
     btn.innerHTML = '⏳ Registrando...<small>quase la</small>';
     var result = await TimeClock.recordPunch(session.franchiseId, staffData.pin, 'pin', {
         channel: 'mobile',
-        geolocation: geoResult.coords || null
+        geolocation: geoResult.coords || null,
+        selfie: selfie
     });
 
     if (result.success) {
         btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
         btn.innerHTML = '✓ Registrado!<small>' + result.typeLabel + ' as ' + new Date(result.timestamp).toLocaleTimeString('pt-BR').slice(0,5) + ' • NSR ' + result.nsr + '</small>';
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         setTimeout(function() {
             fnRenderHoje(session, staffData);
             fnRenderMes(session);
@@ -710,6 +896,32 @@ async function fnBaterPonto() {
         btn.disabled = false;
         btn.innerHTML = '⏰ Bater Ponto<small>Proximo: --</small>';
         alert('Erro: ' + result.error);
+    }
+}
+
+// ====== Selfie capture (camera frontal) ======
+async function fnCaptureSelfie() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return null;
+    try {
+        var stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 480 } },
+            audio: false
+        });
+        var video = document.createElement('video');
+        video.srcObject = stream;
+        video.muted = true;
+        await video.play();
+        // Espera alguns frames pra estabilizar
+        await new Promise(function(r) { setTimeout(r, 800); });
+        var canvas = document.createElement('canvas');
+        canvas.width = 320;
+        canvas.height = 320;
+        canvas.getContext('2d').drawImage(video, 0, 0, 320, 320);
+        stream.getTracks().forEach(function(t) { t.stop(); });
+        return canvas.toDataURL('image/jpeg', 0.65);
+    } catch (e) {
+        console.warn('Selfie capture falhou:', e);
+        return null;
     }
 }
 
@@ -789,6 +1001,8 @@ function fnRenderInfo(session, staff) {
 function fnSwitchTab(tab) {
     document.querySelectorAll('.fn-tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
     document.querySelectorAll('.fn-section').forEach(function(s) { s.classList.toggle('active', s.id === 'sec-' + tab); });
+    if (tab === 'holerite') { fnInitHoleriteControls(); fnCarregarHolerite(); }
+    if (tab === 'banco') fnRenderBanco();
 }
 
 document.getElementById('loginPin').addEventListener('keydown', function(e) {
