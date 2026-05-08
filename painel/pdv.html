@@ -722,8 +722,21 @@
                 <option value="outro">🎁 Outro</option>
             </select>
 
-            <!-- Limite configurado -->
+            <!-- Limite configurado + split de pagamento -->
             <div id="pdvBenefitConfigInfo" style="background:#F0FDF4;border-left:4px solid #16A34A;padding:8px 12px;border-radius:6px;margin-bottom:12px;font-size:.78rem;color:#14532D"></div>
+
+            <!-- Split de pagamento (so aparece se valor exceder limite) -->
+            <div id="pdvBenefitSplit" style="display:none;background:#EFF6FF;border:2px solid #3B82F6;border-radius:10px;padding:12px;margin-bottom:14px">
+                <strong style="display:block;margin-bottom:8px;color:#1E40AF;font-size:.88rem">💡 Pagamento dividido</strong>
+                <div id="pdvBenefitSplitInfo" style="font-size:.85rem;color:#374151;margin-bottom:10px"></div>
+                <label style="display:block;font-size:.8rem;color:#374151;font-weight:700;margin-bottom:6px">Como pagar a diferença:</label>
+                <select id="pdvBenefitRemainderMethod" style="width:100%;padding:9px;border:1px solid #D1D5DB;border-radius:8px;font-family:inherit">
+                    <option value="Dinheiro">💵 Dinheiro</option>
+                    <option value="Pix">📲 Pix</option>
+                    <option value="Débito">💳 Débito</option>
+                    <option value="Crédito">💳 Crédito</option>
+                </select>
+            </div>
 
             <!-- Aceite obrigatorio do funcionario -->
             <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:12px;margin-bottom:14px">
@@ -864,8 +877,9 @@
         var tipo = document.getElementById('pdvBenefitTipo').value;
         var warn = document.getElementById('pdvBenefitWarn');
         var info = document.getElementById('pdvBenefitConfigInfo');
+        var splitBox = document.getElementById('pdvBenefitSplit');
+        var splitInfo = document.getElementById('pdvBenefitSplitInfo');
 
-        // Calcula total atual do carrinho
         var cartTotal = 0;
         try {
             if (typeof cart !== 'undefined' && cart.length) {
@@ -874,17 +888,39 @@
         } catch (e) {}
 
         var cfg = (typeof StaffBenefits !== 'undefined') ? StaffBenefits.getConfig(fid) : { max_value_per_item: 8 };
+
+        // Calcula split
+        var split = (typeof StaffBenefits !== 'undefined' && StaffBenefits.computeBenefitSplit)
+            ? StaffBenefits.computeBenefitSplit(fid, staffId, cartTotal)
+            : null;
+
         var infoTxt = 'Pedido atual: <strong>R$ ' + cartTotal.toFixed(2).replace('.', ',') + '</strong>. ';
-        if (cartTotal > cfg.max_value_per_item) {
-            infoTxt += '<span style="color:#DC2626"><strong>⚠️ Excede o limite configurado de R$ ' + cfg.max_value_per_item.toFixed(2).replace('.', ',') + ' por item.</strong> Reduza ou cobre a diferença em outra forma de pagamento.</span>';
-        } else {
-            infoTxt += 'Dentro do limite (max R$ ' + cfg.max_value_per_item.toFixed(2).replace('.', ',') + ').';
+        if (split && split.partialNeeded) {
+            // Excede — mostra split
+            if (split.allowsPartial && split.eligible > 0) {
+                infoTxt += '<span style="color:#1E40AF"><strong>💡 Use R$ ' + split.eligible.toFixed(2).replace('.', ',') +
+                    ' do benefício + R$ ' + split.remainder.toFixed(2).replace('.', ',') + ' em outra forma.</strong></span>';
+                splitBox.style.display = 'block';
+                splitInfo.innerHTML =
+                    'Benefício cobre <strong>R$ ' + split.eligible.toFixed(2).replace('.', ',') + '</strong> ' +
+                    '(limite: R$ ' + split.limit.toFixed(2).replace('.', ',') + ').<br>' +
+                    '<strong style="color:#7C3AED">Funcionário paga R$ ' + split.remainder.toFixed(2).replace('.', ',') + ' do próprio bolso.</strong>';
+            } else if (split.eligible === 0 && split.reason === 'daily_quantity_limit') {
+                infoTxt += '<span style="color:#DC2626"><strong>🚫 Funcionário já atingiu o limite do dia (' + split.limiteItens + ' itens).</strong> Lançamento será bloqueado.</span>';
+                splitBox.style.display = 'none';
+            } else {
+                infoTxt += '<span style="color:#DC2626"><strong>⚠️ Excede o limite. Pagamento dividido desativado.</strong></span>';
+                splitBox.style.display = 'none';
+            }
+        } else if (split && split.eligible >= cartTotal) {
+            infoTxt += '<span style="color:#16A34A">✓ Dentro do limite (max R$ ' + (split.limit || cfg.max_value_per_item).toFixed(2).replace('.', ',') + ').</span>';
+            splitBox.style.display = 'none';
         }
         info.innerHTML = infoTxt;
 
         if (typeof StaffBenefits !== 'undefined' && tipo === 'sorvete_dia') {
             if (StaffBenefits.alreadyReceivedToday(fid, staffId, 'sorvete_dia')) {
-                warn.textContent = '🚫 Este funcionário JÁ recebeu o sorvete do dia hoje. Limite: 1 por dia. Lançamento será bloqueado.';
+                warn.textContent = '🚫 Este funcionário JÁ recebeu o sorvete do dia hoje. Limite: 1 por dia.';
                 warn.style.display = 'block';
                 return;
             }
@@ -933,10 +969,19 @@
             }
         } catch (e) {}
 
-        // Pre-valida usando StaffBenefits
+        // Calcula split
+        var split = (typeof StaffBenefits !== 'undefined' && StaffBenefits.computeBenefitSplit)
+            ? StaffBenefits.computeBenefitSplit(fid, staff.id, cartTotal)
+            : { eligible: cartTotal, remainder: 0, partialNeeded: false };
+
+        // Pre-valida usando StaffBenefits — passa allowPartial=true se split tem remainder e config permite
         if (typeof StaffBenefits !== 'undefined' && StaffBenefits.validateBeforeRegister) {
             var v = StaffBenefits.validateBeforeRegister(fid, {
-                staffId: staff.id, tipo: tipo, value: cartTotal, acceptedTerms: true
+                staffId: staff.id,
+                tipo: tipo,
+                value: cartTotal,
+                acceptedTerms: true,
+                allowPartial: split.partialNeeded && split.allowsPartial
             });
             if (!v.ok) {
                 errEl.textContent = '🚫 ' + v.error;
@@ -966,12 +1011,41 @@
             tipo: tipo,
             acceptedTerms: true,
             acceptedAt: new Date().toISOString(),
-            authorizedAt: new Date().toISOString()
+            authorizedAt: new Date().toISOString(),
+            // Split de pagamento
+            eligibleValue: split.eligible,        // valor do beneficio (ate o limite)
+            remainderValue: split.remainder,      // valor que o funcionario paga
+            isPartial: split.partialNeeded,
+            remainderMethod: split.partialNeeded
+                ? document.getElementById('pdvBenefitRemainderMethod').value
+                : null
         };
+
+        // Se tiver split, ja muda a forma de pagamento principal pra "Misto" e prepara as linhas
+        if (split.partialNeeded && split.allowsPartial) {
+            // Set payment method label
+            var paymentSel = document.getElementById('paymentMethod');
+            // Adiciona opcao "Beneficio + Resto" se nao existe
+            if (!paymentSel.querySelector('option[value="Beneficio + Resto"]')) {
+                var opt = document.createElement('option');
+                opt.value = 'Beneficio + Resto';
+                opt.textContent = '🎁 Benefício + ' + _pendingBenefit.remainderMethod;
+                paymentSel.appendChild(opt);
+            }
+            paymentSel.value = 'Beneficio + Resto';
+            // Notifica payment lines pro PDV (caso ele use _customerPaymentLinesThisOrder)
+            window._customerPaymentLinesThisOrder = [
+                { method: 'Beneficio Funcionario', type: 'benefit', label: '🎁 Benefício', amount: split.eligible },
+                { method: _pendingBenefit.remainderMethod, type: 'customer_payment', label: _pendingBenefit.remainderMethod, amount: split.remainder }
+            ];
+        }
 
         document.getElementById('pdvBenefitOverlay').style.display = 'none';
         if (typeof Utils !== 'undefined' && Utils.showToast) {
-            Utils.showToast('Benefício autorizado por ' + staff.name + '. Feche o pedido pra registrar.', 'success');
+            var msg = split.partialNeeded
+                ? 'Autorizado: R$ ' + split.eligible.toFixed(2).replace('.', ',') + ' benefício + R$ ' + split.remainder.toFixed(2).replace('.', ',') + ' em ' + _pendingBenefit.remainderMethod
+                : 'Benefício autorizado por ' + staff.name + '. Feche o pedido pra registrar.';
+            Utils.showToast(msg, 'success');
         }
     }
 
@@ -1011,18 +1085,31 @@
         var productNames = (order && order.items && order.items.length)
             ? order.items.map(function(it) { return (it.qty || 1) + 'x ' + (it.name || 'item'); }).join(', ')
             : '';
+        // Se eh split, registra so o valor coberto pelo beneficio (nao o total)
+        var benefitValue = _pendingBenefit.isPartial && _pendingBenefit.eligibleValue
+            ? _pendingBenefit.eligibleValue
+            : totalValue;
+        var splitNote = _pendingBenefit.isPartial
+            ? ' (Split: R$ ' + _pendingBenefit.eligibleValue.toFixed(2) + ' benefício + R$ ' + _pendingBenefit.remainderValue.toFixed(2) + ' em ' + _pendingBenefit.remainderMethod + ')'
+            : '';
+
         var r = StaffBenefits.register(fid, {
             staffId: _pendingBenefit.staffId,
             staffName: _pendingBenefit.staffName,
             tipo: _pendingBenefit.tipo,
             productName: productNames,
-            value: totalValue,
+            value: benefitValue,
+            orderTotal: totalValue,
+            orderRemainderPaidByEmployee: _pendingBenefit.remainderValue || 0,
+            orderRemainderMethod: _pendingBenefit.remainderMethod || null,
+            isPartial: !!_pendingBenefit.isPartial,
             orderId: order && order.id,
             operatorId: op && op.id,
             operatorName: op && op.name,
             acceptedTerms: !!_pendingBenefit.acceptedTerms,
             acceptedAt: _pendingBenefit.acceptedAt,
-            notes: 'Lançado via PDV pagamento Benefício Funcionário'
+            allowPartial: _pendingBenefit.isPartial,
+            notes: 'Lançado via PDV pagamento Benefício Funcionário' + splitNote
         });
         if (!r.success) {
             alert('🚫 Benefício BLOQUEADO: ' + (r.error || 'erro desconhecido'));
