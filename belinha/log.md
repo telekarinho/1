@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #165 — 2026-05-08
+
+**Área:** Conteúdo/WA — `whatsapp-junina-2026.md` standalone
+
+**Contexto:** Prescrito pelo roadmap ciclo #161 (v20a ativa). Gap identificado: todos os playbooks sazonais de 2026–2027 estavam cobertos, exceto `whatsapp-junina-2026.md`. Intel ciclo #160 confirmou share of voice 100% disponível (nenhum concorrente com campanha WA estruturada para Festa Junina em Londrina). Janela: 13/06 (Santo Antônio) → 29/06 (São Pedro), com pico em 24/06 (São João). Produto âncora: Potinho Junino em 3 versões (Clássico, Mel & Cocada, Fit) mapeadas no ciclo #134.
+
+**O que pesquisou/analisou:**
+- Leu `potinho-junino-2026-contraprogramacao.md` (ciclo #134): 3 versões do Potinho Junino, estratégia de contraprogramação TheBest (self-service por balança vs. potinho personalizado preço fixo), copy-âncora "Aqui o arraiá é do jeito que VOCÊ gosta"
+- Leu `instagram-tiktok-junina-2026.md` (ciclo #163): calendário de posts (12, 17, 20, 24, 28/06), roteiros Reel, direção de arte ovelhinha com chapéu de palha
+- Leu `whatsapp-namorados-2026.md` (ciclo #164): estrutura de referência para standalone operacional com keyword, N1–N5, guia de tom e checklist
+- Identificou gap: nenhum template de disparos WA para o período (J1 captura → J2 teaser VIP → J3 lançamento → J4 São João → J5 encerramento)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-junina-2026.md` | CRIADO — Standalone operacional: keyword `JUNINA26`, auto-resposta, 5 broadcasts J1–J5 com datas e horários, tabela de 3 versões do Potinho Junino, respostas rápidas do atendente (qual versão / presentear / estoque), J4 guia de Stories ao vivo São João 24/06, guia de tom certo vs. errado, checklist operacional 11 ações com prazos, referências cruzadas |
+
+**Destaques:**
+1. **5 broadcasts com datas e horários fixos:** J1 captura (10/06 17h), J2 teaser VIP (12/06 20h), J3 lançamento (17/06 12h), J4 São João (24/06 10h), J5 encerramento (28/06 18h). Operador só precisa seguir o checklist.
+2. **Keyword `JUNINA26` + segmentação:** Inscritos voluntários recebem J2 teaser antes de todo mundo — cria sensação de lista VIP sem custo operacional extra.
+3. **São João ao vivo (J4):** Além do broadcast, guia de Stories em 4 momentos (14h, 17h, 20h, 22h) para manter engajamento durante o pico cultural do dia.
+4. **Respostas rápidas do atendente:** 3 scripts prontos (qual versão, presentear, estoque) para reduzir tempo de atendimento no movimento junino.
+5. **Integrado com ciclos #134 e #163:** Sem duplicar conteúdo — aponta para contraprogramação TheBest e posts IG/TikTok já criados.
+
+**Commit:** `3827494`
+
+**Próximo passo sugerido:**
+- **Ciclo #166 — SEO:** Landing page `potinho-personalizado-londrina.html` — keyword de alta intenção sem landing dedicada (prescrito roadmap #161)
+- **Ciclo #167 — Concorrentes:** Refetch pré-Festa Junina: MilkyMoo, JohnnyJoy, TheBest — campanhas e produtos junho 2026
+- **Ciclo #168 — UX/Frontend:** `cardapio.html` refresh — lazy scroll audit, filtros mobile, CLS
+- **Ciclo #169 — Conteúdo/WA:** `whatsapp-pais-2026.md` standalone — Dia dos Pais 09/08/2026
+- **Operador:** Confirmar estoque paçoca/amendoim/cocada/mel até **30/05/2026** — impacta Versões B e C
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05/2026**
+- **Operador:** Confirmar preços P/M/G Potinho Junino até **10/06/2026**
+- **Operador:** Google Search Console — indexar sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — **+27 ciclos**. Risco legal crescente.
+
+_Belinha — Ciclo #165 | 2026-05-08_
+
+---
+
 ## Ciclo #164 — 2026-05-08
 
 **Área:** Conteúdo/WA — `whatsapp-namorados-2026.md` standalone
