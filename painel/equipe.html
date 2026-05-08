@@ -29,6 +29,7 @@
             <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
             <a href="entregas.html" class="sidebar-link"><span class="icon">🛵</span> Entregas</a>
             <a href="equipe.html" class="sidebar-link active"><span class="icon">👥</span> Equipe</a>
+            <a href="ponto.html" class="sidebar-link"><span class="icon">⏰</span> Ponto Eletronico</a>
             <a href="fidelidade.html" class="sidebar-link"><span class="icon">🎁</span> Fidelidade</a>
             <a href="ifood.html" class="sidebar-link"><span class="icon">🛵</span> iFood</a>
             <div class="sidebar-nav-group">Midia da Loja</div>
@@ -133,6 +134,77 @@
                 <div class="form-group">
                     <label>Data de Inicio</label>
                     <input type="date" id="inputStartDate" class="form-control">
+                </div>
+
+                <hr style="margin:18px 0 14px;border:none;border-top:2px solid #E5E7EB">
+                <div style="background:#EFF6FF;border-left:4px solid #3B82F6;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:.82rem;color:#1E40AF">
+                    <strong>📋 Dados para Ponto Eletronico (CLT)</strong><br>
+                    PIS e obrigatorio por lei. PIN de 4 digitos sera usado pelo funcionario para bater ponto no PDV.
+                </div>
+
+                <div class="form-group">
+                    <label>CPF</label>
+                    <input type="text" id="inputCPF" placeholder="000.000.000-00" maxlength="14" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>PIS / PASEP / NIS *</label>
+                    <input type="text" id="inputPIS" placeholder="000.00000.00-0" maxlength="14" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>PIN para bater ponto (4 digitos)</label>
+                    <input type="text" id="inputPIN" placeholder="0000" maxlength="4" pattern="\d{4}" inputmode="numeric" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de jornada</label>
+                    <select id="inputJornadaTipo" class="form-control">
+                        <option value="5x2">5x2 (segunda a sexta, folga sabado/domingo)</option>
+                        <option value="6x1">6x1 (6 dias, 1 folga rotativa)</option>
+                        <option value="12x36">12x36 (12h trabalho, 36h descanso)</option>
+                        <option value="livre">Jornada livre / parcial</option>
+                    </select>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="form-group">
+                        <label>Hora entrada</label>
+                        <input type="time" id="inputHoraEntrada" value="08:00" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Hora saida</label>
+                        <input type="time" id="inputHoraSaida" value="18:00" class="form-control">
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="form-group">
+                        <label>Almoco (min)</label>
+                        <input type="number" id="inputAlmocoMin" value="60" min="0" max="180" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Carga semanal (h)</label>
+                        <input type="number" id="inputCargaSemanal" value="44" min="1" max="44" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Folga semanal (selecione todos)</label>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;padding:8px">
+                        <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="folga-cb" value="domingo" checked>Dom</label>
+                        <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="folga-cb" value="segunda">Seg</label>
+                        <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="folga-cb" value="terca">Ter</label>
+                        <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="folga-cb" value="quarta">Qua</label>
+                        <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="folga-cb" value="quinta">Qui</label>
+                        <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="folga-cb" value="sexta">Sex</label>
+                        <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="folga-cb" value="sabado">Sab</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                        <input type="checkbox" id="inputAdicionalNoturno">
+                        <span>Recebe adicional noturno (22h-5h, +20%)</span>
+                    </label>
                 </div>
             </div>
             <div class="modal-footer">
@@ -456,6 +528,18 @@
         }
 
         // Modal
+        function _setFolgas(folgas) {
+            var arr = folgas || ['domingo'];
+            document.querySelectorAll('.folga-cb').forEach(function(cb) {
+                cb.checked = arr.indexOf(cb.value) !== -1;
+            });
+        }
+        function _getFolgas() {
+            var arr = [];
+            document.querySelectorAll('.folga-cb').forEach(function(cb) { if (cb.checked) arr.push(cb.value); });
+            return arr;
+        }
+
         function openAddModal() {
             document.getElementById('modalTitle').textContent = 'Novo Funcionario';
             document.getElementById('editId').value = '';
@@ -464,12 +548,23 @@
             document.getElementById('inputPhone').value = '';
             document.getElementById('inputSalary').value = '';
             document.getElementById('inputStartDate').value = '';
+            document.getElementById('inputCPF').value = '';
+            document.getElementById('inputPIS').value = '';
+            document.getElementById('inputPIN').value = '';
+            document.getElementById('inputJornadaTipo').value = '5x2';
+            document.getElementById('inputHoraEntrada').value = '08:00';
+            document.getElementById('inputHoraSaida').value = '18:00';
+            document.getElementById('inputAlmocoMin').value = '60';
+            document.getElementById('inputCargaSemanal').value = '44';
+            document.getElementById('inputAdicionalNoturno').checked = false;
+            _setFolgas(['domingo']);
             document.getElementById('modalOverlay').style.display = 'flex';
         }
 
         function openEditModal(id) {
             var staff = staffList.find(function(s) { return s.id === id; });
             if (!staff) return;
+            var j = staff.jornada || {};
             document.getElementById('modalTitle').textContent = 'Editar Funcionario';
             document.getElementById('editId').value = staff.id;
             document.getElementById('inputName').value = staff.name || '';
@@ -477,6 +572,16 @@
             document.getElementById('inputPhone').value = staff.phone || '';
             document.getElementById('inputSalary').value = staff.salary || '';
             document.getElementById('inputStartDate').value = staff.startDate || '';
+            document.getElementById('inputCPF').value = staff.cpf || '';
+            document.getElementById('inputPIS').value = staff.pis || '';
+            document.getElementById('inputPIN').value = staff.pin || '';
+            document.getElementById('inputJornadaTipo').value = j.tipo || '5x2';
+            document.getElementById('inputHoraEntrada').value = j.hora_entrada || '08:00';
+            document.getElementById('inputHoraSaida').value = j.hora_saida || '18:00';
+            document.getElementById('inputAlmocoMin').value = j.intervalo_almoco_min || 60;
+            document.getElementById('inputCargaSemanal').value = staff.carga_horaria_semanal || 44;
+            document.getElementById('inputAdicionalNoturno').checked = !!staff.adicional_noturno;
+            _setFolgas(j.folgas);
             document.getElementById('modalOverlay').style.display = 'flex';
         }
 
@@ -492,11 +597,49 @@
             var startDate = document.getElementById('inputStartDate').value;
             var editId = document.getElementById('editId').value;
 
+            // Campos CLT
+            var cpf = document.getElementById('inputCPF').value.trim();
+            var pis = document.getElementById('inputPIS').value.trim();
+            var pin = document.getElementById('inputPIN').value.trim();
+            var jornadaTipo = document.getElementById('inputJornadaTipo').value;
+            var horaEntrada = document.getElementById('inputHoraEntrada').value;
+            var horaSaida = document.getElementById('inputHoraSaida').value;
+            var almocoMin = parseInt(document.getElementById('inputAlmocoMin').value, 10) || 60;
+            var cargaSemanal = parseFloat(document.getElementById('inputCargaSemanal').value) || 44;
+            var adicionalNoturno = document.getElementById('inputAdicionalNoturno').checked;
+            var folgas = _getFolgas();
+
             if (!name) { alert('Informe o nome do funcionario.'); return; }
             if (!role) { alert('Selecione o cargo.'); return; }
 
+            // Validacoes CLT
+            if (pin && !/^\d{4}$/.test(pin)) {
+                alert('PIN deve ter exatamente 4 digitos numericos.');
+                return;
+            }
+            // Verifica duplicacao de PIN
+            if (pin) {
+                var pinDup = staffList.find(function(s) {
+                    return s.pin === pin && s.id !== editId && s.active;
+                });
+                if (pinDup) {
+                    alert('PIN ja esta em uso por: ' + pinDup.name + '. Escolha outro.');
+                    return;
+                }
+            }
+            if (cargaSemanal > 44) {
+                if (!confirm('Carga semanal acima de 44h excede o limite da CLT (art. 7 XIII). Confirma assim mesmo?')) return;
+            }
+
+            var jornada = {
+                tipo: jornadaTipo,
+                hora_entrada: horaEntrada,
+                hora_saida: horaSaida,
+                intervalo_almoco_min: almocoMin,
+                folgas: folgas.length ? folgas : ['domingo']
+            };
+
             if (editId) {
-                // Editing
                 var idx = staffList.findIndex(function(s) { return s.id === editId; });
                 if (idx !== -1) {
                     staffList[idx].name = name;
@@ -504,9 +647,15 @@
                     staffList[idx].phone = phone;
                     staffList[idx].salary = salary;
                     staffList[idx].startDate = startDate;
+                    staffList[idx].cpf = cpf;
+                    staffList[idx].pis = pis;
+                    staffList[idx].pin = pin;
+                    staffList[idx].jornada = jornada;
+                    staffList[idx].carga_horaria_semanal = cargaSemanal;
+                    staffList[idx].adicional_noturno = adicionalNoturno;
+                    staffList[idx].updatedAt = new Date().toISOString();
                 }
             } else {
-                // Adding
                 var fPrefix = franchiseId ? franchiseId.replace(/[^a-z0-9]/gi, '_') : 'staff';
                 var newId = 'staff_' + fPrefix + '_' + Date.now();
                 staffList.push({
@@ -516,6 +665,12 @@
                     phone: phone,
                     salary: salary,
                     startDate: startDate,
+                    cpf: cpf,
+                    pis: pis,
+                    pin: pin,
+                    jornada: jornada,
+                    carga_horaria_semanal: cargaSemanal,
+                    adicional_noturno: adicionalNoturno,
                     active: true,
                     createdAt: new Date().toISOString()
                 });
@@ -524,6 +679,12 @@
             saveStaffData();
             closeModal();
             renderAll();
+
+            if (!pis) {
+                setTimeout(function() {
+                    alert('⚠️ Atencao: funcionario salvo sem PIS. Por lei (Portaria MTE 671/2021), o PIS e OBRIGATORIO para registro de ponto eletronico. Cadastre antes de comecar a usar o controle de ponto.');
+                }, 200);
+            }
         }
 
         function toggleActive(id) {

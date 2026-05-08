@@ -684,11 +684,75 @@
         <div id="pdvMetaChip" style="display:none"></div>
         <div id="pdvCaixaChip" style="display:none"></div>
         <button class="pdv-orders-btn" id="pdvOrdersBtn" onclick="openOrdersModal()" title="Pedidos de hoje (status)">📋 Pedidos<span id="pdvOrdersBtnCount"></span></button>
+        <button class="pdv-orders-btn" id="pdvPontoBtn" onclick="openPdvPontoModal()" title="Bater ponto (CLT)" style="background:#16A34A">⏰ Ponto</button>
         <div style="font-size:12px;opacity:0.8;" id="clk"></div>
         <button class="btn-back" onclick="openPrinterSettings()" title="Configurações de Impressão">⚙️</button>
         <button class="btn-back" onclick="toggleFullscreen()" title="Tela cheia (F11)">⛶</button>
     </div>
 </div>
+
+<!-- Modal Bater Ponto (CLT) -->
+<div id="pdvPontoOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#fff;border-radius:14px;width:100%;max-width:380px;box-shadow:0 12px 40px rgba(0,0,0,.3);overflow:hidden">
+        <div style="padding:18px 22px;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff;display:flex;justify-content:space-between;align-items:center">
+            <h3 style="margin:0;font-family:'Baloo 2',sans-serif">⏰ Bater Ponto</h3>
+            <button onclick="closePdvPontoModal()" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">&times;</button>
+        </div>
+        <div style="padding:20px 22px">
+            <p style="margin:0 0 14px;color:#6B7280;font-size:.88rem">Digite seu PIN de 4 digitos:</p>
+            <input type="password" id="pdvPontoPin" inputmode="numeric" maxlength="4" pattern="\d{4}" autocomplete="off"
+                   placeholder="••••" style="font-size:2rem;text-align:center;letter-spacing:14px;width:100%;padding:14px;border:2px solid #D1D5DB;border-radius:10px;font-family:'Baloo 2',sans-serif;box-sizing:border-box">
+            <div id="pdvPontoResult" style="margin-top:14px"></div>
+        </div>
+        <div style="padding:14px 22px;border-top:1px solid #E5E7EB;display:flex;gap:10px;justify-content:flex-end">
+            <button onclick="closePdvPontoModal()" style="padding:9px 18px;background:#fff;border:1px solid #D1D5DB;border-radius:8px;cursor:pointer;font-weight:700">Cancelar</button>
+            <button onclick="pdvBaterPonto()" style="padding:9px 18px;background:#16A34A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<script src="../js/core/time-clock.js"></script>
+<script>
+    function openPdvPontoModal() {
+        document.getElementById('pdvPontoPin').value = '';
+        document.getElementById('pdvPontoResult').innerHTML = '';
+        document.getElementById('pdvPontoOverlay').style.display = 'flex';
+        setTimeout(function() { document.getElementById('pdvPontoPin').focus(); }, 100);
+    }
+    function closePdvPontoModal() {
+        document.getElementById('pdvPontoOverlay').style.display = 'none';
+    }
+    async function pdvBaterPonto() {
+        var pin = document.getElementById('pdvPontoPin').value.trim();
+        var resultEl = document.getElementById('pdvPontoResult');
+        if (!pin || pin.length !== 4) {
+            resultEl.innerHTML = '<div style="background:#FEE2E2;border-left:4px solid #DC2626;padding:10px 12px;border-radius:7px;color:#991B1B;font-size:.85rem">PIN deve ter 4 digitos</div>';
+            return;
+        }
+        var session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+        var fid = session && session.franchiseId;
+        if (!fid || typeof TimeClock === 'undefined') {
+            resultEl.innerHTML = '<div style="background:#FEE2E2;border-left:4px solid #DC2626;padding:10px 12px;border-radius:7px;color:#991B1B;font-size:.85rem">Sistema indisponivel</div>';
+            return;
+        }
+        var result = await TimeClock.recordPunch(fid, pin, 'pin');
+        if (result.success) {
+            resultEl.innerHTML = '<div style="background:#DCFCE7;border-left:4px solid #16A34A;padding:12px 14px;border-radius:8px;color:#166534">'
+                + '<strong>✓ Ponto registrado!</strong><br>'
+                + '<strong>' + result.staff.name + '</strong> — ' + result.typeLabel + '<br>'
+                + '<small>' + new Date(result.timestamp).toLocaleTimeString('pt-BR') + ' • NSR ' + result.nsr + '</small></div>';
+            document.getElementById('pdvPontoPin').value = '';
+            setTimeout(closePdvPontoModal, 2200);
+        } else {
+            resultEl.innerHTML = '<div style="background:#FEE2E2;border-left:4px solid #DC2626;padding:10px 12px;border-radius:7px;color:#991B1B;font-size:.85rem"><strong>✗</strong> ' + result.error + '</div>';
+        }
+    }
+    // Enter no PIN dispara
+    document.addEventListener('DOMContentLoaded', function() {
+        var pin = document.getElementById('pdvPontoPin');
+        if (pin) pin.addEventListener('keydown', function(e) { if (e.key === 'Enter') pdvBaterPonto(); });
+    });
+</script>
 <!-- Mensagem motivacional compacta (preenchida por JS) -->
 <div id="pdvMotivBanner"></div>
 <div class="pdv-layout">
