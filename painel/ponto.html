@@ -255,6 +255,8 @@
                 <div class="pt-tabs">
                     <button class="pt-tab active" onclick="ptSwitchTab('hoje', this)">📅 Hoje</button>
                     <button class="pt-tab" onclick="ptSwitchTab('espelho', this)">🗓️ Espelho Mensal</button>
+                    <button class="pt-tab" onclick="ptSwitchTab('holerite', this)">💵 Holerite</button>
+                    <button class="pt-tab" onclick="ptSwitchTab('banco', this)">🏦 Banco de Horas</button>
                     <button class="pt-tab" onclick="ptSwitchTab('justificativas', this)">📝 Justificativas</button>
                     <button class="pt-tab" onclick="ptSwitchTab('escala', this)">📊 Escala</button>
                     <button class="pt-tab" onclick="ptSwitchTab('fiscalizacao', this)">⚖️ Fiscalizacao (AFD)</button>
@@ -284,6 +286,42 @@
                             </tr>
                         </thead>
                         <tbody id="ptTodayBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- TAB HOLERITE -->
+                <div class="pt-panel" id="pt-tab-holerite">
+                    <div class="pt-toolbar">
+                        <label>Funcionário:</label>
+                        <select id="ptHolStaff"></select>
+                        <label>Mês:</label>
+                        <select id="ptHolMonth"></select>
+                        <label>Ano:</label>
+                        <select id="ptHolYear"></select>
+                        <button class="btn-primary" onclick="ptCarregarHolerite()">Calcular</button>
+                        <div style="flex:1"></div>
+                        <button class="btn-outline" onclick="ptImprimirHolerite()">🖨️ Imprimir</button>
+                    </div>
+                    <div id="ptHoleriteContent"><p style="text-align:center;padding:40px;color:#9CA3AF">Selecione funcionário e mês.</p></div>
+                </div>
+
+                <!-- TAB BANCO DE HORAS -->
+                <div class="pt-panel" id="pt-tab-banco">
+                    <div class="pt-legal" style="background:#FEF3C7;border-left-color:#F59E0B;color:#92400E">
+                        <strong>📝 Solicitações de banco de horas:</strong> funcionários solicitam pelo app/portal mobile. Você aprova ou rejeita aqui. Ao aprovar, o funcionário recebe push notification automático.
+                    </div>
+                    <div class="pt-toolbar">
+                        <label>Filtro:</label>
+                        <select id="ptBancoFilter" onchange="ptLoadBanco()">
+                            <option value="all">Todas</option>
+                            <option value="pending" selected>Pendentes</option>
+                            <option value="approved">Aprovadas</option>
+                            <option value="rejected">Rejeitadas</option>
+                        </select>
+                    </div>
+                    <table class="pt-table">
+                        <thead><tr><th>Funcionário</th><th>Tipo</th><th>Horas</th><th>Data desejada</th><th>Motivo</th><th>Status</th><th>Ações</th></tr></thead>
+                        <tbody id="ptBancoBody"></tbody>
                     </table>
                 </div>
 
@@ -469,6 +507,8 @@
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/audit.js"></script>
     <script src="../js/core/time-clock.js"></script>
+    <script src="../js/core/staff-benefits.js"></script>
+    <script src="../js/core/payroll.js"></script>
 
     <script>
         // Auth guard
@@ -494,7 +534,85 @@
             if (name === 'justificativas') ptLoadJustificativas();
             if (name === 'escala') ptLoadEscala();
             if (name === 'fiscalizacao') { ptInitAFDControls(); ptLoadAudit(); }
+            if (name === 'holerite') ptInitHoleriteControls();
+            if (name === 'banco') ptLoadBanco();
         }
+
+        // ========== HOLERITE ADMIN ==========
+        function ptInitHoleriteControls() {
+            var staffSel = document.getElementById('ptHolStaff');
+            var staff = (DataStore.getCollection('staff', franchiseId) || []).filter(function(s) { return s.active; });
+            staffSel.innerHTML = staff.map(function(s) { return '<option value="' + s.id + '">' + escapeHtml(s.name) + '</option>'; }).join('');
+
+            var monthSel = document.getElementById('ptHolMonth');
+            var meses = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+            monthSel.innerHTML = meses.map(function(m, i) { return '<option value="' + (i+1) + '">' + m + '</option>'; }).join('');
+            monthSel.value = new Date().getMonth() + 1;
+
+            var yearSel = document.getElementById('ptHolYear');
+            var y = new Date().getFullYear();
+            var arr = []; for (var i = y - 2; i <= y; i++) arr.push(i);
+            yearSel.innerHTML = arr.map(function(a) { return '<option value="' + a + '">' + a + '</option>'; }).join('');
+            yearSel.value = y;
+        }
+        function ptCarregarHolerite() {
+            var staffId = document.getElementById('ptHolStaff').value;
+            var month = parseInt(document.getElementById('ptHolMonth').value, 10);
+            var year = parseInt(document.getElementById('ptHolYear').value, 10);
+            if (typeof Payroll === 'undefined') { alert('Payroll module nao carregado'); return; }
+            var p = Payroll.computePayslip(franchiseId, staffId, year, month);
+            document.getElementById('ptHoleriteContent').innerHTML = Payroll.generatePayslipHTML(p);
+        }
+        function ptImprimirHolerite() { window.print(); }
+
+        // ========== BANCO DE HORAS ADMIN ==========
+        function ptLoadBanco() {
+            if (typeof Payroll === 'undefined') return;
+            var filter = document.getElementById('ptBancoFilter').value;
+            var lista = Payroll.listBankHoursRequests(franchiseId, filter !== 'all' ? { status: filter } : {});
+            var html = lista.map(function(r) {
+                var statusClr = r.status === 'approved' ? '#16A34A' : (r.status === 'rejected' ? '#DC2626' : '#F59E0B');
+                var actions = r.status === 'pending'
+                    ? '<button class="btn-primary" style="padding:5px 12px;font-size:.78rem" onclick="ptApproveBh(\'' + r.id + '\')">Aprovar</button> '
+                    + '<button class="btn-warn" style="padding:5px 12px;font-size:.78rem" onclick="ptRejectBh(\'' + r.id + '\')">Rejeitar</button>'
+                    : '<small style="color:#6B7280">' + (r.approverObservation || r.rejectReason || '-') + '</small>';
+                return '<tr>'
+                    + '<td><strong>' + escapeHtml(r.staffName) + '</strong></td>'
+                    + '<td><span class="pt-tag blue">' + (r.type === 'compensar' ? 'Compensar' : 'Acumular') + '</span></td>'
+                    + '<td>' + Math.floor(r.hoursMin/60) + 'h' + (r.hoursMin%60 ? (r.hoursMin%60) + 'min' : '') + '</td>'
+                    + '<td>' + (r.useDate ? r.useDate.split('-').reverse().join('/') : '-') + '</td>'
+                    + '<td style="font-size:.8rem">' + escapeHtml(r.reason || '') + '</td>'
+                    + '<td><span class="pt-tag" style="background:' + statusClr + '20;color:' + statusClr + '">' + r.status + '</span></td>'
+                    + '<td>' + actions + '</td>'
+                    + '</tr>';
+            }).join('');
+            if (!html) html = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#9CA3AF">Nenhuma solicitação ' + (filter === 'pending' ? 'pendente' : '') + '.</td></tr>';
+            document.getElementById('ptBancoBody').innerHTML = html;
+        }
+        window.ptApproveBh = function(id) {
+            var obs = prompt('Observação para o funcionário (opcional):');
+            if (obs === null) return; // cancelou
+            var r = Payroll.approveBankHours(franchiseId, id, session.email, obs);
+            if (r.success) {
+                Utils.showToast && Utils.showToast('Aprovada — funcionário receberá push', 'success');
+                // Tenta enviar push via Cloud Function
+                if (typeof CloudFunctions !== 'undefined' && CloudFunctions.call) {
+                    CloudFunctions.call('bankHours_notifyDecision', { franchiseId: franchiseId, requestId: id, decision: 'approved', observation: obs });
+                }
+                ptLoadBanco();
+            } else alert('Erro: ' + r.error);
+        };
+        window.ptRejectBh = function(id) {
+            var motivo = prompt('Motivo da rejeição (será mostrado pro funcionário):');
+            if (!motivo) return;
+            var r = Payroll.rejectBankHours(franchiseId, id, session.email, motivo);
+            if (r.success) {
+                if (typeof CloudFunctions !== 'undefined' && CloudFunctions.call) {
+                    CloudFunctions.call('bankHours_notifyDecision', { franchiseId: franchiseId, requestId: id, decision: 'rejected', observation: motivo });
+                }
+                ptLoadBanco();
+            }
+        };
 
         // ========== TAB HOJE ==========
         function ptLoadHoje() {

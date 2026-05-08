@@ -1,0 +1,134 @@
+name: Build Android APK (TWA Funcionário)
+
+on:
+  workflow_dispatch:
+    inputs:
+      versionName:
+        description: 'Versão (ex: 1.0.0)'
+        required: true
+        default: '1.0.0'
+      versionCode:
+        description: 'Build number'
+        required: true
+        default: '1'
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Bubblewrap CLI
+        run: npm install -g @bubblewrap/cli
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Update version in manifest
+        run: |
+          jq --arg ver "${{ github.event.inputs.versionName }}" \
+             --argjson code ${{ github.event.inputs.versionCode }} \
+             '.appVersion = $ver | .appVersionCode = $code' \
+             twa-manifest.json > twa-manifest.tmp && mv twa-manifest.tmp twa-manifest.json
+
+      - name: Generate keystore (if not provided)
+        run: |
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android.keystore
+          else
+            keytool -genkeypair -v \
+              -keystore android.keystore \
+              -alias android \
+              -keyalg RSA -keysize 2048 \
+              -validity 10000 \
+              -storepass milkypot2026 \
+              -keypass milkypot2026 \
+              -dname "CN=MilkyPot, OU=TI, O=MilkyPot Franquias, L=Londrina, S=PR, C=BR"
+          fi
+
+      - name: Initialize TWA project
+        run: |
+          mkdir -p android-build
+          cd android-build
+          bubblewrap init --manifest=https://milkypot.com/funcionario/manifest.json << EOF || true
+          n
+
+
+          ./../android.keystore
+          android
+          ${{ secrets.KEYSTORE_PASSWORD || 'milkypot2026' }}
+          ${{ secrets.KEY_PASSWORD || 'milkypot2026' }}
+          EOF
+
+      - name: Update twa-manifest in android-build
+        run: |
+          cp twa-manifest.json android-build/twa-manifest.json || true
+
+      - name: Build APK
+        working-directory: android-build
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'milkypot2026' }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'milkypot2026' }}
+        run: |
+          bubblewrap build --skipPwaValidation || true
+
+      - name: Show SHA256 fingerprint (para assetlinks.json)
+        run: |
+          echo "=== ATENÇÃO: copie o SHA256 abaixo para .well-known/assetlinks.json ==="
+          keytool -list -v -keystore android.keystore -alias android -storepass ${{ secrets.KEYSTORE_PASSWORD || 'milkypot2026' }} | grep "SHA256:" || true
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: milkypot-funcionario-${{ github.event.inputs.versionName }}.apk
+          path: android-build/app-release-signed.apk
+          if-no-files-found: warn
+
+      - name: Upload AAB (Play Store)
+        uses: actions/upload-artifact@v4
+        with:
+          name: milkypot-funcionario-${{ github.event.inputs.versionName }}.aab
+          path: android-build/app-release-bundle.aab
+          if-no-files-found: warn
+
+      - name: Create GitHub Release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-v${{ github.event.inputs.versionName }}-${{ github.event.inputs.versionCode }}
+          name: 'MilkyPot Funcionário Android v${{ github.event.inputs.versionName }}'
+          body: |
+            APK Android instalável do Portal do Funcionário (TWA - Trusted Web Activity).
+
+            **Como instalar (qualquer Android):**
+            1. Baixe o APK abaixo
+            2. No celular: Configurações > Segurança > "Permitir apps de fontes desconhecidas"
+            3. Toque no APK baixado e instale
+
+            **Para publicar na Play Store:** use o arquivo .AAB (App Bundle).
+
+            **Funcionalidades:**
+            - Login com CPF + PIN
+            - Bater ponto com geolocalização e selfie
+            - Push notifications via FCM
+            - Espelho mensal, holerite, banco de horas, benefícios
+            - Funciona offline
+          files: |
+            android-build/app-release-signed.apk
+            android-build/app-release-bundle.aab
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

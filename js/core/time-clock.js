@@ -239,6 +239,20 @@
 
         var channel = options.channel || (identifierType === 'pin' ? 'pdv' : 'web');
         var geo = options.geolocation || null;
+        var selfie = options.selfie || null;     // dataURL base64 (caso bater por mobile)
+
+        // GEOFENCE: valida se canal mobile/web exige
+        var geoValidation = null;
+        if (typeof Geofence !== 'undefined' && geo && geo.lat) {
+            geoValidation = Geofence.validate(franchiseId, geo.lat, geo.lng);
+            if (geoValidation.blocked) {
+                return {
+                    success: false,
+                    error: geoValidation.message + ' Aproxime-se da loja para registrar o ponto.',
+                    geofence: geoValidation
+                };
+            }
+        }
 
         var record = {
             id: 'tc_' + franchiseId.replace(/[^a-z0-9]/gi, '_') + '_' + nsr,
@@ -252,7 +266,9 @@
             hash: hash,
             source: channel + '_' + (identifierType === 'pin' ? 'pin' : 'doc'),
             channel: channel,
-            geolocation: geo,         // {lat, lng, accuracy} se disponivel
+            geolocation: geo,                 // {lat, lng, accuracy} se disponivel
+            geofence: geoValidation,          // {valid, distance, radius, reason}
+            selfie: selfie,                   // dataURL (ou null)
             device: getDeviceInfo(),
             userAgent: (navigator.userAgent || '').slice(0, 200),
             createdAt: timestamp,
