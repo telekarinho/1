@@ -2,6 +2,42 @@
 
 ---
 
+## Ciclo #157 — 2026-05-08
+
+**Área:** SEO — `sitemap.xml` auditoria completa de `lastmod` (8 URLs)
+
+**Contexto:** Prescrito pelo roadmap ciclos #155 e #156. Após múltiplas rodadas de edição (ciclos #93, #113, #123, #142, #148, #151, #153, #156), algumas páginas de menor prioridade (desafio, privacidade, termos) tiveram seus `lastmod` no sitemap nunca atualizados a partir do valor inicial `2026-04-22`, mesmo após modificações reais pelo git. Googlebot usa `lastmod` para priorizar re-crawl — datas erradas atrasam indexação de melhorias já commitadas.
+
+**O que pesquisou/analisou:**
+- Comparou `lastmod` de cada uma das 8 URLs do sitemap com `git log --oneline -1 -- <arquivo>` (data do commit mais recente)
+- Identificou 3 divergências: `desafio.html` (sitemap `2026-04-22` vs git `2026-05-02`), `privacidade.html` (sitemap `2026-04-22` vs git `2026-04-26`), `termos.html` (sitemap `2026-04-22` vs git `2026-04-26`)
+- Confirmou 5 URLs corretas: homepage `2026-05-08` ✅, cardápio `2026-05-07` ✅, 2 landing pages `2026-05-05` ✅, raspinha `2026-05-04` ✅
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `sitemap.xml` | `desafio.html` lastmod: `2026-04-22` → `2026-05-02`; `privacidade.html` lastmod: `2026-04-22` → `2026-04-26`; `termos.html` lastmod: `2026-04-22` → `2026-04-26` |
+
+**Commit:** `5bdcf4f`
+
+**Destaques:**
+1. **Auditoria 100% completa:** Todas as 8 URLs do sitemap agora têm `lastmod` correspondendo exatamente à data do último commit git do arquivo.
+2. **Impacto real:** Googlebot re-crawla páginas com `lastmod` recente com maior frequência. `desafio.html` recebeu BreadcrumbList+WebPage schema no ciclo #93 — 16 dias de atraso na indexação potencial corrigidos.
+3. **Prevenção:** A auditoria revela que páginas de baixa prioridade (privacidade, termos, desafio) tendem a acumular drift de lastmod. Próxima auditoria deve ocorrer após qualquer série de ciclos de edição intensiva.
+
+**Próximo passo sugerido:**
+- **Ciclo #158 — Conversão:** Template WA milestone 50 carimbos fidelidade (prescrito roadmap #147, postergado múltiplos ciclos — regra v18b ativa).
+- **Ciclo #159 — Pesquisa concorrentes:** nova rodada de inteligência competitiva (última: ciclo #151, +6 ciclos atrás).
+- **Ciclo #160 — Auto-aprimoramento:** Reler log #155–#159; ajustar estratégia/prioridades para jun–jul 2027.
+- **Operador:** CNPJ + DPO — LGPD — em aberto há **+20 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (ação pendente desde ciclo #148).
+
+_Belinha — Ciclo #157 | 2026-05-08_
+
+---
+
 ## Ciclo #156 — 2026-05-08
 
 **Área:** UX/Frontend — FAQ Páscoa 2027 em `index.html` + `sitemap.xml` lastmod
