@@ -27,11 +27,72 @@
 "use strict";
 
 const crypto = require("crypto");
+const TOOLS = require("./whatsapp-tools.js");
 
-// Vercel pré-parseia req.body por padrão. Pra HMAC funcionar precisamos
-// dos bytes EXATOS que o gateway assinou. config é setado DEPOIS do
-// module.exports do handler (no fim do arquivo) — se setar antes, é
-// sobrescrito quando atribuímos `module.exports = async (req, res) => ...`.
+// ============================================
+// Tool definitions (formato OpenAI/Groq)
+// ============================================
+const TOOL_DEFINITIONS = [
+    {
+        type: "function",
+        function: {
+            name: "criar_pedido",
+            description: "Cria um pedido NO SISTEMA da MilkyPot quando o cliente confirmou TODOS os detalhes. Use SOMENTE depois que cliente confirmou tudo. Retorna orderId, total, eta.",
+            parameters: {
+                type: "object",
+                properties: {
+                    sabor: { type: "string", description: "Sabor (Oreo, Nutella, Morango, Ninho, Açaí+Granola, Whey, Amarula, etc)" },
+                    tamanho: { type: "string", enum: ["P", "M", "G", "GG"], description: "P=R$9,99 / M=R$17,99 / G=R$21,99 / GG=R$29,99" },
+                    tipo: { type: "string", enum: ["delivery", "retirada"], description: "delivery (R$5,90 taxa) ou retirada na loja" },
+                    endereco: { type: "string", description: "Rua, número, bairro. Obrigatório se delivery" },
+                    pagamento: { type: "string", enum: ["pix", "cartao", "dinheiro"] },
+                    troco_para: { type: "number", description: "Troco pra qual valor (só se dinheiro)" },
+                    observacoes: { type: "string", description: "Notas extras do cliente" },
+                    qty: { type: "integer", description: "Quantidade. Default: 1" }
+                },
+                required: ["sabor", "tamanho", "tipo", "pagamento"]
+            }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "consultar_pedido",
+            description: "Busca pedidos do cliente pelo phone atual (automático) ou orderId. Use quando cliente perguntar 'cadê meu pedido?'.",
+            parameters: {
+                type: "object",
+                properties: {
+                    orderId: { type: "string", description: "ID curto (ex: A1B2C3) ou completo" }
+                }
+            }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "listar_promocoes",
+            description: "Retorna promoções vigentes hoje na franquia.",
+            parameters: { type: "object", properties: {} }
+        }
+    }
+];
+
+async function executeToolCall(name, args, ctx) {
+    const full = { ...args, franchiseeId: ctx.franchiseeId };
+    if (name === "criar_pedido") {
+        full.customerPhone = ctx.customerPhone;
+        full.customerName = ctx.customerName;
+        return await TOOLS.criar_pedido(full);
+    }
+    if (name === "consultar_pedido") {
+        if (!full.orderId) full.customerPhone = ctx.customerPhone;
+        return await TOOLS.consultar_pedido(full);
+    }
+    if (name === "listar_promocoes") {
+        return await TOOLS.listar_promocoes(full);
+    }
+    return { error: "tool_unknown:" + name };
+}
 
 function readRawBody(req) {
     return new Promise((resolve, reject) => {
@@ -320,24 +381,42 @@ async function getFranchiseContext(accountId) {
 // ============================================
 // Chamar Lulu IA (Groq)
 // ============================================
-async function generateLuluReply(history, currentText, customerName, accountId) {
+async function callGroq(apiKey, body) {
+    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+    if (!r.ok) {
+        const errText = await r.text().catch(() => "");
+        console.error("Groq API error:", r.status, errText.slice(0, 300));
+        throw new Error("Groq API error " + r.status);
+    }
+    return await r.json();
+}
+
+async function generateLuluReply(history, currentText, customerName, accountId, customerPhone) {
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) throw new Error("GROQ_API_KEY missing");
 
-    // Carrega contexto específico da franquia (se cadastrada)
+    // Carrega contexto específico da franquia
     const franchise = await getFranchiseContext(accountId);
     let contextSuffix = customerName ? `\n\nNome do cliente: ${customerName}` : "";
     if (franchise) {
-        contextSuffix += `\n\n## ATENDIMENTO DA FRANQUIA "${franchise.name || accountId}"`;
+        contextSuffix += `\n\n## FRANQUIA ATUAL: "${franchise.name || accountId}"`;
         if (franchise.address) contextSuffix += `\n- Endereço: ${franchise.address}`;
         if (franchise.hours) contextSuffix += `\n- Horário: ${franchise.hours}`;
         if (franchise.deliveryFee) contextSuffix += `\n- Taxa entrega: R$ ${franchise.deliveryFee}`;
         if (franchise.deliveryTime) contextSuffix += `\n- Tempo entrega: ${franchise.deliveryTime}`;
         if (franchise.ownerName) contextSuffix += `\n- Dono(a): ${franchise.ownerName}`;
-        contextSuffix += `\n(Use ESSAS infos quando cliente perguntar sobre essa loja específica.)`;
     }
+    contextSuffix += `\n\n## VOCÊ TEM TOOLS — USE!
+Quando cliente confirmar TODOS os detalhes do pedido (sabor, tamanho, delivery/retirada, endereço se delivery, pagamento), CHAME a tool 'criar_pedido' pra registrar de verdade no sistema. NÃO simule só na conversa.
+Quando cliente perguntar 'cadê meu pedido?' chame 'consultar_pedido'.
+Quando cliente perguntar 'tem promoção hoje?' chame 'listar_promocoes'.
 
-    // Constrói histórico de mensagens pro modelo
+Após criar o pedido com sucesso, confirme pro cliente com: número do pedido (orderShortId), total e tempo (eta). Ex: "Aaaai pedido feito! 💜🐑 Anota o número: #ABC123. Total R$ 23,89. Chega em 25-40min ✨"`;
+
     const messages = [
         { role: "system", content: LULU_WHATSAPP_PROMPT + contextSuffix },
         ...history.map(h => ({
@@ -345,31 +424,56 @@ async function generateLuluReply(history, currentText, customerName, accountId) 
             content: String(h.text).slice(0, 800)
         })),
         { role: "user", content: String(currentText).slice(0, 1200) }
-    ].slice(-15); // máximo 15 itens
+    ].slice(-15);
 
-    const groqResp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
+    const ctx = { franchiseeId: accountId, customerPhone, customerName };
+    const MAX_ITER = 4;
+
+    for (let iter = 0; iter < MAX_ITER; iter++) {
+        const data = await callGroq(apiKey, {
             model: "llama-3.3-70b-versatile",
             messages,
+            tools: TOOL_DEFINITIONS,
+            tool_choice: "auto",
             temperature: 0.7,
-            max_tokens: 250, // respostas curtas pra WhatsApp
+            max_tokens: 350,
             top_p: 0.9
-        })
-    });
+        });
 
-    if (!groqResp.ok) {
-        const errText = await groqResp.text().catch(() => "");
-        console.error("Groq API error:", groqResp.status, errText.slice(0, 300));
-        throw new Error("Groq API error " + groqResp.status);
+        const choice = data.choices?.[0];
+        const msg = choice?.message;
+        if (!msg) return null;
+
+        // Se NÃO chamou tool, retorna texto final
+        if (!msg.tool_calls || msg.tool_calls.length === 0) {
+            return (msg.content || "").trim() || null;
+        }
+
+        // IA chamou tools — executa cada uma e adiciona resultado ao histórico
+        messages.push({ role: "assistant", content: msg.content || null, tool_calls: msg.tool_calls });
+        for (const tc of msg.tool_calls) {
+            let args = {};
+            try { args = JSON.parse(tc.function.arguments || "{}"); } catch (e) {}
+            console.log(`[Lulu tool] ${tc.function.name}`, args);
+            let result;
+            try {
+                result = await executeToolCall(tc.function.name, args, ctx);
+            } catch (e) {
+                result = { error: e.message };
+            }
+            console.log(`[Lulu tool result]`, result);
+            messages.push({
+                role: "tool",
+                tool_call_id: tc.id,
+                name: tc.function.name,
+                content: JSON.stringify(result).slice(0, 2000)
+            });
+        }
+        // loop de novo pra IA gerar resposta final com base no resultado da tool
     }
-    const data = await groqResp.json();
-    const reply = data.choices?.[0]?.message?.content?.trim();
-    return reply || null;
+
+    // Esgotou iterações — fallback
+    return "Tô processando seu pedido amorzinho... 💜 Manda de novo se eu não responder em 1min ok?";
 }
 
 // ============================================
@@ -431,7 +535,7 @@ module.exports = async (req, res) => {
 
     // 4. Tenta gerar resposta da Lulu
     try {
-        const reply = await generateLuluReply(history.messages, text, customerName || history.lastSeenName, accountId);
+        const reply = await generateLuluReply(history.messages, text, customerName || history.lastSeenName, accountId, phoneClean);
         if (!reply) {
             res.status(200).json({ reply: "Tô tendo dificuldade de pensar agora 😔 Manda de novo? Ou fala direto com o Jocimar: wa.me/5543999919777" });
             return;
