@@ -434,6 +434,82 @@
                         </div>
                     </div>
 
+                    <!-- Card: Sistema de Conduta (OPCIONAL) -->
+                    <div class="panel-card" style="grid-column:1/-1">
+                        <div class="card-header" style="background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff">
+                            <h3 style="color:#fff">🏆 Sistema de Conduta & Pontuação <small style="opacity:.85;font-weight:400">(opcional)</small></h3>
+                            <p style="margin:4px 0 0;font-size:12px;opacity:.92">Gamificação para incentivar pontualidade e regularidade. Condiciona apenas benefícios extras — nunca salário.</p>
+                        </div>
+                        <div class="card-body">
+
+                            <!-- AVISO LEGAL CRITICO -->
+                            <div style="background:#FEE2E2;border:2px solid #DC2626;padding:14px;border-radius:10px;margin-bottom:14px;font-size:.85rem;color:#991B1B;line-height:1.6">
+                                <strong>⚠️ Atenção legal — leia antes de ativar:</strong><br>
+                                Este sistema de pontuação/conduta condiciona <strong>apenas benefícios extras in natura</strong> (sorvete do dia, lanche) e <strong>NUNCA</strong>:
+                                <ul style="margin:6px 0 0;padding-left:18px">
+                                    <li>Salário, hora extra, adicionais (CLT art. 462 — proibido desconto)</li>
+                                    <li>Atestado médico (CLT art. 6 §único, súmula 282 TST — direito constitucional)</li>
+                                    <li>Férias, 13º, FGTS</li>
+                                    <li>Licença maternidade/paternidade</li>
+                                </ul>
+                                Atestado médico válido <strong>sempre</strong> abona faltas e não pode penalizar pontuação.
+                            </div>
+
+                            <!-- Toggle ativo -->
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#F5F3FF;border-radius:10px;margin-bottom:14px">
+                                <div>
+                                    <strong>Sistema de conduta ativo</strong>
+                                    <p style="margin:2px 0 0;font-size:12px;color:#666">Quando desligado, pontuação não aparece em lugar nenhum (default)</p>
+                                </div>
+                                <label style="position:relative;display:inline-block;width:54px;height:30px">
+                                    <input type="checkbox" id="conductEnabled" onchange="syncConductSlider()" style="opacity:0;width:0;height:0">
+                                    <span id="conductSlider" style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:30px;transition:.3s"></span>
+                                    <span id="conductSliderThumb" style="position:absolute;height:24px;width:24px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s"></span>
+                                </label>
+                            </div>
+
+                            <div id="conductFields" style="display:none">
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px">
+                                    <div class="form-group">
+                                        <label>Pontuação inicial / mês</label>
+                                        <input type="number" id="conductInitialScore" min="50" max="200" placeholder="100" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Bônus por dia trabalhado completo</label>
+                                        <input type="number" id="conductBonusDay" min="0" max="5" step="0.5" placeholder="1" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Penalidade por atraso (acima da tolerância)</label>
+                                        <input type="number" id="conductPenaltyLate" min="0" max="20" placeholder="3" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Penalidade por marcação esquecida</label>
+                                        <input type="number" id="conductPenaltyMissed" min="0" max="10" placeholder="2" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Penalidade por falta SEM justificativa</label>
+                                        <input type="number" id="conductPenaltyAbsence" min="0" max="30" placeholder="10" class="form-control">
+                                        <small style="font-size:.7rem;color:#DC2626;font-weight:700">⚠️ Atestado válido NÃO penaliza</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Pontuação mínima para receber benefícios extras</label>
+                                        <input type="number" id="conductBenefitMin" min="0" max="200" placeholder="70" class="form-control">
+                                        <small style="font-size:.7rem;color:#666">Abaixo disso, o sorvete do dia fica bloqueado</small>
+                                    </div>
+                                </div>
+
+                                <div style="background:#F0F9FF;border-left:4px solid #0284C7;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:.78rem;color:#0C4A6E">
+                                    <strong>Como funciona:</strong> No fim do mês, cada funcionário tem uma pontuação calculada
+                                    automaticamente das marcações dele. Se ficar abaixo do mínimo, o sistema bloqueia
+                                    benefícios EXTRAS (sorvete, lanche). Salário, direitos CLT e atestado nunca são afetados.
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary" onclick="saveConductConfig()">💾 Salvar Configurações</button>
+                            <span id="conductSaveStatus" style="margin-left:12px;font-size:.85rem;color:#6B7280"></span>
+                        </div>
+                    </div>
+
                     <!-- Card: Uber Direct Credenciais -->
                     <div class="panel-card" style="grid-column:1/-1">
                         <div class="card-header" style="background:linear-gradient(135deg,#1a1a1a,#333);color:#fff">
@@ -587,6 +663,7 @@
     <script src="../js/core/notifications.js"></script>
     <script src="../js/core/uber-direct.js"></script>
     <script src="../js/core/staff-benefits.js"></script>
+    <script src="../js/core/staff-conduct.js"></script>
     <script src="../js/core/delivery-rules.js?v=mp-v115"></script>
 
     <script>
@@ -1392,6 +1469,51 @@
     loadNotifSettings();
     loadScratchConfig();
     loadBenefitsConfig();
+    loadConductConfig();
+
+    function syncConductSlider() {
+        var on = document.getElementById('conductEnabled').checked;
+        var slider = document.getElementById('conductSlider');
+        var thumb = document.getElementById('conductSliderThumb');
+        slider.style.background = on ? '#7C3AED' : '#ccc';
+        thumb.style.left = on ? '27px' : '3px';
+        document.getElementById('conductFields').style.display = on ? 'block' : 'none';
+    }
+
+    function loadConductConfig() {
+        if (typeof StaffConduct === 'undefined') return;
+        var cfg = StaffConduct.getConfig(franchiseId);
+        document.getElementById('conductEnabled').checked = !!cfg.enabled;
+        document.getElementById('conductInitialScore').value = cfg.initialScore || 100;
+        document.getElementById('conductBonusDay').value = cfg.bonusPerWorkedDay || 1;
+        document.getElementById('conductPenaltyLate').value = cfg.penaltyLatePunch || 3;
+        document.getElementById('conductPenaltyMissed').value = cfg.penaltyMissedPunch || 2;
+        document.getElementById('conductPenaltyAbsence').value = cfg.penaltyUnjustifiedAbsence || 10;
+        document.getElementById('conductBenefitMin').value = cfg.benefitMinScore || 70;
+        syncConductSlider();
+    }
+
+    window.saveConductConfig = function() {
+        if (typeof StaffConduct === 'undefined') return;
+        var cfg = {
+            enabled: document.getElementById('conductEnabled').checked,
+            initialScore: parseInt(document.getElementById('conductInitialScore').value, 10) || 100,
+            bonusPerWorkedDay: parseFloat(document.getElementById('conductBonusDay').value) || 1,
+            penaltyLatePunch: parseInt(document.getElementById('conductPenaltyLate').value, 10) || 0,
+            penaltyMissedPunch: parseInt(document.getElementById('conductPenaltyMissed').value, 10) || 0,
+            penaltyUnjustifiedAbsence: parseInt(document.getElementById('conductPenaltyAbsence').value, 10) || 0,
+            benefitMinScore: parseInt(document.getElementById('conductBenefitMin').value, 10) || 70
+        };
+        var r = StaffConduct.saveConfig(franchiseId, cfg);
+        var status = document.getElementById('conductSaveStatus');
+        if (r.success) {
+            status.textContent = '✓ Salvo';
+            status.style.color = '#16A34A';
+            setTimeout(function() { status.textContent = ''; }, 3000);
+        } else {
+            alert('Erro: ' + r.error);
+        }
+    };
 
     function syncBenSlider() {
         var on = document.getElementById('benEnabled').checked;

@@ -160,9 +160,9 @@
      Permite pausar IA e enviar mensagem manual via gateway zap.milkypot.com
      ============================================ */
 
-  // Auth
+  // Auth — string única (super_admin tem bypass automático)
   if (typeof Auth !== 'undefined' && Auth.requireAuth) {
-    if (!Auth.requireAuth(['super_admin', 'franchisee'])) throw new Error('Não autorizado');
+    if (!Auth.requireAuth('franchisee')) throw new Error('Não autorizado');
   }
 
   // Config — vai ler MP_API_KEY do Firestore (doc admin_secrets/whatsapp)
