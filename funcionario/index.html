@@ -251,6 +251,69 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
                     <div class="fn-greet" id="greetMsg">Ola</div>
                     <div class="fn-name" id="cardName">--</div>
                     <div class="fn-role" id="cardRole">--</div>
+                    <!-- Mensagem motivacional (so se ativada) -->
+                    <div id="gamMotivational" style="display:none;background:rgba(255,255,255,.18);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:.92rem;font-weight:600"></div>
+                    <!-- Story diario (so se ativada) -->
+                    <div id="gamDailyStory" style="display:none;background:rgba(0,0,0,.2);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:.82rem"></div>
+                </div>
+
+                <!-- Streak (so se ativada) -->
+                <div class="fn-card" id="gamStreakCard" style="display:none;background:linear-gradient(135deg,#F59E0B,#FB923C);color:#fff;border:none">
+                    <h3 style="color:#fff;display:flex;align-items:center;gap:8px">🔥 Sua sequência</h3>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+                        <div>
+                            <div style="font-size:2.2rem;font-family:'Baloo 2',cursive;font-weight:800" id="streakCurrent">0</div>
+                            <small style="opacity:.9">dias seguidos</small>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-size:1rem;font-weight:700" id="streakLongest">Recorde: 0</div>
+                            <small style="opacity:.85" id="streakProgress">Continue assim!</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Belinha (so se ativada) -->
+                <div class="fn-card" id="gamBelinhaCard" style="display:none;background:#FCE7F3;border:1px solid #F9A8D4">
+                    <div style="display:flex;gap:12px;align-items:start">
+                        <span style="font-size:2rem;flex-shrink:0">🐑</span>
+                        <div>
+                            <strong style="color:#831843;display:block;font-family:'Baloo 2',cursive;font-size:.95rem;margin-bottom:4px">Belinha diz:</strong>
+                            <div style="color:#374151;font-size:.85rem;line-height:1.5" id="belinhaText"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Badges (so se ativada) -->
+                <div class="fn-card" id="gamBadgesCard" style="display:none">
+                    <h3>🏆 Suas conquistas</h3>
+                    <div id="badgesList" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
+                </div>
+
+                <!-- Calendario visual (so se ativada) -->
+                <div class="fn-card" id="gamCalendarCard" style="display:none">
+                    <h3>📅 Seu mês visualmente</h3>
+                    <div id="visualCalendar" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px"></div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:.7rem;color:#6B7280;margin-top:10px">
+                        <span><span style="display:inline-block;width:12px;height:12px;background:#16A34A;border-radius:3px;vertical-align:middle"></span> Perfeito</span>
+                        <span><span style="display:inline-block;width:12px;height:12px;background:#86EFAC;border-radius:3px;vertical-align:middle"></span> OK</span>
+                        <span><span style="display:inline-block;width:12px;height:12px;background:#FCD34D;border-radius:3px;vertical-align:middle"></span> Justificada</span>
+                        <span><span style="display:inline-block;width:12px;height:12px;background:#FCA5A5;border-radius:3px;vertical-align:middle"></span> Falta</span>
+                        <span><span style="display:inline-block;width:12px;height:12px;background:#E5E7EB;border-radius:3px;vertical-align:middle"></span> Folga</span>
+                    </div>
+                </div>
+
+                <!-- Onboarding missions (so se ativada e se nao completou) -->
+                <div class="fn-card" id="gamOnboardingCard" style="display:none;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none">
+                    <h3 style="color:#fff">🎓 Missões de boas-vindas</h3>
+                    <small style="opacity:.9;display:block;margin-bottom:10px">Complete e ganhe pontos extras</small>
+                    <div id="onboardingList"></div>
+                    <div id="onboardingProgress" style="background:rgba(255,255,255,.2);border-radius:10px;padding:6px 10px;margin-top:10px;font-size:.85rem"></div>
+                </div>
+
+                <!-- Mural de reconhecimento (so se ativada) -->
+                <div class="fn-card" id="gamWallCard" style="display:none">
+                    <h3>📌 Mural da loja</h3>
+                    <div id="wallList" style="margin-top:10px"></div>
                 </div>
 
                 <div class="fn-card">
@@ -430,6 +493,8 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
 <script src="../js/core/payroll.js"></script>
 <script src="../js/core/legal-terms.js"></script>
 <script src="../js/core/staff-conduct.js"></script>
+<script src="../js/core/gamification.js"></script>
+<script src="../js/core/overtime-bank.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 <script src="../js/core/push-funcionario.js"></script>
 
@@ -820,6 +885,7 @@ function fnShowApp(session, staff) {
     fnRenderMes(session);
     fnRenderBeneficios(session);
     fnRenderInfo(session, staff);
+    fnRenderGamification(session, staff);
 
     // Welcome modal no primeiro login
     var welcomed = localStorage.getItem(FN_WELCOME_KEY + session.staffId);
@@ -830,6 +896,123 @@ function fnShowApp(session, staff) {
         // Reenfileira lembretes se ja deu permissao
         if ('Notification' in window && Notification.permission === 'granted') {
             fnScheduleReminders();
+        }
+    }
+}
+
+// =================== GAMIFICAÇÃO (todas opt-in) ===================
+function fnRenderGamification(session, staff) {
+    if (typeof Gamification === 'undefined') return;
+    var fid = session.franchiseId;
+    var sid = session.staffId;
+    var nome = (session.staffName || '').split(' ')[0];
+
+    // 1. Mensagem motivacional
+    if (Gamification.isFeatureEnabled(fid, 'motivationalMessages')) {
+        var hour = new Date().getHours();
+        var ctx = hour < 12 ? 'morning' : (hour < 18 ? 'afternoon' : 'evening');
+        var dayCtx = (new Date().getDay() === 1) ? 'monday' : (new Date().getDay() === 5 ? 'friday' : ctx);
+        var msg = Gamification.getMotivationalMessage(fid, dayCtx, { nome: nome }) || Gamification.getMotivationalMessage(fid, ctx, { nome: nome });
+        if (msg) {
+            var el = document.getElementById('gamMotivational');
+            el.textContent = '💬 ' + msg;
+            el.style.display = 'block';
+        }
+    }
+
+    // 2. Story diário
+    if (Gamification.isFeatureEnabled(fid, 'dailyStory')) {
+        var story = Gamification.getDailyStory(fid, sid);
+        if (story) {
+            var el = document.getElementById('gamDailyStory');
+            el.textContent = story.message;
+            el.style.display = 'block';
+        }
+    }
+
+    // 3. Streak
+    if (Gamification.isFeatureEnabled(fid, 'streaks')) {
+        var streak = Gamification.computeStreak(fid, sid);
+        if (streak) {
+            document.getElementById('streakCurrent').textContent = streak.current;
+            document.getElementById('streakLongest').textContent = 'Recorde: ' + streak.longest;
+            var nextMilestone = streak.current < 7 ? 7 : streak.current < 30 ? 30 : streak.current < 90 ? 90 : streak.current < 365 ? 365 : null;
+            if (nextMilestone) {
+                document.getElementById('streakProgress').textContent = 'Faltam ' + (nextMilestone - streak.current) + ' dias pra próxima conquista';
+            } else {
+                document.getElementById('streakProgress').textContent = 'Você é uma lenda! 💎';
+            }
+            document.getElementById('gamStreakCard').style.display = 'block';
+        }
+    }
+
+    // 4. Belinha
+    if (Gamification.isFeatureEnabled(fid, 'belinhaVoice')) {
+        var bMsg = Gamification.belinhaSay(fid, 'welcome', { nome: nome });
+        if (bMsg) {
+            document.getElementById('belinhaText').textContent = bMsg;
+            document.getElementById('gamBelinhaCard').style.display = 'block';
+        }
+    }
+
+    // 5. Badges
+    if (Gamification.isFeatureEnabled(fid, 'badges')) {
+        var badges = Gamification.getStaffBadges(fid, sid);
+        if (badges.length > 0) {
+            document.getElementById('badgesList').innerHTML = badges.map(function(b) {
+                return '<div title="' + Utils.escapeHtml(b.desc) + '" style="background:#FEF3C7;border:2px solid #F59E0B;border-radius:10px;padding:8px 12px;display:flex;align-items:center;gap:6px"><span style="font-size:1.4rem">' + b.icon + '</span><strong style="font-size:.78rem;color:#92400E">' + b.name + '</strong></div>';
+            }).join('');
+            document.getElementById('gamBadgesCard').style.display = 'block';
+        }
+    }
+
+    // 6. Calendário visual
+    if (Gamification.isFeatureEnabled(fid, 'visualCalendar')) {
+        var now = new Date();
+        var cal = Gamification.getMonthCalendar(fid, sid, now.getFullYear(), now.getMonth() + 1);
+        if (cal) {
+            // Padding do início do mês
+            var firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+            var html = '';
+            ['D','S','T','Q','Q','S','S'].forEach(function(d) { html += '<div style="text-align:center;font-size:.65rem;color:#6B7280;font-weight:700">' + d + '</div>'; });
+            for (var i = 0; i < firstDay; i++) html += '<div></div>';
+            cal.forEach(function(d) {
+                var isToday = d.day === now.getDate() ? 'border:2px solid #111;' : 'border:1px solid #E5E7EB;';
+                html += '<div title="' + d.date + ' (' + d.label + ')" style="aspect-ratio:1;background:' + d.color + ';border-radius:5px;' + isToday + 'display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff">' + d.day + '</div>';
+            });
+            document.getElementById('visualCalendar').innerHTML = html;
+            document.getElementById('gamCalendarCard').style.display = 'block';
+        }
+    }
+
+    // 7. Onboarding missions
+    if (Gamification.isFeatureEnabled(fid, 'onboardingMissions')) {
+        var ob = Gamification.getOnboardingMissions(fid, sid);
+        if (ob && ob.totalEarned < ob.possibleTotal) {
+            var html = ob.missions.map(function(m) {
+                var icon = m.done ? '✅' : '⬜';
+                return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:rgba(255,255,255,.15);border-radius:6px;margin-bottom:4px;font-size:.82rem"><span>' + icon + ' ' + m.name + '</span><strong>+' + m.points + '</strong></div>';
+            }).join('');
+            document.getElementById('onboardingList').innerHTML = html;
+            document.getElementById('onboardingProgress').textContent = ob.totalEarned + ' / ' + ob.possibleTotal + ' pontos conquistados';
+            document.getElementById('gamOnboardingCard').style.display = 'block';
+            // Marca first_punch automaticamente se já bateu hoje
+            var today = new Date().toISOString().slice(0,10);
+            if (TimeClock.computeDay(fid, sid, today).records.length > 0) {
+                Gamification.completeMission(fid, sid, 'first_punch');
+            }
+        }
+    }
+
+    // 8. Mural de reconhecimento
+    if (Gamification.isFeatureEnabled(fid, 'recognitionWall')) {
+        var wall = Gamification.getRecognitionWall(fid);
+        if (wall.length > 0) {
+            var html = wall.slice(0, 5).map(function(r) {
+                return '<div style="background:#F9FAFB;border-left:3px solid #7C3AED;border-radius:6px;padding:8px 12px;margin-bottom:6px;font-size:.82rem"><strong>' + Utils.escapeHtml(r.staffName || r.message.slice(0,30)) + '</strong><br><small style="color:#6B7280">' + Utils.escapeHtml(r.message) + '</small></div>';
+            }).join('');
+            document.getElementById('wallList').innerHTML = html;
+            document.getElementById('gamWallCard').style.display = 'block';
         }
     }
 }
