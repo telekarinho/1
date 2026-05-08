@@ -28,6 +28,23 @@
 
 const crypto = require("crypto");
 
+// Vercel pré-parseia req.body por padrão — desabilitamos pra ler RAW
+// e validar HMAC contra os bytes EXATOS que o gateway assinou.
+module.exports.config = {
+    api: {
+        bodyParser: false
+    }
+};
+
+function readRawBody(req) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        req.on("data", c => chunks.push(c));
+        req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+        req.on("error", reject);
+    });
+}
+
 // ============================================
 // Lulu System Prompt — atendente WhatsApp HUMANIZADA + ÁGIL
 // ============================================
@@ -320,8 +337,8 @@ module.exports = async (req, res) => {
         return;
     }
 
-    // Lê raw body pra HMAC
-    const rawBody = JSON.stringify(req.body || {});
+    // Lê raw body pra HMAC (bytes exatos que o gateway assinou)
+    const rawBody = await readRawBody(req);
     const signature = req.headers["x-mp-signature"];
     const secret = process.env.MP_WEBHOOK_SECRET;
 
@@ -331,7 +348,14 @@ module.exports = async (req, res) => {
         return;
     }
 
-    const { phone, name, text, type, messageId, timestamp } = req.body || {};
+    let parsed;
+    try {
+        parsed = JSON.parse(rawBody || "{}");
+    } catch (e) {
+        res.status(400).json({ error: "invalid json" });
+        return;
+    }
+    const { phone, name, text, type, messageId, timestamp } = parsed;
 
     if (!phone || !text || typeof text !== "string") {
         res.status(400).json({ error: "phone+text required" });
