@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #155 — 2026-05-08
+
+**Área:** Conteúdo — `whatsapp-pascoa-2027.md` standalone
+
+**Contexto:** Item prescrito pela regra v19a há 3 ciclos e marcado como OBRIGATÓRIO nos ciclos #153 e #154. Páscoa 2027 = Domingo 28/03 — evento que precede em 28 dias exatos o 1 Ano (25/04/2027). Gap crítico: era o único grande evento do calendário sem playbook WA standalone. Nenhum dos outros playbooks (Halloween, BlackPot, Natal, Virada, Carnaval, 1 Ano) mencionava a sobreposição de datas com a Páscoa (A0 do 1 Ano ocorre em 25/03 = Quinta-Feira Santa). Este playbook resolve o gap e documenta a coordenação.
+
+**O que pesquisou/analisou:**
+- Leu `semana49.md`: programação Semana Santa (21–27/03) — Domingo de Ramos, Quinta e Sexta-Feira Santa, Sábado de Aleluia. Sexta #33 = feriado nacional = maior tráfego de shopping do trimestre.
+- Leu `semana50.md`: Domingo de Páscoa (28/03) + pós-Páscoa segunda (29/03 Linha Zero). Confirmado: shoppings abrem com horário reduzido no Domingo de Páscoa — ponto de atenção para o operador.
+- Leu `whatsapp-carnaval-2027.md` e `whatsapp-1ano-2027.md` como referência de estrutura e mecânica.
+- Identificou sobreposição crítica: A0 do playbook 1 Ano programado para 25/03 (Quinta-Feira Santa). Sem coordenação, a base receberia 2 broadcasts no mesmo dia → sobrecarga e risco de opt-out. Solução documentada na seção "Coordenação de Calendário" do playbook.
+- Confirmou intel competitivo (ciclos #131–#151): nenhum concorrente tem campanha de Páscoa estruturada. MilkyPot = share of voice 100% no canal WA.
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-pascoa-2027.md` | CRIADO — Playbook WA standalone completo: estratégia de 3 estágios, 4 segmentos, template P-AUTO, broadcasts P0–P8 (11 touchpoints, 10/03→29/03), seção de coordenação com 1 Ano, checklist operacional com prazos, pendências do operador, contraprogramação competitiva, métricas-alvo, referência cruzada com outros playbooks |
+
+**Commit:** `bfdd831`
+
+**Destaques:**
+1. **11 touchpoints** cobrindo 19 dias (10/03→29/03) — janela compacta pós-Carnaval, adequada à proximidade do evento.
+2. **Coordenação 1 Ano documentada:** Tabela de horários recomendados para evitar conflito de broadcasts nos dias 25–28/03. P4 às 9h (VIPs PASCOA) + A0 às 18h (base geral ANIVER) = dois eventos distintos, sem sobrecarga.
+3. **A ovelhinha e a Páscoa:** ovelha = animal de Páscoa na iconografia ocidental — ativo único de marca. Copy P-AUTO, P7 e P7b exploram o humor "a ovelhinha não é exatamente uma coelhinha, mas faz potinhos melhores que ovo de chocolate".
+4. **Gap de standalone events fechado:** todos os 7 grandes eventos do calendário 2026–2027 agora têm playbooks WA completos: Halloween, BlackPot, Natal, Virada, Carnaval, Páscoa e 1 Ano.
+5. **Seed para lista ANIVER integrado:** P6 (Sábado de Aleluia) e P7b (Domingo VIP) plantam CTA "manda ANIVER" — aproveitam o momento emocional da Páscoa para aquecer o maior evento seguinte.
+
+**Próximo passo sugerido:**
+- **Ciclo #156 — UX/Frontend:** revisar `index.html` — remover ou atualizar FAQ de Halloween (ciclo #143) que já passou de data; verificar se CTA hero mobile (ciclo #146) está renderizando corretamente; possível FAQ de Páscoa 2027 (por analogia com FAQ Carnaval do ciclo #151).
+- **Ciclo #157 — SEO:** `sitemap.xml` — atualizar `lastmod` dos arquivos alterados nos ciclos #151–#155; Google Search Console — solicitar indexação (pendente desde ciclo #148).
+- **Operador:** PRAZO CRÍTICO Páscoa — produto/topping temático: **14/03/2027**. Sem definição, 5 broadcasts ficam com placeholders genéricos.
+- **Operador:** Confirmar horários Sexta-Feira Santa (26/03) e Domingo de Páscoa (28/03) com o Shopping Muffato — **prazo 21/03**.
+- **Operador:** CNPJ + DPO — LGPD — em aberto há **+18 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (ação pendente desde ciclo #148).
+
+_Belinha — Ciclo #155 | 2026-05-08_
+
+---
+
 ## Ciclo #154 — 2026-05-08
 
 **Área:** Conteúdo — `whatsapp-1ano-2027.md` standalone
