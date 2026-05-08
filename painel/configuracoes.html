@@ -370,6 +370,70 @@
                         </div>
                     </div>
 
+                    <!-- Card: Beneficios para Funcionarios (CLT) -->
+                    <div class="panel-card" style="grid-column:1/-1">
+                        <div class="card-header" style="background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff">
+                            <h3 style="color:#fff">🎁 Benefícios para Funcionários (CLT)</h3>
+                            <p style="margin:4px 0 0;font-size:12px;opacity:.92">Sorvete do dia, refeição, lanche — pessoal e intransferível. Configurado por franquia.</p>
+                        </div>
+                        <div class="card-body">
+
+                            <!-- Aviso legal pro admin -->
+                            <div style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:12px 14px;border-radius:8px;margin-bottom:14px;font-size:.85rem;color:#92400E;line-height:1.5">
+                                <strong>📜 Conformidade legal:</strong>
+                                Benefícios são <strong>pessoais, intransferíveis</strong> e contabilizados como custo da loja (não como salário in natura para evitar repercussão em FGTS/INSS, conforme art. 458 CLT §2 com Lei 13.467/17).
+                                Em caso de fraude (repasse, troca ou venda), o benefício pode ser cancelado e o funcionário fica sujeito a sanção (art. 482 CLT). Toda autorização exige PIN do próprio funcionário e fica registrada com auditoria.
+                            </div>
+
+                            <!-- Toggle ativo -->
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#F0FDF4;border-radius:10px;margin-bottom:14px">
+                                <div>
+                                    <strong>Sistema de benefícios ativo</strong>
+                                    <p style="margin:2px 0 0;font-size:12px;color:#666">Quando desligado, opção "Benefício Funcionário" some do PDV</p>
+                                </div>
+                                <label style="position:relative;display:inline-block;width:54px;height:30px">
+                                    <input type="checkbox" id="benEnabled" onchange="syncBenSlider()" style="opacity:0;width:0;height:0">
+                                    <span id="benSlider" style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:30px;transition:.3s"></span>
+                                    <span id="benSliderThumb" style="position:absolute;height:24px;width:24px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s"></span>
+                                </label>
+                            </div>
+
+                            <!-- Limites -->
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:14px">
+                                <div class="form-group">
+                                    <label>Valor máximo por item (R$)</label>
+                                    <input type="number" id="benMaxItem" step="0.50" min="0" placeholder="8.00" class="form-control">
+                                    <small style="display:block;color:#6B7280;font-size:11px;margin-top:4px">Ex: R$ 8,00 = sorvete grande premium</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Valor máximo por dia (R$)</label>
+                                    <input type="number" id="benMaxDay" step="0.50" min="0" placeholder="8.00" class="form-control">
+                                    <small style="display:block;color:#6B7280;font-size:11px;margin-top:4px">Soma de todos os benefícios do dia</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Quantidade máxima por dia</label>
+                                    <input type="number" id="benMaxQty" step="1" min="1" max="5" placeholder="1" class="form-control">
+                                    <small style="display:block;color:#6B7280;font-size:11px;margin-top:4px">Recomendado: 1 (jurisprudência CLT)</small>
+                                </div>
+                            </div>
+
+                            <!-- Tipos permitidos -->
+                            <div style="margin-bottom:14px">
+                                <label style="display:block;font-size:.85rem;color:#374151;font-weight:700;margin-bottom:8px">Tipos permitidos nesta franquia</label>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;padding:10px">
+                                    <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;cursor:pointer"><input type="checkbox" class="ben-type-cb" data-type="sorvete_dia" checked>🍦 Sorvete do dia</label>
+                                    <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;cursor:pointer"><input type="checkbox" class="ben-type-cb" data-type="refeicao">🍽️ Refeição</label>
+                                    <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;cursor:pointer"><input type="checkbox" class="ben-type-cb" data-type="lanche">🥪 Lanche</label>
+                                    <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;cursor:pointer"><input type="checkbox" class="ben-type-cb" data-type="bebida">🥤 Bebida</label>
+                                    <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;cursor:pointer"><input type="checkbox" class="ben-type-cb" data-type="outro">🎁 Outro</label>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary" onclick="saveBenefitsConfig()">💾 Salvar Configurações</button>
+                            <span id="benSaveStatus" style="margin-left:12px;font-size:.85rem;color:#6B7280"></span>
+                        </div>
+                    </div>
+
                     <!-- Card: Uber Direct Credenciais -->
                     <div class="panel-card" style="grid-column:1/-1">
                         <div class="card-header" style="background:linear-gradient(135deg,#1a1a1a,#333);color:#fff">
@@ -522,6 +586,7 @@
     <script src="../js/core/audit.js"></script>
     <script src="../js/core/notifications.js"></script>
     <script src="../js/core/uber-direct.js"></script>
+    <script src="../js/core/staff-benefits.js"></script>
     <script src="../js/core/delivery-rules.js?v=mp-v115"></script>
 
     <script>
@@ -1326,6 +1391,61 @@
     loadFranchiseInfo();
     loadNotifSettings();
     loadScratchConfig();
+    loadBenefitsConfig();
+
+    function syncBenSlider() {
+        var on = document.getElementById('benEnabled').checked;
+        var slider = document.getElementById('benSlider');
+        var thumb = document.getElementById('benSliderThumb');
+        slider.style.background = on ? '#16A34A' : '#ccc';
+        thumb.style.left = on ? '27px' : '3px';
+    }
+
+    function loadBenefitsConfig() {
+        if (typeof StaffBenefits === 'undefined') return;
+        var cfg = StaffBenefits.getConfig(franchiseId);
+        document.getElementById('benEnabled').checked = !!cfg.enabled;
+        document.getElementById('benMaxItem').value = cfg.max_value_per_item || 8;
+        document.getElementById('benMaxDay').value = cfg.max_value_per_day || 8;
+        document.getElementById('benMaxQty').value = cfg.max_items_per_day || 1;
+        var allowed = cfg.allowed_types || [];
+        document.querySelectorAll('.ben-type-cb').forEach(function(cb) {
+            cb.checked = allowed.indexOf(cb.dataset.type) !== -1;
+        });
+        syncBenSlider();
+    }
+
+    window.saveBenefitsConfig = function() {
+        if (typeof StaffBenefits === 'undefined') { alert('StaffBenefits indisponivel'); return; }
+        var allowed = [];
+        document.querySelectorAll('.ben-type-cb').forEach(function(cb) { if (cb.checked) allowed.push(cb.dataset.type); });
+        if (!allowed.length) { alert('Marque pelo menos 1 tipo permitido.'); return; }
+
+        var cfg = {
+            enabled: document.getElementById('benEnabled').checked,
+            sorvete_dia_enabled: allowed.indexOf('sorvete_dia') !== -1,
+            max_value_per_item: parseFloat(document.getElementById('benMaxItem').value) || 8,
+            max_value_per_day: parseFloat(document.getElementById('benMaxDay').value) || 8,
+            max_items_per_day: parseInt(document.getElementById('benMaxQty').value, 10) || 1,
+            allowed_types: allowed,
+            require_pin_employee: true,
+            require_acceptance: true
+        };
+
+        if (cfg.max_items_per_day > 5) {
+            if (!confirm('Mais de 5 benefícios por dia pode ser interpretado como salário in natura (art. 458 CLT) e gerar repercussão em FGTS/INSS. Continuar mesmo assim?')) return;
+        }
+
+        var r = StaffBenefits.saveConfig(franchiseId, cfg);
+        var status = document.getElementById('benSaveStatus');
+        if (r.success) {
+            status.textContent = '✓ Salvo';
+            status.style.color = '#16A34A';
+            setTimeout(function() { status.textContent = ''; }, 3000);
+        } else {
+            alert('Erro: ' + r.error);
+        }
+    };
     // Uber Direct: aguarda Firebase Auth restaurar sessao do IndexedDB antes de chamar
     if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().onAuthStateChanged(function(user) {

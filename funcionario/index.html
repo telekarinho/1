@@ -332,15 +332,23 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
                     <div id="notifStatus" style="margin-top:10px;font-size:.78rem;color:#6B7280"></div>
                 </div>
                 <div class="fn-card">
-                    <h3>📜 Direitos legais (CLT)</h3>
-                    <ul style="font-size:.82rem;color:#374151;padding-left:18px;line-height:1.6">
+                    <h3>📜 Direitos & Termos (CLT/LGPD)</h3>
+                    <ul style="font-size:.82rem;color:#374151;padding-left:18px;line-height:1.7;margin:0 0 12px">
                         <li>Maximo 8h/dia, 44h/semana (CLT art. 7 XIII)</li>
                         <li>Intervalo intrajornada minimo 1h (jornada >6h, art. 71)</li>
                         <li>Hora extra com adicional minimo 50% (art. 7 XVI)</li>
                         <li>Adicional noturno 22h-5h: +20% (art. 73)</li>
                         <li>Descanso semanal remunerado: 24h (art. 67)</li>
-                        <li>Espelho mensal de ponto: voce tem direito a receber e conferir</li>
+                        <li>Espelho mensal de ponto: receber e conferir (art. 74)</li>
+                        <li>Férias com 1/3 constitucional (art. 7 XVII)</li>
+                        <li>13º salário (Lei 4.090/62)</li>
+                        <li>FGTS 8% (Lei 8.036/90)</li>
+                        <li>Privacidade dos seus dados — LGPD art. 18</li>
                     </ul>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+                        <button class="fn-btn fn-btn-secondary" onclick="fnVerTermo('employee_app')" style="padding:9px;font-size:.78rem">📄 Termo de uso</button>
+                        <button class="fn-btn fn-btn-secondary" onclick="fnVerTermo('privacy')" style="padding:9px;font-size:.78rem">🔒 LGPD</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -402,6 +410,7 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
 <script src="../js/core/staff-benefits.js"></script>
 <script src="../js/core/geofence.js"></script>
 <script src="../js/core/payroll.js"></script>
+<script src="../js/core/legal-terms.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 <script src="../js/core/push-funcionario.js"></script>
 
@@ -656,8 +665,75 @@ function fnScheduleReminders() {
 function fnFinishWelcome() {
     var session = fnGetSession();
     if (!session) return;
-    localStorage.setItem(FN_WELCOME_KEY + session.staffId, '1');
-    document.getElementById('welcomeModal').style.display = 'none';
+    // Aceite legal obrigatorio antes de fechar welcome
+    fnAbrirAceiteTermos(function() {
+        localStorage.setItem(FN_WELCOME_KEY + session.staffId, '1');
+        document.getElementById('welcomeModal').style.display = 'none';
+    });
+}
+
+// Modal de termo + aceite com prova juridica
+function fnAbrirAceiteTermos(onAccept) {
+    var session = fnGetSession();
+    if (!session || typeof LegalTerms === 'undefined') { if (onAccept) onAccept(); return; }
+    // Ja aceitou versao atual?
+    var last = LegalTerms.lastAcceptance(session.franchiseId, 'employee_app', session.staffId);
+    if (last && last.termVersion === LegalTerms.TERM_VERSION) {
+        if (onAccept) onAccept();
+        return;
+    }
+    var html = '<div id="termoOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:10006;display:flex;align-items:center;justify-content:center;padding:14px">'
+        + '<div style="background:#fff;border-radius:14px;width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column">'
+        + '<div style="padding:18px 22px;border-bottom:1px solid #E5E7EB"><strong style="font-family:\'Baloo 2\',cursive;font-size:1.1rem;color:#16A34A">📜 Antes de continuar — termos legais</strong></div>'
+        + '<div style="padding:18px 22px;overflow-y:auto;flex:1">' + LegalTerms.renderTermHTML('employee_app') + '</div>'
+        + '<div style="padding:14px 22px;border-top:1px solid #E5E7EB">'
+        + '<label style="display:flex;gap:10px;align-items:start;cursor:pointer;font-size:.85rem;color:#374151;margin-bottom:10px">'
+        + '<input type="checkbox" id="termoCk" style="margin-top:3px;width:18px;height:18px"><span>' + Utils.escapeHtml(LegalTerms.getTerm('employee_app').checkboxText) + '</span></label>'
+        + '<div style="display:flex;gap:8px"><button onclick="fnCancelarAceite()" class="fn-btn fn-btn-secondary" style="flex:1">Cancelar</button>'
+        + '<button onclick="fnConfirmarAceite()" class="fn-btn" style="flex:2">Concordo e continuar</button></div></div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+    window._termoOnAccept = onAccept;
+}
+function fnCancelarAceite() {
+    var ov = document.getElementById('termoOverlay'); if (ov) ov.remove();
+    alert('Sem aceitar os termos voce nao pode usar o app. Faça logout e fale com seu gerente.');
+}
+async function fnConfirmarAceite() {
+    var ck = document.getElementById('termoCk');
+    if (!ck.checked) { alert('Marque a caixa para concordar.'); return; }
+    var session = fnGetSession();
+    if (!session) return;
+    // Captura geolocation se disponivel pra prova juridica
+    var geo = null;
+    try {
+        var geoResult = await fnGetGeolocation();
+        if (geoResult.coords) geo = geoResult.coords;
+    } catch (e) {}
+
+    if (typeof LegalTerms !== 'undefined') {
+        LegalTerms.recordAcceptance(session.franchiseId, {
+            termId: 'employee_app',
+            acceptorType: 'staff',
+            acceptorId: session.staffId,
+            acceptorName: session.staffName,
+            channel: 'mobile_first_login',
+            geolocation: geo
+        });
+    }
+    var ov = document.getElementById('termoOverlay'); if (ov) ov.remove();
+    if (window._termoOnAccept) window._termoOnAccept();
+    window._termoOnAccept = null;
+}
+
+function fnVerTermo(termId) {
+    if (typeof LegalTerms === 'undefined') return;
+    var html = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:10007;display:flex;align-items:center;justify-content:center;padding:14px" onclick="if(event.target===this)this.remove()">'
+        + '<div style="background:#fff;border-radius:14px;width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column">'
+        + '<div style="padding:18px 22px;border-bottom:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center">'
+        + '<strong style="font-family:\'Baloo 2\',cursive;color:#16A34A">📜 Termo</strong>'
+        + '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#6B7280">&times;</button></div>'
+        + '<div style="padding:18px 22px;overflow-y:auto">' + LegalTerms.renderTermHTML(termId) + '</div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
 }
 
 function fnLogin() {

@@ -694,13 +694,23 @@
 
 <!-- Modal: Beneficio Funcionario (sorvete do dia, lanche, etc) -->
 <div id="pdvBenefitOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10002;align-items:center;justify-content:center;padding:20px">
-    <div style="background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow:auto;box-shadow:0 16px 40px rgba(0,0,0,.4)">
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:520px;max-height:92vh;overflow:auto;box-shadow:0 16px 40px rgba(0,0,0,.4)">
         <div style="padding:20px 24px;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff">
             <h3 style="margin:0;font-family:'Baloo 2',sans-serif">🎁 Benefício de Funcionário</h3>
-            <p style="margin:6px 0 0;font-size:.85rem;opacity:.95">Não-transferível. Lançado como custo da loja, aparece no portal do funcionário.</p>
+            <p style="margin:6px 0 0;font-size:.85rem;opacity:.95">Pessoal e intransferível. Registrado como custo da loja.</p>
         </div>
         <div style="padding:20px 24px">
-            <label style="display:block;font-size:.85rem;color:#374151;font-weight:700;margin-bottom:6px">Funcionário</label>
+
+            <!-- AVISO LEGAL DESTACADO -->
+            <div style="background:#FEF3C7;border:2px solid #F59E0B;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.82rem;line-height:1.5;color:#92400E">
+                <strong style="display:block;margin-bottom:4px;color:#78350F">⚠️ Atenção — leia antes de continuar:</strong>
+                Este benefício é <strong>pessoal</strong> e <strong>não pode ser repassado</strong> a terceiros (clientes, amigos, familiares).
+                Limite de <strong id="pdvBenefitDailyLimit">1 por dia</strong>.
+                Em caso de fraude (pegar para outra pessoa, vender ou trocar), o benefício pode ser <strong>cancelado</strong>
+                e o funcionário fica sujeito a advertência ou demissão por justa causa (CLT art. 482).
+            </div>
+
+            <label style="display:block;font-size:.85rem;color:#374151;font-weight:700;margin-bottom:6px">Funcionário (precisa estar presente para autorizar)</label>
             <select id="pdvBenefitStaff" style="width:100%;padding:11px 12px;border:2px solid #D1FAE5;border-radius:10px;font-size:1rem;font-family:inherit;margin-bottom:14px"></select>
 
             <label style="display:block;font-size:.85rem;color:#374151;font-weight:700;margin-bottom:6px">Tipo de benefício</label>
@@ -712,7 +722,19 @@
                 <option value="outro">🎁 Outro</option>
             </select>
 
-            <label style="display:block;font-size:.85rem;color:#374151;font-weight:700;margin-bottom:6px">PIN do funcionário (confirma autorização)</label>
+            <!-- Limite configurado -->
+            <div id="pdvBenefitConfigInfo" style="background:#F0FDF4;border-left:4px solid #16A34A;padding:8px 12px;border-radius:6px;margin-bottom:12px;font-size:.78rem;color:#14532D"></div>
+
+            <!-- Aceite obrigatorio do funcionario -->
+            <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:12px;margin-bottom:14px">
+                <label style="display:flex;align-items:start;gap:10px;cursor:pointer;font-size:.85rem;color:#374151">
+                    <input type="checkbox" id="pdvBenefitAccept" style="margin-top:3px;width:18px;height:18px;cursor:pointer;flex-shrink:0">
+                    <span><strong>Eu, funcionário, declaro</strong> que recebo este benefício pessoalmente, é para meu consumo próprio,
+                    e estou ciente que repassar a outras pessoas configura fraude e pode resultar em sanções disciplinares.</span>
+                </label>
+            </div>
+
+            <label style="display:block;font-size:.85rem;color:#374151;font-weight:700;margin-bottom:6px">PIN do FUNCIONÁRIO (autoriza pessoalmente — não pode ser PIN de outro)</label>
             <input type="password" id="pdvBenefitPin" inputmode="numeric" maxlength="4"
                    placeholder="••••" style="font-size:1.5rem;text-align:center;letter-spacing:10px;width:100%;padding:11px;border:2px solid #D1FAE5;border-radius:10px;font-family:'Baloo 2',sans-serif;box-sizing:border-box;margin-bottom:14px">
 
@@ -721,7 +743,7 @@
         </div>
         <div style="padding:14px 24px;border-top:1px solid #E5E7EB;display:flex;gap:10px;justify-content:flex-end">
             <button onclick="cancelBenefit()" style="padding:10px 18px;border:1px solid #D1D5DB;background:#fff;border-radius:8px;cursor:pointer;font-weight:700">Cancelar</button>
-            <button onclick="confirmBenefit()" style="padding:10px 18px;background:#16A34A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">Confirmar</button>
+            <button onclick="confirmBenefit()" style="padding:10px 18px;background:#16A34A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">Confirmar e registrar</button>
         </div>
     </div>
 </div>
@@ -778,6 +800,7 @@
 <script src="../js/core/time-clock.js"></script>
 <script src="../js/core/operator-context.js"></script>
 <script src="../js/core/staff-benefits.js"></script>
+<script src="../js/core/legal-terms.js"></script>
 <script>
     // ====== Beneficio Funcionario ======
     var _pendingBenefit = null;
@@ -795,6 +818,14 @@
         var session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
         var fid = session && session.franchiseId;
         if (!fid) return;
+
+        // Le configuracao da franquia
+        var cfg = (typeof StaffBenefits !== 'undefined' && StaffBenefits.getConfig)
+            ? StaffBenefits.getConfig(fid)
+            : { max_value_per_item: 8, max_items_per_day: 1, max_value_per_day: 8 };
+        document.getElementById('pdvBenefitDailyLimit').textContent =
+            cfg.max_items_per_day + ' por dia, até R$ ' + cfg.max_value_per_day.toFixed(2).replace('.', ',') + ' totais.';
+
         var staff = (DataStore.getCollection('staff', fid) || []).filter(function(s) { return s.active && s.pin; });
         if (!staff.length) {
             alert('Nenhum funcionário com PIN cadastrado. Cadastre em Equipe primeiro.');
@@ -804,12 +835,25 @@
         var sel = document.getElementById('pdvBenefitStaff');
         sel.innerHTML = staff.map(function(s) { return '<option value="' + s.id + '">' + Utils.escapeHtml(s.name) + '</option>'; }).join('');
         document.getElementById('pdvBenefitPin').value = '';
+        document.getElementById('pdvBenefitAccept').checked = false;
         document.getElementById('pdvBenefitErr').style.display = 'none';
         document.getElementById('pdvBenefitWarn').style.display = 'none';
+        // Filtra tipos permitidos
+        var tipoSel = document.getElementById('pdvBenefitTipo');
+        var allTypes = [
+            { v: 'sorvete_dia', l: '🍦 Sorvete do dia' },
+            { v: 'refeicao', l: '🍽️ Refeição' },
+            { v: 'lanche', l: '🥪 Lanche' },
+            { v: 'bebida', l: '🥤 Bebida' },
+            { v: 'outro', l: '🎁 Outro' }
+        ];
+        tipoSel.innerHTML = allTypes
+            .filter(function(t) { return !cfg.allowed_types || cfg.allowed_types.indexOf(t.v) !== -1; })
+            .map(function(t) { return '<option value="' + t.v + '">' + t.l + '</option>'; }).join('');
+
         document.getElementById('pdvBenefitOverlay').style.display = 'flex';
-        // Atualiza warning quando troca staff/tipo
         sel.onchange = checkBenefitDuplication;
-        document.getElementById('pdvBenefitTipo').onchange = checkBenefitDuplication;
+        tipoSel.onchange = checkBenefitDuplication;
         checkBenefitDuplication();
     }
 
@@ -819,9 +863,28 @@
         var staffId = document.getElementById('pdvBenefitStaff').value;
         var tipo = document.getElementById('pdvBenefitTipo').value;
         var warn = document.getElementById('pdvBenefitWarn');
+        var info = document.getElementById('pdvBenefitConfigInfo');
+
+        // Calcula total atual do carrinho
+        var cartTotal = 0;
+        try {
+            if (typeof cart !== 'undefined' && cart.length) {
+                cartTotal = cart.reduce(function(s, c) { return s + (c.unitPrice * c.qty); }, 0);
+            }
+        } catch (e) {}
+
+        var cfg = (typeof StaffBenefits !== 'undefined') ? StaffBenefits.getConfig(fid) : { max_value_per_item: 8 };
+        var infoTxt = 'Pedido atual: <strong>R$ ' + cartTotal.toFixed(2).replace('.', ',') + '</strong>. ';
+        if (cartTotal > cfg.max_value_per_item) {
+            infoTxt += '<span style="color:#DC2626"><strong>⚠️ Excede o limite configurado de R$ ' + cfg.max_value_per_item.toFixed(2).replace('.', ',') + ' por item.</strong> Reduza ou cobre a diferença em outra forma de pagamento.</span>';
+        } else {
+            infoTxt += 'Dentro do limite (max R$ ' + cfg.max_value_per_item.toFixed(2).replace('.', ',') + ').';
+        }
+        info.innerHTML = infoTxt;
+
         if (typeof StaffBenefits !== 'undefined' && tipo === 'sorvete_dia') {
             if (StaffBenefits.alreadyReceivedToday(fid, staffId, 'sorvete_dia')) {
-                warn.textContent = '⚠️ Este funcionário JÁ recebeu o sorvete do dia hoje. Continue se for outro lançamento autorizado.';
+                warn.textContent = '🚫 Este funcionário JÁ recebeu o sorvete do dia hoje. Limite: 1 por dia. Lançamento será bloqueado.';
                 warn.style.display = 'block';
                 return;
             }
@@ -841,8 +904,14 @@
         var staffId = document.getElementById('pdvBenefitStaff').value;
         var tipo = document.getElementById('pdvBenefitTipo').value;
         var pin = document.getElementById('pdvBenefitPin').value.trim();
+        var accepted = document.getElementById('pdvBenefitAccept').checked;
         var errEl = document.getElementById('pdvBenefitErr');
 
+        if (!accepted) {
+            errEl.textContent = 'O funcionário precisa marcar a caixa de declaração antes de receber o benefício.';
+            errEl.style.display = 'block';
+            return;
+        }
         if (pin.length !== 4) {
             errEl.textContent = 'PIN deve ter 4 dígitos';
             errEl.style.display = 'block';
@@ -851,9 +920,43 @@
         var staff = (DataStore.getCollection('staff', fid) || []).find(function(s) { return s.id === staffId; });
         if (!staff) { errEl.textContent = 'Funcionário não encontrado'; errEl.style.display = 'block'; return; }
         if (staff.pin !== pin) {
-            errEl.textContent = 'PIN incorreto. Benefício é não-transferível: o próprio funcionário precisa autorizar com PIN.';
+            errEl.textContent = '🚫 PIN incorreto. Benefício é PESSOAL e INTRANSFERÍVEL — somente o próprio funcionário pode autorizar com seu PIN.';
             errEl.style.display = 'block';
             return;
+        }
+
+        // Calcula valor do carrinho atual
+        var cartTotal = 0;
+        try {
+            if (typeof cart !== 'undefined' && cart.length) {
+                cartTotal = cart.reduce(function(s, c) { return s + (c.unitPrice * c.qty); }, 0);
+            }
+        } catch (e) {}
+
+        // Pre-valida usando StaffBenefits
+        if (typeof StaffBenefits !== 'undefined' && StaffBenefits.validateBeforeRegister) {
+            var v = StaffBenefits.validateBeforeRegister(fid, {
+                staffId: staff.id, tipo: tipo, value: cartTotal, acceptedTerms: true
+            });
+            if (!v.ok) {
+                errEl.textContent = '🚫 ' + v.error;
+                errEl.style.display = 'block';
+                return;
+            }
+        }
+
+        // Registra aceite legal (auditoria juridica)
+        if (typeof LegalTerms !== 'undefined' && LegalTerms.recordAcceptance) {
+            LegalTerms.recordAcceptance(fid, {
+                termId: 'benefit_grant',
+                acceptorType: 'staff',
+                acceptorId: staff.id,
+                acceptorName: staff.name,
+                acceptorCpf: staff.cpf || '',
+                acceptorPis: staff.pis || '',
+                channel: 'pdv',
+                metadata: { tipo: tipo, value: cartTotal }
+            });
         }
 
         // Salva intent — vai ser registrado quando o pedido fechar
@@ -861,6 +964,8 @@
             staffId: staff.id,
             staffName: staff.name,
             tipo: tipo,
+            acceptedTerms: true,
+            acceptedAt: new Date().toISOString(),
             authorizedAt: new Date().toISOString()
         };
 
@@ -915,8 +1020,13 @@
             orderId: order && order.id,
             operatorId: op && op.id,
             operatorName: op && op.name,
+            acceptedTerms: !!_pendingBenefit.acceptedTerms,
+            acceptedAt: _pendingBenefit.acceptedAt,
             notes: 'Lançado via PDV pagamento Benefício Funcionário'
         });
+        if (!r.success) {
+            alert('🚫 Benefício BLOQUEADO: ' + (r.error || 'erro desconhecido'));
+        }
         if (r.success && typeof Utils !== 'undefined' && Utils.showToast) {
             Utils.showToast('🎁 Benefício registrado: ' + _pendingBenefit.staffName, 'success');
         }
