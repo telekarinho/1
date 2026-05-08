@@ -470,16 +470,38 @@
     clearError();
     try {
       const st = await callApi('status', { accountId: CURRENT_ACCOUNT });
+      const prevState = CURRENT_STATE?.state;
+      const prevAccount = CURRENT_STATE?._accountId;
+      const stateChanged = prevState !== st.state || prevAccount !== CURRENT_ACCOUNT;
+      st._accountId = CURRENT_ACCOUNT;
       renderState(st);
-      if (st.state === 'open' || st.state === 'connected') renderConnected(st);
-      else if (st.state === 'qr-pending') renderQrPending();
-      else if (st.state === 'connecting') renderConnecting();
-      else renderDisconnected();
+
+      if (stateChanged) {
+        // Renderiza completo só quando muda de estado/franquia
+        if (st.state === 'open' || st.state === 'connected') renderConnected(st);
+        else if (st.state === 'qr-pending') renderQrPending();
+        else if (st.state === 'connecting') renderConnecting();
+        else renderDisconnected();
+      } else if (st.state === 'qr-pending') {
+        // QR já tá na tela — só atualiza a imagem em si (sem flicker)
+        refreshQrImageOnly();
+      }
     } catch (e) {
       console.error(e);
       showError('Não consegui falar com o gateway: ' + e.message);
       document.getElementById('qrSection').innerHTML = `<div class="loading">❌ ${esc(e.message)}</div>`;
     }
+  }
+
+  // Atualiza só o atributo src da img do QR (sem destruir o DOM)
+  // → não causa flicker pra cliente que está escaneando
+  async function refreshQrImageOnly() {
+    try {
+      const j = await callApi('qr', { accountId: CURRENT_ACCOUNT });
+      if (!j.qr) return;
+      const img = document.querySelector('.qr-wrap img');
+      if (img && img.src !== j.qr) img.src = j.qr;
+    } catch (e) { /* silencioso, próximo polling tenta de novo */ }
   }
 
   async function doRestartSession() {
@@ -531,11 +553,13 @@
 
   function startPolling() {
     if (POLL_INTERVAL) clearInterval(POLL_INTERVAL);
+    // 10s entre pollings — dá tempo do user escanear sem o QR piscar.
+    // refreshQrImageOnly só troca o src se mudou, então sem flicker.
     POLL_INTERVAL = setInterval(() => {
       if (CURRENT_STATE && (CURRENT_STATE.state === 'qr-pending' || CURRENT_STATE.state === 'connecting')) {
         loadStatus();
       }
-    }, 5000);
+    }, 10000);
   }
 
   // Bootstrap
