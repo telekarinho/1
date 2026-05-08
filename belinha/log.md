@@ -26,7 +26,7 @@
 3. **Oportunidade imediata (ciclos #163–#165):** Festa Junina e Dia dos Namorados com share of voice aberto — nenhum concorrente tem campanha estruturada.
 4. **v20a ativa:** Festa Junina = campanha standalone obrigatória todos os anos. Potinho Junino deve ter naming definido pelo operador até 30/05/2026.
 
-**Commit:** (a preencher)
+**Commit:** `21c5353`
 
 **Próximo passo sugerido:**
 - **Ciclo #162 — Código/Performance (PRAZO ABSOLUTO v20b):** `checkout.html` revisão mobile — CLS, bundle size, validação campos 375px. Não pode ser postergado novamente.
