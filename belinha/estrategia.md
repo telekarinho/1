@@ -2191,4 +2191,112 @@ _Belinha — Ciclo #150 | 2026-05-07_
 
 > **v19b — `whatsapp-1ano-2027.md` é prioridade máxima de conteúdo de 2027:** O aniversário de 1 ano (25/04/2027) é o maior evento de marketing da história da unidade. Semanas 47–53 existem e são detalhadas, mas sem playbook WA Business acionável o operador não consegue configurar automações nem broadcasts segmentados. Ciclo #154 é inegociável — não pode ser postergado por qualquer evento sazonal menor.
 
+---
+
+## Auto-aprimoramento #161 — 2026-05-08
+
+### Análise ciclos #155–#160
+
+#### O que foi feito
+
+| Ciclo | Área | Entrega | Valor |
+|-------|------|---------|-------|
+| #155 | Conteúdo/WA | `whatsapp-pascoa-2027.md` standalone (11 touchpoints, coordenação 1 Ano, ativo ovelhinha=animal de Páscoa) | ⭐⭐⭐ Alto |
+| #156 | UX/Frontend | FAQ Páscoa 2027 em `index.html` (13ª pergunta FAQPage) + sitemap lastmod | ⭐⭐ Médio |
+| #157 | SEO | Auditoria sitemap.xml `lastmod` — 3 divergências corrigidas (desafio, privacidade, termos) | ⭐⭐ Médio |
+| #158 | Conversão | `whatsapp-30carimbos-vip.md` standalone (3 templates, Template C sazonal inverno jul–ago) | ⭐⭐⭐ Alto |
+| #159 | Conversão | `whatsapp-100carimbos-lenda.md` standalone — progressão fidelidade **100% fechada** (6 marcos) | ⭐⭐⭐ Alto |
+| #160 | Concorrentes | Intel maio-jun 2026: MilkyMoo (Carameluda + HTTYD), JohnnyJoy (10 anos), TheBest (Donuts). **Gap: Festa Junina aberta** | ⭐⭐⭐ Alto |
+
+#### O que gerou mais valor concreto (ciclos #155–#160)
+
+1. **Playbooks WA standalone (ciclos #152–#155):** Toda a série de WA standalone encerrada. Todos os 7 grandes eventos do calendário 2026–2027 têm playbooks completos e acionáveis pelo operador. Esta foi a maior entrega de valor dos últimos 10 ciclos — 7 playbooks × 10–16 touchpoints = ~90 touchpoints de marketing configuráveis sem necessidade de criar do zero.
+
+2. **Progressão de fidelidade completa (ciclos #149, #158, #159):** Marcos 30 e 100 carimbos criados, fechando os últimos gaps. A jornada 0→100 carimbos agora tem um template WA para cada milestone. Operador pode configurar automações de retenção para toda a vida do cliente.
+
+3. **Intel competitiva (ciclo #160):** Identificou gap de Festa Junina — todos os 4 concorrentes sem campanha estruturada = share of voice 100% disponível para MilkyPot. Esta intel tem valor de ação imediata (ciclos #163–#165).
+
+#### O que foi desperdício ou postergação problemática
+
+1. **`checkout.html` — CRÍTICO:** Postergado desde o ciclo #137. Passou por #153 (prescrito, não executado), entrou na regra v18b (3 postergações) e acumulou +8 postergações totais. Sem revisão, problemas de CLS/UX mobile na última etapa do funil de compra continuam gerando conversão perdida. Este é o único blocker técnico com impacto direto em receita.
+
+2. **Roadmap vs. execução divergiu em #156–#160:** O roadmap prescrito em #150 para os ciclos #156–#160 não foi seguido (previsão: Concorrentes Páscoa, Landing Page, UX 1-Ano, Verificação semanas, Auto-aprimoramento). O que foi executado foi diferente mas igualmente válido. A divergência é um padrão recorrente: novas urgências reais deslocam itens planejados.
+
+3. **CNPJ/DPO LGPD — +23 ciclos sem resolução:** Risco legal crescente. Belinha não pode resolver sozinha — depende do operador. Documentado em `blockers.md`.
+
+#### WA Playbooks standalone — status FINAL (completo)
+
+| Evento | Arquivo | Status |
+|--------|---------|--------|
+| Halloween 2026 | `whatsapp-halloween-2026.md` | ✅ Criado #140, atualizado #144 |
+| BLACKPOT | `whatsapp-blackpot.md` | ✅ |
+| Natal 2026 | `whatsapp-natal-2026.md` | ✅ Criado #145 |
+| Virada/Ano Novo | `whatsapp-virada-2026.md` | ✅ Criado #147 |
+| Carnaval 2027 | `whatsapp-carnaval-2027.md` | ✅ Criado #152 |
+| Páscoa 2027 | `whatsapp-pascoa-2027.md` | ✅ Criado #155 |
+| 1 Ano de loja (25/04/2027) | `whatsapp-1ano-2027.md` | ✅ Criado #154 |
+| **Dia dos Namorados 2026** | — | ❌ Gap → ciclo #164 |
+| **Festa Junina 2026** | — | ❌ Gap → ciclo #165 (share of voice aberto) |
+| **Dia dos Pais 2026** | — | ❌ Gap → ciclo #169 |
+
+#### Progressão fidelidade — status FINAL (completo)
+
+| Marco | Arquivo | Status |
+|-------|---------|--------|
+| 10 carimbos | `conversao-upsell-pdv-10carimbos.md` | ✅ |
+| 15 carimbos | `conversao-upsell-pdv-15carimbos.md` | ✅ |
+| 20 carimbos | *(integrado nos playbooks WA)* | ✅ |
+| 30 carimbos | `whatsapp-30carimbos-vip.md` | ✅ Criado #158 |
+| 50 carimbos | `whatsapp-50carimbos-superfan.md` | ✅ Criado #149 |
+| 100 carimbos | `whatsapp-100carimbos-lenda.md` | ✅ Criado #159 |
+
+**A jornada de fidelidade está 100% coberta.** Próximo passo: criar evento sazonal para cada milestone futuro (ex: template especial quando cliente Superfã (50) coincide com Natal ou 1 Ano da loja — sincronizar carimbos com datas comemorativas).
+
+### Regras v20 — novas diretrizes
+
+> **v20a — Festa Junina = campanha standalone obrigatória (2026 e anos seguintes):** Intel ciclo #160 confirmou: nenhum concorrente tem campanha de Festa Junina estruturada em Londrina. MilkyPot tem share of voice 100% disponível. Por extensão de v18c, `whatsapp-junina-YYYY.md` + posts Instagram/TikTok são obrigatórios. Potinho Junino é o produto âncora — naming deve ser definido pelo operador até **30/05/2026**.
+
+> **v20b — `checkout.html` é prazo absoluto (ciclo #162):** Postergado +8 ciclos. A experiência de compra é o único ponto do funil que não pode ter bugs de UX indefinidamente. Ciclo #162 é o prazo absoluto — sem exceção, sem nova postergação. Se houver blocker técnico, documentar em `blockers.md` e reportar ao operador.
+
+> **v20c — Dia dos Namorados requer standalone (ciclo #164):** 12/06/2026 = 5 semanas do ciclo atual. Potinho do Amor / Potinho Casal são concepts obvios no nicho. Sem campanhas detectadas nos concorrentes = oportunidade de posicionamento. Playbook WA deve incluir CTA de gift (comprar para presentear) além do consumo próprio.
+
+### Checklist atualizado pós-#161
+
+| Item | Status |
+|------|--------|
+| Todos os 7 WA playbooks standalone | ✅ Completo |
+| Progressão fidelidade 0→100 carimbos | ✅ Completo |
+| FAQ sazonal (4 eventos) | ✅ Completo (ciclo #156) |
+| `checkout.html` revisão mobile | ❌ → ciclo #162 (**PRAZO ABSOLUTO v20b**) |
+| Posts Instagram/TikTok Festa Junina | ❌ → ciclo #163 |
+| `whatsapp-namorados-2026.md` standalone | ❌ → ciclo #164 |
+| `whatsapp-junina-2026.md` standalone | ❌ → ciclo #165 |
+| Landing page `potinho-personalizado-londrina.html` | ❌ → ciclo #166 |
+| Concorrentes pré-Festa Junina | ❌ → ciclo #167 |
+| `whatsapp-pais-2026.md` standalone | ❌ → ciclo #169 |
+| `aggregateRating` Schema.org | ⛔ Aguarda ≥3 reviews operador |
+| Google Analytics ID real | ⛔ Aguarda autorização |
+| CNPJ/DPO LGPD | ⛔ **⚠️ +23 ciclos** — Risco legal crescente |
+| `cardapio.js` dead code | ⛔ Aguarda decisão operador/dev |
+| Google Search Console — indexação sitemap | ⛔ Aguarda ação operador (desde ciclo #148) |
+| Potinho Junino — naming + ingredientes | ⛔ Aguarda operador (**prazo 30/05/2026**) |
+| Benefício 30 carimbos (topping vs upgrade) | ⛔ Aguarda operador |
+| Benefício 100 carimbos (Kit Lenda / crédito / Cria seu Potinho) | ⛔ Aguarda operador |
+
+### Roadmap #162–#170 (jun–ago 2026)
+
+| Ciclo | Área | Ação | Urgência |
+|-------|------|------|----------|
+| **#162** | **Código/Performance** | `checkout.html` revisão mobile: CLS, bundle size, validação 375px — **v20b: prazo absoluto** | 🔴 Crítica |
+| **#163** | **Conteúdo** | Posts Instagram/TikTok ovelhinha + Festa Junina — ângulo gap competitivo (share of voice 100%) | 🔴 Alta |
+| **#164** | **Conteúdo/WA** | `whatsapp-namorados-2026.md` standalone — 12/06/2026 (5 semanas) + CTA gift (presentear) | Alta |
+| **#165** | **Conteúdo/WA** | `whatsapp-junina-2026.md` standalone — Festa Junina jun/2026. v20a ativo | Alta |
+| **#166** | **SEO** | Landing page `potinho-personalizado-londrina.html` — keyword de alta intenção sem landing dedicada | Média |
+| **#167** | **Concorrentes** | Refetch pré-Festa Junina: MilkyMoo, JohnnyJoy, TheBest — campanhas e produtos junho 2026 | Alta |
+| **#168** | **UX/Frontend** | `cardapio.html` refresh — lazy scroll audit, filtros mobile, CLS diagnóstico pós-ciclo #141 | Média |
+| **#169** | **Conteúdo/WA** | `whatsapp-pais-2026.md` standalone — Dia dos Pais 09/08/2026. Potinho do Pai / Kit Presente | Média |
+| **#170** | **Auto-aprimoramento** | Reler log #165–#169; ajustar estratégia ago–out 2026 (6 meses de loja 25/10, Halloween) | — |
+
+_Belinha — Auto-aprimoramento #161 | 2026-05-08_
+
 _Belinha — Ciclo #150 | 2026-05-07_

@@ -2,6 +2,45 @@
 
 ---
 
+## Ciclo #161 — 2026-05-08
+
+**Área:** Auto-aprimoramento — análise #155–#160, regras v20, roadmap #162–#170
+
+**O que pesquisou/analisou:**
+- Releu log completo dos ciclos #155–#160 (6 ciclos): Páscoa WA, FAQ Páscoa, sitemap lastmod, 30 carimbos, 100 carimbos, intel concorrentes
+- Verificou status de todos os WA playbooks standalone: **7/7 completos**
+- Verificou status de toda a progressão de fidelidade: **6/6 marcos cobertos (0→100 carimbos)**
+- Identificou padrão de desvio de roadmap: prescrições da estratégia vs. execução real divergem em ~50% dos ciclos, mas com valor igualmente válido
+- Identificou gap crítico persistente: `checkout.html` postergado +8 ciclos (v18b ultrapassado há muito tempo)
+- Incorporou gap competitivo de Festa Junina (ciclo #160): share of voice 100% disponível
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/estrategia.md` | Auto-aprimoramento #161: análise de valor por ciclo, tabelas de status completo (WA playbooks + fidelidade), 3 novas regras v20 (v20a Festa Junina, v20b checkout prazo absoluto, v20c Namorados), checklist atualizado 17 itens, roadmap #162–#170 com urgências |
+
+**Destaques:**
+1. **Marcos atingidos:** WA playbooks standalone 100% (7/7) + progressão fidelidade 100% (6/6) — as duas grandes séries de conteúdo operacional estão completas.
+2. **Prioridade máxima #162:** `checkout.html` é o único bloqueio com impacto direto em receita. v20b define como prazo absoluto sem nova postergação.
+3. **Oportunidade imediata (ciclos #163–#165):** Festa Junina e Dia dos Namorados com share of voice aberto — nenhum concorrente tem campanha estruturada.
+4. **v20a ativa:** Festa Junina = campanha standalone obrigatória todos os anos. Potinho Junino deve ter naming definido pelo operador até 30/05/2026.
+
+**Commit:** (a preencher)
+
+**Próximo passo sugerido:**
+- **Ciclo #162 — Código/Performance (PRAZO ABSOLUTO v20b):** `checkout.html` revisão mobile — CLS, bundle size, validação campos 375px. Não pode ser postergado novamente.
+- **Ciclo #163 — Conteúdo:** Posts Instagram/TikTok ovelhinha + Festa Junina — ângulo gap competitivo.
+- **Operador:** Naming + ingredientes Potinho Junino — **prazo 30/05/2026** (3 semanas).
+- **Operador:** CNPJ + DPO — LGPD — em aberto há **+24 ciclos**. Risco legal crescente.
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente desde ciclo #148).
+- **Operador:** Confirmar benefício 30 carimbos (topping grátis vs upgrade Mini→Médio).
+- **Operador:** Confirmar benefício 100 carimbos (Kit Lenda / crédito / Cria seu Potinho).
+
+_Belinha — Ciclo #161 | 2026-05-08_
+
+---
+
 ## Ciclo #160 — 2026-05-08
 
 **Área:** Pesquisa Concorrentes — intel maio-junho 2026 (última rodada: ciclo #151, 9 ciclos atrás)
