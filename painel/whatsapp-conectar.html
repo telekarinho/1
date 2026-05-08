@@ -237,12 +237,16 @@
       console.warn('[wa-conectar] franchisee sem franchiseeIds — assumindo matriz por default');
     }
 
-    document.getElementById('userRoleHint').textContent =
+    document.getElementById('userRoleHint').innerHTML =
       USER_ROLE === 'super_admin'
-        ? 'Você é admin geral — pode gerenciar TODAS as franquias.'
+        ? `Você é admin geral (<code>${esc(u.email)}</code>) — pode gerenciar TODAS as franquias.`
         : USER_ROLE === 'franchisee'
-          ? `Você gerencia: ${USER_FRANCHISEES.join(', ')}.`
-          : `Sua role é "${USER_ROLE || 'desconhecida'}". Sem permissão pra gerenciar WhatsApp.`;
+          ? `Você gerencia (<code>${esc(u.email)}</code>): ${USER_FRANCHISEES.join(', ')}.`
+          : `<strong>⚠ Sem permissão pra gerenciar WhatsApp.</strong><br>
+             <code style="font-size:11px">email: ${esc(u.email)}</code><br>
+             <code style="font-size:11px">uid: ${esc(u.uid)}</code><br>
+             <code style="font-size:11px">role: ${esc(USER_ROLE || 'null')}</code><br>
+             <em>Manda esse email/uid pro admin geral cadastrar.</em>`;
 
     if (USER_ROLE === 'super_admin') {
       document.getElementById('newFranquiaCard').style.display = '';
