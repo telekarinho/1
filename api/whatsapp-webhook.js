@@ -27,9 +27,9 @@
 "use strict";
 
 const crypto = require("crypto");
-const TOOLS = require("./whatsapp-tools.js");
-const Customers = require("./whatsapp-customers.js");
-const FastReplies = require("./whatsapp-fast-replies.js");
+const TOOLS = require("../lib/whatsapp/tools.js");
+const Customers = require("../lib/whatsapp/customers.js");
+const FastReplies = require("../lib/whatsapp/fast-replies.js");
 
 // ============================================
 // Tool definitions (formato OpenAI/Groq)
