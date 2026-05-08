@@ -87,7 +87,7 @@ const LpFlow = {
         } catch(err) {}
 
         // 2. Prepare WhatsApp Message (Comercial Force)
-        const waNumber = '5543998042424'; 
+        const waNumber = '5543999919777'; 
         const text = `Olá! Vi a proposta da MilkyPot e tenho interesse no modelo *${model === 'delivery' ? 'Delivery (Home)' : 'Loja / Quiosque'}*.\n\nMeu nome é *${name}* e quero garantir minha região no bairro *${neighborhood}* em *${city}*.\n\nPode me passar os próximos passos?`;
         const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(text)}`;
 

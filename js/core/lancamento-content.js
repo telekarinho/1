@@ -16,8 +16,8 @@ const LancamentoContent = {
         mascote: 'Lana (ovelhinha)',
         unit: 'MilkyPot Muffato Londrina',
         address: 'Av. Quintino Bocaiuva, 1045 — dentro do Muffato, Londrina-PR',
-        whatsapp: '(43) 99804-2424',
-        whatsappLink: 'https://wa.me/5543998042424',
+        whatsapp: '(43) 99991-9777',
+        whatsappLink: 'https://wa.me/5543999919777',
         site: 'milkypot.com',
         horario: '14h às 23h',
         launchDate: '2026-04-25',
@@ -108,7 +108,7 @@ Arrasta pro lado e descobre tudo que a gente trouxe:
 
 📅 Inauguração: QUINTA 23/04 às 14h
 📍 Av. Quintino Bocaiuva, 1045 — dentro do Muffato
-📲 (43) 99804-2424 · milkypot.com
+📲 (43) 99991-9777 · milkypot.com
 
 Qual desses você quer provar primeiro? Comenta 👇`,
                     hashtags: '#milkypot #londrina #londrinapr #sobremesalondrina #acailondrina #sorveterialondrina #curtalondrina #londrinafood #comidalondrina #novidadeslondrina #potinhomaisfelizdomundo #milkypotlondrina #muffato #gastronomialondrina #pracomerlondrina #doceriaLondrina #picolelondrina #milkshakelondrina #londrinense #potinhodesobremesa',
@@ -258,7 +258,7 @@ descobre arrastando pro lado — e comenta o emoji da tua tribo pra ovelhinha de
 
 📅 QUINTA 23/04 · 14h
 📍 Muffato — Av. Quintino Bocaiuva, 1045 · Londrina
-📲 (43) 99804-2424 · milkypot.com
+📲 (43) 99991-9777 · milkypot.com
 
 comenta sua tribo 👇`,
                     hashtags: '#milkypot #londrina #londrinapr #quiz #qualtribo #sobremesalondrina #acailondrina #curtalondrina #londrinafood #comidalondrina #novidadeslondrina #potinhomaisfelizdomundo #milkypotlondrina #muffato #gastronomialondrina',
@@ -394,7 +394,7 @@ arrasta pra ver TUDO:
 📍 Av. Quintino Bocaiuva, 1045 — dentro do Muffato
 🎁 100 primeiros ganham brinde + pulseira numerada + chance do POTE DOURADO
 🍡 potinho personalizado · 🍇 açaí buffet · 🍭 picolé · 🍦 sorvete · 🧁 milkshake · 🍫 cacau
-📲 (43) 99804-2424 · milkypot.com
+📲 (43) 99991-9777 · milkypot.com
 
 salva esse post, ativa o sininho, chama a galera — a Lana te espera 🐑💕`,
                     hashtags: '#milkypot #londrina #londrinapr #inauguracao #sobremesalondrina #acailondrina #sorveterialondrina #curtalondrina #londrinafood #comidalondrina #novidadeslondrina #potinhomaisfelizdomundo #milkypotlondrina #muffato #gastronomialondrina #pracomerlondrina #doceriaLondrina',
@@ -532,7 +532,7 @@ VEM PRA CÁ:
 📍 Av. Quintino Bocaiuva, 1045 — dentro do Muffato
 🕑 14h às 23h (todos os dias)
 🎁 brinde pros 100 primeiros clientes
-📲 (43) 99804-2424
+📲 (43) 99991-9777
 🌐 milkypot.com
 
 marca a gente nos stories quando vier — a Lana quer compartilhar sua visita 🥺💗`,
@@ -587,7 +587,7 @@ obrigada. obrigada. OBRIGADA. ✨
 e pra quem não conseguiu vir hoje: amanhã a gente abre de novo, 14h às 23h, com a mesma energia 💕
 
 📍 Av. Quintino Bocaiuva, 1045 — Muffato
-📲 (43) 99804-2424
+📲 (43) 99991-9777
 🌐 milkypot.com
 
 marca a gente nas suas fotos de hoje — a Lana quer repostar TUDO 🥺
@@ -640,7 +640,7 @@ Promo de fim de semana: COMBO CASAL 2x1 — 2 potinhos médios pelo preço de 1.
 Chama o crush, a mãe, a melhor amiga... Londrina, a Lana quer ver vocês em dupla 💗
 
 📍 Av. Quintino Bocaiuva 1045 — Muffato
-📲 (43) 99804-2424`,
+📲 (43) 99991-9777`,
                     hashtags: '#milkypot #londrina #sextou #promo #acailondrina #sobremesalondrina #muffato #milkypotlondrina'
                 },
                 {
@@ -717,7 +717,7 @@ obrigada, Londrina. isso é só o começo 💗
 
 📍 Av. Quintino Bocaiuva 1045 — Muffato
 🕑 14h às 23h todos os dias
-📲 (43) 99804-2424 · milkypot.com`,
+📲 (43) 99991-9777 · milkypot.com`,
                     hashtags: '#milkypot #londrina #londrinapr #semana1 #obrigado #sobremesalondrina #acailondrina #muffato #milkypotlondrina #potinhomaisfelizdomundo'
                 }
             ]
@@ -750,7 +750,7 @@ comenta aqui a sua combinação dos sonhos 👇 que a gente pode fazer!
 
 📍 Av. Quintino Bocaiuva 1045 — Muffato
 🕑 14h às 23h todos os dias
-📲 (43) 99804-2424`,
+📲 (43) 99991-9777`,
                     hashtags: '#milkypot #londrina #potinhodesobremesa #acailondrina #sobremesalondrina #londrinapr #muffato #milkypotbr',
                     links: [
                         { label: '📸 Abrir Instagram', url: 'https://www.instagram.com/milkypotbr' },
@@ -905,7 +905,7 @@ comenta aqui embaixo 💬 (a gente lê todos)
 
 📍 Av. Quintino Bocaiuva 1045 — Muffato
 🕑 14h às 23h todos os dias
-📲 (43) 99804-2424 · milkypot.com`,
+📲 (43) 99991-9777 · milkypot.com`,
                     hashtags: '#milkypot #londrina #londrinapr #potinhodesobremesa #acailondrina #sobremesalondrina #muffato #milkypotbr #curtalondrina #londrinafood #sorveterialondrina',
                     imagePrompt: 'Clean overhead product shot of a customized Brazilian açaí bowl/cup with white fluffy base (Ninho), fresh strawberries, granola, and drizzle of condensed milk. Soft natural light, white marble surface, pastel pink accents, professional food photography style.',
                     links: [
@@ -1537,7 +1537,7 @@ Arrasta pro lado e descobre tudo que a gente trouxe:
 
 📅 Inauguração: QUINTA 23/04 às 14h
 📍 Av. Quintino Bocaiuva, 1045 — dentro do Muffato
-📲 (43) 99804-2424 · milkypot.com
+📲 (43) 99991-9777 · milkypot.com
 
 Qual desses você quer provar primeiro? Comenta 👇`,
             hashtags: '#milkypot #londrina #londrinapr #sobremesalondrina #acailondrina #sorveterialondrina #curtalondrina #londrinafood #comidalondrina #novidadeslondrina #potinhomaisfelizdomundo #milkypotlondrina #muffato #gastronomialondrina #pracomerlondrina #doceriaLondrina #picolelondrina #milkshakelondrina #londrinense #potinhodesobremesa',
@@ -1575,8 +1575,8 @@ Qual desses você quer provar primeiro? Comenta 👇`,
                 {
                     num: 6,
                     role: 'CTA final',
-                    copy: 'CHEGA DIA 23/04 👇 · 📍 Muffato Quintino Bocaiuva 1045 · 🕑 14h-23h · 📲 (43) 99804-2424',
-                    prompt: `Same reference DNA. 1080x1350 Instagram 4:5. Hero scene: the cloud-sheep mascot center-stage, arms wide open in welcome, holding a tiny wooden signboard that says "23/04" in cute hand-painted letters. A soft glowing downward arrow made of floating sparkles points below the mascot. Pastel confetti rain (pink, lilac, mint, butter, peach) falls gently around. Warm inviting atmosphere. Top bold rounded text: "CHEGA DIA 23/04" in raspberry pink #E63F7E. Info block bottom third: "📍 Muffato — Quintino Bocaiuva, 1045" / "🕑 14h às 23h · todos os dias" / "📲 (43) 99804-2424 · milkypot.com". Keep absolute bottom 20% text-free.`
+                    copy: 'CHEGA DIA 23/04 👇 · 📍 Muffato Quintino Bocaiuva 1045 · 🕑 14h-23h · 📲 (43) 99991-9777',
+                    prompt: `Same reference DNA. 1080x1350 Instagram 4:5. Hero scene: the cloud-sheep mascot center-stage, arms wide open in welcome, holding a tiny wooden signboard that says "23/04" in cute hand-painted letters. A soft glowing downward arrow made of floating sparkles points below the mascot. Pastel confetti rain (pink, lilac, mint, butter, peach) falls gently around. Warm inviting atmosphere. Top bold rounded text: "CHEGA DIA 23/04" in raspberry pink #E63F7E. Info block bottom third: "📍 Muffato — Quintino Bocaiuva, 1045" / "🕑 14h às 23h · todos os dias" / "📲 (43) 99991-9777 · milkypot.com". Keep absolute bottom 20% text-free.`
                 }
             ]
         },
@@ -1599,7 +1599,7 @@ descobre arrastando pro lado — e comenta o emoji da tua tribo pra ovelhinha de
 
 📅 QUINTA 23/04 · 14h
 📍 Muffato — Av. Quintino Bocaiuva, 1045 · Londrina
-📲 (43) 99804-2424 · milkypot.com
+📲 (43) 99991-9777 · milkypot.com
 
 comenta sua tribo 👇`,
             hashtags: '#milkypot #londrina #londrinapr #quiz #qualtribo #sobremesalondrina #acailondrina #curtalondrina #londrinafood #comidalondrina #novidadeslondrina #potinhomaisfelizdomundo #milkypotlondrina #muffato #gastronomialondrina #pracomerlondrina #doceriaLondrina #picolelondrina #milkshakelondrina #foodlovers',
@@ -1656,7 +1656,7 @@ arrasta pra ver TUDO:
 📍 Av. Quintino Bocaiuva, 1045 — dentro do Muffato
 🎁 100 primeiros ganham brinde + pulseira numerada + chance do POTE DOURADO
 🍡 potinho personalizado · 🍇 açaí buffet · 🍭 picolé · 🍦 sorvete · 🧁 milkshake · 🍫 cacau
-📲 (43) 99804-2424 · milkypot.com
+📲 (43) 99991-9777 · milkypot.com
 
 salva esse post, ativa o sininho, chama a galera — a Lana te espera 🐑💕`,
             hashtags: '#milkypot #londrina #londrinapr #inauguracao #sobremesalondrina #acailondrina #sorveterialondrina #curtalondrina #londrinafood #comidalondrina #novidadeslondrina #potinhomaisfelizdomundo #milkypotlondrina #muffato #gastronomialondrina #pracomerlondrina #doceriaLondrina #picolelondrina #milkshakelondrina #londrinense',
@@ -1666,7 +1666,7 @@ salva esse post, ativa o sininho, chama a galera — a Lana te espera 🐑💕`,
                 { num: 3, role: 'QUANDO', copy: '🗓️ QUINTA 23/04 a partir das 14h · todo dia 14h às 23h', prompt: 'Same DNA. Oversized cute 3D wall clock in glossy lilac with pink face, hour hand at 2PM, kawaii face on clock. Cloud-sheep next to it holding calendar page "23/04". Top "QUANDO?" raspberry pink.' },
                 { num: 4, role: 'PROMO (hero)', copy: 'OS 100 PRIMEIROS GANHAM: 🎁 topping surpresa · 🎀 pulseira numerada · 🏆 chance de achar o POTE DOURADO', prompt: 'Same DNA with GOLDEN accent added. Shiny metallic GOLDEN ice-cream pot glowing center with warm light rays, pastel pink wristband tag "007" one side, gift box with lilac ribbon exploding toppings other side, cloud-sheep peeking excited. Extra dreamy/magical feel. Top "OS 100 PRIMEIROS GANHAM:" raspberry pink.' },
                 { num: 5, role: 'CARDÁPIO', copy: '🍡 potinho · 🍇 açaí buffet · 🍭 picolé · 🍦 sorvete · 🧁 milkshake · 🍫 cacau', prompt: 'Same DNA. Soft 3x2 grid of six clay product illustrations in pastel circles (alternating pink/lilac/mint/butter/peach/cream): 1) custom dessert pot 2) açaí bowl with toppings 3) rainbow popsicle 4) two-scoop cone 5) milkshake glass 6) cacao bar with pod. Tiny cloud-sheep waving from top-left corner. Top "O QUE VAI TER:" raspberry pink.' },
-                { num: 6, role: 'CTA', copy: 'SALVA ESSE POST E VEM COM A GENTE 👇 · 🌐 milkypot.com · 💬 (43) 99804-2424', prompt: 'Same DNA. Cloud-sheep center waving at viewer with big warm smile, holding tiny smartphone showing heart and bookmark icon, soft confetti, faint glowing downward arrow. Top "SALVA ESSE POST E VEM COM A GENTE" raspberry pink. Contact info in lilac/mint above safe zone.' }
+                { num: 6, role: 'CTA', copy: 'SALVA ESSE POST E VEM COM A GENTE 👇 · 🌐 milkypot.com · 💬 (43) 99991-9777', prompt: 'Same DNA. Cloud-sheep center waving at viewer with big warm smile, holding tiny smartphone showing heart and bookmark icon, soft confetti, faint glowing downward arrow. Top "SALVA ESSE POST E VEM COM A GENTE" raspberry pink. Contact info in lilac/mint above safe zone.' }
             ]
         }
     ],
@@ -1996,7 +1996,7 @@ SERVIÇO
 • O quê: Inauguração MilkyPot — Sorveteria e Açaiteria com Potinho Personalizado
 • Quando: Quinta-feira, 23/04/2026, a partir das 14h
 • Onde: Av. Quintino Bocaiuva, 1045 — dentro do Muffato — Londrina-PR
-• Pedidos: WhatsApp (43) 99804-2424 ou milkypot.com
+• Pedidos: WhatsApp (43) 99991-9777 ou milkypot.com
 • Instagram: @milkypotbr
 
 Contato para imprensa: [NOME] — [TELEFONE] — [EMAIL]

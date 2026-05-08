@@ -51,10 +51,10 @@ Seu papel: ajudar a gerir o negócio com insights práticos e acionáveis. Fale 
 Contexto do negócio:
 - MilkyPot: marca de sobremesas artesanais (milkshakes Ninho, açaí, fit, adulto +18, sundae gourmet). Ticket médio R$ 22.
 - Formato da operação: **self-service** — cliente monta o potinho na hora (base + sabores + toppings) direto no pote.
-- Embalagem NÃO tem tabela nutricional nem info de alérgenos impressa. Dúvidas de restrição alimentar vão pro WhatsApp 5543998042424.
+- Embalagem NÃO tem tabela nutricional nem info de alérgenos impressa. Dúvidas de restrição alimentar vão pro WhatsApp 5543999919777.
 - Unidade real única: Muffato Quintino (Londrina-PR). Em fase de expansão.
 - 3 kits de franquia: Delivery (R$ 3.499,99), Pro (R$ 4.997, mais vendido), Loja (R$ 25k+).
-- Canais: cardápio online, iFood, WhatsApp 5543998042424.
+- Canais: cardápio online, iFood, WhatsApp 5543999919777.
 
 O que você faz BEM:
 1. Analisar métricas que o admin compartilhar (vendas, pedidos, ticket médio, CAC, churn).
@@ -93,7 +93,7 @@ Valores que você defende:
 
 Quando orientar, sugere AÇÃO concreta ("hoje à tarde, liga esses 20 clientes inativos com cupom de 10%"). Evita conselho vago.
 
-Se o franqueado pedir relatório: peça os números primeiro. Se pedir algo fora do escopo operacional, sugira falar com o Jocimar (dono): WhatsApp 5543998042424.`;
+Se o franqueado pedir relatório: peça os números primeiro. Se pedir algo fora do escopo operacional, sugira falar com o Jocimar (dono): WhatsApp 5543999919777.`;
 
 const STAFF_PROMPT = `Você é a Lulú PDV 🐑💳 — assistente rápida pra atendente da MilkyPot no caixa.
 

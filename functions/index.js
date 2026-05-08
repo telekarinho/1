@@ -1529,7 +1529,7 @@ exports.setupTestFranchise = onCall({ region: "southamerica-east1" }, async () =
     } : {
         address: "Rua Quintino Bocaiúva, 1045",
         city: "Londrina", state: "PR",
-        phone: "43998042424", whatsapp: "43998042424",
+        phone: "43999919777", whatsapp: "43999919777",
         deliveryFee: 5.9, deliveryTime: "20-35 min", rating: 5,
         hours: "00:00 - 23:59",
     };
