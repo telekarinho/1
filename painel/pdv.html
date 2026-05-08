@@ -651,6 +651,7 @@
     <div style="display:flex;align-items:center;gap:10px;">
         <button class="btn-back" onclick="window.location.href='pedidos.html'">← Voltar</button>
         <h1><span class="pdv-prefix">🏪 PDV — </span><span id="pdvStore">MilkyPot</span></h1>
+        <button id="pdvOperatorChip" onclick="openOperatorModal(true)" title="Trocar operador" style="display:none;background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:20px;padding:5px 14px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit"></button>
     </div>
     <!-- ATALHOS DE TECLADO — sempre visíveis no header (operador encontra rápido) -->
     <div class="pdv-shortcuts" id="pdvShortcuts" aria-label="Atalhos de teclado">
@@ -691,6 +692,35 @@
     </div>
 </div>
 
+<!-- Modal: Selecionar Operador (quem esta operando o PDV) -->
+<div id="pdvOperatorOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10001;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:560px;max-height:88vh;overflow:auto;box-shadow:0 16px 40px rgba(0,0,0,.4)">
+        <div style="padding:20px 24px;background:linear-gradient(135deg,#7C3AED,#3B82F6);color:#fff">
+            <h3 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:1.2rem">👤 Quem esta operando o PDV?</h3>
+            <p style="margin:6px 0 0;font-size:.85rem;opacity:.95">Toda venda, ponto e abertura/fechamento de caixa fica vinculada a quem voce escolher aqui.</p>
+        </div>
+        <div style="padding:20px 24px">
+            <div id="pdvOperatorList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
+            <div id="pdvOperatorPin" style="display:none;margin-top:14px;background:#F3F4F6;border-radius:10px;padding:14px">
+                <div style="font-size:.85rem;color:#374151;margin-bottom:8px">PIN de <strong id="pdvOperatorPinName"></strong>:</div>
+                <input type="password" id="pdvOperatorPinInput" inputmode="numeric" maxlength="4" pattern="\d{4}" autocomplete="off"
+                       placeholder="••••" style="font-size:1.6rem;text-align:center;letter-spacing:12px;width:100%;padding:12px;border:2px solid #D1D5DB;border-radius:8px;font-family:'Baloo 2',sans-serif;box-sizing:border-box">
+                <div id="pdvOperatorPinErr" style="display:none;color:#DC2626;margin-top:8px;font-size:.82rem"></div>
+                <div style="display:flex;gap:8px;margin-top:10px">
+                    <button onclick="cancelOperatorPin()" style="flex:1;padding:9px;border:1px solid #D1D5DB;background:#fff;border-radius:8px;cursor:pointer;font-weight:700">Voltar</button>
+                    <button onclick="confirmOperatorPin()" style="flex:2;padding:9px;background:#3B82F6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">Confirmar</button>
+                </div>
+            </div>
+            <div id="pdvOperatorEmpty" style="display:none;text-align:center;padding:24px;color:#6B7280;font-size:.85rem">
+                Nenhum colaborador cadastrado. <a href="equipe.html" style="color:#3B82F6;font-weight:700">Cadastre em Equipe</a> ou opere como Admin.
+            </div>
+        </div>
+        <div id="pdvOperatorFooter" style="padding:14px 24px;border-top:1px solid #E5E7EB;text-align:right">
+            <button id="pdvOperatorCancelBtn" onclick="closeOperatorModal()" style="padding:9px 18px;border:1px solid #D1D5DB;background:#fff;border-radius:8px;cursor:pointer;font-weight:700;display:none">Manter atual</button>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Bater Ponto (CLT) -->
 <div id="pdvPontoOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:center;justify-content:center;padding:20px">
     <div style="background:#fff;border-radius:14px;width:100%;max-width:380px;box-shadow:0 12px 40px rgba(0,0,0,.3);overflow:hidden">
@@ -712,7 +742,116 @@
 </div>
 
 <script src="../js/core/time-clock.js"></script>
+<script src="../js/core/operator-context.js"></script>
 <script>
+    // ====== Operator Selection ======
+    var _pendingOperator = null;
+    function openOperatorModal(allowCancel) {
+        if (typeof OperatorContext === 'undefined') return;
+        var session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+        var fid = session && session.franchiseId;
+        if (!fid) return;
+        var operators = OperatorContext.listAvailableOperators(fid);
+
+        var listEl = document.getElementById('pdvOperatorList');
+        var emptyEl = document.getElementById('pdvOperatorEmpty');
+        document.getElementById('pdvOperatorPin').style.display = 'none';
+        document.getElementById('pdvOperatorCancelBtn').style.display = allowCancel ? 'inline-block' : 'none';
+
+        if (operators.length === 0) {
+            listEl.style.display = 'none';
+            emptyEl.style.display = 'block';
+        } else {
+            listEl.style.display = 'grid';
+            emptyEl.style.display = 'none';
+            listEl.innerHTML = operators.map(function(op) {
+                var avatar = op.type === 'admin' ? '👑' : (op.role === 'Cozinheiro' ? '👨‍🍳' : (op.role === 'Entregador' ? '🛵' : (op.role === 'Gerente' ? '👔' : '👤')));
+                var subtitle = op.role + (op.requiresPin ? '' : (op.type === 'admin' ? '' : ' · sem PIN'));
+                var warn = (op.type === 'staff' && !op.requiresPin) ? '<div style="font-size:.7rem;color:#DC2626;margin-top:4px">⚠️ Cadastre PIN</div>' : '';
+                return '<button onclick="onOperatorClick(\'' + op.id + '\')" style="text-align:left;padding:14px;border:2px solid ' + op.color + ';background:#fff;border-radius:12px;cursor:pointer;font-family:inherit;transition:all .15s">'
+                    + '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:1.6rem">' + avatar + '</span>'
+                    + '<div><strong style="display:block;color:#111827;font-size:.95rem">' + op.name + '</strong>'
+                    + '<small style="color:#6B7280;font-size:.78rem">' + subtitle + '</small>' + warn + '</div></div></button>';
+            }).join('');
+        }
+        document.getElementById('pdvOperatorOverlay').style.display = 'flex';
+    }
+    function closeOperatorModal() {
+        document.getElementById('pdvOperatorOverlay').style.display = 'none';
+        _pendingOperator = null;
+    }
+    function onOperatorClick(operatorId) {
+        var session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+        var fid = session && session.franchiseId;
+        var operators = OperatorContext.listAvailableOperators(fid);
+        var op = operators.find(function(x) { return x.id === operatorId; });
+        if (!op) return;
+        if (op.type === 'admin' || !op.requiresPin) {
+            // Sem PIN — entra direto
+            var r = OperatorContext.selectOperator(fid, operatorId, '');
+            if (r.success) { closeOperatorModal(); refreshOperatorChip(); if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast('Operador: ' + r.operator.name, 'success'); }
+            else alert(r.error);
+            return;
+        }
+        // Pede PIN
+        _pendingOperator = op;
+        document.getElementById('pdvOperatorPinName').textContent = op.name;
+        document.getElementById('pdvOperatorPinInput').value = '';
+        document.getElementById('pdvOperatorPinErr').style.display = 'none';
+        document.getElementById('pdvOperatorPin').style.display = 'block';
+        setTimeout(function() { document.getElementById('pdvOperatorPinInput').focus(); }, 80);
+    }
+    function cancelOperatorPin() {
+        document.getElementById('pdvOperatorPin').style.display = 'none';
+        _pendingOperator = null;
+    }
+    function confirmOperatorPin() {
+        if (!_pendingOperator) return;
+        var pin = document.getElementById('pdvOperatorPinInput').value.trim();
+        var session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+        var fid = session && session.franchiseId;
+        var r = OperatorContext.selectOperator(fid, _pendingOperator.id, pin);
+        if (r.success) {
+            closeOperatorModal();
+            refreshOperatorChip();
+            if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast('Operador: ' + r.operator.name, 'success');
+        } else {
+            var err = document.getElementById('pdvOperatorPinErr');
+            err.textContent = r.error;
+            err.style.display = 'block';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var pinInp = document.getElementById('pdvOperatorPinInput');
+        if (pinInp) pinInp.addEventListener('keydown', function(e) { if (e.key === 'Enter') confirmOperatorPin(); });
+    });
+
+    function refreshOperatorChip() {
+        var chip = document.getElementById('pdvOperatorChip');
+        if (!chip || typeof OperatorContext === 'undefined') return;
+        var c = OperatorContext.getCurrent();
+        if (c) {
+            var icon = c.type === 'admin' ? '👑' : '👤';
+            chip.innerHTML = icon + ' ' + (c.name.length > 22 ? c.name.slice(0, 22) + '…' : c.name) + ' <span style="opacity:.7">▾</span>';
+            chip.style.display = 'inline-flex';
+        } else {
+            chip.style.display = 'none';
+        }
+    }
+
+    // Auto-abre modal de operador na primeira carga (se nada selecionado)
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            if (typeof OperatorContext === 'undefined') return;
+            var stored = sessionStorage.getItem('mp_pdv_operator');
+            if (!stored) {
+                openOperatorModal(false);
+            }
+            refreshOperatorChip();
+        }, 800);
+    });
+
+    // ====== Bater Ponto ======
     function openPdvPontoModal() {
         document.getElementById('pdvPontoPin').value = '';
         document.getElementById('pdvPontoResult').innerHTML = '';

@@ -242,9 +242,23 @@ const Caixa = (function () {
        Criação de movimentos (imutáveis)
        ============================================ */
     function sessionInfo() {
+        // Prioriza operador FISICO do PDV (admin OU colaborador que esta operando)
+        if (typeof OperatorContext !== 'undefined' && OperatorContext.getCurrent) {
+            const op = OperatorContext.getCurrent();
+            if (op) return {
+                id: op.id,
+                name: op.name,
+                email: op.email || null,
+                role: op.role,
+                operatorType: op.type,
+                operatorPis: op.pis || null,
+                operatorCpf: op.cpf || null
+            };
+        }
+        // Fallback: sessao Auth
         if (typeof Auth !== 'undefined' && Auth.getSession) {
             const s = Auth.getSession();
-            if (s) return { id: s.userId, name: s.name, email: s.email, role: s.role };
+            if (s) return { id: s.userId, name: s.name, email: s.email, role: s.role, operatorType: 'admin' };
         }
         return { id: 'anonymous', name: 'Sistema', email: null, role: null };
     }
@@ -539,6 +553,63 @@ const Caixa = (function () {
         }
 
         return Object.assign({}, r, { diff: diff, esperado: st.saldoEsperadoDinheiro });
+    }
+
+    /**
+     * Troca de turno SEM fechar o caixa.
+     * Operador 1 conta o dinheiro fisico, operador 2 confirma.
+     * Caixa continua aberto, mas o operador "atual" muda. Movimento
+     * 'troca_turno' fica registrado como conferencia entre operadores.
+     */
+    function changeShift(franchiseId, valorContado, novoOperadorId, novoOperadorPin, observacao) {
+        if (!franchiseId) return { success: false, error: 'Franquia invalida.' };
+        const st = getTurnoState(franchiseId);
+        if (st.status !== 'aberto') return { success: false, error: 'Nao ha caixa aberto. Abra o caixa primeiro.' };
+        if (isNaN(valorContado) || valorContado < 0) return { success: false, error: 'Valor contado invalido.' };
+        if (!novoOperadorId) return { success: false, error: 'Selecione o novo operador.' };
+
+        const opAtual = sessionInfo();
+        if (typeof OperatorContext === 'undefined') return { success: false, error: 'OperatorContext indisponivel.' };
+
+        const r = OperatorContext.selectOperator(franchiseId, novoOperadorId, novoOperadorPin || '');
+        if (!r.success) return { success: false, error: 'PIN incorreto ou operador invalido: ' + r.error };
+
+        const novoOp = r.operator;
+        const diff = valorContado - st.saldoEsperadoDinheiro;
+
+        const move = createMovement(franchiseId, {
+            type: 'troca_turno',
+            valor: 0, // troca nao move dinheiro
+            descricao: 'Troca de turno: ' + opAtual.name + ' → ' + novoOp.name +
+                       ' • Conferencia: ' + formatBRL(valorContado) +
+                       ' (esperado ' + formatBRL(st.saldoEsperadoDinheiro) + ', diff ' + formatBRL(diff) + ')',
+            motivo: observacao || ''
+        });
+        // Salva metadata extra
+        if (move.success && move.move) {
+            const allMoves = loadMovements(franchiseId);
+            const idx = allMoves.findIndex(m => m.id === move.move.id);
+            if (idx !== -1) {
+                allMoves[idx].changeShift = {
+                    operadorAnterior: { id: opAtual.id, name: opAtual.name, type: opAtual.operatorType },
+                    operadorNovo: { id: novoOp.id, name: novoOp.name, type: novoOp.type },
+                    valorContado: valorContado,
+                    saldoEsperadoNoMomento: st.saldoEsperadoDinheiro,
+                    diferenca: diff,
+                    observacao: observacao || ''
+                };
+                if (typeof DataStore !== 'undefined' && DataStore.saveCollection) {
+                    DataStore.saveCollection(COLLECTION, franchiseId, allMoves);
+                }
+            }
+        }
+
+        audit('CAIXA_SHIFT_CHANGE', franchiseId, {
+            de: opAtual.name, para: novoOp.name,
+            valorContado: valorContado, esperado: st.saldoEsperadoDinheiro, diff: diff
+        });
+
+        return { success: true, move: move.move, novoOperador: novoOp, diff: diff };
     }
 
     function registerSale(franchiseId, order) {
@@ -2058,6 +2129,7 @@ const Caixa = (function () {
         // Operações
         openShift: openShift,
         closeShift: closeShift,
+        changeShift: changeShift,
         registerSale: registerSale,
         registerSangria: registerSangria,
         registerReforco: registerReforco,
