@@ -42,20 +42,36 @@ async function fsPatch(docPath, fields, mask) {
 // ============================================
 // TOOL: listar_cardapio (compacto pra evitar 429 rate limit)
 // ============================================
-async function listar_cardapio({ franchiseeId }) {
+async function listar_cardapio({ franchiseeId, categoria, busca }) {
     if (!franchiseeId) return { error: "franchiseeId obrigatório" };
     const cardapio = await Cardapio.getCardapio(franchiseeId);
+    let produtos = cardapio.produtos;
+
+    // Filtra por categoria ou busca pra economizar tokens
+    if (categoria) {
+        const q = String(categoria).toLowerCase();
+        produtos = produtos.filter(p => (p.categoriaName || p.categoria || "").toLowerCase().includes(q));
+    }
+    if (busca) {
+        const q = String(busca).toLowerCase();
+        produtos = produtos.filter(p => p.name.toLowerCase().includes(q));
+    }
+
+    // Limita a 25 produtos máx pra economizar tokens (Groq TPM limit)
+    if (produtos.length > 25) produtos = produtos.slice(0, 25);
+
     return {
         ok: true,
         source: cardapio.source,
         totalProdutos: cardapio.produtos.length,
-        // Resumo super compacto pra IA: só nome + preço
-        produtos: cardapio.produtos.map(p => ({
+        retornados: produtos.length,
+        produtos: produtos.map(p => ({
             name: p.name,
             categoria: p.categoriaName || p.categoria,
             preco: p.priceDelivery || p.price
         })),
-        adicionais: cardapio.adicionais.map(a => ({ name: a.name, preco: a.price })),
+        // Top 10 adicionais mais comuns
+        adicionais: cardapio.adicionais.slice(0, 10).map(a => ({ name: a.name, preco: a.price })),
         bebidas: cardapio.bebidas.map(b => ({ name: b.name, preco: b.price }))
     };
 }

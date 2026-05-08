@@ -38,8 +38,14 @@ const TOOL_DEFINITIONS = [
         type: "function",
         function: {
             name: "listar_cardapio",
-            description: "Retorna o cardápio COMPLETO da franquia (bases, formatos, tamanhos, sabores, adicionais, bebidas) com preços REAIS atualizados. Use SEMPRE antes de quotar preços ou quando cliente pedir 'me mostra o cardápio'.",
-            parameters: { type: "object", properties: {} }
+            description: "Retorna cardápio (até 25 produtos). Use SEMPRE antes de quotar preço ou quando cliente pedir 'cardápio'. Pode filtrar por categoria ('Milkshakes', 'Sundaes', 'Picolés', 'Casquinha') ou busca textual.",
+            parameters: {
+                type: "object",
+                properties: {
+                    categoria: { type: "string", description: "Filtra por categoria. Ex: 'Milkshakes', 'Sundaes'" },
+                    busca: { type: "string", description: "Busca textual no nome do produto. Ex: 'amora', 'chocolate'" }
+                }
+            }
         }
     },
     {
