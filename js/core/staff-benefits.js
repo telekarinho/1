@@ -51,6 +51,8 @@
         max_value_per_day:      8.00,    // R$ 8,00 max por dia
         max_items_per_day:      1,       // 1 sorvete/refeicao por dia
         allowed_types:          ['sorvete_dia', 'refeicao', 'lanche', 'bebida', 'outro'],
+        // Pagamento dividido: se valor exceder, funcionario paga a diferenca
+        allow_partial_payment:  true,    // permite usar beneficio parcial + pagar resto
         require_pin_employee:   true,    // exige PIN do funcionario (nao-transferivel)
         require_acceptance:     true     // exige aceite do termo a cada lancamento
     };
@@ -85,6 +87,42 @@
     }
 
     /**
+     * Calcula o split de pagamento entre beneficio e dinheiro.
+     * Retorna o valor maximo coberto pelo beneficio + restante a pagar.
+     */
+    function computeBenefitSplit(franchiseId, staffId, totalCarrinho) {
+        var cfg = getConfig(franchiseId);
+        if (!cfg.enabled) return { eligible: 0, remainder: totalCarrinho, reason: 'disabled' };
+
+        var today = dateOnly(nowIso());
+        var hojeDoFunc = list(franchiseId, { staffId: staffId, date: today });
+        var totalHoje = hojeDoFunc.reduce(function (s, e) { return s + Number(e.value || 0); }, 0);
+
+        // Limites: per_item OU saldo restante do dia (o menor)
+        var limiteItem = cfg.max_value_per_item || 0;
+        var limiteDiarioRestante = (cfg.max_value_per_day || 0) - totalHoje;
+        var limite = Math.max(0, Math.min(limiteItem, limiteDiarioRestante));
+
+        // Se ja atingiu limite de quantidade do dia → eligible 0
+        if (cfg.max_items_per_day && hojeDoFunc.length >= cfg.max_items_per_day) {
+            return { eligible: 0, remainder: totalCarrinho, reason: 'daily_quantity_limit', totalHoje: totalHoje, limiteItens: cfg.max_items_per_day };
+        }
+
+        var eligible = Math.min(totalCarrinho, limite);
+        var remainder = Math.max(0, totalCarrinho - eligible);
+
+        return {
+            eligible: Math.round(eligible * 100) / 100,
+            remainder: Math.round(remainder * 100) / 100,
+            limit: limite,
+            totalHoje: totalHoje,
+            cartTotal: totalCarrinho,
+            allowsPartial: !!cfg.allow_partial_payment,
+            partialNeeded: remainder > 0
+        };
+    }
+
+    /**
      * Valida ANTES do registro — retorna { ok:bool, error?, warning? }.
      * Aqui ficam todas as regras legais/configuradas.
      */
@@ -100,7 +138,15 @@
 
         var value = parseFloat(params.value || 0);
         if (cfg.max_value_per_item && value > cfg.max_value_per_item) {
-            return { ok: false, error: 'Valor R$ ' + value.toFixed(2) + ' excede o maximo permitido por item (R$ ' + cfg.max_value_per_item.toFixed(2) + '). Ajuste o pedido ou cobre a diferenca.' };
+            // Se split parcial habilitado E o caller informou que vai dividir, deixa passar
+            if (cfg.allow_partial_payment && params.allowPartial) {
+                // Ajusta o valor a ser registrado pra LIMITE (nunca mais que isso)
+                params.value = cfg.max_value_per_item;
+                params._cappedValue = cfg.max_value_per_item;
+                params._originalValue = value;
+            } else {
+                return { ok: false, error: 'Valor R$ ' + value.toFixed(2) + ' excede o maximo por item (R$ ' + cfg.max_value_per_item.toFixed(2) + '). Use pagamento dividido ou reduza o pedido.' };
+            }
         }
 
         // Limite por dia (quantidade)
@@ -115,14 +161,22 @@
             };
         }
 
-        // Limite por dia (valor)
+        // Limite por dia (valor) — usando o valor possivelmente cappado acima
         var totalHoje = hojeDoFunc.reduce(function (s, e) { return s + Number(e.value || 0); }, 0);
-        if (cfg.max_value_per_day && (totalHoje + value) > cfg.max_value_per_day) {
-            return {
-                ok: false,
-                error: 'Total do dia (R$ ' + (totalHoje + value).toFixed(2) + ') excederia o maximo permitido por dia (R$ ' + cfg.max_value_per_day.toFixed(2) + ').',
-                blocked_by: 'daily_value_limit'
-            };
+        var valueChecking = parseFloat(params.value || 0);  // re-le pq pode ter sido cappado
+        if (cfg.max_value_per_day && (totalHoje + valueChecking) > cfg.max_value_per_day) {
+            // Tenta cappar pra encaixar no que sobra do dia
+            var sobraDoDia = cfg.max_value_per_day - totalHoje;
+            if (cfg.allow_partial_payment && params.allowPartial && sobraDoDia > 0) {
+                params.value = Math.min(params.value, sobraDoDia);
+                params._cappedValue = params.value;
+            } else {
+                return {
+                    ok: false,
+                    error: 'Total do dia (R$ ' + (totalHoje + valueChecking).toFixed(2) + ') excede o maximo (R$ ' + cfg.max_value_per_day.toFixed(2) + '). Sobra de hoje: R$ ' + Math.max(0, sobraDoDia).toFixed(2) + '.',
+                    blocked_by: 'daily_value_limit'
+                };
+            }
         }
 
         // Aviso se eh 'sorvete_dia' e ja recebeu hoje
@@ -338,7 +392,8 @@
 
         getConfig: getConfig,
         saveConfig: saveConfig,
-        validateBeforeRegister: validateBeforeRegister
+        validateBeforeRegister: validateBeforeRegister,
+        computeBenefitSplit: computeBenefitSplit
     };
 
 })();
