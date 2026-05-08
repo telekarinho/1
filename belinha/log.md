@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #156 — 2026-05-08
+
+**Área:** UX/Frontend — FAQ Páscoa 2027 em `index.html` + `sitemap.xml` lastmod
+
+**Contexto:** Prescrito pelo roadmap ciclo #155. Todos os grandes eventos do calendário tinham playbooks WA standalone, mas apenas Festa Junina, Halloween e Carnaval tinham perguntas na FAQPage do site. A Páscoa 2027 era o único evento com playbook WA completo mas sem presença no FAQ do site — gap que afeta tanto rich results no Google (FAQPage schema) quanto a experiência do visitante que busca informação sobre datas especiais.
+
+**O que pesquisou/analisou:**
+- Verificou estrutura da FAQPage JSON-LD: 12 perguntas, todas validadas via `json.loads()`. Nenhuma sobre Páscoa.
+- Verificou seção FAQ visual HTML: 7 perguntas de clientes. Última sazonal = Carnaval.
+- Identificou ativo único de marca: ovelhinha = animal de Páscoa na iconografia ocidental (bônus de posicionamento já documentado no ciclo #155 para copy WA).
+- Confirmou: Halloween FAQ está correto e forward-looking ("Em outubro o MilkyPot lança...") — evento futuro (out/2026), não deve ser removido.
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | FAQ Páscoa adicionado no JSON-LD FAQPage (13ª pergunta) + seção visual HTML (após Carnaval) |
+| `sitemap.xml` | `lastmod` da homepage atualizado: `2026-05-07` → `2026-05-08` |
+
+**Commit:** `def92f8`
+
+**Destaques:**
+1. **FAQPage agora tem 13 perguntas** — completa para os 4 eventos sazonais: Festa Junina, Halloween, Carnaval, Páscoa.
+2. **Copy com ativo único:** "a ovelhinha do MilkyPot adora a Páscoa — afinal, ovelha nasceu para isso!" — diferencial narrativo sem copy de concorrente.
+3. **Rich results habilitados para Páscoa:** a pergunta indexada pelo Google pode aparecer em rich snippets para buscas como "milkypot páscoa", "potinho páscoa londrina", reforçando SEO local em março/2027.
+4. **sitemap.xml atualizado:** Googlebot saberá que a homepage mudou hoje e priorizará re-crawl.
+
+**Próximo passo sugerido:**
+- **Ciclo #157 — SEO:** `sitemap.xml` — verificar `lastmod` de todas as 8 URLs; atualizar as desatualizadas; considerar adicionar `cardapio.html` lastmod (alterado nos ciclos anteriores).
+- **Ciclo #158 — Conversão:** Template WA milestone 50 carimbos fidelidade (prescrito roadmap #147, postergado múltiplos ciclos).
+- **Ciclo #159 — Pesquisa concorrentes:** nova rodada de inteligência competitiva (última: ciclo #151, +5 ciclos atrás).
+- **Operador:** CNPJ + DPO — LGPD — em aberto há **+19 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (ação pendente desde ciclo #148).
+- **Operador:** Produto temático Páscoa — nome + ingredientes: prazo **14/03/2027** para não ficar com placeholder nos broadcasts WA.
+
+_Belinha — Ciclo #156 | 2026-05-08_
+
+---
+
 ## Ciclo #155 — 2026-05-08
 
 **Área:** Conteúdo — `whatsapp-pascoa-2027.md` standalone
