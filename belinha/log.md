@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #164 — 2026-05-08
+
+**Área:** Conteúdo/WA — `whatsapp-namorados-2026.md` standalone
+
+**Contexto:** Prescrito pelo roadmap ciclo #163 (v20c ativa). O ciclo #131 criou o `dia-dos-namorados-2026-playbook.md` completo (estratégia, cronograma, posts, reel, KPIs). Mas não havia um arquivo standalone operacional de WA — focado nos templates de copy para o atendente usar no dia sem precisar ler o playbook inteiro. Diferencial obrigatório desta versão: CTA de **gift/presentear** explícito (N4-GIFT e N4-DUO), que o playbook original não cobria como variantes separadas.
+
+**O que pesquisou/analisou:**
+- Leu `dia-dos-namorados-2026-playbook.md` (ciclo #131): N1–N5 base, cronograma, mecânicas A/B/C, KPIs
+- Leu `whatsapp-100carimbos-lenda.md` (ciclo #159): referência de estrutura para standalone operacional
+- Identificou gap: nenhum template para o fluxo de atendimento "cliente quer PRESENTEAR alguém" — o N4 do playbook trata o cliente como consumidor próprio; faltava variante explícita de gift
+- Confirmou: 12/06/2026 a ~35 dias — janela ideal para preparar operador
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-namorados-2026.md` | CRIADO — Standalone operacional: auto-resposta keyword `NAMORADOS26`, N1–N5 completos, **N4-GIFT** (variante presentear: operador coleta nome + gostos da pessoa amada + endereço), **N4-DUO** (variante casal com 2 potinhos + topping extra Versão A), templates de resposta rápida para atendimento no dia, guia de tom (certo vs. errado), checklist operacional com status, tabela de pendências do operador, KPIs |
+
+**Destaques:**
+1. **N4-GIFT — CTA de presentear:** Variante nova não coberta pelo playbook #131. Opera um fluxo de gift diferente: o comprador não sabe os toppings → o atendente pergunta gostos da pessoa amada → monta o potinho "como se você conhecesse ela/ele". Aumenta percepção de cuidado e diferencia de qualquer produto genérico.
+2. **N4-DUO — Casal junto:** Coleta as preferências dos dois via WA em um único fluxo estruturado. Torna o pedido duplo menos ambíguo para o atendente. Topping extra da Versão A integrado como linha condicional `[SE VERSÃO A CONFIRMADA]`.
+3. **Guia de tom:** Tabela "certo vs. errado" para manter a voz da marca sob pressão do movimento do Dia dos Namorados — evita copy promocional genérico que contradiz o posicionamento premium.
+4. **Checklist com status visual:** ⬜ para facilitar uso real pelo operador — pode imprimir ou usar no celular como to-do list.
+5. **Referência cruzada explícita ao playbook:** Standalone não duplica posts e reel — aponta para `dia-dos-namorados-2026-playbook.md` para esses elementos.
+
+**Commit:** `05a35ef`
+
+**Próximo passo sugerido:**
+- **Ciclo #165 — Conteúdo/WA:** `whatsapp-junina-2026.md` standalone — Festa Junina 13–29/06/2026. Integrar com `potinho-junino-2026-contraprogramacao.md` e `instagram-tiktok-junina-2026.md`. Templates de disparo: teaser, lançamento Potinho Junino, São João, encerramento.
+- **Ciclo #166 — SEO:** Landing page `potinho-personalizado-londrina.html` — alto volume local, sem página dedicada.
+- **Ciclo #167 — Concorrentes:** Refetch pré-Festa Junina (campanhas junho 2026)
+- **Operador:** Definir Versão A/B/C mecânica Namorados até **05/06/2026** — impacta N4-DUO diretamente.
+- **Operador:** Confirmar horário limite delivery (22h ou 22h30?) — copy usa 22h30 no momento.
+- **Operador:** Confirmar ingredientes Potinho Junino até 30/05/2026.
+- **Operador:** Google Search Console — solicitar indexação sitemap.xml (pendente ciclo #148).
+- **Operador:** CNPJ + DPO — LGPD — +26 ciclos. Risco legal crescente.
+
+_Belinha — Ciclo #164 | 2026-05-08_
+
+---
+
 ## Ciclo #162 — 2026-05-08
 
 **Área:** UX/Frontend — checkout modal mobile 480px
