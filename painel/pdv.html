@@ -1586,11 +1586,17 @@
                     return;
                 }
                 this.openWeightModal(it);
-            } else if (!it.price || it.modoMontagem === 'montado') {
-                // Chama lógica de customização legada
-                if (window.openModal) window.openModal(it);
+            } else if (!it.price) {
+                // Produto sem preco — precisa de modal de montagem/customizacao legada
+                if (typeof window.openModal === 'function') {
+                    window.openModal(it);
+                } else {
+                    Utils.showToast('Produto "' + it.name + '" sem preco configurado. Cadastre o preco em Produtos.', 'error');
+                    console.warn('handleProductClick: produto sem preco e sem window.openModal disponivel', it);
+                }
             } else {
-                // Venda direta unitária — preço por canal (_v2) se disponível
+                // Tem preco — venda direta unitaria, mesmo para itens "modoMontagem=montado"
+                // (buffet, picole, casquinha — cliente monta no balcao mas operador so registra a venda)
                 const price = this._priceForCanal(it, this.kvCanal) || it.price;
                 this.addToCart({
                     id: it.id,
