@@ -12,8 +12,16 @@
   <style>
     .conectar-page { padding: 24px; max-width: 980px; margin: 0 auto; }
 
-    .status-bar { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
-    .status-card { background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:14px 18px; min-width: 200px; flex: 1; }
+    .franquia-row { background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; padding: 16px 20px; margin-bottom: 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .franquia-row label { font-weight: 800; color: #2D1747; font-size: 13px; }
+    .franquia-row select { padding: 9px 14px; border: 1.5px solid #E5E7EB; border-radius: 10px; font-family: inherit; font-size: 14px; background: #fff; flex: 1; min-width: 200px; }
+    .franquia-row .badge { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; letter-spacing: .3px; }
+    .franquia-row .badge.ok { background: #DCFCE7; color: #166534; }
+    .franquia-row .badge.warn { background: #FEF3C7; color: #92400E; }
+    .franquia-row .badge.err { background: #FEE2E2; color: #991B1B; }
+
+    .status-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .status-card { background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:14px 18px; }
     .status-card .lbl { font-size: 11px; font-weight: 800; color: #6B7280; letter-spacing: .5px; text-transform: uppercase; }
     .status-card .val { font-family: 'Baloo 2', cursive; font-size: 20px; font-weight: 800; color: #2D1747; margin-top: 4px; }
     .status-card.ok .val { color: #16A34A; }
@@ -48,6 +56,11 @@
 
     .info-banner { background: linear-gradient(135deg, #DBEAFE, #EDE9FE); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; font-size: 14px; color: #1E40AF; }
     .info-banner strong { color: #2D1747; }
+
+    .new-franquia-card { background:#fff; border:2px dashed #C4B5FD; border-radius:14px; padding:18px; margin-top: 20px; }
+    .new-franquia-card h4 { margin: 0 0 10px; font-family: 'Baloo 2', cursive; color: #2D1747; }
+    .new-franquia-card .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .new-franquia-card input { flex: 1; min-width: 200px; padding: 9px 14px; border: 1.5px solid #E5E7EB; border-radius: 10px; font-family: inherit; }
   </style>
 </head>
 <body>
@@ -80,19 +93,26 @@
     <main class="panel-main">
       <header class="panel-header">
         <button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-        <h1>📱 Conectar WhatsApp da Lulu</h1>
+        <h1>📱 Conectar WhatsApp <span id="pageContextName" style="font-size:14px;color:#6B7280;font-weight:600"></span></h1>
       </header>
 
       <div class="conectar-page">
-        <div class="info-banner">
-          <strong>🐑 Atenção:</strong> esta página conecta o WhatsApp da MilkyPot (5543999919777) ao gateway da Lulu IA. Se desconectar aqui, a Lulu para de atender automaticamente.
+        <div class="info-banner" id="infoBanner">
+          <strong>🐑 Como funciona:</strong> cada franquia tem seu próprio WhatsApp. <span id="userRoleHint">Carregando...</span>
         </div>
 
         <div id="errBox"></div>
 
-        <div class="status-bar">
+        <!-- Seletor de franquia -->
+        <div class="franquia-row" id="franquiaRow" style="display:none">
+          <label for="franquiaSelect">🏬 Franquia:</label>
+          <select id="franquiaSelect" onchange="onSelectFranquia()"></select>
+          <span class="badge ok" id="franquiaBadge">—</span>
+        </div>
+
+        <div class="status-bar" id="statusBar" style="display:none">
           <div class="status-card" id="cardState">
-            <div class="lbl">Estado do Gateway</div>
+            <div class="lbl">Estado</div>
             <div class="val">⏳ carregando...</div>
           </div>
           <div class="status-card" id="cardNumber">
@@ -100,13 +120,23 @@
             <div class="val">—</div>
           </div>
           <div class="status-card" id="cardUptime">
-            <div class="lbl">Uptime</div>
+            <div class="lbl">Uptime gateway</div>
             <div class="val">—</div>
           </div>
         </div>
 
         <div class="qr-section" id="qrSection">
-          <div class="loading">⏳ Carregando estado do WhatsApp...</div>
+          <div class="loading">⏳ Carregando...</div>
+        </div>
+
+        <!-- Cadastro de nova franquia (super_admin only) -->
+        <div class="new-franquia-card" id="newFranquiaCard" style="display:none">
+          <h4>➕ Adicionar nova franquia ao gateway</h4>
+          <p style="color:#6B7280;font-size:13px;margin:0 0 10px">Cria uma nova sessão Baileys pra essa franquia. Use ID em letras minúsculas (ex: <code>franquia-curitiba</code>).</p>
+          <div class="row">
+            <input id="newFranquiaId" type="text" placeholder="ex: franquia-curitiba" pattern="[a-z0-9-]{2,40}" />
+            <button class="btn primary" onclick="addFranquia()">Criar sessão</button>
+          </div>
         </div>
       </div>
     </main>
@@ -121,11 +151,6 @@
   <script src="../js/core/datastore.js"></script>
   <script src="../js/core/auth.js"></script>
   <script>
-  /* ============================================
-     Painel Conectar WhatsApp — chama /api/whatsapp-admin
-     com Firebase ID token. Só super_admin/franchisee.
-     ============================================ */
-
   if (typeof Auth !== 'undefined' && Auth.requireAuth) {
     if (!Auth.requireAuth(['super_admin', 'franchisee'])) throw new Error('Não autorizado');
   }
@@ -133,16 +158,16 @@
   const API_BASE = '/api/whatsapp-admin';
   let POLL_INTERVAL = null;
   let CURRENT_STATE = null;
+  let CURRENT_ACCOUNT = null;
+  let USER_ROLE = null;
+  let USER_FRANCHISEES = [];
+  let AVAILABLE_FRANQUIAS = [];
 
-  function showError(msg) {
-    document.getElementById('errBox').innerHTML = `<div class="err-msg">⚠️ ${esc(msg)}</div>`;
-  }
-  function clearError() {
-    document.getElementById('errBox').innerHTML = '';
-  }
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+  function showError(msg) { document.getElementById('errBox').innerHTML = `<div class="err-msg">⚠️ ${esc(msg)}</div>`; }
+  function clearError() { document.getElementById('errBox').innerHTML = ''; }
 
   async function getIdToken() {
     if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
@@ -150,24 +175,127 @@
       const unsub = firebase.auth().onAuthStateChanged(async (u) => {
         unsub();
         if (!u) return reject(new Error('Não logado'));
-        try {
-          const t = await u.getIdToken();
-          resolve(t);
-        } catch (e) { reject(e); }
+        try { resolve(await u.getIdToken()); } catch (e) { reject(e); }
       });
     });
   }
 
   async function callApi(action, opts = {}) {
     const token = await getIdToken();
-    const url = `${API_BASE}?action=${encodeURIComponent(action)}`;
-    const r = await fetch(url, {
+    const params = new URLSearchParams({ action });
+    if (opts.accountId) params.set('accountId', opts.accountId);
+    const r = await fetch(`${API_BASE}?${params.toString()}`, {
       method: opts.method || 'GET',
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        ...(opts.body ? { 'Content-Type': 'application/json' } : {})
+      },
+      body: opts.body ? JSON.stringify(opts.body) : undefined
     });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
     return j;
+  }
+
+  async function loadUserContext() {
+    // Busca role + franchiseeIds do user logado via Firestore
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    const u = firebase.auth().currentUser;
+    if (!u) return;
+    try {
+      const doc = await firebase.firestore().collection('users').doc(u.uid).get();
+      if (doc.exists) {
+        const data = doc.data();
+        USER_ROLE = data.role || null;
+        USER_FRANCHISEES = data.franchiseeIds || (data.franchiseeId ? [data.franchiseeId] : []);
+      }
+    } catch (e) {
+      console.warn('falha lendo role:', e);
+    }
+    document.getElementById('userRoleHint').textContent =
+      USER_ROLE === 'super_admin'
+        ? 'Você é admin geral — pode gerenciar TODAS as franquias.'
+        : `Você gerencia: ${USER_FRANCHISEES.join(', ') || '(nenhuma franquia atribuída)'}.`;
+
+    if (USER_ROLE === 'super_admin') {
+      document.getElementById('newFranquiaCard').style.display = '';
+    }
+  }
+
+  async function bootstrapMatrizIfNeeded() {
+    // Só super_admin cadastra matriz pela primeira vez
+    if (USER_ROLE !== 'super_admin') return;
+    try {
+      const docRef = firebase.firestore().collection('franchises').doc('matriz');
+      const snap = await docRef.get();
+      if (!snap.exists) {
+        await docRef.set({
+          name: 'MilkyPot Matriz (Londrina)',
+          accountId: 'matriz',
+          whatsappNumber: '5543999919777',
+          address: 'Av. dos Pioneiros, 4255 — Iguatemi, Londrina-PR (Muffato Quintino)',
+          hours: '10h às 22h',
+          deliveryFee: '5,90',
+          deliveryTime: '25-40min',
+          ownerName: 'Jocimar Rodrigo',
+          active: true,
+          isMatriz: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('✅ Franquia matriz cadastrada automaticamente');
+      }
+    } catch (e) {
+      console.warn('Bootstrap matriz falhou:', e.message);
+    }
+  }
+
+  async function loadFranchises() {
+    await bootstrapMatrizIfNeeded();
+    try {
+      const j = await callApi('franchises');
+      AVAILABLE_FRANQUIAS = j.franchises || [];
+    } catch (e) {
+      console.warn('Falha carregando /franchises do Firestore:', e.message);
+    }
+    // Garante pelo menos a matriz no select (super_admin sempre vê)
+    if (USER_ROLE === 'super_admin' && !AVAILABLE_FRANQUIAS.find(f => f.accountId === 'matriz')) {
+      AVAILABLE_FRANQUIAS.unshift({ accountId: 'matriz', name: 'MilkyPot Matriz (Londrina)', whatsappNumber: '5543999919777' });
+    }
+    // Filtra pra franchisee
+    if (USER_ROLE === 'franchisee') {
+      AVAILABLE_FRANQUIAS = AVAILABLE_FRANQUIAS.filter(f => USER_FRANCHISEES.includes(f.accountId));
+    }
+    renderSelect();
+  }
+
+  function renderSelect() {
+    const sel = document.getElementById('franquiaSelect');
+    sel.innerHTML = AVAILABLE_FRANQUIAS.map(f =>
+      `<option value="${esc(f.accountId)}">${esc(f.name)} ${f.whatsappNumber ? `(+${esc(f.whatsappNumber)})` : ''}</option>`
+    ).join('');
+    if (!AVAILABLE_FRANQUIAS.length) {
+      document.getElementById('franquiaRow').style.display = 'none';
+      document.getElementById('qrSection').innerHTML = '<div class="loading">Você ainda não tem franquia atribuída. Fale com o admin geral.</div>';
+      return;
+    }
+    document.getElementById('franquiaRow').style.display = '';
+    document.getElementById('statusBar').style.display = '';
+
+    // Restaura último selecionado ou pega o 1º
+    const saved = localStorage.getItem('mp_zap_account');
+    const initial = AVAILABLE_FRANQUIAS.find(f => f.accountId === saved)?.accountId || AVAILABLE_FRANQUIAS[0].accountId;
+    sel.value = initial;
+    CURRENT_ACCOUNT = initial;
+    document.getElementById('pageContextName').textContent = '— ' + (AVAILABLE_FRANQUIAS[0].name || initial);
+  }
+
+  async function onSelectFranquia() {
+    const sel = document.getElementById('franquiaSelect');
+    CURRENT_ACCOUNT = sel.value;
+    localStorage.setItem('mp_zap_account', CURRENT_ACCOUNT);
+    const f = AVAILABLE_FRANQUIAS.find(x => x.accountId === CURRENT_ACCOUNT);
+    document.getElementById('pageContextName').textContent = '— ' + (f?.name || CURRENT_ACCOUNT);
+    loadStatus();
   }
 
   function fmtUptime(s) {
@@ -182,6 +310,7 @@
     const cardState = document.getElementById('cardState');
     const cardNumber = document.getElementById('cardNumber');
     const cardUptime = document.getElementById('cardUptime');
+    const badge = document.getElementById('franquiaBadge');
 
     let label, cssClass;
     switch (st.state) {
@@ -194,68 +323,67 @@
       case 'disconnected': case 'closed':
         label = '❌ Desconectado'; cssClass = 'err'; break;
       default:
-        label = '? ' + (st.state || 'desconhecido'); cssClass = 'err';
+        label = '? ' + (st.state || '?'); cssClass = 'err';
     }
     cardState.className = 'status-card ' + cssClass;
     cardState.querySelector('.val').textContent = label;
     cardNumber.querySelector('.val').textContent = st.connectedNumber ? '+' + st.connectedNumber : '—';
     cardUptime.querySelector('.val').textContent = fmtUptime(st.uptime);
+    badge.className = 'badge ' + cssClass;
+    badge.textContent = label;
   }
 
   async function renderConnected(st) {
-    const html = `
+    document.getElementById('qrSection').innerHTML = `
       <div class="connected-box">
         <div class="check">✅</div>
         <div class="name">WhatsApp conectado!</div>
         <div class="num">+${esc(st.connectedNumber || '')}</div>
         <div class="actions">
           <a href="whatsapp-conversas.html" class="btn primary">💬 Ver Conversas Lulu</a>
-          <button class="btn danger" onclick="doLogout()">🔌 Desconectar WhatsApp</button>
+          <button class="btn danger" onclick="doLogout()">🔌 Desconectar</button>
           <button class="btn soft" onclick="loadStatus()">🔄 Atualizar</button>
         </div>
       </div>`;
-    document.getElementById('qrSection').innerHTML = html;
   }
 
   async function renderQrPending() {
     document.getElementById('qrSection').innerHTML = '<div class="loading">📱 Buscando QR code...</div>';
     try {
-      const j = await callApi('qr');
+      const j = await callApi('qr', { accountId: CURRENT_ACCOUNT });
       if (j.qr) {
-        const html = `
+        document.getElementById('qrSection').innerHTML = `
           <h2 class="qr-title">Escaneia com o WhatsApp 📱</h2>
-          <div class="qr-sub">Use o número 5543999919777 (linha oficial MilkyPot)</div>
+          <div class="qr-sub">Use o número da franquia <strong>${esc(CURRENT_ACCOUNT)}</strong></div>
           <div class="qr-wrap"><img src="${esc(j.qr)}" alt="QR Code WhatsApp" /></div>
           <div class="qr-instructions">
             <strong>Como conectar:</strong>
             <ol>
-              <li>Abre o <strong>WhatsApp</strong> no celular</li>
+              <li>Abre o <strong>WhatsApp</strong> no celular dessa franquia</li>
               <li>Toca em <strong>⋮</strong> (3 pontos no canto superior)</li>
               <li>Vai em <strong>Aparelhos conectados</strong></li>
               <li>Toca em <strong>Conectar um aparelho</strong></li>
-              <li>Aponta a câmera do celular pra esse QR aqui na tela</li>
+              <li>Aponta a câmera pra esse QR aqui</li>
             </ol>
           </div>
           <div class="actions">
             <button class="btn soft" onclick="loadStatus()">🔄 Atualizar</button>
-            <button class="btn danger" onclick="doRestart()">🔁 Gerar novo QR</button>
+            <button class="btn danger" onclick="doRestartSession()">🔁 Gerar novo QR</button>
           </div>`;
-        document.getElementById('qrSection').innerHTML = html;
       } else {
         document.getElementById('qrSection').innerHTML = `
-          <div class="loading">QR ainda não gerado. <button class="btn soft" onclick="doRestart()">Gerar agora</button></div>`;
+          <div class="loading">QR ainda não gerado. <button class="btn soft" onclick="doRestartSession()">Gerar agora</button></div>`;
       }
     } catch (e) {
       showError('Erro pegando QR: ' + e.message);
-      document.getElementById('qrSection').innerHTML = `
-        <div class="loading">❌ ${esc(e.message)} <button class="btn soft" onclick="loadStatus()">Tentar de novo</button></div>`;
+      document.getElementById('qrSection').innerHTML = `<div class="loading">❌ ${esc(e.message)}</div>`;
     }
   }
 
   async function renderConnecting() {
     document.getElementById('qrSection').innerHTML = `
       <div class="loading">
-        🔄 Gateway iniciando... aguarde alguns segundos.
+        🔄 Sessão iniciando... aguarde alguns segundos.
         <div style="margin-top:12px"><button class="btn soft" onclick="loadStatus()">🔄 Atualizar agora</button></div>
       </div>`;
   }
@@ -265,17 +393,18 @@
       <div class="connected-box">
         <div class="check">⚠️</div>
         <div class="name" style="color:#DC2626">WhatsApp desconectado</div>
-        <div class="num">A Lulu não está atendendo. Reinicie pra gerar novo QR.</div>
+        <div class="num">A Lulu não está atendendo essa franquia.</div>
         <div class="actions">
-          <button class="btn primary" onclick="doRestart()">🔁 Reconectar (gera QR)</button>
+          <button class="btn primary" onclick="doRestartSession()">🔁 Reconectar (gera QR)</button>
         </div>
       </div>`;
   }
 
   async function loadStatus() {
+    if (!CURRENT_ACCOUNT) return;
     clearError();
     try {
-      const st = await callApi('status');
+      const st = await callApi('status', { accountId: CURRENT_ACCOUNT });
       renderState(st);
       if (st.state === 'open' || st.state === 'connected') renderConnected(st);
       else if (st.state === 'qr-pending') renderQrPending();
@@ -284,35 +413,57 @@
     } catch (e) {
       console.error(e);
       showError('Não consegui falar com o gateway: ' + e.message);
-      document.getElementById('qrSection').innerHTML = `
-        <div class="loading">❌ ${esc(e.message)} <button class="btn soft" onclick="loadStatus()">Tentar de novo</button></div>`;
+      document.getElementById('qrSection').innerHTML = `<div class="loading">❌ ${esc(e.message)}</div>`;
     }
   }
 
-  async function doRestart() {
-    if (!confirm('Tem certeza? Isso vai gerar um novo QR e a Lulu fica fora do ar até reconectar.')) return;
+  async function doRestartSession() {
+    if (!confirm(`Reiniciar sessão "${CURRENT_ACCOUNT}"? Vai gerar um novo QR.`)) return;
     clearError();
     try {
-      await callApi('restart', { method: 'POST' });
-      document.getElementById('qrSection').innerHTML = '<div class="loading">🔄 Reiniciando... aguarde 10s</div>';
-      setTimeout(loadStatus, 10000);
-    } catch (e) {
-      showError('Erro reiniciando: ' + e.message);
-    }
+      await callApi('restart-session', { method: 'POST', accountId: CURRENT_ACCOUNT });
+      document.getElementById('qrSection').innerHTML = '<div class="loading">🔄 Reiniciando sessão... aguarde 8s</div>';
+      setTimeout(loadStatus, 8000);
+    } catch (e) { showError('Erro: ' + e.message); }
   }
 
   async function doLogout() {
-    if (!confirm('Tem certeza que quer DESCONECTAR o WhatsApp? A Lulu para de atender até reconectar.')) return;
+    if (!confirm(`Desconectar WhatsApp da "${CURRENT_ACCOUNT}"? Ela para de atender até reconectar.`)) return;
     clearError();
     try {
-      await callApi('logout', { method: 'POST' });
+      await callApi('logout', { method: 'POST', accountId: CURRENT_ACCOUNT });
       setTimeout(loadStatus, 5000);
-    } catch (e) {
-      showError('Erro desconectando: ' + e.message);
-    }
+    } catch (e) { showError('Erro: ' + e.message); }
   }
 
-  // Polling a cada 5s pra atualizar QR/state
+  async function addFranquia() {
+    const id = (document.getElementById('newFranquiaId').value || '').toLowerCase().trim();
+    if (!/^[a-z0-9-]{2,40}$/.test(id)) {
+      showError('ID inválido. Use letras minúsculas, números e hífen (2-40 chars).');
+      return;
+    }
+    if (!confirm(`Criar franquia "${id}"? Vai aparecer no select pra você escanear o QR dela.`)) return;
+    clearError();
+    try {
+      await callApi('add-account', { method: 'POST', body: { accountId: id } });
+      // Cadastra no Firestore /franchises (precisa nome)
+      const name = prompt('Nome amigável da franquia (ex: "MilkyPot Curitiba")') || id;
+      await firebase.firestore().collection('franchises').doc(id).set({
+        name,
+        accountId: id,
+        active: true,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdBy: firebase.auth().currentUser?.email || null
+      }, { merge: true });
+      document.getElementById('newFranquiaId').value = '';
+      alert('✅ Franquia criada. Selecione no dropdown pra escanear o QR dela.');
+      await loadFranchises();
+      // Seleciona a nova
+      document.getElementById('franquiaSelect').value = id;
+      onSelectFranquia();
+    } catch (e) { showError('Erro: ' + e.message); }
+  }
+
   function startPolling() {
     if (POLL_INTERVAL) clearInterval(POLL_INTERVAL);
     POLL_INTERVAL = setInterval(() => {
@@ -325,8 +476,12 @@
   // Bootstrap
   if (typeof firebase !== 'undefined') {
     if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
-    firebase.auth().onAuthStateChanged(u => {
-      if (u) { loadStatus(); startPolling(); }
+    firebase.auth().onAuthStateChanged(async (u) => {
+      if (!u) return;
+      await loadUserContext();
+      await loadFranchises();
+      if (CURRENT_ACCOUNT) loadStatus();
+      startPolling();
     });
   }
   </script>
