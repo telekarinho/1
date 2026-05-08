@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>MilkyPot — WhatsApp Conversas (Lulu IA)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/shared-panel.css">
+  <style>
+    .wa-page { display: grid; grid-template-columns: 360px 1fr; gap: 16px; padding: 16px; height: calc(100vh - 64px); }
+    .wa-list { background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+    .wa-list-head { padding: 14px 16px; border-bottom: 1px solid #EEF2F7; }
+    .wa-list-head h3 { margin: 0; font-family: 'Baloo 2', cursive; color: #2D1747; font-size: 17px; }
+    .wa-list-head p { margin: 2px 0 0; font-size: 12px; color: #6B7280; }
+    .wa-list-search { padding: 10px 12px; border-bottom: 1px solid #EEF2F7; }
+    .wa-list-search input { width: 100%; padding: 9px 12px; border: 1.5px solid #E5E7EB; border-radius: 10px; font-size: 13px; font-family: inherit; }
+    .wa-conversations { flex: 1; overflow-y: auto; }
+    .wa-conv-item { padding: 12px 16px; border-bottom: 1px solid #F3F4F6; cursor: pointer; transition: background .12s; }
+    .wa-conv-item:hover { background: #FFF0F6; }
+    .wa-conv-item.active { background: #EDE9FE; border-left: 4px solid #7E57C2; padding-left: 12px; }
+    .wa-conv-item .top { display: flex; justify-content: space-between; gap: 8px; }
+    .wa-conv-item .name { font-weight: 700; color: #1F2937; font-size: 14px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wa-conv-item .when { font-size: 11px; color: #9CA3AF; flex-shrink: 0; }
+    .wa-conv-item .preview { font-size: 12px; color: #6B7280; margin-top: 4px; line-height: 1.4; max-height: 32px; overflow: hidden; }
+    .wa-conv-item .badges { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+    .badge { display: inline-block; padding: 2px 7px; border-radius: 8px; font-size: 10px; font-weight: 700; letter-spacing: .3px; }
+    .badge-ia { background: #DBEAFE; color: #1E40AF; }
+    .badge-humano { background: #FEF3C7; color: #92400E; }
+    .badge-pausado { background: #F3F4F6; color: #6B7280; }
+    .badge-novo { background: #DCFCE7; color: #166534; }
+
+    .wa-detail { background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; }
+    .wa-detail-head { padding: 14px 18px; border-bottom: 1px solid #EEF2F7; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .wa-detail-head h3 { margin: 0; font-family: 'Baloo 2', cursive; color: #2D1747; font-size: 17px; }
+    .wa-detail-head .sub { font-size: 12px; color: #6B7280; margin-top: 2px; }
+    .wa-detail-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .wa-messages { flex: 1; overflow-y: auto; padding: 16px; background: #FAF9FC; }
+    .msg { margin-bottom: 10px; max-width: 75%; }
+    .msg.user { margin-left: 0; }
+    .msg.bot, .msg.human { margin-left: auto; }
+    .msg .bubble { padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.5; word-wrap: break-word; white-space: pre-wrap; }
+    .msg.user .bubble { background: #fff; border: 1px solid #E5E7EB; color: #1F2937; }
+    .msg.bot .bubble { background: linear-gradient(135deg, #DBEAFE, #BFDBFE); color: #1E40AF; }
+    .msg.human .bubble { background: linear-gradient(135deg, #FEF3C7, #FDE68A); color: #92400E; }
+    .msg .meta { font-size: 10px; color: #9CA3AF; margin-top: 3px; padding: 0 4px; }
+    .msg.bot .meta, .msg.human .meta { text-align: right; }
+
+    .wa-compose { padding: 12px 16px; border-top: 1px solid #EEF2F7; background: #fff; }
+    .wa-compose-row { display: flex; gap: 8px; align-items: stretch; }
+    .wa-compose textarea { flex: 1; padding: 10px 14px; border: 1.5px solid #E5E7EB; border-radius: 14px; font-family: inherit; font-size: 14px; resize: none; min-height: 42px; max-height: 120px; }
+    .wa-compose textarea:focus { outline: none; border-color: #7E57C2; }
+
+    .btn { border: 0; border-radius: 10px; padding: 9px 14px; font-weight: 800; cursor: pointer; font-family: inherit; font-size: 13px; }
+    .btn.primary { background: #7E57C2; color: #fff; }
+    .btn.green { background: #16A34A; color: #fff; }
+    .btn.warn { background: #F59E0B; color: #fff; }
+    .btn.danger { background: #DC2626; color: #fff; }
+    .btn.soft { background: #F3F4F6; color: #374151; }
+    .btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .empty-detail { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; color: #9CA3AF; padding: 40px; text-align: center; }
+    .empty-detail .icon { font-size: 64px; margin-bottom: 14px; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; padding: 12px 16px 0; }
+    .stat { background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 14px; }
+    .stat .num { font-family: 'Baloo 2', cursive; font-size: 22px; font-weight: 900; color: #2D1747; }
+    .stat .lbl { font-size: 10px; color: #6B7280; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; margin-top: 2px; }
+
+    @media (max-width: 900px) {
+      .wa-page { grid-template-columns: 1fr; height: auto; }
+      .wa-list { max-height: 400px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+        <h2>MilkyPot<small>Admin</small></h2>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-group">Principal</div>
+        <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+        <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+        <a href="pdv.html" class="sidebar-link"><span class="icon">💻</span> PDV</a>
+        <div class="sidebar-nav-group">WhatsApp</div>
+        <a href="whatsapp-conversas.html" class="sidebar-link active"><span class="icon">💬</span> Conversas Lulu</a>
+        <div class="sidebar-nav-group">Franquias</div>
+        <a href="franquia-leads.html" class="sidebar-link"><span class="icon">🐑</span> Leads VIP</a>
+        <div class="sidebar-nav-group">Gestão</div>
+        <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+        <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+        <a href="auditoria.html" class="sidebar-link"><span class="icon">🔍</span> Auditoria</a>
+        <div class="sidebar-nav-group">Mídia</div>
+        <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
+        <a href="configuracoes.html" class="sidebar-link"><span class="icon">⚙️</span> Configurações</a>
+      </nav>
+    </aside>
+
+    <main class="panel-main">
+      <header class="panel-header">
+        <button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <h1>💬 WhatsApp — Conversas Lulu IA</h1>
+      </header>
+
+      <div class="stats-row">
+        <div class="stat"><div class="num" id="statTotal">—</div><div class="lbl">📊 Conversas</div></div>
+        <div class="stat"><div class="num" id="statHoje">—</div><div class="lbl">📅 Hoje</div></div>
+        <div class="stat"><div class="num" id="statHumano">—</div><div class="lbl">👤 C/ humano</div></div>
+        <div class="stat"><div class="num" id="statGateway">—</div><div class="lbl">🔌 Gateway</div></div>
+      </div>
+
+      <section class="wa-page">
+        <!-- LISTA DE CONVERSAS -->
+        <div class="wa-list">
+          <div class="wa-list-head">
+            <h3>Conversas</h3>
+            <p id="convCount">Carregando...</p>
+          </div>
+          <div class="wa-list-search">
+            <input id="convSearch" type="search" placeholder="🔍 Buscar nome / telefone..." oninput="renderConvList()">
+          </div>
+          <div class="wa-conversations" id="convList">
+            <div style="padding:30px;text-align:center;color:#9CA3AF;font-size:13px">Carregando…</div>
+          </div>
+        </div>
+
+        <!-- DETALHE DA CONVERSA -->
+        <div class="wa-detail" id="detailWrapper">
+          <div class="empty-detail">
+            <div class="icon">💬</div>
+            <div style="font-weight:700;font-size:16px;color:#374151">Selecione uma conversa</div>
+            <div style="font-size:13px;margin-top:6px">Clique numa conversa à esquerda pra ver as mensagens.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Firebase + Auth -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="../js/core/firebase-config.js"></script>
+  <script src="../js/core/utils.js"></script>
+  <script src="../js/core/datastore.js"></script>
+  <script src="../js/core/auth.js"></script>
+  <script>
+  /* ============================================
+     Painel WhatsApp Conversas
+     Lê /whatsapp_conversations/{phone} do Firestore em tempo real
+     Permite pausar IA e enviar mensagem manual via gateway zap.milkypot.com
+     ============================================ */
+
+  // Auth
+  if (typeof Auth !== 'undefined' && Auth.requireAuth) {
+    if (!Auth.requireAuth(['super_admin', 'franchisee'])) throw new Error('Não autorizado');
+  }
+
+  // Config — vai ler MP_API_KEY do Firestore (doc admin_secrets/whatsapp)
+  // Pra simplicidade do MVP: NÃO armazenamos a key no front. O envio manual
+  // de mensagem usa Cloud Function que tem a key no env. (TODO se quiser).
+  // Por enquanto o painel só LÊ conversas, transferência humana é via flag.
+
+  let CONVERSATIONS = [];
+  let CURRENT_PHONE = null;
+  let UNSUB_LIST = null;
+  let UNSUB_DETAIL = null;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function timeAgo(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const diff = (Date.now() - d.getTime()) / 1000;
+    if (diff < 60) return 'agora';
+    if (diff < 3600) return Math.floor(diff/60) + 'm';
+    if (diff < 86400) return Math.floor(diff/3600) + 'h';
+    return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+  }
+
+  function fmtPhone(p) {
+    if (!p) return '';
+    p = String(p).replace(/\D/g, '');
+    if (p.startsWith('55')) p = p.slice(2);
+    if (p.length === 11) return `(${p.slice(0,2)}) ${p.slice(2,7)}-${p.slice(7)}`;
+    if (p.length === 10) return `(${p.slice(0,2)}) ${p.slice(2,6)}-${p.slice(6)}`;
+    return p;
+  }
+
+  function loadConversations() {
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    const db = firebase.firestore();
+
+    if (UNSUB_LIST) UNSUB_LIST();
+    UNSUB_LIST = db.collection('whatsapp_conversations')
+      .orderBy('lastMessageAt', 'desc')
+      .limit(200)
+      .onSnapshot(snap => {
+        CONVERSATIONS = [];
+        snap.forEach(doc => {
+          const d = doc.data();
+          d._id = doc.id;
+          CONVERSATIONS.push(d);
+        });
+        renderStats();
+        renderConvList();
+      }, err => {
+        console.error('listen failed:', err);
+        document.getElementById('convList').innerHTML = '<div style="padding:30px;text-align:center;color:#DC2626;font-size:13px">❌ Erro: ' + esc(err.message) + '</div>';
+      });
+  }
+
+  function renderStats() {
+    const hoje = new Date().toISOString().slice(0,10);
+    let total = CONVERSATIONS.length;
+    let novosHoje = 0;
+    let comHumano = 0;
+    CONVERSATIONS.forEach(c => {
+      if (c.lastMessageAt && c.lastMessageAt.slice(0,10) === hoje) novosHoje++;
+      if (c.humanTakeover) comHumano++;
+    });
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statHoje').textContent = novosHoje;
+    document.getElementById('statHumano').textContent = comHumano;
+    // Status gateway: faz fetch /status do zap.milkypot.com
+    fetch('https://zap.milkypot.com/status', { mode: 'cors' })
+      .then(r => r.ok ? r.json() : null)
+      .then(j => {
+        if (j) document.getElementById('statGateway').textContent = j.state === 'open' ? '✅' : '❌';
+        else document.getElementById('statGateway').textContent = '?';
+      })
+      .catch(() => document.getElementById('statGateway').textContent = '?');
+  }
+
+  function renderConvList() {
+    const search = (document.getElementById('convSearch').value || '').toLowerCase().trim();
+    let filtered = CONVERSATIONS;
+    if (search) {
+      filtered = CONVERSATIONS.filter(c => {
+        const hay = ((c.name||'') + ' ' + (c.phone||'') + ' ' + fmtPhone(c.phone||'')).toLowerCase();
+        return hay.indexOf(search) >= 0;
+      });
+    }
+    document.getElementById('convCount').textContent = filtered.length + ' conversa' + (filtered.length === 1 ? '' : 's');
+
+    const list = document.getElementById('convList');
+    if (filtered.length === 0) {
+      list.innerHTML = '<div style="padding:30px;text-align:center;color:#9CA3AF;font-size:13px">Nenhuma conversa ainda. Quando alguém mandar msg pro WhatsApp da MilkyPot, aparece aqui.</div>';
+      return;
+    }
+    list.innerHTML = filtered.map(c => {
+      const lastMsg = (c.messages || [])[c.messages?.length - 1];
+      const preview = lastMsg ? esc(String(lastMsg.text||'').slice(0, 80)) : '(sem mensagem)';
+      const previewIcon = lastMsg?.role === 'bot' ? '🤖 ' : (lastMsg?.role === 'human' ? '👤 ' : '');
+      const active = c._id === CURRENT_PHONE ? ' active' : '';
+      const badges = [];
+      if (c.humanTakeover) badges.push('<span class="badge badge-humano">👤 Humano</span>');
+      else if (c.paused) badges.push('<span class="badge badge-pausado">⏸ Pausada</span>');
+      else badges.push('<span class="badge badge-ia">🤖 IA</span>');
+      return `<div class="wa-conv-item${active}" onclick="openConv('${esc(c._id)}')">
+        <div class="top">
+          <div class="name">${esc(c.name || fmtPhone(c.phone))}</div>
+          <div class="when">${timeAgo(c.lastMessageAt)}</div>
+        </div>
+        <div class="preview">${previewIcon}${preview}</div>
+        <div class="badges">${badges.join('')}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function openConv(phone) {
+    CURRENT_PHONE = phone;
+    renderConvList(); // pra atualizar active
+    if (UNSUB_DETAIL) UNSUB_DETAIL();
+
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    const db = firebase.firestore();
+    UNSUB_DETAIL = db.collection('whatsapp_conversations').doc(phone)
+      .onSnapshot(doc => {
+        if (!doc.exists) return;
+        renderConv(doc.data(), doc.id);
+      }, err => console.error('detail listen failed:', err));
+  }
+
+  function renderConv(data, phone) {
+    const wrap = document.getElementById('detailWrapper');
+    const messages = data.messages || [];
+    const name = data.name || fmtPhone(phone);
+    const wppDigits = String(phone).replace(/\D/g,'');
+    const waLink = 'https://wa.me/' + (wppDigits.startsWith('55') ? wppDigits : '55' + wppDigits);
+    const isHuman = !!data.humanTakeover;
+    const isPaused = !!data.paused;
+
+    wrap.innerHTML = `
+      <div class="wa-detail-head">
+        <div>
+          <h3>${esc(name)}</h3>
+          <div class="sub">📱 ${esc(fmtPhone(phone))} · ${messages.length} msgs</div>
+        </div>
+        <div class="wa-detail-actions">
+          <a href="${waLink}" target="_blank" class="btn green">💬 Abrir WhatsApp</a>
+          ${isHuman
+            ? '<button class="btn primary" onclick="setFlag(\'humanTakeover\', false)">🤖 Voltar pra IA</button>'
+            : '<button class="btn warn" onclick="setFlag(\'humanTakeover\', true)">👤 Eu respondo</button>'}
+          ${isPaused
+            ? '<button class="btn soft" onclick="setFlag(\'paused\', false)">▶ Despausar</button>'
+            : '<button class="btn soft" onclick="setFlag(\'paused\', true)">⏸ Pausar IA</button>'}
+        </div>
+      </div>
+      <div class="wa-messages" id="msgsBox">
+        ${messages.map(m => `
+          <div class="msg ${esc(m.role)}">
+            <div class="bubble">${esc(m.text)}</div>
+            <div class="meta">${m.role === 'bot' ? '🤖 Lulu' : (m.role === 'human' ? '👤 Você' : '👋 Cliente')} · ${timeAgo(m.ts)}</div>
+          </div>`).join('')}
+      </div>
+      <div class="wa-compose">
+        ${isHuman || isPaused
+          ? `<div style="font-size:12px;color:#92400E;background:#FEF3C7;padding:8px 12px;border-radius:8px;margin-bottom:8px">
+              ⚠️ ${isHuman ? 'Você está respondendo essa conversa manualmente. IA pausada.' : 'IA pausada. Cliente não vai receber resposta automática.'}
+              Use o botão <strong>💬 Abrir WhatsApp</strong> acima pra conversar pelo seu WhatsApp.
+            </div>`
+          : `<div style="font-size:12px;color:#1E40AF;background:#DBEAFE;padding:8px 12px;border-radius:8px;margin-bottom:8px">
+              🤖 Lulu IA está respondendo automaticamente. Clique em <strong>"Eu respondo"</strong> pra assumir manualmente.
+            </div>`}
+      </div>
+    `;
+    // Scroll pro final
+    setTimeout(() => {
+      const box = document.getElementById('msgsBox');
+      if (box) box.scrollTop = box.scrollHeight;
+    }, 50);
+  }
+
+  function setFlag(flag, value) {
+    if (!CURRENT_PHONE) return;
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    const db = firebase.firestore();
+    const update = {};
+    update[flag] = value;
+    if (flag === 'humanTakeover' && value) update.paused = false;
+    db.collection('whatsapp_conversations').doc(CURRENT_PHONE).update(update)
+      .then(() => console.log('flag updated', flag, value))
+      .catch(e => alert('Erro: ' + e.message));
+  }
+
+  // Inicia
+  loadConversations();
+  </script>
+</body>
+</html>

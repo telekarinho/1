@@ -385,6 +385,27 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
     }
 
+    // ============================================
+    // WhatsApp Conversations — chat histórico Lulu IA
+    // ============================================
+    // Webhook /api/whatsapp-webhook escreve via REST (sem auth Firebase) —
+    // por isso allow read/write é PÚBLICO mas validamos no servidor que
+    // a chamada é assinada com HMAC do MP_WEBHOOK_SECRET.
+    // Painel admin (super_admin/franchisee) lê + atualiza pra pausar IA.
+    match /whatsapp_conversations/{phone} {
+      // Read: super_admin, franchisee (pra ver no painel) E público
+      // (pra webhook serverless ler histórico antes de chamar Lulu)
+      allow read: if true;
+      // Create/update: público (webhook serverless escreve sem auth Firebase)
+      // Validação: campos obrigatórios + tipos corretos + tamanhos limitados
+      allow create, update: if request.resource.data.phone is string
+                             && request.resource.data.phone.size() > 5
+                             && request.resource.data.phone.size() < 20
+                             && request.resource.data.messages is list
+                             && request.resource.data.messages.size() <= 100;
+      allow delete: if isSuperAdmin();
+    }
+
     // Audit de relatorios de caixa enviados — Cloud Function grava
     match /caixa_reports_sent/{docId} {
       allow read: if isSuperAdmin() || isFranchisee();
