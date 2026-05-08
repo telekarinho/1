@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #162 — 2026-05-08
+
+**Área:** UX/Frontend — checkout modal mobile 480px
+
+**Contexto:** Prescrito como ciclo #162 em `estrategia.md` (v20b — prazo absoluto, postergado +8 ciclos). O checkout é um modal embutido em `index.html` (não há `checkout.html`). A ausência de media queries específicas para telas ≤480px gerava 3 problemas de UX mobile críticos.
+
+**O que pesquisou/analisou:**
+- `css/style.css` linhas 2267–2282: `.modal-content` com `padding: 40px` e sem override mobile → em 375px, só 255px de espaço útil para os campos
+- `css/style.css` linha 1988: `.form-row` com `grid-template-columns: 1fr 1fr` sem breakpoint → pares Telefone/CPF e Complemento/Bairro em ~120px cada, impossível digitar confortavelmente
+- `css/style.css` linhas 4292–4309: `.checkout-step` com `flex-direction: row` e texto longo ("Pagamento") → overflow potencial em 375px com 4 passos visíveis
+- Verificado: `font-size: 1rem` nos inputs (≥16px) já previne zoom iOS — sem ação necessária
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `css/style.css` | ADICIONADO bloco `@media (max-width: 480px)` ao final: 5 regras cobrindo modal-overlay, modal-content, form-row, checkout-steps e checkout-nav |
+
+**Destaques:**
+1. **Espaço útil +36px:** padding 40px→24px/16px libera 36px adicionais de largura (255px→291px) em 375px sem reduzir legibilidade.
+2. **form-row coluna única:** Telefone+CPF e Complemento+Bairro ficam empilhados — area de toque mínima adequada e sem CLS por overflow horizontal.
+3. **Steps verticais:** número + label em coluna com `ellipsis 60px` evita overflow sem remover informação do usuário.
+4. **`-webkit-overflow-scrolling: touch`:** modal com scroll suave em iOS Safari.
+5. **Zero breaking change:** regra dentro de media query isolada; sem impacto em desktop (≥481px).
+
+**Commit:** `b308314`
+
+**Próximo passo sugerido:**
+- **Ciclo #163 — Conteúdo:** Posts Instagram/TikTok ovelhinha + Festa Junina (share of voice 100% disponível — nenhum concorrente detectado com campanha estruturada). v20a ativa.
+- **Ciclo #164 — Conteúdo/WA:** `whatsapp-namorados-2026.md` standalone — 12/06/2026 (5 semanas). v20c ativa.
+- **Ciclo #165 — Conteúdo/WA:** `whatsapp-junina-2026.md` standalone.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente desde ciclo #148).
+- **Operador:** CNPJ + DPO — LGPD — +24 ciclos. Risco legal crescente.
+- **Operador:** Benefício 30 carimbos (topping grátis vs upgrade tamanho) — templates têm placeholder.
+- **Operador:** Potinho Junino — naming + ingredientes — prazo 30/05/2026.
+
+_Belinha — Ciclo #162 | 2026-05-08_
+
+---
+
 ## Ciclo #161 — 2026-05-08
 
 **Área:** Auto-aprimoramento — análise #155–#160, regras v20, roadmap #162–#170
