@@ -1458,6 +1458,11 @@ const Caixa = (function () {
             valorAbertura: st.valorAbertura,
             faturamentoBruto: st.faturamentoBruto,
             porMetodo: st.porMetodo,
+            // Sangrias e reforços do turno (pra mostrar no email "saiu/entrou do caixa")
+            totalSangria: st.totalSangria || 0,
+            totalReforco: st.totalReforco || 0,
+            sangrias: st.sangrias || [],
+            reforcos: st.reforcos || [],
             createdAt: fechamentoDate.toISOString(),
             recipients: RECIPIENTS,
             sent: false
@@ -1560,42 +1565,142 @@ const Caixa = (function () {
         }
     }
 
-    // HTML version do email — mais bonito que texto puro
+    // HTML version do email — desenhado pra criança de 5 anos entender em 1 segundo:
+    //   1. HERO gigante: VENDIDO HOJE R$ X,XX
+    //   2. Como recebeu: Cartão / PIX / Dinheiro
+    //   3. Saiu do caixa pra cofre/banco: Sangrias R$ X (com lista)
+    //   4. Troco que separou pra abrir amanhã: R$ X
+    //   5. Sobra/Falta no dinheiro contado vs esperado (com cor: verde/amarelo/vermelho)
+    //   Detalhes técnicos (M1/M2/banco) ficam em <details> escondido.
     function _buildEmailHtml(rep) {
         const esp = rep.esperado || {};
         const con = rep.conferido || {};
         const br  = rep.breakdown || {};
-        const dt = new Date(rep.fechamentoDate).toLocaleString('pt-BR');
-        const fmt = (v) => 'R$ ' + Number(v||0).toFixed(2).replace('.', ',');
-        const diffColor = Math.abs(con.diffTotal||0) < 0.01 ? '#10B981' :
-                          (Math.abs(con.diffTotal||0) <= 5 ? '#F59E0B' : '#DC2626');
+        const dt = new Date(rep.fechamentoDate).toLocaleString('pt-BR', {
+            day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
+        });
+        const dataDia = (rep.dateKey || '').split('-').reverse().join('/');
+        const fmt = (v) => 'R$ ' + Number(v||0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+        // Total vendido (faturamento bruto = soma de todas as vendas registradas no PDV)
+        const totalVendido = Number(rep.faturamentoBruto || esp.totalEsperado || 0);
+        const valorCartao  = Number(esp.cartao || ((esp.credito||0) + (esp.debito||0)) || 0);
+        const valorPix     = Number(esp.pix || 0);
+        const valorDinheiro = Number(esp.dinheiro || rep.vendasDinheiro || 0);
+        const totalSangria = Number(rep.totalSangria || 0);
+        const totalReforco = Number(rep.totalReforco || 0);
+        const trocoAmanha  = Number(br.dinheiro_troco || 0);
+        const valorAbertura = Number(rep.valorAbertura || 0);
+
+        // Status da diferença
+        const diffTotal = Number(con.diffTotal || 0);
+        const diffAbs = Math.abs(diffTotal);
+        let statusBox;
+        if (diffAbs < 0.01) {
+            statusBox = { label:'✅ Caixa fechou certinho', color:'#10B981', bg:'#ECFDF5' };
+        } else if (diffAbs <= 5) {
+            statusBox = { label:(diffTotal>0?'⚠️ Sobrou ':'⚠️ Faltou ')+fmt(diffAbs)+' (até R$ 5 é normal)', color:'#F59E0B', bg:'#FFFBEB' };
+        } else {
+            statusBox = { label:(diffTotal>0?'🔴 Sobrou ':'🔴 Faltou ')+fmt(diffAbs)+' — checar lançamentos', color:'#DC2626', bg:'#FEF2F2' };
+        }
+
+        // Lista de sangrias (até 5, com motivo)
+        const sangriaList = Array.isArray(rep.sangrias) ? rep.sangrias.slice(0, 5) : [];
+        const sangriaHtml = sangriaList.length
+            ? sangriaList.map(s => {
+                const v = fmt(s.valor || 0);
+                const motivo = String(s.motivo || s.descricao || 'sem motivo').substring(0, 80);
+                const hora = s.criadoEm ? new Date(s.criadoEm).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : '';
+                return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:13px"><span style="color:#6b7280">'+(hora?hora+' · ':'')+motivo+'</span><strong style="color:#DC2626">−'+v+'</strong></div>';
+            }).join('')
+            : '';
+
         return ''+
-        '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">'+
-          '<div style="background:linear-gradient(135deg,#7B1FA2,#DC2626);color:#fff;padding:18px;border-radius:10px 10px 0 0">'+
-            '<h2 style="margin:0;font-size:18px">🔒 Fechamento de Caixa</h2>'+
-            '<div style="opacity:.9;font-size:13px;margin-top:4px">'+rep.franchiseId+' · '+dt+'</div>'+
+        '<div style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;max-width:560px;margin:0 auto;background:#F9FAFB">'+
+
+          // ============ HERO: VENDIDO HOJE (número GIGANTE) ============
+          '<div style="background:linear-gradient(135deg,#7B1FA2 0%,#FF4F8A 100%);color:#fff;padding:32px 24px;text-align:center">'+
+            '<div style="font-size:13px;opacity:.85;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;font-weight:600">Vendeu hoje</div>'+
+            '<div style="font-size:48px;font-weight:900;line-height:1;letter-spacing:-1.5px;margin:0">'+fmt(totalVendido)+'</div>'+
+            '<div style="font-size:13px;opacity:.85;margin-top:10px">📅 '+dataDia+' · MilkyPot '+rep.franchiseId+'</div>'+
           '</div>'+
-          '<div style="background:#fff;padding:16px;border:1px solid #e5e7eb;border-top:0">'+
-            '<p style="margin:0 0 12px;font-size:13px;color:#6b7280">Operador: <strong style="color:#111">'+(rep.operator&&rep.operator.name)+'</strong> &lt;'+(rep.operator&&rep.operator.email)+'&gt;</p>'+
-            '<table style="width:100%;border-collapse:collapse;font-size:13px">'+
-              '<tr style="background:#F3F4F6"><th style="padding:8px;text-align:left">Método</th><th style="padding:8px;text-align:right">Sistema</th><th style="padding:8px;text-align:right">Conferido</th></tr>'+
-              '<tr><td style="padding:6px 8px;border-top:1px solid #e5e7eb">💳 Cartão (Bandeiras)</td><td style="padding:6px 8px;border-top:1px solid #e5e7eb;text-align:right">'+fmt(esp.cartao||((esp.credito||0)+(esp.debito||0)))+'</td><td style="padding:6px 8px;border-top:1px solid #e5e7eb;text-align:right;font-weight:700">'+fmt(br.cartao||0)+'</td></tr>'+
-              '<tr><td style="padding:6px 8px;border-top:1px solid #e5e7eb">⚡ PIX</td><td style="padding:6px 8px;border-top:1px solid #e5e7eb;text-align:right">'+fmt(esp.pix)+'</td><td style="padding:6px 8px;border-top:1px solid #e5e7eb;text-align:right;font-weight:700">'+fmt(br.pix_total||0)+'</td></tr>'+
-              '<tr><td style="padding:6px 8px;border-top:1px solid #e5e7eb">💵 Dinheiro líquido</td><td style="padding:6px 8px;border-top:1px solid #e5e7eb;text-align:right">'+fmt(esp.saldoEsperadoDinheiro)+'</td><td style="padding:6px 8px;border-top:1px solid #e5e7eb;text-align:right;font-weight:700">'+fmt(br.dinheiro_liquido_dia||0)+'</td></tr>'+
-              '<tr style="background:#F9FAFB;font-weight:800"><td style="padding:8px">TOTAL</td><td style="padding:8px;text-align:right">'+fmt(esp.totalEsperado)+'</td><td style="padding:8px;text-align:right;color:'+diffColor+'">'+fmt(con.totalConferido)+'</td></tr>'+
-            '</table>'+
-            '<div style="margin-top:14px;padding:12px;background:'+diffColor+'15;border-radius:8px;border-left:4px solid '+diffColor+'">'+
-              '<div style="font-size:13px;color:'+diffColor+';font-weight:800">Diferença total: '+(con.diffTotal>0?'+':'')+fmt(con.diffTotal)+'</div>'+
-              '<div style="font-size:12px;color:#6b7280;margin-top:2px">Diferença em dinheiro: '+(con.diffDinheiro>0?'+':'')+fmt(con.diffDinheiro)+'</div>'+
-              (rep.motivoQuebra ? '<div style="font-size:12px;margin-top:6px;color:#374151"><strong>Justificativa:</strong> '+rep.motivoQuebra+'</div>' : '')+
+
+          // ============ COMO RECEBEU (cards simples) ============
+          '<div style="background:#fff;padding:20px 24px;border-bottom:1px solid #e5e7eb">'+
+            '<div style="font-size:11px;color:#6b7280;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:12px">Como recebeu</div>'+
+            '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6">'+
+              '<span style="font-size:15px">💳 Cartão</span>'+
+              '<strong style="font-size:15px;color:#111">'+fmt(valorCartao)+'</strong>'+
             '</div>'+
-            '<details style="margin-top:14px;font-size:12px;color:#6b7280"><summary style="cursor:pointer">Ver detalhes (M1/M2/banco)</summary>'+
-              '<pre style="background:#F9FAFB;padding:10px;border-radius:6px;overflow:auto;font-size:11px;font-family:Consolas,monospace">'+
-                _buildEmailBody(rep).replace(/&/g,'&amp;').replace(/</g,'&lt;')+
-              '</pre>'+
-            '</details>'+
+            '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6">'+
+              '<span style="font-size:15px">⚡ PIX</span>'+
+              '<strong style="font-size:15px;color:#111">'+fmt(valorPix)+'</strong>'+
+            '</div>'+
+            '<div style="display:flex;justify-content:space-between;padding:8px 0">'+
+              '<span style="font-size:15px">💵 Dinheiro</span>'+
+              '<strong style="font-size:15px;color:#111">'+fmt(valorDinheiro)+'</strong>'+
+            '</div>'+
           '</div>'+
-          '<div style="text-align:center;color:#9ca3af;font-size:11px;margin-top:10px">Relatório automático MilkyPot PDV · ID '+rep.id+'</div>'+
+
+          // ============ SAIU/ENTROU DO CAIXA (sangrias e reforços) ============
+          (totalSangria > 0 || totalReforco > 0
+            ? '<div style="background:#fff;padding:20px 24px;border-bottom:1px solid #e5e7eb">'+
+                '<div style="font-size:11px;color:#6b7280;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:12px">Movimentos do caixa</div>'+
+                (totalSangria > 0
+                  ? '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6">'+
+                      '<span style="font-size:15px">📤 Saiu pra cofre/banco (sangria)</span>'+
+                      '<strong style="font-size:15px;color:#DC2626">−'+fmt(totalSangria)+'</strong>'+
+                    '</div>'+
+                    (sangriaHtml ? '<div style="margin-top:6px;padding:8px 12px;background:#FEF2F2;border-radius:8px">'+sangriaHtml+'</div>' : '')
+                  : '')+
+                (totalReforco > 0
+                  ? '<div style="display:flex;justify-content:space-between;padding:8px 0">'+
+                      '<span style="font-size:15px">📥 Entrou no caixa (reforço)</span>'+
+                      '<strong style="font-size:15px;color:#10B981">+'+fmt(totalReforco)+'</strong>'+
+                    '</div>'
+                  : '')+
+              '</div>'
+            : ''
+          )+
+
+          // ============ TROCO QUE FICA PRO PRÓXIMO DIA ============
+          '<div style="background:#fff;padding:20px 24px;border-bottom:1px solid #e5e7eb">'+
+            '<div style="font-size:11px;color:#6b7280;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:12px">Pra abrir amanhã</div>'+
+            '<div style="background:#F0F9FF;border:2px solid #BAE6FD;border-radius:10px;padding:14px">'+
+              '<div style="display:flex;justify-content:space-between;align-items:center">'+
+                '<span style="font-size:15px;color:#0c4a6e">💰 Troco separado pro próximo turno</span>'+
+                '<strong style="font-size:18px;color:#0284c7">'+fmt(trocoAmanha)+'</strong>'+
+              '</div>'+
+            '</div>'+
+          '</div>'+
+
+          // ============ STATUS (caixa fechou certinho? sobrou? faltou?) ============
+          '<div style="background:'+statusBox.bg+';padding:18px 24px;border-left:4px solid '+statusBox.color+'">'+
+            '<div style="font-size:15px;font-weight:800;color:'+statusBox.color+'">'+statusBox.label+'</div>'+
+            (rep.motivoQuebra ? '<div style="font-size:13px;color:#374151;margin-top:6px">Motivo: <em>'+String(rep.motivoQuebra).replace(/</g,'&lt;')+'</em></div>' : '')+
+          '</div>'+
+
+          // ============ INFO RODAPÉ (operador, hora, link relatório) ============
+          '<div style="background:#fff;padding:16px 24px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280">'+
+            '<div>👤 Operador: <strong style="color:#374151">'+(rep.operator && rep.operator.name || '—')+'</strong></div>'+
+            '<div style="margin-top:4px">🕐 Fechado em '+dt+'</div>'+
+            (valorAbertura > 0 ? '<div style="margin-top:4px">📂 Abriu o caixa com '+fmt(valorAbertura)+' de troco</div>' : '')+
+          '</div>'+
+
+          // ============ DETALHES TÉCNICOS (escondidos por padrão) ============
+          '<details style="background:#fff;padding:12px 24px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280">'+
+            '<summary style="cursor:pointer;font-weight:600">🔍 Ver detalhes técnicos (M1/M2/banco)</summary>'+
+            '<pre style="background:#F9FAFB;padding:10px;border-radius:6px;overflow:auto;font-size:11px;font-family:Consolas,monospace;margin-top:8px">'+
+              _buildEmailBody(rep).replace(/&/g,'&amp;').replace(/</g,'&lt;')+
+            '</pre>'+
+          '</details>'+
+
+          // ============ FOOTER ============
+          '<div style="text-align:center;color:#9ca3af;font-size:11px;padding:14px">'+
+            'Relatório automático MilkyPot PDV<br>'+
+            '<span style="opacity:.6">ID '+rep.id+'</span>'+
+          '</div>'+
+
         '</div>';
     }
 
