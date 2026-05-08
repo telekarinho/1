@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>MilkyPot — Portal do Funcionario</title>
+<meta name="theme-color" content="#16A34A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+    margin: 0;
+    font-family: 'Nunito', system-ui, sans-serif;
+    background: #F0FDF4;
+    color: #14532D;
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+h1, h2, h3 { font-family: 'Baloo 2', cursive; margin: 0; }
+.fn-app {
+    max-width: 480px;
+    margin: 0 auto;
+    background: #fff;
+    min-height: 100vh;
+    box-shadow: 0 0 24px rgba(0,0,0,.08);
+    display: flex;
+    flex-direction: column;
+}
+.fn-header {
+    background: linear-gradient(135deg,#16A34A,#22C55E);
+    color: #fff;
+    padding: 18px 20px calc(18px + env(safe-area-inset-top));
+    padding-top: calc(18px + env(safe-area-inset-top));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+.fn-header h1 { font-size: 1.1rem; }
+.fn-header small { display:block; opacity: .85; font-size: .75rem; margin-top: 2px; }
+.fn-logout-btn { background: rgba(255,255,255,.2); border: none; color: #fff; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: .85rem; cursor: pointer; }
+.fn-content { padding: 16px; flex: 1; }
+
+/* LOGIN */
+.fn-login {
+    padding: 30px 24px;
+    text-align: center;
+}
+.fn-login h2 { font-size: 1.3rem; margin-bottom: 6px; color: #14532D; }
+.fn-login p { color: #6B7280; margin: 0 0 22px; font-size: .9rem; }
+.fn-login-form { text-align: left; }
+.fn-input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 2px solid #D1FAE5;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    background: #fff;
+}
+.fn-input:focus { outline: none; border-color: #16A34A; }
+.fn-pin-input { font-size: 1.6rem; text-align: center; letter-spacing: 12px; font-family: 'Baloo 2', sans-serif; }
+.fn-btn {
+    width: 100%;
+    padding: 13px 18px;
+    background: #16A34A;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: inherit;
+}
+.fn-btn:hover { background: #15803D; }
+.fn-btn:disabled { opacity: .6; cursor: wait; }
+.fn-btn-secondary { background: #fff; color: #16A34A; border: 2px solid #16A34A; }
+.fn-error {
+    background: #FEE2E2;
+    color: #991B1B;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: .85rem;
+    border-left: 4px solid #DC2626;
+}
+.fn-success {
+    background: #DCFCE7;
+    color: #166534;
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 4px solid #16A34A;
+}
+
+/* CARDS */
+.fn-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid #E5E7EB;
+    margin-bottom: 12px;
+}
+.fn-card h3 { font-size: .95rem; margin-bottom: 10px; color: #374151; }
+.fn-status-card {
+    background: linear-gradient(135deg,#16A34A,#10B981);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 14px;
+    text-align: center;
+}
+.fn-status-card .fn-greet { font-size: .85rem; opacity: .9; }
+.fn-status-card .fn-name { font-size: 1.3rem; font-family: 'Baloo 2', cursive; font-weight: 800; margin: 4px 0; }
+.fn-status-card .fn-role { font-size: .82rem; opacity: .85; }
+
+.fn-bater-btn {
+    width: 100%;
+    background: #fff;
+    color: #16A34A;
+    border: none;
+    padding: 22px;
+    border-radius: 14px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Baloo 2', cursive;
+    margin-top: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.fn-bater-btn:active { transform: scale(.98); }
+.fn-bater-btn small { font-size: .7rem; opacity: .8; font-family: 'Nunito', sans-serif; font-weight: 700; }
+
+.fn-marcacoes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+.fn-marcacao {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-align: center;
+}
+.fn-marcacao.done { background: #DCFCE7; border-color: #86EFAC; }
+.fn-marcacao .lbl { font-size: .68rem; color: #6B7280; font-weight: 700; text-transform: uppercase; }
+.fn-marcacao .val { font-size: 1.1rem; font-weight: 800; color: #111827; font-family: 'Baloo 2', cursive; margin-top: 2px; }
+.fn-marcacao.done .val { color: #16A34A; }
+
+.fn-tab-bar {
+    background: #fff;
+    display: flex;
+    border-top: 1px solid #E5E7EB;
+    position: sticky;
+    bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+.fn-tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 12px 4px;
+    font-size: .75rem;
+    color: #6B7280;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 700;
+}
+.fn-tab-btn .icon { display: block; font-size: 1.4rem; margin-bottom: 2px; }
+.fn-tab-btn.active { color: #16A34A; }
+
+.fn-section { display: none; }
+.fn-section.active { display: block; }
+
+.fn-totais {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.fn-totais .fn-mini-card {
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+}
+.fn-totais .fn-mini-card small { display:block; font-size: .65rem; color: #6B7280; font-weight: 700; text-transform: uppercase; }
+.fn-totais .fn-mini-card strong { display: block; font-size: 1rem; font-family: 'Baloo 2', cursive; color: #111827; margin-top: 2px; }
+
+table.fn-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+table.fn-table th, table.fn-table td { padding: 7px 6px; border-bottom: 1px solid #F3F4F6; text-align: left; }
+table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; color: #6B7280; }
+
+.fn-geo-banner {
+    background: #FEF3C7;
+    color: #92400E;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: .75rem;
+    margin: 8px 0;
+    border-left: 3px solid #F59E0B;
+}
+</style>
+</head>
+<body>
+
+<div class="fn-app">
+    <!-- LOGIN VIEW -->
+    <div id="loginView" class="fn-login">
+        <div style="font-size:3rem;margin-bottom:8px">⏰</div>
+        <h2>Portal do Funcionario</h2>
+        <p>Bata seu ponto, veja sua escala e horas trabalhadas</p>
+        <div class="fn-login-form">
+            <div id="loginErr" class="fn-error" style="display:none"></div>
+            <input type="text" id="loginCpf" class="fn-input" placeholder="Seu CPF (so numeros)" inputmode="numeric" maxlength="14" autocomplete="off">
+            <input type="password" id="loginPin" class="fn-input fn-pin-input" placeholder="••••" inputmode="numeric" maxlength="4" autocomplete="off">
+            <button class="fn-btn" onclick="fnLogin()">Entrar</button>
+            <p style="font-size:.78rem;color:#6B7280;margin-top:14px;text-align:center">
+                Nao tem cadastro? Pergunte ao seu gerente. Ele cadastra em <em>Equipe</em> com seu CPF, PIS e PIN.
+            </p>
+        </div>
+    </div>
+
+    <!-- APP VIEW (apos login) -->
+    <div id="appView" style="display:none;flex:1;flex-direction:column">
+        <header class="fn-header">
+            <div>
+                <h1 id="hdrName">--</h1>
+                <small id="hdrRole">--</small>
+            </div>
+            <button class="fn-logout-btn" onclick="fnLogout()">Sair</button>
+        </header>
+
+        <div class="fn-content" id="fnContent">
+            <!-- HOJE -->
+            <div class="fn-section active" id="sec-hoje">
+                <div class="fn-status-card">
+                    <div class="fn-greet" id="greetMsg">Ola</div>
+                    <div class="fn-name" id="cardName">--</div>
+                    <div class="fn-role" id="cardRole">--</div>
+                </div>
+
+                <div class="fn-card">
+                    <h3>📍 Suas marcacoes de hoje</h3>
+                    <div class="fn-marcacoes" id="todayMarks"></div>
+                    <div id="geoBanner" class="fn-geo-banner" style="display:none"></div>
+                    <button class="fn-bater-btn" id="baterPontoBtn" onclick="fnBaterPonto()" style="background:linear-gradient(135deg,#16A34A,#10B981);color:#fff">
+                        ⏰ Bater Ponto
+                        <small id="baterPontoSub">Proximo: Entrada</small>
+                    </button>
+                </div>
+
+                <div class="fn-card">
+                    <h3>📅 Sua escala</h3>
+                    <div id="escalaInfo" style="font-size:.85rem;color:#374151;line-height:1.6"></div>
+                </div>
+            </div>
+
+            <!-- ESPELHO MES -->
+            <div class="fn-section" id="sec-mes">
+                <div class="fn-totais" id="totaisMes"></div>
+                <div class="fn-card">
+                    <h3 id="mesTitle">Espelho do mes</h3>
+                    <div style="overflow-x:auto">
+                        <table class="fn-table" id="espelhoTable"></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INFO -->
+            <div class="fn-section" id="sec-info">
+                <div class="fn-card">
+                    <h3>👤 Seus dados</h3>
+                    <div id="dadosFunc" style="font-size:.85rem;line-height:1.7"></div>
+                </div>
+                <div class="fn-card">
+                    <h3>📜 Direitos legais (CLT)</h3>
+                    <ul style="font-size:.82rem;color:#374151;padding-left:18px;line-height:1.6">
+                        <li>Maximo 8h/dia, 44h/semana (CLT art. 7 XIII)</li>
+                        <li>Intervalo intrajornada minimo 1h (jornada >6h, art. 71)</li>
+                        <li>Hora extra com adicional minimo 50% (art. 7 XVI)</li>
+                        <li>Adicional noturno 22h-5h: +20% (art. 73)</li>
+                        <li>Descanso semanal remunerado: 24h (art. 67)</li>
+                        <li>Espelho mensal de ponto: voce tem direito a receber e conferir</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <nav class="fn-tab-bar">
+            <button class="fn-tab-btn active" data-tab="hoje" onclick="fnSwitchTab('hoje')"><span class="icon">⏰</span>Hoje</button>
+            <button class="fn-tab-btn" data-tab="mes" onclick="fnSwitchTab('mes')"><span class="icon">🗓️</span>Mes</button>
+            <button class="fn-tab-btn" data-tab="info" onclick="fnSwitchTab('info')"><span class="icon">👤</span>Dados</button>
+        </nav>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/time-clock.js"></script>
+
+<script>
+'use strict';
+
+var FN_KEY = 'mp_func_session';
+
+function fnLogin() {
+    var cpf = document.getElementById('loginCpf').value.replace(/\D/g, '');
+    var pin = document.getElementById('loginPin').value.trim();
+    var err = document.getElementById('loginErr');
+    err.style.display = 'none';
+
+    if (cpf.length !== 11) { err.textContent = 'CPF invalido'; err.style.display = 'block'; return; }
+    if (pin.length !== 4) { err.textContent = 'PIN deve ter 4 digitos'; err.style.display = 'block'; return; }
+
+    // Procura em todas franquias (publicas via DataStore.getAllFranchises)
+    var franchises = (typeof DataStore !== 'undefined') ? (DataStore.getAllFranchises() || []) : [];
+    var found = null;
+    for (var i = 0; i < franchises.length; i++) {
+        var f = franchises[i];
+        var staff = DataStore.getCollection('staff', f.id) || [];
+        var s = staff.find(function(x) {
+            if (!x.active) return false;
+            var c = (x.cpf || '').replace(/\D/g, '');
+            return c === cpf && x.pin === pin;
+        });
+        if (s) { found = { staff: s, franchiseId: f.id, franchise: f }; break; }
+    }
+
+    if (!found) {
+        err.textContent = 'CPF ou PIN incorreto. Confirme com seu gerente.';
+        err.style.display = 'block';
+        return;
+    }
+
+    var session = {
+        staffId: found.staff.id,
+        staffName: found.staff.name,
+        staffRole: found.staff.role,
+        franchiseId: found.franchiseId,
+        franchiseName: found.franchise.name,
+        loginAt: new Date().toISOString()
+    };
+    sessionStorage.setItem(FN_KEY, JSON.stringify(session));
+    fnShowApp(session, found.staff);
+}
+
+function fnLogout() {
+    sessionStorage.removeItem(FN_KEY);
+    document.getElementById('appView').style.display = 'none';
+    document.getElementById('loginView').style.display = 'block';
+    document.getElementById('loginCpf').value = '';
+    document.getElementById('loginPin').value = '';
+}
+
+function fnShowApp(session, staff) {
+    document.getElementById('loginView').style.display = 'none';
+    document.getElementById('appView').style.display = 'flex';
+    document.getElementById('hdrName').textContent = session.staffName;
+    document.getElementById('hdrRole').textContent = session.staffRole + ' • ' + session.franchiseName;
+    document.getElementById('cardName').textContent = session.staffName;
+    document.getElementById('cardRole').textContent = session.staffRole;
+
+    var hour = new Date().getHours();
+    var greet = hour < 6 ? 'Boa madrugada' : (hour < 12 ? 'Bom dia' : (hour < 18 ? 'Boa tarde' : 'Boa noite'));
+    document.getElementById('greetMsg').textContent = greet + ',';
+
+    fnRenderHoje(session, staff);
+    fnRenderMes(session);
+    fnRenderInfo(session, staff);
+}
+
+function fnGetSession() {
+    try { return JSON.parse(sessionStorage.getItem(FN_KEY) || 'null'); }
+    catch (e) { return null; }
+}
+
+function fnRenderHoje(session, staff) {
+    var today = new Date().toISOString().slice(0, 10);
+    var dia = TimeClock.computeDay(session.franchiseId, session.staffId, today);
+    var staffData = staff || (DataStore.getCollection('staff', session.franchiseId) || []).find(function(x) { return x.id === session.staffId; });
+
+    var marks = [
+        { lbl: 'Entrada', rec: dia.entrada },
+        { lbl: 'Almoco', rec: dia.almocoSaida },
+        { lbl: 'Volta', rec: dia.almocoVolta },
+        { lbl: 'Saida', rec: dia.saida }
+    ];
+    document.getElementById('todayMarks').innerHTML = marks.map(function(m) {
+        var done = !!m.rec;
+        var time = m.rec ? m.rec.timestamp.slice(11, 16) : '--:--';
+        return '<div class="fn-marcacao' + (done ? ' done' : '') + '"><div class="lbl">' + m.lbl + '</div><div class="val">' + time + '</div></div>';
+    }).join('');
+
+    var nextType = TimeClock.inferNextType(session.franchiseId, session.staffId);
+    var btn = document.getElementById('baterPontoBtn');
+    var sub = document.getElementById('baterPontoSub');
+    if (nextType) {
+        sub.textContent = 'Proximo: ' + TimeClock.TIPO_LABELS[nextType];
+        btn.disabled = false;
+    } else {
+        sub.textContent = 'Voce ja bateu todas 4 marcacoes hoje';
+        btn.disabled = true;
+        btn.style.opacity = '.6';
+    }
+
+    // Escala
+    var j = (staffData && staffData.jornada) || {};
+    document.getElementById('escalaInfo').innerHTML =
+        '<strong>Tipo:</strong> ' + (j.tipo || '5x2') + '<br>' +
+        '<strong>Hora entrada:</strong> ' + (j.hora_entrada || '08:00') + '<br>' +
+        '<strong>Hora saida:</strong> ' + (j.hora_saida || '18:00') + '<br>' +
+        '<strong>Almoco:</strong> ' + (j.intervalo_almoco_min || 60) + ' min<br>' +
+        '<strong>Carga semanal:</strong> ' + ((staffData && staffData.carga_horaria_semanal) || 44) + 'h<br>' +
+        '<strong>Folga:</strong> ' + ((j.folgas || ['domingo']).join(', '));
+}
+
+async function fnBaterPonto() {
+    var session = fnGetSession();
+    if (!session) return;
+    var btn = document.getElementById('baterPontoBtn');
+    var staffData = (DataStore.getCollection('staff', session.franchiseId) || []).find(function(x) { return x.id === session.staffId; });
+    if (!staffData || !staffData.pin) {
+        alert('Seu cadastro esta incompleto. Peça ao gerente para configurar PIN.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Capturando localizacao...<small>aguarde</small>';
+
+    var geoResult = await fnGetGeolocation();
+    var geoBanner = document.getElementById('geoBanner');
+    if (geoResult.error) {
+        geoBanner.style.display = 'block';
+        geoBanner.innerHTML = '⚠️ ' + geoResult.error + ' — ponto sera registrado sem localizacao.';
+    } else {
+        geoBanner.style.display = 'none';
+    }
+
+    btn.innerHTML = '⏳ Registrando...<small>quase la</small>';
+    var result = await TimeClock.recordPunch(session.franchiseId, staffData.pin, 'pin', {
+        channel: 'mobile',
+        geolocation: geoResult.coords || null
+    });
+
+    if (result.success) {
+        btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+        btn.innerHTML = '✓ Registrado!<small>' + result.typeLabel + ' as ' + new Date(result.timestamp).toLocaleTimeString('pt-BR').slice(0,5) + ' • NSR ' + result.nsr + '</small>';
+        setTimeout(function() {
+            fnRenderHoje(session, staffData);
+            fnRenderMes(session);
+            btn.style.background = 'linear-gradient(135deg,#16A34A,#10B981)';
+            btn.disabled = false;
+        }, 2400);
+    } else {
+        btn.disabled = false;
+        btn.innerHTML = '⏰ Bater Ponto<small>Proximo: --</small>';
+        alert('Erro: ' + result.error);
+    }
+}
+
+function fnGetGeolocation() {
+    return new Promise(function(resolve) {
+        if (!navigator.geolocation) {
+            resolve({ error: 'Navegador sem suporte a geolocalizacao' });
+            return;
+        }
+        var timeout = setTimeout(function() { resolve({ error: 'Tempo esgotado para capturar localizacao' }); }, 8000);
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                clearTimeout(timeout);
+                resolve({
+                    coords: {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        accuracy: pos.coords.accuracy
+                    }
+                });
+            },
+            function(e) {
+                clearTimeout(timeout);
+                var msg = 'Permissao negada';
+                if (e.code === 1) msg = 'Permita acesso a localizacao no navegador';
+                else if (e.code === 2) msg = 'Localizacao indisponivel';
+                else if (e.code === 3) msg = 'Tempo esgotado';
+                resolve({ error: msg });
+            },
+            { enableHighAccuracy: true, timeout: 7000, maximumAge: 60000 }
+        );
+    });
+}
+
+function fnRenderMes(session) {
+    var now = new Date();
+    var espelho = TimeClock.computeMonth(session.franchiseId, session.staffId, now.getFullYear(), now.getMonth() + 1);
+    var t = espelho.totaisFormatado;
+    document.getElementById('mesTitle').textContent = 'Espelho de ' + espelho.monthLabel;
+    document.getElementById('totaisMes').innerHTML =
+        '<div class="fn-mini-card"><small>Trabalhado</small><strong>' + t.trabalhado + '</strong></div>' +
+        '<div class="fn-mini-card"><small>Extras</small><strong>' + t.extras + '</strong></div>' +
+        '<div class="fn-mini-card"><small>Banco horas</small><strong>' + t.bancoHoras + '</strong></div>';
+
+    var rows = '<thead><tr><th>Dia</th><th>Ent.</th><th>Almo.</th><th>Volt.</th><th>Saí.</th><th>Hrs</th></tr></thead><tbody>';
+    espelho.days.forEach(function(d) {
+        if (d.isFolga && !d.records.length) {
+            rows += '<tr style="color:#9CA3AF"><td>' + d.date.slice(8) + '</td><td colspan="5" style="text-align:center;font-style:italic">FOLGA</td></tr>';
+        } else if (d.isFalta) {
+            rows += '<tr style="background:#FEF2F2"><td>' + d.date.slice(8) + '</td><td colspan="5" style="text-align:center;color:#991B1B">FALTA</td></tr>';
+        } else {
+            rows += '<tr><td>' + d.date.slice(8) + '</td>'
+                + '<td>' + (d.entrada ? d.entrada.timestamp.slice(11,16) : '-') + '</td>'
+                + '<td>' + (d.almocoSaida ? d.almocoSaida.timestamp.slice(11,16) : '-') + '</td>'
+                + '<td>' + (d.almocoVolta ? d.almocoVolta.timestamp.slice(11,16) : '-') + '</td>'
+                + '<td>' + (d.saida ? d.saida.timestamp.slice(11,16) : '-') + '</td>'
+                + '<td>' + (d.completo ? d.horasFormatado : '-') + '</td></tr>';
+        }
+    });
+    rows += '</tbody>';
+    document.getElementById('espelhoTable').innerHTML = rows;
+}
+
+function fnRenderInfo(session, staff) {
+    var s = staff || (DataStore.getCollection('staff', session.franchiseId) || []).find(function(x) { return x.id === session.staffId; });
+    if (!s) return;
+    var html = '<strong>Nome:</strong> ' + Utils.escapeHtml(s.name) + '<br>'
+        + '<strong>Cargo:</strong> ' + Utils.escapeHtml(s.role) + '<br>'
+        + '<strong>CPF:</strong> ' + Utils.escapeHtml(s.cpf || '-') + '<br>'
+        + '<strong>PIS:</strong> ' + Utils.escapeHtml(s.pis || '-') + '<br>'
+        + '<strong>Loja:</strong> ' + Utils.escapeHtml(session.franchiseName) + '<br>'
+        + '<strong>Inicio:</strong> ' + Utils.escapeHtml(s.startDate || '-') + '<br>'
+        + '<strong>Adicional noturno:</strong> ' + (s.adicional_noturno ? 'Sim' : 'Nao');
+    document.getElementById('dadosFunc').innerHTML = html;
+}
+
+function fnSwitchTab(tab) {
+    document.querySelectorAll('.fn-tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
+    document.querySelectorAll('.fn-section').forEach(function(s) { s.classList.toggle('active', s.id === 'sec-' + tab); });
+}
+
+document.getElementById('loginPin').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') fnLogin();
+});
+
+// Auto-login se houver sessao
+(function() {
+    var s = fnGetSession();
+    if (s) {
+        var staff = (DataStore.getCollection('staff', s.franchiseId) || []).find(function(x) { return x.id === s.staffId; });
+        if (staff && staff.active) {
+            fnShowApp(s, staff);
+        } else {
+            sessionStorage.removeItem(FN_KEY);
+        }
+    }
+})();
+</script>
+</body>
+</html>

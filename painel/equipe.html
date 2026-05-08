@@ -206,6 +206,35 @@
                         <span>Recebe adicional noturno (22h-5h, +20%)</span>
                     </label>
                 </div>
+
+                <hr style="margin:18px 0 14px;border:none;border-top:2px solid #E5E7EB">
+                <div style="background:#F0FDF4;border-left:4px solid #16A34A;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:.82rem;color:#14532D">
+                    <strong>🔐 Permissoes de acesso ao sistema</strong><br>
+                    Defina o que este colaborador pode fazer. Admin tem acesso a tudo automaticamente.
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;padding:10px">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="pdv" checked>🛒 Operar PDV</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="pedidos" checked>📋 Pedidos</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="caixa_abrir">💰 Abrir caixa</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="caixa_fechar">🔒 Fechar caixa</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="caixa_sangria">📤 Sangria</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="caixa_reforco">📥 Reforco</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="produtos">🍨 Produtos</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="estoque">📦 Estoque</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="equipe">👥 Equipe</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="ponto" checked>⏰ Ver proprio ponto</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="financeiro">💰 Financeiro</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="despesas">💸 Despesas</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="fiscal">🧾 Fiscal</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="marketing">📢 Marketing</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="configuracoes">⚙️ Configuracoes</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer"><input type="checkbox" class="perm-cb" data-perm="relatorios">📊 Relatorios</label>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+                    <button type="button" onclick="_setPermissoesPerfil('atendente')" style="padding:5px 10px;font-size:.75rem;border:1px solid #3B82F6;color:#3B82F6;background:#fff;border-radius:6px;cursor:pointer">Perfil: Atendente</button>
+                    <button type="button" onclick="_setPermissoesPerfil('caixa')" style="padding:5px 10px;font-size:.75rem;border:1px solid #16A34A;color:#16A34A;background:#fff;border-radius:6px;cursor:pointer">Perfil: Caixa</button>
+                    <button type="button" onclick="_setPermissoesPerfil('gerente')" style="padding:5px 10px;font-size:.75rem;border:1px solid #9C27B0;color:#9C27B0;background:#fff;border-radius:6px;cursor:pointer">Perfil: Gerente</button>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
@@ -540,6 +569,34 @@
             return arr;
         }
 
+        function _setPermissoes(perms) {
+            perms = perms || {};
+            document.querySelectorAll('.perm-cb').forEach(function(cb) {
+                cb.checked = !!perms[cb.dataset.perm];
+            });
+        }
+        function _getPermissoes() {
+            var p = {};
+            document.querySelectorAll('.perm-cb').forEach(function(cb) {
+                p[cb.dataset.perm] = !!cb.checked;
+            });
+            return p;
+        }
+        window._setPermissoesPerfil = function(perfil) {
+            var perms;
+            if (perfil === 'atendente') {
+                perms = { pdv: true, pedidos: true, ponto: true };
+            } else if (perfil === 'caixa') {
+                perms = { pdv: true, pedidos: true, ponto: true, caixa_abrir: true, caixa_fechar: true, caixa_sangria: true, caixa_reforco: true };
+            } else if (perfil === 'gerente') {
+                perms = { pdv: true, pedidos: true, ponto: true, caixa_abrir: true, caixa_fechar: true, caixa_sangria: true, caixa_reforco: true,
+                          produtos: true, estoque: true, equipe: true, financeiro: true, despesas: true, marketing: true, relatorios: true };
+            } else {
+                perms = {};
+            }
+            _setPermissoes(perms);
+        };
+
         function openAddModal() {
             document.getElementById('modalTitle').textContent = 'Novo Funcionario';
             document.getElementById('editId').value = '';
@@ -558,6 +615,7 @@
             document.getElementById('inputCargaSemanal').value = '44';
             document.getElementById('inputAdicionalNoturno').checked = false;
             _setFolgas(['domingo']);
+            _setPermissoes({ pdv: true, pedidos: true, ponto: true }); // padrao Atendente
             document.getElementById('modalOverlay').style.display = 'flex';
         }
 
@@ -582,6 +640,7 @@
             document.getElementById('inputCargaSemanal').value = staff.carga_horaria_semanal || 44;
             document.getElementById('inputAdicionalNoturno').checked = !!staff.adicional_noturno;
             _setFolgas(j.folgas);
+            _setPermissoes(staff.permissions || { pdv: true, pedidos: true, ponto: true });
             document.getElementById('modalOverlay').style.display = 'flex';
         }
 
@@ -608,6 +667,7 @@
             var cargaSemanal = parseFloat(document.getElementById('inputCargaSemanal').value) || 44;
             var adicionalNoturno = document.getElementById('inputAdicionalNoturno').checked;
             var folgas = _getFolgas();
+            var permissions = _getPermissoes();
 
             if (!name) { alert('Informe o nome do funcionario.'); return; }
             if (!role) { alert('Selecione o cargo.'); return; }
@@ -653,6 +713,7 @@
                     staffList[idx].jornada = jornada;
                     staffList[idx].carga_horaria_semanal = cargaSemanal;
                     staffList[idx].adicional_noturno = adicionalNoturno;
+                    staffList[idx].permissions = permissions;
                     staffList[idx].updatedAt = new Date().toISOString();
                 }
             } else {
@@ -671,6 +732,7 @@
                     jornada: jornada,
                     carga_horaria_semanal: cargaSemanal,
                     adicional_noturno: adicionalNoturno,
+                    permissions: permissions,
                     active: true,
                     createdAt: new Date().toISOString()
                 });

@@ -201,11 +201,13 @@
     // ----------------------------------------
     // Bater ponto — funcao principal
     // ----------------------------------------
-    async function recordPunch(franchiseId, identifier, identifierType) {
+    // options: { geolocation: {lat, lng, accuracy}, channel: 'pdv'|'mobile'|'web' }
+    async function recordPunch(franchiseId, identifier, identifierType, options) {
         if (!franchiseId) return { success: false, error: 'Franquia nao identificada' };
         if (!identifier) return { success: false, error: 'PIN/CPF/PIS obrigatorio' };
 
         identifierType = identifierType || 'pin';
+        options = options || {};
 
         // Valida funcionario
         var staff = identifierType === 'pin'
@@ -235,6 +237,9 @@
         var hashInput = nsr + '|' + pisClean + '|' + timestamp + '|' + type;
         var hash = await sha256(hashInput);
 
+        var channel = options.channel || (identifierType === 'pin' ? 'pdv' : 'web');
+        var geo = options.geolocation || null;
+
         var record = {
             id: 'tc_' + franchiseId.replace(/[^a-z0-9]/gi, '_') + '_' + nsr,
             nsr: nsr,
@@ -245,8 +250,11 @@
             type: type,
             timestamp: timestamp,
             hash: hash,
-            source: identifierType === 'pin' ? 'pdv_pin' : 'pdv_doc',
+            source: channel + '_' + (identifierType === 'pin' ? 'pin' : 'doc'),
+            channel: channel,
+            geolocation: geo,         // {lat, lng, accuracy} se disponivel
             device: getDeviceInfo(),
+            userAgent: (navigator.userAgent || '').slice(0, 200),
             createdAt: timestamp,
             createdBy: (typeof Auth !== 'undefined' && Auth.getSession()) ? Auth.getSession().email : 'system',
             // Campos imutaveis — qualquer ajuste cria NOVO registro com referencia
