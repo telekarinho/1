@@ -172,6 +172,22 @@
   let CURRENT_PHONE = null;
   let UNSUB_LIST = null;
   let UNSUB_DETAIL = null;
+  let USER_ROLE = null;
+  let USER_FRANCHISEES = [];
+
+  async function loadUserScope() {
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    const u = firebase.auth().currentUser;
+    if (!u) return;
+    try {
+      const doc = await firebase.firestore().collection('users').doc(u.uid).get();
+      if (doc.exists) {
+        const data = doc.data();
+        USER_ROLE = data.role || null;
+        USER_FRANCHISEES = data.franchiseeIds || (data.franchiseeId ? [data.franchiseeId] : []);
+      }
+    } catch (e) { console.warn('load user scope:', e); }
+  }
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -211,6 +227,12 @@
           d._id = doc.id;
           CONVERSATIONS.push(d);
         });
+        // Filtro por escopo: super_admin vê tudo, franchisee só sua(s) franquia(s)
+        if (USER_ROLE === 'franchisee' && USER_FRANCHISEES.length) {
+          CONVERSATIONS = CONVERSATIONS.filter(c =>
+            !c.franchiseeId || USER_FRANCHISEES.includes(c.franchiseeId)
+          );
+        }
         renderStats();
         renderConvList();
       }, err => {
@@ -364,8 +386,15 @@
       .catch(e => alert('Erro: ' + e.message));
   }
 
-  // Inicia
-  loadConversations();
+  // Inicia (após user logado pra pegar role/franchiseeIds)
+  if (typeof firebase !== 'undefined') {
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    firebase.auth().onAuthStateChanged(async (u) => {
+      if (!u) return;
+      await loadUserScope();
+      loadConversations();
+    });
+  }
   </script>
 </body>
 </html>

@@ -231,6 +231,7 @@ async function saveMessageToFirestore(phone, name, role, text, extra = {}) {
     // Lê doc atual
     let messages = [];
     let humanTakeover = false;
+    let existingFranchiseeId = null;
     try {
         const r = await fetch(url, { method: "GET" });
         if (r.ok) {
@@ -239,6 +240,7 @@ async function saveMessageToFirestore(phone, name, role, text, extra = {}) {
             const arr = f.messages?.arrayValue?.values || [];
             messages = arr.map(v => v); // mantém formato Firestore
             humanTakeover = f.humanTakeover?.booleanValue === true;
+            existingFranchiseeId = f.franchiseeId?.stringValue || null;
         }
     } catch (e) { /* doc não existe ainda */ }
 
@@ -257,16 +259,21 @@ async function saveMessageToFirestore(phone, name, role, text, extra = {}) {
     // Limita histórico a últimas 100 mensagens
     if (messages.length > 100) messages = messages.slice(-100);
 
+    // franchiseeId = accountId atual (ou mantém o existente pra não trocar
+    // dono da conversa em meio fluxo). Default 'matriz'.
+    const franchiseeId = existingFranchiseeId || extra.accountId || "matriz";
+
     const fields = {
         phone: { stringValue: phone },
         messages: { arrayValue: { values: messages } },
         lastMessageAt: { stringValue: new Date().toISOString() },
         lastMessageRole: { stringValue: role },
-        humanTakeover: { booleanValue: humanTakeover }
+        humanTakeover: { booleanValue: humanTakeover },
+        franchiseeId: { stringValue: franchiseeId }
     };
     if (name) fields.name = { stringValue: String(name).slice(0, 200) };
 
-    const updateMask = `updateMask.fieldPaths=phone&updateMask.fieldPaths=messages&updateMask.fieldPaths=lastMessageAt&updateMask.fieldPaths=lastMessageRole&updateMask.fieldPaths=humanTakeover` + (name ? `&updateMask.fieldPaths=name` : "");
+    const updateMask = `updateMask.fieldPaths=phone&updateMask.fieldPaths=messages&updateMask.fieldPaths=lastMessageAt&updateMask.fieldPaths=lastMessageRole&updateMask.fieldPaths=humanTakeover&updateMask.fieldPaths=franchiseeId` + (name ? `&updateMask.fieldPaths=name` : "");
 
     try {
         const r = await fetch(url + "&" + updateMask, {
@@ -284,15 +291,55 @@ async function saveMessageToFirestore(phone, name, role, text, extra = {}) {
 }
 
 // ============================================
+// Carrega contexto da franquia (cardápio/endereço/horário próprios)
+// ============================================
+async function getFranchiseContext(accountId) {
+    if (!accountId) return null;
+    const PROJECT = process.env.FIREBASE_PROJECT_ID || "milkypot-ad945";
+    const API_KEY = process.env.FIREBASE_API_KEY || "AIzaSyAbQ1fe0pK4prhfzYJypod2ie4DyNsq6BA";
+    const url = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/franchises/${accountId}?key=${API_KEY}`;
+    try {
+        const r = await fetch(url);
+        if (!r.ok) return null;
+        const j = await r.json();
+        const f = j.fields || {};
+        return {
+            name: f.name?.stringValue,
+            address: f.address?.stringValue,
+            hours: f.hours?.stringValue,
+            deliveryFee: f.deliveryFee?.stringValue || f.deliveryFee?.doubleValue,
+            deliveryTime: f.deliveryTime?.stringValue,
+            whatsappNumber: f.whatsappNumber?.stringValue,
+            ownerName: f.ownerName?.stringValue
+        };
+    } catch (e) {
+        return null;
+    }
+}
+
+// ============================================
 // Chamar Lulu IA (Groq)
 // ============================================
-async function generateLuluReply(history, currentText, customerName) {
+async function generateLuluReply(history, currentText, customerName, accountId) {
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) throw new Error("GROQ_API_KEY missing");
 
+    // Carrega contexto específico da franquia (se cadastrada)
+    const franchise = await getFranchiseContext(accountId);
+    let contextSuffix = customerName ? `\n\nNome do cliente: ${customerName}` : "";
+    if (franchise) {
+        contextSuffix += `\n\n## ATENDIMENTO DA FRANQUIA "${franchise.name || accountId}"`;
+        if (franchise.address) contextSuffix += `\n- Endereço: ${franchise.address}`;
+        if (franchise.hours) contextSuffix += `\n- Horário: ${franchise.hours}`;
+        if (franchise.deliveryFee) contextSuffix += `\n- Taxa entrega: R$ ${franchise.deliveryFee}`;
+        if (franchise.deliveryTime) contextSuffix += `\n- Tempo entrega: ${franchise.deliveryTime}`;
+        if (franchise.ownerName) contextSuffix += `\n- Dono(a): ${franchise.ownerName}`;
+        contextSuffix += `\n(Use ESSAS infos quando cliente perguntar sobre essa loja específica.)`;
+    }
+
     // Constrói histórico de mensagens pro modelo
     const messages = [
-        { role: "system", content: LULU_WHATSAPP_PROMPT + (customerName ? `\n\nNome do cliente: ${customerName}` : "") },
+        { role: "system", content: LULU_WHATSAPP_PROMPT + contextSuffix },
         ...history.map(h => ({
             role: h.role === "bot" ? "assistant" : "user",
             content: String(h.text).slice(0, 800)
@@ -352,12 +399,19 @@ module.exports = async (req, res) => {
         res.status(400).json({ error: "invalid json" });
         return;
     }
-    const { phone, name, text, type, messageId, timestamp } = parsed;
+    const { phone, name, text, type, messageId, timestamp, accountId: bodyAccountId } = parsed;
 
     if (!phone || !text || typeof text !== "string") {
         res.status(400).json({ error: "phone+text required" });
         return;
     }
+
+    // accountId identifica QUAL franquia recebeu a mensagem (pra Lulu IA usar
+    // contexto correto: cardápio/endereço/preço daquela franquia + segregação
+    // de dashboard por franchisee). Default 'matriz' pra retrocompat.
+    const accountId = String(
+        bodyAccountId || req.headers["x-mp-account-id"] || "matriz"
+    ).toLowerCase().trim() || "matriz";
 
     const phoneClean = String(phone).replace(/\D/g, "");
     const customerName = name ? String(name).slice(0, 100) : null;
@@ -365,8 +419,8 @@ module.exports = async (req, res) => {
     // 1. Busca histórico + flags
     const history = await getConversationHistory(phoneClean);
 
-    // 2. Grava msg do cliente
-    await saveMessageToFirestore(phoneClean, customerName, "user", text, { messageId });
+    // 2. Grava msg do cliente (com accountId/franchiseeId tag)
+    await saveMessageToFirestore(phoneClean, customerName, "user", text, { messageId, accountId });
 
     // 3. Se conversa está em humanTakeover ou paused, NÃO responde com IA
     if (history.humanTakeover || history.paused) {
@@ -377,14 +431,14 @@ module.exports = async (req, res) => {
 
     // 4. Tenta gerar resposta da Lulu
     try {
-        const reply = await generateLuluReply(history.messages, text, customerName || history.lastSeenName);
+        const reply = await generateLuluReply(history.messages, text, customerName || history.lastSeenName, accountId);
         if (!reply) {
             res.status(200).json({ reply: "Tô tendo dificuldade de pensar agora 😔 Manda de novo? Ou fala direto com o Jocimar: wa.me/5543999919777" });
             return;
         }
 
         // 5. Grava resposta da bot no histórico
-        await saveMessageToFirestore(phoneClean, customerName, "bot", reply);
+        await saveMessageToFirestore(phoneClean, customerName, "bot", reply, { accountId });
 
         // 6. Devolve pro gateway que envia pelo WhatsApp
         res.status(200).json({ reply });
