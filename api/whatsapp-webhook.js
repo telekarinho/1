@@ -28,13 +28,10 @@
 
 const crypto = require("crypto");
 
-// Vercel pré-parseia req.body por padrão — desabilitamos pra ler RAW
-// e validar HMAC contra os bytes EXATOS que o gateway assinou.
-module.exports.config = {
-    api: {
-        bodyParser: false
-    }
-};
+// Vercel pré-parseia req.body por padrão. Pra HMAC funcionar precisamos
+// dos bytes EXATOS que o gateway assinou. config é setado DEPOIS do
+// module.exports do handler (no fim do arquivo) — se setar antes, é
+// sobrescrito quando atribuímos `module.exports = async (req, res) => ...`.
 
 function readRawBody(req) {
     return new Promise((resolve, reject) => {
@@ -397,5 +394,14 @@ module.exports = async (req, res) => {
         const fallback = "Oi! 🐑 Tô com problema de conexão aqui agora. Posso te chamar em alguns minutos? Se for urgente, fala direto com o Jocimar: wa.me/5543999919777";
         await saveMessageToFirestore(phoneClean, customerName, "bot", fallback).catch(() => {});
         res.status(200).json({ reply: fallback });
+    }
+};
+
+// IMPORTANTE: config TEM que vir DEPOIS do module.exports do handler.
+// Setar antes faz com que `module.exports = handler` sobrescreva o objeto
+// inteiro, perdendo a flag bodyParser:false.
+module.exports.config = {
+    api: {
+        bodyParser: false
     }
 };
