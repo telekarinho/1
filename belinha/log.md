@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #154 — 2026-05-08
+
+**Área:** Conteúdo — `whatsapp-1ano-2027.md` standalone
+
+**Contexto:** Item INEGOCIÁVEL prescrito nos ciclos #152 e #153. O 1 Ano (25/04/2027) é o maior evento de marketing da história da unidade — único marco intransferível (365 dias exatos pós-inauguração). Os playbooks WA de todos os grandes eventos já existiam (Halloween, BlackPot, Natal, Virada, Carnaval), mas o maior de todos ainda não tinha standalone. Gap fechado neste ciclo.
+
+**O que pesquisou/analisou:**
+- Leu `aniversario-1-ano-briefing.md` (ciclo #84): estrutura macro de 4 fases, narrativa "gratidão + conquista + exclusividade", mecânica ANIVER, métricas-alvo
+- Leu `pos-inauguracao-semana52.md`: programação da semana "reta final" (11–17/04), revelação completa, encerramento da lista ANIVER
+- Leu `pos-inauguracao-semana53.md`: semana do aniversário countdown 7→1, tom emocional, roteiro por dia
+- Leu `pos-inauguracao-semana54.md`: Dia H (25/04) + pós-aniversário semana 54
+- Leu `pos-inauguracao-semana55.md`: pós-aniversário + aquecimento Dia das Mães
+- Leu `whatsapp-carnaval-2027.md` e `whatsapp-halloween-2026.md` como referência de estrutura e mecânica
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-1ano-2027.md` | CRIADO — Playbook WA standalone completo: estratégia de 4 estágios, 4 segmentos, configuração WA Business, template A-AUTO, broadcasts A0–A12 (13 touchpoints, 25/03→26/04), calendário resumido, checklist operacional com prazos, pendências do operador com datas, contraprogramação competitiva, métricas-alvo, referência cruzada com outros playbooks |
+
+**Commit:** `8f67535`
+
+**Destaques:**
+1. **13 touchpoints** cobrindo 32 dias (25/03→26/04): A0 (abertura lista), A1 (boas-vindas VIP), A2b (reativação inativos), A3 (reveal produto), A4 ("2 semanas" geral), A5 (programação completa VIP), A6 ("5 dias" geral), A7 ("3 dias" + confirmação presença), A8/A8b (véspera), A9/A10/A11 (Dia H: abertura, mid-event, encerramento), A12 (pós-gratidão).
+2. **Completude dos standalone events:** com este playbook, todos os 6 grandes eventos do calendário têm standalone WA completo: Halloween, BlackPot, Natal, Virada, Carnaval e 1 Ano.
+3. **Checklist operacional com prazos claros:** prazo duro 15/04 (produto), 22/04 (benefício VIP, horário, brinde), 25/04 no dia (números reais). Operador tem mapa de ações com antecedência suficiente.
+4. **Contraprogramação integrada:** MilkyMoo iFood-dependent, JohnnyJoy e TheBest sem campanha de aniversário → copy A0 explora diferencial "canal direto WA, base própria, sem intermediário".
+5. **Narrativa exclusiva:** 25/04/2027 = 365 dias exatos pós-inauguração. Marco intransferível — nenhum concorrente pode replicar. Inserido como elemento central da estratégia e do copy.
+
+**Próximo passo sugerido:**
+- **Ciclo #155 — Conteúdo (OBRIGATÓRIO):** `whatsapp-pascoa-2027.md` standalone — Páscoa 2027 é 28/03 (antes do 1 Ano!). Gap ativo: v19a prescreveu este playbook há 3 ciclos.
+- **Ciclo #156 — UX/Frontend:** revisar `index.html` — hero CTA e FAQ de Halloween (ciclo #143/146) ainda pendente de verificação pós-evento.
+- **Ciclo #157 — SEO:** Google Search Console — solicitar indexação sitemap.xml (pendente desde ciclo #148).
+- **Operador:** PRAZO CRÍTICO — produto comemorativo 1 Ano precisa ser definido até **15/04/2027** (duro). Sem isso, A3 e 5 outros broadcasts ficam com placeholders.
+- **Operador:** CNPJ + DPO — LGPD — em aberto há **+17 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (ação pendente desde ciclo #148).
+
+_Belinha — Ciclo #154 | 2026-05-08_
+
+---
+
 ## Ciclo #153 — 2026-05-07
 
 **Área:** Código/Performance — `js/checkout.js` auditoria + correções
