@@ -36,21 +36,42 @@ const TOOL_DEFINITIONS = [
     {
         type: "function",
         function: {
+            name: "listar_cardapio",
+            description: "Retorna o cardápio COMPLETO da franquia (bases, formatos, tamanhos, sabores, adicionais, bebidas) com preços REAIS atualizados. Use SEMPRE antes de quotar preços ou quando cliente pedir 'me mostra o cardápio'.",
+            parameters: { type: "object", properties: {} }
+        }
+    },
+    {
+        type: "function",
+        function: {
             name: "criar_pedido",
-            description: "Cria um pedido NO SISTEMA da MilkyPot quando o cliente confirmou TODOS os detalhes. Use SOMENTE depois que cliente confirmou tudo. Retorna orderId, total, eta.",
+            description: "Cria pedido REAL no sistema MilkyPot. Use SOMENTE depois que cliente confirmou TODOS os detalhes. Retorna orderId, items, subtotal, taxa entrega, total, ETA. Aceita múltiplos itens.",
             parameters: {
                 type: "object",
                 properties: {
-                    sabor: { type: "string", description: "Sabor (Oreo, Nutella, Morango, Ninho, Açaí+Granola, Whey, Amarula, etc)" },
-                    tamanho: { type: "string", enum: ["P", "M", "G", "GG"], description: "P=R$9,99 / M=R$17,99 / G=R$21,99 / GG=R$29,99" },
-                    tipo: { type: "string", enum: ["delivery", "retirada"], description: "delivery (R$5,90 taxa) ou retirada na loja" },
-                    endereco: { type: "string", description: "Rua, número, bairro. Obrigatório se delivery" },
+                    items: {
+                        type: "array",
+                        description: "Lista de items do pedido. Cada item pode ter base+formato+tamanho+sabor+adicionais OU só sabor+tamanho (sistema auto-detecta base/formato).",
+                        items: {
+                            type: "object",
+                            properties: {
+                                base: { type: "string", description: "ID da base: 'ninho', 'zero-fit', 'acai' (ou nome)" },
+                                formato: { type: "string", description: "ID do formato: 'shake', 'sundae', 'acai-bowl', 'acai-shake' (ou nome)" },
+                                tamanho: { type: "string", description: "ID do tamanho: 'mini' (180ml), 'pequeno' (300ml), 'medio' (500ml), 'gigante' (700ml)" },
+                                sabor: { type: "string", description: "ID ou nome do sabor: 'oreo', 'nutella', 'morango', 'ninho-morango', 'acai-granola', 'whey', 'amarula-cream', etc" },
+                                adicionais: { type: "array", items: { type: "string" }, description: "Lista de IDs/nomes de adicionais (ex: 'borda-nutella', 'add-morango', 'add-granola')" },
+                                qty: { type: "integer", description: "Quantidade desse item. Default 1" }
+                            },
+                            required: ["tamanho", "sabor"]
+                        }
+                    },
+                    tipo: { type: "string", enum: ["delivery", "retirada"], description: "delivery (com taxa) ou retirada na loja (sem taxa)" },
+                    endereco: { type: "string", description: "Endereço completo (rua, número, bairro, complemento). Obrigatório se delivery." },
                     pagamento: { type: "string", enum: ["pix", "cartao", "dinheiro"] },
                     troco_para: { type: "number", description: "Troco pra qual valor (só se dinheiro)" },
-                    observacoes: { type: "string", description: "Notas extras do cliente" },
-                    qty: { type: "integer", description: "Quantidade. Default: 1" }
+                    observacoes: { type: "string", description: "Observações do cliente (sem cebola, gelo, etc)" }
                 },
-                required: ["sabor", "tamanho", "tipo", "pagamento"]
+                required: ["items", "tipo", "pagamento"]
             }
         }
     },
@@ -58,11 +79,11 @@ const TOOL_DEFINITIONS = [
         type: "function",
         function: {
             name: "consultar_pedido",
-            description: "Busca pedidos do cliente pelo phone atual (automático) ou orderId. Use quando cliente perguntar 'cadê meu pedido?'.",
+            description: "Busca pedidos anteriores do cliente. Use quando cliente perguntar 'cadê meu pedido?', 'já chegou?', 'qual número do meu pedido?'.",
             parameters: {
                 type: "object",
                 properties: {
-                    orderId: { type: "string", description: "ID curto (ex: A1B2C3) ou completo" }
+                    orderId: { type: "string", description: "ID que cliente forneceu (ex: ABC123). Se omitido, busca pelo phone do cliente." }
                 }
             }
         }
@@ -71,14 +92,28 @@ const TOOL_DEFINITIONS = [
         type: "function",
         function: {
             name: "listar_promocoes",
-            description: "Retorna promoções vigentes hoje na franquia.",
+            description: "Retorna promoções e horários especiais da franquia hoje. Use quando cliente perguntar 'tem promo?', 'tá aberto?'.",
             parameters: { type: "object", properties: {} }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "cotar_delivery",
+            description: "Calcula taxa de entrega real e retorna se tem frete grátis. Use quando cliente perguntar 'quanto é o frete?' ou 'entrega aqui?'.",
+            parameters: {
+                type: "object",
+                properties: {
+                    endereco: { type: "string", description: "Endereço de entrega" }
+                }
+            }
         }
     }
 ];
 
 async function executeToolCall(name, args, ctx) {
     const full = { ...args, franchiseeId: ctx.franchiseeId };
+    if (name === "listar_cardapio") return await TOOLS.listar_cardapio(full);
     if (name === "criar_pedido") {
         full.customerPhone = ctx.customerPhone;
         full.customerName = ctx.customerName;
@@ -88,9 +123,8 @@ async function executeToolCall(name, args, ctx) {
         if (!full.orderId) full.customerPhone = ctx.customerPhone;
         return await TOOLS.consultar_pedido(full);
     }
-    if (name === "listar_promocoes") {
-        return await TOOLS.listar_promocoes(full);
-    }
+    if (name === "listar_promocoes") return await TOOLS.listar_promocoes(full);
+    if (name === "cotar_delivery") return await TOOLS.cotar_delivery(full);
     return { error: "tool_unknown:" + name };
 }
 
@@ -410,12 +444,53 @@ async function generateLuluReply(history, currentText, customerName, accountId, 
         if (franchise.deliveryTime) contextSuffix += `\n- Tempo entrega: ${franchise.deliveryTime}`;
         if (franchise.ownerName) contextSuffix += `\n- Dono(a): ${franchise.ownerName}`;
     }
-    contextSuffix += `\n\n## VOCÊ TEM TOOLS — USE!
-Quando cliente confirmar TODOS os detalhes do pedido (sabor, tamanho, delivery/retirada, endereço se delivery, pagamento), CHAME a tool 'criar_pedido' pra registrar de verdade no sistema. NÃO simule só na conversa.
-Quando cliente perguntar 'cadê meu pedido?' chame 'consultar_pedido'.
-Quando cliente perguntar 'tem promoção hoje?' chame 'listar_promocoes'.
+    contextSuffix += `
 
-Após criar o pedido com sucesso, confirme pro cliente com: número do pedido (orderShortId), total e tempo (eta). Ex: "Aaaai pedido feito! 💜🐑 Anota o número: #ABC123. Total R$ 23,89. Chega em 25-40min ✨"`;
+## ⚙️ VOCÊ TEM TOOLS — USE!
+
+Você é uma agente AUTÔNOMA que faz pedidos de verdade. NÃO simule. Quando cliente confirmar tudo, chame a tool. Tools disponíveis:
+
+- listar_cardapio()  → traz cardápio REAL atualizado (preços, sabores, tamanhos, adicionais)
+- criar_pedido(items[], tipo, endereco?, pagamento, troco_para?, observacoes?) → grava pedido no sistema, retorna orderShortId, total, eta
+- consultar_pedido(orderId?) → busca pedidos do cliente atual
+- cotar_delivery(endereco) → taxa real e frete grátis se aplicável
+- listar_promocoes() → promoções vigentes
+
+### REGRAS DE TOOL CALLING:
+1. SE cliente pediu cardápio OU vai pedir e você não tem certeza dos itens → CHAME listar_cardapio PRIMEIRO
+2. SE cliente perguntou frete → cotar_delivery antes de responder valor
+3. SE cliente CONFIRMOU pedido (tem sabor + tamanho + tipo + pagamento + endereço se delivery) → criar_pedido SEM perguntar mais nada
+4. SE cliente perguntou status do pedido dele → consultar_pedido
+5. NUNCA invente preço — sempre venha de listar_cardapio ou criar_pedido
+
+### FLUXO DE PEDIDO RECOMENDADO (Lulu autônoma):
+Passo 1: Cliente diz o que quer (ex: "shake oreo")
+   → Você confirma e pergunta tamanho. Se já disse tudo, pula direto pro 4.
+Passo 2: Tamanho (P/M/G/GG)
+Passo 3: Adicionais (perguntar UMA vez: "quer adicionar borda recheada de Nutella por R$ 4? 💜")
+Passo 4: Delivery ou retirada
+   → Se delivery, peça endereço completo e cote frete
+Passo 5: Pagamento (PIX/Cartão/Dinheiro com troco)
+Passo 6: CHAME criar_pedido. Confirme pro cliente:
+   "Aaaai pedido feito amorzinho! 🐑💜
+   📦 Número: #ABC123
+   🍨 ${'\${items.join(", ")}'}
+   💰 Total: R$ XX,XX (frete R$ X,XX)
+   ⏰ Chega em XX-XXmin
+   Tô passando pra cozinha JÁ! ✨"
+
+Se cliente pedir vários itens de uma vez ("2 shake oreo M e 1 açaí bowl gigante"), monte o array items[] de criar_pedido com todos.
+
+### VENDA INTELIGENTE (sem ser chata):
+- UMA sugestão por conversa (não bombardeia): "Que tal adicionar borda Nutella por R$ 4?"
+- Se cliente pediu pequeno: NÃO empurre maior. Respeite escolha.
+- Se total ficou abaixo do mínimo de delivery, AVISE e ofereça retirada como alternativa.
+- Se cliente parecer indeciso, ofereça os MAIS PEDIDOS: "O Oreo M no Shake Ninho é nosso queridinho 💜"
+
+### TRATAMENTO DE ERROS DAS TOOLS:
+- Se criar_pedido retornar { error: 'pedido_minimo_nao_atingido' } → use o campo .mensagem que já vem pronta
+- Se sabor não achar (warningsCardapio), peça pra cliente confirmar nome
+- Se erro genérico → 'Tô com problema técnico aqui amorzinho 😔 Já chamei o Jocimar'`;
 
     const messages = [
         { role: "system", content: LULU_WHATSAPP_PROMPT + contextSuffix },
