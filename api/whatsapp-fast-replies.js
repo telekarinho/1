@@ -141,8 +141,10 @@ const FAST_REPLIES = [
         id: "frete",
         match: (text) => {
             const t = normalize(text);
-            return /^(frete|entrega|delivery|taxa.*entreg|taxa.*delivery|quanto.*entreg|quanto.*delivery|valor.*entreg|tem entrega|faz entrega|entreg(am|a)|chega ate aqui)[\s!.,?]*$/.test(t)
-                || /quanto.*frete/.test(t);
+            // Mensagem curta que mencione frete/delivery/entrega
+            if (t.length > 80) return false;
+            return /\b(frete|entrega|delivery)\b/i.test(t)
+                && !/(fazer|quero|mandar|agora|por favor)\s+(o\s+)?pedido/i.test(t); // não confunde com pedido
         },
         reply: async (ctx) => {
             const cfg = await Cardapio.getDeliveryConfig(ctx.accountId);
@@ -178,7 +180,8 @@ const FAST_REPLIES = [
         id: "obrigado",
         match: (text) => {
             const t = normalize(text);
-            return /^(obrigad[oa]|brigad[oa]|valeu|vlw|gratidao|gratidão|thanks|tnks|tchau|ate mais|ate logo|falou|flw|bye)[\s!.,?💜🐑✨💕]*$/.test(t);
+            if (t.length > 60) return false;
+            return /^(muito\s+|mt\s+|super\s+|nossa\s+)?(obrigad[oa]|brigad[oa]|valeu|vlw|gratidao|thanks|tnks|tchau|ate (mais|logo|amanha|breve)|falou|flw|bye|adeus)[\s!.,?]*$/.test(t);
         },
         reply: (ctx) => {
             const name = ctx.customer?.name ? `, ${ctx.customer.name}` : "";
@@ -260,6 +263,51 @@ const FAST_REPLIES = [
             return t === "1" || t === "1️⃣" || /^(quero (pedir|comprar)|fazer pedido|pedir)$/i.test(t);
         },
         reply: () => `Eba! 🐑💜✨\nMe diz o que vai ser amorzinho:\n\n• *Sabor* (ex: Amora Apaixonada, Blue Ice, Ninho da Vovó...)\n• Se preferir Milkshake ou Sundae\n• Quantos potinhos? 🍨\n\nE depois vejo se é delivery ou retirada e fechamos! 💕`
+    },
+
+    // ============================================
+    // 13. CONFIRMAÇÃO simples (sim/ok/manda/blz)
+    // → só responde se cliente NÃO está em fluxo de pedido
+    // ============================================
+    {
+        id: "confirmacao_simples",
+        match: (text, ctx) => {
+            const t = normalize(text).trim();
+            // Não bate se houver histórico recente de pedido sendo montado (deixa IA tratar)
+            const ultimasBot = (ctx.history || []).filter(h => h.role === "bot").slice(-3);
+            const temContextoPedido = ultimasBot.some(b => /sabor|tamanho|endere|pagam|delivery|retirada|adicional/i.test(b.text || ""));
+            if (temContextoPedido) return false;
+            return /^(sim|s|ok|okay|blz|beleza|claro|certo|combinado|fechado|pode|pode ser|ta bom|tudo bem)[\s!.,?💜]*$/.test(t);
+        },
+        reply: () => `Show! 💜\nMe diz o que precisa amorzinho? 🐑✨`
+    },
+
+    // ============================================
+    // 14. PERGUNTAS CURTAS sobre tempo de entrega
+    // ============================================
+    {
+        id: "tempo_entrega",
+        match: (text) => {
+            const t = normalize(text);
+            if (t.length > 80) return false;
+            return /(quanto.*tempo|demora.*chegar|chega.*quando|quanto.*demor|demora.*entreg|entreg.*minutos)/i.test(t);
+        },
+        reply: () => `🛵 Entrega chega em *30-50min* normalmente amorzinho!\nSe pedir agora tô garantindo que sai já 💜🐑✨`
+    },
+
+    // ============================================
+    // 15. NÚMERO DE WHATSAPP / CONTATO
+    // ============================================
+    {
+        id: "contato",
+        match: (text) => {
+            const t = normalize(text);
+            return /(qual.*whatsapp|qual.*numero|outro contato|outro numero|telefone|fone)/i.test(t) && t.length < 80;
+        },
+        reply: (ctx) => {
+            const num = ctx.franchise?.whatsappNumber || "5543999919777";
+            return `Você tá falando comigo no WhatsApp oficial! 💜\n📞 *${num}*\nQuer falar com o Jocimar direto? É esse mesmo número, ele responde quando tá disponível 🐑`;
+        }
     }
 ];
 
