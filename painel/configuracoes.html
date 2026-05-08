@@ -434,6 +434,106 @@
                         </div>
                     </div>
 
+                    <!-- Card: Horas Extras & Banco de Horas -->
+                    <div class="panel-card" style="grid-column:1/-1">
+                        <div class="card-header" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);color:#fff">
+                            <h3 style="color:#fff">⏱️ Horas Extras & Banco de Horas (CLT)</h3>
+                            <p style="margin:4px 0 0;font-size:12px;opacity:.92">Limites legais conforme CLT art. 59 e art. 7 XVI. Sistema força os limites máximos.</p>
+                        </div>
+                        <div class="card-body">
+                            <div style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:.82rem;color:#92400E">
+                                <strong>📜 Limites legais:</strong> máximo 2h extras/dia (CLT art. 59), adicional mín. 50% (art. 7 XVI), 100% em domingo/feriado (art. 7 IX). Banco de horas: 6 meses por acordo individual ou 12 meses por convenção coletiva (art. 59 §5).
+                            </div>
+
+                            <h4 style="margin:10px 0 8px;color:#0C4A6E">💼 Horas Extras</h4>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px">
+                                <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:700;background:#F0F9FF;padding:10px;border-radius:8px"><input type="checkbox" id="otEnabled">Permite horas extras</label>
+                                <div class="form-group"><label>Máx h/dia (legal: 2)</label><input type="number" id="otMaxDay" min="0" max="2" step="0.5" class="form-control"></div>
+                                <div class="form-group"><label>Máx h/semana</label><input type="number" id="otMaxWeek" min="0" max="20" class="form-control"></div>
+                                <div class="form-group"><label>Máx h/mês</label><input type="number" id="otMaxMonth" min="0" max="80" class="form-control"></div>
+                                <div class="form-group"><label>Adicional % (mín 50)</label><input type="number" id="otRate" min="50" max="200" class="form-control"></div>
+                                <div class="form-group"><label>Domingo/feriado %</label><input type="number" id="otRateSunday" min="100" max="300" class="form-control"></div>
+                                <div class="form-group"><label>Auto-aprovar até (h)</label><input type="number" id="otAutoApprove" min="0" max="2" step="0.5" class="form-control"></div>
+                            </div>
+
+                            <h4 style="margin:14px 0 8px;color:#0C4A6E">🏦 Banco de Horas</h4>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px">
+                                <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:700;background:#F0F9FF;padding:10px;border-radius:8px"><input type="checkbox" id="bhEnabled">Permite banco de horas</label>
+                                <div class="form-group">
+                                    <label>Tipo de acordo</label>
+                                    <select id="bhAgreement" class="form-control">
+                                        <option value="individual">Individual (até 6 meses)</option>
+                                        <option value="collective">Coletivo (até 12 meses)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group"><label>Saldo máx acumulado (h)</label><input type="number" id="bhMaxBalance" min="0" max="120" class="form-control"></div>
+                                <div class="form-group"><label>Prazo compensação (dias)</label><input type="number" id="bhCompDays" min="30" max="365" class="form-control"></div>
+                                <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;background:#F0F9FF;padding:10px;border-radius:8px"><input type="checkbox" id="bhAutoExpire">Pagar em folha se vencer</label>
+                            </div>
+
+                            <button class="btn btn-primary" onclick="saveOvertimeConfig()">💾 Salvar Configurações</button>
+                            <span id="otSaveStatus" style="margin-left:12px;font-size:.85rem;color:#6B7280"></span>
+                        </div>
+                    </div>
+
+                    <!-- Card: Gamificação (TODAS as features OPT-IN) -->
+                    <div class="panel-card" style="grid-column:1/-1">
+                        <div class="card-header" style="background:linear-gradient(135deg,#F59E0B,#FB7185);color:#fff">
+                            <h3 style="color:#fff">🎮 Gamificação & Engajamento</h3>
+                            <p style="margin:4px 0 0;font-size:12px;opacity:.95">Cada feature é independente. Funcionário só vê se você ativar aqui.</p>
+                        </div>
+                        <div class="card-body">
+                            <div style="background:#F0FDF4;border-left:4px solid #16A34A;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:.82rem;color:#14532D">
+                                <strong>💡 Como funciona:</strong> Se a flag estiver desligada, a feature simplesmente NÃO APARECE no app do funcionário. Ative apenas o que faz sentido pra sua operação.
+                            </div>
+
+                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-bottom:14px">
+                                <label class="gam-toggle"><input type="checkbox" data-flag="motivationalMessages"><span>💬 Mensagens motivacionais diárias</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="streaks"><span>🔥 Streaks (sequências de dias bons)</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="badges"><span>🏆 Badges/conquistas</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="notifications"><span>📲 Notificações contextuais</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="progressDashboard"><span>📊 Dashboard de progresso pessoal</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="rewardsCatalog"><span>🎁 Catálogo de recompensas por pontos</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="recoveryMode"><span>💪 Modo Recovery (apoio após erro)</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="onboardingMissions"><span>🎓 Onboarding gamificado (1º dia)</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="recognitionWall"><span>📌 Mural de reconhecimento da loja</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="easterEggs"><span>🎉 Surpresas / Easter eggs</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="belinhaVoice"><span>🐑 Voz da Belinha (mascote)</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="visualCalendar"><span>📅 Calendário visual mensal</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="sounds"><span>🔊 Sons de vitória ao bater ponto</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="dailyStory"><span>📖 Story diário de 24h</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="peerRanking"><span>🥇 Ranking entre colegas <small style="color:#DC2626">(cuidado)</small></span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="socialShare"><span>📱 Compartilhamento social</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="wellbeingReminders"><span>💚 Lembretes de bem-estar</span></label>
+                                <label class="gam-toggle"><input type="checkbox" data-flag="referralProgram"><span>🤝 Programa indique-e-ganhe</span></label>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom:14px">
+                                <label style="font-weight:700">Tom das mensagens</label>
+                                <select id="gamTone" class="form-control" style="max-width:300px">
+                                    <option value="friendly">Amigável (descontraído)</option>
+                                    <option value="professional">Profissional (formal)</option>
+                                    <option value="epic">Épico (motivação intensa)</option>
+                                    <option value="fun">Divertido (humor)</option>
+                                </select>
+                            </div>
+
+                            <div style="display:flex;gap:8px;margin-bottom:14px">
+                                <button class="btn btn-outline" onclick="gamPreset('all_off')" style="font-size:.78rem">🔇 Desligar tudo</button>
+                                <button class="btn btn-outline" onclick="gamPreset('starter')" style="font-size:.78rem">🌱 Pacote Iniciante</button>
+                                <button class="btn btn-outline" onclick="gamPreset('full')" style="font-size:.78rem">🚀 Pacote Completo</button>
+                            </div>
+
+                            <button class="btn btn-primary" onclick="saveGamificationConfig()">💾 Salvar Configurações</button>
+                            <span id="gamSaveStatus" style="margin-left:12px;font-size:.85rem;color:#6B7280"></span>
+                        </div>
+                    </div>
+                    <style>
+                        .gam-toggle { display:flex; align-items:center; gap:8px; padding:10px 12px; background:#FAFAFA; border:1px solid #E5E7EB; border-radius:8px; cursor:pointer; font-size:.84rem; }
+                        .gam-toggle:hover { background:#F3F4F6; }
+                        .gam-toggle input[type="checkbox"] { width:18px; height:18px; cursor:pointer; }
+                    </style>
+
                     <!-- Card: Sistema de Conduta (OPCIONAL) -->
                     <div class="panel-card" style="grid-column:1/-1">
                         <div class="card-header" style="background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff">
@@ -664,6 +764,8 @@
     <script src="../js/core/uber-direct.js"></script>
     <script src="../js/core/staff-benefits.js"></script>
     <script src="../js/core/staff-conduct.js"></script>
+    <script src="../js/core/overtime-bank.js"></script>
+    <script src="../js/core/gamification.js"></script>
     <script src="../js/core/delivery-rules.js?v=mp-v115"></script>
 
     <script>
@@ -1470,6 +1572,106 @@
     loadScratchConfig();
     loadBenefitsConfig();
     loadConductConfig();
+    loadOvertimeConfig();
+    loadGamificationConfig();
+
+    // ============== Horas Extras & Banco ==============
+    function loadOvertimeConfig() {
+        if (typeof OvertimeBank === 'undefined') return;
+        var c = OvertimeBank.getConfig(franchiseId);
+        document.getElementById('otEnabled').checked = !!c.overtimeEnabled;
+        document.getElementById('otMaxDay').value = c.maxOvertimePerDay;
+        document.getElementById('otMaxWeek').value = c.maxOvertimePerWeek;
+        document.getElementById('otMaxMonth').value = c.maxOvertimePerMonth;
+        document.getElementById('otRate').value = c.overtimeRate;
+        document.getElementById('otRateSunday').value = c.overtimeRateSundayHoliday;
+        document.getElementById('otAutoApprove').value = c.autoApproveUpTo;
+        document.getElementById('bhEnabled').checked = !!c.bankHoursEnabled;
+        document.getElementById('bhAgreement').value = c.bankHoursAgreement;
+        document.getElementById('bhMaxBalance').value = c.bankHoursMaxBalance;
+        document.getElementById('bhCompDays').value = c.bankHoursCompensationDays;
+        document.getElementById('bhAutoExpire').checked = !!c.bankHoursAutoExpire;
+    }
+    window.saveOvertimeConfig = function() {
+        if (typeof OvertimeBank === 'undefined') return;
+        var c = {
+            overtimeEnabled: document.getElementById('otEnabled').checked,
+            maxOvertimePerDay: parseFloat(document.getElementById('otMaxDay').value) || 2,
+            maxOvertimePerWeek: parseFloat(document.getElementById('otMaxWeek').value) || 10,
+            maxOvertimePerMonth: parseFloat(document.getElementById('otMaxMonth').value) || 40,
+            overtimeRate: parseFloat(document.getElementById('otRate').value) || 50,
+            overtimeRateSundayHoliday: parseFloat(document.getElementById('otRateSunday').value) || 100,
+            autoApproveUpTo: parseFloat(document.getElementById('otAutoApprove').value) || 0,
+            bankHoursEnabled: document.getElementById('bhEnabled').checked,
+            bankHoursAgreement: document.getElementById('bhAgreement').value,
+            bankHoursMaxBalance: parseFloat(document.getElementById('bhMaxBalance').value) || 40,
+            bankHoursCompensationDays: parseInt(document.getElementById('bhCompDays').value, 10) || 180,
+            bankHoursAutoExpire: document.getElementById('bhAutoExpire').checked
+        };
+        var alerts = OvertimeBank.getValidationStatus(c);
+        if (alerts.length) {
+            if (!confirm(alerts.join('\n') + '\n\nContinuar?')) return;
+        }
+        var r = OvertimeBank.saveConfig(franchiseId, c);
+        var status = document.getElementById('otSaveStatus');
+        if (r.success) { status.textContent = '✓ Salvo'; status.style.color='#16A34A'; setTimeout(function(){status.textContent='';},3000); }
+        else alert('Erro: ' + r.error);
+    };
+
+    // ============== Gamificação ==============
+    function loadGamificationConfig() {
+        if (typeof Gamification === 'undefined') return;
+        var cfg = Gamification.getConfig(franchiseId);
+        document.querySelectorAll('.gam-toggle input[data-flag]').forEach(function(cb) {
+            cb.checked = !!cfg.flags[cb.dataset.flag];
+        });
+        document.getElementById('gamTone').value = cfg.flags.tone || 'friendly';
+    }
+    window.saveGamificationConfig = function() {
+        if (typeof Gamification === 'undefined') return;
+        var flags = {};
+        document.querySelectorAll('.gam-toggle input[data-flag]').forEach(function(cb) {
+            flags[cb.dataset.flag] = cb.checked;
+        });
+        flags.tone = document.getElementById('gamTone').value;
+        var r = Gamification.saveConfig(franchiseId, { flags: flags });
+        var status = document.getElementById('gamSaveStatus');
+        if (r.success) { status.textContent = '✓ Salvo — funcionários verão na próxima abertura do app'; status.style.color='#16A34A'; setTimeout(function(){status.textContent='';},5000); }
+        else alert('Erro');
+    };
+    window.gamPreset = function(preset) {
+        var presets = {
+            all_off: {},
+            starter: {
+                motivationalMessages: true,
+                streaks: true,
+                badges: true,
+                visualCalendar: true,
+                belinhaVoice: true
+            },
+            full: {
+                motivationalMessages: true,
+                streaks: true,
+                badges: true,
+                notifications: true,
+                progressDashboard: true,
+                recoveryMode: true,
+                onboardingMissions: true,
+                recognitionWall: true,
+                easterEggs: true,
+                belinhaVoice: true,
+                visualCalendar: true,
+                sounds: true,
+                dailyStory: true,
+                wellbeingReminders: true
+                // peerRanking, socialShare, referralProgram, rewardsCatalog: ficam off por padrao (precisam config extra)
+            }
+        };
+        var p = presets[preset] || {};
+        document.querySelectorAll('.gam-toggle input[data-flag]').forEach(function(cb) {
+            cb.checked = !!p[cb.dataset.flag];
+        });
+    };
 
     function syncConductSlider() {
         var on = document.getElementById('conductEnabled').checked;
