@@ -1,6 +1,6 @@
 # The Best Açaí — Análise Competitiva
 
-**Última atualização:** 2026-05-07 (Ciclo #151 — Carnaval 2027 intel + stunt sazonais virais)
+**Última atualização:** 2026-05-08 (Ciclo #160 — The Best Donuts status permanente + Festa Junina 2026)
 **Fontes ciclo #151:** vipzinho.com.br, foodbizbrasil.com, suafranquia.com, odiariodemaringa.com.br, dezminutos.com.br
 **Fontes anteriores:** ifood.com.br, gazetadopovo.com.br, temlondrina.com.br, tiktok @marceladegusta, portaldofranchising.com.br, foodbizbrasil.com, suafranquia.com, franquiadeacai.com, jornaluniao.com.br, exame.com, braziljournal.com, portaltela.com, mercadoeconsumo.com.br, aurorashopping.com.br
 **Fontes ciclo #116:** gazetadasemana.com.br, thebestacai.com.br/thebestday (bloqueado), cidadeoferta.com.br, ubereats.com/br, portaltela.com, TikTok @marceladegusta
@@ -559,3 +559,51 @@ Confirmado via WebSearch (Gazeta da Semana + thebestacai.com.br):
 **Próxima verificação:** Setembro/2026 — confirmar campanha de outubro The Best Açaí.
 
 _Belinha — Ciclo #143 | 2026-05-07_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #160 — 2026-05-08
+
+### The Best Donuts — Confirmação Permanente + Festa Junina 2026
+
+**Fontes:** suafranquia.com, foodbizbrasil.com, desfrutecultural.com.br, abcdacomunicacao.com.br
+
+---
+
+#### 1. The Best Donuts — Status Permanente Confirmado
+
+| Atributo | Detalhe |
+|---|---|
+| **Produto** | The Best Donuts — self-service de donuts |
+| **Lançamento** | Janeiro 2025 (verão) em 580+ unidades |
+| **Status 2026** | ✅ Produto permanente no cardápio (não sazonal) |
+| **Modelo** | Self-service por peso: R$5,99/100g (donuts pesados junto com açaí) |
+| **Brinde app** | Mini Boia Clube The Best (flutua em formato de donut — resgate via app) |
+| **Posição de mercado** | Primeiro self-service de donuts do Brasil |
+
+**Contexto 2026:** The Best Açaí projeta faturamento R$1,1 bi em 2025 e expansão para 1.200 unidades. The Best Donuts é diferencial permanente de portfólio, não campanha sazonal.
+
+---
+
+#### 2. Festa Junina 2026 — Sem Campanha Específica The Best Açaí Detectada
+
+- **Pesquisa realizada:** WebSearch "The Best Açaí festa junina 2026 campanha" — nenhuma ativação específica encontrada
+- **Referência do setor:** Açaí da Barra fez parceria com Paçoquita ("Mistura que dá Bom") — padrão de topping junino
+- **Padrão histórico The Best:** Stunts virais de produto novo → provável topping sazonal a confirmar
+
+**Insight para MilkyPot:** Mesmo que The Best lance topping de paçoca para junho, é só um ingrediente em self-service anônimo. O **Potinho Junino** é uma experiência completa — produto específico, narrativa "arraial personalizado", nome na embalagem. MilkyPot tem vantagem narrativa e de diferenciação clara.
+
+---
+
+#### Mapa de Ativações Competitivas — Junho 2026
+
+| Concorrente | Ativação Junho 2026 | Formato |
+|---|---|---|
+| **MilkyMoo** | "Tempestade" (HTTYD live-action) + ingresso cinema | Collab pop-culture, iFood-locked |
+| **JohnnyJoy** | Sem ativação jun detectada | — |
+| **The Best Açaí** | Possível topping junino (padrão histórico) | Self-service por peso, sem narrativa |
+| **MilkyPot** | **Potinho Junino** — arraial personalizado | Canal direto WA, preço fixo, personalização |
+
+**Conclusão:** Junho 2026 = MilkyPot tem o campo mais livre para o nicho de Festa Junina personalizada em Londrina. MilkyMoo está em modo cinema, The Best em self-service genérico, JohnnyJoy sem ativação detectada.
+
+_Belinha — Ciclo #160 | 2026-05-08_

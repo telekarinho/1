@@ -85,3 +85,17 @@ Outros ângulos para usar em copy futuro:
 
 *Atualizado por Belinha — Ciclo #28 — 2026-04-25*  
 *Ciclo #3: pesquisa inicial parcial | Ciclo #28: pesquisa fechada com ação concreta no site*
+
+---
+
+## ⚡ VERIFICAÇÃO CICLO #160 — 2026-05-08
+
+**Pesquisa realizada:** WebSearch "Jhoy sobremesa franquia potinho açaí 2026" — zero resultados específicos para marca "Jhoy".
+
+**Status mantido:** "Jhoy" não é marca identificável no mercado nacional de sobremesas. Provável confusão com **JAH do Açaí** (autoserviço por peso, confirmado ciclo #28) ou marca regional não digitalizada.
+
+**JAH do Açaí — situação 2026:** Expansão agressiva em curso (meta 900 unidades até 2026, investimento R$200 mi). Sem presença detectada em Londrina/Muffato. Modelo self-service por peso mantido. Nenhuma campanha sazonal ou produto novo identificado em 2026.
+
+**Próxima verificação:** Somente se houver indício de entrada do JAH do Açaí em Londrina. Arquivo permanece fechado até então.
+
+_Belinha — Ciclo #160 | 2026-05-08_

@@ -1,6 +1,7 @@
 # Milky Moo — Análise Competitiva
 
-**Última atualização:** 2026-05-07 (Ciclo #151 — Carnaval 2027 intel pré-temporada)
+**Última atualização:** 2026-05-08 (Ciclo #160 — collabs maio-junho 2026 + 180ml Day Part Action)
+**Fontes ciclo #160:** gkpb.com.br, mercadoeconsumo.com.br, auroracultural.com, em.com.br, foodbizbrasil.com, centraldovarejo.com.br, meioemensagem.com.br, sopacultural.com, creativosbr.com.br
 **Fontes ciclo #151:** cadastrarnapromocao.com.br, clubeamostrasgratis.com, portalg.com.br, gkpb.com.br, TikTok @casaldasdicasrp, TikTok @dicasemmanauss
 **Fontes anteriores:** franquiadesorvete.com, portaldofranchising, pricelisto.com/br, gkpb.com.br, TikTok @marceladegusta, portalg.com.br, lagosul.com.br, meioemensagem.com.br, sopacultural.com, franquias360.com.br, timesbrasil.com.br, exame.com, empreenderemgoias.com.br, adital.com.br, foodbizbrasil.com
 **Fontes ciclo #116:** portalg.com.br, cadastrarnapromocao.com.br, clubeamostrasgratis.com, publicitarioscriativos.com, gkpb.com.br, revistamenu.com.br, superhiper.com.br, TikTok @marceladegusta, TikTok @sofiasporai, nuttybavarian blog
@@ -595,3 +596,68 @@ _Última atualização: ciclo #126 — 2026-05-05_
 **Alerta:** Verificar se MilkyMoo lança campanha Dia das Crianças (12/10) integrada ao Milky Boo (bundle infanto-adulto). Monitorar @milkymoo a partir de setembro/2026.
 
 _Belinha — Ciclo #143 | 2026-05-07_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #160 — 2026-05-08
+
+### Collabs maio-junho 2026 + 180ml Day Part Action
+
+**Fontes:** gkpb.com.br, mercadoeconsumo.com.br, foodbizbrasil.com, centraldovarejo.com.br, auroracultural.com, meioemensagem.com.br, creativosbr.com.br
+
+---
+
+#### 1. Parceria O Boticário — Milkshake "Carameluda" (abril–maio 2026)
+
+| Atributo | Detalhe |
+|---|---|
+| **Produto** | Milkshake Carameluda — edição limitada |
+| **Ingredientes** | Sorvete de baunilha + caramelo salgado + doce de leite + biscoitos de especiarias |
+| **Inspiração** | Fragrância Cuide-se Bem Deleite Caramelizado (O Boticário) |
+| **Preço** | A partir de R$25,00 (300ml / 500ml / 700ml) |
+| **Disponibilidade** | Todas as unidades nacionais (~700) até final de maio/2026 |
+| **Parceiro** | O Boticário — campanha criada pela agência SoWhat |
+| **Influencer** | Cantora Desirée (#DoceLovers, foco Gen Z / #perfumetok) |
+| **Canal de venda** | Balcão físico + iFood (sem WhatsApp próprio) |
+
+**Insight para MilkyPot:** Collab com marca de cosméticos premium eleva percepção de produto mas não resolve o lock de iFood nem a falta de personalização. Preço mínimo R$25 exclui público mais jovem. MilkyPot com base a partir de R$10, personalização total, sem app = acesso mais amplo.
+
+---
+
+#### 2. Parceria Universal Pictures — Milkshake "Tempestade" (junho 2026, 1ª semana)
+
+| Atributo | Detalhe |
+|---|---|
+| **Produto** | Milkshake "Tempestade" — edição limitada temática |
+| **Inspiração** | Filme live-action "Como Treinar o Seu Dragão" (Universal Pictures) |
+| **Ingredientes** | Brigadeiro de chocolate + brownie em pedaços + sorvete de baunilha |
+| **Disponibilidade** | 1ª semana de junho 2026, por tempo limitado, todas as unidades |
+| **Promo app** | 2 milkshakes 500ml de qualquer sabor = 2 ingressos de cinema |
+| **Preço** | Não divulgado (linha especial → provavelmente ≥ R$30) |
+| **Canal** | Balcão físico + iFood + app MilkyMoo |
+
+**Insight para MilkyPot:** Junho 2026 = MilkyMoo ativa com pop-culture cinema + ingresso. É ativação de alto impacto de mídia, mas depende de licença cara (Universal) e exclui clientes sem app para aproveitar o bundle. MilkyPot pode contraprogramar com Potinho Junino — experiência autêntica, sem licença de Hollywood, preço fixo, personalização real. **Copy sugerida:** "Enquanto eles precisam de dragão, nosso potinho já encanta do jeito que você gosta."
+
+---
+
+#### 3. 180ml Day Part Action — Confirmação como produto permanente (lançado 30/04/2026)
+
+- Detalhes já documentados no ciclo #143 (formato 180ml, preço a partir de R$12,90 até 13h59)
+- **Confirmação ciclo #160:** Produto permanente no portfólio (não sazonal)
+- Disponível em todos os sabores exceto premium e alcoólicos
+- Estratégia: capturar consumo pós-almoço (snack digestivo), horário sem concorrência direta de iFood
+
+---
+
+#### Tabela de Situação Competitiva MilkyMoo × MilkyPot — Maio/Junho 2026
+
+| Período | Ativação MilkyMoo | Oportunidade MilkyPot |
+|---|---|---|
+| **Até 31/mai** | Carameluda (Boticário) R$25+, iFood | Potinho base a partir R$10, WhatsApp, sem app |
+| **1ª semana jun** | Tempestade (HTTYD) + 2 ingressos cinema | Potinho Junino — arraial personalizado, preço fixo |
+| **Jun–ago (inverno)** | Sem produto de inverno detectado | Delivery aquecido + Linha Ninho reconfortante |
+| **Contínuo** | 180ml Day Part até 13h59 | Abertura 14h (Muffato) — sem sobreposição direta |
+
+**Gap estratégico de junho 2026:** MilkyMoo entra em modo cinema/pop-culture. MilkyPot pode monopolizar o posicionamento de "sobremesa personalizada da Festa Junina em Londrina" — sem concorrência direta no segmento potinho.
+
+_Belinha — Ciclo #160 | 2026-05-08_

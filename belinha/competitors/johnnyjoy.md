@@ -1,6 +1,7 @@
 # JohnnyJoy — Análise Competitiva
 
-**Última atualização:** 2026-05-07 (Ciclo #151 — Carnaval 2027 intel + atualização preços e fidelidade)
+**Última atualização:** 2026-05-08 (Ciclo #160 — 10 anos aniversário + Buenissimo Branco + Joy Fidelidade atualizado)
+**Fontes ciclo #160:** gkpb.com.br, ondecomernorio.com, amostrasgratis.shop, Instagram @johnnyjoy.br, riomarfortaleza.com.br, portalg.com.br
 **Fontes ciclo #151:** johnnyjoy.com.br, buscacliente.com.br, gkpb.com.br, amostrasgratis.shop, TikTok @aproveiteacidade, overblur.com, Instagram @johnnyjoy.br
 **Fontes originais:** johnnyjoy.com.br, buscas orgânicas
 
@@ -144,3 +145,74 @@
 **Próxima verificação:** Setembro/2026 — confirmar se JohnnyJoy lança algo para 12/10 (Dia das Crianças) ou 31/10 (Halloween).
 
 _Belinha — Ciclo #143 | 2026-05-07_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #160 — 2026-05-08
+
+### 10 Anos de Aniversário + Buenissimo Branco + Joy Fidelidade
+
+**Fontes:** gkpb.com.br, ondecomernorio.com, amostrasgratis.shop, Instagram @johnnyjoy.br, riomarfortaleza.com.br, portalg.com.br
+
+---
+
+#### 1. Campanha 10 Anos de Aniversário (10/04/2026)
+
+| Atributo | Detalhe |
+|---|---|
+| **Data** | Sexta-feira, 10/04/2026 (dia 10 do mês 10 anos) |
+| **Promoção** | Milkshake 300ml por R$10,00 em todas as unidades |
+| **Restrição** | Não inclui linha Johnny Recipes nem sabores especiais |
+| **Abrangência** | Nacional — todas as ≥55 unidades |
+| **Sabores válidos** | Ninho com Nutella, Cheese Cake, Doce de Leite com Coco e outros |
+| **Branding** | Bio/perfil Instagram rebrandado para "Johnny Joy • 10 anos" |
+
+**Insight para MilkyPot:** Promo de aniversário de desconto agressivo (R$10) é tática de tráfego de curto prazo — não cria relação de fidelidade. MilkyPot tem o **MilkyPass** (carimbos + milestones) como fidelização estrutural de longo prazo. No dia 10/04, milkshake concorrente estava a R$10; MilkyPot estava recém-inaugurado (25/04 = depois desta promo) e sem necessidade de queima de margem.
+
+---
+
+#### 2. Novo Sabor: Buenissimo Branco
+
+| Atributo | Detalhe |
+|---|---|
+| **Produto** | Buenissimo Branco — milkshake |
+| **Composição** | Kinder Bueno White + creme Johnny Joy de leite e avelã |
+| **Perfil** | Suave, cremoso — variante branca do Buenissimo original |
+| **Status** | Produto novo no cardápio (data exata de lançamento não confirmada) |
+
+---
+
+#### 3. Joy Fidelidade — Atualização
+
+| Atributo | Detalhe |
+|---|---|
+| **Programa** | Joy Fidelidade — por app/cadastro |
+| **Mecânica** | Benefícios exclusivos: descontos especiais, brindes personalizados |
+| **Exclusividade** | Acesso antecipado a novos sabores e lançamentos |
+| **Ponto fraco** | Requer app — sem canal WhatsApp para relacionamento direto |
+
+**Comparação MilkyPot vs JohnnyJoy Fidelidade:**
+
+| Atributo | JohnnyJoy Joy Fidelidade | MilkyPot MilkyPass |
+|---|---|---|
+| **Canal** | App (download obrigatório) | WhatsApp (zero atrito) |
+| **Mecânica** | Benefícios + acesso antecipado | Carimbos físicos + 6 marcos (10→100) |
+| **Milestone mais próximo** | Não divulgado | 10 carimbos = brinde |
+| **Dado do cliente** | App da franqueadora | WhatsApp own (base do operador) |
+| **Simplicidade PDV** | Depende de app ativo | Carimbo físico + opcional digital |
+
+**Insight para MilkyPot:** App de fidelidade = barreira de entrada. WA = zero barreira. Coletar número no ato do primeiro pedido e disparar template WA-10carimbos é diferencial operacional concreto.
+
+---
+
+#### Preços JohnnyJoy Atualizados (confirmados ciclo #160)
+
+| Produto | Preço |
+|---|---|
+| Milkshake 300ml (tradicional) | R$19,00 |
+| Milkshake 500ml (tradicional) | R$22,00 |
+| Milkshake especial (300ml) | R$25,00 |
+| Milkshake especial (500ml) | R$28,00–R$30,00 |
+| Promo aniversário 10 anos | R$10,00 (300ml, 1 dia) |
+
+_Belinha — Ciclo #160 | 2026-05-08_
