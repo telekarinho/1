@@ -2,6 +2,45 @@
 
 ---
 
+## Ciclo #160 — 2026-05-08
+
+**Área:** Pesquisa Concorrentes — intel maio-junho 2026 (última rodada: ciclo #151, 9 ciclos atrás)
+
+**O que pesquisou/analisou:**
+- **MilkyMoo:** (1) Collab O Boticário "Carameluda" — milkshake caramelo salgado + doce de leite, R$25+, abr-mai 2026, campanha Gen Z #DoceLovers. (2) Collab Universal Pictures "Tempestade" (Como Treinar Seu Dragão live-action) — 1ª semana de junho 2026, promo app: 2×500ml = 2 ingressos. (3) 180ml Day Part confirmado permanente.
+- **JohnnyJoy:** (1) 10 anos aniversário — milkshake 300ml por R$10 em 10/04/2026, nacional. (2) Novo sabor Buenissimo Branco (Kinder Bueno White + avelã). (3) Joy Fidelidade detalhado: acesso antecipado + brindes exclusivos via app.
+- **The Best Açaí:** The Best Donuts confirmado como produto permanente (não sazonal). Sem campanha de Festa Junina 2026 detectada.
+- **Jhoy/JAH do Açaí:** Sem novidades. JAH em expansão nacional (meta 900 un.), sem presença em Londrina. Arquivo fechado mantido.
+
+**Gap estratégico identificado — junho 2026:**
+MilkyMoo: ativado com pop-culture cinema (iFood-locked). The Best: self-service genérico. JohnnyJoy: sem ativação. **MilkyPot = único com Potinho Junino personalizado em Londrina** — campo aberto para monopolizar o posicionamento "sobremesa da Festa Junina personalizada".
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/milkymoo.md` | Atualização ciclo #160: Carameluda + Tempestade HTTYD + tabela contraprogramação maio-jun |
+| `belinha/competitors/johnnyjoy.md` | Atualização ciclo #160: 10 anos promo + Buenissimo Branco + Joy Fidelidade + tabela comparativa MilkyPass |
+| `belinha/competitors/the-best-acai.md` | Atualização ciclo #160: The Best Donuts permanente + mapa ativações junho 2026 |
+| `belinha/competitors/jhoy.md` | Verificação ciclo #160: sem novidades, arquivo fechado mantido |
+
+**Commit:** `bb58b0c`
+
+**Próximo passo sugerido:**
+- **Ciclo #161 — Auto-aprimoramento (OBRIGATÓRIO — a cada 5 ciclos, último foi #155):** Reler log #155–#160; ajustar `belinha/estrategia.md` para jun–ago 2026. Incorporar aprendizado da rodada de concorrentes.
+- **Ciclo #162 — Código/Performance (CRÍTICO — postergado +7 ciclos):** `checkout.html` revisão completa. v18b threshold atingido faz muito tempo.
+- **Ciclo #163 — Conteúdo:** Posts Instagram/TikTok ovelhinha + Potinho Junino (jun 2026). Usar gap competitivo identificado como ângulo de copy.
+- **Operador:** Confirmar benefício para 30 carimbos (topping grátis vs upgrade Mini→Médio) — templates prontos, só falta aprovação.
+- **Operador:** Confirmar benefício para 100 carimbos (Kit Lenda / crédito / Cria seu Potinho) — idem.
+- **Operador:** CNPJ + DPO — LGPD — em aberto há **+23 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente desde ciclo #148).
+
+_Belinha — Ciclo #160 | 2026-05-08_
+
+---
+
+
 ## Ciclo #159 — 2026-05-08
 
 **Área:** Conversão — `whatsapp-100carimbos-lenda.md` standalone
