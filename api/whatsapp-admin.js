@@ -52,22 +52,36 @@ async function validateIdToken(idToken) {
     return { uid: user.localId, email: user.email };
 }
 
-async function getUserDoc(uid) {
+async function getUserDoc(uid, idToken) {
+    // Firestore rules exigem auth pra ler /users/{uid}. Passamos o ID token
+    // como Bearer (request.auth.uid == userId permite leitura do próprio doc).
     const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/users/${uid}?key=${FIREBASE_KEY}`;
     try {
-        const r = await fetch(url);
-        if (!r.ok) return null;
+        const r = await fetch(url, {
+            headers: idToken ? { "Authorization": `Bearer ${idToken}` } : {}
+        });
+        if (!r.ok) {
+            // Tenta sem auth como fallback (caso doc seja público)
+            const r2 = await fetch(url);
+            if (!r2.ok) return null;
+            const j2 = await r2.json();
+            return parseUserDoc(j2);
+        }
         const j = await r.json();
-        const fields = j.fields || {};
-        const role = fields.role?.stringValue || null;
-        const franchiseeIds = (fields.franchiseeIds?.arrayValue?.values || []).map(v => v.stringValue).filter(Boolean);
-        // Compat: alguns docs têm franchiseeId (singular) string
-        const singleId = fields.franchiseeId?.stringValue;
-        if (singleId && !franchiseeIds.includes(singleId)) franchiseeIds.push(singleId);
-        return { role, franchiseeIds };
+        return parseUserDoc(j);
     } catch (e) {
         return null;
     }
+}
+
+function parseUserDoc(j) {
+    const fields = j.fields || {};
+    const role = fields.role?.stringValue || null;
+    const franchiseeIds = (fields.franchiseeIds?.arrayValue?.values || []).map(v => v.stringValue).filter(Boolean);
+    // Compat: alguns docs têm franchiseeId (singular) string
+    const singleId = fields.franchiseeId?.stringValue;
+    if (singleId && !franchiseeIds.includes(singleId)) franchiseeIds.push(singleId);
+    return { role, franchiseeIds };
 }
 
 async function listFranchises() {
@@ -126,12 +140,19 @@ module.exports = async (req, res) => {
     const user = await validateIdToken(idToken);
     if (!user) { res.status(401).json({ error: "invalid_token" }); return; }
 
-    const userDoc = await getUserDoc(user.uid);
-    const role = userDoc?.role;
-    const franchiseeIds = userDoc?.franchiseeIds || [];
+    const userDoc = await getUserDoc(user.uid, idToken);
+    let role = userDoc?.role;
+    let franchiseeIds = userDoc?.franchiseeIds || [];
+
+    // Fallback: owner email é super_admin mesmo sem doc /users
+    if (!role && user.email === "jocimarrodrigo@gmail.com") {
+        role = "super_admin";
+        console.log("[whatsapp-admin] fallback: owner email → super_admin");
+    }
+
     if (!ALLOWED_ROLES.has(role)) {
-        console.warn("[whatsapp-admin] forbidden role:", role, "uid:", user.uid);
-        res.status(403).json({ error: "forbidden", role: role || "unknown" });
+        console.warn("[whatsapp-admin] forbidden role:", role, "uid:", user.uid, "email:", user.email);
+        res.status(403).json({ error: "forbidden", role: role || "unknown", email: user.email });
         return;
     }
 
