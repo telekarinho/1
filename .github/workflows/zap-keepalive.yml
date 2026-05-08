@@ -1,0 +1,48 @@
+name: zap.milkypot.com keep-alive
+
+# ============================================
+# Mantém o gateway WhatsApp (Baileys) acordado.
+#
+# LSNode (Hostinger) mata o processo Node se ele ficar
+# sem requisição por ~20s. Esse workflow pinga /health
+# em loop, garantindo que o processo nunca morre por
+# tempo > ~70s. Mesmo se morrer, o auth_info/ persiste
+# em disco, então reconecta sem precisar novo QR.
+#
+# Estratégia:
+#   - Roda a cada 5min (limite mínimo prático do GH cron)
+#   - Cada execução faz 5 pings espaçados de 60s
+#   - Resultado: ping a cada ~60s, 24/7, automático
+#
+# Custo: ~5min × 12 runs/h × 24h × 30d = ~43min/mês
+# (free tier GitHub Actions = 2000min/mês, sobra muito)
+# ============================================
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # a cada 5min
+  workflow_dispatch:        # permite disparar manual também
+
+# evita rodar 2 ao mesmo tempo se o anterior atrasou
+concurrency:
+  group: zap-keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6      # max 5 pings × 60s + margem
+    steps:
+      - name: Ping zap.milkypot.com /health 5 vezes (espaçado 60s)
+        shell: bash
+        run: |
+          set +e   # não falha se um ping cair, segue tentando
+          URL="https://zap.milkypot.com/health"
+          echo "🐑 Iniciando keep-alive — $(date -u +%H:%M:%S)"
+          for i in 1 2 3 4 5; do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 25 "$URL" || echo "000")
+            TIME=$(date -u +%H:%M:%S)
+            echo "  ping $i: HTTP $CODE  ($TIME UTC)"
+            if [ "$i" -lt 5 ]; then sleep 60; fi
+          done
+          echo "✅ keep-alive concluído"
