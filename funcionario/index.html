@@ -7,7 +7,9 @@
 <meta name="theme-color" content="#16A34A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="../manifest.json">
+<meta name="apple-mobile-web-app-title" content="MilkyPot Func">
+<link rel="apple-touch-icon" href="../images/logo-milkypot.png">
+<link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -278,11 +280,32 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
                 </div>
             </div>
 
+            <!-- BENEFICIOS -->
+            <div class="fn-section" id="sec-beneficios">
+                <div class="fn-card">
+                    <h3>🎁 Seus benefícios</h3>
+                    <p style="font-size:.78rem;color:#6B7280;margin:0 0 10px">Sorvete do dia, lanches e outros benefícios entregues pela loja. Não-transferíveis.</p>
+                    <div class="fn-totais" id="benTotais"></div>
+                    <div id="benLista"></div>
+                </div>
+            </div>
+
             <!-- INFO -->
             <div class="fn-section" id="sec-info">
+                <div class="fn-card" id="installCard" style="display:none;background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff;border:none">
+                    <h3 style="color:#fff">📱 Instalar como app</h3>
+                    <p style="font-size:.85rem;margin:6px 0 12px;opacity:.95">Instale no celular pra receber lembretes de bater ponto e abrir mais rápido.</p>
+                    <button class="fn-btn" id="installBtn" style="background:#fff;color:#16A34A">Instalar agora</button>
+                </div>
                 <div class="fn-card">
                     <h3>👤 Seus dados</h3>
                     <div id="dadosFunc" style="font-size:.85rem;line-height:1.7"></div>
+                </div>
+                <div class="fn-card">
+                    <h3>🔔 Lembretes de ponto</h3>
+                    <p style="font-size:.82rem;color:#374151;margin:0 0 10px">Receba aviso pra não esquecer de bater entrada, almoço e saída.</p>
+                    <button class="fn-btn fn-btn-secondary" id="enableNotifBtn" onclick="fnRequestNotifications()">Ativar lembretes</button>
+                    <div id="notifStatus" style="margin-top:10px;font-size:.78rem;color:#6B7280"></div>
                 </div>
                 <div class="fn-card">
                     <h3>📜 Direitos legais (CLT)</h3>
@@ -300,9 +323,45 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
 
         <nav class="fn-tab-bar">
             <button class="fn-tab-btn active" data-tab="hoje" onclick="fnSwitchTab('hoje')"><span class="icon">⏰</span>Hoje</button>
-            <button class="fn-tab-btn" data-tab="mes" onclick="fnSwitchTab('mes')"><span class="icon">🗓️</span>Mes</button>
+            <button class="fn-tab-btn" data-tab="mes" onclick="fnSwitchTab('mes')"><span class="icon">🗓️</span>Mês</button>
+            <button class="fn-tab-btn" data-tab="beneficios" onclick="fnSwitchTab('beneficios')"><span class="icon">🎁</span>Benefícios</button>
             <button class="fn-tab-btn" data-tab="info" onclick="fnSwitchTab('info')"><span class="icon">👤</span>Dados</button>
         </nav>
+    </div>
+</div>
+
+<!-- Welcome Modal: aparece no primeiro login -->
+<div id="welcomeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#fff;border-radius:18px;width:100%;max-width:420px;padding:0;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">
+        <div style="padding:24px;text-align:center;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff">
+            <div style="font-size:3.5rem;margin-bottom:8px">🎉</div>
+            <h2 style="margin:0;font-family:'Baloo 2',cursive;font-size:1.4rem">Bem-vindo, <span id="welcomeName"></span>!</h2>
+            <p style="margin:6px 0 0;font-size:.88rem;opacity:.95">Vamos configurar 2 coisinhas pra facilitar sua vida.</p>
+        </div>
+        <div style="padding:22px">
+            <div id="welcomeStep1" style="margin-bottom:16px">
+                <div style="display:flex;align-items:start;gap:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:14px;margin-bottom:10px">
+                    <span style="font-size:1.6rem">📍</span>
+                    <div>
+                        <strong style="display:block;color:#14532D;margin-bottom:4px">Localização</strong>
+                        <p style="margin:0 0 8px;font-size:.82rem;color:#374151">Pra registrar onde você bateu ponto. Ajuda a comprovar que você estava na loja.</p>
+                        <button class="fn-btn" onclick="fnRequestGeo()" style="padding:8px 14px;font-size:.85rem">Permitir localização</button>
+                        <div id="geoStatus" style="font-size:.75rem;margin-top:6px"></div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:start;gap:12px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:10px;padding:14px">
+                    <span style="font-size:1.6rem">🔔</span>
+                    <div>
+                        <strong style="display:block;color:#92400E;margin-bottom:4px">Lembretes</strong>
+                        <p style="margin:0 0 8px;font-size:.82rem;color:#374151">Receba aviso na hora certa pra não esquecer de bater entrada, almoço e saída.</p>
+                        <button class="fn-btn" onclick="fnRequestNotifications()" style="padding:8px 14px;font-size:.85rem;background:#F59E0B">Ativar lembretes</button>
+                        <div id="notifStatusInline" style="font-size:.75rem;margin-top:6px"></div>
+                    </div>
+                </div>
+            </div>
+            <button class="fn-btn" onclick="fnFinishWelcome()" style="margin-top:8px">Pronto, vamos começar</button>
+            <p style="text-align:center;margin:12px 0 0;font-size:.72rem;color:#9CA3AF">Você pode mudar isso depois em Dados.</p>
+        </div>
     </div>
 </div>
 
@@ -314,11 +373,148 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
 <script src="../js/core/datastore.js"></script>
 <script src="../js/core/firebase-config.js"></script>
 <script src="../js/core/time-clock.js"></script>
+<script src="../js/core/staff-benefits.js"></script>
 
 <script>
 'use strict';
 
 var FN_KEY = 'mp_func_session';
+var FN_WELCOME_KEY = 'mp_func_welcomed_';
+
+// ====== PWA: Service Worker + Install Prompt ======
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/funcionario/sw.js', { scope: '/funcionario/' })
+            .catch(function(e) { console.warn('SW registration failed:', e); });
+    });
+}
+
+var deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    var card = document.getElementById('installCard');
+    if (card) card.style.display = 'block';
+});
+document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('installBtn');
+    if (btn) btn.addEventListener('click', async function() {
+        if (!deferredInstallPrompt) {
+            alert('App ja instalado ou navegador nao suporta. No Chrome Android: menu (3 pontos) → "Adicionar a tela inicial".');
+            return;
+        }
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        var card = document.getElementById('installCard');
+        if (card) card.style.display = 'none';
+    });
+});
+
+// ====== Geolocation & Notifications ======
+async function fnRequestGeo() {
+    var statusEls = [document.getElementById('geoStatus')].filter(Boolean);
+    if (!navigator.geolocation) {
+        statusEls.forEach(function(el) { el.textContent = 'Navegador sem suporte'; el.style.color = '#DC2626'; });
+        return;
+    }
+    statusEls.forEach(function(el) { el.textContent = '⏳ Solicitando...'; });
+    navigator.geolocation.getCurrentPosition(
+        function(pos) {
+            statusEls.forEach(function(el) { el.textContent = '✓ Permitido (' + Math.round(pos.coords.accuracy) + 'm precisao)'; el.style.color = '#16A34A'; });
+        },
+        function(e) {
+            var msg = '✗ Negado';
+            if (e.code === 1) msg = '✗ Voce negou. Va em configuracoes do navegador → permissoes → liberar localizacao.';
+            statusEls.forEach(function(el) { el.textContent = msg; el.style.color = '#DC2626'; });
+        }
+    );
+}
+
+async function fnRequestNotifications() {
+    var statusEls = [document.getElementById('notifStatus'), document.getElementById('notifStatusInline')].filter(Boolean);
+    if (!('Notification' in window)) {
+        statusEls.forEach(function(el) { el.textContent = '✗ Navegador sem suporte a notificacoes'; });
+        return;
+    }
+    if (Notification.permission === 'granted') {
+        statusEls.forEach(function(el) { el.textContent = '✓ Lembretes ativados'; el.style.color = '#16A34A'; });
+        fnScheduleReminders();
+        return;
+    }
+    var perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+        statusEls.forEach(function(el) { el.textContent = '✓ Lembretes ativados'; el.style.color = '#16A34A'; });
+        new Notification('MilkyPot', { body: 'Lembretes ativados. Vou avisar você de bater ponto!', icon: '/images/logo-milkypot.png' });
+        fnScheduleReminders();
+    } else {
+        statusEls.forEach(function(el) { el.textContent = '✗ Voce negou. Va em configuracoes do navegador.'; el.style.color = '#DC2626'; });
+    }
+}
+
+// Agenda lembretes baseado na escala — 10min antes da hora
+function fnScheduleReminders() {
+    if (Notification.permission !== 'granted') return;
+    var session = fnGetSession();
+    if (!session) return;
+    var staff = (DataStore.getCollection('staff', session.franchiseId) || []).find(function(x) { return x.id === session.staffId; });
+    if (!staff || !staff.jornada) return;
+
+    var j = staff.jornada;
+    var horarios = [
+        { time: j.hora_entrada, label: 'Entrada' },
+        { time: j.hora_saida, label: 'Saida' }
+    ];
+    if (j.intervalo_almoco_min) {
+        // Estima horario de almoco como meio do turno
+        var entraMin = parseInt(j.hora_entrada.split(':')[0], 10) * 60 + parseInt(j.hora_entrada.split(':')[1], 10);
+        var saiMin = parseInt(j.hora_saida.split(':')[0], 10) * 60 + parseInt(j.hora_saida.split(':')[1], 10);
+        var almocoSaidaMin = Math.floor((entraMin + saiMin - j.intervalo_almoco_min) / 2);
+        var almocoVoltaMin = almocoSaidaMin + j.intervalo_almoco_min;
+        function fmtMin(m) { return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'); }
+        horarios.splice(1, 0, { time: fmtMin(almocoSaidaMin), label: 'Inicio almoco' });
+        horarios.splice(2, 0, { time: fmtMin(almocoVoltaMin), label: 'Volta almoco' });
+    }
+
+    var now = new Date();
+    horarios.forEach(function(h) {
+        if (!h.time) return;
+        var p = h.time.split(':');
+        var schedule = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(p[0], 10), parseInt(p[1], 10), 0);
+        // 10min antes
+        schedule.setMinutes(schedule.getMinutes() - 10);
+        var delay = schedule.getTime() - Date.now();
+        if (delay <= 0) return; // ja passou hoje
+
+        // Agenda via SW (mais robusto que setTimeout do JS)
+        if (navigator.serviceWorker?.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'SCHEDULE_REMINDER',
+                delayMs: delay,
+                body: 'Em 10 minutos: ' + h.label + ' (' + h.time + ')',
+                tag: 'mp-reminder-' + h.label.toLowerCase()
+            });
+        } else {
+            // Fallback: setTimeout do JS (so funciona se aba aberta)
+            setTimeout(function() {
+                if (Notification.permission === 'granted') {
+                    new Notification('MilkyPot — Lembrete', {
+                        body: 'Em 10 min: ' + h.label + ' (' + h.time + ')',
+                        icon: '/images/logo-milkypot.png',
+                        vibrate: [200, 100, 200]
+                    });
+                }
+            }, delay);
+        }
+    });
+}
+
+function fnFinishWelcome() {
+    var session = fnGetSession();
+    if (!session) return;
+    localStorage.setItem(FN_WELCOME_KEY + session.staffId, '1');
+    document.getElementById('welcomeModal').style.display = 'none';
+}
 
 function fnLogin() {
     var cpf = document.getElementById('loginCpf').value.replace(/\D/g, '');
@@ -383,7 +579,49 @@ function fnShowApp(session, staff) {
 
     fnRenderHoje(session, staff);
     fnRenderMes(session);
+    fnRenderBeneficios(session);
     fnRenderInfo(session, staff);
+
+    // Welcome modal no primeiro login
+    var welcomed = localStorage.getItem(FN_WELCOME_KEY + session.staffId);
+    if (!welcomed) {
+        document.getElementById('welcomeName').textContent = session.staffName.split(' ')[0];
+        document.getElementById('welcomeModal').style.display = 'flex';
+    } else {
+        // Reenfileira lembretes se ja deu permissao
+        if ('Notification' in window && Notification.permission === 'granted') {
+            fnScheduleReminders();
+        }
+    }
+}
+
+function fnRenderBeneficios(session) {
+    if (typeof StaffBenefits === 'undefined') return;
+    var now = new Date();
+    var monthData = StaffBenefits.totalMonth(session.franchiseId, session.staffId, now.getFullYear(), now.getMonth() + 1);
+    var todayData = StaffBenefits.totalDay(session.franchiseId, session.staffId, now.toISOString().slice(0, 10));
+
+    document.getElementById('benTotais').innerHTML =
+        '<div class="fn-mini-card"><small>Hoje</small><strong>' + todayData.count + ' itens</strong></div>' +
+        '<div class="fn-mini-card"><small>No mês</small><strong>' + monthData.count + ' itens</strong></div>' +
+        '<div class="fn-mini-card"><small>Valor mês</small><strong>R$ ' + monthData.total.toFixed(2).replace('.', ',') + '</strong></div>';
+
+    if (!monthData.entries.length) {
+        document.getElementById('benLista').innerHTML = '<p style="text-align:center;color:#9CA3AF;padding:20px;font-size:.85rem">Nenhum benefício registrado este mês.</p>';
+        return;
+    }
+    var html = '<div style="display:flex;flex-direction:column;gap:8px">';
+    monthData.entries.slice(0, 30).forEach(function(e) {
+        var icon = e.tipo === 'sorvete_dia' ? '🍦' : (e.tipo === 'refeicao' ? '🍽️' : (e.tipo === 'lanche' ? '🥪' : (e.tipo === 'bebida' ? '🥤' : '🎁')));
+        html += '<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px">'
+            + '<div style="display:flex;gap:10px;align-items:center"><span style="font-size:1.4rem">' + icon + '</span>'
+            + '<div><strong style="display:block;font-size:.88rem;color:#111827">' + Utils.escapeHtml(e.productName || e.tipoLabel) + '</strong>'
+            + '<small style="color:#6B7280;font-size:.72rem">' + e.date.split('-').reverse().join('/') + ' · ' + e.timestamp.slice(11,16) + ' · ' + Utils.escapeHtml(e.operatorName || '') + '</small></div></div>'
+            + '<strong style="color:#16A34A">R$ ' + Number(e.value || 0).toFixed(2).replace('.', ',') + '</strong>'
+            + '</div>';
+    });
+    html += '</div>';
+    document.getElementById('benLista').innerHTML = html;
 }
 
 function fnGetSession() {
