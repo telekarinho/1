@@ -11,6 +11,7 @@
 "use strict";
 
 const Cardapio = require("./whatsapp-cardapio.js");
+const Customers = require("./whatsapp-customers.js");
 
 const PROJECT = process.env.FIREBASE_PROJECT_ID || "milkypot-ad945";
 const FB_KEY = process.env.FIREBASE_API_KEY || "AIzaSyAbQ1fe0pK4prhfzYJypod2ie4DyNsq6BA";
@@ -71,13 +72,21 @@ async function criar_pedido({
     endereco,        // só se delivery
     pagamento,       // 'pix' | 'cartao' | 'dinheiro'
     troco_para,
-    observacoes
+    observacoes,
+    recipient,       // { name, phone? } se outra pessoa for receber/retirar
+    usar_endereco_anterior // true → puxa o último endereço do cliente
 }) {
     if (!franchiseeId) return { error: "franchiseeId obrigatório" };
     if (!Array.isArray(items) || !items.length) return { error: "items[] obrigatório (pelo menos 1)" };
     if (!tipo || !["delivery", "retirada"].includes(tipo)) return { error: "tipo deve ser delivery ou retirada" };
-    if (tipo === "delivery" && !endereco) return { error: "delivery exige endereço" };
     if (!pagamento || !["pix", "cartao", "dinheiro"].includes(pagamento)) return { error: "pagamento deve ser pix, cartao ou dinheiro" };
+
+    // Se cliente disse "manda no endereço de sempre", puxa do perfil
+    if (tipo === "delivery" && !endereco && usar_endereco_anterior) {
+        const profile = await Customers.getCustomer(franchiseeId, customerPhone);
+        if (profile?.lastAddress) endereco = profile.lastAddress;
+    }
+    if (tipo === "delivery" && !endereco) return { error: "delivery exige endereço (passe `endereco` ou `usar_endereco_anterior:true` se cliente já pediu antes)" };
 
     const cardapio = await Cardapio.getCardapio(franchiseeId);
     const deliveryCfg = await Cardapio.getDeliveryConfig(franchiseeId);
@@ -127,6 +136,10 @@ async function criar_pedido({
     }
 
     const orderId = `lulu_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    const recipientClean = (recipient && recipient.name)
+        ? { name: String(recipient.name).slice(0, 100), phone: recipient.phone ? String(recipient.phone).replace(/\D/g, "") : null }
+        : null;
+
     const order = {
         id: orderId,
         items: resolvedItems,
@@ -136,6 +149,7 @@ async function criar_pedido({
         type: tipo === "delivery" ? "delivery_whatsapp" : "retirada",
         delivery: tipo === "delivery" ? { type: "delivery", address: endereco, fee: deliveryFee } : null,
         customer: { name: customerName || null, phone: customerPhone || null },
+        recipient: recipientClean,   // {name,phone} se OUTRA pessoa vai receber/retirar
         payments: [{
             method: pagamento,
             amount: total,
@@ -179,6 +193,13 @@ async function criar_pedido({
         return { error: "falha gravando pedido: " + e.message };
     }
 
+    // Atualiza perfil do cliente (memória pra próximos pedidos)
+    try {
+        await Customers.registerOrder(franchiseeId, customerPhone, order);
+    } catch (e) {
+        console.warn("[criar_pedido] customer registerOrder failed:", e.message);
+    }
+
     return {
         ok: true,
         orderId,
@@ -190,6 +211,7 @@ async function criar_pedido({
         total: total.toFixed(2),
         eta: tipo === "delivery" ? "30-50min" : "10-20min",
         status: "novo",
+        recipient: recipientClean,
         warningsCardapio: errors.length ? errors : undefined
     };
 }
