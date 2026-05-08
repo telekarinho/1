@@ -135,6 +135,20 @@
             return { ok: false, error: 'Funcionario precisa aceitar os termos do beneficio antes de receber.' };
         }
 
+        // GATE de conduta — opcional, so aplica se admin ativou
+        if (typeof StaffConduct !== 'undefined' && StaffConduct.isEnabled(franchiseId)) {
+            var conduct = StaffConduct.canReceiveBenefit(franchiseId, params.staffId);
+            if (!conduct.entitled && conduct.reason === 'low_score') {
+                return {
+                    ok: false,
+                    error: conduct.message,
+                    blocked_by: 'conduct_score',
+                    score: conduct.score,
+                    threshold: conduct.threshold
+                };
+            }
+        }
+
         return { ok: true };
     }
 

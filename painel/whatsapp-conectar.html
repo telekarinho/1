@@ -153,8 +153,10 @@
   <script src="../js/core/firebase-config.js"></script>
   <script src="../js/core/auth.js"></script>
   <script>
+  // Auth.requireAuth espera string única (não array). 'franchisee' aceita tanto
+  // franchisee quanto super_admin (super_admin tem bypass automático no auth.js).
   if (typeof Auth !== 'undefined' && Auth.requireAuth) {
-    if (!Auth.requireAuth(['super_admin', 'franchisee'])) throw new Error('Não autorizado');
+    if (!Auth.requireAuth('franchisee')) throw new Error('Não autorizado');
   }
 
   // milkypot.com está em GitHub Pages (sem /api/*).

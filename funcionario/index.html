@@ -267,6 +267,24 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
                     <h3>📅 Sua escala</h3>
                     <div id="escalaInfo" style="font-size:.85rem;color:#374151;line-height:1.6"></div>
                 </div>
+
+                <!-- Card de pontuação (so aparece se admin ativou) -->
+                <div class="fn-card" id="scoreCard" style="display:none;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none">
+                    <h3 style="color:#fff">🏆 Sua pontuação do mês</h3>
+                    <div style="font-size:2.5rem;font-family:'Baloo 2',cursive;font-weight:800;text-align:center;margin:8px 0" id="scoreValue">--</div>
+                    <div id="scoreStatus" style="text-align:center;font-size:.85rem;opacity:.95;margin-bottom:10px"></div>
+                    <details style="background:rgba(255,255,255,.1);border-radius:8px;padding:8px">
+                        <summary style="cursor:pointer;font-size:.78rem;font-weight:700">Como meu score é calculado</summary>
+                        <div id="scoreBreakdown" style="margin-top:8px;font-size:.75rem;line-height:1.6"></div>
+                    </details>
+                </div>
+
+                <!-- Card de comissão (so aparece se tem comissão configurada) -->
+                <div class="fn-card" id="commissionCard" style="display:none;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border:none">
+                    <h3 style="color:#fff">💰 Sua comissão do mês</h3>
+                    <div style="font-size:1.8rem;font-family:'Baloo 2',cursive;font-weight:800;text-align:center;margin:6px 0" id="commissionValue">R$ 0,00</div>
+                    <div id="commissionDetails" style="font-size:.78rem;opacity:.95;text-align:center"></div>
+                </div>
             </div>
 
             <!-- ESPELHO MES -->
@@ -411,6 +429,7 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
 <script src="../js/core/geofence.js"></script>
 <script src="../js/core/payroll.js"></script>
 <script src="../js/core/legal-terms.js"></script>
+<script src="../js/core/staff-conduct.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 <script src="../js/core/push-funcionario.js"></script>
 
@@ -876,6 +895,43 @@ function fnRenderHoje(session, staff) {
         sub.textContent = 'Voce ja bateu todas 4 marcacoes hoje';
         btn.disabled = true;
         btn.style.opacity = '.6';
+    }
+
+    // SCORE — so aparece se admin ativou
+    if (typeof StaffConduct !== 'undefined' && StaffConduct.isEnabled(session.franchiseId)) {
+        var now = new Date();
+        var report = StaffConduct.computeScore(session.franchiseId, session.staffId, now.getFullYear(), now.getMonth() + 1);
+        var scoreCard = document.getElementById('scoreCard');
+        if (scoreCard) {
+            scoreCard.style.display = 'block';
+            document.getElementById('scoreValue').textContent = report.score;
+            var status = report.entitledToBenefits
+                ? '✓ Habilitado pra receber benefícios extras'
+                : '⚠️ Pontuação baixa — alguns benefícios podem estar bloqueados';
+            document.getElementById('scoreStatus').textContent = status;
+            var breakdown = report.breakdown.map(function(b) {
+                var sign = b.value > 0 ? '+' : (b.value < 0 ? '' : '');
+                var color = b.value > 0 ? '#A7F3D0' : (b.value < 0 ? '#FCA5A5' : '#FDE68A');
+                return '<div style="display:flex;justify-content:space-between;color:' + color + '"><span>' + b.label + '</span><strong>' + sign + b.value + '</strong></div>';
+            }).join('');
+            document.getElementById('scoreBreakdown').innerHTML = breakdown;
+        }
+    }
+
+    // COMISSÃO — so aparece se tem comissionRate ou commissionFixed
+    if (staffData && (staffData.commissionRate > 0 || staffData.commissionFixed > 0) && typeof StaffConduct !== 'undefined') {
+        var nowC = new Date();
+        var rep = StaffConduct.computeCommission(session.franchiseId, session.staffId, nowC.getFullYear(), nowC.getMonth() + 1);
+        var commCard = document.getElementById('commissionCard');
+        if (commCard) {
+            commCard.style.display = 'block';
+            document.getElementById('commissionValue').textContent = 'R$ ' + rep.total.toFixed(2).replace('.', ',');
+            var detail = '';
+            if (rep.fixed > 0) detail += 'Fixa: R$ ' + rep.fixed.toFixed(2).replace('.', ',') + '. ';
+            if (rep.rate > 0) detail += rep.rate + '% sobre R$ ' + rep.totalVendas.toFixed(2).replace('.', ',') + ' = R$ ' + rep.variable.toFixed(2).replace('.', ',') + '. ';
+            detail += rep.ordersCount + ' pedido(s).';
+            document.getElementById('commissionDetails').textContent = detail;
+        }
     }
 
     // Escala
