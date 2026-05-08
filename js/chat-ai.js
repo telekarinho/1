@@ -86,7 +86,7 @@
             try { data = await resp.json(); } catch (e) {}
 
             if (!resp.ok) {
-                const errMsg = (data && data.error) || 'Opa, travei aqui! 🐑 Fala comigo no WhatsApp: 5543998042424';
+                const errMsg = (data && data.error) || 'Opa, travei aqui! 🐑 Fala comigo no WhatsApp: 5543999919777';
                 throw new Error(errMsg);
             }
 
@@ -97,7 +97,7 @@
         } catch (err) {
             clearTimeout(timeout);
             if (err.name === 'AbortError') {
-                throw new Error('Demorei demais pra responder 😔 Tenta de novo ou fala no WhatsApp 5543998042424');
+                throw new Error('Demorei demais pra responder 😔 Tenta de novo ou fala no WhatsApp 5543999919777');
             }
             throw err;
         }
@@ -187,7 +187,7 @@
                 addBotResponse(reply);
             } catch (err) {
                 removeTypingIndicator(typing);
-                addBotResponse(err.message || 'Opa! Tenta de novo, ou fala comigo no WhatsApp 5543998042424 🐑');
+                addBotResponse(err.message || 'Opa! Tenta de novo, ou fala comigo no WhatsApp 5543999919777 🐑');
             }
         }
 

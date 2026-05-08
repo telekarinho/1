@@ -29,7 +29,7 @@ var MILKYPOT_STORES = [
         deliveryEnabled: true,  // toggle controlado em painel/configuracoes.html
         hours: '10:00 - 22:00',
         open: true,
-        whatsapp: '5543998042424',
+        whatsapp: '5543999919777',
         email: 'milkypot.com@gmail.com',
         lat: -23.3265,
         lng: -51.1664,
@@ -64,7 +64,7 @@ var MILKYPOT_STORES = [
         storeOnlineOpen: true,
         hours: '00:00 - 23:59',
         open: true,
-        whatsapp: '5543998042424',
+        whatsapp: '5543999919777',
         email: 'teste@teste.com',
         isTestFranchise: true,
         lat: -23.3265,
