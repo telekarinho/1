@@ -27,8 +27,9 @@
 "use strict";
 
 const crypto = require("crypto");
-const TOOLS = require("./whatsapp-tools.js");
-const Customers = require("./whatsapp-customers.js");
+const TOOLS = require("../lib/whatsapp/tools.js");
+const Customers = require("../lib/whatsapp/customers.js");
+const FastReplies = require("../lib/whatsapp/fast-replies.js");
 
 // ============================================
 // Tool definitions (formato OpenAI/Groq)
@@ -596,7 +597,34 @@ module.exports = async (req, res) => {
         return;
     }
 
-    // 4. Tenta gerar resposta da Lulu
+    // 4. FAST REPLY local (sem chamar Groq) — cobre 90% das mensagens
+    //    (saudações, cardápio, horário, endereço, frete, pagamento, agradecimentos,
+    //     status pedido, franquia, falar com humano, intenção de pedir).
+    //    Se não bater nenhum padrão, cai pro Groq abaixo.
+    try {
+        const customerProfile = await Customers.getCustomer(accountId, phoneClean);
+        const franchise = await getFranchiseContext(accountId);
+        const fastCtx = {
+            accountId,
+            customerPhone: phoneClean,
+            customerName,
+            customer: customerProfile,
+            franchise,
+            text,
+            history: history.messages
+        };
+        const fast = await FastReplies.tryFastReply(text, fastCtx);
+        if (fast) {
+            console.log(`[fast-reply] hit: ${fast.matchedId}`);
+            await saveMessageToFirestore(phoneClean, customerName, "bot", fast.reply, { accountId });
+            res.status(200).json({ reply: fast.reply, source: "fast_reply", matched: fast.matchedId });
+            return;
+        }
+    } catch (e) {
+        console.warn("[fast-reply] erro, segue pro Groq:", e.message);
+    }
+
+    // 5. Sem match local — chama Groq (parsing de pedido novo, conversa nuançada)
     try {
         const reply = await generateLuluReply(history.messages, text, customerName || history.lastSeenName, accountId, phoneClean);
         if (!reply) {
@@ -604,17 +632,17 @@ module.exports = async (req, res) => {
             return;
         }
 
-        // 5. Grava resposta da bot no histórico
+        // 6. Grava resposta da bot no histórico
         await saveMessageToFirestore(phoneClean, customerName, "bot", reply, { accountId });
 
-        // 6. Devolve pro gateway que envia pelo WhatsApp
-        res.status(200).json({ reply });
+        // 7. Devolve pro gateway que envia pelo WhatsApp
+        res.status(200).json({ reply, source: "groq_ia" });
     } catch (err) {
         console.error("[whatsapp-webhook] Lulu error:", err.message);
         // Fallback amigável
         const fallback = "Oi! 🐑 Tô com problema de conexão aqui agora. Posso te chamar em alguns minutos? Se for urgente, fala direto com o Jocimar: wa.me/5543999919777";
         await saveMessageToFirestore(phoneClean, customerName, "bot", fallback).catch(() => {});
-        res.status(200).json({ reply: fallback });
+        res.status(200).json({ reply: fallback, source: "fallback" });
     }
 };
 
