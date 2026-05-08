@@ -6000,3 +6000,47 @@ _Belinha — Ciclo #152 | 2026-05-07_
 _Belinha — Ciclo #158 | 2026-05-08_
 
 ---
+
+---
+
+## Ciclo #163 — 2026-05-08
+
+**Área:** Conteúdo — `instagram-tiktok-junina-2026.md` standalone
+
+**Contexto:** Prescrito pelo roadmap ciclo #161 (v20a ativa). Gap identificado no ciclo #160: nenhum concorrente (MilkyMoo, JohnnyJoy, TheBest) tem campanha de posts orgânicos estruturada de Festa Junina em Londrina — share of voice 100% disponível. Os arquivos existentes (`potinho-junino-2026-contraprogramacao.md`, `semana9.md`) cobriam estratégia competitiva e calendário semanal, mas não havia playbook standalone de posts IG/TikTok com a ovelhinha como personagem central.
+
+**O que pesquisou/analisou:**
+- Leu `potinho-junino-2026-contraprogramacao.md` (ciclo #134): intel TheBest Festival Junino, 3 versões do Potinho Junino (A Clássica, B Tropicana, C Fit)
+- Leu `pos-inauguracao-semana9.md`: calendário da semana 9 (14–20/06) com lançamento do Potinho Junino em 17/06
+- Verificou `belinha/content/` — sem arquivo standalone de posts IG/TikTok para Festa Junina
+- Identificou datas-chave: Santo Antônio 13/06, São João 24/06, São Pedro 29/06
+- Confirmou: 5–6 semanas até o período junino = janela ideal para preparar conteúdo
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/instagram-tiktok-junina-2026.md` | CRIADO — Playbook standalone: 4 posts feed (Reel teaser, Carrossel lançamento, Reel monta-comigo, Reel encerramento), 2 sequências de Stories (teaser 48h + São João ao vivo), adaptações TikTok (sons, hashtags, stitch challenge), checklist operacional 9 ações com datas (10/06→28/06), tabela de pendências do operador, referências cruzadas |
+
+**Destaques:**
+1. **Ovelhinha no arraial:** Character arc completo — ovelhinha de chapéu de palha como protagonista em todos os posts. Visual direction em cada post (cor, fundo, sticker, posição). Cria continuidade narrativa da personagem ao longo do mês.
+2. **3 versões do Potinho Junino:** Carrossel (POST 2) apresenta Clássica, Tropicana e Fit em slides separados. Aumenta percepção de variedade vs. TheBest (que vende por peso em self-service).
+3. **Urgência construída ao longo de 17 dias:** POST 1 (teaser 12/06) → POST 2 (lançamento 17/06) → POST 3 (UGC 20/06) → POST 4 (encerramento 28/06). Cada post tem CTA diferente — antecipação, lançamento, participação, urgência.
+4. **São João ao vivo (24/06):** Sequência de 3 stories para o pico cultural do dia — aproveita o trending sem precisar de conteúdo novo.
+5. **TikTok adaptado:** Notas específicas de sound, hashtags e formato "stitch challenge" orgânico — diferente do feed IG.
+6. **Diferenciação integrada (sem citar TheBest):** Copy dos posts POST 2 e POST 3 usa "não é self-service, não é por peso" como gancho de personalização — referência à contraprogramação do ciclo #134 sem nomear concorrente.
+
+**Commit:** `501c085`
+
+**Próximo passo sugerido:**
+- **Ciclo #164 — Conteúdo/WA:** `whatsapp-namorados-2026.md` standalone — 12/06/2026 em 5 semanas. v20c ativa. CTA de gift/presentear obrigatório.
+- **Ciclo #165 — Conteúdo/WA:** `whatsapp-junina-2026.md` standalone — v20a ativa.
+- **Ciclo #166 — SEO:** Landing page `potinho-personalizado-londrina.html`
+- **Ciclo #167 — Concorrentes:** Refetch pré-Festa Junina (campanhas junho 2026)
+- **Operador:** Confirmar ingredientes do Potinho Junino com a franquia — prazo 30/05/2026 (antes da data de gravação 10/06)
+- **Operador:** Confirmar naming: "Potinho Junino" vs. "Potinho do Arraial" ou outro
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente desde ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — +25 ciclos. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+
+_Belinha — Ciclo #163 | 2026-05-08_
