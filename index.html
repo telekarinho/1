@@ -406,8 +406,21 @@
             var textEl = document.getElementById('inaugBannerText');
             var ctaEl  = document.getElementById('inaugBannerCta');
 
-            // Após 25/04 23:59 — ocultar o banner definitivamente
+            // Após 25/04 23:59 — fases pós-inauguração (Festa Junina 10/05→29/06)
             if(y > 2026 || (y === 2026 && m > 4) || (y === 2026 && m === 4 && day > 25)){
+                var inJuninaTeaser = (y === 2026) && ((m === 5 && day >= 10) || (m === 6 && day <= 16));
+                var inJuninaLaunch = (y === 2026 && m === 6 && day >= 17 && day <= 29);
+                if((inJuninaTeaser || inJuninaLaunch) && !sessionStorage.getItem('juninaBannerClosed')){
+                    if(inJuninaTeaser){
+                        if(textEl) textEl.innerHTML = '🎪 <strong>EM BREVE: NOVIDADE JUNINA!</strong> &nbsp;·&nbsp; Mande <strong>JUNINA26</strong> no WhatsApp e seja o 1º a saber 🐑';
+                        if(ctaEl){ ctaEl.textContent = 'Quero saber! →'; ctaEl.href = 'https://wa.me/5543998042424?text=JUNINA26'; }
+                    } else {
+                        if(textEl) textEl.innerHTML = '🌽 <strong>POTINHO JUNINO CHEGOU!</strong> &nbsp;·&nbsp; Paçoca + cocada + mel · Só até 29/06!';
+                        if(ctaEl){ ctaEl.textContent = 'Pedir agora! →'; ctaEl.href = 'https://wa.me/5543998042424?text=Ol%C3%A1!%20Quero%20o%20Potinho%20Junino%21%20%F0%9F%8C%BD'; }
+                    }
+                    if(banner) banner.style.display = 'flex';
+                    return;
+                }
                 if(banner) banner.style.display = 'none';
                 return;
             }
@@ -444,6 +457,8 @@
 
         window.closeBanner = function(){
             if(banner) banner.style.display = 'none';
+            var d2 = getBrasiliaDate(), m2 = d2.getMonth()+1, day2 = d2.getDate(), y2 = d2.getFullYear();
+            if(y2 > 2026 || (y2 === 2026 && (m2 > 4 || (m2 === 4 && day2 > 25)))) sessionStorage.setItem('juninaBannerClosed','1');
             applyBannerOffset();
         };
 
