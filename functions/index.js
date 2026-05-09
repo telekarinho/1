@@ -1867,17 +1867,25 @@ function _buildClosingHtml(data) {
     const saldoEsperadoDinheiro = valorAbertura + vendasDinheiro + totalReforco - totalSangria;
 
     const dinheiroContado = Number((br && (br.dinheiro_liquido_dia || br.dinheiro_total_gaveta)) || data.valorContado || 0);
-    const pixContado = Number((br && br.pix_total) || 0);
-    const cartaoContado = Number((br && br.cartao) || 0);
+    // Se operador NAO conferiu PIX/Cartao separadamente, assume = sistema (nao mostra diff falsa)
+    const pixConferenciaFeita = !!(br && br.pix_total !== undefined && Number(br.pix_total) > 0);
+    const cartaoConferenciaFeita = !!(br && br.cartao !== undefined && Number(br.cartao) > 0);
+    const pixContado = pixConferenciaFeita ? Number(br.pix_total) : vendasPix;
+    const cartaoContado = cartaoConferenciaFeita ? Number(br.cartao) : vendasCartao;
     const totalContado = dinheiroContado + pixContado + cartaoContado;
     const totalEsperado = saldoEsperadoDinheiro + vendasPix + vendasCartao;
 
     const diffDinheiro = dinheiroContado - saldoEsperadoDinheiro;
     const diffPix = pixContado - vendasPix;
     const diffCartao = cartaoContado - vendasCartao;
-    const diffTotal = Number(con.diffTotal || data.diferenca || (totalContado - totalEsperado));
+    // Se a diferenca total veio explicita do dinheiro contado (sem conferir pix/cartao),
+    // usa apenas a diferenca em dinheiro
+    const diffTotalRaw = Number(con.diffTotal || data.diferenca || (totalContado - totalEsperado));
+    const diffTotal = (!pixConferenciaFeita && !cartaoConferenciaFeita) ? diffDinheiro : diffTotalRaw;
     const diffColor = Math.abs(diffTotal) < 0.01 ? "#10B981" : (Math.abs(diffTotal) <= 5 ? "#F59E0B" : "#DC2626");
-    const diffLabel = Math.abs(diffTotal) < 0.01 ? "✅ Bateu certinho" : (diffTotal > 0 ? "🔼 Sobrou" : "🔽 Faltou");
+    const diffLabel = Math.abs(diffTotal) < 0.01
+        ? "✅ Bateu certinho"
+        : (diffTotal > 0 ? "📥 Excedente em dinheiro (provavelmente venda não lançada)" : "📤 Faltou no caixa");
 
     function row(label, val, weight) {
         return `<tr><td style="padding:7px 10px;border-top:1px solid #f3f4f6;color:#374151">${label}</td><td style="padding:7px 10px;border-top:1px solid #f3f4f6;text-align:right;font-weight:${weight || 600};color:#111">${_fmtBRL(val)}</td></tr>`;
@@ -2002,7 +2010,14 @@ function _buildClosingHtml(data) {
         ${totalSangria > 0 ? row("− Sangrias", -totalSangria) : ""}
         <tr style="background:#fff;font-weight:800"><td style="padding:9px 10px;border-top:2px solid #FDE68A;color:#92400E">= Esperado na gaveta</td><td style="padding:9px 10px;border-top:2px solid #FDE68A;text-align:right;color:#92400E">${_fmtBRL(saldoEsperadoDinheiro)}</td></tr>
         ${row("Contado pelo operador", dinheiroContado, 700)}
-        ${Math.abs(diffDinheiro) >= 0.01 ? `<tr><td style="padding:9px 10px;border-top:1px solid #F3F4F6;color:${Math.abs(diffDinheiro) <= 5 ? '#F59E0B' : '#DC2626'};font-weight:700">${diffDinheiro > 0 ? '⚠️ Sobra na gaveta (entrou a mais)' : '⚠️ Falta na gaveta (saiu a mais)'}</td><td style="padding:9px 10px;border-top:1px solid #F3F4F6;text-align:right;color:${Math.abs(diffDinheiro) <= 5 ? '#F59E0B' : '#DC2626'};font-weight:800">${(diffDinheiro > 0 ? '+' : '−')}${_fmtBRL(Math.abs(diffDinheiro))}</td></tr>` : `<tr><td style="padding:9px 10px;border-top:1px solid #F3F4F6;color:#16A34A;font-weight:700">✅ Bateu certinho</td><td style="padding:9px 10px;border-top:1px solid #F3F4F6;text-align:right;color:#16A34A;font-weight:800">R$ 0,00</td></tr>`}
+        ${Math.abs(diffDinheiro) >= 0.01 ? (function(){
+            var diffColorLocal = Math.abs(diffDinheiro) <= 5 ? '#F59E0B' : '#DC2626';
+            var label = diffDinheiro > 0
+                ? '📥 Excedente em dinheiro <small style="color:#6B7280;font-weight:400">(venda não lançada no PDV)</small>'
+                : '📤 Faltou no caixa';
+            return `<tr><td style="padding:9px 10px;border-top:1px solid #F3F4F6;color:${diffColorLocal};font-weight:700">${label}</td><td style="padding:9px 10px;border-top:1px solid #F3F4F6;text-align:right;color:${diffColorLocal};font-weight:800">${(diffDinheiro > 0 ? '+' : '−')}${_fmtBRL(Math.abs(diffDinheiro))}</td></tr>`;
+        })() : `<tr><td style="padding:9px 10px;border-top:1px solid #F3F4F6;color:#16A34A;font-weight:700">✅ Bateu certinho</td><td style="padding:9px 10px;border-top:1px solid #F3F4F6;text-align:right;color:#16A34A;font-weight:800">R$ 0,00</td></tr>`}
+        ${diffDinheiro > 0.01 ? `<tr><td colspan="2" style="padding:8px 10px;background:#FEF3C7;border-top:1px solid #FDE68A;font-size:.78rem;color:#92400E;line-height:1.4">💡 <strong>Excedente NÃO é "sobra"</strong> — geralmente significa venda em dinheiro que não foi registrada no PDV (operador esqueceu de lançar). Contabiliza como faturamento.</td></tr>` : ''}
       </table>
     </div>
 
@@ -2020,16 +2035,17 @@ function _buildClosingHtml(data) {
       </div>
     </div>
 
-    <!-- CONFERENCIA PIX/CARTAO (se diferenca) -->
-    ${(Math.abs(diffPix) >= 0.01 || Math.abs(diffCartao) >= 0.01) ? `
+    <!-- CONFERENCIA PIX/CARTAO — so aparece se admin conferiu E houver diferenca real -->
+    ${((pixConferenciaFeita && Math.abs(diffPix) >= 0.01) || (cartaoConferenciaFeita && Math.abs(diffCartao) >= 0.01)) ? `
     <h3 style="margin:18px 0 8px;font-size:14px;color:#374151">💳 Conferência PIX e Cartão</h3>
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">
       <thead><tr style="background:#F3F4F6"><th style="padding:9px 10px;text-align:left">Método</th><th style="padding:9px 10px;text-align:right">Sistema</th><th style="padding:9px 10px;text-align:right">Conferido</th><th style="padding:9px 10px;text-align:right">Diferença</th></tr></thead>
       <tbody>
-        ${diffRow("⚡ PIX", vendasPix, pixContado)}
-        ${diffRow("💳 Cartão", vendasCartao, cartaoContado)}
+        ${pixConferenciaFeita ? diffRow("⚡ PIX", vendasPix, pixContado) : ''}
+        ${cartaoConferenciaFeita ? diffRow("💳 Cartão", vendasCartao, cartaoContado) : ''}
       </tbody>
     </table>` : ''}
+    ${(!pixConferenciaFeita || !cartaoConferenciaFeita) && (vendasPix > 0 || vendasCartao > 0) ? '<p style="font-size:.78rem;color:#6B7280;font-style:italic;margin:8px 0 14px">ℹ️ PIX e Cartão considerados conferidos pelo valor do sistema (operador não preencheu valor das maquininhas separadamente).</p>' : ''}
 
     <!-- JUSTIFICATIVA SE HOUVER -->
     ${data.motivo ? '<div style="padding:12px 14px;background:#FEF2F2;border-left:4px solid #DC2626;border-radius:8px;margin-bottom:14px;font-size:13px;color:#991B1B"><strong>Justificativa registrada:</strong> ' + String(data.motivo).replace(/</g, "&lt;") + '</div>' : ''}
@@ -2157,6 +2173,89 @@ exports.sendClosingReport = onCall({
             _createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
         throw new HttpsError("internal", "SMTP falhou: " + (e.message || "?"));
+    }
+});
+
+// ============================================================
+// TESTE — dispara email de fechamento com dados mockados
+// URL: https://southamerica-east1-milkypot-ad945.cloudfunctions.net/testClosingEmail?secret=mp-test-2026&email=SEU@EMAIL.COM
+// ============================================================
+const { onRequest } = require("firebase-functions/v2/https");
+exports.testClosingEmail = onRequest({
+    region: "southamerica-east1",
+    secrets: [GMAIL_APP_PASSWORD],
+    cors: true,
+    timeoutSeconds: 30,
+    memory: "256MiB",
+}, async (req, res) => {
+    if (req.query.secret !== "mp-test-2026") return res.status(403).send("forbidden");
+    const targetEmail = (req.query.email || "jocimarrodrigo@gmail.com").trim();
+    const now = new Date();
+
+    const mockData = {
+        franchiseId: "muffato-quintino",
+        operatorName: "Carlos Souza",
+        operatorEmail: "carlos@milkypot.com",
+        valorContado: 272.00,
+        saldoEsperado: 199.00,
+        diferenca: 73.00,
+        motivo: "falta de lançamento",
+        fechamentoDate: now.toISOString(),
+        valorAbertura: 199.00,
+        vendasDinheiro: 23.00,
+        totalSangria: 0,
+        totalReforco: 0,
+        totalPedidos: 30,
+        faturamentoBruto: 465.46,
+        trocoProximoDia: 199.00,
+        porMetodoEsperado: {
+            pix: 92.69,
+            cartao_credito: 200.00,
+            cartao_debito: 172.77,
+            beneficio_funcionario: 0
+        },
+        breakdownConferido: {
+            conferido: { totalConferido: 272.00, diffTotal: 73.00 },
+            breakdown: {
+                dinheiro_liquido_dia: 272.00,
+                dinheiro_total_gaveta: 272.00
+                // pix_total e cartao NAO informados → assume = sistema
+            }
+        },
+        turnos: [
+            { tipo: "abertura", hora: "08:42", descricao: "Aberto por <strong>Maria Silva</strong> com troco de R$ 199,00" },
+            { tipo: "fechamento", hora: "21:51", descricao: "Fechado por <strong>Carlos Souza</strong>" }
+        ],
+        sangrias: [],
+        reforcos: [],
+        comissoes: [
+            { name: "Indefinido", orders: 30, revenue: 4456.55, commission: 222.10 }
+        ],
+        beneficios: []
+    };
+
+    const password = GMAIL_APP_PASSWORD.value();
+    if (!password) return res.status(500).json({ error: "GMAIL_APP_PASSWORD nao configurado" });
+
+    const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: { user: SMTP_USER, pass: password },
+    });
+
+    try {
+        await transporter.sendMail({
+            from: '"MilkyPot PDV [TESTE]" <' + SMTP_USER + '>',
+            to: targetEmail,
+            subject: "🧪 [TESTE v2] Fechamento de Caixa — MilkyPot — " + new Date().toISOString().slice(0, 10),
+            text: _buildClosingText(mockData),
+            html: _buildClosingHtml(mockData),
+        });
+        res.json({ success: true, sentTo: targetEmail });
+    } catch (e) {
+        console.error("testClosingEmail error:", e);
+        res.status(500).json({ error: e.message });
     }
 });
 
