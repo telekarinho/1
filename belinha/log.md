@@ -2,6 +2,49 @@
 
 ---
 
+## Ciclo #174 — 2026-05-09
+
+**Área:** Conversão — Funil WA + Keyword JUNINA26 (Festa Junina 10–29/06/2026)
+
+**Contexto:** O `whatsapp-junina-2026.md` (ciclo #165) contém a campanha completa com a keyword `JUNINA26`, mas o `whatsapp-funil.md` (funil operacional do atendente) nunca foi atualizado para referenciar essa keyword. O atendente usava `/junino` apenas para upsell durante pedidos, mas não tinha script para recrutar clientes à lista VIP JUNINA26 nem a configuração da auto-resposta documentada no funil principal. Com Festa Junina em ~25 dias (abertura 10/06, lançamento do produto 17/06), essa integração é urgente para o operador configurar o WA Business até 06/06.
+
+**O que pesquisou/analisou:**
+- Leitura de `whatsapp-funil.md`: estrutura v1+v2, atalhos existentes `/junino` e `/acai`, fluxo sugerido até ciclo #48
+- Leitura de `whatsapp-junina-2026.md`: auto-resposta JUNINA26 + calendário de disparos + pendência do operador (confirmar ingredientes até 30/05)
+- Gap identificado: funil operacional sem entrada JUNINA26, sem script de recrutamento manual, sem atalhos `/junina-*`
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-funil.md` | +62 linhas — seção JUNINA26 + atalhos v3 + fluxo atualizado |
+
+**Detalhes:**
+- **Seção nova:** "ETAPA NOVA — Keyword JUNINA26 (Festa Junina 10–29/06/2026)" com:
+  - Auto-resposta WA Business (texto completo + instruções de configuração)
+  - Script manual de recrutamento para o atendente usar entre 10–16/06
+  - Confirmação de inscrição quando cliente responde "SIM"
+  - Prazo de configuração: **06/06/2026**
+- **Atalhos v3 adicionados:** `/junina-recruta` e `/junina-ok` na tabela de respostas rápidas
+- **Fluxo atualizado:** gatilho `/junina-recruta` inserido entre `/junino` e `/voltou`
+
+**Commit:** `a0e99ae`
+
+**Próximo passo sugerido:**
+- **Ciclo #175 — SEO:** Schema.org `FAQPage` em `potinho-personalizado-londrina.html` (landing do ciclo #166 sem structured data FAQ)
+- **Ciclo #176 — UX/Frontend:** Adicionar `.muffato-upsell` bar em `cardapio.html` (prescrito ciclo #171, adiado)
+- **Ciclo #177 — Concorrentes:** Refetch MilkyMoo/JohnnyJoy/TheBest pré-Festa Junina (verificar campanhas junho 2026)
+- **Operador:** Configurar keyword `JUNINA26` no WA Business até **06/06** ⚠️ URGENTE (28 dias)
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05** ⚠️ URGENTE (21 dias)
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05** ⚠️ URGENTE
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — **+34 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+
+_Belinha — Ciclo #174 | 2026-05-09_
+
+---
+
 ## Ciclo #173 — 2026-05-09
 
 **Área:** Conteúdo/IG — Dia dos Pais 2026 (posts de feed Instagram/TikTok)
