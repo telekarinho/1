@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Influencer MilkyPot — Admin · MilkyPot</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7c3aed">
+<style>
+body{background:#FAF5FF;font-family:'Nunito',sans-serif;color:#1A2740}
+.panel-content{max-width:1280px;margin:0 auto}
+
+.hero{background:linear-gradient(135deg,#7c3aed,#EC407A);border-radius:24px;padding:24px 28px;color:#fff;margin-bottom:18px;position:relative;overflow:hidden;box-shadow:0 16px 48px rgba(124,58,237,.3)}
+.hero::after{content:'⭐';position:absolute;right:-30px;bottom:-30px;font-size:9rem;opacity:.18}
+.hero h1{font-family:'Baloo 2',cursive;font-size:1.8rem;font-weight:900;margin-bottom:6px}
+.hero p{opacity:.95;font-size:1rem;max-width:680px}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;position:relative;z-index:1}
+.stat{background:rgba(255,255,255,.18);backdrop-filter:blur(8px);border-radius:14px;padding:10px 14px}
+.stat .v{font-family:'Baloo 2',cursive;font-size:1.5rem;font-weight:900;line-height:1}
+.stat .l{font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;font-weight:800;opacity:.85;margin-top:3px}
+
+.tabs{display:flex;gap:0;background:#fff;border-radius:14px;padding:6px;margin-bottom:18px;box-shadow:0 8px 28px rgba(0,0,0,.06);overflow-x:auto}
+.tab{flex:1;min-width:120px;background:transparent;border:none;padding:12px 16px;font-family:'Nunito',sans-serif;font-weight:800;font-size:.9rem;color:#999;cursor:pointer;border-radius:10px;white-space:nowrap}
+.tab.active{background:linear-gradient(135deg,#7c3aed,#EC407A);color:#fff;box-shadow:0 6px 20px rgba(124,58,237,.3)}
+
+.section{background:#fff;border-radius:20px;padding:22px;margin-bottom:18px;box-shadow:0 8px 28px rgba(0,0,0,.06)}
+.section h2{font-family:'Baloo 2',cursive;font-size:1.3rem;color:#7c3aed;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+
+.queue-list{display:flex;flex-direction:column;gap:10px}
+.queue-item{background:#FAFAFA;border:2px solid #EEE;border-radius:14px;padding:14px;display:grid;grid-template-columns:60px 1fr auto;gap:14px;align-items:center;transition:border-color .15s}
+.queue-item:hover{border-color:#7c3aed}
+.queue-item .platform-ico{font-size:2rem;text-align:center}
+.queue-item .info .who{font-weight:800;font-size:.95rem;color:#1A2740}
+.queue-item .info .url{font-size:.78rem;color:#666;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:380px}
+.queue-item .info .meta{display:flex;gap:8px;margin-top:6px;font-size:.74rem;color:#7c3aed;font-weight:800;flex-wrap:wrap}
+.queue-item .actions{display:flex;gap:6px}
+.btn-approve{background:#10B981;color:#fff;border:none;padding:8px 14px;border-radius:100px;font-weight:800;font-size:.82rem;cursor:pointer;font-family:'Nunito',sans-serif}
+.btn-reject{background:#EF4444;color:#fff;border:none;padding:8px 14px;border-radius:100px;font-weight:800;font-size:.82rem;cursor:pointer;font-family:'Nunito',sans-serif}
+.btn-view{background:#42A5F5;color:#fff;border:none;padding:8px 14px;border-radius:100px;font-weight:800;font-size:.82rem;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;display:inline-block}
+
+.lb-table{width:100%;border-collapse:collapse}
+.lb-table th{text-align:left;padding:10px;background:#FAF5FF;color:#7c3aed;font-weight:800;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #EDE7F6}
+.lb-table td{padding:12px 10px;border-bottom:1px solid #F3E5F5}
+.lb-table tr:hover{background:#FAFAFA}
+.lb-table .rank{font-family:'Baloo 2',cursive;font-size:1.3rem;font-weight:900;color:#7c3aed;width:50px}
+.tier-pill{padding:3px 10px;border-radius:100px;font-size:.7rem;font-weight:800;text-transform:uppercase;background:#F3E5F5;color:#6A1B9A}
+
+.miss-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.miss-card{background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border-radius:14px;padding:14px;display:flex;gap:12px}
+.miss-card .emoji{font-size:2rem}
+.miss-card .info{flex:1}
+.miss-card .titulo{font-family:'Baloo 2',cursive;font-size:1.1rem;font-weight:900;line-height:1.15}
+.miss-card .desc{font-size:.84rem;color:#555;margin-top:4px;line-height:1.4}
+.miss-card .meta{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;font-size:.72rem}
+.miss-card .badge{background:rgba(255,255,255,.7);padding:2px 8px;border-radius:100px;font-weight:800;color:#7c3aed}
+.miss-card .toggle{margin-left:auto}
+
+.empty{text-align:center;padding:40px;color:#999;font-style:italic}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10B981;color:#fff;padding:12px 22px;border-radius:100px;font-weight:800;z-index:9999;box-shadow:0 8px 28px rgba(16,185,129,.4)}
+
+.config-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.cfg{background:#FAFAFA;border:1.5px solid #EEE;border-radius:10px;padding:12px}
+.cfg label{display:block;font-size:.72rem;color:#7c3aed;font-weight:800;text-transform:uppercase;margin-bottom:4px}
+.cfg input{width:100%;background:#fff;border:1.5px solid #EEE;border-radius:6px;padding:6px 10px;font-family:'Nunito',sans-serif;font-size:.9rem}
+</style>
+</head>
+<body>
+<div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+            <h2>MilkyPot<small>Central Admin</small></h2>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-group">MilkyClube</div>
+            <a href="clube-central.html" class="sidebar-link"><span class="icon">🥛</span> Central MilkyClube</a>
+            <a href="recompensas-claims.html" class="sidebar-link"><span class="icon">🎁</span> Fila Claims</a>
+            <a href="influencer-program.html" class="sidebar-link active" style="background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(236,64,122,.15));border-left:3px solid #7c3aed"><span class="icon">⭐</span> Influencer MilkyPot</a>
+            <a href="desafio.html" class="sidebar-link"><span class="icon">🎮</span> Desafios</a>
+
+            <div class="sidebar-nav-group">Marketing</div>
+            <a href="marketing-diario.html" class="sidebar-link"><span class="icon">🚀</span> Marketing Diário</a>
+            <a href="belinha-historinhas.html" class="sidebar-link"><span class="icon">🐑</span> Belinha — 90 dias</a>
+
+            <div class="sidebar-nav-group">Voltar</div>
+            <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+        </nav>
+    </aside>
+
+    <main class="panel-main">
+        <header class="panel-header">
+            <button class="btn btn-sm btn-outline" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">☰</button>
+            <h1>⭐ Influencer MilkyPot — Painel Admin</h1>
+        </header>
+
+        <div class="panel-content">
+
+            <div class="hero">
+                <h1>Programa Influencer MilkyPot</h1>
+                <p>Cliente vira nano-influencer. Posta no IG/TikTok, marca @milkypotbr, ganha MilkyCoins. Aqui você modera UGC, configura missões da semana e acompanha quem mais converte.</p>
+                <div class="stats-grid">
+                    <div class="stat"><div class="v" id="kpiInfluencers">—</div><div class="l">Influencers</div></div>
+                    <div class="stat"><div class="v" id="kpiPending">—</div><div class="l">Fila moderação</div></div>
+                    <div class="stat"><div class="v" id="kpiPostsWeek">—</div><div class="l">Posts/semana</div></div>
+                    <div class="stat"><div class="v" id="kpiConvWeek">—</div><div class="l">Conversões/sem</div></div>
+                    <div class="stat"><div class="v" id="kpiCAC">—</div><div class="l">CAC influencer</div></div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" data-tab="queue" onclick="switchTab('queue')">📥 Fila moderação</button>
+                <button class="tab" data-tab="leaderboard" onclick="switchTab('leaderboard')">🏆 Ranking</button>
+                <button class="tab" data-tab="missions" onclick="switchTab('missions')">🎯 Missões</button>
+                <button class="tab" data-tab="config" onclick="switchTab('config')">⚙️ Config</button>
+                <button class="tab" data-tab="plan" onclick="switchTab('plan')">📖 Plano completo</button>
+            </div>
+
+            <!-- TAB: QUEUE -->
+            <div class="tab-content" id="tab-queue">
+                <div class="section">
+                    <h2>📥 Posts aguardando aprovação</h2>
+                    <div class="queue-list" id="queueList">
+                        <div class="empty">Nenhum post pendente. Cliente postou? Vai aparecer aqui em segundos.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: LEADERBOARD -->
+            <div class="tab-content" id="tab-leaderboard" style="display:none">
+                <div class="section">
+                    <h2>🏆 Top Influencers (mês)</h2>
+                    <table class="lb-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Influencer</th>
+                                <th>@</th>
+                                <th>Tier</th>
+                                <th>Posts</th>
+                                <th>Views</th>
+                                <th>Conversões</th>
+                                <th>MC ganhos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lbBody">
+                            <tr><td colspan="8" class="empty">Sem dados ainda — aprovar posts gera ranking.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: MISSIONS -->
+            <div class="tab-content" id="tab-missions" style="display:none">
+                <div class="section">
+                    <h2>🎯 Missões da semana <button onclick="addMission()" style="margin-left:auto;background:linear-gradient(135deg,#7c3aed,#EC407A);color:#fff;border:none;padding:8px 16px;border-radius:100px;font-weight:800;cursor:pointer;font-family:Nunito">+ Nova missão</button></h2>
+                    <div class="miss-grid" id="missionsGrid"></div>
+                </div>
+            </div>
+
+            <!-- TAB: CONFIG -->
+            <div class="tab-content" id="tab-config" style="display:none">
+                <div class="section">
+                    <h2>⚙️ Configurações da economia Influencer</h2>
+                    <p style="color:#6B7A95;margin-bottom:14px;font-size:.92rem">1 MilkyCoin = R$ 0,10. Ajuste valores base por ação. Multiplicadores por tier aplicados em cima.</p>
+                    <div class="config-grid">
+                        <div class="cfg"><label>Coins por Story</label><input type="number" id="cfgStory" value="30"></div>
+                        <div class="cfg"><label>Coins por Post feed</label><input type="number" id="cfgFeed" value="80"></div>
+                        <div class="cfg"><label>Coins por Reel</label><input type="number" id="cfgReel" value="200"></div>
+                        <div class="cfg"><label>Coins por Carrossel</label><input type="number" id="cfgCarousel" value="120"></div>
+                        <div class="cfg"><label>Bônus 500+ views</label><input type="number" id="cfgViews500" value="80"></div>
+                        <div class="cfg"><label>Bônus 2k+ views</label><input type="number" id="cfgViews2k" value="250"></div>
+                        <div class="cfg"><label>Bônus VIRAL (50k+)</label><input type="number" id="cfgViral" value="2500"></div>
+                        <div class="cfg"><label>Coins por conversão de cupom</label><input type="number" id="cfgConv" value="50"></div>
+                        <div class="cfg"><label>Coins por referral 1ª compra</label><input type="number" id="cfgReferral" value="150"></div>
+                        <div class="cfg"><label>Cap diário Stories</label><input type="number" id="cfgCapStory" value="2"></div>
+                        <div class="cfg"><label>% off cupom pessoal</label><input type="number" id="cfgCouponPct" value="10"></div>
+                        <div class="cfg"><label>R$ cashback amigo</label><input type="number" id="cfgFriendCash" value="5"></div>
+                    </div>
+                    <button onclick="saveConfig()" style="margin-top:14px;background:linear-gradient(135deg,#7c3aed,#EC407A);color:#fff;border:none;padding:12px 24px;border-radius:100px;font-family:'Baloo 2',cursive;font-weight:900;cursor:pointer">💾 Salvar configurações</button>
+                </div>
+            </div>
+
+            <!-- TAB: PLAN -->
+            <div class="tab-content" id="tab-plan" style="display:none">
+                <div class="section">
+                    <h2>📖 Plano estratégico completo</h2>
+                    <p style="color:#6B7A95;margin-bottom:14px">Documento completo do programa, sintetizado por 3 agentes especialistas (Growth Hacker + Instagram Strategist + UX Researcher). Roadmap de implementação, KPIs, anti-fraude, viral loops.</p>
+                    <a href="/MILKYCLUBE_INFLUENCER_PLAN.md" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#EC407A);color:#fff;padding:14px 28px;border-radius:100px;font-family:'Baloo 2',cursive;font-weight:900;text-decoration:none">📖 Abrir plano completo</a>
+                    <a href="/influencer.html" target="_blank" style="display:inline-block;margin-left:8px;background:#fff;color:#7c3aed;border:2px solid #7c3aed;padding:14px 28px;border-radius:100px;font-family:'Baloo 2',cursive;font-weight:900;text-decoration:none">👀 Ver como cliente</a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script src="../js/data/influencer-missions.js?v=mp-v167"></script>
+<script>
+const MISSIONS = window.InfluencerData.missions;
+const TIERS = window.InfluencerData.tiers;
+
+// MOCK DATA — TODO: integrar com Firestore /influencerPosts e /influencers
+let mockQueue = [
+    {id:'p1', user:{name:'Mariana S.',handle:'@mari_lond'}, platform:'instagram', url:'https://instagram.com/p/ABC123', type:'reel', submittedAt:new Date(Date.now()-3600000).toISOString(), missionId:'mission_001'},
+    {id:'p2', user:{name:'Pedro G.',handle:'@pedro.ld'}, platform:'tiktok', url:'https://tiktok.com/@pedro.ld/video/1234', type:'reel', submittedAt:new Date(Date.now()-7200000).toISOString()},
+    {id:'p3', user:{name:'Camila R.',handle:'@camir'}, platform:'instagram', url:'https://instagram.com/p/XYZ789', type:'feed', submittedAt:new Date(Date.now()-10800000).toISOString(), missionId:'mission_003'}
+];
+let mockLeaderboard = [
+    {rank:1,name:'Mariana S.',handle:'@mari_lond',tier:3,posts:18,views:24500,conv:7,coins:3200},
+    {rank:2,name:'Pedro G.',handle:'@pedro.ld',tier:2,posts:12,views:8400,conv:4,coins:1850},
+    {rank:3,name:'Camila R.',handle:'@camir',tier:2,posts:9,views:5100,conv:3,coins:1320}
+];
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab));
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = c.id==='tab-'+tab ? '' : 'none');
+}
+
+function renderQueue() {
+    const list = document.getElementById('queueList');
+    if (!mockQueue.length) {
+        list.innerHTML = '<div class="empty">Fila vazia — nenhum post pendente.</div>';
+        document.getElementById('kpiPending').textContent = '0';
+        return;
+    }
+    document.getElementById('kpiPending').textContent = mockQueue.length;
+    list.innerHTML = mockQueue.map(p => {
+        const mission = p.missionId ? MISSIONS.find(m => m.id===p.missionId) : null;
+        return `
+        <div class="queue-item" id="q-${p.id}">
+            <div class="platform-ico">${p.platform==='tiktok'?'🎵':'📸'}</div>
+            <div class="info">
+                <div class="who">${escapeHtml(p.user.name)} <span style="color:#666;font-weight:600">${escapeHtml(p.user.handle)}</span></div>
+                <div class="url">${escapeHtml(p.url)}</div>
+                <div class="meta">
+                    <span>📅 ${formatDate(p.submittedAt)}</span>
+                    <span>🎬 ${p.type}</span>
+                    ${mission ? '<span>🎯 '+escapeHtml(mission.titulo)+'</span>' : ''}
+                </div>
+            </div>
+            <div class="actions">
+                <a href="${escapeHtml(p.url)}" target="_blank" class="btn-view">👀 Ver</a>
+                <button class="btn-approve" onclick="approve('${p.id}')">✓ Aprovar</button>
+                <button class="btn-reject" onclick="reject('${p.id}')">✗ Rejeitar</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderLeaderboard() {
+    const body = document.getElementById('lbBody');
+    if (!mockLeaderboard.length) return;
+    body.innerHTML = mockLeaderboard.map(l => {
+        const tier = TIERS.find(t=>t.id===l.tier);
+        return `
+        <tr>
+            <td class="rank">#${l.rank}</td>
+            <td><strong>${escapeHtml(l.name)}</strong></td>
+            <td>${escapeHtml(l.handle)}</td>
+            <td><span class="tier-pill">${tier?tier.emoji+' '+tier.nome:l.tier}</span></td>
+            <td>${l.posts}</td>
+            <td>${l.views.toLocaleString('pt-BR')}</td>
+            <td>${l.conv}</td>
+            <td><strong style="color:#7c3aed">${l.coins.toLocaleString('pt-BR')}</strong></td>
+        </tr>`;
+    }).join('');
+}
+
+function renderMissions() {
+    document.getElementById('missionsGrid').innerHTML = MISSIONS.map(m => `
+        <div class="miss-card">
+            <div class="emoji">${m.emoji||'🎯'}</div>
+            <div class="info">
+                <div class="titulo">${escapeHtml(m.titulo)}</div>
+                <div class="desc">${escapeHtml(m.descricao)}</div>
+                <div class="meta">
+                    <span class="badge">+${m.coinsBonus} MC</span>
+                    <span class="badge">${m.tipo}</span>
+                    <span class="badge">${m.duracaoDias}d</span>
+                    <span class="badge">tier ${m.tierMinimo}+</span>
+                    ${m.ativa ? '<span class="badge" style="background:#10B981;color:#fff">✓ ativa</span>' : '<span class="badge">paused</span>'}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function approve(id) {
+    mockQueue = mockQueue.filter(p => p.id !== id);
+    showToast('✅ Post aprovado · cliente notificado');
+    renderQueue();
+}
+function reject(id) {
+    const reason = prompt('Motivo da rejeição (cliente vê):', 'Faltou marcação @milkypotbr na legenda');
+    if (!reason) return;
+    mockQueue = mockQueue.filter(p => p.id !== id);
+    showToast('Rejeitado · motivo enviado');
+    renderQueue();
+}
+function addMission() {
+    alert('TODO: modal pra criar missão (será integrado ao Firestore /missions)');
+}
+function saveConfig() {
+    showToast('💾 Configurações salvas');
+}
+
+function showToast(msg) {
+    const old = document.querySelector('.toast');
+    if (old) old.remove();
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 2200);
+}
+
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function formatDate(iso){
+    if(!iso) return '';
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = (now - d)/60000;
+    if (diff < 60) return Math.floor(diff)+'min atrás';
+    if (diff < 1440) return Math.floor(diff/60)+'h atrás';
+    return d.toLocaleDateString('pt-BR');
+}
+
+// KPIs mock
+document.getElementById('kpiInfluencers').textContent = '12';
+document.getElementById('kpiPostsWeek').textContent = '34';
+document.getElementById('kpiConvWeek').textContent = '8';
+document.getElementById('kpiCAC').textContent = 'R$22';
+
+renderQueue();
+renderLeaderboard();
+renderMissions();
+</script>
+</body>
+</html>

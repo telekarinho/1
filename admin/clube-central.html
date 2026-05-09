@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyClube — Central Admin · MilkyPot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#7c3aed">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="../images/logo-milkypot.png">
+    <style>
+    body{background:#FAF5FF;font-family:'Nunito',sans-serif;color:#1A2740}
+    .panel-content{max-width:1280px;margin:0 auto}
+
+    .clube-hero{background:linear-gradient(135deg,#7c3aed 0%,#EC407A 60%,#FFB74D 100%);border-radius:24px;padding:28px 32px;margin-bottom:22px;color:#fff;box-shadow:0 16px 48px rgba(124,58,237,.3);position:relative;overflow:hidden}
+    .clube-hero::after{content:'🥛';position:absolute;right:-30px;bottom:-30px;font-size:9rem;opacity:.18;transform:rotate(-15deg)}
+    .clube-hero h1{font-family:'Baloo 2',cursive;font-size:2rem;font-weight:900;margin-bottom:6px;line-height:1.05}
+    .clube-hero p{opacity:.95;font-size:1rem;line-height:1.5;max-width:680px;position:relative;z-index:1}
+    .hero-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:18px;position:relative;z-index:1}
+    .hero-stat{background:rgba(255,255,255,.18);backdrop-filter:blur(10px);border-radius:14px;padding:12px 14px}
+    .hero-stat .v{font-family:'Baloo 2',cursive;font-size:1.6rem;font-weight:900;line-height:1}
+    .hero-stat .l{font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;font-weight:800;opacity:.85;margin-top:3px}
+
+    .quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:24px}
+    .quick-card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 8px 28px rgba(0,0,0,.06);text-decoration:none;color:#1A2740;border-left:5px solid var(--c,#EC407A);transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;gap:6px}
+    .quick-card:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(124,58,237,.18)}
+    .quick-card .ico{font-size:1.8rem;line-height:1}
+    .quick-card h3{font-family:'Baloo 2',cursive;font-size:1.1rem;font-weight:900;color:var(--c,#EC407A);line-height:1.2}
+    .quick-card p{font-size:.85rem;color:#6B7A95;line-height:1.4}
+    .quick-card .meta{margin-top:auto;font-size:.74rem;color:#7c3aed;font-weight:800;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:4px}
+
+    .section{background:#fff;border-radius:20px;padding:22px 24px;margin-bottom:18px;box-shadow:0 8px 28px rgba(0,0,0,.06)}
+    .section h2{font-family:'Baloo 2',cursive;font-size:1.35rem;font-weight:900;color:#7c3aed;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+    .section .subtitle{color:#6B7A95;font-size:.92rem;margin-bottom:18px}
+
+    .modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+    .module-card{background:linear-gradient(135deg,var(--bg1,#FFE0EC),var(--bg2,#E3F2FD));border-radius:16px;padding:18px;position:relative;overflow:hidden}
+    .module-card::after{content:var(--emoji,'');position:absolute;right:-15px;bottom:-15px;font-size:5rem;opacity:.2}
+    .module-card h3{font-family:'Baloo 2',cursive;font-size:1.15rem;font-weight:900;color:#1A2740;margin-bottom:4px;position:relative;z-index:1}
+    .module-card .stat{font-family:'Baloo 2',cursive;font-size:1.4rem;font-weight:900;color:#7c3aed;line-height:1;margin:6px 0;position:relative;z-index:1}
+    .module-card .desc{font-size:.85rem;color:#444;line-height:1.4;position:relative;z-index:1;margin-bottom:10px}
+    .module-card .actions{display:flex;gap:6px;flex-wrap:wrap;position:relative;z-index:1}
+    .module-card .btn{background:rgba(255,255,255,.7);backdrop-filter:blur(8px);color:#7c3aed;border:none;padding:6px 12px;border-radius:100px;font-size:.78rem;font-weight:800;cursor:pointer;text-decoration:none;font-family:'Nunito',sans-serif}
+    .module-card .btn:hover{background:#fff}
+    .module-card .btn.primary{background:#7c3aed;color:#fff}
+
+    .leads-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.9rem}
+    .leads-table th{text-align:left;padding:10px 12px;background:#FAF5FF;color:#7c3aed;font-weight:800;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #EDE7F6}
+    .leads-table td{padding:10px 12px;border-bottom:1px solid #F3E5F5;color:#1A2740}
+    .leads-table tr:hover{background:#FAFAFA}
+    .leads-table .tier-badge{padding:3px 10px;border-radius:100px;font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+    .tier-aspirante{background:#E1F5FE;color:#01579B}
+    .tier-estrela{background:#F3E5F5;color:#6A1B9A}
+    .tier-pop{background:#FFE0B2;color:#E65100}
+    .tier-icone{background:#FFEBEE;color:#C62828}
+    .tier-lenda{background:linear-gradient(135deg,#FFD700,#EC407A);color:#fff}
+
+    .config-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+    .config-item{background:#FAFAFA;border:1.5px solid #EEE;border-radius:12px;padding:14px}
+    .config-item label{display:block;font-size:.74rem;color:#7c3aed;text-transform:uppercase;letter-spacing:.5px;font-weight:800;margin-bottom:6px}
+    .config-item input,.config-item select{width:100%;background:#fff;border:1.5px solid #EEE;border-radius:8px;padding:8px 12px;font-family:'Nunito',sans-serif;font-size:.92rem;color:#1A2740}
+    .config-item input:focus{outline:none;border-color:#7c3aed}
+    .config-item .help{font-size:.78rem;color:#999;margin-top:4px}
+    .save-bar{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+    .btn-save{background:linear-gradient(135deg,#7c3aed,#EC407A);color:#fff;border:none;padding:10px 20px;border-radius:100px;font-family:'Baloo 2',cursive;font-weight:900;font-size:.95rem;cursor:pointer}
+    .btn-save:hover{transform:translateY(-2px)}
+
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10B981;color:#fff;padding:14px 24px;border-radius:100px;font-weight:800;z-index:9999;box-shadow:0 8px 28px rgba(16,185,129,.4)}
+
+    .empty{text-align:center;padding:30px;color:#999;font-style:italic}
+    </style>
+</head>
+<body>
+<div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+            <h2>MilkyPot<small>Central Admin</small></h2>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-group">MilkyClube</div>
+            <a href="clube-central.html" class="sidebar-link active" style="background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(236,64,122,.15));border-left:3px solid #7c3aed"><span class="icon">🥛</span> Central MilkyClube</a>
+            <a href="recompensas-claims.html" class="sidebar-link"><span class="icon">🎁</span> Fila de Claims</a>
+            <a href="recompensas-roi.html" class="sidebar-link"><span class="icon">📈</span> ROI Recompensas</a>
+            <a href="influencer-program.html" class="sidebar-link"><span class="icon">⭐</span> Influencer MilkyPot</a>
+            <a href="desafio.html" class="sidebar-link"><span class="icon">🎮</span> Desafios</a>
+
+            <div class="sidebar-nav-group">Marketing</div>
+            <a href="marketing-diario.html" class="sidebar-link"><span class="icon">🚀</span> Marketing Diário</a>
+            <a href="belinha-historinhas.html" class="sidebar-link"><span class="icon">🐑</span> Belinha — 90 dias</a>
+            <a href="campaigns.html" class="sidebar-link"><span class="icon">📣</span> Campanhas</a>
+
+            <div class="sidebar-nav-group">Voltar</div>
+            <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard Geral</a>
+        </nav>
+    </aside>
+
+    <main class="panel-main">
+        <header class="panel-header">
+            <button class="btn btn-sm btn-outline" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">☰</button>
+            <h1>🥛 MilkyClube — Central de Configuração e Métricas</h1>
+        </header>
+
+        <div class="panel-content">
+
+            <!-- HERO -->
+            <div class="clube-hero">
+                <h1>MilkyClube em números 💗</h1>
+                <p>Tudo do programa de fidelidade: membros ativos, MilkyCoins em circulação, raspinhas geradas, MilkyPass completos, claims pendentes, configurações da economia e leads (clientes prontos pra virar fãs).</p>
+                <div class="hero-stats">
+                    <div class="hero-stat"><div class="v" id="kpiMembers">—</div><div class="l">Membros</div></div>
+                    <div class="hero-stat"><div class="v" id="kpiCoinsCirc">—</div><div class="l">MilkyCoins ativos</div></div>
+                    <div class="hero-stat"><div class="v" id="kpiScratches">—</div><div class="l">Raspinhas</div></div>
+                    <div class="hero-stat"><div class="v" id="kpiPassDone">—</div><div class="l">MilkyPass concluídos</div></div>
+                    <div class="hero-stat"><div class="v" id="kpiClaimsPending">—</div><div class="l">Claims pendentes</div></div>
+                </div>
+            </div>
+
+            <!-- QUICK ACTIONS -->
+            <div class="quick-grid">
+                <a href="recompensas-claims.html" class="quick-card" style="--c:#10B981">
+                    <div class="ico">📥</div>
+                    <h3>Fila de claims</h3>
+                    <p>Aprovar/recusar resgates dos clientes — raspinha, MilkyCoins, brindes.</p>
+                    <span class="meta">Operacional →</span>
+                </a>
+                <a href="recompensas-roi.html" class="quick-card" style="--c:#42A5F5">
+                    <div class="ico">📈</div>
+                    <h3>ROI Recompensas</h3>
+                    <p>Quanto custou em prêmios vs receita gerada por membro do clube.</p>
+                    <span class="meta">Análise →</span>
+                </a>
+                <a href="influencer-program.html" class="quick-card" style="--c:#EC407A">
+                    <div class="ico">⭐</div>
+                    <h3>Influencer MilkyPot</h3>
+                    <p>Painel de aprovação de UGC, ranking de influencers, missões da semana.</p>
+                    <span class="meta">Novo programa →</span>
+                </a>
+                <a href="desafio.html" class="quick-card" style="--c:#FFB300">
+                    <div class="ico">🎮</div>
+                    <h3>Desafios da semana</h3>
+                    <p>Configurar gamificação que aparece pro cliente no app.</p>
+                    <span class="meta">Configurar →</span>
+                </a>
+                <a href="/clube.html?login=1" class="quick-card" style="--c:#7c3aed" target="_blank">
+                    <div class="ico">👀</div>
+                    <h3>Ver como cliente</h3>
+                    <p>Abrir o app MilkyClube em outra aba pra testar a experiência real.</p>
+                    <span class="meta">Preview →</span>
+                </a>
+                <a href="/clube/" class="quick-card" style="--c:#26A69A" target="_blank">
+                    <div class="ico">🌐</div>
+                    <h3>Landing pública</h3>
+                    <p>Ver e editar a página de captura — onde clientes descobrem o clube.</p>
+                    <span class="meta">Marketing →</span>
+                </a>
+            </div>
+
+            <!-- MÓDULOS DO MILKYCLUBE -->
+            <div class="section">
+                <h2>🎯 Módulos do MilkyClube</h2>
+                <p class="subtitle">Cada módulo do programa: status, métrica chave, ações.</p>
+
+                <div class="modules">
+                    <div class="module-card" style="--bg1:#FFE0B2;--bg2:#FFF3E0;--emoji:'🎟️'">
+                        <h3>Raspinha digital</h3>
+                        <div class="stat" id="modScratches">—</div>
+                        <div class="desc">Cada compra gera uma raspinha. Cliente raspa virtualmente, ganha prêmio.</div>
+                        <div class="actions">
+                            <a href="recompensas-claims.html?type=scratch" class="btn primary">Fila</a>
+                            <a href="#" onclick="openConfig('scratch');return false" class="btn">Config</a>
+                        </div>
+                    </div>
+
+                    <div class="module-card" style="--bg1:#E1F5FE;--bg2:#B3E5FC;--emoji:'🎟️'">
+                        <h3>MilkyPass</h3>
+                        <div class="stat" id="modPass">—</div>
+                        <div class="desc">Cartão fidelidade: 7 carimbos = prêmio equivalente. 7 dias entre cada carimbo.</div>
+                        <div class="actions">
+                            <a href="recompensas-claims.html?type=milkypass" class="btn primary">Fila</a>
+                            <a href="#" onclick="openConfig('milkypass');return false" class="btn">Config</a>
+                        </div>
+                    </div>
+
+                    <div class="module-card" style="--bg1:#F3E5F5;--bg2:#E1BEE7;--emoji:'💰'">
+                        <h3>MilkyCoins (cashback)</h3>
+                        <div class="stat" id="modCoins">—</div>
+                        <div class="desc">Cashback 3-7% (varia por tier). 1 MilkyCoin = R$ 1 de desconto na próxima compra.</div>
+                        <div class="actions">
+                            <a href="#" onclick="openConfig('coins');return false" class="btn primary">Config</a>
+                            <a href="recompensas-roi.html" class="btn">ROI</a>
+                        </div>
+                    </div>
+
+                    <div class="module-card" style="--bg1:#E8F5E9;--bg2:#C8E6C9;--emoji:'🎮'">
+                        <h3>Desafios</h3>
+                        <div class="stat" id="modChallenges">—</div>
+                        <div class="desc">Missões gamificadas: "compra 3x na semana = ganha bônus", "indica amigo", etc.</div>
+                        <div class="actions">
+                            <a href="desafio.html" class="btn primary">Configurar</a>
+                        </div>
+                    </div>
+
+                    <div class="module-card" style="--bg1:#FFE0EC;--bg2:#F8BBD0;--emoji:'⭐'">
+                        <h3>Influencer MilkyPot</h3>
+                        <div class="stat" id="modInfluencers">—</div>
+                        <div class="desc">Clientes viram influencers, postam UGC, ganham MilkyCoins. NOVO!</div>
+                        <div class="actions">
+                            <a href="influencer-program.html" class="btn primary">Painel</a>
+                            <a href="/influencer.html" class="btn" target="_blank">Cliente</a>
+                        </div>
+                    </div>
+
+                    <div class="module-card" style="--bg1:#FFF59D;--bg2:#FFE082;--emoji:'🎁'">
+                        <h3>Cadastro & Leads</h3>
+                        <div class="stat" id="modLeads">—</div>
+                        <div class="desc">Quem viu landing mas não cadastrou. Captura via WhatsApp/Email/Instagram.</div>
+                        <div class="actions">
+                            <a href="#leads-tabela" class="btn primary">Ver leads</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONFIGURAÇÕES DA ECONOMIA -->
+            <div class="section" id="config">
+                <h2>⚙️ Configurações da Economia</h2>
+                <p class="subtitle">Quanto cliente ganha por compra, multiplicadores por tier, validade dos pontos.</p>
+
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label>Cashback base (%)</label>
+                        <input type="number" id="cfgCashback" value="3" min="0" max="100" step="0.5">
+                        <div class="help">% do valor da compra que vira MilkyCoin</div>
+                    </div>
+                    <div class="config-item">
+                        <label>Multiplicador Tier Estrela</label>
+                        <input type="number" id="cfgMultEstrela" value="1.5" min="1" max="5" step="0.1">
+                        <div class="help">Multiplica o cashback do tier 2</div>
+                    </div>
+                    <div class="config-item">
+                        <label>Multiplicador Tier Pop</label>
+                        <input type="number" id="cfgMultPop" value="2" min="1" max="5" step="0.1">
+                        <div class="help">Multiplica o cashback do tier 3</div>
+                    </div>
+                    <div class="config-item">
+                        <label>Validade MilkyCoins (dias)</label>
+                        <input type="number" id="cfgCoinsValid" value="180" min="30" max="999">
+                        <div class="help">Após X dias sem compra, MilkyCoins expiram</div>
+                    </div>
+                    <div class="config-item">
+                        <label>Carimbos pra completar MilkyPass</label>
+                        <input type="number" id="cfgPassCount" value="7" min="3" max="15">
+                        <div class="help">Quantas compras pra ganhar prêmio</div>
+                    </div>
+                    <div class="config-item">
+                        <label>Janela entre carimbos (dias)</label>
+                        <input type="number" id="cfgPassWindow" value="7" min="1" max="60">
+                        <div class="help">Dias máximos entre 2 carimbos pra não perder</div>
+                    </div>
+                    <div class="config-item">
+                        <label>Bônus de cadastro (MilkyCoins)</label>
+                        <input type="number" id="cfgSignupBonus" value="10" min="0" max="100">
+                        <div class="help">Cliente novo ganha quanto?</div>
+                    </div>
+                    <div class="config-item">
+                        <label>Bônus de aniversário (MilkyCoins)</label>
+                        <input type="number" id="cfgBirthdayBonus" value="20" min="0" max="100">
+                        <div class="help">No mês de aniversário</div>
+                    </div>
+                    <div class="config-item">
+                        <label>Bônus de indicação (MilkyCoins)</label>
+                        <input type="number" id="cfgReferralBonus" value="15" min="0" max="100">
+                        <div class="help">Por amigo que se cadastrar</div>
+                    </div>
+                </div>
+
+                <div class="save-bar">
+                    <button class="btn-save" onclick="saveConfig()">💾 Salvar configurações</button>
+                </div>
+            </div>
+
+            <!-- LEADS -->
+            <div class="section" id="leads-tabela">
+                <h2>📋 Leads recentes</h2>
+                <p class="subtitle">Pessoas que tocaram no MilkyClube. Pré-cadastros, abandonos, captação.</p>
+                <table class="leads-table">
+                    <thead>
+                        <tr>
+                            <th>Quando</th>
+                            <th>Nome</th>
+                            <th>Contato</th>
+                            <th>Origem</th>
+                            <th>Tier</th>
+                            <th>MilkyCoins</th>
+                            <th>Última compra</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leadsBody">
+                        <tr><td colspan="7" class="empty">Carregando…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, getDocs, query, orderBy, limit, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// Firebase config — pega o que o site usa
+const firebaseConfig = window.firebaseConfig || (await fetch('/js/core/firebase-config.js').then(r=>r.text()).then(t=>{
+    // Extract config from the file
+    const m = t.match(/firebaseConfig\s*=\s*({[\s\S]*?})/);
+    if (m) return eval('(' + m[1] + ')');
+    return null;
+}));
+
+let db = null;
+try {
+    if (firebaseConfig) {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+    }
+} catch(e) { console.warn('Firebase init failed:', e); }
+
+function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 2200);
+}
+
+async function loadKPIs() {
+    if (!db) return;
+    try {
+        // Members count
+        const membersSnap = await getDocs(query(collection(db, 'club_members'), limit(500)));
+        document.getElementById('kpiMembers').textContent = membersSnap.size;
+
+        let totalCoins = 0, totalScratches = 0, totalPass = 0;
+        const tiers = { aspirante:0, estrela:0, pop:0, icone:0, lenda:0 };
+        const leads = [];
+
+        membersSnap.forEach(docSnap => {
+            const m = docSnap.data();
+            totalCoins += (m.milkycoins || 0);
+            totalScratches += (m.pendingScratches?.length || 0);
+            if (m.milkypass?.completed) totalPass++;
+            const tier = (m.tier || 'aspirante').toLowerCase();
+            if (tiers[tier] != null) tiers[tier]++;
+            leads.push({
+                id: docSnap.id,
+                name: m.displayName || m.name || '—',
+                email: m.email || m.phone || '—',
+                origin: m.signupOrigin || 'site',
+                tier: m.tier || 'aspirante',
+                coins: m.milkycoins || 0,
+                lastBuy: m.lastPurchaseAt?.toDate ? m.lastPurchaseAt.toDate() : null,
+                createdAt: m.createdAt?.toDate ? m.createdAt.toDate() : null
+            });
+        });
+
+        document.getElementById('kpiCoinsCirc').textContent = totalCoins.toLocaleString('pt-BR');
+        document.getElementById('kpiScratches').textContent = totalScratches;
+        document.getElementById('kpiPassDone').textContent = totalPass;
+        document.getElementById('modScratches').textContent = totalScratches + ' ativas';
+        document.getElementById('modPass').textContent = totalPass + ' concluídos';
+        document.getElementById('modCoins').textContent = totalCoins.toLocaleString('pt-BR');
+        document.getElementById('modLeads').textContent = leads.length + ' total';
+
+        // Claims pendentes
+        try {
+            const claimsSnap = await getDocs(query(collection(db, 'action_claims'), limit(100)));
+            let pending = 0;
+            claimsSnap.forEach(c => { if ((c.data().status || 'pending') === 'pending') pending++; });
+            document.getElementById('kpiClaimsPending').textContent = pending;
+        } catch(e){ document.getElementById('kpiClaimsPending').textContent = '0'; }
+
+        // Influencers
+        try {
+            const infSnap = await getDocs(query(collection(db, 'influencers'), limit(100)));
+            document.getElementById('modInfluencers').textContent = infSnap.size + ' cadastrados';
+        } catch(e){ document.getElementById('modInfluencers').textContent = '0 (módulo novo)'; }
+
+        // Desafios ativos
+        try {
+            const chSnap = await getDocs(query(collection(db, 'challenges'), limit(20)));
+            let active = 0;
+            chSnap.forEach(c => { if (c.data().active) active++; });
+            document.getElementById('modChallenges').textContent = active + ' ativos';
+        } catch(e){ document.getElementById('modChallenges').textContent = '—'; }
+
+        renderLeads(leads.sort((a,b) => (b.createdAt?.getTime?.()||0) - (a.createdAt?.getTime?.()||0)).slice(0, 30));
+
+    } catch (e) {
+        console.error(e);
+        document.getElementById('kpiMembers').textContent = '—';
+    }
+}
+
+function renderLeads(leads) {
+    const body = document.getElementById('leadsBody');
+    if (!leads.length) {
+        body.innerHTML = '<tr><td colspan="7" class="empty">Sem leads ainda — campanhas trazem.</td></tr>';
+        return;
+    }
+    body.innerHTML = leads.map(l => `
+        <tr>
+            <td>${l.createdAt ? l.createdAt.toLocaleDateString('pt-BR') : '—'}</td>
+            <td>${escapeHtml(l.name)}</td>
+            <td>${escapeHtml(l.email)}</td>
+            <td>${escapeHtml(l.origin)}</td>
+            <td><span class="tier-badge tier-${(l.tier||'aspirante').toLowerCase()}">${escapeHtml(l.tier||'Aspirante')}</span></td>
+            <td><strong>${(l.coins||0).toLocaleString('pt-BR')}</strong></td>
+            <td>${l.lastBuy ? l.lastBuy.toLocaleDateString('pt-BR') : '—'}</td>
+        </tr>
+    `).join('');
+}
+
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function loadConfig() {
+    if (!db) return;
+    try {
+        const cfgDoc = await getDoc(doc(db, 'system_config', 'milkyclube'));
+        if (cfgDoc.exists()) {
+            const c = cfgDoc.data();
+            if (c.cashbackPct != null) document.getElementById('cfgCashback').value = c.cashbackPct;
+            if (c.multEstrela != null) document.getElementById('cfgMultEstrela').value = c.multEstrela;
+            if (c.multPop != null) document.getElementById('cfgMultPop').value = c.multPop;
+            if (c.coinsValidDays != null) document.getElementById('cfgCoinsValid').value = c.coinsValidDays;
+            if (c.passCount != null) document.getElementById('cfgPassCount').value = c.passCount;
+            if (c.passWindowDays != null) document.getElementById('cfgPassWindow').value = c.passWindowDays;
+            if (c.signupBonus != null) document.getElementById('cfgSignupBonus').value = c.signupBonus;
+            if (c.birthdayBonus != null) document.getElementById('cfgBirthdayBonus').value = c.birthdayBonus;
+            if (c.referralBonus != null) document.getElementById('cfgReferralBonus').value = c.referralBonus;
+        }
+    } catch(e) { console.warn('Config load failed:', e); }
+}
+
+window.saveConfig = async function() {
+    if (!db) { showToast('⚠️ Firebase não conectado'); return; }
+    try {
+        const cfg = {
+            cashbackPct: parseFloat(document.getElementById('cfgCashback').value),
+            multEstrela: parseFloat(document.getElementById('cfgMultEstrela').value),
+            multPop: parseFloat(document.getElementById('cfgMultPop').value),
+            coinsValidDays: parseInt(document.getElementById('cfgCoinsValid').value),
+            passCount: parseInt(document.getElementById('cfgPassCount').value),
+            passWindowDays: parseInt(document.getElementById('cfgPassWindow').value),
+            signupBonus: parseInt(document.getElementById('cfgSignupBonus').value),
+            birthdayBonus: parseInt(document.getElementById('cfgBirthdayBonus').value),
+            referralBonus: parseInt(document.getElementById('cfgReferralBonus').value),
+            updatedAt: new Date().toISOString(),
+            updatedBy: 'admin'
+        };
+        await setDoc(doc(db, 'system_config', 'milkyclube'), cfg, { merge: true });
+        showToast('✅ Configurações salvas!');
+    } catch(e) {
+        console.error(e);
+        showToast('❌ Erro ao salvar: ' + e.message);
+    }
+};
+
+window.openConfig = function(mod) {
+    document.getElementById('config').scrollIntoView({behavior:'smooth'});
+};
+
+loadKPIs();
+loadConfig();
+</script>
+</body>
+</html>
