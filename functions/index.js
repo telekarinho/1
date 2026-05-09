@@ -1850,33 +1850,171 @@ function _buildClosingHtml(data) {
     const con = data.conferido || (data.breakdownConferido && data.breakdownConferido.conferido) || {};
     const br = data.breakdown || (data.breakdownConferido && data.breakdownConferido.breakdown) || {};
     const dt = new Date(data.fechamentoDate || Date.now()).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-    const diff = Number(con.diffTotal || data.diferenca || 0);
-    const diffColor = Math.abs(diff) < 0.01 ? "#10B981" : (Math.abs(diff) <= 5 ? "#F59E0B" : "#DC2626");
-    const diffLabel = Math.abs(diff) < 0.01 ? "Bateu certinho" : (diff > 0 ? "Sobrou" : "Faltou");
-    const totalEsperado = Number(esp.totalEsperado || data.saldoEsperado || 0);
-    const totalConferido = Number(con.totalConferido || data.valorContado || 0);
+    const horaFechamento = new Date(data.fechamentoDate || Date.now()).toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
+
+    // ===== TOTAIS =====
+    const valorAbertura = Number(data.valorAbertura || 0);
+    const vendasDinheiro = Number(data.vendasDinheiro || 0);
+    const vendasPix = Number((data.porMetodoEsperado && data.porMetodoEsperado.pix) || 0);
+    const vendasCredito = Number((data.porMetodoEsperado && data.porMetodoEsperado.cartao_credito) || (data.porMetodoEsperado && data.porMetodoEsperado.credito) || 0);
+    const vendasDebito = Number((data.porMetodoEsperado && data.porMetodoEsperado.cartao_debito) || (data.porMetodoEsperado && data.porMetodoEsperado.debito) || 0);
+    const vendasCartao = vendasCredito + vendasDebito;
+    const vendasOutros = Number((data.porMetodoEsperado && data.porMetodoEsperado.outros) || 0);
+    const vendasBeneficio = Number((data.porMetodoEsperado && data.porMetodoEsperado.beneficio_funcionario) || 0);
+    const totalSangria = Number(data.totalSangria || 0);
+    const totalReforco = Number(data.totalReforco || 0);
+    const faturamentoBruto = Number(data.faturamentoBruto || (vendasDinheiro + vendasPix + vendasCartao + vendasOutros));
+    const saldoEsperadoDinheiro = valorAbertura + vendasDinheiro + totalReforco - totalSangria;
+
+    const dinheiroContado = Number((br && (br.dinheiro_liquido_dia || br.dinheiro_total_gaveta)) || data.valorContado || 0);
+    const pixContado = Number((br && br.pix_total) || 0);
+    const cartaoContado = Number((br && br.cartao) || 0);
+    const totalContado = dinheiroContado + pixContado + cartaoContado;
+    const totalEsperado = saldoEsperadoDinheiro + vendasPix + vendasCartao;
+
+    const diffDinheiro = dinheiroContado - saldoEsperadoDinheiro;
+    const diffPix = pixContado - vendasPix;
+    const diffCartao = cartaoContado - vendasCartao;
+    const diffTotal = Number(con.diffTotal || data.diferenca || (totalContado - totalEsperado));
+    const diffColor = Math.abs(diffTotal) < 0.01 ? "#10B981" : (Math.abs(diffTotal) <= 5 ? "#F59E0B" : "#DC2626");
+    const diffLabel = Math.abs(diffTotal) < 0.01 ? "✅ Bateu certinho" : (diffTotal > 0 ? "🔼 Sobrou" : "🔽 Faltou");
+
+    function row(label, val, weight) {
+        return `<tr><td style="padding:7px 10px;border-top:1px solid #f3f4f6;color:#374151">${label}</td><td style="padding:7px 10px;border-top:1px solid #f3f4f6;text-align:right;font-weight:${weight || 600};color:#111">${_fmtBRL(val)}</td></tr>`;
+    }
+    function diffRow(method, sistema, conferido) {
+        const d = conferido - sistema;
+        const dColor = Math.abs(d) < 0.01 ? "#10B981" : (Math.abs(d) <= 2 ? "#F59E0B" : "#DC2626");
+        const dStr = (d >= 0 ? "+" : "−") + _fmtBRL(Math.abs(d));
+        return `<tr>
+            <td style="padding:8px 10px;border-top:1px solid #f3f4f6">${method}</td>
+            <td style="padding:8px 10px;border-top:1px solid #f3f4f6;text-align:right;color:#6B7280">${_fmtBRL(sistema)}</td>
+            <td style="padding:8px 10px;border-top:1px solid #f3f4f6;text-align:right;font-weight:700">${_fmtBRL(conferido)}</td>
+            <td style="padding:8px 10px;border-top:1px solid #f3f4f6;text-align:right;color:${dColor};font-weight:700">${dStr}</td>
+        </tr>`;
+    }
+
+    // ===== TURNOS / OPERADORES =====
+    const turnos = Array.isArray(data.turnos) ? data.turnos : [];
+    let turnosHtml = '';
+    if (turnos.length > 0) {
+        turnosHtml = '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">';
+        turnos.forEach(function(t) {
+            const ico = t.tipo === 'abertura' ? '🟢' : (t.tipo === 'fechamento' ? '🔴' : (t.tipo === 'troca' ? '🔄' : '👤'));
+            turnosHtml += `<tr><td style="padding:8px 10px;border-top:1px solid #f3f4f6;width:90px;font-weight:700;color:#374151">${ico} ${t.hora || ''}</td><td style="padding:8px 10px;border-top:1px solid #f3f4f6;color:#111">${t.descricao || ''}</td></tr>`;
+        });
+        turnosHtml += '</table>';
+    } else {
+        turnosHtml = `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">
+            <tr><td style="padding:8px 10px;border-top:1px solid #f3f4f6;width:90px;font-weight:700">🔴 ${horaFechamento}</td><td style="padding:8px 10px;border-top:1px solid #f3f4f6">Fechado por <strong>${data.operatorName || '?'}</strong></td></tr>
+        </table>`;
+    }
+
+    // ===== SANGRIAS / REFORÇOS =====
+    const sangrias = Array.isArray(data.sangrias) ? data.sangrias : [];
+    const reforcos = Array.isArray(data.reforcos) ? data.reforcos : [];
+    let movHtml = '';
+    if (sangrias.length || reforcos.length) {
+        movHtml = '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">';
+        sangrias.forEach(function(s) {
+            movHtml += `<tr><td style="padding:6px 10px;border-top:1px solid #f3f4f6;color:#DC2626">📤 Sangria</td><td style="padding:6px 10px;border-top:1px solid #f3f4f6">${(s.motivo || '-').replace(/</g, '&lt;')}</td><td style="padding:6px 10px;border-top:1px solid #f3f4f6;text-align:right;font-weight:700;color:#DC2626">−${_fmtBRL(s.valor)}</td></tr>`;
+        });
+        reforcos.forEach(function(r) {
+            movHtml += `<tr><td style="padding:6px 10px;border-top:1px solid #f3f4f6;color:#16A34A">📥 Reforço</td><td style="padding:6px 10px;border-top:1px solid #f3f4f6">${(r.motivo || '-').replace(/</g, '&lt;')}</td><td style="padding:6px 10px;border-top:1px solid #f3f4f6;text-align:right;font-weight:700;color:#16A34A">+${_fmtBRL(r.valor)}</td></tr>`;
+        });
+        movHtml += '</table>';
+    }
+
+    // ===== COMISSOES =====
+    const comissoes = Array.isArray(data.comissoes) ? data.comissoes : [];
+    let comHtml = '';
+    if (comissoes.length > 0) {
+        comHtml = '<h3 style="margin:18px 0 8px;font-size:14px;color:#374151">💰 Comissões dos operadores</h3>';
+        comHtml += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px"><thead><tr style="background:#F3F4F6"><th style="padding:7px 10px;text-align:left">Operador</th><th style="padding:7px 10px;text-align:right">Pedidos</th><th style="padding:7px 10px;text-align:right">Vendas</th><th style="padding:7px 10px;text-align:right">Comissão</th></tr></thead><tbody>';
+        comissoes.forEach(function(c) {
+            comHtml += `<tr><td style="padding:6px 10px;border-top:1px solid #f3f4f6">${c.name}</td><td style="padding:6px 10px;border-top:1px solid #f3f4f6;text-align:right">${c.orders || 0}</td><td style="padding:6px 10px;border-top:1px solid #f3f4f6;text-align:right;color:#6B7280">${_fmtBRL(c.revenue)}</td><td style="padding:6px 10px;border-top:1px solid #f3f4f6;text-align:right;font-weight:700;color:#F59E0B">${_fmtBRL(c.commission)}</td></tr>`;
+        });
+        comHtml += '</tbody></table>';
+    }
+
+    // ===== BENEFICIOS =====
+    const beneficios = Array.isArray(data.beneficios) ? data.beneficios : [];
+    let benHtml = '';
+    if (beneficios.length > 0) {
+        const totalBen = beneficios.reduce((s, b) => s + Number(b.value || 0), 0);
+        benHtml = '<h3 style="margin:18px 0 8px;font-size:14px;color:#374151">🎁 Benefícios entregues no dia</h3>';
+        benHtml += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">';
+        beneficios.forEach(function(b) {
+            benHtml += `<tr><td style="padding:6px 10px;border-top:1px solid #f3f4f6">${b.icon || '🎁'} ${(b.staffName || '?')}</td><td style="padding:6px 10px;border-top:1px solid #f3f4f6;color:#6B7280">${(b.tipoLabel || b.tipo || '-')}</td><td style="padding:6px 10px;border-top:1px solid #f3f4f6;text-align:right;font-weight:700">${_fmtBRL(b.value)}</td></tr>`;
+        });
+        benHtml += `<tr style="background:#F9FAFB;font-weight:800"><td style="padding:8px 10px;border-top:2px solid #E5E7EB" colspan="2">Total benefícios (custo da loja)</td><td style="padding:8px 10px;border-top:2px solid #E5E7EB;text-align:right">${_fmtBRL(totalBen)}</td></tr>`;
+        benHtml += '</table>';
+    }
+
+    // ===== PEDIDOS =====
+    const totalPedidos = Number(data.totalPedidos || 0);
+    const ticketMedio = totalPedidos > 0 ? faturamentoBruto / totalPedidos : 0;
+
     return `
-<div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;padding:16px;background:#f9fafb">
-  <div style="background:linear-gradient(135deg,#7B1FA2,#DC2626);color:#fff;padding:18px 22px;border-radius:12px 12px 0 0">
+<div style="font-family:Arial,sans-serif;max-width:680px;margin:0 auto;padding:16px;background:#f3f4f6">
+  <div style="background:linear-gradient(135deg,#7B1FA2,#DC2626);color:#fff;padding:20px 24px;border-radius:14px 14px 0 0">
     <h2 style="margin:0;font-size:20px">🔒 Fechamento de Caixa — MilkyPot</h2>
     <div style="opacity:.92;font-size:13px;margin-top:6px">${data.franchiseId || ""} · ${dt}</div>
   </div>
-  <div style="background:#fff;padding:18px;border:1px solid #e5e7eb;border-top:0">
-    <p style="margin:0 0 14px;font-size:13px;color:#6b7280">Operador: <strong style="color:#111">${data.operatorName || "?"}</strong> &lt;${data.operatorEmail || ""}&gt;</p>
-    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">
-      <tr style="background:#F3F4F6"><th style="padding:9px 8px;text-align:left">Método</th><th style="padding:9px 8px;text-align:right">Sistema</th><th style="padding:9px 8px;text-align:right">Conferido</th></tr>
-      <tr><td style="padding:7px 8px;border-top:1px solid #e5e7eb">💳 Cartão (Bandeiras)</td><td style="padding:7px 8px;border-top:1px solid #e5e7eb;text-align:right">${_fmtBRL(esp.cartao || ((esp.credito || 0) + (esp.debito || 0)))}</td><td style="padding:7px 8px;border-top:1px solid #e5e7eb;text-align:right;font-weight:700">${_fmtBRL(br.cartao || 0)}</td></tr>
-      <tr><td style="padding:7px 8px;border-top:1px solid #e5e7eb">⚡ PIX</td><td style="padding:7px 8px;border-top:1px solid #e5e7eb;text-align:right">${_fmtBRL(esp.pix)}</td><td style="padding:7px 8px;border-top:1px solid #e5e7eb;text-align:right;font-weight:700">${_fmtBRL(br.pix_total || 0)}</td></tr>
-      <tr><td style="padding:7px 8px;border-top:1px solid #e5e7eb">💵 Dinheiro físico</td><td style="padding:7px 8px;border-top:1px solid #e5e7eb;text-align:right">${_fmtBRL(esp.saldoEsperadoDinheiro)}</td><td style="padding:7px 8px;border-top:1px solid #e5e7eb;text-align:right;font-weight:700">${_fmtBRL(br.dinheiro_liquido_dia || br.dinheiro_total_gaveta || 0)}</td></tr>
-      <tr style="background:#F9FAFB;font-weight:800"><td style="padding:9px 8px;border-top:2px solid #e5e7eb">TOTAL</td><td style="padding:9px 8px;border-top:2px solid #e5e7eb;text-align:right">${_fmtBRL(totalEsperado)}</td><td style="padding:9px 8px;border-top:2px solid #e5e7eb;text-align:right">${_fmtBRL(totalConferido)}</td></tr>
-    </table>
-    <div style="padding:14px;background:${diffColor}15;border-radius:8px;border-left:5px solid ${diffColor}">
-      <div style="font-size:14px;color:${diffColor};font-weight:800">${diffLabel}: ${_fmtBRL(Math.abs(diff))}</div>
-      ${data.motivo ? '<div style="font-size:12px;margin-top:8px;color:#374151"><strong>Justificativa:</strong> ' + String(data.motivo).replace(/</g, "&lt;") + '</div>' : ''}
+  <div style="background:#fff;padding:20px;border:1px solid #e5e7eb;border-top:0">
+
+    <!-- KPIs do dia -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px">
+      <div style="background:#F0FDF4;border-left:4px solid #16A34A;padding:10px;border-radius:6px"><small style="color:#6B7280;font-size:11px">FATURAMENTO BRUTO</small><div style="font-size:18px;font-weight:800;color:#14532D;margin-top:2px">${_fmtBRL(faturamentoBruto)}</div></div>
+      <div style="background:#EFF6FF;border-left:4px solid #3B82F6;padding:10px;border-radius:6px"><small style="color:#6B7280;font-size:11px">PEDIDOS</small><div style="font-size:18px;font-weight:800;color:#1E40AF;margin-top:2px">${totalPedidos}</div></div>
+      <div style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:10px;border-radius:6px"><small style="color:#6B7280;font-size:11px">TICKET MÉDIO</small><div style="font-size:18px;font-weight:800;color:#92400E;margin-top:2px">${_fmtBRL(ticketMedio)}</div></div>
     </div>
-    ${br.dinheiro_troco ? `<div style="margin-top:12px;font-size:12px;color:#6b7280">💰 Troco que fica pro próximo turno: <strong>${_fmtBRL(br.dinheiro_troco)}</strong></div>` : ""}
+
+    <!-- TURNOS -->
+    <h3 style="margin:0 0 8px;font-size:14px;color:#374151">👤 Quem operou hoje</h3>
+    ${turnosHtml}
+
+    <!-- COMPOSIÇÃO DO DINHEIRO ESPERADO -->
+    <h3 style="margin:18px 0 8px;font-size:14px;color:#374151">💵 Composição do dinheiro físico esperado</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">
+      ${row("Abertura (troco inicial)", valorAbertura)}
+      ${row("+ Vendas em dinheiro no dia", vendasDinheiro)}
+      ${row("+ Reforços", totalReforco)}
+      ${row("− Sangrias", -totalSangria)}
+      <tr style="background:#F9FAFB;font-weight:800"><td style="padding:9px 10px;border-top:2px solid #E5E7EB">= Esperado em dinheiro</td><td style="padding:9px 10px;border-top:2px solid #E5E7EB;text-align:right">${_fmtBRL(saldoEsperadoDinheiro)}</td></tr>
+    </table>
+
+    <!-- MOVIMENTAÇÕES -->
+    ${(sangrias.length || reforcos.length) ? '<h3 style="margin:18px 0 8px;font-size:14px;color:#374151">📋 Movimentações do dia</h3>' + movHtml : ''}
+
+    <!-- TABELA DE CONFERENCIA -->
+    <h3 style="margin:18px 0 8px;font-size:14px;color:#374151">⚖️ Conferência por método de pagamento</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">
+      <thead><tr style="background:#F3F4F6"><th style="padding:9px 10px;text-align:left">Método</th><th style="padding:9px 10px;text-align:right">Sistema</th><th style="padding:9px 10px;text-align:right">Conferido</th><th style="padding:9px 10px;text-align:right">Diferença</th></tr></thead>
+      <tbody>
+        ${diffRow("💵 Dinheiro físico", saldoEsperadoDinheiro, dinheiroContado)}
+        ${diffRow("⚡ PIX", vendasPix, pixContado)}
+        ${diffRow("💳 Cartão (Crédito + Débito)", vendasCartao, cartaoContado)}
+        ${vendasBeneficio > 0 ? `<tr><td style="padding:8px 10px;border-top:1px solid #f3f4f6">🎁 Benefício funcionário <small style="color:#6B7280">(custo loja)</small></td><td style="padding:8px 10px;border-top:1px solid #f3f4f6;text-align:right;color:#6B7280">${_fmtBRL(vendasBeneficio)}</td><td style="padding:8px 10px;border-top:1px solid #f3f4f6;text-align:right" colspan="2"><em style="color:#6B7280">não entra na conferência</em></td></tr>` : ''}
+        <tr style="background:#F9FAFB;font-weight:800"><td style="padding:9px 10px;border-top:2px solid #E5E7EB">TOTAL</td><td style="padding:9px 10px;border-top:2px solid #E5E7EB;text-align:right">${_fmtBRL(totalEsperado)}</td><td style="padding:9px 10px;border-top:2px solid #E5E7EB;text-align:right">${_fmtBRL(totalContado)}</td><td style="padding:9px 10px;border-top:2px solid #E5E7EB;text-align:right;color:${diffColor}">${(diffTotal>=0?'+':'−')}${_fmtBRL(Math.abs(diffTotal))}</td></tr>
+      </tbody>
+    </table>
+
+    <!-- RESULTADO -->
+    <div style="padding:16px;background:${diffColor}15;border-radius:10px;border-left:5px solid ${diffColor};margin-bottom:14px">
+      <div style="font-size:18px;color:${diffColor};font-weight:800">${diffLabel}: ${_fmtBRL(Math.abs(diffTotal))}</div>
+      ${data.motivo ? '<div style="font-size:13px;margin-top:8px;color:#374151"><strong>Justificativa:</strong> ' + String(data.motivo).replace(/</g, "&lt;") + '</div>' : ''}
+      ${Math.abs(diffTotal) > 5 ? '<div style="font-size:12px;margin-top:8px;color:' + diffColor + ';font-weight:600">⚠️ Diferença acima de R$ 5,00 — recomendado investigar.</div>' : ''}
+    </div>
+
+    ${comHtml}
+    ${benHtml}
+
+    ${br && br.dinheiro_troco ? `<div style="margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px;font-size:13px;color:#6b7280">💰 Troco que fica pro próximo turno: <strong style="color:#111">${_fmtBRL(br.dinheiro_troco)}</strong></div>` : ""}
   </div>
-  <div style="text-align:center;color:#9ca3af;font-size:11px;margin-top:12px">Relatório automático MilkyPot PDV</div>
+  <div style="text-align:center;color:#9ca3af;font-size:11px;margin-top:14px;padding:10px">
+    Relatório automático MilkyPot PDV · Fechado por <strong>${data.operatorName || '?'}</strong> &lt;${data.operatorEmail || ''}&gt;
+  </div>
 </div>`;
 }
 
