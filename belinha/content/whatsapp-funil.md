@@ -402,6 +402,62 @@ Quer incluir no pedido? (Disponível só este mês!)
 
 ---
 
+## ETAPA NOVA — Keyword JUNINA26 (Festa Junina 10–29/06/2026)
+
+> **Configurar no WA Business até 06/06/2026** → Mensagens automáticas → Respostas por palavra-chave.  
+> Palavra-chave exata: `JUNINA26` (maiúsculas, sem espaço).  
+> Etiquetar contato automaticamente como: `#junina-2026`.  
+> Referência completa: [`whatsapp-junina-2026.md`](whatsapp-junina-2026.md)
+
+### AUTO-RESPOSTA automática (WA Business configura sozinho)
+
+```
+🐑🌽 Oi! A ovelhinha pulou de alegria aqui!
+
+Você entrou na lista especial da Festa Junina 🎪
+
+Vem aí o Potinho Junino — edição limitada com paçoca,
+calda de amendoim e o arraial mais fofo do Muffato.
+
+Quando lançar (17/06) você é um dos primeiros a saber!
+(Responde "SIM" aqui pra confirmar que quer o aviso 📬)
+
+Qualquer dúvida é só chamar!
+— MilkyPot Londrina 🌈
+📍 Muffato · Av. Quintino Bocaiuva, 1045
+```
+
+### Script manual — quando atendente recruta cliente durante pedido
+
+> **Quando usar:** Entre 10/06–16/06 (antes do lançamento oficial do Potinho Junino), ao fechar um pedido, oferecer a lista VIP de lançamento.
+
+```
+Ei, posso te dar uma novidade? 🌽
+
+No dia 17/06 lançamos o *Potinho Junino* — edição especial só de Festa Junina!
+
+Manda *JUNINA26* aqui que você é dos primeiros a saber quando sair!
+
+Vale a pena — quem está na lista ganha acesso antes de todo mundo 😍
+```
+
+**Atalho WhatsApp Business:** `/junina-recruta`
+
+### Confirmação de inscrição (quando cliente responde "SIM")
+
+```
+Anotado! 🐑✅ Te aviso no dia do lançamento!
+
+Enquanto isso, a ovelhinha aguarda você aqui no Muffato.
+Boa Festa Junina!
+```
+
+**Atalho WhatsApp Business:** `/junina-ok`
+
+> **Lembrete operacional:** A partir de 17/06, use `/junino` normalmente para upsell durante pedidos. A keyword `JUNINA26` segue ativa até 29/06 para captação passiva.
+
+---
+
 ## ETAPA NOVA — Upsell Açaí Self-Service Muffato
 
 > **Quando usar:** Quando cliente pede potinho e pode adicionar o açaí buffet, ou quando menciona açaí. Diferencial exclusivo da unidade Muffato.
@@ -439,6 +495,8 @@ Quer adicionar ao pedido?
 | `/voltou` | Reconhecimento de cliente recorrente | **v2** |
 | `/indica` | Ativação do Indica & Ganha | **v2** |
 | `/junino` | Upsell Potinho Junino (só junho) | **v2** |
+| `/junina-recruta` | Recrutar cliente p/ lista JUNINA26 (10–16/06) | **v3** |
+| `/junina-ok` | Confirmar inscrição lista JUNINA26 | **v3** |
 | `/acai` | Upsell Açaí Self-Service | **v2** |
 | `/reclamacao` | Tratamento de reclamações | v1 |
 
@@ -467,9 +525,12 @@ Saiu → /saiu
 ↓
 [Na escolha do topping, se junho] → /junino  ← NOVO (sazonalidade)
 ↓
+[Se junho e cliente ainda não está na lista] → /junina-recruta  ← v3 (JUNINA26)
+↓
 [Próxima visita] → /voltou  ← NOVO (reconhecimento)
 ```
 
 ---
 
-*Belinha — Ciclo #48 | 2026-04-26*
+*Belinha — Ciclo #48 | 2026-04-26*  
+*Atualizado — Ciclo #174 | 2026-05-09 — keyword JUNINA26 + atalhos v3*
