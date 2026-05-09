@@ -1,6 +1,7 @@
 # The Best Açaí — Análise Competitiva
 
-**Última atualização:** 2026-05-08 (Ciclo #160 — The Best Donuts status permanente + Festa Junina 2026)
+**Última atualização:** 2026-05-09 (Ciclo #167 — R$80M investimento PE + expansão EUA + 1.500 unidades meta + gap Festa Junina confirmado)
+**Fontes ciclo #167:** mercadoeconsumo.com.br, soubh.uai.com.br, TikTok @marceladegusta, vipzinho.com.br, franquias.portaldofranchising.com.br, foodbizbrasil.com
 **Fontes ciclo #151:** vipzinho.com.br, foodbizbrasil.com, suafranquia.com, odiariodemaringa.com.br, dezminutos.com.br
 **Fontes anteriores:** ifood.com.br, gazetadopovo.com.br, temlondrina.com.br, tiktok @marceladegusta, portaldofranchising.com.br, foodbizbrasil.com, suafranquia.com, franquiadeacai.com, jornaluniao.com.br, exame.com, braziljournal.com, portaltela.com, mercadoeconsumo.com.br, aurorashopping.com.br
 **Fontes ciclo #116:** gazetadasemana.com.br, thebestacai.com.br/thebestday (bloqueado), cidadeoferta.com.br, ubereats.com/br, portaltela.com, TikTok @marceladegusta
@@ -607,3 +608,77 @@ _Belinha — Ciclo #143 | 2026-05-07_
 **Conclusão:** Junho 2026 = MilkyPot tem o campo mais livre para o nicho de Festa Junina personalizada em Londrina. MilkyMoo está em modo cinema, The Best em self-service genérico, JohnnyJoy sem ativação detectada.
 
 _Belinha — Ciclo #160 | 2026-05-08_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #167 — 2026-05-09
+
+### R$80M Investimento PE + Expansão EUA + Meta 1.500 Unidades
+
+**Fontes:** mercadoeconsumo.com.br (13/04/2026), franquias.portaldofranchising.com.br, soubh.uai.com.br, TikTok @marceladegusta, vipzinho.com.br
+
+---
+
+#### 1. Primeiro Investimento de Private Equity — R$80 Milhões
+
+| Atributo | Detalhe |
+|---|---|
+| **Valor** | R$80 milhões |
+| **Tipo** | Primeiro PE da história da marca |
+| **Destino** | Expansão acelerada nacional + internacionalização |
+| **Meta unidades** | 1.500 ao fim de 2026 (atual: 1.100+) |
+| **Meta receita** | R$1,1 bilhão em 2025 (faturamento estimado da rede) |
+
+**Implicação estratégica para MilkyPot:** The Best está em modo agressivo de escala, mas crescimento national não ameaça Londrina diretamente — a unidade no Catuaí Shopping LDA já existe. O risco é aumento de marketing nacional que pode ofuscar campanha local. Contra: MilkyPot tem vantagem hiperlocal (Muffato = ponto de fluxo diferente do Catuaí).
+
+---
+
+#### 2. Expansão para os EUA — Florida H2 2026
+
+| Atributo | Detalhe |
+|---|---|
+| **Destino** | Florida, EUA |
+| **Previsão** | 2º semestre de 2026 |
+| **Modelo** | Self-service por peso (mesmo modelo Brasil) |
+| **Relevância local** | Nenhuma — operação USA não impacta Londrina 2026 |
+
+---
+
+#### 3. Preço Self-Service Confirmado — Maio 2026
+
+| Região | Preço/100g |
+|---|---|
+| São Paulo (capital) | R$5,99 |
+| BH / interior | R$6,59 |
+| Londrina (estimativa) | R$5,99–R$6,59 |
+
+**Produtos ativos em self-service:**
+- 12 sabores de açaí
+- 24 sabores de sorvete
+- 42+ toppings
+- The Best Donuts (permanente desde jan 2025)
+- Ovos de Páscoa self-service (sazonal — encerrado abr 2026)
+
+---
+
+#### 4. Festa Junina 2026 — Sem Campanha Específica (Gap Confirmado)
+
+- **Padrão histórico:** The Best usa o modelo de "topping sazonal" (ex: ovo de Páscoa, donuts) para datas comemorativas — porém sem narrativa personalizada
+- **Concorrente do setor:** Açaí da Barra fez parceria Paçoquita ("Mistura que dá Bom") para Festa Junina — **The Best não replicou isso ainda em 2026**
+- **Gap:** Nenhum produto junino específico confirmado para a rede. Se ativarem: será topping de paçoca ou milho em self-service anônimo — sem nome, sem ovelhinha, sem narrativa
+- **Vantagem MilkyPot:** Potinho Junino tem nome, tema, personagem (ovelhinha de chapéu de palha), CTA direto WA. The Best não pode fazer isso no modelo buffet.
+
+---
+
+#### Mapa de Ameaça The Best em Londrina — Junho 2026
+
+| Fator | Avaliação | Impacto |
+|---|---|---|
+| Presença Londrina | Catuaí Shopping (longe do Muffato) | Baixo — praça diferente |
+| Preço vs. MilkyPot | Self-service ~R$18–25 por pote médio | Comparável — sem vantagem clara |
+| Personalização | Nenhuma — cliente se serve | **Vantagem MilkyPot** |
+| Narrativa/Brand | Sem mascote, sem storytelling | **Vantagem MilkyPot** |
+| Canal de vendas | Balcão físico + Rappi/iFood | **Vantagem MilkyPot** (WhatsApp own) |
+| Produto junino | Provável topping genérico | **Vantagem MilkyPot** (Potinho Junino) |
+
+_Belinha — Ciclo #167 | 2026-05-09_

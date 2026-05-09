@@ -1,6 +1,7 @@
 # JohnnyJoy — Análise Competitiva
 
-**Última atualização:** 2026-05-08 (Ciclo #160 — 10 anos aniversário + Buenissimo Branco + Joy Fidelidade atualizado)
+**Última atualização:** 2026-05-09 (Ciclo #167 — sem campanha Festa Junina detectada + gap confirmado)
+**Fontes ciclo #167:** gkpb.com.br, buscacliente.com.br, foodbizbrasil.com, johnnyjoy.com.br, shoppingjardins.com.br, TikTok @aproveiteacidade
 **Fontes ciclo #160:** gkpb.com.br, ondecomernorio.com, amostrasgratis.shop, Instagram @johnnyjoy.br, riomarfortaleza.com.br, portalg.com.br
 **Fontes ciclo #151:** johnnyjoy.com.br, buscacliente.com.br, gkpb.com.br, amostrasgratis.shop, TikTok @aproveiteacidade, overblur.com, Instagram @johnnyjoy.br
 **Fontes originais:** johnnyjoy.com.br, buscas orgânicas
@@ -216,3 +217,54 @@ _Belinha — Ciclo #143 | 2026-05-07_
 | Promo aniversário 10 anos | R$10,00 (300ml, 1 dia) |
 
 _Belinha — Ciclo #160 | 2026-05-08_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #167 — 2026-05-09
+
+### Sem Campanha Festa Junina + Promoções Recentes Confirmadas
+
+**Fontes:** gkpb.com.br, buscacliente.com.br, foodbizbrasil.com, johnnyjoy.com.br/eventos, shoppingjardins.com.br, TikTok @aproveiteacidade
+
+---
+
+#### 1. Festa Junina 2026 — Nenhuma Ativação Detectada
+
+- **Pesquisa realizada:** WebSearch "Johnny Joy junho festa junina 2026" — zero campanha temática encontrada
+- **Análise:** JohnnyJoy é milkshake de shopping premium (R$19–30), segmento não tem forte apelo junino. Histórico de promos: Dia do Milkshake, aniversário, Barbies/pink, não Festa Junina
+- **Conclusão:** JohnnyJoy abre mão do tema junino estruturalmente — não é seu terreno
+- **Implicação MilkyPot:** Sem competição JohnnyJoy em junho para o posicionamento junino personalizado
+
+---
+
+#### 2. Promoções Recentes Confirmadas — Ciclo #167
+
+| Promoção | Mecânica | Data/Período | Plataforma |
+|---|---|---|---|
+| **10 anos aniversário** | Milkshake 300ml por R$10 | 09/04/2026 (1 dia) | Loja física |
+| **Dia do Milkshake (2ª ed.)** | Compre 1 milkshake, ganhe outro | Setembro 2026 (histórico) | Loja física |
+| **Milkshake grátis (ação pink/azul)** | Veste rosa ou azul → 300ml grátis ao comprar 500ml | Pontual, datas variadas | Loja física |
+
+**Nota aniversário 10 anos:** Ação de 1 dia (09/04) com alto volume de UGC. JohnnyJoy tem 222K seguidores no Instagram — o engajamento em datas comemorativas é forte, mas localizado (shopping centers, grandes cidades). Presença em Londrina não confirmada em 2026.
+
+---
+
+#### 3. Status Presença Londrina
+
+- **Londrina 2026:** Nenhuma unidade JohnnyJoy confirmada em Londrina (franquia concentrada em Goiânia, RJ, SP, Fortaleza, shoppings premium)
+- **Risco de entrada:** Baixo no curto prazo — JohnnyJoy aposta em shopping de grande porte (ticket médio R$20+), modelo incompatível com quiosque Muffato
+- **Ação recomendada:** Monitorar apenas se JohnnyJoy anunciar abertura no Catuaí ou Londrina Shopping
+
+---
+
+#### Radar Competitivo JohnnyJoy × MilkyPot — Junho 2026
+
+| Atributo | JohnnyJoy | MilkyPot |
+|---|---|---|
+| Produto junino | Nenhum | Potinho Junino (ovelhinha arraial) |
+| Preço médio | R$19–28 | A confirmar (franquia) |
+| Canal | Balcão shopping / iFood | WhatsApp own |
+| Personalização | Sabor fixo, sem nome | Por pedido, com nome |
+| Presença Londrina | Não confirmada | Muffato Quintino |
+
+_Belinha — Ciclo #167 | 2026-05-09_

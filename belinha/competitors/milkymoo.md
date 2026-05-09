@@ -1,6 +1,7 @@
 # Milky Moo — Análise Competitiva
 
-**Última atualização:** 2026-05-08 (Ciclo #160 — collabs maio-junho 2026 + 180ml Day Part Action)
+**Última atualização:** 2026-05-09 (Ciclo #167 — preços nacionais confirmados + status collabs + gap Festa Junina)
+**Fontes ciclo #167:** clubeamostrasgratis.com, auroracultural.com, mercadoeconsumo.com.br, meioemensagem.com.br, barato.com.br, TikTok @guiadois, franquiadesorvete.com
 **Fontes ciclo #160:** gkpb.com.br, mercadoeconsumo.com.br, auroracultural.com, em.com.br, foodbizbrasil.com, centraldovarejo.com.br, meioemensagem.com.br, sopacultural.com, creativosbr.com.br
 **Fontes ciclo #151:** cadastrarnapromocao.com.br, clubeamostrasgratis.com, portalg.com.br, gkpb.com.br, TikTok @casaldasdicasrp, TikTok @dicasemmanauss
 **Fontes anteriores:** franquiadesorvete.com, portaldofranchising, pricelisto.com/br, gkpb.com.br, TikTok @marceladegusta, portalg.com.br, lagosul.com.br, meioemensagem.com.br, sopacultural.com, franquias360.com.br, timesbrasil.com.br, exame.com, empreenderemgoias.com.br, adital.com.br, foodbizbrasil.com
@@ -661,3 +662,64 @@ _Belinha — Ciclo #143 | 2026-05-07_
 **Gap estratégico de junho 2026:** MilkyMoo entra em modo cinema/pop-culture. MilkyPot pode monopolizar o posicionamento de "sobremesa personalizada da Festa Junina em Londrina" — sem concorrência direta no segmento potinho.
 
 _Belinha — Ciclo #160 | 2026-05-08_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #167 — 2026-05-09
+
+### Preços Nacionais Confirmados + Status Collabs + Gap Festa Junina
+
+**Fontes:** clubeamostrasgratis.com, auroracultural.com, mercadoeconsumo.com.br, meioemensagem.com.br, barato.com.br, TikTok @guiadois, franquiadesorvete.com
+
+---
+
+#### 1. Tabela de Preços Nacionais Confirmados — Maio 2026
+
+| Tamanho | Preço sugerido nacional | Preço promo regional observado |
+|---|---|---|
+| **180ml** (Day Part, até 13h59) | A partir de R$12,90 | — |
+| **300ml** (linha tradicional) | R$25,00 | R$14,90 (promo local Goiânia) |
+| **500ml** (linha tradicional) | R$30,00 | R$20,00 (promo local) |
+| **700ml** (linha tradicional) | R$35,00 | — |
+| **Collab Carameluda** (Boticário) | A partir de R$25,00 | — |
+
+**Nota:** Preços sugeridos nacionais são R$25/30/35, mas franqueados praticam promos regionais. Preço médio real de mercado parece ser R$20 (300ml) em regiões fora dos grandes centros. Para Londrina, usar benchmarks regionais como referência — MilkyPot continua com vantagem clara de preço/tamanho no segmento potinho.
+
+---
+
+#### 2. Status Collab Boticário "Carameluda" — Encerrando
+
+- **Encerramento previsto:** Fim de maio 2026 (campanha temporária, anunciada "até final de maio")
+- **Impacto:** Após 31/05, MilkyMoo volta ao cardápio padrão sem produto de destaque
+- **Janela para MilkyPot:** 1 a 28/06 = MilkyMoo sem collab ativa + Potinho Junino no ar
+
+---
+
+#### 3. MilkyMoo Day Aniversário (março 2026) — Padrão Histórico
+
+- **Data:** 11/03/2026 (aniversário da marca)
+- **Mecânica:** Compre 1 Milkshake 500ml → Ganhe 1 Milkshake 300ml grátis (todas as unidades)
+- **Plataforma:** Loja física + iFood
+- **Análise:** Promoção de 1 dia com alto engajamento de mídia social (UGC orgânico elevado). MilkyPot pode observar padrão para replicar em aniversário de inauguração (25/04/2027).
+
+---
+
+#### 4. Festa Junina 2026 — Gap Confirmado (sem ativação MilkyMoo)
+
+- **Pesquisa realizada:** WebSearch "MilkyMoo festa junina junho 2026" — zero campanha específica detectada
+- **Situação junho 2026:** MilkyMoo ocupa o mês com collab Universal (Tempestade/HTTYD) na 1ª semana e retorna ao cardápio standard a partir da 2ª semana
+- **Sem produto junino:** Nenhum milkshake temático de arraial, paçoquita, canjica ou milho detectado
+- **Implicação:** Share of voice de Festa Junina no segmento sobremesas personalizadas de Londrina = 100% disponível para MilkyPot
+
+---
+
+#### Radar Junho 2026 — MilkyMoo
+
+| Semana | Situação MilkyMoo | Oportunidade MilkyPot |
+|---|---|---|
+| **02–08/06** | Tempestade (HTTYD) + 2 ingressos cinema | Lançamento Potinho Junino (17/06 previsto) — preparar teasers |
+| **09–15/06** | Cardápio standard, sem collab | Antecipação: stories ovelhinha de chapéu de palha |
+| **16–22/06** | Cardápio standard | Lançamento + UGC challenge |
+| **23–29/06** | Cardápio standard | São João 24/06 + stories ao vivo + encerramento 28/06 |
+
+_Belinha — Ciclo #167 | 2026-05-09_
