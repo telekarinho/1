@@ -542,6 +542,27 @@
                         .gam-toggle input[type="checkbox"] { width:18px; height:18px; cursor:pointer; }
                     </style>
 
+                    <!-- Card: Reenviar Relatório de Fechamento de Caixa -->
+                    <div class="panel-card" style="grid-column:1/-1">
+                        <div class="card-header" style="background:linear-gradient(135deg,#7B1FA2,#DC2626);color:#fff">
+                            <h3 style="color:#fff">📧 Reenviar Relatório de Fechamento de Caixa</h3>
+                            <p style="margin:4px 0 0;font-size:12px;opacity:.95">Reenvia o email de fechamento do caixa de um dia já fechado. Útil pra conferir o template ou recuperar emails que se perderam.</p>
+                        </div>
+                        <div class="card-body">
+                            <div style="display:flex;gap:12px;align-items:end;flex-wrap:wrap">
+                                <div class="form-group" style="margin:0">
+                                    <label>Data do caixa</label>
+                                    <input type="date" id="resendDate" class="form-control" style="min-width:180px">
+                                </div>
+                                <button class="btn btn-primary" onclick="resendCaixaReport()" style="background:#DC2626">📧 Reenviar Relatório</button>
+                                <span id="resendStatus" style="font-size:.85rem;align-self:center"></span>
+                            </div>
+                            <div style="margin-top:14px;padding:10px 14px;background:#FEF3C7;border-left:4px solid #F59E0B;border-radius:8px;font-size:.82rem;color:#92400E">
+                                <strong>ℹ️ Quem recebe:</strong> os emails configurados do gestor (milkypot.com / jocimarrodrigo / joseanemse). Os dados são reais, do dia escolhido.
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Card: Configurações do App do Funcionário (controle granular do que aparece) -->
                     <div class="panel-card" style="grid-column:1/-1">
                         <div class="card-header" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);color:#fff">
@@ -954,6 +975,8 @@
     <script src="../js/core/staff-conduct.js"></script>
     <script src="../js/core/overtime-bank.js"></script>
     <script src="../js/core/gamification.js"></script>
+    <script src="../js/core/analytics-advanced.js"></script>
+    <script src="../js/core/caixa.js?v=resend"></script>
     <script src="../js/core/delivery-rules.js?v=mp-v115"></script>
 
     <script>
@@ -1767,6 +1790,37 @@
     loadRedemptions();
     loadAppLinks();
     loadAppConfig();
+
+    // ============== REENVIO RELATORIO CAIXA ==============
+    (function() {
+        var inp = document.getElementById('resendDate');
+        if (inp) inp.value = new Date().toISOString().slice(0, 10);
+    })();
+    window.resendCaixaReport = async function() {
+        var date = document.getElementById('resendDate').value;
+        var status = document.getElementById('resendStatus');
+        if (!date) { alert('Selecione uma data'); return; }
+        if (typeof Caixa === 'undefined' || !Caixa.resendClosingReport) {
+            alert('Modulo Caixa nao carregado');
+            return;
+        }
+        status.textContent = '⏳ Enviando...';
+        status.style.color = '#6B7280';
+        try {
+            var r = await Caixa.resendClosingReport(franchiseId, date);
+            if (r && r.success) {
+                status.textContent = '✓ Email enviado! Confira a caixa de entrada dos gestores.';
+                status.style.color = '#16A34A';
+            } else {
+                status.textContent = '✗ ' + (r && r.error ? r.error : 'Falha ao enviar');
+                status.style.color = '#DC2626';
+            }
+        } catch (e) {
+            status.textContent = '✗ Erro: ' + (e.message || e);
+            status.style.color = '#DC2626';
+        }
+        setTimeout(function() { status.textContent = ''; }, 8000);
+    };
 
     // ============== APP CONFIG (controle granular do que aparece) ==============
     function loadAppConfig() {

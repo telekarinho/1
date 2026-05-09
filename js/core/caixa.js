@@ -2200,6 +2200,129 @@ const Caixa = (function () {
         return map[k] || '💰';
     }
 
+    /**
+     * Reenviar relatorio de fechamento de caixa de um dia ja fechado.
+     */
+    function resendClosingReport(franchiseId, dateKey) {
+        if (!franchiseId) return Promise.resolve({ success: false, error: 'Franquia invalida' });
+        dateKey = dateKey || todayKey();
+
+        const st = getTurnoState(franchiseId, dateKey);
+        if (st.status === 'nao_aberto') {
+            return Promise.resolve({ success: false, error: 'Nao houve caixa aberto em ' + dateKey });
+        }
+        if (st.status !== 'fechado') {
+            return Promise.resolve({ success: false, error: 'Caixa de ' + dateKey + ' ainda esta aberto. Feche primeiro.' });
+        }
+        if (typeof CloudFunctions === 'undefined' || !CloudFunctions.sendClosingReport) {
+            return Promise.resolve({ success: false, error: 'CloudFunctions indisponivel' });
+        }
+
+        const session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+        const operator = (typeof OperatorContext !== 'undefined') ? OperatorContext.getCurrent() : null;
+        const operatorName = (st.fechamento && st.fechamento.createdByName) ||
+                             (operator ? operator.name : (session ? session.name : 'Operador Desconhecido'));
+        const operatorEmail = (st.fechamento && st.fechamento.createdByEmail) ||
+                              (operator ? operator.email : (session ? session.email : ''));
+
+        function _hhmm(iso) {
+            try { return new Date(iso).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }); }
+            catch (e) { return ''; }
+        }
+        const turnos = [];
+        if (st.abertura) {
+            turnos.push({
+                tipo: 'abertura',
+                hora: _hhmm(st.abertura.createdAt),
+                descricao: 'Aberto por <strong>' + (st.abertura.createdByName || '?') + '</strong> com troco de ' + formatBRL(st.abertura.valor)
+            });
+        }
+        (st.moves || []).filter(function(m) { return m.type === 'troca_turno'; }).forEach(function(m) {
+            var c = m.changeShift || {};
+            turnos.push({
+                tipo: 'troca',
+                hora: _hhmm(m.createdAt),
+                descricao: 'Troca: <strong>' + (c.operadorAnterior ? c.operadorAnterior.name : '?') + '</strong> → <strong>' + (c.operadorNovo ? c.operadorNovo.name : '?') + '</strong> · Conferência ' + formatBRL(c.valorContado || 0) + (Math.abs(c.diferenca || 0) >= 0.01 ? ' (diff ' + formatBRL(c.diferenca) + ')' : '')
+            });
+        });
+        if (st.fechamento) {
+            turnos.push({
+                tipo: 'fechamento',
+                hora: _hhmm(st.fechamento.createdAt),
+                descricao: 'Fechado por <strong>' + operatorName + '</strong>'
+            });
+        }
+
+        const sangriasList = (st.sangrias || []).map(function(m) {
+            return { valor: m.valor, motivo: m.motivo || m.descricao, hora: _hhmm(m.createdAt), por: m.createdByName };
+        });
+        const reforcosList = (st.reforcos || []).map(function(m) {
+            return { valor: m.valor, motivo: m.motivo || m.descricao, hora: _hhmm(m.createdAt), por: m.createdByName };
+        });
+
+        const orders = (typeof DataStore !== 'undefined') ? (DataStore.getCollection('orders', franchiseId) || []) : [];
+        const pedidosDoDia = orders.filter(function(o) {
+            if (!o || !o.createdAt) return false;
+            if (o.deleted || o.status === 'cancelado') return false;
+            return o.createdAt.startsWith(dateKey);
+        });
+
+        let comissoes = [];
+        try {
+            if (typeof AnalyticsAdvanced !== 'undefined' && AnalyticsAdvanced.commissionReport) {
+                const rep = AnalyticsAdvanced.commissionReport(franchiseId, dateKey.slice(0, 7));
+                const staffArr = (typeof DataStore !== 'undefined') ? (DataStore.getCollection('staff', franchiseId) || []) : [];
+                const staffMap = {};
+                staffArr.forEach(function(s) { staffMap[s.id] = s.name; staffMap[s.name] = s.name; });
+                comissoes = (rep.operadores || [])
+                    .filter(function(o) { return o.commission > 0; })
+                    .map(function(o) { return { name: staffMap[o.operatorId] || o.operatorId, orders: o.orders, revenue: o.revenue, commission: o.commission }; });
+            }
+        } catch (e) {}
+
+        let beneficios = [];
+        try {
+            if (typeof StaffBenefits !== 'undefined' && StaffBenefits.list) {
+                beneficios = StaffBenefits.list(franchiseId, { date: dateKey }).map(function(b) {
+                    var icon = b.tipo === 'sorvete_dia' ? '🍦' : (b.tipo === 'refeicao' ? '🍽️' : (b.tipo === 'lanche' ? '🥪' : (b.tipo === 'bebida' ? '🥤' : '🎁')));
+                    return { staffName: b.staffName, tipo: b.tipo, tipoLabel: b.tipoLabel, value: b.value, icon: icon };
+                });
+            }
+        } catch (e) {}
+
+        const franchises = (typeof DataStore !== 'undefined') ? (DataStore.getAllFranchises() || []) : [];
+        const fr = franchises.find(function(f) { return f.id === franchiseId; });
+        const trocoProximoDia = (fr && fr.trocoProximoDiaPadrao != null) ? Number(fr.trocoProximoDiaPadrao) : (st.valorAbertura || 0);
+
+        return Promise.resolve(CloudFunctions.sendClosingReport(franchiseId, {
+            operatorName: operatorName,
+            operatorEmail: operatorEmail,
+            valorContado: st.valorContado || 0,
+            saldoEsperado: st.saldoEsperadoDinheiro,
+            diferenca: st.diferenca || 0,
+            motivo: st.motivoQuebra || (st.fechamento && st.fechamento.motivo) || '',
+            fechamentoDate: st.fechamento ? st.fechamento.createdAt : new Date().toISOString(),
+            porMetodoEsperado: st.porMetodo || {},
+            faturamentoBruto: st.faturamentoBruto || 0,
+            valorAbertura: st.valorAbertura || 0,
+            vendasDinheiro: st.vendasDinheiro || 0,
+            totalSangria: st.totalSangria || 0,
+            totalReforco: st.totalReforco || 0,
+            totalPedidos: pedidosDoDia.length,
+            trocoProximoDia: trocoProximoDia,
+            turnos: turnos,
+            sangrias: sangriasList,
+            reforcos: reforcosList,
+            comissoes: comissoes,
+            beneficios: beneficios,
+            isResend: true
+        })).then(function() {
+            return { success: true, dateKey: dateKey };
+        }).catch(function(e) {
+            return { success: false, error: (e && e.message) || String(e) };
+        });
+    }
+
     /* ============================================
        API pública
        ============================================ */
@@ -2211,6 +2334,7 @@ const Caixa = (function () {
         // Operações
         openShift: openShift,
         closeShift: closeShift,
+        resendClosingReport: resendClosingReport,
         changeShift: changeShift,
         registerSale: registerSale,
         registerSangria: registerSangria,
