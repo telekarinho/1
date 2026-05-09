@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Influencer MilkyPot — Posta. Ganha. Repete.</title>
+<meta name="description" content="Vire Influencer MilkyPot. Posta no Instagram, marca @milkypotbr, ganha MilkyCoins de verdade. Sobe de tier, ganha mais.">
+<meta property="og:title" content="Posta. Ganha. Repete. — Influencer MilkyPot">
+<meta property="og:description" content="Seu Instagram pode virar sorvete grátis.">
+<meta property="og:image" content="/images/logo-milkypot.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#7c3aed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MilkyInfluencer">
+<link rel="apple-touch-icon" href="/images/logo-milkypot.png">
+<link rel="icon" href="/images/logo-milkypot.png">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --c-purple:#7c3aed;
+    --c-pink:#EC407A;
+    --c-yellow:#FFB300;
+    --c-blue:#42A5F5;
+    --c-green:#10B981;
+    --c-bg:#FAF5FF;
+    --c-text:#1A2740;
+    --c-muted:#6B7A95;
+    --c-card:#fff;
+    --r-lg:24px;
+    --r-md:16px;
+    --r-sm:10px;
+    --shadow-soft:0 8px 28px rgba(124,58,237,.10);
+    --shadow-strong:0 16px 48px rgba(124,58,237,.20);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',system-ui,sans-serif;background:var(--c-bg);color:var(--c-text);line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:0 18px 100px;min-height:100vh}
+
+/* ════════ NAV ════════ */
+.nav{position:sticky;top:0;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(124,58,237,.12);padding:12px 18px;z-index:50;display:flex;align-items:center;gap:10px;justify-content:space-between}
+.nav .brand{display:flex;align-items:center;gap:8px;font-family:'Baloo 2',cursive;font-weight:900;color:var(--c-purple);font-size:1rem}
+.nav .brand img{width:32px;height:32px}
+.nav .back{color:var(--c-muted);font-size:.85rem;font-weight:700;text-decoration:none}
+
+/* ════════ HERO ════════ */
+.hero{padding:34px 18px 30px;text-align:center;position:relative}
+.hero h1{font-family:'Baloo 2',cursive;font-size:clamp(2rem,7vw,3.4rem);font-weight:900;line-height:1.05;color:var(--c-text);margin-bottom:14px}
+.hero h1 .glow{background:linear-gradient(120deg,var(--c-purple),var(--c-pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--c-muted);font-size:1.05rem;max-width:480px;margin:0 auto 20px}
+.hero-bullets{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+.bullet{background:#fff;border-radius:100px;padding:8px 16px;font-size:.86rem;font-weight:800;color:var(--c-purple);box-shadow:var(--shadow-soft)}
+.cta-primary{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--c-purple),var(--c-pink));color:#fff;font-family:'Baloo 2',cursive;font-weight:900;font-size:1.1rem;padding:18px 32px;border-radius:100px;border:none;cursor:pointer;text-decoration:none;box-shadow:0 12px 32px rgba(236,64,122,.35);transition:transform .15s}
+.cta-primary:hover{transform:translateY(-2px)}
+.cta-secondary{color:var(--c-muted);font-weight:700;text-decoration:none;font-size:.9rem;margin-top:14px;display:inline-block}
+
+/* ════════ SECTIONS ════════ */
+.section{background:var(--c-card);border-radius:var(--r-lg);padding:24px;margin-bottom:18px;box-shadow:var(--shadow-soft)}
+.section h2{font-family:'Baloo 2',cursive;font-size:1.4rem;font-weight:900;color:var(--c-purple);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.section .lead{color:var(--c-muted);margin-bottom:18px;font-size:.95rem}
+
+/* ════════ TIERS ════════ */
+.tiers{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:10px;margin:0 -8px;padding:0 8px 10px}
+.tiers::-webkit-scrollbar{display:none}
+.tier-card{flex:0 0 200px;background:linear-gradient(135deg,var(--bg1,#FFE0EC),var(--bg2,#E3F2FD));border-radius:var(--r-md);padding:18px 16px;scroll-snap-align:start;border:2px solid transparent;transition:all .2s}
+.tier-card.current{border-color:var(--c-purple);box-shadow:var(--shadow-strong);transform:scale(1.03)}
+.tier-card .emoji{font-size:2.2rem;line-height:1;margin-bottom:6px}
+.tier-card .nome{font-family:'Baloo 2',cursive;font-size:1.1rem;font-weight:900;line-height:1.05;color:var(--c-text)}
+.tier-card .mult{font-size:.78rem;font-weight:800;color:var(--c-purple);margin-top:4px}
+.tier-card .req{font-size:.74rem;color:#555;line-height:1.3;margin-top:8px}
+
+/* ════════ DASHBOARD CARDS ════════ */
+.dash-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.dash-card{background:linear-gradient(135deg,var(--bg1,#F3E5F5),var(--bg2,#E1BEE7));border-radius:var(--r-md);padding:16px;position:relative;overflow:hidden}
+.dash-card .lbl{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--c-purple);margin-bottom:4px}
+.dash-card .val{font-family:'Baloo 2',cursive;font-size:1.8rem;font-weight:900;line-height:1;color:var(--c-text)}
+.dash-card .delta{font-size:.78rem;color:var(--c-green);font-weight:800;margin-top:6px}
+
+.tier-progress{background:linear-gradient(135deg,#FFE0EC,#F3E5F5);border-radius:var(--r-md);padding:18px;margin-bottom:14px}
+.tier-progress .label{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.tier-progress .label .ico{font-size:1.5rem}
+.tier-progress .label .name{font-family:'Baloo 2',cursive;font-size:1.15rem;font-weight:900}
+.tier-progress .bar{height:10px;background:rgba(255,255,255,.6);border-radius:100px;overflow:hidden}
+.tier-progress .bar-fill{height:100%;background:linear-gradient(90deg,var(--c-purple),var(--c-pink));border-radius:100px;transition:width .8s ease}
+.tier-progress .next{font-size:.82rem;color:var(--c-text);margin-top:6px;font-weight:700}
+
+/* ════════ MISSIONS ════════ */
+.mission-list{display:flex;flex-direction:column;gap:10px}
+.mission{background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border-radius:var(--r-md);padding:14px 16px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:transform .15s;border:2px solid transparent}
+.mission:hover{transform:translateY(-1px);border-color:var(--c-yellow)}
+.mission.locked{opacity:.55;cursor:not-allowed}
+.mission .emoji{font-size:1.8rem;line-height:1;flex-shrink:0}
+.mission .txt{flex:1}
+.mission .titulo{font-family:'Baloo 2',cursive;font-size:1.05rem;font-weight:900;line-height:1.15}
+.mission .descr{font-size:.85rem;color:#555;margin-top:4px;line-height:1.35}
+.mission .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:.75rem;font-weight:800;color:var(--c-purple)}
+.mission .meta .badge{background:rgba(255,255,255,.7);padding:3px 8px;border-radius:100px}
+
+/* ════════ POINT TABLE ════════ */
+.point-table{display:flex;flex-direction:column;gap:6px}
+.point-row{background:#FAFAFA;border-radius:var(--r-sm);padding:8px 12px;display:flex;align-items:center;gap:10px;font-size:.88rem}
+.point-row .ico{font-size:1.1rem;flex-shrink:0;width:28px;text-align:center}
+.point-row .acao{flex:1;color:var(--c-text)}
+.point-row .coins{font-weight:900;color:var(--c-purple);font-family:'Baloo 2',cursive;font-size:1.05rem}
+
+/* ════════ SUBMIT ════════ */
+.submit-form{display:flex;flex-direction:column;gap:12px}
+.input{background:#FAFAFA;border:2px solid #EEE;border-radius:var(--r-sm);padding:14px 16px;font-family:'Nunito',sans-serif;font-size:1rem;color:var(--c-text);width:100%;transition:border-color .15s}
+.input:focus{outline:none;border-color:var(--c-purple)}
+.input-help{font-size:.78rem;color:var(--c-muted);margin-top:-6px}
+
+.platform-toggle{display:flex;gap:8px;background:#F5F0FF;padding:6px;border-radius:100px}
+.platform-toggle button{flex:1;border:none;background:transparent;padding:10px 16px;border-radius:100px;font-family:'Nunito',sans-serif;font-weight:800;cursor:pointer;color:var(--c-muted);transition:all .15s}
+.platform-toggle button.active{background:linear-gradient(135deg,var(--c-purple),var(--c-pink));color:#fff;box-shadow:var(--shadow-soft)}
+
+.preview{background:#FAFAFA;border:2px dashed #DDD;border-radius:var(--r-md);padding:14px;text-align:center;color:var(--c-muted);font-size:.88rem}
+.preview.ok{border-style:solid;border-color:var(--c-green);background:#E8F5E9;color:var(--c-text)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--c-purple),var(--c-pink));color:#fff;padding:14px 24px;border-radius:100px;font-weight:800;z-index:9999;box-shadow:0 12px 32px rgba(124,58,237,.4);max-width:90vw;text-align:center}
+.toast.ok{background:var(--c-green)}
+.toast.err{background:#EF4444}
+
+/* ════════ MY POSTS ════════ */
+.posts-list{display:flex;flex-direction:column;gap:8px}
+.post-item{background:#FAFAFA;border-radius:var(--r-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:.88rem}
+.post-item .platform{font-size:1.2rem}
+.post-item .info{flex:1;min-width:0}
+.post-item .url{font-weight:700;color:var(--c-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.82rem}
+.post-item .date{font-size:.74rem;color:var(--c-muted)}
+.post-item .status{font-size:.76rem;font-weight:800;padding:3px 10px;border-radius:100px;white-space:nowrap}
+.status-pending{background:#FFF3E0;color:#E65100}
+.status-approved{background:#E8F5E9;color:#1B5E20}
+.status-rejected{background:#FFEBEE;color:#C62828}
+
+.empty{text-align:center;padding:24px;color:var(--c-muted);font-style:italic}
+
+/* ════════ MOBILE ════════ */
+@media (max-width:520px){
+    .dash-grid{grid-template-columns:1fr 1fr}
+    .hero h1{font-size:2.2rem}
+}
+
+/* Animação de moedas caindo (delight) */
+@keyframes coinDrop{
+    0%{opacity:0;transform:translate(-50%,-30px) rotate(0deg) scale(.6)}
+    50%{opacity:1;transform:translate(-50%,8px) rotate(180deg) scale(1.1)}
+    100%{opacity:0;transform:translate(-50%,30px) rotate(360deg) scale(1)}
+}
+.coins-anim{position:fixed;top:30%;left:50%;font-size:3rem;z-index:99999;animation:coinDrop 1.4s ease-out forwards}
+
+/* Sticky CTA bottom */
+.sticky-cta{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border-top:1px solid rgba(124,58,237,.12);padding:14px 18px;z-index:60;display:none}
+.sticky-cta.show{display:flex;justify-content:center}
+.sticky-cta .btn{flex:1;max-width:480px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a href="/clube.html" class="brand">
+        <img src="/images/logo-milkypot.png" alt="MilkyPot">
+        <span>MilkyInfluencer</span>
+    </a>
+    <a href="/clube.html" class="back">← MilkyClube</a>
+</nav>
+
+<div class="wrap">
+
+<!-- ════════ HERO (não-membros) ════════ -->
+<section class="hero" id="heroSection">
+    <h1>Posta. Ganha.<br><span class="glow">Repete.</span></h1>
+    <p>Seu Instagram pode virar sorvete grátis. Posta no IG, marca <strong>@milkypotbr</strong>, ganha MilkyCoins de verdade.</p>
+    <div class="hero-bullets">
+        <span class="bullet">📸 50 coins por post</span>
+        <span class="bullet">🚀 Bônus por views</span>
+        <span class="bullet">🏆 Sobe de tier</span>
+    </div>
+    <button class="cta-primary" onclick="goSignup()">Bora começar 🐑</button>
+    <div><a href="#como" class="cta-secondary">Como funciona →</a></div>
+</section>
+
+<!-- ════════ DASHBOARD (visível só pra membros) ════════ -->
+<section class="section" id="dashboardSection" style="display:none">
+    <h2>👋 Oi, <span id="userName">Influencer</span></h2>
+
+    <div class="tier-progress">
+        <div class="label">
+            <span class="ico" id="tierEmoji">⭐</span>
+            <div>
+                <div class="name" id="tierName">Aspirante</div>
+                <div style="font-size:.78rem;color:var(--c-muted)" id="tierMult">+20% coins por post</div>
+            </div>
+        </div>
+        <div class="bar"><div class="bar-fill" id="tierBar" style="width:30%"></div></div>
+        <div class="next" id="tierNext">Falta 7 posts pra subir pra Estrela 🌟</div>
+    </div>
+
+    <div class="dash-grid">
+        <div class="dash-card" style="--bg1:#F3E5F5;--bg2:#E1BEE7">
+            <div class="lbl">MilkyCoins</div>
+            <div class="val" id="coinsVal">0</div>
+            <div class="delta" id="coinsDelta">+0 essa semana</div>
+        </div>
+        <div class="dash-card" style="--bg1:#FFE0EC;--bg2:#F8BBD0">
+            <div class="lbl">Posts ativos</div>
+            <div class="val" id="postsVal">0</div>
+            <div class="delta" id="postsDelta">0 aprovados</div>
+        </div>
+        <div class="dash-card" style="--bg1:#FFF3E0;--bg2:#FFE0B2">
+            <div class="lbl">Cupom pessoal</div>
+            <div class="val" style="font-size:1.1rem;font-family:'Nunito',sans-serif" id="couponCode">—</div>
+            <div class="delta" id="couponUses">0 usos</div>
+        </div>
+        <div class="dash-card" style="--bg1:#E1F5FE;--bg2:#B3E5FC">
+            <div class="lbl">Conversões</div>
+            <div class="val" id="convVal">0</div>
+            <div class="delta">amigos que compraram</div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════ SUBMETER POST ════════ -->
+<section class="section" id="submitSection" style="display:none">
+    <h2>🚀 Postou? Manda aqui</h2>
+    <p class="lead">Cola o link do seu post no IG ou TikTok. A gente confere em até 2h e credita na hora.</p>
+
+    <div class="submit-form">
+        <div class="platform-toggle">
+            <button class="active" data-platform="instagram" onclick="setPlatform('instagram')">📸 Instagram</button>
+            <button data-platform="tiktok" onclick="setPlatform('tiktok')">🎵 TikTok</button>
+        </div>
+
+        <input type="url" class="input" id="postUrl" placeholder="Cola aqui o link do post" oninput="validateUrl()">
+        <div class="input-help">Ex: instagram.com/p/ABC123 ou instagram.com/reel/...</div>
+
+        <div class="preview" id="postPreview">Cole o link acima pra ver preview ☝️</div>
+
+        <input type="text" class="input" id="postCaption" placeholder="Conta a história (opcional, max 200 chars)" maxlength="200">
+
+        <button class="cta-primary" id="btnSubmit" onclick="submitPost()" disabled>Mandar 🚀</button>
+
+        <div style="background:#FFF9C4;border-left:4px solid var(--c-yellow);padding:12px;border-radius:8px;font-size:.84rem;line-height:1.5;margin-top:6px">
+            <strong>Não esqueça:</strong> marca <strong>@milkypotbr</strong> + use a hashtag <strong>#EuSouMilkyPot</strong> + ative localização <strong>"MilkyPot — Londrina"</strong>. Sem isso a Belinha não vê o post.
+        </div>
+    </div>
+</section>
+
+<!-- ════════ MEUS POSTS ════════ -->
+<section class="section" id="postsSection" style="display:none">
+    <h2>📜 Meus posts</h2>
+    <div class="posts-list" id="postsList">
+        <div class="empty">Nenhum post ainda. Que tal o primeiro? 🚀</div>
+    </div>
+</section>
+
+<!-- ════════ MISSÕES DA SEMANA ════════ -->
+<section class="section" id="missionsSection">
+    <h2>🎯 Missões da semana</h2>
+    <p class="lead">Pega uma missão, posta com a hashtag certa e ganha bônus em cima. Cumpriu? Coins na conta.</p>
+    <div class="mission-list" id="missionsList"></div>
+</section>
+
+<!-- ════════ COMO FUNCIONA ════════ -->
+<section class="section" id="como">
+    <h2>💡 Como funciona</h2>
+    <ol style="padding-left:20px;color:var(--c-text);line-height:1.8">
+        <li><strong>Cadastra:</strong> conecta seu @ do Instagram (30 segundos)</li>
+        <li><strong>Posta:</strong> qualquer foto/vídeo do MilkyPot, marcando <strong>@milkypotbr</strong></li>
+        <li><strong>Registra:</strong> volta aqui, cola o link, "Mandar 🚀"</li>
+        <li><strong>Ganha:</strong> a Belinha confere e credita MilkyCoins na conta</li>
+        <li><strong>Resgata:</strong> usa MilkyCoins como desconto na próxima compra (10 coins = R$ 1)</li>
+    </ol>
+</section>
+
+<!-- ════════ TABELA DE PONTOS ════════ -->
+<section class="section">
+    <h2>💰 Tabela de pontos</h2>
+    <p class="lead">1 MilkyCoin = R$ 0,10 de desconto. Quanto mais alto o tier, mais multiplicador você ganha.</p>
+    <div class="point-table" id="pointTable"></div>
+</section>
+
+<!-- ════════ TIERS ════════ -->
+<section class="section">
+    <h2>🏆 Tiers</h2>
+    <p class="lead">Quanto mais você posta e converte amigos, mais alto seu tier — e mais MilkyCoins ganha por ação.</p>
+    <div class="tiers" id="tiersContainer"></div>
+</section>
+
+<!-- ════════ FAQ ════════ -->
+<section class="section">
+    <h2>❓ Dúvidas comuns</h2>
+    <details style="margin-bottom:8px;background:#FAFAFA;border-radius:10px;padding:12px"><summary style="cursor:pointer;font-weight:800">Quem pode participar?</summary><p style="margin-top:8px;color:#555">Qualquer cliente do MilkyClube. Cadastro é gratuito, dura 30 segundos.</p></details>
+    <details style="margin-bottom:8px;background:#FAFAFA;border-radius:10px;padding:12px"><summary style="cursor:pointer;font-weight:800">Preciso ter muitos seguidores?</summary><p style="margin-top:8px;color:#555">Não. A gente recompensa qualquer post, mesmo que pegue 50 views. Bônus por views são extras.</p></details>
+    <details style="margin-bottom:8px;background:#FAFAFA;border-radius:10px;padding:12px"><summary style="cursor:pointer;font-weight:800">Quanto demora pra aprovar?</summary><p style="margin-top:8px;color:#555">Em até 2 horas. Se for fim de semana, até segunda. A gente avisa por push.</p></details>
+    <details style="margin-bottom:8px;background:#FAFAFA;border-radius:10px;padding:12px"><summary style="cursor:pointer;font-weight:800">E se meu post for rejeitado?</summary><p style="margin-top:8px;color:#555">Avisamos o motivo (ex: faltou marcação @milkypotbr). Você corrige e manda de novo.</p></details>
+    <details style="margin-bottom:8px;background:#FAFAFA;border-radius:10px;padding:12px"><summary style="cursor:pointer;font-weight:800">Posso comprar likes/views?</summary><p style="margin-top:8px;color:#555">Não funciona — detectamos. 3 strikes e você fica fora do programa.</p></details>
+</section>
+
+</div>
+
+<div class="sticky-cta" id="stickyCta">
+    <button class="cta-primary btn" onclick="goSignup()">Bora começar 🐑</button>
+</div>
+
+<script src="/js/data/influencer-missions.js?v=mp-v167"></script>
+<script>
+const TIERS = window.InfluencerData.tiers;
+const MISSIONS = window.InfluencerData.missions;
+const POINT_TABLE = window.InfluencerData.pointTable;
+
+// State (mock — TODO: integrar com Firestore)
+let user = null;
+let userTier = 1;
+let userCoins = 0;
+let userPosts = [];
+let activePlatform = 'instagram';
+
+// Detecta se já é influencer (via localStorage por enquanto)
+function loadUser() {
+    try {
+        const saved = localStorage.getItem('milkypot_influencer');
+        if (saved) {
+            user = JSON.parse(saved);
+            userTier = user.tier || 1;
+            userCoins = user.coins || 0;
+            userPosts = user.posts || [];
+            renderDashboard();
+        } else {
+            renderHero();
+        }
+    } catch(e) { renderHero(); }
+}
+
+function renderHero() {
+    document.getElementById('heroSection').style.display = '';
+    document.getElementById('dashboardSection').style.display = 'none';
+    document.getElementById('submitSection').style.display = 'none';
+    document.getElementById('postsSection').style.display = 'none';
+    setTimeout(() => document.getElementById('stickyCta').classList.add('show'), 1500);
+}
+
+function renderDashboard() {
+    document.getElementById('heroSection').style.display = 'none';
+    document.getElementById('dashboardSection').style.display = '';
+    document.getElementById('submitSection').style.display = '';
+    document.getElementById('postsSection').style.display = '';
+    document.getElementById('stickyCta').classList.remove('show');
+
+    document.getElementById('userName').textContent = user?.name || 'Influencer';
+    document.getElementById('coinsVal').textContent = userCoins.toLocaleString('pt-BR');
+    document.getElementById('postsVal').textContent = userPosts.length;
+    document.getElementById('postsDelta').textContent = userPosts.filter(p=>p.status==='approved').length + ' aprovados';
+    document.getElementById('couponCode').textContent = user?.coupon || ('BELINHA-' + (user?.name||'VC').toUpperCase().slice(0,6) + '10');
+    document.getElementById('couponUses').textContent = (user?.couponUses||0) + ' usos';
+    document.getElementById('convVal').textContent = user?.conversions || 0;
+
+    const tier = TIERS.find(t => t.id === userTier) || TIERS[1];
+    const nextTier = TIERS.find(t => t.id === userTier + 1);
+    document.getElementById('tierEmoji').textContent = tier.emoji;
+    document.getElementById('tierName').textContent = tier.nome;
+    document.getElementById('tierMult').textContent = '+' + ((tier.multiplier-1)*100).toFixed(0) + '% coins por post';
+
+    const postsCount = userPosts.length;
+    let pct = 30, nextLabel = 'Continua postando! 🚀';
+    if (nextTier) {
+        const totalNeed = tier.id === 1 ? 10 : tier.id === 2 ? 25 : 50;
+        pct = Math.min(95, Math.max(10, (postsCount / totalNeed) * 100));
+        const remaining = Math.max(0, totalNeed - postsCount);
+        nextLabel = 'Falta ' + remaining + ' post' + (remaining===1?'':'s') + ' pra subir pra ' + nextTier.emoji + ' ' + nextTier.nome;
+    }
+    document.getElementById('tierBar').style.width = pct + '%';
+    document.getElementById('tierNext').textContent = nextLabel;
+
+    renderPosts();
+}
+
+function renderPosts() {
+    const list = document.getElementById('postsList');
+    if (!userPosts.length) {
+        list.innerHTML = '<div class="empty">Nenhum post ainda. Que tal o primeiro? 🚀</div>';
+        return;
+    }
+    list.innerHTML = userPosts.slice().reverse().map(p => `
+        <div class="post-item">
+            <span class="platform">${p.platform === 'tiktok' ? '🎵' : '📸'}</span>
+            <div class="info">
+                <div class="url">${escapeHtml(p.url)}</div>
+                <div class="date">${formatDate(p.submittedAt)}</div>
+            </div>
+            <span class="status status-${p.status||'pending'}">
+                ${p.status==='approved' ? '✓ +'+(p.coins||0)+' MC' : p.status==='rejected' ? '✗ rejeitado' : '⏰ analisando'}
+            </span>
+        </div>
+    `).join('');
+}
+
+function renderMissions() {
+    const list = document.getElementById('missionsList');
+    list.innerHTML = MISSIONS.filter(m => m.ativa).slice(0, 8).map(m => {
+        const locked = userTier < m.tierMinimo;
+        return `
+            <div class="mission ${locked?'locked':''}" onclick="${locked?'showLocked('+m.tierMinimo+')':'pickMission(\''+m.id+'\')'}">
+                <div class="emoji">${m.emoji||'🎯'}</div>
+                <div class="txt">
+                    <div class="titulo">${escapeHtml(m.titulo)}</div>
+                    <div class="descr">${escapeHtml(m.descricao)}</div>
+                    <div class="meta">
+                        <span class="badge">+${m.coinsBonus} MC</span>
+                        <span class="badge">${m.tipo}</span>
+                        <span class="badge">${m.duracaoDias}d</span>
+                        ${locked ? '<span class="badge">🔒 Tier '+m.tierMinimo+'+</span>' : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderTiers() {
+    const c = document.getElementById('tiersContainer');
+    c.innerHTML = TIERS.map(t => `
+        <div class="tier-card ${t.id===userTier?'current':''}" style="--bg1:${t.cor}25;--bg2:${t.cor}10">
+            <div class="emoji">${t.emoji}</div>
+            <div class="nome">${t.nome}</div>
+            <div class="mult">×${t.multiplier} coins ${t.capMonth?'· cap '+t.capMonth+'/mês':''}</div>
+            <div class="req">${t.requisito}</div>
+        </div>
+    `).join('');
+}
+
+function renderPointTable() {
+    document.getElementById('pointTable').innerHTML = POINT_TABLE.map(p => `
+        <div class="point-row">
+            <span class="ico">${p.ico}</span>
+            <span class="acao">${escapeHtml(p.acao)}${p.extra?' <small style="color:#666">'+p.extra+'</small>':''}</span>
+            <span class="coins">+${p.coinsBase}</span>
+        </div>
+    `).join('');
+}
+
+// ════════ ACTIONS ════════
+function goSignup() {
+    const name = prompt('Como você se chama? (primeiro nome basta)');
+    if (!name || name.length < 2) return;
+    const handle = prompt('Qual seu @ no Instagram? (sem o @)');
+    if (!handle || handle.length < 2) return;
+    user = {
+        name: name.trim(),
+        handle: handle.replace(/^@/,'').trim(),
+        tier: 1,
+        coins: 10, // bônus boas-vindas
+        posts: [],
+        coupon: 'BELINHA-' + name.toUpperCase().slice(0,6) + '10',
+        conversions: 0,
+        couponUses: 0,
+        joinedAt: new Date().toISOString()
+    };
+    userTier = 1;
+    userCoins = 10;
+    userPosts = [];
+    saveUser();
+    showCelebration();
+    setTimeout(() => renderDashboard(), 1400);
+}
+
+function saveUser() {
+    user.tier = userTier;
+    user.coins = userCoins;
+    user.posts = userPosts;
+    localStorage.setItem('milkypot_influencer', JSON.stringify(user));
+}
+
+function setPlatform(p) {
+    activePlatform = p;
+    document.querySelectorAll('.platform-toggle button').forEach(b => b.classList.toggle('active', b.dataset.platform === p));
+}
+
+function validateUrl() {
+    const url = document.getElementById('postUrl').value.trim();
+    const preview = document.getElementById('postPreview');
+    const btn = document.getElementById('btnSubmit');
+    const igRe = /instagram\.com\/(p|reel|reels|stories)\/[\w-]+/i;
+    const ttRe = /tiktok\.com\/(@[\w.-]+\/video|t)\/[\w]+/i;
+    if (!url) {
+        preview.className = 'preview';
+        preview.textContent = 'Cole o link acima pra ver preview ☝️';
+        btn.disabled = true;
+        return;
+    }
+    const matches = activePlatform === 'instagram' ? igRe.test(url) : ttRe.test(url);
+    if (matches) {
+        preview.className = 'preview ok';
+        preview.innerHTML = '✅ Link válido — Belinha vai conferir após enviar.';
+        btn.disabled = false;
+    } else {
+        preview.className = 'preview';
+        preview.textContent = 'Hmm, esse link tá meio estranho 🤔. Confere se é do ' + (activePlatform === 'instagram' ? 'Instagram' : 'TikTok') + '?';
+        btn.disabled = true;
+    }
+}
+
+function submitPost() {
+    const url = document.getElementById('postUrl').value.trim();
+    const caption = document.getElementById('postCaption').value.trim();
+    if (!url) return;
+
+    // Check duplicate
+    if (userPosts.some(p => p.url === url)) {
+        showToast('Esse link já foi enviado 👀', 'err');
+        return;
+    }
+
+    const post = {
+        id: 'p_' + Date.now(),
+        url: url,
+        platform: activePlatform,
+        caption: caption,
+        submittedAt: new Date().toISOString(),
+        status: 'pending'
+    };
+    userPosts.push(post);
+    saveUser();
+    document.getElementById('postUrl').value = '';
+    document.getElementById('postCaption').value = '';
+    validateUrl();
+    showToast('Tô conferindo aqui ⏰', 'ok');
+    setTimeout(() => renderPosts(), 200);
+
+    // TODO: enviar pra Firestore /influencerPosts
+    console.log('[InfluencerPost] Submit:', post);
+}
+
+function pickMission(id) {
+    const m = MISSIONS.find(x => x.id === id);
+    if (!m) return;
+    showToast('🎯 Missão escolhida — bom post!', 'ok');
+    document.getElementById('postCaption').value = m.hashtags.join(' ') + ' — ' + m.titulo;
+    document.getElementById('submitSection').scrollIntoView({behavior:'smooth'});
+}
+
+function showLocked(min) {
+    showToast('🔒 Sobe pro tier ' + min + ' pra desbloquear', 'err');
+}
+
+function showCelebration() {
+    const emojis = ['🎉','🪙','💜','⭐','🐑'];
+    emojis.forEach((e,i) => {
+        const el = document.createElement('div');
+        el.className = 'coins-anim';
+        el.textContent = e;
+        el.style.left = (40 + i*5) + '%';
+        el.style.animationDelay = (i*120) + 'ms';
+        document.body.appendChild(el);
+        setTimeout(()=>el.remove(), 1800);
+    });
+}
+
+function showToast(msg, type) {
+    const old = document.querySelector('.toast');
+    if (old) old.remove();
+    const t = document.createElement('div');
+    t.className = 'toast ' + (type||'');
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 2400);
+}
+
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function formatDate(iso){
+    if(!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+
+// Init
+loadUser();
+renderMissions();
+renderTiers();
+renderPointTable();
+</script>
+</body>
+</html>
