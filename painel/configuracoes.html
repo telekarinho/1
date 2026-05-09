@@ -542,6 +542,61 @@
                         .gam-toggle input[type="checkbox"] { width:18px; height:18px; cursor:pointer; }
                     </style>
 
+                    <!-- Card: Configurações do App do Funcionário (controle granular do que aparece) -->
+                    <div class="panel-card" style="grid-column:1/-1">
+                        <div class="card-header" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);color:#fff">
+                            <h3 style="color:#fff">📲 Configurações do App do Funcionário</h3>
+                            <p style="margin:4px 0 0;font-size:12px;opacity:.95">Controle exato do que o funcionário vê no app. Cada aba/card pode ser ligado/desligado.</p>
+                        </div>
+                        <div class="card-body">
+                            <div style="background:#EFF6FF;border-left:4px solid #0EA5E9;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:.82rem;color:#0C4A6E">
+                                <strong>💡 Como funciona:</strong> Liga só o que faz sentido para o seu negócio. Desligado = funcionário NÃO vê aquela aba/card no app.
+                            </div>
+
+                            <h4 style="margin:0 0 8px;color:#374151">🗂️ Abas do menu inferior</h4>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:18px">
+                                <label class="app-toggle"><input type="checkbox" data-app="tab_hoje" checked disabled><span>⏰ <strong>Hoje</strong> <small>(obrigatória)</small></span></label>
+                                <label class="app-toggle"><input type="checkbox" data-app="tab_mes"><span>🗓️ <strong>Mês</strong> (espelho de ponto)</span></label>
+                                <label class="app-toggle"><input type="checkbox" data-app="tab_holerite"><span>💵 <strong>Holerite</strong> simplificado</span></label>
+                                <label class="app-toggle"><input type="checkbox" data-app="tab_banco"><span>🏦 <strong>Banco</strong> de horas</span></label>
+                                <label class="app-toggle"><input type="checkbox" data-app="tab_beneficios"><span>🎁 <strong>Benefícios</strong> recebidos</span></label>
+                                <label class="app-toggle"><input type="checkbox" data-app="tab_dados" checked disabled><span>👤 <strong>Dados</strong> <small>(obrigatória)</small></span></label>
+                            </div>
+
+                            <h4 style="margin:0 0 8px;color:#374151">📦 Cards na tela "Hoje"</h4>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:18px">
+                                <label class="app-toggle"><input type="checkbox" data-app="card_ponto" checked disabled><span>📍 <strong>Bater ponto</strong> <small>(obrigatório)</small></span></label>
+                                <label class="app-toggle"><input type="checkbox" data-app="card_escala"><span>📅 <strong>Sua escala</strong> (horários cadastrados)</span></label>
+                                <label class="app-toggle"><input type="checkbox" data-app="card_comissao"><span>💰 <strong>Comissão</strong> do mês</span></label>
+                                <label class="app-toggle"><input type="checkbox" data-app="card_pontuacao"><span>🏆 <strong>Pontuação</strong> de conduta</span></label>
+                            </div>
+
+                            <h4 style="margin:0 0 8px;color:#374151">📚 Aba "Dados" — exibições</h4>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:18px">
+                                <label class="app-toggle"><input type="checkbox" data-app="info_personal" checked disabled><span>👤 <strong>Dados pessoais</strong> <small>(obrigatório)</small></span></label>
+                                <label class="app-toggle"><input type="checkbox" data-app="info_clt"><span>📜 <strong>Direitos CLT</strong> (lista de leis)</span></label>
+                                <label class="app-toggle"><input type="checkbox" data-app="info_termos" checked disabled><span>📄 <strong>Termo de uso</strong> e LGPD <small>(obrigatório)</small></span></label>
+                                <label class="app-toggle"><input type="checkbox" data-app="info_install"><span>📱 <strong>Instalar como app</strong> (banner PWA)</span></label>
+                                <label class="app-toggle"><input type="checkbox" data-app="info_notif"><span>🔔 <strong>Lembretes</strong> de ponto</span></label>
+                            </div>
+
+                            <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+                                <button class="btn btn-outline" onclick="appPreset('minimal')" style="font-size:.78rem">📌 Mínimo (só ponto)</button>
+                                <button class="btn btn-outline" onclick="appPreset('basic')" style="font-size:.78rem">📋 Básico (ponto + mês + benefícios)</button>
+                                <button class="btn btn-outline" onclick="appPreset('full')" style="font-size:.78rem">🚀 Completo (tudo ligado)</button>
+                            </div>
+
+                            <button class="btn btn-primary" onclick="saveAppConfig()">💾 Salvar Configurações do App</button>
+                            <span id="appCfgSaveStatus" style="margin-left:12px;font-size:.85rem"></span>
+                        </div>
+                    </div>
+                    <style>
+                        .app-toggle { display:flex; align-items:center; gap:8px; padding:10px 12px; background:#FAFAFA; border:1px solid #E5E7EB; border-radius:8px; cursor:pointer; font-size:.84rem; }
+                        .app-toggle:hover { background:#F3F4F6; }
+                        .app-toggle input[type="checkbox"] { width:18px; height:18px; cursor:pointer; }
+                        .app-toggle input[type="checkbox"]:disabled { opacity:.6 }
+                    </style>
+
                     <!-- Card: App MilkyPot Funcionário — Links e Compartilhamento -->
                     <div class="panel-card" style="grid-column:1/-1">
                         <div class="card-header" style="background:linear-gradient(135deg,#16A34A,#10B981);color:#fff">
@@ -1711,6 +1766,52 @@
     loadRecognitionUI();
     loadRedemptions();
     loadAppLinks();
+    loadAppConfig();
+
+    // ============== APP CONFIG (controle granular do que aparece) ==============
+    function loadAppConfig() {
+        var saved = JSON.parse(localStorage.getItem('mp_app_config_' + franchiseId) || '{}');
+        // Defaults: só obrigatorios
+        var defaults = {
+            tab_hoje: true, tab_dados: true, card_ponto: true, info_personal: true, info_termos: true,
+            tab_mes: false, tab_holerite: false, tab_banco: false, tab_beneficios: false,
+            card_escala: false, card_comissao: false, card_pontuacao: false,
+            info_clt: false, info_install: false, info_notif: false
+        };
+        var cfg = Object.assign({}, defaults, saved);
+        document.querySelectorAll('.app-toggle input[data-app]').forEach(function(cb) {
+            if (!cb.disabled) cb.checked = !!cfg[cb.dataset.app];
+        });
+    }
+    window.appPreset = function(p) {
+        var presets = {
+            minimal: {},
+            basic: { tab_mes: true, tab_beneficios: true, card_escala: true, info_install: true, info_notif: true },
+            full: { tab_mes: true, tab_holerite: true, tab_banco: true, tab_beneficios: true, card_escala: true, card_comissao: true, card_pontuacao: true, info_clt: true, info_install: true, info_notif: true }
+        };
+        var preset = presets[p] || {};
+        document.querySelectorAll('.app-toggle input[data-app]').forEach(function(cb) {
+            if (!cb.disabled) cb.checked = !!preset[cb.dataset.app];
+        });
+    };
+    window.saveAppConfig = function() {
+        var cfg = {};
+        document.querySelectorAll('.app-toggle input[data-app]').forEach(function(cb) {
+            cfg[cb.dataset.app] = cb.checked;
+        });
+        localStorage.setItem('mp_app_config_' + franchiseId, JSON.stringify(cfg));
+        // Salva tambem no Firestore via DataStore
+        var franchises = DataStore.get('franchises') || [];
+        var idx = franchises.findIndex(function(f) { return f.id === franchiseId; });
+        if (idx !== -1) {
+            franchises[idx].appConfig = cfg;
+            DataStore.set('franchises', franchises);
+        }
+        var s = document.getElementById('appCfgSaveStatus');
+        s.textContent = '✓ Salvo! Funcionários verão na próxima abertura do app';
+        s.style.color = '#16A34A';
+        setTimeout(function() { s.textContent = ''; }, 5000);
+    };
 
     // ============== APP LINKS ==============
     function loadAppLinks() {

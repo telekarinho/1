@@ -890,6 +890,56 @@ function fnLogout() {
     document.getElementById('loginPin').value = '';
 }
 
+function fnGetAppConfig(franchiseId) {
+    // Le config de qual aba/card aparece
+    var saved = (typeof DataStore !== 'undefined') ? (DataStore.getAllFranchises() || []).find(function(f) { return f.id === franchiseId; }) : null;
+    var defaults = {
+        tab_hoje: true, tab_dados: true, card_ponto: true, info_personal: true, info_termos: true,
+        tab_mes: false, tab_holerite: false, tab_banco: false, tab_beneficios: false,
+        card_escala: false, card_comissao: false, card_pontuacao: false,
+        info_clt: false, info_install: false, info_notif: false
+    };
+    return Object.assign({}, defaults, (saved && saved.appConfig) || {});
+}
+
+function fnApplyAppConfig(franchiseId) {
+    var cfg = fnGetAppConfig(franchiseId);
+    // Esconde abas desligadas
+    var tabMap = { tab_mes: 'mes', tab_holerite: 'holerite', tab_banco: 'banco', tab_beneficios: 'beneficios' };
+    Object.keys(tabMap).forEach(function(flag) {
+        var btn = document.querySelector('.fn-tab-btn[data-tab="' + tabMap[flag] + '"]');
+        var sec = document.getElementById('sec-' + tabMap[flag]);
+        if (btn) btn.style.display = cfg[flag] ? '' : 'none';
+        if (sec) sec.style.display = cfg[flag] ? '' : 'none';
+    });
+    // Esconde cards desligados
+    var cardEscala = document.querySelector('.fn-card h3');
+    document.querySelectorAll('.fn-section#sec-hoje .fn-card').forEach(function(card) {
+        var h3 = card.querySelector('h3');
+        if (!h3) return;
+        var t = h3.textContent.trim();
+        if (/Sua escala/i.test(t) && !cfg.card_escala) card.style.display = 'none';
+        // commissionCard / scoreCard ja tem logica propria condicional
+    });
+    // Esconde infos da aba Dados
+    if (!cfg.info_clt) {
+        document.querySelectorAll('#sec-info .fn-card').forEach(function(card) {
+            var h3 = card.querySelector('h3');
+            if (h3 && /Direitos.{0,3}Termos/i.test(h3.textContent)) card.style.display = 'none';
+        });
+    }
+    if (!cfg.info_install) {
+        var ic = document.getElementById('installCard');
+        if (ic) ic.dataset.disabled = '1';
+    }
+    if (!cfg.info_notif) {
+        // Esconde card "Lembretes de ponto"
+        document.querySelectorAll('#sec-info .fn-card h3').forEach(function(h3) {
+            if (/Lembretes de ponto/i.test(h3.textContent)) h3.parentNode.style.display = 'none';
+        });
+    }
+}
+
 function fnShowApp(session, staff) {
     document.getElementById('loginView').style.display = 'none';
     document.getElementById('appView').style.display = 'flex';
@@ -907,6 +957,7 @@ function fnShowApp(session, staff) {
     fnRenderBeneficios(session);
     fnRenderInfo(session, staff);
     fnRenderGamification(session, staff);
+    fnApplyAppConfig(session.franchiseId);  // aplica feature flags do admin
 
     // Welcome modal no primeiro login
     var welcomed = localStorage.getItem(FN_WELCOME_KEY + session.staffId);
