@@ -2,6 +2,51 @@
 
 ---
 
+## Ciclo #173 — 2026-05-09
+
+**Área:** Conteúdo/IG — Dia dos Pais 2026 (posts de feed Instagram/TikTok)
+
+**Contexto:** Playbook `dia-dos-pais-2026-playbook.md` (ciclo #136) e templates WA `whatsapp-pais-2026.md` (ciclo #170) já existiam, mas nenhum arquivo standalone de posts de feed IG/TikTok havia sido criado para o Dia dos Pais — gap análogo ao que foi resolvido para a Festa Junina (ciclo #163). `pos-inauguracao-semana16.md` não continha nenhuma menção a "pai", "papai" ou "PAPAI26". O playbook indicava 3 posts de feed chave: teaser Qua 05/08, carrossel 4 perfis Qui 06/08 18h e post principal emocional Dom 09/08 10h.
+
+**O que pesquisou/analisou:**
+- Leitura de `dia-dos-pais-2026-playbook.md`: cronograma completo, mecânicas A/B/C, keyword PAPAI26
+- Leitura de `whatsapp-pais-2026.md`: templates WA criados no ciclo #170 — P1–P6 + variantes FIT/DUO/GIFT
+- Leitura de `instagram-tiktok-junina-2026.md` (ciclo #163): formato de referência para posts de feed standalone
+- Verificação de `pos-inauguracao-semana16.md`: sem qualquer conteúdo de Dia dos Pais — gap confirmado
+- Gap identificado: carrossel "Qual potinho combina com o seu pai?" (4 perfis) previsto no playbook não existia em nenhum arquivo
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/instagram-tiktok-pais-2026.md` | NOVO — 3 posts de feed IG/TikTok para Dia dos Pais 2026 |
+
+**Detalhes do conteúdo criado:**
+- **POST 1** (Qua 05/08 12h) — Teaser feed 2 slides: ovelhinha com segredinho + potinho com laço azul; CTA keyword `PAPAI26`
+- **POST 2** (Qui 06/08 18h) — Carrossel 6 slides "Qual potinho combina com o seu pai?": 4 perfis (Clássico / Fitness / Aventureiro / Coringa) + capa + CTA; cada perfil com base + toppings sugeridos + cor de fundo própria
+- **POST 3** (Dom 09/08 10h) — Post principal Dia H: arte emocional + Reel 15s alternativo; abertura 14h
+- Tabela de integração com `semana16.md` (o que substituir vs. adicionar)
+- Checklist operacional completo (10 itens de Seg 03/08 a Seg 10/08)
+- Métricas de sucesso por post (metas de comentários, saves, pedidos WA)
+
+**Commit:** `2d5c0c5`
+
+**Próximo passo sugerido:**
+- **Ciclo #174 — UX/Frontend:** Integrar nota de Dia dos Pais no `pos-inauguracao-semana16.md` (adicionar bloco "Integração Dia dos Pais" ao checklist operacional, referenciando este arquivo)
+- **Ciclo #175 — SEO:** Schema.org `FAQPage` em `potinho-personalizado-londrina.html` (landing criada no ciclo #166 ainda não tem FAQ structured data)
+- **Ciclo #176 — Conversão:** Adicionar variante `JUNINA26` no funil WA para Festa Junina (análogo ao PAPAI26) — data urgente: 03/06
+- **Operador:** Tirar fotos dos 4 perfis de potinho (Clássico/Fitness/Aventureiro/Coringa) para o carrossel — fazer sessão fotográfica antes de 01/08
+- **Operador:** Comprar chapéu de palha + bandeirinhas antes de 03/06 ⚠️ URGENTE (25 dias)
+- **Operador:** Criar sticker ovelhinha com chapéu de palha antes de 03/06 ⚠️ URGENTE
+- **Operador:** Confirmar ingredientes "Potinho Junino" até 30/05/2026 ⚠️ URGENTE
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** LGPD — CNPJ + DPO — **+34 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+
+_Belinha — Ciclo #173 | 2026-05-09_
+
+---
+
 ## Ciclo #172 — 2026-05-09
 
 **Área:** SEO — Links internos `potinho-personalizado-londrina.html`
