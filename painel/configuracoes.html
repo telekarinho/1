@@ -542,6 +542,56 @@
                         .gam-toggle input[type="checkbox"] { width:18px; height:18px; cursor:pointer; }
                     </style>
 
+                    <!-- Card: App MilkyPot Funcionário — Links e Compartilhamento -->
+                    <div class="panel-card" style="grid-column:1/-1">
+                        <div class="card-header" style="background:linear-gradient(135deg,#16A34A,#10B981);color:#fff">
+                            <h3 style="color:#fff">📱 App MilkyPot Funcionário</h3>
+                            <p style="margin:4px 0 0;font-size:12px;opacity:.95">Compartilhe os links com seus colaboradores. Eles instalam no celular e usam pra bater ponto, ver escala, holerite e benefícios.</p>
+                        </div>
+                        <div class="card-body">
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:14px">
+                                <!-- PWA -->
+                                <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:14px">
+                                    <strong style="display:block;color:#14532D;margin-bottom:8px">🌐 Versão Web (PWA)</strong>
+                                    <p style="margin:0 0 8px;font-size:.82rem;color:#374151">Funciona em qualquer celular — Android e iPhone. Instala como app via "Adicionar à tela inicial".</p>
+                                    <input type="text" readonly value="https://milkypot.com/funcionario/" id="appLinkPwa" style="width:100%;padding:9px;border:1px solid #D1D5DB;border-radius:8px;font-size:.85rem;font-family:monospace;background:#fff;box-sizing:border-box;margin-bottom:8px">
+                                    <div style="display:flex;gap:6px">
+                                        <button class="btn btn-outline" onclick="copyAppLink('pwa')" style="flex:1;padding:8px;font-size:.78rem">📋 Copiar</button>
+                                        <button class="btn btn-outline" onclick="qrcodeAppLink('pwa')" style="flex:1;padding:8px;font-size:.78rem">🔳 QR</button>
+                                        <button class="btn btn-primary" onclick="shareAppLink('pwa')" style="flex:1;padding:8px;font-size:.78rem">📲 Share</button>
+                                    </div>
+                                </div>
+
+                                <!-- APK Android -->
+                                <div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:10px;padding:14px">
+                                    <strong style="display:block;color:#92400E;margin-bottom:8px">🤖 APK Android Nativo</strong>
+                                    <p style="margin:0 0 8px;font-size:.82rem;color:#374151">App instalável (.apk). Gere via GitHub Actions e cole o link da release abaixo.</p>
+                                    <input type="text" placeholder="Cole aqui o link da release APK (ex: github.com/.../releases/...)" id="appLinkApk" class="form-control" style="font-size:.82rem;margin-bottom:8px">
+                                    <div style="display:flex;gap:6px">
+                                        <button class="btn btn-outline" onclick="saveApkUrl()" style="flex:1;padding:8px;font-size:.78rem">💾 Salvar</button>
+                                        <button class="btn btn-outline" onclick="window.open('https://github.com/telekarinho/1/actions/workflows/build-android-app.yml','_blank')" style="flex:1;padding:8px;font-size:.78rem">⚙️ Gerar APK</button>
+                                    </div>
+                                </div>
+
+                                <!-- Instruções -->
+                                <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:14px">
+                                    <strong style="display:block;color:#1E40AF;margin-bottom:8px">💡 Como compartilhar com cada funcionário</strong>
+                                    <ol style="margin:0;padding-left:18px;font-size:.82rem;color:#374151;line-height:1.6">
+                                        <li>Vá em <a href="equipe.html" style="color:#3B82F6;font-weight:700">Equipe</a></li>
+                                        <li>No card do funcionário, clique <strong>"📲 Acesso"</strong></li>
+                                        <li>Mensagem pronta com CPF + PIN dele já formatada</li>
+                                        <li>WhatsApp / Copiar texto / QR code</li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            <div id="appQrContainer" style="display:none;text-align:center;padding:14px;background:#F9FAFB;border-radius:10px">
+                                <canvas id="appQrCanvas"></canvas>
+                                <small style="display:block;margin-top:8px;color:#6B7280">Escaneie pra abrir o app</small>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Card: Geofence (Localizacao da loja para validar ponto) -->
                     <div class="panel-card" style="grid-column:1/-1">
                         <div class="card-header" style="background:linear-gradient(135deg,#0EA5E9,#06B6D4);color:#fff">
@@ -1660,6 +1710,49 @@
     loadGeofenceConfig();
     loadRecognitionUI();
     loadRedemptions();
+    loadAppLinks();
+
+    // ============== APP LINKS ==============
+    function loadAppLinks() {
+        var saved = localStorage.getItem('mp_app_apk_url_' + franchiseId);
+        if (saved) document.getElementById('appLinkApk').value = saved;
+    }
+    window.copyAppLink = function(type) {
+        var inp = document.getElementById('appLink' + (type === 'pwa' ? 'Pwa' : 'Apk'));
+        inp.select();
+        try { document.execCommand('copy'); Utils.showToast && Utils.showToast('Link copiado!', 'success'); } catch (e) { alert('Copiado: ' + inp.value); }
+    };
+    window.shareAppLink = function(type) {
+        var url = type === 'pwa' ? document.getElementById('appLinkPwa').value : document.getElementById('appLinkApk').value;
+        if (!url) { alert('Cole o link primeiro'); return; }
+        var msg = type === 'pwa'
+            ? 'Olá! 👋\n\nO app MilkyPot Funcionário está disponível em:\n' + url + '\n\nFaz login com seu CPF + PIN. Pra instalar, abre o link no celular e em "Adicionar à tela inicial".'
+            : 'Olá! 👋\n\nDownload do app Android MilkyPot Funcionário:\n' + url + '\n\nDepois de instalado, faz login com seu CPF + PIN.';
+        if (navigator.share) {
+            navigator.share({ title: 'MilkyPot Funcionário', text: msg, url: url });
+        } else {
+            window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+        }
+    };
+    window.qrcodeAppLink = function(type) {
+        var url = type === 'pwa' ? document.getElementById('appLinkPwa').value : document.getElementById('appLinkApk').value;
+        if (!url) return;
+        var container = document.getElementById('appQrContainer');
+        var canvas = document.getElementById('appQrCanvas');
+        var img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function() {
+            canvas.width = 300; canvas.height = 300;
+            canvas.getContext('2d').drawImage(img, 0, 0, 300, 300);
+        };
+        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(url);
+        container.style.display = 'block';
+    };
+    window.saveApkUrl = function() {
+        var url = document.getElementById('appLinkApk').value.trim();
+        localStorage.setItem('mp_app_apk_url_' + franchiseId, url);
+        Utils.showToast && Utils.showToast('Link APK salvo localmente', 'success');
+    };
 
     // ============== GEOFENCE ==============
     function loadGeofenceConfig() {
