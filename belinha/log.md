@@ -6257,3 +6257,48 @@ _Belinha — Ciclo #167 | 2026-05-09_
 - **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
 
 _Belinha — Ciclo #168 | 2026-05-09_
+
+---
+
+## Ciclo #169 — 2026-05-09
+
+**Área:** Conteúdo/IG — Reels teasers pré-Festa Junina (01–11/06/2026)
+
+**Contexto:** Gap identificado no roadmap: Semanas 7 (31/05–06/06) e 8 (07/06–13/06) não tinham nenhum conteúdo de antecipação junina. O reveal oficial do Potinho Junino é em 12/06 (`instagram-tiktok-junina-2026.md` POST 1) e o lançamento em 17/06 (semana9). Sem teasers, o produto chega "do nada" — sem aquecimento de audiência.
+
+**O que pesquisou/analisou:**
+- Leitura de `instagram-tiktok-junina-2026.md` (Ciclo #163): POST 1 em 12/06 = teaser oficial — mas sem conteúdo antes de 12/06
+- Leitura de `pos-inauguracao-semana7.md` e `semana8.md`: nenhuma menção a Festa Junina — gap confirmado
+- Leitura de `potinho-junino-2026-contraprogramacao.md` (Ciclo #134): produto e copy âncora disponíveis
+- Estratégia: 4 teasers progressivos (03/06 → 07/06 → 10/06 → 11/06) construindo curiosidade SEM revelar o produto
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reels-teaser-junina-pre-lancamento-2026.md` | NOVO — 4 teasers da ovelhinha de chapéu de palha para 01–11/06 |
+
+**Detalhes do conteúdo criado:**
+- **TEASER 1** (Qua 03/06 Reel 15s): Ovelhinha tentando colocar chapéu de palha — humor fofo + "tem algo chegando"
+- **TEASER 2** (Dom 07/06 Stories 3 frames): Enquete "quer saber o segredo?" + pista "tem paçoca" + countdown até 12/06
+- **TEASER 3** (Qua 10/06 Reel 15s): Unboxing de paçoca na loja + chapéu de palha — conteúdo real de bastidores
+- **TEASER 4** (Qui 11/06 Story único): Countdown 24h + enquete pré-pedido + DM automático script
+- Série com consistência visual: mesmo som, mesma ovelhinha, mesma paleta
+- Integração não-destrutiva nas Semanas 7 e 8 (posts aditivos, não substituem conteúdo principal)
+- Checklist de produção + métricas por teaser incluídos no arquivo
+
+**Commit:** `3f33087`
+
+**Próximo passo sugerido:**
+- **Ciclo #170 — Conteúdo/WA:** `whatsapp-pais-2026.md` standalone — Dia dos Pais 09/08/2026
+- **Ciclo #171 — UX/Frontend:** `content-visibility: auto` na seção `.muffato-upsell` + lazy loading abaixo do fold (prescrito #168)
+- **Ciclo #172 — SEO:** Injetar links internos das novas landing pages (potinho-personalizado-londrina.html) no index.html e cardapio.html
+- **Operador:** Comprar chapéu de palha (prop) + bandeirinhas juninas antes de 03/06 — R$20–35 no total ⚠️ URGENTE (24 dias)
+- **Operador:** Criar/comissionar sticker da ovelhinha com chapéu de palha — necessário para todos os 4 teasers ⚠️ URGENTE
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05/2026** ⚠️ URGENTE (impacta TEASER 3 em 10/06)
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05/2026** ⚠️ URGENTE
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — **+31 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+
+_Belinha — Ciclo #169 | 2026-05-09_
