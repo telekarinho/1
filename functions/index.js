@@ -1955,6 +1955,11 @@ function _buildClosingHtml(data) {
     const totalPedidos = Number(data.totalPedidos || 0);
     const ticketMedio = totalPedidos > 0 ? faturamentoBruto / totalPedidos : 0;
 
+    // Troco padrao pro proximo dia (= mesmo valor da abertura desse dia, salvo override)
+    const trocoProximo = Number(data.trocoProximoDia != null ? data.trocoProximoDia : valorAbertura);
+    // Quanto vai pro deposito = dinheiro contado fisico - troco que fica
+    const depositar = Math.max(0, dinheiroContado - trocoProximo);
+
     return `
 <div style="font-family:Arial,sans-serif;max-width:680px;margin:0 auto;padding:16px;background:#f3f4f6">
   <div style="background:linear-gradient(135deg,#7B1FA2,#DC2626);color:#fff;padding:20px 24px;border-radius:14px 14px 0 0">
@@ -1963,54 +1968,75 @@ function _buildClosingHtml(data) {
   </div>
   <div style="background:#fff;padding:20px;border:1px solid #e5e7eb;border-top:0">
 
-    <!-- KPIs do dia -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px">
-      <div style="background:#F0FDF4;border-left:4px solid #16A34A;padding:10px;border-radius:6px"><small style="color:#6B7280;font-size:11px">FATURAMENTO BRUTO</small><div style="font-size:18px;font-weight:800;color:#14532D;margin-top:2px">${_fmtBRL(faturamentoBruto)}</div></div>
-      <div style="background:#EFF6FF;border-left:4px solid #3B82F6;padding:10px;border-radius:6px"><small style="color:#6B7280;font-size:11px">PEDIDOS</small><div style="font-size:18px;font-weight:800;color:#1E40AF;margin-top:2px">${totalPedidos}</div></div>
-      <div style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:10px;border-radius:6px"><small style="color:#6B7280;font-size:11px">TICKET MÉDIO</small><div style="font-size:18px;font-weight:800;color:#92400E;margin-top:2px">${_fmtBRL(ticketMedio)}</div></div>
+    <!-- ===== RESUMO PRINCIPAL — visualmente DOMINANTE ===== -->
+    <div style="background:linear-gradient(135deg,#16A34A,#10B981);color:#fff;padding:18px 20px;border-radius:12px;margin-bottom:18px">
+      <div style="font-size:12px;opacity:.85;text-transform:uppercase;letter-spacing:.5px">VENDIDO HOJE</div>
+      <div style="font-size:36px;font-weight:800;line-height:1.1;margin-top:2px">${_fmtBRL(faturamentoBruto)}</div>
+      <div style="font-size:13px;opacity:.92;margin-top:6px">${totalPedidos} pedido${totalPedidos === 1 ? '' : 's'} · ticket médio ${_fmtBRL(ticketMedio)}</div>
     </div>
 
-    <!-- TURNOS -->
-    <h3 style="margin:0 0 8px;font-size:14px;color:#374151">👤 Quem operou hoje</h3>
-    ${turnosHtml}
-
-    <!-- COMPOSIÇÃO DO DINHEIRO ESPERADO -->
-    <h3 style="margin:18px 0 8px;font-size:14px;color:#374151">💵 Composição do dinheiro físico esperado</h3>
+    <!-- VENDAS POR METODO -->
+    <h3 style="margin:0 0 8px;font-size:14px;color:#374151">💰 Vendas do dia (por método)</h3>
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">
-      ${row("Abertura (troco inicial)", valorAbertura)}
-      ${row("+ Vendas em dinheiro no dia", vendasDinheiro)}
-      ${row("+ Reforços", totalReforco)}
-      ${row("− Sangrias", -totalSangria)}
-      <tr style="background:#F9FAFB;font-weight:800"><td style="padding:9px 10px;border-top:2px solid #E5E7EB">= Esperado em dinheiro</td><td style="padding:9px 10px;border-top:2px solid #E5E7EB;text-align:right">${_fmtBRL(saldoEsperadoDinheiro)}</td></tr>
+      ${row("💵 Dinheiro", vendasDinheiro)}
+      ${row("⚡ PIX", vendasPix)}
+      ${row("💳 Cartão (Crédito + Débito)", vendasCartao)}
+      ${vendasBeneficio > 0 ? row("🎁 Benefício funcionário (custo loja, não é receita)", vendasBeneficio) : ""}
+      <tr style="background:#F0FDF4;font-weight:800"><td style="padding:9px 10px;border-top:2px solid #BBF7D0;color:#14532D">TOTAL VENDIDO</td><td style="padding:9px 10px;border-top:2px solid #BBF7D0;text-align:right;color:#14532D">${_fmtBRL(faturamentoBruto)}</td></tr>
     </table>
 
-    <!-- MOVIMENTAÇÕES -->
-    ${(sangrias.length || reforcos.length) ? '<h3 style="margin:18px 0 8px;font-size:14px;color:#374151">📋 Movimentações do dia</h3>' + movHtml : ''}
+    <!-- TURNOS -->
+    <h3 style="margin:18px 0 8px;font-size:14px;color:#374151">👤 Quem operou hoje</h3>
+    ${turnosHtml}
 
-    <!-- TABELA DE CONFERENCIA -->
-    <h3 style="margin:18px 0 8px;font-size:14px;color:#374151">⚖️ Conferência por método de pagamento</h3>
+    <!-- MOVIMENTAÇÕES -->
+    ${(sangrias.length || reforcos.length) ? '<h3 style="margin:18px 0 8px;font-size:14px;color:#374151">📋 Movimentações do dia (sangrias e reforços)</h3>' + movHtml + `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">${row("📤 Total tirado de sangria", -totalSangria)}${totalReforco > 0 ? row("📥 Total reforços", totalReforco) : ""}</table>` : '<p style="font-size:12px;color:#6B7280;margin:8px 0 14px;font-style:italic">Nenhuma sangria ou reforço hoje.</p>'}
+
+    <!-- ===== SALDO DA GAVETA — visualmente CLARO ===== -->
+    <div style="background:#FFFBEB;border:2px solid #F59E0B;border-radius:12px;padding:16px;margin-bottom:14px">
+      <h3 style="margin:0 0 10px;font-size:14px;color:#92400E">💵 Dinheiro físico no caixa</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px">
+        ${row("Troco inicial (não é venda — só fundo de caixa)", valorAbertura)}
+        ${row("+ Vendas em dinheiro hoje", vendasDinheiro)}
+        ${totalReforco > 0 ? row("+ Reforços", totalReforco) : ""}
+        ${totalSangria > 0 ? row("− Sangrias", -totalSangria) : ""}
+        <tr style="background:#fff;font-weight:800"><td style="padding:9px 10px;border-top:2px solid #FDE68A;color:#92400E">= Esperado na gaveta</td><td style="padding:9px 10px;border-top:2px solid #FDE68A;text-align:right;color:#92400E">${_fmtBRL(saldoEsperadoDinheiro)}</td></tr>
+        ${row("Contado pelo operador", dinheiroContado, 700)}
+        ${Math.abs(diffDinheiro) >= 0.01 ? `<tr><td style="padding:9px 10px;border-top:1px solid #F3F4F6;color:${Math.abs(diffDinheiro) <= 5 ? '#F59E0B' : '#DC2626'};font-weight:700">${diffDinheiro > 0 ? '⚠️ Sobra na gaveta (entrou a mais)' : '⚠️ Falta na gaveta (saiu a mais)'}</td><td style="padding:9px 10px;border-top:1px solid #F3F4F6;text-align:right;color:${Math.abs(diffDinheiro) <= 5 ? '#F59E0B' : '#DC2626'};font-weight:800">${(diffDinheiro > 0 ? '+' : '−')}${_fmtBRL(Math.abs(diffDinheiro))}</td></tr>` : `<tr><td style="padding:9px 10px;border-top:1px solid #F3F4F6;color:#16A34A;font-weight:700">✅ Bateu certinho</td><td style="padding:9px 10px;border-top:1px solid #F3F4F6;text-align:right;color:#16A34A;font-weight:800">R$ 0,00</td></tr>`}
+      </table>
+    </div>
+
+    <!-- ===== O QUE FAZER COM O DINHEIRO ===== -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+      <div style="background:#EFF6FF;border:1px solid #BFDBFE;padding:14px;border-radius:10px">
+        <div style="font-size:11px;color:#1E40AF;text-transform:uppercase;letter-spacing:.5px;font-weight:700">🔁 Fica de troco amanhã</div>
+        <div style="font-size:22px;font-weight:800;color:#1E40AF;margin-top:4px">${_fmtBRL(trocoProximo)}</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:4px">deixar na gaveta como fundo</div>
+      </div>
+      <div style="background:#F0FDF4;border:1px solid #BBF7D0;padding:14px;border-radius:10px">
+        <div style="font-size:11px;color:#14532D;text-transform:uppercase;letter-spacing:.5px;font-weight:700">🏦 Pra depositar</div>
+        <div style="font-size:22px;font-weight:800;color:#14532D;margin-top:4px">${_fmtBRL(depositar)}</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:4px">levar pro banco / cofre</div>
+      </div>
+    </div>
+
+    <!-- CONFERENCIA PIX/CARTAO (se diferenca) -->
+    ${(Math.abs(diffPix) >= 0.01 || Math.abs(diffCartao) >= 0.01) ? `
+    <h3 style="margin:18px 0 8px;font-size:14px;color:#374151">💳 Conferência PIX e Cartão</h3>
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">
       <thead><tr style="background:#F3F4F6"><th style="padding:9px 10px;text-align:left">Método</th><th style="padding:9px 10px;text-align:right">Sistema</th><th style="padding:9px 10px;text-align:right">Conferido</th><th style="padding:9px 10px;text-align:right">Diferença</th></tr></thead>
       <tbody>
-        ${diffRow("💵 Dinheiro físico", saldoEsperadoDinheiro, dinheiroContado)}
         ${diffRow("⚡ PIX", vendasPix, pixContado)}
-        ${diffRow("💳 Cartão (Crédito + Débito)", vendasCartao, cartaoContado)}
-        ${vendasBeneficio > 0 ? `<tr><td style="padding:8px 10px;border-top:1px solid #f3f4f6">🎁 Benefício funcionário <small style="color:#6B7280">(custo loja)</small></td><td style="padding:8px 10px;border-top:1px solid #f3f4f6;text-align:right;color:#6B7280">${_fmtBRL(vendasBeneficio)}</td><td style="padding:8px 10px;border-top:1px solid #f3f4f6;text-align:right" colspan="2"><em style="color:#6B7280">não entra na conferência</em></td></tr>` : ''}
-        <tr style="background:#F9FAFB;font-weight:800"><td style="padding:9px 10px;border-top:2px solid #E5E7EB">TOTAL</td><td style="padding:9px 10px;border-top:2px solid #E5E7EB;text-align:right">${_fmtBRL(totalEsperado)}</td><td style="padding:9px 10px;border-top:2px solid #E5E7EB;text-align:right">${_fmtBRL(totalContado)}</td><td style="padding:9px 10px;border-top:2px solid #E5E7EB;text-align:right;color:${diffColor}">${(diffTotal>=0?'+':'−')}${_fmtBRL(Math.abs(diffTotal))}</td></tr>
+        ${diffRow("💳 Cartão", vendasCartao, cartaoContado)}
       </tbody>
-    </table>
+    </table>` : ''}
 
-    <!-- RESULTADO -->
-    <div style="padding:16px;background:${diffColor}15;border-radius:10px;border-left:5px solid ${diffColor};margin-bottom:14px">
-      <div style="font-size:18px;color:${diffColor};font-weight:800">${diffLabel}: ${_fmtBRL(Math.abs(diffTotal))}</div>
-      ${data.motivo ? '<div style="font-size:13px;margin-top:8px;color:#374151"><strong>Justificativa:</strong> ' + String(data.motivo).replace(/</g, "&lt;") + '</div>' : ''}
-      ${Math.abs(diffTotal) > 5 ? '<div style="font-size:12px;margin-top:8px;color:' + diffColor + ';font-weight:600">⚠️ Diferença acima de R$ 5,00 — recomendado investigar.</div>' : ''}
-    </div>
+    <!-- JUSTIFICATIVA SE HOUVER -->
+    ${data.motivo ? '<div style="padding:12px 14px;background:#FEF2F2;border-left:4px solid #DC2626;border-radius:8px;margin-bottom:14px;font-size:13px;color:#991B1B"><strong>Justificativa registrada:</strong> ' + String(data.motivo).replace(/</g, "&lt;") + '</div>' : ''}
+    ${Math.abs(diffTotal) > 5 ? '<div style="padding:10px 14px;background:#FEE2E2;color:#991B1B;border-radius:8px;margin-bottom:14px;font-size:12px;font-weight:600">⚠️ Diferença total acima de R$ 5,00 — recomendado investigar.</div>' : ''}
 
     ${comHtml}
     ${benHtml}
-
-    ${br && br.dinheiro_troco ? `<div style="margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px;font-size:13px;color:#6b7280">💰 Troco que fica pro próximo turno: <strong style="color:#111">${_fmtBRL(br.dinheiro_troco)}</strong></div>` : ""}
   </div>
   <div style="text-align:center;color:#9ca3af;font-size:11px;margin-top:14px;padding:10px">
     Relatório automático MilkyPot PDV · Fechado por <strong>${data.operatorName || '?'}</strong> &lt;${data.operatorEmail || ''}&gt;
@@ -2023,19 +2049,41 @@ function _buildClosingText(data) {
     const con = data.conferido || (data.breakdownConferido && data.breakdownConferido.conferido) || {};
     const br = data.breakdown || (data.breakdownConferido && data.breakdownConferido.breakdown) || {};
     const dt = new Date(data.fechamentoDate || Date.now()).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+    const valorAbertura = Number(data.valorAbertura || 0);
+    const vendasDinheiro = Number(data.vendasDinheiro || 0);
+    const vendasPix = Number((data.porMetodoEsperado && data.porMetodoEsperado.pix) || 0);
+    const vendasCartao = Number(((data.porMetodoEsperado && (data.porMetodoEsperado.cartao_credito || data.porMetodoEsperado.credito)) || 0) + ((data.porMetodoEsperado && (data.porMetodoEsperado.cartao_debito || data.porMetodoEsperado.debito)) || 0));
+    const totalSangria = Number(data.totalSangria || 0);
+    const totalReforco = Number(data.totalReforco || 0);
+    const faturamento = Number(data.faturamentoBruto || (vendasDinheiro + vendasPix + vendasCartao));
+    const dinheiroContado = Number((br && (br.dinheiro_liquido_dia || br.dinheiro_total_gaveta)) || data.valorContado || 0);
+    const saldoEsperado = valorAbertura + vendasDinheiro + totalReforco - totalSangria;
+    const trocoProximo = Number(data.trocoProximoDia != null ? data.trocoProximoDia : valorAbertura);
+    const depositar = Math.max(0, dinheiroContado - trocoProximo);
+    const diffDin = dinheiroContado - saldoEsperado;
     let body = "";
     body += "FECHAMENTO DE CAIXA — MilkyPot\n";
     body += "====================================\n";
     body += "Franquia:   " + (data.franchiseId || "?") + "\n";
     body += "Data:       " + dt + "\n";
     body += "Operador:   " + (data.operatorName || "?") + " <" + (data.operatorEmail || "") + ">\n\n";
-    body += "Cartão (Bandeiras):  " + _fmtBRL(br.cartao || 0) + " (esperado " + _fmtBRL(esp.cartao || 0) + ")\n";
-    body += "PIX:                 " + _fmtBRL(br.pix_total || 0) + " (esperado " + _fmtBRL(esp.pix || 0) + ")\n";
-    body += "Dinheiro físico:     " + _fmtBRL(br.dinheiro_liquido_dia || br.dinheiro_total_gaveta || 0) + " (esperado " + _fmtBRL(esp.saldoEsperadoDinheiro || 0) + ")\n";
-    body += "TOTAL CONFERIDO:     " + _fmtBRL(con.totalConferido || data.valorContado || 0) + "\n";
-    body += "Diferença total:     " + _fmtBRL(con.diffTotal || data.diferenca || 0) + "\n";
-    if (data.motivo) body += "Justificativa:       " + data.motivo + "\n";
-    if (br.dinheiro_troco) body += "Troco próx. turno:   " + _fmtBRL(br.dinheiro_troco) + "\n";
+    body += "\n>> VENDIDO HOJE: " + _fmtBRL(faturamento) + "\n";
+    body += "   Dinheiro:     " + _fmtBRL(vendasDinheiro) + "\n";
+    body += "   PIX:          " + _fmtBRL(vendasPix) + "\n";
+    body += "   Cartao:       " + _fmtBRL(vendasCartao) + "\n";
+    body += "\n>> DINHEIRO FISICO NA GAVETA\n";
+    body += "   Troco inicial (nao e venda): " + _fmtBRL(valorAbertura) + "\n";
+    body += "   + Vendas dinheiro:           " + _fmtBRL(vendasDinheiro) + "\n";
+    if (totalReforco > 0) body += "   + Reforcos:                  " + _fmtBRL(totalReforco) + "\n";
+    if (totalSangria > 0) body += "   - Sangrias:                  " + _fmtBRL(totalSangria) + "\n";
+    body += "   = Esperado na gaveta:        " + _fmtBRL(saldoEsperado) + "\n";
+    body += "   Contado pelo operador:       " + _fmtBRL(dinheiroContado) + "\n";
+    if (Math.abs(diffDin) >= 0.01) body += "   Diferenca:                   " + (diffDin > 0 ? "+" : "-") + _fmtBRL(Math.abs(diffDin)) + "\n";
+    else body += "   Bateu certinho!\n";
+    body += "\n>> O QUE FAZER\n";
+    body += "   Fica de troco amanha: " + _fmtBRL(trocoProximo) + "\n";
+    body += "   Pra depositar:        " + _fmtBRL(depositar) + "\n";
+    if (data.motivo) body += "\nJustificativa: " + data.motivo + "\n";
     return body;
 }
 
