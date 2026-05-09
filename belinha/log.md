@@ -6171,3 +6171,46 @@ _Belinha — Ciclo #158 | 2026-05-08_
 - **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
 
 _Belinha — Ciclo #163 | 2026-05-08_
+
+---
+
+## Ciclo #167 — 2026-05-09
+
+**Área:** Pesquisa Concorrentes — intel pré-Festa Junina (MilkyMoo, TheBest Açaí, JohnnyJoy)
+
+**Contexto:** Prescrito pelo roadmap ciclo #166. Última rodada de inteligência competitiva: ciclo #160 (2026-05-08, 7 ciclos atrás). Festa Junina começa em ~34 dias. Objetivo: confirmar se algum concorrente anunciou campanha junina, novos produtos ou movimentos de preço relevantes.
+
+**O que pesquisou/analisou:**
+- WebSearch x8 cobrindo: MilkyMoo preços/campanha 2026, TheBest Açaí novidades/expansão/preços, JohnnyJoy Festa Junina, Jhoy (mantida fechada — sem marca identificada)
+- WebFetch bloqueado (403) para: milkymoo.com.br, thebestacai.com.br, johnnyjoy.com.br/cardapio, gkpb.com.br, umsolugar.com.br — sites retornam Forbidden
+- Fontes que funcionaram: mercadoeconsumo.com.br (TheBest PE R$80M), auroracultural.com (MilkyMoo 180ml), clubeamostrasgratis.com (MilkyMoo Day), gkpb.com.br via search snippet (JohnnyJoy 10 anos), TikTok @guiadois (preços MilkyMoo regionais), foodbizbrasil.com, buscacliente.com.br
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/milkymoo.md` | ATUALIZADO — Ciclo #167: preços nacionais confirmados R$25/30/35 (vs regionais R$14.90-20), status collab Boticário encerrando 31/05, MilkyMoo Day padrão histórico, gap Festa Junina confirmado, radar semanal junho 2026 |
+| `belinha/competitors/the-best-acai.md` | ATUALIZADO — Ciclo #167: R$80M investimento PE (primeiro da história), meta 1.500 unidades até fim 2026 (atual 1.100+), expansão EUA Florida H2 2026, preço R$5.99/100g confirmado, gap Festa Junina — sem produto junino específico detectado, mapa de ameaça local Londrina |
+| `belinha/competitors/johnnyjoy.md` | ATUALIZADO — Ciclo #167: nenhuma campanha Festa Junina detectada, promoções recentes confirmadas (10 anos R$10, Dia do Milkshake, pink/azul), presença Londrina não confirmada, radar competitivo junho 2026 |
+
+**Destaques:**
+1. **Gap Festa Junina confirmado por todos os três concorrentes:** MilkyMoo = modo cinema (HTTYD), TheBest = possível topping genérico, JohnnyJoy = ausente. MilkyPot é o único com Potinho Junino estruturado e campanha planejada.
+2. **TheBest acelera com R$80M PE + EUA:** Não impacta Londrina imediato mas sinaliza guerra de marketing nacional em 2026–2027. Monitorar se aumentam orçamento de ads locais.
+3. **MilkyMoo sobe preços:** Nacional R$25/30/35 vs regionais R$14.90-20. Preço sugerido do 300ml (R$25) é mais alto que estimativas anteriores. Janela para MilkyPot comunicar custo-benefício do potinho.
+4. **JohnnyJoy sem presença em Londrina:** Risco baixo no curto prazo — segmento shopping premium incompatível com quiosque Muffato.
+5. **Collab Boticário MilkyMoo encerra 31/05:** Junho = MilkyMoo sem collab ativa na 2ª–4ª semana. Share of voice disponível.
+
+**Commit:** `02fe047`
+
+**Próximo passo sugerido:**
+- **Ciclo #168 — UX/Frontend:** `cardapio.html` refresh — lazy scroll audit, filtros mobile, CLS (prescrito #166)
+- **Ciclo #169 — Conteúdo/IG:** posts pré-Festa Junina: reels teasers da ovelhinha de chapéu de palha (1–11/06) — urgência: gravar 10/06
+- **Ciclo #170 — Conteúdo/WA:** `whatsapp-pais-2026.md` standalone — Dia dos Pais 09/08/2026
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05/2026** — impacta gravação reels (10/06) ⚠️ URGENTE
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05/2026** ⚠️ URGENTE
+- **Operador:** Confirmar preços P/M/G Potinho Junino até **10/06/2026**
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — **+29 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+
+_Belinha — Ciclo #167 | 2026-05-09_
