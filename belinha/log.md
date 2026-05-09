@@ -2,6 +2,49 @@
 
 ---
 
+## Ciclo #172 — 2026-05-09
+
+**Área:** SEO — Links internos `potinho-personalizado-londrina.html`
+
+**Contexto:** Landing page umbrella `potinho-personalizado-londrina.html` foi criada no ciclo #166, mas não estava linkada em nenhum dos dois arquivos principais (`index.html` e `cardapio.html`). Sem links internos, o Googlebot só descobre a página via sitemap.xml (passivo). Links internos em páginas de alta autoridade (home + cardápio) transferem PageRank e aumentam a velocidade de indexação. A landing Ninho e a Açaí já tinham links nessas páginas — gap era só a "Personalizado".
+
+**O que pesquisou/analisou:**
+- `grep` confirmou: `potinho-personalizado-londrina.html` tinha 0 ocorrências em `index.html` e `cardapio.html`
+- `index.html` linha 588: barra inline "☁️ Ninho · 🫐 Açaí" sem a landing umbrella
+- `cardapio.html` linhas 351–352: idem — 2 links, faltava o 3º
+- Footer `index.html`: colunas `2fr 1fr 1fr 1fr` (não podia adicionar 5ª coluna) — solução: adicionar 3 links dentro da coluna "Links" existente
+
+**O que mudou:**
+
+| Arquivo | Linha(s) | Mudança |
+|---------|----------|---------|
+| `index.html` | 588 | Adicionado `🎨 Potinho Personalizado em Londrina` na barra inline de links (3ª entrada ao lado de Ninho e Açaí) |
+| `index.html` | 1426–1428 | Footer coluna "Links": 3 novas entradas — `potinho-personalizado-londrina.html`, `potinho-ninho-londrina.html`, `acai-self-service-londrina.html` |
+| `cardapio.html` | 353 | Adicionada 3ª linha `🎨 Potinho Personalizado em Londrina — Monte do Seu Jeito` (margin ajustada dos outros 2 para `4px`, novo para `16px`) |
+
+**Impacto esperado:**
+- Googlebot encontra `potinho-personalizado-londrina.html` via 3 pontos de alta autoridade (home + cardápio + footer home)
+- Footer home = presente em TODAS as visitas à home page → máxima transferência de PageRank para a landing umbrella
+- Keyword "Potinho Personalizado em Londrina" aparece como anchor text nos 3 pontos — reforça sinal de relevância para a query
+
+**Commit:** `592d8be`
+
+**Próximo passo sugerido:**
+- **Ciclo #173 — Conteúdo/IG:** Carrossel Dia dos Pais "qual potinho combina com o seu pai?" (4 perfis — Clássico/Fit/Açaí/Especial) para semana 16 (04–10/08)
+- **Ciclo #174 — UX:** Adicionar `.muffato-upsell` em `cardapio.html` (prescrito ciclo #171)
+- **Ciclo #175 — SEO:** Verificar se `potinho-personalizado-londrina.html` tem links de retorno para `index.html` e `cardapio.html` (link equity bidirecional)
+- **Operador:** Comprar chapéu de palha (prop) + bandeirinhas juninas antes de 03/06 — R$20–35 ⚠️ URGENTE (25 dias)
+- **Operador:** Criar sticker ovelhinha com chapéu de palha antes de 03/06 ⚠️ URGENTE
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05/2026** ⚠️ URGENTE
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05/2026** ⚠️ URGENTE
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** LGPD — CNPJ + DPO — **+34 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+
+_Belinha — Ciclo #172 | 2026-05-09_
+
+---
+
 ## Ciclo #171 — 2026-05-09
 
 **Área:** UX/Frontend — `.muffato-upsell` bar + `content-visibility: auto` below-fold
