@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soft Launch Influencer — Top 30 VIPs · MilkyPot</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7c3aed">
+<style>
+body{background:#FAF5FF;font-family:'Nunito',sans-serif;color:#1A2740}
+.panel-content{max-width:1200px;margin:0 auto}
+
+.hero{background:linear-gradient(135deg,#7c3aed 0%,#EC407A 60%,#FFB300 100%);border-radius:24px;padding:26px 30px;color:#fff;margin-bottom:18px;position:relative;overflow:hidden;box-shadow:0 16px 48px rgba(124,58,237,.3)}
+.hero::after{content:'🌟';position:absolute;right:-30px;bottom:-30px;font-size:9rem;opacity:.18;transform:rotate(-15deg)}
+.hero h1{font-family:'Baloo 2',cursive;font-size:1.8rem;font-weight:900;margin-bottom:6px}
+.hero p{opacity:.95;font-size:.98rem;max-width:700px;line-height:1.5}
+
+.explainer{background:#fff;border-radius:18px;padding:20px 24px;margin-bottom:18px;box-shadow:0 8px 24px rgba(0,0,0,.05);border-left:5px solid #FFB300}
+.explainer h3{font-family:'Baloo 2',cursive;font-size:1.2rem;color:#7c3aed;margin-bottom:8px}
+.explainer p{color:#444;line-height:1.6;margin-bottom:8px}
+.explainer ol{padding-left:20px;color:#444;line-height:1.8;margin:8px 0}
+.explainer .tip{background:#FFF9C4;border-left:4px solid #FFB300;padding:10px 14px;border-radius:0 8px 8px 0;margin-top:10px;font-size:.9rem}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;position:relative;z-index:1}
+.stat{background:rgba(255,255,255,.18);backdrop-filter:blur(8px);border-radius:14px;padding:12px 14px}
+.stat .v{font-family:'Baloo 2',cursive;font-size:1.6rem;font-weight:900;line-height:1}
+.stat .l{font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;font-weight:800;opacity:.85;margin-top:3px}
+
+.controls{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.filter-btn{background:#fff;border:2px solid #EDE7F6;color:#7c3aed;padding:8px 14px;border-radius:100px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;font-size:.85rem}
+.filter-btn.active{background:linear-gradient(135deg,#7c3aed,#EC407A);color:#fff;border-color:transparent}
+.search{flex:1;min-width:200px;background:#fff;border:2px solid #EDE7F6;border-radius:100px;padding:8px 16px;font-family:'Nunito',sans-serif;font-size:.92rem}
+
+.vip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px}
+.vip-card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);border-left:5px solid var(--bd,#7c3aed);transition:transform .15s,box-shadow .15s}
+.vip-card:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(124,58,237,.15)}
+.vip-card.sent{border-color:#10B981;background:linear-gradient(135deg,#fff,#F0FDF4)}
+.vip-card.responded{border-color:#FFB300;background:linear-gradient(135deg,#fff,#FFFBEB)}
+.vip-card.posted{border-color:#EC407A;background:linear-gradient(135deg,#fff,#FCE4EC)}
+
+.vip-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+.vip-rank{font-family:'Baloo 2',cursive;font-size:1.4rem;font-weight:900;color:#7c3aed;min-width:34px;background:#FAF5FF;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.vip-info{flex:1}
+.vip-info .name{font-family:'Baloo 2',cursive;font-size:1.15rem;font-weight:900;color:#1A2740;line-height:1.1}
+.vip-info .handle{color:#7c3aed;font-weight:700;font-size:.85rem}
+.vip-info .handle a{color:#7c3aed;text-decoration:none}
+.vip-info .handle a:hover{text-decoration:underline}
+.vip-status{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:4px 10px;border-radius:100px;white-space:nowrap}
+.status-pending{background:#F3E5F5;color:#6A1B9A}
+.status-sent{background:#E8F5E9;color:#1B5E20}
+.status-responded{background:#FFF3E0;color:#E65100}
+.status-posted{background:#FCE4EC;color:#C62828}
+
+.vip-stats{display:flex;gap:14px;margin-bottom:12px;font-size:.78rem;color:#666}
+.vip-stats .stat-mini{display:flex;flex-direction:column}
+.vip-stats .stat-mini .n{font-family:'Baloo 2',cursive;font-weight:900;color:#7c3aed;font-size:1.1rem;line-height:1}
+
+.dm-box{background:#FAFAFA;border-radius:12px;padding:12px;margin-bottom:10px;font-size:.86rem;color:#333;line-height:1.5;white-space:pre-wrap;font-family:'Nunito',sans-serif;max-height:180px;overflow-y:auto;border:1px dashed #DDD}
+
+.vip-actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn{border:none;padding:8px 14px;border-radius:100px;font-weight:800;font-size:.82rem;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.btn-copy{background:linear-gradient(135deg,#7c3aed,#EC407A);color:#fff}
+.btn-copy.copied{background:#10B981}
+.btn-sent{background:#10B981;color:#fff}
+.btn-responded{background:#FFB300;color:#fff}
+.btn-posted{background:#EC407A;color:#fff}
+.btn-instagram{background:#fff;color:#E1306C;border:2px solid #E1306C}
+.btn-link{background:#fff;color:#7c3aed;border:2px solid #7c3aed}
+
+.empty{text-align:center;padding:40px;color:#999;font-style:italic}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10B981;color:#fff;padding:14px 24px;border-radius:100px;font-weight:800;z-index:9999;box-shadow:0 8px 28px rgba(16,185,129,.4)}
+</style>
+</head>
+<body>
+<div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+            <h2>MilkyPot<small>Central Admin</small></h2>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-group">MilkyClube</div>
+            <a href="clube-central.html" class="sidebar-link"><span class="icon">🥛</span> Central MilkyClube</a>
+            <a href="influencer-program.html" class="sidebar-link"><span class="icon">⭐</span> Influencer MilkyPot</a>
+            <a href="clube-soft-launch.html" class="sidebar-link active" style="background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(255,179,0,.15));border-left:3px solid #FFB300"><span class="icon">🌟</span> Soft Launch VIP</a>
+            <a href="recompensas-claims.html" class="sidebar-link"><span class="icon">🎁</span> Fila Claims</a>
+            <a href="desafio.html" class="sidebar-link"><span class="icon">🎮</span> Desafios</a>
+
+            <div class="sidebar-nav-group">Marketing</div>
+            <a href="marketing-diario.html" class="sidebar-link"><span class="icon">🚀</span> Marketing Diário</a>
+            <a href="belinha-historinhas.html" class="sidebar-link"><span class="icon">🐑</span> Belinha — 90 dias</a>
+
+            <div class="sidebar-nav-group">Voltar</div>
+            <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+        </nav>
+    </aside>
+
+    <main class="panel-main">
+        <header class="panel-header">
+            <button class="btn btn-sm btn-outline" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">☰</button>
+            <h1>🌟 Soft Launch Influencer — Top 30 VIPs</h1>
+        </header>
+
+        <div class="panel-content">
+
+            <div class="hero">
+                <h1>Convite VIP — só pros 30 melhores 🌟</h1>
+                <p>Antes de abrir o programa Influencer pra todo mundo, mande mensagem privada (DM) pessoal pros seus 30 melhores clientes. Eles se sentem especiais, testam primeiro, dão feedback, e quando você abre pra todos, esses 30 já estão postando = prova social pronta.</p>
+                <div class="stats">
+                    <div class="stat"><div class="v" id="kpiTotal">30</div><div class="l">Alvos</div></div>
+                    <div class="stat"><div class="v" id="kpiPending">30</div><div class="l">Pendentes</div></div>
+                    <div class="stat"><div class="v" id="kpiSent">0</div><div class="l">Enviadas</div></div>
+                    <div class="stat"><div class="v" id="kpiResponded">0</div><div class="l">Responderam</div></div>
+                    <div class="stat"><div class="v" id="kpiPosted">0</div><div class="l">Já postaram</div></div>
+                </div>
+            </div>
+
+            <!-- EXPLAINER -->
+            <div class="explainer">
+                <h3>📖 Como funciona o passo-a-passo</h3>
+                <ol>
+                    <li><strong>Aqui embaixo</strong> tem 30 clientes ranqueados pelos que mais compram. Cada um tem mensagem pronta personalizada.</li>
+                    <li><strong>Clica em "📋 Copiar DM"</strong> — a mensagem vai pra área de transferência</li>
+                    <li><strong>Abre o Instagram</strong> (no botão azul "Abrir IG"), procura a pessoa, cola e manda</li>
+                    <li><strong>Volta aqui e clica "✓ Enviei!"</strong> pra marcar (assim você não envia 2x)</li>
+                    <li><strong>Quando responder</strong>, clica "💬 Respondeu". Quando postar, clica "📸 Postou"</li>
+                </ol>
+                <div class="tip">
+                    💡 <strong>Dica:</strong> faça <strong>3 DMs por dia</strong>, não todos de uma vez. Em 10 dias você completa os 30. Espalhar dá mais qualidade na conversa e o Instagram não suspeita de spam.
+                </div>
+            </div>
+
+            <!-- CONTROLS -->
+            <div class="controls">
+                <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Todos</button>
+                <button class="filter-btn" data-filter="pending" onclick="setFilter('pending')">⏳ Pendentes</button>
+                <button class="filter-btn" data-filter="sent" onclick="setFilter('sent')">✓ Enviadas</button>
+                <button class="filter-btn" data-filter="responded" onclick="setFilter('responded')">💬 Responderam</button>
+                <button class="filter-btn" data-filter="posted" onclick="setFilter('posted')">📸 Postaram</button>
+                <input type="search" class="search" id="searchInput" placeholder="🔎 Buscar nome / @">
+                <button onclick="exportCSV()" style="background:#fff;color:#7c3aed;border:2px solid #7c3aed;padding:8px 14px;border-radius:100px;font-weight:800;cursor:pointer">📥 Exportar CSV</button>
+            </div>
+
+            <!-- VIP GRID -->
+            <div class="vip-grid" id="vipGrid">
+                <div class="empty">Carregando lista de VIPs… 🥹</div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, getDocs, query, orderBy, limit, doc, updateDoc, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// Mock data fallback se Firebase falhar — pra usuário poder testar
+const MOCK_VIPS = [
+    {uid:'mock1', name:'Mariana Silva', firstName:'Mariana', handle:'mari_lond', purchases:14, totalSpent:412.50, lastBuy:'2026-05-08', favFlavor:'Ninho com morango'},
+    {uid:'mock2', name:'Pedro Garcia', firstName:'Pedro', handle:'pedro.ld', purchases:11, totalSpent:298.00, lastBuy:'2026-05-07', favFlavor:'Açaí'},
+    {uid:'mock3', name:'Camila Rocha', firstName:'Camila', handle:'camir', purchases:10, totalSpent:285.50, lastBuy:'2026-05-08', favFlavor:'Pavê'},
+    {uid:'mock4', name:'João Pereira', firstName:'João', handle:'joaopereira', purchases:9, totalSpent:265.00, lastBuy:'2026-05-06', favFlavor:'Ninho'},
+    {uid:'mock5', name:'Beatriz Lima', firstName:'Bia', handle:'bialima', purchases:9, totalSpent:248.00, lastBuy:'2026-05-05', favFlavor:'Chocolate belga'},
+    {uid:'mock6', name:'Lucas Martins', firstName:'Lucas', handle:'lucasm', purchases:8, totalSpent:232.50, lastBuy:'2026-05-08', favFlavor:'Açaí com morango'},
+    {uid:'mock7', name:'Fernanda Costa', firstName:'Fê', handle:'fecostal', purchases:8, totalSpent:225.00, lastBuy:'2026-05-04', favFlavor:'Romeu e Julieta'},
+    {uid:'mock8', name:'Rafaela Alves', firstName:'Rafa', handle:'rafalves', purchases:7, totalSpent:198.00, lastBuy:'2026-05-07', favFlavor:'Ninho'},
+];
+
+const firebaseConfig = window.firebaseConfig;
+let db = null;
+try {
+    if (firebaseConfig) {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+    }
+} catch(e) { console.warn('Firebase init failed:', e); }
+
+const STORAGE_KEY = 'mp_softlaunch_status';
+let vips = [];
+let filter = 'all';
+let search = '';
+
+// 5 templates de DM pra rotação (não parecer copy/paste)
+const DM_TEMPLATES = [
+    (v) => `Oi ${v.firstName}! Aqui é a equipe MilkyPot 🐑
+
+Você é uma das **30 primeiras pessoas** que tá conhecendo um programa novo nosso. Antes de qualquer outra. Posso te contar?
+
+Em resumo: você posta foto/vídeo do MilkyPot no Insta, marca a gente, e ganha moedinhas que viram desconto na próxima compra. Quanto mais gente vê, mais você ganha. Tem cupom pessoal pra repartir com amigo (ele ganha desconto também).
+
+Quer participar? Manda um "bora" aqui e te mando o link 💜`,
+
+    (v) => `${v.firstName}, oi! 🐑
+
+Lembra que você já comprou ${v.purchases}x com a gente? Por isso você é dos primeiros a saber:
+
+A gente lançou o **Influencer MilkyPot** — você posta no Insta, marca @milkypotbr, ganha moedinhas. 10 moedinhas = R$1 de desconto. Simples.
+
+Tô te chamando antes de abrir pra todo mundo. Topa? Manda "bora" 💜`,
+
+    (v) => `Oi ${v.firstName}! 💗
+
+Tô passando aqui antes de abrir pra geral. Você é dos meus clientes top — não dá pra você não saber primeiro.
+
+Lançamos um programa onde você posta no Insta com a gente e ganha desconto. Tipo cashback, mas em moedinhas. ${v.favFlavor ? '(Já tô vendo um vídeo seu de '+v.favFlavor+'... 👀)' : ''}
+
+Te mando o link? Só responde "manda" aqui 🐑`,
+
+    (v) => `Bom dia ${v.firstName}! ☀️
+
+Notícia rápida: lançamos o programa Influencer MilkyPot pra você que ama a gente postar e ganhar moedinhas (vira desconto).
+
+Você é uma das 30 pessoas convidadas antes de abrir pra geral. Posta foto, marca a gente, ganha. Tem cupom pessoal pra dar pros amigos também (ele ganha desconto, você ganha moedinhas).
+
+Quer entrar? Responde "quero" 💜`,
+
+    (v) => `${v.firstName} 🐑
+
+Olha, eu não chamo todo mundo assim — mas você compra muito da gente (${v.purchases} vezes!) então você merece saber primeiro.
+
+Lançamos o programa onde você posta no Insta marcando @milkypotbr e ganha moedinhas. 10 moedinhas = R$1 de desconto. Tem cupom seu pra os amigos.
+
+Manda "bora" e te mando o link com convite VIP 💜`
+];
+
+function generateDM(vip, idx) {
+    const template = DM_TEMPLATES[idx % DM_TEMPLATES.length];
+    return template(vip);
+}
+
+// Score de ranking (compras × frequência × engajamento)
+function scoreVIP(m) {
+    const purchases = m.purchases || 0;
+    const recency = m.lastBuy ? (Date.now() - new Date(m.lastBuy).getTime()) / 86400000 : 999;
+    const recencyScore = recency < 7 ? 30 : recency < 30 ? 20 : 10;
+    return purchases * 10 + recencyScore + (m.totalSpent || 0) / 10;
+}
+
+async function loadVIPs() {
+    let all = [];
+    try {
+        if (db) {
+            const snap = await getDocs(query(collection(db, 'club_members'), limit(500)));
+            snap.forEach(docSnap => {
+                const m = docSnap.data();
+                if (!m.purchases || m.purchases < 2) return; // só com 2+ compras
+                all.push({
+                    uid: docSnap.id,
+                    name: m.displayName || m.name || 'Cliente',
+                    firstName: (m.displayName || m.name || 'amigo').split(' ')[0],
+                    handle: m.instagramHandle || m.handle || '',
+                    purchases: m.purchases || 0,
+                    totalSpent: m.totalSpent || 0,
+                    lastBuy: m.lastPurchaseAt?.toDate ? m.lastPurchaseAt.toDate().toISOString().slice(0,10) : null,
+                    favFlavor: m.favFlavor || null
+                });
+            });
+        }
+    } catch(e) { console.warn('Firestore load failed:', e); }
+
+    // Fallback to mock if no real data
+    if (all.length < 8) {
+        all = [...all, ...MOCK_VIPS].slice(0, 30);
+    }
+
+    // Score & rank
+    all.sort((a,b) => scoreVIP(b) - scoreVIP(a));
+    vips = all.slice(0, 30);
+
+    // Load saved status
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    vips.forEach(v => {
+        v.status = saved[v.uid]?.status || 'pending';
+        v.notes = saved[v.uid]?.notes || '';
+    });
+
+    render();
+}
+
+function saveStatus(uid, status, notes) {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    saved[uid] = { status, notes: notes||'', updatedAt: new Date().toISOString() };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+    // TODO: salvar no Firestore /users/{uid}.softLaunchStatus
+}
+
+window.setFilter = function(f) {
+    filter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
+    render();
+};
+
+document.getElementById('searchInput').addEventListener('input', e => {
+    search = e.target.value.trim().toLowerCase();
+    render();
+});
+
+window.copyDM = function(idx) {
+    const v = vips[idx];
+    const dm = generateDM(v, idx);
+    navigator.clipboard.writeText(dm).then(() => {
+        const btn = document.querySelector(`#vip-${idx} .btn-copy`);
+        btn.classList.add('copied');
+        btn.textContent = '✓ Copiado!';
+        showToast('📋 DM copiado — agora cola no Instagram');
+        setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.innerHTML = '📋 Copiar DM';
+        }, 2200);
+    });
+};
+
+window.markStatus = function(idx, status) {
+    vips[idx].status = status;
+    saveStatus(vips[idx].uid, status);
+    showToast(getStatusMsg(status));
+    render();
+};
+
+function getStatusMsg(status) {
+    return {
+        sent: '✓ Marcado como enviado',
+        responded: '💬 Marcado: respondeu',
+        posted: '📸 Marcado: postou!',
+        pending: '⏳ Voltou pra pendente'
+    }[status] || 'Atualizado';
+}
+
+window.exportCSV = function() {
+    const headers = ['Rank','Nome','@','Compras','Total R$','Última compra','Status'];
+    const rows = vips.map((v,i) => [i+1, v.name, '@'+v.handle, v.purchases, v.totalSpent, v.lastBuy||'', v.status]);
+    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'milkypot-soft-launch-vips-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+};
+
+function render() {
+    let filtered = vips;
+    if (filter !== 'all') filtered = filtered.filter(v => v.status === filter);
+    if (search) filtered = filtered.filter(v => (v.name+' '+v.handle).toLowerCase().includes(search));
+
+    // Update KPIs
+    document.getElementById('kpiTotal').textContent = vips.length;
+    document.getElementById('kpiPending').textContent = vips.filter(v=>v.status==='pending').length;
+    document.getElementById('kpiSent').textContent = vips.filter(v=>v.status==='sent').length;
+    document.getElementById('kpiResponded').textContent = vips.filter(v=>v.status==='responded').length;
+    document.getElementById('kpiPosted').textContent = vips.filter(v=>v.status==='posted').length;
+
+    const grid = document.getElementById('vipGrid');
+    if (!filtered.length) {
+        grid.innerHTML = '<div class="empty">Nenhum VIP nesse filtro 🥹</div>';
+        return;
+    }
+
+    grid.innerHTML = filtered.map((v, i) => {
+        const realIdx = vips.indexOf(v);
+        const dm = generateDM(v, realIdx);
+        const status = v.status || 'pending';
+        const igUrl = v.handle ? `https://instagram.com/${v.handle}` : '#';
+        const inviteUrl = `https://milkypot.com/influencer.html?slvip=1&n=${encodeURIComponent(v.firstName)}&u=${v.uid}`;
+
+        return `
+        <div class="vip-card ${status}" id="vip-${realIdx}" style="--bd:${statusColor(status)}">
+            <div class="vip-head">
+                <div class="vip-rank">#${realIdx+1}</div>
+                <div class="vip-info">
+                    <div class="name">${escapeHtml(v.name)}</div>
+                    <div class="handle">${v.handle ? `<a href="${igUrl}" target="_blank">@${escapeHtml(v.handle)}</a>` : '<em style="color:#999">sem @ Instagram cadastrado</em>'}</div>
+                </div>
+                <span class="vip-status status-${status}">${statusLabel(status)}</span>
+            </div>
+
+            <div class="vip-stats">
+                <div class="stat-mini"><div class="n">${v.purchases}</div>compras</div>
+                <div class="stat-mini"><div class="n">R$${(v.totalSpent||0).toFixed(0)}</div>total</div>
+                <div class="stat-mini"><div class="n">${v.lastBuy ? formatDays(v.lastBuy) : '—'}</div>última</div>
+            </div>
+
+            <div class="dm-box">${escapeHtml(dm)}</div>
+
+            <div class="vip-actions">
+                <button class="btn btn-copy" onclick="copyDM(${realIdx})">📋 Copiar DM</button>
+                ${v.handle ? `<a href="${igUrl}" target="_blank" class="btn btn-instagram">📸 Abrir IG</a>` : ''}
+                <a href="${inviteUrl}" target="_blank" class="btn btn-link">🔗 Link convite</a>
+                ${status === 'pending' ? `<button class="btn btn-sent" onclick="markStatus(${realIdx},'sent')">✓ Enviei!</button>` : ''}
+                ${status === 'sent' ? `<button class="btn btn-responded" onclick="markStatus(${realIdx},'responded')">💬 Respondeu</button>` : ''}
+                ${(status === 'sent' || status === 'responded') ? `<button class="btn btn-posted" onclick="markStatus(${realIdx},'posted')">📸 Postou</button>` : ''}
+                ${status !== 'pending' ? `<button class="btn" style="background:#fff;color:#666;border:1px solid #DDD" onclick="markStatus(${realIdx},'pending')">↩ voltar</button>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function statusLabel(s){return {pending:'⏳ Pendente',sent:'✓ Enviada',responded:'💬 Respondeu',posted:'📸 Postou!'}[s]||'?'}
+function statusColor(s){return {pending:'#7c3aed',sent:'#10B981',responded:'#FFB300',posted:'#EC407A'}[s]||'#7c3aed'}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function formatDays(iso){
+    const d = new Date(iso);
+    const days = Math.floor((Date.now() - d.getTime())/86400000);
+    if (days === 0) return 'hoje';
+    if (days === 1) return 'ontem';
+    return days+'d atrás';
+}
+
+function showToast(msg) {
+    const old = document.querySelector('.toast');
+    if (old) old.remove();
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 2200);
+}
+
+loadVIPs();
+</script>
+</body>
+</html>

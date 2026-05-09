@@ -351,14 +351,44 @@ Dataset completo em: `js/data/influencer-missions.js`
 
 ---
 
-## 15. Decisões em aberto (precisa do dono)
+## 15. Decisões confirmadas / em aberto
 
-1. **Razão coin:R$:** confirmar 10:1 (R$ 0,10/coin) — impacta toda tabela
-2. **Budget mensal de campanha paga influencer:** R$ 0 / 200 / 500?
-3. **Geolocal lock:** Londrina M1-M3 ou nacional desde início?
-4. **API Instagram Graph:** @milkypotbr já é Business? (necessário pra mention webhook)
-5. **Vision API:** Google Cloud Vision (pago) vs TensorFlow.js client (free, menos preciso)
-6. **Belinha agent integração:** automatizar moderação leve + DMs de convite?
+### ✅ Confirmadas (2026-05-09)
+
+1. **✅ Razão coin:R$ = 10:1** (1 MilkyCoin = R$ 0,10) — toda tabela está calibrada
+2. **✅ Hashtag oficial: `#EuSouMilkyPot`** — aplicada em todos os pontos
+3. **✅ @milkypotbr é Business no Instagram** — habilita mention webhook (Sprint 3)
+4. **✅ Soft launch ATIVADO** — página `/admin/clube-soft-launch.html` lista top 30 VIPs com DMs prontos
+
+### ⏳ Em aberto
+
+5. **Budget mensal de campanha paga influencer:** R$ 0 / 200 / 500?
+6. **Geolocal lock:** Londrina M1-M3 ou nacional desde início?
+7. **Vision API:** Google Cloud Vision (pago) vs TensorFlow.js client (free, menos preciso)
+8. **Belinha agent integração:** automatizar moderação leve + DMs de convite?
+
+---
+
+## 17. Soft Launch VIP — Operacional (CONFIRMADO 2026-05-09)
+
+**Objetivo:** ativar 30 melhores clientes do MilkyClube ANTES de abrir pra todos. Eles testam, dão feedback, já estão postando quando público geral chega = prova social pronta.
+
+**Como funciona:**
+1. Admin abre `/admin/clube-soft-launch.html` — lista os 30 VIPs auto-ranqueados (compras × frequência × valor gasto)
+2. Cada VIP tem um DM personalizado pronto (5 templates rotativos pra não parecer spam)
+3. Admin clica **"📋 Copiar DM"** → cola no Instagram → envia → marca **"✓ Enviei"**
+4. Quando o cliente responder, marca **"💬 Respondeu"**. Quando postar, **"📸 Postou"**
+5. KPIs no topo: 30 alvos · X enviadas · Y responderam · Z postaram
+
+**Cadência recomendada:** 3 DMs/dia (não tudo de uma vez). 10 dias completa os 30. Espalhar dá mais qualidade na conversa e o Instagram não suspeita de spam.
+
+**Bônus VIP:** quando cliente entra pelo link `?slvip=1`, ganha **+50 MilkyCoins extras** (total 60 vs 10 normal). Banner especial "🌟 Bem-vindo, você é um dos 30 primeiros".
+
+**Status persistido:** `localStorage` por enquanto, depois migra pra `users/{uid}.softLaunchStatus`.
+
+**Tracking de conversão do soft launch:**
+- DMs enviadas → DMs respondidas → cadastros → primeiro post → primeiro post viral
+- Métrica-mãe: **% dos 30 VIPs que postaram pelo menos 1x em 14 dias** (target: ≥50%)
 
 ---
 
