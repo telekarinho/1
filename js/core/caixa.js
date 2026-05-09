@@ -522,30 +522,105 @@ const Caixa = (function () {
             Motivacional.toastCaixaFechado();
         }
 
-        // Trigger Automated Report via Cloud Functions (3 emails fixos:
-        // milkypot.com / jocimarrodrigo / joseanemse — definidos em
-        // cloud-functions.js sendClosingReport)
+        // Trigger Automated Report via Cloud Functions
         try {
             if (typeof CloudFunctions !== 'undefined' && CloudFunctions.sendClosingReport) {
                 const session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+                const operator = (typeof OperatorContext !== 'undefined') ? OperatorContext.getCurrent() : null;
+                const operatorName = operator ? operator.name : (session ? session.name : 'Operador Desconhecido');
+                const operatorEmail = operator ? operator.email : (session ? session.email : '');
+
+                // Monta lista de TURNOS cronologica (abertura, trocas, fechamento)
+                function _hhmm(iso) {
+                    try { return new Date(iso).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }); }
+                    catch (e) { return ''; }
+                }
+                const turnos = [];
+                if (st.abertura) {
+                    turnos.push({
+                        tipo: 'abertura',
+                        hora: _hhmm(st.abertura.createdAt),
+                        descricao: 'Aberto por <strong>' + (st.abertura.createdByName || '?') + '</strong> com troco de ' + formatBRL(st.abertura.valor)
+                    });
+                }
+                (st.moves || []).filter(function(m) { return m.type === 'troca_turno'; }).forEach(function(m) {
+                    var c = m.changeShift || {};
+                    turnos.push({
+                        tipo: 'troca',
+                        hora: _hhmm(m.createdAt),
+                        descricao: 'Troca: <strong>' + (c.operadorAnterior ? c.operadorAnterior.name : '?') + '</strong> → <strong>' + (c.operadorNovo ? c.operadorNovo.name : '?') + '</strong> · Conferência ' + formatBRL(c.valorContado || 0) + (Math.abs(c.diferenca || 0) >= 0.01 ? ' (diff ' + formatBRL(c.diferenca) + ')' : '')
+                    });
+                });
+                turnos.push({
+                    tipo: 'fechamento',
+                    hora: _hhmm(new Date().toISOString()),
+                    descricao: 'Fechado por <strong>' + operatorName + '</strong>'
+                });
+
+                // Sangrias e reforcos detalhados
+                const sangriasList = (st.sangrias || []).map(function(m) {
+                    return { valor: m.valor, motivo: m.motivo || m.descricao, hora: _hhmm(m.createdAt), por: m.createdByName };
+                });
+                const reforcosList = (st.reforcos || []).map(function(m) {
+                    return { valor: m.valor, motivo: m.motivo || m.descricao, hora: _hhmm(m.createdAt), por: m.createdByName };
+                });
+
+                // Pedidos do dia
+                const orders = (typeof DataStore !== 'undefined') ? (DataStore.getCollection('orders', franchiseId) || []) : [];
+                const today = todayKey();
+                const pedidosDoDia = orders.filter(function(o) {
+                    if (!o || !o.createdAt) return false;
+                    if (o.deleted || o.status === 'cancelado') return false;
+                    return o.createdAt.startsWith(today);
+                });
+
+                // Comissoes por operador (pega da analytics se disponivel)
+                let comissoes = [];
+                try {
+                    if (typeof AnalyticsAdvanced !== 'undefined' && AnalyticsAdvanced.commissionReport) {
+                        const rep = AnalyticsAdvanced.commissionReport(franchiseId, today.slice(0, 7));
+                        const staffArr = (typeof DataStore !== 'undefined') ? (DataStore.getCollection('staff', franchiseId) || []) : [];
+                        const staffMap = {};
+                        staffArr.forEach(function(s) { staffMap[s.id] = s.name; staffMap[s.name] = s.name; });
+                        comissoes = (rep.operadores || [])
+                            .filter(function(o) { return o.commission > 0; })
+                            .map(function(o) { return { name: staffMap[o.operatorId] || o.operatorId, orders: o.orders, revenue: o.revenue, commission: o.commission }; });
+                    }
+                } catch (e) {}
+
+                // Beneficios entregues hoje
+                let beneficios = [];
+                try {
+                    if (typeof StaffBenefits !== 'undefined' && StaffBenefits.list) {
+                        beneficios = StaffBenefits.list(franchiseId, { date: today }).map(function(b) {
+                            var icon = b.tipo === 'sorvete_dia' ? '🍦' : (b.tipo === 'refeicao' ? '🍽️' : (b.tipo === 'lanche' ? '🥪' : (b.tipo === 'bebida' ? '🥤' : '🎁')));
+                            return { staffName: b.staffName, tipo: b.tipo, tipoLabel: b.tipoLabel, value: b.value, icon: icon };
+                        });
+                    }
+                } catch (e) {}
+
                 CloudFunctions.sendClosingReport(franchiseId, {
-                    operatorName: session ? session.name : 'Operador Desconhecido',
-                    operatorEmail: session ? session.email : '',
+                    operatorName: operatorName,
+                    operatorEmail: operatorEmail,
                     valorContado: valorContado,
                     saldoEsperado: st.saldoEsperadoDinheiro,
                     diferenca: diff,
                     motivo: motivoQuebra,
                     fechamentoDate: new Date().toISOString(),
-                    // Dados extras conferidos pelo operador (opcional — vem do
-                    // novo modal interativo). Backward-compatible: se null,
-                    // o relatorio funciona como antes.
                     porMetodoEsperado: st.porMetodo || {},
                     faturamentoBruto: st.faturamentoBruto || 0,
                     valorAbertura: st.valorAbertura || 0,
                     vendasDinheiro: st.vendasDinheiro || 0,
                     totalSangria: st.totalSangria || 0,
                     totalReforco: st.totalReforco || 0,
-                    breakdownConferido: extras || null
+                    totalPedidos: pedidosDoDia.length,
+                    breakdownConferido: extras || null,
+                    // NOVO: dados completos pro relatorio
+                    turnos: turnos,
+                    sangrias: sangriasList,
+                    reforcos: reforcosList,
+                    comissoes: comissoes,
+                    beneficios: beneficios
                 });
             }
         } catch (e) {
