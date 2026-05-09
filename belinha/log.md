@@ -6302,3 +6302,53 @@ _Belinha — Ciclo #168 | 2026-05-09_
 - **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
 
 _Belinha — Ciclo #169 | 2026-05-09_
+
+---
+
+## Ciclo #170 — 2026-05-09
+
+**Área:** Conteúdo/WA — Dia dos Pais 09/08/2026
+
+**Contexto:** Gap identificado: `dia-dos-pais-2026-playbook.md` (ciclo #136) tem estratégia completa, mas não existia arquivo standalone de mensagens WA prontas para o operador disparar — igual aos formatos `whatsapp-namorados-2026.md` (ciclo #164) e `whatsapp-junina-2026.md`. Dia dos Pais é a 3ª grande data comemorativa pós-inauguração (após Mães 10/05 e Namorados 12/06).
+
+**O que pesquisou/analisou:**
+- Leitura de `dia-dos-pais-2026-playbook.md` (ciclo #136): estratégia completa disponível — mecânicas A/B/C, keyword PAPAI26, cronograma 04–10/08
+- Leitura de `whatsapp-namorados-2026.md` (ciclo #164): formato de referência — auto-resposta + N1/N2/N3/N4/N4-GIFT/N4-DUO/N5 + guia de tom + checklist + KPIs
+- Gap identificado: nenhum arquivo `whatsapp-pais-2026.md` existia (confirmado via `ls belinha/content/`)
+- Contexto agosto: inverno de saída = dois ângulos (confort Ninho + Linha Zero fit)
+- Novidade desta data: variante P5-FIT criada especificamente para público "pai fitness/diabético" — não presente em outros templates
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-pais-2026.md` | NOVO — template WA completo para Dia dos Pais |
+
+**Detalhes do conteúdo criado:**
+- **AUTO-RESPOSTA** keyword `PAPAI26` — configurar até 03/08
+- **P1** Broadcast geral captura (Qui 06/08 18h) — recrutar lista PAPAI26
+- **P2** Lista VIP lembrete véspera (Sáb 08/08 11h)
+- **P3** Broadcast geral véspera (Sáb 08/08 14h)
+- **P4** Lista VIP abertura Dia H (Dom 09/08 08h)
+- **P5** Broadcast geral abertura (Dom 09/08 13h)
+- **P5-GIFT** Variante presentear (pai recebe como presente)
+- **P5-DUO** Variante Duo Papai (pai + filho/filha juntos)
+- **P5-FIT** Variante Linha Zero (pai fitness/diabético) — NOVA, não existia em outros templates
+- **P6** Pós-evento gratidão (Seg 10/08 11h)
+- Guia de tom, checklist operacional completo, templates de resposta rápida, KPIs
+
+**Commit:** `da29726`
+
+**Próximo passo sugerido:**
+- **Ciclo #171 — UX/Frontend:** `content-visibility: auto` na seção `.muffato-upsell` + lazy loading abaixo do fold (prescrito #168)
+- **Ciclo #172 — SEO:** Injetar links internos das novas landing pages (potinho-personalizado-londrina.html) no index.html e cardapio.html
+- **Ciclo #173 — Conteúdo/IG:** Posts Feed teaser Dia dos Pais (semana16 04–10/08) — carrossel "qual potinho combina com o seu pai?" (4 perfis)
+- **Operador:** Comprar chapéu de palha (prop) + bandeirinhas juninas antes de 03/06 — R$20–35 ⚠️ URGENTE (25 dias)
+- **Operador:** Criar sticker da ovelhinha com chapéu de palha antes de 03/06 ⚠️ URGENTE
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05/2026** ⚠️ URGENTE
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05/2026** ⚠️ URGENTE
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** LGPD — CNPJ + DPO — **+32 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+
+_Belinha — Ciclo #170 | 2026-05-09_
