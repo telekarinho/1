@@ -6214,3 +6214,46 @@ _Belinha — Ciclo #163 | 2026-05-08_
 - **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
 
 _Belinha — Ciclo #167 | 2026-05-09_
+
+---
+
+## Ciclo #168 — 2026-05-09
+
+**Área:** UX/Frontend — `cardapio.html` CLS prevention + ARIA tabs
+
+**Contexto:** Prescrito pelo roadmap ciclo #167. O `#productGrid` era enviado vazio no HTML e preenchido por JS após carga — causando layout shift (CLS) mensurável, especialmente em conexões lentas e dispositivos mobile de entrada. Os filtros de categoria (.cat-tab) não tinham semântica ARIA, o que prejudica leitores de tela e ferramentas de acessibilidade.
+
+**O que pesquisou/analisou:**
+- Leitura completa de `cardapio.html` (1.257 linhas) — fluxo completo: head → tabs → productGrid → lazy rendering → checkout → scripts
+- Identificado: `grid.innerHTML = ''` em `renderProducts()` (linha 778) zera o grid antes de renderizar — skeleton é apagado automaticamente, sem JS extra
+- Verificado: `getBrasiliaHour()` — fórmula `getTime() + getTimezoneOffset()*60000 - 3*3600000` + `.getHours()` é matematicamente correta para qualquer timezone (offset local cancela com o offset artificial, resultando em hora BRT)
+- Identificado: `renderProducts('ninho')` chamado na init (linha 1006) — JS é síncrono, skeleton visível apenas enquanto parser não chegou ao `<script>`, ou em conexões lentas/JS deferido
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `cardapio.html` | +CSS: `.product-card-skeleton` com `@keyframes skeleton-shimmer` (gradiente pastel animado, min-height 128px, border-radius 18px — visual coerente com brand) |
+| `cardapio.html` | +HTML: 6 `<div class="product-card-skeleton" aria-hidden="true">` dentro de `#productGrid` como placeholders (substituídos por `grid.innerHTML = ''` no init JS) |
+| `cardapio.html` | +ARIA: `role="tablist"` + `aria-label="Filtros do cardápio"` no `.category-tabs`; `role="tab"` + `aria-selected="true/false"` em cada `.cat-tab` |
+| `cardapio.html` | `filterProducts()` atualiza `aria-selected` ao trocar de aba (sincronização de estado ARIA) |
+
+**Impacto esperado:**
+- CLS reduzido: grid reserva 6 × 128px antes do JS — sem salto de layout em conexões lentas
+- Leitores de tela anunciam "Filtros do cardápio, ☁️ Ninho, selecionado" — conformidade WCAG 2.1 AA (role+state)
+- Sem regressão: `renderProducts()` já limpava `innerHTML`, skeleton some automaticamente
+
+**Commit:** `f7942ca`
+
+**Próximo passo sugerido:**
+- **Ciclo #169 — Conteúdo/IG:** Reels teasers pré-Festa Junina com ovelhinha de chapéu de palha (urgência: gravação 10/06/2026 — 32 dias)
+- **Ciclo #170 — Conteúdo/WA:** `whatsapp-pais-2026.md` standalone — Dia dos Pais 09/08/2026
+- **Ciclo #171 — UX/Frontend:** Verificar `content-visibility: auto` na seção `.muffato-upsell` + lazy loading abaixo do fold
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05/2026** ⚠️ URGENTE (impacta roteiro reels 10/06)
+- **Operador:** Confirmar naming "Potinho Junino" vs "Potinho do Arraial" até **30/05/2026** ⚠️ URGENTE
+- **Operador:** Confirmar preços P/M/G Potinho Junino até **10/06/2026**
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — **+30 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+
+_Belinha — Ciclo #168 | 2026-05-09_
