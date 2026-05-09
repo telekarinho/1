@@ -2,6 +2,49 @@
 
 ---
 
+## Ciclo #171 — 2026-05-09
+
+**Área:** UX/Frontend — `.muffato-upsell` bar + `content-visibility: auto` below-fold
+
+**Contexto:** Prescrito pelo ciclo #168. A `.muffato-upsell` não existia no HTML — os produtos exclusivos do Muffato Londrina (açaí buffet, milkshakes, picolés, sorvetes, chocolates) estavam apenas mencionados em meta tags, mas não apresentados visualmente ao visitante da home. `content-visibility: auto` nas seções abaixo do fold reduz tempo de paint inicial sem necessidade de lazy-load JS.
+
+**O que pesquisou/analisou:**
+- Leitura de `index.html` (2609 linhas): confirmada ausência de `.muffato-upsell`; únicas menções eram em keywords e links texto na seção products
+- Verificado: 5 seções pesadas abaixo do fold sem `content-visibility` — `.testimonials-section`, `.media-section`, `.faq-section`, `.contact-section`, `.franchise-section`
+- Confirmado: seções `<style>` balanceadas (4 aberturas, 4 fechamentos); sections balanceadas (12/12)
+- `contain-intrinsic-block-size: auto <N>px` — palavra-chave `auto` faz o browser memorizar altura real após 1ª renderização, eliminando CLS em scroll de retorno
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | NOVO: seção `.muffato-upsell` com 4 pill-links para exclusivos Muffato (Açaí Buffet → acai-self-service-londrina.html; Milkshakes, Picolés & Sorvetes, Cacau & Chocolates → WA pré-preenchido) |
+| `index.html` | CSS inline: `.muffato-upsell` com estilos brand (gradiente pastel, pill-cards, hover, mobile responsive) + `content-visibility: auto` |
+| `index.html` | CSS no `<head>`: `content-visibility: auto` + `contain-intrinsic-block-size` em 5 seções below-fold (testimonials 480px, media 320px, faq 1200px, contact 340px, franchise 640px) |
+
+**Impacto esperado:**
+- Browser pula paint das 5 seções off-screen → redução de ~20–35% no Total Blocking Time em mobile de entrada
+- Visitante que scrollar até produtos vê imediatamente os extras do Muffato — oportunidade de upsell que antes não existia visualmente
+- `auto` em `contain-intrinsic-block-size` previne scroll-jump se usuário voltar ao topo após seção já renderizada
+
+**Commit:** `032e88b`
+
+**Próximo passo sugerido:**
+- **Ciclo #172 — SEO:** Injetar links internos das landing pages (potinho-personalizado-londrina.html, acai-self-service-londrina.html, potinho-ninho-londrina.html) em `index.html` e `cardapio.html`
+- **Ciclo #173 — Conteúdo/IG:** Posts Feed teaser Dia dos Pais (semana 16, 04–10/08) — carrossel "qual potinho combina com o seu pai?" (4 perfis)
+- **Ciclo #174 — UX:** Adicionar `.muffato-upsell` em `cardapio.html` também (visibilidade na página de pedidos)
+- **Operador:** Comprar chapéu de palha (prop) + bandeirinhas juninas antes de 03/06 — R$20–35 ⚠️ URGENTE (25 dias)
+- **Operador:** Criar sticker ovelhinha com chapéu de palha antes de 03/06 ⚠️ URGENTE
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05/2026** ⚠️ URGENTE
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05/2026** ⚠️ URGENTE
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** LGPD — CNPJ + DPO — **+33 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+
+_Belinha — Ciclo #171 | 2026-05-09_
+
+---
+
 ## Ciclo #166 — 2026-05-09
 
 **Área:** SEO — `potinho-personalizado-londrina.html` landing page
