@@ -182,47 +182,47 @@ let vips = [];
 let filter = 'all';
 let search = '';
 
-// 5 templates de DM pra rotação (não parecer copy/paste)
+// 5 templates de DM rotativos — tom amigo descolado, não infantil nem corporativo
 const DM_TEMPLATES = [
-    (v) => `Oi ${v.firstName}! Aqui é a equipe MilkyPot 🐑
+    (v) => `Oi ${v.firstName}, tudo bem? Aqui é da MilkyPot 🐑
 
-Você é uma das **30 primeiras pessoas** que tá conhecendo um programa novo nosso. Antes de qualquer outra. Posso te contar?
+A gente tá lançando um programa de influencer e você foi um dos 30 selecionados pra entrar primeiro, antes de abrir pra todo mundo.
 
-Em resumo: você posta foto/vídeo do MilkyPot no Insta, marca a gente, e ganha moedinhas que viram desconto na próxima compra. Quanto mais gente vê, mais você ganha. Tem cupom pessoal pra repartir com amigo (ele ganha desconto também).
+Funciona assim: você posta no Insta marcando @milkypotbr, e ganha MilkyCoins (10 MC = R$ 1 de desconto). Tem cupom pessoal pra repartir com a galera — eles ganham 10% off, você ganha MC quando alguém usa.
 
-Quer participar? Manda um "bora" aqui e te mando o link 💜`,
+Curte saber mais? Te passo o link.`,
 
-    (v) => `${v.firstName}, oi! 🐑
+    (v) => `${v.firstName}, fala 👋
 
-Lembra que você já comprou ${v.purchases}x com a gente? Por isso você é dos primeiros a saber:
+Você já comprou ${v.purchases}x com a gente — entrou na lista dos 30 primeiros do programa Influencer MilkyPot.
 
-A gente lançou o **Influencer MilkyPot** — você posta no Insta, marca @milkypotbr, ganha moedinhas. 10 moedinhas = R$1 de desconto. Simples.
+Resumo: posta no Insta com a gente → ganha MilkyCoins → vira desconto na próxima. Sem mínimo de seguidor.
 
-Tô te chamando antes de abrir pra todo mundo. Topa? Manda "bora" 💜`,
+Topa entrar antes de a gente abrir pra geral?`,
 
-    (v) => `Oi ${v.firstName}! 💗
+    (v) => `Oi ${v.firstName}, blz?
 
-Tô passando aqui antes de abrir pra geral. Você é dos meus clientes top — não dá pra você não saber primeiro.
+Tô avisando 30 clientes selecionados antes de abrir o programa Influencer pra geral, e você tá na lista. ${v.favFlavor ? `(Inclusive vi posts seus do ${v.favFlavor} — sigo 👀)` : ''}
 
-Lançamos um programa onde você posta no Insta com a gente e ganha desconto. Tipo cashback, mas em moedinhas. ${v.favFlavor ? '(Já tô vendo um vídeo seu de '+v.favFlavor+'... 👀)' : ''}
+A ideia: você posta no Insta marcando @milkypotbr, ganha MC, vira desconto. Cupom pessoal pra dividir com amigos. Sem letra miúda.
 
-Te mando o link? Só responde "manda" aqui 🐑`,
-
-    (v) => `Bom dia ${v.firstName}! ☀️
-
-Notícia rápida: lançamos o programa Influencer MilkyPot pra você que ama a gente postar e ganhar moedinhas (vira desconto).
-
-Você é uma das 30 pessoas convidadas antes de abrir pra geral. Posta foto, marca a gente, ganha. Tem cupom pessoal pra dar pros amigos também (ele ganha desconto, você ganha moedinhas).
-
-Quer entrar? Responde "quero" 💜`,
+Te passo o link de cadastro?`,
 
     (v) => `${v.firstName} 🐑
 
-Olha, eu não chamo todo mundo assim — mas você compra muito da gente (${v.purchases} vezes!) então você merece saber primeiro.
+Notícia rápida: lançamos o programa Influencer MilkyPot e você é um dos 30 primeiros convidados (acesso antecipado antes de abrir pra geral).
 
-Lançamos o programa onde você posta no Insta marcando @milkypotbr e ganha moedinhas. 10 moedinhas = R$1 de desconto. Tem cupom seu pra os amigos.
+Posta no Insta marcando @milkypotbr → ganha MilkyCoins → vira desconto. Tem cupom pessoal pra você dividir.
 
-Manda "bora" e te mando o link com convite VIP 💜`
+Bônus VIP por entrar agora: +50 MC extras no cadastro.`,
+
+    (v) => `Oi ${v.firstName}, beleza?
+
+Não tô chamando geral — só os 30 clientes que mais compram com a gente (você é um deles, ${v.purchases} compras 👏).
+
+Tá rolando o programa Influencer MilkyPot: você posta com a gente no Insta, ganha MilkyCoins, vira desconto. Funciona pra qualquer perfil, não precisa ter muitos seguidores.
+
+Te mando o link?`
 ];
 
 function generateDM(vip, idx) {
