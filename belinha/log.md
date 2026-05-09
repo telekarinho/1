@@ -2,6 +2,50 @@
 
 ---
 
+## Ciclo #166 — 2026-05-09
+
+**Área:** SEO — `potinho-personalizado-londrina.html` landing page
+
+**Contexto:** Prescrito pelo roadmap ciclo #161 (v20a ativa). Keyword umbrella "potinho personalizado Londrina" é a busca de intenção de compra mais ampla para a categoria — cobre quem ainda não sabe se quer Ninho ou Açaí, apenas quer algo personalizado. As páginas existentes (`potinho-ninho-londrina.html` e `acai-self-service-londrina.html`) capturavam buscas específicas de produto, mas não a busca genérica de personalizáção. Gap: usuário que digita "potinho personalizado londrina" não chegava a nenhuma landing dedicada.
+
+**O que pesquisou/analisou:**
+- Leu `potinho-ninho-londrina.html` (ciclo anterior): estrutura de template, schema.org, FAQ, CSS — usado como referência integral
+- Leu `sitemap.xml`: 4 landing pages existentes, sem entrada para a nova página
+- Confirmou posicionamento diferencial: "Não é self-service, não é por peso — é do jeito que VOCÊ escolhe" (contraprogramação ao modelo das concorrentes TheBest/MilkyMoo)
+- Identificou que a página umbrella precisa cobrir TODAS as bases (Ninho + Açaí + Fit/Zero), não apenas uma
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `potinho-personalizado-londrina.html` | CRIADO — Landing page SEO completa: title/meta/OG/Twitter Card otimizados para "potinho personalizado londrina"; Schema.org BreadcrumbList + Product + FoodEstablishment; FAQPage com 7 perguntas (rich results Google); seção "Escolha sua base" com cards Ninho/Açaí/Fit side-by-side; diff-banner com copy de diferenciação anti-self-service; toppings grid, sizes, como pedir, pagamento+fidelidade, localização, 2 CTAs WhatsApp |
+| `sitemap.xml` | ADICIONADO — entrada para `potinho-personalizado-londrina.html` (priority 0.8, changefreq monthly, image caption com keyword "potinho personalizado londrina") |
+
+**Destaques:**
+1. **Keyword umbrella:** "potinho personalizado londrina" cobre o funil de intenção mais alto — quem ainda compara marcas/sabores. As páginas específicas (Ninho, Açaí) ficam para buscas bottom-of-funnel.
+2. **Copy anti-self-service no hero:** "Não é self-service. Não é por peso. É do jeito que VOCÊ escolhe." — banner roxo de destaque. Integra posicionamento do ciclo #134 (contraprogramação TheBest) direto na landing.
+3. **3 bases na mesma página:** Cards Ninho + Açaí + Fit/Zero em grid — aumenta percepção de variedade e cobre busca de quem só sabe que quer "algo personalizado".
+4. **FAQ com 7 perguntas:** Cobre "o que é", "diferença Ninho vs Açaí", "tem fit?", "faz delivery?", "quanto custa?", "onde fica?", "formas de pagamento" — rich snippets para posição zero no Google.
+5. **Sitemap atualizado:** Entrada com priority 0.8 igual às outras landings, imagem e caption com keyword exata.
+
+**Commit:** `0dfdb95`
+
+**Próximo passo sugerido:**
+- **Ciclo #167 — Concorrentes:** Refetch pré-Festa Junina (última rodada: ciclo #160, +7 ciclos). MilkyMoo, JohnnyJoy, TheBest — campanhas junho 2026, Festa Junina, produtos sazonais
+- **Ciclo #168 — UX/Frontend:** `cardapio.html` refresh — lazy scroll audit, filtros mobile, CLS
+- **Ciclo #169 — Conteúdo/WA:** `whatsapp-pais-2026.md` standalone — Dia dos Pais 09/08/2026
+- **Ciclo #170 — Conteúdo/IG:** posts pré-Festa Junina: reels de teasers da ovelhinha (1–11/06)
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05/2026** — impacta gravação reels (10/06)
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05/2026**
+- **Operador:** Confirmar preços P/M/G Potinho Junino até **10/06/2026**
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — **+28 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+
+_Belinha — Ciclo #166 | 2026-05-09_
+
+---
+
 ## Ciclo #165 — 2026-05-08
 
 **Área:** Conteúdo/WA — `whatsapp-junina-2026.md` standalone
