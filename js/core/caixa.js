@@ -599,6 +599,12 @@ const Caixa = (function () {
                     }
                 } catch (e) {}
 
+                // Troco padrao pro proximo dia: por default = mesmo valor da abertura
+                // Admin pode customizar em franquia.trocoProximoDiaPadrao (futuro card config)
+                const franchises = (typeof DataStore !== 'undefined') ? (DataStore.getAllFranchises() || []) : [];
+                const fr = franchises.find(function(f) { return f.id === franchiseId; });
+                const trocoProximoDia = (fr && fr.trocoProximoDiaPadrao != null) ? Number(fr.trocoProximoDiaPadrao) : (st.valorAbertura || 0);
+
                 CloudFunctions.sendClosingReport(franchiseId, {
                     operatorName: operatorName,
                     operatorEmail: operatorEmail,
@@ -614,8 +620,9 @@ const Caixa = (function () {
                     totalSangria: st.totalSangria || 0,
                     totalReforco: st.totalReforco || 0,
                     totalPedidos: pedidosDoDia.length,
+                    trocoProximoDia: trocoProximoDia,
                     breakdownConferido: extras || null,
-                    // NOVO: dados completos pro relatorio
+                    // dados completos pro relatorio
                     turnos: turnos,
                     sangrias: sangriasList,
                     reforcos: reforcosList,
