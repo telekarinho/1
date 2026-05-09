@@ -686,6 +686,7 @@
         <div id="pdvCaixaChip" style="display:none"></div>
         <button class="pdv-orders-btn" id="pdvOrdersBtn" onclick="openOrdersModal()" title="Pedidos de hoje (status)">📋 Pedidos<span id="pdvOrdersBtnCount"></span></button>
         <button class="pdv-orders-btn" id="pdvPontoBtn" onclick="openPdvPontoModal()" title="Bater ponto (CLT)" style="background:#16A34A">⏰ Ponto</button>
+        <button class="pdv-orders-btn" id="pdvResendBtn" onclick="pdvResendCaixaReport()" title="Reenviar email de fechamento do caixa de hoje" style="background:#7B1FA2">📧 Relatório</button>
         <div style="font-size:12px;opacity:0.8;" id="clk"></div>
         <button class="btn-back" onclick="openPrinterSettings()" title="Configurações de Impressão">⚙️</button>
         <button class="btn-back" onclick="toggleFullscreen()" title="Tela cheia (F11)">⛶</button>
@@ -1228,6 +1229,47 @@
     });
 
     // ====== Bater Ponto ======
+    // Reenvia email de fechamento do caixa do dia atual
+    window.pdvResendCaixaReport = async function() {
+        var session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+        var fid = session && session.franchiseId;
+        if (!fid) { alert('Sessão não encontrada'); return; }
+        if (typeof Caixa === 'undefined' || !Caixa.resendClosingReport) {
+            alert('Módulo Caixa não carregado');
+            return;
+        }
+        var today = new Date().toISOString().slice(0, 10);
+        var btn = document.getElementById('pdvResendBtn');
+        var origText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '⏳ Enviando...';
+        try {
+            var r = await Caixa.resendClosingReport(fid, today);
+            if (r && r.success) {
+                btn.textContent = '✓ Enviado!';
+                btn.style.background = '#16A34A';
+                if (typeof Utils !== 'undefined' && Utils.showToast) {
+                    Utils.showToast('📧 Relatório reenviado pros gestores!', 'success');
+                } else {
+                    alert('✓ Email reenviado pros gestores!');
+                }
+            } else {
+                btn.textContent = '✗ Erro';
+                btn.style.background = '#DC2626';
+                alert('Não foi possível reenviar:\n' + (r && r.error ? r.error : 'erro desconhecido'));
+            }
+        } catch (e) {
+            btn.textContent = '✗ Erro';
+            btn.style.background = '#DC2626';
+            alert('Erro: ' + (e.message || e));
+        }
+        setTimeout(function() {
+            btn.disabled = false;
+            btn.textContent = origText;
+            btn.style.background = '#7B1FA2';
+        }, 3500);
+    };
+
     function openPdvPontoModal() {
         document.getElementById('pdvPontoPin').value = '';
         document.getElementById('pdvPontoResult').innerHTML = '';
