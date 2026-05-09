@@ -1,6 +1,6 @@
 # Milky Moo — Análise Competitiva
 
-**Última atualização:** 2026-05-09 (Ciclo #167 — preços nacionais confirmados + status collabs + gap Festa Junina)
+**Última atualização:** 2026-05-09 (Ciclo #176 — CORREÇÃO análise Festa Junina: "Pede Mooleca" collab Nestlé confirmado + radar junho revisado)
 **Fontes ciclo #167:** clubeamostrasgratis.com, auroracultural.com, mercadoeconsumo.com.br, meioemensagem.com.br, barato.com.br, TikTok @guiadois, franquiadesorvete.com
 **Fontes ciclo #160:** gkpb.com.br, mercadoeconsumo.com.br, auroracultural.com, em.com.br, foodbizbrasil.com, centraldovarejo.com.br, meioemensagem.com.br, sopacultural.com, creativosbr.com.br
 **Fontes ciclo #151:** cadastrarnapromocao.com.br, clubeamostrasgratis.com, portalg.com.br, gkpb.com.br, TikTok @casaldasdicasrp, TikTok @dicasemmanauss
@@ -723,3 +723,84 @@ _Belinha — Ciclo #160 | 2026-05-08_
 | **23–29/06** | Cardápio standard | São João 24/06 + stories ao vivo + encerramento 28/06 |
 
 _Belinha — Ciclo #167 | 2026-05-09_
+
+---
+
+## ⚡ CORREÇÃO CRÍTICA — CICLO #176 — 2026-05-09
+
+### ⚠️ ANÁLISE JUNINA DO CICLO #167 ESTAVA ERRADA
+
+**Erro ciclo #167:** "zero campanha específica detectada" / "sem produto junino" — **INCORRETO**.
+
+**Realidade confirmada:** MilkyMoo lançou **"Pede Mooleca"** em **junho de 2025** (anunciado em 02/06/2025) — produto junino collab com Nestlé/Garoto. Fontes: GKPB, Publicitários Criativos, Mapa das Franquias.
+
+**Alta probabilidade de repetição em junho 2026** (padrão sazonal confirmado).
+
+---
+
+### MilkyMoo "Pede Mooleca" — Milkshake Junino (Padrão 2025)
+
+**Produto:** Milkshake edição limitada com bombom Crocante da Garoto (Nestlé)
+
+**Ingredientes:**
+- Sorvete de baunilha
+- Pedacinhos de amendoim
+- Borda de brigadeiro
+- Caramelo salgado
+- Pedaços do cookie Crocante (Garoto)
+- Bombom Crocante inteiro no topo do copo
+
+**Posicionamento:** "Sabores típicos de Festas Juninas" — resgate nostálgico (bombom Crocante = clássico dos anos 90)
+
+**Tamanhos e Preço:**
+| Tamanho | Preço médio |
+|---|---|
+| 300 ml | R$ 25,00 |
+| 500 ml | R$ 30,00 |
+
+**Canais de venda:** iFood + app próprio MilkyMoo (NÃO WhatsApp próprio)
+
+**Disponibilidade:** Edição limitada enquanto durarem os estoques — todas as unidades da rede
+
+**Parceria:** Nestlé / Garoto (collab de marca — ingrediente assinado)
+
+---
+
+### Impacto no Posicionamento MilkyPot — Revisão
+
+> O "share of voice 100% disponível" declarado no ciclo #167 estava **incorreto**. MilkyMoo ativa Festa Junina com produto específico e collab de marca forte.
+
+**Novo mapa competitivo junho 2026:**
+
+| Atributo | MilkyMoo "Pede Mooleca" | MilkyPot Potinho Junino |
+|---|---|---|
+| Produto | Milkshake 300–500ml collab Nestlé | Potinho cremoso personalizado |
+| Preço | R$25–30 | A confirmar (operador) |
+| Personalização | Nenhuma — produto fixo | Por nome, por pedido, WA próprio |
+| Canal | iFood + app → **comissão** | WhatsApp own → **sem comissão** |
+| Mascote/Narrativa | Sem personagem | Ovelhinha de chapéu de palha |
+| IG-Friendly | Copo alto visual | Potinho apresentável, afetuoso |
+| Collab | Nestlé/Garoto (credibilidade) | Sem collab — diferencial na personalização |
+
+**Diferencial real MilkyPot:**
+- Personalização (nome no potinho, ovelhinha como protagonista da narrativa)
+- Canal próprio WA — base de dados, sem comissão de marketplace
+- Experiência relacional — não é produto anônimo, é "meu potinho junino"
+- Tamanho menor = preço potencialmente mais acessível para teste
+
+**Ameaça real:** MilkyMoo tem escala nacional, collab de marca, presença em iFood — capilaridade de descoberta muito maior. Mitigação: MilkyPot domina praça Muffato Londrina-PR, nicho personalização, fidelidade WA.
+
+---
+
+### Radar Junho 2026 — MilkyMoo (Revisado)
+
+| Semana | Situação MilkyMoo (revisada) | Estratégia MilkyPot |
+|---|---|---|
+| **02–08/06** | Provável collab Universal (HTTYD padrão 2025) | Teaser ovelhinha chapéu de palha — pre-heat JUNINA26 |
+| **09–15/06** | Possível lançamento "Pede Mooleca 2026" (padrão jun/2025) | Intensificar WA: keyword JUNINA26, lead capture |
+| **16–22/06** | "Pede Mooleca" ativo — edição limitada | Lançamento Potinho Junino (17/06 previsto) — UGC challenge |
+| **23–29/06** | "Pede Mooleca" esgotando — sem estoque garantido | São João 24/06: stories ao vivo, último fim de semana |
+
+**Fontes ciclo #176:** gkpb.com.br, publicitarioscriativos.com, mapadasfranquias.com.br, exame.com
+
+_Belinha — Ciclo #176 | 2026-05-09_

@@ -2,6 +2,45 @@
 
 ---
 
+## Ciclo #176 — 2026-05-09
+
+**Área:** Concorrentes — Refetch pré-Festa Junina (correção crítica)
+
+**Contexto:** Ciclo #167 havia declarado "zero campanha específica detectada" para MilkyMoo e "provável topping genérico" para The Best Açaí em Festa Junina. WebSearch de hoje revelou que **ambas as análises estavam erradas** — dados desatualizados do ciclo #167 subestimavam a ativação dos concorrentes. O ciclo #176 corrije o registro e redefine o mapa competitivo de junho 2026.
+
+**O que pesquisou/analisou:**
+- WebSearch: "MilkyMoo sobremesa festa junina junho 2026 campanha" → "Pede Mooleca" confirmado
+- WebSearch: "The Best Açaí Festival Junino canjica pamonha cocada paçoca sorvete 2026" → Festival Junino 4 sabores confirmado
+- WebSearch: "MilkyMoo 'Pede Mooleca' data lançamento 2025 2026 quando disponível" → lançamento 02/06/2025, canais iFood + app próprio
+
+**Achados críticos:**
+1. **MilkyMoo "Pede Mooleca"** — collab Nestlé/Garoto (bombom Crocante); sorvete baunilha + amendoim + brigadeiro + caramelo salgado + cookie Crocante; 300ml R$25 / 500ml R$30; iFood + app; padrão junho 2025 → alta prob. repetição 2026
+2. **The Best Açaí "Festival Junino"** — 4 sorvetes temáticos: canjica, pamonha, cocada, paçoca; self-service; lançado 26/06/2025 nas 700+ unidades; padrão sazonal → alta prob. repetição 2026
+
+**Impacto estratégico:**
+- O "share of voice 100% disponível" do ciclo #167 foi declarado prematuramente — concorrentes ativam Festa Junina com produtos específicos
+- Diferencial MilkyPot reafirmado: **personalização + WA próprio + ovelhinha-narrativa** — não "único com produto junino", mas "único com potinho com SEU nome + personagem + canal sem comissão"
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/milkymoo.md` | Seção "Correção Crítica #176" com "Pede Mooleca" completo + radar junho revisado |
+| `belinha/competitors/the-best-acai.md` | Seção "Correção #176" com Festival Junino 4 sabores + mapa ameaça revisado |
+
+**Próximo passo sugerido:**
+- **Ciclo #177 — Conteúdo/IG:** Reel de reveal do Potinho Junino (17/06) — roteiro 15s ovelhinha de chapéu de palha. Ângulo revisado: **"aqui o potinho tem seu nome"** (não "somos os únicos") — responde ao novo mapa competitivo
+- **Ciclo #178 — SEO:** Landing `potinho-junino-londrina.html` (aguarda confirmação operador 30/05)
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05** ⚠️ URGENTE (21 dias)
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05** ⚠️ URGENTE
+- **Operador:** Configurar keyword `JUNINA26` no WA Business até **06/06** ⚠️ URGENTE
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #176 | 2026-05-09_
+
+---
+
 ## Ciclo #174 — 2026-05-09
 
 **Área:** Conversão — Funil WA + Keyword JUNINA26 (Festa Junina 10–29/06/2026)

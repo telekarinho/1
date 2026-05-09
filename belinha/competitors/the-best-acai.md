@@ -1,6 +1,6 @@
 # The Best Açaí — Análise Competitiva
 
-**Última atualização:** 2026-05-09 (Ciclo #167 — R$80M investimento PE + expansão EUA + 1.500 unidades meta + gap Festa Junina confirmado)
+**Última atualização:** 2026-05-09 (Ciclo #176 — CORREÇÃO análise Festa Junina: Festival Junino 4 sorvetes temáticos confirmado + mapa ameaça revisado)
 **Fontes ciclo #167:** mercadoeconsumo.com.br, soubh.uai.com.br, TikTok @marceladegusta, vipzinho.com.br, franquias.portaldofranchising.com.br, foodbizbrasil.com
 **Fontes ciclo #151:** vipzinho.com.br, foodbizbrasil.com, suafranquia.com, odiariodemaringa.com.br, dezminutos.com.br
 **Fontes anteriores:** ifood.com.br, gazetadopovo.com.br, temlondrina.com.br, tiktok @marceladegusta, portaldofranchising.com.br, foodbizbrasil.com, suafranquia.com, franquiadeacai.com, jornaluniao.com.br, exame.com, braziljournal.com, portaltela.com, mercadoeconsumo.com.br, aurorashopping.com.br
@@ -682,3 +682,77 @@ _Belinha — Ciclo #160 | 2026-05-08_
 | Produto junino | Provável topping genérico | **Vantagem MilkyPot** (Potinho Junino) |
 
 _Belinha — Ciclo #167 | 2026-05-09_
+
+---
+
+## ⚡ CORREÇÃO — CICLO #176 — 2026-05-09
+
+### ⚠️ ANÁLISE JUNINA DO CICLO #167 ESTAVA PARCIALMENTE INCORRETA
+
+**Erro ciclo #167:** "Provável topping genérico" para produto junino — **SUBESTIMADO**.
+
+**Realidade confirmada (padrão 2025):** The Best Açaí lançou **Festival Junino** em 26/06/2025 com **4 sorvetes temáticos específicos** — não simples topping genérico. Fonte: folhadecuritiba.com.br/2025/06/27, thebestacai.com.br/blog.
+
+**Alta probabilidade de repetição em junho 2026** (estratégia declarada de drive traffic sazonal).
+
+---
+
+### The Best Açaí "Festival Junino" — Sorvetes Sazonais (Padrão 2025)
+
+**Produtos:** 4 sabores de sorvete edição limitada:
+1. **Canjica** — sabor junino regional
+2. **Pamonha** — sabor junino regional
+3. **Cocada** — sabor junino regional
+4. **Paçoca** — sabor junino regional
+
+**Mecânica:** Cliente inclui o sorvete junino no pote self-service (autoatendimento) — produto adicionado ao mix, não experiência guiada.
+
+**Disponibilidade:** 26 de junho (padrão 2025) — edição limitada por unidade, enquanto durarem estoques.
+
+**Escala:** 700+ unidades em todo o Brasil recebem quantidade limitada de cada sabor.
+
+**Objetivo declarado:** Drive traffic sazonal — criar fluxo de loja fora dos picos habituais com "memória afetiva regional".
+
+**Preço:** Incluído no modelo self-service por kg/pote — não há preço unitário destacado para os sorvetes juninos.
+
+---
+
+### Impacto no Posicionamento MilkyPot — Revisão
+
+> The Best NÃO é apenas self-service anônimo na Festa Junina — tem produto temático com identidade (4 sabores regionais). A vantagem MilkyPot não é "eles não fazem nada"; é "eles fazem sem nome, sem personagem, sem WA".
+
+**Novo mapa competitivo junho 2026:**
+
+| Atributo | The Best "Festival Junino" | MilkyPot Potinho Junino |
+|---|---|---|
+| Produto junino | 4 sorvetes temáticos (self-service) | Potinho personalizado (feito na hora) |
+| Personalização | Nenhuma — cliente se serve | Por nome, com ovelhinha chapéu de palha |
+| Narrativa | "Sabores regionais" genérico | Ovelhinha protagonista — storytelling |
+| Canal | Balcão físico + Rappi/iFood | WhatsApp own (sem comissão) |
+| Disponibilidade Londrina | Catuaí Shopping (outra praça) | Muffato Quintino (praça exclusiva) |
+| Preço | Diluído no kg do pote | A confirmar — transparente, fixo |
+| IG-Shareability | Pote genérico sem nome | Potinho com nome + ovelhinha = UGC natural |
+
+**Diferencial real MilkyPot:**
+- A experiência de **receber um potinho com seu nome + ovelhinha de chapéu de palha** não existe no modelo buffet
+- Cliente The Best é auto-atendido — experiência fria. Cliente MilkyPot é servido — experiência afetiva
+- The Best não tem WhatsApp próprio — sem captura de lead, sem fidelização direta
+
+**Ameaça real Londrina:** Baixa (Catuaí Shopping vs. Muffato Quintino — praças diferentes). Mas o padrão nacional mostra que The Best investirá em produto junino — o argumento "só nós temos produto junino" não é verdade para clientes que frequentam ambos os locais.
+
+---
+
+### Mapa de Ameaça The Best em Londrina — Junho 2026 (Revisado)
+
+| Fator | Avaliação Revisada | Impacto |
+|---|---|---|
+| Presença Londrina | Catuaí Shopping (longe do Muffato) | Baixo — praça diferente |
+| Produto junino | Sorvetes temáticos (4 sabores) — não genérico | Médio — têm produto específico, não só self-service |
+| Personalização | Nenhuma — cliente se serve | **Vantagem MilkyPot** — experiência guiada |
+| Narrativa/Brand | Sem mascote, sem storytelling | **Vantagem MilkyPot** — ovelhinha |
+| Canal de vendas | Balcão físico + Rappi/iFood | **Vantagem MilkyPot** — WA own, base de dados |
+| IG-Shareability | Pote anônimo, sem nome | **Vantagem MilkyPot** — UGC natural |
+
+**Fontes ciclo #176:** folhadecuritiba.com.br, thebestacai.com.br/blog, abcdacomunicacao.com.br
+
+_Belinha — Ciclo #176 | 2026-05-09_
