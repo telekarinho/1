@@ -500,7 +500,49 @@ let userCoins = 0;
 let userPosts = [];
 let activePlatform = 'instagram';
 
+// Detecta se veio do soft launch VIP (admin manda link com ?slvip=1)
+function isVIP() {
+    try {
+        const params = new URLSearchParams(location.search);
+        if (params.get('slvip') === '1') return { name: params.get('n') || '', uid: params.get('u') || '' };
+    } catch(e){}
+    return null;
+}
+
+function showVIPWelcome(vipInfo) {
+    const banner = document.createElement('div');
+    banner.style.cssText = `
+        position:fixed;top:0;left:0;right:0;
+        background:linear-gradient(135deg,#FFB300,#EC407A,#7c3aed);
+        color:#fff;padding:14px 18px;
+        text-align:center;font-family:'Baloo 2',cursive;font-weight:900;
+        font-size:1rem;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.2);
+        animation:vipSlide .5s ease-out;
+    `;
+    banner.innerHTML = `🌟 Bem-vindo${vipInfo.name?', '+escapeHtml(vipInfo.name):''}! Você é um dos <strong>30 primeiros</strong> — convite VIP MilkyPot 💜`;
+    document.body.insertBefore(banner, document.body.firstChild);
+    document.body.style.paddingTop = '50px';
+
+    // Adiciona animação CSS
+    const style = document.createElement('style');
+    style.textContent = '@keyframes vipSlide{from{transform:translateY(-100%)}to{transform:translateY(0)}}';
+    document.head.appendChild(style);
+
+    // Modifica hero pra mensagem VIP especial
+    const heroP = document.querySelector('.hero p');
+    if (heroP) {
+        heroP.innerHTML = `<strong>Você foi escolhido(a) como um dos 30 primeiros</strong> — antes de abrir pra todo mundo. Posta no Insta, marca <strong>@milkypotbr</strong>, e ganha moedinhas que viram desconto. <strong>Bônus VIP: +50 moedinhas extras só pra você</strong> 💜`;
+    }
+
+    // Salva flag VIP pra dar bonus no signup
+    sessionStorage.setItem('mp_vip_signup', JSON.stringify(vipInfo));
+}
+
 function loadUser() {
+    // Verifica VIP primeiro
+    const vipInfo = isVIP();
+    if (vipInfo) showVIPWelcome(vipInfo);
+
     try {
         const saved = localStorage.getItem('milkypot_influencer');
         if (saved) {
@@ -628,23 +670,37 @@ function goSignup() {
     if (!name || name.length < 2) return;
     const handle = prompt('Qual seu @ no Instagram? (sem o @)\n\nEx: se seu Insta é @joao123, escreve só joao123');
     if (!handle || handle.length < 2) return;
+
+    // VIP signup bonus: +50 moedinhas extras se veio do soft launch
+    const vipFlag = sessionStorage.getItem('mp_vip_signup');
+    const vipBonus = vipFlag ? 50 : 0;
+    const totalBonus = 10 + vipBonus;
+
     user = {
         name: name.trim(),
         handle: handle.replace(/^@/,'').trim(),
-        tier: 1,
-        coins: 10,
+        tier: vipFlag ? 1 : 1,
+        coins: totalBonus,
         posts: [],
         coupon: 'BELINHA-' + name.toUpperCase().slice(0,6) + '10',
         conversions: 0,
         couponUses: 0,
+        isVIP: !!vipFlag,
         joinedAt: new Date().toISOString()
     };
     userTier = 1;
-    userCoins = 10;
+    userCoins = totalBonus;
     userPosts = [];
     saveUser();
+    sessionStorage.removeItem('mp_vip_signup');
     showCelebration();
-    setTimeout(() => { renderDashboard(); showToast('🎉 Pronto! Ganhou 10 moedinhas só por entrar', 'ok'); }, 1400);
+    setTimeout(() => {
+        renderDashboard();
+        const msg = vipFlag
+            ? '🌟 VIP confirmado! Ganhou ' + totalBonus + ' moedinhas (10 + 50 VIP)'
+            : '🎉 Pronto! Ganhou 10 moedinhas só por entrar';
+        showToast(msg, 'ok');
+    }, 1400);
 }
 
 function saveUser() {
