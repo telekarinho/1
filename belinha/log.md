@@ -6526,3 +6526,46 @@ _Belinha — Ciclo #169 | 2026-05-09_
 - **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
 
 _Belinha — Ciclo #170 | 2026-05-09_
+
+---
+
+## Ciclo #175 — 2026-05-09
+
+**Área:** UX/Conversão — Banner Festa Junina na homepage
+
+**Contexto:** Prescrições de ciclos #175 (FAQPage potinho-personalizado) e #176 (muffato-upsell em cardapio.html) já executadas em ciclos anteriores. Foco reorientado para a oportunidade mais urgente: ativar captura de leads JUNINA26 diretamente na homepage, 32 dias antes do lançamento (17/06). O `inaugBanner` (ID, CSS, navbar-offset, resize handler, closeBanner) já existia mas estava permanentemente oculto após 25/04 — infraestrutura desperdiçada. Reutilizando sem criar novo elemento DOM.
+
+**O que pesquisou/analisou:**
+- Confirmado: FAQPage já existe em `potinho-personalizado-londrina.html` (ciclos anteriores)
+- Confirmado: `.muffato-upsell` já existe em `cardapio.html` (ciclo #171)
+- `inaugBanner` — band lógica de ocultar após 25/04 sem nenhuma fase seguinte → oportunidade
+- `whatsapp-junina-2026.md` — keyword `JUNINA26` configurada, mas sem ponto de entrada na homepage
+- Festa Junina: 32 dias para o lançamento do produto (17/06), 22 dias para o primeiro teaser IG (03/06)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | +16 linhas — 2 fases Festa Junina na `configureBanner()` + sessionStorage no `closeBanner()` |
+
+**Detalhes:**
+- **Fase 1 (10/05–16/06):** Banner mostra "🎪 EM BREVE: NOVIDADE JUNINA!" → link WA `?text=JUNINA26` (captura automática na lista VIP)
+- **Fase 2 (17/06–29/06):** Banner mostra "🌽 POTINHO JUNINO CHEGOU!" → link WA com texto de pedido direto
+- **Sem novo DOM:** reutiliza `#inaugBanner`, `#inaugBannerText`, `#inaugBannerCta` — sem impacto em layout, CSS ou navbar offset
+- **closeBanner() melhorado:** agora persiste `juninaBannerClosed` via `sessionStorage` no período pós-inauguração — evita que o banner reapareça a cada reload na mesma sessão (UX mais respeitoso)
+- **Auto-encerra:** após 29/06 o banner volta a ficar oculto permanentemente
+
+**Commit:** `7ebc727`
+
+**Próximo passo sugerido:**
+- **Ciclo #176 — Concorrentes:** Refetch MilkyMoo + JohnnyJoy + TheBest pré-Festa Junina (verificar campanhas junho e preços de produtos juninos concorrentes)
+- **Ciclo #177 — Conteúdo/IG:** Reel de reveal product Festa Junina (para 17/06) — roteiro 15s com ovelhinha de chapéu de palha presenteando o Potinho Junino
+- **Ciclo #178 — SEO:** Landing page `potinho-junino-londrina.html` (aguarda confirmação operador de ingredientes/nome até 30/05)
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05** ⚠️ URGENTE (21 dias)
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05** ⚠️ URGENTE (impacta landing + IG reveal + cardápio)
+- **Operador:** Configurar keyword `JUNINA26` no WA Business até **06/06** ⚠️ URGENTE (28 dias)
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — **+35 ciclos**. Risco legal crescente.
+- **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
+
+_Belinha — Ciclo #175 | 2026-05-09_
