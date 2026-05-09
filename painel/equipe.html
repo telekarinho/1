@@ -109,6 +109,31 @@
         </div>
     </main>
 
+    <!-- Modal Compartilhar Acesso -->
+    <div class="modal-overlay" id="acessoOverlay" style="display:none;z-index:10000">
+        <div class="modal-box" style="max-width:520px">
+            <div class="modal-header" style="background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff;border-radius:16px 16px 0 0">
+                <h3 style="color:#fff">📲 Compartilhar acesso</h3>
+                <button class="modal-close" onclick="document.getElementById('acessoOverlay').style.display='none'" style="color:#fff">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="background:#F0FDF4;border-left:4px solid #16A34A;padding:12px 14px;border-radius:8px;margin-bottom:14px;font-size:.85rem;color:#14532D">
+                    <strong>Mensagem pronta para mandar pro funcionário</strong> com link do app + dados de acesso.
+                </div>
+                <textarea id="acessoMensagem" rows="14" style="width:100%;padding:14px;border:1px solid #D1D5DB;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.88rem;line-height:1.5;resize:vertical;box-sizing:border-box"></textarea>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:14px">
+                    <button class="btn-primary" onclick="enviarWhatsApp()" style="background:#25D366">📱 WhatsApp</button>
+                    <button class="btn-primary" onclick="copiarMensagem()" style="background:#3B82F6">📋 Copiar texto</button>
+                    <button class="btn-primary" onclick="gerarQrCode()" style="background:#7C3AED">🔳 QR Code</button>
+                </div>
+                <div id="acessoQrContainer" style="display:none;margin-top:14px;text-align:center">
+                    <canvas id="acessoQrCanvas" style="border:1px solid #E5E7EB;border-radius:10px"></canvas>
+                    <small style="display:block;margin-top:6px;color:#6B7280">Funcionário escaneia e abre o app direto</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Novo / Editar Funcionario -->
     <div class="modal-overlay" id="modalOverlay" style="display:none;">
         <div class="modal-box" style="max-width:480px;">
@@ -553,6 +578,9 @@
                 html += '  </div>';
                 html += '  <div class="staff-actions">';
                 html += '    <button onclick="openEditModal(\'' + s.id + '\')">Editar</button>';
+                if (s.cpf && s.pin) {
+                    html += '    <button onclick="abrirCompartilharAcesso(\'' + s.id + '\')" style="background:#16A34A;color:#fff;border-color:#16A34A">📲 Acesso</button>';
+                }
                 html += '    <button class="btn-toggle ' + toggleClass + '" onclick="toggleActive(\'' + s.id + '\')">' + toggleLabel + '</button>';
                 html += '    <button class="btn-remove" onclick="removeStaff(\'' + s.id + '\')">Remover</button>';
                 html += '  </div>';
@@ -784,6 +812,97 @@
                 }, 200);
             }
         }
+
+        // ============ COMPARTILHAR ACESSO ============
+        var _acessoCurrentStaff = null;
+
+        window.abrirCompartilharAcesso = function(id) {
+            var s = staffList.find(function(x) { return x.id === id; });
+            if (!s) return;
+            if (!s.cpf || !s.pin) {
+                alert('Funcionário precisa ter CPF e PIN cadastrados.');
+                return;
+            }
+            _acessoCurrentStaff = s;
+            var fone = (s.phone || '').replace(/\D/g, '');
+            var nome = s.name.split(' ')[0];
+
+            var msg =
+                'Olá ' + nome + '! 👋\n\n' +
+                'Seu acesso ao app *MilkyPot Funcionário* tá pronto.\n\n' +
+                '📱 *Acesse aqui:*\n' +
+                'https://milkypot.com/funcionario/\n\n' +
+                '🔐 *Seus dados:*\n' +
+                'CPF: ' + s.cpf + '\n' +
+                'PIN: ' + s.pin + '\n\n' +
+                '📲 *Pra instalar como app no celular:*\n' +
+                '• Chrome (Android): menu (3 pontinhos) → "Adicionar à tela inicial"\n' +
+                '• iPhone: botão compartilhar → "Adicionar à Tela de Início"\n\n' +
+                '⏰ *No app você pode:*\n' +
+                '• Bater ponto (com localização)\n' +
+                '• Ver sua escala e horários\n' +
+                '• Acompanhar horas trabalhadas e extras\n' +
+                '• Ver seu holerite simplificado\n' +
+                '• Solicitar banco de horas\n' +
+                '• Acompanhar seus benefícios\n\n' +
+                'Lembrete importante: o PIN é *pessoal e intransferível*. Não compartilha com ninguém.\n\n' +
+                'Qualquer dúvida me chama!';
+
+            document.getElementById('acessoMensagem').value = msg;
+            document.getElementById('acessoQrContainer').style.display = 'none';
+            document.getElementById('acessoOverlay').style.display = 'flex';
+        };
+
+        window.enviarWhatsApp = function() {
+            if (!_acessoCurrentStaff) return;
+            var msg = document.getElementById('acessoMensagem').value;
+            var fone = (_acessoCurrentStaff.phone || '').replace(/\D/g, '');
+            // Adiciona DDI 55 se não tiver e for número BR
+            if (fone && fone.length === 11) fone = '55' + fone;
+            else if (fone && fone.length === 10) fone = '55' + fone;
+            var url = fone
+                ? 'https://wa.me/' + fone + '?text=' + encodeURIComponent(msg)
+                : 'https://wa.me/?text=' + encodeURIComponent(msg);
+            window.open(url, '_blank');
+        };
+
+        window.copiarMensagem = function() {
+            var ta = document.getElementById('acessoMensagem');
+            ta.select();
+            try {
+                document.execCommand('copy');
+                if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast('Copiado!', 'success');
+                else alert('Mensagem copiada!');
+            } catch (e) { alert('Não conseguiu copiar. Selecione manualmente.'); }
+        };
+
+        window.gerarQrCode = function() {
+            var container = document.getElementById('acessoQrContainer');
+            var canvas = document.getElementById('acessoQrCanvas');
+            // QR code simples (sem libs externas) — usa API qrserver.com como fallback
+            var url = 'https://milkypot.com/funcionario/?cpf=' + (_acessoCurrentStaff.cpf || '').replace(/\D/g, '');
+            var img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function() {
+                canvas.width = 280;
+                canvas.height = 280;
+                canvas.getContext('2d').drawImage(img, 0, 0, 280, 280);
+            };
+            img.onerror = function() {
+                // Fallback se nao tiver internet — mostra so o link
+                canvas.width = 280;
+                canvas.height = 100;
+                var ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, 280, 100);
+                ctx.fillStyle = '#111';
+                ctx.font = '12px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(url, 140, 50);
+            };
+            img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=' + encodeURIComponent(url);
+            container.style.display = 'block';
+        };
 
         function toggleActive(id) {
             var staff = staffList.find(function(s) { return s.id === id; });
