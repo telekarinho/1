@@ -1242,36 +1242,62 @@
             alert('Módulo Caixa não carregado');
             return;
         }
-        var today = new Date().toISOString().slice(0, 10);
         var btn = document.getElementById('pdvResendBtn');
         var origText = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = '⏳ Enviando...';
-        try {
-            var r = await Caixa.resendClosingReport(fid, today);
-            if (r && r.success) {
-                btn.textContent = '✓ Enviado!';
-                btn.style.background = '#16A34A';
-                if (typeof Utils !== 'undefined' && Utils.showToast) {
-                    Utils.showToast('📧 Relatório reenviado pros gestores!', 'success');
+        var origBg = btn.style.background || '#7B1FA2';
+
+        function _doSend(dateToUse, friendlyLabel) {
+            btn.disabled = true;
+            btn.textContent = '⏳ Enviando...';
+            return Caixa.resendClosingReport(fid, dateToUse).then(function(r) {
+                if (r && r.success) {
+                    btn.textContent = '✓ Enviado!';
+                    btn.style.background = '#16A34A';
+                    var msg = friendlyLabel
+                        ? '📧 Relatório de ' + friendlyLabel + ' reenviado!'
+                        : '📧 Relatório reenviado pros gestores!';
+                    if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast(msg, 'success');
+                    else alert('✓ ' + msg);
                 } else {
-                    alert('✓ Email reenviado pros gestores!');
+                    btn.textContent = '✗ Erro';
+                    btn.style.background = '#DC2626';
+                    alert('Não foi possível reenviar:\n' + (r && r.error ? r.error : 'erro desconhecido'));
                 }
-            } else {
+            }).catch(function(e) {
                 btn.textContent = '✗ Erro';
                 btn.style.background = '#DC2626';
-                alert('Não foi possível reenviar:\n' + (r && r.error ? r.error : 'erro desconhecido'));
-            }
-        } catch (e) {
-            btn.textContent = '✗ Erro';
-            btn.style.background = '#DC2626';
-            alert('Erro: ' + (e.message || e));
+                alert('Erro: ' + (e.message || e));
+            }).then(function() {
+                setTimeout(function() {
+                    btn.disabled = false;
+                    btn.textContent = origText;
+                    btn.style.background = origBg;
+                }, 3500);
+            });
         }
-        setTimeout(function() {
-            btn.disabled = false;
-            btn.textContent = origText;
-            btn.style.background = '#7B1FA2';
-        }, 3500);
+
+        var today = new Date().toISOString().slice(0, 10);
+        var st = Caixa.getTurnoState ? Caixa.getTurnoState(fid) : null;
+
+        // Se caixa de HOJE ja fechado, manda direto
+        if (st && st.status === 'fechado') {
+            return _doSend(today, 'hoje');
+        }
+
+        // Senao, busca ultimo dia com caixa fechado
+        var ultimo = Caixa.findLastClosedDate ? Caixa.findLastClosedDate(fid) : null;
+        if (!ultimo) {
+            alert('Nenhum caixa fechado encontrado pra reenviar.\n\nFeche um caixa primeiro pelo botão F10 ou na aba Configurações.');
+            return;
+        }
+
+        var dataFormatada = ultimo.split('-').reverse().join('/');
+        var statusHoje = (st && st.status === 'aberto')
+            ? 'O caixa de hoje ainda está ABERTO.'
+            : 'O caixa de hoje ainda não foi aberto.';
+        if (confirm(statusHoje + '\n\nÚltimo caixa fechado: ' + dataFormatada + '\n\nReenviar o relatório do dia ' + dataFormatada + '?')) {
+            return _doSend(ultimo, dataFormatada);
+        }
     };
 
     function openPdvPontoModal() {

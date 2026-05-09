@@ -2201,6 +2201,20 @@ const Caixa = (function () {
     }
 
     /**
+     * Retorna o dateKey mais recente com caixa fechado.
+     * Usado pelo botao 'Reenviar Relatorio' quando hoje nao foi fechado ainda.
+     */
+    function findLastClosedDate(franchiseId) {
+        if (!franchiseId) return null;
+        const moves = loadMovements(franchiseId);
+        const fechamentos = moves
+            .filter(function(m) { return m.type === 'fechamento'; })
+            .sort(function(a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); });
+        if (!fechamentos.length) return null;
+        return fechamentos[0].dateKey;
+    }
+
+    /**
      * Reenviar relatorio de fechamento de caixa de um dia ja fechado.
      */
     function resendClosingReport(franchiseId, dateKey) {
@@ -2335,6 +2349,7 @@ const Caixa = (function () {
         openShift: openShift,
         closeShift: closeShift,
         resendClosingReport: resendClosingReport,
+        findLastClosedDate: findLastClosedDate,
         changeShift: changeShift,
         registerSale: registerSale,
         registerSangria: registerSangria,
