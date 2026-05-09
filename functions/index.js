@@ -1882,10 +1882,20 @@ function _buildClosingHtml(data) {
     // usa apenas a diferenca em dinheiro
     const diffTotalRaw = Number(con.diffTotal || data.diferenca || (totalContado - totalEsperado));
     const diffTotal = (!pixConferenciaFeita && !cartaoConferenciaFeita) ? diffDinheiro : diffTotalRaw;
+
+    // === EXCEDENTE = VENDA NAO LANCADA (entra no faturamento real) ===
+    // Qualquer diff POSITIVO em qualquer forma de pagamento significa que o operador
+    // esqueceu de lancar venda. Soma no faturamento total.
+    const excedenteDinheiro = Math.max(0, diffDinheiro);
+    const excedentePix = pixConferenciaFeita ? Math.max(0, diffPix) : 0;
+    const excedenteCartao = cartaoConferenciaFeita ? Math.max(0, diffCartao) : 0;
+    const excedenteTotal = excedenteDinheiro + excedentePix + excedenteCartao;
+    const faturamentoReal = faturamentoBruto + excedenteTotal;
+
     const diffColor = Math.abs(diffTotal) < 0.01 ? "#10B981" : (Math.abs(diffTotal) <= 5 ? "#F59E0B" : "#DC2626");
     const diffLabel = Math.abs(diffTotal) < 0.01
         ? "✅ Bateu certinho"
-        : (diffTotal > 0 ? "📥 Excedente em dinheiro (provavelmente venda não lançada)" : "📤 Faltou no caixa");
+        : (diffTotal > 0 ? "📥 Excedente registrado como venda não lançada" : "📤 Faltou no caixa");
 
     function row(label, val, weight) {
         return `<tr><td style="padding:7px 10px;border-top:1px solid #f3f4f6;color:#374151">${label}</td><td style="padding:7px 10px;border-top:1px solid #f3f4f6;text-align:right;font-weight:${weight || 600};color:#111">${_fmtBRL(val)}</td></tr>`;
@@ -1961,7 +1971,7 @@ function _buildClosingHtml(data) {
 
     // ===== PEDIDOS =====
     const totalPedidos = Number(data.totalPedidos || 0);
-    const ticketMedio = totalPedidos > 0 ? faturamentoBruto / totalPedidos : 0;
+    const ticketMedio = totalPedidos > 0 ? faturamentoReal / totalPedidos : 0;
 
     // Troco padrao pro proximo dia (= mesmo valor da abertura desse dia, salvo override)
     const trocoProximo = Number(data.trocoProximoDia != null ? data.trocoProximoDia : valorAbertura);
@@ -1979,19 +1989,24 @@ function _buildClosingHtml(data) {
     <!-- ===== RESUMO PRINCIPAL — visualmente DOMINANTE ===== -->
     <div style="background:linear-gradient(135deg,#16A34A,#10B981);color:#fff;padding:18px 20px;border-radius:12px;margin-bottom:18px">
       <div style="font-size:12px;opacity:.85;text-transform:uppercase;letter-spacing:.5px">VENDIDO HOJE</div>
-      <div style="font-size:36px;font-weight:800;line-height:1.1;margin-top:2px">${_fmtBRL(faturamentoBruto)}</div>
+      <div style="font-size:36px;font-weight:800;line-height:1.1;margin-top:2px">${_fmtBRL(faturamentoReal)}</div>
       <div style="font-size:13px;opacity:.92;margin-top:6px">${totalPedidos} pedido${totalPedidos === 1 ? '' : 's'} · ticket médio ${_fmtBRL(ticketMedio)}</div>
+      ${excedenteTotal > 0 ? `<div style="font-size:11px;opacity:.95;margin-top:8px;background:rgba(0,0,0,.2);padding:6px 10px;border-radius:6px">📥 Inclui ${_fmtBRL(excedenteTotal)} de venda não lançada (excedente conferido)</div>` : ''}
     </div>
 
     <!-- VENDAS POR METODO -->
     <h3 style="margin:0 0 8px;font-size:14px;color:#374151">💰 Vendas do dia (por método)</h3>
-    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">
-      ${row("💵 Dinheiro", vendasDinheiro)}
-      ${row("⚡ PIX", vendasPix)}
-      ${row("💳 Cartão (Crédito + Débito)", vendasCartao)}
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px">
+      ${row("💵 Dinheiro lançado no PDV", vendasDinheiro)}
+      ${excedenteDinheiro > 0 ? `<tr><td style="padding:7px 10px;border-top:1px solid #f3f4f6;color:#92400E">📥 + Excedente em dinheiro <small style="color:#6B7280;font-weight:400">(venda não lançada)</small></td><td style="padding:7px 10px;border-top:1px solid #f3f4f6;text-align:right;color:#92400E;font-weight:700">${_fmtBRL(excedenteDinheiro)}</td></tr>` : ''}
+      ${row("⚡ PIX lançado no PDV", vendasPix)}
+      ${excedentePix > 0 ? `<tr><td style="padding:7px 10px;border-top:1px solid #f3f4f6;color:#92400E">📥 + Excedente em PIX <small style="color:#6B7280;font-weight:400">(venda não lançada)</small></td><td style="padding:7px 10px;border-top:1px solid #f3f4f6;text-align:right;color:#92400E;font-weight:700">${_fmtBRL(excedentePix)}</td></tr>` : ''}
+      ${row("💳 Cartão (Crédito + Débito) lançado", vendasCartao)}
+      ${excedenteCartao > 0 ? `<tr><td style="padding:7px 10px;border-top:1px solid #f3f4f6;color:#92400E">📥 + Excedente em cartão <small style="color:#6B7280;font-weight:400">(venda não lançada)</small></td><td style="padding:7px 10px;border-top:1px solid #f3f4f6;text-align:right;color:#92400E;font-weight:700">${_fmtBRL(excedenteCartao)}</td></tr>` : ''}
       ${vendasBeneficio > 0 ? row("🎁 Benefício funcionário (custo loja, não é receita)", vendasBeneficio) : ""}
-      <tr style="background:#F0FDF4;font-weight:800"><td style="padding:9px 10px;border-top:2px solid #BBF7D0;color:#14532D">TOTAL VENDIDO</td><td style="padding:9px 10px;border-top:2px solid #BBF7D0;text-align:right;color:#14532D">${_fmtBRL(faturamentoBruto)}</td></tr>
+      <tr style="background:#F0FDF4;font-weight:800"><td style="padding:9px 10px;border-top:2px solid #BBF7D0;color:#14532D">TOTAL VENDIDO ${excedenteTotal > 0 ? '<small style="color:#92400E;font-weight:600">(lançado + excedente)</small>' : ''}</td><td style="padding:9px 10px;border-top:2px solid #BBF7D0;text-align:right;color:#14532D">${_fmtBRL(faturamentoReal)}</td></tr>
     </table>
+    ${excedenteTotal > 0 ? `<div style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:.82rem;color:#92400E">💡 <strong>${_fmtBRL(excedenteTotal)} a mais foram contados pelo operador</strong> — somam no faturamento como venda não lançada. Recomenda-se treinar pra registrar tudo no PDV no momento da venda.</div>` : ''}
 
     <!-- TURNOS -->
     <h3 style="margin:18px 0 8px;font-size:14px;color:#374151">👤 Quem operou hoje</h3>
