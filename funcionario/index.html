@@ -841,21 +841,44 @@ function fnVerTermo(termId) {
     document.body.insertAdjacentHTML('beforeend', html);
 }
 
-function fnLogin() {
+async function fnLogin() {
     var cpf = document.getElementById('loginCpf').value.replace(/\D/g, '');
     var pin = document.getElementById('loginPin').value.trim();
     var err = document.getElementById('loginErr');
+    var btn = document.querySelector('.fn-login button.fn-btn');
     err.style.display = 'none';
 
     if (cpf.length !== 11) { err.textContent = 'CPF invalido'; err.style.display = 'block'; return; }
     if (pin.length !== 4) { err.textContent = 'PIN deve ter 4 digitos'; err.style.display = 'block'; return; }
 
-    // Procura em todas franquias (publicas via DataStore.getAllFranchises)
-    var franchises = (typeof DataStore !== 'undefined') ? (DataStore.getAllFranchises() || []) : [];
+    if (typeof DataStore === 'undefined') {
+        err.textContent = 'Sistema indisponível. Recarregue a página.';
+        err.style.display = 'block';
+        return;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Buscando...'; }
+
+    // 1. Busca lista de franquias direto do Firestore (publica)
+    try {
+        if (DataStore.fetchPublicFranchises) await DataStore.fetchPublicFranchises();
+    } catch (e) { console.warn('fetchPublicFranchises:', e); }
+
+    // 2. Busca staff de TODAS as franquias direto do Firestore (publico, sem auth)
+    var publicStaff = {};
+    try {
+        if (DataStore.fetchAllPublicStaff) publicStaff = await DataStore.fetchAllPublicStaff();
+    } catch (e) { console.warn('fetchAllPublicStaff:', e); }
+
+    if (btn) { btn.textContent = 'Entrar'; btn.disabled = false; }
+
+    // 3. Procura match nas franquias publicas
+    var franchises = DataStore.getAllFranchises() || [];
     var found = null;
     for (var i = 0; i < franchises.length; i++) {
         var f = franchises[i];
-        var staff = DataStore.getCollection('staff', f.id) || [];
+        // Prioriza dados frescos do fetch publico, senao cai no DataStore local
+        var staff = publicStaff[f.id] || DataStore.getCollection('staff', f.id) || [];
         var s = staff.find(function(x) {
             if (!x.active) return false;
             var c = (x.cpf || '').replace(/\D/g, '');
