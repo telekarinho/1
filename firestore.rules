@@ -181,12 +181,24 @@ service cloud.firestore {
     // ============================================
     // Audit Log (somente admin le, imutavel)
     // ============================================
+    // Hardening: client AINDA pode gravar (js/core/audit.js depende disso),
+    // mas com constraints fortes — userId/userRole travados ao auth real,
+    // userName e userEmail strings, timestamp/serverTime preenchidos.
+    // Atacante autenticado nao consegue mais forjar 'auth.role_set'
+    // com role='super_admin' em nome de outro user.
+    // TODO: pos-CF migration, mover writes para Cloud Function logAudit.
     match /audit_log/{logId} {
       allow read: if isSuperAdmin();
-      // Apenas permite criar se o userId do log corresponde ao usuario autenticado
-      // Impede injecao de logs falsos
-      allow create: if isAuthenticated() &&
-                       request.resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated()
+                       && request.resource.data.userId == request.auth.uid
+                       && (request.resource.data.userRole == null
+                           || request.resource.data.userRole == request.auth.token.role)
+                       && request.resource.data.event is string
+                       && request.resource.data.event.size() <= 80
+                       && request.resource.data.diff({}).affectedKeys()
+                          .hasOnly(['id','event','timestamp','userId','userName',
+                                    'userEmail','userRole','franchiseId','details',
+                                    'ip','userAgent']);
       allow update, delete: if false; // Imutavel
     }
 

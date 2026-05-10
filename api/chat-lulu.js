@@ -127,10 +127,16 @@ module.exports = async (req, res) => {
         return;
     }
 
+    // Sanitiza tags estruturais (anti prompt injection)
+    function sanitize(s) {
+        return String(s || "")
+            .replace(/<\/?(?:context|system|assistant|user)\b[^>]*>/gi, "[tag]")
+            .slice(0, 1000);
+    }
     const userMessages = messages
         .filter(m => m && typeof m === "object" && ["user", "assistant"].includes(m.role) && typeof m.content === "string")
         .slice(-10)
-        .map(m => ({ role: m.role, content: String(m.content).slice(0, 1000) }));
+        .map(m => ({ role: m.role, content: sanitize(m.content) }));
 
     if (userMessages.length === 0) {
         res.status(400).json({ error: "Mensagem vazia" });
