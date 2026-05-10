@@ -980,7 +980,7 @@
         <label style="display:block;font-size:11px;color:#666;font-weight:800;margin-bottom:4px;text-transform:uppercase">Nome do cliente</label>
         <input type="text" id="freeChallengeName" placeholder="Nome do cliente" maxlength="32" style="width:100%;padding:12px 14px;border:2px solid #ddd;border-radius:10px;font-size:16px;font-weight:800;font-family:inherit;margin-bottom:10px">
         <label style="display:block;font-size:11px;color:#666;font-weight:800;margin-bottom:4px;text-transform:uppercase">WhatsApp</label>
-        <input type="tel" id="freeChallengePhone" placeholder="(43) 99999-9999" maxlength="16" style="width:100%;padding:12px 14px;border:2px solid #ddd;border-radius:10px;font-size:16px;font-weight:800;font-family:inherit;margin-bottom:12px">
+        <input type="tel" id="freeChallengePhone" placeholder="(43) 99991-9777" maxlength="16" style="width:100%;padding:12px 14px;border:2px solid #ddd;border-radius:10px;font-size:16px;font-weight:800;font-family:inherit;margin-bottom:12px">
         <div id="freeChallengeStatus" style="display:none;border-radius:10px;padding:10px;margin-bottom:12px;font-size:13px;font-weight:800"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
             <button onclick="closeFreeChallengeModal()" style="padding:12px;border:2px solid #ddd;background:#fff;color:#666;border-radius:10px;font-weight:800;cursor:pointer;font-family:inherit">Cancelar</button>
@@ -2737,15 +2737,17 @@
 
     // ========== DESCONTO NO PEDIDO (com PIN + limite + AuditLog) ==========
     // Estado: window._cartDiscount = { type:'reais'|'perc', value, reason, by, at }
-    // Configuracao: franchise.descontoPin (default '1234'), franchise.descontoMaxPct (default 30)
+    // Configuracao OBRIGATORIA: franchise.descontoPin (sem default) + franchise.descontoMaxPct (default 30)
+    // Sem PIN configurado, descontos sao BLOQUEADOS — atendente nao pode aplicar.
     var _discountType = 'reais';
     function getDiscountConfig(){
         var franchises = DataStore.get('franchises') || [];
         var f = franchises.find(function(x){return x.id===fid}) || {};
+        var raw = (f.descontoPin || '').toString().trim();
         return {
-            pin: (f.descontoPin || '1234'),
+            pin: raw,
             maxPct: Number(f.descontoMaxPct || 30),
-            isDefault: !f.descontoPin
+            isDefault: !raw || raw === '1234'
         };
     }
     function getCartSubtotal() {
@@ -2838,6 +2840,13 @@
         var cfg = getDiscountConfig();
         var subtotal = getCartSubtotal();
 
+        // Bloqueio de PIN nao configurado / fraco (default 1234)
+        // Sem isso, atendente le DataStore via F12 e aplica desconto sem autorizacao.
+        if (cfg.isDefault) {
+            _showDiscountError('PIN do gerente nao configurado. Acesse Configuracoes > Loja > PIN de Desconto antes de aplicar descontos.');
+            return;
+        }
+
         // Valida PIN do gerente
         var pinInputs = document.querySelectorAll('#discountModal .pin-digit');
         if (pinInputs.length === 4) {
@@ -2889,7 +2898,7 @@
 
         closeDiscountModal();
         renderCart();
-        toast(cfg.isDefault ? '⚠️ Desconto OK — configure PIN próprio em Configurações' : '🏷️ Desconto aplicado.');
+        toast('🏷️ Desconto aplicado.');
     };
     window.clearDiscount = function () {
         if (window._cartDiscount) {

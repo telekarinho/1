@@ -204,34 +204,53 @@ service cloud.firestore {
     // ============================================
 
     // Vouchers gerados pelo PDV / fiscal / delivery
+    // Hardening: update SO marca como usado (one-way), nao permite revogar.
+    // Ideal pos-launch: mover redemption pra Cloud Function com lock transacional.
     match /desafio_vouchers/{voucherId} {
-      // Leitura publica: necessario para validar voucher no jogo
       allow read: if true;
-      // Criacao: apenas sistemas autenticados (PDV, fiscal)
       allow create: if isAuthenticated();
-      // Update: jogo marca como usado (idealmente via Cloud Function)
-      allow update: if true;
+      // One-way: nao pode "desusar" um voucher. Apenas marca como usado e campos correlatos.
+      allow update: if (resource.data.used == false || resource.data.used == null)
+                       && request.resource.data.used == true
+                       && request.resource.data.diff(resource.data).affectedKeys()
+                          .hasOnly(['used','usedAt','usedBy','usedAtFranchise','redeemedOrderId']);
       allow delete: if isSuperAdmin();
     }
 
     // Resultados das partidas
+    // Hardening: score limitado a 0-10000 (anti-rank injection).
+    // Update apenas videoUrl/videoUploadedAt (nao reescrever score).
     match /desafio_10000/{gameId} {
-      allow read: if true;  // Publico para ranking
-      allow create: if true; // Qualquer jogador salva resultado
-      allow update: if true; // Atualiza URL do video de reacao
+      allow read: if true;
+      allow create: if request.resource.data.score is int
+                       && request.resource.data.score >= 0
+                       && request.resource.data.score <= 10000;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['videoUrl','videoUploadedAt','reactionEmoji']);
       allow delete: if isSuperAdmin();
     }
 
     // Streaks dos jogadores (por telefone)
+    // Hardening: contadores monotonicos (so podem aumentar).
+    // Sem isso, atacante zera streak/freePlayCount via DevTools.
     match /desafio_streaks/{playerId} {
       allow read: if true;
-      allow write: if true;
+      allow create: if request.resource.data.streak is int
+                       && request.resource.data.streak >= 0;
+      allow update: if request.resource.data.streak is int
+                       && request.resource.data.streak >= (resource.data.streak == null ? 0 : resource.data.streak)
+                       && request.resource.data.streak <= 10000;
     }
 
     // Cartelas de carimbo (stamp cards)
+    // Hardening: contagem monotonica (so cresce).
     match /desafio_stamps/{playerId} {
       allow read: if true;
-      allow write: if true;
+      allow create: if request.resource.data.stamps is int
+                       && request.resource.data.stamps >= 0;
+      allow update: if request.resource.data.stamps is int
+                       && request.resource.data.stamps >= (resource.data.stamps == null ? 0 : resource.data.stamps)
+                       && request.resource.data.stamps <= 10000;
     }
 
     // Opt-in de notificacoes WhatsApp
@@ -242,23 +261,33 @@ service cloud.firestore {
 
     // Tentativas gratis por telefone+dia (modo "Acesso Livre")
     // Doc id: {phone}_{YYYY-MM-DD}, contador incrementado a cada tentativa
+    // Hardening: count MONOTONICO. Atacante nao consegue zerar pra jogar 24h/dia.
     match /desafio_free_plays/{playId} {
       allow read: if true;
-      allow write: if true;
+      allow create: if request.resource.data.count is int
+                       && request.resource.data.count >= 0
+                       && request.resource.data.count <= 50;
+      allow update: if request.resource.data.count is int
+                       && request.resource.data.count >= resource.data.count
+                       && request.resource.data.count <= 50;
     }
 
     // ============================================
     // RASPINHA DA SORTE - Cada pedido gera 1 raspinha
     // ============================================
+    // Hardening: status evolui SO pra frente: pending/available -> scratched -> redeemed.
+    // Atacante nao consegue "des-resgatar" pra usar 2x nem reescrever prize.
     match /scratches/{scratchCode} {
-      // Leitura publica: cliente precisa acessar sua raspinha pelo codigo
-      // Codigo tem 218 trilhoes combinacoes - seguro por obscuridade
       allow read: if true;
-      // Criacao: PDV/sistema autenticado gera raspinha
       allow create: if true;
-      // Update: cliente raspa (muda status) e funcionario resgata
-      allow update: if true;
-      // Delete: apenas super_admin
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['status','scratchedAt','redeemedAt','redeemedBy','redeemedAtFranchise','redeemedOrderId'])
+                       && (
+                            ((resource.data.status == 'pending' || resource.data.status == 'available' || resource.data.status == null)
+                              && (request.resource.data.status == 'scratched' || request.resource.data.status == 'redeemed'))
+                            || (resource.data.status == 'scratched'
+                              && request.resource.data.status == 'redeemed')
+                          );
       allow delete: if isSuperAdmin();
     }
 

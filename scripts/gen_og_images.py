@@ -222,7 +222,7 @@ def build_image(title_line2="Cardápio Online"):
         cur_x += bb[2] - bb[0]
 
     # ── WhatsApp pill ───────────────────────────────────────────────────────
-    phone_text = "WhatsApp  (43) 99804-2424"
+    phone_text = "WhatsApp  (43) 99991-9777"
     phone_y    = sub_y + text_h(draw, subtitle, f_items) + 22
 
     bb_ph = draw.textbbox((0, 0), phone_text, font=f_phone)

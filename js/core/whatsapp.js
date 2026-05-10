@@ -8,7 +8,7 @@
 
 const WhatsApp = {
     // Número padrão do suporte MilkyPot (com código do país)
-    SUPPORT_NUMBER: (typeof MP !== 'undefined' && MP.SUPPORT_WHATSAPP) ? MP.SUPPORT_WHATSAPP : '5543999999999',
+    SUPPORT_NUMBER: (typeof MP !== 'undefined' && MP.SUPPORT_WHATSAPP) ? MP.SUPPORT_WHATSAPP : '5543999919777',
 
     // ============================================
     // Gerar link WhatsApp (wa.me)

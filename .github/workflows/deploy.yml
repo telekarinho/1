@@ -57,6 +57,8 @@ jobs:
             "js/core/constants.js"
             "js/core/datastore.js"
             "js/core/firebase-config.js"
+            "robots.txt"
+            "sitemap.xml"
           )
           for f in "${required_files[@]}"; do
             if [ ! -f "$f" ]; then
@@ -65,6 +67,51 @@ jobs:
             fi
           done
           echo "All required files present"
+
+      - name: SW cache version guard (must be monotonic increasing)
+        run: |
+          echo "Checking sw.js CACHE_VERSION monotonic increase..."
+          current=$(grep -oE "mp-v[0-9]+" sw.js | head -1 | sed 's/mp-v//')
+          if [ -z "$current" ]; then
+            echo "CACHE_VERSION not found in sw.js"; exit 1
+          fi
+          # Compara com base de PR ou main
+          if [ -n "$GITHUB_BASE_REF" ]; then
+            git fetch origin "$GITHUB_BASE_REF" --depth=1 2>/dev/null || true
+            base=$(git show "origin/$GITHUB_BASE_REF:sw.js" 2>/dev/null | grep -oE "mp-v[0-9]+" | head -1 | sed 's/mp-v//')
+          else
+            git fetch origin main --depth=1 2>/dev/null || true
+            base=$(git show origin/main:sw.js 2>/dev/null | grep -oE "mp-v[0-9]+" | head -1 | sed 's/mp-v//')
+          fi
+          if [ -n "$base" ] && [ "$current" -lt "$base" ]; then
+            echo "CACHE_VERSION regrediu: base=$base, current=$current"
+            echo "Bump sw.js antes de mergear."
+            exit 1
+          fi
+          echo "CACHE_VERSION OK (base=${base:-n/a}, current=$current)"
+
+      - name: PIN default guard (no '1234' fallback in PDV)
+        run: |
+          if grep -E "descontoPin.*\|\|.*['\"]1234['\"]" painel/pdv.html; then
+            echo "PIN default '1234' detectado em painel/pdv.html — remova fallback inseguro."
+            exit 1
+          fi
+          echo "PIN default guard OK"
+
+      - name: Firestore rules sanity check
+        run: |
+          # Garante que regras explosivas não voltaram
+          if grep -nE "allow read, write: if true" firestore.rules; then
+            echo "Regra perigosa 'allow read, write: if true' detectada — revise."
+            exit 1
+          fi
+          echo "Firestore rules sanity OK"
+
+      - name: NPM audit (functions)
+        continue-on-error: true
+        run: |
+          cd functions
+          npm audit --audit-level=high --omit=dev || echo "::warning::vulnerabilidades de severidade alta detectadas em functions/"
 
   # ============================================
   # 2. Deploy to GitHub Pages
