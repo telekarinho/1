@@ -8,7 +8,7 @@
    ============================================ */
 
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
-const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const { onDocumentCreated, onDocumentUpdated, onDocumentWritten } = require("firebase-functions/v2/firestore");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
@@ -102,41 +102,65 @@ exports.setupOwner = onCall({
 });
 
 // ============================================
-// 3. TRIGGER: Novo pedido criado
+// 3. TRIGGER: Novo(s) pedido(s) criado(s) — usa onDocumentWritten
 // ============================================
-// Quando um pedido e criado via storefront publico
-exports.onOrderCreated = onDocumentCreated({
+// FIX RACE: a versao anterior usava onDocumentCreated + orders[orders.length-1].
+// Bug: (a) onDocumentCreated so dispara UMA vez no create do doc inteiro
+// (subsequente updates do array nao disparavam); (b) com 2 PDVs gravando
+// em paralelo, o "ultimo do array" podia ser processado 2x.
+//
+// Agora: onDocumentWritten + diff (before vs after) processa SO os pedidos
+// novos por id, e quotas a TOP 10 mais recentes pra evitar reprocessar
+// historico no primeiro create.
+exports.onOrderCreated = onDocumentWritten({
     document: "datastore/{docId}",
     region: "southamerica-east1"
 }, async (event) => {
     const docId = event.params.docId;
-
-    // So processa documentos de orders
     if (!docId.startsWith("orders_")) return;
 
-    const data = event.data.data();
-    if (!data || !data.value) return;
+    const afterData = event.data?.after?.data();
+    if (!afterData || !afterData.value) return;
 
+    const beforeData = event.data?.before?.data();
+
+    let afterOrders = [];
+    let beforeOrders = [];
     try {
-        const orders = JSON.parse(data.value);
-        if (!Array.isArray(orders)) return;
-
-        // Pega o pedido mais recente (ultimo do array)
-        const latestOrder = orders[orders.length - 1];
-        if (!latestOrder) return;
-
-        const franchiseId = docId.replace("orders_", "");
-
-        // Log
-        console.log(`Novo pedido detectado: ${latestOrder.id} na franquia ${franchiseId}`);
-
-        // Aqui poderia:
-        // - Enviar notificacao push para o franqueado
-        // - Enviar email de confirmacao para o cliente
-        // - Atualizar metricas em tempo real
-
+        afterOrders = JSON.parse(afterData.value) || [];
+        if (beforeData && beforeData.value) {
+            beforeOrders = JSON.parse(beforeData.value) || [];
+        }
     } catch (e) {
-        console.error("onOrderCreated error:", e);
+        console.error("onOrderCreated parse error:", e);
+        return;
+    }
+    if (!Array.isArray(afterOrders)) return;
+
+    // Identifica pedidos novos por id (diff)
+    const beforeIds = new Set(beforeOrders.map(o => o && o.id).filter(Boolean));
+    const newOrders = afterOrders.filter(o => o && o.id && !beforeIds.has(o.id));
+
+    // Hard cap: no primeiro create (beforeOrders vazio), so processa os 10
+    // mais recentes pra evitar inundar de notificacoes historicas.
+    const toProcess = (beforeOrders.length === 0)
+        ? newOrders.slice(-10)
+        : newOrders;
+
+    if (toProcess.length === 0) return;
+
+    const franchiseId = docId.replace("orders_", "");
+
+    for (const order of toProcess) {
+        try {
+            console.log(`Novo pedido: ${order.id} franquia ${franchiseId} total=${order.total}`);
+            // Aqui poderia:
+            // - Enviar notificacao push para o franqueado
+            // - Enviar email de confirmacao para o cliente
+            // - Atualizar metricas em tempo real
+        } catch (e) {
+            console.error(`onOrderCreated process error order=${order.id}:`, e);
+        }
     }
 });
 
