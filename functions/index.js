@@ -848,3 +848,9 @@ Object.assign(exports, uberDirect);
 // ============================================================
 const testMode = require("./test-mode");
 Object.assign(exports, testMode);
+
+// ============================================================
+// Orders Migration (ADR-001 — datastore -> subcollection)
+// ============================================================
+const migrateOrders = require("./migrate-orders");
+Object.assign(exports, migrateOrders);
