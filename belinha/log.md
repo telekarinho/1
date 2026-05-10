@@ -6608,3 +6608,48 @@ _Belinha — Ciclo #170 | 2026-05-09_
 - **Operador:** Confirmar `cardapio.js` (A=deletar / B=integrar / C=manter) — blocker técnico persistente.
 
 _Belinha — Ciclo #175 | 2026-05-09_
+
+---
+
+## Ciclo #177 — 2026-05-10
+
+**Área:** Conteúdo/IG — Reel 15s lançamento Potinho Junino (17/06)
+
+**Contexto:** O ciclo #176 corrigiu o mapa competitivo: MilkyMoo ("Pede Mooleca") e The Best ("Festival Junino") têm produtos juninos reais em 2026. O ângulo "share of voice 100% disponível" estava obsoleto. O `instagram-tiktok-junina-2026.md` (POST 2, ciclo #163) cobria o Carrossel das 12h de 17/06, mas o slot do **Reel às 18h** — prescrito em `semana9.md` como "copy de diferenciação" — estava vazio sem roteiro.
+
+**O que pesquisou/analisou:**
+- Releitura de `instagram-tiktok-junina-2026.md` POST 1 (Reel 12/06) e POST 2 (Carrossel 17/06)
+- Releitura de `pos-inauguracao-semana9.md`: "Injetar copy de diferenciação em qua 17/06 (Reel)" — slot sem arquivo
+- Releitura de `reels-teaser-junina-pre-lancamento-2026.md` — cobre 03–11/06, não 17/06
+- Mapa competitivo ciclo #176: diferencial correto = **"qualquer um tem o sabor, só a gente coloca o seu nome"**
+- Calendário 17/06: Carrossel 12h (produto/preço) → gap → Reel 18h (personalização/emoção)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reel-lancamento-potinho-junino-17jun.md` | NOVO — roteiro Reel 15s completo para 17/06 às 18h |
+
+**Detalhes do conteúdo criado:**
+- **Ângulo:** "No arraial deles = produto genérico. No nosso = SEU nome no potinho" — sem nomear concorrente
+- **Roteiro 15s dividido em 4 blocos:** abertura (ovelhinha + chapéu), reveal slow-mo (potinho + nome personalizado), diferenciação (dois potinhos, dois nomes), CTA (logo + WA)
+- **Prop central:** rótulo personalizado escrito à mão (nome fictício "MARIA LUÍZA" + "SEU NOME AQUI") — visualiza o benefício imediatamente
+- **Slot 18h** (não 12h): deixa 6h de respiro após o Carrossel de produto — evita overposting num mesmo dia de lançamento
+- **Integração documentada:** tabela relacionando Carrossel 12h + Broadcast WA 12h + Este Reel 18h + Stories 20h
+- **Variante TikTok** incluída (caption encurtada + duet/stitch ativado para UGC)
+- **Direção de arte** detalhada para produção independente pelo operador (prop, paleta, font, trilha, edição CapCut)
+
+**Commit:** `5b2f9f9`
+
+**Próximo passo sugerido:**
+- **Ciclo #178 — SEO:** Landing page `potinho-junino-londrina.html` (aguarda confirmação ingredientes/naming do operador até **30/05** — prazo em 20 dias)
+- **Ciclo #179 — UX/Frontend:** Stories Thu 18/06 — copy de diferenciação "preço fixo vs. balança" (prescrita no `semana9.md` para 18/06, ainda sem template)
+- **Ciclo #180 — Conversão:** Upsell "Versão B (cocada/mel) e Versão C Fit" do Potinho Junino — script de atendente para sugerir variantes no WA
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05** ⚠️ URGENTE (20 dias)
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05** ⚠️ URGENTE
+- **Operador:** Configurar keyword `JUNINA26` no WA Business até **06/06** ⚠️ URGENTE (27 dias)
+- **Operador:** Buscar trilha baiãozinho lo-fi TikTok na semana de **08/06** (prazo de produção)
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #177 | 2026-05-10_
