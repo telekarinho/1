@@ -638,14 +638,20 @@
                                     </div>
                                 </div>
 
-                                <!-- APK Android -->
+                                <!-- APK Android — busca automatico da release mais recente -->
                                 <div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:10px;padding:14px">
                                     <strong style="display:block;color:#92400E;margin-bottom:8px">🤖 APK Android Nativo</strong>
-                                    <p style="margin:0 0 8px;font-size:.82rem;color:#374151">App instalável (.apk). Gere via GitHub Actions e cole o link da release abaixo.</p>
-                                    <input type="text" placeholder="Cole aqui o link da release APK (ex: github.com/.../releases/...)" id="appLinkApk" class="form-control" style="font-size:.82rem;margin-bottom:8px">
-                                    <div style="display:flex;gap:6px">
-                                        <button class="btn btn-outline" onclick="saveApkUrl()" style="flex:1;padding:8px;font-size:.78rem">💾 Salvar</button>
-                                        <button class="btn btn-outline" onclick="window.open('https://github.com/telekarinho/1/actions/workflows/build-android-app.yml','_blank')" style="flex:1;padding:8px;font-size:.78rem">⚙️ Gerar APK</button>
+                                    <p style="margin:0 0 8px;font-size:.82rem;color:#374151">App instalável (.apk). Buscado automaticamente da última release do GitHub.</p>
+                                    <input type="text" id="appLinkApk" class="form-control" style="font-size:.82rem;margin-bottom:6px;background:#fff" readonly placeholder="Buscando última release...">
+                                    <div id="appApkStatus" style="font-size:.72rem;color:#6B7280;margin-bottom:8px"></div>
+                                    <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                        <button class="btn btn-outline" onclick="refreshApkUrl()" style="flex:1;padding:8px;font-size:.78rem">🔄 Buscar última</button>
+                                        <button class="btn btn-outline" onclick="copyAppLink('apk')" style="flex:1;padding:8px;font-size:.78rem">📋 Copiar</button>
+                                        <button class="btn btn-outline" onclick="qrcodeAppLink('apk')" style="flex:1;padding:8px;font-size:.78rem">🔳 QR</button>
+                                        <button class="btn btn-primary" onclick="shareAppLink('apk')" style="flex:1;padding:8px;font-size:.78rem">📲 Share</button>
+                                    </div>
+                                    <div style="display:flex;gap:6px;margin-top:6px">
+                                        <button class="btn btn-outline" onclick="triggerNewBuild()" style="flex:1;padding:7px;font-size:.72rem">⚙️ Gerar nova versão (build novo)</button>
                                     </div>
                                 </div>
 
@@ -1869,9 +1875,65 @@
 
     // ============== APP LINKS ==============
     function loadAppLinks() {
-        var saved = localStorage.getItem('mp_app_apk_url_' + franchiseId);
-        if (saved) document.getElementById('appLinkApk').value = saved;
+        // Auto-busca da release mais recente do GitHub
+        refreshApkUrl();
     }
+
+    // Busca o APK mais recente da release do GitHub via API publica
+    window.refreshApkUrl = async function() {
+        var inp = document.getElementById('appLinkApk');
+        var status = document.getElementById('appApkStatus');
+        if (!inp || !status) return;
+        status.textContent = '⏳ Buscando última release...';
+        status.style.color = '#6B7280';
+        try {
+            var resp = await fetch('https://api.github.com/repos/telekarinho/1/releases?per_page=20', {
+                headers: { 'Accept': 'application/vnd.github+json' }
+            });
+            if (!resp.ok) throw new Error('GitHub API ' + resp.status);
+            var releases = await resp.json();
+            // Filtra releases que tem APK do colaborador (tag começa com 'android-' ou nome contem 'Funcionário'/'Colaborador')
+            var release = null;
+            for (var i = 0; i < releases.length; i++) {
+                var r = releases[i];
+                var hasApk = (r.assets || []).some(function(a) { return a.name && a.name.toLowerCase().endsWith('.apk') && (a.name.toLowerCase().indexOf('funcionario') !== -1 || a.name.toLowerCase().indexOf('colaborador') !== -1); });
+                if (hasApk) { release = r; break; }
+            }
+            if (!release) {
+                inp.value = '';
+                inp.placeholder = 'Nenhum APK gerado ainda — clique "Gerar nova versão"';
+                status.innerHTML = '⚠️ Sem release de APK ainda. <a href="https://github.com/telekarinho/1/actions/workflows/build-android-app.yml" target="_blank" style="color:#1E40AF;font-weight:700">Ver workflow</a>';
+                status.style.color = '#92400E';
+                return;
+            }
+            // Pega o asset .apk
+            var apk = (release.assets || []).find(function(a) { return a.name.toLowerCase().endsWith('.apk'); });
+            if (apk && apk.browser_download_url) {
+                inp.value = apk.browser_download_url;
+                var dt = new Date(release.published_at).toLocaleDateString('pt-BR');
+                var size = (apk.size / 1048576).toFixed(1) + ' MB';
+                status.innerHTML = '✓ ' + (release.tag_name || release.name) + ' · ' + dt + ' · ' + size + ' · <a href="' + release.html_url + '" target="_blank" style="color:#1E40AF">ver no GitHub</a>';
+                status.style.color = '#16A34A';
+                localStorage.setItem('mp_app_apk_url_' + franchiseId, apk.browser_download_url);
+            }
+        } catch (e) {
+            // Fallback: usa cache localStorage se houver
+            var saved = localStorage.getItem('mp_app_apk_url_' + franchiseId);
+            if (saved) {
+                inp.value = saved;
+                status.textContent = '⚠️ Erro ao buscar do GitHub — usando link salvo localmente.';
+                status.style.color = '#92400E';
+            } else {
+                status.textContent = '✗ ' + (e.message || 'erro');
+                status.style.color = '#DC2626';
+            }
+        }
+    };
+
+    window.triggerNewBuild = function() {
+        if (!confirm('Disparar novo build do APK no GitHub Actions?\n\nO build leva ~5 minutos. Quando terminar, clique em "Buscar última" pra atualizar o link.')) return;
+        window.open('https://github.com/telekarinho/1/actions/workflows/build-android-app.yml', '_blank');
+    };
     window.copyAppLink = function(type) {
         var inp = document.getElementById('appLink' + (type === 'pwa' ? 'Pwa' : 'Apk'));
         inp.select();
