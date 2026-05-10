@@ -138,8 +138,14 @@ jobs:
           EOF
           cat android-build/twa-manifest.json
 
-      - name: Install Bubblewrap core (API direta, non-interactive)
-        run: npm install -g @bubblewrap/core@1.22.0
+      - name: Install @bubblewrap/core localmente (com peer deps)
+        working-directory: android-build
+        run: |
+          # Global install do @bubblewrap/core nao puxa lodash (peerDep).
+          # Instalar local resolve todas as deps.
+          npm init -y > /dev/null
+          npm install @bubblewrap/core@1.22.0 lodash > /dev/null
+          ls node_modules | head -20
 
       - name: Generate Android TWA project via @bubblewrap/core API
         working-directory: android-build
@@ -164,8 +170,6 @@ jobs:
             }
           })();
           JSEOF
-          # Resolve modulo global instalado
-          export NODE_PATH=$(npm root -g)
           node generate.js
           echo "=== Files apos generate ==="
           ls -la
