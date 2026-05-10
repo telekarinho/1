@@ -156,11 +156,25 @@ jobs:
           cat > generate.js <<'JSEOF'
           const path = require('path');
           const fs = require('fs');
-          const { TwaGenerator, TwaManifest } = require('@bubblewrap/core');
+          const core = require('@bubblewrap/core');
+          const { TwaGenerator, TwaManifest } = core;
           (async () => {
             try {
-              const raw = JSON.parse(fs.readFileSync('twa-manifest.json', 'utf8'));
-              const manifest = await TwaManifest.fromObject(raw);
+              console.log('Bubblewrap core keys:', Object.keys(core));
+              console.log('TwaManifest props:', Object.getOwnPropertyNames(TwaManifest));
+              let manifest;
+              if (typeof TwaManifest.fromBubblewrapManifestJson === 'function') {
+                manifest = await TwaManifest.fromBubblewrapManifestJson('twa-manifest.json');
+                console.log('Usado: fromBubblewrapManifestJson');
+              } else if (typeof TwaManifest.fromObject === 'function') {
+                const raw = JSON.parse(fs.readFileSync('twa-manifest.json', 'utf8'));
+                manifest = await TwaManifest.fromObject(raw);
+                console.log('Usado: fromObject');
+              } else {
+                const raw = JSON.parse(fs.readFileSync('twa-manifest.json', 'utf8'));
+                manifest = new TwaManifest(raw);
+                console.log('Usado: new TwaManifest(raw)');
+              }
               const generator = new TwaGenerator();
               await generator.createTwaProject(process.cwd(), manifest);
               console.log('OK: TWA project gerado em', process.cwd());
