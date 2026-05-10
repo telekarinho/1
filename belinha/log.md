@@ -2,6 +2,49 @@
 
 ---
 
+## Ciclo #181 — 2026-05-10
+
+**Área:** Conteúdo — Feed editorial + Stories 19/06 Potinho Junino
+
+**Contexto:** Ciclos #177–180 completaram: Reel 17/06, Stories 18/06 e script WA upsell variantes B/C. O slot de sexta 19/06 estava prescrito no `semana9.md` mas sem arquivo de produção dedicado — apenas uma caption básica sem brief fotográfico e sem integração da copy de diferenciação do `potinho-junino-2026-contraprogramacao.md`.
+
+**O que pesquisou/analisou:**
+- Releitura de `semana9.md` (seção Sex 19/06 — linhas 223–268): caption básica + conceito de cenário
+- Releitura de `potinho-junino-2026-contraprogramacao.md`: Variações 1/2/3 de copy, brief de diferenciação "preço fixo vs. balança", instrução explícita de usar Var1 ou Var2 em 19/06
+- Leitura dos arquivos adjacentes `reel-lancamento-potinho-junino-17jun.md` e `stories-18jun-potinho-junino-reacoes.md` para manter consistência de formato e tom
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/feed-19jun-potinho-junino-editorial.md` | NOVO — brief de produção completo |
+
+**Detalhes do conteúdo criado:**
+- **Brief fotográfico editorial** detalhado: 2 composições (cenário rústico + flat lay), lista de props, luz recomendada, ângulo, checklist pré-foto e lista do que evitar
+- **Caption principal** com diferenciação integrada ("Preço fixo. Sem balança. Sem surpresa.") e listagem das 3 variantes do Potinho Junino
+- **Caption Variação A** — ângulo emocional/nostálgico (público 25–40 anos, para foto com props rústicos)
+- **Caption Variação B** — produto direto com ingredientes (flat lay clean, público que decide pelo produto)
+- **Stories 19/06** — sequência de 3 frames: Story 1 bastidor (19h), Story 2 enquete (19h15), Story 3 CTA urgência (20h30) — com copy pronta e instruções de design no Canva
+- **Notas operacionais:** tabela de horários de publicação, KPIs de rastreamento, strategy de hashtags (grupo principal + grupo nicho por variante), instrução de repost WhatsApp Status
+- **Mapa de integração da semana 9** para orientar o operador na sequência 17–20/06
+
+**Commit:** `469e881`
+
+**Próximo passo sugerido:**
+- **Ciclo #182 — Conteúdo:** `reel-urgencia-potinho-junino-20jun.md` — Reel 15s sábado 20/06 urgência + Indica & Ganha (prescrito em `semana9.md`, ainda sem arquivo)
+- **Ciclo #183 — SEO:** Landing page `potinho-junino-londrina.html` com placeholders estruturados (esqueleto que não bloqueia operador confirmar ingredientes)
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05** ⚠️ URGENTE (20 dias)
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05** ⚠️ URGENTE
+- **Operador:** Confirmar disponibilidade cocada e mel (Versões B e C) até **13/06**
+- **Operador:** Configurar keyword `JUNINO26` no WA Business até **06/06** ⚠️ URGENTE
+- **Operador:** Buscar trilha baiãozinho lo-fi TikTok na semana de **08/06**
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #181 | 2026-05-10_
+
+---
+
 ## Ciclo #179 — 2026-05-10
 
 **Área:** SEO — Landing page `potinho-junino-londrina.html` (edição limitada junho 2026)
