@@ -55,10 +55,59 @@ const Utils = {
         return yyyy + '-' + mm + '-' + dd;
     },
 
-    // Início do mês atual
+    // Alias canonico — use Utils.todayKey() em vez de toISOString().slice(0,10)
+    // (que quebra apos 21h locais virando o dia em UTC).
+    // MEMORY do dono: timezone Brasilia exige getTimezoneOffset compensation.
+    todayKey() {
+        return this.today();
+    },
+
+    // Inicio do mes atual
     startOfMonth() {
         const d = new Date();
         return new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
+    },
+
+    // =====================================================================
+    // Money helper — trabalha em CENTAVOS inteiros pra evitar erros de
+    // ponto flutuante. R$ 19,99 = 1999. R$ 0,10 = 10.
+    // Use em qualquer calculo financeiro (PDV, fechamento, comissao).
+    //
+    // Exemplos:
+    //   Money.fromReais(19.99)      // -> 1999
+    //   Money.toReais(1999)         // -> 19.99
+    //   Money.format(1999)          // -> "R$ 19,99"
+    //   Money.sum([1999, 10, 20])   // -> 2029  (sem erro de float)
+    //   Money.percentage(2000, 30)  // -> 600  (30% de 2000c)
+    // =====================================================================
+    Money: {
+        fromReais(reais) {
+            // Trata "19,99" ou "19.99" ou 19.99
+            if (typeof reais === 'string') {
+                reais = reais.replace(/\./g, '').replace(',', '.');
+            }
+            const n = Number(reais);
+            if (!isFinite(n)) return 0;
+            return Math.round(n * 100);
+        },
+        toReais(cents) {
+            const n = Number(cents);
+            if (!isFinite(n)) return 0;
+            return Math.round(n) / 100;
+        },
+        format(cents) {
+            return 'R$ ' + this.toReais(cents).toFixed(2).replace('.', ',');
+        },
+        sum(arr) {
+            return (arr || []).reduce((a, b) => a + (Number(b) || 0), 0);
+        },
+        percentage(cents, percent) {
+            return Math.round((Number(cents) || 0) * (Number(percent) || 0) / 100);
+        },
+        // Multiplica preco unitario (centavos) por quantidade — seguro pra float
+        unitTimes(unitCents, qty) {
+            return Math.round((Number(unitCents) || 0) * (Number(qty) || 0));
+        }
     },
 
     // Toast notification
