@@ -24,8 +24,6 @@ const GMAIL_APP_PASSWORD = defineSecret("GMAIL_APP_PASSWORD");
 // Sem ela, o sistema cai pro fluxo manual (admin aprova na fila).
 const GOOGLE_PLACES_API_KEY = defineSecret("GOOGLE_PLACES_API_KEY");
 
-const UBER_ENCRYPTION_KEY = defineSecret("UBER_ENCRYPTION_KEY");
-
 admin.initializeApp();
 const db = admin.firestore();
 const auth = admin.auth();
