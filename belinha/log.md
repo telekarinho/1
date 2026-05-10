@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #187 — 2026-05-10
+
+**Área:** Pesquisa Concorrentes — MilkyMoo + The Best Açaí (refetch pré-São João)
+
+**Contexto:** Ciclos #182–186 focaram em conteúdo e UX. Última atualização de concorrentes foi ciclo #176 (>1 semana atrás). Com São João em 24/06 (6 semanas), urgência de verificar campanhas lançadas, novos produtos e preços ativos.
+
+**O que pesquisou/analisou:**
+- WebSearch: "MilkyMoo São João Festa Junina 2026", "MilkyMoo cardápio 2026 novo sabor", "MilkyMoo O Boticário collab 2026", "The Best Açaí Londrina 2026 promoção produto"
+- WebFetch tentado em milkymoo.com.br (403 Forbidden — site bloqueado para crawlers)
+- Fontes funcionais: auroracultural.com, mercadoeconsumo.com.br, centraldovarejo.com.br, goinfoco.com.br, exame.com, gomesaltimari.com.br
+
+**Principais descobertas:**
+
+1. **MilkyMoo 180ml Day Part (30/04/2026):** novo tamanho entry price R$12,90 até 13h59 — estratégia de impulso pós-almoço. Insight: MilkyPot pode explorar "mini potinho" ou oferta de horário.
+2. **MilkyMoo Collab O Boticário "Carameluda" (Abril–Maio 2026):** milkshake caramelo salgado + doce de leite, R$25+, edição limitada até fim de maio. **Valida a onda do caramelo** — timing do Potinho Caramelado (julho/semana 11) é estrategicamente sólido.
+3. **MilkyMoo São João 2026:** NENHUMA campanha anunciada ainda. Padrão histórico sugere lançamento semana 9–10 de junho. **Janela aberta para MilkyPot ser PRIMEIRO.**
+4. **The Best Açaí nacional:** 900+ unidades, meta 1.000+, faturamento R$1,5B/2026. Novo sabor a cada ~2 meses.
+5. **The Best Londrina (Gleba Palhano):** confirmado Rua Caracas, 159 — praça diferente do Muffato Quintino (~8km). R$6,29/100g. São João 2026: sem campanha anunciada.
+
+**Arquivos alterados:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/milkymoo.md` | Atualização cabeçalho + seção ciclo #187: 180ml Day Part, Carameluda collab, análise onda caramelo, radar São João |
+| `belinha/competitors/the-best-acai.md` | Atualização cabeçalho + seção ciclo #187: escala nacional, Londrina Gleba Palhano preços, São João sem campanha |
+
+**Próximo passo sugerido:**
+- **Ciclo #188 — Conteúdo:** Brief encerramento Potinho Junino (30/06 — despedida definitiva + ponte para Potinho Caramelado semana 11)
+- **Ciclo #189 — Conteúdo:** Brief reveal Potinho Caramelado (01/07) — aproveitar onda do caramelo validada pelo MilkyMoo/Boticário
+- **Ciclo #190 — UX:** `cardapio.css` (21K orphaned) — avaliar deletar ou incorporar
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05** ⚠️ URGENTE
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05** ⚠️ URGENTE
+- **Operador:** Confirmar disponibilidade calda de caramelo + granola para Potinho Caramelado até **20/06**
+- **Operador:** Configurar keyword `JUNINO26` + `/despedidajunino` no WA Business até **22/06**
+- **Operador:** Google Search Console — indexação sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #187 | 2026-05-10_
+
+---
+
 ## Ciclo #182 — 2026-05-10
 
 **Área:** Conteúdo — Reel 15s urgência + Stories encerramento semana 9 (Sáb 20/06/2026)
