@@ -2,6 +2,51 @@
 
 ---
 
+## Ciclo #188 — 2026-05-10
+
+**Área:** Conversão — Brief encerramento Potinho Junino (30/06) + mecânica carimbo duplo + ponte narrativa Potinho Caramelado
+
+**Contexto:** Arco narrativo São João entra na fase final. O Potinho Junino foi planejado para 17/06–30/06. O ciclo #188 cobre o dia de encerramento — pico de FOMO e conversão de última hora — e prepara a transição para o reveal do Potinho Caramelado (01/07, ciclo #189).
+
+**O que pesquisou/analisou:**
+- Verificou que `belinha/content/` não tinha nenhum brief específico para 30/06 (encerramento)
+- `feed-26jun-adeus-junino-oi-julho.md` cobre 26/06 (sexta), mas 30/06 (terça) é o último dia real do produto — dia distinto com mecânica diferente
+- Confirmou dependência crítica: operador precisa confirmar lançamento Potinho Junino até 30/05
+- Analisou que 30/06 é terça (pós-fim de semana pós-São João) — público ligeiramente menor que fim de semana, então o WA broadcast e o carimbo duplo são essenciais para converter indecisos
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/encerramento-potinho-junino-30jun.md` | NOVO — brief completo de encerramento |
+
+**Detalhes do brief criado:**
+- **Checklist de produção** com 8 ações escalonadas 09h–23h (versão simplificada mínimo viável incluída)
+- **Post feed** com especificação de arte (ovelhinha com lacinho de despedida) + caption longa Instagram + versão curta TikTok
+- **6 Stories** escalonados 11h–23h: urgência progressiva + teaser de surpresa sem revelar o Caramelado
+- **2 WA broadcasts**: Lote A (17h, clientes ativos 30 dias) + Lote B (19h, reativação 31–90 dias) com templates prontos
+- **Mecânica "Carimbo de Despedida"** — carimbo duplo para quem comprar o Potinho Junino no último dia (converte indecisos + recompensa fiéis)
+- **Sinalização PDV** — plaquinha sugerida com texto + badge carimbo duplo
+- **Ponte narrativa** para 01/07 — como comunicar o mistério sem revelar o Caramelado (saves/expectativa)
+- **KPIs do dia** — 7 métricas com metas e como medir
+- **Nota de dependências** com checklist de pré-requisitos e versão mínima viável
+
+**Commit:** `44b2e7e`
+
+**Próximo passo sugerido:**
+- **Ciclo #189 — Conteúdo:** Brief reveal Potinho Caramelado (01/07) — deve referenciar o teaser do 30/06 e criar continuidade narrativa
+- **Ciclo #190 — UX:** `cardapio.css` (21K) orphaned — nunca carregado por nenhum HTML. Avaliar: deletar ou incorporar ao `style.css`
+- **Ciclo #191 — SEO:** Sitemap.xml + robots.txt — verificar se estão atualizados para as páginas novas
+- **Operador:** Confirmar ingredientes + naming "Potinho Junino" até **30/05** ⚠️ URGENTE (bloqueador de todo o arco São João)
+- **Operador:** Confirmar disponibilidade calda de caramelo + granola para Potinho Caramelado até **20/06**
+- **Operador:** Configurar keyword `JUNINO26` + `/adeusjunino` no WA Business até **22/06**
+- **Operador:** Google Search Console — solicitar indexação sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #188 | 2026-05-10_
+
+---
+
 ## Ciclo #187 — 2026-05-10
 
 **Área:** Pesquisa Concorrentes — MilkyMoo + The Best Açaí (refetch pré-São João)
