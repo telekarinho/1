@@ -2287,6 +2287,97 @@ exports.testClosingEmail = onRequest({
 });
 
 // ============================================================
+// LOGIN DO FUNCIONARIO (Portal /funcionario/) — sem auth previa
+// ============================================================
+// CPF + PIN do staff sao dados SENSIVEIS — Firestore Rules bloqueiam
+// leitura publica de staff_*. Esta Cloud Function recebe cpf+pin,
+// busca match em todas franquias com admin SDK (bypass rules), e
+// retorna apenas dados nao-sensiveis pra criar sessao local no app.
+// ============================================================
+exports.funcionarioLogin = onRequest({
+    region: "southamerica-east1",
+    cors: true,
+    timeoutSeconds: 15,
+    memory: "256MiB",
+}, async (req, res) => {
+    try {
+        // Aceita GET com query OR POST com body
+        const cpfRaw = (req.method === "POST" ? req.body?.cpf : req.query.cpf) || "";
+        const pinRaw = (req.method === "POST" ? req.body?.pin : req.query.pin) || "";
+        const cpf = String(cpfRaw).replace(/\D/g, "");
+        const pin = String(pinRaw).trim();
+
+        if (cpf.length !== 11) return res.status(400).json({ error: "CPF invalido" });
+        if (pin.length !== 4) return res.status(400).json({ error: "PIN deve ter 4 digitos" });
+
+        // Pega lista de franquias
+        const franchisesDoc = await db.collection("datastore").doc("franchises").get();
+        if (!franchisesDoc.exists) return res.status(500).json({ error: "Franquias nao encontradas" });
+        const franchises = JSON.parse(franchisesDoc.data().value);
+
+        // Busca staff em cada franquia
+        let foundStaff = null;
+        let foundFranchiseId = null;
+        let foundFranchise = null;
+
+        for (const f of franchises) {
+            try {
+                const staffDoc = await db.collection("datastore").doc("staff_" + f.id).get();
+                if (!staffDoc.exists) continue;
+                const value = staffDoc.data().value;
+                const staff = typeof value === "string" ? JSON.parse(value) : value;
+                if (!Array.isArray(staff)) continue;
+                const match = staff.find(s => {
+                    if (!s.active) return false;
+                    const c = String(s.cpf || "").replace(/\D/g, "");
+                    return c === cpf && String(s.pin || "") === pin;
+                });
+                if (match) {
+                    foundStaff = match;
+                    foundFranchiseId = f.id;
+                    foundFranchise = f;
+                    break;
+                }
+            } catch (e) {
+                console.warn("staff_" + f.id + " falhou:", e.message);
+            }
+        }
+
+        if (!foundStaff) return res.status(401).json({ error: "CPF ou PIN incorreto" });
+
+        // Retorna apenas dados necessarios pra UI — NAO retorna PIN clear
+        const safeStaff = {
+            id: foundStaff.id,
+            name: foundStaff.name,
+            role: foundStaff.role,
+            phone: foundStaff.phone || "",
+            cpf: foundStaff.cpf || "",
+            pis: foundStaff.pis || "",
+            startDate: foundStaff.startDate || "",
+            jornada: foundStaff.jornada || {},
+            carga_horaria_semanal: foundStaff.carga_horaria_semanal || 44,
+            adicional_noturno: !!foundStaff.adicional_noturno,
+            commissionRate: foundStaff.commissionRate || 0,
+            commissionFixed: foundStaff.commissionFixed || 0,
+            permissions: foundStaff.permissions || {},
+            // PIN incluido pra fluxos internos do app (ex: bater ponto). E o mesmo
+            // que o usuario acabou de fornecer, entao nao tem vazamento extra.
+            pin: foundStaff.pin
+        };
+
+        res.json({
+            success: true,
+            staff: safeStaff,
+            franchiseId: foundFranchiseId,
+            franchise: { id: foundFranchise.id, name: foundFranchise.name, slug: foundFranchise.slug || "" }
+        });
+    } catch (e) {
+        console.error("funcionarioLogin error:", e);
+        res.status(500).json({ error: "Erro interno: " + e.message });
+    }
+});
+
+// ============================================================
 // FASE 3 — DESPESAS RECORRENTES (cron mensal + callable)
 // ============================================================
 // Gera lancamentos automaticos de custos fixos (aluguel, salarios, energia)
