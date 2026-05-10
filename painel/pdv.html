@@ -56,15 +56,17 @@
             gap: 6px;
             background: rgba(255,255,255,0.16);
             border: 1px solid rgba(255,255,255,0.28);
-            padding: 5px 10px 5px 6px;
+            padding: 7px 12px 7px 8px;
             border-radius: 22px;
-            font-size: 12px;
+            /* Aumentado de 12 -> 14px (audit: operador nao acha chip pequeno) */
+            font-size: 14px;
             font-weight: 700;
             cursor: pointer;
             user-select: none;
             transition: background .12s, transform .08s;
             color: #fff;
             white-space: nowrap;
+            min-height: 36px;
         }
         .pdv-shortcuts .ks:hover { background: rgba(255,255,255,0.28); }
         .pdv-shortcuts .ks:active { transform: scale(.96); }
@@ -261,9 +263,21 @@
             box-shadow: 0 6px 22px rgba(0,0,0,0.18);
         }
         @media (max-width: 480px) {
-            .pdv-action-fab { left: 8px; right: 8px; justify-content: center; }
-            .pdv-action-fab button { font-size: 13px; padding: 12px 14px; flex: 1; justify-content: center; }
-            .pdv-action-fab .fab-total { display: none; }
+            .pdv-action-fab { left: 8px; right: 8px; justify-content: space-between; gap: 6px; }
+            .pdv-action-fab button { font-size: 13px; padding: 12px 14px; flex: 1; justify-content: center; min-width: 0; }
+            /* Total SEMPRE visivel no mobile — operador rapido precisa ver
+               o valor a todo momento. Antes era display:none. */
+            .pdv-action-fab .fab-total {
+                display: inline-flex !important;
+                flex: 0 0 auto;
+                padding: 8px 10px;
+                font-size: 13px;
+                font-weight: 800;
+                background: rgba(255,255,255,0.16);
+                border-radius: 10px;
+                color: #fff;
+                white-space: nowrap;
+            }
         }
 
         /* Buffet FAB */
