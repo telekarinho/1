@@ -6925,3 +6925,52 @@ _Belinha — Ciclo #180 | 2026-05-10_
 - **Operador:** CNPJ + DPO — LGPD — risco legal crescente
 
 _Belinha — Ciclo #183 | 2026-05-10_
+
+---
+
+## Ciclo #184 — 2026-05-10
+
+**Área:** Conversão — Milestone "3 Indicações = Potinho Grande Grátis"
+
+**Contexto:** Ciclos #41 e #52 criaram o Indica & Ganha (1 indicação = 1 carimbo) e o Embaixador do Mês (concurso mensal). Havia uma lacuna no funil de conversão: clientes com 1–2 indicações não tinham motivação concreta para tentar a 3ª. O log do ciclo #183 identificou como próximo passo criar o documento de treinamento da mecânica "Embaixador MilkyPot" com critério ≥3 indicações e recompensa Potinho Grande grátis.
+
+**O que pesquisou/analisou:**
+- Releitura de `whatsapp-indicacao.md` (ciclo #41): mecânica base, planilha de rastreamento, templates existentes A–D
+- Releitura de `embaixador-do-mes.md` (ciclo #52): concurso mensal — confirmar que são programas distintos que se complementam
+- Releitura do log ciclos #180–183: contexto da semana Potinho Junino e pendências operacionais
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/embaixador-3indicacoes-treinamento.md` | NOVO — documento completo de treinamento operador |
+
+**Detalhes do conteúdo criado:**
+- **Tabela comparativa** dos 3 programas de indicação (Indica & Ganha / Milestone 3 / Embaixador do Mês) — clareza para o operador entender onde cada programa se encaixa
+- **Passo a passo operacional** completo (perspectiva do operador e do cliente)
+- **Planilha de rastreamento** com colunas específicas para o milestone + dica de grupo WA interno
+- **Lógica de alertas de progresso**: quando mandar Template PROG-1 (1ª ind.), PROG-2 (2ª ind., urgência), e Template A (milestone atingido)
+- **5 templates WA** prontos: PROG-1 (addon à confirmação), PROG-2 (urgência falta 1), Template A (milestone), Template B (confirmação resgate), Template C (reativação 30+ dias)
+- **Script PDV** para o atendente usar no balcão quando amigo indicado aparece
+- **Roteiro de entrega** do Potinho Grande na loja (7 passos)
+- **Mapa de integração** dos 3 programas com fluxo visual
+- **Tabela ROI estimado**: custo ~R$12–18, receita gerada ~R$66–84, ROI ~5x por milestone
+- **Checklist semanal** de segunda-feira (5 itens)
+- **FAQ operador** com 4 casos de borda (parente/online/promo inauguração/planilha perdida)
+
+**Commit:** `b0476b7`
+
+**Próximo passo sugerido:**
+- **Ciclo #185 — Conteúdo:** Post feed + Stories Sex 26/06 "Adeus junino, oi julho" — teaser semana 11 (prescrito em `semana10.md`, sem brief dedicado)
+- **Ciclo #186 — UX:** `checkout.html` — auditoria mobile CLS/bundle (postergado desde ciclo #162 do roadmap, risco crescente)
+- **Ciclo #187 — Concorrentes:** Refetch pré-São João de MilkyMoo + TheBest (últimas atualizações ciclo #176, 1 semana atrás)
+- **Ciclo #188 — Conversão:** Script de apresentação do milestone 3 indicações para novos clientes na inauguração tardia (Template PROG-1 como sequência de boas-vindas)
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05** ⚠️ URGENTE (20 dias)
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05** ⚠️ URGENTE
+- **Operador:** Confirmar valor de venda do Potinho Grande (necessário para calibrar FAQ e scripts)
+- **Operador:** Confirmar disponibilidade cocada e mel (Versões B e C) até **13/06**
+- **Operador:** Configurar keyword `JUNINO26` no WA Business até **22/06**
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente desde ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #184 | 2026-05-10_
