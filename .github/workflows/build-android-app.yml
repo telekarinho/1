@@ -41,6 +41,18 @@ jobs:
         with:
           accept-android-sdk-licenses: true
 
+      - name: Pre-configure Bubblewrap (skip interactive prompts)
+        run: |
+          mkdir -p $HOME/.bubblewrap
+          cat > $HOME/.bubblewrap/config.json <<EOF
+          {
+            "jdkPath": "$JAVA_HOME",
+            "androidSdkPath": "$ANDROID_SDK_ROOT"
+          }
+          EOF
+          echo "=== Bubblewrap config ==="
+          cat $HOME/.bubblewrap/config.json
+
       - name: Generate or restore keystore
         run: |
           if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
@@ -126,27 +138,33 @@ jobs:
           EOF
           cat android-build/twa-manifest.json
 
-      - name: Update TWA project (no init, generate Android files from manifest)
+      - name: Initialize TWA project (non-interactive via Bubblewrap config)
         working-directory: android-build
-        env:
-          KS_PASS: ${{ secrets.KEYSTORE_PASSWORD || 'milkypot2026' }}
-          KEY_PASS: ${{ secrets.KEY_PASSWORD || 'milkypot2026' }}
         run: |
-          # bubblewrap update gera/atualiza projeto Android de forma nao-interativa
-          # com base no twa-manifest.json existente
-          export GH_TOKEN="${{ secrets.GITHUB_TOKEN }}"
-          # Pre-cria estrutura minima Android pra update funcionar
-          bubblewrap update --skipPwaValidation || bubblewrap init --manifest=https://milkypot.com/colaborador/manifest.json --directory=. --skipPwaValidation < /dev/null || true
+          # Com $HOME/.bubblewrap/config.json pre-criado, init nao pergunta nada
+          # Run como subshell pra heredoc nao colidir com bubblewrap
+          bubblewrap init --manifest=https://milkypot.com/colaborador/manifest.json --directory=. --skipPwaValidation < /dev/null
+          echo "=== Files apos init ==="
           ls -la
 
-      - name: Build APK + AAB
+      - name: Build APK + AAB com Gradle (non-interactive)
         working-directory: android-build
         env:
           KS_PASS: ${{ secrets.KEYSTORE_PASSWORD || 'milkypot2026' }}
           KEY_PASS: ${{ secrets.KEY_PASSWORD || 'milkypot2026' }}
         run: |
-          # Build forçando passwords via env vars que o bubblewrap aceita
-          echo "$KS_PASS" | bubblewrap build --skipPwaValidation || true
+          # Bubblewrap build e interativo. Roda gradle direto.
+          # Cria gradle.properties com senhas pra signing nao perguntar
+          if [ -f gradle.properties ]; then
+            echo "" >> gradle.properties
+          fi
+          echo "android.useAndroidX=true" >> gradle.properties
+          echo "android.injected.signing.store.file=$(pwd)/android.keystore" >> gradle.properties
+          echo "android.injected.signing.store.password=$KS_PASS" >> gradle.properties
+          echo "android.injected.signing.key.alias=android" >> gradle.properties
+          echo "android.injected.signing.key.password=$KEY_PASS" >> gradle.properties
+          chmod +x ./gradlew
+          ./gradlew assembleRelease bundleRelease --no-daemon || true
           echo "=== Listing artifacts ==="
           find . -name "*.apk" -o -name "*.aab" 2>/dev/null
 
