@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>MilkyPot — Portal do Colaborador</title>
+<meta name="theme-color" content="#16A34A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MilkyPot Colab">
+<link rel="apple-touch-icon" href="../images/logo-milkypot.png">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+    margin: 0;
+    font-family: 'Nunito', system-ui, sans-serif;
+    background: #F0FDF4;
+    color: #14532D;
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+h1, h2, h3 { font-family: 'Baloo 2', cursive; margin: 0; }
+.fn-app {
+    max-width: 480px;
+    margin: 0 auto;
+    background: #fff;
+    min-height: 100vh;
+    box-shadow: 0 0 24px rgba(0,0,0,.08);
+    display: flex;
+    flex-direction: column;
+}
+.fn-header {
+    background: linear-gradient(135deg,#16A34A,#22C55E);
+    color: #fff;
+    padding: 18px 20px calc(18px + env(safe-area-inset-top));
+    padding-top: calc(18px + env(safe-area-inset-top));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+.fn-header h1 { font-size: 1.1rem; }
+.fn-header small { display:block; opacity: .85; font-size: .75rem; margin-top: 2px; }
+.fn-logout-btn { background: rgba(255,255,255,.2); border: none; color: #fff; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: .85rem; cursor: pointer; }
+.fn-content { padding: 16px; flex: 1; }
+
+/* LOGIN */
+.fn-login {
+    padding: 30px 24px;
+    text-align: center;
+}
+.fn-login h2 { font-size: 1.3rem; margin-bottom: 6px; color: #14532D; }
+.fn-login p { color: #6B7280; margin: 0 0 22px; font-size: .9rem; }
+.fn-login-form { text-align: left; }
+.fn-input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 2px solid #D1FAE5;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    background: #fff;
+}
+.fn-input:focus { outline: none; border-color: #16A34A; }
+.fn-pin-input { font-size: 1.6rem; text-align: center; letter-spacing: 12px; font-family: 'Baloo 2', sans-serif; }
+.fn-btn {
+    width: 100%;
+    padding: 13px 18px;
+    background: #16A34A;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: inherit;
+}
+.fn-btn:hover { background: #15803D; }
+.fn-btn:disabled { opacity: .6; cursor: wait; }
+.fn-btn-secondary { background: #fff; color: #16A34A; border: 2px solid #16A34A; }
+.fn-error {
+    background: #FEE2E2;
+    color: #991B1B;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: .85rem;
+    border-left: 4px solid #DC2626;
+}
+.fn-success {
+    background: #DCFCE7;
+    color: #166534;
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 4px solid #16A34A;
+}
+
+/* CARDS */
+.fn-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid #E5E7EB;
+    margin-bottom: 12px;
+}
+.fn-card h3 { font-size: .95rem; margin-bottom: 10px; color: #374151; }
+.fn-status-card {
+    background: linear-gradient(135deg,#16A34A,#10B981);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 14px;
+    text-align: center;
+}
+.fn-status-card .fn-greet { font-size: .85rem; opacity: .9; }
+.fn-status-card .fn-name { font-size: 1.3rem; font-family: 'Baloo 2', cursive; font-weight: 800; margin: 4px 0; }
+.fn-status-card .fn-role { font-size: .82rem; opacity: .85; }
+
+.fn-bater-btn {
+    width: 100%;
+    background: #fff;
+    color: #16A34A;
+    border: none;
+    padding: 22px;
+    border-radius: 14px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Baloo 2', cursive;
+    margin-top: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.fn-bater-btn:active { transform: scale(.98); }
+.fn-bater-btn small { font-size: .7rem; opacity: .8; font-family: 'Nunito', sans-serif; font-weight: 700; }
+
+.fn-marcacoes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+.fn-marcacao {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-align: center;
+}
+.fn-marcacao.done { background: #DCFCE7; border-color: #86EFAC; }
+.fn-marcacao .lbl { font-size: .68rem; color: #6B7280; font-weight: 700; text-transform: uppercase; }
+.fn-marcacao .val { font-size: 1.1rem; font-weight: 800; color: #111827; font-family: 'Baloo 2', cursive; margin-top: 2px; }
+.fn-marcacao.done .val { color: #16A34A; }
+
+.fn-tab-bar {
+    background: #fff;
+    display: flex;
+    border-top: 1px solid #E5E7EB;
+    position: sticky;
+    bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+.fn-tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 12px 4px;
+    font-size: .75rem;
+    color: #6B7280;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 700;
+}
+.fn-tab-btn .icon { display: block; font-size: 1.4rem; margin-bottom: 2px; }
+.fn-tab-btn.active { color: #16A34A; }
+
+.fn-section { display: none; }
+.fn-section.active { display: block; }
+
+.fn-totais {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.fn-totais .fn-mini-card {
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+}
+.fn-totais .fn-mini-card small { display:block; font-size: .65rem; color: #6B7280; font-weight: 700; text-transform: uppercase; }
+.fn-totais .fn-mini-card strong { display: block; font-size: 1rem; font-family: 'Baloo 2', cursive; color: #111827; margin-top: 2px; }
+
+table.fn-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+table.fn-table th, table.fn-table td { padding: 7px 6px; border-bottom: 1px solid #F3F4F6; text-align: left; }
+table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; color: #6B7280; }
+
+.fn-geo-banner {
+    background: #FEF3C7;
+    color: #92400E;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: .75rem;
+    margin: 8px 0;
+    border-left: 3px solid #F59E0B;
+}
+</style>
+</head>
+<body>
+
+<div class="fn-app">
+    <!-- LOGIN VIEW -->
+    <div id="loginView" class="fn-login">
+        <div style="font-size:3rem;margin-bottom:8px">⏰</div>
+        <h2>Portal do Colaborador</h2>
+        <p>Bata seu ponto, veja sua escala e horas trabalhadas</p>
+        <div class="fn-login-form">
+            <div id="loginErr" class="fn-error" style="display:none"></div>
+            <input type="text" id="loginCpf" class="fn-input" placeholder="Seu CPF (so numeros)" inputmode="numeric" maxlength="14" autocomplete="off">
+            <input type="password" id="loginPin" class="fn-input fn-pin-input" placeholder="••••" inputmode="numeric" maxlength="4" autocomplete="off">
+            <button class="fn-btn" onclick="fnLogin()">Entrar</button>
+            <p style="font-size:.78rem;color:#6B7280;margin-top:14px;text-align:center">
+                Nao tem cadastro? Pergunte ao seu gerente. Ele cadastra em <em>Equipe</em> com seu CPF, PIS e PIN.
+            </p>
+        </div>
+    </div>
+
+    <!-- APP VIEW (apos login) -->
+    <div id="appView" style="display:none;flex:1;flex-direction:column">
+        <header class="fn-header">
+            <div>
+                <h1 id="hdrName">--</h1>
+                <small id="hdrRole">--</small>
+            </div>
+            <button class="fn-logout-btn" onclick="fnLogout()">Sair</button>
+        </header>
+
+        <div class="fn-content" id="fnContent">
+            <!-- HOJE -->
+            <div class="fn-section active" id="sec-hoje">
+                <div class="fn-status-card">
+                    <div class="fn-greet" id="greetMsg">Ola</div>
+                    <div class="fn-name" id="cardName">--</div>
+                    <div class="fn-role" id="cardRole">--</div>
+                    <!-- Mensagem motivacional (so se ativada) -->
+                    <div id="gamMotivational" style="display:none;background:rgba(255,255,255,.18);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:.92rem;font-weight:600"></div>
+                    <!-- Story diario (so se ativada) -->
+                    <div id="gamDailyStory" style="display:none;background:rgba(0,0,0,.2);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:.82rem"></div>
+                </div>
+
+                <!-- Streak (so se ativada) -->
+                <div class="fn-card" id="gamStreakCard" style="display:none;background:linear-gradient(135deg,#F59E0B,#FB923C);color:#fff;border:none">
+                    <h3 style="color:#fff;display:flex;align-items:center;gap:8px">🔥 Sua sequência</h3>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+                        <div>
+                            <div style="font-size:2.2rem;font-family:'Baloo 2',cursive;font-weight:800" id="streakCurrent">0</div>
+                            <small style="opacity:.9">dias seguidos</small>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-size:1rem;font-weight:700" id="streakLongest">Recorde: 0</div>
+                            <small style="opacity:.85" id="streakProgress">Continue assim!</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Belinha (so se ativada) -->
+                <div class="fn-card" id="gamBelinhaCard" style="display:none;background:#FCE7F3;border:1px solid #F9A8D4">
+                    <div style="display:flex;gap:12px;align-items:start">
+                        <span style="font-size:2rem;flex-shrink:0">🐑</span>
+                        <div>
+                            <strong style="color:#831843;display:block;font-family:'Baloo 2',cursive;font-size:.95rem;margin-bottom:4px">Belinha diz:</strong>
+                            <div style="color:#374151;font-size:.85rem;line-height:1.5" id="belinhaText"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Badges (so se ativada) -->
+                <div class="fn-card" id="gamBadgesCard" style="display:none">
+                    <h3>🏆 Suas conquistas</h3>
+                    <div id="badgesList" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
+                </div>
+
+                <!-- Calendario visual (so se ativada) -->
+                <div class="fn-card" id="gamCalendarCard" style="display:none">
+                    <h3>📅 Seu mês visualmente</h3>
+                    <div id="visualCalendar" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px"></div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:.7rem;color:#6B7280;margin-top:10px">
+                        <span><span style="display:inline-block;width:12px;height:12px;background:#16A34A;border-radius:3px;vertical-align:middle"></span> Perfeito</span>
+                        <span><span style="display:inline-block;width:12px;height:12px;background:#86EFAC;border-radius:3px;vertical-align:middle"></span> OK</span>
+                        <span><span style="display:inline-block;width:12px;height:12px;background:#FCD34D;border-radius:3px;vertical-align:middle"></span> Justificada</span>
+                        <span><span style="display:inline-block;width:12px;height:12px;background:#FCA5A5;border-radius:3px;vertical-align:middle"></span> Falta</span>
+                        <span><span style="display:inline-block;width:12px;height:12px;background:#E5E7EB;border-radius:3px;vertical-align:middle"></span> Folga</span>
+                    </div>
+                </div>
+
+                <!-- Onboarding missions (so se ativada e se nao completou) -->
+                <div class="fn-card" id="gamOnboardingCard" style="display:none;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none">
+                    <h3 style="color:#fff">🎓 Missões de boas-vindas</h3>
+                    <small style="opacity:.9;display:block;margin-bottom:10px">Complete e ganhe pontos extras</small>
+                    <div id="onboardingList"></div>
+                    <div id="onboardingProgress" style="background:rgba(255,255,255,.2);border-radius:10px;padding:6px 10px;margin-top:10px;font-size:.85rem"></div>
+                </div>
+
+                <!-- Mural de reconhecimento (so se ativada) -->
+                <div class="fn-card" id="gamWallCard" style="display:none">
+                    <h3>📌 Mural da loja</h3>
+                    <div id="wallList" style="margin-top:10px"></div>
+                </div>
+
+                <!-- Catalogo de recompensas (so se ativada) -->
+                <div class="fn-card" id="gamRewardsCard" style="display:none">
+                    <h3>🎁 Resgatar com pontos</h3>
+                    <small style="display:block;color:#6B7280;margin-bottom:8px">Você tem <strong id="myPoints">0</strong> pontos disponíveis</small>
+                    <div id="rewardsList"></div>
+                </div>
+
+                <!-- Compartilhar conquista (so se ativada) -->
+                <div class="fn-card" id="gamShareCard" style="display:none;background:linear-gradient(135deg,#EC4899,#8B5CF6);color:#fff;border:none">
+                    <h3 style="color:#fff">📱 Compartilhe sua conquista</h3>
+                    <small style="opacity:.95;display:block;margin-bottom:10px">Mande pro WhatsApp/Instagram</small>
+                    <button class="fn-btn" onclick="fnGerarCardCompartilhar()" style="background:#fff;color:#EC4899">✨ Gerar Card</button>
+                </div>
+
+                <!-- Indique amigo (so se ativada) -->
+                <div class="fn-card" id="gamReferralCard" style="display:none;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff;border:none">
+                    <h3 style="color:#fff">🤝 Indique um amigo</h3>
+                    <small style="opacity:.95;display:block;margin-bottom:10px">Indique alguém que se daria bem aqui. Se contratado e ficar 3 meses, você ganha bônus.</small>
+                    <button class="fn-btn" onclick="fnIndicarAmigo()" style="background:#fff;color:#F59E0B">📲 Compartilhar link</button>
+                </div>
+
+                <div class="fn-card">
+                    <h3>📍 Suas marcacoes de hoje</h3>
+                    <div class="fn-marcacoes" id="todayMarks"></div>
+                    <div id="geoBanner" class="fn-geo-banner" style="display:none"></div>
+                    <button class="fn-bater-btn" id="baterPontoBtn" onclick="fnBaterPonto()" style="background:linear-gradient(135deg,#16A34A,#10B981);color:#fff">
+                        ⏰ Bater Ponto
+                        <small id="baterPontoSub">Proximo: Entrada</small>
+                    </button>
+                </div>
+
+                <div class="fn-card">
+                    <h3>📅 Sua escala</h3>
+                    <div id="escalaInfo" style="font-size:.85rem;color:#374151;line-height:1.6"></div>
+                </div>
+
+                <!-- Card de pontuação (so aparece se admin ativou) -->
+                <div class="fn-card" id="scoreCard" style="display:none;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none">
+                    <h3 style="color:#fff">🏆 Sua pontuação do mês</h3>
+                    <div style="font-size:2.5rem;font-family:'Baloo 2',cursive;font-weight:800;text-align:center;margin:8px 0" id="scoreValue">--</div>
+                    <div id="scoreStatus" style="text-align:center;font-size:.85rem;opacity:.95;margin-bottom:10px"></div>
+                    <details style="background:rgba(255,255,255,.1);border-radius:8px;padding:8px">
+                        <summary style="cursor:pointer;font-size:.78rem;font-weight:700">Como meu score é calculado</summary>
+                        <div id="scoreBreakdown" style="margin-top:8px;font-size:.75rem;line-height:1.6"></div>
+                    </details>
+                </div>
+
+                <!-- Card de comissão (so aparece se tem comissão configurada) -->
+                <div class="fn-card" id="commissionCard" style="display:none;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border:none">
+                    <h3 style="color:#fff">💰 Sua comissão do mês</h3>
+                    <div style="font-size:1.8rem;font-family:'Baloo 2',cursive;font-weight:800;text-align:center;margin:6px 0" id="commissionValue">R$ 0,00</div>
+                    <div id="commissionDetails" style="font-size:.78rem;opacity:.95;text-align:center"></div>
+                </div>
+            </div>
+
+            <!-- ESPELHO MES -->
+            <div class="fn-section" id="sec-mes">
+                <div class="fn-totais" id="totaisMes"></div>
+                <div class="fn-card">
+                    <h3 id="mesTitle">Espelho do mes</h3>
+                    <div style="overflow-x:auto">
+                        <table class="fn-table" id="espelhoTable"></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HOLERITE -->
+            <div class="fn-section" id="sec-holerite">
+                <div class="fn-card">
+                    <h3>💵 Holerite simplificado</h3>
+                    <p style="font-size:.78rem;color:#6B7280;margin:0 0 10px">Documento informativo. Holerite oficial vem da contabilidade.</p>
+                    <div style="display:flex;gap:8px;margin-bottom:12px">
+                        <select id="holMes" style="flex:1;padding:9px;border:1px solid #D1D5DB;border-radius:8px;font-family:inherit"></select>
+                        <select id="holAno" style="flex:1;padding:9px;border:1px solid #D1D5DB;border-radius:8px;font-family:inherit"></select>
+                        <button class="fn-btn" onclick="fnCarregarHolerite()" style="flex:0 0 auto;padding:9px 16px">Ver</button>
+                    </div>
+                    <div id="holConteudo"></div>
+                </div>
+            </div>
+
+            <!-- BANCO DE HORAS -->
+            <div class="fn-section" id="sec-banco">
+                <div class="fn-card">
+                    <h3>🏦 Banco de horas</h3>
+                    <p style="font-size:.78rem;color:#6B7280;margin:0 0 10px">Solicite compensação ou folga acumulada de horas extras.</p>
+                    <button class="fn-btn" onclick="fnAbrirSolicitarBanco()">+ Nova Solicitação</button>
+                    <div id="bancoLista" style="margin-top:14px"></div>
+                </div>
+            </div>
+
+            <!-- BENEFICIOS -->
+            <div class="fn-section" id="sec-beneficios">
+                <div class="fn-card">
+                    <h3>🎁 Seus benefícios</h3>
+                    <p style="font-size:.78rem;color:#6B7280;margin:0 0 10px">Sorvete do dia, lanches e outros benefícios entregues pela loja. Não-transferíveis.</p>
+                    <div class="fn-totais" id="benTotais"></div>
+                    <div id="benLista"></div>
+                </div>
+            </div>
+
+            <!-- INFO -->
+            <div class="fn-section" id="sec-info">
+                <div class="fn-card" id="installCard" style="display:none;background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff;border:none">
+                    <h3 style="color:#fff">📱 Instalar como app</h3>
+                    <p style="font-size:.85rem;margin:6px 0 12px;opacity:.95">Instale no celular pra receber lembretes de bater ponto e abrir mais rápido.</p>
+                    <button class="fn-btn" id="installBtn" style="background:#fff;color:#16A34A">Instalar agora</button>
+                </div>
+                <div class="fn-card">
+                    <h3>👤 Seus dados</h3>
+                    <div id="dadosFunc" style="font-size:.85rem;line-height:1.7"></div>
+                </div>
+                <div class="fn-card">
+                    <h3>🔔 Lembretes de ponto</h3>
+                    <p style="font-size:.82rem;color:#374151;margin:0 0 10px">Receba aviso pra não esquecer de bater entrada, almoço e saída.</p>
+                    <button class="fn-btn fn-btn-secondary" id="enableNotifBtn" onclick="fnRequestNotifications()">Ativar lembretes</button>
+                    <div id="notifStatus" style="margin-top:10px;font-size:.78rem;color:#6B7280"></div>
+                </div>
+                <div class="fn-card">
+                    <h3>📜 Direitos & Termos (CLT/LGPD)</h3>
+                    <ul style="font-size:.82rem;color:#374151;padding-left:18px;line-height:1.7;margin:0 0 12px">
+                        <li>Maximo 8h/dia, 44h/semana (CLT art. 7 XIII)</li>
+                        <li>Intervalo intrajornada minimo 1h (jornada >6h, art. 71)</li>
+                        <li>Hora extra com adicional minimo 50% (art. 7 XVI)</li>
+                        <li>Adicional noturno 22h-5h: +20% (art. 73)</li>
+                        <li>Descanso semanal remunerado: 24h (art. 67)</li>
+                        <li>Espelho mensal de ponto: receber e conferir (art. 74)</li>
+                        <li>Férias com 1/3 constitucional (art. 7 XVII)</li>
+                        <li>13º salário (Lei 4.090/62)</li>
+                        <li>FGTS 8% (Lei 8.036/90)</li>
+                        <li>Privacidade dos seus dados — LGPD art. 18</li>
+                    </ul>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+                        <button class="fn-btn fn-btn-secondary" onclick="fnVerTermo('employee_app')" style="padding:9px;font-size:.78rem">📄 Termo de uso</button>
+                        <button class="fn-btn fn-btn-secondary" onclick="fnVerTermo('privacy')" style="padding:9px;font-size:.78rem">🔒 LGPD</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="fn-tab-bar" style="overflow-x:auto;flex-wrap:nowrap">
+            <button class="fn-tab-btn active" data-tab="hoje" onclick="fnSwitchTab('hoje')"><span class="icon">⏰</span>Hoje</button>
+            <button class="fn-tab-btn" data-tab="mes" onclick="fnSwitchTab('mes')"><span class="icon">🗓️</span>Mês</button>
+            <button class="fn-tab-btn" data-tab="holerite" onclick="fnSwitchTab('holerite')"><span class="icon">💵</span>Holerite</button>
+            <button class="fn-tab-btn" data-tab="banco" onclick="fnSwitchTab('banco')"><span class="icon">🏦</span>Banco</button>
+            <button class="fn-tab-btn" data-tab="beneficios" onclick="fnSwitchTab('beneficios')"><span class="icon">🎁</span>Benef.</button>
+            <button class="fn-tab-btn" data-tab="info" onclick="fnSwitchTab('info')"><span class="icon">👤</span>Dados</button>
+        </nav>
+    </div>
+</div>
+
+<!-- Welcome Modal: aparece no primeiro login -->
+<div id="welcomeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#fff;border-radius:18px;width:100%;max-width:420px;padding:0;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">
+        <div style="padding:24px;text-align:center;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff">
+            <div style="font-size:3.5rem;margin-bottom:8px">🎉</div>
+            <h2 style="margin:0;font-family:'Baloo 2',cursive;font-size:1.4rem">Bem-vindo, <span id="welcomeName"></span>!</h2>
+            <p style="margin:6px 0 0;font-size:.88rem;opacity:.95">Vamos configurar 2 coisinhas pra facilitar sua vida.</p>
+        </div>
+        <div style="padding:22px">
+            <div id="welcomeStep1" style="margin-bottom:16px">
+                <div style="display:flex;align-items:start;gap:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:14px;margin-bottom:10px">
+                    <span style="font-size:1.6rem">📍</span>
+                    <div>
+                        <strong style="display:block;color:#14532D;margin-bottom:4px">Localização</strong>
+                        <p style="margin:0 0 8px;font-size:.82rem;color:#374151">Pra registrar onde você bateu ponto. Ajuda a comprovar que você estava na loja.</p>
+                        <button class="fn-btn" onclick="fnRequestGeo()" style="padding:8px 14px;font-size:.85rem">Permitir localização</button>
+                        <div id="geoStatus" style="font-size:.75rem;margin-top:6px"></div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:start;gap:12px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:10px;padding:14px">
+                    <span style="font-size:1.6rem">🔔</span>
+                    <div>
+                        <strong style="display:block;color:#92400E;margin-bottom:4px">Lembretes</strong>
+                        <p style="margin:0 0 8px;font-size:.82rem;color:#374151">Receba aviso na hora certa pra não esquecer de bater entrada, almoço e saída.</p>
+                        <button class="fn-btn" onclick="fnRequestNotifications()" style="padding:8px 14px;font-size:.85rem;background:#F59E0B">Ativar lembretes</button>
+                        <div id="notifStatusInline" style="font-size:.75rem;margin-top:6px"></div>
+                    </div>
+                </div>
+            </div>
+            <button class="fn-btn" onclick="fnFinishWelcome()" style="margin-top:8px">Pronto, vamos começar</button>
+            <p style="text-align:center;margin:12px 0 0;font-size:.72rem;color:#9CA3AF">Você pode mudar isso depois em Dados.</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/time-clock.js"></script>
+<script src="../js/core/staff-benefits.js"></script>
+<script src="../js/core/geofence.js"></script>
+<script src="../js/core/payroll.js"></script>
+<script src="../js/core/legal-terms.js"></script>
+<script src="../js/core/staff-conduct.js"></script>
+<script src="../js/core/gamification.js"></script>
+<script src="../js/core/overtime-bank.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+<script src="../js/core/push-funcionario.js"></script>
+
+<script>
+'use strict';
+
+var FN_KEY = 'mp_func_session';
+var FN_WELCOME_KEY = 'mp_func_welcomed_';
+
+// ====== PWA: Service Worker + Install Prompt ======
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/colaborador/sw.js', { scope: '/colaborador/' })
+            .catch(function(e) { console.warn('SW registration failed:', e); });
+    });
+}
+
+var deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    var card = document.getElementById('installCard');
+    if (card) card.style.display = 'block';
+});
+document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('installBtn');
+    if (btn) btn.addEventListener('click', async function() {
+        if (!deferredInstallPrompt) {
+            alert('App ja instalado ou navegador nao suporta. No Chrome Android: menu (3 pontos) → "Adicionar a tela inicial".');
+            return;
+        }
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        var card = document.getElementById('installCard');
+        if (card) card.style.display = 'none';
+    });
+});
+
+// ====== Geolocation & Notifications ======
+async function fnRequestGeo() {
+    var statusEls = [document.getElementById('geoStatus')].filter(Boolean);
+    if (!navigator.geolocation) {
+        statusEls.forEach(function(el) { el.textContent = 'Navegador sem suporte'; el.style.color = '#DC2626'; });
+        return;
+    }
+    statusEls.forEach(function(el) { el.textContent = '⏳ Solicitando...'; });
+    navigator.geolocation.getCurrentPosition(
+        function(pos) {
+            statusEls.forEach(function(el) { el.textContent = '✓ Permitido (' + Math.round(pos.coords.accuracy) + 'm precisao)'; el.style.color = '#16A34A'; });
+        },
+        function(e) {
+            var msg = '✗ Negado';
+            if (e.code === 1) msg = '✗ Voce negou. Va em configuracoes do navegador → permissoes → liberar localizacao.';
+            statusEls.forEach(function(el) { el.textContent = msg; el.style.color = '#DC2626'; });
+        }
+    );
+}
+
+async function fnRequestNotifications() {
+    var statusEls = [document.getElementById('notifStatus'), document.getElementById('notifStatusInline')].filter(Boolean);
+    if (!('Notification' in window)) {
+        statusEls.forEach(function(el) { el.textContent = '✗ Navegador sem suporte a notificacoes'; });
+        return;
+    }
+    var session = fnGetSession();
+    if (!session) return;
+
+    // FCM real (via Firebase) — push do servidor mesmo com app fechado
+    if (typeof PushFuncionario !== 'undefined') {
+        var fcmResult = await PushFuncionario.subscribe(session.franchiseId, session.staffId);
+        if (fcmResult.success) {
+            statusEls.forEach(function(el) {
+                el.textContent = fcmResult.mode === 'fcm'
+                    ? '✓ Push ativo (FCM) — receberá lembretes mesmo com app fechado'
+                    : '✓ Lembretes locais ativos';
+                el.style.color = '#16A34A';
+            });
+            try { new Notification('MilkyPot', { body: 'Lembretes ativados!', icon: '/images/logo-milkypot.png' }); } catch (e) {}
+            fnScheduleReminders();
+            return;
+        } else {
+            statusEls.forEach(function(el) { el.textContent = '✗ ' + fcmResult.error; el.style.color = '#DC2626'; });
+            return;
+        }
+    }
+
+    // Fallback se Push module nao carregar
+    var perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+        statusEls.forEach(function(el) { el.textContent = '✓ Lembretes locais ativos'; el.style.color = '#16A34A'; });
+        fnScheduleReminders();
+    } else {
+        statusEls.forEach(function(el) { el.textContent = '✗ Voce negou.'; el.style.color = '#DC2626'; });
+    }
+}
+
+// ====== HOLERITE ======
+function fnInitHoleriteControls() {
+    var meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    var mesSel = document.getElementById('holMes');
+    var anoSel = document.getElementById('holAno');
+    if (mesSel && !mesSel.options.length) {
+        mesSel.innerHTML = meses.map(function(m, i) { return '<option value="' + (i+1) + '">' + m + '</option>'; }).join('');
+        mesSel.value = new Date().getMonth() + 1;
+    }
+    if (anoSel && !anoSel.options.length) {
+        var y = new Date().getFullYear();
+        var arr = []; for (var i = y - 2; i <= y; i++) arr.push(i);
+        anoSel.innerHTML = arr.map(function(a) { return '<option value="' + a + '">' + a + '</option>'; }).join('');
+        anoSel.value = y;
+    }
+}
+function fnCarregarHolerite() {
+    var session = fnGetSession();
+    if (!session || typeof Payroll === 'undefined') return;
+    var mes = parseInt(document.getElementById('holMes').value, 10);
+    var ano = parseInt(document.getElementById('holAno').value, 10);
+    var p = Payroll.computePayslip(session.franchiseId, session.staffId, ano, mes);
+    document.getElementById('holConteudo').innerHTML = Payroll.generatePayslipHTML(p);
+}
+
+// ====== BANCO DE HORAS ======
+function fnRenderBanco() {
+    var session = fnGetSession();
+    if (!session || typeof Payroll === 'undefined') return;
+    var lista = Payroll.listBankHoursRequests(session.franchiseId, { staffId: session.staffId });
+    if (!lista.length) {
+        document.getElementById('bancoLista').innerHTML = '<p style="text-align:center;color:#9CA3AF;padding:14px;font-size:.85rem">Nenhuma solicitação ainda.</p>';
+        return;
+    }
+    var html = lista.map(function(r) {
+        var statusClr = r.status === 'approved' ? '#16A34A' : (r.status === 'rejected' ? '#DC2626' : '#F59E0B');
+        var statusBg = r.status === 'approved' ? '#DCFCE7' : (r.status === 'rejected' ? '#FEE2E2' : '#FEF3C7');
+        var statusLbl = { pending: '⏳ Aguardando', approved: '✓ Aprovada', rejected: '✗ Rejeitada' }[r.status];
+        return '<div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:12px;margin-bottom:8px">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+            + '<strong style="font-size:.92rem">' + (r.type === 'compensar' ? '🔄 Compensar saldo' : '➕ Acumular') + '</strong>'
+            + '<span style="background:' + statusBg + ';color:' + statusClr + ';padding:2px 10px;border-radius:6px;font-size:.72rem;font-weight:700">' + statusLbl + '</span></div>'
+            + '<div style="font-size:.82rem;color:#374151"><strong>' + Math.floor(r.hoursMin/60) + 'h' + (r.hoursMin%60 ? (r.hoursMin%60 + 'min') : '') + '</strong>'
+            + (r.useDate ? ' • Para usar em ' + r.useDate.split('-').reverse().join('/') : '')
+            + '<br><small style="color:#6B7280">' + Utils.escapeHtml(r.reason || '') + '</small>'
+            + (r.approverObservation ? '<br><small style="color:#16A34A">Resposta: ' + Utils.escapeHtml(r.approverObservation) + '</small>' : '')
+            + (r.rejectReason ? '<br><small style="color:#DC2626">Motivo rejeição: ' + Utils.escapeHtml(r.rejectReason) + '</small>' : '')
+            + '</div></div>';
+    }).join('');
+    document.getElementById('bancoLista').innerHTML = html;
+}
+function fnAbrirSolicitarBanco() {
+    var html = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10005;display:flex;align-items:center;justify-content:center;padding:20px" id="bhModal">'
+        + '<div style="background:#fff;border-radius:14px;width:100%;max-width:380px;padding:0;overflow:hidden">'
+        + '<div style="padding:18px 22px;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff"><h3 style="margin:0">🏦 Solicitar banco de horas</h3></div>'
+        + '<div style="padding:20px 22px">'
+        + '<label style="display:block;font-size:.82rem;color:#374151;font-weight:700;margin-bottom:6px">Tipo</label>'
+        + '<select id="bhTipo" class="fn-input" style="margin-bottom:10px"><option value="compensar">Compensar (folga remunerada)</option><option value="acumular">Acumular saldo</option></select>'
+        + '<label style="display:block;font-size:.82rem;color:#374151;font-weight:700;margin-bottom:6px">Quantas horas?</label>'
+        + '<input id="bhHoras" type="number" class="fn-input" style="margin-bottom:10px" min="1" max="40" placeholder="Ex: 4">'
+        + '<label style="display:block;font-size:.82rem;color:#374151;font-weight:700;margin-bottom:6px">Data desejada (folga)</label>'
+        + '<input id="bhData" type="date" class="fn-input" style="margin-bottom:10px">'
+        + '<label style="display:block;font-size:.82rem;color:#374151;font-weight:700;margin-bottom:6px">Motivo</label>'
+        + '<textarea id="bhMotivo" class="fn-input" rows="3" placeholder="Ex: consulta médica, evento familiar"></textarea>'
+        + '</div><div style="padding:12px 22px;border-top:1px solid #E5E7EB;display:flex;gap:8px;justify-content:flex-end">'
+        + '<button onclick="document.getElementById(\'bhModal\').remove()" class="fn-btn fn-btn-secondary" style="flex:0 0 auto;padding:9px 16px">Cancelar</button>'
+        + '<button onclick="fnEnviarSolicitarBanco()" class="fn-btn" style="flex:0 0 auto;padding:9px 16px">Enviar</button>'
+        + '</div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+function fnEnviarSolicitarBanco() {
+    var session = fnGetSession();
+    if (!session) return;
+    var horas = parseInt(document.getElementById('bhHoras').value, 10);
+    var data = document.getElementById('bhData').value;
+    var motivo = document.getElementById('bhMotivo').value.trim();
+    var tipo = document.getElementById('bhTipo').value;
+    if (!horas || horas <= 0) { alert('Informe quantas horas'); return; }
+    if (!motivo) { alert('Informe o motivo'); return; }
+    var r = Payroll.requestBankHours(session.franchiseId, {
+        staffId: session.staffId,
+        staffName: session.staffName,
+        type: tipo,
+        hoursMin: horas * 60,
+        useDate: data || null,
+        reason: motivo,
+        createdBy: session.staffName
+    });
+    if (r.success) {
+        document.getElementById('bhModal').remove();
+        alert('Solicitação enviada. Você verá a resposta aqui mesmo.');
+        fnRenderBanco();
+    } else {
+        alert('Erro: ' + r.error);
+    }
+}
+
+// Agenda lembretes baseado na escala — 10min antes da hora
+function fnScheduleReminders() {
+    if (Notification.permission !== 'granted') return;
+    var session = fnGetSession();
+    if (!session) return;
+    var staff = (DataStore.getCollection('staff', session.franchiseId) || []).find(function(x) { return x.id === session.staffId; });
+    if (!staff || !staff.jornada) return;
+
+    var j = staff.jornada;
+    var horarios = [
+        { time: j.hora_entrada, label: 'Entrada' },
+        { time: j.hora_saida, label: 'Saida' }
+    ];
+    if (j.intervalo_almoco_min) {
+        // Estima horario de almoco como meio do turno
+        var entraMin = parseInt(j.hora_entrada.split(':')[0], 10) * 60 + parseInt(j.hora_entrada.split(':')[1], 10);
+        var saiMin = parseInt(j.hora_saida.split(':')[0], 10) * 60 + parseInt(j.hora_saida.split(':')[1], 10);
+        var almocoSaidaMin = Math.floor((entraMin + saiMin - j.intervalo_almoco_min) / 2);
+        var almocoVoltaMin = almocoSaidaMin + j.intervalo_almoco_min;
+        function fmtMin(m) { return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'); }
+        horarios.splice(1, 0, { time: fmtMin(almocoSaidaMin), label: 'Inicio almoco' });
+        horarios.splice(2, 0, { time: fmtMin(almocoVoltaMin), label: 'Volta almoco' });
+    }
+
+    var now = new Date();
+    horarios.forEach(function(h) {
+        if (!h.time) return;
+        var p = h.time.split(':');
+        var schedule = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(p[0], 10), parseInt(p[1], 10), 0);
+        // 10min antes
+        schedule.setMinutes(schedule.getMinutes() - 10);
+        var delay = schedule.getTime() - Date.now();
+        if (delay <= 0) return; // ja passou hoje
+
+        // Agenda via SW (mais robusto que setTimeout do JS)
+        if (navigator.serviceWorker?.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'SCHEDULE_REMINDER',
+                delayMs: delay,
+                body: 'Em 10 minutos: ' + h.label + ' (' + h.time + ')',
+                tag: 'mp-reminder-' + h.label.toLowerCase()
+            });
+        } else {
+            // Fallback: setTimeout do JS (so funciona se aba aberta)
+            setTimeout(function() {
+                if (Notification.permission === 'granted') {
+                    new Notification('MilkyPot — Lembrete', {
+                        body: 'Em 10 min: ' + h.label + ' (' + h.time + ')',
+                        icon: '/images/logo-milkypot.png',
+                        vibrate: [200, 100, 200]
+                    });
+                }
+            }, delay);
+        }
+    });
+}
+
+function fnFinishWelcome() {
+    var session = fnGetSession();
+    if (!session) return;
+    // Aceite legal obrigatorio antes de fechar welcome
+    fnAbrirAceiteTermos(function() {
+        localStorage.setItem(FN_WELCOME_KEY + session.staffId, '1');
+        document.getElementById('welcomeModal').style.display = 'none';
+    });
+}
+
+// Modal de termo + aceite com prova juridica
+function fnAbrirAceiteTermos(onAccept) {
+    var session = fnGetSession();
+    if (!session || typeof LegalTerms === 'undefined') { if (onAccept) onAccept(); return; }
+    // Ja aceitou versao atual?
+    var last = LegalTerms.lastAcceptance(session.franchiseId, 'employee_app', session.staffId);
+    if (last && last.termVersion === LegalTerms.TERM_VERSION) {
+        if (onAccept) onAccept();
+        return;
+    }
+    var html = '<div id="termoOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:10006;display:flex;align-items:center;justify-content:center;padding:14px">'
+        + '<div style="background:#fff;border-radius:14px;width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column">'
+        + '<div style="padding:18px 22px;border-bottom:1px solid #E5E7EB"><strong style="font-family:\'Baloo 2\',cursive;font-size:1.1rem;color:#16A34A">📜 Antes de continuar — termos legais</strong></div>'
+        + '<div style="padding:18px 22px;overflow-y:auto;flex:1">' + LegalTerms.renderTermHTML('employee_app') + '</div>'
+        + '<div style="padding:14px 22px;border-top:1px solid #E5E7EB">'
+        + '<label style="display:flex;gap:10px;align-items:start;cursor:pointer;font-size:.85rem;color:#374151;margin-bottom:10px">'
+        + '<input type="checkbox" id="termoCk" style="margin-top:3px;width:18px;height:18px"><span>' + Utils.escapeHtml(LegalTerms.getTerm('employee_app').checkboxText) + '</span></label>'
+        + '<div style="display:flex;gap:8px"><button onclick="fnCancelarAceite()" class="fn-btn fn-btn-secondary" style="flex:1">Cancelar</button>'
+        + '<button onclick="fnConfirmarAceite()" class="fn-btn" style="flex:2">Concordo e continuar</button></div></div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+    window._termoOnAccept = onAccept;
+}
+function fnCancelarAceite() {
+    var ov = document.getElementById('termoOverlay'); if (ov) ov.remove();
+    alert('Sem aceitar os termos voce nao pode usar o app. Faça logout e fale com seu gerente.');
+}
+async function fnConfirmarAceite() {
+    var ck = document.getElementById('termoCk');
+    if (!ck.checked) { alert('Marque a caixa para concordar.'); return; }
+    var session = fnGetSession();
+    if (!session) return;
+    // Captura geolocation se disponivel pra prova juridica
+    var geo = null;
+    try {
+        var geoResult = await fnGetGeolocation();
+        if (geoResult.coords) geo = geoResult.coords;
+    } catch (e) {}
+
+    if (typeof LegalTerms !== 'undefined') {
+        LegalTerms.recordAcceptance(session.franchiseId, {
+            termId: 'employee_app',
+            acceptorType: 'staff',
+            acceptorId: session.staffId,
+            acceptorName: session.staffName,
+            channel: 'mobile_first_login',
+            geolocation: geo
+        });
+    }
+    var ov = document.getElementById('termoOverlay'); if (ov) ov.remove();
+    if (window._termoOnAccept) window._termoOnAccept();
+    window._termoOnAccept = null;
+}
+
+function fnVerTermo(termId) {
+    if (typeof LegalTerms === 'undefined') return;
+    var html = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:10007;display:flex;align-items:center;justify-content:center;padding:14px" onclick="if(event.target===this)this.remove()">'
+        + '<div style="background:#fff;border-radius:14px;width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column">'
+        + '<div style="padding:18px 22px;border-bottom:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center">'
+        + '<strong style="font-family:\'Baloo 2\',cursive;color:#16A34A">📜 Termo</strong>'
+        + '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#6B7280">&times;</button></div>'
+        + '<div style="padding:18px 22px;overflow-y:auto">' + LegalTerms.renderTermHTML(termId) + '</div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function fnLogin() {
+    var cpf = document.getElementById('loginCpf').value.replace(/\D/g, '');
+    var pin = document.getElementById('loginPin').value.trim();
+    var err = document.getElementById('loginErr');
+    err.style.display = 'none';
+
+    if (cpf.length !== 11) { err.textContent = 'CPF invalido'; err.style.display = 'block'; return; }
+    if (pin.length !== 4) { err.textContent = 'PIN deve ter 4 digitos'; err.style.display = 'block'; return; }
+
+    // Procura em todas franquias (publicas via DataStore.getAllFranchises)
+    var franchises = (typeof DataStore !== 'undefined') ? (DataStore.getAllFranchises() || []) : [];
+    var found = null;
+    for (var i = 0; i < franchises.length; i++) {
+        var f = franchises[i];
+        var staff = DataStore.getCollection('staff', f.id) || [];
+        var s = staff.find(function(x) {
+            if (!x.active) return false;
+            var c = (x.cpf || '').replace(/\D/g, '');
+            return c === cpf && x.pin === pin;
+        });
+        if (s) { found = { staff: s, franchiseId: f.id, franchise: f }; break; }
+    }
+
+    if (!found) {
+        err.textContent = 'CPF ou PIN incorreto. Confirme com seu gerente.';
+        err.style.display = 'block';
+        return;
+    }
+
+    var session = {
+        staffId: found.staff.id,
+        staffName: found.staff.name,
+        staffRole: found.staff.role,
+        franchiseId: found.franchiseId,
+        franchiseName: found.franchise.name,
+        loginAt: new Date().toISOString()
+    };
+    sessionStorage.setItem(FN_KEY, JSON.stringify(session));
+    fnShowApp(session, found.staff);
+}
+
+function fnLogout() {
+    sessionStorage.removeItem(FN_KEY);
+    document.getElementById('appView').style.display = 'none';
+    document.getElementById('loginView').style.display = 'block';
+    document.getElementById('loginCpf').value = '';
+    document.getElementById('loginPin').value = '';
+}
+
+function fnGetAppConfig(franchiseId) {
+    // Le config de qual aba/card aparece
+    var saved = (typeof DataStore !== 'undefined') ? (DataStore.getAllFranchises() || []).find(function(f) { return f.id === franchiseId; }) : null;
+    var defaults = {
+        tab_hoje: true, tab_dados: true, card_ponto: true, info_personal: true, info_termos: true,
+        tab_mes: false, tab_holerite: false, tab_banco: false, tab_beneficios: false,
+        card_escala: false, card_comissao: false, card_pontuacao: false,
+        info_clt: false, info_install: false, info_notif: false
+    };
+    return Object.assign({}, defaults, (saved && saved.appConfig) || {});
+}
+
+function fnApplyAppConfig(franchiseId) {
+    var cfg = fnGetAppConfig(franchiseId);
+    // Esconde abas desligadas
+    var tabMap = { tab_mes: 'mes', tab_holerite: 'holerite', tab_banco: 'banco', tab_beneficios: 'beneficios' };
+    Object.keys(tabMap).forEach(function(flag) {
+        var btn = document.querySelector('.fn-tab-btn[data-tab="' + tabMap[flag] + '"]');
+        var sec = document.getElementById('sec-' + tabMap[flag]);
+        if (btn) btn.style.display = cfg[flag] ? '' : 'none';
+        if (sec) sec.style.display = cfg[flag] ? '' : 'none';
+    });
+    // Esconde cards desligados
+    var cardEscala = document.querySelector('.fn-card h3');
+    document.querySelectorAll('.fn-section#sec-hoje .fn-card').forEach(function(card) {
+        var h3 = card.querySelector('h3');
+        if (!h3) return;
+        var t = h3.textContent.trim();
+        if (/Sua escala/i.test(t) && !cfg.card_escala) card.style.display = 'none';
+        // commissionCard / scoreCard ja tem logica propria condicional
+    });
+    // Esconde infos da aba Dados
+    if (!cfg.info_clt) {
+        document.querySelectorAll('#sec-info .fn-card').forEach(function(card) {
+            var h3 = card.querySelector('h3');
+            if (h3 && /Direitos.{0,3}Termos/i.test(h3.textContent)) card.style.display = 'none';
+        });
+    }
+    if (!cfg.info_install) {
+        var ic = document.getElementById('installCard');
+        if (ic) ic.dataset.disabled = '1';
+    }
+    if (!cfg.info_notif) {
+        // Esconde card "Lembretes de ponto"
+        document.querySelectorAll('#sec-info .fn-card h3').forEach(function(h3) {
+            if (/Lembretes de ponto/i.test(h3.textContent)) h3.parentNode.style.display = 'none';
+        });
+    }
+}
+
+function fnShowApp(session, staff) {
+    document.getElementById('loginView').style.display = 'none';
+    document.getElementById('appView').style.display = 'flex';
+    document.getElementById('hdrName').textContent = session.staffName;
+    document.getElementById('hdrRole').textContent = session.staffRole + ' • ' + session.franchiseName;
+    document.getElementById('cardName').textContent = session.staffName;
+    document.getElementById('cardRole').textContent = session.staffRole;
+
+    var hour = new Date().getHours();
+    var greet = hour < 6 ? 'Boa madrugada' : (hour < 12 ? 'Bom dia' : (hour < 18 ? 'Boa tarde' : 'Boa noite'));
+    document.getElementById('greetMsg').textContent = greet + ',';
+
+    fnRenderHoje(session, staff);
+    fnRenderMes(session);
+    fnRenderBeneficios(session);
+    fnRenderInfo(session, staff);
+    fnRenderGamification(session, staff);
+    fnApplyAppConfig(session.franchiseId);  // aplica feature flags do admin
+
+    // Welcome modal no primeiro login
+    var welcomed = localStorage.getItem(FN_WELCOME_KEY + session.staffId);
+    if (!welcomed) {
+        document.getElementById('welcomeName').textContent = session.staffName.split(' ')[0];
+        document.getElementById('welcomeModal').style.display = 'flex';
+    } else {
+        // Reenfileira lembretes se ja deu permissao
+        if ('Notification' in window && Notification.permission === 'granted') {
+            fnScheduleReminders();
+        }
+    }
+}
+
+// =================== GAMIFICAÇÃO (todas opt-in) ===================
+function fnRenderGamification(session, staff) {
+    if (typeof Gamification === 'undefined') return;
+    var fid = session.franchiseId;
+    var sid = session.staffId;
+    var nome = (session.staffName || '').split(' ')[0];
+
+    // 1. Mensagem motivacional
+    if (Gamification.isFeatureEnabled(fid, 'motivationalMessages')) {
+        var hour = new Date().getHours();
+        var ctx = hour < 12 ? 'morning' : (hour < 18 ? 'afternoon' : 'evening');
+        var dayCtx = (new Date().getDay() === 1) ? 'monday' : (new Date().getDay() === 5 ? 'friday' : ctx);
+        var msg = Gamification.getMotivationalMessage(fid, dayCtx, { nome: nome }) || Gamification.getMotivationalMessage(fid, ctx, { nome: nome });
+        if (msg) {
+            var el = document.getElementById('gamMotivational');
+            el.textContent = '💬 ' + msg;
+            el.style.display = 'block';
+        }
+    }
+
+    // 2. Story diário
+    if (Gamification.isFeatureEnabled(fid, 'dailyStory')) {
+        var story = Gamification.getDailyStory(fid, sid);
+        if (story) {
+            var el = document.getElementById('gamDailyStory');
+            el.textContent = story.message;
+            el.style.display = 'block';
+        }
+    }
+
+    // 3. Streak
+    if (Gamification.isFeatureEnabled(fid, 'streaks')) {
+        var streak = Gamification.computeStreak(fid, sid);
+        if (streak) {
+            document.getElementById('streakCurrent').textContent = streak.current;
+            document.getElementById('streakLongest').textContent = 'Recorde: ' + streak.longest;
+            var nextMilestone = streak.current < 7 ? 7 : streak.current < 30 ? 30 : streak.current < 90 ? 90 : streak.current < 365 ? 365 : null;
+            if (nextMilestone) {
+                document.getElementById('streakProgress').textContent = 'Faltam ' + (nextMilestone - streak.current) + ' dias pra próxima conquista';
+            } else {
+                document.getElementById('streakProgress').textContent = 'Você é uma lenda! 💎';
+            }
+            document.getElementById('gamStreakCard').style.display = 'block';
+        }
+    }
+
+    // 4. Belinha
+    if (Gamification.isFeatureEnabled(fid, 'belinhaVoice')) {
+        var bMsg = Gamification.belinhaSay(fid, 'welcome', { nome: nome });
+        if (bMsg) {
+            document.getElementById('belinhaText').textContent = bMsg;
+            document.getElementById('gamBelinhaCard').style.display = 'block';
+        }
+    }
+
+    // 5. Badges
+    if (Gamification.isFeatureEnabled(fid, 'badges')) {
+        var badges = Gamification.getStaffBadges(fid, sid);
+        if (badges.length > 0) {
+            document.getElementById('badgesList').innerHTML = badges.map(function(b) {
+                return '<div title="' + Utils.escapeHtml(b.desc) + '" style="background:#FEF3C7;border:2px solid #F59E0B;border-radius:10px;padding:8px 12px;display:flex;align-items:center;gap:6px"><span style="font-size:1.4rem">' + b.icon + '</span><strong style="font-size:.78rem;color:#92400E">' + b.name + '</strong></div>';
+            }).join('');
+            document.getElementById('gamBadgesCard').style.display = 'block';
+        }
+    }
+
+    // 6. Calendário visual
+    if (Gamification.isFeatureEnabled(fid, 'visualCalendar')) {
+        var now = new Date();
+        var cal = Gamification.getMonthCalendar(fid, sid, now.getFullYear(), now.getMonth() + 1);
+        if (cal) {
+            // Padding do início do mês
+            var firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+            var html = '';
+            ['D','S','T','Q','Q','S','S'].forEach(function(d) { html += '<div style="text-align:center;font-size:.65rem;color:#6B7280;font-weight:700">' + d + '</div>'; });
+            for (var i = 0; i < firstDay; i++) html += '<div></div>';
+            cal.forEach(function(d) {
+                var isToday = d.day === now.getDate() ? 'border:2px solid #111;' : 'border:1px solid #E5E7EB;';
+                html += '<div title="' + d.date + ' (' + d.label + ')" style="aspect-ratio:1;background:' + d.color + ';border-radius:5px;' + isToday + 'display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff">' + d.day + '</div>';
+            });
+            document.getElementById('visualCalendar').innerHTML = html;
+            document.getElementById('gamCalendarCard').style.display = 'block';
+        }
+    }
+
+    // 7. Onboarding missions
+    if (Gamification.isFeatureEnabled(fid, 'onboardingMissions')) {
+        var ob = Gamification.getOnboardingMissions(fid, sid);
+        if (ob && ob.totalEarned < ob.possibleTotal) {
+            var html = ob.missions.map(function(m) {
+                var icon = m.done ? '✅' : '⬜';
+                return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:rgba(255,255,255,.15);border-radius:6px;margin-bottom:4px;font-size:.82rem"><span>' + icon + ' ' + m.name + '</span><strong>+' + m.points + '</strong></div>';
+            }).join('');
+            document.getElementById('onboardingList').innerHTML = html;
+            document.getElementById('onboardingProgress').textContent = ob.totalEarned + ' / ' + ob.possibleTotal + ' pontos conquistados';
+            document.getElementById('gamOnboardingCard').style.display = 'block';
+            // Marca first_punch automaticamente se já bateu hoje
+            var today = new Date().toISOString().slice(0,10);
+            if (TimeClock.computeDay(fid, sid, today).records.length > 0) {
+                Gamification.completeMission(fid, sid, 'first_punch');
+            }
+        }
+    }
+
+    // 8. Mural de reconhecimento
+    if (Gamification.isFeatureEnabled(fid, 'recognitionWall')) {
+        var wall = Gamification.getRecognitionWall(fid);
+        if (wall.length > 0) {
+            var html = wall.slice(0, 5).map(function(r) {
+                return '<div style="background:#F9FAFB;border-left:3px solid #7C3AED;border-radius:6px;padding:8px 12px;margin-bottom:6px;font-size:.82rem"><strong>' + Utils.escapeHtml(r.staffName || r.message.slice(0,30)) + '</strong><br><small style="color:#6B7280">' + Utils.escapeHtml(r.message) + '</small></div>';
+            }).join('');
+            document.getElementById('wallList').innerHTML = html;
+            document.getElementById('gamWallCard').style.display = 'block';
+        }
+    }
+
+    // 9. Catalogo de recompensas
+    if (Gamification.isFeatureEnabled(fid, 'rewardsCatalog')) {
+        var rewards = Gamification.getRewardsCatalog(fid);
+        var conduct = (typeof StaffConduct !== 'undefined') ? StaffConduct.computeScore(fid, sid, new Date().getFullYear(), new Date().getMonth() + 1) : { score: 0 };
+        document.getElementById('myPoints').textContent = conduct.score || 0;
+        if (rewards.length > 0) {
+            var html = rewards.map(function(r) {
+                var canRedeem = (conduct.score || 0) >= r.points;
+                var btnStyle = canRedeem ? 'background:#16A34A;color:#fff' : 'background:#E5E7EB;color:#6B7280;cursor:not-allowed';
+                return '<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px"><div><span style="font-size:1.4rem">' + (r.icon || '🎁') + '</span> <strong>' + Utils.escapeHtml(r.name) + '</strong><br><small style="color:#6B7280">' + r.points + ' pontos</small></div><button onclick="fnResgatar(\'' + r.id + '\')" ' + (canRedeem ? '' : 'disabled') + ' style="border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-family:inherit;font-size:.78rem;' + btnStyle + '">' + (canRedeem ? 'Resgatar' : 'Bloqueado') + '</button></div>';
+            }).join('');
+            document.getElementById('rewardsList').innerHTML = html;
+            document.getElementById('gamRewardsCard').style.display = 'block';
+        }
+    }
+
+    // 10. Social share
+    if (Gamification.isFeatureEnabled(fid, 'socialShare')) {
+        document.getElementById('gamShareCard').style.display = 'block';
+    }
+
+    // 11. Referral program
+    if (Gamification.isFeatureEnabled(fid, 'referralProgram')) {
+        document.getElementById('gamReferralCard').style.display = 'block';
+    }
+
+    // 12. Wellbeing reminders
+    if (Gamification.isFeatureEnabled(fid, 'wellbeingReminders')) {
+        fnAgendarLembretesBemEstar();
+    }
+}
+
+function fnResgatar(rewardId) {
+    var session = fnGetSession();
+    var conduct = StaffConduct.computeScore(session.franchiseId, session.staffId, new Date().getFullYear(), new Date().getMonth() + 1);
+    var r = Gamification.redeemReward(session.franchiseId, session.staffId, rewardId, conduct.score || 0);
+    if (r.success) {
+        alert('🎁 Resgate solicitado! Aguarde aprovação do gerente.');
+        fnRenderGamification(session, null);
+    } else {
+        alert(r.error);
+    }
+}
+
+function fnGerarCardCompartilhar() {
+    var session = fnGetSession();
+    var canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1350;
+    var ctx = canvas.getContext('2d');
+    // BG gradient
+    var grad = ctx.createLinearGradient(0, 0, 1080, 1350);
+    grad.addColorStop(0, '#7C3AED');
+    grad.addColorStop(1, '#EC4899');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 1080, 1350);
+    // Texto
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 80px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('💪 EU FAÇO PARTE', 540, 400);
+    ctx.font = 'bold 120px Baloo 2, cursive';
+    ctx.fillText('MILKYPOT', 540, 600);
+    ctx.font = '60px Nunito, sans-serif';
+    ctx.fillText(session.staffName, 540, 800);
+    ctx.font = '40px Nunito, sans-serif';
+    ctx.fillText(session.staffRole, 540, 870);
+    var streak = Gamification.computeStreak(session.franchiseId, session.staffId);
+    if (streak && streak.current > 0) {
+        ctx.font = 'bold 50px Nunito, sans-serif';
+        ctx.fillText('🔥 ' + streak.current + ' dias seguidos pontual', 540, 1000);
+    }
+    ctx.font = '30px Nunito, sans-serif';
+    ctx.fillText('milkypot.com', 540, 1280);
+
+    canvas.toBlob(function(blob) {
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'milkypot.png', { type: 'image/png' })] })) {
+            navigator.share({
+                files: [new File([blob], 'milkypot.png', { type: 'image/png' })],
+                title: 'MilkyPot — eu faço parte'
+            });
+        } else {
+            // Fallback: download
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'milkypot-conquista.png';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    });
+}
+
+function fnIndicarAmigo() {
+    var msg = 'Trabalho na MilkyPot e indico! Manda WhatsApp pro gerente da nossa loja se quiser uma chance.';
+    if (navigator.share) {
+        navigator.share({ title: 'MilkyPot — Indicação', text: msg });
+    } else {
+        // WhatsApp web
+        window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+    }
+}
+
+function fnAgendarLembretesBemEstar() {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (!navigator.serviceWorker?.controller) return;
+    // Lembrete de agua a cada 3h
+    [3, 6].forEach(function(h) {
+        navigator.serviceWorker.controller.postMessage({
+            type: 'SCHEDULE_REMINDER',
+            delayMs: h * 3600000,
+            body: '💧 Hora de tomar água! Cuide de você.',
+            tag: 'mp-water-reminder'
+        });
+    });
+}
+
+function fnRenderBeneficios(session) {
+    if (typeof StaffBenefits === 'undefined') return;
+    var now = new Date();
+    var monthData = StaffBenefits.totalMonth(session.franchiseId, session.staffId, now.getFullYear(), now.getMonth() + 1);
+    var todayData = StaffBenefits.totalDay(session.franchiseId, session.staffId, now.toISOString().slice(0, 10));
+
+    document.getElementById('benTotais').innerHTML =
+        '<div class="fn-mini-card"><small>Hoje</small><strong>' + todayData.count + ' itens</strong></div>' +
+        '<div class="fn-mini-card"><small>No mês</small><strong>' + monthData.count + ' itens</strong></div>' +
+        '<div class="fn-mini-card"><small>Valor mês</small><strong>R$ ' + monthData.total.toFixed(2).replace('.', ',') + '</strong></div>';
+
+    if (!monthData.entries.length) {
+        document.getElementById('benLista').innerHTML = '<p style="text-align:center;color:#9CA3AF;padding:20px;font-size:.85rem">Nenhum benefício registrado este mês.</p>';
+        return;
+    }
+    var html = '<div style="display:flex;flex-direction:column;gap:8px">';
+    monthData.entries.slice(0, 30).forEach(function(e) {
+        var icon = e.tipo === 'sorvete_dia' ? '🍦' : (e.tipo === 'refeicao' ? '🍽️' : (e.tipo === 'lanche' ? '🥪' : (e.tipo === 'bebida' ? '🥤' : '🎁')));
+        html += '<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px">'
+            + '<div style="display:flex;gap:10px;align-items:center"><span style="font-size:1.4rem">' + icon + '</span>'
+            + '<div><strong style="display:block;font-size:.88rem;color:#111827">' + Utils.escapeHtml(e.productName || e.tipoLabel) + '</strong>'
+            + '<small style="color:#6B7280;font-size:.72rem">' + e.date.split('-').reverse().join('/') + ' · ' + e.timestamp.slice(11,16) + ' · ' + Utils.escapeHtml(e.operatorName || '') + '</small></div></div>'
+            + '<strong style="color:#16A34A">R$ ' + Number(e.value || 0).toFixed(2).replace('.', ',') + '</strong>'
+            + '</div>';
+    });
+    html += '</div>';
+    document.getElementById('benLista').innerHTML = html;
+}
+
+function fnGetSession() {
+    try { return JSON.parse(sessionStorage.getItem(FN_KEY) || 'null'); }
+    catch (e) { return null; }
+}
+
+function fnRenderHoje(session, staff) {
+    var today = new Date().toISOString().slice(0, 10);
+    var dia = TimeClock.computeDay(session.franchiseId, session.staffId, today);
+    var staffData = staff || (DataStore.getCollection('staff', session.franchiseId) || []).find(function(x) { return x.id === session.staffId; });
+
+    var marks = [
+        { lbl: 'Entrada', rec: dia.entrada },
+        { lbl: 'Almoco', rec: dia.almocoSaida },
+        { lbl: 'Volta', rec: dia.almocoVolta },
+        { lbl: 'Saida', rec: dia.saida }
+    ];
+    document.getElementById('todayMarks').innerHTML = marks.map(function(m) {
+        var done = !!m.rec;
+        var time = m.rec ? m.rec.timestamp.slice(11, 16) : '--:--';
+        return '<div class="fn-marcacao' + (done ? ' done' : '') + '"><div class="lbl">' + m.lbl + '</div><div class="val">' + time + '</div></div>';
+    }).join('');
+
+    var nextType = TimeClock.inferNextType(session.franchiseId, session.staffId);
+    var btn = document.getElementById('baterPontoBtn');
+    var sub = document.getElementById('baterPontoSub');
+    if (nextType) {
+        sub.textContent = 'Proximo: ' + TimeClock.TIPO_LABELS[nextType];
+        btn.disabled = false;
+    } else {
+        sub.textContent = 'Voce ja bateu todas 4 marcacoes hoje';
+        btn.disabled = true;
+        btn.style.opacity = '.6';
+    }
+
+    // SCORE — so aparece se admin ativou
+    if (typeof StaffConduct !== 'undefined' && StaffConduct.isEnabled(session.franchiseId)) {
+        var now = new Date();
+        var report = StaffConduct.computeScore(session.franchiseId, session.staffId, now.getFullYear(), now.getMonth() + 1);
+        var scoreCard = document.getElementById('scoreCard');
+        if (scoreCard) {
+            scoreCard.style.display = 'block';
+            document.getElementById('scoreValue').textContent = report.score;
+            var status = report.entitledToBenefits
+                ? '✓ Habilitado pra receber benefícios extras'
+                : '⚠️ Pontuação baixa — alguns benefícios podem estar bloqueados';
+            document.getElementById('scoreStatus').textContent = status;
+            var breakdown = report.breakdown.map(function(b) {
+                var sign = b.value > 0 ? '+' : (b.value < 0 ? '' : '');
+                var color = b.value > 0 ? '#A7F3D0' : (b.value < 0 ? '#FCA5A5' : '#FDE68A');
+                return '<div style="display:flex;justify-content:space-between;color:' + color + '"><span>' + b.label + '</span><strong>' + sign + b.value + '</strong></div>';
+            }).join('');
+            document.getElementById('scoreBreakdown').innerHTML = breakdown;
+        }
+    }
+
+    // COMISSÃO — so aparece se tem comissionRate ou commissionFixed
+    if (staffData && (staffData.commissionRate > 0 || staffData.commissionFixed > 0) && typeof StaffConduct !== 'undefined') {
+        var nowC = new Date();
+        var rep = StaffConduct.computeCommission(session.franchiseId, session.staffId, nowC.getFullYear(), nowC.getMonth() + 1);
+        var commCard = document.getElementById('commissionCard');
+        if (commCard) {
+            commCard.style.display = 'block';
+            document.getElementById('commissionValue').textContent = 'R$ ' + rep.total.toFixed(2).replace('.', ',');
+            var detail = '';
+            if (rep.fixed > 0) detail += 'Fixa: R$ ' + rep.fixed.toFixed(2).replace('.', ',') + '. ';
+            if (rep.rate > 0) detail += rep.rate + '% sobre R$ ' + rep.totalVendas.toFixed(2).replace('.', ',') + ' = R$ ' + rep.variable.toFixed(2).replace('.', ',') + '. ';
+            detail += rep.ordersCount + ' pedido(s).';
+            document.getElementById('commissionDetails').textContent = detail;
+        }
+    }
+
+    // Escala
+    var j = (staffData && staffData.jornada) || {};
+    document.getElementById('escalaInfo').innerHTML =
+        '<strong>Tipo:</strong> ' + (j.tipo || '5x2') + '<br>' +
+        '<strong>Hora entrada:</strong> ' + (j.hora_entrada || '08:00') + '<br>' +
+        '<strong>Hora saida:</strong> ' + (j.hora_saida || '18:00') + '<br>' +
+        '<strong>Almoco:</strong> ' + (j.intervalo_almoco_min || 60) + ' min<br>' +
+        '<strong>Carga semanal:</strong> ' + ((staffData && staffData.carga_horaria_semanal) || 44) + 'h<br>' +
+        '<strong>Folga:</strong> ' + ((j.folgas || ['domingo']).join(', '));
+}
+
+async function fnBaterPonto() {
+    var session = fnGetSession();
+    if (!session) return;
+    var btn = document.getElementById('baterPontoBtn');
+    var staffData = (DataStore.getCollection('staff', session.franchiseId) || []).find(function(x) { return x.id === session.staffId; });
+    if (!staffData || !staffData.pin) {
+        alert('Seu cadastro esta incompleto. Peça ao gerente para configurar PIN.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Capturando localizacao...<small>aguarde</small>';
+
+    // 1) Geolocalizacao
+    var geoResult = await fnGetGeolocation();
+    var geoBanner = document.getElementById('geoBanner');
+
+    // 2) Validar geofence (proximidade da loja)
+    if (geoResult.coords && typeof Geofence !== 'undefined') {
+        var validation = Geofence.validate(session.franchiseId, geoResult.coords.lat, geoResult.coords.lng);
+        if (validation.blocked) {
+            btn.disabled = false;
+            btn.innerHTML = '⏰ Bater Ponto<small>Bloqueado: longe da loja</small>';
+            geoBanner.style.display = 'block';
+            geoBanner.style.background = '#FEE2E2';
+            geoBanner.style.borderLeftColor = '#DC2626';
+            geoBanner.style.color = '#991B1B';
+            geoBanner.innerHTML = '🚫 ' + validation.message + ' Ponto BLOQUEADO ate voce chegar na loja.';
+            return;
+        } else if (!validation.valid) {
+            geoBanner.style.display = 'block';
+            geoBanner.style.background = '#FEF3C7';
+            geoBanner.style.borderLeftColor = '#F59E0B';
+            geoBanner.style.color = '#92400E';
+            geoBanner.innerHTML = '⚠️ ' + validation.message + ' (registrado mesmo assim)';
+        } else {
+            geoBanner.style.display = 'block';
+            geoBanner.style.background = '#DCFCE7';
+            geoBanner.style.borderLeftColor = '#16A34A';
+            geoBanner.style.color = '#166534';
+            geoBanner.innerHTML = '✓ ' + validation.message;
+        }
+    } else if (geoResult.error) {
+        geoBanner.style.display = 'block';
+        geoBanner.style.background = '#FEF3C7';
+        geoBanner.style.borderLeftColor = '#F59E0B';
+        geoBanner.style.color = '#92400E';
+        geoBanner.innerHTML = '⚠️ ' + geoResult.error;
+    }
+
+    // 3) Capturar selfie (anti-fraude)
+    btn.innerHTML = '📸 Capturando foto...<small>olhe pra camera</small>';
+    var selfie = await fnCaptureSelfie();
+    if (!selfie) {
+        if (!confirm('Nao foi possivel capturar selfie. Continuar registrando ponto sem foto?')) {
+            btn.disabled = false;
+            btn.innerHTML = '⏰ Bater Ponto<small>Cancelado</small>';
+            return;
+        }
+    }
+
+    // 4) Registrar
+    btn.innerHTML = '⏳ Registrando...<small>quase la</small>';
+    var result = await TimeClock.recordPunch(session.franchiseId, staffData.pin, 'pin', {
+        channel: 'mobile',
+        geolocation: geoResult.coords || null,
+        selfie: selfie
+    });
+
+    if (result.success) {
+        btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+        btn.innerHTML = '✓ Registrado!<small>' + result.typeLabel + ' as ' + new Date(result.timestamp).toLocaleTimeString('pt-BR').slice(0,5) + ' • NSR ' + result.nsr + '</small>';
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        setTimeout(function() {
+            fnRenderHoje(session, staffData);
+            fnRenderMes(session);
+            btn.style.background = 'linear-gradient(135deg,#16A34A,#10B981)';
+            btn.disabled = false;
+        }, 2400);
+    } else {
+        btn.disabled = false;
+        btn.innerHTML = '⏰ Bater Ponto<small>Proximo: --</small>';
+        alert('Erro: ' + result.error);
+    }
+}
+
+// ====== Selfie capture (camera frontal) ======
+async function fnCaptureSelfie() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return null;
+    try {
+        var stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 480 } },
+            audio: false
+        });
+        var video = document.createElement('video');
+        video.srcObject = stream;
+        video.muted = true;
+        await video.play();
+        // Espera alguns frames pra estabilizar
+        await new Promise(function(r) { setTimeout(r, 800); });
+        var canvas = document.createElement('canvas');
+        canvas.width = 320;
+        canvas.height = 320;
+        canvas.getContext('2d').drawImage(video, 0, 0, 320, 320);
+        stream.getTracks().forEach(function(t) { t.stop(); });
+        return canvas.toDataURL('image/jpeg', 0.65);
+    } catch (e) {
+        console.warn('Selfie capture falhou:', e);
+        return null;
+    }
+}
+
+function fnGetGeolocation() {
+    return new Promise(function(resolve) {
+        if (!navigator.geolocation) {
+            resolve({ error: 'Navegador sem suporte a geolocalizacao' });
+            return;
+        }
+        var timeout = setTimeout(function() { resolve({ error: 'Tempo esgotado para capturar localizacao' }); }, 8000);
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                clearTimeout(timeout);
+                resolve({
+                    coords: {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        accuracy: pos.coords.accuracy
+                    }
+                });
+            },
+            function(e) {
+                clearTimeout(timeout);
+                var msg = 'Permissao negada';
+                if (e.code === 1) msg = 'Permita acesso a localizacao no navegador';
+                else if (e.code === 2) msg = 'Localizacao indisponivel';
+                else if (e.code === 3) msg = 'Tempo esgotado';
+                resolve({ error: msg });
+            },
+            { enableHighAccuracy: true, timeout: 7000, maximumAge: 60000 }
+        );
+    });
+}
+
+function fnRenderMes(session) {
+    var now = new Date();
+    var espelho = TimeClock.computeMonth(session.franchiseId, session.staffId, now.getFullYear(), now.getMonth() + 1);
+    var t = espelho.totaisFormatado;
+    document.getElementById('mesTitle').textContent = 'Espelho de ' + espelho.monthLabel;
+    document.getElementById('totaisMes').innerHTML =
+        '<div class="fn-mini-card"><small>Trabalhado</small><strong>' + t.trabalhado + '</strong></div>' +
+        '<div class="fn-mini-card"><small>Extras</small><strong>' + t.extras + '</strong></div>' +
+        '<div class="fn-mini-card"><small>Banco horas</small><strong>' + t.bancoHoras + '</strong></div>';
+
+    var rows = '<thead><tr><th>Dia</th><th>Ent.</th><th>Almo.</th><th>Volt.</th><th>Saí.</th><th>Hrs</th></tr></thead><tbody>';
+    espelho.days.forEach(function(d) {
+        if (d.isFolga && !d.records.length) {
+            rows += '<tr style="color:#9CA3AF"><td>' + d.date.slice(8) + '</td><td colspan="5" style="text-align:center;font-style:italic">FOLGA</td></tr>';
+        } else if (d.isFalta) {
+            rows += '<tr style="background:#FEF2F2"><td>' + d.date.slice(8) + '</td><td colspan="5" style="text-align:center;color:#991B1B">FALTA</td></tr>';
+        } else {
+            rows += '<tr><td>' + d.date.slice(8) + '</td>'
+                + '<td>' + (d.entrada ? d.entrada.timestamp.slice(11,16) : '-') + '</td>'
+                + '<td>' + (d.almocoSaida ? d.almocoSaida.timestamp.slice(11,16) : '-') + '</td>'
+                + '<td>' + (d.almocoVolta ? d.almocoVolta.timestamp.slice(11,16) : '-') + '</td>'
+                + '<td>' + (d.saida ? d.saida.timestamp.slice(11,16) : '-') + '</td>'
+                + '<td>' + (d.completo ? d.horasFormatado : '-') + '</td></tr>';
+        }
+    });
+    rows += '</tbody>';
+    document.getElementById('espelhoTable').innerHTML = rows;
+}
+
+function fnRenderInfo(session, staff) {
+    var s = staff || (DataStore.getCollection('staff', session.franchiseId) || []).find(function(x) { return x.id === session.staffId; });
+    if (!s) return;
+    var html = '<strong>Nome:</strong> ' + Utils.escapeHtml(s.name) + '<br>'
+        + '<strong>Cargo:</strong> ' + Utils.escapeHtml(s.role) + '<br>'
+        + '<strong>CPF:</strong> ' + Utils.escapeHtml(s.cpf || '-') + '<br>'
+        + '<strong>PIS:</strong> ' + Utils.escapeHtml(s.pis || '-') + '<br>'
+        + '<strong>Loja:</strong> ' + Utils.escapeHtml(session.franchiseName) + '<br>'
+        + '<strong>Inicio:</strong> ' + Utils.escapeHtml(s.startDate || '-') + '<br>'
+        + '<strong>Adicional noturno:</strong> ' + (s.adicional_noturno ? 'Sim' : 'Nao');
+    document.getElementById('dadosFunc').innerHTML = html;
+}
+
+function fnSwitchTab(tab) {
+    document.querySelectorAll('.fn-tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
+    document.querySelectorAll('.fn-section').forEach(function(s) { s.classList.toggle('active', s.id === 'sec-' + tab); });
+    if (tab === 'holerite') { fnInitHoleriteControls(); fnCarregarHolerite(); }
+    if (tab === 'banco') fnRenderBanco();
+}
+
+document.getElementById('loginPin').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') fnLogin();
+});
+
+// Auto-login se houver sessao
+(function() {
+    var s = fnGetSession();
+    if (s) {
+        var staff = (DataStore.getCollection('staff', s.franchiseId) || []).find(function(x) { return x.id === s.staffId; });
+        if (staff && staff.active) {
+            fnShowApp(s, staff);
+        } else {
+            sessionStorage.removeItem(FN_KEY);
+        }
+    }
+})();
+</script>
+</body>
+</html>
