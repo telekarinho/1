@@ -529,6 +529,38 @@ const DataStore = {
         return null;
     },
 
+    // Fetch staff de uma franquia direto do Firestore (sem auth admin).
+    // Necessario pro portal /funcionario/ logar funcionarios em qualquer dispositivo.
+    async fetchPublicStaff(franchiseId) {
+        if (!this._ready || !this._db || !franchiseId) return null;
+        try {
+            const doc = await this._db.collection('datastore').doc('staff_' + franchiseId).get();
+            if (doc.exists) {
+                const value = doc.data().value;
+                const data = typeof value === 'string' ? JSON.parse(value) : value;
+                localStorage.setItem(this.PREFIX + 'staff_' + franchiseId, JSON.stringify(data));
+                return data;
+            }
+        } catch (e) {
+            console.warn('fetchPublicStaff error:', e);
+        }
+        return null;
+    },
+
+    // Fetch staff de TODAS as franquias publicas — pro login do funcionario achar
+    async fetchAllPublicStaff() {
+        if (!this._ready || !this._db) return {};
+        // Garante que franquias estao em cache
+        await this.fetchPublicFranchises();
+        const franchises = this.getAllFranchises() || [];
+        const result = {};
+        await Promise.all(franchises.map(async (f) => {
+            const staff = await this.fetchPublicStaff(f.id);
+            if (staff) result[f.id] = staff;
+        }));
+        return result;
+    },
+
     // Lista de docs públicos por franquia — sync funciona SEM auth via per-doc gets
     // (collection.get() exige rule de LIST que não temos pra unauth).
     _publicSyncDocs() {
