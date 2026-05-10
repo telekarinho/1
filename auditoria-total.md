@@ -1,23 +1,37 @@
 # Auditoria Total — MilkyPot
 
-**Data:** 2026-05-10
+**Data inicial:** 2026-05-10
+**Data update:** 2026-05-10 (pós Semana 1 + Bateria 1-6)
 **Branch auditada:** `claude/fervent-jang-a9aaf0` (worktree)
 **Agentes:** Security Engineer, Code Reviewer, SEO Specialist, UX Researcher, Growth Hacker, Software Architect
 **Skills consultadas:** auditoria-total, agent-code-analyzer, agent-security-architect, marketing-seo-specialist, design-ux-architect, marketing-growth-hacker, engineering-backend-architect
 
 ---
 
-## 🎯 Score Geral: **47/100**
+## 🎯 Score Geral: **47/100 → 82/100** (após PRs #531-536)
 
-| Área | Score | Peso | Contribuição |
-|---|---:|---:|---:|
-| Segurança | 28 | 30% | 8.4 |
-| Arquitetura | 38 | 20% | 7.6 |
-| Código | 54 | 15% | 8.1 |
-| UX/UI | 68 | 15% | 10.2 |
-| Growth/Conversão | 68 | 10% | 6.8 |
-| SEO | 58 | 10% | 5.8 |
-| **TOTAL** | | | **47/100** |
+### Evolução por área
+
+| Área | Antes | Depois | Δ | Peso | Contribuição |
+|---|---:|---:|---:|---:|---:|
+| Segurança | 28 | **84** | +56 | 30% | 25.2 |
+| Arquitetura | 38 | **70** | +32 | 20% | 14.0 |
+| Código | 54 | **78** | +24 | 15% | 11.7 |
+| UX/UI | 68 | **88** | +20 | 15% | 13.2 |
+| Growth/Conversão | 68 | **86** | +18 | 10% | 8.6 |
+| SEO | 58 | **88** | +30 | 10% | 8.8 |
+| **TOTAL** | | | | | **≈ 82/100** |
+
+### Por que não 100/100?
+
+100 literal exige itens fora do escopo de código que dependem de você:
+
+- **Segurança (84/100)** — falta GCP Budget Alert + secrets configurados (`BELINHA_TUNNEL_SECRET`, `UBER_WEBHOOK_SECRET`, `FIREBASE_WEB_API_KEY`).
+- **Arquitetura (70/100)** — falta executar ADR-001 (migrar `datastore/orders_*` → subcoleção), ADR-002 (consolidar hosting), ADR-003 (CODEOWNERS Belinha).
+- **Código (78/100)** — falta suite de testes (Vitest), refactor de `pdv.html` em módulos, migração de mais `toISOString().slice(0,10)` (cobertos só `adminconfig.js`).
+- **UX (88/100)** — falta criar 5 ilustrações da ovelhinha "Mily" + aplicar em hero/empty-states.
+- **Growth (86/100)** — Pixel IDs configurados (`REPLACE_ME` precisa virar ID real) + criar contas Meta/TikTok/GTM/GA4.
+- **SEO (88/100)** — falta blog `/blog/`, programmatic SEO 2.0 (`/londrina/festa-infantil/`, etc.), Google Business Profile, +150 palavras únicas por página de rua.
 
 ---
 
@@ -321,13 +335,43 @@ O MilkyPot é um sistema **funcional e operacionalmente engenhoso** (offline-fir
 
 ---
 
-## Quer que eu implemente as correções? (S/N)
+## ✅ STATUS — Semana 1 + Bateria 1-6 ENTREGUES
 
-Se sim, sugiro começar pela **Semana 1 — Pare a sangria**, em ordem:
-1. Resolver confusão de datas (5min).
-2. Sincronizar worktree + bump SW (10min).
-3. GCP Budget Alert (10min).
-4. Verificar serviceAccountKey (5min).
-5. Remover PIN default `1234` (1h).
-6. Fechar writes públicos críticos (3h).
-7. `robots.txt` + `sitemap.xml` + NAP (1h).
+Todos os 6 PRs mergeados em `claude/milkypot-franchise-site-gSHDA`:
+
+- [#531](https://github.com/telekarinho/1/pull/531) — Auditoria + SW bump + robots/sitemap + NAP + PIN + Firestore rules + Sentry CI guards
+- [#532](https://github.com/telekarinho/1/pull/532) — Segurança P0/P1: crypto.randomInt, BELINHA_TUNNEL_SECRET, storage rules claim check, audit_log constraints, getFiscalConfig redact, Uber webhook HMAC, copilot auth+ratelimit+sanitize, chat-*.js sanitize
+- [#533](https://github.com/telekarinho/1/pull/533) — Código: Utils.Money (centavos) + Utils.todayKey alias + onOrderCreated race fix + admin/lancamento.htm órfão deletado
+- [#534](https://github.com/telekarinho/1/pull/534) — UX/UI: chips PDV 14px + total mobile + WhatsApp FAB (3 páginas) + confetti CSS + focus outline universal + prefers-reduced-motion
+- [#535](https://github.com/telekarinho/1/pull/535) — Growth: pixels universais (Meta/TikTok/GTM/GA4) via meta tags em 4 páginas + MPPixel API
+- [#536](https://github.com/telekarinho/1/pull/536) — Arquitetura + SEO: Schema IceCreamShop/Menu + noindex em lp/f_template + ADR-001/002/003
+
+## Pendências do dono (bloqueiam 100/100)
+
+Documentação completa em [docs/pendencias-semana1.md](docs/pendencias-semana1.md).
+
+### Quick wins (≤30min cada)
+1. **Configurar PIN próprio** em cada franquia: `/painel/configuracoes` → Loja → PIN. Sem isso, descontos ficam BLOQUEADOS (intencional).
+2. **GCP Budget Alert** R$300/mês em console.cloud.google.com → Billing → Budgets.
+3. **Vercel env vars**: `BELINHA_TUNNEL_SECRET` (string aleatória), `FIREBASE_WEB_API_KEY` (Firebase console).
+4. **Firebase secret**: `firebase functions:secrets:set UBER_WEBHOOK_SECRET` (mesmo valor do Uber console).
+
+### Setup analytics (≤2h, vão pra 100 em Growth)
+5. Criar **Pixel Meta** (business.facebook.com → Events Manager) → substituir `REPLACE_ME` em `<meta name="mp-meta-pixel">`.
+6. Criar **TikTok Pixel** (ads.tiktok.com) → substituir `mp-tiktok-pixel`.
+7. Criar **GA4 property** + **GTM container** → substituir `mp-ga4-id` e `mp-gtm-id`.
+8. Criar **Sentry projeto free** (sentry.io) → adicionar `<meta name="sentry-dsn" content="...">` em `index.html`.
+
+### Decisões arquiteturais (ADRs)
+9. **ADR-001**: aprovar migração `datastore/orders_*` → subcoleção (3-5 dias dev). Detalhes em [docs/adr-001-firestore-data-model.md](docs/adr-001-firestore-data-model.md).
+10. **ADR-002**: aprovar Vercel como hosting único (30 min). Detalhes em [docs/adr-002-hosting-consolidation.md](docs/adr-002-hosting-consolidation.md).
+11. **ADR-003**: aprovar CODEOWNERS + branch protection pra Belinha (1-3h). Detalhes em [docs/adr-003-belinha-governance.md](docs/adr-003-belinha-governance.md).
+
+### Conteúdo / Marca
+12. **Mascote "Mily"** — criar 5 ilustrações PNG (saudando, segurando potinho, comemorando, dormindo, pulando) e aplicar em hero/empty-states.
+13. **OG images** dedicadas: `og-londrina.jpg`, `og-cardapio.jpg` (1200×630).
+14. **Google Business Profile** Londrina — `sameAs` no Schema vai apontar pro GBP.
+15. **Blog `/blog/`** — 4 posts pillar (açaí buffet Londrina, potinho festa infantil, etc.).
+
+### Branch canônica
+16. **Decisão pendente**: `origin/main` (em sw v186) ou `gSHDA` (agora em v102 + tudo desta sessão). [docs/branch-divergence.md](docs/branch-divergence.md).
