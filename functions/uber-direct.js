@@ -657,127 +657,6 @@ exports.uberDirect_getQuote = onCall({
 });
 
 // ============================================================
-// ---- 4b. uberDirect_getQuotePublic (cliente anonimo) -------
-// ============================================================
-// Variante publica do getQuote pra ser chamada pelo cardapio.html
-// (cliente final, sem login). Validacoes extras:
-//   - franquia precisa existir e ter delivery+uber habilitados
-//   - retorna SO customer_fee (esconde uber_fee_cents internos)
-//   - logado como quote.requested.public
-//   - rate-limit basico via Firestore (futuro: AppCheck)
-exports.uberDirect_getQuotePublic = onCall({
-    region: REGION,
-    secrets: [UBER_ENCRYPTION_KEY],
-    timeoutSeconds: 30,
-    cors: true,
-}, async (request) => {
-    const {
-        franchiseId,
-        dropoff_address,
-        dropoff_name,
-        dropoff_phone_number,
-        manifest_items,
-        order_total_cents = 0,
-        distance_km = 0,
-    } = request.data || {};
-
-    if (!franchiseId) {
-        throw new HttpsError("invalid-argument", "franchiseId obrigatorio");
-    }
-    if (!dropoff_address || !dropoff_name || !dropoff_phone_number) {
-        throw new HttpsError(
-            "invalid-argument",
-            "dropoff_address, dropoff_name e dropoff_phone_number sao obrigatorios"
-        );
-    }
-
-    const db = getDb();
-
-    // Settings (precisa existir + enabled)
-    const settingsSnap = await db.collection("uber_settings").doc(franchiseId).get();
-    if (!settingsSnap.exists) {
-        throw new HttpsError("not-found", "Entrega Uber nao configurada pra esta loja");
-    }
-    const settings = settingsSnap.data();
-    if (!settings.enabled) {
-        throw new HttpsError("failed-precondition", "Entrega Uber desabilitada pra esta loja");
-    }
-
-    const clientId = settings.client_id;
-    const clientSecret = decryptSecret(settings.client_secret_encrypted);
-    const customerId = settings.customer_id;
-
-    // Pricing rules (opcional)
-    const rulesSnap = await db.collection("uber_pricing_rules").doc(franchiseId).get();
-    const rules = rulesSnap.exists ? rulesSnap.data() : null;
-    const effectivePricingMode = (rules && rules.pricing_mode) || "exact_uber";
-
-    const t0 = Date.now();
-    let quoteData = null;
-    let error = null;
-
-    try {
-        const token = await getUberAccessToken(clientId, clientSecret, franchiseId);
-        const quoteBody = {
-            pickup_address: settings.pickup_address,
-            dropoff_address,
-            pickup_name: settings.pickup_name,
-            dropoff_name,
-            pickup_phone_number: settings.pickup_phone,
-            dropoff_phone_number,
-            manifest_items: manifest_items || [{ name: "Pedido MilkyPot", quantity: 1, size: "small" }],
-        };
-        const url = `${UBER_API_BASE}/${customerId}/delivery_quotes`;
-        quoteData = await uberRequest("POST", url, token, quoteBody);
-    } catch (err) {
-        error = err.message;
-    }
-
-    const durationMs = Date.now() - t0;
-
-    await logUberEvent(franchiseId, {
-        action: "quote.requested.public",
-        requestPayload: {
-            dropoff_address,
-            dropoff_name,
-            order_total_cents,
-            distance_km,
-            source: "cardapio.html",
-        },
-        responsePayload: quoteData ? { quote_id: quoteData.quote_id, fee: quoteData.fee, currency: quoteData.currency } : null,
-        durationMs,
-        error,
-    });
-
-    if (error) {
-        throw new HttpsError("internal", `Erro ao obter cotacao Uber: ${error}`);
-    }
-
-    const uberFeeCents = quoteData.fee != null ? Math.round(Number(quoteData.fee)) : 0;
-    const { customerFeeCents, isFree } = applyPricingRules(
-        rules ? { ...rules, pricing_mode: effectivePricingMode } : null,
-        uberFeeCents,
-        order_total_cents,
-        distance_km
-    );
-
-    // Resposta sanitizada — NAO expoe uber_fee_cents (custo interno)
-    return {
-        success: true,
-        data: {
-            quote_id: quoteData.quote_id,
-            customer_fee_cents: customerFeeCents,
-            customer_fee: customerFeeCents,
-            is_free: isFree,
-            currency: quoteData.currency || "BRL",
-            pickup_duration: quoteData.pickup_duration || null,
-            dropoff_eta: quoteData.dropoff_eta || null,
-            expires_at: quoteData.expires || null,
-        },
-    };
-});
-
-// ============================================================
 // ---- 5. uberDirect_createDelivery -------------------------
 // ============================================================
 exports.uberDirect_createDelivery = onCall({
@@ -1094,13 +973,61 @@ exports.uberDirect_getPricingRules = onCall({
  * Uber sends POST with JSON body. We do idempotent processing via Firestore
  * deduplication on event_id.
  */
+// Secret usado para verificar assinatura HMAC do webhook Uber Direct.
+// Configure em: firebase functions:secrets:set UBER_WEBHOOK_SECRET
+// (mesmo valor cadastrado no console Uber Direct > Webhook config).
+const UBER_WEBHOOK_SECRET = defineSecret("UBER_WEBHOOK_SECRET");
+
+function _verifyUberSignature(rawBody, signatureHeader, secret) {
+    if (!signatureHeader || typeof signatureHeader !== 'string') return false;
+    if (!secret) return false;
+    try {
+        const crypto = require('crypto');
+        const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+        // Aceita formatos comuns: hex puro, 'sha256=<hex>' ou 'v1=<hex>'
+        const provided = signatureHeader.replace(/^(sha256=|v1=)/i, '').trim();
+        const a = Buffer.from(expected, 'hex');
+        const b = Buffer.from(provided, 'hex');
+        if (a.length !== b.length) return false;
+        return crypto.timingSafeEqual(a, b);
+    } catch (_) {
+        return false;
+    }
+}
+
 exports.uberDirect_webhook = onRequest({
     region: REGION,
-    secrets: [UBER_ENCRYPTION_KEY],
+    secrets: [UBER_ENCRYPTION_KEY, UBER_WEBHOOK_SECRET],
     timeoutSeconds: 30,
 }, async (req, res) => {
     if (req.method !== "POST") {
         res.status(405).send("Method Not Allowed");
+        return;
+    }
+
+    // ---- HMAC signature verification ----
+    // Sem isso, qualquer um POSTa { event_id, delivery_id:<id_real>, status:'delivered' }
+    // e o pedido fica marcado como entregue sem ter saido da loja.
+    const sigHeader = req.headers['x-uber-signature']
+                   || req.headers['x-uber-signature-256']
+                   || req.headers['uber-signature']
+                   || '';
+    const rawBody = (req.rawBody && Buffer.isBuffer(req.rawBody))
+        ? req.rawBody
+        : Buffer.from(JSON.stringify(req.body || {}));
+    const secretValue = UBER_WEBHOOK_SECRET.value();
+    if (!secretValue) {
+        // Secret nao configurado — recuso por seguranca, nao processo "anything-goes"
+        console.error("[uberDirect_webhook] UBER_WEBHOOK_SECRET nao configurado");
+        res.status(503).send("Webhook secret not configured");
+        return;
+    }
+    if (!_verifyUberSignature(rawBody, sigHeader, secretValue)) {
+        console.warn("[uberDirect_webhook] assinatura HMAC invalida", {
+            hasHeader: !!sigHeader,
+            ip: req.headers['x-forwarded-for'] || req.ip
+        });
+        res.status(401).send("Invalid signature");
         return;
     }
 

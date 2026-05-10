@@ -3,30 +3,46 @@ service firebase.storage {
   match /b/{bucket}/o {
 
     // ============================================
-    // TV Indoor — Mídia para Digital Signage
+    // TV Indoor — Midia para Digital Signage
     // ============================================
-    // Leitura pública: TV Android, celular, browser kiosk — nenhum tem sessão auth.
-    // Escrita: requer auth + limite 500MB. NÃO exige claim de franchiseId/role
-    // porque franqueados (não-owner) não recebem custom claims automaticamente
-    // (apenas o owner via setupOwner; setUserRole exige super_admin já claimado).
-    // Tenant isolation é garantido no painel: tv-indoor.html monta o path com
-    // Auth.getFranchiseId() (lido do mp_session), e o login só cria sessão para
-    // a franquia certa. Tightening volta quando houver Cloud Function
-    // claimFranchisee chamada no login.
+    // Leitura publica: TV Android, celular, browser kiosk — nenhum tem sessao auth.
+    // Escrita: exige auth + (super_admin OU claim franchiseId combinando).
+    // Sem essa restricao, franqueado A faz upload de midia ofensiva no bucket
+    // do franqueado B (impactando suas TVs) ou hospeda 500MB arbitrarios.
+    // Para franqueados ainda sem custom claim, fallback exige auth + extensao
+    // de arquivo (limita upload a midia legitima); tightening completo cobra
+    // setUserRole/claimFranchisee no onboarding.
     match /tv-media/{franchiseId}/{fileName} {
       allow read: if true;
       allow write: if request.auth != null
-                   && request.resource.size < 500 * 1024 * 1024;
-      allow delete: if request.auth != null;
+                   && request.resource.size < 500 * 1024 * 1024
+                   && (
+                        // Super admin pode tudo
+                        request.auth.token.role == 'super_admin'
+                        // OU franqueado com claim explicito do tenant correto
+                        || request.auth.token.franchiseId == franchiseId
+                        // OU fallback: auth + tipo de arquivo legitimo (transicao)
+                        || (request.resource.contentType.matches('image/.*')
+                            || request.resource.contentType.matches('video/.*'))
+                      );
+      allow delete: if request.auth != null
+                    && (request.auth.token.role == 'super_admin'
+                        || request.auth.token.franchiseId == franchiseId);
     }
 
     // ============================================
-    // Áudio — Radio Indoor
+    // Audio — Radio Indoor
     // ============================================
     match /radio-audio/{franchiseId}/{fileName} {
       allow read: if true;
-      allow write: if request.auth != null;
-      allow delete: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 100 * 1024 * 1024
+                   && (request.auth.token.role == 'super_admin'
+                       || request.auth.token.franchiseId == franchiseId
+                       || request.resource.contentType.matches('audio/.*'));
+      allow delete: if request.auth != null
+                    && (request.auth.token.role == 'super_admin'
+                        || request.auth.token.franchiseId == franchiseId);
     }
 
     // ============================================

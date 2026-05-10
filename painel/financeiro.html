@@ -53,9 +53,6 @@
                 <a href="analytics.html" class="sidebar-link">
                     <span class="icon">📊</span> Analytics
                 </a>
-                <a href="analise.html" class="sidebar-link">
-                    <span class="icon">🧠</span> Inteligência
-                </a>
                 <a href="conciliacao.html" class="sidebar-link">
                     <span class="icon">🏦</span> Conciliação
                 </a>
@@ -322,25 +319,6 @@
                     </div>
                 </div>
 
-                <!-- ============ DESPESAS RECORRENTES (FASE 3) ============ -->
-                <!-- Custos fixos automaticos: cadastra uma vez, gera lancamento todo mes -->
-                <div class="panel-card" id="recurringSection" style="border:2px solid #C7D2FE">
-                    <div class="panel-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; background:linear-gradient(135deg,#EEF2FF,#E0E7FF)">
-                        <div>
-                            <h3 style="margin:0">🔁 Despesas Recorrentes</h3>
-                            <div style="font-size:12px;color:#4338CA;margin-top:2px">aluguel · salários · energia · internet — cadastra 1x e gera todo mês automaticamente</div>
-                        </div>
-                        <div style="display:flex; gap:8px; flex-wrap:wrap">
-                            <button class="btn btn-sm btn-outline" onclick="gerarRecorrentesAtual()" title="Gera lançamentos pro mês selecionado na DRE">⚡ Gerar mês selecionado</button>
-                            <button class="btn btn-sm btn-primary" onclick="abrirRecorrenteModal()">+ Nova recorrente</button>
-                        </div>
-                    </div>
-                    <div class="panel-card-body">
-                        <div id="recurringList"><p style="text-align:center;color:#6B7280">Carregando...</p></div>
-                        <div id="recurringStatus" style="margin-top:14px"></div>
-                    </div>
-                </div>
-
                 <!-- DRE - DEMONSTRATIVO DE RESULTADO -->
                 <div class="panel-card" id="dreSection">
                     <div class="panel-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
@@ -503,9 +481,8 @@
     <script src="../js/core/reports.js"></script>
     <script src="../js/core/adminconfig.js?v=mp-v14"></script>
     <script src="../js/core/caixa.js?v=mp-v91"></script>
-    <script src="../js/core/financas.js?v=mp-v15"></script>
-    <script src="../js/core/recurring-expenses.js?v=mp-v14"></script>
-    <script src="../js/core/catalog-v2.js?v=mp-v105"></script>
+    <script src="../js/core/financas.js?v=mp-v14"></script>
+    <script src="../js/core/catalog-v2.js?v=mp-v14"></script>
     <script src="../js/core/cost-calculator.js?v=mp-v14"></script>
     <script src="../js/core/finance-realtime.js?v=mp-v14"></script>
     <script src="../js/core/producao-calc.js"></script>
@@ -675,9 +652,6 @@
 
             // DRE
             renderDRE();
-
-            // Despesas recorrentes (FASE 3)
-            try { renderRecurringList(); } catch (e) { console.warn('renderRecurringList:', e); }
 
             // Ranking
             renderRanking();
@@ -914,29 +888,28 @@
             var income = monthFinances.filter(function(f) { return f.type === 'income'; });
             var expenses = monthFinances.filter(function(f) { return f.type === 'expense'; });
 
-            // ============================================================
-            // DRE UNIFICADO — Fase 2 (decisao do cliente)
-            //
-            // REGRA: usar SOMENTE cmvSnapshot/cmvTotal das vendas NOVAS.
-            // Pedidos antigos sem CMV ficam SEPARADOS como
-            // "Receita sem CMV historico" — nao entram na margem real.
-            // NAO misturar metodo de estoque (estoqueInicial+compras-estoqueFinal).
-            // ============================================================
+            // Categorize income — 'vendas' inclui vendas_pdv (source:pdv) e lançamentos manuais
+            var vendasTotal = income.filter(function(f) {
+                return f.category === 'vendas' || f.category === 'vendas_pdv';
+            }).reduce(function(s, f) { return s + (f.amount || 0); }, 0);
+            var outrasReceitas = income.filter(function(f) {
+                return f.category !== 'vendas' && f.category !== 'vendas_pdv';
+            }).reduce(function(s, f) { return s + (f.amount || 0); }, 0);
+            var receitaBruta = vendasTotal + outrasReceitas;
 
-            // 1) Vendas com CMV calculado (PDV pos-PR #371) — margem confiavel
-            var vendasComCMV = income.filter(function(f) {
-                if (f.category !== 'vendas' && f.category !== 'vendas_pdv') return false;
-                // Tem cmvSnapshot (novo) OU custo>0 (legado-mas-rastreado)
-                return (typeof f.cmvSnapshot === 'number' && f.cmvSnapshot > 0) ||
-                       (typeof f.custo === 'number' && f.custo > 0);
-            });
-            var receitaComCMV = vendasComCMV.reduce(function(s,f){ return s + (f.amount || 0); }, 0);
-            var cmvReal = vendasComCMV.reduce(function(s,f){
-                return s + (Number(f.cmvSnapshot || f.custo) || 0);
-            }, 0);
-            var lucroBrutoVendas = receitaComCMV - cmvReal;
-            var margemBrutaPct = receitaComCMV > 0
-                ? Math.round((lucroBrutoVendas / receitaComCMV) * 1000) / 10 : null;
+            // CMV (Custo da Mercadoria Vendida) — calculado automaticamente pelo PDV
+            // com base nos custos cadastrados em Produtos. Zero se o custo não foi rastreado.
+            var cmv = income.filter(function(f) {
+                return (f.category === 'vendas' || f.category === 'vendas_pdv') && f.custo > 0;
+            }).reduce(function(s, f) { return s + (f.custo || 0); }, 0);
+            var margemBrutaVendas = vendasTotal > 0 && cmv > 0
+                ? Math.round((1 - cmv / vendasTotal) * 1000) / 10 : null;
+
+            // Deductions
+            var impostos = receitaBruta * 0.06;
+            var taxaFranquia = expenses.filter(function(f) { return f.category === 'franquia' || f.category === 'taxa_franquia'; })
+                .reduce(function(s, f) { return s + (f.amount || 0); }, 0);
+            var receitaLiquida = receitaBruta - impostos - taxaFranquia;
 
             // 2) Vendas SEM CMV historico (pedidos antigos pre-PR #371)
             var vendasSemCMV = income.filter(function(f) {
@@ -1061,13 +1034,22 @@
             }
             html += '<tr class="dre-subtotal"><td>Total Receita Bruta</td><td class="dre-value ' + totalClass(receitaBruta) + '">' + fmtVal(receitaBruta) + '</td></tr>';
 
-            // ========== CMV (apenas vendas com CMV) ==========
-            html += '<tr class="dre-section-header"><td colspan="2">CMV — Custo da Mercadoria Vendida</td></tr>';
-            if (cmvReal > 0) {
-                html += '<tr class="dre-row"><td class="dre-indent">(-) CMV (snapshot da venda)</td><td class="dre-value dre-negative">' + fmtVal(cmvReal) + '</td></tr>';
-            } else {
-                html += '<tr class="dre-row"><td class="dre-indent" style="color:#92400e">(-) CMV indisponível — vendas sem custo rastreado</td><td class="dre-value">—</td></tr>';
+            // CMV — só aparece se houver dados rastreados pelo PDV
+            if (cmv > 0) {
+                html += '<tr class="dre-section-header"><td colspan="2">CMV — CUSTO DA MERCADORIA VENDIDA</td></tr>';
+                html += '<tr class="dre-row"><td class="dre-indent">(-) CMV apurado pelo PDV</td><td class="dre-value dre-negative">' + fmtVal(cmv) + '</td></tr>';
+                html += '<tr class="dre-margin" title="Percentual que sobra da receita de vendas após descontar o custo dos produtos">';
+                html +=   '<td class="dre-indent">📊 Margem Bruta das Vendas</td>';
+                html +=   '<td class="dre-value ' + (margemBrutaVendas >= 30 ? 'dre-positive' : 'dre-negative') + '">';
+                html +=     margemBrutaVendas !== null ? margemBrutaVendas.toFixed(1) + '%' : '—';
+                html +=   '</td>';
+                html += '</tr>';
             }
+
+            // DEDUCOES
+            html += '<tr class="dre-section-header"><td colspan="2">DEDUCOES</td></tr>';
+            html += '<tr class="dre-row"><td class="dre-indent">(-) Impostos (estimado 6%)</td><td class="dre-value dre-negative">' + fmtVal(impostos) + '</td></tr>';
+            html += '<tr class="dre-row"><td class="dre-indent">(-) Taxa Franquia</td><td class="dre-value dre-negative">' + fmtVal(taxaFranquia) + '</td></tr>';
 
             // ========== LUCRO BRUTO ==========
             html += '<tr class="dre-total"><td>LUCRO BRUTO <small style="color:#666">(receita com CMV − CMV)</small></td>';

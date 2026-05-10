@@ -13,6 +13,17 @@
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://milkypot.com/cardapio.html">
 
+    <!-- Pixels (configurar IDs no index.html — usa as mesmas envs) -->
+    <meta name="mp-meta-pixel" content="REPLACE_ME">
+    <meta name="mp-tiktok-pixel" content="REPLACE_ME">
+    <meta name="mp-gtm-id" content="GTM-WGPBCS6K">
+    <meta name="mp-ga4-id" content="G-N2B5V05MEN">
+    <script src="js/core/pixels.js" defer></script>
+
+    <!-- Sentry DSN -->
+    <meta name="sentry-dsn" content="https://65b5fc23340431c0ca62ecfff1c43143@o4511367769620480.ingest.de.sentry.io/4511367953252432">
+    <script src="js/core/error-tracking.js" defer></script>
+
     <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://milkypot.com/cardapio.html">
@@ -30,6 +41,54 @@
     <meta name="twitter:description" content="Monte seu potinho perfeito! Pedido online com retirada rápida. Londrina-PR.">
     <meta name="twitter:image" content="https://milkypot.com/images/og-cardapio.jpg">
 
+    <!-- Schema Menu pra rich snippet + citacoes ChatGPT/Perplexity -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Menu",
+        "name": "Cardapio MilkyPot",
+        "url": "https://milkypot.com/cardapio.html",
+        "inLanguage": "pt-BR",
+        "provider": {
+            "@type": "IceCreamShop",
+            "name": "MilkyPot",
+            "url": "https://milkypot.com",
+            "telephone": "+55-43-99991-9777",
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Av. Quintino Bocaiuva, 1045 (Muffato Quintino)",
+                "addressLocality": "Londrina",
+                "addressRegion": "PR",
+                "addressCountry": "BR"
+            }
+        },
+        "hasMenuSection": [
+            { "@type": "MenuSection", "name": "Linha Ninho", "hasMenuItem": [
+                { "@type": "MenuItem", "name": "Shake de Ninho", "offers": { "@type": "Offer", "price": "14.00", "priceCurrency": "BRL" } },
+                { "@type": "MenuItem", "name": "Ninho + Morango", "offers": { "@type": "Offer", "price": "14.00", "priceCurrency": "BRL" } },
+                { "@type": "MenuItem", "name": "Nutella", "offers": { "@type": "Offer", "price": "14.00", "priceCurrency": "BRL" } },
+                { "@type": "MenuItem", "name": "Oreo", "offers": { "@type": "Offer", "price": "14.00", "priceCurrency": "BRL" } },
+                { "@type": "MenuItem", "name": "Capuccino Cream", "offers": { "@type": "Offer", "price": "14.00", "priceCurrency": "BRL" } }
+            ]},
+            { "@type": "MenuSection", "name": "Acai", "hasMenuItem": [
+                { "@type": "MenuItem", "name": "Acai + Granola", "offers": { "@type": "Offer", "price": "14.00", "priceCurrency": "BRL" } },
+                { "@type": "MenuItem", "name": "Acai + Morango", "offers": { "@type": "Offer", "price": "14.00", "priceCurrency": "BRL" } },
+                { "@type": "MenuItem", "name": "Acai + Banana", "offers": { "@type": "Offer", "price": "14.00", "priceCurrency": "BRL" } }
+            ]},
+            { "@type": "MenuSection", "name": "Fit/Zero", "hasMenuItem": [
+                { "@type": "MenuItem", "name": "Shake Whey", "offers": { "@type": "Offer", "price": "14.00", "priceCurrency": "BRL" } },
+                { "@type": "MenuItem", "name": "Banana + Whey", "offers": { "@type": "Offer", "price": "14.00", "priceCurrency": "BRL" } },
+                { "@type": "MenuItem", "name": "Pasta de Amendoim", "offers": { "@type": "Offer", "price": "14.00", "priceCurrency": "BRL" } }
+            ]},
+            { "@type": "MenuSection", "name": "Sundae Gourmet", "hasMenuItem": [
+                { "@type": "MenuItem", "name": "Sundae Morango", "offers": { "@type": "Offer", "price": "18.00", "priceCurrency": "BRL" } },
+                { "@type": "MenuItem", "name": "Sundae Nutella", "offers": { "@type": "Offer", "price": "18.00", "priceCurrency": "BRL" } },
+                { "@type": "MenuItem", "name": "Sundae Oreo", "offers": { "@type": "Offer", "price": "18.00", "priceCurrency": "BRL" } }
+            ]}
+        ]
+    }
+    </script>
+
     <!-- ============================================
          Security Headers (via meta — backup; use server-side quando possível)
          ============================================ -->
@@ -43,8 +102,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=mp-v116">
-    <link rel="stylesheet" href="css/mobile-app.css?v=mp-v114">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mobile-app.css">
 
     <!-- Favicon + PWA -->
     <link rel="icon" type="image/png" href="images/logo-milkypot.png">
@@ -433,6 +492,13 @@
 
     <!-- Order Success Modal -->
     <div class="modal-overlay" id="successModal">
+        <!-- Confetti container (visivel quando modal abre — JS dispara via .show) -->
+        <div class="mp-confetti" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+        </div>
         <div class="modal-content success-modal">
             <div class="success-animation">
                 <div class="success-circle">
@@ -443,8 +509,56 @@
             <p>Seu pedido <strong id="orderNumber">#MP0001</strong> foi recebido com sucesso!</p>
             <div class="success-details" id="successDetails"></div>
             <button class="btn-primary btn-full" onclick="closeSuccessModal()">Voltar ao Cardápio</button>
+            <button class="btn-secondary btn-full" style="margin-top:8px;"
+                onclick="(function(){var u=encodeURIComponent('Acabei de pedir na MilkyPot 🐑🍨 venha tambem: https://milkypot.com');window.open('https://wa.me/?text='+u,'_blank');})()">
+                📲 Compartilhar com amigo
+            </button>
         </div>
     </div>
+    <style>
+        /* Confetti puro CSS — sem libs externas, baixo custo */
+        #successModal .mp-confetti {
+            position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+            display: none;
+        }
+        #successModal.show .mp-confetti { display: block; }
+        #successModal .mp-confetti span {
+            position: absolute; top: -10px; width: 10px; height: 14px;
+            opacity: 0.9; animation: mpConfettiFall 2.4s ease-in forwards;
+        }
+        #successModal .mp-confetti span:nth-child(odd) { background: #FF80AB; }
+        #successModal .mp-confetti span:nth-child(3n) { background: #82B1FF; }
+        #successModal .mp-confetti span:nth-child(5n) { background: #FFD54F; }
+        #successModal .mp-confetti span:nth-child(7n) { background: #B9F6CA; }
+        #successModal .mp-confetti span:nth-child(1)  { left: 5%;  animation-delay: 0s;   }
+        #successModal .mp-confetti span:nth-child(2)  { left: 12%; animation-delay: 0.1s; }
+        #successModal .mp-confetti span:nth-child(3)  { left: 19%; animation-delay: 0.05s; }
+        #successModal .mp-confetti span:nth-child(4)  { left: 26%; animation-delay: 0.15s; }
+        #successModal .mp-confetti span:nth-child(5)  { left: 33%; animation-delay: 0.2s; }
+        #successModal .mp-confetti span:nth-child(6)  { left: 40%; animation-delay: 0.05s; }
+        #successModal .mp-confetti span:nth-child(7)  { left: 47%; animation-delay: 0.18s; }
+        #successModal .mp-confetti span:nth-child(8)  { left: 54%; animation-delay: 0.08s; }
+        #successModal .mp-confetti span:nth-child(9)  { left: 61%; animation-delay: 0.22s; }
+        #successModal .mp-confetti span:nth-child(10) { left: 68%; animation-delay: 0.12s; }
+        #successModal .mp-confetti span:nth-child(11) { left: 75%; animation-delay: 0.04s; }
+        #successModal .mp-confetti span:nth-child(12) { left: 82%; animation-delay: 0.16s; }
+        #successModal .mp-confetti span:nth-child(13) { left: 89%; animation-delay: 0.09s; }
+        #successModal .mp-confetti span:nth-child(14) { left: 96%; animation-delay: 0.21s; }
+        #successModal .mp-confetti span:nth-child(15) { left: 30%; animation-delay: 0.6s; }
+        #successModal .mp-confetti span:nth-child(16) { left: 50%; animation-delay: 0.7s; }
+        #successModal .mp-confetti span:nth-child(17) { left: 70%; animation-delay: 0.65s; }
+        #successModal .mp-confetti span:nth-child(18) { left: 20%; animation-delay: 0.9s; }
+        #successModal .mp-confetti span:nth-child(19) { left: 60%; animation-delay: 1.0s; }
+        #successModal .mp-confetti span:nth-child(20) { left: 80%; animation-delay: 1.1s; }
+        @keyframes mpConfettiFall {
+            0%   { transform: translateY(-10vh) rotate(0deg);    opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        /* Respeita prefers-reduced-motion */
+        @media (prefers-reduced-motion: reduce) {
+            #successModal .mp-confetti { display: none !important; }
+        }
+    </style>
 
     <!-- Product Bottom Sheet -->
     <div id="productSheetBackdrop" class="sheet-backdrop" onclick="closeProductSheet()" style="display:none;"></div>
@@ -471,79 +585,7 @@
         <p class="cf-copy">© 2026 MilkyPot. Todos os direitos reservados.</p>
     </footer>
 
-    <!-- Sticky Cart Bar — mobile-first, sempre visivel quando tem item -->
-    <style>
-      .sticky-cart-bar{position:fixed;left:0;right:0;bottom:0;z-index:990;background:#fff;border-top:1px solid #e5e7eb;box-shadow:0 -10px 30px -10px rgba(0,0,0,.18);padding:10px 14px;display:flex;align-items:center;gap:10px;animation:slideUp .3s ease}
-      @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-      .sticky-cart-info{display:flex;align-items:center;gap:8px;color:#374151;font-weight:600;font-size:13px;flex-shrink:0}
-      .sticky-cart-icon{font-size:22px}
-      .sticky-cart-btn{flex:1;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:14px 16px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(16,185,129,.35);transition:transform .12s}
-      .sticky-cart-btn:active{transform:scale(.97)}
-      .sticky-cart-btn strong{font-size:16px}
-      @media (min-width:768px){.sticky-cart-bar{max-width:480px;left:auto;right:16px;bottom:16px;border-radius:16px;border-top:0;padding:12px 14px}}
-      /* Espaço pra nao tampar conteudo */
-      body.has-cart-bar{padding-bottom:80px}
-
-      /* CRITICAL FIX: esconder sticky cart bar quando carrinho aberto
-         (senao o botao verde gigante cobre o 'Finalizar Pedido' do sidebar) */
-      body.cart-open .sticky-cart-bar{display:none!important}
-
-      /* CART SIDEBAR — mobile full-screen + footer SEMPRE visivel */
-      .cart-sidebar{
-        position:fixed; top:0; right:0; bottom:0; width:100%; max-width:480px;
-        background:#fff; z-index:1100; transform:translateX(100%);
-        transition:transform .28s cubic-bezier(.4,0,.2,1);
-        display:flex; flex-direction:column;
-        box-shadow:-12px 0 40px rgba(0,0,0,.15);
-      }
-      .cart-sidebar.open{transform:translateX(0)}
-      .cart-overlay{
-        position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1099;
-        opacity:0; pointer-events:none; transition:opacity .25s;
-      }
-      .cart-overlay.open{opacity:1; pointer-events:auto}
-      .cart-header{
-        padding:16px 18px; border-bottom:1px solid #e5e7eb;
-        display:flex; justify-content:space-between; align-items:center;
-        flex-shrink:0; background:linear-gradient(135deg,#7B1FA2,#E91E63); color:#fff;
-      }
-      .cart-header h3{margin:0; font-size:18px; font-weight:800}
-      .cart-close{
-        background:rgba(255,255,255,.25); border:none; color:#fff;
-        width:36px; height:36px; border-radius:50%; cursor:pointer;
-        font-size:22px; line-height:1; display:flex; align-items:center; justify-content:center;
-        font-weight:700;
-      }
-      .cart-close:hover{background:rgba(255,255,255,.4)}
-      .cart-items{
-        flex:1; overflow-y:auto; padding:8px 12px;
-        background:#f9fafb;
-      }
-      .cart-empty{
-        text-align:center; padding:60px 20px; color:#9ca3af;
-      }
-      .cart-empty-icon{font-size:60px; display:block; margin-bottom:12px; opacity:.5}
-      .cart-footer{
-        flex-shrink:0; padding:14px 16px; background:#fff;
-        border-top:2px solid #e5e7eb;
-        box-shadow:0 -8px 20px -8px rgba(0,0,0,.1);
-      }
-      .cart-total{
-        display:flex; justify-content:space-between; align-items:center;
-        font-size:14px; color:#374151; margin-bottom:10px;
-      }
-      .cart-total-value{
-        font-size:22px; font-weight:900; color:#7B1FA2; letter-spacing:-.5px;
-      }
-      .btn-primary.btn-full{
-        width:100%; background:linear-gradient(135deg,#10B981,#059669); color:#fff;
-        border:none; padding:16px; border-radius:12px; font-weight:800;
-        font-size:16px; cursor:pointer; box-shadow:0 4px 12px rgba(16,185,129,.35);
-        transition:transform .12s;
-      }
-      .btn-primary.btn-full:hover{transform:translateY(-1px)}
-      .btn-primary.btn-full:active{transform:scale(.98)}
-    </style>
+    <!-- Sticky Cart Bar -->
     <div id="stickyCart" class="sticky-cart-bar" style="display:none;">
         <div class="sticky-cart-info">
             <span class="sticky-cart-icon">🛒</span>
@@ -555,12 +597,27 @@
         </button>
     </div>
 
-    <!-- Firebase SDKs — necessario pra Firestore (catalog sync) e
-         Functions (uberDirect_getQuote pra cotacao de frete real) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
-    <script src="js/core/firebase-config.js"></script>
+    <!-- WhatsApp FAB sticky (audit: canal primario de conversao Brasil) -->
+    <a id="mpWhatsFab" href="https://wa.me/5543999919777?text=Oi!%20Vim%20do%20card%C3%A1pio%20online%20da%20MilkyPot!"
+       target="_blank" rel="noopener"
+       aria-label="Fale com a gente no WhatsApp"
+       style="position:fixed;right:14px;bottom:88px;width:56px;height:56px;border-radius:50%;
+              background:#25D366;display:flex;align-items:center;justify-content:center;
+              box-shadow:0 6px 22px rgba(37,211,102,0.45);z-index:1100;text-decoration:none;
+              transition:transform .15s">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+            <path d="M19.05 4.91A9.82 9.82 0 0 0 12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01zM12.04 20.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.21 8.21 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.23 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.7-.8-.23-.08-.39-.12-.56.12-.17.25-.64.8-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.42-.14 0-.31-.02-.48-.02-.17 0-.43.06-.66.31-.23.25-.86.84-.86 2.05 0 1.21.88 2.37 1 2.54.12.17 1.72 2.63 4.17 3.69.58.25 1.04.4 1.39.51.58.19 1.12.16 1.54.1.47-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29z"/>
+        </svg>
+    </a>
+    <style>
+        #mpWhatsFab:hover { transform: scale(1.08); }
+        #mpWhatsFab:active { transform: scale(0.95); }
+        #mpWhatsFab:focus-visible { outline: 3px solid #FFD54F; outline-offset: 2px; }
+        @media (max-width: 480px) {
+            #mpWhatsFab { right: 12px; bottom: 76px; width: 52px; height: 52px; }
+        }
+    </style>
+
     <script src="js/core/constants.js"></script>
     <script src="js/core/utils.js"></script>
     <script src="js/core/datastore.js?v=mp-v112"></script>
@@ -574,11 +631,10 @@
     <script src="js/analytics.js?v=mp-v114"></script>
     <script src="js/cardapio-data.js"></script>
     <script src="js/core/cost-calculator.js?v=mp-v14"></script>
-    <script src="js/core/catalog-v2.js?v=mp-v105"></script>
-    <script src="js/core/delivery-rules.js?v=mp-v118"></script>
-    <script src="js/cart.js?v=mp-v114"></script>
+    <script src="js/core/catalog-v2.js?v=mp-v14"></script>
+    <script src="js/cart.js"></script>
     <script src="js/core/raspinha-engine.js"></script>
-    <script src="js/checkout.js?v=mp-v119"></script>
+    <script src="js/checkout.js"></script>
     <script src="js/chat-ai.js" defer></script>
     <script>
     /* ============================================
@@ -586,53 +642,6 @@
        ============================================ */
     (function() {
         var catalog = null;
-
-        function getCardapioFranchiseId() {
-            try {
-                if (window.selectedStore && window.selectedStore.id) return window.selectedStore.id;
-                const sess = typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession();
-                if (sess && sess.franchiseId) return sess.franchiseId;
-            } catch(_) {}
-            return 'muffato-quintino';
-        }
-
-        function getDeliveryConfig() {
-            return window.DeliveryRules
-                ? DeliveryRules.getConfig(getCardapioFranchiseId())
-                : { percentual_acrescimo_delivery: 30, pedido_minimo_delivery: 30, taxa_uber_referencia: 10.50, modo_frete_delivery: 'FRETE_GRATIS_TOTAL' };
-        }
-
-        function updateDeliveryPromoNotice() {
-            var el = document.getElementById('deliveryPromoNotice');
-            if (!el) return;
-            var cfg = getDeliveryConfig();
-            var min = window.DeliveryRules ? DeliveryRules.brl(cfg.pedido_minimo_delivery) : ('R$ ' + Number(cfg.pedido_minimo_delivery || 30).toFixed(2).replace('.', ','));
-            if (cfg.modo_frete_delivery === 'COBRAR_DIFERENCA') {
-                el.textContent = '🚚 Parte do frete já está inclusa no pedido. Você paga apenas a diferença da entrega.';
-            } else if (cfg.modo_frete_delivery === 'FRETE_NORMAL') {
-                el.textContent = '🚚 Entrega calculada conforme a região.';
-            } else {
-                el.textContent = '🚚 Frete grátis em pedidos a partir de ' + min + ', conforme região de entrega.';
-            }
-        }
-
-        function getSimpleDeliveryPricing(item) {
-            return window.DeliveryRules
-                ? DeliveryRules.priceForSimpleItem(item, getDeliveryConfig())
-                : { pdvUnitPrice: Number(item && item.price) || 0, deliveryUnitPrice: Number(item && item.price) || 0 };
-        }
-
-        function getVariantDeliveryPricing(variant) {
-            return window.DeliveryRules
-                ? DeliveryRules.priceForVariant(variant, getDeliveryConfig())
-                : { pdvUnitPrice: Number(variant && variant.precoLoja) || 0, deliveryUnitPrice: Number(variant && (variant.precoDelivery || variant.precoLoja)) || 0 };
-        }
-
-        function getPortionDeliveryPricing(item, peso) {
-            return window.DeliveryRules
-                ? DeliveryRules.priceForPortion(item, peso, getDeliveryConfig())
-                : { pdvUnitPrice: (Number(item && item.price) || 0) * peso / 1000, deliveryUnitPrice: (Number(item && item.price) || 0) * peso / 1000 };
-        }
 
         // Labels e emojis para grupos de categoria (legado + CatalogV2)
         const SABORES_GROUP_META = {
@@ -644,7 +653,6 @@
             'sorvete_kg': { label: 'Sorvete por Kg',  emoji: '⚖️', tab: 'sorvete' },
             'buffet':     { label: 'Buffet',          emoji: '🍽️', tab: 'buffet' },
             'acai':       { label: 'Açaí Bowls',      emoji: '🫐', tab: 'acai' },
-            'casquinha':  { label: 'Casquinha',       emoji: '🍦', tab: 'casquinha' },
             // CARDAPIO_CONFIG legado
             'classicos':       { label: 'Clássicos',      emoji: '☁️', tab: 'ninho' },
             'tradicionais':    { label: 'Tradicionais',   emoji: '☁️', tab: 'ninho' },
@@ -678,30 +686,12 @@
 
             catalog = DataStore.get('catalog_config');
             if (catalog) {
-                updateDeliveryPromoNotice();
                 _renderCatalogTabs();
                 renderProducts('ninho');
             } else {
                 console.log('🔄 Sincronizando catálogo delivery...');
                 setTimeout(initCatalog, 500);
             }
-
-            // FASE 4D: cardapio publico nao tem auth Firestore -> usa storage event
-            // pra detectar quando admin de OUTRA aba do mesmo browser atualiza catalog.
-            // Multi-PC ainda depende do DataStore poll (intervalo definido em datastore.js).
-            window.addEventListener('storage', (ev) => {
-                if (ev.key === 'mp_catalog_config' && ev.newValue) {
-                    try {
-                        const updated = JSON.parse(ev.newValue);
-                        catalog = updated;
-                        _renderCatalogTabs();
-                        const activeTab = document.querySelector('.cat-tab.active');
-                        const cat = activeTab ? activeTab.dataset.category : 'ninho';
-                        renderProducts(cat);
-                        console.log('🔄 Cardapio: atualizado via storage event (admin em outra aba)');
-                    } catch (e) { console.warn('storage event parse:', e); }
-                }
-            });
 
             // Sync listener: atualiza tabs + produtos em tempo real quando produtos.html salva
             let _reassertInFlight = false;
@@ -776,7 +766,6 @@
                             }
                         }
                     }
-                    updateDeliveryPromoNotice();
                 } catch(e) {}
             });
         }
@@ -802,7 +791,6 @@
                 { key: 'ninho',    label: '🍨 MilkyPot' },
                 { key: 'acai',     label: '🫐 Açaí' },
                 { key: 'picole',   label: '🍡 Picolé' },
-                { key: 'casquinha', label: '🍦 Casquinha' },
                 { key: 'sorvete',  label: '⚖️ Sorvete Kg' },
                 { key: 'buffet',   label: '🍽️ Buffet' },
                 { key: 'fit',      label: '💪 Zero/Fit' },
@@ -849,7 +837,6 @@
                 'ninho':   ['classicos', 'tradicionais', 'especiais', 'milkshake', 'potinho', 'sundae'],
                 'acai':    ['acai'],
                 'picole':  ['picole'],
-                'casquinha': ['casquinha'],
                 'sorvete': ['sorvete_kg'],
                 'buffet':  ['buffet'],
                 'fit':     ['zero_fit'],
@@ -870,17 +857,11 @@
                 }
             });
 
-            // FASE 4C: filtro Cardapio usa disponibilidade.cardapio com fallback no canalVenda legado
-            // Default permissivo: produto sem flag continua aparecendo (nao quebra producao)
-            return items.filter(i => {
-                if (i.available === false) return false;
-                if (i.disponibilidade && i.disponibilidade.cardapio === false) return false;
-                // Sem flag nova => comportamento legado (canalVenda)
-                if (!i.disponibilidade) {
-                    return (!i.canalVenda || i.canalVenda === 'delivery' || i.canalVenda === 'ambos');
-                }
-                return true;
-            });
+            // Filtro canal: delivery ou ambos (omitido = legacy sem restrição)
+            return items.filter(i =>
+                i.available !== false &&
+                (!i.canalVenda || i.canalVenda === 'delivery' || i.canalVenda === 'ambos')
+            );
         }
 
         function renderProducts(filter) {
@@ -918,19 +899,13 @@
                 // 2. Se tipoVenda = por_peso, calcula da porcao minima
                 // 3. Senao, usa o menor preco dos tamanhos do catalogo (fallback)
                 var displayPrice, priceLabel;
-                if (it._v2 && it._v2.variantes && it._v2.variantes.length) {
-                    var vPrices = it._v2.variantes
-                        .map(function(v){ return getVariantDeliveryPricing(v).deliveryUnitPrice; })
-                        .filter(function(p){ return p > 0; });
-                    displayPrice = vPrices.length ? Math.min.apply(null, vPrices) : 0;
-                    priceLabel = 'a partir de ';
-                } else if (typeof it.price === 'number') {
+                if (typeof it.price === 'number') {
+                    displayPrice = it.price;
                     if (it.tipoVenda === 'por_peso') {
                         var minPortion = (it.porcoes && it.porcoes.length > 0) ? it.porcoes[0] : null;
-                        displayPrice = minPortion ? getPortionDeliveryPricing(it, minPortion.peso).deliveryUnitPrice : getSimpleDeliveryPricing(it).deliveryUnitPrice;
+                        displayPrice = minPortion ? (it.price * minPortion.peso / 1000) : it.price;
                         priceLabel = 'a partir de ';
                     } else {
-                        displayPrice = getSimpleDeliveryPricing(it).deliveryUnitPrice;
                         priceLabel = '';
                     }
                 } else {
@@ -962,8 +937,7 @@
                 var isPremium = !!(it.premium || it.isPremium || (it._v2 && it._v2.premium) || (typeof displayPrice === 'number' && displayPrice >= 20));
                 var premiumAttr = isPremium ? ' data-premium="true"' : '';
 
-                var openSheetCall = "openProductSheet('" + it.id + "')";
-                html += '<div class="product-card-mobile"' + premiumAttr + ' role="button" tabindex="0" onclick="' + openSheetCall + '">' +
+                html += '<div class="product-card-mobile"' + premiumAttr + ' onclick="openProductSheet(\'' + it.id + '\')">' +
                     '<div class="card-emoji-wrap">' +
                         imgHtml +
                         badgeHtml +
@@ -974,7 +948,7 @@
                         spHtml +
                         '<div class="card-footer">' +
                             '<span class="card-price">' + (priceLabel ? '<small>' + priceLabel + '</small>' : '') + '<strong>R$ ' + displayPrice.toFixed(2).replace('.',',') + '</strong></span>' +
-                            '<button type="button" class="card-add-btn" onclick="event.stopPropagation();' + openSheetCall + '">Pedir</button>' +
+                            '<button class="card-add-btn">Pedir</button>' +
                         '</div>' +
                     '</div>' +
                 '</div>';
@@ -1033,42 +1007,48 @@
                         <div class="sheet-sizes">
                 `;
                 (item.porcoes || [{label: 'Padrão', peso: 500}]).forEach((p, idx) => {
-                    const pricing = getPortionDeliveryPricing(item, p.peso);
-                    const portionPrice = pricing.deliveryUnitPrice;
+                    const portionPrice = (item.price * p.peso / 1000);
                     html += `
                         <button class="sheet-size-btn ${idx === 0 ? 'selected' : ''}" 
-                            onclick="selectPortion(this, ${p.peso}, ${portionPrice}, ${pricing.pdvUnitPrice})">
+                            onclick="selectPortion(this, ${p.peso}, ${portionPrice})">
                             <span class="size-ml">${p.peso}g</span>
                             <span class="size-name">${p.label}</span>
                             <span class="size-price">R$ ${portionPrice.toFixed(2).replace('.',',')}</span>
                         </button>
                     `;
-                    if (idx === 0) window._sheetPortion = { ...p, price: portionPrice, pdvPrice: pricing.pdvUnitPrice };
+                    if (idx === 0) window._sheetPortion = { ...p, price: portionPrice };
                 });
                 html += `</div></div>`;
             } else if (item._v2 && item._v2.variantes && item._v2.variantes.length) {
                 // Case 2a: Unit items COM variantes (P/M/G — milkshakes etc.)
+                // Pega preço por canal: delivery por padrão no cardápio online
+                const priceKey = 'precoDelivery';
                 html += `
                     <div class="sheet-section">
                         <h4 class="sheet-section-title">Escolha o tamanho</h4>
                         <div class="sheet-sizes">
                 `;
                 item._v2.variantes.forEach((v, idx) => {
-                    const pricing = getVariantDeliveryPricing(v);
-                    const price = pricing.deliveryUnitPrice;
+                    const price = Number(v[priceKey]) || Number(v.precoLoja) || 0;
                     if (!price) return;
-                    const priceLine = `<span class="size-price">R$ ${price.toFixed(2).replace('.',',')}</span>`;
+                    const isPromo = v.promoAtivo && Number(v.precoLojaOriginal) > Number(v.precoLoja);
+                    const promoBadge = isPromo
+                        ? `<span class="size-promo-badge">${(v.promoLabel || 'PROMO').toUpperCase()}</span>`
+                        : '';
+                    const priceLine = isPromo
+                        ? `<span class="size-price-original">R$ ${Number(v.precoLojaOriginal).toFixed(2).replace('.',',')}</span><span class="size-price size-price-promo">R$ ${price.toFixed(2).replace('.',',')}</span>`
+                        : `<span class="size-price">R$ ${price.toFixed(2).replace('.',',')}</span>`;
                     const ml = v.gramas ? `<span class="size-ml">${v.gramas}ml</span>` : '';
                     html += `
                         <button class="sheet-size-btn ${idx === 0 ? 'selected' : ''}"
                             onclick="selectVariante(this, ${idx})">
                             ${ml}
-                            <span class="size-name">${v.name}</span>
+                            <span class="size-name">${v.name}${promoBadge}</span>
                             ${priceLine}
                         </button>
                     `;
                     if (idx === 0) {
-                        window._sheetVariante = { idx, price, name: v.name, gramas: v.gramas, pdvPrice: pricing.pdvUnitPrice };
+                        window._sheetVariante = { idx, price, name: v.name };
                     }
                 });
                 html += `</div></div>`;
@@ -1078,39 +1058,34 @@
                     <div class="sheet-section">
                         <div class="sheet-price-row">
                             <span>Preço unitário:</span>
-                            <strong>R$ ${getSimpleDeliveryPricing(item).deliveryUnitPrice.toFixed(2).replace('.',',')}</strong>
+                            <strong>R$ ${item.price.toFixed(2).replace('.',',')}</strong>
                         </div>
                     </div>
                 `;
             }
 
-            // Case 3: Adicionais — escondidos por default em accordion <details>
-            // (cliente pediu: "adicional pode ficar mas em segunda tela")
+            // Case 3: Customization (Simplified for Delivery Phase 1)
+            // If it's a base milkypot, we could show extras here
             if (item.modoMontagem !== 'simples') {
+                html += `
+                    <div class="sheet-section">
+                        <h4 class="sheet-section-title">Adicionais Sugeridos</h4>
+                        <div class="sheet-extras">
+                `;
+                // Get some popular toppings
                 const toppings = catalog.adicionais && catalog.adicionais.coberturas ? catalog.adicionais.coberturas.items : [];
-                if (toppings.length) {
+                toppings.slice(0, 5).forEach(ex => {
                     html += `
-                        <details class="sheet-section sheet-extras-acc" style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:0;margin-bottom:10px">
-                          <summary style="padding:14px 16px;cursor:pointer;font-weight:700;font-size:14px;color:#374151;display:flex;align-items:center;justify-content:space-between;list-style:none">
-                            <span>✨ Quer adicionar toppings?</span>
-                            <span style="font-size:11px;color:#9ca3af;font-weight:500">${toppings.length} opções • opcional</span>
-                          </summary>
-                          <div class="sheet-extras" style="padding:0 16px 14px">
+                        <label class="sheet-extra-item" onclick="toggleExtraDelivery(this)">
+                            <span class="extra-emoji">${ex.emoji}</span>
+                            <span class="extra-name">${ex.name}</span>
+                            <span class="extra-price">+R$ ${ex.price.toFixed(2)}</span>
+                            <input type="checkbox" class="extra-check" data-id="${ex.id}" data-price="${ex.price}" data-name="${ex.name}" hidden>
+                            <span class="extra-toggle"></span>
+                        </label>
                     `;
-                    toppings.slice(0, 5).forEach(ex => {
-                        const exPricing = getSimpleDeliveryPricing(ex);
-                        html += `
-                            <label class="sheet-extra-item" onclick="toggleExtraDelivery(this)">
-                                <span class="extra-emoji">${ex.emoji}</span>
-                                <span class="extra-name">${ex.name}</span>
-                                <span class="extra-price">+R$ ${exPricing.deliveryUnitPrice.toFixed(2).replace('.', ',')}</span>
-                                <input type="checkbox" class="extra-check" data-id="${ex.id}" data-price="${exPricing.deliveryUnitPrice}" data-pdv-price="${exPricing.pdvUnitPrice}" data-name="${ex.name}" hidden>
-                                <span class="extra-toggle"></span>
-                            </label>
-                        `;
-                    });
-                    html += `</div></details>`;
-                }
+                });
+                html += `</div></div>`;
             }
 
             // Recomendações "Combina com..." — itens da mesma categoria ou complementares
@@ -1162,57 +1137,52 @@
             suggestions = suggestions.slice(0, 3);
 
             if (suggestions.length > 0) {
-                html += `<div class="sheet-section" style="background:transparent;padding:8px 4px 4px;margin-bottom:6px">
-                    <div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:600">Pode gostar também</div>
-                    <div class="sheet-combina" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px">`;
+                html += `<div class="sheet-section">
+                    <h4 class="sheet-section-title">🔗 Combina com</h4>
+                    <div class="sheet-combina">`;
                 suggestions.forEach(function(s) {
-                    const sPricing = getSimpleDeliveryPricing(s);
-                    const sPrice = sPricing.deliveryUnitPrice > 0 ? 'R$ ' + sPricing.deliveryUnitPrice.toFixed(2).replace('.',',') : '';
-                    html += `<div class="combina-chip" onclick="closeProductSheet();setTimeout(()=>openProductSheet('${s.id}'),180)" style="flex-shrink:0;min-width:90px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:8px;text-align:center;cursor:pointer;font-size:11px">
-                        <div style="font-size:24px;line-height:1">${s.emoji || '🍦'}</div>
-                        <div style="margin-top:4px;font-weight:600;color:#374151;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px">${(s.name||'').replace(/^\d+\.\s*/,'').split(' ').slice(0,2).join(' ')}</div>
-                        ${sPrice ? '<div style="color:#7B1FA2;font-weight:700;margin-top:2px">' + sPrice + '</div>' : ''}
+                    const sPrice = typeof s.price === 'number' ? 'R$ ' + s.price.toFixed(2).replace('.',',') : '';
+                    html += `<div class="combina-chip" onclick="closeProductSheet();setTimeout(()=>openProductSheet('${s.id}'),180)">
+                        <span class="combina-emoji">${s.emoji || '🍦'}</span>
+                        <span class="combina-name">${s.name}</span>
+                        ${sPrice ? '<span class="combina-price">' + sPrice + '</span>' : ''}
                     </div>`;
                 });
                 html += `</div></div>`;
             }
 
             html += `
-                <div class="sheet-footer" style="position:sticky;bottom:0;background:#fff;padding:14px 16px;border-top:1px solid #e5e7eb;display:flex;gap:10px;align-items:center;box-shadow:0 -8px 16px -8px rgba(0,0,0,.08);z-index:10">
-                    <div class="sheet-qty" style="display:flex;align-items:center;gap:6px;background:#f3f4f6;border-radius:10px;padding:4px">
-                        <button class="qty-btn" onclick="changeQty(-1)" style="width:32px;height:32px;border-radius:8px;border:none;background:#fff;font-size:18px;font-weight:700;cursor:pointer;color:#374151">−</button>
-                        <span class="qty-value" id="sheetQty" style="min-width:24px;text-align:center;font-weight:700;font-size:15px">1</span>
-                        <button class="qty-btn" onclick="changeQty(1)" style="width:32px;height:32px;border-radius:8px;border:none;background:#fff;font-size:18px;font-weight:700;cursor:pointer;color:#374151">+</button>
+                <div class="sheet-footer">
+                    <div class="sheet-qty">
+                        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+                        <span class="qty-value" id="sheetQty">1</span>
+                        <button class="qty-btn" onclick="changeQty(1)">+</button>
                     </div>
-                    <button class="sheet-add-btn" id="sheetAddBtn" onclick="addToCartDelivery()" style="flex:1;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:14px 16px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,.3);display:flex;align-items:center;justify-content:center;gap:8px">
-                        <span>✓ Adicionar</span>
-                        <strong id="sheetTotal" style="font-size:16px">R$ 0,00</strong>
+                    <button class="sheet-add-btn" id="sheetAddBtn" onclick="addToCartDelivery()">
+                        Adicionar — <strong id="sheetTotal">R$ 0,00</strong>
                     </button>
                 </div>
             `;
 
-            var sheetContent = document.getElementById('sheetContent');
-            var backdrop = document.getElementById('productSheetBackdrop');
+            document.getElementById('sheetContent').innerHTML = html;
+            document.getElementById('productSheetBackdrop').style.display = 'block';
             var sheet = document.getElementById('productSheet');
             if (!sheetContent || !backdrop || !sheet) return;
 
             sheetContent.innerHTML = html;
             backdrop.style.display = 'block';
             sheet.style.display = 'block';
-            sheet.classList.remove('sheet-open');
-            // Forca reflow para o bottom sheet animar sempre, inclusive apos cache/voltar do navegador.
-            void sheet.offsetHeight;
-            requestAnimationFrame(() => {
+            setTimeout(() => {
                 sheet.classList.add('sheet-open');
                 document.body.style.overflow = 'hidden';
                 updateSheetTotalDelivery();
-            });
+            }, 10);
         };
 
-        window.selectPortion = function(btn, peso, price, pdvPrice) {
+        window.selectPortion = function(btn, peso, price) {
             document.querySelectorAll('.sheet-size-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
-            window._sheetPortion = { peso, price, pdvPrice };
+            window._sheetPortion = { peso, price };
             updateSheetTotalDelivery();
         };
 
@@ -1221,9 +1191,8 @@
             btn.classList.add('selected');
             const item = window._sheetProduct;
             const v = item._v2.variantes[idx];
-            const pricing = getVariantDeliveryPricing(v);
-            const price = pricing.deliveryUnitPrice;
-            window._sheetVariante = { idx, price, name: v.name, gramas: v.gramas, pdvPrice: pricing.pdvUnitPrice };
+            const price = Number(v.precoDelivery) || Number(v.precoLoja) || 0;
+            window._sheetVariante = { idx, price, name: v.name, gramas: v.gramas };
             updateSheetTotalDelivery();
         };
 
@@ -1241,8 +1210,6 @@
                 basePrice = window._sheetPortion.price;
             } else if (window._sheetVariante) {
                 basePrice = window._sheetVariante.price;
-            } else {
-                basePrice = getSimpleDeliveryPricing(item).deliveryUnitPrice;
             }
 
             let extrasTotal = 0;
@@ -1262,24 +1229,19 @@
 
             const extras = [];
             document.querySelectorAll('.extra-check:checked').forEach(cb => {
-                extras.push({ name: cb.dataset.name, price: parseFloat(cb.dataset.price), pdvPrice: parseFloat(cb.dataset.pdvPrice || cb.dataset.price) });
+                extras.push({ name: cb.dataset.name, price: parseFloat(cb.dataset.price) });
             });
 
-            const simplePricing = getSimpleDeliveryPricing(item);
-            const unitPrice = portion ? portion.price : (variante ? variante.price : simplePricing.deliveryUnitPrice);
-            const pdvUnitPrice = portion ? portion.pdvPrice : (variante ? variante.pdvPrice : simplePricing.pdvUnitPrice);
+            const unitPrice = portion ? portion.price : (variante ? variante.price : item.price);
             const sizeSuffix = portion ? ' (' + portion.peso + 'g)' : (variante ? ' · ' + variante.name : '');
             const cartItem = {
                 id: Utils.generateId(),
                 name: item.name + sizeSuffix,
                 emoji: item.emoji,
                 unitPrice: unitPrice,
-                pdvUnitPrice: pdvUnitPrice,
-                deliveryMarkupUnit: Number((unitPrice - pdvUnitPrice).toFixed(2)),
                 qty: qty,
                 extras: extras,
                 total: (unitPrice + extras.reduce((s, e) => s + e.price, 0)) * qty,
-                pdvTotal: (pdvUnitPrice + extras.reduce((s, e) => s + (e.pdvPrice || e.price || 0), 0)) * qty,
                 type: item.tipoVenda,
                 peso: portion ? portion.peso : (variante ? variante.gramas : null)
             };
@@ -1419,128 +1381,6 @@
                 hamburger.classList.toggle('active');
             });
         }
-
-        // === Carrinho — funcoes que nao existiam (bug: clicar Adicionar
-        //     dava ReferenceError closeProductSheet is not defined) ===
-
-        window.closeProductSheet = function() {
-            var sheet = document.getElementById('productSheet');
-            var bd    = document.getElementById('productSheetBackdrop');
-            if (sheet) {
-                sheet.classList.remove('sheet-open');
-                sheet.style.display = 'none';
-            }
-            if (bd)    bd.style.display    = 'none';
-            document.body.style.overflow = '';
-        };
-
-        function _readCart() {
-            try { return JSON.parse(localStorage.getItem('milkypot_cart') || '[]'); }
-            catch(_) { return []; }
-        }
-        function _cartTotal(items) {
-            return items.reduce(function(s,i){ return s + Number(i.total||i.price||0); }, 0);
-        }
-        function _fmtBRL(v) { return 'R$ ' + Number(v||0).toFixed(2).replace('.', ','); }
-
-        window.updateCartUI = function() {
-            var items = _readCart();
-            var total = _cartTotal(items);
-            // Sticky cart bar (rodape mobile-first, desktop bottom-right)
-            var sticky = document.getElementById('stickyCart');
-            var stTxt  = document.getElementById('stickyCartText');
-            var stTot  = document.getElementById('stickyCartTotal');
-            if (sticky) {
-                if (items.length > 0) {
-                    sticky.style.display = 'flex';
-                    document.body.classList.add('has-cart-bar');
-                    if (stTxt) stTxt.textContent = items.length + ' ite' + (items.length>1?'ns':'m');
-                    if (stTot) stTot.textContent = _fmtBRL(total);
-                } else {
-                    sticky.style.display = 'none';
-                    document.body.classList.remove('has-cart-bar');
-                }
-            }
-            // Badge no nav (carrinho icon, se existir)
-            var navCount = document.getElementById('cartCount');
-            if (navCount) navCount.textContent = items.length;
-            var badge = document.querySelector('.cart-badge, [data-cart-count]');
-            if (badge) badge.textContent = items.length || '';
-            // Se carrinho aberto, re-renderiza itens
-            var sb = document.getElementById('cartSidebar');
-            if (sb && (sb.classList.contains('open') || sb.classList.contains('active'))) renderCartItems();
-        };
-
-        function renderCartItems() {
-            var items = _readCart();
-            var box   = document.getElementById('cartItems');
-            var foot  = document.getElementById('cartFooter');
-            var totEl = document.getElementById('cartTotal');
-            if (!box) return;
-            if (!items.length) {
-                box.innerHTML = '<div class="cart-empty"><span class="cart-empty-icon">🛒</span>' +
-                                '<p>Seu carrinho está vazio</p><small>Adicione produtos deliciosos!</small></div>';
-                if (foot) foot.style.display = 'none';
-                return;
-            }
-            var html = '';
-            items.forEach(function(it, idx) {
-                var sub = it.sabor ? (' <small style="color:#888">'+it.sabor+'</small>') : '';
-                var sz  = it.size  ? (' <small style="color:#666">'+it.size+'</small>')  : '';
-                var ext = (it.extras && it.extras.length) ? '<div style="font-size:11px;color:#888;margin-top:2px">+ ' + it.extras.map(function(e){return e.name||e}).join(', ') + '</div>' : '';
-                html += '<div class="cart-item" style="padding:10px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">' +
-                          '<div style="flex:1;min-width:0">' +
-                            '<div style="font-weight:700;font-size:14px">'+(it.emoji||'')+' '+(it.name||'Produto')+sz+'</div>' +
-                            sub + ext +
-                            '<div style="font-size:11px;color:#999;margin-top:2px">qtd: '+(it.qty||1)+' · '+_fmtBRL(it.unitPrice||(it.total/(it.qty||1)))+' un</div>' +
-                          '</div>' +
-                          '<div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">' +
-                            '<strong style="color:#7B1FA2">'+_fmtBRL(it.total||it.price)+'</strong>' +
-                            '<button onclick="removeCartItem('+idx+')" style="background:none;border:none;color:#DC2626;cursor:pointer;font-size:16px;padding:2px 6px" title="Remover">✕</button>' +
-                          '</div>' +
-                        '</div>';
-            });
-            box.innerHTML = html;
-            if (totEl) totEl.textContent = _fmtBRL(_cartTotal(items));
-            if (foot) foot.style.display = 'block';
-        }
-
-        window.removeCartItem = function(idx) {
-            var items = _readCart();
-            items.splice(idx, 1);
-            localStorage.setItem('milkypot_cart', JSON.stringify(items));
-            window.cart = items;
-            updateCartUI();
-            renderCartItems();
-        };
-
-        window.openCartSidebar = function() {
-            var sb = document.getElementById('cartSidebar');
-            var ov = document.getElementById('cartOverlay');
-            if (!sb) return;
-            renderCartItems();
-            sb.classList.add('open', 'active');
-            if (ov) ov.classList.add('open', 'active');
-            document.body.style.overflow = 'hidden';
-            // CRITICAL: esconde sticky cart bar quando o carrinho abre,
-            // senao o botao verde gigante cobre o 'Finalizar Pedido'
-            document.body.classList.add('cart-open');
-        };
-        window.closeCartSidebar = function() {
-            var sb = document.getElementById('cartSidebar');
-            var ov = document.getElementById('cartOverlay');
-            if (sb) sb.classList.remove('open', 'active');
-            if (ov) ov.classList.remove('open', 'active');
-            document.body.style.overflow = '';
-            document.body.classList.remove('cart-open');
-        };
-        // Wiring close button + overlay click
-        (function wireCart(){
-            var btn = document.getElementById('cartClose');
-            if (btn) btn.addEventListener('click', closeCartSidebar);
-            var ov = document.getElementById('cartOverlay');
-            if (ov) ov.addEventListener('click', closeCartSidebar);
-        })();
 
         window.openCart = function() {
             window.openCartSidebar();

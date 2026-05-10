@@ -29,35 +29,35 @@
             'Quase! Esse não foi seu prêmio... mas tem outra raspadinha te esperando no próximo potinho.'
          ]},
         {code:'RSP_TOPPING_FREE', name:'1 Topping Grátis',
-         desc:'Na compra de milkshake, sundae ou potinho a partir de R$15, ganha 1 topping.',
+         desc:'Escolhe 1 topping da casa pro próximo milkshake, sundae ou potinho.',
          prob:22, cost:0.80, validity:5, scope:'same', minOrder:15, tier:'small', categoria:'cat_milkshake,cat_sundae,cat_potinho,cat_acai'},
         {code:'RSP_UPSIZE', name:'Upgrade Grátis P→M ou M→G',
-         desc:'Na compra de milkshake ou sundae M ou G, ganha upgrade de tamanho.',
-         prob:13, cost:5, validity:5, scope:'same', minOrder:20, tier:'small', categoria:'cat_milkshake,cat_sundae'},
+         desc:'Pediu Milkshake/Sundae P? Leva M. Pediu M? Leva G.',
+         prob:13, cost:5, validity:5, scope:'same', minOrder:15, tier:'small', categoria:'cat_milkshake,cat_sundae'},
         {code:'RSP_DISC_5', name:'R$ 5 OFF acima de R$ 20',
          desc:'R$ 5 de desconto no próximo pedido (mínimo R$ 20).',
          prob:8, cost:5, validity:5, scope:'any', minOrder:20, tier:'medium', categoria:null},
         {code:'RSP_2BY1_TOPPING', name:'Toppings 2 por 1',
-         desc:'Na compra de milkshake, sundae ou potinho a partir de R$15, escolhe 2 toppings e paga 1.',
+         desc:'Escolhe 2 toppings, paga só 1.',
          prob:5, cost:1.50, validity:5, scope:'same', minOrder:15, tier:'medium', categoria:'cat_milkshake,cat_sundae,cat_potinho'},
         {code:'RSP_BUFFET_100G', name:'+100g de Buffet Grátis',
-         desc:'Na compra de buffet a partir de R$15, ganha +100g na pesagem.',
-         prob:3, cost:6, validity:5, scope:'same', minOrder:15, tier:'medium', categoria:'cat_buffet'},
+         desc:'No próximo buffet a granel, ganha 100g extras na pesagem.',
+         prob:3, cost:6, validity:5, scope:'same', minOrder:0, tier:'medium', categoria:'cat_buffet'},
         {code:'RSP_PICOLE_2BY1', name:'Picolés 2 por 1',
-         desc:'Na compra de 1 picolé e pedido mínimo de R$15, leva 2 picolés.',
-         prob:2, cost:2.60, validity:5, scope:'same', minOrder:15, tier:'medium', categoria:'cat_picole'},
+         desc:'Pediu 1 picolé? Leva 2. Misture os 22 sabores que quiser.',
+         prob:2, cost:2.60, validity:5, scope:'same', minOrder:0, tier:'medium', categoria:'cat_picole'},
         {code:'RSP_SHAKE_P_FREE', name:'Milkshake P Grátis',
-         desc:'Na compra de milkshake grande a partir de R$25, ganha 1 milkshake P.',
-         prob:3.3, cost:9.99, validity:5, scope:'same', minOrder:25, tier:'big', categoria:'cat_milkshake'},
+         desc:'Milkshake P 250ml de qualquer sabor da casa GRÁTIS.',
+         prob:3.3, cost:9.99, validity:5, scope:'same', minOrder:15, tier:'big', categoria:'cat_milkshake'},
         {code:'RSP_SUNDAE_P_FREE', name:'Sundae P Grátis',
-         desc:'Na compra de sundae a partir de R$25, ganha 1 sundae P.',
-         prob:1, cost:9.99, validity:5, scope:'same', minOrder:25, tier:'big', categoria:'cat_sundae'},
+         desc:'Sundae P 250ml de qualquer sabor da casa GRÁTIS.',
+         prob:1, cost:9.99, validity:5, scope:'same', minOrder:15, tier:'big', categoria:'cat_sundae'},
         {code:'RSP_CAPITAO_50', name:'50% OFF no Capitão Açaí',
          desc:'O Premium 600ml por metade do preço (R$ 12,49).',
-         prob:0.5, cost:12.50, validity:5, scope:'same', minOrder:25, tier:'mega', categoria:'cat_milkshake,cat_sundae'},
+         prob:0.5, cost:12.50, validity:5, scope:'same', minOrder:0, tier:'mega', categoria:'cat_milkshake,cat_sundae'},
         {code:'RSP_MEGA_50', name:'MEGA R$ 50 em créditos',
          desc:'R$ 50 em créditos MilkyPot pra usar em até 7 dias.',
-         prob:0.2, cost:50, validity:7, scope:'any', minOrder:50, tier:'mega', categoria:null}
+         prob:0.2, cost:50, validity:7, scope:'any', minOrder:0, tier:'mega', categoria:null}
     ];
 
     var DEFAULT_CONFIG = {
@@ -67,22 +67,6 @@
         loopOnRedeem: true,
         defaultValidityDays: 5
     };
-
-    function enforcePrizeSafety(prize){
-        if (!prize || prize.tier === 'none') return prize;
-        var minByCode = {
-            RSP_BUFFET_100G: 15,
-            RSP_PICOLE_2BY1: 15,
-            RSP_UPSIZE: 20,
-            RSP_SHAKE_P_FREE: 25,
-            RSP_SUNDAE_P_FREE: 25,
-            RSP_CAPITAO_50: 25,
-            RSP_MEGA_50: 50
-        };
-        var required = minByCode[prize.code] || 10;
-        prize.minOrder = Math.max(Number(prize.minOrder || 0), required);
-        return prize;
-    }
 
     // ─────────────────────────────────────────────────
     function getStore(fid){
@@ -98,10 +82,10 @@
         if (custom && custom.length) {
             return DEFAULT_SCRATCH_PRIZES.map(function(def){
                 var found = custom.find(function(p){ return p.code === def.code; });
-                return enforcePrizeSafety(Object.assign({}, def, found || {}));
+                return Object.assign({}, def, found || {});
             });
         }
-        return DEFAULT_SCRATCH_PRIZES.map(function(p){ return enforcePrizeSafety(Object.assign({}, p)); });
+        return DEFAULT_SCRATCH_PRIZES.slice();
     }
 
     function getConfig(fid){
@@ -111,23 +95,6 @@
 
     function rollPrize(fid){
         var prizes = getPrizes(fid).filter(function(p){ return !p.disabled; });
-        var totalProb = prizes.reduce(function(s,p){ return s + p.prob; }, 0);
-        var r = Math.random() * totalProb;
-        var acc = 0;
-        for (var i=0; i<prizes.length; i++){
-            acc += prizes[i].prob;
-            if (r <= acc) return prizes[i];
-        }
-        return prizes[0];
-    }
-
-    // Roleta PREMIUM — só tier medium/big. Liberada quando cliente fez review/ação.
-    // Garante que nunca cai no tier "none" (passou raspando) nem "small".
-    function rollPremiumPrize(fid){
-        var prizes = getPrizes(fid).filter(function(p){
-            return !p.disabled && (p.tier === 'medium' || p.tier === 'big');
-        });
-        if (!prizes.length) return rollPrize(fid); // fallback
         var totalProb = prizes.reduce(function(s,p){ return s + p.prob; }, 0);
         var r = Math.random() * totalProb;
         var acc = 0;
@@ -226,10 +193,7 @@
             }
         }
 
-        // PREMIUM: cliente fez ação (review Google, etc) e ganhou direito a prêmio elevado.
-        // opts.premium=true forçado pelo PDV quando member.pendingPremiumScratches > 0.
-        // Caso normal: roleta padrão.
-        var prize = opts.premium === true ? rollPremiumPrize(fid) : rollPrize(fid);
+        var prize = rollPrize(fid);
         var prizeDesc = pickNearMissCopy(prize) || prize.desc;
         var cfg = getConfig(fid);
         var validityDays = prize.validity > 0 ? prize.validity : (prize.tier === 'none' ? 0 : (cfg.defaultValidityDays || 5));
@@ -264,10 +228,7 @@
             redeemedStoreId: null, redeemedEmployeeId: null, redeemedOrderId: null,
             sharedOnInstagram: false, instagramBonusGranted: false,
             generatedBy: opts.generatedBy || 'order',
-            loopFromCode: opts.loopFromCode || null,
-            isPremium: opts.premium === true,                 // marca raspinha PREMIUM
-            premiumSource: opts.premium ? (opts.premiumSource || 'unknown') : null,
-            memberId: opts.memberId || null                   // vincula ao MilkyClube
+            loopFromCode: opts.loopFromCode || null
         };
 
         saveScratch(fid, scratch);

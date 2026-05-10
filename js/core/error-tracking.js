@@ -1,8 +1,20 @@
 /* ============================================================
    MilkyPot Error Tracking — captura erros em produção
    ============================================================
-   Sem Sentry pago: captura erros window e grava localmente +
-   manda para Firestore quando online. Admin vê em /painel/auditoria.
+   Camadas:
+   1. Queue localStorage (sempre)
+   2. Firestore error_log (quando online)
+   3. Sentry (opcional, se window.SENTRY_DSN configurado OU
+      <meta name="sentry-dsn" content="https://..."> presente)
+
+   Sentry alerta em tempo real (Slack/email) — substitui o
+   error_log caseiro que ninguem monitora.
+
+   Setup Sentry:
+   - Crie projeto free em sentry.io (JavaScript / Browser)
+   - Defina <meta name="sentry-dsn" content="<DSN>"> em
+     index.html (ou window.SENTRY_DSN antes deste script)
+   - SDK carregado on-demand do CDN da Sentry quando configurado.
 
    Uso: incluir script em qualquer página crítica.
    Auto-instala handlers na carga.
@@ -15,6 +27,52 @@
     const QUEUE_KEY = 'mp_error_queue';
     const MAX_QUEUE = 50;  // Limite local pra não estourar localStorage
     const SAMPLE_RATE = 1.0; // 100% — ajuste se virar caro
+
+    // Sentry DSN: window.SENTRY_DSN tem prioridade; senao <meta name="sentry-dsn">
+    function _resolveSentryDsn() {
+        try {
+            if (global.SENTRY_DSN) return global.SENTRY_DSN;
+            const m = document.querySelector('meta[name="sentry-dsn"]');
+            if (m && m.content && m.content.trim()) return m.content.trim();
+        } catch(e) {}
+        return null;
+    }
+    const _SENTRY_DSN = _resolveSentryDsn();
+
+    // Carga lazy do Sentry SDK (CDN) — so quando DSN configurado.
+    function _initSentry() {
+        if (!_SENTRY_DSN || global.Sentry) return;
+        const s = document.createElement('script');
+        s.src = 'https://browser.sentry-cdn.com/8.20.0/bundle.tracing.min.js';
+        s.crossOrigin = 'anonymous';
+        s.async = true;
+        s.onload = function() {
+            try {
+                global.Sentry.init({
+                    dsn: _SENTRY_DSN,
+                    environment: location.hostname.includes('localhost') ? 'dev' : 'prod',
+                    tracesSampleRate: 0.1,
+                    release: (global.MP && global.MP.CACHE_VERSION) || 'unknown',
+                    beforeSend(event) {
+                        // Adiciona contexto MilkyPot
+                        try {
+                            const s = global.Auth && global.Auth.getSession && global.Auth.getSession();
+                            if (s) {
+                                event.user = event.user || {};
+                                event.user.id = s.uid || s.name;
+                                event.user.role = s.role;
+                                event.tags = event.tags || {};
+                                event.tags.franchiseId = s.franchiseId;
+                            }
+                        } catch(_) {}
+                        return event;
+                    }
+                });
+            } catch(e) { console.warn('[ErrorTracking] Sentry init failed:', e); }
+        };
+        document.head.appendChild(s);
+    }
+    _initSentry();
 
     function _queue() {
         try {
@@ -39,6 +97,21 @@
                     .catch(() => {}); // silent fail (não queremos loop de erros)
             }
         } catch(e) {}
+        // Sentry se carregado (alerta em tempo real)
+        try {
+            if (global.Sentry && global.Sentry.captureException) {
+                const e = new Error(err.message || 'unknown');
+                if (err.stack) e.stack = err.stack;
+                global.Sentry.withScope(scope => {
+                    scope.setContext('milkypot', {
+                        url: err.url, userId: err.userId,
+                        role: err.role, franchiseId: err.franchiseId,
+                        extra: err.extra
+                    });
+                    global.Sentry.captureException(e);
+                });
+            }
+        } catch(_) {}
     }
 
     function capture(error, extra) {

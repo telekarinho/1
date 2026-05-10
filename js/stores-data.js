@@ -20,56 +20,13 @@ var MILKYPOT_STORES = [
         rating: 5,
         deliveryTime: '25-40 min',
         deliveryFee: 5.90,
-        deliveryFreeConfig: {
-            percentual_acrescimo_delivery: 30,
-            pedido_minimo_delivery: 30,
-            taxa_uber_referencia: 10.50,
-            modo_frete_delivery: 'FRETE_GRATIS_TOTAL'
-        },
         deliveryEnabled: true,  // toggle controlado em painel/configuracoes.html
         hours: '10:00 - 22:00',
         open: true,
         whatsapp: '5543999919777',
         email: 'milkypot.com@gmail.com',
         lat: -23.3265,
-        lng: -51.1664,
-        // FIX (Fase 8.6): flag pro cardápio saber que essa loja calcula frete
-        // dinamicamente via Uber Direct. Quando true, modal "Entrega" mostra
-        // 'Calculado pela Uber ao informar endereço' em vez do fee fixo.
-        uberDirectEnabled: true
-    },
-    {
-        // Franquia TESTE — espelha dados REAIS da Muffato Quintino
-        // (mesmo endereco, mesmo telefone, mesma cobertura) pra
-        // simular pedidos reais. So muda o id/slug -> pedidos vao pra
-        // orders_franquia-teste (separado) sem misturar com producao.
-        // Login no painel: teste@teste.com / Teste@123
-        id: 'franquia-teste',
-        slug: 'franquia-teste',
-        name: 'MilkyPot TESTE (Demo)',
-        address: 'Rua Quintino Bocaiúva, 1045',
-        city: 'Londrina',
-        state: 'PR',
-        rating: 5,
-        deliveryTime: '20-35 min',
-        deliveryFee: 5.90,
-        deliveryFreeConfig: {
-            percentual_acrescimo_delivery: 30,
-            pedido_minimo_delivery: 30,
-            taxa_uber_referencia: 10.50,
-            modo_frete_delivery: 'FRETE_GRATIS_TOTAL'
-        },
-        deliveryEnabled: true,
-        pickupEnabled: true,
-        storeOnlineOpen: true,
-        hours: '00:00 - 23:59',
-        open: true,
-        whatsapp: '5543999919777',
-        email: 'teste@teste.com',
-        isTestFranchise: true,
-        lat: -23.3265,
-        lng: -51.1664,
-        uberDirectEnabled: true
+        lng: -51.1664
     }
 ];
 
@@ -89,11 +46,8 @@ function mergeFranchiseFlags() {
                 if (typeof f.pickupEnabled === 'boolean') s.pickupEnabled = f.pickupEnabled;
                 // Dados operacionais
                 if (typeof f.deliveryFee === 'number') s.deliveryFee = f.deliveryFee;
-                if (f.deliveryFreeConfig && typeof f.deliveryFreeConfig === 'object') s.deliveryFreeConfig = f.deliveryFreeConfig;
                 if (f.hours) s.hours = f.hours;
                 if (f.deliveryTime) s.deliveryTime = f.deliveryTime;
-                // FIX (Fase 8.6): propaga flag de Uber se franchise tiver
-                if (typeof f.uberDirectEnabled === 'boolean') s.uberDirectEnabled = f.uberDirectEnabled;
             }
         });
     } catch(e) {}

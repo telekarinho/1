@@ -241,87 +241,6 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         return template.replace('{DIAS}', validityDays || 7);
     }
 
-    function displayCode(scratch){
-        return (scratch && (scratch.shortCode || scratch._inputCode || scratch.code || '')).toUpperCase();
-    }
-
-    function effectiveMinOrder(scratch){
-        var min = Number(scratch && scratch.minOrder || 0);
-        if (min > 0) return min;
-        var fallback = {
-            RSP_CASQUINHA: 10,
-            RSP_BUFFET_100_15: 15,
-            RSP_BUFFET_100_20: 20,
-            RSP_BUFFET_150_25: 25,
-            RSP_BUFFET_200_35: 35,
-            RSP_PICOLE_15: 15,
-            RSP_COPINHO_20: 20,
-            RSP_SUNDAE_P_30: 30,
-            RSP_SHAKE_UPGRADE: 20,
-            RSP_COMBO_BUFFET_PIC: 25,
-            RSP_AMIGO_100G: 20,
-            RSP_BUFFET_100G: 15,
-            RSP_PICOLE_2BY1: 15,
-            RSP_SHAKE_P_FREE: 25,
-            RSP_SUNDAE_P_FREE: 25,
-            RSP_CAPITAO_50: 25,
-            RSP_MEGA_50: 50
-        };
-        return fallback[(scratch && scratch.prizeCode) || ''] || 10;
-    }
-
-    function offerPrizeText(scratch){
-        var code = (scratch && scratch.prizeCode) || '';
-        var map = {
-            RSP_BUFFET_100_15: 'na compra de buffet a partir de R$ 15,00, ganha +100g de buffet',
-            RSP_BUFFET_100_20: 'na compra de buffet a partir de R$ 20,00, ganha +100g de buffet',
-            RSP_BUFFET_150_25: 'na compra de buffet a partir de R$ 25,00, ganha +150g de buffet',
-            RSP_BUFFET_200_35: 'na compra de buffet a partir de R$ 35,00, ganha +200g de buffet',
-            RSP_PICOLE_15: 'na compra de 1 picole e pedido minimo de R$ 15,00, leva 2 picoles',
-            RSP_CASQUINHA: 'em qualquer compra a partir de R$ 10,00, ganha 1 casquinha',
-            RSP_COPINHO_20: 'em qualquer compra a partir de R$ 20,00, ganha 1 copinho de sorvete',
-            RSP_SUNDAE_P_30: 'na compra de sundae a partir de R$ 30,00, ganha 1 sundae P',
-            RSP_SHAKE_UPGRADE: 'na compra de milk shake M ou G, ganha upgrade de tamanho',
-            RSP_COMBO_BUFFET_PIC: 'na compra de buffet a partir de R$ 25,00, ganha +100g e 1 picole',
-            RSP_AMIGO_100G: 'voltando com um amigo e comprando buffet a partir de R$ 20,00, os dois ganham +100g',
-            RSP_BUFFET_100G: 'na compra de buffet a partir de R$ 15,00, ganha +100g de buffet',
-            RSP_PICOLE_2BY1: 'na compra de 1 picole e pedido minimo de R$ 15,00, leva 2 picoles',
-            RSP_SHAKE_P_FREE: 'na compra de milk shake grande a partir de R$ 25,00, ganha 1 milk shake P',
-            RSP_SUNDAE_P_FREE: 'na compra de sundae a partir de R$ 25,00, ganha 1 sundae P'
-        };
-        return map[code] || (scratch && scratch.prizeDesc) || 'use este premio na proxima compra';
-    }
-
-    function offerDeadlineText(scratch){
-        if (scratch && scratch.expiresAt) {
-            return 'Valido ate ' + new Date(scratch.expiresAt).toLocaleDateString('pt-BR') + ': ';
-        }
-        var days = Number(scratch && scratch.validityDays || 0) || 7;
-        return 'Use em ate ' + days + ' dias: ';
-    }
-
-    function prizeConditionText(scratch){
-        if (!scratch) return '';
-        return offerDeadlineText(scratch) + offerPrizeText(scratch) + '. Codigo para o atendente: ' + displayCode(scratch) + '.';
-    }
-
-    function clearPrizeDesc(scratch){
-        if (!scratch) return '';
-        return offerDeadlineText(scratch) + offerPrizeText(scratch) + '.';
-    }
-
-    function updateRedeemCodeCard(scratch, visible){
-        var card = document.getElementById('redeemCodeCard');
-        if (!card) return;
-        if (!visible) {
-            card.style.display = 'none';
-            return;
-        }
-        document.getElementById('redeemShortCode').textContent = displayCode(scratch);
-        document.getElementById('redeemCondition').textContent = prizeConditionText(scratch);
-        card.style.display = 'block';
-    }
-
     function findInLocalStorage(code){
         // Accepts full code or short code (XXX-XXX)
         var codeUp = (code || '').toUpperCase();
@@ -587,7 +506,7 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         document.getElementById('revealEmoji').textContent =
             (tipo && TYPE_EMOJI[tipo]) || TIER_EMOJI[tier] || '🎁';
         document.getElementById('revealPrize').textContent = currentScratch.prizeName;
-        document.getElementById('revealDesc').textContent = prizeConditionText(currentScratch);
+        document.getElementById('revealDesc').textContent = currentScratch.prizeDesc;
         // Endcard motivacional por tipo (com fallback no tier)
         var endcardEl = document.getElementById('revealEndcard');
         if (endcardEl) {

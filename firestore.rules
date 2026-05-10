@@ -80,7 +80,6 @@ service cloud.firestore {
                     || document.matches('caixa_.*')
                     || document.matches('pdv_tabs_.*')
                     || document.matches('finances_.*')
-                    || document.matches('customers_.*')
                     // super_admin le tudo
                     || isSuperAdmin()
                     // Outros documentos nao sensiveis (catalog, config, etc.):
@@ -104,7 +103,6 @@ service cloud.firestore {
                       document.matches('caixa_.*') ||
                       document.matches('pdv_tabs_.*') ||
                       document.matches('finances_.*') ||
-                      document.matches('customers_.*') ||
                       (isSuperAdmin() && document == 'franchises') ||
                       (isAuthenticated() && document != 'franchises' && document != 'users');
     }
@@ -183,12 +181,24 @@ service cloud.firestore {
     // ============================================
     // Audit Log (somente admin le, imutavel)
     // ============================================
+    // Hardening: client AINDA pode gravar (js/core/audit.js depende disso),
+    // mas com constraints fortes — userId/userRole travados ao auth real,
+    // userName e userEmail strings, timestamp/serverTime preenchidos.
+    // Atacante autenticado nao consegue mais forjar 'auth.role_set'
+    // com role='super_admin' em nome de outro user.
+    // TODO: pos-CF migration, mover writes para Cloud Function logAudit.
     match /audit_log/{logId} {
       allow read: if isSuperAdmin();
-      // Apenas permite criar se o userId do log corresponde ao usuario autenticado
-      // Impede injecao de logs falsos
-      allow create: if isAuthenticated() &&
-                       request.resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated()
+                       && request.resource.data.userId == request.auth.uid
+                       && (request.resource.data.userRole == null
+                           || request.resource.data.userRole == request.auth.token.role)
+                       && request.resource.data.event is string
+                       && request.resource.data.event.size() <= 80
+                       && request.resource.data.diff({}).affectedKeys()
+                          .hasOnly(['id','event','timestamp','userId','userName',
+                                    'userEmail','userRole','franchiseId','details',
+                                    'ip','userAgent']);
       allow update, delete: if false; // Imutavel
     }
 
@@ -206,34 +216,53 @@ service cloud.firestore {
     // ============================================
 
     // Vouchers gerados pelo PDV / fiscal / delivery
+    // Hardening: update SO marca como usado (one-way), nao permite revogar.
+    // Ideal pos-launch: mover redemption pra Cloud Function com lock transacional.
     match /desafio_vouchers/{voucherId} {
-      // Leitura publica: necessario para validar voucher no jogo
       allow read: if true;
-      // Criacao: apenas sistemas autenticados (PDV, fiscal)
       allow create: if isAuthenticated();
-      // Update: jogo marca como usado (idealmente via Cloud Function)
-      allow update: if true;
+      // One-way: nao pode "desusar" um voucher. Apenas marca como usado e campos correlatos.
+      allow update: if (resource.data.used == false || resource.data.used == null)
+                       && request.resource.data.used == true
+                       && request.resource.data.diff(resource.data).affectedKeys()
+                          .hasOnly(['used','usedAt','usedBy','usedAtFranchise','redeemedOrderId']);
       allow delete: if isSuperAdmin();
     }
 
     // Resultados das partidas
+    // Hardening: score limitado a 0-10000 (anti-rank injection).
+    // Update apenas videoUrl/videoUploadedAt (nao reescrever score).
     match /desafio_10000/{gameId} {
-      allow read: if true;  // Publico para ranking
-      allow create: if true; // Qualquer jogador salva resultado
-      allow update: if true; // Atualiza URL do video de reacao
+      allow read: if true;
+      allow create: if request.resource.data.score is int
+                       && request.resource.data.score >= 0
+                       && request.resource.data.score <= 10000;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['videoUrl','videoUploadedAt','reactionEmoji']);
       allow delete: if isSuperAdmin();
     }
 
     // Streaks dos jogadores (por telefone)
+    // Hardening: contadores monotonicos (so podem aumentar).
+    // Sem isso, atacante zera streak/freePlayCount via DevTools.
     match /desafio_streaks/{playerId} {
       allow read: if true;
-      allow write: if true;
+      allow create: if request.resource.data.streak is int
+                       && request.resource.data.streak >= 0;
+      allow update: if request.resource.data.streak is int
+                       && request.resource.data.streak >= (resource.data.streak == null ? 0 : resource.data.streak)
+                       && request.resource.data.streak <= 10000;
     }
 
     // Cartelas de carimbo (stamp cards)
+    // Hardening: contagem monotonica (so cresce).
     match /desafio_stamps/{playerId} {
       allow read: if true;
-      allow write: if true;
+      allow create: if request.resource.data.stamps is int
+                       && request.resource.data.stamps >= 0;
+      allow update: if request.resource.data.stamps is int
+                       && request.resource.data.stamps >= (resource.data.stamps == null ? 0 : resource.data.stamps)
+                       && request.resource.data.stamps <= 10000;
     }
 
     // Opt-in de notificacoes WhatsApp
@@ -244,23 +273,98 @@ service cloud.firestore {
 
     // Tentativas gratis por telefone+dia (modo "Acesso Livre")
     // Doc id: {phone}_{YYYY-MM-DD}, contador incrementado a cada tentativa
+    // Hardening: count MONOTONICO. Atacante nao consegue zerar pra jogar 24h/dia.
     match /desafio_free_plays/{playId} {
       allow read: if true;
-      allow write: if true;
+      allow create: if request.resource.data.count is int
+                       && request.resource.data.count >= 0
+                       && request.resource.data.count <= 50;
+      allow update: if request.resource.data.count is int
+                       && request.resource.data.count >= resource.data.count
+                       && request.resource.data.count <= 50;
     }
 
     // ============================================
     // RASPINHA DA SORTE - Cada pedido gera 1 raspinha
     // ============================================
+    // Hardening: status evolui SO pra frente: pending/available -> scratched -> redeemed.
+    // Atacante nao consegue "des-resgatar" pra usar 2x nem reescrever prize.
     match /scratches/{scratchCode} {
-      // Leitura publica: cliente precisa acessar sua raspinha pelo codigo
-      // Codigo tem 218 trilhoes combinacoes - seguro por obscuridade
       allow read: if true;
-      // Criacao: PDV/sistema autenticado gera raspinha
       allow create: if true;
-      // Update: cliente raspa (muda status) e funcionario resgata
-      allow update: if true;
-      // Delete: apenas super_admin
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['status','scratchedAt','redeemedAt','redeemedBy','redeemedAtFranchise','redeemedOrderId'])
+                       && (
+                            ((resource.data.status == 'pending' || resource.data.status == 'available' || resource.data.status == null)
+                              && (request.resource.data.status == 'scratched' || request.resource.data.status == 'redeemed'))
+                            || (resource.data.status == 'scratched'
+                              && request.resource.data.status == 'redeemed')
+                          );
+      allow delete: if isSuperAdmin();
+    }
+
+    // ============================================
+    // MILKYCLUBE — Programa de fidelidade v1
+    // Coins/Tiers/Transactions/Referrals/FCM
+    // ============================================
+
+    // Config global do MilkyClube (tiers, bonus, feature flags)
+    // Leitura publica para o PWA do clube montar a UI
+    match /club_config/{configId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    // Membros do clube (1 doc por UID Firebase Auth)
+    // Cliente pode ler seu proprio doc e atualizar dados cadastrais
+    // mas NUNCA coins/tier/totals (somente Cloud Functions)
+    match /club_members/{memberId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == memberId || isSuperAdmin() || isFranchisee()
+      );
+      allow create: if isAuthenticated() && request.auth.uid == memberId;
+      allow update: if isAuthenticated()
+        && request.auth.uid == memberId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'coins', 'totalEarned', 'totalRedeemed',
+          'tier', 'tierProgress', 'ordersCount', 'totalSpent',
+          'birthdayClaimedYear', 'firstOrderBonusClaimed',
+          'referralCount', 'referralCode', 'referredBy'
+        ]);
+      allow delete: if isSuperAdmin();
+    }
+
+    // Transacoes de MilkyCoins - imutaveis, so Cloud Function escreve
+    match /milkycoins_transactions/{txId} {
+      allow read: if isAuthenticated() && (
+        resource.data.memberId == request.auth.uid || isSuperAdmin() || isFranchisee()
+      );
+      allow write: if false; // Somente Cloud Functions via admin SDK
+    }
+
+    // Codigos de indicacao (referral) - leitura publica para validar codigo
+    match /club_referrals/{code} {
+      allow read: if true;
+      allow write: if false; // Somente Cloud Functions
+    }
+
+    // Tokens FCM (push) - somente Cloud Functions gravam
+    match /fcm_tokens/{tokenHash} {
+      allow read: if isSuperAdmin();
+      allow write: if false; // Somente Cloud Functions
+    }
+
+    // Fila de envios WhatsApp - franqueado le sua fila, CF escreve
+    match /whatsapp_queue/{queueId} {
+      allow read: if isAuthenticated() && (isSuperAdmin() || isFranchisee());
+      allow update: if isAuthenticated() && (isSuperAdmin() || isFranchisee());
+      allow create, delete: if false; // Somente Cloud Functions criam
+    }
+
+    // Agenda de postagens de marketing (plano viral MilkyClube IG/TikTok)
+    match /marketing_agenda/{postId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
       allow delete: if isSuperAdmin();
     }
 

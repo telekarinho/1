@@ -134,7 +134,7 @@ def gen_page(b, all_bairros):
         "name": "MilkyPot - {b['name']}, Londrina",
         "description": "{b['desc'][:200]}",
         "url": "https://milkypot.com/londrina/{b['slug']}/",
-        "telephone": "(43) 99999-9999",
+        "telephone": "(43) 99991-9777",
         "address": {{
             "@type": "PostalAddress",
             "addressLocality": "Londrina",
@@ -208,7 +208,7 @@ def gen_page(b, all_bairros):
                     <p class="bairro-subtitle">Açaí, milkshake e sorvete com delivery em {b['eta']} min na zona {b['zone'].lower()}</p>
                     <div class="bairro-actions">
                         <a href="/#produtos" class="btn-primary">🍨 Pedir Agora</a>
-                        <a href="https://wa.me/5543999999999?text=Oi!%20Quero%20pedir%20MilkyPot%20em%20{b['name']}!" class="btn-secondary" target="_blank" rel="noopener">💬 WhatsApp</a>
+                        <a href="https://wa.me/5543999919777?text=Oi!%20Quero%20pedir%20MilkyPot%20em%20{b['name']}!" class="btn-secondary" target="_blank" rel="noopener">💬 WhatsApp</a>
                     </div>
                 </div>
             </div>
@@ -272,7 +272,7 @@ def gen_page(b, all_bairros):
                 <p>Escolha como prefere fazer seu pedido:</p>
                 <div class="cta-buttons">
                     <a href="/#produtos" class="btn-primary btn-lg">🍨 Pedir pelo Site</a>
-                    <a href="https://wa.me/5543999999999?text=Oi!%20Quero%20pedir%20MilkyPot%20em%20{b['name']}!" class="btn-secondary btn-lg" target="_blank" rel="noopener">💬 Pedir por WhatsApp</a>
+                    <a href="https://wa.me/5543999919777?text=Oi!%20Quero%20pedir%20MilkyPot%20em%20{b['name']}!" class="btn-secondary btn-lg" target="_blank" rel="noopener">💬 Pedir por WhatsApp</a>
                 </div>
             </div>
         </section>
@@ -369,7 +369,7 @@ def gen_hub():
         "@type": "LocalBusiness",
         "name": "MilkyPot Londrina",
         "url": "https://milkypot.com/londrina/",
-        "telephone": "(43) 99999-9999",
+        "telephone": "(43) 99991-9777",
         "address": {{
             "@type": "PostalAddress",
             "addressLocality": "Londrina",
