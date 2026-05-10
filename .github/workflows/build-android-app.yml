@@ -138,13 +138,36 @@ jobs:
           EOF
           cat android-build/twa-manifest.json
 
-      - name: Initialize TWA project (non-interactive via Bubblewrap config)
+      - name: Install Bubblewrap core (API direta, non-interactive)
+        run: npm install -g @bubblewrap/core@1.22.0
+
+      - name: Generate Android TWA project via @bubblewrap/core API
         working-directory: android-build
         run: |
-          # Com $HOME/.bubblewrap/config.json pre-criado, init nao pergunta nada
-          # Run como subshell pra heredoc nao colidir com bubblewrap
-          bubblewrap init --manifest=https://milkypot.com/colaborador/manifest.json --directory=. --skipPwaValidation < /dev/null
-          echo "=== Files apos init ==="
+          # bubblewrap CLI faz prompts interativos mesmo com twa-manifest.json
+          # existente. Usar TwaGenerator + TwaManifest direto da API e 100%
+          # non-interactive: le o twa-manifest.json e gera os arquivos.
+          cat > generate.js <<'JSEOF'
+          const path = require('path');
+          const fs = require('fs');
+          const { TwaGenerator, TwaManifest } = require('@bubblewrap/core');
+          (async () => {
+            try {
+              const raw = JSON.parse(fs.readFileSync('twa-manifest.json', 'utf8'));
+              const manifest = await TwaManifest.fromObject(raw);
+              const generator = new TwaGenerator();
+              await generator.createTwaProject(process.cwd(), manifest);
+              console.log('OK: TWA project gerado em', process.cwd());
+            } catch (e) {
+              console.error('ERRO no TwaGenerator:', e && e.stack || e);
+              process.exit(1);
+            }
+          })();
+          JSEOF
+          # Resolve modulo global instalado
+          export NODE_PATH=$(npm root -g)
+          node generate.js
+          echo "=== Files apos generate ==="
           ls -la
 
       - name: Build APK + AAB com Gradle (non-interactive)
