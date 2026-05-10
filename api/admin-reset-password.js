@@ -16,6 +16,7 @@
    ============================================ */
 
 const admin = require('firebase-admin');
+const crypto = require('crypto');
 
 // Init singleton — evita re-init em cold starts repetidos
 let _app = null;
@@ -56,17 +57,19 @@ async function verifyCallerIsSuperAdmin(idToken) {
     return { uid: user.localId, email: user.email };
 }
 
-// Gera senha aleatória fácil de digitar mas segura (10 chars, alphanumeric+symbol)
+// Gera senha aleatoria facil de digitar mas segura (10 chars, alphanumeric+symbol).
+// Usa crypto.randomInt (criptograficamente seguro) — Math.random e previsivel
+// e nao deve ser usado para senhas de uma vez.
 function generateTempPassword() {
     const upper = 'ABCDEFGHJKMNPQRSTUVWXYZ';     // sem I, L, O
     const lower = 'abcdefghjkmnpqrstuvwxyz';
     const nums  = '23456789';                     // sem 0, 1
     const syms  = '!@#$';
-    function pick(s) { return s[Math.floor(Math.random() * s.length)]; }
+    function pick(s) { return s[crypto.randomInt(0, s.length)]; }
     const base = [pick(upper), pick(upper), pick(lower), pick(lower), pick(lower), pick(nums), pick(nums), pick(nums), pick(syms)];
-    // embaralha
+    // Fisher-Yates com crypto.randomInt
     for (let i = base.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
+        const j = crypto.randomInt(0, i + 1);
         [base[i], base[j]] = [base[j], base[i]];
     }
     return base.join('');

@@ -66,15 +66,7 @@ const CloudFunctions = {
             name === 'claimTestSession' ||
             name === 'setSystemMode' ||
             name === 'getSystemMode' ||
-            name === 'saveChecklistItem' ||
-            // Email/notificacoes: o backend PHP nao implementa essas actions —
-            // ir direto pro Firebase CF que tem Nodemailer + Gmail SMTP configurado
-            name === 'sendClosingReport' ||
-            name === 'sendLowStockAlert' ||
-            // MilkyClube — agregadores e operacoes só no Firebase CF
-            name === 'clubResolveCredits' ||
-            name === 'claimAction' ||
-            name === 'verifyClaim'
+            name === 'saveChecklistItem'
         ) {
             return this._callFirebaseDirect(name, data);
         }
@@ -229,57 +221,18 @@ const CloudFunctions = {
     // Automations (Reports & Alerts)
     // ============================================
 
-    // ============================================
-    // MilkyClube — Action Claims (earn-before-claim)
-    // ============================================
-    // Cliente reivindica recompensa via ação real (review Google, story IG, etc).
-    // Sistema cria claim pendente, valida (auto/manual) e libera prêmio.
-    async claimAction(memberId, action, payload, franchiseId) {
-        if (!memberId || !action) return { success: false, error: 'memberId e action obrigatorios' };
-        return this._callFirebaseDirect('claimAction', {
-            memberId, action, payload: payload || {}, franchiseId: franchiseId || null
-        });
-    },
-
-    // Aprova/rejeita claim manualmente (admin/gerente)
-    async verifyClaim(claimId, approved, rejectionReason) {
-        if (!claimId) return { success: false, error: 'claimId obrigatorio' };
-        return this._callFirebaseDirect('verifyClaim', {
-            claimId, approved: approved !== false, rejectionReason: rejectionReason || ''
-        });
-    },
-
-    // ============================================
-    // MilkyClube — créditos unificados
-    // ============================================
-    // Retorna tudo que o membro tem disponível pra usar como
-    // pagamento parcial: MilkyCoins, MilkyPass premiado,
-    // Raspinhas válidas, Vouchers de Desafio.
-    // Apenas leitura — não consome nada.
-    async clubResolveCredits(memberId, franchiseId) {
-        if (!memberId) return { success: false, error: 'memberId obrigatorio' };
-        return this._callFirebaseDirect('clubResolveCredits', {
-            memberId,
-            franchiseId: franchiseId || null
-        });
-    },
-
     // Envia relatorio do fechamento + auditoria cega
     async sendClosingReport(franchiseId, reportData) {
         const managers = ['milkypot.com@gmail.com', 'jocimarrodrigo@gmail.com', 'joseanemse@gmail.com'];
-        // Flag opcional pra incluir o operador como destinatario.
-        // Default: false (so gerencia recebe). Pode ser ativado via
-        // localStorage.setItem('mp_email_send_to_operator_'+fid, '1')
-        let sendToOperator = false;
-        try {
-            sendToOperator = localStorage.getItem('mp_email_send_to_operator_' + franchiseId) === '1';
-        } catch(_) {}
-
+        // Regra: operador so recebe se a config estiver ativada
+        const config = (typeof AdminConfig !== 'undefined') ? AdminConfig.getConfig(franchiseId) : {};
+        const sendToOperator = config.enviarComprovanteOperador === true;
+        
         return this.call('sendClosingReport', {
             franchiseId,
             managers,
             sendToOperator,
-            operatorEmail: reportData.operatorEmail,
+            operatorEmail: reportData.operatorEmail, // Only if sendToOperator is true it will be used
             data: reportData
         });
     },

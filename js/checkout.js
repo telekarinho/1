@@ -209,6 +209,11 @@ function updateOrderSummary() {
     var deliveryFee = calc.fretePagoCliente;
 
     if (summarySubtotal) summarySubtotal.textContent = formatCurrency(subtotal);
+    // Se Uber Direct ativo com quote calculado, usa o valor do cliente
+    if (deliveryType === 'delivery' && window._uberQuoteId && window._uberCustomerFee !== undefined) {
+        deliveryFee = window._uberCustomerFee;
+    }
+
     if (summaryDelivery) summaryDelivery.textContent = deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Grátis';
     if (summaryTotal) summaryTotal.textContent = formatCurrency(subtotal + deliveryFee);
 
@@ -267,9 +272,14 @@ function placeOrder() {
     var storeTime = window._selectedStoreTime || '20-35 min';
 
     // Delivery data
-    var deliveryType = getCurrentDeliveryType();
-    var deliveryCalc = getCurrentDeliveryCalc();
-    var deliveryFee = deliveryCalc.fretePagoCliente;
+    var deliveryRadio = document.querySelector('input[name="delivery"]:checked');
+    var deliveryType = deliveryRadio ? deliveryRadio.value : 'pickup';
+    var deliveryFee = deliveryType === 'delivery' ? storeFee : 0;
+
+    // Se delivery + Uber Direct ativo: usar quote ja calculado
+    if (deliveryType === 'delivery' && window._uberQuoteId && window._uberCustomerFee !== undefined) {
+        deliveryFee = window._uberCustomerFee;
+    }
     var deliveryAddress = '';
     if (deliveryType === 'delivery') {
         var addr = (document.getElementById('checkoutAddress') || {}).value || '';
@@ -340,7 +350,6 @@ function placeOrder() {
         }),
         subtotal: subtotal,
         deliveryFee: deliveryFee,
-        deliveryPricing: deliveryCalc,
         total: total,
         // Uber Direct quote data (preenchido se cotacao foi feita)
         uberQuoteId: (deliveryType === 'delivery' && window._uberQuoteId) ? window._uberQuoteId : null,
@@ -577,7 +586,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 window._uberQuoteId = null;
                 window._uberCustomerFee = undefined;
             }
-            updateOrderSummary();
         });
     });
 

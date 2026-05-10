@@ -153,6 +153,72 @@ function pickSystem(persona) {
     return SYSTEM_PROMPT_LILO;
 }
 
+// =====================================================================
+// SANITIZACAO ANTI PROMPT INJECTION
+// Cliente nao pode injetar </context>, <system> ou simular tags do prompt
+// pra extrair instrucoes/system prompt ou virar dono da conversa.
+// =====================================================================
+function sanitizeUserContent(s) {
+    if (typeof s !== 'string') return '';
+    return s
+        .replace(/<\/?context\b[^>]*>/gi, '[ctx]')
+        .replace(/<\/?system\b[^>]*>/gi, '[sys]')
+        .replace(/<\/?assistant\b[^>]*>/gi, '[asst]')
+        .replace(/<\/?user\b[^>]*>/gi, '[user]')
+        .slice(0, 8000); // cap defensivo
+}
+
+// =====================================================================
+// AUTH: exige Firebase ID token (Bearer) em producao.
+// Verifica via Google Identity Toolkit (sem precisar do admin SDK).
+// =====================================================================
+async function verifyFirebaseIdToken(idToken) {
+    if (!idToken) return null;
+    const apiKey = process.env.FIREBASE_WEB_API_KEY;
+    if (!apiKey) {
+        // Sem FIREBASE_WEB_API_KEY, nao temos como verificar — deixa passar
+        // (modo dev/transicao). Logar pra dono perceber.
+        console.warn('[copilot] FIREBASE_WEB_API_KEY ausente — auth skip');
+        return { uid: 'unknown', skipReason: 'no-api-key' };
+    }
+    try {
+        const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken })
+        });
+        if (!r.ok) return null;
+        const data = await r.json();
+        const u = data.users && data.users[0];
+        if (!u) return null;
+        let claims = {};
+        try { claims = JSON.parse(u.customAttributes || '{}'); } catch (_) {}
+        return { uid: u.localId, email: u.email, role: claims.role || null, franchiseId: claims.franchiseId || null };
+    } catch (_) {
+        return null;
+    }
+}
+
+// =====================================================================
+// RATE LIMIT em memoria (best-effort em cold start; substituir por
+// Upstash/Vercel KV pra producao real).
+// =====================================================================
+const _rateLimitMap = new Map();
+const RATE_WINDOW_MS = 60 * 1000; // 1 min
+const RATE_MAX = 20;              // 20 chamadas/min/UID
+function rateLimitHit(uid) {
+    const now = Date.now();
+    const key = String(uid || 'anon');
+    const arr = (_rateLimitMap.get(key) || []).filter(t => now - t < RATE_WINDOW_MS);
+    if (arr.length >= RATE_MAX) {
+        _rateLimitMap.set(key, arr);
+        return true;
+    }
+    arr.push(now);
+    _rateLimitMap.set(key, arr);
+    return false;
+}
+
 export default async function handler(req, res) {
     // CORS: permite chamadas de milkypot.com (GitHub Pages), vercel.app e localhost
     const origin = req.headers.origin || '';
@@ -172,7 +238,7 @@ export default async function handler(req, res) {
     }
     res.setHeader('Vary', 'Origin');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Max-Age', '86400');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
@@ -180,14 +246,27 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'method_not_allowed' });
     }
 
+    // AUTH (Bearer ID token). bypass: NODE_ENV !== 'production' & sem env.
+    const authHeader = req.headers.authorization || '';
+    const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+    const caller = await verifyFirebaseIdToken(idToken);
+    if (!caller && process.env.NODE_ENV === 'production') {
+        return res.status(401).json({ error: 'auth_required', hint: 'Envie Authorization: Bearer <Firebase ID token>' });
+    }
+
+    if (rateLimitHit(caller?.uid || origin)) {
+        res.setHeader('Retry-After', '60');
+        return res.status(429).json({ error: 'rate_limited', limit: RATE_MAX, windowSec: 60 });
+    }
+
     try {
         const { apiKey: bodyKey, model, messages, context, persona, image } = req.body || {};
 
-        // Estrategia: aceita apiKey do body (user trouxe a dele) OU da env
-        // ANTHROPIC_API_KEY configurada na Vercel (chave do MilkyPot
-        // compartilhada pra todos os franqueados, zero config no client).
-        // Franqueado nao precisa ter/pagar API key propria.
-        const apiKey = (bodyKey && typeof bodyKey === 'string' && bodyKey.trim())
+        // Em PRODUCAO, ignora bodyKey — atacante poderia mandar sua propria
+        // key roubada e usar o endpoint MilkyPot como proxy de lavagem.
+        // Em dev (NODE_ENV != production), aceita bodyKey pra facilitar debug.
+        const allowBodyKey = process.env.NODE_ENV !== 'production';
+        const apiKey = (allowBodyKey && bodyKey && typeof bodyKey === 'string' && bodyKey.trim())
             || process.env.ANTHROPIC_API_KEY
             || process.env.BELINHA_API_KEY;
 
@@ -203,25 +282,25 @@ export default async function handler(req, res) {
 
         const chosenModel = (model || 'claude-sonnet-4-5').trim();
 
-        // Injeta contexto na PRIMEIRA mensagem do usuário como bloco <context>
-        // Se tem imagem, usa formato de content array (vision)
+        // Injeta contexto na PRIMEIRA mensagem do usuario como bloco <context>
+        // Sanitize PRIMEIRO pra cliente nao injetar </context>/<system>/etc.
         const augmented = messages.map((m, i) => {
             const isLastUser = (i === messages.length - 1 && m.role === 'user');
+            const cleanContent = sanitizeUserContent(m.content);
             if (isLastUser && image) {
-                // Vision: content = [image, text]
                 const imgPart = { type: 'image', source: image.source || image };
                 const textWithCtx = context
-                    ? `<context>\n${JSON.stringify(context, null, 2)}\n</context>\n\n${m.content}`
-                    : m.content;
+                    ? `<context>\n${JSON.stringify(context, null, 2)}\n</context>\n\nUser said: ${cleanContent}`
+                    : cleanContent;
                 return { role: 'user', content: [imgPart, { type: 'text', text: textWithCtx }] };
             }
             if (isLastUser && context) {
                 return {
                     role: 'user',
-                    content: `<context>\n${JSON.stringify(context, null, 2)}\n</context>\n\n${m.content}`
+                    content: `<context>\n${JSON.stringify(context, null, 2)}\n</context>\n\nUser said: ${cleanContent}`
                 };
             }
-            return { role: m.role, content: m.content };
+            return { role: m.role, content: cleanContent };
         });
 
         const r = await fetch('https://api.anthropic.com/v1/messages', {

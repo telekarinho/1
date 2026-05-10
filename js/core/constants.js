@@ -90,7 +90,7 @@ const MP = {
 
     // Owner email (para auto-registro como super_admin)
     OWNER_EMAIL: 'jocimarrodrigo@gmail.com',
-    SUPPORT_WHATSAPP: '5543999999999',
+    SUPPORT_WHATSAPP: '5543999919777',
 
     // Session config
     SESSION_DURATION_MS: 7 * 24 * 60 * 60 * 1000, // 7 dias (PDV sobrevive fins de semana sem internet)

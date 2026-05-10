@@ -166,53 +166,21 @@
                    ['confirmado','entregue','pago'].includes(o.status);
         });
 
-        // Mapa de staff pra pegar comissao por funcionario (Equipe)
-        const staffList = DS().getCollection ? (DS().getCollection('staff', fid) || []) : [];
-        const staffById = {};
-        const staffByName = {};
-        staffList.forEach(s => {
-            staffById[s.id] = s;
-            if (s.name) staffByName[s.name] = s;
-        });
-
         periodOrders.forEach(o => {
             const operId = o.operatorId || o.createdBy || 'indefinido';
             if (!byOperator.has(operId)) {
-                byOperator.set(operId, { operatorId: operId, orders: 0, revenue: 0, commission: 0, source: '' });
+                byOperator.set(operId, { operatorId: operId, orders: 0, revenue: 0, commission: 0 });
             }
             const op = byOperator.get(operId);
             op.orders++;
             op.revenue += Number(o.total) || 0;
 
-            // 1) Verifica se operador tem comissao DIRETA cadastrada em Equipe (% sobre vendas)
-            const staff = staffById[operId] || staffByName[operId];
-            const staffRate = staff ? Number(staff.commissionRate || 0) : 0;
-            if (staffRate > 0) {
-                op.commission += (Number(o.total) || 0) * staffRate / 100;
-                op.source = 'staff_rate_' + staffRate + '%';
-                return; // ja calculou — nao soma comissao por produto
-            }
-
-            // 2) Fallback: commissionRate por PRODUTO (modelo antigo)
             (o.items || []).forEach(it => {
                 const p = productMap[it.productId || it.id];
                 const rate = p ? Number(p.commissionRate || 0) : 0;
                 const linhaValor = Number(it.total || (Number(it.unitPrice)||0) * (Number(it.qty)||1));
                 op.commission += linhaValor * rate / 100;
             });
-            op.source = 'product_rate';
-        });
-
-        // Soma comissao FIXA mensal de cada funcionario (cadastrada em Equipe)
-        staffList.forEach(s => {
-            var fixed = Number(s.commissionFixed || 0);
-            if (fixed > 0) {
-                if (!byOperator.has(s.id)) {
-                    byOperator.set(s.id, { operatorId: s.id, orders: 0, revenue: 0, commission: 0, source: 'staff_fixed' });
-                }
-                byOperator.get(s.id).commission += fixed;
-                byOperator.get(s.id).fixed = fixed;
-            }
         });
 
         const list = Array.from(byOperator.values()).map(o => ({

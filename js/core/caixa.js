@@ -54,15 +54,6 @@ const Caixa = (function () {
         return (parseInt(p[0],10) || 0) * 60 + (parseInt(p[1],10) || 0);
     }
 
-    // Franquia de teste — APENAS para QA. Allowlist EXPLÍCITA pra garantir
-    // que NENHUMA franquia de produção (muffato-quintino, morumbi, barra, ibirapuera,
-    // jardins, catuai, recife, curitiba) ative os bypass por engano.
-    // Se quiser adicionar nova franquia de teste, adicione AQUI explicitamente.
-    const TEST_FRANCHISE_IDS = ['franquia-teste'];
-    function isTestFranchise(franchiseId) {
-        return TEST_FRANCHISE_IDS.indexOf(franchiseId) !== -1;
-    }
-
     // Retorna { ok, reason, currentHHMM, expectedOpen, expectedClose }
     // ok=true se está dentro da janela de tolerância.
     // Fora dela, modal pede justificativa (ver showOpenModal/showCloseModal).
@@ -71,10 +62,6 @@ const Caixa = (function () {
         var hours = getBusinessHours(franchiseId);
         var now = new Date();
         var hh = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-        // Franquia de teste: sempre liberada, qualquer horário
-        if (isTestFranchise(franchiseId)) {
-            return { ok: true, currentHHMM: hh, expectedOpen: hours.open, expectedClose: hours.close, testMode: true };
-        }
         // Permite desabilitar via flag (escape hatch pra emergência)
         try {
             var disabled = localStorage.getItem('mp_validate_business_hours_' + franchiseId) === '0';
@@ -152,43 +139,12 @@ const Caixa = (function () {
         const all = loadMovements(franchiseId);
         const moves = byDate(all, dateKey).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 
-        // FIX: pega LAST abertura/fechamento (não first) — se houve reabertura
-        // após fechamento, o turno atual é o ÚLTIMO abertura. Antes usava
-        // find() (primeiro match), o que ignorava reaberturas e deixava
-        // status="fechado" pra sempre.
-        let abertura = null, fechamento = null;
-        for (let i = moves.length - 1; i >= 0; i--) {
-            if (!fechamento && moves[i].type === 'fechamento') fechamento = moves[i];
-            if (!abertura && moves[i].type === 'abertura') abertura = moves[i];
-            if (abertura && fechamento) break;
-        }
-
-        // Determina status pela ORDEM cronológica do último evento de abertura vs fechamento.
-        // - Sem abertura: nao_aberto
-        // - Última abertura DEPOIS do último fechamento (ou sem fechamento): aberto
-        // - Último fechamento DEPOIS da última abertura: fechado
-        let status;
-        if (!abertura) {
-            status = 'nao_aberto';
-        } else if (!fechamento) {
-            status = 'aberto';
-        } else {
-            const aTs = abertura.createdAt || '';
-            const fTs = fechamento.createdAt || '';
-            status = (aTs > fTs) ? 'aberto' : 'fechado';
-        }
-
-        // CALCULOS FINANCEIROS: contabiliza apenas movimentos do TURNO ATUAL
-        // (depois da última abertura). Movimentos anteriores foram fechados
-        // num turno anterior do mesmo dia (caso de reabertura).
-        const turnoCutoff = abertura ? (abertura.createdAt || '') : '';
-        const turnoMoves = abertura
-            ? moves.filter(m => (m.createdAt || '') >= turnoCutoff)
-            : moves;
-        const vendas = turnoMoves.filter(m => m.type === 'venda');
-        const sangrias = turnoMoves.filter(m => m.type === 'sangria');
-        const reforcos = turnoMoves.filter(m => m.type === 'reforco');
-        const ajustes = turnoMoves.filter(m => m.type === 'ajuste');
+        const abertura = moves.find(m => m.type === 'abertura');
+        const fechamento = moves.find(m => m.type === 'fechamento');
+        const vendas = moves.filter(m => m.type === 'venda');
+        const sangrias = moves.filter(m => m.type === 'sangria');
+        const reforcos = moves.filter(m => m.type === 'reforco');
+        const ajustes = moves.filter(m => m.type === 'ajuste');
 
         // Saldo em dinheiro esperado
         const valorAbertura = abertura ? Number(abertura.valor || 0) : 0;
@@ -208,6 +164,11 @@ const Caixa = (function () {
             acc[k] = (acc[k] || 0) + Number(m.valor || 0);
             return acc;
         }, {});
+
+        let status;
+        if (!abertura) status = 'nao_aberto';
+        else if (fechamento) status = 'fechado';
+        else status = 'aberto';
 
         return {
             dateKey: dateKey,
@@ -242,23 +203,9 @@ const Caixa = (function () {
        Criação de movimentos (imutáveis)
        ============================================ */
     function sessionInfo() {
-        // Prioriza operador FISICO do PDV (admin OU colaborador que esta operando)
-        if (typeof OperatorContext !== 'undefined' && OperatorContext.getCurrent) {
-            const op = OperatorContext.getCurrent();
-            if (op) return {
-                id: op.id,
-                name: op.name,
-                email: op.email || null,
-                role: op.role,
-                operatorType: op.type,
-                operatorPis: op.pis || null,
-                operatorCpf: op.cpf || null
-            };
-        }
-        // Fallback: sessao Auth
         if (typeof Auth !== 'undefined' && Auth.getSession) {
             const s = Auth.getSession();
-            if (s) return { id: s.userId, name: s.name, email: s.email, role: s.role, operatorType: 'admin' };
+            if (s) return { id: s.userId, name: s.name, email: s.email, role: s.role };
         }
         return { id: 'anonymous', name: 'Sistema', email: null, role: null };
     }
@@ -309,10 +256,7 @@ const Caixa = (function () {
         if (!franchiseId) return { success: false, error: 'Franquia inválida.' };
         const st = getTurnoState(franchiseId);
         if (st.status === 'aberto') return { success: false, error: 'Já existe um caixa aberto hoje.' };
-        // Franquia de teste pode reabrir caixa fechado livremente — registra novo abertura sobre o fechamento
-        if (st.status === 'fechado' && !isTestFranchise(franchiseId)) {
-            return { success: false, error: 'O caixa de hoje já foi fechado. Peça ao gerente para abrir um novo turno.' };
-        }
+        if (st.status === 'fechado') return { success: false, error: 'O caixa de hoje já foi fechado. Peça ao gerente para abrir um novo turno.' };
         if (isNaN(valorAbertura) || valorAbertura < 0) return { success: false, error: 'Valor de abertura inválido.' };
 
         // === HORÁRIO COMERCIAL ===
@@ -350,19 +294,7 @@ const Caixa = (function () {
         return r;
     }
 
-    /**
-     * Fecha o turno do dia.
-     * @param {string} franchiseId
-     * @param {number} valorContado - dinheiro fisico contado (sem troco)
-     * @param {string} motivoQuebra - obrigatorio se |diff|>5
-     * @param {string} motivoForaHorario - obrigatorio se fora do horario
-     * @param {object} [extras] - opcional: breakdown completo conferido pelo
-     *   operador (pix, cartoes por maquininha, dinheiro, troco). NAO altera
-     *   contrato de retorno; eh apenas anexado ao audit e ao email.
-     *   { conferidoPix, conferidoCredito, conferidoDebito, maquininhas: [{label,credito,debito}],
-     *     dinheiroContadoTotal, troco, sangrias, observacoes }
-     */
-    function closeShift(franchiseId, valorContado, motivoQuebra, motivoForaHorario, extras) {
+    function closeShift(franchiseId, valorContado, motivoQuebra, motivoForaHorario) {
         if (!franchiseId) return { success: false, error: 'Franquia inválida.' };
         const st = getTurnoState(franchiseId);
         if (st.status === 'nao_aberto') return { success: false, error: 'Nenhum caixa aberto hoje.' };
@@ -431,50 +363,17 @@ const Caixa = (function () {
         // (operador deve finalizar manualmente ou via "Encerrar Dia").
         // Pedidos de DIAS ANTERIORES ja foram auto-finalizados acima.
         const pendingOrders = orders.filter(o => {
-            if (!o) return false;
-            if (o.deleted) return false;
             if (o.status === 'entregue' || o.status === 'cancelado') return false;
             if (o.status === 'aguardando_pagamento') return false;
             var lc = _localDateOf(o.createdAt);
-            // BUG-FIX: pedidos sem createdAt (lc='') eram contados como
-            // pendentes — geralmente sao seeds antigos / lixo no localStorage.
-            // Agora ignoramos: se nao tem data, nao bloqueia o fechamento.
-            if (!lc) return false;
-            if (lc !== today) return false;
+            if (lc && lc !== today) return false;
             return true;
         });
         if (pendingOrders.length > 0) {
-            if (isTestFranchise(franchiseId)) {
-                // Modo teste: auto-finaliza pedidos pendentes em vez de bloquear
-                const tsAutoTest = new Date().toISOString();
-                pendingOrders.forEach(po => {
-                    const idx = orders.findIndex(x => x && x.id === po.id);
-                    if (idx >= 0) {
-                        orders[idx].status = 'entregue';
-                        orders[idx].updatedAt = tsAutoTest;
-                        orders[idx].finalizedByCaixaClose = true;
-                        orders[idx].finalizedAt = tsAutoTest;
-                    }
-                });
-                DataStore.set('orders_' + franchiseId, orders);
-                console.log('[Caixa] Modo teste: ' + pendingOrders.length + ' pedido(s) pendente(s) auto-finalizado(s)');
-            } else {
-                // Lista os pedidos pendentes pra o operador identificar (ate 5)
-                const lista = pendingOrders.slice(0, 5).map(o => {
-                    const seq = o.dailySeq ? '#' + o.dailySeq : '#' + String(o.id || '').slice(-6);
-                    const cliente = (o.customer && o.customer.name) || 'Balcao';
-                    const status = o.status || '?';
-                    const valor = formatBRL(o.total || 0);
-                    return '  • ' + seq + ' (' + status + ') · ' + cliente + ' · ' + valor;
-                }).join('\n');
-                const extra = pendingOrders.length > 5 ? '\n  ...e mais ' + (pendingOrders.length - 5) : '';
-                return {
-                    success: false,
-                    error: '⚠️ ' + pendingOrders.length + ' pedido(s) pendente(s) HOJE bloqueando o fechamento:\n' + lista + extra +
-                           '\n\nVá em Pedidos (F9) e marque como Entregue ou Cancelado, depois feche o caixa.',
-                    pendingOrders: pendingOrders.map(o => ({ id: o.id, dailySeq: o.dailySeq, status: o.status, total: o.total, customer: (o.customer || {}).name }))
-                };
-            }
+            return {
+                success: false,
+                error: `⚠️ Não é possível fechar o caixa. Existem ${pendingOrders.length} pedido(s) ativo(s) HOJE. Finalize ou cancele antes.`
+            };
         }
 
         // REGRA DE SEGURANÇA: Bloquear se houver comandas/contas abertas
@@ -483,17 +382,10 @@ const Caixa = (function () {
         const openTabsAll = DataStore.get('pdv_tabs_' + franchiseId) || [];
         const openTabs = openTabsAll.filter(function(t){ return t && !t.deleted; });
         if (openTabs.length > 0) {
-            if (isTestFranchise(franchiseId)) {
-                // Modo teste: marca todas comandas como deletadas em vez de bloquear
-                const cleared = openTabsAll.map(t => t && !t.deleted ? Object.assign({}, t, { deleted: true, _autoCleared: true }) : t);
-                DataStore.set('pdv_tabs_' + franchiseId, cleared);
-                console.log('[Caixa] Modo teste: ' + openTabs.length + ' comanda(s) auto-fechada(s)');
-            } else {
-                return {
-                    success: false,
-                    error: `⚠️ Existem ${openTabs.length} conta(s) aberta(s). Feche todas antes de encerrar o turno.`
-                };
-            }
+            return {
+                success: false,
+                error: `⚠️ Existem ${openTabs.length} conta(s) aberta(s). Feche todas antes de encerrar o turno.`
+            };
         }
 
         if (isNaN(valorContado) || valorContado < 0) return { success: false, error: 'Valor contado inválido.' };
@@ -514,8 +406,7 @@ const Caixa = (function () {
             valorContado: valorContado,
             saldoEsperado: st.saldoEsperadoDinheiro,
             diferenca: diff,
-            motivo: motivoQuebra || '',
-            extras: extras || null
+            motivo: motivoQuebra || ''
         });
 
         if (typeof Motivacional !== 'undefined' && Motivacional.toastCaixaFechado) {
@@ -526,108 +417,14 @@ const Caixa = (function () {
         try {
             if (typeof CloudFunctions !== 'undefined' && CloudFunctions.sendClosingReport) {
                 const session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
-                const operator = (typeof OperatorContext !== 'undefined') ? OperatorContext.getCurrent() : null;
-                const operatorName = operator ? operator.name : (session ? session.name : 'Operador Desconhecido');
-                const operatorEmail = operator ? operator.email : (session ? session.email : '');
-
-                // Monta lista de TURNOS cronologica (abertura, trocas, fechamento)
-                function _hhmm(iso) {
-                    try { return new Date(iso).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }); }
-                    catch (e) { return ''; }
-                }
-                const turnos = [];
-                if (st.abertura) {
-                    turnos.push({
-                        tipo: 'abertura',
-                        hora: _hhmm(st.abertura.createdAt),
-                        descricao: 'Aberto por <strong>' + (st.abertura.createdByName || '?') + '</strong> com troco de ' + formatBRL(st.abertura.valor)
-                    });
-                }
-                (st.moves || []).filter(function(m) { return m.type === 'troca_turno'; }).forEach(function(m) {
-                    var c = m.changeShift || {};
-                    turnos.push({
-                        tipo: 'troca',
-                        hora: _hhmm(m.createdAt),
-                        descricao: 'Troca: <strong>' + (c.operadorAnterior ? c.operadorAnterior.name : '?') + '</strong> → <strong>' + (c.operadorNovo ? c.operadorNovo.name : '?') + '</strong> · Conferência ' + formatBRL(c.valorContado || 0) + (Math.abs(c.diferenca || 0) >= 0.01 ? ' (diff ' + formatBRL(c.diferenca) + ')' : '')
-                    });
-                });
-                turnos.push({
-                    tipo: 'fechamento',
-                    hora: _hhmm(new Date().toISOString()),
-                    descricao: 'Fechado por <strong>' + operatorName + '</strong>'
-                });
-
-                // Sangrias e reforcos detalhados
-                const sangriasList = (st.sangrias || []).map(function(m) {
-                    return { valor: m.valor, motivo: m.motivo || m.descricao, hora: _hhmm(m.createdAt), por: m.createdByName };
-                });
-                const reforcosList = (st.reforcos || []).map(function(m) {
-                    return { valor: m.valor, motivo: m.motivo || m.descricao, hora: _hhmm(m.createdAt), por: m.createdByName };
-                });
-
-                // Pedidos do dia
-                const orders = (typeof DataStore !== 'undefined') ? (DataStore.getCollection('orders', franchiseId) || []) : [];
-                const today = todayKey();
-                const pedidosDoDia = orders.filter(function(o) {
-                    if (!o || !o.createdAt) return false;
-                    if (o.deleted || o.status === 'cancelado') return false;
-                    return o.createdAt.startsWith(today);
-                });
-
-                // Comissoes por operador (pega da analytics se disponivel)
-                let comissoes = [];
-                try {
-                    if (typeof AnalyticsAdvanced !== 'undefined' && AnalyticsAdvanced.commissionReport) {
-                        const rep = AnalyticsAdvanced.commissionReport(franchiseId, today.slice(0, 7));
-                        const staffArr = (typeof DataStore !== 'undefined') ? (DataStore.getCollection('staff', franchiseId) || []) : [];
-                        const staffMap = {};
-                        staffArr.forEach(function(s) { staffMap[s.id] = s.name; staffMap[s.name] = s.name; });
-                        comissoes = (rep.operadores || [])
-                            .filter(function(o) { return o.commission > 0; })
-                            .map(function(o) { return { name: staffMap[o.operatorId] || o.operatorId, orders: o.orders, revenue: o.revenue, commission: o.commission }; });
-                    }
-                } catch (e) {}
-
-                // Beneficios entregues hoje
-                let beneficios = [];
-                try {
-                    if (typeof StaffBenefits !== 'undefined' && StaffBenefits.list) {
-                        beneficios = StaffBenefits.list(franchiseId, { date: today }).map(function(b) {
-                            var icon = b.tipo === 'sorvete_dia' ? '🍦' : (b.tipo === 'refeicao' ? '🍽️' : (b.tipo === 'lanche' ? '🥪' : (b.tipo === 'bebida' ? '🥤' : '🎁')));
-                            return { staffName: b.staffName, tipo: b.tipo, tipoLabel: b.tipoLabel, value: b.value, icon: icon };
-                        });
-                    }
-                } catch (e) {}
-
-                // Troco padrao pro proximo dia: por default = mesmo valor da abertura
-                // Admin pode customizar em franquia.trocoProximoDiaPadrao (futuro card config)
-                const franchises = (typeof DataStore !== 'undefined') ? (DataStore.getAllFranchises() || []) : [];
-                const fr = franchises.find(function(f) { return f.id === franchiseId; });
-                const trocoProximoDia = (fr && fr.trocoProximoDiaPadrao != null) ? Number(fr.trocoProximoDiaPadrao) : (st.valorAbertura || 0);
-
                 CloudFunctions.sendClosingReport(franchiseId, {
-                    operatorName: operatorName,
-                    operatorEmail: operatorEmail,
+                    operatorName: session ? session.name : 'Operador Desconhecido',
+                    operatorEmail: session ? session.email : '',
                     valorContado: valorContado,
                     saldoEsperado: st.saldoEsperadoDinheiro,
                     diferenca: diff,
                     motivo: motivoQuebra,
-                    fechamentoDate: new Date().toISOString(),
-                    porMetodoEsperado: st.porMetodo || {},
-                    faturamentoBruto: st.faturamentoBruto || 0,
-                    valorAbertura: st.valorAbertura || 0,
-                    vendasDinheiro: st.vendasDinheiro || 0,
-                    totalSangria: st.totalSangria || 0,
-                    totalReforco: st.totalReforco || 0,
-                    totalPedidos: pedidosDoDia.length,
-                    trocoProximoDia: trocoProximoDia,
-                    breakdownConferido: extras || null,
-                    // dados completos pro relatorio
-                    turnos: turnos,
-                    sangrias: sangriasList,
-                    reforcos: reforcosList,
-                    comissoes: comissoes,
-                    beneficios: beneficios
+                    fechamentoDate: new Date().toISOString()
                 });
             }
         } catch (e) {
@@ -635,63 +432,6 @@ const Caixa = (function () {
         }
 
         return Object.assign({}, r, { diff: diff, esperado: st.saldoEsperadoDinheiro });
-    }
-
-    /**
-     * Troca de turno SEM fechar o caixa.
-     * Operador 1 conta o dinheiro fisico, operador 2 confirma.
-     * Caixa continua aberto, mas o operador "atual" muda. Movimento
-     * 'troca_turno' fica registrado como conferencia entre operadores.
-     */
-    function changeShift(franchiseId, valorContado, novoOperadorId, novoOperadorPin, observacao) {
-        if (!franchiseId) return { success: false, error: 'Franquia invalida.' };
-        const st = getTurnoState(franchiseId);
-        if (st.status !== 'aberto') return { success: false, error: 'Nao ha caixa aberto. Abra o caixa primeiro.' };
-        if (isNaN(valorContado) || valorContado < 0) return { success: false, error: 'Valor contado invalido.' };
-        if (!novoOperadorId) return { success: false, error: 'Selecione o novo operador.' };
-
-        const opAtual = sessionInfo();
-        if (typeof OperatorContext === 'undefined') return { success: false, error: 'OperatorContext indisponivel.' };
-
-        const r = OperatorContext.selectOperator(franchiseId, novoOperadorId, novoOperadorPin || '');
-        if (!r.success) return { success: false, error: 'PIN incorreto ou operador invalido: ' + r.error };
-
-        const novoOp = r.operator;
-        const diff = valorContado - st.saldoEsperadoDinheiro;
-
-        const move = createMovement(franchiseId, {
-            type: 'troca_turno',
-            valor: 0, // troca nao move dinheiro
-            descricao: 'Troca de turno: ' + opAtual.name + ' → ' + novoOp.name +
-                       ' • Conferencia: ' + formatBRL(valorContado) +
-                       ' (esperado ' + formatBRL(st.saldoEsperadoDinheiro) + ', diff ' + formatBRL(diff) + ')',
-            motivo: observacao || ''
-        });
-        // Salva metadata extra
-        if (move.success && move.move) {
-            const allMoves = loadMovements(franchiseId);
-            const idx = allMoves.findIndex(m => m.id === move.move.id);
-            if (idx !== -1) {
-                allMoves[idx].changeShift = {
-                    operadorAnterior: { id: opAtual.id, name: opAtual.name, type: opAtual.operatorType },
-                    operadorNovo: { id: novoOp.id, name: novoOp.name, type: novoOp.type },
-                    valorContado: valorContado,
-                    saldoEsperadoNoMomento: st.saldoEsperadoDinheiro,
-                    diferenca: diff,
-                    observacao: observacao || ''
-                };
-                if (typeof DataStore !== 'undefined' && DataStore.saveCollection) {
-                    DataStore.saveCollection(COLLECTION, franchiseId, allMoves);
-                }
-            }
-        }
-
-        audit('CAIXA_SHIFT_CHANGE', franchiseId, {
-            de: opAtual.name, para: novoOp.name,
-            valorContado: valorContado, esperado: st.saldoEsperadoDinheiro, diff: diff
-        });
-
-        return { success: true, move: move.move, novoOperador: novoOp, diff: diff };
     }
 
     function registerSale(franchiseId, order) {
@@ -1063,846 +803,82 @@ const Caixa = (function () {
                 showCloseModal(franchiseId, cb);
             });
         }
-        return _showCloseModalV2(franchiseId, cb);
-    }
 
-    /* ============================================
-       V2 (modal interativo) — substitui o modal antigo de fechamento.
-       Mantem a mesma assinatura externa (showCloseModal), apenas troca a UI:
-         - Inputs editaveis por metodo (PIX, Credito M1, Credito M2, Debito M1,
-           Debito M2, Dinheiro contado, Troco)
-         - Mostra esperado vs contado em tempo real e calcula diferenca
-         - Justificativa so eh obrigatoria quando ha diferenca > R$ 5
-         - Apos confirmar, dispara closeShift normalmente + envia relatorio
-           (tenta CloudFunctions, salva sempre no Firestore audit, e tem
-           fallback mailto: pra abrir o cliente de email do operador)
-       ============================================ */
-    function _showCloseModalV2(franchiseId, cb) {
         const st = getTurnoState(franchiseId);
-        const hourCheckClose = checkBusinessHours(franchiseId, 'close');
-
-        // Agrega valores esperados normalizando TODAS as chaves de porMetodo.
-        // Antes: chaves com acento ('crédito') nao batiam com lookup ('credito')
-        // -> esperado aparecia R$ 0,00 e operador nao confiava.
-        function _aggExpected(porMetodo) {
-            const agg = { cartao: 0, pix: 0, dinheiro: 0, _outros: 0 };
-            Object.keys(porMetodo || {}).forEach(k => {
-                const v = Number(porMetodo[k] || 0);
-                const norm = normalizeMetodo(k);
-                if (norm === 'pix') agg.pix += v;
-                else if (norm === 'dinheiro') agg.dinheiro += v;
-                else if (norm === 'credito' || norm === 'debito') agg.cartao += v;
-                else agg._outros += v; // [object object], nao_informado, etc
-            });
-            return agg;
-        }
-        const exp = _aggExpected(st.porMetodo);
-        // O Z-relatorio das maquininhas ja vem com cartao somado (cred+deb),
-        // entao operador nao precisa separar. Mantem compatibilidade:
-        const espCartao   = exp.cartao;
-        const espPix      = exp.pix;
-        const espDinheiro = exp.dinheiro || Number(st.vendasDinheiro || 0);
-        const saldoEsperadoDinheiro = Number(st.saldoEsperadoDinheiro || 0);
-
-        // Aviso de vendas com metodo invalido (geralmente pedido teste antigo)
-        const polluted = Object.keys(st.porMetodo || {}).filter(k =>
-            k && (k.indexOf('object') !== -1 || normalizeMetodo(k) === 'nao_informado')
-        );
-        let pollutedHtml = '';
-        if (polluted.length) {
-            const totalPoll = polluted.reduce((s, k) => s + Number(st.porMetodo[k] || 0), 0);
-            pollutedHtml =
-              '<div style="background:#FEF3C7;border:1px solid #F59E0B;color:#92400E;padding:6px 10px;border-radius:6px;margin:0 0 8px;font-size:11px">' +
-                '⚠️ ' + formatBRL(totalPoll) + ' de vendas teste antigas — ignore' +
-              '</div>';
-        }
-
-        const offHoursCloseWarning = !hourCheckClose.ok ? `
-            <div style="background:#FFF3E0;border:2px solid #FB8C00;color:#E65100;padding:10px;border-radius:8px;margin:8px 0;font-weight:600;font-size:13px">
-                ⏰ <strong>Fora do horário</strong>
-                <div style="font-weight:400;margin-top:2px">${hourCheckClose.reason || 'Previsto: ' + hourCheckClose.expectedClose}</div>
+        // Pre-check do horário
+        var hourCheckClose = checkBusinessHours(franchiseId, 'close');
+        var offHoursCloseWarning = !hourCheckClose.ok ? `
+            <div style="background:#FFF3E0;border:2px solid #FB8C00;color:#E65100;padding:12px;border-radius:8px;margin:10px 0;font-weight:600">
+                ⏰ <strong>Fora do horário comercial</strong><br>
+                <small style="font-weight:400">${hourCheckClose.reason || 'Horário previsto: ' + hourCheckClose.expectedClose}</small>
             </div>
-            <label style="margin-top:6px;font-size:13px"><strong>Justificativa de horário (obrigatória)</strong></label>
-            <textarea data-name="motivoForaHorario" placeholder="Ex: shopping fechou cedo, sem movimento..." rows="2" style="width:100%;padding:8px;border:2px solid #FB8C00;border-radius:6px;font-family:inherit;font-size:13px"></textarea>
+            <label style="margin-top:8px"><strong>Justificativa de horário (obrigatória)</strong></label>
+            <textarea data-name="motivoForaHorario" placeholder="Ex: shopping fechou cedo, problema técnico, sem movimento..." rows="2" style="width:100%;padding:10px;border:2px solid #FB8C00;border-radius:8px;font-family:inherit;font-size:14px"></textarea>
         ` : '';
 
-        // === MODO SIMPLES (default): 3 cards (Cartão, PIX, Dinheiro). ===
-        // Cada card tem 2 botoes GRANDES: "✓ Tá certo" (verde) ou
-        // "✏️ Não bate" (laranja). Confere = aceita o esperado.
-        // Não bate = expande input pra digitar valor real e mostra diff.
-        // Botão FECHAR fica DESABILITADO ate todos resolvidos.
+        const breakdownHtml = _renderPagamentosBreakdown(st);
 
-        const cv2Style = ''+
-          '<style>' +
-            '.cv2-modal{max-width:560px!important;max-height:92vh;display:flex;flex-direction:column;border-radius:16px;overflow:hidden}' +
-            '.cv2-modal .caixa-modal-body{padding:14px 16px!important;background:#f9fafb;overflow-y:auto;flex:1;min-height:0}' +
-            '.cv2-modal .caixa-modal-header{padding:12px 16px!important}' +
-            '.cv2-modal .caixa-modal-header h3{font-size:17px!important;margin:0!important}' +
-            '.cv2-modal .caixa-modal-footer{padding:10px 14px!important;flex-shrink:0;display:flex;gap:8px;background:#fff;border-top:1px solid #e5e7eb}' +
-            '.cv2-card{background:#fff;border:2px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:10px;transition:all .15s}' +
-            '.cv2-card.ok{border-color:#10B981;background:#ECFDF5}' +
-            '.cv2-card.editing{border-color:#F59E0B;background:#FFFBEB}' +
-            '.cv2-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}' +
-            '.cv2-card-icon{font-size:24px;line-height:1}' +
-            '.cv2-card-name{font-size:15px;font-weight:800;color:#111827}' +
-            '.cv2-card-esperado{font-size:22px;font-weight:900;color:#111827;letter-spacing:-.5px;line-height:1}' +
-            '.cv2-card-esp-label{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px}' +
-            '.cv2-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}' +
-            '.cv2-btn{padding:11px 8px;border-radius:8px;font-weight:800;cursor:pointer;border:2px solid;font-size:13px;transition:all .12s;text-align:center}' +
-            '.cv2-btn-ok{background:#10B981;color:#fff;border-color:#10B981}' +
-            '.cv2-btn-ok:hover{background:#059669;border-color:#059669}' +
-            '.cv2-btn-naobate{background:#fff;color:#92400E;border-color:#F59E0B}' +
-            '.cv2-btn-naobate:hover{background:#FFFBEB}' +
-            '.cv2-card.ok .cv2-btn-ok{background:#10B981;color:#fff}' +
-            '.cv2-card.ok .cv2-btn-naobate{background:#fff;color:#92400E;border-color:#F59E0B;opacity:.6}' +
-            '.cv2-card.editing .cv2-btn-naobate{background:#F59E0B;color:#fff}' +
-            '.cv2-card.editing .cv2-btn-ok{background:#fff;color:#10B981;opacity:.6}' +
-            '.cv2-edit-area{margin-top:10px;padding-top:10px;border-top:1px dashed #F59E0B}' +
-            '.cv2-edit-area input{width:100%;padding:10px 12px;border:2px solid #F59E0B;border-radius:8px;font-weight:800;text-align:right;font-size:18px;background:#fff}' +
-            '.cv2-diff-msg{margin-top:8px;font-size:13px;font-weight:600;text-align:center;padding:8px 10px;border-radius:6px;line-height:1.4}' +
-            '.cv2-diff-ok{background:#ECFDF5;color:#065F46;border:1px solid #6EE7B7}' +
-            '.cv2-diff-pequena{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0}' +
-            '.cv2-diff-faltou{background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5}' +
-            '.cv2-diff-sobrou{background:#FFEDD5;color:#9A3412;border:1px solid #FDBA74}' +
-            '.cv2-card.ok .cv2-card-status::before{content:"✓ confere";font-size:11px;font-weight:800;color:#065F46;background:#A7F3D0;padding:3px 8px;border-radius:99px}' +
-            '.cv2-card.editing .cv2-card-status::before{content:"✏️ ajustando";font-size:11px;font-weight:800;color:#92400E;background:#FDE68A;padding:3px 8px;border-radius:99px}' +
-            '.cv2-card .cv2-card-status::before{content:"⚠ confira";font-size:11px;font-weight:800;color:#92400E;background:#FEF3C7;padding:3px 8px;border-radius:99px}' +
-            '.cv2-btn-final{flex:1;padding:14px;font-size:16px;font-weight:900;border-radius:10px;border:none;cursor:pointer;transition:all .15s}' +
-            '.cv2-btn-final:disabled{background:#d1d5db!important;color:#6b7280!important;cursor:not-allowed}' +
-            '.cv2-btn-final-ok{background:#10B981;color:#fff}' +
-            '.cv2-btn-final-ok:hover:not(:disabled){background:#059669}' +
-            '.cv2-btn-cancel{background:#fff;color:#6b7280;border:2px solid #d1d5db;padding:14px 18px;font-weight:700;border-radius:10px;cursor:pointer}' +
-            '.cv2-progress{display:flex;gap:4px;margin-bottom:12px}' +
-            '.cv2-progress-dot{flex:1;height:6px;border-radius:3px;background:#e5e7eb;transition:background .2s}' +
-            '.cv2-progress-dot.done{background:#10B981}' +
-            '.cv2-dinheiro-extra{margin-top:8px;padding-top:8px;border-top:1px dashed #d1d5db}' +
-            '.cv2-dinheiro-extra label{font-size:12px;color:#6b7280;display:block;margin-bottom:3px}' +
-            '.cv2-dinheiro-extra input{width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:6px;font-weight:700;text-align:right;font-size:14px}' +
-          '</style>';
-
-        // Helper: gera card (Cartão / PIX / Dinheiro)
-        // Helper: gera card com campos editaveis customizaveis quando "Não bate"
-        // fields = array de { name, label, default } — quando expandido vai
-        // gerar 1 input por campo, e a SOMA deles vira o valor conferido.
-        // Pra cartao: 2 maquininhas. Pra PIX: 2 maquininhas + banco direto.
-        // Pra dinheiro: 1 input (total contado) - depois trata troco separado.
-        function _card(key, icon, name, esperado, hint, fields) {
-            // Default: 1 campo unico (compatibilidade)
-            const flds = fields || [{ name: 'conf_'+key, label: 'Quanto realmente entrou?', default: esperado }];
-            const inputsHtml = flds.map(f => ''+
-                '<div style="margin-bottom:6px">' +
-                  '<label style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px;font-weight:600">'+f.label+'</label>' +
-                  '<input type="text" class="caixa-brl cv2-edit-input" data-caixa-brl data-name="'+f.name+'" data-card-field="'+key+'" inputmode="numeric" '+
-                    'value="'+formatBRL(f.default || 0)+'" '+
-                    'style="width:100%;padding:8px 10px;border:2px solid #F59E0B;border-radius:6px;font-weight:800;text-align:right;font-size:15px;background:#fff">' +
-                '</div>'
-            ).join('');
-            return ''+
-            '<div class="cv2-card" data-card="'+key+'" data-esperado-num="'+esperado+'">' +
-              '<div class="cv2-card-head">' +
-                '<div style="display:flex;align-items:center;gap:10px">' +
-                  '<span class="cv2-card-icon">'+icon+'</span>' +
-                  '<div>' +
-                    '<div class="cv2-card-name">'+name+'</div>' +
-                    '<div class="cv2-card-status" style="margin-top:3px"></div>' +
-                  '</div>' +
-                '</div>' +
-                '<div style="text-align:right">' +
-                  '<div class="cv2-card-esp-label">'+(hint||'esperado')+'</div>' +
-                  '<div class="cv2-card-esperado">'+formatBRL(esperado)+'</div>' +
-                '</div>' +
-              '</div>' +
-              '<div class="cv2-btns">' +
-                '<button type="button" class="cv2-btn cv2-btn-ok"      data-action="ok"      data-card-btn="'+key+'">✓ Tá certo</button>' +
-                '<button type="button" class="cv2-btn cv2-btn-naobate" data-action="naobate" data-card-btn="'+key+'">✏️ Não bate</button>' +
-              '</div>' +
-              '<div class="cv2-edit-area" data-edit-area="'+key+'" style="display:none">' +
-                inputsHtml +
-                '<div class="cv2-diff-msg" data-diff-msg="'+key+'" style="display:none"></div>' +
-              '</div>' +
-            '</div>';
-        }
-
-        const html = `${cv2Style}
-            <div class="caixa-modal cv2-modal" role="dialog" aria-label="Fechar caixa">
-              <div class="caixa-modal-header" style="background:linear-gradient(135deg,#7B1FA2,#DC2626)">
-                <h3>🔒 Fechar caixa do dia</h3>
+        const html = `
+            <div class="caixa-modal" role="dialog" aria-label="Fechar caixa">
+              <div class="caixa-modal-header" style="background:linear-gradient(135deg,#DC2626,#F59E0B)">
+                <h3>🔒 Fechar caixa</h3>
                 <button class="caixa-modal-close" data-caixa-close aria-label="Fechar">✕</button>
               </div>
               <div class="caixa-modal-body">
-
-                ${pollutedHtml}
-
-                <div style="background:#EEF2FF;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#3730A3;line-height:1.5">
-                  💡 <strong>Como conferir:</strong><br>
-                  • <strong>Cartão</strong>: pegue o <strong>Z relatório</strong> da maquineta → linha <strong>"Totais Bandeiras"</strong><br>
-                  • <strong>PIX</strong>: linha <strong>"Pix"</strong> do Z relatório (e/ou extrato do banco)<br>
-                  • <strong>Dinheiro</strong>: conte a gaveta<br>
-                  Se bater, clica <strong>✓ Tá certo</strong>. Se não, <strong>✏️ Não bate</strong> e digita o real.
+                <div style="font-weight:700;margin-bottom:6px;color:#333">💰 Vendas por forma de pagamento</div>
+                ${breakdownHtml}
+                <div class="caixa-info" style="margin-top:10px">
+                  Abertura: <strong>${formatBRL(st.valorAbertura)}</strong><br>
+                  + Vendas em dinheiro: <strong>${formatBRL(st.vendasDinheiro)}</strong><br>
+                  + Reforços: <strong>${formatBRL(st.totalReforco)}</strong><br>
+                  − Sangrias: <strong>${formatBRL(st.totalSangria)}</strong><br>
+                  <hr style="border:none;border-top:1px solid #ddd;margin:6px 0">
+                  <span style="font-size:15px">Saldo esperado em dinheiro:</span> <strong style="color:#2E7D32;font-size:16px">${formatBRL(st.saldoEsperadoDinheiro)}</strong>
                 </div>
-
-                <!-- Barra de progresso (3 dots) -->
-                <div class="cv2-progress">
-                  <div class="cv2-progress-dot" data-prog="cartao"></div>
-                  <div class="cv2-progress-dot" data-prog="pix"></div>
-                  <div class="cv2-progress-dot" data-prog="dinheiro"></div>
-                </div>
-
-                ${_card('cartao', '💳', 'Cartão (Bandeiras)', espCartao, 'do Z da maquineta', [
-                  { name:'conf_cartao_m1', label:'💳 Maquineta 1 — total Bandeiras', default: espCartao },
-                  { name:'conf_cartao_m2', label:'💳 Maquineta 2 — total Bandeiras (se tiver)', default: 0 }
-                ])}
-                ${_card('pix', '⚡', 'PIX', espPix, 'banco + maquineta', [
-                  { name:'conf_pix_m1',     label:'⚡ PIX Maquineta 1', default: espPix },
-                  { name:'conf_pix_m2',     label:'⚡ PIX Maquineta 2 (se tiver)', default: 0 },
-                  { name:'conf_pix_direto', label:'⚡ PIX direto na conta (banco)', default: 0 }
-                ])}
-
-                <!-- Card Dinheiro tem extras (troco) -->
-                <div class="cv2-card" data-card="dinheiro" data-esperado-num="${saldoEsperadoDinheiro}">
-                  <div class="cv2-card-head">
-                    <div style="display:flex;align-items:center;gap:10px">
-                      <span class="cv2-card-icon">💵</span>
-                      <div>
-                        <div class="cv2-card-name">Dinheiro físico</div>
-                        <div class="cv2-card-status" style="margin-top:3px"></div>
-                      </div>
-                    </div>
-                    <div style="text-align:right">
-                      <div class="cv2-card-esp-label">deve ter na gaveta</div>
-                      <div class="cv2-card-esperado">${formatBRL(saldoEsperadoDinheiro)}</div>
-                    </div>
-                  </div>
-                  <div style="font-size:11px;color:#6b7280;margin-bottom:8px;text-align:right">
-                    abertura ${formatBRL(st.valorAbertura)} + vendas dinheiro ${formatBRL(st.vendasDinheiro)}${st.totalReforco?' + reforço '+formatBRL(st.totalReforco):''}${st.totalSangria?' − sangria '+formatBRL(st.totalSangria):''}
-                  </div>
-                  <div class="cv2-btns">
-                    <button type="button" class="cv2-btn cv2-btn-ok"      data-action="ok"      data-card-btn="dinheiro">✓ Tá certo</button>
-                    <button type="button" class="cv2-btn cv2-btn-naobate" data-action="naobate" data-card-btn="dinheiro">✏️ Não bate</button>
-                  </div>
-                  <div class="cv2-edit-area" data-edit-area="dinheiro" style="display:none">
-                    <label style="font-size:12px;color:#374151;display:block;margin-bottom:4px;font-weight:700">💵 Quanto contou na gaveta?</label>
-                    <input type="text" class="caixa-brl cv2-edit-input" data-caixa-brl data-name="conf_dinheiro" data-card-field="dinheiro" inputmode="numeric" placeholder="R$ 0,00"
-                           style="width:100%;padding:10px 12px;border:2px solid #F59E0B;border-radius:8px;font-weight:800;text-align:right;font-size:18px;background:#fff">
-                    <div class="cv2-dinheiro-extra">
-                      <label>Quanto desse total fica de troco pro próximo turno? (só anotação — não afeta o caixa)</label>
-                      <input type="text" class="caixa-brl" data-caixa-brl data-name="dinheiro_troco" inputmode="numeric" placeholder="R$ 0,00">
-                    </div>
-                    <div class="cv2-diff-msg" data-diff-msg="dinheiro" style="display:none"></div>
-                  </div>
-                </div>
-
-                <!-- Justificativa só aparece quando há diff > R$ 5 -->
-                <div data-justify-wrap style="display:none;margin-top:6px">
-                  <div style="background:#FEF3C7;border-radius:8px;padding:10px 12px;font-size:13px;color:#92400E;font-weight:700;margin-bottom:6px">
-                    ⚠️ Tem diferença de mais de R$ 5,00 — explique o motivo:
-                  </div>
-                  <textarea data-name="motivo" placeholder="Ex: troco a mais, erro digitação, falta R$ X..." rows="2"
-                            style="width:100%;padding:8px;border:2px solid #F59E0B;border-radius:8px;font-family:inherit;font-size:13px;resize:vertical"></textarea>
-                </div>
-
+                <label>Valor real contado no caixa</label>
+                <input type="text" class="caixa-brl" data-caixa-brl data-name="valor" inputmode="numeric" placeholder="R$ 0,00">
+                <label>Justificativa (obrigatória se diferença &gt; R$ 5)</label>
+                <textarea data-name="motivo" placeholder="Ex: troco dado a mais, erro de conferência..."></textarea>
                 ${offHoursCloseWarning}
-
-                <div style="margin-top:10px;font-size:11px;color:#6b7280;text-align:center" title="Email enviado para: milkypot.com@gmail.com, jocimarrodrigo@gmail.com, joseanemse@gmail.com">
-                  📧 Ao fechar, relatório vai automaticamente para os 3 emails da gestão
-                </div>
-
-                <!-- Detalhes avançados (opcional) -->
-                <details style="margin-top:10px">
-                  <summary style="cursor:pointer;font-size:11px;color:#6b7280;text-align:center;padding:4px">📊 Ver detalhes (M1/M2 separados)</summary>
-                  <div style="background:#fff;border-radius:8px;padding:10px;margin-top:6px;font-size:11px;color:#6b7280;line-height:1.6">
-                    Por padrão somamos tudo (M1 + M2 + PIX banco). Se você precisa registrar separado, edite os valores acima clicando "Não bate" e digite a soma das suas maquinetas.
-                  </div>
-                </details>
-
-                <div class="caixa-danger" data-caixa-error style="display:none;margin-top:8px;padding:8px 10px;background:#FEE2E2;color:#991B1B;border-radius:6px;font-size:13px;font-weight:700"></div>
+                <div class="caixa-danger" data-caixa-error style="display:none"></div>
               </div>
               <div class="caixa-modal-footer">
-                <button type="button" class="cv2-btn-cancel" data-caixa-close>Cancelar</button>
-                <button type="button" class="cv2-btn-final cv2-btn-final-ok" data-caixa-confirm disabled>✅ Fechar Caixa</button>
+                <button class="caixa-btn-secondary" data-caixa-close>Cancelar</button>
+                <button class="caixa-btn-danger" data-caixa-confirm>Revisar e fechar →</button>
               </div>
             </div>`;
-
         const modal = openModal(html, (data) => {
-            // Estado dos cards (preenchido pelos clicks)
-            const cardState = modal.__cardState || {};
-
-            // Validar todos resolvidos
-            const required = ['cartao','pix','dinheiro'];
-            const pending = required.filter(k => !cardState[k]);
-            if (pending.length) {
-                return _err(modal, '⚠️ Confira: ' + pending.join(', ') + ' ainda não foi marcado.');
-            }
-
-            const valCartao = cardState.cartao.value;
-            const valPix    = cardState.pix.value;
-            // BUG-FIX: Cliente reportou — "TROCO É UMA COISA VENDA E OUTRA"
-            // O troco do proximo turno nao deve subtrair do valor contado.
-            // O esperado em dinheiro (saldoEsperadoDinheiro) ja eh:
-            //   abertura + vendas dinheiro + reforcos − sangrias
-            // O valor contado eh o TOTAL na gaveta — incluindo o troco que
-            // vai ficar pra amanha (porque ainda nao saiu).
-            // Troco vai como informacao auxiliar pro relatorio, nao no calculo.
-            const valDinheiroTotal = cardState.dinheiro.value;
-            const dinTroco = Number(parseBRL(data.dinheiro_troco) || 0);
-            const valorContado = +valDinheiroTotal.toFixed(2);
-
-            // Justificativa de horario
-            let motivoH = '';
+            // Se fora do horário e textarea vazia, bloqueia
+            var motivoH = '';
             if (!hourCheckClose.ok) {
                 motivoH = (data.motivoForaHorario || '').trim();
                 if (motivoH.length < 3) {
-                    return _err(modal, '⚠️ Justificativa de horário obrigatória.');
+                    const err = modal.overlay.querySelector('[data-caixa-error]');
+                    err.textContent = '⚠️ Justificativa de horário obrigatória (mínimo 3 caracteres).';
+                    err.style.display = 'block';
+                    return false;
                 }
             }
-
-            const totalConferido = valCartao + valPix + valorContado;
-            const totalEsperado  = espCartao + espPix + espDinheiro + Number(st.valorAbertura||0);
-            const diffTotal      = +(totalConferido - totalEsperado).toFixed(2);
-            const diffDinheiro   = +(valorContado - saldoEsperadoDinheiro).toFixed(2);
-
-            const motivo = (data.motivo || '').trim();
-            if ((Math.abs(diffTotal) > 5 || Math.abs(diffDinheiro) > 5) && !motivo) {
-                return _err(modal, '⚠️ Diferença maior que R$ 5,00 — explique o motivo no campo amarelo.');
+            // Validacao basica: valor preenchido
+            var valorContado = parseBRL(data.valor);
+            if (!valorContado && valorContado !== 0) {
+                const err = modal.overlay.querySelector('[data-caixa-error]');
+                err.textContent = '⚠️ Informe o valor real contado no caixa.';
+                err.style.display = 'block';
+                return false;
             }
-
-            const extras = {
-                modo: 'simples',
-                breakdown: {
-                    cartao: valCartao,
-                    pix_total: valPix,
-                    dinheiro_total_gaveta: valDinheiroTotal,
-                    dinheiro_troco: dinTroco,  // info pro proximo turno (nao no calculo)
-                    dinheiro_liquido_dia: valorContado  // = total contado (sem subtrair troco)
-                },
-                esperado: {
-                    cartao: espCartao,
-                    pix: espPix,
-                    dinheiro: espDinheiro,
-                    saldoEsperadoDinheiro: saldoEsperadoDinheiro,
-                    totalEsperado: totalEsperado
-                },
-                conferido: {
-                    totalConferido: totalConferido,
-                    diffTotal: diffTotal,
-                    diffDinheiro: diffDinheiro
-                },
-                conferidoEm: new Date().toISOString()
-            };
-
-            const r = closeShift(franchiseId, valorContado, motivo, motivoH, extras);
-            if (!r.success) {
-                return _err(modal, r.error);
-            }
-
-            try {
-                _persistAndDispatchReport(franchiseId, st, valorContado, motivo, motivoH, extras, r);
-            } catch (e) { console.warn('Falha ao despachar relatorio:', e); }
-
-            if (cb) cb(r);
-            setTimeout(function(){
-                let msg = '✅ Caixa fechado!\n\n';
-                msg += 'Total: ' + formatBRL(totalConferido) + '\n';
-                if (Math.abs(diffTotal) >= 0.01) msg += 'Diferença: ' + (diffTotal>0?'+':'') + formatBRL(diffTotal) + '\n';
-                else msg += 'Bateu certinho!\n';
-                msg += '\n📧 Relatório enviado pra gestão.';
-                window.alert(msg);
-            }, 100);
+            // ETAPA 2: confirmacao dupla — mostra resumo e exige clique consciente
+            // antes de aplicar. Evita fechamento errado por reflexo do operador.
+            modal.overlay.remove();
+            _showCloseConfirmModal(franchiseId, st, {
+                valorContado: valorContado,
+                valorContadoRaw: data.valor,
+                motivo: data.motivo || '',
+                motivoForaHorario: motivoH,
+                hourCheckClose: hourCheckClose
+            }, cb);
+            return false; // ja gerenciamos o fechamento manualmente
         });
-
-        // ====== Wiring dos botões e estado ======
-        const overlay = modal.overlay;
-        modal.__cardState = {}; // { cartao: {ok:true, value:N}, pix: {...}, dinheiro: {...} }
-
-        function _esp(key) {
-            const card = overlay.querySelector('[data-card="'+key+'"]');
-            return Number(card ? card.getAttribute('data-esperado-num') : 0);
-        }
-        function _setProgress() {
-            ['cartao','pix','dinheiro'].forEach(k => {
-                const dot = overlay.querySelector('[data-prog="'+k+'"]');
-                if (dot) dot.classList.toggle('done', !!modal.__cardState[k]);
-            });
-            // Habilita botão final só quando os 3 resolvidos
-            const allOk = ['cartao','pix','dinheiro'].every(k => modal.__cardState[k]);
-            const fechBtn = overlay.querySelector('[data-caixa-confirm]');
-            if (fechBtn) fechBtn.disabled = !allOk;
-
-            // Atualiza justificativa
-            if (allOk) {
-                // Troco NAO entra no calculo (eh dinheiro fisico que fica
-                // pra abrir o proximo turno, nao eh venda).
-                const dinContado = modal.__cardState.dinheiro.value;
-                const total      = modal.__cardState.cartao.value + modal.__cardState.pix.value + dinContado;
-                const totalEsp   = espCartao + espPix + espDinheiro + Number(st.valorAbertura||0);
-                const diff       = +(total - totalEsp).toFixed(2);
-                const dinDiff    = +(dinContado - saldoEsperadoDinheiro).toFixed(2);
-                const wrap = overlay.querySelector('[data-justify-wrap]');
-                if (wrap) wrap.style.display = (Math.abs(diff) > 5 || Math.abs(dinDiff) > 5) ? 'block' : 'none';
-            }
-        }
-
-        function _markCard(key, mode, value) {
-            const card = overlay.querySelector('[data-card="'+key+'"]');
-            const editArea = overlay.querySelector('[data-edit-area="'+key+'"]');
-            if (!card) return;
-            card.classList.remove('ok','editing');
-            if (mode === 'ok') {
-                card.classList.add('ok');
-                if (editArea) editArea.style.display = 'none';
-                modal.__cardState[key] = { ok: true, mode: 'ok', value: _esp(key) };
-            } else if (mode === 'editing') {
-                card.classList.add('editing');
-                if (editArea) {
-                    editArea.style.display = 'block';
-                    // Foca no primeiro campo do edit area
-                    const firstInp = editArea.querySelector('input.cv2-edit-input, input[data-name^="conf_"]');
-                    if (firstInp) { firstInp.focus(); firstInp.select(); }
-                }
-                // Inicializa value com soma dos campos atuais (defaults)
-                if (typeof _sumCardFields === 'function') {
-                    const v = _sumCardFields(key);
-                    modal.__cardState[key] = { ok: true, mode: 'editing', value: v };
-                } else if (typeof value === 'number') {
-                    modal.__cardState[key] = { ok: true, mode: 'editing', value: value };
-                } else {
-                    modal.__cardState[key] = { ok: true, mode: 'editing', value: _esp(key) };
-                }
-            }
-            _setProgress();
-        }
-
-        // Click handlers nos botões dos cards
-        overlay.addEventListener('click', function(ev){
-            const btn = ev.target.closest('[data-card-btn]');
-            if (!btn) return;
-            ev.preventDefault();
-            const key = btn.getAttribute('data-card-btn');
-            const action = btn.getAttribute('data-action');
-            if (action === 'ok') _markCard(key, 'ok');
-            else if (action === 'naobate') {
-                _markCard(key, 'editing');
-                // Sem value ainda — sera registrado ao digitar
-                if (modal.__cardState[key] && modal.__cardState[key].mode === 'editing' && !modal.__cardState[key].value) {
-                    modal.__cardState[key].value = _esp(key);
-                }
-            }
-        });
-
-        // Listener do input de valor "não bate" — soma TODOS os campos do mesmo card
-        // (cartao tem M1+M2; PIX tem M1+M2+banco; dinheiro tem so 1 input)
-        function _sumCardFields(key) {
-            const inputs = overlay.querySelectorAll('[data-card-field="'+key+'"]');
-            let sum = 0;
-            inputs.forEach(i => { sum += parseBRL(i.value) || 0; });
-            return +sum.toFixed(2);
-        }
-        function _onCardFieldInput(key) {
-            const v = _sumCardFields(key);
-            modal.__cardState[key] = { ok: true, mode: 'editing', value: v };
-            const esp = _esp(key);
-            const d = +(v - esp).toFixed(2);
-            const msgEl = overlay.querySelector('[data-diff-msg="'+key+'"]');
-            if (msgEl) {
-                msgEl.style.display = 'block';
-                msgEl.classList.remove('cv2-diff-ok','cv2-diff-faltou','cv2-diff-sobrou','cv2-diff-pequena');
-                const absD = Math.abs(d);
-                if (absD < 0.01) {
-                    msgEl.innerHTML = '✓ <strong>Bateu certinho</strong> — pode fechar caixa';
-                    msgEl.classList.add('cv2-diff-ok');
-                } else if (absD <= 5) {
-                    // Diff pequena (até R$5): aceitavel sem justificativa, fecha normal
-                    const lbl = d > 0 ? 'Sobrou' : 'Faltou';
-                    msgEl.innerHTML = '<strong>' + lbl + ' ' + formatBRL(absD) + '</strong> — diferença pequena, ok pode fechar (sistema lança como ajuste)';
-                    msgEl.classList.add('cv2-diff-pequena');
-                } else {
-                    // Diff grande (>R$5): obrigatorio justificar
-                    const lbl = d > 0 ? 'Sobrou' : 'Faltou';
-                    msgEl.innerHTML = '⚠️ <strong>' + lbl + ' ' + formatBRL(absD) + '</strong> — explique o motivo no campo amarelo abaixo pra poder fechar';
-                    msgEl.classList.add(d < 0 ? 'cv2-diff-faltou' : 'cv2-diff-sobrou');
-                }
-            }
-            _setProgress();
-        }
-        // Liga TODOS os inputs de campos do edit area
-        overlay.querySelectorAll('[data-card-field]').forEach(function(inp){
-            const key = inp.getAttribute('data-card-field');
-            inp.addEventListener('input', function(){ _onCardFieldInput(key); });
-        });
-        // Mantem o listener antigo dos campos antigos (compat) — vazio agora
-        ['x_unused'].forEach(function(key){
-            const inp = overlay.querySelector('input[data-name="conf_'+key+'"]');
-            if (!inp) return;
-            inp.addEventListener('input', function(){
-                const v = parseBRL(inp.value);
-                modal.__cardState[key] = { ok: true, mode: 'editing', value: v };
-                const esp = _esp(key);
-                const d = +(v - esp).toFixed(2);
-                const msgEl = overlay.querySelector('[data-diff-msg="'+key+'"]');
-                if (msgEl) {
-                    msgEl.style.display = 'block';
-                    msgEl.classList.remove('cv2-diff-ok','cv2-diff-faltou','cv2-diff-sobrou');
-                    if (Math.abs(d) < 0.01) { msgEl.textContent = '✓ Bateu certinho'; msgEl.classList.add('cv2-diff-ok'); }
-                    else if (d < 0) { msgEl.textContent = '⚠ Faltou ' + formatBRL(Math.abs(d)); msgEl.classList.add('cv2-diff-faltou'); }
-                    else { msgEl.textContent = '+ Sobrou ' + formatBRL(d); msgEl.classList.add('cv2-diff-sobrou'); }
-                }
-                _setProgress();
-            });
-        });
-
-        // Listener do troco
-        const trocoInput = overlay.querySelector('[data-name="dinheiro_troco"]');
-        if (trocoInput) trocoInput.addEventListener('input', _setProgress);
-
-        // Estado inicial: barras vazias, botão final desabilitado
-        _setProgress();
-    }
-
-    function _err(modal, msg) {
-        const err = modal.overlay.querySelector('[data-caixa-error]');
-        if (err) {
-            // Preserva quebras de linha (\n) na mensagem usando <br>
-            err.innerHTML = String(msg).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
-            err.style.display = 'block';
-            err.style.whiteSpace = 'pre-wrap';
-            // Scroll pro erro pra o operador ver
-            try { err.scrollIntoView({behavior:'smooth', block:'center'}); } catch(_){}
-        }
-        return false;
-    }
-
-    /* ============================================
-       Envio AUTOMATICO do relatorio — 3 camadas (todas servidor, sem
-       abrir cliente de email do operador):
-
-       1. Persiste em caixa_reports_<fid> (audit imutavel no Firestore)
-       2. Escreve documento na coleção `mail` no formato da Firebase
-          Extension "Trigger Email from Firestore" — quando a extension
-          esta instalada (uma vez no console Firebase), ela detecta
-          documentos novos em `mail` e envia via SMTP automaticamente.
-          Doc: https://extensions.dev/extensions/firebase/firestore-send-email
-       3. Tenta CloudFunctions.sendClosingReport (silent fail se nao
-          deployada — quando o backend Function for criado, funciona)
-
-       NUNCA abre mailto/cliente de email externo.
-       ============================================ */
-    function _persistAndDispatchReport(franchiseId, st, valorContado, motivo, motivoH, extras, r) {
-        const session = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
-        const operatorName = session ? (session.name || session.email || 'Operador') : 'Operador';
-        const operatorEmail = session ? (session.email || '') : '';
-        const fechamentoDate = new Date();
-        const reportId = 'rep_' + (typeof Utils !== 'undefined' ? Utils.generateId() : Date.now().toString(36));
-        const RECIPIENTS = ['milkypot.com@gmail.com','jocimarrodrigo@gmail.com','joseanemse@gmail.com'];
-
-        const report = {
-            id: reportId,
-            franchiseId: franchiseId,
-            fechamentoDate: fechamentoDate.toISOString(),
-            dateKey: st.dateKey,
-            turnoId: st.turnoId,
-            operator: { name: operatorName, email: operatorEmail },
-            esperado: extras.esperado,
-            conferido: extras.conferido,
-            breakdown: extras.breakdown,
-            motivoQuebra: motivo || '',
-            motivoForaHorario: motivoH || '',
-            valorContado: valorContado,
-            saldoEsperadoDinheiro: st.saldoEsperadoDinheiro,
-            valorAbertura: st.valorAbertura,
-            faturamentoBruto: st.faturamentoBruto,
-            porMetodo: st.porMetodo,
-            // Sangrias e reforços do turno (pra mostrar no email "saiu/entrou do caixa")
-            totalSangria: st.totalSangria || 0,
-            totalReforco: st.totalReforco || 0,
-            sangrias: st.sangrias || [],
-            reforcos: st.reforcos || [],
-            createdAt: fechamentoDate.toISOString(),
-            recipients: RECIPIENTS,
-            sent: false
-        };
-
-        // 1. Persiste audit no Firestore (sempre — funciona offline tambem)
-        try {
-            if (typeof DataStore !== 'undefined' && DataStore.addToCollection) {
-                DataStore.addToCollection('caixa_reports', franchiseId, report);
-            }
-        } catch (e) { console.warn('persist report:', e); }
-
-        // 2. CAMINHO PRINCIPAL: escreve em /mail (Firebase Trigger Email Extension)
-        //    Formato esperado pela extension:
-        //    { to: [...], message: { subject, text, html } }
-        try {
-            const subject = 'Fechamento de Caixa ' + st.dateKey + ' — MilkyPot ' + franchiseId;
-            const text = _buildEmailBody(report);
-            const html = _buildEmailHtml(report);
-            const mailDoc = {
-                to: RECIPIENTS,
-                from: 'MilkyPot PDV <noreply@milkypot.com>',
-                replyTo: operatorEmail || 'milkypot.com@gmail.com',
-                message: { subject: subject, text: text, html: html },
-                // Metadata pra audit
-                _reportId: reportId,
-                _franchiseId: franchiseId,
-                _operator: operatorName,
-                _createdAt: fechamentoDate.toISOString()
-            };
-            // Tenta gravar via DataStore (que ja sincroniza Firestore)
-            if (typeof DataStore !== 'undefined' && DataStore.addToCollection) {
-                // collection 'mail' (raiz, nao por franquia) — eh onde a
-                // Firebase Trigger Email Extension escuta por default
-                DataStore.addToCollection('mail', '_global', mailDoc);
-            }
-            // Direto no Firestore (caminho explicito, prioritario)
-            // — caso DataStore tenha namespacing por franquia, garante
-            // que o doc apareca em /mail/{auto-id}
-            try {
-                if (typeof firebase !== 'undefined' && firebase.firestore) {
-                    firebase.firestore().collection('mail').add(mailDoc).catch(e => {
-                        console.warn('mail collection add failed:', e && e.message);
-                    });
-                }
-            } catch(_) {}
-        } catch (e) { console.warn('mail dispatch:', e); }
-
-        // Helper toast visivel pro operador (consoles ficam ocultos)
-        function _emailToast(msg, kind) {
-            try {
-                var existing = document.getElementById('mp-email-toast');
-                if (existing) existing.remove();
-                var color = kind === 'ok' ? '#10B981' : kind === 'err' ? '#DC2626' : '#F59E0B';
-                var t = document.createElement('div');
-                t.id = 'mp-email-toast';
-                t.style.cssText = 'position:fixed;top:24px;right:24px;background:'+color+';color:#fff;padding:14px 20px;border-radius:10px;font-size:.95rem;font-weight:700;z-index:99999;box-shadow:0 8px 28px rgba(0,0,0,.25);max-width:420px;line-height:1.4;font-family:Nunito,sans-serif;';
-                t.textContent = msg;
-                document.body.appendChild(t);
-                setTimeout(function(){ try{ t.remove(); }catch(_){} }, kind === 'err' ? 12000 : 7000);
-            } catch(_) {}
-        }
-
-        // 3. CAMINHO PRIMARIO: chama CloudFunctions.sendClosingReport (Firebase CF)
-        //    Tem Nodemailer + Gmail SMTP. Fallback automatico pra /mail se SMTP falhar.
-        try {
-            if (typeof CloudFunctions !== 'undefined' && CloudFunctions.sendClosingReport) {
-                _emailToast('📧 Enviando relatório por email...', 'info');
-                CloudFunctions.sendClosingReport(franchiseId, {
-                    operatorName: operatorName,
-                    operatorEmail: operatorEmail,
-                    valorContado: valorContado,
-                    saldoEsperado: st.saldoEsperadoDinheiro,
-                    diferenca: extras.conferido && extras.conferido.diffTotal,
-                    motivo: motivo,
-                    fechamentoDate: fechamentoDate.toISOString(),
-                    breakdownConferido: extras
-                }).then(function(res) {
-                    if (res && res.success) {
-                        var n = res.sent || RECIPIENTS.length;
-                        console.log('✅ Relatorio enviado por email para', n, 'destinatarios');
-                        _emailToast('✅ Relatório enviado por email para ' + n + ' destinatário(s)', 'ok');
-                    } else {
-                        var reason = (res && (res.error || res.reason)) || 'resposta desconhecida';
-                        console.warn('⚠️ Email nao enviado:', reason);
-                        _emailToast('⚠️ Email não enviado: ' + reason, 'err');
-                    }
-                }).catch(function(e) {
-                    var msg = (e && (e.message || e)) + '';
-                    console.error('❌ sendClosingReport falhou:', msg);
-                    _emailToast('❌ Erro no envio: ' + msg.substring(0, 200), 'err');
-                });
-            } else {
-                console.warn('⚠️ CloudFunctions.sendClosingReport indisponivel — email nao enviado');
-                _emailToast('⚠️ CloudFunctions não inicializado — recarregue a página', 'err');
-            }
-        } catch (e) {
-            console.error('CF dispatch error:', e);
-            _emailToast('❌ Erro disparando email: ' + (e.message || e), 'err');
-        }
-    }
-
-    // HTML version do email — desenhado pra criança de 5 anos entender em 1 segundo:
-    //   1. HERO gigante: VENDIDO HOJE R$ X,XX
-    //   2. Como recebeu: Cartão / PIX / Dinheiro
-    //   3. Saiu do caixa pra cofre/banco: Sangrias R$ X (com lista)
-    //   4. Troco que separou pra abrir amanhã: R$ X
-    //   5. Sobra/Falta no dinheiro contado vs esperado (com cor: verde/amarelo/vermelho)
-    //   Detalhes técnicos (M1/M2/banco) ficam em <details> escondido.
-    function _buildEmailHtml(rep) {
-        const esp = rep.esperado || {};
-        const con = rep.conferido || {};
-        const br  = rep.breakdown || {};
-        const dt = new Date(rep.fechamentoDate).toLocaleString('pt-BR', {
-            day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
-        });
-        const dataDia = (rep.dateKey || '').split('-').reverse().join('/');
-        const fmt = (v) => 'R$ ' + Number(v||0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-
-        // Total vendido (faturamento bruto = soma de todas as vendas registradas no PDV)
-        const totalVendido = Number(rep.faturamentoBruto || esp.totalEsperado || 0);
-        const valorCartao  = Number(esp.cartao || ((esp.credito||0) + (esp.debito||0)) || 0);
-        const valorPix     = Number(esp.pix || 0);
-        const valorDinheiro = Number(esp.dinheiro || rep.vendasDinheiro || 0);
-        const totalSangria = Number(rep.totalSangria || 0);
-        const totalReforco = Number(rep.totalReforco || 0);
-        const trocoAmanha  = Number(br.dinheiro_troco || 0);
-        const valorAbertura = Number(rep.valorAbertura || 0);
-
-        // Status da diferença
-        const diffTotal = Number(con.diffTotal || 0);
-        const diffAbs = Math.abs(diffTotal);
-        let statusBox;
-        if (diffAbs < 0.01) {
-            statusBox = { label:'✅ Caixa fechou certinho', color:'#10B981', bg:'#ECFDF5' };
-        } else if (diffAbs <= 5) {
-            statusBox = { label:(diffTotal>0?'⚠️ Sobrou ':'⚠️ Faltou ')+fmt(diffAbs)+' (até R$ 5 é normal)', color:'#F59E0B', bg:'#FFFBEB' };
-        } else {
-            statusBox = { label:(diffTotal>0?'🔴 Sobrou ':'🔴 Faltou ')+fmt(diffAbs)+' — checar lançamentos', color:'#DC2626', bg:'#FEF2F2' };
-        }
-
-        // Lista de sangrias (até 5, com motivo)
-        const sangriaList = Array.isArray(rep.sangrias) ? rep.sangrias.slice(0, 5) : [];
-        const sangriaHtml = sangriaList.length
-            ? sangriaList.map(s => {
-                const v = fmt(s.valor || 0);
-                const motivo = String(s.motivo || s.descricao || 'sem motivo').substring(0, 80);
-                const hora = s.criadoEm ? new Date(s.criadoEm).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : '';
-                return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:13px"><span style="color:#6b7280">'+(hora?hora+' · ':'')+motivo+'</span><strong style="color:#DC2626">−'+v+'</strong></div>';
-            }).join('')
-            : '';
-
-        return ''+
-        '<div style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;max-width:560px;margin:0 auto;background:#F9FAFB">'+
-
-          // ============ HERO: VENDIDO HOJE (número GIGANTE) ============
-          '<div style="background:linear-gradient(135deg,#7B1FA2 0%,#FF4F8A 100%);color:#fff;padding:32px 24px;text-align:center">'+
-            '<div style="font-size:13px;opacity:.85;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;font-weight:600">Vendeu hoje</div>'+
-            '<div style="font-size:48px;font-weight:900;line-height:1;letter-spacing:-1.5px;margin:0">'+fmt(totalVendido)+'</div>'+
-            '<div style="font-size:13px;opacity:.85;margin-top:10px">📅 '+dataDia+' · MilkyPot '+rep.franchiseId+'</div>'+
-          '</div>'+
-
-          // ============ COMO RECEBEU (cards simples) ============
-          '<div style="background:#fff;padding:20px 24px;border-bottom:1px solid #e5e7eb">'+
-            '<div style="font-size:11px;color:#6b7280;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:12px">Como recebeu</div>'+
-            '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6">'+
-              '<span style="font-size:15px">💳 Cartão</span>'+
-              '<strong style="font-size:15px;color:#111">'+fmt(valorCartao)+'</strong>'+
-            '</div>'+
-            '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6">'+
-              '<span style="font-size:15px">⚡ PIX</span>'+
-              '<strong style="font-size:15px;color:#111">'+fmt(valorPix)+'</strong>'+
-            '</div>'+
-            '<div style="display:flex;justify-content:space-between;padding:8px 0">'+
-              '<span style="font-size:15px">💵 Dinheiro</span>'+
-              '<strong style="font-size:15px;color:#111">'+fmt(valorDinheiro)+'</strong>'+
-            '</div>'+
-          '</div>'+
-
-          // ============ SAIU/ENTROU DO CAIXA (sangrias e reforços) ============
-          (totalSangria > 0 || totalReforco > 0
-            ? '<div style="background:#fff;padding:20px 24px;border-bottom:1px solid #e5e7eb">'+
-                '<div style="font-size:11px;color:#6b7280;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:12px">Movimentos do caixa</div>'+
-                (totalSangria > 0
-                  ? '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6">'+
-                      '<span style="font-size:15px">📤 Saiu pra cofre/banco (sangria)</span>'+
-                      '<strong style="font-size:15px;color:#DC2626">−'+fmt(totalSangria)+'</strong>'+
-                    '</div>'+
-                    (sangriaHtml ? '<div style="margin-top:6px;padding:8px 12px;background:#FEF2F2;border-radius:8px">'+sangriaHtml+'</div>' : '')
-                  : '')+
-                (totalReforco > 0
-                  ? '<div style="display:flex;justify-content:space-between;padding:8px 0">'+
-                      '<span style="font-size:15px">📥 Entrou no caixa (reforço)</span>'+
-                      '<strong style="font-size:15px;color:#10B981">+'+fmt(totalReforco)+'</strong>'+
-                    '</div>'
-                  : '')+
-              '</div>'
-            : ''
-          )+
-
-          // ============ TROCO QUE FICA PRO PRÓXIMO DIA ============
-          '<div style="background:#fff;padding:20px 24px;border-bottom:1px solid #e5e7eb">'+
-            '<div style="font-size:11px;color:#6b7280;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:12px">Pra abrir amanhã</div>'+
-            '<div style="background:#F0F9FF;border:2px solid #BAE6FD;border-radius:10px;padding:14px">'+
-              '<div style="display:flex;justify-content:space-between;align-items:center">'+
-                '<span style="font-size:15px;color:#0c4a6e">💰 Troco separado pro próximo turno</span>'+
-                '<strong style="font-size:18px;color:#0284c7">'+fmt(trocoAmanha)+'</strong>'+
-              '</div>'+
-            '</div>'+
-          '</div>'+
-
-          // ============ STATUS (caixa fechou certinho? sobrou? faltou?) ============
-          '<div style="background:'+statusBox.bg+';padding:18px 24px;border-left:4px solid '+statusBox.color+'">'+
-            '<div style="font-size:15px;font-weight:800;color:'+statusBox.color+'">'+statusBox.label+'</div>'+
-            (rep.motivoQuebra ? '<div style="font-size:13px;color:#374151;margin-top:6px">Motivo: <em>'+String(rep.motivoQuebra).replace(/</g,'&lt;')+'</em></div>' : '')+
-          '</div>'+
-
-          // ============ INFO RODAPÉ (operador, hora, link relatório) ============
-          '<div style="background:#fff;padding:16px 24px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280">'+
-            '<div>👤 Operador: <strong style="color:#374151">'+(rep.operator && rep.operator.name || '—')+'</strong></div>'+
-            '<div style="margin-top:4px">🕐 Fechado em '+dt+'</div>'+
-            (valorAbertura > 0 ? '<div style="margin-top:4px">📂 Abriu o caixa com '+fmt(valorAbertura)+' de troco</div>' : '')+
-          '</div>'+
-
-          // ============ DETALHES TÉCNICOS (escondidos por padrão) ============
-          '<details style="background:#fff;padding:12px 24px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280">'+
-            '<summary style="cursor:pointer;font-weight:600">🔍 Ver detalhes técnicos (M1/M2/banco)</summary>'+
-            '<pre style="background:#F9FAFB;padding:10px;border-radius:6px;overflow:auto;font-size:11px;font-family:Consolas,monospace;margin-top:8px">'+
-              _buildEmailBody(rep).replace(/&/g,'&amp;').replace(/</g,'&lt;')+
-            '</pre>'+
-          '</details>'+
-
-          // ============ FOOTER ============
-          '<div style="text-align:center;color:#9ca3af;font-size:11px;padding:14px">'+
-            'Relatório automático MilkyPot PDV<br>'+
-            '<span style="opacity:.6">ID '+rep.id+'</span>'+
-          '</div>'+
-
-        '</div>';
-    }
-
-    function _buildEmailBody(rep) {
-        const esp = rep.esperado || {};
-        const con = rep.conferido || {};
-        const br  = rep.breakdown || {};
-        const dt = new Date(rep.fechamentoDate).toLocaleString('pt-BR');
-        const fmt = (v) => 'R$ ' + Number(v||0).toFixed(2).replace('.', ',');
-
-        let body = '';
-        body += 'FECHAMENTO DE CAIXA — MilkyPot\n';
-        body += '====================================\n';
-        body += 'Franquia:   ' + rep.franchiseId + '\n';
-        body += 'Data:       ' + rep.dateKey + '  (fechado em ' + dt + ')\n';
-        body += 'Operador:   ' + (rep.operator && rep.operator.name) + ' <' + (rep.operator && rep.operator.email) + '>\n';
-        body += 'Turno ID:   ' + rep.turnoId + '\n';
-        body += '\n--- VENDAS POR MÉTODO (sistema) ---\n';
-        body += 'PIX:        ' + fmt(esp.pix) + '\n';
-        body += 'Crédito:    ' + fmt(esp.credito) + '\n';
-        body += 'Débito:     ' + fmt(esp.debito) + '\n';
-        body += 'Dinheiro:   ' + fmt(esp.dinheiro) + '\n';
-        body += 'TOTAL:      ' + fmt(esp.totalEsperado) + '\n';
-        body += '\n--- CONFERIDO PELO OPERADOR ---\n';
-        body += 'Crédito Maquininha 1:    ' + fmt(br.credito_maquineta_1) + '\n';
-        body += 'Crédito Maquininha 2:    ' + fmt(br.credito_maquineta_2) + '\n';
-        body += 'Débito Maquininha 1:     ' + fmt(br.debito_maquineta_1) + '\n';
-        body += 'Débito Maquininha 2:     ' + fmt(br.debito_maquineta_2) + '\n';
-        body += 'PIX Maquininha 1:        ' + fmt(br.pix_maquineta_1) + '\n';
-        body += 'PIX Maquininha 2:        ' + fmt(br.pix_maquineta_2) + '\n';
-        body += 'PIX direto banco:        ' + fmt(br.pix_direto_banco) + '\n';
-        body += '  = PIX total:           ' + fmt(br.pix_total) + '\n';
-        body += 'Dinheiro contado:        ' + fmt(br.dinheiro_total_gaveta) + '\n';
-        body += '  (− troco prox. turno): ' + fmt(br.dinheiro_troco) + '\n';
-        body += '  = Dinheiro líquido:    ' + fmt(br.dinheiro_liquido_dia) + '\n';
-        body += 'TOTAL CONFERIDO:         ' + fmt(con.totalConferido) + '\n';
-        body += '\n--- DIFERENÇA ---\n';
-        body += 'Diferença em dinheiro:   ' + fmt(con.diffDinheiro) + '\n';
-        body += 'Diferença total:         ' + fmt(con.diffTotal) + '\n';
-        body += 'Justificativa:           ' + (rep.motivoQuebra || '(sem diferença significativa)') + '\n';
-        if (rep.motivoForaHorario) body += 'Just. fora horário:      ' + rep.motivoForaHorario + '\n';
-        body += '\n--- MOVIMENTOS DO CAIXA ---\n';
-        body += 'Abertura:           ' + fmt(rep.valorAbertura) + '\n';
-        body += 'Vendas em dinheiro: ' + fmt(rep.breakdown && rep.breakdown.dinheiro_liquido_dia) + '\n';
-        body += 'Faturamento bruto:  ' + fmt(rep.faturamentoBruto) + '\n';
-        body += '\n====================================\n';
-        body += 'Relatório gerado automaticamente pelo PDV MilkyPot.\n';
-        body += 'ID do relatório: ' + rep.id + '\n';
-        return body;
     }
 
     // Modal de confirmacao (etapa 2) — mostra um resumo final claro
@@ -2168,21 +1144,8 @@ const Caixa = (function () {
     }
 
     function normalizeMetodo(p) {
-        if (p == null) return 'nao_informado';
-        // Defensivo: payment pode vir como string ('PIX'), number (legado),
-        // ou objeto {method,label} (vem da landing). Sem isso, String({...})
-        // virava '[object Object]' e poluia o relatorio do caixa.
-        let raw = p;
-        if (typeof p === 'object') {
-            raw = p.method || p.type || p.label || p.name || '';
-        }
-        let v = String(raw).toLowerCase().trim();
-        if (!v) return 'nao_informado';
-        // BUG-FIX: 'crédito'.includes('cred') === false ('é' nao bate com 'e')
-        // Remove acentos antes de comparar pra detectar credito/debito que
-        // foram salvos com acento ('crédito','débito').
-        try { v = v.normalize('NFD').replace(/[̀-ͯ]/g, ''); }
-        catch(_) {}
+        if (!p) return 'nao_informado';
+        const v = String(p).toLowerCase().trim();
         if (v.includes('pix')) return 'pix';
         if (v.includes('din')) return 'dinheiro';
         if (v.includes('cred')) return 'credito';
@@ -2200,143 +1163,6 @@ const Caixa = (function () {
         return map[k] || '💰';
     }
 
-    /**
-     * Retorna o dateKey mais recente com caixa fechado.
-     * Usado pelo botao 'Reenviar Relatorio' quando hoje nao foi fechado ainda.
-     */
-    function findLastClosedDate(franchiseId) {
-        if (!franchiseId) return null;
-        const moves = loadMovements(franchiseId);
-        const fechamentos = moves
-            .filter(function(m) { return m.type === 'fechamento'; })
-            .sort(function(a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); });
-        if (!fechamentos.length) return null;
-        return fechamentos[0].dateKey;
-    }
-
-    /**
-     * Reenviar relatorio de fechamento de caixa de um dia ja fechado.
-     */
-    function resendClosingReport(franchiseId, dateKey) {
-        if (!franchiseId) return Promise.resolve({ success: false, error: 'Franquia invalida' });
-        dateKey = dateKey || todayKey();
-
-        const st = getTurnoState(franchiseId, dateKey);
-        if (st.status === 'nao_aberto') {
-            return Promise.resolve({ success: false, error: 'Nao houve caixa aberto em ' + dateKey });
-        }
-        if (st.status !== 'fechado') {
-            return Promise.resolve({ success: false, error: 'Caixa de ' + dateKey + ' ainda esta aberto. Feche primeiro.' });
-        }
-        if (typeof CloudFunctions === 'undefined' || !CloudFunctions.sendClosingReport) {
-            return Promise.resolve({ success: false, error: 'CloudFunctions indisponivel' });
-        }
-
-        const session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
-        const operator = (typeof OperatorContext !== 'undefined') ? OperatorContext.getCurrent() : null;
-        const operatorName = (st.fechamento && st.fechamento.createdByName) ||
-                             (operator ? operator.name : (session ? session.name : 'Operador Desconhecido'));
-        const operatorEmail = (st.fechamento && st.fechamento.createdByEmail) ||
-                              (operator ? operator.email : (session ? session.email : ''));
-
-        function _hhmm(iso) {
-            try { return new Date(iso).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }); }
-            catch (e) { return ''; }
-        }
-        const turnos = [];
-        if (st.abertura) {
-            turnos.push({
-                tipo: 'abertura',
-                hora: _hhmm(st.abertura.createdAt),
-                descricao: 'Aberto por <strong>' + (st.abertura.createdByName || '?') + '</strong> com troco de ' + formatBRL(st.abertura.valor)
-            });
-        }
-        (st.moves || []).filter(function(m) { return m.type === 'troca_turno'; }).forEach(function(m) {
-            var c = m.changeShift || {};
-            turnos.push({
-                tipo: 'troca',
-                hora: _hhmm(m.createdAt),
-                descricao: 'Troca: <strong>' + (c.operadorAnterior ? c.operadorAnterior.name : '?') + '</strong> → <strong>' + (c.operadorNovo ? c.operadorNovo.name : '?') + '</strong> · Conferência ' + formatBRL(c.valorContado || 0) + (Math.abs(c.diferenca || 0) >= 0.01 ? ' (diff ' + formatBRL(c.diferenca) + ')' : '')
-            });
-        });
-        if (st.fechamento) {
-            turnos.push({
-                tipo: 'fechamento',
-                hora: _hhmm(st.fechamento.createdAt),
-                descricao: 'Fechado por <strong>' + operatorName + '</strong>'
-            });
-        }
-
-        const sangriasList = (st.sangrias || []).map(function(m) {
-            return { valor: m.valor, motivo: m.motivo || m.descricao, hora: _hhmm(m.createdAt), por: m.createdByName };
-        });
-        const reforcosList = (st.reforcos || []).map(function(m) {
-            return { valor: m.valor, motivo: m.motivo || m.descricao, hora: _hhmm(m.createdAt), por: m.createdByName };
-        });
-
-        const orders = (typeof DataStore !== 'undefined') ? (DataStore.getCollection('orders', franchiseId) || []) : [];
-        const pedidosDoDia = orders.filter(function(o) {
-            if (!o || !o.createdAt) return false;
-            if (o.deleted || o.status === 'cancelado') return false;
-            return o.createdAt.startsWith(dateKey);
-        });
-
-        let comissoes = [];
-        try {
-            if (typeof AnalyticsAdvanced !== 'undefined' && AnalyticsAdvanced.commissionReport) {
-                const rep = AnalyticsAdvanced.commissionReport(franchiseId, dateKey.slice(0, 7));
-                const staffArr = (typeof DataStore !== 'undefined') ? (DataStore.getCollection('staff', franchiseId) || []) : [];
-                const staffMap = {};
-                staffArr.forEach(function(s) { staffMap[s.id] = s.name; staffMap[s.name] = s.name; });
-                comissoes = (rep.operadores || [])
-                    .filter(function(o) { return o.commission > 0; })
-                    .map(function(o) { return { name: staffMap[o.operatorId] || o.operatorId, orders: o.orders, revenue: o.revenue, commission: o.commission }; });
-            }
-        } catch (e) {}
-
-        let beneficios = [];
-        try {
-            if (typeof StaffBenefits !== 'undefined' && StaffBenefits.list) {
-                beneficios = StaffBenefits.list(franchiseId, { date: dateKey }).map(function(b) {
-                    var icon = b.tipo === 'sorvete_dia' ? '🍦' : (b.tipo === 'refeicao' ? '🍽️' : (b.tipo === 'lanche' ? '🥪' : (b.tipo === 'bebida' ? '🥤' : '🎁')));
-                    return { staffName: b.staffName, tipo: b.tipo, tipoLabel: b.tipoLabel, value: b.value, icon: icon };
-                });
-            }
-        } catch (e) {}
-
-        const franchises = (typeof DataStore !== 'undefined') ? (DataStore.getAllFranchises() || []) : [];
-        const fr = franchises.find(function(f) { return f.id === franchiseId; });
-        const trocoProximoDia = (fr && fr.trocoProximoDiaPadrao != null) ? Number(fr.trocoProximoDiaPadrao) : (st.valorAbertura || 0);
-
-        return Promise.resolve(CloudFunctions.sendClosingReport(franchiseId, {
-            operatorName: operatorName,
-            operatorEmail: operatorEmail,
-            valorContado: st.valorContado || 0,
-            saldoEsperado: st.saldoEsperadoDinheiro,
-            diferenca: st.diferenca || 0,
-            motivo: st.motivoQuebra || (st.fechamento && st.fechamento.motivo) || '',
-            fechamentoDate: st.fechamento ? st.fechamento.createdAt : new Date().toISOString(),
-            porMetodoEsperado: st.porMetodo || {},
-            faturamentoBruto: st.faturamentoBruto || 0,
-            valorAbertura: st.valorAbertura || 0,
-            vendasDinheiro: st.vendasDinheiro || 0,
-            totalSangria: st.totalSangria || 0,
-            totalReforco: st.totalReforco || 0,
-            totalPedidos: pedidosDoDia.length,
-            trocoProximoDia: trocoProximoDia,
-            turnos: turnos,
-            sangrias: sangriasList,
-            reforcos: reforcosList,
-            comissoes: comissoes,
-            beneficios: beneficios,
-            isResend: true
-        })).then(function() {
-            return { success: true, dateKey: dateKey };
-        }).catch(function(e) {
-            return { success: false, error: (e && e.message) || String(e) };
-        });
-    }
-
     /* ============================================
        API pública
        ============================================ */
@@ -2348,9 +1174,6 @@ const Caixa = (function () {
         // Operações
         openShift: openShift,
         closeShift: closeShift,
-        resendClosingReport: resendClosingReport,
-        findLastClosedDate: findLastClosedDate,
-        changeShift: changeShift,
         registerSale: registerSale,
         registerSangria: registerSangria,
         registerReforco: registerReforco,

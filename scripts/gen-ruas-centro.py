@@ -149,7 +149,7 @@ def gerar_pagina_rua(slug, nome, tipo, refs, tempo):
         "name": "MilkyPot - {nome}, Londrina",
         "description": "{desc}",
         "url": "https://milkypot.com/londrina/ruas/{slug_clean}/",
-        "telephone": "(43) 99999-9999",
+        "telephone": "(43) 99991-9777",
         "address": {{
             "@type": "PostalAddress",
             "streetAddress": "Rua Quintino Bocaiúva, Centro",
@@ -225,7 +225,7 @@ def gerar_pagina_rua(slug, nome, tipo, refs, tempo):
                     <p class="bairro-subtitle">Açaí, milkshake e sobremesas personalizadas com entrega em {tempo}</p>
                     <div class="bairro-actions">
                         <a href="/#produtos" class="btn-primary">🍨 Pedir Agora</a>
-                        <a href="https://wa.me/5543999999999?text=Oi!%20Quero%20pedir%20MilkyPot%20{prep}%20{nome.replace(" ", "%20")}!" class="btn-secondary" target="_blank" rel="noopener">💬 WhatsApp</a>
+                        <a href="https://wa.me/5543999919777?text=Oi!%20Quero%20pedir%20MilkyPot%20{prep}%20{nome.replace(" ", "%20")}!" class="btn-secondary" target="_blank" rel="noopener">💬 WhatsApp</a>
                     </div>
                 </div>
             </div>
@@ -314,7 +314,7 @@ def gerar_pagina_rua(slug, nome, tipo, refs, tempo):
                 <p>Escolha como prefere fazer seu pedido:</p>
                 <div class="cta-buttons">
                     <a href="/#produtos" class="btn-primary btn-lg">🍨 Pedir pelo Site</a>
-                    <a href="https://wa.me/5543999999999?text=Oi!%20Quero%20pedir%20MilkyPot%20{prep}%20{nome.replace(" ", "%20")}!" class="btn-secondary btn-lg" target="_blank" rel="noopener">💬 Pedir por WhatsApp</a>
+                    <a href="https://wa.me/5543999919777?text=Oi!%20Quero%20pedir%20MilkyPot%20{prep}%20{nome.replace(" ", "%20")}!" class="btn-secondary btn-lg" target="_blank" rel="noopener">💬 Pedir por WhatsApp</a>
                 </div>
             </div>
         </section>
