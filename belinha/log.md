@@ -6974,3 +6974,50 @@ _Belinha — Ciclo #183 | 2026-05-10_
 - **Operador:** CNPJ + DPO — LGPD — risco legal crescente
 
 _Belinha — Ciclo #184 | 2026-05-10_
+
+---
+
+## Ciclo #185 — 2026-05-10
+
+**Área:** Conteúdo — Brief dedicado Sex 26/06 "Adeus junino, oi julho"
+
+**Contexto:** A semana 10 (`pos-inauguracao-semana10.md`, ciclo #49) tinha apenas um bloco resumido para a sexta 26/06. Ciclos #183 e #184 identificaram a necessidade de um brief dedicado equivalente ao reel-sao-joao (ciclo #183) — produção completa com direção de arte, sequência de stories escalonada, template WA e integração com a semana 11 (Potinho Caramelado).
+
+**O que pesquisou/analisou:**
+- Releitura de `pos-inauguracao-semana10.md` para extrair o bloco "Sexta 27/06" existente
+- Releitura de `pos-inauguracao-semana11.md` para mapear o que o teaser de julho deve preparar (Potinho Caramelado reveal 01/07)
+- Releitura de `reel-sao-joao-24jun-potinho-junino.md` para manter consistência de formato e profundidade
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/feed-26jun-adeus-junino-oi-julho.md` | NOVO — brief completo post feed + 4 Stories + template WA + KPIs + checklist |
+
+**Detalhes do conteúdo criado:**
+- **Contexto estratégico** posicionando a sexta 26/06 no arco narrativo (pós-São João → urgência → teaser → reveal semana11)
+- **Arte do post feed** com especificação de composição (potinho em foco, bandeirinhas desfocadas atrás, ovelhinha acenando com lenço + olhinho curioso) e alternativa simples sem designer
+- **Caption principal** (instagram/feed, ~160 palavras) + versão curta (TikTok/Stories)
+- **Sequência de 4 Stories** escalonada 19h–21h: Story 1 (despedida emocional 19h), Story 2 (contagem regressiva 19h30), Story 3 (teaser julho sem revelar 20h), Story 4 (caixinha de palpites 21h)
+- **Template broadcast WA** (`/despedidajunino`) para lote máximo 20 contatos às 18h
+- **Tabela de integração** com semana 11 — como cada elemento do 26/06 prepara o reveal do Potinho Caramelado
+- **KPI da data** com 6 indicadores e metas numéricas
+- **Checklist de produção** com 10 itens escalonados por horário
+- **Nota operacional** com versões simplificadas (só Story 1+2 se operador sem energia; só post feed se sem WA)
+
+**Commit:** `3f72969`
+
+**Próximo passo sugerido:**
+- **Ciclo #186 — UX:** `checkout.html` — auditoria mobile CLS/bundle (postergado desde ciclo #162 do roadmap — risco crescente, agora é prioridade real)
+- **Ciclo #187 — Concorrentes:** Refetch pré-São João de MilkyMoo + TheBest (últimas atualizações ciclo #176 — verificar campanhas São João lançadas)
+- **Ciclo #188 — Conversão:** Brief de encerramento do Potinho Junino (30/06 — despedida definitiva + ponte para Potinho Caramelado)
+- **Ciclo #189 — Conteúdo:** Brief completo do reveal Potinho Caramelado (01/07, semana 11)
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05** ⚠️ URGENTE
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05** ⚠️ URGENTE
+- **Operador:** Confirmar disponibilidade calda de caramelo + granola para Potinho Caramelado até **20/06**
+- **Operador:** Confirmar promoção "carimbo extra São João" até **23/06** (1 dia antes)
+- **Operador:** Configurar keyword `JUNINO26` + `/despedidajunino` no WA Business até **22/06**
+- **Operador:** Google Search Console — solicitar indexação sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #185 | 2026-05-10_
