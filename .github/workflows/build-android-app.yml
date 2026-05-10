@@ -215,8 +215,9 @@ jobs:
         id: artifacts
         working-directory: android-build
         run: |
-          APK=$(find . -name "*.apk" -path "*release*" | head -1)
-          AAB=$(find . -name "*.aab" -path "*release*" | head -1)
+          # Strip do ./ inicial pq actions/upload-artifact rejeita rel paths
+          APK=$(find . -name "*.apk" -path "*release*" | head -1 | sed 's|^\./||')
+          AAB=$(find . -name "*.aab" -path "*release*" | head -1 | sed 's|^\./||')
           echo "APK: $APK"
           echo "AAB: $AAB"
           echo "apk_path=$APK" >> $GITHUB_OUTPUT
