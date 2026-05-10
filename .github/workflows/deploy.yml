@@ -113,6 +113,78 @@ jobs:
           cd functions
           npm audit --audit-level=high --omit=dev || echo "::warning::vulnerabilidades de severidade alta detectadas em functions/"
 
+      - name: Setup Node 20 (lint)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: HTML lint (htmlhint)
+        continue-on-error: true
+        run: |
+          npx --yes htmlhint --rules \
+            "tag-pair=true,id-unique=true,doctype-first=true,attr-no-duplication=true,src-not-empty=true,alt-require=true" \
+            "*.html" "painel/**/*.html" "admin/**/*.html" "londrina/**/*.html" "clube/**/*.html" \
+          || echo "::warning::htmlhint encontrou problemas — revise"
+
+      - name: JS undef-symbol check (eslint minimal)
+        continue-on-error: true
+        run: |
+          # Cria config minima inline pra rodar sem instalar eslintrc no repo
+          cat > /tmp/eslint.config.cjs <<'CFG'
+          module.exports = [{
+            files: ["js/**/*.js", "api/**/*.js", "functions/**/*.js"],
+            ignores: ["**/node_modules/**", "**/*.min.js"],
+            languageOptions: {
+              ecmaVersion: 2022,
+              sourceType: "script",
+              globals: {
+                window: "readonly", document: "readonly", navigator: "readonly",
+                localStorage: "readonly", sessionStorage: "readonly", location: "readonly",
+                console: "readonly", setTimeout: "readonly", clearTimeout: "readonly",
+                setInterval: "readonly", clearInterval: "readonly", fetch: "readonly",
+                Promise: "readonly", Map: "readonly", Set: "readonly", JSON: "readonly",
+                Date: "readonly", Math: "readonly", Array: "readonly", Object: "readonly",
+                String: "readonly", Number: "readonly", Boolean: "readonly", RegExp: "readonly",
+                Error: "readonly", URL: "readonly", URLSearchParams: "readonly",
+                FormData: "readonly", Blob: "readonly", File: "readonly", FileReader: "readonly",
+                Event: "readonly", CustomEvent: "readonly", IntersectionObserver: "readonly",
+                MutationObserver: "readonly", ResizeObserver: "readonly", AbortController: "readonly",
+                module: "writable", require: "readonly", process: "readonly", Buffer: "readonly",
+                __dirname: "readonly", __filename: "readonly", exports: "writable",
+                globalThis: "readonly", self: "readonly", caches: "readonly", clients: "readonly",
+                firebase: "readonly", crypto: "readonly", btoa: "readonly", atob: "readonly",
+                alert: "readonly", confirm: "readonly", prompt: "readonly", FileList: "readonly",
+                HTMLElement: "readonly", Element: "readonly", Node: "readonly", Image: "readonly",
+                Audio: "readonly", Worker: "readonly", IDBObjectStore: "readonly",
+                indexedDB: "readonly", WebSocket: "readonly", postMessage: "readonly",
+                Headers: "readonly", Response: "readonly", Request: "readonly",
+                // Project globals (loose check)
+                Auth: "readonly", DataStore: "readonly", Utils: "readonly", AuditLog: "readonly",
+                MP: "readonly", AdminConfig: "readonly", Caixa: "readonly", Financas: "readonly",
+                Loyalty: "readonly", MilkyClube: "readonly", MPPixel: "readonly",
+                ErrorTracking: "readonly", Sentry: "readonly", fbq: "readonly", ttq: "readonly",
+                gtag: "readonly", dataLayer: "writable"
+              }
+            },
+            rules: {
+              "no-undef": "error",
+              "no-unreachable": "warn"
+            }
+          }];
+          CFG
+          npx --yes eslint@9 --config /tmp/eslint.config.cjs js/ api/ functions/ \
+            --no-warn-ignored 2>&1 || echo "::warning::eslint encontrou problemas — revise"
+
+      - name: Functions sintax check (Node)
+        run: |
+          echo "Validating Cloud Functions..."
+          for f in functions/*.js; do
+            if [ -f "$f" ] && ! node --check "$f" 2>&1; then
+              echo "Syntax error in $f"; exit 1
+            fi
+          done
+          echo "Functions OK"
+
   # ============================================
   # 2. Deploy to GitHub Pages
   # ============================================
