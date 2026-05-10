@@ -6874,3 +6874,54 @@ _Belinha — Ciclo #178 | 2026-05-10_
 - **Operador:** CNPJ + DPO — LGPD — risco legal crescente
 
 _Belinha — Ciclo #180 | 2026-05-10_
+
+---
+
+## Ciclo #183 — 2026-05-10
+
+**Área:** Conteúdo — Brief de produção Reel 15s + Stories Dia de São João (24/06/2026)
+
+**Contexto:** Ciclos #177–182 completaram toda a produção da semana 9 (17–20/06) do Potinho Junino com briefs dedicados por dia. O ciclo #182 sugeriu "ciclo #183 — SEO landing page", mas essa já foi criada no ciclo #179. O item mais urgente no horizonte é o Dia de São João (24/06) — pico máximo de alcance orgânico junino e dia de maior concorrência (TheBest Açaí com Festival Junino em 6 unidades Londrina, MilkyMoo com "Pede Mooleca"). O `semana10.md` tinha apenas um esboço de Reel e 5 blocos de Stories para esse dia — sem brief fotográfico, sem direção de arte, sem checklist operacional detalhado.
+
+**O que pesquisou/analisou:**
+- Releitura de `pos-inauguracao-semana10.md` (seção Qua 24/06, linhas 117–185): roteiro básico + caption base + 5 blocos de stories
+- Releitura de `reel-lancamento-potinho-junino-17jun.md`: formato de brief de produção de referência (estilo que funciona)
+- Releitura de `reel-urgencia-potinho-junino-20jun.md`: direção de arte e formato de checklist por turno
+- Releitura de `potinho-junino-2026-contraprogramacao.md`: diferencial "preço fixo vs. balança" (TheBest) — ângulo central do São João
+- Releitura de `belinha/competitors/milkymoo.md` e `the-best-acai.md`: contexto competitivo confirmado (Festival Junino 6 unidades TheBest; Pede Mooleca MilkyMoo ativo)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reel-sao-joao-24jun-potinho-junino.md` | NOVO — brief completo Reel + Stories + Broadcast WA + KPIs |
+
+**Detalhes do conteúdo criado:**
+- **Contexto estratégico** com diferencial vs. TheBest/MilkyMoo ("preço fixo + personalização" vs. "por balança" vs. "produto genérico")
+- **Roteiro Reel 15s** (4 blocos): abertura festiva com ovelhinha chapéu de palha, reveal produto slow-motion zoom no rótulo com nome, contraste diferencial preço fixo, CTA com logo
+- **Direção de arte** completa: paleta, tipografia, stickers, trilha musical, ferramenta sugerida, o que evitar
+- **Caption principal** (Instagram + TikTok) + versão compacta (Stories / WA Status)
+- **Sequência de 5 Stories** com horários escalonados (10h30 / 14h / 18h / 19h / 21h): abertura festiva, produto + enquete, promoção carimbo extra (condicional operador), bastidores, CTA UGC
+- **Template broadcast WA** (disparo 10h–11h, lote máximo 20 contatos)
+- **Checklist operacional** por período (preparação/manhã/tarde-noite/encerramento) com 24 itens
+- **Tabela KPI do dia** com 8 indicadores e metas numéricas
+- **Mapa de integração** da semana 10 com referências cruzadas
+- **Nota de produção** sobre escolha de horário do Reel (11h vs. 18h) com critério baseado em dados
+
+**Commit:** `18a599a`
+
+**Próximo passo sugerido:**
+- **Ciclo #184 — Conversão:** Mecânica "Embaixador MilkyPot" — documento de treinamento do operador (critério ≥3 indicações, recompensa Potinho Grande grátis, como rastrear)
+- **Ciclo #185 — Conteúdo:** Post feed + Stories Sex 26/06 "Adeus junino, oi julho" — teaser para semana 11 (prescrito em `semana10.md`, sem brief dedicado)
+- **Ciclo #186 — UX:** `checkout.html` — auditoria mobile CLS/bundle (postergado desde ciclo #162 do roadmap, risco crescente)
+- **Ciclo #187 — Concorrentes:** Refetch pré-São João de MilkyMoo + TheBest (últimas atualizações ciclo #176, 1 semana atrás — verificar se campanhas São João foram lançadas)
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05** ⚠️ URGENTE (20 dias)
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05** ⚠️ URGENTE
+- **Operador:** Confirmar promoção "carimbo extra São João" até **23/06** (1 dia antes)
+- **Operador:** Confirmar disponibilidade cocada e mel (Versões B e C) até **13/06**
+- **Operador:** Configurar keyword `JUNINO26` no WA Business até **22/06** (2 dias antes do São João)
+- **Operador:** Pesquisar trilha forró lo-fi trending na semana **22/06** no Instagram Reels
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente desde ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #183 | 2026-05-10_
