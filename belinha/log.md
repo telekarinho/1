@@ -6653,3 +6653,46 @@ _Belinha — Ciclo #175 | 2026-05-09_
 - **Operador:** CNPJ + DPO — LGPD — risco legal crescente
 
 _Belinha — Ciclo #177 | 2026-05-10_
+
+---
+
+## Ciclo #178 — 2026-05-10
+
+**Área:** Conteúdo/IG — Stories Qui 18/06 (reações + social proof + diferenciação preço fixo vs. balança)
+
+**Contexto:** Ciclo #178 originalmente apontado para landing page SEO `potinho-junino-londrina.html`, bloqueada por confirmação do operador (ingredientes/naming — prazo 30/05). Avançou para próxima prioridade: template de Stories 18/06, prescrito em `pos-inauguracao-semana9.md` como "stories de reações e primeiras impressões do Potinho Junino" — slot existia sem arquivo de produção. A copy de diferenciação "preço fixo vs. balança" (prescrita no ciclo #177 para este slot) estava apenas esboçada em `potinho-junino-2026-contraprogramacao.md` sem integração ao cronograma do dia.
+
+**O que pesquisou/analisou:**
+- Releitura de `pos-inauguracao-semana9.md` — Qui 18/06: 3 stories de social proof (enquete, UGC, convite)
+- Releitura de `potinho-junino-2026-contraprogramacao.md` — sequência 3 frames "preço fixo vs. balança" (específica para qui 18/06)
+- Releitura de `reel-lancamento-potinho-junino-17jun.md` (ciclo #177) — contexto do dia anterior para continuidade narrativa
+- Releitura de `instagram-tiktok-junina-2026.md` — integração com feed 17/06
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/stories-18jun-potinho-junino-reacoes.md` | NOVO — 6 stories completos divididos em 2 blocos com direção de arte, cronograma e script WA |
+
+**Detalhes do conteúdo criado:**
+- **Bloco A (14h):** 3 stories de social proof — resultado da enquete 17/06, repost UGC/WA (com fallback se não houver), convite para mais UGC
+- **Bloco B (20h):** 3 stories de diferenciação — enquete ancoragem, contraste visual "sorvete por kg vs. potinho preço fixo" (sem nomear concorrente), CTA direto com variantes do produto
+- **Cronograma completo** para o operador: 13h → 22h30
+- **Script de resposta rápida** para DM/inbox: cobre as 3 variantes do produto + conversão WA
+- **Tabela de integração multi-canal** (IG Stories, WA Status, TikTok, Feed)
+- **Notas para o operador:** 5 pontos práticos incluindo dependência do Reel 17/06 e atualização se ingredientes mudarem
+
+**Commit:** `11e9323`
+
+**Próximo passo sugerido:**
+- **Ciclo #179 — SEO:** Esqueleto da landing page `potinho-junino-londrina.html` com placeholders estruturados (não bloqueia mais aguardar operador — o esqueleto já pode ser commitado e preenchido depois)
+- **Ciclo #180 — Conversão:** Script WA de upsell das variantes B e C do Potinho Junino para atendente sugerir no PDV
+- **Ciclo #181 — Feed 19/06:** Caption + conceito foto editorial do Potinho Junino (prescrito no `semana9.md` para sex 19/06 — slot vazio)
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05** ⚠️ URGENTE (20 dias)
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05** ⚠️ URGENTE
+- **Operador:** Configurar keyword `JUNINA26` no WA Business até **06/06** ⚠️ URGENTE (27 dias)
+- **Operador:** Buscar trilha baiãozinho lo-fi TikTok na semana de **08/06**
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #178 | 2026-05-10_
