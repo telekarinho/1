@@ -189,31 +189,6 @@
         p.toppingsIds = Array.isArray(p.toppingsIds) ? p.toppingsIds : [];
         p.buffet = p.buffet || { ativo: false, precoPorKg: 0, toppingsInclusos: [] };
         p.canal = p.canal || 'ambos';
-        // FASE 4A: flags por canal (PDV/Delivery/Cardapio/TV) — granularidade que
-        // o campo `canal` legado nao tinha. Default permissivo: produto sem flag
-        // continua aparecendo em tudo (nao quebra producao).
-        // Se ja tem `canal` mas nao tem `disponibilidade`, deriva pra retrocompat:
-        if (!p.disponibilidade || typeof p.disponibilidade !== 'object') {
-            // Migration suave: deriva flags do `canal` existente
-            // - 'loja'     => so PDV+TV (estoque fisico)
-            // - 'delivery' => so Delivery+Cardapio+TV
-            // - 'ambos'    => tudo
-            // TV sempre true porque ainda nao consome catalogo (FASE 5)
-            if (p.canal === 'loja') {
-                p.disponibilidade = { pdv: true, delivery: false, cardapio: false, tv: true };
-            } else if (p.canal === 'delivery') {
-                p.disponibilidade = { pdv: false, delivery: true, cardapio: true, tv: true };
-            } else {
-                // 'ambos' ou indefinido => permissivo
-                p.disponibilidade = { pdv: true, delivery: true, cardapio: true, tv: true };
-            }
-        } else {
-            // Tem objeto mas garante todos os 4 campos (default permissivo se faltar)
-            p.disponibilidade.pdv = (p.disponibilidade.pdv !== false);
-            p.disponibilidade.delivery = (p.disponibilidade.delivery !== false);
-            p.disponibilidade.cardapio = (p.disponibilidade.cardapio !== false);
-            p.disponibilidade.tv = (p.disponibilidade.tv !== false);
-        }
         if (p.active == null) p.active = true;
         return p;
     }
@@ -253,28 +228,6 @@
     function seedMilkyPot(fid) {
         const d = load(fid);
         if (d.produtos.length) return { skipped: true, reason: 'já tem produtos' };
-        // GUARD CRITICO: NUNCA seed se ja tem catalog_config no DataStore
-        // (seedRealCatalog Cloud Function ja populou os 18 milkshakes +
-        // 18 sundaes + buffet REAIS). Sem esse guard, qualquer load do
-        // CatalogV2 num browser sem cache local sobrescreve o catalogo
-        // real com 3 produtos placeholder (Ninho com Morango, Nutella,
-        // Buffet) — bug reportado pelo cliente N vezes.
-        try {
-            const existing = (typeof DataStore !== 'undefined' && DataStore.get)
-                ? DataStore.get('catalog_config') : null;
-            if (existing && existing._seedSource === 'production_real') {
-                return { skipped: true, reason: 'catalog_config production_real ja existe' };
-            }
-            // Tambem skipa se tem >5 produtos numa estrutura sabores/items
-            if (existing && existing.sabores) {
-                const totalItems = Object.values(existing.sabores).reduce(function(s, g){
-                    return s + ((g && g.items) ? g.items.length : 0);
-                }, 0);
-                if (totalItems > 5) {
-                    return { skipped: true, reason: 'catalog_config ja tem ' + totalItems + ' items reais' };
-                }
-            }
-        } catch(_) {}
 
         // Toppings base — cardápio oficial MilkyPot
         const topSeed = [
@@ -423,61 +376,6 @@
         const d = load(fid);
         const cats = d.categorias.filter(c => c.active !== false);
 
-        // GUARD CRITICO #1: production_real ja populou — nao toca
-        try {
-            const existing = global.DataStore.get('catalog_config');
-            if (existing && existing._seedSource === 'production_real') {
-                if (existing.sabores) {
-                    const totalItems = Object.values(existing.sabores).reduce(function(s, g){
-                        return s + ((g && g.items) ? g.items.length : 0);
-                    }, 0);
-                    if (totalItems > 5 && d.produtos.length === 0) {
-                        return;
-                    }
-                }
-            }
-        } catch(_) {}
-
-        // GUARD CRITICO #2 (Fase 8.4): NUNCA sobrescreve catalog_config se a
-        // versão local do v2 tem produtos MAS sem receitas (cache desatualizado),
-        // E a versão remota do catalog_config tem receitas. Senão geramos um
-        // catalog_config "ruim" que sobrescreve o "bom" do servidor.
-        // Causa do loop "Receita pendente volta": outro PC com cache antigo
-        // rodava syncToLegacy e revertia o catalog_config recém-corrigido.
-        try {
-            if (d.produtos.length > 0) {
-                const localComReceita = d.produtos.filter(function(p) {
-                    return p.custos && Array.isArray(p.custos.insumos) && p.custos.insumos.length > 0;
-                }).length;
-                const localPercComReceita = (localComReceita / d.produtos.length) * 100;
-
-                if (localPercComReceita < 50) {
-                    // Local tem <50% de produtos com receita — provavelmente cache ruim.
-                    // Verifica se Firestore tem versão melhor antes de sobrescrever.
-                    var existingPerFid = global.DataStore.get('catalog_config_' + fid)
-                                        || global.DataStore.get('catalog_config');
-                    if (existingPerFid && existingPerFid.sabores) {
-                        var remoteItemsTotal = 0, remoteComReceita = 0;
-                        Object.values(existingPerFid.sabores).forEach(function(g){
-                            if (g && g.items) g.items.forEach(function(it){
-                                remoteItemsTotal++;
-                                if (it.receita && it.receita.length) remoteComReceita++;
-                            });
-                        });
-                        var remotePerc = remoteItemsTotal > 0 ? (remoteComReceita / remoteItemsTotal) * 100 : 0;
-                        if (remotePerc > localPercComReceita + 30) {
-                            console.warn('[catalog-v2] syncToLegacy ABORTADO — cache local desatualizado (' +
-                                localComReceita + '/' + d.produtos.length + ' com receita) vs remoto melhor (' +
-                                remoteComReceita + '/' + remoteItemsTotal + '). Forçando refresh do Firestore...');
-                            // Trigger re-sync do Firestore pra atualizar o cache local
-                            try { if (global.DataStore._syncFromCloud) global.DataStore._syncFromCloud(); } catch(_) {}
-                            return null; // ABORTA — não escreve catalog_config ruim
-                        }
-                    }
-                }
-            }
-        } catch(_) {}
-
         // Quando CatalogV2 tem produtos cadastrados, ELE é a fonte de verdade.
         // Partimos de um objeto limpo — sem carregar o catalog_config antigo —
         // para que os itens do CARDAPIO_CONFIG legado (bases, clássicos, especiais,
@@ -579,8 +477,6 @@
                     tipoVenda,
                     porcoes: porcoes,  // exposto pro cardápio mobile por peso
                     canalVenda: p.canal || 'ambos',
-                    // FASE 4A: flags granulares por canal — PDV/cardapio leem isso
-                    disponibilidade: p.disponibilidade || { pdv: true, delivery: true, cardapio: true, tv: true },
                     modoMontagem: 'montado',
                     commissionRate: 5,
                     badge: p.badge || '',           // ex: 'PREMIUM' no Capitão Açaí
@@ -592,13 +488,11 @@
                         .map(r => ({ insumoId: r.insumoId, qty: r.qty, unit: r.unit || 'unid' })),
                     // Dados v2 completos para PDV avançado
                     _v2: {
-                        categoriaId: p.categoriaId,
                         precos: p.precos,
                         kits: p.kits,
                         variantes: p.variantes,
                         toppingsIds: p.toppingsIds,
-                        buffet: p.buffet,
-                        picoleFlavors: p.picoleFlavors || []
+                        buffet: p.buffet
                     }
                 };
             });
@@ -617,8 +511,7 @@
                 priceDelivery: Number(p.precos?.delivery?.real || p.precos?.delivery?.recomendado || 0),
                 cost: Number(p.custos?.custoTotal || 0),
                 available: p.active !== false,
-                canalVenda: p.canal || 'ambos',
-                disponibilidade: p.disponibilidade || { pdv: true, delivery: true, cardapio: true, tv: true }
+                canalVenda: p.canal || 'ambos'
             }));
         }
 
@@ -643,15 +536,7 @@
 
         // Flag para que PDV e cardapio saibam que o catálogo veio do CatalogV2
         if (hasProdutos) legacy._fromV2 = true;
-        legacy._fid = fid; // marca de qual franquia veio (anti-mistura)
 
-        // FIX (Fase 8.3): catalog_config é PER-FRANCHISE pra evitar
-        // race condition entre franquias diferentes escrevendo no mesmo
-        // doc global. Outras telas leem via DataStore.get('catalog_config')
-        // que prefere catalog_config_<fid> automaticamente quando existe.
-        global.DataStore.set('catalog_config_' + fid, legacy);
-        // Mantém escrita no global pra retrocompat — DataStore.get prioriza
-        // o per-franchise quando disponível, então race aqui é inofensivo.
         global.DataStore.set('catalog_config', legacy);
 
         // Dispara evento LOCAL imediatamente (sem aguardar round-trip Firestore).

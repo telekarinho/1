@@ -295,7 +295,7 @@ const AdminConfig = (function () {
         const user = sessionInfo();
         const exec = {
             phase,
-            dateKey: new Date().toISOString().slice(0, 10),
+            dateKey: (typeof Utils !== 'undefined' && Utils.todayKey) ? Utils.todayKey() : new Date().toISOString().slice(0, 10),
             items: items || [],
             completedCount: (items || []).filter(i => i.done).length,
             totalCount: (items || []).length,
@@ -309,7 +309,7 @@ const AdminConfig = (function () {
     }
 
     function getTodayChecklistExec(franchiseId, phase) {
-        const today = new Date().toISOString().slice(0, 10);
+        const today = (typeof Utils !== 'undefined' && Utils.todayKey) ? Utils.todayKey() : new Date().toISOString().slice(0, 10);
         const all = (DataStore.getCollection('checklist_exec', franchiseId) || []);
         return all.find(e => e.phase === phase && e.dateKey === today) || null;
     }

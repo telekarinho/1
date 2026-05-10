@@ -315,35 +315,7 @@ const DataStore = {
     // Sem merge: cada PC sobrescreve o array INTEIRO → race condition fatal,
     // PC com menos itens locais apaga itens do outro PC do cloud.
     _isMergeable(key) {
-        // inventory_ NÃO é mergeable: cada deduct é state replacement.
-        // Merge por id+timestamp falhava porque deduct mantém createdAt original
-        // → cloud sempre vencia local recém-deduzido. Resultado: estoque revertia.
-        // Last-writer-wins via _localFresherThanCloud() abaixo.
-        return /^(orders_|caixa_|pdv_tabs_|finances_|recurring_expenses_|price_changes_log_|purchase_orders_log_|weekly_stock_audits_|picole_counts_)/.test(key || '');
-    },
-
-    /**
-     * Checa se a versão local de uma key tem timestamp mais novo que a cloud.
-     * Usado por inventory_ pra evitar que sync sobrescreva venda recém-feita.
-     * Retorna true se local deve ser PRESERVADO (e empurrado pra cloud).
-     */
-    _localFresherThanCloud(key, cloudDoc) {
-        try {
-            const localTsStr = localStorage.getItem(this.PREFIX + key + '__local_ts');
-            if (!localTsStr) return false;
-            const localTs = parseInt(localTsStr, 10);
-            if (!Number.isFinite(localTs)) return false;
-            if (!cloudDoc || !cloudDoc.exists) return true; // local existe, cloud não → local wins
-            const cloudUpdatedAt = cloudDoc.data().updatedAt;
-            const cloudMs = (cloudUpdatedAt && cloudUpdatedAt.toMillis)
-                ? cloudUpdatedAt.toMillis() : 0;
-            return localTs > cloudMs;
-        } catch (e) { return false; }
-    },
-
-    /** Keys que usam protocolo last-writer-wins com timestamp local */
-    _isLocalTimestampedKey(key) {
-        return /^inventory_/.test(key || '');
+        return /^(orders_|caixa_|pdv_tabs_|finances_)/.test(key || '');
     },
     // Merge inteligente: une dois arrays por id, prefere o mais recente
     // (updatedAt > createdAt). Idempotente — pode rodar várias vezes sem efeito ruim.
@@ -470,19 +442,11 @@ const DataStore = {
     _isMergeableListDoc(docId) {
         // Arrays compartilhadas entre PCs — sem merge dá race condition fatal.
         // PCs com listas locais diferentes sobrescrevem o array do outro.
-        // inventory_ EXCEPTION: usa last-writer-wins via _localFresherThanCloud
-        // (deduct não atualiza createdAt → merge sempre escolhia cloud antigo).
         return !!docId && (
             docId.startsWith('orders_') ||
             docId.startsWith('pdv_tabs_') ||
             docId.startsWith('caixa_') ||
-            docId.startsWith('finances_') ||
-            docId.startsWith('recurring_expenses_') ||
-            docId.startsWith('price_changes_log_') ||
-            docId.startsWith('purchase_orders_log_') ||
-            docId.startsWith('weekly_stock_audits_') ||
-            docId.startsWith('picole_counts_')
-            // inventory_ removido: tratado via last-writer-wins
+            docId.startsWith('finances_')
         );
     },
 
@@ -529,18 +493,84 @@ const DataStore = {
         return null;
     },
 
-    // Fetch staff de uma franquia direto do Firestore (sem auth admin).
-    // Necessario pro portal /funcionario/ logar funcionarios em qualquer dispositivo.
-    async fetchPublicStaff(franchiseId) {
-        if (!this._ready || !this._db || !franchiseId) return null;
+    // Lista de docs públicos por franquia — sync funciona SEM auth via per-doc gets
+    // (collection.get() exige rule de LIST que não temos pra unauth).
+    _publicSyncDocs() {
+        // Nao use Auth.getSession() aqui: se a sessao local estiver expirada,
+        // getSession pode redirecionar a tela. Sync publico precisa ser
+        // side-effect-free para nao derrubar o operador no PDV.
+        var fid = null;
         try {
-            const doc = await this._db.collection('datastore').doc('staff_' + franchiseId).get();
-            if (doc.exists) {
-                const value = doc.data().value;
-                const data = typeof value === 'string' ? JSON.parse(value) : value;
-                localStorage.setItem(this.PREFIX + 'staff_' + franchiseId, JSON.stringify(data));
-                return data;
+            if (typeof Auth !== 'undefined' && Auth.getSessionRaw) {
+                fid = (Auth.getSessionRaw() || {}).franchiseId;
+            } else {
+                var raw = localStorage.getItem('mp_session');
+                fid = raw ? (JSON.parse(raw) || {}).franchiseId : null;
             }
+        } catch (_) {}
+        if (!fid) return [];
+        return [
+            'orders_' + fid,
+            'caixa_' + fid,
+            'pdv_tabs_' + fid,
+            'finances_' + fid
+        ];
+    },
+
+    async _syncFromCloud() {
+        if (!this._ready || !this._db) return;
+
+        // CRÍTICO: anexa listeners e poll ANTES dos awaits do sync inicial.
+        // Se um await travar (rede lenta, Firestore offline, etc), os listeners
+        // ainda assim ficam ativos e o sync acontece via realtime/poll quando
+        // a rede normalizar. Isolation total das duas fases.
+        this._setupListenersAndPoll();
+
+        try {
+            // Priority 1: Check for catalog_config specifically for seeding (timeout 5s)
+            try {
+                const catalogDoc = await Promise.race([
+                    this._db.collection('datastore').doc('catalog_config').get(),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 5s')), 5000))
+                ]);
+                if (!catalogDoc.exists && typeof CARDAPIO_CONFIG !== 'undefined') {
+                    console.log('🌱 Seed: Enviando configuração inicial do cardápio para o Firestore...');
+                    this.set('catalog_config', CARDAPIO_CONFIG);
+                }
+            } catch (e) {
+                console.warn('catalog_config sync ignorado:', e.code || e.message);
+            }
+
+            // PER-DOC reads — funciona sem auth pq cada doc tem allow read individual
+            // pelas patterns orders_*, caixa_*, etc. Collection.get() exigia LIST permission.
+            const docsToSync = this._publicSyncDocs();
+            let synced = 0;
+            for (const docId of docsToSync) {
+                try {
+                    const doc = await this._db.collection('datastore').doc(docId).get();
+                    if (doc.exists) {
+                        const merged = this._mergeListDoc(docId, doc.data().value);
+                        const cloudStr = merged.value;
+                        localStorage.setItem(this.PREFIX + docId, cloudStr);
+                        // SYNC INICIAL: se local tinha itens que o cloud não tinha (e.g. caixa
+                        // aberto offline), escreve de volta. Seguro aqui porque roda 1x só
+                        // por carregamento de página. Não causa loop: onSnapshot vai disparar
+                        // com o mesmo conteúdo → merge produz igual → localStr===cloudStr → sem loop.
+                        if (merged.changed) this._writeToCloud(docId, JSON.parse(cloudStr));
+                        synced++;
+                    } else if (this._isMergeableListDoc(docId)) {
+                        const localStr = localStorage.getItem(this.PREFIX + docId);
+                        if (localStr) this._writeToCloud(docId, JSON.parse(localStr));
+                    }
+                } catch (e) {
+                    console.warn('per-doc sync error', docId, e.message);
+                }
+            }
+            console.log(`☁️ Per-doc sync: ${synced}/${docsToSync.length} docs`);
+
+            this._syncDone = true;
+            window.dispatchEvent(new CustomEvent('mp_synced'));
+
         } catch (e) {
             console.warn('fetchPublicStaff error:', e);
         }
@@ -684,39 +714,17 @@ const DataStore = {
             // catalog_config listener (background)
             if (!this._catalogListenerAttached) {
                 this._catalogListenerAttached = true;
-                const self = this;
-                const attachCatalogListener = function(docId, storageKey) {
-                    self._db.collection('datastore').doc(docId).onSnapshot(doc => {
-                        if (doc.exists) {
-                            const value = doc.data().value;
-                            if (typeof value !== 'string') return;
-                            const newData = JSON.parse(value);
-                            localStorage.setItem(self.PREFIX + storageKey, value);
-                            console.log('🔄 Catálogo atualizado via Firebase (Background):', docId);
-                            if (storageKey === 'catalog_config' || (newData && newData._fromV2)) {
-                                window.dispatchEvent(new CustomEvent('mp_catalog_updated', { detail: newData }));
-                            }
-                        }
-                    }, err => {
-                        console.warn(docId + ' listener ignorado:', err.code || err.message);
-                        self._catalogListenerAttached = false;
-                    });
-                };
-
-                attachCatalogListener('catalog_config', 'catalog_config');
-                try {
-                    let fid = null;
-                    if (typeof Auth !== 'undefined' && Auth.getSessionRaw) {
-                        fid = (Auth.getSessionRaw() || {}).franchiseId;
-                    } else {
-                        const raw = localStorage.getItem('mp_session');
-                        fid = raw ? (JSON.parse(raw) || {}).franchiseId : null;
+                this._db.collection('datastore').doc('catalog_config').onSnapshot(doc => {
+                    if (doc.exists) {
+                        const newData = JSON.parse(doc.data().value);
+                        localStorage.setItem(this.PREFIX + 'catalog_config', doc.data().value);
+                        console.log('🔄 Catálogo atualizado via Firebase (Background)');
+                        window.dispatchEvent(new CustomEvent('mp_catalog_updated', { detail: newData }));
                     }
-                    if (fid) {
-                        attachCatalogListener('catalog_config_' + fid, 'catalog_config_' + fid);
-                        attachCatalogListener('catalog_v2_' + fid, 'catalog_v2_' + fid);
-                    }
-                } catch (_) {}
+                }, err => {
+                    console.warn('catalog_config listener ignorado:', err.code || err.message);
+                    this._catalogListenerAttached = false;
+                });
             }
 
             // Per-doc realtime listeners (orders/caixa/pdv_tabs/finances)
@@ -728,10 +736,6 @@ const DataStore = {
                     self._db.collection('datastore').doc(docId).onSnapshot(doc => {
                         if (!doc.exists) return;
                         try {
-                            // last-writer-wins: ignora updates do cloud se local é mais novo
-                            if (self._isLocalTimestampedKey(docId) && self._localFresherThanCloud(docId, doc)) {
-                                return; // local é fresher — não sobrescreve
-                            }
                             const merged = self._mergeListDoc(docId, doc.data().value);
                             const cloudStr = merged.value;
                             const localStr = localStorage.getItem(self.PREFIX + docId);
@@ -785,16 +789,10 @@ const DataStore = {
                         try {
                             const doc = await self._db.collection('datastore').doc(docId).get();
                             if (!doc.exists) {
-                                if (self._isMergeableListDoc(docId) || self._isLocalTimestampedKey(docId)) {
+                                if (self._isMergeableListDoc(docId)) {
                                     const localStr = localStorage.getItem(self.PREFIX + docId);
                                     if (localStr) self._writeToCloud(docId, JSON.parse(localStr));
                                 }
-                                continue;
-                            }
-                            // last-writer-wins pra inventory_: poll não sobrescreve local fresher
-                            if (self._isLocalTimestampedKey(docId) && self._localFresherThanCloud(docId, doc)) {
-                                const localStr = localStorage.getItem(self.PREFIX + docId);
-                                if (localStr) self._writeToCloud(docId, JSON.parse(localStr));
                                 continue;
                             }
                             const merged = self._mergeListDoc(docId, doc.data().value);
@@ -837,16 +835,10 @@ const DataStore = {
                     const doc = await this._db.collection('datastore').doc(docId).get();
                     total++;
                     if (!doc.exists) {
-                        if (this._isMergeableListDoc(docId) || this._isLocalTimestampedKey(docId)) {
+                        if (this._isMergeableListDoc(docId)) {
                             const localStr = localStorage.getItem(this.PREFIX + docId);
                             if (localStr) this._writeToCloud(docId, JSON.parse(localStr));
                         }
-                        continue;
-                    }
-                    // forceSync respeita local mais fresher pra last-writer-wins keys
-                    if (this._isLocalTimestampedKey(docId) && this._localFresherThanCloud(docId, doc)) {
-                        const localStr = localStorage.getItem(this.PREFIX + docId);
-                        if (localStr) this._writeToCloud(docId, JSON.parse(localStr));
                         continue;
                     }
                     const merged = this._mergeListDoc(docId, doc.data().value);

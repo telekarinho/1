@@ -393,7 +393,7 @@
                 if (!Array.isArray(allOrders) || !allOrders.length) return 0;
 
                 const today = Utils.today();
-                const openStatuses = ['aguardando_whatsapp', 'novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'em_rota'];
+                const openStatuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'em_rota'];
                 const nowIso = new Date().toISOString();
                 let changed = 0;
 
@@ -509,10 +509,45 @@
             // o kanban operacional. Outras colunas respeitam o filtro do select.
             const todayOrders = getTodayOrders();
 
+            // Aviso quando há pedidos NO STORAGE mas o filtro atual esconde — evita
+            // operador achar que sumiu (pedido feito ontem, filtro Hoje vazio)
+            const visibleIds = new Set(orders.map(o => o.id));
+            const openStatusesForBanner = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'em_rota'];
+            const hiddenOpen = allOrders.filter(o =>
+                o && !visibleIds.has(o.id) && openStatusesForBanner.includes(o.status)
+            ).length;
+            let bannerEl = document.getElementById('ordersHiddenBanner');
+            if (!bannerEl) {
+                const panel = document.querySelector('.panel-content');
+                if (panel) {
+                    bannerEl = document.createElement('div');
+                    bannerEl.id = 'ordersHiddenBanner';
+                    bannerEl.style.cssText = 'background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border:2px solid #FFB74D;color:#E65100;padding:10px 16px;border-radius:10px;margin-bottom:14px;font-weight:700;font-size:13px;display:none;align-items:center;gap:10px;cursor:pointer';
+                    bannerEl.onclick = function(){
+                        var sel = document.getElementById('filterDate');
+                        if (sel) { sel.value = 'all'; renderKanban(); }
+                    };
+                    panel.insertBefore(bannerEl, panel.firstChild);
+                }
+            }
+            if (bannerEl) {
+                if (hiddenOpen > 0) {
+                    bannerEl.innerHTML = '&#9888; <span>Tem ' + hiddenOpen + ' pedido' + (hiddenOpen>1?'s':'') + ' aberto' + (hiddenOpen>1?'s':'') + ' fora do filtro atual</span> &middot; <strong style="text-decoration:underline">Clique pra ver TODOS</strong>';
+                    bannerEl.style.display = 'flex';
+                } else {
+                    bannerEl.style.display = 'none';
+                }
+            }
+
+            // Coluna "Entregue" SEMPRE mostra so pedidos de hoje — historico
+            // de entregas antigas vai pra outro lugar (relatorios), nao polui
+            // o kanban operacional. Outras colunas respeitam o filtro do select.
+            const todayOrders = getTodayOrders();
+
             statuses.forEach(status => {
                 const sourceList = (status === 'entregue') ? todayOrders : orders;
                 const statusOrders = sourceList
-                    .filter(o => kanbanStatus(o) === status)
+                    .filter(o => o.status === status)
                     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
                 const listId = 'list' + status.charAt(0).toUpperCase() + status.slice(1);
@@ -538,6 +573,25 @@
                         : '';
                     const nextLabel = { novo: '✔️ Confirmar', confirmado: '▶️ Preparar', preparando: '✅ Pronto', pronto: '🛵 Enviar', em_entrega: '📦 Entregue' };
                     const isDeliveryCard = typeKey === 'delivery' || typeKey === 'delivery_whatsapp' || !!o.address || !!(o.delivery && o.delivery.address);
+
+                    // Numeração sequencial diária preferida; fallback pro hash legado
+                    const seqLabel = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
+                    const seqTitle = o.dailySeq ? `Pedido nº ${o.dailySeq} do dia · ${o.id.slice(-6)}` : `Pedido ${o.id.slice(-6)}`;
+
+                    // Calcula tempo de espera para pedidos ainda não entregues
+                    let waitAttr = '';
+                    let waitBadgeHtml = '';
+                    if (status !== 'entregue' && status !== 'cancelado' && o.createdAt) {
+                        const ageMs = Date.now() - new Date(o.createdAt).getTime();
+                        const ageMins = Math.floor(ageMs / 60000);
+                        if (ageMins >= 0) {
+                            const waitClass = ageMins >= 30 ? 'late' : (ageMins >= 15 ? 'warn' : 'ok');
+                            const waitIcon = ageMins >= 30 ? '🔴' : (ageMins >= 15 ? '🟡' : '🟢');
+                            waitBadgeHtml = `<span class="order-wait-badge ${waitClass}" title="Aguardando há ${ageMins} min">${waitIcon} ${ageMins}min</span>`;
+                            if (ageMins >= 30) waitAttr = 'data-wait="alert"';
+                            else if (ageMins >= 15) waitAttr = 'data-wait="warn"';
+                        }
+                    }
 
                     // Numeração sequencial diária preferida; fallback pro hash legado
                     const seqLabel = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
@@ -696,29 +750,6 @@
             const o = orders.find(x => x.id === orderId);
             if (!o) return;
 
-            const deliveryType = o.type || o.orderType || (o.delivery && o.delivery.type) || o.delivery;
-            const isDeliveryOrder = deliveryType === 'delivery' || deliveryType === 'delivery_whatsapp' || !!o.address || !!(o.delivery && o.delivery.address);
-            const typeBadgeClass = isDeliveryOrder ? 'delivery' : 'retirada';
-            const typeBadgeLabel = isDeliveryOrder ? '🛵 Delivery' : '🏪 Retirada';
-            const customer = o.customer || {};
-            const deliveryObj = (o.delivery && typeof o.delivery === 'object') ? o.delivery : {};
-            const addressParts = deliveryObj.addressParts || {};
-            const addressLines = [];
-            const line1 = (addressParts.rua || addressParts.street || deliveryObj.street || '');
-            const number = addressParts.numero || addressParts.number || deliveryObj.number || '';
-            if (line1 || number) addressLines.push((line1 + (number ? ', ' + number : '')).trim());
-            const complement = addressParts.complemento || addressParts.complement || deliveryObj.complement || '';
-            if (complement) addressLines.push(complement);
-            const neighborhood = addressParts.bairro || addressParts.neighborhood || deliveryObj.neighborhood || customer.neighborhood || '';
-            if (neighborhood) addressLines.push('Bairro ' + neighborhood);
-            const cepRaw = addressParts.cep || deliveryObj.cep || customer.cep || '';
-            if (cepRaw) {
-                const cep = String(cepRaw).replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2');
-                addressLines.push('CEP ' + cep);
-            }
-            const addressText = addressLines.length ? addressLines.join('<br>') : Utils.escapeHtml(o.address || deliveryObj.address || customer.address || '-');
-            const obsText = o.observacao || o.observation || '';
-            const paymentLabel = o.payment || (o.status === 'aguardando_whatsapp' ? 'A combinar no WhatsApp' : 'N/A');
             const _modalSeq = o.dailySeq ? `Pedido #${o.dailySeq}` : `Pedido #${o.id.slice(-6)}`;
             document.getElementById('orderModalTitle').textContent = _modalSeq + (o.dailySeq ? ` · ${o.id.slice(-6)}` : '');
             document.getElementById('orderModalBody').innerHTML = `
@@ -770,7 +801,7 @@
             document.getElementById('orderModalFooter').innerHTML = !isFinal
                 ? `${reprintBtn} ${editBtn} ${deleteBtn}
                    <button class="btn btn-danger btn-sm" onclick="moveOrder('${o.id}','cancelado');document.getElementById('orderModal').classList.remove('active')">Cancelar</button>
-                   <button class="btn btn-primary" onclick="moveOrder('${o.id}','${nextStatus[o.status]}');document.getElementById('orderModal').classList.remove('active')">${nextLabel[o.status] || 'Confirmar'}</button>`
+                   <button class="btn btn-primary" onclick="moveOrder('${o.id}','${nextStatus[o.status]}');document.getElementById('orderModal').classList.remove('active')">${nextLabel[o.status]}</button>`
                 : `${reprintBtn} ${deleteBtn}`;
 
             document.getElementById('orderModal').classList.add('active');
@@ -1036,7 +1067,7 @@
                 return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
             })();
             const allOrders = DataStore.getCollection('orders', franchiseId);
-            const openStatuses = ['aguardando_whatsapp', 'novo', 'confirmado', 'preparando', 'pronto', 'em_entrega'];
+            const openStatuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega'];
             const todayOpen = allOrders.filter(o =>
                 !o.deleted &&
                 openStatuses.includes(o.status) &&
@@ -1109,7 +1140,7 @@
                     return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
                 })();
                 const allOrders = DataStore.getCollection('orders', franchiseId);
-                const openStatuses = ['aguardando_whatsapp', 'novo', 'confirmado', 'preparando', 'pronto', 'em_entrega'];
+                const openStatuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega'];
                 const oldOpen = allOrders.filter(o =>
                     !o.deleted &&
                     openStatuses.includes(o.status) &&
@@ -1191,7 +1222,7 @@
         let lastSeenIds = new Set();
         setInterval(() => {
             const orders = DataStore.getCollection('orders', franchiseId);
-            const newOrders = orders.filter(o => o.status === 'aguardando_whatsapp' || o.status === 'novo');
+            const newOrders = orders.filter(o => o.status === 'novo');
             const reallyNew = newOrders.filter(o => !lastSeenIds.has(o.id));
             if (reallyNew.length > 0 && lastOrderCount > 0) {
                 document.getElementById('newOrderAlert').style.display = 'block';
@@ -1199,11 +1230,8 @@
 
                 // Detecta delivery (vai estar em order.type, order.orderType ou order.delivery)
                 const hasDelivery = reallyNew.some(o =>
-                    o.type === 'delivery' || o.type === 'delivery_whatsapp' ||
-                    o.orderType === 'delivery' || o.orderType === 'delivery_whatsapp' ||
-                    o.delivery === 'delivery' || o.delivery === 'delivery_whatsapp' ||
-                    (o.delivery && o.delivery.type === 'delivery_whatsapp') ||
-                    o.delivery === true ||
+                    o.type === 'delivery' || o.orderType === 'delivery' ||
+                    o.delivery === 'delivery' || o.delivery === true ||
                     !!o.address
                 );
 
@@ -1268,7 +1296,7 @@
                         return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
                     } catch(e) { return ''; }
                 }
-                var openStatuses = ['aguardando_whatsapp','novo','confirmado','preparando','pronto','em_entrega'];
+                var openStatuses = ['novo','confirmado','preparando','pronto','em_entrega'];
                 var changed = 0;
                 var ts = new Date().toISOString();
                 allOrders.forEach(function(o, idx) {
@@ -1432,20 +1460,12 @@
             function isTestOrder(o) {
                 if (isSeedDemoOrder(o)) return true;
                 if (o.isTestSession || o.testSession) return true;
-                // ID-based: pedidos gerados por scripts live-test (ex.: live_test_<ts>)
-                const id = o && o.id ? String(o.id) : '';
-                if (/^live_test_/i.test(id)) return true;
-                // orderNumber explicito de teste
-                const orderNum = String(o.orderNumber || '');
-                if (/MP_TEST|^#?TEST/i.test(orderNum)) return true;
                 const uid = o.userId || o.operatorId || '';
                 if (/^test_agent_/i.test(uid)) return true;
                 const email = (o.operatorEmail || o.createdByEmail || '').toLowerCase();
                 if (TEST_PATTERNS.some(p => p.test(email))) return true;
                 const name = (o.customer && o.customer.name) || '';
-                // Pega "test", "teste" (sozinho ou com prefixo) e tambem "Cliente Teste"
                 if (/^(test|teste)\b/i.test(name)) return true;
-                if (/cliente\s+teste/i.test(name)) return true;
                 return false;
             }
 
