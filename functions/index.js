@@ -503,6 +503,30 @@ exports.getFiscalHealth = onCall({
     };
 });
 
+// Redact campos sensiveis (CSC token NFC-e, provider.apiKey) — exibe apenas
+// last4 + flag "configurado". Antes: getFiscalConfig retornava cleartext
+// completo, permitindo qualquer franqueado puxar o CSC e forjar NFC-e em
+// homologacao contra o CNPJ da loja.
+function _last4(s) {
+    if (!s || typeof s !== 'string') return null;
+    if (s.length <= 4) return '***';
+    return '***' + s.slice(-4);
+}
+function _redactFiscal(data) {
+    if (!data || typeof data !== 'object') return data;
+    const out = { ...data };
+    if (out.cscToken) out.cscToken = _last4(out.cscToken);
+    if (out.csc_token) out.csc_token = _last4(out.csc_token);
+    if (out.provider) {
+        out.provider = { ...out.provider };
+        if (out.provider.apiKey) out.provider.apiKey = _last4(out.provider.apiKey);
+        if (out.provider.api_key) out.provider.api_key = _last4(out.provider.api_key);
+        if (out.provider.token) out.provider.token = _last4(out.provider.token);
+        if (out.provider.secret) out.provider.secret = _last4(out.provider.secret);
+    }
+    return out;
+}
+
 exports.getFiscalConfig = onCall({
     region: "southamerica-east1"
 }, async (request) => {
@@ -514,7 +538,7 @@ exports.getFiscalConfig = onCall({
         success: true,
         franchiseId,
         config: {
-            ...data,
+            ..._redactFiscal(data),
             certificate: sanitizeCertificateMeta(data.certificate)
         }
     };

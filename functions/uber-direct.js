@@ -973,13 +973,61 @@ exports.uberDirect_getPricingRules = onCall({
  * Uber sends POST with JSON body. We do idempotent processing via Firestore
  * deduplication on event_id.
  */
+// Secret usado para verificar assinatura HMAC do webhook Uber Direct.
+// Configure em: firebase functions:secrets:set UBER_WEBHOOK_SECRET
+// (mesmo valor cadastrado no console Uber Direct > Webhook config).
+const UBER_WEBHOOK_SECRET = defineSecret("UBER_WEBHOOK_SECRET");
+
+function _verifyUberSignature(rawBody, signatureHeader, secret) {
+    if (!signatureHeader || typeof signatureHeader !== 'string') return false;
+    if (!secret) return false;
+    try {
+        const crypto = require('crypto');
+        const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+        // Aceita formatos comuns: hex puro, 'sha256=<hex>' ou 'v1=<hex>'
+        const provided = signatureHeader.replace(/^(sha256=|v1=)/i, '').trim();
+        const a = Buffer.from(expected, 'hex');
+        const b = Buffer.from(provided, 'hex');
+        if (a.length !== b.length) return false;
+        return crypto.timingSafeEqual(a, b);
+    } catch (_) {
+        return false;
+    }
+}
+
 exports.uberDirect_webhook = onRequest({
     region: REGION,
-    secrets: [UBER_ENCRYPTION_KEY],
+    secrets: [UBER_ENCRYPTION_KEY, UBER_WEBHOOK_SECRET],
     timeoutSeconds: 30,
 }, async (req, res) => {
     if (req.method !== "POST") {
         res.status(405).send("Method Not Allowed");
+        return;
+    }
+
+    // ---- HMAC signature verification ----
+    // Sem isso, qualquer um POSTa { event_id, delivery_id:<id_real>, status:'delivered' }
+    // e o pedido fica marcado como entregue sem ter saido da loja.
+    const sigHeader = req.headers['x-uber-signature']
+                   || req.headers['x-uber-signature-256']
+                   || req.headers['uber-signature']
+                   || '';
+    const rawBody = (req.rawBody && Buffer.isBuffer(req.rawBody))
+        ? req.rawBody
+        : Buffer.from(JSON.stringify(req.body || {}));
+    const secretValue = UBER_WEBHOOK_SECRET.value();
+    if (!secretValue) {
+        // Secret nao configurado — recuso por seguranca, nao processo "anything-goes"
+        console.error("[uberDirect_webhook] UBER_WEBHOOK_SECRET nao configurado");
+        res.status(503).send("Webhook secret not configured");
+        return;
+    }
+    if (!_verifyUberSignature(rawBody, sigHeader, secretValue)) {
+        console.warn("[uberDirect_webhook] assinatura HMAC invalida", {
+            hasHeader: !!sigHeader,
+            ip: req.headers['x-forwarded-for'] || req.ip
+        });
+        res.status(401).send("Invalid signature");
         return;
     }
 

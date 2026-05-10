@@ -97,8 +97,18 @@ module.exports = async function handler(req, res) {
                     hint: 'Esperado https://<subdomain>.trycloudflare.com'
                 });
             }
+            // Secret OBRIGATORIO em producao. Sem isso, qualquer um do mundo
+            // registra um tunnel falso e a Belinha do painel passa a chamar
+            // o servidor do atacante (vazando contexto e roubando comandos).
             const expectedSecret = process.env.BELINHA_TUNNEL_SECRET;
-            if (expectedSecret && secret !== expectedSecret) {
+            if (!expectedSecret) {
+                console.error('[belinha-tunnel] BELINHA_TUNNEL_SECRET nao configurado — recusando POST');
+                return res.status(503).json({
+                    error: 'secret_not_configured',
+                    hint: 'Defina env var BELINHA_TUNNEL_SECRET no Vercel dashboard.'
+                });
+            }
+            if (secret !== expectedSecret) {
                 return res.status(401).json({ error: 'invalid_secret' });
             }
 

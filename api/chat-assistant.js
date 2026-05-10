@@ -200,10 +200,17 @@ module.exports = async (req, res) => {
         res.status(400).json({ error: 'messages inválido (array 1-30 itens)' });
         return;
     }
+    // Sanitiza tags estruturais pra evitar prompt injection (cliente nao pode
+    // simular <system>/<context>/<assistant> e tomar controle da conversa).
+    function sanitize(s) {
+        return String(s || '')
+            .replace(/<\/?(?:context|system|assistant|user)\b[^>]*>/gi, '[tag]')
+            .slice(0, 2000);
+    }
     const userMessages = messages
         .filter(m => m && typeof m === 'object' && ['user', 'assistant'].includes(m.role) && typeof m.content === 'string')
         .slice(-20)
-        .map(m => ({ role: m.role, content: String(m.content).slice(0, 2000) }));
+        .map(m => ({ role: m.role, content: sanitize(m.content) }));
     if (userMessages.length === 0) {
         res.status(400).json({ error: 'Mensagem vazia' });
         return;
