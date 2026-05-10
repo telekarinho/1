@@ -6741,3 +6741,48 @@ _Belinha — Ciclo #177 | 2026-05-10_
 - **Operador:** CNPJ + DPO — LGPD — risco legal crescente
 
 _Belinha — Ciclo #178 | 2026-05-10_
+
+---
+
+## Ciclo #180 — 2026-05-10
+
+**Área:** Conversão — Script WA upsell Potinho Junino variantes B e C
+
+**Contexto:** Ciclos #177–179 completaram a sequência de conteúdo de lançamento do Potinho Junino para qua/qui/sex 17–19/06. Ciclo #180 preenche a lacuna operacional: o atendente sabia que existem 3 versões (prescrito em `potinho-junino-2026-contraprogramacao.md`) mas não tinha script concreto para oferecer Versão B (Mel & Cocada) e Versão C (Fit) no balcão e no WA sem improvisar.
+
+**O que pesquisou/analisou:**
+- Releitura de `potinho-junino-2026-contraprogramacao.md` — ingredientes exatos de cada variante (linhas 44–61)
+- Releitura de `whatsapp-funil.md` — padrão de formato e tom dos scripts WA existentes
+- Releitura de `whatsapp-junina-2026.md` (ciclo #165) — estrutura de broadcasts e keyword `JUNINO26`
+- Releitura de `pos-inauguracao-semana9.md` — cronograma 17–20/06, KPIs, checklist operacional
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-potinho-junino-upsell-variantesBC.md` | NOVO — script completo de upsell |
+
+**Detalhes do conteúdo criado:**
+- **Tabela de referência rápida** dos 3 Potinhos Juninos (base, toppings, perfil de cliente)
+- **Roteiro PDV presencial:** frase para quando cliente pede sem especificar versão + oferta de upgrade da Versão A
+- **5 scripts WA** prontos para copiar/colar: (1) pedido sem versão, (2) upgrade Versão A, (3) indeciso, (4) alergia amendoim, (5) broadcast pós-lançamento 18/06
+- **Broadcast São João 24/06** — script para pico da campanha às 12h
+- **Checklist operacional por turno** (estoques, WA Business keyword, rótulos)
+- **5 variações de frase de fechamento** para não repetir no mesmo dia
+- **Rastreamento de variante** embutido no checklist (anotar A/B/C por pedido WA)
+
+**Commit:** `3f05449`
+
+**Próximo passo sugerido:**
+- **Ciclo #181 — Feed 19/06:** Caption + conceito foto editorial do Potinho Junino (slot prescrito em `semana9.md`, ainda sem arquivo de produção dedicado)
+- **Ciclo #182 — UX:** Sábado 20/06 — Reel urgência + stories encerramento semana 9 (prescrito em `semana9.md`, sem arquivo)
+- **Ciclo #183 — SEO:** Landing page `potinho-junino-londrina.html` (esqueleto com placeholders — não bloqueia mais operador)
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05** ⚠️ URGENTE (20 dias)
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05** ⚠️ URGENTE
+- **Operador:** Configurar keyword `JUNINO26` no WA Business até **06/06** ⚠️ URGENTE
+- **Operador:** Confirmar disponibilidade de cocada e mel (Versões B e C) até **13/06**
+- **Operador:** Buscar trilha baiãozinho lo-fi TikTok na semana de **08/06**
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #180 | 2026-05-10_
