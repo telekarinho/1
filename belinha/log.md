@@ -2,6 +2,51 @@
 
 ---
 
+## Ciclo #182 — 2026-05-10
+
+**Área:** Conteúdo — Reel 15s urgência + Stories encerramento semana 9 (Sáb 20/06/2026)
+
+**Contexto:** Ciclos #177–181 produziram todo o conteúdo da semana 9 do Potinho Junino (lançamento Reel 17/06, Stories 18/06 reações, feed editorial 19/06, scripts WA upsell). O último slot da semana — sábado 20/06 — estava prescrito em `semana9.md` apenas com esboço básico: "Reel urgência + stories encerramento semana 9". Ciclo #182 preenche esse slot com brief de produção completo.
+
+**O que pesquisou/analisou:**
+- Releitura de `pos-inauguracao-semana9.md` (seção Sáb 20/06, linhas 259–310): roteiro mínimo + caption base + Stories de encerramento
+- Releitura de `reel-lancamento-potinho-junino-17jun.md`: formato, direção de arte, trilha musical e consistência visual a manter
+- Releitura de `stories-18jun-potinho-junino-reacoes.md`: padrão de 3 stories com horários escalonados e stickers
+- Releitura de `whatsapp-indicacao.md` e `potinho-junino-2026-contraprogramacao.md`: mecânica Indica & Ganha e diferencial vs. MilkyMoo/The Best
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reel-urgencia-potinho-junino-20jun.md` | NOVO — brief completo Reel + Stories 20/06 |
+
+**Detalhes do conteúdo criado:**
+- **Roteiro Reel 15s** (4 blocos: abertura xadrez com ovelhinha, dois potinhos side-by-side, CTA indica & ganha, encerramento com logo + horário)
+- **Direção de arte** (tabela com paleta, fonte, ovelhinha chapéu de palha, stickers, música baiãozinho lo-fi)
+- **Caption principal** + variação B compacta para repost Stories/WA Status
+- **3 Stories de encerramento** com horários (19h, 19h15, 20h30): retrospectiva semana → enquete de satisfação → teaser semana 10 + CTA final
+- **Checklist operacional Sáb 20/06** (manhã/turno/noite/pós-turno) — inclui rastreamento de indicações e anotação de UGC
+- **Tabela KPI semana 9** para consolidar no Dom 21/06
+- **Notas de integração com semana 10** (resultado enquete, continuidade Potinho Junino, preparação julho)
+
+**Commit:** `831e762`
+
+**Próximo passo sugerido:**
+- **Ciclo #183 — SEO:** Landing page `potinho-junino-londrina.html` — o esqueleto com placeholders está prescrito desde ciclo #179 mas foi postergado; com a semana 9 completa, é o item mais urgente agora
+- **Ciclo #184 — Conteúdo:** Semana 10 (22–28/06) — abertura com resultado enquete, continuidade Potinho Junino "último final de semana" (Sáb 27/06), preparação para julho
+- **Ciclo #185 — Conversão:** Mecânica "Embaixador MilkyPot" — formalizar critério (≥3 indicações) e recompensa (Potinho Grande grátis) em documento de treinamento do operador
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05** ⚠️ URGENTE (20 dias)
+- **Operador:** Confirmar naming "Potinho Junino" até **30/05** ⚠️ URGENTE
+- **Operador:** Confirmar disponibilidade cocada e mel (Versões B e C) até **13/06**
+- **Operador:** Configurar keyword `JUNINO26` no WA Business até **06/06** ⚠️ URGENTE
+- **Operador:** Buscar trilha baiãozinho lo-fi TikTok na semana de **08/06**
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #182 | 2026-05-10_
+
+---
+
 ## Ciclo #181 — 2026-05-10
 
 **Área:** Conteúdo — Feed editorial + Stories 19/06 Potinho Junino
