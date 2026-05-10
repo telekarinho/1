@@ -841,45 +841,62 @@ function fnVerTermo(termId) {
     document.body.insertAdjacentHTML('beforeend', html);
 }
 
-function fnLogin() {
+async function fnLogin() {
     var cpf = document.getElementById('loginCpf').value.replace(/\D/g, '');
     var pin = document.getElementById('loginPin').value.trim();
     var err = document.getElementById('loginErr');
+    var btn = document.querySelector('.fn-login button.fn-btn');
     err.style.display = 'none';
 
     if (cpf.length !== 11) { err.textContent = 'CPF invalido'; err.style.display = 'block'; return; }
     if (pin.length !== 4) { err.textContent = 'PIN deve ter 4 digitos'; err.style.display = 'block'; return; }
 
-    // Procura em todas franquias (publicas via DataStore.getAllFranchises)
-    var franchises = (typeof DataStore !== 'undefined') ? (DataStore.getAllFranchises() || []) : [];
-    var found = null;
-    for (var i = 0; i < franchises.length; i++) {
-        var f = franchises[i];
-        var staff = DataStore.getCollection('staff', f.id) || [];
-        var s = staff.find(function(x) {
-            if (!x.active) return false;
-            var c = (x.cpf || '').replace(/\D/g, '');
-            return c === cpf && x.pin === pin;
-        });
-        if (s) { found = { staff: s, franchiseId: f.id, franchise: f }; break; }
-    }
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Entrando...'; }
 
-    if (!found) {
-        err.textContent = 'CPF ou PIN incorreto. Confirme com seu gerente.';
+    // Login via Cloud Function — busca em TODAS franquias com admin SDK,
+    // funciona em qualquer dispositivo (PC/celular) sem cache local.
+    // Firestore Rules NAO liberam staff_* pra unauth (CPF/PIN sao sensiveis).
+    var loginUrl = 'https://southamerica-east1-milkypot-ad945.cloudfunctions.net/funcionarioLogin';
+    try {
+        var resp = await fetch(loginUrl + '?cpf=' + encodeURIComponent(cpf) + '&pin=' + encodeURIComponent(pin));
+        var data = await resp.json().catch(function() { return { error: 'Resposta inválida' }; });
+        if (btn) { btn.textContent = 'Entrar'; btn.disabled = false; }
+
+        if (!resp.ok || !data.success) {
+            err.textContent = data.error || 'CPF ou PIN incorreto. Confirme com seu gerente.';
+            err.style.display = 'block';
+            return;
+        }
+
+        // Cacheia o staff localmente pra fluxos internos (bater ponto, etc)
+        try {
+            if (typeof DataStore !== 'undefined') {
+                if (DataStore.fetchPublicFranchises) DataStore.fetchPublicFranchises();
+                var existing = DataStore.getCollection('staff', data.franchiseId) || [];
+                var idx = existing.findIndex(function(x) { return x.id === data.staff.id; });
+                if (idx === -1) existing.push(data.staff);
+                else existing[idx] = Object.assign({}, existing[idx], data.staff);
+                if (DataStore.saveCollection) DataStore.saveCollection('staff', data.franchiseId, existing);
+                else if (DataStore.set) DataStore.set('staff_' + data.franchiseId, existing);
+            }
+        } catch (e) { console.warn('cache staff:', e); }
+
+        var session = {
+            staffId: data.staff.id,
+            staffName: data.staff.name,
+            staffRole: data.staff.role,
+            franchiseId: data.franchiseId,
+            franchiseName: data.franchise.name,
+            loginAt: new Date().toISOString()
+        };
+        sessionStorage.setItem(FN_KEY, JSON.stringify(session));
+        fnShowApp(session, data.staff);
+    } catch (e) {
+        if (btn) { btn.textContent = 'Entrar'; btn.disabled = false; }
+        err.textContent = 'Erro de conexão. Verifique sua internet e tente novamente.';
         err.style.display = 'block';
-        return;
+        console.error('fnLogin error:', e);
     }
-
-    var session = {
-        staffId: found.staff.id,
-        staffName: found.staff.name,
-        staffRole: found.staff.role,
-        franchiseId: found.franchiseId,
-        franchiseName: found.franchise.name,
-        loginAt: new Date().toISOString()
-    };
-    sessionStorage.setItem(FN_KEY, JSON.stringify(session));
-    fnShowApp(session, found.staff);
 }
 
 function fnLogout() {
