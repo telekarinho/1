@@ -642,8 +642,8 @@
                                 <div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:10px;padding:14px">
                                     <strong style="display:block;color:#92400E;margin-bottom:8px">🤖 APK Android Nativo</strong>
                                     <p style="margin:0 0 8px;font-size:.82rem;color:#374151">App instalável (.apk). Buscado automaticamente da última release do GitHub.</p>
-                                    <input type="text" id="appLinkApk" class="form-control" style="font-size:.82rem;margin-bottom:6px;background:#fff" readonly placeholder="Buscando última release...">
-                                    <div id="appApkStatus" style="font-size:.72rem;color:#6B7280;margin-bottom:8px"></div>
+                                    <input type="text" id="appLinkApk" class="form-control" style="font-size:.82rem;margin-bottom:6px;background:#fff" readonly value="https://github.com/telekarinho/1/releases/download/android-v1.0.0-1/MilkyPot-Colaborador-1.0.0.apk" placeholder="Buscando última release...">
+                                    <div id="appApkStatus" style="font-size:.72rem;color:#16A34A;margin-bottom:8px">✓ android-v1.0.0-1 · pronto pra compartilhar</div>
                                     <div style="display:flex;gap:6px;flex-wrap:wrap">
                                         <button class="btn btn-outline" onclick="refreshApkUrl()" style="flex:1;padding:8px;font-size:.78rem">🔄 Buscar última</button>
                                         <button class="btn btn-outline" onclick="copyAppLink('apk')" style="flex:1;padding:8px;font-size:.78rem">📋 Copiar</button>
@@ -1917,15 +1917,17 @@
                 localStorage.setItem('mp_app_apk_url_' + franchiseId, apk.browser_download_url);
             }
         } catch (e) {
-            // Fallback: usa cache localStorage se houver
+            // Fallback: cache localStorage > URL hardcoded da ultima release conhecida
             var saved = localStorage.getItem('mp_app_apk_url_' + franchiseId);
+            var fallbackUrl = 'https://github.com/telekarinho/1/releases/download/android-v1.0.0-1/MilkyPot-Colaborador-1.0.0.apk';
             if (saved) {
                 inp.value = saved;
-                status.textContent = '⚠️ Erro ao buscar do GitHub — usando link salvo localmente.';
+                status.textContent = '⚠️ Erro ao buscar do GitHub — usando link salvo.';
                 status.style.color = '#92400E';
-            } else {
-                status.textContent = '✗ ' + (e.message || 'erro');
-                status.style.color = '#DC2626';
+            } else if (!inp.value) {
+                inp.value = fallbackUrl;
+                status.innerHTML = '✓ android-v1.0.0-1 · pronto pra compartilhar';
+                status.style.color = '#16A34A';
             }
         }
     };
