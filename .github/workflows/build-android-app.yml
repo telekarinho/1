@@ -1,4 +1,4 @@
-name: Build Android APK (TWA Funcionário)
+name: Build Android APK (TWA Colaborador)
 
 on:
   workflow_dispatch:
@@ -11,6 +11,9 @@ on:
         description: 'Build number'
         required: true
         default: '1'
+
+permissions:
+  contents: write   # necessário pra criar release
 
 jobs:
   build-apk:
@@ -31,22 +34,18 @@ jobs:
           node-version: '20'
 
       - name: Install Bubblewrap CLI
-        run: npm install -g @bubblewrap/cli
+        run: npm install -g @bubblewrap/cli@1.22.0
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          accept-android-sdk-licenses: true
 
-      - name: Update version in manifest
-        run: |
-          jq --arg ver "${{ github.event.inputs.versionName }}" \
-             --argjson code ${{ github.event.inputs.versionCode }} \
-             '.appVersion = $ver | .appVersionCode = $code' \
-             twa-manifest.json > twa-manifest.tmp && mv twa-manifest.tmp twa-manifest.json
-
-      - name: Generate keystore (if not provided)
+      - name: Generate or restore keystore
         run: |
           if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
             echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android.keystore
+            echo "Keystore restaurado de secret"
           else
             keytool -genkeypair -v \
               -keystore android.keystore \
@@ -56,61 +55,144 @@ jobs:
               -storepass milkypot2026 \
               -keypass milkypot2026 \
               -dname "CN=MilkyPot, OU=TI, O=MilkyPot Franquias, L=Londrina, S=PR, C=BR"
+            echo "Keystore novo gerado"
           fi
 
-      - name: Initialize TWA project
+      - name: Show SHA256 fingerprint (pra assetlinks)
+        env:
+          KS_PASS: ${{ secrets.KEYSTORE_PASSWORD || 'milkypot2026' }}
+        run: |
+          echo "=== SHA256 fingerprint da keystore (use em assetlinks.json) ==="
+          keytool -list -v -keystore android.keystore -alias android -storepass "$KS_PASS" | grep "SHA256:" || true
+
+      - name: Prepare twa-manifest.json
+        env:
+          KS_PASS: ${{ secrets.KEYSTORE_PASSWORD || 'milkypot2026' }}
+          KEY_PASS: ${{ secrets.KEY_PASSWORD || 'milkypot2026' }}
         run: |
           mkdir -p android-build
-          cd android-build
-          bubblewrap init --manifest=https://milkypot.com/funcionario/manifest.json << EOF || true
-          n
-
-
-          ./../android.keystore
-          android
-          ${{ secrets.KEYSTORE_PASSWORD || 'milkypot2026' }}
-          ${{ secrets.KEY_PASSWORD || 'milkypot2026' }}
+          cp android.keystore android-build/android.keystore
+          # twa-manifest.json com config inline (sem precisar de bubblewrap init interativo)
+          cat > android-build/twa-manifest.json <<EOF
+          {
+            "packageId": "com.milkypot.colaborador",
+            "host": "milkypot.com",
+            "name": "MilkyPot Colaborador",
+            "launcherName": "MilkyPot Colab",
+            "display": "standalone",
+            "themeColor": "#16A34A",
+            "navigationColor": "#16A34A",
+            "navigationColorDark": "#16A34A",
+            "navigationDividerColor": "#16A34A",
+            "navigationDividerColorDark": "#16A34A",
+            "backgroundColor": "#16A34A",
+            "enableNotifications": true,
+            "startUrl": "/colaborador/",
+            "iconUrl": "https://milkypot.com/images/logo-milkypot.png",
+            "maskableIconUrl": "https://milkypot.com/images/logo-milkypot.png",
+            "monochromeIconUrl": "https://milkypot.com/images/logo-milkypot.png",
+            "splashScreenFadeOutDuration": 300,
+            "signingKey": {
+              "path": "./android.keystore",
+              "alias": "android"
+            },
+            "appVersion": "${{ github.event.inputs.versionName }}",
+            "appVersionCode": ${{ github.event.inputs.versionCode }},
+            "shortcuts": [
+              {
+                "name": "Bater Ponto",
+                "shortName": "Ponto",
+                "url": "/colaborador/?action=punch",
+                "iconUrl": "https://milkypot.com/images/logo-milkypot.png"
+              }
+            ],
+            "generatorApp": "bubblewrap-cli",
+            "webManifestUrl": "https://milkypot.com/colaborador/manifest.json",
+            "fallbackType": "customtabs",
+            "features": {
+              "locationDelegation": { "enabled": true },
+              "playBilling": { "enabled": false }
+            },
+            "alphaDependencies": { "enabled": false },
+            "enableSiteSettingsShortcut": true,
+            "isChromeOSOnly": false,
+            "isMetaQuest": false,
+            "fullScopeUrl": "https://milkypot.com/colaborador/",
+            "minSdkVersion": 21,
+            "orientation": "portrait",
+            "additionalTrustedOrigins": [],
+            "retainedBundles": []
+          }
           EOF
+          cat android-build/twa-manifest.json
 
-      - name: Update twa-manifest in android-build
-        run: |
-          cp twa-manifest.json android-build/twa-manifest.json || true
-
-      - name: Build APK
+      - name: Update TWA project (no init, generate Android files from manifest)
         working-directory: android-build
         env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'milkypot2026' }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'milkypot2026' }}
+          KS_PASS: ${{ secrets.KEYSTORE_PASSWORD || 'milkypot2026' }}
+          KEY_PASS: ${{ secrets.KEY_PASSWORD || 'milkypot2026' }}
         run: |
-          bubblewrap build --skipPwaValidation || true
+          # bubblewrap update gera/atualiza projeto Android de forma nao-interativa
+          # com base no twa-manifest.json existente
+          export GH_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          # Pre-cria estrutura minima Android pra update funcionar
+          bubblewrap update --skipPwaValidation || bubblewrap init --manifest=https://milkypot.com/colaborador/manifest.json --directory=. --skipPwaValidation < /dev/null || true
+          ls -la
 
-      - name: Show SHA256 fingerprint (para assetlinks.json)
+      - name: Build APK + AAB
+        working-directory: android-build
+        env:
+          KS_PASS: ${{ secrets.KEYSTORE_PASSWORD || 'milkypot2026' }}
+          KEY_PASS: ${{ secrets.KEY_PASSWORD || 'milkypot2026' }}
         run: |
-          echo "=== ATENÇÃO: copie o SHA256 abaixo para .well-known/assetlinks.json ==="
-          keytool -list -v -keystore android.keystore -alias android -storepass ${{ secrets.KEYSTORE_PASSWORD || 'milkypot2026' }} | grep "SHA256:" || true
+          # Build forçando passwords via env vars que o bubblewrap aceita
+          echo "$KS_PASS" | bubblewrap build --skipPwaValidation || true
+          echo "=== Listing artifacts ==="
+          find . -name "*.apk" -o -name "*.aab" 2>/dev/null
 
-      - name: Upload APK
+      - name: Locate built artifacts
+        id: artifacts
+        working-directory: android-build
+        run: |
+          APK=$(find . -name "*.apk" -path "*release*" | head -1)
+          AAB=$(find . -name "*.aab" -path "*release*" | head -1)
+          echo "APK: $APK"
+          echo "AAB: $AAB"
+          echo "apk_path=$APK" >> $GITHUB_OUTPUT
+          echo "aab_path=$AAB" >> $GITHUB_OUTPUT
+
+      - name: Upload APK artifact
+        if: steps.artifacts.outputs.apk_path != ''
         uses: actions/upload-artifact@v4
         with:
-          name: milkypot-funcionario-${{ github.event.inputs.versionName }}.apk
-          path: android-build/app-release-signed.apk
+          name: MilkyPot-Colaborador-Android-${{ github.event.inputs.versionName }}-apk
+          path: android-build/${{ steps.artifacts.outputs.apk_path }}
           if-no-files-found: warn
 
-      - name: Upload AAB (Play Store)
+      - name: Upload AAB artifact (Play Store)
+        if: steps.artifacts.outputs.aab_path != ''
         uses: actions/upload-artifact@v4
         with:
-          name: milkypot-funcionario-${{ github.event.inputs.versionName }}.aab
-          path: android-build/app-release-bundle.aab
+          name: MilkyPot-Colaborador-Android-${{ github.event.inputs.versionName }}-aab
+          path: android-build/${{ steps.artifacts.outputs.aab_path }}
           if-no-files-found: warn
+
+      - name: Rename for release
+        if: steps.artifacts.outputs.apk_path != ''
+        working-directory: android-build
+        run: |
+          cp "${{ steps.artifacts.outputs.apk_path }}" "MilkyPot-Colaborador-${{ github.event.inputs.versionName }}.apk" || true
+          [ -n "${{ steps.artifacts.outputs.aab_path }}" ] && cp "${{ steps.artifacts.outputs.aab_path }}" "MilkyPot-Colaborador-${{ github.event.inputs.versionName }}.aab" || true
+          ls -la *.apk *.aab 2>/dev/null
 
       - name: Create GitHub Release
-        if: success()
+        if: steps.artifacts.outputs.apk_path != ''
         uses: softprops/action-gh-release@v2
         with:
           tag_name: android-v${{ github.event.inputs.versionName }}-${{ github.event.inputs.versionCode }}
-          name: 'MilkyPot Funcionário Android v${{ github.event.inputs.versionName }}'
+          name: 'MilkyPot Colaborador Android v${{ github.event.inputs.versionName }}'
           body: |
-            APK Android instalável do Portal do Funcionário (TWA - Trusted Web Activity).
+            APK Android instalável do Portal do Colaborador (TWA - Trusted Web Activity).
 
             **Como instalar (qualquer Android):**
             1. Baixe o APK abaixo
@@ -120,15 +202,16 @@ jobs:
             **Para publicar na Play Store:** use o arquivo .AAB (App Bundle).
 
             **Funcionalidades:**
-            - Login com CPF + PIN
+            - Login com CPF + PIN via Cloud Function
             - Bater ponto com geolocalização e selfie
             - Push notifications via FCM
             - Espelho mensal, holerite, banco de horas, benefícios
             - Funciona offline
           files: |
-            android-build/app-release-signed.apk
-            android-build/app-release-bundle.aab
+            android-build/MilkyPot-Colaborador-*.apk
+            android-build/MilkyPot-Colaborador-*.aab
           draft: false
           prerelease: false
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
