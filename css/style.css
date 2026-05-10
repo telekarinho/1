@@ -3,6 +3,40 @@
    Main Stylesheet
    ============================================ */
 
+/* =====================================================================
+   ACESSIBILIDADE — focus outline universal (audit recommendation).
+   Antes: apenas 11 ocorrencias :focus/outline em 4974 linhas → keyboard
+   nav invisivel. Agora: outline universal pra qualquer interagivel.
+   ===================================================================== */
+:focus-visible {
+    outline: 3px solid #FFD54F;
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+    outline: 3px solid #FFD54F;
+    outline-offset: 2px;
+}
+
+/* Color-scheme hint pra Chrome/Safari renderizarem scrollbar/form correto */
+html { color-scheme: light; }
+
+/* Movimentos reduzidos — respeita preferencia de acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 /* CSS Variables - Dreamy Pastel Rainbow Theme (from logo) */
 :root {
     --pink: #90CAF9;
