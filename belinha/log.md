@@ -2,6 +2,51 @@
 
 ---
 
+## Ciclo #179 — 2026-05-10
+
+**Área:** SEO — Landing page `potinho-junino-londrina.html` (edição limitada junho 2026)
+
+**Contexto:** Ciclo #178 apontou este como próximo passo. A landing page estava bloqueada por confirmação de ingredientes do operador (prazo 30/05), mas o ciclo #178 validou que o esqueleto pode ser commitado agora com placeholders claros — o operador pode preencher/ajustar sem risco de publicar informação incorreta, pois os comentários `<!-- TODO operador -->` identificam o que precisa de confirmação.
+
+**O que pesquisou/analisou:**
+- Releitura de `potinho-junino-2026-contraprogramacao.md` — 3 variantes do produto (Versão A Clássico, B Mel & Cocada, C Fit)
+- Releitura de `potinho-ninho-londrina.html` — template estrutural completo (head SEO, schema, CSS, HTML)
+- Releitura de `sitemap.xml` — padrão de entrada existente para landing pages SEO locais
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `potinho-junino-londrina.html` | NOVO — 458 linhas. Landing page SEO completa: meta tags, OG, Twitter Card, Schema.org (Product + FoodEstablishment + BreadcrumbList + FAQPage), CSS temático festa junina (amber/orange), 3 variantes do produto com placeholders de operador, toppings livres, tamanhos P/M/G, como pedir, localização, CTA WA |
+| `sitemap.xml` | ATUALIZADO — entrada adicionada com `priority 0.9` (urgência pré-17/06), `changefreq weekly`, image caption otimizada para busca local |
+
+**Detalhes técnicos:**
+- **Title:** "Potinho Junino em Londrina — Edição Limitada Junho | MilkyPot Muffato" (63 chars)
+- **Meta description:** 156 chars, inclui keyword principal + CTA + localização
+- **Keywords:** potinho junino londrina, sobremesa festa junina londrina, potinho personalizado londrina, etc.
+- **Schema Product:** `availability: LimitedAvailability`, `priceValidUntil: 2026-06-30`, SKU `POTINHO-JUNINO-LDN-2026`
+- **FAQPage:** 6 perguntas com rich results — inclui Q sobre diferença de sorvete em balança (contraprogramação TheBest sem nomear concorrente)
+- **Canonical:** `https://milkypot.com/potinho-junino-londrina.html`
+- **Sitemap priority 0.9:** acima das outras landing pages (0.8) pelo caráter sazonal urgente
+- **Placeholders de operador** marcados com `<!-- TODO operador: ... -->` e texto visual na UI ("Disponibilidade sujeita a estoque — confirme pelo WA")
+- **CSS tema junino:** background warm amber/cream, price-badge dourado, accent amber #F59E0B — mantém identidade MilkyPot mas com calor junino
+
+**Commit:** `641cf50`
+
+**Próximo passo sugerido:**
+- **Ciclo #180 — Conversão:** Script WA de upsell variantes B e C do Potinho Junino para atendente sugerir no PDV (prescrição ciclo #178, ainda sem arquivo)
+- **Ciclo #181 — Conteúdo:** Caption + conceito foto editorial Potinho Junino (sex 19/06 — prescrito no `semana9.md`, slot vazio)
+- **Ciclo #182 — SEO:** Adicionar link para `potinho-junino-londrina.html` em `index.html` e `cardapio.html` para autoridade interna
+- **Operador:** Confirmar ingredientes Potinho Junino até **30/05** ⚠️ URGENTE (20 dias)
+- **Operador:** Confirmar disponibilidade cocada + mel (Versão B) antes de **13/06** ⚠️
+- **Operador:** Configurar keyword `JUNINA26` no WA Business até **06/06** ⚠️
+- **Operador:** Google Search Console — solicitar indexação do sitemap.xml após confirmar landing ativa
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #179 | 2026-05-10_
+
+---
+
 ## Ciclo #176 — 2026-05-09
 
 **Área:** Concorrentes — Refetch pré-Festa Junina (correção crítica)
