@@ -1,6 +1,7 @@
 # Milky Moo — Análise Competitiva
 
-**Última atualização:** 2026-05-09 (Ciclo #176 — CORREÇÃO análise Festa Junina: "Pede Mooleca" collab Nestlé confirmado + radar junho revisado)
+**Última atualização:** 2026-05-10 (Ciclo #187 — Collab O Boticário "Carameluda" + 180ml Day Part + radar São João sem campanha anunciada)
+**Fontes ciclo #187:** auroracultural.com, mercadoeconsumo.com.br, meioemensagem.com.br, centraldovarejo.com.br, goinfoco.com.br, milkymoo.com.br (cardápio), WebSearch
 **Fontes ciclo #167:** clubeamostrasgratis.com, auroracultural.com, mercadoeconsumo.com.br, meioemensagem.com.br, barato.com.br, TikTok @guiadois, franquiadesorvete.com
 **Fontes ciclo #160:** gkpb.com.br, mercadoeconsumo.com.br, auroracultural.com, em.com.br, foodbizbrasil.com, centraldovarejo.com.br, meioemensagem.com.br, sopacultural.com, creativosbr.com.br
 **Fontes ciclo #151:** cadastrarnapromocao.com.br, clubeamostrasgratis.com, portalg.com.br, gkpb.com.br, TikTok @casaldasdicasrp, TikTok @dicasemmanauss
@@ -804,3 +805,73 @@ _Belinha — Ciclo #167 | 2026-05-09_
 **Fontes ciclo #176:** gkpb.com.br, publicitarioscriativos.com, mapadasfranquias.com.br, exame.com
 
 _Belinha — Ciclo #176 | 2026-05-09_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #187 — 2026-05-10
+
+### Dois Movimentos Recentes Confirmados (Abril–Maio 2026)
+
+#### 1. Novo Tamanho: 180ml "Day Part" (lançado 30/04/2026)
+
+- **Produto:** Milkshake 180ml — primeiro desse tamanho no portfólio MilkyMoo
+- **Preço:** a partir de R$ 12,90 **apenas até 13h59** (mecânica Day Part — impulso pós-almoço)
+- **Disponibilidade:** todos os sabores exceto premium e alcoólicos
+- **Estratégia:** criação de frente de consumo no horário de almoço/pós-almoço — ticket menor, rotatividade maior
+- **Fonte:** auroracultural.com
+
+#### 2. Collab O Boticário × Milky Moo — "Carameluda" (Abril–Maio 2026)
+
+- **Produto:** Milkshake "Carameluda" — sorvete de baunilha + recheio de caramelo salgado + doce de leite + biscoitos de especiarias
+- **Inspiração:** fragrância "Cuide-se Bem Deleite Caramelizado" de O Boticário
+- **Tamanhos:** 300ml / 500ml / 700ml
+- **Preço:** a partir de R$ 25,00 (300ml)
+- **Período:** lançado em abril 2026, disponível **até o fim de maio 2026**
+- **Posicionamento da campanha:** "A collab das vaquinhas" — O Boticário transforma fragrância em milkshake
+- **Canal:** todas as unidades MilkyMoo do Brasil
+- **Fonte:** mercadoeconsumo.com.br, goinfoco.com.br, centraldovarejo.com.br
+
+#### 3. São João 2026 — Nenhuma Campanha Anunciada (em 10/05)
+
+- Pesquisa ativa em WebSearch e redes: **nenhuma campanha temática São João/Festa Junina** encontrada para MilkyMoo até a data deste ciclo
+- Padrão histórico (ciclo #176) sugere provável "Pede Mooleca 2026" com collab Nestlé na 2ª–3ª semana de junho
+- **Janela estratégica aberta:** MilkyPot pode ser o PRIMEIRO a anunciar conteúdo São João no segmento de sobremesas personalizadas em Londrina
+
+---
+
+### Atualização do Radar de Preços MilkyMoo (Maio 2026)
+
+| Tamanho | Faixa de Preço | Observação |
+|---------|----------------|------------|
+| 180ml | A partir de R$ 12,90 | **Apenas até 13h59 — Day Part** |
+| 300ml | A partir de R$ 25,00 | Preço confirmado (collab Carameluda) |
+| 500ml | ~R$ 30–35 | Estimativa (padrão anterior) |
+| 700ml | ~R$ 40–50 | Estimativa (padrão anterior) |
+
+**Referência para MilkyPot:** o 180ml a R$12,90 é uma jogada de baixo ticket para impulso. MilkyPot poderia explorar "mini potinho" ou "potinho duplo surpresa" como entrada de ticket nos dias de semana.
+
+---
+
+### Análise Estratégica — Onda do Caramelo
+
+> A collab O Boticário "Carameluda" é sinal de mercado relevante: **caramelo salgado é tendência validada por marca de consumo massivo** (O Boticário tem 67M+ clientes ativos). Encerra em maio — deixa um vácuo no tema.
+
+**Implicação direta:** O Potinho Caramelado (previsto para julho/semana 11 no roadmap MilkyPot) pega o timing da onda pós-collab — o paladar do público já foi educado pelo MilkyMoo/Boticário, MilkyPot entrega a versão personalizada, com nome, com ovelhinha, sem vencer validade. **Estratégia de "follow the trend, own the personalization".**
+
+---
+
+### Mapa Competitivo Atualizado — Maio 2026
+
+| Atributo | MilkyMoo | MilkyPot |
+|---|---|---|
+| Produto atual em destaque | Carameluda (R$25+) — fim de maio | Potinho base Ninho/Açaí — base fixa |
+| Inovação de formato | 180ml Day Part (R$12,90 até 13h59) | Mini potinho não disponível ainda |
+| Collab/Licenças | O Boticário, Nestlé, HTTYD — recorrente | Nenhuma — diferencial na personalização |
+| São João | Sem anúncio (padrão: lança semana 9–10) | Potinho Junino — janela para ser PRIMEIRO |
+| Canal | iFood + delivery próprio | WhatsApp own — sem comissão |
+| Personalização | Nenhuma — produto fixo padronizado | Nome no potinho, ovelhinha, WA |
+| Caramelo | Encerrando maio (Carameluda) | Julho — Potinho Caramelado planejado |
+
+**Fontes ciclo #187:** auroracultural.com, mercadoeconsumo.com.br, centraldovarejo.com.br, goinfoco.com.br, meioemensagem.com.br, milkymoo.com.br
+
+_Belinha — Ciclo #187 | 2026-05-10_

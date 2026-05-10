@@ -1,6 +1,7 @@
 # The Best Açaí — Análise Competitiva
 
-**Última atualização:** 2026-05-09 (Ciclo #176 — CORREÇÃO análise Festa Junina: Festival Junino 4 sorvetes temáticos confirmado + mapa ameaça revisado)
+**Última atualização:** 2026-05-10 (Ciclo #187 — Expansão 900→1000 unidades + Londrina Gleba Palhano confirmado + São João sem campanha anunciada)
+**Fontes ciclo #187:** gomesaltimari.com.br, mercadoeconsumo.com.br, meioemensagem.com.br, exame.com, thebestacai.com.br, WebSearch
 **Fontes ciclo #167:** mercadoeconsumo.com.br, soubh.uai.com.br, TikTok @marceladegusta, vipzinho.com.br, franquias.portaldofranchising.com.br, foodbizbrasil.com
 **Fontes ciclo #151:** vipzinho.com.br, foodbizbrasil.com, suafranquia.com, odiariodemaringa.com.br, dezminutos.com.br
 **Fontes anteriores:** ifood.com.br, gazetadopovo.com.br, temlondrina.com.br, tiktok @marceladegusta, portaldofranchising.com.br, foodbizbrasil.com, suafranquia.com, franquiadeacai.com, jornaluniao.com.br, exame.com, braziljournal.com, portaltela.com, mercadoeconsumo.com.br, aurorashopping.com.br
@@ -756,3 +757,60 @@ _Belinha — Ciclo #167 | 2026-05-09_
 **Fontes ciclo #176:** folhadecuritiba.com.br, thebestacai.com.br/blog, abcdacomunicacao.com.br
 
 _Belinha — Ciclo #176 | 2026-05-09_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #187 — 2026-05-10
+
+### Escala Nacional e Londrina (Confirmado 2026)
+
+**Escala nacional:**
+- **900+ unidades** operando no Brasil + Paraguai (2025)
+- **Meta 2026:** 1.000 unidades + R$ 1,5 bilhão de faturamento (vs. R$1B em 2025)
+- Expansão com ~300 novas franquias previstas em 2026
+- Estratégia EUA: modelo inédito de self-service para mercado americano em piloto
+
+**Londrina — unidade Gleba Palhano:**
+- Localização confirmada: **Rua Caracas, 159 — Gleba Palhano** (10ª unidade, a maior)
+- Área: +300 m²
+- Cardápio: 12 sabores de açaí + 24 sabores de sorvete + 40+ toppings
+- Preço: **R$ 6,29 por 100g** (self-service — cliente monta o próprio pote)
+- Referência de preço: 300g ≈ R$ 18,87 | 500g ≈ R$ 31,45 (sem topping extra)
+
+> **Praça diferente:** Gleba Palhano é bairro de alta renda (~8km do Muffato Quintino). Sobreposição de público com MilkyPot é baixa — cliente típico The Best Palhano ≠ cliente típico Muffato Quintino. Ameaça direta segue sendo Catuaí Shopping (mencionado em ciclo #176).
+
+**Cadência de novidades:**
+- Novo sabor lançado a cada **~2 meses** (estratégia de recorrência e novidade)
+- Campanhas sazonais confirmadas: Páscoa (ovo de Páscoa interativo), Waffles Belgas, Festival Junino (4 sabores — ciclo #176)
+- Micro-influencers por região como canal primário de awareness
+
+### São João 2026 — Sem Campanha Anunciada (em 10/05)
+
+- Pesquisa ativa em WebSearch: **nenhuma campanha específica São João 2026** encontrada para The Best Açaí até esta data
+- Padrão histórico (ciclo #176): "Festival Junino" com 4 sorvetes temáticos regionais → provável repetição
+- **Janela estratégica para MilkyPot:** potinho nomeado + ovelhinha de chapéu de palha = experiência que The Best não consegue replicar no modelo self-service
+
+### Tabela de Preços Atualizada — The Best Londrina
+
+| Item | Preço | Modelo |
+|------|-------|--------|
+| Açaí (por 100g) | R$ 6,29 | Self-service — cliente se serve |
+| Pote 300g | ~R$ 18,87 | Calculado (sem topping pago extra) |
+| Pote 500g | ~R$ 31,45 | Calculado |
+| Pote 1L (promo histórica) | R$ 17,50 (promoção) | Via Cidade Oferta — preço promocional eventual |
+
+**Comparativo de experiência vs. MilkyPot:**
+
+| Critério | The Best Açaí Londrina | MilkyPot Muffato |
+|----------|------------------------|------------------|
+| Formato | Self-service anônimo | Feito na hora pelo operador |
+| Personalização | Nenhuma — cliente monta | Nome no potinho + ovelhinha |
+| Preço entrada | ~R$18,87 (300g) | A confirmar (operador) |
+| Praça | Gleba Palhano (~8km) | Muffato Quintino |
+| Canal extra | Rappi / iFood | WhatsApp own |
+| São João 2026 | Sem campanha anunciada | Potinho Junino — pode ser PRIMEIRO |
+| Mascote/narrativa | Nenhum | Ovelhinha chapéu de palha |
+
+**Fontes ciclo #187:** gomesaltimari.com.br, mercadoeconsumo.com.br, exame.com, thebestacai.com.br, cidadeoferta.com.br, WebSearch
+
+_Belinha — Ciclo #187 | 2026-05-10_
