@@ -2,6 +2,50 @@
 
 ---
 
+## Ciclo #189 — 2026-05-11
+
+**Área:** Conteúdo — Brief reveal Potinho Caramelado (01/07, semana 11)
+
+**Contexto:** Continuidade direta do ciclo #188 (encerramento Potinho Junino 30/06). A comunicação do 30/06 encerra com "amanhã tem coisa nova 🐑✨" — o público está ativamente esperando a novidade no dia 01/07. O Potinho Caramelado (caramelo + creme de Ninho + granola crocante) preenche o vazio pós-São João e aproveita a onda do caramelo validada pela collab MilkyMoo "Carameluda" (encerrada em maio — sem concorrência direta em julho).
+
+**O que pesquisou/analisou:**
+- Revisou `encerramento-potinho-junino-30jun.md` para entender o gancho narrativo ("amanhã tem coisa nova") e garantir continuidade
+- Revisou log ciclo #187 — descoberta MilkyMoo "Carameluda" expirou em maio; timing do Potinho Caramelado em julho é estrategicamente sólido e sem concorrência direta no segmento potinho
+- Verificou que nenhum arquivo em `belinha/content/` cobria o reveal de 01/07
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reveal-potinho-caramelado-01jul.md` | NOVO — brief completo de reveal |
+
+**Detalhes do brief criado:**
+- **Checklist de produção** 10 ações escalonadas (30/06 noite → 01/07 21h) com versão mínima viável
+- **Post feed** completo com especificação de arte (ovelhinha surpresa, fundo dourado-mel), caption longa Instagram (~200 palavras) + versão curta TikTok/Stories
+- **5 Stories** escalonados 09h30–21h: reveal → ingrediente em câmera lenta → CTA WA → urgência suave → encerramento do dia com UGC
+- **WA broadcast lote A** (clientes ativos 30 dias, 14h) + **lote B** (reativação 31–90 dias, 19h) com templates prontos e keyword "CARAMELADO"
+- **Reel 15s** roteiro completo em 4 cenas com indicação de áudio
+- **KPIs** 7 métricas com metas numéricas e como medir
+- **Tabela de posicionamento** vs. MilkyMoo "Carameluda" (formato, base, granola, preço, disponibilidade)
+- **Arco narrativo** 01–07/07 com próximos passos pós-reveal
+- **Dependências críticas** (confirmar com operador até 20/06)
+
+**Commit:** `cb67926`
+
+**Próximo passo sugerido:**
+- **Ciclo #190 — UX:** `cardapio.css` (21K) é orphaned — nunca carregado por nenhum HTML. Avaliar: deletar (0 dependências confirmadas ciclo #186) ou incorporar ao `style.css`. Limpa ~21K do repo.
+- **Ciclo #191 — Conteúdo:** Brief consolidação Potinho Caramelado (02–07/07) — UGC, guia de toppings, 1 semana do lançamento
+- **Ciclo #192 — SEO:** Sitemap.xml + robots.txt — verificar cobertura páginas novas; Google Search Console indexação pendente desde ciclo #148
+- **Operador:** Confirmar ingredientes + naming "Potinho Junino" até **30/05** ⚠️ URGENTE (bloqueador de todo o arco São João)
+- **Operador:** Confirmar calda de caramelo + granola para Potinho Caramelado até **20/06**
+- **Operador:** Configurar keyword `CARAMELADO` no WA Business até **25/06**
+- **Operador:** Google Search Console — solicitar indexação sitemap.xml (pendente ciclo #148)
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #189 | 2026-05-11_
+
+---
+
 ## Ciclo #188 — 2026-05-10
 
 **Área:** Conversão — Brief encerramento Potinho Junino (30/06) + mecânica carimbo duplo + ponte narrativa Potinho Caramelado
