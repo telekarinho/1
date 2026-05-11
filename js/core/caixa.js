@@ -496,10 +496,13 @@ const Caixa = (function () {
         }
 
         // Trigger Automated Report via Cloud Functions
+        // Bug reportado: email nao chegou ao fechar caixa de "usuario teste".
+        // Diagnostico adicionado pra capturar causa (token null? api down?
+        // role incompativel?). Resultado vai pra audit log + console.
         try {
             if (typeof CloudFunctions !== 'undefined' && CloudFunctions.sendClosingReport) {
                 const session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
-                CloudFunctions.sendClosingReport(franchiseId, {
+                const reportPayload = {
                     operatorName: session ? session.name : 'Operador Desconhecido',
                     operatorEmail: session ? session.email : '',
                     valorContado: valorContado,
@@ -510,7 +513,33 @@ const Caixa = (function () {
                     vendasMes: vendasMes,
                     pedidosMes: pedidosMes,
                     trocoProximoDia: TROCO_PADRAO
-                });
+                };
+                console.log('[caixa.closeShift] disparando sendClosingReport...', { franchiseId, role: session && session.role });
+                Promise.resolve(CloudFunctions.sendClosingReport(franchiseId, reportPayload))
+                    .then(function(result) {
+                        console.log('[caixa.closeShift] sendClosingReport result:', result);
+                        try {
+                            audit('CAIXA_CLOSING_EMAIL_RESULT', franchiseId, {
+                                success: !!(result && result.success),
+                                deduped: !!(result && result.deduped),
+                                error: result && result.error,
+                                role: session && session.role
+                            });
+                        } catch(_) {}
+                        if (!result || result.success === false) {
+                            console.warn('⚠️ Email de fechamento NAO foi enviado:', result);
+                        }
+                    })
+                    .catch(function(err) {
+                        console.error('[caixa.closeShift] sendClosingReport erro:', err);
+                        try {
+                            audit('CAIXA_CLOSING_EMAIL_FAILED', franchiseId, {
+                                error: String(err && err.message || err)
+                            });
+                        } catch(_) {}
+                    });
+            } else {
+                console.warn('[caixa.closeShift] CloudFunctions.sendClosingReport indisponivel');
             }
         } catch (e) {
             console.error('Falha ao acionar CloudFunctions (sendClosingReport):', e);

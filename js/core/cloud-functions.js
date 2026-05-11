@@ -66,9 +66,24 @@ const CloudFunctions = {
             name === 'claimTestSession' ||
             name === 'setSystemMode' ||
             name === 'getSystemMode' ||
-            name === 'saveChecklistItem'
+            name === 'saveChecklistItem' ||
+            // sendClosingReport: foi migrada pro Firebase (dedup + vendas do mes +
+            // remove comissao). Versao PHP em api.milkypot.com nao tem essas
+            // mudancas — manter ela so como fallback se Firebase falhar.
+            name === 'sendClosingReport' ||
+            name === 'manualFirestoreBackup'
         ) {
-            return this._callFirebaseDirect(name, data);
+            // Diagnostico extra pra debugar emails nao enviados
+            console.log('[CloudFunctions] -> Firebase direto:', name);
+            const fbResult = await this._callFirebaseDirect(name, data);
+            // Se Firebase falhou (provavel: staff sem Auth), tenta PHP como fallback
+            if (fbResult && fbResult.success === false && this._apiUrl &&
+                (fbResult.error === 'Firebase Functions SDK nao carregado' ||
+                 /unauthenticated|401|Autenticacao necessaria/i.test(fbResult.error || ''))) {
+                console.warn('[CloudFunctions] Firebase falhou em', name, '→ tentando PHP fallback:', fbResult.error);
+                return this._callVercel(name, data);
+            }
+            return fbResult;
         }
 
         // Se usando Vercel API
