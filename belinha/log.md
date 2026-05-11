@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #197 — 2026-05-11
+
+**Área:** Conteúdo — Programa "Quarta Feliz" (WA semanal) + contracampanha "Dia da Vaca" (08/07/2026)
+
+**Contexto:** Ciclo #196 revelou que o MilkyMoo usa "Quarta da Moo" (50% OFF toda quarta via app) como principal mecânica de retenção semanal. MilkyPot não tem app — precisa de equivalente via WA. Além disso, o "Dia da Vaca" do MilkyMoo (08/07) é oportunidade de piggyback cultural com a ovelhinha sem citar o concorrente. Esses dois tópicos foram agrupados por serem a mesma resposta estratégica: criar rituais semanais de engajamento com a Belinha como protagonista.
+
+**O que pesquisou/analisou:**
+- Intel ciclo #196: "Quarta da Moo" = toda quarta, 50% OFF em sabores selecionados, app exclusivo
+- Intel ciclo #196: "Dia da Vaca" = 08/07, cupom "COWERA", Pintadinha 300ml R$9,90
+- Diagnóstico de posicionamento: MilkyMoo treina cliente a esperar desconto (dependência de preço) vs MilkyPot treina cliente a esperar surpresa (valor percebido > valor de face)
+- Calendário junho-julho: 24/06 (São João), 01/07 (Potinho Caramelado), 08/07 (Dia da Vaca), alinhados com rotação Quarta Feliz
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/quarta-feliz-dia-da-vaca.md` | NOVO — 273 linhas — programa completo |
+
+**Detalhes do conteúdo criado:**
+- **Tabela comparativa** MilkyMoo vs MilkyPot (canal, mecânica, percepção)
+- **4 tipos de Quarta Feliz** em rotação mensal: Semana A (Topping Surpresa), Semana B (Desafio UGC), Semana C (Recompensa 2x carimbos), Semana D (Ovelhinha livre)
+- **Mensagens prontas** para cada tipo (copiar-colar no WA Business)
+- **Calendário Quarta Feliz** junho-julho com sugestão de surpresa para cada data
+- **Integração estratégica 01/07:** Quarta do Caramelo = teaser do Potinho Caramelado (lançamento mesmo dia)
+- **Brief completo Dia da Vaca (08/07):** arte feed, caption principal (feeds + shorts), sequência 4 Stories (10h–19h), broadcast WA, KPIs, checklist de produção (preparar até 04/07)
+- **Regra de ouro:** NUNCA citar MilkyMoo pelo nome nas peças — piada funciona independente
+
+**Commit:** `30f4998`
+
+**Próximo passo sugerido:**
+- **Ciclo #198 — UX:** Auditoria `js/cardapio.js` (1050 linhas) — ciclo #193 corrigiu bug de bebidas × qty; verificar outros padrões inconsistentes de cálculo (ex: fidelidade, desconto, item bundle)
+- **Ciclo #199 — Conversão:** Script WA Business "Festival Junino" — keyword trigger + mensagem automática + checklist operacional pré-24/06
+- **Ciclo #200 (marco):** Auto-aprimoramento — releitura `belinha/log.md` completo + revisão `belinha/estrategia.md`
+- **Operador (URGENTE — prazo 30/05):** Confirmar ingredientes + naming "Potinho Junino" — afeta mensagens D+30 da onda 1
+- **Operador (URGENTE — prazo 25/05):** Executar guia Google Search Console (1 mês da inauguração)
+- **Operador:** Implementar Quarta Feliz como rotina — configurar lembrete toda terça pra preparar a mensagem
+- **Operador:** Briefar designer com arte do Dia da Vaca até 04/07
+
+_Belinha — Ciclo #197 | 2026-05-11_
+
+---
+
 ## Ciclo #196 — 2026-05-11
 
 **Área:** Concorrentes — Intel inverno/junho-julho 2026: MilkyMoo + The Best Açaí
