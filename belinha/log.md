@@ -2,6 +2,52 @@
 
 ---
 
+## Ciclo #194 — 2026-05-11
+
+**Área:** Conteúdo — Brief consolidação Potinho Caramelado 02–07/07/2026
+
+**Contexto:** Prescrito no ciclo #193 (e originado no roadmap do reveal-potinho-caramelado-01jul.md, ciclo #189). O reveal de 01/07 gerou o pico de atenção; a semana seguinte é a janela crítica de consolidação: transformar curiosidade em hábito, UGC dos primeiros clientes em prova social, e o produto novo em carro-chefe de julho. Semana 11–12 do calendário, coincide com férias escolares em plena atividade.
+
+**O que pesquisou/analisou:**
+- Releitura de `reveal-potinho-caramelado-01jul.md` (ciclo #189) — roadmap pós-reveal indicava: Story UGC (02/07), guia toppings (03/07), 1 semana (07/07)
+- Releitura de `pos-inauguracao-semana11.md` (ciclo #50) — bloco 02–04/07 existente mas superficial
+- Releitura de `pos-inauguracao-semana12.md` (ciclo #51) — contexto férias escolares + família
+- Releitura de `encerramento-potinho-junino-30jun.md` (ciclo #188) — confirmar arco narrativo completo
+- Identificado gap: nenhum brief dedicado cobria 02–07/07 com a profundidade necessária (scripts WA, KPIs diários, checklist operacional, variantes)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/consolidacao-potinho-caramelado-02-07jul.md` | NOVO — brief completo (492 linhas) |
+
+**Detalhes do conteúdo criado:**
+- **6 dias com calendário individual** (02/07 a 07/07): Stories escalonados, posts feed, enquetes
+- **Post feed educativo 03/07** — "Guia de toppings do Potinho Caramelado" (carrossel 5 slides + caption longa + versão TikTok)
+- **WA Broadcast reativação (06/07)** — segmento: viram o reveal mas não compraram D+5
+- **WA comemorativo 07/07** — benefício "CARAMELADO7" (topping extra) para quem comprou na 1ª semana
+- **2 templates WA adicionais** (`/caramelado7`, `/toppingsdocaram`)
+- **KPIs da semana** — 8 métricas com metas numéricas
+- **Arco narrativo visual** — de 30/06 a 08/07+
+- **Checklist de produção** — 10 itens escalonados por data/horário
+- **Notas operacionais** — 3 cenários de contingência (baixo UGC, baixa adesão, operador sem tempo)
+
+**Commit:** `3867b32`
+
+**Próximo passo sugerido:**
+- **Ciclo #195 — Conversão:** Estrutura de reativação D+30 para clientes da semana 1 (janela: 25/05–01/06) — clientes mais antigos que podem estar dormentes
+- **Ciclo #196 — Concorrentes:** Refetch MilkyMoo + TheBest (última atualização há 6+ ciclos — verificar posicionamento julho/inverno)
+- **Ciclo #197 — UX:** Auditoria `js/cardapio.js` restante (ciclo #193 corrigiu bug de bebidas — verificar se há outros padrões inconsistentes no arquivo de 1.050 linhas)
+- **Operador (AÇÃO IMEDIATA):** Executar guia `guia-google-search-console.md` — sitemap pendente desde ciclo #148
+- **Operador (AÇÃO IMEDIATA até 30/05):** Confirmar ingredientes + naming "Potinho Junino" ⚠️ URGENTE
+- **Operador:** Confirmar benefício "CARAMELADO7" antes de enviar WA em 07/07
+- **Operador:** Confirmar keyword `/caramelado7` no WA Business até 05/07
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #194 | 2026-05-11_
+
+---
+
 ## Ciclo #193 — 2026-05-11
 
 **Área:** Código/Performance — bug fix consistência de total com bebidas em `js/cardapio.js`
