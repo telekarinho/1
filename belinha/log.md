@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #190 — 2026-05-11
+
+**Área:** UX/Frontend — remoção de `css/cardapio.css` (arquivo orphaned confirmado)
+
+**Contexto:** Prescrito no roadmap ciclo #190 (log ciclo #186). Auditoria confirmou que `css/cardapio.css` (1.101 linhas, 21 KB) define 103 seletores `.cp-*` que eram usados pela versão antiga do fluxo de pedido (`js/cardapio.js`). Nenhuma página HTML carrega este arquivo via `<link rel="stylesheet">`. O `js/cardapio.js` (também orphaned, 1.050 linhas) foi documentado em `belinha/blockers.md` no ciclo #112 como dívida técnica pendente de decisão do operador — mantido no repo até autorização explícita de deleção.
+
+**O que pesquisou/analisou:**
+- `grep -rn "cardapio.css"` em todos os `.html`, `.js`, `.json`: **0 resultados**
+- `grep -rn 'src.*cardapio\.js'` em todos os `.html`: **0 resultados** (confirmado orphaned par)
+- Classes `.cp-*` verificadas: nenhuma aparece diretamente em nenhum HTML (o único uso é em `js/cardapio.js` que gera HTML dinamicamente, mas o arquivo JS nunca é carregado)
+- `sw.js`: `cardapio.css` não estava no precache (já havia sido removido ou nunca incluído)
+- Conclusão: arquivo é dead code 100% seguro para remoção
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `css/cardapio.css` | DELETADO — 21 KB / 1.101 linhas de CSS orphaned removidos do repositório |
+
+**Impacto:**
+- Repositório mais limpo: -21 KB de CSS morto
+- Nenhum impacto visual ou funcional em produção (arquivo nunca foi servido)
+- Reduz confusão para futuro dev que inspecionar `css/`: todos os arquivos CSS são agora carregados por pelo menos uma página
+
+**Próximo passo sugerido:**
+- **Ciclo #191 — Conversão:** WA broadcast de segunda-feira (semana 4) — reativação dos clientes da semana 1 e 2 que não voltaram. Template específico para envio em lote às 10h (antes de abrir às 14h).
+- **Ciclo #192 — UX:** Avaliar deleção de `js/cardapio.js` (1.050 linhas, blocker #6) — aguarda autorização do operador. Se autorizado, reduz mais 42 KB de dead code.
+- **Ciclo #193 — SEO:** Google Search Console indexação — pendente desde ciclo #148. Criar guia de passos para o operador.
+- **Operador (URGENTE):** Confirmar ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (URGENTE):** Confirmar naming "Potinho Junino" até **30/05/2026** ⚠️
+- **Operador:** Confirmar calda de caramelo + granola para Potinho Caramelado até **20/06**
+- **Operador:** `js/cardapio.js` — Opção A (deletar) ou Opção B (integrar)? Ver `belinha/blockers.md` #6
+
+_Belinha — Ciclo #190 | 2026-05-11_
+
+---
+
 ## Ciclo #189 — 2026-05-11
 
 **Área:** Conteúdo — Brief reveal Potinho Caramelado (01/07, semana 11)
