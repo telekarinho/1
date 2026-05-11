@@ -349,6 +349,18 @@ const Caixa = (function () {
         if (!r.success) return r;
         audit(AuditLog.EVENTS.CAIXA_OPENED, franchiseId, { valor: valorAbertura, turnoId: r.move.turnoId, motivoForaHorario: motivoForaHorario || null });
 
+        // SYNC CRITICO: forca push pra Firestore IMEDIATAMENTE pra que outros PCs
+        // vejam o caixa aberto. createMovement -> setCollection -> set dispara
+        // _writeToCloud em background, mas se a rede estiver lenta/listener
+        // ja tiver firado antes da escrita completar, outros PCs nao veem.
+        // forceSync(docId) faz um get+merge+set explicito.
+        try {
+            if (typeof DataStore !== 'undefined' && DataStore.forceSync) {
+                Promise.resolve(DataStore.forceSync('caixa_' + franchiseId))
+                    .catch(function(e){ console.warn('forceSync abertura falhou:', e && e.message); });
+            }
+        } catch (_) {}
+
         if (typeof Motivacional !== 'undefined' && Motivacional.toastCaixaAberto) {
             Motivacional.toastCaixaAberto();
         }
