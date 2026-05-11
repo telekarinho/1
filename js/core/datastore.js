@@ -55,6 +55,9 @@ const DataStore = {
                     // não mostra banner — reads públicos cobrem o caso de sync.
                     await self._attemptAnonymousAuth();
                 } else if (user) {
+                    // Usuario logou (real ou anon). Reset do one-shot flag pra
+                    // permitir re-tentativa de anon auth em futuro logout.
+                    self._anonAuthAttempted = false;
                     self._flushPendingWrites();
                     self._syncFromCloud();
                 }
@@ -69,12 +72,23 @@ const DataStore = {
     // Não cobre rules que checam .uid específico, mas pra collection 'datastore' rola.
     async _attemptAnonymousAuth() {
         if (!firebase || !firebase.auth) return false;
-        // Evita loop: tenta no máximo 1 vez por sessão
-        if (this._anonAuthAttempted) return false;
+        // Cooldown 30s entre tentativas (em vez de one-shot). Se sucesso,
+        // reseta. Permite retry quando Firebase responde com permission-denied
+        // em writes posteriores — antes ficava preso na primeira falha.
+        var now = Date.now();
+        if (this._anonAuthAttempted && now - (this._anonAuthAttemptedAt || 0) < 30000) {
+            return false;
+        }
         this._anonAuthAttempted = true;
+        this._anonAuthAttemptedAt = now;
         try {
             const result = await firebase.auth().signInAnonymously();
-            return !!(result && result.user);
+            if (result && result.user) {
+                // Sucesso — reset pra permitir retry se token expirar depois
+                this._anonAuthAttempted = false;
+                return true;
+            }
+            return false;
         } catch (e) {
             console.warn('signInAnonymously falhou:', e.code, e.message);
             return false;
@@ -542,88 +556,22 @@ const DataStore = {
         return null;
     },
 
-    // Lista de docs públicos por franquia — sync funciona SEM auth via per-doc gets
-    // (collection.get() exige rule de LIST que não temos pra unauth).
-    _publicSyncDocs() {
-        // Nao use Auth.getSession() aqui: se a sessao local estiver expirada,
-        // getSession pode redirecionar a tela. Sync publico precisa ser
-        // side-effect-free para nao derrubar o operador no PDV.
-        var fid = null;
+    // Fetch staff de UMA franquia publica — pro login do funcionario achar
+    // Doc: datastore/staff_<fid>. Allow read publico pelas rules.
+    async fetchPublicStaff(franchiseId) {
+        if (!this._ready || !this._db || !franchiseId) return null;
         try {
-            if (typeof Auth !== 'undefined' && Auth.getSessionRaw) {
-                fid = (Auth.getSessionRaw() || {}).franchiseId;
-            } else {
-                var raw = localStorage.getItem('mp_session');
-                fid = raw ? (JSON.parse(raw) || {}).franchiseId : null;
-            }
-        } catch (_) {}
-        if (!fid) return [];
-        return [
-            'orders_' + fid,
-            'caixa_' + fid,
-            'pdv_tabs_' + fid,
-            'finances_' + fid
-        ];
-    },
-
-    async _syncFromCloud() {
-        if (!this._ready || !this._db) return;
-
-        // CRÍTICO: anexa listeners e poll ANTES dos awaits do sync inicial.
-        // Se um await travar (rede lenta, Firestore offline, etc), os listeners
-        // ainda assim ficam ativos e o sync acontece via realtime/poll quando
-        // a rede normalizar. Isolation total das duas fases.
-        this._setupListenersAndPoll();
-
-        try {
-            // Priority 1: Check for catalog_config specifically for seeding (timeout 5s)
-            try {
-                const catalogDoc = await Promise.race([
-                    this._db.collection('datastore').doc('catalog_config').get(),
-                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 5s')), 5000))
-                ]);
-                if (!catalogDoc.exists && typeof CARDAPIO_CONFIG !== 'undefined') {
-                    console.log('🌱 Seed: Enviando configuração inicial do cardápio para o Firestore...');
-                    this.set('catalog_config', CARDAPIO_CONFIG);
-                }
-            } catch (e) {
-                console.warn('catalog_config sync ignorado:', e.code || e.message);
-            }
-
-            // PER-DOC reads — funciona sem auth pq cada doc tem allow read individual
-            // pelas patterns orders_*, caixa_*, etc. Collection.get() exigia LIST permission.
-            const docsToSync = this._publicSyncDocs();
-            let synced = 0;
-            for (const docId of docsToSync) {
-                try {
-                    const doc = await this._db.collection('datastore').doc(docId).get();
-                    if (doc.exists) {
-                        const merged = this._mergeListDoc(docId, doc.data().value);
-                        const cloudStr = merged.value;
-                        localStorage.setItem(this.PREFIX + docId, cloudStr);
-                        // SYNC INICIAL: se local tinha itens que o cloud não tinha (e.g. caixa
-                        // aberto offline), escreve de volta. Seguro aqui porque roda 1x só
-                        // por carregamento de página. Não causa loop: onSnapshot vai disparar
-                        // com o mesmo conteúdo → merge produz igual → localStr===cloudStr → sem loop.
-                        if (merged.changed) this._writeToCloud(docId, JSON.parse(cloudStr));
-                        synced++;
-                    } else if (this._isMergeableListDoc(docId)) {
-                        const localStr = localStorage.getItem(this.PREFIX + docId);
-                        if (localStr) this._writeToCloud(docId, JSON.parse(localStr));
-                    }
-                } catch (e) {
-                    console.warn('per-doc sync error', docId, e.message);
-                }
-            }
-            console.log(`☁️ Per-doc sync: ${synced}/${docsToSync.length} docs`);
-
-            this._syncDone = true;
-            window.dispatchEvent(new CustomEvent('mp_synced'));
-
+            const doc = await this._db.collection('datastore').doc('staff_' + franchiseId).get();
+            if (!doc.exists) return null;
+            const raw = doc.data().value;
+            const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            // Atualiza cache local pra acesso sincrono futuro
+            try { localStorage.setItem(this.PREFIX + 'staff_' + franchiseId, typeof raw === 'string' ? raw : JSON.stringify(data)); } catch(_){}
+            return data;
         } catch (e) {
-            console.warn('fetchPublicStaff error:', e);
+            console.warn('fetchPublicStaff error:', franchiseId, e.code || e.message);
+            return null;
         }
-        return null;
     },
 
     // Fetch staff de TODAS as franquias publicas — pro login do funcionario achar
@@ -982,13 +930,26 @@ const DataStore = {
     onOrdersChange(franchiseId, callback) {
         if (!this._ready || !this._db) return null;
         const key = franchiseId ? `orders_${franchiseId}` : 'orders';
+        const self = this;
         return this._db.collection('datastore').doc(key)
             .onSnapshot(doc => {
                 if (doc.exists) {
                     try {
-                        const data = JSON.parse(doc.data().value);
-                        localStorage.setItem(this.PREFIX + key, JSON.stringify(data));
-                        if (callback) callback(data);
+                        // CORRECAO: antes era overwrite direto (clobbing pedidos
+                        // locais offline). Agora MERGE pelo id antes de salvar
+                        // — preserva pedidos criados offline que ainda nao
+                        // chegaram no cloud. localOnlyCount>0 dispara writeback
+                        // unidirecional pra propagar pedidos novos.
+                        const merged = self._mergeListDoc(key, doc.data().value);
+                        const finalStr = merged.value;
+                        localStorage.setItem(self.PREFIX + key, finalStr);
+                        if (merged.localOnlyCount > 0) {
+                            try { self._writeToCloud(key, JSON.parse(finalStr)); } catch(_) {}
+                        }
+                        if (callback) {
+                            try { callback(JSON.parse(finalStr)); }
+                            catch (cbErr) { console.warn('onOrdersChange callback error:', cbErr); }
+                        }
                     } catch (e) {
                         console.warn('onOrdersChange parse error:', e);
                     }
