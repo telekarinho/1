@@ -5856,15 +5856,39 @@
             });
         }).catch(function(e){ console.warn('[PDV] SW failed:', e); });
 
-        // controllerchange = SW novo tomou controle. Reload imediato silencioso.
-        // Operador trabalhando vai ver a pagina recarregar sozinha quando deploy chega.
+        // controllerchange = SW novo tomou controle. Reload IMEDIATO so se for seguro.
+        // SEGURANCA: nunca reload se houver carrinho, modal aberto ou input focado.
+        // Re-tenta a cada 30s ate ser seguro. Operador NUNCA perde trabalho.
         var _hasReloaded = false;
-        navigator.serviceWorker.addEventListener('controllerchange', function(){
+        function isSafeToReload() {
+            try {
+                // Carrinho com items? Operador ta no meio de uma venda — adia.
+                if (typeof cart !== 'undefined' && cart && cart.length > 0) return false;
+                // Algum modal aberto?
+                if (document.querySelector('.caixa-modal-overlay')) return false;
+                if (document.querySelector('[id^="mp"][role="dialog"]')) return false;
+                if (document.getElementById('mpPaymentSelectModal')) return false;
+                // Input focado (digitando)?
+                var ae = document.activeElement;
+                if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable)) {
+                    if (ae.value && ae.value.length > 0) return false;
+                }
+            } catch (_) {}
+            return true;
+        }
+        function autoReloadWhenSafe(reason) {
             if (_hasReloaded) return;
+            if (!isSafeToReload()) {
+                console.log('[PDV] Reload adiado (carrinho/modal/input ativos):', reason);
+                setTimeout(function(){ autoReloadWhenSafe(reason); }, 30000);
+                return;
+            }
             _hasReloaded = true;
-            console.log('[PDV] Controle do SW mudou — recarregando automaticamente');
-            // Pequeno delay pra eventuais ops em vôo finalizarem (ex: write ja iniciado)
+            console.log('[PDV] Reload automatico:', reason);
             setTimeout(function(){ location.reload(); }, 500);
+        }
+        navigator.serviceWorker.addEventListener('controllerchange', function(){
+            autoReloadWhenSafe('controllerchange');
         });
 
         // Listener pra mensagens do SW (FORCE_RELOAD quando nova versão ativa).
@@ -5872,10 +5896,7 @@
         navigator.serviceWorker.addEventListener('message', function(e) {
             if (!e.data) return;
             if (e.data.type === 'FORCE_RELOAD' || e.data.type === 'NEW_VERSION_AVAILABLE') {
-                if (_hasReloaded) return;
-                _hasReloaded = true;
-                console.log('[PDV] Nova versão SW detectada, recarregando...');
-                location.reload();
+                autoReloadWhenSafe('SW message');
             }
         });
     }
