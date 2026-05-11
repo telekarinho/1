@@ -451,14 +451,24 @@ const DataStore = {
     },
 
     _mergeListDoc(docId, cloudStr) {
-        if (!this._isMergeableListDoc(docId)) return { value: cloudStr, changed: false };
+        if (!this._isMergeableListDoc(docId)) return { value: cloudStr, changed: false, localOnlyCount: 0 };
         try {
             const localStr = localStorage.getItem(this.PREFIX + docId);
             const cloudItems = cloudStr ? JSON.parse(cloudStr) : [];
             const localItems = localStr ? JSON.parse(localStr) : [];
             if (!Array.isArray(cloudItems) || !Array.isArray(localItems)) {
-                return { value: cloudStr, changed: false };
+                return { value: cloudStr, changed: false, localOnlyCount: 0 };
             }
+            // Count items local has by id that cloud doesn't — sao itens NOVOS
+            // criados localmente (ex: caixa aberto enquanto Firestore estava offline,
+            // pedido criado no PDV, etc) que precisam ser propagados pro cloud.
+            // Esse count habilita writeback condicional em listener/poll sem causar
+            // loop infinito multi-PC: writeback so dispara quando ha extras locais.
+            const cloudIds = new Set();
+            cloudItems.forEach(it => { if (it && it.id) cloudIds.add(it.id); });
+            let localOnlyCount = 0;
+            localItems.forEach(it => { if (it && it.id && !cloudIds.has(it.id)) localOnlyCount++; });
+
             const byId = {};
             const self = this;
             cloudItems.concat(localItems).forEach(item => {
@@ -470,10 +480,10 @@ const DataStore = {
                 return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
             });
             const mergedStr = JSON.stringify(merged);
-            return { value: mergedStr, changed: mergedStr !== cloudStr };
+            return { value: mergedStr, changed: mergedStr !== cloudStr, localOnlyCount };
         } catch (e) {
             console.warn('merge ' + docId + ' ignorado:', e.message || e);
-            return { value: cloudStr, changed: false };
+            return { value: cloudStr, changed: false, localOnlyCount: 0 };
         }
     },
 
@@ -741,14 +751,28 @@ const DataStore = {
                             const localStr = localStorage.getItem(self.PREFIX + docId);
                             if (localStr !== cloudStr) {
                                 localStorage.setItem(self.PREFIX + docId, cloudStr);
-                                // FIX LOOP: NÃO auto-writeback (causa loop infinito multi-PC)
-                                // if (merged.changed) self._writeToCloud(docId, JSON.parse(cloudStr));
+                                // WRITEBACK CONDICIONAL: so push pro cloud quando o local tem
+                                // itens com id que o cloud nao tinha (caixa aberto offline,
+                                // pedido criado durante reconnect, etc). localOnlyCount>0
+                                // garante propagacao UNIDIRECIONAL — nunca causa loop multi-PC
+                                // porque quando todos os PCs convergem, localOnlyCount==0 em
+                                // todos eles e ninguem escreve mais.
+                                if (merged.localOnlyCount > 0) {
+                                    try { self._writeToCloud(docId, JSON.parse(cloudStr)); } catch(_) {}
+                                    console.log('🔼 Sync remoto + push local extras:', docId, '+' + merged.localOnlyCount);
+                                } else {
+                                    console.log('🔄 Sync remoto:', docId);
+                                }
                                 let parsed = null;
                                 try { parsed = JSON.parse(cloudStr); } catch(_) {}
                                 window.dispatchEvent(new CustomEvent('mp_remote_update', {
                                     detail: { key: docId, data: parsed }
                                 }));
-                                console.log('🔄 Sync remoto:', docId);
+                            }
+                            // Listener vivo = Firestore conectado. Flush pending writes
+                            // que podem ter ficado em fila por falhas anteriores.
+                            if (self._pendingWrites && self._pendingWrites.length > 0) {
+                                self._flushPendingWrites();
                             }
                         } catch (e) {
                             console.warn('Realtime sync error:', docId, e);
@@ -800,8 +824,12 @@ const DataStore = {
                             const localStr = localStorage.getItem(self.PREFIX + docId);
                             if (localStr !== cloudStr) {
                                 localStorage.setItem(self.PREFIX + docId, cloudStr);
-                                // FIX LOOP: NÃO auto-writeback (causa loop infinito multi-PC)
-                                // if (merged.changed) self._writeToCloud(docId, JSON.parse(cloudStr));
+                                // WRITEBACK CONDICIONAL: idem listener — so push pro cloud
+                                // quando o local tem extras (ex: caixa aberto offline).
+                                if (merged.localOnlyCount > 0) {
+                                    try { self._writeToCloud(docId, JSON.parse(cloudStr)); } catch(_) {}
+                                    console.log('🔼 Poll + push local extras:', docId, '+' + merged.localOnlyCount);
+                                }
                                 let parsed = null;
                                 try { parsed = JSON.parse(cloudStr); } catch (_) {}
                                 window.dispatchEvent(new CustomEvent('mp_remote_update', {
@@ -812,6 +840,10 @@ const DataStore = {
                         } catch (e) { /* ignora — próximo poll tenta */ }
                     }
                     if (changes > 0) console.log('🔁 Poll: ' + changes + ' doc(s) atualizado(s)');
+                    // Poll bem-sucedido = Firestore acessivel. Flush pending writes.
+                    if (self._pendingWrites && self._pendingWrites.length > 0) {
+                        self._flushPendingWrites();
+                    }
                 }, 10000); // 10s — fallback quando listener morrer/reconectar
             }
         } catch (e) {
@@ -821,13 +853,17 @@ const DataStore = {
 
     // Manual force sync — botão "Sincronizar Agora" no UI
     // PER-DOC gets pra não depender de LIST permission da collection.
-    async forceSync() {
+    // Aceita docId opcional pra sync targeted (ex: caixa_<fid> apos openShift).
+    async forceSync(onlyDocId) {
         if (!this._ready || !this._db) {
             console.warn('forceSync: Firestore não conectado');
             return { success: false, error: 'Firestore offline', code: 'no_db' };
         }
         try {
-            const docsToSync = this._publicSyncDocs();
+            const allDocs = this._publicSyncDocs();
+            const docsToSync = onlyDocId
+                ? allDocs.filter(d => d === onlyDocId)
+                : allDocs;
             let changes = 0;
             let total = 0;
             for (const docId of docsToSync) {
@@ -846,12 +882,13 @@ const DataStore = {
                     const localStr = localStorage.getItem(this.PREFIX + docId);
                     if (localStr !== cloudStr) {
                         localStorage.setItem(this.PREFIX + docId, cloudStr);
-                        // FIX LOOP: NÃO escreve de volta no cloud por iniciativa do listener.
-                        // Se merge produz resultado diferente do cloud, isso só significa que
-                        // local tinha algo a mais — esse algo será propagado no próximo
-                        // DataStore.set explícito do user (ordem nova, status, etc).
-                        // Auto-writeback aqui causava loop infinito entre PCs (4+ writes/s).
-                        // if (merged.changed) this._writeToCloud(docId, JSON.parse(cloudStr));
+                        // WRITEBACK CONDICIONAL: push local extras (itens com id que cloud
+                        // nao tinha — ex: caixa aberto offline). localOnlyCount=0 garante
+                        // que JSON ordering instability nao causa loop.
+                        if (merged.localOnlyCount > 0) {
+                            try { this._writeToCloud(docId, JSON.parse(cloudStr)); } catch(_) {}
+                            console.log('🔼 ForceSync + push local extras:', docId, '+' + merged.localOnlyCount);
+                        }
                         let parsed = null;
                         try { parsed = JSON.parse(cloudStr); } catch(_) {}
                         window.dispatchEvent(new CustomEvent('mp_remote_update', {
