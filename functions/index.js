@@ -2154,35 +2154,41 @@ exports.sendClosingReport = onCall({
     // Janela = dia local Brasilia. Se ja teve report enviado hoje pra
     // essa franquia, UPDATE o registro existente em vez de criar novo,
     // e SO envia novo email se passou > 5 minutos do anterior (rerun manual).
-    try {
-        const todayLocal = new Date(Date.now() - 3 * 3600 * 1000) // shift UTC->BRT
-            .toISOString().slice(0, 10);
-        const existingQuery = await db.collection("caixa_reports_sent")
-            .where("franchiseId", "==", franchiseId)
-            .where("dayKey", "==", todayLocal)
-            .orderBy("sentAt", "desc")
-            .limit(1)
-            .get();
-        if (!existingQuery.empty) {
-            const last = existingQuery.docs[0];
-            const lastSent = last.data().sentAt;
-            const lastMs = lastSent && lastSent.toMillis ? lastSent.toMillis() : 0;
-            const ageMs = Date.now() - lastMs;
-            // Se foi enviado < 5 minutos atras, NAO reenvia — apenas
-            // atualiza o snapshot dos dados (vence o ultimo)
-            if (ageMs < 5 * 60 * 1000) {
-                await last.ref.update({
-                    data: reportData,
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                    _skipped: true,
-                    _skippedReason: "dedup_window_5min"
-                });
-                console.log(`[sendClosingReport] DEDUP: ja enviado ha ${Math.round(ageMs/1000)}s — skipping`);
-                return { success: true, deduped: true, reason: "report_just_sent" };
+    // forceResend=true (vindo de Caixa.resendClosingReport) PULA o dedup:
+    // operador clicou explicitamente em "reenviar" porque o email nao chegou.
+    if (reportData.forceResend === true) {
+        console.log("[sendClosingReport] forceResend=true — bypassing dedup check");
+    } else {
+        try {
+            const todayLocal = new Date(Date.now() - 3 * 3600 * 1000) // shift UTC->BRT
+                .toISOString().slice(0, 10);
+            const existingQuery = await db.collection("caixa_reports_sent")
+                .where("franchiseId", "==", franchiseId)
+                .where("dayKey", "==", todayLocal)
+                .orderBy("sentAt", "desc")
+                .limit(1)
+                .get();
+            if (!existingQuery.empty) {
+                const last = existingQuery.docs[0];
+                const lastSent = last.data().sentAt;
+                const lastMs = lastSent && lastSent.toMillis ? lastSent.toMillis() : 0;
+                const ageMs = Date.now() - lastMs;
+                // Se foi enviado < 5 minutos atras, NAO reenvia — apenas
+                // atualiza o snapshot dos dados (vence o ultimo)
+                if (ageMs < 5 * 60 * 1000) {
+                    await last.ref.update({
+                        data: reportData,
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                        _skipped: true,
+                        _skippedReason: "dedup_window_5min"
+                    });
+                    console.log(`[sendClosingReport] DEDUP: ja enviado ha ${Math.round(ageMs/1000)}s — skipping`);
+                    return { success: true, deduped: true, reason: "report_just_sent" };
+                }
             }
+        } catch (dedupErr) {
+            console.warn("[sendClosingReport] dedup check failed (continuing):", dedupErr.message);
         }
-    } catch (dedupErr) {
-        console.warn("[sendClosingReport] dedup check failed (continuing):", dedupErr.message);
     }
 
     const password = GMAIL_APP_PASSWORD.value();
