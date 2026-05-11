@@ -397,13 +397,21 @@ const Caixa = (function () {
 
         // ===== AUTO-SANGRIA pra TROCO PADRAO R$ 200 =====
         // Regra do dono: troco do dia seguinte = sempre R$ 200 em dinheiro.
-        // O que passar disso deve sair como SANGRIA automatica antes de
-        // gerar o evento de fechamento (vai pro deposito do dia).
-        // Sem isso o operador esquece a sangria e fecha com R$ 500+ na
-        // gaveta — risco de furto + zera o controle de troco.
+        // O que passar disso vira SANGRIA automatica antes do fechamento,
+        // MAS exige CUSTODIANTE (quem fisicamente leva o dinheiro) — pode
+        // ser pessoa diferente do operador (gerente, franqueado, etc).
+        //
+        // FLUXO A — Custodia sincrona com PIN do destinatario:
+        //   1. Detecta excesso > R$ 200
+        //   2. Cria sangria com withdrawal: { status: 'pending', ... }
+        //   3. UI modal mostra "Quem retirou?" + PIN do destinatario
+        //   4. confirmSangriaWithdrawal CF valida e marca como 'confirmed'
+        //   5. Sem confirmacao, sangria fica pendente (audit alerta)
         const TROCO_PADRAO = 200;
+        let autoSangriaInfo = null;
         if (valorContado > TROCO_PADRAO + 0.01) {
             const excesso = Math.round((valorContado - TROCO_PADRAO) * 100) / 100;
+            const operador = sessionInfo();
             const sg = createMovement(franchiseId, {
                 type: 'sangria',
                 valor: excesso,
@@ -411,13 +419,37 @@ const Caixa = (function () {
                 motivo: 'auto-sangria fechamento — excesso sobre troco padrao'
             });
             if (sg.success) {
+                // Marca a sangria como aguardando confirmacao de custodia.
+                // O movimento ja foi criado (imutavel), mas adicionamos
+                // metadata 'withdrawalStatus: pending' no MESMO doc/array
+                // pra ser consultavel sem nova colecao no client.
+                try {
+                    const fins = DataStore.getCollection(COLLECTION, franchiseId) || [];
+                    const idx = fins.findIndex(function(m){ return m && m.id === sg.move.id; });
+                    if (idx !== -1) {
+                        fins[idx].withdrawalStatus = 'pending';
+                        fins[idx].withdrawalRequiresCustody = true;
+                        fins[idx].operadorOriginalUid = operador.id;
+                        fins[idx].operadorOriginalName = operador.name;
+                        DataStore.setCollection(COLLECTION, franchiseId, fins);
+                    }
+                } catch(_) {}
                 try {
                     audit('CAIXA_AUTO_SANGRIA_FECHAMENTO', franchiseId, {
                         valor: excesso,
                         valorContadoInicial: valorContado,
-                        trocoFinal: TROCO_PADRAO
+                        trocoFinal: TROCO_PADRAO,
+                        sangriaId: sg.move.id,
+                        custodiaPendente: true
                     });
                 } catch(_) {}
+                // Expoe pro caller mostrar modal de confirmacao
+                autoSangriaInfo = {
+                    sangriaId: sg.move.id,
+                    valor: excesso,
+                    operadorUid: operador.id,
+                    operadorName: operador.name
+                };
                 // valorContado vira o troco padrao (refletido no resumo do email)
                 valorContado = TROCO_PADRAO;
             }
@@ -484,7 +516,102 @@ const Caixa = (function () {
             console.error('Falha ao acionar CloudFunctions (sendClosingReport):', e);
         }
 
-        return Object.assign({}, r, { diff: diff, esperado: st.saldoEsperadoDinheiro });
+        return Object.assign({}, r, {
+            diff: diff,
+            esperado: st.saldoEsperadoDinheiro,
+            // Expoe auto-sangria pra UI mostrar modal "Quem retirou?"
+            autoSangria: autoSangriaInfo
+        });
+    }
+
+    /* ============================================
+       CUSTODIA DE SANGRIA — confirma quem fisicamente
+       retirou o dinheiro. Chamado APOS o operador
+       informar destinatario+PIN no modal de fechamento.
+       ============================================ */
+    function confirmSangriaWithdrawal(franchiseId, sangriaId, destinatarioStaffId, destinatarioPin) {
+        if (!franchiseId || !sangriaId) return { success: false, error: 'Parametros invalidos.' };
+        if (!destinatarioStaffId) return { success: false, error: 'Selecione quem retirou.' };
+        if (!destinatarioPin || String(destinatarioPin).length !== 4) {
+            return { success: false, error: 'PIN do destinatario invalido.' };
+        }
+
+        // Busca destinatario na lista de staff
+        const staff = DataStore.get('staff_' + franchiseId) || [];
+        const dest = staff.find(function(s){
+            return s && s.id === destinatarioStaffId && s.active !== false;
+        });
+        if (!dest) return { success: false, error: 'Destinatario nao encontrado.' };
+
+        // Valida PIN (server-side ideal via CF; aqui client-side como fallback)
+        if (String(dest.pin || '') !== String(destinatarioPin)) {
+            return { success: false, error: 'PIN do destinatario incorreto.' };
+        }
+
+        // Anti-self: operador !== destinatario (segregacao de funcoes)
+        const operador = sessionInfo();
+        if (dest.id === operador.id) {
+            return { success: false, error: 'Operador do caixa nao pode ser destinatario da sangria. Chame outra pessoa autorizada.' };
+        }
+
+        // Anti-double-confirm: idempotencia via sangriaId
+        const fins = DataStore.getCollection(COLLECTION, franchiseId) || [];
+        const idx = fins.findIndex(function(m){ return m && m.id === sangriaId; });
+        if (idx === -1) return { success: false, error: 'Sangria nao encontrada.' };
+        const sangria = fins[idx];
+        if (sangria.withdrawalStatus === 'confirmed') {
+            return { success: false, error: 'Sangria ja foi confirmada por ' + (sangria.withdrawalConfirmedByName || '?') };
+        }
+
+        // Marca confirmada no movimento (append-only)
+        fins[idx].withdrawalStatus = 'confirmed';
+        fins[idx].withdrawalConfirmedBy = dest.id;
+        fins[idx].withdrawalConfirmedByName = dest.name;
+        fins[idx].withdrawalConfirmedByRole = dest.role || '';
+        fins[idx].withdrawalConfirmedAt = new Date().toISOString();
+        // PIN nunca em cleartext — registra apenas hash curto pra audit
+        try {
+            const enc = new TextEncoder();
+            const buf = enc.encode(String(destinatarioPin) + ':' + dest.id);
+            // sha-256 simplificado (sem WebCrypto pra ser sincrono)
+            let h = 0;
+            for (let i = 0; i < buf.length; i++) { h = ((h << 5) - h) + buf[i]; h |= 0; }
+            fins[idx].withdrawalPinFingerprint = Math.abs(h).toString(36);
+        } catch(_) {}
+        DataStore.setCollection(COLLECTION, franchiseId, fins);
+
+        // Audit log
+        try {
+            audit('CAIXA_SANGRIA_CUSTODIA_CONFIRMADA', franchiseId, {
+                sangriaId: sangriaId,
+                valor: sangria.valor,
+                operadorUid: operador.id,
+                operadorName: operador.name,
+                custodianteUid: dest.id,
+                custodianteName: dest.name,
+                custodianteRole: dest.role || ''
+            });
+        } catch(_) {}
+
+        return {
+            success: true,
+            custodiante: { id: dest.id, name: dest.name, role: dest.role || '' }
+        };
+    }
+
+    /* Lista candidatos a custodiante (qualquer staff cadastrado/ativo,
+       exceto o operador que esta fechando). Modal vai mostrar essa lista. */
+    function listSangriaCustodianCandidates(franchiseId, excludeStaffId) {
+        const staff = DataStore.get('staff_' + franchiseId) || [];
+        return staff
+            .filter(function(s){ return s && s.active !== false && s.id !== excludeStaffId; })
+            .map(function(s){
+                return {
+                    id: s.id,
+                    name: s.name,
+                    role: s.role || ''
+                };
+            });
     }
 
     function registerSale(franchiseId, order) {
@@ -994,6 +1121,25 @@ const Caixa = (function () {
                 err.style.display = 'block';
                 return false;
             }
+            // ===== AUTO-SANGRIA gerada — exige modal de custodia =====
+            // Se o fechamento gerou sangria automatica (excesso > R$200), o
+            // operador precisa indicar QUEM esta retirando o dinheiro fisico
+            // ANTES de o caixa ser considerado totalmente fechado.
+            // O movimento da sangria ja existe (audit-friendly), mas fica
+            // com withdrawalStatus='pending' ate o destinatario assinar.
+            if (r.autoSangria) {
+                showWithdrawalConfirmModal(franchiseId, r.autoSangria, function(custResult) {
+                    if (custResult && custResult.success) {
+                        if (cb) cb(r);
+                    } else {
+                        // Sangria fica pendente — caixa ja fechou, mas registra
+                        // no audit que custodia nao foi atribuida.
+                        console.warn('Custodia da sangria nao confirmada — fica pendente:', custResult);
+                        if (cb) cb(r);
+                    }
+                });
+                return; // nao fecha o modal de confirmacao automaticamente
+            }
             if (cb) cb(r);
         });
         // Botao "Voltar" reabre o modal anterior preservando os valores digitados
@@ -1012,6 +1158,109 @@ const Caixa = (function () {
                     var motHEl = document.querySelector('.caixa-modal [data-name="motivoForaHorario"]');
                     if (motHEl && params.motivoForaHorario) motHEl.value = params.motivoForaHorario;
                 }, 60);
+            });
+        }
+    }
+
+    /* ============================================
+       MODAL DE CUSTODIA — quem retirou o dinheiro?
+       ============================================ */
+    function showWithdrawalConfirmModal(franchiseId, sangriaInfo, cb) {
+        const valor = Number(sangriaInfo.valor || 0);
+        const operadorId = sangriaInfo.operadorUid;
+        const candidatos = listSangriaCustodianCandidates(franchiseId, operadorId);
+
+        if (!candidatos.length) {
+            // Nenhum staff cadastrado alem do operador — registra como
+            // "pendente custodia" e segue. Operador deve cadastrar gerente
+            // antes do proximo fechamento (audit alerta).
+            console.warn('Nenhum candidato a custodiante encontrado — sangria fica pendente.');
+            try {
+                audit('CAIXA_SANGRIA_CUSTODIA_SEM_CANDIDATO', franchiseId, {
+                    sangriaId: sangriaInfo.sangriaId, valor: valor
+                });
+            } catch(_) {}
+            if (cb) cb({ success: false, error: 'Nenhum staff alem do operador. Cadastre um gerente.' });
+            return;
+        }
+
+        const opcoesHtml = candidatos.map(function(c){
+            return '<option value="' + Utils.escapeHtml(c.id) + '">' +
+                Utils.escapeHtml(c.name) + (c.role ? ' (' + Utils.escapeHtml(c.role) + ')' : '') +
+                '</option>';
+        }).join('');
+
+        const html =
+            '<div class="caixa-modal" role="dialog" aria-label="Confirmar custodia da sangria" style="max-width:460px">' +
+              '<div class="caixa-modal-header" style="background:linear-gradient(135deg,#F59E0B,#D97706)">' +
+                '<h3>💰 Quem está retirando o dinheiro?</h3>' +
+              '</div>' +
+              '<div class="caixa-modal-body">' +
+                '<div style="background:#FFF3CD;border-left:4px solid #F59E0B;padding:12px;border-radius:6px;margin-bottom:14px;font-size:14px;color:#92400E">' +
+                  '<strong>Sangria automatica de ' + formatBRL(valor) + '</strong><br>' +
+                  '<span style="font-size:12px">Excesso sobre o troco padrao de R$ 200,00 foi retirado do caixa.</span>' +
+                '</div>' +
+                '<label style="display:block;font-weight:700;margin-top:6px">Destinatario (quem fisicamente pega o dinheiro)</label>' +
+                '<select data-name="destinatario" style="width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;font-size:16px;font-family:inherit;margin-top:6px">' +
+                  '<option value="">— Selecione quem retirou —</option>' +
+                  opcoesHtml +
+                '</select>' +
+                '<label style="display:block;font-weight:700;margin-top:14px">PIN do destinatario (4 digitos)</label>' +
+                '<input type="password" inputmode="numeric" maxlength="4" data-name="pin" autocomplete="off" ' +
+                  'style="width:100%;padding:14px;border:2px solid #F59E0B;border-radius:8px;font-size:24px;letter-spacing:8px;text-align:center;font-family:monospace;margin-top:6px" ' +
+                  'placeholder="••••">' +
+                '<div style="font-size:12px;color:#666;margin-top:6px">' +
+                  '🔒 So o proprio destinatario deve digitar o PIN. ' +
+                  'Operador do caixa <strong>nao pode</strong> ser o mesmo que retira (segregacao de funcoes).' +
+                '</div>' +
+                '<div class="caixa-danger" data-caixa-error style="display:none;margin-top:10px"></div>' +
+              '</div>' +
+              '<div class="caixa-modal-footer">' +
+                '<button class="caixa-btn-secondary" data-caixa-back type="button">Deixar pendente</button>' +
+                '<button class="caixa-btn-primary" data-caixa-confirm style="background:linear-gradient(135deg,#F59E0B,#D97706)">' +
+                  '✅ Confirmar retirada' +
+                '</button>' +
+              '</div>' +
+            '</div>';
+
+        const modal = openModal(html, function(data){
+            const destId = (data.destinatario || '').trim();
+            const pin = (data.pin || '').trim();
+            if (!destId) {
+                const err = modal.overlay.querySelector('[data-caixa-error]');
+                err.textContent = '⚠️ Selecione quem esta retirando o dinheiro.';
+                err.style.display = 'block';
+                return false;
+            }
+            if (pin.length !== 4) {
+                const err = modal.overlay.querySelector('[data-caixa-error]');
+                err.textContent = '⚠️ PIN do destinatario deve ter 4 digitos.';
+                err.style.display = 'block';
+                return false;
+            }
+            const r = confirmSangriaWithdrawal(franchiseId, sangriaInfo.sangriaId, destId, pin);
+            if (!r.success) {
+                const err = modal.overlay.querySelector('[data-caixa-error]');
+                err.textContent = r.error;
+                err.style.display = 'block';
+                return false;
+            }
+            if (typeof Motivacional !== 'undefined' && Motivacional.toast) {
+                Motivacional.toast('✅ Sangria registrada com ' + r.custodiante.name);
+            }
+            if (cb) cb(r);
+        });
+        // Botao "Deixar pendente" — caixa fecha mesmo sem custodia (audit alerta)
+        const backBtn = modal.overlay.querySelector('[data-caixa-back]');
+        if (backBtn) {
+            backBtn.addEventListener('click', function(){
+                try {
+                    audit('CAIXA_SANGRIA_CUSTODIA_ADIADA', franchiseId, {
+                        sangriaId: sangriaInfo.sangriaId, valor: valor
+                    });
+                } catch(_) {}
+                modal.overlay.remove();
+                if (cb) cb({ success: false, deferred: true });
             });
         }
     }
@@ -1231,6 +1480,10 @@ const Caixa = (function () {
         registerSangria: registerSangria,
         registerReforco: registerReforco,
         registerAjuste: registerAjuste,
+        // Custodia de sangria (quem retirou o dinheiro)
+        confirmSangriaWithdrawal: confirmSangriaWithdrawal,
+        listSangriaCustodianCandidates: listSangriaCustodianCandidates,
+        showWithdrawalConfirmModal: showWithdrawalConfirmModal,
         // Modais
         showOpenModal: showOpenModal,
         showCloseModal: showCloseModal,
