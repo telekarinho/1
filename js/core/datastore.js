@@ -450,6 +450,45 @@ const DataStore = {
         );
     },
 
+    // ============================================
+    // Last-Writer-Wins keys (timestamp local)
+    // ============================================
+    // BUG GRAVE EM PRODUCAO: essas duas funcoes eram CHAMADAS em 3 lugares
+    // (set, _syncFromCloud) mas NUNCA foram definidas. Resultado:
+    // TypeError: this._isLocalTimestampedKey is not a function → engolido
+    // pelo try/catch do set() → _writeToCloud NUNCA EXECUTAVA → caixa,
+    // orders, pdv_tabs, finances, etc nao propagavam pro Firestore.
+    //
+    // Causa de TODO o bug de "abertura nao sincroniza entre PCs" reportado
+    // pelo operador (PR 557 + hotfix). O fix #555 (writeback condicional)
+    // mascarou parte do problema mas a raiz era essa exception fatal.
+    //
+    // Keys que entram aqui: docs que NAO sao array-mergeable mas precisam
+    // de last-writer-wins (local com timestamp mais novo nao deve ser
+    // sobrescrito pelo cloud — push pro cloud em vez de pull).
+    _isLocalTimestampedKey(key) {
+        if (!key) return false;
+        return key.indexOf('inventory_') === 0 ||
+               key.indexOf('staff_') === 0 ||
+               key.indexOf('recurring_expenses_') === 0 ||
+               key.indexOf('weekly_stock_audits_') === 0 ||
+               key.indexOf('purchase_orders_log_') === 0 ||
+               key.indexOf('picole_counts_') === 0;
+    },
+
+    // Compara timestamp do __local_ts (gravado no set()) com updatedAt
+    // do doc cloud. Retorna true se local foi modificado DEPOIS do cloud.
+    _localFresherThanCloud(docId, cloudDocSnap) {
+        try {
+            const localTs = parseInt(localStorage.getItem(this.PREFIX + docId + '__local_ts') || '0', 10);
+            if (!localTs) return false;
+            const cd = cloudDocSnap && cloudDocSnap.data ? cloudDocSnap.data() : null;
+            const cu = cd && cd.updatedAt;
+            const cloudMs = cu && cu.toMillis ? cu.toMillis() : 0;
+            return localTs > cloudMs;
+        } catch (_) { return false; }
+    },
+
     _mergeListDoc(docId, cloudStr) {
         if (!this._isMergeableListDoc(docId)) return { value: cloudStr, changed: false, localOnlyCount: 0 };
         try {
