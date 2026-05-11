@@ -253,9 +253,46 @@ const Caixa = (function () {
     }
 
     /* ============================================
+       Identificacao do DISPOSITIVO (PC vs Mobile + hash curto).
+       Gerado uma vez, persiste em localStorage. Permite ao operador
+       ver no chip do PDV se o caixa foi aberto NO mesmo PC ou em outro
+       (atendente abriu no PC do balcao, gerente acompanha pelo celular).
+       ============================================ */
+    function getDeviceId() {
+        try {
+            if (typeof localStorage === 'undefined') return 'unknown';
+            var id = localStorage.getItem('mp_device_id');
+            if (id) return id;
+            var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent || '');
+            var prefix = isMobile ? 'Mobile' : 'PC';
+            var suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+            id = prefix + '-' + suffix;
+            localStorage.setItem('mp_device_id', id);
+            return id;
+        } catch (_) { return 'unknown'; }
+    }
+
+    /* Etiqueta amigavel pro dispositivo (com emoji). */
+    function getDeviceLabel(deviceId) {
+        if (!deviceId) return '';
+        return (deviceId.indexOf('Mobile') === 0 ? '📱 ' : '🖥️ ') + deviceId;
+    }
+
+    /* ============================================
        Criação de movimentos (imutáveis)
        ============================================ */
     function sessionInfo() {
+        // Preferir OperatorContext (operador escolhido na abertura do caixa)
+        // sobre Auth (sessao do login). Permite franqueado/admin logar mas
+        // o atendente real ser registrado como dono das movimentacoes.
+        if (typeof OperatorContext !== 'undefined' && OperatorContext.getCurrent) {
+            try {
+                const op = OperatorContext.getCurrent();
+                if (op && op.id && !op.isFromSession) {
+                    return { id: op.id, name: op.name, email: op.email || null, role: op.role || null };
+                }
+            } catch (_) {}
+        }
         if (typeof Auth !== 'undefined' && Auth.getSession) {
             const s = Auth.getSession();
             if (s) return { id: s.userId, name: s.name, email: s.email, role: s.role };
@@ -287,6 +324,19 @@ const Caixa = (function () {
             createdByName: user.name,
             createdByEmail: user.email,
             createdByRole: user.role,
+            // Quem fez login no painel (pode diferir do operador escolhido)
+            sessionUserEmail: (function(){
+                try {
+                    if (typeof Auth !== 'undefined' && Auth.getSession) {
+                        var s = Auth.getSession();
+                        return s ? (s.email || null) : null;
+                    }
+                } catch(_) {}
+                return null;
+            })(),
+            // Identificador do dispositivo (PC vs Mobile + hash curto). Permite
+            // mostrar no chip "caixa aberto no Mobile-A4B7" quando outro PC ve.
+            deviceId: getDeviceId(),
             saldoEsperadoAntes: state.saldoEsperadoDinheiro
         };
 
@@ -897,12 +947,131 @@ const Caixa = (function () {
         return { close: close, overlay: overlay };
     }
 
+    /* ============================================
+       Modal de seleção de operador (ETAPA 1 da abertura)
+       ============================================
+       Mostra cards: Admin (sem PIN) + cada funcionario ativo.
+       Funcionario com PIN cadastrado exige 4 digitos.
+       Persiste em sessionStorage via OperatorContext.selectOperator.
+       Apos selecao bem-sucedida, segue pra etapa de valor (cb()).
+       ============================================ */
+    function showOperatorPickerModal(franchiseId, operators, cb) {
+        var cardsHtml = operators.map(function(op){
+            var pinHint = op.requiresPin ? '<small style="display:block;opacity:.7;font-size:10px;margin-top:2px">🔒 PIN</small>' : '';
+            var typeIcon = op.type === 'admin' ? '🛡️' : (op.role === 'Gerente' ? '👤' : '🧑‍🍳');
+            return '<div class="operator-card" data-operator-id="' + op.id + '" data-requires-pin="' + (op.requiresPin ? '1' : '0') + '" ' +
+                   'style="border:2px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer;text-align:center;transition:all .2s;background:#fff" ' +
+                   'onmouseover="this.style.borderColor=\'' + op.color + '\';this.style.background=\'' + op.color + '11\'" ' +
+                   'onmouseout="this.style.borderColor=\'#e5e7eb\';this.style.background=\'#fff\'">' +
+                   '<div style="font-size:28px;line-height:1">' + typeIcon + '</div>' +
+                   '<div style="font-weight:700;margin-top:6px;font-size:13px">' + op.name + '</div>' +
+                   '<div style="font-size:11px;opacity:.7">' + op.role + '</div>' +
+                   pinHint +
+                   '</div>';
+        }).join('');
+
+        var html =
+            '<div class="caixa-modal" role="dialog" aria-label="Quem vai operar?" style="max-width:520px">' +
+              '<div class="caixa-modal-header" style="background:linear-gradient(135deg,#7C3AED,#5B21B6)">' +
+                '<h3>👥 Quem vai operar o caixa?</h3>' +
+                '<button class="caixa-modal-close" data-caixa-close aria-label="Fechar">✕</button>' +
+              '</div>' +
+              '<div class="caixa-modal-body">' +
+                '<div class="caixa-info" style="margin-bottom:12px">Selecione quem vai operar este turno. Todas as vendas/sangrias serão registradas em nome desta pessoa.</div>' +
+                '<div id="operator-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">' +
+                  cardsHtml +
+                '</div>' +
+                '<div id="pin-row" style="margin-top:14px;display:none">' +
+                  '<label><strong>Digite o PIN do operador</strong></label>' +
+                  '<input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="operator-pin-input" placeholder="****" style="width:100%;padding:12px;border:2px solid #7C3AED;border-radius:8px;font-size:18px;letter-spacing:6px;text-align:center;margin-top:6px">' +
+                '</div>' +
+                '<div class="caixa-danger" data-caixa-error style="display:none;margin-top:10px"></div>' +
+              '</div>' +
+              '<div class="caixa-modal-footer">' +
+                '<button class="caixa-btn-secondary" data-caixa-close>Cancelar</button>' +
+              '</div>' +
+            '</div>';
+
+        var modal = openModal(html, null);
+        var grid = modal.overlay.querySelector('#operator-grid');
+        var pinRow = modal.overlay.querySelector('#pin-row');
+        var pinInput = modal.overlay.querySelector('#operator-pin-input');
+        var errBox = modal.overlay.querySelector('[data-caixa-error]');
+        var selectedId = null;
+
+        function tryConfirm(operatorId, pin) {
+            try {
+                var r = OperatorContext.selectOperator(franchiseId, operatorId, pin);
+                if (!r.success) {
+                    errBox.textContent = '❌ ' + (r.error || 'Falha ao selecionar operador');
+                    errBox.style.display = 'block';
+                    return;
+                }
+                errBox.style.display = 'none';
+                modal.close();
+                if (cb) cb(r);
+            } catch (e) {
+                errBox.textContent = '❌ ' + String(e && e.message || e);
+                errBox.style.display = 'block';
+            }
+        }
+
+        grid.querySelectorAll('.operator-card').forEach(function(card){
+            card.addEventListener('click', function(){
+                selectedId = card.getAttribute('data-operator-id');
+                var needsPin = card.getAttribute('data-requires-pin') === '1';
+                // Marca selecao visual
+                grid.querySelectorAll('.operator-card').forEach(function(c){
+                    c.style.borderColor = c === card ? '#7C3AED' : '#e5e7eb';
+                    c.style.background = c === card ? '#7C3AED11' : '#fff';
+                });
+                if (needsPin) {
+                    pinRow.style.display = 'block';
+                    setTimeout(function(){ pinInput.focus(); }, 50);
+                } else {
+                    // Admin (ou staff sem PIN): seleciona direto
+                    tryConfirm(selectedId, null);
+                }
+            });
+        });
+        if (pinInput) {
+            pinInput.addEventListener('keydown', function(e){
+                if (e.key === 'Enter') {
+                    var pin = pinInput.value.trim();
+                    if (pin.length < 3) {
+                        errBox.textContent = '⚠️ PIN muito curto.';
+                        errBox.style.display = 'block';
+                        return;
+                    }
+                    tryConfirm(selectedId, pin);
+                }
+            });
+        }
+    }
+
     function showOpenModal(franchiseId, cb) {
         // Se houver checklist configurado e ainda não executado hoje, exibe antes
         if (shouldShowChecklist('abertura', franchiseId)) {
             return showChecklistModal(franchiseId, 'abertura', () => {
                 showOpenModal(franchiseId, cb);
             });
+        }
+
+        // ETAPA 1 — quem vai operar? Admin (logado) ou um funcionario?
+        // Roda APENAS se ha staff cadastrado E OperatorContext disponivel.
+        // Se nao, segue direto pra etapa de valor (comportamento antigo).
+        if (typeof OperatorContext !== 'undefined' && OperatorContext.listAvailableOperators) {
+            try {
+                var ops = OperatorContext.listAvailableOperators(franchiseId) || [];
+                var hasStaff = ops.some(function(o){ return o.type === 'staff'; });
+                var alreadyPicked = OperatorContext.getCurrent && OperatorContext.getCurrent();
+                // Se ja escolheu operador nessa sessao (e nao expirou), pula direto.
+                if (hasStaff && !(alreadyPicked && !alreadyPicked.isFromSession)) {
+                    return showOperatorPickerModal(franchiseId, ops, function(){
+                        showOpenModal(franchiseId, cb);
+                    });
+                }
+            } catch (_) {}
         }
 
         // Pre-check do horário: se fora, já mostra textarea de justificativa
@@ -1786,6 +1955,9 @@ const Caixa = (function () {
         _handleResendReport: _handleResendReport,
         // Modo treinamento (teste@teste.com ou localStorage flag)
         isTrainingFranchise: isTrainingFranchise,
+        // Identificacao do dispositivo (PC vs Mobile + hash)
+        getDeviceId: getDeviceId,
+        getDeviceLabel: getDeviceLabel,
         // Modais
         showOpenModal: showOpenModal,
         showCloseModal: showCloseModal,
