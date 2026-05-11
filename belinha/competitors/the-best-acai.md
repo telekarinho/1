@@ -1,11 +1,73 @@
 # The Best Açaí — Análise Competitiva
 
-**Última atualização:** 2026-05-10 (Ciclo #187 — Expansão 900→1000 unidades + Londrina Gleba Palhano confirmado + São João sem campanha anunciada)
+**Última atualização:** 2026-05-11 (Ciclo #196 — Festival Junino padrão 2025 confirmado + projeção 2026 + "The Best Donuts" + preço Gleba Palhano R$6,29 + estratégia inverno)
+**Fontes ciclo #196:** folhadecuritiba.com.br, abcdacomunicacao.com.br, cervanacaneca.blogspot.com, foodbizbrasil.com, vipzinho.com.br, tiktok @marceladegusta, WebSearch
 **Fontes ciclo #187:** gomesaltimari.com.br, mercadoeconsumo.com.br, meioemensagem.com.br, exame.com, thebestacai.com.br, WebSearch
 **Fontes ciclo #167:** mercadoeconsumo.com.br, soubh.uai.com.br, TikTok @marceladegusta, vipzinho.com.br, franquias.portaldofranchising.com.br, foodbizbrasil.com
 **Fontes ciclo #151:** vipzinho.com.br, foodbizbrasil.com, suafranquia.com, odiariodemaringa.com.br, dezminutos.com.br
 **Fontes anteriores:** ifood.com.br, gazetadopovo.com.br, temlondrina.com.br, tiktok @marceladegusta, portaldofranchising.com.br, foodbizbrasil.com, suafranquia.com, franquiadeacai.com, jornaluniao.com.br, exame.com, braziljournal.com, portaltela.com, mercadoeconsumo.com.br, aurorashopping.com.br
 **Fontes ciclo #116:** gazetadasemana.com.br, thebestacai.com.br/thebestday (bloqueado), cidadeoferta.com.br, ubereats.com/br, portaltela.com, TikTok @marceladegusta
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #196 — 2026-05-11
+
+### Festival Junino — Padrão 2025 Confirmado + Projeção 2026
+
+#### Histórico 2025 (base para projeção 2026)
+- **Data de lançamento:** 26/06/2025 (quinta-feira, véspera do São João)
+- **Campanha:** *"The Best Açaí entra no clima junino"*
+- **Produtos:** 4 sabores de sorvete exclusivos e sazonais:
+  - Canjica
+  - Pamonha
+  - Cocada
+  - Paçoca
+- **Disponibilidade:** Enquanto durasse o estoque — cada unidade recebeu quantidade limitada (700+ lojas Brasil)
+- **Sem alteração de preço:** Cobrados na balança junto com outros sorvetes (R$5,99–6,29/100g)
+- **Estratégia declarada:** "Criar fluxo novo fora dos picos de temporada" + "despertar memória afetiva" (CEO Sérgio Kendy)
+- **Fonte:** folhadecuritiba.com.br, abcdacomunicacao.com.br (jun/2025)
+
+#### Projeção 2026 (ciclo #196)
+- **Expectativa:** Campanha junina em ~24–27/06/2026 com mesma mecânica (sorvetes sazonais por estoque limitado)
+- **Possível expansão:** Em 2025 foram 4 sabores; em 2026 podem ampliar ou renovar os sabores juninos
+- **Alerta para MilkyPot:** Se The Best Açaí lançar sorvetes juninos nas unidades de Londrina ~26/06, o movimento cria buzz açaí+inverno no período do Potinho Junino MilkyPot. **Diferenciação clara:** potinho personalizado (identidade + narrativa ovelhinha) vs buffet self-service genérico.
+
+### "The Best Donuts" — Diversificação Self-Service (Verão 2024/2025)
+
+- **Lançamento:** 15/01/2025 em 580+ lojas
+- **Mecânica:** Donuts incluídos no buffet self-service, pesados na balança como qualquer topping
+- **Sem custo adicional:** Preço único por grama (mesma balança do açaí e sorvete)
+- **Diferencial:** Primeiro self-service de donuts do Brasil — PR de lançamento forte
+- **Brinde promocional:** Mini Boia Clube The Best (boia de donut para copos) via app com pontos de fidelidade
+- **Status atual (mai/2026):** Não confirmado se é permanente ou sazonalidade de verão — possível encerramento ou rotação de produto
+- **Fonte:** foodbizbrasil.com, cervanacaneca.blogspot.com, vipzinho.com.br
+
+### Atualização Preços Londrina (mai/2026)
+
+| Unidade | Endereço | Preço/100g | Observação |
+|---|---|---|---|
+| Gleba Palhano (maior loja) | Rua Caracas, 159 | R$6,29 | 310m², 100+ lugares, pet space |
+| Arthur Thomas | Av. Arthur Thomas, 831 | R$5,99 | Reinaugurada jul/2024 |
+| Catuaí Shopping | Catuaí Londrina | Não confirmado | — |
+
+**Nota:** Preço Gleba Palhano (R$6,29) é 5% mais caro que Arthur Thomas (R$5,99) — possível estratégia de segmentação por localização premium. Ambos competem com o açaí buffet do Muffato/MilkyPot.
+
+### Estratégia Inverno The Best Açaí
+
+1. **Sazonalização de sorvetes:** Sabores juninos criam senso de urgência (estoque limitado) e geram UGC natural ("fui antes que acabasse")
+2. **Expansão de SKU sem mudança de modelo:** Donuts, sorvetes sazonais — sempre no mesmo buffet self-service, mesma balança, sem complexidade operacional
+3. **Londrina como HQ:** Grupo The Best sediado em Londrina = 3 lojas locais como laboratório + vitrine. Operações e campanhas possivelmente testadas aqui antes de nacional
+4. **Sem campanha de preço inverno:** Não há evidência de desconto ou promoção de preço no inverno — concorre por variedade, não por preço
+
+### Implicações para MilkyPot Londrina — Inverno/Julho 2026
+
+1. **Festival Junino TheBest (est. ~26/06):** Vai ativar buzz "sabores típicos juninos" em Londrina. MilkyPot deve anunciar Potinho Junino **antes** (idealmente 24/06 — véspera do São João) para ser lembrado como o original no feed do cliente.
+
+2. **Preço**: TheBest cobra R$5,99–6,29/100g (buffet). Potinho Junino MilkyPot é produto fechado com preço fixo — comparação direta não é óbvia para o consumidor. Reforçar na comunicação: "sem balança, sem surpresa no valor".
+
+3. **"The Best Donuts" como modelo:** A estratégia de adicionar produto sazonal no buffet sem custo extra (cobrado na balança) é simples e gera buzz. MilkyPot pode fazer o equivalente: topping sazonal grátis na semana de lançamento do Potinho Junino (ex: granola crocante: "semana do lançamento = granola de cortesia").
+
+4. **Londrina como laboratório TheBest:** Operador deve monitorar as unidades locais semanalmente — o que The Best testa em Londrina provavelmente será nacional em 2–4 semanas.
 
 ---
 

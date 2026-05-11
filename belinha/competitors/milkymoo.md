@@ -1,12 +1,80 @@
 # Milky Moo — Análise Competitiva
 
-**Última atualização:** 2026-05-10 (Ciclo #187 — Collab O Boticário "Carameluda" + 180ml Day Part + radar São João sem campanha anunciada)
+**Última atualização:** 2026-05-11 (Ciclo #196 — Ativação Shakira + "Como Treinar o Dragão" junho + Smoor's inverno + "Quarta da Moo" 50% + "Dia da Vaca" 08/07 + Havanna Matilda)
+**Fontes ciclo #196:** sopacultural.com, marcasmais.com.br, grandesnomesdapropaganda.com.br, gkpb.com.br, gazetadasemana.com.br, visitebrasilia.com.br, amostrasgratis.shop, WebSearch
 **Fontes ciclo #187:** auroracultural.com, mercadoeconsumo.com.br, meioemensagem.com.br, centraldovarejo.com.br, goinfoco.com.br, milkymoo.com.br (cardápio), WebSearch
 **Fontes ciclo #167:** clubeamostrasgratis.com, auroracultural.com, mercadoeconsumo.com.br, meioemensagem.com.br, barato.com.br, TikTok @guiadois, franquiadesorvete.com
 **Fontes ciclo #160:** gkpb.com.br, mercadoeconsumo.com.br, auroracultural.com, em.com.br, foodbizbrasil.com, centraldovarejo.com.br, meioemensagem.com.br, sopacultural.com, creativosbr.com.br
 **Fontes ciclo #151:** cadastrarnapromocao.com.br, clubeamostrasgratis.com, portalg.com.br, gkpb.com.br, TikTok @casaldasdicasrp, TikTok @dicasemmanauss
 **Fontes anteriores:** franquiadesorvete.com, portaldofranchising, pricelisto.com/br, gkpb.com.br, TikTok @marceladegusta, portalg.com.br, lagosul.com.br, meioemensagem.com.br, sopacultural.com, franquias360.com.br, timesbrasil.com.br, exame.com, empreenderemgoias.com.br, adital.com.br, foodbizbrasil.com
 **Fontes ciclo #116:** portalg.com.br, cadastrarnapromocao.com.br, clubeamostrasgratis.com, publicitarioscriativos.com, gkpb.com.br, revistamenu.com.br, superhiper.com.br, TikTok @marceladegusta, TikTok @sofiasporai, nuttybavarian blog
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #196 — 2026-05-11
+
+### Campanhas Ativas Maio–Junho 2026 (Inverno/Pop Culture)
+
+#### 1. Ativação Shakira — "Milkshakes Don't Lie – Addicted to Moo" (30/04–09/05/2026)
+- **Escopo:** 3 unidades do RJ (zona sul) durante show da Shakira em Copacabana (02/05/2026)
+- **Mecânica:** Cardápio inteiramente renomeado com trocadilhos de músicas da artista
+- **Sabores temáticos:**
+  | Nome Temático | Sabor Original | Obs |
+  |---|---|---|
+  | VVAKA VVAKA | Rubi | +18 |
+  | BARANQUILLA | Flocos de Neve | — |
+  | SHE MOO | Moo | — |
+  | LOCA | Manhosa | — |
+  | SHAKEIRA | Mimosa | — |
+  | LATINA LIKE ME | Poderosa | — |
+- **Estratégia:** "Cultural hijacking" — piggyback em megaeventos culturais sem patrocínio formal
+- **Alcance:** Limitado a 3 unidades locais; altíssimo potencial viral/UGC orgânico
+- **Fonte:** sopacultural.com, marcasmais.com.br
+
+#### 2. Collab O Boticário "Carameluda" (até final de maio/2026)
+- Documentado no ciclo #187. Encerrou ou encerrando agora (final de maio)
+- **Alerta para MilkyPot:** Potinho Caramelado estreia 01/07 — público já está "aquecido" para o sabor caramelo pelo concorrente. Oportunidade: reposicionar como "o original sem compromisso com perfume"
+
+#### 3. Collab Universal Pictures — Milkshake "Tempestade" (estreia filme 12/06/2026)
+- **Franquia:** *Como Treinar o Seu Dragão* (live-action 2026)
+- **Produto:** Sabor "Tempestade" (nome do dragão), visual integrado ao filme, disponível em todas as lojas
+- **Estratégia:** Segundo collab com Universal após 2025 — padrão estabelecido de licença sazonal com grande lançamento
+- **Alerta para MilkyPot:** Junho terá MilkyMoo com ativação nacional de licença de cinema. Semana 26/05–01/06 (Desafio #PotinhoMaisFeliz) precisa ter energia própria antes deste lançamento
+
+#### 4. Novos Sabores Premium — Smoor's e Havanna Matilda
+- **Smoor's** (lançado jul/2025, possivelmente cardápio fixo de inverno):
+  - Composição: sorvete de baunilha + brigadeiro + Chocobiscuit Nestlé + marshmallow tostado
+  - Preço: R$25 (300ml) / R$30 (500ml) — posicionamento premium
+  - **Ângulo inverno:** "Aconchego" + marshmallow tostado = narrativa quente para dias frios
+  - Collab embutida (Nestlé Chocobiscuit) sem ser anunciada como collab
+  - **Fonte:** gkpb.com.br (jul/2025)
+- **Havanna Matilda** (data exata não confirmada, inverno 2026 estimado):
+  - Composição: sorvete de baunilha + doce de leite + alfajor Havanna
+  - Estratégia: collab com marca argentina premium já reconhecida no Brasil
+  - Posicionamento: sobremesa completa em copo, não só milkshake
+
+### Promoções Recorrentes Confirmdas
+
+| Promoção | Quando | Mecânica | Canal | Sabores/Restrições |
+|---|---|---|---|---|
+| **"Quarta da Moo"** | Toda quarta-feira | 50% off em sabores selecionados | App exclusivo | 13 sabores: Bisa, Branca, Cacau, Pintadinha, Diva e outros |
+| **"Dia da Vaca"** | 08/07 (anual) | Pintadinha 300ml por R$9,90 via cupom "COWERA" | App exclusivo | Só Pintadinha; limitado ao dia |
+| **"Dia do Milkshake"** | 12/09 (anual) | R$10 de desconto em todo cardápio | App exclusivo | Sem restrição de sabor |
+| **Milky Moo Day** | 11/03 (anual) | Compre 500ml → ganhe 300ml grátis | Loja física (não apps delivery) | Alcoólicos e premium fora |
+
+**Nota estratégica — App como canal central:** Toda promoção MilkyMoo é gatekept pelo app proprietário — requer download, cadastro e pedido via app. Isso elimina comissão de delivery (iFood apenas para ações pontuais como Carnaval), cria base de dados própria e mede conversão. Paralelo direto com estratégia MilkyPot via WhatsApp.
+
+### Implicações para MilkyPot Londrina — Inverno/Julho 2026
+
+1. **"Dia da Vaca" (08/07):** MilkyMoo vai ativar com cupom R$9,90. Oportunidade de contracampanha com ovelhinha: "Dia da Vaca? Aqui é o dia da **Ovelhinha** — e todo dia tem potinho feliz 🐑" — piggyback sem citar concorrente. Criar Stories temáticos no dia.
+
+2. **Caramelado vs Carameluda:** O encerramento da collab "Carameluda" (fim de maio) abre o mercado para MilkyPot capturar o público que gostou do flavor profile. Potinho Caramelado (01/07) chega em timing perfeito como "a versão potinho do que o público já quer".
+
+3. **"Quarta da Moo" 50%:** Criar rotina de quarta para MilkyPot no WA também — ex: "Quarta Feliz: mostre a ovelhinha e ganhe topping grátis" ou desconto no delivery toda quarta. Canal WhatsApp em vez de app.
+
+4. **Smoor's = Inverno Quente:** MilkyMoo posiciona milkshake frio com elementos "quentes" (marshmallow tostado, brigadeiro). MilkyPot pode adotar narrativa similar: "O Potinho de Ninho aquece a alma mesmo no inverno ☕" — sem precisar criar novo produto, apenas reposicionar o base Ninho como conforto invernal.
+
+5. **Cultural Hijacking (Shakira modelo):** MilkyMoo faz isso localmente com 3 lojas. MilkyPot pode replicar a nível micro: renomear potinhos na véspera de jogos do Londrina FC, shows em Londrina, festa de aniversário da cidade (01/10). Custo zero, UGC alto.
 
 ---
 
