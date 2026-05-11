@@ -2,6 +2,52 @@
 
 ---
 
+## Ciclo #198 — 2026-05-11
+
+**Área:** UX (auditoria `js/cardapio.js`) → pivot Conversão (WA Business setup junino)
+
+**Contexto:** Prescrição era auditar `js/cardapio.js` para cálculos de fidelidade/desconto/bundle. Auditoria revelou: (1) arquivo já confirmado como órfão desde ciclo #112 — nenhum HTML o carrega; (2) sem código de fidelidade/desconto/bundle; (3) cálculos internamente consistentes após fix do ciclo #193. Pivotou para Conversão — lacuna urgente: nenhum guia passo-a-passo de configuração do WA Business para os keywords juninos. São João é em 44 dias.
+
+**O que pesquisou/analisou:**
+- Releitura de `belinha/blockers.md` — confirmou status órfão de `js/cardapio.js` (blocker #6, ciclo #112)
+- Grep em `js/cardapio.js` por `fidelidade`, `desconto`, `bundle`, `promo` — zero ocorrências
+- Verificação de consistência: `renderResumo` × `changeQty` × `addToMenuCart` × `updateMenuCartQty` — todos usam `(sizePrice + extrasTotal) × qty + bebidasTotal` (correto)
+- Revisão de `belinha/content/whatsapp-junina-2026.md` — tem keyword `JUNINA26` e broadcasts mas sem tutorial de configuração WA Business
+- Grep de `JUNINO26` em todo o repositório — mencionado em 10+ arquivos como "pendente configurar" mas SEM auto-resposta completa e SEM guia de setup
+- Identificado: `DESPEDIDAJUNINO` keyword completamente ausente (prescrito em ciclos #183–185 mas nunca materializado)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/wa-business-setup-junino.md` | NOVO — 200+ linhas — guia completo de setup WA Business |
+
+**Detalhes do conteúdo criado:**
+- **Sumário de 8 configurações** com datas-limite e status ⬜
+- **Tutorial passo-a-passo** de como configurar keyword no app WA Business (Android/iOS)
+- **3 auto-respostas prontas** para copiar/colar: `JUNINA26` (campanha geral, ativar 06/06), `JUNINO26` (produto, ativar 16/06), `DESPEDIDAJUNINO` (encerramento, ativar 26/06) — terceira era gap crítico não coberto por nenhum doc anterior
+- **3 respostas rápidas** (`/composicao`, `/preco`, `/delivery`) com atalhos de balcão prontos
+- **Mensagem de ausência noturna festiva** para ativar 17/06–30/06
+- **Instruções de listas de transmissão** com 3 segmentações recomendadas
+- **Calendário de implementação** com 7 marcos e urgência por cores
+- **Guia de teste** para o operador verificar antes de lançar
+- **Tabela de integração** com 6 documentos relacionados
+
+**Commit:** (a seguir)
+
+**Próximo passo sugerido:**
+- **Ciclo #199 — Conversão:** Brief de encerramento definitivo do Potinho Junino (30/06) — além do `encerramento-potinho-junino-30jun.md` existente, criar script de pivot narrativo para o cliente: "o Potinho Junino acabou, mas o Caramelado chegou"
+- **Ciclo #200 (marco):** Auto-aprimoramento — releitura completa `belinha/log.md` + revisão `belinha/estrategia.md`
+- **Operador (URGENTE — prazo 06/06):** Ativar keyword `JUNINA26` no WA Business — consultar `wa-business-setup-junino.md` Parte 1
+- **Operador (URGENTE — prazo 30/05):** Confirmar ingredientes + naming "Potinho Junino" — bloqueia preenchimento de `/preco` no guia acima
+- **Operador (URGENTE — prazo 25/05):** Google Search Console — solicitar indexação sitemap.xml (1 mês da inauguração)
+- **Operador:** Confirmar preços de tamanho para preencher `/preco` no guia antes de 16/06
+- **js/cardapio.js:** Decisão pendente (Opção A deletar / Opção B integrar) — ver `belinha/blockers.md` blocker #6
+
+_Belinha — Ciclo #198 | 2026-05-11_
+
+---
+
 ## Ciclo #197 — 2026-05-11
 
 **Área:** Conteúdo — Programa "Quarta Feliz" (WA semanal) + contracampanha "Dia da Vaca" (08/07/2026)
