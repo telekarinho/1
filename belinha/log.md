@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #191 — 2026-05-11
+
+**Área:** Conversão — WA broadcast segunda-feira semana 4 (reativação D+7/D+14)
+
+**Contexto:** Hoje é domingo 11/05. Semana 4 começa amanhã (10–16/05). Clientes da semana 1 (25/04–01/05) estão no D+11–17 — janela crítica antes dos 30 dias onde probabilidade de reativação cai. Clientes da semana 2 (02/05–08/05) estão no D+4–9 — janela D+7 perfeita para segunda visita. Nenhum arquivo dedicado existia para o lote de segunda de manhã às 10h (4h antes de abrir às 14h).
+
+**O que pesquisou/analisou:**
+- Releitura de `pos-inauguracao-semana4.md` — tem nota operacional mencionando reativação, mas sem brief de execução
+- Releitura de `whatsapp-reativacao.md` — tem templates D+7/D+14/D+30 mas sem orquestração de lote pré-abertura
+- Verificou que nenhum arquivo em `belinha/content/` cobria o broadcast específico de segunda semana 4
+- Calculou segmentação: Lote A (semana 1, D+14), Lote B (semana 2, D+7), Lote C follow-up quinta 14/05
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/wa-broadcast-segunda-semana4.md` | NOVO — brief completo de execução broadcast |
+
+**Detalhes do arquivo criado:**
+- **2 templates de abertura** (Lote A e Lote B) + **mensagens de follow-up** pós-resposta para cada lote
+- **Lote C** (cupom R$5 surpresa) para Lote A sem resposta — envio quinta 14/05 às 18h
+- **Script de resposta** para atendente (4 cenários: resposta curta, dúvida de frete, opt-out, positivo)
+- **Checklist de execução** em dois dias (domingo prep + segunda execução + quinta follow-up)
+- **KPIs**: taxa de resposta por lote (A ≥30%, B ≥40%), conversão em pedido ≥20%, opt-out <5%
+- **Integração** com fidelidade (MEUS PONTOS), indicação e reativação D+30
+
+**Commit:** `a2cf54b`
+
+**Próximo passo sugerido:**
+- **Ciclo #192 — SEO:** Google Search Console guia de passos para o operador (pendente desde ciclo #148 — indexação do sitemap.xml nunca confirmada)
+- **Ciclo #193 — UX:** Avaliar `js/cardapio.js` (1.050 linhas dead code, blocker #6) — aguarda decisão do operador; documentar opções A/B/C de forma clara para facilitar decisão
+- **Ciclo #194 — Conteúdo:** Brief consolidação Potinho Caramelado pós-reveal (02–07/07) — UGC, guia de toppings, 1 semana após lançamento
+- **Operador (URGENTE até 30/05):** Confirmar ingredientes + naming "Potinho Junino" ⚠️
+- **Operador (URGENTE):** Executar WA broadcast amanhã 12/05 às 10h — `wa-broadcast-segunda-semana4.md`
+- **Operador:** Confirmar calda de caramelo + granola para Potinho Caramelado até 20/06
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #191 | 2026-05-11_
+
+---
+
 ## Ciclo #190 — 2026-05-11
 
 **Área:** UX/Frontend — remoção de `css/cardapio.css` (arquivo orphaned confirmado)
