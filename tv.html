@@ -104,10 +104,10 @@ body:not(.idle){cursor:default}
 
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <script src="/js/core/constants.js"></script>
-    <script src="/js/core/utils.js"></script>
-    <script src="/js/core/datastore.js"></script>
-    <script src="/js/core/firebase-config.js"></script>
+    <script src="/js/core/constants.js?v=mp-v208"></script>
+    <script src="/js/core/utils.js?v=mp-v208"></script>
+    <script src="/js/core/datastore.js?v=mp-v208"></script>
+    <script src="/js/core/firebase-config.js?v=mp-v208"></script>
 <script>
 /* ============================================
    MilkyPot TV Player — Fullscreen Digital Signage
@@ -299,17 +299,30 @@ body:not(.idle){cursor:default}
         document.getElementById('weatherCity').textContent = config.weatherCity || '';
     }
 
-    /* === Fetch direto do Firestore (bypass de cache local) === */
+    /* === Fetch direto do Firestore (bypass de cache local) ===
+       TIMEOUT defensivo de 8s: TV em loja low-budget pode ter rede
+       lenta/instavel. Antes do fix, fetchFromCloud podia hangar
+       indefinidamente -> playlist nunca renderizava -> tela presa em
+       "Carregando playlist...". Agora cai pro fallback localStorage. */
+    function _withTimeout(promise, ms, label) {
+        return Promise.race([
+            promise,
+            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout ' + ms + 'ms ' + label)), ms))
+        ]);
+    }
     async function fetchFromCloud(docId) {
         try {
             if (typeof firebase === 'undefined' || !firebase.firestore) return null;
-            var doc = await firebase.firestore().collection('datastore').doc(docId).get({ source: 'server' });
+            var doc = await _withTimeout(
+                firebase.firestore().collection('datastore').doc(docId).get({ source: 'server' }),
+                8000, docId
+            );
             if (!doc.exists) return null;
             var raw = doc.data().value || '';
             if (typeof raw === 'string') return JSON.parse(raw || 'null');
             return raw;
         } catch (e) {
-            console.warn('fetchFromCloud', docId, e);
+            console.warn('fetchFromCloud', docId, e.message || e);
             return null;
         }
     }
