@@ -746,15 +746,32 @@
         computeAgendaKpis();
     }
 
+    // Date awareness: hoje (Brasilia) pra marcar posts atrasados/atuais
+    function _todayLocal(){
+        var d = new Date();
+        var off = -3 * 60; // BRT UTC-3 em minutos
+        var local = new Date(d.getTime() + (off - d.getTimezoneOffset()) * 60000);
+        return local.toISOString().slice(0,10);
+    }
+
     function cardHtml(p){
         var phase = PHASE_COLORS[p.phase] || { bg:'#eee', fg:'#555', ic:'•' };
         var stat = STATUS_COLORS[p.status] || STATUS_COLORS['Pendente'];
         var dateFmt = p.date.split('-').reverse().join('/');
         var plat = PLATFORM_ICONS[p.platform] || '';
-        return '<div class="agenda-card" data-id="' + p.id + '" style="background:#fff; border-radius:16px; padding:18px; box-shadow:0 2px 14px rgba(45,27,78,0.07); border-top:4px solid ' + phase.fg + '; display:flex; flex-direction:column; gap:10px;">' +
+        // Date awareness — destaque visual baseado na data atual
+        var today = _todayLocal();
+        var isPast = p.date < today && p.status === 'Pendente';
+        var isToday = p.date === today;
+        var dateBg = isToday ? '#FFE082' : (isPast ? '#FFCDD2' : '#E3F2FD');
+        var dateFg = isToday ? '#5D4037' : (isPast ? '#C62828' : '#1976D2');
+        var dateLabel = isToday ? '🔥 HOJE · ' + dateFmt : (isPast ? '⏰ ' + dateFmt + ' (atrasado)' : dateFmt);
+        var cardBorder = isToday ? '4px solid #F57F17' : (isPast ? '4px solid #C62828' : '4px solid ' + phase.fg);
+        var cardOpacity = (isPast && p.status === 'Pendente') ? '0.78' : '1';
+        return '<div class="agenda-card" data-id="' + p.id + '" style="background:#fff; border-radius:16px; padding:18px; box-shadow:0 2px 14px rgba(45,27,78,0.07); border-top:' + cardBorder + '; display:flex; flex-direction:column; gap:10px; opacity:' + cardOpacity + ';' + (isToday ? 'box-shadow:0 0 0 3px #FFE082, 0 4px 18px rgba(245,127,23,0.25);' : '') + '">' +
             '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">' +
                 '<div style="display:flex; align-items:center; gap:8px; color:#455A64; font-family:Nunito,sans-serif; font-size:0.82rem; font-weight:700;">' +
-                    '<span style="background:#E3F2FD; color:#1976D2; padding:3px 10px; border-radius:8px;">' + dateFmt + '</span>' +
+                    '<span style="background:' + dateBg + '; color:' + dateFg + '; padding:3px 10px; border-radius:8px;">' + dateLabel + '</span>' +
                     '<span style="display:inline-flex; align-items:center; gap:4px; color:#1976D2;">' + plat + ' ' + Utils.escapeHtml(p.platform) + '</span>' +
                 '</div>' +
                 '<span style="background:' + phase.bg + '; color:' + phase.fg + '; font-family:Nunito,sans-serif; font-weight:700; font-size:0.72rem; padding:4px 10px; border-radius:999px; letter-spacing:0.3px;">' + phase.ic + ' ' + Utils.escapeHtml(p.phase) + '</span>' +
@@ -775,21 +792,46 @@
 
     function computeAgendaKpis(){
         var total = allPosts.length;
-        var pub = 0, ag = 0, pr = 0, pe = 0;
+        var pub = 0, ag = 0, pr = 0, pe = 0, atrasado = 0;
+        var today = _todayLocal();
         allPosts.forEach(function(p){
             if (p.status === 'Publicado') pub++;
             else if (p.status === 'Agendado') ag++;
             else if (p.status === 'Producao') pr++;
-            else pe++;
+            else { // Pendente
+                if (p.date < today) atrasado++;
+                else pe++;
+            }
         });
         document.getElementById('kpiTotalPosts').textContent = total;
         document.getElementById('kpiPublicados').textContent = pub;
         document.getElementById('kpiAgendados').textContent = ag;
         document.getElementById('kpiProducao').textContent = pr;
-        document.getElementById('kpiPendentes').textContent = pe;
+        // Pendentes futuros + atrasados (separados visualmente quando possivel)
+        var pendEl = document.getElementById('kpiPendentes');
+        if (atrasado > 0) {
+            pendEl.innerHTML = pe + ' <span style="color:#C62828;font-size:.75em">(+' + atrasado + ' atrasados)</span>';
+        } else {
+            pendEl.textContent = pe;
+        }
+        // Progresso TEMPORAL: dia atual vs total de dias da campanha
+        // (em vez de % publicado, mostra quanto da campanha ja passou em dias)
         var pct = total > 0 ? Math.round((pub / total) * 100) : 0;
+        var sorted = allPosts.map(function(p){return p.date;}).sort();
+        if (sorted.length > 0) {
+            var startMs = new Date(sorted[0]+'T00:00:00').getTime();
+            var endMs = new Date(sorted[sorted.length-1]+'T23:59:59').getTime();
+            var nowMs = new Date(today+'T12:00:00').getTime();
+            if (nowMs <= startMs) {
+                pct = 0;
+            } else if (nowMs >= endMs) {
+                pct = 100;
+            } else {
+                pct = Math.round(((nowMs - startMs) / (endMs - startMs)) * 100);
+            }
+        }
         document.getElementById('progressBar').style.width = pct + '%';
-        document.getElementById('progressPercent').textContent = pct + '%';
+        document.getElementById('progressPercent').textContent = pct + '% (dia ' + today.split('-').reverse().join('/') + ')';
     }
 
     function updatePostStatus(id, status){
