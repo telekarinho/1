@@ -2,6 +2,51 @@
 
 ---
 
+## Ciclo #192 — 2026-05-11
+
+**Área:** SEO — Guia operacional Google Search Console + submissão do sitemap
+
+**Contexto:** Blocker pendente desde ciclo #148: o `sitemap.xml` (`https://milkypot.com/sitemap.xml`) existe e está referenciado no `robots.txt`, mas nunca foi submetido ao Google Search Console. O operador nunca recebeu um guia passo-a-passo em português para fazer isso. Sem submissão, o Google pode levar semanas ou meses para descobrir e indexar as páginas organicamente — prejudicando o SEO local de Londrina ("potinho londrina", "açaí muffato", etc.).
+
+**O que pesquisou/analisou:**
+- Confirmou que `sitemap.xml` existe (619 bytes, 6 URLs mapeadas: `/`, `/cardapio.html`, `/desafio.html`, `/raspinha.html`, `/privacidade.html`, `/termos.html`)
+- Confirmou que `robots.txt` aponta para o sitemap corretamente (`Sitemap: https://milkypot.com/sitemap.xml`)
+- Verificou que nenhum arquivo em `belinha/content/` cobria o passo-a-passo de verificação e submissão
+- Avaliou as duas formas de verificação disponíveis: DNS TXT (requer acesso ao painel do domínio) e Tag HTML (requer deploy Firebase)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/guia-google-search-console.md` | NOVO — guia completo em PT-BR para o operador (170 linhas) |
+
+**Detalhes do guia criado:**
+- **Etapa 0** — Pré-requisitos (acesso ao e-mail admin + 15 min)
+- **Etapa 1** — Acessar o Search Console
+- **Etapa 2** — Adicionar propriedade `milkypot.com` com duas opções de verificação (DNS TXT via Registro.br OU Tag HTML via Firebase)
+- **Etapa 3** — Submeter `sitemap.xml` + tabela com 6 URLs esperadas
+- **Etapa 4** — Solicitar indexação manual das 3 páginas prioritárias (/, /cardapio.html, /desafio.html)
+- **Etapa 5** — Configurar Google Business Profile (bônus SEO local: aparece no Maps + painel lateral Google)
+- **Etapa 6** — Monitoramento após 7 dias (relatórios Desempenho, Cobertura, Core Web Vitals)
+- **Checklist de 7 itens** para o operador marcar conforme executa
+- **Buscas esperadas** na 1ª semana ("potinho londrina", "milkypot londrina", "açaí self service londrina")
+
+**Commit:** `f4968da`
+
+**Próximo passo sugerido:**
+- **Operador (AÇÃO IMEDIATA):** Executar guia `guia-google-search-console.md` — submeter sitemap e verificar propriedade no Search Console ⚠️ PENDENTE DESDE CICLO #148
+- **Operador (AÇÃO IMEDIATA):** Executar WA broadcast amanhã 12/05 às 10h — `wa-broadcast-segunda-semana4.md`
+- **Ciclo #193 — UX:** Avaliar `js/cardapio.js` (1.050 linhas, possível dead code) — documentar opções A/B/C para decisão do operador
+- **Ciclo #194 — Conteúdo:** Brief consolidação Potinho Caramelado pós-reveal (02–07/07)
+- **Ciclo #195 — Conversão:** Estrutura de reativação D+30 para clientes da semana 1 (janela: 25/05–01/06)
+- **Operador (URGENTE até 30/05):** Confirmar ingredientes + naming "Potinho Junino" ⚠️
+- **Operador:** Confirmar calda de caramelo + granola para Potinho Caramelado até 20/06
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #192 | 2026-05-11_
+
+---
+
 ## Ciclo #191 — 2026-05-11
 
 **Área:** Conversão — WA broadcast segunda-feira semana 4 (reativação D+7/D+14)
