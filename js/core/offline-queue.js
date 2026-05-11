@@ -122,7 +122,14 @@
                     resolve({ synced: pending.length });
                 };
 
-                if (global.firebase && global.firebase.firestore) {
+                // NOTA: o batch direto na collection 'orders_<fid>' falhava com
+                // "Missing or insufficient permissions" — essa collection nao
+                // tem rules publicas (so 'datastore/orders_<fid>' tem). Resultado:
+                // chip "Sincronizando pedidos pendentes" ficava preso pra sempre.
+                // CORRECAO: pula o batch direto. DataStore ja sincroniza pedidos
+                // via datastore/orders_<fid> (rules publicas + writeback). Apenas
+                // marca pending=false e deixa o DataStore propagar.
+                if (false && global.firebase && global.firebase.firestore) {
                     try {
                         const db = global.firebase.firestore();
                         const batch = db.batch();

@@ -1159,29 +1159,29 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <script src="../js/core/constants.js"></script>
 <script src="../js/core/utils.js"></script>
-<script src="../js/core/datastore.js?v=mp-v112"></script>
-<script src="../js/core/cloud-functions.js?v=mp-v133"></script>
+<script src="../js/core/datastore.js?v=mp-v204"></script>
+<script src="../js/core/cloud-functions.js?v=mp-v204"></script>
 <script src="../js/core/firebase-config.js"></script>
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v92"></script>
-<script src="../js/core/motivacional.js?v=mp-v92"></script>
-<script src="../js/core/operator-context.js?v=mp-v200"></script>
-<script src="../js/core/caixa.js?v=mp-v92"></script>
-<script src="../js/core/financas.js?v=mp-v92"></script>
-<script src="../js/core/onboarding.js?v=mp-v92-selfheal"></script>
-<script src="../js/core/units.js?v=mp-v92"></script>
-<script src="../js/core/error-tracking.js?v=mp-v92"></script>
-<script src="../js/core/recipes.js?v=mp-v92"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v92"></script>
-<script src="../js/core/offline-queue.js?v=mp-v92"></script>
-<script src="../js/core/pix.js?v=mp-v92"></script>
-<script src="../js/core/nfce.js?v=mp-v92"></script>
-<script src="../js/core/printer.js?v=mp-v92"></script>
+<script src="../js/core/adminconfig.js?v=mp-v204"></script>
+<script src="../js/core/motivacional.js?v=mp-v204"></script>
+<script src="../js/core/operator-context.js?v=mp-v204"></script>
+<script src="../js/core/caixa.js?v=mp-v204"></script>
+<script src="../js/core/financas.js?v=mp-v204"></script>
+<script src="../js/core/onboarding.js?v=mp-v204"></script>
+<script src="../js/core/units.js?v=mp-v204"></script>
+<script src="../js/core/error-tracking.js?v=mp-v204"></script>
+<script src="../js/core/recipes.js?v=mp-v204"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v204"></script>
+<script src="../js/core/offline-queue.js?v=mp-v204"></script>
+<script src="../js/core/pix.js?v=mp-v204"></script>
+<script src="../js/core/nfce.js?v=mp-v204"></script>
+<script src="../js/core/printer.js?v=mp-v204"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v91"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v91"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v204"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v204"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -3656,13 +3656,17 @@
         var _todayOrders = _allOrders.filter(function(o){ return !o.deleted && o.createdAt && o.createdAt.slice(0,10) === _todayKeyLocal; });
         var _seqNum = _todayOrders.length + 1;
 
+        // BUG FIX: selectedPaymentMethod era variavel UNDEFINED → throw ReferenceError
+        // ao clicar Dinheiro/PIX/Debito/Credito no modal de pagamento → pedido nao
+        // finalizava. Le do select 'paymentMethod' que e setado em finishOrder linha 3557.
+        var _selectedPay = (document.getElementById('paymentMethod') && document.getElementById('paymentMethod').value) || 'Dinheiro';
         var order={
             id:Utils.generateId(),createdAt:new Date().toISOString(),status:'confirmado',
             dailySeq:_seqNum,                  // numeração diária pra exibição no kanban
             dailyDate:_todayKeyLocal,
             type:orderType,source:'pdv',
             delivery:orderType==='delivery'?'delivery':null,
-            payment:selectedPaymentMethod,
+            payment:_selectedPay,
             items:cart.map(function(c){
                 return{
                     productId:c.id||null,  // referência ao catalog_v2 product ID (p/ CMV e finance-realtime)
@@ -5830,20 +5834,73 @@
             console.log('[PDV] SW registered:', reg.scope);
             // Força checagem de update imediata (browser throttle pode atrasar 24h)
             reg.update().catch(function(){});
+            // AUTO-UPDATE AGGRESSIVE: re-checa a cada 60s. Operador nunca precisa
+            // fazer hard refresh — deploys novos chegam silenciosamente.
+            setInterval(function(){
+                reg.update().catch(function(){});
+            }, 60000);
             window.addEventListener('online', function(){
                 reg.active && reg.active.postMessage({type:'REPLAY_OFFLINE_QUEUE'});
                 // Também checa se tem versão nova quando volta online
                 reg.update().catch(function(){});
             });
+            // Detecta SW novo instalado e force ativacao + reload
+            reg.addEventListener('updatefound', function(){
+                var nw = reg.installing;
+                if (!nw) return;
+                nw.addEventListener('statechange', function(){
+                    if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                        // Tem SW antigo controlando + novo instalado pronto.
+                        // skipWaiting() ja eh chamado no install handler do sw.js,
+                        // entao isso so confirma. Quando ativar, controllerchange
+                        // dispara o reload abaixo.
+                        console.log('[PDV] Novo SW instalado, aguardando ativacao...');
+                    }
+                });
+            });
         }).catch(function(e){ console.warn('[PDV] SW failed:', e); });
+
+        // controllerchange = SW novo tomou controle. Reload IMEDIATO so se for seguro.
+        // SEGURANCA: nunca reload se houver carrinho, modal aberto ou input focado.
+        // Re-tenta a cada 30s ate ser seguro. Operador NUNCA perde trabalho.
+        var _hasReloaded = false;
+        function isSafeToReload() {
+            try {
+                // Carrinho com items? Operador ta no meio de uma venda — adia.
+                if (typeof cart !== 'undefined' && cart && cart.length > 0) return false;
+                // Algum modal aberto?
+                if (document.querySelector('.caixa-modal-overlay')) return false;
+                if (document.querySelector('[id^="mp"][role="dialog"]')) return false;
+                if (document.getElementById('mpPaymentSelectModal')) return false;
+                // Input focado (digitando)?
+                var ae = document.activeElement;
+                if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable)) {
+                    if (ae.value && ae.value.length > 0) return false;
+                }
+            } catch (_) {}
+            return true;
+        }
+        function autoReloadWhenSafe(reason) {
+            if (_hasReloaded) return;
+            if (!isSafeToReload()) {
+                console.log('[PDV] Reload adiado (carrinho/modal/input ativos):', reason);
+                setTimeout(function(){ autoReloadWhenSafe(reason); }, 30000);
+                return;
+            }
+            _hasReloaded = true;
+            console.log('[PDV] Reload automatico:', reason);
+            setTimeout(function(){ location.reload(); }, 500);
+        }
+        navigator.serviceWorker.addEventListener('controllerchange', function(){
+            autoReloadWhenSafe('controllerchange');
+        });
 
         // Listener pra mensagens do SW (FORCE_RELOAD quando nova versão ativa).
         // Sem isso, PDV fica preso em cache antigo enquanto resto do site atualiza.
         navigator.serviceWorker.addEventListener('message', function(e) {
             if (!e.data) return;
             if (e.data.type === 'FORCE_RELOAD' || e.data.type === 'NEW_VERSION_AVAILABLE') {
-                console.log('[PDV] Nova versão SW detectada, recarregando...');
-                location.reload();
+                autoReloadWhenSafe('SW message');
             }
         });
     }
