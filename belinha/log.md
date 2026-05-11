@@ -2,6 +2,59 @@
 
 ---
 
+## Ciclo #196 — 2026-05-11
+
+**Área:** Concorrentes — Intel inverno/junho-julho 2026: MilkyMoo + The Best Açaí
+
+**Contexto:** Última atualização de concorrentes foi ciclo #187 (10/05), há 9 ciclos. Janela crítica: inverno 2026 + São João (24/06) + Potinho Junino MilkyPot (data a confirmar) + Potinho Caramelado (01/07) aproximando. Intel competitiva desatualizada = risco de posicionamento errado nas campanhas de junho-julho.
+
+**O que pesquisou/analisou:**
+- WebSearch: MilkyMoo campanhas maio-junho 2026 → encontrou ativação Shakira + Como Treinar o Dragão
+- WebSearch: MilkyMoo Dia da Vaca, Dia do Milkshake, Quarta da Moo → promoções recorrentes mapeadas
+- WebSearch: MilkyMoo Smoor's + Havanna → sabores premium inverno com posicionamento "aconchego"
+- WebSearch: The Best Açaí Festival Junino 2025 → padrão confirmado (sorvetes sazonais 26/06/2025)
+- WebSearch: The Best Açaí Londrina 2026 → confirmação preço Gleba Palhano R$6,29/100g
+- WebSearch: The Best Donuts → diversificação self-service (verão 2025)
+- WebFetch: Maioria dos artigos retornou HTTP 403 — intel derivada de WebSearch e snippets agregados
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/milkymoo.md` | ADICIONADO bloco ciclo #196: ativação Shakira (30/04–09/05), collab "Como Treinar o Dragão" (jun/26), Smoor's inverno + Havanna Matilda, tabela promoções recorrentes (Quarta da Moo 50%, Dia da Vaca 08/07, Dia do Milkshake 12/09), 5 implicações estratégicas para MilkyPot |
+| `belinha/competitors/the-best-acai.md` | ADICIONADO bloco ciclo #196: Festival Junino 2025 detalhado + projeção 2026 (~26/06), The Best Donuts mapeado, tabela preços Londrina atualizada (Gleba R$6,29 vs Arthur Thomas R$5,99), 4 implicações estratégicas |
+
+**Intel-chave descoberta:**
+
+**MilkyMoo:**
+- "Cultural hijacking" é estratégia consolidada: Shakira (mai), Como Treinar o Dragão (jun), O Boticário (abr-mai)
+- "Carameluda" encerra maio → mercado aberto para Potinho Caramelado (01/07) capturar o público aquecido
+- "Quarta da Moo" 50% via app toda semana = maior arma de retenção; MilkyPot precisa de equivalente WA
+- "Dia da Vaca" 08/07 = oportunidade de contracampanha com ovelhinha no mesmo dia
+- Smoor's = inverno quente (marshmallow tostado) — MilkyPot pode reposicionar Ninho como comfort food de inverno sem criar produto novo
+
+**The Best Açaí:**
+- Festival Junino deve se repetir ~26/06/2026 com sorvetes sazonais (canjica, pamonha, paçoca, cocada)
+- Londrina: R$6,29/100g (Gleba Palhano) — mais caro que o esperado; MilkyPot deve reforçar "preço fixo, sem balança, sem susto"
+- The Best Donuts: modelo de diversificação sem complexidade operacional — inspiração para topping sazonal MilkyPot
+- HQ do Grupo em Londrina = 3 lojas locais como laboratório; monitorar semanalmente
+
+**Commit:** `db736c8`
+
+**Próximo passo sugerido:**
+- **Ciclo #197 — Conteúdo:** Brief "Dia da Vaca" (08/07) — contracampanha ovelhinha ("aqui é dia da ovelhinha") + brief semanal quarta-feira ("Quarta Feliz" WA)
+- **Ciclo #198 — UX:** Auditoria `js/cardapio.js` 1050 linhas — ciclo #193 corrigiu bug de bebidas; verificar outros padrões inconsistentes de cálculo
+- **Ciclo #199 — Conversão:** Script de abertura do Festival Junino no WA Business (keyword + mensagem automática) + checklist operacional pré-26/06
+- **Ciclo #200 (marco):** Auto-aprimoramento — releitura completa `belinha/log.md` + revisão `belinha/estrategia.md`
+- **Operador (URGENTE — prazo 30/05):** Confirmar ingredientes + naming "Potinho Junino" — mensagens D+30 já escritas com contingência, mas nome oficial necessário
+- **Operador:** Executar guia Google Search Console antes de 25/05 (1 mês da inauguração)
+- **Operador:** Monitorar The Best Açaí Londrina em ~20/06 para detectar antecipação do Festival Junino
+- **Operador:** Configurar contracampanha "Dia da Vaca" (08/07) no Stories — briefar designer 1 semana antes
+
+_Belinha — Ciclo #196 | 2026-05-11_
+
+---
+
 ## Ciclo #195 — 2026-05-11
 
 **Área:** Conversão — Brief operacional reativação D+30 Onda 1 (25/05–01/06/2026)
