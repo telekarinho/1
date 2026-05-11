@@ -3656,13 +3656,17 @@
         var _todayOrders = _allOrders.filter(function(o){ return !o.deleted && o.createdAt && o.createdAt.slice(0,10) === _todayKeyLocal; });
         var _seqNum = _todayOrders.length + 1;
 
+        // BUG FIX: selectedPaymentMethod era variavel UNDEFINED → throw ReferenceError
+        // ao clicar Dinheiro/PIX/Debito/Credito no modal de pagamento → pedido nao
+        // finalizava. Le do select 'paymentMethod' que e setado em finishOrder linha 3557.
+        var _selectedPay = (document.getElementById('paymentMethod') && document.getElementById('paymentMethod').value) || 'Dinheiro';
         var order={
             id:Utils.generateId(),createdAt:new Date().toISOString(),status:'confirmado',
             dailySeq:_seqNum,                  // numeração diária pra exibição no kanban
             dailyDate:_todayKeyLocal,
             type:orderType,source:'pdv',
             delivery:orderType==='delivery'?'delivery':null,
-            payment:selectedPaymentMethod,
+            payment:_selectedPay,
             items:cart.map(function(c){
                 return{
                     productId:c.id||null,  // referência ao catalog_v2 product ID (p/ CMV e finance-realtime)
