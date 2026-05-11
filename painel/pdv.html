@@ -1162,6 +1162,7 @@
 <script src="../js/core/audit.js"></script>
 <script src="../js/core/adminconfig.js?v=mp-v92"></script>
 <script src="../js/core/motivacional.js?v=mp-v92"></script>
+<script src="../js/core/operator-context.js?v=mp-v200"></script>
 <script src="../js/core/caixa.js?v=mp-v92"></script>
 <script src="../js/core/financas.js?v=mp-v92"></script>
 <script src="../js/core/onboarding.js?v=mp-v92-selfheal"></script>
@@ -2076,13 +2077,45 @@
     // ───── Finance OS no PDV: mensagem motivacional + chip caixa + chip meta ─────
     window.renderPdvStatusChips = function () {
         try {
-            // Chip do caixa (compacto): aberto/fechado + botoes
+            // Chip do caixa (compacto): aberto/fechado + operador + dispositivo + botoes
+            // Reflete o ESTADO CROSS-PC (sincronizado via Firestore). Mostra quem
+            // abriu, em qual dispositivo (PC do balcao vs Mobile do gerente) e a
+            // hora. Permite gerente fora da loja saber se o caixa esta aberto.
             var caixaChip = document.getElementById('pdvCaixaChip');
             if (caixaChip && typeof Caixa !== 'undefined') {
                 var st = Caixa.getTurnoState(fid);
                 var color = st.status === 'aberto' ? '#10B981' : st.status === 'fechado' ? '#2196F3' : '#9E9E9E';
-                var label = st.status === 'aberto' ? '🟢 Caixa aberto' : st.status === 'fechado' ? '🔒 Caixa fechado hoje' : '⚪ Caixa fechado';
-                var saldo = st.status === 'aberto' ? ' · ' + Caixa.formatBRL(st.saldoEsperadoDinheiro) : '';
+                var label = st.status === 'aberto' ? '🟢 Aberto' : st.status === 'fechado' ? '🔒 Fechado hoje' : '⚪ Caixa fechado';
+                var detalhes = '';
+                var tooltip = '';
+                var thisDevice = (Caixa.getDeviceId ? Caixa.getDeviceId() : '');
+                if (st.status === 'aberto' && st.abertura) {
+                    var op = st.abertura.createdByName || 'Operador';
+                    var hr = '';
+                    try {
+                        var d = new Date(st.abertura.createdAt);
+                        hr = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+                    } catch(_){}
+                    var saldo = Caixa.formatBRL(st.saldoEsperadoDinheiro);
+                    detalhes = ' · ' + op + (hr ? ' (' + hr + ')' : '') + ' · ' + saldo;
+                    // Hint se foi aberto em OUTRO dispositivo
+                    var aberturaDev = st.abertura.deviceId || '';
+                    if (aberturaDev && thisDevice && aberturaDev !== thisDevice) {
+                        var devLabel = (aberturaDev.indexOf('Mobile') === 0 ? '📱' : '🖥️') + ' ' + aberturaDev;
+                        detalhes += ' · <span style="opacity:.7">' + devLabel + '</span>';
+                        tooltip = 'Aberto em outro dispositivo (' + aberturaDev + '). Sincronizado via nuvem.';
+                    } else if (aberturaDev) {
+                        tooltip = 'Aberto neste dispositivo (' + aberturaDev + ')';
+                    }
+                } else if (st.status === 'fechado' && st.fechamento) {
+                    var opF = st.fechamento.createdByName || 'Operador';
+                    var hrF = '';
+                    try {
+                        var dF = new Date(st.fechamento.createdAt);
+                        hrF = dF.getHours().toString().padStart(2,'0') + ':' + dF.getMinutes().toString().padStart(2,'0');
+                    } catch(_){}
+                    detalhes = ' · ' + opF + (hrF ? ' (' + hrF + ')' : '');
+                }
                 var btn = '';
                 if (st.status === 'nao_aberto') {
                     btn = '<button onclick="Caixa.showOpenModal(\'' + fid + '\', renderPdvStatusChips)" style="margin-left:6px;background:#10B981;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">Abrir caixa</button>';
@@ -2091,7 +2124,7 @@
                           '<button onclick="Caixa.showSangriaModal(\'' + fid + '\', renderPdvStatusChips)" style="margin-left:4px;background:#F59E0B;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer" title="Sangria">📤</button>' +
                           '<button onclick="Caixa.showReforcoModal(\'' + fid + '\', renderPdvStatusChips)" style="margin-left:4px;background:#059669;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer" title="Reforço">📥</button>';
                 }
-                caixaChip.innerHTML = '<span style="background:' + color + '22;color:' + color + ';padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700">' + label + saldo + '</span>' + btn;
+                caixaChip.innerHTML = '<span title="' + (tooltip || '') + '" style="background:' + color + '22;color:' + color + ';padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:2px">' + label + detalhes + '</span>' + btn;
                 caixaChip.style.display = '';
             }
             // Chip da meta (sempre visivel)
