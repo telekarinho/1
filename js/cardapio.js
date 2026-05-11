@@ -711,10 +711,10 @@ const CardapioApp = {
             id: b.id, name: b.name, price: b.price, emoji: b.emoji, qty: b.qty || 1
         }));
 
-        // Calculate totals
+        // Calculate totals — bebidas are per-order (not per-potinho qty), matching renderResumo display
         const extrasTotal = extras.reduce((s, e) => s + e.price * (e.qty || 1), 0);
         const bebidasTotal = bebidas.reduce((s, b) => s + b.price * (b.qty || 1), 0);
-        const total = ((this.selectedTamanho.price + extrasTotal + bebidasTotal) * this.quantity);
+        const total = ((this.selectedTamanho.price + extrasTotal) * this.quantity) + bebidasTotal;
 
         // UNIFIED CART FORMAT - same as index.html bottom sheet
         const item = {
@@ -757,10 +757,10 @@ const CardapioApp = {
         if (!item) return;
         item.qty = (item.qty || 1) + delta;
         if (item.qty <= 0) { this.removeFromMenuCart(id); return; }
-        // Recalculate total
+        // Recalculate total — bebidas are per-order (not per-potinho qty)
         const extrasTotal = (item.extras || []).reduce((s, e) => s + e.price * (e.qty || 1), 0);
         const bebidasTotal = (item.bebidas || []).reduce((s, b) => s + b.price * (b.qty || 1), 0);
-        item.total = (item.sizePrice + extrasTotal + bebidasTotal) * item.qty;
+        item.total = (item.sizePrice + extrasTotal) * item.qty + bebidasTotal;
         this.saveCart();
         this.updateCartCount();
         this.renderCartItems();
