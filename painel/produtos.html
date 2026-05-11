@@ -395,11 +395,42 @@
 <script src="../js/core/belinha-page-scanners.js?v=mp-v204"></script>
 <script src="../js/core/belinha-widget.js?v=mp-v204"></script>
 <script>
-(function(){
+(async function(){
   if (!Auth.requireAuth('franchisee')) return;
   DataStore.init();
   const session = Auth.getSession();
   const fid = session.franchiseId;
+
+  // BUSCA DO FIRESTORE SE LOCAL VAZIO:
+  // localStorage pode estar vazio (cache limpo, dispositivo novo, etc).
+  // O CatalogV2.load(fid) so le de localStorage — antes mostrava
+  // "Nenhum produto ainda" mesmo com 44 produtos no Firestore.
+  // Fetch direto via firebase.firestore() (rules permitem read publico
+  // de catalog_v2_*). NAO escreve no Firestore — so popula localStorage.
+  try {
+    if (window.CatalogV2 && CatalogV2.load && typeof firebase !== 'undefined' && firebase.firestore) {
+      const local = CatalogV2.load(fid);
+      const hasProdutos = local && Array.isArray(local.produtos) && local.produtos.length > 0;
+      if (!hasProdutos && fid) {
+        console.log('[produtos] localStorage vazio, buscando catalog_v2_' + fid + ' do Firestore...');
+        const doc = await firebase.firestore().collection('datastore').doc('catalog_v2_' + fid).get({ source: 'server' });
+        if (doc.exists) {
+          const cloudData = JSON.parse(doc.data().value || 'null');
+          if (cloudData && Array.isArray(cloudData.produtos) && cloudData.produtos.length > 0) {
+            // Popula localStorage com dado do Firestore (NAO escreve de volta)
+            DataStore.set('catalog_v2_' + fid, cloudData);
+            console.log('[produtos] Catalog sincronizado:', cloudData.produtos.length, 'produtos');
+          } else {
+            console.warn('[produtos] catalog_v2_' + fid + ' existe no Firestore mas sem produtos');
+          }
+        } else {
+          console.warn('[produtos] catalog_v2_' + fid + ' nao existe no Firestore');
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[produtos] fetch catalog do Firestore falhou:', e.message);
+  }
 
   // Sincroniza com PDV/cardápio: aplica todas migrations idempotentes
   // antes de listar produtos. Garante que o admin sempre vê o mesmo
