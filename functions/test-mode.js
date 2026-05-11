@@ -42,7 +42,7 @@ async function resolveTestAdmin(request) {
 const crypto = require("crypto");
 exports.generateTestToken = onCall({ region: "southamerica-east1" }, async (request) => {
     const caller = await resolveTestAdmin(request);
-    const { franchiseId } = request.data;
+    const { franchiseId, permanent } = request.data;
     if (!franchiseId) throw new HttpsError("invalid-argument", "franchiseId obrigatorio");
 
     const safeId  = franchiseId.replace(/[^a-zA-Z0-9]/g, "_");
@@ -50,7 +50,14 @@ exports.generateTestToken = onCall({ region: "southamerica-east1" }, async (requ
 
     // Token aleatorio de 32 bytes (URL-safe)
     const token = crypto.randomBytes(32).toString("base64url");
-    const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hora
+    // Mudanca a pedido do dono: usuario de teste deve ser PERMANENTE
+    // (testes, treinamentos, suporte a novos franqueados, etc.).
+    // expiresAt = null indica "nunca expira". Pode revogar via flag
+    // 'revoked: true' no doc test_tokens/{token} se vazar.
+    // Aceita override `permanent: false` pra geracao temporaria (1h)
+    // se algum admin quiser um token efemero (testes pontuais).
+    const isPermanent = permanent !== false; // default agora eh PERMANENTE
+    const expiresAt = isPermanent ? null : (Date.now() + 60 * 60 * 1000);
 
     // Salva token em Firestore — login.html valida via lookup
     await getDb().collection("test_tokens").doc(token).set({
@@ -59,10 +66,12 @@ exports.generateTestToken = onCall({ region: "southamerica-east1" }, async (requ
         franchiseId,
         role:        "franchisee",
         isTestSession: true,
+        isPermanent,
         name:        `Test Agent (${franchiseId})`,
         email:       `${testUid}@test.milkypot.internal`,
-        expiresAt:   expiresAt,
+        expiresAt:   expiresAt,  // null = permanente
         used:        false,
+        revoked:     false,
         generatedAt: admin.firestore.FieldValue.serverTimestamp(),
         generatedBy: caller.email
     });
@@ -92,7 +101,8 @@ exports.generateTestToken = onCall({ region: "southamerica-east1" }, async (requ
         testUid,
         franchiseId,
         loginUrl:   `https://milkypot.com/login.html?testToken=${encodeURIComponent(token)}&fid=${encodeURIComponent(franchiseId)}`,
-        expiresIn:  "1 hora"
+        expiresIn:  isPermanent ? "nunca (permanente)" : "1 hora",
+        isPermanent
     };
 });
 
@@ -117,6 +127,13 @@ exports.claimTestSession = onCall({ region: "southamerica-east1" }, async (reque
     if (!tokenDoc.exists) throw new HttpsError("not-found", "Token invalido");
 
     const tokenData = tokenDoc.data();
+
+    // Revogacao manual (admin pode invalidar token vazado)
+    if (tokenData.revoked === true) {
+        throw new HttpsError("permission-denied", "Token revogado pelo admin");
+    }
+
+    // Expiracao: somente se expiresAt foi setado (null = permanente)
     if (tokenData.expiresAt && Date.now() > tokenData.expiresAt) {
         throw new HttpsError("deadline-exceeded", "Token expirado");
     }

@@ -116,6 +116,14 @@
                     .then(function(ctx){
                         var data = ctx.result;
                         // 4) Salva session local
+                        // expiresAt: null = sessao PERMANENTE (test user nao expira)
+                        // Se backend retornar expiresAt valido (token efemero 1h),
+                        // respeita; caso contrario, sessao infinita.
+                        var rawExpiresAt = data.expiresAt;
+                        var sessionExpiresAt = null;
+                        if (rawExpiresAt && rawExpiresAt > 0) {
+                            sessionExpiresAt = new Date(rawExpiresAt).toISOString();
+                        }
                         var session = {
                             userId:        data.testUid,
                             email:         data.email || (data.testUid + '@test.milkypot.internal'),
@@ -125,9 +133,10 @@
                             firebaseUid:   ctx.cred.user.uid,
                             anonUid:       ctx.cred.user.uid,
                             isTestSession: true,
+                            isPermanent:   !sessionExpiresAt,
                             token:         tok,
                             loginAt:       new Date().toISOString(),
-                            expiresAt:     new Date(data.expiresAt || (Date.now() + 3600000)).toISOString()
+                            expiresAt:     sessionExpiresAt // null = permanente
                         };
                         localStorage.setItem('mp_session', JSON.stringify(session));
                         window.location.href = '/painel/test-checklist.html';
