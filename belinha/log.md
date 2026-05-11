@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #193 — 2026-05-11
+
+**Área:** Código/Performance — bug fix consistência de total com bebidas em `js/cardapio.js`
+
+**Contexto:** Auditoria de `js/cardapio.js` (1.050 linhas, 46K) prescrita pelo ciclo #192. Arquivo está limpo — sem console.logs, sem dead code óbvio. Porém foi identificado um **bug de preço real**: 4 funções calculavam o total do pedido com fórmulas inconsistentes para bebidas.
+
+**O que pesquisou/analisou:**
+- Leitura completa de `js/cardapio.js` linha a linha
+- Identificadas 4 fórmulas de total: `renderResumo` (l.582), `changeQty` (l.675), `addToMenuCart` (l.717), `updateMenuCartQty` (l.763)
+- `renderResumo` + `changeQty`: `(base + adicionais) × qty + bebidas` → bebidas não multiplicadas por qty
+- `addToMenuCart` + `updateMenuCartQty`: `(base + adicionais + bebidas) × qty` → bebidas multiplicadas por qty
+- **Impacto concreto:** com qty=2 e bebida R$10, o cliente via R$10 no resumo mas o carrinho armazenava e cobrava R$20
+- Conclusão: bebidas são por-pedido (não por-potinho), a fórmula do resumo estava correta e as funções de carrinho estavam erradas
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `js/cardapio.js` | `addToMenuCart` (l.717): `(price + extras + bebidas) × qty` → `(price + extras) × qty + bebidas` |
+| `js/cardapio.js` | `updateMenuCartQty` (l.763): `(price + extras + bebidas) × qty` → `(price + extras) × qty + bebidas` |
+
+**Impacto:**
+- Elimina discrepância entre preço exibido no resumo e preço armazenado/cobrado no carrinho
+- Bug afetava apenas pedidos com bebidas + qty > 1 (cenário realista: família pedindo 2+ potinhos + milkshake)
+- Sem mudança visual — só a matemática interna do carrinho
+
+**Commit:** `51997e3`
+
+**Próximo passo sugerido:**
+- **Operador (AÇÃO IMEDIATA):** Executar guia `guia-google-search-console.md` — submeter sitemap ⚠️ PENDENTE DESDE CICLO #148
+- **Operador (AÇÃO IMEDIATA):** Executar WA broadcast `wa-broadcast-segunda-semana4.md` se ainda não executado
+- **Ciclo #194 — Conteúdo:** Brief consolidação Potinho Caramelado pós-reveal (02–07/07)
+- **Ciclo #195 — Conversão:** Estrutura de reativação D+30 para clientes da semana 1 (janela: 25/05–01/06)
+- **Ciclo #196 — Concorrentes:** Refetch MilkyMoo + TheBest (última atualização há 6+ ciclos)
+- **Operador (URGENTE até 30/05):** Confirmar ingredientes + naming "Potinho Junino" ⚠️
+- **Operador:** Confirmar calda de caramelo + granola para Potinho Caramelado até 20/06
+- **Operador:** CNPJ + DPO — LGPD — risco legal crescente
+
+_Belinha — Ciclo #193 | 2026-05-11_
+
+---
+
 ## Ciclo #192 — 2026-05-11
 
 **Área:** SEO — Guia operacional Google Search Console + submissão do sitemap
