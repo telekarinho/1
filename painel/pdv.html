@@ -1159,29 +1159,29 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <script src="../js/core/constants.js"></script>
 <script src="../js/core/utils.js"></script>
-<script src="../js/core/datastore.js?v=mp-v112"></script>
-<script src="../js/core/cloud-functions.js?v=mp-v133"></script>
+<script src="../js/core/datastore.js?v=mp-v204"></script>
+<script src="../js/core/cloud-functions.js?v=mp-v204"></script>
 <script src="../js/core/firebase-config.js"></script>
 <script src="../js/core/raspinha-engine.js"></script>
 <script src="../js/core/auth.js"></script>
 <script src="../js/core/audit.js"></script>
-<script src="../js/core/adminconfig.js?v=mp-v92"></script>
-<script src="../js/core/motivacional.js?v=mp-v92"></script>
-<script src="../js/core/operator-context.js?v=mp-v200"></script>
-<script src="../js/core/caixa.js?v=mp-v92"></script>
-<script src="../js/core/financas.js?v=mp-v92"></script>
-<script src="../js/core/onboarding.js?v=mp-v92-selfheal"></script>
-<script src="../js/core/units.js?v=mp-v92"></script>
-<script src="../js/core/error-tracking.js?v=mp-v92"></script>
-<script src="../js/core/recipes.js?v=mp-v92"></script>
-<script src="../js/core/analytics-advanced.js?v=mp-v92"></script>
-<script src="../js/core/offline-queue.js?v=mp-v92"></script>
-<script src="../js/core/pix.js?v=mp-v92"></script>
-<script src="../js/core/nfce.js?v=mp-v92"></script>
-<script src="../js/core/printer.js?v=mp-v92"></script>
+<script src="../js/core/adminconfig.js?v=mp-v204"></script>
+<script src="../js/core/motivacional.js?v=mp-v204"></script>
+<script src="../js/core/operator-context.js?v=mp-v204"></script>
+<script src="../js/core/caixa.js?v=mp-v204"></script>
+<script src="../js/core/financas.js?v=mp-v204"></script>
+<script src="../js/core/onboarding.js?v=mp-v204"></script>
+<script src="../js/core/units.js?v=mp-v204"></script>
+<script src="../js/core/error-tracking.js?v=mp-v204"></script>
+<script src="../js/core/recipes.js?v=mp-v204"></script>
+<script src="../js/core/analytics-advanced.js?v=mp-v204"></script>
+<script src="../js/core/offline-queue.js?v=mp-v204"></script>
+<script src="../js/core/pix.js?v=mp-v204"></script>
+<script src="../js/core/nfce.js?v=mp-v204"></script>
+<script src="../js/core/printer.js?v=mp-v204"></script>
 <script src="../js/cardapio-data.js"></script>
-<script src="../js/core/cost-calculator.js?v=mp-v91"></script>
-<script src="../js/core/catalog-v2.js?v=mp-v91"></script>
+<script src="../js/core/cost-calculator.js?v=mp-v204"></script>
+<script src="../js/core/catalog-v2.js?v=mp-v204"></script>
 <script>
 (function(){
     if(!Auth.requireAuth('franchisee'))return;
@@ -5830,18 +5830,50 @@
             console.log('[PDV] SW registered:', reg.scope);
             // Força checagem de update imediata (browser throttle pode atrasar 24h)
             reg.update().catch(function(){});
+            // AUTO-UPDATE AGGRESSIVE: re-checa a cada 60s. Operador nunca precisa
+            // fazer hard refresh — deploys novos chegam silenciosamente.
+            setInterval(function(){
+                reg.update().catch(function(){});
+            }, 60000);
             window.addEventListener('online', function(){
                 reg.active && reg.active.postMessage({type:'REPLAY_OFFLINE_QUEUE'});
                 // Também checa se tem versão nova quando volta online
                 reg.update().catch(function(){});
             });
+            // Detecta SW novo instalado e force ativacao + reload
+            reg.addEventListener('updatefound', function(){
+                var nw = reg.installing;
+                if (!nw) return;
+                nw.addEventListener('statechange', function(){
+                    if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                        // Tem SW antigo controlando + novo instalado pronto.
+                        // skipWaiting() ja eh chamado no install handler do sw.js,
+                        // entao isso so confirma. Quando ativar, controllerchange
+                        // dispara o reload abaixo.
+                        console.log('[PDV] Novo SW instalado, aguardando ativacao...');
+                    }
+                });
+            });
         }).catch(function(e){ console.warn('[PDV] SW failed:', e); });
+
+        // controllerchange = SW novo tomou controle. Reload imediato silencioso.
+        // Operador trabalhando vai ver a pagina recarregar sozinha quando deploy chega.
+        var _hasReloaded = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function(){
+            if (_hasReloaded) return;
+            _hasReloaded = true;
+            console.log('[PDV] Controle do SW mudou — recarregando automaticamente');
+            // Pequeno delay pra eventuais ops em vôo finalizarem (ex: write ja iniciado)
+            setTimeout(function(){ location.reload(); }, 500);
+        });
 
         // Listener pra mensagens do SW (FORCE_RELOAD quando nova versão ativa).
         // Sem isso, PDV fica preso em cache antigo enquanto resto do site atualiza.
         navigator.serviceWorker.addEventListener('message', function(e) {
             if (!e.data) return;
             if (e.data.type === 'FORCE_RELOAD' || e.data.type === 'NEW_VERSION_AVAILABLE') {
+                if (_hasReloaded) return;
+                _hasReloaded = true;
                 console.log('[PDV] Nova versão SW detectada, recarregando...');
                 location.reload();
             }
