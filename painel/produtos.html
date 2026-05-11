@@ -396,10 +396,41 @@
 <script src="../js/core/belinha-widget.js?v=mp-v204"></script>
 <script>
 (async function(){
+  // requireAuth('franchisee') ja libera super_admin automaticamente (auth.js linha 411)
   if (!Auth.requireAuth('franchisee')) return;
   DataStore.init();
   const session = Auth.getSession();
-  const fid = session.franchiseId;
+  let fid = session.franchiseId;
+
+  // ADMIN SEM FID: super_admin nao tem franchiseId fixa. Resolve pra
+  // primeira franquia disponivel (ou muffato-quintino como default).
+  // Operador owner (super_admin) edita catalogo desta franquia. Em
+  // sistema multi-franquia futuro, pode-se adicionar dropdown.
+  if (!fid) {
+    try {
+      const fr = (DataStore.get('franchises') || []);
+      if (Array.isArray(fr) && fr.length > 0) {
+        fid = fr[0].id;
+        console.log('[produtos] super_admin sem fid — usando primeira franquia:', fid);
+      } else if (typeof firebase !== 'undefined' && firebase.firestore) {
+        const fdoc = await firebase.firestore().collection('datastore').doc('franchises').get({ source: 'server' });
+        if (fdoc.exists) {
+          const list = JSON.parse(fdoc.data().value || '[]');
+          if (Array.isArray(list) && list[0]) {
+            fid = list[0].id;
+            DataStore.set('franchises', list);
+            console.log('[produtos] super_admin sem fid — buscou franquias do cloud:', fid);
+          }
+        }
+      }
+    } catch (e) { console.warn('[produtos] resolve fid pra admin falhou:', e.message); }
+    if (!fid) {
+      console.warn('[produtos] nenhuma franquia disponivel — abortando');
+      return;
+    }
+  }
+  // Disponibiliza pra outras funcoes do script via window
+  window._catalogEditorFid = fid;
 
   // BUSCA DO FIRESTORE SE LOCAL VAZIO:
   // localStorage pode estar vazio (cache limpo, dispositivo novo, etc).
@@ -411,7 +442,7 @@
     if (window.CatalogV2 && CatalogV2.load && typeof firebase !== 'undefined' && firebase.firestore) {
       const local = CatalogV2.load(fid);
       const hasProdutos = local && Array.isArray(local.produtos) && local.produtos.length > 0;
-      if (!hasProdutos && fid) {
+      if (!hasProdutos) {
         console.log('[produtos] localStorage vazio, buscando catalog_v2_' + fid + ' do Firestore...');
         const doc = await firebase.firestore().collection('datastore').doc('catalog_v2_' + fid).get({ source: 'server' });
         if (doc.exists) {
