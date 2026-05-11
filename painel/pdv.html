@@ -10,6 +10,10 @@
     <link rel="stylesheet" href="../css/shared-panel.css">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#42A5F5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MilkyPot PDV">
+    <link rel="apple-touch-icon" href="../images/logo-milkypot.png">
     <link rel="icon" type="image/png" href="../images/logo-milkypot.png">
     <meta name="robots" content="noindex, nofollow">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
@@ -20,10 +24,6 @@
         /* Fullscreen PWA-like */
         html { height: 100%; }
         body { height: 100%; }
-        /* Layout flex: header pega altura natural (cresce com chip cross-PC),
-           layout abaixo preenche o resto. Antes era height:calc(100vh - 44px),
-           que assumia header de 44px fixos e quebrava quando o chip de caixa
-           enriquecido (operador + hora + dispositivo) fazia o header crescer. */
         .pdv-header { flex-shrink: 0; }
         .pdv-layout { display: grid; grid-template-columns: 1fr 380px; flex: 1 1 auto; min-height: 0; }
 
@@ -61,17 +61,15 @@
             gap: 6px;
             background: rgba(255,255,255,0.16);
             border: 1px solid rgba(255,255,255,0.28);
-            padding: 7px 12px 7px 8px;
+            padding: 5px 10px 5px 6px;
             border-radius: 22px;
-            /* Aumentado de 12 -> 14px (audit: operador nao acha chip pequeno) */
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 700;
             cursor: pointer;
             user-select: none;
             transition: background .12s, transform .08s;
             color: #fff;
             white-space: nowrap;
-            min-height: 36px;
         }
         .pdv-shortcuts .ks:hover { background: rgba(255,255,255,0.28); }
         .pdv-shortcuts .ks:active { transform: scale(.96); }
@@ -136,9 +134,13 @@
         .pitem.esgotado .pp { color: #9CA3AF; text-decoration: line-through; }
         .pitem.baixoestoque { border-color: #FCD34D; }
         .pitem.baixoestoque:hover { border-color: #F59E0B; }
+        /* FASE 1F: produto sem receita — borda laranja-amarelado discreta, nao bloqueia venda */
+        .pitem.semreceita { border-color: #FDBA74; background: #FFF7ED; }
+        .pitem.semreceita:hover { border-color: #FB923C; }
         .pbadge { position: absolute; top: 4px; right: 4px; padding: 2px 6px; border-radius: 8px; font-size: 9px; font-weight: 800; line-height: 1.2; z-index: 1; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .pbadge.bd-out { background: #DC2626; color: #fff; }
         .pbadge.bd-low { background: #FBBF24; color: #78350F; }
+        .pbadge.bd-norecipe { background: #FB923C; color: #fff; }
 
         /* Cart sidebar — GRID layout: head/tabs/cust auto, items 1fr, foot auto.
            Garante que cart-foot SEMPRE caiba (foot tem prioridade sobre items). */
@@ -268,21 +270,9 @@
             box-shadow: 0 6px 22px rgba(0,0,0,0.18);
         }
         @media (max-width: 480px) {
-            .pdv-action-fab { left: 8px; right: 8px; justify-content: space-between; gap: 6px; }
-            .pdv-action-fab button { font-size: 13px; padding: 12px 14px; flex: 1; justify-content: center; min-width: 0; }
-            /* Total SEMPRE visivel no mobile — operador rapido precisa ver
-               o valor a todo momento. Antes era display:none. */
-            .pdv-action-fab .fab-total {
-                display: inline-flex !important;
-                flex: 0 0 auto;
-                padding: 8px 10px;
-                font-size: 13px;
-                font-weight: 800;
-                background: rgba(255,255,255,0.16);
-                border-radius: 10px;
-                color: #fff;
-                white-space: nowrap;
-            }
+            .pdv-action-fab { left: 8px; right: 8px; justify-content: center; }
+            .pdv-action-fab button { font-size: 13px; padding: 12px 14px; flex: 1; justify-content: center; }
+            .pdv-action-fab .fab-total { display: none; }
         }
 
         /* Buffet FAB */
@@ -297,6 +287,9 @@
         .challenge-fab { position: fixed; bottom: 18px; left: 190px; width: 76px; height: 70px; border-radius: 18px; background: linear-gradient(135deg, #6C63FF, #42A5F5); color: #fff; border: none; box-shadow: 0 6px 20px rgba(66,165,245,0.42); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; transition: transform 0.15s; }
         .challenge-fab:hover { transform: scale(1.06); box-shadow: 0 10px 28px rgba(66,165,245,0.55); }
         .challenge-fab:active { transform: scale(0.95); }
+        .tv-fab { position: fixed; bottom: 18px; left: 274px; width: 52px; height: 70px; border-radius: 18px; background: linear-gradient(135deg, #00C853, #00897B); color: #fff; border: none; box-shadow: 0 6px 20px rgba(0,200,83,0.42); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; transition: transform 0.15s; }
+        .tv-fab:hover { transform: scale(1.06); box-shadow: 0 10px 28px rgba(0,200,83,0.55); }
+        .tv-fab:active { transform: scale(0.95); }
 
         /* Buffet / Weight Modal */
         .buffet-modal { background: #fff; border-radius: 20px; width: 520px; max-width: 95vw; max-height: 92vh; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.25); display: flex; flex-direction: column; }
@@ -527,6 +520,12 @@
                 width: 60px; height: 56px;
                 border-radius: 14px;
             }
+            .tv-fab {
+                bottom: calc(62vh + 12px) !important;
+                left: 220px;
+                width: 46px; height: 56px;
+                border-radius: 14px;
+            }
         }
 
         @media(max-width:480px) {
@@ -566,6 +565,12 @@
                 bottom: calc(55vh + 8px) !important;
                 left: 134px;
                 width: 56px; height: 50px;
+                border-radius: 12px;
+            }
+            .tv-fab {
+                bottom: calc(55vh + 8px) !important;
+                left: 196px;
+                width: 42px; height: 50px;
                 border-radius: 12px;
             }
             /* Header compacto no celular */
@@ -642,6 +647,7 @@
             .buffet-fab { bottom: 12px !important; left: 12px; }
             .redeem-fab { bottom: 12px !important; }
             .challenge-fab { bottom: 12px !important; }
+            .tv-fab { bottom: 12px !important; }
         }
     </style>
 </head>
@@ -650,6 +656,7 @@
     <div style="display:flex;align-items:center;gap:10px;">
         <button class="btn-back" onclick="window.location.href='pedidos.html'">← Voltar</button>
         <h1><span class="pdv-prefix">🏪 PDV — </span><span id="pdvStore">MilkyPot</span></h1>
+        <button id="pdvOperatorChip" onclick="openOperatorModal(true)" title="Trocar operador" style="display:none;background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:20px;padding:5px 14px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit"></button>
     </div>
     <!-- ATALHOS DE TECLADO — sempre visíveis no header (operador encontra rápido) -->
     <div class="pdv-shortcuts" id="pdvShortcuts" aria-label="Atalhos de teclado">
@@ -683,11 +690,657 @@
         <div id="pdvMetaChip" style="display:none"></div>
         <div id="pdvCaixaChip" style="display:none"></div>
         <button class="pdv-orders-btn" id="pdvOrdersBtn" onclick="openOrdersModal()" title="Pedidos de hoje (status)">📋 Pedidos<span id="pdvOrdersBtnCount"></span></button>
+        <button class="pdv-orders-btn" id="pdvPontoBtn" onclick="openPdvPontoModal()" title="Bater ponto (CLT)" style="background:#16A34A">⏰ Ponto</button>
+        <button class="pdv-orders-btn" id="pdvResendBtn" onclick="pdvResendCaixaReport()" title="Reenviar email de fechamento do caixa de hoje" style="background:#7B1FA2">📧 Relatório</button>
         <div style="font-size:12px;opacity:0.8;" id="clk"></div>
         <button class="btn-back" onclick="openPrinterSettings()" title="Configurações de Impressão">⚙️</button>
         <button class="btn-back" onclick="toggleFullscreen()" title="Tela cheia (F11)">⛶</button>
     </div>
 </div>
+
+<!-- Modal: Beneficio Funcionario (sorvete do dia, lanche, etc) -->
+<div id="pdvBenefitOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10002;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:520px;max-height:92vh;overflow:auto;box-shadow:0 16px 40px rgba(0,0,0,.4)">
+        <div style="padding:20px 24px;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff">
+            <h3 style="margin:0;font-family:'Baloo 2',sans-serif">🎁 Benefício de Funcionário</h3>
+            <p style="margin:6px 0 0;font-size:.85rem;opacity:.95">Pessoal e intransferível. Registrado como custo da loja.</p>
+        </div>
+        <div style="padding:20px 24px">
+
+            <!-- AVISO LEGAL DESTACADO -->
+            <div style="background:#FEF3C7;border:2px solid #F59E0B;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.82rem;line-height:1.5;color:#92400E">
+                <strong style="display:block;margin-bottom:4px;color:#78350F">⚠️ Atenção — leia antes de continuar:</strong>
+                Este benefício é <strong>pessoal</strong> e <strong>não pode ser repassado</strong> a terceiros (clientes, amigos, familiares).
+                Limite de <strong id="pdvBenefitDailyLimit">1 por dia</strong>.
+                Em caso de fraude (pegar para outra pessoa, vender ou trocar), o benefício pode ser <strong>cancelado</strong>
+                e o funcionário fica sujeito a advertência ou demissão por justa causa (CLT art. 482).
+            </div>
+
+            <label style="display:block;font-size:.85rem;color:#374151;font-weight:700;margin-bottom:6px">Funcionário (precisa estar presente para autorizar)</label>
+            <select id="pdvBenefitStaff" style="width:100%;padding:11px 12px;border:2px solid #D1FAE5;border-radius:10px;font-size:1rem;font-family:inherit;margin-bottom:14px"></select>
+
+            <label style="display:block;font-size:.85rem;color:#374151;font-weight:700;margin-bottom:6px">Tipo de benefício</label>
+            <select id="pdvBenefitTipo" style="width:100%;padding:11px 12px;border:2px solid #D1FAE5;border-radius:10px;font-size:1rem;font-family:inherit;margin-bottom:14px">
+                <option value="sorvete_dia">🍦 Sorvete do dia</option>
+                <option value="refeicao">🍽️ Refeição</option>
+                <option value="lanche">🥪 Lanche</option>
+                <option value="bebida">🥤 Bebida</option>
+                <option value="outro">🎁 Outro</option>
+            </select>
+
+            <!-- Limite configurado + split de pagamento -->
+            <div id="pdvBenefitConfigInfo" style="background:#F0FDF4;border-left:4px solid #16A34A;padding:8px 12px;border-radius:6px;margin-bottom:12px;font-size:.78rem;color:#14532D"></div>
+
+            <!-- Split de pagamento (so aparece se valor exceder limite) -->
+            <div id="pdvBenefitSplit" style="display:none;background:#EFF6FF;border:2px solid #3B82F6;border-radius:10px;padding:12px;margin-bottom:14px">
+                <strong style="display:block;margin-bottom:8px;color:#1E40AF;font-size:.88rem">💡 Pagamento dividido</strong>
+                <div id="pdvBenefitSplitInfo" style="font-size:.85rem;color:#374151;margin-bottom:10px"></div>
+                <label style="display:block;font-size:.8rem;color:#374151;font-weight:700;margin-bottom:6px">Como pagar a diferença:</label>
+                <select id="pdvBenefitRemainderMethod" style="width:100%;padding:9px;border:1px solid #D1D5DB;border-radius:8px;font-family:inherit">
+                    <option value="Dinheiro">💵 Dinheiro</option>
+                    <option value="Pix">📲 Pix</option>
+                    <option value="Débito">💳 Débito</option>
+                    <option value="Crédito">💳 Crédito</option>
+                </select>
+            </div>
+
+            <!-- Aceite obrigatorio do funcionario -->
+            <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:12px;margin-bottom:14px">
+                <label style="display:flex;align-items:start;gap:10px;cursor:pointer;font-size:.85rem;color:#374151">
+                    <input type="checkbox" id="pdvBenefitAccept" style="margin-top:3px;width:18px;height:18px;cursor:pointer;flex-shrink:0">
+                    <span><strong>Eu, funcionário, declaro</strong> que recebo este benefício pessoalmente, é para meu consumo próprio,
+                    e estou ciente que repassar a outras pessoas configura fraude e pode resultar em sanções disciplinares.</span>
+                </label>
+            </div>
+
+            <label style="display:block;font-size:.85rem;color:#374151;font-weight:700;margin-bottom:6px">PIN do FUNCIONÁRIO (autoriza pessoalmente — não pode ser PIN de outro)</label>
+            <input type="password" id="pdvBenefitPin" inputmode="numeric" maxlength="4"
+                   placeholder="••••" style="font-size:1.5rem;text-align:center;letter-spacing:10px;width:100%;padding:11px;border:2px solid #D1FAE5;border-radius:10px;font-family:'Baloo 2',sans-serif;box-sizing:border-box;margin-bottom:14px">
+
+            <div id="pdvBenefitWarn" style="display:none;background:#FEF3C7;border-left:4px solid #F59E0B;padding:10px 12px;border-radius:8px;color:#92400E;font-size:.82rem;margin-bottom:10px"></div>
+            <div id="pdvBenefitErr" style="display:none;background:#FEE2E2;border-left:4px solid #DC2626;padding:10px 12px;border-radius:8px;color:#991B1B;font-size:.82rem;margin-bottom:10px"></div>
+        </div>
+        <div style="padding:14px 24px;border-top:1px solid #E5E7EB;display:flex;gap:10px;justify-content:flex-end">
+            <button onclick="cancelBenefit()" style="padding:10px 18px;border:1px solid #D1D5DB;background:#fff;border-radius:8px;cursor:pointer;font-weight:700">Cancelar</button>
+            <button onclick="confirmBenefit()" style="padding:10px 18px;background:#16A34A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">Confirmar e registrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Selecionar Operador (quem esta operando o PDV) -->
+<div id="pdvOperatorOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10001;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:560px;max-height:88vh;overflow:auto;box-shadow:0 16px 40px rgba(0,0,0,.4)">
+        <div style="padding:20px 24px;background:linear-gradient(135deg,#7C3AED,#3B82F6);color:#fff">
+            <h3 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:1.2rem">👤 Quem esta operando o PDV?</h3>
+            <p style="margin:6px 0 0;font-size:.85rem;opacity:.95">Toda venda, ponto e abertura/fechamento de caixa fica vinculada a quem voce escolher aqui.</p>
+        </div>
+        <div style="padding:20px 24px">
+            <div id="pdvOperatorList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
+            <div id="pdvOperatorPin" style="display:none;margin-top:14px;background:#F3F4F6;border-radius:10px;padding:14px">
+                <div style="font-size:.85rem;color:#374151;margin-bottom:8px">PIN de <strong id="pdvOperatorPinName"></strong>:</div>
+                <input type="password" id="pdvOperatorPinInput" inputmode="numeric" maxlength="4" pattern="\d{4}" autocomplete="off"
+                       placeholder="••••" style="font-size:1.6rem;text-align:center;letter-spacing:12px;width:100%;padding:12px;border:2px solid #D1D5DB;border-radius:8px;font-family:'Baloo 2',sans-serif;box-sizing:border-box">
+                <div id="pdvOperatorPinErr" style="display:none;color:#DC2626;margin-top:8px;font-size:.82rem"></div>
+                <div style="display:flex;gap:8px;margin-top:10px">
+                    <button onclick="cancelOperatorPin()" style="flex:1;padding:9px;border:1px solid #D1D5DB;background:#fff;border-radius:8px;cursor:pointer;font-weight:700">Voltar</button>
+                    <button onclick="confirmOperatorPin()" style="flex:2;padding:9px;background:#3B82F6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">Confirmar</button>
+                </div>
+            </div>
+            <div id="pdvOperatorEmpty" style="display:none;text-align:center;padding:24px;color:#6B7280;font-size:.85rem">
+                Nenhum colaborador cadastrado. <a href="equipe.html" style="color:#3B82F6;font-weight:700">Cadastre em Equipe</a> ou opere como Admin.
+            </div>
+        </div>
+        <div id="pdvOperatorFooter" style="padding:14px 24px;border-top:1px solid #E5E7EB;text-align:right">
+            <button id="pdvOperatorCancelBtn" onclick="closeOperatorModal()" style="padding:9px 18px;border:1px solid #D1D5DB;background:#fff;border-radius:8px;cursor:pointer;font-weight:700;display:none">Manter atual</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Bater Ponto (CLT) -->
+<div id="pdvPontoOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#fff;border-radius:14px;width:100%;max-width:380px;box-shadow:0 12px 40px rgba(0,0,0,.3);overflow:hidden">
+        <div style="padding:18px 22px;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff;display:flex;justify-content:space-between;align-items:center">
+            <h3 style="margin:0;font-family:'Baloo 2',sans-serif">⏰ Bater Ponto</h3>
+            <button onclick="closePdvPontoModal()" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">&times;</button>
+        </div>
+        <div style="padding:20px 22px">
+            <p style="margin:0 0 14px;color:#6B7280;font-size:.88rem">Digite seu PIN de 4 digitos:</p>
+            <input type="password" id="pdvPontoPin" inputmode="numeric" maxlength="4" pattern="\d{4}" autocomplete="off"
+                   placeholder="••••" style="font-size:2rem;text-align:center;letter-spacing:14px;width:100%;padding:14px;border:2px solid #D1D5DB;border-radius:10px;font-family:'Baloo 2',sans-serif;box-sizing:border-box">
+            <div id="pdvPontoResult" style="margin-top:14px"></div>
+        </div>
+        <div style="padding:14px 22px;border-top:1px solid #E5E7EB;display:flex;gap:10px;justify-content:flex-end">
+            <button onclick="closePdvPontoModal()" style="padding:9px 18px;background:#fff;border:1px solid #D1D5DB;border-radius:8px;cursor:pointer;font-weight:700">Cancelar</button>
+            <button onclick="pdvBaterPonto()" style="padding:9px 18px;background:#16A34A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<script src="../js/core/time-clock.js"></script>
+<script src="../js/core/operator-context.js"></script>
+<script src="../js/core/staff-benefits.js"></script>
+<script src="../js/core/legal-terms.js"></script>
+<script>
+    // ====== Beneficio Funcionario ======
+    var _pendingBenefit = null;
+
+    function onPaymentMethodChange() {
+        var method = document.getElementById('paymentMethod').value;
+        if (method === 'Beneficio Funcionario') {
+            openBenefitModal();
+        } else {
+            _pendingBenefit = null;
+        }
+    }
+
+    function openBenefitModal() {
+        var session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+        var fid = session && session.franchiseId;
+        if (!fid) return;
+
+        // Le configuracao da franquia
+        var cfg = (typeof StaffBenefits !== 'undefined' && StaffBenefits.getConfig)
+            ? StaffBenefits.getConfig(fid)
+            : { max_value_per_item: 8, max_items_per_day: 1, max_value_per_day: 8 };
+        document.getElementById('pdvBenefitDailyLimit').textContent =
+            cfg.max_items_per_day + ' por dia, até R$ ' + cfg.max_value_per_day.toFixed(2).replace('.', ',') + ' totais.';
+
+        var staff = (DataStore.getCollection('staff', fid) || []).filter(function(s) { return s.active && s.pin; });
+        if (!staff.length) {
+            alert('Nenhum funcionário com PIN cadastrado. Cadastre em Equipe primeiro.');
+            document.getElementById('paymentMethod').value = 'Dinheiro';
+            return;
+        }
+        var sel = document.getElementById('pdvBenefitStaff');
+        sel.innerHTML = staff.map(function(s) { return '<option value="' + s.id + '">' + Utils.escapeHtml(s.name) + '</option>'; }).join('');
+        document.getElementById('pdvBenefitPin').value = '';
+        document.getElementById('pdvBenefitAccept').checked = false;
+        document.getElementById('pdvBenefitErr').style.display = 'none';
+        document.getElementById('pdvBenefitWarn').style.display = 'none';
+        // Filtra tipos permitidos
+        var tipoSel = document.getElementById('pdvBenefitTipo');
+        var allTypes = [
+            { v: 'sorvete_dia', l: '🍦 Sorvete do dia' },
+            { v: 'refeicao', l: '🍽️ Refeição' },
+            { v: 'lanche', l: '🥪 Lanche' },
+            { v: 'bebida', l: '🥤 Bebida' },
+            { v: 'outro', l: '🎁 Outro' }
+        ];
+        tipoSel.innerHTML = allTypes
+            .filter(function(t) { return !cfg.allowed_types || cfg.allowed_types.indexOf(t.v) !== -1; })
+            .map(function(t) { return '<option value="' + t.v + '">' + t.l + '</option>'; }).join('');
+
+        document.getElementById('pdvBenefitOverlay').style.display = 'flex';
+        sel.onchange = checkBenefitDuplication;
+        tipoSel.onchange = checkBenefitDuplication;
+        checkBenefitDuplication();
+    }
+
+    function checkBenefitDuplication() {
+        var session = Auth.getSession();
+        var fid = session && session.franchiseId;
+        var staffId = document.getElementById('pdvBenefitStaff').value;
+        var tipo = document.getElementById('pdvBenefitTipo').value;
+        var warn = document.getElementById('pdvBenefitWarn');
+        var info = document.getElementById('pdvBenefitConfigInfo');
+        var splitBox = document.getElementById('pdvBenefitSplit');
+        var splitInfo = document.getElementById('pdvBenefitSplitInfo');
+
+        var cartTotal = 0;
+        try {
+            if (typeof cart !== 'undefined' && cart.length) {
+                cartTotal = cart.reduce(function(s, c) { return s + (c.unitPrice * c.qty); }, 0);
+            }
+        } catch (e) {}
+
+        var cfg = (typeof StaffBenefits !== 'undefined') ? StaffBenefits.getConfig(fid) : { max_value_per_item: 8 };
+
+        // Calcula split
+        var split = (typeof StaffBenefits !== 'undefined' && StaffBenefits.computeBenefitSplit)
+            ? StaffBenefits.computeBenefitSplit(fid, staffId, cartTotal)
+            : null;
+
+        var infoTxt = 'Pedido atual: <strong>R$ ' + cartTotal.toFixed(2).replace('.', ',') + '</strong>. ';
+        if (split && split.partialNeeded) {
+            // Excede — mostra split
+            if (split.allowsPartial && split.eligible > 0) {
+                infoTxt += '<span style="color:#1E40AF"><strong>💡 Use R$ ' + split.eligible.toFixed(2).replace('.', ',') +
+                    ' do benefício + R$ ' + split.remainder.toFixed(2).replace('.', ',') + ' em outra forma.</strong></span>';
+                splitBox.style.display = 'block';
+                splitInfo.innerHTML =
+                    'Benefício cobre <strong>R$ ' + split.eligible.toFixed(2).replace('.', ',') + '</strong> ' +
+                    '(limite: R$ ' + split.limit.toFixed(2).replace('.', ',') + ').<br>' +
+                    '<strong style="color:#7C3AED">Funcionário paga R$ ' + split.remainder.toFixed(2).replace('.', ',') + ' do próprio bolso.</strong>';
+            } else if (split.eligible === 0 && split.reason === 'daily_quantity_limit') {
+                infoTxt += '<span style="color:#DC2626"><strong>🚫 Funcionário já atingiu o limite do dia (' + split.limiteItens + ' itens).</strong> Lançamento será bloqueado.</span>';
+                splitBox.style.display = 'none';
+            } else {
+                infoTxt += '<span style="color:#DC2626"><strong>⚠️ Excede o limite. Pagamento dividido desativado.</strong></span>';
+                splitBox.style.display = 'none';
+            }
+        } else if (split && split.eligible >= cartTotal) {
+            infoTxt += '<span style="color:#16A34A">✓ Dentro do limite (max R$ ' + (split.limit || cfg.max_value_per_item).toFixed(2).replace('.', ',') + ').</span>';
+            splitBox.style.display = 'none';
+        }
+        info.innerHTML = infoTxt;
+
+        if (typeof StaffBenefits !== 'undefined' && tipo === 'sorvete_dia') {
+            if (StaffBenefits.alreadyReceivedToday(fid, staffId, 'sorvete_dia')) {
+                warn.textContent = '🚫 Este funcionário JÁ recebeu o sorvete do dia hoje. Limite: 1 por dia.';
+                warn.style.display = 'block';
+                return;
+            }
+        }
+        warn.style.display = 'none';
+    }
+
+    function cancelBenefit() {
+        document.getElementById('pdvBenefitOverlay').style.display = 'none';
+        _pendingBenefit = null;
+        document.getElementById('paymentMethod').value = 'Dinheiro';
+    }
+
+    function confirmBenefit() {
+        var session = Auth.getSession();
+        var fid = session && session.franchiseId;
+        var staffId = document.getElementById('pdvBenefitStaff').value;
+        var tipo = document.getElementById('pdvBenefitTipo').value;
+        var pin = document.getElementById('pdvBenefitPin').value.trim();
+        var accepted = document.getElementById('pdvBenefitAccept').checked;
+        var errEl = document.getElementById('pdvBenefitErr');
+
+        if (!accepted) {
+            errEl.textContent = 'O funcionário precisa marcar a caixa de declaração antes de receber o benefício.';
+            errEl.style.display = 'block';
+            return;
+        }
+        if (pin.length !== 4) {
+            errEl.textContent = 'PIN deve ter 4 dígitos';
+            errEl.style.display = 'block';
+            return;
+        }
+        var staff = (DataStore.getCollection('staff', fid) || []).find(function(s) { return s.id === staffId; });
+        if (!staff) { errEl.textContent = 'Funcionário não encontrado'; errEl.style.display = 'block'; return; }
+        if (staff.pin !== pin) {
+            errEl.textContent = '🚫 PIN incorreto. Benefício é PESSOAL e INTRANSFERÍVEL — somente o próprio funcionário pode autorizar com seu PIN.';
+            errEl.style.display = 'block';
+            return;
+        }
+
+        // Calcula valor do carrinho atual
+        var cartTotal = 0;
+        try {
+            if (typeof cart !== 'undefined' && cart.length) {
+                cartTotal = cart.reduce(function(s, c) { return s + (c.unitPrice * c.qty); }, 0);
+            }
+        } catch (e) {}
+
+        // Calcula split
+        var split = (typeof StaffBenefits !== 'undefined' && StaffBenefits.computeBenefitSplit)
+            ? StaffBenefits.computeBenefitSplit(fid, staff.id, cartTotal)
+            : { eligible: cartTotal, remainder: 0, partialNeeded: false };
+
+        // Pre-valida usando StaffBenefits — passa allowPartial=true se split tem remainder e config permite
+        if (typeof StaffBenefits !== 'undefined' && StaffBenefits.validateBeforeRegister) {
+            var v = StaffBenefits.validateBeforeRegister(fid, {
+                staffId: staff.id,
+                tipo: tipo,
+                value: cartTotal,
+                acceptedTerms: true,
+                allowPartial: split.partialNeeded && split.allowsPartial
+            });
+            if (!v.ok) {
+                errEl.textContent = '🚫 ' + v.error;
+                errEl.style.display = 'block';
+                return;
+            }
+        }
+
+        // Registra aceite legal (auditoria juridica)
+        if (typeof LegalTerms !== 'undefined' && LegalTerms.recordAcceptance) {
+            LegalTerms.recordAcceptance(fid, {
+                termId: 'benefit_grant',
+                acceptorType: 'staff',
+                acceptorId: staff.id,
+                acceptorName: staff.name,
+                acceptorCpf: staff.cpf || '',
+                acceptorPis: staff.pis || '',
+                channel: 'pdv',
+                metadata: { tipo: tipo, value: cartTotal }
+            });
+        }
+
+        // Salva intent — vai ser registrado quando o pedido fechar
+        _pendingBenefit = {
+            staffId: staff.id,
+            staffName: staff.name,
+            tipo: tipo,
+            acceptedTerms: true,
+            acceptedAt: new Date().toISOString(),
+            authorizedAt: new Date().toISOString(),
+            // Split de pagamento
+            eligibleValue: split.eligible,        // valor do beneficio (ate o limite)
+            remainderValue: split.remainder,      // valor que o funcionario paga
+            isPartial: split.partialNeeded,
+            remainderMethod: split.partialNeeded
+                ? document.getElementById('pdvBenefitRemainderMethod').value
+                : null
+        };
+
+        // Se tiver split, ja muda a forma de pagamento principal pra "Misto" e prepara as linhas
+        if (split.partialNeeded && split.allowsPartial) {
+            // Set payment method label
+            var paymentSel = document.getElementById('paymentMethod');
+            // Adiciona opcao "Beneficio + Resto" se nao existe
+            if (!paymentSel.querySelector('option[value="Beneficio + Resto"]')) {
+                var opt = document.createElement('option');
+                opt.value = 'Beneficio + Resto';
+                opt.textContent = '🎁 Benefício + ' + _pendingBenefit.remainderMethod;
+                paymentSel.appendChild(opt);
+            }
+            paymentSel.value = 'Beneficio + Resto';
+            // Notifica payment lines pro PDV (caso ele use _customerPaymentLinesThisOrder)
+            window._customerPaymentLinesThisOrder = [
+                { method: 'Beneficio Funcionario', type: 'benefit', label: '🎁 Benefício', amount: split.eligible },
+                { method: _pendingBenefit.remainderMethod, type: 'customer_payment', label: _pendingBenefit.remainderMethod, amount: split.remainder }
+            ];
+        }
+
+        document.getElementById('pdvBenefitOverlay').style.display = 'none';
+        if (typeof Utils !== 'undefined' && Utils.showToast) {
+            var msg = split.partialNeeded
+                ? 'Autorizado: R$ ' + split.eligible.toFixed(2).replace('.', ',') + ' benefício + R$ ' + split.remainder.toFixed(2).replace('.', ',') + ' em ' + _pendingBenefit.remainderMethod
+                : 'Benefício autorizado por ' + staff.name + '. Feche o pedido pra registrar.';
+            Utils.showToast(msg, 'success');
+        }
+    }
+
+    // Observer: quando um novo pedido com pagamento Beneficio aparece em DataStore, registra benefit
+    (function startBenefitObserver() {
+        var session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+        var fid = session && session.franchiseId;
+        if (!fid || typeof DataStore === 'undefined') return;
+        var seen = new Set();
+        var initial = DataStore.getCollection('orders', fid) || [];
+        initial.forEach(function(o) { if (o && o.id) seen.add(o.id); });
+
+        setInterval(function() {
+            if (!_pendingBenefit) return;
+            var orders = DataStore.getCollection('orders', fid) || [];
+            for (var i = orders.length - 1; i >= 0; i--) {
+                var o = orders[i];
+                if (!o || !o.id || seen.has(o.id)) continue;
+                seen.add(o.id);
+                var pay = (o.payment || '').toLowerCase();
+                if (pay.indexOf('benefic') !== -1) {
+                    window.MP_recordBenefitOnOrderClose(o);
+                    return;
+                }
+            }
+        }, 1500);
+    })();
+
+    // Hook: quando pedido for fechado E pagamento for Beneficio, registra
+    // Espera o codigo de checkout do PDV chamar StaffBenefits.register
+    window.MP_recordBenefitOnOrderClose = function(order) {
+        if (!_pendingBenefit) return;
+        var session = Auth.getSession();
+        var fid = session && session.franchiseId;
+        var op = (typeof OperatorContext !== 'undefined') ? OperatorContext.getCurrent() : null;
+        var totalValue = (order && order.total) ? Number(order.total) : 0;
+        var productNames = (order && order.items && order.items.length)
+            ? order.items.map(function(it) { return (it.qty || 1) + 'x ' + (it.name || 'item'); }).join(', ')
+            : '';
+        // Se eh split, registra so o valor coberto pelo beneficio (nao o total)
+        var benefitValue = _pendingBenefit.isPartial && _pendingBenefit.eligibleValue
+            ? _pendingBenefit.eligibleValue
+            : totalValue;
+        var splitNote = _pendingBenefit.isPartial
+            ? ' (Split: R$ ' + _pendingBenefit.eligibleValue.toFixed(2) + ' benefício + R$ ' + _pendingBenefit.remainderValue.toFixed(2) + ' em ' + _pendingBenefit.remainderMethod + ')'
+            : '';
+
+        var r = StaffBenefits.register(fid, {
+            staffId: _pendingBenefit.staffId,
+            staffName: _pendingBenefit.staffName,
+            tipo: _pendingBenefit.tipo,
+            productName: productNames,
+            value: benefitValue,
+            orderTotal: totalValue,
+            orderRemainderPaidByEmployee: _pendingBenefit.remainderValue || 0,
+            orderRemainderMethod: _pendingBenefit.remainderMethod || null,
+            isPartial: !!_pendingBenefit.isPartial,
+            orderId: order && order.id,
+            operatorId: op && op.id,
+            operatorName: op && op.name,
+            acceptedTerms: !!_pendingBenefit.acceptedTerms,
+            acceptedAt: _pendingBenefit.acceptedAt,
+            allowPartial: _pendingBenefit.isPartial,
+            notes: 'Lançado via PDV pagamento Benefício Funcionário' + splitNote
+        });
+        if (!r.success) {
+            alert('🚫 Benefício BLOQUEADO: ' + (r.error || 'erro desconhecido'));
+        }
+        if (r.success && typeof Utils !== 'undefined' && Utils.showToast) {
+            Utils.showToast('🎁 Benefício registrado: ' + _pendingBenefit.staffName, 'success');
+        }
+        _pendingBenefit = null;
+    };
+
+    // ====== Operator Selection ======
+    var _pendingOperator = null;
+    function openOperatorModal(allowCancel) {
+        if (typeof OperatorContext === 'undefined') return;
+        var session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+        var fid = session && session.franchiseId;
+        if (!fid) return;
+        var operators = OperatorContext.listAvailableOperators(fid);
+
+        var listEl = document.getElementById('pdvOperatorList');
+        var emptyEl = document.getElementById('pdvOperatorEmpty');
+        document.getElementById('pdvOperatorPin').style.display = 'none';
+        document.getElementById('pdvOperatorCancelBtn').style.display = allowCancel ? 'inline-block' : 'none';
+
+        if (operators.length === 0) {
+            listEl.style.display = 'none';
+            emptyEl.style.display = 'block';
+        } else {
+            listEl.style.display = 'grid';
+            emptyEl.style.display = 'none';
+            listEl.innerHTML = operators.map(function(op) {
+                var avatar = op.type === 'admin' ? '👑' : (op.role === 'Cozinheiro' ? '👨‍🍳' : (op.role === 'Entregador' ? '🛵' : (op.role === 'Gerente' ? '👔' : '👤')));
+                var subtitle = op.role + (op.requiresPin ? '' : (op.type === 'admin' ? '' : ' · sem PIN'));
+                var warn = (op.type === 'staff' && !op.requiresPin) ? '<div style="font-size:.7rem;color:#DC2626;margin-top:4px">⚠️ Cadastre PIN</div>' : '';
+                return '<button onclick="onOperatorClick(\'' + op.id + '\')" style="text-align:left;padding:14px;border:2px solid ' + op.color + ';background:#fff;border-radius:12px;cursor:pointer;font-family:inherit;transition:all .15s">'
+                    + '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:1.6rem">' + avatar + '</span>'
+                    + '<div><strong style="display:block;color:#111827;font-size:.95rem">' + op.name + '</strong>'
+                    + '<small style="color:#6B7280;font-size:.78rem">' + subtitle + '</small>' + warn + '</div></div></button>';
+            }).join('');
+        }
+        document.getElementById('pdvOperatorOverlay').style.display = 'flex';
+    }
+    function closeOperatorModal() {
+        document.getElementById('pdvOperatorOverlay').style.display = 'none';
+        _pendingOperator = null;
+    }
+    function onOperatorClick(operatorId) {
+        var session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+        var fid = session && session.franchiseId;
+        var operators = OperatorContext.listAvailableOperators(fid);
+        var op = operators.find(function(x) { return x.id === operatorId; });
+        if (!op) return;
+        if (op.type === 'admin' || !op.requiresPin) {
+            // Sem PIN — entra direto
+            var r = OperatorContext.selectOperator(fid, operatorId, '');
+            if (r.success) { closeOperatorModal(); refreshOperatorChip(); if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast('Operador: ' + r.operator.name, 'success'); }
+            else alert(r.error);
+            return;
+        }
+        // Pede PIN
+        _pendingOperator = op;
+        document.getElementById('pdvOperatorPinName').textContent = op.name;
+        document.getElementById('pdvOperatorPinInput').value = '';
+        document.getElementById('pdvOperatorPinErr').style.display = 'none';
+        document.getElementById('pdvOperatorPin').style.display = 'block';
+        setTimeout(function() { document.getElementById('pdvOperatorPinInput').focus(); }, 80);
+    }
+    function cancelOperatorPin() {
+        document.getElementById('pdvOperatorPin').style.display = 'none';
+        _pendingOperator = null;
+    }
+    function confirmOperatorPin() {
+        if (!_pendingOperator) return;
+        var pin = document.getElementById('pdvOperatorPinInput').value.trim();
+        var session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+        var fid = session && session.franchiseId;
+        var r = OperatorContext.selectOperator(fid, _pendingOperator.id, pin);
+        if (r.success) {
+            closeOperatorModal();
+            refreshOperatorChip();
+            if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast('Operador: ' + r.operator.name, 'success');
+        } else {
+            var err = document.getElementById('pdvOperatorPinErr');
+            err.textContent = r.error;
+            err.style.display = 'block';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var pinInp = document.getElementById('pdvOperatorPinInput');
+        if (pinInp) pinInp.addEventListener('keydown', function(e) { if (e.key === 'Enter') confirmOperatorPin(); });
+    });
+
+    function refreshOperatorChip() {
+        var chip = document.getElementById('pdvOperatorChip');
+        if (!chip || typeof OperatorContext === 'undefined') return;
+        var c = OperatorContext.getCurrent();
+        if (c) {
+            var icon = c.type === 'admin' ? '👑' : '👤';
+            chip.innerHTML = icon + ' ' + (c.name.length > 22 ? c.name.slice(0, 22) + '…' : c.name) + ' <span style="opacity:.7">▾</span>';
+            chip.style.display = 'inline-flex';
+        } else {
+            chip.style.display = 'none';
+        }
+    }
+
+    // Auto-abre modal de operador na primeira carga (se nada selecionado)
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            if (typeof OperatorContext === 'undefined') return;
+            var stored = sessionStorage.getItem('mp_pdv_operator');
+            if (!stored) {
+                openOperatorModal(false);
+            }
+            refreshOperatorChip();
+        }, 800);
+    });
+
+    // ====== Bater Ponto ======
+    // Reenvia email de fechamento do caixa do dia atual
+    window.pdvResendCaixaReport = async function() {
+        var session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+        var fid = session && session.franchiseId;
+        if (!fid) { alert('Sessão não encontrada'); return; }
+        if (typeof Caixa === 'undefined' || !Caixa.resendClosingReport) {
+            alert('Módulo Caixa não carregado');
+            return;
+        }
+        var btn = document.getElementById('pdvResendBtn');
+        var origText = btn.textContent;
+        var origBg = btn.style.background || '#7B1FA2';
+
+        function _doSend(dateToUse, friendlyLabel) {
+            btn.disabled = true;
+            btn.textContent = '⏳ Enviando...';
+            return Caixa.resendClosingReport(fid, dateToUse).then(function(r) {
+                if (r && r.success) {
+                    btn.textContent = '✓ Enviado!';
+                    btn.style.background = '#16A34A';
+                    var msg = friendlyLabel
+                        ? '📧 Relatório de ' + friendlyLabel + ' reenviado!'
+                        : '📧 Relatório reenviado pros gestores!';
+                    if (typeof Utils !== 'undefined' && Utils.showToast) Utils.showToast(msg, 'success');
+                    else alert('✓ ' + msg);
+                } else {
+                    btn.textContent = '✗ Erro';
+                    btn.style.background = '#DC2626';
+                    alert('Não foi possível reenviar:\n' + (r && r.error ? r.error : 'erro desconhecido'));
+                }
+            }).catch(function(e) {
+                btn.textContent = '✗ Erro';
+                btn.style.background = '#DC2626';
+                alert('Erro: ' + (e.message || e));
+            }).then(function() {
+                setTimeout(function() {
+                    btn.disabled = false;
+                    btn.textContent = origText;
+                    btn.style.background = origBg;
+                }, 3500);
+            });
+        }
+
+        var today = new Date().toISOString().slice(0, 10);
+        var st = Caixa.getTurnoState ? Caixa.getTurnoState(fid) : null;
+
+        // Se caixa de HOJE ja fechado, manda direto
+        if (st && st.status === 'fechado') {
+            return _doSend(today, 'hoje');
+        }
+
+        // Senao, busca ultimo dia com caixa fechado
+        var ultimo = Caixa.findLastClosedDate ? Caixa.findLastClosedDate(fid) : null;
+        if (!ultimo) {
+            alert('Nenhum caixa fechado encontrado pra reenviar.\n\nFeche um caixa primeiro pelo botão F10 ou na aba Configurações.');
+            return;
+        }
+
+        var dataFormatada = ultimo.split('-').reverse().join('/');
+        var statusHoje = (st && st.status === 'aberto')
+            ? 'O caixa de hoje ainda está ABERTO.'
+            : 'O caixa de hoje ainda não foi aberto.';
+        if (confirm(statusHoje + '\n\nÚltimo caixa fechado: ' + dataFormatada + '\n\nReenviar o relatório do dia ' + dataFormatada + '?')) {
+            return _doSend(ultimo, dataFormatada);
+        }
+    };
+
+    function openPdvPontoModal() {
+        document.getElementById('pdvPontoPin').value = '';
+        document.getElementById('pdvPontoResult').innerHTML = '';
+        document.getElementById('pdvPontoOverlay').style.display = 'flex';
+        setTimeout(function() { document.getElementById('pdvPontoPin').focus(); }, 100);
+    }
+    function closePdvPontoModal() {
+        document.getElementById('pdvPontoOverlay').style.display = 'none';
+    }
+    async function pdvBaterPonto() {
+        var pin = document.getElementById('pdvPontoPin').value.trim();
+        var resultEl = document.getElementById('pdvPontoResult');
+        if (!pin || pin.length !== 4) {
+            resultEl.innerHTML = '<div style="background:#FEE2E2;border-left:4px solid #DC2626;padding:10px 12px;border-radius:7px;color:#991B1B;font-size:.85rem">PIN deve ter 4 digitos</div>';
+            return;
+        }
+        var session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+        var fid = session && session.franchiseId;
+        if (!fid || typeof TimeClock === 'undefined') {
+            resultEl.innerHTML = '<div style="background:#FEE2E2;border-left:4px solid #DC2626;padding:10px 12px;border-radius:7px;color:#991B1B;font-size:.85rem">Sistema indisponivel</div>';
+            return;
+        }
+        var result = await TimeClock.recordPunch(fid, pin, 'pin');
+        if (result.success) {
+            resultEl.innerHTML = '<div style="background:#DCFCE7;border-left:4px solid #16A34A;padding:12px 14px;border-radius:8px;color:#166534">'
+                + '<strong>✓ Ponto registrado!</strong><br>'
+                + '<strong>' + result.staff.name + '</strong> — ' + result.typeLabel + '<br>'
+                + '<small>' + new Date(result.timestamp).toLocaleTimeString('pt-BR') + ' • NSR ' + result.nsr + '</small></div>';
+            document.getElementById('pdvPontoPin').value = '';
+            setTimeout(closePdvPontoModal, 2200);
+        } else {
+            resultEl.innerHTML = '<div style="background:#FEE2E2;border-left:4px solid #DC2626;padding:10px 12px;border-radius:7px;color:#991B1B;font-size:.85rem"><strong>✗</strong> ' + result.error + '</div>';
+        }
+    }
+    // Enter no PIN dispara
+    document.addEventListener('DOMContentLoaded', function() {
+        var pin = document.getElementById('pdvPontoPin');
+        if (pin) pin.addEventListener('keydown', function(e) { if (e.key === 'Enter') pdvBaterPonto(); });
+    });
+</script>
 <!-- Mensagem motivacional compacta (preenchida por JS) -->
 <div id="pdvMotivBanner"></div>
 <div class="pdv-layout">
@@ -714,12 +1367,24 @@
         <span style="font-size:10px;font-weight:800;display:block">RESGATAR</span>
     </button>
 
+    <!-- Floating "Acertou 300g" Button -->
+    <button class="redeem-fab" id="promo300gFab" onclick="openPromo300gModal()"
+        style="left:200px;background:linear-gradient(135deg,#9C27B0,#6A1B9A)"
+        title="Promoção: acertou 300g exato no buffet — não paga!">
+        <span style="font-size:24px">🎯</span>
+        <span style="font-size:10px;font-weight:800;display:block">300g</span>
+    </button>
+
     <!-- FAB FLUTUANTE: Conta Aberta + Fechar SEMPRE visíveis quando carrinho tem itens.
          Independe do tamanho do PDV — não some em viewport pequeno. -->
     <!-- Floating Free Challenge Release Button -->
     <button class="challenge-fab" onclick="openFreeChallengeModal()" title="Liberar desafio gratis na TV">
         <span style="font-size:24px">⚡</span>
         <span style="font-size:10px;font-weight:800;display:block">DESAFIO</span>
+    </button>
+    <button class="tv-fab" onclick="window.open('/tvd.html','_blank')" title="Abrir TV Desafio em nova janela">
+        <span style="font-size:22px">📺</span>
+        <span style="font-size:9px;font-weight:800;display:block">TV</span>
     </button>
 
     <div class="pdv-action-fab" id="pdvActionFab" role="toolbar" aria-label="Ações do pedido">
@@ -765,6 +1430,7 @@
                     <span style="font-size:10px;color:#5A4570;font-weight:700;">Saldo:</span>
                     <strong id="clubBalance" style="font-size:13px;color:#5A4570;">G$ 0 = R$ 0,00</strong>
                 </div>
+                <div id="clubPassStatus" style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:6px 8px;margin-bottom:6px;font-size:10px;color:#9A3412;font-weight:800;">MilkyPass: 0/5</div>
                 <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#3a2e4a;cursor:pointer;margin-bottom:4px;">
                     <input type="checkbox" id="clubUseToggle" onchange="toggleClubRedeem()"> Usar MilkyCoins
                 </label>
@@ -788,11 +1454,12 @@
                     <span class="ct-label">Total</span>
                     <span class="ct-value" id="cTotal">R$ 0,00</span>
                 </div>
-                <select id="paymentMethod">
+                <select id="paymentMethod" onchange="onPaymentMethodChange()">
                     <option value="Dinheiro">💵 Dinheiro</option>
                     <option value="Pix">📲 Pix</option>
                     <option value="Débito">💳 Débito</option>
                     <option value="Crédito">💳 Crédito</option>
+                    <option value="Beneficio Funcionario">🎁 Benefício Funcionário</option>
                 </select>
             </div>
             <!-- Linha de DESCONTO — visível só quando aplicado, com botão pra editar/limpar -->
@@ -999,7 +1666,7 @@
         <label style="display:block;font-size:11px;color:#666;font-weight:800;margin-bottom:4px;text-transform:uppercase">Nome do cliente</label>
         <input type="text" id="freeChallengeName" placeholder="Nome do cliente" maxlength="32" style="width:100%;padding:12px 14px;border:2px solid #ddd;border-radius:10px;font-size:16px;font-weight:800;font-family:inherit;margin-bottom:10px">
         <label style="display:block;font-size:11px;color:#666;font-weight:800;margin-bottom:4px;text-transform:uppercase">WhatsApp</label>
-        <input type="tel" id="freeChallengePhone" placeholder="(43) 99991-9777" maxlength="16" style="width:100%;padding:12px 14px;border:2px solid #ddd;border-radius:10px;font-size:16px;font-weight:800;font-family:inherit;margin-bottom:12px">
+        <input type="tel" id="freeChallengePhone" placeholder="(43) 99999-9999" maxlength="16" style="width:100%;padding:12px 14px;border:2px solid #ddd;border-radius:10px;font-size:16px;font-weight:800;font-family:inherit;margin-bottom:12px">
         <div id="freeChallengeStatus" style="display:none;border-radius:10px;padding:10px;margin-bottom:12px;font-size:13px;font-weight:800"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
             <button onclick="closeFreeChallengeModal()" style="padding:12px;border:2px solid #ddd;background:#fff;color:#666;border-radius:10px;font-weight:800;cursor:pointer;font-family:inherit">Cancelar</button>
@@ -1089,6 +1756,11 @@
                 <button class="kv-canal" data-c="delivery" onclick="PDV_Dynamics.kvSetCanal('delivery')">🛵 Delivery</button>
                 <button class="kv-canal" data-c="ifood" onclick="PDV_Dynamics.kvSetCanal('ifood')">🍔 iFood</button>
             </div>
+            <div id="kvPicoleFlavorBox" style="display:none;margin-bottom:14px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:12px;padding:12px">
+                <div style="font-weight:900;color:#9A3412;margin-bottom:6px">Sabor do picole <span style="font-size:11px;color:#9CA3AF;font-weight:700">opcional</span></div>
+                <div style="font-size:12px;color:#7C2D12;margin-bottom:8px">Escolha quando souber. Se estiver corrido, pode vender sem informar e acertar na contagem semanal.</div>
+                <div id="kvPicoleFlavors" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            </div>
             <div id="kvOptions" style="display:grid;gap:10px"></div>
         </div>
     </div>
@@ -1101,6 +1773,8 @@
     .kv-opt .kv-label{font-weight:800;color:#1F2937;font-size:15px}
     .kv-opt .kv-sub{font-size:12px;color:#6B7280;margin-top:2px}
     .kv-opt .kv-price{font-size:18px;font-weight:900;color:#16A34A}
+    .kv-flavor{border:1px solid #FED7AA;background:#fff;color:#9A3412;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800;cursor:pointer}
+    .kv-flavor.active{background:#F97316;color:#fff;border-color:#F97316}
 </style>
 
 <!-- MilkyClube Identification Modal -->
@@ -1167,7 +1841,6 @@
 <script src="../js/core/audit.js"></script>
 <script src="../js/core/adminconfig.js?v=mp-v204"></script>
 <script src="../js/core/motivacional.js?v=mp-v204"></script>
-<script src="../js/core/operator-context.js?v=mp-v204"></script>
 <script src="../js/core/caixa.js?v=mp-v204"></script>
 <script src="../js/core/financas.js?v=mp-v204"></script>
 <script src="../js/core/onboarding.js?v=mp-v204"></script>
@@ -1312,10 +1985,19 @@
                 if (items.length) sections.push({ key: 'bases', title: '🔥 Bases Populares', className: 'pop', items });
             }
 
+            // FASE 4C: filtro PDV usa disponibilidade.pdv com fallback no canalVenda legado
+            // Default permissivo: produto sem flag continua aparecendo (nao quebra producao)
+            const isPDV = (item) => {
+                if (item && item.disponibilidade && item.disponibilidade.pdv === false) return false;
+                // Se nao tem flag nova, cai no comportamento antigo (canalVenda)
+                if (!item || !item.disponibilidade) return item.canalVenda !== 'delivery';
+                return true;
+            };
+
             Object.entries(this.catalog.sabores || {}).forEach(([key, group]) => {
                 if (!group || !Array.isArray(group.items)) return;
                 if (v2ValidKeys && !v2ValidKeys.has(key)) return;
-                const items = group.items.filter(i => i.available && i.canalVenda !== 'delivery');
+                const items = group.items.filter(i => i.available && isPDV(i));
                 if (items.length > 0) {
                     const title = (group.icon ? group.icon + ' ' : '') + (group.name || key);
                     sections.push({ key, title, className: '', items });
@@ -1323,7 +2005,7 @@
             });
 
             if (this.catalog.bebidas) {
-                const items = this.catalog.bebidas.filter(b => b.available);
+                const items = this.catalog.bebidas.filter(b => b.available && isPDV(b));
                 if (items.length) sections.push({ key: 'bebidas', title: '🥤 Bebidas', className: '', items });
             }
             return sections;
@@ -1377,12 +2059,39 @@
             } catch (e) { return []; }
         },
 
+        // Resolve receita do item via dual-read: catalog_config primeiro,
+        // depois CatalogV2 se vazio. Defesa contra catalog_config legado
+        // sobrescrito por sync de outro PC (a receita sempre vive no v2).
+        _resolveReceita(item) {
+            if (item && item.receita && item.receita.length) return item.receita;
+            // Fallback CatalogV2 (autoritativo)
+            try {
+                if (typeof CatalogV2 === 'undefined' || !CatalogV2.getProduto) return null;
+                const session = typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession();
+                const fid = session && session.franchiseId;
+                if (!fid || !item || !item.id) return null;
+                const p = CatalogV2.getProduto(fid, item.id);
+                if (p && p.custos && Array.isArray(p.custos.insumos) && p.custos.insumos.length) {
+                    const valid = p.custos.insumos.filter(r => r && r.insumoId && Number(r.qty) > 0 && r.unit);
+                    if (valid.length) {
+                        // Hidrata o item in-place pra próximas chamadas + render usar
+                        item.receita = valid;
+                        return valid;
+                    }
+                }
+            } catch (e) {}
+            return null;
+        },
+
         // Calcula quantas unidades do item ainda dá pra produzir com o inventory atual.
         // Retorna { units: number|Infinity, hasRecipe: boolean, missing: boolean }
         _stockState(item, inventory) {
-            if (!item || !item.receita || !item.receita.length) {
+            const receita = this._resolveReceita(item);
+            if (!receita || !receita.length) {
                 return { units: Infinity, hasRecipe: false, missing: false };
             }
+            // Garante que `item.receita` tem o valor resolvido pra Recipes.availability usar
+            if (!item.receita || !item.receita.length) item.receita = receita;
             if (typeof Recipes === 'undefined' || !Recipes.availability) {
                 return { units: Infinity, hasRecipe: true, missing: false };
             }
@@ -1460,9 +2169,12 @@
                 const stock = this._stockState(it, inventory);
                 const isOut = stock.hasRecipe && stock.units === 0;
                 const isLow = stock.hasRecipe && stock.units > 0 && stock.units <= lowStockThreshold && stock.units !== Infinity;
+                // FASE 1F: produto sem composicao = nao baixa estoque + nao calcula CMV
+                // Operador precisa SABER (badge laranja) pra cobrar do gestor cadastrar receita
+                const noRecipe = !stock.hasRecipe;
 
                 const div = document.createElement('div');
-                div.className = 'pitem ' + (it.isHighlight ? 'pop ' : '') + (isOut ? 'esgotado ' : '') + (isLow ? 'baixoestoque' : '');
+                div.className = 'pitem ' + (it.isHighlight ? 'pop ' : '') + (isOut ? 'esgotado ' : '') + (isLow ? 'baixoestoque' : '') + (noRecipe ? ' semreceita' : '');
 
                 // Badge premium/promo (ex: it.badge="PREMIUM") — top-left pra não conflitar com Esgotado/Restam
                 const promoBadge = it.badge
@@ -1474,6 +2186,9 @@
                     stockBadge = '<div class="pbadge bd-out">❌ Esgotado</div>';
                 } else if (isLow) {
                     stockBadge = `<div class="pbadge bd-low">⚠️ Restam ${stock.units}</div>`;
+                } else if (noRecipe) {
+                    // FASE 1F: produto sem receita — vende, mas nao baixa estoque nem grava CMV
+                    stockBadge = '<div class="pbadge bd-norecipe" title="Produto sem composição cadastrada — venda funciona mas estoque NÃO baixa e CMV NÃO grava. Vai em Painel → Produtos → Receita.">📋 Receita pendente</div>';
                 }
 
                 // Preço: "a partir de" se tem variantes
@@ -1524,11 +2239,17 @@
                     return;
                 }
                 this.openWeightModal(it);
-            } else if (!it.price || it.modoMontagem === 'montado') {
-                // Chama lógica de customização legada
-                if (window.openModal) window.openModal(it);
+            } else if (!it.price) {
+                // Produto sem preco — precisa de modal de montagem/customizacao legada
+                if (typeof window.openModal === 'function') {
+                    window.openModal(it);
+                } else {
+                    Utils.showToast('Produto "' + it.name + '" sem preco configurado. Cadastre o preco em Produtos.', 'error');
+                    console.warn('handleProductClick: produto sem preco e sem window.openModal disponivel', it);
+                }
             } else {
-                // Venda direta unitária — preço por canal (_v2) se disponível
+                // Tem preco — venda direta unitaria, mesmo para itens "modoMontagem=montado"
+                // (buffet, picole, casquinha — cliente monta no balcao mas operador so registra a venda)
                 const price = this._priceForCanal(it, this.kvCanal) || it.price;
                 this.addToCart({
                     id: it.id,
@@ -1536,7 +2257,8 @@
                     price: price,
                     emoji: it.emoji,
                     qty: 1,
-                    type: 'unitario'
+                    type: 'unitario',
+                    categoriaId: it._v2 ? it._v2.categoriaId : ''
                 });
             }
         },
@@ -1544,6 +2266,7 @@
         // ===== Kit/Variante modal (_v2) =====
         kvCanal: 'loja',
         _kvCurrentItem: null,
+        _kvPicoleFlavor: null,
 
         _priceForCanal(it, canal) {
             if (!it._v2 || !it._v2.precos) return null;
@@ -1554,6 +2277,7 @@
 
         openKitVariantModal(it) {
             this._kvCurrentItem = it;
+            this._kvPicoleFlavor = null;
             document.getElementById('kvTitle').textContent = (it.emoji || '🎁') + ' ' + it.name;
             this.kvSetCanal(this.kvCanal);
             document.getElementById('kitVariantModal').classList.add('open');
@@ -1567,12 +2291,52 @@
             this._renderKvOptions();
         },
 
+        _isPicoleItem(it) {
+            if (!it) return false;
+            const n = String(it.name || '').toLowerCase();
+            const cat = it._v2 && it._v2.categoriaId ? String(it._v2.categoriaId).toLowerCase() : '';
+            return cat.indexOf('picole') >= 0 || cat.indexOf('picol') >= 0 || n.indexOf('picol') >= 0;
+        },
+
+        _picoleFlavors(it) {
+            const src = (it && it._v2 && Array.isArray(it._v2.picoleFlavors)) ? it._v2.picoleFlavors : [];
+            return src.filter(f => f && f.active !== false);
+        },
+
+        _renderPicoleFlavorPicker(it) {
+            const box = document.getElementById('kvPicoleFlavorBox');
+            const wrap = document.getElementById('kvPicoleFlavors');
+            if (!box || !wrap) return;
+            const flavors = this._isPicoleItem(it) ? this._picoleFlavors(it) : [];
+            if (!flavors.length) {
+                box.style.display = 'none';
+                wrap.innerHTML = '';
+                return;
+            }
+            box.style.display = 'block';
+            const selectedId = this._kvPicoleFlavor && this._kvPicoleFlavor.id;
+            const escAttr = value => String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            wrap.innerHTML = '<button class="kv-flavor ' + (!selectedId ? 'active' : '') + '" onclick="PDV_Dynamics.kvSelectPicoleFlavor(null)">Nao informar</button>' + flavors.map(f => {
+                const stock = Number(f.stock || 0);
+                const stockTxt = Number.isFinite(stock) && stock > 0 ? ' · ' + stock + ' un' : '';
+                return `<button class="kv-flavor ${selectedId === f.id ? 'active' : ''}" onclick="PDV_Dynamics.kvSelectPicoleFlavor('${escAttr(f.id)}')">${f.name || f.id}${stockTxt}</button>`;
+            }).join('');
+        },
+
+        kvSelectPicoleFlavor(flavorId) {
+            const it = this._kvCurrentItem;
+            const flavors = this._picoleFlavors(it);
+            this._kvPicoleFlavor = flavorId ? (flavors.find(f => f.id === flavorId) || null) : null;
+            this._renderPicoleFlavorPicker(it);
+        },
+
         _renderKvOptions() {
             const it = this._kvCurrentItem;
             if (!it) return;
             const canal = this.kvCanal;
             const container = document.getElementById('kvOptions');
             container.innerHTML = '';
+            this._renderPicoleFlavorPicker(it);
 
             const priceKey = canal === 'loja' ? 'precoLoja' : (canal === 'delivery' ? 'precoDelivery' : 'precoIfood');
             const brl = v => 'R$ ' + Number(v||0).toFixed(2).replace('.',',');
@@ -1640,15 +2404,20 @@
             const it = this._kvCurrentItem;
             if (!it) return;
             const qty = choice.kit ? choice.kit.qty : 1;
+            const flavor = this._kvPicoleFlavor;
+            const flavorLabel = flavor ? ' ? ' + flavor.name : '';
             this.addToCart({
                 id: it.id,
-                name: it.name + ' · ' + choice.label + ' · ' + this.kvCanal,
+                name: it.name + ' ?? ' + choice.label + flavorLabel + ' ?? ' + this.kvCanal,
                 price: choice.price,
                 emoji: it.emoji,
                 qty: 1, // linha única no carrinho, mas quantity do kit embutida no label
                 type: 'unitario',
                 kitQty: qty,
-                canal: this.kvCanal
+                canal: this.kvCanal,
+                categoriaId: it._v2 ? it._v2.categoriaId : '',
+                picoleFlavorId: flavor ? flavor.id : null,
+                picoleFlavorName: flavor ? flavor.name : null
             });
             document.getElementById('kitVariantModal').classList.remove('open');
         },
@@ -1941,7 +2710,8 @@
                 cost: custoProporcional,
                 qty: 1,
                 type: 'por_peso',
-                emoji: item.emoji || '⚖️'
+                emoji: item.emoji || '⚖️',
+                categoriaId: item.categoriaId || (item._v2 ? item._v2.categoriaId : '')
             });
 
             this.closeWeightModal();
@@ -2032,7 +2802,11 @@
         addToCart(item) {
             // Integração com o objeto global 'cart' do PDV legada
             if (item.type === 'unitario') {
-                const existing = cart.find(c => c.id === item.id && c.type === 'unitario' && !c.customItems);
+                const existing = cart.find(c => c.id === item.id && c.type === 'unitario' && !c.customItems
+                    && Number(c.unitPrice || 0) === Number(item.price || item.unitPrice || 0)
+                    && (c.picoleFlavorId || null) === (item.picoleFlavorId || null)
+                    && (c.kitQty || null) === (item.kitQty || null)
+                    && (c.canal || null) === (item.canal || null));
                 if (existing) {
                     existing.qty += (item.qty || 1);
                     existing.total = existing.qty * existing.unitPrice;
@@ -2056,7 +2830,12 @@
                 total: item.total || (item.price * (item.qty || 1)),
                 extras: item.extras || [],
                 type: item.type,
+                categoriaId: item.categoriaId || null,
                 weightG: item.weightG || null,
+                kitQty: item.kitQty || null,
+                canal: item.canal || null,
+                picoleFlavorId: item.picoleFlavorId || null,
+                picoleFlavorName: item.picoleFlavorName || '',
                 cost: Number(item.cost) || 0,  // pré-calculado (ex: buffet proporcional ao peso) — flui para CMV
                 size: item.type === 'por_peso' && pricePerKgDisplay
                     ? `${item.weightG}g @ R$ ${pricePerKgDisplay.toFixed(2).replace('.',',')}/kg`
@@ -2092,8 +2871,6 @@
                 var label = st.status === 'aberto' ? '🟢 Aberto' : st.status === 'fechado' ? '🔒 Fechado' : '⚪ Fechado';
                 var detalhes = '';
                 var tooltip = '';
-                // Pega so o PRIMEIRO nome do operador (max 12 chars) pra economizar
-                // espaco no header. Tooltip mostra nome completo.
                 function firstName(full) {
                     if (!full) return 'Operador';
                     var n = String(full).trim().split(/\s+/)[0];
@@ -2109,8 +2886,6 @@
                     } catch(_){}
                     var saldo = Caixa.formatBRL(st.saldoEsperadoDinheiro);
                     detalhes = ' · ' + op + (hr ? ' ' + hr : '') + ' · ' + saldo;
-                    // Hint se foi aberto em OUTRO dispositivo: SO o icone (sem
-                    // texto longo) — tooltip explica.
                     var aberturaDev = st.abertura.deviceId || '';
                     if (aberturaDev && thisDevice && aberturaDev !== thisDevice) {
                         var devIcon = (aberturaDev.indexOf('Mobile') === 0 ? ' 📱' : ' 🖥️');
@@ -2807,17 +3582,15 @@
 
     // ========== DESCONTO NO PEDIDO (com PIN + limite + AuditLog) ==========
     // Estado: window._cartDiscount = { type:'reais'|'perc', value, reason, by, at }
-    // Configuracao OBRIGATORIA: franchise.descontoPin (sem default) + franchise.descontoMaxPct (default 30)
-    // Sem PIN configurado, descontos sao BLOQUEADOS — atendente nao pode aplicar.
+    // Configuracao: franchise.descontoPin (default '1234'), franchise.descontoMaxPct (default 30)
     var _discountType = 'reais';
     function getDiscountConfig(){
         var franchises = DataStore.get('franchises') || [];
         var f = franchises.find(function(x){return x.id===fid}) || {};
-        var raw = (f.descontoPin || '').toString().trim();
         return {
-            pin: raw,
+            pin: (f.descontoPin || '1234'),
             maxPct: Number(f.descontoMaxPct || 30),
-            isDefault: !raw || raw === '1234'
+            isDefault: !f.descontoPin
         };
     }
     function getCartSubtotal() {
@@ -2910,13 +3683,6 @@
         var cfg = getDiscountConfig();
         var subtotal = getCartSubtotal();
 
-        // Bloqueio de PIN nao configurado / fraco (default 1234)
-        // Sem isso, atendente le DataStore via F12 e aplica desconto sem autorizacao.
-        if (cfg.isDefault) {
-            _showDiscountError('PIN do gerente nao configurado. Acesse Configuracoes > Loja > PIN de Desconto antes de aplicar descontos.');
-            return;
-        }
-
         // Valida PIN do gerente
         var pinInputs = document.querySelectorAll('#discountModal .pin-digit');
         if (pinInputs.length === 4) {
@@ -2968,7 +3734,7 @@
 
         closeDiscountModal();
         renderCart();
-        toast('🏷️ Desconto aplicado.');
+        toast(cfg.isDefault ? '⚠️ Desconto OK — configure PIN próprio em Configurações' : '🏷️ Desconto aplicado.');
     };
     window.clearDiscount = function () {
         if (window._cartDiscount) {
@@ -3013,12 +3779,40 @@
         var key = todayLocalKey();
         return all.filter(function(o){
             if(!o || !o.createdAt) return false;
+            // Pedidos deletados/excluidos NAO contam no faturamento do dia.
+            // Sem esse filtro, pedido seed_demo apagado hoje vazava pro chip
+            // de faturamento e o operador via valores que nao batiam com o caixa.
+            if (o.deleted || o.status === 'excluido') return false;
             var d = new Date(o.createdAt);
             if(isNaN(d.getTime())) return false;
             var off = d.getTimezoneOffset() * 60000;
             var localKey = new Date(d.getTime() - off).toISOString().slice(0,10);
             return localKey === key;
         }).sort(function(a,b){return (b.createdAt||'').localeCompare(a.createdAt||'')});
+    }
+
+    function updatePicoleFlavorStock(order) {
+        if (!order || !order.items || typeof CatalogV2 === 'undefined') return;
+        var selected = order.items.filter(function(it){ return it && it.picoleFlavorId; });
+        if (!selected.length) return;
+        var catalog = CatalogV2.load(fid);
+        if (!catalog || !catalog.produtos) return;
+        var touched = 0;
+        selected.forEach(function(it) {
+            var product = catalog.produtos.find(function(p){ return p.id === it.productId; });
+            if (!product || !Array.isArray(product.picoleFlavors)) return;
+            var flavor = product.picoleFlavors.find(function(f){ return f.id === it.picoleFlavorId; });
+            if (!flavor) return;
+            var qty = Number(it.kitQty || it.qty || 1) || 1;
+            flavor.stock = Math.max(0, Math.round((Number(flavor.stock || 0) - qty) * 100) / 100);
+            flavor.soldSinceCount = Math.round((Number(flavor.soldSinceCount || 0) + qty) * 100) / 100;
+            flavor.lastSaleAt = order.createdAt || new Date().toISOString();
+            touched++;
+        });
+        if (touched) {
+            CatalogV2.save(fid, catalog);
+            CatalogV2.syncToLegacy(fid);
+        }
     }
 
     function statusLabel(s){
@@ -3284,17 +4078,17 @@
     //   • cumulativo:false (não acumula com outros prêmios) · 1 prêmio por compra
     //   • valor mínimo validado automaticamente no caixa
     var DEFAULT_SCRATCH_PRIZES = [
-        {code:'RSP_BUFFET_100_15',   name:'100g Buffet (acima R$15)',  tipo:'buffet',   desc:'Ganhe 100g de buffet na próxima compra acima de R$15',     prob:30, cost:6,   validity:7, scope:'same', minOrder:15, cumulativo:false, tier:'small',  categoria:'cat_buffet', emoji:'⚖️'},
-        {code:'RSP_BUFFET_100_20',   name:'100g Buffet (acima R$20)',  tipo:'buffet',   desc:'Ganhe 100g de buffet na próxima compra acima de R$20',     prob:20, cost:6,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  categoria:'cat_buffet', emoji:'⚖️'},
-        {code:'RSP_BUFFET_150_25',   name:'150g Buffet (acima R$25)',  tipo:'buffet',   desc:'Ganhe 150g de buffet na compra acima de R$25',             prob:15, cost:9,   validity:7, scope:'same', minOrder:25, cumulativo:false, tier:'medium', categoria:'cat_buffet', emoji:'⚖️'},
-        {code:'RSP_BUFFET_200_35',   name:'200g Buffet (acima R$35)',  tipo:'buffet',   desc:'Ganhe 200g de buffet na compra acima de R$35',             prob:5,  cost:12,  validity:7, scope:'same', minOrder:35, cumulativo:false, tier:'medium', categoria:'cat_buffet', emoji:'⚖️'},
-        {code:'RSP_PICOLE_15',       name:'1 Picolé Grátis',           tipo:'brinde',   desc:'Ganhe 1 picolé na próxima compra acima de R$15',           prob:10, cost:3,   validity:7, scope:'same', minOrder:15, cumulativo:false, tier:'small',  categoria:'cat_picole', emoji:'🍦'},
-        {code:'RSP_CASQUINHA',       name:'1 Casquinha Grátis',        tipo:'brinde',   desc:'Ganhe 1 casquinha na próxima compra',                       prob:5,  cost:2,   validity:7, scope:'same', minOrder:10, cumulativo:false, tier:'small',  categoria:null,         emoji:'🍨'},
-        {code:'RSP_COPINHO_20',      name:'1 Copinho de Sorvete',      tipo:'produto',  desc:'Ganhe 1 copinho de sorvete na compra acima de R$20',       prob:5,  cost:5,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  categoria:null,         emoji:'🍧'},
-        {code:'RSP_SUNDAE_P_30',     name:'1 Sundae P Grátis',         tipo:'produto',  desc:'Ganhe 1 sundae P na compra acima de R$30',                 prob:4,  cost:8,   validity:7, scope:'same', minOrder:30, cumulativo:false, tier:'medium', categoria:'cat_sundae', emoji:'🍦'},
-        {code:'RSP_SHAKE_UPGRADE',   name:'Upgrade de Milk Shake',     tipo:'produto',  desc:'Ganhe upgrade de Milk Shake (P para M ou M para G)',       prob:3,  cost:5,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  categoria:'cat_milkshake', emoji:'⬆️'},
-        {code:'RSP_COMBO_BUFFET_PIC',name:'Combo Buffet + Picolé',     tipo:'combo',    desc:'Ganhe 100g de buffet + 1 picolé na compra acima de R$25', prob:2,  cost:9,   validity:7, scope:'same', minOrder:25, cumulativo:false, tier:'medium', categoria:'cat_buffet,cat_picole', emoji:'🎁'},
-        {code:'RSP_AMIGO_100G',      name:'Volte com um Amigo',        tipo:'especial', desc:'Volte com um amigo e ganhem 100g de buffet cada',          prob:1,  cost:12,  validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'big',    categoria:'cat_buffet', emoji:'👯'}
+        {code:'RSP_BUFFET_100_15',   name:'+100g no Buffet',           tipo:'buffet',   desc:'Na compra de buffet a partir de R$15, ganha +100g de buffet.',              prob:30, cost:6,   validity:7, scope:'same', minOrder:15, cumulativo:false, tier:'small',  categoria:'cat_buffet', emoji:'⚖️'},
+        {code:'RSP_BUFFET_100_20',   name:'+100g no Buffet',           tipo:'buffet',   desc:'Na compra de buffet a partir de R$20, ganha +100g de buffet.',              prob:20, cost:6,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  categoria:'cat_buffet', emoji:'⚖️'},
+        {code:'RSP_BUFFET_150_25',   name:'+150g no Buffet',           tipo:'buffet',   desc:'Na compra de buffet a partir de R$25, ganha +150g de buffet.',              prob:15, cost:9,   validity:7, scope:'same', minOrder:25, cumulativo:false, tier:'medium', categoria:'cat_buffet', emoji:'⚖️'},
+        {code:'RSP_BUFFET_200_35',   name:'+200g no Buffet',           tipo:'buffet',   desc:'Na compra de buffet a partir de R$35, ganha +200g de buffet.',              prob:5,  cost:12,  validity:7, scope:'same', minOrder:35, cumulativo:false, tier:'medium', categoria:'cat_buffet', emoji:'⚖️'},
+        {code:'RSP_PICOLE_15',       name:'Picolé em Dobro',           tipo:'brinde',   desc:'Na compra de 1 picolé e pedido mínimo de R$15, leva 2 picolés.',            prob:10, cost:3,   validity:7, scope:'same', minOrder:15, cumulativo:false, tier:'small',  categoria:'cat_picole', emoji:'🍦'},
+        {code:'RSP_CASQUINHA',       name:'Casquinha de Volta',        tipo:'brinde',   desc:'Na compra mínima de R$10, ganha 1 casquinha grátis.',                      prob:5,  cost:2,   validity:7, scope:'same', minOrder:10, cumulativo:false, tier:'small',  categoria:null,         emoji:'🍨'},
+        {code:'RSP_COPINHO_20',      name:'Copinho de Volta',          tipo:'produto',  desc:'Na compra mínima de R$20, ganha 1 copinho de sorvete.',                    prob:5,  cost:5,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  categoria:null,         emoji:'🍧'},
+        {code:'RSP_SUNDAE_P_30',     name:'Sundae P de Presente',      tipo:'produto',  desc:'Na compra de sundae a partir de R$30, ganha 1 sundae P.',                   prob:4,  cost:8,   validity:7, scope:'same', minOrder:30, cumulativo:false, tier:'medium', categoria:'cat_sundae', emoji:'🍦'},
+        {code:'RSP_SHAKE_UPGRADE',   name:'Milk Shake Maior',          tipo:'produto',  desc:'Na compra de milk shake M ou G, ganha upgrade de tamanho.',                 prob:3,  cost:5,   validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'small',  categoria:'cat_milkshake', emoji:'⬆️'},
+        {code:'RSP_COMBO_BUFFET_PIC',name:'Buffet + Picolé',           tipo:'combo',    desc:'Na compra de buffet a partir de R$25, ganha +100g e 1 picolé.',             prob:2,  cost:9,   validity:7, scope:'same', minOrder:25, cumulativo:false, tier:'medium', categoria:'cat_buffet', emoji:'🎁'},
+        {code:'RSP_AMIGO_100G',      name:'Volte com um Amigo',        tipo:'especial', desc:'Voltando com um amigo, na compra de buffet a partir de R$20, os dois ganham +100g.', prob:1, cost:12, validity:7, scope:'same', minOrder:20, cumulativo:false, tier:'big', categoria:'cat_buffet', emoji:'👯'}
     ];
 
     function enforceScratchPrizeSafety(prize){
@@ -3329,10 +4123,10 @@
             // Mescla com defaults (preserva customizações + adiciona prêmios novos)
             return DEFAULT_SCRATCH_PRIZES.map(function(def){
                 var found = custom.find(function(p){return p.code === def.code});
-                return Object.assign({}, def, found || {});
+                return enforceScratchPrizeSafety(Object.assign({}, def, found || {}));
             });
         }
-        return DEFAULT_SCRATCH_PRIZES.slice();
+        return DEFAULT_SCRATCH_PRIZES.map(function(p){ return enforceScratchPrizeSafety(Object.assign({}, p)); });
     }
 
     function getScratchConfig(){
@@ -3356,6 +4150,47 @@
             if(r <= acc) return prizes[i];
         }
         return prizes[0];
+    }
+
+    // Roleta PREMIUM — só tier medium/big. Cliente que avaliou no Google ou
+    // realizou outra ação que beneficiou a marca recebe esse upgrade.
+    // Consumido via clubMember.pendingPremiumScratches.
+    function rollScratchPrizePremium(){
+        var prizes = getScratchPrizes().filter(function(p){
+            return !p.disabled && (p.tier === 'medium' || p.tier === 'big');
+        });
+        if (!prizes.length) return rollScratchPrize();
+        var totalProb = prizes.reduce(function(s,p){return s+p.prob},0);
+        var r = Math.random() * totalProb;
+        var acc = 0;
+        for(var i=0;i<prizes.length;i++){
+            acc += prizes[i].prob;
+            if(r <= acc) return prizes[i];
+        }
+        return prizes[0];
+    }
+
+    // Verifica se o membro identificado tem direito a raspinha PREMIUM agora.
+    // SYNC check (state local) — decrementa de forma assíncrona após emitir.
+    // Pequena janela de race em uso concorrente, aceita pelo UX.
+    function hasPendingPremiumScratch() {
+        if (typeof clubMember === 'undefined' || !clubMember) return false;
+        return Number(clubMember.pendingPremiumScratches || 0) > 0;
+    }
+    function asyncDecrementPremium() {
+        try {
+            if (typeof clubMember === 'undefined' || !clubMember) return;
+            var memberId = clubMember.id || clubMember.uid;
+            if (!memberId || typeof firebase === 'undefined' || !firebase.firestore) return;
+            var ref = firebase.firestore().collection('club_members').doc(memberId);
+            ref.update({
+                pendingPremiumScratches: firebase.firestore.FieldValue.increment(-1),
+                lastPremiumConsumedAt: new Date().toISOString()
+            }).then(function(){
+                // Decrementa também o cache local para consistência imediata
+                clubMember.pendingPremiumScratches = Math.max(0, Number(clubMember.pendingPremiumScratches || 0) - 1);
+            }).catch(function(e){ console.warn('[Premium] decrement err', e); });
+        } catch(e) { console.warn('[Premium] async dec', e); }
     }
 
     // Cooldown anti-fraude — 1 raspinha por CPF/telefone a cada N minutos
@@ -3476,6 +4311,171 @@
     // Roda 2s após carregar (dá tempo de DataStore + Auth iniciarem)
     setTimeout(function(){ try { backfillScratchesToFirestore(); } catch(e){ console.warn('[Raspinha] backfill init:', e); } }, 2000);
 
+    // ============================================
+    // SPLIT PAYMENT VISUAL — substitui o prompt antigo de "2 formas"
+    // Aceita N pagamentos misturados, cada um com método e valor.
+    // Live-update do total/restante. Confirma só quando exato.
+    // ============================================
+    function _showSplitPaymentModal(totalValue, onConfirm) {
+        var existing = document.getElementById('mpSplitPayModal');
+        if (existing) existing.remove();
+
+        var total = Number(totalValue) || 0;
+        var lines = []; // { method, label, amount }
+
+        var overlay = document.createElement('div');
+        overlay.id = 'mpSplitPayModal';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(45,27,78,.7);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Nunito",sans-serif';
+
+        overlay.innerHTML =
+          '<div style="background:#fff;border-radius:18px;max-width:520px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;max-height:90vh;display:flex;flex-direction:column">' +
+            '<div style="padding:18px 22px;background:linear-gradient(135deg,#111827,#374151);color:#fff;display:flex;justify-content:space-between;align-items:center">' +
+              '<div>' +
+                '<h3 style="margin:0;font-family:\'Baloo 2\',cursive;font-size:1.15rem;font-weight:700">💳 Pagamento misto</h3>' +
+                '<div style="font-size:.78rem;opacity:.92;margin-top:2px">Combine quantas formas precisar</div>' +
+              '</div>' +
+              '<button id="mpSplitClose" style="background:rgba(255,255,255,.22);color:#fff;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:700">×</button>' +
+            '</div>' +
+
+            '<div style="padding:20px 22px;overflow-y:auto;flex:1">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center;background:#F7F4FF;border-radius:12px;padding:14px 16px;margin-bottom:16px">' +
+                '<div>' +
+                  '<div style="font-size:.74rem;color:#7d6e92;font-weight:700;text-transform:uppercase">Total</div>' +
+                  '<div style="font-family:\'Baloo 2\',cursive;font-size:1.4rem;font-weight:800;color:#6C63FF">R$ ' + total.toFixed(2).replace('.',',') + '</div>' +
+                '</div>' +
+                '<div style="text-align:right">' +
+                  '<div style="font-size:.74rem;color:#7d6e92;font-weight:700;text-transform:uppercase">Restante</div>' +
+                  '<div id="splitRemaining" style="font-family:\'Baloo 2\',cursive;font-size:1.4rem;font-weight:800;color:#dc2626">R$ ' + total.toFixed(2).replace('.',',') + '</div>' +
+                '</div>' +
+              '</div>' +
+
+              '<div id="splitLines" style="margin-bottom:16px;min-height:40px"></div>' +
+
+              '<div style="font-size:.82rem;font-weight:700;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Adicionar forma:</div>' +
+              '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">' +
+                '<button data-add="Dinheiro" class="mp-split-add" style="padding:12px 4px;background:#fff;border:2px solid #10B981;color:#065F46;border-radius:10px;font-family:Nunito;font-size:.78rem;font-weight:800;cursor:pointer">💵 Dinheiro</button>' +
+                '<button data-add="Pix" class="mp-split-add" style="padding:12px 4px;background:#fff;border:2px solid #06B6D4;color:#0E7490;border-radius:10px;font-family:Nunito;font-size:.78rem;font-weight:800;cursor:pointer">📲 PIX</button>' +
+                '<button data-add="Débito" class="mp-split-add" style="padding:12px 4px;background:#fff;border:2px solid #3B82F6;color:#1E40AF;border-radius:10px;font-family:Nunito;font-size:.78rem;font-weight:800;cursor:pointer">💳 Débito</button>' +
+                '<button data-add="Crédito" class="mp-split-add" style="padding:12px 4px;background:#fff;border:2px solid #8B5CF6;color:#5B21B6;border-radius:10px;font-family:Nunito;font-size:.78rem;font-weight:800;cursor:pointer">💳 Crédito</button>' +
+              '</div>' +
+
+              '<div id="splitFeedback" style="margin-top:8px;padding:10px;border-radius:8px;font-size:.85rem;font-weight:700;text-align:center;display:none"></div>' +
+            '</div>' +
+
+            '<div style="padding:14px 22px;background:#f9fafb;border-top:1px solid #e5e7eb;display:flex;gap:10px">' +
+              '<button id="splitCancelBtn" style="flex:1;padding:12px;background:#f3f4f6;border:none;border-radius:10px;font-family:Nunito;font-weight:700;cursor:pointer">Cancelar</button>' +
+              '<button id="splitConfirmBtn" style="flex:2;padding:12px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;border-radius:10px;font-family:\'Baloo 2\',cursive;font-weight:800;cursor:pointer;opacity:.5" disabled>✓ Confirmar pagamento</button>' +
+            '</div>' +
+          '</div>';
+
+        document.body.appendChild(overlay);
+
+        var $$ = function(s){ return overlay.querySelector(s); };
+
+        function close() {
+            if (overlay.parentNode) overlay.remove();
+            document.removeEventListener('keydown', onKey);
+        }
+        function onKey(e) { if (e.key === 'Escape') { e.preventDefault(); close(); } }
+        document.addEventListener('keydown', onKey);
+        $$('#mpSplitClose').addEventListener('click', close);
+        $$('#splitCancelBtn').addEventListener('click', close);
+        overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+
+        function getRemaining() {
+            var paid = lines.reduce(function(s,l){ return s + (Number(l.amount) || 0); }, 0);
+            return Math.round((total - paid) * 100) / 100;
+        }
+        function showFeedback(msg, kind) {
+            var fb = $$('#splitFeedback');
+            fb.textContent = msg;
+            fb.style.display = msg ? 'block' : 'none';
+            fb.style.background = kind === 'err' ? '#fee2e2' : kind === 'ok' ? '#dcfce7' : '#fef3c7';
+            fb.style.color = kind === 'err' ? '#991b1b' : kind === 'ok' ? '#166534' : '#92400e';
+        }
+        function methodIcon(m) {
+            return ({ Dinheiro:'💵', Pix:'📲', 'Débito':'💳', 'Crédito':'💳' })[m] || '💳';
+        }
+        function render() {
+            var rem = getRemaining();
+            $$('#splitRemaining').textContent = 'R$ ' + Math.abs(rem).toFixed(2).replace('.',',');
+            $$('#splitRemaining').style.color = Math.abs(rem) < 0.01 ? '#16a34a' : (rem < 0 ? '#dc2626' : '#dc2626');
+
+            var html = lines.map(function(l, idx) {
+                return '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;margin-bottom:6px">' +
+                    '<span style="font-size:1.4rem">' + methodIcon(l.method) + '</span>' +
+                    '<span style="flex:1;font-weight:700">' + l.label + '</span>' +
+                    '<input type="text" value="' + l.amount.toFixed(2).replace('.', ',') + '" data-idx="' + idx + '" class="split-amount" style="width:100px;padding:6px 10px;border:1.5px solid #e2e2e8;border-radius:8px;font-weight:700;text-align:right">' +
+                    '<button data-rm="' + idx + '" class="split-rm" style="background:#fee2e2;color:#dc2626;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-weight:800">×</button>' +
+                '</div>';
+            }).join('');
+            $$('#splitLines').innerHTML = html;
+
+            // Bind eventos das linhas
+            overlay.querySelectorAll('.split-amount').forEach(function(inp) {
+                inp.addEventListener('change', function() {
+                    var i = parseInt(inp.getAttribute('data-idx'), 10);
+                    var v = parseFloat(String(inp.value).replace(/\./g,'').replace(',','.')) || 0;
+                    lines[i].amount = Math.max(0, Math.round(v * 100) / 100);
+                    render();
+                });
+            });
+            overlay.querySelectorAll('.split-rm').forEach(function(b) {
+                b.addEventListener('click', function() {
+                    var i = parseInt(b.getAttribute('data-rm'), 10);
+                    lines.splice(i, 1);
+                    render();
+                });
+            });
+
+            // Feedback + botão confirma
+            var rem2 = getRemaining();
+            var btn = $$('#splitConfirmBtn');
+            if (Math.abs(rem2) < 0.01) {
+                showFeedback('✓ Total bateu! Confirme pra finalizar.', 'ok');
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            } else if (rem2 > 0) {
+                showFeedback('Faltam R$ ' + rem2.toFixed(2).replace('.', ',') + ' — adicione mais formas', '');
+                btn.disabled = true;
+                btn.style.opacity = '.5';
+            } else {
+                showFeedback('Pagou ' + Math.abs(rem2).toFixed(2).replace('.', ',') + ' a mais — ajuste os valores', 'err');
+                btn.disabled = true;
+                btn.style.opacity = '.5';
+            }
+        }
+
+        // Adicionar nova forma — auto-completa com restante
+        overlay.querySelectorAll('.mp-split-add').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var method = btn.getAttribute('data-add');
+                var rem = getRemaining();
+                var initialAmount = Math.max(0, rem); // sugere o restante
+                lines.push({
+                    method: method,
+                    label: method,
+                    amount: initialAmount,
+                    type: 'customer_payment'
+                });
+                render();
+            });
+        });
+
+        // Confirmar
+        $$('#splitConfirmBtn').addEventListener('click', function() {
+            if (Math.abs(getRemaining()) >= 0.01) return;
+            var validLines = lines.filter(function(l){ return l.amount > 0; });
+            if (!validLines.length) return;
+            close();
+            if (typeof onConfirm === 'function') {
+                onConfirm(validLines.map(function(l){ return l.method; }).join(' + '), validLines);
+            }
+        });
+
+        render();
+    }
+
     // Modal obrigatorio de selecao de forma de pagamento.
     // Operador clica "Fechar" -> abre este modal -> escolhe forma -> finishOrder
     // segue. Sem default. Evita pedido gravado com forma errada por reflexo.
@@ -3488,34 +4488,56 @@
         overlay.style.cssText = 'position:fixed;inset:0;background:rgba(45,27,78,.65);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Nunito",sans-serif;animation:mpFadeIn .15s ease-out';
         var totalLabel = 'R$ ' + (Number(totalValue)||0).toFixed(2).replace('.',',');
         overlay.innerHTML =
-          '<div style="background:#fff;border-radius:18px;max-width:460px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;animation:mpSlideUp .2s ease-out">' +
-            '<div style="padding:18px 22px;background:linear-gradient(135deg,#6C63FF,#42A5F5);color:#fff;display:flex;justify-content:space-between;align-items:center">' +
-              '<div>' +
-                '<h3 style="margin:0;font-family:\'Baloo 2\',cursive;font-size:1.15rem;font-weight:700">💰 Forma de pagamento</h3>' +
-                '<div style="font-size:.78rem;opacity:.92;margin-top:2px">Selecione pra finalizar a venda</div>' +
+          '<div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;animation:mpSlideUp .2s ease-out">' +
+            // Header sticky compacto com total embutido
+            '<div style="padding:12px 18px;background:linear-gradient(135deg,#6C63FF,#42A5F5);color:#fff;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-shrink:0">' +
+              '<div style="flex:1;min-width:0">' +
+                '<div style="font-size:.7rem;opacity:.85;font-weight:700;letter-spacing:.5px;text-transform:uppercase">Total a receber</div>' +
+                '<div style="font-family:\'Baloo 2\',cursive;font-size:1.6rem;font-weight:800;line-height:1.05">' + totalLabel + '</div>' +
               '</div>' +
-              '<button id="mpPaySelectClose" style="background:rgba(255,255,255,.22);color:#fff;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:700">×</button>' +
+              '<button id="mpPaySelectClose" style="background:rgba(255,255,255,.22);color:#fff;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;font-weight:700;flex-shrink:0">×</button>' +
             '</div>' +
-            '<div style="padding:22px">' +
-              '<div style="background:#F7F4FF;border-radius:12px;padding:14px 18px;text-align:center;margin-bottom:18px">' +
-                '<div style="font-size:.78rem;color:#7d6e92;font-weight:600;letter-spacing:.5px;text-transform:uppercase">Total a receber</div>' +
-                '<div style="font-family:\'Baloo 2\',cursive;font-size:2rem;font-weight:800;color:#6C63FF;margin-top:2px">' + totalLabel + '</div>' +
-              '</div>' +
-              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
-                '<button data-pay="Dinheiro"  class="mp-pay-btn" style="padding:18px 12px;background:#fff;border:2px solid #10B981;color:#065F46;border-radius:14px;font-family:\'Baloo 2\',cursive;font-size:1.02rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s ease">' +
-                  '<span style="font-size:1.6rem">💵</span><span>Dinheiro</span>' +
+            // Body com scroll
+            '<div style="padding:14px 16px;overflow-y:auto;flex:1;min-height:0">' +
+              // 4 botões tradicionais (compactos)
+              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+                '<button data-pay="Dinheiro" class="mp-pay-btn" style="padding:10px 8px;background:#fff;border:2px solid #10B981;color:#065F46;border-radius:11px;font-family:\'Baloo 2\',cursive;font-size:.92rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s ease">' +
+                  '<span style="font-size:1.1rem">💵</span><span>Dinheiro</span>' +
                 '</button>' +
-                '<button data-pay="Pix"       class="mp-pay-btn" style="padding:18px 12px;background:#fff;border:2px solid #06B6D4;color:#0E7490;border-radius:14px;font-family:\'Baloo 2\',cursive;font-size:1.02rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s ease">' +
-                  '<span style="font-size:1.6rem">📲</span><span>PIX</span>' +
+                '<button data-pay="Pix" class="mp-pay-btn" style="padding:10px 8px;background:#fff;border:2px solid #06B6D4;color:#0E7490;border-radius:11px;font-family:\'Baloo 2\',cursive;font-size:.92rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">' +
+                  '<span style="font-size:1.1rem">📲</span><span>PIX</span>' +
                 '</button>' +
-                '<button data-pay="Débito"    class="mp-pay-btn" style="padding:18px 12px;background:#fff;border:2px solid #3B82F6;color:#1E40AF;border-radius:14px;font-family:\'Baloo 2\',cursive;font-size:1.02rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s ease">' +
-                  '<span style="font-size:1.6rem">💳</span><span>Débito</span>' +
+                '<button data-pay="Débito" class="mp-pay-btn" style="padding:10px 8px;background:#fff;border:2px solid #3B82F6;color:#1E40AF;border-radius:11px;font-family:\'Baloo 2\',cursive;font-size:.92rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">' +
+                  '<span style="font-size:1.1rem">💳</span><span>Débito</span>' +
                 '</button>' +
-                '<button data-pay="Crédito"   class="mp-pay-btn" style="padding:18px 12px;background:#fff;border:2px solid #8B5CF6;color:#5B21B6;border-radius:14px;font-family:\'Baloo 2\',cursive;font-size:1.02rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s ease">' +
-                  '<span style="font-size:1.6rem">💳</span><span>Crédito</span>' +
+                '<button data-pay="Crédito" class="mp-pay-btn" style="padding:10px 8px;background:#fff;border:2px solid #8B5CF6;color:#5B21B6;border-radius:11px;font-family:\'Baloo 2\',cursive;font-size:.92rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">' +
+                  '<span style="font-size:1.1rem">💳</span><span>Crédito</span>' +
                 '</button>' +
               '</div>' +
-              '<div style="text-align:center;margin-top:14px;font-size:.72rem;color:#9CA3AF">Esc fecha sem finalizar</div>' +
+              // Promocional — bem mais compacto, 5 botões em grid 5 colunas (icon+label vertical pequeno)
+              '<div style="margin-top:12px;padding:10px;background:linear-gradient(135deg,#FFF3D6,#FFE0EC);border-radius:11px;border:1px dashed #EC407A">' +
+                '<div style="font-family:\'Baloo 2\',cursive;font-size:.78rem;font-weight:800;color:#7c3aed;text-align:center;margin-bottom:7px">🎁 Promocional</div>' +
+                '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">' +
+                  '<button data-promo="raspinha" class="mp-promo-btn" style="padding:7px 2px;background:#fff;border:1.5px solid #EC407A;color:#AD1457;border-radius:9px;font-family:Nunito,sans-serif;font-size:.66rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px">' +
+                    '<span style="font-size:1rem">🎰</span><span>Raspinha</span>' +
+                  '</button>' +
+                  '<button data-promo="milkycoins" class="mp-promo-btn" id="mpPromoCoinsBtn" style="padding:7px 2px;background:#fff;border:1.5px solid #FFB300;color:#E65100;border-radius:9px;font-family:Nunito,sans-serif;font-size:.66rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px">' +
+                    '<span style="font-size:1rem">💰</span><span>Coins</span>' +
+                  '</button>' +
+                  '<button data-promo="milkypass" class="mp-promo-btn" id="mpPromoPassBtn" style="padding:7px 2px;background:#fff;border:1.5px solid #00BCD4;color:#00838F;border-radius:9px;font-family:Nunito,sans-serif;font-size:.66rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px">' +
+                    '<span style="font-size:1rem">🏆</span><span>Pass</span>' +
+                  '</button>' +
+                  '<button data-promo="desafio" class="mp-promo-btn" style="padding:7px 2px;background:#fff;border:1.5px solid #4CAF50;color:#2E7D32;border-radius:9px;font-family:Nunito,sans-serif;font-size:.66rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px">' +
+                    '<span style="font-size:1rem">🎮</span><span>Desafio</span>' +
+                  '</button>' +
+                  '<button data-promo="promo300g" class="mp-promo-btn" style="padding:7px 2px;background:#fff;border:1.5px solid #9C27B0;color:#6A1B9A;border-radius:9px;font-family:Nunito,sans-serif;font-size:.66rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px">' +
+                    '<span style="font-size:1rem">🎯</span><span>300g</span>' +
+                  '</button>' +
+                '</div>' +
+                '<div id="mpPromoInfo" style="margin-top:6px;font-size:.7rem;color:#6b7280;text-align:center"></div>' +
+              '</div>' +
+              '<button id="mpPayMixedBtn" style="width:100%;margin-top:10px;padding:10px;background:#111827;color:#fff;border:none;border-radius:10px;font-family:\'Baloo 2\',cursive;font-size:.88rem;font-weight:800;cursor:pointer">💳 Pagamento misto (N formas)</button>' +
+              '<div style="text-align:center;margin-top:8px;font-size:.66rem;color:#9CA3AF">Esc fecha sem finalizar</div>' +
             '</div>' +
           '</div>';
         document.body.appendChild(overlay);
@@ -3524,13 +4546,190 @@
         document.addEventListener('keydown', onKey);
         overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
         overlay.querySelector('#mpPaySelectClose').addEventListener('click', close);
+        overlay.querySelector('#mpPayMixedBtn').addEventListener('click', function(){
+            close();
+            _showSplitPaymentModal(totalValue, onConfirm);
+        });
         overlay.querySelectorAll('.mp-pay-btn').forEach(function(btn){
             btn.addEventListener('mouseenter', function(){ btn.style.transform = 'translateY(-2px)'; btn.style.boxShadow = '0 8px 22px rgba(108,99,255,.18)'; });
             btn.addEventListener('mouseleave', function(){ btn.style.transform = ''; btn.style.boxShadow = ''; });
             btn.addEventListener('click', function(){
                 var method = btn.getAttribute('data-pay');
                 close();
-                if (typeof onConfirm === 'function') onConfirm(method);
+                if (typeof onConfirm === 'function') onConfirm(method, [{ method:method, type:'customer_payment', label:method, amount:Number(totalValue)||0 }]);
+            });
+        });
+
+        // === Handlers dos botões PROMOCIONAIS ===
+        // Cada um abre fluxo específico, valida e fecha o modal com lines
+        // contendo o desconto que será aplicado pelo finishOrder.
+
+        function showPromoInfo(msg, kind) {
+            var el = overlay.querySelector('#mpPromoInfo');
+            if (!el) return;
+            el.textContent = msg;
+            el.style.color = kind === 'err' ? '#dc2626' : kind === 'ok' ? '#16a34a' : '#6b7280';
+            el.style.fontWeight = kind ? '700' : '400';
+        }
+
+        function applyPromoLines(method, label, amount, payload) {
+            var rest = Math.max(0, Math.round(((Number(totalValue)||0) - amount) * 100) / 100);
+            var lines = [{ method: method, type: 'promo_credit', label: label, amount: amount, payload: payload || {} }];
+            if (rest > 0) {
+                // Resto precisa de pagamento real — pergunta a forma
+                var fallback = prompt('Resta R$ ' + rest.toFixed(2).replace('.', ',') + ' para fechar. Qual forma?\n(Dinheiro, Pix, Débito ou Crédito)', 'Pix');
+                if (!fallback) return;
+                var methods4 = ['Dinheiro','Pix','Débito','Crédito'];
+                var cleaned = methods4.find(function(m){ return m.toLowerCase() === String(fallback).toLowerCase().trim(); }) || fallback.trim();
+                lines.push({ method: cleaned, type: 'customer_payment', label: cleaned, amount: rest });
+            }
+            close();
+            if (typeof onConfirm === 'function') {
+                onConfirm(lines.map(function(l){ return l.method; }).join(' + '), lines);
+            }
+        }
+
+        // Auto-update botões com info do membro identificado
+        (function annotatePromoButtons(){
+            try {
+                if (typeof clubMember !== 'undefined' && clubMember) {
+                    var coins = Number(clubMember.coins || 0);
+                    var coinsBtn = overlay.querySelector('#mpPromoCoinsBtn');
+                    if (coinsBtn && coins > 0) {
+                        coinsBtn.innerHTML = '<span style="font-size:1.4rem">💰</span><span>MilkyCoins</span><span style="font-size:.7rem;font-weight:700;color:#E65100;margin-top:2px">G$ ' + coins + ' disponível</span>';
+                    }
+                    var pendingPass = (clubMember.pendingPassRewards || []).filter(function(r){ return !r.redeemedAt; }).length;
+                    var passBtn = overlay.querySelector('#mpPromoPassBtn');
+                    if (passBtn && pendingPass > 0) {
+                        passBtn.innerHTML = '<span style="font-size:1.4rem">🏆</span><span>MilkyPass (' + pendingPass + ')</span>';
+                        passBtn.style.background = '#dcfce7';
+                        passBtn.style.borderColor = '#16a34a';
+                    } else if (passBtn) {
+                        passBtn.style.opacity = '.5';
+                        passBtn.title = 'Cliente não tem MilkyPass completo';
+                    }
+                } else {
+                    showPromoInfo('💡 Identifique o cliente no MilkyClube pra usar Coins/Pass', '');
+                }
+            } catch(e) { console.warn('annotate promo', e); }
+        })();
+
+        overlay.querySelectorAll('.mp-promo-btn').forEach(function(btn){
+            btn.addEventListener('mouseenter', function(){ btn.style.transform = 'translateY(-2px)'; btn.style.boxShadow = '0 6px 18px rgba(0,0,0,.15)'; });
+            btn.addEventListener('mouseleave', function(){ btn.style.transform = ''; btn.style.boxShadow = ''; });
+            btn.addEventListener('click', function(){
+                var promo = btn.getAttribute('data-promo');
+
+                if (promo === 'raspinha') {
+                    var code = prompt('Cole o código da raspinha do cliente:');
+                    if (!code) return;
+                    code = String(code).toUpperCase().trim();
+                    // Procura no localStorage local primeiro
+                    var found = null;
+                    try {
+                        var key = 'mp_scratches_' + (typeof fid !== 'undefined' ? fid : 'muffato-quintino');
+                        var arr = JSON.parse(localStorage.getItem(key) || '[]');
+                        found = arr.find(function(s){
+                            return (s.code === code || s.shortCode === code || (s.shortCode||'').replace(/-/g,'') === code.replace(/-/g,''));
+                        });
+                    } catch(_) {}
+                    if (!found) { showPromoInfo('❌ Raspinha não encontrada. Verifique o código.', 'err'); return; }
+                    if (found.status === 'redeemed') { showPromoInfo('❌ Esta raspinha já foi resgatada.', 'err'); return; }
+                    if (found.expiresAt && new Date(found.expiresAt) < new Date()) { showPromoInfo('❌ Raspinha expirada.', 'err'); return; }
+                    if (found.prizeTier === 'none') { showPromoInfo('❌ Esta raspinha não dá prêmio (passou raspando).', 'err'); return; }
+                    if (found.minOrder && Number(totalValue) < Number(found.minOrder)) {
+                        showPromoInfo('❌ Pedido mínimo R$ ' + Number(found.minOrder).toFixed(2) + ' para usar essa raspinha.', 'err'); return;
+                    }
+                    var prizeValue = Number(found.prizeCost || found.prizeValue || 5);
+                    var discount = Math.min(prizeValue, Number(totalValue) || 0);
+                    if (!confirm('Aplicar raspinha "' + (found.prizeName || found.prizeCode) + '" — R$ ' + discount.toFixed(2) + ' de desconto?')) return;
+                    // Marca raspinha como resgatada (assíncrono)
+                    try {
+                        if (firebase && firebase.firestore) {
+                            firebase.firestore().collection('scratches').doc(found.code).update({
+                                status: 'redeemed', redeemedAt: new Date().toISOString()
+                            }).catch(function(){});
+                        }
+                    } catch(_) {}
+                    applyPromoLines('Raspinha', '🎰 Raspinha (' + (found.shortCode || found.code) + ')', discount, { scratchCode: found.code });
+                    return;
+                }
+
+                if (promo === 'milkycoins') {
+                    if (typeof clubMember === 'undefined' || !clubMember) {
+                        showPromoInfo('⚠️ Identifique o cliente no MilkyClube primeiro.', 'err'); return;
+                    }
+                    var available = Number(clubMember.coins || 0);
+                    if (available <= 0) { showPromoInfo('❌ Cliente sem MilkyCoins disponíveis.', 'err'); return; }
+                    var maxBRL = available * 0.01; // 100 coins = R$ 1
+                    var maxApply = Math.min(maxBRL, Number(totalValue) || 0);
+                    var ask = prompt('Cliente tem G$ ' + available + ' (= R$ ' + maxBRL.toFixed(2) + ').\nQuanto usar nesse pedido (R$)?', maxApply.toFixed(2).replace('.', ','));
+                    if (!ask) return;
+                    var applyBRL = parseFloat(String(ask).replace('.', '').replace(',', '.')) || 0;
+                    if (applyBRL <= 0) return;
+                    if (applyBRL > maxApply) { showPromoInfo('❌ Valor maior que o disponível ou que o total.', 'err'); return; }
+                    var coinsToUse = Math.round(applyBRL * 100); // R$ -> coins
+                    applyPromoLines('MilkyCoins', '💰 MilkyCoins (' + coinsToUse + ' G$)', applyBRL, { coinsToRedeem: coinsToUse });
+                    return;
+                }
+
+                if (promo === 'milkypass') {
+                    if (typeof clubMember === 'undefined' || !clubMember) {
+                        showPromoInfo('⚠️ Identifique o cliente no MilkyClube primeiro.', 'err'); return;
+                    }
+                    var pending = (clubMember.pendingPassRewards || []).filter(function(r){ return !r.redeemedAt; });
+                    if (!pending.length) { showPromoInfo('❌ Cliente não tem MilkyPass completo pendente.', 'err'); return; }
+                    var reward = pending[0];
+                    if (!confirm('Aplicar MilkyPass "' + (reward.label || 'Prêmio') + '"? Vale o item de menor valor do pedido.')) return;
+                    // Pega o item mais barato do carrinho como referência
+                    var cheapest = (typeof cart !== 'undefined' && cart.length)
+                        ? cart.reduce(function(min, c){ var p = (c.unitPrice || 0) * (c.qty || 1); return (!min || p < min.value) ? { item: c, value: p } : min; }, null)
+                        : null;
+                    var discount = cheapest ? cheapest.value : Math.min(15, Number(totalValue) || 0);
+                    applyPromoLines('MilkyPass', '🏆 MilkyPass — ' + (reward.label || 'Prêmio'), discount, { passRewardId: reward.id });
+                    return;
+                }
+
+                if (promo === 'desafio') {
+                    var dcode = prompt('Cole o código do voucher do Desafio:');
+                    if (!dcode) return;
+                    dcode = String(dcode).toUpperCase().trim();
+                    showPromoInfo('🔍 Validando voucher...', '');
+                    if (!firebase || !firebase.firestore) { showPromoInfo('❌ Firebase não disponível.', 'err'); return; }
+                    firebase.firestore().collection('desafio_vouchers').doc(dcode).get().then(function(d){
+                        if (!d.exists) { showPromoInfo('❌ Voucher não encontrado.', 'err'); return; }
+                        var v = d.data() || {};
+                        if (v.used) { showPromoInfo('❌ Voucher já utilizado.', 'err'); return; }
+                        var disc = Number(v.discountValue || 5);
+                        if (!confirm('Aplicar voucher "' + (v.prizeLabel || v.prize || 'Desafio') + '" — R$ ' + disc.toFixed(2) + '?')) return;
+                        firebase.firestore().collection('desafio_vouchers').doc(dcode).update({
+                            used: true, usedAt: new Date().toISOString()
+                        }).catch(function(){});
+                        applyPromoLines('Voucher Desafio', '🎮 Desafio — ' + (v.prizeLabel || dcode), Math.min(disc, Number(totalValue) || 0), { voucherCode: dcode });
+                    }).catch(function(e){ showPromoInfo('❌ Erro: ' + e.message, 'err'); });
+                    return;
+                }
+
+                if (promo === 'promo300g') {
+                    // Procura item de buffet no carrinho
+                    var buffetItem = (typeof cart !== 'undefined' && cart.length)
+                        ? cart.find(function(c){ return /buffet|self.?service/i.test(c.name || ''); })
+                        : null;
+                    if (!buffetItem) { showPromoInfo('❌ Não há item de buffet no pedido.', 'err'); return; }
+                    var weightTxt = prompt('Peso medido na balança (em gramas):');
+                    if (!weightTxt) return;
+                    var weight = parseInt(String(weightTxt).replace(/\D/g, ''), 10);
+                    if (isNaN(weight)) { showPromoInfo('❌ Peso inválido.', 'err'); return; }
+                    if (weight !== 300) {
+                        showPromoInfo('🎯 ' + weight + 'g — não bateu! 300g exato. Cliente paga normal.', 'err');
+                        return;
+                    }
+                    // Acertou! Buffet vira grátis
+                    var buffetValue = (Number(buffetItem.unitPrice) || 0) * (Number(buffetItem.qty) || 1);
+                    if (!confirm('🎉 ACERTOU 300g exato!\nDescontar R$ ' + buffetValue.toFixed(2) + ' (item de buffet por conta da casa)?')) return;
+                    applyPromoLines('Promo 300g', '🎯 Acertou 300g exato!', buffetValue, { weightG: weight, buffetItemId: buffetItem.id });
+                    return;
+                }
             });
         });
         // Adiciona keyframes uma vez
@@ -3552,13 +4751,15 @@
             // Calcula total preliminar pro modal exibir
             var _stPrelim = Math.round(cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0)*100)/100;
             var _discPrelim = (typeof calcDiscountAmount === 'function') ? calcDiscountAmount(_stPrelim) : 0;
-            var _totPrelim = Math.max(0, Math.round((_stPrelim - _discPrelim) * 100) / 100);
-            _showPaymentSelectModal(_totPrelim, function(method){
+            var _clubPrelim = (typeof clubRedeemAmount !== 'undefined') ? Math.max(0, (clubRedeemAmount|0) / 100) : 0;
+            var _totPrelim = Math.max(0, Math.round((_stPrelim - _discPrelim - _clubPrelim) * 100) / 100);
+            _showPaymentSelectModal(_totPrelim, function(method, paymentLines){
                 var sel = document.getElementById('paymentMethod');
                 if (sel) sel.value = method;
+                window._customerPaymentLinesThisOrder = paymentLines || [{ method:method, type:'customer_payment', label:method, amount:_totPrelim }];
                 window._paymentConfirmedThisOrder = true;
                 try { window.finishOrder(); }
-                finally { window._paymentConfirmedThisOrder = false; }
+                finally { window._paymentConfirmedThisOrder = false; window._customerPaymentLinesThisOrder = null; }
             });
             return;
         }
@@ -3576,7 +4777,9 @@
             at: window._cartDiscount.at || null,
             usedDefaultPin: !!window._cartDiscount.usedDefaultPin
         } : null;
-        var total = Math.max(0, Math.round((subtotal - discountAmount) * 100) / 100);
+        var clubRedeemBRL = (typeof clubRedeemAmount !== 'undefined') ? Math.max(0, Math.round((clubRedeemAmount|0)) / 100) : 0;
+        var totalBeforeClub = Math.max(0, Math.round((subtotal - discountAmount) * 100) / 100);
+        var total = Math.max(0, Math.round((totalBeforeClub - clubRedeemBRL) * 100) / 100);
         // Nome do pedido: fallback para 'Balcao' quando vazio em pedido balcao (NAO bloqueia
         // o fluxo do operador). A liberacao do desafio na TV e feita SEPARADAMENTE pelo
         // botao "DESAFIO" (FAB), que tem seu proprio modal exigindo nome+WhatsApp.
@@ -3595,7 +4798,12 @@
         var scratchData = null;
         var scratchCheck = shouldEmitScratch(total, customerKey);
         if (scratchCheck.ok) {
-            var scratchPrize = rollScratchPrize();
+            // Upgrade para PREMIUM se o cliente identificado tem créditos pendentes
+            // (review Google, story IG, etc — concedido pelo claimAction quando aprovado).
+            // Sync check para não tornar finishOrder async; decremento assincrono.
+            var isPremium = hasPendingPremiumScratch();
+            var scratchPrize = isPremium ? rollScratchPrizePremium() : rollScratchPrize();
+            if (isPremium) asyncDecrementPremium();
             // Rotaciona copy do "Quase!" se for tier none
             var scratchPrizeDesc = pickNearMissCopy(scratchPrize) || scratchPrize.desc;
             var scratchCfg = getScratchConfig();
@@ -3621,6 +4829,7 @@
                 prizeTipo: scratchPrize.tipo || null,            // categoria estratégica (buffet/brinde/produto/combo/especial)
                 prizeScope: scratchPrize.scope,
                 prizeCategoria: scratchPrize.categoria || null,  // vínculo a produtos reais
+                prizeCost: Number(scratchPrize.cost) || 0,
                 minOrder: scratchPrize.minOrder,
                 cumulativo: scratchPrize.cumulativo === true,    // default false (não acumula)
                 customerName: oName || '',
@@ -3638,7 +4847,10 @@
                 redeemedOrderId: null,
                 sharedOnInstagram: false,
                 instagramBonusGranted: false,
-                generatedBy: 'order'  // 'order' ou 'redeem_loop' (futuro)
+                generatedBy: 'order',  // 'order' ou 'redeem_loop' (futuro)
+                isPremium: isPremium,
+                premiumSource: isPremium ? 'review_or_action' : null,
+                memberId: (typeof clubMember !== 'undefined' && clubMember) ? (clubMember.id || clubMember.uid || null) : null
             };
             saveScratch(scratchData);
         } else {
@@ -3656,17 +4868,21 @@
         var _todayOrders = _allOrders.filter(function(o){ return !o.deleted && o.createdAt && o.createdAt.slice(0,10) === _todayKeyLocal; });
         var _seqNum = _todayOrders.length + 1;
 
-        // BUG FIX: selectedPaymentMethod era variavel UNDEFINED → throw ReferenceError
-        // ao clicar Dinheiro/PIX/Debito/Credito no modal de pagamento → pedido nao
-        // finalizava. Le do select 'paymentMethod' que e setado em finishOrder linha 3557.
-        var _selectedPay = (document.getElementById('paymentMethod') && document.getElementById('paymentMethod').value) || 'Dinheiro';
+        var merchandiseSubtotal = Math.round(cart.reduce(function(s,c){
+            return s + (c.isPrize ? 0 : (Number(c.unitPrice) || 0) * (Number(c.qty) || 1));
+        },0)*100)/100;
+        var scratchPaymentTotal = Math.round(cart.reduce(function(s,c){
+            return s + (c.isPrize ? Math.abs((Number(c.unitPrice) || 0) * (Number(c.qty) || 1)) : 0);
+        },0)*100)/100;
+        var selectedPaymentMethod = document.getElementById('paymentMethod') ? document.getElementById('paymentMethod').value : 'Não informado';
+        var orderId = Utils.generateId();
         var order={
-            id:Utils.generateId(),createdAt:new Date().toISOString(),status:'confirmado',
+            id:orderId,createdAt:new Date().toISOString(),status:'confirmado',
             dailySeq:_seqNum,                  // numeração diária pra exibição no kanban
             dailyDate:_todayKeyLocal,
             type:orderType,source:'pdv',
             delivery:orderType==='delivery'?'delivery':null,
-            payment:_selectedPay,
+            payment:selectedPaymentMethod,
             items:cart.map(function(c){
                 return{
                     productId:c.id||null,  // referência ao catalog_v2 product ID (p/ CMV e finance-realtime)
@@ -3675,14 +4891,27 @@
                     total:Math.round(c.unitPrice*c.qty*100)/100,
                     byWeight:c.type==='por_peso'||c.byWeight||false,
                     type:c.type||'unitario',
+                    categoriaId:c.categoriaId||null,
                     weightG:c.weightG||null,
                     weightKg:c.weightKg||(c.weightG?c.weightG/1000:null),
                     pricePerKg:c.pricePerKg,
+                    kitQty:c.kitQty||null,
+                    canal:c.canal||null,
+                    picoleFlavorId:c.picoleFlavorId||null,
+                    picoleFlavorName:c.picoleFlavorName||'',
+                    isPrize:!!c.isPrize,
+                    prizeCode:c.prizeCode||null,
+                    prizeCategoria:c.prizeCategoria||null,
+                    scratchCode:c.scratchCode||null,
+                    scratchShortCode:c.scratchShortCode||null,
                     cost:Math.round((Number(c.cost)||0)*100)/100,  // CMV pré-calculado (buffet etc)
                     emoji:c.emoji
                 };
             }),
             subtotal:subtotal,
+            grossSubtotal:merchandiseSubtotal,
+            scratchPromoTotal:scratchPaymentTotal,
+            milkyClubRedeemTotal:clubRedeemBRL,
             discount:discountInfo,             // {type, value, amount, reason, by, byName, at, usedDefaultPin} | null
             total:total,
             totalPaid:total,
@@ -3693,6 +4922,31 @@
             voucherCode: voucherDisplay,       // Desafio 10 Segundos code
             challengeAttempts: attemptsPerPurchase
         };
+        var scratchPaymentLines = buildScratchPaymentLines(order, cart, total, merchandiseSubtotal);
+        var paymentLines = (window._customerPaymentLinesThisOrder && window._customerPaymentLinesThisOrder.length)
+            ? window._customerPaymentLinesThisOrder.map(function(p){
+                return { method:p.method, type:'customer_payment', label:p.label || p.method, amount:Math.round((Number(p.amount)||0)*100)/100 };
+            })
+            : [{ method:selectedPaymentMethod, type:'customer_payment', label:selectedPaymentMethod, amount:total }];
+        if (discountAmount > 0 && discountInfo) {
+            paymentLines.push({ method:'desconto_manual', type:'manual_discount', label:'Desconto manual', amount:discountAmount, reason:discountInfo.reason || '' });
+        }
+        scratchPaymentLines.forEach(function(line){ paymentLines.push(line); });
+        if (clubRedeemBRL > 0) {
+            paymentLines.push({
+                method:'milkyclub',
+                type:'loyalty_redeem',
+                label:'MilkyClub',
+                amount:clubRedeemBRL,
+                memberId:(typeof clubMember !== 'undefined' && clubMember) ? (clubMember.id || clubMember.uid || null) : null
+            });
+        }
+        order.payments = paymentLines;
+        order.scratchRedemptions = scratchPaymentLines.map(function(line){ return line.scratchRedemption; });
+        if (!validateScratchPaymentsStillOpen(order.scratchRedemptions)) {
+            toast('🚫 Raspinha já usada ou inválida. Remova o resgate e valide novamente.');
+            return;
+        }
 
         // === AUTO-PRONTO / AUTO-ENTREGUE ===
         // Sem kitchen item (buffet/picolé/água/sorvete-kg/bebida):
@@ -3736,6 +4990,9 @@
         } else {
             DataStore.addToCollection('orders',fid,order);
         }
+        try { finalizeScratchRedemptions(order); } catch(e) { console.warn('[Raspinha] finalizar resgate:', e); }
+
+        try { updatePicoleFlavorStock(order); } catch(e) { console.warn('[Picoles] baixa por sabor falhou:', e); }
 
         // NFC-e: tenta emitir (manual ou Bling)
         if (typeof NFCe !== 'undefined' && NFCe.emit && order.nf) {
@@ -3759,77 +5016,146 @@
             } catch(e) { console.warn('NFCe.emit:', e); }
         }
 
-        // Auto-create financial entry from PDV sale
-        // Inclui CMV (custo da mercadoria vendida) para rastreio de margem no Financeiro
+        // ============================================
+        // CMV SNAPSHOT — calculado AGORA, salvo no pedido (imutavel)
+        // ============================================
+        // FONTE PRIMARIA: CatalogV2 (produto.custos.custoTotal)
+        // FONTE FALLBACK: catalog_config legado (campo cost no item)
+        // SOURCE TRACKING: cada item registra de onde veio o custo
+        // _pendingCMV: marca pedido se algum item ficou sem custo (admin
+        // precisa cadastrar composicao do produto)
         var _catalogCfg = DataStore.get('catalog_config') || {};
-        var _totalCusto = 0;
-        var _itemsWithCost = order.items.map(function(item) {
-            // 1) Custo pré-calculado (buffet/por_peso já traz custo proporcional)
-            var preCusto = Number(item.cost) || 0;
-            if (preCusto > 0) {
-                _totalCusto += preCusto;
-                return {
-                    name: item.name, qty: item.qty, unitPrice: item.unitPrice,
-                    productId: item.productId || null,
-                    type: item.type || 'unitario',
-                    weightG: item.weightG || null,
-                    unitCost: item.type === 'por_peso' && item.weightG
-                        ? Math.round((preCusto / (item.weightG/1000)) * 100) / 100  // custo/kg
-                        : preCusto,
-                    custo: Math.round(preCusto * 100) / 100
-                };
-            }
-
-            // 2) Lookup por productId (fonte mais confiável) ou nome no catálogo
-            var unitCost = 0;
+        var _v2Cache = null; // lazy-load CatalogV2 produtos
+        function _v2Lookup(productId) {
+            if (!productId) return null;
+            if (typeof CatalogV2 === 'undefined' || !CatalogV2.getProduto) return null;
+            try {
+                var p = CatalogV2.getProduto(fid, productId);
+                if (p && p.custos) {
+                    return Number(p.custos.custoTotal) || Number(p.custos.custoInsumos) || 0;
+                }
+            } catch(_e) {}
+            return null;
+        }
+        function _legacyLookup(item) {
+            // Lookup legado (catalog_config) por productId ou nome
             if (item.productId && _catalogCfg.sabores) {
-                Object.values(_catalogCfg.sabores).some(function(grupo) {
-                    if (!grupo || !grupo.items) return false;
-                    var found = grupo.items.find(function(ci) { return ci.id === item.productId; });
-                    if (found) { unitCost = Number(found.cost) || 0; return true; }
+                var hit = null;
+                Object.values(_catalogCfg.sabores).some(function(g) {
+                    if (!g || !g.items) return false;
+                    var f = g.items.find(function(ci) { return ci.id === item.productId; });
+                    if (f) { hit = f; return true; }
                     return false;
                 });
+                if (hit) return Number(hit.cost) || 0;
             }
-            if (!unitCost && _catalogCfg.sabores) {
-                Object.values(_catalogCfg.sabores).some(function(grupo) {
-                    if (!grupo || !grupo.items) return false;
-                    var found = grupo.items.find(function(ci) {
+            if (_catalogCfg.sabores) {
+                var hit2 = null;
+                Object.values(_catalogCfg.sabores).some(function(g) {
+                    if (!g || !g.items) return false;
+                    var f = g.items.find(function(ci) {
                         return ci.name === item.name || item.name.indexOf(ci.name) === 0;
                     });
-                    if (found) { unitCost = Number(found.cost) || 0; return true; }
+                    if (f) { hit2 = f; return true; }
                     return false;
                 });
+                if (hit2) return Number(hit2.cost) || 0;
             }
-            // Bebidas (por productId ou nome)
-            if (!unitCost && _catalogCfg.bebidas) {
+            if (_catalogCfg.bebidas) {
                 var bev = _catalogCfg.bebidas.find(function(b) {
                     return (item.productId && b.id === item.productId) || b.name === item.name;
                 });
-                if (bev) unitCost = Number(bev.cost) || 0;
+                if (bev) return Number(bev.cost) || 0;
             }
-            // Custo dos extras/toppings
+            return 0;
+        }
+
+        var _totalCusto = 0;
+        var _hasPendingCMV = false;
+        var _itemsWithCost = order.items.map(function(item) {
+            var qty = item.qty || 1;
+            if (item.isPrize) {
+                return {
+                    name: item.name, qty: qty, unitPrice: item.unitPrice,
+                    productId: null,
+                    type: 'promotion_redeem',
+                    weightG: null,
+                    unitCost: 0,
+                    custo: 0,
+                    cmvSource: 'promotion'
+                };
+            }
+            var cmvSource = 'none';
+            var unitCost = 0;
             var extrasCost = 0;
-            if (item.extras && _catalogCfg.adicionais) {
-                item.extras.forEach(function(ex) {
-                    Object.values(_catalogCfg.adicionais).forEach(function(ag) {
-                        if (ag && ag.items) {
-                            var ai = ag.items.find(function(a) { return a.name === ex.name; });
-                            if (ai) extrasCost += Number(ai.cost) || 0;
-                        }
+
+            // 1) Custo pré-calculado (buffet/por_peso ja vem com custo proporcional)
+            var preCusto = Number(item.cost) || 0;
+            if (preCusto > 0) {
+                cmvSource = 'precalculated';
+                unitCost = item.type === 'por_peso' && item.weightG
+                    ? Math.round((preCusto / (item.weightG/1000)) * 100) / 100
+                    : preCusto;
+                _totalCusto += preCusto;
+            } else {
+                // 2) Lookup CatalogV2 PRIMARIO
+                var v2Cost = _v2Lookup(item.productId);
+                if (v2Cost && v2Cost > 0) {
+                    unitCost = v2Cost;
+                    cmvSource = 'v2';
+                } else {
+                    // 3) FALLBACK: catalog_config legado
+                    var legCost = _legacyLookup(item);
+                    if (legCost > 0) {
+                        unitCost = legCost;
+                        cmvSource = 'legacy';
+                    } else {
+                        cmvSource = 'none';
+                        _hasPendingCMV = true;
+                    }
+                }
+                // Custo dos extras/toppings (do legado — sem v2 equivalent ainda)
+                if (item.extras && _catalogCfg.adicionais) {
+                    item.extras.forEach(function(ex) {
+                        Object.values(_catalogCfg.adicionais).forEach(function(ag) {
+                            if (ag && ag.items) {
+                                var ai = ag.items.find(function(a) { return a.name === ex.name; });
+                                if (ai) extrasCost += Number(ai.cost) || 0;
+                            }
+                        });
                     });
-                });
+                }
+                var itemTotal = (unitCost + extrasCost) * qty;
+                _totalCusto += itemTotal;
             }
-            var itemCusto = (unitCost + extrasCost) * (item.qty || 1);
-            _totalCusto += itemCusto;
+
+            // CMV snapshot por item (imutavel, gravado no pedido)
+            var cmvSnapshot = preCusto > 0 ? preCusto : ((unitCost + extrasCost) * qty);
+            // Tambem grava DENTRO de order.items pra o pedido carregar consigo
+            item.productId = item.productId || null;
+            item.cmvSnapshot = Math.round(cmvSnapshot * 100) / 100;
+            item.cmvSource = cmvSource;
+            item.unitCostSnapshot = Math.round(unitCost * 100) / 100;
+
             return {
-                name: item.name, qty: item.qty, unitPrice: item.unitPrice,
+                name: item.name, qty: qty, unitPrice: item.unitPrice,
                 productId: item.productId || null,
                 type: item.type || 'unitario',
+                weightG: item.weightG || null,
                 unitCost: unitCost,
-                custo: Math.round(itemCusto * 100) / 100
+                custo: Math.round(cmvSnapshot * 100) / 100,
+                cmvSource: cmvSource
             };
         });
-        var _margem = total > 0 ? Math.round((1 - _totalCusto / total) * 1000) / 10 : null;
+        // CMV total e margem no pedido (alem do financeEntry)
+        var _scratchPrizeCostTotal = (order.scratchRedemptions || []).reduce(function(s,r){ return s + (Number(r.prizeCost)||0); }, 0);
+        var _businessCostTotal = Math.round((_totalCusto + _scratchPrizeCostTotal) * 100) / 100;
+        order.cmvTotal = Math.round(_totalCusto * 100) / 100;
+        order.promoCostTotal = Math.round(_scratchPrizeCostTotal * 100) / 100;
+        order.businessCostTotal = _businessCostTotal;
+        order.lucroBruto = Math.round((total - _businessCostTotal) * 100) / 100;
+        if (_hasPendingCMV) order._pendingCMV = true;
+        var _margem = total > 0 ? Math.round((1 - _businessCostTotal / total) * 1000) / 10 : null;
 
         var financeEntry = {
             id: Utils.generateId(),
@@ -3837,7 +5163,16 @@
             category: 'vendas',
             source: 'pdv',
             amount: total,
-            custo: Math.round(_totalCusto * 100) / 100,
+            grossAmount: merchandiseSubtotal,
+            paidAmount: total,
+            payments: order.payments,
+            scratchRedemptions: order.scratchRedemptions,
+            scratchPromoTotal: order.scratchPromoTotal,
+            scratchPrizeCostTotal: _scratchPrizeCostTotal,
+            custo: Math.round(_totalCusto * 100) / 100,           // CMV
+            cmvSnapshot: Math.round(_totalCusto * 100) / 100,     // alias explicito
+            businessCostTotal: _businessCostTotal,
+            lucroBruto: Math.round((total - _businessCostTotal) * 100) / 100,
             margem: _margem,
             items: _itemsWithCost,
             description: 'PDV ' + order.id + ' - ' + (oName || 'Balcao'),
@@ -3852,17 +5187,43 @@
         };
         DataStore.addToCollection('finances', fid, financeEntry);
 
-        // Consome estoque da receita uma vez por venda.
+        // Consome estoque da receita uma vez por venda. Recipes.deductFromInventory
+        // agora faz dual-read (CatalogV2 primeiro, legado fallback).
         if (typeof Recipes !== 'undefined' && Recipes.deductFromInventory) {
             try {
                 var deducted = Recipes.deductFromInventory(fid, order);
-                if (deducted) {
+                // Compat: pode ser bool (legado) ou {ok, deducted, warnings, sources}
+                var didDeduct = deducted === true || (deducted && deducted.deducted);
+                var stockWarnings = (deducted && deducted.warnings) || [];
+                var stockSources = (deducted && deducted.sources) || {};
+                if (didDeduct) {
                     order.inventoryDeducted = true;
                     order.inventoryDeductedAt = new Date().toISOString();
-                    DataStore.updateInCollection('orders', fid, order.id, {
-                        inventoryDeducted: true,
-                        inventoryDeductedAt: order.inventoryDeductedAt
-                    });
+                }
+                if (stockWarnings.length || Object.keys(stockSources).length) {
+                    order._stockWarnings = stockWarnings;
+                    order._stockSources = stockSources;
+                }
+                DataStore.updateInCollection('orders', fid, order.id, {
+                    inventoryDeducted: !!didDeduct,
+                    inventoryDeductedAt: order.inventoryDeductedAt || null,
+                    _stockWarnings: stockWarnings.length ? stockWarnings : null,
+                    _stockSources: Object.keys(stockSources).length ? stockSources : null,
+                    cmvTotal: order.cmvTotal,
+                    promoCostTotal: order.promoCostTotal,
+                    businessCostTotal: order.businessCostTotal,
+                    lucroBruto: order.lucroBruto,
+                    _pendingCMV: !!order._pendingCMV,
+                    // CRITICAL: items foram modificados in-place no calculo do CMV
+                    // (cmvSnapshot, cmvSource, unitCostSnapshot adicionados em
+                    // cada item). Sem persistir aqui, ficavam apenas em memoria
+                    // -> firestore mantinha items "limpos" sem CMV.
+                    items: order.items,
+                    _cmvSourceMix: financeEntry._cmvSourceMix || null
+                });
+                // Toast pro operador se algum item ficou sem baixa de estoque
+                if (stockWarnings.length && typeof Utils !== 'undefined' && Utils.showToast) {
+                    Utils.showToast('⚠ Venda OK mas: ' + stockWarnings[0], 'warning');
                 }
             } catch (e) {
                 console.warn('Recipes.deductFromInventory:', e);
@@ -4542,10 +5903,18 @@
 
         // Validação minOrder ANTES de marcar como resgatada
         var cartTotal = cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
-        if (scratch.minOrder && cartTotal < scratch.minOrder) {
+        var requiredMinOrder = effectiveScratchMinOrder(scratch);
+        if (requiredMinOrder && cartTotal < requiredMinOrder) {
             btn.disabled = false;
             btn.textContent = '✅ Validar Codigo';
-            toast('🚫 Pedido mínimo R$ ' + scratch.minOrder + ' pra resgatar este prêmio. Atual: R$ ' + cartTotal.toFixed(2));
+            toast('🚫 Pedido mínimo R$ ' + requiredMinOrder + ' pra resgatar este prêmio. Atual: R$ ' + cartTotal.toFixed(2));
+            return;
+        }
+        var categoryCheck = cartHasScratchCategory(scratch);
+        if (!categoryCheck.ok) {
+            btn.disabled = false;
+            btn.textContent = '✅ Validar Codigo';
+            toast('🚫 Este prêmio precisa de compra com ' + categoryCheck.label + ' no carrinho.');
             return;
         }
 
@@ -4557,38 +5926,9 @@
             return;
         }
 
-        // Marca como resgatada (local + Firestore)
-        var key = 'scratches_' + scratch.franchiseId;
-        var arr = DataStore.get(key) || [];
-        var idx = arr.findIndex(function(s){ return s.code === scratch.code; });
-        var employeeId = (typeof Auth !== 'undefined' ? Auth.getSession().userId : 'unknown');
-        if(idx !== -1){
-            arr[idx].status = 'redeemed';
-            arr[idx].redeemedAt = new Date().toISOString();
-            arr[idx].redeemedStoreId = fid;
-            arr[idx].redeemedEmployeeId = employeeId;
-            DataStore.set(key, arr);
-        }
-        try {
-            if(typeof firebase !== 'undefined' && firebase.firestore){
-                await firebase.firestore().collection('scratches').doc(scratch.code).update({
-                    status: 'redeemed',
-                    redeemedAt: new Date().toISOString(),
-                    redeemedStoreId: fid,
-                    redeemedEmployeeId: employeeId
-                });
-            }
-        } catch(e){ console.warn('Firestore redeem update:', e); }
-
-        // LOOP ON REDEEM — gera nova raspadinha pro cliente (próxima visita)
-        var loopScratch = tryGenerateLoopScratch(scratch, cartTotal);
-        var loopMsg = loopScratch
-            ? ' 🎁 Cliente ganhou NOVA raspinha (' + loopScratch.shortCode + ') pra usar no próximo pedido!'
-            : '';
-
         pendingRedeemedScratch = null;
         closeRedeemModal();
-        toast('🎉 Raspinha resgatada! Prêmio aplicado.' + loopMsg);
+        toast('🎁 Raspinha adicionada ao pagamento. Ela será marcada como usada ao finalizar a venda.');
     }
 
     // Mapa: prizeCode → cálculo do desconto a aplicar (negativo = abate do total)
@@ -4605,18 +5945,142 @@
             case 'RSP_PICOLE_2BY1':   return -3.00;                          // 1 picolé grátis
             case 'RSP_SHAKE_P_FREE':  return -9.99;                          // Milkshake P grátis
             case 'RSP_SUNDAE_P_FREE': return -9.99;                          // Sundae P grátis
+            case 'RSP_BUFFET_100_15':  return -5.99;                          // +100g buffet
+            case 'RSP_BUFFET_100_20':  return -5.99;                          // +100g buffet
+            case 'RSP_BUFFET_150_25':  return -8.99;                          // +150g buffet
+            case 'RSP_BUFFET_200_35':  return -11.98;                         // +200g buffet
+            case 'RSP_PICOLE_15':      return -3.00;                          // picolé em dobro
+            case 'RSP_CASQUINHA':      return -2.00;                          // casquinha
+            case 'RSP_COPINHO_20':     return -5.00;                          // copinho
+            case 'RSP_SUNDAE_P_30':    return -9.99;                          // sundae P
+            case 'RSP_SHAKE_UPGRADE':  return -5.00;                          // upgrade milk shake
+            case 'RSP_COMBO_BUFFET_PIC': return -8.99;                        // +100g + picolé controlado
+            case 'RSP_AMIGO_100G':     return -11.98;                         // +100g para dois
             case 'RSP_CAPITAO_50':    return -12.50;                         // 50% de R$24,99
             case 'RSP_MEGA_50':       return -Math.min(50, cartTotal);       // R$50 capped pelo total
             default:                  return 0;
         }
     }
 
+    function getScratchPrizeCost(prizeCode){
+        try {
+            var prize = getScratchPrizes().find(function(p){ return p.code === prizeCode; });
+            return prize ? (Number(prize.cost) || 0) : 0;
+        } catch(e) {
+            return 0;
+        }
+    }
+
+    function buildScratchPaymentLines(order, cartItems, paidTotal, grossSubtotal){
+        return (cartItems || []).filter(function(item){ return item && item.isPrize && item.scratchCode; }).map(function(item){
+            var promoAmount = Math.abs(Math.round(((Number(item.unitPrice) || 0) * (Number(item.qty) || 1)) * 100) / 100);
+            var redemption = Object.assign({}, item.scratchRedemption || {}, {
+                scratchCode: item.scratchCode,
+                shortCode: item.scratchShortCode || null,
+                prizeCode: item.prizeCode || null,
+                prizeName: String(item.name || '').replace(/^🎁\s*/, ''),
+                prizeCategoria: item.prizeCategoria || null,
+                promoAmount: promoAmount,
+                prizeCost: Number(item.scratchPrizeCost) || getScratchPrizeCost(item.prizeCode),
+                redeemedOrderId: order.id,
+                redeemedAt: order.createdAt,
+                redeemedStoreId: fid,
+                redemptionPaidTotal: paidTotal,
+                redemptionGrossTotal: grossSubtotal,
+                status: 'redeemed'
+            });
+            return {
+                method: 'raspinha',
+                type: 'promotion_redeem',
+                label: 'Raspinha da Sorte',
+                amount: promoAmount,
+                cost: redemption.prizeCost,
+                scratchCode: redemption.scratchCode,
+                shortCode: redemption.shortCode,
+                prizeCode: redemption.prizeCode,
+                prizeName: redemption.prizeName,
+                scratchRedemption: redemption
+            };
+        });
+    }
+
+    function finalizeScratchRedemptions(order){
+        var redemptions = order && order.scratchRedemptions;
+        if (!redemptions || !redemptions.length) return;
+        var key = 'scratches_' + fid;
+        var arr = DataStore.get(key) || [];
+        var employeeId = (typeof Auth !== 'undefined' && Auth.getSession) ? ((Auth.getSession() || {}).userId || 'unknown') : 'unknown';
+        var now = new Date().toISOString();
+        redemptions.forEach(function(r){
+            var idx = arr.findIndex(function(s){ return s.code === r.scratchCode; });
+            var patch = {
+                status: 'redeemed',
+                redeemedAt: r.redeemedAt || now,
+                redeemedStoreId: fid,
+                redeemedEmployeeId: employeeId,
+                redeemedOrderId: order.id,
+                redemptionPaymentMethod: 'raspinha',
+                redemptionPaidTotal: r.redemptionPaidTotal,
+                redemptionGrossTotal: r.redemptionGrossTotal,
+                redemptionTotal: r.redemptionPaidTotal,
+                redemptionPromoAmount: r.promoAmount,
+                redemptionPrizeCost: r.prizeCost,
+                redemptionItems: (order.items || []).filter(function(it){ return !it.isPrize; }).map(function(it){
+                    return { name: it.name, qty: it.qty, total: it.total, category: it.categoriaId || it.type || null };
+                })
+            };
+            var originalScratch = idx !== -1 ? Object.assign({}, arr[idx]) : { code:r.scratchCode, prizeCode:r.prizeCode, customerName:(order.customer||{}).name, customerPhone:(order.customer||{}).phone };
+            if(idx !== -1){
+                arr[idx] = Object.assign({}, arr[idx], patch);
+            }
+            try {
+                if(typeof firebase !== 'undefined' && firebase.firestore){
+                    firebase.firestore().collection('scratches').doc(r.scratchCode).update(patch)
+                        .catch(function(e){ console.warn('Firestore scratch redeem update:', e); });
+                }
+            } catch(e){ console.warn('Firestore scratch redeem update:', e); }
+            try {
+                var loopScratch = tryGenerateLoopScratch(Object.assign({}, originalScratch, patch), order.total);
+                if (loopScratch) {
+                    window._lastRedeemLoopScratch = loopScratch;
+                }
+            } catch(e){ console.warn('[Raspinha] loop no resgate:', e); }
+        });
+        DataStore.set(key, arr);
+    }
+
+    function validateScratchPaymentsStillOpen(redemptions){
+        if (!redemptions || !redemptions.length) return true;
+        var arr = DataStore.get('scratches_' + fid) || [];
+        return redemptions.every(function(r){
+            var s = arr.find(function(x){ return x.code === r.scratchCode; });
+            if (!s) return true;
+            if (s.status === 'redeemed') return false;
+            if (s.expiresAt && new Date(s.expiresAt) < new Date()) return false;
+            return true;
+        });
+    }
+
     function applyPrizeToCart(scratch){
-        var cartTotal = cart.reduce(function(s,c){return s+c.unitPrice*c.qty},0);
+        if (cart.some(function(c){ return c.isPrize && c.scratchCode === scratch.code; })) {
+            toast('Esta raspinha já está no pagamento desta venda.');
+            return false;
+        }
+        if (cart.some(function(c){ return c.isPrize; })) {
+            toast('Use apenas 1 raspinha por venda.');
+            return false;
+        }
+        var cartTotal = cart.reduce(function(s,c){return s+(c.isPrize ? 0 : c.unitPrice*c.qty)},0);
 
         // Validação minOrder — só aplica se carrinho atende mínimo
-        if (scratch.minOrder && cartTotal < scratch.minOrder) {
-            toast('🚫 Pedido mínimo R$ ' + scratch.minOrder + ' pra usar este prêmio. Atual: R$ ' + cartTotal.toFixed(2));
+        var requiredMinOrder = effectiveScratchMinOrder(scratch);
+        if (requiredMinOrder && cartTotal < requiredMinOrder) {
+            toast('🚫 Pedido mínimo R$ ' + requiredMinOrder + ' pra usar este prêmio. Atual: R$ ' + cartTotal.toFixed(2));
+            return false;
+        }
+        var categoryCheck = cartHasScratchCategory(scratch);
+        if (!categoryCheck.ok) {
+            toast('🚫 Este prêmio precisa de compra com ' + categoryCheck.label + ' no carrinho.');
             return false;
         }
 
@@ -4641,7 +6105,19 @@
             isPrize: true,
             prizeCode: scratch.prizeCode,
             prizeCategoria: scratch.prizeCategoria || null,
-            scratchCode: scratch.code
+            scratchCode: scratch.code,
+            scratchShortCode: scratch.shortCode || null,
+            scratchPrizeCost: Number(scratch.prizeCost) || getScratchPrizeCost(scratch.prizeCode),
+            scratchRedemption: {
+                scratchCode: scratch.code,
+                shortCode: scratch.shortCode || null,
+                prizeCode: scratch.prizeCode,
+                prizeName: scratch.prizeName,
+                prizeCategoria: scratch.prizeCategoria || null,
+                prizeCost: Number(scratch.prizeCost) || getScratchPrizeCost(scratch.prizeCode),
+                promoAmount: Math.abs(discount),
+                status: 'pending_payment'
+            }
         };
 
         cart.push(prizeItem);
@@ -4675,6 +6151,7 @@
             prizeTier: newPrize.tier,
             prizeScope: newPrize.scope,
             prizeCategoria: newPrize.categoria || null,
+            prizeCost: Number(newPrize.cost) || 0,
             minOrder: newPrize.minOrder,
             customerName: originalScratch.customerName || '',
             customerPhone: originalScratch.customerPhone || '',
@@ -4751,9 +6228,21 @@
             var ticketMedio = qtdPedidos > 0 ? (totalDia / qtdPedidos) : 0;
 
             // Breakdown por forma de pagamento
+            // Defensivo: payment pode vir como string, number, ou {method:...}
+            // (legado de versoes diferentes do PDV/cardapio). Normaliza tudo
+            // pra string antes de chamar toLowerCase, senao quebra com TypeError.
+            function _normPay(raw){
+                if (raw == null) return 'não informado';
+                if (typeof raw === 'string') return raw.toLowerCase().trim();
+                if (typeof raw === 'object') {
+                    var s = raw.method || raw.type || raw.label || raw.name || '';
+                    return String(s).toLowerCase().trim() || 'não informado';
+                }
+                return String(raw).toLowerCase().trim();
+            }
             var porPagto = {};
             finalizados.forEach(function(o){
-                var p = (o.payment || 'Não informado').toLowerCase().trim();
+                var p = _normPay(o.payment);
                 var key = p;
                 if (p.indexOf('pix') !== -1) key = 'pix';
                 else if (p.indexOf('din') !== -1) key = 'dinheiro';
@@ -5398,6 +6887,49 @@
             document.exitFullscreen().catch(function(){});
         }
     };
+
+    // F10 — Fechar caixa do dia.
+    // ANTES: window.fecharCaixa nao existia; F10 e o botao "Fechar Caixa"
+    // referenciavam a funcao mas ela nunca era definida -> tecla nao fazia
+    // nada. Agora wrapper que valida estado do caixa e abre o modal correto.
+    window.fecharCaixa = function(){
+        try {
+            if (typeof Caixa === 'undefined' || !Caixa.showCloseModal) {
+                alert('⚠️ Modulo de caixa ainda carregando. Tente novamente em 3 segundos.');
+                return;
+            }
+            // Pega franquia da sessao (fid global do PDV ja deve estar setado)
+            var franchId = (typeof fid !== 'undefined' && fid) ? fid :
+                           (typeof Auth !== 'undefined' && Auth.getSession ? (Auth.getSession()||{}).franchiseId : null);
+            if (!franchId) {
+                alert('⚠️ Sessao sem franquia. Faça login novamente.');
+                return;
+            }
+            // Checa estado do caixa antes de abrir o modal
+            var st = Caixa.getTurnoState(franchId);
+            if (st.status === 'nao_aberto') {
+                if (confirm('Nenhum caixa aberto hoje. Quer ABRIR o caixa primeiro?')) {
+                    Caixa.showOpenModal(franchId, function(){
+                        if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
+                    });
+                }
+                return;
+            }
+            if (st.status === 'fechado') {
+                alert('✅ O caixa de hoje já foi fechado.\n\nPara reabrir, peça ao gerente.');
+                return;
+            }
+            // Caixa aberto: abre o modal interativo
+            Caixa.showCloseModal(franchId, function(r){
+                if (typeof renderPdvStatusChips === 'function') renderPdvStatusChips();
+                if (typeof renderFaturamentoChip === 'function') renderFaturamentoChip();
+            });
+        } catch(e) {
+            console.error('[fecharCaixa] erro:', e);
+            alert('Erro ao abrir fechamento do caixa: ' + e.message);
+        }
+    };
+
     // Atalhos de teclado pro PDV
     // F1 vendas · F2 imprimir · F3 conta aberta · F4 fechar pedido
     // F9 painel de pedidos · F10 fechar caixa · F11 fullscreen
@@ -5678,6 +7210,12 @@
         document.getElementById('clubAvatar').textContent = (m.name||'?').charAt(0).toUpperCase();
         var coins = (m.coins|0);
         document.getElementById('clubBalance').textContent = formatCoins(coins);
+        var pass = m.milkyPass || {};
+        var pendingPass = Array.isArray(m.pendingPassRewards) ? m.pendingPassRewards.filter(function(r){ return !r.redeemedAt; }).length : 0;
+        var passText = 'MilkyPass: ' + (pass.current || 0) + '/' + (pass.required || 5);
+        if(pendingPass) passText += ' - ' + pendingPass + ' premio pendente';
+        var passEl = document.getElementById('clubPassStatus');
+        if(passEl) passEl.textContent = passText;
         document.getElementById('clubUseToggle').checked = false;
         document.getElementById('clubUseRow').style.display = 'none';
         document.getElementById('clubRedeemHint').style.display = 'none';
@@ -5733,6 +7271,40 @@
         document.getElementById('clubRedeemHint').textContent = 'Desconto: R$ '+reais;
     };
 
+    function getMilkyPassConfig(){
+        var fallback = {
+            enabled: true,
+            stampsRequired: 5,
+            minOrder: 0,
+            rewardType: 'scratch_bonus',
+            rewardLabel: 'Raspinha bonus',
+            resetOnComplete: true
+        };
+        if(typeof firebase==='undefined' || !firebase.firestore) return Promise.resolve(fallback);
+        return firebase.firestore().collection('club_config').doc('global').get().then(function(doc){
+            var data = doc.exists ? (doc.data() || {}) : {};
+            return Object.assign({}, fallback, data.milkyPass || {});
+        }).catch(function(err){
+            console.warn('milkyPass config err', err);
+            return fallback;
+        });
+    }
+
+    function grantMilkyPassStamp(memberId, orderId, totalBRL){
+        if(!memberId || typeof firebase==='undefined' || !firebase.functions) return Promise.resolve(null);
+        var fns = firebase.app().functions('southamerica-east1');
+        return fns.httpsCallable('clubGrantMilkyPassStamp')({
+            memberId: memberId,
+            orderId: orderId,
+            franchiseId: fid,
+            total: totalBRL
+        }).then(function(res){
+            var data = (res && res.data) || {};
+            if(data.skipped) return null;
+            return data;
+        });
+    }
+
     // Expoe helpers para o finishOrder
     window.MilkyClubPDV = {
         getMember: function(){ return clubMember; },
@@ -5741,12 +7313,11 @@
         handleAfterOrder: function(orderId, totalBRL){
             if(!clubMember) return;
             var memberId = clubMember.id || clubMember.uid;
-            if(typeof firebase==='undefined' || !firebase.functions) return;
-            var fns = firebase.app().functions('southamerica-east1');
+            var fns = (typeof firebase!=='undefined' && firebase.functions) ? firebase.app().functions('southamerica-east1') : null;
 
             // 1) Se houver redeem solicitado, chama clubRedeem primeiro
             var chain = Promise.resolve();
-            if(clubRedeemAmount>0){
+            if(clubRedeemAmount>0 && fns){
                 chain = chain.then(function(){
                     return fns.httpsCallable('clubRedeem')({
                         memberId: memberId,
@@ -5757,7 +7328,8 @@
                 });
             }
             // 2) Concede cashback sobre o total pago apos o desconto
-            chain.then(function(){
+            if(fns){
+                chain = chain.then(function(){
                 return fns.httpsCallable('clubGrantCashback')({
                     orderId: orderId,
                     franchiseId: fid,
@@ -5771,6 +7343,19 @@
                 } catch(e){}
             }).catch(function(err){
                 console.warn('clubGrantCashback err', err);
+            });
+            }
+            chain.then(function(){
+                return grantMilkyPassStamp(memberId, orderId, totalBRL);
+            }).then(function(passResult){
+                if(!passResult) return;
+                if(passResult.completed && passResult.reward){
+                    clubToast('MilkyPass completo! Premio liberado: '+passResult.reward.label);
+                } else {
+                    clubToast('MilkyPass: +1 carimbo ('+passResult.current+'/'+passResult.required+')');
+                }
+            }).catch(function(err){
+                console.warn('milkyclub after-order err', err);
             });
 
             // Limpa o estado apos uso
@@ -5832,47 +7417,32 @@
     if('serviceWorker' in navigator){
         navigator.serviceWorker.register('/sw.js').then(function(reg){
             console.log('[PDV] SW registered:', reg.scope);
-            // Força checagem de update imediata (browser throttle pode atrasar 24h)
             reg.update().catch(function(){});
-            // AUTO-UPDATE AGGRESSIVE: re-checa a cada 60s. Operador nunca precisa
-            // fazer hard refresh — deploys novos chegam silenciosamente.
             setInterval(function(){
                 reg.update().catch(function(){});
             }, 60000);
             window.addEventListener('online', function(){
                 reg.active && reg.active.postMessage({type:'REPLAY_OFFLINE_QUEUE'});
-                // Também checa se tem versão nova quando volta online
                 reg.update().catch(function(){});
             });
-            // Detecta SW novo instalado e force ativacao + reload
             reg.addEventListener('updatefound', function(){
                 var nw = reg.installing;
                 if (!nw) return;
                 nw.addEventListener('statechange', function(){
                     if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-                        // Tem SW antigo controlando + novo instalado pronto.
-                        // skipWaiting() ja eh chamado no install handler do sw.js,
-                        // entao isso so confirma. Quando ativar, controllerchange
-                        // dispara o reload abaixo.
                         console.log('[PDV] Novo SW instalado, aguardando ativacao...');
                     }
                 });
             });
         }).catch(function(e){ console.warn('[PDV] SW failed:', e); });
 
-        // controllerchange = SW novo tomou controle. Reload IMEDIATO so se for seguro.
-        // SEGURANCA: nunca reload se houver carrinho, modal aberto ou input focado.
-        // Re-tenta a cada 30s ate ser seguro. Operador NUNCA perde trabalho.
         var _hasReloaded = false;
         function isSafeToReload() {
             try {
-                // Carrinho com items? Operador ta no meio de uma venda — adia.
                 if (typeof cart !== 'undefined' && cart && cart.length > 0) return false;
-                // Algum modal aberto?
                 if (document.querySelector('.caixa-modal-overlay')) return false;
                 if (document.querySelector('[id^="mp"][role="dialog"]')) return false;
                 if (document.getElementById('mpPaymentSelectModal')) return false;
-                // Input focado (digitando)?
                 var ae = document.activeElement;
                 if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable)) {
                     if (ae.value && ae.value.length > 0) return false;
@@ -5883,7 +7453,7 @@
         function autoReloadWhenSafe(reason) {
             if (_hasReloaded) return;
             if (!isSafeToReload()) {
-                console.log('[PDV] Reload adiado (carrinho/modal/input ativos):', reason);
+                console.log('[PDV] Reload adiado:', reason);
                 setTimeout(function(){ autoReloadWhenSafe(reason); }, 30000);
                 return;
             }
@@ -5894,9 +7464,6 @@
         navigator.serviceWorker.addEventListener('controllerchange', function(){
             autoReloadWhenSafe('controllerchange');
         });
-
-        // Listener pra mensagens do SW (FORCE_RELOAD quando nova versão ativa).
-        // Sem isso, PDV fica preso em cache antigo enquanto resto do site atualiza.
         navigator.serviceWorker.addEventListener('message', function(e) {
             if (!e.data) return;
             if (e.data.type === 'FORCE_RELOAD' || e.data.type === 'NEW_VERSION_AVAILABLE') {
