@@ -169,6 +169,7 @@
                         <option value="Publicado">Publicado</option>
                     </select>
                     <div style="flex-basis:100%; height:0;"></div>
+                    <button class="btn" onclick="reagendarApartirDeHoje()" style="background:linear-gradient(135deg,#10B981,#059669); color:#fff; border:none; border-radius:10px; padding:10px 16px; font-family:'Nunito',sans-serif; font-weight:700; cursor:pointer;" title="Move TODOS os posts para começar hoje (mantém intervalos)">📅 Reagendar a partir de hoje</button>
                     <button class="btn" onclick="exportAgendaCsv()" style="background:#42A5F5; color:#fff; border:none; border-radius:10px; padding:10px 16px; font-family:'Nunito',sans-serif; font-weight:700; cursor:pointer;">📤 Exportar CSV</button>
                     <button class="btn" onclick="alertZip()" style="background:#fff; color:#EC407A; border:2px solid #EC407A; border-radius:10px; padding:8px 16px; font-family:'Nunito',sans-serif; font-weight:700; cursor:pointer;">🗂️ Exportar pacote visuais (em breve)</button>
                     <button class="btn" onclick="openDriveFolder()" style="background:#fff; color:#1976D2; border:2px solid #42A5F5; border-radius:10px; padding:8px 16px; font-family:'Nunito',sans-serif; font-weight:700; cursor:pointer;">☁️ Pasta do Drive</button>
@@ -695,15 +696,37 @@
         ];
     }
 
-    // Seed + render
-    var allPosts = viralPlan.slice();
+    // Seed + render. Prioridade:
+    // 1. localStorage backup (mp_marketing_agenda_local) — datas reagendadas
+    // 2. MarketingAgenda.list (Firestore) — sobrescreve se tiver dados
+    // 3. viralPlan (hardcoded fallback)
+    var allPosts;
+    try {
+        var localBackup = localStorage.getItem('mp_marketing_agenda_local');
+        if (localBackup) {
+            var parsed = JSON.parse(localBackup);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                // Faz merge: usa dates/status do backup, mantem hook/roteiro/audio do viralPlan
+                var bkById = {};
+                parsed.forEach(function(p){ bkById[p.id] = p; });
+                allPosts = viralPlan.map(function(p){
+                    if (bkById[p.id]) {
+                        return Object.assign({}, p, { date: bkById[p.id].date, status: bkById[p.id].status });
+                    }
+                    return p;
+                });
+                console.log('[marketing] Carregou agenda reagendada do localStorage');
+            }
+        }
+    } catch(_) {}
+    if (!allPosts) allPosts = viralPlan.slice();
 
     (function initAgenda(){
         if (typeof MarketingAgenda !== 'undefined') {
             MarketingAgenda.seed(viralPlan).catch(function(){/* noop */});
             MarketingAgenda.list(franchiseId).then(function(posts){
                 if (posts && posts.length > 0) {
-                    allPosts = mergeLists(viralPlan, posts);
+                    allPosts = mergeLists(allPosts, posts);
                 }
                 renderAgenda();
             }).catch(function(){ renderAgenda(); });
@@ -914,9 +937,58 @@
         }
         if (drive) window.open(drive, '_blank');
     }
+
+    /* Reagenda TODOS os posts pra comecarem hoje, preservando intervalos
+       relativos. Ex: se post[0] era dia 24/04 e post[5] era dia 29/04,
+       apos reagendar pra hoje (11/05): post[0]=11/05, post[5]=16/05.
+       Util quando operador nao executou nada do plano original e quer
+       comecar agora sem perder a estrutura (teaser, lancamento, etc). */
+    function reagendarApartirDeHoje(){
+        var ok = confirm(
+            '📅 Reagendar a partir de hoje?\n\n' +
+            'Vai mover TODOS os ' + allPosts.length + ' posts para comecarem HOJE (' +
+            _todayLocal().split('-').reverse().join('/') + '), mantendo a sequencia de fases.\n\n' +
+            'Posts atrasados deixam de ser atrasados.\n' +
+            'Status de cada post fica como Pendente.\n\n' +
+            'Confirma?'
+        );
+        if (!ok) return;
+
+        // Calcula offset em dias entre o primeiro post original e hoje
+        var sorted = allPosts.map(function(p){return p.date;}).sort();
+        if (!sorted.length) return;
+        var origStartMs = new Date(sorted[0]+'T12:00:00').getTime();
+        var todayMs = new Date(_todayLocal()+'T12:00:00').getTime();
+        var offsetMs = todayMs - origStartMs;
+
+        var changed = 0;
+        allPosts.forEach(function(p){
+            try {
+                var origMs = new Date(p.date+'T12:00:00').getTime();
+                var newMs = origMs + offsetMs;
+                var newDate = new Date(newMs).toISOString().slice(0,10);
+                if (p.date !== newDate) {
+                    p.date = newDate;
+                    p.status = 'Pendente';
+                    changed++;
+                    // Persiste cada post via MarketingAgenda se disponivel
+                    if (typeof MarketingAgenda !== 'undefined' && MarketingAgenda.updatePost) {
+                        try { MarketingAgenda.updatePost(p.id, { date: newDate, status: 'Pendente' }); } catch(_) {}
+                    }
+                }
+            } catch(e) { console.warn('reagendar post', p.id, e.message); }
+        });
+        // Backup local em caso de MarketingAgenda nao persistir
+        try { localStorage.setItem('mp_marketing_agenda_local', JSON.stringify(allPosts)); } catch(_) {}
+        console.log('[marketing] Reagendado', changed, 'posts pra começarem hoje');
+        alert('✅ ' + changed + ' posts reagendados. Hoje é o dia 1 da campanha agora!');
+        renderAgenda();
+    }
+
     window.exportAgendaCsv = exportAgendaCsv;
     window.alertZip = alertZip;
     window.openDriveFolder = openDriveFolder;
+    window.reagendarApartirDeHoje = reagendarApartirDeHoje;
 
     // Galeria de templates (thumbs linkando para o estudio)
     var TEMPLATES = [
