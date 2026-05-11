@@ -2,6 +2,50 @@
 
 ---
 
+## Ciclo #195 — 2026-05-11
+
+**Área:** Conversão — Brief operacional reativação D+30 Onda 1 (25/05–01/06/2026)
+
+**Contexto:** A janela D+30 para clientes da inauguração (25/04) abre em 25/05 — 2 semanas. O playbook genérico D+30/D+60 existia (ciclo #106), mas faltava um brief de **execução concreta** para esta onda específica: mensagens prontas (não templates com brackets), calendário dia-a-dia, segmentação em 3 lotes (inauguração / semana 1 / fãs sem retorno), integração com Desafio UGC #PotinhoMaisFeliz (semana 6) e Potinho Junino (novidade de temporada). A semana 25/05 é especialmente poderosa porque coincide com o 1 mês exato — gancho emocional real, não forçado.
+
+**O que pesquisou/analisou:**
+- Releitura de `whatsapp-reativacao-d30-d60.md` (ciclo #106) — playbook genérico existente, não adaptar: criar execução específica
+- Releitura de `pos-inauguracao-semana6.md` — Desafio #PotinhoMaisFeliz (24–30/05): gancho UGC perfeito para reativação
+- Releitura de `wa-broadcast-segunda-semana4.md` (ciclo #191) — confirmado que D+14 foi coberto; agora é D+30
+- Verificado que Potinho Junino ainda aguarda confirmação do operador (prazo 30/05) — incluída contingência nos 3 cenários
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reativacao-d30-onda1-maio26.md` | NOVO — brief completo de execução (290 linhas) |
+
+**Detalhes do brief criado:**
+- **3 lotes segmentados** — Lote A (inauguração, tom "você fez história"), Lote B (semana 1, tom "saudade leve"), Lote C (fãs VIP, convite UGC)
+- **Sequências completas** — A1→A2→A3 (3 mensagens), B1→B2 (2 mensagens), C1 (1 mensagem VIP)
+- **Mensagens prontas para copiar-colar** (não templates — texto final)
+- **Calendário dia-a-dia** 24/05–01/06 com horários recomendados
+- **Guia de respostas** para 6 cenários comuns (vou comprar / não sabia do delivery / tive problema / Potinho Junino / sem interesse / silêncio)
+- **Script de abertura do cardápio** em 2 mensagens sequenciais
+- **Integração UGC** com Desafio #PotinhoMaisFeliz — como aproveitar a reativação para gerar conteúdo
+- **Contingência em 3 cenários** para o Potinho Junino (confirmado / em andamento / não confirmado)
+- **KPIs** com 5 métricas e metas numéricas
+- **Checklist de 10 itens** por data/horário
+
+**Commit:** `0feac9b`
+
+**Próximo passo sugerido:**
+- **Ciclo #196 — Concorrentes:** Refetch MilkyMoo + TheBest (última atualização há 8+ ciclos — urgente verificar posicionamento inverno/julho)
+- **Ciclo #197 — UX:** Auditoria completa de `js/cardapio.js` (1050 linhas) — ciclo #193 corrigiu bug de bebidas; verificar se há outros padrões inconsistentes
+- **Ciclo #198 — Conteúdo:** Brief semana 7 (01–07/06) com tema "Junho chegou" + teaser Potinho Junino
+- **Operador (AÇÃO IMEDIATA — prazo 30/05):** Confirmar ingredientes + naming "Potinho Junino" ⚠️ URGENTE — afeta mensagens D+30
+- **Operador (AÇÃO IMEDIATA — prazo 25/05):** Executar guia `guia-google-search-console.md` antes do 1 mês
+- **Operador:** Preparar listas de contatos D+30 (lotes A, B, C) no WA Business até 24/05
+
+_Belinha — Ciclo #195 | 2026-05-11_
+
+---
+
 ## Ciclo #194 — 2026-05-11
 
 **Área:** Conteúdo — Brief consolidação Potinho Caramelado 02–07/07/2026
