@@ -117,6 +117,36 @@ const Caixa = (function () {
         return DataStore.getCollection(COLLECTION, franchiseId) || [];
     }
 
+    /* ============================================
+       MODO TREINAMENTO — abre/fecha caixa varias vezes
+       no mesmo dia pra treinar funcionarios, validar fluxo
+       de emails, demonstrar pra novos franqueados etc.
+       Detectado automaticamente quando:
+       - email da sessao eh teste@teste.com OU
+       - localStorage.mp_caixa_training_mode === '1' (toggle manual)
+       - localStorage.mp_caixa_training_mode_<franchiseId> === '1'
+       Comportamento:
+       - getTurnoState retorna o CICLO ATIVO (depois da ultima abertura)
+       - openShift permite abrir novo turno mesmo se ja teve fechamento hoje
+       - closeShift envia email com forceResend=true (sem dedup 5min)
+       ============================================ */
+    function isTrainingFranchise(franchiseId) {
+        try {
+            if (typeof localStorage !== 'undefined') {
+                if (localStorage.getItem('mp_caixa_training_mode') === '1') return true;
+                if (franchiseId && localStorage.getItem('mp_caixa_training_mode_' + franchiseId) === '1') return true;
+            }
+            if (typeof Auth !== 'undefined' && Auth.getSession) {
+                const s = Auth.getSession();
+                if (s && s.email) {
+                    const e = String(s.email).toLowerCase().trim();
+                    if (e === 'teste@teste.com') return true;
+                }
+            }
+        } catch (_) {}
+        return false;
+    }
+
     function byDate(moves, dateKey) {
         return moves.filter(m => {
             if (m.dateKey !== dateKey) return false;
@@ -137,7 +167,30 @@ const Caixa = (function () {
     function getTurnoState(franchiseId, dateKey) {
         dateKey = dateKey || todayKey();
         const all = loadMovements(franchiseId);
-        const moves = byDate(all, dateKey).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+        const movesAll = byDate(all, dateKey).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+
+        // MODO TREINAMENTO: isola o ciclo ATIVO (a partir da ultima abertura).
+        // Permite multiplos pares abertura/fechamento por dia sem misturar
+        // saldos. Movimentos antes da ultima abertura ficam no historico
+        // (loadMovements ainda traz tudo).
+        let moves;
+        if (isTrainingFranchise(franchiseId)) {
+            const aberturasIdx = [];
+            movesAll.forEach((m, i) => { if (m.type === 'abertura') aberturasIdx.push(i); });
+            if (aberturasIdx.length === 0) {
+                moves = movesAll; // 'nao_aberto' — array vazio na pratica
+            } else {
+                const lastAberturaIdx = aberturasIdx[aberturasIdx.length - 1];
+                // Se ja tem fechamento depois dessa abertura, o ciclo terminou
+                let cycleEndExclusive = movesAll.length;
+                for (let i = lastAberturaIdx + 1; i < movesAll.length; i++) {
+                    if (movesAll[i].type === 'fechamento') { cycleEndExclusive = i + 1; break; }
+                }
+                moves = movesAll.slice(lastAberturaIdx, cycleEndExclusive);
+            }
+        } else {
+            moves = movesAll;
+        }
 
         const abertura = moves.find(m => m.type === 'abertura');
         const fechamento = moves.find(m => m.type === 'fechamento');
@@ -255,34 +308,42 @@ const Caixa = (function () {
     function openShift(franchiseId, valorAbertura, motivoForaHorario) {
         if (!franchiseId) return { success: false, error: 'Franquia inválida.' };
         const st = getTurnoState(franchiseId);
+        const training = isTrainingFranchise(franchiseId);
         if (st.status === 'aberto') return { success: false, error: 'Já existe um caixa aberto hoje.' };
-        if (st.status === 'fechado') return { success: false, error: 'O caixa de hoje já foi fechado. Peça ao gerente para abrir um novo turno.' };
+        // Em producao bloqueia reabertura no mesmo dia. Modo TREINAMENTO
+        // libera (multiplos ciclos pra demonstracao/teste).
+        if (st.status === 'fechado' && !training) {
+            return { success: false, error: 'O caixa de hoje já foi fechado. Peça ao gerente para abrir um novo turno.' };
+        }
         if (isNaN(valorAbertura) || valorAbertura < 0) return { success: false, error: 'Valor de abertura inválido.' };
 
         // === HORÁRIO COMERCIAL ===
-        var hourCheck = checkBusinessHours(franchiseId, 'open');
-        if (!hourCheck.ok) {
-            if (!motivoForaHorario || !motivoForaHorario.trim()) {
-                return {
-                    success: false,
-                    error: hourCheck.reason,
-                    requiresReason: true,
-                    reasonField: 'motivoForaHorario',
-                    hourCheck: hourCheck
-                };
+        // Modo TREINAMENTO pula a checagem (demo/teste pode ser em qualquer hora).
+        if (!training) {
+            var hourCheck = checkBusinessHours(franchiseId, 'open');
+            if (!hourCheck.ok) {
+                if (!motivoForaHorario || !motivoForaHorario.trim()) {
+                    return {
+                        success: false,
+                        error: hourCheck.reason,
+                        requiresReason: true,
+                        reasonField: 'motivoForaHorario',
+                        hourCheck: hourCheck
+                    };
+                }
+                // Justificativa fornecida — registra
+                audit('CAIXA_OPENED_OFF_HOURS', franchiseId, {
+                    hora: hourCheck.currentHHMM,
+                    horarioPrevisto: hourCheck.expectedOpen,
+                    motivo: motivoForaHorario
+                });
             }
-            // Justificativa fornecida — registra
-            audit('CAIXA_OPENED_OFF_HOURS', franchiseId, {
-                hora: hourCheck.currentHHMM,
-                horarioPrevisto: hourCheck.expectedOpen,
-                motivo: motivoForaHorario
-            });
         }
 
         const r = createMovement(franchiseId, {
             type: 'abertura',
             valor: valorAbertura,
-            descricao: 'Abertura de caixa' + (motivoForaHorario ? ' (fora do horário · ' + motivoForaHorario + ')' : ''),
+            descricao: 'Abertura de caixa' + (training ? ' [🧪 treinamento]' : '') + (motivoForaHorario ? ' (fora do horário · ' + motivoForaHorario + ')' : ''),
             motivo: motivoForaHorario || ''
         });
         if (!r.success) return r;
@@ -297,26 +358,30 @@ const Caixa = (function () {
     function closeShift(franchiseId, valorContado, motivoQuebra, motivoForaHorario) {
         if (!franchiseId) return { success: false, error: 'Franquia inválida.' };
         const st = getTurnoState(franchiseId);
+        const training = isTrainingFranchise(franchiseId);
         if (st.status === 'nao_aberto') return { success: false, error: 'Nenhum caixa aberto hoje.' };
         if (st.status === 'fechado') return { success: false, error: 'O caixa de hoje já foi fechado.' };
 
         // === HORÁRIO COMERCIAL ===
-        var hourCheck = checkBusinessHours(franchiseId, 'close');
-        if (!hourCheck.ok) {
-            if (!motivoForaHorario || !motivoForaHorario.trim()) {
-                return {
-                    success: false,
-                    error: hourCheck.reason,
-                    requiresReason: true,
-                    reasonField: 'motivoForaHorario',
-                    hourCheck: hourCheck
-                };
+        // Modo TREINAMENTO pula a checagem (demo/teste pode ser em qualquer hora).
+        if (!training) {
+            var hourCheck = checkBusinessHours(franchiseId, 'close');
+            if (!hourCheck.ok) {
+                if (!motivoForaHorario || !motivoForaHorario.trim()) {
+                    return {
+                        success: false,
+                        error: hourCheck.reason,
+                        requiresReason: true,
+                        reasonField: 'motivoForaHorario',
+                        hourCheck: hourCheck
+                    };
+                }
+                audit('CAIXA_CLOSED_OFF_HOURS', franchiseId, {
+                    hora: hourCheck.currentHHMM,
+                    horarioPrevisto: hourCheck.expectedClose,
+                    motivo: motivoForaHorario
+                });
             }
-            audit('CAIXA_CLOSED_OFF_HOURS', franchiseId, {
-                hora: hourCheck.currentHHMM,
-                horarioPrevisto: hourCheck.expectedClose,
-                motivo: motivoForaHorario
-            });
         }
 
         // AUTO-FINALIZAR pedidos de DIAS ANTERIORES — quando opera-
@@ -513,7 +578,11 @@ const Caixa = (function () {
                     fechamentoDate: new Date().toISOString(),
                     vendasMes: vendasMes,
                     pedidosMes: pedidosMes,
-                    trocoProximoDia: TROCO_PADRAO
+                    trocoProximoDia: TROCO_PADRAO,
+                    // Modo TREINAMENTO: cada ciclo envia email real (sem dedup 5min)
+                    // pra owner conseguir validar fluxo de envio repetidas vezes.
+                    forceResend: training === true,
+                    isTrainingMode: training === true
                 };
                 console.log('[caixa.closeShift] disparando sendClosingReport', { franchiseId: franchiseId, role: session && session.role });
                 Promise.resolve(CloudFunctions.sendClosingReport(franchiseId, reportPayload))
@@ -1364,6 +1433,7 @@ const Caixa = (function () {
        ============================================ */
     function renderWidget(franchiseId) {
         const st = getTurnoState(franchiseId);
+        const training = isTrainingFranchise(franchiseId);
 
         const statusStyles = {
             aberto: { color: '#10B981', label: 'Caixa aberto' },
@@ -1385,12 +1455,23 @@ const Caixa = (function () {
                 <button class="btn btn-sm" style="background:#DC2626;color:#fff" onclick="Caixa.showCloseModal(Caixa._fid(), Caixa.refreshWidget)">🔒 Fechar caixa</button>`;
         } else {
             const diffColor = Math.abs(st.diferenca || 0) < 0.01 ? '#10B981' : '#DC2626';
+            // Modo TREINAMENTO: botao verde "Abrir novo turno" pra rodar mais ciclos
+            // no mesmo dia. Producao real bloqueia (so 1 turno/dia).
+            const reopenBtn = training
+                ? `<button class="btn btn-sm" style="background:#10B981;color:#fff" onclick="Caixa.showOpenModal(Caixa._fid(), Caixa.refreshWidget)" title="Modo treinamento: abrir novo turno hoje">🟢 Abrir novo turno</button>`
+                : '';
             // Botao de reenvio do relatorio: util quando email automatico nao chegou.
             // Server-side: forceResend=true bypassa dedup de 5min.
             actionBtns = `
                 <span style="color:${diffColor};font-weight:700;margin-right:8px">Diferença: ${formatBRL(st.diferenca)}</span>
+                ${reopenBtn}
                 <button class="btn btn-sm" style="background:#2196F3;color:#fff" onclick="Caixa._handleResendReport(this)" title="Reenviar email do relatorio (caso nao tenha chegado)">📧 Reenviar relatório</button>`;
         }
+
+        // Badge extra no header quando em modo treinamento
+        const trainingBadge = training
+            ? `<span class="status-badge" style="background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;margin-left:6px" title="Esta franquia esta em modo treinamento: multiplos ciclos por dia + emails sempre enviados">🧪 Treinamento</span>`
+            : '';
 
         const porMetodoHtml = Object.keys(st.porMetodo).length > 0
             ? Object.entries(st.porMetodo).map(([k, v]) =>
@@ -1402,7 +1483,10 @@ const Caixa = (function () {
             <div id="caixaWidget" class="panel-card" style="margin-bottom:20px">
               <div class="panel-card-header">
                 <h3>💰 Caixa de Hoje</h3>
-                <span class="status-badge" style="background:${s.color}15;color:${s.color};border:1px solid ${s.color}30">${s.label}</span>
+                <div>
+                  <span class="status-badge" style="background:${s.color}15;color:${s.color};border:1px solid ${s.color}30">${s.label}</span>
+                  ${trainingBadge}
+                </div>
               </div>
               <div class="panel-card-body">
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:14px">
@@ -1688,6 +1772,8 @@ const Caixa = (function () {
         // Reenvio manual do relatorio de fechamento (caso email nao chegou)
         resendClosingReport: resendClosingReport,
         _handleResendReport: _handleResendReport,
+        // Modo treinamento (teste@teste.com ou localStorage flag)
+        isTrainingFranchise: isTrainingFranchise,
         // Modais
         showOpenModal: showOpenModal,
         showCloseModal: showCloseModal,
