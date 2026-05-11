@@ -783,65 +783,35 @@ exports.setupOwner = onCall({
 });
 
 // ============================================
-// 3. TRIGGER: Novo(s) pedido(s) criado(s) — usa onDocumentWritten
+// 3. TRIGGER: Novo pedido criado
 // ============================================
-// FIX RACE: a versao anterior usava onDocumentCreated + orders[orders.length-1].
-// Bug: (a) onDocumentCreated so dispara UMA vez no create do doc inteiro
-// (subsequente updates do array nao disparavam); (b) com 2 PDVs gravando
-// em paralelo, o "ultimo do array" podia ser processado 2x.
-//
-// Agora: onDocumentWritten + diff (before vs after) processa SO os pedidos
-// novos por id, e quotas a TOP 10 mais recentes pra evitar reprocessar
-// historico no primeiro create.
-exports.onOrderCreated = onDocumentWritten({
+// Quando um pedido e criado via storefront publico
+exports.onOrderCreated = onDocumentCreated({
     document: "datastore/{docId}",
     region: "southamerica-east1"
 }, async (event) => {
     const docId = event.params.docId;
+
+    // So processa documentos de orders
     if (!docId.startsWith("orders_")) return;
 
-    const afterData = event.data?.after?.data();
-    if (!afterData || !afterData.value) return;
+    const data = event.data.data();
+    if (!data || !data.value) return;
 
-    const beforeData = event.data?.before?.data();
-
-    let afterOrders = [];
-    let beforeOrders = [];
     try {
-        afterOrders = JSON.parse(afterData.value) || [];
-        if (beforeData && beforeData.value) {
-            beforeOrders = JSON.parse(beforeData.value) || [];
-        }
+        const orders = JSON.parse(data.value);
+        if (!Array.isArray(orders)) return;
+
+        // FIX RACE: pega so o pedido mais recente — em 2 PDVs paralelos
+        // o trigger dispara 2x e ambos processariam "o ultimo do array",
+        // duplicando notificacao. Hard cap 1 + log com id.
+        const latestOrder = orders[orders.length - 1];
+        if (!latestOrder || !latestOrder.id) return;
+
+        const franchiseId = docId.replace("orders_", "");
+        console.log(`onOrderCreated: ${latestOrder.id} franquia=${franchiseId} total=${latestOrder.total || 0}`);
     } catch (e) {
-        console.error("onOrderCreated parse error:", e);
-        return;
-    }
-    if (!Array.isArray(afterOrders)) return;
-
-    // Identifica pedidos novos por id (diff)
-    const beforeIds = new Set(beforeOrders.map(o => o && o.id).filter(Boolean));
-    const newOrders = afterOrders.filter(o => o && o.id && !beforeIds.has(o.id));
-
-    // Hard cap: no primeiro create (beforeOrders vazio), so processa os 10
-    // mais recentes pra evitar inundar de notificacoes historicas.
-    const toProcess = (beforeOrders.length === 0)
-        ? newOrders.slice(-10)
-        : newOrders;
-
-    if (toProcess.length === 0) return;
-
-    const franchiseId = docId.replace("orders_", "");
-
-    for (const order of toProcess) {
-        try {
-            console.log(`Novo pedido: ${order.id} franquia ${franchiseId} total=${order.total}`);
-            // Aqui poderia:
-            // - Enviar notificacao push para o franqueado
-            // - Enviar email de confirmacao para o cliente
-            // - Atualizar metricas em tempo real
-        } catch (e) {
-            console.error(`onOrderCreated process error order=${order.id}:`, e);
-        }
+        console.error("onOrderCreated error:", e);
     }
 });
 
@@ -1208,30 +1178,6 @@ exports.getFiscalHealth = onCall({
     };
 });
 
-// Redact campos sensiveis (CSC token NFC-e, provider.apiKey) — exibe apenas
-// last4 + flag "configurado". Antes: getFiscalConfig retornava cleartext
-// completo, permitindo qualquer franqueado puxar o CSC e forjar NFC-e em
-// homologacao contra o CNPJ da loja.
-function _last4(s) {
-    if (!s || typeof s !== 'string') return null;
-    if (s.length <= 4) return '***';
-    return '***' + s.slice(-4);
-}
-function _redactFiscal(data) {
-    if (!data || typeof data !== 'object') return data;
-    const out = { ...data };
-    if (out.cscToken) out.cscToken = _last4(out.cscToken);
-    if (out.csc_token) out.csc_token = _last4(out.csc_token);
-    if (out.provider) {
-        out.provider = { ...out.provider };
-        if (out.provider.apiKey) out.provider.apiKey = _last4(out.provider.apiKey);
-        if (out.provider.api_key) out.provider.api_key = _last4(out.provider.api_key);
-        if (out.provider.token) out.provider.token = _last4(out.provider.token);
-        if (out.provider.secret) out.provider.secret = _last4(out.provider.secret);
-    }
-    return out;
-}
-
 exports.getFiscalConfig = onCall({
     region: "southamerica-east1"
 }, async (request) => {
@@ -1239,11 +1185,29 @@ exports.getFiscalConfig = onCall({
     const snap = await getFiscalConfigRef(franchiseId).get();
     const data = snap.exists ? snap.data() : {};
 
+    // REDACT campos sensiveis (CSC token NFC-e, provider.apiKey, secrets)
+    // Antes: retornava cleartext, qualquer manager/franqueado puxava CSC e
+    // forjava NFC-e em homologacao contra o CNPJ da loja.
+    function _last4(s) {
+        if (!s || typeof s !== "string") return null;
+        return s.length <= 4 ? "***" : "***" + s.slice(-4);
+    }
+    const redacted = { ...data };
+    if (redacted.cscToken) redacted.cscToken = _last4(redacted.cscToken);
+    if (redacted.csc_token) redacted.csc_token = _last4(redacted.csc_token);
+    if (redacted.provider) {
+        redacted.provider = { ...redacted.provider };
+        if (redacted.provider.apiKey) redacted.provider.apiKey = _last4(redacted.provider.apiKey);
+        if (redacted.provider.api_key) redacted.provider.api_key = _last4(redacted.provider.api_key);
+        if (redacted.provider.token) redacted.provider.token = _last4(redacted.provider.token);
+        if (redacted.provider.secret) redacted.provider.secret = _last4(redacted.provider.secret);
+    }
+
     return {
         success: true,
         franchiseId,
         config: {
-            ..._redactFiscal(data),
+            ...redacted,
             certificate: sanitizeCertificateMeta(data.certificate)
         }
     };
@@ -1531,7 +1495,1482 @@ const testMode = require("./test-mode");
 Object.assign(exports, testMode);
 
 // ============================================================
-// Orders Migration (ADR-001 — datastore -> subcollection)
+// SETUP TEST USER — uma vez, garante claims + franquia teste
 // ============================================================
-const migrateOrders = require("./migrate-orders");
-Object.assign(exports, migrateOrders);
+// Function publica (sem auth) que SO atua no email teste@teste.com.
+// Seta custom claims (role franchisee, franchiseId franquia-teste) e
+// garante que a franquia-teste existe no doc datastore/franchises.
+// Apos o user logar uma vez, podemos remover essa function.
+exports.setupTestFranchise = onCall({ region: "southamerica-east1" }, async () => {
+    const TEST_EMAIL = "teste@teste.com";
+    const TEST_FID = "franquia-teste";
+
+    // 1. Setar claims no usuario teste
+    let user;
+    try {
+        user = await auth.getUserByEmail(TEST_EMAIL);
+    } catch (e) {
+        throw new HttpsError("not-found", "Usuario teste@teste.com nao existe");
+    }
+    await auth.setCustomUserClaims(user.uid, {
+        role: "franchisee",
+        franchiseId: TEST_FID,
+    });
+
+    // 2. Garantir franquia-teste no doc franchises com DADOS REAIS
+    //    da Muffato Quintino (cliente pediu: dados reais pra testar
+    //    pedidos reais, mas separados em outro fid/orders).
+    const ref = db.collection("datastore").doc("franchises");
+    const snap = await ref.get();
+    let arr = [];
+    if (snap.exists) {
+        try { arr = JSON.parse(snap.data().value || "[]"); } catch (e) { arr = []; }
+    }
+    const muffato = arr.find((f) => f.id === "muffato-quintino");
+    // Dados reais da loja real (com fallback se Muffato nao existir)
+    const realData = muffato ? {
+        address: muffato.address,
+        city: muffato.city,
+        state: muffato.state,
+        phone: muffato.phone,
+        whatsapp: muffato.whatsapp,
+        deliveryFee: muffato.deliveryFee,
+        deliveryTime: muffato.deliveryTime,
+        rating: muffato.rating,
+        hours: muffato.hours,
+    } : {
+        address: "Rua Quintino Bocaiúva, 1045",
+        city: "Londrina", state: "PR",
+        phone: "43999919777", whatsapp: "43999919777",
+        deliveryFee: 5.9, deliveryTime: "20-35 min", rating: 5,
+        hours: "00:00 - 23:59",
+    };
+    const testFranchiseObj = {
+        id: TEST_FID,
+        slug: TEST_FID,
+        name: "MilkyPot TESTE (Demo)",
+        ...realData,
+        type: "store",
+        monthlyFee: 0,
+        status: "ativo",
+        storeOnlineOpen: true,
+        deliveryEnabled: true,
+        pickupEnabled: true,
+        isTestFranchise: true,
+        // Override hours pra sempre aberta no teste
+        hours: "00:00 - 23:59",
+        createdAt: new Date().toISOString(),
+        access: {
+            ownerName: "Franquia TESTE",
+            ownerEmail: TEST_EMAIL,
+            ownerPhone: realData.phone,
+            ownerPassword: "Teste@123",
+            loginUrl: "https://milkypot.com/login.html",
+            panelUrl: "https://milkypot.com/painel/index.html",
+            notes: "Franquia de teste — dados de endereco/contato espelhados da Muffato Quintino. Pedidos salvos em orders_franquia-teste (separado).",
+        },
+    };
+    const idx = arr.findIndex((f) => f.id === TEST_FID);
+    if (idx === -1) arr.push(testFranchiseObj);
+    else arr[idx] = testFranchiseObj; // SEMPRE re-sincroniza dados reais
+    await ref.set({
+        value: JSON.stringify(arr),
+        updatedAt: new Date().toISOString(),
+    });
+
+    // 2.1 Cria docs vazios pro APK Android nao receber 404 quando itera
+    //     sobre franchises buscando tv_shortcodes_<fid>. Sem isso, a
+    //     adicao da franquia-teste no array franchises causa 404 no APK
+    //     pra essas chaves -> APK pode mostrar 'codigo tv3 nao encontrado'
+    //     se o cache da muffato-quintino tambem falhar momentaneamente.
+    const tvDocs = [
+        "tv_shortcodes_" + TEST_FID,
+        "tv_media_" + TEST_FID,
+        "tv_playlist_" + TEST_FID,
+        "tv_config_" + TEST_FID,
+    ];
+    for (const docId of tvDocs) {
+        try {
+            const dRef = db.collection("datastore").doc(docId);
+            const dSnap = await dRef.get();
+            if (!dSnap.exists) {
+                const emptyVal = docId.includes("media") || docId.includes("playlist") ? "[]" : "{}";
+                await dRef.set({ value: emptyVal, updatedAt: new Date().toISOString() });
+            }
+        } catch (e) { console.warn("init tv doc " + docId + ":", e.message); }
+    }
+
+    // 2.2 Copia credenciais Uber Direct da Muffato Quintino pra franquia-teste
+    //     (cliente disse: "ja ta ativa e cadastrada no sistema pode usar a mesma").
+    //     Usa a mesma conta Uber, so muda o franchiseId interno.
+    try {
+        const muffatoUber = await db.collection("uber_settings").doc("muffato-quintino").get();
+        if (muffatoUber.exists) {
+            const testUber = await db.collection("uber_settings").doc(TEST_FID).get();
+            if (!testUber.exists) {
+                await db.collection("uber_settings").doc(TEST_FID).set(muffatoUber.data());
+                console.log("uber settings copiadas de muffato-quintino pra " + TEST_FID);
+            }
+        }
+    } catch (e) { console.warn("copy uber settings:", e.message); }
+
+    // 3. Garantir user profile no datastore/users (auth.js usa esse perfil
+    //    pra autorizar login — sem ele cai em 'Usuario nao cadastrado').
+    const usersRef = db.collection("datastore").doc("users");
+    const usersSnap = await usersRef.get();
+    let usersArr = [];
+    if (usersSnap.exists) {
+        try { usersArr = JSON.parse(usersSnap.data().value || "[]"); } catch (e) { usersArr = []; }
+    }
+    if (!usersArr.find((u) => u.email === TEST_EMAIL)) {
+        usersArr.push({
+            id: "user_" + user.uid,
+            email: TEST_EMAIL,
+            name: "Franquia TESTE",
+            role: "franchisee",
+            franchiseId: TEST_FID,
+            firebaseUid: user.uid,
+            createdAt: new Date().toISOString(),
+        });
+        await usersRef.set({
+            value: JSON.stringify(usersArr),
+            updatedAt: new Date().toISOString(),
+        });
+    }
+
+    // Diagnostico do estado Uber (sem expor secrets)
+    const uberMuffato = await db.collection("uber_settings").doc("muffato-quintino").get();
+    const uberTeste = await db.collection("uber_settings").doc(TEST_FID).get();
+    const muffatoStatus = uberMuffato.exists ? {
+        exists: true,
+        enabled: uberMuffato.data().enabled === true,
+        has_client_id: !!uberMuffato.data().client_id,
+        has_customer_id: !!uberMuffato.data().customer_id,
+        has_secret: !!uberMuffato.data().client_secret_encrypted,
+        pickup_address: uberMuffato.data().pickup_address || null,
+    } : { exists: false };
+    const testeStatus = uberTeste.exists ? {
+        exists: true,
+        enabled: uberTeste.data().enabled === true,
+        has_client_id: !!uberTeste.data().client_id,
+        has_customer_id: !!uberTeste.data().customer_id,
+        has_secret: !!uberTeste.data().client_secret_encrypted,
+        pickup_address: uberTeste.data().pickup_address || null,
+    } : { exists: false };
+
+    return {
+        success: true,
+        message: "Franquia teste configurada (auth + franquia + user profile)",
+        uid: user.uid,
+        email: TEST_EMAIL,
+        franchiseId: TEST_FID,
+        password: "Teste@123",
+        userProfileCreated: true,
+        uberStatus: {
+            muffato: muffatoStatus,
+            teste: testeStatus,
+        },
+    };
+});
+
+// ============================================================
+// SEED REAL CATALOG — popula Firestore com os 17 milkshakes + 17
+// sundaes + buffet OFICIAIS. Idempotente — pode rodar quantas vezes.
+// SO sobrescreve o catalog_config se ele tiver < 5 produtos OU se
+// for o seed default (apenas Ninho com Morango / Nutella / Buffet).
+// ============================================================
+exports.seedRealCatalog = onCall({ region: "southamerica-east1" }, async (request) => {
+    const MILKSHAKES = [
+        { id:'amora-apaixonada', name:'Amora Apaixonada', emoji:'💜', desc:'Roxa, doce e teimosa — que nem aquele crush que sua mente não desliga.' },
+        { id:'blue-ice', name:'Blue Ice — Crush Gelado', emoji:'🧊', desc:'Azul que nem o céu de Londrina ao entardecer. Sabor surpresa, frescor de praia.' },
+        { id:'morango-romantico', name:'Morango Romântico', emoji:'🍓', desc:'O clássico que sempre volta — porque amor verdadeiro não envelhece.' },
+        { id:'acai-liberdade', name:'Açaí Liberdade', emoji:'🟣', desc:'Bowl de açaí virou líquido. Energia da Amazônia.' },
+        { id:'caramelo-derretido', name:'Caramelo Derretido', emoji:'🍯', desc:'Caramelo que escorre devagar — igual beijo demorado.' },
+        { id:'limao-refresca', name:'Limão Refresca-Tudo', emoji:'🍋', desc:'Azedinho na medida, gelado no ponto.' },
+        { id:'chocolate-apaixonante', name:'Chocolate Apaixonante', emoji:'🍫', desc:'Bombom líquido. Abraço quente do chocolate.' },
+        { id:'uva-vovo', name:'Uva da Vovó', emoji:'🍇', desc:'Aquela uva roxinha do quintal da vovó, mas crescida.' },
+        { id:'maracuja-calmaria', name:'Maracujá Calmaria', emoji:'💛', desc:'Tropical, levemente azedinho, totalmente relaxante.' },
+        { id:'dentadura-doidinha', name:'Dentadura Doidinha', emoji:'😬', desc:'Milkshake colorido que deixa sua boca igual desenho animado.' },
+        { id:'cookies-snow', name:'Cookies Snow', emoji:'🤍', desc:'Branquinho, cremoso, com pedaços de cookie crocante.' },
+        { id:'ninho-vovo', name:'Ninho da Vovó', emoji:'🥛', desc:'Cremosidade de berço. Aquele cheirinho que lembra colo.' },
+        { id:'pistache-esmeralda', name:'Pistache Esmeralda', emoji:'🟢', desc:'Verdinho gourmet, sofisticado, crocante.' },
+        { id:'peanut-heaven', name:'Peanut Heaven', emoji:'🥜', desc:'Cremoso, salgadinho, viciante. Peanut butter virou milkshake.' },
+        { id:'cereja-beijada', name:'Cereja Beijada', emoji:'🍒', desc:'Vermelhinha, brincalhona, top de bolo.' },
+        { id:'ameixa-roxinha', name:'Ameixa Roxinha', emoji:'🍑', desc:'Roxa, polpuda, exótica.' },
+        { id:'banana-caramelizada', name:'Banana Caramelizada', emoji:'🍌', desc:'Banana douradinha, beijada pelo caramelo.' },
+    ];
+
+    const TAMANHOS = [
+        { id: 'p',     name: 'P (250ml)',    ml: 250, price: 9.99,  available: true },
+        { id: 'm',     name: 'M (400ml)',    ml: 400, price: 19.99, available: true },
+        { id: 'g',     name: 'G (500ml)',    ml: 500, price: 22.99, available: true },
+    ];
+
+    function makeItem(prefix, formato, m, idx) {
+        return {
+            id: prefix + '-' + m.id,
+            name: (idx+1) + '. ' + formato + ' ' + m.name,
+            emoji: m.emoji,
+            desc: m.desc,
+            price: 9.99,
+            highlight: idx < 3,
+            available: true,
+            modoMontagem: 'simples',
+            tipoVenda: 'unidade',
+        };
+    }
+
+    const milkshakeItems = MILKSHAKES.map((m, idx) => makeItem('milkshake', 'Milkshake', m, idx));
+    const sundaeItems = MILKSHAKES.map((m, idx) => makeItem('sundae', 'Sundae', m, idx));
+    sundaeItems.push({
+        id: 'sundae-capitao-acai-premium', name: '18. Sundae Capitão Açaí Premium', emoji: '👑',
+        desc: 'Premium sundae com açaí da Amazônia, granola e raspas de chocolate.',
+        price: 24.99, highlight: true, available: true, isPremium: true,
+        modoMontagem: 'simples', tipoVenda: 'unidade',
+    });
+    milkshakeItems.push({
+        id: 'milkshake-capitao-acai-premium', name: '18. Milkshake Capitão Açaí Premium', emoji: '👑',
+        desc: 'Premium milkshake — açaí amazônico, granola, banana caramelizada.',
+        price: 24.99, highlight: true, available: true, isPremium: true,
+        modoMontagem: 'simples', tipoVenda: 'unidade',
+    });
+
+    const newCatalog = {
+        bases: [
+            { id: 'ninho', name: 'Ninho', emoji: '🥛', available: true },
+            { id: 'baunilha', name: 'Baunilha', emoji: '🍦', available: true },
+        ],
+        tamanhos: TAMANHOS,
+        formatos: [
+            { id: 'milkshake', name: 'Milkshake', emoji: '🥤' },
+            { id: 'sundae', name: 'Sundae', emoji: '🍨' },
+        ],
+        sabores: {
+            milkshake: { label: 'Milkshake', icon: '🥤', items: milkshakeItems },
+            sundae:    { label: 'Sundae',    icon: '🍨', items: sundaeItems    },
+            buffet:    { label: 'Buffet Self-Service', icon: '🍽️', items: [
+                { id: 'buffet-100g', name: 'Buffet por peso', emoji: '⚖️',
+                  desc: 'Monte do seu jeito — 22 toppings + 12 sabores + caldas. R\$ 5,99/100g',
+                  price: 5.99, highlight: true, available: true,
+                  modoMontagem: 'simples', tipoVenda: 'por_peso',
+                  porcoes: [
+                      { label: '200g', peso: 200 },
+                      { label: '300g', peso: 300 },
+                      { label: '400g', peso: 400 },
+                      { label: '500g', peso: 500 },
+                  ],
+                },
+            ]},
+        },
+        adicionais: {
+            coberturas: { label: 'Caldas e Toppings', items: [
+                { id: 'leitinho-morango', name: 'Leitinho Morango', emoji: '✨', price: 2.00, available: true },
+                { id: 'calda-avela', name: 'Calda Avelã', emoji: '✨', price: 2.00, available: true },
+                { id: 'maracuja-calda', name: 'Maracujá Calda', emoji: '✨', price: 2.00, available: true },
+                { id: 'pistache', name: 'Pistache', emoji: '✨', price: 3.50, available: true },
+                { id: 'banana-caramelizada-add', name: 'Banana Caramelizada', emoji: '✨', price: 2.50, available: true },
+                { id: 'morango-add', name: 'Morango', emoji: '🍓', price: 2.00, available: true },
+                { id: 'nutella-add', name: 'Nutella', emoji: '🍫', price: 4.00, available: true },
+            ]},
+        },
+        bebidas: [
+            { id: 'agua-500', name: 'Água Mineral 500ml', emoji: '💧', price: 4.00, available: true, type: 'bebida', tipoVenda: 'unidade' },
+            { id: 'coca-lata', name: 'Coca-Cola Lata 350ml', emoji: '🥤', price: 6.00, available: true, type: 'bebida', tipoVenda: 'unidade' },
+            { id: 'guarana-lata', name: 'Guaraná Antarctica Lata', emoji: '🥤', price: 6.00, available: true, type: 'bebida', tipoVenda: 'unidade' },
+        ],
+        _seedSource: 'production_real',
+        _seededAt: new Date().toISOString(),
+    };
+
+    // Salva em catalog_config (key global usada pelo PDV/cardapio/landing)
+    await db.collection("datastore").doc("catalog_config").set({
+        value: JSON.stringify(newCatalog),
+        updatedAt: new Date().toISOString(),
+    });
+
+    // Tambem salva em catalog_config_<fid> pra ambas franquias
+    const fids = ["muffato-quintino", "franquia-teste"];
+    for (const fid of fids) {
+        await db.collection("datastore").doc("catalog_config_" + fid).set({
+            value: JSON.stringify(newCatalog),
+            updatedAt: new Date().toISOString(),
+        });
+    }
+
+    return {
+        success: true,
+        message: "Catálogo real seedado em catalog_config + 2 franquias",
+        produtos: {
+            milkshakes: milkshakeItems.length,
+            sundaes: sundaeItems.length,
+            buffet: 1,
+            bebidas: newCatalog.bebidas.length,
+        },
+        franquias: fids,
+    };
+});
+
+// ============================================================
+// GET MY PROFILE — auth.js usa pra buscar perfil quando cache vazio
+// ============================================================
+// Retorna o perfil do usuario autenticado. Seguro: usa request.auth
+// (token verificado pelo Firebase) — ninguem consegue pegar perfil
+// de outro usuario.
+exports.getMyProfile = onCall({ region: "southamerica-east1" }, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Login necessario");
+    }
+    const email = request.auth.token.email;
+    if (!email) {
+        throw new HttpsError("invalid-argument", "Token sem email");
+    }
+    try {
+        const snap = await db.collection("datastore").doc("users").get();
+        if (!snap.exists) return { success: false, profile: null };
+        const arr = JSON.parse((snap.data() || {}).value || "[]");
+        const profile = arr.find((u) => u && u.email === email) || null;
+        return { success: true, profile };
+    } catch (e) {
+        console.error("getMyProfile error:", e);
+        throw new HttpsError("internal", e.message || "Erro");
+    }
+});
+
+// ============================================================
+// SEND CLOSING REPORT — fechamento de caixa por email
+// ============================================================
+// Chamada pelo PDV (caixa.js) quando o operador fecha o caixa do dia.
+// Envia relatorio HTML pra 3 emails fixos da gestao via Gmail SMTP.
+// Pre-requisito: secret GMAIL_APP_PASSWORD setado:
+//   firebase functions:secrets:set GMAIL_APP_PASSWORD
+// (gerado em https://myaccount.google.com/apppasswords usando a conta
+//  milkypot.com@gmail.com com 2FA ativo)
+const RECIPIENTS = [
+    "milkypot.com@gmail.com",
+    "jocimarrodrigo@gmail.com",
+    "joseanemse@gmail.com",
+];
+// Conta usada como remetente (gerou a app password):
+const SMTP_USER = "jocimarrodrigo@gmail.com";
+
+function _fmtBRL(v) {
+    return "R$ " + (Number(v || 0).toFixed(2)).replace(".", ",");
+}
+
+function _buildClosingHtml(data) {
+    const con = data.conferido || (data.breakdownConferido && data.breakdownConferido.conferido) || {};
+    const br = data.breakdown || (data.breakdownConferido && data.breakdownConferido.breakdown) || {};
+    const dt = new Date(data.fechamentoDate || Date.now()).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+    const horaFechamento = new Date(data.fechamentoDate || Date.now()).toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
+
+    // ===== TOTAIS =====
+    const valorAbertura = Number(data.valorAbertura || 0);
+    const vendasDinheiro = Number(data.vendasDinheiro || 0);
+    const vendasPix = Number((data.porMetodoEsperado && data.porMetodoEsperado.pix) || 0);
+    const vendasCredito = Number((data.porMetodoEsperado && data.porMetodoEsperado.cartao_credito) || (data.porMetodoEsperado && data.porMetodoEsperado.credito) || 0);
+    const vendasDebito = Number((data.porMetodoEsperado && data.porMetodoEsperado.cartao_debito) || (data.porMetodoEsperado && data.porMetodoEsperado.debito) || 0);
+    const vendasCartao = vendasCredito + vendasDebito;
+    const vendasOutros = Number((data.porMetodoEsperado && data.porMetodoEsperado.outros) || 0);
+    const vendasBeneficio = Number((data.porMetodoEsperado && data.porMetodoEsperado.beneficio_funcionario) || 0);
+    const vendasDelivery = Number((data.porMetodoEsperado && data.porMetodoEsperado.delivery) || 0);
+    const totalSangria = Number(data.totalSangria || 0);
+    const totalReforco = Number(data.totalReforco || 0);
+    const faturamentoBruto = Number(data.faturamentoBruto || (vendasDinheiro + vendasPix + vendasCartao + vendasOutros + vendasDelivery));
+    const saldoEsperadoDinheiro = valorAbertura + vendasDinheiro + totalReforco - totalSangria;
+
+    const dinheiroContado = Number((br && (br.dinheiro_liquido_dia || br.dinheiro_total_gaveta)) || data.valorContado || 0);
+    const pixConferenciaFeita = !!(br && br.pix_total !== undefined && Number(br.pix_total) > 0);
+    const cartaoConferenciaFeita = !!(br && br.cartao !== undefined && Number(br.cartao) > 0);
+    const pixContado = pixConferenciaFeita ? Number(br.pix_total) : vendasPix;
+    const cartaoContado = cartaoConferenciaFeita ? Number(br.cartao) : vendasCartao;
+
+    const diffDinheiro = dinheiroContado - saldoEsperadoDinheiro;
+    const diffPix = pixContado - vendasPix;
+    const diffCartao = cartaoContado - vendasCartao;
+    const diffTotalRaw = Number(con.diffTotal || data.diferenca || (diffDinheiro + diffPix + diffCartao));
+    const diffTotal = (!pixConferenciaFeita && !cartaoConferenciaFeita) ? diffDinheiro : diffTotalRaw;
+
+    // EXCEDENTE = venda nao lancada (entra no faturamento)
+    const excedenteDinheiro = Math.max(0, diffDinheiro);
+    const excedentePix = pixConferenciaFeita ? Math.max(0, diffPix) : 0;
+    const excedenteCartao = cartaoConferenciaFeita ? Math.max(0, diffCartao) : 0;
+    const excedenteTotal = excedenteDinheiro + excedentePix + excedenteCartao;
+    const faturamentoReal = faturamentoBruto + excedenteTotal;
+
+    const totalPedidos = Number(data.totalPedidos || 0);
+    const ticketMedio = totalPedidos > 0 ? faturamentoReal / totalPedidos : 0;
+    const trocoProximo = Number(data.trocoProximoDia != null ? data.trocoProximoDia : valorAbertura);
+    const depositar = Math.max(0, dinheiroContado - trocoProximo);
+
+    // STATUS DO FECHAMENTO
+    const fechouCorreto = Math.abs(diffDinheiro) < 0.01 && Math.abs(diffPix) < 0.01 && Math.abs(diffCartao) < 0.01;
+    const statusBg = fechouCorreto ? "#16A34A" : "#DC2626";
+    const statusIcon = fechouCorreto ? "✅" : "⚠️";
+    const statusText = fechouCorreto ? "CAIXA FECHADO CORRETAMENTE" : "FECHAMENTO COM DIFERENÇA";
+
+    // OPERADOR
+    const turnos = Array.isArray(data.turnos) ? data.turnos : [];
+    const aberturaT = turnos.find(t => t.tipo === "abertura");
+    const fechamentoT = turnos.find(t => t.tipo === "fechamento");
+    const horaAbertura = aberturaT ? aberturaT.hora : "—";
+    const horaFech = fechamentoT ? fechamentoT.hora : horaFechamento;
+
+    // OCORRENCIAS (lista curta)
+    const ocorrencias = [];
+    if (data.motivo) ocorrencias.push(String(data.motivo).replace(/</g, "&lt;"));
+    if (excedenteDinheiro > 0) ocorrencias.push("Venda em dinheiro não lançada: +" + _fmtBRL(excedenteDinheiro));
+    if (excedentePix > 0) ocorrencias.push("Venda em PIX não lançada: +" + _fmtBRL(excedentePix));
+    if (excedenteCartao > 0) ocorrencias.push("Venda em cartão não lançada: +" + _fmtBRL(excedenteCartao));
+    if (diffDinheiro < -0.01) ocorrencias.push("Faltou no caixa: " + _fmtBRL(Math.abs(diffDinheiro)));
+
+    // DADOS DO MES (calculados no client e passados via data)
+    // Cliente deve enviar: vendasMes (total faturamento real do mes em BRL)
+    //                     pedidosMes (qtd de pedidos do mes corrente)
+    // Se nao mandar, mostra so do dia (faturamentoReal/totalPedidos).
+    // REMOVIDO: bloco de comissao (a pedido do operador).
+    const vendasMes = (data.vendasMes != null) ? Number(data.vendasMes) : faturamentoReal;
+    const pedidosMes = (data.pedidosMes != null) ? Number(data.pedidosMes) : totalPedidos;
+    const nomeMesAtual = new Date().toLocaleDateString("pt-BR", { month: "long", timeZone: "America/Sao_Paulo" });
+
+    // Helpers
+    function paymentRow(icon, label, value) {
+        if (!value || value < 0.01) return "";
+        return `
+        <tr>
+            <td style="padding:14px 18px;font-size:16px;color:#374151;border-top:1px solid #F3F4F6">
+                <span style="font-size:20px;margin-right:8px;vertical-align:middle">${icon}</span>${label}
+            </td>
+            <td style="padding:14px 18px;font-size:16px;font-weight:700;color:#111827;text-align:right;border-top:1px solid #F3F4F6">${_fmtBRL(value)}</td>
+        </tr>`;
+    }
+
+    function summaryRow(icon, label, value, color, sub) {
+        return `
+        <tr>
+            <td style="padding:14px 18px;font-size:15px;color:#374151;border-top:1px solid #F3F4F6">
+                <div><span style="font-size:20px;margin-right:8px;vertical-align:middle">${icon}</span><strong>${label}</strong></div>
+                ${sub ? `<div style="font-size:12px;color:#9CA3AF;margin-top:2px;margin-left:30px">${sub}</div>` : ""}
+            </td>
+            <td style="padding:14px 18px;font-size:18px;font-weight:800;color:${color || "#111827"};text-align:right;border-top:1px solid #F3F4F6;white-space:nowrap">${value}</td>
+        </tr>`;
+    }
+
+    return `<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F3F4F6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F3F4F6;padding:14px 0">
+  <tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+
+      <!-- ============ BLOCO 1 — HERO PRINCIPAL ============ -->
+      <tr>
+        <td style="padding:0;background:${statusBg};color:#fff;text-align:center">
+          <div style="padding:18px 22px 10px">
+            <div style="font-size:13px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.95">${statusIcon} ${statusText}</div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:32px 22px 28px;text-align:center;background:#FFFFFF">
+          <div style="font-size:11px;color:#9CA3AF;letter-spacing:1.5px;font-weight:700">VENDIDO HOJE</div>
+          <div style="font-size:54px;font-weight:900;color:#111827;line-height:1;margin:8px 0 12px;letter-spacing:-1.5px">${_fmtBRL(faturamentoReal)}</div>
+          <div style="font-size:14px;color:#6B7280;font-weight:500">${totalPedidos} pedido${totalPedidos === 1 ? "" : "s"} · ticket médio ${_fmtBRL(ticketMedio)}</div>
+        </td>
+      </tr>
+
+      <!-- ============ BLOCO 2 — FORMAS DE PAGAMENTO ============ -->
+      <tr>
+        <td style="padding:8px 16px 0">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9FAFB;border-radius:12px;overflow:hidden">
+            <tr>
+              <td colspan="2" style="padding:14px 18px 8px;font-size:13px;font-weight:800;color:#6B7280;letter-spacing:.5px;text-transform:uppercase">💳 Formas de Pagamento</td>
+            </tr>
+            ${paymentRow("💵", "Dinheiro", vendasDinheiro + excedenteDinheiro)}
+            ${paymentRow("📱", "PIX", vendasPix + excedentePix)}
+            ${paymentRow("💳", "Cartão", vendasCartao + excedenteCartao)}
+            ${vendasDelivery > 0 ? paymentRow("🛵", "Delivery", vendasDelivery) : ""}
+            ${vendasBeneficio > 0 ? paymentRow("🎁", "Benefício funcionário", vendasBeneficio) : ""}
+            <tr>
+              <td style="padding:14px 18px;font-size:15px;font-weight:800;color:#111827;border-top:2px solid #E5E7EB">TOTAL</td>
+              <td style="padding:14px 18px;font-size:18px;font-weight:800;color:#16A34A;text-align:right;border-top:2px solid #E5E7EB">${_fmtBRL(faturamentoReal)}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <!-- ============ BLOCO 3 — RESUMO DO CAIXA ============ -->
+      <tr>
+        <td style="padding:14px 16px 0">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;border:2px solid #E5E7EB;border-radius:12px;overflow:hidden">
+            <tr>
+              <td colspan="2" style="padding:14px 18px 8px;font-size:13px;font-weight:800;color:#6B7280;letter-spacing:.5px;text-transform:uppercase">🏦 Resumo do Caixa</td>
+            </tr>
+            ${summaryRow("💰", "Dinheiro no caixa", _fmtBRL(dinheiroContado), "#111827", "valor que está fisicamente na gaveta")}
+            ${summaryRow("🏦", "Valor para depósito", _fmtBRL(depositar), "#16A34A", "levar pro banco / cofre")}
+            ${summaryRow("📦", "Troco para amanhã", _fmtBRL(trocoProximo), "#1E40AF", "deixar na gaveta como fundo")}
+            ${(function(){
+                if (Math.abs(diffDinheiro) < 0.01) {
+                    return summaryRow("✅", "Caixa confere", "OK", "#16A34A", "tudo bateu certinho");
+                }
+                if (diffDinheiro > 0) {
+                    return summaryRow("⚠️", "Sobrou no caixa", "+" + _fmtBRL(diffDinheiro), "#D97706", "provavelmente venda em dinheiro não lançada");
+                }
+                return summaryRow("❌", "Faltou no caixa", "−" + _fmtBRL(Math.abs(diffDinheiro)), "#DC2626", "investigar com operador");
+            })()}
+          </table>
+        </td>
+      </tr>
+
+      <!-- ============ BLOCO 4 — OPERADOR RESPONSÁVEL ============ -->
+      <tr>
+        <td style="padding:14px 16px 0">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9FAFB;border-radius:12px;overflow:hidden">
+            <tr>
+              <td colspan="2" style="padding:14px 18px 8px;font-size:13px;font-weight:800;color:#6B7280;letter-spacing:.5px;text-transform:uppercase">👤 Responsável pelo Fechamento</td>
+            </tr>
+            <tr>
+              <td colspan="2" style="padding:8px 18px 14px">
+                <div style="font-size:18px;font-weight:800;color:#111827">${data.operatorName || "—"}</div>
+                <div style="font-size:13px;color:#6B7280;margin-top:4px">🟢 Abertura ${horaAbertura} → 🔴 Fechamento ${horaFech}</div>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2" style="padding:0 18px 14px">
+                <div style="font-size:11px;color:#9CA3AF;font-weight:700;letter-spacing:.5px;text-transform:uppercase">Vendas em ${nomeMesAtual}</div>
+                <div style="font-size:18px;font-weight:800;color:#111827;margin-top:2px">${pedidosMes} pedido${pedidosMes === 1 ? "" : "s"} · ${_fmtBRL(vendasMes)}</div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      ${(totalSangria > 0 || totalReforco > 0) ? `
+      <!-- MOVIMENTAÇÕES (sangria/reforço — só se houver) -->
+      <tr>
+        <td style="padding:14px 16px 0">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9FAFB;border-radius:12px;overflow:hidden">
+            <tr>
+              <td colspan="2" style="padding:14px 18px 8px;font-size:13px;font-weight:800;color:#6B7280;letter-spacing:.5px;text-transform:uppercase">📋 Movimentações</td>
+            </tr>
+            ${totalSangria > 0 ? `<tr>
+              <td style="padding:10px 18px;font-size:14px;color:#374151;border-top:1px solid #F3F4F6">📤 Sangrias</td>
+              <td style="padding:10px 18px;font-size:14px;font-weight:700;color:#DC2626;text-align:right;border-top:1px solid #F3F4F6">−${_fmtBRL(totalSangria)}</td>
+            </tr>` : ""}
+            ${totalReforco > 0 ? `<tr>
+              <td style="padding:10px 18px;font-size:14px;color:#374151;border-top:1px solid #F3F4F6">📥 Reforços</td>
+              <td style="padding:10px 18px;font-size:14px;font-weight:700;color:#16A34A;text-align:right;border-top:1px solid #F3F4F6">+${_fmtBRL(totalReforco)}</td>
+            </tr>` : ""}
+          </table>
+        </td>
+      </tr>` : ""}
+
+      ${ocorrencias.length > 0 ? `
+      <!-- ============ BLOCO 5 — OCORRÊNCIAS (só se houver) ============ -->
+      <tr>
+        <td style="padding:14px 16px 0">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FEF2F2;border-left:4px solid #DC2626;border-radius:8px">
+            <tr>
+              <td style="padding:14px 18px">
+                <div style="font-size:13px;font-weight:800;color:#991B1B;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">⚠️ Ocorrências</div>
+                ${ocorrencias.map(o => `<div style="font-size:14px;color:#7F1D1D;padding:4px 0;line-height:1.4">• ${o}</div>`).join("")}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>` : ""}
+
+      <!-- FOOTER -->
+      <tr>
+        <td style="padding:18px 22px 22px;text-align:center;color:#9CA3AF;font-size:11px">
+          MilkyPot PDV · ${data.franchiseId || ""} · ${dt}
+        </td>
+      </tr>
+
+    </table>
+  </td></tr>
+</table>
+</body></html>`;
+}
+
+function _buildClosingText(data) {
+    const esp = data.esperado || {};
+    const con = data.conferido || (data.breakdownConferido && data.breakdownConferido.conferido) || {};
+    const br = data.breakdown || (data.breakdownConferido && data.breakdownConferido.breakdown) || {};
+    const dt = new Date(data.fechamentoDate || Date.now()).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+    const valorAbertura = Number(data.valorAbertura || 0);
+    const vendasDinheiro = Number(data.vendasDinheiro || 0);
+    const vendasPix = Number((data.porMetodoEsperado && data.porMetodoEsperado.pix) || 0);
+    const vendasCartao = Number(((data.porMetodoEsperado && (data.porMetodoEsperado.cartao_credito || data.porMetodoEsperado.credito)) || 0) + ((data.porMetodoEsperado && (data.porMetodoEsperado.cartao_debito || data.porMetodoEsperado.debito)) || 0));
+    const totalSangria = Number(data.totalSangria || 0);
+    const totalReforco = Number(data.totalReforco || 0);
+    const faturamento = Number(data.faturamentoBruto || (vendasDinheiro + vendasPix + vendasCartao));
+    const dinheiroContado = Number((br && (br.dinheiro_liquido_dia || br.dinheiro_total_gaveta)) || data.valorContado || 0);
+    const saldoEsperado = valorAbertura + vendasDinheiro + totalReforco - totalSangria;
+    const trocoProximo = Number(data.trocoProximoDia != null ? data.trocoProximoDia : valorAbertura);
+    const depositar = Math.max(0, dinheiroContado - trocoProximo);
+    const diffDin = dinheiroContado - saldoEsperado;
+    let body = "";
+    body += "FECHAMENTO DE CAIXA — MilkyPot\n";
+    body += "====================================\n";
+    body += "Franquia:   " + (data.franchiseId || "?") + "\n";
+    body += "Data:       " + dt + "\n";
+    body += "Operador:   " + (data.operatorName || "?") + " <" + (data.operatorEmail || "") + ">\n\n";
+    body += "\n>> VENDIDO HOJE: " + _fmtBRL(faturamento) + "\n";
+    body += "   Dinheiro:     " + _fmtBRL(vendasDinheiro) + "\n";
+    body += "   PIX:          " + _fmtBRL(vendasPix) + "\n";
+    body += "   Cartao:       " + _fmtBRL(vendasCartao) + "\n";
+    body += "\n>> DINHEIRO FISICO NA GAVETA\n";
+    body += "   Troco inicial (nao e venda): " + _fmtBRL(valorAbertura) + "\n";
+    body += "   + Vendas dinheiro:           " + _fmtBRL(vendasDinheiro) + "\n";
+    if (totalReforco > 0) body += "   + Reforcos:                  " + _fmtBRL(totalReforco) + "\n";
+    if (totalSangria > 0) body += "   - Sangrias:                  " + _fmtBRL(totalSangria) + "\n";
+    body += "   = Esperado na gaveta:        " + _fmtBRL(saldoEsperado) + "\n";
+    body += "   Contado pelo operador:       " + _fmtBRL(dinheiroContado) + "\n";
+    if (Math.abs(diffDin) >= 0.01) body += "   Diferenca:                   " + (diffDin > 0 ? "+" : "-") + _fmtBRL(Math.abs(diffDin)) + "\n";
+    else body += "   Bateu certinho!\n";
+    body += "\n>> O QUE FAZER\n";
+    body += "   Fica de troco amanha: " + _fmtBRL(trocoProximo) + "\n";
+    body += "   Pra depositar:        " + _fmtBRL(depositar) + "\n";
+    if (data.motivo) body += "\nJustificativa: " + data.motivo + "\n";
+    return body;
+}
+
+exports.sendClosingReport = onCall({
+    region: "southamerica-east1",
+    secrets: [GMAIL_APP_PASSWORD],
+    timeoutSeconds: 60,
+    memory: "256MiB",
+}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Autenticacao necessaria");
+    }
+    const { franchiseId, data, managers } = request.data || {};
+    const recipients = Array.isArray(managers) && managers.length ? managers : RECIPIENTS;
+    const reportData = data || {};
+
+    // DEDUPLICACAO: bloqueia 2o email do mesmo fechamento (mesmo dia + franquia).
+    // Operador relatou 2 emails saindo (1 antes do reajuste, 1 depois).
+    // Mantemos so o ULTIMO enviado pra refletir o estado final do caixa.
+    // Janela = dia local Brasilia. Se ja teve report enviado hoje pra
+    // essa franquia, UPDATE o registro existente em vez de criar novo,
+    // e SO envia novo email se passou > 5 minutos do anterior (rerun manual).
+    try {
+        const todayLocal = new Date(Date.now() - 3 * 3600 * 1000) // shift UTC->BRT
+            .toISOString().slice(0, 10);
+        const existingQuery = await db.collection("caixa_reports_sent")
+            .where("franchiseId", "==", franchiseId)
+            .where("dayKey", "==", todayLocal)
+            .orderBy("sentAt", "desc")
+            .limit(1)
+            .get();
+        if (!existingQuery.empty) {
+            const last = existingQuery.docs[0];
+            const lastSent = last.data().sentAt;
+            const lastMs = lastSent && lastSent.toMillis ? lastSent.toMillis() : 0;
+            const ageMs = Date.now() - lastMs;
+            // Se foi enviado < 5 minutos atras, NAO reenvia — apenas
+            // atualiza o snapshot dos dados (vence o ultimo)
+            if (ageMs < 5 * 60 * 1000) {
+                await last.ref.update({
+                    data: reportData,
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    _skipped: true,
+                    _skippedReason: "dedup_window_5min"
+                });
+                console.log(`[sendClosingReport] DEDUP: ja enviado ha ${Math.round(ageMs/1000)}s — skipping`);
+                return { success: true, deduped: true, reason: "report_just_sent" };
+            }
+        }
+    } catch (dedupErr) {
+        console.warn("[sendClosingReport] dedup check failed (continuing):", dedupErr.message);
+    }
+
+    const password = GMAIL_APP_PASSWORD.value();
+    if (!password) {
+        // Secret nao configurado — salva no Firestore mesmo assim e retorna erro graceful
+        await db.collection("mail").add({
+            to: recipients,
+            from: "MilkyPot PDV <" + SMTP_USER + ">",
+            replyTo: reportData.operatorEmail || SMTP_USER,
+            message: {
+                subject: "Fechamento de Caixa — " + (franchiseId || "?") + " — " + new Date().toISOString().slice(0, 10),
+                text: _buildClosingText({ ...reportData, franchiseId }),
+                html: _buildClosingHtml({ ...reportData, franchiseId }),
+            },
+            _pendingSmtp: true,
+            _createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        return { success: false, queued: true, reason: "GMAIL_APP_PASSWORD nao configurado — relatorio salvo em /mail" };
+    }
+
+    const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: { user: SMTP_USER, pass: password },
+    });
+
+    try {
+        await transporter.sendMail({
+            from: '"MilkyPot PDV" <' + SMTP_USER + '>',
+            to: recipients.join(", "),
+            replyTo: reportData.operatorEmail || SMTP_USER,
+            subject: "🔒 Fechamento de Caixa — " + (franchiseId || "?") + " — " + new Date().toISOString().slice(0, 10),
+            text: _buildClosingText({ ...reportData, franchiseId }),
+            html: _buildClosingHtml({ ...reportData, franchiseId }),
+        });
+        // Marca como enviado pra audit + dedup futura
+        const todayLocal = new Date(Date.now() - 3 * 3600 * 1000)
+            .toISOString().slice(0, 10);
+        await db.collection("caixa_reports_sent").add({
+            franchiseId,
+            dayKey: todayLocal,
+            recipients,
+            sentAt: admin.firestore.FieldValue.serverTimestamp(),
+            data: reportData,
+        });
+        return { success: true, sent: recipients.length };
+    } catch (e) {
+        console.error("sendClosingReport SMTP error:", e);
+        // Salva no Firestore como fallback pra retry futuro
+        await db.collection("mail").add({
+            to: recipients,
+            from: "MilkyPot PDV <" + SMTP_USER + ">",
+            message: {
+                subject: "Fechamento de Caixa — " + (franchiseId || "?"),
+                text: _buildClosingText({ ...reportData, franchiseId }),
+                html: _buildClosingHtml({ ...reportData, franchiseId }),
+            },
+            _smtpError: String(e && e.message || e),
+            _createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        throw new HttpsError("internal", "SMTP falhou: " + (e.message || "?"));
+    }
+});
+
+// ============================================================
+// TESTE — dispara email de fechamento com dados mockados
+// URL: https://southamerica-east1-milkypot-ad945.cloudfunctions.net/testClosingEmail?secret=mp-test-2026&email=SEU@EMAIL.COM
+// ============================================================
+exports.testClosingEmail = onRequest({
+    region: "southamerica-east1",
+    secrets: [GMAIL_APP_PASSWORD],
+    cors: true,
+    timeoutSeconds: 30,
+    memory: "256MiB",
+}, async (req, res) => {
+    if (req.query.secret !== "mp-test-2026") return res.status(403).send("forbidden");
+    const targetEmail = (req.query.email || "jocimarrodrigo@gmail.com").trim();
+    const now = new Date();
+
+    const mockData = {
+        franchiseId: "muffato-quintino",
+        operatorName: "Carlos Souza",
+        operatorEmail: "carlos@milkypot.com",
+        valorContado: 272.00,
+        saldoEsperado: 199.00,
+        diferenca: 73.00,
+        motivo: "falta de lançamento",
+        fechamentoDate: now.toISOString(),
+        valorAbertura: 199.00,
+        vendasDinheiro: 23.00,
+        totalSangria: 0,
+        totalReforco: 0,
+        totalPedidos: 30,
+        faturamentoBruto: 465.46,
+        trocoProximoDia: 199.00,
+        porMetodoEsperado: {
+            pix: 92.69,
+            cartao_credito: 200.00,
+            cartao_debito: 172.77,
+            beneficio_funcionario: 0
+        },
+        breakdownConferido: {
+            conferido: { totalConferido: 272.00, diffTotal: 73.00 },
+            breakdown: {
+                dinheiro_liquido_dia: 272.00,
+                dinheiro_total_gaveta: 272.00
+                // pix_total e cartao NAO informados → assume = sistema
+            }
+        },
+        turnos: [
+            { tipo: "abertura", hora: "08:42", descricao: "Aberto por <strong>Maria Silva</strong> com troco de R$ 199,00" },
+            { tipo: "fechamento", hora: "21:51", descricao: "Fechado por <strong>Carlos Souza</strong>" }
+        ],
+        sangrias: [],
+        reforcos: [],
+        comissoes: [
+            { name: "Indefinido", orders: 30, revenue: 4456.55, commission: 222.10 }
+        ],
+        beneficios: []
+    };
+
+    const password = GMAIL_APP_PASSWORD.value();
+    if (!password) return res.status(500).json({ error: "GMAIL_APP_PASSWORD nao configurado" });
+
+    const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: { user: SMTP_USER, pass: password },
+    });
+
+    try {
+        await transporter.sendMail({
+            from: '"MilkyPot PDV [TESTE]" <' + SMTP_USER + '>',
+            to: targetEmail,
+            subject: "🧪 [TESTE v2] Fechamento de Caixa — MilkyPot — " + new Date().toISOString().slice(0, 10),
+            text: _buildClosingText(mockData),
+            html: _buildClosingHtml(mockData),
+        });
+        res.json({ success: true, sentTo: targetEmail });
+    } catch (e) {
+        console.error("testClosingEmail error:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ============================================================
+// LOGIN DO FUNCIONARIO (Portal /funcionario/) — sem auth previa
+// ============================================================
+// CPF + PIN do staff sao dados SENSIVEIS — Firestore Rules bloqueiam
+// leitura publica de staff_*. Esta Cloud Function recebe cpf+pin,
+// busca match em todas franquias com admin SDK (bypass rules), e
+// retorna apenas dados nao-sensiveis pra criar sessao local no app.
+// ============================================================
+exports.funcionarioLogin = onRequest({
+    region: "southamerica-east1",
+    cors: true,
+    timeoutSeconds: 15,
+    memory: "256MiB",
+}, async (req, res) => {
+    try {
+        // Aceita GET com query OR POST com body
+        const cpfRaw = (req.method === "POST" ? req.body?.cpf : req.query.cpf) || "";
+        const pinRaw = (req.method === "POST" ? req.body?.pin : req.query.pin) || "";
+        const cpf = String(cpfRaw).replace(/\D/g, "");
+        const pin = String(pinRaw).trim();
+
+        if (cpf.length !== 11) return res.status(400).json({ error: "CPF invalido" });
+        if (pin.length !== 4) return res.status(400).json({ error: "PIN deve ter 4 digitos" });
+
+        // Pega lista de franquias
+        const franchisesDoc = await db.collection("datastore").doc("franchises").get();
+        if (!franchisesDoc.exists) return res.status(500).json({ error: "Franquias nao encontradas" });
+        const franchises = JSON.parse(franchisesDoc.data().value);
+
+        // Busca staff em cada franquia
+        let foundStaff = null;
+        let foundFranchiseId = null;
+        let foundFranchise = null;
+
+        for (const f of franchises) {
+            try {
+                const staffDoc = await db.collection("datastore").doc("staff_" + f.id).get();
+                if (!staffDoc.exists) continue;
+                const value = staffDoc.data().value;
+                const staff = typeof value === "string" ? JSON.parse(value) : value;
+                if (!Array.isArray(staff)) continue;
+                const match = staff.find(s => {
+                    if (!s.active) return false;
+                    const c = String(s.cpf || "").replace(/\D/g, "");
+                    return c === cpf && String(s.pin || "") === pin;
+                });
+                if (match) {
+                    foundStaff = match;
+                    foundFranchiseId = f.id;
+                    foundFranchise = f;
+                    break;
+                }
+            } catch (e) {
+                console.warn("staff_" + f.id + " falhou:", e.message);
+            }
+        }
+
+        if (!foundStaff) return res.status(401).json({ error: "CPF ou PIN incorreto" });
+
+        // Retorna apenas dados necessarios pra UI — NAO retorna PIN clear
+        const safeStaff = {
+            id: foundStaff.id,
+            name: foundStaff.name,
+            role: foundStaff.role,
+            phone: foundStaff.phone || "",
+            cpf: foundStaff.cpf || "",
+            pis: foundStaff.pis || "",
+            startDate: foundStaff.startDate || "",
+            jornada: foundStaff.jornada || {},
+            carga_horaria_semanal: foundStaff.carga_horaria_semanal || 44,
+            adicional_noturno: !!foundStaff.adicional_noturno,
+            commissionRate: foundStaff.commissionRate || 0,
+            commissionFixed: foundStaff.commissionFixed || 0,
+            permissions: foundStaff.permissions || {},
+            // PIN incluido pra fluxos internos do app (ex: bater ponto). E o mesmo
+            // que o usuario acabou de fornecer, entao nao tem vazamento extra.
+            pin: foundStaff.pin
+        };
+
+        res.json({
+            success: true,
+            staff: safeStaff,
+            franchiseId: foundFranchiseId,
+            franchise: { id: foundFranchise.id, name: foundFranchise.name, slug: foundFranchise.slug || "" }
+        });
+    } catch (e) {
+        console.error("funcionarioLogin error:", e);
+        res.status(500).json({ error: "Erro interno: " + e.message });
+    }
+});
+
+// ============================================================
+// FASE 3 — DESPESAS RECORRENTES (cron mensal + callable)
+// ============================================================
+// Gera lancamentos automaticos de custos fixos (aluguel, salarios, energia)
+// no dia 1 de cada mes, pra TODAS as franquias ativas.
+//
+// Idempotencia: usa (recurringExpenseId, competencia) como chave logica.
+// Se ja existe lancamento na collection 'finances' com esse par, pula.
+//
+// Storage layout (DataStore JSON-blob por doc):
+//   datastore/recurring_expenses_<fid>  → { value: JSON.stringify([recs...]) }
+//   datastore/finances_<fid>            → { value: JSON.stringify([entries...]) }
+// ============================================================
+function _competenciaAtual() {
+    const dt = new Date();
+    return dt.getUTCFullYear() + "-" + String(dt.getUTCMonth() + 1).padStart(2, "0");
+}
+
+function _dateForCompetencia(competencia, dia) {
+    const parts = (competencia || "").split("-");
+    if (parts.length !== 2) return null;
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    if (!y || !m) return null;
+    const lastDay = new Date(y, m, 0).getDate();
+    const d = Math.min(Math.max(parseInt(dia, 10) || 1, 1), lastDay);
+    return y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+}
+
+function _genId() {
+    return "rec_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function _competenciaFromDate(d) {
+    const dt = (d instanceof Date) ? d : new Date(d);
+    if (isNaN(dt)) return null;
+    return dt.getUTCFullYear() + "-" + String(dt.getUTCMonth() + 1).padStart(2, "0");
+}
+
+function _isApplicable(rec, competencia) {
+    if (!rec || rec.ativo === false) return false;
+    const inicioComp = _competenciaFromDate(rec.dataInicio);
+    if (inicioComp && competencia < inicioComp) return false;
+    if (rec.dataFim) {
+        const fimComp = _competenciaFromDate(rec.dataFim);
+        if (fimComp && competencia > fimComp) return false;
+    }
+    return true;
+}
+
+async function _readDoc(docId) {
+    try {
+        const snap = await db.collection("datastore").doc(docId).get();
+        if (!snap.exists) return [];
+        const raw = snap.data().value;
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        console.warn("readDoc " + docId + " err:", e.message);
+        return [];
+    }
+}
+
+async function _writeDoc(docId, arr) {
+    await db.collection("datastore").doc(docId).set({
+        value: JSON.stringify(arr),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedBy: "scheduled_recurring_expenses",
+    }, { merge: true });
+}
+
+async function _generateForFranchise(franchiseId, competencia) {
+    const recs = await _readDoc("recurring_expenses_" + franchiseId);
+    if (!Array.isArray(recs) || recs.length === 0) {
+        return { franchiseId, criados: 0, pulados: 0, semRecorrencias: true };
+    }
+
+    const finances = await _readDoc("finances_" + franchiseId);
+    const finArr = Array.isArray(finances) ? finances.slice() : [];
+
+    let criados = 0;
+    let pulados = 0;
+    let inaplicaveis = 0;
+    const detalhes = [];
+
+    for (const r of recs) {
+        if (!_isApplicable(r, competencia)) {
+            inaplicaveis++;
+            continue;
+        }
+        const jaExiste = finArr.some(f =>
+            f && f._origem === "recorrente"
+            && f._recurringExpenseId === r.id
+            && f._competencia === competencia
+        );
+        if (jaExiste) {
+            pulados++;
+            continue;
+        }
+        const entry = {
+            id: _genId(),
+            type: "expense",
+            category: r.categoria,
+            amount: Number(r.valor) || 0,
+            description: (r.descricao || "Recorrente") + " (recorrente)",
+            date: _dateForCompetencia(competencia, r.diaVencimento),
+            _origem: "recorrente",
+            _recurringExpenseId: r.id,
+            _competencia: competencia,
+            _diaVencimento: r.diaVencimento,
+            _snapshotValor: Number(r.valor) || 0,
+            _generatedBy: "cloud_function_scheduled",
+            createdAt: new Date().toISOString(),
+        };
+        finArr.push(entry);
+        criados++;
+        detalhes.push({ recurringId: r.id, descricao: r.descricao, valor: entry.amount });
+    }
+
+    if (criados > 0) {
+        await _writeDoc("finances_" + franchiseId, finArr);
+    }
+
+    return {
+        franchiseId,
+        competencia,
+        criados,
+        pulados,
+        inaplicaveis,
+        detalhes,
+    };
+}
+
+async function _runForAllFranchises(competencia) {
+    // Le a lista de franquias do datastore/franchises
+    const franchisesDoc = await _readDoc("franchises");
+    if (!Array.isArray(franchisesDoc) || franchisesDoc.length === 0) {
+        console.warn("[recurring] nenhuma franquia encontrada em datastore/franchises");
+        return { totalFranquias: 0, processadas: 0, criados: 0, resultados: [] };
+    }
+    const resultados = [];
+    let totalCriados = 0;
+    for (const f of franchisesDoc) {
+        if (!f || !f.id) continue;
+        try {
+            const res = await _generateForFranchise(f.id, competencia);
+            resultados.push(res);
+            totalCriados += res.criados;
+        } catch (e) {
+            console.error("[recurring] falha em " + f.id + ":", e.message);
+            resultados.push({ franchiseId: f.id, error: e.message });
+        }
+    }
+    return {
+        totalFranquias: franchisesDoc.length,
+        processadas: resultados.length,
+        criados: totalCriados,
+        resultados,
+    };
+}
+
+// CRON: dia 1 de cada mes, 03:00 UTC (00:00 Brasilia)
+exports.generateMonthlyRecurringExpenses = onSchedule({
+    region: "southamerica-east1",
+    schedule: "0 3 1 * *",
+    timeZone: "America/Sao_Paulo",
+    timeoutSeconds: 540,
+    memory: "256MiB",
+}, async (event) => {
+    const competencia = _competenciaAtual();
+    console.log("[scheduled-recurring] iniciando geracao", competencia);
+    const summary = await _runForAllFranchises(competencia);
+    console.log("[scheduled-recurring] resumo:", JSON.stringify(summary));
+
+    // Audit log
+    try {
+        await db.collection("recurring_expenses_runs").add({
+            triggeredBy: "schedule",
+            competencia,
+            ranAt: admin.firestore.FieldValue.serverTimestamp(),
+            summary,
+        });
+    } catch (e) {
+        console.warn("audit log falhou:", e.message);
+    }
+});
+
+// Callable manual — admin pode forcar geracao retroativa pra qualquer mes/franquia
+exports.runRecurringExpensesNow = onCall({
+    region: "southamerica-east1",
+    timeoutSeconds: 120,
+    memory: "256MiB",
+}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Autenticacao necessaria");
+    }
+    const role = request.auth.token.role || "";
+    if (!["super_admin", "admin", "franchisee"].includes(role)) {
+        throw new HttpsError("permission-denied", "Apenas admin/franqueado");
+    }
+
+    const { franchiseId, competencia } = request.data || {};
+    const comp = competencia || _competenciaAtual();
+    if (!/^\d{4}-\d{2}$/.test(comp)) {
+        throw new HttpsError("invalid-argument", "competencia deve ser YYYY-MM");
+    }
+
+    if (franchiseId) {
+        // franqueado so pode rodar pra propria franquia
+        if (role === "franchisee" && request.auth.token.franchiseId !== franchiseId) {
+            throw new HttpsError("permission-denied", "Franqueado so pode rodar pra propria franquia");
+        }
+        const res = await _generateForFranchise(franchiseId, comp);
+        await db.collection("recurring_expenses_runs").add({
+            triggeredBy: "manual:" + (request.auth.uid || "?"),
+            competencia: comp,
+            franchiseId,
+            ranAt: admin.firestore.FieldValue.serverTimestamp(),
+            result: res,
+        });
+        return { ok: true, mode: "single-franchise", result: res };
+    }
+
+    // sem franchiseId → apenas super_admin pode rodar pra todas
+    if (role !== "super_admin" && role !== "admin") {
+        throw new HttpsError("permission-denied", "Apenas admin pode rodar pra todas franquias");
+    }
+    const summary = await _runForAllFranchises(comp);
+    await db.collection("recurring_expenses_runs").add({
+        triggeredBy: "manual-all:" + (request.auth.uid || "?"),
+        competencia: comp,
+        ranAt: admin.firestore.FieldValue.serverTimestamp(),
+        summary,
+    });
+    return { ok: true, mode: "all-franchises", summary };
+});
+
+// ============================================================
+// FASE 5++ — Limpeza automática de finance órfãos
+// ============================================================
+// Roda toda madrugada e tombstona income entries que:
+//   - type === 'income'
+//   - !deleted (ainda ativos)
+//   - !orderId OU orderId não existe na collection orders_<fid>
+// Tombstone = deleted:true, amount:0, cmvSnapshot:0, _voided_reason
+// NUNCA apaga físico — preserva auditoria.
+// ============================================================
+async function _cleanupOrphansForFranchise(fid) {
+    const financesRef = db.collection("datastore").doc("finances_" + fid);
+    const ordersRef = db.collection("datastore").doc("orders_" + fid);
+    const [finSnap, ordSnap] = await Promise.all([financesRef.get(), ordersRef.get()]);
+    if (!finSnap.exists) {
+        return { fid, skipped: "no-finances", tombstoned: 0 };
+    }
+    let finances;
+    try {
+        finances = JSON.parse(finSnap.data().value || "[]");
+    } catch (e) {
+        return { fid, error: "parse-finances: " + e.message, tombstoned: 0 };
+    }
+    if (!Array.isArray(finances)) {
+        return { fid, error: "finances-not-array", tombstoned: 0 };
+    }
+    let validOrderIds = new Set();
+    if (ordSnap.exists) {
+        try {
+            const orders = JSON.parse(ordSnap.data().value || "[]");
+            if (Array.isArray(orders)) orders.forEach((o) => o && o.id && validOrderIds.add(o.id));
+        } catch (e) { /* ignora — assume nenhum order válido */ }
+    }
+    const nowIso = new Date().toISOString();
+    const tombstoned = [];
+    finances.forEach((f) => {
+        if (!f || f.type !== "income" || f.deleted) return;
+        const isOrphan = !f.orderId || !validOrderIds.has(f.orderId);
+        if (!isOrphan) return;
+        tombstoned.push({
+            id: f.id,
+            orderId: f.orderId || null,
+            amountWas: Number(f.amount || 0),
+            cmvSnapshotWas: Number(f.cmvSnapshot || f.custo || 0),
+        });
+        f.amount = 0;
+        f.cmvSnapshot = 0;
+        f.custo = 0;
+        f.lucroBruto = 0;
+        f.margem = null;
+        f.deleted = true;
+        f.deletedAt = nowIso;
+        f.updatedAt = nowIso;
+        f._voided_reason = "órfão automático (income sem orderId válido)";
+        f.description = "[VOID-orphan-auto] " + (f.description || f.id);
+    });
+    if (tombstoned.length === 0) {
+        return { fid, tombstoned: 0, scanned: finances.length };
+    }
+    await financesRef.set({
+        value: JSON.stringify(finances),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return { fid, tombstoned: tombstoned.length, scanned: finances.length, ids: tombstoned };
+}
+
+async function _runOrphanCleanupAllFranchises() {
+    const fSnap = await db.collection("datastore").doc("franchises").get();
+    if (!fSnap.exists) return { franchises: 0, totalTombstoned: 0, results: [] };
+    let franchises;
+    try {
+        franchises = JSON.parse(fSnap.data().value || "[]");
+    } catch (e) {
+        return { error: "parse-franchises: " + e.message };
+    }
+    if (!Array.isArray(franchises)) return { error: "franchises-not-array" };
+    const results = [];
+    let totalTombstoned = 0;
+    for (const f of franchises) {
+        if (!f || !f.id) continue;
+        try {
+            const r = await _cleanupOrphansForFranchise(f.id);
+            results.push(r);
+            totalTombstoned += r.tombstoned || 0;
+        } catch (e) {
+            results.push({ fid: f.id, error: e.message });
+        }
+    }
+    return { franchises: franchises.length, totalTombstoned, results };
+}
+
+// Cron diário 3h da manhã Brasília — roda pra todas as franquias
+exports.cleanupOrphanFinances = onSchedule({
+    region: "southamerica-east1",
+    schedule: "0 3 * * *",
+    timeZone: "America/Sao_Paulo",
+    timeoutSeconds: 540,
+    memory: "256MiB",
+}, async () => {
+    console.log("[orphan-cleanup] iniciando");
+    const summary = await _runOrphanCleanupAllFranchises();
+    console.log("[orphan-cleanup] resumo:", JSON.stringify(summary));
+    try {
+        await db.collection("orphan_cleanup_runs").add({
+            triggeredBy: "schedule",
+            ranAt: admin.firestore.FieldValue.serverTimestamp(),
+            summary,
+        });
+    } catch (e) {
+        console.warn("audit log falhou:", e.message);
+    }
+});
+
+// Manual trigger — admin / franchisee pra própria franquia
+exports.runOrphanCleanupNow = onCall({
+    region: "southamerica-east1",
+    timeoutSeconds: 120,
+    memory: "256MiB",
+}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Autenticacao necessaria");
+    }
+    const role = request.auth.token.role || "";
+    if (!["super_admin", "admin", "franchisee"].includes(role)) {
+        throw new HttpsError("permission-denied", "Apenas admin/franqueado");
+    }
+    const { franchiseId } = request.data || {};
+    if (franchiseId) {
+        if (role === "franchisee" && request.auth.token.franchiseId !== franchiseId) {
+            throw new HttpsError("permission-denied", "Franqueado so pode rodar pra propria franquia");
+        }
+        const result = await _cleanupOrphansForFranchise(franchiseId);
+        await db.collection("orphan_cleanup_runs").add({
+            triggeredBy: "manual:" + (request.auth.uid || "?"),
+            franchiseId,
+            ranAt: admin.firestore.FieldValue.serverTimestamp(),
+            result,
+        });
+        return { ok: true, mode: "single-franchise", result };
+    }
+    if (role !== "super_admin" && role !== "admin") {
+        throw new HttpsError("permission-denied", "Apenas admin pode rodar pra todas");
+    }
+    const summary = await _runOrphanCleanupAllFranchises();
+    await db.collection("orphan_cleanup_runs").add({
+        triggeredBy: "manual-all:" + (request.auth.uid || "?"),
+        ranAt: admin.firestore.FieldValue.serverTimestamp(),
+        summary,
+    });
+    return { ok: true, mode: "all-franchises", summary };
+});
+
+// ============================================================
+// FASE 8.2 — Catalog Auto-Sync (server-side)
+// ============================================================
+// Triggers Firestore: quando catalog_v2_<fid> ou inventory_<fid> muda,
+// servidor reconstrói catalog_config + recalcula custoTotal automaticamente.
+// Elimina race condition entre PCs (servidor é fonte única de verdade).
+const CatalogSync = require("./catalog-sync");
+
+/**
+ * Trigger: datastore/catalog_v2_{fid} mudou → reconstrói catalog_config.
+ * Importante: não dispara loop porque o catalog_config NÃO matcha o pattern.
+ */
+exports.onCatalogV2Write = onDocumentUpdated({
+    region: "southamerica-east1",
+    document: "datastore/{docId}",
+    timeoutSeconds: 60,
+    memory: "256MiB",
+}, async (event) => {
+    const docId = event.params.docId || "";
+    // Responde a catalog_v2_<fid>, inventory_<fid> e catalog_config[_<fid>]
+    const isCatalogV2 = docId.startsWith("catalog_v2_") && docId !== "catalog_v2_franquia";
+    const isInventory = docId.startsWith("inventory_");
+    const isCatalogConfig = docId === "catalog_config" || docId.startsWith("catalog_config_");
+    if (!isCatalogV2 && !isInventory && !isCatalogConfig) return;
+
+    // Extrai fid
+    let fid = null;
+    if (isCatalogV2) fid = docId.replace("catalog_v2_", "");
+    else if (isInventory) fid = docId.replace("inventory_", "");
+    else if (isCatalogConfig) {
+        if (docId === "catalog_config") {
+            // catalog_config global: tenta extrair fid via _fid no payload
+            try {
+                const after = event.data.after.data();
+                const parsed = JSON.parse(after.value || "{}");
+                fid = parsed._fid || null;
+            } catch (e) {}
+        } else {
+            fid = docId.replace("catalog_config_", "");
+        }
+    }
+    if (!fid) return;
+
+    // Anti-loop: se o write veio do próprio sync (audit tag), não dispara de novo
+    try {
+        const after = event.data.after.data();
+        if (after && after._updatedBy && /^catalog-sync-/.test(after._updatedBy)) {
+            return; // próprio sync escreveu — ignora
+        }
+    } catch (e) {}
+
+    // FIX (Fase 8.5) — DEFESA SERVER-SIDE contra clients legados:
+    // Se for write em catalog_config[_<fid>] vindo de browser (sem tag),
+    // VALIDA que tem receitas. Se não tiver MAS catalog_v2 da franquia tem,
+    // RESTAURA imediatamente. Isso bloqueia o loop de "Receita pendente volta"
+    // mesmo quando outro cliente tá com cache antigo (sem o guard v8.4).
+    if (isCatalogConfig) {
+        try {
+            const after = event.data.after.data();
+            const parsed = JSON.parse(after.value || "{}");
+            // Conta receitas escritas
+            let totalItems = 0, comReceita = 0;
+            Object.values(parsed.sabores || {}).forEach((g) => {
+                if (g && g.items) g.items.forEach((it) => {
+                    totalItems++;
+                    if (it.receita && it.receita.length) comReceita++;
+                });
+            });
+            const percComReceita = totalItems > 0 ? (comReceita / totalItems) * 100 : 100;
+
+            // Lê catalog_v2 do FS pra comparar
+            const v2Snap = await db.collection("datastore").doc("catalog_v2_" + fid).get();
+            if (v2Snap.exists) {
+                const v2 = JSON.parse(v2Snap.data().value || "{}");
+                const v2Prods = (v2.produtos || []).filter(p => p && p.active !== false);
+                const v2ComReceita = v2Prods.filter(p => p.custos && p.custos.insumos && p.custos.insumos.length).length;
+                const v2Perc = v2Prods.length > 0 ? (v2ComReceita / v2Prods.length) * 100 : 0;
+
+                if (percComReceita < 50 && v2Perc > 50) {
+                    console.warn(`[catalog-config-guard] BLOCKED stale write em ${docId} ` +
+                        `(${comReceita}/${totalItems} com receita) — v2 tem ${v2ComReceita}/${v2Prods.length}. RESTAURANDO.`);
+                    // Re-roda sync server-side pra restaurar a versão correta
+                    await CatalogSync.syncCatalogConfigForFranchise(db, fid);
+                    return;
+                }
+            }
+        } catch (e) { console.warn("[catalog-config-guard] check falhou:", e.message); }
+        // Se passou no guard, não precisa re-sync (o write é válido OU não é catalog_config)
+        return;
+    }
+
+    console.log(`[catalog-sync] trigger por ${docId} → sincronizando franquia ${fid}`);
+    try {
+        const r = await CatalogSync.syncCatalogConfigForFranchise(db, fid);
+        console.log(`[catalog-sync] resultado:`, JSON.stringify(r));
+    } catch (e) {
+        console.error(`[catalog-sync] erro pra ${fid}:`, e.message);
+    }
+});
+
+/** Também responde a catalog_v2 created (1ª vez) */
+exports.onCatalogV2Create = onDocumentCreated({
+    region: "southamerica-east1",
+    document: "datastore/{docId}",
+    timeoutSeconds: 60,
+    memory: "256MiB",
+}, async (event) => {
+    const docId = event.params.docId || "";
+    if (!docId.startsWith("catalog_v2_") && !docId.startsWith("inventory_")) return;
+    let fid = null;
+    if (docId.startsWith("catalog_v2_")) fid = docId.replace("catalog_v2_", "");
+    else fid = docId.replace("inventory_", "");
+    if (!fid) return;
+    try {
+        const after = event.data.data();
+        if (after && after._updatedBy && /^catalog-sync-/.test(after._updatedBy)) return;
+    } catch (e) {}
+    console.log(`[catalog-sync] create-trigger por ${docId} → sincronizando franquia ${fid}`);
+    try {
+        await CatalogSync.syncCatalogConfigForFranchise(db, fid);
+    } catch (e) { console.error(`[catalog-sync] erro:`, e.message); }
+});
+
+/** Manual trigger — admin (todas) ou franchisee (própria). Útil pra catch-up inicial. */
+exports.runCatalogSyncNow = onCall({
+    region: "southamerica-east1",
+    timeoutSeconds: 120,
+    memory: "256MiB",
+}, async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Autenticacao necessaria");
+    const role = request.auth.token.role || "";
+    if (!["super_admin", "admin", "franchisee"].includes(role)) {
+        throw new HttpsError("permission-denied", "Apenas admin/franqueado");
+    }
+    const { franchiseId } = request.data || {};
+    if (franchiseId) {
+        if (role === "franchisee" && request.auth.token.franchiseId !== franchiseId) {
+            throw new HttpsError("permission-denied", "Franqueado só pode rodar pra própria franquia");
+        }
+        const r = await CatalogSync.syncCatalogConfigForFranchise(db, franchiseId);
+        return { ok: true, mode: "single-franchise", result: r };
+    }
+    if (role !== "super_admin" && role !== "admin") {
+        throw new HttpsError("permission-denied", "Apenas admin pode rodar pra todas");
+    }
+    const summary = await CatalogSync.syncAllFranchises(db);
+    return { ok: true, mode: "all-franchises", summary };
+});
+
+// ============================================
+// Franchise Nurture — sequência automática de emails pra leads VIP
+// Roda 1x/dia (10:00 BR), envia emails em T+1d, T+7d, T+30d, T+90d
+// ============================================
+const franchiseNurture = require("./franchise-nurture");
+exports.franchiseNurtureCron = franchiseNurture.franchiseNurtureCron;
+
+// ============================================
+// Time Clock Reminders + Banco de Horas
+// cron a cada 5min envia push pros funcionarios 10min antes da escala
+// + funcoes pra solicitar/aprovar banco de horas via FCM
+// ============================================
+const timeClockReminders = require("./time-clock-reminders");
+exports.cron_remindPunch = timeClockReminders.cron_remindPunch;
+exports.bankHours_notifyDecision = timeClockReminders.bankHours_notifyDecision;
+exports.bankHours_request = timeClockReminders.bankHours_request;

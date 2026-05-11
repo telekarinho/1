@@ -395,6 +395,34 @@ const Caixa = (function () {
             return { success: false, error: '⚠️ Diferença maior que R$ 5,00 exige justificativa obrigatória.', diff: diff, esperado: st.saldoEsperadoDinheiro };
         }
 
+        // ===== AUTO-SANGRIA pra TROCO PADRAO R$ 200 =====
+        // Regra do dono: troco do dia seguinte = sempre R$ 200 em dinheiro.
+        // O que passar disso deve sair como SANGRIA automatica antes de
+        // gerar o evento de fechamento (vai pro deposito do dia).
+        // Sem isso o operador esquece a sangria e fecha com R$ 500+ na
+        // gaveta — risco de furto + zera o controle de troco.
+        const TROCO_PADRAO = 200;
+        if (valorContado > TROCO_PADRAO + 0.01) {
+            const excesso = Math.round((valorContado - TROCO_PADRAO) * 100) / 100;
+            const sg = createMovement(franchiseId, {
+                type: 'sangria',
+                valor: excesso,
+                descricao: 'Sangria automatica (troco fica em R$ ' + TROCO_PADRAO.toFixed(2) + ')',
+                motivo: 'auto-sangria fechamento — excesso sobre troco padrao'
+            });
+            if (sg.success) {
+                try {
+                    audit('CAIXA_AUTO_SANGRIA_FECHAMENTO', franchiseId, {
+                        valor: excesso,
+                        valorContadoInicial: valorContado,
+                        trocoFinal: TROCO_PADRAO
+                    });
+                } catch(_) {}
+                // valorContado vira o troco padrao (refletido no resumo do email)
+                valorContado = TROCO_PADRAO;
+            }
+        }
+
         const r = createMovement(franchiseId, {
             type: 'fechamento',
             valor: valorContado,
@@ -413,6 +441,28 @@ const Caixa = (function () {
             Motivacional.toastCaixaFechado();
         }
 
+        // ===== CALCULA VENDAS DO MES =====
+        // Cliente pediu: mostrar "vendeu esse mes tantas vendas valor X"
+        // no email do fechamento (em vez de comissao+acumulado). Calcula
+        // aqui (mais simples que server) usando pedidos ja em DataStore.
+        let vendasMes = 0, pedidosMes = 0;
+        try {
+            const ordersAll = DataStore.getCollection('orders', franchiseId) || [];
+            const now = new Date();
+            const mesAtual = now.getMonth();
+            const anoAtual = now.getFullYear();
+            ordersAll.forEach(function(o) {
+                if (!o || o.deleted || o.status === 'cancelado') return;
+                const d = new Date(o.createdAt || o.date || 0);
+                if (isNaN(d.getTime())) return;
+                if (d.getMonth() !== mesAtual || d.getFullYear() !== anoAtual) return;
+                vendasMes += Number(o.total || 0);
+                pedidosMes += 1;
+            });
+        } catch(e) {
+            console.warn('Falha calculando vendas do mes:', e);
+        }
+
         // Trigger Automated Report via Cloud Functions
         try {
             if (typeof CloudFunctions !== 'undefined' && CloudFunctions.sendClosingReport) {
@@ -424,7 +474,10 @@ const Caixa = (function () {
                     saldoEsperado: st.saldoEsperadoDinheiro,
                     diferenca: diff,
                     motivo: motivoQuebra,
-                    fechamentoDate: new Date().toISOString()
+                    fechamentoDate: new Date().toISOString(),
+                    vendasMes: vendasMes,
+                    pedidosMes: pedidosMes,
+                    trocoProximoDia: TROCO_PADRAO
                 });
             }
         } catch (e) {
