@@ -1385,7 +1385,11 @@ const Caixa = (function () {
                 <button class="btn btn-sm" style="background:#DC2626;color:#fff" onclick="Caixa.showCloseModal(Caixa._fid(), Caixa.refreshWidget)">🔒 Fechar caixa</button>`;
         } else {
             const diffColor = Math.abs(st.diferenca || 0) < 0.01 ? '#10B981' : '#DC2626';
-            actionBtns = `<span style="color:${diffColor};font-weight:700">Diferença: ${formatBRL(st.diferenca)}</span>`;
+            // Botao de reenvio do relatorio: util quando email automatico nao chegou.
+            // Server-side: forceResend=true bypassa dedup de 5min.
+            actionBtns = `
+                <span style="color:${diffColor};font-weight:700;margin-right:8px">Diferença: ${formatBRL(st.diferenca)}</span>
+                <button class="btn btn-sm" style="background:#2196F3;color:#fff" onclick="Caixa._handleResendReport(this)" title="Reenviar email do relatorio (caso nao tenha chegado)">📧 Reenviar relatório</button>`;
         }
 
         const porMetodoHtml = Object.keys(st.porMetodo).length > 0
@@ -1435,6 +1439,173 @@ const Caixa = (function () {
         const fid = _fid();
         if (!fid) return;
         el.outerHTML = renderWidget(fid);
+    }
+
+    /* ============================================
+       Reenvio MANUAL do relatorio do ultimo fechamento.
+       Usado quando o email automatico nao chegou (provedor
+       caiu, conta Gmail bateu limite, etc.).
+       Reconstroi o reportData a partir dos movimentos do
+       ultimo turno fechado e chama sendClosingReport.
+       Server-side dedup (5min) garante que nao manda
+       duplicado se o automatico esta indo.
+       ============================================ */
+    function resendClosingReport(franchiseId) {
+        if (!franchiseId) franchiseId = _fid();
+        if (!franchiseId) return { success: false, error: 'Franquia nao identificada.' };
+        if (typeof CloudFunctions === 'undefined' || !CloudFunctions.sendClosingReport) {
+            return { success: false, error: 'CloudFunctions indisponivel.' };
+        }
+
+        // Pega o turno mais recente que tem fechamento
+        const movs = loadMovements(franchiseId);
+        const fechamentos = movs.filter(function(m){ return m && m.type === 'fechamento'; })
+                                .sort(function(a,b){ return (b.createdAt||'').localeCompare(a.createdAt||''); });
+        if (!fechamentos.length) {
+            return { success: false, error: 'Nenhum fechamento de caixa encontrado pra reenviar.' };
+        }
+        const ultimo = fechamentos[0];
+        const dateKey = ultimo.dateKey;
+        const turnoId = ultimo.turnoId;
+
+        // Recalcula totais do turno
+        const movsTurno = movs.filter(function(m){
+            return m && (m.turnoId === turnoId || m.dateKey === dateKey);
+        });
+        const abertura = movsTurno.find(function(m){ return m.type === 'abertura'; });
+        const vendas = movsTurno.filter(function(m){ return m.type === 'venda'; });
+        const sangrias = movsTurno.filter(function(m){ return m.type === 'sangria'; });
+        const reforcos = movsTurno.filter(function(m){ return m.type === 'reforco'; });
+
+        const valorAbertura = abertura ? Number(abertura.valor || 0) : 0;
+        const totalReforco = reforcos.reduce(function(s,m){ return s + Number(m.valor || 0); }, 0);
+        const totalSangria = sangrias.reduce(function(s,m){ return s + Number(m.valor || 0); }, 0);
+        const vendasDinheiro = vendas
+            .filter(function(v){ return v.metodo === 'dinheiro'; })
+            .reduce(function(s,m){ return s + Number(m.valor || 0); }, 0);
+        const faturamentoBruto = vendas.reduce(function(s,m){ return s + Number(m.valor || 0); }, 0);
+        const saldoEsperado = valorAbertura + vendasDinheiro + totalReforco - totalSangria;
+        const valorContado = Number(ultimo.valor || 0);
+
+        const porMetodoEsperado = {};
+        vendas.forEach(function(v){
+            const k = v.metodo || 'outros';
+            porMetodoEsperado[k] = (porMetodoEsperado[k] || 0) + Number(v.valor || 0);
+        });
+
+        // Vendas do mes (mesma logica do closeShift)
+        let vendasMes = 0, pedidosMes = 0;
+        try {
+            const ordersAll = DataStore.getCollection('orders', franchiseId) || [];
+            const now = new Date();
+            const mesAtual = now.getMonth();
+            const anoAtual = now.getFullYear();
+            ordersAll.forEach(function(o){
+                if (!o || o.deleted || o.status === 'cancelado') return;
+                const d = new Date(o.createdAt || o.date || 0);
+                if (isNaN(d.getTime())) return;
+                if (d.getMonth() !== mesAtual || d.getFullYear() !== anoAtual) return;
+                vendasMes += Number(o.total || 0);
+                pedidosMes += 1;
+            });
+        } catch(_) {}
+
+        const session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+        const payload = {
+            operatorName: (ultimo.createdByName) || (session && session.name) || 'Operador',
+            operatorEmail: (ultimo.createdByEmail) || (session && session.email) || '',
+            valorContado: valorContado,
+            saldoEsperado: saldoEsperado,
+            diferenca: valorContado - saldoEsperado,
+            motivo: ultimo.motivo || '',
+            fechamentoDate: ultimo.createdAt,
+            valorAbertura: valorAbertura,
+            vendasDinheiro: vendasDinheiro,
+            totalSangria: totalSangria,
+            totalReforco: totalReforco,
+            faturamentoBruto: faturamentoBruto,
+            porMetodoEsperado: porMetodoEsperado,
+            totalPedidos: vendas.length,
+            vendasMes: vendasMes,
+            pedidosMes: pedidosMes,
+            trocoProximoDia: 200,
+            sangrias: sangrias,
+            reforcos: reforcos,
+            // Forca novo envio mesmo dentro da janela dedup 5min
+            forceResend: true
+        };
+
+        console.log('[caixa.resendClosingReport] reenviando relatorio do turno', { dateKey: dateKey, turnoId: turnoId });
+        return Promise.resolve(CloudFunctions.sendClosingReport(franchiseId, payload))
+            .then(function(result){
+                console.log('[caixa.resendClosingReport] resultado:', result);
+                try {
+                    audit('CAIXA_CLOSING_EMAIL_RESEND', franchiseId, {
+                        dateKey: dateKey,
+                        turnoId: turnoId,
+                        success: !!(result && result.success),
+                        deduped: !!(result && result.deduped),
+                        error: result && result.error
+                    });
+                } catch(_) {}
+                return result;
+            })
+            .catch(function(err){
+                console.error('[caixa.resendClosingReport] erro:', err);
+                try {
+                    audit('CAIXA_CLOSING_EMAIL_RESEND_FAILED', franchiseId, {
+                        error: String(err && err.message || err)
+                    });
+                } catch(_) {}
+                return { success: false, error: String(err && err.message || err) };
+            });
+    }
+
+    /* ============================================
+       Handler do botao "Reenviar relatorio".
+       Da feedback visual no proprio botao enquanto chama
+       resendClosingReport(). Bloqueia clique duplo.
+       ============================================ */
+    function _handleResendReport(btn) {
+        if (!btn || btn.disabled) return;
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Enviando...';
+        Promise.resolve(resendClosingReport(_fid()))
+            .then(function(result){
+                if (result && result.success) {
+                    btn.innerHTML = '✅ Enviado!';
+                    btn.style.background = '#10B981';
+                    if (typeof toast !== 'undefined') toast('Relatorio reenviado com sucesso', 'success');
+                    setTimeout(function(){
+                        btn.innerHTML = original;
+                        btn.style.background = '#2196F3';
+                        btn.disabled = false;
+                    }, 3000);
+                } else {
+                    btn.innerHTML = '❌ Erro';
+                    btn.style.background = '#DC2626';
+                    const msg = (result && result.error) || 'Falha ao reenviar relatorio';
+                    if (typeof toast !== 'undefined') toast(msg, 'error');
+                    else alert('Falha ao reenviar relatorio: ' + msg);
+                    setTimeout(function(){
+                        btn.innerHTML = original;
+                        btn.style.background = '#2196F3';
+                        btn.disabled = false;
+                    }, 4000);
+                }
+            })
+            .catch(function(err){
+                btn.innerHTML = '❌ Erro';
+                btn.style.background = '#DC2626';
+                if (typeof toast !== 'undefined') toast(String(err && err.message || err), 'error');
+                else alert('Erro: ' + (err && err.message || err));
+                setTimeout(function(){
+                    btn.innerHTML = original;
+                    btn.style.background = '#2196F3';
+                    btn.disabled = false;
+                }, 4000);
+            });
     }
 
     function _fid() {
@@ -1514,6 +1685,9 @@ const Caixa = (function () {
         confirmSangriaWithdrawal: confirmSangriaWithdrawal,
         listSangriaCustodianCandidates: listSangriaCustodianCandidates,
         showWithdrawalConfirmModal: showWithdrawalConfirmModal,
+        // Reenvio manual do relatorio de fechamento (caso email nao chegou)
+        resendClosingReport: resendClosingReport,
+        _handleResendReport: _handleResendReport,
         // Modais
         showOpenModal: showOpenModal,
         showCloseModal: showCloseModal,
