@@ -2974,3 +2974,132 @@ const timeClockReminders = require("./time-clock-reminders");
 exports.cron_remindPunch = timeClockReminders.cron_remindPunch;
 exports.bankHours_notifyDecision = timeClockReminders.bankHours_notifyDecision;
 exports.bankHours_request = timeClockReminders.bankHours_request;
+
+// ============================================================
+// BACKUP DIARIO FIRESTORE — onSchedule cron
+// ============================================================
+// Faz export programatico de TODAS as colecoes do Firestore pra
+// gs://milkypot-ad945.appspot.com/firestore-backups/YYYY-MM-DD/
+// rodando todo dia 06:00 BRT (operacao da loja ainda nao comecou).
+//
+// Pre-requisitos:
+//   1. Bucket gs://milkypot-ad945.appspot.com existe (default Firebase Storage)
+//   2. Service account da function tem role 'Cloud Datastore Import Export Admin'
+//      (roles/datastore.importExportAdmin)
+//   3. API firestore.googleapis.com habilitada (ja esta — usado pelo Firestore)
+//
+// Lifecycle/retencao: configurar no bucket via GCS Lifecycle rules
+// (delete files older than 30 days). Por enquanto, mantem todos.
+//
+// Monitorar: audit_log evento system.firestore_backup_triggered + console.
+// Se falhar, owner recebe alerta via Sentry (error-tracking nao cobre CF —
+// adicionar manualmente Sentry SDK em CFs ainda e TODO).
+// ============================================================
+exports.dailyFirestoreBackup = onSchedule({
+    schedule: "0 6 * * *",
+    timeZone: "America/Sao_Paulo",
+    region: "southamerica-east1",
+    timeoutSeconds: 540,
+    memory: "256MiB",
+    retryCount: 1
+}, async (event) => {
+    const projectId = process.env.GCLOUD_PROJECT || "milkypot-ad945";
+    const day = new Date().toISOString().slice(0, 10);
+    const outputUri = `gs://${projectId}.appspot.com/firestore-backups/${day}`;
+
+    try {
+        const { GoogleAuth } = require("google-auth-library");
+        const auth = new GoogleAuth({
+            scopes: ["https://www.googleapis.com/auth/datastore"]
+        });
+        const client = await auth.getClient();
+        const tokenResp = await client.getAccessToken();
+        const token = (tokenResp && tokenResp.token) || tokenResp;
+
+        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default):exportDocuments`;
+        const resp = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                outputUriPrefix: outputUri,
+                collectionIds: []  // [] = TODAS as colecoes
+            })
+        });
+
+        const text = await resp.text();
+        if (!resp.ok) {
+            console.error(`[dailyFirestoreBackup] HTTP ${resp.status}:`, text);
+            // Audit log evento de FALHA
+            try {
+                await db.collection("audit_log").add({
+                    event: "system.firestore_backup_failed",
+                    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                    details: { day, outputUri, status: resp.status, error: text.slice(0, 1000) }
+                });
+            } catch(_) {}
+            throw new Error(`Firestore backup HTTP ${resp.status}: ${text.slice(0, 500)}`);
+        }
+
+        let result = {};
+        try { result = JSON.parse(text); } catch(_) {}
+        console.log(`[dailyFirestoreBackup] OK -> ${outputUri}`, result.name || "");
+
+        // Audit log evento de SUCESSO
+        try {
+            await db.collection("audit_log").add({
+                event: "system.firestore_backup_triggered",
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                details: {
+                    day,
+                    outputUri,
+                    operationName: result.name || null
+                }
+            });
+        } catch(_) {}
+
+        return { success: true, day, outputUri, operationName: result.name };
+    } catch (err) {
+        console.error("[dailyFirestoreBackup] erro:", err.message);
+        throw err;
+    }
+});
+
+// Manual trigger pra testar o backup AGORA sem esperar 06h
+// Uso: firebase functions:call manualFirestoreBackup --project milkypot-ad945
+exports.manualFirestoreBackup = onCall({
+    region: "southamerica-east1",
+    timeoutSeconds: 540,
+    memory: "256MiB"
+}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Autenticacao necessaria");
+    }
+    if (request.auth.token.role !== "super_admin") {
+        throw new HttpsError("permission-denied", "Apenas super_admin pode disparar backup manual");
+    }
+
+    const projectId = process.env.GCLOUD_PROJECT || "milkypot-ad945";
+    const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const outputUri = `gs://${projectId}.appspot.com/firestore-backups/manual-${ts}`;
+
+    const { GoogleAuth } = require("google-auth-library");
+    const auth = new GoogleAuth({ scopes: ["https://www.googleapis.com/auth/datastore"] });
+    const client = await auth.getClient();
+    const tokenResp = await client.getAccessToken();
+    const token = (tokenResp && tokenResp.token) || tokenResp;
+
+    const resp = await fetch(
+        `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default):exportDocuments`,
+        {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ outputUriPrefix: outputUri, collectionIds: [] })
+        }
+    );
+    const text = await resp.text();
+    if (!resp.ok) throw new HttpsError("internal", `HTTP ${resp.status}: ${text}`);
+    return { success: true, outputUri, response: JSON.parse(text) };
+});
