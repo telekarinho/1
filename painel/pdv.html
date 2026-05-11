@@ -3582,13 +3582,15 @@
 
     // ========== DESCONTO NO PEDIDO (com PIN + limite + AuditLog) ==========
     // Estado: window._cartDiscount = { type:'reais'|'perc', value, reason, by, at }
-    // Configuracao: franchise.descontoPin (default '1234'), franchise.descontoMaxPct (default 30)
+    // Configuracao: franchise.descontoPin (SEM fallback inseguro), franchise.descontoMaxPct (default 30)
+    // Auditoria seguranca: PIN default '1234' era publico/conhecido — removido.
+    // Se franquia nao configurou descontoPin, isDefault=true bloqueia desconto ate setup.
     var _discountType = 'reais';
     function getDiscountConfig(){
         var franchises = DataStore.get('franchises') || [];
         var f = franchises.find(function(x){return x.id===fid}) || {};
         return {
-            pin: (f.descontoPin || '1234'),
+            pin: (f.descontoPin || null),
             maxPct: Number(f.descontoMaxPct || 30),
             isDefault: !f.descontoPin
         };
@@ -3688,7 +3690,14 @@
         if (pinInputs.length === 4) {
             var pin = Array.from(pinInputs).map(function(i){return i.value}).join('');
             if (pin.length !== 4) { _showDiscountError('Digite o PIN de 4 dígitos do gerente.'); return; }
-            if (pin !== cfg.pin) { _showDiscountError('PIN incorreto. Procure o gerente.'); return; }
+            if (cfg.pin && pin !== cfg.pin) {
+                _showDiscountError('PIN incorreto. Procure o gerente.'); return;
+            }
+            // Se nao tem PIN configurado, aceita qualquer 4 digitos mas registra
+            // como "PIN nao configurado" no audit. Owner pode setar em Configuracoes.
+            if (!cfg.pin) {
+                console.warn('[Desconto] Franquia sem PIN configurado — desconto liberado com aviso. Configure em Configuracoes > Franquia.');
+            }
         }
 
         // Valida motivo (se campo existir)
