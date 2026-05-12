@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plano de Ação · MilkyPot</title>
+<link rel="stylesheet" href="../css/shared-panel.css?v=mp-v214">
+<style>
+    body { font-family: 'Nunito', sans-serif; background: #F4F6FB; margin: 0; }
+    h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; color: #2D1B4E; margin: 0; }
+    .container { max-width: 1180px; margin: 0 auto; padding: 24px; }
+    .hero { background: linear-gradient(135deg, #DC2626, #F59E0B); color: #fff; border-radius: 18px; padding: 28px; margin-bottom: 24px; box-shadow: 0 8px 32px rgba(220,38,38,0.25); }
+    .hero h1 { color: #fff; font-size: 1.8rem; margin-bottom: 8px; }
+    .hero p { font-size: 0.95rem; opacity: 0.95; margin: 0; line-height: 1.5; }
+
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .kpi { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 2px 10px rgba(45,27,78,0.06); }
+    .kpi-label { font-size: 0.72rem; color: #6B7280; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    .kpi-value { font-family: 'Baloo 2', cursive; font-size: 1.6rem; font-weight: 800; margin-top: 4px; }
+    .kpi.red .kpi-value { color: #DC2626; }
+    .kpi.green .kpi-value { color: #10B981; }
+    .kpi.blue .kpi-value { color: #2196F3; }
+    .kpi.amber .kpi-value { color: #F59E0B; }
+
+    .section { background: #fff; border-radius: 18px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(45,27,78,0.06); }
+    .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .section-header h2 { font-size: 1.4rem; }
+    .section-header .badge { background: #EEF2FF; color: #4338CA; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+
+    .action-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px; border: 2px solid #E5E7EB; border-radius: 12px; margin-bottom: 12px; transition: all .2s; background: #fff; }
+    .action-item.done { background: #F0FDF4; border-color: #10B981; opacity: 0.7; }
+    .action-item.done .action-title { text-decoration: line-through; color: #6B7280; }
+    .action-item.doing { background: #FEF3C7; border-color: #F59E0B; }
+    .action-checkbox { width: 28px; height: 28px; border: 2px solid #D1D5DB; border-radius: 8px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all .15s; user-select: none; }
+    .action-checkbox.done { background: #10B981; border-color: #10B981; color: #fff; }
+    .action-checkbox.doing { background: #F59E0B; border-color: #F59E0B; color: #fff; }
+    .action-body { flex: 1; }
+    .action-title { font-weight: 700; color: #1F2937; font-size: 0.95rem; margin-bottom: 4px; }
+    .action-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 0.78rem; color: #6B7280; margin-bottom: 6px; }
+    .action-meta span { background: #F3F4F6; padding: 3px 8px; border-radius: 6px; }
+    .action-desc { font-size: 0.85rem; color: #374151; line-height: 1.5; margin-bottom: 6px; }
+    .action-rewards { display: flex; gap: 8px; font-size: 0.78rem; font-weight: 700; }
+    .action-rewards .cost { background: #FEE2E2; color: #991B1B; padding: 3px 8px; border-radius: 6px; }
+    .action-rewards .gain { background: #D1FAE5; color: #065F46; padding: 3px 8px; border-radius: 6px; }
+
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 12px; }
+    .product-card { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 10px; padding: 12px; }
+    .product-card.hero { background: linear-gradient(135deg, #EEF2FF, #DBEAFE); border-color: #6366F1; }
+    .product-title { font-weight: 700; font-size: 0.88rem; color: #1F2937; }
+    .product-price { font-family: 'Baloo 2', cursive; font-size: 1.4rem; color: #10B981; margin-top: 4px; }
+    .product-margin { font-size: 0.75rem; color: #6B7280; margin-top: 2px; }
+
+    .alert { padding: 14px 18px; border-radius: 10px; margin-bottom: 16px; font-size: 0.9rem; line-height: 1.5; }
+    .alert-warn { background: #FEF3C7; border-left: 4px solid #F59E0B; color: #92400E; }
+    .alert-danger { background: #FEE2E2; border-left: 4px solid #DC2626; color: #991B1B; }
+    .alert-success { background: #D1FAE5; border-left: 4px solid #10B981; color: #065F46; }
+    .alert-info { background: #DBEAFE; border-left: 4px solid #2196F3; color: #1E40AF; }
+
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .tab-btn { background: #F3F4F6; border: none; padding: 10px 18px; border-radius: 10px; cursor: pointer; font-weight: 700; font-family: inherit; color: #6B7280; font-size: 0.88rem; transition: all .15s; }
+    .tab-btn.active { background: linear-gradient(135deg, #6C63FF, #EC407A); color: #fff; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .copy-btn { background: #2196F3; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 700; }
+    .copy-btn:hover { background: #1976D2; }
+    .copy-btn.copied { background: #10B981; }
+
+    .post-card { background: #fff; border: 2px solid #E5E7EB; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .post-card.today { border-color: #F59E0B; box-shadow: 0 0 0 3px #FEF3C7; }
+    .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+    .post-date { background: #EEF2FF; color: #4338CA; padding: 4px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; }
+    .post-platform { background: #FCE7F3; color: #BE185D; padding: 4px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; }
+    .post-hook { font-family: 'Baloo 2', cursive; font-size: 1.05rem; color: #1F2937; margin: 6px 0; }
+    .post-script { background: #F9FAFB; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; color: #374151; line-height: 1.55; margin-bottom: 8px; }
+    .post-tags { font-size: 0.78rem; color: #6366F1; }
+
+    .progress-bar { background: #E5E7EB; height: 14px; border-radius: 8px; overflow: hidden; margin-top: 6px; }
+    .progress-fill { background: linear-gradient(90deg, #10B981, #059669); height: 100%; transition: width .5s; }
+
+    .ad-card { border: 2px solid #2196F3; border-radius: 12px; padding: 18px; margin-bottom: 16px; background: linear-gradient(135deg, #F0F9FF, #DBEAFE); }
+    .ad-card h3 { color: #1976D2; margin-bottom: 8px; }
+    .ad-field { margin-bottom: 10px; }
+    .ad-field label { font-size: 0.72rem; color: #6B7280; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
+    .ad-field .value { background: #fff; padding: 8px 12px; border-radius: 6px; border: 1px solid #E5E7EB; font-size: 0.9rem; }
+
+    .back-btn { background: #6B7280; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; margin-bottom: 16px; font-size: 0.85rem; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<a href="index.html" class="back-btn">← Voltar ao painel</a>
+
+<!-- HERO -->
+<div class="hero">
+    <h1>🚨 Plano de Ação — MilkyPot Muffato Quintino</h1>
+    <p>Você está vendendo <strong>R$ 200/dia</strong> com custo fixo de <strong>R$ 408+/dia</strong>. Esse plano te leva pra <strong>R$ 700-900/dia</strong> em 14 dias. Cada ação tem custo + retorno esperado. Marca cada item conforme executar. Salva automaticamente.</p>
+</div>
+
+<!-- KPIs -->
+<div class="kpis">
+    <div class="kpi red">
+        <div class="kpi-label">Receita atual</div>
+        <div class="kpi-value">R$ 200/dia</div>
+    </div>
+    <div class="kpi red">
+        <div class="kpi-label">Custo fixo</div>
+        <div class="kpi-value">R$ 458/dia</div>
+    </div>
+    <div class="kpi amber">
+        <div class="kpi-label">Meta empate</div>
+        <div class="kpi-value">R$ 700/dia</div>
+    </div>
+    <div class="kpi green">
+        <div class="kpi-label">Meta lucro</div>
+        <div class="kpi-value">R$ 900/dia</div>
+    </div>
+    <div class="kpi blue">
+        <div class="kpi-label">Progresso</div>
+        <div class="kpi-value" id="kpiProgress">0%</div>
+        <div class="progress-bar"><div class="progress-fill" id="kpiProgressBar" style="width:0%"></div></div>
+    </div>
+</div>
+
+<!-- SEÇÃO: CATÁLOGO E ESTRATÉGIA DE PREÇO -->
+<div class="section">
+    <div class="section-header">
+        <h2>📋 Seu Cardápio Real — Onde Empurrar pra Lucrar</h2>
+    </div>
+
+    <div class="alert alert-warn">
+        <strong>⚠️ DESCOBERTA CRÍTICA:</strong> seu <strong>Milkshake P (R$ 9,99)</strong> tem margem de só <strong>30%</strong> (custo R$ 6,95). Os tamanhos <strong>M / G / GG</strong> têm <strong>43% de margem</strong>. <strong>Vender só Ps não cobre custo fixo</strong>. Estratégia: empurrar M e G + toppings.
+    </div>
+
+    <h3 style="margin-bottom:10px">💎 Produtos prioritários (vender ESTES)</h3>
+    <div class="product-grid">
+        <div class="product-card hero">
+            <div class="product-title">⚖️ Buffet Self-Service</div>
+            <div class="product-price">R$ 59,90/kg</div>
+            <div class="product-margin">CMV ~33% · Margem REI · monta no pote</div>
+        </div>
+        <div class="product-card hero">
+            <div class="product-title">🥤 Milkshake M (440ml)</div>
+            <div class="product-price">R$ 17,99</div>
+            <div class="product-margin">Margem 43% (R$ 7,74/un) · cresce ticket</div>
+        </div>
+        <div class="product-card hero">
+            <div class="product-title">🥤 Milkshake G (550ml)</div>
+            <div class="product-price">R$ 21,99</div>
+            <div class="product-margin">Margem 43% (R$ 9,54/un) · combo casal</div>
+        </div>
+        <div class="product-card hero">
+            <div class="product-title">🥤 Milkshake GG (770ml)</div>
+            <div class="product-price">R$ 29,99</div>
+            <div class="product-margin">Margem 44% (R$ 13,14/un) · família</div>
+        </div>
+        <div class="product-card">
+            <div class="product-title">🍇 Açaí Bowl P / M / G</div>
+            <div class="product-price">R$ 9,99–24,99</div>
+            <div class="product-margin">Inverno: posicionar como "energia"</div>
+        </div>
+        <div class="product-card">
+            <div class="product-title">✨ Topping (22 opções)</div>
+            <div class="product-price">+R$ 1,50–3,50</div>
+            <div class="product-margin">⚡ SEMPRE PERGUNTAR — sobe ticket 15%</div>
+        </div>
+    </div>
+
+    <div class="alert alert-success" style="margin-top:14px">
+        <strong>💡 SCRIPT pra atendimento:</strong> Quando cliente pedir "milkshake": <em>"P, M ou G? M é só R$ 8 a mais e tem quase 2x mais sorvete"</em>. Quando fechar pedido: <em>"Vai topping? Granola, leitinho ninho, ovomaltine — R$ 2 a R$ 3,50 cada"</em>. Isso sozinho sobe ticket de R$ 22 → R$ 30.
+    </div>
+</div>
+
+<!-- SEÇÃO: PLANO 14 DIAS -->
+<div class="section">
+    <div class="section-header">
+        <h2>📅 Plano de 14 Dias</h2>
+        <span class="badge" id="actionsCount">0 de 0 feitos</span>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="hoje">🔥 Hoje</button>
+        <button class="tab-btn" data-tab="semana1">Semana 1 (até 17/05)</button>
+        <button class="tab-btn" data-tab="semana2">Semana 2 (até 24/05)</button>
+    </div>
+
+    <div class="tab-panel active" id="panel-hoje">
+        <div id="actions-hoje"></div>
+    </div>
+    <div class="tab-panel" id="panel-semana1">
+        <div id="actions-semana1"></div>
+    </div>
+    <div class="tab-panel" id="panel-semana2">
+        <div id="actions-semana2"></div>
+    </div>
+</div>
+
+<!-- SEÇÃO: POSTS ORGÂNICOS -->
+<div class="section">
+    <div class="section-header">
+        <h2>📱 Posts Orgânicos — 7 Reels Prontos</h2>
+        <span class="badge">TikTok + IG Reels</span>
+    </div>
+
+    <div class="alert alert-info">
+        <strong>Regra de ouro:</strong> filma com CELULAR, sem edição complexa. Posta entre 18h-20h (pico FYP Londrina). Responde TODO comentário em 1h.
+    </div>
+
+    <div id="postsOrganicos"></div>
+</div>
+
+<!-- SEÇÃO: POSTS PAGOS -->
+<div class="section">
+    <div class="section-header">
+        <h2>💰 Posts Pagos — Meta Ads (R$ 30/dia)</h2>
+        <span class="badge">Facebook + Instagram</span>
+    </div>
+
+    <div class="alert alert-info">
+        <strong>Como subir:</strong> Acessa <a href="https://business.facebook.com" target="_blank" style="color:#1E40AF;font-weight:700">business.facebook.com</a> → Ads Manager → "Criar campanha" → cola os textos abaixo. Pixel já está instalado (ID 1630338818189805).
+    </div>
+
+    <div id="postsPagos"></div>
+</div>
+
+<!-- SEÇÃO: DELIVERY -->
+<div class="section">
+    <div class="section-header">
+        <h2>🛵 Setup de Delivery</h2>
+        <span class="badge" style="background:#FEE2E2;color:#991B1B">Opcional mas alta alavancagem</span>
+    </div>
+
+    <div class="alert alert-warn">
+        <strong>⚠️ Considera antes:</strong> iFood cobra 27-32% de comissão. Seu Milkshake P de R$ 9,99 fica com margem NEGATIVA no iFood (preço sobe pra R$ 12,99 mas iFood fica com R$ 3,90, sobra R$ 9,09 e custa R$ 6,95). <strong>Só vale com tamanho M+ e combos.</strong>
+    </div>
+
+    <div id="actions-delivery"></div>
+</div>
+
+<!-- SEÇÃO: PARCERIAS LOCAIS -->
+<div class="section">
+    <div class="section-header">
+        <h2>🤝 Parcerias no Shopping Muffato</h2>
+        <span class="badge">Custo zero · alto impacto</span>
+    </div>
+    <div id="actions-parcerias"></div>
+</div>
+
+</div>
+
+<script>
+// =========================================================
+// PLANO DE AÇÃO — MilkyPot Muffato Quintino
+// =========================================================
+(function(){
+
+const STORAGE_KEY = 'mp_plano_acao_status';
+const today = (function(){
+    var d = new Date();
+    var off = -3 * 60;
+    var local = new Date(d.getTime() + (off - d.getTimezoneOffset()) * 60000);
+    return local.toISOString().slice(0,10);
+})();
+
+// ========= AÇÕES DO PLANO =========
+const actions = {
+    hoje: [
+        { id:'h1', title:'🎯 Cartaz Raspinha da Sorte na vitrine', cost:'R$ 0 · 15 min', gain:'+R$ 50–100 hoje',
+          desc:'Papel A4 escrito à mão GRANDE: "RASPOU NA HORA — RASPINHA DA SORTE. 1 em cada 5 ganha. SÓ HOJE E AMANHÃ". Cola na vitrine virada pro corredor do shopping. Quem passar ler.' },
+        { id:'h2', title:'📱 Gravar e postar Reel "POV: loja vazia"', cost:'R$ 0 · 1h', gain:'+R$ 80–150 (ticket noite)',
+          desc:'Filma com celular sem edição. Hook: "POV: tá fazendo 14°C em Londrina e essa sorveteria aqui no Muffato Quintino tá VAZIA…". Mostra loja vazia, freezer cheio. Texto na tela: "ATÉ 22H HOJE: PROVA o açaí roxão R$9,99". Áudio: trend "oh no oh no". CTA: "Vem agora. Piso L1". Posta no TikTok + Instagram Reels.' },
+        { id:'h3', title:'💬 Story "Tô aqui até 22h"', cost:'R$ 0 · 5 min', gain:'+R$ 30–60',
+          desc:'Selfie sua na loja, texto: "Tô aqui sozinho até 22h. Sobe pra dar oi 🐑". Coloca localização "MilkyPot Muffato Quintino".' },
+        { id:'h4', title:'🗣️ Script de upsell pra ESTA noite', cost:'R$ 0 · imediato', gain:'+R$ 80–120 ticket',
+          desc:'Decora 2 falas: (1) "P, M ou G? M tem quase 2x mais por só R$ 8 a mais" — sempre que pedirem milkshake. (2) "Vai topping? Granola, ninho, ovomaltine — R$ 2 a R$ 3,50" — sempre antes de fechar. Sobe ticket médio de R$22 pra R$30.' }
+    ],
+    semana1: [
+        { id:'s1-1', title:'📍 Google Meu Negócio TURBO', cost:'R$ 0 · 1h', gain:'+R$ 600–900/sem',
+          desc:'Acessa business.google.com → MilkyPot Muffato Quintino. (1) Upload 15 fotos novas (produtos, fachada, vitrine). (2) Responde TODAS as reviews. (3) Cria 1 post "Inverno quentinho: açaí roxão R$ 9,99". (4) Atualiza horário pra refletir loja aberta.' },
+        { id:'s1-2', title:'🎟️ Imprimir 500 cupons físicos', cost:'R$ 40 gráfica', gain:'+R$ 2.000–3.000/sem',
+          desc:'Texto do cupom: "MOSTRE ESTE CUPOM = MILKSHAKE P GRÁTIS na compra de qualquer M, G ou GG. SÓ HOJE." Encomenda em qualquer gráfica rápida (5x10cm, 500 unidades, cerca de R$40).' },
+        { id:'s1-3', title:'🚶 Panfletar terça 17h-19h', cost:'tempo · 2h', gain:'+R$ 800–1.200',
+          desc:'Pega 250 cupons. Distribui na: praça de alimentação, saída do cinema, corredor Renner/Riachuelo. Aborda: "Sorveteria nova aqui no shopping, ganha um milkshake grátis hoje". 15-25% convertem.' },
+        { id:'s1-4', title:'🚶 Panfletar quinta 17h-19h', cost:'tempo · 2h', gain:'+R$ 800–1.200',
+          desc:'Repete a terça com os 250 cupons restantes. Foca corredor próximo à academia e farmácia (gente sai com fome).' },
+        { id:'s1-5', title:'💰 Subir Campanha Meta Ads Local (R$15/dia)', cost:'R$ 105/sem', gain:'+R$ 600–1.100',
+          desc:'Setup completo na seção "Posts Pagos" abaixo. Tráfego local raio 3km. Vê os 3 criativos prontos pra colar.' },
+        { id:'s1-6', title:'🎬 Parceria com cinema Muffato', cost:'R$ 0 · 30 min', gain:'+R$ 300–500/dia',
+          desc:'Bate na gerência do cinema. Proposta: "Quem mostrar ingresso do dia ganha 15% no MilkyPot até 1h após sessão". Em troca: você expõe poster do filme do mês no balcão. Cria cupom "CINEMA15" no PDV pra rastrear.' },
+        { id:'s1-7', title:'⭐ Pedir 30 reviews Google em 7 dias', cost:'R$ 0 · QR code', gain:'+R$ 200/dia organico',
+          desc:'QR code no balcão "Avalia a gente no Google = ganha topping grátis AGORA". Gera o QR em qrcode-monkey.com apontando pra seu Google Maps profile.' },
+        { id:'s1-8', title:'📲 Postar Reel 1 por dia (7 reels)', cost:'R$ 0 · 30min/dia', gain:'+R$ 200/dia alcance',
+          desc:'Os 7 posts orgânicos prontos estão na seção abaixo. Posta entre 18-20h sempre.' }
+    ],
+    semana2: [
+        { id:'s2-1', title:'🏆 Lançar Desafio 10 MilkyPot (cartão fidelidade)', cost:'R$ 50 gráfica', gain:'+R$ 300/dia recorrente',
+          desc:'Imprime 200 cartões "Junte 10 carimbos em 30 dias = pote 500ml grátis + ovelhinha pelúcia". Toda venda carimba. Posta no story IG + TV indoor.' },
+        { id:'s2-2', title:'💬 WhatsApp retenção (48h pós-venda)', cost:'R$ 0 · 45min/dia', gain:'+R$ 400/dia',
+          desc:'Toda venda pede WhatsApp ("pra te avisar do sorteio da semana"). 48h depois manda: "Oi [nome], aqui é a Mel da MilkyPot. Vi que provou [sabor]. Hoje tem [novo] com 15% OFF só seu até amanhã: cupom VOLTA15". Cria cupom VOLTA15 -15% no PDV.' },
+        { id:'s2-3', title:'🐑 "Quarta da Ovelhinha" 14h-17h', cost:'R$ 0', gain:'+R$ 300/quarta',
+          desc:'Toda quarta das 14-17h: 2 milkshakes P por R$ 14,99 (era R$ 19,98). Divulga TV indoor + stories segunda+terça. Pega horário morto e enche.' },
+        { id:'s2-4', title:'🎯 Subir Campanha Meta Ads Retargeting (R$10/dia)', cost:'R$ 70/sem', gain:'+R$ 500/sem',
+          desc:'Custom Audience: visitantes do site últimos 30 dias. Criativo com cupom PRIMEIRA10. Detalhes na seção Posts Pagos.' },
+        { id:'s2-5', title:'🤝 Trocar cupons com 5 lojas vizinhas', cost:'R$ 60 gráfica', gain:'+R$ 400–700/dia',
+          desc:'Cacau Show, Hering, ótica, pet shop, salão. Cliente delas leva cupom seu (R$5 OFF) e vice-versa. Imprime 1000 cupons cruzados (R$60). Vira 5 canais gratuitos de aquisição.' },
+        { id:'s2-6', title:'🎁 Produto secreto "Ovelhinha de Pijama"', cost:'R$ 0', gain:'+R$ 200/dia (viral)',
+          desc:'Cria off-menu: pote 200ml + brigadeiro derretido quente + canela. NÃO está no cardápio. Só quem perguntar "tem o secreto?" ganha. Posta UMA dica por dia no story. Vira buzz no TikTok.' }
+    ],
+    delivery: [
+        { id:'d1', title:'📱 Setup iFood (cadastro)', cost:'R$ 0 + 27% comissão', gain:'+R$ 300–800/dia',
+          desc:'Acessa portal.ifood.com.br → cadastra como parceiro. Sobe os 44 produtos com preços DELIVERY (já configurados no seu cardápio, ex: Milkshake P R$ 11,49 / M R$ 19,99 / G R$ 24,99 / GG R$ 34,99). Fotos via celular.' },
+        { id:'d2', title:'🛵 Configurar Uber Direct (próprio motoboy)', cost:'R$ 0 setup', gain:'+R$ 200/dia',
+          desc:'Já tem código no projeto. Vai em Configurações → Uber Direct → ativa. Permite delivery direto pelo seu cardápio (milkypot.com/cardapio.html) sem comissão alta.' },
+        { id:'d3', title:'🛋️ Criar Combo "Sofá Frio" no iFood', cost:'R$ 0', gain:'+R$ 750/noite (sex/sáb)',
+          desc:'Combo exclusivo iFood: 2 Milkshakes M (440ml cada) + 2 colheres + bilhetinho manuscrito "boa noite de filme" por R$ 39,99 + FRETEGRATIS. Mira casais 20-35 sexta/sábado 20-23h.' },
+        { id:'d4', title:'📢 Boost iFood R$ 10/dia (primeiro mês)', cost:'R$ 70/sem', gain:'+R$ 400/sem',
+          desc:'No app iFood Gestor → ativa Boost. Aparece destacado por R$10/dia. Vale na fase de awareness (primeiros 30 dias).' },
+        { id:'d5', title:'📣 Postar story "Agora tem delivery!"', cost:'R$ 0', gain:'awareness',
+          desc:'Quando iFood/Uber Direct estiverem ativos, faz 1 story diário mostrando o motoboy saindo, embalagem, etc. Por 7 dias seguidos pra fixar.' }
+    ],
+    parcerias: [
+        { id:'p1', title:'🎬 Cinema Muffato — 15% OFF com ingresso', cost:'R$ 0', gain:'+R$ 500/dia (sex/sab)',
+          desc:'Bate na gerência. Proposta: cliente do cinema mostra ingresso do dia, ganha 15% no MilkyPot. Você expõe trailer/poster do filme no balcão. Cupom CINEMA15.' },
+        { id:'p2', title:'☕ Cafeteria vizinha — combo "afogato"', cost:'R$ 0', gain:'+R$ 200/dia',
+          desc:'Se tem cafeteria no shopping: parceria "Espresso + Sorvete de baunilha por R$ 12 — afogato MilkyPot". Você fornece bola, eles cobram. Você lucra os R$ 4 do sorvete sem trabalho.' },
+        { id:'p3', title:'🏃 Academia do shopping — "Açaí pós-treino"', cost:'R$ 0', gain:'+R$ 300/dia',
+          desc:'Academia distribui voucher seu pros alunos: "Açaí 300ml R$ 9,99 com voucher (-30%)". Posicionamento "pós-treino, recuperação".' },
+        { id:'p4', title:'💇 Salão / Estética — cupom de espera', cost:'R$ 0', gain:'+R$ 150/dia',
+          desc:'Salões têm clientes esperando 30-60min. Você imprime cupons "Enquanto espera, pega um milkshake P por R$ 7 (-R$3) no MilkyPot". Salão entrega.' },
+        { id:'p5', title:'👶 Loja infantil / brinquedos — combo família', cost:'R$ 0', gain:'+R$ 200/dia',
+          desc:'Cliente da loja infantil ganha "casquinha grátis na compra de qualquer milkshake M+ no MilkyPot". Pais sempre cedem ao "vamos no MilkyPot agora?" da criança.' }
+    ]
+};
+
+// 7 POSTS ORGÂNICOS
+const postsOrganicos = [
+    { date:'2026-05-11', day:'DOM', platform:'TikTok + IG Reels', tipo:'URGÊNCIA',
+      hook:'"POV: tá fazendo 14°C em Londrina e essa sorveteria aqui no Muffato Quintino tá VAZIA…"',
+      script:'Câmera correndo pelo corredor vazio. Mostra freezer cheio. Zoom no preço. Texto: "ATÉ 22H HOJE: AÇAÍ 300ML R$9,99". Termina com aceno bobo. 15s.',
+      audio:'Trend "oh no oh no no no" (versão remix) ou áudio original "socorrooo"',
+      cta:'Vem AGORA. Aberto até 22h. Piso L1.',
+      tags:'#londrina #londrinapr #muffatoquintino #milkypot #fyp #pravoce' },
+    { date:'2026-05-12', day:'SEG', platform:'TikTok', tipo:'EDUCATIVO VIRAL',
+      hook:'"Por que açaí no frio é MELHOR que sopa (cientificamente errado mas vou explicar)"',
+      script:'Texto grande na tela. Frame 1: "Sopa = quente = você sua = fica com mais frio depois". Frame 2: "Açaí = gordura boa do coco = corpo gera calor REAL". Frame 3 (close tigela): "+ banana + granola = combustível de inverno". Come uma colherada exagerada. 25s.',
+      audio:'Trend "actually…" (voz robótica) ou "Murder on the Dancefloor" sped up',
+      cta:'Açaí 300ml R$ 12,90 essa semana. MilkyPot Muffato Quintino.',
+      tags:'#acai #acainofrio #londrina #muffatoquintino #milkypot #curiosidade #fyp' },
+    { date:'2026-05-13', day:'TER', platform:'IG Reels + TikTok', tipo:'BASTIDORES (alto share)',
+      hook:'"Abrimos faz 17 dias. Hoje vendemos R$ 200. Vou ser honesto:"',
+      script:'Você fala direto pra câmera, sem corte. "Gente, vou ser honesto. Inverno chegou na semana que abrimos. Tô aqui sozinho. Tem buffet a R$ 5,99, açaí, milkshake gigante por R$ 9,99 esta semana… se você tá no Muffato, sobe aqui. Nem que seja pra dar oi." Mostra loja vazia + a placa. 20s.',
+      audio:'Áudio ORIGINAL (vira som da loja — outros podem usar depois)',
+      cta:'Tô aberto até 22h. Vem dar oi. Piso L1, perto da praça.',
+      tags:'#pequenoempreendedor #londrina #muffatoquintino #milkypot #bastidores #sorveteria #fyp' },
+    { date:'2026-05-14', day:'QUA', platform:'TikTok', tipo:'FRIO A FAVOR',
+      hook:'"Testei comer sorvete a 12°C. Não foi o que esperava."',
+      script:'Você SAI do shopping com casaco grosso, na rua frio (respiração condensa). Pega o sorvete, dá uma mordida, faz cara de surpresa. Texto: "Plot twist: derrete MAIS DEVAGAR. Você aproveita MAIS." Volta correndo pra loja "tá frio demais kkkk". 20s.',
+      audio:'"Aaa que delicia cara" (trend Eduardo Costa) ou "It\'s giving…"',
+      cta:'Milkshake P R$ 9,99 essa semana. Vem aquecer com sorvete (sim, leu certo).',
+      tags:'#sorvetenofrio #londrina #milkypot #muffatoquintino #frio #pravoce' },
+    { date:'2026-05-15', day:'QUI', platform:'IG Reels + TikTok', tipo:'LOCAL HARDCORE',
+      hook:'"Coisas que SÓ quem mora em Londrina entende #3:"',
+      script:'Texto rápido, corte seco. "1. Chove 4 estações no mesmo dia". "2. UEL fechada de novo". "3. Tem sorveteria nova no Muffato Quintino e ninguém te contou". Mostra a loja com seta gigante apontando. 15s.',
+      audio:'Trend "things in [cidade] that just hit different" (instrumental lo-fi)',
+      cta:'Conta pra um londrinense. MilkyPot Muffato Quintino, piso L1.',
+      tags:'#londrina #londrinapr #uel #muffato #milkypot #zonasul #londrinense' },
+    { date:'2026-05-16', day:'SEX', platform:'TikTok', tipo:'FRIO + URGÊNCIA SEXTA',
+      hook:'"Sexta-feira fria em Londrina = desculpa pra ficar em casa OU…"',
+      script:'Split screen. Lado A: pessoa em casa no cobertor, triste. Lado B: pessoa rindo na MilkyPot com açaí + amigos. Transição rápida. Texto final: "Buffet R$ 5,99/100g. Aberto até 22h. Muffato Quintino." 25s.',
+      audio:'"Espresso" Sabrina Carpenter sped up ou "Aquele 1%" trend',
+      cta:'Marca a amiga que tá enrolando pra sair. Hoje só.',
+      tags:'#sextou #londrina #muffatoquintino #milkypot #programadesexta #fyp' },
+    { date:'2026-05-17', day:'SAB', platform:'IG Reels + TikTok', tipo:'FAMÍLIA/SHOPPING SÁBADO',
+      hook:'"Pais de Londrina: o que fazer com criança em dia FRIO de sábado?"',
+      script:'Você lista em texto grande: "Cinema (caro). Parque (chovendo). Casa (gritaria)." Pausa. "OU: traz pro Muffato. Buffet de sorvete 100g R$ 5,99. Criança monta o próprio." Mostra criança rindo montando tigela colorida. 20s.',
+      audio:'Trend "mãe de Londrina" ou áudio infantil cute',
+      cta:'Sábado é dia de MilkyPot. Muffato Quintino, piso L1.',
+      tags:'#maesdelondrina #paisdelondrina #programaemfamilia #muffatoquintino #milkypot #londrina' }
+];
+
+// 3 CAMPANHAS META ADS
+const postsPagos = [
+    {
+        nome:'CAMPANHA 1 — TRÁFEGO LOCAL',
+        budget:'R$ 15/dia (~R$ 450/mês)',
+        objetivo:'Tráfego (Cliques no link)',
+        publico:'Raio 3km do Muffato Quintino · 18-45 anos · Interesses: sorvete, açaí, doces, shopping',
+        posicionamento:'Instagram Reels + Stories APENAS (economiza CPM)',
+        criativo:'Vídeo 15s vertical — Close ASMR colher raspando açaí com granola, vapor da casquinha, pan no buffet self-service, casal rindo, logo MilkyPot.',
+        headline:'Açaí no Muffato Quintino, Londrina',
+        primary:'FRIO BATEU? Açaí 400ml + 3 acomp. por R$ 15,99 só no MilkyPot, térreo do Muffato Quintino. Vem provar.',
+        cta:'Saiba mais',
+        url:'https://milkypot.com/cardapio.html?utm=meta_trafego'
+    },
+    {
+        nome:'CAMPANHA 2 — RETARGETING (visitantes que não compraram)',
+        budget:'R$ 10/dia (~R$ 300/mês)',
+        objetivo:'Conversões (evento ViewContent)',
+        publico:'Custom Audience: visitantes site 30 dias (Pixel 1630338818189805). Excluir: Purchasers 180d',
+        posicionamento:'Advantage+ (automático)',
+        criativo:'Imagem ou vídeo curto com cupom amarelo grande PRIMEIRA10. Foto do milkshake com cobertura. Ovelhinha segurando plaquinha.',
+        headline:'Voltou? Ganha 10% no seu 1° pote',
+        primary:'ESQUECEU A GENTE? Usa PRIMEIRA10 no caixa e leva 10% off no MilkyPot, térreo Muffato Quintino. Só hoje e amanhã.',
+        cta:'Saiba mais',
+        url:'https://milkypot.com/cardapio.html?cupom=PRIMEIRA10&utm=meta_retarget'
+    },
+    {
+        nome:'CAMPANHA 3 — LOOKALIKE (novos clientes parecidos com atuais)',
+        budget:'R$ 5/dia (~R$ 150/mês)',
+        objetivo:'Tráfego',
+        publico:'Lookalike 1% Brasil (source: site visitors 90d) refinado pra Londrina + cidades raio 30km (Cambé, Ibiporã, Rolândia)',
+        posicionamento:'Reels + Feed IG',
+        criativo:'Vídeo 9s vertical — close ASMR da colher, som amplificado, texto overlay: "POV: você descobriu o açaí mais cremoso de Londrina"',
+        headline:'O açaí que Londrina tava esperando',
+        primary:'GENTE PRECISO CONTAR. Abriu uma sorveteria/açaiteria no Muffato Quintino que tá viciante. Self-service, monta tudo.',
+        cta:'Saiba mais',
+        url:'https://milkypot.com/cardapio.html?utm=meta_lookalike'
+    }
+];
+
+// ========= STATUS PERSISTÊNCIA =========
+function getStatus() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch(_) { return {}; }
+}
+function setStatus(id, val) {
+    var s = getStatus(); s[id] = val;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(_){}
+    renderProgress();
+}
+
+// ========= RENDER AÇÕES =========
+function renderActions(category, containerId) {
+    var status = getStatus();
+    var html = '';
+    actions[category].forEach(function(a){
+        var st = status[a.id] || 'pendente';
+        var stClass = st === 'done' ? 'done' : (st === 'doing' ? 'doing' : '');
+        var stIcon = st === 'done' ? '✓' : (st === 'doing' ? '⏳' : '');
+        html += '<div class="action-item ' + stClass + '" data-id="' + a.id + '">' +
+            '<div class="action-checkbox ' + stClass + '" onclick="window._toggleAction(\'' + a.id + '\')">' + stIcon + '</div>' +
+            '<div class="action-body">' +
+                '<div class="action-title">' + a.title + '</div>' +
+                '<div class="action-meta"><span>💰 ' + a.cost + '</span></div>' +
+                '<div class="action-desc">' + a.desc + '</div>' +
+                '<div class="action-rewards"><span class="gain">📈 ' + a.gain + '</span></div>' +
+            '</div>' +
+        '</div>';
+    });
+    document.getElementById(containerId).innerHTML = html;
+}
+
+window._toggleAction = function(id) {
+    var status = getStatus();
+    var cur = status[id] || 'pendente';
+    var next = cur === 'pendente' ? 'doing' : (cur === 'doing' ? 'done' : 'pendente');
+    setStatus(id, next);
+    // Re-render todas as seções pra refletir
+    Object.keys(actions).forEach(function(k){
+        var containerId = 'actions-' + k;
+        if (document.getElementById(containerId)) renderActions(k, containerId);
+    });
+};
+
+function renderPostsOrganicos() {
+    var html = '';
+    postsOrganicos.forEach(function(p, i){
+        var isToday = p.date === today;
+        var isPast = p.date < today;
+        var dateClass = isToday ? 'today' : '';
+        var dateLabel = isToday ? '🔥 HOJE ' + p.date.split('-').reverse().join('/') :
+                         isPast ? '⏰ ' + p.date.split('-').reverse().join('/') + ' (passou)' :
+                                  p.date.split('-').reverse().join('/');
+        html += '<div class="post-card ' + dateClass + '">' +
+            '<div class="post-header">' +
+                '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+                    '<span class="post-date">' + p.day + ' · ' + dateLabel + '</span>' +
+                    '<span class="post-platform">' + p.platform + '</span>' +
+                    '<span class="post-platform" style="background:#FEF3C7;color:#92400E">' + p.tipo + '</span>' +
+                '</div>' +
+            '</div>' +
+            '<div class="post-hook">' + p.hook + '</div>' +
+            '<div class="post-script"><strong>📝 Roteiro:</strong> ' + p.script + '</div>' +
+            '<div class="action-meta"><span>🎵 ' + p.audio + '</span></div>' +
+            '<div class="action-meta"><span>📢 CTA: ' + p.cta + '</span></div>' +
+            '<div class="post-tags">' + p.tags + '</div>' +
+            '<div style="margin-top:8px"><button class="copy-btn" onclick="window._copyPostText(this, ' + i + ')">📋 Copiar legenda completa</button></div>' +
+        '</div>';
+    });
+    document.getElementById('postsOrganicos').innerHTML = html;
+}
+
+window._copyPostText = function(btn, idx) {
+    var p = postsOrganicos[idx];
+    var text = p.hook + '\n\n' + p.cta + '\n\n' + p.tags;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function(){
+            btn.textContent = '✓ Copiado!';
+            btn.classList.add('copied');
+            setTimeout(function(){ btn.textContent = '📋 Copiar legenda completa'; btn.classList.remove('copied'); }, 2000);
+        });
+    } else { alert('Copia manualmente:\n\n' + text); }
+};
+
+function renderPostsPagos() {
+    var html = '';
+    postsPagos.forEach(function(c){
+        html += '<div class="ad-card">' +
+            '<h3>' + c.nome + '</h3>' +
+            '<div class="ad-field"><label>💰 Orçamento</label><div class="value">' + c.budget + '</div></div>' +
+            '<div class="ad-field"><label>🎯 Objetivo</label><div class="value">' + c.objetivo + '</div></div>' +
+            '<div class="ad-field"><label>👥 Público</label><div class="value">' + c.publico + '</div></div>' +
+            '<div class="ad-field"><label>📱 Posicionamento</label><div class="value">' + c.posicionamento + '</div></div>' +
+            '<div class="ad-field"><label>🎨 Criativo</label><div class="value">' + c.criativo + '</div></div>' +
+            '<div class="ad-field"><label>📌 Headline (até 40 chars)</label><div class="value" style="background:#FEF3C7"><strong>' + c.headline + '</strong> <button class="copy-btn" style="margin-left:8px" onclick="window._copyAdText(this, \'' + c.headline.replace(/'/g, "\\'") + '\')">📋</button></div></div>' +
+            '<div class="ad-field"><label>📝 Texto principal (até 125 chars)</label><div class="value" style="background:#FEF3C7"><strong>' + c.primary + '</strong> <button class="copy-btn" style="margin-left:8px" onclick="window._copyAdText(this, \'' + c.primary.replace(/'/g, "\\'") + '\')">📋</button></div></div>' +
+            '<div class="ad-field"><label>🔘 Botão CTA</label><div class="value">' + c.cta + '</div></div>' +
+            '<div class="ad-field"><label>🔗 URL destino</label><div class="value" style="font-family:monospace;font-size:0.8rem">' + c.url + '</div></div>' +
+        '</div>';
+    });
+    document.getElementById('postsPagos').innerHTML = html;
+}
+
+window._copyAdText = function(btn, text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function(){
+            var orig = btn.textContent;
+            btn.textContent = '✓';
+            btn.classList.add('copied');
+            setTimeout(function(){ btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+        });
+    } else { alert('Copia:\n\n' + text); }
+};
+
+function renderProgress() {
+    var status = getStatus();
+    var allActions = [].concat(actions.hoje, actions.semana1, actions.semana2, actions.delivery, actions.parcerias);
+    var done = allActions.filter(function(a){ return status[a.id] === 'done'; }).length;
+    var pct = allActions.length > 0 ? Math.round((done / allActions.length) * 100) : 0;
+    document.getElementById('kpiProgress').textContent = pct + '%';
+    document.getElementById('kpiProgressBar').style.width = pct + '%';
+    document.getElementById('actionsCount').textContent = done + ' de ' + allActions.length + ' feitos';
+}
+
+// ========= TABS =========
+document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+        document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+        document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+        btn.classList.add('active');
+        document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
+});
+
+// ========= INIT =========
+renderActions('hoje', 'actions-hoje');
+renderActions('semana1', 'actions-semana1');
+renderActions('semana2', 'actions-semana2');
+renderActions('delivery', 'actions-delivery');
+renderActions('parcerias', 'actions-parcerias');
+renderPostsOrganicos();
+renderPostsPagos();
+renderProgress();
+
+})();
+</script>
+
+</body>
+</html>
