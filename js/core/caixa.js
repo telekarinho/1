@@ -114,7 +114,9 @@ const Caixa = (function () {
 
     function loadMovements(franchiseId) {
         if (typeof DataStore === 'undefined' || !DataStore.getCollection) return [];
-        return DataStore.getCollection(COLLECTION, franchiseId) || [];
+        return (DataStore.getCollection(COLLECTION, franchiseId) || []).filter(function(m) {
+            return m && !m.deleted;
+        });
     }
 
     /* ============================================
