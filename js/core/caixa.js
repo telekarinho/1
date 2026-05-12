@@ -164,6 +164,57 @@ const Caixa = (function () {
         });
     }
 
+    function localDateKeyFrom(value) {
+        if (!value) return '';
+        try {
+            const d = new Date(value);
+            if (isNaN(d.getTime())) return '';
+            return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+                .toISOString().slice(0, 10);
+        } catch (_) {
+            return '';
+        }
+    }
+
+    function getMonthlySalesSummary(franchiseId, refDate) {
+        const ref = refDate ? new Date(refDate) : new Date();
+        const month = ref.getMonth();
+        const year = ref.getFullYear();
+        const seenOrders = {};
+        let total = 0;
+        let count = 0;
+
+        loadMovements(franchiseId).forEach(function(m) {
+            if (!m || m.deleted || m.type !== 'venda') return;
+            const key = localDateKeyFrom(m.createdAt) || m.dateKey || '';
+            if (!key) return;
+            const parts = key.split('-');
+            if (Number(parts[0]) !== year || Number(parts[1]) !== month + 1) return;
+
+            total += Number(m.valor || 0);
+            const orderKey = m.orderId || m.id;
+            if (orderKey && !seenOrders[orderKey]) {
+                seenOrders[orderKey] = true;
+                count += 1;
+            }
+        });
+
+        return {
+            vendasMes: Math.round(total * 100) / 100,
+            pedidosMes: count
+        };
+    }
+
+    function getTrocoProximoDia(valorContado, extras) {
+        const br = extras && extras.breakdown;
+        if (br && br.dinheiro_troco !== null && br.dinheiro_troco !== undefined) {
+            const v = Number(br.dinheiro_troco);
+            if (!isNaN(v) && v >= 0) return Math.round(v * 100) / 100;
+        }
+        const contado = Number(valorContado || 0);
+        return Math.round(contado * 100) / 100;
+    }
+
     function getTurnoState(franchiseId, dateKey) {
         dateKey = dateKey || todayKey();
         const all = loadMovements(franchiseId);
@@ -334,6 +385,7 @@ const Caixa = (function () {
                 } catch(_) {}
                 return null;
             })(),
+            conferencia: partial.conferencia || null,
             // Identificador do dispositivo (PC vs Mobile + hash curto). Permite
             // mostrar no chip "caixa aberto no Mobile-A4B7" quando outro PC ve.
             deviceId: getDeviceId(),
@@ -522,65 +574,10 @@ const Caixa = (function () {
             return { success: false, error: '⚠️ Diferença maior que R$ 5,00 exige justificativa obrigatória.', diff: diff, esperado: st.saldoEsperadoDinheiro };
         }
 
-        // ===== AUTO-SANGRIA pra TROCO PADRAO R$ 200 =====
-        // Regra do dono: troco do dia seguinte = sempre R$ 200 em dinheiro.
-        // O que passar disso vira SANGRIA automatica antes do fechamento,
-        // MAS exige CUSTODIANTE (quem fisicamente leva o dinheiro) — pode
-        // ser pessoa diferente do operador (gerente, franqueado, etc).
-        //
-        // FLUXO A — Custodia sincrona com PIN do destinatario:
-        //   1. Detecta excesso > R$ 200
-        //   2. Cria sangria com withdrawal: { status: 'pending', ... }
-        //   3. UI modal mostra "Quem retirou?" + PIN do destinatario
-        //   4. confirmSangriaWithdrawal CF valida e marca como 'confirmed'
-        //   5. Sem confirmacao, sangria fica pendente (audit alerta)
-        const TROCO_PADRAO = 200;
+        // O fechamento deve registrar o dinheiro REAL contado na gaveta.
+        // Sangria/deposito precisam ser lancados explicitamente; nao forcar
+        // troco padrao aqui, pois isso mascara o valor fisico informado.
         let autoSangriaInfo = null;
-        if (valorContado > TROCO_PADRAO + 0.01) {
-            const excesso = Math.round((valorContado - TROCO_PADRAO) * 100) / 100;
-            const operador = sessionInfo();
-            const sg = createMovement(franchiseId, {
-                type: 'sangria',
-                valor: excesso,
-                descricao: 'Sangria automatica (troco fica em R$ ' + TROCO_PADRAO.toFixed(2) + ')',
-                motivo: 'auto-sangria fechamento — excesso sobre troco padrao'
-            });
-            if (sg.success) {
-                // Marca a sangria como aguardando confirmacao de custodia.
-                // O movimento ja foi criado (imutavel), mas adicionamos
-                // metadata 'withdrawalStatus: pending' no MESMO doc/array
-                // pra ser consultavel sem nova colecao no client.
-                try {
-                    const fins = DataStore.getCollection(COLLECTION, franchiseId) || [];
-                    const idx = fins.findIndex(function(m){ return m && m.id === sg.move.id; });
-                    if (idx !== -1) {
-                        fins[idx].withdrawalStatus = 'pending';
-                        fins[idx].withdrawalRequiresCustody = true;
-                        fins[idx].operadorOriginalUid = operador.id;
-                        fins[idx].operadorOriginalName = operador.name;
-                        DataStore.setCollection(COLLECTION, franchiseId, fins);
-                    }
-                } catch(_) {}
-                try {
-                    audit('CAIXA_AUTO_SANGRIA_FECHAMENTO', franchiseId, {
-                        valor: excesso,
-                        valorContadoInicial: valorContado,
-                        trocoFinal: TROCO_PADRAO,
-                        sangriaId: sg.move.id,
-                        custodiaPendente: true
-                    });
-                } catch(_) {}
-                // Expoe pro caller mostrar modal de confirmacao
-                autoSangriaInfo = {
-                    sangriaId: sg.move.id,
-                    valor: excesso,
-                    operadorUid: operador.id,
-                    operadorName: operador.name
-                };
-                // valorContado vira o troco padrao (refletido no resumo do email)
-                valorContado = TROCO_PADRAO;
-            }
-        }
 
         const r = createMovement(franchiseId, {
             type: 'fechamento',
@@ -602,27 +599,12 @@ const Caixa = (function () {
             Motivacional.toastCaixaFechado();
         }
 
-        // ===== CALCULA VENDAS DO MES =====
-        // Cliente pediu: mostrar "vendeu esse mes tantas vendas valor X"
-        // no email do fechamento (em vez de comissao+acumulado). Calcula
-        // aqui (mais simples que server) usando pedidos ja em DataStore.
-        let vendasMes = 0, pedidosMes = 0;
-        try {
-            const ordersAll = DataStore.getCollection('orders', franchiseId) || [];
-            const now = new Date();
-            const mesAtual = now.getMonth();
-            const anoAtual = now.getFullYear();
-            ordersAll.forEach(function(o) {
-                if (!o || o.deleted || o.status === 'cancelado') return;
-                const d = new Date(o.createdAt || o.date || 0);
-                if (isNaN(d.getTime())) return;
-                if (d.getMonth() !== mesAtual || d.getFullYear() !== anoAtual) return;
-                vendasMes += Number(o.total || 0);
-                pedidosMes += 1;
-            });
-        } catch(e) {
-            console.warn('Falha calculando vendas do mes:', e);
-        }
+        // ===== CALCULA VENDAS REAIS DO MES =====
+        // Usa movimentos financeiros do caixa, nao a colecao orders, para nao
+        // misturar pedido teste/rascunho/legado no relatorio de fechamento.
+        const monthSummary = getMonthlySalesSummary(franchiseId, new Date());
+        const vendasMes = monthSummary.vendasMes;
+        const pedidosMes = monthSummary.pedidosMes;
 
         // Trigger Automated Report via Cloud Functions + diagnostico
         // Bug reportado: email nao chegou ao fechar caixa do "usuario teste".
@@ -647,7 +629,7 @@ const Caixa = (function () {
                     fechamentoDate: new Date().toISOString(),
                     vendasMes: vendasMes,
                     pedidosMes: pedidosMes,
-                    trocoProximoDia: TROCO_PADRAO,
+                    trocoProximoDia: getTrocoProximoDia(valorContado, extras),
                     // Modo TREINAMENTO: cada ciclo envia email real (sem dedup 5min)
                     // pra owner conseguir validar fluxo de envio repetidas vezes.
                     forceResend: training === true,
@@ -658,6 +640,7 @@ const Caixa = (function () {
                     vendasDinheiro: st.vendasDinheiro || 0,
                     totalSangria: st.totalSangria || 0,
                     totalReforco: st.totalReforco || 0,
+                    totalPedidos: st.vendas.length,
                     breakdownConferido: extras || null,
                     esperado: extras && extras.esperado,
                     conferido: extras && extras.conferido,
@@ -1561,7 +1544,8 @@ const Caixa = (function () {
             // vai ficar pra amanha (porque ainda nao saiu).
             // Troco vai como informacao auxiliar pro relatorio, nao no calculo.
             const valDinheiroTotal = cardState.dinheiro.value;
-            const dinTroco = Number(parseBRL(data.dinheiro_troco) || 0);
+            const trocoRaw = String(data.dinheiro_troco || '').trim();
+            const dinTroco = trocoRaw ? Number(parseBRL(trocoRaw) || 0) : null;
             const valorContado = +valDinheiroTotal.toFixed(2);
 
             // Justificativa de horario
@@ -2209,30 +2193,23 @@ const Caixa = (function () {
             .reduce(function(s,m){ return s + Number(m.valor || 0); }, 0);
         const faturamentoBruto = vendas.reduce(function(s,m){ return s + Number(m.valor || 0); }, 0);
         const saldoEsperado = valorAbertura + vendasDinheiro + totalReforco - totalSangria;
-        const valorContado = Number(ultimo.valor || 0);
+        const extras = ultimo.conferencia || null;
+        const valorContado = Number(
+            (extras && extras.breakdown && extras.breakdown.dinheiro_total_gaveta != null)
+                ? extras.breakdown.dinheiro_total_gaveta
+                : (ultimo.valor || 0)
+        );
 
         const porMetodoEsperado = {};
         vendas.forEach(function(v){
-            const k = v.metodo || 'outros';
+            const k = normalizeMetodo(v.metodo || 'outros');
             porMetodoEsperado[k] = (porMetodoEsperado[k] || 0) + Number(v.valor || 0);
         });
 
-        // Vendas do mes (mesma logica do closeShift)
-        let vendasMes = 0, pedidosMes = 0;
-        try {
-            const ordersAll = DataStore.getCollection('orders', franchiseId) || [];
-            const now = new Date();
-            const mesAtual = now.getMonth();
-            const anoAtual = now.getFullYear();
-            ordersAll.forEach(function(o){
-                if (!o || o.deleted || o.status === 'cancelado') return;
-                const d = new Date(o.createdAt || o.date || 0);
-                if (isNaN(d.getTime())) return;
-                if (d.getMonth() !== mesAtual || d.getFullYear() !== anoAtual) return;
-                vendasMes += Number(o.total || 0);
-                pedidosMes += 1;
-            });
-        } catch(_) {}
+        // Vendas reais do mes: movimentos financeiros do caixa, nao orders.
+        const monthSummary = getMonthlySalesSummary(franchiseId, ultimo.createdAt || new Date());
+        const vendasMes = monthSummary.vendasMes;
+        const pedidosMes = monthSummary.pedidosMes;
 
         const session = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
         const payload = {
@@ -2252,7 +2229,11 @@ const Caixa = (function () {
             totalPedidos: vendas.length,
             vendasMes: vendasMes,
             pedidosMes: pedidosMes,
-            trocoProximoDia: 200,
+            trocoProximoDia: getTrocoProximoDia(valorContado, extras),
+            breakdownConferido: extras || null,
+            esperado: extras && extras.esperado,
+            conferido: extras && extras.conferido,
+            breakdown: extras && extras.breakdown,
             sangrias: sangrias,
             reforcos: reforcos,
             // Forca novo envio mesmo dentro da janela dedup 5min
