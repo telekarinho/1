@@ -2,6 +2,52 @@
 
 ---
 
+## Ciclo #199 — 2026-05-12
+
+**Área:** Conversão — Script pivot narrativo "Potinho Junino acabou → Potinho Caramelado chegou"
+
+**Contexto:** Ciclo #198 prescreveu criação de script de pivot para o cliente no momento pós-30/06. Diagnóstico confirmou: `encerramento-potinho-junino-30jun.md`, `reveal-potinho-caramelado-01jul.md` e `consolidacao-potinho-caramelado-02-07jul.md` existem, mas nenhum deles tem os scripts de atendimento real — o que falar no balcão, como responder no WA, como atualizar keyword automática, como responder comentários nos posts juninos após o encerramento.
+
+**O que pesquisou/analisou:**
+- Leitura de `encerramento-potinho-junino-30jun.md` — confirma que não há scripts de atendimento/pivot
+- Leitura de `reveal-potinho-caramelado-01jul.md` — confirma foco no reveal, não no redirecionamento de clientes que perguntam pelo Junino
+- Grep de "pivot", "script", "atendente", "balcão" nos três arquivos — zero ocorrências
+- Mapeamento de 5 canais onde o cliente pode pedir Junino após 30/06: WA automático (keyword), WA manual, PDV presencial, comentários Instagram, comentários TikTok
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pivot-junino-para-caramelado.md` | NOVO — 213 linhas — script completo de pivot para 5 canais |
+
+**Detalhes do conteúdo criado:**
+- **Seção 1:** Atualização de auto-resposta WA Business para keyword `JUNINO26` (texto pronto para copiar/colar, instrução passo-a-passo de onde editar no app)
+- **Seção 2:** Script PDV balcão — 3 variantes (padrão, fila rápida, cliente insistente/desapontado)
+- **Seção 3:** Script WA individual — 2 variantes (padrão e para fã recorrente com histórico)
+- **Seção 4:** Templates de resposta para comentários Instagram/TikTok — 3 tons (pedido direto, nostalgia, marcação de amigos)
+- **Seção 5:** Broadcast WA de transição — 01/07 às 09h — "ponte emocional" simultânea ao reveal
+- **Seção 6:** Tabela de decisão rápida (canal × situação × script)
+- **Seção 7:** Checklist de implementação com datas e horários específicos
+- **Seção 8:** Variante "em breve" caso Caramelado não esteja disponível em 01/07
+- **Tabela de integração** com 5 documentos relacionados
+
+**Commit:** `65e1e04`
+
+**Próximo passo sugerido:**
+- **Ciclo #200 (MARCO):** Auto-aprimoramento — releitura completa `belinha/log.md` (199 ciclos) + revisão/atualização `belinha/estrategia.md` com foco em eficiência dos próximos 50 ciclos
+- **Ciclo #201 — UX:** `cardapio.css` (21K) é orphaned desde ciclo #112 — decisão definitiva: Opção A (deletar após confirmar 0 dependências) ou Opção B (integrar ao style.css o que for útil). Ver `belinha/blockers.md` blocker #6
+- **Ciclo #202 — SEO:** Sitemap.xml + meta tags — Google Search Console pendente desde ciclo #148 (operador ainda não executou). Verificar se há ajustes que podem ser feitos no próprio sitemap para facilitar indexação
+- **Ciclo #203 — Concorrentes:** Refetch Johnny + Jhoy (últimas atualizações foram há vários ciclos — verificar campanhas de inverno/julho 2026)
+- **Operador (URGENTE — 30/06 às 23h):** Atualizar keyword `JUNINO26` no WA Business — consultar `pivot-junino-para-caramelado.md` Seção 1
+- **Operador (URGENTE — 01/07 às 08h45):** Preparar lista de broadcast e disparar às 09h — consultar Seção 5
+- **Operador (URGENTE — prazo 25/05):** Google Search Console — solicitar indexação sitemap.xml
+- **Operador (URGENTE — prazo 30/05):** Confirmar ingredientes + naming "Potinho Junino" (afeta preenchimento dos scripts acima)
+- **Operador:** Imprimir script de balcão da Seção 2 e fixar atrás do caixa em 01/07
+
+_Belinha — Ciclo #199 | 2026-05-12_
+
+---
+
 ## Ciclo #198 — 2026-05-11
 
 **Área:** UX (auditoria `js/cardapio.js`) → pivot Conversão (WA Business setup junino)
