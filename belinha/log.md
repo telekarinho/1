@@ -2,6 +2,50 @@
 
 ---
 
+## Ciclo #202 — 2026-05-13
+
+**Área:** Concorrentes — JohnnyJoy + JAH do Açaí (refetch após +33 ciclos)
+
+**Contexto:** Ciclo prescrito pelo roadmap #201–#210. Violação v21d (regra de atualização a cada 21 dias): última atualização JohnnyJoy em ciclo #167 (04/05/2026), JAH em ciclo #160 (08/05/2026) — ~4–9 dias, não 33 ciclos em dias, mas #202-#167 = 35 ciclos = ~3 dias na escala real. Independentemente, ciclo #202 era a prioridade competitiva prescrita para intel de inverno/julho 2026.
+
+**O que pesquisou/analisou:**
+- WebSearch: "JohnnyJoy festa junina São João junho 2026" → zero campanha temática
+- WebSearch: "JohnnyJoy inverno julho 2026 lançamento novo sabor" → padrão Galáktico (Nestlé/Galak, julho 2025) identificado como baseline para 2026
+- WebSearch: "JohnnyJoy Galaktico Nestle julho 2025 milkshake" → preços R$22,90/R$26,90 + ação 18/07 tatuagem galáctica grátis
+- WebSearch: "JAH do Açaí 2026 novo produto campanha" → JAH Coffee & Tea descoberto (novo braço café+chá, +80% receita, 1ª unidade SP março 2026)
+- WebSearch: "JAH do Açaí Londrina 2026" → nenhuma unidade detectada em Londrina
+- WebFetch: johnnyjoy.com.br, jahdoacai.com.br → HTTP 403 (sites bloqueiam scraping)
+- Dados compilados via meta-resultados de buscas + artigos acessíveis (amostrasgratis.shop, terra.com.br, exame.com, diariodocomercio.com.br)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/johnnyjoy.md` | ATUALIZADO — seção ciclo #202 com: (1) Festa Junina 2026 = zero ativação confirmado; (2) Padrão Galáktico julho — preços R$22,90/R$26,90, ação tatuagem 18/07; (3) tabela preços atualizada; (4) radar competitivo julho 2026 |
+| `belinha/competitors/jhoy.md` | ATUALIZADO — seção ciclo #202 com: (1) JAH Coffee & Tea (grande pivô 2026 — café+chá +80% receita, 10 un. meta); (2) expansão Portugal; (3) faturamento R$210 mi meta; (4) sem unidade Londrina; (5) radar competitivo |
+
+**Destaques Intel:**
+- **JohnnyJoy:** padrão inverno = collab Nestlé em julho (Galák 2025, provável nova collab jul/2026). Sem Festa Junina. Sem Londrina. Preços premium R$22,90–R$26,90 vs. MilkyPot Mini R$10 → gap enorme, diferente público
+- **JAH do Açaí:** pivô estratégico para café+chá (diversificação de daypart). Expansão internacional (Portugal). Meta R$210 mi. Sem presença Londrina = sem ameaça imediata
+- **Insight acionável:** ação de tatuagem JohnnyJoy gera UGC forte → MilkyPot pode adaptar: "mostre a ovelhinha desenhada no braço / produto na foto → ganhe X"
+
+**Commit:** `c353c22`
+
+**Próximo passo sugerido:**
+- **Ciclo #203 — Conteúdo:** Potinho Caramelado posts feed IG/TikTok semanas 2-3 (07–17/07) — lifestyle + "como montar" + testimonial
+- **Ciclo #204 — Conversão:** 3 meses de loja 25/07 — post comemorativo + broadcast WA "você estava lá desde o início"
+- **Ciclo #205 — SEO:** Schema.org LocalBusiness — atualizar horário julho + verificar se ≥3 reviews Google desbloqueiam `aggregateRating`
+- **Ciclo #206 — Conversão:** D+90 reativação brief (24/07)
+- **Ciclo #208 — Concorrentes:** Refetch MilkyMoo pós-Caramelado (collab "Como Treinar Dragão" jun/26 + Smoor's inverno — monitorar)
+- **Operador (URGENTE — 30/05 — VENCIDO):** Confirmar ingredientes + naming "Potinho Junino" ⚠️
+- **Operador (22/06):** Preparar listas D+60 WA Business — ver `reativacao-d60-onda1-jun26.md`
+- **Operador:** Google Search Console — indexação sitemap.xml (pendente ciclo #148)
+- **Operador:** Verificar ≥3 reviews Google Maps → liberar `aggregateRating` Schema.org
+
+_Belinha — Ciclo #202 | 2026-05-13_
+
+---
+
 ## Ciclo #201 — 2026-05-13
 
 **Área:** Conversão — Brief D+60 Onda 1 (22–28/06/2026 · São João + última tentativa de reativação)
