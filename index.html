@@ -1444,7 +1444,10 @@
             }
 
             window.addEventListener('mp_catalog_updated', function(e) {
-                catalog = e.detail;
+                // Mantém catalog antigo se vier evento vazio (evita zerar UI em race conditions)
+                var incoming = e && e.detail;
+                if (!incoming || (!incoming.sabores && !incoming.bebidas)) return;
+                catalog = incoming;
                 _renderCatalogTabs();
                 var activeTab = document.querySelector('.cat-tab.active');
                 var cat = activeTab ? activeTab.dataset.category : 'ninho';
@@ -1612,6 +1615,17 @@
         };
 
         window.openProductSheet = function(itemId) {
+            // Recovery: se catalog zerou por race, tenta recarregar de DataStore antes de falhar silenciosamente
+            if (!catalog || (!catalog.sabores && !catalog.bebidas)) {
+                try {
+                    var fresh = (typeof DataStore !== 'undefined') ? DataStore.get('catalog_config') : null;
+                    if (fresh && (fresh.sabores || fresh.bebidas)) {
+                        catalog = fresh;
+                    } else if (typeof buildLegacyCatalog === 'function' && typeof CARDAPIO_CONFIG !== 'undefined') {
+                        catalog = buildLegacyCatalog();
+                    }
+                } catch(_) {}
+            }
             if (!catalog) return;
             var item = null;
             if (catalog.bebidas) item = catalog.bebidas.find(function(i) { return i.id === itemId; });
