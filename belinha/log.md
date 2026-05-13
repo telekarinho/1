@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #207 — 2026-05-13
+
+**Área:** UX/Frontend — Banner `#inaugBanner` em `index.html`: fase Potinho Caramelado 01/07–31/07
+
+**Contexto:** O banner do site (`#inaugBanner`) tinha 4 fases codificadas: inauguração (antes/em 25/04), junina teaser (10/05–16/06), junina launch (17/06–29/06) e — nada (banner apagava após 29/06). Com o Potinho Caramelado lançando em 01/07, deixar o banner dark durante todo julho desperdiçava um canal de visibilidade de produto totalmente gratuito. O ciclo #207 foi prescrito no roadmap do #206 exatamente para preparar isso com antecedência.
+
+**O que pesquisou/analisou:**
+- Leu a lógica completa do banner JS (linhas 431–491 de `index.html`)
+- Confirmou que `sessionStorage.getItem('juninaBannerClosed')` era a única chave usada — se o usuário tivesse fechado o banner junino em 29/06 e voltasse em 01/07, o Caramelado ficaria oculto (bug)
+- Leu `belinha/content/reveal-potinho-caramelado-01jul.md` para extrair copy e CTA consistentes com o material de lançamento já produzido
+- Verificou a função `closeBanner()` — estava gravando `juninaBannerClosed` para qualquer fase pós-25/04, inclusive julho
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | ADICIONADO bloco `inCaramelado` (julho/2026) na função `configureBanner()` com copy "NOVIDADE: POTINHO CARAMELADO!" + CTA WA; CORRIGIDO `closeBanner()` para gravar `caramBannerClosed` em julho e `juninaBannerClosed` nos demais meses |
+
+**Detalhes da mudança:**
+- **Nova fase:** `var inCaramelado = (y === 2026 && m === 7)` — cobre 01/07 a 31/07 automaticamente
+- **Copy do banner:** `🍮 NOVIDADE: POTINHO CARAMELADO! · Caramelo + granola + base Ninho · Só na MilkyPot 🐑`
+- **CTA:** "Quero provar! →" → `https://wa.me/5543998042424?text=Olá!%20Quero%20o%20Potinho%20Caramelado!%20🍮`
+- **Chave sessionStorage separada:** `caramBannerClosed` — garante que fechar o banner junino em junho não suprime o banner de julho
+- **Fases anteriores:** intactas — nenhuma regressão na lógica de inauguração, junina teaser ou junina launch
+- **Após 31/07:** banner retorna a `display:none` automaticamente (próxima campanha deverá ser adicionada antes)
+
+**Commit:** `7afdb1f`
+
+**Próximo passo sugerido:**
+- **Ciclo #208 — Concorrentes:** Refetch MilkyMoo pós-Caramelado + collab "Como Treinar Dragão" (foi citada em ciclos anteriores como encerrada em mai/26) + intel pré-julho (promoções de férias escolares)
+- **Ciclo #209 — Conteúdo:** Dia dos Pais 09/08 — posts feed IG/TikTok + Stories (WA standalone `whatsapp-pais-2026.md` já existe; falta o conteúdo visual/narrativo)
+- **Ciclo #210 — UX:** Após 31/07, definir próxima fase do banner (Dia dos Pais 09/08? Produto outono/inverno? Manter dark até agosto?)
+- **Operador (URGENTE):** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+- **Operador:** Confirmar horário julho — mesmo ou diferente? (Blocker #8)
+- **Operador:** Google Search Console — solicitar indexação sitemap.xml (pendente ciclo #148)
+
+_Belinha — Ciclo #207 | 2026-05-13_
+
+---
+
 ## Ciclo #206 — 2026-05-13
 
 **Área:** Conversão — Brief D+90 reativação Onda 1 (clientes inauguração, 21–24/jul/2026)
