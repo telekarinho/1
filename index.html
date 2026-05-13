@@ -1546,8 +1546,23 @@
                 var isHighlight = it.isHighlight || it.highlight;
                 var badgeHtml = isHighlight ? '<span class="card-badge badge-popular">⭐ Popular</span>' : '';
 
+                // Cardapio público (index.html) = canal delivery → usa precoDelivery
+                // (loja + ~30% Uber), consistente com o modal de tamanho (linha ~1641)
                 var displayPrice, priceLabel;
-                if (typeof it.price === 'number') {
+                var deliveryPrice = 0;
+                if (it._v2 && it._v2.variantes && it._v2.variantes.length) {
+                    var dPrices = it._v2.variantes
+                        .map(function(v){ return Number(v.precoDelivery) || 0; })
+                        .filter(function(p){ return p > 0; });
+                    if (dPrices.length) deliveryPrice = Math.min.apply(null, dPrices);
+                }
+                if (!deliveryPrice && it._v2 && it._v2.precos && it._v2.precos.delivery) {
+                    deliveryPrice = Number(it._v2.precos.delivery.real || it._v2.precos.delivery.recomendado) || 0;
+                }
+                if (deliveryPrice > 0) {
+                    displayPrice = deliveryPrice;
+                    priceLabel = (it._v2 && it._v2.variantes && it._v2.variantes.length > 1) ? 'a partir de ' : '';
+                } else if (typeof it.price === 'number') {
                     displayPrice = it.price;
                     if (it.tipoVenda === 'por_peso') {
                         var minP = (it.porcoes && it.porcoes.length > 0) ? it.porcoes[0] : null;
