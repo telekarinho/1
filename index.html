@@ -428,7 +428,7 @@
             var textEl = document.getElementById('inaugBannerText');
             var ctaEl  = document.getElementById('inaugBannerCta');
 
-            // Após 25/04 23:59 — fases pós-inauguração (Festa Junina 10/05→29/06)
+            // Após 25/04 23:59 — fases pós-inauguração (Festa Junina 10/05→29/06 · Caramelado 01/07→31/07)
             if(y > 2026 || (y === 2026 && m > 4) || (y === 2026 && m === 4 && day > 25)){
                 var inJuninaTeaser = (y === 2026) && ((m === 5 && day >= 10) || (m === 6 && day <= 16));
                 var inJuninaLaunch = (y === 2026 && m === 6 && day >= 17 && day <= 29);
@@ -440,6 +440,13 @@
                         if(textEl) textEl.innerHTML = '🌽 <strong>POTINHO JUNINO CHEGOU!</strong> &nbsp;·&nbsp; Paçoca + cocada + mel · Só até 29/06!';
                         if(ctaEl){ ctaEl.textContent = 'Pedir agora! →'; ctaEl.href = 'https://wa.me/5543998042424?text=Ol%C3%A1!%20Quero%20o%20Potinho%20Junino%21%20%F0%9F%8C%BD'; }
                     }
+                    if(banner) banner.style.display = 'flex';
+                    return;
+                }
+                var inCaramelado = (y === 2026 && m === 7);
+                if(inCaramelado && !sessionStorage.getItem('caramBannerClosed')){
+                    if(textEl) textEl.innerHTML = '🍮 <strong>NOVIDADE: POTINHO CARAMELADO!</strong> &nbsp;·&nbsp; Caramelo + granola + base Ninho · Só na MilkyPot 🐑';
+                    if(ctaEl){ ctaEl.textContent = 'Quero provar! →'; ctaEl.href = 'https://wa.me/5543998042424?text=Ol%C3%A1!%20Quero%20o%20Potinho%20Caramelado%21%20%F0%9F%8D%AE'; }
                     if(banner) banner.style.display = 'flex';
                     return;
                 }
@@ -480,7 +487,10 @@
         window.closeBanner = function(){
             if(banner) banner.style.display = 'none';
             var d2 = getBrasiliaDate(), m2 = d2.getMonth()+1, day2 = d2.getDate(), y2 = d2.getFullYear();
-            if(y2 > 2026 || (y2 === 2026 && (m2 > 4 || (m2 === 4 && day2 > 25)))) sessionStorage.setItem('juninaBannerClosed','1');
+            if(y2 > 2026 || (y2 === 2026 && (m2 > 4 || (m2 === 4 && day2 > 25)))){
+                if(y2 === 2026 && m2 === 7){ sessionStorage.setItem('caramBannerClosed','1'); }
+                else { sessionStorage.setItem('juninaBannerClosed','1'); }
+            }
             applyBannerOffset();
         };
 
