@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #210 — 2026-05-13
+
+**Área:** Conteúdo — Playbook "Férias da Ovelhinha" (julho 2026)
+
+**Contexto:** Prescrito nos ciclos #208 e #209 como "campo aberto para campanha temática férias escolares capturando famílias do Muffato". Todos os arquivos de julho existentes cobriam produto (Caramelado) e marcos (3 meses, Dia da Vaca), mas nenhum ativava o público familiar das férias de forma estruturada. O insight do ciclo #208 era claro: MilkyMoo sem campanha de férias escolares = oportunidade de MilkyPot marcar território com famílias.
+
+**O que pesquisou/analisou:**
+- Leu `consolidacao-potinho-caramelado-02-07jul.md`: "semana 12 (família + férias escolares)" mencionada mas sem brief dedicado
+- Leu `sustentacao-caramelado-semanas-2-3.md`: conteúdo de produto para semanas 2-3, menciona "Férias escolares em plena vigência" mas sem mecânica de engajamento familiar
+- Leu `quarta-feliz-dia-da-vaca.md`: cobre 08/07 pontualmente; não há campanha de mês inteiro
+- Verificou todos os arquivos `ferias*` e `familia*` no diretório `belinha/content/` — nenhum existia
+- Identificou diferencial da unidade Muffato: Açaí buffet self-service + picolés + sorvetes = argumento de duplo produto (adulto + criança = ticket médio maior)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/ferias-da-ovelhinha-julho-2026.md` | CRIADO — 460 linhas: estratégia dual (adulto/criança), mecânica Cartão de Férias (keyword `FERIAS26`), calendário completo 07/07–31/07 com 8 momentos de ativação, 5 WA broadcasts, posts feed + stories + reel 15s, checklist operador, KPIs, integração com calendário maior |
+
+**Destaques do playbook:**
+1. **Cartão de Férias da Ovelhinha:** gamificação leve — 3 sabores diferentes = topping extra grátis. Gera retenção (mínimo 3 visitas), opt-in WA orgânico (`FERIAS26`) e ticket médio duplo (adulto + criança)
+2. **Argumento Muffato:** açaí buffet self-service posicionado como "a criança escolhe" — diferencial real que concorrentes não têm
+3. **Integração no calendário:** playbook conecta explicitamente com reveal (01/07), consolidação (02-06/07), Dia da Vaca (08/07), sustentação (07-17/07), 3 meses (25/07) e Dia dos Pais (09/08)
+4. **Encerramento como teaser:** último story de 31/07 planta semente do Dia dos Pais — transição suave de campanha
+5. **Versão A/B/C do Cartão:** operador decide implementação (digital WA = zero custo; físico simples = R$0,15; físico ilustrado = encomenda)
+
+**Próximo passo sugerido:**
+- **Ciclo #211 — Conversão:** Brief contra-programação "Dia da Vaca" 08/07 (já mencionado em `quarta-feliz-dia-da-vaca.md` mas pode aprofundar o lado emocional: "enquanto MilkyMoo faz campanha de vaca, a ovelhinha cuida das famílias")
+- **Ciclo #212 — UX:** Banner pós-31/07 para agosto (Dia dos Pais 09/08) — atualizar `index.html` para fase agosto
+- **Ciclo #213 — Concorrentes:** Refetch TheBest + Jhoy (últimas atualizações antigas — verificar ações de julho/agosto)
+- **Ciclo #214 — SEO:** Adicionar evento LocalBusiness para "Férias da Ovelhinha" no schema.org
+- **Operador (URGENTE):** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+- **Operador:** Confirmar horário julho — mesmo ou diferente? (Blocker #8)
+- **Operador:** Confirmar naming "Potinho Junino" + ingredientes até 30/05 ⚠️ (ainda pendente)
+- **Operador:** Decidir versão do Cartão de Férias (A/B/C) até 01/07 ← novo
+
+_Belinha — Ciclo #210 | 2026-05-13_
+
+---
+
 ## Ciclo #207 — 2026-05-13
 
 **Área:** UX/Frontend — Banner `#inaugBanner` em `index.html`: fase Potinho Caramelado 01/07–31/07
