@@ -161,6 +161,107 @@ Outros ângulos para usar em copy futuro:
 | Londrina | ❌ não presente | ✅ presente |
 | Linha Fit/proteína | não identificada | ✅ linha Zero/Fit |
 
+---
+
+### ➕ SUPLEMENTO CICLO #202B — intel agente background
+
+**Fontes adicionais:** alobrasilia.com.br, gastronominho.com.br, colanagradebh.com.br, diariomsnews.com.br, jahdoacai.com.br, gkpb.com.br, portalfilipemello.com, mercadoeconsumo.com.br (10/05/2026)
+
+---
+
+#### A. FeliciJAH — Dia Internacional da Felicidade — 20/03/2026 (CONFIRMADA)
+
+- **Data:** 20/03/2026
+- **Produto:** Pote 360ml de açaí, sorvete ou iogurte natural por **R$16,99** (preço fixo)
+- **Abrangência:** Todas as unidades do Brasil
+- **Copy:** *"Rede JAH, que tem Caio Castro como sócio, realiza promoções especiais para celebrar a alegria de viver."*
+- **Resultado 2025:** 55.000+ clientes, crescimento +50% vs. ano anterior
+- **Status 2026:** 3ª edição consecutiva da campanha
+
+---
+
+#### B. Lançamento Sorvete de Pistache — 12/06/2026 (CONFIRMADO — urgente para MilkyPot)
+
+- **Data:** 12/06/2026 (Dia dos Namorados)
+- **Disponibilidade:** Edição limitada **até setembro 2026** — período cobre junho, julho e agosto (inverno inteiro)
+- **Parceria:** Francisco Santana (Escola Sorvete — referência gelados América Latina)
+- **Diferencial:** Pasta de pistache desenvolvida 100% in-house (sem base pré-comprada)
+- **Modelo:** Self-service por peso — mesmo preço/kg dos demais sabores
+- **Copy:** *"O seu novo amor chegou: Pistache no JAH!"* / *"uma novidade irresistível que vai conquistar corações"* / *"Ouro verde"*
+- **Hashtags:** `#JAH #pistache #sorvetedepistache #novamor`
+- **Impacto para MilkyPot:** Pistache é tendência 2025-2026 — JAH ocupa o espaço com produto premium de inverno. Avaliação: MilkyPot pode contra-programar com Potinho Pistachio (topping pistache + chantilly verde) se disponível no fornecedor
+
+---
+
+#### C. Campanha Caio Castro — Dia dos Namorados 2026
+
+- **Status:** Ação confirmada com Caio Castro para 12/06/2026 — detalhes não totalmente rastreados
+- **Histórico:** Em 2022 envolveu passeio de Porsche em Interlagos com clientes
+- **Implicação:** Campanha com alto apelo aspiracional e UGC — difícil de competir diretamente
+
+---
+
+#### D. JAH Coffee & Tea — Detalhes Completos
+
+| Detalhe | Info |
+|---|---|
+| **Cardápio** | Café especial (82+ pontos, Gran Coffee) + chás Baldo + ~35 itens: salgados, tortas, focaccias, frappés, smoothies |
+| **Investimento franqueado** | R$80–100k |
+| **Retorno projetado** | 14–18 meses |
+| **Meta 2026** | 10 unidades |
+| **Meta 2027** | 25–30 unidades |
+| **Modelo** | Store-in-store (dentro da loja JAH existente) |
+| **Data 1ª unidade** | Março 2026 (SP) |
+| **Data 2ª unidade** | 1ª quinzena junho 2026 (SP) |
+
+---
+
+#### E. Preços e App JAH 2026
+
+| Canal/Produto | Preço |
+|---|---|
+| Açaí self-service | ~R$59,90/kg (referência Cascavel/PR) |
+| FeliciJAH (março) | R$16,99 por 360ml |
+| App JAH — 1º pedido | -R$10,00 |
+| App JAH — cashback | Até 20% |
+| Sorvete pistache | Mesmo preço/kg |
+
+---
+
+#### F. Perfil Atualizado — Números 2026
+
+| Indicador | Valor |
+|---|---|
+| Unidades | 190+ (em 14 estados) |
+| Clientes/mês | 500.000 |
+| Faturamento meta 2026 | R$210 mi (+31% vs. R$160 mi em 2025) |
+| Sócio/embaixador | Caio Castro |
+| Certificação | Selo de Excelência ABF |
+| Expansão | Portugal (1ª loja), ABF Expo 2026 (6ª edição) |
+
+---
+
+#### G. Calendário Campanhas JAH 2026
+
+| Data | Campanha | Mecânica |
+|---|---|---|
+| 20/03/2026 | FeliciJAH | 360ml por R$16,99 |
+| 12/06/2026 | Sorvete Pistache + Caio Castro | Lançamento "Ouro verde" até set/2026 |
+| Julho/2026 | Cobertura passiva | Pistache disponível (inverno) — sem campanha específica |
+| Sem data | ShakeJAH | Campanha shake (2025, possível repetição) |
+
+---
+
+#### H. Análise Estratégica Atualizada vs. MilkyPot
+
+**Pistache é a maior ameaça sazonal de junho/julho:**
+- JAH vai lançar sorvete de pistache exatamente no Dia dos Namorados (12/06) — 12 dias antes do São João (24/06)
+- Cobre todo o inverno até setembro
+- Se MilkyPot tiver topping de pistache disponível, pode criar "Potinho Pistachio" como resposta imediata, ou posicionar o Potinho Junino como "sabor que o JAH não tem: tradição do Brasil de verdade"
+
+**Caio Castro = diferencial de influência que MilkyPot não tem:**
+- Ovelhinha deve compensar em autenticidade e personalização, não em celebrity
+
 _Belinha — Ciclo #202 | 2026-05-13_
 
 ---

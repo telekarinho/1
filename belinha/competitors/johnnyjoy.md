@@ -290,6 +290,84 @@ _Belinha — Ciclo #160 | 2026-05-08_
 | Ação UGC | Tatuagem galáctica → grátis | Ovelhinha desenhada → explorar |
 | Canal Londrina | Não presente | Muffato Quintino |
 
+---
+
+### ➕ SUPLEMENTO CICLO #202B — intel agente background
+
+**Fontes adicionais:** ondecomernorio.com, buscacliente.com.br, portalg.com.br, foodbizbrasil.com, gkpb.com.br, riomarrecife (Facebook), amostrasgratis.shop
+
+---
+
+#### A. Campanha 10 Anos — 10/04/2026 (CONFIRMADA)
+
+- **Data:** 10/04/2026 (sexta-feira)
+- **Ação:** Milkshake 300ml por **R$10,00** em todas as unidades do Brasil
+- **Restrição:** Não inclui linha "Receitas do Johnny" nem "Sabores Especiais"
+- **Copy:** *"Em comemoração aos 10 anos, no dia 10, milkshake por R$10"*
+- **Narrativa de marca:** "Nasceu há 10 anos dentro de uma Kombi em Goiânia com a ideia de levar milkshakes para mais perto das pessoas, transformando momentos comuns do dia em pequenas celebrações."
+- **Hashtags:** `#JohnnyJoy #10anos #milkshake #sobremesa`
+
+---
+
+#### B. Dia do Milkshake 2ª Edição — 12/09/2026 (CONFIRMADA)
+
+- **Data:** 12/09/2026 (sexta-feira — setembro)
+- **Mecânica:** Visitante com roupa **azul ou rosa** ganha 300ml grátis ao comprar 500ml do mesmo sabor
+- **Abrangência:** Todas as unidades
+- **Hashtags:** `#johnnyjoy #diaDomilkshake #milkshake`
+
+---
+
+#### C. Campanha "Dois Amores" — Dia dos Namorados (histórico 2025)
+
+- **Produto:** Sabor especial "Dois Amores" — edição limitada
+- **Período:** Dia dos Namorados (12/06)
+- **Preço:** R$20,90–R$24,90
+- **Status 2026:** Não confirmado relançamento — tratar como "provável reedição" (padrão sazonal da marca)
+
+---
+
+#### D. Preços Completos Atualizados 2026
+
+| Linha | 300ml | 500ml |
+|---|---|---|
+| Tradicionais | R$19,00–R$19,90 | R$22,00–R$22,90 |
+| Especiais (Pistachello, Buenissimo Branco, Cookies Caramelo) | R$25,90 | R$28,90 |
+| Dois Amores (histórico namorados) | R$20,90–R$24,90 | — |
+| Promoção 10 anos (10/04/2026 apenas) | **R$10,00** | — |
+
+*Preços regionais: BH historicamente mais baixos (R$17/R$20). Goiânia = referência principal.*
+
+---
+
+#### E. Joy Fidelidade — Diferencial 2026
+
+- A cada R$1 gasto = 1 Joybit
+- A cada 10 milkshakes = 1 grátis
+- Acesso antecipado a lançamentos (sabores especiais não publicados no cardápio geral)
+- Desconto de aniversário + cupons exclusivos
+- **Copy:** *"Seja o primeiro a provar os novos sabores"*
+
+---
+
+#### F. Outros Diferenciais 2026
+
+- **Gift Card** disponível (johnnyjoy.com.br/gift-card/) — vetor presente e corporativo
+- **55+ lojas, 18 estados** — marco comunicado ativamente no 10 anos
+- **Pistachello** no cardápio fixo — sabor premium alinhado à tendência pistache 2025-2026
+
+---
+
+#### G. Calendário 2026 Consolidado JohnnyJoy
+
+| Data | Campanha | Mecânica |
+|---|---|---|
+| 10/04/2026 | 10 Anos | 300ml por R$10 |
+| 12/06/2026 (provável) | Dois Amores | Sabor especial namorados R$20,90 |
+| Julho 2026 (previsto) | Galaktico 2.0? | Collab Nestlé — aguardar confirmação |
+| 18/07 (previsto) | Ação tatuagem | Tatuagem galáctica → grátis |
+| 12/09/2026 | Dia do Milkshake 2ª ed. | Azul/rosa → 300ml grátis |
+
 _Belinha — Ciclo #202 | 2026-05-13_
 
 ---
