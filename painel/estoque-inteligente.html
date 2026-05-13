@@ -147,6 +147,38 @@
             grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
             gap: 10px;
         }
+        .lifetime-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .lifetime-card {
+            border: 1px solid #eadff5;
+            border-radius: 16px;
+            padding: 16px;
+            background: linear-gradient(135deg, #fff, #fbf7ff);
+        }
+        .lifetime-card span {
+            display: block;
+            color: var(--muted);
+            font-weight: 900;
+            font-size: .78rem;
+            text-transform: uppercase;
+        }
+        .lifetime-card strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 1.65rem;
+            line-height: 1;
+            color: var(--purple);
+        }
+        .lifetime-card small {
+            display: block;
+            margin-top: 8px;
+            color: var(--muted);
+            font-weight: 700;
+            line-height: 1.35;
+        }
         .flavor {
             border: 1px solid #eee4f8;
             border-radius: 14px;
@@ -187,6 +219,7 @@
             .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .two-col { grid-template-columns: 1fr; }
             .hero { grid-template-columns: 1fr; }
+            .lifetime-grid { grid-template-columns: 1fr; }
         }
         @media (max-width: 720px) {
             .kpi-grid { grid-template-columns: 1fr; }
@@ -244,6 +277,7 @@
                                 <option value="14">Ultimos 14 dias</option>
                                 <option value="30">Ultimos 30 dias</option>
                                 <option value="90">Ultimos 90 dias</option>
+                                <option value="0">Desde o inicio</option>
                             </select>
                             <select id="coverageSelect" class="select-smart" onchange="runAnalysis()">
                                 <option value="7">Comprar para 7 dias</option>
@@ -261,6 +295,23 @@
                         <div class="kpi"><span>Atencao</span><strong id="kpiAttention">--</strong><small>entre 3 e 7 dias</small></div>
                         <div class="kpi"><span>Sem receita/vinculo</span><strong id="kpiMissing">--</strong><small>produto vendido sem insumo rastreavel</small></div>
                         <div class="kpi"><span>Itens rastreados</span><strong id="kpiTracked">--</strong><small>estoque + sabores monitorados</small></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-head">
+                            <div>
+                                <h3>Vendido desde o primeiro lançamento</h3>
+                                <p>Acumulado real dos pedidos salvos no PDV. Serve para decidir o que pedir e o que parar de comprar.</p>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="lifetime-grid" id="lifetimeGrid">
+                                <div class="empty">Calculando histórico...</div>
+                            </div>
+                            <div class="notice" style="margin-top:14px;">
+                                Picolé por sabor só fica exato quando a venda registrar o sabor escolhido. Para vendas antigas, o sistema sabe o total geral vendido; a decisão por sabor usa a contagem atual e a auditoria semanal.
+                            </div>
+                        </div>
                     </div>
 
                     <div class="two-col">
@@ -370,6 +421,7 @@
             docs: {},
             rows: [],
             issues: [],
+            lifetime: {},
             flavorTab: 'picoles',
             chart: null
         };
@@ -581,16 +633,15 @@
             return Number(item.total || item.subtotal || (Number(item.price || item.unitPrice || 0) * q) || 0);
         }
 
-        function runAnalysis() {
-            var period = Number(document.getElementById('periodSelect').value) || 7;
-            var coverage = Number(document.getElementById('coverageSelect').value) || 14;
-            var since = new Date(Date.now() - period * 86400000);
-            var inventory = getInventory();
-            var orders = getOrders().filter(validOrder).filter(function(o) {
-                var d = orderDate(o);
-                return !d || d >= since;
-            });
-            var products = buildProductMap();
+        function analysisDaysFromOrders(orders) {
+            var times = orders.map(orderDate).filter(Boolean).map(function(d) { return d.getTime(); });
+            if (!times.length) return 1;
+            var first = Math.min.apply(Math, times);
+            var days = Math.ceil((Date.now() - first) / 86400000);
+            return Math.max(1, days);
+        }
+
+        function calculateConsumption(orders, inventory, products) {
             var insById = {};
             inventory.forEach(function(ins) { if (ins && ins.id) insById[ins.id] = ins; });
 
@@ -636,6 +687,34 @@
                 });
             });
 
+            return { consumption: consumption, missing: missing, revenue: revenue };
+        }
+
+        function runAnalysis() {
+            var period = Number(document.getElementById('periodSelect').value);
+            if (!Number.isFinite(period)) period = 7;
+            var coverage = Number(document.getElementById('coverageSelect').value) || 14;
+            var inventory = getInventory();
+            var allValidOrders = getOrders().filter(validOrder);
+            var since = period > 0 ? new Date(Date.now() - period * 86400000) : null;
+            var orders = allValidOrders.filter(function(o) {
+                var d = orderDate(o);
+                return !since || !d || d >= since;
+            });
+            var products = buildProductMap();
+            var periodCalc = calculateConsumption(orders, inventory, products);
+            var consumption = periodCalc.consumption;
+            var missing = periodCalc.missing;
+            var revenue = periodCalc.revenue;
+            var analysisDays = period > 0 ? period : analysisDaysFromOrders(orders);
+
+            var lifetimeCalc = calculateConsumption(allValidOrders, inventory, products);
+            state.lifetime = {
+                rows: lifetimeCalc.consumption,
+                firstDate: allValidOrders.map(orderDate).filter(Boolean).sort(function(a, b) { return a - b; })[0] || null,
+                orders: allValidOrders.length
+            };
+
             inventory.forEach(function(ins) {
                 if (!ins || !ins.id || consumption[ins.id]) return;
                 consumption[ins.id] = {
@@ -651,7 +730,7 @@
             });
 
             state.rows = Object.values(consumption).map(function(row) {
-                var avg = row.consumed > 0 ? row.consumed / period : 0;
+                var avg = row.consumed > 0 ? row.consumed / analysisDays : 0;
                 var daysLeft = avg > 0 ? row.stock / avg : null;
                 var suggested = avg > 0 ? Math.max(0, avg * coverage - row.stock) : 0;
                 var status = 'sem-dado';
@@ -670,7 +749,8 @@
             });
 
             state.issues = Object.values(missing).sort(function(a, b) { return b.count - a.count; });
-            setText('syncNotice', 'Dados carregados: ' + orders.length + ' pedidos no periodo, ' + inventory.length + ' insumos/estoques e ' + Object.keys(products).length + ' produtos no catalogo.');
+            var label = period > 0 ? 'no periodo' : 'desde o inicio';
+            setText('syncNotice', 'Dados carregados: ' + orders.length + ' pedidos ' + label + ', ' + inventory.length + ' insumos/estoques e ' + Object.keys(products).length + ' produtos no catalogo.');
             renderAll(revenue);
         }
 
@@ -691,8 +771,57 @@
             renderRisk();
             renderPurchaseTable();
             renderChart();
+            renderLifetimeSummary();
             renderIssues();
             renderFlavors();
+        }
+
+        function lifetimeItem(id, fallbackUnit) {
+            var row = state.lifetime && state.lifetime.rows ? state.lifetime.rows[id] : null;
+            if (row) return row;
+            var ins = getInventory().find(function(i) { return i && i.id === id; }) || {};
+            return {
+                id: id,
+                name: ins.name || id,
+                unit: ins.unit || fallbackUnit || '',
+                stock: Number(ins.quantity || 0),
+                consumed: 0
+            };
+        }
+
+        function renderLifetimeSummary() {
+            var grid = document.getElementById('lifetimeGrid');
+            if (!grid) return;
+            var first = state.lifetime && state.lifetime.firstDate
+                ? state.lifetime.firstDate.toLocaleDateString('pt-BR')
+                : 'primeiro pedido';
+            var picole = lifetimeItem('ins_picole', 'unid');
+            var buffet = lifetimeItem('ins_base_geral', 'kg');
+            var soft = lifetimeItem('ins_milkshake', 'kg');
+            var cards = [
+                {
+                    label: 'Picoles vendidos',
+                    value: qty(picole.consumed, picole.unit),
+                    note: 'Desde ' + first + '. Estoque atual: ' + qty(picole.stock, picole.unit) + '. Total geral ajuda a saber se precisa recomprar picole.'
+                },
+                {
+                    label: 'Buffet geral vendido',
+                    value: qty(buffet.consumed, buffet.unit),
+                    note: 'Soma sorvete + acai vendidos por peso. Estoque atual do buffet: ' + qty(buffet.stock, buffet.unit) + '.'
+                },
+                {
+                    label: 'Base soft usada',
+                    value: qty(soft.consumed, soft.unit),
+                    note: 'Usada em casquinha, sundae e milkshake. Estoque atual: ' + qty(soft.stock, soft.unit) + '.'
+                }
+            ];
+            grid.innerHTML = cards.map(function(c) {
+                return '<div class="lifetime-card">' +
+                    '<span>' + escapeHtml(c.label) + '</span>' +
+                    '<strong>' + escapeHtml(c.value) + '</strong>' +
+                    '<small>' + escapeHtml(c.note) + '</small>' +
+                '</div>';
+            }).join('');
         }
 
         function renderRisk() {
