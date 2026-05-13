@@ -29,7 +29,12 @@
 - **JAH do Açaí:** pivô estratégico para café+chá (diversificação de daypart). Expansão internacional (Portugal). Meta R$210 mi. Sem presença Londrina = sem ameaça imediata
 - **Insight acionável:** ação de tatuagem JohnnyJoy gera UGC forte → MilkyPot pode adaptar: "mostre a ovelhinha desenhada no braço / produto na foto → ganhe X"
 
-**Commit:** `c353c22`
+**Commit:** `c353c22` + `55765cd` (suplemento B — agente background)
+
+**Suplemento #202B — intel adicional (agente background):**
+- **JohnnyJoy:** Campanha 10 Anos 10/04/2026 confirmada (R$10 por 300ml), Dia do Milkshake 2ª ed. 12/09/2026 (roupa azul/rosa → 300ml grátis), "Dois Amores" histórico namorados, preços completos (tradicionais R$19–22,90 / especiais R$25,90–28,90), calendário 2026 consolidado
+- **JAH do Açaí:** FeliciJAH 20/03/2026 (R$16,99/360ml, 3ª edição, 55k clientes 2025), **Sorvete Pistache lançamento 12/06/2026** (até set/2026, parceria Francisco Santana, in-house) + campanha Caio Castro Namorados, JAH Coffee & Tea detalhado (~35 itens, investimento R$80-100k, retorno 14-18m), preços (R$59,90/kg + app cashback 20%), 190+ unidades 500k clientes/mês
+- **Alerta crítico:** JAH lança pistache exatamente 12 dias antes do São João — cobre o inverno inteiro. Operador deve avaliar se tem topping pistache para contra-programar ou reforçar o ângulo "tradição brasileira" do Potinho Junino
 
 **Próximo passo sugerido:**
 - **Ciclo #203 — Conteúdo:** Potinho Caramelado posts feed IG/TikTok semanas 2-3 (07–17/07) — lifestyle + "como montar" + testimonial
