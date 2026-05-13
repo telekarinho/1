@@ -507,6 +507,7 @@
             var keys = [
                 'inventory_' + fid,
                 'orders_' + fid,
+                'caixa_' + fid,
                 'catalog_config_' + fid,
                 'catalog_config',
                 'catalog_v2_' + fid,
@@ -540,6 +541,12 @@
             var orders = state.docs['orders_' + state.fid];
             if (!Array.isArray(orders) && window.DataStore) orders = DataStore.getCollection('orders', state.fid);
             return Array.isArray(orders) ? orders : [];
+        }
+
+        function getCashMoves() {
+            var moves = state.docs['caixa_' + state.fid];
+            if (!Array.isArray(moves) && window.DataStore) moves = DataStore.get('caixa_' + state.fid);
+            return Array.isArray(moves) ? moves : [];
         }
 
         function getCatalog() {
@@ -624,13 +631,76 @@
         }
 
         function itemQty(item) {
-            var q = Number(item.kitQty || item.qty || item.quantity || 1);
-            return q > 0 ? q : 1;
+            var qty = Number(item && (item.qty || item.quantity) || 1);
+            var kitQty = Number(item && item.kitQty || 0);
+            if (!Number.isFinite(qty) || qty <= 0) qty = 1;
+            if (Number.isFinite(kitQty) && kitQty > 1) return qty * kitQty;
+            return qty;
         }
 
         function itemRevenue(item) {
             var q = itemQty(item);
             return Number(item.total || item.subtotal || (Number(item.price || item.unitPrice || 0) * q) || 0);
+        }
+
+        function normalizeText(s) {
+            return String(s || '').toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function isPicoleItem(item, product) {
+            var s = normalizeText([
+                item && item.name,
+                item && item.sabor,
+                item && item.category,
+                item && item.categoriaId,
+                product && product.name,
+                product && product.category
+            ].join(' '));
+            return s.indexOf('picol') !== -1 || (product && product.category === 'picole');
+        }
+
+        function isBuffetWeightItem(item, product) {
+            var s = normalizeText([
+                item && item.name,
+                item && item.size,
+                item && item.type,
+                item && item.categoriaId,
+                product && product.name,
+                product && product.category
+            ].join(' '));
+            return !!(item && (item.byWeight || item.type === 'por_peso' || item.weightG || item.weightKg)) ||
+                s.indexOf('buffet') !== -1 || s.indexOf('self-service') !== -1 || s.indexOf('granel') !== -1;
+        }
+
+        function getWeightKg(item) {
+            if (!item) return 0;
+            var kg = Number(item.weightKg || 0);
+            if (kg > 0) return kg;
+            var g = Number(item.weightG || 0);
+            if (g > 0) return g / 1000;
+            var size = String(item.size || item.name || '');
+            var m = size.match(/(\d+(?:[,.]\d+)?)\s*g\b/i);
+            if (m) return Number(m[1].replace(',', '.')) / 1000;
+            var kgm = size.match(/(\d+(?:[,.]\d+)?)\s*kg\b/i);
+            if (kgm) return Number(kgm[1].replace(',', '.'));
+            return 0;
+        }
+
+        function ensureConsumption(consumption, insById, id, fallbackName, unit) {
+            var ins = insById[id] || {};
+            if (!consumption[id]) {
+                consumption[id] = {
+                    id: id,
+                    name: ins.name || fallbackName || id,
+                    unit: ins.unit || unit || '',
+                    stock: Number(ins.quantity || 0),
+                    minStock: Number(ins.minStock || 0),
+                    cost: Number(ins.cost || 0),
+                    consumed: 0
+                };
+            }
+            return consumption[id];
         }
 
         function analysisDaysFromOrders(orders) {
@@ -654,9 +724,30 @@
                     revenue += itemRevenue(item);
                     var pid = item.productId || item.id || item.itemId;
                     var product = products[pid];
+                    if (isPicoleItem(item, product)) {
+                        ensureConsumption(consumption, insById, 'ins_picole', 'Picole pronto', 'unid').consumed += itemQty(item);
+                        return;
+                    }
+                    if (isBuffetWeightItem(item, product)) {
+                        var kg = getWeightKg(item);
+                        if (kg > 0) {
+                            ensureConsumption(consumption, insById, 'ins_base_geral', 'Sorvete e acai do buffet', 'kg').consumed += kg;
+                            return;
+                        }
+                        var buffetKey = 'buffet-sem-peso';
+                        if (!missing[buffetKey]) missing[buffetKey] = {
+                            name: 'Buffet vendido sem peso registrado',
+                            reason: 'Nao entrou no consumo em kg para nao inventar estoque/CMV',
+                            count: 0,
+                            revenue: 0
+                        };
+                        missing[buffetKey].count += itemQty(item);
+                        missing[buffetKey].revenue += itemRevenue(item);
+                        return;
+                    }
                     if (!product || !product.receita || !product.receita.length) {
                         var key = pid || (item.name || item.sabor || 'Produto sem id');
-                        if (!missing[key]) missing[key] = { name: item.name || item.sabor || key, count: 0, revenue: 0 };
+                        if (!missing[key]) missing[key] = { name: item.name || item.sabor || key, reason: 'Vendido sem receita ou insumo vinculado', count: 0, revenue: 0 };
                         missing[key].count += itemQty(item);
                         missing[key].revenue += itemRevenue(item);
                         return;
@@ -665,7 +756,7 @@
                         var ins = insById[r.insumoId];
                         if (!ins) {
                             var missKey = 'insumo:' + r.insumoId;
-                            if (!missing[missKey]) missing[missKey] = { name: 'Insumo nao encontrado: ' + r.insumoId, count: 0, revenue: 0 };
+                            if (!missing[missKey]) missing[missKey] = { name: 'Insumo nao encontrado: ' + r.insumoId, reason: 'Receita aponta para um insumo que nao existe mais', count: 0, revenue: 0 };
                             missing[missKey].count += itemQty(item);
                             return;
                         }
@@ -702,6 +793,8 @@
                 return !since || !d || d >= since;
             });
             var products = buildProductMap();
+            var ordersById = {};
+            allValidOrders.forEach(function(o) { if (o && o.id) ordersById[o.id] = o; });
             var periodCalc = calculateConsumption(orders, inventory, products);
             var consumption = periodCalc.consumption;
             var missing = periodCalc.missing;
@@ -712,7 +805,8 @@
             state.lifetime = {
                 rows: lifetimeCalc.consumption,
                 firstDate: allValidOrders.map(orderDate).filter(Boolean).sort(function(a, b) { return a - b; })[0] || null,
-                orders: allValidOrders.length
+                orders: allValidOrders.length,
+                caixa: auditCashCoverage(getCashMoves(), ordersById)
             };
 
             inventory.forEach(function(ins) {
@@ -789,30 +883,44 @@
             };
         }
 
+        function auditCashCoverage(moves, ordersById) {
+            var vendas = (moves || []).filter(function(m) { return m && m.type === 'venda'; });
+            var missing = vendas.filter(function(m) { return m.orderId && !ordersById[m.orderId]; });
+            var missingValue = missing.reduce(function(s, m) { return s + (Number(m.valor || 0) || 0); }, 0);
+            return {
+                vendas: vendas.length,
+                missing: missing.length,
+                missingValue: missingValue,
+                firstDate: vendas.map(function(m) { return orderDate(m); }).filter(Boolean).sort(function(a, b) { return a - b; })[0] || null
+            };
+        }
+
         function renderLifetimeSummary() {
             var grid = document.getElementById('lifetimeGrid');
             if (!grid) return;
             var first = state.lifetime && state.lifetime.firstDate
                 ? state.lifetime.firstDate.toLocaleDateString('pt-BR')
                 : 'primeiro pedido';
+            var caixa = (state.lifetime && state.lifetime.caixa) || { vendas: 0, missing: 0, missingValue: 0 };
             var picole = lifetimeItem('ins_picole', 'unid');
             var buffet = lifetimeItem('ins_base_geral', 'kg');
-            var soft = lifetimeItem('ins_milkshake', 'kg');
             var cards = [
                 {
                     label: 'Picoles vendidos',
                     value: qty(picole.consumed, picole.unit),
-                    note: 'Desde ' + first + '. Estoque atual: ' + qty(picole.stock, picole.unit) + '. Total geral ajuda a saber se precisa recomprar picole.'
+                    note: 'Desde ' + first + '. Estoque atual: ' + qty(picole.stock, picole.unit) + '. Conta kits por kitQty, mesmo quando a receita antiga nao bate.'
                 },
                 {
                     label: 'Buffet geral vendido',
                     value: qty(buffet.consumed, buffet.unit),
-                    note: 'Soma sorvete + acai vendidos por peso. Estoque atual do buffet: ' + qty(buffet.stock, buffet.unit) + '.'
+                    note: 'Soma sorvete + acai vendidos pelo peso real do item (weightG/weightKg). Estoque atual: ' + qty(buffet.stock, buffet.unit) + '.'
                 },
                 {
-                    label: 'Base soft usada',
-                    value: qty(soft.consumed, soft.unit),
-                    note: 'Usada em casquinha, sundae e milkshake. Estoque atual: ' + qty(soft.stock, soft.unit) + '.'
+                    label: 'Caixa x pedidos',
+                    value: caixa.vendas + ' vendas',
+                    note: caixa.missing
+                        ? caixa.missing + ' lancamentos de caixa (' + money(caixa.missingValue) + ') nao tem pedido detalhado para separar produto. Eles ficam como pendencia de auditoria.'
+                        : 'Todos os lancamentos de venda do caixa encontrados tem pedido detalhado para rastrear produto.'
                 }
             ];
             grid.innerHTML = cards.map(function(c) {
@@ -889,8 +997,8 @@
             }
             el.innerHTML = state.issues.slice(0, 25).map(function(i) {
                 return '<div class="risk-row">' +
-                    '<div><div class="risk-name">' + escapeHtml(i.name) + '</div><small>Vendido sem receita ou insumo vinculado</small></div>' +
-                    '<div class="risk-days">' + qty(i.count, 'un') + '</div>' +
+                    '<div><div class="risk-name">' + escapeHtml(i.name) + '</div><small>' + escapeHtml(i.reason || 'Vendido sem receita ou insumo vinculado') + '</small></div>' +
+                    '<div class="risk-days">' + qty(i.count, 'un') + (i.revenue ? '<br><small>' + money(i.revenue) + '</small>' : '') + '</div>' +
                     '<div class="bar-track"><div class="bar-fill" style="width:100%"></div></div>' +
                 '</div>';
             }).join('');
