@@ -943,3 +943,110 @@ _Belinha — Ciclo #176 | 2026-05-09_
 **Fontes ciclo #187:** auroracultural.com, mercadoeconsumo.com.br, centraldovarejo.com.br, goinfoco.com.br, meioemensagem.com.br, milkymoo.com.br
 
 _Belinha — Ciclo #187 | 2026-05-10_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #208 — 2026-05-13
+
+### Contexto do Refetch
+Última atualização: ciclo #187 (10/05). Intervalo: 3 dias. Foco: (a) status pós-Carameluda, (b) campanha Dia da Vaca 08/07, (c) modelo Milky Moo Festa, (d) intel férias escolares julho 2026.
+
+---
+
+### Novo: Consolidação Financeira 2025 (Exame, mai/2026)
+
+- **Faturamento 2025:** R$ 542 milhões (alta de +40% vs R$ 388M em 2024)
+- **Lojas:** 800 unidades (alta de +31% vs 612 em 2024 — ~188 novas lojas/ano)
+- **Projeção 2026:** crescimento de 50% em faturamento (~R$ 813M) e pontos de venda (~1.200 lojas)
+
+> **Implicação MilkyPot:** MilkyMoo é 800 lojas, R$542M/ano — empresa com musculatura de marketing muito superior. A vantagem de MilkyPot é localidade, personalização e funil próprio. Não compete em volume, compete em vínculo.
+
+---
+
+### Novo: Milky Moo Festa — Modelo Móvel para Eventos (mai/2026)
+
+- **Formato:** operação compacta e móvel, fácil transporte, equipe reduzida, produção no local
+- **Aplicações:** aniversários, festas, ações corporativas, eventos temporários, ativações de marca
+- **Investimento:** a partir de R$ 200.000 (inferior ao modelo loja física)
+- **Cidades-alvo:** a partir de 25.000 habitantes (como Londrina, como interior do PR)
+- **Escala planejada:** 1.352 cidades mapeadas, 1.745 oportunidades de eventos identificadas; meta de 1.500 unidades do modelo Festa no longo prazo
+- **Fonte:** portaldofranchising.com.br, foodbizbrasil.com, mundodomarketing.com.br
+
+> **Alerta para MilkyPot Londrina:** MilkyMoo Festa pode chegar ao PR antes do esperado. Londrina tem população e estrutura de eventos (Centro de Convenções, feiras, casamentos no agro). Se um franqueado local ativar o formato, cobre festas particulares — exatamente o espaço não coberto pelo Muffato. **Ação recomendada:** MilkyPot deveria ter estratégia de "reserva de espaço" em eventos (catering informal, combo aniversário via WA) antes da chegada do Festa.
+
+---
+
+### Campanha Confirmada: "Dia da Vaca" — 08/07/2026
+
+- **Data:** exclusivamente 8 de julho (Dia Internacional da Vaca)
+- **Produto:** Milkshake Pintadinha 300ml — R$ 9,90 (vs. preço normal ~R$18–20)
+- **Mecânica:** cupom `COWERA` no aplicativo próprio MilkyMoo
+- **Restrições:** válido só no app, só na loja física (sem delivery); sabores alcoólicos e premium fora
+- **Conceito da campanha:** "Cow Era" — trocadilho com era das divas pop (como Taylor Swift "Eras Tour")
+- **Canal:** app proprietário (sem iFood) — foco em instalar base de usuários
+- **Fonte:** amostrasgratis.shop, portalg.com.br, facebook.com/amostrasgratisshop
+
+> **Oportunidade direta para MilkyPot:** O "Dia da Vaca" em 08/07 é durante julho — exatamente quando o Potinho Caramelado é lançado (01/07). MilkyMoo vai dominar as buscas/feeds em 08/07. **Contra-programação recomendada:** "Dia da Ovelhinha" em 08/07 (ou qualquer data próxima) — "a vaquinha tem o dia dela, mas a ovelhinha tem o mês todo". Stories com ovelhinha vs. vaca, CTA WA, humor suave sem atacar diretamente.
+
+---
+
+### Status Pós-Carameluda (maio 2026)
+
+- A collab **"Carameluda"** (O Boticário × MilkyMoo) **encerra no fim de maio 2026**
+- Após 31/05: vácuo no tema caramelo no portfólio MilkyMoo
+- Próxima collab não anunciada (padrão histórico: collab com Nestlé recorrente em datas sazonais)
+- **Janela de caramelo:** junho totalmente livre, julho inteiro disponível → Potinho Caramelado MilkyPot em 01/07 chega no pico do vácuo deixado pela Carameluda
+
+---
+
+### Intel: Férias Escolares Julho 2026
+
+- Período: estimado **01/07 a 31/07** (com variação por rede/município)
+- MilkyMoo sem campanha específica de férias anunciada ainda (em 13/05)
+- Histórico: Shopping Portal Go promoveu milkshake 300ml grátis na compra acima de R$300 em lojas parceiras (ativação de shopping, não da rede)
+- Iniciativa própria de promoção de férias não identificada — depende de franqueados locais
+- **Potencial:** MilkyPot pode criar campanha "Férias da Ovelhinha" para julho, capturando famílias do Muffato com crianças em período de recesso
+
+---
+
+### Radar de Preços MilkyMoo Atualizado — Maio 2026
+
+| Tamanho | Preço Normal | Observação |
+|---------|-------------|------------|
+| 180ml | R$ 12,90 | Day Part — só até 13h59, sem premium/alcoólico |
+| 300ml regular | R$ 18–20 | Referência nacional (pode variar por praça) |
+| 500ml regular | R$ 22–30 | Faixa estimada |
+| 700ml | ~R$ 40–50 | Faixa estimada (premium/collab) |
+| 300ml alcoólico | R$ 25 | Confirmado |
+| 500ml alcoólico | R$ 35 | Confirmado |
+| Dia da Vaca (08/07) | R$ 9,90 (300ml Pintadinha) | Promoção app — 1 dia/ano |
+| Carameluda (encerrada) | R$ 25 (300ml) | Collab O Boticário — até 31/05 |
+
+---
+
+### Mapa Competitivo Atualizado — Julho 2026 (projeção)
+
+| Atributo | MilkyMoo | MilkyPot |
+|---|---|---|
+| Produto destaque (julho) | Cardápio padrão (pós-Carameluda) | Potinho Caramelado (lançamento 01/07) |
+| Campanha julho | Dia da Vaca 08/07 (app, 1 dia) | Mês inteiro de Caramelado + banner site |
+| Férias escolares | Sem campanha própria confirmada | Oportunidade: "Férias da Ovelhinha" |
+| Presença em eventos | Milky Moo Festa (em expansão) | Sem formato móvel ainda — risco |
+| Canal próprio | App proprietário (instala base) | WhatsApp own — sem comissão |
+| Caramelo | Vácuo (Carameluda encerrou maio) | Janela aberta — paladar educado |
+| Ticket entrada | R$ 9,90 (dia) / R$ 12,90 (Day Part) | Potinho base a partir de ~R$20 estimado |
+| Personalização | Nenhuma | Nome + ovelhinha + WA |
+
+---
+
+### Conclusões Estratégicas — Ciclo #208
+
+1. **Caramelo:** MilkyMoo deixa vácuo em junho. MilkyPot entra com Potinho Caramelado em 01/07 — paladar educado, sem concorrência temática direta. **Timing perfeito.**
+2. **Dia da Vaca 08/07:** MilkyMoo vai dominar feeds. Oportunidade de contra-programação leve com ovelhinha — não precisa mencionar concorrente.
+3. **Milky Moo Festa:** ameaça real de médio prazo (6–18 meses) para espaço de eventos em Londrina. Priorizar estratégia de catering/eventos via WA antes da chegada do formato.
+4. **Férias escolares:** campo em aberto — criar campanha temática "Férias da Ovelhinha" para julho seria diferencial local.
+5. **Escala:** MilkyMoo tem 800 lojas e R$542M/ano. Comparação direta é desfavorável — vantagem de MilkyPot é vínculo local, personalização, funil sem comissão.
+
+**Fontes ciclo #208:** exame.com, portaldofranchising.com.br, foodbizbrasil.com, mundodomarketing.com.br, amostrasgratis.shop, portalg.com.br, auroracultural.com, gironews.com, meioemensagem.com.br, mercadoeconsumo.com.br
+
+_Belinha — Ciclo #208 | 2026-05-13_
