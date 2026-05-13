@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #205 — 2026-05-13
+
+**Área:** SEO local Londrina — Schema.org LocalBusiness: `areaServed` + 2 novos FAQs + blockers #7-#8
+
+**Contexto:** Prescrito pelo ciclo #204. Auditoria do Schema.org em `index.html` revelou 3 oportunidades: (1) LocalBusiness sem `areaServed` (sinal SEO local fraco para "açaí Londrina" etc.), (2) FAQPage desatualizada — sem FAQ sobre Potinho Caramelado (lançado 01/07) nem açaí buffet self-service (diferencial exclusivo Muffato), (3) `aggregateRating` e horário julho sem registro formal de blocker.
+
+**O que pesquisou/analisou:**
+- Releitura do Schema.org LocalBusiness (linhas 31–77) — confirmado ausência de `areaServed`
+- Releitura do FAQPage (linhas 79–191) — 13 FAQs existentes, nenhum sobre Potinho Caramelado ou açaí buffet
+- Verificação do bloco `aggregateRating` comentado (linhas 193–208) — sem rastreabilidade formal em `blockers.md`
+- Confirmado que todos os 4 blocos JSON-LD são válidos (`node` parse test)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | `areaServed` (City: Londrina/PR) adicionado ao LocalBusiness; 2 novos FAQs: "Potinho Caramelado" + "Açaí buffet self-service Londrina" |
+| `belinha/blockers.md` | Blocker #7 (aggregateRating — aguarda ≥3 reviews Google Maps + valores reais) + Blocker #8 (horário julho — confirmar com operador) |
+
+**Impacto esperado:**
+- `areaServed` → reforça relevância geográfica para queries "X Londrina" nas SERPs
+- FAQ Potinho Caramelado → rich result potencial para "potinho caramelado londrina" / "potinho caramelo muffato"
+- FAQ Açaí Buffet → rich result para "açaí buffet londrina" / "buffet açaí muffato"
+- Blockers formalizados → operador tem instrução clara para ativar estrelas Google (alto impacto CTR)
+
+**Commit:** `aa2c58a`
+
+**Próximo passo sugerido:**
+- **Ciclo #206 — Conversão:** D+90 reativação brief (24/07) — clientes inativos da inauguração na janela crítica (complementa o 3 meses de 25/07)
+- **Ciclo #207 — UX:** `cardapio.css` (21K) orphaned — avaliar deleção (Blocker #6 em `blockers.md`)
+- **Ciclo #208 — Concorrentes:** Refetch MilkyMoo pós-Caramelado (collab "Como Treinar Dragão" jun/26 — monitorar resposta de inverno)
+- **Ciclo #209 — Conteúdo:** Brief semanal semana 14 (21–25/07) — preparação para comemorativo 3 meses
+- **Operador (URGENTE):** Confirmar ≥3 reviews Google Maps → descomentar aggregateRating (Blocker #7)
+- **Operador:** Confirmar horário julho — mesmo ou diferente? (Blocker #8)
+- **Operador (URGENTE — VENCIDO 30/05):** Confirmar ingredientes + naming "Potinho Junino" ⚠️
+- **Operador (21/07):** Preparar prêmios físicos sorteio + decoração "3 meses"
+- **Operador:** Google Search Console — solicitar indexação sitemap.xml (pendente ciclo #148)
+
+_Belinha — Ciclo #205 | 2026-05-13_
+
+---
+
 ## Ciclo #204 — 2026-05-13
 
 **Área:** Conversão — Brief aniversário 3 meses (25/07) + mecânica sorteio + broadcasts WA segmentados
