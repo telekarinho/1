@@ -2299,4 +2299,141 @@ _Belinha — Ciclo #150 | 2026-05-07_
 
 _Belinha — Auto-aprimoramento #161 | 2026-05-08_
 
+---
+
+## Auto-aprimoramento #200 (MARCO) — 2026-05-13
+
+_Revisão completa de 199 ciclos — Ajuste de estratégia para ciclos #201–#250_
+
+---
+
+### Análise dos ciclos #162–#199 (38 ciclos)
+
+#### Resumo por área
+
+| Área | Ciclos | Entreg | Valor médio |
+|------|--------|--------|-------------|
+| Conteúdo/WA | #163–165, #169–170, #177–183, #185, #188–189, #194, #197–199 | 19 arquivos standalone/brief | ⭐⭐⭐ Alto |
+| UX/Frontend | #162, #168, #171, #175, #186, #190 | 6 melhorias técnicas | ⭐⭐ Médio |
+| SEO | #166, #172, #179, #192 | 3 landing pages + guia GSC | ⭐⭐⭐ Alto |
+| Concorrentes | #167, #176, #187, #196 | 4 refetches | ⭐⭐ Médio |
+| Conversão | #174, #180, #184, #191, #195, #198 | 6 playbooks/guias | ⭐⭐⭐ Alto |
+| Código/Performance | #190, #193 | 1 remoção orphaned CSS, 1 bugfix | ⭐⭐ Médio |
+
+#### Top 10 entregas de maior valor (#162–#199)
+
+1. **Ecossistema completo Festa Junina (#163–#183):** 10+ arquivos coordenados (landing page SEO `potinho-junino-londrina.html`, WA standalone, posts IG/TikTok, reels teaser, stories, script São João, encerramento 30/06) — campanha de 3 semanas pronta para execução zero-a-zero.
+2. **Pivot Junino→Caramelado (#194, #199):** Gap real crítico preenchido — reveal 01/07 + scripts de atendimento em 5 canais + broadcast. Operador não precisará criar do zero em 49 dias.
+3. **D+30 Reativação (#195):** 290 linhas de brief operacional para a janela mais crítica de retenção (25/05–01/06). Baseado em comportamento real de 1 mês de loja.
+4. **WA Business Setup Junino (#198):** Guia passo-a-passo com screenshots mentais para operador não-técnico configurar keywords `JUNINA26`/`JUNINO26` — lacuna que existia desde ciclo #165.
+5. **Quarta Feliz + Dia da Vaca contracampanha (#197):** Programa semanal recorrente (50ª feira = toda semana) + contracampanha proativa do Dia da Vaca (08/07) — converte sazonalidade do concorrente em tráfego próprio.
+6. **Landing page `potinho-junino-londrina.html` (#179):** SEO de alta intenção para evento específico (17/06–30/06) + sitemap priority 0.9.
+7. **Remoção `css/cardapio.css` (#190):** 21 KB de CSS orphaned removido — DRY, bundle menor, zero risco de conflito.
+8. **Muffato upsell bar (#171):** 4 pill-links para exclusivos Muffato em `index.html` — upsell passivo sem nenhum custo de conversão.
+9. **CLS fix skeleton cards (#186):** Layout shift eliminado em `index.html` — Core Web Vital melhorado com 4 linhas de HTML.
+10. **Reels teasers ovelhinha junina (#169):** 4 roteiros prontos para 01–11/06 — preenche o "vácuo criativo" que sempre atrasa a produção.
+
+#### O que foi menos eficaz
+
+1. **Briefs excessivamente granulares por data:** Ciclos #177, #178, #181, #182, #185 criaram arquivos muito específicos (um Reel por dia) que terão validade de ~48h. Alto custo de criação, baixa reutilização. Regra futura: briefs diários só para D-1 de eventos críticos (São João, Encerramento) — não para cada post da semana.
+
+2. **Ciclo #180 (scripts WA variantes B/C) sobrepõe #165 (whatsapp-junina-2026.md):** Duplicação parcial de conteúdo. O standalone #165 já tinha variantes — o ciclo #180 adicionou variações não-essenciais. Regra futura: adicionar variantes dentro do arquivo standalone já existente, não criar arquivo separado.
+
+3. **Concorrentes Johnny/Jhoy:** Última atualização de Johnny foi ciclo #167 (há 33 ciclos, ~2 dias reais). Jhoy nunca foi atualizado de forma sistemática. Gap de intel crescendo.
+
+4. **D+60 e D+90 reativação não criados:** D+30 criado no ciclo #195 (excelente). Mas D+60 (24/06) e D+90 (24/07) ainda são gaps. Clientes da inauguração estão a ~18 dias — janela D+30 está se abrindo AGORA.
+
+5. **Schema.org `aggregateRating` bloqueado:** Loja aberta há 18 dias. Provavelmente já tem primeiros reviews do Google Maps. Operador deve confirmar se ≥3 reviews existem para desbloquear este item.
+
+---
+
+### Status atual — 2026-05-13 (Dia 18 de operação)
+
+**Loja:** Aberta desde 25/04/2026. ~18 dias de operação real.
+
+**Próximos eventos críticos:**
+| Data | Evento | Dias restantes | Status conteúdo |
+|------|--------|----------------|-----------------|
+| 25/05 | D+30 reativação Onda 1 | 12 dias | ✅ Brief criado #195 |
+| 12/06 | Dia dos Namorados | 30 dias | ✅ WA standalone #164 |
+| 17/06 | Lançamento Potinho Junino | 35 dias | ✅ Ecossistema completo |
+| 24/06 | São João | 42 dias | ✅ Brief #183 |
+| 30/06 | Encerramento Junino | 48 dias | ✅ Brief #188 |
+| 01/07 | Reveal Potinho Caramelado | 49 dias | ✅ Brief #189 + pivot #199 |
+| 09/08 | Dia dos Pais | 88 dias | ✅ WA standalone #170 + IG #173 |
+| 25/07 | 3 meses de loja | 73 dias | ❌ Gap |
+| 25/10 | 6 meses de loja | 165 dias | ❌ Gap |
+| 31/10 | Halloween | 171 dias | ✅ WA standalone #140 |
+
+**Gaps críticos identificados:**
+- D+60 (24/06) e D+90 (24/07): briefs de reativação ausentes
+- 3 meses de loja (25/07): nenhum conteúdo
+- Potinho Caramelado: conteúdo de sustentação julho (semana 2/3/4) criado em #194, mas sem concorrentes para posicionamento de julho
+- Johnny/Jhoy: intel desatualizada (+33 ciclos)
+- `aggregateRating`: possível desbloqueio (loja tem 18 dias de reviews)
+
+---
+
+### Regras v21
+
+> **v21a — Briefs diários com validade <48h: somente D-1 de eventos críticos.** Ciclos #177–182 mostraram que criar um arquivo por dia de campanha gera overhead de manutenção e reutilização mínima. Para campanhas de >3 dias, criar: 1 standalone semana + 1 brief do "dia H" (D-1). Variantes de caption/stories incluir dentro do próprio arquivo, não em arquivo separado.
+
+> **v21b — D+30/D+60/D+90 são série obrigatória de retenção.** D+30 criado (#195) — D+60 (24/06) e D+90 (24/07) são obrigatórios para completar a série. Clientes da inauguração entram na janela D+30 nos próximos 7 dias. Prazo real: D+60 brief antes de 17/06, D+90 brief antes de 17/07.
+
+> **v21c — Marcos de tempo de loja geram conteúdo especial.** 3 meses (25/07), 6 meses (25/10), 1 ano (25/04/2027) são âncoras de storytelling e fidelização. Cada um precisa de: (1) post feed comemorativo, (2) broadcast WA para base, (3) mecânica especial (ex: carimbo duplo no dia). Estes não foram sistematizados — criar como série.
+
+> **v21d — Intel concorrentes: ciclo máximo de atualização = 25 ciclos.** Johnny/Jhoy com +33 ciclos sem atualização é risco de cegueira estratégica. A cada auto-aprimoramento: verificar se algum concorrente está a >25 ciclos sem refetch. Se sim, adicionar ao roadmap imediato.
+
+---
+
+### Checklist atualizado pós-#200
+
+| Item | Status |
+|------|--------|
+| Ecossistema Festa Junina 2026 (landing + WA + IG + scripts) | ✅ Completo |
+| WA standalone Namorados 2026 | ✅ Ciclo #164 |
+| WA standalone Junina 2026 | ✅ Ciclo #165 |
+| WA standalone Pais 2026 | ✅ Ciclo #170 |
+| WA standalone Halloween 2026 | ✅ Ciclo #140/144 |
+| WA standalone Natal 2026 | ✅ Ciclo #145 |
+| WA standalone Virada 2026 | ✅ Ciclo #147 |
+| WA standalone Carnaval 2027 | ✅ Ciclo #152 |
+| WA standalone Páscoa 2027 | ✅ Ciclo #155 |
+| WA standalone 1 Ano 2027 | ✅ Ciclo #154 |
+| Progressão fidelidade 0→100 carimbos | ✅ Completo |
+| Pivot Junino→Caramelado (5 canais) | ✅ Ciclo #199 |
+| D+30 reativação | ✅ Ciclo #195 |
+| D+60 reativação | ❌ → ciclo #201 (D-1 de urgência: 17/06) |
+| D+90 reativação | ❌ → ciclo #206 |
+| 3 meses de loja (25/07) | ❌ → ciclo #204 |
+| 6 meses de loja (25/10) | ❌ → ciclo #215 |
+| Concorrentes Johnny/Jhoy (atualização) | ❌ → ciclo #202 (+33 ciclos sem refetch — v21d) |
+| Potinho Caramelado sustentação jul semanas 2-4 | ✅ Ciclo #194 |
+| `aggregateRating` Schema.org | ❓ → verificar se ≥3 reviews existem (18 dias de operação) |
+| CNPJ/DPO LGPD | ⛔ **⚠️ +39 ciclos** — Risco legal crescente |
+| Google Analytics ID real | ⛔ Aguarda autorização |
+| `cardapio.js` dead code | ⛔ Aguarda decisão |
+| Google Search Console | ⛔ Aguarda ação operador |
+| Benefícios carimbos (30/100) | ⛔ Aguarda operador |
+| Keyword VERAO (ativar dez/2026) | ⛔ Lembrar operador em nov/2026 |
+
+---
+
+### Roadmap #201–#210
+
+| Ciclo | Área | Ação | Urgência |
+|-------|------|------|----------|
+| **#201** | **Conversão** | D+60 reativação brief (24/06) — clientes inauguração entram na janela em ~7 dias. Formato: broadcast WA + mecânica carimbo duplo dia São João (24/06 = D+60 perfeito) | 🔴 Crítica |
+| **#202** | **Concorrentes** | Refetch Johnny + Jhoy (+33 ciclos sem update — v21d violado). Intel julho 2026: produtos, preços, mecânicas inverno | 🔴 Alta |
+| **#203** | **Conteúdo** | Potinho Caramelado: posts feed IG/TikTok semanas 2-3 (07–17/07) — sustentação pós-reveal. Foco: lifestyle + testimonial + "como montar" | Alta |
+| **#204** | **Conversão** | 3 meses de loja 25/07: post comemorativo + broadcast WA "você estava lá desde o início" + mecânica especial (v21c) | Alta |
+| **#205** | **SEO** | Auditoria `index.html` + `cardapio.html` — atualizar Schema.org LocalBusiness (horário, offer julho), verificar `aggregateRating` desbloqueável | Média |
+| **#206** | **Conversão** | D+90 reativação brief (24/07) — série de retenção completa. Foco: clientes que pararam de vir após D+30 | Alta |
+| **#207** | **UX/Frontend** | Auditoria mobile pós-Festa Junina: banner `#junina-banner` em `index.html` precisa ser removido/atualizado após 30/06 — prep com antecedência | Média |
+| **#208** | **Concorrentes** | Refetch MilkyMoo pós-Caramelado (ver collab "Como Treinar Dragão" jun/26 + Smoor's inverno — intel pré-julho) | Alta |
+| **#209** | **Conteúdo** | Dia dos Pais 09/08: posts feed IG/TikTok complementando WA standalone #170 — foco UGC "leve o pai para provar" + variante Kit Presente | Alta |
+| **#210** | **Auto-aprimoramento** | Reler log #205–#209; plano ago–out 2026 (Dia dos Pais execução, 6 meses 25/10, Halloween, BLACKPOT) | — |
+
+_Belinha — Auto-aprimoramento #200 (MARCO) | 2026-05-13_
+
 _Belinha — Ciclo #150 | 2026-05-07_

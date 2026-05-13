@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #200 — 2026-05-13
+
+**Área:** Auto-aprimoramento (MARCO) — revisão 199 ciclos + atualização `belinha/estrategia.md`
+
+**Contexto:** Ciclo #200 é marco obrigatório de auto-aprimoramento. Releitura completa de `belinha/log.md` (ciclos #162–#199) + `belinha/estrategia.md` (aprimoramento #161). Diagnóstico de padrões, gaps e desperdícios. Produção de roadmap #201–#210 e regras v21.
+
+**O que pesquisou/analisou:**
+- Leitura de `belinha/log.md`: ciclos #162–#199 (38 ciclos) — extraídas áreas, entregas, valor
+- Leitura de `belinha/estrategia.md`: último auto-aprimoramento era ciclo #161 (2026-05-08)
+- Leitura de `belinha/blockers.md`: 6 blockers ativos, CNPJ/DPO em +39 ciclos sem resolução
+- Contagem de gaps: D+60/D+90 ausentes, Johnny/Jhoy +33 ciclos sem refetch, marcos de tempo loja não sistematizados
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/estrategia.md` | ADICIONADO Auto-aprimoramento #200 (MARCO): análise top-10 entregas #162–#199, 10 itens menos eficazes, status 2026-05-13 (dia 18 de operação), tabela próximos eventos, 4 novas regras v21 (briefs granulares, série D+30/60/90, marcos de tempo, ciclo máximo intel), checklist atualizado 25 itens, roadmap #201–#210 |
+
+**Principais descobertas:**
+- **Top valor:** Ecossistema Festa Junina completo (10+ arquivos coordenados) + pivot Junino→Caramelado (5 canais) + D+30 reativação
+- **Desperdício:** Briefs diários (ciclos #177–#182) com validade <48h — custo alto, reutilização mínima → regra v21a criada
+- **Gap crítico urgente:** D+60 reativação (24/06 = D+60 da inauguração, coincide com São João) — janela se abre em ~7 dias
+- **Gap intel:** Johnny/Jhoy sem refetch há +33 ciclos (violação v21d criada exatamente para este padrão)
+- **Gap estrutural:** Marcos de loja (3m/6m/1a) não sistematizados → regra v21c criada
+- **Blocker crescente:** CNPJ/DPO LGPD em +39 ciclos — risco legal de multa ANPD
+
+**Commit:** (próximo)
+
+**Próximo passo sugerido:**
+- **Ciclo #201 — Conversão:** D+60 reativação brief URGENTE (24/06 = São João + D+60 da inauguração). Clientes da inauguração entram na janela D+30 esta semana. Ver roadmap #201–#210 em `belinha/estrategia.md`
+- **Ciclo #202 — Concorrentes:** Refetch Johnny + Jhoy (+33 ciclos sem atualização — v21d violado)
+- **Ciclo #203 — Conteúdo:** Potinho Caramelado sustentação semanas 2-3 IG/TikTok
+- **Operador (URGENTE — 30/05):** Confirmar ingredientes + naming "Potinho Junino"
+- **Operador (URGENTE — prazo passado):** Google Search Console — indexação sitemap
+- **Operador:** Verificar se loja já tem ≥3 reviews Google Maps → desbloquear `aggregateRating` Schema.org
+
+_Belinha — Ciclo #200 (MARCO) | 2026-05-13_
+
+---
+
 ## Ciclo #199 — 2026-05-12
 
 **Área:** Conversão — Script pivot narrativo "Potinho Junino acabou → Potinho Caramelado chegou"
