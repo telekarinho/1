@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot - Estoque Inteligente</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared-panel.css">
+    <link rel="manifest" href="../manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --ink: #25153f;
+            --muted: #7c6f92;
+            --purple: #6f42c1;
+            --blue: #2f8ee8;
+            --green: #12b981;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+            --soft: #f7f1ff;
+            --line: #eadff5;
+        }
+        body { background: #f6effb; color: var(--ink); }
+        .smart-header {
+            background: linear-gradient(135deg, #5c2aa2, #8d5bd7);
+            color: #fff;
+            border-bottom: 0;
+        }
+        .smart-shell { display: grid; gap: 18px; }
+        .hero {
+            background: linear-gradient(135deg, #2c174f, #55308b);
+            border-radius: 18px;
+            padding: 24px;
+            color: #fff;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 18px;
+            align-items: center;
+            box-shadow: 0 18px 45px rgba(63, 39, 102, .18);
+        }
+        .hero h2 { margin: 0; font-family: 'Baloo 2', cursive; font-size: 2rem; line-height: 1.05; }
+        .hero p { margin: 6px 0 0; color: rgba(255,255,255,.78); max-width: 720px; }
+        .hero-actions, .control-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .btn-smart {
+            border: 0;
+            border-radius: 12px;
+            padding: 11px 16px;
+            font-weight: 800;
+            color: #fff;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(86, 74, 214, .18);
+        }
+        .btn-smart.secondary { background: rgba(255,255,255,.18); box-shadow: none; border: 1px solid rgba(255,255,255,.2); }
+        .btn-smart.light { background: #fff; color: var(--purple); border: 1px solid var(--line); box-shadow: none; }
+        .select-smart {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: #fff;
+            color: var(--ink);
+            font-weight: 800;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+        }
+        .kpi {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 10px 24px rgba(37, 21, 63, .05);
+        }
+        .kpi span { display: block; color: var(--muted); font-weight: 800; font-size: .78rem; text-transform: uppercase; letter-spacing: .02em; }
+        .kpi strong { display: block; margin-top: 7px; font-size: 1.85rem; line-height: 1; }
+        .kpi small { color: var(--muted); font-weight: 700; }
+        .card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            box-shadow: 0 10px 24px rgba(37, 21, 63, .05);
+            overflow: hidden;
+        }
+        .card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 22px;
+            border-bottom: 1px solid #f0e7f8;
+        }
+        .card-head h3 { margin: 0; font-family: 'Baloo 2', cursive; font-size: 1.35rem; }
+        .card-head p { margin: 2px 0 0; color: var(--muted); }
+        .card-body { padding: 18px 22px 22px; }
+        .two-col { display: grid; grid-template-columns: 1.1fr .9fr; gap: 18px; }
+        .chart-box { height: 280px; }
+        .risk-list { display: grid; gap: 10px; }
+        .risk-row {
+            display: grid;
+            grid-template-columns: minmax(170px, 1fr) 120px 1.5fr;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1eaf8;
+        }
+        .risk-row:last-child { border-bottom: 0; }
+        .risk-name { font-weight: 800; }
+        .risk-days { font-weight: 900; color: var(--purple); }
+        .bar-track { height: 10px; border-radius: 999px; background: #f1ecf7; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--red), var(--yellow)); min-width: 3%; }
+        .bar-fill.ok { background: linear-gradient(90deg, var(--green), #65d8a5); }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-weight: 900;
+            font-size: .78rem;
+            white-space: nowrap;
+        }
+        .st-critical { background: #ffe8e8; color: #b91c1c; }
+        .st-attention { background: #fff4d7; color: #92400e; }
+        .st-ok { background: #dcfce7; color: #047857; }
+        .st-missing { background: #eef2ff; color: #5b5f88; }
+        .table-wrap { overflow-x: auto; }
+        .smart-table { width: 100%; border-collapse: collapse; min-width: 980px; }
+        .smart-table th, .smart-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f0e7f8;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .smart-table th {
+            color: var(--muted);
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .02em;
+        }
+        .num { font-variant-numeric: tabular-nums; font-weight: 800; }
+        .flavor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+            gap: 10px;
+        }
+        .lifetime-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .lifetime-card {
+            border: 1px solid #eadff5;
+            border-radius: 16px;
+            padding: 16px;
+            background: linear-gradient(135deg, #fff, #fbf7ff);
+        }
+        .lifetime-card span {
+            display: block;
+            color: var(--muted);
+            font-weight: 900;
+            font-size: .78rem;
+            text-transform: uppercase;
+        }
+        .lifetime-card strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 1.65rem;
+            line-height: 1;
+            color: var(--purple);
+        }
+        .lifetime-card small {
+            display: block;
+            margin-top: 8px;
+            color: var(--muted);
+            font-weight: 700;
+            line-height: 1.35;
+        }
+        .flavor {
+            border: 1px solid #eee4f8;
+            border-radius: 14px;
+            padding: 12px;
+            background: #fff;
+        }
+        .flavor strong { display: block; line-height: 1.15; }
+        .flavor span { color: var(--muted); font-weight: 800; }
+        .flavor.zero { border-color: #ffb4b4; background: #fff4f4; }
+        .flavor.low { border-color: #f8d884; background: #fffbeb; }
+        .flavor.ok { border-color: #b7f0cf; background: #f1fff7; }
+        .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+        .tab {
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--muted);
+            border-radius: 999px;
+            padding: 8px 13px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+        .tab.active { background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff; border-color: transparent; }
+        .notice {
+            border: 1px solid #c7f0dd;
+            background: #ecfff5;
+            color: #05603a;
+            border-radius: 14px;
+            padding: 14px 16px;
+            font-weight: 800;
+        }
+        .empty {
+            padding: 38px 16px;
+            text-align: center;
+            color: var(--muted);
+            font-weight: 800;
+        }
+        @media (max-width: 1100px) {
+            .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .two-col { grid-template-columns: 1fr; }
+            .hero { grid-template-columns: 1fr; }
+            .lifetime-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 720px) {
+            .kpi-grid { grid-template-columns: 1fr; }
+            .risk-row { grid-template-columns: 1fr; }
+            .hero h2 { font-size: 1.55rem; }
+            .card-head { align-items: flex-start; flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="panel-layout">
+        <aside class="panel-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+                <h2>MilkyPot<small id="sidebarStoreName">Franqueado</small></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-group">Principal</div>
+                <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+                <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+                <a href="pdv.html" class="sidebar-link"><span class="icon">🛒</span> PDV</a>
+                <div class="sidebar-nav-group">Gestao</div>
+                <a href="financeiro.html" class="sidebar-link"><span class="icon">💰</span> Financeiro</a>
+                <a href="analise.html" class="sidebar-link"><span class="icon">🧠</span> Inteligencia</a>
+                <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
+                <a href="auditoria.html" class="sidebar-link"><span class="icon">🔎</span> Auditoria</a>
+                <a href="compras.html" class="sidebar-link"><span class="icon">🛒</span> Compras</a>
+                <a href="estoque-inteligente.html" class="sidebar-link active"><span class="icon">📦</span> Estoque Inteligente</a>
+                <a href="operacional.html" class="sidebar-link"><span class="icon">🎯</span> Operacional</a>
+            </nav>
+        </aside>
+
+        <main class="panel-main">
+            <header class="panel-header smart-header">
+                <div class="panel-header-left">
+                    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>📦 Estoque Inteligente</h1>
+                </div>
+                <div class="panel-header-right">
+                    <button class="btn-smart secondary" onclick="reloadAll()">Atualizar</button>
+                    <button class="btn-logout" onclick="safeLogout()">Sair</button>
+                </div>
+            </header>
+
+            <section class="panel-content">
+                <div class="smart-shell">
+                    <div class="hero">
+                        <div>
+                            <h2>Central geral para nao faltar nada</h2>
+                            <p>Une vendas, receitas, CMV, estoque atual, contagem de sabores e sugestao de compra em uma tela so. Quando algum dado nao conversa, ele aparece como pendencia.</p>
+                        </div>
+                        <div class="hero-actions">
+                            <select id="periodSelect" class="select-smart" onchange="runAnalysis()">
+                                <option value="7">Ultimos 7 dias</option>
+                                <option value="14">Ultimos 14 dias</option>
+                                <option value="30">Ultimos 30 dias</option>
+                                <option value="90">Ultimos 90 dias</option>
+                                <option value="0">Desde o inicio</option>
+                            </select>
+                            <select id="coverageSelect" class="select-smart" onchange="runAnalysis()">
+                                <option value="7">Comprar para 7 dias</option>
+                                <option value="14" selected>Comprar para 14 dias</option>
+                                <option value="21">Comprar para 21 dias</option>
+                                <option value="30">Comprar para 30 dias</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="notice" id="syncNotice">Carregando dados reais do Firestore...</div>
+
+                    <div class="kpi-grid">
+                        <div class="kpi"><span>Risco critico</span><strong id="kpiCritical">--</strong><small>menos de 3 dias de estoque</small></div>
+                        <div class="kpi"><span>Atencao</span><strong id="kpiAttention">--</strong><small>entre 3 e 7 dias</small></div>
+                        <div class="kpi"><span>Sem receita/vinculo</span><strong id="kpiMissing">--</strong><small>produto vendido sem insumo rastreavel</small></div>
+                        <div class="kpi"><span>Itens rastreados</span><strong id="kpiTracked">--</strong><small>estoque + sabores monitorados</small></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-head">
+                            <div>
+                                <h3>Vendido desde o primeiro lançamento</h3>
+                                <p>Acumulado real dos pedidos salvos no PDV. Serve para decidir o que pedir e o que parar de comprar.</p>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="lifetime-grid" id="lifetimeGrid">
+                                <div class="empty">Calculando histórico...</div>
+                            </div>
+                            <div class="notice" style="margin-top:14px;">
+                                Picolé por sabor só fica exato quando a venda registrar o sabor escolhido. Para vendas antigas, o sistema sabe o total geral vendido; a decisão por sabor usa a contagem atual e a auditoria semanal.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="two-col">
+                        <div class="card">
+                            <div class="card-head">
+                                <div>
+                                    <h3>Risco de faltar</h3>
+                                    <p>Baseado no consumo real do periodo e no estoque atual.</p>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="riskList" class="risk-list"><div class="empty">Calculando risco...</div></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-head">
+                                <div>
+                                    <h3>Consumo por insumo</h3>
+                                    <p>Maiores saidas do periodo selecionado.</p>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-box"><canvas id="consumptionChart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-head">
+                            <div>
+                                <h3>Lista inteligente de compra</h3>
+                                <p>Quantidade sugerida para cobrir o periodo escolhido, sem alterar estoque automaticamente.</p>
+                            </div>
+                            <div class="control-row">
+                                <button class="btn-smart light" onclick="copyPurchaseList()">Copiar lista</button>
+                                <button class="btn-smart" onclick="sendPurchaseList()">Enviar WhatsApp</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-wrap">
+                                <table class="smart-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Estoque</th>
+                                            <th>Consumo periodo</th>
+                                            <th>Media/dia</th>
+                                            <th>Dias restantes</th>
+                                            <th>Sugestao</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="purchaseBody"><tr><td colspan="7">Carregando...</td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-head">
+                            <div>
+                                <h3>Sabores e auditoria semanal</h3>
+                                <p>Picolés, sorvetes e acai precisam de contagem por sabor para saber exatamente o que pedir.</p>
+                            </div>
+                            <div class="tabs">
+                                <button class="tab active" id="tab-picoles" onclick="showFlavorTab('picoles')">Picoles</button>
+                                <button class="tab" id="tab-sorvetes" onclick="showFlavorTab('sorvetes')">Sorvetes</button>
+                                <button class="tab" id="tab-acai" onclick="showFlavorTab('acai')">Acai</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="flavorSummary" class="notice" style="margin-bottom:14px;">Carregando sabores...</div>
+                            <div id="flavorGrid" class="flavor-grid"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-head">
+                            <div>
+                                <h3>Pendencias para o sistema conversar</h3>
+                                <p>Mostra produtos vendidos sem receita, insumos sem unidade/custo e pontos que impedem CMV perfeito.</p>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="issuesList" class="risk-list"><div class="empty">Verificando integridade...</div></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../js/core/constants.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/datastore.js"></script>
+    <script src="../js/core/firebase-config.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/units.js"></script>
+    <script src="../js/core/catalog-v2.js"></script>
+
+    <script>
+        var state = {
+            fid: 'muffato-quintino',
+            docs: {},
+            rows: [],
+            issues: [],
+            lifetime: {},
+            flavorTab: 'picoles',
+            chart: null
+        };
+
+        function toggleSidebar() {
+            var el = document.getElementById('sidebar');
+            if (el) el.classList.toggle('open');
+        }
+
+        function safeLogout() {
+            if (window.Auth && Auth.logout) Auth.logout();
+            else location.href = '../login.html';
+        }
+
+        function money(v) {
+            return 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function qty(v, unit) {
+            var n = Number(v) || 0;
+            var digits = unit === 'un' || unit === 'unid' ? 0 : 3;
+            return n.toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits }) + ' ' + (unit || '');
+        }
+
+        function parseDocValue(raw) {
+            if (!raw) return null;
+            var value = raw.value !== undefined ? raw.value : raw;
+            if (typeof value === 'string') {
+                try { return JSON.parse(value); } catch (e) { return value; }
+            }
+            return value;
+        }
+
+        function getSessionLoose() {
+            try {
+                if (window.Auth && Auth.getSessionRaw) return Auth.getSessionRaw();
+                var raw = localStorage.getItem('mp_session');
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function resolveFid() {
+            var params = new URLSearchParams(location.search);
+            var fromUrl = params.get('fid');
+            if (fromUrl) return fromUrl;
+            var s = getSessionLoose();
+            return (s && s.franchiseId) || 'muffato-quintino';
+        }
+
+        async function ensureCloudReady() {
+            state.fid = resolveFid();
+            if (window.DataStore && !DataStore._ready && DataStore.init) {
+                DataStore.init();
+            }
+            if (window.DataStore && DataStore._attemptAnonymousAuth) {
+                try { await DataStore._attemptAnonymousAuth(); } catch (e) {}
+            } else if (window.firebase && firebase.auth) {
+                try {
+                    if (!firebase.auth().currentUser) await firebase.auth().signInAnonymously();
+                } catch (e) {}
+            }
+        }
+
+        async function fetchStoreDoc(key) {
+            if (!window.firebase || !firebase.firestore) return null;
+            try {
+                var snap = await firebase.firestore().collection('datastore').doc(key).get();
+                if (!snap.exists) return null;
+                var value = parseDocValue(snap.data());
+                try { localStorage.setItem('mp_' + key, JSON.stringify(value)); } catch (e) {}
+                return value;
+            } catch (e) {
+                console.warn('Falha ao buscar doc', key, e.code || e.message);
+                return null;
+            }
+        }
+
+        async function loadAllData() {
+            await ensureCloudReady();
+            var fid = state.fid;
+            var keys = [
+                'inventory_' + fid,
+                'orders_' + fid,
+                'caixa_' + fid,
+                'catalog_config_' + fid,
+                'catalog_config',
+                'catalog_v2_' + fid,
+                'purchase_orders_log_' + fid,
+                'weekly_stock_audits_' + fid
+            ];
+            var results = await Promise.all(keys.map(fetchStoreDoc));
+            keys.forEach(function(k, idx) { state.docs[k] = results[idx]; });
+
+            if (state.docs['catalog_config_' + fid]) {
+                try { localStorage.setItem('mp_catalog_config', JSON.stringify(state.docs['catalog_config_' + fid])); } catch (e) {}
+            }
+
+            var s = getSessionLoose();
+            if (s && s.name) setText('sidebarUserName', s.name);
+            setText('sidebarStoreName', fid.replace(/-/g, ' '));
+        }
+
+        function setText(id, text) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = text;
+        }
+
+        function getInventory() {
+            var inv = state.docs['inventory_' + state.fid];
+            if (!Array.isArray(inv) && window.DataStore) inv = DataStore.getCollection('inventory', state.fid);
+            return Array.isArray(inv) ? inv : [];
+        }
+
+        function getOrders() {
+            var orders = state.docs['orders_' + state.fid];
+            if (!Array.isArray(orders) && window.DataStore) orders = DataStore.getCollection('orders', state.fid);
+            return Array.isArray(orders) ? orders : [];
+        }
+
+        function getCashMoves() {
+            var moves = state.docs['caixa_' + state.fid];
+            if (!Array.isArray(moves) && window.DataStore) moves = DataStore.get('caixa_' + state.fid);
+            return Array.isArray(moves) ? moves : [];
+        }
+
+        function getCatalog() {
+            return state.docs['catalog_config_' + state.fid] || state.docs.catalog_config || (window.DataStore ? DataStore.get('catalog_config') : {}) || {};
+        }
+
+        function normalizeRecipeLine(r) {
+            if (!r) return null;
+            var id = r.insumoId || r.inventoryId || r.id;
+            var amount = Number(r.qty || r.quantity || r.amount || 0);
+            var unit = r.unit || r.unidade || r.unitLabel;
+            if (!id || !(amount > 0) || !unit) return null;
+            return { insumoId: id, qty: amount, unit: unit };
+        }
+
+        function buildProductMap() {
+            var map = {};
+            var cat = getCatalog();
+            function addItem(item, section, category) {
+                if (!item) return;
+                var id = item.id || item.productId;
+                if (!id) return;
+                var rec = (item.receita || item.recipe || []).map(normalizeRecipeLine).filter(Boolean);
+                map[id] = {
+                    id: id,
+                    name: item.name || item.nome || id,
+                    section: section,
+                    category: category,
+                    receita: rec
+                };
+            }
+            Object.keys(cat.sabores || {}).forEach(function(catName) {
+                var group = cat.sabores[catName] || {};
+                (group.items || []).forEach(function(item) { addItem(item, 'sabores', catName); });
+            });
+            Object.keys(cat.adicionais || {}).forEach(function(catName) {
+                var group = cat.adicionais[catName] || {};
+                (group.items || []).forEach(function(item) { addItem(item, 'adicionais', catName); });
+            });
+            (cat.bebidas || []).forEach(function(item) { addItem(item, 'bebidas', 'bebidas'); });
+
+            var cv2 = state.docs['catalog_v2_' + state.fid];
+            var list = Array.isArray(cv2) ? cv2 : (cv2 && (cv2.produtos || cv2.items || cv2.products));
+            (Array.isArray(list) ? list : []).forEach(function(p) {
+                var ins = p && p.custos && Array.isArray(p.custos.insumos) ? p.custos.insumos : [];
+                addItem({
+                    id: p.id,
+                    name: p.name || p.nome,
+                    receita: ins.map(function(i) {
+                        return { insumoId: i.insumoId, qty: i.qty, unit: i.unit };
+                    })
+                }, p.section || 'catalog_v2', p.category || '');
+            });
+            return map;
+        }
+
+        function convertUnit(value, fromUnit, toUnit) {
+            value = Number(value) || 0;
+            if (!fromUnit || !toUnit || fromUnit === toUnit) return value;
+            var f = String(fromUnit).toLowerCase();
+            var t = String(toUnit).toLowerCase();
+            if ((f === 'un' || f === 'unid' || f === 'unidade') && (t === 'un' || t === 'unid' || t === 'unidade')) return value;
+            if (f === 'kg' && t === 'g') return value * 1000;
+            if (f === 'g' && t === 'kg') return value / 1000;
+            if (f === 'l' && t === 'ml') return value * 1000;
+            if (f === 'ml' && t === 'l') return value / 1000;
+            return null;
+        }
+
+        function orderDate(o) {
+            var raw = o.createdAt || o.updatedAt || o.date || o.timestamp;
+            if (!raw) return null;
+            var d = new Date(raw);
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        function validOrder(o) {
+            var st = String(o.status || '').toLowerCase();
+            if (o.deleted || o.cancelled || o.canceled) return false;
+            if (['cancelado', 'cancelled', 'canceled', 'excluido', 'deleted'].indexOf(st) !== -1) return false;
+            return Array.isArray(o.items) && o.items.length > 0;
+        }
+
+        function itemQty(item) {
+            var qty = Number(item && (item.qty || item.quantity) || 1);
+            var kitQty = Number(item && item.kitQty || 0);
+            if (!Number.isFinite(qty) || qty <= 0) qty = 1;
+            if (Number.isFinite(kitQty) && kitQty > 1) return qty * kitQty;
+            return qty;
+        }
+
+        function itemRevenue(item) {
+            var q = itemQty(item);
+            return Number(item.total || item.subtotal || (Number(item.price || item.unitPrice || 0) * q) || 0);
+        }
+
+        function normalizeText(s) {
+            return String(s || '').toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function isPicoleItem(item, product) {
+            var s = normalizeText([
+                item && item.name,
+                item && item.sabor,
+                item && item.category,
+                item && item.categoriaId,
+                product && product.name,
+                product && product.category
+            ].join(' '));
+            return s.indexOf('picol') !== -1 || (product && product.category === 'picole');
+        }
+
+        function isBuffetWeightItem(item, product) {
+            var s = normalizeText([
+                item && item.name,
+                item && item.size,
+                item && item.type,
+                item && item.categoriaId,
+                product && product.name,
+                product && product.category
+            ].join(' '));
+            return !!(item && (item.byWeight || item.type === 'por_peso' || item.weightG || item.weightKg)) ||
+                s.indexOf('buffet') !== -1 || s.indexOf('self-service') !== -1 || s.indexOf('granel') !== -1;
+        }
+
+        function getWeightKg(item) {
+            if (!item) return 0;
+            var kg = Number(item.weightKg || 0);
+            if (kg > 0) return kg;
+            var g = Number(item.weightG || 0);
+            if (g > 0) return g / 1000;
+            var size = String(item.size || item.name || '');
+            var m = size.match(/(\d+(?:[,.]\d+)?)\s*g\b/i);
+            if (m) return Number(m[1].replace(',', '.')) / 1000;
+            var kgm = size.match(/(\d+(?:[,.]\d+)?)\s*kg\b/i);
+            if (kgm) return Number(kgm[1].replace(',', '.'));
+            return 0;
+        }
+
+        function ensureConsumption(consumption, insById, id, fallbackName, unit) {
+            var ins = insById[id] || {};
+            if (!consumption[id]) {
+                consumption[id] = {
+                    id: id,
+                    name: ins.name || fallbackName || id,
+                    unit: ins.unit || unit || '',
+                    stock: Number(ins.quantity || 0),
+                    minStock: Number(ins.minStock || 0),
+                    cost: Number(ins.cost || 0),
+                    consumed: 0
+                };
+            }
+            return consumption[id];
+        }
+
+        function analysisDaysFromOrders(orders) {
+            var times = orders.map(orderDate).filter(Boolean).map(function(d) { return d.getTime(); });
+            if (!times.length) return 1;
+            var first = Math.min.apply(Math, times);
+            var days = Math.ceil((Date.now() - first) / 86400000);
+            return Math.max(1, days);
+        }
+
+        function calculateConsumption(orders, inventory, products) {
+            var insById = {};
+            inventory.forEach(function(ins) { if (ins && ins.id) insById[ins.id] = ins; });
+
+            var consumption = {};
+            var missing = {};
+            var revenue = 0;
+
+            orders.forEach(function(o) {
+                (o.items || []).forEach(function(item) {
+                    revenue += itemRevenue(item);
+                    var pid = item.productId || item.id || item.itemId;
+                    var product = products[pid];
+                    if (isPicoleItem(item, product)) {
+                        ensureConsumption(consumption, insById, 'ins_picole', 'Picole pronto', 'unid').consumed += itemQty(item);
+                        return;
+                    }
+                    if (isBuffetWeightItem(item, product)) {
+                        var kg = getWeightKg(item);
+                        if (kg > 0) {
+                            ensureConsumption(consumption, insById, 'ins_base_geral', 'Sorvete e acai do buffet', 'kg').consumed += kg;
+                            return;
+                        }
+                        var buffetKey = 'buffet-sem-peso';
+                        if (!missing[buffetKey]) missing[buffetKey] = {
+                            name: 'Buffet vendido sem peso registrado',
+                            reason: 'Nao entrou no consumo em kg para nao inventar estoque/CMV',
+                            count: 0,
+                            revenue: 0
+                        };
+                        missing[buffetKey].count += itemQty(item);
+                        missing[buffetKey].revenue += itemRevenue(item);
+                        return;
+                    }
+                    if (!product || !product.receita || !product.receita.length) {
+                        var key = pid || (item.name || item.sabor || 'Produto sem id');
+                        if (!missing[key]) missing[key] = { name: item.name || item.sabor || key, reason: 'Vendido sem receita ou insumo vinculado', count: 0, revenue: 0 };
+                        missing[key].count += itemQty(item);
+                        missing[key].revenue += itemRevenue(item);
+                        return;
+                    }
+                    product.receita.forEach(function(r) {
+                        var ins = insById[r.insumoId];
+                        if (!ins) {
+                            var missKey = 'insumo:' + r.insumoId;
+                            if (!missing[missKey]) missing[missKey] = { name: 'Insumo nao encontrado: ' + r.insumoId, reason: 'Receita aponta para um insumo que nao existe mais', count: 0, revenue: 0 };
+                            missing[missKey].count += itemQty(item);
+                            return;
+                        }
+                        var converted = convertUnit(r.qty * itemQty(item), r.unit, ins.unit);
+                        if (converted === null) return;
+                        if (!consumption[ins.id]) {
+                            consumption[ins.id] = {
+                                id: ins.id,
+                                name: ins.name || ins.id,
+                                unit: ins.unit || '',
+                                stock: Number(ins.quantity || 0),
+                                minStock: Number(ins.minStock || 0),
+                                cost: Number(ins.cost || 0),
+                                consumed: 0
+                            };
+                        }
+                        consumption[ins.id].consumed += converted;
+                    });
+                });
+            });
+
+            return { consumption: consumption, missing: missing, revenue: revenue };
+        }
+
+        function runAnalysis() {
+            var period = Number(document.getElementById('periodSelect').value);
+            if (!Number.isFinite(period)) period = 7;
+            var coverage = Number(document.getElementById('coverageSelect').value) || 14;
+            var inventory = getInventory();
+            var allValidOrders = getOrders().filter(validOrder);
+            var since = period > 0 ? new Date(Date.now() - period * 86400000) : null;
+            var orders = allValidOrders.filter(function(o) {
+                var d = orderDate(o);
+                return !since || !d || d >= since;
+            });
+            var products = buildProductMap();
+            var ordersById = {};
+            allValidOrders.forEach(function(o) { if (o && o.id) ordersById[o.id] = o; });
+            var periodCalc = calculateConsumption(orders, inventory, products);
+            var consumption = periodCalc.consumption;
+            var missing = periodCalc.missing;
+            var revenue = periodCalc.revenue;
+            var analysisDays = period > 0 ? period : analysisDaysFromOrders(orders);
+
+            var lifetimeCalc = calculateConsumption(allValidOrders, inventory, products);
+            state.lifetime = {
+                rows: lifetimeCalc.consumption,
+                firstDate: allValidOrders.map(orderDate).filter(Boolean).sort(function(a, b) { return a - b; })[0] || null,
+                orders: allValidOrders.length,
+                caixa: auditCashCoverage(getCashMoves(), ordersById)
+            };
+
+            inventory.forEach(function(ins) {
+                if (!ins || !ins.id || consumption[ins.id]) return;
+                consumption[ins.id] = {
+                    id: ins.id,
+                    name: ins.name || ins.id,
+                    unit: ins.unit || '',
+                    stock: Number(ins.quantity || 0),
+                    minStock: Number(ins.minStock || 0),
+                    cost: Number(ins.cost || 0),
+                    consumed: 0,
+                    noConsumption: true
+                };
+            });
+
+            state.rows = Object.values(consumption).map(function(row) {
+                var avg = row.consumed > 0 ? row.consumed / analysisDays : 0;
+                var daysLeft = avg > 0 ? row.stock / avg : null;
+                var suggested = avg > 0 ? Math.max(0, avg * coverage - row.stock) : 0;
+                var status = 'sem-dado';
+                if (daysLeft !== null) status = daysLeft < 3 ? 'critico' : (daysLeft < 7 ? 'atencao' : 'ok');
+                if (row.stock <= 0 && row.minStock > 0) status = 'critico';
+                return Object.assign(row, {
+                    avgDaily: avg,
+                    daysLeft: daysLeft,
+                    suggested: suggested,
+                    status: status
+                });
+            }).sort(function(a, b) {
+                var rank = { critico: 0, atencao: 1, ok: 2, 'sem-dado': 3 };
+                if (rank[a.status] !== rank[b.status]) return rank[a.status] - rank[b.status];
+                return (a.daysLeft === null ? 9999 : a.daysLeft) - (b.daysLeft === null ? 9999 : b.daysLeft);
+            });
+
+            state.issues = Object.values(missing).sort(function(a, b) { return b.count - a.count; });
+            var label = period > 0 ? 'no periodo' : 'desde o inicio';
+            setText('syncNotice', 'Dados carregados: ' + orders.length + ' pedidos ' + label + ', ' + inventory.length + ' insumos/estoques e ' + Object.keys(products).length + ' produtos no catalogo.');
+            renderAll(revenue);
+        }
+
+        function statusHtml(status) {
+            if (status === 'critico') return '<span class="status-pill st-critical">Critico</span>';
+            if (status === 'atencao') return '<span class="status-pill st-attention">Atencao</span>';
+            if (status === 'ok') return '<span class="status-pill st-ok">OK</span>';
+            return '<span class="status-pill st-missing">Sem consumo</span>';
+        }
+
+        function renderAll(revenue) {
+            var critical = state.rows.filter(function(r) { return r.status === 'critico'; }).length;
+            var attention = state.rows.filter(function(r) { return r.status === 'atencao'; }).length;
+            setText('kpiCritical', critical);
+            setText('kpiAttention', attention);
+            setText('kpiMissing', state.issues.length);
+            setText('kpiTracked', state.rows.length);
+            renderRisk();
+            renderPurchaseTable();
+            renderChart();
+            renderLifetimeSummary();
+            renderIssues();
+            renderFlavors();
+        }
+
+        function lifetimeItem(id, fallbackUnit) {
+            var row = state.lifetime && state.lifetime.rows ? state.lifetime.rows[id] : null;
+            if (row) return row;
+            var ins = getInventory().find(function(i) { return i && i.id === id; }) || {};
+            return {
+                id: id,
+                name: ins.name || id,
+                unit: ins.unit || fallbackUnit || '',
+                stock: Number(ins.quantity || 0),
+                consumed: 0
+            };
+        }
+
+        function auditCashCoverage(moves, ordersById) {
+            var vendas = (moves || []).filter(function(m) { return m && m.type === 'venda'; });
+            var missing = vendas.filter(function(m) { return m.orderId && !ordersById[m.orderId]; });
+            var missingValue = missing.reduce(function(s, m) { return s + (Number(m.valor || 0) || 0); }, 0);
+            return {
+                vendas: vendas.length,
+                missing: missing.length,
+                missingValue: missingValue,
+                firstDate: vendas.map(function(m) { return orderDate(m); }).filter(Boolean).sort(function(a, b) { return a - b; })[0] || null
+            };
+        }
+
+        function renderLifetimeSummary() {
+            var grid = document.getElementById('lifetimeGrid');
+            if (!grid) return;
+            var first = state.lifetime && state.lifetime.firstDate
+                ? state.lifetime.firstDate.toLocaleDateString('pt-BR')
+                : 'primeiro pedido';
+            var caixa = (state.lifetime && state.lifetime.caixa) || { vendas: 0, missing: 0, missingValue: 0 };
+            var picole = lifetimeItem('ins_picole', 'unid');
+            var buffet = lifetimeItem('ins_base_geral', 'kg');
+            var cards = [
+                {
+                    label: 'Picoles vendidos',
+                    value: qty(picole.consumed, picole.unit),
+                    note: 'Desde ' + first + '. Estoque atual: ' + qty(picole.stock, picole.unit) + '. Conta kits por kitQty, mesmo quando a receita antiga nao bate.'
+                },
+                {
+                    label: 'Buffet geral vendido',
+                    value: qty(buffet.consumed, buffet.unit),
+                    note: 'Soma sorvete + acai vendidos pelo peso real do item (weightG/weightKg). Estoque atual: ' + qty(buffet.stock, buffet.unit) + '.'
+                },
+                {
+                    label: 'Caixa x pedidos',
+                    value: caixa.vendas + ' vendas',
+                    note: caixa.missing
+                        ? caixa.missing + ' lancamentos de caixa (' + money(caixa.missingValue) + ') nao tem pedido detalhado para separar produto. Eles ficam como pendencia de auditoria.'
+                        : 'Todos os lancamentos de venda do caixa encontrados tem pedido detalhado para rastrear produto.'
+                }
+            ];
+            grid.innerHTML = cards.map(function(c) {
+                return '<div class="lifetime-card">' +
+                    '<span>' + escapeHtml(c.label) + '</span>' +
+                    '<strong>' + escapeHtml(c.value) + '</strong>' +
+                    '<small>' + escapeHtml(c.note) + '</small>' +
+                '</div>';
+            }).join('');
+        }
+
+        function renderRisk() {
+            var el = document.getElementById('riskList');
+            var rows = state.rows.filter(function(r) { return r.status !== 'sem-dado'; }).slice(0, 10);
+            if (!rows.length) {
+                el.innerHTML = '<div class="empty">Sem consumo suficiente para calcular risco ainda.</div>';
+                return;
+            }
+            el.innerHTML = rows.map(function(r) {
+                var days = r.daysLeft === null ? 0 : r.daysLeft;
+                var width = Math.max(3, Math.min(100, (days / 14) * 100));
+                return '<div class="risk-row">' +
+                    '<div><div class="risk-name">' + escapeHtml(r.name) + '</div><small>' + escapeHtml(r.id) + '</small></div>' +
+                    '<div class="risk-days">' + (r.daysLeft === null ? 'sem media' : r.daysLeft.toFixed(1) + ' dias') + '</div>' +
+                    '<div class="bar-track"><div class="bar-fill ' + (r.status === 'ok' ? 'ok' : '') + '" style="width:' + width + '%"></div></div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function renderPurchaseTable() {
+            var tbody = document.getElementById('purchaseBody');
+            var rows = state.rows.slice();
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum estoque encontrado.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = rows.map(function(r) {
+                return '<tr>' +
+                    '<td><strong>' + escapeHtml(r.name) + '</strong><br><small>' + escapeHtml(r.id) + '</small></td>' +
+                    '<td class="num">' + qty(r.stock, r.unit) + '</td>' +
+                    '<td class="num">' + qty(r.consumed, r.unit) + '</td>' +
+                    '<td class="num">' + qty(r.avgDaily, r.unit) + '</td>' +
+                    '<td class="num">' + (r.daysLeft === null ? '-' : r.daysLeft.toFixed(1)) + '</td>' +
+                    '<td class="num">' + (r.suggested > 0 ? qty(r.suggested, r.unit) : '-') + '</td>' +
+                    '<td>' + statusHtml(r.status) + '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        function renderChart() {
+            var ctx = document.getElementById('consumptionChart');
+            var rows = state.rows.filter(function(r) { return r.consumed > 0; }).sort(function(a, b) { return b.consumed - a.consumed; }).slice(0, 8);
+            if (state.chart) state.chart.destroy();
+            state.chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: rows.map(function(r) { return r.name.length > 20 ? r.name.slice(0, 18) + '...' : r.name; }),
+                    datasets: [{ label: 'Consumo', data: rows.map(function(r) { return Number(r.consumed.toFixed(3)); }), backgroundColor: '#6f42c1', borderRadius: 8 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function renderIssues() {
+            var el = document.getElementById('issuesList');
+            if (!state.issues.length) {
+                el.innerHTML = '<div class="notice">Tudo que foi vendido no periodo tem receita/insumo rastreavel. Otimo para CMV.</div>';
+                return;
+            }
+            el.innerHTML = state.issues.slice(0, 25).map(function(i) {
+                return '<div class="risk-row">' +
+                    '<div><div class="risk-name">' + escapeHtml(i.name) + '</div><small>' + escapeHtml(i.reason || 'Vendido sem receita ou insumo vinculado') + '</small></div>' +
+                    '<div class="risk-days">' + qty(i.count, 'un') + (i.revenue ? '<br><small>' + money(i.revenue) + '</small>' : '') + '</div>' +
+                    '<div class="bar-track"><div class="bar-fill" style="width:100%"></div></div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function collectFlavorGroups() {
+            var inv = getInventory();
+            function findById(id) { return inv.find(function(i) { return i && i.id === id; }) || {}; }
+            var picole = findById('ins_picole');
+            var sorvete = findById('ins_sorvete');
+            var acai = findById('ins_acai');
+            return {
+                picoles: { title: 'Picoles', unit: 'un', list: toFlavorList(picole.picoleFlavors || picole.flavors || picole.variants), low: 20 },
+                sorvetes: { title: 'Sorvetes', unit: 'kg', list: toFlavorList(sorvete.auditVariants || sorvete.variants || sorvete.flavors), low: 4 },
+                acai: { title: 'Acai', unit: 'kg/un', list: toFlavorList(acai.auditVariants || acai.variants || acai.flavors), low: 4 }
+            };
+        }
+
+        function toFlavorList(raw) {
+            if (!raw) return [];
+            if (Array.isArray(raw)) {
+                return raw.map(function(v) {
+                    return {
+                        name: v.name || v.sabor || v.flavor || v.id || 'Sabor',
+                        quantity: Number(v.quantity !== undefined ? v.quantity : (v.qty !== undefined ? v.qty : v.stock)) || 0,
+                        unit: v.unit || v.unidade || ''
+                    };
+                });
+            }
+            return Object.keys(raw).map(function(k) {
+                var v = raw[k];
+                if (typeof v === 'number') return { name: k, quantity: v, unit: '' };
+                return { name: v.name || k, quantity: Number(v.quantity || v.qty || v.stock || 0), unit: v.unit || '' };
+            });
+        }
+
+        function showFlavorTab(tab) {
+            state.flavorTab = tab;
+            ['picoles', 'sorvetes', 'acai'].forEach(function(t) {
+                var el = document.getElementById('tab-' + t);
+                if (el) el.classList.toggle('active', t === tab);
+            });
+            renderFlavors();
+        }
+
+        function renderFlavors() {
+            var groups = collectFlavorGroups();
+            var group = groups[state.flavorTab] || groups.picoles;
+            var list = group.list || [];
+            var total = list.reduce(function(s, f) { return s + (Number(f.quantity) || 0); }, 0);
+            var zero = list.filter(function(f) { return Number(f.quantity) <= 0; }).length;
+            var low = list.filter(function(f) { return Number(f.quantity) > 0 && Number(f.quantity) <= group.low; }).length;
+            setText('flavorSummary', group.title + ': ' + list.length + ' sabores monitorados, total ' + qty(total, group.unit) + '. Zerados: ' + zero + '. Baixo: ' + low + '.');
+            var grid = document.getElementById('flavorGrid');
+            if (!list.length) {
+                grid.innerHTML = '<div class="empty">Nenhum sabor cadastrado nesse grupo ainda.</div>';
+                return;
+            }
+            grid.innerHTML = list.sort(function(a, b) { return a.quantity - b.quantity; }).map(function(f) {
+                var q = Number(f.quantity) || 0;
+                var cls = q <= 0 ? 'zero' : (q <= group.low ? 'low' : 'ok');
+                return '<div class="flavor ' + cls + '"><strong>' + escapeHtml(f.name) + '</strong><span>' + qty(q, f.unit || group.unit) + '</span></div>';
+            }).join('');
+        }
+
+        function purchaseLines() {
+            return state.rows.filter(function(r) { return r.suggested > 0 || r.status === 'critico' || r.status === 'atencao'; })
+                .map(function(r) {
+                    var sug = r.suggested > 0 ? qty(r.suggested, r.unit) : 'conferir';
+                    return '- ' + r.name + ': comprar ' + sug + ' (estoque ' + qty(r.stock, r.unit) + ', ' + (r.daysLeft === null ? 'sem media' : r.daysLeft.toFixed(1) + ' dias') + ')';
+                });
+        }
+
+        async function copyPurchaseList() {
+            var text = buildPurchaseText();
+            try {
+                await navigator.clipboard.writeText(text);
+                alert('Lista copiada.');
+            } catch (e) {
+                prompt('Copie a lista:', text);
+            }
+        }
+
+        function sendPurchaseList() {
+            var text = encodeURIComponent(buildPurchaseText());
+            window.open('https://wa.me/?text=' + text, '_blank');
+        }
+
+        function buildPurchaseText() {
+            var lines = purchaseLines();
+            if (!lines.length) lines = ['Nenhuma compra urgente sugerida agora.'];
+            return 'Lista inteligente MilkyPot - ' + new Date().toLocaleDateString('pt-BR') + '\n\n' + lines.join('\n');
+        }
+
+        function escapeHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+            });
+        }
+
+        async function reloadAll() {
+            setText('syncNotice', 'Atualizando dados reais do Firestore...');
+            await loadAllData();
+            runAnalysis();
+        }
+
+        document.addEventListener('DOMContentLoaded', reloadAll);
+    </script>
+</body>
+</html>

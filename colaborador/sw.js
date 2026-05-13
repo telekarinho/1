@@ -1,7 +1,7 @@
 /* Service Worker — Portal do Colaborador MilkyPot
    Cache-first para assets, network-first para HTML, push notifications.
 */
-const SW_VERSION = 'mp-colab-v1';
+const SW_VERSION = 'mp-colab-v2';
 const CACHE_NAME = 'milkypot-colaborador-' + SW_VERSION;
 
 const PRECACHE = [

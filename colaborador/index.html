@@ -227,7 +227,7 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
             <div id="loginErr" class="fn-error" style="display:none"></div>
             <input type="text" id="loginCpf" class="fn-input" placeholder="Seu CPF (so numeros)" inputmode="numeric" maxlength="14" autocomplete="off">
             <input type="password" id="loginPin" class="fn-input fn-pin-input" placeholder="••••" inputmode="numeric" maxlength="4" autocomplete="off">
-            <button class="fn-btn" onclick="fnLogin()">Entrar</button>
+            <button class="fn-btn" id="loginBtn" onclick="fnLogin()">Entrar</button>
             <p style="font-size:.78rem;color:#6B7280;margin-top:14px;text-align:center">
                 Nao tem cadastro? Pergunte ao seu gerente. Ele cadastra em <em>Equipe</em> com seu CPF, PIS e PIN.
             </p>
@@ -524,6 +524,7 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
 
 var FN_KEY = 'mp_func_session';
 var FN_WELCOME_KEY = 'mp_func_welcomed_';
+var fnStaffCachePromise = null;
 
 // ====== PWA: Service Worker + Install Prompt ======
 if ('serviceWorker' in navigator) {
@@ -841,32 +842,111 @@ function fnVerTermo(termId) {
     document.body.insertAdjacentHTML('beforeend', html);
 }
 
-function fnLogin() {
-    var cpf = document.getElementById('loginCpf').value.replace(/\D/g, '');
-    var pin = document.getElementById('loginPin').value.trim();
-    var err = document.getElementById('loginErr');
-    err.style.display = 'none';
+function fnSetLoginLoading(loading, text) {
+    var btn = document.getElementById('loginBtn');
+    if (!btn) return;
+    btn.disabled = !!loading;
+    btn.textContent = loading ? (text || 'Entrando...') : 'Entrar';
+}
 
-    if (cpf.length !== 11) { err.textContent = 'CPF invalido'; err.style.display = 'block'; return; }
-    if (pin.length !== 4) { err.textContent = 'PIN deve ter 4 digitos'; err.style.display = 'block'; return; }
+async function fnWaitForDataStoreSync(timeoutMs) {
+    if (typeof DataStore === 'undefined') return false;
+    if (DataStore._syncDone) return true;
+    return new Promise(function(resolve) {
+        var done = false;
+        var timer = setTimeout(function() {
+            if (done) return;
+            done = true;
+            window.removeEventListener('mp_synced', onSynced);
+            resolve(!!DataStore._syncDone);
+        }, timeoutMs || 2500);
+        function onSynced() {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            resolve(true);
+        }
+        window.addEventListener('mp_synced', onSynced, { once: true });
+    });
+}
 
-    // Procura em todas franquias (publicas via DataStore.getAllFranchises)
+async function fnEnsureStaffCache() {
+    if (typeof DataStore === 'undefined') throw new Error('DataStore indisponivel');
+    if (fnStaffCachePromise) return fnStaffCachePromise;
+
+    fnStaffCachePromise = (async function() {
+        // Celular novo/instalado nao tem mp_session nem cache. Sem Firebase Auth
+        // anonimo, as rules nao liberam staff_<franquia>. O PC funciona porque
+        // geralmente ja tem cache/sessao do painel.
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+            try {
+                if (!firebase.auth().currentUser && DataStore._attemptAnonymousAuth) {
+                    await DataStore._attemptAnonymousAuth();
+                }
+            } catch (e) {
+                console.warn('auth anon colaborador falhou:', e.code || e.message);
+            }
+        }
+
+        if (DataStore.fetchAllPublicStaff) {
+            await DataStore.fetchAllPublicStaff();
+        } else {
+            await fnWaitForDataStoreSync(2500);
+        }
+        return true;
+    })();
+
+    try {
+        return await fnStaffCachePromise;
+    } finally {
+        fnStaffCachePromise = null;
+    }
+}
+
+function fnFindStaffByCpfPin(cpf, pin) {
     var franchises = (typeof DataStore !== 'undefined') ? (DataStore.getAllFranchises() || []) : [];
-    var found = null;
     for (var i = 0; i < franchises.length; i++) {
         var f = franchises[i];
         var staff = DataStore.getCollection('staff', f.id) || [];
         var s = staff.find(function(x) {
             if (!x.active) return false;
-            var c = (x.cpf || '').replace(/\D/g, '');
-            return c === cpf && x.pin === pin;
+            var c = String(x.cpf || '').replace(/\D/g, '');
+            var p = String(x.pin || '').replace(/\D/g, '').padStart(4, '0');
+            return c === cpf && p === pin;
         });
-        if (s) { found = { staff: s, franchiseId: f.id, franchise: f }; break; }
+        if (s) return { staff: s, franchiseId: f.id, franchise: f };
     }
+    return null;
+}
+
+async function fnLogin() {
+    var cpf = document.getElementById('loginCpf').value.replace(/\D/g, '');
+    var rawPin = document.getElementById('loginPin').value.replace(/\D/g, '');
+    var pin = rawPin.padStart(4, '0');
+    var err = document.getElementById('loginErr');
+    err.style.display = 'none';
+
+    if (cpf.length !== 11) { err.textContent = 'CPF invalido'; err.style.display = 'block'; return; }
+    if (rawPin.length !== 4) { err.textContent = 'PIN deve ter 4 digitos'; err.style.display = 'block'; return; }
+
+    fnSetLoginLoading(true, 'Conectando...');
+
+    try {
+        await fnEnsureStaffCache();
+    } catch (e) {
+        console.warn('fnEnsureStaffCache:', e);
+        err.textContent = 'Nao consegui conectar com o sistema agora. Verifique a internet e tente novamente.';
+        err.style.display = 'block';
+        fnSetLoginLoading(false);
+        return;
+    }
+
+    var found = fnFindStaffByCpfPin(cpf, pin);
 
     if (!found) {
         err.textContent = 'CPF ou PIN incorreto. Confirme com seu gerente.';
         err.style.display = 'block';
+        fnSetLoginLoading(false);
         return;
     }
 
@@ -879,6 +959,7 @@ function fnLogin() {
         loginAt: new Date().toISOString()
     };
     sessionStorage.setItem(FN_KEY, JSON.stringify(session));
+    fnSetLoginLoading(false);
     fnShowApp(session, found.staff);
 }
 
@@ -1512,10 +1593,20 @@ document.getElementById('loginPin').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') fnLogin();
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        var cpf = new URLSearchParams(location.search).get('cpf');
+        if (cpf) document.getElementById('loginCpf').value = cpf.replace(/\D/g, '').slice(0, 11);
+    } catch (_) {}
+});
+
 // Auto-login se houver sessao
-(function() {
+(async function() {
     var s = fnGetSession();
     if (s) {
+        if (!(DataStore.getCollection('staff', s.franchiseId) || []).length) {
+            try { await fnEnsureStaffCache(); } catch (_) {}
+        }
         var staff = (DataStore.getCollection('staff', s.franchiseId) || []).find(function(x) { return x.id === s.staffId; });
         if (staff && staff.active) {
             fnShowApp(s, staff);

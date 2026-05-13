@@ -1869,7 +1869,8 @@ function _buildClosingHtml(data) {
     const vendasPix = Number((data.porMetodoEsperado && data.porMetodoEsperado.pix) || 0);
     const vendasCredito = Number((data.porMetodoEsperado && data.porMetodoEsperado.cartao_credito) || (data.porMetodoEsperado && data.porMetodoEsperado.credito) || 0);
     const vendasDebito = Number((data.porMetodoEsperado && data.porMetodoEsperado.cartao_debito) || (data.porMetodoEsperado && data.porMetodoEsperado.debito) || 0);
-    const vendasCartao = vendasCredito + vendasDebito;
+    const vendasCartaoAgregado = Number((data.porMetodoEsperado && data.porMetodoEsperado.cartao) || 0);
+    const vendasCartao = vendasCartaoAgregado + vendasCredito + vendasDebito;
     const vendasOutros = Number((data.porMetodoEsperado && data.porMetodoEsperado.outros) || 0);
     const vendasBeneficio = Number((data.porMetodoEsperado && data.porMetodoEsperado.beneficio_funcionario) || 0);
     const vendasDelivery = Number((data.porMetodoEsperado && data.porMetodoEsperado.delivery) || 0);
@@ -1899,7 +1900,7 @@ function _buildClosingHtml(data) {
 
     const totalPedidos = Number(data.totalPedidos || 0);
     const ticketMedio = totalPedidos > 0 ? faturamentoReal / totalPedidos : 0;
-    const trocoProximo = Number(data.trocoProximoDia != null ? data.trocoProximoDia : valorAbertura);
+    const trocoProximo = Number(data.trocoProximoDia != null ? data.trocoProximoDia : dinheiroContado);
     const depositar = Math.max(0, dinheiroContado - trocoProximo);
 
     // STATUS DO FECHAMENTO
@@ -2100,13 +2101,13 @@ function _buildClosingText(data) {
     const valorAbertura = Number(data.valorAbertura || 0);
     const vendasDinheiro = Number(data.vendasDinheiro || 0);
     const vendasPix = Number((data.porMetodoEsperado && data.porMetodoEsperado.pix) || 0);
-    const vendasCartao = Number(((data.porMetodoEsperado && (data.porMetodoEsperado.cartao_credito || data.porMetodoEsperado.credito)) || 0) + ((data.porMetodoEsperado && (data.porMetodoEsperado.cartao_debito || data.porMetodoEsperado.debito)) || 0));
+    const vendasCartao = Number(((data.porMetodoEsperado && data.porMetodoEsperado.cartao) || 0) + ((data.porMetodoEsperado && (data.porMetodoEsperado.cartao_credito || data.porMetodoEsperado.credito)) || 0) + ((data.porMetodoEsperado && (data.porMetodoEsperado.cartao_debito || data.porMetodoEsperado.debito)) || 0));
     const totalSangria = Number(data.totalSangria || 0);
     const totalReforco = Number(data.totalReforco || 0);
     const faturamento = Number(data.faturamentoBruto || (vendasDinheiro + vendasPix + vendasCartao));
     const dinheiroContado = Number((br && (br.dinheiro_liquido_dia || br.dinheiro_total_gaveta)) || data.valorContado || 0);
     const saldoEsperado = valorAbertura + vendasDinheiro + totalReforco - totalSangria;
-    const trocoProximo = Number(data.trocoProximoDia != null ? data.trocoProximoDia : valorAbertura);
+    const trocoProximo = Number(data.trocoProximoDia != null ? data.trocoProximoDia : dinheiroContado);
     const depositar = Math.max(0, dinheiroContado - trocoProximo);
     const diffDin = dinheiroContado - saldoEsperado;
     let body = "";
