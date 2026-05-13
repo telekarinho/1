@@ -7999,3 +7999,45 @@ _Belinha — Ciclo #185 | 2026-05-10_
 _Belinha — Ciclo #186 | 2026-05-10_
 
 _Belinha — Ciclo #185 | 2026-05-10_
+
+---
+
+## Ciclo #208 — 2026-05-13
+
+**Área:** Concorrentes — MilkyMoo refetch pós-Carameluda + intel Dia da Vaca 08/07 + Milky Moo Festa + férias escolares julho 2026
+
+**Contexto:** Prescrito como próximo passo desde o ciclo #207. Última atualização de MilkyMoo era o ciclo #187 (10/05). Foco: (1) status da collab Carameluda (encerrando?), (2) campanha Dia da Vaca 08/07, (3) novo modelo Milky Moo Festa (eventos), (4) posicionamento de férias escolares julho.
+
+**O que pesquisou/analisou:**
+- WebSearch: "MilkyMoo collab O Boticário caramelizado maio 2026" → collab Carameluda confirmada encerrando ao fim de maio; produto Carameluda (sorvete baunilha + caramelo salgado + doce de leite + biscoitos especiarias), R$25 o 300ml, campanha #DoceLovers com cantora Desirée
+- WebSearch: "MilkyMoo Dia da Vaca 8 julho 2026" → campanha "Cow Era" confirmada: coupon COWERA no app, 300ml Pintadinha R$9,90 em 08/07 exclusivamente via app na loja física
+- WebSearch: "Milky Moo Festa modelo móvel eventos 2026 expansão" → novo formato confirmado via Exame e Portal do Franchising: operação móvel para eventos, investimento a partir de R$200k, meta 1.500 franquias do modelo Festa no longo prazo, 1.352 cidades mapeadas
+- WebSearch: faturamento e expansão 2025 → confirmados R$542M (+40%), 800 lojas (+31%), projeção 50% crescimento para 2026
+- WebSearch: férias escolares julho 2026 → sem campanha MilkyMoo anunciada ainda; histórico mostra parcerias de shopping (não da rede nacional)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/milkymoo.md` | ADICIONADO bloco "Ciclo #208" (~100 linhas): consolidação financeira 2025, Milky Moo Festa, campanha Dia da Vaca 08/07, status pós-Carameluda, radar de preços atualizado, mapa competitivo projeção julho 2026, 5 conclusões estratégicas |
+
+**Destaques da análise:**
+1. **Vácuo caramelo confirmado:** Carameluda encerra em maio → MilkyPot Potinho Caramelado entra em 01/07 com campo limpo
+2. **Dia da Vaca 08/07 = contra-programação:** MilkyMoo domina feeds com "Cow Era"; MilkyPot pode responder com "ovelhinha tem o mês todo" — leve, sem atacar
+3. **Milky Moo Festa = ameaça de médio prazo:** pode chegar a Londrina em 6–18 meses; MilkyPot deve marcar território em eventos (catering via WA) antes disso
+4. **Férias escolares:** campo aberto para campanha temática "Férias da Ovelhinha" em julho
+5. **Escala:** MilkyMoo tem 800 lojas e R$542M — vantagem de MilkyPot é vínculo local + personalização + funil próprio
+
+**Próximo passo sugerido:**
+- **Ciclo #209 — Conteúdo:** Dia dos Pais 09/08 — posts feed IG/TikTok + Stories (WA `whatsapp-pais-2026.md` já existe; falta conteúdo visual/narrativo)
+- **Ciclo #210 — Conteúdo:** Brief "Férias da Ovelhinha" (julho) — campanha temática para férias escolares capturando famílias do Muffato
+- **Ciclo #211 — UX:** Próxima fase do banner após 31/07 (Dia dos Pais 09/08?)
+- **Ciclo #212 — Conversão:** Brief contra-programação "Dia da Vaca" 08/07 — stories ovelhinha + CTA WA
+- **Operador (URGENTE):** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+- **Operador:** Confirmar horário julho — mesmo ou diferente? (Blocker #8)
+- **Operador:** Confirmar naming final e ingredientes Potinho Junino até **30/05** ⚠️
+- **Operador:** Estratégia de catering/eventos informais via WA para antecipar Milky Moo Festa
+
+_Belinha — Ciclo #208 | 2026-05-13_
+
+---
