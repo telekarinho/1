@@ -5565,6 +5565,9 @@
             var name = String(item.name || '').toLowerCase();
             return cats.some(function(c){
                 if (cat === c) return true;
+                // novos splits (cat_milkshake_top, cat_milkshake_calda, cat_sundae_top, cat_sundae_calda) entram pelo prefixo
+                if (c === 'cat_milkshake' && (cat === 'cat_milkshake_top' || cat === 'cat_milkshake_calda')) return true;
+                if (c === 'cat_sundae' && (cat === 'cat_sundae_top' || cat === 'cat_sundae_calda')) return true;
                 if (c === 'cat_buffet' && (name.indexOf('buffet') >= 0 || item.type === 'por_peso')) return true;
                 if (c === 'cat_picole' && name.indexOf('picol') >= 0) return true;
                 if (c === 'cat_milkshake' && (name.indexOf('milk') >= 0 || name.indexOf('shake') >= 0)) return true;
