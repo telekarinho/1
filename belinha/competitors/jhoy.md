@@ -88,6 +88,83 @@ Outros ângulos para usar em copy futuro:
 
 ---
 
+## ⚡ ATUALIZAÇÃO CICLO #202 — 2026-05-13
+
+### JAH do Açaí — Grande Pivô 2026: JAH Coffee & Tea + Expansão Internacional
+
+**Fontes:** terra.com.br, exame.com, diariodocomercio.com.br, WebSearch
+
+---
+
+#### 1. Festa Junina / São João 2026 — Sem Ativação (padrão mantido)
+
+- **Pesquisa:** WebSearch "JAH do Açaí festa junina junho julho 2026" — zero campanha temática
+- **Conclusão:** modelo self-service por peso não faz campanhas sazonais temáticas. JAH aposta em expansão estrutural, não marketing sazonal
+- **Implicação MilkyPot:** sem competição JAH em posicionamento junino
+
+---
+
+#### 2. Grande Novidade 2026: JAH Coffee & Tea
+
+**Pivô estratégico identificado:** JAH lançou um novo braço de negócio — **cafés especiais e chás** dentro das lojas de açaí existentes.
+
+| Detalhe | Info |
+|---|---|
+| **Nome** | JAH Coffee & Tea |
+| **Objetivo** | +80% receita por franqueado |
+| **Modelo** | Café + chá como upsell no espaço já existente do franqueado |
+| **1ª unidade** | São Paulo — março 2026 |
+| **2ª unidade** | São Paulo — 1ª quinzena junho 2026 |
+| **Próxima** | Belo Horizonte — previsão julho 2026 |
+| **Meta 2026** | 10 unidades no formato Coffee & Tea |
+
+**Análise para MilkyPot:**
+- JAH está tentando capturar ticket em momentos não-açaí (manhã/tarde) com café — diversificação de daypart
+- MilkyPot não compete em café — baixo impacto direto
+- **Aprendizado:** unidade Muffato poderia explorar combo tarde/noite (ex: café + potinho) como opção se tráfego de manhã existir
+
+---
+
+#### 3. Expansão Internacional — Portugal
+
+- JAH inaugurou primeira loja em **Portugal** (confirmado ABF Expo 2025) — primeiro movimento internacional
+- Não é ameaça para Londrina, mas sinaliza ambição de crescimento fora do Brasil
+
+---
+
+#### 4. Números 2026
+
+| Indicador | 2025 | 2026 (projeção) |
+|---|---|---|
+| Faturamento | R$160 mi | **R$210 mi** (+31%) |
+| Unidades | ~180 | Meta 900 (expansão acelerada) |
+| Investimento expansão | — | R$200 mi |
+
+---
+
+#### 5. Presença Londrina — Mantida como zero
+
+- **Londrina 2026:** nenhuma unidade JAH confirmada após pesquisa específica
+- Expansão prioritária: rotas de SP e BH, depois expansão internacional
+- **Risco:** médio no longo prazo (meta 900 unidades pode incluir Londrina em algum momento)
+
+---
+
+#### 6. Radar Competitivo Atualizado
+
+| Atributo | JAH do Açaí | MilkyPot |
+|---|---|---|
+| Produto novo 2026 | JAH Coffee & Tea (café + chá) | Potinho Junino (jun) + Caramelado (jul) |
+| Expansão 2026 | Internacional (Portugal) + meta 900 un | Unidade Muffato Londrina |
+| Modelo | Self-service por peso + café | Potinho personalizado fixo |
+| iFood/Rappi | ✅ (paga ~30% comissão) | ❌ canal próprio |
+| Londrina | ❌ não presente | ✅ presente |
+| Linha Fit/proteína | não identificada | ✅ linha Zero/Fit |
+
+_Belinha — Ciclo #202 | 2026-05-13_
+
+---
+
 ## ⚡ VERIFICAÇÃO CICLO #160 — 2026-05-08
 
 **Pesquisa realizada:** WebSearch "Jhoy sobremesa franquia potinho açaí 2026" — zero resultados específicos para marca "Jhoy".

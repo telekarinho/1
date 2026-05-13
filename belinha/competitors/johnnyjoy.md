@@ -1,6 +1,7 @@
 # JohnnyJoy — Análise Competitiva
 
-**Última atualização:** 2026-05-09 (Ciclo #167 — sem campanha Festa Junina detectada + gap confirmado)
+**Última atualização:** 2026-05-13 (Ciclo #202 — intel inverno/julho 2026 + padrão Galáktico confirmado)
+**Fontes ciclo #202:** amostrasgratis.shop, publicitarioscriativos.com, foodbizbrasil.com, gkpb.com.br, WebSearch 2025-2026
 **Fontes ciclo #167:** gkpb.com.br, buscacliente.com.br, foodbizbrasil.com, johnnyjoy.com.br, shoppingjardins.com.br, TikTok @aproveiteacidade
 **Fontes ciclo #160:** gkpb.com.br, ondecomernorio.com, amostrasgratis.shop, Instagram @johnnyjoy.br, riomarfortaleza.com.br, portalg.com.br
 **Fontes ciclo #151:** johnnyjoy.com.br, buscacliente.com.br, gkpb.com.br, amostrasgratis.shop, TikTok @aproveiteacidade, overblur.com, Instagram @johnnyjoy.br
@@ -217,6 +218,79 @@ _Belinha — Ciclo #143 | 2026-05-07_
 | Promo aniversário 10 anos | R$10,00 (300ml, 1 dia) |
 
 _Belinha — Ciclo #160 | 2026-05-08_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #202 — 2026-05-13
+
+### Intel Inverno/Julho 2026 — Padrão Galáktico + Sem Festa Junina (confirmado)
+
+**Fontes:** amostrasgratis.shop, publicitarioscriativos.com, foodbizbrasil.com, gkpb.com.br, WebSearch
+
+---
+
+#### 1. Festa Junina / São João 2026 — Zero Ativação (padrão reconfirmado)
+
+- **Pesquisa:** WebSearch "JohnnyJoy festa junina São João junho 2026" — zero campanha temática
+- **Conclusão:** JohnnyJoy mantém histórico de não ativar junho/São João. Produto (milkshake premium de shopping) é estruturalmente incompatível com tema junino
+- **Implicação MilkyPot:** campo aberto — Potinho Junino sem concorrência direta de JohnnyJoy
+
+---
+
+#### 2. Padrão Inverno/Julho — Collab Nestlé (Galáktico 2025 → base para 2026)
+
+**Produto identificado:** Milkshake Galáktico (edição limitada julho 2025, parceria Nestlé/Galak)
+
+| Detalhe | Info |
+|---|---|
+| **Produto** | Milkshake Galáktico — chocolate branco Galak + pedaços de cookie Galak |
+| **Período** | Exclusivo julho (edição limitada mensal — padrão inverno) |
+| **Preço 300ml** | R$22,90 |
+| **Preço 500ml** | R$26,90 |
+| **Parceria** | Nestlé (Galak) — co-branding de ingrediente |
+
+**Ação especial 18/07:** clientes com tatuagem "galáctica" (astronauta, foguete, planeta, estrela, lua, sol, personagem de filme espacial) ganham 300ml grátis na compra de outro (300ml ou 500ml).
+
+**Análise para MilkyPot:**
+- JohnnyJoy faz **collab de marca** todo julho (padrão detectado: Kinder Buenissimo Branco anterior, Galak 2025) — diferencial "parceria premium"
+- Preços confirmados: 300ml R$22,90 / 500ml R$26,90 — **significativamente acima de MilkyPot** (potinho mini R$10)
+- Ação de tatuagem = UGC gratuito + PR criativo. **Ideia replicável:** ovelhinha desenhada no braço / produto no cenário → "mostre sua ovelhinha, ganhe X"
+- **Previsão:** julho 2026 deve trazer nova collab Nestlé ou similar — monitorar instagram JohnnyJoy em junho
+
+---
+
+#### 3. Preços Atualizados vs. Ciclo #151
+
+| Tamanho | Ciclo #151 (abr/2026) | Ciclo #202 (Galáktico jul/2025) | Δ |
+|---|---|---|---|
+| 300ml Tradicional | R$19,90 | — | — |
+| 300ml Especial | R$25,90 | R$22,90 (Galák) | -R$3,00 (edição esp. pode variar) |
+| 500ml Tradicional | R$22,90 | — | — |
+| 500ml Especial | R$28,90 | R$26,90 (Galák) | -R$2,00 |
+
+*Nota: preços do ciclo #151 são de unidades Goiânia. Galáktico pode ter preço diferenciado. Variação regional esperada.*
+
+---
+
+#### 4. Presença em Londrina — Sem mudança
+
+- **Londrina 2026:** zero unidades confirmadas. JohnnyJoy foca shoppings premium (Flamboyant Goiânia, RioMar Fortaleza, Jardins SP)
+- Modelo Muffato (quiosque popular) é incompatível com posicionamento premium JohnnyJoy
+- **Risco:** mantido como BAIXO
+
+---
+
+#### 5. Radar Competitivo Atualizado — Julho 2026
+
+| Atributo | JohnnyJoy | MilkyPot |
+|---|---|---|
+| Produto inverno | Milkshake Galáktico (collab Nestlé) | Potinho Caramelado (previsto 01/07) |
+| Preço médio inverno | R$22,90–R$26,90 | A confirmar |
+| Collab de marca | Nestlé, Kinder — premium | Sem collab confirmada |
+| Ação UGC | Tatuagem galáctica → grátis | Ovelhinha desenhada → explorar |
+| Canal Londrina | Não presente | Muffato Quintino |
+
+_Belinha — Ciclo #202 | 2026-05-13_
 
 ---
 
