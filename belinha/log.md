@@ -2,6 +2,54 @@
 
 ---
 
+## Ciclo #204 — 2026-05-13
+
+**Área:** Conversão — Brief aniversário 3 meses (25/07) + mecânica sorteio + broadcasts WA segmentados
+
+**Contexto:** Prescrito pelo roadmap #200 e ciclo #203. Em 25/07/2026 (sábado — 91 dias / 13 semanas exatos da inauguração), a loja completa 3 meses. O brief de sustentação do Caramelado (ciclo #203) já deixou um teaser vago "algo especial em 25/07" no post de 17/07. Era necessário um playbook completo definindo o que é esse "algo especial".
+
+**O que pesquisou/analisou:**
+- Leitura do log ciclo #203 + confirmação do teaser embutido em `sustentacao-caramelado-semanas-2-3.md` (post 17/07 menciona "algo especial em 25/07")
+- Verificação de arquivos existentes: `whatsapp-aniversario-6meses.md` (estrutura referência) + `reativacao-d60-onda1-jun26.md` (onda anterior)
+- Confirmado que não existia nenhum brief específico de 3 meses (nem D+90 nem aniversário)
+- Calculado: 25/04 + 91 dias = 25/07, e 91 = 13 semanas exatos → sábado novamente. Perfeito para celebração.
+- Diagnóstico: 5 elementos faltando (post comemorativo, reel, 3 broadcasts WA segmentados, sorteio, sequência Stories)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/3meses-25jul-comemoracao-sorteio.md` | NOVO — 453 linhas — playbook completo 3 meses |
+
+**Detalhes do conteúdo criado:**
+- **Mecânica sorteio "3 meses — 3 prêmios"**: 3 prêmios escalonados (Semana Caramelado / Kit Fã / 1 mês VIP), 3 formas de participar (IG + WA + compra no dia), regras, FAQ rápido para WA
+- **Calendário da semana** 21/07→26/07 completo: aviso (21/07), último lembrete + post feed (23/07), dia do aniversário (25/07) com Stories hora a hora, anúncio ganhadores (26/07)
+- **3 broadcasts WA segmentados**: Seg A (clientes inauguração 25/04–30/04 — "você estava lá desde o início"), Seg B (primeiros 30 dias 01–25/05), Seg C (base geral) — com horários escalonados 10h/11h/12h
+- **Reel TikTok "3 meses depois"** — roteiro segundo a segundo comparando Dia 1 vs. hoje (30s)
+- **Integração MilkyPass**: pontos dobro + carimbo triplo + bônus referência em 25/07
+- **KPIs** com 8 indicadores e metas numéricas (≥200 comentários IG, ≥150 novos seguidores, ≥40% faturamento extra, etc.)
+- **Checklist operacional** escalonado até 26/07 com ≥20 itens verificáveis
+- **Versão mínima** se operador com pouca energia (3 itens obrigatórios)
+- **Tabela de integração** com 6 documentos existentes
+
+**Commit:** `7dac4c6`
+
+**Próximo passo sugerido:**
+- **Ciclo #205 — SEO:** Schema.org LocalBusiness — verificar `aggregateRating` (≥3 reviews Google Maps) + atualizar horário julho
+- **Ciclo #206 — Conversão:** D+90 reativação brief (24/07) — clientes inativos da inauguração na janela crítica (complementa o 3 meses de 25/07)
+- **Ciclo #207 — UX:** `cardapio.css` (21K) orphaned — avaliar deleção (Blocker #6 em `blockers.md`)
+- **Ciclo #208 — Concorrentes:** Refetch MilkyMoo pós-Caramelado (collab "Como Treinar Dragão" jun/26 + Smoor's inverno — monitorar)
+- **Operador (URGENTE — VENCIDO 30/05):** Confirmar ingredientes + naming "Potinho Junino" ⚠️
+- **Operador (21/07):** Preparar prêmios físicos sorteio + decoração loja balões/banner "3 meses"
+- **Operador (21/07):** Separar etiquetas WA Business: `#inauguracao`, `#primeiros-30d`, base geral
+- **Operador (25/07):** Ativar pontos dobro + carimbo triplo no PDV
+- **Operador:** Google Search Console — indexação sitemap.xml (pendente ciclo #148)
+- **Operador:** Verificar ≥3 reviews Google Maps → liberar `aggregateRating` Schema.org
+
+_Belinha — Ciclo #204 | 2026-05-13_
+
+---
+
 ## Ciclo #203 — 2026-05-13
 
 **Área:** Conteúdo — Brief sustentação Potinho Caramelado semanas 2-3 IG/TikTok (07–17/07)
