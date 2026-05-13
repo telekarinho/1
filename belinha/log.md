@@ -8041,3 +8041,46 @@ _Belinha — Ciclo #185 | 2026-05-10_
 _Belinha — Ciclo #208 | 2026-05-13_
 
 ---
+
+---
+
+## Ciclo #209 — 2026-05-13
+
+**Área:** Conteúdo — Stories Dia dos Pais 09/08/2026
+
+**Contexto:** Prescrito no ciclo #208. A campanha Dia dos Pais tinha 3 arquivos criados (playbook, WA, feed IG/TikTok) mas faltava o roteiro de Stories — mencionado no checklist de `instagram-tiktok-pais-2026.md` e `whatsapp-pais-2026.md` mas nunca escrito. Gap identificado: 9 stories em 6 touchpoints ao longo de Ter 04/08 a Dom 09/08, todos sem copy pronta.
+
+**O que pesquisou/analisou:**
+- Leu `instagram-tiktok-pais-2026.md`: 3 posts de feed (teaser, carrossel 4 perfis, dia H emocional) com reel sketch — stories mencionados apenas no checklist como "ADICIONAR"
+- Leu `whatsapp-pais-2026.md`: 6 linhas de checklist mencionando stories sem scripts
+- Leu `dia-dos-pais-2026-playbook.md`: mecânica Duo Papai, keyword `PAPAI26`, KPIs
+- Verificou padrão de arquivos: `stories-18jun-potinho-junino-reacoes.md` era o único arquivo dedicado de stories — confirmou que este formato é o padrão correto
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/stories-pais-2026.md` | CRIADO — 310 linhas, 6 touchpoints completos: TP1 teaser (3 stories sequenciais), TP2 countdown Sex 07/08, TP3 urgência Sáb 08/08, TP4 ao vivo abertura Dom 09/08 (3 stories com roteiro de condução), TP5 mid-day urgência Dom 19h, TP6 encerramento + UGC Dom 22h |
+
+**Detalhes do arquivo:**
+- 9 stories total (3+1+1+3+1+1) em 8 momentos de postagem
+- Cada touchpoint: visual/direção de arte + texto tela + stickers interativos + CTA + nota operacional
+- TP4 (ao vivo): roteiro de condução para operador gravar com celular sem preparação prévia
+- Checklist de execução com estimativa de tempo por touchpoint
+- Notas de produção: templates a criar até Seg 03/08, 30min para TP1, ~1h total
+- Integração documentada com os 4 outros arquivos da campanha
+
+**Commit:** `1819d98`
+
+**Próximo passo sugerido:**
+- **Ciclo #210 — Conteúdo:** Brief "Férias da Ovelhinha" (julho) — campanha temática para férias escolares capturando famílias no Muffato (identificado no ciclo #208 como campo aberto)
+- **Ciclo #211 — Conversão:** Brief contra-programação "Dia da Vaca" MilkyMoo 08/07 — stories ovelhinha + CTA WA (enquanto MilkyMoo faz "Cow Era", MilkyPot faz "a ovelhinha tem o mês todo")
+- **Ciclo #212 — UX:** Banner pós-31/07 — próxima fase após Potinho Caramelado (Dia dos Pais 09/08?)
+- **Ciclo #213 — Concorrentes:** Refetch TheBest + Jhoy (última atualização antiga — verificar ações de agosto)
+- **Operador (URGENTE):** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+- **Operador:** Confirmar horário julho — mesmo ou diferente? (Blocker #8)
+- **Operador:** Confirmar naming "Potinho Junino" + ingredientes até 30/05 ⚠️
+
+_Belinha — Ciclo #209 | 2026-05-13_
+
+---
