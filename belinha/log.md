@@ -2,6 +2,54 @@
 
 ---
 
+## Ciclo #203 — 2026-05-13
+
+**Área:** Conteúdo — Brief sustentação Potinho Caramelado semanas 2-3 IG/TikTok (07–17/07)
+
+**Contexto:** Prescrito pelo roadmap #200 + ciclo #202. Existiam reveal (01/07) e consolidação (02–07/07) completos, e planos semanais genéricos para semanas 12-13 (ciclos #51/#55). Faltavam briefs dedicados de posts feed + reels TikTok para a sustentação do Caramelado com profundidade equivalente ao reveal — especialmente integrando o intel do ciclo #202 (pistache JAH como contra-programming).
+
+**O que pesquisou/analisou:**
+- Leitura de `consolidacao-potinho-caramelado-02-07jul.md` — mapear o que já foi coberto (02–07/07)
+- Leitura de `pos-inauguracao-semana12.md` e `semana13.md` — confirmar que planos semanais existem mas não têm briefs de post/reel específicos para o Caramelado
+- Leitura de `belinha/competitors/jhoy.md` (ciclo #202) — intel JAH pistache 12/06: ocupação do mesmo daypart inverno, mesma audiência jovem. Estratégia contra-programming definida.
+- Diagnóstico: 5 peças de conteúdo faltando (3 posts feed + 2 reels), cobrindo marco de 1 semana do lançamento (07/07) até teaser 3 meses (17/07)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/sustentacao-caramelado-semanas-2-3.md` | NOVO — 314 linhas — brief completo semanas 2-3 |
+
+**Detalhes do conteúdo criado:**
+- **Post feed 07/07** (Seg) — "1 semana de Potinho Caramelado" · hero shot · caption longa (feed) + curta (TikTok/Stories)
+- **Reel TikTok/Reels 09/07** (Qua) — "Como montar o Caramelado" · 15s · roteiro segundo a segundo · instruções ao operador (celular + tripé)
+- **Post feed 12/07** (Sáb) — "Londrina aprovou" · carrossel UGC (Opção A) ou "por que o caramelo" (Opção B sem UGC)
+- **Reel TikTok/Reels 14/07** (Ter) — "Qual topping você escolheria?" · enquete nos comentários · lógica de continuidade (vencedor vira post do dia seguinte)
+- **Post feed 17/07** (Qui) — "Seja Embaixador + teaser 3 meses" · CTA candidatura DM/WA · teaser vago do 25/07
+- **Contra-programming JAH pistache** — estratégia integrada (não citar concorrente, reforçar personalização + calor + tradição brasileira)
+- **Tabela de integração** com 6 documentos existentes
+- **KPIs** com metas por semana (impressões, salvamentos, plays, UGC, candidatos embaixador)
+- **Notas operacionais** com versão mínima (3 peças se pouco tempo) e fallback sem UGC
+- **Bônus Story diária** (selfie loja pré-abertura — 30 segundos, impacto de consistência)
+
+**Commit:** `fb3dae5`
+
+**Próximo passo sugerido:**
+- **Ciclo #204 — Conversão:** Brief 3 meses de loja 25/07 — post comemorativo + broadcast WA "você estava lá desde o início" + mecânica sorteio (prescrito no roadmap #200)
+- **Ciclo #205 — SEO:** Schema.org LocalBusiness — verificar se há ≥3 reviews Google Maps desbloqueando `aggregateRating` + atualizar horário julho
+- **Ciclo #206 — Conversão:** D+90 reativação brief (24/07) — clientes da inauguração entram na janela
+- **Ciclo #207 — UX:** `cardapio.css` (21K) orphaned — avaliar deleção (Blocker #6 em `blockers.md`)
+- **Ciclo #208 — Concorrentes:** Refetch MilkyMoo pós-Caramelado (collab "Como Treinar Dragão" jun/26 + Smoor's inverno — monitorar)
+- **Operador (URGENTE — 30/05 — VENCIDO):** Confirmar ingredientes + naming "Potinho Junino" ⚠️
+- **Operador (21/07):** Anunciar Embaixador escolhido (candidaturas abertas em 17/07)
+- **Operador (22/06):** Preparar listas D+60 WA Business — ver `reativacao-d60-onda1-jun26.md`
+- **Operador:** Google Search Console — indexação sitemap.xml (pendente ciclo #148)
+- **Operador:** Verificar ≥3 reviews Google Maps → liberar `aggregateRating` Schema.org
+
+_Belinha — Ciclo #203 | 2026-05-13_
+
+---
+
 ## Ciclo #202 — 2026-05-13
 
 **Área:** Concorrentes — JohnnyJoy + JAH do Açaí (refetch após +33 ciclos)
