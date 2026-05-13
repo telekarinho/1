@@ -2,6 +2,50 @@
 
 ---
 
+## Ciclo #206 — 2026-05-13
+
+**Área:** Conversão — Brief D+90 reativação Onda 1 (clientes inauguração, 21–24/jul/2026)
+
+**Contexto:** Prescrito pelo roadmap auto-aprimoramento #200 e confirmado no ciclo #205. D+90 = 24/07/2026, véspera do marco 3 meses (25/07). Encerra formalmente o ciclo de reativação ativa Onda 1 para clientes que não responderam D+30 (25/05) nem D+60 (22–28/06). O brief do 3 meses (`3meses-25jul-comemoracao-sorteio.md`) cobre o broadcast geral; este cobre o contato individual de última instância.
+
+**O que pesquisou/analisou:**
+- Releitura de `reativacao-d30-onda1-maio26.md` e `reativacao-d60-onda1-jun26.md` para manter consistência de estrutura e progressão de tom
+- Releitura de `3meses-25jul-comemoracao-sorteio.md` para mapear o timing do broadcast geral (25/07 às 10h) e não criar conflito de canal
+- Releitura de `sustentacao-caramelado-semanas-2-3.md` para extrair o gancho de produto mais fresco (Caramelado em plena operação em julho)
+- Cálculo do calendário: D+90 = 24/07 (sex) → janela ideal 22–24/07 → encerrar arquivamento até 24/07 22h → broadcast 25/07 10h
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reativacao-d90-onda1-jul26.md` | NOVO — brief operacional completo D+90 |
+
+**Detalhes do conteúdo criado:**
+- **Contexto estratégico** com tabela de 5 forças que tornam 22–24/07 a janela ideal
+- **Segmentação em 2 lotes:** Lote A (inativos sem histórico de resposta — etiqueta `#inativos-90d`) e Lote B (engajaram antes mas não converteram — etiqueta `#inativos-90d-engajados`)
+- **Calendário da semana** (21–25/07) com ações separadas D+90 vs. broadcast 3 meses
+- **4 templates WA:** Versão Curiosidade (Lote A), Versão Sorteio (Lote A alternativa), Mensagem 2 Lote A, Versão Próxima (Lote B), Mensagem 2 Lote B
+- **Roteiro de resposta do operador:** interesse produto, curiosidade sorteio, feedback negativo, silêncio → arquivamento
+- **Tabela de integração** com 4 documentos relacionados
+- **KPIs:** taxa de resposta ≥8%, conversão ≥3%, 100% arquivamento pós-onda
+- **Checklist de execução** com 11 itens escalonados por data/horário
+- **Nota LGPD** com definição de `#arquivado-permanente` + nota sobre Onda 2 (clientes sem1-sem4)
+
+**Commit:** `12adeb3`
+
+**Próximo passo sugerido:**
+- **Ciclo #207 — UX:** Banner `#junina-banner` em `index.html` — remover/atualizar após 30/06. Preparar com antecedência (ainda estamos em maio, mas o banner precisa ter lógica de expiração)
+- **Ciclo #208 — Concorrentes:** Refetch MilkyMoo pós-Caramelado + collab "Como Treinar Dragão" jun/26 + intel pré-julho
+- **Ciclo #209 — Conteúdo:** Dia dos Pais 09/08 — posts feed IG/TikTok (WA standalone #170 já existe; falta o conteúdo visual)
+- **Operador (URGENTE):** Confirmar ≥3 reviews Google Maps → descomentar aggregateRating (Blocker #7)
+- **Operador:** Confirmar horário julho — mesmo ou diferente? (Blocker #8)
+- **Operador:** Google Search Console — solicitar indexação sitemap.xml (pendente ciclo #148)
+- **Operador:** Preparar prêmios físicos sorteio 3 meses (Blocker a confirmar: Semana Caramelado / Kit MilkyPot Fã / Mês VIP)
+
+_Belinha — Ciclo #206 | 2026-05-13_
+
+---
+
 ## Ciclo #205 — 2026-05-13
 
 **Área:** SEO local Londrina — Schema.org LocalBusiness: `areaServed` + 2 novos FAQs + blockers #7-#8
