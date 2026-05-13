@@ -2,6 +2,55 @@
 
 ---
 
+## Ciclo #201 — 2026-05-13
+
+**Área:** Conversão — Brief D+60 Onda 1 (22–28/06/2026 · São João + última tentativa de reativação)
+
+**Contexto:** Marco #200 identificou D+60 como gap crítico urgente: 24/06 = D+60 da inauguração E São João, janela abre em ~11 dias. Existia playbook genérico D+60 em `whatsapp-reativacao-d30-d60.md` (ciclo #106) mas nenhum brief operacional contextualizado para São João + Potinho Junino, equivalente ao `reativacao-d30-onda1-maio26.md` do ciclo #195.
+
+**O que pesquisou/analisou:**
+- Leitura de `whatsapp-reativacao-d30-d60.md` — seção D+60 genérica (linhas 116–165): uma única mensagem, sem calendário, sem integração junina
+- Leitura de `reativacao-d30-onda1-maio26.md` — estrutura referência: segmentação por lotes, calendário diário, scripts por variante, KPIs, checklist — padrão a replicar
+- Leitura de `reel-sao-joao-24jun-potinho-junino.md` — gancho São João disponível para D+60
+- Leitura de `whatsapp-junina-2026.md` — J4 broadcast em 24/06 às 11h: confirmado não colidir
+- Diagnóstico: D+60 não pode ser no mesmo dia do J4 broadcast (24/06). Melhor: 23/06 (véspera) ou 25/06 (pós-São João)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reativacao-d60-onda1-jun26.md` | NOVO — 256 linhas — brief operacional completo para D+60 Onda 1 |
+
+**Detalhes do conteúdo criado:**
+- **Contexto estratégico:** por que 24/06 é o melhor dia do ano (São João + Potinho Junino últimos dias + psicologia D+60)
+- **Segmentação:** Lote A (inativos D+30 que não responderam) + Lote B (nunca contactados) + excluir recorrentes
+- **Calendário semanal** 22–28/06: sequência dia a dia com horários, evitando colisão com J4 broadcast de 24/06
+- **Mensagem 1 Lote A** — 2 variantes: Emotiva (maioria) + Feedback (≤8 casos específicos)
+- **Mensagem 1 Lote B** — tom de gratidão pela inauguração (primeira mensagem ativa)
+- **Mensagem 2** — apenas para quem respondeu D+60 mas não converteu (28/06, urgência Potinho Junino)
+- **Roteiro de resposta** — 3 cenários: interesse, feedback negativo, sem resposta
+- **Tabela de integração** com 5 documentos existentes
+- **KPIs** com metas (resposta ≥15%, conversão ≥5%)
+- **Checklist** de execução com 11 itens datados
+- **Nota LGPD** — D+60 é o último contato proativo; sem resposta → `#arquivado`
+
+**Commit:** `df004ab`
+
+**Próximo passo sugerido:**
+- **Ciclo #202 — Concorrentes:** Refetch Johnny + Jhoy — última atualização há +33 ciclos (violação v21d). Buscar campanhas de inverno/julho 2026
+- **Ciclo #203 — Conteúdo:** Sustentação Potinho Caramelado semanas 2-3 IG/TikTok (01–14/07)
+- **Ciclo #204 — UX:** `cardapio.css` (21K) orphaned — Opção A (deletar) ou Opção B (incorporar ao style.css). Blocker #6 em `belinha/blockers.md`
+- **Ciclo #205 — SEO:** Verificar se há otimizações adicionais no sitemap.xml para facilitar indexação (operador ainda não solicitou indexação no GSC)
+- **Operador (URGENTE — 22/06):** Preparar listas D+60 no WA Business — consultar `reativacao-d60-onda1-jun26.md` Segmentação
+- **Operador (URGENTE — 23/06 às 18h):** Disparar Lote A — ver Mensagem 1 Variante Emotiva
+- **Operador (URGENTE — 30/05 — VENCIDO):** Confirmar ingredientes + naming "Potinho Junino" ⚠️ Crítico para D+60 Mensagem 2 e scripts
+- **Operador:** Google Search Console — indexação sitemap.xml (pendente desde ciclo #148)
+- **Operador:** Verificar ≥3 reviews Google Maps → liberar `aggregateRating` Schema.org
+
+_Belinha — Ciclo #201 | 2026-05-13_
+
+---
+
 ## Ciclo #200 — 2026-05-13
 
 **Área:** Auto-aprimoramento (MARCO) — revisão 199 ciclos + atualização `belinha/estrategia.md`
