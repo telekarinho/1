@@ -1089,11 +1089,13 @@ const DataStore = {
     seed() {
         if (this.get('_seeded')) return;
         const host = (typeof window !== 'undefined' && window.location) ? window.location.hostname : '';
+        const params = (typeof window !== 'undefined' && window.location) ? new URLSearchParams(window.location.search) : null;
+        const allowDemoSeed = params && params.get('seedDemo') === '1';
         const isLocalHost = !host || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0';
-        const skipDemoSeed = !isLocalHost;
+        const skipDemoSeed = !allowDemoSeed || !isLocalHost;
         if (skipDemoSeed) {
             localStorage.setItem(this.PREFIX + '_seeded', JSON.stringify(true));
-            console.log('DataStore seed demo skipped on production host');
+            console.log('DataStore seed demo skipped');
             return;
         }
 
