@@ -139,4 +139,50 @@ Google Analytics 4 Property ID: G-__________
 ---
 
 *Criado por Belinha — Ciclo #12 — 2026-04-23*
-*Atualizado — Ciclo #112 — 2026-05-04*
+*Atualizado — Ciclo #205 — 2026-05-13*
+
+---
+
+## 🟡 SEO — confirmar com operador (pós-inauguração)
+
+### 7. `aggregateRating` Schema.org — aguarda confirmação de ≥3 reviews Google Maps
+
+**Descoberta (Ciclo #205):**
+- O bloco `aggregateRating` no `index.html` (linhas ~193–208) está comentado aguardando avaliações reais no Google Maps
+- Google não exibe estrelas no resultado de busca sem `aggregateRating` estruturado
+- O bloco já está preparado; basta descomentar e atualizar os valores reais
+
+**Onde aparece:**
+- `index.html` linhas ~193–208: bloco comentado `<!-- aggregateRating — ATIVAR após primeiras avaliações Google Maps`
+
+**O que fornecer:**
+```
+Número atual de reviews Google Maps: ____
+Média de avaliação (ex: 4.8): ____
+```
+
+**Como aplicar após receber:**
+1. Descomentar o bloco `<script type="application/ld+json">` de aggregateRating
+2. Atualizar `"ratingValue"` com a média real (ex: `"4.9"`)
+3. Atualizar `"reviewCount"` com o total de avaliações (ex: `"27"`)
+4. Manter `"bestRating": "5"` e `"worstRating": "1"`
+
+**Regra do Google:** Mínimo de 3 reviews para exibir estrelas na SERP. Com ≥3 reviews reais, é ALTO impacto em CTR local.
+
+---
+
+### 8. Horário de funcionamento julho — confirmar se há mudança
+
+**Contexto (Ciclo #205):**
+- O `openingHoursSpecification` em `index.html` (linhas ~58–66) define 14:00–23:00 todos os dias com `validFrom: 2026-04-25` sem `validThrough`
+- Se o Muffato Londrina tiver horário diferente em julho (ex: fim de semana estendido, feriados, férias escolares) o schema deve ser atualizado
+
+**O que confirmar:**
+```
+Horário de verão/julho (se diferente): ____
+Feriados com funcionamento especial em julho: ____
+```
+
+**Como aplicar após confirmar:**
+- Se horário muda em julho: adicionar `"validThrough": "2026-06-30"` nas specs atuais + criar novas specs com `validFrom: "2026-07-01"` e horário correto
+- Se horário permanece igual: nenhuma ação necessária
