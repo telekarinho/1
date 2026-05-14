@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #219 — 2026-05-14
+
+**Área:** SEO — Event schema + FAQPage Dia dos Namorados 12/06/2026
+
+**Contexto:** Ciclo #218 prescreveu "Brief Dia dos Namorados ainda sem post de feed nem stories", mas ao auditar descobriu-se que `dia-dos-namorados-2026-playbook.md` (ciclo #131) e `whatsapp-namorados-2026.md` (ciclo #164) já cobrem feed, reels, stories e WA completos. O gap real era no SEO: `index.html` não tinha nenhuma referência ao Dia dos Namorados — zero Event schema e zero FAQ entry — perdendo buscas de alta intenção a 29 dias do evento.
+
+**O que pesquisou/analisou:**
+- Confirmou que `dia-dos-namorados-2026-playbook.md` já contém: Post 1 (véspera), Post 2 (Dia H), Reel 15s roteiro completo, 3 stories teaser, stories ao vivo e checklist
+- Confirmou que `whatsapp-namorados-2026.md` cobre: keyword NAMORADOS26, auto-resposta, N1–N5 broadcasts, N4-GIFT, N4-DUO, guia de tom e KPIs
+- Verificou que `index.html` tem Event schema para "Férias da Ovelhinha" (julho) e FAQPage com 14 perguntas mas **zero menção a Dia dos Namorados**
+- Identificou keywords alvo: "presente dia dos namorados Londrina 2026", "o que fazer dia dos namorados Londrina", "sobremesa casal Londrina", "potinho personalizado dia dos namorados"
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | +1 Event schema JSON-LD "Duo MilkyPot" (startDate: 2026-06-12T14:00, endDate: 23:00, MixedEventAttendanceMode, Offer, keywords) |
+| `index.html` | +1 entrada FAQPage "O MilkyPot tem algo especial para o Dia dos Namorados em Londrina?" com texto completo, NAMORADOS26, CTA WA |
+
+**Destaques técnicos:**
+1. `MixedEventAttendanceMode` — correto porque atende presencialmente (Muffato) e via delivery
+2. Timestamp com timezone `-03:00` (BRT) — mais preciso para Google
+3. Keyword `NAMORADOS26` presente em: Event schema description + FAQPage text + Offer name → coerência de indexação
+4. Todos os 6 schemas do `index.html` validados com `json.loads` → OK
+5. 29 dias antes do evento → janela suficiente para Google indexar antes de 12/06
+
+**Commit:** `40496fe`
+
+**Próximo passo sugerido:**
+- **Ciclo #220 — UX:** Verificar banner hero `index.html` — checar se ainda mostra "Inauguração 25/04" ou se já foi atualizado para fase pós-inauguração; se obsoleto, atualizar para campanha Junina ou Namorados
+- **Ciclo #221 — Conversão:** Stories 3-day countdown (Ter 09/06, Qui 11/06) — o playbook descreve "3 stories urgência + CTA NAMORADOS26" mas não tem roteiro visual detalhado (ângulo de câmera, texto tela, sticker) pronto para operador copiar direto no celular
+- **Ciclo #222 — Concorrentes:** Refetch Johnny + Jhoy (última atualização > 30 dias) — checar ações de junho/namorados
+- **Operador (URGENTE — 20 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador:** Definir Versão A, B ou C mecânica Duo MilkyPot até **05/06** (playbook tem 3 opções aguardando decisão)
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #219 | 2026-05-14_
+
+---
+
 ## Ciclo #217 — 2026-05-14
 
 **Área:** Conversão — Sorteio Aniversário 6 Meses + Halloween (25–31/10/2026)
