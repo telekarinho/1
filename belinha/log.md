@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #213 — 2026-05-14
+
+**Área:** Concorrentes — Intel São João 2026: The Best Açaí + MilkyMoo
+
+**Contexto:** Prescrito no ciclo #212. TheBest última atualização: ciclo #196 (11/05). MilkyMoo última atualização: ciclo #208 (13/05). São João é 24/06 (40 dias). Objetivo: verificar se algum concorrente anunciou campanha junina 2026 e consolidar radar competitivo para o Potinho Junino.
+
+**O que pesquisou/analisou:**
+- WebSearch + WebFetch (via agente): "The Best Açaí São João 2026", "MilkyMoo São João junho 2026", "Pede Mooleca 2026", "MilkyMoo Como Treinar Dragão"
+- TheBest: nenhum anúncio 2026 encontrado — padrão histórico lança em 26–27/06 (após São João). **Nova intel:** "Ovo em Pétala" da Páscoa 2026 viral (+100M views) → confirma capacidade de execução viral de produtos sazonais
+- MilkyMoo: "Pede Mooleca" padrão recorrente confirmado — preços (R$25/300ml, R$30/500ml) e ingredientes completos confirmados (sorvete baunilha + amendoim + borda brigadeiro + caramelo salgado + Crocante Nestlé). **Nova intel:** "Tempestade" (Como Treinar Dragão, estreia 13/06) é produto simultâneo — MilkyMoo opera 2 produtos em junho = comunicação fragmentada
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/the-best-acai.md` | ADICIONADO bloco "Ciclo #213": verificação 14/05 (sem anúncio junino), nova intel "Ovo em Pétala" Páscoa 2026, tabela de diferenciação São João, análise janela 01/06–23/06 descoberta |
+| `belinha/competitors/milkymoo.md` | ADICIONADO bloco "Ciclo #213": preços Pede Mooleca confirmados, ingredientes completos, detalhes "Tempestade" (Dragão), tabela oportunidade foco MilkyPot vs. dispersão MilkyMoo junho |
+
+**Destaques estratégicos:**
+1. **Janela São João 01/06–23/06 totalmente descoberta:** TheBest lança 26/06 (tarde), MilkyMoo divide atenção entre cinema e festa junina. MilkyPot com mensagem única e antecipação de 23 dias tem share of voice exclusivo no segmento.
+2. **"Ovo em Pétala" alerta:** TheBest prova que produtos sazonais visuais explodem em redes. Quando lançarem sorvetes juninos em 26/06, vai haver buzz. MilkyPot deve ter encerramento do Potinho Junino já planejado para não ser engolido.
+3. **Pede Mooleca R$25 (300ml):** confirma pricing MilkyMoo na faixa R$25–30. Potinho MilkyPot sendo diferente (potinho ≠ milkshake) evita comparação direta — é complementar, não concorrente de preço.
+4. **Tempestade = oportunidade de narrativa:** enquanto MilkyMoo fala de dragão, a ovelhinha fala de arraiá — narrativa mais autêntica para o São João.
+
+**Commit:** `88ce6de`
+
+**Próximo passo sugerido:**
+- **Ciclo #214 — Conteúdo:** Criar calendário editorial detalhado para a **janela 14/05–02/06** (hoje até início dos teasers juninos) — o que o operador posta nessas 3 semanas para manter engajamento sem queimar o "reveal junino"? Os arquivos de semana cobriam o período mas sem integração com a narrativa que vem aí.
+- **Ciclo #215 — Conversão:** Marco 6 meses de loja (25/10/2026) — playbook comemorativo (prescrito na estratégia v21c). Com 5 meses de antecedência, ideal para planejar.
+- **Ciclo #216 — Concorrentes:** Green Açaí (última atualização ciclo #84, 01/05 — 129 ciclos atrasado, violando v21d). Verificar se @greenlondrina anunciou algo para São João.
+- **Operador (URGENTE — 16 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — sem isso, teasers de junho não podem ser finalizados
+- **Operador:** Reviews Google Maps (≥3) para desbloquear `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #213 | 2026-05-14_
+
+---
+
 ## Ciclo #212 — 2026-05-14
 
 **Área:** Conversão — Overlay família em férias para contracampanha Dia da Vaca 08/07/2026
