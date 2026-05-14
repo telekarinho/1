@@ -450,6 +450,18 @@
                     if(banner) banner.style.display = 'flex';
                     return;
                 }
+                var inPais = (y === 2026 && m === 8 && day <= 9);
+                if(inPais && !sessionStorage.getItem('paisBannerClosed')){
+                    if(day < 9){
+                        if(textEl) textEl.innerHTML = '👨 <strong>DIA DOS PAIS 09/08</strong> &nbsp;·&nbsp; Potinho Duo Papai a caminho · Mande <strong>PAPAI26</strong> e entre na lista VIP 🐑';
+                        if(ctaEl){ ctaEl.textContent = 'Entrar no VIP →'; ctaEl.href = 'https://wa.me/5543998042424?text=PAPAI26'; }
+                    } else {
+                        if(textEl) textEl.innerHTML = '👨 <strong>FELIZ DIA DOS PAIS!</strong> &nbsp;·&nbsp; Potinho Duo Papai · Delivery 15-40min · Hoje até 23h 🐑';
+                        if(ctaEl){ ctaEl.textContent = 'Pedir agora! →'; ctaEl.href = 'https://wa.me/5543998042424?text=Ol%C3%A1!%20Quero%20o%20Potinho%20Duo%20Papai%21%20%F0%9F%91%A8'; }
+                    }
+                    if(banner) banner.style.display = 'flex';
+                    return;
+                }
                 if(banner) banner.style.display = 'none';
                 return;
             }
@@ -489,6 +501,7 @@
             var d2 = getBrasiliaDate(), m2 = d2.getMonth()+1, day2 = d2.getDate(), y2 = d2.getFullYear();
             if(y2 > 2026 || (y2 === 2026 && (m2 > 4 || (m2 === 4 && day2 > 25)))){
                 if(y2 === 2026 && m2 === 7){ sessionStorage.setItem('caramBannerClosed','1'); }
+                else if(y2 === 2026 && m2 === 8){ sessionStorage.setItem('paisBannerClosed','1'); }
                 else { sessionStorage.setItem('juninaBannerClosed','1'); }
             }
             applyBannerOffset();
