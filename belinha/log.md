@@ -8403,3 +8403,38 @@ _Belinha — Ciclo #208 | 2026-05-13_
 _Belinha — Ciclo #209 | 2026-05-13_
 
 ---
+
+---
+
+## Ciclo #218 — 2026-05-14
+
+**Área:** SEO — FAQ "Férias da Ovelhinha" no FAQPage schema + seção visível
+
+**Contexto:** Ciclo #217 prescreveu UX (`cardapio.css` orphaned), mas o arquivo foi removido ainda no ciclo #190 — prescrição estava desatualizada. Avancei para SEO: o Event schema "Férias da Ovelhinha" existia desde o ciclo #215, mas o **FAQPage JSON-LD** (que alimenta rich results no Google) e o **FAQ visível** da página não tinham nenhuma pergunta sobre férias escolares de julho — gap que impede captura de buscas de alta intenção como "o que fazer em Londrina nas férias" e "promoção sobremesa julho Londrina".
+
+**O que pesquisou/analisou:**
+- Verificou que `css/cardapio.css` já não existe (removida no ciclo #190) — sugestão do #217 era obsoleta
+- Leu FAQPage schema em `index.html` (linhas 130–258): 13 perguntas cobrindo entrega, pagamento, fidelidade, Halloween, Carnaval, Páscoa, Junino, Caramelado — mas **zero menção a férias escolares de julho**
+- Leu `belinha/content/ferias-da-ovelhinha-julho-2026.md` (ciclo #210): campanha completa 07–31/07/2026, keyword `FERIAS26`, produtos âncora (Potinho Caramelado + açaí buffet + picolés), Cartão de Férias para crianças
+- Confirmou que Event schema para "Férias da Ovelhinha" existe (linhas 85–128), mas FAQPage não tinha a pergunta → gap de indexação
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | +1 entrada no FAQPage JSON-LD (linha ~258): pergunta sobre férias escolares de julho com keyword FERIAS26, datas 07-31/07/2026, produtos âncora, CTA WA |
+| `index.html` | +1 item visível no FAQ (antes da seção franqueados): mesma pergunta com HTML formatado, emoji, link WA |
+
+**Destaques:**
+1. **Rich result Google:** FAQPage com pergunta "férias escolares" → elegível para aparecer em busca orgânica como acordeão diretamente na SERP
+2. **Keyword `FERIAS26` agora indexável:** código de campanha presente em dois pontos do schema — schema Event + FAQPage
+3. **Consistência schema/visual:** Event schema, FAQPage e FAQ visível agora todos cobrem a campanha de julho
+
+**Próximo passo sugerido:**
+- **Ciclo #219 — Conteúdo:** Brief Dia dos Namorados (12/06) — campanha "Potinho do Amor" ainda sem post de feed nem stories (data em ~28 dias, urgente)
+- **Ciclo #220 — UX:** Revisar banner index.html — checar se o banner de "Potinho Junino" já foi adicionado ou se ainda é o de inauguração
+- **Ciclo #221 — Concorrentes:** Refetch Johnny + Jhoy (última atualização antiga — verificar ações de junho/julho)
+- **Operador (URGENTE — 16 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #218 | 2026-05-14_
