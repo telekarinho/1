@@ -1361,6 +1361,7 @@
     <script src="js/chat-ai.js" defer></script>
     <script src="js/cardapio-data.js"></script>
     <script src="js/core/catalog-v2.js?v=mp-v204"></script>
+    <script src="js/monte-seu-flow.js?v=mp-v222"></script>
     <script src="js/core/franchise-waitlist.js" defer></script>
     <script>
     /* ============================================
@@ -1650,6 +1651,44 @@
                 });
             }
             if (!item) return;
+
+            // ============================================
+            // MONTE DO SEU JEITO — wizard 5 passos
+            // Açaí · Smoothie · Shake Proteico tem metadata _v2.monteSeuJeito
+            // Delega pro módulo MonteSeuFlow (js/monte-seu-flow.js)
+            // ============================================
+            if (item._v2 && item._v2.monteSeuJeito && window.MonteSeuFlow) {
+                MonteSeuFlow.open(item, {
+                    channel: 'delivery',
+                    onAdd: function(cartEntry) {
+                        var cartItem = {
+                            id: cartEntry.id + '_' + Date.now(),
+                            productId: cartEntry.productId,
+                            name: cartEntry.name,
+                            emoji: cartEntry.emoji,
+                            unitPrice: cartEntry.unitPrice,
+                            qty: 1,
+                            extras: [],
+                            total: cartEntry.unitPrice,
+                            type: 'monte_seu',
+                            peso: null,
+                            obs: cartEntry.obs || '',
+                            isMonteSeu: true,
+                            monteSeuJeito: cartEntry.monteSeuJeito,
+                            description: cartEntry.description
+                        };
+                        var existingCart = JSON.parse(localStorage.getItem('milkypot_cart') || '[]');
+                        existingCart.push(cartItem);
+                        localStorage.setItem('milkypot_cart', JSON.stringify(existingCart));
+                        if (typeof updateCartUI === 'function') updateCartUI();
+                        if (typeof updateCartBadge === 'function') updateCartBadge();
+                        if (typeof updateStickyCart === 'function') updateStickyCart();
+                        if ('vibrate' in navigator) navigator.vibrate(50);
+                        if (typeof showToast === 'function') showToast((item.emoji || '🎨') + ' ' + item.name + ' adicionado!');
+                    }
+                });
+                return;
+            }
 
             window._sheetProduct = item;
             window._sheetQty = 1;

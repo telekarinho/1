@@ -626,6 +626,7 @@
     <script src="js/cardapio-data.js"></script>
     <script src="js/core/cost-calculator.js?v=mp-v204"></script>
     <script src="js/core/catalog-v2.js?v=mp-v204"></script>
+    <script src="js/monte-seu-flow.js?v=mp-v222"></script>
     <script src="js/cart.js"></script>
     <script src="js/core/raspinha-engine.js"></script>
     <script src="js/checkout.js"></script>
@@ -1018,6 +1019,41 @@
                 });
             }
             if (!item) return;
+
+            // ============================================
+            // MONTE DO SEU JEITO — wizard 5 passos
+            // Açaí · Smoothie · Shake Proteico tem metadata _v2.monteSeuJeito
+            // Delega pro módulo MonteSeuFlow (js/monte-seu-flow.js)
+            // ============================================
+            if (item._v2 && item._v2.monteSeuJeito && window.MonteSeuFlow) {
+                MonteSeuFlow.open(item, {
+                    channel: 'delivery',
+                    onAdd: function(cartEntry) {
+                        // Reusa estrutura de cart existente
+                        if (typeof cart === 'undefined') window.cart = JSON.parse(localStorage.getItem('milkypot_cart') || '[]');
+                        const cartItem = {
+                            id: cartEntry.id + '_' + Date.now(),
+                            productId: cartEntry.productId,
+                            name: cartEntry.name,
+                            emoji: cartEntry.emoji,
+                            varianteId: cartEntry.varianteId,
+                            varianteName: cartEntry.varianteName,
+                            unitPrice: cartEntry.unitPrice,
+                            quantity: 1,
+                            extras: [],
+                            obs: cartEntry.obs || '',
+                            isMonteSeu: true,
+                            monteSeuJeito: cartEntry.monteSeuJeito,
+                            description: cartEntry.description
+                        };
+                        cart.push(cartItem);
+                        localStorage.setItem('milkypot_cart', JSON.stringify(cart));
+                        if (typeof updateCartUI === 'function') updateCartUI();
+                        if (typeof showToast === 'function') showToast('✓ Adicionado ao carrinho!');
+                    }
+                });
+                return;
+            }
 
             window._sheetProduct = item;
             window._sheetQty = 1;
