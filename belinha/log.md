@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #216 — 2026-05-14
+
+**Área:** Concorrentes — Green Açaí Londrina (130 ciclos de defasagem)
+
+**Contexto:** Prescrito no ciclo #215 como urgente — Green Açaí não era atualizado desde o ciclo #84 (2026-05-01). Com São João em 40 dias e teasers do Potinho Junino começando em 03/06, era crítico verificar se algum concorrente local anunciou campanha junina. Green Açaí é o principal player local de açaí em Londrina.
+
+**O que pesquisou/analisou:**
+- WebSearch: perfil @greenlondrina → 38K seguidores, segunda unidade @greenacaicentro confirmada, app próprio (cashback+pontos) detectado, reel ativo de giveaway
+- WebSearch: campanha São João/junho 2026 → **nenhuma anunciada** — campo aberto
+- WebSearch: campanha férias julho 2026 → **nenhuma anunciada** — campo aberto
+- WebSearch: preço de insumo açaí → alta de 25% (fev→mar 2026, R$33→R$41) — impacto de custo para Green Açaí
+- WebSearch: avaliações → 4.5/5 em 2.604 avaliações confirmadas (forte autoridade local de reviews)
+- WebFetch tentativas (tripadvisor, ifood, cardapio.menu, cylex): todas bloqueadas por 403 — dados consolidados via WebSearch
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/green-acai.md` | ADICIONADO bloco "Ciclo #216" (~75 linhas): tabela comparativa ciclo#84 vs #216, nova ameaça app cashback, confirmação segunda unidade Centro, impacto alta 25% açaí, radar São João (vácuo competitivo confirmado em todos concorrentes), 5 conclusões estratégicas, cronograma de próximo monitoramento |
+
+**Destaques da análise:**
+1. **Vácuo São João confirmado:** Green Açaí sem campanha junina (junto a TheBest e MilkyMoo) — MilkyPot será único player com campanha estruturada em Londrina
+2. **App cashback = ameaça fidelidade:** Green Açaí tem plataforma digital de pontos; MilkyPot deve comunicar "fidelidade no zap, sem app"
+3. **Segunda unidade Centro:** @greenacaicentro — se estiver perto do Muffato (≤2km), nível de ameaça sobe; verificar no ciclo #230
+4. **Alta 25% no açaí:** comprime margem do Green ou sinaliza repasse ao consumidor — MilkyPot pode narrar estabilidade de preço do Potinho Ninho
+
+**Commit:** `ec7234a`
+
+**Próximo passo sugerido:**
+- **Ciclo #217 — Conversão:** Marco 6 meses de loja 25/10/2026 — playbook comemorativo (prescrito no ciclo #215)
+- **Ciclo #218 — UX:** `cardapio.css` (21K) orphaned — avaliar: deletar ou incorporar ao `style.css`
+- **Ciclo #219 — SEO:** FAQ "Férias da Ovelhinha" — Q&A no FAQPage de `index.html`
+- **Ciclo #230:** Verificar endereço exato @greenacaicentro e distância do Muffato (urgente se ≤2km)
+- **Operador (URGENTE — 16 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #216 | 2026-05-14_
+
+---
+
 ## Ciclo #215 — 2026-05-14
 
 **Área:** SEO — Event schema.org "Férias da Ovelhinha" em `index.html`
