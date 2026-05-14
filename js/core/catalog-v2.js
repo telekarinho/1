@@ -487,12 +487,15 @@
                         .filter(r => r.insumoId && r.qty)
                         .map(r => ({ insumoId: r.insumoId, qty: r.qty, unit: r.unit || 'unid' })),
                     // Dados v2 completos para PDV avançado
+                    // IMPORTANTE: monteSeuJeito deve ser preservado pra wizard Açaí/Smoothie/Shake Proteico funcionar
                     _v2: {
                         precos: p.precos,
                         kits: p.kits,
                         variantes: p.variantes,
                         toppingsIds: p.toppingsIds,
-                        buffet: p.buffet
+                        buffet: p.buffet,
+                        monteSeuJeito: p.monteSeuJeito || null,
+                        tags: p.tags || []
                     }
                 };
             });
