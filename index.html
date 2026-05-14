@@ -1453,10 +1453,23 @@
                 // Mantém catalog antigo se vier evento vazio (evita zerar UI em race conditions)
                 var incoming = e && e.detail;
                 if (!incoming || (!incoming.sabores && !incoming.bebidas)) return;
+
+                // Auto-switch pra 🎨 Monte o Seu se acabou de aparecer e user não tinha clicado
+                var hadMonteSeu = !!(catalog && catalog.sabores && catalog.sabores.monte_seu && catalog.sabores.monte_seu.items && catalog.sabores.monte_seu.items.length);
+                var hasMonteSeu = !!(incoming.sabores && incoming.sabores.monte_seu && incoming.sabores.monte_seu.items && incoming.sabores.monte_seu.items.length);
+                var monteSeuJustAppeared = !hadMonteSeu && hasMonteSeu;
+
                 catalog = incoming;
                 _renderCatalogTabs();
                 var activeTab = document.querySelector('.cat-tab.active');
                 var cat = activeTab ? activeTab.dataset.category : 'ninho';
+
+                if (monteSeuJustAppeared && !window._userClickedTab) {
+                    cat = 'monteseu';
+                    document.querySelectorAll('.cat-tab').forEach(function(t){ t.classList.remove('active'); });
+                    var newActive = document.querySelector('.cat-tab[data-category="monteseu"]');
+                    if (newActive) newActive.classList.add('active');
+                }
                 renderProducts(cat);
             });
 
@@ -1620,6 +1633,8 @@
         }
 
         window.filterProducts = function(event, cat) {
+            // Marca escolha manual — evita auto-switch pra monteseu em sync subsequente
+            window._userClickedTab = true;
             var tabs = document.querySelectorAll('.cat-tab');
             tabs.forEach(function(t) { t.classList.remove('active'); });
             if (event && event.target) event.target.classList.add('active');
