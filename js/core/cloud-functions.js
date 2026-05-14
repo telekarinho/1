@@ -239,8 +239,17 @@ const CloudFunctions = {
     // Envia relatorio do fechamento + auditoria cega
     async sendClosingReport(franchiseId, reportData) {
         const managers = ['milkypot.com@gmail.com', 'jocimarrodrigo@gmail.com', 'joseanemse@gmail.com'];
-        // Regra: operador so recebe se a config estiver ativada
-        const config = (typeof AdminConfig !== 'undefined') ? AdminConfig.getConfig(franchiseId) : {};
+        // Regra: operador so recebe se a config estiver ativada.
+        // Defesa: AdminConfig nao expoe getConfig no PDV; o reenvio nao pode quebrar por isso.
+        let config = {};
+        try {
+            if (typeof AdminConfig !== 'undefined' && typeof AdminConfig.getConfig === 'function') {
+                config = AdminConfig.getConfig(franchiseId) || {};
+            }
+        } catch (e) {
+            console.warn('[CloudFunctions.sendClosingReport] ignorando config local indisponivel:', e && e.message || e);
+            config = {};
+        }
         const sendToOperator = config.enviarComprovanteOperador === true;
         
         return this.call('sendClosingReport', {

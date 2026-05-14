@@ -685,8 +685,8 @@ function initChat() {
     document.body.appendChild(chatBtn);
     document.body.appendChild(chatWidget);
 
-    var whatsapp = document.querySelector('.whatsapp-float');
-    if (whatsapp) whatsapp.style.bottom = '170px';
+
+
 
     chatBtn.addEventListener('click', function() {
         chatWidget.classList.add('active');

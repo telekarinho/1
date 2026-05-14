@@ -2,9 +2,9 @@
 """Generate MilkyPot Open Graph images (1200x630)."""
 
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
-import math, shutil, sys
+import math, os, shutil, sys
 
-BASE = '/home/user/1'
+BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 OUT_CARDAPIO = f'{BASE}/images/og-cardapio.jpg'
 OUT_HOME     = f'{BASE}/images/og-home.jpg'
 LOGO_PATH    = f'{BASE}/images/logo-milkypot.png'
@@ -23,9 +23,30 @@ BG_TOP    = (240, 228, 255)    # #F0E4FF
 BG_BOTTOM = (255, 220, 242)    # #FFDCF2
 
 # ── Fonts ──────────────────────────────────────────────────────────────────────
-FONT_BOLD   = '/usr/share/fonts/truetype/freefont/FreeSansBold.ttf'
-FONT_NORMAL = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
-FONT_EMOJI  = '/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf'
+FONT_BOLD_CANDIDATES = [
+    '/usr/share/fonts/truetype/freefont/FreeSansBold.ttf',
+    'C:/Windows/Fonts/arialbd.ttf',
+    'C:/Windows/Fonts/segoeuib.ttf',
+]
+FONT_NORMAL_CANDIDATES = [
+    '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+    'C:/Windows/Fonts/arial.ttf',
+    'C:/Windows/Fonts/segoeui.ttf',
+]
+FONT_EMOJI_CANDIDATES = [
+    '/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf',
+    'C:/Windows/Fonts/seguiemj.ttf',
+]
+
+def first_font(candidates):
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+    return None
+
+FONT_BOLD   = first_font(FONT_BOLD_CANDIDATES)
+FONT_NORMAL = first_font(FONT_NORMAL_CANDIDATES)
+FONT_EMOJI  = first_font(FONT_EMOJI_CANDIDATES)
 
 def lerp_color(c1, c2, t):
     return tuple(int(c1[i] + (c2[i] - c1[i]) * t) for i in range(3))
@@ -150,12 +171,11 @@ def build_image(title_line2="Cardápio Online"):
     draw = ImageDraw.Draw(img)  # refresh after paste
 
     # ── Fonts ───────────────────────────────────────────────────────────────
-    f_brand   = ImageFont.truetype(FONT_BOLD,   62)
-    f_sub     = ImageFont.truetype(FONT_BOLD,   34)
-    f_items   = ImageFont.truetype(FONT_NORMAL, 28)
-    f_phone   = ImageFont.truetype(FONT_BOLD,   30)
-    # Noto Color Emoji only ships as 109px bitmap
-    f_emoji   = ImageFont.truetype(FONT_EMOJI,  109)
+    f_brand   = ImageFont.truetype(FONT_BOLD,   62) if FONT_BOLD else ImageFont.load_default()
+    f_sub     = ImageFont.truetype(FONT_BOLD,   34) if FONT_BOLD else ImageFont.load_default()
+    f_items   = ImageFont.truetype(FONT_NORMAL, 28) if FONT_NORMAL else ImageFont.load_default()
+    f_phone   = ImageFont.truetype(FONT_BOLD,   30) if FONT_BOLD else ImageFont.load_default()
+    f_emoji   = ImageFont.truetype(FONT_EMOJI,  109) if FONT_EMOJI else f_brand
 
     # ── Render emoji into a small RGBA tile, then resize to cap height ──────
     EMOJI_TARGET_H = 58   # match title cap height visually
@@ -205,11 +225,11 @@ def build_image(title_line2="Cardápio Online"):
         draw.point((xi, div_y), fill=lerp_color(DARK_PURPLE, PINK, t))
 
     # ── Subtitle (items) ────────────────────────────────────────────────────
-    subtitle = "Milkshakes  •  Potinhos  •  Açaí  •  Zero/Fit"
+    subtitle = "Milkshakes  •  Sundaes  •  Açaí  •  Picolés"
     sub_x = center_x(draw, subtitle, f_items)
     sub_y = div_y + 16
     # draw with color alternation per segment
-    segments = ["Milkshakes", "  •  ", "Potinhos", "  •  ", "Açaí", "  •  ", "Zero/Fit"]
+    segments = ["Milkshakes", "  •  ", "Sundaes", "  •  ", "Açaí", "  •  ", "Picolés"]
     colors   = [DARK_PURPLE, PINK, DARK_PURPLE, PINK, DARK_PURPLE, PINK, DARK_PURPLE]
     # measure full to center
     full_bb = draw.textbbox((0, 0), "".join(segments), font=f_items)

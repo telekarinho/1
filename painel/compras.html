@@ -136,6 +136,7 @@
                 <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
                 <a href="auditoria.html" class="sidebar-link"><span class="icon">🔍</span> Auditoria Cega</a>
                 <a href="compras.html" class="sidebar-link active"><span class="icon">🛒</span> Compras</a>
+                <a href="estoque-inteligente.html" class="sidebar-link"><span class="icon">📦</span> Estoque Inteligente</a>
                 <a href="operacional.html" class="sidebar-link"><span class="icon">🎯</span> Operacional</a>
             </nav>
         </aside>
@@ -158,7 +159,8 @@
                             </div>
                         </div>
                         <p style="color:#666; margin-bottom: 16px;">
-                            Lista de itens que estão abaixo do estoque mínimo. Você pode ajustar a quantidade livremente, como compras para final de semana.
+                            Lista de itens que estão abaixo do estoque mínimo. Para dias restantes, sabores e sugestão por venda real, use a
+                            <a href="estoque-inteligente.html" style="font-weight:800;color:#6f42c1;">Central de Estoque Inteligente</a>.
                         </p>
 
                         <div class="filters">
@@ -228,8 +230,31 @@
             renderTable();
         }
 
-        function loadSuggestions() {
+        async function loadSuggestions() {
+            const tbody = document.getElementById('comprasBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5">Carregando estoque real...</td></tr>';
+
             inventoryData = DataStore.getCollection('inventory', franchiseId) || [];
+
+            // Fallback cloud: evita tela vazia quando o cache local ainda nao sincronizou.
+            try {
+                if (typeof DataStore !== 'undefined' && DataStore._attemptAnonymousAuth) {
+                    await DataStore._attemptAnonymousAuth();
+                }
+                if (typeof firebase !== 'undefined' && firebase.firestore) {
+                    const doc = await firebase.firestore().collection('datastore').doc('inventory_' + franchiseId).get();
+                    if (doc.exists) {
+                        let value = doc.data().value;
+                        if (typeof value === 'string') value = JSON.parse(value);
+                        if (Array.isArray(value) && value.length) {
+                            inventoryData = value;
+                            DataStore.setCollection('inventory', franchiseId, value);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('compras cloud fallback:', e.code || e.message);
+            }
             
             // Sort by category then name
             inventoryData.sort((a,b) => {

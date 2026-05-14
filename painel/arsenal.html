@@ -95,7 +95,7 @@
 <!-- HERO -->
 <div class="hero">
     <h1>🎮 Arsenal MilkyPot</h1>
-    <div class="subtitle">Você tem <strong>16 ferramentas</strong>. Cada uma ativada = +XP. Cada post promovendo = +XP. Cada R$ vendido com elas = +XP. Vamos ranquear isso.</div>
+    <div class="subtitle">Você tem <strong>17 ferramentas reais</strong> (todas inspecionadas no código). Cada uma ativada = +XP. Cada post promovendo = +XP. Vamos ranquear isso.</div>
 
     <div class="player-stats">
         <div class="stat-card">
@@ -108,7 +108,7 @@
         </div>
         <div class="stat-card">
             <div class="stat-label">🎁 Ferramentas Ativadas</div>
-            <div class="stat-value" id="toolsActivated">0 / 16</div>
+            <div class="stat-value" id="toolsActivated">0 / 17</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">💎 Mestre em</div>
@@ -126,7 +126,7 @@
 
 <!-- FILTERS -->
 <div class="filters">
-    <button class="filter-btn active" data-filter="todas">🔄 Todas (16)</button>
+    <button class="filter-btn active" data-filter="todas">🔄 Todas (17)</button>
     <button class="filter-btn" data-filter="inativas">📦 Inativas</button>
     <button class="filter-btn" data-filter="ativas">🚀 Ativadas</button>
     <button class="filter-btn" data-filter="mestre">💎 Mestre</button>
@@ -149,119 +149,182 @@
 
 const STORAGE_KEY = 'mp_arsenal_status';
 
-// ========= 16 FERRAMENTAS COM CONTEÚDO COMPLETO =========
+// ========= 17 FERRAMENTAS COM MECÂNICAS REAIS DO SISTEMA =========
 const tools = [
-    // ============ AQUISIÇÃO ============
     {
         id: 'raspinha',
         name: 'Raspinha da Sorte',
         icon: '🎫',
         category: 'aquisicao',
-        tagline: 'A cada venda, 1 em 5 ganha algo',
+        tagline: '11 prêmios reais · prêmio só na PRÓXIMA compra (5 dias)',
         defaultStatus: 'active',
         xp: 30,
         page: 'pdv.html',
-        why: 'Aumenta retorno em 40%. Cliente raspou e ganhou = vai voltar pra usar. Já está rodando no seu PDV.',
+        why: 'Sistema sorteia 1 de 11 prêmios reais (topping grátis 22%, upgrade P→M 13%, Milkshake P grátis 3,3%, MEGA R$50 0,2%). Prêmio só usável na PRÓXIMA compra dentro de 5 dias = força cliente voltar.',
         tutorial: [
-            'Já está ativa automaticamente em toda venda',
-            'Divulgue no balcão com cartaz "RASPOU NA HORA - GANHE"',
-            'Cliente raspa no celular após o pagamento (link no comprovante)'
+            'Já roda automático em toda venda (raspinha-engine.js ativo)',
+            'Cliente raspa no celular após pagamento (link gerado)',
+            'Voltou em 5 dias = redime o prêmio no PDV'
         ],
         content: {
-            instagram: 'Foto da raspinha sendo raspada (mão + ovelhinha) + caption: "🎫 NOVIDADE: TODA compra no MilkyPot Muffato Quintino tem raspinha. 1 em cada 5 ganha algo — pode ser desconto, topping grátis ou pote 200ml FREE 🍦. Quanto mais comprar, mais chances. Vem testar a sorte hoje! 📍 Piso L1 do Muffato Quintino"',
-            tiktok: 'HOOK: "Sorveteria com raspinha igual jogo de bingo, isso aqui é Londrina mesmo?" SCRIPT 15s: Cliente paga, raspa o celular ao vivo, GRITA "GANHEI POTE 200ML!". Você fala "Sério, 1 em cada 5 ganha". AUDIO: trend "no shot" reverse. HASHTAGS: #raspinhadasorte #londrina #muffatoquintino #milkypot #fyp',
-            story: 'Sticker enquete: "Tu confia na tua sorte? SIM/NÃO" → resposta: "Vem testar. Raspinha em TODA compra na MilkyPot Muffato. Hoje rolou pote 200ml grátis"',
-            whatsapp: 'Oi [nome]! 🐑 Vi que veio na MilkyPot semana passada. Hoje tem rodada nova de raspinha — 1 em 5 ganha pote 200ml grátis. Tô aberto até 22h. Vem? 📍 Muffato Quintino L1'
+            instagram: '🎫 RASPOU AGORA, GANHA NA PRÓXIMA. Toda compra na MilkyPot Muffato Quintino vira raspinha. Pode dar: topping grátis (22%), upgrade pra tamanho maior (13%), Milkshake P de graça (3,3%) ou R$50 em créditos (0,2%). Vale por 5 dias. 11 prêmios diferentes possíveis 🐑 📍 Piso L1',
+            tiktok: 'HOOK: "Comprei R$22, raspou no celular e GANHEI um Milkshake P GRÁTIS pra próxima visita". SCRIPT 15s: você comprando, raspando ao vivo (close no celular), reação genuína. Texto: "Sério, 11 prêmios diferentes. Topping, upgrade, milkshake grátis, R$50 em créditos. Mas só vale na PRÓXIMA". AUDIO: trend reveal/surprise. HASHTAGS: #raspinhadasorte #londrina #muffatoquintino #milkypot #fyp',
+            story: 'Sticker enquete "Tu vai ganhar topping grátis ou Milkshake P grátis hoje?" → Raspa em qualquer compra. 5 dias pra usar.',
+            whatsapp: 'Oi [nome]! 🎫 Lembra que tu raspou semana passada e ganhou [prêmio]? Hoje é o último dia pra usar — perde se não vier até 22h. Te espero 🐑'
         }
     },
     {
-        id: 'desafio10',
-        name: 'Desafio 10 MilkyPot',
-        icon: '🎮',
+        id: 'desafio_10s',
+        name: 'Desafio 10 Segundos',
+        icon: '⏱️',
         category: 'aquisicao',
-        tagline: 'Cliente filma 10 sorvetes em 10s, viraliza',
+        tagline: 'Cronômetro na TV · cliente para sem olhar · acertar 10.00s = brinde',
         defaultStatus: 'inactive',
         xp: 50,
         page: 'desafios.html',
-        why: 'Viralização orgânica. Cliente filma desafio na sua loja, posta TikTok com geo-tag "Muffato Quintino" = anúncio grátis pra rede de amigos dele.',
+        why: 'Mecânica de timing PURA: cliente vê tela, aperta INICIAR, cronômetro corre invisível, aperta PARAR. Se travar em 10.00s exatos (±0,5s) ganha brinde. Vira viral pq quase ninguém acerta — quem acerta posta TikTok comemorando.',
         tutorial: [
-            'Cria cartaz A2 na entrada: "DESAFIO 10 MILKYPOT — VENCEDOR GANHA 1 MÊS GRÁTIS"',
-            'Cliente filma comendo 10 colheres em 10 segundos, posta no TikTok marcando @milkypot',
-            'Você reposta no story da loja + premia o melhor da semana'
+            'Ativa no PDV: botão "DESAFIO" (FAB amarelo)',
+            'Cliente vai no canto designado · vê a TV grande · aperta INICIAR · tenta parar em 10.00s',
+            'Ganhou: registra no sistema, brinde sai do estoque'
         ],
         content: {
-            instagram: 'Reel: você desafiando alguém na loja. Hook: "DESAFIO 10 MILKYPOT — quem aguenta?". 15s: pessoa pega 10 colheres em 10s, gritos, mascote ovelhinha aplaudindo. Caption: "🎮 NOVO DESAFIO TODA SEMANA. Vencedor leva 1 mês de sorvete grátis. Marca quem topa! 📍 Muffato Quintino L1"',
-            tiktok: 'HOOK: "Se você comer 10 colheres de sorvete em 10 segundos eu te dou 1 MÊS GRÁTIS" SCRIPT 20s: você na câmera, cronômetro aparece, primeira pessoa tenta, falha rindo. Próxima ganha. Mascote aplaudindo. AUDIO: countdown "10, 9, 8…" + roar. HASHTAGS: #desafio #challenge #londrina #milkypot #muffatoquintino #fyp',
-            story: 'Sticker countdown "Próximo Desafio 10 — sábado 20h". Quem topar manda DM.',
-            whatsapp: '🎮 OPORTUNIDADE: Estamos lançando o DESAFIO 10 MILKYPOT no sábado às 20h. 10 colheres em 10 segundos = 1 MÊS DE SORVETE GRÁTIS. Vai ter público, filmagem pra TikTok. Topa participar?'
+            instagram: 'Reel: cliente jogando o desafio na sua loja, tela do cronômetro, suspense, GANHOU 10.02s! Caption: "⏱️ DESAFIO 10 SEGUNDOS — para o cronômetro EXATAMENTE em 10.00s SEM OLHAR e leva brinde grátis. Quase impossível. Quem topa hoje? 📍 Muffato L1"',
+            tiktok: 'HOOK: "TEM UMA SORVETERIA EM LONDRINA QUE DÁ SORVETE GRÁTIS SE VC ACERTAR 10 SEGUNDOS NO CRONÔMETRO" SCRIPT 20s: você (ou cliente) começa, tela cronômetro, tensão, ERROU por 0.4s. Outro cliente tenta, ACERTOU 10.01s! Comemora. Texto: "Mecânica de timing. 90% erra. 10% leva brinde grátis." AUDIO: tension build-up + drum drop. HASHTAGS: #desafio10s #challenge #londrina #milkypot #muffatoquintino #fyp',
+            story: 'Print da tela do cronômetro. Sticker "TU acharia que acerta 10.00s? Sim/Não" → "Vem testar"',
+            whatsapp: 'Já passou pra fazer o Desafio 10 Segundos? Hoje 3 clientes acertaram, 47 erraram kkk Quem acerta leva BRINDE. Vai hoje?'
         }
     },
     {
-        id: 'promocoes_oficiais',
-        name: 'Promoções Oficiais',
-        icon: '⚡',
+        id: 'acerte_300g',
+        name: 'Acerte 300g · Promoção Oficial',
+        icon: '⚖️',
         category: 'aquisicao',
-        tagline: '2 promos virais prontas, falta ativar',
+        tagline: 'Cliente pesa olho 300g no buffet · acertou (±5g) = 100% grátis',
         defaultStatus: 'inactive',
-        xp: 35,
+        xp: 40,
         page: 'promocoes-oficiais.html',
-        why: 'Já tem 2 promoções viralizantes prontas no sistema. Aparecem automaticamente nas TVs + cardápio online. Só precisa clicar "Ativar".',
+        why: 'Promoção viral oficial já implementada. Cliente enche pote no buffet, vai pesar. Se balança bater 295-305g, leva GRÁTIS. Margem perdida (R$18) viraliza pro influencer postar = pago em conteúdo.',
         tutorial: [
-            'Entra em painel/promocoes-oficiais.html',
-            'Vê as 2 promos prontas (Acertou Ganhou 300g + Desafio 10s)',
-            'Clica "Ativar" — aparece automático nas TVs + cardápio online'
+            'Ativa em painel/promocoes-oficiais.html',
+            'Promo aparece automático nas TVs · cardápio · cartaz buffet',
+            'No PDV: campo "Acertou Ganhou" — operador marca, sistema aplica 100% off'
         ],
         content: {
-            instagram: 'Carrossel 3 slides: Slide 1 "ACERTOU GANHOU 300G". Slide 2 "Como funciona: você pesa olho 300g, acertou ganhou 100% off". Slide 3 "Só hoje até 22h. Muffato Quintino L1". Caption: "⚡ Promoção do dia: ACERTOU GANHOU. Você pesa olho 300g de sorvete — se acertar na balança, leva GRÁTIS. Vem tentar 🐑"',
-            tiktok: 'HOOK: "TENTEI PESAR 300G NO OLHO PRA GANHAR SORVETE GRÁTIS" SCRIPT 15s: você pega o pote, enche com cara de concentração, coloca na balança. Texto aparece: "299g — PERDEU POR 1G AAAA". Caption: "Sério, se eu acertar leva tudo grátis. Vem tentar". AUDIO: drum roll suspense. #acerteiganhei #milkypot #londrina',
-            story: 'Story enquete "Você acha que acerta 300g no olho? SIM/NÃO" → revela: "Vem testar HOJE. Se acertar, leva 300g GRÁTIS"',
-            whatsapp: '⚡ Promo do dia: ACERTOU 300G GANHOU TUDO. Você pesa olho um pote de sorvete, se a balança bater exato 300g leva 100% off. Topa testar a precisão? Hoje até 22h.'
+            instagram: '⚖️ ACERTOU GANHOU 300g — desafio do buffet. Tu enche o pote no olho, pesa. Se bater 300g (±5g) leva GRÁTIS. Já teve 1 cliente que acertou EXATO 300,2g essa semana. Quem topa? 🐑 📍 Muffato L1 até 22h',
+            tiktok: 'HOOK: "Tentei pesar 300g de sorvete NO OLHO pra ganhar grátis" SCRIPT 25s: você no buffet, enche concentrado, hesita, fala "tô confiante", coloca balança, suspense… ERROU por 4g (304g). Cliente vizinho tenta, ACERTA. Reação: "PORRA". Texto final: "Eu paguei. Ela levou grátis. Vai ter coragem hoje?" AUDIO: drum roll suspense. HASHTAGS: #acerteiganhei #buffet #londrina #milkypot #muffatoquintino',
+            story: 'Foto da balança. Enquete "295g, 300g ou 305g?" → revela depois "Quem acertar 300g exato hoje leva GRÁTIS"',
+            whatsapp: 'Hoje rolou: cliente acertou 300,3g e levou 300g de sorvete GRÁTIS. Tu se acha bom no olho? Vem testar até 22h.'
         }
     },
-
-    // ============ CONVERSÃO ============
+    {
+        id: 'milky_influencer',
+        name: 'MilkyInfluencer · Programa de Creators',
+        icon: '🌟',
+        category: 'aquisicao',
+        tagline: '10 missões prontas · 5 tiers (Aspirante→Lenda) · MilkyCoins por post',
+        defaultStatus: 'inactive',
+        xp: 50,
+        page: '../admin/influencer-program.html',
+        why: 'Sistema separado pra creators virais. Cliente vira influencer, completa missões (Primeira Mordida, Belinha Reagindo, Combo Secreto, POV Saindo da MilkyPot...), ganha MilkyCoins (1 coin = R$0,10), sobe tier. Marketing GRÁTIS porque post vira viral.',
+        tutorial: [
+            'Cliente entra em milkypot.com/influencer.html · cadastra',
+            'Escolhe missão (10 disponíveis) · filma · posta com hashtag + @milkypotbr',
+            'Sistema valida (admin/influencer-program.html) · credita MilkyCoins'
+        ],
+        content: {
+            instagram: '🌟 MILKYINFLUENCER — programa pra creators de Londrina. 10 missões: Primeira Mordida (150 coins), Combo Secreto (250), POV Saindo (200), Duelo de Sabores (300), Receita Caseira (400), MilkyChallenge Adivinha (350)... Posta com #PrimeiraMordidaMilky @milkypotbr, ganha MilkyCoins (1 = R$0,10). Sobe de tier: Aspirante → Estrela → Pop → Ícone → Lenda 🐑',
+            tiktok: 'HOOK: "Sorveteria que PAGA pra você postar TikTok — isso existe?" SCRIPT 20s: tela do painel influencer, mostra as 10 missões com valores (150-400 coins/missão = R$15-40 por post). Texto: "Combo Secreto = 250 coins. Receita Caseira = 400. Tier Lenda multiplica por 3x". AUDIO: trend "wait that\'s genius". HASHTAGS: #milkyinfluencer #creator #londrina #milkypot #ugc',
+            story: 'Print das 10 missões. Sticker "Qual tu faria primeiro? POV ou Combo Secreto?" → resposta: "Cadastra aqui [link]"',
+            whatsapp: 'Oi [nome]! Vi que tu posta direto no Insta. Tenho programa MilkyInfluencer — pagamos com MilkyCoins (R$0,10 cada) por post. 10 missões prontas. Quer entrar?'
+        }
+    },
+    {
+        id: 'milkyclube',
+        name: 'MilkyClube Nacional · 3 Tiers',
+        icon: '🎉',
+        category: 'retencao',
+        tagline: '🥛 Leite · ✨ Nata · 👑 Chantilly · cashback 3-7% escalonado',
+        defaultStatus: 'active',
+        xp: 45,
+        page: 'fidelidade.html',
+        why: 'Cashback NACIONAL (vale em qualquer franquia). Cliente cadastrado ganha MilkyCoins (1 coin = R$1 desconto). Tier Leite: 3%. Nata: 5%. Chantilly: 7%. Quem gasta mais ganha mais.',
+        tutorial: [
+            'Já integrado no PDV (botão IDENTIFICAR cliente)',
+            'Toda venda: "Tem cadastro MilkyClube? Ganha cashback nacional"',
+            'Cliente identifica por CPF/telefone · sistema credita automático'
+        ],
+        content: {
+            instagram: 'Carrossel 3 slides: (1) "MilkyClube nacional — vale em qualquer franquia". (2) "🥛 Leite 3% / ✨ Nata 5% / 👑 Chantilly 7% cashback". (3) "Cadastra grátis. 1 MilkyCoin = R$1 desconto. Quem mais compra, mais ganha". Caption: "🎉 MilkyClube — único programa nacional de sorveteria do Brasil. Tier Chantilly devolve R$7 a cada R$100 gasto 🐑"',
+            tiktok: 'HOOK: "Tô gastando R$100 em sorvete e a sorveteria devolve R$7" SCRIPT 15s: você comprando, mostra extrato MilkyClube com saldo coins. Texto: "Tier Chantilly = 7% cashback. Vale em qualquer MilkyPot do Brasil". AUDIO: cash-back vibes. HASHTAGS: #milkyclube #cashback #londrina #milkypot',
+            story: 'Print do app com saldo MilkyCoins. Sticker "Quantos MilkyCoins tu tem?" → resposta: "Identifica no balcão e descobre"',
+            whatsapp: 'Oi [nome]! Tu tem R$[X] em MilkyCoins esperando no MilkyClube. Pode usar HOJE em qualquer pote. Validade [data]. Vem aproveitar 🐑'
+        }
+    },
+    {
+        id: 'fidelidade_digital',
+        name: 'Cartão Fidelidade Digital',
+        icon: '💳',
+        category: 'retencao',
+        tagline: '1 ponto por R$1 · 100 pontos = Sorvete Mini grátis (R$10)',
+        defaultStatus: 'active',
+        xp: 35,
+        page: 'fidelidade.html',
+        why: 'Sistema POR LOJA (diferente do MilkyClube nacional). Cliente identifica por TELEFONE, ganha 1 ponto/R$1. A cada 100 pontos = 1 Sorvete Mini grátis (R$10 = 10% retorno efetivo). Mais simples, ROI mais alto que MilkyClube tier Leite.',
+        tutorial: [
+            'Cliente passa telefone no balcão pra acumular ponto',
+            'Sistema mostra "tem 73/100 pontos — falta R$27"',
+            'Bate 100 = Sorvete Mini liberado automático no próximo pedido'
+        ],
+        content: {
+            instagram: '💳 CARTÃO FIDELIDADE DIGITAL: cada R$1 = 1 ponto. Bateu 100 pontos = Sorvete Mini grátis (R$10). Sem cartão de papel — funciona com TEU TELEFONE. Passa o número no balcão. 🐑 Muffato L1',
+            tiktok: 'HOOK: "100 pontos = 1 sorvete grátis. Tô a 23 pontos." SCRIPT 15s: você no balcão, atendente fala "73 pontos, falta 27", você decide pegar combo M pra acelerar. Texto: "Funciona com teu telefone. Não precisa cartão". AUDIO: progress unlock.',
+            story: 'Foto do display "73/100 pontos". Sticker "Quanto falta pra ti?"',
+            whatsapp: 'Oi [nome]! Tu tem 84 pontos no Cartão Fidelidade. Faltam R$16 pra ganhar Sorvete Mini grátis (R$10). Vem hoje fechar? 🐑'
+        }
+    },
     {
         id: 'buffet',
         name: 'Buffet Self-Service R$59,90/kg',
         icon: '🍽️',
         category: 'conversao',
-        tagline: 'Margem 66% — melhor produto da casa',
+        tagline: 'Cliente monta · 22 toppings · margem 66% (melhor da casa)',
         defaultStatus: 'active',
         xp: 25,
         page: 'pdv.html',
-        why: 'Margem REI da sua loja (66%). Cliente monta o pote = sente que tá pegando muito = compra mais = sai feliz. Já tá ativo, falta divulgar.',
+        why: 'Margem REI (66%). Cliente monta = sente que tá pegando muito = compra mais (média R$12-18 por pote). Já ativo, falta DIVULGAR.',
         tutorial: [
-            'Já está ativo no PDV (botão BUFFET FAB)',
-            'Coloca placa visível "BUFFET SELF-SERVICE R$5,99/100g"',
-            'Treina script: "É como rodízio. Você monta, pesa, paga"'
+            'Já está ativo (botão BUFFET FAB no PDV)',
+            'Placa visível "BUFFET SELF-SERVICE R$5,99/100g · 22 toppings"',
+            'Script atendente: "É como rodízio. Monta, pesa, paga"'
         ],
         content: {
-            instagram: 'Reel top-down: alguém pegando colher, indo no balcão de buffet, montando tigela colorida com 5 toppings, pesando. Caption: "🍽️ BUFFET SELF-SERVICE — você monta SEU sorvete dos sonhos. 22 toppings, 18 sabores, do seu jeito. R$ 5,99/100g (média do cliente: R$ 12). 📍 Muffato Quintino L1"',
-            tiktok: 'HOOK: "Sorveteria com BUFFET tipo rodízio EXISTE em Londrina" SCRIPT 20s: tour pela seção buffet, sabores, toppings, pessoa enchendo pote. Final: "R$ 5,99 cada 100g. Eu paguei R$ 11 e tava recheado". AUDIO: aesthetic cafe vibes. HASHTAGS: #buffet #sorveteria #londrina #milkypot #muffatoquintino',
-            story: 'Foto do buffet montado. Sticker "Monta o teu" + slider "Quanto tu gastaria?" (R$8-30).',
-            whatsapp: 'Oi! 🐑 Você já experimentou o BUFFET self-service da MilkyPot? 22 toppings, monta do teu jeito, R$ 5,99/100g. Hoje rolou cookies recheado novo. Aberto até 22h, Muffato L1.'
+            instagram: 'Reel top-down: pessoa pegando colher, balcão buffet com 18 sabores + 22 toppings, montando tigela colorida, pesando, valor R$14,20. Caption: "🍽️ BUFFET self-service tipo rodízio. Você monta SEU sorvete. R$5,99/100g (média do cliente: R$14). 📍 Muffato L1"',
+            tiktok: 'HOOK: "Sorveteria com BUFFET tipo rodízio EXISTE em Londrina" SCRIPT 20s: tour pelo buffet — sabores, toppings, pessoa enchendo pote. Final: "R$5,99/100g. Paguei R$11 e tava recheado". AUDIO: aesthetic cafe. HASHTAGS: #buffet #sorveteria #londrina #milkypot',
+            story: 'Time-lapse alguém montando pote no buffet. Sticker enquete "Quanto tu pegaria? R$8/R$15/R$25"',
+            whatsapp: 'Já experimentou o BUFFET self-service da MilkyPot? 22 toppings, R$5,99/100g. Hoje rolou topping NOVO (cookies recheado). Vem antes que acabe?'
         }
     },
     {
         id: 'toppings_upsell',
-        name: 'Toppings (22 opções, R$1,50-3,50)',
+        name: 'Toppings (22 opções · upsell)',
         icon: '✨',
         category: 'conversao',
-        tagline: 'Margem 80%+ · subir ticket sem trabalho',
+        tagline: 'R$1,50-3,50 cada · margem 80%+ · script obrigatório no atendimento',
         defaultStatus: 'inactive',
-        xp: 20,
+        xp: 25,
         page: 'pdv.html',
-        why: '22 toppings com margem 80%+. Cliente já tá pagando, só pergunta "topping?" — 40% diz sim. R$3 a mais por venda × 30 vendas/dia = +R$ 90/dia FÁCIL.',
+        why: '22 toppings. 40% dos clientes diz SIM quando ofertam. R$3 a mais × 30 vendas/dia = +R$90/dia FÁCIL. Maior ROI de qualquer ação.',
         tutorial: [
-            'Decora script: "Vai topping? Granola, ninho, ovomaltine, leitinho — R$2 a R$3,50 cada"',
-            'Pergunta SEMPRE antes de fechar o pedido (não depois)',
-            'Mostra os 22 toppings na bancada — visual ajuda'
+            'Script: "Vai topping? Granola, ninho, ovomaltine, leitinho — R$2 a R$3,50 cada"',
+            'Pergunta SEMPRE antes de fechar o pedido',
+            'Mostra os 22 toppings na bancada (visual ajuda 70%)'
         ],
         content: {
-            instagram: 'Reel ASMR: close em cada topping caindo no sorvete. Texto frame a frame: "Granola, Ninho, Ovomaltine, Leitinho morango, Chocolate ralado, Marshmallow…". Caption: "✨ 22 TOPPINGS pra montar SEU sorvete dos sonhos. R$ 1,50 a 3,50 cada. Qual seu favorito?"',
-            tiktok: 'HOOK: "TESTEI todos os 22 toppings da MilkyPot Muffato pra te dizer os 3 melhores" SCRIPT 30s: você testa 1 por vez com cara expressiva. Top 3 no final com gritinhos. AUDIO: trend "ranking" reaction. HASHTAGS: #topping #ranking #milkypot #muffatoquintino #londrina',
+            instagram: 'Reel ASMR: close em cada topping caindo. Texto frame a frame: "Granola, Ninho, Ovomaltine, Leitinho morango, Chocolate, Marshmallow, Brigadeiro...". Caption: "✨ 22 TOPPINGS na MilkyPot Muffato. Qual tu colocaria no teu Milkshake? Vota nos stories 🐑"',
+            tiktok: 'HOOK: "TESTEI todos os 22 toppings da MilkyPot pra te dizer os 3 melhores" SCRIPT 30s: você testa 1 por vez, expressão exagerada, ranking aparece. Top 3 com gritinhos. AUDIO: trend "ranking" reaction. HASHTAGS: #topping #ranking #milkypot #londrina',
             story: 'Sticker enquete: "Qual topping eu boto no MEU sorvete? OVOMALTINE x GRANOLA". 24h depois revela.',
-            whatsapp: 'Oi [nome]! 🐑 Hoje chegou cookies recheado de avelã — topping novo só pra clientes MilkyClube. Vem hoje provar antes que acabe? R$ 2,50 cada.'
+            whatsapp: 'Topping novo na MilkyPot — cookies recheado de avelã (R$3,50). Avisei só pra MilkyClube antes de divulgar geral. Vem provar?'
         }
     },
     {
@@ -269,91 +332,43 @@ const tools = [
         name: 'Milkshake M/G/GG (não vender P!)',
         icon: '🥤',
         category: 'conversao',
-        tagline: 'P margem 30% · M+ margem 43% — empurra os grandes',
+        tagline: 'P margem 30% · M+ margem 43% — empurrar GG (770ml)',
         defaultStatus: 'inactive',
         xp: 30,
         page: 'pdv.html',
-        why: 'Seu Milkshake P (R$9,99) tem margem só 30%. M, G, GG têm 43%+. Vender só Ps NÃO COBRE custo fixo. Empurrar tamanhos maiores.',
+        why: 'Milkshake P (R$9,99) tem margem só 30% (custo R$6,95). M, G, GG têm 43-44%. Vender só P NÃO COBRE custo fixo. Empurrar tamanhos maiores com anchoring.',
         tutorial: [
-            'Script: "P, M ou G? M é só R$ 8 a mais e tem QUASE 2X mais sorvete"',
-            'Mostra os copos físicos lado a lado (anchoring visual)',
-            'Promo cardápio: "GG por R$ 29,99 — serve 2"'
+            'Script: "P, M ou G? M é só R$8 a mais e tem QUASE 2X mais sorvete (440ml vs 275ml)"',
+            'Mostra os 4 copos físicos lado a lado (anchoring visual)',
+            'Combo casal: "GG 770ml por R$29,99 — dá pra 2, R$15 cada"'
         ],
         content: {
-            instagram: 'Foto comparativa: 4 copos P/M/G/GG lado a lado com preços. Caption: "🥤 MILKSHAKE TAMANHOS — qual é o seu? P R$9,99 / M R$17,99 / G R$21,99 / GG R$29,99 (dá pra 2). Math: GG sai mais barato por ML 📊 📍 Muffato Quintino L1"',
-            tiktok: 'HOOK: "Por que GG de Milkshake é MAIS BARATO que P se você fizer a conta?" SCRIPT 20s: matemática visual — P 275ml R$9,99 = R$3,63/100ml. GG 770ml R$29,99 = R$3,89/100ml. ESPERA, P é mais barato? Ahh sabia que era trap kkkk. Mas se sois 2: GG dividido = R$15 = R$1,94/100ml. PORRA. AUDIO: math/coding aesthetic. #math #milkshake #londrina #milkypot',
-            story: 'Foto dos 4 copos. Sticker enquete "Qual TU PEGA? P/M/G/GG"',
-            whatsapp: 'Vai pedir milkshake hoje? Dica: GG de 770ml por R$ 29,99 dá pra 2 pessoas = R$ 15 cada. Mais barato que P de 275ml a R$ 9,99 se vocês forem dois. Hoje tem combo casal: GG + 2 toppings R$ 32 🥤'
+            instagram: 'Foto comparativa: 4 copos P/M/G/GG lado a lado com preços e ml. Caption: "🥤 Qual tamanho tu pega? P 275ml R$9,99 / M 440ml R$17,99 / G 550ml R$21,99 / GG 770ml R$29,99 (dá pra 2). 📊 Math: GG dividido casal = R$15 cada (mais barato que P!) 📍 Muffato L1"',
+            tiktok: 'HOOK: "Por que GG de Milkshake é MAIS BARATO que P se você fizer a conta?" SCRIPT 25s: matemática visual. P 275ml R$9,99 = R$3,63/100ml. GG 770ml R$29,99 = R$3,89/100ml. PERA. Mas se sois 2: GG dividido = R$1,94/100ml. PORRA! AUDIO: trend "wait what".',
+            story: 'Foto 4 copos juntos. Sticker enquete "Qual TU PEGA? P/M/G/GG"',
+            whatsapp: 'Vai pedir milkshake hoje? Combo casal: GG 770ml R$29,99 = R$15 cada se forem 2. Mais barato que P 🥤'
         }
     },
-
-    // ============ RETENÇÃO ============
-    {
-        id: 'milkyclube',
-        name: 'MilkyClube + MilkyCoins',
-        icon: '🎉',
-        category: 'retencao',
-        tagline: 'Cashback 5% em coins · cliente VOLTA pra usar',
-        defaultStatus: 'active',
-        xp: 40,
-        page: 'fidelidade.html',
-        why: 'Cliente compra R$ 30 → ganha 1,50 em MilkyCoins (5%). Pra usar PRECISA voltar. Junto com 1 visita média/mês, vira 2x/mês.',
-        tutorial: [
-            'Já está integrado no PDV (botão IDENTIFICAR cliente)',
-            'Toda venda: pergunta "Tem cadastro MilkyClube? Ganha cashback"',
-            'Cliente baixa app/usa whatsapp e identifica pelo CPF/telefone'
-        ],
-        content: {
-            instagram: 'Carrossel: Slide 1 "MilkyClube — programa de fidelidade da casa". Slide 2 "Como funciona: ganha 5% cashback em MilkyCoins, usa na próxima". Slide 3 "Tier prata: 7% / Ouro: 10% — quem mais compra, mais ganha". Caption: "🎉 Cadastra grátis no MilkyClube e seu sorvete vira investimento. 5-10% de tudo volta pra você 🐑"',
-            tiktok: 'HOOK: "Sorveteria que DEVOLVE seu dinheiro existe em Londrina" SCRIPT 15s: você comprando 30 reais, mostra notificação MilkyCoins +1,50, "isso vira desconto na próxima". Texto: "5% sempre. Quem é Gold ganha 10%". AUDIO: cha-ching cash register. #cashback #fidelidade #milkypot #londrina',
-            story: 'Story explicando os 3 tiers (Leite/Nata/Chantilly). Sticker "Em qual tier tu acha que tá? 🥛/🍦/🧁"',
-            whatsapp: 'Oi [nome]! Você sabia que tem R$ X de MilkyCoins esperando? Pode usar HOJE em qualquer pote. Validade 90 dias. Vem hoje aproveitar? 🐑'
-        }
-    },
-    {
-        id: 'cardapio_online',
-        name: 'Cardápio Online (PWA)',
-        icon: '📱',
-        category: 'retencao',
-        tagline: 'milkypot.com/cardapio.html — cliente pede direto',
-        defaultStatus: 'active',
-        xp: 30,
-        page: 'https://milkypot.com/cardapio.html',
-        why: 'Site responsivo, PWA (instala como app). Cliente passa em casa, vê foto do milkshake → vem na loja OU pede delivery via Uber Direct.',
-        tutorial: [
-            'Já está live em milkypot.com/cardapio.html',
-            'Coloca QR Code no balcão linkando pro cardápio',
-            'Manda link via WhatsApp pra quem perguntar "tem o cardápio?"'
-        ],
-        content: {
-            instagram: 'Link na bio "🍦 Cardápio + Pedido Online". Story destaque "Cardápio". Caption pinada: "📱 Cardápio online: 44 produtos, fotos, preços. Bookmark esse link: milkypot.com 📍 Muffato Quintino L1"',
-            tiktok: 'HOOK: "Salva esse link na bio pq vai querer rever depois" SCRIPT 10s: scroll rápido pelo cardápio mostrando os 44 produtos. Final: "Link na descrição do TikTok também". AUDIO: trend "easy come easy go".',
-            story: 'Print do cardápio + sticker link "Toca aqui pra ver". Coloca em destaque permanente.',
-            whatsapp: 'Cardápio MilkyPot completo aqui ó 📲 milkypot.com/cardapio.html — pode pedir direto pelo site, entregamos em Londrina via Uber Direct.'
-        }
-    },
-
-    // ============ DELIVERY ============
     {
         id: 'uber_direct',
-        name: 'Uber Direct (delivery próprio)',
+        name: 'Uber Direct · Delivery Próprio',
         icon: '🚀',
         category: 'delivery',
-        tagline: 'Sem comissão 27% iFood · 100% lucro pra você',
+        tagline: 'Cardápio próprio + motoboy Uber · SEM comissão 27% iFood',
         defaultStatus: 'inactive',
-        xp: 45,
+        xp: 50,
         page: 'uber-entregas.html',
-        why: 'iFood cobra 27% comissão = come sua margem. Uber Direct é só taxa de entrega. Cliente pede no SEU site, motoboy Uber leva. Margem inteira.',
+        why: 'iFood cobra 27%. Uber Direct é só taxa entrega (~R$8-12). Cliente pede em milkypot.com/cardapio.html, Uber busca, entrega. Margem inteira sua.',
         tutorial: [
-            'Entra em painel/uber-entregas.html → ativa integração',
-            'Cliente pede em milkypot.com/cardapio.html',
-            'Sistema chama Uber automático, motoboy vem buscar'
+            'Entra em painel/uber-entregas.html · cadastra conta Uber Direct',
+            'Cliente pede em milkypot.com/cardapio.html (preços DELIVERY já configurados)',
+            'Sistema chama Uber automático · você só prepara'
         ],
         content: {
-            instagram: 'Reel: cliente fazendo pedido no celular, motoboy Uber chegando, sorvete entregue. Caption: "🛵 AGORA TEM DELIVERY MilkyPot via Uber. 30 minutos em qualquer lugar de Londrina. Pede em milkypot.com 🐑"',
-            tiktok: 'HOOK: "Sorvete chegando em casa em 30min sem pagar iFood?" SCRIPT 15s: pedido no celular → motoboy Uber → pote chegando. Texto: "Direto comigo. Sem app de delivery. Sem comissão alta. Mais barato pra você". AUDIO: aesthetic delivery vibes.',
-            story: 'Sticker "Onde tu mora?" + zonas que entregamos. "Pede em milkypot.com"',
-            whatsapp: 'Oi [nome]! 🛵 NOVIDADE: agora a MilkyPot entrega via Uber Direct em Londrina, 30 min. Pede direto em milkypot.com/cardapio.html. Frete é só a taxa Uber (sem comissão extra).'
+            instagram: '🚀 AGORA TEM DELIVERY MilkyPot via Uber em Londrina. milkypot.com/cardapio.html · 30 min em casa · sem app de delivery. Combo Sofá Frio (2 Milkshakes M + colheres) R$39,99 sex/sáb 🐑',
+            tiktok: 'HOOK: "Sorveteria em casa em 30 min sem pagar iFood?" SCRIPT 15s: pedido no celular → motoboy Uber → pote chegando. Texto: "Direto comigo. Sem comissão alta. milkypot.com". AUDIO: aesthetic delivery.',
+            story: 'Sticker "Onde tu mora?" + lista bairros + link cardápio',
+            whatsapp: 'Oi [nome]! 🛵 Delivery próprio da MilkyPot ativo. milkypot.com/cardapio.html, entrega Uber 30min. Combo Sofá Frio hoje?'
         }
     },
     {
@@ -361,157 +376,153 @@ const tools = [
         name: 'iFood Integration',
         icon: '🛵',
         category: 'delivery',
-        tagline: 'Pedidos iFood entram direto no PDV',
+        tagline: 'Pedidos iFood entram no PDV · 27% comissão · só vale combos M+',
         defaultStatus: 'inactive',
         xp: 35,
         page: 'ifood.html',
-        why: 'Apesar da comissão 27%, iFood traz tráfego de pessoas que não conheciam a marca. Como aquisição, vale. Especialmente combos M+.',
+        why: 'Apesar comissão alta (27%), iFood traz tráfego NOVO. Como AQUISIÇÃO inicial vale. Especialmente combos M+ (margem 43% absorve 27% e ainda lucra).',
         tutorial: [
             'Cadastra como parceiro em portal.ifood.com.br (3-7 dias)',
-            'Sobe os 44 produtos com preços DELIVERY já configurados',
-            'Pedidos chegam direto no painel/ifood.html'
+            'Sobe 44 produtos com preços DELIVERY já configurados',
+            'Pedidos chegam direto em painel/ifood.html'
         ],
         content: {
-            instagram: 'Story "AGORA NO IFOOD" + link. Caption: "🛵 Tô no iFood! Procura MilkyPot Muffato Quintino. Combo Sofá Frio R$ 39,99 com frete grátis."',
-            tiktok: 'HOOK: "Sorveteria nova chegou no iFood Londrina — peguei o que mais combina com Netflix" SCRIPT 15s: pedido no app, motoboy chega, abre o pote no sofá, Netflix. AUDIO: comfy cozy.',
-            story: 'Print do app iFood com MilkyPot. "Bem fácil de achar agora".',
-            whatsapp: 'Já tem MilkyPot no iFood! 🛵 Pra quem quer ficar em casa hoje no friozinho — Combo Sofá Frio R$ 39,99 com frete grátis. Aceita?'
+            instagram: '🛵 Tô no iFood! Procura "MilkyPot Muffato Quintino". Combo Sofá Frio R$39,99 com frete grátis pra Londrina. 🐑',
+            tiktok: 'HOOK: "Sorveteria nova chegou no iFood Londrina" SCRIPT 15s: pedido no app, motoboy chega, abre o pote no sofá, Netflix. AUDIO: comfy cozy.',
+            story: 'Print do iFood mostrando MilkyPot.',
+            whatsapp: 'Já tem MilkyPot no iFood 🛵 Combo Sofá Frio R$39,99 frete grátis.'
         }
     },
-
-    // ============ MARKETING / TV ============
+    {
+        id: 'cardapio_online',
+        name: 'Cardápio Online (PWA)',
+        icon: '📱',
+        category: 'retencao',
+        tagline: 'milkypot.com/cardapio.html · 44 produtos · cliente pede direto',
+        defaultStatus: 'active',
+        xp: 30,
+        page: 'https://milkypot.com/cardapio.html',
+        why: 'PWA (instala como app). Cliente vê foto em casa → vem na loja OU pede via Uber Direct. Identifica MilkyClube automático.',
+        tutorial: [
+            'Já está live em milkypot.com/cardapio.html',
+            'Coloca QR Code no balcão',
+            'Manda link via WhatsApp pra quem perguntar "cardápio?"'
+        ],
+        content: {
+            instagram: 'Link na bio "🍦 Cardápio MilkyPot Online". Story destaque "Cardápio" fixado. Post pinado: "📱 44 produtos, fotos, preços. milkypot.com/cardapio.html 📍 Muffato L1"',
+            tiktok: 'HOOK: "Salva esse link na bio pq vai querer rever" SCRIPT 10s: scroll rápido pelo cardápio mostrando os 44 produtos.',
+            story: 'Print do cardápio + sticker link "Toca aqui"',
+            whatsapp: 'Cardápio MilkyPot 📲 milkypot.com/cardapio.html — pede direto, entregamos Londrina via Uber Direct.'
+        }
+    },
     {
         id: 'tv_indoor',
-        name: 'TV Indoor (cardápio rotativo)',
+        name: 'TV Indoor · Cardápio Rotativo',
         icon: '📺',
         category: 'aquisicao',
-        tagline: '3 TVs · slides automáticos + promos',
+        tagline: '3 TVs · slides automáticos cardápio + promos + UGC',
         defaultStatus: 'active',
         xp: 20,
         page: 'tv-indoor.html',
-        why: 'Cliente fica esperando no balcão olhando TV. Slides certos = upsell visual. TV correta = +R$ 2-3 ticket médio sem esforço.',
+        why: 'Cliente espera 1-3 min no balcão olhando TV. Slide certo = upsell visual. Integra com UGC Wall, Promoções, Desafio 10s.',
         tutorial: [
             'Sobe fotos novas em tv-indoor.html (Biblioteca)',
             'Adiciona em Playlist (drag and drop)',
-            'TVs atualizam automaticamente em <5 min'
+            'TVs atualizam automático em <5 min via Firestore'
         ],
         content: {
-            instagram: 'Foto das TVs na loja com cardápio rolando. Caption: "📺 As TVs da loja não dormem. Sempre tem promo, desafio do dia, raspinha. Vem ver de pertinho 🐑"',
-            tiktok: 'Pan slow nas 3 TVs. Audio cinematic.',
-            story: 'Time-lapse da TV mudando slides.',
+            instagram: 'Foto das 3 TVs ligadas com cardápio rolando. Caption: "📺 As TVs não dormem na MilkyPot. Sempre promo, desafio, raspinha 🐑"',
+            tiktok: 'Pan slow nas 3 TVs sincronizadas. Audio cinematic.',
+            story: 'Time-lapse TV mudando slides em 30s.',
             whatsapp: 'N/A — uso interno'
         }
     },
     {
         id: 'ugc_wall',
-        name: 'UGC Live Wall',
+        name: 'UGC Live Wall · TVs',
         icon: '📸',
         category: 'aquisicao',
-        tagline: 'Foto de cliente vira slide na TV da loja',
+        tagline: 'Foto do cliente marca @milkypot · vira slide na TV da loja',
         defaultStatus: 'inactive',
         xp: 40,
         page: 'tv-ugc-curadoria.html',
-        why: 'Cliente posta foto comendo MilkyPot, marca @milkypot. Sistema captura → você aprova → vira slide na TV da loja. Cliente vê AMIGO na TV, vem fotografar, repete. Marketing viral.',
+        why: 'Cliente posta foto na MilkyPot marca @milkypot. Sistema captura → admin aprova → vira slide na TV. Cliente vê AMIGO/A na TV → vem fotografar = loop viral 100% grátis.',
         tutorial: [
-            'Ativa em painel/tv-ugc-curadoria.html',
-            'Cartaz na loja: "MARCA @milkypot, sua foto pode aparecer na TV"',
+            'Ativa em painel/tv-ugc-curadoria.html (auto-pull do Instagram)',
+            'Cartaz visível: "MARCA @milkypot e tua foto aparece na TV"',
             'Curadoria diária: aprova fotos boas, ignora ruins'
         ],
         content: {
-            instagram: 'Story: foto do cliente vira slide na TV. Caption "Marca @milkypot que pode aparecer aqui!". Sticker "Marcar".',
-            tiktok: 'HOOK: "Bem assim — sua foto aparece na TV da SORVETERIA" SCRIPT 15s: cliente comendo, posta IG, depois entra na loja e vê foto dele no slide. "Eu literalmente saí pra ver". AUDIO: surprise reveal.',
-            story: 'Cartaz/print: "🌟 Marca @milkypot pra aparecer na nossa TV". Sticker mention.',
-            whatsapp: 'Marcou @milkypot na foto? Tá rolando na TV da loja agora 📸. Vem ver tua estrela em vida real 🌟'
+            instagram: 'Story: foto cliente real virando slide na TV. Caption "Marca @milkypot que pode aparecer aqui!"',
+            tiktok: 'HOOK: "Bem assim — postou foto, marcou @milkypot, agora tá na TV da sorveteria" SCRIPT 15s: cliente comendo, posta IG, depois entra na loja e vê foto dele no slide. "Eu literalmente saí pra ver". AUDIO: surprise reveal.',
+            story: 'Print: "🌟 Marca @milkypot pra aparecer na nossa TV"',
+            whatsapp: 'Marcou @milkypot na foto? Tá rolando na TV da loja agora 📸'
         }
     },
     {
         id: 'auto_stories',
-        name: 'Auto-Post Stories Instagram',
+        name: 'Auto-Post Stories IG',
         icon: '📱',
         category: 'aquisicao',
-        tagline: 'Stories gerados automaticamente com vendas, clima, eventos',
+        tagline: 'Sistema gera 5 stories/dia automático · clima + cardápio + promo',
         defaultStatus: 'inactive',
         xp: 30,
         page: 'tv-auto-stories.html',
-        why: 'Você posta 1x/dia = ok. Mas se sistema posta 5x/dia automático (manhã, almoço, tarde, noite, fechamento) sem você lembrar = +500% alcance.',
+        why: 'Você posta 1 story/dia = OK. Sistema posta 5/dia automático (8h/12h/17h/19h/21h) com clima Londrina + cardápio + promo = 5x mais alcance sem trabalho.',
         tutorial: [
             'Entra em painel/tv-auto-stories.html',
-            'Configura horários (8h, 12h, 17h, 19h, 21h)',
-            'Sistema gera com clima Londrina + cardápio + promo do dia'
+            'Configura 5 horários (default já vem otimizado)',
+            'Aprova preview · sistema posta sozinho via IG API'
         ],
         content: {
-            instagram: 'É a ferramenta — gera ela mesma',
+            instagram: 'É a própria ferramenta — gera ela mesma',
             tiktok: 'Cross-post: o melhor story do dia vira TikTok automático',
             story: 'Já é a ferramenta',
             whatsapp: 'N/A'
         }
     },
-
-    // ============ AUTOMAÇÃO ============
     {
         id: 'whatsapp_lulu',
-        name: 'WhatsApp Lulu (IA 24/7)',
+        name: 'WhatsApp Lulu IA · Atendente 24/7',
         icon: '💬',
         category: 'retencao',
-        tagline: 'IA atende cliente no WhatsApp · cardápio, pedidos, dúvidas',
+        tagline: 'IA atende WhatsApp · cardápio + pedido + dúvida · sem você operar',
         defaultStatus: 'inactive',
         xp: 50,
         page: 'whatsapp-conectar.html',
-        why: 'Cliente manda WhatsApp 22h "tem açaí?" — sem Lulu fica sem resposta = perde venda. Com Lulu, IA responde + manda cardápio + finaliza pedido.',
+        why: 'Cliente manda WhatsApp 22h "tem açaí?" — sem Lulu fica sem resposta = perde venda. Com Lulu, IA responde + envia cardápio + finaliza pedido (Uber Direct). Funciona 24/7.',
         tutorial: [
             'Entra em painel/whatsapp-conectar.html',
             'Escaneia QR Code com WhatsApp (43) 99991-9777',
-            'Lulu começa a responder automaticamente'
+            'Lulu começa a responder automaticamente em <5 min'
         ],
         content: {
-            instagram: 'Print da conversa Lulu com cliente. Caption: "💬 24/7 a Lulu responde tua dúvida no WhatsApp. Cardápio, preço, pedido. Salva o número: (43) 99991-9777"',
-            tiktok: 'HOOK: "Mandei WhatsApp pra sorveteria às 3h da manhã, viu o que aconteceu" SCRIPT 15s: você mandando msg, Lulu respondendo em 5s. Texto: "É IA. Responde mesmo de madrugada. Loja real existe em Londrina".',
-            story: 'Print: "Salva (43) 99991-9777 = Lulu da MilkyPot. Te ajuda com pedido sempre".',
-            whatsapp: 'A própria ferramenta — você não usa, ela trabalha pra você'
+            instagram: 'Print de conversa Lulu com cliente real (com permissão). Caption: "💬 24/7 a Lulu responde tua dúvida no WhatsApp. Salva: (43) 99991-9777"',
+            tiktok: 'HOOK: "Mandei WhatsApp pra sorveteria às 3h da manhã, viu o que aconteceu" SCRIPT 15s: você mandando msg, Lulu respondendo em 5s. Texto: "É IA. Responde mesmo de madrugada".',
+            story: 'Print conversa Lulu. "Salva (43) 99991-9777 = Lulu da MilkyPot 24/7"',
+            whatsapp: 'A própria Lulu trabalha pra você'
         }
     },
     {
         id: 'belinha',
-        name: 'Belinha AI (copiloto executivo)',
+        name: 'Belinha AI · Copiloto Executivo',
         icon: '🐑',
         category: 'operacao',
-        tagline: 'IA te dá ideias de marketing, ofertas, vendas',
+        tagline: 'IA te dá ideias de marketing, vendas, ofertas em segundos',
         defaultStatus: 'inactive',
         xp: 25,
         page: 'copilot-belinha.html',
-        why: 'Cansado, sem ideias, vendas baixas? Conversa com Belinha "tá frio, vendas R$ 200, o que faço?" e ela sugere 3 táticas adaptadas ao momento.',
+        why: 'Sem ideias hoje? Conversa com Belinha: "tá frio, vendas R$200" → ela sugere 3 táticas específicas pro momento + cria os posts.',
         tutorial: [
             'Entra em painel/copilot-belinha.html',
             'Pergunta qualquer coisa: "como aumento vendas hoje?"',
-            'Aplica as sugestões dela'
+            'Aplica as sugestões + clica nos atalhos pra posts'
         ],
         content: {
-            instagram: 'Print convo Belinha. "🐑 Tenho um copiloto AI que me dá ideia de promo todo dia. Hoje sugeriu chocolate quente com bola — bombou."',
-            tiktok: 'HOOK: "Tenho uma IA que decide minhas promos. Sério." SCRIPT 15s: você conversando com Belinha, ela sugere combo, você ativa, mostra cliente comprando. AUDIO: AI futuristic.',
-            story: 'Sticker enquete "Quer que a Belinha sugira promo pra TI hoje? SIM/NÃO" → se SIM, manda DM.',
+            instagram: 'Print convo Belinha. "🐑 Tenho um copiloto AI que decide minhas promos. Hoje sugeriu Acerte 300g — bombou."',
+            tiktok: 'HOOK: "Tenho uma IA que decide minhas promos. Sério." SCRIPT 15s: você conversando com Belinha, ela sugere combo, você ativa.',
+            story: 'Sticker enquete "Quer que a Belinha sugira promo pra TI hoje? SIM/NÃO"',
             whatsapp: 'Uso interno — Belinha ajuda VOCÊ'
-        }
-    },
-    {
-        id: 'simulador',
-        name: 'Simulador de Faturamento',
-        icon: '📈',
-        category: 'operacao',
-        tagline: 'Calcula quanto pode faturar com inputs reais',
-        defaultStatus: 'inactive',
-        xp: 15,
-        page: 'simulador.html',
-        why: 'Você sabe que pode chegar a R$700/dia? Simulador mostra cenários (otimista, realista, pessimista) com inputs reais. Vira meta clara.',
-        tutorial: [
-            'Entra em painel/simulador.html',
-            'Coloca: ticket médio (R$22), vendas/dia (10), variável %',
-            'Vê quanto pode chegar em 30/60/90 dias'
-        ],
-        content: {
-            instagram: 'Uso interno — não é pra cliente',
-            tiktok: 'N/A',
-            story: 'N/A',
-            whatsapp: 'N/A'
         }
     }
 ];
@@ -556,7 +567,7 @@ function getAchievements() {
         { id: 'a4', name: '🔁 Retenção Master', desc: 'MilkyClube + WhatsApp Lulu ativos', unlocked: getToolStatus(tools.find(function(t){return t.id==='milkyclube';}))!=='inactive' && getToolStatus(tools.find(function(t){return t.id==='whatsapp_lulu';}))!=='inactive' },
         { id: 'a5', name: '🚚 Delivery Ativo', desc: 'iFood + Uber Direct ativos', unlocked: getToolStatus(tools.find(function(t){return t.id==='ifood';}))!=='inactive' && getToolStatus(tools.find(function(t){return t.id==='uber_direct';}))!=='inactive' },
         { id: 'a6', name: '💎 5 Mestres', desc: 'Domina 5 ferramentas', unlocked: s.mastered >= 5 },
-        { id: 'a7', name: '👑 Arsenal Completo', desc: 'Ativou todas 16 ferramentas', unlocked: s.activated === tools.length }
+        { id: 'a7', name: '👑 Arsenal Completo', desc: 'Ativou todas 17 ferramentas', unlocked: s.activated === tools.length }
     ];
 }
 

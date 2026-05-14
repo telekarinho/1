@@ -2174,7 +2174,7 @@
                 const noRecipe = !stock.hasRecipe;
 
                 const div = document.createElement('div');
-                div.className = 'pitem ' + (it.isHighlight ? 'pop ' : '') + (isOut ? 'esgotado ' : '') + (isLow ? 'baixoestoque' : '') + (noRecipe ? ' semreceita' : '');
+                div.className = 'pitem ' + (it.isHighlight ? 'pop ' : '') + (isOut ? 'baixoestoque estoquezerado ' : '') + (isLow ? 'baixoestoque ' : '') + (noRecipe ? ' semreceita' : '');
 
                 // Badge premium/promo (ex: it.badge="PREMIUM") — top-left pra não conflitar com Esgotado/Restam
                 const promoBadge = it.badge
@@ -2183,7 +2183,7 @@
 
                 let stockBadge = '';
                 if (isOut) {
-                    stockBadge = '<div class="pbadge bd-out">❌ Esgotado</div>';
+                    stockBadge = '<div class="pbadge bd-out" title="Estoque zerado no sistema. A venda continua liberada; ajuste o estoque assim que possivel.">Estoque zerado</div>';
                 } else if (isLow) {
                     stockBadge = `<div class="pbadge bd-low">⚠️ Restam ${stock.units}</div>`;
                 } else if (noRecipe) {
@@ -2206,15 +2206,12 @@
                     <div class="pn">${it.name}</div>
                     <div class="pp">${priceLabel}</div>
                 `;
-                if (isOut) {
-                    div.onclick = () => {
-                        if (typeof Utils !== 'undefined' && Utils.showToast) {
-                            Utils.showToast('❌ ' + it.name + ' está esgotado. Reabasteça em Painel → Produtos.', 'error');
-                        }
-                    };
-                } else {
-                    div.onclick = () => this.handleProductClick(it);
-                }
+                div.onclick = () => {
+                    if (isOut && typeof Utils !== 'undefined' && Utils.showToast) {
+                        Utils.showToast('Estoque zerado no sistema, mas venda liberada: ' + it.name, 'warning');
+                    }
+                    this.handleProductClick(it);
+                };
                 grid.appendChild(div);
             });
             container.appendChild(grid);
@@ -5568,6 +5565,9 @@
             var name = String(item.name || '').toLowerCase();
             return cats.some(function(c){
                 if (cat === c) return true;
+                // novos splits (cat_milkshake_top, cat_milkshake_calda, cat_sundae_top, cat_sundae_calda) entram pelo prefixo
+                if (c === 'cat_milkshake' && (cat === 'cat_milkshake_top' || cat === 'cat_milkshake_calda')) return true;
+                if (c === 'cat_sundae' && (cat === 'cat_sundae_top' || cat === 'cat_sundae_calda')) return true;
                 if (c === 'cat_buffet' && (name.indexOf('buffet') >= 0 || item.type === 'por_peso')) return true;
                 if (c === 'cat_picole' && name.indexOf('picol') >= 0) return true;
                 if (c === 'cat_milkshake' && (name.indexOf('milk') >= 0 || name.indexOf('shake') >= 0)) return true;
