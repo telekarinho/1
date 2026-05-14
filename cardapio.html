@@ -650,6 +650,7 @@
             'casquinha':       { label: 'Casquinhas',          emoji: '🍦', tab: 'ninho' },
             'ice_protein':     { label: 'Ice Protein Whey',    emoji: '💪', tab: 'fit' },
             'alcoolico':       { label: 'Milk Shakes Alcoólicos', emoji: '🍸', tab: 'bar' },
+            'monte_seu':       { label: 'Monte do Seu Jeito',  emoji: '🎨', tab: 'monteseu' },
             'picole':          { label: 'Picolés',             emoji: '🍡', tab: 'picole' },
             'sorvete_kg':      { label: 'Sorvete por Kg',      emoji: '⚖️', tab: 'sorvete' },
             'buffet':          { label: 'Buffet',              emoji: '🍽️', tab: 'buffet' },
@@ -687,7 +688,9 @@
             catalog = DataStore.get('catalog_config');
             if (catalog) {
                 _renderCatalogTabs();
-                renderProducts('ninho');
+                // Default: se houver Monte do Seu (Açaí/Smoothie/Shake Proteico), abrir essa aba primeiro
+                const defaultTab = (catalog.sabores && catalog.sabores.monte_seu && catalog.sabores.monte_seu.items && catalog.sabores.monte_seu.items.length) ? 'monteseu' : 'ninho';
+                renderProducts(defaultTab);
             } else {
                 console.log('🔄 Sincronizando catálogo delivery...');
                 setTimeout(initCatalog, 500);
@@ -791,6 +794,7 @@
 
             // Configuração das tabs (ordem + display)
             const TAB_DEF = [
+                { key: 'monteseu', label: '🎨 Monte o Seu' },   // ★ Açaí · Smoothie · Shake Proteico
                 { key: 'ninho',    label: '🍨 MilkyPot' },
                 { key: 'fit',      label: '💪 Ice Protein' },
                 { key: 'bar',      label: '🍸 Alcoólicos' },
@@ -838,6 +842,7 @@
 
             // Mapeia tabs → grupos de sabores (inclui chaves CatalogV2 + legado)
             const categoryMap = {
+                'monteseu':['monte_seu'],
                 'ninho':   ['classicos', 'tradicionais', 'especiais', 'milkshake', 'milkshake_top', 'milkshake_calda', 'potinho', 'sundae', 'sundae_top', 'sundae_calda', 'casquinha'],
                 'fit':     ['zero_fit', 'ice_protein'],
                 'bar':     ['alcoolico'],
@@ -1835,8 +1840,11 @@
         }
         window.showToast = showToast;
 
-        // Init
-        renderProducts('ninho');
+        // Init — preferir Monte do Seu como aba inicial (fallback ninho)
+        (function(){
+            const initialTab = (catalog && catalog.sabores && catalog.sabores.monte_seu && catalog.sabores.monte_seu.items && catalog.sabores.monte_seu.items.length) ? 'monteseu' : 'ninho';
+            renderProducts(initialTab);
+        })();
         updateCartUI();
 
         // Navbar scroll effect

@@ -1388,7 +1388,8 @@
             'sorvete_kg':       { tab: 'sorvete' },
             'buffet':           { tab: 'buffet' },
             'ice_protein':      { tab: 'fit' },        // Ice Protein Whey: aba Zero/Fit
-            'alcoolico':        { tab: 'bar' }          // Alcoólicos: aba dedicada +18
+            'alcoolico':        { tab: 'bar' },         // Alcoólicos: aba dedicada +18
+            'monte_seu':        { tab: 'monteseu' }     // Monte do Seu Jeito: aba destaque (Açaí/Smoothie/Shake Proteico)
         };
 
         function _getFid() {
@@ -1440,7 +1441,9 @@
             }
             if (catalog) {
                 _renderCatalogTabs();
-                renderProducts('ninho');
+                // Default: se houver "Monte do Seu Jeito" (Açaí/Smoothie/Shake Proteico), abrir essa aba
+                var defaultTab = (catalog.sabores && catalog.sabores.monte_seu && catalog.sabores.monte_seu.items && catalog.sabores.monte_seu.items.length) ? 'monteseu' : 'ninho';
+                renderProducts(defaultTab);
             } else {
                 setTimeout(initCatalog, 500);
             }
@@ -1483,14 +1486,15 @@
             if (catalog.bebidas && catalog.bebidas.length) tabsNeeded['bebida'] = true;
 
             var TAB_DEF = [
-                { key: 'ninho',   label: '🍨 MilkyPot' },
-                { key: 'fit',     label: '💪 Ice Protein' },
-                { key: 'bar',     label: '🍸 Alcoólicos' },
-                { key: 'acai',    label: '🫐 Açaí' },
-                { key: 'picole',  label: '🍡 Picolé' },
-                { key: 'sorvete', label: '⚖️ Sorvete Kg' },
-                { key: 'buffet',  label: '🍽️ Buffet' },
-                { key: 'bebida',  label: '🥤 Bebidas' }
+                { key: 'monteseu', label: '🎨 Monte o Seu' },  // ★ Açaí · Smoothie · Shake Proteico
+                { key: 'ninho',    label: '🍨 MilkyPot' },
+                { key: 'fit',      label: '💪 Ice Protein' },
+                { key: 'bar',      label: '🍸 Alcoólicos' },
+                { key: 'acai',     label: '🫐 Açaí' },
+                { key: 'picole',   label: '🍡 Picolé' },
+                { key: 'sorvete',  label: '⚖️ Sorvete Kg' },
+                { key: 'buffet',   label: '🍽️ Buffet' },
+                { key: 'bebida',   label: '🥤 Bebidas' }
             ];
 
             var activeTab = container.querySelector('.cat-tab.active');
@@ -1508,6 +1512,7 @@
         function getFilteredCatalogItems(category) {
             if (!catalog) return [];
             var categoryMap = {
+                'monteseu':['monte_seu'],
                 'ninho':   ['classicos', 'tradicionais', 'especiais', 'milkshake', 'milkshake_top', 'milkshake_calda', 'potinho', 'sundae', 'sundae_top', 'sundae_calda', 'casquinha', 'edicao_limitada'],
                 'fit':     ['zero_fit', 'ice_protein'],
                 'bar':     ['alcoolico'],
