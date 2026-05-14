@@ -876,3 +876,36 @@ _Belinha — Ciclo #176 | 2026-05-09_
 **Fontes ciclo #187:** gomesaltimari.com.br, mercadoeconsumo.com.br, exame.com, thebestacai.com.br, cidadeoferta.com.br, WebSearch
 
 _Belinha — Ciclo #187 | 2026-05-10_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #213 — 2026-05-14
+
+### São João 2026 — Verificação + "Ovo em Pétala" Páscoa 2026
+
+#### Status São João 2026 (verificado 14/05)
+- **Resultado:** Nenhuma campanha junina 2026 anunciada até esta data
+- **Padrão histórico confirmado:** lançamento esperado em 26–27/06/2026 — na véspera ou após o São João (24/06)
+- **Janela descoberta:** 01/06–23/06 totalmente sem cobertura junina da The Best Açaí
+- **Produto esperado:** repetição dos 4 sorvetes sazonais (canjica, pamonha, cocada, paçoca) — mesmo modelo self-service, preço no peso, estoque limitado por loja
+
+#### "Ovo em Pétala" — Páscoa 2026 (Nova Intel)
+- **Campanha:** produto sazonal de Páscoa 2026 com +100 milhões de visualizações totais
+- **Mecânica:** ovo de páscoa incorporado ao bowl self-service — abertura em formato "pétala" com efeito visual icônico
+- **Canais:** Instagram + TikTok orgânico + assessoria de imprensa (Marramaque, portais regionais)
+- **Implicação estratégica:** The Best tem capacidade viral comprovada em sazonalidades — campanhas juninas 2026 podem acionar o mesmo playbook. MilkyPot deve ocupar a janela 01/06–23/06 antes do buzz da The Best Açaí, não disputar o pico.
+
+#### Tabela de Diferenciação — São João 2026
+
+| Atributo | The Best Açaí | MilkyPot |
+|---|---|---|
+| Campanha ativa em 14/05 | Não (lança ~26/06) | Em preparação (nome confirmar até 30/05) |
+| Produto com nome + mascote | Nenhum — sabores genéricos no bowl | Potinho Junino + ovelhinha de arraial |
+| Antecipação vs. São João | 0 dias (lança na véspera) | 23 dias antes (lança 01/06) |
+| Storytelling junino | "Clima junino" genérico | Ovelhinha chapéu de palha — narrativa específica |
+| Canal de compra | iFood / Rappi | WhatsApp próprio (sem comissão) |
+| Collab de marca | Nenhuma para São João | Oportunidade: produtores locais PR (paçoquinha artesanal) |
+
+**Fontes ciclo #213:** folhadecuritiba.com.br, abcdacomunicacao.com.br, thebestacai.com.br/blog, marramaque.jor.br, exame.com, WebSearch 14/05/2026
+
+_Belinha — Ciclo #213 | 2026-05-14_

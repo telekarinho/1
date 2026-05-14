@@ -1050,3 +1050,39 @@ _Belinha — Ciclo #187 | 2026-05-10_
 **Fontes ciclo #208:** exame.com, portaldofranchising.com.br, foodbizbrasil.com, mundodomarketing.com.br, amostrasgratis.shop, portalg.com.br, auroracultural.com, gironews.com, meioemensagem.com.br, mercadoeconsumo.com.br
 
 _Belinha — Ciclo #208 | 2026-05-13_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #213 — 2026-05-14
+
+### Pede Mooleca 2026 — Preços + Ingredientes Confirmados + "Tempestade" Detalhes
+
+#### "Pede Mooleca" — Intel Completa Confirmada
+
+- **Status (14/05):** nenhum comunicado 2026 específico encontrado; produto ativo em reels de unidades locais = padrão de lançamento nacional esperado para início de junho (histórico: 02/06/2025)
+- **Ingredientes completos (confirmados):** sorvete de baunilha + amendoim + borda de brigadeiro + caramelo salgado + pedaços de Crocante Garoto/Nestlé + bombom Crocante inteiro no topo
+- **Preços confirmados:** R$25,00 (300ml) · R$30,00 (500ml)
+- **Collab:** Nestlé/Garoto (Bombom Crocante) — parceria institucional com CPG global
+- **Formato:** milkshake — não é potinho. Público-alvo diferente; complementar, não idêntico ao MilkyPot.
+
+#### "Tempestade" — Collab Universal/Como Treinar Seu Dragão (Junho 2026)
+
+- **Produto:** milkshake "Tempestade" temático do live-action *Como Treinar o Seu Dragão* (estreia 13/06/2026)
+- **Ingredientes:** brigadeiro de chocolate + brownie + sorvete de baunilha
+- **Mecânica app:** compra 2x milkshakes 500ml = par de ingressos para o filme
+- **Impacto de comunicação:** MilkyMoo em junho opera dois produtos simultâneos (Pede Mooleca + Tempestade) — comunicação fragmentada entre collab de cinema e temática junina
+
+#### Oportunidade — Foco MilkyPot vs. Dispersão MilkyMoo em Junho 2026
+
+| Dimensão | MilkyMoo (junho 2026) | MilkyPot |
+|---|---|---|
+| Produtos ativos simultaneamente | 2 (Dragão + Pede Mooleca) | 1 — Potinho Junino (foco total) |
+| Preço entrada | R$25 milkshake 300ml | Potinho — formato diferente, faixa a confirmar |
+| Identidade visual junina | Parcial (Crocante nostálgico, não visual) | Total (ovelhinha + arraial + chapéu de palha) |
+| Canal de compra | App próprio + iFood + Rappi | WhatsApp próprio — sem comissão |
+| Presença física em Londrina | Sem unidade confirmada | Exclusiva no Muffato Quintino |
+| Mensagem principal de junho | Dividida (cinema vs. festa junina) | Única e coerente |
+
+**Fontes ciclo #213:** gkpb.com.br, publicitarioscriativos.com, mapadasfranquias.com.br, es360.com.br, foodbizbrasil.com, WebSearch 14/05/2026
+
+_Belinha — Ciclo #213 | 2026-05-14_
