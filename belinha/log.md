@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #211 — 2026-05-14
+
+**Área:** UX/Frontend — Banner `#inaugBanner` fase agosto / Dia dos Pais 09/08/2026
+
+**Contexto:** Após o ciclo #207 (banner Caramelado julho), o banner ficava `display:none` automaticamente a partir de 01/08, deixando todo agosto sem comunicação de topo de página — canal gratuito de alta visibilidade desperdiçado. Dia dos Pais 09/08 é a terceira grande data comemorativa do MilkyPot Londrina; o playbook completo (ciclo #197–209) já existia mas o site não tinha a fase correspondente no banner.
+
+**O que pesquisou/analisou:**
+- Leu a lógica `configureBanner()` em `index.html` (linhas 425–502) — confirmou que após `inCaramelado` (m===7) o código caia direto em `display:none`
+- Leu `dia-dos-pais-2026-playbook.md`: keyword de captura `PAPAI26`, mecânica Duo Papai, campanha começa teaser 04/08
+- Verificou `closeBanner()` — precisava de chave `paisBannerClosed` própria para evitar que fechar o banner de julho suprimisse o de agosto (mesmo bug corrigido no ciclo #207 para caramelo vs junina)
+- Confirmou ausência de qualquer fase de agosto em `index.html` — gap 01/08 a 09/08 completamente descoberto
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | ADICIONADO bloco `inPais` (01–09/08/2026) após `inCaramelado`; ADICIONADO `paisBannerClosed` em `closeBanner()` |
+
+**Detalhes da mudança:**
+- **Nova fase:** `var inPais = (y === 2026 && m === 8 && day <= 9)` — cobre 01/08 a 09/08
+- **01–08/08:** `"👨 DIA DOS PAIS 09/08 · Potinho Duo Papai a caminho · Mande PAPAI26 e entre na lista VIP 🐑"` → CTA "Entrar no VIP →" → `wa.me?text=PAPAI26`
+- **09/08 (Dia H):** `"👨 FELIZ DIA DOS PAIS! · Potinho Duo Papai · Delivery 15-40min · Hoje até 23h 🐑"` → CTA "Pedir agora! →" → link WA com texto Duo Papai
+- **Após 09/08:** banner retorna `display:none` automaticamente
+- **`closeBanner()`:** nova branch `else if(y2===2026 && m2===8)` → grava `paisBannerClosed` (não conflita com `caramBannerClosed` de julho)
+- **Fases anteriores:** intactas — inauguração, junina teaser, junina launch, caramelado não afetados
+
+**Commit:** `0e36330`
+
+**Próximo passo sugerido:**
+- **Ciclo #212 — Conversão:** Brief contra-programação "Dia da Vaca" 08/07 — adicionar camada "família em férias" (Férias da Ovelhinha framing) que o arquivo `quarta-feliz-dia-da-vaca.md` (ciclo #197) não tem; enquanto MilkyMoo faz "Cow Era" individual via app, MilkyPot atende famílias em férias com Cartão de Férias + Quarta Feliz
+- **Ciclo #213 — Concorrentes:** Refetch TheBest + Jhoy (últimas atualizações antigas — verificar posicionamento de julho/agosto 2026)
+- **Ciclo #214 — SEO:** Adicionar evento LocalBusiness para "Férias da Ovelhinha" no schema.org de `index.html`
+- **Ciclo #215 — Conteúdo:** Brief pós-09/08 (segunda quinzena de agosto) — transição para inverno de saída / teaser setembro
+- **Operador (URGENTE):** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+- **Operador:** Confirmar horário agosto — mesmo (14h–23h) ou diferente?
+- **Operador:** Confirmar naming final + ingredientes Potinho Junino até 30/05 ⚠️
+
+_Belinha — Ciclo #211 | 2026-05-14_
+
+---
+
 ## Ciclo #210 — 2026-05-13
 
 **Área:** Conteúdo — Playbook "Férias da Ovelhinha" (julho 2026)
