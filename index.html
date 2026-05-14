@@ -1441,9 +1441,9 @@
                 catalog = buildLegacyCatalog();
             }
             if (catalog) {
-                _renderCatalogTabs();
                 // Default: se houver "Monte do Seu Jeito" (Açaí/Smoothie/Shake Proteico), abrir essa aba
                 var defaultTab = (catalog.sabores && catalog.sabores.monte_seu && catalog.sabores.monte_seu.items && catalog.sabores.monte_seu.items.length) ? 'monteseu' : 'ninho';
+                _renderCatalogTabs(defaultTab);  // força tab ativa (sobrescreve hardcoded 'ninho' inicial)
                 renderProducts(defaultTab);
             } else {
                 setTimeout(initCatalog, 500);
@@ -1487,7 +1487,7 @@
             });
         }
 
-        function _renderCatalogTabs() {
+        function _renderCatalogTabs(forcedActiveTab) {
             if (!catalog || !catalog.sabores) return;
             var container = document.getElementById('categoryTabs');
             if (!container) return;
@@ -1512,7 +1512,7 @@
             ];
 
             var activeTab = container.querySelector('.cat-tab.active');
-            var activeCat = activeTab ? activeTab.dataset.category : 'ninho';
+            var activeCat = forcedActiveTab || (activeTab ? activeTab.dataset.category : 'ninho');
 
             var html = '';
             TAB_DEF.forEach(function(t) {
