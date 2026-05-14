@@ -2,6 +2,55 @@
 
 ---
 
+## Ciclo #222 — 2026-05-14
+
+**Área:** Concorrentes — Intel Namorados 2026: JohnnyJoy "Dois Amores" + JAH Pistache
+
+**Contexto:** Prescrito no ciclo #221. Com o Dia dos Namorados em 29 dias (12/06/2026), era crítico mapear o que os concorrentes estão fazendo para que o "Duo MilkyPot" tenha posicionamento diferenciado. Os arquivos de concorrentes tinham última atualização no ciclo #202 (ontem), mas sem foco específico em Namorados para JohnnyJoy e sem confirmação independente do Pistache JAH.
+
+**O que pesquisou/analisou:**
+- WebSearch "JohnnyJoy Dia dos Namorados 2026 campanha promoção" → GKPB revelou "Dois Amores" confirmado para todo junho 2026
+- WebSearch "JAH do Açaí Dia dos Namorados junho 2026 promoção" → confirmação do passeio Caio Castro (padrão 2022 histórico)
+- WebSearch "JohnnyJoy 'Dois Amores' 2026 preço sabor ingredientes" → R$20,90–R$24,90, todo junho, conceito "celebrar conexões com alguém especial ou consigo mesmo"
+- WebSearch "JAH do Açaí sorvete pistache namorados 2026 lançamento" → múltiplas fontes reconfirmam pistache 12/06/2026 + Francisco Santana (Escola Sorvete) + receita 100% in-house
+- WebFetch johnnyjoy.com.br e jahdoacai.com.br → 403 Forbidden (padrão)
+- WebSearch "JohnnyJoy namorados 2026 campanha casalzinho/combo/presente" → nenhuma mecânica de combo/par encontrada
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/johnnyjoy.md` | +Atualização Ciclo #222: "Dois Amores" R$20,90–R$24,90 todo junho, conceito "conexões", sem combo casalzinho; tabela comparativa vs. Duo MilkyPot; alerta 9 anos/R$9,99 promo |
+| `belinha/competitors/jhoy.md` | +Atualização Ciclo #222: pistache reconfirmado em 4 fontes independentes, mecânica histórica Caio Castro 2022 documentada, calendário Namorados 2026 JAH |
+
+**Intel-chave para campanha Namorados MilkyPot:**
+
+1. **JohnnyJoy "Dois Amores" 2026:**
+   - R$20,90–R$24,90 (milkshake premium de shopping)
+   - Todo junho (sem urgência de data)
+   - Conceito genérico: "com alguém **ou consigo mesmo**" → não é totalmente romântico
+   - **Sem combo casalzinho** confirmado → gap explorado pelo Duo MilkyPot
+   - MilkyPot pode ser mais romântico, mais acessível, mais personalizável
+
+2. **JAH Pistache (12/06):**
+   - Lançamento em Interlagos/SP + Caio Castro (aspiracional nacional) → público diferente de Londrina
+   - Concorre por atenção em 12/06 mas em outro segmento (self-service por peso)
+   - Receita craft/in-house é ângulo forte — MilkyPot responde com personalização real (toppings livres, dois sabores num duo)
+
+**Commit:** `798f8d5`
+
+**Próximo passo sugerido:**
+- **Ciclo #223 — SEO:** Verificar sitemap.xml — gap mencionado há múltiplos ciclos, nunca tratado. Dias até Namorados = 29 → Google precisa de tempo para indexar
+- **Ciclo #224 — Conversão:** Finalizar mecânica "Duo MilkyPot" — playbook tem 3 opções (A, B, C) sem decisão do operador. Com intel de concorrentes completo, propor versão padrão que pode ser implementada sem decisão prévia
+- **Ciclo #225 — Conteúdo:** Feed IG/TikTok Namorados 12/06 — `dia-dos-namorados-2026-playbook.md` tem posts descritos mas sem copy completa para feed
+- **Operador (URGENTE — 16 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador:** Definir Versão A, B ou C mecânica Duo MilkyPot até **05/06** ⚠️ — playbook aguarda
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #222 | 2026-05-14_
+
+---
+
 ## Ciclo #221 — 2026-05-14
 
 **Área:** Conversão — Stories countdown Dia dos Namorados (roteiro visual operador-pronto)
