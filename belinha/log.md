@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #220 — 2026-05-14
+
+**Área:** UX — Banner hero: slot Dia dos Namorados 11–12/06 (prioridade sobre teaser Junina)
+
+**Contexto:** Prescrito no ciclo #219. Auditei o script do banner em `index.html` (linhas 519–622): a lógica pós-inauguração tem 5 fases (JuninaTeaser 10/05–16/06, JuninaLaunch 17–29/06, Caramelado julho, Dias dos Pais 01–09/08, silêncio fora disso). O Dia dos Namorados 12/06 **caía dentro de `inJuninaTeaser`** — exibiria "EM BREVE: NOVIDADE JUNINA!" no dia mais valioso de junho, desperdiçando CTA de conversão direta. Sem nenhum slot de Namorados existente.
+
+**O que pesquisou/analisou:**
+- Verificou a lógica completa do banner JS (linhas 531–573): `inJuninaTeaser = (m===5 && day>=10) || (m===6 && day<=16)` cobria 11/06 e 12/06 → gap confirmado
+- Verificou que `closeBanner()` usava `juninaBannerClosed` como fallback — fechamento em 11-12/06 marcaria bandeira errada, fazendo o banner Junina não aparecer mais na semana seguinte
+- Confirmou que Event schema + FAQPage para Namorados já existem no `<head>` (ciclos #219) → coerência com banner agora completa
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | +`inNamorados` check **antes** de `inJuninaTeaser` na função `configureBanner()`: exibe banner 💕 em 11/06 (véspera, CTA "Lista VIP → NAMORADOS26") e 12/06 (dia H, CTA "Pedir Duo →") |
+| `index.html` | +case `namoradosBannerClosed` em `closeBanner()`: sessionStorage correto para 11–12/06, não contamina bandeira Junina |
+
+**Destaques:**
+1. **Cobertura de conversão**: 11/06 captura pré-compra VIP + 12/06 captura demanda imediata — dois momentos de intenção distintos com CTAs distintos
+2. **Isolamento de sessionStorage**: `namoradosBannerClosed` independente de `juninaBannerClosed` — fechar banner no dia 12/06 não impede o teaser Junina de aparecer nos dias 13–16/06
+3. **Zero regressão**: `inJuninaTeaser` continua cobrindo 10/05–10/06 e 13–16/06 sem alteração; apenas 11–12/06 desviado para Namorados
+
+**Commit:** `2f8f56c`
+
+**Próximo passo sugerido:**
+- **Ciclo #221 — Conversão:** Stories 3-day countdown Namorados (Seg 08/06, Ter 09/06, Qui 11/06) — playbook já tem estrutura mas sem roteiro visual detalhado (ângulo, texto tela, sticker) pronto para operador copiar no celular; alto impacto a 29 dias do evento
+- **Ciclo #222 — Concorrentes:** Refetch Johnny + Jhoy (última atualização > 30 dias) — checar promoções de junho/namorados
+- **Ciclo #223 — SEO:** Verificar se `sitemap.xml` existe e está atualizado com todas as páginas; gap identificado mas nunca tratado
+- **Operador (URGENTE — 16 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador:** Definir Versão A, B ou C mecânica Duo MilkyPot até **05/06** (playbook tem 3 opções aguardando decisão)
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #220 | 2026-05-14_
+
+---
+
 ## Ciclo #219 — 2026-05-14
 
 **Área:** SEO — Event schema + FAQPage Dia dos Namorados 12/06/2026
