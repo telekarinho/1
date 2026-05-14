@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #215 — 2026-05-14
+
+**Área:** SEO — Event schema.org "Férias da Ovelhinha" em `index.html`
+
+**Contexto:** Prescrito nos ciclos #211 e #212. A campanha "Férias da Ovelhinha" (07–31/07/2026) tinha todo o conteúdo de execução pronto (`ferias-da-ovelhinha-julho-2026.md`, `overlay-08jul-familia-ferias.md`) mas nenhum sinal de SEO estruturado no site. Oportunidade: buscas sazonais como "o que fazer em Londrina julho 2026" e "férias Londrina família" têm volume em junho–julho e o Google exibe carrossel de Events Rich Results para essas queries.
+
+**O que pesquisou/analisou:**
+- Leu `ferias-da-ovelhinha-julho-2026.md`: janela confirmada 07/07 (início férias PR) → 31/07, produto âncora Potinho Caramelado + Açaí Self-Service, keyword `FERIAS26`
+- Verificou schema atual de `index.html`: FoodEstablishment (LocalBusiness), FAQPage, WebSite/WebPage — nenhum Event schema presente
+- Confirmou que Google Event Rich Results requer bloco `Event` top-level (não aninhado no LocalBusiness)
+- Schema.org Event suporta `startDate`, `endDate`, `eventStatus`, `offers` c/ `validFrom`/`validThrough` (prescrição dos ciclos anteriores)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | ADICIONADO bloco `Event` schema.org (~45 linhas) entre o LocalBusiness e o FAQPage: name, description, startDate (2026-07-07), endDate (2026-07-31), eventStatus (EventScheduled), eventAttendanceMode (Offline), location c/ endereço completo, organizer, Offer c/ price R$10/validFrom/validThrough/URL WA, image, keywords temáticas |
+
+**Impacto esperado:**
+- Rich Result de evento no Google Search para buscas "férias Londrina julho 2026" / "o que fazer em Londrina julho"
+- Indexação antecipada: schema live 54 dias antes do evento → Googlebot processa antes do pico de buscas (junho)
+- Offer.validFrom/validThrough atende a prescrição técnica dos ciclos #211/#212
+
+**Commit:** `e6596c0`
+
+**Próximo passo sugerido:**
+- **Ciclo #216 — Concorrentes:** Green Açaí — última atualização foi ciclo #84 (130 ciclos atrasado). Verificar @greenlondrina campanhas São João 2026 e posicionamento julho
+- **Ciclo #217 — Conversão:** Marco 6 meses de loja 25/10/2026 — playbook comemorativo com 5 meses de antecedência
+- **Ciclo #218 — UX:** `cardapio.css` (21K) orphaned — avaliar: deletar ou incorporar ao `style.css`
+- **Ciclo #219 — SEO:** FAQ "Férias da Ovelhinha" — adicionar Q&A no FAQPage de `index.html` reforçando busca orgânica de julho
+- **Operador (URGENTE — 16 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+- **Operador:** Monitorar hashtag #PotinhoMaisFeliz a partir de 25/05
+
+_Belinha — Ciclo #215 | 2026-05-14_
+
+---
+
 ## Ciclo #214 — 2026-05-14
 
 **Área:** Conteúdo — Calendário editorial 14/05–02/06/2026 (janela de ponte pré-junina)
