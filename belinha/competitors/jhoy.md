@@ -266,6 +266,50 @@ _Belinha — Ciclo #202 | 2026-05-13_
 
 ---
 
+## ⚡ ATUALIZAÇÃO CICLO #222 — 2026-05-14
+
+### Reconfirmação Intel Namorados 2026 — Pistache + Caio Castro
+
+**Fontes:** portalfilipemello.com (mar/2026), abcdacomunicacao.com.br (histórico), WebSearch mai/2026
+
+---
+
+#### 1. Sorvete Pistache 12/06/2026 — Reconfirmado independentemente
+
+- Sorvete Pistache confirmado em **múltiplas fontes** (ciclo #202 + ciclo #222): portalfilipemello.com, gkpb.com.br, gironews.com, minasinforma.com
+- Manchete principal: **"Sabor pistache: JAH Açaí aposta no 'ouro verde' para diversificar o cardápio"** — posicionamento de saúde e tendência, não só romance
+- Parceiro técnico Francisco Santana (Escola Sorvete — América Latina) reconfirmado
+- **Receita 100% in-house:** sem base pré-comprada — diferencial de craft/artesanal que JAH está comunicando ativamente
+
+---
+
+#### 2. Caio Castro — Mecânica Histórica Confirmada (2022 → padrão da marca)
+
+Padrão da ação de Namorados JAH × Caio Castro (2022, base para 2026):
+- **Mecânica:** Seguir @jahdoacai + @caiocastro → curtir foto oficial do sorteio → marcar parceiro na publicação → compartilhar nos stories marcando @jahdoacai e @caiocastro
+- **Prêmio histórico 2022:** Passeio de Porsche em Interlagos + deslocamento da cidade até SP + translado + hospedagem + alimentação → fins de semana de 11/12 junho
+- **Status 2026:** Ação confirmada (ciclo #202) mas mecânica 2026 específica não rastreada — padrão 2022 serve como referência de nível de produção esperado
+
+**Implicação para MilkyPot:**
+- JAH usa aspiracional (Caio Castro + Porsche) como anzol para UGC de alcance nacional
+- MilkyPot não pode competir nessa frente → focar em **intimidade local**: ovelhinha, personalização, "potinho do amor feito pra vocês dois"
+- Público JAH = aspiracional/influenciado por celebridade. Público MilkyPot = acessível/emocional/família
+
+---
+
+#### 3. Calendário Confirmado — Namorados 2026 JAH
+
+| Ação | Data | Status |
+|---|---|---|
+| Sorteio Caio Castro (Instagram) | ~Semana 08/06 | Padrão histórico — 2026 não confirmado |
+| Passeio Porsche Interlagos | 11–12/06/2026 | Padrão histórico |
+| Lançamento Sorvete Pistache | 12/06/2026 | CONFIRMADO (múltiplas fontes) |
+| Pistache disponível | Até set/2026 | CONFIRMADO |
+
+_Belinha — Ciclo #222 | 2026-05-14_
+
+---
+
 ## ⚡ VERIFICAÇÃO CICLO #160 — 2026-05-08
 
 **Pesquisa realizada:** WebSearch "Jhoy sobremesa franquia potinho açaí 2026" — zero resultados específicos para marca "Jhoy".

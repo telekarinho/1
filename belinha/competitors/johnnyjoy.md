@@ -1,11 +1,54 @@
 # JohnnyJoy — Análise Competitiva
 
-**Última atualização:** 2026-05-13 (Ciclo #202 — intel inverno/julho 2026 + padrão Galáktico confirmado)
+**Última atualização:** 2026-05-14 (Ciclo #222 — Dia dos Namorados 2026 + "Dois Amores" confirmado)
+**Fontes ciclo #222:** gkpb.com.br/178878, WebSearch 2026
 **Fontes ciclo #202:** amostrasgratis.shop, publicitarioscriativos.com, foodbizbrasil.com, gkpb.com.br, WebSearch 2025-2026
 **Fontes ciclo #167:** gkpb.com.br, buscacliente.com.br, foodbizbrasil.com, johnnyjoy.com.br, shoppingjardins.com.br, TikTok @aproveiteacidade
 **Fontes ciclo #160:** gkpb.com.br, ondecomernorio.com, amostrasgratis.shop, Instagram @johnnyjoy.br, riomarfortaleza.com.br, portalg.com.br
 **Fontes ciclo #151:** johnnyjoy.com.br, buscacliente.com.br, gkpb.com.br, amostrasgratis.shop, TikTok @aproveiteacidade, overblur.com, Instagram @johnnyjoy.br
 **Fontes originais:** johnnyjoy.com.br, buscas orgânicas
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #222 — 2026-05-14
+
+### Dia dos Namorados 2026 — "Dois Amores" Confirmado (todo junho)
+
+**Fontes:** gkpb.com.br, WebSearch 2026
+
+---
+
+#### 1. Produto "Dois Amores" 2026 — Confirmado
+
+- **Produto:** Milkshake Edição Limitada "Dois Amores" (retorno do produto histórico 2025)
+- **Período:** Todo o mês de junho nas lojas da rede
+- **Preço:** R$20,90–R$24,90 (300ml / especial — consistente com ciclo #151)
+- **Conceito de campanha:** "Celebrar conexões – com alguém especial ou consigo mesmo"
+- **Sabor/ingredientes específicos:** não identificados neste ciclo (GKPB retornou 403)
+- **Mecânica de combo/casalzinho:** nenhuma encontrada — sem promoção de par confirmada
+
+**Análise para MilkyPot:**
+
+| Dimensão | JohnnyJoy "Dois Amores" | MilkyPot "Duo MilkyPot" |
+|---|---|---|
+| **Preço** | R$20,90–R$24,90 | ~R$18–R$22 (dois potinhos) |
+| **Acessibilidade** | Shopping premium, ticket alto | Muffato — acesso popular |
+| **Personalização** | Sabor fixo edição limitada | Toppings livres — cada um escolhe |
+| **Conceito** | "com alguém ou consigo mesmo" (genérico) | Duo = dois potinhos, um para cada |
+| **Período** | Todo junho | Campanha focada 12/06 (urgência) |
+
+**Oportunidade identificada:**
+- JohnnyJoy **não tem combo casalzinho** com desconto — MilkyPot pode criar "Duo MilkyPot" (2 potinhos por preço especial) como diferencial direto
+- Posicionamento deles é genérico ("ou consigo mesmo") — MilkyPot pode apropriar romance literal com ovelhinha + coração
+- Preço MilkyPot imbatível vs. milkshake premium de shopping → argumento "mesmo clima, metade do preço"
+
+---
+
+#### 2. Aniversário 9 Anos JohnnyJoy — Milkshakes R$9,99 (data não confirmada)
+
+- **Fonte:** gkpb.com.br/177375
+- **Promoção:** Milkshakes por R$9,99 no aniversário da marca (9 anos)
+- **Alerta MilkyPot:** se coincide com junho/namorados, cria competição de preço pontual — monitorar data exata
 
 ---
 
