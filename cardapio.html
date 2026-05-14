@@ -612,9 +612,17 @@
         }
     </style>
 
+    <!-- Firebase SDK — REQUERIDO pra DataStore.init() sincronizar catalog_config
+         de Firestore em abas anônimas (sem localStorage prévio).
+         Sem firebase carregado, DataStore._db fica null e o sync nunca acontece. -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+
     <script src="js/core/constants.js"></script>
     <script src="js/core/utils.js"></script>
-    <script src="js/core/datastore.js?v=mp-v204"></script>
+    <script src="js/core/firebase-config.js"></script>
+    <script src="js/core/datastore.js?v=mp-v226"></script>
     <script>
         // CRITICAL: cliente anonimo (incognito) precisa do init pra puxar
         // catalog_config do Firestore — sem isso, getCatalogConfig retorna
@@ -688,9 +696,9 @@
 
             catalog = DataStore.get('catalog_config');
             if (catalog) {
-                _renderCatalogTabs();
                 // Default: se houver Monte do Seu (Açaí/Smoothie/Shake Proteico), abrir essa aba primeiro
                 const defaultTab = (catalog.sabores && catalog.sabores.monte_seu && catalog.sabores.monte_seu.items && catalog.sabores.monte_seu.items.length) ? 'monteseu' : 'ninho';
+                _renderCatalogTabs(defaultTab);  // força tab ativa (sobrescreve hardcoded 'ninho' do HTML inicial)
                 renderProducts(defaultTab);
             } else {
                 console.log('🔄 Sincronizando catálogo delivery...');
@@ -794,7 +802,7 @@
 
         // Gera/atualiza as tabs de categoria dinamicamente a partir do catálogo atual.
         // Preserva tabs estáticas do HTML e adiciona novas categorias do CatalogV2.
-        function _renderCatalogTabs() {
+        function _renderCatalogTabs(forcedActiveTab) {
             if (!catalog || !catalog.sabores) return;
             const container = document.getElementById('categoryTabs');
             if (!container) return;
@@ -821,9 +829,9 @@
                 { key: 'bebida',   label: '🥤 Bebidas' }
             ];
 
-            // Mantém tab ativa atual
+            // Mantém tab ativa atual — forcedActiveTab tem prioridade (usado no init pra forçar monteseu)
             const activeTab = container.querySelector('.cat-tab.active');
-            const activeCat = activeTab ? activeTab.dataset.category : 'ninho';
+            const activeCat = forcedActiveTab || (activeTab ? activeTab.dataset.category : 'ninho');
 
             // Reconstrói somente as tabs que têm produtos
             let html = '';
@@ -1251,8 +1259,11 @@
                 </div>
             `;
 
-            document.getElementById('sheetContent').innerHTML = html;
-            document.getElementById('productSheetBackdrop').style.display = 'block';
+            // FIX (v227): sheetContent e backdrop NÃO eram declaradas — `if (!sheetContent || !backdrop || !sheet) return`
+            // jogava ReferenceError em strict mode silencioso, abortando antes do display:block.
+            // Resultado: usuário via tela escurecida (backdrop block setado antes) mas o sheet NUNCA aparecia.
+            var sheetContent = document.getElementById('sheetContent');
+            var backdrop = document.getElementById('productSheetBackdrop');
             var sheet = document.getElementById('productSheet');
             if (!sheetContent || !backdrop || !sheet) return;
 
