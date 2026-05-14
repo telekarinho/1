@@ -2,6 +2,45 @@
 
 ---
 
+## Ciclo #217 — 2026-05-14
+
+**Área:** Conversão — Sorteio Aniversário 6 Meses + Halloween (25–31/10/2026)
+
+**Contexto:** Prescrito no ciclo #216 como próximo passo. O marco de 6 meses (25/10/2026) já tinha cobertura de WA (`whatsapp-aniversario-6meses.md`, ciclo #119) e posts de feed/stories (`pos-inauguracao-semana28.md`), mas **faltava a mecânica de sorteio** — elemento que existe para o 3 meses (`3meses-25jul-comemoracao-sorteio.md`, ciclo #204). Com Halloween (31/10) na mesma semana, o sorteio tem uma oportunidade única de manter engajamento diário por 5 dias consecutivos, o período mais valioso do ano.
+
+**O que pesquisou/analisou:**
+- Leu `3meses-25jul-comemoracao-sorteio.md` para entender a estrutura de referência: 3 prêmios, 3 caminhos de participação, sorteio ao vivo no dia do aniversário
+- Leu `whatsapp-aniversario-6meses.md` (ciclo #119): M1/M2/M3 completos para 25/10 — WA já coberto
+- Leu `pos-inauguracao-semana28.md`: posts feed + stories da semana 25–31/10 — conteúdo editorial já coberto
+- Identificou **gap**: nenhuma mecânica de sorteio para 6 meses; o 3 meses teve sorteio, o 6 meses não tinha
+- Insight estratégico: sorteio entre 25/10 e 30/10 (véspera de Halloween) mantém engajamento em 5 dias consecutivos, muito mais eficiente que sortear no próprio dia do aniversário
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/6meses-25out-sorteio-halloween.md` | CRIADO (~360 linhas): mecânica completa com 6 prêmios para 6 ganhadores, 4 caminhos de participação (IG + UGC Halloween + WA + compra), calendário 22–31/10 com scripts dia a dia, script do sorteio ao vivo (30/10 às 21h30), integração com os playbooks existentes, checklist pré-sorteio, métricas de sucesso e erros comuns |
+
+**Destaques da entrega:**
+1. **Escala 3→6:** 3 prêmios/3 caminhos no 3 meses → 6 prêmios/4 caminhos no 6 meses (reflete crescimento da base)
+2. **Prêmio âncora "Experiência Ovelhinha Rainha":** festa privada para 4 pessoas na loja — inédita, gera buzz press/UGC
+3. **Caminho UGC Halloween** (2 bilhetes): incentiva fotos de fantasia com potinho → conteúdo orgânico de Halloween para repostar
+4. **Sorteio em 30/10** (e não 25/10): mantém engajamento por 5 dias + revela ganhadores no post matinal de 31/10 = combustível para o Dia H Halloween
+5. **Integração limpa:** este playbook é *camada adicional* sobre os docs existentes, sem duplicar conteúdo
+
+**Commit:** `30707e6`
+
+**Próximo passo sugerido:**
+- **Ciclo #218 — UX:** `cardapio.css` (21K) orphaned — avaliar: deletar ou incorporar ao `style.css`
+- **Ciclo #219 — SEO:** FAQ "Férias da Ovelhinha" — Q&A no FAQPage de `index.html`
+- **Operador (URGENTE — 16 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+- **Ciclo #230:** Verificar endereço @greenacaicentro e distância do Muffato (urgente se ≤2km)
+
+_Belinha — Ciclo #217 | 2026-05-14_
+
+---
+
 ## Ciclo #216 — 2026-05-14
 
 **Área:** Concorrentes — Green Açaí Londrina (130 ciclos de defasagem)
