@@ -452,9 +452,10 @@ body:not(.idle){cursor:default}
             priceUnit: '/ 100g',
             footer: 'Caldas · Granulados · Frutas · Cremes premium · Crocantes'
         };
-        // 28 SABORES MILKYPOT — padronizacao 2026-05-12
-        // Parte 1 (1-11): Mais Vendidos — Essencial R$17 / Supremo R$21 / Monster R$24 / Soberano R$27
-        // Parte 2 (12-28): Sabores com Calda (base Baunilha/Ninho) — Essencial R$15 / Supremo R$19 / Monster R$22 / Soberano R$25
+        // 28 SABORES MILKYPOT — padronizacao 2026-05-14
+        // Milkshakes + Sundaes (1-28): Essencial R$16,99 / Supremo R$20,99 / Monster R$23,99 / Soberano R$26,99
+        // Ice Protein Whey (29-31): Essencial R$21,99 / Supremo R$25,99 / Monster R$29,99 / Soberano R$33,99
+        // Alcoolicos (32-35): Essencial R$24,99 / Supremo R$29,99 / Monster R$34,99 / Soberano R$39,99
         var MILKSHAKE_CARDS = [
             // PARTE 1 — MAIS VENDIDOS MILKYPOT
             { ord:1,  parte:1, emoji:'🥛', gradient:'linear-gradient(135deg,#FFB300 0%,#FFE082 60%,#FFFDE7 100%)',                name:'Ninho Supreme',           copy:'O sabor mais branquinho, cremoso e queridinho da MilkyPot. Feito para quem ama aquele gostinho de leite ninho que derrete na boca e deixa vontade de repetir.' },
@@ -488,15 +489,57 @@ body:not(.idle){cursor:default}
             { ord:28, parte:2, emoji:'🟫', gradient:'linear-gradient(135deg,#5D4037 0%,#795548 60%,#BCAAA4 100%)',                name:'Ovomaltine',              copy:'Maltado, cremoso e crocante. Um clássico que sempre combina com milkshake.' }
         ];
 
-        // Helpers de preco/tamanho por parte (1 = Mais Vendidos, 2 = Sabores com Calda)
-        function priceForPart(p) { return p === 1 ? 'R$ 17' : 'R$ 15'; }
+        // Helpers de preco/tamanho — milkshakes/sundaes padronizados 2026-05-14
+        function priceForPart(p) { return 'R$ 16,99'; }
         function unitLabel() { return '· Essencial 275ml'; }
-        function footerMilkshake() { return '🥛 Essencial 275ml · Supremo 440ml · Monster Pot 550ml · Soberano 770ml'; }
-        function footerSundae() { return '🍨 Essencial 275ml · Supremo 440ml · Monster Pot 550ml · Soberano 770ml'; }
+        function footerMilkshake() { return '🥛 275ml R$ 16,99 · 440ml R$ 20,99 · 550ml R$ 23,99 · 770ml R$ 26,99'; }
+        function footerSundae() { return '🍨 275ml R$ 16,99 · 440ml R$ 20,99 · 550ml R$ 23,99 · 770ml R$ 26,99'; }
+        function footerProtein() { return '💪 275ml R$ 21,99 · 440ml R$ 25,99 · 550ml R$ 29,99 · 770ml R$ 33,99'; }
+        function footerAlcohol() { return '🍸 275ml R$ 24,99 · 440ml R$ 29,99 · 550ml R$ 34,99 · 770ml R$ 39,99'; }
 
         // Capitao Acai DESATIVADO na padronizacao 2026-05-12 — removidos os slides premium
         var marketingPremium = null;
         var marketingPremiumSundae = null;
+
+        // ICE PROTEIN WHEY (29-31) — gradiente azul fitness, selo FITNESS · 26G PROTEÍNA
+        var ICE_PROTEIN_CARDS = [
+            { ord:29, emoji:'🥛', gradient:'linear-gradient(135deg,#0D47A1 0%,#1976D2 50%,#90CAF9 100%)', name:'Baunilha + Whey',         copy:'Sorvete Ninho Zero Açúcar + Whey de Baunilha (26g proteína) + Banana. Fitness, leve e cheio de sabor.' },
+            { ord:30, emoji:'🍫', gradient:'linear-gradient(135deg,#1A237E 0%,#3949AB 50%,#9FA8DA 100%)', name:'Chocolate + Whey',        copy:'Sorvete Ninho Zero Açúcar + Whey de Chocolate (26g proteína) + Banana. Cremoso, intenso e sem culpa.' },
+            { ord:31, emoji:'🍓', gradient:'linear-gradient(135deg,#0277BD 0%,#039BE5 50%,#B3E5FC 100%)', name:'Baunilha Morango + Whey', copy:'Sorvete Ninho Zero Açúcar + Whey Baunilha (26g proteína) + Banana + Morango. Frutado, refrescante e proteico.' }
+        ];
+
+        // CARDS DE MARKETING ICE PROTEIN (3 slides com selos grandes)
+        var marketingIceProtein = {
+            type: 'milkshake-card', mode: 'flavor',
+            emoji: '💪', gradient: 'linear-gradient(135deg,#0D47A1 0%,#1976D2 50%,#42A5F5 100%)',
+            tag: '💪 FITNESS · 26G PROTEÍNA',
+            title: 'Ice Protein Zero com Whey',
+            subtitle: 'Sorvete Ninho Zero Açúcar + Whey Protein. Sabor cremoso sem abrir mão da dieta. 3 sabores disponíveis.',
+            priceLabel: 'A partir de R$ 21,99',
+            priceUnit: '· Essencial 275ml',
+            footer: '🥛 ZERO AÇÚCAR · 26G PROTEÍNA · BAUNILHA · CHOCOLATE · MORANGO'
+        };
+
+        // ALCOÓLICOS (32-35) — gradiente roxo bar, selo +18 · CONTÉM ÁLCOOL, fonte preço grande
+        var ALCOHOLIC_CARDS = [
+            { ord:32, emoji:'🥃', gradient:'linear-gradient(135deg,#4A148C 0%,#6A1B9A 50%,#CE93D8 100%)', name:'AmaruLovers',  copy:'Milk shake alcoólico de Amarula. Licor cremoso brasileiro em forma de sobremesa adulta.' },
+            { ord:33, emoji:'🍋', gradient:'linear-gradient(135deg,#311B92 0%,#5E35B1 50%,#B39DDB 100%)', name:'Frozen Lemon', copy:'Limão com vodka. Cítrico, refrescante e marcante. Ideal pra noites mais quentes.' },
+            { ord:34, emoji:'🌹', gradient:'linear-gradient(135deg,#880E4F 0%,#AD1457 50%,#F48FB1 100%)', name:'Rosa Perfeito',copy:'Morango com vodka/vinho rosé. Doce, romântico e elegante. Perfeito pra brindar.' },
+            { ord:35, emoji:'🟡', gradient:'linear-gradient(135deg,#6A1B9A 0%,#8E24AA 50%,#E1BEE7 100%)', name:'Maracujá Crush', copy:'Maracujá com vodka. Tropical, azedinho na medida certa. Sabor brasileiro premium.' }
+        ];
+
+        // CARD DE MARKETING ALCOÓLICOS (selo +18, fonte preço +35% pra TV indoor)
+        var marketingAlcoholic = {
+            type: 'milkshake-card', mode: 'flavor',
+            emoji: '🍸', gradient: 'linear-gradient(135deg,#4A148C 0%,#7B1FA2 50%,#AB47BC 100%)',
+            tag: '🍸 +18 · CONTÉM ÁLCOOL',
+            title: 'Milk Shakes Alcoólicos',
+            subtitle: 'A linha adulta da MilkyPot. Vodka, Amarula e licor de qualidade premium em 4 sabores marcantes.',
+            priceLabel: 'A partir de R$ 24,99',
+            priceUnit: '· Essencial 275ml',
+            footer: '🍸 AMARULA · VODKA · ROSÉ · 4 SABORES · APENAS +18 ANOS',
+            priceBoost: true
+        };
 
         // Cria slides pra cada milkshake (8s cada). subtitle = m.copy (especifico do sabor).
         var milkshakeSlides = MILKSHAKE_CARDS.map(function(m){
@@ -509,6 +552,35 @@ body:not(.idle){cursor:default}
                 priceUnit: unitLabel(),
                 footer: footerMilkshake()
             }, duration: 8000 };
+        });
+
+        // Cria slides Ice Protein (29-31) — selo FITNESS, gradient azul
+        var iceProteinSlides = ICE_PROTEIN_CARDS.map(function(m){
+            return { media: {
+                type: 'milkshake-card', mode: 'flavor',
+                emoji: m.emoji, gradient: m.gradient,
+                tag: '💪 FITNESS · 26G PROTEÍNA',
+                title: m.ord + '. ' + m.name,
+                subtitle: m.copy,
+                priceLabel: 'R$ 21,99',
+                priceUnit: '· Essencial 275ml',
+                footer: footerProtein()
+            }, duration: 9000 };
+        });
+
+        // Cria slides Alcoólicos (32-35) — selo +18, gradient roxo, fonte preço grande (priceBoost +35%)
+        var alcoholicSlides = ALCOHOLIC_CARDS.map(function(m){
+            return { media: {
+                type: 'milkshake-card', mode: 'flavor',
+                emoji: m.emoji, gradient: m.gradient,
+                tag: '🍸 +18 · CONTÉM ÁLCOOL',
+                title: m.ord + '. ' + m.name,
+                subtitle: m.copy,
+                priceLabel: 'R$ 24,99',
+                priceUnit: '· Essencial 275ml',
+                footer: footerAlcohol(),
+                priceBoost: true
+            }, duration: 9000 };
         });
 
         // Cria slides pros sundaes — copy adaptada do sabor
@@ -541,6 +613,8 @@ body:not(.idle){cursor:default}
         }
         shuffle(milkshakeSlides);
         shuffle(sundaeSlides);
+        shuffle(iceProteinSlides);
+        shuffle(alcoholicSlides);
 
         // Respeita toggles do admin (painel/tv-indoor.html → config)
         // Default = ON (compatibilidade pra TVs sem config salvo)
@@ -550,16 +624,22 @@ body:not(.idle){cursor:default}
         var cfgShowBuffet        = config.showTvCardsBuffet  !== false;
         var cfgShowSundae        = config.showTvCardsSundae  !== false;
         var cfgShowSundaePremium = config.showTvCardsSundaePremium !== false;
+        var cfgShowIceProtein    = config.showTvCardsIceProtein !== false;  // Default ON
+        var cfgShowAlcoholic     = config.showTvCardsAlcoholic  !== false;  // Default ON
 
         var marketingSlides = [];
         if (cfgShowPromos)        marketingSlides.push({ media: marketingPromo1,        duration: 10000 });  // Acertou 300g
         if (cfgShowPromos)        marketingSlides.push({ media: marketingPromo2,        duration: 10000 });  // Desafio 10s
         if (cfgShowBuffet)        marketingSlides.push({ media: marketingBuffet,        duration: 10000 });  // Buffet R$5,99/100g
+        if (cfgShowIceProtein)    marketingSlides.push({ media: marketingIceProtein,    duration: 12000 });  // Selo FITNESS · 26G PROTEÍNA
+        if (cfgShowAlcoholic)     marketingSlides.push({ media: marketingAlcoholic,     duration: 12000 });  // Selo +18 · CONTÉM ÁLCOOL
         // Capitao Acai DESATIVADO na padronizacao 2026-05-12 (slides null guardados)
         if (cfgShowPremium && marketingPremium)             marketingSlides.push({ media: marketingPremium,       duration: 10000 });
         if (cfgShowSundaePremium && marketingPremiumSundae) marketingSlides.push({ media: marketingPremiumSundae, duration: 10000 });
         if (cfgShowFlavors)       marketingSlides = marketingSlides.concat(milkshakeSlides);                 // 28 sabores Milkshake
         if (cfgShowSundae)        marketingSlides = marketingSlides.concat(sundaeSlides);                    // 28 sabores Sundae
+        if (cfgShowIceProtein)    marketingSlides = marketingSlides.concat(iceProteinSlides);                // 3 Ice Protein
+        if (cfgShowAlcoholic)     marketingSlides = marketingSlides.concat(alcoholicSlides);                 // 4 Alcoólicos
 
         if (playlist.length > 0) {
             if (marketingSlides.length > 0) {
@@ -976,11 +1056,15 @@ body:not(.idle){cursor:default}
                         esc(m.subtitle)+
                     '</p>'+
 
-                    /* Bloco de preço — tipográfico, sem caixa berrante */
-                    '<div style="display:flex;align-items:baseline;gap:clamp(14px,1.5vw,22px);margin-bottom:clamp(20px,2.5vh,32px);padding-bottom:clamp(18px,2.2vh,28px);border-bottom:1px solid rgba(0,0,0,.10);animation:mpFadeUp 1.1s ease-out .65s both">'+
-                        '<span style="font-size:clamp(48px,6vw,92px);font-weight:900;color:#1A1A2E;line-height:.9;letter-spacing:-2px">'+esc(m.priceLabel)+'</span>'+
-                        '<span style="font-size:clamp(13px,1.1vw,17px);color:#777;font-weight:600;letter-spacing:.3px;line-height:1.3">'+esc(m.priceUnit)+'</span>'+
-                    '</div>'+
+                    /* Bloco de preço — tipográfico, sem caixa berrante. Boost em +35% pra alcoólicos (m.priceBoost) */
+                    (function(){
+                        var boost = m.priceBoost === true;
+                        var fsBig = boost ? 'clamp(64px,8.2vw,124px)' : 'clamp(48px,6vw,92px)';
+                        return '<div style="display:flex;align-items:baseline;gap:clamp(14px,1.5vw,22px);margin-bottom:clamp(20px,2.5vh,32px);padding-bottom:clamp(18px,2.2vh,28px);border-bottom:1px solid rgba(0,0,0,.10);animation:mpFadeUp 1.1s ease-out .65s both">'+
+                            '<span style="font-size:'+fsBig+';font-weight:900;color:#1A1A2E;line-height:.9;letter-spacing:-2px">'+esc(m.priceLabel)+'</span>'+
+                            '<span style="font-size:clamp(13px,1.1vw,17px);color:#777;font-weight:600;letter-spacing:.3px;line-height:1.3">'+esc(m.priceUnit)+'</span>'+
+                        '</div>';
+                    })()+
 
                     /* Footer fino com tamanhos */
                     (m.footer ? '<div style="font-size:clamp(12px,.95vw,15px);color:#888;font-weight:600;letter-spacing:.5px;animation:mpFadeUp 1.2s ease-out .75s both">'+esc(m.footer)+'</div>' : '')+
