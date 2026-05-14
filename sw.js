@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v221';
-const CACHE_NAME = 'milkypot-v221';
+const CACHE_VERSION = 'mp-v222';
+const CACHE_NAME = 'milkypot-v222';
 
 // VAPID public key — Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
 const VAPID_PUBLIC_KEY = 'BAjJDEh3BZsxBDRlLXhLOZomMpCpv-FHsApsPGCvRcj3GjE3kF3Lfok4JgRs8Rdmpx3pq530i5ceVIsnngyyyBE';
@@ -76,6 +76,7 @@ const PRECACHE_URLS = [
     // Feature JS
     '/js/cardapio.js',
     '/js/cardapio-data.js',
+    '/js/monte-seu-flow.js',
     '/js/core/franchise-waitlist.js',
     // Assets
     '/images/logo-milkypot.png',
