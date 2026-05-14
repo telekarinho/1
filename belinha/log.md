@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #221 — 2026-05-14
+
+**Área:** Conversão — Stories countdown Dia dos Namorados (roteiro visual operador-pronto)
+
+**Contexto:** Prescrito no ciclo #220 como próxima prioridade. O playbook `dia-dos-namorados-2026-playbook.md` (ciclo #131) listava stories para Ter 09/06 e Qui 11/06 apenas como bullets resumidos ("3 stories urgência + CTA NAMORADOS26") sem ângulo de câmera, texto de tela, stickers interativos ou notas operacionais. Com 29 dias para o evento, o operador precisaria criar tudo do zero no celular na hora — alto risco de inconsistência. O gap foi o mesmo identificado nos Dias dos Pais (ciclo #209), resolvido com o mesmo formato.
+
+**O que pesquisou/analisou:**
+- Leu `dia-dos-namorados-2026-playbook.md` completo: confirmou que Ter 09/06 e Qui 11/06 tinham apenas 1 linha de descrição cada, sem visual script
+- Leu `stories-pais-2026.md` (ciclo #209) como template de referência: formato touchpoint → story → visual/câmera → texto → sticker → nota operacional
+- Leu `stories-18jun-potinho-junino-reacoes.md` para confirmar padrão de checklist de execução
+- Mapeou 3 touchpoints ideais: Seg 08/06 (abertura semana — não estava no playbook, novo), Ter 09/06 (D-3), Qui 11/06 (véspera urgência D-1)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/stories-countdown-namorados-2026.md` | CRIADO — 314 linhas: 3 touchpoints completos (TP1 Seg 08/06: 2 stories, TP2 Ter 09/06: 3 stories, TP3 Qui 11/06: 3 stories), cada story com: ângulo/direção câmera, texto de tela, posição, stickers interativos, duração, nota operacional; + mapa Sex 12/06 rápido + checklist de execução + notas de produção |
+
+**Destaques da entrega:**
+1. **8 stories em 3 dias:** TP1 (2) + TP2 (3) + TP3 (3) — cobertura completa do countdown sem sobrecarregar o feed
+2. **Seg 08/06 novo:** touchpoint que não estava no playbook — abre a semana dos Namorados segunda-feira, plantando a ideia antes da concorrência
+3. **Poll estratégica (TP3):** "Primeira vez no MilkyPot?" → inteligência de mercado: operador calibra discurso no balcão no dia H
+4. **Integração com keyword:** `NAMORADOS26` aparece como CTA em TP2 Story 3 e TP3 Story 3 — canaliza leads para lista VIP WA
+5. **Estimativa de tempo por touchpoint:** TP1 10min, TP2 20min, TP3 15min — realista para operador solo
+
+**Commit:** `726d0ea`
+
+**Próximo passo sugerido:**
+- **Ciclo #222 — Concorrentes:** Refetch Johnny + Jhoy (última atualização > 30 dias) — checar promoções e ações de junho/namorados
+- **Ciclo #223 — SEO:** Verificar sitemap.xml — gap identificado mas nunca tratado (ciclo #220 item 3)
+- **Ciclo #224 — UX:** Verificar banner Qua 10/06 e Ter 09/06 — o script de banner cobre o slot `inJuninaTeaser` nesses dias; checar se há contradição com stories Namorados
+- **Operador (URGENTE — 16 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador:** Definir Versão A, B ou C mecânica Duo MilkyPot até **05/06** (playbook tem 3 opções aguardando decisão)
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+- **Operador:** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+
+_Belinha — Ciclo #221 | 2026-05-14_
+
+---
+
 ## Ciclo #220 — 2026-05-14
 
 **Área:** UX — Banner hero: slot Dia dos Namorados 11–12/06 (prioridade sobre teaser Junina)
