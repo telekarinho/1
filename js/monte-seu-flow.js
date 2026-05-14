@@ -62,8 +62,14 @@
     };
 
     MS.close = function () {
-        if (MS.sheetEl) MS.sheetEl.style.display = 'none';
-        if (MS.backdropEl) MS.backdropEl.style.display = 'none';
+        if (MS.sheetEl) {
+            MS.sheetEl.classList.remove('sheet-open');
+            // Espera animação de slide-down (350ms) antes de hidden — UX consistente com closeProductSheet
+            setTimeout(function () {
+                if (MS.sheetEl) MS.sheetEl.style.display = 'none';
+                if (MS.backdropEl) MS.backdropEl.style.display = 'none';
+            }, 350);
+        }
         document.body.style.overflow = '';
         MS.state = null;
     };
@@ -84,9 +90,17 @@
     }
     function showSheet() {
         if (!MS.sheetEl) return;
-        MS.sheetEl.style.display = 'block';
+        // display:flex — msStyles posiciona header/steps/body/footer em coluna
+        MS.sheetEl.style.display = 'flex';
         MS.backdropEl.style.display = 'block';
         document.body.style.overflow = 'hidden';
+        // CRÍTICO: .product-sheet CSS tem transform: translateY(100%) (escondido).
+        // A classe .sheet-open faz transform: translateY(0) → slide-up visível.
+        // Sem essa classe, sheet fica fora da viewport e user só vê backdrop escurecido.
+        // requestAnimationFrame garante que a transition rola (transform muda em frame separado)
+        requestAnimationFrame(function () {
+            if (MS.sheetEl) MS.sheetEl.classList.add('sheet-open');
+        });
     }
 
     // ============================================
