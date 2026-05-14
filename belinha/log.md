@@ -2,6 +2,49 @@
 
 ---
 
+## Ciclo #214 — 2026-05-14
+
+**Área:** Conteúdo — Calendário editorial 14/05–02/06/2026 (janela de ponte pré-junina)
+
+**Contexto:** Prescrito no ciclo #213. Com os teasers juninos começando em 03/06 (`reels-teaser-junina-pre-lancamento-2026.md`), a janela de 20 dias entre hoje e a véspera dos teasers não tinha um plano editorial integrado e dia a dia. Os arquivos de semana 4, 5, 6 e 7 existiam mas de forma isolada — o operador precisava de um único documento acionável que respondesse "o que posto hoje?" sem revelar acidentalmente o Potinho Junino.
+
+**O que pesquisou/analisou:**
+- Leu `reels-teaser-junina-pre-lancamento-2026.md`: teasers começam 03/06 — confirmou janela exata
+- Leu `instagram-tiktok-junina-2026.md`: POST 1 é em 12/06 (POST 1 teaser com ovelhinha de chapéu) — confirmou que qualquer menção junina antes de 03/06 queima o reveal
+- Leu `pos-inauguracao-semana4.md` (10–16/05): açaí self-service + fidelidade
+- Leu `pos-inauguracao-semana5.md` (17–23/05): "quase 1 mês", reviews Google, UGC seed
+- Leu `pos-inauguracao-semana6.md` (24–30/05): 1 mês exato 25/05 + Desafio UGC #PotinhoMaisFeliz
+- Leu `pos-inauguracao-semana7.md` (31/05–06/06): vencedores do desafio + virada de junho
+- Identificou 4 blocos temáticos e o risco de "contaminação junina" na virada de junho
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/calendario-editorial-14mai-02jun-2026.md` | CRIADO — 439 linhas: 4 blocos temáticos, calendário dia a dia com formato/horário, briefs expandidos para cada post-chave, tabela "Regras de ouro" (o que NÃO dizer para proteger o reveal junino), agenda WA broadcasts (4 disparos), tabela de KPIs, checklist do operador, mapa de integração com arquivos existentes |
+
+**Destaques do calendário:**
+1. **Bloco 1 (14–16/05):** stories açaí self-service + fidelidade — diferenciais concretos do Muffato
+2. **Bloco 2 (17–23/05):** "Quase 1 mês", reviews Google, reel educativo Ninho vs Açaí, topping da semana, Linha Fit
+3. **Bloco 3 (24–30/05):** teaser desafio (24/05) → lançamento + WA broadcast (25/05 1 mês exato) → urgência (29/05) → encerramento (30/05)
+4. **Bloco 4 (31/05–02/06):** anúncio vencedores + virada "Junho com surpresas" com nota crítica anti-spoiler junino
+5. **Regras de ouro:** tabela explícita do que NÃO usar antes de 03/06 (bandeirinhas, chapéu de palha, paçoca, forró, São João)
+
+**Commit:** `0d5a5e3`
+
+**Próximo passo sugerido:**
+- **Ciclo #215 — SEO:** Adicionar evento LocalBusiness "Férias da Ovelhinha" no schema.org de `index.html` (prescrito nos ciclos #211 e #212 — campo mapeado mas vazio; requer `validFrom`/`validThrough` julho 2026)
+- **Ciclo #216 — Concorrentes:** Green Açaí (última atualização ciclo #84 — 130 ciclos atrasado, violando v21d). Verificar @greenlondrina campanhas São João 2026
+- **Ciclo #217 — Conversão:** Marco 6 meses de loja 25/10/2026 — playbook comemorativo com 5 meses de antecedência
+- **Ciclo #218 — UX:** `cardapio.css` (21K) é orphaned — nunca carregado. Avaliar: deletar ou incorporar ao `style.css`
+- **Operador (URGENTE — 16 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — sem isso, teasers de 03/06 não podem ser executados
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+- **Operador:** Monitorar hashtag #PotinhoMaisFeliz a partir de 25/05 e salvar posts participantes
+
+_Belinha — Ciclo #214 | 2026-05-14_
+
+---
+
 ## Ciclo #213 — 2026-05-14
 
 **Área:** Concorrentes — Intel São João 2026: The Best Açaí + MilkyMoo
