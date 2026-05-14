@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #212 — 2026-05-14
+
+**Área:** Conversão — Overlay família em férias para contracampanha Dia da Vaca 08/07/2026
+
+**Contexto:** Prescrito no ciclo #211. O `quarta-feliz-dia-da-vaca.md` (ciclo #197) tinha toda a mecânica de contracampanha individual (ovelhinha confusa vs vaca, Quarta Feliz, WA broadcast), mas não contemplava o contexto de **família em férias escolares** — o Paraná entra em férias em 07/07, e o dia seguinte (08/07 = Dia da Vaca da MilkyMoo) cai exatamente no 2º dia de férias. O público do Muffato nessa data é radicalmente diferente: famílias completas, crianças junto, ticket duplo (adulto + criança).
+
+**O que pesquisou/analisou:**
+- Releu `quarta-feliz-dia-da-vaca.md` (273 linhas): confirmou foco individual — nenhuma menção a crianças, família, passeio de férias
+- Releu `ferias-da-ovelhinha-julho-2026.md`: campanha-mãe julho referenciava `quarta-feliz-dia-da-vaca.md` como relacionado, mas sem conteúdo de integração
+- Mapeou assimetria competitiva: MilkyMoo "Cow Era" = app + produto único + individual; MilkyPot Muffato = dois produtos simultâneos (potinho adulto + sorvete/açaí criança) + espaço físico + zero atrito WA
+- Identificou janela crítica de oportunidade: 08–15/07 = primeiras 2 semanas de férias com pico de entusiasmo familiar
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/overlay-08jul-familia-ferias.md` | CRIADO — 298 linhas; overlay complementar ao brief original com: tabela de assimetria competitiva MilkyMoo vs MilkyPot família, caption feed versão família, 3 stories família (14h/15h30/17h), WA broadcast família 13h30, mecânica "Cartão de Férias Família" (+3 carimbos bônus por grupo, sem custo), calendário de execução integrado 10h–21h com referências cruzadas, checklist de produção e KPIs família |
+
+**Destaques estratégicos:**
+1. **Mudança de eixo:** Não competir em preço (R$9,90 Pintadinha app), mas em experiência — família vs individual
+2. **Dois produtos simultâneos:** adulto monta potinho, criança escolhe sorvete → ticket médio meta ≥R$38 (vs R$28 normal)
+3. **Cartão de Férias Família:** mecânica verbal de +3 carimbos bônus por pessoa do grupo — zero custo, alta percepção de valor
+4. **Stories família 14h–17h:** horário de chegada de famílias no Muffato (complementa stories awareness 10h do brief original)
+5. **Janela 08–15/07:** primeiras 2 semanas de férias têm maior entusiasmo familiar; concentrar esforço nesse período
+
+**Commit:** `dc9e653`
+
+**Próximo passo sugerido:**
+- **Ciclo #213 — Concorrentes:** Refetch TheBest + Jhoy (últimas atualizações antigas — verificar posicionamento julho/agosto 2026)
+- **Ciclo #214 — SEO:** Adicionar evento `LocalBusiness` para "Férias da Ovelhinha" no schema.org de `index.html` — campo mapeado mas vazio
+- **Ciclo #215 — Conteúdo:** Brief pós-09/08 (segunda quinzena agosto) — transição para inverno de saída / teaser setembro
+- **Ciclo #216 — Conversão:** Revisar `whatsapp-reativacao-d90-onda1-jul26.md` para adicionar framing família (Onda 1 reativação vence em julho, coincide com férias)
+- **Operador (URGENTE):** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+- **Operador:** Confirmar horário agosto — mesmo (14h–23h) ou diferente?
+- **Operador:** Confirmar naming final + ingredientes Potinho Junino até 30/05 ⚠️
+- **Operador:** Definir "surpresa da Quarta Feliz" até Seg 06/07 para execução em 08/07
+
+_Belinha — Ciclo #212 | 2026-05-14_
+
+---
+
 ## Ciclo #211 — 2026-05-14
 
 **Área:** UX/Frontend — Banner `#inaugBanner` fase agosto / Dia dos Pais 09/08/2026
