@@ -709,14 +709,31 @@ const DataStore = {
         if (!this._ready || !this._db) return;
         try {
             // catalog_config listener (background)
+            // ANTI-FLICKER (v234): payload stale do polling/fallback (poucos sabores)
+            // não sobrescreve catalog completo do Firestore. Evita re-render dos tabs
+            // a cada 10s que apagavam .active do clique do user.
             if (!this._catalogListenerAttached) {
                 this._catalogListenerAttached = true;
                 this._db.collection('datastore').doc('catalog_config').onSnapshot(doc => {
                     if (doc.exists) {
-                        const newData = JSON.parse(doc.data().value);
-                        localStorage.setItem(this.PREFIX + 'catalog_config', doc.data().value);
-                        console.log('🔄 Catálogo atualizado via Firebase (Background)');
-                        window.dispatchEvent(new CustomEvent('mp_catalog_updated', { detail: newData }));
+                        try {
+                            const newData = JSON.parse(doc.data().value);
+                            const incomingSabKeys = Object.keys((newData && newData.sabores) || {}).length;
+                            const currentRaw = localStorage.getItem(this.PREFIX + 'catalog_config');
+                            const currentSabKeys = currentRaw
+                                ? Object.keys((JSON.parse(currentRaw) || {}).sabores || {}).length
+                                : 0;
+                            // Skip stale: incoming menor que current (provável race com cache antigo)
+                            if (currentSabKeys > 0 && incomingSabKeys < currentSabKeys) {
+                                console.log('⏭ DataStore: skip catalog_config stale (', incomingSabKeys, '<', currentSabKeys, ')');
+                                return;
+                            }
+                            localStorage.setItem(this.PREFIX + 'catalog_config', doc.data().value);
+                            console.log('🔄 Catálogo atualizado via Firebase (Background)');
+                            window.dispatchEvent(new CustomEvent('mp_catalog_updated', { detail: newData }));
+                        } catch(e) {
+                            console.warn('catalog_config onSnapshot parse err:', e.message);
+                        }
                     }
                 }, err => {
                     console.warn('catalog_config listener ignorado:', err.code || err.message);

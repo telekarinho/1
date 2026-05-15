@@ -39,6 +39,21 @@ try {
 
 function saveCart() {
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    // CART PERSISTENCE (v234): se logado no MilkyClube, espelha no Firestore
+    // pra recuperar carrinho após reload/troca de device. Funciona em background
+    // sem bloquear UI. Falha silenciosa (LocalStorage segue como fonte primária).
+    try {
+        if (typeof firebase !== 'undefined' && firebase.firestore && firebase.auth) {
+            var u = firebase.auth().currentUser;
+            if (u && u.uid && cart.length > 0) {
+                firebase.firestore().collection('user_carts').doc(u.uid).set({
+                    items: cart,
+                    updatedAt: new Date().toISOString(),
+                    franchiseId: (window.MILKYPOT_STORES && window.MILKYPOT_STORES[0]) ? window.MILKYPOT_STORES[0].id : null
+                }, { merge: true }).catch(function(){});
+            }
+        }
+    } catch(_) {}
 }
 
 function reloadCart() {
@@ -51,6 +66,32 @@ function reloadCart() {
         localStorage.removeItem(CART_KEY);
     }
 }
+
+// CART PERSISTENCE (v234): recupera carrinho do Firestore se localStorage tá vazio
+// e user logado. Chama ao boot da página de cardápio/checkout.
+window.recoverCartFromCloud = async function recoverCartFromCloud() {
+    try {
+        if (cart && cart.length > 0) return false; // já tem itens, não sobrescreve
+        if (typeof firebase === 'undefined' || !firebase.auth || !firebase.firestore) return false;
+        var u = firebase.auth().currentUser;
+        if (!u || !u.uid) return false;
+        var doc = await firebase.firestore().collection('user_carts').doc(u.uid).get();
+        if (!doc.exists) return false;
+        var data = doc.data() || {};
+        // Só recupera se atualizado nas últimas 48h (evita carrinhos zumbi)
+        var updatedAt = new Date(data.updatedAt || 0);
+        if (Date.now() - updatedAt.getTime() > 48 * 3600 * 1000) return false;
+        if (!Array.isArray(data.items) || !data.items.length) return false;
+        cart = data.items;
+        saveCart();
+        if (typeof updateCartUI === 'function') updateCartUI();
+        console.log('🛒 Carrinho recuperado do cloud:', cart.length, 'itens');
+        return true;
+    } catch(e) {
+        console.warn('recoverCartFromCloud err:', e.message);
+        return false;
+    }
+};
 
 // ============================================
 // PRICE HELPERS

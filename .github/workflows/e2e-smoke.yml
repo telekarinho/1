@@ -1,0 +1,38 @@
+name: E2E Smoke Tests
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm i -D @playwright/test
+          npx playwright install --with-deps chromium
+
+      - name: Run smoke tests
+        env:
+          E2E_BASE_URL: https://milkypot.com
+        run: npx playwright test --config tests/e2e/playwright.config.js
+
+      - name: Upload trace on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-trace
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 5
