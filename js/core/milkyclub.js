@@ -368,18 +368,34 @@
                     isNewMember = !doc.exists;
                     // Cria member inicial se for novo (com nome/email/foto do Google)
                     if (isNewMember) {
+                        // WELCOME BONUS (v234): 50 MilkyCoins de boas-vindas pra
+                        // converter cadastro Google em valor imediato. Aumenta retenção.
+                        var WELCOME_BONUS = 50;
                         var memberData = {
                             uid: user.uid,
                             email: user.email || null,
                             name: user.displayName || (user.email||'').split('@')[0] || 'MilkyFã',
                             photoURL: user.photoURL || null,
-                            coins: 0,
+                            coins: WELCOME_BONUS,
                             tier: 'leite',
                             authProvider: 'google',
+                            welcomeBonusGiven: true,
+                            welcomeBonusAt: new Date().toISOString(),
                             createdAt: new Date().toISOString(),
                             createdVia: 'google-signin'
                         };
                         await state.firestore.collection('club_members').doc(user.uid).set(memberData, { merge: true });
+                        // Log do bonus em coin_transactions pra auditoria
+                        try {
+                            await state.firestore.collection('coin_transactions').add({
+                                memberId: user.uid,
+                                type: 'welcome-bonus',
+                                amount: WELCOME_BONUS,
+                                source: 'google-signin',
+                                createdAt: new Date().toISOString(),
+                                balanceAfter: WELCOME_BONUS
+                            });
+                        } catch(_) {}
                     }
                 } catch(e) {
                     warn('signInWithGoogle: member create/check failed', e && e.message);
