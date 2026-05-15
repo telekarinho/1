@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'mp-v234';
+const CACHE_VERSION = 'mp-v235';
 const CACHE_NAME = 'milkypot-v234';
 
 // VAPID public key — Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
