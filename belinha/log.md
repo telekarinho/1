@@ -8819,3 +8819,55 @@ _Belinha — Ciclo #224 | 2026-05-15_
 _Belinha — Ciclo #225 | 2026-05-15_
 
 ---
+
+---
+
+## Ciclo #228 — 2026-05-15
+
+**Área:** Conteúdo — Integração Versão A no `whatsapp-namorados-2026.md`
+
+**Contexto:** Prescrito em 3 ciclos consecutivos (#225, #226, #227) sem execução. O brief operacional do ciclo #224 (`duo-milkypot-brief-operacional.md`) definiu Versão A ("2 potinhos = 1 topping extra") como mecânica padrão do Duo MilkyPot para 12/06, mas o arquivo `whatsapp-namorados-2026.md` (criado no ciclo #164) continuava com linguagem condicional em 4 pontos: resumo executivo ("operador decide"), auto-resposta NAMORADOS26 (sem menção ao topping), N1 broadcast (sem o bônus), e N4-DUO (instrução `[SE VERSÃO A CONFIRMADA — incluir:]` como placeholder).
+
+**O que pesquisou/analisou:**
+- Releu `whatsapp-namorados-2026.md` integralmente (316 linhas): identificou 6 pontos com linguagem condicional/desatualizada referentes à Versão A
+- Releu trecho específico de `duo-milkypot-brief-operacional.md` (ciclo #224), seções "ATUALIZAÇÃO AUTOMAÇÃO WA" e "ATUALIZAÇÃO BROADCAST N1": extraiu os dois trechos literais prescritos para inserção
+- Cruzou com `copy-final-namorados-2026.md` (ciclo #225): confirmou que captions de feed já usam a mecânica Versão A — WA era o único canal sem integração
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-namorados-2026.md` | 7 edições pontuais conforme abaixo |
+
+**Detalhes das 7 edições:**
+
+1. **Header:** Nota de atualização "Ciclo #228 (2026-05-15)" adicionada
+2. **Resumo executivo — Mecânica do dia:** Bloco "operador decide até 05/06 (A/B/C)" → "✅ VERSÃO A CONFIRMADA (Ciclo #224)" com link para o brief e nota de troca rápida
+3. **AUTO-RESPOSTA NAMORADOS26:** Inserido após "(Responde 'SIM' aqui se quiser)" o trecho literal do brief: "E tem um presentinho da ovelhinha: pedir 2 potinhos juntos no Dia dos Namorados / ganha 1 topping extra de graça em qualquer um! 🍓✨"
+4. **N1 broadcast:** Inserido após "🍨 Monte outro com os SABORES FAVORITOS DELE" o bônus: "🍓 Bônus: peça 2 potinhos e ganhe 1 topping extra de graça / (só no Dia dos Namorados, 12/06!)"
+5. **N4-DUO:** Removido `[SE VERSÃO A CONFIRMADA — incluir:]` — linha de topping extra agora é permanente/incondicional; nota descritiva atualizada de "(se Versão A foi confirmada)" para "(Versão A confirmada — Ciclo #224)"
+6. **Checklist operacional (05/06):** "Decidir Versão A, B ou C" → "~~Decidir Versão A, B ou C~~ · Versão A confirmada — comunicar equipe até 11/06 | ✅"
+7. **Pendências do operador:** Linha Versão A marcada como ✅ concluída com referência ao brief
+
+**Estado pós-ciclo #228 — canais sincronizados com Versão A:**
+| Canal | Versão A integrada? |
+|-------|---------------------|
+| `duo-milkypot-brief-operacional.md` | ✅ (definida no ciclo #224) |
+| `copy-final-namorados-2026.md` | ✅ (captions IG/TikTok/Reel — ciclo #225) |
+| `dia-dos-namorados-2026-playbook.md` | ✅ (fonte original da mecânica) |
+| `whatsapp-namorados-2026.md` | ✅ (agora — ciclo #228) |
+
+**Commit:** `7b7b820`
+
+**Próximo passo sugerido:**
+- **Ciclo #229 — Concorrentes:** Pesquisar MilkyMoo status junho 2026 — última atualização é antiga (ciclo #227 sinalizou como pendente); verificar ações de Namorados e Festa Junina
+- **Ciclo #230 — UX:** Auditar `cardapio.html` para Festa Junina — verificar se produto "Potinho Junino" está listado ou se há placeholder; teaser começa 03/06 mas produto precisa aparecer (ou bloqueio claro) no cardápio antes disso
+- **Ciclo #231 — Conversão:** Mecânica "foto com potinho = reward" (resposta ao polaroid JAH) — proposta simples sem custo de produção, prescrita no ciclo #226
+- **Operador (URGENTE — 15 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador (URGENTE — 19 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+- **Operador:** Topping pistache disponível? Define estratégia junho inteira (alerta convergência ciclo #226)
+
+_Belinha — Ciclo #228 | 2026-05-15_
+
+---
