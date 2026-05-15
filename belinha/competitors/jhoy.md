@@ -310,6 +310,77 @@ _Belinha — Ciclo #222 | 2026-05-14_
 
 ---
 
+## ⚡ ATUALIZAÇÃO CICLO #226 — 2026-05-15
+
+### Namorados 2026 — Mecânica Caio Castro Confirmada + Mascote Jahckeline
+
+#### 1. Mecânica Caio Castro 2026 — Confirmada com Detalhes
+
+**Campanha ativa:** vigência até **09/06/2026** (sorteio encerra antes do evento)
+**Prêmio:** passeio de Porsche em Interlagos (11–12/06/2026) + translado + hospedagem + alimentação
+**Mecânica:**
+1. Seguir @jahdoacai + perfil da unidade preferida (Instagram)
+2. Curtir a foto oficial do sorteio
+3. Marcar parceiro(a) na publicação
+4. Compartilhar a foto nos stories marcando @jahdoacai e @caiocastro
+
+**Calendário definitivo Namorados 2026 JAH (atualizado):**
+
+| Ação | Data | Status |
+|---|---|---|
+| Sorteio Caio Castro (IG) | Até 09/06/2026 | **CONFIRMADO** |
+| Passeio Porsche Interlagos | 11–12/06/2026 | **CONFIRMADO** |
+| Lançamento Sorvete Pistache | 12/06/2026 | **CONFIRMADO** |
+| Pistache disponível | Até set/2026 | **CONFIRMADO** |
+
+> Fonte: abcdacomunicacao.com.br + mapadasfranquias.com.br + promoview.com.br
+
+---
+
+#### 2. Mascote Jahckeline — Casal de Mascotes para Namorados
+
+**Histórico confirmado (2023 → padrão para Namorados):**
+- JAH tem mascote fixo: **Jahckson** (leão)
+- Para Namorados: apresentam **Jahckeline** (leoa) como par romântico do Jahckson
+- **Mecânica de apresentação:** storytelling em que Jahckson encontra Jahckeline comprando em loja concorrente e a convida para conhecer o JAH
+- **Ativação física:** unidades participantes presenteiam casais com foto polaroid ao consumirem qualquer valor
+
+**Implicação crítica para MilkyPot — TERRENO DE MASCOTES:**
+- JAH joga no terreno de personagens/mascotes para Namorados: casal de leões Jahckson+Jahckeline
+- Coincide com o ativo mais forte da MilkyPot: a ovelhinha
+- **Diferenciador a explorar:** a ovelhinha MilkyPot É O PRODUTO — o nome do potinho, a personalização, o UGC "nosso potinho". Os mascotes JAH são corporativos (leões), distantes do produto.
+- **Resposta narrativa:** "O potinho dela tem o nome dela. O potinho dele tem o nome dele. Feitos um para o outro — como vocês." → intimidade real vs. mascote de marketing.
+
+#### 3. Atualização Calendário JAH Junho–Julho 2026
+
+| Data | Campanha | Mecânica |
+|---|---|---|
+| Até 09/06/2026 | Sorteio Caio Castro | Follow + curtir + marcar + story |
+| 11–12/06/2026 | Passeio Porsche Interlagos | Prêmio casal sortudo |
+| 12/06/2026 | Lançamento Sorvete Pistache | "Ouro verde" — Namorados |
+| Jun–Set/2026 | Pistache permanente | Cardápio inverno |
+| Julho/2026 | Cobertura passiva | Sem campanha específica São João |
+
+> **Janela MilkyPot São João:** JAH confirma que **não há campanha São João 2026** anunciada. Potinho Junino = campo aberto.
+
+#### 4. Convergência Pistache — Alerta Estratégico
+
+**NOVO (ciclo #226):** Tanto JAH (sorvete 12/06) quanto The Best Açaí ("Piscininha" creme pistache 06/06–06/07) entram em junho com pistache.
+
+| Concorrente | Produto Pistache | Data |
+|-------------|-----------------|------|
+| JAH do Açaí | Sorvete de Pistache (lançamento) | 12/06/2026 |
+| The Best Açaí | Creme "Piscininha" de Pistache | 06/06–06/07/2026 |
+| MilkyPot | Topping pistache? | A confirmar pelo operador |
+
+**Decisão necessária do operador:** O MilkyPot tem topping de pistache? Se sim → criar campanha "Potinho Pistachio" em junho (antes do JAH). Se não → posicionar ativamente como "sabores do Brasil de verdade" (paçoca, cocada, brigadeiro, doce de leite) vs. tendência pistache.
+
+**Fontes ciclo #226:** abcdacomunicacao.com.br, mapadasfranquias.com.br, promoview.com.br, jahdoacai.com.br, WebSearch 15/05/2026
+
+_Belinha — Ciclo #226 | 2026-05-15_
+
+---
+
 ## ⚡ VERIFICAÇÃO CICLO #160 — 2026-05-08
 
 **Pesquisa realizada:** WebSearch "Jhoy sobremesa franquia potinho açaí 2026" — zero resultados específicos para marca "Jhoy".

@@ -909,3 +909,75 @@ _Belinha — Ciclo #187 | 2026-05-10_
 **Fontes ciclo #213:** folhadecuritiba.com.br, abcdacomunicacao.com.br, thebestacai.com.br/blog, marramaque.jor.br, exame.com, WebSearch 14/05/2026
 
 _Belinha — Ciclo #213 | 2026-05-14_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #226 — 2026-05-15
+
+### Junho 2026 — Duas Campanhas Confirmadas + Aumento de Preço
+
+#### 1. "The Best Piscininha" — Produto Novo (06/06–06/07/2026)
+
+**O que é:** "Piscininha" = pote de creme servido em porção generosa (formato "piscina") como molho/fondue para dip ou para despejar sobre açaí, sorvete ou waffle.
+
+**3 sabores exclusivos e limitados:**
+| Sabor | Posicionamento |
+|-------|---------------|
+| Dulce de Leche (doce de leite) | Clássico brasileiro |
+| Creme de Pistache | Tendência 2026 — concorre com JAH pistache |
+| Chocolate ao Leite | Acessível/familiar |
+
+**Mecânica de uso:**
+- Dip de frutas e toppings no creme
+- Despejar sobre sorvete, açaí ou waffle
+- Conceito "fondue descomplicado" — experience instagramável
+- Mensagem: "Sair do óbvio" — campanha dirige tráfego fora do pico
+
+**Período:** 06/06/2026 a 06/07/2026 — cobre Namorados 12/06 + São João 24/06 + virada do mês
+
+**Insight estratégico MilkyPot:**
+- The Best e JAH vão usar **pistache** em junho (JAH sorvete 12/06 + The Best creme piscininha a partir de 06/06)
+- Convergência de tendência: pistache está dominando a comunicação dos dois maiores concorrentes de açaí/sorvete em junho
+- MilkyPot **resposta possível:** "Potinho Pistachio" como topping especial do mês de junho, OR ignorar a tendência e reforçar "sabores do Brasil de verdade" (paçoca, cocada, brigadeiro)
+- The Best Piscininha = produto de experiência/sharing → MilkyPot potinho já É experiência personalizada → diferenciador mantido
+
+#### 2. "The Best Waffle" — Retorno com Nova Versão
+
+- **Dois formatos:** waffle original inteiro + "waffle bites" (pedaços práticos)
+- Posicionamento: conveniência sem sacrificar sabor
+- Cobre o mesmo período de junho
+
+#### 3. Preço Atualizado — Junho 2026
+
+| Produto | Preço Ciclo #187 | Preço Ciclo #226 | Variação |
+|---------|-----------------|-----------------|----------|
+| Açaí/sorvete por 100g | R$ 6,29 | **R$ 6,49** | +R$0,20 (+3,2%) |
+| Pote 300g estimado | R$ 18,87 | **R$ 19,47** | +R$0,60 |
+| Pote 500g estimado | R$ 31,45 | **R$ 32,45** | +R$1,00 |
+
+> Reajuste confirmado entre mai/2026. Possível repassse de custo ou ajuste para compensar mix de sabores premium (pistache/waffle).
+
+#### 4. Tabela de Campanhas Junho 2026 — The Best Açaí
+
+| Campanha | Período | Produto | Foco |
+|----------|---------|---------|------|
+| The Best Piscininha | 06/06–06/07 | Creme dulce/pistache/choc | Namorados + São João |
+| The Best Waffle | Junho (provavelmente) | Waffle + waffle bites | Conveniência |
+
+#### 5. Implicações para MilkyPot — Junho 2026
+
+| Dimensão | The Best Açaí Junho | Posição MilkyPot |
+|----------|---------------------|-----------------|
+| Produto novo | Piscininha (3 cremes limitados) | Potinho Junino (confirmar até 30/05) |
+| Pistache | Creme de Pistache 06/06–06/07 | Topping disponível? → explorar ou ignorar tendência |
+| Instagramabilidade | Alta — piscininha é visual | Potinho c/ nome = UGC natural |
+| Formato | Self-service anônimo | Operador prepara c/ personalização |
+| Período | 30 dias (junho inteiro) | Campanhas pontuais (Namorados 12/06 + São João 24/06) |
+| Canal | iFood / Rappi | WhatsApp próprio |
+
+**Alerta de convergência pistache:**
+Tanto JAH (sorvete 12/06) quanto The Best (creme 06/06) entram em junho com pistache. O operador MilkyPot precisa decidir: surfar a tendência (se tiver topping) ou diferenciar ativamente com "sabores brasileiros genuínos" antes que a onda domine as redes.
+
+**Fontes ciclo #226:** abcdacomunicacao.com.br, patoshoje.com.br, thebestacai.com.br/blog, jornaldobras.com.br, brasiliaeomaximo.com.br, WebSearch 15/05/2026
+
+_Belinha — Ciclo #226 | 2026-05-15_
