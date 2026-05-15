@@ -537,15 +537,16 @@
             // Após 25/04 23:59 — fases pós-inauguração (Festa Junina 10/05→29/06 · Caramelado 01/07→31/07)
             if(y > 2026 || (y === 2026 && m > 4) || (y === 2026 && m === 4 && day > 25)){
                 // Dia dos Namorados 12/06 — prioridade sobre teaser Junina (11/06 véspera · 12/06 dia H)
-                var inNamorados = (y === 2026 && m === 6 && (day === 11 || day === 12));
-                if(inNamorados && !sessionStorage.getItem('namoradosBannerClosed')){
-                    if(day === 12){
-                        if(textEl) textEl.innerHTML = '💕 <strong>DIA DOS NAMORADOS HOJE!</strong> &nbsp;·&nbsp; Duo MilkyPot: dois potinhos do jeito que vocês amam · Delivery 15–40min 🐑';
-                        if(ctaEl){ ctaEl.textContent = 'Pedir Duo →'; ctaEl.href = 'https://wa.me/5543998042424?text=NAMORADOS26'; }
-                    } else {
-                        if(textEl) textEl.innerHTML = '💕 <strong>AMANHÃ: DIA DOS NAMORADOS</strong> &nbsp;·&nbsp; Duo MilkyPot · Dois potinhos, cada um do jeito que vocês amam · Mande <strong>NAMORADOS26</strong> e entre na lista VIP 🐑';
-                        if(ctaEl){ ctaEl.textContent = 'Lista VIP →'; ctaEl.href = 'https://wa.me/5543998042424?text=NAMORADOS26'; }
-                    }
+                // Chaves separadas por dia para não suprimir o Dia H se usuário fechou a véspera na mesma sessão
+                if(y === 2026 && m === 6 && day === 12 && !sessionStorage.getItem('namoradosDiahClosed')){
+                    if(textEl) textEl.innerHTML = '💕 <strong>DIA DOS NAMORADOS HOJE!</strong> &nbsp;·&nbsp; Duo MilkyPot: dois potinhos do jeito que vocês amam · Delivery 15–40min 🐑';
+                    if(ctaEl){ ctaEl.textContent = 'Pedir Duo →'; ctaEl.href = 'https://wa.me/5543998042424?text=NAMORADOS26'; }
+                    if(banner) banner.style.display = 'flex';
+                    return;
+                }
+                if(y === 2026 && m === 6 && day === 11 && !sessionStorage.getItem('namoradosVespraClosed')){
+                    if(textEl) textEl.innerHTML = '💕 <strong>AMANHÃ: DIA DOS NAMORADOS</strong> &nbsp;·&nbsp; Duo MilkyPot · Dois potinhos, cada um do jeito que vocês amam · Mande <strong>NAMORADOS26</strong> e entre na lista VIP 🐑';
+                    if(ctaEl){ ctaEl.textContent = 'Lista VIP →'; ctaEl.href = 'https://wa.me/5543998042424?text=NAMORADOS26'; }
                     if(banner) banner.style.display = 'flex';
                     return;
                 }
@@ -621,7 +622,8 @@
             if(y2 > 2026 || (y2 === 2026 && (m2 > 4 || (m2 === 4 && day2 > 25)))){
                 if(y2 === 2026 && m2 === 7){ sessionStorage.setItem('caramBannerClosed','1'); }
                 else if(y2 === 2026 && m2 === 8){ sessionStorage.setItem('paisBannerClosed','1'); }
-                else if(y2 === 2026 && m2 === 6 && (day2 === 11 || day2 === 12)){ sessionStorage.setItem('namoradosBannerClosed','1'); }
+                else if(y2 === 2026 && m2 === 6 && day2 === 12){ sessionStorage.setItem('namoradosDiahClosed','1'); }
+                else if(y2 === 2026 && m2 === 6 && day2 === 11){ sessionStorage.setItem('namoradosVespraClosed','1'); }
                 else { sessionStorage.setItem('juninaBannerClosed','1'); }
             }
             applyBannerOffset();
