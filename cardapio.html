@@ -730,24 +730,30 @@
                 const incoming = e && e.detail;
                 if (!incoming || (!incoming.sabores && !incoming.bebidas)) return;
 
+                // ANTI-FLICKER (v228): se incoming tem MENOS sabores que o catalog atual,
+                // é payload stale (polling/CARDAPIO_CONFIG fallback). Ignora pra não
+                // sobrescrever catalog completo + re-renderizar tabs (apagando .active
+                // que o user acabou de clicar). Mantém UI estável a cada 10s do polling.
+                const currentSabKeysLen = (catalog && catalog.sabores) ? Object.keys(catalog.sabores).length : 0;
+                const incomingSabKeysLen = Object.keys(incoming.sabores || {}).length;
+                if (currentSabKeysLen > 0 && incomingSabKeysLen < currentSabKeysLen) {
+                    return; // skip stale payload — protege click do user
+                }
+
                 // Detecta se Monte do Seu APARECEU agora (sync trouxe categoria nova)
                 // pra fazer auto-switch da aba quando user ainda não clicou em nada
                 const hadMonteSeu = !!(catalog && catalog.sabores && catalog.sabores.monte_seu && catalog.sabores.monte_seu.items && catalog.sabores.monte_seu.items.length);
                 const hasMonteSeu = !!(incoming.sabores && incoming.sabores.monte_seu && incoming.sabores.monte_seu.items && incoming.sabores.monte_seu.items.length);
                 const monteSeuJustAppeared = !hadMonteSeu && hasMonteSeu;
 
-                catalog = incoming;
-                _renderCatalogTabs();
-                const activeTab = document.querySelector('.cat-tab.active');
-                let cat = activeTab ? activeTab.dataset.category : 'ninho';
+                // Preserva tab ativa atual ANTES do re-render
+                const activeTabBefore = document.querySelector('.cat-tab.active');
+                const preserveCat = activeTabBefore ? activeTabBefore.dataset.category : null;
 
-                // Auto-switch pra 🎨 Monte o Seu se acabou de aparecer e user não tinha clicado em outra aba
-                if (monteSeuJustAppeared && !window._userClickedTab) {
-                    cat = 'monteseu';
-                    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
-                    const newActive = document.querySelector('.cat-tab[data-category="monteseu"]');
-                    if (newActive) newActive.classList.add('active');
-                }
+                catalog = incoming;
+                _renderCatalogTabs(monteSeuJustAppeared && !window._userClickedTab ? 'monteseu' : preserveCat);
+
+                const cat = (monteSeuJustAppeared && !window._userClickedTab) ? 'monteseu' : (preserveCat || 'ninho');
                 renderProducts(cat);
             });
 

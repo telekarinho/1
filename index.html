@@ -1454,22 +1454,30 @@
                 var incoming = e && e.detail;
                 if (!incoming || (!incoming.sabores && !incoming.bebidas)) return;
 
+                // ANTI-FLICKER (v228): se incoming tem MENOS sabores que o catalog atual,
+                // é payload stale (polling/CARDAPIO_CONFIG fallback). Ignora pra não
+                // sobrescrever catalog completo + re-renderizar tabs (apagando .active
+                // que o user acabou de clicar). Mantém UI estável.
+                var currentSabKeysLen = (catalog && catalog.sabores) ? Object.keys(catalog.sabores).length : 0;
+                var incomingSabKeysLen = Object.keys(incoming.sabores || {}).length;
+                if (currentSabKeysLen > 0 && incomingSabKeysLen < currentSabKeysLen) {
+                    return; // skip stale payload
+                }
+
                 // Auto-switch pra 🎨 Monte o Seu se acabou de aparecer e user não tinha clicado
                 var hadMonteSeu = !!(catalog && catalog.sabores && catalog.sabores.monte_seu && catalog.sabores.monte_seu.items && catalog.sabores.monte_seu.items.length);
                 var hasMonteSeu = !!(incoming.sabores && incoming.sabores.monte_seu && incoming.sabores.monte_seu.items && incoming.sabores.monte_seu.items.length);
                 var monteSeuJustAppeared = !hadMonteSeu && hasMonteSeu;
 
-                catalog = incoming;
-                _renderCatalogTabs();
-                var activeTab = document.querySelector('.cat-tab.active');
-                var cat = activeTab ? activeTab.dataset.category : 'ninho';
+                // Preserva tab ativa atual ANTES do re-render
+                var activeTabBefore = document.querySelector('.cat-tab.active');
+                var preserveCat = activeTabBefore ? activeTabBefore.dataset.category : null;
 
-                if (monteSeuJustAppeared && !window._userClickedTab) {
-                    cat = 'monteseu';
-                    document.querySelectorAll('.cat-tab').forEach(function(t){ t.classList.remove('active'); });
-                    var newActive = document.querySelector('.cat-tab[data-category="monteseu"]');
-                    if (newActive) newActive.classList.add('active');
-                }
+                catalog = incoming;
+                // Passa a tab ativa preservada pro re-render manter o estado visual
+                _renderCatalogTabs(monteSeuJustAppeared && !window._userClickedTab ? 'monteseu' : preserveCat);
+
+                var cat = (monteSeuJustAppeared && !window._userClickedTab) ? 'monteseu' : (preserveCat || 'ninho');
                 renderProducts(cat);
             });
 
