@@ -31,6 +31,7 @@ h1{font-family:'Baloo 2',cursive;font-size:1.8rem;line-height:1.1;margin-bottom:
 .foot a{color:#42A5F5;font-weight:700}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid #1d4ed8;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
 </style>
 </head>
 <body>
@@ -93,6 +94,10 @@ h1{font-family:'Baloo 2',cursive;font-size:1.8rem;line-height:1.1;margin-bottom:
     // Marca quando user clicou no botão de Avaliar (pra calcular tempo até voltar)
     btnReview.addEventListener('click', function() {
         try { sessionStorage.setItem('mp_review_started_at', Date.now()); } catch(_) {}
+        // Highlight botão "Já avaliei" — visual indica próximo passo
+        btnAlready.style.animation = 'pulse 1.5s infinite';
+        btnAlready.style.boxShadow = '0 0 0 4px rgba(66,165,245,.2)';
+        document.getElementById('s1').classList.add('done');
     });
 
     // Quando volta do Google, esperamos pelo menos 30s desde o clique
@@ -102,6 +107,20 @@ h1{font-family:'Baloo 2',cursive;font-size:1.8rem;line-height:1.1;margin-bottom:
             return t ? (Date.now() - t) : 0;
         } catch(_) { return 0; }
     }
+
+    // FIX (v229): se usuário VOLTOU pra essa página (visibilitychange) após clicar
+    // em "Avaliar", destaca botão "Já avaliei" e auto-scroll pra ele
+    document.addEventListener('visibilitychange', function(){
+        if (!document.hidden && timeSinceReviewStart() > 5000) {
+            // Voltou pra essa tab após 5+ segundos no Google → assume avaliou
+            document.getElementById('s1').classList.add('done');
+            btnAlready.style.animation = 'pulse 1.5s infinite';
+            btnAlready.style.boxShadow = '0 0 0 6px rgba(66,165,245,.25)';
+            btnAlready.textContent = '✓ Já avaliei — confirmar agora';
+            btnAlready.scrollIntoView({behavior:'smooth', block:'center'});
+            setBanner('👋 Bem-vindo de volta! Clique em "Já avaliei" pra liberar sua raspinha PREMIUM.', 'info');
+        }
+    });
 
     btnAlready.addEventListener('click', async function() {
         clearBanner();
