@@ -8689,3 +8689,44 @@ _Belinha — Ciclo #218 | 2026-05-14_
 _Belinha — Ciclo #224 | 2026-05-15_
 
 ---
+
+---
+
+## Ciclo #225 — 2026-05-15
+
+**Área:** Conteúdo — copy final Dia dos Namorados 2026 (IG + TikTok + Reel)
+
+**Contexto:** Prescrito no ciclo #224. O playbook `dia-dos-namorados-2026-playbook.md` tinha captions embutidas em documento longo, sem integração da mecânica Versão A ("2 potinhos = 1 topping extra") definida no brief operacional do ciclo #224. Com 28 dias para o evento, o operador precisa de copy que possa copiar e colar sem edição.
+
+**O que pesquisou/analisou:**
+- Releu `dia-dos-namorados-2026-playbook.md`: captions existentes em Post 1 e Post 2 sem menção ao topping extra (Versão A)
+- Releu `duo-milkypot-brief-operacional.md` (ciclo #224): mecânica Versão A definida mas sem atualização do copy de feed
+- Identificou gap: nenhum arquivo standalone com captions finalizadas em formato "copiar e postar" — o operador teria que concatenar informações de dois documentos
+- Confirmou que TikTok precisa de variação distinta (mais curto, hook imediato, menos emojis narrativos)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/copy-final-namorados-2026.md` | CRIADO — 180 linhas: copy pronto para Post 1 (véspera Qui 11/06) em IG e TikTok, Post 2 (Dia H Sex 12/06) em IG e TikTok, Reel 15s roteiro + caption, checklist de publicação com horários, nota de integração com demais arquivos |
+
+**Destaques:**
+1. **Mecânica Versão A integrada ao copy:** Todas as captions mencionam "2 potinhos = 1 topping extra de graça" — eliminando o gap entre brief operacional e copy de feed
+2. **Duas vozes distintas por plataforma:** IG tem narrativa emocional ("primeiro Dia dos Namorados em Londrina", "o melhor presente é o que mostra que você presta atenção"); TikTok tem hook direto ("não dá pra errar o presente amanhã") e copy curto
+3. **Reel roteiro atualizado:** Slide [8s–13s] agora inclui a mecânica do topping extra — ausente no roteiro original do playbook
+4. **Zero edição necessária:** Campos abertos ("NOME", versões incompletas) eliminados — tudo pronto para copiar
+
+**Commit:** `2aeb788`
+
+**Próximo passo sugerido:**
+- **Ciclo #226 — Concorrentes:** Refetch TheBest + MilkyMoo status junho (última atualização antiga — verificar ações de Namorados e Festa Junina)
+- **Ciclo #227 — UX:** Verificar overlap/consistência banner Namorados vs. banner Festa Junina no `index.html` (ciclo #220 adicionou banner Namorados, ciclo anterior adicionou banner Junina — verificar se há conflito visual ou de texto)
+- **Ciclo #228 — Conteúdo:** Atualizar `whatsapp-namorados-2026.md` com trecho da Versão A no template N1 (conforme instrução do brief operacional do ciclo #224 — ainda não executado)
+- **Operador (URGENTE — 15 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador (URGENTE — 19 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Confirmar Versão A ou escolher B/C até **05/06** — guia de troca rápida em `duo-milkypot-brief-operacional.md`
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #225 | 2026-05-15_
+
+---
