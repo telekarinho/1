@@ -83,6 +83,7 @@ h1{font-family:'Baloo 2',cursive;font-size:1.8rem;line-height:1.1;margin-bottom:
     const params = new URLSearchParams(location.search);
     const FRANCHISE = params.get('fid') || 'muffato-quintino';
     const fromScratchCode = params.get('scratch') || null;
+    const autoClaim = params.get('autoclaim') === '1';
 
     function setBanner(msg, type) {
         banner.textContent = msg;
@@ -142,10 +143,14 @@ h1{font-family:'Baloo 2',cursive;font-size:1.8rem;line-height:1.1;margin-bottom:
         } catch(e) {}
 
         if (!member || !(member.uid || member.id)) {
-            setBanner('Você precisa estar logado no MilkyClube para resgatar a recompensa. Redirecionando...', 'info');
+            setBanner('Você precisa estar logado no MilkyClube para resgatar. Redirecionando pro login...', 'info');
             setTimeout(function() {
-                location.href = '/clube/?next=' + encodeURIComponent(location.href);
-            }, 2000);
+                // FIX (v232): redirect direto pro app /clube.html (não /clube/ landing)
+                // E retorno automático: ?autoclaim=1 dispara btnAlready.click() ao voltar
+                var returnUrl = new URL(location.href);
+                returnUrl.searchParams.set('autoclaim', '1');
+                location.href = '/clube.html?login=1&next=' + encodeURIComponent(returnUrl.toString());
+            }, 1800);
             return;
         }
 
@@ -199,6 +204,27 @@ h1{font-family:'Baloo 2',cursive;font-size:1.8rem;line-height:1.1;margin-bottom:
             btnAlready.textContent = 'Já avaliei — confirmar';
         }
     });
+
+    // FIX (v232): se ?autoclaim=1 (voltando do login do MilkyClube), aguarda
+    // MilkyClube carregar e auto-dispara o claim — user não precisa clicar de novo.
+    if (autoClaim) {
+        setBanner('🔄 Continuando seu resgate... aguarda um segundo.', 'info');
+        (async function tryAutoClaim() {
+            for (let i = 0; i < 30; i++) { // até 6 segundos
+                if (typeof MilkyClube !== 'undefined' && MilkyClube.getCurrentMember) {
+                    try { await MilkyClube.init().catch(()=>{}); } catch(_){}
+                    const m = MilkyClube.getCurrentMember && MilkyClube.getCurrentMember();
+                    if (m && (m.uid || m.id)) {
+                        // Logado! dispara click programaticamente
+                        btnAlready.click();
+                        return;
+                    }
+                }
+                await new Promise(r => setTimeout(r, 200));
+            }
+            setBanner('⚠️ Não foi possível auto-validar. Clique manualmente em "Já avaliei" abaixo.', 'err');
+        })();
+    }
 })();
 </script>
 </body>

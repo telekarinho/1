@@ -1097,6 +1097,23 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
         $('#mc-nav').classList.toggle('show', loggedIn);
         $('#mc-wa-fab').style.display = loggedIn ? '' : 'none';
 
+        // FIX (v232): após login bem-sucedido, se houver ?next= na URL,
+        // redireciona pra lá (ex: voltar pra /clube/avaliei.html com autoclaim=1)
+        if (loggedIn) {
+            try {
+                var nextUrl = new URLSearchParams(location.search).get('next');
+                if (nextUrl && !window._nextRedirected) {
+                    window._nextRedirected = true; // evita loop
+                    var safe = decodeURIComponent(nextUrl);
+                    // Só permite same-origin pra segurança
+                    if (safe.startsWith('/') || safe.startsWith(location.origin)) {
+                        setTimeout(function(){ location.href = safe; }, 600);
+                        return;
+                    }
+                }
+            } catch(_) {}
+        }
+
         if (!loggedIn) return;
 
         // Header / saudação
