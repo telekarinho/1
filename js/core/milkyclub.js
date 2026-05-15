@@ -326,6 +326,69 @@
         },
 
         /**
+         * Login via Google (popup). Usado especialmente no fluxo de avaliação
+         * Google — user já tem conta Google, evita digitar email + esperar link.
+         * Após sign-in, cria/atualiza o member em club_members.
+         *
+         * @returns {Promise<{ user, isNewMember: boolean }>}
+         */
+        async signInWithGoogle() {
+            await this.init();
+            if (!state.auth || !window.firebase || !firebase.auth || !firebase.auth.GoogleAuthProvider) {
+                throw new Error('Firebase Auth não carregado.');
+            }
+            var provider = new firebase.auth.GoogleAuthProvider();
+            // Pede só o profile/email (não pede scope extra desnecessário)
+            provider.addScope('profile');
+            provider.addScope('email');
+            provider.setCustomParameters({ prompt: 'select_account' });
+
+            var result;
+            try {
+                result = await state.auth.signInWithPopup(provider);
+            } catch (err) {
+                // Fallback: alguns mobile/iOS bloqueiam popup → tenta redirect
+                if (err && (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user')) {
+                    try {
+                        await state.auth.signInWithRedirect(provider);
+                        return { user: null, isNewMember: false, redirected: true };
+                    } catch(e2) {
+                        throw new Error(translateAuthError(e2) || 'Não foi possível abrir login Google.');
+                    }
+                }
+                throw new Error(translateAuthError(err) || 'Erro no login Google.');
+            }
+            var user = result && result.user;
+            state.currentUser = user;
+
+            var isNewMember = true;
+            if (state.firestore && user) {
+                try {
+                    var doc = await state.firestore.collection('club_members').doc(user.uid).get();
+                    isNewMember = !doc.exists;
+                    // Cria member inicial se for novo (com nome/email/foto do Google)
+                    if (isNewMember) {
+                        var memberData = {
+                            uid: user.uid,
+                            email: user.email || null,
+                            name: user.displayName || (user.email||'').split('@')[0] || 'MilkyFã',
+                            photoURL: user.photoURL || null,
+                            coins: 0,
+                            tier: 'leite',
+                            authProvider: 'google',
+                            createdAt: new Date().toISOString(),
+                            createdVia: 'google-signin'
+                        };
+                        await state.firestore.collection('club_members').doc(user.uid).set(memberData, { merge: true });
+                    }
+                } catch(e) {
+                    warn('signInWithGoogle: member create/check failed', e && e.message);
+                }
+            }
+            return { user: user, isNewMember: isNewMember };
+        },
+
+        /**
          * Retorna true se a URL atual e um magic link valido do Firebase
          * (contem os parametros necessarios do sign-in).
          */

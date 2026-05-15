@@ -357,8 +357,25 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         var tipo = scratch.prizeTipo;
         document.getElementById('prizeEmoji').textContent = (tipo && TYPE_EMOJI[tipo]) || TIER_EMOJI[tier] || '🎁';
         document.getElementById('prizeName').textContent = scratch.prizeName;
-        document.getElementById('prizeDesc').textContent = clearPrizeDesc(scratch);
-        updateRedeemCodeCard(scratch, true);
+        // FIX (v230): clearPrizeDesc não existia → ReferenceError silencioso abortava
+        // showScratchStage antes de chamar tryInit → canvas nunca inicializava.
+        document.getElementById('prizeDesc').textContent = (scratch.prizeDesc || '').toString();
+        try {
+            if (typeof updateRedeemCodeCard === 'function') {
+                updateRedeemCodeCard(scratch, true);
+            } else {
+                // Fallback inline: preenche redeemShortCode + redeemCondition direto
+                var rsc = document.getElementById('redeemShortCode');
+                if (rsc) rsc.textContent = scratch.shortCode || scratch._inputCode || scratch.code || '---';
+                var rc = document.getElementById('redeemCondition');
+                if (rc) {
+                    var cond = '';
+                    if (scratch.minOrder) cond = 'Pedido mínimo R$ ' + scratch.minOrder;
+                    if (scratch.prizeScope === 'same') cond += (cond ? ' · ' : '') + 'Mesmo produto';
+                    rc.textContent = cond || (scratch.prizeDesc || '').slice(0, 60);
+                }
+            }
+        } catch(_) {}
 
         if(scratch.expiresAt){
             var exp = new Date(scratch.expiresAt);
@@ -375,28 +392,19 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
             document.getElementById('actionArea').style.display = 'block';
             document.getElementById('statusLabel').innerHTML = '<span class="status-chip">Raspada - aguardando resgate</span>';
         } else {
-            // FIX: initScratchCanvas precisa do wrap dimensionado pelo browser.
-            // Em fluxos rápidos (payload inline), scratchStage.classList.add('active')
-            // acontece e initScratchCanvas é chamado no mesmo tick — wrap ainda pode
-            // ter rect 0x0. Usa requestAnimationFrame pra garantir layout commit + retry
-            // se o wrap ainda não tiver dimensões (race com display:block).
-            var tryInit = function(attempts) {
-                var wrap = document.getElementById('scratchWrap');
-                var r = wrap && wrap.getBoundingClientRect();
-                if (r && r.width > 50 && r.height > 50) {
+            // FIX (v231): chamada DIRETA com setTimeout 150ms — abordagem simples e
+            // robusta que evita qualquer race condition de requestAnimationFrame
+            // ou layout pendente. Wrap já está visível com classList.active.
+            console.log('[Raspinha] Schedulando initScratchCanvas em 150ms');
+            setTimeout(function() {
+                try {
+                    console.log('[Raspinha] Chamando initScratchCanvas — wrap rect:', document.getElementById('scratchWrap').getBoundingClientRect());
                     initScratchCanvas(scratch);
-                } else if (attempts < 20) {
-                    requestAnimationFrame(function(){ tryInit(attempts + 1); });
-                } else {
-                    // Last resort: força wrap visible e tenta
-                    if (wrap) {
-                        wrap.style.minWidth = '300px';
-                        wrap.style.minHeight = '200px';
-                    }
-                    initScratchCanvas(scratch);
+                    console.log('[Raspinha] initScratchCanvas OK — canvas:', document.getElementById('scratchCanvas').width + 'x' + document.getElementById('scratchCanvas').height);
+                } catch(e) {
+                    console.error('[Raspinha] initScratchCanvas FALHOU:', e.message, e.stack);
                 }
-            };
-            requestAnimationFrame(function(){ tryInit(0); });
+            }, 150);
         }
     }
 

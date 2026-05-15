@@ -61,6 +61,11 @@ h1{font-family:'Baloo 2',cursive;font-size:1.8rem;line-height:1.1;margin-bottom:
         ⭐ Avaliar no Google agora
     </a>
 
+    <button class="btn-google" id="btnGoogleSignin" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;background:#fff;color:#1a2740;border:2px solid #DADCE0;font-family:'Nunito',sans-serif;font-weight:700;font-size:.98rem;border-radius:14px;cursor:pointer;margin-bottom:10px">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4c-7.8 0-14.5 4.5-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.6-5.2l-6.3-5.3c-2 1.5-4.5 2.5-7.3 2.5-5.2 0-9.7-3.3-11.3-8l-6.5 5C9.3 39.4 16.1 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.2 4.3-4.1 5.6l6.3 5.3C42.2 35.5 44 30 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+        Continuar com Google
+    </button>
+
     <button class="btn-secondary" id="btnAlready">Já avaliei — confirmar</button>
 
     <p class="foot">
@@ -80,9 +85,11 @@ h1{font-family:'Baloo 2',cursive;font-size:1.8rem;line-height:1.1;margin-bottom:
     const banner = document.getElementById('banner');
     const btnAlready = document.getElementById('btnAlready');
     const btnReview = document.getElementById('btnReview');
+    const btnGoogleSignin = document.getElementById('btnGoogleSignin');
     const params = new URLSearchParams(location.search);
     const FRANCHISE = params.get('fid') || 'muffato-quintino';
     const fromScratchCode = params.get('scratch') || null;
+    const autoClaim = params.get('autoclaim') === '1';
 
     function setBanner(msg, type) {
         banner.textContent = msg;
@@ -142,10 +149,14 @@ h1{font-family:'Baloo 2',cursive;font-size:1.8rem;line-height:1.1;margin-bottom:
         } catch(e) {}
 
         if (!member || !(member.uid || member.id)) {
-            setBanner('Você precisa estar logado no MilkyClube para resgatar a recompensa. Redirecionando...', 'info');
+            setBanner('Você precisa estar logado no MilkyClube para resgatar. Redirecionando pro login...', 'info');
             setTimeout(function() {
-                location.href = '/clube/?next=' + encodeURIComponent(location.href);
-            }, 2000);
+                // FIX (v232): redirect direto pro app /clube.html (não /clube/ landing)
+                // E retorno automático: ?autoclaim=1 dispara btnAlready.click() ao voltar
+                var returnUrl = new URL(location.href);
+                returnUrl.searchParams.set('autoclaim', '1');
+                location.href = '/clube.html?login=1&next=' + encodeURIComponent(returnUrl.toString());
+            }, 1800);
             return;
         }
 
@@ -199,6 +210,59 @@ h1{font-family:'Baloo 2',cursive;font-size:1.8rem;line-height:1.1;margin-bottom:
             btnAlready.textContent = 'Já avaliei — confirmar';
         }
     });
+
+    // FIX (v233): botão Continuar com Google — sign-in rápido (mesma conta
+    // que o user usa pra avaliar no Google). Após login, dispara o claim
+    // automaticamente sem precisar clicar em "Já avaliei" depois.
+    if (btnGoogleSignin) {
+        btnGoogleSignin.addEventListener('click', async function(){
+            clearBanner();
+            btnGoogleSignin.disabled = true;
+            const orig = btnGoogleSignin.innerHTML;
+            btnGoogleSignin.innerHTML = '<span class="spinner"></span> Abrindo Google...';
+            try {
+                if (typeof MilkyClube === 'undefined' || !MilkyClube.signInWithGoogle) {
+                    throw new Error('MilkyClube não carregado — recarregue a página');
+                }
+                await MilkyClube.init().catch(()=>{});
+                const result = await MilkyClube.signInWithGoogle();
+                if (result && result.redirected) {
+                    setBanner('🔄 Redirecionando pro Google...', 'info');
+                    return;
+                }
+                if (result && result.user) {
+                    setBanner('✅ Conectado como ' + (result.user.displayName || result.user.email) + '. Validando avaliação...', 'ok');
+                    // Auto-dispara o claim
+                    setTimeout(function(){ btnAlready.click(); }, 800);
+                }
+            } catch(e) {
+                setBanner('❌ ' + (e.message || 'Erro no login Google'), 'err');
+                btnGoogleSignin.disabled = false;
+                btnGoogleSignin.innerHTML = orig;
+            }
+        });
+    }
+
+    // FIX (v232): se ?autoclaim=1 (voltando do login do MilkyClube), aguarda
+    // MilkyClube carregar e auto-dispara o claim — user não precisa clicar de novo.
+    if (autoClaim) {
+        setBanner('🔄 Continuando seu resgate... aguarda um segundo.', 'info');
+        (async function tryAutoClaim() {
+            for (let i = 0; i < 30; i++) { // até 6 segundos
+                if (typeof MilkyClube !== 'undefined' && MilkyClube.getCurrentMember) {
+                    try { await MilkyClube.init().catch(()=>{}); } catch(_){}
+                    const m = MilkyClube.getCurrentMember && MilkyClube.getCurrentMember();
+                    if (m && (m.uid || m.id)) {
+                        // Logado! dispara click programaticamente
+                        btnAlready.click();
+                        return;
+                    }
+                }
+                await new Promise(r => setTimeout(r, 200));
+            }
+            setBanner('⚠️ Não foi possível auto-validar. Clique manualmente em "Já avaliei" abaixo.', 'err');
+        })();
+    }
 })();
 </script>
 </body>
