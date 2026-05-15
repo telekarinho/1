@@ -1,6 +1,6 @@
 # Milky Moo — Análise Competitiva
 
-**Última atualização:** 2026-05-11 (Ciclo #196 — Ativação Shakira + "Como Treinar o Dragão" junho + Smoor's inverno + "Quarta da Moo" 50% + "Dia da Vaca" 08/07 + Havanna Matilda)
+**Última atualização:** 2026-05-15 (Ciclo #229 — MooBai Namorados 2026 + Pede Mooleca Junina + ALERTA: 2 unidades MilkyMoo em Londrina confirmadas)
 **Fontes ciclo #196:** sopacultural.com, marcasmais.com.br, grandesnomesdapropaganda.com.br, gkpb.com.br, gazetadasemana.com.br, visitebrasilia.com.br, amostrasgratis.shop, WebSearch
 **Fontes ciclo #187:** auroracultural.com, mercadoeconsumo.com.br, meioemensagem.com.br, centraldovarejo.com.br, goinfoco.com.br, milkymoo.com.br (cardápio), WebSearch
 **Fontes ciclo #167:** clubeamostrasgratis.com, auroracultural.com, mercadoeconsumo.com.br, meioemensagem.com.br, barato.com.br, TikTok @guiadois, franquiadesorvete.com
@@ -1086,3 +1086,104 @@ _Belinha — Ciclo #208 | 2026-05-13_
 **Fontes ciclo #213:** gkpb.com.br, publicitarioscriativos.com, mapadasfranquias.com.br, es360.com.br, foodbizbrasil.com, WebSearch 14/05/2026
 
 _Belinha — Ciclo #213 | 2026-05-14_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #229 — 2026-05-15
+
+### ALERTA CRÍTICO: MilkyMoo tem 2 unidades em Londrina-PR
+
+**Unidades confirmadas:**
+- **Catuaí Shopping Londrina** — Rodovia Celso Garcia Cid Km 377, Gleba Fazenda Palhano (CNPJ: 44.866.878/0001-80, razão social Aim Milkshakes LTDA)
+- **Boulevard Shopping Londrina** — confirmado em boulevardlondrinashopping.com.br/lojas/MILKY-MOO
+- **Horário (Catuaí):** Seg–Sáb 10h–22h | Dom/Feriados 14h–20h
+- **Instagram local:** @milkymoo_londrina
+
+> ⚠️ Isso muda o mapa competitivo de Londrina. MilkyMoo opera em shopping premium; MilkyPot opera em hipermercado (Muffato Quintino). Públicos e ocasiões de compra parcialmente distintos, mas sobreposição real em delivery e busca por sobremesa no período noturno.
+
+---
+
+### MooBai Chocolate — Namorados 2026 (12/06)
+
+**Status:** Relançamento/expansão do produto original (lançado 12/06/2025 em 5 unidades SP+Goiânia). Em 2026, campanhas ativas em múltiplas unidades + Instagram nacional `@milkymoo` + posts de unidades regionais com ID prefixo DK (indicativo de maio/junho 2026).
+
+**Produto:**
+| Atributo | Detalhe |
+|---|---|
+| Nome | MooBai Chocolate |
+| Ingredientes | Sorvete baunilha + creme avelã + creme pistacho Dubai + kadayfi (massa árabe crocante) |
+| Preço 300ml | R$ 30,00 |
+| Preço 500ml | R$ 34,00 |
+| Disponibilidade 2025 | 5 unidades: Morumbi, Shopping Center Norte, SP Market, Paraíso (SP) + Flamboyant (Goiânia) |
+| Disponibilidade Londrina 2026 | Não confirmada (verificar @milkymoo_londrina) |
+| Inspiração | Trend Dubai Chocolate (viral redes sociais desde 2024) |
+| Mecânica | Nenhuma mecânica combo/casalzinho confirmada — produto individual |
+
+**Posicionamento:** Aspiracional, instagramável, premium. Explora a trend pistacho-Dubai em sinergia com JAH do Açaí (pistacho em 12/06) — dois concorrentes convergindo no mesmo sabor de luxo no mesmo dia.
+
+**Comparativo MooBai vs. MilkyPot Namorados:**
+| Dimensão | MilkyMoo MooBai | MilkyPot Duo |
+|---|---|---|
+| Preço entry | R$ 30 (300ml) | Potinho base (a confirmar, ~R$20+) |
+| Personalização | Nenhuma | Nome + ovelhinha + toppings livres |
+| Combo casal | Não confirmado | Duo MilkyPot (Versão A, B ou C pendente operador) |
+| Canal | App próprio + iFood | WhatsApp próprio (sem comissão) |
+| Presença em Londrina | 2 unidades em shopping | 1 unidade em hipermercado |
+| Mensagem | Exclusividade + trend Dubai | Intimidade + personalização real |
+| Sabor foco | Pistacho Dubai (aspiracional) | Ninho/Açaí + toppings à escolha |
+
+---
+
+### Pede Mooleca — Festa Junina 2026 (confirmado)
+
+**Status:** Confirmado ativo em 2026 (Instagram post ID `DKaa1fxSKtC` = prefixo DK = maio/junho 2026). Produto com mesma receita do lançamento original.
+
+**Produto:**
+| Atributo | Detalhe |
+|---|---|
+| Nome | Pede Mooleca |
+| Ingredientes | Sorvete baunilha + amendoim + borda brigadeiro + caramelo salgado + pedaços Crocante Garoto + bombom Crocante inteiro no topo |
+| Preço 300ml | R$ 25,00 |
+| Preço 500ml | R$ 30,00 |
+| Collab | Nestlé / Garoto (Bombom Crocante) — parceria CPG nacional |
+| Disponibilidade | Todas as unidades da rede (inclusive Londrina) + iFood + app MilkyMoo |
+| Edição | Limitada enquanto durarem estoques |
+
+**Análise para MilkyPot:**
+- Pede Mooleca em Londrina = ativo em Catuaí + Boulevard a partir de ~junho
+- Preço competitivo (R$25/300ml) — milkshake grande vs. potinho personalizado
+- Canal iFood: MilkyMoo usa delivery por comissão; MilkyPot usa WhatsApp próprio → estrutura de custo diferente
+- Tema junino está sendo disputado por MilkyMoo via collab industrial Nestlé — MilkyPot pode posicionar Potinho Junino como artesanal/local vs. collab corporativa
+
+---
+
+### Mapa Competitivo Atualizado — Junho 2026
+
+| Dimensão | MilkyMoo | MilkyPot Londrina |
+|---|---|---|
+| Produtos ativos junho | 3 (MooBai + Pede Mooleca + Tempestade) | 1 foco (Potinho Junino confirmado?) |
+| Presença em Londrina | 2 shoppings premium | 1 hipermercado |
+| Namorados 12/06 | MooBai R$30 (disponibilidade local a confirmar) | Duo MilkyPot (Versão pendente) |
+| Junina junho | Pede Mooleca R$25 Nestlé collab | Potinho Junino (naming a confirmar operador) |
+| Canal digital | App + iFood + Rappi | WhatsApp próprio |
+| Personalização | Zero | Total (nome + toppings) |
+| Mensagem de junho | Fragmentada (3 produtos simultâneos) | Potencialmente coesa (1 foco) |
+| Instagram local | @milkymoo_londrina (ativo) | @milkypotbr (nacional) |
+
+---
+
+### Insights Estratégicos — Ciclo #229
+
+1. **MilkyMoo em Londrina é real e ativo.** Catuaí + Boulevard = dois pontos de alto fluxo. MilkyPot precisa de posicionamento claro de diferenciação local, não apenas nacional.
+
+2. **MooBai em Londrina: aguardar confirmação.** Se @milkymoo_londrina ativar MooBai para 12/06, MilkyPot enfrenta concorrência direta de R$30-34 com produto premium/instagramável no Dia dos Namorados. O contra: MilkyPot tem personalização (nome no potinho) que MooBai não tem.
+
+3. **Pede Mooleca ESTARÁ em Londrina.** É produto de rede + iFood = Londrina terá. R$25 milkshake 300ml vs. Potinho Junino (preço a confirmar). Posicionar Potinho Junino como "sobremesa artesanal local com afeto" vs. "collab industrial crocante".
+
+4. **Oportunidade diferencial:** MilkyMoo em Londrina = shopping + iFood (comissão). MilkyPot = hipermercado + WhatsApp (sem comissão + dados do cliente). Base de clientes própria é vantagem estrutural de longo prazo.
+
+5. **Convergência pistacho em Londrina:** Se Catuaí tiver MooBai (pistacho Dubai) + JAH tiver pistacho 12/06 → MilkyPot tem oportunidade de ziguezaguear para "sabores brasileiros afetivos" (paçoca, amendoim, doce de leite, goiabada) como contraprogramação ao pistacho premium.
+
+**Fontes ciclo #229:** cnpj.biz, catuailondrina.com.br, boulevardlondrinashopping.com.br, mercadoeconsumo.com.br, gkpb.com.br, publicitarioscriativos.com, moodfood.com.br, mapadasfranquias.com.br, es360.com.br, Instagram (IDs DK = 2026), WebSearch 15/05/2026
+
+_Belinha — Ciclo #229 | 2026-05-15_
