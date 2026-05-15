@@ -469,8 +469,14 @@
                     id: p.id,
                     name: p.name,
                     emoji: p.midia?.emoji || cat.icon || '🍨',
-                    // Foto real do produto (v235): preserva p.midia.imageUrl ou p.imagem
-                    imagem: (p.midia && p.midia.imageUrl) || p.imagem || null,
+                    // Foto real do produto (v237): prioridade
+                    //  1. p.midia.imageUrl (single, setado via script)
+                    //  2. p.midia.fotos[0] (array, editado via painel/produtos.html)
+                    //  3. p.imagem (legado)
+                    imagem: (p.midia && p.midia.imageUrl)
+                        || (p.midia && Array.isArray(p.midia.fotos) && p.midia.fotos[0])
+                        || p.imagem
+                        || null,
                     desc: p.desc || '',
                     price: price,
                     cost: cost,
