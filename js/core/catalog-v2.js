@@ -469,6 +469,8 @@
                     id: p.id,
                     name: p.name,
                     emoji: p.midia?.emoji || cat.icon || '🍨',
+                    // Foto real do produto (v235): preserva p.midia.imageUrl ou p.imagem
+                    imagem: (p.midia && p.midia.imageUrl) || p.imagem || null,
                     desc: p.desc || '',
                     price: price,
                     cost: cost,
@@ -495,7 +497,8 @@
                         toppingsIds: p.toppingsIds,
                         buffet: p.buffet,
                         monteSeuJeito: p.monteSeuJeito || null,
-                        tags: p.tags || []
+                        tags: p.tags || [],
+                        imagem: (p.midia && p.midia.imageUrl) || p.imagem || null
                     }
                 };
             });
