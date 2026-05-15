@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #231 — 2026-05-15
+
+**Área:** Conversão — Roteiro PDV contra-posicionamento MilkyPot vs. MilkyMoo
+
+**Contexto:** Prescrito nos ciclos #229 e #230. Com MilkyMoo confirmado em 2 unidades em Londrina (Catuaí + Boulevard), equipe de atendimento precisa de linguagem pronta para cenários de comparação com o concorrente. Intel do ciclo #229 mapeou 3 pontos de fricção concretos: (1) MooBai pistacho Dubai para Namorados 12/06, (2) Pede Mooleca Nestlé para Festa Junina, (3) iFood vs. WhatsApp.
+
+**O que pesquisou/analisou:**
+- Releu `belinha/competitors/milkymoo.md` — seção Ciclo #229: 2 unidades Londrina confirmadas, MooBai R$30-34 pistacho Dubai 12/06, Pede Mooleca R$25 Nestlé collab em todas as unidades incluindo Londrina
+- Releu `belinha/content/duo-milkypot-brief-operacional.md` — mecânica Versão A (Duo + topping extra) confirmada para 12/06
+- Releu `belinha/content/diferenciacao-potinho-sem-balanca.md` — ângulos existentes de diferenciação (artesanal, personalização, experiência)
+- Verificou arquivo `belinha/content/conversao-upsell-pdv-15carimbos.md` — formato e tom de linguagem para equipe PDV
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pdv-contra-posicionamento-milkymoo.md` | CRIADO — 145 linhas: 5 cenários de objeção com roteiro de resposta pronto, mapa de diferenciação bolso, ângulos positivos sem citar concorrente, alertas operacionais, checklist de próximos passos para operador |
+
+**Destaques:**
+1. **5 cenários práticos cobertos:** (1) cliente menciona MilkyMoo/milkshake, (2) pistacho Dubai Namorados, (3) Pede Mooleca Junina, (4) objeção de preço, (5) delivery/app — cada cenário com 2 variações de fala
+2. **Frase-âncora para toda equipe:** "Aqui você monta o potinho com o seu nome. Não tem igual em nenhuma outra loja da cidade." — orientação clara sem treinamento extenso
+3. **Contra-posicionamento artesanal Junina:** "paçoca + calda de amendoim caseira" vs. "Crocante Garoto + caramelo salgado industrial" — diferencial concreto e sensorial
+4. **Trio de alertas críticos:** não citar nome do concorrente, não entrar em guerra de preço, MooBai em Londrina ainda não confirmado
+5. **Checklist operador:** imprimir/plastificar, treinar equipe antes de 11/06, monitorar @milkymoo_londrina
+
+**Commit:** `49a238a`
+
+**Próximo passo sugerido:**
+- **Ciclo #232 — Conteúdo:** Post feed IG/TikTok comparativo implícito: "potinho com SEU nome" vs. milkshake sem personalização (sem citar concorrente) — prescrito 3 ciclos consecutivos
+- **Ciclo #233 — SEO:** Verificar se `potinho-junino-londrina.html` está em `sitemap.xml` — se não estiver, adicionar com `lastmod` e `changefreq`
+- **Ciclo #234 — Concorrentes:** Verificar @milkymoo_londrina para confirmar MooBai Namorados em Londrina — decisão crítica para estratégia 12/06
+- **Operador (URGENTE — 15 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — aba já será ativa em 03/06, Cenário 3 do roteiro PDV usa "paçoca + calda de amendoim caseira" como working assumption
+- **Operador (URGENTE):** Imprimir e treinar equipe no roteiro PDV antes de 11/06 (Namorados)
+- **Operador:** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #231 | 2026-05-15_
+
+---
+
 ## Ciclo #230 — 2026-05-15
 
 **Área:** UX — Aba "Junina" date-gated + link landing page no `cardapio.html`
