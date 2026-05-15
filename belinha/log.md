@@ -2,6 +2,45 @@
 
 ---
 
+## Ciclo #227 — 2026-05-15
+
+**Área:** UX — Correção bug overlap banner Namorados × Junina (`index.html`)
+
+**Contexto:** Prescrito no ciclo #226 como próximo passo. O ciclo #220 adicionou o banner de Namorados (11–12/06) e ciclo anterior adicionou o banner Junina teaser (10/05–16/06). A prescrição dizia "verificar script banner dias 09-10/06 — overlap entre inJuninaTeaser e slots de Namorados".
+
+**O que pesquisou/analisou:**
+- Leu o bloco `configureBanner()` no `index.html` (linhas 531–634)
+- Identificou que `inJuninaTeaser` cobre 10/05→16/06, o que inclui 11/06 e 12/06 (Namorados)
+- Confirmou que a exibição está correta: `inNamorados` é verificado primeiro e retorna early
+- **Bug real encontrado:** Chave `namoradosBannerClosed` era compartilhada para dias 11 e 12/06 — se o usuário fechava o banner na véspera (11/06) e voltava ao site no Dia H (12/06) na mesma sessão de aba, o check `!sessionStorage.getItem('namoradosBannerClosed')` falhava, caindo para o bloco `inJuninaTeaser` ativo (12 ≤ 16), exibindo "EM BREVE: NOVIDADE JUNINA" no lugar de "DIA DOS NAMORADOS HOJE"
+- Mesmo problema em `closeBanner()`: uma branch `else if (day === 11 || day === 12)` definia a mesma chave para ambos os dias
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | Split da chave sessionStorage em duas: `namoradosDiahClosed` (12/06) e `namoradosVespraClosed` (11/06); bloco de verificação separado para cada dia em `configureBanner()`; `closeBanner()` atualizado para definir a chave correta por dia |
+
+**Detalhe da correção:**
+- Antes: 1 bloco conjunto `inNamorados && !sessionStorage.getItem('namoradosBannerClosed')` → 1 `if/else` para dia 12 vs. 11
+- Depois: 2 blocos independentes: `day === 12 && !namoradosDiahClosed` → dia 12; `day === 11 && !namoradosVespraClosed` → dia 11
+- Resultado: fechar o banner da véspera (11/06) não suprime mais o banner do Dia H (12/06) na mesma sessão
+
+**Commit:** `79768c8`
+
+**Próximo passo sugerido:**
+- **Ciclo #228 — Conteúdo:** Atualizar `whatsapp-namorados-2026.md` — template N1 (autoresposta WA) ainda não inclui a mecânica Versão A ("2 potinhos = 1 topping extra"), conforme instrução do brief operacional do ciclo #224 (pendente há 3 ciclos)
+- **Ciclo #229 — Concorrentes:** Pesquisar MilkyMoo status junho — última atualização é antiga e não cobre ações de Namorados / Festa Junina 2026
+- **Ciclo #230 — UX:** Auditar `cardapio.html` — verificar se produto "Potinho Junino" está listado ou se há placeholder; lançamento previsto para 17/06 mas teaser começa 03/06
+- **Operador (URGENTE — 15 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (URGENTE):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Confirmar Versão A ou escolher B/C até **05/06** — guia em `duo-milkypot-brief-operacional.md`
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #227 | 2026-05-15_
+
+---
+
 ## Ciclo #226 — 2026-05-15
 
 **Área:** Concorrentes — Refetch The Best Açaí + JAH do Açaí (status junho 2026)
