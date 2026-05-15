@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #223 — 2026-05-15
+
+**Área:** SEO — Auditoria `lastmod` sitemap.xml: homepage + cardápio
+
+**Contexto:** Prescrito no ciclo #222 como gap crítico: sitemap existe desde o ciclo #148, mas `lastmod` estava desatualizado para os dois arquivos mais importantes. `index.html` sofreu mudanças significativas nos ciclos #218-220 (FAQPage Férias Ovelhinha, Event schema + FAQPage Namorados, banner hero Namorados) mas o sitemap ainda marcava `2026-05-08` — uma semana desatualizado. `cardapio.html` foi alterado no ciclo #186 (CLS fix + skeleton CSS) em 2026-05-10, mas o sitemap marcava `2026-05-07`. `lastmod` desatualizado faz o Googlebot deprioritizar o re-crawl das páginas, atrasando a indexação das novas FAQPage entries e dos Event schemas de Namorados e Férias.
+
+**O que pesquisou/analisou:**
+- Verificou `sitemap.xml` completo (10 URLs): todas as páginas públicas cobertas, exclusões documentadas (cartao-fidelidade, login, tv*, radio, cronometro — todas com noindex)
+- Cruzou `git log --follow -- index.html | head -5` → última modificação: commit `2f8f56c` em 2026-05-14 (ciclo #220, banner Namorados)
+- Cruzou `git log --follow -- cardapio.html | head -5` → última modificação: commit `c6483f0` em 2026-05-10 (ciclo #186, skeleton CLS)
+- `robots.txt`: válido, `Allow: /` cobre todas as landing pages, `Sitemap:` aponta corretamente para `https://milkypot.com/sitemap.xml`
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `sitemap.xml` | `/`: `lastmod` `2026-05-08` → `2026-05-14` (alinha com ciclos 218-220) |
+| `sitemap.xml` | `cardapio.html`: `lastmod` `2026-05-07` → `2026-05-10` (alinha com ciclo #186) |
+
+**Impacto esperado:**
+- Googlebot irá repriorizar crawl de `/` e `/cardapio.html` ao processar o sitemap atualizado
+- FAQPage schema Férias Ovelhinha + FAQPage Dia dos Namorados (ciclos 218-219) entrarão na fila de re-crawl — elegíveis para rich results antes do evento 12/06
+- Event schema Namorados 12/06 precisa ser indexado com antecedência → `lastmod` correto acelera isso
+- Google Search Console: solicitar re-indexação sitemap ainda pendente (Blocker operador)
+
+**Commit:** `2c33f30`
+
+**Próximo passo sugerido:**
+- **Ciclo #224 — Conversão:** Finalizar mecânica "Duo MilkyPot" para Namorados — playbook tem Versão A, B, C sem decisão do operador; com intel de concorrentes completo (JohnnyJoy sem combo, JAH pistache aspiracional), propor versão padrão implementável sem validação prévia
+- **Ciclo #225 — Conteúdo:** Copy feed IG/TikTok Dia dos Namorados 12/06 — `dia-dos-namorados-2026-playbook.md` tem posts descritos mas sem copy completa (captions prontas para copiar)
+- **Ciclo #226 — Concorrentes:** Refetch TheBest + Jhoy status junho (última atualização > 1 semana)
+- **Ciclo #227 — UX:** Verificar script banner dias 09-10/06 — overlap entre `inJuninaTeaser` e slots de Namorados (ciclo #221 mencionou possível contradição)
+- **Operador (URGENTE — 15 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador:** Definir Versão A, B ou C mecânica Duo MilkyPot até **05/06** ⚠️
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+- **Operador (CRÍTICO):** Google Search Console — solicitar indexação sitemap.xml (pendente desde ciclo #148)
+
+_Belinha — Ciclo #223 | 2026-05-15_
+
+---
+
 ## Ciclo #222 — 2026-05-14
 
 **Área:** Concorrentes — Intel Namorados 2026: JohnnyJoy "Dois Amores" + JAH Pistache
