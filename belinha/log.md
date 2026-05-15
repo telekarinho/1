@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #232 — 2026-05-15
+
+**Área:** Conteúdo — Diferenciação implícita "potinho com SEU nome vs. milkshake padrão"
+
+**Contexto:** Prescrito 3 ciclos consecutivos (#229, #230, #231) sem execução. Com MilkyMoo confirmado em 2 unidades em Londrina (Catuaí + Boulevard) e MooBai pistacho Dubai ativo para 12/06, a loja precisa de contra-posicionamento de feed que destaque personalização sem nomear concorrente. Sitemap verificado: `potinho-junino-londrina.html` já estava indexado — SEO ciclo #233 não é mais blocker.
+
+**O que pesquisou/analisou:**
+- Releu `pdv-contra-posicionamento-milkymoo.md` (ciclo #231): 5 cenários de objeção com frase-âncora "Aqui você monta o potinho com o seu nome. Não tem igual em nenhuma outra loja da cidade."
+- Releu `diferenciacao-potinho-sem-balanca.md` (ciclo #109): formato de carrossel 5 frames + caption IG/TikTok distintos — referência de estrutura
+- Releu `copy-final-namorados-2026.md` (ciclo #225): tom e mecânica Versão A integrada — para alinhar variante Namorados
+- Verificou `sitemap.xml`: `potinho-junino-londrina.html` já presente com image tags — SEO ciclo #233 dispensado
+- Identificou ângulo central: "qualquer loja tem milkshake padronizado; só o MilkyPot tem um montado com o SEU nome" — sem citar MilkyMoo, sem comparação de preço
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/feed-diferenciacao-potinho-vs-milkshake.md` | CRIADO — 202 linhas: Peça A (carrossel 6 frames evergreen), Peça B (reel 15s evergreen), Peça C (variante Namorados 09–10/06), captions prontas IG e TikTok para cada peça, tabela de checklist de publicação, notas operacionais |
+
+**Destaques:**
+1. **Carrossel 6 frames com narrativa progressiva:** Hook "tem milkshake em todo lugar — mas com o SEU nome?" → contraste produto industrial → personalização MilkyPot → CTA. Zero menção a concorrente pelo nome.
+2. **Reel 15s evergreen:** Roteiro frame-a-frame incluindo sugestão de áudio trending + divisão cena/texto na tela. Pronto para produção interna sem diretor.
+3. **Variante Namorados (09–10/06):** Adapta o ângulo "seu nome" para "nome DELA + nome DELE" — integra mecânica Duo MilkyPot (Versão A, topping extra). Preenche gap de comunicação entre `copy-final-namorados-2026.md` (posts 11–12/06) e semana anterior.
+4. **Captions IG ≠ TikTok:** IG tem narrativa emocional (3–4 parágrafos); TikTok tem hook + payoff em 2 linhas — padrão estabelecido nos ciclos anteriores mantido.
+5. **Sitemap verificado como bônus:** `potinho-junino-londrina.html` já indexado → ciclo #233 SEO redirecionado para outro arquivo se necessário.
+
+**Commit:** `aa8d225`
+
+**Próximo passo sugerido:**
+- **Ciclo #233 — Concorrentes:** Verificar @milkymoo_londrina para confirmar MooBai Namorados em Londrina — decisão crítica para estratégia 12/06; prescrito desde ciclo #231
+- **Ciclo #234 — UX:** Auditar `index.html` banner Junina — verificar se teaser de 03/06 está funcionando corretamente com a data atual (15/05) e que não há overlap com banner Namorados ao aproximar-se de 11/06
+- **Ciclo #235 — Conversão:** Mecânica "foto com potinho = reward" (UGC + fidelidade) — prescrita no ciclo #226, ainda não executada
+- **Operador (URGENTE — 15 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — aba ativa em 03/06
+- **Operador (URGENTE):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Imprimir e treinar equipe no roteiro PDV antes de 11/06 (`pdv-contra-posicionamento-milkymoo.md`)
+- **Operador:** Produzir fotos de potinho com etiqueta de nome — necessário para Peça A e B do novo arquivo
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #232 | 2026-05-15_
+
+---
+
 ## Ciclo #231 — 2026-05-15
 
 **Área:** Conversão — Roteiro PDV contra-posicionamento MilkyPot vs. MilkyMoo
