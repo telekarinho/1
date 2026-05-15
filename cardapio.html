@@ -591,24 +591,19 @@
         </button>
     </div>
 
-    <!-- WhatsApp FAB sticky (audit: canal primario de conversao Brasil) -->
-    <a id="mpWhatsFab" href="https://wa.me/5543999919777?text=Oi!%20Vim%20do%20card%C3%A1pio%20online%20da%20MilkyPot!"
-       target="_blank" rel="noopener"
-       aria-label="Fale com a gente no WhatsApp"
-       style="position:fixed;right:14px;bottom:88px;width:56px;height:56px;border-radius:50%;
-              background:#25D366;display:flex;align-items:center;justify-content:center;
-              box-shadow:0 6px 22px rgba(37,211,102,0.45);z-index:1100;text-decoration:none;
-              transition:transform .15s">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
-            <path d="M19.05 4.91A9.82 9.82 0 0 0 12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01zM12.04 20.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.21 8.21 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.23 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.7-.8-.23-.08-.39-.12-.56.12-.17.25-.64.8-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.42-.14 0-.31-.02-.48-.02-.17 0-.43.06-.66.31-.23.25-.86.84-.86 2.05 0 1.21.88 2.37 1 2.54.12.17 1.72 2.63 4.17 3.69.58.25 1.04.4 1.39.51.58.19 1.12.16 1.54.1.47-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29z"/>
-        </svg>
-    </a>
+    <!-- WhatsApp FAB sticky removido (v239): duplicava com .whatsapp-float "Pedir agora"
+         no rodapé e empilhava em cima da ovelhinha Lulú do chat AI -->
     <style>
-        #mpWhatsFab:hover { transform: scale(1.08); }
-        #mpWhatsFab:active { transform: scale(0.95); }
-        #mpWhatsFab:focus-visible { outline: 3px solid #FFD54F; outline-offset: 2px; }
+        /* Garante que ovelhinha (chat AI Lulú) fica VISÍVEL acima do botão Pedir agora
+           e não sobreposta pelo .whatsapp-float (160x60) */
+        .chat-float-btn {
+            bottom: calc(20px + 60px + 16px + env(safe-area-inset-bottom, 0px)) !important;
+            z-index: 1500 !important;
+        }
         @media (max-width: 480px) {
-            #mpWhatsFab { right: 12px; bottom: 76px; width: 52px; height: 52px; }
+            .chat-float-btn {
+                bottom: calc(20px + 60px + 14px + env(safe-area-inset-bottom, 0px)) !important;
+            }
         }
     </style>
 
@@ -622,7 +617,7 @@
     <script src="js/core/constants.js"></script>
     <script src="js/core/utils.js"></script>
     <script src="js/core/firebase-config.js"></script>
-    <script src="js/core/datastore.js?v=mp-v238"></script>
+    <script src="js/core/datastore.js?v=mp-v239"></script>
     <script>
         // CRITICAL: cliente anonimo (incognito) precisa do init pra puxar
         // catalog_config do Firestore — sem isso, getCatalogConfig retorna
@@ -630,11 +625,11 @@
         if (typeof DataStore !== 'undefined' && DataStore.init) DataStore.init();
     </script>
     <script src="js/stores-data.js"></script>
-    <script src="js/analytics.js?v=mp-v238"></script>
+    <script src="js/analytics.js?v=mp-v239"></script>
     <script src="js/cardapio-data.js"></script>
-    <script src="js/core/cost-calculator.js?v=mp-v238"></script>
-    <script src="js/core/catalog-v2.js?v=mp-v238"></script>
-    <script src="js/monte-seu-flow.js?v=mp-v238"></script>
+    <script src="js/core/cost-calculator.js?v=mp-v239"></script>
+    <script src="js/core/catalog-v2.js?v=mp-v239"></script>
+    <script src="js/monte-seu-flow.js?v=mp-v239"></script>
     <script src="js/cart.js"></script>
     <script src="js/core/raspinha-engine.js"></script>
     <script src="js/checkout.js"></script>
