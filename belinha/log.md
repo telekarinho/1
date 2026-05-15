@@ -2,6 +2,58 @@
 
 ---
 
+## Ciclo #230 — 2026-05-15
+
+**Área:** UX — Aba "Junina" date-gated + link landing page no `cardapio.html`
+
+**Contexto:** Prescrito nos ciclos #228 e #229 como próxima prioridade. O arquivo `potinho-junino-londrina.html` (landing page com produto definido: Ninho + paçoca + calda de amendoim, R$10+) existia desde antes deste ciclo, mas estava completamente desconectado do `cardapio.html`: nenhuma aba, nenhum link, nenhum card no grid. Com Pede Mooleca (MilkyMoo) ativo em Londrina e teaser previsto para 03/06, a janela para preparar o cardápio estava se fechando.
+
+**O que pesquisou/analisou:**
+- Releu `js/cardapio-data.js`: estrutura de bases/formatos/sabores; confirmou ausência total de qualquer entrada relativa ao Potinho Junino
+- Leu `cardapio.html` (1264 linhas): abas hard-coded no DOM (`ninho`, `acai`, `fit`); grid de produtos gerado dinamicamente via `getAllProducts()`; links de landing pages no cabeçalho do cardápio (`potinho-ninho-londrina.html`, `acai-self-service-londrina.html`, `potinho-personalizado-londrina.html`)
+- Leu `potinho-junino-londrina.html` integralmente: produto com ingredientes definidos (paçoca + calda de amendoim), preço mínimo R$10, SKU `POTINHO-JUNINO-LDN-2026`, WA deep link pronto
+- Avaliou estratégia: `cardapio-data.js` usa fluxo base→sabor→topping que não se aplica a produto de receita fixa; alternativa mais limpa é card especial com link externo para landing page dedicada
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `cardapio.html` | +40 linhas: link contextual na seção de cabeçalho + função `renderJunina()` + extensão de `filterProducts()` + IIFE de injeção de tab date-gated |
+
+**Detalhes das mudanças:**
+
+1. **Link contextual no cabeçalho (sempre visível, SEO):**
+   ```html
+   🎪 Potinho Junino em Londrina — Edição Limitada Junho
+   ```
+   Link cor `#C0820A` (âmbar junino), ao lado dos outros links de landing page. Sempre visível → Google indexa a relação entre `cardapio.html` e `potinho-junino-londrina.html`.
+
+2. **`renderJunina()`:** Função que injeta no `#productGrid` um card especial estruturado como `<a href="potinho-junino-londrina.html">` — reutiliza classes CSS do grid existente (`product-card-mobile`, `card-emoji-wrap`, `card-info`, etc.) sem CSS novo. Card mostra: emoji 🥜, badge "Edição Limitada" (âmbar), nome "Potinho Junino 🎪", desc "Base Ninho + paçoca + calda de amendoim. Só em junho!", preço "a partir de R$10". Clique leva para a landing page dedicada.
+
+3. **`filterProducts()` ampliado:** Branch `if (cat === 'junina') { renderJunina(); return; }` antes do `renderProducts(cat)` — zero impacto nas abas existentes.
+
+4. **IIFE de injeção date-gated:** Executa no carregamento; se `new Date() < new Date('2026-06-03')` → retorna sem fazer nada. Após 03/06 → injeta `<button class="cat-tab">&#127914; Junina</button>` no `#categoryTabs` via DOM. Antes de 03/06: zero impacto visual ou funcional.
+
+**Resultado:**
+- Cardápio de 15/05 até 02/06: link contextual visível, zero aba nova no grid
+- A partir de 03/06 (teaser day): aba "🎪 Junina" aparece automaticamente → card com CTA → landing page → WA
+- **Nenhuma alteração em `cardapio-data.js`** — evita conflito com o blocker do operador (naming/ingredientes não confirmados formalmente)
+
+**Commit:** `71982a2`
+
+**Próximo passo sugerido:**
+- **Ciclo #231 — Conversão:** Criar roteiro de contra-posicionamento MilkyPot vs. MilkyMoo para equipe PDV: "personalização vs. produto padrão" — aproveitando a convergência pistacho identificada no ciclo #229 (JAH 12/06 + MooBai + The Best = pistacho saturado, MilkyPot pode se diferenciar com sabores brasileiros)
+- **Ciclo #232 — Conteúdo:** Post feed IG/TikTok comparativo implícito: "potinho com SEU nome" vs. milkshake sem personalização (sem citar concorrente)
+- **Ciclo #233 — SEO:** Verificar se `potinho-junino-londrina.html` está em `sitemap.xml` — se não estiver, adicionar com `lastmod` e `changefreq`
+- **Operador (URGENTE — 15 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — aba já estará ativa em 03/06, card usa ingredientes working assumption do landing page
+- **Operador (URGENTE — 19 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Verificar @milkymoo_londrina vai ativar MooBai para 12/06 — define estratégia Namorados
+- **Operador:** Topping pistache disponível? Define estratégia junho inteira
+
+_Belinha — Ciclo #230 | 2026-05-15_
+
+---
+
 ## Ciclo #229 — 2026-05-15
 
 **Área:** Concorrentes — MilkyMoo status junho 2026 (Namorados + Festa Junina + ALERTA Londrina)
