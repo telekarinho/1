@@ -9053,3 +9053,44 @@ _Belinha — Ciclo #225 | 2026-05-15_
 _Belinha — Ciclo #228 | 2026-05-15_
 
 ---
+
+---
+
+## Ciclo #233 — 2026-05-15
+
+**Área:** Concorrentes — MilkyMoo status Namorados 12/06 + novos vetores junho 2026
+
+**Contexto:** Prescrito 3 ciclos consecutivos (#231, #232, #233). MooBai Londrina era a pergunta crítica para validar/ajustar estratégia 12/06. Com MilkyMoo confirmado em 2 unidades (Catuaí + Boulevard), precisava verificar se MooBai pistacho Dubai chegaria a Londrina para Namorados.
+
+**O que pesquisou/analisou:**
+- 8 WebSearches cobrindo: MilkyMoo Londrina MooBai namorados junho 2026; @milkymoo_londrina instagram; campanha Namorados 2026 rede; promoções combo/casal; Milky Moo Festa mobile; O Boticário collab; escala de rede 2025-2026
+- WebFetch bloqueado (403) em Instagram, MilkyMoo.com.br, GKPB, Exame — uso de resultados indexados e snippets de busca
+- Analisou padrões de prefixo de ID de post: DK = maio/junho 2026 confirmado em 4+ franquias regionais
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/milkymoo.md` | Seção `ATUALIZAÇÃO CICLO #233` adicionada (~100 linhas): veredito MooBai Londrina (PROVÁVEL não confirmado), 5 novos itens de intel (campanha rede Namorados, Milky Moo Festa, collab O Boticário, promoções recorrentes, escala R$542mi), mapa de ameaças atualizado, análise de oportunidade |
+
+**Destaques:**
+1. **MooBai Londrina: PROVÁVEL mas não confirmado.** 4+ franquias regionais com posts DK (jun/2026) de Namorados — campanha de rede ativa. @milkymoo_londrina não tem post MooBai visível no índice de busca. Roteiro PDV ciclo #231 cobre o cenário seja qual for o resultado.
+2. **Milky Moo Festa (NOVO):** formato mobile R$200k pode aparecer em eventos Londrina sem unidade fixa. Terceiro vetor de competição além de Catuaí e Boulevard.
+3. **Promoções de volume agressivas:** "Quarta da Moo" 50% off no app, Milky Moo Day 2x1, iFood fev/2026 — MilkyMoo joga em guerra de preço via app/marketplace. MilkyPot deve manter diferenciação por personalização, não entrar na guerra.
+4. **Escala intimidadora:** R$542mi em 2025 (+40%), 800 unidades, meta +50% para 2026. Mas isso também significa comunicação nacional fragmentada vs. MilkyPot hiperlocal em Londrina.
+5. **Oportunidade WhatsApp:** Cada pedido de Namorados via WA = cliente na base própria = remarketing Festa Junina + próximas datas — vantagem estrutural de longo prazo não replicável pelo modelo iFood.
+
+**Commit:** a registrar
+
+**Próximo passo sugerido:**
+- **Ciclo #234 — UX:** Auditar `index.html` — verificar se banner/teaser Junina (date-gated 03/06) e banner Namorados coexistem sem conflito visual quando data atual está entre 15/05 e 11/06; ajustar lógica se necessário
+- **Ciclo #235 — Conversão:** Mecânica "foto com potinho = reward" (UGC + fidelidade) — prescrita ciclo #226, ainda pendente
+- **Ciclo #236 — Conteúdo:** Post "sabores brasileiros vs. pistacho premium" como contra-posicionamento sutil à tendência MooBai + JAH — validar se faz sentido antes de 12/06
+- **Operador (URGENTE — 15 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (URGENTE):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Monitorar @milkymoo_londrina para confirmar MooBai — se confirmar, ativar roteiro PDV cenário 2 (pistacho Dubai) imediatamente
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #233 | 2026-05-15_
+
+---

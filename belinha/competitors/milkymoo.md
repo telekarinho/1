@@ -1187,3 +1187,109 @@ _Belinha — Ciclo #213 | 2026-05-14_
 **Fontes ciclo #229:** cnpj.biz, catuailondrina.com.br, boulevardlondrinashopping.com.br, mercadoeconsumo.com.br, gkpb.com.br, publicitarioscriativos.com, moodfood.com.br, mapadasfranquias.com.br, es360.com.br, Instagram (IDs DK = 2026), WebSearch 15/05/2026
 
 _Belinha — Ciclo #229 | 2026-05-15_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #233 — 2026-05-15
+
+### Status MooBai Londrina — Namorados 12/06/2026
+
+**Veredito: PROVÁVEL — não confirmado explicitamente por post local**
+
+Investigação focada em @milkymoo_londrina + rede MilkyMoo para confirmar se MooBai (pistacho Dubai) estará ativo em Londrina no Dia dos Namorados 12/06/2026.
+
+**Evidências coletadas:**
+
+| Sinal | Força | Detalhe |
+|---|---|---|
+| @milkymoo nacional posts com prefixo DK (= jun/2026) promovendo campanha Namorados | Forte | Múltiplas franquias (Guarapari, Ituiutaba, Teixeira de Freitas) com `DKcLd`, `DKyBX`, `DKzksH` — indica campanha de rede ativa |
+| @milkymoo_londrina posts recentes: "Stanley by MilkyMoo" (DG prefix) e "Ainda dá pra trocar" | Fraca | Sem post MooBai visível; últimas publicações conhecidas com prefixo DG = fev/2026 — não há post DK da unidade local |
+| MooBai em 2025 restrito a 5 unidades SP + Goiânia; 2026 aparece em posts nacionais | Moderada | Expansão sugerida mas rollout para todas as franquias não confirmado nos dados disponíveis |
+| Instagram local bloqueado para fetch — conteúdo não acessível via WebFetch | Limitação | Sem acesso direto para confirmar/refutar post MooBai Londrina |
+
+**Conclusão operacional:** Tratar como RISCO REAL mas não como certeza. Estratégia de contra-posicionamento do ciclo #231-232 permanece válida independentemente da confirmação.
+
+---
+
+### Novos Produtos e Campanhas MilkyMoo — Ciclo #233
+
+#### 1. Campanha Namorados 2026 — Rede ativa
+
+**Status:** Confirmada em múltiplas franquias com posts prefixo DK (= maio/junho 2026)
+
+- Guarapari: `instagram.com/p/DKcLd-QuNMN` — "💘 Promoção de Dia dos Namorados"
+- Guarapari (reel): `instagram.com/reel/DKkX8QhshGf` — "💘 Promoção especial de Dia dos Namorados"
+- Ituiutaba: `instagram.com/reel/DKyBX6bMVLT` — "💘 Promoção especial de Dia dos Namorados"
+- Teixeira de Freitas: `instagram.com/reel/DKzksH2OKfR` — "Feliz Dia dos Namorados"
+- TikTok Ituiutaba: apresentação de milkshakes como presentes para o mozão — linguagem de gifting
+
+**Mecânica exata não obtida** (Instagram bloqueou fetch), mas padrão de rede sugere desconto ou bundle combo.
+
+#### 2. Milky Moo Festa — Novo Formato Mobile (2026)
+
+**Novidade estratégica relevante:**
+
+| Atributo | Detalhe |
+|---|---|
+| Formato | Operação móvel compacta — eventos, festas, ações corporativas |
+| Investimento inicial | ~R$ 200.000 |
+| Instagram | @milkymoofesta (Goiânia) |
+| Proposta | Expansão para cidades sem loja fixa; birthdays, festas juninas, eventos |
+| Meta 2026 | 50% crescimento em receita + pontos de venda |
+
+**Risco para Londrina:** MilkyMoo Festa pode aparecer em eventos da cidade (shoppings, praças de alimentação sazonais, Festa Junina de junho) SEM unidade fixa — requer monitoramento.
+
+#### 3. Collab O Boticário × MilkyMoo (abril 2026)
+
+- MilkyMoo criou milkshake exclusivo inspirado em fragrância do O Boticário
+- Publicado em mercadoeconsumo.com.br em 16/04/2026
+- Padrão: collab CPG/lifestyle premium → associa MilkyMoo a marcas aspiracionais
+
+#### 4. Promoções Recorrentes de Rede
+
+| Promoção | Mecânica | Canal | Data |
+|---|---|---|---|
+| Milky Moo Day | Compre 500ml + ganhe 300ml grátis | iFood + App | março 2026 |
+| Dia do Milkshake | R$ 10 desconto em todo cardápio | App | setembro (recorrente) |
+| Quarta da Moo | 50% desconto em sabores selecionados | App | recorrente/semanal |
+| Promoção iFood fevereiro | "Milkshake em dobro" | iFood | fev 2026 |
+
+> ⚠️ **Alerta estratégico:** MilkyMoo opera promoções agressivas recorrentes VIA APP e iFood com desconto direto (50%, 2x1, -R$10). MilkyPot responde com fidelidade WA próprio sem comissão — posicionamento distinto, mas o cliente médio compara "promoção visível" e MilkyMoo joga pesado nesse campo.
+
+#### 5. Escala de Rede 2026
+
+| Indicador | 2024 | 2025 |
+|---|---|---|
+| Faturamento rede | ~R$ 388 mi | R$ 542 mi (+40%) |
+| Unidades | 612 | ~800 (+188) |
+| Novo formato | — | Milky Moo Festa (mobile) |
+| Meta crescimento 2026 | — | +50% receita e PDV |
+
+---
+
+### Mapa de Ameaças Atualizado — Junho 2026 (Londrina)
+
+| Vetor | Risco | Ação recomendada |
+|---|---|---|
+| MooBai Londrina 12/06 | PROVÁVEL — não confirmado | Monitorar @milkymoo_londrina; roteiro PDV ciclo #231 cobre cenário |
+| Pede Mooleca Londrina | CONFIRMADO (produto de rede) | Potinho Junino artesanal como contraponto |
+| MilkyMoo Festa em evento local | POSSÍVEL — novo formato 2026 | Monitorar eventos Londrina (Catuaí Fest, Arraial etc.) |
+| Promoções app 50% / 2x1 | ATIVO — recorrente | WA próprio + pontos fidelidade como resposta; não entrar em guerra de preço |
+| Collab CPG nacional (Nestlé, O Boticário) | ATIVO | Posicionar MilkyPot como artesanal/local — autenticidade vs. collab corporativa |
+
+---
+
+### Análise de Oportunidade Ciclo #233
+
+**1. Namorados 12/06 — diferencial WhatsApp vs. App/iFood:**
+MilkyMoo exige app ou iFood para promoções de Namorados. MilkyPot opera via WhatsApp (zero comissão, dados do cliente). Cada pedido de Namorados via WA = cliente na base própria = possibilidade de remarketing para Festa Junina em junho + próximas datas.
+
+**2. "Milky Moo Festa" é ameaça E oportunidade:**
+Se MilkyMoo Festa aparecer em Londrina, pode roubar fluxo em eventos. Mas também valida o modelo de sobremesa personalizada em eventos — MilkyPot pode explorar mesmo formato com operador local (catering, aniversários) sem precisar da franquia Festa.
+
+**3. Promoções de volume vs. personalização:**
+MilkyMoo usa "leve 2 ganhe 1", "50% off", etc. para criar urgência via volume. MilkyPot deve evitar guerra de desconto — a proposta de valor é personalização afetiva (nome no potinho), não preço. Desconto pontual pode ser feito via fidelidade (raspinha, carimbo) sem depreciar marca.
+
+**Fontes ciclo #233:** instagram.com/milkymoo_londrina, instagram.com/milkymoo, catuailondrina.com.br, gkpb.com.br, exame.com, mercadoeconsumo.com.br, publicitarioscriativos.com, cadastrarnapromocao.com.br, clubeamostrasgratis.com, jornaldobras.com.br, WebSearch 15/05/2026
+
+_Belinha — Ciclo #233 | 2026-05-15_
