@@ -2,7 +2,57 @@
 
 ---
 
-## Ciclo #223 — 2026-05-15
+## Ciclo #226 — 2026-05-15
+
+**Área:** Concorrentes — Refetch The Best Açaí + JAH do Açaí (status junho 2026)
+
+**Contexto:** Prescrito no ciclo #223 como próximo passo para o ciclo #226. Ambos os arquivos tinham atualizações de 2026-05-14 mas sem cobertura de produtos e campanhas específicas de junho: The Best não tinha detalhes de campanha (só "Festival Junino genérico esperado ~26/06") e JAH tinha Caio Castro confirmado mas sem mecânica e sem confirmação da mascote Jahckeline para 2026.
+
+**O que pesquisou/analisou:**
+- WebSearch "The Best Açaí Namorados junho 2026 campanha" → encontrou **duas campanhas ativas para junho**: "The Best Piscininha" (06/06–06/07) + "The Best Waffle" (retorno)
+- WebSearch "The Best Piscininha junho 2026 produto" → fonte primária abcdacomunicacao.com.br + thebestacai.com.br/blog: produto com 3 sabores limitados (dulce de leche, creme de pistache, chocolate), conceito fondue/dip, instagramável
+- WebSearch "JAH Açaí Namorados 2026 Caio Castro mecânica" → confirmação mecânica completa: sorteio até 09/06, passeio Porsche 11–12/06, Interlagos, follow+curtir+marcar+story
+- WebSearch "JAH Açaí nova mascote Namorados 2026" → descoberta: mascote **Jahckeline** (leoa) apresentada como par romântico do Jahckson para Namorados — padrão desde 2023
+- Cruzamento de intel: **convergência pistache** — JAH sorvete 12/06 + The Best creme piscininha pistache 06/06 = dois concorrentes usando pistache em junho simultâneo
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/the-best-acai.md` | +Ciclo #226: "Piscininha" (3 sabores limitados 06/06–06/07), waffle bites, preço atualizado R$6,49/100g, tabela comparativa junho MilkyPot vs The Best, alerta convergência pistache |
+| `belinha/competitors/jhoy.md` | +Ciclo #226: mecânica Caio Castro 2026 com datas definitivas (sorteio até 09/06, passeio 11–12/06), mascote Jahckeline confirmada histórico 2023→padrão, calendário junho–julho completo, análise terreno de mascotes, alerta pistache |
+
+**Intel-chave ciclo #226:**
+
+1. **The Best Piscininha** (06/06–06/07/2026):
+   - Produto fondue/dip com 3 cremes limitados — pistache está na lista
+   - Preço reajustado: R$6,49/100g (era R$6,29 ciclo #187, +3,2%)
+   - Cobre Namorados 12/06 + São João 24/06 — campanha de alcance longo
+
+2. **JAH mascote Jahckeline** — padrão Namorados desde 2023:
+   - Casal de leões Jahckson+Jahckeline concorre no terreno de personagens com a ovelhinha MilkyPot
+   - Diferenciador: mascotes JAH são corporativos; ovelhinha MilkyPot É O PRODUTO (nome no potinho)
+   - Foto polaroid para casais nas unidades = experiência física — MilkyPot pode fazer equivalente
+
+3. **Alerta convergência pistache** — DECISÃO NECESSÁRIA DO OPERADOR:
+   - Dois concorrentes com pistache em junho: JAH (sorvete 12/06) + The Best (creme 06/06–06/07)
+   - Operador precisa responder: tem topping pistache? Se sim → "Potinho Pistachio" antes do JAH. Se não → reforçar sabores brasileiros genuínos (paçoca, brigadeiro, doce de leite) como contraprogramação
+
+**Commit:** `23bad72`
+
+**Próximo passo sugerido:**
+- **Ciclo #227 — UX:** Verificar script banner — overlap `inJuninaTeaser` vs. slots Namorados (ciclo #221 mencionou possível contradição) — crítico para que o banner não exiba Namorados e São João ao mesmo tempo no mesmo período
+- **Ciclo #228 — Conteúdo:** Post feed IG/Reels explorando "Potinho feito para vocês dois" — narrativa intimidade vs. mascotes corporativos JAH; usar diferenciador de personalização contra Jahckson+Jahckeline
+- **Ciclo #229 — Conversão:** Resposta MilkyPot ao polaroid JAH — propor mecânica equivalente simples (foto com potinho personalizado = reward) sem custo de produção
+- **Operador (URGENTE — 15 dias):** Confirmar topping pistache disponível ou não — define a estratégia inteira de junho ⚠️
+- **Operador (URGENTE — 15 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador:** Definir Versão A, B ou C mecânica Duo MilkyPot até **05/06** ⚠️
+
+_Belinha — Ciclo #226 | 2026-05-15_
+
+---
+
+## Ciclo #225 — 2026-05-15
 
 **Área:** SEO — Auditoria `lastmod` sitemap.xml: homepage + cardápio
 
