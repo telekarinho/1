@@ -1,7 +1,7 @@
 # Template WA Standalone — Dia dos Namorados 2026
 ## MilkyPot Londrina · 12/06/2026 (Sexta-feira)
 
-> **Criado por:** Belinha — Ciclo #164 (2026-05-08)
+> **Criado por:** Belinha — Ciclo #164 (2026-05-08) · **Atualizado:** Ciclo #228 (2026-05-15)
 > **Para:** Operador/Atendente MilkyPot Muffato Londrina
 > **WhatsApp da loja:** (43) 99804-2424 | wa.me/5543998042424
 > **Horário do evento:** 14h–23h · Delivery 15–40min
@@ -21,10 +21,9 @@
 | **Diferencial de copy** | Potinho como presente feito por quem conhece a pessoa amada — não é bombom genérico |
 | **CTA principal** | Presentear: pedir por outra pessoa + Delivery como comodidade |
 
-> **Mecânica do dia — operador decide até 05/06:**
-> - **Versão A:** Duo MilkyPot — 2 potinhos juntos = 1 topping extra em qualquer um dos dois
-> - **Versão B:** Bilhetinho do amor — card impresso da ovelhinha em todo pedido do Dia dos Namorados
-> - **Versão C:** Carimbos em dobro nos dois cartões do casal no mesmo pedido
+> **Mecânica do dia — ✅ VERSÃO A CONFIRMADA (Ciclo #224):**
+> **Duo MilkyPot:** 2 potinhos juntos = 1 topping extra de graça em qualquer um dos dois
+> (Versão B e C documentadas em `duo-milkypot-brief-operacional.md` para troca rápida se necessário)
 
 ---
 
@@ -46,6 +45,9 @@ dois potinhos, cada um do jeitinho que a pessoa amada mais gosta.
 Posso te mandar um lembrete na véspera e quando abrirmos no dia?
 (Responde "SIM" aqui se quiser 📬)
 
+E tem um presentinho da ovelhinha: pedir 2 potinhos juntos no Dia dos Namorados
+ganha 1 topping extra de graça em qualquer um! 🍓✨
+
 Qualquer dúvida é só chamar!
 — MilkyPot Londrina 🌈
 📍 Muffato · Av. Quintino Bocaiuva, 1045
@@ -66,6 +68,8 @@ Nada de caixa de bombom genérica.
 
 🍨 Monte um potinho com os SABORES FAVORITOS DELA
 🍨 Monte outro com os SABORES FAVORITOS DELE
+🍓 Bônus: peça 2 potinhos e ganhe 1 topping extra de graça
+   (só no Dia dos Namorados, 12/06!)
 🎁 A gente entrega embalado, caprichado, pronto pra presentear
 
 📦 Delivery em Londrina · ⏰ 14h–23h · Sex 12/06
@@ -174,7 +178,7 @@ E qual o endereço de entrega (ou vai retirar no Muffato)?
 ### N4-DUO — Variante "Pedido de Casal" · Sex 12/06 (sob demanda)
 
 > Usar quando o casal faz o pedido junto (dois potinhos, dois sabores distintos).
-> Reforça a mecânica Duo e o topping extra (se Versão A foi confirmada).
+> Reforça a mecânica Duo e o topping extra (Versão A confirmada — Ciclo #224).
 
 ```
 🐑💕 Que fofura! Dois potinhos de casal!
@@ -192,7 +196,6 @@ Me fala:
 📦 Delivery ou retirada no Muffato?
 📍 Se delivery: qual o endereço?
 
-[SE VERSÃO A CONFIRMADA — incluir:]
 ✨ *Duo MilkyPot:* pedido de 2 potinhos ganha +1 topping extra em qualquer um dos dois!
 
 ⏰ Hoje 14h–23h · Muffato Londrina
@@ -244,7 +247,7 @@ Essa semana tem novidade por aqui. Qualquer coisa a gente te avisa primeiro!
 |------|-----------------|--------|
 | **Ter 03/06** | Ativar keyword `NAMORADOS26` no WA Business | ⬜ |
 | **Qua 04/06** | Publicar story teaser leve "algo especial chegando 💕" | ⬜ |
-| **Qui 05/06** | Decidir Versão A, B ou C da mecânica + comunicar equipe | ⬜ |
+| **Qui 05/06** | ~~Decidir Versão A, B ou C~~ · Versão A confirmada — comunicar equipe até 11/06 | ✅ |
 | **Ter 09/06** | Disparar N1 (broadcast geral de captura) | ⬜ |
 | **Qui 11/06 15h** | Publicar Post feed véspera (via `dia-dos-namorados-2026-playbook.md`) | ⬜ |
 | **Qui 11/06 18h** | 3 Stories urgência + CTA `NAMORADOS26` | ⬜ |
@@ -293,7 +296,7 @@ Me conta o que você imaginou — tamanho (Mini/Médio/Grande) e quais toppings 
 
 | Item | Prazo | Impacto |
 |---|---|---|
-| Definir Versão A, B ou C da mecânica | **05/06/2026** | 🔴 Sem isso, copy de N4-DUO fica incompleto |
+| ~~Definir Versão A, B ou C da mecânica~~ | ~~05/06/2026~~ | ✅ **Versão A confirmada** — `duo-milkypot-brief-operacional.md` (Ciclo #224) |
 | Confirmar se tem "bilhetinho da ovelhinha" físico (Versão B) | **07/06/2026** | 🟡 N4-GIFT menciona recadinho na embalagem |
 | Confirmar horário limite de delivery (22h ou 22h30?) | **10/06/2026** | 🟡 Copy de N4 e Stories mid-day usam 22h30 |
 | Confirmar ingredientes / disponibilidade de toppings sazonais | **10/06/2026** | 🟡 Evitar prometer topping que pode faltar no dia |
@@ -312,4 +315,4 @@ Me conta o que você imaginou — tamanho (Mini/Médio/Grande) e quais toppings 
 
 ---
 
-_Belinha — Ciclo #164 | 2026-05-08_
+_Belinha — Ciclo #164 | 2026-05-08 · Atualizado Ciclo #228 | 2026-05-15_
