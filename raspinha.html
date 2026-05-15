@@ -335,9 +335,20 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
                 po.classList.add('active');
                 var btn = document.getElementById('goReviewBtn');
                 if (btn) {
-                    var url = '/clube/avaliei.html?fid=' + (scratch.franchiseId || 'muffato-quintino');
-                    if (scratch.code || scratch.id) url += '&scratch=' + encodeURIComponent(scratch.code || scratch.id);
-                    btn.href = url;
+                    // FIX (v229): link direto pro Google Review com target=_blank.
+                    // Marca timestamp no sessionStorage pra detectar retorno na próxima
+                    // visita à página avaliei.html. Antes apontava pra avaliei.html
+                    // sem registro de intent — user clicava 2x e flow ficava confuso.
+                    var avalUrl = '/clube/avaliei.html?fid=' + (scratch.franchiseId || 'muffato-quintino');
+                    if (scratch.code || scratch.id) avalUrl += '&scratch=' + encodeURIComponent(scratch.code || scratch.id);
+                    btn.href = avalUrl;
+                    // Pré-marca intent — quando user voltar pra avaliei.html, sabe que veio da raspinha
+                    btn.addEventListener('click', function(){
+                        try {
+                            sessionStorage.setItem('mp_review_intent_from', 'raspinha');
+                            sessionStorage.setItem('mp_review_intent_scratch', scratch.code || scratch.shortCode || '');
+                        } catch(_) {}
+                    });
                 }
             }
         }
@@ -364,7 +375,28 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
             document.getElementById('actionArea').style.display = 'block';
             document.getElementById('statusLabel').innerHTML = '<span class="status-chip">Raspada - aguardando resgate</span>';
         } else {
-            initScratchCanvas(scratch);
+            // FIX: initScratchCanvas precisa do wrap dimensionado pelo browser.
+            // Em fluxos rápidos (payload inline), scratchStage.classList.add('active')
+            // acontece e initScratchCanvas é chamado no mesmo tick — wrap ainda pode
+            // ter rect 0x0. Usa requestAnimationFrame pra garantir layout commit + retry
+            // se o wrap ainda não tiver dimensões (race com display:block).
+            var tryInit = function(attempts) {
+                var wrap = document.getElementById('scratchWrap');
+                var r = wrap && wrap.getBoundingClientRect();
+                if (r && r.width > 50 && r.height > 50) {
+                    initScratchCanvas(scratch);
+                } else if (attempts < 20) {
+                    requestAnimationFrame(function(){ tryInit(attempts + 1); });
+                } else {
+                    // Last resort: força wrap visible e tenta
+                    if (wrap) {
+                        wrap.style.minWidth = '300px';
+                        wrap.style.minHeight = '200px';
+                    }
+                    initScratchCanvas(scratch);
+                }
+            };
+            requestAnimationFrame(function(){ tryInit(0); });
         }
     }
 
