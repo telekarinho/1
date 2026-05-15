@@ -8645,3 +8645,47 @@ _Belinha — Ciclo #209 | 2026-05-13_
 - **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
 
 _Belinha — Ciclo #218 | 2026-05-14_
+
+---
+
+## Ciclo #224 — 2026-05-15
+
+**Área:** Conversão — Duo MilkyPot: brief operacional Versão A (padrão implementável)
+
+**Contexto:** Prescrito no ciclo #223. O `dia-dos-namorados-2026-playbook.md` listava 3 versões de mecânica (A/B/C) sem decisão do operador. Com 28 dias para o evento (12/06/2026) e intel completo dos concorrentes (ciclo #222), a janela para esperar validação estava se fechando. A intel revelou que JohnnyJoy não tem mecânica de combo/par em junho ("Dois Amores" é produto solo), e JAH vai aspiracional com pistache — deixando o espaço "duo personalizado com benefício tangível" completamente livre para o MilkyPot.
+
+**O que pesquisou/analisou:**
+- Releu `dia-dos-namorados-2026-playbook.md`: 3 versões abertas, mecânica documentada mas sem decisão
+- Releu `belinha/competitors/johnnyjoy.md` (ciclo #222): JohnnyJoy "Dois Amores" confirmado sem combo/par, todo junho, R$20,90–R$24,90
+- Releu `belinha/competitors/jhoy.md` (ciclo #222): JAH pistache aspiracional, sem mecânica de casal 2026 confirmada
+- Analisou Versão A vs. B vs. C em 5 critérios: conversão, diferenciação, operação, margem, UGC
+- Confirmou que Versão A vence em 4 de 5 critérios e não exige insumo extra (cards impressos da B não existem ainda)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/duo-milkypot-brief-operacional.md` | CRIADO — 181 linhas: justificativa baseada em intel, regra única operacional, sinalização PDV (lousa + card delivery), script verbal para atendente e delivery, atualização WA auto-resposta + N1, checklist equipe, guia de troca rápida para B/C, KPI adicional, timeline crítica 03–12/06 |
+
+**Detalhes do arquivo:**
+- Tabela comparativa A/B/C em 6 critérios com veredito documentado
+- Intel JohnnyJoy + JAH integrado à justificativa (não é opinião — é dado)
+- Script verbal pronto para 3 cenários: cliente sem saber, já pediu 2, pediu 1
+- Guia de troca rápida: se operador quiser B ou C, tem o que precisa fazer (Versão B exige card impresso até 07/06)
+- Timeline crítica: ações mínimas em 4 datas (03/06, 07/06, 11/06, 12/06)
+- Completamente implementável sem validação prévia do operador
+
+**Commit:** `d03fe36`
+
+**Próximo passo sugerido:**
+- **Ciclo #225 — Conteúdo:** Copy feed IG/TikTok Dia dos Namorados — captions prontas para Post 1 (véspera 11/06) e Post 2 (Dia H 12/06), com variação para Reel 15s; o playbook tem estrutura mas não tem copy linha a linha finalizada para copiar e postar
+- **Ciclo #226 — Concorrentes:** Refetch TheBest + MilkyMoo status junho (última atualização antiga — verificar ações de Namorados)
+- **Ciclo #227 — UX:** Verificar overlap banner Junina (04/06–18/06) vs. Namorados (ciclo #221 mencionou possível contradição nos scripts de banner; ciclo #220 adicionou o banner de Namorados)
+- **Operador (URGENTE — 15 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador (URGENTE — 19 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Confirmar Versão A como padrão OU escolher B/C até **05/06** (guia de troca rápida em `duo-milkypot-brief-operacional.md`)
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #224 | 2026-05-15_
+
+---
