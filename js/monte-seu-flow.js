@@ -317,10 +317,16 @@
 
     function renderHeader() {
         var item = MS.state.item;
+        // FOTO (v235): se item tem imagem (catalog_config.sabores.items[].imagem),
+        // mostra foto real no header em vez de emoji. Fallback emoji se sem imageUrl.
+        var imgSrc = (item.imagem || (item._v2 && item._v2.imagem) || '').trim();
+        var leadVisual = imgSrc
+            ? '<img class="ms-header-img" src="' + esc(imgSrc) + '" alt="' + esc(item.name) + '" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'inline\')"><span class="ms-header-emoji" style="display:none">' + esc(item.emoji || '🎨') + '</span>'
+            : '<span class="ms-header-emoji">' + esc(item.emoji || '🎨') + '</span>';
         return ''
             + '<div class="ms-header">'
             + '  <div class="ms-header-info">'
-            + '    <span class="ms-header-emoji">' + esc(item.emoji || '🎨') + '</span>'
+            + '    ' + leadVisual
             + '    <div>'
             + '      <div class="ms-header-tag">MONTE O SEU JEITO</div>'
             + '      <div class="ms-header-title">' + esc(item.name) + '</div>'
@@ -592,6 +598,7 @@
             + '.ms-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid #eee;background:linear-gradient(135deg,#EC407A 0%,#AB47BC 50%,#5E35B1 100%);color:#fff;flex-shrink:0}'
             + '.ms-header-info{display:flex;align-items:center;gap:12px}'
             + '.ms-header-emoji{font-size:34px;line-height:1}'
+            + '.ms-header-img{width:56px;height:56px;border-radius:14px;object-fit:cover;border:2px solid rgba(255,255,255,.3);box-shadow:0 4px 12px rgba(0,0,0,.18)}'
             + '.ms-header-tag{font-size:11px;letter-spacing:1.5px;font-weight:700;opacity:.9}'
             + '.ms-header-title{font-size:22px;font-weight:800;line-height:1.1;margin-top:2px}'
             + '.ms-close{background:rgba(255,255,255,.25);border:none;color:#fff;width:38px;height:38px;border-radius:50%;font-size:22px;cursor:pointer}'
