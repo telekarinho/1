@@ -622,7 +622,7 @@
     <script src="js/core/constants.js"></script>
     <script src="js/core/utils.js"></script>
     <script src="js/core/firebase-config.js"></script>
-    <script src="js/core/datastore.js?v=mp-v226"></script>
+    <script src="js/core/datastore.js?v=mp-v234"></script>
     <script>
         // CRITICAL: cliente anonimo (incognito) precisa do init pra puxar
         // catalog_config do Firestore — sem isso, getCatalogConfig retorna
@@ -630,11 +630,11 @@
         if (typeof DataStore !== 'undefined' && DataStore.init) DataStore.init();
     </script>
     <script src="js/stores-data.js"></script>
-    <script src="js/analytics.js?v=mp-v204"></script>
+    <script src="js/analytics.js?v=mp-v234"></script>
     <script src="js/cardapio-data.js"></script>
-    <script src="js/core/cost-calculator.js?v=mp-v204"></script>
-    <script src="js/core/catalog-v2.js?v=mp-v224"></script>
-    <script src="js/monte-seu-flow.js?v=mp-v225"></script>
+    <script src="js/core/cost-calculator.js?v=mp-v234"></script>
+    <script src="js/core/catalog-v2.js?v=mp-v234"></script>
+    <script src="js/monte-seu-flow.js?v=mp-v234"></script>
     <script src="js/cart.js"></script>
     <script src="js/core/raspinha-engine.js"></script>
     <script src="js/checkout.js"></script>
@@ -1916,6 +1916,16 @@
             renderProducts(initialTab);
         })();
         updateCartUI();
+
+        // CART RECOVERY (v234): tenta recuperar carrinho do Firestore (background)
+        // Funciona se user logou MilkyClube em outro device e adicionou ao carrinho
+        setTimeout(function(){
+            try {
+                if (typeof window.recoverCartFromCloud === 'function') {
+                    window.recoverCartFromCloud().catch(function(){});
+                }
+            } catch(_){}
+        }, 1500);
 
         // Navbar scroll effect
         window.addEventListener('scroll', function() {

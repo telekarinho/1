@@ -3110,3 +3110,70 @@ exports.manualFirestoreBackup = onCall({
     if (!resp.ok) throw new HttpsError("internal", `HTTP ${resp.status}: ${text}`);
     return { success: true, outputUri, response: JSON.parse(text) };
 });
+
+// ============================================================
+// notifyExpiringScratches — alerta raspinhas perto de expirar (v234)
+// ============================================================
+// Roda 2x/dia (8h e 18h BRT). Pra cada scratch com status='not_scratched'
+// e expiresAt em [agora, agora+30h]: cria doc em `pending_notifications`
+// com tipo='scratch_expiring' pra ser consumido por worker FCM/WhatsApp.
+//
+// Hook FCM (futuro): listener onCreate em pending_notifications dispara
+// messaging().send() pro fcmToken do membro. Atualmente o doc serve
+// como queue auditável — painel admin pode listar pra envio manual.
+exports.notifyExpiringScratches = onSchedule({
+    schedule: "0 8,18 * * *",
+    timeZone: "America/Sao_Paulo",
+    region: "southamerica-east1",
+    memory: "256MiB"
+}, async (event) => {
+    const now = new Date();
+    const limit = new Date(now.getTime() + 30 * 3600 * 1000); // 30h pra frente
+
+    const snap = await db.collection("scratches")
+        .where("status", "==", "not_scratched")
+        .where("expiresAt", ">=", now.toISOString())
+        .where("expiresAt", "<=", limit.toISOString())
+        .limit(500) // sanidade
+        .get();
+
+    if (snap.empty) {
+        console.log("notifyExpiringScratches: nenhuma raspinha expirando.");
+        return;
+    }
+
+    let queued = 0;
+    let skipped = 0;
+    const batch = db.batch();
+    snap.forEach((doc) => {
+        const data = doc.data() || {};
+        // dedup: se já foi notificada nas últimas 18h, skip
+        if (data._lastReminderAt) {
+            const lastMs = new Date(data._lastReminderAt).getTime();
+            if (now.getTime() - lastMs < 18 * 3600 * 1000) { skipped++; return; }
+        }
+        const notifId = `scratch_exp_${doc.id}_${Math.floor(now.getTime() / 1000)}`;
+        const notifRef = db.collection("pending_notifications").doc(notifId);
+        batch.set(notifRef, {
+            type: "scratch_expiring",
+            scratchCode: doc.id,
+            shortCode: data.shortCode || null,
+            franchiseId: data.franchiseId || null,
+            customerKey: data.customerKey || null,
+            memberId: data.memberId || null,
+            customerPhone: data.customerPhone || null,
+            customerName: data.customerName || null,
+            prizeName: data.prizeName || null,
+            expiresAt: data.expiresAt,
+            scheduledAt: now.toISOString(),
+            status: "pending",
+            channel: "auto", // auto = FCM se token disponível, WhatsApp como fallback
+            message: `🪙 Sua raspinha "${data.prizeName || 'prêmio'}" expira em breve! Resgate até ${new Date(data.expiresAt).toLocaleDateString('pt-BR')}.`
+        });
+        batch.update(doc.ref, { _lastReminderAt: now.toISOString() });
+        queued++;
+    });
+
+    await batch.commit();
+    console.log(`notifyExpiringScratches: ${queued} notificações enfileiradas, ${skipped} skipped (dedup).`);
+});
