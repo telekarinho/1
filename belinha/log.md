@@ -2,6 +2,54 @@
 
 ---
 
+## Ciclo #229 — 2026-05-15
+
+**Área:** Concorrentes — MilkyMoo status junho 2026 (Namorados + Festa Junina + ALERTA Londrina)
+
+**Contexto:** Prescrito no ciclo #228 como próxima prioridade. Última atualização de MilkyMoo era ciclo #213 (14/05), cobrindo "Tempestade" (Como Treinar o Dragão) e "Pede Mooleca" histórico. Sem cobertura de Namorados 2026, sem confirmação de disponibilidade Londrina, sem intel do MooBai 2026.
+
+**O que pesquisou/analisou:**
+- WebSearch "MilkyMoo Dia dos Namorados junho 2026" → descoberta de posts IG locais (Guarapari, Ituiutaba, Teixeira de Freitas) com "Promoção especial Namorados" + post nacional `@milkymoo` "No clima de Namorados" (prefixo DK = 2026 confirmado)
+- WebSearch "MilkyMoo Moobai milkshake Dubai Namorados" → confirmação do produto MooBai Chocolate: sorvete baunilha + creme avelã + pistacho Dubai + kadayfi, R$30/300ml · R$34/500ml, lançado originalmente 12/06/2025 e reativado 2026 com posts DK
+- WebSearch "MilkyMoo Festa Junina Pede Mooleca 2026" → confirmação post Instagram ID `DKaa1fxSKtC` (DK = 2026) + múltiplas fontes (GKPB, Publicitários Criativos, MoodFood, MapaFranquias, ES360): Pede Mooleca ativo 2026 em TODAS as unidades, R$25/300ml, collab Nestlé/Garoto
+- **WebSearch "MilkyMoo Londrina Paraná 2026" → DESCOBERTA CRÍTICA:** 2 unidades confirmadas em Londrina:
+  - Catuaí Shopping (CNPJ 44.866.878/0001-80, Rodovia Celso Garcia Cid Km 377)
+  - Boulevard Shopping Londrina (confirmado em site do shopping)
+  - Instagram local: @milkymoo_londrina
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/milkymoo.md` | Cabeçalho atualizado; +Ciclo #229: alerta 2 unidades Londrina, MooBai Namorados 2026 (ingredientes, preços, comparativo vs. Duo MilkyPot), Pede Mooleca Junina 2026 confirmado, mapa competitivo junho, 5 insights estratégicos |
+
+**Intel-chave ciclo #229:**
+
+1. **MilkyMoo Londrina:** Catuaí + Boulevard = dois shoppings ativos com @milkymoo_londrina. Não eram mapeados explicitamente no arquivo. Risco competitivo local real, principalmente para Namorados e Junina.
+
+2. **MooBai Chocolate (Namorados 12/06):** Produto Dubai pistacho/kadayfi, R$30-34. Aspiracional, instagramável. Disponibilidade em Londrina NÃO confirmada — verificar @milkymoo_londrina antes de 12/06.
+
+3. **Pede Mooleca (Junina 2026):** Confirmado em todas as unidades (incluindo Londrina) via iFood + app. R$25/300ml. Collab Nestlé corporativa. Contra-posicionamento MilkyPot: artesanal/local vs. industrial.
+
+4. **Convergência pistacho tripla:** JAH (12/06) + MilkyMoo MooBai (12/06) + The Best Piscininha (06/06-06/07) = pistacho saturado. MilkyPot pode se diferenciar com sabores brasileiros afetivos.
+
+5. **Vantagem estrutural:** MilkyMoo usa iFood (comissão); MilkyPot usa WhatsApp (sem comissão + base própria).
+
+**Commit:** `3f502c9`
+
+**Próximo passo sugerido:**
+- **Ciclo #230 — UX:** Auditar `cardapio.html` — verificar se produto "Potinho Junino" está listado ou se há placeholder; lançamento previsto 17/06 mas teaser começa 03/06. Com Pede Mooleca ativo em Londrina, naming + posicionamento do Potinho Junino é urgente
+- **Ciclo #231 — Conversão:** Criar roteiro de contra-posicionamento MilkyPot vs MilkyMoo para equipe de PDV — diferencial "personalização vs. produto padrão"
+- **Ciclo #232 — Conteúdo:** Post feed IG/TikTok comparativo implícito: "potinho com SEU nome" vs. milkshake sem personalização (sem citar concorrente pelo nome)
+- **Operador (URGENTE — 15 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — com Pede Mooleca ativo em Londrina, timing é crítico
+- **Operador (URGENTE):** Verificar se @milkymoo_londrina vai ativar MooBai para 12/06 — define estratégia Namorados
+- **Operador:** Confirmar topping pistache disponível — define se MilkyPot entra no trend ou contraprograma com sabores brasileiros
+- **Operador:** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+
+_Belinha — Ciclo #229 | 2026-05-15_
+
+---
+
 ## Ciclo #227 — 2026-05-15
 
 **Área:** UX — Correção bug overlap banner Namorados × Junina (`index.html`)
