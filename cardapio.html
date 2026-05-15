@@ -347,7 +347,8 @@
             <p style="text-align:center;color:#9484A8;font-size:0.9rem;margin-bottom:4px;">Toque no sabor para montar do seu jeito!</p>
             <p style="text-align:center;font-size:0.8rem;color:#9484A8;margin-bottom:4px;">☁️ <a href="potinho-ninho-londrina.html" style="color:#7C5CBF;text-decoration:underline;text-underline-offset:2px;">Tudo sobre o Potinho de Ninho em Londrina</a></p>
             <p style="text-align:center;font-size:0.8rem;color:#9484A8;margin-bottom:4px;">🫐 <a href="acai-self-service-londrina.html" style="color:#5B52D0;text-decoration:underline;text-underline-offset:2px;">Açaí Self-Service em Londrina — Buffet Livre</a></p>
-            <p style="text-align:center;font-size:0.8rem;color:#9484A8;margin-bottom:16px;">🎨 <a href="potinho-personalizado-londrina.html" style="color:#C45FA8;text-decoration:underline;text-underline-offset:2px;">Potinho Personalizado em Londrina — Monte do Seu Jeito</a></p>
+            <p style="text-align:center;font-size:0.8rem;color:#9484A8;margin-bottom:4px;">🎨 <a href="potinho-personalizado-londrina.html" style="color:#C45FA8;text-decoration:underline;text-underline-offset:2px;">Potinho Personalizado em Londrina — Monte do Seu Jeito</a></p>
+            <p style="text-align:center;font-size:0.8rem;color:#9484A8;margin-bottom:16px;">🎪 <a href="potinho-junino-londrina.html" style="color:#C0820A;text-decoration:underline;text-underline-offset:2px;">Potinho Junino em Londrina — Edição Limitada Junho</a></p>
             <div class="category-tabs sticky-tabs" id="categoryTabs" role="tablist" aria-label="Filtros do cardápio">
                 <button class="cat-tab active" data-category="ninho" onclick="filterProducts(event, 'ninho')" role="tab" aria-selected="true">☁️ Ninho</button>
                 <button class="cat-tab" data-category="acai" onclick="filterProducts(event, 'acai')" role="tab" aria-selected="false">🫐 Açaí</button>
@@ -777,12 +778,50 @@
             renderBatch();
         }
 
+        function renderJunina() {
+            var grid = document.getElementById('productGrid');
+            if (!grid) return;
+            if (lazyObserver) { lazyObserver.disconnect(); lazyObserver = null; }
+            grid.innerHTML =
+                '<a href="potinho-junino-londrina.html" class="product-card-mobile" style="text-decoration:none;color:inherit;" aria-label="Potinho Junino — Edição Limitada de Junho">' +
+                    '<div class="card-emoji-wrap">' +
+                        '<span class="card-emoji">🥜</span>' +
+                        '<span class="card-format-icon">🍨</span>' +
+                        '<span class="card-badge" style="background:#C0820A;color:#fff;font-size:0.6rem;padding:2px 6px;border-radius:8px;position:absolute;top:6px;right:6px;">Edição Limitada</span>' +
+                    '</div>' +
+                    '<div class="card-info">' +
+                        '<h3 class="card-name">Potinho Junino 🎪</h3>' +
+                        '<p class="card-desc">Base Ninho + paçoca + calda de amendoim. Só em junho!</p>' +
+                        '<div class="card-footer">' +
+                            '<span class="card-price">a partir de <strong>R$ 10</strong></span>' +
+                            '<span class="card-add-btn">Ver</span>' +
+                        '</div>' +
+                    '</div>' +
+                '</a>';
+        }
+
         window.filterProducts = function(event, cat) {
             var tabs = document.querySelectorAll('.cat-tab');
             tabs.forEach(function(t) { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
             if (event && event.target) { event.target.classList.add('active'); event.target.setAttribute('aria-selected', 'true'); }
+            if (cat === 'junina') { renderJunina(); return; }
             renderProducts(cat);
         };
+
+        // Date-gated Junina tab: visible from 03/06/2026 (teaser day)
+        (function() {
+            if (new Date() < new Date('2026-06-03')) return;
+            var tabs = document.getElementById('categoryTabs');
+            if (!tabs) return;
+            var btn = document.createElement('button');
+            btn.className = 'cat-tab';
+            btn.setAttribute('data-category', 'junina');
+            btn.setAttribute('role', 'tab');
+            btn.setAttribute('aria-selected', 'false');
+            btn.innerHTML = '&#127914; Junina';
+            btn.onclick = function(e) { window.filterProducts(e, 'junina'); };
+            tabs.appendChild(btn);
+        })();
 
         // Product Bottom Sheet
         window.openProductSheet = function(baseId, formatoId, saborId) {
