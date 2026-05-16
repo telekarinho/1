@@ -2,6 +2,54 @@
 
 ---
 
+## Ciclo #234 — 2026-05-16
+
+**Área:** UX — coexistência de banners Namorados VIP e Junina em `index.html`
+
+**Contexto:** Prescrito no ciclo #233. A lógica de `configureBanner()` em `index.html` cobria Namorados apenas nos dias 11/06 (véspera) e 12/06 (Dia H), mas o período **03/06–10/06** — quando o keyword NAMORADOS26 entra no WA Business — estava sendo engolido pelo `inJuninaTeaser` (ativo desde 10/05). Além disso, o `closeBanner()` usava a chave genérica `juninaBannerClosed` para esses dias, suprimindo o teaser Junina de 13-16/06 na mesma sessão de quem fechasse o banner durante o VIP.
+
+**O que pesquisou/analisou:**
+- Leu toda a função `configureBanner()` (linhas 531–636 de `index.html`)
+- Mapeou o fluxo de datas e chaves `sessionStorage` para cada fase
+- Identificou dois bugs: (1) ausência de fase VIP Namorados 03-10/06; (2) `closeBanner()` `else` catch-all incorreto para esse período
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | +7 linhas: fase `namoradosVipClosed` 03-10/06 em `configureBanner()` + chave correspondente em `closeBanner()` |
+
+**Detalhes das mudanças:**
+1. `configureBanner()` — inserido bloco após o check de véspera (11/06): se `m===6 && day>=3 && day<=10` e `!namoradosVipClosed`, mostra "12/06: DUO MILKYPOT · Mande NAMORADOS26 → Lista VIP". Retorna antes do `inJuninaTeaser`.
+2. `closeBanner()` — inserido `else if` antes do `else` genérico: se `m2===6 && day2>=3 && day2<=10`, seta `namoradosVipClosed` (não mais `juninaBannerClosed`).
+
+**Mapa de fases pós-ciclo #234:**
+| Datas | Banner | Chave |
+|-------|--------|-------|
+| 10/05–02/06 | Junina teaser | `juninaBannerClosed` |
+| 03/06–10/06 | Namorados VIP (novo) | `namoradosVipClosed` |
+| 11/06 | Namorados véspera | `namoradosVespraClosed` |
+| 12/06 | Namorados Dia H | `namoradosDiahClosed` |
+| 13/06–16/06 | Junina teaser (retoma) | `juninaBannerClosed` |
+| 17/06–29/06 | Junina launch | `juninaBannerClosed` |
+| Julho | Caramelado | `caramBannerClosed` |
+| 01-09/08 | Dia dos Pais | `paisBannerClosed` |
+
+**Commit:** `d07f499`
+
+**Próximo passo sugerido:**
+- **Ciclo #235 — Conversão:** Mecânica "foto com potinho = reward" (UGC + fidelidade) — prescrita ciclos #226 e #231, ainda pendente; baixo custo de implementação (copy + instrução no WA flow)
+- **Ciclo #236 — Conteúdo:** Post "sabores brasileiros vs. pistacho premium" — contra-posicionamento sutil à tendência MooBai + JAH antes de 12/06
+- **Ciclo #237 — SEO:** Verificar se `potinho-junino-londrina.html` tem `datePublished` / `validFrom` 03/06 no schema e se está linkado em `sitemap.xml`
+- **Operador (URGENTE — 14 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador (URGENTE):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️ — banner VIP agora ativo a partir dessa data
+- **Operador:** Monitorar @milkymoo_londrina para confirmar MooBai Londrina
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #234 | 2026-05-16_
+
+---
+
 ## Ciclo #232 — 2026-05-15
 
 **Área:** Conteúdo — Diferenciação implícita "potinho com SEU nome vs. milkshake padrão"
