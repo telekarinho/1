@@ -1,14 +1,66 @@
 # 🛡️ PRODUCTION GUARDRAILS — MilkyPot
 
-> **Esta é uma DIRETIVA OBRIGATÓRIA para qualquer sessão Claude editando o repo MilkyPot.**
+> **Esta é uma DIRETIVA OBRIGATÓRIA para qualquer sessão Claude (incluindo Belinha autônoma) editando o repo MilkyPot.**
 > Loja de Londrina (Muffato Quintino) ABERTA desde 25/04/2026 e processando vendas reais.
 > Qualquer atualização que QUEBRE algo que estava funcionando custa dinheiro ao franqueado.
 
 ---
 
-## 🚦 Princípio Maestre
+## 🚦 REGRA #0 — ANTI-REGRESSÃO ABSOLUTA
 
-**ATUALIZAR ≠ SUBSTITUIR.** Adicionar funcionalidade nova é OK. Apagar o que já funcionava (mesmo "limpando código morto") é PROIBIDO sem confirmação explícita do user.
+**O MilkyPot SÓ PROGRIDE.** Toda mudança é **ADITIVA**. **NUNCA REGRESSIVA**.
+
+Esta regra vale em **TODAS** as superfícies do projeto, simultaneamente — online (GitHub/Vercel), offline (PWAs cacheados nas TVs/celulares), e qualquer estado intermediário:
+
+| Superfície | Cobertura anti-regressão |
+|---|---|
+| **GitHub repo** (`telekarinho/1`) | Branches, tags, releases, workflows, secrets |
+| **Código local** (worktrees Claude, máquina do user) | Working tree, stashes, branches em paralelo |
+| **Vercel produção** | Build atual servido em `milkypot.com` |
+| **GitHub Pages** | Fallback de hosting |
+| **Firestore** (`milkypot-ad945`) | `datastore/*`, regras de segurança, índices |
+| **Cloud Functions** (`southamerica-east1`) | Funções deployadas + suas dependências |
+| **PWAs cacheados** (`sw.js`) | Service workers nas TVs, celulares de clientes, de colaboradores |
+| **APK Colaborador** (`build-android-app.yml`) | TWA via `@bubblewrap/core` |
+| **APK TV** (`android-tv/`) | WebView fullscreen → `tv.html` |
+| **Painel admin** (`painel/*.html`) | PDV, equipe, configurações, TV-indoor, fechamento de caixa |
+| **MilkyClube** (`/milkyclube/`) | Cashback + push FCM + gamificação |
+| **Belinha bot** (branch `claude/belinha-melhoria-continua`) | Agente autônomo 24/7 |
+| **Offline state** | Comportamento esperado sem internet ainda deve funcionar |
+
+### O que esta regra PROÍBE
+
+- ❌ Apagar função, componente, array ou arquivo "porque não parece estar sendo usado"
+- ❌ Renomear campos do Firestore sem atualizar TODOS os consumers no mesmo PR
+- ❌ "Limpar código duplicado" entre superfícies (`tv.html` web ↔ APK TV — não há duplicação real, são contratos)
+- ❌ "Otimizar" reescrevendo do zero
+- ❌ "Consolidar" merging features sem confirmar com user
+- ❌ "Desativar temporariamente" um toggle/flag em produção
+- ❌ Substituir um renderer/handler por outro mais "moderno" sem manter o antigo como fallback
+- ❌ Remover suporte a um tipo de dado/slide/payload do switch
+- ❌ Bumpar versão de dependency major que muda API pública
+- ❌ Forçar reload do SW de um jeito que apaga dados locais (caixa aberto, fila offline, etc)
+- ❌ Mexer em `permissions:` de workflow / Firestore Rules sem revisão
+
+### O que esta regra PERMITE
+
+- ✅ Adicionar nova função/slide/tipo/flag sem mexer no que existe
+- ✅ Corrigir bug introduzido **na mesma sessão** (rollback é progresso)
+- ✅ Bumpar `sw.js` cache version (parte do fluxo normal)
+- ✅ Renomear código interno sem mudar contrato externo (assinaturas de função, IDs de docs Firestore, query params de URL)
+- ✅ Substituir COM CONFIRMAÇÃO explícita do user + plano de revert documentado em commit
+- ✅ Marcar legacy como `// DEPRECATED` mantendo o código funcional
+
+### Como agir quando há dúvida
+
+1. **Procure todas as referências** com Grep antes de remover qualquer coisa
+2. **Assuma que é usado** se houver UMA referência que você não consegue rastrear
+3. **Pergunte ao user** — é melhor parar uma sessão por 1 minuto do que quebrar produção
+4. **Marque como DEPRECATED** em vez de remover. Remover fica pra major version explícita
+
+### Regra prática: ATUALIZAR ≠ SUBSTITUIR
+
+Adicionar funcionalidade nova é OK. Apagar o que já funcionava (mesmo "limpando código morto") é PROIBIDO sem confirmação explícita do user.
 
 Se você está em dúvida se algo é usado: **assuma que SIM e mantenha.**
 
