@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #241 — 2026-05-16
+
+**Área:** SEO + UX — `potinho-junino-londrina.html`: meta tags com data de lançamento + date-gate nos CTAs
+
+**Contexto:** Sugestão do ciclo #240. O ciclo #239 corrigiu `cardapio.html` com badge "Em breve · 17/06" no card do Potinho Junino, mas a landing page `/potinho-junino-londrina.html` ainda tinha meta description, og:description, og:title e twitter:description sem mencionar "17/06" — o snippet no Google mostrava "Edição limitada de junho" sem a data, potencial confusão. Além disso, os dois CTAs "Pedir pelo WhatsApp" estavam ativos mesmo antes de 17/06, levando a falsa expectativa.
+
+**O que pesquisou/analisou:**
+- Leu `potinho-junino-londrina.html` completo — confirmou ausência de "17/06" em todos os 5 campos de texto SEO (meta, og:title, og:desc, twitter:title, twitter:desc)
+- Confirmou que `validFrom: "2026-06-17"` já estava correto no Schema.org Product (ciclo anterior)
+- Identificou que FAQ e body mencionavam "17/06" corretamente — só os meta tags estavam desalinhados
+- Identificou CTAs hero + bottom sem date-gate — qualquer clique antes de 17/06 levaria a um pedido impossível de entregar
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `potinho-junino-londrina.html` | 8 mudanças: meta description +data; og:title "lançamento 17/06"; og:description +data; twitter:title +data; twitter:description +data; badge "JUNHO 2026"→"LANÇAMENTO 17/06"; hero sub-text +`<strong>Disponível a partir de 17/06.</strong>`; IDs nos CTAs + script date-gate |
+
+**Destaques técnicos:**
+1. **SEO** — 5 campos de meta/OG/Twitter agora comunicam "17/06": quando Google rastrear, o snippet vai exibir a data de disponibilidade, reduzindo bounce de visitantes que esperavam produto disponível imediatamente
+2. **Date-gate JS** — `new Date() < new Date('2026-06-17')` troca ambos CTAs de "Pedir pelo WhatsApp" para "Avisem-me no lançamento · 17/06" com deep link de captura de lista WA; reverte automaticamente em 17/06 sem intervenção do operador
+3. **Zero dependência nova** — JS inline puro, funciona em qualquer browser sem bundle extra
+4. **Badge e hero sub** — alinhamento visual com o cardápio (que já mostrava "Em breve · 17/06" desde ciclo #239)
+
+**Commit:** `28b1321`
+
+**Próximo passo sugerido:**
+- **Ciclo #242 — Conteúdo:** Feed IG pós-enquete 05/06 — post resultado votação + countdown "faltam 12 dias · 17/06" (transforma dado coletado pela enquete em conteúdo orgânico adicional)
+- **Ciclo #243 — UX:** Auditar `index.html` banner Namorados (12/06) vs. banner Junina (17/06) — verificar coexistência visual na janela de overlap 12/06–16/06 onde ambos coexistem
+- **Ciclo #244 — Conversão:** Mecânica UGC "foto com potinho = reward" (prescrita ciclo #226, ainda pendente)
+- **Ciclo #245 — Concorrentes:** Novo ciclo MilkyMoo/JAH — verificar se ações de Namorados 12/06 já visíveis; ajustar contra-posicionamento se necessário
+- **Operador (URGENTE — 14 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador (URGENTE — 18 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Configurar 4 Quick Replies Instagram antes de 03/06 (roteiro ciclo #240)
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #241 | 2026-05-16_
+
+---
+
 ## Ciclo #240 — 2026-05-16
 
 **Área:** Conversão — Roteiro DM Instagram para captura de leads juninos → WhatsApp
