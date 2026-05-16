@@ -249,6 +249,16 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(145deg,#FFF8E1 0
 .footer a:hover{color:#6C3FC7}
 .footer-sep{margin:0 8px;color:#D4C5E8}
 .mascote{font-size:28px;display:block;margin-bottom:6px}
+
+/* Countdown regressivo */
+.countdown-wrap{text-align:center;margin-bottom:16px}
+.countdown-title{font-size:12px;font-weight:700;color:#B45309;margin-bottom:8px;letter-spacing:.2px}
+.countdown-box{display:inline-flex;gap:6px;align-items:flex-start;background:#fff;border:2px solid #F59E0B;border-radius:20px;padding:12px 18px;box-shadow:0 6px 20px rgba(245,158,11,.16)}
+.cd-unit{display:flex;flex-direction:column;align-items:center;min-width:40px}
+.cd-num{font-family:'Baloo 2',cursive;font-size:24px;font-weight:800;color:#92400E;line-height:1}
+.cd-label{font-size:9px;font-weight:700;color:#B45309;text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+.cd-sep{font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;color:#F59E0B;padding-top:3px}
+.countdown-launched{display:inline-block;background:linear-gradient(135deg,#34D399,#059669);color:#fff;border-radius:20px;padding:12px 24px;font-family:'Baloo 2',cursive;font-size:15px;font-weight:800;box-shadow:0 6px 18px rgba(52,211,153,.3)}
 </style>
 </head>
 <body>
@@ -267,8 +277,22 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(145deg,#FFF8E1 0
   </header>
 
   <!-- Badge edição limitada -->
-  <div style="text-align:center;margin-bottom:16px">
+  <div style="text-align:center;margin-bottom:12px">
     <span class="badge-limited">🎪 EDIÇÃO LIMITADA · LANÇAMENTO 17/06</span>
+  </div>
+
+  <!-- Countdown regressivo até 17/06 às 14h (BRT) -->
+  <div class="countdown-wrap" id="countdown-junino">
+    <p class="countdown-title">🕐 Faltam para o lançamento:</p>
+    <div class="countdown-box">
+      <div class="cd-unit"><span class="cd-num" id="cd-d">--</span><span class="cd-label">dias</span></div>
+      <span class="cd-sep">:</span>
+      <div class="cd-unit"><span class="cd-num" id="cd-h">--</span><span class="cd-label">horas</span></div>
+      <span class="cd-sep">:</span>
+      <div class="cd-unit"><span class="cd-num" id="cd-m">--</span><span class="cd-label">min</span></div>
+      <span class="cd-sep">:</span>
+      <div class="cd-unit"><span class="cd-num" id="cd-s">--</span><span class="cd-label">seg</span></div>
+    </div>
   </div>
 
   <!-- Hero -->
@@ -444,6 +468,28 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(145deg,#FFF8E1 0
   </footer>
 
 </div>
+
+<script>
+/* Countdown regressivo até 17/06 14h BRT (17h UTC) */
+(function(){
+  var target = new Date('2026-06-17T17:00:00Z');
+  var wrap = document.getElementById('countdown-junino');
+  function pad(n){ return n < 10 ? '0'+n : String(n); }
+  function tick(){
+    var diff = target - Date.now();
+    if(diff <= 0){
+      wrap.innerHTML = '<span class="countdown-launched">🎉 Disponível agora! Peça hoje pelo WhatsApp 🐑</span>';
+      return;
+    }
+    document.getElementById('cd-d').textContent = Math.floor(diff / 86400000);
+    document.getElementById('cd-h').textContent = pad(Math.floor(diff % 86400000 / 3600000));
+    document.getElementById('cd-m').textContent = pad(Math.floor(diff % 3600000 / 60000));
+    document.getElementById('cd-s').textContent = pad(Math.floor(diff % 60000 / 1000));
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
 
 <script>
 (function(){
