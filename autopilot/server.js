@@ -31,6 +31,7 @@ const path = require('path');
 
 const { pickSystem } = require('./_brain-local.js');
 const Memory = require('./_belinha-memory.js');
+const Backends = require('./_backends.js');
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
@@ -69,14 +70,21 @@ app.use((req, res, next) => {
 });
 
 // ========== HEALTH ==========
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+    const detected = await Backends.detectAvailable();
+    const available = detected.filter(b => b.available);
     res.json({
         ok: true,
         service: 'MilkyPot Autopilot',
-        version: '1.0.0',
+        version: '2.0.0',
         uptime: Math.round(process.uptime()) + 's',
-        primaryBackend: fs.existsSync(CODEX_BIN) ? 'codex' : 'claude',
-        fallbackBackend: fs.existsSync(CODEX_BIN) ? 'claude' : null
+        primaryBackend: available[0]?.id || null,
+        fallbackBackends: available.slice(1).map(b => b.id),
+        cascade: detected.map(b => ({ id: b.id, name: b.name, available: b.available, plan: b.plan })),
+        memory: {
+            decisions: Memory.loadDecisions(10).length,
+            facts: Object.keys(Memory.loadFacts()).length
+        }
     });
 });
 
@@ -242,14 +250,16 @@ app.post('/copilot', async (req, res) => {
         const combined = `<system_instructions>\n${systemPrompt}\n</system_instructions>\n\n${finalPrompt}`;
 
         const primaryStartTs = Date.now();
+        // Cascata completa: Claude → Codex → Gemini CLI → Copilot CLI → LM Studio → Ollama
+        // Cada backend testa detect() primeiro; se disponível, tenta executar;
+        // se falhar, próximo da cascata assume.
+        // Ordem configurável via autopilot/backends.json
         let result;
         try {
-            // Primário: Codex local (OpenAI plano do usuário — R$ 0)
-            result = await runCodex(combined);
-        } catch (codexErr) {
-            console.warn('[copilot] codex falhou, tentando claude backup:', codexErr.message.slice(0, 120));
-            // Backup: Claude CLI (plano Claude Pro/Max — R$ 0)
-            result = await runClaude(combined, model);
+            result = await Backends.executeCascade(combined, { model });
+        } catch (cascadeErr) {
+            console.error('[copilot] cascata completa falhou:', cascadeErr.attempts);
+            throw cascadeErr;
         }
 
         const primaryElapsedMs = Date.now() - primaryStartTs;
@@ -434,20 +444,48 @@ function startTunnel(port) {
 
 // ========== INIT ==========
 const PORT = process.env.MILKYPOT_PORT || 5757;
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
     console.log('═══════════════════════════════════════════════');
-    console.log(' 🐑 MilkyPot Autopilot — Servidor Local v1.0.0');
+    console.log(' 🐑 MilkyPot Autopilot — Servidor Local v2.0.0');
     console.log('═══════════════════════════════════════════════');
     console.log('');
     console.log(`   Rodando em: http://localhost:${PORT}`);
     console.log('   Health check: http://localhost:' + PORT + '/health');
     console.log('');
-    console.log('   ⚙️  Backend: claude CLI (seu plano Claude Pro/Max)');
-    console.log('   💰 Custo: R$ 0,00 — usa sua conta autenticada');
+
+    // Detecta TODOS os backends disponíveis e mostra cascata
+    try {
+        const detected = await Backends.detectAvailable();
+        console.log('   🧠 CASCATA DE BACKENDS LLM (ordem de tentativa):');
+        let i = 1;
+        for (const b of detected) {
+            const status = b.available ? '✅' : '⚪';
+            const label = b.available
+                ? `${b.id} — ${b.plan}`
+                : `${b.id} — não detectado`;
+            console.log(`      ${status} ${i}. ${label}`);
+            i++;
+        }
+        const ativos = detected.filter(b => b.available);
+        console.log('');
+        if (ativos.length) {
+            console.log(`   💰 ${ativos.length} backend(s) ativo(s) — Custo: R$ 0,00`);
+            console.log(`   🥇 Primário: ${ativos[0].id} (resto é backup automático)`);
+        } else {
+            console.log('   ⚠️  NENHUM backend detectado! Verifique:');
+            console.log('      - claude CLI instalado e logado (claude login)');
+            console.log('      - codex CLI instalado');
+            console.log('      - Ollama rodando em :11434');
+            console.log('      - LM Studio rodando em :1234');
+        }
+    } catch (e) {
+        console.warn('   ⚠️  Erro detectando backends:', e.message);
+    }
+
     console.log('');
-    console.log('   🐑 BELINHA LOCAL: http://localhost:' + PORT + '/painel/copilot-belinha.html');
+    console.log('   🐑 BELINHA LOCAL:  http://localhost:' + PORT + '/painel/copilot-belinha.html');
     console.log('   🐑 BELINHA ONLINE: https://milkypot.com/painel/copilot-belinha.html');
-    console.log('   (ambas usam este servidor local — R$ 0,00)');
+    console.log('   🧠 Memória permanente: autopilot/memory/');
     console.log('');
     console.log('   Ctrl+C pra parar.');
     console.log('═══════════════════════════════════════════════');
