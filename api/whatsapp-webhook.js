@@ -578,19 +578,40 @@ async function transcribeAudio({ audioBase64, audioUrl, audioMimeType }) {
 
 // ============================================
 // Chamar Belinha IA (Groq)
+// Com fallback automático pra modelo menor quando rate limit (429)
 // ============================================
+const FALLBACK_MODELS = [
+    "llama-3.1-8b-instant",    // 4-5x mais barato em tokens que 70b
+    "llama-3.3-70b-versatile", // primário (melhor qualidade)
+    "gemma2-9b-it"             // ultra-fallback
+];
+
 async function callGroq(apiKey, body) {
-    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-    });
-    if (!r.ok) {
+    const originalModel = body.model;
+    // Tenta o modelo solicitado primeiro, depois fallbacks em ordem
+    const modelsToTry = [originalModel, ...FALLBACK_MODELS.filter(m => m !== originalModel)];
+
+    for (let i = 0; i < modelsToTry.length; i++) {
+        const model = modelsToTry[i];
+        const attemptBody = { ...body, model };
+        const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify(attemptBody)
+        });
+        if (r.ok) {
+            if (i > 0) console.log(`[groq] fallback model ${model} worked (original ${originalModel} failed)`);
+            return await r.json();
+        }
         const errText = await r.text().catch(() => "");
-        console.error("Groq API error:", r.status, errText.slice(0, 300));
-        throw new Error("Groq API error " + r.status);
+        console.error(`Groq ${model} error:`, r.status, errText.slice(0, 200));
+        // Se 429 (rate limit), tenta próximo modelo. Se outro erro, lança.
+        if (r.status !== 429 && r.status !== 503) {
+            throw new Error(`Groq API error ${r.status}`);
+        }
+        // 429/503 → próximo modelo
     }
-    return await r.json();
+    throw new Error("Groq todos modelos esgotaram rate limit");
 }
 
 async function generateBelinhaReply(history, currentText, customerName, accountId, customerPhone) {
