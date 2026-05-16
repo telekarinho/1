@@ -603,7 +603,7 @@ app.get('/health', (req, res) => {
 
 app.get('/', (req, res) => res.redirect('/painel/copilot.html'));
 
-app.post('/chat', requireSecret, async (req, res) => {
+async function _handleChatRequest(req, res) {
     const { messages = [] } = req.body || {};
     if (!messages.length) return res.status(400).json({ error: 'messages_empty' });
 
@@ -622,7 +622,18 @@ app.post('/chat', requireSecret, async (req, res) => {
         console.error('[chat] erro:', e);
         return res.status(500).json({ error: 'internal', message: e.message });
     }
-});
+}
+
+// Rota canônica original. Mantida pra back-compat com qualquer cliente legacy.
+app.post('/chat', requireSecret, _handleChatRequest);
+
+// Aliases — o painel painel/copilot-belinha.html (via js/core/copilot-transport.js)
+// posta em '/copilot' (local + tunnel cloudflared) e em '/api/copilot' (Vercel
+// fallback online). Sem esses aliases o Express devolvia 'Cannot POST /copilot'
+// como HTML e o user via "<!DOCTYPE html>...Error..." no chat da Belinha.
+// REGRA #0 anti-regressao: rotas novas adicionadas, '/chat' continua viva.
+app.post('/copilot', requireSecret, _handleChatRequest);
+app.post('/api/copilot', requireSecret, _handleChatRequest);
 
 // ──────────────────────────────────────────────────────
 // CLOUDFLARE TUNNEL — expõe HTTPS público pra milkypot.com
