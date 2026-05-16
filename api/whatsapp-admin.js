@@ -46,6 +46,14 @@ const OWNER_EMAILS = new Set([
     ...(process.env.MP_OWNER_EMAILS || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean)
 ]);
 
+// Owner UIDs — fallback quando user logou via provider sem email (custom token,
+// phone auth, ou Google Sign-In sem scope email). Email pode ficar vazio mas UID
+// é estável. Pode ser estendido via env var MP_OWNER_UIDS (CSV).
+const OWNER_UIDS = new Set([
+    "GbxPt7Hjx7hNNX39UW1Ohq4qaVE2",
+    ...(process.env.MP_OWNER_UIDS || "").split(",").map(s => s.trim()).filter(Boolean)
+]);
+
 async function validateIdToken(idToken) {
     const url = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_KEY}`;
     const r = await fetch(url, {
@@ -162,6 +170,11 @@ module.exports = async (req, res) => {
     // alguém setar role errado no /users/{uid} de um owner)
     if (OWNER_EMAILS.has(emailLower)) {
         role = "super_admin";
+    }
+    // Fallback UID (quando user logou sem email no Auth — phone, custom token, etc)
+    if (OWNER_UIDS.has(user.uid)) {
+        role = "super_admin";
+        console.log("[whatsapp-admin] fallback: owner UID → super_admin", user.uid);
     }
 
     if (!ALLOWED_ROLES.has(role)) {
