@@ -30,6 +30,7 @@ const os = require('os');
 const path = require('path');
 
 const { pickSystem } = require('./_brain-local.js');
+const Memory = require('./_belinha-memory.js');
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
@@ -187,19 +188,47 @@ async function runCodex(combined) {
 // ========== COPILOT ==========
 app.post('/copilot', async (req, res) => {
     try {
-        const { messages, context, persona, model } = req.body || {};
+        const { messages, context, persona, model, images } = req.body || {};
         if (!Array.isArray(messages) || !messages.length) {
             return res.status(400).json({ error: 'messages_empty' });
         }
 
-        const systemPrompt = pickSystem(persona);
+        // 🧠 Memória permanente: injeta no system prompt
+        const lastUserText = (messages.slice().reverse().find(m => m.role === 'user') || {}).content || '';
+        const memorySnippet = Memory.buildMemorySnippet(lastUserText.slice(0, 200));
+        const baseSystem = pickSystem(persona);
+        const systemPrompt = `${baseSystem}\n\n${memorySnippet}`;
+
+        // Se vier imagens (paste de print), descreve elas no prompt e o user prompt vê
+        let imagesSummary = '';
+        if (Array.isArray(images) && images.length) {
+            imagesSummary = `\n\n📎 O usuário anexou ${images.length} imagem(ns) (print/foto). Cada imagem está descrita abaixo como ALT_TEXT (Codex não vê pixels diretamente, mas usa esse texto):\n` +
+                images.map((img, i) => `[${i + 1}] ${img.altText || img.filename || 'print sem descrição'}`).join('\n');
+            console.log(`[copilot] ${images.length} imagem(ns) anexadas`);
+        }
+
+        // 📝 COMPRESSÃO: se histórico > 30 msgs, comprime as mais antigas em summary
+        let workingMessages = messages;
+        if (messages.length > 30) {
+            const oldMsgs = messages.slice(0, messages.length - 20);
+            const recentMsgs = messages.slice(messages.length - 20);
+            const compressedSummary = oldMsgs
+                .map(m => `${m.role}: ${String(m.content || '').slice(0, 200)}`)
+                .join("\n")
+                .slice(0, 1500);
+            workingMessages = [
+                { role: 'system', content: `[Conversa anterior comprimida — ${oldMsgs.length} msgs]\n${compressedSummary}` },
+                ...recentMsgs
+            ];
+            console.log(`[copilot] comprimiu ${oldMsgs.length} msgs antigas (${messages.length} → ${workingMessages.length})`);
+        }
 
         // Pega a última user message, injeta <context>
-        const lastUserIdx = [...messages].map((m, i) => [m.role, i]).reverse().find(([r]) => r === 'user')?.[1];
+        const lastUserIdx = [...workingMessages].map((m, i) => [m.role, i]).reverse().find(([r]) => r === 'user')?.[1];
         let finalPrompt = '';
-        messages.forEach((m, i) => {
+        workingMessages.forEach((m, i) => {
             if (i === lastUserIdx && m.role === 'user' && context) {
-                finalPrompt += `\n\nUSER: <context>\n${JSON.stringify(context, null, 2)}\n</context>\n\n${m.content}`;
+                finalPrompt += `\n\nUSER: <context>\n${JSON.stringify(context, null, 2)}\n</context>${imagesSummary}\n\n${m.content}`;
             } else {
                 finalPrompt += `\n\n${m.role.toUpperCase()}: ${m.content}`;
             }
@@ -226,13 +255,30 @@ app.post('/copilot', async (req, res) => {
         const primaryElapsedMs = Date.now() - primaryStartTs;
         console.log(`[copilot] ${(persona || 'belinha')} · ${result.backend} · ${primaryElapsedMs}ms · ${result.reply.length} chars`);
 
+        // 🧠 Auto-captura: extrai decisões/fatos da troca user→assistant
+        try {
+            const lastUser = messages.slice().reverse().find(m => m.role === 'user');
+            if (lastUser) Memory.autoCaptureFromMessage('user', lastUser.content);
+            Memory.autoCaptureFromMessage('assistant', result.reply);
+            // Atualiza last-context com onde parou
+            Memory.updateLastContext({
+                activeTask: (context?.activeTask || context?.currentPage) || null,
+                lastUserMessage: lastUser ? lastUser.content.slice(0, 300) : null,
+                lastBotReply: result.reply.slice(0, 300),
+                msgCount: messages.length + 1
+            });
+        } catch (e) {
+            console.warn('[copilot] auto-memory falhou:', e.message);
+        }
+
         return res.json({
             reply: result.reply,
             usage: result.usage,
             model: model || (result.backend === 'claude' ? 'claude-default' : 'codex-default'),
             elapsedMs: primaryElapsedMs,
             source: 'local',
-            backend: result.backend
+            backend: result.backend,
+            memoryUsed: !!memorySnippet
         });
 
     } catch (e) {
@@ -242,6 +288,63 @@ app.post('/copilot', async (req, res) => {
 });
 
 // ========== BRIEFING PROATIVO (opcional) ==========
+// ========== MEMORY ENDPOINTS ==========
+// Painel pode listar/manipular memória persistente
+app.get('/memory', (req, res) => {
+    try {
+        res.json({
+            decisions: Memory.loadDecisions(50),
+            facts: Memory.loadFacts(),
+            lastContext: Memory.loadLastContext(),
+            recentSummaries: Memory.loadRecentSummaries(5)
+        });
+    } catch (e) {
+        res.status(500).json({ error: 'internal', message: e.message });
+    }
+});
+
+app.post('/memory/decision', (req, res) => {
+    try {
+        const { text, meta } = req.body || {};
+        if (!text) return res.status(400).json({ error: 'text required' });
+        const entry = Memory.appendDecision(text, meta || {});
+        res.json({ ok: true, entry });
+    } catch (e) {
+        res.status(500).json({ error: 'internal', message: e.message });
+    }
+});
+
+app.post('/memory/fact', (req, res) => {
+    try {
+        const { key, value } = req.body || {};
+        if (!key) return res.status(400).json({ error: 'key required' });
+        const entry = Memory.setFact(key, value);
+        res.json({ ok: true, entry });
+    } catch (e) {
+        res.status(500).json({ error: 'internal', message: e.message });
+    }
+});
+
+app.post('/memory/summary', (req, res) => {
+    try {
+        const { summary } = req.body || {};
+        if (!summary) return res.status(400).json({ error: 'summary required' });
+        const entry = Memory.saveSessionSummary(summary);
+        res.json({ ok: true, entry });
+    } catch (e) {
+        res.status(500).json({ error: 'internal', message: e.message });
+    }
+});
+
+app.get('/memory/snippet', (req, res) => {
+    try {
+        const query = req.query.q || null;
+        res.type('text/plain').send(Memory.buildMemorySnippet(query));
+    } catch (e) {
+        res.status(500).json({ error: 'internal', message: e.message });
+    }
+});
+
 app.post('/briefing', async (req, res) => {
     try {
         const { context, persona = 'belinha' } = req.body || {};

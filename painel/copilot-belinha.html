@@ -241,9 +241,17 @@
       </div>
 
       <div class="chat-input-area">
+        <!-- Preview de imagens coladas -->
+        <div id="imgPreview" style="display:none;padding:6px 12px;border-top:1px solid #EEF2F7;border-bottom:1px solid #EEF2F7;background:#FAF9FC;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        </div>
         <div class="chat-input-row">
-          <textarea id="userInput" placeholder="Pergunte algo ou cola o briefing aqui… (Shift+Enter pra quebrar linha)" rows="1"></textarea>
+          <button class="send-btn" id="attachBtn" onclick="document.getElementById('fileInput').click()" title="Anexar imagem" style="background:#F3F4F6;color:#374151">📎</button>
+          <input type="file" id="fileInput" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
+          <textarea id="userInput" placeholder="Pergunte algo, cola briefing ou Ctrl+V uma imagem… (Shift+Enter quebra linha)" rows="1"></textarea>
           <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+        </div>
+        <div style="padding:4px 12px;font-size:10px;color:#9CA3AF">
+          🧠 Memória permanente ativa · <a href="#" onclick="showMemoryPanel(event)" style="color:#7E57C2">ver decisões registradas</a>
         </div>
       </div>
     </section>
@@ -359,7 +367,11 @@
     try {
       const franchises = DataStore.get('franchises') || [];
       const f = franchises.find(x => x.id === fid);
-      if (f) { ctx.franchiseName = f.name; ctx.franchiseCity = (f.territorio||{}).cidade || ''; }
+      if (f) {
+        ctx.franchiseName = f.name;
+        ctx.franchiseCity = f.city || f.cidade || (f.territorio||{}).cidade || '';
+        ctx.franchiseState = f.state || f.uf || (f.territorio||{}).uf || '';
+      }
 
       // Orders de hoje / semana
       const orders = DataStore.getCollection('orders', fid) || [];
@@ -387,9 +399,16 @@
       // Catálogo
       const cat = DataStore.get('catalog_config');
       if (cat) {
-        ctx.activeFlavors = Object.values(cat.sabores || {}).flatMap(g => (g.items||[]).filter(i => i.available).map(i => ({
-          name: i.name, price: i.price, cost: i.cost
-        })));
+        ctx.activeFlavors = Object.values(cat.sabores || {}).flatMap(g => (g.items||[]).filter(i => i.available).map(i => {
+          const variants = (((i || {})._v2 || {}).variantes || []).filter(v => v && v.active !== false);
+          const firstVariantCost = variants.find(v => Number(v.custoExtra) > 0);
+          const firstVariantPrice = variants.find(v => Number(v.precoLoja) > 0);
+          return {
+            name: i.name,
+            price: Number(i.price) || Number(firstVariantPrice && firstVariantPrice.precoLoja) || 0,
+            cost: Number(i.cost) || Number(firstVariantCost && firstVariantCost.custoExtra) || 0
+          };
+        }));
       }
 
       // Finanças (mês)
@@ -455,19 +474,174 @@
     return '<p>' + t + '</p>';
   }
 
+  // ====== Paste/Attach de imagens ======
+  let pendingImages = []; // [{ filename, dataUrl, altText, sizeKb }]
+
+  window.handleFiles = async function(fileList) {
+    const files = Array.from(fileList || []).filter(f => f.type.startsWith('image/'));
+    for (const f of files) {
+      if (f.size > 5 * 1024 * 1024) {
+        alert(`Imagem ${f.name} é maior que 5MB. Comprime antes de colar.`);
+        continue;
+      }
+      const dataUrl = await new Promise(resolve => {
+        const r = new FileReader();
+        r.onload = e => resolve(e.target.result);
+        r.readAsDataURL(f);
+      });
+      const altText = prompt(`Descreve em 1 linha o que tem na imagem "${f.name || 'print'}" (ajuda a Belinha entender, Codex não vê pixels):`, '') || f.name || 'print sem descrição';
+      pendingImages.push({
+        filename: f.name || `print-${Date.now()}.png`,
+        dataUrl,
+        altText: altText.slice(0, 200),
+        sizeKb: Math.round(f.size / 1024)
+      });
+    }
+    renderImagePreview();
+  };
+
+  function renderImagePreview() {
+    const wrap = document.getElementById('imgPreview');
+    if (!pendingImages.length) {
+      wrap.style.display = 'none';
+      wrap.innerHTML = '';
+      return;
+    }
+    wrap.style.display = 'flex';
+    wrap.innerHTML = pendingImages.map((img, i) => `
+      <div style="position:relative;display:inline-block">
+        <img src="${img.dataUrl}" style="max-height:60px;border-radius:6px;border:2px solid #C4B5FD" title="${img.altText.replace(/"/g,'&quot;')}">
+        <button onclick="removeImage(${i})" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:0;background:#DC2626;color:#fff;cursor:pointer;font-size:11px;line-height:0">✕</button>
+        <div style="font-size:9px;color:#6B7280;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${img.altText}</div>
+      </div>
+    `).join('');
+  }
+
+  window.removeImage = function(i) {
+    pendingImages.splice(i, 1);
+    renderImagePreview();
+  };
+
+  // Listener global de PASTE — captura Ctrl+V de imagem
+  document.addEventListener('paste', async function(e) {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const imageItems = [];
+    for (const item of items) {
+      if (item.type.startsWith('image/')) imageItems.push(item.getAsFile());
+    }
+    if (imageItems.length) {
+      e.preventDefault();
+      await handleFiles(imageItems);
+    }
+  });
+
+  // ====== Painel de memória ======
+  window.showMemoryPanel = async function(e) {
+    if (e) e.preventDefault();
+    try {
+      const r = await fetch('http://localhost:5757/memory', { mode: 'cors' });
+      if (!r.ok) throw new Error('servidor local não respondeu — abra Belinha-Iniciar.bat');
+      const data = await r.json();
+      const lines = [];
+      lines.push('🧠 MEMÓRIA PERMANENTE BELINHA\n');
+      if (data.lastContext) {
+        const age = ((Date.now() - new Date(data.lastContext.ts).getTime()) / 3600000).toFixed(1);
+        lines.push(`📍 Última sessão (${age}h atrás):`);
+        if (data.lastContext.activeTask) lines.push(`  Tarefa: ${data.lastContext.activeTask}`);
+        if (data.lastContext.lastUserMessage) lines.push(`  Última msg: "${data.lastContext.lastUserMessage.slice(0,100)}"`);
+        lines.push('');
+      }
+      if (data.decisions?.length) {
+        lines.push(`📋 ${data.decisions.length} decisões registradas (últimas 10):`);
+        data.decisions.slice(-10).forEach(d => {
+          lines.push(`  [${d.ts?.slice(5,10)}] ${d.text}`);
+        });
+        lines.push('');
+      }
+      if (Object.keys(data.facts || {}).length) {
+        lines.push(`📌 Fatos:`);
+        Object.entries(data.facts).slice(0, 10).forEach(([k, v]) => {
+          lines.push(`  ${k}: ${(v.value||'').slice(0,80)}`);
+        });
+      }
+      alert(lines.join('\n'));
+    } catch (err) {
+      alert(`❌ Não consegui ler memória: ${err.message}`);
+    }
+  };
+
+  // ====== Erro humanizado ======
+  function humanizeError(e, rawText) {
+    const msg = e.message || String(e);
+    // Tenta detectar HTML de 404
+    if (rawText && rawText.includes('<!DOCTYPE')) {
+      if (rawText.includes('Cannot POST')) {
+        return '❌ Servidor local não tem esse endpoint. Reinicie o Belinha-Iniciar.bat pra puxar a versão mais nova.';
+      }
+      return '❌ O servidor retornou HTML em vez de JSON — pode estar offline ou o endpoint mudou.';
+    }
+    if (msg.match(/failed.*fetch|networkerror|cors/i)) {
+      return '❌ Servidor local não respondeu. Verifica se Belinha-Iniciar.bat tá aberto na bandeja.';
+    }
+    if (msg.match(/timeout/i)) {
+      return '⏱️ Demorou demais pra responder. Tenta uma pergunta mais curta?';
+    }
+    if (msg.match(/api_key_missing/)) {
+      return '🔑 Sem servidor local ativo e sem API key Anthropic. Abra o Belinha-Iniciar.bat OU configure a API key em ⚙️.';
+    }
+    if (msg.match(/401|unauthorized/)) {
+      return '🔒 Não autenticado. Verifica a API key em ⚙️.';
+    }
+    if (msg.match(/429|rate.limit/i)) {
+      return '⏳ Limite de uso atingido. Espera 1 min ou troca de provider.';
+    }
+    return `❌ ${msg.slice(0, 200)}`;
+  }
+
   window.sendMessage = async function() {
     const input = document.getElementById('userInput');
     const text = input.value.trim();
-    if (!text) return;
+    if (!text && !pendingImages.length) return;
     const settings = getSettings();
     // Belinha funciona sem apiKey — a Vercel Function usa ANTHROPIC_API_KEY
     // env var (compartilhada MilkyPot). User NAO precisa configurar nada.
     // Se o user tem apiKey propria configurada, ela tem prioridade.
 
-    messages.push({ role:'user', content: text });
+    // Monta conteúdo do user, incluindo descrição de imagens
+    let finalUserText = text;
+    const imagesPayload = pendingImages.map(img => ({ filename: img.filename, altText: img.altText, sizeKb: img.sizeKb }));
+    if (pendingImages.length) {
+      const imgDesc = pendingImages.map((img, i) => `[Imagem ${i+1}: ${img.altText}]`).join(' ');
+      finalUserText = (text ? text + '\n\n' : '') + imgDesc;
+    }
+
+    messages.push({ role:'user', content: finalUserText });
     input.value = '';
     autosize(input);
+
+    // Render imagens junto da msg (UX)
+    const lastImgs = [...pendingImages];
+    pendingImages = [];
+    renderImagePreview();
     renderMessages();
+
+    // Se tem imagens, mostra elas embaixo da msg do user
+    if (lastImgs.length) {
+      const userMsgEl = document.querySelector('#chatMessages .msg.user:last-child .bubble');
+      if (userMsgEl) {
+        const imgRow = document.createElement('div');
+        imgRow.style.cssText = 'margin-top:8px;display:flex;gap:6px;flex-wrap:wrap';
+        lastImgs.forEach(img => {
+          const i = document.createElement('img');
+          i.src = img.dataUrl;
+          i.style.cssText = 'max-height:80px;border-radius:6px;cursor:pointer';
+          i.title = img.altText;
+          imgRow.appendChild(i);
+        });
+        userMsgEl.appendChild(imgRow);
+      }
+    }
 
     const thinkingEl = document.createElement('div');
     thinkingEl.className = 'msg bot';
@@ -477,6 +651,7 @@
 
     document.getElementById('sendBtn').disabled = true;
 
+    let rawErrorText = '';
     try {
       const ctx = await buildContext();
       const data = await CopilotTransport.send({
@@ -484,7 +659,8 @@
         model: settings.model || 'claude-sonnet-4-5',
         persona: 'belinha',
         messages: messages,
-        context: ctx
+        context: ctx,
+        images: imagesPayload
       });
       thinkingEl.remove();
       const reply = data.reply || '(sem resposta)';
@@ -501,7 +677,11 @@
       saveHistory();
     } catch (e) {
       thinkingEl.remove();
-      appendBotMsg('❌ Erro de rede: ' + e.message);
+      // Tenta capturar HTML cru do response pra detectar 404/erro de path
+      let rawText = e.responseText || e.body || '';
+      const friendly = humanizeError(e, rawText);
+      appendBotMsg(friendly);
+      console.error('[belinha-chat]', e);
     }
     document.getElementById('sendBtn').disabled = false;
     input.focus();

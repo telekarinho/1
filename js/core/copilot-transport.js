@@ -141,12 +141,18 @@
                 persona: payload.persona,
                 messages: payload.messages,
                 context: payload.context,
-                model: payload.model
+                model: payload.model,
+                images: payload.images || []
             })
         });
-        if (!r.ok) throw new Error('local ' + r.status);
+        if (!r.ok) {
+            const body = await r.text().catch(() => '');
+            const err = new Error('local ' + r.status);
+            err.responseText = body;
+            throw err;
+        }
         const data = await r.json();
-        return { reply: data.reply, usage: data.usage || { input_tokens: 0, output_tokens: 0 }, source: 'local' };
+        return { reply: data.reply, usage: data.usage || { input_tokens: 0, output_tokens: 0 }, source: 'local', memoryUsed: data.memoryUsed };
     }
 
     async function sendRemote(payload) {
@@ -160,17 +166,27 @@
                 persona: payload.persona,
                 messages: payload.messages,
                 context: payload.context,
-                model: payload.model
+                model: payload.model,
+                images: payload.images || []
             })
         });
-        if (!r.ok) throw new Error('remote ' + r.status);
+        if (!r.ok) {
+            const body = await r.text().catch(() => '');
+            const err = new Error('remote ' + r.status);
+            err.responseText = body;
+            throw err;
+        }
         const data = await r.json();
-        return { reply: data.reply, usage: data.usage || { input_tokens: 0, output_tokens: 0 }, source: 'remote' };
+        return { reply: data.reply, usage: data.usage || { input_tokens: 0, output_tokens: 0 }, source: 'tunnel', memoryUsed: data.memoryUsed };
     }
 
     async function sendApi(payload) {
         if (!payload.apiKey) throw new Error('api_key_missing');
-        const r = await fetch('/api/copilot', {
+        // Detecta se estamos servidos pelo localhost — então precisa URL absoluta pro Vercel
+        const apiBase = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+            ? 'https://milkypot.vercel.app'
+            : '';
+        const r = await fetch(apiBase + '/api/copilot', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -182,8 +198,10 @@
             })
         });
         if (!r.ok) {
-            const err = await r.text();
-            throw new Error(err || ('api ' + r.status));
+            const body = await r.text().catch(() => '');
+            const err = new Error('api ' + r.status);
+            err.responseText = body;
+            throw err;
         }
         const data = await r.json();
         return { reply: data.reply, usage: data.usage || null, source: 'api' };
