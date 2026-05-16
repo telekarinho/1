@@ -16,6 +16,9 @@
 
    Body (do gateway):
      { phone, name, text, type, timestamp, messageId, from }
+     OPCIONAL pra áudio: { audioBase64: "...", audioMimeType: "audio/ogg" }
+       OU                  { audioUrl: "https://..." }
+     → webhook transcreve via Groq Whisper e usa transcrição como `text`.
 
    Resposta:
      200 { reply: "..." } → gateway envia
@@ -442,6 +445,76 @@ async function getFranchiseContext(accountId) {
 }
 
 // ============================================
+// 🎤 TRANSCRIÇÃO DE ÁUDIO via Groq Whisper (whisper-large-v3-turbo)
+// ============================================
+// Cliente manda áudio no WhatsApp → gateway baixa o buffer e envia pra cá
+// como audioBase64 (recomendado, sem CORS) OU audioUrl (Firebase Storage).
+// Transcrevemos pt-BR via Groq Whisper (free tier, ~100x realtime) e usamos
+// a transcrição como se fosse o texto digitado pelo cliente.
+async function transcribeAudio({ audioBase64, audioUrl, audioMimeType }) {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) throw new Error("GROQ_API_KEY missing");
+
+    let audioBuffer;
+    let mime = audioMimeType || "audio/ogg";
+    if (audioBase64) {
+        audioBuffer = Buffer.from(audioBase64, "base64");
+    } else if (audioUrl) {
+        const r = await fetch(audioUrl);
+        if (!r.ok) throw new Error("audio download failed: " + r.status);
+        audioBuffer = Buffer.from(await r.arrayBuffer());
+        const ct = r.headers.get("content-type");
+        if (ct && !audioMimeType) mime = ct;
+    } else {
+        throw new Error("audioBase64 ou audioUrl obrigatório");
+    }
+
+    // Limite Groq: 25MB. WhatsApp voice notes ~1-2MB, OK.
+    if (audioBuffer.length > 25 * 1024 * 1024) {
+        throw new Error("audio too large (>25MB)");
+    }
+
+    // Whisper aceita: flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, webm
+    // WhatsApp manda OGG Opus por padrão — vai funcionar direto
+    const ext = mime.includes("opus") || mime.includes("ogg") ? "ogg"
+        : mime.includes("mp3") ? "mp3"
+        : mime.includes("mp4") || mime.includes("m4a") ? "m4a"
+        : mime.includes("wav") ? "wav"
+        : mime.includes("webm") ? "webm"
+        : "ogg";
+
+    // Usa multipart manualmente (Vercel runtime tem fetch nativo, sem form-data lib)
+    const boundary = "----GroqWhisperBoundary" + Date.now();
+    const parts = [];
+    parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-large-v3-turbo\r\n`));
+    parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="language"\r\n\r\npt\r\n`));
+    parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="response_format"\r\n\r\njson\r\n`));
+    parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="audio.${ext}"\r\nContent-Type: ${mime}\r\n\r\n`));
+    parts.push(audioBuffer);
+    parts.push(Buffer.from(`\r\n--${boundary}--\r\n`));
+    const body = Buffer.concat(parts);
+
+    const r = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": `multipart/form-data; boundary=${boundary}`,
+            "Content-Length": String(body.length)
+        },
+        body
+    });
+    if (!r.ok) {
+        const errText = await r.text().catch(() => "");
+        console.error("[whisper] error:", r.status, errText.slice(0, 300));
+        throw new Error("whisper " + r.status);
+    }
+    const j = await r.json();
+    const transcript = (j.text || "").trim();
+    console.log(`[whisper] transcribed ${audioBuffer.length}B → "${transcript.slice(0, 80)}${transcript.length > 80 ? '...' : ''}"`);
+    return transcript;
+}
+
+// ============================================
 // Chamar Belinha IA (Groq)
 // ============================================
 async function callGroq(apiKey, body) {
@@ -654,10 +727,36 @@ module.exports = async (req, res) => {
         res.status(400).json({ error: "invalid json" });
         return;
     }
-    const { phone, name, text, type, messageId, timestamp, accountId: bodyAccountId } = parsed;
+    const { phone, name, text: rawText, type, messageId, timestamp, accountId: bodyAccountId, audioBase64, audioUrl, audioMimeType } = parsed;
+    let text = rawText;
+    let isTranscribed = false;
 
-    if (!phone || !text || typeof text !== "string") {
-        res.status(400).json({ error: "phone+text required" });
+    if (!phone) {
+        res.status(400).json({ error: "phone required" });
+        return;
+    }
+
+    // 🎤 ÁUDIO — se gateway mandou audioBase64/audioUrl, transcreve via Groq Whisper
+    // antes de processar como texto. WhatsApp manda voice notes em OGG Opus.
+    // Prioriza transcrição quando tem audio data, mesmo se text=="[audio]" placeholder.
+    const isAudioPlaceholder = text && /^\[(audio|áudio|voice)\]$/i.test(text.trim());
+    if ((!text || isAudioPlaceholder) && (audioBase64 || audioUrl)) {
+        try {
+            const transcript = await transcribeAudio({ audioBase64, audioUrl, audioMimeType });
+            if (transcript && transcript.length > 0) {
+                text = transcript;
+                isTranscribed = true;
+            } else {
+                text = "[áudio: sem fala detectada]";
+            }
+        } catch (e) {
+            console.error("[whatsapp-webhook] transcribe failed:", e.message);
+            text = "[áudio: falha na transcrição]";
+        }
+    }
+
+    if (!text || typeof text !== "string") {
+        res.status(400).json({ error: "phone+text (ou audioBase64/audioUrl) required" });
         return;
     }
 
@@ -674,8 +773,45 @@ module.exports = async (req, res) => {
     // 1. Busca histórico + flags
     const history = await getConversationHistory(phoneClean);
 
-    // 2. Grava msg do cliente (com accountId/franchiseeId tag)
-    await saveMessageToFirestore(phoneClean, customerName, "user", text, { messageId, accountId });
+    // 2. Grava msg do cliente (com accountId/franchiseeId tag).
+    // Se foi transcrito, prefixa com 🎤 pra atendente ver no painel que é áudio.
+    const textToSave = isTranscribed ? `🎤 [áudio transcrito]: ${text}` : text;
+    await saveMessageToFirestore(phoneClean, customerName, "user", textToSave, { messageId, accountId });
+
+    // 2.5. MÍDIA NÃO-TEXTUAL — gateway envia texto literal "[sticker]", "[image]",
+    // "[audio]", "[video]", "[mensagem não suportada]", "[location]", etc. Belinha
+    // não consegue interpretar essas mensagens — então respondemos com mensagens
+    // canned humanas e amigáveis (sem chamar Groq, economiza tokens).
+    const textTrim = text.trim();
+    const isMediaMarker = /^\[(sticker|image|imagem|figurinha|audio|áudio|voice|video|vídeo|location|localização|document|documento|contact|contato|gif|reaction|rea[cç][aã]o|mensagem n[aã]o suportada|unsupported message)\]$/i.test(textTrim);
+    if (isMediaMarker) {
+        const lower = textTrim.toLowerCase();
+        let mediaReply;
+        if (/sticker|figurinha/.test(lower)) {
+            mediaReply = "Aaai amei a figurinha! 🐑💜✨\nMe conta o que vai ser hoje? 🍨";
+        } else if (/audio|áudio|voice/.test(lower)) {
+            mediaReply = "Oi querida(o)! 💜🐑 Tô surda agorinha (tô com fone ruim) — manda por escrito que eu te ajudo na hora ✨";
+        } else if (/image|imagem|gif/.test(lower)) {
+            mediaReply = "Recebi a foto amorzinho! 📸💜\nMe conta em palavras o que você quer pedir? 🍨🐑";
+        } else if (/video|vídeo/.test(lower)) {
+            mediaReply = "Vi o vídeo! 🎥💜\nMe escreve o que precisa que eu cuido pra você 🐑✨";
+        } else if (/location|localização/.test(lower)) {
+            mediaReply = "Recebi sua localização! 📍💜\nÉ pra delivery? Me conta o que vai querer e eu já calculo a entrega 🛵🐑";
+        } else if (/document|documento/.test(lower)) {
+            mediaReply = "Recebi o documento amorzinho! 📄💜\nMe diz em palavras como posso te ajudar? 🐑";
+        } else if (/contact|contato/.test(lower)) {
+            mediaReply = "Recebi o contato! 📇💜\nMe conta o que precisa que eu cuido 🐑✨";
+        } else if (/reaction|rea[cç][aã]o/.test(lower)) {
+            mediaReply = "Aii amei a reação! 💜🐑✨"; // não conta como necessidade de resposta de pedido
+        } else {
+            // [mensagem não suportada] / [unsupported message] / outros
+            mediaReply = "Oi querida(o)! 💜🐑 Não consegui abrir essa mensagem aqui — manda por texto ou foto que eu te ajudo na hora ✨";
+        }
+        console.log(`[whatsapp-webhook] media marker detected: ${textTrim} → canned reply`);
+        await saveMessageToFirestore(phoneClean, customerName, "bot", mediaReply, { accountId });
+        res.status(200).json({ reply: mediaReply, source: "media_marker", marker: textTrim });
+        return;
+    }
 
     // 3. Se conversa está em humanTakeover ou paused, NÃO responde com IA
     if (history.humanTakeover || history.paused) {
