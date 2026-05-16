@@ -137,6 +137,21 @@
             <input id="newFranquiaId" type="text" placeholder="ex: franquia-curitiba" pattern="[a-z0-9-]{2,40}" />
             <button class="btn primary" onclick="addFranquia()">Criar sessão</button>
           </div>
+
+          <!-- WhatsApp ADICIONAL na mesma franquia (teste ou número secundário) -->
+          <hr style="margin:18px 0;border:none;border-top:1px solid #E5E7EB">
+          <h4 style="margin-top:0">📱 WhatsApp adicional (teste / 2º número)</h4>
+          <p style="color:#6B7280;font-size:13px;margin:0 0 10px">Conecta um SEGUNDO número de WhatsApp pra mesma franquia — útil pra testar fluxos, separar atendimento vs disparo, ou ter backup. Vira uma sessão Baileys independente (sufixo automático).</p>
+          <div class="row">
+            <select id="addWaParentFranquia" style="flex:1">
+              <!-- preenchido por JS — só franquias existentes -->
+            </select>
+            <input id="addWaSuffix" type="text" placeholder="sufixo (ex: test, vendas)" value="test" pattern="[a-z0-9-]{2,20}" style="max-width:160px" />
+            <button class="btn primary" onclick="addWhatsAppAdicional()">+ WhatsApp</button>
+          </div>
+          <p style="color:#9CA3AF;font-size:12px;margin:8px 0 0">
+            Ex: franquia <code>matriz</code> + sufixo <code>test</code> = sessão <code>matriz-test</code>. Aparece no dropdown de franquia acima depois de criar.
+          </p>
         </div>
       </div>
     </main>
@@ -149,7 +164,7 @@
   <script src="../js/core/constants.js"></script>
   <script src="../js/core/i18n.js"></script>
   <script src="../js/core/utils.js"></script>
-  <script src="../js/core/datastore.js?v=mp-v248"></script>
+  <script src="../js/core/datastore.js?v=mp-v249"></script>
   <script src="../js/core/firebase-config.js"></script>
   <script src="../js/core/auth.js"></script>
   <script>
@@ -352,6 +367,18 @@
     sel.value = initial;
     CURRENT_ACCOUNT = initial;
     document.getElementById('pageContextName').textContent = '— ' + (AVAILABLE_FRANQUIAS[0].name || initial);
+
+    // Popula dropdown de "WhatsApp adicional" — só franquias-PAI (sem sufixo) viram opção
+    // pra evitar confusão tipo "matriz-test-test". Heurística: pega só accountIds que
+    // NÃO terminam num sufixo conhecido (test, vendas, suporte, backup, dev).
+    const sufixosConhecidos = /-(test|vendas|suporte|backup|dev|2|alt|secundario)$/i;
+    const parentSel = document.getElementById('addWaParentFranquia');
+    if (parentSel) {
+      const franquiasParent = AVAILABLE_FRANQUIAS.filter(f => !sufixosConhecidos.test(f.accountId));
+      parentSel.innerHTML = franquiasParent.map(f =>
+        `<option value="${esc(f.accountId)}">${esc(f.name || f.accountId)}</option>`
+      ).join('');
+    }
   }
 
   async function onSelectFranquia() {
@@ -549,6 +576,59 @@
       document.getElementById('franquiaSelect').value = id;
       onSelectFranquia();
     } catch (e) { showError('Erro: ' + e.message); }
+  }
+
+  // Conecta um WhatsApp ADICIONAL na mesma franquia (2º número, teste, backup).
+  // Cria sessão Baileys independente com sufixo, ex: matriz + test = matriz-test.
+  // O dropdown de franquia principal vai mostrar a nova sessão depois de criada.
+  async function addWhatsAppAdicional() {
+    const parent = (document.getElementById('addWaParentFranquia').value || '').toLowerCase().trim();
+    const suffix = (document.getElementById('addWaSuffix').value || '').toLowerCase().trim();
+    if (!parent) {
+      showError('Selecione a franquia parent primeiro.');
+      return;
+    }
+    if (!/^[a-z0-9-]{2,20}$/.test(suffix)) {
+      showError('Sufixo inválido. Use letras minúsculas, números e hífen (2-20 chars). Ex: test, vendas, backup.');
+      return;
+    }
+    const newAccountId = `${parent}-${suffix}`;
+    if (newAccountId.length > 50) {
+      showError('Nome final ficou longo demais (>50). Use sufixo menor.');
+      return;
+    }
+    if (AVAILABLE_FRANQUIAS.some(f => f.accountId === newAccountId)) {
+      showError(`Sessão "${newAccountId}" já existe — selecione no dropdown principal pra ver o QR.`);
+      return;
+    }
+    if (!confirm(`Criar WhatsApp ADICIONAL "${newAccountId}" na franquia "${parent}"?\n\nIsso vira uma sessão Baileys independente — você vai escanear um QR diferente do número principal.`)) return;
+    clearError();
+    try {
+      await callApi('add-account', { method: 'POST', body: { accountId: newAccountId } });
+      // Cadastra no Firestore /franchises pra aparecer com nome amigável
+      const parentMeta = AVAILABLE_FRANQUIAS.find(f => f.accountId === parent);
+      const friendlyName = `${parentMeta?.name || parent} — ${suffix}`;
+      try {
+        await firebase.firestore().collection('franchises').doc(newAccountId).set({
+          name: friendlyName,
+          accountId: newAccountId,
+          parentAccountId: parent,
+          suffix,
+          isAdditional: true,
+          active: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: firebase.auth().currentUser?.email || null
+        }, { merge: true });
+      } catch (e) {
+        console.warn('[wa-conectar] falha gravando metadata Firestore (não-crítico):', e.message);
+      }
+      alert(`✅ Sessão "${newAccountId}" criada.\n\nAgora seleciona ela no dropdown principal acima pra escanear o QR.`);
+      await loadFranchises();
+      // Auto-seleciona a nova sessão pra já mostrar o QR
+      const sel = document.getElementById('franquiaSelect');
+      sel.value = newAccountId;
+      onSelectFranquia();
+    } catch (e) { showError('Erro criando WhatsApp adicional: ' + e.message); }
   }
 
   function startPolling() {
