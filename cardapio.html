@@ -1134,11 +1134,18 @@
             window._sheetPortion = null;
             window._sheetVariante = null;
 
+            // Tenta extrair tamanho ml do nome ou variantes pra AR
+            var defaultMl = 440;
+            if (item._v2 && item._v2.variantes && item._v2.variantes.length) {
+                var v0 = item._v2.variantes.find(function(v){return v.gramas;}) || item._v2.variantes[0];
+                if (v0 && v0.gramas) defaultMl = v0.gramas;
+            }
             let html = `
                 <div class="sheet-product-hero">
                     <span class="sheet-emoji">${item.emoji || '🍦'}</span>
                     <h2 class="sheet-name">${item.name}</h2>
                     <p class="sheet-desc">${item.desc || 'O sabor irresistível da MilkyPot!'}</p>
+                    <button onclick="event.stopPropagation();window.ARPreview&&window.ARPreview.show({sizeMl:${defaultMl},productName:${JSON.stringify(item.name)}})" style="margin-top:10px;background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;border:0;padding:8px 16px;border-radius:999px;font-weight:800;cursor:pointer;font-size:12px;display:inline-flex;align-items:center;gap:6px">🪄 Ver em 3D</button>
                 </div>
             `;
 

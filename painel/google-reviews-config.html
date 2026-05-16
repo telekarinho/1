@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot · Google Reviews Config</title>
+    <meta name="theme-color" content="#EC4899">
+    <link rel="stylesheet" href="../css/shared-panel.css?v=mp-v263">
+    <style>
+        body { background: #FAFAFA; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 24px; color: #1F2937; }
+        .container { max-width: 720px; margin: 0 auto; }
+        h1 { color: #831843; margin: 0 0 6px; font-size: 24px; }
+        .sub { color: #6B7280; font-size: 14px; margin-bottom: 24px; }
+        .card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 14px rgba(0,0,0,.05); margin-bottom: 16px; }
+        .field { margin-bottom: 16px; }
+        label { font-size: 13px; color: #374151; font-weight: 700; display: block; margin-bottom: 6px; }
+        input { width: 100%; padding: 12px 14px; border: 2px solid #E5E7EB; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
+        input:focus { outline: none; border-color: #EC4899; }
+        button { background: linear-gradient(135deg, #EC4899, #8B5CF6); color: #fff; border: 0; padding: 14px 28px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 15px; }
+        button:hover { opacity: 0.95; }
+        .preview { background: #FFFBEB; border: 2px solid #FCD34D; border-radius: 14px; padding: 20px; margin-top: 16px; }
+        .stars { color: #F59E0B; font-size: 22px; letter-spacing: -2px; }
+        .ok { background: #D1FAE5; color: #065F46; border: 1px solid #6EE7B7; padding: 12px; border-radius: 10px; margin-top: 12px; display: none; }
+        .err { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; padding: 12px; border-radius: 10px; margin-top: 12px; display: none; }
+        .help { font-size: 12px; color: #6B7280; margin-top: 4px; line-height: 1.5; }
+        .url-shortcut { background: #F0F9FF; border: 1px solid #BFDBFE; border-radius: 10px; padding: 12px; font-size: 13px; color: #1E40AF; margin-top: 12px; }
+        .url-shortcut a { color: #1D4ED8; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⭐ Google Reviews — Vitrine no site</h1>
+        <p class="sub">Atualize manualmente o número de avaliações e o rating que aparecem na home do cardápio (`cardapio.html`). Lê de Firestore: <code>datastore/google_reviews_stats</code>.</p>
+
+        <div class="card">
+            <h2 style="font-size:18px;color:#831843;margin:0 0 14px">Status atual</h2>
+            <div class="preview" id="preview">Carregando…</div>
+        </div>
+
+        <div class="card">
+            <h2 style="font-size:18px;color:#831843;margin:0 0 14px">Atualizar dados</h2>
+            <div class="field">
+                <label>Rating (estrelas, 0-5)</label>
+                <input type="number" id="ratingInput" step="0.1" min="0" max="5" placeholder="4.9">
+                <div class="help">Quantas estrelas em média você tem no Google. Vê em <a href="https://g.page/r/CXrthQS1rgPdEAE/review" target="_blank">g.page/r/CXrthQS1rgPdEAE</a></div>
+            </div>
+            <div class="field">
+                <label>Quantidade de avaliações</label>
+                <input type="number" id="countInput" min="0" step="1" placeholder="50">
+                <div class="help">Total de pessoas que avaliaram no Google. Atualize semanalmente.</div>
+            </div>
+            <button onclick="save()">💾 Salvar</button>
+            <div class="ok" id="okMsg">✅ Salvo! Vitrine atualizada em até 6h (cache cliente).</div>
+            <div class="err" id="errMsg"></div>
+        </div>
+
+        <div class="card">
+            <h2 style="font-size:18px;color:#831843;margin:0 0 14px">📋 Atalho rápido</h2>
+            <div class="url-shortcut">
+                🔗 <strong>Link de avaliação:</strong> <a href="https://g.page/r/CXrthQS1rgPdEAE/review" target="_blank">g.page/r/CXrthQS1rgPdEAE/review</a><br>
+                Cole esse link em qualquer lugar (Instagram bio, WhatsApp status, recibos) pra coletar mais avaliações.
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="../js/core/constants.js?v=mp-v263"></script>
+    <script src="../js/core/utils.js?v=mp-v263"></script>
+    <script src="../js/core/firebase-config.js?v=mp-v263"></script>
+    <script src="../js/core/auth.js?v=mp-v263"></script>
+    <script>
+    (function () {
+        if (!Auth.requireAuth(['franchisee', 'admin', 'super_admin'])) {
+            throw new Error('Not authorized');
+        }
+
+        var db = firebase.firestore();
+        var docRef = db.collection('datastore').doc('google_reviews_stats');
+
+        function render(data) {
+            var rating = (data && data.rating) || 5.0;
+            var count = (data && data.count) || 50;
+            var lastUpdated = data && data.lastUpdated ? new Date(data.lastUpdated).toLocaleString('pt-BR') : 'Nunca';
+
+            var stars = '';
+            var full = Math.floor(rating);
+            for (var i = 0; i < full; i++) stars += '⭐';
+            if (rating - full >= 0.5) stars += '⭐';
+
+            document.getElementById('preview').innerHTML =
+                '<div style="display:flex;align-items:center;gap:14px">' +
+                    '<div style="font-size:32px">⭐</div>' +
+                    '<div>' +
+                        '<div style="font-size:22px;font-weight:900;color:#1F2937">' + rating.toFixed(1) +
+                            ' <span class="stars">' + stars + '</span></div>' +
+                        '<div style="font-size:13px;color:#6B7280">' + count + '+ avaliações no Google</div>' +
+                        '<div style="font-size:11px;color:#9CA3AF;margin-top:2px">Última atualização: ' + lastUpdated + '</div>' +
+                    '</div>' +
+                '</div>';
+
+            document.getElementById('ratingInput').value = rating.toFixed(1);
+            document.getElementById('countInput').value = count;
+        }
+
+        function load() {
+            docRef.get().then(function (snap) {
+                render(snap.exists ? snap.data() : null);
+            }).catch(function (e) {
+                document.getElementById('preview').textContent = '⚠ ' + e.message;
+            });
+        }
+
+        window.save = function () {
+            var rating = parseFloat(document.getElementById('ratingInput').value);
+            var count = parseInt(document.getElementById('countInput').value, 10);
+            var ok = document.getElementById('okMsg');
+            var err = document.getElementById('errMsg');
+            ok.style.display = 'none';
+            err.style.display = 'none';
+
+            if (isNaN(rating) || rating < 0 || rating > 5) {
+                err.textContent = '⚠ Rating deve ser entre 0 e 5';
+                err.style.display = 'block';
+                return;
+            }
+            if (isNaN(count) || count < 0) {
+                err.textContent = '⚠ Quantidade deve ser >= 0';
+                err.style.display = 'block';
+                return;
+            }
+
+            docRef.set({
+                rating: rating,
+                count: count,
+                url: 'https://g.page/r/CXrthQS1rgPdEAE/review',
+                lastUpdated: new Date().toISOString()
+            }, { merge: true }).then(function () {
+                ok.style.display = 'block';
+                load();
+                setTimeout(function () { ok.style.display = 'none'; }, 4000);
+            }).catch(function (e) {
+                err.textContent = '⚠ ' + e.message;
+                err.style.display = 'block';
+            });
+        };
+
+        load();
+    })();
+    </script>
+</body>
+</html>

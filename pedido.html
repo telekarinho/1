@@ -69,6 +69,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
     <script src="js/core/firebase-config.js?v=mp-v263"></script>
     <script src="js/core/selfie-sticker.js?v=mp-v263" defer></script>
+    <script src="js/core/google-review-cta.js?v=mp-v263" defer></script>
+    <script src="js/core/roleta-milkycoins.js?v=mp-v263" defer></script>
+    <script src="js/core/analytics-events.js?v=mp-v263" defer></script>
     <script>
     (function(){
         var params = new URLSearchParams(location.search);
@@ -122,13 +125,17 @@
             if (order.status === 'entregue') {
                 var orderId = order.orderNumber || '';
                 var cName = (order.customer && order.customer.name) || '';
+                var fid = (order.store && order.store.id) || 'muffato-quintino';
                 etaBannerHtml =
                     '<div class="eta-banner">' +
                       '<div class="eta-emoji">🎉</div>' +
                       '<div class="eta-label">PEDIDO ENTREGUE</div>' +
                       '<div class="eta-time">Aproveite!</div>' +
-                      '<div class="eta-sub">Avalie a gente — vale MilkyCoins 🪙</div>' +
-                      '<button onclick="window.SelfieSticker && window.SelfieSticker.show({orderId:\'' + orderId + '\', customerName:\'' + cName + '\'})" style="margin-top:14px;width:100%;background:linear-gradient(135deg,#EC4899,#F97316);color:#fff;border:0;padding:14px;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer">📸 Mostra pra galera no Stories!</button>' +
+                      '<div class="eta-sub">Olha quanta coisa pra fazer 👇</div>' +
+                      '<div style="display:grid;gap:8px;margin-top:14px">' +
+                        '<button onclick="window.Roleta && window.Roleta.show({orderId:\'' + orderId + '\', customerPhone:\'' + ((order.customer && order.customer.phone) || '') + '\', franchiseId:\'' + fid + '\'})" style="background:linear-gradient(135deg,#FBBF24,#F97316);color:#fff;border:0;padding:14px;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer">🎰 Girar Roleta MilkyCoins!</button>' +
+                        '<button onclick="window.SelfieSticker && window.SelfieSticker.show({orderId:\'' + orderId + '\', customerName:\'' + cName + '\'})" style="background:linear-gradient(135deg,#EC4899,#F97316);color:#fff;border:0;padding:14px;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer">📸 Mostra pra galera no Stories!</button>' +
+                      '</div>' +
                     '</div>';
             } else if (order.status === 'cancelado' || order.status === 'excluido') {
                 etaBannerHtml =
