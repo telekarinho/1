@@ -885,6 +885,64 @@ module.exports = async (req, res) => {
         return;
     }
 
+    // 3.5. CAPTURA DE NOME — se cliente disse o nome dele na msg, salva
+    //      ("meu nome é Maria", "sou João", "me chamo X", etc)
+    try {
+        const detected = Customers.extractName(text);
+        if (detected) {
+            const existing = await Customers.getCustomer(accountId, phoneClean);
+            if (!existing?.name || existing.name.toLowerCase() !== detected.toLowerCase()) {
+                await Customers.upsertCustomer(accountId, { phone: phoneClean, name: detected });
+                console.log(`[name-capture] saved name="${detected}" for ${phoneClean}`);
+            }
+        }
+    } catch (e) {
+        console.warn("[name-capture] error:", e.message);
+    }
+
+    // 3.6. LOOP DETECTOR — empresa de cobrança/spam/bot externo, mensagem repetida,
+    //      bot respondendo o mesmo, etc. Quando detecta loop, pausa a IA e envia
+    //      mensagem de handoff profissional pra atendente humano.
+    try {
+        const Loop = require("../lib/whatsapp/loop-detector.js");
+        const loopCheck = Loop.detectLoop(history.messages, text);
+        if (loopCheck.loop) {
+            console.log(`[loop-detector] reason=${loopCheck.reason} confidence=${loopCheck.confidence}`);
+            const handoff = Loop.getHandoffMessage(loopCheck.reason);
+            // Marca conversa como humanTakeover pra próximas msgs não serem auto-respondidas
+            await saveMessageToFirestore(phoneClean, customerName, "bot", handoff, {
+                accountId,
+                triggerHumanTakeover: true,
+                ringPanel: true,
+                escalationReason: `loop:${loopCheck.reason}`,
+                urgency: "high"
+            });
+            // Salva learning pra futuro RAG
+            if (typeof saveBelinhaLearning === "function") {
+                saveBelinhaLearning({
+                    type: "loop_handoff",
+                    accountId, phone: phoneClean, customerName,
+                    customerMessage: text,
+                    botReply: handoff,
+                    reason: `loop:${loopCheck.reason}`,
+                    confidence: loopCheck.confidence,
+                    history: history.messages.slice(-6),
+                    urgency: "high"
+                }).catch(e => console.warn("[learning] save failed:", e.message));
+            }
+            res.status(200).json({
+                reply: handoff,
+                source: "loop_handoff",
+                reason: loopCheck.reason,
+                confidence: loopCheck.confidence,
+                escalated: true
+            });
+            return;
+        }
+    } catch (e) {
+        console.warn("[loop-detector] error, segue normal:", e.message);
+    }
+
     // 4. FAST REPLY local (sem chamar Groq) — cobre 90% das mensagens
     //    (saudações, cardápio, horário, endereço, frete, pagamento, agradecimentos,
     //     status pedido, franquia, falar com humano, intenção de pedir).
