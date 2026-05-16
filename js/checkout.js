@@ -531,6 +531,21 @@ function placeOrder() {
         item_count: cart.length
     });
 
+    // 🎰 Roleta MilkyCoins: abre 2s após success modal pra dar tempo do user ver o pedido
+    // confirmado primeiro. Modal da roleta sobrepõe e oferece prêmio surpresa.
+    if (window.Roleta && typeof window.Roleta.show === 'function') {
+        setTimeout(function () {
+            try {
+                window.Roleta.show({
+                    orderId: orderNumber,
+                    customerPhone: customerPhone,
+                    franchiseId: storeId || null,
+                    total: total
+                });
+            } catch (e) { console.warn('[Roleta] failed:', e); }
+        }, 2000);
+    }
+
     console.log('Order captured:', order);
 }
 
