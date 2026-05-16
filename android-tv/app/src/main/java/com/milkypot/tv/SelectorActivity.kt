@@ -67,7 +67,11 @@ class SelectorActivity : AppCompatActivity() {
     }
 
     private fun startPlayer(code: String) {
-        val i = Intent(this, PlayerActivity::class.java)
+        // v2.0+: usa WebPlayerActivity (WebView fullscreen carregando tv.html).
+        // Garantia de paridade 100% com a URL web — qualquer slide novo do
+        // catalogo (sabores, buffet, sundae, etc) aparece automaticamente.
+        // PlayerActivity legacy fica como classe compat mas nao e mais chamada.
+        val i = Intent(this, WebPlayerActivity::class.java)
         i.putExtra("code", code)
         startActivity(i)
     }
