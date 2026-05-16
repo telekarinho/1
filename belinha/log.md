@@ -2,6 +2,44 @@
 
 ---
 
+## Ciclo #238 — 2026-05-16
+
+**Área:** Conteúdo — Stories enquete sabor junino 03/06 (demanda + engajamento)
+
+**Contexto:** Prescrito no ciclo #237. O TEASER 1 de 03/06 (`reels-teaser-junina-pre-lancamento-2026.md`) é um Reel de mistério sem enquete. O que faltava era uma sequência de Stories no mesmo dia com função dupla: engajamento do público + sinal de demanda para o operador confirmar ingredientes/estoque antes do deadline 30/05. A enquete "Paçoca vs. Mel & Cocada" gera dados reais de preferência sem revelar o produto.
+
+**O que pesquisou/analisou:**
+- Revisou `reels-teaser-junina-pre-lancamento-2026.md` — confirmou que 03/06 só tinha Reel, sem Story com enquete
+- Verificou que TEASER 2 (07/06) tem Stories de mistério mas sem coleta de preferência de sabor
+- Identificou gap: nenhum ponto de coleta de demanda antes do deadline operador 30/05
+- Confirmou 3 versões do Potinho Junino (A: paçoca, B: cocada/mel, C: fit) via `instagram-tiktok-junina-2026.md` ciclo #163
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/stories-enquete-sabor-junino-03jun.md` | Criado — sequência 4 frames: abertura + enquete sabor + enquete fit + resultado 48h depois |
+
+**Destaques:**
+1. **4 frames sequenciais:** Abertura (ovelhinha chapéu palha) → Enquete principal (Paçoca vs. Mel/Cocada) → Enquete bônus (quer versão Fit?) → Resultado em 05/06 com countdown para 12/06
+2. **Dupla função:** engajamento público + dado operacional real — operador usa votos para decidir estoque antes de 30/05
+3. **Integrado ao calendário:** publicação às 19h30 (após Reel das 18h), não conflita com os outros teasers
+4. **Checklist operacional** incluído: Canva, sticker nativo, print resultado, resposta automática DM
+5. **Versão curta** para operadores com menos tempo de produção (2 frames ao invés de 4)
+
+**Commit:** `9e3902f`
+
+**Próximo passo sugerido:**
+- **Ciclo #239 — UX:** Auditar `cardapio.html` — verificar se Potinho Junino aparece com badge "Em breve — 17/06" ou está oculto; usuário que chega via landing page `potinho-junino-londrina.html` precisa encontrar o produto no cardápio antes da data de lançamento
+- **Ciclo #240 — Conversão:** Criar roteiro de resposta automática DM para quem interagir com a enquete do Stories — "Boa notícia vem aí 🐑💛" + link WhatsApp pré-lançamento
+- **Operador (URGENTE — 14 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — usar votos da enquete de 03/06 como dado de decisão
+- **Operador (URGENTE — 18 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #238 | 2026-05-16_
+
+---
+
 ## Ciclo #237 — 2026-05-16
 
 **Área:** SEO — `validFrom` no Offer schema + sitemap `lastmod`
