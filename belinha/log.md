@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #236 — 2026-05-16
+
+**Área:** Conteúdo — Contra-posicionamento "Sabores Brasileiros vs. Pistacho Premium"
+
+**Contexto:** Prescrito no ciclo #235. MooBai (MilkyMoo) + JAH Açaí convergem em pistacho Dubai para o Namorados 12/06 — produto aspiracional R$30+, instagramável, árabe/premium. A convergência dos dois maiores concorrentes em um mesmo ângulo cria espaço vazio na conversa: ninguém vai falar de "afeto brasileiro" naquele fim de semana. MilkyPot preenche esse vazio sem atacar concorrente, sem citar preço rival, e reforça personalização como diferencial real sobre produto fechado premium.
+
+**O que pesquisou/analisou:**
+- Revisou `competitors/milkymoo.md` (ciclo #233): MooBai = pistacho Dubai + kadayfi + R$30; JAH também com pistacho 12/06; dois concorrentes convergindo no mesmo sabor no mesmo dia
+- Revisou `feed-diferenciacao-potinho-vs-milkshake.md` (ciclo #232): ângulo personalização/nome no potinho — para não sobrepor, o novo material usa eixo *emocional/cultural* (sabores brasileiros afetivos) em vez de eixo *processo* (montagem personalizada)
+- Revisou `copy-final-namorados-2026.md` e `duo-milkypot-brief-operacional.md` para alinhar nomenclatura DUO e keyword NAMORADOS26
+- Identificou timing ideal: 05–08/06, dentro da janela VIP Namorados (03–10/06) definida no ciclo #234
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/feed-contraprogramacao-pistacho-sabores-br.md` | Criado — brief completo de contra-posicionamento pré-Namorados |
+
+**Destaques do arquivo criado:**
+1. **Carrossel 7 frames** com visual "Brasil/afeto" (tons âmbar, paçoca, Ninho, doce de leite) — sem citar concorrente em nenhum frame
+2. **2 versões de caption IG** (completa + curta) + 2 variantes de hook para TikTok
+3. **Reel 15s** com roteiro cena a cena — áudio MPB/bossa nova suave (anti-aspiracional)
+4. **Sequência Stories** com enquete "tendência vs. clássico brasileiro" para gerar engajamento antes de revelar resultado 24h depois
+5. **Variante "Cozinha da Vovó"** para usar se houver material UGC com apelo de afeto/nostalgia disponível
+6. **5 notas estratégicas** explicando por que o eixo "sabores brasileiros" ganha contra pistacho neste momento específico (Junina + convergência de concorrentes + personalização vs. produto fechado)
+7. **Timing preciso:** Thu 05/06 ou Fri 06/06 · 18h–20h — captura janela pré-Namorados sem competir com o pico do Dia H (12/06)
+
+**Commit:** _(ver abaixo)_
+
+**Próximo passo sugerido:**
+- **Ciclo #237 — SEO:** Verificar se `potinho-junino-londrina.html` tem `datePublished`/`validFrom` 03/06 no schema e se está linkado em `sitemap.xml` (prescrito #235)
+- **Ciclo #238 — UX:** Auditar `cardapio.html` para garantir placeholder/placeholder do Potinho Junino visível antes de 03/06
+- **Ciclo #239 — Concorrentes:** Refetch JAH Açaí (pistacho Namorados confirmado?) + verificar se MooBai chegou a Londrina — intel crítica para validar se contra-posicionamento foi bem executado pós-12/06
+- **Operador (URGENTE — 14 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (URGENTE):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Publicar `feed-contraprogramacao-pistacho-sabores-br.md` em Thu 05/06 ou Fri 06/06 · 18h–20h
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #236 | 2026-05-16_
+
+---
+
 ## Ciclo #235 — 2026-05-16
 
 **Área:** Conversão — Mecânica UGC "Foto com Potinho = Reward"
