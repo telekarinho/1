@@ -301,6 +301,20 @@ const TOOLS_IMPL = {
     }
 };
 
+// =============================================================
+// EXTENSAO 360° — Fases A/B/C/D (diagnostico, vendas, marketing, operacao)
+// Tools novas plugadas em TOOLS_IMPL via _tools-360.js. Tudo aditivo —
+// nao mexe nas 13 tools existentes (REGRA #0 anti-regressao).
+// =============================================================
+try {
+    const tools360 = require('./_tools-360.js');
+    const ext = tools360.build({ db, readDS, writeDS, admin });
+    Object.assign(TOOLS_IMPL, ext);
+    console.log(`✅ Belinha 360° tools carregadas: ${Object.keys(ext).length} novas tools (total ${Object.keys(TOOLS_IMPL).length})`);
+} catch (e) {
+    console.warn('⚠️ Falha ao carregar _tools-360.js (Belinha funciona sem):', e.message);
+}
+
 // ──────────────────────────────────────────────────────
 // Tool descriptions (texto pro Claude — não JSON schema)
 // ──────────────────────────────────────────────────────
@@ -356,6 +370,54 @@ Aí você continua a conversa normalmente, lendo o resultado e respondendo. Pode
 **read_finances** — DRE. Input: \`{"franchiseId": "muffato-quintino", "month": "2026-04"}\`
 
 **raw_firestore_read** — Escape hatch p/ qualquer doc. Input: \`{"collection": "datastore", "document": "..."}\`
+
+### 🩺 FASE A — Diagnóstico do sistema
+
+**system_health** — Visão 360° de saúde: Firestore, SW cache, APKs, erros recentes. Input: \`{}\`. Use quando user perguntar "tá tudo ok?", "como tá o sistema?".
+
+**check_apk_versions** — Versões mais recentes dos APKs Colaborador e TV no GitHub Releases. Input: \`{}\`.
+
+**recent_errors** — Erros registrados nas últimas N horas. Input: \`{"franchiseId":"muffato-quintino","hours":24}\` (franchiseId opcional).
+
+**sw_cache_status** — Lê \`sw.js\` em produção e retorna a CACHE_VERSION atual servida ao usuário. Input: \`{}\`.
+
+### 💰 FASE B — Vendas profundas
+
+**sales_compare** — Compara vendas hoje vs ontem vs semana atrás vs mês atrás. Input: \`{"franchiseId":"muffato-quintino"}\` (omita pra todas as franquias).
+
+**top_items_today** — Itens mais vendidos hoje (ou em N dias). Input: \`{"franchiseId":"muffato-quintino","days":1,"limit":10}\`.
+
+**peak_hours** — Histograma de pedidos por hora. Input: \`{"franchiseId":"muffato-quintino","days":7}\`. Bom pra responder "qual o horário de pico?".
+
+**ticket_average** — Ticket médio nos últimos N dias. Input: \`{"franchiseId":"muffato-quintino","days":7}\`.
+
+**inventory_status** — Estoque e itens em baixa. Input: \`{"franchiseId":"muffato-quintino"}\`.
+
+### 📣 FASE C — Marketing 24/7
+
+**tv_slide_add** — Adiciona slide na TV indoor (biblioteca + playlist). Input: \`{"franchiseId":"muffato-quintino","slide":{"type":"promo","promoHeadline":"...","promoSubtext":"...","duration":12}}\`. Tipos: image/video/promo/story/milkshake-card/combo/menu/text/product/html.
+
+**instagram_post_queue** — Enfileira post no Instagram (auto-poster posterior publica). Input: \`{"franchiseId":"muffato-quintino","caption":"...","hashtags":["milkypot"],"scheduledFor":"2026-05-16T20:00:00Z"}\`.
+
+**tiktok_post_queue** — Enfileira post no TikTok. Input: idem ao Instagram.
+
+**whatsapp_broadcast_queue** — Enfileira broadcast WhatsApp segmentado. Input: \`{"franchiseId":"muffato-quintino","message":"🍦 Promo!","targetTag":"vip","scheduledFor":"..."}\`.
+
+**competitor_scan** — Scan de concorrentes locais Londrina + diferenciais MilkyPot + oportunidades. Input: \`{"city":"Londrina-PR"}\`.
+
+**trend_pulse** — Estação, datas comemorativas próximas, sugestão de hero SKU. Input: \`{}\`. Use pra responder "o que postar essa semana?".
+
+### 🏪 FASE D — Operação da loja
+
+**pdv_status** — Caixa aberto/fechado, operador, vendas em curso. Input: \`{"franchiseId":"muffato-quintino"}\`.
+
+**caixa_status** — Alias pra pdv_status.
+
+**staff_present** — Equipe presente hoje (lê staff + punches). Input: \`{"franchiseId":"muffato-quintino"}\`.
+
+**commission_today** — Comissão acumulada do dia por operador. Input: \`{"franchiseId":"muffato-quintino"}\`.
+
+**escalation_queue** — Fila de conversas WhatsApp esperando humano (humanTakeover=true). Input: \`{"franchiseId":"muffato-quintino"}\`.
 
 ### Estrutura do catálogo
 Seções: \`bases\`, \`formatos\`, \`tamanhos\`, \`sabores\`, \`adicionais\`, \`bebidas\`.
