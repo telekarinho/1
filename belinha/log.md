@@ -2,6 +2,42 @@
 
 ---
 
+## Ciclo #237 — 2026-05-16
+
+**Área:** SEO — `validFrom` no Offer schema + sitemap `lastmod`
+
+**Contexto:** Prescrito nos ciclos #235 e #236. A landing page `potinho-junino-londrina.html` já estava linkada no `sitemap.xml` (prioridade 0.9, adicionada em ciclo anterior), mas o bloco `Offer` do schema Product estava incompleto: tinha `priceValidUntil: 2026-06-30` mas sem `validFrom` — o Google não conseguia inferir quando o produto fica disponível para rich results.
+
+**O que pesquisou/analisou:**
+- Leu o schema completo do arquivo — confirmou que `Offer` tinha `priceValidUntil` mas nenhum `validFrom`
+- Verificou consistência com o texto do FAQ (2 ocorrências de "17/06/2026" como data de disponibilidade)
+- Verificou `sitemap.xml` — `lastmod` estava em `2026-05-10`, desatualizado
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `potinho-junino-londrina.html` | `"validFrom": "2026-06-17"` adicionado ao bloco `Offer` (linha 57) |
+| `sitemap.xml` | `lastmod` da entrada `potinho-junino-londrina.html` atualizado `2026-05-10` → `2026-05-16` |
+
+**Impacto SEO:**
+- O Google agora tem a janela completa do produto: disponível **17/06 – 30/06/2026**
+- Rich results de produto com oferta temporal exigem `validFrom` + `priceValidUntil` para elegibilidade plena
+- `lastmod` atualizado sinaliza ao Googlebot que a página foi modificada e merece recrawl prioritário
+
+**Commit:** `cc82db5`
+
+**Próximo passo sugerido:**
+- **Ciclo #238 — Conteúdo:** Criar sequência de Stories IG pré-lançamento Potinho Junino para 03/06 — texto + enquete "Qual sabor junino você quer no potinho? 🌽 Paçoca / 🍯 Mel & Cocada" (gera engajamento e sinaliza demanda antes do lançamento 17/06)
+- **Ciclo #239 — UX:** Verificar se `cardapio.html` mostra o Potinho Junino com badge "Em breve — 17/06" ou se está totalmente oculto até a data (experiência do usuário que chega via landing page)
+- **Operador (URGENTE — 14 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers 03/06 dependem disso
+- **Operador (URGENTE — 18 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #237 | 2026-05-16_
+
+---
+
 ## Ciclo #236 — 2026-05-16
 
 **Área:** Conteúdo — Contra-posicionamento "Sabores Brasileiros vs. Pistacho Premium"
