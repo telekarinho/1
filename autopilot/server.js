@@ -272,18 +272,34 @@ function startTunnel(port) {
     console.log('🌐 Iniciando tunnel publico (cloudflared)...');
     const tunnel = spawn('cloudflared', ['tunnel', '--url', `http://localhost:${port}`], { shell: true });
 
+    // Lê secret de .env (se existir) ou env var direta
+    const BELINHA_TUNNEL_SECRET = process.env.BELINHA_TUNNEL_SECRET || (function() {
+        try {
+            const envFile = path.join(__dirname, '.env');
+            if (!fs.existsSync(envFile)) return null;
+            const content = fs.readFileSync(envFile, 'utf8');
+            const m = content.match(/BELINHA_TUNNEL_SECRET\s*=\s*(.+)/);
+            return m ? m[1].trim().replace(/^["']|["']$/g, '') : null;
+        } catch (e) { return null; }
+    })();
+
     const tryRegister = async (url) => {
         try {
+            const body = { url };
+            if (BELINHA_TUNNEL_SECRET) body.secret = BELINHA_TUNNEL_SECRET;
             const resp = await fetch(VERCEL_REGISTRY, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url })
+                body: JSON.stringify(body)
             });
             if (resp.ok) {
                 console.log('✅ Tunnel registrado no Firestore — painel milkypot.com ja funciona!');
             } else {
                 const txt = await resp.text();
                 console.warn('⚠️ Falha ao registrar tunnel:', resp.status, txt);
+                if (!BELINHA_TUNNEL_SECRET) {
+                    console.warn('   💡 Defina BELINHA_TUNNEL_SECRET em autopilot/.env');
+                }
             }
         } catch (e) {
             console.warn('⚠️ Falha ao registrar tunnel:', e.message);
