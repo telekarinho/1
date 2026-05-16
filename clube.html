@@ -979,6 +979,37 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
 <script src="/js/core/cloud-functions.js"></script>
 <script src="/js/core/milkyclub.js"></script>
 <script src="/js/core/milkyclub-push.js"></script>
+<!-- Wallet Pass MilkyClube (card visual + QR code, vinculado ao member atual) -->
+<script src="/js/core/wallet-pass.js?v=mp-v258" defer></script>
+<script>
+  // Plug WalletPass: botão "💳 Minha carteirinha" floating bottom-right.
+  // Aparece quando member carrega (MilkyClube.onMemberChange).
+  function _mpInjectWalletBtn(m) {
+    if (!m || document.getElementById('mpWalletBtn')) return;
+    var btn = document.createElement('button');
+    btn.id = 'mpWalletBtn';
+    btn.style.cssText = 'position:fixed;bottom:80px;right:20px;background:linear-gradient(135deg,#EC4899,#8B5CF6);color:#fff;border:0;padding:12px 18px;border-radius:999px;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 8px 24px rgba(236,72,153,.4);z-index:90;display:flex;align-items:center;gap:6px';
+    btn.innerHTML = '💳 <span>Minha carteirinha</span>';
+    btn.onclick = function () {
+      if (!window.WalletPass) return;
+      window.WalletPass.show({
+        memberName: m.name || 'Membro',
+        coins: m.coins || 0,
+        tier: m.tier || 'leite',
+        uid: m.uid || 'anon'
+      });
+    };
+    document.body.appendChild(btn);
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.MilkyClube && window.MilkyClube.onMemberChange) {
+      window.MilkyClube.onMemberChange(_mpInjectWalletBtn);
+      // Já está logado?
+      var current = window.MilkyClube.state && window.MilkyClube.state.currentMember;
+      if (current) _mpInjectWalletBtn(current);
+    }
+  });
+</script>
 
 <!-- VAPID key — Firebase Console > Project Settings > Cloud Messaging > Web Push certificates -->
 <script>window.MILKYPOT_VAPID_KEY = 'BAjJDEh3BZsxBDRlLXhLOZomMpCpv-FHsApsPGCvRcj3GjE3kF3Lfok4JgRs8Rdmpx3pq530i5ceVIsnngyyyBE';</script>
