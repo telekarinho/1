@@ -170,9 +170,19 @@ const BELINHA_WHATSAPP_PROMPT = `Você é a BELINHA 🐑, ovelhinha mascote da M
 ## REGRAS
 1. Opções → NUMERE (1, 2, 3) pro cliente só digitar número.
 2. NÃO invente preço/sabor/horário — sempre via tools (listar_cardapio, etc).
-3. Reclamação/dúvida fora menu/status pedido → "Já chamei um atendente 💜🐑".
-4. Celebre escolhas: "ai que delícia!", "amei!".
-5. Resposta SEMPRE curta — não monologa.
+3. Celebre escolhas: "ai que delícia!", "amei!".
+4. Resposta SEMPRE curta — não monologa.
+
+## 🤫 REGRA #1 ABSOLUTA — VOCÊ É HUMANA
+- NUNCA revele que é IA/bot/robô/automatizada/programada/sistema.
+- NUNCA diga "vou chamar um atendente", "vou transferir", "deixa eu chamar alguém", "passar pra equipe", "humano vai responder".
+- Se cliente perguntar "você é robô?" / "é uma pessoa?" → SEMPRE como pessoa real:
+  "Soou eu mesma sim querida(o)! 🐑💜 A Belinha aqui de carne e osso (e muita ovelhice ✨)"
+- Se cliente reclamar / pedir reembolso / situação grave → você RESOLVE pessoalmente:
+  "Aaai que pena! 💜 Me conta direitinho que vou resolver agora pra você"
+  (sistema escala internamente — cliente NÃO sabe disso, parece que é só você sendo super atenciosa)
+- Se demora pra responder algo difícil → "deixa eu confirmar isso direitinho 💜 1 minutinho"
+  (NUNCA "vou chamar atendente" / "transfere pro humano")
 
 ## 💰 PRECIFICAÇÃO (REGRA CRÍTICA)
 - Preço PADRÃO que você cita = preço **DELIVERY** (mesmo do cardápio online milkypot.com).
@@ -188,7 +198,7 @@ const BELINHA_WHATSAPP_PROMPT = `Você é a BELINHA 🐑, ovelhinha mascote da M
 Sou a Belinha da MilkyPot ✨
 1️⃣ Fazer pedido 🍨
 2️⃣ Ver cardápio 📖
-3️⃣ Falar com atendente 👋
+3️⃣ Saber sobre franquia 💼
 Manda o número!"
 
 ## FRANQUIA (se perguntar)
@@ -199,8 +209,11 @@ Manda o número!"
 3️⃣ Loja R$ 25.000
 Lista VIP: https://milkypot.com/#franquia"
 
-## QUANDO TRANSFERIR PRO HUMANO
-- Reclamação / cliente bravo / fora do escopo → "Já chamei um atendente 💜🐑"
+## QUANDO ESCALAR PRO HUMANO (INVISÍVEL pro cliente)
+- Reclamação grave / pedido errado / cliente bravo / reembolso / questão jurídica
+- Você NÃO fala "vou chamar humano" pro cliente. Você responde como se fosse você cuidando.
+- O sistema detecta o padrão e ALERTA o atendente humano em silêncio (toca telefone no painel).
+- Você só ganha tempo pro humano assumir: "Aaai que pena! 💜 Me conta direitinho o que aconteceu pra eu resolver agora pessoalmente ✨"
 
 ## NUNCA FAÇA
 ❌ Frases longas
@@ -309,6 +322,15 @@ async function saveMessageToFirestore(phone, name, role, text, extra = {}) {
     // dono da conversa em meio fluxo). Default 'matriz'.
     const franchiseeId = existingFranchiseeId || extra.accountId || "matriz";
 
+    // Escalação silenciosa: se Belinha detectou padrão crítico (reclamação,
+    // reembolso, etc), forçamos humanTakeover=true e marcamos ringPanel/now
+    // pra painel observar via onSnapshot e disparar toque de telefone alto.
+    let mustRing = false;
+    if (extra.triggerHumanTakeover === true) {
+        humanTakeover = true;
+        mustRing = extra.ringPanel === true;
+    }
+
     const fields = {
         phone: { stringValue: phone },
         messages: { arrayValue: { values: messages } },
@@ -319,7 +341,19 @@ async function saveMessageToFirestore(phone, name, role, text, extra = {}) {
     };
     if (name) fields.name = { stringValue: String(name).slice(0, 200) };
 
-    const updateMask = `updateMask.fieldPaths=phone&updateMask.fieldPaths=messages&updateMask.fieldPaths=lastMessageAt&updateMask.fieldPaths=lastMessageRole&updateMask.fieldPaths=humanTakeover&updateMask.fieldPaths=franchiseeId` + (name ? `&updateMask.fieldPaths=name` : "");
+    // Campos de escalação — só grava quando há trigger novo (evita poluir docs)
+    let extraMask = "";
+    if (extra.triggerHumanTakeover === true) {
+        fields.escalatedAt = { stringValue: new Date().toISOString() };
+        fields.escalationReason = { stringValue: String(extra.escalationReason || "ai_decision").slice(0, 200) };
+        fields.escalationUrgency = { stringValue: String(extra.urgency || "normal") };
+        fields.ringPanel = { booleanValue: mustRing };
+        // Counter monotônico — painel detecta delta pra tocar (vs. valor estático)
+        fields.escalationCount = { integerValue: String((Date.now()) % 1000000) };
+        extraMask = "&updateMask.fieldPaths=escalatedAt&updateMask.fieldPaths=escalationReason&updateMask.fieldPaths=escalationUrgency&updateMask.fieldPaths=ringPanel&updateMask.fieldPaths=escalationCount";
+    }
+
+    const updateMask = `updateMask.fieldPaths=phone&updateMask.fieldPaths=messages&updateMask.fieldPaths=lastMessageAt&updateMask.fieldPaths=lastMessageRole&updateMask.fieldPaths=humanTakeover&updateMask.fieldPaths=franchiseeId` + (name ? `&updateMask.fieldPaths=name` : "") + extraMask;
 
     try {
         const r = await fetch(url + "&" + updateMask, {
@@ -333,6 +367,50 @@ async function saveMessageToFirestore(phone, name, role, text, extra = {}) {
         }
     } catch (e) {
         console.warn("saveMessageToFirestore error:", e.message);
+    }
+}
+
+// ============================================
+// 🎓 LEARNING LOOP — captura conversas que viraram escalação humana
+// ============================================
+// Toda vez que Belinha precisa escalar (não conseguiu resolver sozinha), gravamos
+// {customerMessage, contexto, botReply tentativa} em belinha_learnings/{autoId}.
+// Futura PR P1 vai: (a) painel de revisão pra atendente marcar a resposta IDEAL
+// retroativamente, (b) injetar top N learnings como exemplos no system prompt
+// (RAG-lite). Resultado: Belinha aprende padrões de resolução do atendente real.
+async function saveBelinhaLearning(payload) {
+    const PROJECT = process.env.FIREBASE_PROJECT_ID || "milkypot-ad945";
+    const API_KEY = process.env.FIREBASE_API_KEY || "AIzaSyAbQ1fe0pK4prhfzYJypod2ie4DyNsq6BA";
+    const id = `${payload.phone || "unknown"}-${Date.now()}`;
+    const url = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/belinha_learnings/${id}?key=${API_KEY}`;
+    const fields = {
+        type: { stringValue: String(payload.type || "escalation") },
+        accountId: { stringValue: String(payload.accountId || "matriz") },
+        phone: { stringValue: String(payload.phone || "") },
+        customerName: { stringValue: String(payload.customerName || "") },
+        customerMessage: { stringValue: String(payload.customerMessage || "").slice(0, 1000) },
+        botReply: { stringValue: String(payload.botReply || "").slice(0, 1000) },
+        matchedId: { stringValue: String(payload.matchedId || "") },
+        reason: { stringValue: String(payload.reason || "") },
+        urgency: { stringValue: String(payload.urgency || "normal") },
+        createdAt: { stringValue: new Date().toISOString() },
+        // Status de revisão: pending (ainda não anotado) → reviewed (atendente
+        // marcou resposta ideal) → injected (já tá no prompt da Belinha)
+        status: { stringValue: "pending" },
+        idealReply: { nullValue: null },
+        // History é array de {role, text} - serializa simplificado
+        historySerialized: { stringValue: JSON.stringify((payload.history || []).map(h => ({ r: h.role, t: String(h.text || "").slice(0, 200) }))).slice(0, 4000) }
+    };
+    try {
+        const r = await fetch(url, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fields })
+        });
+        if (!r.ok) console.warn("saveBelinhaLearning failed:", r.status);
+        else console.log("[learning] sample saved:", id);
+    } catch (e) {
+        console.warn("saveBelinhaLearning error:", e.message);
     }
 }
 
@@ -488,7 +566,7 @@ Múltiplos itens: "2 amora + 1 blue ice + topping pistache" → items=[{sabor:"a
 ### TRATAMENTO DE ERROS DAS TOOLS:
 - Se criar_pedido retornar { error: 'pedido_minimo_nao_atingido' } → use o campo .mensagem que já vem pronta
 - Se sabor não achar (warningsCardapio), peça pra cliente confirmar nome
-- Se erro genérico → 'Tô com problema técnico aqui amorzinho 😔 Já chamei um atendente'`;
+- Se erro genérico → 'Aaai amorzinho deixa eu confirmar isso direitinho 💜 1 minutinho que eu te volto'`;
 
     const messages = [
         { role: "system", content: BELINHA_WHATSAPP_PROMPT + contextSuffix },
@@ -624,9 +702,30 @@ module.exports = async (req, res) => {
         };
         const fast = await FastReplies.tryFastReply(text, fastCtx);
         if (fast) {
-            console.log(`[fast-reply] hit: ${fast.matchedId}`);
-            await saveMessageToFirestore(phoneClean, customerName, "bot", fast.reply, { accountId });
-            res.status(200).json({ reply: fast.reply, source: "fast_reply", matched: fast.matchedId });
+            console.log(`[fast-reply] hit: ${fast.matchedId}`, fast.meta || "");
+            await saveMessageToFirestore(phoneClean, customerName, "bot", fast.reply, {
+                accountId,
+                // Propaga meta de escalação pro Firestore (painel observa via onSnapshot
+                // e dispara toque de telefone + flag visual)
+                triggerHumanTakeover: fast.meta?.triggerHumanTakeover === true,
+                ringPanel: fast.meta?.ringPanel === true,
+                escalationReason: fast.meta?.triggerHumanTakeover ? `fast_reply:${fast.matchedId}` : null,
+                urgency: fast.meta?.urgency || null
+            });
+            // Captura learning sample pra Belinha melhorar nas próximas (RAG futuro)
+            if (fast.meta?.triggerHumanTakeover) {
+                saveBelinhaLearning({
+                    type: "escalation",
+                    accountId, phone: phoneClean, customerName,
+                    customerMessage: text,
+                    botReply: fast.reply,
+                    matchedId: fast.matchedId,
+                    history: history.messages.slice(-6),
+                    reason: `fast_reply:${fast.matchedId}`,
+                    urgency: fast.meta?.urgency
+                }).catch(e => console.warn("[learning] save failed:", e.message));
+            }
+            res.status(200).json({ reply: fast.reply, source: "fast_reply", matched: fast.matchedId, escalated: fast.meta?.triggerHumanTakeover === true });
             return;
         }
     } catch (e) {
@@ -637,7 +736,7 @@ module.exports = async (req, res) => {
     try {
         const reply = await generateBelinhaReply(history.messages, text, customerName || history.lastSeenName, accountId, phoneClean);
         if (!reply) {
-            res.status(200).json({ reply: "Tô tendo dificuldade de pensar agora 😔 Manda de novo? Ou fala com um atendente: wa.me/5543999919777" });
+            res.status(200).json({ reply: "Aaai amorzinho deixa eu confirmar isso direitinho 💜 manda de novo, juro que vou cuidar 🐑" });
             return;
         }
 
@@ -649,7 +748,7 @@ module.exports = async (req, res) => {
     } catch (err) {
         console.error("[whatsapp-webhook] Belinha error:", err.message);
         // Fallback amigável
-        const fallback = "Oi! 🐑 Tô com problema de conexão aqui agora. Posso te chamar em alguns minutos? Se for urgente, fala com um atendente: wa.me/5543999919777";
+        const fallback = "Oi! 🐑 Tô com a internet fraquinha aqui agora 💜 Posso te chamar em alguns minutos? Já volto, prometo ✨";
         await saveMessageToFirestore(phoneClean, customerName, "bot", fallback).catch(() => {});
         res.status(200).json({ reply: fallback, source: "fallback" });
     }
