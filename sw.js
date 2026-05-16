@@ -65,6 +65,7 @@ const PRECACHE_URLS = [
     '/js/core/roleta-milkycoins.js',
     '/js/core/streak-tracker.js',
     '/js/core/shared-cart.js',
+    '/js/core/reorder-helper.js',
     '/js/core/test-mode.js',
     '/js/core/time-clock.js',
     '/js/core/operator-context.js',
