@@ -156,7 +156,7 @@
   <script src="../js/core/constants.js"></script>
   <script src="../js/core/i18n.js"></script>
   <script src="../js/core/utils.js"></script>
-  <script src="../js/core/datastore.js?v=mp-v258"></script>
+  <script src="../js/core/datastore.js?v=mp-v259"></script>
   <script src="../js/core/firebase-config.js"></script>
   <script src="../js/core/auth.js"></script>
   <script>
@@ -220,6 +220,10 @@
     return p;
   }
 
+  // Tracking de escalações pra detectar delta e tocar (sem tocar a cada snapshot)
+  const _seenEscalations = new Map(); // phone -> escalationCount
+  let _firstSnapshot = true;
+
   function loadConversations() {
     if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
     const db = firebase.firestore();
@@ -230,11 +234,31 @@
       .limit(200)
       .onSnapshot(snap => {
         CONVERSATIONS = [];
+        const novasEscalacoes = []; // pra tocar telefone só pras NOVAS
         snap.forEach(doc => {
           const d = doc.data();
           d._id = doc.id;
           CONVERSATIONS.push(d);
+
+          // Detecta NOVA escalação (delta no escalationCount ou primeira vez com humanTakeover)
+          // Não toca no primeiro snapshot (carga inicial) — só pra eventos novos
+          if (!_firstSnapshot && d.humanTakeover && d.escalationCount != null) {
+            const prev = _seenEscalations.get(d._id);
+            if (prev !== d.escalationCount) {
+              novasEscalacoes.push({
+                phone: d._id,
+                name: d.name || d.phone,
+                reason: d.escalationReason || 'cliente precisa de você',
+                urgency: d.escalationUrgency || 'normal',
+                ringPanel: d.ringPanel === true
+              });
+            }
+            _seenEscalations.set(d._id, d.escalationCount);
+          } else if (d.escalationCount != null) {
+            _seenEscalations.set(d._id, d.escalationCount);
+          }
         });
+
         // Filtro por escopo: super_admin vê tudo, franchisee só sua(s) franquia(s)
         if (USER_ROLE === 'franchisee' && USER_FRANCHISEES.length) {
           CONVERSATIONS = CONVERSATIONS.filter(c =>
@@ -243,11 +267,126 @@
         }
         renderStats();
         renderConvList();
+
+        // 🔔 TOQUE DE TELEFONE — Belinha escalou pro humano (silencioso pro cliente)
+        // Toca alto + popup visual + título piscando até atendente clicar/responder
+        for (const esc of novasEscalacoes) {
+          tocarTelefone(esc);
+        }
+
+        _firstSnapshot = false;
       }, err => {
         console.error('listen failed:', err);
         document.getElementById('convList').innerHTML = '<div style="padding:30px;text-align:center;color:#DC2626;font-size:13px">❌ Erro: ' + esc(err.message) + '</div>';
       });
   }
+
+  // ============================================
+  // 🔔 TOQUE DE TELEFONE (escalação silenciosa Belinha → humano)
+  // ============================================
+  // Quando Belinha detecta padrão crítico (reclamação, reembolso, etc), o
+  // webhook seta humanTakeover=true + escalationCount delta no Firestore.
+  // O painel observa via onSnapshot e dispara essa função: toca som de
+  // telefone alto, mostra popup, faz título da aba piscar pra equipe assumir.
+  let _ringInterval = null;
+  let _titleBlinkInterval = null;
+  const _origTitle = document.title;
+
+  function tocarTelefone(escInfo) {
+    console.log('[BELINHA-RING] 🔔 escalação detectada:', escInfo);
+    // 1. Som de telefone alto e looping (Web Audio API — gera tom sintético
+    //    pra não depender de arquivo .mp3 cacheável que pode 404 em PWA)
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      let toques = 0;
+      const tocarUm = () => {
+        if (toques++ > 30) { stopRing(); return; } // segurança: max 30 toques (~1min)
+        // Padrão "ringtone Brasil": 1s tom, 4s silêncio (loop)
+        for (const freq of [800, 1000]) { // dois tons sobrepostos = som "telefone"
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.frequency.value = freq;
+          osc.type = 'sine';
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1);
+          osc.connect(gain).connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 1);
+        }
+      };
+      tocarUm();
+      _ringInterval = setInterval(tocarUm, 5000);
+    } catch (e) {
+      console.warn('[BELINHA-RING] audio falhou:', e.message);
+    }
+
+    // 2. Popup visual full-screen
+    showEscalacaoPopup(escInfo);
+
+    // 3. Título da aba piscando + favicon vermelho
+    if (_titleBlinkInterval) clearInterval(_titleBlinkInterval);
+    let toggle = false;
+    _titleBlinkInterval = setInterval(() => {
+      document.title = (toggle = !toggle) ? `🔔 BELINHA PRECISA DE VOCÊ — ${escInfo.name}` : _origTitle;
+    }, 800);
+
+    // 4. Notification API se permitida
+    try {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(`🔔 Belinha escalou pra você`, {
+          body: `${escInfo.name} • motivo: ${escInfo.reason}`,
+          icon: '/images/logo-milkypot.png',
+          requireInteraction: true,
+          tag: 'belinha-escalation-' + escInfo.phone
+        });
+      } else if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    } catch (e) {}
+  }
+
+  function stopRing() {
+    if (_ringInterval) { clearInterval(_ringInterval); _ringInterval = null; }
+    if (_titleBlinkInterval) { clearInterval(_titleBlinkInterval); _titleBlinkInterval = null; document.title = _origTitle; }
+    const popup = document.getElementById('belinhaEscPopup');
+    if (popup) popup.remove();
+  }
+
+  function showEscalacaoPopup(escInfo) {
+    let popup = document.getElementById('belinhaEscPopup');
+    if (popup) popup.remove();
+    popup = document.createElement('div');
+    popup.id = 'belinhaEscPopup';
+    popup.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;animation:bp-fade .2s ease;';
+    popup.innerHTML = `
+      <style>
+        @keyframes bp-fade { from{opacity:0} to{opacity:1} }
+        @keyframes bp-shake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-15deg)} 75%{transform:rotate(15deg)} }
+      </style>
+      <div style="background:#fff;border-radius:24px;padding:40px;max-width:420px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+        <div style="font-size:80px;animation:bp-shake .5s ease-in-out infinite">📞</div>
+        <h2 style="margin:14px 0 6px;color:#DC2626;font-family:'Baloo 2',cursive;font-size:26px">Belinha tá te chamando!</h2>
+        <p style="color:#6B7280;font-size:14px;margin:0 0 18px">Cliente precisa de atenção humana agora 💜</p>
+        <div style="background:#FEE2E2;border-radius:12px;padding:14px;margin-bottom:18px;text-align:left">
+          <div style="font-weight:800;color:#991B1B">${esc(escInfo.name)}</div>
+          <div style="font-size:12px;color:#7F1D1D;margin-top:4px">Motivo: ${esc(escInfo.reason)}</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button onclick="abrirEscalacao('${esc(escInfo.phone)}')" style="flex:1;padding:14px;border:0;border-radius:10px;background:#DC2626;color:#fff;font-weight:800;font-size:14px;cursor:pointer">📞 Atender agora</button>
+          <button onclick="stopRing()" style="padding:14px 20px;border:1.5px solid #E5E7EB;background:#fff;border-radius:10px;font-weight:700;font-size:13px;color:#6B7280;cursor:pointer">Ignorar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(popup);
+  }
+
+  function abrirEscalacao(phone) {
+    stopRing();
+    if (typeof openConv === 'function') openConv(phone);
+  }
+  // Expor pra onclick inline
+  window.tocarTelefone = tocarTelefone;
+  window.stopRing = stopRing;
+  window.abrirEscalacao = abrirEscalacao;
 
   function renderStats() {
     const hoje = new Date().toISOString().slice(0,10);
