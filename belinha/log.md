@@ -2,6 +2,50 @@
 
 ---
 
+## Ciclo #242 — 2026-05-16
+
+**Área:** Conteúdo — Feed IG carrossel 05/06: resultado enquete sabor junino + countdown 17/06
+
+**Contexto:** O ciclo #238 criou os Stories de enquete (03/06) e o Frame 4 de resultado (05/06 Stories). O ciclo #241 sugeriu este ciclo: transformar o dado da enquete em post de feed permanente. Gap identificado: após 05/06, qualquer visitante do perfil entre 05/06 e 12/06 não encontrava nenhum conteúdo de feed referente à Festa Junina — os Stories são efêmeros (24h). Nenhum arquivo existente cobria este slot de feed.
+
+**O que pesquisou/analisou:**
+- Leu `stories-enquete-sabor-junino-03jun.md` — confirmou que Frame 4 (resultado) é Stories, não feed
+- Leu `reels-teaser-junina-pre-lancamento-2026.md` — confirmou que próximo post de feed é TEASER 3 em 10/06 (gap de 5 dias após 05/06)
+- Leu `instagram-tiktok-junina-2026.md` — confirmou ausência de post de feed em 05/06
+- Verificou `dm-resposta-enquete-junina-03jun.md` — confirmou funil DM→WA já coberto; feed adiciona canal de alcance sem duplicar
+- Identificou estratégia carrossel (3 slides): hook → resultado sem revelar vencedor → countdown CTA
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/feed-05jun-resultado-enquete-countdown.md` | Criado (253 linhas): carrossel 3 slides com art direction, copy pronta (versão longa + curta), análise hashtags, timing, métricas esperadas, checklist operacional, referências cruzadas |
+
+**Destaques:**
+1. **Gap preenchido:** post de feed permanente em 05/06 — visível por 12 dias até 17/06, sustenta curiosidade sem custo adicional de produção de Reel
+2. **Resultado sem reveal:** Slide 2 mostra percentuais reais da enquete mas NÃO revela qual sabor "ganhou" — suspense preservado até POST 1 em 12/06
+3. **Carrossel estratégico:** 3 slides acionam comportamento de swipe → sinal de engajamento → distribuição orgânica estendida
+4. **Countdown permanente:** "Faltam 12 dias · 17/06" no Slide 3 como prova social de urgência; instruções para operador ajustar número se publicar fora de 05/06
+5. **CTA 🌽 WA:** integrado com keyword `JUNINO26` do `wa-business-setup-junino.md` — captura leads VIP pré-lançamento via post de feed
+6. **Pinagem sugerida:** fixar no topo do perfil de 05/06 a 17/06 — garante primeira impressão do perfil durante todo o período de teaser
+
+**Commit:** `a9a3c47`
+
+**Próximo passo sugerido:**
+- **Ciclo #243 — UX:** Auditar `index.html` — coexistência dos banners Namorados (12/06) e Junina (17/06) na janela de overlap 12/06–16/06; testar lógica date-gate existente e corrigir se houver conflito visual
+- **Ciclo #244 — Conversão:** Mecânica UGC "foto com potinho = reward" (prescrita ciclo #226, ainda pendente)
+- **Ciclo #245 — Concorrentes:** MilkyMoo + JAH — monitorar ações Namorados 12/06 já visíveis; atualizar análise
+- **Ciclo #246 — Conteúdo:** Post TEASER 2 (07/06 Stories) já coberto em `reels-teaser-junina-pre-lancamento-2026.md`; verificar se falta post de feed complementar para 07/06 similar ao que foi feito para 05/06
+- **Operador (URGENTE — 14 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador (URGENTE):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Configurar 4 Quick Replies Instagram antes de 03/06 (roteiro ciclo #240)
+- **Operador:** Antes de publicar feed-05jun: salvar print da enquete com percentuais reais (antes de encerrar a enquete às 18h de 05/06)
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #242 | 2026-05-16_
+
+---
+
 ## Ciclo #241 — 2026-05-16
 
 **Área:** SEO + UX — `potinho-junino-londrina.html`: meta tags com data de lançamento + date-gate nos CTAs
