@@ -2,6 +2,42 @@
 
 ---
 
+## Ciclo #243 — 2026-05-16
+
+**Área:** UX/Frontend — countdown regressivo em `potinho-junino-londrina.html`
+
+**Contexto:** Página criada no ciclo #241 (SEO meta tags). Teaser Festa Junina começa em 03/06. Badge "LANÇAMENTO 17/06" era estático — sem senso de urgência para visitantes da landing page.
+
+**O que pesquisou/analisou:**
+- Leu `potinho-junino-londrina.html` completo — confirmou ausência de countdown; badge estático era único indicador de data
+- Verificou estrutura JS existente (date-gate CTAs pré/pós-lançamento) — confirmou que `new Date('2026-06-17')` usa meia-noite UTC; countdown usa `2026-06-17T17:00:00Z` = 14h BRT (abertura da loja) para maior precisão
+- Verificou classes CSS existentes — adicionou novas classes sem conflito
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `potinho-junino-londrina.html` | +47 linhas: CSS countdown + HTML 4 unidades (d/h/m/s) + script JS `setInterval(tick,1000)` |
+
+**Detalhes:**
+1. **HTML:** bloco `#countdown-junino` inserido após `.badge-limited` — título "🕐 Faltam para o lançamento:" + 4 colunas d:h:m:s
+2. **CSS:** 7 novas classes (`.countdown-wrap`, `.countdown-box`, `.cd-unit`, `.cd-num`, `.cd-label`, `.cd-sep`, `.countdown-launched`) em estilo pastel amarelo/âmbar, coerente com a identidade junina da página
+3. **JS:** IIFE com `target = new Date('2026-06-17T17:00:00Z')`, `tick()` a cada 1s via `setInterval`; após lançamento substitui o bloco inteiro por `<span class="countdown-launched">🎉 Disponível agora! Peça hoje pelo WhatsApp 🐑</span>` (verde esmeralda)
+4. **Zero dependências externas:** pure JS/CSS inline, sem libs, sem requisição adicional
+
+**Commit:** `7c3a56e`
+
+**Próximo passo sugerido:**
+- **Ciclo #244 — Concorrentes:** JohnnyJoy última atualização foi ciclo #202 (40+ ciclos atrás) — verificar ações Namorados 12/06 e Festa Junina 2026; capturar promoções e copy de junho
+- **Ciclo #245 — Código/performance:** Auditar `cardapio.html` — verificar se card Potinho Junino está visível e com link para a landing page `potinho-junino-londrina.html`
+- **Ciclo #246 — Conteúdo:** Post Instagram "teaser reveal 17/06" para publicar em 10/06 (TEASER 3 do calendário junino)
+- **Operador (URGENTE — 14 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador (URGENTE):** Configurar keyword `JUNINO26` no WA Business até **03/06** ⚠️
+
+_Belinha — Ciclo #243 | 2026-05-16_
+
+---
+
 ## Ciclo #242 — 2026-05-16
 
 **Área:** Conteúdo — Feed IG carrossel 05/06: resultado enquete sabor junino + countdown 17/06
