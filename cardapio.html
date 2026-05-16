@@ -348,7 +348,7 @@
             <p style="text-align:center;font-size:0.8rem;color:#9484A8;margin-bottom:4px;">☁️ <a href="potinho-ninho-londrina.html" style="color:#7C5CBF;text-decoration:underline;text-underline-offset:2px;">Tudo sobre o Potinho de Ninho em Londrina</a></p>
             <p style="text-align:center;font-size:0.8rem;color:#9484A8;margin-bottom:4px;">🫐 <a href="acai-self-service-londrina.html" style="color:#5B52D0;text-decoration:underline;text-underline-offset:2px;">Açaí Self-Service em Londrina — Buffet Livre</a></p>
             <p style="text-align:center;font-size:0.8rem;color:#9484A8;margin-bottom:4px;">🎨 <a href="potinho-personalizado-londrina.html" style="color:#C45FA8;text-decoration:underline;text-underline-offset:2px;">Potinho Personalizado em Londrina — Monte do Seu Jeito</a></p>
-            <p style="text-align:center;font-size:0.8rem;color:#9484A8;margin-bottom:16px;">🎪 <a href="potinho-junino-londrina.html" style="color:#C0820A;text-decoration:underline;text-underline-offset:2px;">Potinho Junino em Londrina — Edição Limitada Junho</a></p>
+            <p style="text-align:center;font-size:0.8rem;color:#9484A8;margin-bottom:16px;">🎪 <a href="potinho-junino-londrina.html" style="color:#C0820A;text-decoration:underline;text-underline-offset:2px;">Potinho Junino em Londrina — Edição Limitada · disponível 17/06</a></p>
             <div class="category-tabs sticky-tabs" id="categoryTabs" role="tablist" aria-label="Filtros do cardápio">
                 <button class="cat-tab active" data-category="ninho" onclick="filterProducts(event, 'ninho')" role="tab" aria-selected="true">☁️ Ninho</button>
                 <button class="cat-tab" data-category="acai" onclick="filterProducts(event, 'acai')" role="tab" aria-selected="false">🫐 Açaí</button>
@@ -782,22 +782,43 @@
             var grid = document.getElementById('productGrid');
             if (!grid) return;
             if (lazyObserver) { lazyObserver.disconnect(); lazyObserver = null; }
-            grid.innerHTML =
-                '<a href="potinho-junino-londrina.html" class="product-card-mobile" style="text-decoration:none;color:inherit;" aria-label="Potinho Junino — Edição Limitada de Junho">' +
-                    '<div class="card-emoji-wrap">' +
-                        '<span class="card-emoji">🥜</span>' +
-                        '<span class="card-format-icon">🍨</span>' +
-                        '<span class="card-badge" style="background:#C0820A;color:#fff;font-size:0.6rem;padding:2px 6px;border-radius:8px;position:absolute;top:6px;right:6px;">Edição Limitada</span>' +
-                    '</div>' +
-                    '<div class="card-info">' +
-                        '<h3 class="card-name">Potinho Junino 🎪</h3>' +
-                        '<p class="card-desc">Base Ninho + paçoca + calda de amendoim. Só em junho!</p>' +
-                        '<div class="card-footer">' +
-                            '<span class="card-price">a partir de <strong>R$ 10</strong></span>' +
-                            '<span class="card-add-btn">Ver</span>' +
+            var isAvailable = new Date() >= new Date('2026-06-17');
+            if (isAvailable) {
+                grid.innerHTML =
+                    '<a href="potinho-junino-londrina.html" class="product-card-mobile" style="text-decoration:none;color:inherit;" aria-label="Potinho Junino — Edição Limitada de Junho">' +
+                        '<div class="card-emoji-wrap">' +
+                            '<span class="card-emoji">🥜</span>' +
+                            '<span class="card-format-icon">🍨</span>' +
+                            '<span class="card-badge" style="background:#C0820A;color:#fff;font-size:0.6rem;padding:2px 6px;border-radius:8px;position:absolute;top:6px;right:6px;">Edição Limitada</span>' +
                         '</div>' +
-                    '</div>' +
-                '</a>';
+                        '<div class="card-info">' +
+                            '<h3 class="card-name">Potinho Junino 🎪</h3>' +
+                            '<p class="card-desc">Base Ninho + paçoca + calda de amendoim. Só em junho!</p>' +
+                            '<div class="card-footer">' +
+                                '<span class="card-price">a partir de <strong>R$ 10</strong></span>' +
+                                '<span class="card-add-btn">Ver</span>' +
+                            '</div>' +
+                        '</div>' +
+                    '</a>';
+            } else {
+                // Teaser period 03/06–16/06: product not yet available, show "Em breve" state
+                grid.innerHTML =
+                    '<a href="potinho-junino-londrina.html" class="product-card-mobile" style="text-decoration:none;color:inherit;" aria-label="Potinho Junino — Em breve 17 de junho">' +
+                        '<div class="card-emoji-wrap">' +
+                            '<span class="card-emoji">🥜</span>' +
+                            '<span class="card-format-icon">🎪</span>' +
+                            '<span class="card-badge" style="background:#E8A317;color:#fff;font-size:0.6rem;padding:2px 6px;border-radius:8px;position:absolute;top:6px;right:6px;">Em breve · 17/06</span>' +
+                        '</div>' +
+                        '<div class="card-info">' +
+                            '<h3 class="card-name">Potinho Junino 🎪</h3>' +
+                            '<p class="card-desc">Edição limitada chegando dia 17 de junho. Garanta o seu pelo WhatsApp!</p>' +
+                            '<div class="card-footer">' +
+                                '<span class="card-price" style="color:#9484A8;">disponível em 17/06</span>' +
+                                '<span class="card-add-btn" style="background:#E8A317;">Saiba mais</span>' +
+                            '</div>' +
+                        '</div>' +
+                    '</a>';
+            }
         }
 
         window.filterProducts = function(event, cat) {
