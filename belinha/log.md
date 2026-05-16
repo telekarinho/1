@@ -2,6 +2,45 @@
 
 ---
 
+## Ciclo #240 — 2026-05-16
+
+**Área:** Conversão — Roteiro DM Instagram para captura de leads juninos → WhatsApp
+
+**Contexto:** O Stories enquete "Paçoca vs. Mel & Cocada" (03/06, ciclo #238) + Reel de mistério vão gerar DMs espontâneos de curiosos e compradores em potencial. Nenhum script existia para tratar esses DMs e convertê-los em leads no WhatsApp antes do lançamento em 17/06. A enquete de sabor gera o gatilho; faltava o funil de resposta.
+
+**O que pesquisou/analisou:**
+- Revisou `stories-enquete-sabor-junino-03jun.md` — confirmou que o arquivo menciona "ativar resposta automática DM" mas sem roteiro completo
+- Revisou `wa-business-setup-junino.md` — entendeu a estrutura de keywords WA (`JUNINA26`) para alinhar a CTA dos DMs
+- Revisou `whatsapp-junina-2026.md` — tom e mecânica de captura já estabelecidos
+- Identificou 4 cenários distintos de DM: voto+reação, curiosidade geral, pedido antes do lançamento, pós-lançamento 17/06
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/dm-resposta-enquete-junina-03jun.md` | **NOVO** — Roteiro completo com 4 cenários de DM, 4 Quick Replies para Instagram Business (`/junina-voto`, `/junina-em-breve`, `/junina-wa`, `/junina-aberto`), volume esperado por período, instrução de captura de lista WA, integração com calendário de conteúdo, checklist operador |
+
+**Destaques:**
+1. **4 Quick Replies prontos para copiar/colar** no Instagram Business — operador configura em <5min antes de 03/06
+2. **Funil claro:** DM qualquer → keyword `JUNINA26` no WA → lista de transmissão "Interessados Junina" → aviso no lançamento 17/06
+3. **Atalho `/junina-aberto`** criado para ser ativado em 17/06 — evita resposta errada após lançamento
+4. **Volume estimado:** 15–51 DMs no período de teaser — manual mas manejável; cada Cenário 3 (pedido real) = receita direta
+
+**Commit:** `7f53394`
+
+**Próximo passo sugerido:**
+- **Ciclo #241 — SEO:** Verificar se `potinho-junino-londrina.html` tem `description` meta atualizado com "disponível 17/06" — ciclo #239 atualizou o cardápio mas a landing page pode ter texto genérico "em junho"
+- **Ciclo #242 — Conteúdo:** Feed IG pós-enquete 05/06 — post resultado votação + countdown "faltam 12 dias · 17/06" — transforma o dado coletado pela enquete em mais um post orgânico
+- **Ciclo #243 — UX:** Auditar `index.html` banner Namorados vs. banner Junina para coexistência visual entre 12/06 e 17/06 (janela de overlap)
+- **Operador (URGENTE — 14 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (URGENTE — 18 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Configurar 4 Quick Replies Instagram antes de **03/06** (roteiro neste ciclo)
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #240 | 2026-05-16_
+
+---
+
 ## Ciclo #239 — 2026-05-16
 
 **Área:** UX — badge "Em breve · 17/06" no card Potinho Junino durante período de teaser
