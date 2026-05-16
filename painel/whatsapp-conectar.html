@@ -268,31 +268,42 @@
       document.getElementById('newFranquiaCard').style.display = '';
     }
 
-    // Sidebar branding consistente com outras páginas: super_admin vê "Admin",
-    // franchisee vê o nome amigável da franquia (não "Admin"). Tenta puxar do
-    // Auth.getSession() (mesmo padrão de painel/index.html) com fallbacks.
+    // Sidebar branding: mirror exato de painel/index.html — sempre mostra nome
+    // da franquia em que o user está operando (mesmo super_admin), pra manter
+    // consistência visual entre páginas. Sem caso especial por role.
     updateSidebarBrand();
   }
 
   function updateSidebarBrand() {
     const el = document.getElementById('sidebarStoreName');
     if (!el) return;
-    if (USER_ROLE === 'super_admin') {
-      el.textContent = 'Admin';
-      return;
-    }
-    // Franchisee: tenta pegar o nome do session/franquias carregadas
     let label = null;
     try {
       const session = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
-      const fid = session?.franchiseId || USER_FRANCHISEES[0];
+      // Mesma ordem de painel/index.html: session.franchiseId > ?fid= > USER_FRANCHISEES[0] > primeira AVAILABLE_FRANQUIAS
+      const fid = session?.franchiseId
+        || new URLSearchParams(location.search).get('fid')
+        || USER_FRANCHISEES[0]
+        || (AVAILABLE_FRANQUIAS && AVAILABLE_FRANQUIAS[0]?.accountId);
       if (fid) {
-        // Tenta buscar nome amigável das franquias já carregadas
-        const meta = (AVAILABLE_FRANQUIAS || []).find(f => f.accountId === fid);
-        label = (meta?.name || fid).replace(/^MilkyPot\s+/i, '');
+        // 1. Tenta DataStore.getAllFranchises() (fonte que painel/index.html usa)
+        let franchiseName = null;
+        try {
+          if (typeof DataStore !== 'undefined' && DataStore.getAllFranchises) {
+            const all = DataStore.getAllFranchises() || [];
+            const f = all.find(x => x.id === fid);
+            if (f?.name) franchiseName = f.name;
+          }
+        } catch (e) { /* ignora */ }
+        // 2. Fallback pras franquias já carregadas via gateway/firestore
+        if (!franchiseName) {
+          const meta = (AVAILABLE_FRANQUIAS || []).find(f => f.accountId === fid);
+          franchiseName = meta?.name || fid;
+        }
+        label = franchiseName.replace(/^MilkyPot\s+/i, '');
       }
     } catch (e) { /* ignora */ }
-    el.textContent = label || 'Franqueado';
+    el.textContent = label || 'Franquia';
   }
 
   async function bootstrapMatrizIfNeeded() {
