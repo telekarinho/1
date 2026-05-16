@@ -148,6 +148,122 @@
          */
         getAll() {
             return state.flags || state.defaults;
+        },
+
+        // ============================================================
+        // A/B TESTING — variant assignment determinístico
+        // ============================================================
+        //
+        // Usage:
+        //   var variant = FeatureFlags.variant('checkout_button_color', ['A', 'B']);
+        //   if (variant === 'B') applyNewStyle();
+        //
+        // Schema flag Firestore (extends):
+        //   "checkout_button_color": {
+        //     enabled: true,
+        //     experiment: true,
+        //     variants: ['A', 'B'],            // ou {A: 50, B: 50} pra pesos
+        //     trafficAllocation: 1.0,           // 0-1 = % do tráfego no experimento
+        //     franchiseAllowlist: ['*']
+        //   }
+        //
+        // Anonymous user ID gerado uma vez e persistido (localStorage),
+        // garante mesma variant sempre pro mesmo browser.
+        // ============================================================
+
+        /**
+         * Retorna ID anônimo estável do user (gerado uma vez, persistido).
+         */
+        getAnonId() {
+            try {
+                var id = localStorage.getItem('mp_anon_id');
+                if (!id) {
+                    id = 'anon_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+                    localStorage.setItem('mp_anon_id', id);
+                }
+                return id;
+            } catch (e) {
+                return 'anon_fallback';
+            }
+        },
+
+        /**
+         * Hash simples (djb2) — determinístico, distribui bem.
+         */
+        _hash(str) {
+            var hash = 5381;
+            for (var i = 0; i < str.length; i++) {
+                hash = ((hash << 5) + hash) + str.charCodeAt(i);
+                hash = hash | 0; // force int32
+            }
+            return Math.abs(hash);
+        },
+
+        /**
+         * Atribui variant a um experimento (deterministico por user).
+         * Retorna nome da variant OU null se não está no experimento.
+         */
+        variant(experimentKey, variants) {
+            var flags = state.flags || state.defaults;
+            var f = flags[experimentKey];
+
+            // Permite chamadas sem flag config explícita — usa array passado
+            var variantsArr;
+            var trafficAllocation = 1.0;
+            if (f && f.experiment && f.variants) {
+                variantsArr = Array.isArray(f.variants) ? f.variants : Object.keys(f.variants);
+                trafficAllocation = typeof f.trafficAllocation === 'number' ? f.trafficAllocation : 1.0;
+                // Respeita allowlist da flag (se ativada)
+                if (f.enabled === false) return null;
+            } else {
+                variantsArr = variants || ['A', 'B'];
+            }
+            if (!variantsArr.length) return null;
+
+            var anonId = this.getAnonId();
+            var bucket = (this._hash(experimentKey + ':' + anonId) % 1000) / 1000; // 0-1
+
+            // Verifica traffic allocation primeiro
+            if (bucket >= trafficAllocation) return null;
+
+            // Distribui dentro do allocated traffic
+            var variantBucket = bucket / trafficAllocation;
+            var variant = variantsArr[Math.floor(variantBucket * variantsArr.length)];
+
+            // Track exposure UMA vez por sessão (sessionStorage dedupe)
+            try {
+                var dedupeKey = 'mp_exp_seen_' + experimentKey;
+                if (!sessionStorage.getItem(dedupeKey)) {
+                    sessionStorage.setItem(dedupeKey, variant);
+                    if (global.MpAnalytics) {
+                        global.MpAnalytics.track('experiment_exposed', {
+                            experiment: experimentKey,
+                            variant: variant,
+                            anon_id: anonId
+                        });
+                    }
+                }
+            } catch (e) {}
+
+            return variant;
+        },
+
+        /**
+         * Track conversion no experimento — chama depois do user completar a meta.
+         */
+        trackConversion(experimentKey, metric, value) {
+            try {
+                var variant = sessionStorage.getItem('mp_exp_seen_' + experimentKey);
+                if (!variant) return; // user não está no experimento
+                if (global.MpAnalytics) {
+                    global.MpAnalytics.track('experiment_conversion', {
+                        experiment: experimentKey,
+                        variant: variant,
+                        metric: metric || 'default',
+                        value: value || 1
+                    });
+                }
+            } catch (e) {}
         }
     };
 })(typeof window !== 'undefined' ? window : globalThis);
