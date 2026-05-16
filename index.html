@@ -550,6 +550,13 @@
                     if(banner) banner.style.display = 'flex';
                     return;
                 }
+                // Namorados VIP teaser 03/06–10/06 — prioridade sobre Junina; keyword NAMORADOS26 ativa a partir de 03/06
+                if(y === 2026 && m === 6 && day >= 3 && day <= 10 && !sessionStorage.getItem('namoradosVipClosed')){
+                    if(textEl) textEl.innerHTML = '💕 <strong>12/06: DUO MILKYPOT</strong> &nbsp;·&nbsp; Dois potinhos, cada um do jeito que vocês amam · Mande <strong>NAMORADOS26</strong> e entre na lista VIP 🐑';
+                    if(ctaEl){ ctaEl.textContent = 'Lista VIP →'; ctaEl.href = 'https://wa.me/5543998042424?text=NAMORADOS26'; }
+                    if(banner) banner.style.display = 'flex';
+                    return;
+                }
                 var inJuninaTeaser = (y === 2026) && ((m === 5 && day >= 10) || (m === 6 && day <= 16));
                 var inJuninaLaunch = (y === 2026 && m === 6 && day >= 17 && day <= 29);
                 if((inJuninaTeaser || inJuninaLaunch) && !sessionStorage.getItem('juninaBannerClosed')){
@@ -624,6 +631,7 @@
                 else if(y2 === 2026 && m2 === 8){ sessionStorage.setItem('paisBannerClosed','1'); }
                 else if(y2 === 2026 && m2 === 6 && day2 === 12){ sessionStorage.setItem('namoradosDiahClosed','1'); }
                 else if(y2 === 2026 && m2 === 6 && day2 === 11){ sessionStorage.setItem('namoradosVespraClosed','1'); }
+                else if(y2 === 2026 && m2 === 6 && day2 >= 3 && day2 <= 10){ sessionStorage.setItem('namoradosVipClosed','1'); }
                 else { sessionStorage.setItem('juninaBannerClosed','1'); }
             }
             applyBannerOffset();
