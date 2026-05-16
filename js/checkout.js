@@ -510,6 +510,28 @@ function placeOrder() {
             raspadinhaBlock;
     }
 
+    // Tracking link: adicione ao success modal e ao Firestore pra link compartilhável
+    var trackingUrl = location.origin + '/pedido.html?id=' + encodeURIComponent(orderNumber);
+    try {
+        if (typeof firebase !== 'undefined' && firebase.firestore) {
+            firebase.firestore().collection('orders_log').doc(orderNumber).set({
+                orderNumber: orderNumber,
+                status: order.status,
+                customer: order.customer,
+                store: order.store,
+                delivery: order.delivery,
+                payment: order.payment,
+                items: order.items,
+                subtotal: order.subtotal,
+                total: order.total,
+                createdAt: order.createdAt,
+                updatedAt: order.createdAt,
+                source: 'site',
+                trackingUrl: trackingUrl
+            }).catch(function(){});
+        }
+    } catch (e) {}
+
     if (successModal) {
         successModal.classList.add('active');
         document.body.style.overflow = 'hidden';
