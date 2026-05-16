@@ -36,6 +36,7 @@ const PRECACHE_URLS = [
     '/painel/franquia-leads.html',
     '/painel/uber-entregas.html',
     '/painel/test-checklist.html',
+    '/painel/belinha-learnings.html',
 
 
     '/painel/finance-os.html',

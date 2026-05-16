@@ -374,6 +374,68 @@ async function saveMessageToFirestore(phone, name, role, text, extra = {}) {
 }
 
 // ============================================
+// 🎓 RAG-lite — carrega top N learnings revisados pra injetar no prompt
+// ============================================
+// Cache em memória (5min TTL) — evita query Firestore a cada mensagem.
+// Belinha lê os "exemplos de resolução humana" e aprende padrões.
+let _learningCache = { samples: [], fetchedAt: 0 };
+const LEARNING_CACHE_TTL_MS = 5 * 60 * 1000;
+
+async function getReviewedLearnings(limit = 12) {
+    const now = Date.now();
+    if (now - _learningCache.fetchedAt < LEARNING_CACHE_TTL_MS && _learningCache.samples.length) {
+        return _learningCache.samples;
+    }
+    const PROJECT = process.env.FIREBASE_PROJECT_ID || "milkypot-ad945";
+    const API_KEY = process.env.FIREBASE_API_KEY || "AIzaSyAbQ1fe0pK4prhfzYJypod2ie4DyNsq6BA";
+    // Query: status IN (reviewed, injected) ordenado por reviewedAt desc, limite N
+    const url = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents:runQuery?key=${API_KEY}`;
+    const query = {
+        structuredQuery: {
+            from: [{ collectionId: "belinha_learnings" }],
+            where: {
+                fieldFilter: {
+                    field: { fieldPath: "status" },
+                    op: "IN",
+                    value: { arrayValue: { values: [{ stringValue: "reviewed" }, { stringValue: "injected" }] } }
+                }
+            },
+            orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
+            limit
+        }
+    };
+    try {
+        const r = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(query)
+        });
+        if (!r.ok) {
+            _learningCache = { samples: [], fetchedAt: now };
+            return [];
+        }
+        const arr = await r.json();
+        const samples = (Array.isArray(arr) ? arr : []).map(row => row.document?.fields).filter(Boolean).map(f => ({
+            customerMessage: f.customerMessage?.stringValue,
+            idealReply: f.idealReply?.stringValue,
+            reason: f.reason?.stringValue
+        })).filter(s => s.customerMessage && s.idealReply);
+        _learningCache = { samples, fetchedAt: now };
+        console.log(`[RAG-lite] cached ${samples.length} learning samples`);
+        return samples;
+    } catch (e) {
+        console.warn("[RAG-lite] fetch failed:", e.message);
+        return [];
+    }
+}
+
+function formatLearningsForPrompt(samples) {
+    if (!samples || !samples.length) return "";
+    const lines = samples.map((s, i) => `${i + 1}. Cliente: "${s.customerMessage.slice(0, 200)}"\n   Resposta ideal: "${s.idealReply.slice(0, 300)}"`).join("\n");
+    return `\n\n## 🎓 EXEMPLOS REAIS DE RESOLUÇÃO (você JÁ APRENDEU isso de atendentes humanos)\n${lines}\n\nQuando bater situação parecida com esses exemplos, USA o mesmo tom/conteúdo da resposta ideal. Não escala se conseguir resolver com base nesses padrões.`;
+}
+
+// ============================================
 // 🎓 LEARNING LOOP — captura conversas que viraram escalação humana
 // ============================================
 // Toda vez que Belinha precisa escalar (não conseguiu resolver sozinha), gravamos
@@ -535,13 +597,16 @@ async function generateBelinhaReply(history, currentText, customerName, accountI
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) throw new Error("GROQ_API_KEY missing");
 
-    // Carrega contexto específico da franquia + perfil do cliente em paralelo
-    const [franchise, customer] = await Promise.all([
+    // Carrega contexto específico da franquia + perfil do cliente + RAG learnings em paralelo
+    const [franchise, customer, learningSamples] = await Promise.all([
         getFranchiseContext(accountId),
-        Customers.getCustomer(accountId, customerPhone)
+        Customers.getCustomer(accountId, customerPhone),
+        getReviewedLearnings(12) // top 12 learnings revisados pelo atendente
     ]);
 
     let contextSuffix = customerName ? `\n\nNome do cliente: ${customerName}` : "";
+    // 🎓 RAG-lite: injeta exemplos de resolução humana no prompt da Belinha
+    contextSuffix += formatLearningsForPrompt(learningSamples);
     if (franchise) {
         contextSuffix += `\n\n## FRANQUIA ATUAL: "${franchise.name || accountId}"`;
         if (franchise.address) contextSuffix += `\n- Endereço: ${franchise.address}`;

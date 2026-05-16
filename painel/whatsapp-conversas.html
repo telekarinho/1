@@ -92,6 +92,9 @@
                 <a href="whatsapp-conversas.html" class="sidebar-link active">
                     <span class="icon">💬</span> Conversas Belinha
                 </a>
+                <a href="belinha-learnings.html" class="sidebar-link">
+                    <span class="icon">🎓</span> Belinha Aprende
+                </a>
 
                 <div class="sidebar-nav-group">Principal</div>
         <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
@@ -118,6 +121,7 @@
       <div class="stats-row">
         <div class="stat"><div class="num" id="statTotal">—</div><div class="lbl">📊 Conversas</div></div>
         <div class="stat"><div class="num" id="statHoje">—</div><div class="lbl">📅 Hoje</div></div>
+        <div class="stat" style="background:linear-gradient(135deg,#DCFCE7,#BBF7D0);border-color:#16A34A"><div class="num" id="statResolvedPct" style="color:#166534">—</div><div class="lbl">✅ Resolvido s/ escalar</div></div>
         <div class="stat"><div class="num" id="statHumano">—</div><div class="lbl">👤 C/ humano</div></div>
         <div class="stat"><div class="num" id="statGateway">—</div><div class="lbl">🔌 Gateway</div></div>
       </div>
@@ -400,6 +404,9 @@
     document.getElementById('statTotal').textContent = total;
     document.getElementById('statHoje').textContent = novosHoje;
     document.getElementById('statHumano').textContent = comHumano;
+    // % resolvido sem escalar = (total - escalações) / total
+    const resolvedPct = total > 0 ? Math.round(((total - comHumano) / total) * 100) : 100;
+    document.getElementById('statResolvedPct').textContent = resolvedPct + '%';
     // Status gateway: usa proxy autenticado (não pode chamar gateway direto)
     fetchGatewayStatus().then(j => {
       if (j && j.state) document.getElementById('statGateway').textContent = j.state === 'open' ? '✅' : '⏳';
