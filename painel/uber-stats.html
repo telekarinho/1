@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilkyPot · Uber Stats</title>
+    <meta name="theme-color" content="#EC4899">
+    <link rel="stylesheet" href="../css/shared-panel.css?v=mp-v251">
+    <style>
+        body { background: #FAFAFA; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 16px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #831843; margin: 0 0 6px; }
+        .subtitle { color: #6B7280; margin: 0 0 24px; font-size: 14px; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .card { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+        .card-label { font-size: 12px; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+        .card-value { font-size: 28px; font-weight: 900; color: #831843; }
+        .card-sub { font-size: 12px; color: #9CA3AF; margin-top: 4px; }
+        table { width: 100%; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.05); border-collapse: collapse; }
+        th { background: #FCE7F3; color: #831843; padding: 12px; text-align: left; font-size: 13px; }
+        td { padding: 10px 12px; border-top: 1px solid #F3F4F6; font-size: 14px; }
+        .status-success { color: #10B981; font-weight: 700; }
+        .status-outside_area { color: #F59E0B; font-weight: 700; }
+        .status-unavailable, .status-unknown_error { color: #DC2626; font-weight: 700; }
+        .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+        .filters button { background: #fff; border: 2px solid #E5E7EB; padding: 8px 16px; border-radius: 999px; cursor: pointer; font-weight: 700; }
+        .filters button.active { background: #EC4899; color: #fff; border-color: #EC4899; }
+        .loading { text-align: center; color: #9CA3AF; padding: 40px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛵 Uber Stats — Cotações de Frete</h1>
+        <p class="subtitle">Análise em tempo real das cotações de delivery via Uber Direct. Útil pra identificar bairros fora da área e calibrar promoções.</p>
+
+        <div class="filters">
+            <button data-days="1" class="active">Hoje</button>
+            <button data-days="7">7 dias</button>
+            <button data-days="30">30 dias</button>
+            <button data-days="0">Tudo</button>
+        </div>
+
+        <div class="cards">
+            <div class="card">
+                <div class="card-label">Total cotações</div>
+                <div class="card-value" id="kpiTotal">—</div>
+                <div class="card-sub" id="kpiTotalSub"></div>
+            </div>
+            <div class="card">
+                <div class="card-label">Taxa sucesso</div>
+                <div class="card-value" id="kpiSuccess" style="color:#10B981">—</div>
+                <div class="card-sub" id="kpiSuccessSub"></div>
+            </div>
+            <div class="card">
+                <div class="card-label">Fora da área</div>
+                <div class="card-value" id="kpiOutside" style="color:#F59E0B">—</div>
+                <div class="card-sub">Bairros sem cobertura</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Fee médio</div>
+                <div class="card-value" id="kpiAvgFee" style="color:#3B82F6">—</div>
+                <div class="card-sub">apenas sucessos</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Latência média</div>
+                <div class="card-value" id="kpiLatency" style="color:#8B5CF6">—</div>
+                <div class="card-sub">resposta Uber API (ms)</div>
+            </div>
+        </div>
+
+        <h3 style="color:#831843;margin:24px 0 8px">🗺️ Top 10 bairros</h3>
+        <table>
+            <thead>
+                <tr><th>Bairro</th><th>Cotações</th><th>Sucesso %</th><th>Fee médio</th></tr>
+            </thead>
+            <tbody id="neighborhoodTable">
+                <tr><td colspan="4" class="loading">Carregando…</td></tr>
+            </tbody>
+        </table>
+
+        <h3 style="color:#831843;margin:24px 0 8px">📋 Últimas 30 cotações</h3>
+        <table>
+            <thead>
+                <tr><th>Quando</th><th>Bairro</th><th>CEP</th><th>Status</th><th>Fee</th><th>Latência</th></tr>
+            </thead>
+            <tbody id="quotesTable">
+                <tr><td colspan="6" class="loading">Carregando…</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="../js/core/constants.js?v=mp-v251"></script>
+    <script src="../js/core/utils.js?v=mp-v251"></script>
+    <script src="../js/core/firebase-config.js?v=mp-v251"></script>
+    <script src="../js/core/auth.js?v=mp-v251"></script>
+    <script>
+        (function(){
+            if (!Auth.requireAuth(['franchisee','admin','super_admin'])) {
+                throw new Error('Not authorized');
+            }
+            var session = Auth.getSession();
+            var franchiseId = session.franchiseId;
+            var currentDaysFilter = 1;
+
+            function fetchQuotes(days) {
+                var query = firebase.firestore().collection('uber_quote_log');
+                if (franchiseId && session.role !== 'super_admin') {
+                    query = query.where('franchiseId', '==', franchiseId);
+                }
+                if (days > 0) {
+                    var cutoff = new Date(Date.now() - days * 86400000).toISOString();
+                    query = query.where('created_at', '>=', cutoff);
+                }
+                query = query.orderBy('created_at', 'desc').limit(500);
+                return query.get().then(function(snap) {
+                    return snap.docs.map(function(d){ return d.data(); });
+                }).catch(function(e){
+                    console.warn('Quote fetch error:', e.message);
+                    return [];
+                });
+            }
+
+            function fmtMs(ms) { return ms ? Math.round(ms) + 'ms' : '—'; }
+            function fmtBRL(n) { return n ? 'R$ ' + Number(n).toFixed(2).replace('.', ',') : '—'; }
+            function fmtTime(iso) {
+                if (!iso) return '—';
+                var d = new Date(iso);
+                var dd = String(d.getDate()).padStart(2,'0');
+                var mm = String(d.getMonth()+1).padStart(2,'0');
+                var hh = String(d.getHours()).padStart(2,'0');
+                var mn = String(d.getMinutes()).padStart(2,'0');
+                return dd+'/'+mm+' '+hh+':'+mn;
+            }
+
+            function render(data) {
+                var total = data.length;
+                var success = data.filter(function(d){return d.status === 'success';});
+                var outside = data.filter(function(d){return d.status === 'outside_area';});
+                var fees = success.map(function(d){return d.fee_brl;}).filter(function(f){return typeof f === 'number';});
+                var avgFee = fees.length ? fees.reduce(function(s,f){return s+f;}, 0) / fees.length : 0;
+                var latencies = data.map(function(d){return d.response_ms;}).filter(function(l){return typeof l === 'number';});
+                var avgLat = latencies.length ? latencies.reduce(function(s,l){return s+l;}, 0) / latencies.length : 0;
+
+                document.getElementById('kpiTotal').textContent = total;
+                document.getElementById('kpiTotalSub').textContent = currentDaysFilter === 0 ? 'todos tempos' : 'últimos ' + currentDaysFilter + 'd';
+                document.getElementById('kpiSuccess').textContent = total ? Math.round((success.length / total) * 100) + '%' : '—';
+                document.getElementById('kpiSuccessSub').textContent = success.length + ' / ' + total;
+                document.getElementById('kpiOutside').textContent = outside.length;
+                document.getElementById('kpiAvgFee').textContent = fmtBRL(avgFee);
+                document.getElementById('kpiLatency').textContent = fmtMs(avgLat);
+
+                // Top bairros
+                var byNbh = {};
+                data.forEach(function(d){
+                    var nbh = d.neighborhood || '?';
+                    byNbh[nbh] = byNbh[nbh] || { total: 0, success: 0, fees: [] };
+                    byNbh[nbh].total++;
+                    if (d.status === 'success') {
+                        byNbh[nbh].success++;
+                        if (typeof d.fee_brl === 'number') byNbh[nbh].fees.push(d.fee_brl);
+                    }
+                });
+                var nbhList = Object.keys(byNbh).map(function(k){
+                    var v = byNbh[k];
+                    return {
+                        nbh: k,
+                        total: v.total,
+                        successRate: v.total ? (v.success / v.total) : 0,
+                        avgFee: v.fees.length ? (v.fees.reduce(function(s,f){return s+f;},0) / v.fees.length) : null
+                    };
+                }).sort(function(a,b){return b.total - a.total;}).slice(0, 10);
+
+                var nbhHtml = nbhList.map(function(n){
+                    return '<tr><td>' + escapeHtml(n.nbh) + '</td>' +
+                           '<td>' + n.total + '</td>' +
+                           '<td>' + Math.round(n.successRate * 100) + '%</td>' +
+                           '<td>' + (n.avgFee ? fmtBRL(n.avgFee) : '—') + '</td></tr>';
+                }).join('');
+                document.getElementById('neighborhoodTable').innerHTML = nbhHtml || '<tr><td colspan="4" class="loading">Sem dados nesse período</td></tr>';
+
+                // Últimas 30 cotações
+                var recent = data.slice(0, 30);
+                var rowsHtml = recent.map(function(q){
+                    return '<tr><td>' + fmtTime(q.created_at) + '</td>' +
+                           '<td>' + escapeHtml(q.neighborhood || '—') + '</td>' +
+                           '<td>' + escapeHtml(q.cep_prefix || '—') + '</td>' +
+                           '<td><span class="status-' + escapeHtml(q.status||'?') + '">' + escapeHtml(q.status||'?') + '</span></td>' +
+                           '<td>' + (q.fee_brl ? fmtBRL(q.fee_brl) : '—') + '</td>' +
+                           '<td>' + fmtMs(q.response_ms) + '</td></tr>';
+                }).join('');
+                document.getElementById('quotesTable').innerHTML = rowsHtml || '<tr><td colspan="6" class="loading">Sem cotações</td></tr>';
+            }
+
+            function escapeHtml(s){
+                return String(s||'').replace(/[&<>"']/g, function(c){
+                    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+                });
+            }
+
+            function loadData(days) {
+                currentDaysFilter = days;
+                document.getElementById('kpiTotal').textContent = '…';
+                fetchQuotes(days).then(render);
+            }
+
+            document.querySelectorAll('.filters button').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    document.querySelectorAll('.filters button').forEach(function(b){ b.classList.remove('active'); });
+                    btn.classList.add('active');
+                    loadData(parseInt(btn.getAttribute('data-days')) || 0);
+                });
+            });
+
+            loadData(1);
+        })();
+    </script>
+</body>
+</html>
