@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #235 — 2026-05-16
+
+**Área:** Conversão — Mecânica UGC "Foto com Potinho = Reward"
+
+**Contexto:** Prescrita nos ciclos #226 (origem: experiência Polaroid física do JAH Açaí para casais) e #231 (como resposta de baixo custo sem dependência operacional). Pending 4 ciclos — implementada agora pois não requer nenhuma decisão do operador (naming, ingredientes, etc.) e pode ser ativada imediatamente.
+
+**O que pesquisou/analisou:**
+- Revisou `ugc-compartilhe-potinho.md` (focado na inauguração, sem integração fidelidade)
+- Revisou `fidelidade-milestones-wa.md` e `whatsapp-fidelidade-resgate.md` para alinhar linguagem de pontos
+- Revisou `whatsapp-funil.md` para identificar onde a mecânica se encaixa no fluxo existente
+- Mapeou ciclo #226: JAH Polaroid = R$3–5/impressão, experiência in-store; MilkyPot = R$0, alcance orgânico via Stories
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/whatsapp-ugc-foto-reward.md` | Criado — brief operacional completo da mecânica UGC + fidelidade |
+
+**Destaques do arquivo criado:**
+1. **Script verbal** (2 versões: loja cheia / fluxo normal) + mensagem WA de convite pós-entrega de delivery
+2. **Template WA de confirmação** dos +5 pontos bônus com variáveis [NOME], [X], [TOTAL]
+3. **Controle operacional** sem sistema/app: lista WA "UGC Foto Reward" + registro semanal
+4. **Variantes sazonais:** +10 pts DUO Namorados (09-12/06), +5 pts + sorteio Junina, +10 pts eventos especiais
+5. **Tabela comparativa** JAH Polaroid (físico, R$3–5/foto) vs. MilkyPot (digital, R$0, alcance 100–500 seguidores, dado de cliente)
+6. **Checklist de implantação** — ativável imediatamente, sem dependência de fornecedores
+
+**Commit:** `2175171`
+
+**Próximo passo sugerido:**
+- **Ciclo #236 — Conteúdo:** Post "sabores brasileiros vs. pistacho premium" — contra-posicionamento sutil MilkyPot vs. tendência MooBai + JAH antes de 12/06; ângulo: "potinho com seu nome > sorvete da moda"
+- **Ciclo #237 — SEO:** Verificar se `potinho-junino-londrina.html` tem `datePublished` / `validFrom` 03/06 no schema e se está linkado em `sitemap.xml`
+- **Ciclo #238 — UX:** Auditar `cardapio.html` para garantir que o Potinho Junino aparece (ou placeholder claro) antes de 03/06
+- **Operador (URGENTE — 14 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 03/06 dependem disso
+- **Operador (URGENTE):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Ativar mecânica UGC foto reward agora — briefing de equipe ≤2min, sem custo
+- **Operador:** Monitorar @milkymoo_londrina para confirmar MooBai Londrina
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #235 | 2026-05-16_
+
+---
+
 ## Ciclo #234 — 2026-05-16
 
 **Área:** UX — coexistência de banners Namorados VIP e Junina em `index.html`
