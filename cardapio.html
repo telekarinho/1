@@ -617,7 +617,7 @@
     <script src="js/core/constants.js"></script>
     <script src="js/core/utils.js"></script>
     <script src="js/core/firebase-config.js"></script>
-    <script src="js/core/datastore.js?v=mp-v244"></script>
+    <script src="js/core/datastore.js?v=mp-v245"></script>
     <script>
         // CRITICAL: cliente anonimo (incognito) precisa do init pra puxar
         // catalog_config do Firestore — sem isso, getCatalogConfig retorna
@@ -625,16 +625,18 @@
         if (typeof DataStore !== 'undefined' && DataStore.init) DataStore.init();
     </script>
     <script src="js/stores-data.js"></script>
-    <script src="js/analytics.js?v=mp-v244"></script>
+    <script src="js/analytics.js?v=mp-v245"></script>
     <script src="js/cardapio-data.js"></script>
-    <script src="js/core/cost-calculator.js?v=mp-v244"></script>
-    <script src="js/core/catalog-v2.js?v=mp-v244"></script>
-    <script src="js/monte-seu-flow.js?v=mp-v244"></script>
+    <script src="js/core/cost-calculator.js?v=mp-v245"></script>
+    <script src="js/core/catalog-v2.js?v=mp-v245"></script>
+    <script src="js/monte-seu-flow.js?v=mp-v245"></script>
     <script src="js/cart.js"></script>
     <script src="js/core/raspinha-engine.js"></script>
     <!-- DeliveryRules (regras dinâmicas: pedido mínimo, frete grátis, taxa Uber per-franchise) -->
     <!-- Restaurado: commit e9fc611 removeu o script tag e checkout.js caiu em fallback hardcoded -->
-    <script src="js/core/delivery-rules.js?v=mp-v244"></script>
+    <script src="js/core/delivery-rules.js?v=mp-v245"></script>
+    <!-- Analytics Events (funil checkout + alerta crítico se DeliveryRules sumir) -->
+    <script src="js/core/analytics-events.js?v=mp-v245"></script>
     <script src="js/checkout.js"></script>
     <script src="js/chat-ai.js" defer></script>
     <script>
@@ -1524,6 +1526,7 @@
         window._cepLookupOnInput = function(input) {
             var d = (input.value || '').replace(/\D/g, '');
             if (d.length !== 8) return;
+            if (window.MpAnalytics) MpAnalytics.track('cep_filled', { cep_prefix: d.slice(0,5) });
             var status = document.getElementById('uberQuoteStatus');
             var statusText = document.getElementById('uberQuoteStatusText');
             function setS(msg, color, bg) { if (status && statusText) { statusText.innerHTML = msg; status.style.display = 'block'; status.style.color = color || '#3730A3'; status.style.background = bg || '#EEF2FF'; } }
@@ -1534,9 +1537,16 @@
                     var n = document.getElementById('checkoutNeighborhood'); if (n && j.bairro) n.value = j.bairro;
                     var num = document.getElementById('checkoutNumber'); if (num) num.focus();
                     setS('✓ ' + (j.logradouro||'') + ', ' + (j.bairro||''), '#065F46', '#ECFDF5');
+                    if (window.MpAnalytics) MpAnalytics.track('cep_lookup_success', { neighborhood: j.bairro || '' });
                     window._scheduleUberQuote();
-                } else { setS('⚠ CEP não encontrado', '#9A3412', '#FFF7ED'); }
-            }).catch(function(){ setS('⚠ Sem conexão pra buscar CEP', '#991B1B', '#FEE2E2'); });
+                } else {
+                    setS('⚠ CEP não encontrado', '#9A3412', '#FFF7ED');
+                    if (window.MpAnalytics) MpAnalytics.track('cep_lookup_failed', { reason: 'not_found' });
+                }
+            }).catch(function(){
+                setS('⚠ Sem conexão pra buscar CEP', '#991B1B', '#FEE2E2');
+                if (window.MpAnalytics) MpAnalytics.track('cep_lookup_failed', { reason: 'network_error' });
+            });
         };
         // Autocomplete de rua: ViaCEP busca por logradouro em Londrina/PR
         var _streetAcTimeout = null;
@@ -1852,6 +1862,8 @@
                 var dropAddr = addr + ', ' + num + ' - ' + nbh + ' - Londrina, PR ' + cep;
                 var fns = (firebase.app && firebase.app().functions) ? firebase.app().functions('southamerica-east1') : null;
                 if (!fns) return;
+                if (window.MpAnalytics) MpAnalytics.track('uber_quote_dispatched', { cep: cep.slice(0,5)+'xxx', franchise: fid });
+                var _quoteStart = Date.now();
                 // ENDPOINT PUBLICO — cliente nao precisa estar logado
                 // (uberDirect_getQuote exige role admin/franchisee/manager)
                 fns.httpsCallable('uberDirect_getQuotePublic')({
@@ -1867,11 +1879,20 @@
                     var raw = (r && r.data) || {};
                     var data = raw.data || raw;
                     var feeCents = data.customer_fee_cents != null ? data.customer_fee_cents : data.uber_fee_cents;
-                    if (feeCents == null) { setS('⚠ Frete indisponível — usando taxa padrão', '#9A3412', '#FFF7ED'); return; }
+                    if (feeCents == null) {
+                        setS('⚠ Frete indisponível — usando taxa padrão', '#9A3412', '#FFF7ED');
+                        if (window.MpAnalytics) MpAnalytics.track('uber_quote_no_fee', { response_ms: Date.now()-_quoteStart });
+                        return;
+                    }
                     var feeBRL = Number(feeCents) / 100;
                     window._uberQuoteFee = feeBRL;
                     window._uberCustomerFee = feeBRL;
                     window._uberQuoteId = data.quote_id;
+                    if (window.MpAnalytics) MpAnalytics.track('uber_quote_received', {
+                        fee_brl: feeBRL,
+                        quote_id: data.quote_id,
+                        response_ms: Date.now()-_quoteStart
+                    });
                     var calc = (typeof getCurrentDeliveryCalc === 'function') ? getCurrentDeliveryCalc() : null;
                     var clientFee = calc ? Number(calc.fretePagoCliente || 0) : feeBRL;
                     var feeTxt = 'R$ ' + feeBRL.toFixed(2).replace('.', ',');
@@ -1887,17 +1908,25 @@
                     // Mensagem mais útil: distingue endereço fora de cobertura vs erro de config/auth
                     var msg = (e && e.message) || '';
                     var friendly;
+                    var category;
                     if (/not.found|invalid.*address|geocod|out.of|coverage|range|distance/i.test(msg)) {
                         friendly = 'Esse endereço está fora da nossa área automática. Já deixamos seu pedido pronto para enviar no WhatsApp.';
+                        category = 'outside_area';
                         window._setWhatsappFallbackMode(true);
                         window._ensureWhatsappFallbackOrder(false);
                     } else if (/unavailable|not.enabled|disabled|configura/i.test(msg)) {
                         friendly = '⚠ Entrega Uber temporariamente indisponível pra esta loja. <small style="opacity:.7">' + msg.slice(0,80) + '</small>';
+                        category = 'unavailable';
                     } else {
                         friendly = '⚠ Não consegui calcular o frete agora. <small style="opacity:.7">' + msg.slice(0,80) + '</small>';
+                        category = 'unknown_error';
                     }
                     setS(friendly, '#9A3412', '#FFF7ED');
                     console.warn('[uber-quote-error]', e);
+                    if (window.MpAnalytics) MpAnalytics.track(
+                        category === 'outside_area' ? 'uber_quote_outside_area' : 'uber_quote_failed',
+                        { category: category, error_msg: msg.slice(0,120), response_ms: Date.now()-_quoteStart }
+                    );
                 });
             } catch(e) { console.warn('uber quote:', e); }
         };

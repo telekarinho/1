@@ -97,6 +97,7 @@ function openCheckout() {
     reloadCart();
     if (cart.length === 0) {
         showToast('Adicione produtos ao carrinho primeiro!');
+        if (window.MpAnalytics) MpAnalytics.track('checkout_blocked_empty_cart');
         return;
     }
     var modal = document.getElementById('checkoutModal');
@@ -106,6 +107,10 @@ function openCheckout() {
         currentCheckoutStep = 1;
         updateCheckoutSteps();
         updateOrderSummary();
+        if (window.MpAnalytics) MpAnalytics.track('checkout_open', {
+            cart_items: cart.length,
+            cart_total: getCartTotal ? getCartTotal() : 0
+        });
     }
 }
 
@@ -119,7 +124,15 @@ function closeCheckout() {
 
 function nextCheckoutStep(step) {
     if (step > currentCheckoutStep) {
-        if (!validateCheckoutStep(currentCheckoutStep)) return;
+        if (!validateCheckoutStep(currentCheckoutStep)) {
+            if (window.MpAnalytics) MpAnalytics.track('checkout_step_validation_failed', {
+                step: currentCheckoutStep
+            });
+            return;
+        }
+        if (window.MpAnalytics) MpAnalytics.track('checkout_step_complete', {
+            step: currentCheckoutStep
+        });
     }
     currentCheckoutStep = step;
     updateCheckoutSteps();
@@ -508,6 +521,16 @@ function placeOrder() {
     // Clear cart
     clearCart();
 
+    // Funnel event: pedido finalizado com sucesso
+    if (window.MpAnalytics) MpAnalytics.track('order_completed', {
+        order_number: orderNumber,
+        total_brl: total,
+        delivery_type: deliveryType,
+        payment_method: paymentType,
+        uber_fee: deliveryType === 'delivery' && window._uberQuoteId ? (window._uberCustomerFee || 0) : 0,
+        item_count: cart.length
+    });
+
     console.log('Order captured:', order);
 }
 
@@ -585,6 +608,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (radio && radio.value !== 'delivery') {
                 window._uberQuoteId = null;
                 window._uberCustomerFee = undefined;
+            }
+            if (window.MpAnalytics && radio) {
+                MpAnalytics.track('delivery_option_selected', { type: radio.value });
             }
         });
     });
