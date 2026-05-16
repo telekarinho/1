@@ -68,7 +68,7 @@
     <aside class="panel-sidebar" id="sidebar">
       <div class="sidebar-brand">
         <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
-        <h2>MilkyPot<small>Admin</small></h2>
+        <h2>MilkyPot<small id="sidebarStoreName">Carregando...</small></h2>
       </div>
       <nav class="sidebar-nav">
         <div class="sidebar-nav-group">Principal</div>
@@ -267,6 +267,32 @@
     if (USER_ROLE === 'super_admin') {
       document.getElementById('newFranquiaCard').style.display = '';
     }
+
+    // Sidebar branding consistente com outras páginas: super_admin vê "Admin",
+    // franchisee vê o nome amigável da franquia (não "Admin"). Tenta puxar do
+    // Auth.getSession() (mesmo padrão de painel/index.html) com fallbacks.
+    updateSidebarBrand();
+  }
+
+  function updateSidebarBrand() {
+    const el = document.getElementById('sidebarStoreName');
+    if (!el) return;
+    if (USER_ROLE === 'super_admin') {
+      el.textContent = 'Admin';
+      return;
+    }
+    // Franchisee: tenta pegar o nome do session/franquias carregadas
+    let label = null;
+    try {
+      const session = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+      const fid = session?.franchiseId || USER_FRANCHISEES[0];
+      if (fid) {
+        // Tenta buscar nome amigável das franquias já carregadas
+        const meta = (AVAILABLE_FRANQUIAS || []).find(f => f.accountId === fid);
+        label = (meta?.name || fid).replace(/^MilkyPot\s+/i, '');
+      }
+    } catch (e) { /* ignora */ }
+    el.textContent = label || 'Franqueado';
   }
 
   async function bootstrapMatrizIfNeeded() {
@@ -346,6 +372,8 @@
 
     console.log('[wa-conectar] AVAILABLE_FRANQUIAS final:', AVAILABLE_FRANQUIAS);
     renderSelect();
+    // Re-atualiza sidebar agora que temos nome amigável da franquia
+    updateSidebarBrand();
   }
 
   function renderSelect() {
