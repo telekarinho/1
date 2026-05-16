@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v247';
-const CACHE_NAME = 'milkypot-v247';
+const CACHE_VERSION = 'mp-v248';
+const CACHE_NAME = 'milkypot-v248';
 
 // VAPID public key — Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
 const VAPID_PUBLIC_KEY = 'BAjJDEh3BZsxBDRlLXhLOZomMpCpv-FHsApsPGCvRcj3GjE3kF3Lfok4JgRs8Rdmpx3pq530i5ceVIsnngyyyBE';
@@ -64,6 +64,7 @@ const PRECACHE_URLS = [
     '/js/core/analytics-events.js',
     '/js/core/roleta-milkycoins.js',
     '/js/core/streak-tracker.js',
+    '/js/core/shared-cart.js',
     '/js/core/test-mode.js',
     '/js/core/time-clock.js',
     '/js/core/operator-context.js',
