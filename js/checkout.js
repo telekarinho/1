@@ -546,6 +546,21 @@ function placeOrder() {
         }, 2000);
     }
 
+    // 🔥 Streak Tracker: registra pedido pro contador de dias consecutivos.
+    // Se atingir milestone (3, 7, 14, 30 dias) dispara modal de recompensa.
+    // Roda sem delay pq usa storage (não conflita com modal Roleta).
+    // Modal de milestone (se houver) aparece DEPOIS da Roleta fechar via z-index inferior.
+    if (window.StreakTracker && typeof window.StreakTracker.recordOrder === 'function') {
+        try {
+            window._lastOrderPhone = customerPhone; // pra showStatus() futuro
+            window.StreakTracker.recordOrder({
+                phone: customerPhone,
+                uid: (window.MilkyClube && window.MilkyClube.state && window.MilkyClube.state.currentUser && window.MilkyClube.state.currentUser.uid) || null,
+                franchiseId: storeId || null
+            });
+        } catch (e) { console.warn('[StreakTracker] failed:', e); }
+    }
+
     console.log('Order captured:', order);
 }
 
