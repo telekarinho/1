@@ -617,7 +617,7 @@
     <script src="js/core/constants.js"></script>
     <script src="js/core/utils.js"></script>
     <script src="js/core/firebase-config.js"></script>
-    <script src="js/core/datastore.js?v=mp-v239"></script>
+    <script src="js/core/datastore.js?v=mp-v243"></script>
     <script>
         // CRITICAL: cliente anonimo (incognito) precisa do init pra puxar
         // catalog_config do Firestore — sem isso, getCatalogConfig retorna
@@ -625,11 +625,11 @@
         if (typeof DataStore !== 'undefined' && DataStore.init) DataStore.init();
     </script>
     <script src="js/stores-data.js"></script>
-    <script src="js/analytics.js?v=mp-v239"></script>
+    <script src="js/analytics.js?v=mp-v243"></script>
     <script src="js/cardapio-data.js"></script>
-    <script src="js/core/cost-calculator.js?v=mp-v239"></script>
-    <script src="js/core/catalog-v2.js?v=mp-v239"></script>
-    <script src="js/monte-seu-flow.js?v=mp-v239"></script>
+    <script src="js/core/cost-calculator.js?v=mp-v243"></script>
+    <script src="js/core/catalog-v2.js?v=mp-v243"></script>
+    <script src="js/monte-seu-flow.js?v=mp-v243"></script>
     <script src="js/cart.js"></script>
     <script src="js/core/raspinha-engine.js"></script>
     <script src="js/checkout.js"></script>
@@ -966,7 +966,14 @@
 
                 // Imagem do produto (suporta URL, ou fallback para emoji)
                 var imgHtml;
-                var imgSrc = (it.imagem || (it._v2 && it._v2.imagem) || '').trim();
+                // FALLBACK hardcoded (v240): Monte do Seu sempre tem foto mesmo se
+                // Firestore for sobrescrito por cliente stale.
+                var MONTE_SEU_IMG_MAP = {
+                    'prod_monte_acai': '/images/produtos/monte-seu/acai-montado.webp',
+                    'prod_monte_smoothie': '/images/produtos/monte-seu/smoothie.webp',
+                    'prod_monte_shake_proteico': '/images/produtos/monte-seu/shake-proteico.webp'
+                };
+                var imgSrc = (it.imagem || (it._v2 && it._v2.imagem) || MONTE_SEU_IMG_MAP[it.id] || '').trim();
                 if (imgSrc) {
                     imgHtml = '<img src="' + imgSrc + '" alt="' + it.name + '" class="card-img" loading="lazy"' +
                         ' onerror="this.style.display=\'none\';this.nextSibling.style.display=\'block\'">' +

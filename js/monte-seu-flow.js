@@ -319,7 +319,13 @@
         var item = MS.state.item;
         // FOTO (v235): se item tem imagem (catalog_config.sabores.items[].imagem),
         // mostra foto real no header em vez de emoji. Fallback emoji se sem imageUrl.
-        var imgSrc = (item.imagem || (item._v2 && item._v2.imagem) || '').trim();
+        // FALLBACK hardcoded (v240): mapa resiliente a sobrescrita Firestore
+        var MS_IMG_MAP = {
+            'prod_monte_acai': '/images/produtos/monte-seu/acai-montado.webp',
+            'prod_monte_smoothie': '/images/produtos/monte-seu/smoothie.webp',
+            'prod_monte_shake_proteico': '/images/produtos/monte-seu/shake-proteico.webp'
+        };
+        var imgSrc = (item.imagem || (item._v2 && item._v2.imagem) || MS_IMG_MAP[item.id] || '').trim();
         var leadVisual = imgSrc
             ? '<img class="ms-header-img" src="' + esc(imgSrc) + '" alt="' + esc(item.name) + '" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'inline\')"><span class="ms-header-emoji" style="display:none">' + esc(item.emoji || '🎨') + '</span>'
             : '<span class="ms-header-emoji">' + esc(item.emoji || '🎨') + '</span>';
