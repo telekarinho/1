@@ -343,9 +343,9 @@
     <script src="../js/core/notifications.js"></script>
     <script src="../js/core/whatsapp.js"></script>
     <script src="../js/core/reports.js"></script>
-    <script src="../js/core/adminconfig.js?v=mp-v242"></script>
-    <script src="../js/core/motivacional.js?v=mp-v242"></script>
-    <script src="../js/core/caixa.js?v=mp-v242"></script>
+    <script src="../js/core/adminconfig.js?v=mp-v243"></script>
+    <script src="../js/core/motivacional.js?v=mp-v243"></script>
+    <script src="../js/core/caixa.js?v=mp-v243"></script>
     <script>
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
         const session = Auth.getSession();
@@ -541,25 +541,6 @@
                         : '';
                     const nextLabel = { novo: '✔️ Confirmar', confirmado: '▶️ Preparar', preparando: '✅ Pronto', pronto: '🛵 Enviar', em_entrega: '📦 Entregue' };
                     const isDeliveryCard = typeKey === 'delivery' || typeKey === 'delivery_whatsapp' || !!o.address || !!(o.delivery && o.delivery.address);
-
-                    // Numeração sequencial diária preferida; fallback pro hash legado
-                    const seqLabel = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
-                    const seqTitle = o.dailySeq ? `Pedido nº ${o.dailySeq} do dia · ${o.id.slice(-6)}` : `Pedido ${o.id.slice(-6)}`;
-
-                    // Calcula tempo de espera para pedidos ainda não entregues
-                    let waitAttr = '';
-                    let waitBadgeHtml = '';
-                    if (status !== 'entregue' && status !== 'cancelado' && o.createdAt) {
-                        const ageMs = Date.now() - new Date(o.createdAt).getTime();
-                        const ageMins = Math.floor(ageMs / 60000);
-                        if (ageMins >= 0) {
-                            const waitClass = ageMins >= 30 ? 'late' : (ageMins >= 15 ? 'warn' : 'ok');
-                            const waitIcon = ageMins >= 30 ? '🔴' : (ageMins >= 15 ? '🟡' : '🟢');
-                            waitBadgeHtml = `<span class="order-wait-badge ${waitClass}" title="Aguardando há ${ageMins} min">${waitIcon} ${ageMins}min</span>`;
-                            if (ageMins >= 30) waitAttr = 'data-wait="alert"';
-                            else if (ageMins >= 15) waitAttr = 'data-wait="warn"';
-                        }
-                    }
 
                     // Numeração sequencial diária preferida; fallback pro hash legado
                     const seqLabel = o.dailySeq ? `#${o.dailySeq}` : `#${o.id.slice(-6)}`;
@@ -1573,8 +1554,8 @@
     </script>
 <script src="../js/core/copilot-transport.js" defer></script>
 <script src="../js/pages/lilo-scanner.js" defer></script>
-<script src="../js/core/belinha-page-scanners.js?v=mp-v242" defer></script>
-<script src="../js/core/belinha-widget.js?v=mp-v242" defer></script>
-<script src="../js/core/register-sw.js?v=mp-v242"></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v243" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v243" defer></script>
+<script src="../js/core/register-sw.js?v=mp-v243"></script>
 </body>
 </html>
