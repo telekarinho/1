@@ -2973,6 +2973,16 @@ const franchiseNurture = require("./franchise-nurture");
 exports.franchiseNurtureCron = franchiseNurture.franchiseNurtureCron;
 
 // ============================================
+// ORDER NOTIFICATIONS (push FCM + WhatsApp outbox)
+// notifyOrderStatusPush       — push notification por mudanca de status
+// notifyOrderDeliveredOutbox  — WhatsApp review request 5min apos entrega
+// Deploy: firebase deploy --only functions:notifyOrderStatusPush,functions:notifyOrderDeliveredOutbox
+// ============================================
+const orderNotifications = require("./order-notifications");
+exports.notifyOrderStatusPush = orderNotifications.notifyOrderStatusPush;
+exports.notifyOrderDeliveredOutbox = orderNotifications.notifyOrderDeliveredOutbox;
+
+// ============================================
 // Time Clock Reminders + Banco de Horas
 // cron a cada 5min envia push pros funcionarios 10min antes da escala
 // + funcoes pra solicitar/aprovar banco de horas via FCM
