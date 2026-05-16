@@ -343,9 +343,9 @@
     <script src="../js/core/notifications.js"></script>
     <script src="../js/core/whatsapp.js"></script>
     <script src="../js/core/reports.js"></script>
-    <script src="../js/core/adminconfig.js?v=mp-v241"></script>
-    <script src="../js/core/motivacional.js?v=mp-v241"></script>
-    <script src="../js/core/caixa.js?v=mp-v241"></script>
+    <script src="../js/core/adminconfig.js?v=mp-v242"></script>
+    <script src="../js/core/motivacional.js?v=mp-v242"></script>
+    <script src="../js/core/caixa.js?v=mp-v242"></script>
     <script>
         if (!Auth.requireAuth('franchisee')) throw new Error('Not authorized');
         const session = Auth.getSession();
@@ -481,41 +481,6 @@
             // operador achar que sumiu (pedido feito ontem, filtro Hoje vazio)
             const visibleIds = new Set(orders.map(o => o.id));
             const openStatusesForBanner = ['aguardando_whatsapp', 'novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'em_rota'];
-            const hiddenOpen = allOrders.filter(o =>
-                o && !visibleIds.has(o.id) && openStatusesForBanner.includes(o.status)
-            ).length;
-            let bannerEl = document.getElementById('ordersHiddenBanner');
-            if (!bannerEl) {
-                const panel = document.querySelector('.panel-content');
-                if (panel) {
-                    bannerEl = document.createElement('div');
-                    bannerEl.id = 'ordersHiddenBanner';
-                    bannerEl.style.cssText = 'background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border:2px solid #FFB74D;color:#E65100;padding:10px 16px;border-radius:10px;margin-bottom:14px;font-weight:700;font-size:13px;display:none;align-items:center;gap:10px;cursor:pointer';
-                    bannerEl.onclick = function(){
-                        var sel = document.getElementById('filterDate');
-                        if (sel) { sel.value = 'all'; renderKanban(); }
-                    };
-                    panel.insertBefore(bannerEl, panel.firstChild);
-                }
-            }
-            if (bannerEl) {
-                if (hiddenOpen > 0) {
-                    bannerEl.innerHTML = '&#9888; <span>Tem ' + hiddenOpen + ' pedido' + (hiddenOpen>1?'s':'') + ' aberto' + (hiddenOpen>1?'s':'') + ' fora do filtro atual</span> &middot; <strong style="text-decoration:underline">Clique pra ver TODOS</strong>';
-                    bannerEl.style.display = 'flex';
-                } else {
-                    bannerEl.style.display = 'none';
-                }
-            }
-
-            // Coluna "Entregue" SEMPRE mostra so pedidos de hoje — historico
-            // de entregas antigas vai pra outro lugar (relatorios), nao polui
-            // o kanban operacional. Outras colunas respeitam o filtro do select.
-            const todayOrders = getTodayOrders();
-
-            // Aviso quando há pedidos NO STORAGE mas o filtro atual esconde — evita
-            // operador achar que sumiu (pedido feito ontem, filtro Hoje vazio)
-            const visibleIds = new Set(orders.map(o => o.id));
-            const openStatusesForBanner = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega', 'em_rota'];
             const hiddenOpen = allOrders.filter(o =>
                 o && !visibleIds.has(o.id) && openStatusesForBanner.includes(o.status)
             ).length;
@@ -1608,8 +1573,8 @@
     </script>
 <script src="../js/core/copilot-transport.js" defer></script>
 <script src="../js/pages/lilo-scanner.js" defer></script>
-<script src="../js/core/belinha-page-scanners.js?v=mp-v241" defer></script>
-<script src="../js/core/belinha-widget.js?v=mp-v241" defer></script>
-<script src="../js/core/register-sw.js?v=mp-v241"></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v242" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v242" defer></script>
+<script src="../js/core/register-sw.js?v=mp-v242"></script>
 </body>
 </html>
