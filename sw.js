@@ -66,6 +66,7 @@ const PRECACHE_URLS = [
     '/js/core/streak-tracker.js',
     '/js/core/shared-cart.js',
     '/js/core/reorder-helper.js',
+    '/js/core/weather-promo.js',
     '/js/core/test-mode.js',
     '/js/core/time-clock.js',
     '/js/core/operator-context.js',
