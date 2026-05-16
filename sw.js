@@ -68,6 +68,7 @@ const PRECACHE_URLS = [
     '/js/core/reorder-helper.js',
     '/js/core/weather-promo.js',
     '/js/core/maps-picker.js',
+    '/js/core/selfie-sticker.js',
     '/js/core/test-mode.js',
     '/js/core/time-clock.js',
     '/js/core/operator-context.js',
