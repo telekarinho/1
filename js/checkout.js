@@ -546,6 +546,20 @@ function placeOrder() {
         }, 2000);
     }
 
+    // 🔄 Reorder Helper: salva pedido no histórico pra "Pedir de novo" 1-tap.
+    // Roda sincronicamente, antes da Roleta animar.
+    if (window.Reorder && typeof window.Reorder.saveOrderToHistory === 'function') {
+        try {
+            window.Reorder.saveOrderToHistory({
+                orderNumber: orderNumber,
+                items: order.items,
+                total: total,
+                createdAt: order.createdAt,
+                franchiseId: storeId || null
+            });
+        } catch (e) { console.warn('[Reorder] save history failed:', e); }
+    }
+
     // 🔥 Streak Tracker: registra pedido pro contador de dias consecutivos.
     // Se atingir milestone (3, 7, 14, 30 dias) dispara modal de recompensa.
     // Roda sem delay pq usa storage (não conflita com modal Roleta).
