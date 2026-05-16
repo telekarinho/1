@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>MilkyPot — Belinha Aprende (revisão de escalações)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/shared-panel.css">
+  <style>
+    .bl-page { padding: 16px; max-width: 1200px; margin: 0 auto; }
+    .bl-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 20px; }
+    .bl-stat { background: #fff; border: 1px solid #E5E7EB; border-radius: 12px; padding: 14px 18px; }
+    .bl-stat .num { font-family: 'Baloo 2', cursive; font-size: 28px; font-weight: 900; color: #2D1747; }
+    .bl-stat .lbl { font-size: 11px; color: #6B7280; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; margin-top: 2px; }
+    .bl-stat.success .num { color: #16A34A; }
+    .bl-stat.warn .num { color: #F59E0B; }
+    .bl-stat.danger .num { color: #DC2626; }
+
+    .bl-filters { background: #fff; border: 1px solid #E5E7EB; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .bl-filters select, .bl-filters input { padding: 8px 12px; border: 1.5px solid #E5E7EB; border-radius: 8px; font-family: inherit; font-size: 13px; }
+
+    .bl-list { display: grid; gap: 12px; }
+    .learning-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; padding: 16px 20px; }
+    .learning-card.pending { border-left: 4px solid #F59E0B; }
+    .learning-card.reviewed { border-left: 4px solid #16A34A; }
+    .learning-card.injected { border-left: 4px solid #7E57C2; background: linear-gradient(135deg, #FFF, #FAF5FF); }
+
+    .lc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+    .lc-meta { font-size: 12px; color: #6B7280; }
+    .lc-meta b { color: #2D1747; }
+    .lc-status { padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; letter-spacing: .3px; }
+    .lc-status.pending { background: #FEF3C7; color: #92400E; }
+    .lc-status.reviewed { background: #DCFCE7; color: #166534; }
+    .lc-status.injected { background: #EDE9FE; color: #5B21B6; }
+    .lc-urgency.high { background: #FEE2E2; color: #991B1B; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; }
+
+    .lc-conv { background: #FAF9FC; border-radius: 10px; padding: 12px 14px; margin-top: 12px; font-size: 13px; line-height: 1.5; }
+    .lc-conv .turn { padding: 5px 0; }
+    .lc-conv .turn.user { color: #1F2937; }
+    .lc-conv .turn.bot { color: #1E40AF; }
+    .lc-conv .turn.user::before { content: "👤 "; }
+    .lc-conv .turn.bot::before { content: "🐑 "; }
+
+    .lc-q { background: #FEE2E2; border-radius: 10px; padding: 12px 14px; margin-top: 10px; font-size: 14px; }
+    .lc-q b { color: #991B1B; }
+    .lc-current { background: #DBEAFE; border-radius: 10px; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #1E40AF; }
+    .lc-current b { color: #1E3A8A; }
+
+    .lc-ideal-input { width: 100%; min-height: 80px; padding: 12px 14px; border: 1.5px solid #E5E7EB; border-radius: 10px; font-family: inherit; font-size: 14px; line-height: 1.5; resize: vertical; margin-top: 10px; box-sizing: border-box; }
+    .lc-ideal-input:focus { outline: none; border-color: #7E57C2; }
+
+    .lc-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .btn { border: 0; border-radius: 10px; padding: 9px 16px; font-weight: 800; cursor: pointer; font-family: inherit; font-size: 13px; }
+    .btn.primary { background: #7E57C2; color: #fff; }
+    .btn.green { background: #16A34A; color: #fff; }
+    .btn.warn { background: #F59E0B; color: #fff; }
+    .btn.danger { background: #DC2626; color: #fff; }
+    .btn.soft { background: #F3F4F6; color: #374151; }
+    .btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    .empty { text-align: center; padding: 60px 20px; color: #9CA3AF; background: #fff; border: 2px dashed #E5E7EB; border-radius: 14px; }
+    .empty .icon { font-size: 56px; margin-bottom: 12px; }
+
+    .info-banner { background: linear-gradient(135deg, #DBEAFE, #EDE9FE); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; font-size: 13px; color: #1E40AF; line-height: 1.5; }
+    .info-banner b { color: #2D1747; }
+  </style>
+</head>
+<body>
+  <div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <img src="../images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+        <h2>MilkyPot<small id="sidebarStoreName">Admin</small></h2>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-group">WhatsApp Belinha</div>
+        <a href="whatsapp-conectar.html" class="sidebar-link"><span class="icon">📱</span> Conectar WhatsApp</a>
+        <a href="whatsapp-conversas.html" class="sidebar-link"><span class="icon">💬</span> Conversas Belinha</a>
+        <a href="belinha-learnings.html" class="sidebar-link active"><span class="icon">🎓</span> Belinha Aprende</a>
+        <div class="sidebar-nav-group">Principal</div>
+        <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+        <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+        <a href="pdv.html" class="sidebar-link"><span class="icon">💻</span> PDV</a>
+      </nav>
+    </aside>
+
+    <main class="panel-main">
+      <header class="panel-header">
+        <button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <h1>🎓 Belinha Aprende</h1>
+      </header>
+
+      <div class="bl-page">
+        <div class="info-banner">
+          <b>🐑 Como funciona:</b> toda vez que a Belinha não consegue resolver sozinha (cliente reclama, pede reembolso, etc), ela <b>escala em silêncio</b> e o painel toca telefone. Aqui você revisa essas escalações e <b>marca a resposta IDEAL</b>. Depois a Belinha aprende e nas próximas vezes já sabe responder igual a você. <b>Meta: 90% sem escalar.</b>
+        </div>
+
+        <div class="bl-stats">
+          <div class="bl-stat success"><div class="num" id="statResolved">—</div><div class="lbl">Resolvidos sem escalar</div></div>
+          <div class="bl-stat warn"><div class="num" id="statPending">—</div><div class="lbl">Esperando revisão</div></div>
+          <div class="bl-stat"><div class="num" id="statReviewed">—</div><div class="lbl">Revisados</div></div>
+          <div class="bl-stat"><div class="num" id="statInjected">—</div><div class="lbl">Já no prompt da Belinha</div></div>
+          <div class="bl-stat"><div class="num" id="statTotal">—</div><div class="lbl">Total de escalações</div></div>
+        </div>
+
+        <div class="bl-filters">
+          <label style="font-size:12px;color:#6B7280;font-weight:800">Status:</label>
+          <select id="filterStatus" onchange="renderList()">
+            <option value="pending">⚠ Pending (revisar)</option>
+            <option value="reviewed">✓ Revisados</option>
+            <option value="injected">🚀 No prompt</option>
+            <option value="all">Todos</option>
+          </select>
+          <label style="font-size:12px;color:#6B7280;font-weight:800">Urgência:</label>
+          <select id="filterUrgency" onchange="renderList()">
+            <option value="all">Todas</option>
+            <option value="high">🔴 Alta</option>
+            <option value="normal">🟡 Normal</option>
+            <option value="low">🟢 Baixa</option>
+          </select>
+          <input id="searchBox" type="text" placeholder="Buscar por mensagem ou telefone…" oninput="renderList()" style="flex:1;min-width:240px">
+          <button class="btn soft" onclick="loadLearnings()">🔄 Atualizar</button>
+        </div>
+
+        <div id="blList" class="bl-list">
+          <div class="empty"><div class="icon">⏳</div><div>Carregando aprendizados…</div></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="../js/core/firebase-config.js?v=mp-v263"></script>
+  <script>
+  let LEARNINGS = [];
+  let TOTAL_CONVERSATIONS = 0;
+
+  function esc(s) { return String(s||'').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+  function timeAgo(iso) {
+    if (!iso) return '';
+    const diff = Date.now() - new Date(iso).getTime();
+    if (diff < 60000) return 'agora';
+    if (diff < 3600000) return Math.floor(diff/60000) + 'min';
+    if (diff < 86400000) return Math.floor(diff/3600000) + 'h';
+    return Math.floor(diff/86400000) + 'd';
+  }
+
+  async function loadLearnings() {
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    const db = firebase.firestore();
+    document.getElementById('blList').innerHTML = '<div class="empty"><div class="icon">⏳</div><div>Carregando aprendizados…</div></div>';
+    try {
+      // Pega learnings (max 200, mais recentes primeiro)
+      const snap = await db.collection('belinha_learnings').orderBy('createdAt', 'desc').limit(200).get();
+      LEARNINGS = [];
+      snap.forEach(doc => {
+        const d = doc.data();
+        d._id = doc.id;
+        LEARNINGS.push(d);
+      });
+      // Pega total de conversas pra calcular % resolvido
+      try {
+        const convCount = await db.collection('whatsapp_conversations').get();
+        TOTAL_CONVERSATIONS = convCount.size;
+      } catch (e) { TOTAL_CONVERSATIONS = 0; }
+      renderStats();
+      renderList();
+    } catch (e) {
+      console.error(e);
+      document.getElementById('blList').innerHTML = '<div class="empty"><div class="icon">⚠️</div><div>Erro carregando: ' + esc(e.message) + '</div></div>';
+    }
+  }
+
+  function renderStats() {
+    const pending = LEARNINGS.filter(l => l.status === 'pending').length;
+    const reviewed = LEARNINGS.filter(l => l.status === 'reviewed').length;
+    const injected = LEARNINGS.filter(l => l.status === 'injected').length;
+    const total = LEARNINGS.length;
+    // % resolvido = conversas que NÃO viraram learning (resolvidas sozinha)
+    const resolvedPct = TOTAL_CONVERSATIONS > 0
+      ? Math.round((1 - total / TOTAL_CONVERSATIONS) * 100)
+      : (total === 0 ? 100 : 0);
+    document.getElementById('statResolved').textContent = (Math.max(0, resolvedPct)) + '%';
+    document.getElementById('statPending').textContent = pending;
+    document.getElementById('statReviewed').textContent = reviewed;
+    document.getElementById('statInjected').textContent = injected;
+    document.getElementById('statTotal').textContent = total;
+  }
+
+  function renderList() {
+    const filterStatus = document.getElementById('filterStatus').value;
+    const filterUrgency = document.getElementById('filterUrgency').value;
+    const search = document.getElementById('searchBox').value.toLowerCase().trim();
+    let list = LEARNINGS;
+    if (filterStatus !== 'all') list = list.filter(l => l.status === filterStatus);
+    if (filterUrgency !== 'all') list = list.filter(l => (l.urgency || 'normal') === filterUrgency);
+    if (search) {
+      list = list.filter(l => {
+        const hay = ((l.customerMessage||'') + ' ' + (l.phone||'') + ' ' + (l.customerName||'') + ' ' + (l.idealReply||'')).toLowerCase();
+        return hay.includes(search);
+      });
+    }
+
+    if (!list.length) {
+      document.getElementById('blList').innerHTML = '<div class="empty"><div class="icon">🐑</div><div>Nenhuma escalação encontrada.<br><small>Belinha tá resolvendo tudo sozinha! ✨</small></div></div>';
+      return;
+    }
+
+    document.getElementById('blList').innerHTML = list.map(l => {
+      let history = [];
+      try { history = JSON.parse(l.historySerialized || '[]'); } catch (e) {}
+      const historyHtml = history.length
+        ? '<div class="lc-conv">' + history.map(h => `<div class="turn ${h.r === 'user' ? 'user' : 'bot'}">${esc(h.t)}</div>`).join('') + '</div>'
+        : '';
+
+      const statusClass = l.status || 'pending';
+      const urgencyHtml = (l.urgency === 'high') ? '<span class="lc-urgency high">🔴 ALTA</span>' : '';
+
+      const idealField = l.status === 'pending' || l.status === 'reviewed'
+        ? `<textarea class="lc-ideal-input" id="ideal-${esc(l._id)}" placeholder="Como a Belinha DEVERIA ter respondido? (a próxima vez ela vai usar isso como referência)">${esc(l.idealReply || '')}</textarea>
+           <div class="lc-actions">
+             ${l.status === 'pending'
+                ? `<button class="btn green" onclick="markReviewed('${esc(l._id)}')">✓ Salvar como resposta ideal</button>`
+                : `<button class="btn primary" onclick="markReviewed('${esc(l._id)}')">💾 Atualizar resposta ideal</button>
+                   <button class="btn soft" onclick="markInjected('${esc(l._id)}')">🚀 Marcar como já no prompt</button>`}
+             <button class="btn soft" onclick="discardLearning('${esc(l._id)}')">🗑 Descartar (não vale aprender)</button>
+           </div>`
+        : `<div class="lc-current"><b>Resposta ideal já salva:</b><br>${esc(l.idealReply || '(vazio)')}</div>
+           <div class="lc-actions">
+             <button class="btn soft" onclick="reopenLearning('${esc(l._id)}')">↩ Reabrir pra editar</button>
+           </div>`;
+
+      return `<div class="learning-card ${statusClass}">
+        <div class="lc-head">
+          <div>
+            <div class="lc-meta">
+              <b>${esc(l.customerName || '(sem nome)')}</b> · ${esc(l.phone || '?')} · ${timeAgo(l.createdAt)}
+              ${urgencyHtml}
+            </div>
+            <div style="font-size:11px;color:#9CA3AF;margin-top:2px">
+              motivo: <code>${esc(l.reason || '?')}</code> · franquia: ${esc(l.accountId || 'matriz')}
+            </div>
+          </div>
+          <span class="lc-status ${statusClass}">${statusClass === 'pending' ? '⚠ Pending' : statusClass === 'reviewed' ? '✓ Revisado' : '🚀 No prompt'}</span>
+        </div>
+
+        ${historyHtml}
+
+        <div class="lc-q"><b>Cliente disse:</b><br>${esc(l.customerMessage || '(sem msg)')}</div>
+        <div class="lc-current"><b>Belinha tentou responder:</b><br>${esc(l.botReply || '(sem reply)')}</div>
+
+        ${idealField}
+      </div>`;
+    }).join('');
+  }
+
+  async function markReviewed(id) {
+    const ideal = document.getElementById('ideal-' + id).value.trim();
+    if (!ideal || ideal.length < 5) {
+      alert('Escreve a resposta ideal (mínimo 5 caracteres) — sem isso a Belinha não aprende nada novo.');
+      return;
+    }
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    try {
+      await firebase.firestore().collection('belinha_learnings').doc(id).update({
+        idealReply: ideal,
+        status: 'reviewed',
+        reviewedAt: new Date().toISOString(),
+        reviewedBy: firebase.auth().currentUser?.email || 'unknown'
+      });
+      const item = LEARNINGS.find(l => l._id === id);
+      if (item) { item.idealReply = ideal; item.status = 'reviewed'; }
+      renderStats();
+      renderList();
+    } catch (e) { alert('Erro: ' + e.message); }
+  }
+
+  async function markInjected(id) {
+    if (!confirm('Marcar como já INJETADO no prompt da Belinha? (Use só depois de fazer o redeploy do webhook).')) return;
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    try {
+      await firebase.firestore().collection('belinha_learnings').doc(id).update({
+        status: 'injected',
+        injectedAt: new Date().toISOString()
+      });
+      const item = LEARNINGS.find(l => l._id === id);
+      if (item) item.status = 'injected';
+      renderStats();
+      renderList();
+    } catch (e) { alert('Erro: ' + e.message); }
+  }
+
+  async function discardLearning(id) {
+    if (!confirm('Descartar essa escalação? (Não vale a pena aprender — false positive, troll, etc)')) return;
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    try {
+      await firebase.firestore().collection('belinha_learnings').doc(id).update({
+        status: 'discarded',
+        discardedAt: new Date().toISOString()
+      });
+      LEARNINGS = LEARNINGS.filter(l => l._id !== id);
+      renderStats();
+      renderList();
+    } catch (e) { alert('Erro: ' + e.message); }
+  }
+
+  async function reopenLearning(id) {
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    try {
+      await firebase.firestore().collection('belinha_learnings').doc(id).update({
+        status: 'reviewed' // volta pro estado editável
+      });
+      const item = LEARNINGS.find(l => l._id === id);
+      if (item) item.status = 'reviewed';
+      renderList();
+    } catch (e) { alert('Erro: ' + e.message); }
+  }
+
+  if (typeof firebase !== 'undefined') {
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    firebase.auth().onAuthStateChanged(u => {
+      if (!u) {
+        document.getElementById('blList').innerHTML = '<div class="empty"><div class="icon">🔒</div><div>Faça login pra ver os aprendizados.</div></div>';
+        return;
+      }
+      loadLearnings();
+    });
+  }
+  </script>
+</body>
+</html>
