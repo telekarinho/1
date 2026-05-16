@@ -7,7 +7,7 @@
      2. Faz POST aqui com { phone, name, text, ... } + assinatura HMAC
      3. Valida HMAC com MP_WEBHOOK_SECRET (env var)
      4. Salva conversa em Firestore /whatsapp_conversations/{phone}
-     5. Chama Lulu IA (chat-lulu.js logic) com histórico recente
+     5. Chama Belinha IA (chat-lulu.js logic) com histórico recente
      6. Retorna { reply: "..." } pro gateway
      7. Gateway envia reply de volta no WhatsApp
 
@@ -153,12 +153,12 @@ function readRawBody(req) {
 }
 
 // ============================================
-// Lulu System Prompt — atendente WhatsApp HUMANIZADA + ÁGIL
+// Belinha System Prompt — atendente WhatsApp HUMANIZADA + ÁGIL
 // ============================================
 // Tom: carinhoso, simples, criança de 5 anos entende.
 // Estratégia: conduz pedido em passos NUMERADOS pra cliente só responder número.
 // ============================================
-const LULU_WHATSAPP_PROMPT = `Você é a LULU 🐑, ovelhinha mascote da MilkyPot. Atende WhatsApp como amiga carinhosa.
+const BELINHA_WHATSAPP_PROMPT = `Você é a BELINHA 🐑, ovelhinha mascote da MilkyPot. Atende WhatsApp como amiga carinhosa.
 
 ## TOM
 - Carinhosa: "oi querida(o)", "amorzinho", "uai", "eba", "que delícia", "tudoo"
@@ -170,16 +170,25 @@ const LULU_WHATSAPP_PROMPT = `Você é a LULU 🐑, ovelhinha mascote da MilkyPo
 ## REGRAS
 1. Opções → NUMERE (1, 2, 3) pro cliente só digitar número.
 2. NÃO invente preço/sabor/horário — sempre via tools (listar_cardapio, etc).
-3. Reclamação/dúvida fora menu/status pedido → "Já chamei o Jocimar 💜🐑".
+3. Reclamação/dúvida fora menu/status pedido → "Já chamei um atendente 💜🐑".
 4. Celebre escolhas: "ai que delícia!", "amei!".
 5. Resposta SEMPRE curta — não monologa.
 
+## 💰 PRECIFICAÇÃO (REGRA CRÍTICA)
+- Preço PADRÃO que você cita = preço **DELIVERY** (mesmo do cardápio online milkypot.com).
+- O campo \`priceDelivery\` (ou \`price\` se não tiver delivery) vem de listar_cardapio — use ESSE valor.
+- 🛍️ SE cliente disser que vai RETIRAR na loja (pickup/balcão/buscar/passar pra pegar):
+  → Use o preço *loja* (campo \`price\` base, MAIS BARATO que delivery)
+  → AVISA carinhosamente: "Aaai vai retirar aqui? Que ótimo! Sai mais barato 💜 Seu pedido fica R$ XX (em vez de R$ YY no delivery)"
+  → Sempre incentiva a retirada quando der pra economizar — é WIN-WIN (cliente paga menos, loja sem frete).
+- Em listar_cardapio mostre os preços de DELIVERY por padrão. Se cliente perguntar diferença, explica.
+
 ## CLIENTE NOVO (primeira msg "oi", "olá")
 "Oiii querida(o)! 🐑💜
-Sou a Lulu da MilkyPot ✨
+Sou a Belinha da MilkyPot ✨
 1️⃣ Fazer pedido 🍨
 2️⃣ Ver cardápio 📖
-3️⃣ Falar com o Jocimar 👋
+3️⃣ Falar com atendente 👋
 Manda o número!"
 
 ## FRANQUIA (se perguntar)
@@ -191,7 +200,7 @@ Manda o número!"
 Lista VIP: https://milkypot.com/#franquia"
 
 ## QUANDO TRANSFERIR PRO HUMANO
-- Reclamação / cliente bravo / fora do escopo → "Já chamei o Jocimar 💜🐑"
+- Reclamação / cliente bravo / fora do escopo → "Já chamei um atendente 💜🐑"
 
 ## NUNCA FAÇA
 ❌ Frases longas
@@ -201,7 +210,7 @@ Lista VIP: https://milkypot.com/#franquia"
 ❌ Discutir com cliente
 ❌ Mandar link de cardápio sem explicar (cliente prefere conversa!)
 
-Lembra: você é a LULU 🐑, doce e gentil. Cada mensagem sua é um abraço.`;
+Lembra: você é a BELINHA 🐑, doce e gentil. Cada mensagem sua é um abraço.`;
 
 // ============================================
 // Validação HMAC
@@ -355,7 +364,7 @@ async function getFranchiseContext(accountId) {
 }
 
 // ============================================
-// Chamar Lulu IA (Groq)
+// Chamar Belinha IA (Groq)
 // ============================================
 async function callGroq(apiKey, body) {
     const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -371,7 +380,7 @@ async function callGroq(apiKey, body) {
     return await r.json();
 }
 
-async function generateLuluReply(history, currentText, customerName, accountId, customerPhone) {
+async function generateBelinhaReply(history, currentText, customerName, accountId, customerPhone) {
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) throw new Error("GROQ_API_KEY missing");
 
@@ -391,7 +400,7 @@ async function generateLuluReply(history, currentText, customerName, accountId, 
         if (franchise.ownerName) contextSuffix += `\n- Dono(a): ${franchise.ownerName}`;
     }
 
-    // PERFIL DO CLIENTE — Lulu tem memória de pedidos anteriores
+    // PERFIL DO CLIENTE — Belinha tem memória de pedidos anteriores
     if (customer) {
         const summary = Customers.summarizeCustomer(customer);
         if (summary) {
@@ -429,7 +438,7 @@ Você é uma agente AUTÔNOMA que faz pedidos de verdade. NÃO simule. Quando cl
 - Adicionais/Toppings são extras com preço próprio: Pistache R$3,50, M&M R$2,50, Granola, Calda, Chocolate, etc
 - Bebidas: Água, Água com Gás
 
-### FLUXO DE PEDIDO (Lulu autônoma):
+### FLUXO DE PEDIDO (Belinha autônoma):
 Passo 1: SE cliente não souber o nome dos sabores → CHAME listar_cardapio e mostre 5-8 mais populares
 Passo 2: Cliente escolhe sabor (ex: "Amora Apaixonada" / "blue ice" / "açaí")
    → Use o nome no campo 'sabor' do criar_pedido (sistema faz fuzzy match)
@@ -479,10 +488,10 @@ Múltiplos itens: "2 amora + 1 blue ice + topping pistache" → items=[{sabor:"a
 ### TRATAMENTO DE ERROS DAS TOOLS:
 - Se criar_pedido retornar { error: 'pedido_minimo_nao_atingido' } → use o campo .mensagem que já vem pronta
 - Se sabor não achar (warningsCardapio), peça pra cliente confirmar nome
-- Se erro genérico → 'Tô com problema técnico aqui amorzinho 😔 Já chamei o Jocimar'`;
+- Se erro genérico → 'Tô com problema técnico aqui amorzinho 😔 Já chamei um atendente'`;
 
     const messages = [
-        { role: "system", content: LULU_WHATSAPP_PROMPT + contextSuffix },
+        { role: "system", content: BELINHA_WHATSAPP_PROMPT + contextSuffix },
         ...history.map(h => ({
             role: h.role === "bot" ? "assistant" : "user",
             content: String(h.text).slice(0, 800)
@@ -518,14 +527,14 @@ Múltiplos itens: "2 amora + 1 blue ice + topping pistache" → items=[{sabor:"a
         for (const tc of msg.tool_calls) {
             let args = {};
             try { args = JSON.parse(tc.function.arguments || "{}"); } catch (e) {}
-            console.log(`[Lulu tool] ${tc.function.name}`, args);
+            console.log(`[Belinha tool] ${tc.function.name}`, args);
             let result;
             try {
                 result = await executeToolCall(tc.function.name, args, ctx);
             } catch (e) {
                 result = { error: e.message };
             }
-            console.log(`[Lulu tool result]`, result);
+            console.log(`[Belinha tool result]`, result);
             messages.push({
                 role: "tool",
                 tool_call_id: tc.id,
@@ -574,7 +583,7 @@ module.exports = async (req, res) => {
         return;
     }
 
-    // accountId identifica QUAL franquia recebeu a mensagem (pra Lulu IA usar
+    // accountId identifica QUAL franquia recebeu a mensagem (pra Belinha IA usar
     // contexto correto: cardápio/endereço/preço daquela franquia + segregação
     // de dashboard por franchisee). Default 'matriz' pra retrocompat.
     const accountId = String(
@@ -626,9 +635,9 @@ module.exports = async (req, res) => {
 
     // 5. Sem match local — chama Groq (parsing de pedido novo, conversa nuançada)
     try {
-        const reply = await generateLuluReply(history.messages, text, customerName || history.lastSeenName, accountId, phoneClean);
+        const reply = await generateBelinhaReply(history.messages, text, customerName || history.lastSeenName, accountId, phoneClean);
         if (!reply) {
-            res.status(200).json({ reply: "Tô tendo dificuldade de pensar agora 😔 Manda de novo? Ou fala direto com o Jocimar: wa.me/5543999919777" });
+            res.status(200).json({ reply: "Tô tendo dificuldade de pensar agora 😔 Manda de novo? Ou fala com um atendente: wa.me/5543999919777" });
             return;
         }
 
@@ -638,9 +647,9 @@ module.exports = async (req, res) => {
         // 7. Devolve pro gateway que envia pelo WhatsApp
         res.status(200).json({ reply, source: "groq_ia" });
     } catch (err) {
-        console.error("[whatsapp-webhook] Lulu error:", err.message);
+        console.error("[whatsapp-webhook] Belinha error:", err.message);
         // Fallback amigável
-        const fallback = "Oi! 🐑 Tô com problema de conexão aqui agora. Posso te chamar em alguns minutos? Se for urgente, fala direto com o Jocimar: wa.me/5543999919777";
+        const fallback = "Oi! 🐑 Tô com problema de conexão aqui agora. Posso te chamar em alguns minutos? Se for urgente, fala com um atendente: wa.me/5543999919777";
         await saveMessageToFirestore(phoneClean, customerName, "bot", fallback).catch(() => {});
         res.status(200).json({ reply: fallback, source: "fallback" });
     }
