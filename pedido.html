@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seu pedido MilkyPot 🐑</title>
+    <meta name="theme-color" content="#EC4899">
+    <meta property="og:title" content="Acompanhe seu pedido MilkyPot 🐑">
+    <meta property="og:description" content="Veja o status do seu pedido em tempo real">
+    <meta property="og:image" content="https://milkypot.com/images/logo-milkypot.png">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { background: linear-gradient(180deg, #FFF1F5 0%, #FCE7F3 100%); min-height: 100vh; font-family: 'Segoe UI', Tahoma, sans-serif; color: #1F2937; }
+        .container { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
+        .header { text-align: center; padding: 16px 0 24px; }
+        .header img { width: 80px; }
+        h1 { font-size: 22px; color: #831843; margin-bottom: 6px; }
+        .order-num { font-family: monospace; font-size: 13px; color: #6B7280; }
+
+        .card { background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,.06); }
+        .card-title { font-size: 12px; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; font-weight: 700; }
+
+        .timeline { position: relative; padding-left: 36px; }
+        .timeline::before { content: ''; position: absolute; left: 14px; top: 14px; bottom: 14px; width: 2px; background: #E5E7EB; }
+        .stage { position: relative; padding: 10px 0; }
+        .stage-dot { position: absolute; left: -36px; top: 12px; width: 30px; height: 30px; border-radius: 50%; background: #E5E7EB; border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,.1); display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all .4s; }
+        .stage.active .stage-dot { background: linear-gradient(135deg, #EC4899, #F97316); animation: mp-pulse 1.5s ease-in-out infinite; }
+        .stage.done .stage-dot { background: #10B981; }
+        .stage-label { font-size: 15px; font-weight: 700; color: #1F2937; }
+        .stage-time { font-size: 12px; color: #9CA3AF; margin-top: 2px; }
+        .stage.pending .stage-label, .stage.pending .stage-time { color: #9CA3AF; }
+        @keyframes mp-pulse { 0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(236,72,153,.5); } 50% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(236,72,153,0); } }
+
+        .eta-banner { background: linear-gradient(135deg, #FCE7F3, #FBCFE8); border: 2px solid #EC4899; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 16px; }
+        .eta-banner .eta-emoji { font-size: 48px; line-height: 1; margin-bottom: 4px; }
+        .eta-banner .eta-label { font-size: 12px; color: #831843; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
+        .eta-banner .eta-time { font-size: 32px; font-weight: 900; color: #831843; margin-top: 4px; }
+        .eta-banner .eta-sub { font-size: 13px; color: #6B7280; margin-top: 4px; }
+
+        .item-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #F3F4F6; font-size: 14px; }
+        .item-row:last-child { border-bottom: 0; }
+
+        .totals { padding-top: 12px; border-top: 2px solid #F3F4F6; margin-top: 8px; }
+        .totals .row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+        .totals .row.total { font-weight: 900; font-size: 16px; color: #831843; padding-top: 8px; border-top: 1px solid #F3F4F6; margin-top: 4px; }
+
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn { background: linear-gradient(135deg, #EC4899, #8B5CF6); color: #fff; border: 0; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn.whatsapp { background: #25D366; }
+        .btn.outline { background: #fff; color: #831843; border: 2px solid #EC4899; }
+
+        .error { background: #FEE2E2; border: 2px solid #DC2626; color: #991B1B; padding: 16px; border-radius: 12px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="/images/logo-milkypot.png" alt="MilkyPot" onerror="this.style.display='none'">
+            <h1>🐑 Seu pedido MilkyPot</h1>
+            <div class="order-num" id="orderNum">Carregando…</div>
+        </div>
+
+        <div id="content"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="js/core/firebase-config.js?v=mp-v253"></script>
+    <script>
+    (function(){
+        var params = new URLSearchParams(location.search);
+        var orderId = params.get('id') || params.get('order') || location.hash.replace('#','');
+        var contentEl = document.getElementById('content');
+
+        if (!orderId) {
+            contentEl.innerHTML = '<div class="error">⚠ Pedido não encontrado. Pegue o link do seu pedido no WhatsApp.</div>';
+            return;
+        }
+
+        document.getElementById('orderNum').textContent = '#' + orderId.slice(0, 12);
+
+        var STAGES = [
+            { key: 'aguardando_pagamento', emoji: '💳', label: 'Pedido recebido' },
+            { key: 'novo', emoji: '✅', label: 'Confirmado' },
+            { key: 'preparando', emoji: '🥤', label: 'Preparando' },
+            { key: 'pronto', emoji: '📦', label: 'Pronto' },
+            { key: 'em_entrega', emoji: '🛵', label: 'Saiu pra entrega' },
+            { key: 'entregue', emoji: '🎉', label: 'Entregue' }
+        ];
+
+        function fmtBRL(n) { return 'R$ ' + Number(n||0).toFixed(2).replace('.', ','); }
+        function fmtTime(iso) { if (!iso) return ''; var d = new Date(iso); return d.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}); }
+
+        function renderOrder(order) {
+            if (!order) {
+                contentEl.innerHTML = '<div class="error">⚠ Pedido não encontrado ou expirado.</div>';
+                return;
+            }
+
+            var currentIdx = STAGES.findIndex(function(s){ return s.key === order.status; });
+            if (currentIdx < 0) currentIdx = 0;
+
+            // ETA simples
+            var etaMin;
+            if (order.status === 'entregue') {
+                etaMin = null;
+            } else if (order.delivery && order.delivery.type === 'delivery') {
+                var stageMinutes = { aguardando_pagamento: 35, novo: 30, preparando: 20, pronto: 12, em_entrega: 6 };
+                etaMin = stageMinutes[order.status] || 30;
+            } else {
+                var stageMinutesPickup = { aguardando_pagamento: 20, novo: 18, preparando: 12, pronto: 5 };
+                etaMin = stageMinutesPickup[order.status] || 15;
+            }
+
+            var currentStage = STAGES[currentIdx];
+
+            // ETA banner
+            var etaBannerHtml;
+            if (order.status === 'entregue') {
+                etaBannerHtml =
+                    '<div class="eta-banner">' +
+                      '<div class="eta-emoji">🎉</div>' +
+                      '<div class="eta-label">PEDIDO ENTREGUE</div>' +
+                      '<div class="eta-time">Aproveite!</div>' +
+                      '<div class="eta-sub">Avalie a gente — vale MilkyCoins 🪙</div>' +
+                    '</div>';
+            } else if (order.status === 'cancelado' || order.status === 'excluido') {
+                etaBannerHtml =
+                    '<div class="eta-banner" style="background:#FEE2E2;border-color:#DC2626">' +
+                      '<div class="eta-emoji">😢</div>' +
+                      '<div class="eta-label" style="color:#991B1B">Pedido cancelado</div>' +
+                      '<div class="eta-sub" style="color:#991B1B">Chama no WhatsApp pra entender o que rolou</div>' +
+                    '</div>';
+            } else {
+                etaBannerHtml =
+                    '<div class="eta-banner">' +
+                      '<div class="eta-emoji">' + currentStage.emoji + '</div>' +
+                      '<div class="eta-label">' + currentStage.label + '</div>' +
+                      '<div class="eta-time">~' + etaMin + ' min</div>' +
+                      '<div class="eta-sub">Tempo estimado pra chegar' + ((order.delivery && order.delivery.type !== 'delivery') ? ' na loja' : '') + '</div>' +
+                    '</div>';
+            }
+
+            // Timeline
+            var timelineHtml = '<div class="card">';
+            timelineHtml += '<div class="card-title">📍 Acompanhamento</div>';
+            timelineHtml += '<div class="timeline">';
+            STAGES.forEach(function(s, i){
+                var cls = '';
+                if (i === currentIdx) cls = 'active';
+                else if (i < currentIdx) cls = 'done';
+                else cls = 'pending';
+                if (s.key === 'aguardando_pagamento' && order.payment && order.payment.status === 'pago') cls = 'done';
+                timelineHtml += '<div class="stage ' + cls + '">';
+                timelineHtml += '<div class="stage-dot">' + (cls === 'done' ? '✓' : s.emoji) + '</div>';
+                timelineHtml += '<div class="stage-label">' + s.label + '</div>';
+                if (i === currentIdx && order.updatedAt) {
+                    timelineHtml += '<div class="stage-time">Atualizado às ' + fmtTime(order.updatedAt) + '</div>';
+                }
+                timelineHtml += '</div>';
+            });
+            timelineHtml += '</div></div>';
+
+            // Items
+            var itemsHtml = '<div class="card"><div class="card-title">🍨 Seu pedido</div>';
+            if (order.items && order.items.length) {
+                order.items.forEach(function(it){
+                    itemsHtml += '<div class="item-row">';
+                    itemsHtml += '<span>' + (it.qty||1) + 'x ' + (it.emoji||'') + ' ' + (it.name||'?') + ((it.size) ? ' (' + it.size + ')' : '') + '</span>';
+                    itemsHtml += '<span>' + fmtBRL((it.sizePrice || it.unitPrice || 0) * (it.qty||1)) + '</span>';
+                    itemsHtml += '</div>';
+                });
+            }
+            itemsHtml += '<div class="totals">';
+            itemsHtml += '<div class="row"><span>Subtotal</span><span>' + fmtBRL(order.subtotal||order.total) + '</span></div>';
+            if (order.delivery && order.delivery.fee > 0) {
+                itemsHtml += '<div class="row"><span>Frete</span><span>' + fmtBRL(order.delivery.fee) + '</span></div>';
+            }
+            itemsHtml += '<div class="row total"><span>Total</span><span>' + fmtBRL(order.total) + '</span></div>';
+            itemsHtml += '</div></div>';
+
+            // Delivery info
+            var deliveryHtml = '';
+            if (order.delivery) {
+                deliveryHtml = '<div class="card"><div class="card-title">' + (order.delivery.type === 'delivery' ? '🛵 Entrega' : '🏪 Retirada') + '</div>';
+                if (order.delivery.type === 'delivery' && order.delivery.address) {
+                    deliveryHtml += '<div style="font-size:14px;line-height:1.5">' + order.delivery.address + '</div>';
+                } else if (order.store && order.store.name) {
+                    deliveryHtml += '<div style="font-size:14px;line-height:1.5">' + order.store.name + '</div>';
+                }
+                deliveryHtml += '</div>';
+            }
+
+            // Actions
+            var whatsappPhone = (order.store && order.store.whatsapp) || '5543999919777';
+            var whatsappMsg = 'Olá! Sobre meu pedido #' + (order.orderNumber||orderId.slice(-6));
+            var actionsHtml = '<div class="card">';
+            actionsHtml += '<div class="card-title">💬 Precisa de ajuda?</div>';
+            actionsHtml += '<div class="actions">';
+            actionsHtml += '<a class="btn whatsapp" href="https://wa.me/' + whatsappPhone + '?text=' + encodeURIComponent(whatsappMsg) + '" target="_blank">📲 WhatsApp</a>';
+            actionsHtml += '<a class="btn outline" href="/cardapio.html">🛒 Novo pedido</a>';
+            actionsHtml += '</div></div>';
+
+            contentEl.innerHTML = etaBannerHtml + timelineHtml + itemsHtml + deliveryHtml + actionsHtml;
+        }
+
+        // Tenta Firestore primeiro, depois localStorage
+        function loadOrder() {
+            if (typeof firebase !== 'undefined' && firebase.firestore) {
+                firebase.firestore().collection('orders_log').doc(orderId).get()
+                    .then(function(snap) {
+                        if (snap.exists) {
+                            renderOrder(snap.data());
+                            // Real-time updates
+                            firebase.firestore().collection('orders_log').doc(orderId)
+                                .onSnapshot(function(s){ if (s.exists) renderOrder(s.data()); });
+                        } else {
+                            loadFromLocalStorage();
+                        }
+                    })
+                    .catch(function(){ loadFromLocalStorage(); });
+            } else {
+                loadFromLocalStorage();
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                var history = JSON.parse(localStorage.getItem('milkypot_orders_history') || '[]');
+                var found = history.find(function(o){ return o.orderNumber === orderId || o.orderNumber === '#' + orderId; });
+                if (found) renderOrder(found);
+                else renderOrder(null);
+            } catch (e) {
+                renderOrder(null);
+            }
+        }
+
+        loadOrder();
+    })();
+    </script>
+</body>
+</html>
