@@ -173,7 +173,9 @@ body:not(.idle){cursor:default}
             styleTag.id = 'dynamicFitStyle';
             document.head.appendChild(styleTag);
         }
-        styleTag.textContent = '#player img,#player video{object-fit:' + fit + ' !important}';
+        // SEM !important: permite override per-image (auto-fit por aspect ratio em showImage).
+        // Video continua respeitando config (videos sao quase sempre 16:9 mesmo).
+        styleTag.textContent = '#player img{object-fit:' + fit + '}#player video{object-fit:' + fit + '}';
 
         /* --- Clock --- */
         if(config.showClock === false){
@@ -827,11 +829,28 @@ body:not(.idle){cursor:default}
             }, 4000);
             img.src = mediaSrc;
             img.alt = m.name;
+            // Auto-fit por aspect ratio: se imagem mais larga ou mais alta que a tela
+            // alem da tolerancia, forca 'contain' pra nao cortar conteudo importante
+            // (ex: cardapio horizontal 21:9 em TV 16:9 - cortaria sabores das pontas).
+            // Caso contrario, respeita o fit configurado pelo admin (default cover/contain).
             img.style.objectFit = fit;
             img.onload = function(){
                 if(imgHandled) return;
                 imgHandled = true;
                 clearTimeout(imgTimeout);
+                try {
+                    var screenRatio = window.innerWidth / window.innerHeight;
+                    var imgRatio = (img.naturalWidth || 1) / (img.naturalHeight || 1);
+                    // Tolerancia 8% — pequenas diferenças ainda usam o fit normal.
+                    // Se aspect da imagem desvia +8% (mais wide OU mais tall) que a tela,
+                    // forca contain pra preservar todo o conteudo visual.
+                    var ratioDelta = Math.abs(imgRatio - screenRatio) / screenRatio;
+                    if (ratioDelta > 0.08) {
+                        img.style.objectFit = 'contain';
+                        // Fundo gradient escuro pra letterbox nao ficar branco/feio
+                        img.style.background = 'linear-gradient(135deg,#0A0A1A 0%,#1A1A2E 100%)';
+                    }
+                } catch(_) { /* fallback silencioso pro fit configurado */ }
                 startProgress(item.duration);
                 timer = setTimeout(playNext, item.duration);
             };

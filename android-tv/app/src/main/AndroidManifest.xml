@@ -46,6 +46,21 @@
             </intent-filter>
         </activity>
 
+        <!-- v2.0+: WebPlayerActivity e o player principal (WebView fullscreen).
+             Paridade 100% com https://milkypot.com/tv.html — todo o catalogo,
+             sabores, buffet, promos, sundae etc vem do web sem duplicar codigo.
+             hardwareAccelerated=true e mandatorio pra WebView com video/animacoes. -->
+        <activity
+            android:name=".WebPlayerActivity"
+            android:exported="false"
+            android:hardwareAccelerated="true"
+            android:screenOrientation="unspecified"
+            android:launchMode="singleTask"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode" />
+
+        <!-- PlayerActivity legacy v1.x: nao e mais lancada pelo Selector.
+             Mantida no manifest pra nao quebrar Heartbeat/AutoUpdater que
+             ainda podem referenciar a classe. Pode ser removida em v3.0. -->
         <activity
             android:name=".PlayerActivity"
             android:exported="false"
