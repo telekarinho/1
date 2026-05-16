@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #239 — 2026-05-16
+
+**Área:** UX — badge "Em breve · 17/06" no card Potinho Junino durante período de teaser
+
+**Contexto:** O tab Junina aparece no `cardapio.html` a partir de 03/06 (teaser), mas o produto só fica disponível em 17/06. O `renderJunina()` anterior mostrava o card como se o produto já estivesse à venda (badge "Edição Limitada", preço "a partir de R$ 10", CTA "Ver") sem nenhuma indicação de data de lançamento — criando falsa expectativa durante 14 dias de teaser.
+
+**O que pesquisou/analisou:**
+- Leu `renderJunina()` completo — confirmou ausência de lógica date-gated para disponibilidade vs. teaser
+- Verificou que o tab (03/06+) e o produto (17/06+) têm datas diferentes sem tratamento visual diferenciado
+- Confirmou que o link estático na seção de catálogo (linha 351) também não indicava a data de lançamento
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `cardapio.html` | `renderJunina()` agora bifurca: antes de 17/06 → badge âmbar "Em breve · 17/06" + preço "disponível em 17/06" + CTA "Saiba mais"; a partir de 17/06 → card normal original |
+| `cardapio.html` | Link estático linha 351 atualizado: "Edição Limitada Junho" → "Edição Limitada · disponível 17/06" |
+
+**Destaques técnicos:**
+- `var isAvailable = new Date() >= new Date('2026-06-17');` — zero dependência externa, funciona client-side
+- CTA "Saiba mais" mantém o link para `potinho-junino-londrina.html` (landing page com toda informação do produto) — usuário não fica sem destino
+- Cor do badge teaser: `#E8A317` (âmbar/laranja) diferente do badge de lançamento `#C0820A` (terra/junina) — distinção visual clara
+
+**Commit:** `cc55207`
+
+**Próximo passo sugerido:**
+- **Ciclo #240 — Conversão:** Criar roteiro de resposta automática DM para quem interagir com a enquete do Stories (03/06) — mensagem "Boa notícia vem aí 🐑💛" + link WA para pré-interesse no Potinho Junino. Prescrito ciclo #239 + #238.
+- **Ciclo #241 — SEO:** Verificar se `potinho-junino-londrina.html` tem `description` meta atualizado alinhado com "disponível 17/06" — pode estar com texto genérico de "em junho" sem data específica
+- **Ciclo #242 — Conteúdo:** Feed IG após enquete de 03/06: post resultado + countdown visual "faltam X dias para 17/06" — reaproveitamento do dado de demanda coletado pela enquete
+- **Operador (URGENTE — 14 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (URGENTE — 18 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #239 | 2026-05-16_
+
+---
+
 ## Ciclo #238 — 2026-05-16
 
 **Área:** Conteúdo — Stories enquete sabor junino 03/06 (demanda + engajamento)
