@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>MilkyPot — Métricas TV-Promo</title>
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/auth.js"></script>
+<style>
+body{font-family:'Nunito',sans-serif;background:#FAF9FC;margin:0}
+.page{padding:20px 24px;max-width:1280px;margin:0 auto}
+h1{font-family:'Baloo 2',cursive;color:#2D1747;font-size:26px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+.sub{color:#6B7280;font-size:14px;margin:0 0 22px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:18px}
+.kpi .num{font-family:'Baloo 2',cursive;font-size:32px;font-weight:900;color:#2D1747}
+.kpi .lbl{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:#6B7280;margin-top:4px;font-weight:800}
+table{width:100%;background:#fff;border:1px solid #E5E7EB;border-radius:14px;border-collapse:separate;border-spacing:0;overflow:hidden}
+th,td{padding:10px 14px;text-align:left;font-size:13px;border-bottom:1px solid #F3F4F6}
+th{background:#FAF9FC;font-weight:800;color:#374151;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+tr:last-child td{border-bottom:0}
+.bar{display:inline-block;height:8px;border-radius:4px;background:linear-gradient(90deg,#7E57C2,#FF4F8A);vertical-align:middle;margin-right:8px}
+.controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.controls select,.controls button{padding:8px 14px;border:1.5px solid #E5E7EB;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;background:#fff;cursor:pointer}
+.controls button.primary{background:#7E57C2;color:#fff;border-color:#7E57C2}
+.empty{text-align:center;padding:60px 20px;color:#9CA3AF}
+.empty .icon{font-size:60px;margin-bottom:12px}
+.slide-name{font-weight:700;color:#1F2937}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>📺 Métricas TV-Promo</h1>
+  <p class="sub">Quantos clientes viram cada slide na TV do desafio + scans nos QR codes. Atualiza ao vivo a cada 30s.</p>
+
+  <div class="controls">
+    <select id="periodSelect">
+      <option value="1">Hoje</option>
+      <option value="7" selected>Últimos 7 dias</option>
+      <option value="30">Últimos 30 dias</option>
+    </select>
+    <select id="franchiseSelect"><option value="">Todas as franquias</option></select>
+    <button class="primary" onclick="loadMetrics()">🔄 Atualizar</button>
+    <button onclick="window.location.href='configuracoes.html'">⚙️ Voltar</button>
+  </div>
+
+  <div class="row">
+    <div class="kpi"><div class="num" id="kpiViews">—</div><div class="lbl">Visualizações de slide</div></div>
+    <div class="kpi"><div class="num" id="kpiScans">—</div><div class="lbl">Scans em QR</div></div>
+    <div class="kpi"><div class="num" id="kpiConv">—</div><div class="lbl">Taxa de conversão</div></div>
+    <div class="kpi"><div class="num" id="kpiTopPromo">—</div><div class="lbl">Promoção mais escaneada</div></div>
+  </div>
+
+  <h3 style="font-family:'Baloo 2',cursive;color:#2D1747;margin:24px 0 10px">Por promoção</h3>
+  <table>
+    <thead><tr><th>Slide</th><th>Views</th><th>Scans</th><th>Taxa</th><th>Ranking</th></tr></thead>
+    <tbody id="byPromoBody"><tr><td colspan="5" class="empty"><div class="icon">📡</div>Carregando dados ao vivo…</td></tr></tbody>
+  </table>
+
+  <h3 style="font-family:'Baloo 2',cursive;color:#2D1747;margin:24px 0 10px">Últimos 20 scans</h3>
+  <table>
+    <thead><tr><th>Quando</th><th>Promo</th><th>Franquia</th><th>Destino</th></tr></thead>
+    <tbody id="recentScans"><tr><td colspan="4" class="empty">—</td></tr></tbody>
+  </table>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  if (typeof Auth !== 'undefined' && !Auth.requireAuth('franchisee')) return;
+
+  var PROMO_NAMES = {
+    raspadinha:'🎫 Raspadinha (pós-pagamento)',
+    milkyclube:'🐑 MilkyClube — cashback',
+    roleta:'🎰 Roleta da Sorte',
+    desafio10s:'⏱️ Desafio 10 segundos',
+    acerta300:'⚖️ Acertou 300g, não paga',
+    googlereview:'⭐ Google Review premiado',
+    instagram:'📸 Instagram @milkypotbr',
+    influencer:'💸 Programa Influencer',
+    streak:'🔥 Streak diário',
+    milkypass:'📱 MilkyPass (Wallet)'
+  };
+
+  function daysAgoKey(n){
+    var d = new Date(Date.now() - n*86400000);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0,10);
+  }
+
+  function loadFranchises(){
+    if (typeof firebase === 'undefined' || !firebase.firestore) return;
+    firebase.firestore().collection('datastore').doc('franchises').get().then(function(snap){
+      if (!snap.exists) return;
+      var raw = snap.data().value || '[]';
+      var list = JSON.parse(raw);
+      if (!Array.isArray(list)) list = list.franchises || [];
+      var sel = document.getElementById('franchiseSelect');
+      list.forEach(function(f){
+        var opt = document.createElement('option');
+        opt.value = f.id;
+        opt.textContent = f.name || f.id;
+        sel.appendChild(opt);
+      });
+    }).catch(function(){});
+  }
+
+  window.loadMetrics = async function(){
+    var days = parseInt(document.getElementById('periodSelect').value || '7', 10);
+    var fid = document.getElementById('franchiseSelect').value || '';
+    var cutoff = daysAgoKey(days - 1);
+
+    var db = firebase.firestore();
+    var q = db.collection('tv_promo_events').where('dayKey', '>=', cutoff);
+    if (fid) q = q.where('franchiseId', '==', fid);
+    var snap = await q.limit(5000).get().catch(function(){ return null; });
+    if (!snap) return;
+
+    var views = 0, scans = 0;
+    var byPromo = {};
+    var recent = [];
+    snap.forEach(function(doc){
+      var d = doc.data();
+      var pid = d.slideId || 'unknown';
+      if (!byPromo[pid]) byPromo[pid] = { views:0, scans:0 };
+      if (d.type === 'view') { views++; byPromo[pid].views++; }
+      if (d.type === 'scan') {
+        scans++; byPromo[pid].scans++;
+        recent.push({ ts: d.timestamp, pid: pid, fid: d.franchiseId || '-', to: (d.targetUrl||'').slice(0, 50) });
+      }
+    });
+
+    document.getElementById('kpiViews').textContent = views.toLocaleString('pt-BR');
+    document.getElementById('kpiScans').textContent = scans.toLocaleString('pt-BR');
+    var conv = views > 0 ? (scans / views * 100) : 0;
+    document.getElementById('kpiConv').textContent = conv.toFixed(2) + '%';
+    var top = Object.entries(byPromo).sort(function(a,b){ return b[1].scans - a[1].scans })[0];
+    document.getElementById('kpiTopPromo').textContent = top ? (PROMO_NAMES[top[0]] || top[0]).slice(0, 22) : '—';
+
+    var rows = Object.entries(byPromo)
+      .sort(function(a,b){ return b[1].scans - a[1].scans || b[1].views - a[1].views; })
+      .map(function(e){
+        var v = e[1].views, s = e[1].scans;
+        var rate = v > 0 ? (s/v*100).toFixed(2)+'%' : '—';
+        var maxBar = top ? Math.max(top[1].scans,1) : 1;
+        var w = Math.max(4, (s/maxBar*120));
+        return '<tr>'
+          + '<td class="slide-name">'+ (PROMO_NAMES[e[0]] || e[0]) +'</td>'
+          + '<td>'+ v.toLocaleString('pt-BR') +'</td>'
+          + '<td>'+ s.toLocaleString('pt-BR') +'</td>'
+          + '<td>'+ rate +'</td>'
+          + '<td><span class="bar" style="width:'+ w +'px"></span></td>'
+          + '</tr>';
+      });
+    document.getElementById('byPromoBody').innerHTML = rows.length
+      ? rows.join('')
+      : '<tr><td colspan="5" class="empty"><div class="icon">🍦</div>Nenhuma TV ainda registrou eventos no período. <br><small>Verifique que <code>milkypot.com/desafio.html?tv=1&franchise=...</code> está aberta.</small></td></tr>';
+
+    recent.sort(function(a,b){
+      var ta = a.ts && a.ts.toMillis ? a.ts.toMillis() : 0;
+      var tb = b.ts && b.ts.toMillis ? b.ts.toMillis() : 0;
+      return tb - ta;
+    });
+    var recentRows = recent.slice(0,20).map(function(r){
+      var when = r.ts && r.ts.toDate ? r.ts.toDate().toLocaleString('pt-BR') : '—';
+      return '<tr><td>'+ when +'</td><td>'+ (PROMO_NAMES[r.pid] || r.pid) +'</td><td>'+ r.fid +'</td><td><code style="font-size:11px">'+ r.to +'…</code></td></tr>';
+    });
+    document.getElementById('recentScans').innerHTML = recentRows.length
+      ? recentRows.join('')
+      : '<tr><td colspan="4" class="empty">Sem scans ainda — espere uns clientes apontarem celular pro QR.</td></tr>';
+  };
+
+  loadFranchises();
+  setTimeout(window.loadMetrics, 600);
+  setInterval(window.loadMetrics, 30000);
+})();
+</script>
+</body>
+</html>

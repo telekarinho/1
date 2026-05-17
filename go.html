@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MilkyPot — Redirecionando…</title>
+<style>
+body{font-family:'Baloo 2','Nunito',sans-serif;background:linear-gradient(135deg,#FF4F8A,#7E57C2);color:#fff;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:24px;text-align:center}
+.sheep{font-size:80px;animation:bounce 1.2s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+h1{font-size:clamp(22px,4vw,36px);margin:16px 0 8px;font-weight:900}
+p{font-size:clamp(14px,1.8vw,18px);opacity:.9;margin:0 0 18px}
+.fallback{background:rgba(255,255,255,.2);padding:12px 24px;border-radius:14px;color:#fff;text-decoration:none;font-weight:700;font-size:14px;display:inline-block;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="sheep">🐑</div>
+<h1>Tô levando você lá…</h1>
+<p>A ovelhinha tá registrando seu clique antes do redirect</p>
+<a class="fallback" id="manualLink" href="#" target="_blank">Toque aqui se não redirecionar em 3s</a>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="/js/core/firebase-config.js"></script>
+<script>
+(function(){
+  'use strict';
+  var p = new URLSearchParams(location.search);
+  var to = p.get('to') || '';
+  var promo = p.get('promo') || 'unknown';
+  var fid = p.get('fid') || '';
+  var source = p.get('source') || 'unknown';
+
+  // Sanity: so redireciona pra URLs https conhecidas (whitelist parcial).
+  // Bloqueia javascript:, data:, file:, etc — protege contra abuso de link.
+  var allowed = /^https:\/\/(g\.page|maps\.google|search\.google|google\.com|instagram\.com|www\.instagram\.com|tiktok\.com|www\.tiktok\.com|milkypot\.com|www\.milkypot\.com)\b/i;
+  var safeTarget = allowed.test(to) ? to : 'https://milkypot.com/';
+
+  document.getElementById('manualLink').href = safeTarget;
+
+  function track(cb){
+    try {
+      if (typeof firebase === 'undefined' || !firebase.firestore) return cb();
+      var today = new Date();
+      today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+      var dayKey = today.toISOString().slice(0,10);
+      firebase.firestore().collection('tv_promo_events').add({
+        type: 'scan',
+        slideId: promo,
+        franchiseId: fid,
+        source: source,
+        targetUrl: safeTarget,
+        userAgent: (navigator.userAgent || '').slice(0,120),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        dayKey: dayKey
+      }).then(cb).catch(cb);
+    } catch(_) { cb(); }
+  }
+
+  function go(){ try { location.replace(safeTarget); } catch(_) { location.href = safeTarget; } }
+
+  var done = false;
+  function once(){ if (done) return; done = true; go(); }
+  track(once);
+  setTimeout(once, 1200);
+})();
+</script>
+</body>
+</html>
