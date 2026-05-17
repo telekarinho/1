@@ -1,12 +1,120 @@
 # The Best Açaí — Análise Competitiva
 
-**Última atualização:** 2026-05-11 (Ciclo #196 — Festival Junino padrão 2025 confirmado + projeção 2026 + "The Best Donuts" + preço Gleba Palhano R$6,29 + estratégia inverno)
+**Última atualização:** 2026-05-17 (Ciclo #246 — Piscininha campanha 06/06–06/07 + Aurora Shopping quiosque Londrina confirmado + preço R$6,49 + waffle bites)
+**Fontes ciclo #246:** patoshoje.com.br, abcdacomunicacao.com.br, jornaldobras.com.br, thebestacai.com.br/blog, portaldofranchising.com.br, aurorashopping.com.br, exame.com, revistasaoroque.com.br, WebSearch
 **Fontes ciclo #196:** folhadecuritiba.com.br, abcdacomunicacao.com.br, cervanacaneca.blogspot.com, foodbizbrasil.com, vipzinho.com.br, tiktok @marceladegusta, WebSearch
 **Fontes ciclo #187:** gomesaltimari.com.br, mercadoeconsumo.com.br, meioemensagem.com.br, exame.com, thebestacai.com.br, WebSearch
 **Fontes ciclo #167:** mercadoeconsumo.com.br, soubh.uai.com.br, TikTok @marceladegusta, vipzinho.com.br, franquias.portaldofranchising.com.br, foodbizbrasil.com
 **Fontes ciclo #151:** vipzinho.com.br, foodbizbrasil.com, suafranquia.com, odiariodemaringa.com.br, dezminutos.com.br
 **Fontes anteriores:** ifood.com.br, gazetadopovo.com.br, temlondrina.com.br, tiktok @marceladegusta, portaldofranchising.com.br, foodbizbrasil.com, suafranquia.com, franquiadeacai.com, jornaluniao.com.br, exame.com, braziljournal.com, portaltela.com, mercadoeconsumo.com.br, aurorashopping.com.br
 **Fontes ciclo #116:** gazetadasemana.com.br, thebestacai.com.br/thebestday (bloqueado), cidadeoferta.com.br, ubereats.com/br, portaltela.com, TikTok @marceladegusta
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #246 — 2026-05-17
+
+### ALERTA CRÍTICO: 4ª Unidade em Londrina + Campanha Piscininha (pistacho!) Ativa no Período Namorados/Junina
+
+---
+
+### 1. Aurora Shopping — Quiosque Londrina CONFIRMADO (4ª unidade)
+
+**Fontes:** aurorashopping.com.br, portaldofranchising.com.br, exame.com
+
+- **Status:** Confirmado como unidade operacional — listada no site Aurora Shopping
+- **Formato:** Quiosque (modelo novo/piloto para expansão nacional)
+- **Localização:** Aurora Shopping, Gleba Palhano, Londrina-PR
+- **Investimento:** ~R$150 mil (vs. R$200k–500k lojas regulares)
+- **Receita esperada:** R$60k/mês · Payback 16–20 meses
+- **Menu:** ~16 opções entre açaí e sorvetes — cardápio reduzido vs. lojas completas (12 açaí + 24 sorvetes + 40 toppings)
+- **Operação:** Self-service com totem — menos funcionários necessários
+- **Estratégia nacional:** Piloto para 300–500 quiosques em shoppings, metrôs e mercados
+
+#### Mapa de unidades TheBest em Londrina (atualizado)
+
+| # | Local | Endereço | Preço/100g | Formato |
+|---|-------|----------|-----------|---------|
+| 1 | Gleba Palhano (maior loja) | Rua Caracas, 159 | R$6,29 | Loja completa (310m²) |
+| 2 | Arthur Thomas | Av. Arthur Thomas, 831 | R$5,99 | Loja reinaugurada jul/2024 |
+| 3 | Catuaí Shopping | Catuaí Londrina | N/C | Loja |
+| 4 | **Aurora Shopping** *(NOVO)* | Gleba Palhano | ~R$6,29–6,49 | **Quiosque (piloto nacional)** |
+
+**Implicação estratégica para MilkyPot:**
+- TheBest agora está em 4 pontos de Londrina — cobertura geográfica de shopping premium (Aurora + Catuaí) + bairro (Gleba Palhano) + corredor comercial (Arthur Thomas)
+- Muffato Av. Quintino Bocaiuva = ainda o único ponto sem cobertura TheBest — MilkyPot é o único açaí/potinho premium no raio do Muffato
+- O modelo quiosque (R$60k/mês, operação lean) reforça que TheBest está escalando presença em Londrina agressivamente
+
+---
+
+### 2. The Best Piscininha — Campanha 06/06–06/07/2026 (ATIVO durante Namorados + Junina)
+
+**Fontes:** abcdacomunicacao.com.br, jornaldobras.com.br, thebestacai.com.br/blog, patoshoje.com.br, revistasaoroque.com.br
+
+**Período:** 06/06/2026 a 06/07/2026 — cobertura total de Namorados (12/06) + São João (24/06)
+
+| Atributo | Detalhe |
+|---|---|
+| **Nome** | The Best Piscininha |
+| **Formato** | Porção-"piscina" de creme/cobertura para mergulhar toppings, frutas, açaí, waffle |
+| **Mecânica** | Pede uma piscininha de sabor escolhido → mergulha o que quiser → instagrammável |
+| **Sabores** | Rocca dulce de leche · Creme de pistache · Chocolate ao leite |
+| **Edição** | Limitada — enquanto durar o estoque por unidade |
+| **Preço** | Cobrado no bufê (~R$6,49/100g) — sem preço unitário fixo confirmado |
+| **Ângulo** | "Mergulha em uma nova experiência" / "inverno atrevido e delicioso" |
+| **UGC** | Alto — formato instagrammável por design |
+
+#### ⚠️ ALERTA PISTACHE — Convergência Direta
+
+O ciclo #226 havia sinalizado "alerta de convergência pistache" (JAH/MooBai). A Piscininha da TheBest **confirma a tendência nacional** e a traz para o bufê self-service das 4 unidades de Londrina:
+
+- **Piscininha de creme de pistache** estará disponível nas lojas Londrina de 06/06 a 06/07
+- TheBest entrou no trend pistacho via Piscininha antes do MilkyPot lançar o Potinho Junino (17/06)
+- Clientes que buscam pistacho premium podem ir para TheBest Gleba Palhano/Aurora **antes** de descobrir o Potinho Junino
+
+**Diferenciação MilkyPot vs. Piscininha TheBest:**
+
+| Dimensão | TheBest Piscininha | MilkyPot Potinho Junino |
+|---|---|---|
+| **Formato** | Bufê self-service (pesa e paga por grama) | Potinho montado — experiência curada |
+| **Personalização** | Você monta livre, mas sem guia | Ovelhinha sugere combinações temáticas |
+| **Narrativa** | "Mergulha" (conceito genérico de inverno) | Festa Junina + Londrina + ovelhinha |
+| **Preço base** | ~R$6,49/100g (variável pelo peso) | Preço fixo (previsível) — melhor para pedido delivery |
+| **Canais** | Presencial (todas unidades) | WhatsApp delivery + retirada no Muffato |
+| **Pistacho** | Sim (Piscininha) | A confirmar pelo operador |
+
+**Recomendação para copy:** Se o operador confirmar pistacho no Potinho Junino, o copy pode explorar "potinho personalizado da ovelhinha vs. açaí genérico" — sem nomear TheBest, mas posicionando o formato potinho como superior em cuidado e personalização.
+
+---
+
+### 3. The Best Waffle — Retorno com Formato "Waffle Bites" (junho 2026)
+
+**Fonte:** patoshoje.com.br, lojas.thebestacai.com.br/waffle
+
+- **Produto:** Waffle feito na hora (caramelizado) + novo formato Waffle Bites (pedaços práticos, sem garfo)
+- **Preço:** Cobrado no bufê — sem custo extra confirmado
+- **Posicionamento:** "Seu waffle, suas regras" — personalização de cobertura (açaí, sorvete, frutas)
+- **Período:** Aparentemente permanente com destaque de junho 2026
+- **Para MilkyPot:** Sem impacto direto — MilkyPot não tem waffle, diferenciação é pelo potinho, não pelo formato waffle. Ambos podem coexistir sem conflito.
+
+---
+
+### 4. Preço Atualizado — R$6,49/100g (junho 2026)
+
+- **Preço nacional confirmado:** R$6,49/100g (vs. R$6,29 Gleba Palhano e R$5,99 Arthur Thomas de ciclos anteriores)
+- Possível reajuste geral ou preço da campanha Piscininha — não confirmado se é permanente
+- **Referência de paridade:** Potinho MilkyPot (preço fixo, previsível) vs. TheBest (paga pelo que pesa — ticket pode ser maior ou menor dependendo do consumo)
+
+---
+
+### Mapa de Ameaças Atualizado (Ciclo #246)
+
+| Ameaça | Urgência | Janela |
+|--------|---------|--------|
+| Aurora Shopping 4ª unidade | 🟡 Média | Permanente |
+| Piscininha pistacho 06/06–06/07 | 🔴 Alta | Sobrepõe Namorados + Junina |
+| Sorvetes juninos TheBest ~26/06 | 🟡 Média | Pós-São João |
+| Modelo quiosque (escalabilidade) | 🟡 Média | Longo prazo |
+| Waffle Bites | 🟢 Baixa | Sem conflito direto |
 
 ---
 
