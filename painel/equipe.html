@@ -42,6 +42,7 @@
             <a href="equipe.html" class="sidebar-link active"><span class="icon">👥</span> Equipe</a>
             <a href="ponto.html" class="sidebar-link"><span class="icon">⏰</span> Ponto Eletronico</a>
             <a href="colaboradores-hub.html" class="sidebar-link"><span class="icon">📨</span> Solicitações & Avisos</a>
+            <a href="relatorio-clt.html" class="sidebar-link"><span class="icon">📊</span> Relatório CLT</a>
             <a href="fidelidade.html" class="sidebar-link"><span class="icon">🎁</span> Fidelidade</a>
             <a href="ifood.html" class="sidebar-link"><span class="icon">🛵</span> iFood</a>
             <div class="sidebar-nav-group">Midia da Loja</div>
@@ -247,6 +248,13 @@
                         <label>Carga semanal (h)</label>
                         <input type="number" id="inputCargaSemanal" value="44" min="1" max="44" class="form-control">
                     </div>
+                </div>
+
+                <!-- 🎉 Horário especial domingo/feriado (mercado fecha mais cedo) -->
+                <div class="form-group" style="background:#EFF6FF;border-left:4px solid #3B82F6;padding:10px 14px;border-radius:8px;margin-bottom:14px">
+                    <label style="color:#1E40AF">🎉 Saída em domingo/feriado (loja fecha mais cedo)</label>
+                    <p style="font-size:.78rem;color:#1E40AF;margin:4px 0 8px">Ex: shopping/mercado fecha 20h domingo. Se vazio, usa hora normal.</p>
+                    <input type="time" id="inputHoraSaidaDomFer" placeholder="20:00" class="form-control" style="max-width:200px">
                 </div>
 
                 <div class="form-group">
@@ -695,6 +703,7 @@
             document.getElementById('inputJornadaTipo').value = '5x2';
             document.getElementById('inputHoraEntrada').value = '08:00';
             document.getElementById('inputHoraSaida').value = '18:00';
+            document.getElementById('inputHoraSaidaDomFer').value = '';
             document.getElementById('inputAlmocoMin').value = '60';
             document.getElementById('inputCargaSemanal').value = '44';
             document.getElementById('inputAdicionalNoturno').checked = false;
@@ -812,6 +821,7 @@
             document.getElementById('inputJornadaTipo').value = j.tipo || '5x2';
             document.getElementById('inputHoraEntrada').value = j.hora_entrada || '08:00';
             document.getElementById('inputHoraSaida').value = j.hora_saida || '18:00';
+            document.getElementById('inputHoraSaidaDomFer').value = j.hora_saida_dom_feriado || '';
             document.getElementById('inputAlmocoMin').value = j.intervalo_almoco_min || 60;
             document.getElementById('inputCargaSemanal').value = staff.carga_horaria_semanal || 44;
             document.getElementById('inputAdicionalNoturno').checked = !!staff.adicional_noturno;
@@ -871,12 +881,14 @@
                 if (!confirm('Carga semanal acima de 44h excede o limite da CLT (art. 7 XIII). Confirma assim mesmo?')) return;
             }
 
+            var horaSaidaDomFer = document.getElementById('inputHoraSaidaDomFer').value || '';
             var jornada = {
                 tipo: jornadaTipo,
                 hora_entrada: horaEntrada,
                 hora_saida: horaSaida,
                 intervalo_almoco_min: almocoMin,
-                folgas: folgas.length ? folgas : ['domingo']
+                folgas: folgas.length ? folgas : ['domingo'],
+                hora_saida_dom_feriado: horaSaidaDomFer  // 🎉 saída especial domingo/feriado (loja fecha cedo)
             };
 
             // 📸 Foto de referência (anti-fraude ponto). Pode ser '' (não tem) ou dataUrl JPEG 320x320
@@ -1058,17 +1070,17 @@
 <script src="../js/pages/lilo-scanner.js" defer></script>
 <<<<<<< HEAD
 <<<<<<< HEAD
-<script src="../js/core/belinha-page-scanners.js?v=mp-v284" defer></script>
-<script src="../js/core/belinha-widget.js?v=mp-v284" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v285" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v285" defer></script>
 =======
-<script src="../js/core/belinha-page-scanners.js?v=mp-v284" defer></script>
-<script src="../js/core/belinha-widget.js?v=mp-v284" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v285" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v285" defer></script>
 =======
-<script src="../js/core/belinha-page-scanners.js?v=mp-v284" defer></script>
-<script src="../js/core/belinha-widget.js?v=mp-v284" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v285" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v285" defer></script>
 =======
-<script src="../js/core/belinha-page-scanners.js?v=mp-v284" defer></script>
-<script src="../js/core/belinha-widget.js?v=mp-v284" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v285" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v285" defer></script>
 >>>>>>> origin/main
 >>>>>>> origin/main
 </body>

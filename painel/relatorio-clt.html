@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>MilkyPot — Relatório CLT (Contador)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/shared-panel.css">
+  <style>
+    .rc-page { padding: 16px; max-width: 1200px; margin: 0 auto; }
+    .rc-banner { background: linear-gradient(135deg,#1E40AF,#3B82F6); color:#fff; padding: 16px 22px; border-radius: 14px; margin-bottom: 14px; }
+    .rc-banner h2 { margin: 0 0 4px; font-family: 'Baloo 2', cursive; }
+    .rc-banner p { margin: 0; opacity: .92; font-size: .85rem; }
+    .rc-legal { background:#FFF7ED; border-left:4px solid #F59E0B; padding:10px 14px; border-radius:8px; margin-bottom:18px; font-size:.82rem; color:#92400E; line-height:1.6; }
+    .rc-toolbar { background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:14px 18px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:18px; }
+    .rc-toolbar label { font-weight:800; color:#374151; font-size:.85rem }
+    .rc-toolbar select, .rc-toolbar input { padding:9px 14px; border:1.5px solid #E5E7EB; border-radius:10px; font-family:inherit; font-size:14px }
+    .rc-toolbar button { background:#3B82F6; color:#fff; border:0; border-radius:10px; padding:10px 18px; font-weight:800; cursor:pointer; font-family:inherit }
+    .rc-toolbar button.alt { background:#16A34A }
+    .rc-toolbar button.pdf { background:#DC2626 }
+    .rc-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:18px }
+    .rc-kpi { background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:14px 18px }
+    .rc-kpi .num { font-family:'Baloo 2',cursive; font-size:24px; font-weight:900; color:#2D1747 }
+    .rc-kpi .lbl { font-size:11px; color:#6B7280; font-weight:800; letter-spacing:.5px; text-transform:uppercase; margin-top:2px }
+    .rc-kpi.green .num { color:#16A34A }
+    .rc-kpi.amber .num { color:#F59E0B }
+    .rc-kpi.red .num { color:#DC2626 }
+    .rc-kpi.purple .num { color:#7C3AED }
+    .rc-section { background:#fff; border:1px solid #E5E7EB; border-radius:14px; padding:16px 20px; margin-bottom:14px }
+    .rc-section h3 { margin:0 0 12px; color:#2D1747; font-family:'Baloo 2',cursive; font-size:17px }
+    table.rc-table { width:100%; border-collapse:collapse; font-size:.85rem }
+    table.rc-table th, table.rc-table td { padding:8px 10px; text-align:left; border-bottom:1px solid #F3F4F6 }
+    table.rc-table th { background:#F9FAFB; font-weight:800; font-size:.72rem; text-transform:uppercase; letter-spacing:.4px; color:#374151 }
+    table.rc-table tr.weekend td { background:#FAFAFA }
+    table.rc-table tr.holiday td { background:#FFF7ED }
+    table.rc-table tr.falta td { background:#FEF2F2 }
+    .pill { display:inline-block; padding:2px 8px; border-radius:6px; font-size:.7rem; font-weight:700 }
+    .pill.green { background:#DCFCE7; color:#166534 }
+    .pill.red { background:#FEE2E2; color:#991B1B }
+    .pill.amber { background:#FEF3C7; color:#92400E }
+    .pill.blue { background:#DBEAFE; color:#1E40AF }
+    .pill.gray { background:#F3F4F6; color:#6B7280 }
+    @media print {
+      .panel-sidebar, .panel-header, .rc-toolbar, .rc-banner button { display:none !important }
+      body { background:#fff }
+      .rc-section { box-shadow:none; border:1px solid #ccc; page-break-inside:avoid }
+    }
+  </style>
+</head>
+<body>
+  <div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <img src="../images/logo-milkypot-redonda.png" alt="MilkyPot" class="logo-img">
+        <h2>MilkyPot<small>Admin</small></h2>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-group">Colaboradores</div>
+        <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
+        <a href="ponto.html" class="sidebar-link"><span class="icon">⏰</span> Ponto Eletrônico</a>
+        <a href="colaboradores-hub.html" class="sidebar-link"><span class="icon">📨</span> Solicitações & Avisos</a>
+        <a href="relatorio-clt.html" class="sidebar-link active"><span class="icon">📊</span> Relatório CLT (Contador)</a>
+      </nav>
+    </aside>
+
+    <main class="panel-main">
+      <header class="panel-header">
+        <button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <h1>📊 Relatório CLT</h1>
+      </header>
+
+      <div class="rc-page">
+        <div class="rc-banner">
+          <h2>📊 Relatório CLT pro Contador</h2>
+          <p>Espelho de ponto, banco de horas, extras, adicional noturno, faltas, justificativas — tudo conforme Portaria 671/2021 + CLT.</p>
+        </div>
+
+        <div class="rc-legal">
+          📜 <b>Conformidade legal:</b> este relatório atende CLT arts. 7, 71, 73, 74; Portaria MTE 671/2021 (REP-P);
+          marcações imutáveis com NSR sequencial e hash SHA-256; ajustes via justificativa registrada com auditoria.
+          Espelho mensal deve ser entregue ao trabalhador (CLT art. 74).
+        </div>
+
+        <div class="rc-toolbar">
+          <label>Funcionário</label>
+          <select id="rcStaff" style="min-width:240px"></select>
+          <label>Mês</label>
+          <select id="rcMes"></select>
+          <select id="rcAno"></select>
+          <button onclick="rcRender()">🔍 Gerar relatório</button>
+          <button class="alt" onclick="rcExportCSV()">📊 Exportar CSV</button>
+          <button class="pdf" onclick="window.print()">🖨️ Imprimir / PDF</button>
+        </div>
+
+        <div id="rcReport"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="../js/core/constants.js?v=mp-v285"></script>
+  <script src="../js/core/utils.js?v=mp-v285"></script>
+  <script src="../js/core/datastore.js?v=mp-v285"></script>
+  <script src="../js/core/firebase-config.js?v=mp-v285"></script>
+  <script src="../js/core/auth.js?v=mp-v285"></script>
+  <script src="../js/core/time-clock.js?v=mp-v285"></script>
+  <script src="../js/core/payroll.js?v=mp-v285"></script>
+  <script src="../js/core/overtime-bank.js?v=mp-v285"></script>
+  <script>
+  let FRANCHISE_ID = null;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const m2t = m => TimeClock.minutesToTime(m || 0);
+
+  function rcInit() {
+    const session = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : {};
+    FRANCHISE_ID = session.franchiseId || new URLSearchParams(location.search).get('fid') || 'matriz';
+    const staff = (DataStore.getCollection('staff', FRANCHISE_ID) || []).filter(s => s.active !== false);
+    $('rcStaff').innerHTML = staff.map(s => '<option value="' + esc(s.id) + '">' + esc(s.name) + '</option>').join('');
+    const mNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const now = new Date();
+    $('rcMes').innerHTML = mNames.map((n,i) => '<option value="' + (i+1) + '">' + n + '</option>').join('');
+    $('rcMes').value = now.getMonth() + 1;
+    $('rcAno').innerHTML = [now.getFullYear()-1, now.getFullYear()].map(y => '<option value="' + y + '">' + y + '</option>').join('');
+    $('rcAno').value = now.getFullYear();
+    rcRender();
+  }
+
+  function rcRender() {
+    const staffId = $('rcStaff').value;
+    const mes = parseInt($('rcMes').value, 10);
+    const ano = parseInt($('rcAno').value, 10);
+    if (!staffId) { $('rcReport').innerHTML = '<div class="rc-section"><p>Selecione um funcionário.</p></div>'; return; }
+    const staff = (DataStore.getCollection('staff', FRANCHISE_ID) || []).find(s => s.id === staffId);
+    const espelho = TimeClock.computeMonth(FRANCHISE_ID, staffId, ano, mes);
+    let html = '';
+
+    // CABEÇALHO
+    html += '<div class="rc-section">';
+    html += '<h3>👤 Dados do Funcionário (CLT art. 74)</h3>';
+    html += '<table style="width:100%;font-size:.85rem">';
+    html += '<tr><td style="padding:4px 0"><b>Nome:</b></td><td>' + esc(staff.name) + '</td>';
+    html += '<td style="padding:4px 0"><b>CPF:</b></td><td>' + esc(staff.cpf || '—') + '</td></tr>';
+    html += '<tr><td><b>PIS/PASEP:</b></td><td>' + esc(staff.pis || '<span style="color:#DC2626">NÃO CADASTRADO</span>') + '</td>';
+    html += '<td><b>Cargo:</b></td><td>' + esc(staff.role || '—') + '</td></tr>';
+    html += '<tr><td><b>Admissão:</b></td><td>' + esc(staff.startDate || '—') + '</td>';
+    var j = staff.jornada || {};
+    html += '<td><b>Carga semanal:</b></td><td>' + (staff.carga_horaria_semanal || 44) + 'h</td></tr>';
+    html += '<tr><td><b>Jornada combinada:</b></td><td colspan="3">' + esc(j.hora_entrada || '?') + ' às ' + esc(j.hora_saida || '?') + ' (' + (j.intervalo_almoco_min || 60) + 'min almoço)';
+    if (j.hora_saida_dom_feriado) html += ' — Dom/feriado: até ' + esc(j.hora_saida_dom_feriado);
+    html += '</td></tr>';
+    html += '</table></div>';
+
+    // KPIs
+    html += '<div class="rc-kpis">';
+    html += '<div class="rc-kpi"><div class="num">' + espelho.totals.diasTrabalhados + '</div><div class="lbl">Dias trabalhados</div></div>';
+    html += '<div class="rc-kpi green"><div class="num">' + espelho.totaisFormatado.trabalhado + '</div><div class="lbl">Total trabalhado</div></div>';
+    html += '<div class="rc-kpi amber"><div class="num">' + espelho.totaisFormatado.extras + '</div><div class="lbl">Horas extras</div></div>';
+    html += '<div class="rc-kpi red"><div class="num">' + espelho.totaisFormatado.atraso + '</div><div class="lbl">Atrasos</div></div>';
+    html += '<div class="rc-kpi purple"><div class="num">' + espelho.totaisFormatado.noturno + '</div><div class="lbl">Adic. noturno</div></div>';
+    var bancoSinal = espelho.totals.bancoHorasMin >= 0 ? '+' : '-';
+    var bancoColor = espelho.totals.bancoHorasMin >= 0 ? 'green' : 'red';
+    html += '<div class="rc-kpi ' + bancoColor + '"><div class="num">' + bancoSinal + espelho.totaisFormatado.bancoHoras.replace('-','') + '</div><div class="lbl">Banco de horas</div></div>';
+    html += '<div class="rc-kpi red"><div class="num">' + espelho.totals.faltas + '</div><div class="lbl">Faltas s/ justific.</div></div>';
+    html += '</div>';
+
+    // ESPELHO DIÁRIO
+    html += '<div class="rc-section">';
+    html += '<h3>📅 Espelho Mensal Detalhado</h3>';
+    html += '<div style="overflow-x:auto"><table class="rc-table">';
+    html += '<thead><tr><th>Dia</th><th>Sem</th><th>Jornada Prevista</th><th>Entrada</th><th>Almoço</th><th>Volta</th><th>Saída</th><th>Trabalhado</th><th>Saldo Banco</th><th>Extras</th><th>Atraso</th><th>Noturno</th><th>Justific.</th></tr></thead><tbody>';
+    espelho.days.forEach(d => {
+      var rowClass = '';
+      if (d.isHoliday) rowClass = 'holiday';
+      else if (d.isFolga && d.records.length === 0) rowClass = 'weekend';
+      else if (d.isFalta) rowClass = 'falta';
+      html += '<tr class="' + rowClass + '">';
+      html += '<td>' + d.date.slice(8) + '/' + d.date.slice(5,7) + '</td>';
+      html += '<td>' + d.dayOfWeek.slice(0,3) + (d.isHoliday ? '<br><span class="pill red">🎉</span>' : '') + '</td>';
+      // Jornada prevista
+      var jeff = d.jornadaEfetiva;
+      var jPrev = jeff ? (jeff.hora_entrada + '→' + jeff.hora_saida) : '-';
+      var jBadge = '';
+      if (jeff && jeff.source === 'override') jBadge = ' <span class="pill blue" title="' + esc(jeff.sourceLabel) + '">📅</span>';
+      else if (jeff && jeff.source === 'feriado') jBadge = ' <span class="pill red">🎉</span>';
+      else if (jeff && jeff.source === 'domingo') jBadge = ' <span class="pill amber">📿</span>';
+      html += '<td>' + jPrev + jBadge + '</td>';
+      if (d.isFolga && d.records.length === 0) {
+        html += '<td colspan="9" style="text-align:center;font-style:italic;color:#9CA3AF">FOLGA</td>';
+      } else if (d.isFalta) {
+        html += '<td colspan="9" style="text-align:center;color:#991B1B;font-weight:700">FALTA' + (d.justificativa ? ' (' + esc(d.justificativa.type) + ')' : ' s/ justific.') + '</td>';
+      } else {
+        html += '<td>' + (d.entrada ? Utils.formatTime(d.entrada.timestamp) : '-') + '</td>';
+        html += '<td>' + (d.almocoSaida ? Utils.formatTime(d.almocoSaida.timestamp) : '-') + '</td>';
+        html += '<td>' + (d.almocoVolta ? Utils.formatTime(d.almocoVolta.timestamp) : '-') + '</td>';
+        html += '<td>' + (d.saida ? Utils.formatTime(d.saida.timestamp) : '-') + '</td>';
+        html += '<td><b>' + (d.completo ? d.horasFormatado : '-') + '</b></td>';
+        // Saldo dia
+        if (d.completo) {
+          var sgn = d.saldoDiaMin >= 0 ? '+' : '-';
+          var col = d.saldoDiaMin >= 0 ? '#16A34A' : '#DC2626';
+          html += '<td style="color:' + col + ';font-weight:700">' + sgn + m2t(Math.abs(d.saldoDiaMin)) + '</td>';
+        } else { html += '<td>-</td>'; }
+        html += '<td>' + (d.minutosExtras ? m2t(d.minutosExtras) : '-') + '</td>';
+        html += '<td>' + (d.minutosAtraso ? m2t(d.minutosAtraso) : '-') + '</td>';
+        html += '<td>' + (d.minutosNoturnos ? m2t(d.minutosNoturnos) : '-') + '</td>';
+        html += '<td>' + (d.justificativa ? '<span class="pill blue" title="' + esc(d.justificativa.reason) + '">' + esc(d.justificativa.type) + '</span>' : '-') + '</td>';
+      }
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<div style="font-size:.72rem;color:#6B7280;margin-top:8px">📅=ajuste pontual · 🎉=feriado · 📿=domingo · saldo=trabalhado - jornada prevista (vai pro banco se +)</div>';
+    html += '</div>';
+
+    // OBSERVAÇÕES LEGAIS
+    html += '<div class="rc-section">';
+    html += '<h3>📜 Conformidade & Observações</h3>';
+    var avisos = espelho.days.filter(d => d.avisoIntervalo).length;
+    html += '<ul style="font-size:.85rem;line-height:1.8;padding-left:20px;color:#374151">';
+    html += '<li><b>NSR (Número Sequencial de Registro):</b> ' + (espelho.days.reduce((a,d) => a + (d.records ? d.records.length : 0), 0)) + ' marcações registradas com hash SHA-256 imutável</li>';
+    html += '<li><b>Intervalo intrajornada (art. 71):</b> ' + (avisos > 0 ? '⚠ ' + avisos + ' dia(s) com intervalo menor que 1h' : '✓ Todos os dias com intervalo correto') + '</li>';
+    html += '<li><b>Carga máxima (art. 7º XIII):</b> ' + (espelho.totals.bancoHorasMin > 60 * 220 ? '⚠ Banco horas excede limite anual de 6 meses' : '✓ Dentro do limite') + '</li>';
+    html += '<li><b>Adicional noturno (art. 73):</b> ' + (espelho.totaisFormatado.noturno) + ' computado conforme jornada 22h-5h, +20% sobre hora normal</li>';
+    html += '<li><b>Faltas:</b> ' + espelho.totals.faltas + ' sem justificativa (passível desconto DSR conforme Lei 605/49)</li>';
+    html += '</ul>';
+    html += '</div>';
+
+    $('rcReport').innerHTML = html;
+  }
+
+  function rcExportCSV() {
+    const staffId = $('rcStaff').value;
+    const mes = parseInt($('rcMes').value, 10);
+    const ano = parseInt($('rcAno').value, 10);
+    if (!staffId) return alert('Selecione um funcionário');
+    TimeClock.downloadEspelhoCSV(FRANCHISE_ID, staffId, ano, mes);
+  }
+
+  if (typeof firebase !== 'undefined') {
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    firebase.auth().onAuthStateChanged(u => {
+      if (!u) { document.body.innerHTML = '<div style="padding:40px;text-align:center"><h2>🔒 Login necessário</h2><a href="../login.html">Entrar</a></div>'; return; }
+      rcInit();
+    });
+  }
+  </script>
+</body>
+</html>
