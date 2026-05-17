@@ -175,8 +175,32 @@ const DataStore = {
         const col = this.getCollection(name, franchiseId);
         item.id = item.id || Utils.generateId();
         item.createdAt = item.createdAt || new Date().toISOString();
-        col.push(item);
+        // Guard contra duplicado (replay) — se id já existe, não duplica
+        if (!col.find(x => x && x.id === item.id)) {
+            col.push(item);
+        }
         this.setCollection(name, franchiseId, col);
+
+        // 🔄 RACE-FIX: pra collections mergeable (time_clock_*, orders_, etc),
+        // dispara um pull-then-merge IMEDIATAMENTE em background. Isso garante
+        // que se outro device escreveu mais cedo no Firestore (ex: Amanda bateu
+        // ponto no celular dela há 1h), o nosso write local NÃO sobrescreva os
+        // registros dela. _mergeListDoc faz union por id, mantendo todos.
+        try {
+            const key = this._collectionKey(name, franchiseId);
+            if (this._isMergeableListDoc(key) && this._db) {
+                this._db.collection('datastore').doc(key).get().then(doc => {
+                    if (!doc.exists) return;
+                    const merged = this._mergeListDoc(key, doc.data().value);
+                    if (merged.changed) {
+                        localStorage.setItem(this.PREFIX + key, merged.value);
+                        // Push merged version de volta pro cloud
+                        try { this._writeToCloud(key, JSON.parse(merged.value)); } catch (_) {}
+                        console.log('🔄 addToCollection race-fix: merged', key, '+ extras do cloud');
+                    }
+                }).catch(() => { /* offline ou sem permissão — write local já feito */ });
+            }
+        } catch (_) {}
         return item;
     },
 

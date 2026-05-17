@@ -1451,7 +1451,7 @@ function fnRenderBeneficios(session) {
         html += '<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px">'
             + '<div style="display:flex;gap:10px;align-items:center"><span style="font-size:1.4rem">' + icon + '</span>'
             + '<div><strong style="display:block;font-size:.88rem;color:#111827">' + Utils.escapeHtml(e.productName || e.tipoLabel) + '</strong>'
-            + '<small style="color:#6B7280;font-size:.72rem">' + e.date.split('-').reverse().join('/') + ' · ' + e.timestamp.slice(11,16) + ' · ' + Utils.escapeHtml(e.operatorName || '') + '</small></div></div>'
+            + '<small style="color:#6B7280;font-size:.72rem">' + e.date.split('-').reverse().join('/') + ' · ' + Utils.formatTime(e.timestamp) + ' · ' + Utils.escapeHtml(e.operatorName || '') + '</small></div></div>'
             + '<strong style="color:#16A34A">R$ ' + Number(e.value || 0).toFixed(2).replace('.', ',') + '</strong>'
             + '</div>';
     });
@@ -1477,7 +1477,7 @@ function fnRenderHoje(session, staff) {
     ];
     document.getElementById('todayMarks').innerHTML = marks.map(function(m) {
         var done = !!m.rec;
-        var time = m.rec ? m.rec.timestamp.slice(11, 16) : '--:--';
+        var time = m.rec ? Utils.formatTime(m.rec.timestamp) : '--:--';
         return '<div class="fn-marcacao' + (done ? ' done' : '') + '"><div class="lbl">' + m.lbl + '</div><div class="val">' + time + '</div></div>';
     }).join('');
 
@@ -1702,10 +1702,10 @@ function fnRenderMes(session) {
             rows += '<tr style="background:#FEF2F2"><td>' + d.date.slice(8) + '</td><td colspan="5" style="text-align:center;color:#991B1B">FALTA</td></tr>';
         } else {
             rows += '<tr><td>' + d.date.slice(8) + '</td>'
-                + '<td>' + (d.entrada ? d.entrada.timestamp.slice(11,16) : '-') + '</td>'
-                + '<td>' + (d.almocoSaida ? d.almocoSaida.timestamp.slice(11,16) : '-') + '</td>'
-                + '<td>' + (d.almocoVolta ? d.almocoVolta.timestamp.slice(11,16) : '-') + '</td>'
-                + '<td>' + (d.saida ? d.saida.timestamp.slice(11,16) : '-') + '</td>'
+                + '<td>' + (d.entrada ? Utils.formatTime(d.entrada.timestamp) : '-') + '</td>'
+                + '<td>' + (d.almocoSaida ? Utils.formatTime(d.almocoSaida.timestamp) : '-') + '</td>'
+                + '<td>' + (d.almocoVolta ? Utils.formatTime(d.almocoVolta.timestamp) : '-') + '</td>'
+                + '<td>' + (d.saida ? Utils.formatTime(d.saida.timestamp) : '-') + '</td>'
                 + '<td>' + (d.completo ? d.horasFormatado : '-') + '</td></tr>';
         }
     });
