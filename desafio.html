@@ -768,6 +768,12 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 
 <!-- STEP ATTRACT: SCREENSAVER -->
 <div class="step active attract" id="stepAttract">
+<!-- PROMO ROTATOR: ocupa a tela inteira como overlay quando ativo (modo TV).
+     Renderiza propagandas virais (Raspadinha, MilkyClube, Influencer, Combo
+     Monstro, Buffet 5,99, Desafio Balança) rotacionando a cada N segundos.
+     Click no overlay = fecha e mostra o desafio (ou aceita touch pra jogar). -->
+<div id="promoRotator" class="promo-rotator" onclick="window.dismissPromoOverlay && window.dismissPromoOverlay()"></div>
+
 <img src="images/logo-milkypot.png" alt="MilkyPot" class="attract-logo">
 <div class="attract-title">Desafio 10 MilkyPot</div>
 <div class="attract-sub">Pare o cronometro em <strong style="color:#FF0040">exatamente 5, 10 ou 30 segundos</strong> e ganhe premio!</div>
@@ -2665,8 +2671,55 @@ tvClaimingVoucher=false;
 function watchTvVoucherRelease(){
 if(!isStoreTvMode||!db||tvVoucherUnsub) return;
 try{
-tvVoucherUnsub=db.collection('desafio_vouchers').orderBy('createdAt','desc').limit(10).onSnapshot(function(){
-if(activeVoucher||gameState==='running'||gameState==='done') return;
+tvVoucherUnsub=db.collection('desafio_vouchers').orderBy('createdAt','desc').limit(10).onSnapshot(function(snap){
+/* Se desafio ESTA EM ANDAMENTO (cliente jogando agora), nao interrompe */
+if(gameState==='running') return;
+
+/* Procura voucher novo pronto pra TV (mesma logica do claim) */
+var picked=null, pickedId=null;
+try{
+snap.forEach(function(doc){
+if(picked) return;
+var d=doc.data();
+var remaining=(d.attempts||0)-(d.attemptsUsed||0);
+if(tvFranchiseId && d.franchiseId && d.franchiseId!==tvFranchiseId) return;
+if(d.tvReady===true && d.status==='ready' && !d.used && remaining>0){
+picked=d; pickedId=doc.id;
+}
+});
+}catch(e){console.warn('TV voucher scan:',e); return}
+
+if(!picked) return;
+
+/* BUG FIX: depois do 1o desafio, gameState='done' e activeVoucher ficava
+   travado ate o idleTimer de 60s. Se chegou um voucher NOVO (id diferente
+   do que ta ativo OU nenhum ativo), forca reset imediato pra atender o
+   proximo cliente em segundos, nao em minuto.
+   Cobre os casos:
+     1. activeVoucher=null + gameState=idle → liberacao normal (1o cliente)
+     2. activeVoucher antigo + gameState=done → reset e atende novo
+     3. activeVoucher diferente + qualquer estado nao-running → reset
+*/
+if(activeVoucher && activeVoucherCode===pickedId){
+/* Mesmo voucher de antes — ja foi processado, nao reativa */
+return;
+}
+
+if(gameState==='done' || (activeVoucher && activeVoucherCode!==pickedId)){
+/* Reset rapido pra liberar novo cliente sem esperar 60s de idle */
+try{
+activeVoucher=null;
+activeVoucherCode=null;
+gameState='idle';
+var c=document.getElementById('counter'); if(c) c.textContent='00:00.000';
+var gb=document.getElementById('gameBtn');
+if(gb){gb.className='btn btn-start'; gb.innerHTML='Iniciar Desafio &#9889;'}
+var st=document.getElementById('statusMsg'); if(st) st.textContent='';
+document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active')});
+var s0=document.getElementById('step0'); if(s0) s0.classList.add('active');
+}catch(e){console.warn('Quick reset:',e)}
+}
+
 claimNextTvVoucher();
 },function(err){console.warn('TV voucher watch:',err)});
 setTvReleaseStatus('Aguardando liberacao do PDV...');
@@ -2742,6 +2795,457 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   window.addEventListener('online',update);
   window.addEventListener('offline',update);
   if(!navigator.onLine) update();
+})();
+</script>
+
+<!-- ============================================================
+     PROMO ROTATOR + ÁUDIO ÉPICO — TV Desafio v2
+     Aditivo puro (REGRA #0). Coexiste com tudo que já existe.
+     6 propagandas virais rotacionando no attract + música épica
+     durante o desafio.
+     ============================================================ -->
+<style>
+.promo-rotator{
+  position:fixed; inset:0; z-index:50;
+  display:none; align-items:center; justify-content:center;
+  pointer-events:auto; cursor:pointer;
+  font-family:'Baloo 2',cursive;
+  overflow:hidden;
+}
+.promo-rotator.on{display:flex}
+.promo-slide{
+  width:100%; height:100%;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:6vh 6vw; text-align:center;
+  animation:promoIn .6s cubic-bezier(.2,.8,.2,1) both;
+  position:relative;
+}
+@keyframes promoIn{
+  from{opacity:0; transform:scale(.94)}
+  to{opacity:1; transform:scale(1)}
+}
+.promo-eyebrow{
+  font-size:clamp(13px,1.6vw,18px); font-weight:800;
+  letter-spacing:4px; text-transform:uppercase;
+  color:rgba(255,255,255,.85);
+  margin-bottom:18px; padding:8px 22px;
+  background:rgba(0,0,0,.18); border-radius:30px;
+}
+.promo-headline{
+  font-size:clamp(48px,8vw,128px); font-weight:900;
+  line-height:1; color:#fff; margin:0 0 24px;
+  text-shadow:0 6px 32px rgba(0,0,0,.35);
+  max-width:90vw;
+}
+.promo-subtext{
+  font-size:clamp(20px,2.6vw,36px); font-weight:700;
+  color:rgba(255,255,255,.92); margin:0 0 36px;
+  max-width:80vw; line-height:1.25;
+}
+.promo-emoji{
+  font-size:clamp(80px,12vw,180px); margin-bottom:14px;
+  animation:promoBounce 2.4s ease-in-out infinite;
+  filter:drop-shadow(0 10px 30px rgba(0,0,0,.3));
+}
+@keyframes promoBounce{
+  0%,100%{transform:translateY(0) rotate(-3deg)}
+  50%{transform:translateY(-18px) rotate(3deg)}
+}
+.promo-cta{
+  display:flex; align-items:center; gap:18px;
+  background:rgba(255,255,255,.95); color:#1A1A2E;
+  padding:18px 36px; border-radius:24px;
+  font-size:clamp(16px,2.2vw,26px); font-weight:800;
+  box-shadow:0 14px 40px rgba(0,0,0,.25);
+  margin-top:18px;
+}
+.promo-tap{
+  position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
+  color:rgba(255,255,255,.85);
+  font-size:clamp(13px,1.4vw,16px); font-weight:700;
+  letter-spacing:2px; text-transform:uppercase;
+  animation:promoTap 1.6s ease-in-out infinite;
+}
+@keyframes promoTap{
+  0%,100%{opacity:.6}
+  50%{opacity:1; transform:translateX(-50%) scale(1.04)}
+}
+.promo-progress{
+  position:absolute; top:0; left:0; right:0; height:4px;
+  background:rgba(255,255,255,.18);
+}
+.promo-progress::after{
+  content:''; display:block; height:100%;
+  background:#fff; width:0;
+  animation:promoTick var(--promo-dur,8s) linear forwards;
+}
+@keyframes promoTick{from{width:0}to{width:100%}}
+</style>
+
+<script>
+(function(){
+  'use strict';
+
+  // ---------- PROMO ROTATOR ----------
+  // Só ativa em modo TV indoor (URL ?tv=… ou ?kiosk=…)
+  var urlP = new URLSearchParams(location.search);
+  var isTvMode = urlP.has('tv') || urlP.has('kiosk');
+  if (!isTvMode) return;
+
+  // Brief Carousel Growth Engine — 6 anúncios virais
+  var SLIDES = [
+    { // 1. COMBO MONSTRO (abre forte, 5s)
+      emoji:'🥤🔥', eyebrow:'MILKYSHAKE 770ML',
+      headline:'770ml de PURO CAOS',
+      subtext:'O MilkyShake que não cabe na mão. Nem no story.',
+      cta:'Mostra esse QR no caixa = topping grátis',
+      bg:'linear-gradient(135deg,#7E57C2 0%,#42A5F5 100%)',
+      dur:6000
+    },
+    { // 2. RASPADINHA AO VIVO (cassino)
+      emoji:'🎰', eyebrow:'RASPA E GANHA',
+      headline:'Raspa aí, medroso 👀',
+      subtext:'Tem gente ganhando MilkyShake de graça agora.\nVocê tá só olhando?',
+      cta:'Aponta a câmera e raspa AGORA',
+      bg:'linear-gradient(135deg,#FF4F8A 0%,#7E57C2 100%)',
+      dur:8000
+    },
+    { // 3. INFLUENCER MODE (META — pede pra filmar a TV)
+      emoji:'💅📸', eyebrow:'PROGRAMA INFLUENCER',
+      headline:'Filma essa TV e ganha R$',
+      subtext:'Posta no story marcando @milkypot →\nvira influencer oficial → bonus toda semana.',
+      cta:'Vira influencer agora — cadastro 30s',
+      bg:'linear-gradient(135deg,#FF4F8A 0%,#FF8A65 100%)',
+      dur:10000
+    },
+    { // 4. DESAFIO DA BALANÇA (300g)
+      emoji:'🐑⚖️', eyebrow:'DESAFIO BALANÇA',
+      headline:'300g na ponta ou paga em dobro',
+      subtext:'Acertou na régua = sorvete grátis.\nErrou = a ovelhinha ri de você.',
+      cta:'Escaneia e vê o ranking dos craques',
+      bg:'linear-gradient(135deg,#42A5F5 0%,#FF4F8A 100%)',
+      dur:10000
+    },
+    { // 5. MILKYCLUBE (urgência R$5 pra cadastrar)
+      emoji:'💰', eyebrow:'CASHBACK MILKYCLUBE',
+      headline:'Você tá deixando dinheiro na mesa',
+      subtext:'Cada R$1 vira MilkyCoin. Acumula\ne some do boleto. Ovelhinha já depositou R$5 pra você.',
+      cta:'Cadastra em 7s — leva os R$5 agora',
+      bg:'linear-gradient(135deg,#7E57C2 0%,#FFD700 100%)',
+      dur:9000
+    },
+    { // 6. BUFFET 5,99 (info utilitária)
+      emoji:'🍦', eyebrow:'BUFFET SELF-SERVICE',
+      headline:'Monta. Pesa. Paga pouco.',
+      subtext:'R$ 5,99 / 100g. Calma na régua que\ndá pra fazer obra de arte.',
+      cta:'Vê o cardápio completo + coberturas',
+      bg:'linear-gradient(135deg,#42A5F5 0%,#80D8FF 100%)',
+      dur:7000
+    }
+  ];
+
+  var rotEl = document.getElementById('promoRotator');
+  if (!rotEl) return;
+  var promoIdx = -1;
+  var promoTimer = null;
+  var promoActive = false;
+
+  function renderSlide(s){
+    rotEl.style.background = s.bg;
+    rotEl.style.setProperty('--promo-dur', (s.dur/1000)+'s');
+    rotEl.innerHTML =
+      '<div class="promo-progress"></div>' +
+      '<div class="promo-slide">' +
+        '<div class="promo-eyebrow">'+ s.eyebrow +'</div>' +
+        '<div class="promo-emoji">'+ s.emoji +'</div>' +
+        '<h1 class="promo-headline">'+ s.headline +'</h1>' +
+        '<p class="promo-subtext">'+ s.subtext.replace(/\n/g,'<br>') +'</p>' +
+        '<div class="promo-cta">📱 '+ s.cta +'</div>' +
+        '<div class="promo-tap">👆 Toque pra jogar o Desafio 10s</div>' +
+      '</div>';
+  }
+
+  function nextPromo(){
+    promoIdx = (promoIdx + 1) % SLIDES.length;
+    var s = SLIDES[promoIdx];
+    renderSlide(s);
+    promoTimer = setTimeout(nextPromo, s.dur);
+  }
+
+  function startPromos(){
+    if (promoActive) return;
+    promoActive = true;
+    rotEl.classList.add('on');
+    nextPromo();
+  }
+  function stopPromos(){
+    promoActive = false;
+    if (promoTimer) { clearTimeout(promoTimer); promoTimer = null; }
+    rotEl.classList.remove('on');
+    rotEl.innerHTML = '';
+  }
+
+  // Expor pra que o JS principal possa chamar
+  window.startPromoRotator = startPromos;
+  window.stopPromoRotator = stopPromos;
+  window.dismissPromoOverlay = function(){
+    stopPromos();
+    // Quando user toca a TV, ela vira o cronômetro/desafio
+    // (a lógica do desafio.html já lida com touch via stepAttract listener)
+  };
+
+  // Auto-inicia depois de 4s no attract pra dar tempo da UI carregar
+  setTimeout(function(){
+    // Só ativa se estamos no attract e o desafio não está rodando
+    var attract = document.getElementById('stepAttract');
+    if (attract && attract.classList.contains('active')) startPromos();
+  }, 4000);
+
+  // Para o rotator quando o cliente está no fluxo de desafio
+  var origStop = window.stopAttract;
+  window.stopAttract = function(){
+    stopPromos();
+    if (typeof origStop === 'function') return origStop();
+  };
+  var origStart = window.startAttract;
+  window.startAttract = function(){
+    if (typeof origStart === 'function') origStart();
+    // Volta a propaganda 2s depois de voltar pro attract
+    setTimeout(function(){
+      var a = document.getElementById('stepAttract');
+      if (a && a.classList.contains('active')) startPromos();
+    }, 2000);
+  };
+
+
+  // ---------- ÁUDIO ÉPICO ----------
+  // Reforça o startTensionSound existente com beats de coração + crescendo.
+  // Roda em paralelo (não substitui — REGRA #0). Audible só durante desafio.
+  var epicCtx = null;
+  var epicNodes = [];
+  function ensureEpic(){
+    try {
+      if (!epicCtx) epicCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (epicCtx.state === 'suspended') epicCtx.resume();
+    } catch(_) {}
+  }
+  function heartbeat(intervalMs, totalSec){
+    if (!epicCtx) return;
+    var t = 0;
+    var iv = setInterval(function(){
+      if (t > totalSec * 1000) { clearInterval(iv); return; }
+      // Batida grave dupla (tum-tum) tipo coração
+      var t0 = epicCtx.currentTime;
+      [60, 80].forEach(function(f, i){
+        var o = epicCtx.createOscillator();
+        var g = epicCtx.createGain();
+        o.frequency.value = f; o.type = 'sine';
+        g.gain.setValueAtTime(0.0001, t0 + i*0.08);
+        g.gain.exponentialRampToValueAtTime(0.18, t0 + i*0.08 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + i*0.08 + 0.12);
+        o.connect(g).connect(epicCtx.destination);
+        o.start(t0 + i*0.08);
+        o.stop(t0 + i*0.08 + 0.15);
+        epicNodes.push(o, g);
+      });
+      t += intervalMs;
+    }, intervalMs);
+    epicNodes.push({ _interval: iv });
+  }
+
+  window.startEpicAudio = function(targetMs){
+    ensureEpic();
+    if (!epicCtx) return;
+    // Coração começa em 800ms (calmo) e acelera ao longo do desafio
+    var dur = (targetMs || 10000) / 1000;
+    heartbeat(800, dur * 0.5);
+    setTimeout(function(){ heartbeat(500, dur * 0.4); }, dur * 500);
+    setTimeout(function(){ heartbeat(280, dur * 0.2); }, dur * 800);
+  };
+  window.stopEpicAudio = function(){
+    epicNodes.forEach(function(n){
+      if (n && n._interval) clearInterval(n._interval);
+      try { if (n.stop) n.stop(0); } catch(_) {}
+      try { if (n.disconnect) n.disconnect(); } catch(_) {}
+    });
+    epicNodes = [];
+    if (epicCtx) {
+      try { epicCtx.close(); } catch(_) {}
+      epicCtx = null;
+    }
+  };
+
+  // Hook em startTensionSound / stopTensionSound se existirem
+  var origTension = window.startTensionSound;
+  if (typeof origTension === 'function') {
+    window.startTensionSound = function(){
+      origTension.apply(this, arguments);
+      try {
+        var t = (window.gameTarget) ? Number(window.gameTarget) : 10000;
+        window.startEpicAudio(t);
+      } catch(_) {}
+    };
+  }
+  var origStopTension = window.stopTensionSound;
+  if (typeof origStopTension === 'function') {
+    window.stopTensionSound = function(){
+      origStopTension.apply(this, arguments);
+      window.stopEpicAudio();
+    };
+  }
+
+
+  // ---------- PREPARE-SE OVERLAY (build-up 1.2s antes do timer) ----------
+  // Quando user clica "Iniciar Desafio" (estado IDLE), mostra overlay full-screen
+  // com "PREPARA AÍ" gigante + som crescente. Só depois disso o timer real
+  // dispara — gera tensão dramática e da tempo do cliente focar.
+  //
+  // Audio:
+  //   3 ticks crescentes em frequencia + intensidade
+  //   POP no final (transicao pro tension sound do desafio)
+  //
+  // Visual:
+  //   Overlay roxo->rosa com numero/palavra pulsando
+  //   3-2-1 → GO! sequencial com escala crescente
+  //
+  // ROI: para ao clicar pra parar o cronometro (handler natural ja existente).
+
+  var prepCss = document.createElement('style');
+  prepCss.textContent = ''+
+    '#prepOverlay{position:fixed;inset:0;z-index:90;display:none;'+
+      'align-items:center;justify-content:center;'+
+      'background:radial-gradient(circle at center,#7E57C2 0%,#1A1A2E 100%);'+
+      'animation:prepFlash .25s ease-out both}'+
+    '#prepOverlay.on{display:flex}'+
+    '@keyframes prepFlash{from{opacity:0}to{opacity:1}}'+
+    '.prep-num{font-family:"Orbitron","Baloo 2",sans-serif;'+
+      'font-size:clamp(180px,28vw,420px);font-weight:900;color:#fff;'+
+      'text-shadow:0 0 60px rgba(255,79,138,.8),0 0 120px rgba(126,87,194,.6);'+
+      'animation:prepPop .45s cubic-bezier(.34,1.56,.64,1) both;'+
+      'line-height:1;letter-spacing:-8px}'+
+    '@keyframes prepPop{0%{transform:scale(.2);opacity:0}'+
+      '60%{transform:scale(1.15);opacity:1}100%{transform:scale(1);opacity:1}}'+
+    '.prep-label{position:absolute;top:14vh;left:50%;transform:translateX(-50%);'+
+      'font-family:"Baloo 2",cursive;font-size:clamp(28px,4vw,56px);font-weight:900;'+
+      'color:rgba(255,255,255,.92);letter-spacing:4px;text-transform:uppercase;'+
+      'text-shadow:0 4px 20px rgba(0,0,0,.4)}'+
+    '.prep-sheep{position:absolute;bottom:10vh;left:50%;transform:translateX(-50%);'+
+      'font-size:clamp(80px,12vw,160px);animation:prepBounce .6s ease-in-out infinite}'+
+    '@keyframes prepBounce{0%,100%{transform:translateX(-50%) translateY(0)}'+
+      '50%{transform:translateX(-50%) translateY(-18px)}}'+
+    '.prep-tip{position:absolute;bottom:4vh;left:50%;transform:translateX(-50%);'+
+      'font-size:clamp(14px,1.8vw,20px);color:rgba(255,255,255,.7);'+
+      'font-weight:700;letter-spacing:3px;text-transform:uppercase}';
+  document.head.appendChild(prepCss);
+
+  var prepEl = document.createElement('div');
+  prepEl.id = 'prepOverlay';
+  prepEl.innerHTML = ''+
+    '<div class="prep-label" id="prepLabel">PREPARA AI</div>'+
+    '<div class="prep-num" id="prepNum">3</div>'+
+    '<div class="prep-sheep">🐑</div>'+
+    '<div class="prep-tip">Toque na tela pra PARAR no tempo certo</div>';
+  document.body.appendChild(prepEl);
+
+  function prepTick(){
+    if (!epicCtx) ensureEpic();
+    if (!epicCtx) return;
+    var t0 = epicCtx.currentTime;
+    var o = epicCtx.createOscillator();
+    var g = epicCtx.createGain();
+    o.type = 'square';
+    o.frequency.value = 720;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.16, t0 + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.13);
+    o.connect(g).connect(epicCtx.destination);
+    o.start(t0); o.stop(t0 + 0.15);
+    epicNodes.push(o, g);
+  }
+  function prepGo(){
+    if (!epicCtx) ensureEpic();
+    if (!epicCtx) return;
+    var t0 = epicCtx.currentTime;
+    // POP de partida — sweep grave→agudo + crash agudo
+    var o1 = epicCtx.createOscillator();
+    var g1 = epicCtx.createGain();
+    o1.type = 'sawtooth';
+    o1.frequency.setValueAtTime(80, t0);
+    o1.frequency.exponentialRampToValueAtTime(1200, t0 + 0.18);
+    g1.gain.setValueAtTime(0.22, t0);
+    g1.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22);
+    o1.connect(g1).connect(epicCtx.destination);
+    o1.start(t0); o1.stop(t0 + 0.25);
+    // Crash agudo
+    var o2 = epicCtx.createOscillator();
+    var g2 = epicCtx.createGain();
+    o2.type = 'triangle';
+    o2.frequency.value = 1800;
+    g2.gain.setValueAtTime(0.18, t0 + 0.16);
+    g2.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.5);
+    o2.connect(g2).connect(epicCtx.destination);
+    o2.start(t0 + 0.16); o2.stop(t0 + 0.52);
+    epicNodes.push(o1, g1, o2, g2);
+  }
+
+  function runPrepSequence(callback){
+    ensureEpic();
+    var ov = document.getElementById('prepOverlay');
+    var num = document.getElementById('prepNum');
+    var label = document.getElementById('prepLabel');
+    if (!ov || !num) { callback(); return; }
+    ov.classList.add('on');
+    label.textContent = 'PREPARA AI';
+    var steps = [
+      { txt: '3', dur: 380 },
+      { txt: '2', dur: 380 },
+      { txt: '1', dur: 380 },
+      { txt: 'VAI!', dur: 380, go: true }
+    ];
+    var i = 0;
+    function nextStep(){
+      if (i >= steps.length) {
+        ov.classList.remove('on');
+        callback();
+        return;
+      }
+      var s = steps[i++];
+      num.textContent = s.txt;
+      num.style.animation = 'none';
+      void num.offsetWidth;
+      num.style.animation = 'prepPop .45s cubic-bezier(.34,1.56,.64,1) both';
+      if (s.go) {
+        label.textContent = 'AGORA!';
+        prepGo();
+        if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
+      } else {
+        prepTick();
+        if (navigator.vibrate) navigator.vibrate(20);
+      }
+      setTimeout(nextStep, s.dur);
+    }
+    nextStep();
+  }
+
+  // Hook em handleGame: so faz a fase prep quando esta em IDLE (botao tipo start)
+  var origHandle = window.handleGame;
+  if (typeof origHandle === 'function') {
+    window.handleGame = function(){
+      var btn = document.getElementById('gameBtn');
+      var isIdle = btn && /btn-start/.test(btn.className || '');
+      if (!isIdle) {
+        // PARAR: chama original direto pra som de stop tocar sem delay
+        return origHandle.apply(this, arguments);
+      }
+      // INICIAR: roda prep antes
+      if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+      runPrepSequence(function(){
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+        origHandle.call(window);
+      });
+    };
+  }
 })();
 </script>
 </body>
