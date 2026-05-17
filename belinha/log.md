@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #250 — 2026-05-17
+
+**Área:** Conteúdo — Script completo Reel #3 "Sem culpa de verdade" (Linha Zero/Fit · 03/06)
+
+**Contexto:** Prescrito pelo ciclo #249 como próximo passo imediato. Operador não confirmou Potinho Junino até hoje (prazo 30/05 ainda aberto) → default executado: Linha Zero/Fit como tema do Reel 3 da série educativa. Data 03/06 também é início dos teasers juninos — scripts de Stories enquete (já existente: `stories-enquete-sabor-junino-03jun.md`, ciclo #238) complementam o reel às 19h30.
+
+**O que pesquisou/analisou:**
+- Leu `reel-27mai-toppings-infinitos.md` integralmente — extraiu estrutura de série, tabela de próximos reels, padrão visual (flat lay, lo-fi candy, ovelhinha), gancho final ("Reel 3: Linha Zero") e note de timing sobre 03/06 junino
+- Leu `reel-20mai-ninho-vs-acai-dois-mundos.md` (parcial) — confirmou padrão de 3 cenas (hook → revelação → CTA), trilha consistente entre reels, slot Qua 18h
+- Leu `stories-enquete-sabor-junino-03jun.md` — confirmou sequência do dia: Reel 18h → Stories junina 19h30 (já prontos); scripts não conflitam, se complementam
+- Identificou erro de nomenclatura: tabela do Reel #2 dizia "Sexta sem culpa" mas 03/06/2026 é Quarta-feira → corrigido para "Sem culpa de verdade" (título sem referência de dia, atemporal para reshares)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reel-03jun-linha-zero-fit-sem-culpa.md` | CRIADO — 248 linhas: roteiro 15s completo (3 cenas), caption IG longa + curta, checklist de produção, estratégia engajamento, ângulo Namorados (dois potinhos no Clip C = pré-frame do Duo), tabela série atualizada |
+| `belinha/content/reel-27mai-toppings-infinitos.md` | Tabela "Próximos reels": linha #3 atualizada de ⏳ para ✅ com link e nota de timing |
+
+**Destaques do script:**
+1. **Hook subversivo (0s–4s):** Potinho Zero filmado igual a potinho normal → texto "ZERO açúcar" explode na tela. Quebra expectativa de "produto fit = produto feio".
+2. **Clip C estratégico (9s–11s):** Dois potinhos lado a lado (Zero/Fit + Clássico) — pré-frame visual do Duo MilkyPot de Namorados (12/06) sem citar a data. Operador pode ativar resposta DM direcionando para 2 potinhos = 1 topping grátis.
+3. **Ângulo anti-concorrente implícito:** "sem balança, toppings livres mesmo na Linha Zero" — diferencial direto vs. The Best Açaí (Piscininha R$6,49/100g, ativa desde 06/06).
+4. **Sequência do dia 03/06:** Reel 18h (Linha Zero) → Stories enquete junina 19h30 → dois tipos de engajamento no mesmo dia sem conflito de mensagem.
+
+**Commit:** `e46572b`
+
+**Próximo passo sugerido:**
+- **Ciclo #251 — Conteúdo:** Script Reel #4 "Montagem ao vivo — bastidores" (10/06, Qua) — 2 dias antes de Namorados; oportunidade de mostrar dois potinhos sendo montados (Duo) como pré-venda implícita do 12/06
+- **Ciclo #252 — Concorrentes:** Refetch Johnny/Jhoy Londrina — v21d violado (+51 ciclos sem update)
+- **Ciclo #253 — Conversão:** Mecânica UGC "foto com potinho = reward" — prescrita desde ciclo #226, ainda pendente
+- **Operador (URGENTE — 13 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — impacta estratégia junina inteira e definição de Reel #4
+- **Operador (URGENTE — 17 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador (03/06 18h):** Publicar Reel #3 (`reel-03jun-linha-zero-fit-sem-culpa.md`)
+- **Operador (03/06 19h30):** Publicar Stories enquete junina (`stories-enquete-sabor-junino-03jun.md`)
+- **Operador (06/06 18h):** Publicar Peça A stories contra-posicionamento (`contra-posicionamento-bufe-self-service.md`)
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #250 | 2026-05-17_
+
+---
+
 ## Ciclo #249 — 2026-05-17
 
 **Área:** UX/Frontend — Correção timezone BRT em date-gates Junina (`cardapio.html`)
