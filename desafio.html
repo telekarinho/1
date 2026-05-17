@@ -2805,84 +2805,125 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
      durante o desafio.
      ============================================================ -->
 <style>
+/* AUTO-FIT layout — usa Grid + clamp(vmin) pra adaptar a qualquer
+   tela (TV horizontal 16:9, vertical 9:16, monitor ultrawide).
+   vmin = menor entre vw/vh, escala IGUAL nas duas orientacoes. */
 .promo-rotator{
   position:fixed; inset:0; z-index:50;
-  display:none; align-items:center; justify-content:center;
+  display:none;
   pointer-events:auto; cursor:pointer;
   font-family:'Baloo 2',cursive;
   overflow:hidden;
 }
-.promo-rotator.on{display:flex}
+.promo-rotator.on{display:block}
 .promo-slide{
   width:100%; height:100%;
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  padding:6vh 6vw; text-align:center;
+  display:grid;
+  grid-template-rows:
+    minmax(min-content, auto)   /* eyebrow */
+    minmax(min-content, 1fr)    /* emoji (flex) */
+    minmax(min-content, auto)   /* headline */
+    minmax(min-content, auto)   /* subtext */
+    minmax(min-content, auto)   /* cta */
+    minmax(min-content, auto);  /* qr */
+  justify-items:center; align-items:center;
+  gap:clamp(6px, 1.2vh, 18px);
+  padding: clamp(12px, 3vh, 40px) clamp(20px, 4vw, 60px);
+  padding-bottom: clamp(46px, 6vh, 80px);
+  text-align:center;
   animation:promoIn .6s cubic-bezier(.2,.8,.2,1) both;
   position:relative;
+  box-sizing:border-box;
 }
 @keyframes promoIn{
   from{opacity:0; transform:scale(.94)}
   to{opacity:1; transform:scale(1)}
 }
 .promo-eyebrow{
-  font-size:clamp(13px,1.6vw,18px); font-weight:800;
-  letter-spacing:4px; text-transform:uppercase;
-  color:rgba(255,255,255,.85);
-  margin-bottom:18px; padding:8px 22px;
-  background:rgba(0,0,0,.18); border-radius:30px;
-}
-.promo-headline{
-  font-size:clamp(48px,8vw,128px); font-weight:900;
-  line-height:1; color:#fff; margin:0 0 24px;
-  text-shadow:0 6px 32px rgba(0,0,0,.35);
-  max-width:90vw;
-}
-.promo-subtext{
-  font-size:clamp(20px,2.6vw,36px); font-weight:700;
-  color:rgba(255,255,255,.92); margin:0 0 36px;
-  max-width:80vw; line-height:1.25;
+  font-size:clamp(10px, 1.6vmin, 16px); font-weight:800;
+  letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,.9);
+  padding:6px 18px;
+  background:rgba(0,0,0,.22); border-radius:30px;
+  white-space:nowrap; max-width:90vw; overflow:hidden; text-overflow:ellipsis;
 }
 .promo-emoji{
-  font-size:clamp(80px,12vw,180px); margin-bottom:14px;
+  font-size:clamp(50px, 14vmin, 160px);
+  line-height:1;
   animation:promoBounce 2.4s ease-in-out infinite;
   filter:drop-shadow(0 10px 30px rgba(0,0,0,.3));
 }
 @keyframes promoBounce{
   0%,100%{transform:translateY(0) rotate(-3deg)}
-  50%{transform:translateY(-18px) rotate(3deg)}
+  50%{transform:translateY(-12px) rotate(3deg)}
+}
+.promo-headline{
+  font-size:clamp(28px, 6.5vmin, 100px); font-weight:900;
+  line-height:1.02; color:#fff; margin:0;
+  text-shadow:0 4px 24px rgba(0,0,0,.35);
+  max-width:94vw;
+  word-wrap:break-word;
+}
+.promo-subtext{
+  font-size:clamp(14px, 2.4vmin, 28px); font-weight:700;
+  color:rgba(255,255,255,.94); margin:0;
+  max-width:88vw; line-height:1.3;
 }
 .promo-cta{
-  display:flex; align-items:center; gap:18px;
+  display:inline-flex; align-items:center; gap:12px;
   background:rgba(255,255,255,.95); color:#1A1A2E;
-  padding:18px 36px; border-radius:24px;
-  font-size:clamp(16px,2.2vw,26px); font-weight:800;
-  box-shadow:0 14px 40px rgba(0,0,0,.25);
-  margin-top:18px;
+  padding:clamp(8px,1.4vmin,16px) clamp(16px,3vmin,32px);
+  border-radius:clamp(14px,2vmin,24px);
+  font-size:clamp(13px, 2vmin, 22px); font-weight:800;
+  box-shadow:0 10px 32px rgba(0,0,0,.25);
+  max-width:90vw;
 }
 .promo-qr{
-  width:clamp(140px,16vw,240px); height:auto;
-  margin-top:clamp(16px,2.6vh,28px);
-  border-radius:18px;
-  padding:clamp(10px,1.4vw,18px);
+  width:clamp(110px, 22vmin, 220px); height:auto;
+  border-radius:14px;
+  padding:clamp(6px, 1vmin, 14px);
   background:#fff;
-  box-shadow:0 14px 48px rgba(0,0,0,.28), 0 0 0 4px rgba(255,255,255,.5);
+  box-shadow:0 10px 36px rgba(0,0,0,.28), 0 0 0 3px rgba(255,255,255,.5);
   animation:promoQrPulse 2.2s ease-in-out infinite;
+  display:block;
 }
 @keyframes promoQrPulse{
-  0%,100%{transform:scale(1); box-shadow:0 14px 48px rgba(0,0,0,.28), 0 0 0 4px rgba(255,255,255,.5)}
-  50%{transform:scale(1.04); box-shadow:0 22px 60px rgba(0,0,0,.35), 0 0 0 8px rgba(255,255,255,.7)}
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.04)}
 }
 .promo-tap{
-  position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
-  color:rgba(255,255,255,.85);
-  font-size:clamp(13px,1.4vw,16px); font-weight:700;
+  position:absolute; bottom:clamp(10px, 1.8vh, 22px);
+  left:50%; transform:translateX(-50%);
+  color:rgba(255,255,255,.78);
+  font-size:clamp(10px, 1.4vmin, 14px); font-weight:700;
   letter-spacing:2px; text-transform:uppercase;
   animation:promoTap 1.6s ease-in-out infinite;
+  white-space:nowrap;
+  text-shadow:0 2px 6px rgba(0,0,0,.4);
+  max-width:96vw; overflow:hidden; text-overflow:ellipsis;
 }
 @keyframes promoTap{
-  0%,100%{opacity:.6}
+  0%,100%{opacity:.55}
   50%{opacity:1; transform:translateX(-50%) scale(1.04)}
+}
+/* Portrait estreito (TV vertical / celular) — empilha mais compacto */
+@media (orientation:portrait) and (max-aspect-ratio: 3/4) {
+  .promo-slide{
+    grid-template-rows:
+      minmax(min-content, auto)
+      minmax(min-content, .8fr)
+      minmax(min-content, auto)
+      minmax(min-content, auto)
+      minmax(min-content, auto)
+      minmax(min-content, 1fr);
+    gap:clamp(4px, .8vh, 12px);
+  }
+  .promo-headline{ font-size:clamp(26px, 7vw, 64px); }
+  .promo-subtext{ font-size:clamp(13px, 3.4vw, 22px); }
+}
+/* Landscape ultrawide — centraliza melhor */
+@media (orientation:landscape) and (min-aspect-ratio: 16/9) {
+  .promo-slide{ padding-left:8vw; padding-right:8vw; }
 }
 .promo-progress{
   position:absolute; top:0; left:0; right:0; height:4px;
@@ -2924,67 +2965,83 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
     return 'https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&color=1A1A2E&bgcolor=FFFFFF&data=' + encodeURIComponent(proxy);
   }
 
+  // Copies em portugues popular BR — frases simples, humor obvio,
+  // ZERO meme de Twitter. O cliente da loja em Londrina le na TV em
+  // 1 segundo e entende DE PRIMEIRA. Cada slide diz: o que é, qual
+  // a regra, o que faz. Sem firula.
   var SLIDES = [
-    { id:'raspadinha', emoji:'🎫', eyebrow:'RASPA E CHORA',
-      headline:'Gente de bem raspa. Os outros, azar.',
-      subtext:'QR vem na nota. 7 dias pra raspar.\nPerdeu o prazo? Problema seu, meu bem.',
-      cta:'Aponta a câmera. A ovelha explica.',
+    { id:'raspadinha', emoji:'🎫', eyebrow:'RASPADINHA NA NOTA',
+      headline:'Toda compra dá raspadinha.',
+      subtext:'Sai um QR na sua nota. Raspa em até 7 dias\ne descobre o que ganhou. Pode ser sorvete grátis.',
+      cta:'Aponta a câmera no QR da nota fiscal',
       qr: qrUrl('/raspinha.html', 'raspadinha'),
       bg:'linear-gradient(135deg,#FF4F8A 0%,#7E57C2 100%)', dur:9000 },
-    { id:'milkyclube', emoji:'🐑', eyebrow:'MILKYCLUBE (DE GRAÇA)',
-      headline:'Você já gasta. Agora gasta ganhando.',
-      subtext:'Cashback de verdade. Sem letrinha miúda.\nSeu aniversário a ovelha LEMBRA. Sua mãe não.',
-      cta:'milkypot.com/clube — corre lá',
+    { id:'milkyclube', emoji:'🐑', eyebrow:'PROGRAMA MILKYCLUBE',
+      headline:'Gasta agora, ganha desconto depois.',
+      subtext:'Cada R$1 que você paga vira moedinha pro próximo sorvete.\nDe graça. Tipo o cashback do banco.',
+      cta:'Cadastra rapidinho — só precisa do email',
       qr: qrUrl('/clube.html', 'milkyclube'),
       bg:'linear-gradient(135deg,#7E57C2 0%,#42A5F5 100%)', dur:9000 },
     { id:'roleta', emoji:'🎰', eyebrow:'ROLETA DA SORTE',
-      headline:'Pagou? Gira. A ovelha exige.',
-      subtext:'20% OFF, topping free, +50 coins ou MEGA prêmio.\nNão girou? Tá deixando dinheiro na mesa.',
-      cta:'Aparece na tela após o pedido',
+      headline:'Pagou? Gira a roleta.',
+      subtext:'Aparece sozinha quando você termina o pedido.\nPode sair 20% off, topping grátis ou moedinha extra.',
+      cta:'Já é automático — só aceitar e girar',
       qr: qrUrl('/cardapio.html', 'roleta'),
       bg:'linear-gradient(135deg,#FFD700 0%,#FF4F8A 100%)', dur:8500 },
     { id:'desafio10s', emoji:'⏱️', eyebrow:'DESAFIO 10 SEGUNDOS',
-      headline:'Para o cronômetro em 10s. Fácil? KKK',
-      subtext:'Margem de 0,3s. Errou por 0,4? Vai chorar no banho.\nDá pra jogar daí mesmo, ó.',
-      cta:'milkypot.com/desafio — duvido',
+      headline:'Para o cronômetro em 10s cravado e ganha.',
+      subtext:'Margem de 0,3 segundo. Acertou? Sorvete por nossa conta.\nDá pra jogar aqui mesmo, dessa tela.',
+      cta:'Toca a tela ou escaneia pra jogar do celular',
       qr: qrUrl('/desafio.html', 'desafio10s'),
       bg:'linear-gradient(135deg,#42A5F5 0%,#FF4F8A 100%)', dur:9000 },
     { id:'acerta300', emoji:'⚖️', eyebrow:'ACERTOU 300g, NÃO PAGA',
-      headline:'Bateu 300g cravado? Casa paga.',
-      subtext:'Margem de 3g. Sim, a balança é honesta.\nVocê é que tem mão pesada, amigão.',
-      cta:'Monta com fé. Pesa com coragem.',
+      headline:'Montou 300g no buffet? A casa paga.',
+      subtext:'Você monta seu pote, a gente pesa. Bateu 300g (margem 3g)\né de graça. Errou? Paga normal R$5,99/100g.',
+      cta:'Sem trapaça — a balança é certa',
       qr: qrUrl('/cardapio.html#buffet', 'acerta300'),
       bg:'linear-gradient(135deg,#FF8A65 0%,#FFD700 100%)', dur:9500 },
-    { id:'googlereview', emoji:'⭐', eyebrow:'5 ESTRELAS OU NADA',
-      headline:'Avalia aí. A ovelha tá olhando.',
-      subtext:'5 estrelas = raspadinha premium + 50 coins.\n4 estrelas? Tô magoada. 1 estrela? Tô PROCESSANDO.',
-      cta:'Pesquisa MilkyPot no Google. Vai.',
+    { id:'googlereview', emoji:'⭐', eyebrow:'AVALIA NO GOOGLE',
+      headline:'5 estrelas vale raspadinha premium + 50 moedas.',
+      subtext:'Foi bom o sorvete? Conta pro Google.\nA gente te recompensa por isso.',
+      cta:'Aponta a câmera e cai direto no Google',
       qr: qrExternal('https://g.page/r/CXrthQS1rgPdEAE/review', 'googlereview'),
       bg:'linear-gradient(135deg,#4285F4 0%,#FFD700 100%)', dur:9000 },
-    { id:'instagram', emoji:'📸', eyebrow:'POSTA E LUCRA',
-      headline:'Marca a gente ou come em silêncio.',
-      subtext:'@milkypotbr #PrimeiraMordidaMilky = 150 coins.\nFoto borrada também conta. Sem julgamento.',
-      cta:'Abre o Insta AGORA, antes de comer.',
+    { id:'instagram', emoji:'📸', eyebrow:'POSTA NO INSTA',
+      headline:'Posta marcando @milkypotbr e ganha 150 moedas.',
+      subtext:'Pode ser foto, vídeo, story, qualquer coisa.\nMarcou a gente? 150 moedinhas pro próximo pedido.',
+      cta:'Hashtag: #PrimeiraMordidaMilky',
       qr: qrExternal('https://instagram.com/milkypotbr', 'instagram'),
       bg:'linear-gradient(135deg,#E1306C 0%,#FCAF45 100%)', dur:9000 },
-    { id:'influencer', emoji:'💸', eyebrow:'VIRA INFLUENCER',
-      headline:'Teu amigo come. Você embolsa.',
-      subtext:'Link referral próprio. % em coins por indicado.\nNão precisa ter seguidor. Só amigo guloso.',
-      cta:'milkypot.com/influencer — cadastra',
+    { id:'influencer', emoji:'💸', eyebrow:'INDICA E GANHA',
+      headline:'Indica um amigo, ganha cada vez que ele vem.',
+      subtext:'Cadastra, pega seu link, manda no Whats da galera.\nCada amigo que pede com seu link: você ganha moeda.',
+      cta:'Não precisa ser famoso — só ter amigos guloso',
       qr: qrUrl('/influencer.html', 'influencer'),
       bg:'linear-gradient(135deg,#FF4F8A 0%,#FF8A65 100%)', dur:9500 },
-    { id:'streak', emoji:'🔥', eyebrow:'STREAK DIÁRIO',
-      headline:'Veio ontem. Vem hoje. Amanhã tbm.',
-      subtext:'3 dias: +25 coins. 7: SUNDAE FREE. 30: camiseta LENDÁRIO.\nQuebrou? A ovelha não te conhece mais.',
-      cta:'Aparece todo dia. Só não falhar.',
+    { id:'streak', emoji:'🔥', eyebrow:'CLIENTE FIEL GANHA MAIS',
+      headline:'Veio 3 dias seguidos? +25 moedas.',
+      subtext:'7 dias = sundae GRÁTIS. 14 dias = +100 moedas.\n30 dias seguidos = camiseta exclusiva LENDÁRIO.',
+      cta:'É automático, só não pular dia',
       qr: qrUrl('/clube.html#streak', 'streak'),
       bg:'linear-gradient(135deg,#FF4F8A 0%,#FFD700 100%)', dur:9500 },
-    { id:'milkypass', emoji:'📱', eyebrow:'PARA DE PERDER CARTÃO',
-      headline:'Teu fidelidade mora no celular.',
-      subtext:'Apple Wallet, Google Wallet, qualquer wallet.\nMostra o QR. Pronto. Ovelha aprova.',
-      cta:'Adiciona agora. É 1 toque.',
+    { id:'milkypass', emoji:'📱', eyebrow:'CARTÃO NO CELULAR',
+      headline:'Teu cartão do clube mora no celular.',
+      subtext:'Salva no Apple Wallet ou Google Wallet — sem app pra baixar.\nNa hora de pagar, mostra o QR. Pronto.',
+      cta:'Entra no clube e clica em "Adicionar ao Wallet"',
       qr: qrUrl('/clube.html#pass', 'milkypass'),
-      bg:'linear-gradient(135deg,#7E57C2 0%,#1A1A2E 100%)', dur:8000 }
+      bg:'linear-gradient(135deg,#7E57C2 0%,#1A1A2E 100%)', dur:8500 },
+    { id:'ganhadores', emoji:'🏆', eyebrow:'HALL DA FAMA',
+      headline:'Vê quem ganhou ontem.',
+      subtext:'Todo cliente que acertou 300g ou ganhou o desafio\nvai pros destaques do nosso Instagram. Pode ser você amanhã.',
+      cta:'Escaneia e vê os craques + segue a gente',
+      qr: qrExternal('https://www.instagram.com/stories/highlights/18075880883645372/', 'ganhadores'),
+      bg:'linear-gradient(135deg,#FFD700 0%,#E1306C 50%,#7E57C2 100%)', dur:9000 },
+    { id:'compartilha', emoji:'📲', eyebrow:'CHAMA UM AMIGO',
+      headline:'Manda o cardápio pra galera.',
+      subtext:'Aponta o celular, pega o link da loja\ne joga no grupo do WhatsApp. Bora dividir esse sorvete?',
+      cta:'milkypot.com — só apontar a câmera',
+      qr: qrUrl('/cardapio.html', 'compartilha'),
+      bg:'linear-gradient(135deg,#25D366 0%,#42A5F5 100%)', dur:8000 }
   ];
 
   var rotEl = document.getElementById('promoRotator');
