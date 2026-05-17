@@ -2,6 +2,55 @@
 
 ---
 
+## Ciclo #246 — 2026-05-17
+
+**Área:** Concorrentes — The Best Açaí: Piscininha pistacho (campanha 06/06–06/07) + Aurora Shopping quiosque (4ª unidade Londrina)
+
+**Contexto:** Prescrito pelo Ciclo #245 como próxima ação prioritária. TheBest é o concorrente local mais direto em Londrina. Última atualização em 11/05 (Ciclo #196 — 6 dias atrás). Namorados 12/06 em 26 dias + Potinho Junino 17/06 em 31 dias — janela crítica para verificar movimentos de campanha do concorrente.
+
+**O que pesquisou/analisou:**
+- 6 WebSearches: "TheBest Açaí namorados junho 2026"; "Aurora Shopping Londrina quiosque"; "Piscininha pistacho dulce leche chocolate datas"; "TheBest Waffle 2026"; "TheBest pistache preço bufê"
+- 4 WebFetch tentativas → 403 bloqueados (thebestacai.com.br, portaldofranchising.com.br, aurorashopping.com.br, abcdacomunicacao.com.br)
+- Intel extraída de snippets de busca, jornaldobras.com.br, revistasaoroque.com.br, patoshoje.com.br, exame.com
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/the-best-acai.md` | +109 linhas: bloco `ATUALIZAÇÃO CICLO #246` com 4 seções + mapa de ameaças atualizado |
+
+**Destaques:**
+
+1. **CRÍTICO — Campanha Piscininha ativa durante Namorados + Junina (06/06–06/07):** TheBest lança produto Instagrammável com sabor de **creme de pistache** — exatamente o trend identificado no ciclo #226 como "alerta de convergência". A campanha cobre 100% do período Namorados (12/06) e início Junina (17/06). Sabores: Rocca dulce de leche · Creme de pistache · Chocolate ao leite. Formato: porção-piscina para mergulhar toppings (self-service, pago por grama).
+
+2. **CRÍTICO — Aurora Shopping = 4ª unidade em Londrina confirmada:** TheBest agora tem 4 pontos em Londrina (Gleba Palhano + Arthur Thomas + Catuaí + Aurora Shopping). Aurora é quiosque piloto para expansão nacional de 300–500 unidades. TheBest HQ é em Londrina — cidade serve de laboratório. MilkyPot Muffato Av. Quintino Bocaiuva continua sendo o único ponto sem cobertura TheBest no raio.
+
+3. **Preço atualizado:** R$6,49/100g confirmado em campanha junho (vs. R$6,29 Gleba e R$5,99 Arthur Thomas anteriores).
+
+4. **Waffle Bites:** retorno do waffle com novo formato "bites" — sem impacto direto no posicionamento MilkyPot.
+
+5. **JohnnyJoy:** "Dois Amores" (R$20,90–24,90) já documentado em ciclo #222 — nenhuma novidade adicional encontrada para junho.
+
+**Análise estratégica:**
+- TheBest entrará no trend pistacho (via Piscininha) **antes** do lançamento do Potinho Junino (17/06) — se o operador confirmar pistacho como ingrediente, o copy deve reforçar "potinho personalizado com cuidado" vs. "bufê self-service por peso"
+- Se operador NÃO confirmar pistacho, o diferenciador Potinho Junino precisa ser outro ingredient/narrativa para escapar do shadow da Piscininha
+- O modelo quiosque Aurora (lean, R$60k/mês) reforça que TheBest está aumentando cobertura em Londrina — monitorar mais 1 unidade ainda em 2026
+
+**Commit:** `03c472d`
+
+**Próximo passo sugerido:**
+- **Ciclo #247 — Conteúdo:** Script reel #2 da série educativa "Os toppings infinitos" (27/05) — aproveitar gancho do reel de 20/05 "NINHO ou AÇAÍ?" (que responde "E os toppings?")
+- **Ciclo #248 — Conversão:** Criar copy de contra-posicionamento sutil "potinho vs. bufê self-service" para usar no período 06/06–12/06, quando Piscininha TheBest estiver ativa e Namorados chegar. Sem nomear concorrente — focar no formato potinho personalizado.
+- **Ciclo #249 — UX:** Auditar `cardapio.html` — verificar se card Potinho Junino está visível com link para `potinho-junino-londrina.html` e se topping pistacho aparece ou se há placeholder
+- **Operador (URGENTE — 13 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — se pistacho for confirmado, impacta o copy anti-TheBest Piscininha; se não for, impacta a narrativa do reel de lançamento
+- **Operador (URGENTE):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Monitorar se Aurora Shopping TheBest lança sorvetes juninos — potencial conflito no período 17/06–30/06
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #246 | 2026-05-17_
+
+---
+
 ## Ciclo #245 — 2026-05-17
 
 **Área:** Conteúdo — Script completo reel 20/05 "Ninho vs. Açaí"
