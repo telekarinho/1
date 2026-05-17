@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #251 — 2026-05-17
+
+**Área:** Conteúdo — Script completo Reel #4 "Montagem ao vivo — bastidores" (10/06 · pré-Namorados)
+
+**Contexto:** Prescrito pelo ciclo #250 como próximo passo imediato. Fecha a série educativa de 4 reels (iniciada 20/05). Data 10/06 é 48h antes do Dia dos Namorados (12/06) — janela de pico de decisão de compra para datas comemorativas. Reel posiciona o Duo MilkyPot visualmente sem revelar a data explicitamente.
+
+**O que pesquisou/analisou:**
+- Leu `reel-03jun-linha-zero-fit-sem-culpa.md` completo — extraiu nota estratégica do Reel #4, padrão de 3 cenas, integração com Stories e tabela da série
+- Leu `reel-27mai-toppings-infinitos.md` (tabela série) — confirmou status ⏳ para #4
+- Leu playbook Namorados (`dia-dos-namorados-2026-playbook.md`) — confirmou cronograma 10/06: Reel 18h + Stories 19h; Versão A (Duo + 1 topping extra) confirmada ciclo #224
+- Leu `whatsapp-namorados-2026.md` — confirmou keyword `NAMORADOS26` e URL WA para CTA
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reel-10jun-montagem-ao-vivo-bastidores.md` | CRIADO — 269 linhas: roteiro 15s (3 cenas ASMR), caption IG longa + curta, 3 stories complementares (19h), checklist de produção completo, tabela de respostas para engajamento, tabela da série atualizada |
+| `belinha/content/reel-03jun-linha-zero-fit-sem-culpa.md` | Tabela série: linha #4 atualizada de ⏳ para ✅ com link |
+| `belinha/content/reel-27mai-toppings-infinitos.md` | Tabela série: linha #4 atualizada de ⏳ para ✅ com link |
+
+**Destaques do script:**
+1. **Hook ASMR (0s–5s):** Silêncio nos primeiros 2s enquanto colher mergulha na base — depois música entra. Contraste silêncio→som prende atenção melhor que hook de texto.
+2. **Cena 2 — Dois potinhos simultâneos (5s–12s):** "um pro jeito dela 🍓 / um pro jeito dele 🍌" — ativa o Duo MilkyPot visualmente sem precisar de copy longa. Ovelhinha com coração nos olhos aparece.
+3. **CTA vago mas eficaz (12s–15s):** "sexta é o dia. 💕" — intencionalmente sem mencionar Namorados; funciona como teaser para quem vê na quarta e ressoa em qualquer sexta para reshares futuros.
+4. **Série educativa concluída:** 4 reels cobrem Base → Toppings → Linha Fit → Processo. Ciclo completo de educação de produto antes da principal data comemorativa.
+
+**Commit:** `cc1174c`
+
+**Próximo passo sugerido:**
+- **Ciclo #252 — Concorrentes:** Refetch Johnny/Jhoy Londrina — sem atualização há >51 ciclos; verificar ações de Namorados e se lançaram produto novo
+- **Ciclo #253 — Conversão:** Mecânica UGC "foto com potinho = reward" — prescrita desde ciclo #226, ainda pendente
+- **Ciclo #254 — UX:** Auditar `index.html` — verificar coexistência de banner Namorados e teaser Junina sem conflito visual (15/05–11/06)
+- **Operador (URGENTE — 13 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — impacta série Junina inteira
+- **Operador (URGENTE — 17 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador (10/06 18h):** Publicar Reel #4 (`reel-10jun-montagem-ao-vivo-bastidores.md`)
+- **Operador (10/06 19h):** Publicar 3 Stories complementares (roteiro no mesmo arquivo)
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #251 | 2026-05-17_
+
+---
+
 ## Ciclo #250 — 2026-05-17
 
 **Área:** Conteúdo — Script completo Reel #3 "Sem culpa de verdade" (Linha Zero/Fit · 03/06)
