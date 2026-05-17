@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MilkyPot Colab">
-<link rel="apple-touch-icon" href="../images/logo-milkypot.png">
+<link rel="apple-touch-icon" href="../images/logo-milkypot-redonda.png">
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -423,6 +423,32 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
                     <p style="font-size:.85rem;margin:6px 0 12px;opacity:.95">Instale no celular pra receber lembretes de bater ponto e abrir mais rápido.</p>
                     <button class="fn-btn" id="installBtn" style="background:#fff;color:#16A34A">Instalar agora</button>
                 </div>
+
+                <!-- 📲 Download APK nativo Android (TWA oficial)
+                     Cliente Android tem 2 opções: TWA via "Adicionar à tela inicial" (acima) OU
+                     APK nativo aqui (recomendado pra notificações push 100% funcionais). -->
+                <div class="fn-card" id="apkDownloadCard" style="background:linear-gradient(135deg,#FFF8E1,#FFE8D6);border:2px solid #F59E0B">
+                    <h3 style="margin:0 0 8px">📲 App Android oficial MilkyPot</h3>
+                    <p style="font-size:.85rem;color:#374151;margin:0 0 12px">
+                        Versão nativa Android — mais rápida, push notifications garantidas pra lembretes de ponto.
+                    </p>
+                    <a href="https://github.com/telekarinho/1/releases/download/android-v1.0.0-1/MilkyPot-Colaborador-1.0.0.apk"
+                       class="fn-btn"
+                       id="apkDownloadBtn"
+                       style="background:#F59E0B;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:8px"
+                       onclick="fnTrackApkDownload()">
+                        <span style="font-size:1.2rem">⬇️</span> Baixar APK (2.2MB)
+                    </a>
+                    <details style="margin-top:12px;font-size:.78rem;color:#6B7280">
+                        <summary style="cursor:pointer;font-weight:700;color:#92400E">Como instalar (1ª vez)</summary>
+                        <ol style="padding-left:18px;margin:8px 0 0;line-height:1.7">
+                            <li>Toca em "Baixar APK" acima</li>
+                            <li>Quando o Android pedir, permite "Instalar apps desconhecidos"</li>
+                            <li>Abre o arquivo baixado e instala</li>
+                            <li>Pronto! Aparece na home como "MilkyPot Colaborador"</li>
+                        </ol>
+                    </details>
+                </div>
                 <div class="fn-card">
                     <h3>👤 Seus dados</h3>
                     <div id="dadosFunc" style="font-size:.85rem;line-height:1.7"></div>
@@ -595,7 +621,7 @@ async function fnRequestNotifications() {
                     : '✓ Lembretes locais ativos';
                 el.style.color = '#16A34A';
             });
-            try { new Notification('MilkyPot', { body: 'Lembretes ativados!', icon: '/images/logo-milkypot.png' }); } catch (e) {}
+            try { new Notification('MilkyPot', { body: 'Lembretes ativados!', icon: '/images/logo-milkypot-redonda.png' }); } catch (e) {}
             fnScheduleReminders();
             return;
         } else {
@@ -759,7 +785,7 @@ function fnScheduleReminders() {
                 if (Notification.permission === 'granted') {
                     new Notification('MilkyPot — Lembrete', {
                         body: 'Em 10 min: ' + h.label + ' (' + h.time + ')',
-                        icon: '/images/logo-milkypot.png',
+                        icon: '/images/logo-milkypot-redonda.png',
                         vibrate: [200, 100, 200]
                     });
                 }
@@ -963,6 +989,33 @@ async function fnLogin() {
     fnShowApp(session, found.staff);
 }
 
+// =================== APK DOWNLOAD ===================
+// Esconde card de download se já estamos rodando dentro do TWA/APK nativo
+// (detecta via document.referrer android-app:// ou display-mode standalone)
+function fnIsInsideNativeApp() {
+    try {
+        if (document.referrer && document.referrer.startsWith('android-app://com.milkypot')) return true;
+        if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+        if (window.navigator.standalone === true) return true;
+    } catch (_) {}
+    return false;
+}
+function fnSetupApkDownload() {
+    var card = document.getElementById('apkDownloadCard');
+    if (!card) return;
+    if (fnIsInsideNativeApp()) {
+        card.style.display = 'none'; // já tá no app, não precisa baixar
+    }
+}
+function fnTrackApkDownload() {
+    try {
+        if (window.MpAnalytics && typeof MpAnalytics.track === 'function') {
+            MpAnalytics.track('apk_download_click', { source: 'colaborador_dados_tab' });
+        }
+        console.log('[colaborador] APK download clicked');
+    } catch (_) {}
+}
+
 function fnLogout() {
     sessionStorage.removeItem(FN_KEY);
     document.getElementById('appView').style.display = 'none';
@@ -1029,7 +1082,7 @@ function fnShowApp(session, staff) {
     document.getElementById('cardName').textContent = session.staffName;
     document.getElementById('cardRole').textContent = session.staffRole;
 
-    var hour = new Date().getHours();
+    var hour = Utils.nowHourSP();
     var greet = hour < 6 ? 'Boa madrugada' : (hour < 12 ? 'Bom dia' : (hour < 18 ? 'Boa tarde' : 'Boa noite'));
     document.getElementById('greetMsg').textContent = greet + ',';
 
@@ -1039,6 +1092,7 @@ function fnShowApp(session, staff) {
     fnRenderInfo(session, staff);
     fnRenderGamification(session, staff);
     fnApplyAppConfig(session.franchiseId);  // aplica feature flags do admin
+    fnSetupApkDownload();                   // mostra/esconde card APK conforme contexto
 
     // Welcome modal no primeiro login
     var welcomed = localStorage.getItem(FN_WELCOME_KEY + session.staffId);
@@ -1062,9 +1116,10 @@ function fnRenderGamification(session, staff) {
 
     // 1. Mensagem motivacional
     if (Gamification.isFeatureEnabled(fid, 'motivationalMessages')) {
-        var hour = new Date().getHours();
+        var hour = Utils.nowHourSP();
+        var dow = Utils.nowDayOfWeekSP();
         var ctx = hour < 12 ? 'morning' : (hour < 18 ? 'afternoon' : 'evening');
-        var dayCtx = (new Date().getDay() === 1) ? 'monday' : (new Date().getDay() === 5 ? 'friday' : ctx);
+        var dayCtx = (dow === 1) ? 'monday' : (dow === 5 ? 'friday' : ctx);
         var msg = Gamification.getMotivationalMessage(fid, dayCtx, { nome: nome }) || Gamification.getMotivationalMessage(fid, ctx, { nome: nome });
         if (msg) {
             var el = document.getElementById('gamMotivational');
@@ -1150,7 +1205,7 @@ function fnRenderGamification(session, staff) {
             document.getElementById('onboardingProgress').textContent = ob.totalEarned + ' / ' + ob.possibleTotal + ' pontos conquistados';
             document.getElementById('gamOnboardingCard').style.display = 'block';
             // Marca first_punch automaticamente se já bateu hoje
-            var today = new Date().toISOString().slice(0,10);
+            var today = Utils.todayKey();
             if (TimeClock.computeDay(fid, sid, today).records.length > 0) {
                 Gamification.completeMission(fid, sid, 'first_punch');
             }
@@ -1321,7 +1376,7 @@ function fnGetSession() {
 }
 
 function fnRenderHoje(session, staff) {
-    var today = new Date().toISOString().slice(0, 10);
+    var today = Utils.todayKey();
     var dia = TimeClock.computeDay(session.franchiseId, session.staffId, today);
     var staffData = staff || (DataStore.getCollection('staff', session.franchiseId) || []).find(function(x) { return x.id === session.staffId; });
 
@@ -1468,7 +1523,7 @@ async function fnBaterPonto() {
 
     if (result.success) {
         btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
-        btn.innerHTML = '✓ Registrado!<small>' + result.typeLabel + ' as ' + new Date(result.timestamp).toLocaleTimeString('pt-BR').slice(0,5) + ' • NSR ' + result.nsr + '</small>';
+        btn.innerHTML = '✓ Registrado!<small>' + result.typeLabel + ' as ' + Utils.formatTime(result.timestamp) + ' • NSR ' + result.nsr + '</small>';
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         setTimeout(function() {
             fnRenderHoje(session, staffData);
