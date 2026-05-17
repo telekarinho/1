@@ -28,22 +28,153 @@
         } catch (e) { return false; }
     }
 
-    function parseSabores(itemName) {
-        // Extrai sabores compostos do tipo "Ninho com Morango"
-        // ou simples "Nutella"
-        const lower = String(itemName || '').toLowerCase();
-        const candidates = ['Morango', 'Ninho', 'Nutella', 'Oreo', 'Capuccino', 'Ninho com Morango', 'Ninho com morango'];
-        const found = [];
-        for (const sab of candidates) {
-            if (lower.includes(sab.toLowerCase())) {
-                if (!found.some(f => f.toLowerCase().includes(sab.toLowerCase()) || sab.toLowerCase().includes(f.toLowerCase()))) {
-                    found.push(sab);
-                }
-            }
-        }
-        if (!found.length) return ['Outros'];
-        return found;
+    function normalizeItemName(itemName) {
+        let name = String(itemName || '')
+            .replace(/[�]+/g, ' ')
+            .replace(/\?{2,}/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        name = name
+            .replace(/\s*(?:·|–|-)?\s*(?:Essencial|Supremo|Monster Pot|Soberano|P|M|G|GG)\s*\(\d+\s*ml\).*$/i, '')
+            .replace(/\s*(?:·|–|-)?\s*(?:1|4|10)\s+unidades?.*$/i, '')
+            .replace(/\s*(?:·|–|-)?\s*(?:loja|delivery|ifood).*$/i, '')
+            .replace(/\s*\(\d+\s*g\).*$/i, '')
+            .replace(/^\d+\.\s*/, '')
+            .replace(/^Milkshake\s+/i, '')
+            .replace(/^Sundae\s+/i, '')
+            .trim();
+
+        if (/^Buffet Self-Service/i.test(name)) return 'Buffet Self-Service';
+        return name || 'Outros';
     }
+
+    function foldText(value) {
+        return String(value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[�]+/g, ' ')
+            .replace(/\?{2,}/g, ' ')
+            .replace(/\s+/g, ' ')
+            .toLowerCase()
+            .trim();
+    }
+
+    function canonicalSabor(name) {
+        const lower = foldText(name);
+        const aliases = {
+            'pistache supreme': 'Pistache Esmeralda',
+            'pistache esmeralda': 'Pistache Esmeralda',
+            'peanut heaven': 'Amendoim Supremo',
+            'morango': 'Morango Romântico',
+            'chocolate': 'Chocolate Apaixonante',
+            'caramelo': 'Caramelo Derretido'
+        };
+        return aliases[lower] || name;
+    }
+
+    function parseSabores(itemName) {
+        const name = normalizeItemName(itemName);
+        const lower = foldText(name);
+        const candidates = [
+            'Picolé de Leite/Fruta',
+            'Casquinha Expresso',
+            'Casquinha Bola',
+            'Cascão Expresso',
+            'Cascão 2 Bola',
+            'Buffet Self-Service',
+            'Ninho Supreme',
+            'Tentação Rosa',
+            'Ovomaltine Gold',
+            'Oreo Cookies Explosion',
+            'Golden Maracujá',
+            'Pistache Esmeralda',
+            'Nutella Dream',
+            'Choco Monster',
+            'Cookies Mega',
+            'Lemon Pot',
+            'Amendoim Supremo',
+            'Blue Ice',
+            'Amora Apaixonada',
+            'Morango Romântico',
+            'Chocolate Apaixonante',
+            'Caramelo Derretido',
+            'Pistache Esmeralda',
+            'Peanut Heaven',
+            'Morango',
+            'Ninho',
+            'Nutella',
+            'Oreo',
+            'Maracujá'
+        ];
+        const found = candidates.filter(sab => lower.includes(foldText(sab)));
+        if (found.length) {
+            return [canonicalSabor(found.sort((a, b) => b.length - a.length)[0])];
+        }
+        return [canonicalSabor(name)];
+    }
+
+    // Overrides limpos: pedidos antigos gravaram separadores/acentos com encoding quebrado.
+    normalizeItemName = function(itemName) {
+        let name = String(itemName || '')
+            .replace(/[\uFFFD\u00C2]+/g, ' ')
+            .replace(/\?{2,}/g, ' - ')
+            .replace(/\s*(?:Â·|Ã‚Â·|·|–|—)\s*/g, ' - ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        name = name
+            .replace(/\s*(?:-|–|—)?\s*(?:Essencial|Supremo|Monster Pot|Soberano|P|M|G|GG)\s*\(\d+\s*ml\).*$/i, '')
+            .replace(/\s*(?:-|–|—)?\s*(?:1|4|10|20)\s+unidades?.*$/i, '')
+            .replace(/\s*(?:-|–|—)?\s*(?:loja|delivery|ifood).*$/i, '')
+            .replace(/\s*\(\d+\s*g\).*$/i, '')
+            .replace(/^\d+\.\s*/, '')
+            .replace(/^Milkshake\s+/i, '')
+            .replace(/^Sundae\s+/i, '')
+            .trim();
+
+        if (/^Buffet Self-Service/i.test(name)) return 'Buffet Self-Service';
+        return name || 'Outros';
+    };
+
+    parseSabores = function(itemName) {
+        const name = normalizeItemName(itemName);
+        const lower = foldText(name);
+        const candidates = [
+            'Picolé de Leite/Fruta',
+            'Casquinha Expresso',
+            'Casquinha Bola',
+            'Cascão Expresso',
+            'Cascão 2 Bola',
+            'Buffet Self-Service',
+            'Ninho Supreme',
+            'Tentação Rosa',
+            'Ovomaltine Gold',
+            'Oreo Cookies Explosion',
+            'Golden Maracujá',
+            'Pistache Esmeralda',
+            'Nutella Dream',
+            'Choco Monster',
+            'Cookies Mega',
+            'Lemon Pot',
+            'Amendoim Supremo',
+            'Blue Ice',
+            'Amora Apaixonada',
+            'Morango Romântico',
+            'Chocolate Apaixonante',
+            'Caramelo Derretido',
+            'Pistache Esmeralda',
+            'Peanut Heaven',
+            'Morango',
+            'Ninho',
+            'Nutella',
+            'Oreo',
+            'Maracujá'
+        ];
+        const found = candidates.filter(sab => lower.includes(foldText(sab)));
+        if (found.length) return [canonicalSabor(found.sort((a, b) => b.length - a.length)[0])];
+        return [canonicalSabor(name)];
+    };
 
     // ============= Contador de Potinhos Hoje =============
     async function potinhosHoje(fid) {

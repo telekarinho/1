@@ -111,6 +111,9 @@ function openCheckout() {
             cart_items: cart.length,
             cart_total: getCartTotal ? getCartTotal() : 0
         });
+        try {
+            if (window.MPPixel) window.MPPixel.initiateCheckout(getCartTotal ? getCartTotal() : 0);
+        } catch (_) {}
     }
 }
 
@@ -287,7 +290,8 @@ function placeOrder() {
     // Delivery data
     var deliveryRadio = document.querySelector('input[name="delivery"]:checked');
     var deliveryType = deliveryRadio ? deliveryRadio.value : 'pickup';
-    var deliveryFee = deliveryType === 'delivery' ? storeFee : 0;
+    var deliveryCalc = getCurrentDeliveryCalc();
+    var deliveryFee = deliveryType === 'delivery' ? (deliveryCalc.fretePagoCliente || getCurrentUberFee(deliveryType) || 0) : 0;
 
     // Se delivery + Uber Direct ativo: usar quote ja calculado
     if (deliveryType === 'delivery' && window._uberQuoteId && window._uberCustomerFee !== undefined) {
@@ -364,6 +368,7 @@ function placeOrder() {
         subtotal: subtotal,
         deliveryFee: deliveryFee,
         total: total,
+        attribution: (window.MPPixel && window.MPPixel.attribution) ? window.MPPixel.attribution() : {},
         // Uber Direct quote data (preenchido se cotacao foi feita)
         uberQuoteId: (deliveryType === 'delivery' && window._uberQuoteId) ? window._uberQuoteId : null,
         uberEnabled: !!(deliveryType === 'delivery' && window._uberQuoteId)
@@ -399,6 +404,7 @@ function placeOrder() {
                 deliveryFee: deliveryFee,
                 deliveryPricing: deliveryCalc,
                 total: total,
+                attribution: order.attribution,
                 source: 'site'
             });
 
@@ -524,6 +530,7 @@ function placeOrder() {
                 items: order.items,
                 subtotal: order.subtotal,
                 total: order.total,
+                attribution: order.attribution,
                 createdAt: order.createdAt,
                 updatedAt: order.createdAt,
                 source: 'site',
@@ -540,6 +547,12 @@ function placeOrder() {
     // Confetti
     if (typeof createConfetti === 'function') createConfetti();
 
+    var purchasedItemCount = cart.length;
+
+    try {
+        if (window.MPPixel) window.MPPixel.purchase(total, 'BRL', orderNumber);
+    } catch (_) {}
+
     // Clear cart
     clearCart();
 
@@ -550,7 +563,7 @@ function placeOrder() {
         delivery_type: deliveryType,
         payment_method: paymentType,
         uber_fee: deliveryType === 'delivery' && window._uberQuoteId ? (window._uberCustomerFee || 0) : 0,
-        item_count: cart.length
+        item_count: purchasedItemCount
     });
 
     // 🎰 Roleta MilkyCoins: abre 2s após success modal pra dar tempo do user ver o pedido

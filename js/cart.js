@@ -124,6 +124,11 @@ function addItemToCart(item) {
     cart.push(item);
     saveCart();
     updateCartUI();
+    try {
+        if (window.MPPixel) {
+            window.MPPixel.addToCart(item.total || calcItemTotal(item), item.name || 'Produto');
+        }
+    } catch (_) {}
 }
 
 function removeFromCart(itemId) {

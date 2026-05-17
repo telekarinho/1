@@ -277,6 +277,14 @@
             geolocation: geo,                 // {lat, lng, accuracy} se disponivel
             geofence: geoValidation,          // {valid, distance, radius, reason}
             selfie: selfie,                   // dataURL (ou null)
+            // 🤖 Face match: {status, distance, confidence} - calculado pelo colaborador
+            // app usando face-api.js. NUNCA bloqueia o ponto; admin audita registros flagged.
+            faceMatch: options.faceMatch || null,
+            // 🚩 Auto-flag se face match falhou OU admin marcou suspeito depois
+            flagged: options.flagged === true,
+            flaggedReason: options.flaggedReason || null,
+            flaggedAt: options.flagged === true ? timestamp : null,
+            flaggedBy: options.flagged === true ? 'system_face_match' : null,
             device: getDeviceInfo(),
             userAgent: (navigator.userAgent || '').slice(0, 200),
             createdAt: timestamp,

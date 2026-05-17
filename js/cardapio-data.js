@@ -35,7 +35,7 @@ const CARDAPIO_CONFIG = {
             desc: 'Base zero açúcar com opções proteicas.',
             color: '#4CAF50',
             gradient: 'linear-gradient(135deg, #D0FFE8 0%, #C8F0DC 100%)',
-            available: true
+            available: false
         },
         {
             id: 'acai',
@@ -204,3 +204,14 @@ const CARDAPIO_CONFIG = {
         { baseId: 'ninho', saborId: 'oreo',           label: 'Crocante' }
     ]
 };
+
+(function renumerarSaboresPadrao() {
+    let numero = 1;
+    Object.keys(CARDAPIO_CONFIG.sabores || {}).forEach(function (grupoKey) {
+        const grupo = CARDAPIO_CONFIG.sabores[grupoKey] || {};
+        (grupo.items || []).forEach(function (item) {
+            if (item && !item.numero) item.numero = numero;
+            numero += 1;
+        });
+    });
+})();
