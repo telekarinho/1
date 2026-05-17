@@ -337,6 +337,25 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
                     <button class="fn-btn" onclick="fnIndicarAmigo()" style="background:#fff;color:#F59E0B">📲 Compartilhar link</button>
                 </div>
 
+                <!-- 📅 Card "Minha jornada hoje" — mostra jornada efetiva + override se houver -->
+                <div class="fn-card" id="jornadaHojeCard" style="background:linear-gradient(135deg,#DBEAFE,#BFDBFE);border:none;display:none">
+                    <h3 style="color:#1E40AF">📅 Sua jornada hoje</h3>
+                    <div id="jornadaHojeBody" style="font-size:.92rem;color:#1E3A8A;line-height:1.6"></div>
+                </div>
+
+                <!-- 📌 LEMBRETE CLT amigável (responsabilidade do funcionário) -->
+                <div class="fn-card" id="cltReminderCard" style="background:#FEF3C7;border-left:4px solid #F59E0B">
+                    <div style="display:flex;gap:10px;align-items:flex-start">
+                        <span style="font-size:1.5rem">⏰</span>
+                        <div>
+                            <strong style="color:#92400E;font-size:.92rem">Bater ponto é sua responsabilidade!</strong>
+                            <div style="font-size:.78rem;color:#92400E;margin-top:4px;line-height:1.5">
+                                Conforme <b>CLT art. 74</b>, registrar entrada/saída é dever do trabalhador. Bate certinho e ganha pontuação no app + mais segurança no banco de horas 💪🐑
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="fn-card">
                     <h3>📍 Suas marcacoes de hoje</h3>
                     <div class="fn-marcacoes" id="todayMarks"></div>
@@ -345,6 +364,8 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
                         ⏰ Bater Ponto
                         <small id="baterPontoSub">Proximo: Entrada</small>
                     </button>
+                    <!-- 💼 Saldo dia (banco horas) — só aparece após completar jornada -->
+                    <div id="saldoDiaCard" style="display:none;margin-top:12px;padding:10px 14px;background:#F0FDF4;border:1px solid #16A34A;border-radius:10px;text-align:center;font-size:.85rem"></div>
                 </div>
 
                 <div class="fn-card">
@@ -1469,6 +1490,46 @@ function fnRenderHoje(session, staff) {
     var today = Utils.todayKey();
     var dia = TimeClock.computeDay(session.franchiseId, session.staffId, today);
     var staffData = staff || (DataStore.getCollection('staff', session.franchiseId) || []).find(function(x) { return x.id === session.staffId; });
+
+    // 📅 CARD "Minha jornada hoje" — mostra horário efetivo + override se houver
+    var jornCard = document.getElementById('jornadaHojeCard');
+    var jornBody = document.getElementById('jornadaHojeBody');
+    if (jornCard && jornBody && dia.jornadaEfetiva) {
+        var j = dia.jornadaEfetiva;
+        var html = '<div style="font-size:1.1rem;font-weight:800;font-family:\'Baloo 2\',cursive;color:#1E3A8A">⏰ ' + j.hora_entrada + ' → ' + j.hora_saida + '</div>';
+        html += '<div style="font-size:.78rem;margin-top:4px">';
+        html += 'Intervalo almoço/janta: <b>' + (j.intervalo_almoco_min || 0) + 'min</b>';
+        html += ' • Carga prevista: <b>' + Math.floor(j.cargaDiariaMin / 60) + 'h' + (j.cargaDiariaMin % 60 ? (j.cargaDiariaMin % 60) + 'min' : '') + '</b>';
+        html += '</div>';
+        if (j.source === 'override') {
+            html += '<div style="background:#FEF3C7;color:#92400E;padding:6px 10px;border-radius:8px;margin-top:8px;font-size:.78rem">📅 <b>Jornada ajustada pelo seu gerente hoje:</b> ' + Utils.escapeHtml(j.sourceLabel.replace(/^Ajuste pontual:\s*/, '')) + '</div>';
+        } else if (j.source === 'feriado') {
+            html += '<div style="background:#FEE2E2;color:#991B1B;padding:6px 10px;border-radius:8px;margin-top:8px;font-size:.78rem">🎉 ' + Utils.escapeHtml(j.sourceLabel) + '</div>';
+        } else if (j.source === 'domingo') {
+            html += '<div style="background:#EDE9FE;color:#5B21B6;padding:6px 10px;border-radius:8px;margin-top:8px;font-size:.78rem">📿 ' + Utils.escapeHtml(j.sourceLabel) + '</div>';
+        }
+        jornBody.innerHTML = html;
+        jornCard.style.display = 'block';
+    } else if (jornCard) {
+        jornCard.style.display = 'none';
+    }
+
+    // 💼 Saldo do dia (banco horas) — só após completar
+    var saldoCard = document.getElementById('saldoDiaCard');
+    if (saldoCard) {
+        if (dia.completo) {
+            var sgn = dia.saldoDiaMin >= 0 ? '+' : '-';
+            var icon = dia.saldoDiaMin >= 0 ? '🟢' : '🔴';
+            var lbl = dia.saldoDiaMin >= 0 ? 'a favor (vai pro seu banco de horas)' : 'devendo (compensar nos próximos dias)';
+            saldoCard.style.display = 'block';
+            saldoCard.style.background = dia.saldoDiaMin >= 0 ? '#F0FDF4' : '#FEF2F2';
+            saldoCard.style.borderColor = dia.saldoDiaMin >= 0 ? '#16A34A' : '#DC2626';
+            saldoCard.innerHTML = '<div style="font-size:1rem;font-weight:800">' + icon + ' Trabalhado: ' + dia.horasFormatado + ' • Saldo: <b>' + sgn + TimeClock.minutesToTime(Math.abs(dia.saldoDiaMin)) + '</b></div>'
+                + '<small style="color:#6B7280">' + lbl + '</small>';
+        } else {
+            saldoCard.style.display = 'none';
+        }
+    }
 
     var marks = [
         { lbl: 'Entrada', rec: dia.entrada },
