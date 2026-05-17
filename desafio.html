@@ -2947,6 +2947,14 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
 
   var rotEl = document.getElementById('promoRotator');
   if (!rotEl) return;
+  // CRITICO: move pro body. O rotator nasce dentro de #stepAttract,
+  // mas quando outro step fica ativo (step0/stepDiff/etc), stepAttract
+  // vira display:none e leva o rotator junto — mesmo com position:fixed,
+  // parent hidden invalida renderizacao. Movendo pro <body>, ele fica
+  // independente dos steps e cobre a tela em TODAS as fases.
+  if (rotEl.parentElement !== document.body) {
+    document.body.appendChild(rotEl);
+  }
   var promoIdx = -1;
   var promoTimer = null;
   var promoActive = false;

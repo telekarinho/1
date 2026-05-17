@@ -1,0 +1,55 @@
+name: Reject merge conflict markers
+
+# Rejeita qualquer PR/push que tenha marcadores de conflito de merge
+# não resolvidos (<<<<<<<, =======, >>>>>>>).
+#
+# Motivacao: PR #659 vazou 154 marcadores em 62 arquivos pra producao
+# porque ninguem reviu visualmente o merge. PR #662 (cleanup) +
+# autopilot/fix-merge-markers-v2.js limparam tudo. Esse check garante
+# que NAO acontece de novo.
+#
+# REGRA #0 anti-regressao: bloqueia merge automatico que destrua o
+# que estava funcionando.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Search for unresolved merge conflict markers
+        run: |
+          # Procura marcadores SO no inicio de linha pra evitar falso
+          # positivo em documentacao falando sobre git.
+          # Exclui: .git, node_modules, autopilot/memory (Belinha logs),
+          # backups, tmp-* (working trees temporarios).
+          MATCHES=$(grep -rnE "^<<<<<<< |^=======$|^>>>>>>> " . \
+            --exclude-dir=.git \
+            --exclude-dir=node_modules \
+            --exclude-dir=backups \
+            --exclude-dir=memory \
+            --exclude-dir=tmp-zap-app \
+            --exclude-dir=tmp-zap-placeholder \
+            --include="*.html" --include="*.js" --include="*.css" \
+            --include="*.json" --include="*.md" --include="*.kt" \
+            --include="*.xml" --include="*.yml" --include="*.yaml" \
+            2>/dev/null || true)
+
+          if [ -n "$MATCHES" ]; then
+            echo "::error::Marcadores de merge conflict nao resolvidos encontrados!"
+            echo ""
+            echo "$MATCHES" | head -30
+            echo ""
+            echo "Para limpar automaticamente:"
+            echo "  node autopilot/fix-merge-markers-v2.js"
+            echo ""
+            echo "Apos limpar, commit e push de novo."
+            exit 1
+          fi
+          echo "OK — zero marcadores de merge no codebase."
