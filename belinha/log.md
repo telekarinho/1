@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #249 — 2026-05-17
+
+**Área:** UX/Frontend — Correção timezone BRT em date-gates Junina (`cardapio.html`)
+
+**Contexto:** Prescrito pelo ciclo #248 como próximo passo. Auditei `cardapio.html` para verificar: (1) card Potinho Junino com link para `potinho-junino-londrina.html` e (2) pistacho nos toppings.
+
+**O que pesquisou/analisou:**
+- Leu `cardapio.html` inteiro — `renderJunina()` e date-gate da tab Junina já estão implementados com link correto para `potinho-junino-londrina.html` ✅
+- Identificou bug de timezone: `new Date('2026-06-17')` cria `2026-06-17T00:00:00Z` = `2026-06-16T21:00:00 BRT` — tab e card "disponível" apareceriam ~3h antes do previsto (21h de 16/06 em vez de meia-noite de 17/06)
+- Mesma falha na date-gate da tab Junina (03/06): `new Date('2026-06-03')` = BRT 21h de 02/06
+- Comparou com padrão correto de `index.html` (já usa `getTimezoneOffset() + offset -3h` para day-level BRT)
+- Pistacho: NÃO listado nos adicionais — correto, é produto rival TheBest (Piscininha), não deve aparecer como topping MilkyPot; estratégia de contra-posicionamento (ciclo #248) é a resposta certa
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `cardapio.html` | Adicionada função `getBRTDay()` (UTC-3 offset); substituídas as 2 comparações `new Date('2026-06-XX')` por lógica day-level BRT; 11 linhas +2 linhas removidas |
+
+**Detalhes do fix:**
+- `getBRTDay()` retorna `{ y, m, d }` usando `getTimezoneOffset()*60000 - 3*3600000` — padrão idêntico ao já estabelecido em `index.html`
+- `isAvailable` em `renderJunina()`: `brt.y > 2026 || (y===2026 && (m>6 || (m===6 && d>=17)))`
+- Tab date-gate: `afterTeaser = brt.y > 2026 || (y===2026 && (m>6 || (m===6 && d>=3)))`
+- Nenhuma comparação `new Date('2026-06-XX')` restante no arquivo
+
+**Commit:** `2077961`
+
+**Próximo passo sugerido:**
+- **Ciclo #250 — Conteúdo:** Script Reel #3 "Linha Zero/Fit" (03/06) OU tema junino — decisão depende de confirmação do operador (prazo 30/05). Se operador não confirmar, default = Linha Zero/Fit (produto permanente, não precisa de info nova)
+- **Ciclo #251 — Concorrentes:** Refetch Johnny Rockets/Jhoy Londrina — v21d violado (+50 ciclos sem update)
+- **Ciclo #252 — Conversão:** Mecânica UGC "foto com potinho = reward" — prescrita desde ciclo #226, ainda pendente
+- **Operador (URGENTE — 13 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — impacta Reel #3 (03/06) e estratégia junina inteira
+- **Operador (URGENTE — 17 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador (06/06):** Publicar Peça A (stories contra-posicionamento) às 18h
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #249 | 2026-05-17_
+
+---
+
 ## Ciclo #248 — 2026-05-17
 
 **Área:** Conversão — Copy contra-posicionamento "potinho vs. bufê self-service" (janela 06–12/06)
