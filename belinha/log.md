@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #247 — 2026-05-17
+
+**Área:** Conteúdo — Script completo reel 27/05 "Os toppings infinitos" (Série educativa #2/4)
+
+**Contexto:** Prescrito pelo Ciclo #246 como próximo passo imediato. Reel #1 da série educativa ("Ninho vs. Açaí", 20/05) foi publicado e encerrou com o gancho "E os toppings? Você sabia que dá pra combinar isso?". Reel #2 responde essa pergunta com urgência visual — mostrando a sequência frutas → calda → biscoito → chocolate no mesmo potinho. Sem script completo, operador improvisaria (ou não filmaria).
+
+**O que pesquisou/analisou:**
+- Leu `reel-20mai-ninho-vs-acai-dois-mundos.md` — extraiu gancho de série, tabela de próximos reels e tom estabelecido (lo-fi candy, split screen, ovelhinha como guia)
+- Leu `diferenciacao-potinho-sem-balanca.md` — confirmou ângulo anti-balança como diferencial implícito vs. TheBest (R$6,49/100g com Piscininha pistacho 06/06–06/07)
+- Leu `belinha/log.md` ciclos #244–#246 — confirmou que Piscininha TheBest começa 06/06, tornando o argumento "sem balança, sem culpa de topping" ainda mais urgente; Namorados em 26 dias
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reel-27mai-toppings-infinitos.md` | CRIADO — 235 linhas: script 3 cenas (15s) com timing exato, direção de arte, passo a passo CapCut, caption longa (IG) + curta (TikTok), checklist de produção, estratégia de engajamento pós-publicação, briefing estratégico, KPIs, tabela da série completa |
+
+**Destaques:**
+1. **Script produtivo sem improvisar:** 3 cenas com segundos exatos (0–3s / 3–10s / 10–15s), instrução de câmera (flat lay top-down), dica de edição CapCut, trilha da mesma família do Reel 1 → coerência de série.
+2. **Sequência visual deliberada:** Hook (potinho vazio + pergunta) → 4 micro-clipes de montagem rápida no beat → CTA "Qual é o SEU topping favorito?" — fricção zero para comentar.
+3. **Anti-balança implícito:** Cada topping adicionado visualmente reforça "aqui você empilha sem culpa" — contra-posicionamento vs. TheBest Piscininha que coberta por grama justamente no período 06/06–06/07 (overlap Namorados + Junina).
+4. **Engajamento como dado de produto:** Toppings mais citados nos comentários = preferências reais do público Londrina — operador pode usar para planejar estoque e teasers da Festa Junina.
+5. **Tabela de série atualizada:** Reel 3 (03/06) tem nota de timing — decisão sobre manter "Linha Zero/Fit" vs. antecipar tema junino depende da confirmação do Potinho Junino pelo operador (prazo 30/05).
+
+**Commit:** `4823376`
+
+**Próximo passo sugerido:**
+- **Ciclo #248 — Conversão:** Copy de contra-posicionamento "potinho vs. bufê self-service" — prescrito em #246 e #247; janela crítica: Piscininha TheBest ativa 06/06 (20 dias). Criar 3–5 cards para feed OU caption adaptável para stories no período 06/06–12/06.
+- **Ciclo #249 — UX:** Auditar `cardapio.html` — verificar se card Potinho Junino está visível com link para `potinho-junino-londrina.html`; verificar se topping pistacho aparece ou há placeholder (info depende de confirmação do operador até 30/05)
+- **Ciclo #250 — Conteúdo:** Script Reel #3 "Linha Zero/Fit" (03/06) OU ajustar para tema junino conforme decisão do operador. Reel 3 da série educational chega justamente no primeiro dia de teaser Junina.
+- **Operador (URGENTE — 13 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — impacta Reel 3 (03/06) e toda a estratégia junina
+- **Operador (URGENTE):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador (20/05):** Publicar Reel 1 "Ninho vs. Açaí" às 18h (se ainda não publicado) — série depende desta publicação primeiro
+- **Operador (27/05):** Publicar Reel 2 "Os toppings infinitos" às 18h seguindo `reel-27mai-toppings-infinitos.md`
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #247 | 2026-05-17_
+
+---
+
 ## Ciclo #246 — 2026-05-17
 
 **Área:** Concorrentes — The Best Açaí: Piscininha pistacho (campanha 06/06–06/07) + Aurora Shopping quiosque (4ª unidade Londrina)
