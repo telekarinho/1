@@ -216,7 +216,7 @@ O Clip C dos dois potinhos juntos (Linha Zero + Clássico) cria um pré-frame vi
 | 1 | 20/05 (Qua) | Ninho vs. Açaí — "Dois mundos" | `reel-20mai-ninho-vs-acai-dois-mundos.md` | ✅ |
 | 2 | 27/05 (Qua) | Os toppings infinitos | `reel-27mai-toppings-infinitos.md` | ✅ |
 | 3 | 03/06 (Qua) | Linha Zero/Fit — "Sem culpa de verdade" | `reel-03jun-linha-zero-fit-sem-culpa.md` | ✅ **Este arquivo** |
-| 4 | 10/06 (Qua) | Montagem ao vivo — bastidores | *(ciclo #251 sugerido)* | ⏳ |
+| 4 | 10/06 (Qua) | Montagem ao vivo — bastidores | ✅ Script pronto (`reel-10jun-montagem-ao-vivo-bastidores.md`) — ciclo #251 | ✅ |
 
 > **Nota:** Reel 4 (10/06) é 2 dias antes do Namorados (12/06). Oportunidade: mostrar bastidores da montagem de um potinho especial + CTA direto para o Namorados. Pode incluir dois potinhos sendo montados simultaneamente (variação Duo).
 

@@ -226,7 +226,7 @@ Descoberta → [Reel 1: Ninho vs. Açaí] → Consideração → [Reel 2: Toppin
 | 1 | 20/05 (Qua) | Ninho vs. Açaí — "Dois mundos" | ✅ Script pronto (`reel-20mai-ninho-vs-acai-dois-mundos.md`) |
 | 2 | 27/05 (Qua) | Os toppings infinitos | ✅ **Este arquivo** |
 | 3 | 03/06 (Qua) | Linha Zero/Fit — "Sem culpa de verdade" | ✅ Script pronto (`reel-03jun-linha-zero-fit-sem-culpa.md`) — ciclo #250 |
-| 4 | 10/06 (Qua) | Montagem ao vivo — bastidores | ⏳ Pendente (ciclo #251 sugerido) |
+| 4 | 10/06 (Qua) | Montagem ao vivo — bastidores | ✅ Script pronto (`reel-10jun-montagem-ao-vivo-bastidores.md`) — ciclo #251 |
 
 > **Nota de timing:** Reel 3 (03/06) manteve tema Linha Zero/Fit (operador não confirmou Potinho Junino até prazo). Stories enquete junina às 19h30 do mesmo dia fazem a transição para o teaser sazonal (`stories-enquete-sabor-junino-03jun.md`).
 
