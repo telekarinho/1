@@ -490,7 +490,11 @@ const DataStore = {
             // apaga as batidas da outra. Merge por id mantém todas as marcações.
             docId.startsWith('time_clock_records_') ||
             docId.startsWith('time_clock_justifications_') ||
-            docId.startsWith('time_clock_audit_')
+            docId.startsWith('time_clock_audit_') ||
+            // 📝 Solicitações + 📣 Comunicados — múltiplos devices escrevem
+            docId.startsWith('solicitacoes_') ||
+            docId.startsWith('comunicados_') ||
+            docId.startsWith('treinamentos_')
         );
     },
 
@@ -658,7 +662,14 @@ const DataStore = {
             // mostrava 0 marcações mesmo após funcionária bater.
             'time_clock_records_' + fid,
             'time_clock_justifications_' + fid,
-            'time_clock_audit_' + fid
+            'time_clock_audit_' + fid,
+            // 📝 COLABORADOR app — solicitações (atestado/ajuste/troca/abono/férias/falar gerente)
+            // viram docs em solicitacoes_<fid>. Admin no painel precisa ler pra aprovar/rejeitar.
+            'solicitacoes_' + fid,
+            // 📣 COMUNICADOS do gerente → app colaborador exibe na tab Avisos
+            'comunicados_' + fid,
+            // 🎓 TREINAMENTOS customizados do gerente
+            'treinamentos_' + fid
         ];
     },
 

@@ -1028,6 +1028,33 @@
         ptLoadHoje();
         document.getElementById('ptCurrentNSR').textContent = TimeClock.getCurrentNSR(franchiseId) || '0';
 
+        // 🔄 AUTO-RERENDER quando time_clock_records_ chega do Firestore (cross-device)
+        // Permite que admin no PC veja a batida do funcionario no celular EM TEMPO REAL
+        // sem precisar F5. Disparado pelo DataStore onSnapshot listener (linha ~810).
+        // Eventos: 'mp_remote_update' (per-doc sync) e 'mp_synced' (sync inicial).
+        const TC_KEYS = ['time_clock_records_' + franchiseId, 'time_clock_justifications_' + franchiseId, 'staff_' + franchiseId];
+        let _ptRerenderTimer = null;
+        function _ptScheduleRerender() {
+            // Debounce 300ms — agrupa múltiplos updates rapidos (varias batidas em sequencia)
+            if (_ptRerenderTimer) clearTimeout(_ptRerenderTimer);
+            _ptRerenderTimer = setTimeout(function() {
+                _ptRerenderTimer = null;
+                try {
+                    var activeTab = document.querySelector('.pt-tab.active');
+                    var activeTabName = activeTab ? activeTab.dataset.tab : 'hoje';
+                    if (activeTabName === 'hoje') ptLoadHoje();
+                    else if (activeTabName === 'espelho' && typeof ptLoadEspelho === 'function') ptLoadEspelho();
+                    console.log('🔄 painel/ponto.html auto-rerender:', activeTabName);
+                } catch (e) { /* ignora */ }
+            }, 300);
+        }
+        window.addEventListener('mp_remote_update', function(e) {
+            if (e && e.detail && e.detail.key && TC_KEYS.indexOf(e.detail.key) >= 0) {
+                _ptScheduleRerender();
+            }
+        });
+        window.addEventListener('mp_synced', function() { _ptScheduleRerender(); });
+
         // ============================================
         // 🛠 EDITAR BATIDA DE PONTO (admin) — modal de ajuste
         // ============================================
