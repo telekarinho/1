@@ -778,11 +778,18 @@
             renderBatch();
         }
 
+        function getBRTDay() {
+            var now = new Date();
+            var brt = new Date(now.getTime() + now.getTimezoneOffset() * 60000 - 3 * 3600000);
+            return { y: brt.getFullYear(), m: brt.getMonth() + 1, d: brt.getDate() };
+        }
+
         function renderJunina() {
             var grid = document.getElementById('productGrid');
             if (!grid) return;
             if (lazyObserver) { lazyObserver.disconnect(); lazyObserver = null; }
-            var isAvailable = new Date() >= new Date('2026-06-17');
+            var brt = getBRTDay();
+            var isAvailable = brt.y > 2026 || (brt.y === 2026 && (brt.m > 6 || (brt.m === 6 && brt.d >= 17)));
             if (isAvailable) {
                 grid.innerHTML =
                     '<a href="potinho-junino-londrina.html" class="product-card-mobile" style="text-decoration:none;color:inherit;" aria-label="Potinho Junino — Edição Limitada de Junho">' +
@@ -831,7 +838,9 @@
 
         // Date-gated Junina tab: visible from 03/06/2026 (teaser day)
         (function() {
-            if (new Date() < new Date('2026-06-03')) return;
+            var brt = getBRTDay();
+            var afterTeaser = brt.y > 2026 || (brt.y === 2026 && (brt.m > 6 || (brt.m === 6 && brt.d >= 3)));
+            if (!afterTeaser) return;
             var tabs = document.getElementById('categoryTabs');
             if (!tabs) return;
             var btn = document.createElement('button');
