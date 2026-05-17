@@ -1103,13 +1103,6 @@
                 '  </div>' +
                 '  <div style="background:#F9FAFB;padding:14px 24px;border-top:1px solid #E5E7EB;font-size:13px;line-height:1.7">' +
                 '    <div><b>📍 Localização:</b> ' + escapeHtml(geoInfo) + ' ' + escapeHtml(geofence) + '</div>' +
-                (rec.faceMatch ? (function() {
-                    var fm = rec.faceMatch;
-                    var color = fm.status === 'match' ? '#16A34A' : (fm.status === 'maybe' ? '#F59E0B' : (fm.status === 'no_match' ? '#DC2626' : '#6B7280'));
-                    var icon = fm.status === 'match' ? '✓' : (fm.status === 'maybe' ? '⚠' : (fm.status === 'no_match' ? '✗' : '?'));
-                    var label = fm.status === 'match' ? 'Rosto reconhecido (mesma pessoa)' : (fm.status === 'maybe' ? 'Reconhecimento parcial (revisar)' : (fm.status === 'no_match' ? 'Rosto DIFERENTE da foto-ref' : 'Sem detecção facial'));
-                    return '<div><b>🤖 Biometria:</b> <span style="color:' + color + ';font-weight:800">' + icon + ' ' + label + '</span> · distance=' + (fm.distance != null ? fm.distance : '?') + ' · confiança=' + Math.round((fm.confidence || 0) * 100) + '%</div>';
-                })() : '<div><b>🤖 Biometria:</b> <span style="color:#6B7280">não calculada (sem foto-ref ou biometria indisponível)</span></div>') +
                 '    <div><b>🔐 NSR:</b> ' + rec.nsr + ' · <b>Hash:</b> <code style="font-size:10px">' + (rec.hash || '').slice(0, 16) + '...</code></div>' +
                 '    <div><b>📱 Canal:</b> ' + escapeHtml(rec.channel || '?') + ' · <b>Device:</b> ' + escapeHtml((rec.userAgent || '').slice(0, 80)) + '</div>' +
                 (rec.flaggedReason ? '<div style="background:#FEE2E2;color:#991B1B;padding:6px 10px;border-radius:8px;margin-top:6px"><b>🚩 Suspeito:</b> ' + escapeHtml(rec.flaggedReason) + '</div>' : '') +

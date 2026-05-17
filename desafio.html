@@ -2860,6 +2860,19 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   box-shadow:0 14px 40px rgba(0,0,0,.25);
   margin-top:18px;
 }
+.promo-qr{
+  width:clamp(140px,16vw,240px); height:auto;
+  margin-top:clamp(16px,2.6vh,28px);
+  border-radius:18px;
+  padding:clamp(10px,1.4vw,18px);
+  background:#fff;
+  box-shadow:0 14px 48px rgba(0,0,0,.28), 0 0 0 4px rgba(255,255,255,.5);
+  animation:promoQrPulse 2.2s ease-in-out infinite;
+}
+@keyframes promoQrPulse{
+  0%,100%{transform:scale(1); box-shadow:0 14px 48px rgba(0,0,0,.28), 0 0 0 4px rgba(255,255,255,.5)}
+  50%{transform:scale(1.04); box-shadow:0 22px 60px rgba(0,0,0,.35), 0 0 0 8px rgba(255,255,255,.7)}
+}
 .promo-tap{
   position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
   color:rgba(255,255,255,.85);
@@ -2893,56 +2906,85 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   var isTvMode = urlP.has('tv') || urlP.has('kiosk');
   if (!isTvMode) return;
 
-  // Brief Carousel Growth Engine — 6 anúncios virais
+  // 10 slides — cada um vinculado a uma promocao REAL do sistema,
+  // com QR code apontando pra URL funcional + UTM tracking pro admin
+  // medir scans em painel/tv-promo-metrics.html.
+  // Copies pelo Whimsy Injector (humor BR autoironico, ovelhinha psico).
+  // URL params: ?source=tv-desafio&promo=<id>&fid=<franchiseId>
+  var fidParam = (urlP.get('franchise') || urlP.get('f') || 'muffato-quintino');
+  function qrUrl(path, promoId){
+    var sep = path.indexOf('?') >= 0 ? '&' : '?';
+    var url = 'https://milkypot.com' + path + sep + 'source=tv-desafio&promo=' + promoId + '&fid=' + encodeURIComponent(fidParam);
+    return 'https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&color=1A1A2E&bgcolor=FFFFFF&data=' + encodeURIComponent(url);
+  }
+  function qrExternal(rawUrl, promoId){
+    // URLs externas (Google review, Instagram) — passa pelo /go.html
+    // proxy que conta o scan antes do redirect.
+    var proxy = 'https://milkypot.com/go.html?to=' + encodeURIComponent(rawUrl) + '&promo=' + promoId + '&fid=' + encodeURIComponent(fidParam) + '&source=tv-desafio';
+    return 'https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&color=1A1A2E&bgcolor=FFFFFF&data=' + encodeURIComponent(proxy);
+  }
+
   var SLIDES = [
-    { // 1. COMBO MONSTRO (abre forte, 5s)
-      emoji:'🥤🔥', eyebrow:'MILKYSHAKE 770ML',
-      headline:'770ml de PURO CAOS',
-      subtext:'O MilkyShake que não cabe na mão. Nem no story.',
-      cta:'Mostra esse QR no caixa = topping grátis',
-      bg:'linear-gradient(135deg,#7E57C2 0%,#42A5F5 100%)',
-      dur:6000
-    },
-    { // 2. RASPADINHA AO VIVO (cassino)
-      emoji:'🎰', eyebrow:'RASPA E GANHA',
-      headline:'Raspa aí, medroso 👀',
-      subtext:'Tem gente ganhando MilkyShake de graça agora.\nVocê tá só olhando?',
-      cta:'Aponta a câmera e raspa AGORA',
-      bg:'linear-gradient(135deg,#FF4F8A 0%,#7E57C2 100%)',
-      dur:8000
-    },
-    { // 3. INFLUENCER MODE (META — pede pra filmar a TV)
-      emoji:'💅📸', eyebrow:'PROGRAMA INFLUENCER',
-      headline:'Filma essa TV e ganha R$',
-      subtext:'Posta no story marcando @milkypot →\nvira influencer oficial → bonus toda semana.',
-      cta:'Vira influencer agora — cadastro 30s',
-      bg:'linear-gradient(135deg,#FF4F8A 0%,#FF8A65 100%)',
-      dur:10000
-    },
-    { // 4. DESAFIO DA BALANÇA (300g)
-      emoji:'🐑⚖️', eyebrow:'DESAFIO BALANÇA',
-      headline:'300g na ponta ou paga em dobro',
-      subtext:'Acertou na régua = sorvete grátis.\nErrou = a ovelhinha ri de você.',
-      cta:'Escaneia e vê o ranking dos craques',
-      bg:'linear-gradient(135deg,#42A5F5 0%,#FF4F8A 100%)',
-      dur:10000
-    },
-    { // 5. MILKYCLUBE (urgência R$5 pra cadastrar)
-      emoji:'💰', eyebrow:'CASHBACK MILKYCLUBE',
-      headline:'Você tá deixando dinheiro na mesa',
-      subtext:'Cada R$1 vira MilkyCoin. Acumula\ne some do boleto. Ovelhinha já depositou R$5 pra você.',
-      cta:'Cadastra em 7s — leva os R$5 agora',
-      bg:'linear-gradient(135deg,#7E57C2 0%,#FFD700 100%)',
-      dur:9000
-    },
-    { // 6. BUFFET 5,99 (info utilitária)
-      emoji:'🍦', eyebrow:'BUFFET SELF-SERVICE',
-      headline:'Monta. Pesa. Paga pouco.',
-      subtext:'R$ 5,99 / 100g. Calma na régua que\ndá pra fazer obra de arte.',
-      cta:'Vê o cardápio completo + coberturas',
-      bg:'linear-gradient(135deg,#42A5F5 0%,#80D8FF 100%)',
-      dur:7000
-    }
+    { id:'raspadinha', emoji:'🎫', eyebrow:'RASPA E CHORA',
+      headline:'Gente de bem raspa. Os outros, azar.',
+      subtext:'QR vem na nota. 7 dias pra raspar.\nPerdeu o prazo? Problema seu, meu bem.',
+      cta:'Aponta a câmera. A ovelha explica.',
+      qr: qrUrl('/raspinha.html', 'raspadinha'),
+      bg:'linear-gradient(135deg,#FF4F8A 0%,#7E57C2 100%)', dur:9000 },
+    { id:'milkyclube', emoji:'🐑', eyebrow:'MILKYCLUBE (DE GRAÇA)',
+      headline:'Você já gasta. Agora gasta ganhando.',
+      subtext:'Cashback de verdade. Sem letrinha miúda.\nSeu aniversário a ovelha LEMBRA. Sua mãe não.',
+      cta:'milkypot.com/clube — corre lá',
+      qr: qrUrl('/clube.html', 'milkyclube'),
+      bg:'linear-gradient(135deg,#7E57C2 0%,#42A5F5 100%)', dur:9000 },
+    { id:'roleta', emoji:'🎰', eyebrow:'ROLETA DA SORTE',
+      headline:'Pagou? Gira. A ovelha exige.',
+      subtext:'20% OFF, topping free, +50 coins ou MEGA prêmio.\nNão girou? Tá deixando dinheiro na mesa.',
+      cta:'Aparece na tela após o pedido',
+      qr: qrUrl('/cardapio.html', 'roleta'),
+      bg:'linear-gradient(135deg,#FFD700 0%,#FF4F8A 100%)', dur:8500 },
+    { id:'desafio10s', emoji:'⏱️', eyebrow:'DESAFIO 10 SEGUNDOS',
+      headline:'Para o cronômetro em 10s. Fácil? KKK',
+      subtext:'Margem de 0,3s. Errou por 0,4? Vai chorar no banho.\nDá pra jogar daí mesmo, ó.',
+      cta:'milkypot.com/desafio — duvido',
+      qr: qrUrl('/desafio.html', 'desafio10s'),
+      bg:'linear-gradient(135deg,#42A5F5 0%,#FF4F8A 100%)', dur:9000 },
+    { id:'acerta300', emoji:'⚖️', eyebrow:'ACERTOU 300g, NÃO PAGA',
+      headline:'Bateu 300g cravado? Casa paga.',
+      subtext:'Margem de 3g. Sim, a balança é honesta.\nVocê é que tem mão pesada, amigão.',
+      cta:'Monta com fé. Pesa com coragem.',
+      qr: qrUrl('/cardapio.html#buffet', 'acerta300'),
+      bg:'linear-gradient(135deg,#FF8A65 0%,#FFD700 100%)', dur:9500 },
+    { id:'googlereview', emoji:'⭐', eyebrow:'5 ESTRELAS OU NADA',
+      headline:'Avalia aí. A ovelha tá olhando.',
+      subtext:'5 estrelas = raspadinha premium + 50 coins.\n4 estrelas? Tô magoada. 1 estrela? Tô PROCESSANDO.',
+      cta:'Pesquisa MilkyPot no Google. Vai.',
+      qr: qrExternal('https://g.page/r/CXrthQS1rgPdEAE/review', 'googlereview'),
+      bg:'linear-gradient(135deg,#4285F4 0%,#FFD700 100%)', dur:9000 },
+    { id:'instagram', emoji:'📸', eyebrow:'POSTA E LUCRA',
+      headline:'Marca a gente ou come em silêncio.',
+      subtext:'@milkypotbr #PrimeiraMordidaMilky = 150 coins.\nFoto borrada também conta. Sem julgamento.',
+      cta:'Abre o Insta AGORA, antes de comer.',
+      qr: qrExternal('https://instagram.com/milkypotbr', 'instagram'),
+      bg:'linear-gradient(135deg,#E1306C 0%,#FCAF45 100%)', dur:9000 },
+    { id:'influencer', emoji:'💸', eyebrow:'VIRA INFLUENCER',
+      headline:'Teu amigo come. Você embolsa.',
+      subtext:'Link referral próprio. % em coins por indicado.\nNão precisa ter seguidor. Só amigo guloso.',
+      cta:'milkypot.com/influencer — cadastra',
+      qr: qrUrl('/influencer.html', 'influencer'),
+      bg:'linear-gradient(135deg,#FF4F8A 0%,#FF8A65 100%)', dur:9500 },
+    { id:'streak', emoji:'🔥', eyebrow:'STREAK DIÁRIO',
+      headline:'Veio ontem. Vem hoje. Amanhã tbm.',
+      subtext:'3 dias: +25 coins. 7: SUNDAE FREE. 30: camiseta LENDÁRIO.\nQuebrou? A ovelha não te conhece mais.',
+      cta:'Aparece todo dia. Só não falhar.',
+      qr: qrUrl('/clube.html#streak', 'streak'),
+      bg:'linear-gradient(135deg,#FF4F8A 0%,#FFD700 100%)', dur:9500 },
+    { id:'milkypass', emoji:'📱', eyebrow:'PARA DE PERDER CARTÃO',
+      headline:'Teu fidelidade mora no celular.',
+      subtext:'Apple Wallet, Google Wallet, qualquer wallet.\nMostra o QR. Pronto. Ovelha aprova.',
+      cta:'Adiciona agora. É 1 toque.',
+      qr: qrUrl('/clube.html#pass', 'milkypass'),
+      bg:'linear-gradient(135deg,#7E57C2 0%,#1A1A2E 100%)', dur:8000 }
   ];
 
   var rotEl = document.getElementById('promoRotator');
@@ -2959,6 +3001,24 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   var promoTimer = null;
   var promoActive = false;
 
+  // Telemetria: registra view de cada slide em tv_promo_events.
+  // painel/tv-promo-metrics.html agrega esses eventos por dia/promocao.
+  function trackEvent(type, slideId){
+    try {
+      if (typeof firebase === 'undefined' || !firebase.firestore) return;
+      var today = new Date();
+      today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+      var dayKey = today.toISOString().slice(0,10);
+      firebase.firestore().collection('tv_promo_events').add({
+        type: type,
+        slideId: slideId,
+        franchiseId: fidParam,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        dayKey: dayKey
+      }).catch(function(){});
+    } catch(_) {}
+  }
+
   function renderSlide(s){
     rotEl.style.background = s.bg;
     rotEl.style.setProperty('--promo-dur', (s.dur/1000)+'s');
@@ -2970,8 +3030,10 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
         '<h1 class="promo-headline">'+ s.headline +'</h1>' +
         '<p class="promo-subtext">'+ s.subtext.replace(/\n/g,'<br>') +'</p>' +
         '<div class="promo-cta">📱 '+ s.cta +'</div>' +
-        '<div class="promo-tap">👆 Toque pra jogar o Desafio 10s</div>' +
+        (s.qr ? '<img class="promo-qr" src="'+ s.qr +'" alt="QR ' + s.id + '" loading="lazy">' : '') +
+        '<div class="promo-tap">👆 Toque pra jogar o Desafio 10s · Aponta a câmera no QR pra promo</div>' +
       '</div>';
+    trackEvent('view', s.id);
   }
 
   function nextPromo(){
