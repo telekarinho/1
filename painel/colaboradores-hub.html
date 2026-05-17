@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>MilkyPot — Hub Colaboradores (RH)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/shared-panel.css">
+  <style>
+    .hub-page { padding: 16px; max-width: 1200px; margin: 0 auto; }
+    .hub-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 18px; }
+    .hub-stat { background: #fff; border: 1px solid #E5E7EB; border-radius: 12px; padding: 14px 18px; cursor: pointer; transition: transform .12s; }
+    .hub-stat:hover { transform: translateY(-2px); border-color: #7E57C2; }
+    .hub-stat .num { font-family: 'Baloo 2', cursive; font-size: 28px; font-weight: 900; color: #2D1747; }
+    .hub-stat .lbl { font-size: 11px; color: #6B7280; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; margin-top: 2px; }
+    .hub-stat.warn .num { color: #F59E0B; }
+    .hub-stat.success .num { color: #16A34A; }
+    .hub-stat.danger .num { color: #DC2626; }
+
+    .hub-tabs { display: flex; gap: 6px; background: #fff; border-radius: 12px; padding: 6px; margin-bottom: 18px; border: 1px solid #E5E7EB; overflow-x: auto; }
+    .hub-tab { padding: 9px 16px; border-radius: 8px; background: transparent; border: 0; font-family: inherit; font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap; color: #6B7280; display: flex; align-items: center; gap: 6px; }
+    .hub-tab.active { background: #7E57C2; color: #fff; }
+    .hub-tab .badge { background: rgba(255,255,255,.25); padding: 1px 7px; border-radius: 8px; font-size: 11px; font-weight: 800; }
+    .hub-tab:not(.active) .badge { background: #FEE2E2; color: #991B1B; }
+    .hub-panel { display: none; }
+    .hub-panel.active { display: block; }
+
+    .card { background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; padding: 16px 20px; margin-bottom: 12px; }
+    .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+    .card-title { font-weight: 800; color: #1F2937; font-size: 15px; margin: 0; }
+    .card-meta { font-size: 12px; color: #6B7280; margin-top: 2px; }
+    .status-badge { padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; }
+    .status-pending { background: #FEF3C7; color: #92400E; }
+    .status-approved { background: #DCFCE7; color: #166534; }
+    .status-rejected { background: #FEE2E2; color: #991B1B; }
+    .urgency-high { background: #FEE2E2; color: #991B1B; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; }
+
+    .card-body { background: #FAFAFA; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.5; margin-top: 8px; white-space: pre-wrap; }
+
+    .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .btn { border: 0; border-radius: 10px; padding: 9px 16px; font-weight: 800; cursor: pointer; font-family: inherit; font-size: 13px; }
+    .btn.primary { background: #7E57C2; color: #fff; }
+    .btn.green { background: #16A34A; color: #fff; }
+    .btn.warn { background: #F59E0B; color: #fff; }
+    .btn.danger { background: #DC2626; color: #fff; }
+    .btn.soft { background: #F3F4F6; color: #374151; }
+    .btn:hover:not(:disabled) { transform: translateY(-1px); }
+
+    .empty { text-align: center; padding: 50px 20px; color: #9CA3AF; background: #fff; border: 2px dashed #E5E7EB; border-radius: 14px; }
+    .empty .icon { font-size: 56px; margin-bottom: 12px; }
+
+    .form-row { margin-bottom: 12px; }
+    .form-row label { display: block; font-size: 12px; font-weight: 800; color: #374151; margin-bottom: 4px; }
+    .form-row input, .form-row select, .form-row textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #E5E7EB; border-radius: 10px; font-family: inherit; font-size: 14px; box-sizing: border-box; }
+
+    .reply-box { background: #DBEAFE; border-left: 3px solid #3B82F6; border-radius: 8px; padding: 8px 12px; margin-top: 8px; font-size: 12px; color: #1E40AF; }
+    .reply-box b { color: #1E3A8A; }
+
+    .filters { background: #fff; border: 1px solid #E5E7EB; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .filters select, .filters input { padding: 8px 12px; border: 1.5px solid #E5E7EB; border-radius: 8px; font-size: 13px; font-family: inherit; }
+
+    .new-form-card { background: linear-gradient(135deg, #FFF, #FAF5FF); border: 2px solid #E5E7EB; border-radius: 14px; padding: 16px 20px; margin-bottom: 18px; }
+    .new-form-card h3 { margin: 0 0 12px; font-family: 'Baloo 2', cursive; color: #2D1747; }
+  </style>
+</head>
+<body>
+  <div class="panel-layout">
+    <aside class="panel-sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <img src="../images/logo-milkypot-redonda.png" alt="MilkyPot" class="logo-img">
+        <h2>MilkyPot<small id="sidebarStoreName">Admin</small></h2>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-group">Colaboradores</div>
+        <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
+        <a href="ponto.html" class="sidebar-link"><span class="icon">⏰</span> Ponto Eletrônico</a>
+        <a href="colaboradores-hub.html" class="sidebar-link active"><span class="icon">📨</span> Solicitações & Comunicados</a>
+        <div class="sidebar-nav-group">Principal</div>
+        <a href="index.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+        <a href="pedidos.html" class="sidebar-link"><span class="icon">📋</span> Pedidos</a>
+        <a href="pdv.html" class="sidebar-link"><span class="icon">💻</span> PDV</a>
+        <div class="sidebar-nav-group">WhatsApp Belinha</div>
+        <a href="whatsapp-conectar.html" class="sidebar-link"><span class="icon">📱</span> Conectar</a>
+        <a href="whatsapp-conversas.html" class="sidebar-link"><span class="icon">💬</span> Conversas</a>
+        <a href="belinha-learnings.html" class="sidebar-link"><span class="icon">🎓</span> Belinha Aprende</a>
+      </nav>
+    </aside>
+
+    <main class="panel-main">
+      <header class="panel-header">
+        <button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <h1>📨 Hub Colaboradores</h1>
+      </header>
+
+      <div class="hub-page">
+        <!-- Stats -->
+        <div class="hub-stats">
+          <div class="hub-stat warn" onclick="hubSwitchTab('solicitacoes')">
+            <div class="num" id="statPending">—</div>
+            <div class="lbl">⚠ Solicitações pendentes</div>
+          </div>
+          <div class="hub-stat success">
+            <div class="num" id="statApproved">—</div>
+            <div class="lbl">✓ Aprovadas este mês</div>
+          </div>
+          <div class="hub-stat danger">
+            <div class="num" id="statRejected">—</div>
+            <div class="lbl">✗ Rejeitadas este mês</div>
+          </div>
+          <div class="hub-stat" onclick="hubSwitchTab('comunicados')">
+            <div class="num" id="statComunicados">—</div>
+            <div class="lbl">📣 Comunicados ativos</div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="hub-tabs">
+          <button class="hub-tab active" data-tab="solicitacoes" onclick="hubSwitchTab('solicitacoes')">
+            📝 Solicitações <span class="badge" id="badgePending">0</span>
+          </button>
+          <button class="hub-tab" data-tab="comunicados" onclick="hubSwitchTab('comunicados')">
+            📣 Comunicados
+          </button>
+          <button class="hub-tab" data-tab="mural" onclick="hubSwitchTab('mural')">
+            📌 Mural
+          </button>
+          <button class="hub-tab" data-tab="treinamento" onclick="hubSwitchTab('treinamento')">
+            🎓 Treinamento
+          </button>
+        </div>
+
+        <!-- === TAB: SOLICITAÇÕES === -->
+        <div class="hub-panel active" id="hub-solicitacoes">
+          <div class="filters">
+            <select id="filterSolStatus" onchange="hubRenderSolicitacoes()">
+              <option value="pending">⚠ Pending (aguardando)</option>
+              <option value="approved">✓ Aprovadas</option>
+              <option value="rejected">✗ Rejeitadas</option>
+              <option value="all">Todas</option>
+            </select>
+            <select id="filterSolType" onchange="hubRenderSolicitacoes()">
+              <option value="all">Todos tipos</option>
+              <option value="atestado">🏥 Atestado</option>
+              <option value="ajuste_ponto">⏱️ Ajuste ponto</option>
+              <option value="troca_turno">🔄 Troca turno</option>
+              <option value="abono_falta">📋 Abono falta</option>
+              <option value="ferias">🏖️ Férias</option>
+              <option value="conversa_rh">💬 Conversa</option>
+            </select>
+            <input id="filterSolSearch" type="text" placeholder="Buscar colaborador…" oninput="hubRenderSolicitacoes()" style="flex:1;min-width:200px">
+          </div>
+          <div id="solicitacoesLista"></div>
+        </div>
+
+        <!-- === TAB: COMUNICADOS === -->
+        <div class="hub-panel" id="hub-comunicados">
+          <div class="new-form-card">
+            <h3>📣 Novo comunicado pra equipe</h3>
+            <div class="form-row">
+              <label>Título</label>
+              <input id="comTitulo" type="text" placeholder="Ex: Reunião sexta às 14h">
+            </div>
+            <div class="form-row">
+              <label>Mensagem</label>
+              <textarea id="comMensagem" rows="3" placeholder="Ex: Vamos alinhar metas do mês"></textarea>
+            </div>
+            <div class="form-row" style="display:flex;gap:10px">
+              <div style="flex:1">
+                <label>Prioridade</label>
+                <select id="comPrioridade">
+                  <option value="normal">📣 Normal</option>
+                  <option value="high">⚠️ Alta</option>
+                  <option value="urgent">🚨 Urgente</option>
+                </select>
+              </div>
+              <div style="flex:0 0 auto;align-self:flex-end">
+                <button class="btn primary" onclick="hubCriarComunicado()">+ Publicar</button>
+              </div>
+            </div>
+          </div>
+          <div id="comunicadosLista"></div>
+        </div>
+
+        <!-- === TAB: MURAL === -->
+        <div class="hub-panel" id="hub-mural">
+          <div class="new-form-card">
+            <h3>📌 Postar elogio no mural</h3>
+            <div class="form-row">
+              <label>Colaborador</label>
+              <select id="muralStaff"></select>
+            </div>
+            <div class="form-row">
+              <label>Mensagem de reconhecimento</label>
+              <textarea id="muralMsg" rows="2" placeholder="Ex: Amanda salvou o dia ontem com o pedido grande, ficou até as 23h"></textarea>
+            </div>
+            <button class="btn green" onclick="hubPostarMural()">⭐ Publicar elogio</button>
+          </div>
+          <div id="muralLista"></div>
+        </div>
+
+        <!-- === TAB: TREINAMENTO === -->
+        <div class="hub-panel" id="hub-treinamento">
+          <div class="new-form-card">
+            <h3>🎓 Adicionar material de treinamento</h3>
+            <div class="form-row">
+              <label>Título</label>
+              <input id="trTitulo" type="text" placeholder="Ex: Como montar Açaí Bowl">
+            </div>
+            <div class="form-row">
+              <label>Descrição curta</label>
+              <textarea id="trDesc" rows="2" placeholder="Ex: Sequência: base → sabor → granola → frutas"></textarea>
+            </div>
+            <div class="form-row" style="display:flex;gap:10px">
+              <div style="flex:1">
+                <label>Tipo</label>
+                <select id="trTipo">
+                  <option value="guide">📖 Guia (texto)</option>
+                  <option value="video">🎥 Vídeo (URL YouTube)</option>
+                  <option value="pdf">📄 PDF (URL)</option>
+                </select>
+              </div>
+              <div style="flex:1">
+                <label>URL (opcional)</label>
+                <input id="trUrl" type="url" placeholder="https://...">
+              </div>
+            </div>
+            <button class="btn primary" onclick="hubAddTreino()">+ Adicionar material</button>
+          </div>
+          <div id="treinamentoLista"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<<<<<<< HEAD
+  <script src="../js/core/constants.js?v=mp-v281"></script>
+  <script src="../js/core/utils.js?v=mp-v281"></script>
+  <script src="../js/core/datastore.js?v=mp-v281"></script>
+  <script src="../js/core/firebase-config.js?v=mp-v281"></script>
+  <script src="../js/core/time-clock.js?v=mp-v281"></script>
+  <script src="../js/core/gamification.js?v=mp-v281"></script>
+  <script src="../js/core/auth.js?v=mp-v281"></script>
+=======
+  <script src="../js/core/constants.js?v=mp-v281"></script>
+  <script src="../js/core/utils.js?v=mp-v281"></script>
+  <script src="../js/core/datastore.js?v=mp-v281"></script>
+  <script src="../js/core/firebase-config.js?v=mp-v281"></script>
+  <script src="../js/core/time-clock.js?v=mp-v281"></script>
+  <script src="../js/core/gamification.js?v=mp-v281"></script>
+  <script src="../js/core/auth.js?v=mp-v281"></script>
+>>>>>>> origin/main
+  <script>
+  // ============================================
+  // 📨 Hub Colaboradores — RH centralizado
+  // ============================================
+  // Admin gerencia: solicitações (atestado/ajuste/troca/abono/férias),
+  // comunicados, mural, treinamentos. Aprovar dispara AÇÃO REAL:
+  // - atestado/abono → TimeClock.addJustification (vira justificativa no espelho)
+  // - ajuste_ponto → TimeClock.adjustRecord (cria registro ajustado conforme Portaria 1510)
+  // - troca_turno → grava em escala_<fid>
+  // - ferias → grava em ferias_<fid>
+  // - conversa_rh → só marca como respondida
+  // ============================================
+  let FRANCHISE_ID = null;
+  let SESSION = null;
+
+  function esc(s) { return String(s||'').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+  function timeAgo(iso) {
+    if (!iso) return '';
+    const diff = Date.now() - new Date(iso).getTime();
+    if (diff < 60000) return 'agora';
+    if (diff < 3600000) return Math.floor(diff/60000) + 'min';
+    if (diff < 86400000) return Math.floor(diff/3600000) + 'h';
+    return Math.floor(diff/86400000) + 'd';
+  }
+
+  const SOL_TYPE_META = {
+    atestado: { icon: '🏥', lbl: 'Atestado médico', color: '#3B82F6' },
+    ajuste_ponto: { icon: '⏱️', lbl: 'Ajuste de ponto', color: '#F59E0B' },
+    troca_turno: { icon: '🔄', lbl: 'Troca de turno', color: '#8B5CF6' },
+    abono_falta: { icon: '📋', lbl: 'Abono de falta', color: '#EF4444' },
+    ferias: { icon: '🏖️', lbl: 'Marcação de férias', color: '#06B6D4' },
+    conversa_rh: { icon: '💬', lbl: 'Conversa com gerente', color: '#10B981' }
+  };
+
+  function hubSwitchTab(tab) {
+    document.querySelectorAll('.hub-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    document.querySelectorAll('.hub-panel').forEach(p => p.classList.toggle('active', p.id === 'hub-' + tab));
+    if (tab === 'solicitacoes') hubRenderSolicitacoes();
+    if (tab === 'comunicados') hubRenderComunicados();
+    if (tab === 'mural') { hubLoadStaffSelect(); hubRenderMural(); }
+    if (tab === 'treinamento') hubRenderTreinamento();
+  }
+
+  function hubRenderStats() {
+    const sols = DataStore.getCollection('solicitacoes', FRANCHISE_ID) || [];
+    const now = new Date();
+    const thisMonthPrefix = now.toISOString().slice(0, 7);
+    const pending = sols.filter(s => s.status === 'pending').length;
+    const approved = sols.filter(s => s.status === 'approved' && (s.respondedAt || s.createdAt || '').slice(0, 7) === thisMonthPrefix).length;
+    const rejected = sols.filter(s => s.status === 'rejected' && (s.respondedAt || s.createdAt || '').slice(0, 7) === thisMonthPrefix).length;
+    const coms = DataStore.getCollection('comunicados', FRANCHISE_ID) || [];
+    const activeComs = coms.filter(c => !c.expiresAt || new Date(c.expiresAt) > now).length;
+    document.getElementById('statPending').textContent = pending;
+    document.getElementById('statApproved').textContent = approved;
+    document.getElementById('statRejected').textContent = rejected;
+    document.getElementById('statComunicados').textContent = activeComs;
+    document.getElementById('badgePending').textContent = pending;
+    document.getElementById('badgePending').style.display = pending > 0 ? '' : 'none';
+  }
+
+  // ============================================
+  // 📝 SOLICITAÇÕES
+  // ============================================
+  function hubRenderSolicitacoes() {
+    const el = document.getElementById('solicitacoesLista');
+    if (!el) return;
+    const fStatus = document.getElementById('filterSolStatus').value;
+    const fType = document.getElementById('filterSolType').value;
+    const fSearch = document.getElementById('filterSolSearch').value.toLowerCase().trim();
+    let list = DataStore.getCollection('solicitacoes', FRANCHISE_ID) || [];
+    list = list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    if (fStatus !== 'all') list = list.filter(s => (s.status || 'pending') === fStatus);
+    if (fType !== 'all') list = list.filter(s => s.type === fType);
+    if (fSearch) list = list.filter(s => ((s.staffName || '') + ' ' + (s.descricao || '')).toLowerCase().includes(fSearch));
+
+    if (!list.length) {
+      el.innerHTML = '<div class="empty"><div class="icon">📭</div><div>Nenhuma solicitação ' + (fStatus === 'pending' ? 'pendente' : '') + '.</div></div>';
+      return;
+    }
+
+    el.innerHTML = list.slice(0, 100).map(s => {
+      const meta = SOL_TYPE_META[s.type] || { icon: '📋', lbl: s.type, color: '#6B7280' };
+      const status = s.status || 'pending';
+      const when = '';
+      let whenStr = '';
+      try { whenStr = new Date(s.createdAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }); } catch (_) {}
+
+      const actions = status === 'pending'
+        ? '<div class="actions">'
+          + '<button class="btn green" onclick="hubAprovarSol(\'' + esc(s.id) + '\')">✓ Aprovar</button>'
+          + '<button class="btn danger" onclick="hubRejeitarSol(\'' + esc(s.id) + '\')">✗ Rejeitar</button>'
+          + '<button class="btn soft" onclick="hubMostrarPayload(\'' + esc(s.id) + '\')">🔍 Ver detalhes</button>'
+          + '</div>'
+        : '';
+
+      return '<div class="card" style="border-left:4px solid ' + meta.color + '">'
+        + '<div class="card-head">'
+        +   '<div>'
+        +     '<div class="card-title">' + meta.icon + ' ' + Utils.escapeHtml(meta.lbl) + ' — ' + Utils.escapeHtml(s.staffName || '?') + '</div>'
+        +     '<div class="card-meta">' + Utils.escapeHtml(whenStr) + ' · ' + timeAgo(s.createdAt) + ' atrás</div>'
+        +   '</div>'
+        +   '<span class="status-badge status-' + status + '">' + (status === 'pending' ? '⏳ Aguardando' : status === 'approved' ? '✓ Aprovada' : '✗ Rejeitada') + '</span>'
+        + '</div>'
+        + '<div class="card-body">' + Utils.escapeHtml(s.descricao || '') + '</div>'
+        + (s.adminReply ? '<div class="reply-box"><b>Sua resposta:</b> ' + Utils.escapeHtml(s.adminReply) + '</div>' : '')
+        + actions
+        + '</div>';
+    }).join('');
+  }
+
+  function hubMostrarPayload(id) {
+    const sol = (DataStore.getCollection('solicitacoes', FRANCHISE_ID) || []).find(s => s.id === id);
+    if (!sol) return;
+    alert(JSON.stringify(sol.payload || {}, null, 2));
+  }
+
+  function hubAprovarSol(id) {
+    const sol = (DataStore.getCollection('solicitacoes', FRANCHISE_ID) || []).find(s => s.id === id);
+    if (!sol) return alert('Solicitação não encontrada');
+    const reply = prompt('Mensagem pro colaborador (opcional):', 'Aprovado! ✓');
+    if (reply === null) return;
+
+    // 🎯 AÇÃO REAL conforme tipo
+    let actionResult = null;
+    try {
+      if (sol.type === 'atestado') {
+        // Cria justificativa de atestado pros dias informados
+        const data = sol.payload?.data;
+        const dias = parseInt(sol.payload?.dias || 1, 10);
+        if (data) {
+          for (let i = 0; i < dias; i++) {
+            const d = new Date(data + 'T12:00:00');
+            d.setDate(d.getDate() + i);
+            const dateStr = d.toISOString().slice(0, 10);
+            TimeClock.addJustification(FRANCHISE_ID, sol.staffId, dateStr, 'atestado', sol.payload?.motivo || 'Atestado médico (aprovado via hub)');
+          }
+          actionResult = `${dias} dia(s) de atestado registrado(s) como justificativa`;
+        }
+      } else if (sol.type === 'ajuste_ponto') {
+        // O ajuste retroativo precisa do recordId — admin precisa fazer manualmente no painel/ponto
+        // Aqui só APROVAMOS o pedido. Marca pra admin ir no painel de ponto e ajustar.
+        actionResult = '⚠ Próximo passo: vá em /painel/ponto.html → Espelho Mensal → clique na hora do ' + (sol.payload?.data || '?') + ' e ajuste pra ' + (sol.payload?.hora || '?');
+      } else if (sol.type === 'abono_falta') {
+        const data = sol.payload?.data;
+        if (data) {
+          TimeClock.addJustification(FRANCHISE_ID, sol.staffId, data, 'abono', sol.payload?.motivo || 'Falta abonada (aprovada via hub)');
+          actionResult = 'Falta de ' + data + ' abonada como justificativa';
+        }
+      } else if (sol.type === 'ferias') {
+        // Grava em férias collection
+        DataStore.addToCollection('ferias', FRANCHISE_ID, {
+          id: 'fer_' + Date.now(),
+          staffId: sol.staffId,
+          staffName: sol.staffName,
+          inicio: sol.payload?.inicio,
+          dias: sol.payload?.dias,
+          obs: sol.payload?.obs,
+          approvedAt: new Date().toISOString(),
+          approvedBy: SESSION?.email || 'admin',
+          status: 'approved'
+        });
+        actionResult = 'Férias gravadas no calendário';
+      } else if (sol.type === 'troca_turno') {
+        // Grava no log de troca (escala não tem ainda)
+        DataStore.addToCollection('trocas_turno', FRANCHISE_ID, {
+          id: 'troca_' + Date.now(),
+          staffId: sol.staffId,
+          staffName: sol.staffName,
+          colega: sol.payload?.colega,
+          folgaData: sol.payload?.folgaData,
+          contraData: sol.payload?.contraData,
+          motivo: sol.payload?.motivo,
+          approvedAt: new Date().toISOString(),
+          approvedBy: SESSION?.email || 'admin'
+        });
+        actionResult = 'Troca de turno registrada';
+      } else if (sol.type === 'conversa_rh') {
+        actionResult = 'Conversa marcada como respondida';
+      }
+    } catch (e) {
+      console.error('Erro ao executar ação:', e);
+      if (!confirm('Erro ao executar ação (' + e.message + '). Aprovar mesmo assim?')) return;
+    }
+
+    // Atualiza solicitação
+    const records = DataStore.getCollection('solicitacoes', FRANCHISE_ID);
+    const idx = records.findIndex(r => r.id === id);
+    if (idx >= 0) {
+      records[idx].status = 'approved';
+      records[idx].respondedAt = new Date().toISOString();
+      records[idx].respondedBy = SESSION?.email || 'admin';
+      records[idx].adminReply = reply + (actionResult ? '\n\n📌 ' + actionResult : '');
+      DataStore.setCollection('solicitacoes', FRANCHISE_ID, records);
+    }
+
+    Utils.showToast('✓ Aprovado e ação executada', 'success');
+    hubRenderStats();
+    hubRenderSolicitacoes();
+  }
+
+  function hubRejeitarSol(id) {
+    const reason = prompt('Motivo da rejeição (vai pro colaborador):');
+    if (!reason || reason.trim().length < 5) { alert('Motivo obrigatório (min 5 chars)'); return; }
+    const records = DataStore.getCollection('solicitacoes', FRANCHISE_ID);
+    const idx = records.findIndex(r => r.id === id);
+    if (idx >= 0) {
+      records[idx].status = 'rejected';
+      records[idx].respondedAt = new Date().toISOString();
+      records[idx].respondedBy = SESSION?.email || 'admin';
+      records[idx].adminReply = reason.trim();
+      DataStore.setCollection('solicitacoes', FRANCHISE_ID, records);
+    }
+    Utils.showToast('Solicitação rejeitada', 'success');
+    hubRenderStats();
+    hubRenderSolicitacoes();
+  }
+
+  // ============================================
+  // 📣 COMUNICADOS
+  // ============================================
+  function hubCriarComunicado() {
+    const titulo = document.getElementById('comTitulo').value.trim();
+    const mensagem = document.getElementById('comMensagem').value.trim();
+    const priority = document.getElementById('comPrioridade').value;
+    if (!titulo || titulo.length < 3) return alert('Título obrigatório (min 3 chars)');
+    if (!mensagem || mensagem.length < 5) return alert('Mensagem obrigatória (min 5 chars)');
+    const com = {
+      id: 'com_' + Date.now(),
+      titulo, mensagem, priority,
+      autor: SESSION?.name || SESSION?.email || 'Admin',
+      createdAt: new Date().toISOString()
+    };
+    DataStore.addToCollection('comunicados', FRANCHISE_ID, com);
+    document.getElementById('comTitulo').value = '';
+    document.getElementById('comMensagem').value = '';
+    Utils.showToast('📣 Comunicado publicado', 'success');
+    hubRenderStats();
+    hubRenderComunicados();
+  }
+
+  function hubRenderComunicados() {
+    const el = document.getElementById('comunicadosLista');
+    if (!el) return;
+    const list = (DataStore.getCollection('comunicados', FRANCHISE_ID) || [])
+      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    if (!list.length) {
+      el.innerHTML = '<div class="empty"><div class="icon">📭</div><div>Nenhum comunicado ainda.</div></div>';
+      return;
+    }
+    el.innerHTML = list.slice(0, 30).map(c => {
+      let whenStr = '';
+      try { whenStr = new Date(c.createdAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }); } catch (_) {}
+      const pri = c.priority || 'normal';
+      const priIcon = pri === 'urgent' ? '🚨' : (pri === 'high' ? '⚠️' : '📣');
+      return '<div class="card">'
+        + '<div class="card-head">'
+        +   '<div><div class="card-title">' + priIcon + ' ' + Utils.escapeHtml(c.titulo) + '</div>'
+        +     '<div class="card-meta">' + Utils.escapeHtml(c.autor || '') + ' · ' + Utils.escapeHtml(whenStr) + '</div></div>'
+        +   '<button class="btn soft" onclick="hubExcluirComunicado(\'' + esc(c.id) + '\')">🗑</button>'
+        + '</div>'
+        + '<div class="card-body">' + Utils.escapeHtml(c.mensagem) + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function hubExcluirComunicado(id) {
+    if (!confirm('Excluir esse comunicado?')) return;
+    DataStore.removeFromCollection('comunicados', FRANCHISE_ID, id);
+    hubRenderStats();
+    hubRenderComunicados();
+  }
+
+  // ============================================
+  // 📌 MURAL
+  // ============================================
+  function hubLoadStaffSelect() {
+    const sel = document.getElementById('muralStaff');
+    if (!sel) return;
+    const staff = (DataStore.getCollection('staff', FRANCHISE_ID) || []).filter(s => s.active !== false);
+    sel.innerHTML = staff.map(s => '<option value="' + esc(s.id) + '|' + esc(s.name) + '">' + esc(s.name) + '</option>').join('');
+  }
+
+  function hubPostarMural() {
+    const sel = document.getElementById('muralStaff').value;
+    const msg = document.getElementById('muralMsg').value.trim();
+    if (!sel || !msg || msg.length < 5) return alert('Selecione colaborador e escreva uma mensagem (min 5 chars)');
+    const [staffId, staffName] = sel.split('|');
+    if (typeof Gamification !== 'undefined' && Gamification.pinRecognition) {
+      Gamification.pinRecognition(FRANCHISE_ID, { staffId, staffName, message: msg });
+    } else {
+      // Fallback se Gamification não disponível
+      const wall = DataStore.getCollection('recognition_wall', FRANCHISE_ID) || [];
+      wall.push({ id: 'pin_' + Date.now(), staffId, staffName, message: msg, pinnedAt: new Date().toISOString(), pinnedBy: SESSION?.email });
+      DataStore.setCollection('recognition_wall', FRANCHISE_ID, wall);
+    }
+    document.getElementById('muralMsg').value = '';
+    Utils.showToast('⭐ Elogio publicado no mural', 'success');
+    hubRenderMural();
+  }
+
+  function hubRenderMural() {
+    const el = document.getElementById('muralLista');
+    if (!el) return;
+    let wall = [];
+    try {
+      wall = (typeof Gamification !== 'undefined' && Gamification.getRecognitionWall)
+        ? Gamification.getRecognitionWall(FRANCHISE_ID) || []
+        : DataStore.getCollection('recognition_wall', FRANCHISE_ID) || [];
+    } catch (_) {}
+    if (!wall.length) {
+      el.innerHTML = '<div class="empty"><div class="icon">🐑</div><div>Mural vazio. Comece postando um elogio acima!</div></div>';
+      return;
+    }
+    el.innerHTML = wall.slice(0, 50).map(r => {
+      let when = '';
+      try { when = new Date(r.pinnedAt || r.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }); } catch (_) {}
+      return '<div class="card">'
+        + '<div class="card-head"><div class="card-title">⭐ ' + Utils.escapeHtml(r.staffName) + '</div><div class="card-meta">' + Utils.escapeHtml(when) + '</div></div>'
+        + '<div class="card-body">' + Utils.escapeHtml(r.message) + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  // ============================================
+  // 🎓 TREINAMENTO
+  // ============================================
+  function hubAddTreino() {
+    const titulo = document.getElementById('trTitulo').value.trim();
+    const desc = document.getElementById('trDesc').value.trim();
+    const tipo = document.getElementById('trTipo').value;
+    const url = document.getElementById('trUrl').value.trim();
+    if (!titulo || titulo.length < 3) return alert('Título obrigatório');
+    const item = {
+      id: 'tr_' + Date.now(), titulo, desc, tipo, url,
+      createdAt: new Date().toISOString(),
+      createdBy: SESSION?.email || 'admin'
+    };
+    DataStore.addToCollection('treinamentos', FRANCHISE_ID, item);
+    document.getElementById('trTitulo').value = '';
+    document.getElementById('trDesc').value = '';
+    document.getElementById('trUrl').value = '';
+    Utils.showToast('🎓 Material adicionado', 'success');
+    hubRenderTreinamento();
+  }
+
+  function hubRenderTreinamento() {
+    const el = document.getElementById('treinamentoLista');
+    if (!el) return;
+    const list = (DataStore.getCollection('treinamentos', FRANCHISE_ID) || [])
+      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    if (!list.length) {
+      el.innerHTML = '<div class="empty"><div class="icon">📚</div><div>Sem materiais customizados ainda. Adicione acima.<br><small>Colaborador já tem 5 guias default disponíveis.</small></div></div>';
+      return;
+    }
+    el.innerHTML = list.map(t => {
+      const icon = t.tipo === 'video' ? '🎥' : (t.tipo === 'pdf' ? '📄' : '📖');
+      return '<div class="card">'
+        + '<div class="card-head"><div class="card-title">' + icon + ' ' + Utils.escapeHtml(t.titulo) + '</div>'
+        + '<button class="btn soft" onclick="hubExcluirTreino(\'' + esc(t.id) + '\')">🗑</button></div>'
+        + '<div class="card-body">' + Utils.escapeHtml(t.desc || '') + (t.url ? '<br><a href="' + esc(t.url) + '" target="_blank" style="color:#3B82F6;font-weight:600">→ ' + Utils.escapeHtml(t.url) + '</a>' : '') + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function hubExcluirTreino(id) {
+    if (!confirm('Excluir esse material?')) return;
+    DataStore.removeFromCollection('treinamentos', FRANCHISE_ID, id);
+    hubRenderTreinamento();
+  }
+
+  // ============================================
+  // 🔄 AUTO-RERENDER quando solicitações sincronizam
+  // ============================================
+  let _hubTimer = null;
+  function _hubScheduleRerender() {
+    if (_hubTimer) clearTimeout(_hubTimer);
+    _hubTimer = setTimeout(() => {
+      _hubTimer = null;
+      hubRenderStats();
+      const activeTab = document.querySelector('.hub-tab.active')?.dataset.tab || 'solicitacoes';
+      hubSwitchTab(activeTab);
+    }, 300);
+  }
+  window.addEventListener('mp_remote_update', e => {
+    if (!e.detail?.key) return;
+    const k = e.detail.key;
+    if (k.startsWith('solicitacoes_') || k.startsWith('comunicados_') ||
+        k.startsWith('treinamentos_') || k.startsWith('staff_') ||
+        k.startsWith('recognition_wall_')) {
+      _hubScheduleRerender();
+    }
+  });
+  window.addEventListener('mp_synced', _hubScheduleRerender);
+
+  // ============================================
+  // INIT
+  // ============================================
+  if (typeof firebase !== 'undefined') {
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+    firebase.auth().onAuthStateChanged(async u => {
+      if (!u) {
+        document.body.innerHTML = '<div style="padding:40px;text-align:center"><h2>🔒 Login necessário</h2><a href="../login.html">Entrar</a></div>';
+        return;
+      }
+      // Pega franchiseId da session OU ?fid=
+      SESSION = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : { email: u.email };
+      FRANCHISE_ID = SESSION?.franchiseId || new URLSearchParams(location.search).get('fid') || 'matriz';
+      console.log('[hub] franchiseId:', FRANCHISE_ID);
+      // Render inicial
+      hubRenderStats();
+      hubRenderSolicitacoes();
+    });
+  }
+  </script>
+</body>
+</html>

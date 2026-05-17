@@ -1627,30 +1627,128 @@ async function fnBaterPonto() {
     }
 }
 
-// ====== Selfie capture (camera frontal) ======
+// ====== Selfie capture (camera frontal) com PREVIEW VISUAL + COUNTDOWN ======
+// Anti-fraude: funcionario VE o que esta sendo capturado, com countdown 3..2..1 e flash.
+// Permite "tirar de novo" se ficou ruim. Foto vai pro registro de ponto pra auditoria
+// posterior pelo admin (comparacao com foto-referencia cadastrada em Equipe).
 async function fnCaptureSelfie() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return null;
-    try {
-        var stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 480 } },
-            audio: false
-        });
-        var video = document.createElement('video');
-        video.srcObject = stream;
-        video.muted = true;
-        await video.play();
-        // Espera alguns frames pra estabilizar
-        await new Promise(function(r) { setTimeout(r, 800); });
-        var canvas = document.createElement('canvas');
-        canvas.width = 320;
-        canvas.height = 320;
-        canvas.getContext('2d').drawImage(video, 0, 0, 320, 320);
-        stream.getTracks().forEach(function(t) { t.stop(); });
-        return canvas.toDataURL('image/jpeg', 0.65);
-    } catch (e) {
-        console.warn('Selfie capture falhou:', e);
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.warn('Browser sem getUserMedia');
         return null;
     }
+    return new Promise(async function(resolve) {
+        var stream = null;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 640 } },
+                audio: false
+            });
+        } catch (e) {
+            console.warn('Acesso camera negado:', e.message);
+            return resolve(null);
+        }
+
+        var modal = document.createElement('div');
+        modal.id = 'selfieModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:#000;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px';
+        modal.innerHTML =
+            '<style>' +
+            '  @keyframes selfie-flash { 0%{background:rgba(255,255,255,0)} 50%{background:rgba(255,255,255,.95)} 100%{background:rgba(255,255,255,0)} }' +
+            '  @keyframes selfie-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }' +
+            '  #selfieCountdown { font-size:140px; color:#fff; font-weight:900; font-family:"Baloo 2",cursive; text-shadow:0 4px 12px rgba(0,0,0,.6); animation: selfie-pulse 1s ease-in-out infinite; position:absolute; pointer-events:none; }' +
+            '  #selfieFlash { position:absolute; inset:0; pointer-events:none; }' +
+            '  #selfieFlash.flashing { animation: selfie-flash .35s ease; }' +
+            '  .selfie-frame { position:relative; width:min(86vw,420px); height:min(86vw,420px); border-radius:50%; overflow:hidden; border:6px solid rgba(255,255,255,.5); box-shadow:0 0 30px rgba(255,255,255,.3); background:#000; }' +
+            '  .selfie-frame video, .selfie-frame img, .selfie-frame canvas { width:100%; height:100%; object-fit:cover; transform: scaleX(-1); }' +
+            '  .selfie-actions { display:flex; gap:14px; margin-top:24px; }' +
+            '  .selfie-btn { padding:14px 24px; border:0; border-radius:14px; font-weight:800; font-family:inherit; font-size:16px; cursor:pointer; }' +
+            '  .selfie-btn.primary { background:linear-gradient(135deg,#16A34A,#22C55E); color:#fff; box-shadow:0 6px 16px rgba(22,163,74,.4); }' +
+            '  .selfie-btn.soft { background:rgba(255,255,255,.15); color:#fff; border:1.5px solid rgba(255,255,255,.3); }' +
+            '  .selfie-btn.warn { background:#F59E0B; color:#fff; }' +
+            '  .selfie-tip { color:#fff; font-size:14px; margin-top:12px; text-align:center; opacity:.9; max-width:380px; }' +
+            '  .selfie-close { position:absolute; top:18px; right:18px; background:rgba(0,0,0,.5); color:#fff; border:0; width:40px; height:40px; border-radius:50%; cursor:pointer; font-size:18px; }' +
+            '</style>' +
+            '<button class="selfie-close" onclick="window.__selfieCancel && window.__selfieCancel()">✕</button>' +
+            '<div class="selfie-frame">' +
+            '  <video id="selfieVideo" autoplay playsinline muted></video>' +
+            '  <div id="selfieCountdown" style="display:none;left:50%;top:50%;transform:translate(-50%,-50%)"></div>' +
+            '  <div id="selfieFlash"></div>' +
+            '</div>' +
+            '<div class="selfie-tip" id="selfieTip">📸 Posiciona o rosto dentro do círculo e aperta CAPTURAR</div>' +
+            '<div class="selfie-actions" id="selfieActions">' +
+            '  <button class="selfie-btn primary" id="selfieCaptureBtn">📸 Capturar selfie</button>' +
+            '</div>';
+        document.body.appendChild(modal);
+
+        var video = modal.querySelector('#selfieVideo');
+        video.srcObject = stream;
+
+        function cleanup() {
+            try { stream.getTracks().forEach(function(t) { t.stop(); }); } catch(_) {}
+            if (modal.parentNode) modal.parentNode.removeChild(modal);
+            window.__selfieCancel = null;
+        }
+
+        window.__selfieCancel = function() {
+            cleanup();
+            resolve(null);
+        };
+
+        // Loop CAPTURAR → preview → confirmar / tirar de novo
+        function startCapture() {
+            var countEl = modal.querySelector('#selfieCountdown');
+            var tipEl = modal.querySelector('#selfieTip');
+            var actionsEl = modal.querySelector('#selfieActions');
+            actionsEl.style.display = 'none';
+            tipEl.textContent = '⏳ Segura aí...';
+            countEl.style.display = '';
+            var n = 3;
+            countEl.textContent = n;
+            var iv = setInterval(function() {
+                n--;
+                if (n > 0) { countEl.textContent = n; return; }
+                clearInterval(iv);
+                countEl.style.display = 'none';
+                // FLASH
+                var flash = modal.querySelector('#selfieFlash');
+                flash.classList.add('flashing');
+                setTimeout(function() { flash.classList.remove('flashing'); }, 400);
+                // Captura frame
+                var canvas = document.createElement('canvas');
+                canvas.width = 480;
+                canvas.height = 480;
+                var ctx = canvas.getContext('2d');
+                ctx.save();
+                ctx.scale(-1, 1); // espelhar de volta pra foto final ser orientacao real (não espelhada)
+                ctx.drawImage(video, -480, 0, 480, 480);
+                ctx.restore();
+                var dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+                // Substitui video por img preview
+                var frame = modal.querySelector('.selfie-frame');
+                frame.innerHTML = '<img src="' + dataUrl + '" style="transform:none">';
+                tipEl.innerHTML = '✓ Ficou boa? <br><small style="opacity:.7">Conferir antes de confirmar</small>';
+                actionsEl.innerHTML =
+                    '<button class="selfie-btn soft" id="selfieRetake">🔄 Tirar de novo</button>' +
+                    '<button class="selfie-btn primary" id="selfieConfirm">✓ Confirmar e bater ponto</button>';
+                actionsEl.style.display = '';
+                modal.querySelector('#selfieRetake').onclick = function() {
+                    frame.innerHTML = '<video id="selfieVideo" autoplay playsinline muted></video><div id="selfieCountdown" style="display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:140px;color:#fff;font-weight:900;font-family:Baloo 2,cursive;text-shadow:0 4px 12px rgba(0,0,0,.6)"></div><div id="selfieFlash" style="position:absolute;inset:0;pointer-events:none"></div>';
+                    var v = modal.querySelector('#selfieVideo');
+                    v.srcObject = stream;
+                    actionsEl.innerHTML = '<button class="selfie-btn primary" id="selfieCaptureBtn">📸 Capturar selfie</button>';
+                    modal.querySelector('#selfieCaptureBtn').onclick = startCapture;
+                    tipEl.textContent = '📸 Posiciona o rosto dentro do círculo e aperta CAPTURAR';
+                };
+                modal.querySelector('#selfieConfirm').onclick = function() {
+                    cleanup();
+                    resolve(dataUrl);
+                };
+            }, 700);
+        }
+
+        modal.querySelector('#selfieCaptureBtn').onclick = startCapture;
+    });
 }
 
 function fnGetGeolocation() {

@@ -218,6 +218,7 @@
             <a href="produtos.html" class="sidebar-link"><span class="icon">🍨</span> Produtos</a>
             <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
             <a href="ponto.html" class="sidebar-link active"><span class="icon">⏰</span> Ponto Eletronico</a>
+            <a href="colaboradores-hub.html" class="sidebar-link"><span class="icon">📨</span> Solicitações & Avisos</a>
             <div class="sidebar-nav-group">Config</div>
             <a href="configuracoes.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
         </nav>
@@ -652,10 +653,13 @@
                 // DEVE converter pra São Paulo via Utils.formatTime (timeZone: America/Sao_Paulo).
                 // Antes usava slice(11,16) que mostrava UTC: 17:20 SP virava "17:20" (errado!).
                 // Bug reportado: registro às 14:20 SP exibia "17:20" (UTC).
+                // 📸 Se rec.selfie existe, mostra ícone 📷 que abre modal de auditoria.
                 function tdHora(rec) {
                     if (!rec) return '<td style="color:#9CA3AF">-</td>';
                     var hh = (typeof Utils !== 'undefined' && Utils.formatTime) ? Utils.formatTime(rec.timestamp) : rec.timestamp.slice(11,16);
-                    return '<td style="cursor:pointer;color:#3B82F6;font-weight:600" title="Clique pra ajustar (admin)" onclick="ptAbrirEditarPonto(\'' + rec.id + '\',\'' + hh + '\')">' + hh + ' ✎</td>';
+                    var selfieIcon = rec.selfie ? ' <span onclick="event.stopPropagation();ptAuditarSelfie(\'' + rec.id + '\')" style="cursor:pointer;color:#7E57C2;margin-left:4px" title="Ver selfie do registro">📸</span>' : '';
+                    var flaggedBadge = rec.flagged ? ' <span title="Marcado como suspeito" style="background:#FEE2E2;color:#991B1B;padding:1px 5px;border-radius:5px;font-size:10px;font-weight:800">🚩</span>' : '';
+                    return '<td style="cursor:pointer;color:#3B82F6;font-weight:600" title="Clique pra ajustar (admin)" onclick="ptAbrirEditarPonto(\'' + rec.id + '\',\'' + hh + '\')">' + hh + ' ✎' + selfieIcon + flaggedBadge + '</td>';
                 }
                 html += '<tr>';
                 html += '<td><strong>' + escapeHtml(s.name) + '</strong>' + (s.pis ? '' : '<br><span class="pt-tag red">SEM PIS</span>') + '</td>';
@@ -1054,6 +1058,95 @@
             }
         });
         window.addEventListener('mp_synced', function() { _ptScheduleRerender(); });
+
+        // ============================================
+        // 📸 AUDITAR SELFIE — modal com selfie capturada + foto referência lado a lado
+        // ============================================
+        // Anti-fraude: admin abre o modal, compara visualmente a selfie do funcionário
+        // no momento da batida com a foto-referência cadastrada em Equipe.
+        // Se algo estranho (foto preta, outra pessoa, etc), marca como suspeito.
+        window.ptAuditarSelfie = function(recordId) {
+            var records = DataStore.getCollection('time_clock_records', franchiseId) || [];
+            var rec = records.find(function(r) { return r.id === recordId; });
+            if (!rec) { alert('Registro não encontrado'); return; }
+            var staff = (DataStore.getCollection('staff', franchiseId) || []).find(function(s) { return s.id === rec.staffId; });
+            var refPhoto = staff && staff.referencePhoto;
+            var when = Utils.formatTime(rec.timestamp);
+            var dateStr = Utils.localDateOf(rec.timestamp);
+            var typeLabel = { entrada: 'Entrada', almoco_saida: 'Saída almoço', almoco_volta: 'Volta almoço', saida: 'Saída' }[rec.type] || rec.type;
+            var geoInfo = rec.geolocation ? ('lat ' + rec.geolocation.lat.toFixed(5) + ', lng ' + rec.geolocation.lng.toFixed(5) + ' (precisão ' + Math.round(rec.geolocation.accuracy) + 'm)') : 'sem geolocalização';
+            var geofence = rec.geofence ? (rec.geofence.valid ? '✓ dentro da loja (' + Math.round(rec.geofence.distance) + 'm)' : '⚠ FORA da loja (' + Math.round(rec.geofence.distance) + 'm)') : '';
+
+            var modal = document.getElementById('ptSelfieModal');
+            if (modal) modal.remove();
+            modal = document.createElement('div');
+            modal.id = 'ptSelfieModal';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+            modal.innerHTML =
+                '<div style="background:#fff;border-radius:18px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">' +
+                '  <div style="padding:18px 24px;border-bottom:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center">' +
+                '    <div><h3 style="margin:0;color:#2D1747;font-family:\'Baloo 2\',cursive">📸 Auditar batida de ponto</h3>' +
+                '      <small style="color:#6B7280">' + escapeHtml(staff?.name || '?') + ' • ' + escapeHtml(typeLabel) + ' às ' + when + ' do dia ' + escapeHtml(dateStr.split('-').reverse().join('/')) + '</small></div>' +
+                '    <button onclick="document.getElementById(\'ptSelfieModal\').remove()" style="background:none;border:0;font-size:24px;cursor:pointer;color:#9CA3AF">✕</button>' +
+                '  </div>' +
+                '  <div style="padding:20px 24px;display:grid;grid-template-columns:1fr 1fr;gap:20px">' +
+                '    <div style="text-align:center">' +
+                '      <h4 style="margin:0 0 8px;color:#6B7280;font-size:12px;text-transform:uppercase;letter-spacing:.5px">📸 Selfie do registro</h4>' +
+                '      <img src="' + rec.selfie + '" style="width:100%;max-width:280px;border-radius:14px;border:2px solid #7E57C2">' +
+                '    </div>' +
+                '    <div style="text-align:center">' +
+                '      <h4 style="margin:0 0 8px;color:#6B7280;font-size:12px;text-transform:uppercase;letter-spacing:.5px">👤 Foto-referência cadastrada</h4>' +
+                (refPhoto
+                    ? '<img src="' + refPhoto + '" style="width:100%;max-width:280px;border-radius:14px;border:2px solid #16A34A">'
+                    : '<div style="background:#FEF3C7;border:2px dashed #F59E0B;border-radius:14px;padding:30px;color:#92400E;font-size:14px">⚠ Funcionário sem foto-referência cadastrada.<br><br><a href="equipe.html" style="color:#92400E;font-weight:700;text-decoration:underline">Cadastrar agora</a></div>') +
+                '    </div>' +
+                '  </div>' +
+                '  <div style="background:#F9FAFB;padding:14px 24px;border-top:1px solid #E5E7EB;font-size:13px;line-height:1.7">' +
+                '    <div><b>📍 Localização:</b> ' + escapeHtml(geoInfo) + ' ' + escapeHtml(geofence) + '</div>' +
+                '    <div><b>🔐 NSR:</b> ' + rec.nsr + ' · <b>Hash:</b> <code style="font-size:10px">' + (rec.hash || '').slice(0, 16) + '...</code></div>' +
+                '    <div><b>📱 Canal:</b> ' + escapeHtml(rec.channel || '?') + ' · <b>Device:</b> ' + escapeHtml((rec.userAgent || '').slice(0, 80)) + '</div>' +
+                (rec.flaggedReason ? '<div style="background:#FEE2E2;color:#991B1B;padding:6px 10px;border-radius:8px;margin-top:6px"><b>🚩 Suspeito:</b> ' + escapeHtml(rec.flaggedReason) + '</div>' : '') +
+                '  </div>' +
+                '  <div style="padding:14px 24px;border-top:1px solid #E5E7EB;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">' +
+                (rec.flagged
+                    ? '<button onclick="ptDesmarcarSuspeito(\'' + recordId + '\')" class="btn-outline" style="border-color:#16A34A;color:#16A34A">✓ Desmarcar suspeito</button>'
+                    : '<button onclick="ptMarcarSuspeito(\'' + recordId + '\')" style="background:#FEE2E2;color:#991B1B;border:0;border-radius:10px;padding:10px 16px;font-weight:800;cursor:pointer">🚩 Marcar como suspeito</button>') +
+                '    <button onclick="document.getElementById(\'ptSelfieModal\').remove()" class="btn-primary">Fechar</button>' +
+                '  </div>' +
+                '</div>';
+            document.body.appendChild(modal);
+        };
+        window.ptMarcarSuspeito = function(recordId) {
+            var reason = prompt('Motivo da suspeita (ex: rosto diferente, foto preta, geolocalização absurda):');
+            if (!reason || reason.trim().length < 5) { alert('Motivo obrigatório (min 5 chars)'); return; }
+            var records = DataStore.getCollection('time_clock_records', franchiseId);
+            var idx = records.findIndex(function(r) { return r.id === recordId; });
+            if (idx >= 0) {
+                records[idx].flagged = true;
+                records[idx].flaggedReason = reason.trim();
+                records[idx].flaggedAt = new Date().toISOString();
+                records[idx].flaggedBy = (typeof Auth !== 'undefined' && Auth.getSession ? Auth.getSession().email : 'admin');
+                DataStore.setCollection('time_clock_records', franchiseId, records);
+            }
+            alert('🚩 Registro marcado como suspeito. Audit log gravado.');
+            document.getElementById('ptSelfieModal').remove();
+            ptLoadHoje();
+            if (typeof ptLoadEspelho === 'function') ptLoadEspelho();
+        };
+        window.ptDesmarcarSuspeito = function(recordId) {
+            if (!confirm('Desmarcar registro como suspeito?')) return;
+            var records = DataStore.getCollection('time_clock_records', franchiseId);
+            var idx = records.findIndex(function(r) { return r.id === recordId; });
+            if (idx >= 0) {
+                records[idx].flagged = false;
+                records[idx].unflaggedAt = new Date().toISOString();
+                records[idx].unflaggedBy = (typeof Auth !== 'undefined' && Auth.getSession ? Auth.getSession().email : 'admin');
+                DataStore.setCollection('time_clock_records', franchiseId, records);
+            }
+            document.getElementById('ptSelfieModal').remove();
+            ptLoadHoje();
+            if (typeof ptLoadEspelho === 'function') ptLoadEspelho();
+        };
 
         // ============================================
         // 🛠 EDITAR BATIDA DE PONTO (admin) — modal de ajuste
