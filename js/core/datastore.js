@@ -460,7 +460,13 @@ const DataStore = {
             docId.startsWith('orders_') ||
             docId.startsWith('pdv_tabs_') ||
             docId.startsWith('caixa_') ||
-            docId.startsWith('finances_')
+            docId.startsWith('finances_') ||
+            // 🕐 Ponto: colaboradora bate no app dela (uma localStorage), painel
+            // admin lê do PC (outra localStorage). Sem merge, quem escrever último
+            // apaga as batidas da outra. Merge por id mantém todas as marcações.
+            docId.startsWith('time_clock_records_') ||
+            docId.startsWith('time_clock_justifications_') ||
+            docId.startsWith('time_clock_audit_')
         );
     },
 
@@ -621,7 +627,14 @@ const DataStore = {
             'staff_' + fid,
             'purchase_orders_log_' + fid,
             'weekly_stock_audits_' + fid,
-            'picole_counts_' + fid
+            'picole_counts_' + fid,
+            // 🕐 PONTO ELETRÔNICO — colaborador bate no app dela e sincroniza
+            // pra Firestore. Painel admin precisa LER de volta pra ver no espelho
+            // e poder editar batidas. SEM esses 3 keys, a tabela "Hoje" sempre
+            // mostrava 0 marcações mesmo após funcionária bater.
+            'time_clock_records_' + fid,
+            'time_clock_justifications_' + fid,
+            'time_clock_audit_' + fid
         ];
     },
 
