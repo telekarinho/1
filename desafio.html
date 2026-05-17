@@ -2990,33 +2990,39 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   window.startPromoRotator = startPromos;
   window.stopPromoRotator = stopPromos;
   window.dismissPromoOverlay = function(){
-    stopPromos();
-    // Quando user toca a TV, ela vira o cronômetro/desafio
-    // (a lógica do desafio.html já lida com touch via stepAttract listener)
+    // Click no overlay deixa passar pro elemento por baixo (jogo)
+    // Nao pausamos rotator aqui — quem decide pausar e o observer abaixo
   };
 
-  // Auto-inicia depois de 4s no attract pra dar tempo da UI carregar
-  setTimeout(function(){
-    // Só ativa se estamos no attract e o desafio não está rodando
-    var attract = document.getElementById('stepAttract');
-    if (attract && attract.classList.contains('active')) startPromos();
-  }, 4000);
+  // ROBUSTO: observa mudancas no DOM em vez de hookar funcoes privadas (IIFE).
+  // Regra: rotator aparece em TODAS as telas EXCETO quando o jogo ta rodando.
+  // Sintoma de "jogo rodando": step2 ativo OU botao gameBtn com classe btn-stop.
+  function isGameRunning(){
+    var btn = document.getElementById('gameBtn');
+    var s2 = document.getElementById('step2');
+    var step2Active = s2 && s2.classList.contains('active');
+    var btnStop = btn && /btn-stop/.test(btn.className || '');
+    return step2Active && btnStop;
+  }
 
-  // Para o rotator quando o cliente está no fluxo de desafio
-  var origStop = window.stopAttract;
-  window.stopAttract = function(){
-    stopPromos();
-    if (typeof origStop === 'function') return origStop();
-  };
-  var origStart = window.startAttract;
-  window.startAttract = function(){
-    if (typeof origStart === 'function') origStart();
-    // Volta a propaganda 2s depois de voltar pro attract
-    setTimeout(function(){
-      var a = document.getElementById('stepAttract');
-      if (a && a.classList.contains('active')) startPromos();
-    }, 2000);
-  };
+  function syncRotator(){
+    var running = isGameRunning();
+    if (running) {
+      if (promoActive) stopPromos();
+    } else {
+      if (!promoActive) startPromos();
+    }
+  }
+
+  // Observa mudancas de classe (step.active) e mudancas no botao gameBtn
+  var obs = new MutationObserver(function(){ syncRotator(); });
+  obs.observe(document.body, { attributes:true, subtree:true, attributeFilter:['class'] });
+
+  // Tick redundante a cada 1.5s pra cobrir cenarios que o observer perdeu
+  setInterval(syncRotator, 1500);
+
+  // Primeira ativacao apos load
+  setTimeout(syncRotator, 800);
 
 
   // ---------- ÁUDIO ÉPICO ----------
@@ -3076,24 +3082,37 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
     }
   };
 
-  // Hook em startTensionSound / stopTensionSound se existirem
-  var origTension = window.startTensionSound;
-  if (typeof origTension === 'function') {
-    window.startTensionSound = function(){
-      origTension.apply(this, arguments);
-      try {
-        var t = (window.gameTarget) ? Number(window.gameTarget) : 10000;
-        window.startEpicAudio(t);
-      } catch(_) {}
-    };
-  }
-  var origStopTension = window.stopTensionSound;
-  if (typeof origStopTension === 'function') {
-    window.stopTensionSound = function(){
-      origStopTension.apply(this, arguments);
+  // ROBUSTO: dispara epic audio via observer do botao em vez de hookar
+  // funcoes privadas (que estao dentro de IIFE inacessivel).
+  // Quando #gameBtn vira btn-stop (jogo iniciado) → starta epic.
+  // Quando volta pra btn-start ou btn-result (jogo parou/terminou) → para.
+  var lastBtnState = '';
+  function syncAudio(){
+    var btn = document.getElementById('gameBtn');
+    if (!btn) { lastBtnState = ''; return; }
+    var cls = btn.className || '';
+    var state = /btn-stop/.test(cls) ? 'running'
+              : /btn-result/.test(cls) ? 'done'
+              : 'idle';
+    if (state === lastBtnState) return;
+    if (state === 'running') {
+      // Detecta target pelo texto do botao "PARAR EM 00:10.000"
+      var targetMs = 10000;
+      var m = (btn.textContent || '').match(/(\d{2}):(\d{2})\.(\d{3})/);
+      if (m) targetMs = (+m[1])*60000 + (+m[2])*1000 + (+m[3]);
+      window.startEpicAudio(targetMs);
+    } else if (state !== 'running' && lastBtnState === 'running') {
       window.stopEpicAudio();
-    };
+    }
+    lastBtnState = state;
   }
+  var btnObs = new MutationObserver(syncAudio);
+  function attachBtnObserver(){
+    var btn = document.getElementById('gameBtn');
+    if (btn) btnObs.observe(btn, { attributes:true, attributeFilter:['class'] });
+  }
+  attachBtnObserver();
+  setInterval(syncAudio, 800);  // safety net
 
 
   // ---------- PREPARE-SE OVERLAY (build-up 1.2s antes do timer) ----------
@@ -3228,24 +3247,47 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
     nextStep();
   }
 
-  // Hook em handleGame: so faz a fase prep quando esta em IDLE (botao tipo start)
-  var origHandle = window.handleGame;
-  if (typeof origHandle === 'function') {
-    window.handleGame = function(){
-      var btn = document.getElementById('gameBtn');
-      var isIdle = btn && /btn-start/.test(btn.className || '');
-      if (!isIdle) {
-        // PARAR: chama original direto pra som de stop tocar sem delay
-        return origHandle.apply(this, arguments);
+  // ROBUSTO: intercepta CLICK no botao Iniciar (capture phase, antes
+  // do handler original). Roda prep, depois replay do click pra deixar
+  // o codigo original cuidar do resto.
+  var prepRunning = false;
+  function btnClickInterceptor(ev){
+    var btn = document.getElementById('gameBtn');
+    if (!btn || ev.target !== btn && !btn.contains(ev.target)) return;
+    if (prepRunning) return;
+    var cls = btn.className || '';
+    var isStart = /btn-start/.test(cls);
+    if (!isStart) return; // PARAR: deixa fluir direto
+
+    // Bloqueia o click original, roda prep, depois dispara click novo
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    prepRunning = true;
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    runPrepSequence(function(){
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      prepRunning = false;
+      // Simula click novo — agora sem interceptacao (flag prepRunning impede loop)
+      // mas vamos chamar window.handleGame se existir, mais confiavel
+      if (typeof window.handleGame === 'function') {
+        try { window.handleGame.call(window); } catch (e) { console.warn('handleGame:', e); btn.click(); }
+      } else {
+        // Re-dispara click — flag prepRunning ja resetada, mas o re-entry
+        // sera bloqueado pelo handleGame que vira o state pra running
+        var clone = new MouseEvent('click', { bubbles:true, cancelable:true });
+        // Sinaliza pro nosso proprio interceptor pular esse click
+        clone._mpSkipPrep = true;
+        btn.dispatchEvent(clone);
       }
-      // INICIAR: roda prep antes
-      if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
-      runPrepSequence(function(){
-        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-        origHandle.call(window);
-      });
-    };
+    });
   }
+  // Capture phase + true → roda ANTES do listener inline onclick="handleGame()"
+  document.addEventListener('click', function(ev){
+    if (ev._mpSkipPrep) return;
+    btnClickInterceptor(ev);
+  }, true);
 })();
 </script>
 </body>
