@@ -30,6 +30,8 @@ const os = require('os');
 const path = require('path');
 
 const { pickSystem } = require('./_brain-local.js');
+const Memory = require('./_belinha-memory.js');
+const Backends = require('./_backends.js');
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
@@ -68,14 +70,21 @@ app.use((req, res, next) => {
 });
 
 // ========== HEALTH ==========
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+    const detected = await Backends.detectAvailable();
+    const available = detected.filter(b => b.available);
     res.json({
         ok: true,
         service: 'MilkyPot Autopilot',
-        version: '1.0.0',
+        version: '2.0.0',
         uptime: Math.round(process.uptime()) + 's',
-        primaryBackend: fs.existsSync(CODEX_BIN) ? 'codex' : 'claude',
-        fallbackBackend: fs.existsSync(CODEX_BIN) ? 'claude' : null
+        primaryBackend: available[0]?.id || null,
+        fallbackBackends: available.slice(1).map(b => b.id),
+        cascade: detected.map(b => ({ id: b.id, name: b.name, available: b.available, plan: b.plan })),
+        memory: {
+            decisions: Memory.loadDecisions(10).length,
+            facts: Object.keys(Memory.loadFacts()).length
+        }
     });
 });
 
@@ -187,19 +196,47 @@ async function runCodex(combined) {
 // ========== COPILOT ==========
 app.post('/copilot', async (req, res) => {
     try {
-        const { messages, context, persona, model } = req.body || {};
+        const { messages, context, persona, model, images } = req.body || {};
         if (!Array.isArray(messages) || !messages.length) {
             return res.status(400).json({ error: 'messages_empty' });
         }
 
-        const systemPrompt = pickSystem(persona);
+        // 🧠 Memória permanente: injeta no system prompt
+        const lastUserText = (messages.slice().reverse().find(m => m.role === 'user') || {}).content || '';
+        const memorySnippet = Memory.buildMemorySnippet(lastUserText.slice(0, 200));
+        const baseSystem = pickSystem(persona);
+        const systemPrompt = `${baseSystem}\n\n${memorySnippet}`;
+
+        // Se vier imagens (paste de print), descreve elas no prompt e o user prompt vê
+        let imagesSummary = '';
+        if (Array.isArray(images) && images.length) {
+            imagesSummary = `\n\n📎 O usuário anexou ${images.length} imagem(ns) (print/foto). Cada imagem está descrita abaixo como ALT_TEXT (Codex não vê pixels diretamente, mas usa esse texto):\n` +
+                images.map((img, i) => `[${i + 1}] ${img.altText || img.filename || 'print sem descrição'}`).join('\n');
+            console.log(`[copilot] ${images.length} imagem(ns) anexadas`);
+        }
+
+        // 📝 COMPRESSÃO: se histórico > 30 msgs, comprime as mais antigas em summary
+        let workingMessages = messages;
+        if (messages.length > 30) {
+            const oldMsgs = messages.slice(0, messages.length - 20);
+            const recentMsgs = messages.slice(messages.length - 20);
+            const compressedSummary = oldMsgs
+                .map(m => `${m.role}: ${String(m.content || '').slice(0, 200)}`)
+                .join("\n")
+                .slice(0, 1500);
+            workingMessages = [
+                { role: 'system', content: `[Conversa anterior comprimida — ${oldMsgs.length} msgs]\n${compressedSummary}` },
+                ...recentMsgs
+            ];
+            console.log(`[copilot] comprimiu ${oldMsgs.length} msgs antigas (${messages.length} → ${workingMessages.length})`);
+        }
 
         // Pega a última user message, injeta <context>
-        const lastUserIdx = [...messages].map((m, i) => [m.role, i]).reverse().find(([r]) => r === 'user')?.[1];
+        const lastUserIdx = [...workingMessages].map((m, i) => [m.role, i]).reverse().find(([r]) => r === 'user')?.[1];
         let finalPrompt = '';
-        messages.forEach((m, i) => {
+        workingMessages.forEach((m, i) => {
             if (i === lastUserIdx && m.role === 'user' && context) {
-                finalPrompt += `\n\nUSER: <context>\n${JSON.stringify(context, null, 2)}\n</context>\n\n${m.content}`;
+                finalPrompt += `\n\nUSER: <context>\n${JSON.stringify(context, null, 2)}\n</context>${imagesSummary}\n\n${m.content}`;
             } else {
                 finalPrompt += `\n\n${m.role.toUpperCase()}: ${m.content}`;
             }
@@ -213,18 +250,36 @@ app.post('/copilot', async (req, res) => {
         const combined = `<system_instructions>\n${systemPrompt}\n</system_instructions>\n\n${finalPrompt}`;
 
         const primaryStartTs = Date.now();
+        // Cascata completa: Claude → Codex → Gemini CLI → Copilot CLI → LM Studio → Ollama
+        // Cada backend testa detect() primeiro; se disponível, tenta executar;
+        // se falhar, próximo da cascata assume.
+        // Ordem configurável via autopilot/backends.json
         let result;
         try {
-            // Primário: Codex local (OpenAI plano do usuário — R$ 0)
-            result = await runCodex(combined);
-        } catch (codexErr) {
-            console.warn('[copilot] codex falhou, tentando claude backup:', codexErr.message.slice(0, 120));
-            // Backup: Claude CLI (plano Claude Pro/Max — R$ 0)
-            result = await runClaude(combined, model);
+            result = await Backends.executeCascade(combined, { model });
+        } catch (cascadeErr) {
+            console.error('[copilot] cascata completa falhou:', cascadeErr.attempts);
+            throw cascadeErr;
         }
 
         const primaryElapsedMs = Date.now() - primaryStartTs;
         console.log(`[copilot] ${(persona || 'belinha')} · ${result.backend} · ${primaryElapsedMs}ms · ${result.reply.length} chars`);
+
+        // 🧠 Auto-captura: extrai decisões/fatos da troca user→assistant
+        try {
+            const lastUser = messages.slice().reverse().find(m => m.role === 'user');
+            if (lastUser) Memory.autoCaptureFromMessage('user', lastUser.content);
+            Memory.autoCaptureFromMessage('assistant', result.reply);
+            // Atualiza last-context com onde parou
+            Memory.updateLastContext({
+                activeTask: (context?.activeTask || context?.currentPage) || null,
+                lastUserMessage: lastUser ? lastUser.content.slice(0, 300) : null,
+                lastBotReply: result.reply.slice(0, 300),
+                msgCount: messages.length + 1
+            });
+        } catch (e) {
+            console.warn('[copilot] auto-memory falhou:', e.message);
+        }
 
         return res.json({
             reply: result.reply,
@@ -232,7 +287,8 @@ app.post('/copilot', async (req, res) => {
             model: model || (result.backend === 'claude' ? 'claude-default' : 'codex-default'),
             elapsedMs: primaryElapsedMs,
             source: 'local',
-            backend: result.backend
+            backend: result.backend,
+            memoryUsed: !!memorySnippet
         });
 
     } catch (e) {
@@ -242,6 +298,63 @@ app.post('/copilot', async (req, res) => {
 });
 
 // ========== BRIEFING PROATIVO (opcional) ==========
+// ========== MEMORY ENDPOINTS ==========
+// Painel pode listar/manipular memória persistente
+app.get('/memory', (req, res) => {
+    try {
+        res.json({
+            decisions: Memory.loadDecisions(50),
+            facts: Memory.loadFacts(),
+            lastContext: Memory.loadLastContext(),
+            recentSummaries: Memory.loadRecentSummaries(5)
+        });
+    } catch (e) {
+        res.status(500).json({ error: 'internal', message: e.message });
+    }
+});
+
+app.post('/memory/decision', (req, res) => {
+    try {
+        const { text, meta } = req.body || {};
+        if (!text) return res.status(400).json({ error: 'text required' });
+        const entry = Memory.appendDecision(text, meta || {});
+        res.json({ ok: true, entry });
+    } catch (e) {
+        res.status(500).json({ error: 'internal', message: e.message });
+    }
+});
+
+app.post('/memory/fact', (req, res) => {
+    try {
+        const { key, value } = req.body || {};
+        if (!key) return res.status(400).json({ error: 'key required' });
+        const entry = Memory.setFact(key, value);
+        res.json({ ok: true, entry });
+    } catch (e) {
+        res.status(500).json({ error: 'internal', message: e.message });
+    }
+});
+
+app.post('/memory/summary', (req, res) => {
+    try {
+        const { summary } = req.body || {};
+        if (!summary) return res.status(400).json({ error: 'summary required' });
+        const entry = Memory.saveSessionSummary(summary);
+        res.json({ ok: true, entry });
+    } catch (e) {
+        res.status(500).json({ error: 'internal', message: e.message });
+    }
+});
+
+app.get('/memory/snippet', (req, res) => {
+    try {
+        const query = req.query.q || null;
+        res.type('text/plain').send(Memory.buildMemorySnippet(query));
+    } catch (e) {
+        res.status(500).json({ error: 'internal', message: e.message });
+    }
+});
+
 app.post('/briefing', async (req, res) => {
     try {
         const { context, persona = 'belinha' } = req.body || {};
@@ -272,18 +385,34 @@ function startTunnel(port) {
     console.log('🌐 Iniciando tunnel publico (cloudflared)...');
     const tunnel = spawn('cloudflared', ['tunnel', '--url', `http://localhost:${port}`], { shell: true });
 
+    // Lê secret de .env (se existir) ou env var direta
+    const BELINHA_TUNNEL_SECRET = process.env.BELINHA_TUNNEL_SECRET || (function() {
+        try {
+            const envFile = path.join(__dirname, '.env');
+            if (!fs.existsSync(envFile)) return null;
+            const content = fs.readFileSync(envFile, 'utf8');
+            const m = content.match(/BELINHA_TUNNEL_SECRET\s*=\s*(.+)/);
+            return m ? m[1].trim().replace(/^["']|["']$/g, '') : null;
+        } catch (e) { return null; }
+    })();
+
     const tryRegister = async (url) => {
         try {
+            const body = { url };
+            if (BELINHA_TUNNEL_SECRET) body.secret = BELINHA_TUNNEL_SECRET;
             const resp = await fetch(VERCEL_REGISTRY, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url })
+                body: JSON.stringify(body)
             });
             if (resp.ok) {
                 console.log('✅ Tunnel registrado no Firestore — painel milkypot.com ja funciona!');
             } else {
                 const txt = await resp.text();
                 console.warn('⚠️ Falha ao registrar tunnel:', resp.status, txt);
+                if (!BELINHA_TUNNEL_SECRET) {
+                    console.warn('   💡 Defina BELINHA_TUNNEL_SECRET em autopilot/.env');
+                }
             }
         } catch (e) {
             console.warn('⚠️ Falha ao registrar tunnel:', e.message);
@@ -315,20 +444,48 @@ function startTunnel(port) {
 
 // ========== INIT ==========
 const PORT = process.env.MILKYPOT_PORT || 5757;
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
     console.log('═══════════════════════════════════════════════');
-    console.log(' 🐑 MilkyPot Autopilot — Servidor Local v1.0.0');
+    console.log(' 🐑 MilkyPot Autopilot — Servidor Local v2.0.0');
     console.log('═══════════════════════════════════════════════');
     console.log('');
     console.log(`   Rodando em: http://localhost:${PORT}`);
     console.log('   Health check: http://localhost:' + PORT + '/health');
     console.log('');
-    console.log('   ⚙️  Backend: claude CLI (seu plano Claude Pro/Max)');
-    console.log('   💰 Custo: R$ 0,00 — usa sua conta autenticada');
+
+    // Detecta TODOS os backends disponíveis e mostra cascata
+    try {
+        const detected = await Backends.detectAvailable();
+        console.log('   🧠 CASCATA DE BACKENDS LLM (ordem de tentativa):');
+        let i = 1;
+        for (const b of detected) {
+            const status = b.available ? '✅' : '⚪';
+            const label = b.available
+                ? `${b.id} — ${b.plan}`
+                : `${b.id} — não detectado`;
+            console.log(`      ${status} ${i}. ${label}`);
+            i++;
+        }
+        const ativos = detected.filter(b => b.available);
+        console.log('');
+        if (ativos.length) {
+            console.log(`   💰 ${ativos.length} backend(s) ativo(s) — Custo: R$ 0,00`);
+            console.log(`   🥇 Primário: ${ativos[0].id} (resto é backup automático)`);
+        } else {
+            console.log('   ⚠️  NENHUM backend detectado! Verifique:');
+            console.log('      - claude CLI instalado e logado (claude login)');
+            console.log('      - codex CLI instalado');
+            console.log('      - Ollama rodando em :11434');
+            console.log('      - LM Studio rodando em :1234');
+        }
+    } catch (e) {
+        console.warn('   ⚠️  Erro detectando backends:', e.message);
+    }
+
     console.log('');
-    console.log('   🐑 BELINHA LOCAL: http://localhost:' + PORT + '/painel/copilot-belinha.html');
+    console.log('   🐑 BELINHA LOCAL:  http://localhost:' + PORT + '/painel/copilot-belinha.html');
     console.log('   🐑 BELINHA ONLINE: https://milkypot.com/painel/copilot-belinha.html');
-    console.log('   (ambas usam este servidor local — R$ 0,00)');
+    console.log('   🧠 Memória permanente: autopilot/memory/');
     console.log('');
     console.log('   Ctrl+C pra parar.');
     console.log('═══════════════════════════════════════════════');

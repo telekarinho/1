@@ -577,20 +577,33 @@ async function transcribeAudio({ audioBase64, audioUrl, audioMimeType }) {
 }
 
 // ============================================
-// Chamar Belinha IA (Groq)
+// LLM CASCATA — Belinha Local → Groq → Gemini → Cerebras → OpenRouter
 // ============================================
+const LLM = require("../lib/whatsapp/llm-providers.js");
+
+/**
+ * Wrapper compatível com chamadas antigas de callGroq — agora usa cascata.
+ * Recebe { model, messages, tools, tool_choice, temperature, max_tokens }
+ * Devolve { choices: [{ message: { content, tool_calls } }] } (formato OpenAI).
+ */
 async function callGroq(apiKey, body) {
-    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+    // apiKey é ignorado — cada provider tem sua chave via env
+    const result = await LLM.chat(body.messages, body.tools, {
+        model: body.model,
+        tool_choice: body.tool_choice,
+        temperature: body.temperature,
+        max_tokens: body.max_tokens
     });
-    if (!r.ok) {
-        const errText = await r.text().catch(() => "");
-        console.error("Groq API error:", r.status, errText.slice(0, 300));
-        throw new Error("Groq API error " + r.status);
-    }
-    return await r.json();
+    // Adapta pro formato OpenAI choices[0].message
+    return {
+        choices: [{
+            message: {
+                content: result.content || null,
+                tool_calls: result.tool_calls || undefined
+            }
+        }],
+        _provider: result.provider
+    };
 }
 
 async function generateBelinhaReply(history, currentText, customerName, accountId, customerPhone) {
@@ -842,6 +855,61 @@ module.exports = async (req, res) => {
     // Se foi transcrito, prefixa com 🎤 pra atendente ver no painel que é áudio.
     const textToSave = isTranscribed ? `🎤 [áudio transcrito]: ${text}` : text;
     await saveMessageToFirestore(phoneClean, customerName, "user", textToSave, { messageId, accountId });
+
+    // 2.4. CAPTURA DE NOME — salva no perfil se cliente disse "meu nome é X"
+    try {
+        const detected = Customers.extractName(text);
+        if (detected) {
+            const existing = await Customers.getCustomer(accountId, phoneClean);
+            if (!existing?.name || existing.name.toLowerCase() !== detected.toLowerCase()) {
+                await Customers.upsertCustomer(accountId, { phone: phoneClean, name: detected });
+                console.log(`[name-capture] saved name="${detected}" for ${phoneClean}`);
+            }
+        }
+    } catch (e) {
+        console.warn("[name-capture] error:", e.message);
+    }
+
+    // 2.45. LOOP DETECTOR — bot externo (cobrança/spam), msg repetida, sem progresso.
+    //       Roda ANTES do media_marker pra capturar "[mensagem não suportada]"
+    //       repetida que é o cenário clássico de loop com outro bot.
+    try {
+        const Loop = require("../lib/whatsapp/loop-detector.js");
+        const loopCheck = Loop.detectLoop(history.messages, text);
+        if (loopCheck.loop) {
+            console.log(`[loop-detector] reason=${loopCheck.reason} confidence=${loopCheck.confidence}`);
+            const handoff = Loop.getHandoffMessage(loopCheck.reason);
+            await saveMessageToFirestore(phoneClean, customerName, "bot", handoff, {
+                accountId,
+                triggerHumanTakeover: true,
+                ringPanel: true,
+                escalationReason: `loop:${loopCheck.reason}`,
+                urgency: "high"
+            });
+            if (typeof saveBelinhaLearning === "function") {
+                saveBelinhaLearning({
+                    type: "loop_handoff",
+                    accountId, phone: phoneClean, customerName,
+                    customerMessage: text,
+                    botReply: handoff,
+                    reason: `loop:${loopCheck.reason}`,
+                    confidence: loopCheck.confidence,
+                    history: history.messages.slice(-6),
+                    urgency: "high"
+                }).catch(e => console.warn("[learning] save failed:", e.message));
+            }
+            res.status(200).json({
+                reply: handoff,
+                source: "loop_handoff",
+                reason: loopCheck.reason,
+                confidence: loopCheck.confidence,
+                escalated: true
+            });
+            return;
+        }
+    } catch (e) {
+        console.warn("[loop-detector] error, segue normal:", e.message);
+    }
 
     // 2.5. MÍDIA NÃO-TEXTUAL — gateway envia texto literal "[sticker]", "[image]",
     // "[audio]", "[video]", "[mensagem não suportada]", "[location]", etc. Belinha

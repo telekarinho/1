@@ -70,9 +70,11 @@ object AutoUpdater {
                     when (status) {
                         PackageInstaller.STATUS_PENDING_USER_ACTION -> {
                             // Primeira instalacao: precisa abrir tela de confirmacao
-                            val confirm = intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
+                            val confirm = intent?.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
                             confirm?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            try { context.startActivity(confirm) } catch (_: Exception) {}
+                            if (confirm != null) {
+                                try { context.startActivity(confirm) } catch (_: Exception) {}
+                            }
                         }
                         PackageInstaller.STATUS_SUCCESS -> Log.i(TAG, "install OK")
                         else -> Log.w(TAG, "install status=$status msg=$msg")
