@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #245 — 2026-05-17
+
+**Área:** Conteúdo — Script completo reel 20/05 "Ninho vs. Açaí"
+
+**Contexto:** Calendário editorial prevê reel de educação de produto para Quarta 20/05 (3 dias) mas tinha apenas esboço de 4 linhas sem direção de arte, edição, CTAs ou estratégia. Script incompleto = reel não produzido ou produzido de forma genérica.
+
+**O que pesquisou/analisou:**
+- Leu `belinha/content/calendario-editorial-14mai-02jun-2026.md` — confirmou esboço simplificado para 20/05: roteiro 4 frames sem instrução de produção
+- Leu `reel-lancamento-potinho-junino-17jun.md` — referência de formato e profundidade de script de produção
+- Leu `diferenciacao-potinho-sem-balanca.md` — angulação de diferenciação implícita vs. concorrentes (TheBest peso, MilkyMoo base única)
+- Identificou ângulo estratégico: MilkyPot é a ÚNICA marca que oferece as duas bases + personalização total — a pergunta "Ninho ou Açaí?" é um diferencial competitivo real
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reel-20mai-ninho-vs-acai-dois-mundos.md` | Criado — 228 linhas: script completo com 4 cenas cronometradas, direção de arte por cena, passo a passo CapCut, caption completa com hashtags, CTAs de engajamento, variações para limitações de produção, briefing estratégico e planejamento de série de 4 reels educativos |
+
+**Destaques:**
+1. **Script pronto para produzir:** 4 cenas com timing exato (0–3s / 3–8s / 8–12s / 12–15s), instrução de câmera, instrução de edição e trilha sugerida — operador pode filmar sem improvisar.
+2. **CTA de comentário binário:** "NINHO ou AÇAÍ?" tem fricção zero → maximiza engajamento → aumenta alcance orgânico pelo algoritmo.
+3. **Diferenciação sem nomear concorrente:** TheBest só tem açaí por peso; MilkyMoo foca em Ninho. MilkyPot é a única marca que faz a pergunta — o reel comunica superioridade implicitamente.
+4. **Inicia série editorial:** Planejamento de 4 reels educativos (20/05 → 10/06) que constroem repertório do cliente antes do pico de Namorados (12/06) e Junina (17/06).
+5. **Variações de produção:** 4 alternativas para o operador caso faltem recursos (sticker, dois potinhos simultâneos, tempo de edição).
+
+**Commit:** `6548a27`
+
+**Próximo passo sugerido:**
+- **Ciclo #246 — Concorrentes:** Pesquisa atualizada Johnny/Jhoy/TheBest — não foram atualizados há vários ciclos; Namorados 12/06 chega em 26 dias, verificar ações de campanha (especialmente TheBest Aurora que é o concorrente local mais próximo)
+- **Ciclo #247 — Conteúdo:** Script reel #2 da série educativa — "Os toppings infinitos" (27/05) — aproveitar o gancho do reel de hoje ("E os toppings? Você sabia que dá pra combinar isso?")
+- **Ciclo #248 — UX:** Auditar `cardapio.html` — verificar se banner de Namorados VIP (03/06–11/06) está implementado; lógica date-gate de ciclo #244 cobre mas cardápio pode precisar de destaque do combo duo
+- **Operador (URGENTE — 13 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers 03/06 dependem disso
+- **Operador (URGENTE):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador (20/05):** Filmar reel Ninho vs. Açaí seguindo `reel-20mai-ninho-vs-acai-dois-mundos.md` — publicar às 18h
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #245 | 2026-05-17_
+
+---
+
 ## Ciclo #244 — 2026-05-17
 
 **Área:** UX — Banner "1 mês" fidelidade + correção bug teaser junino prematuro
