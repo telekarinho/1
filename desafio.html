@@ -3164,22 +3164,35 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
     } catch(_) {}
   }
 
-  // Premios REAIS da raspinha (config admin atual da loja Muffato Quintino).
-  // Sem mostrar probabilidades — cliente so precisa saber QUE GANHA.
-  // Atualizado conforme spec do user: 11 premios todos positivos,
-  // nenhum "Quase!" (toda compra acima de R$ 15 sai com premio real).
+  // Premios REAIS da raspinha — todos no formato "comprou X, leva Y junto"
+  // pra MAXIMIZAR upsell e MINIMIZAR prejuizo (Y sempre tem custo bem
+  // menor que X). Sem mostrar probabilidades — cliente so precisa saber
+  // QUE ganha.
+  // Ideia: cada premio condiciona a recompra a uma categoria especifica,
+  // virando motor de cross-sell.
   var RASP_DEMO_PRIZES = [
-    { emoji:'⚖️', label:'100g BUFFET',         sub:'na próxima compra acima de R$ 15' },
-    { emoji:'⚖️', label:'100g BUFFET',         sub:'na próxima compra acima de R$ 20' },
-    { emoji:'⚖️', label:'150g BUFFET',         sub:'na próxima compra acima de R$ 25' },
-    { emoji:'⚖️', label:'200g BUFFET',         sub:'na próxima compra acima de R$ 35' },
-    { emoji:'🍦', label:'1 PICOLÉ GRÁTIS',     sub:'qualquer sabor da casa' },
-    { emoji:'🍨', label:'1 CASQUINHA GRÁTIS',  sub:'na próxima compra acima de R$ 10' },
-    { emoji:'🍧', label:'1 COPINHO DE SORVETE', sub:'na próxima compra acima de R$ 20' },
-    { emoji:'🍦', label:'1 SUNDAE P GRÁTIS',   sub:'na próxima compra acima de R$ 30' },
-    { emoji:'⬆️', label:'UPGRADE MILK SHAKE',  sub:'P → M ou M → G de graça' },
-    { emoji:'🎁', label:'COMBO BUFFET + PICOLÉ', sub:'100g buffet + 1 picolé' },
-    { emoji:'👯', label:'VOLTE COM UM AMIGO',  sub:'os dois ganham 100g de buffet' }
+    { emoji:'🥛➕🍦', label:'COMPROU MILK SHAKE? LEVA CASQUINHA',
+      sub:'Casquinha de leite ninho de brinde no próximo' },
+    { emoji:'🍨➕🍧', label:'COMPROU SUNDAE? LEVA COPINHO',
+      sub:'Copinho de sorvete grátis no próximo sundae' },
+    { emoji:'🍦➕🍦', label:'CASCÃO? LEVA CASQUINHA',
+      sub:'Casquinha de brinde no próximo cascão' },
+    { emoji:'⚖️➕🍡', label:'BUFFET 250g+? LEVA PICOLÉ',
+      sub:'1 picolé de graça acima de 250g' },
+    { emoji:'⬆️',    label:'UPGRADE MILK SHAKE',
+      sub:'P vira M ou M vira G de graça' },
+    { emoji:'⬆️',    label:'UPGRADE SUNDAE',
+      sub:'P vira M ou M vira G de graça' },
+    { emoji:'➕⚖️',  label:'+50g BUFFET',
+      sub:'no próximo buffet acima de R$ 15' },
+    { emoji:'🍫',    label:'TOPPING PREMIUM GRÁTIS',
+      sub:'Nutella, Ovomaltine ou Oreo no próximo' },
+    { emoji:'👯',    label:'VOLTE COM UM AMIGO',
+      sub:'os dois ganham 1 casquinha' },
+    { emoji:'🥤',    label:'DOSE DUPLA MILK SHAKE',
+      sub:'comprou G ou Monster? leva 1 P pra dividir' },
+    { emoji:'🎁',    label:'COMBO SURPRESA',
+      sub:'casquinha + picolé no próximo Milk Shake M+' }
   ];
 
   function renderRaspadinhaDemo(){
